@@ -1,6 +1,7 @@
 mod atlas;
 pub mod backend;
 mod cache;
+mod fonts;
 pub mod measure;
 mod system;
 mod vertex;

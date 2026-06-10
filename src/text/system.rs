@@ -41,6 +41,8 @@ const GLYPH_CACHE_CAPACITY: usize = 4096;
 
 impl TextSystem {
     pub fn new(device: &wgpu::Device, text_bind_group_layout: &wgpu::BindGroupLayout) -> Self {
+        // System fonts (desktop) are fallback only; the embedded faces below
+        // are the source of truth so rasterization matches `TextMeasurer`.
         #[cfg(all(
             not(target_arch = "wasm32"),
             not(target_os = "android"),
@@ -49,24 +51,12 @@ impl TextSystem {
         let mut font_system = FontSystem::new();
 
         #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
-        let mut font_system = {
-            let mut db = cosmic_text::fontdb::Database::new();
-            db.load_font_data(include_bytes!("../../assets/fonts/Inter-Regular.ttf").to_vec());
-            FontSystem::new_with_locale_and_db("en-US".to_string(), db)
-        };
-
-        // Load JetBrains Mono (primary UI font)
-        font_system.db_mut().load_font_data(
-            include_bytes!("../../assets/fonts/JetBrainsMono-Regular.ttf").to_vec(),
+        let mut font_system = FontSystem::new_with_locale_and_db(
+            "en-US".to_string(),
+            cosmic_text::fontdb::Database::new(),
         );
-        font_system
-            .db_mut()
-            .load_font_data(include_bytes!("../../assets/fonts/JetBrainsMono-Bold.ttf").to_vec());
 
-        // Load embedded icon font (Codicons — VS Code icons, MIT)
-        font_system
-            .db_mut()
-            .load_font_data(include_bytes!("../../assets/fonts/codicons.ttf").to_vec());
+        super::fonts::register_embedded_fonts(font_system.db_mut());
 
         let swash_cache = SwashCache::new();
         let allocator = BucketedAtlasAllocator::new(size2(

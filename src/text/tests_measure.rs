@@ -94,6 +94,87 @@ fn bold_weight_measures_at_least_regular() {
     );
 }
 
+// -- weight -> face resolution (HOFF regression: weights 500/600/700) --
+//
+// cosmic-text keeps the requested family only on an *exact* weight match
+// (`FontFallbackIter::default_font_match_key` filters `font_weight_diff == 0`).
+// When only Inter-Regular was embedded, any text at weight 500/600/700 skipped
+// Inter entirely and resolved per-word through the platform fallback lists —
+// on macOS: Apple SD Gothic Neo + Apple Color Emoji at 500/600 (+35% advance),
+// Menlo at 700 ("1,632" headlines, 600-weight labels).
+
+/// Advance of `text` at `weight` must stay close to the regular advance:
+/// faces of the same family differ a few percent, a family fallback does not.
+fn assert_advance_close_to_regular(text: &str, style: &TextStyle, weight: u16) {
+    let (rw, _) = TextMeasurer::measure_styled(text, style, None);
+    let (ww, _) = TextMeasurer::measure_styled(text, &style.clone().with_weight(weight), None);
+    assert!(rw > 0.0);
+    let ratio = (ww - rw).abs() / rw;
+    assert!(
+        ratio < 0.08,
+        "{text:?} at weight {weight} ({ww}px) drifted {:.1}% from regular ({rw}px): \
+         weight resolved to a fallback family instead of a sibling face",
+        ratio * 100.0
+    );
+}
+
+#[test]
+fn semibold_digits_advance_close_to_regular() {
+    // StatCard headline from the showcase.
+    assert_advance_close_to_regular("1,632", &inter(28.0), 600);
+}
+
+#[test]
+fn medium_multiword_advance_close_to_regular() {
+    assert_advance_close_to_regular("Expense Tracker", &inter(18.0), 500);
+}
+
+#[test]
+fn default_family_weights_advance_close_to_regular() {
+    // Widgets pass `font_family: None` (engine default family).
+    let style = TextStyle::new(16.0);
+    for weight in [500, 600, 700] {
+        assert_advance_close_to_regular("Expense Tracker 1,632", &style, weight);
+    }
+}
+
+#[test]
+fn inter_family_resolves_inter_faces_for_all_ui_weights() {
+    for weight in [400u16, 500, 600, 700] {
+        let style = inter(16.0).with_weight(weight);
+        let faces = TextMeasurer::resolved_faces("Expense Tracker 1,632", &style);
+        assert!(!faces.is_empty());
+        for (family, face_weight) in &faces {
+            assert_eq!(
+                family, "Inter",
+                "weight {weight} fell back to family {family:?} (weight {face_weight})"
+            );
+            assert_eq!(
+                *face_weight, weight,
+                "weight {weight} resolved to Inter face of weight {face_weight}"
+            );
+        }
+    }
+}
+
+#[test]
+fn default_family_resolves_inter_faces_for_all_ui_weights() {
+    // `font_family: None` maps to Family::SansSerif; the engine pins that to
+    // the embedded Inter so weights resolve deterministically on any system.
+    for weight in [400u16, 500, 600, 700] {
+        let style = TextStyle::new(16.0).with_weight(weight);
+        let faces = TextMeasurer::resolved_faces("Expense Tracker 1,632", &style);
+        assert!(!faces.is_empty());
+        for (family, face_weight) in &faces {
+            assert_eq!(
+                family, "Inter",
+                "default family at weight {weight} fell back to {family:?} (weight {face_weight})"
+            );
+            assert_eq!(*face_weight, weight);
+        }
+    }
+}
+
 // -- cursor_x / hit_test round-trip --
 
 fn char_boundaries(text: &str) -> Vec<usize> {

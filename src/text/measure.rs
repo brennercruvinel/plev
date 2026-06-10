@@ -7,8 +7,8 @@
 //! expensive to build per call.
 //!
 //! The font set mirrors `TextSystem::new` (system fonts on desktop plus the
-//! embedded Inter, JetBrains Mono, and Codicons faces) so measurements match
-//! what is rasterized.
+//! embedded faces from `super::fonts`: Inter 400/500/600/700, JetBrains Mono,
+//! Codicons) so measurements match what is rasterized.
 
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
@@ -95,13 +95,9 @@ fn new_font_system() -> FontSystem {
         FontSystem::new_with_locale_and_db("en-US".to_string(), db)
     };
 
-    // Same embedded faces TextSystem::new loads, plus Inter on desktop so
-    // measurements are reproducible regardless of installed system fonts.
-    let db = font_system.db_mut();
-    db.load_font_data(include_bytes!("../../assets/fonts/Inter-Regular.ttf").to_vec());
-    db.load_font_data(include_bytes!("../../assets/fonts/JetBrainsMono-Regular.ttf").to_vec());
-    db.load_font_data(include_bytes!("../../assets/fonts/JetBrainsMono-Bold.ttf").to_vec());
-    db.load_font_data(include_bytes!("../../assets/fonts/codicons.ttf").to_vec());
+    // Exactly the faces TextSystem::new registers, so measurements match
+    // what is rasterized regardless of installed system fonts.
+    super::fonts::register_embedded_fonts(font_system.db_mut());
 
     font_system
 }
@@ -273,6 +269,36 @@ impl TextMeasurer {
             let ctx = &mut *ctx.borrow_mut();
             ctx.prepare(text, style, max_width);
             cursor_rect_in(&ctx.scratch, &line_starts(text), cursor_byte).x
+        })
+    }
+
+    /// Distinct `(family, weight)` of the faces used to shape `text` with
+    /// `style`, in glyph order. Diagnostic API: guards against family
+    /// fallback when a requested weight has no matching embedded face
+    /// (cosmic-text only keeps the requested family on an *exact* weight
+    /// match, otherwise it walks per-word fallback lists).
+    pub fn resolved_faces(text: &str, style: &TextStyle) -> Vec<(String, u16)> {
+        MEASURE_CTX.with(|ctx| {
+            let ctx = &mut *ctx.borrow_mut();
+            ctx.prepare(text, style, None);
+            let mut faces: Vec<(String, u16)> = Vec::new();
+            for run in ctx.scratch.layout_runs() {
+                for glyph in run.glyphs.iter() {
+                    let Some(face) = ctx.font_system.db().face(glyph.font_id) else {
+                        continue;
+                    };
+                    let family = face
+                        .families
+                        .first()
+                        .map(|(name, _)| name.clone())
+                        .unwrap_or_default();
+                    let entry = (family, face.weight.0);
+                    if !faces.contains(&entry) {
+                        faces.push(entry);
+                    }
+                }
+            }
+            faces
         })
     }
 
