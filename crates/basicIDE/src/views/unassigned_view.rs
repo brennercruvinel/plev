@@ -80,6 +80,9 @@ impl UnassignedView {
             selected_path.and_then(|path| self.files.iter().position(|f| f.path == path));
     }
 
+    /// Row hit rects from the last render (test-only accessor; interaction
+    /// code goes through [`hit_test`](Self::hit_test)).
+    #[cfg(test)]
     pub fn hit_rects(&self) -> &[(f32, f32, f32, f32)] {
         &self.hit_rects
     }
@@ -116,11 +119,6 @@ impl UnassignedView {
             Some(i) => Some((i + 1).min(max)),
         };
         self.select(new)
-    }
-
-    /// Get the currently selected file entry, if any.
-    pub fn selected_file(&self) -> Option<&FileEntry> {
-        self.selected_idx.and_then(|i| self.files.get(i))
     }
 
     /// Build and render into a compositor layer.

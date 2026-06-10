@@ -6,11 +6,6 @@
 //!
 //! Run: `cargo run -p basicIDE [path-to-repo]` (defaults to the cwd).
 
-// Catálogo de componentes (avatar, badge, checkbox, tabs, separator,
-// panel_header) ainda não está todo conectado às views — silencia os
-// dead_code até o port completar.
-#![allow(dead_code)]
-
 mod actions;
 mod adapters;
 mod components;
