@@ -130,7 +130,10 @@ impl super::App {
         // Window clear color: composite base AND backdrop-blur base (glass
         // over the bare background frosts the same color the user sees).
         let clear_color = {
-            let bg = self.theme.colors.bg.to_array();
+            // wgpu clear values are linear; the sRGB surface re-encodes on
+            // write. Linearize the sRGB theme color so the bg shows its true
+            // tone instead of a washed-out ~2.5× lighter gray.
+            let bg = self.theme.colors.bg.to_linear_array();
             wgpu::Color {
                 r: bg[0] as f64,
                 g: bg[1] as f64,

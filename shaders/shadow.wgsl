@@ -29,10 +29,16 @@ fn vs_main(@builtin(vertex_index) idx: u32) -> VertexOutput {
     return out;
 }
 
+fn srgb_to_linear(c: vec3<f32>) -> vec3<f32> {
+    let lo = c / 12.92;
+    let hi = pow((c + 0.055) / 1.055, vec3<f32>(2.4));
+    return select(hi, lo, c <= vec3<f32>(0.04045));
+}
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let src = textureSample(source_texture, source_sampler, in.uv);
     let alpha = src.a * shadow.color.a;
-    // Premultiplied output
-    return vec4<f32>(shadow.color.rgb * alpha, alpha);
+    // Linearize the sRGB shadow tint, then premultiplied output.
+    return vec4<f32>(srgb_to_linear(shadow.color.rgb) * alpha, alpha);
 }
