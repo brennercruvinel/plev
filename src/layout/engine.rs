@@ -201,8 +201,8 @@ fn to_taffy_style(style: &LayoutStyle) -> Style {
     };
 
     let size = taffy::Size {
-        width: dim_from_option(style.width),
-        height: dim_from_option(style.height),
+        width: dim_from(style.width, style.width_percent),
+        height: dim_from(style.height, style.height_percent),
     };
 
     let min_size = taffy::Size {
@@ -249,5 +249,16 @@ fn dim_from_option(val: Option<f32>) -> Dimension {
     match val {
         Some(v) => Dimension::length(v),
         None => Dimension::auto(),
+    }
+}
+
+/// Resolve a dimension from parallel pixel/percent fields. Percent (a
+/// fraction, `0.5` = 50% of the parent) wins over a fixed pixel value;
+/// neither set means auto.
+fn dim_from(px: Option<f32>, percent: Option<f32>) -> Dimension {
+    match (percent, px) {
+        (Some(p), _) => Dimension::percent(p),
+        (None, Some(v)) => Dimension::length(v),
+        (None, None) => Dimension::auto(),
     }
 }

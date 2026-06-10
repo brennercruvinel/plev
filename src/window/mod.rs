@@ -7,6 +7,9 @@ pub(crate) mod state;
 
 pub use render_passes::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 
+#[cfg(target_arch = "wasm32")]
+pub use lifecycle::setup_wasm_canvas;
+
 use std::sync::Arc;
 
 use winit::application::ApplicationHandler;
@@ -21,7 +24,7 @@ use crate::compositor::Compositor;
 use crate::effects::EffectProcessor;
 use crate::gpu::GpuContext;
 use crate::ime::ImeState;
-use crate::input::{InputState, TouchInputState};
+use crate::input::{InputState, TouchInputState, TouchPointerSynth};
 use crate::lifecycle::LifecycleManager;
 use crate::platform::SafeAreaInsets;
 use crate::signal::{ReadSignal, WriteSignal, create_signal};
@@ -47,6 +50,9 @@ pub struct App {
     input_state: InputState,
     #[allow(dead_code)]
     touch_input: TouchInputState,
+    /// Synthesizes mouse-equivalent pointer events from the primary touch,
+    /// so touch input drives the same widget path as the mouse.
+    touch_pointer: TouchPointerSynth,
     theme: crate::theme::Theme,
     frame_read: ReadSignal<u64>,
     frame_write: WriteSignal<u64>,
@@ -89,6 +95,7 @@ impl App {
             compositor,
             input_state: InputState::new(),
             touch_input: TouchInputState::new(),
+            touch_pointer: TouchPointerSynth::new(),
             theme: crate::theme::Theme::default(),
             frame_read,
             frame_write,
@@ -168,6 +175,7 @@ impl App {
             compositor,
             input_state: InputState::new(),
             touch_input: TouchInputState::new(),
+            touch_pointer: TouchPointerSynth::new(),
             theme: crate::theme::Theme::default(),
             frame_read,
             frame_write,

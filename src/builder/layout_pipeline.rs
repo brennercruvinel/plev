@@ -2,10 +2,9 @@ use crate::layout::{
     Align as TaffyAlign, Direction as TaffyDirection, Justify as TaffyJustify, LayoutItem,
     LayoutStyle as TaffyLayoutStyle, TextMeasureSpec,
 };
-use crate::text::TextStyle;
 
 use super::element::{Element, ElementKind};
-use super::emit::resolve_display_text;
+use super::emit::{resolve_display_text, resolved_text_style};
 use super::style::*;
 
 // ---------------------------------------------------------------------------
@@ -63,21 +62,11 @@ fn text_measure_spec(element: &Element) -> Option<TextMeasureSpec> {
         return None;
     }
 
-    let font_weight = if element.style.bold {
-        700
-    } else {
-        element.style.font_weight
-    };
-
     Some(TextMeasureSpec {
         content: resolved.into_owned(),
-        style: TextStyle {
-            font_size: *font_size,
-            line_height: *line_height,
-            font_weight,
-            letter_spacing: 0.0,
-            font_family: None,
-        },
+        // Same resolved style the emitter keys the draw with (see
+        // `emit::resolved_text_style`): measure == draw, by construction.
+        style: resolved_text_style(element, *font_size, *line_height),
         max_width: *max_width,
     })
 }
@@ -162,6 +151,10 @@ pub(crate) fn to_layout_style(element: &Element) -> TaffyLayoutStyle {
         gap: lc.gap,
         width,
         height,
+        // The builder's SizeConstraint has no percent variant yet; map to
+        // the wrapper's parallel percent fields once it grows one.
+        width_percent: None,
+        height_percent: None,
         min_width: lc.min_width,
         min_height: lc.min_height,
         max_width: lc.max_width,

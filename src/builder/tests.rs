@@ -533,4 +533,81 @@ mod tests {
         assert_eq!(*h, 1.0);
         assert_eq!(*y, 39.0); // 40.0 - 1.0
     }
+
+    // -- letter spacing: ONE TextStyle shared by measurement and drawing --
+
+    /// `.tracking()` must reach the measure spec, otherwise layout sizes the
+    /// box without the tracking the renderer draws and text overflows.
+    #[test]
+    fn tracking_reaches_text_measure_spec() {
+        let el = text("Research Social").tracking(2.0);
+        let mut items = Vec::new();
+        let mut elements = Vec::new();
+        crate::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
+        let spec = items[0]
+            .text
+            .as_ref()
+            .expect("text leaf must carry a measure spec");
+        assert_eq!(spec.style.letter_spacing, 2.0);
+    }
+
+    /// `.tracking()` must reach the draw key, otherwise the shaper renders
+    /// without the tracking layout reserved space for.
+    #[test]
+    fn tracking_reaches_text_node_key() {
+        let el = text("Research Social").tracking(2.0);
+        let nodes = el.render(&mut test_cx());
+        let SceneNode::Text { key, .. } = &nodes[0] else {
+            panic!("Expected Text, got {:?}", &nodes[0]);
+        };
+        assert_eq!(key.letter_spacing_bits, 2.0_f32.to_bits());
+    }
+
+    /// Measure spec and draw key are built from the same resolved TextStyle:
+    /// every typographic field must agree (weight via `.bold()`, size,
+    /// line height, tracking).
+    #[test]
+    fn measure_spec_and_node_key_share_one_text_style() {
+        let el = text("Quarterly").font_size(18.0).bold().tracking(0.35);
+
+        let mut items = Vec::new();
+        let mut elements = Vec::new();
+        crate::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
+        let spec = items[0].text.as_ref().expect("measure spec").clone();
+
+        let nodes = el.render(&mut test_cx());
+        let SceneNode::Text { key, .. } = &nodes[0] else {
+            panic!("Expected Text, got {:?}", &nodes[0]);
+        };
+
+        assert_eq!(key.font_size_bits, spec.style.font_size.to_bits());
+        assert_eq!(key.line_height_bits, spec.style.line_height.to_bits());
+        assert_eq!(key.font_weight, spec.style.font_weight);
+        assert_eq!(key.font_weight, 700);
+        assert_eq!(
+            key.letter_spacing_bits,
+            spec.style.letter_spacing.to_bits()
+        );
+        assert_eq!(key.font_family, spec.style.font_family);
+    }
+
+    /// End to end through the builder pipeline: a tracked run must measure
+    /// wider than the same run without tracking (layout reserves the extra
+    /// advance the renderer will draw).
+    #[test]
+    fn tracking_widens_builder_text_measurement() {
+        let measure = |el: Element| {
+            let mut items = Vec::new();
+            let mut elements = Vec::new();
+            crate::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
+            let mut engine = crate::layout::LayoutEngine::new();
+            engine.compute(&items, 800.0, 600.0)[0].width
+        };
+        let plain = measure(text("Research Social"));
+        let tracked = measure(text("Research Social").tracking(2.0));
+        assert!(
+            tracked > plain,
+            "tracking must widen the measured run ({plain} -> {tracked})"
+        );
+    }
 }

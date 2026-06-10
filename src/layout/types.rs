@@ -36,6 +36,14 @@ pub struct LayoutStyle {
     pub gap: f32,
     pub width: Option<f32>,
     pub height: Option<f32>,
+    /// Width as a fraction of the parent (`0.5` = 50%), mapped to
+    /// `taffy::Dimension::percent`. Parallel to `width` so existing
+    /// pixel-based call sites keep working untouched; when both are set,
+    /// the percentage wins (a node cannot be two widths at once).
+    pub width_percent: Option<f32>,
+    /// Height as a fraction of the parent (`0.5` = 50%). See
+    /// [`width_percent`](Self::width_percent).
+    pub height_percent: Option<f32>,
     pub min_width: Option<f32>,
     pub min_height: Option<f32>,
     pub max_width: Option<f32>,
@@ -57,6 +65,8 @@ impl Default for LayoutStyle {
             gap: 0.0,
             width: None,
             height: None,
+            width_percent: None,
+            height_percent: None,
             min_width: None,
             min_height: None,
             max_width: None,

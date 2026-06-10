@@ -1,6 +1,7 @@
 use winit::event::{ElementState, MouseButton, MouseScrollDelta};
 use winit::keyboard::{Key, NamedKey};
 
+use super::touch::SyntheticPointerEvent;
 use super::types::*;
 
 impl super::InputState {
@@ -121,6 +122,23 @@ impl super::InputState {
             delta_y,
             modifiers: self.modifiers,
         }));
+    }
+
+    /// Inject a touch-synthesized pointer event (see
+    /// [`TouchPointerSynth`](super::touch::TouchPointerSynth)) into the
+    /// exact same handlers real mouse input goes through, so hover, focus,
+    /// click and hit-testing behave identically for touch and mouse.
+    pub fn handle_synthetic_pointer(&mut self, event: SyntheticPointerEvent) {
+        match event {
+            SyntheticPointerEvent::CursorMoved { x, y } => self.handle_cursor_moved(x, y),
+            SyntheticPointerEvent::PrimaryButtonDown => {
+                self.handle_mouse_input(MouseButton::Left, ElementState::Pressed)
+            }
+            SyntheticPointerEvent::PrimaryButtonUp => {
+                self.handle_mouse_input(MouseButton::Left, ElementState::Released)
+            }
+            SyntheticPointerEvent::CursorLeft => self.handle_cursor_left(),
+        }
     }
 
     pub fn handle_modifiers_changed(&mut self, mods: &winit::event::Modifiers) {

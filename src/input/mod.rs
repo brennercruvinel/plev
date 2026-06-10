@@ -9,6 +9,7 @@ mod tests;
 #[cfg(test)]
 mod tests_hit;
 
+pub use touch::{SyntheticPointerEvent, TouchPointerSynth};
 pub use types::*;
 
 pub struct InputState {

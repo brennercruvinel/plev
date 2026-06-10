@@ -220,3 +220,69 @@ fn drain_clears_queue() {
     assert!(!input.drain_events().is_empty());
     assert!(input.drain_events().is_empty());
 }
+
+// -- touch -> pointer compatibility (synthetic events through InputState) --
+
+/// Drive a full touch tap through `TouchPointerSynth` +
+/// `handle_synthetic_pointer` and assert widgets see exactly what a mouse
+/// click produces: press + release on the touched view, focus included.
+#[test]
+fn synthetic_touch_tap_clicks_like_mouse() {
+    use winit::event::TouchPhase;
+
+    let mut input = InputState::new();
+    let id = input.next_view_id();
+    input.register_hit_region(id, 0.0, 0.0, 100.0, 100.0, true);
+
+    let mut synth = TouchPointerSynth::new();
+    for ev in synth.synthesize(7, TouchPhase::Started, 50.0, 50.0) {
+        input.handle_synthetic_pointer(ev);
+    }
+    assert_eq!(input.focused_view(), Some(ViewId(0)), "tap focuses");
+    for ev in synth.synthesize(7, TouchPhase::Ended, 50.0, 50.0) {
+        input.handle_synthetic_pointer(ev);
+    }
+
+    let events = input.drain_events();
+    let clicks: Vec<_> = events
+        .iter()
+        .filter_map(|e| match e {
+            InputEvent::Click(c) => Some(c),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(clicks.len(), 2, "press + release, like a mouse click");
+    assert_eq!(clicks[0].view_id, ViewId(0));
+    assert_eq!(clicks[0].button, PointerButton::Primary);
+    assert_eq!(clicks[0].state, PressState::Pressed);
+    assert_eq!(clicks[1].state, PressState::Released);
+    assert_eq!(clicks[1].position, (50.0, 50.0));
+
+    // Finger lifted: no widget stays hovered or under a phantom cursor.
+    assert_eq!(input.hovered_view(), None);
+    assert_eq!(input.cursor_position(), None);
+}
+
+/// A one-finger drag synthesizes cursor movement, so hover tracking (and
+/// any widget that follows MouseMove) works mid-gesture.
+#[test]
+fn synthetic_touch_drag_moves_cursor_across_views() {
+    use winit::event::TouchPhase;
+
+    let mut input = InputState::new();
+    let a = input.next_view_id();
+    let b = input.next_view_id();
+    input.register_hit_region(a, 0.0, 0.0, 100.0, 100.0, false);
+    input.register_hit_region(b, 200.0, 0.0, 100.0, 100.0, false);
+
+    let mut synth = TouchPointerSynth::new();
+    for ev in synth.synthesize(1, TouchPhase::Started, 50.0, 50.0) {
+        input.handle_synthetic_pointer(ev);
+    }
+    assert_eq!(input.hovered_view(), Some(a));
+    for ev in synth.synthesize(1, TouchPhase::Moved, 250.0, 50.0) {
+        input.handle_synthetic_pointer(ev);
+    }
+    assert_eq!(input.hovered_view(), Some(b));
+    assert_eq!(input.cursor_position(), Some((250.0, 50.0)));
+}

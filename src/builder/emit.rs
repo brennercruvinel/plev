@@ -1,5 +1,6 @@
 use crate::compositor::{SceneNode, TextNodeKey};
 use crate::layout::ComputedBounds;
+use crate::text::TextStyle;
 
 use super::element::{Element, ElementKind};
 
@@ -298,6 +299,28 @@ pub(crate) fn resolve_display_text<'a>(
     }
 }
 
+/// Resolve the effective [`TextStyle`] of a text element's run — the single
+/// source of truth for typography (size, line height, weight, letter
+/// spacing). Layout measurement (`text_measure_spec`) and scene emission
+/// (`emit_text`) both build from this, so the renderer always draws exactly
+/// what layout measured; diverging copies are what made `.tracking()` text
+/// overflow its container.
+pub(crate) fn resolved_text_style(element: &Element, font_size: f32, line_height: f32) -> TextStyle {
+    TextStyle {
+        font_size,
+        line_height,
+        font_weight: if element.style.bold {
+            700
+        } else {
+            element.style.font_weight
+        },
+        letter_spacing: element.style.letter_spacing,
+        // The builder Style has no font-family modifier yet; when it grows
+        // one, threading it here propagates to measure AND draw at once.
+        font_family: None,
+    }
+}
+
 fn emit_text(
     element: &Element,
     b: &ComputedBounds,
@@ -309,14 +332,9 @@ fn emit_text(
     let actual: &str = &actual;
 
     if !actual.is_empty() {
-        let weight = if element.style.bold {
-            700
-        } else {
-            element.style.font_weight
-        };
+        let style = resolved_text_style(element, props.font_size, props.line_height);
         out.push(SceneNode::Text {
-            key: TextNodeKey::new(actual, props.font_size, props.line_height, props.max_width)
-                .with_weight(weight),
+            key: TextNodeKey::from_style(actual, &style, props.max_width),
             x: b.x,
             y: b.y,
             color: intent_color

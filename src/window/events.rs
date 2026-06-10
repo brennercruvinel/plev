@@ -49,7 +49,22 @@ impl super::App {
                     self.input_state.handle_modifiers_changed(&mods);
                 }
                 BufferedEvent::Touch(touch, when) => {
+                    // Gesture recognition (tap/double-tap/long-press/drag/
+                    // pinch/swipe) for consumers of the recognizer...
                     self.touch_input.handle_touch(&touch, when);
+                    // ...AND mouse-equivalent pointer synthesis from the
+                    // primary finger, injected into the same `InputState`
+                    // path as real mouse input, so hover/click/focus work
+                    // on touch screens without widget changes.
+                    let synthesized = self.touch_pointer.synthesize(
+                        touch.id,
+                        touch.phase,
+                        touch.location.x as f32,
+                        touch.location.y as f32,
+                    );
+                    for pointer_event in synthesized {
+                        self.input_state.handle_synthetic_pointer(pointer_event);
+                    }
                 }
                 BufferedEvent::Ime(ref ime) => {
                     let window_height = if let GpuState::Ready { ref gpu, .. } = self.state {
@@ -82,8 +97,20 @@ impl super::App {
                 event_loop.exit();
             }
             WindowEvent::Resized(size) => {
+                // `gpu.resize` reconfigures the surface AND resets the
+                // projection to physical pixels (clearing `logical_size`).
+                // Reapply the logical projection right away, otherwise on
+                // HiDPI every resize would leave the scene rendering at
+                // physical scale (half-size content on a 2x display).
+                let scale_factor = self
+                    .window
+                    .as_ref()
+                    .map(|w| w.scale_factor())
+                    .unwrap_or(self.scale_factor);
                 if let GpuState::Ready { ref mut gpu, .. } = self.state {
                     gpu.resize(size.width, size.height);
+                    let (lw, lh) = logical_projection_size(size.width, size.height, scale_factor);
+                    gpu.set_projection(lw, lh);
                 }
                 self.compositor.invalidate();
                 if let Some(ref window) = self.window {
@@ -141,5 +168,62 @@ impl super::App {
             }
             _ => {}
         }
+    }
+}
+
+/// Logical size for the projection matrix: physical surface pixels divided
+/// by the window scale factor. This is what the engine `App` feeds to
+/// [`GpuContext::set_projection`] after every resize, so scenes keep
+/// addressing logical pixels on HiDPI displays.
+///
+/// Pure on purpose: `set_projection` itself needs a live GPU queue, so the
+/// resize math is tested here without one (the full `Resized` path requires
+/// a window + adapter and is exercised by the apps).
+///
+/// [`GpuContext::set_projection`]: crate::gpu::GpuContext::set_projection
+pub(crate) fn logical_projection_size(
+    physical_width: u32,
+    physical_height: u32,
+    scale_factor: f64,
+) -> (f32, f32) {
+    // Guard degenerate factors (uninitialized window state); 0 would
+    // produce inf/NaN and a broken projection.
+    let sf = if scale_factor.is_finite() && scale_factor > 0.0 {
+        scale_factor
+    } else {
+        1.0
+    };
+    (
+        (physical_width as f64 / sf) as f32,
+        (physical_height as f64 / sf) as f32,
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::logical_projection_size;
+
+    #[test]
+    fn logical_projection_divides_by_scale_factor() {
+        assert_eq!(logical_projection_size(2048, 1640, 2.0), (1024.0, 820.0));
+    }
+
+    #[test]
+    fn logical_projection_identity_at_scale_one() {
+        assert_eq!(logical_projection_size(1024, 820, 1.0), (1024.0, 820.0));
+    }
+
+    #[test]
+    fn logical_projection_fractional_scale() {
+        let (w, h) = logical_projection_size(1280, 800, 1.25);
+        assert!((w - 1024.0).abs() < 0.001);
+        assert!((h - 640.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn logical_projection_guards_degenerate_scale() {
+        assert_eq!(logical_projection_size(800, 600, 0.0), (800.0, 600.0));
+        assert_eq!(logical_projection_size(800, 600, -2.0), (800.0, 600.0));
+        assert_eq!(logical_projection_size(800, 600, f64::NAN), (800.0, 600.0));
     }
 }

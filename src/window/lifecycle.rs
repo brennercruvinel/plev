@@ -195,8 +195,15 @@ impl super::App {
 /// Attaches the winit canvas to `<body>` and sizes it to the viewport at the
 /// device pixel ratio. Returns `Err` if any web-sys API is unavailable (e.g.
 /// restricted iframe, headless context).
+///
+/// Re-exported as `plev::window::setup_wasm_canvas` so downstream apps with
+/// their own winit event loop can reuse it. The initial width/height set
+/// here are a first-paint fallback: with the canvas styled via CSS (e.g.
+/// `width: 100vw; height: 100vh`), winit's `ResizeObserver` emits
+/// `WindowEvent::Resized` and the app's `surface.configure` keeps the
+/// buffer in sync afterwards.
 #[cfg(target_arch = "wasm32")]
-pub(super) fn setup_wasm_canvas(window: &winit::window::Window) -> crate::error::PlevResult<()> {
+pub fn setup_wasm_canvas(window: &winit::window::Window) -> crate::error::PlevResult<()> {
     use crate::error::PlevError;
     use winit::platform::web::WindowExtWebSys;
 
