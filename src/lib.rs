@@ -10,6 +10,7 @@ pub mod path;
 pub mod texture_pool;
 
 // -- Text
+pub mod editor;
 pub mod text;
 pub mod text_input;
 
