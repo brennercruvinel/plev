@@ -393,6 +393,7 @@ fn clip_applies_to_sdf_and_shadow_ranges() {
         blur_radius: 8.0,
         offset: [0.0, 2.0],
         color: [0.0, 0.0, 0.0, 0.5],
+        inset: false,
     });
     comp.pop_clip();
     comp.resolve_scene((800.0, 600.0));
@@ -514,6 +515,7 @@ fn shadow_quad_is_expanded_by_blur_and_shifted_by_offset() {
         blur_radius: 16.0,
         offset: [0.0, 4.0],
         color: [0.0, 0.0, 0.0, 0.5],
+        inset: false,
     });
     comp.resolve_scene((800.0, 600.0));
 
@@ -554,6 +556,7 @@ fn shadow_is_culled_using_expanded_bounds() {
         blur_radius: 20.0,
         offset: [0.0, 0.0],
         color: [0.0, 0.0, 0.0, 1.0],
+        inset: false,
     });
     // Far enough away that not even the expanded quad is visible.
     comp.push(SceneNode::Shadow {
@@ -565,6 +568,7 @@ fn shadow_is_culled_using_expanded_bounds() {
         blur_radius: 20.0,
         offset: [0.0, 0.0],
         color: [0.0, 0.0, 0.0, 1.0],
+        inset: false,
     });
     comp.resolve_scene((800.0, 600.0));
 
@@ -586,6 +590,7 @@ fn shadow_node_participates_in_dirty_tracking() {
             blur_radius,
             offset: [0.0, 2.0],
             color: [0.0, 0.0, 0.0, 0.4],
+            inset: false,
         }
     }
 
@@ -604,6 +609,118 @@ fn shadow_node_participates_in_dirty_tracking() {
     comp.begin_frame();
     comp.push(shadow(9.0));
     assert!(comp.needs_render());
+}
+
+#[test]
+fn inset_shadow_quad_is_the_rect_with_inset_flag_and_offset() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    // HOFF glass relief: inset 2px 4px 16px rgba(248,248,248,.06).
+    comp.push(SceneNode::Shadow {
+        x: 100.0,
+        y: 200.0,
+        w: 80.0,
+        h: 40.0,
+        corner_radius: 8.0,
+        blur_radius: 16.0,
+        offset: [2.0, 4.0],
+        color: [248.0 / 255.0, 248.0 / 255.0, 248.0 / 255.0, 0.06],
+        inset: true,
+    });
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(layer.shadow_vertices.len(), 4);
+    assert_eq!(layer.shadow_index_count, 6);
+
+    let v = &layer.shadow_vertices;
+    // The quad is EXACTLY the casting rect: no blur padding, no offset
+    // shift (the shadow is clipped inside the rect).
+    assert_eq!(v[0].position, [100.0, 200.0]);
+    assert_eq!(v[2].position, [180.0, 240.0]);
+    // Local coords span the plain half extents.
+    assert_eq!(v[0].local, [-40.0, -20.0]);
+    assert_eq!(v[2].local, [40.0, 20.0]);
+    for vert in v {
+        assert_eq!(vert.params, [40.0, 20.0, 8.0, shadow_sigma(16.0)]);
+        // inset flag + offset move only the in-shader mask.
+        assert_eq!(vert.params2, [1.0, 2.0, 4.0, 0.0]);
+    }
+}
+
+#[test]
+fn drop_shadow_keeps_params2_zeroed() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(SceneNode::Shadow {
+        x: 0.0,
+        y: 0.0,
+        w: 10.0,
+        h: 10.0,
+        corner_radius: 2.0,
+        blur_radius: 8.0,
+        offset: [0.0, 2.0],
+        color: [0.0, 0.0, 0.0, 0.4],
+        inset: false,
+    });
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    for vert in &layer.shadow_vertices {
+        assert_eq!(vert.params2, [0.0; 4]);
+    }
+}
+
+#[test]
+fn inset_flag_participates_in_dirty_tracking() {
+    fn shadow(inset: bool) -> SceneNode {
+        SceneNode::Shadow {
+            x: 0.0,
+            y: 0.0,
+            w: 10.0,
+            h: 10.0,
+            corner_radius: 2.0,
+            blur_radius: 8.0,
+            offset: [0.0, 2.0],
+            color: [0.0, 0.0, 0.0, 0.4],
+            inset,
+        }
+    }
+
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(shadow(false));
+    comp.resolve_scene((800.0, 600.0));
+    comp.mark_layer_clean(LayerId::DEFAULT);
+
+    comp.begin_frame();
+    comp.push(shadow(true));
+    assert!(comp.needs_render());
+}
+
+#[test]
+fn inset_shadow_after_fill_stays_on_top_in_sequence() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    // Glass card: fill first, then the inset relief on top of it.
+    comp.push(rounded_rect(10.0, 10.0, 100.0, 50.0));
+    comp.push(SceneNode::Shadow {
+        x: 10.0,
+        y: 10.0,
+        w: 100.0,
+        h: 50.0,
+        corner_radius: 8.0,
+        blur_radius: 16.0,
+        offset: [2.0, 4.0],
+        color: [1.0, 1.0, 1.0, 0.06],
+        inset: true,
+    });
+    comp.resolve_scene((800.0, 600.0));
+
+    assert_eq!(
+        sequence_kinds(&comp),
+        vec![DrawKind::SdfRect, DrawKind::Shadow]
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -905,6 +1022,7 @@ fn sequence_preserves_push_order_across_kinds() {
         blur_radius: 8.0,
         offset: [0.0, 2.0],
         color: [0.0, 0.0, 0.0, 0.4],
+        inset: false,
     });
     comp.push(rounded_rect(10.0, 10.0, 50.0, 30.0));
     comp.push(SceneNode::Path {

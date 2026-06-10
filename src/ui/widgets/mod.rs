@@ -264,6 +264,7 @@ pub fn menu_shadow(rect: Rect, radius: f32) -> SceneNode {
         blur_radius: 32.0,
         offset: [0.0, 16.0],
         color: [18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.35],
+        inset: false,
     }
 }
 

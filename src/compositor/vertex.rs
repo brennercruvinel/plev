@@ -91,11 +91,18 @@ impl RectSdfVertex {
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct ShadowVertex {
     pub position: [f32; 2],
-    /// Pixel offset from the shadow rect center (covers the padded quad).
+    /// Pixel offset from the shadow rect center. Drop shadows cover the
+    /// padded quad around the OFFSET rect; inset shadows cover exactly the
+    /// casting rect (the shadow is clipped inside it).
     pub local: [f32; 2],
     pub color: [f32; 4],
     /// half_w, half_h, corner_radius, sigma.
     pub params: [f32; 4],
+    /// inset (>0.5 = inset mode), offset_x, offset_y, unused. Drop shadows
+    /// bake the offset into the quad position and leave this zeroed; inset
+    /// shadows evaluate the blurred mask at `local - offset` in-shader so
+    /// the hard clip to the rect stays put.
+    pub params2: [f32; 4],
 }
 
 impl ShadowVertex {
@@ -122,6 +129,11 @@ impl ShadowVertex {
                 wgpu::VertexAttribute {
                     offset: 32,
                     shader_location: 3,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: 48,
+                    shader_location: 4,
                     format: wgpu::VertexFormat::Float32x4,
                 },
             ],

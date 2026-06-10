@@ -34,6 +34,7 @@ pub fn shadow(
             blur_radius: spec.blur,
             offset: spec.offset,
             color: spec.color.to_array(),
+            inset: false,
         },
     );
 }
@@ -210,6 +211,7 @@ mod tests {
                 blur_radius,
                 offset,
                 color,
+                ..
             } => {
                 // spread -12 shrinks the casting rect by 12px each side
                 assert_eq!((*x, *y), (112.0, 62.0));

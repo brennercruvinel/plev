@@ -429,6 +429,35 @@ mod tests {
     }
 
     #[test]
+    fn shadow_inset_emits_inset_shadow_after_fill() {
+        let el = div().w(100.0).h(50.0).bg("blue").rounded(8.0).shadow_inset(
+            16.0,
+            [2.0, 4.0],
+            [248.0 / 255.0, 248.0 / 255.0, 248.0 / 255.0, 0.06],
+        );
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 2);
+        assert!(matches!(&nodes[0], SceneNode::RoundedRect { .. }));
+        let SceneNode::Shadow {
+            w,
+            h,
+            corner_radius,
+            blur_radius,
+            offset,
+            inset,
+            ..
+        } = &nodes[1]
+        else {
+            panic!("Expected inset Shadow after fill, got {:?}", &nodes[1]);
+        };
+        assert_eq!((*w, *h), (100.0, 50.0));
+        assert_eq!(*corner_radius, 8.0);
+        assert_eq!(*blur_radius, 16.0);
+        assert_eq!(*offset, [2.0, 4.0]);
+        assert!(*inset);
+    }
+
+    #[test]
     fn bg_linear_emits_gradient_rect() {
         let el = div().w(100.0).h(50.0).rounded(8.0).bg_linear(
             [1.0, 0.0, 0.0, 1.0],

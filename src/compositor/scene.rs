@@ -64,9 +64,16 @@ pub enum SceneNode {
     },
     /// Pop the most recent `PushClip`.
     PopClip,
-    /// Analytic drop shadow of a rounded rect (Evan Wallace approximation,
-    /// no blur pass). `x..h` are the bounds of the CASTING rect; the emitted
-    /// quad is expanded by the blur and shifted by `offset`.
+    /// Analytic shadow of a rounded rect (Evan Wallace approximation, no
+    /// blur pass). `x..h` are the bounds of the CASTING rect.
+    ///
+    /// Drop (`inset: false`): the emitted quad is expanded by the blur and
+    /// shifted by `offset`; push it BEFORE the rect that casts it.
+    ///
+    /// Inset (`inset: true`): the shadow falls INSIDE the rect (CSS
+    /// `box-shadow: inset`), clipped to the rounded bounds -- the HOFF
+    /// glass key-light (`inset 2px 4px 16px rgba(248,248,248,.06)`). Push
+    /// it AFTER the surface fill so it composites on top.
     Shadow {
         x: f32,
         y: f32,
@@ -77,6 +84,7 @@ pub enum SceneNode {
         blur_radius: f32,
         offset: [f32; 2],
         color: [f32; 4],
+        inset: bool,
     },
 }
 
@@ -205,6 +213,7 @@ impl SceneNode {
                 blur_radius,
                 offset,
                 color,
+                inset,
             } => {
                 5u8.hash(&mut h);
                 x.to_bits().hash(&mut h);
@@ -219,6 +228,7 @@ impl SceneNode {
                 for c in color {
                     c.to_bits().hash(&mut h);
                 }
+                inset.hash(&mut h);
             }
             SceneNode::GradientRect {
                 x,

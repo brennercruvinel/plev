@@ -13,7 +13,7 @@ pub struct RoundedRectParams {
     pub border_color: [f32; 4],
 }
 
-/// Parameters for an analytic drop shadow cast by a rounded rect.
+/// Parameters for an analytic shadow cast by a rounded rect.
 pub struct ShadowParams {
     /// Bounds of the rect casting the shadow (not the expanded quad).
     pub x: f32,
@@ -25,6 +25,9 @@ pub struct ShadowParams {
     pub blur_radius: f32,
     pub offset: [f32; 2],
     pub color: [f32; 4],
+    /// CSS `box-shadow: inset`: the shadow falls INSIDE the rect, clipped
+    /// to its rounded bounds.
+    pub inset: bool,
 }
 
 /// Parameters for drawing a rounded rect filled with a 2-stop linear gradient.
@@ -110,8 +113,11 @@ impl Compositor {
         });
     }
 
-    /// Draw an analytic drop shadow. Push it BEFORE the rect that casts it
-    /// so the rect paints on top.
+    /// Draw an analytic shadow. Push drop shadows BEFORE the rect that
+    /// casts them so the rect paints on top; push inset shadows AFTER the
+    /// surface fill so they composite over it (draw order follows push
+    /// order). Multi-shadow stacks (CSS comma lists) are just several
+    /// pushes.
     pub fn draw_shadow(&mut self, p: ShadowParams) {
         self.push(SceneNode::Shadow {
             x: p.x,
@@ -122,6 +128,7 @@ impl Compositor {
             blur_radius: p.blur_radius,
             offset: p.offset,
             color: p.color,
+            inset: p.inset,
         });
     }
 

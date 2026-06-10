@@ -88,6 +88,7 @@ impl DemoApp {
                 blur_radius: blur,
                 offset: [0.0, 6.0],
                 color: [0.0, 0.0, 0.0, 0.55],
+                inset: false,
             });
             self.compositor.draw_rounded_rect(RoundedRectParams {
                 x,

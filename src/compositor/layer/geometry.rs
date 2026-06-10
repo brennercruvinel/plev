@@ -279,18 +279,40 @@ impl Layer {
                     blur_radius,
                     offset,
                     color,
+                    inset,
                 } => {
-                    let pad = shadow_padding(*blur_radius);
-                    let (qx, qy) = (x - pad + offset[0], y - pad + offset[1]);
-                    let (qw, qh) = (w + 2.0 * pad, h + 2.0 * pad);
+                    // Drop shadows pad the quad by the blur and shift it by
+                    // the offset; inset shadows live entirely inside the
+                    // casting rect, so the quad IS the rect and the offset
+                    // moves only the in-shader mask (params2).
+                    let (qx, qy, qw, qh, half, params2) = if *inset {
+                        (
+                            *x,
+                            *y,
+                            *w,
+                            *h,
+                            [w / 2.0, h / 2.0],
+                            [1.0, offset[0], offset[1], 0.0],
+                        )
+                    } else {
+                        let pad = shadow_padding(*blur_radius);
+                        (
+                            x - pad + offset[0],
+                            y - pad + offset[1],
+                            w + 2.0 * pad,
+                            h + 2.0 * pad,
+                            [w / 2.0 + pad, h / 2.0 + pad],
+                            [0.0; 4],
+                        )
+                    };
                     if outside_viewport(viewport, qx, qy, qw, qh) || clips.is_empty_clip() {
                         culled += 1;
                         continue;
                     }
 
                     let params = [w / 2.0, h / 2.0, *corner_radius, shadow_sigma(*blur_radius)];
-                    // Quad corners relative to the (offset) rect center.
-                    let half = [w / 2.0 + pad, h / 2.0 + pad];
+                    // Quad corners relative to the rect center (the offset
+                    // rect center for drop shadows).
                     let corners = [
                         ([qx, qy], [-half[0], -half[1]]),
                         ([qx + qw, qy], [half[0], -half[1]]),
@@ -306,6 +328,7 @@ impl Layer {
                             local,
                             color: *color,
                             params,
+                            params2,
                         });
                     }
                     self.shadow_indices.extend_from_slice(&[
