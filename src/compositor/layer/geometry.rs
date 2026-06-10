@@ -1,11 +1,48 @@
 use super::{INITIAL_IB_SIZE, INITIAL_VB_SIZE, Layer};
 use crate::compositor::scene::SceneNode;
-use crate::compositor::vertex::{QuadVertex, RectSdfVertex};
+use crate::compositor::vertex::{QuadVertex, RectSdfVertex, gradient_direction};
 use crate::gpu_vec::GpuVec;
+
+/// Resolved per-rect parameters shared by the solid and gradient SDF paths.
+struct SdfRect {
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
+    color: [f32; 4],
+    color2: [f32; 4],
+    gradient: [f32; 4],
+    corner_radius: f32,
+    border_width: f32,
+    border_color: [f32; 4],
+}
 
 /// Whether an axis-aligned box is entirely outside the `[0,0]..viewport` rect.
 fn outside_viewport(viewport: (f32, f32), x: f32, y: f32, w: f32, h: f32) -> bool {
     x + w <= 0.0 || y + h <= 0.0 || x >= viewport.0 || y >= viewport.1
+}
+
+fn emit_sdf_rect(vertices: &mut Vec<RectSdfVertex>, indices: &mut Vec<u32>, r: &SdfRect) {
+    let params = [r.w / 2.0, r.h / 2.0, r.corner_radius, r.border_width];
+    let base = vertices.len() as u32;
+    let corners = [
+        ([r.x, r.y], [-1.0, -1.0]),
+        ([r.x + r.w, r.y], [1.0, -1.0]),
+        ([r.x + r.w, r.y + r.h], [1.0, 1.0]),
+        ([r.x, r.y + r.h], [-1.0, 1.0]),
+    ];
+    for (position, uv) in corners {
+        vertices.push(RectSdfVertex {
+            position,
+            uv,
+            color: r.color,
+            rect_params: params,
+            border_color: r.border_color,
+            color2: r.color2,
+            gradient: r.gradient,
+        });
+    }
+    indices.extend_from_slice(&[base, base + 1, base + 2, base + 2, base + 3, base]);
 }
 
 /// Bounding box of tessellated path vertices, or `None` for empty paths.
@@ -78,7 +115,7 @@ impl Layer {
                     self.quad_indices
                         .extend(data.indices.iter().map(|i| i + base));
                 }
-                SceneNode::RoundedRect { .. } | SceneNode::Text { .. } => {}
+                _ => {}
             }
         }
 
@@ -110,73 +147,71 @@ impl Layer {
         }
     }
 
-    /// Rebuild CPU-side SDF geometry (rounded rects), skipping nodes entirely
-    /// outside the viewport. Returns the number of nodes culled.
+    /// Rebuild CPU-side SDF geometry (rounded + gradient rects), skipping
+    /// nodes entirely outside the viewport. Returns the number of nodes
+    /// culled.
     pub(crate) fn build_sdf_geometry(&mut self, viewport: (f32, f32)) -> u32 {
         self.sdf_vertices.clear();
         self.sdf_indices.clear();
         let mut culled = 0u32;
 
         for node in &self.nodes {
-            if let SceneNode::RoundedRect {
-                x,
-                y,
-                w,
-                h,
-                color,
-                corner_radius,
-                border_width,
-                border_color,
-            } = node
-            {
-                if outside_viewport(viewport, *x, *y, *w, *h) {
-                    culled += 1;
-                    continue;
+            let rect = match node {
+                SceneNode::RoundedRect {
+                    x,
+                    y,
+                    w,
+                    h,
+                    color,
+                    corner_radius,
+                    border_width,
+                    border_color,
+                } => SdfRect {
+                    x: *x,
+                    y: *y,
+                    w: *w,
+                    h: *h,
+                    color: *color,
+                    color2: *color,
+                    gradient: [0.0; 4],
+                    corner_radius: *corner_radius,
+                    border_width: *border_width,
+                    border_color: *border_color,
+                },
+                SceneNode::GradientRect {
+                    x,
+                    y,
+                    w,
+                    h,
+                    color,
+                    color2,
+                    angle_deg,
+                    corner_radius,
+                    border_width,
+                    border_color,
+                } => {
+                    let dir = gradient_direction(*angle_deg);
+                    SdfRect {
+                        x: *x,
+                        y: *y,
+                        w: *w,
+                        h: *h,
+                        color: *color,
+                        color2: *color2,
+                        gradient: [dir[0], dir[1], 1.0, 0.0],
+                        corner_radius: *corner_radius,
+                        border_width: *border_width,
+                        border_color: *border_color,
+                    }
                 }
-                let hw = w / 2.0;
-                let hh = h / 2.0;
-                let params = [hw, hh, *corner_radius, *border_width];
+                _ => continue,
+            };
 
-                let base = self.sdf_vertices.len() as u32;
-                self.sdf_vertices.extend_from_slice(&[
-                    RectSdfVertex {
-                        position: [*x, *y],
-                        uv: [-1.0, -1.0],
-                        color: *color,
-                        rect_params: params,
-                        border_color: *border_color,
-                    },
-                    RectSdfVertex {
-                        position: [x + w, *y],
-                        uv: [1.0, -1.0],
-                        color: *color,
-                        rect_params: params,
-                        border_color: *border_color,
-                    },
-                    RectSdfVertex {
-                        position: [x + w, y + h],
-                        uv: [1.0, 1.0],
-                        color: *color,
-                        rect_params: params,
-                        border_color: *border_color,
-                    },
-                    RectSdfVertex {
-                        position: [*x, y + h],
-                        uv: [-1.0, 1.0],
-                        color: *color,
-                        rect_params: params,
-                        border_color: *border_color,
-                    },
-                ]);
-                self.sdf_indices.extend_from_slice(&[
-                    base,
-                    base + 1,
-                    base + 2,
-                    base + 2,
-                    base + 3,
-                    base,
-                ]);
+            if outside_viewport(viewport, rect.x, rect.y, rect.w, rect.h) {
+                culled += 1;
+                continue;
             }
+            emit_sdf_rect(&mut self.sdf_vertices, &mut self.sdf_indices, &rect);
         }
 
         self.sdf_index_count = self.sdf_indices.len() as u32;

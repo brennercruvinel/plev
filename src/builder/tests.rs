@@ -311,6 +311,43 @@ mod tests {
     }
 
     #[test]
+    fn bg_linear_emits_gradient_rect() {
+        let el = div()
+            .w(100.0)
+            .h(50.0)
+            .rounded(8.0)
+            .bg_linear([1.0, 0.0, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0], 45.0);
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 1);
+        let SceneNode::GradientRect {
+            color,
+            color2,
+            angle_deg,
+            corner_radius,
+            ..
+        } = &nodes[0]
+        else {
+            panic!("Expected GradientRect, got {:?}", &nodes[0]);
+        };
+        assert_eq!(*color, [1.0, 0.0, 0.0, 1.0]);
+        assert_eq!(*color2, [0.0, 0.0, 1.0, 1.0]);
+        assert_eq!(*angle_deg, 45.0);
+        assert_eq!(*corner_radius, 8.0);
+    }
+
+    #[test]
+    fn bg_linear_takes_precedence_over_bg() {
+        let el = div()
+            .w(100.0)
+            .h(50.0)
+            .bg("blue")
+            .bg_linear("red", "green", 0.0);
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 1);
+        assert!(matches!(&nodes[0], SceneNode::GradientRect { .. }));
+    }
+
+    #[test]
     fn border_bottom_emits_thin_rect() {
         let el = div().w(200.0).h(40.0).border_bottom(1.0, "gray");
         let nodes = el.render(&mut test_cx());

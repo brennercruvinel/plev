@@ -206,6 +206,85 @@ fn rounded_rect(x: f32, y: f32, w: f32, h: f32) -> SceneNode {
 }
 
 // ---------------------------------------------------------------------------
+// Gradient brush
+// ---------------------------------------------------------------------------
+
+#[test]
+fn gradient_rect_vertices_carry_both_colors_and_direction() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(SceneNode::GradientRect {
+        x: 10.0,
+        y: 20.0,
+        w: 100.0,
+        h: 50.0,
+        color: [1.0, 0.0, 0.0, 1.0],
+        color2: [0.0, 0.0, 1.0, 1.0],
+        angle_deg: 90.0,
+        corner_radius: 6.0,
+        border_width: 0.0,
+        border_color: [0.0; 4],
+    });
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(layer.sdf_vertices.len(), 4);
+    for v in &layer.sdf_vertices {
+        assert_eq!(v.color, [1.0, 0.0, 0.0, 1.0]);
+        assert_eq!(v.color2, [0.0, 0.0, 1.0, 1.0]);
+        assert!(v.gradient[2] > 0.0, "gradient must be enabled");
+        // 90 degrees points right in screen space
+        assert!((v.gradient[0] - 1.0).abs() < 1e-5);
+        assert!(v.gradient[1].abs() < 1e-5);
+    }
+}
+
+#[test]
+fn solid_rounded_rect_has_gradient_disabled() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(rounded_rect(0.0, 0.0, 50.0, 50.0));
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    for v in &layer.sdf_vertices {
+        assert_eq!(v.gradient, [0.0; 4]);
+        assert_eq!(v.color2, v.color);
+    }
+}
+
+#[test]
+fn gradient_direction_follows_css_convention() {
+    let up = gradient_direction(0.0);
+    assert!(up[0].abs() < 1e-6 && (up[1] + 1.0).abs() < 1e-6);
+    let right = gradient_direction(90.0);
+    assert!((right[0] - 1.0).abs() < 1e-6 && right[1].abs() < 1e-6);
+    let down = gradient_direction(180.0);
+    assert!(down[0].abs() < 1e-6 && (down[1] - 1.0).abs() < 1e-6);
+}
+
+#[test]
+fn gradient_rect_participates_in_culling_and_dirty_tracking() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(SceneNode::GradientRect {
+        x: -500.0,
+        y: 0.0,
+        w: 100.0,
+        h: 50.0,
+        color: [1.0; 4],
+        color2: [0.0, 0.0, 0.0, 1.0],
+        angle_deg: 0.0,
+        corner_radius: 0.0,
+        border_width: 0.0,
+        border_color: [0.0; 4],
+    });
+    comp.resolve_scene((800.0, 600.0));
+    assert_eq!(comp.stats().nodes_culled, 1);
+    assert_eq!(comp.stats().sdf_vertices, 0);
+}
+
+// ---------------------------------------------------------------------------
 // Viewport culling
 // ---------------------------------------------------------------------------
 

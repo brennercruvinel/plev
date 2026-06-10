@@ -81,9 +81,29 @@ pub struct BorderConfig {
     pub color: Color,
 }
 
+/// 2-stop linear gradient background (see `Element::bg_linear`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct LinearGradient {
+    pub from: Color,
+    pub to: Color,
+    /// CSS-style angle in degrees (0 = `from` at the bottom, clockwise).
+    pub angle_deg: f32,
+}
+
+/// Analytic drop shadow (see `Element::shadow_drop`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DropShadow {
+    pub blur: f32,
+    pub offset: [f32; 2],
+    pub color: Color,
+}
+
 #[derive(Clone, Debug)]
 pub struct Style {
     pub bg: Option<Color>,
+    pub bg_gradient: Option<LinearGradient>,
+    pub drop_shadow: Option<DropShadow>,
+    pub clip_children: bool,
     pub text_color: Color,
     pub corner_radius: f32,
     pub shadow: f32,
@@ -102,6 +122,9 @@ impl Default for Style {
     fn default() -> Self {
         Style {
             bg: None,
+            bg_gradient: None,
+            drop_shadow: None,
+            clip_children: false,
             text_color: Color::WHITE,
             corner_radius: 0.0,
             shadow: 0.0,

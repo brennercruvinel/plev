@@ -20,6 +20,22 @@ pub enum SceneNode {
         border_width: f32,
         border_color: [f32; 4],
     },
+    /// Rounded rect filled with a 2-stop linear gradient. Rendered by the
+    /// same SDF pipeline as `RoundedRect` (use radius 0 for plain rects).
+    GradientRect {
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        color: [f32; 4],
+        color2: [f32; 4],
+        /// CSS-style angle in degrees: 0 = first stop at the bottom,
+        /// 90 = first stop at the left, clockwise.
+        angle_deg: f32,
+        corner_radius: f32,
+        border_width: f32,
+        border_color: [f32; 4],
+    },
     Text {
         key: TextNodeKey,
         x: f32,
@@ -115,6 +131,36 @@ impl SceneNode {
                 for c in color {
                     c.to_bits().hash(&mut h);
                 }
+                corner_radius.to_bits().hash(&mut h);
+                border_width.to_bits().hash(&mut h);
+                for c in border_color {
+                    c.to_bits().hash(&mut h);
+                }
+            }
+            SceneNode::GradientRect {
+                x,
+                y,
+                w,
+                h: rh,
+                color,
+                color2,
+                angle_deg,
+                corner_radius,
+                border_width,
+                border_color,
+            } => {
+                4u8.hash(&mut h);
+                x.to_bits().hash(&mut h);
+                y.to_bits().hash(&mut h);
+                w.to_bits().hash(&mut h);
+                rh.to_bits().hash(&mut h);
+                for c in color {
+                    c.to_bits().hash(&mut h);
+                }
+                for c in color2 {
+                    c.to_bits().hash(&mut h);
+                }
+                angle_deg.to_bits().hash(&mut h);
                 corner_radius.to_bits().hash(&mut h);
                 border_width.to_bits().hash(&mut h);
                 for c in border_color {

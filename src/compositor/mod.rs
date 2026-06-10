@@ -8,11 +8,11 @@ mod vertex;
 #[cfg(test)]
 mod tests;
 
-pub use drawing::RoundedRectParams;
+pub use drawing::{GradientRectParams, RoundedRectParams};
 pub use layer::{Layer, LayerEffect, LayerId};
 pub use scene::{SceneNode, TextNodeKey};
 pub use stats::RenderStats;
-pub use vertex::{QuadVertex, RectSdfVertex};
+pub use vertex::{QuadVertex, RectSdfVertex, gradient_direction};
 
 /// GPU resources needed for layer texture resolution and compositing.
 pub struct ResolveResources<'a> {

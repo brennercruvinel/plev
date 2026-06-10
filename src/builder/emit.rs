@@ -69,16 +69,30 @@ fn emit_div(
     out: &mut Vec<SceneNode>,
 ) {
     let has_bg = element.style.bg.is_some() || intent_color.is_some();
+    let has_gradient = element.style.bg_gradient.is_some();
     let has_border = element.style.border > 0.0;
     let has_radius = element.style.corner_radius > 0.0;
 
-    if (has_bg || has_border) && (b.width > 0.0 || b.height > 0.0) {
+    if (has_bg || has_gradient || has_border) && (b.width > 0.0 || b.height > 0.0) {
         let bg_color = intent_color
             .or(element.style.bg)
             .unwrap_or(crate::color::Color::TRANSPARENT)
             .to_array();
 
-        if has_radius || has_border {
+        if let Some(gradient) = element.style.bg_gradient {
+            out.push(SceneNode::GradientRect {
+                x: b.x,
+                y: b.y,
+                w: b.width,
+                h: b.height,
+                color: gradient.from.to_array(),
+                color2: gradient.to.to_array(),
+                angle_deg: gradient.angle_deg,
+                corner_radius: element.style.corner_radius,
+                border_width: element.style.border,
+                border_color: element.style.border_color.to_array(),
+            });
+        } else if has_radius || has_border {
             out.push(SceneNode::RoundedRect {
                 x: b.x,
                 y: b.y,
