@@ -105,6 +105,19 @@ impl GpuContext {
             .copied()
             .unwrap_or(surface_caps.formats[0]);
 
+        // Render-target format. WebGPU canvases only expose non-sRGB formats
+        // (bgra8unorm), which would skip the linear→sRGB encode-on-write that
+        // every shader and clear color assumes — colors come out ~2.5× darker
+        // (#303030 background measured (8,8,8)). Registering the sRGB variant
+        // as a view format and rendering into that view restores the encode.
+        // On desktop the surface is already sRGB and this is a no-op.
+        let render_format = surface_format.add_srgb_suffix();
+        let view_formats = if render_format != surface_format {
+            vec![render_format]
+        } else {
+            vec![]
+        };
+
         let width = size.width.max(1);
         let height = size.height.max(1);
 
@@ -129,7 +142,7 @@ impl GpuContext {
             height,
             present_mode,
             alpha_mode: surface_caps.alpha_modes[0],
-            view_formats: vec![],
+            view_formats,
             desired_maximum_frame_latency: 2,
         };
         surface.configure(&device, &surface_config);
@@ -200,7 +213,7 @@ impl GpuContext {
             &device,
             &quad_src,
             &projection_bind_group_layout,
-            surface_format,
+            render_format,
             config.msaa_samples,
         );
 
@@ -212,7 +225,7 @@ impl GpuContext {
             &device,
             &sdf_src,
             &projection_bind_group_layout,
-            surface_format,
+            render_format,
             config.msaa_samples,
         );
 
@@ -225,7 +238,7 @@ impl GpuContext {
             &device,
             &shadow_src,
             &projection_bind_group_layout,
-            surface_format,
+            render_format,
             config.msaa_samples,
         );
 
@@ -238,7 +251,7 @@ impl GpuContext {
             &text_src,
             &projection_bind_group_layout,
             &text_bind_group_layout,
-            surface_format,
+            render_format,
             config.msaa_samples,
         );
 
@@ -276,7 +289,7 @@ impl GpuContext {
             &image_src,
             &projection_bind_group_layout,
             &image_bind_group_layout,
-            surface_format,
+            render_format,
             config.msaa_samples,
         );
 
@@ -329,7 +342,7 @@ impl GpuContext {
             &comp_src,
             &composite_bind_group_layout,
             &opacity_bind_group_layout,
-            surface_format,
+            render_format,
         );
 
         #[cfg(feature = "hot-reload")]
@@ -342,7 +355,7 @@ impl GpuContext {
             &backdrop_src,
             &projection_bind_group_layout,
             &composite_bind_group_layout,
-            surface_format,
+            render_format,
             config.msaa_samples,
         );
 

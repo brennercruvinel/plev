@@ -42,9 +42,7 @@ pub fn render_frame(
         }
         Err(_) => return,
     };
-    let surface_view = output
-        .texture
-        .create_view(&wgpu::TextureViewDescriptor::default());
+    let surface_view = gpu.surface_render_view(&output);
 
     // Resolve compositor (upload dirty layers to GPU)
     compositor.resolve(&plev::compositor::ResolveResources {

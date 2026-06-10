@@ -244,9 +244,7 @@ impl DemoApp {
                 return;
             }
         };
-        let surface_view = output
-            .texture
-            .create_view(&plev::wgpu::TextureViewDescriptor::default());
+        let surface_view = gpu.surface_render_view(&output);
 
         text_system.begin_frame();
 

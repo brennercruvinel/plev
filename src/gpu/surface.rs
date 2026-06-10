@@ -68,6 +68,14 @@ impl GpuContext {
             .copied()
             .unwrap_or(caps.formats[0]);
         self.surface_config.format = format;
+        // Mirror GpuContext::new_with_config: render into an sRGB view even
+        // when the surface format itself can't be sRGB.
+        let render_format = format.add_srgb_suffix();
+        self.surface_config.view_formats = if render_format != format {
+            vec![render_format]
+        } else {
+            vec![]
+        };
         self.surface_config.alpha_mode = caps.alpha_modes[0];
 
         surface.configure(&self.device, &self.surface_config);
@@ -108,7 +116,25 @@ impl GpuContext {
         }
     }
 
+    /// The format render passes target. This is the sRGB *view* format when
+    /// the surface itself is non-sRGB (WebGPU canvas), so pipelines, layer
+    /// textures and the surface view all encode linear→sRGB on write.
     pub fn surface_format(&self) -> wgpu::TextureFormat {
-        self.surface_config.format
+        self.surface_config
+            .view_formats
+            .first()
+            .copied()
+            .unwrap_or(self.surface_config.format)
+    }
+
+    /// Create the view render passes must target. Plain
+    /// `texture.create_view(&Default::default())` inherits the texture's own
+    /// (possibly non-sRGB) format and silently skips gamma encoding — always
+    /// go through here for surface render targets.
+    pub fn surface_render_view(&self, output: &wgpu::SurfaceTexture) -> wgpu::TextureView {
+        output.texture.create_view(&wgpu::TextureViewDescriptor {
+            format: Some(self.surface_format()),
+            ..Default::default()
+        })
     }
 }

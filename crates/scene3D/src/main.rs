@@ -71,9 +71,7 @@ impl App {
             }
         };
 
-        let view = output
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
+        let view = gpu.surface_render_view(&output);
         let w = gpu.surface_config.width as f32;
         let h = gpu.surface_config.height as f32;
         let aspect = w / h;

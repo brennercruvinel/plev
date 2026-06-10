@@ -33,9 +33,7 @@ pub fn render_frame(
         }
         Err(_) => return,
     };
-    let surface_view = output
-        .texture
-        .create_view(&wgpu::TextureViewDescriptor::default());
+    let surface_view = gpu.surface_render_view(&output);
 
     compositor.resolve(&plev::compositor::ResolveResources {
         device: &gpu.device,

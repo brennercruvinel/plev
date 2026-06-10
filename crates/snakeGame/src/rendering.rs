@@ -58,9 +58,7 @@ impl SnakeApp {
             }
         };
 
-        let surface_view = output
-            .texture
-            .create_view(&plev::wgpu::TextureViewDescriptor::default());
+        let surface_view = gpu.surface_render_view(&output);
         let w = gpu.surface_config.width as f32;
         let h = gpu.surface_config.height as f32;
 
