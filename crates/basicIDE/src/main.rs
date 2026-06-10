@@ -17,6 +17,7 @@ mod components;
 mod renderer;
 mod theme;
 mod views;
+mod watcher;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -43,6 +44,8 @@ const LOG_LIMIT: usize = 100;
 /// Events injected into the winit loop from background threads.
 enum AppEvent {
     Git(GitEvent),
+    /// The worktree or `.git` changed on disk (debounced).
+    FsChange,
 }
 
 // ---------------------------------------------------------------------------
@@ -79,6 +82,8 @@ struct App {
     scale_factor: f64,
 
     git: GitClient,
+    /// Keeps the OS file watcher alive (`None` when watching failed).
+    _fs_watcher: Option<watcher::FsWatcher>,
     diff_target: Option<DiffTarget>,
     /// Last log/branches payloads — the stacks panel needs both.
     log_cache: Vec<git_backend::Commit>,
@@ -91,7 +96,7 @@ struct App {
 }
 
 impl App {
-    fn new(git: GitClient) -> Self {
+    fn new(git: GitClient, fs_watcher: Option<watcher::FsWatcher>) -> Self {
         let mut workspace = WorkspaceView::new(1280.0, 800.0);
         workspace.repo_label = git
             .workdir()
@@ -106,6 +111,7 @@ impl App {
             cursor_pos: (0.0, 0.0),
             scale_factor: 1.0,
             git,
+            _fs_watcher: fs_watcher,
             diff_target: None,
             log_cache: Vec::new(),
             branch_cache: Vec::new(),
@@ -346,6 +352,13 @@ impl ApplicationHandler<AppEvent> for App {
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: AppEvent) {
         match event {
             AppEvent::Git(git_event) => self.apply_git_event(git_event),
+            AppEvent::FsChange => {
+                // Something changed on disk: reload status/log/branches.
+                // The resulting events invalidate the scene when applied.
+                self.git.send(GitCommand::Refresh {
+                    log_limit: LOG_LIMIT,
+                });
+            }
         }
     }
 
@@ -529,6 +542,16 @@ fn main() {
         log_limit: LOG_LIMIT,
     });
 
-    let mut app = App::new(git);
+    // Watch worktree + .git so external changes (editor saves, CLI
+    // commits) refresh the UI automatically. The app still works if the
+    // platform watcher fails — it just won't auto-refresh.
+    let fs_proxy = event_loop.create_proxy();
+    let fs_watcher = watcher::spawn(git.workdir(), move || {
+        let _ = fs_proxy.send_event(AppEvent::FsChange);
+    })
+    .inspect_err(|e| log::warn!("file watcher disabled: {e}"))
+    .ok();
+
+    let mut app = App::new(git, fs_watcher);
     event_loop.run_app(&mut app).unwrap();
 }

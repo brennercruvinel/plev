@@ -486,6 +486,7 @@ dependencies = [
  "env_logger",
  "git_backend",
  "log",
+ "notify",
  "plev",
  "pollster",
  "wgpu",
