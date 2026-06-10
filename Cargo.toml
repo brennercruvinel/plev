@@ -9,6 +9,7 @@ members = [
     "crates/snakeGame",
     "crates/basicIDE",
     "crates/editor_core",
+    "crates/git_backend",
 ]
 
 [package]

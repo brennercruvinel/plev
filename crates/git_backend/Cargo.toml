@@ -1,0 +1,16 @@
+[package]
+name = "git_backend"
+version = "0.1.0"
+edition = "2024"
+description = "Git backend for plev apps: gix for reads, git CLI for the rest. No UI dependencies."
+
+[dependencies]
+# Read-side (open/log/branches/HEAD). Mutations and worktree status/diff go
+# through the git CLI (see ADR notes in repo.rs). Minimal feature set: a
+# hash algorithm is mandatory, "revision" covers rev_walk specs and
+# "parallel" swaps internal Rc for Arc so Repository can move into the
+# GitClient worker thread.
+gix = { version = "0.84", default-features = false, features = ["sha1", "revision", "parallel"] }
+
+[dev-dependencies]
+tempfile = "3"
