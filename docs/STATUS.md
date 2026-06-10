@@ -5,10 +5,11 @@
 
 ## Resumo
 
-- **Branch:** `main` · **Testes:** 980 passando / 0 falhando · **Build:** limpo
+- **Branch:** `main` · **Testes:** 1020+ passando / 0 falhando · **Build:** limpo (desktop e wasm32)
 - **Desde o commit base:** ~85 commits, 183 arquivos, +31k/−2.3k linhas
-- **Apps que rodam:** `showcase` (galeria de widgets), `basicIDE` (git client
-  real), `editor_demo`, `visual_demo`
+- **Apps que rodam:** `showcase` (galeria de widgets — desktop E browser),
+  `basicIDE` (git client real), `editor_demo`, `visual_demo`
+- **Web:** `trunk build --release` → servir `dist/` (WebGPU; Chrome 113+)
 
 ## Linguagem visual estabelecida (HOFF)
 
@@ -44,7 +45,7 @@ vivo, não do CSS estático):
 - **`crates/git_backend`:** status/log/diff/stage/commit via gix+CLI; basicIDE
   sem mocks, watcher, dados reais
 
-### Correções de raiz (esta sessão)
+### Correções de raiz (sessões anteriores)
 1. **Tipografia quebrada** → Inter 500/600/700 ausentes faziam fallback para
    fontes do sistema (+35% advance). Embarcados todos os pesos; depois trocado
    o default para **Rubik** (a fonte da ref)
@@ -57,6 +58,34 @@ vivo, não do CSS estático):
    clareando tudo ~2,5× (fundo medido 118 quando o token é 48). Corrigido:
    `srgb_to_linear` nos shaders + `to_linear_array` nos clear colors. Fundo
    medido **118 → 50**. Validado por medição de pixel, não no olho
+
+### Responsividade + multiplataforma (esta sessão)
+1. **Texto vazava da forma** → basicIDE dimensionava TODAS as formas com
+   heurística `chars × 0.58em` (erro real −10% a +21%) e desenhava com shaping
+   Rubik 600 por cima. Morta a heurística: `hoff::measure_text(text,
+   &TextStyle)` via `TextMeasurer` (shaping real) e **regra de ouro**: um único
+   `TextStyle` por label, usado para medir E desenhar
+   (`TextNodeKey::from_style`). Buraco latente análogo no builder
+   (letter-spacing medido 0 / desenhado com spacing) fechado na raiz
+2. **Elementos não se distribuíam na janela** → os apps não usavam o flex do
+   engine; tudo era posição manual com constantes. Showcase agora é
+   content-driven: forms empilha/expande, cards calcula colunas pelo espaço e
+   estica (320–520), buttons quebra linha, caps de 460/560 removidos (+8
+   testes por viewport). basicIDE: largura desejada × efetiva (clamp deixou
+   de ser destrutivo). Engine: `width_percent`/`height_percent` no
+   `LayoutStyle`; App reaplica projeção lógica no resize (HiDPI)
+3. **Web (browser)** → showcase RODA no Chrome via WebGPU: init async de GPU
+   (`spawn_local` + proxy), entry wasm próprio (feature `web-entry` no engine),
+   `index.html` + `Trunk.toml` (`trunk build --release`; servir `dist/`).
+   Canvas acompanha resize do browser (ResizeObserver do winit)
+4. **Gamma no browser** → canvas WebGPU só aceita formato não-sRGB; o encode
+   na escrita era pulado e tudo saía ~2,5× mais escuro (fundo (8,8,8)).
+   Agora renderizamos numa **view sRGB** (`view_formats` +
+   `gpu.surface_render_view()`); desktop é no-op. Pixel web validado:
+   **(8,8,8) → (48,48,48)**, idêntico ao desktop
+5. **Touch → widgets** → toque primário sintetiza ponteiro no MESMO caminho
+   do mouse (`TouchPointerSynth`); todo widget atual responde a toque por
+   construção. Pré-requisito de iOS/Android cumprido
 
 ## Decisões registradas nesta sessão
 
@@ -78,14 +107,27 @@ vivo, não do CSS estático):
 ## O que falta (backlog priorizado)
 
 ### Visual / fidelidade
-- [ ] **Propagar `to_linear_array`** aos clear colors de `examples/visual_demo`
-      e `editor_demo` (ainda sRGB direto — aparecem mais claros)
-- [ ] **Auditar gamma em casos restantes** — confirmar que image atlas (sRGB) e
-      backdrop compõem certo após o fix; medir todas as seções do showcase
+- [x] ~~Propagar `to_linear_array` aos examples~~ (feito, commit 775e74b)
+- [x] ~~Auditar gamma em casos restantes~~ (web era o caso restante; corrigido)
+- [ ] **Subtítulo de página do showcase não quebra linha** — cortado à direita
+      em janela estreita (visto no browser a 700px); medir e wrappar
 - [ ] **Decisão de design:** manter grafite #303030 (fiel à ref) ou ir mais
       escuro #1A1A1A se o usuário preferir mais contraste — **aguarda o usuário**
 - [ ] Afinar estados (hover/active/focus) de todos os widgets contra a ref
 - [ ] Subpixel text + DPI de ponta a ponta (WS-A.4-5) — texto nítido em retina
+
+### Multiplataforma (rota viva)
+- [x] ~~Web: compilar + rodar showcase no browser~~ (WebGPU, Chrome 113+;
+      `trunk build --release` + servir `dist/`)
+- [ ] Web polish: favicon (404 no console), `Esc` não deve fechar o app no
+      browser, fallback WebGL (Safari/Firefox) se quisermos alcance
+- [ ] **Android** (rota mais curta): `rustup target add aarch64-linux-android`
+      + cargo-ndk; re-gate do arboard (não compila p/ mobile); task Gradle
+      rodando cargo-ndk → jniLibs; corrigir `android.app.lib_name` ("φ" →
+      "plev") no AndroidManifest
+- [ ] **iOS** (rota longa): entry point (bin ou staticlib+Xcode), safe areas
+      (hoje retorna zeros — UI colide com notch), assinatura
+- [ ] Teste em devices reais (touch já roteado para os widgets)
 
 ### Funcional (plano original, ainda pendente)
 - [ ] **Editor embutido no basicIDE** — clicar num arquivo abre o EditorView
