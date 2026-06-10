@@ -9,6 +9,10 @@ use plev::ui::widgets::{
 use super::{group_label, text};
 
 const COL_W: f32 = 320.0;
+/// Tab strip width: wide enough that the longest 14px label ("Appearance",
+/// ~78px) keeps generous horizontal breathing room inside its segment —
+/// the folgado pill the GOLDEN_SPEC calls for.
+const TAB_W: f32 = 384.0;
 const COL_GAP: f32 = 60.0;
 const ROW_H: f32 = 32.0;
 const LABEL_H: f32 = 24.0;
@@ -43,7 +47,10 @@ struct Layout {
 impl FormsSection {
     pub fn new(theme: &Theme) -> Self {
         Self {
-            tabs: Tabs::new(["Account", "Appearance", "Keybindings", "About"]),
+            // Three roomy segments: the reference keeps each label folgado
+            // inside its pill (GOLDEN_SPEC) — four 14px labels in 320px would
+            // overflow, so the strip below is widened to TAB_W to fit.
+            tabs: Tabs::new(["Account", "Appearance", "About"]),
             autosave: Checkbox::new(true).label("Autosave on focus loss"),
             telemetry: Checkbox::new(false).label("Share anonymous usage data"),
             locked: Checkbox::new(true)
@@ -69,8 +76,9 @@ impl FormsSection {
         let (x, y) = (content.x, content.y);
         let col_b = x + COL_W + COL_GAP;
 
-        // Column A: tabs, checkboxes, switches. HOFF tabs: 44px strip.
-        let tabs = Rect::new(x, y + LABEL_H, COL_W, 44.0);
+        // Column A: tabs, checkboxes, switches. HOFF tabs: 44px strip, widened
+        // to TAB_W so each label stays folgado inside its segment.
+        let tabs = Rect::new(x, y + LABEL_H, TAB_W, 44.0);
         let cb_y = tabs.y + tabs.h + GROUP_GAP + LABEL_H;
         let checkboxes = [
             Rect::new(x, cb_y, COL_W, ROW_H),
@@ -255,5 +263,39 @@ impl FormsSection {
         self.select.render(c, layout.select, theme);
         self.select
             .render_dropdown(c, overlay, layout.select, theme);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use plev::text::TextMeasurer;
+    use plev::theme::TypographyScale;
+
+    /// Every tab label must sit FOLGADO inside its segment: the GOLDEN_SPEC
+    /// flags cramped tabs as the broken state. We require at least 16px of
+    /// horizontal breathing room on each side (text centered in the segment).
+    #[test]
+    fn forms_tabs_keep_every_label_folgado() {
+        let theme = Theme::hoff();
+        let section = FormsSection::new(&theme);
+        // A representative content rect (matches the page layout origin).
+        let content = Rect::new(288.0, 80.0, 760.0, 700.0);
+        let layout = section.layout(content);
+        let rects = section.tabs.item_rects(layout.tabs);
+        let style = TypographyScale::hoff().base_2sm();
+
+        assert_eq!(rects.len(), section.tabs.labels.len());
+        for (label, rect) in section.tabs.labels.iter().zip(&rects) {
+            let (text_w, _) = TextMeasurer::measure_styled(label, &style, None);
+            let slack = rect.w - text_w;
+            assert!(
+                slack >= 32.0,
+                "tab '{label}' is cramped: segment {:.1}px holds {:.1}px of text ({:.1}px slack, need >=32)",
+                rect.w,
+                text_w,
+                slack
+            );
+        }
     }
 }
