@@ -5,10 +5,11 @@
 
 use super::workspace::ThemeMode;
 use crate::components::badge::{self, BadgeKind};
-use crate::components::button::{ButtonKind, ButtonSize, draw as draw_button};
+use crate::components::button::{ButtonKind, ButtonSize, draw as draw_button, width_for};
 use crate::components::hoff;
 use crate::theme::Theme;
 use plev::compositor::{Compositor, SceneNode, TextNodeKey};
+use plev::text::TextStyle;
 
 pub const HEADER_H: f32 = 68.0;
 const PAD_X: f32 = 12.0;
@@ -61,16 +62,20 @@ impl Header {
             color: theme.edge.to_array(),
         });
 
-        // App name — title (20/500) at .76.
+        // App name — title (20/500) at .76. One style measures AND draws,
+        // so the tag placed after the name never overlaps it.
+        let title_style = TextStyle::new(TITLE_SIZE)
+            .with_line_height(TITLE_LINE_H)
+            .with_weight(500);
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::new("basicIDE", TITLE_SIZE, TITLE_LINE_H, None).with_weight(500),
+            key: TextNodeKey::from_style("basicIDE", &title_style, None),
             x: x + PAD_X,
             y: (HEADER_H - TITLE_LINE_H) / 2.0,
             color: theme.text_active.to_array(),
         });
 
         // "plev" glass tag next to the name.
-        let name_w = hoff::text_width("basicIDE", TITLE_SIZE);
+        let name_w = hoff::measure_text("basicIDE", &title_style);
         badge::draw(
             compositor,
             theme,
@@ -86,9 +91,10 @@ impl Header {
         } else {
             format!("{repo_label} \u{00B7} {branch_label}")
         };
-        let center_w = hoff::text_width(&center, 14.0);
+        let center_style = TextStyle::new(14.0).with_line_height(14.0 * 1.4);
+        let center_w = hoff::measure_text(&center, &center_style);
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::new(&center, 14.0, 14.0 * 1.4, None).with_weight(400),
+            key: TextNodeKey::from_style(&center, &center_style, None),
             x: x + (w - center_w) / 2.0,
             y: (HEADER_H - 14.0 * 1.4) / 2.0,
             color: theme.text_muted.to_array(),
@@ -99,7 +105,8 @@ impl Header {
             ThemeMode::Dark => "Light",
             ThemeMode::Light => "Dark",
         };
-        let btn_w = hoff::text_width(mode_label, 14.0) + 16.0 * 2.0;
+        // Same real measurement draw_button uses (Sm pads 16).
+        let btn_w = width_for(mode_label, ButtonSize::Sm);
         let btn_x = vw - PAD_X - btn_w;
         let btn_y = (HEADER_H - 36.0) / 2.0;
         self.theme_btn_rect = draw_button(

@@ -208,8 +208,11 @@ impl WorkspaceView {
                 OverlayKind::Tooltip { text } => {
                     // HOFF tooltip: pad 5 12 3, bg #262626, radius 8,
                     // caption-r at $text-secondary, shadow 0 1.5 2 rgba(24,24,24,.15).
+                    // One caption-r style (12/1.33/400) measures the bubble
+                    // and draws the text, so long tips never leak out.
                     let line_h = 12.0 * 1.33;
-                    let tip_w = hoff::text_width(text, 12.0) + 24.0;
+                    let tip_style = plev::text::TextStyle::new(12.0).with_line_height(line_h);
+                    let tip_w = hoff::measure_text(text, &tip_style) + 24.0;
                     let tip_h = line_h + 8.0;
                     hoff::shadow(
                         compositor,
@@ -237,7 +240,7 @@ impl WorkspaceView {
                     compositor.push_to_layer(
                         layer_id,
                         SceneNode::Text {
-                            key: plev::compositor::TextNodeKey::new(text, 12.0, line_h, None),
+                            key: plev::compositor::TextNodeKey::from_style(text, &tip_style, None),
                             x: overlay.x + 12.0,
                             y: overlay.y + 5.0,
                             color: theme.text_secondary.to_array(),

@@ -6,6 +6,7 @@
 use super::hoff;
 use crate::theme::Theme;
 use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use plev::text::TextStyle;
 
 /// Button visual style variant.
 // Catálogo de design: variantes ainda sem uso nas views ficam disponíveis.
@@ -51,6 +52,21 @@ const FONT_SIZE: f32 = 14.0;
 const LINE_H: f32 = 14.0 * 1.4;
 const WEIGHT: u16 = 600;
 
+/// The one label style — used for BOTH measuring and drawing so the pill
+/// is always sized by the same shaping that rasterizes the label.
+fn label_style() -> TextStyle {
+    TextStyle::new(FONT_SIZE)
+        .with_line_height(LINE_H)
+        .with_weight(WEIGHT)
+}
+
+/// Width the pill takes for `label` at `size` — the exact measurement
+/// `draw_to_layer` uses, exposed so callers (modal, header) can position
+/// buttons without re-deriving widths from heuristics.
+pub fn width_for(label: &str, size: ButtonSize) -> f32 {
+    hoff::measure_text(label, &label_style()) + size.pad_x() * 2.0
+}
+
 /// Draw a button on the default layer and return its bounding box.
 pub fn draw(
     compositor: &mut Compositor,
@@ -93,7 +109,8 @@ pub fn draw_to_layer(
 ) -> (f32, f32, f32, f32) {
     let btn_h = size.height();
     let pad_x = size.pad_x();
-    let btn_w = hoff::text_width(label, FONT_SIZE) + pad_x * 2.0;
+    let style = label_style();
+    let btn_w = hoff::measure_text(label, &style) + pad_x * 2.0;
     let radius = theme.radius_pill.min(btn_h / 2.0);
     let hovered = hovered && !disabled;
 
@@ -171,7 +188,7 @@ pub fn draw_to_layer(
     compositor.push_to_layer(
         layer,
         SceneNode::Text {
-            key: TextNodeKey::new(label, FONT_SIZE, LINE_H, None).with_weight(WEIGHT),
+            key: TextNodeKey::from_style(label, &style, None),
             x: x + pad_x,
             y: y + (btn_h - LINE_H) / 2.0,
             color: text_col,
@@ -179,4 +196,73 @@ pub fn draw_to_layer(
     );
 
     (x, y, btn_w, btn_h)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use plev::compositor::LayerId;
+    use plev::text::TextMeasurer;
+
+    /// Regression for the "label leaks out of the pill" bug: the drawn
+    /// shape must be at least the REAL measured label width plus both
+    /// paddings. With the old per-char heuristic, "Commit" @14/600
+    /// (real ~53.7px, estimated 48.7px) overflowed a Md pill.
+    #[test]
+    fn pill_is_wide_enough_for_real_shaped_label() {
+        let mut c = Compositor::new();
+        c.begin_frame();
+        let (_, _, w, _) = draw(
+            &mut c,
+            &crate::theme::DARK,
+            0.0,
+            0.0,
+            "Commit",
+            ButtonKind::Glass,
+            ButtonSize::Md,
+            false,
+            false,
+        );
+        let (text_w, _) = TextMeasurer::measure_styled("Commit", &label_style(), None);
+        let pad = ButtonSize::Md.pad_x();
+        assert!(
+            w >= text_w + 2.0 * pad - 1e-3,
+            "pill width {w} must fit measured label {text_w} + 2*{pad} padding"
+        );
+        // And the drawn Text node must carry the same style we measured
+        // with (weight 600), or measurement != rendering.
+        let text_key = c
+            .layer(LayerId::DEFAULT)
+            .unwrap()
+            .nodes()
+            .iter()
+            .find_map(|n| match n {
+                SceneNode::Text { key, .. } => Some(key.clone()),
+                _ => None,
+            })
+            .expect("button must draw its label");
+        assert_eq!(text_key.font_weight, WEIGHT);
+    }
+
+    /// `width_for` must agree exactly with the width `draw` produces —
+    /// modal/header position buttons with it.
+    #[test]
+    fn width_for_matches_drawn_width() {
+        for size in [ButtonSize::Sm, ButtonSize::Md, ButtonSize::Lg] {
+            let mut c = Compositor::new();
+            c.begin_frame();
+            let (_, _, w, _) = draw(
+                &mut c,
+                &crate::theme::DARK,
+                0.0,
+                0.0,
+                "Discard changes",
+                ButtonKind::Danger,
+                size,
+                false,
+                false,
+            );
+            assert_eq!(w, width_for("Discard changes", size));
+        }
+    }
 }

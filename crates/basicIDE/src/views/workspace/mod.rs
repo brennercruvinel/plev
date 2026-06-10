@@ -23,8 +23,17 @@ const RIGHT_MIN_W: f32 = 220.0;
 
 /// Three-panel workspace layout — mirrors basicIDE's MainViewport.
 pub struct WorkspaceView {
+    /// EFFECTIVE left panel width used by layout/render — re-derived from
+    /// `left_w_desired` on every resize/drag (clamped to available space).
     pub left_w: f32,
+    /// EFFECTIVE right panel width (see `left_w`).
     pub right_w: f32,
+    /// Width the USER wants for the left panel (default or last drag).
+    /// Never overwritten by window shrinking: growing the window back
+    /// restores the panel to this width.
+    left_w_desired: f32,
+    /// Width the user wants for the right panel (see `left_w_desired`).
+    right_w_desired: f32,
     pub theme_mode: ThemeMode,
 
     // Chrome
@@ -123,9 +132,11 @@ impl WorkspaceView {
     pub fn new(vw: f32, vh: f32) -> Self {
         // Overlay layer is created lazily on first render via `ensure_overlay_layer`.
         // Use a sentinel LayerId so the default layer is never accidentally used.
-        Self {
+        let mut view = Self {
             left_w: LEFT_DEFAULT_W,
             right_w: RIGHT_DEFAULT_W,
+            left_w_desired: LEFT_DEFAULT_W,
+            right_w_desired: RIGHT_DEFAULT_W,
             theme_mode: ThemeMode::Dark,
             sidebar: Sidebar::new(),
             header: Header::new(),
@@ -155,7 +166,9 @@ impl WorkspaceView {
             branch_label: String::new(),
             vw,
             vh,
-        }
+        };
+        view.apply_panel_widths();
+        view
     }
 
     /// Takes the git operations queued by interaction handlers since the
@@ -186,11 +199,13 @@ impl WorkspaceView {
         };
     }
 
-    /// Update window dimensions.
+    /// Update window dimensions. Effective panel widths are re-derived
+    /// from the user-desired ones, so shrinking the window squeezes the
+    /// panels and growing it back restores them.
     pub fn resize(&mut self, vw: f32, vh: f32) {
         self.vw = vw;
         self.vh = vh;
-        self.clamp_panel_widths();
+        self.apply_panel_widths();
     }
 
     /// Begin resizing the left panel. `cursor_x` is current cursor X.
@@ -212,29 +227,38 @@ impl WorkspaceView {
         self.dragging_right = false;
     }
 
-    /// Update panel widths based on cursor drag.
+    /// Update panel widths based on cursor drag. Dragging expresses user
+    /// intent: it rewrites the DESIRED width; the effective width is then
+    /// re-derived (clamped) like on any resize.
     pub fn update_drag(&mut self, cursor_x: f32) {
         let delta = cursor_x - self.drag_start_x;
         if self.dragging_left {
-            self.left_w = (self.drag_start_w + delta).max(LEFT_MIN_W);
-            self.clamp_panel_widths();
+            self.left_w_desired = (self.drag_start_w + delta).max(LEFT_MIN_W);
+            self.apply_panel_widths();
         } else if self.dragging_right {
-            self.right_w = (self.drag_start_w - delta).max(RIGHT_MIN_W);
-            self.clamp_panel_widths();
+            self.right_w_desired = (self.drag_start_w - delta).max(RIGHT_MIN_W);
+            self.apply_panel_widths();
         }
     }
 
-    fn clamp_panel_widths(&mut self) {
+    /// Derive the EFFECTIVE panel widths from the desired ones:
+    /// `effective = clamp(desired, available space)`, computed fresh each
+    /// time. The desired widths are never touched here — the old code
+    /// shrank `left_w`/`right_w` in place on every window shrink and could
+    /// never grow them back (destructive loss of the user's layout).
+    fn apply_panel_widths(&mut self) {
         let middle_min = 200.0;
         let usable_w = self.vw - SIDEBAR_W;
         let available = usable_w - middle_min;
-        if self.left_w + self.right_w > available {
-            let ratio = available / (self.left_w + self.right_w);
-            self.left_w *= ratio;
-            self.right_w *= ratio;
+        let mut left = self.left_w_desired;
+        let mut right = self.right_w_desired;
+        if left + right > available {
+            let ratio = available / (left + right);
+            left *= ratio;
+            right *= ratio;
         }
-        self.left_w = self.left_w.max(LEFT_MIN_W);
-        self.right_w = self.right_w.max(RIGHT_MIN_W);
+        self.left_w = left.max(LEFT_MIN_W);
+        self.right_w = right.max(RIGHT_MIN_W);
     }
 
     /// Handle mouse scroll for the hovered panel. Returns `true` when an

@@ -30,7 +30,9 @@ pub fn draw(
     });
 
     if let Some(text) = badge_text {
-        let badge_w = super::hoff::text_width(text, 12.0) + 16.0;
+        // Real chip footprint (same measurement badge::draw uses), so the
+        // right-aligned chip never overruns the panel edge.
+        let badge_w = badge::tag_width(text);
         badge::draw(
             compositor,
             theme,

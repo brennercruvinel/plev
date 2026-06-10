@@ -4,6 +4,7 @@
 //! filename in base-2sm at rgba($n2,.56) (.76 selected), status letter in
 //! the HOFF accent set, staged marker = 8px #55F08B "new" dot.
 
+use crate::components::badge::{self, BadgeKind};
 use crate::components::hoff;
 use crate::theme::{StatusColors, Theme};
 use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
@@ -163,27 +164,15 @@ impl UnassignedView {
             y: y + (HEADER_H - 20.0 * 1.2) / 2.0,
             color: theme.text_default.to_array(),
         });
+        // Count chip — the Tag badge recipe; `tag_width` is the same real
+        // measurement `badge::draw` uses, so the right-aligned chip always
+        // fits its number.
         let count_str = self.files.len().to_string();
-        let chip_w = hoff::text_width(&count_str, 12.0) + 16.0;
+        let chip_w = badge::tag_width(&count_str);
         let chip_h = 22.0;
         let chip_x = x + w - PAD - chip_w;
         let chip_y = y + (HEADER_H - chip_h) / 2.0;
-        compositor.push(SceneNode::RoundedRect {
-            x: chip_x,
-            y: chip_y,
-            w: chip_w,
-            h: chip_h,
-            color: theme.chip.to_array(),
-            corner_radius: theme.radius_tooltip,
-            border_width: 0.0,
-            border_color: [0.0; 4],
-        });
-        compositor.push(SceneNode::Text {
-            key: TextNodeKey::new(&count_str, 12.0, 12.0 * 1.33, None).with_weight(600),
-            x: chip_x + 8.0,
-            y: chip_y + (chip_h - 12.0 * 1.33) / 2.0,
-            color: theme.text_default.to_array(),
-        });
+        badge::draw(compositor, theme, chip_x, chip_y, &count_str, BadgeKind::Tag);
 
         // File list — card rows inset by the 12px body padding. Rows are
         // clipped to the list viewport so scrolled rows never paint over

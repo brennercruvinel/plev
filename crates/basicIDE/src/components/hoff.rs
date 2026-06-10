@@ -5,6 +5,7 @@
 use crate::theme::ShadowSpec;
 use plev::color::Color;
 use plev::compositor::{Compositor, LayerId, SceneNode};
+use plev::text::{TextMeasurer, TextStyle};
 
 /// Push one CSS-like box-shadow layer. `spread` is emulated by
 /// expanding/shrinking the casting rect (plev shadows have no spread).
@@ -176,9 +177,16 @@ pub fn glass(
     }
 }
 
-/// Rough text width estimate for Inter at `font_size` (used to size pills).
-pub fn text_width(text: &str, font_size: f32) -> f32 {
-    text.chars().count() as f32 * font_size * 0.58
+/// Real single-line text width via the engine's shaper
+/// ([`plev::text::TextMeasurer`]): same `FontSystem`, faces (Rubik default
+/// family) and cache as the rasterizer, so a shape sized with this never
+/// disagrees with the glyphs drawn on top of it.
+///
+/// Golden rule: build ONE [`TextStyle`] per label and use it BOTH here and
+/// in the draw call (`TextNodeKey::from_style` with the same style), so
+/// measurement == rendering by construction.
+pub fn measure_text(text: &str, style: &TextStyle) -> f32 {
+    TextMeasurer::measure_styled(text, style, None).0
 }
 
 /// Scrollbar thumb — 4px wide, rgba($n2,.25), rounded; no track.
@@ -368,6 +376,38 @@ mod tests {
             }
             other => panic!("expected fill RoundedRect, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn measure_text_uses_real_shaping_not_per_char_heuristic() {
+        // "Commit" at 14px weight 600 (the button label style). The old
+        // per-char heuristic (`chars * size * 0.58`) gave 48.72px; the real
+        // Rubik SemiBold shaping is ~53.7px (verified against the
+        // rasterizer's FontSystem). Sizing pills with the heuristic made
+        // labels overflow their shapes by up to ~10%.
+        let style = TextStyle::new(14.0).with_weight(600);
+        let measured = measure_text("Commit", &style);
+        let old_heuristic = "Commit".chars().count() as f32 * 14.0 * 0.58;
+        assert!(
+            (measured - old_heuristic).abs() > 1.0,
+            "measure_text must differ from the old heuristic: real {measured} vs heuristic {old_heuristic}"
+        );
+        assert!(
+            (50.0..60.0).contains(&measured),
+            "Commit @14/600 should shape to ~53.7px, got {measured}"
+        );
+    }
+
+    #[test]
+    fn measure_text_respects_font_weight() {
+        // Weight is part of the style: SemiBold advances are wider than
+        // Regular for the same string — the heuristic could not see this.
+        let regular = measure_text("MODIFIED", &TextStyle::new(14.0));
+        let semibold = measure_text("MODIFIED", &TextStyle::new(14.0).with_weight(600));
+        assert!(
+            semibold > regular,
+            "600 ({semibold}) must measure wider than 400 ({regular})"
+        );
     }
 
     #[test]

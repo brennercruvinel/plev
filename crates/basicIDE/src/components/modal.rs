@@ -5,7 +5,7 @@
 //! above the scrim, + the deep shadow stack + edge-light 1.5px
 //! rgba(255,255,255,.05) (mask 175deg -> 60%).
 
-use super::button::{ButtonKind, ButtonSize, draw_to_layer as draw_button};
+use super::button::{ButtonKind, ButtonSize, draw_to_layer as draw_button, width_for};
 use super::hoff;
 use crate::theme::{SHADOW_MODAL, Theme};
 use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
@@ -102,8 +102,10 @@ pub fn draw(
     // Buttons — 44px pills, right-aligned at the bottom.
     let btn_h = 44.0;
     let btn_area_y = y + MODAL_H - btn_h - PAD;
-    let confirm_w = hoff::text_width(confirm_label, 14.0) + 24.0 * 2.0;
-    let cancel_w = hoff::text_width(cancel_label, 14.0) + 24.0 * 2.0;
+    // Same real measurement `draw_button` uses internally, so the pills
+    // land exactly where these rects say they will.
+    let confirm_w = width_for(confirm_label, ButtonSize::Md);
+    let cancel_w = width_for(cancel_label, ButtonSize::Md);
     let confirm_x = x + MODAL_W - PAD - confirm_w;
     let cancel_x = confirm_x - BTN_GAP - cancel_w;
 

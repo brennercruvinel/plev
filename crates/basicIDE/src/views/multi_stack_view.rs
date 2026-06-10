@@ -11,6 +11,7 @@ use crate::components::hoff;
 use crate::theme::Theme;
 use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use plev::scroll::ScrollState;
+use plev::text::TextStyle;
 
 /// A commit in a stack.
 #[derive(Clone, Debug)]
@@ -255,9 +256,14 @@ impl MultiStackView {
                         .next()
                         .map(|c| c.to_uppercase().to_string())
                         .unwrap_or_default();
-                    let initial_w = hoff::text_width(&initial, 14.0);
+                    // One style measures the initial AND draws it, so it
+                    // sits centered in the 44px disc.
+                    let initial_style = TextStyle::new(14.0)
+                        .with_line_height(14.0)
+                        .with_weight(600);
+                    let initial_w = hoff::measure_text(&initial, &initial_style);
                     compositor.push(SceneNode::Text {
-                        key: TextNodeKey::new(&initial, 14.0, 14.0, None).with_weight(600),
+                        key: TextNodeKey::from_style(&initial, &initial_style, None),
                         x: avatar_x + (AVATAR_SIZE - initial_w) / 2.0,
                         y: avatar_y + (AVATAR_SIZE - 14.0) / 2.0,
                         color: theme.text_active.to_array(),
@@ -270,18 +276,23 @@ impl MultiStackView {
                     // Commit message — the card headline, like the HOFF post
                     // card's name: base-2 semibold (14/600) at text-primary
                     // (.95), the brightest line in the white/.76/.50 ramp.
-                    // Truncated to the column width and drawn WITHOUT a wrap
-                    // max (None) so a long message never spills onto a second
-                    // line and collides with the meta row below.
-                    let msg = truncate_to_width(&commit.message, text_w, 14.0);
+                    // Truncated to the column width with the SAME style it
+                    // is drawn with and rendered WITHOUT a wrap max (None)
+                    // so a long message never spills onto a second line and
+                    // collides with the meta row below.
+                    let msg_style = TextStyle::new(14.0)
+                        .with_line_height(14.0 * 1.4)
+                        .with_weight(600);
+                    let msg = truncate_to_width(&commit.message, text_w, &msg_style);
                     compositor.push(SceneNode::Text {
-                        key: TextNodeKey::new(&msg, 14.0, 14.0 * 1.4, None).with_weight(600),
+                        key: TextNodeKey::from_style(&msg, &msg_style, None),
                         x: text_x,
                         y: cy + PAD + 2.0,
                         color: theme.text_primary.to_array(),
                     });
 
                     // sha · author · time — caption-r at $text-tertiary.
+                    let meta_style = TextStyle::new(12.0).with_line_height(12.0 * 1.33);
                     let sha_display = commit.sha.get(..7).unwrap_or(&commit.sha);
                     let meta = truncate_to_width(
                         &format!(
@@ -289,10 +300,10 @@ impl MultiStackView {
                             sha_display, commit.author, commit.time_ago
                         ),
                         text_w,
-                        12.0,
+                        &meta_style,
                     );
                     compositor.push(SceneNode::Text {
-                        key: TextNodeKey::new(&meta, 12.0, 12.0 * 1.33, None).with_weight(400),
+                        key: TextNodeKey::from_style(&meta, &meta_style, None),
                         x: text_x,
                         y: cy + PAD + 2.0 + 14.0 * 1.4 + 4.0,
                         color: theme.text_tertiary.to_array(),
@@ -328,38 +339,81 @@ impl MultiStackView {
     }
 }
 
-/// Truncate `s` with an ellipsis so it fits on one line of `avail` px at
-/// `font_size`, using the same width estimate the layout uses elsewhere
-/// ([`hoff::text_width`]). Keeps commit rows strictly single-line.
-fn truncate_to_width(s: &str, avail: f32, font_size: f32) -> String {
-    if hoff::text_width(s, font_size) <= avail {
+/// Truncate `s` with an ellipsis so it fits on one line of `avail` px,
+/// measured with the SAME [`TextStyle`] the caller draws with (real shaping
+/// via [`hoff::measure_text`], not a per-char estimate). Keeps commit rows
+/// strictly single-line.
+fn truncate_to_width(s: &str, avail: f32, style: &TextStyle) -> String {
+    if hoff::measure_text(s, style) <= avail {
         return s.to_string();
     }
-    let ell_w = hoff::text_width("\u{2026}", font_size);
-    let budget = (avail - ell_w).max(0.0);
-    let per_char = font_size * 0.58;
-    let max_chars = (budget / per_char).floor() as usize;
-    let t: String = s.chars().take(max_chars).collect();
-    format!("{}\u{2026}", t.trim_end())
+    let chars: Vec<char> = s.chars().collect();
+    let candidate = |n: usize| -> String {
+        let t: String = chars[..n].iter().collect();
+        format!("{}\u{2026}", t.trim_end())
+    };
+    // Largest prefix whose "prefix…" really fits, by binary search on the
+    // char count (each probe is a cached real measurement).
+    let (mut lo, mut hi) = (0usize, chars.len().saturating_sub(1));
+    while lo < hi {
+        let mid = (lo + hi).div_ceil(2);
+        if hoff::measure_text(&candidate(mid), style) <= avail {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    candidate(lo)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    fn style_14_600() -> TextStyle {
+        TextStyle::new(14.0)
+            .with_line_height(14.0 * 1.4)
+            .with_weight(600)
+    }
+
     #[test]
     fn truncate_to_width_keeps_short_strings() {
         let s = "fix: bug";
-        assert_eq!(truncate_to_width(s, 500.0, 14.0), s);
+        assert_eq!(truncate_to_width(s, 500.0, &style_14_600()), s);
     }
 
     #[test]
     fn truncate_to_width_ellipsizes_long_strings_to_one_line() {
         let s = "a very long commit message that would otherwise wrap onto two lines";
-        let out = truncate_to_width(s, 120.0, 14.0);
+        let style = style_14_600();
+        let out = truncate_to_width(s, 120.0, &style);
         assert!(out.ends_with('\u{2026}'));
         assert!(out.chars().count() < s.chars().count());
-        // The result must fit the available width on a single line.
-        assert!(hoff::text_width(&out, 14.0) <= 120.0 + 14.0 * 0.58);
+        // The result must REALLY fit: measured with the same shaping the
+        // renderer uses, no heuristic slack. (The old per-char model only
+        // guaranteed `<= avail + one estimated char`.)
+        assert!(hoff::measure_text(&out, &style) <= 120.0);
+    }
+
+    #[test]
+    fn truncate_to_width_maximizes_kept_text() {
+        // Regression against over-truncation: the cut must land exactly at
+        // the real shaped limit (largest prefix whose "prefix…" fits), not
+        // at a per-char guess. Brute-force the optimum and compare.
+        let s = "a very long commit message that would otherwise wrap onto two lines";
+        let style = style_14_600();
+        let avail = 120.0;
+        let out = truncate_to_width(s, avail, &style);
+
+        let chars: Vec<char> = s.chars().collect();
+        let candidate = |n: usize| -> String {
+            let t: String = chars[..n].iter().collect();
+            format!("{}\u{2026}", t.trim_end())
+        };
+        let best = (0..chars.len())
+            .rev()
+            .find(|&n| hoff::measure_text(&candidate(n), &style) <= avail)
+            .expect("at least the bare ellipsis fits 120px");
+        assert_eq!(out, candidate(best));
     }
 }
