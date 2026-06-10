@@ -136,8 +136,9 @@ impl Compositor {
     /// CPU-side part of `resolve`: sorts layers when order changed, detects
     /// dirty layers, rebuilds their geometry with viewport culling, and
     /// collects frame stats. Separated from GPU uploads so it is testable
-    /// without a device.
-    pub(crate) fn resolve_scene(&mut self, viewport: (f32, f32)) {
+    /// without a device (headless tests drive the same dirty-tracking the
+    /// render loop uses).
+    pub fn resolve_scene(&mut self, viewport: (f32, f32)) {
         let start = web_time::Instant::now();
 
         if !self.sorted {

@@ -27,6 +27,13 @@ pub struct GpuContext {
     pub composite_bind_group_layout: wgpu::BindGroupLayout,
     pub opacity_bind_group_layout: wgpu::BindGroupLayout,
     pub composite_sampler: wgpu::Sampler,
+    /// Logical size set via [`set_projection`]; `None` while scene
+    /// coordinates match the physical surface (the default). Used to scale
+    /// `SceneNode::PushClip` rects (logical pixels) into physical scissor
+    /// rects, so clipping holds on HiDPI surfaces.
+    ///
+    /// [`set_projection`]: GpuContext::set_projection
+    pub(crate) logical_size: Option<(f32, f32)>,
 }
 
 impl GpuContext {
@@ -352,6 +359,7 @@ impl GpuContext {
             composite_bind_group_layout,
             opacity_bind_group_layout,
             composite_sampler,
+            logical_size: None,
         }
     }
 }

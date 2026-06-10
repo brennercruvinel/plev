@@ -1,13 +1,15 @@
 use crate::compositor::{DrawRange, LayerEffect, clip_to_scissor, intersect_scissors};
 
 /// Issue one scissored draw per range: the scissor is the range's clip
-/// (intersection of the PushClip stack) clamped to the viewport and
-/// intersected with the layer's own clip rect. Empty scissors are skipped.
-/// Returns the number of draw calls issued.
+/// (intersection of the PushClip stack, in scene coordinates scaled to
+/// physical pixels by `clip_scale`) clamped to the viewport and intersected
+/// with the layer's own clip rect. Empty scissors are skipped. Returns the
+/// number of draw calls issued.
 fn draw_clipped_ranges(
     pass: &mut wgpu::RenderPass<'_>,
     ranges: &[DrawRange],
     base_scissor: (u32, u32, u32, u32),
+    clip_scale: (f32, f32),
     vw: u32,
     vh: u32,
 ) -> u32 {
@@ -16,6 +18,12 @@ fn draw_clipped_ranges(
         let scissor = match range.clip {
             None => Some(base_scissor),
             Some(clip) => {
+                let clip = [
+                    clip[0] * clip_scale.0,
+                    clip[1] * clip_scale.1,
+                    clip[2] * clip_scale.0,
+                    clip[3] * clip_scale.1,
+                ];
                 clip_to_scissor(clip, vw, vh).and_then(|s| intersect_scissors(s, base_scissor))
             }
         };
@@ -81,6 +89,7 @@ pub fn encode_layer_passes(
 ) -> u32 {
     let vw = gpu.surface_config.width;
     let vh = gpu.surface_config.height;
+    let clip_scale = gpu.clip_scale();
     let mut draw_calls = 0u32;
     for layer_id in dirty_layer_ids {
         let layer = compositor.layer(*layer_id).unwrap();
@@ -120,8 +129,14 @@ pub fn encode_layer_passes(
             pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
             pass.set_vertex_buffer(0, vb.slice(..));
             pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
-            draw_calls +=
-                draw_clipped_ranges(&mut pass, layer.quad_draw_ranges(), base_scissor, vw, vh);
+            draw_calls += draw_clipped_ranges(
+                &mut pass,
+                layer.quad_draw_ranges(),
+                base_scissor,
+                clip_scale,
+                vw,
+                vh,
+            );
         }
 
         // Shadows go after plain quads (page backgrounds) but before SDF
@@ -131,8 +146,14 @@ pub fn encode_layer_passes(
             pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
             pass.set_vertex_buffer(0, vb.slice(..));
             pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
-            draw_calls +=
-                draw_clipped_ranges(&mut pass, layer.shadow_draw_ranges(), base_scissor, vw, vh);
+            draw_calls += draw_clipped_ranges(
+                &mut pass,
+                layer.shadow_draw_ranges(),
+                base_scissor,
+                clip_scale,
+                vw,
+                vh,
+            );
         }
 
         if let Some((vb, ib, _)) = layer.sdf_rect_buffers() {
@@ -140,8 +161,14 @@ pub fn encode_layer_passes(
             pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
             pass.set_vertex_buffer(0, vb.slice(..));
             pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
-            draw_calls +=
-                draw_clipped_ranges(&mut pass, layer.sdf_draw_ranges(), base_scissor, vw, vh);
+            draw_calls += draw_clipped_ranges(
+                &mut pass,
+                layer.sdf_draw_ranges(),
+                base_scissor,
+                clip_scale,
+                vw,
+                vh,
+            );
         }
 
         if let (Some((vb, ib, _)), Some(image_bg)) =
@@ -152,8 +179,14 @@ pub fn encode_layer_passes(
             pass.set_bind_group(1, image_bg, &[]);
             pass.set_vertex_buffer(0, vb.slice(..));
             pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
-            draw_calls +=
-                draw_clipped_ranges(&mut pass, layer.image_draw_ranges(), base_scissor, vw, vh);
+            draw_calls += draw_clipped_ranges(
+                &mut pass,
+                layer.image_draw_ranges(),
+                base_scissor,
+                clip_scale,
+                vw,
+                vh,
+            );
         }
 
         if let Some((vb, ib, _)) = layer.text_buffers() {
@@ -162,8 +195,14 @@ pub fn encode_layer_passes(
             pass.set_bind_group(1, &text_system.atlas_bind_group, &[]);
             pass.set_vertex_buffer(0, vb.slice(..));
             pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
-            draw_calls +=
-                draw_clipped_ranges(&mut pass, layer.text_draw_ranges(), base_scissor, vw, vh);
+            draw_calls += draw_clipped_ranges(
+                &mut pass,
+                layer.text_draw_ranges(),
+                base_scissor,
+                clip_scale,
+                vw,
+                vh,
+            );
         }
     }
     draw_calls
