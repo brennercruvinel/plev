@@ -51,6 +51,7 @@ impl Theme {
             glass: GlassTokens::derive(&colors),
             colors,
             typography: TypographyScale {
+                small: 10.0,
                 caption: 11.0,
                 body_sm: 13.0,
                 body: 16.0,
