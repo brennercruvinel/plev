@@ -270,12 +270,9 @@ impl Card {
                 inset: false,
             },
         );
-        // Card overlay: the page surface one notch more opaque
-        // (rgba(40,40,40,.8) under HOFF, where surface is .7).
-        let fill = {
-            let s = theme.colors.surface.0;
-            [s[0], s[1], s[2], (s[3] + 0.1).min(1.0)]
-        };
+        // Card overlay: the raised graphite panel tone (theme.surface =
+        // #2E2E2E, the measured rgba(40,40,40,.8)/body composite).
+        let fill = theme.colors.surface.0;
         for node in glass_pill(b, radius, theme.glass.edge_soft.0, 1.5, fill) {
             c.push_to_layer(layer, node);
         }

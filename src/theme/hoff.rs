@@ -4,8 +4,25 @@
 // Monochromatic "dark glass": every surface is white (#F8F8F8) or graphite
 // (#282828) at one of a handful of canonical alphas, lit from the top by an
 // edge-light border and an inset key-light. The only chromatic accents are
-// a red, two greens and an orange. Values are taken 1:1 from the HOFF
-// reference (styles/variables.sass + component modules).
+// a red, two greens and an orange.
+//
+// Text/interaction alphas are taken 1:1 from the SASS sources; the big
+// opaque BACKDROPS are stored pre-composed, because in the web reference
+// they are translucent layers over a `body` (#444444) that is never visible
+// on screen. plev has no hidden body layer, so storing the recipe alphas
+// raw would composite against the wrong base. Composed values were measured
+// LIVE on the reference app (getComputedStyle + elementsFromPoint alpha
+// compositing on Home/Settings, 2026-06):
+//   body                              -> rgb(68,68,68)  #444444 (never shown)
+//   container  rgba(40,40,40,.7) /body -> #303030  (feed/page canvas)
+//   sidebar rail   (web hardcodes)     -> #2E2E2E
+//   right column   rgba(40,40,40,.x)   -> #323232
+//   post card  rgba(248,248,248,.02)/container -> #343434
+//   tab pill   rgba(40,40,40,.6) /container    -> #2B2B2B  (backdrop blur)
+//   search     rgba(40,40,40,.7) /container    -> #2B2B2B  (backdrop blur 16)
+//   popover/menu                       -> solid #3B3B3B (radius 32)
+// The GOLDEN_SPEC's "#0E0E0E black" is NOT what the live app renders: every
+// screen sits on the graphite container, never on pure black.
 // ============================================================================
 
 use super::core::Theme;
@@ -46,12 +63,23 @@ pub const GREEN_LIGHT: Color = Color::rgba(124.0 / 255.0, 1.0, 176.0 / 255.0, 0.
 /// Message reaction heart: `rgba(255, 77, 0, .9)` (#FF4D00).
 pub const ORANGE: Color = Color::rgba(1.0, 77.0 / 255.0, 0.0, 0.9);
 
-/// Global page frame behind the app (`body` in common.sass): `#444444`.
-pub const PAGE_BG: Color = Color::hex(0x444444);
-/// Central feed container `$bg-surface: rgba(40, 40, 40, .7)`.
-pub const BG_SURFACE: Color = n3(0.7);
-/// Sidebars: `rgba(40, 40, 40, .8)`.
-pub const BG_SIDEBAR: Color = n3(0.8);
+/// The `body` frame (`#444444` in common.sass). In the real app this is
+/// never visible: the sidebars + central container cover 100% of the
+/// viewport, so #444444 only exists as the hidden compositing base. Do NOT
+/// use it as a screen background — screens sit on [`PAGE_BG`].
+pub const BODY_FRAME: Color = Color::hex(0x444444);
+/// What screens actually sit on: the central container
+/// `rgba(40,40,40,.7)` COMPOSED over the body #444444 = `#303030`. Measured
+/// live (getComputedStyle + elementsFromPoint) on every screen's content.
+pub const PAGE_BG: Color = Color::hex(0x303030);
+/// Central feed container `$bg-surface: rgba(40,40,40,.7)` composed over the
+/// body — same `#303030` tone as [`PAGE_BG`] (in plev the page IS the
+/// container; kept as its own token for semantic call sites).
+pub const BG_SURFACE: Color = Color::hex(0x303030);
+/// Sidebars: `rgba(40,40,40,.8)` composed over the body = `#2E2E2E`. The
+/// reference itself ships the composed value (`Sidebar.module.sass`
+/// hardcodes `#2E2E2E`), and the live computed stack measures rgb(46,46,46).
+pub const BG_SIDEBAR: Color = Color::hex(0x2E2E2E);
 /// Modal overlay: `rgba(35, 34, 34, .9)`.
 pub const SCRIM: Color = Color::rgba(35.0 / 255.0, 34.0 / 255.0, 34.0 / 255.0, 0.9);
 /// Actions dropdown body: solid `#3b3b3b`.
@@ -59,8 +87,10 @@ pub const POPOVER: Color = Color::hex(0x3b3b3b);
 /// Tooltip body: solid `#262626`.
 pub const TOOLTIP: Color = Color::hex(0x262626);
 
-/// Card-shell overlay (hoff cards): `rgba(40, 40, 40, .8)`.
-pub const CARD_OVERLAY: Color = n3(0.8);
+/// Card-shell overlay (hoff deck cards): `rgba(40,40,40,.8)` composed over
+/// the body = `#2E2E2E` opaque — the raised graphite panel tone. Opaque so
+/// the shell reads the same no matter what it is drawn over.
+pub const CARD_OVERLAY: Color = Color::hex(0x2E2E2E);
 /// Deep drop shadow under cards: `0 32px 24px -16px rgba(0, 0, 0, .40)`.
 pub const CARD_SHADOW: Color = Color::rgba(0.0, 0.0, 0.0, 0.40);
 /// Floating menu shadow: `0 24px 32px -12px rgba(18, 18, 18, .10)`.
@@ -90,8 +120,13 @@ impl Theme {
     pub fn hoff() -> Self {
         Self {
             colors: ColorTokens {
+                // The composed container tone (#303030), NOT the hidden body
+                // #444444 — every screen sits on this graphite, measured live.
                 bg: PAGE_BG,
-                surface: BG_SURFACE,
+                // Raised opaque panel (sidebar / deck / dialog sheets):
+                // rgba(40,40,40,.8) over body = #2E2E2E, one notch off the
+                // page. Opaque like every other theme's `surface`.
+                surface: CARD_OVERLAY,
                 bg_panel: POPOVER,
                 bg_hover: n2(0.05),
                 // $text-primary / $text-secondary / $text-tertiary.

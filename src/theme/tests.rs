@@ -369,9 +369,13 @@ mod tests {
         assert_eq!(hoff::N2.0, rgba8(0xf8, 0xf8, 0xf8, 1.0));
         assert_eq!(hoff::N3.0, rgba8(0x28, 0x28, 0x28, 1.0));
         assert_eq!(hoff::N4.0, rgba8(0x12, 0x12, 0x12, 1.0));
-        assert_eq!(hoff::PAGE_BG.0, rgba8(0x44, 0x44, 0x44, 1.0));
-        assert_eq!(hoff::BG_SURFACE.0, rgba8(40, 40, 40, 0.7));
-        assert_eq!(hoff::BG_SIDEBAR.0, rgba8(40, 40, 40, 0.8));
+        // Hidden compositing frame (never on screen) vs the graphite tones
+        // every screen actually sits on — measured live, not pure black.
+        assert_eq!(hoff::BODY_FRAME.0, rgba8(0x44, 0x44, 0x44, 1.0));
+        assert_eq!(hoff::PAGE_BG.0, rgba8(0x30, 0x30, 0x30, 1.0));
+        assert_eq!(hoff::BG_SURFACE.0, rgba8(0x30, 0x30, 0x30, 1.0));
+        assert_eq!(hoff::BG_SIDEBAR.0, rgba8(0x2e, 0x2e, 0x2e, 1.0));
+        assert_eq!(hoff::CARD_OVERLAY.0, rgba8(0x2e, 0x2e, 0x2e, 1.0));
         assert_eq!(hoff::SCRIM.0, rgba8(35, 34, 34, 0.9));
         assert_eq!(hoff::POPOVER.0, rgba8(0x3b, 0x3b, 0x3b, 1.0));
         assert_eq!(hoff::TOOLTIP.0, rgba8(0x26, 0x26, 0x26, 1.0));
