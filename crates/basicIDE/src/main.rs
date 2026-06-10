@@ -11,6 +11,7 @@
 // dead_code até o port completar.
 #![allow(dead_code)]
 
+mod actions;
 mod adapters;
 mod components;
 mod renderer;
@@ -21,15 +22,19 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use git_backend::{GitClient, GitCommand, GitEvent};
+use plev::actions::{
+    Action, ActionRegistry, ContextStack, KeyContext, KeymapMatcher, MatchResult,
+    keystroke_from_key_event,
+};
 use plev::compositor::Compositor;
 use plev::gpu::GpuContext;
 use plev::text::TextSystem;
 use plev::texture_pool::TexturePool;
 use views::workspace::{Side, UiRequest, WorkspaceView};
 use winit::application::ApplicationHandler;
-use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
+use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop};
-use winit::keyboard::{Key, NamedKey};
+use winit::keyboard::{Key, ModifiersState};
 use winit::window::{CursorIcon, Window, WindowAttributes, WindowId};
 
 /// How many commits the stacks panel loads per refresh.
@@ -78,6 +83,11 @@ struct App {
     /// Last log/branches payloads — the stacks panel needs both.
     log_cache: Vec<git_backend::Commit>,
     branch_cache: Vec<git_backend::Branch>,
+
+    // Keymap dispatch (Zed model): keystroke -> matcher -> name -> registry.
+    modifiers: ModifiersState,
+    matcher: KeymapMatcher,
+    registry: ActionRegistry,
 }
 
 impl App {
@@ -99,6 +109,9 @@ impl App {
             diff_target: None,
             log_cache: Vec::new(),
             branch_cache: Vec::new(),
+            modifiers: ModifiersState::empty(),
+            matcher: KeymapMatcher::new(actions::default_keymap()),
+            registry: actions::registry(),
         }
     }
 
@@ -214,49 +227,88 @@ impl App {
             .set_stacks(adapters::stacks(&self.branch_cache, &self.log_cache));
     }
 
-    /// Keyboard handling. Returns true if state changed.
-    fn handle_key(&mut self, key: &Key, event_loop: &ActiveEventLoop) -> bool {
-        // The visible commit form captures text input first.
-        if self.workspace.commit_form.visible {
-            return match key {
-                Key::Named(NamedKey::Escape) => {
-                    self.workspace.commit_form.hide();
-                    true
-                }
-                Key::Named(NamedKey::Backspace) => {
-                    self.workspace.commit_form.backspace();
-                    true
-                }
-                Key::Named(NamedKey::Enter) => self.workspace.submit_commit(),
-                Key::Character(c) => {
-                    for ch in c.chars() {
-                        self.workspace.commit_form.append_char(ch);
-                    }
-                    true
-                }
-                _ => false,
-            };
+    /// Keyboard handling: text input for the commit form, everything else
+    /// through the keymap. Returns true if state changed.
+    fn handle_key_event(&mut self, key_event: &KeyEvent, event_loop: &ActiveEventLoop) -> bool {
+        // The visible commit form captures plain characters as text before
+        // the keymap sees them (named keys — Enter/Escape/Backspace — still
+        // dispatch through the CommitForm context bindings).
+        if self.workspace.commit_form.visible
+            && !self.modifiers.control_key()
+            && !self.modifiers.super_key()
+            && !self.modifiers.alt_key()
+            && let Key::Character(text) = &key_event.logical_key
+        {
+            for ch in text.chars() {
+                self.workspace.commit_form.append_char(ch);
+            }
+            return true;
         }
 
-        match key {
-            Key::Named(NamedKey::Escape) => {
-                // Overlays close first; quit only with nothing on screen.
-                if self.workspace.close_top_overlay() {
-                    true
-                } else {
-                    event_loop.exit();
-                    false
-                }
+        let Some(keystroke) = keystroke_from_key_event(key_event, self.modifiers) else {
+            return false;
+        };
+        let stack = self.context_stack();
+        match self.matcher.match_keystroke(&keystroke, &stack) {
+            MatchResult::Complete(name) => {
+                let Some(action) = self.registry.build(&name) else {
+                    log::warn!("keymap resolved unknown action `{name}`");
+                    return false;
+                };
+                self.dispatch(action.as_ref(), event_loop)
             }
-            Key::Named(NamedKey::ArrowUp) => self.workspace.nav_up(),
-            Key::Named(NamedKey::ArrowDown) => self.workspace.nav_down(),
-            Key::Named(NamedKey::Enter) => self.workspace.show_selected_diff(),
-            Key::Character(c) if c.eq_ignore_ascii_case("t") => {
-                self.workspace.toggle_theme();
-                true
-            }
-            Key::Character(c) if c.eq_ignore_ascii_case("c") => self.workspace.toggle_commit_form(),
-            _ => false,
+            MatchResult::Pending | MatchResult::None => false,
+        }
+    }
+
+    /// Key contexts from outermost to innermost; deeper entries win binding
+    /// conflicts (e.g. Escape closes an overlay before quitting the app).
+    fn context_stack(&self) -> ContextStack {
+        let mut stack = ContextStack::new();
+        stack.push(KeyContext::new("Workspace"));
+        if self.workspace.commit_form.visible {
+            stack.push(KeyContext::new("CommitForm"));
+        }
+        if !self.workspace.overlay_mgr.is_empty() {
+            stack.push(KeyContext::new("Overlay"));
+        }
+        stack
+    }
+
+    /// Executes a resolved action. Returns true if state changed.
+    fn dispatch(&mut self, action: &dyn Action, event_loop: &ActiveEventLoop) -> bool {
+        let ws = &mut self.workspace;
+        if action.is::<actions::Quit>() {
+            event_loop.exit();
+            false
+        } else if action.is::<actions::Toggle>() {
+            ws.toggle_theme();
+            true
+        } else if action.is::<actions::Up>() {
+            ws.nav_up()
+        } else if action.is::<actions::Down>() {
+            ws.nav_down()
+        } else if action.is::<actions::ShowDiff>() {
+            ws.show_selected_diff()
+        } else if action.is::<actions::Stage>() {
+            ws.stage_selected()
+        } else if action.is::<actions::Discard>() {
+            ws.discard_selected()
+        } else if action.is::<actions::OpenForm>() {
+            ws.toggle_commit_form()
+        } else if action.is::<actions::Submit>() {
+            ws.submit_commit()
+        } else if action.is::<actions::Cancel>() {
+            ws.commit_form.hide();
+            true
+        } else if action.is::<actions::Backspace>() {
+            ws.commit_form.backspace();
+            true
+        } else if action.is::<actions::Close>() {
+            ws.close_top_overlay()
+        } else {
+            log::warn!("no handler for action {}", action.name());
+            false
         }
     }
 }
@@ -301,11 +353,15 @@ impl ApplicationHandler<AppEvent> for App {
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
 
+            WindowEvent::ModifiersChanged(modifiers) => {
+                self.modifiers = modifiers.state();
+            }
+
             WindowEvent::KeyboardInput {
                 event: key_event, ..
             } => {
                 if key_event.state == ElementState::Pressed
-                    && self.handle_key(&key_event.logical_key, event_loop)
+                    && self.handle_key_event(&key_event, event_loop)
                 {
                     self.invalidate();
                 }

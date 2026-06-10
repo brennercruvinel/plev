@@ -1,0 +1,33 @@
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      "escape": "app::Quit",
+      "t": "theme::Toggle",
+      "shift-t": "theme::Toggle",
+      "c": "commit::OpenForm",
+      "shift-c": "commit::OpenForm",
+      "up": "nav::Up",
+      "down": "nav::Down",
+      "enter": "file::ShowDiff",
+      "s": "file::Stage",
+      "d": "file::Discard"
+    }
+  },
+  {
+    "context": "CommitForm",
+    "bindings": {
+      "escape": "commit::Cancel",
+      "enter": "commit::Submit",
+      "backspace": "commit::Backspace",
+      "up": null,
+      "down": null
+    }
+  },
+  {
+    "context": "Overlay",
+    "bindings": {
+      "escape": "overlay::Close"
+    }
+  }
+]

@@ -63,30 +63,7 @@ impl WorkspaceView {
                         // Discard -- show confirmation modal
                         self.overlay_mgr.pop_all(); // close context menu first
                         self.ctx_menu_item_rects.clear();
-                        self.pending_action = Some(PendingAction::ConfirmDiscard { file_idx });
-                        let file_name = self
-                            .unassigned
-                            .files
-                            .get(file_idx)
-                            .map(|f| f.path.rsplit('/').next().unwrap_or(&f.path).to_string())
-                            .unwrap_or_default();
-                        let (mx, my) = modal::centered_pos(self.vw, self.vh);
-                        let (mw, mh) = modal::dimensions();
-                        self.overlay_mgr.push(
-                            OverlayKind::Modal {
-                                title: "Discard changes?".into(),
-                                body: format!(
-                                    "Discard all changes to {}? This cannot be undone.",
-                                    file_name
-                                ),
-                                confirm: "Discard".into(),
-                                cancel: "Cancel".into(),
-                            },
-                            mx,
-                            my,
-                            mw,
-                            mh,
-                        );
+                        self.open_discard_modal(file_idx);
                     }
                     2 => {
                         // Ignore -- remove from list, append to .gitignore
@@ -109,6 +86,35 @@ impl WorkspaceView {
 
         // Click inside an overlay but not on an item -- consume without action
         true
+    }
+
+    /// Opens the discard confirmation modal for file `file_idx` (destructive
+    /// operations always confirm). The actual discard happens on confirm.
+    pub(crate) fn open_discard_modal(&mut self, file_idx: usize) {
+        self.pending_action = Some(PendingAction::ConfirmDiscard { file_idx });
+        let file_name = self
+            .unassigned
+            .files
+            .get(file_idx)
+            .map(|f| f.path.rsplit('/').next().unwrap_or(&f.path).to_string())
+            .unwrap_or_default();
+        let (mx, my) = modal::centered_pos(self.vw, self.vh);
+        let (mw, mh) = modal::dimensions();
+        self.overlay_mgr.push(
+            OverlayKind::Modal {
+                title: "Discard changes?".into(),
+                body: format!(
+                    "Discard all changes to {}? This cannot be undone.",
+                    file_name
+                ),
+                confirm: "Discard".into(),
+                cancel: "Cancel".into(),
+            },
+            mx,
+            my,
+            mw,
+            mh,
+        );
     }
 
     /// Closes every overlay and clears the cached interaction state.

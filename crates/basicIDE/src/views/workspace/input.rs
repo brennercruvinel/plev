@@ -171,6 +171,33 @@ impl WorkspaceView {
         }
     }
 
+    /// Stages the selected file (no-op when already staged).
+    pub fn stage_selected(&mut self) -> bool {
+        let Some(idx) = self.unassigned.selected_idx else {
+            return false;
+        };
+        let Some(file) = self.unassigned.files.get_mut(idx) else {
+            return false;
+        };
+        if file.staged {
+            return false;
+        }
+        file.staged = true;
+        self.requests.push(UiRequest::Stage {
+            path: file.path.clone(),
+        });
+        true
+    }
+
+    /// Asks for confirmation before discarding the selected file.
+    pub fn discard_selected(&mut self) -> bool {
+        let Some(idx) = self.unassigned.selected_idx else {
+            return false;
+        };
+        self.open_discard_modal(idx);
+        true
+    }
+
     /// Shows/hides the commit form.
     pub fn toggle_commit_form(&mut self) -> bool {
         if self.commit_form.visible {
