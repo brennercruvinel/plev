@@ -3,6 +3,7 @@ pub(crate) mod drawing;
 mod layer;
 mod layer_ops;
 mod scene;
+mod sequence;
 mod stats;
 mod vertex;
 
@@ -15,6 +16,7 @@ pub use clip::{
 pub use drawing::{GradientRectParams, RoundedRectParams, ShadowParams};
 pub use layer::{Layer, LayerEffect, LayerId};
 pub use scene::{SceneNode, TextNodeKey};
+pub use sequence::{DrawCommand, DrawKind};
 pub use stats::RenderStats;
 pub use vertex::{
     ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction, shadow_padding,
@@ -154,10 +156,7 @@ impl Compositor {
         for layer in &mut self.layers {
             layer.resolve_dirty();
             if layer.dirty {
-                let culled = layer.build_quad_geometry(viewport)
-                    + layer.build_sdf_geometry(viewport)
-                    + layer.build_shadow_geometry(viewport)
-                    + layer.build_image_geometry(viewport);
+                let culled = layer.build_geometry(viewport);
                 self.stats.layers_redrawn += 1;
                 self.stats.nodes_culled += culled;
             }
