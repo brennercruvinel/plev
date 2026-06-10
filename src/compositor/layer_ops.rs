@@ -17,6 +17,17 @@ impl Compositor {
         self.layers.retain(|l| l.id != id);
     }
 
+    /// Change a layer's z-order. Marks the layer order dirty only when the
+    /// value actually changes, so `resolve` skips re-sorting otherwise.
+    pub fn set_layer_z_order(&mut self, id: LayerId, z_order: i32) {
+        if let Some(layer) = self.layers.iter_mut().find(|l| l.id == id)
+            && layer.z_order != z_order
+        {
+            layer.z_order = z_order;
+            self.sorted = false;
+        }
+    }
+
     pub fn set_layer_opacity(&mut self, id: LayerId, opacity: f32) {
         if let Some(layer) = self.layers.iter_mut().find(|l| l.id == id) {
             layer.opacity = opacity.clamp(0.0, 1.0);

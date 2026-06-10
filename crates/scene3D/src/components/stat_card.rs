@@ -1,4 +1,4 @@
-use plev::builder::{div, text, Element};
+use plev::builder::{Element, div, text};
 
 use crate::theme::*;
 

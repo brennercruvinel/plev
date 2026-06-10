@@ -14,6 +14,7 @@ impl GpuContext {
         shader_source: &str,
         projection_bgl: &wgpu::BindGroupLayout,
         surface_format: wgpu::TextureFormat,
+        msaa_samples: u32,
     ) -> wgpu::RenderPipeline {
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("quad_shader"),
@@ -54,7 +55,7 @@ impl GpuContext {
             },
             depth_stencil: None,
             multisample: wgpu::MultisampleState {
-                count: 4,
+                count: msaa_samples,
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
@@ -68,6 +69,7 @@ impl GpuContext {
         shader_source: &str,
         projection_bgl: &wgpu::BindGroupLayout,
         surface_format: wgpu::TextureFormat,
+        msaa_samples: u32,
     ) -> wgpu::RenderPipeline {
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("rect_sdf_shader"),
@@ -108,7 +110,7 @@ impl GpuContext {
             },
             depth_stencil: None,
             multisample: wgpu::MultisampleState {
-                count: 4,
+                count: msaa_samples,
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
@@ -123,6 +125,7 @@ impl GpuContext {
         projection_bgl: &wgpu::BindGroupLayout,
         text_bgl: &wgpu::BindGroupLayout,
         surface_format: wgpu::TextureFormat,
+        msaa_samples: u32,
     ) -> wgpu::RenderPipeline {
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("text_shader"),
@@ -163,7 +166,7 @@ impl GpuContext {
             },
             depth_stencil: None,
             multisample: wgpu::MultisampleState {
-                count: 4,
+                count: msaa_samples,
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
@@ -177,6 +180,7 @@ impl GpuContext {
     #[cfg(feature = "hot-reload")]
     pub fn reload_shader(&mut self, filename: &str, source: &str) -> bool {
         let surface_format = self.surface_config.format;
+        let msaa_samples = self.config.msaa_samples;
         match filename {
             "quad.wgsl" => {
                 let guard = self.device.push_error_scope(wgpu::ErrorFilter::Validation);
@@ -185,6 +189,7 @@ impl GpuContext {
                     source,
                     &self.projection_bind_group_layout,
                     surface_format,
+                    msaa_samples,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
                     log::error!("Shader reload failed for quad.wgsl: {}", err);
@@ -201,6 +206,7 @@ impl GpuContext {
                     source,
                     &self.projection_bind_group_layout,
                     surface_format,
+                    msaa_samples,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
                     log::error!("Shader reload failed for rect_sdf.wgsl: {}", err);
@@ -218,6 +224,7 @@ impl GpuContext {
                     &self.projection_bind_group_layout,
                     &self.text_bind_group_layout,
                     surface_format,
+                    msaa_samples,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
                     log::error!("Shader reload failed for text.wgsl: {}", err);

@@ -1,4 +1,4 @@
-use plev::builder::{div, text, Align, Element};
+use plev::builder::{Align, Element, div, text};
 
 use crate::theme::*;
 

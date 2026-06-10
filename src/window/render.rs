@@ -1,4 +1,5 @@
 use super::state::GpuState;
+use crate::compositor::Layer;
 
 impl super::App {
     pub(crate) fn render(&mut self) {
@@ -64,6 +65,7 @@ impl super::App {
                 format: gpu.surface_format(),
                 width: gpu.surface_config.width,
                 height: gpu.surface_config.height,
+                msaa_samples: gpu.config.msaa_samples,
                 composite_bgl: &gpu.composite_bind_group_layout,
                 opacity_bgl: &gpu.opacity_bind_group_layout,
                 sampler: &gpu.composite_sampler,
@@ -127,6 +129,7 @@ impl super::App {
         }
 
         // Encode render passes
+        let encode_start = web_time::Instant::now();
         let mut encoder = gpu
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
@@ -142,7 +145,7 @@ impl super::App {
             .map(|l| l.id)
             .collect();
 
-        Self::encode_layer_passes(
+        let layer_draws = Self::encode_layer_passes(
             &self.compositor,
             gpu,
             text_system,
@@ -163,7 +166,7 @@ impl super::App {
         }
 
         // Composite pass: draw all visible layers to surface
-        Self::encode_composite_pass(
+        let composite_draws = Self::encode_composite_pass(
             &self.compositor,
             &self.theme,
             gpu,
@@ -174,5 +177,17 @@ impl super::App {
 
         gpu.queue.submit(std::iter::once(encoder.finish()));
         output.present();
+
+        let glyphs: u32 = self
+            .compositor
+            .layers()
+            .iter()
+            .map(Layer::glyph_count)
+            .sum();
+        self.compositor.record_encode_stats(
+            layer_draws + composite_draws,
+            glyphs,
+            encode_start.elapsed().as_micros() as u64,
+        );
     }
 }

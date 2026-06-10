@@ -165,6 +165,22 @@ impl Layer {
     pub fn texture_view(&self) -> Option<&wgpu::TextureView> {
         self.texture_view.as_ref()
     }
+
+    /// Color attachment for this layer's render pass: with MSAA the pass
+    /// renders into the MSAA texture and resolves into the layer texture;
+    /// with a single sample it renders directly (no resolve target).
+    pub fn render_attachment(&self) -> Option<(&wgpu::TextureView, Option<&wgpu::TextureView>)> {
+        match (self.msaa_view.as_ref(), self.texture_view.as_ref()) {
+            (Some(msaa), target) => Some((msaa, target)),
+            (None, Some(target)) => Some((target, None)),
+            (None, None) => None,
+        }
+    }
+
+    /// Number of glyph quads currently uploaded (6 indices per glyph).
+    pub fn glyph_count(&self) -> u32 {
+        self.text_index_count / 6
+    }
     pub fn composite_bind_group(&self) -> Option<&wgpu::BindGroup> {
         self.composite_bind_group.as_ref()
     }
@@ -210,7 +226,7 @@ impl Layer {
         self.nodes.clear();
     }
 
-    fn compute_hash(&self) -> u64 {
+    pub(crate) fn compute_hash(&self) -> u64 {
         let mut scene_hasher = FxHasher::default();
         for node in &self.nodes {
             node.hash_u64().hash(&mut scene_hasher);

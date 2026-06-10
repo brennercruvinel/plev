@@ -2,6 +2,7 @@ use std::sync::Arc;
 use wgpu::util::DeviceExt;
 use winit::window::Window;
 
+use super::config::RenderConfig;
 use super::utils::ortho_projection;
 
 pub struct GpuContext {
@@ -9,6 +10,7 @@ pub struct GpuContext {
     pub queue: wgpu::Queue,
     pub surface: Option<wgpu::Surface<'static>>,
     pub surface_config: wgpu::SurfaceConfiguration,
+    pub config: RenderConfig,
     pub projection_buffer: wgpu::Buffer,
     pub projection_bind_group_layout: wgpu::BindGroupLayout,
     pub projection_bind_group: wgpu::BindGroup,
@@ -25,6 +27,13 @@ pub struct GpuContext {
 
 impl GpuContext {
     pub async fn new(window: Arc<Window>) -> Self {
+        Self::new_with_config(window, RenderConfig::default()).await
+    }
+
+    pub async fn new_with_config(window: Arc<Window>, mut config: RenderConfig) -> Self {
+        config.msaa_samples = config.effective_msaa_samples();
+        crate::path::set_default_tolerance(config.path_tolerance);
+
         let size = window.inner_size();
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             #[cfg(not(target_arch = "wasm32"))]
@@ -78,12 +87,26 @@ impl GpuContext {
         let width = size.width.max(1);
         let height = size.height.max(1);
 
+        let present_mode = if matches!(
+            config.present_mode,
+            wgpu::PresentMode::AutoVsync | wgpu::PresentMode::AutoNoVsync
+        ) || surface_caps.present_modes.contains(&config.present_mode)
+        {
+            config.present_mode
+        } else {
+            log::warn!(
+                "Present mode {:?} unsupported by surface -- falling back to AutoVsync",
+                config.present_mode
+            );
+            wgpu::PresentMode::AutoVsync
+        };
+
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
             width,
             height,
-            present_mode: wgpu::PresentMode::AutoVsync,
+            present_mode,
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
@@ -157,6 +180,7 @@ impl GpuContext {
             &quad_src,
             &projection_bind_group_layout,
             surface_format,
+            config.msaa_samples,
         );
 
         #[cfg(feature = "hot-reload")]
@@ -168,6 +192,7 @@ impl GpuContext {
             &sdf_src,
             &projection_bind_group_layout,
             surface_format,
+            config.msaa_samples,
         );
 
         #[cfg(feature = "hot-reload")]
@@ -180,6 +205,7 @@ impl GpuContext {
             &projection_bind_group_layout,
             &text_bind_group_layout,
             surface_format,
+            config.msaa_samples,
         );
 
         // Composite bind group layouts (struct fields, not recreated on reload)
@@ -248,6 +274,7 @@ impl GpuContext {
             queue,
             surface: Some(surface),
             surface_config,
+            config,
             projection_buffer,
             projection_bind_group_layout,
             projection_bind_group,

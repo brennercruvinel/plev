@@ -146,7 +146,9 @@ impl SnakeGame {
     }
 
     fn find_food(&self) -> Option<(usize, usize)> {
-        self.field.iter().position(|c| *c == Cell::Food)
+        self.field
+            .iter()
+            .position(|c| *c == Cell::Food)
             .map(|i| (i % GRID_W, i / GRID_W))
     }
 
@@ -178,8 +180,12 @@ impl SnakeGame {
     }
 
     pub(crate) fn tick(&mut self) {
-        if self.game_over { return; }
-        if self.ai_mode { self.ai_decide(); }
+        if self.game_over {
+            return;
+        }
+        if self.ai_mode {
+            self.ai_decide();
+        }
 
         let nx = ((self.head.0 as isize + self.dir.0 + GRID_W as isize) as usize) % GRID_W;
         let ny = ((self.head.1 as isize + self.dir.1 + GRID_H as isize) as usize) % GRID_H;
@@ -188,7 +194,9 @@ impl SnakeGame {
         match self.cell_at((nx, ny)) {
             Cell::Wall | Cell::Snake => {
                 self.game_over = true;
-                if self.score > self.high_score { self.high_score = self.score; }
+                if self.score > self.high_score {
+                    self.high_score = self.score;
+                }
                 return;
             }
             Cell::Food => {
@@ -208,14 +216,18 @@ impl SnakeGame {
 
         if !ate {
             if let Some(tail) = self.body.pop_back() {
-                if tail != self.head { self.set_cell(tail, Cell::Empty); }
+                if tail != self.head {
+                    self.set_cell(tail, Cell::Empty);
+                }
             }
         }
     }
 
     pub(crate) fn update_flash(&mut self) {
         if self.food_flash > 0.0 {
-            let elapsed = Instant::now().duration_since(self.last_food_eaten).as_secs_f32();
+            let elapsed = Instant::now()
+                .duration_since(self.last_food_eaten)
+                .as_secs_f32();
             if elapsed < FLASH_DURATION {
                 self.food_flash = (1.0 - elapsed / FLASH_DURATION).powi(2);
             } else {
@@ -225,8 +237,12 @@ impl SnakeGame {
     }
 
     pub(crate) fn try_set_dir(&mut self, d: (isize, isize)) {
-        if self.ai_mode { return; }
-        if d.0 == -self.dir.0 && d.1 == -self.dir.1 && self.body.len() > 1 { return; }
+        if self.ai_mode {
+            return;
+        }
+        if d.0 == -self.dir.0 && d.1 == -self.dir.1 && self.body.len() > 1 {
+            return;
+        }
         self.dir = d;
     }
 }
