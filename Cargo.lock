@@ -2402,6 +2402,8 @@ dependencies = [
  "notify-debouncer-full",
  "pollster",
  "rustc-hash 2.1.2",
+ "serde",
+ "serde_json",
  "slotmap",
  "taffy",
  "wasm-bindgen",

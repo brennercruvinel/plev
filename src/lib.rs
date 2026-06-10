@@ -14,6 +14,7 @@ pub mod text;
 pub mod text_input;
 
 // -- Input & Events
+pub mod actions;
 pub mod dispatch;
 pub mod ime;
 pub mod input;

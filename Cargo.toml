@@ -40,6 +40,9 @@ web-time = "1.1"
 indexmap = "2"
 lyon_tessellation = "1"
 lyon_path = "1"
+# Keymap JSON (actions/keymap.rs)
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 accesskit = { version = "0.24", optional = true }
 accesskit_winit = { version = "0.32", optional = true }
 notify = { version = "7", optional = true }
