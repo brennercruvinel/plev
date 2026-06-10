@@ -1,4 +1,5 @@
 mod builder;
+pub mod icons;
 mod modifier;
 mod node;
 mod render;
