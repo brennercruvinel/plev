@@ -193,16 +193,16 @@ impl ContextMenu {
         let glass = &theme.glass;
         let text = theme.colors.text;
 
-        // Floating shadow, then a path-based solid #3b3b3b surface: row
-        // icons are paths and must stack on top.
+        // Floating shadow, then the solid #3b3b3b surface; row icons pushed
+        // later stack on top (push order is preserved across types).
         compositor.push_to_layer(layer, super::menu_shadow(Rect::new(x, y, w, h), RADIUS));
         compositor.push_to_layer(
             layer,
-            super::path_rounded_rect(x, y, w, h, RADIUS, glass.popover.0),
+            super::rounded_rect(x, y, w, h, RADIUS, glass.popover.0),
         );
         compositor.push_to_layer(
             layer,
-            super::path_rounded_rect_stroke(x, y, w, h, RADIUS, glass.edge_soft.0, 1.0),
+            super::rounded_rect_stroke(x, y, w, h, RADIUS, glass.edge_soft.0, 1.0),
         );
 
         let line_height = FONT * 1.4;
@@ -233,7 +233,7 @@ impl ContextMenu {
                         // Hover: rgba($n2,.1), radius 16.
                         compositor.push_to_layer(
                             layer,
-                            super::path_rounded_rect(
+                            super::rounded_rect(
                                 rect.x + PAD_X,
                                 rect.y,
                                 rect.w - PAD_X * 2.0,

@@ -4,9 +4,7 @@ use plev::compositor::{Compositor, SceneNode, TextNodeKey};
 use plev::text::TextMeasurer;
 use plev::theme::Theme;
 use plev::ui::icons;
-use plev::ui::widgets::{
-    EventResult, Rect, WidgetEvent, path_rounded_rect, path_rounded_rect_stroke,
-};
+use plev::ui::widgets::{EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
 
 const CELL_W: f32 = 104.0;
 const CELL_H: f32 = 72.0;
@@ -69,8 +67,9 @@ impl IconsSection {
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
         for (i, (name, rect)) in self.names.iter().zip(self.cell_rects(content)).enumerate() {
             let hovered = self.hovered == Some(i);
-            // Path-based cards: the icons on them are paths.
-            c.push(path_rounded_rect(
+            // Cards under path icons: push order is preserved, so the icon
+            // pushed after the card stacks on top.
+            c.push(rounded_rect(
                 rect.x,
                 rect.y,
                 rect.w,
@@ -78,7 +77,7 @@ impl IconsSection {
                 theme.radius.lg,
                 theme.colors.surface.0,
             ));
-            c.push(path_rounded_rect_stroke(
+            c.push(rounded_rect_stroke(
                 rect.x,
                 rect.y,
                 rect.w,

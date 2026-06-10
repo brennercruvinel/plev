@@ -15,8 +15,8 @@ use plev::scroll::ScrollState;
 use plev::theme::{Intent, Theme};
 use plev::ui::icons;
 use plev::ui::widgets::{
-    ContextMenu, EventResult, Modal, ModalAction, Rect, ToastManager, WidgetEvent,
-    path_rounded_rect, path_rounded_rect_stroke,
+    ContextMenu, EventResult, Modal, ModalAction, Rect, ToastManager, WidgetEvent, rounded_rect,
+    rounded_rect_stroke,
 };
 
 pub const SIDEBAR_W: f32 = 248.0;
@@ -717,7 +717,7 @@ impl ShowcaseView {
             let hovered = self.sidebar_hover == Some(i);
             // NavLink: radius 12, hover .05, active .10 + edge stroke.
             if active || hovered {
-                c.push(path_rounded_rect(
+                c.push(rounded_rect(
                     rect.x,
                     rect.y,
                     rect.w,
@@ -731,7 +731,7 @@ impl ShowcaseView {
                 ));
             }
             if active {
-                c.push(path_rounded_rect_stroke(
+                c.push(rounded_rect_stroke(
                     rect.x,
                     rect.y,
                     rect.w,
@@ -855,9 +855,10 @@ pub(crate) fn group_label(c: &mut Compositor, s: &str, x: f32, y: f32, theme: &T
 }
 
 /// Soft panel container — HOFF list card: radius 20, .02 white glass,
-/// soft edge. Path-based so icon paths drawn on top of it stay visible.
+/// soft edge. Icon paths pushed after it stack on top (push order is
+/// preserved across primitive types).
 pub(crate) fn panel(c: &mut Compositor, rect: Rect, theme: &Theme) {
-    c.push(path_rounded_rect(
+    c.push(rounded_rect(
         rect.x,
         rect.y,
         rect.w,
@@ -865,7 +866,7 @@ pub(crate) fn panel(c: &mut Compositor, rect: Rect, theme: &Theme) {
         theme.radius.lg,
         theme.glass.surface.0,
     ));
-    c.push(path_rounded_rect_stroke(
+    c.push(rounded_rect_stroke(
         rect.x,
         rect.y,
         rect.w,

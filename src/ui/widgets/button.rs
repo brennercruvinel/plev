@@ -271,26 +271,10 @@ impl Button {
         // Pill: HOFF radius 32 clamps to half the 44px height.
         let radius = theme.radius.xl.min(bounds.h / 2.0);
 
-        if self.icon.is_some() {
-            // Icons are quad-pass paths; an SDF background would paint over
-            // them, so the background becomes path geometry too (flat fill,
-            // uniform border instead of the gradient edge-light).
-            if bg[3] > 0.001 {
-                compositor.push_to_layer(
-                    layer,
-                    super::path_rounded_rect(bounds.x, bounds.y, bounds.w, bounds.h, radius, bg),
-                );
-            }
-            if edge[3] > 0.001 {
-                compositor.push_to_layer(
-                    layer,
-                    super::path_rounded_rect_stroke(
-                        bounds.x, bounds.y, bounds.w, bounds.h, radius, edge, 1.5,
-                    ),
-                );
-            }
-        } else if bg[3] > 0.001 || edge[3] > 0.001 {
-            // Edge-light underlay + glass fill (HOFF :before border).
+        if bg[3] > 0.001 || edge[3] > 0.001 {
+            // Edge-light underlay + glass fill (HOFF :before border). Icon
+            // paths pushed later stack on top: the compositor preserves
+            // push order across primitive types.
             for node in glass_pill(bounds, radius, edge, 1.5, bg) {
                 compositor.push_to_layer(layer, node);
             }

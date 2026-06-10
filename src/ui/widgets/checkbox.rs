@@ -95,11 +95,10 @@ impl Checkbox {
         let glass = &theme.glass;
 
         if self.checked {
-            // Filled white ($text-primary) with a dark check. Path-based
-            // fill so the check icon (also a path) stacks on top; an SDF
-            // rect would draw after every path in the layer.
+            // Filled white ($text-primary) with a dark check on top (push
+            // order is preserved across primitive types).
             let fill = theme.colors.text;
-            compositor.push(super::path_rounded_rect(
+            compositor.push(super::rounded_rect(
                 bx,
                 by,
                 BOX,

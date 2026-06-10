@@ -154,13 +154,13 @@ impl Select {
             with_alpha(glass.edge_soft, glass.edge_soft.0[3] * alpha)
         };
 
-        // Path-based background: the chevron icon must stack on top (see
-        // path_rounded_rect docs for the pipeline-order constraint).
+        // Glass field; the chevron icon pushed later stacks on top (the
+        // compositor preserves push order across primitive types).
         let radius = theme.radius.xl.min(bounds.h / 2.0);
-        compositor.push(super::path_rounded_rect(
+        compositor.push(super::rounded_rect(
             bounds.x, bounds.y, bounds.w, bounds.h, radius, bg,
         ));
-        compositor.push(super::path_rounded_rect_stroke(
+        compositor.push(super::rounded_rect_stroke(
             bounds.x, bounds.y, bounds.w, bounds.h, radius, edge, 1.5,
         ));
 
