@@ -1,7 +1,9 @@
 //! Confirmation modal — HOFF Modal recipe (`components/Modal`):
 //! overlay rgba(35,34,34,.9); container max-width 400, radius 32,
-//! padding 32; surface rgba(40,40,40,.7) + deep shadow stack +
-//! edge-light 1.5px rgba(255,255,255,.05) (mask 175deg -> 60%).
+//! padding 32. The sheet sits on the elevated popover graphite (#3B3B3B,
+//! the same measured tone the Actions dropdown uses) so it reads as raised
+//! above the scrim, + the deep shadow stack + edge-light 1.5px
+//! rgba(255,255,255,.05) (mask 175deg -> 60%).
 
 use super::button::{ButtonKind, ButtonSize, draw_to_layer as draw_button};
 use super::hoff;
@@ -70,7 +72,7 @@ pub fn draw(
         MODAL_W,
         MODAL_H,
         theme.radius_pill,
-        theme.bg_panel,
+        theme.bg_popover,
         Some((1.5, theme.edge)),
     );
 

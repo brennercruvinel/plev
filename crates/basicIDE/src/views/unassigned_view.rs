@@ -231,7 +231,8 @@ impl UnassignedView {
                 border_width: 0.0,
                 border_color: [0.0; 4],
             });
-            if is_selected {
+            // Edge-light rim: soft on hover, the stronger .10 when selected.
+            if is_selected || is_hovered {
                 hoff::edge_light(
                     compositor,
                     LayerId::DEFAULT,
@@ -241,7 +242,11 @@ impl UnassignedView {
                     ITEM_H,
                     theme.radius_item,
                     1.0,
-                    theme.edge_strong,
+                    if is_selected {
+                        theme.edge_strong
+                    } else {
+                        theme.edge
+                    },
                 );
             }
 

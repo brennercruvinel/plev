@@ -116,6 +116,35 @@ pub fn edge_light(
     compositor.push_to_layer(layer, SceneNode::PopClip);
 }
 
+/// HOFF inset key-light: `inset 2px 4px 16px rgba(248,248,248,.06)` — a soft
+/// highlight bleeding in from the top-left, the glint that makes a glass
+/// surface read as lit rather than painted (the same recipe plev's Card
+/// widget uses on its social shell).
+pub fn inset_keylight(
+    compositor: &mut Compositor,
+    layer: LayerId,
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
+    radius: f32,
+) {
+    compositor.push_to_layer(
+        layer,
+        SceneNode::Shadow {
+            x,
+            y,
+            w,
+            h,
+            corner_radius: radius,
+            blur_radius: 16.0,
+            offset: [2.0, 4.0],
+            color: [248.0 / 255.0, 248.0 / 255.0, 248.0 / 255.0, 0.06],
+            inset: true,
+        },
+    );
+}
+
 /// Glass surface: background fill + optional edge-light rim.
 /// `edge` is `(border_width, color)`.
 pub fn glass(

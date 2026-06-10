@@ -49,16 +49,22 @@ const fn ink(alpha: f32) -> Color {
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub struct Theme {
-    // -- Backgrounds --
-    /// Global frame behind the app (`body` = #444444 in common.sass).
+    // -- Backgrounds (opaque composed tones — see module header) --
+    /// Page canvas behind the app. In the web reference the body #444444 is
+    /// the hidden compositing base; the visible container is
+    /// `rgba(40,40,40,.7)` over it = measured **#303030 graphite**. plev has
+    /// no hidden body layer, so the canvas IS that composed graphite.
     pub bg_body: Color,
-    /// Center container surface — `$bg-surface` = rgba(40,40,40,.7).
+    /// Center feed container — `$bg-surface` rgba(40,40,40,.7) over body,
+    /// composed = #303030 (same graphite as the page).
     pub bg_panel: Color,
-    /// Sidebar / right-sidebar surface — rgba(40,40,40,.8).
+    /// Sidebar / right-sidebar surface — rgba(40,40,40,.8) over body,
+    /// composed = #2E2E2E (one notch darker than the page).
     pub bg_sidebar: Color,
     /// Solid dropdown body (Actions) — #3b3b3b.
     pub bg_popover: Color,
-    /// Tabs container — rgba($n3,.6).
+    /// Tabs/search pill container — rgba(40,40,40,.6) over body,
+    /// composed = #2B2B2B.
     pub bg_tabs: Color,
     /// Tooltip — #262626.
     pub bg_tooltip: Color,
@@ -151,11 +157,15 @@ pub struct Theme {
 }
 
 pub const DARK: Theme = Theme {
-    bg_body: Color::hex(0x444444),
-    bg_panel: n3(0.7),
-    bg_sidebar: n3(0.8),
+    // Opaque composed graphite tones (measured live on the reference app):
+    // rgba(40,40,40,.7)/body #444444 -> #303030 page · .8 -> #2E2E2E sidebar
+    // · .6 -> #2B2B2B tabs. plev has no hidden body, so these are stored
+    // pre-composed rather than as translucent recipes over #444444.
+    bg_body: Color::hex(0x303030),
+    bg_panel: Color::hex(0x303030),
+    bg_sidebar: Color::hex(0x2E2E2E),
     bg_popover: Color::hex(0x3B3B3B),
-    bg_tabs: n3(0.6),
+    bg_tabs: Color::hex(0x2B2B2B),
     bg_tooltip: Color::hex(0x262626),
     bg_overlay: Color::rgba(35.0 / 255.0, 34.0 / 255.0, 34.0 / 255.0, 0.9),
 
@@ -204,11 +214,14 @@ pub const DARK: Theme = Theme {
 
 /// Light mode — the dark spec inverted: ink (#070707) alphas over pale glass.
 pub const LIGHT: Theme = Theme {
-    bg_body: Color::hex(0xBBBBBB),
-    bg_panel: Color::rgba(215.0 / 255.0, 215.0 / 255.0, 215.0 / 255.0, 0.7),
-    bg_sidebar: Color::rgba(215.0 / 255.0, 215.0 / 255.0, 215.0 / 255.0, 0.8),
+    // Opaque composed pale-glass tones, mirroring DARK: rgba(215,215,215,a)
+    // over the light body #BBBBBB -> #CECECE page · #D1D1D1 sidebar ·
+    // #CCCCCC tabs. Page sits one notch below the raised sidebar surface.
+    bg_body: Color::hex(0xCECECE),
+    bg_panel: Color::hex(0xCECECE),
+    bg_sidebar: Color::hex(0xD1D1D1),
     bg_popover: Color::hex(0xC4C4C4),
-    bg_tabs: Color::rgba(215.0 / 255.0, 215.0 / 255.0, 215.0 / 255.0, 0.6),
+    bg_tabs: Color::hex(0xCCCCCC),
     bg_tooltip: Color::hex(0xD9D9D9),
     bg_overlay: Color::rgba(220.0 / 255.0, 221.0 / 255.0, 221.0 / 255.0, 0.9),
 
@@ -389,11 +402,13 @@ mod tests {
 
     #[test]
     fn dark_surfaces_match_hoff_recipe() {
-        assert_color(DARK.bg_body, 0x44, 0x44, 0x44, 1.0);
-        assert_color(DARK.bg_panel, 40, 40, 40, 0.7);
-        assert_color(DARK.bg_sidebar, 40, 40, 40, 0.8);
+        // Opaque composed graphite — page #303030, sidebar #2E2E2E, tabs
+        // #2B2B2B (rgba(40,40,40,.7/.8/.6) over body, measured live).
+        assert_color(DARK.bg_body, 0x30, 0x30, 0x30, 1.0);
+        assert_color(DARK.bg_panel, 0x30, 0x30, 0x30, 1.0);
+        assert_color(DARK.bg_sidebar, 0x2E, 0x2E, 0x2E, 1.0);
         assert_color(DARK.bg_popover, 0x3B, 0x3B, 0x3B, 1.0);
-        assert_color(DARK.bg_tabs, 40, 40, 40, 0.6);
+        assert_color(DARK.bg_tabs, 0x2B, 0x2B, 0x2B, 1.0);
         assert_color(DARK.bg_tooltip, 0x26, 0x26, 0x26, 1.0);
         assert_color(DARK.bg_overlay, 35, 34, 34, 0.9);
         assert_color(DARK.surface, 248, 248, 248, 0.02);
