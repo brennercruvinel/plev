@@ -180,7 +180,15 @@ pub(super) fn rasterize_and_upload(
         if !evicted {
             let new_size = (sys.atlas_size * 2).min(MAX_ATLAS_SIZE);
             if new_size == sys.atlas_size {
-                log::error!("Atlas at maximum size and cannot allocate glyph");
+                log::warn!(
+                    "Glyph atlas full at maximum size {}x{}: cannot allocate glyph_id={} \
+                     ({}x{} px); glyph will not be rendered",
+                    sys.atlas_size,
+                    sys.atlas_size,
+                    cache_key.glyph_id,
+                    padded_w,
+                    padded_h
+                );
                 return None;
             }
             grow_atlas(sys, device, queue, text_bind_group_layout, new_size);

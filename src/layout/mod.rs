@@ -2,7 +2,9 @@ mod engine;
 mod types;
 
 pub use engine::LayoutEngine;
-pub use types::{Align, ComputedBounds, Direction, Justify, LayoutItem, LayoutStyle};
+pub use types::{
+    Align, ComputedBounds, Direction, Justify, LayoutItem, LayoutStyle, TextMeasureSpec,
+};
 
 #[cfg(test)]
 mod tests;

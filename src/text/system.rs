@@ -187,7 +187,13 @@ impl TextSystem {
                 continue;
             };
             // Temporarily remove the shaped entry to split the borrow
-            let shaped = self.shaping_cache.remove(key).unwrap();
+            let Some(shaped) = self.shaping_cache.remove(key) else {
+                log::warn!(
+                    "Shaping cache missing entry for text node {:?}; skipping",
+                    &key.text.get(..40.min(key.text.len()))
+                );
+                continue;
+            };
             emit_glyphs(
                 self,
                 &atlas::GlyphGpuResources {
