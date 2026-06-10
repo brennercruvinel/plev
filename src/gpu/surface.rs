@@ -18,6 +18,9 @@ impl GpuContext {
             surface.configure(&self.device, &self.surface_config);
         }
 
+        // Back to physical coordinates until the app re-applies its logical
+        // projection (apps call `set_projection` right after `resize`).
+        self.logical_size = None;
         let projection_data = ortho_projection(width as f32, height as f32);
         self.queue.write_buffer(
             &self.projection_buffer,
@@ -81,12 +84,26 @@ impl GpuContext {
     /// Override the projection matrix with custom logical dimensions.
     /// Use when scene coordinates differ from physical surface size (e.g. HiDPI).
     pub fn set_projection(&mut self, logical_width: f32, logical_height: f32) {
+        self.logical_size = Some((logical_width.max(1.0), logical_height.max(1.0)));
         let projection_data = ortho_projection(logical_width, logical_height);
         self.queue.write_buffer(
             &self.projection_buffer,
             0,
             bytemuck::cast_slice(&projection_data),
         );
+    }
+
+    /// Scale from scene (logical) coordinates to physical surface pixels —
+    /// `(1, 1)` unless a logical projection is active. Scissor rects derived
+    /// from `SceneNode::PushClip` must be multiplied by this.
+    pub fn clip_scale(&self) -> (f32, f32) {
+        match self.logical_size {
+            Some((lw, lh)) => (
+                self.surface_config.width as f32 / lw,
+                self.surface_config.height as f32 / lh,
+            ),
+            None => (1.0, 1.0),
+        }
     }
 
     pub fn surface_format(&self) -> wgpu::TextureFormat {

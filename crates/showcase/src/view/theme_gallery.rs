@@ -137,6 +137,33 @@ impl ThemeSection {
         }
     }
 
+    /// The type-ramp specimens drawn under the palette grid.
+    fn type_ramp(theme: &Theme) -> [(&'static str, f32, u16); 6] {
+        [
+            ("Display", theme.typography.display, 700u16),
+            ("Title", theme.typography.title, 700),
+            ("Title sm", theme.typography.title_sm, 600),
+            ("Body", theme.typography.body, 400),
+            ("Body sm", theme.typography.body_sm, 400),
+            ("Caption", theme.typography.caption, 400),
+        ]
+    }
+
+    /// Natural height of tokens + palettes + typography (page scrolling
+    /// needs it).
+    pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
+        let cards_bottom = self
+            .card_rects(content)
+            .last()
+            .map(|r| r.y + r.h)
+            .unwrap_or(content.y);
+        let ramp_h: f32 = Self::type_ramp(theme)
+            .iter()
+            .map(|(_, size, _)| size * 1.3 + 6.0)
+            .sum();
+        cards_bottom + 34.0 + LABEL_H + ramp_h + GAP - content.y
+    }
+
     /// Returns the picked theme name, if a card was clicked.
     pub fn handle_event(
         &mut self,
@@ -242,22 +269,12 @@ impl ThemeSection {
             bottom = bottom.max(rect.y + rect.h);
         }
 
-        // Typography ramp with the *current* theme.
+        // Typography ramp with the *current* theme. The page clips and
+        // scrolls, so the full ramp is always emitted.
         let mut y = bottom + 34.0;
         group_label(c, "TYPOGRAPHY", content.x, y, theme);
         y += LABEL_H;
-        let ramp = [
-            ("Display", theme.typography.display, 700u16),
-            ("Title", theme.typography.title, 700),
-            ("Title sm", theme.typography.title_sm, 600),
-            ("Body", theme.typography.body, 400),
-            ("Body sm", theme.typography.body_sm, 400),
-            ("Caption", theme.typography.caption, 400),
-        ];
-        for (name, size, weight) in ramp {
-            if y + size * 1.3 > content.y + content.h {
-                break;
-            }
+        for (name, size, weight) in Self::type_ramp(theme) {
             text(
                 c,
                 &format!("{name} — quick brown fox {size}px"),

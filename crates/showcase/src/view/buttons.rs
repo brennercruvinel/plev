@@ -91,6 +91,17 @@ impl ButtonsSection {
         all
     }
 
+    /// Natural height of all button rows (page scrolling needs it).
+    pub fn content_height(&self, content: Rect) -> f32 {
+        self.layout(content)
+            .iter()
+            .flatten()
+            .map(|r| r.y + r.h)
+            .fold(content.y, f32::max)
+            - content.y
+            + GAP
+    }
+
     pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
         let rects = self.layout(content);
         let mut result = EventResult::IGNORED;

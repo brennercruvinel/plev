@@ -115,6 +115,14 @@ impl FormsSection {
         }
     }
 
+    /// Natural height of both form columns (page scrolling needs it).
+    pub fn content_height(&self, content: Rect) -> f32 {
+        let l = self.layout(content);
+        let col_a = l.switches[2].y + l.switches[2].h;
+        let col_b = l.select.y + l.select.h;
+        col_a.max(col_b) - content.y + GROUP_GAP
+    }
+
     pub fn select_is_open(&self) -> bool {
         self.select.is_open()
     }

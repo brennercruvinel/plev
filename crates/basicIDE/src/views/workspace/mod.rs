@@ -237,16 +237,24 @@ impl WorkspaceView {
         self.right_w = self.right_w.max(RIGHT_MIN_W);
     }
 
-    /// Handle mouse scroll for the hovered panel.
-    pub fn scroll(&mut self, cursor_x: f32, delta: f32) {
+    /// Handle mouse scroll for the hovered panel. Returns `true` when an
+    /// offset actually moved (callers may invalidate unconditionally; the
+    /// return value keeps the routing testable).
+    pub fn scroll(&mut self, cursor_x: f32, delta: f32) -> bool {
         let (left_x, right_x) = self.panel_bounds();
-        if cursor_x < left_x + self.left_w {
-            self.unassigned.scroll.scroll_by(delta);
+        let target = if cursor_x < left_x {
+            // The sidebar rail does not scroll any panel.
+            return false;
+        } else if cursor_x < left_x + self.left_w {
+            &mut self.unassigned.scroll
         } else if cursor_x > right_x {
-            self.diff.scroll.scroll_by(delta);
+            &mut self.diff.scroll
         } else {
-            self.stacks.scroll.scroll_by(delta);
-        }
+            &mut self.stacks.scroll
+        };
+        let old = target.offset();
+        target.scroll_by(delta);
+        target.offset() != old
     }
 
     /// Returns (left_panel_x, right_panel_x) accounting for sidebar.
