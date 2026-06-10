@@ -779,38 +779,44 @@ fn card_default_width_is_hoff_368() {
 }
 
 #[test]
-fn card_deck_shell_emits_shadow_then_frost_then_edge_then_surface() {
+fn card_deck_shell_is_the_discreet_post_lift() {
     let theme = Theme::hoff();
     let card = &sample_cards()[0]; // Stat: deck shell.
     let nodes = card_nodes(card, &theme);
 
+    // No frost, no drop shadow: the live post card measures
+    // `backdrop-filter:none` and `box-shadow:none`. The deck never paints a
+    // backdrop blur or an outset (non-inset) shadow.
     assert!(
-        matches!(nodes[0], SceneNode::Shadow { color, inset, .. }
-            if color == [0.0, 0.0, 0.0, 0.40] && !inset),
-        "deck shell starts with the 40%-black drop shadow"
+        !nodes
+            .iter()
+            .any(|n| matches!(n, SceneNode::BackdropBlur { .. })),
+        "deck shell does not frost (content cards aren't real glass)"
     );
-    // Real glass: a backdrop blur frosts the page before the fill.
     assert!(
-        matches!(nodes[1], SceneNode::BackdropBlur { sigma, .. } if sigma > 0.0),
-        "deck shell frosts its backdrop (real glass)"
+        !nodes
+            .iter()
+            .any(|n| matches!(n, SceneNode::Shadow { inset: false, .. })),
+        "deck shell casts no drop shadow"
     );
-    // Edge-light underlay: white gradient fading downward.
+    // Edge-light underlay first: a soft white gradient fading downward.
     assert!(
-        matches!(nodes[2], SceneNode::GradientRect { color, color2, angle_deg, .. }
+        matches!(nodes[0], SceneNode::GradientRect { color, color2, angle_deg, .. }
             if color[3] > 0.0 && color2[3] == 0.0 && angle_deg == 180.0),
         "edge-light underlay fades to transparent"
     );
-    // Surface: translucent graphite (theme.surface tone) at radius 32 (inset
-    // by the 1.5 border) — translucent so the frost reads through.
-    match nodes[3] {
+    // Surface: the .02 white post-card lift at radius 20 (inset 1.0 → 19.0),
+    // translucent so the #303030 page reads through as ~#343434.
+    match nodes[1] {
         SceneNode::RoundedRect {
             color,
             corner_radius,
             ..
         } => {
-            assert!((color[0] - 46.0 / 255.0).abs() < 1e-5);
-            assert!(color[3] < 1.0 && color[3] > 0.5);
-            assert_eq!(corner_radius, 30.5);
+            // White (#f8f8f8) at .02 — a whisper lighter than the page.
+            assert!((color[0] - 248.0 / 255.0).abs() < 1e-5);
+            assert!((color[3] - 0.02).abs() < 1e-5);
+            assert_eq!(corner_radius, theme.radius.lg - 1.0);
         }
         ref other => panic!("expected surface RoundedRect, got {other:?}"),
     }
@@ -825,27 +831,30 @@ fn card_deck_shell_emits_shadow_then_frost_then_edge_then_surface() {
 }
 
 #[test]
-fn card_profile_uses_social_surface_and_hover() {
+fn card_profile_uses_post_surface_and_hover() {
     let theme = Theme::hoff();
     let mut card = sample_cards().remove(1);
     let (w, h) = card.preferred_size();
     let bounds = Rect::new(0.0, 0.0, w, h);
 
     let nodes = card_nodes(&card, &theme);
-    // Social shell: no drop shadow; frost the page, then a .02 white surface.
+    // Same discreet post shell as the deck: no frost, no drop shadow, a .02
+    // white surface (edge-light underlay first, surface second).
     assert!(!matches!(nodes[0], SceneNode::Shadow { inset: false, .. }));
     assert!(
-        matches!(nodes[0], SceneNode::BackdropBlur { .. }),
-        "social shell frosts its backdrop first"
+        !nodes
+            .iter()
+            .any(|n| matches!(n, SceneNode::BackdropBlur { .. })),
+        "post card does not frost its backdrop"
     );
-    assert!(matches!(nodes[2], SceneNode::RoundedRect { color, .. }
+    assert!(matches!(nodes[1], SceneNode::RoundedRect { color, .. }
         if (color[3] - 0.02).abs() < 1e-5));
 
     card.handle_event(&move_to(10.0, 10.0), bounds);
     assert!(card.is_hovered());
     let nodes = card_nodes(&card, &theme);
     assert!(
-        matches!(nodes[2], SceneNode::RoundedRect { color, .. }
+        matches!(nodes[1], SceneNode::RoundedRect { color, .. }
             if (color[3] - 0.05).abs() < 1e-5),
         "hover raises the surface to .05"
     );
