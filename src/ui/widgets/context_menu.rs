@@ -5,13 +5,14 @@ use crate::ui::icons;
 
 use super::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 
-/// HOFF actions dropdown: 240px body, radius 24, pad 8, solid #3b3b3b;
-/// items 44px, radius 16, pad 0 8, base-2sm rgba($n2,.56) -> .76 hover.
+/// HOFF actions dropdown: 240px body, radius 32, pad 8, solid #3b3b3b
+/// (measured live); items 44px, radius 16, pad 0 8, base-2sm
+/// rgba($n2,.56) -> .76 hover.
 const ITEM_H: f32 = 44.0;
 const SEP_H: f32 = 9.0;
 const PAD_X: f32 = 8.0;
 const PAD_Y: f32 = 8.0;
-const RADIUS: f32 = 24.0;
+const RADIUS: f32 = 32.0;
 const ITEM_RADIUS: f32 = 16.0;
 const ICON: f32 = 18.0;
 const MIN_W: f32 = 240.0;
@@ -207,6 +208,21 @@ impl ContextMenu {
         compositor.push_to_layer(
             layer,
             super::rounded_rect_stroke(x, y, w, h, RADIUS, glass.edge_soft.0, 1.0),
+        );
+        // Inset key-light glint (measured: inset 2px 4px 16px rgba(248,248,248,.06)).
+        compositor.push_to_layer(
+            layer,
+            SceneNode::Shadow {
+                x,
+                y,
+                w,
+                h,
+                corner_radius: RADIUS,
+                blur_radius: 16.0,
+                offset: [2.0, 4.0],
+                color: glass.inset_highlight.0,
+                inset: true,
+            },
         );
 
         let style = Self::label_style();
