@@ -100,14 +100,14 @@ pub fn parse_unified(text: &str) -> Result<Vec<Hunk>> {
         // Re-walk to attach paths: cheapest is a second pass over the raw
         // text mirroring the state machine above, but tracking which hunk
         // belongs to which file as we created them in order.
-        attach_file_prefixes(text, &mut hunks)?;
+        attach_file_prefixes(text, &mut hunks);
     }
     Ok(hunks)
 }
 
 /// Second pass for multi-file diffs: prepend `path: ` to each hunk header
 /// in creation order.
-fn attach_file_prefixes(text: &str, hunks: &mut [Hunk]) -> Result<()> {
+fn attach_file_prefixes(text: &str, hunks: &mut [Hunk]) {
     let mut current_file: Option<String> = None;
     let mut idx = 0;
     for line in text.lines() {
@@ -122,7 +122,6 @@ fn attach_file_prefixes(text: &str, hunks: &mut [Hunk]) -> Result<()> {
             idx += 1;
         }
     }
-    Ok(())
 }
 
 /// Extracts the new-side path from a `diff --git a/old b/new` line.

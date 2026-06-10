@@ -25,14 +25,14 @@ pub fn parse_porcelain_v2(raw: &str) -> Result<Vec<FileStatus>> {
             b'1' => {
                 // 1 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <path>
                 let (xy, path) = split_fields(record, 8)?;
-                push_xy(&mut entries, xy, path, path);
+                push_xy(&mut entries, xy, path);
             }
             b'2' => {
                 // 2 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <X><score> <path>
                 // followed by a separate NUL-terminated <origPath> token.
                 let (xy, path) = split_fields(record, 9)?;
                 let _orig = tokens.next(); // consume original path token
-                push_xy(&mut entries, xy, path, path);
+                push_xy(&mut entries, xy, path);
             }
             b'?' => {
                 let path = record
@@ -73,7 +73,7 @@ fn split_fields(record: &str, path_field: usize) -> Result<(&str, &str)> {
     Ok((xy, rest))
 }
 
-fn push_xy(entries: &mut Vec<FileStatus>, xy: &str, path: &str, _orig: &str) {
+fn push_xy(entries: &mut Vec<FileStatus>, xy: &str, path: &str) {
     let mut chars = xy.chars();
     let x = chars.next().unwrap_or('.');
     let y = chars.next().unwrap_or('.');
