@@ -92,7 +92,20 @@ impl Default for ComputedBounds {
 // LayoutItem -- input for layout computation (style + child indices)
 // ---------------------------------------------------------------------------
 
+/// Text content + style for real measurement of text leaf nodes. When set on
+/// a `LayoutItem`, the engine measures the node with the `TextMeasurer`
+/// (taffy measure function) instead of treating it as an empty leaf.
+#[derive(Debug, Clone)]
+pub struct TextMeasureSpec {
+    pub content: String,
+    pub style: crate::text::TextStyle,
+    /// Element-level wrap width, combined with the available space.
+    pub max_width: Option<f32>,
+}
+
 pub struct LayoutItem {
     pub style: LayoutStyle,
     pub children: Vec<usize>,
+    /// Present for text leaf nodes that need intrinsic-size measurement.
+    pub text: Option<TextMeasureSpec>,
 }

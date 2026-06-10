@@ -4,11 +4,16 @@ fn leaf(style: LayoutStyle) -> LayoutItem {
     LayoutItem {
         style,
         children: vec![],
+        text: None,
     }
 }
 
 fn container(style: LayoutStyle, children: Vec<usize>) -> LayoutItem {
-    LayoutItem { style, children }
+    LayoutItem {
+        style,
+        children,
+        text: None,
+    }
 }
 
 #[test]

@@ -15,6 +15,7 @@ impl Ui {
             .map(|n| LayoutItem {
                 style: n.layout.clone(),
                 children: n.children.clone(),
+                text: None,
             })
             .collect();
 

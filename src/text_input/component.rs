@@ -1,9 +1,9 @@
 //! TextInput: editable text field component with focus, blinking cursor, and scene generation.
 
 use crate::compositor::{SceneNode, TextNodeKey};
+use crate::text::TextMeasurer;
 
 use super::buffer::TextBuffer;
-use super::cursor_map::{cursor_to_x, x_to_cursor};
 
 const CURSOR_BLINK_INTERVAL: f32 = 0.53;
 
@@ -168,7 +168,15 @@ impl TextInput {
 
     pub fn handle_click(&mut self, local_x: f32) {
         self.focus();
-        let cursor_pos = x_to_cursor(self.buffer.text(), local_x, self.font_size);
+        // Single-line input: hit-test on the first (only) line, no wrapping.
+        let line_middle = self.font_size * 0.65;
+        let cursor_pos = TextMeasurer::hit_test(
+            self.buffer.text(),
+            self.font_size,
+            None,
+            local_x,
+            line_middle,
+        );
         self.buffer.cursor = cursor_pos;
         self.buffer.selection = None;
         self.reset_blink();
@@ -236,8 +244,8 @@ impl TextInput {
             } else {
                 (end, start)
             };
-            let sel_x = cursor_to_x(self.buffer.text(), lo, self.font_size);
-            let sel_w = cursor_to_x(self.buffer.text(), hi, self.font_size) - sel_x;
+            let sel_x = TextMeasurer::cursor_x(self.buffer.text(), self.font_size, lo);
+            let sel_w = TextMeasurer::cursor_x(self.buffer.text(), self.font_size, hi) - sel_x;
             nodes.push(SceneNode::Rect {
                 x: x + pad + sel_x,
                 y: text_y - 2.0,
@@ -290,7 +298,8 @@ impl TextInput {
 
         // Cursor
         if self.focused && self.cursor_visible {
-            let cursor_x = cursor_to_x(self.buffer.text(), self.buffer.cursor(), self.font_size);
+            let cursor_x =
+                TextMeasurer::cursor_x(self.buffer.text(), self.font_size, self.buffer.cursor());
             nodes.push(SceneNode::Rect {
                 x: x + pad + cursor_x,
                 y: text_y - 2.0,

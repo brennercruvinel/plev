@@ -203,32 +203,22 @@ fn set_text_resets() {
 }
 
 // -- Cursor-pixel mapping tests --
+// Mapping is done by text::TextMeasurer (real shaping); see
+// tests_component.rs and text/tests_measure.rs for cursor <-> x coverage.
 
 #[test]
-fn cursor_to_x_start() {
-    assert!((cursor_to_x("hello", 0, 16.0) - 0.0).abs() < 0.01);
+fn cursor_x_start_is_zero() {
+    assert!((crate::text::TextMeasurer::cursor_x("hello", 16.0, 0) - 0.0).abs() < 0.01);
 }
 
 #[test]
-fn cursor_to_x_end() {
-    let x = cursor_to_x("hello", 5, 16.0);
-    assert!((x - 48.0).abs() < 0.01); // 5 chars * 9.6 = 48.0
+fn hit_test_far_right_caps_at_end() {
+    let pos = crate::text::TextMeasurer::hit_test("hello", 16.0, None, 1000.0, 10.0);
+    assert_eq!(pos, 5);
 }
 
 #[test]
-fn x_to_cursor_start() {
-    assert_eq!(x_to_cursor("hello", 0.0, 16.0), 0);
-}
-
-#[test]
-fn x_to_cursor_end() {
-    let pos = x_to_cursor("hello", 100.0, 16.0);
-    assert_eq!(pos, 5); // capped at end
-}
-
-#[test]
-fn x_to_cursor_middle() {
-    let pos = x_to_cursor("hello", 24.0, 16.0);
-    // ~24 / 9.6 = 2.5, rounds to 3
-    assert!(pos >= 2 && pos <= 3);
+fn hit_test_far_left_is_start() {
+    let pos = crate::text::TextMeasurer::hit_test("hello", 16.0, None, -10.0, 10.0);
+    assert_eq!(pos, 0);
 }

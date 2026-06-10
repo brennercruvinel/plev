@@ -1,13 +1,17 @@
 use taffy::prelude::*;
 
-use super::types::{Align, ComputedBounds, Direction, Justify, LayoutItem, LayoutStyle};
+use crate::text::TextMeasurer;
+
+use super::types::{
+    Align, ComputedBounds, Direction, Justify, LayoutItem, LayoutStyle, TextMeasureSpec,
+};
 
 // ---------------------------------------------------------------------------
 // LayoutEngine -- owns a TaffyTree, computes layout from a flat list of items
 // ---------------------------------------------------------------------------
 
 pub struct LayoutEngine {
-    tree: TaffyTree<()>,
+    tree: TaffyTree<TextMeasureSpec>,
 }
 
 impl Default for LayoutEngine {
@@ -38,13 +42,17 @@ impl LayoutEngine {
             return Vec::new();
         }
 
-        // Phase 1: create all nodes with styles (no children yet)
+        // Phase 1: create all nodes with styles (no children yet). Text leaf
+        // nodes carry their measure spec as taffy node context.
         let node_ids: Vec<NodeId> = items
             .iter()
             .map(|item| {
-                self.tree
-                    .new_leaf(to_taffy_style(&item.style))
-                    .expect("failed to create taffy node")
+                let style = to_taffy_style(&item.style);
+                match &item.text {
+                    Some(spec) => self.tree.new_leaf_with_context(style, spec.clone()),
+                    None => self.tree.new_leaf(style),
+                }
+                .expect("failed to create taffy node")
             })
             .collect();
 
@@ -59,15 +67,16 @@ impl LayoutEngine {
             }
         }
 
-        // Phase 3: compute layout
+        // Phase 3: compute layout, measuring text leaves with the real shaper
         let root = node_ids[0];
         self.tree
-            .compute_layout(
+            .compute_layout_with_measure(
                 root,
                 taffy::Size {
                     width: AvailableSpace::Definite(viewport_w),
                     height: AvailableSpace::Definite(viewport_h),
                 },
+                measure_text_node,
             )
             .expect("layout computation failed");
 
@@ -105,6 +114,42 @@ impl LayoutEngine {
         for &child_idx in &items[index].children {
             self.collect_bounds(node_ids, items, child_idx, abs_x, abs_y, bounds);
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Text measure function (taffy leaf nodes with a TextMeasureSpec context)
+// ---------------------------------------------------------------------------
+
+fn measure_text_node(
+    known: taffy::Size<Option<f32>>,
+    available: taffy::Size<AvailableSpace>,
+    _node: NodeId,
+    context: Option<&mut TextMeasureSpec>,
+    _style: &Style,
+) -> taffy::Size<f32> {
+    let Some(spec) = context else {
+        return taffy::Size::ZERO;
+    };
+    if spec.content.is_empty() {
+        return taffy::Size::ZERO;
+    }
+
+    let available_width = known.width.or(match available.width {
+        AvailableSpace::Definite(w) => Some(w),
+        // Min-content: wrap as tightly as possible (widest unbreakable word).
+        AvailableSpace::MinContent => Some(0.0),
+        AvailableSpace::MaxContent => None,
+    });
+    let wrap_width = match (available_width, spec.max_width) {
+        (Some(a), Some(b)) => Some(a.min(b)),
+        (a, b) => a.or(b),
+    };
+
+    let (width, height) = TextMeasurer::measure_styled(&spec.content, &spec.style, wrap_width);
+    taffy::Size {
+        width: known.width.unwrap_or(width),
+        height: known.height.unwrap_or(height),
     }
 }
 

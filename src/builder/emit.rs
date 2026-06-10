@@ -141,15 +141,16 @@ fn emit_div(
     }
 }
 
-fn emit_text(
-    element: &Element,
-    b: &ComputedBounds,
-    intent_color: Option<crate::color::Color>,
-    props: &TextProps<'_>,
-    out: &mut Vec<SceneNode>,
-) {
+/// Resolve the final display string for a text element: merged-children
+/// content, uppercase transform, and truncation with ellipsis. Shared by
+/// scene emission and layout measurement so both see the exact same text.
+pub(crate) fn resolve_display_text<'a>(
+    element: &'a Element,
+    content: &'a str,
+    truncate_chars: Option<usize>,
+) -> std::borrow::Cow<'a, str> {
     // Resolve content (check merged children)
-    let resolved = if props.content.is_empty() && !element.children.is_empty() {
+    let resolved = if content.is_empty() && !element.children.is_empty() {
         element
             .children
             .iter()
@@ -165,33 +166,36 @@ fn emit_text(
             })
             .unwrap_or("")
     } else {
-        props.content
+        content
     };
 
     // Apply uppercase transform
-    let uppercased;
-    let after_case: &str = if element.style.uppercase {
-        uppercased = resolved.to_uppercase();
-        &uppercased
+    let after_case: std::borrow::Cow<'a, str> = if element.style.uppercase {
+        resolved.to_uppercase().into()
     } else {
-        resolved
+        resolved.into()
     };
 
-    let truncated;
-    let actual: &str = if let Some(max) = props.truncate_chars {
-        if after_case.chars().count() > *max {
-            truncated = after_case
-                .chars()
-                .take(max.saturating_sub(1))
-                .collect::<String>()
-                + "\u{2026}";
-            &truncated
-        } else {
-            after_case
-        }
-    } else {
-        after_case
-    };
+    match truncate_chars {
+        Some(max) if after_case.chars().count() > max => (after_case
+            .chars()
+            .take(max.saturating_sub(1))
+            .collect::<String>()
+            + "\u{2026}")
+            .into(),
+        _ => after_case,
+    }
+}
+
+fn emit_text(
+    element: &Element,
+    b: &ComputedBounds,
+    intent_color: Option<crate::color::Color>,
+    props: &TextProps<'_>,
+    out: &mut Vec<SceneNode>,
+) {
+    let actual = resolve_display_text(element, props.content, props.truncate_chars.copied());
+    let actual: &str = &actual;
 
     if !actual.is_empty() {
         let weight = if element.style.bold {
