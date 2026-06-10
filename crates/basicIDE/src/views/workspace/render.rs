@@ -15,7 +15,7 @@ impl WorkspaceView {
 
         compositor.begin_frame();
 
-        // Global frame behind the app — body #444444.
+        // Page canvas behind the app — composed graphite #303030.
         compositor.push(SceneNode::Rect {
             x: 0.0,
             y: 0.0,
