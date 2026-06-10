@@ -682,18 +682,14 @@ impl ShowcaseView {
         let glass = &theme.glass;
         let text_c = theme.colors.text;
 
-        // HOFF sidebar: surface one notch above the page (rgba(40,40,40,.8))
-        // — path-based so nav icons stack on top.
-        let surface = {
-            let s = theme.colors.surface.0;
-            [s[0], s[1], s[2], (s[3] + 0.1).min(1.0)]
-        };
+        // HOFF sidebar rail: the raised opaque panel tone (#2E2E2E, measured
+        // live) — a touch darker than the #303030 page, same as the real app.
         c.push(SceneNode::Rect {
             x: 0.0,
             y: 0.0,
             w: SIDEBAR_W,
             h: self.height,
-            color: surface,
+            color: theme.colors.surface.0,
         });
 
         // Logo block: gradient-text feel (primary name, faint subtitle).

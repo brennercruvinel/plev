@@ -148,7 +148,9 @@ impl Modal {
             },
         );
 
-        // Glass dialog: deep shadow stack + edge-light + rgba(40,40,40,.7).
+        // Glass dialog: deep floating-menu shadow + real frost + edge-light
+        // + the solid #3B3B3B sheet (measured live: dialogs/menus are this
+        // lighter graphite, radius 32) + the inset key-light glint.
         let dialog = self.dialog_rect(vw, vh);
         let radius = theme.radius.xl;
         compositor.push_to_layer(
@@ -159,22 +161,43 @@ impl Modal {
                 w: dialog.w,
                 h: dialog.h,
                 corner_radius: radius,
-                // 0 24px 24px -16px rgba(5,5,5,..) head of the deep stack.
-                blur_radius: 24.0,
-                offset: [0.0, 16.0],
-                color: [5.0 / 255.0, 5.0 / 255.0, 5.0 / 255.0, 0.35],
+                // 0 24px 32px -12px rgba(18,18,18,..): the measured menu
+                // shadow, deepened for the blocking dialog.
+                blur_radius: 32.0,
+                offset: [0.0, 24.0],
+                color: [18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.45],
                 inset: false,
             },
         );
-        for node in glass_pill(
-            dialog,
-            radius,
-            glass.edge_soft.0,
-            1.5,
-            theme.colors.surface.0,
-        ) {
+        compositor.push_to_layer(
+            layer,
+            SceneNode::BackdropBlur {
+                x: dialog.x,
+                y: dialog.y,
+                w: dialog.w,
+                h: dialog.h,
+                corner_radius: radius,
+                sigma: theme.effects.blur_sigma,
+            },
+        );
+        for node in glass_pill(dialog, radius, glass.edge_soft.0, 1.5, glass.popover.0) {
             compositor.push_to_layer(layer, node);
         }
+        // Inset key-light: inset 2px 4px 16px rgba(248,248,248,.06).
+        compositor.push_to_layer(
+            layer,
+            SceneNode::Shadow {
+                x: dialog.x,
+                y: dialog.y,
+                w: dialog.w,
+                h: dialog.h,
+                corner_radius: radius,
+                blur_radius: 16.0,
+                offset: [2.0, 4.0],
+                color: glass.inset_highlight.0,
+                inset: true,
+            },
+        );
 
         // Title 20/1.2/500 $text-primary; body base-2r $text-secondary.
         compositor.push_to_layer(

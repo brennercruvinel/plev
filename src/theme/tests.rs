@@ -369,12 +369,36 @@ mod tests {
         assert_eq!(hoff::N2.0, rgba8(0xf8, 0xf8, 0xf8, 1.0));
         assert_eq!(hoff::N3.0, rgba8(0x28, 0x28, 0x28, 1.0));
         assert_eq!(hoff::N4.0, rgba8(0x12, 0x12, 0x12, 1.0));
-        assert_eq!(hoff::PAGE_BG.0, rgba8(0x44, 0x44, 0x44, 1.0));
-        assert_eq!(hoff::BG_SURFACE.0, rgba8(40, 40, 40, 0.7));
-        assert_eq!(hoff::BG_SIDEBAR.0, rgba8(40, 40, 40, 0.8));
+        // Hidden compositing frame (never on screen) vs the graphite tones
+        // every screen actually sits on — measured live, not pure black.
+        assert_eq!(hoff::BODY_FRAME.0, rgba8(0x44, 0x44, 0x44, 1.0));
+        assert_eq!(hoff::PAGE_BG.0, rgba8(0x30, 0x30, 0x30, 1.0));
+        assert_eq!(hoff::BG_SURFACE.0, rgba8(0x30, 0x30, 0x30, 1.0));
+        assert_eq!(hoff::BG_SIDEBAR.0, rgba8(0x2e, 0x2e, 0x2e, 1.0));
+        assert_eq!(hoff::CARD_OVERLAY.0, rgba8(0x2e, 0x2e, 0x2e, 1.0));
         assert_eq!(hoff::SCRIM.0, rgba8(35, 34, 34, 0.9));
         assert_eq!(hoff::POPOVER.0, rgba8(0x3b, 0x3b, 0x3b, 1.0));
         assert_eq!(hoff::TOOLTIP.0, rgba8(0x26, 0x26, 0x26, 1.0));
+    }
+
+    /// Parity contract for the page canvas: the live reference renders on
+    /// graphite, never the GOLDEN_SPEC's "#0E0E0E black" nor the hidden
+    /// #444444 body. Page == #303030, the rail one notch darker (#2E2E2E),
+    /// and a glass card (.02 white over the page) reads a touch LIGHTER.
+    #[test]
+    fn hoff_page_is_measured_graphite_not_black() {
+        let t = Theme::hoff();
+        let bg = t.colors.bg.0;
+        // Graphite, not black: every channel near 0.19 (#303030 = 48/255).
+        assert!((bg[0] - 48.0 / 255.0).abs() < 1e-5, "page bg is #303030");
+        assert!(bg[0] > 0.12 && bg[0] < 0.25, "graphite, not #0E0E0E black");
+        assert_eq!(bg[3], 1.0, "page bg is opaque");
+        // Rail/panel sits one notch darker than the page (measured #2E2E2E).
+        assert!(t.colors.surface.0[0] < bg[0], "rail darker than the page");
+        // A .02 white card glass composited over the page lands lighter.
+        let card_white = t.glass.surface.0;
+        let lifted = bg[0] * (1.0 - card_white[3]) + card_white[0] * card_white[3];
+        assert!(lifted > bg[0], "a glass card reads lighter than the page");
     }
 
     #[test]
