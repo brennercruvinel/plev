@@ -1,6 +1,8 @@
 use super::{INITIAL_IB_SIZE, INITIAL_VB_SIZE, Layer};
 use crate::compositor::scene::SceneNode;
-use crate::compositor::vertex::{QuadVertex, RectSdfVertex, gradient_direction};
+use crate::compositor::vertex::{
+    QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction, shadow_padding, shadow_sigma,
+};
 use crate::gpu_vec::GpuVec;
 
 /// Resolved per-rect parameters shared by the solid and gradient SDF paths.
@@ -216,6 +218,94 @@ impl Layer {
 
         self.sdf_index_count = self.sdf_indices.len() as u32;
         culled
+    }
+
+    /// Rebuild CPU-side analytic shadow geometry. Each shadow is a single
+    /// quad expanded by the blur padding and shifted by the offset; the
+    /// fragment shader evaluates the blurred rounded-box mask analytically.
+    /// Returns the number of nodes culled.
+    pub(crate) fn build_shadow_geometry(&mut self, viewport: (f32, f32)) -> u32 {
+        self.shadow_vertices.clear();
+        self.shadow_indices.clear();
+        let mut culled = 0u32;
+
+        for node in &self.nodes {
+            let SceneNode::Shadow {
+                x,
+                y,
+                w,
+                h,
+                corner_radius,
+                blur_radius,
+                offset,
+                color,
+            } = node
+            else {
+                continue;
+            };
+
+            let pad = shadow_padding(*blur_radius);
+            let (qx, qy) = (x - pad + offset[0], y - pad + offset[1]);
+            let (qw, qh) = (w + 2.0 * pad, h + 2.0 * pad);
+            if outside_viewport(viewport, qx, qy, qw, qh) {
+                culled += 1;
+                continue;
+            }
+
+            let params = [
+                w / 2.0,
+                h / 2.0,
+                *corner_radius,
+                shadow_sigma(*blur_radius),
+            ];
+            // Quad corners relative to the (offset) rect center.
+            let half = [w / 2.0 + pad, h / 2.0 + pad];
+            let corners = [
+                ([qx, qy], [-half[0], -half[1]]),
+                ([qx + qw, qy], [half[0], -half[1]]),
+                ([qx + qw, qy + qh], [half[0], half[1]]),
+                ([qx, qy + qh], [-half[0], half[1]]),
+            ];
+
+            let base = self.shadow_vertices.len() as u32;
+            for (position, local) in corners {
+                self.shadow_vertices.push(ShadowVertex {
+                    position,
+                    local,
+                    color: *color,
+                    params,
+                });
+            }
+            self.shadow_indices
+                .extend_from_slice(&[base, base + 1, base + 2, base + 2, base + 3, base]);
+        }
+
+        self.shadow_index_count = self.shadow_indices.len() as u32;
+        culled
+    }
+
+    pub(crate) fn upload_shadow_geometry(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
+        if !self.shadow_vertices.is_empty() {
+            let vb = self.shadow_vb.get_or_insert_with(|| {
+                GpuVec::new(
+                    device,
+                    "layer_shadow_vb",
+                    wgpu::BufferUsages::VERTEX,
+                    INITIAL_VB_SIZE,
+                )
+            });
+            vb.upload(device, queue, &self.shadow_vertices);
+
+            let ib = self.shadow_ib.get_or_insert_with(|| {
+                GpuVec::new(
+                    device,
+                    "layer_shadow_ib",
+                    wgpu::BufferUsages::INDEX,
+                    INITIAL_IB_SIZE,
+                )
+            });
+            ib.upload(device, queue, &self.shadow_indices);
+        }
     }
 
     pub(crate) fn upload_sdf_geometry(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {

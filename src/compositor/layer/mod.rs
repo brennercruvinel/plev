@@ -5,7 +5,7 @@ use rustc_hash::FxHasher;
 use std::hash::{Hash, Hasher};
 
 use crate::compositor::scene::SceneNode;
-use crate::compositor::vertex::{QuadVertex, RectSdfVertex};
+use crate::compositor::vertex::{QuadVertex, RectSdfVertex, ShadowVertex};
 use crate::gpu_vec::GpuVec;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -48,6 +48,11 @@ pub struct Layer {
     pub(crate) sdf_vb: Option<GpuVec>,
     pub(crate) sdf_ib: Option<GpuVec>,
     pub(crate) sdf_index_count: u32,
+    pub(crate) shadow_vertices: Vec<ShadowVertex>,
+    pub(crate) shadow_indices: Vec<u32>,
+    pub(crate) shadow_vb: Option<GpuVec>,
+    pub(crate) shadow_ib: Option<GpuVec>,
+    pub(crate) shadow_index_count: u32,
     pub(crate) text_vertices: Vec<crate::text::TextVertex>,
     pub(crate) text_indices: Vec<u32>,
     pub(crate) text_vb: Option<GpuVec>,
@@ -89,6 +94,11 @@ impl Layer {
             sdf_vb: None,
             sdf_ib: None,
             sdf_index_count: 0,
+            shadow_vertices: Vec::new(),
+            shadow_indices: Vec::new(),
+            shadow_vb: None,
+            shadow_ib: None,
+            shadow_index_count: 0,
             text_vertices: Vec::new(),
             text_indices: Vec::new(),
             text_vb: None,
@@ -144,6 +154,19 @@ impl Layer {
             return None;
         }
         Some((vb.buffer(), ib.buffer(), self.sdf_index_count))
+    }
+
+    pub fn has_shadows(&self) -> bool {
+        self.shadow_index_count > 0
+    }
+
+    pub fn shadow_buffers(&self) -> Option<(&wgpu::Buffer, &wgpu::Buffer, u32)> {
+        let vb = self.shadow_vb.as_ref()?;
+        let ib = self.shadow_ib.as_ref()?;
+        if self.shadow_index_count == 0 {
+            return None;
+        }
+        Some((vb.buffer(), ib.buffer(), self.shadow_index_count))
     }
 
     pub fn has_text(&self) -> bool {

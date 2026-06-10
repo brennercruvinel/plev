@@ -45,6 +45,20 @@ pub enum SceneNode {
     Path {
         data: crate::path::TessellatedPath,
     },
+    /// Analytic drop shadow of a rounded rect (Evan Wallace approximation,
+    /// no blur pass). `x..h` are the bounds of the CASTING rect; the emitted
+    /// quad is expanded by the blur and shifted by `offset`.
+    Shadow {
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        corner_radius: f32,
+        /// CSS-like blur radius (Gaussian sigma = blur_radius / 2).
+        blur_radius: f32,
+        offset: [f32; 2],
+        color: [f32; 4],
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -134,6 +148,30 @@ impl SceneNode {
                 corner_radius.to_bits().hash(&mut h);
                 border_width.to_bits().hash(&mut h);
                 for c in border_color {
+                    c.to_bits().hash(&mut h);
+                }
+            }
+            SceneNode::Shadow {
+                x,
+                y,
+                w,
+                h: rh,
+                corner_radius,
+                blur_radius,
+                offset,
+                color,
+            } => {
+                5u8.hash(&mut h);
+                x.to_bits().hash(&mut h);
+                y.to_bits().hash(&mut h);
+                w.to_bits().hash(&mut h);
+                rh.to_bits().hash(&mut h);
+                corner_radius.to_bits().hash(&mut h);
+                blur_radius.to_bits().hash(&mut h);
+                for o in offset {
+                    o.to_bits().hash(&mut h);
+                }
+                for c in color {
                     c.to_bits().hash(&mut h);
                 }
             }

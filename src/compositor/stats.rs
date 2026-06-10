@@ -13,6 +13,8 @@ pub struct RenderStats {
     pub quad_vertices: u32,
     /// Total CPU-side SDF vertices across all layers (rounded rects).
     pub sdf_vertices: u32,
+    /// Total CPU-side analytic shadow vertices across all layers.
+    pub shadow_vertices: u32,
     /// Glyph quads uploaded across all layers.
     pub glyphs: u32,
     /// Number of layers managed by the compositor.

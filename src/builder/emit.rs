@@ -73,6 +73,22 @@ fn emit_div(
     let has_border = element.style.border > 0.0;
     let has_radius = element.style.corner_radius > 0.0;
 
+    // Drop shadow first so the rect paints on top of it.
+    if let Some(shadow) = element.style.drop_shadow
+        && (b.width > 0.0 || b.height > 0.0)
+    {
+        out.push(SceneNode::Shadow {
+            x: b.x,
+            y: b.y,
+            w: b.width,
+            h: b.height,
+            corner_radius: element.style.corner_radius,
+            blur_radius: shadow.blur,
+            offset: shadow.offset,
+            color: shadow.color.to_array(),
+        });
+    }
+
     if (has_bg || has_gradient || has_border) && (b.width > 0.0 || b.height > 0.0) {
         let bg_color = intent_color
             .or(element.style.bg)

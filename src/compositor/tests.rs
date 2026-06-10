@@ -206,6 +206,115 @@ fn rounded_rect(x: f32, y: f32, w: f32, h: f32) -> SceneNode {
 }
 
 // ---------------------------------------------------------------------------
+// Analytic shadow
+// ---------------------------------------------------------------------------
+
+#[test]
+fn shadow_quad_is_expanded_by_blur_and_shifted_by_offset() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(SceneNode::Shadow {
+        x: 100.0,
+        y: 200.0,
+        w: 80.0,
+        h: 40.0,
+        corner_radius: 8.0,
+        blur_radius: 16.0,
+        offset: [0.0, 4.0],
+        color: [0.0, 0.0, 0.0, 0.5],
+    });
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(layer.shadow_vertices.len(), 4);
+    assert_eq!(layer.shadow_index_count, 6);
+
+    let pad = shadow_padding(16.0); // 3 * sigma = 1.5 * blur
+    assert_eq!(pad, 24.0);
+
+    let v = &layer.shadow_vertices;
+    // Top-left corner: rect origin - padding + offset
+    assert_eq!(v[0].position, [100.0 - pad, 200.0 - pad + 4.0]);
+    // Bottom-right corner: rect end + padding + offset
+    assert_eq!(v[2].position, [180.0 + pad, 240.0 + pad + 4.0]);
+    // Local coords span the padded half extents, centered on the rect
+    assert_eq!(v[0].local, [-(40.0 + pad), -(20.0 + pad)]);
+    assert_eq!(v[2].local, [40.0 + pad, 20.0 + pad]);
+    for vert in v {
+        // half_w, half_h, corner_radius, sigma
+        assert_eq!(vert.params, [40.0, 20.0, 8.0, shadow_sigma(16.0)]);
+        assert_eq!(vert.color, [0.0, 0.0, 0.0, 0.5]);
+    }
+}
+
+#[test]
+fn shadow_is_culled_using_expanded_bounds() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    // Rect outside the viewport, but the expanded shadow quad reaches in:
+    // x+w = -10, padding = 30 -> quad right edge at +20.
+    comp.push(SceneNode::Shadow {
+        x: -110.0,
+        y: 10.0,
+        w: 100.0,
+        h: 50.0,
+        corner_radius: 0.0,
+        blur_radius: 20.0,
+        offset: [0.0, 0.0],
+        color: [0.0, 0.0, 0.0, 1.0],
+    });
+    // Far enough away that not even the expanded quad is visible.
+    comp.push(SceneNode::Shadow {
+        x: -500.0,
+        y: 10.0,
+        w: 100.0,
+        h: 50.0,
+        corner_radius: 0.0,
+        blur_radius: 20.0,
+        offset: [0.0, 0.0],
+        color: [0.0, 0.0, 0.0, 1.0],
+    });
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(layer.shadow_vertices.len(), 4);
+    assert_eq!(comp.stats().nodes_culled, 1);
+    assert_eq!(comp.stats().shadow_vertices, 4);
+}
+
+#[test]
+fn shadow_node_participates_in_dirty_tracking() {
+    fn shadow(blur_radius: f32) -> SceneNode {
+        SceneNode::Shadow {
+            x: 0.0,
+            y: 0.0,
+            w: 10.0,
+            h: 10.0,
+            corner_radius: 2.0,
+            blur_radius,
+            offset: [0.0, 2.0],
+            color: [0.0, 0.0, 0.0, 0.4],
+        }
+    }
+
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(shadow(8.0));
+    comp.resolve_scene((800.0, 600.0));
+    comp.mark_layer_clean(LayerId::DEFAULT);
+
+    // Same shadow rebuilt -> no render needed
+    comp.begin_frame();
+    comp.push(shadow(8.0));
+    assert!(!comp.needs_render());
+
+    // Different blur -> different hash -> render needed
+    comp.begin_frame();
+    comp.push(shadow(9.0));
+    assert!(comp.needs_render());
+}
+
+// ---------------------------------------------------------------------------
 // Gradient brush
 // ---------------------------------------------------------------------------
 

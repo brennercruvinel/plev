@@ -16,6 +16,7 @@ pub struct GpuContext {
     pub projection_bind_group: wgpu::BindGroup,
     pub quad_pipeline: wgpu::RenderPipeline,
     pub rect_sdf_pipeline: wgpu::RenderPipeline,
+    pub shadow_analytic_pipeline: wgpu::RenderPipeline,
     pub text_pipeline: wgpu::RenderPipeline,
     pub text_bind_group_layout: wgpu::BindGroupLayout,
     // Composite pipeline resources
@@ -196,6 +197,19 @@ impl GpuContext {
         );
 
         #[cfg(feature = "hot-reload")]
+        let shadow_src = crate::hot_reload::shader_source("shadow_analytic.wgsl");
+        #[cfg(not(feature = "hot-reload"))]
+        let shadow_src: std::borrow::Cow<'_, str> =
+            include_str!("../../shaders/shadow_analytic.wgsl").into();
+        let shadow_analytic_pipeline = Self::create_shadow_analytic_pipeline(
+            &device,
+            &shadow_src,
+            &projection_bind_group_layout,
+            surface_format,
+            config.msaa_samples,
+        );
+
+        #[cfg(feature = "hot-reload")]
         let text_src = crate::hot_reload::shader_source("text.wgsl");
         #[cfg(not(feature = "hot-reload"))]
         let text_src: std::borrow::Cow<'_, str> = include_str!("../../shaders/text.wgsl").into();
@@ -280,6 +294,7 @@ impl GpuContext {
             projection_bind_group,
             quad_pipeline,
             rect_sdf_pipeline,
+            shadow_analytic_pipeline,
             text_pipeline,
             text_bind_group_layout,
             composite_pipeline,

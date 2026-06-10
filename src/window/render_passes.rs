@@ -52,6 +52,17 @@ impl super::App {
                 draw_calls += 1;
             }
 
+            // Shadows go after plain quads (page backgrounds) but before SDF
+            // rects so cards paint on top of their own shadow.
+            if let Some((vb, ib, count)) = layer.shadow_buffers() {
+                pass.set_pipeline(&gpu.shadow_analytic_pipeline);
+                pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
+                pass.set_vertex_buffer(0, vb.slice(..));
+                pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
+                pass.draw_indexed(0..count, 0, 0..1);
+                draw_calls += 1;
+            }
+
             if let Some((vb, ib, count)) = layer.sdf_rect_buffers() {
                 pass.set_pipeline(&gpu.rect_sdf_pipeline);
                 pass.set_bind_group(0, &gpu.projection_bind_group, &[]);

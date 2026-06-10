@@ -311,6 +311,36 @@ mod tests {
     }
 
     #[test]
+    fn shadow_drop_emits_shadow_before_rect() {
+        let el = div()
+            .w(100.0)
+            .h(50.0)
+            .bg("blue")
+            .rounded(8.0)
+            .shadow_drop(16.0, 4.0, [0.0, 0.0, 0.0, 0.5]);
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 2);
+        let SceneNode::Shadow {
+            w,
+            h,
+            corner_radius,
+            blur_radius,
+            offset,
+            color,
+            ..
+        } = &nodes[0]
+        else {
+            panic!("Expected Shadow first, got {:?}", &nodes[0]);
+        };
+        assert_eq!((*w, *h), (100.0, 50.0));
+        assert_eq!(*corner_radius, 8.0);
+        assert_eq!(*blur_radius, 16.0);
+        assert_eq!(*offset, [0.0, 4.0]);
+        assert_eq!(*color, [0.0, 0.0, 0.0, 0.5]);
+        assert!(matches!(&nodes[1], SceneNode::RoundedRect { .. }));
+    }
+
+    #[test]
     fn bg_linear_emits_gradient_rect() {
         let el = div()
             .w(100.0)

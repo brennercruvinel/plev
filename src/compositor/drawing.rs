@@ -13,6 +13,20 @@ pub struct RoundedRectParams {
     pub border_color: [f32; 4],
 }
 
+/// Parameters for an analytic drop shadow cast by a rounded rect.
+pub struct ShadowParams {
+    /// Bounds of the rect casting the shadow (not the expanded quad).
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
+    pub corner_radius: f32,
+    /// CSS-like blur radius (Gaussian sigma = blur_radius / 2).
+    pub blur_radius: f32,
+    pub offset: [f32; 2],
+    pub color: [f32; 4],
+}
+
 /// Parameters for drawing a rounded rect filled with a 2-stop linear gradient.
 pub struct GradientRectParams {
     pub x: f32,
@@ -63,6 +77,21 @@ impl Compositor {
             corner_radius: p.corner_radius,
             border_width: p.border_width,
             border_color: p.border_color,
+        });
+    }
+
+    /// Draw an analytic drop shadow. Push it BEFORE the rect that casts it
+    /// so the rect paints on top.
+    pub fn draw_shadow(&mut self, p: ShadowParams) {
+        self.push(SceneNode::Shadow {
+            x: p.x,
+            y: p.y,
+            w: p.w,
+            h: p.h,
+            corner_radius: p.corner_radius,
+            blur_radius: p.blur_radius,
+            offset: p.offset,
+            color: p.color,
         });
     }
 
