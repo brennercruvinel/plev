@@ -292,6 +292,20 @@ impl Card {
         for node in glass_pill(b, radius, theme.glass.edge_soft.0, 1.5, fill) {
             c.push_to_layer(layer, node);
         }
+        // A whisper of white glass over the graphite so the deck reads a
+        // touch LIGHTER than the #303030 page (the measured card lift,
+        // ~#343434), the way the reference panels float above the canvas.
+        c.push_to_layer(
+            layer,
+            super::rounded_rect(
+                b.x + 1.5,
+                b.y + 1.5,
+                (b.w - 3.0).max(0.0),
+                (b.h - 3.0).max(0.0),
+                (radius - 1.5).max(0.0),
+                theme.glass.surface_hover.0,
+            ),
+        );
         self.inset_keylight(c, layer, b, radius);
     }
 
