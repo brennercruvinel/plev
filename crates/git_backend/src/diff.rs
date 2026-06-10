@@ -21,6 +21,10 @@ pub fn parse_unified(text: &str) -> Result<Vec<Hunk>> {
     let mut old_no: u32 = 0;
     let mut new_no: u32 = 0;
     let mut in_hunk = false;
+    // Prefix columns before each content line: 1 for an ordinary diff, N for a
+    // combined diff of a merge commit (`@@@ -a -b +c @@@` has 2 `-` columns and
+    // 2-char line prefixes). Recomputed at every hunk header.
+    let mut prefix_width: usize = 1;
 
     for line in text.lines() {
         if let Some(rest) = line.strip_prefix("diff --git ") {
@@ -35,8 +39,12 @@ pub fn parse_unified(text: &str) -> Result<Vec<Hunk>> {
             current_file = Some(path.to_string());
             continue;
         }
-        if let Some(header) = line.strip_prefix("@@") {
-            let header = format!("@@{header}");
+        if line.starts_with("@@") {
+            // Leading `@` run is 2 for an ordinary diff, N+1 for a combined
+            // diff of N parents; the content prefix is one column per parent.
+            let at_run = line.chars().take_while(|&c| c == '@').count();
+            prefix_width = at_run.saturating_sub(1).max(1);
+            let header = line.to_string();
             let (old_start, new_start) = parse_hunk_header(&header)?;
             old_no = old_start;
             new_no = new_start;
@@ -53,7 +61,31 @@ pub fn parse_unified(text: &str) -> Result<Vec<Hunk>> {
         let Some(hunk) = hunks.last_mut() else {
             continue;
         };
-        if let Some(content) = line.strip_prefix('+') {
+        // Combined diffs carry one prefix column per parent; classify by the
+        // columns (any `+` → addition, any `-` → removal, else context) and
+        // strip all prefix columns from the content.
+        if prefix_width > 1 && line.len() >= prefix_width {
+            let (cols, content) = line.split_at(prefix_width);
+            let (kind, old_d, new_d) = if cols.contains('+') {
+                (DiffLineKind::Add, None, Some(new_no))
+            } else if cols.contains('-') {
+                (DiffLineKind::Remove, Some(old_no), None)
+            } else {
+                (DiffLineKind::Context, Some(old_no), Some(new_no))
+            };
+            if old_d.is_some() {
+                old_no += 1;
+            }
+            if new_d.is_some() {
+                new_no += 1;
+            }
+            hunk.lines.push(DiffLine {
+                kind,
+                content: content.to_string(),
+                old_no: old_d,
+                new_no: new_d,
+            });
+        } else if let Some(content) = line.strip_prefix('+') {
             hunk.lines.push(DiffLine {
                 kind: DiffLineKind::Add,
                 content: content.to_string(),
@@ -129,26 +161,38 @@ fn parse_diff_git_path(rest: &str) -> String {
     rest.rsplit(" b/").next().unwrap_or(rest).to_string()
 }
 
-/// Parses `@@ -old_start[,len] +new_start[,len] @@ …` into the two starts.
+/// Parses the start lines from a hunk header into `(old_start, new_start)`.
+///
+/// Handles both ordinary headers (`@@ -a,b +c,d @@ …`) and combined headers of
+/// merge commits (`@@@ -a,b -e,f +c,d @@@ …`): the old start is the first `-`
+/// column and the new start is the `+` column, found by scanning tokens rather
+/// than fixed positions.
 fn parse_hunk_header(header: &str) -> Result<(u32, u32)> {
-    let parse = |token: &str, sign: char| -> Result<u32> {
-        let token = token
-            .strip_prefix(sign)
-            .ok_or_else(|| GitError::Parse(format!("bad hunk header: {header}")))?;
-        let start = token.split(',').next().unwrap_or(token);
+    let start_of = |token: &str| -> Result<u32> {
+        let digits = &token[1..]; // drop the leading sign
+        let start = digits.split(',').next().unwrap_or(digits);
         start
             .parse::<u32>()
             .map_err(|_| GitError::Parse(format!("bad hunk header: {header}")))
     };
-    let mut parts = header.split_whitespace();
-    parts.next(); // @@
-    let old = parts
-        .next()
-        .ok_or_else(|| GitError::Parse(format!("bad hunk header: {header}")))?;
-    let new = parts
-        .next()
-        .ok_or_else(|| GitError::Parse(format!("bad hunk header: {header}")))?;
-    Ok((parse(old, '-')?, parse(new, '+')?))
+    let mut old = None;
+    let mut new = None;
+    for token in header.split_whitespace() {
+        // Stop at the closing `@@`/`@@@` so trailing context (e.g. a function
+        // signature containing `+`/`-`) is never read as a range.
+        if token.starts_with('@') && (old.is_some() || new.is_some()) {
+            break;
+        }
+        if old.is_none() && token.starts_with('-') && token.len() > 1 {
+            old = Some(start_of(token)?);
+        } else if new.is_none() && token.starts_with('+') && token.len() > 1 {
+            new = Some(start_of(token)?);
+        }
+    }
+    match (old, new) {
+        (Some(o), Some(n)) => Ok((o, n)),
+        _ => Err(GitError::Parse(format!("bad hunk header: {header}"))),
+    }
 }
 
 #[cfg(test)]
@@ -238,5 +282,56 @@ diff --git a/f b/f
     #[test]
     fn empty_input_yields_no_hunks() {
         assert!(parse_unified("").unwrap().is_empty());
+    }
+
+    // Combined diff of a merge commit: `git show <merge>` emits `@@@` headers
+    // with two `-` columns and 2-char line prefixes. The old parser read the
+    // second `-` column as the `+` start and panicked ("bad hunk header"),
+    // crashing basicIDE when a merge commit was opened.
+    const COMBINED_MERGE: &str = "\
+diff --cc src/ui/menu.rs
+index aaa,bbb..ccc
+--- a/src/ui/menu.rs
++++ b/src/ui/menu.rs
+@@@ -202,10 -206,10 +206,10 @@@ impl ContextMenu
+  context line
+ -removed from parent 1
+- removed from parent 2
+++added in merge
+  trailing context
+";
+
+    #[test]
+    fn parses_combined_merge_diff_without_panicking() {
+        let hunks = parse_unified(COMBINED_MERGE).unwrap();
+        assert_eq!(hunks.len(), 1);
+        let h = &hunks[0];
+        assert!(h.header.contains("@@@ -202,10 -206,10 +206,10 @@@"));
+        // old start = first `-` column (202), new start = `+` column (206).
+        assert_eq!(h.lines[0].old_no, Some(202));
+        assert_eq!(h.lines[0].new_no, Some(206));
+        assert_eq!(h.lines[0].kind, DiffLineKind::Context);
+        assert_eq!(h.lines[0].content, "context line");
+        assert_eq!(h.lines[1].kind, DiffLineKind::Remove);
+        assert_eq!(h.lines[2].kind, DiffLineKind::Remove);
+        assert_eq!(h.lines[3].kind, DiffLineKind::Add);
+        assert_eq!(h.lines[3].content, "added in merge");
+        assert_eq!(h.lines[4].kind, DiffLineKind::Context);
+    }
+
+    #[test]
+    fn hunk_header_with_signs_in_context_is_safe() {
+        // The trailing function context contains `+`/`-`; must not be parsed.
+        let text = "\
+diff --git a/m.rs b/m.rs
+--- a/m.rs
++++ b/m.rs
+@@ -5,2 +5,2 @@ fn f(a: i32) -> i32 { a + 1 }
+ keep
++changed
+";
+        let hunks = parse_unified(text).unwrap();
+        assert_eq!(hunks[0].lines[0].old_no, Some(5));
+        assert_eq!(hunks[0].lines[0].new_no, Some(5));
     }
 }
