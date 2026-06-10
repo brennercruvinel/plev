@@ -3,7 +3,9 @@
 // ============================================================================
 
 use super::intent::{Intent, MotionPhysics};
-use super::tokens::{ColorTokens, EffectTokens, RadiusScale, SpacingScale, TypographyScale};
+use super::tokens::{
+    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
+};
 use crate::color::Color;
 
 #[derive(Clone, Debug)]
@@ -14,29 +16,40 @@ pub struct Theme {
     pub radius: RadiusScale,
     pub motion: MotionPhysics,
     pub effects: EffectTokens,
+    /// Translucent surface recipe (HOFF dark-glass language).
+    pub glass: GlassTokens,
+}
+
+/// The default plev theme is HOFF (see [`Theme::hoff`]).
+impl Default for Theme {
+    fn default() -> Self {
+        Self::hoff()
+    }
 }
 
 impl Theme {
-    /// Dark theme matching the current showcase palette.
+    /// Dark theme matching the pre-HOFF showcase palette.
     pub fn dark() -> Self {
+        let colors = ColorTokens {
+            bg: Color::hex(0x000000),
+            surface: Color::hex(0x0a0a0a),
+            bg_panel: Color::hex(0x111111),
+            bg_hover: Color::hex(0x1a1a1a),
+            text: Color::hex(0xe0e0e0),
+            text_dim: Color::hex(0x555555),
+            text_mid: Color::hex(0x888888),
+            accent: Color::hex(0xffffff),
+            accent_dim: Color::hex(0x444444),
+            success: Color::rgb(0.20, 0.80, 0.45),
+            danger: Color::rgb(1.0, 0.30, 0.25),
+            warning: Color::rgb(1.0, 0.85, 0.20),
+            info: Color::rgb(0.0, 0.85, 0.95),
+            divider: Color::hex(0x222222),
+            border_active: Color::hex(0x444444),
+        };
         Self {
-            colors: ColorTokens {
-                bg: Color::hex(0x000000),
-                surface: Color::hex(0x0a0a0a),
-                bg_panel: Color::hex(0x111111),
-                bg_hover: Color::hex(0x1a1a1a),
-                text: Color::hex(0xe0e0e0),
-                text_dim: Color::hex(0x555555),
-                text_mid: Color::hex(0x888888),
-                accent: Color::hex(0xffffff),
-                accent_dim: Color::hex(0x444444),
-                success: Color::rgb(0.20, 0.80, 0.45),
-                danger: Color::rgb(1.0, 0.30, 0.25),
-                warning: Color::rgb(1.0, 0.85, 0.20),
-                info: Color::rgb(0.0, 0.85, 0.95),
-                divider: Color::hex(0x222222),
-                border_active: Color::hex(0x444444),
-            },
+            glass: GlassTokens::derive(&colors),
+            colors,
             typography: TypographyScale {
                 caption: 11.0,
                 body_sm: 13.0,
@@ -77,24 +90,26 @@ impl Theme {
 
     /// Light theme.
     pub fn light() -> Self {
+        let colors = ColorTokens {
+            bg: Color::rgb(0.98, 0.98, 0.99),
+            surface: Color::rgb(1.0, 1.0, 1.0),
+            bg_panel: Color::hex(0xf0f0f0),
+            bg_hover: Color::hex(0xe8e8ec),
+            text: Color::rgba(0.10, 0.10, 0.12, 1.0),
+            text_dim: Color::rgba(0.45, 0.45, 0.50, 1.0),
+            text_mid: Color::rgba(0.30, 0.30, 0.35, 1.0),
+            accent: Color::rgb(0.22, 0.45, 0.95),
+            accent_dim: Color::rgb(0.15, 0.30, 0.65),
+            success: Color::rgb(0.15, 0.65, 0.35),
+            danger: Color::rgb(0.90, 0.22, 0.18),
+            warning: Color::rgb(0.85, 0.65, 0.05),
+            info: Color::rgb(0.0, 0.65, 0.80),
+            divider: Color::rgba(0.85, 0.85, 0.88, 1.0),
+            border_active: Color::hex(0x9699a3),
+        };
         Self {
-            colors: ColorTokens {
-                bg: Color::rgb(0.98, 0.98, 0.99),
-                surface: Color::rgb(1.0, 1.0, 1.0),
-                bg_panel: Color::hex(0xf0f0f0),
-                bg_hover: Color::hex(0xe8e8ec),
-                text: Color::rgba(0.10, 0.10, 0.12, 1.0),
-                text_dim: Color::rgba(0.45, 0.45, 0.50, 1.0),
-                text_mid: Color::rgba(0.30, 0.30, 0.35, 1.0),
-                accent: Color::rgb(0.22, 0.45, 0.95),
-                accent_dim: Color::rgb(0.15, 0.30, 0.65),
-                success: Color::rgb(0.15, 0.65, 0.35),
-                danger: Color::rgb(0.90, 0.22, 0.18),
-                warning: Color::rgb(0.85, 0.65, 0.05),
-                info: Color::rgb(0.0, 0.65, 0.80),
-                divider: Color::rgba(0.85, 0.85, 0.88, 1.0),
-                border_active: Color::hex(0x9699a3),
-            },
+            glass: GlassTokens::derive(&colors),
+            colors,
             ..Self::dark()
         }
     }
@@ -109,6 +124,7 @@ impl Theme {
             ..Self::dark().colors
         };
         let colors = match name {
+            "hoff" => return Some(Self::hoff()),
             "plev" => return Some(Self::dark()),
             "catppuccin" => ColorTokens {
                 bg: Color::hex(0x11111b),
@@ -253,6 +269,7 @@ impl Theme {
             _ => return None,
         };
         Some(Self {
+            glass: GlassTokens::derive(&colors),
             colors,
             ..Self::dark()
         })
