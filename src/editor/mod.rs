@@ -17,6 +17,9 @@ mod config;
 mod input;
 mod view;
 
+#[cfg(test)]
+mod tests;
+
 #[cfg(not(target_arch = "wasm32"))]
 pub use clipboard::SystemClipboard;
 pub use clipboard::{ClipboardProvider, LocalClipboard};
