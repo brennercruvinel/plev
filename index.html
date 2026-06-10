@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>plev — design system showcase</title>
+    <!-- Trunk builds the showcase bin to wasm and injects the JS glue. -->
+    <link data-trunk rel="rust" href="crates/showcase/Cargo.toml" data-bin="showcase" />
+    <style>
+      /* Match the showcase's dark surface so there's no white flash
+         while the wasm module loads and the GPU initializes. */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #303030;
+      }
+
+      /* The canvas (appended to <body> by plev::window::setup_wasm_canvas)
+         is sized by CSS: winit's ResizeObserver turns CSS size changes into
+         WindowEvent::Resized, so the app tracks the browser window. */
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>

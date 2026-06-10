@@ -24,6 +24,10 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 [features]
 default = ["accessibility"]
 accessibility = ["dep:accesskit", "dep:accesskit_winit"]
+# Exports the engine's own `#[wasm_bindgen(start)]` entry point on wasm32.
+# Off by default so downstream apps (showcase, basicIDE, ...) can define
+# their own browser entry without colliding with the engine's.
+web-entry = []
 android-game-activity = ["winit/android-game-activity"]
 hot-reload = ["dep:notify", "dep:notify-debouncer-full"]
 

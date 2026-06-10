@@ -13,6 +13,14 @@ plev = { path = "../..", package = "plev" }
 wgpu = "28"
 winit = { version = "0.30", features = ["rwh_06"] }
 log = "0.4"
+web-time = "1.1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger = "0.11"
 pollster = "0.4"
-web-time = "1.1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+console_log = "1"
+console_error_panic_hook = "0.1"

@@ -117,10 +117,15 @@ fn android_main(app: winit::platform::android::activity::AndroidApp) {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", feature = "web-entry"))]
 use wasm_bindgen::prelude::*;
 
-#[cfg(target_arch = "wasm32")]
+/// Browser entry point for the engine's built-in [`window::App`].
+///
+/// Gated behind the `web-entry` cargo feature (off by default): a wasm
+/// module may only have one `#[wasm_bindgen(start)]`, so downstream apps
+/// that ship their own `main` on the web must be able to opt out.
+#[cfg(all(target_arch = "wasm32", feature = "web-entry"))]
 #[wasm_bindgen(start)]
 pub fn wasm_main() {
     use winit::platform::web::EventLoopExtWebSys;

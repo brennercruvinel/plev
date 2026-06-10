@@ -9,6 +9,12 @@
 //! Run: `cargo run -p showcase [section] [theme]`, e.g.
 //! `cargo run -p showcase cards hoff` — handy for snapshot tooling.
 //!
+//! Web: `trunk serve` (or `trunk build --release`) from the repo root —
+//! the canvas is CSS-sized (100vw/100vh) and follows the browser window
+//! via winit's `ResizeObserver`-backed `Resized` events. GPU init is
+//! async on wasm: `resumed` spawns `GpuContext::new` and the result comes
+//! back through a `UserEvent::GpuReady` on the event loop proxy.
+//!
 //! Keys: `T` cycles hoff/dark/light · `1`-`7` jump to a section · `Esc`
 //! closes overlays (or quits).
 
@@ -26,8 +32,22 @@ use view::ShowcaseView;
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop};
+#[cfg(target_arch = "wasm32")]
+use winit::event_loop::EventLoopProxy;
 use winit::keyboard::{Key, NamedKey};
 use winit::window::{Window, WindowAttributes, WindowId};
+
+/// Sent by the async GPU-init task on wasm; never constructed natively
+/// (desktop blocks on `GpuContext::new` inside `resumed` instead).
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+enum UserEvent {
+    GpuReady {
+        gpu: GpuContext,
+        text_system: TextSystem,
+        effects: plev::effects::EffectProcessor,
+        texture_pool: plev::texture_pool::TexturePool,
+    },
+}
 
 enum GpuState {
     Uninitialized,
@@ -47,12 +67,15 @@ struct App {
     clock: FrameClock,
     cursor: (f32, f32),
     scale_factor: f64,
+    #[cfg(target_arch = "wasm32")]
+    proxy: Option<EventLoopProxy<UserEvent>>,
 }
 
 impl App {
     fn new() -> Self {
         let mut view = ShowcaseView::new(1200.0, 800.0);
         // Optional launch state for demos/snapshots: section, then theme.
+        // (Empty iterator on wasm — no process args in the browser.)
         let mut args = std::env::args().skip(1);
         if let Some(section) = args.next() {
             view.jump_to_section(&section);
@@ -68,6 +91,8 @@ impl App {
             clock: FrameClock::new(),
             cursor: (0.0, 0.0),
             scale_factor: 1.0,
+            #[cfg(target_arch = "wasm32")]
+            proxy: None,
         }
     }
 
@@ -77,35 +102,107 @@ impl App {
             w.request_redraw();
         }
     }
-}
 
-impl ApplicationHandler for App {
-    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let attrs = WindowAttributes::default()
-            .with_title("plev — design system showcase")
-            .with_inner_size(winit::dpi::LogicalSize::new(1200u32, 800u32));
-        let window = Arc::new(event_loop.create_window(attrs).unwrap());
-        self.window = Some(window.clone());
-
-        self.scale_factor = window.scale_factor();
-        let gpu = pollster::block_on(GpuContext::new(window.clone()));
-        let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let effects = plev::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
-        self.state = GpuState::Ready {
-            gpu,
-            text_system,
-            effects,
-            texture_pool: plev::texture_pool::TexturePool::new(),
+    /// Sync surface, projection, and view layout to the window's current
+    /// inner size. Called once GPU state becomes `Ready` (and harmless to
+    /// call again — `gpu.resize` clamps to at least 1x1).
+    fn configure_viewport(&mut self) {
+        let Some(window) = self.window.clone() else {
+            return;
         };
-
         let size = window.inner_size();
         let sf = self.scale_factor as f32;
         let (lw, lh) = (size.width as f32 / sf, size.height as f32 / sf);
-        self.view.resize(lw, lh, sf);
         if let GpuState::Ready { gpu, .. } = &mut self.state {
+            gpu.resize(size.width, size.height);
             gpu.set_projection(lw, lh);
         }
+        self.view.resize(lw, lh, sf);
         self.invalidate();
+    }
+}
+
+impl ApplicationHandler<UserEvent> for App {
+    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+        if self.window.is_some() {
+            return;
+        }
+
+        #[allow(unused_mut)] // mut needed for cfg(not(wasm)) inner_size
+        let mut attrs = WindowAttributes::default().with_title("plev — design system showcase");
+
+        // Desktop gets a fixed initial size. On the web the canvas size is
+        // owned by CSS (100vw/100vh in index.html): setting an inner size
+        // here would pin inline styles on the canvas and stop it from
+        // tracking the browser window.
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            attrs = attrs.with_inner_size(winit::dpi::LogicalSize::new(1200u32, 800u32));
+        }
+
+        let window = Arc::new(event_loop.create_window(attrs).unwrap());
+
+        #[cfg(target_arch = "wasm32")]
+        if let Err(e) = plev::window::setup_wasm_canvas(&window) {
+            log::error!("WASM canvas setup failed: {e}");
+        }
+
+        self.window = Some(window.clone());
+        self.scale_factor = window.scale_factor();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let gpu = pollster::block_on(GpuContext::new(window));
+            let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
+            let effects = plev::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+            self.state = GpuState::Ready {
+                gpu,
+                text_system,
+                effects,
+                texture_pool: plev::texture_pool::TexturePool::new(),
+            };
+            self.configure_viewport();
+        }
+
+        // Browsers forbid blocking on async GPU setup inside the event
+        // loop: spawn it and hand the result back via the proxy.
+        #[cfg(target_arch = "wasm32")]
+        if let Some(proxy) = self.proxy.take() {
+            wasm_bindgen_futures::spawn_local(async move {
+                let gpu = GpuContext::new(window).await;
+                let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
+                let effects =
+                    plev::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+                let _ = proxy.send_event(UserEvent::GpuReady {
+                    gpu,
+                    text_system,
+                    effects,
+                    texture_pool: plev::texture_pool::TexturePool::new(),
+                });
+            });
+        }
+    }
+
+    fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: UserEvent) {
+        match event {
+            UserEvent::GpuReady {
+                gpu,
+                text_system,
+                effects,
+                texture_pool,
+            } => {
+                log::info!("GPU context ready (async)");
+                self.state = GpuState::Ready {
+                    gpu,
+                    text_system,
+                    effects,
+                    texture_pool,
+                };
+                // The canvas may have been resized while the adapter and
+                // device were being requested; re-sync everything.
+                self.configure_viewport();
+            }
+        }
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
@@ -235,9 +332,25 @@ impl ApplicationHandler for App {
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {}
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
-    let event_loop = EventLoop::new().unwrap();
+    let event_loop = EventLoop::<UserEvent>::with_user_event().build().unwrap();
     let mut app = App::new();
     event_loop.run_app(&mut app).unwrap();
+}
+
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    use winit::platform::web::EventLoopExtWebSys;
+
+    console_error_panic_hook::set_once();
+    console_log::init_with_level(log::Level::Info).expect("failed to init console_log");
+
+    let event_loop = EventLoop::<UserEvent>::with_user_event().build().unwrap();
+    let mut app = App::new();
+    app.proxy = Some(event_loop.create_proxy());
+    // `spawn_app` returns immediately and keeps the loop alive in the
+    // browser's event loop — `run_app` would throw to escape `main`.
+    event_loop.spawn_app(app);
 }
