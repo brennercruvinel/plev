@@ -713,7 +713,201 @@ fn virtual_list_empty_has_empty_range() {
     assert_eq!(list.visible_range(), 0..0);
 }
 
+// ---------------------------------------------------------------------------
+// Card
+// ---------------------------------------------------------------------------
+
 use crate::compositor::{LayerId, SceneNode};
+
+fn card_nodes(card: &Card, theme: &Theme) -> Vec<SceneNode> {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    let (w, h) = card.preferred_size();
+    card.render(&mut c, Rect::new(0.0, 0.0, w, h), theme);
+    c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec()
+}
+
+fn sample_cards() -> Vec<Card> {
+    vec![
+        Card::new(CardVariant::Stat {
+            value: "1,632".into(),
+            label: "Clicks".into(),
+            delta: Some(("+12.4%".into(), true)),
+        }),
+        Card::new(CardVariant::Profile {
+            name: "Artur".into(),
+            username: "@artur".into(),
+            bio: "Designs dark glass.".into(),
+            action: "Follow".into(),
+            online: true,
+            avatar: None,
+        }),
+        Card::new(CardVariant::Media {
+            title: "4K Video Streaming".into(),
+            caption: "Buffer-free playback".into(),
+            badge: Some("4K".into()),
+            image: None,
+        }),
+        Card::new(CardVariant::List {
+            title: "Expense Tracker".into(),
+            rows: vec![
+                CardListRow::new("Starter", "$88.00"),
+                CardListRow::new("Pro", "$128.00").active(true),
+                CardListRow::new("Sync", "70%").progress(0.7),
+            ],
+        }),
+        Card::new(CardVariant::Chart {
+            value: "$408.36".into(),
+            label: "Last month".into(),
+            groups: vec![(0.4, 0.6), (0.5, 0.85), (0.3, 0.5), (0.6, 0.76)],
+            highlight: 1,
+        }),
+        Card::new(CardVariant::Cta {
+            title: "Detailed Analytics".into(),
+            body: "Track every click with the comparative toolkit.".into(),
+            button: "Discover".into(),
+        }),
+    ]
+}
+
+#[test]
+fn card_default_width_is_hoff_368() {
+    for card in sample_cards() {
+        assert_eq!(card.preferred_size().0, 368.0);
+        assert!(card.preferred_size().1 > 0.0);
+    }
+}
+
+#[test]
+fn card_deck_shell_emits_shadow_then_edge_then_surface() {
+    let theme = Theme::hoff();
+    let card = &sample_cards()[0]; // Stat: deck shell.
+    let nodes = card_nodes(card, &theme);
+
+    assert!(
+        matches!(nodes[0], SceneNode::Shadow { color, .. } if color == [0.0, 0.0, 0.0, 0.40]),
+        "deck shell starts with the 40%-black drop shadow"
+    );
+    // Edge-light underlay: white gradient fading downward.
+    assert!(
+        matches!(nodes[1], SceneNode::GradientRect { color, color2, angle_deg, .. }
+            if color[3] > 0.0 && color2[3] == 0.0 && angle_deg == 180.0),
+        "edge-light underlay fades to transparent"
+    );
+    // Surface: rgba(40,40,40,.8) at radius 32 (inset by the 1.5 border).
+    match nodes[2] {
+        SceneNode::RoundedRect {
+            color,
+            corner_radius,
+            ..
+        } => {
+            assert!((color[0] - 40.0 / 255.0).abs() < 1e-5);
+            assert!((color[3] - 0.8).abs() < 1e-5);
+            assert_eq!(corner_radius, 30.5);
+        }
+        ref other => panic!("expected surface RoundedRect, got {other:?}"),
+    }
+}
+
+#[test]
+fn card_profile_uses_social_surface_and_hover() {
+    let theme = Theme::hoff();
+    let mut card = sample_cards().remove(1);
+    let (w, h) = card.preferred_size();
+    let bounds = Rect::new(0.0, 0.0, w, h);
+
+    let nodes = card_nodes(&card, &theme);
+    // Social shell: no drop shadow, .02 white surface.
+    assert!(!matches!(nodes[0], SceneNode::Shadow { .. }));
+    assert!(matches!(nodes[1], SceneNode::RoundedRect { color, .. }
+        if (color[3] - 0.02).abs() < 1e-5));
+
+    card.handle_event(&move_to(10.0, 10.0), bounds);
+    assert!(card.is_hovered());
+    let nodes = card_nodes(&card, &theme);
+    assert!(
+        matches!(nodes[1], SceneNode::RoundedRect { color, .. }
+            if (color[3] - 0.05).abs() < 1e-5),
+        "hover raises the surface to .05"
+    );
+}
+
+#[test]
+fn card_chart_highlight_is_gradient_with_cap() {
+    let theme = Theme::hoff();
+    let card = &sample_cards()[4];
+    let nodes = card_nodes(card, &theme);
+
+    let gradients: Vec<_> = nodes
+        .iter()
+        .filter(|n| {
+            matches!(n, SceneNode::GradientRect { angle_deg, color, .. }
+                if *angle_deg == 180.0 && (color[3] - 0.20).abs() < 1e-5)
+        })
+        .collect();
+    assert_eq!(gradients.len(), 1, "exactly one highlighted bar");
+
+    // The floating 2px cap at 50% white.
+    assert!(nodes.iter().any(|n| matches!(n,
+        SceneNode::RoundedRect { h, color, .. } if *h == 2.0 && (color[3] - 0.50).abs() < 1e-5)));
+
+    // 4 groups x 2 bars: 7 plain bars + 1 gradient highlight.
+    let plain_bars = nodes
+        .iter()
+        .filter(|n| {
+            matches!(n, SceneNode::RoundedRect { corner_radius, h, .. }
+                if *corner_radius == 2.0 && *h > 2.0)
+        })
+        .count();
+    assert_eq!(plain_bars, 7);
+}
+
+#[test]
+fn card_list_marks_active_row_with_strong_border() {
+    let theme = Theme::hoff();
+    let card = &sample_cards()[3];
+    let nodes = card_nodes(card, &theme);
+
+    let strong_rows = nodes
+        .iter()
+        .filter(|n| {
+            matches!(n, SceneNode::RoundedRect { h, border_color, .. }
+                if *h == 58.0 && (border_color[3] - 0.40).abs() < 1e-5)
+        })
+        .count();
+    let soft_rows = nodes
+        .iter()
+        .filter(|n| {
+            matches!(n, SceneNode::RoundedRect { h, border_color, .. }
+                if *h == 58.0 && (border_color[3] - 0.05).abs() < 1e-5)
+        })
+        .count();
+    assert_eq!(strong_rows, 1, "one active row");
+    assert_eq!(soft_rows, 2, "two resting rows");
+
+    // The progress row carries the 90deg gradient fill.
+    assert!(nodes.iter().any(|n| matches!(n,
+        SceneNode::GradientRect { angle_deg, h, .. } if *angle_deg == 90.0 && *h == 4.0)));
+}
+
+#[test]
+fn card_click_reports_activation() {
+    let mut card = sample_cards().remove(5);
+    let (w, h) = card.preferred_size();
+    let bounds = Rect::new(0.0, 0.0, w, h);
+    let r = click(|e| card.handle_event(e, bounds));
+    assert!(r.clicked);
+}
+
+#[test]
+fn card_renders_under_every_builtin_theme() {
+    for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
+        for card in sample_cards() {
+            let nodes = card_nodes(&card, &theme);
+            assert!(nodes.len() > 3, "variant emits a scene");
+        }
+    }
+}
 
 // ---------------------------------------------------------------------------
 // HOFF widget fixtures

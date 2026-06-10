@@ -13,6 +13,7 @@
 //! glass recipe, so every widget renders under every palette.
 
 mod button;
+mod card;
 mod checkbox;
 mod context_menu;
 mod list;
@@ -31,6 +32,7 @@ mod tree;
 mod tests;
 
 pub use button::{Button, ButtonSize, ButtonVariant};
+pub use card::{Card, CardListRow, CardVariant};
 pub use checkbox::Checkbox;
 pub use context_menu::{ContextMenu, MenuEntry};
 pub use list::VirtualList;
