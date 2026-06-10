@@ -110,8 +110,11 @@ fn assert_advance_close_to_regular(text: &str, style: &TextStyle, weight: u16) {
     let (ww, _) = TextMeasurer::measure_styled(text, &style.clone().with_weight(weight), None);
     assert!(rw > 0.0);
     let ratio = (ww - rw).abs() / rw;
+    // Sibling faces of one family differ by up to ~10% (Rubik Bold runs ~8.5%
+    // wider than Rubik Regular); a broken family fallback drifts ~35%+. The
+    // threshold catches the fallback bug while admitting real per-face width.
     assert!(
-        ratio < 0.08,
+        ratio < 0.13,
         "{text:?} at weight {weight} ({ww}px) drifted {:.1}% from regular ({rw}px): \
          weight resolved to a fallback family instead of a sibling face",
         ratio * 100.0
@@ -158,16 +161,17 @@ fn inter_family_resolves_inter_faces_for_all_ui_weights() {
 }
 
 #[test]
-fn default_family_resolves_inter_faces_for_all_ui_weights() {
+fn default_family_resolves_rubik_faces_for_all_ui_weights() {
     // `font_family: None` maps to Family::SansSerif; the engine pins that to
-    // the embedded Inter so weights resolve deterministically on any system.
+    // the embedded Rubik (the HOFF reference typeface) so weights resolve
+    // deterministically on any system.
     for weight in [400u16, 500, 600, 700] {
         let style = TextStyle::new(16.0).with_weight(weight);
         let faces = TextMeasurer::resolved_faces("Expense Tracker 1,632", &style);
         assert!(!faces.is_empty());
         for (family, face_weight) in &faces {
             assert_eq!(
-                family, "Inter",
+                family, "Rubik",
                 "default family at weight {weight} fell back to {family:?} (weight {face_weight})"
             );
             assert_eq!(*face_weight, weight);
