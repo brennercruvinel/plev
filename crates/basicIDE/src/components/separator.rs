@@ -1,3 +1,5 @@
+//! Hairline separators — rgba(255,255,255,.05), the HOFF edge color.
+
 use crate::theme::Theme;
 use plev::compositor::{Compositor, SceneNode};
 
@@ -8,7 +10,7 @@ pub fn horizontal(compositor: &mut Compositor, theme: &Theme, x: f32, y: f32, w:
         y,
         w,
         h: 1.0,
-        color: theme.border.to_array(),
+        color: theme.edge.to_array(),
     });
 }
 
@@ -19,6 +21,6 @@ pub fn vertical(compositor: &mut Compositor, theme: &Theme, x: f32, y: f32, h: f
         y,
         w: 1.0,
         h,
-        color: theme.border.to_array(),
+        color: theme.edge.to_array(),
     });
 }
