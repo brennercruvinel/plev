@@ -201,14 +201,15 @@ impl Tree {
             let is_hovered = self.hovered_row == Some(i);
 
             // Path-based highlights: row icons (paths) must stack on top.
+            // HOFF rows: hover .05 / selected .10 white glass, radius 12.
             if is_selected {
                 compositor.push(super::path_rounded_rect(
                     row_rect.x + 2.0,
                     row_rect.y + 1.0,
                     row_rect.w - 4.0,
                     row_rect.h - 2.0,
-                    theme.radius.md,
-                    with_alpha(theme.colors.accent, 0.14),
+                    theme.radius.md.min(row_rect.h / 2.0),
+                    theme.glass.surface_active.0,
                 ));
             } else if is_hovered {
                 compositor.push(super::path_rounded_rect(
@@ -216,8 +217,8 @@ impl Tree {
                     row_rect.y + 1.0,
                     row_rect.w - 4.0,
                     row_rect.h - 2.0,
-                    theme.radius.md,
-                    with_alpha(theme.colors.bg_hover, 1.0),
+                    theme.radius.md.min(row_rect.h / 2.0),
+                    theme.glass.surface_hover.0,
                 ));
             }
 

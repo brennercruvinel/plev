@@ -3,52 +3,56 @@ use crate::text::{TextMeasurer, TextStyle};
 use crate::theme::{Intent, Theme};
 use crate::ui::icons;
 
-use super::{EventResult, Rect, WidgetEvent, contrast_text, intent_fill, shade, with_alpha};
+use super::{EventResult, Rect, WidgetEvent, glass_pill, intent_fill, with_alpha};
 
-/// Visual variant, shadcn/ui naming.
+/// Visual variant, HOFF naming.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ButtonVariant {
-    /// Filled with the intent color (primary action).
+    /// Glass pill: graphite fill + top edge-light (the HOFF default
+    /// button — `rgba(40,40,40,.70)`, hover `rgba(248,248,248,.10)`).
     #[default]
     Solid,
-    /// Transparent with a 1px border.
+    /// Transparent with the edge border always visible.
     Outline,
-    /// Transparent until hovered.
+    /// Transparent until hovered (chip-social hover recipe).
     Ghost,
-    /// Solid shorthand for destructive actions.
+    /// Glass pill with the label/icon in `#BD3027` (unfollow-style).
     Danger,
 }
 
+/// HOFF control heights: chip-social 40 · button 44 · button-medium 52.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ButtonSize {
+    /// Social chip: 40px, pad 12, caption-sm (12/600).
     Sm,
+    /// Standard pill: 44px, pad 24, base-2sm (14/600).
     #[default]
     Md,
+    /// Medium pill: 52px, pad 32, base-2sm (14/600).
     Lg,
 }
 
 impl ButtonSize {
     pub fn height(self) -> f32 {
         match self {
-            ButtonSize::Sm => 24.0,
-            ButtonSize::Md => 30.0,
-            ButtonSize::Lg => 36.0,
+            ButtonSize::Sm => 40.0,
+            ButtonSize::Md => 44.0,
+            ButtonSize::Lg => 52.0,
         }
     }
 
     pub fn font_size(self) -> f32 {
         match self {
             ButtonSize::Sm => 12.0,
-            ButtonSize::Md => 13.0,
-            ButtonSize::Lg => 14.0,
+            ButtonSize::Md | ButtonSize::Lg => 14.0,
         }
     }
 
     pub fn pad_x(self) -> f32 {
         match self {
-            ButtonSize::Sm => 10.0,
-            ButtonSize::Md => 14.0,
-            ButtonSize::Lg => 18.0,
+            ButtonSize::Sm => 12.0,
+            ButtonSize::Md => 24.0,
+            ButtonSize::Lg => 32.0,
         }
     }
 }
@@ -119,16 +123,20 @@ impl Button {
     }
 
     fn icon_size(&self) -> f32 {
-        self.size.font_size() + 2.0
+        self.size.font_size() + 4.0
+    }
+
+    fn font_weight(&self) -> u16 {
+        600
     }
 
     /// Intrinsic size from real text measurement.
     pub fn preferred_size(&self) -> (f32, f32) {
         let font = self.size.font_size();
-        let style = TextStyle::new(font).with_weight(500);
+        let style = TextStyle::new(font).with_weight(self.font_weight());
         let (text_w, _) = TextMeasurer::measure_styled(&self.label, &style, None);
         let icon_w = if self.icon.is_some() {
-            self.icon_size() + 6.0
+            self.icon_size() + 8.0
         } else {
             0.0
         };
@@ -181,67 +189,68 @@ impl Button {
         }
     }
 
-    /// Background, border (color, width), and text colors for the current
-    /// state — resolved from theme tokens.
-    fn colors(&self, theme: &Theme) -> ([f32; 4], [f32; 4], f32, [f32; 4]) {
+    /// Background, edge-light color (alpha 0 = none), and label color for
+    /// the current state — resolved from glass tokens.
+    fn colors(&self, theme: &Theme) -> ([f32; 4], [f32; 4], [f32; 4]) {
         let intent = if self.variant == ButtonVariant::Danger {
             Intent::Destructive
         } else {
             self.intent
         };
         let alpha = if self.disabled { 0.5 } else { 1.0 };
-        let active = self.pressed && self.hovered;
+        let glass = &theme.glass;
+        let text = theme.colors.text;
 
-        match self.variant {
+        // Label: $text-secondary (.70 of text) at rest, .76 on hover —
+        // intents recolor the label, never the glass fill.
+        let label_rest = match intent {
+            Intent::Neutral => with_alpha(text, text.0[3] * 0.737),
+            other => intent_fill(theme, other),
+        };
+        let label_hot = match intent {
+            Intent::Neutral => with_alpha(text, text.0[3] * 0.8),
+            other => intent_fill(theme, other),
+        };
+
+        let (bg, edge, fg) = match self.variant {
             ButtonVariant::Solid | ButtonVariant::Danger => {
-                let mut bg = intent_fill(theme, intent);
-                if active {
-                    bg = shade(bg, 0.18);
-                } else if self.hovered {
-                    bg = shade(bg, 0.10);
-                }
-                let fg = contrast_text(bg);
-                bg[3] *= alpha;
-                (bg, [0.0; 4], 0.0, [fg[0], fg[1], fg[2], alpha])
+                let bg = if self.hovered {
+                    glass.button_hover.0
+                } else {
+                    glass.button.0
+                };
+                let fg = if self.hovered { label_hot } else { label_rest };
+                (bg, glass.edge.0, fg)
             }
             ButtonVariant::Outline => {
-                let bg = if active {
-                    shade(theme.colors.bg_hover.0, 0.06)
-                } else if self.hovered {
-                    theme.colors.bg_hover.0
+                let bg = if self.hovered {
+                    glass.surface_hover.0
                 } else {
-                    [0.0, 0.0, 0.0, 0.0]
+                    [0.0; 4]
                 };
-                let border = if self.hovered && !self.disabled {
-                    theme.colors.border_active
+                let edge = if self.hovered {
+                    glass.field_focus_border.0
                 } else {
-                    theme.colors.divider
+                    glass.edge.0
                 };
-                (
-                    [bg[0], bg[1], bg[2], bg[3] * alpha],
-                    with_alpha(border, alpha),
-                    1.0,
-                    with_alpha(theme.colors.text, alpha),
-                )
+                let fg = if self.hovered { label_hot } else { label_rest };
+                (bg, edge, fg)
             }
             ButtonVariant::Ghost => {
-                let bg = if active {
-                    shade(theme.colors.bg_hover.0, 0.06)
-                } else if self.hovered {
-                    theme.colors.bg_hover.0
+                let bg = if self.hovered {
+                    glass.surface_hover.0
                 } else {
-                    [0.0, 0.0, 0.0, 0.0]
+                    [0.0; 4]
                 };
-                let fg = match intent {
-                    Intent::Neutral => with_alpha(theme.colors.text, alpha),
-                    other => {
-                        let c = intent_fill(theme, other);
-                        [c[0], c[1], c[2], alpha]
-                    }
-                };
-                ([bg[0], bg[1], bg[2], bg[3] * alpha], [0.0; 4], 0.0, fg)
+                let fg = if self.hovered { label_hot } else { label_rest };
+                (bg, [0.0; 4], fg)
             }
-        }
+        };
+        (
+            [bg[0], bg[1], bg[2], bg[3] * alpha],
+            [edge[0], edge[1], edge[2], edge[3] * alpha],
+            [fg[0], fg[1], fg[2], fg[3] * alpha],
+        )
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
@@ -256,55 +265,42 @@ impl Button {
         bounds: Rect,
         theme: &Theme,
     ) {
-        let (bg, border_color, border_width, fg) = self.colors(theme);
+        let (bg, edge, fg) = self.colors(theme);
         let font = self.size.font_size();
-        let line_height = font * 1.3;
-        let radius = theme.radius.md + 2.0;
+        let line_height = font * 1.4;
+        // Pill: HOFF radius 32 clamps to half the 44px height.
+        let radius = theme.radius.xl.min(bounds.h / 2.0);
 
         if self.icon.is_some() {
             // Icons are quad-pass paths; an SDF background would paint over
-            // them, so the background becomes path geometry too.
+            // them, so the background becomes path geometry too (flat fill,
+            // uniform border instead of the gradient edge-light).
             if bg[3] > 0.001 {
                 compositor.push_to_layer(
                     layer,
                     super::path_rounded_rect(bounds.x, bounds.y, bounds.w, bounds.h, radius, bg),
                 );
             }
-            if border_width > 0.0 {
+            if edge[3] > 0.001 {
                 compositor.push_to_layer(
                     layer,
                     super::path_rounded_rect_stroke(
-                        bounds.x,
-                        bounds.y,
-                        bounds.w,
-                        bounds.h,
-                        radius,
-                        border_color,
-                        border_width,
+                        bounds.x, bounds.y, bounds.w, bounds.h, radius, edge, 1.5,
                     ),
                 );
             }
-        } else if bg[3] > 0.001 || border_width > 0.0 {
-            compositor.push_to_layer(
-                layer,
-                SceneNode::RoundedRect {
-                    x: bounds.x,
-                    y: bounds.y,
-                    w: bounds.w,
-                    h: bounds.h,
-                    color: bg,
-                    corner_radius: radius,
-                    border_width,
-                    border_color,
-                },
-            );
+        } else if bg[3] > 0.001 || edge[3] > 0.001 {
+            // Edge-light underlay + glass fill (HOFF :before border).
+            for node in glass_pill(bounds, radius, edge, 1.5, bg) {
+                compositor.push_to_layer(layer, node);
+            }
         }
 
-        let style = TextStyle::new(font).with_weight(500);
+        let style = TextStyle::new(font).with_weight(self.font_weight());
         let (text_w, _) = TextMeasurer::measure_styled(&self.label, &style, None);
         let icon_size = self.icon_size();
         let icon_w = if self.icon.is_some() {
-            icon_size + 6.0
+            icon_size + 8.0
         } else {
             0.0
         };
@@ -327,7 +323,8 @@ impl Button {
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::new(&self.label, font, line_height, None).with_weight(500),
+                key: TextNodeKey::new(&self.label, font, line_height, None)
+                    .with_weight(self.font_weight()),
                 x: cx,
                 y: bounds.y + (bounds.h - line_height) / 2.0,
                 color: fg,

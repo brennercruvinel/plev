@@ -5,7 +5,7 @@ use crate::scroll::ScrollState;
 use crate::theme::Theme;
 
 use super::scrollbar::Scrollbar;
-use super::{EventResult, Rect, WidgetEvent, with_alpha};
+use super::{EventResult, Rect, WidgetEvent};
 
 /// Rows tessellated beyond the viewport on each side, so partially
 /// visible rows and small scroll deltas don't pop.
@@ -197,6 +197,7 @@ impl VirtualList {
             let hovered = self.hovered == Some(index);
             let selected = self.selected == Some(index);
 
+            // HOFF rows: rest .02 / hover .05 / selected .10 white glass.
             if selected {
                 compositor.push_to_layer(
                     layer,
@@ -205,7 +206,7 @@ impl VirtualList {
                         y: rect.y,
                         w: rect.w,
                         h: rect.h,
-                        color: with_alpha(theme.colors.accent, 0.14),
+                        color: theme.glass.surface_active.0,
                     },
                 );
             } else if hovered {
@@ -216,7 +217,7 @@ impl VirtualList {
                         y: rect.y,
                         w: rect.w,
                         h: rect.h,
-                        color: with_alpha(theme.colors.bg_hover, 1.0),
+                        color: theme.glass.surface_hover.0,
                     },
                 );
             }

@@ -5,7 +5,9 @@ use crate::ui::icons;
 use super::{EventResult, Rect, WidgetEvent, contrast_text, with_alpha};
 
 /// Box edge length.
-const BOX: f32 = 16.0;
+const BOX: f32 = 18.0;
+/// Micro-action radius (HOFF radius 6 on small controls).
+const BOX_RADIUS: f32 = 6.0;
 
 /// Retained checkbox with optional trailing label. The whole bounds act
 /// as the hit area (box + label), like every native toolkit.
@@ -90,58 +92,55 @@ impl Checkbox {
         let alpha = if self.disabled { 0.5 } else { 1.0 };
         let bx = bounds.x;
         let by = bounds.y + (bounds.h - BOX) / 2.0;
+        let glass = &theme.glass;
 
-        let accent = theme.colors.accent.0;
         if self.checked {
-            // Path-based fill so the check icon (also a path) stacks on top;
-            // an SDF rect would draw after every path in the layer.
+            // Filled white ($text-primary) with a dark check. Path-based
+            // fill so the check icon (also a path) stacks on top; an SDF
+            // rect would draw after every path in the layer.
+            let fill = theme.colors.text;
             compositor.push(super::path_rounded_rect(
                 bx,
                 by,
                 BOX,
                 BOX,
-                theme.radius.md,
-                [accent[0], accent[1], accent[2], alpha],
+                BOX_RADIUS,
+                with_alpha(fill, fill.0[3] * alpha),
             ));
+            let mark = contrast_text(fill.0);
+            let mark = [mark[0], mark[1], mark[2], alpha];
+            if let Some(node) = icons::icon_at("check", 12.0, mark, bx + 3.0, by + 3.0) {
+                compositor.push(node);
+            }
         } else {
-            let border = if self.hovered {
-                theme.colors.border_active
-            } else {
-                theme.colors.divider
-            };
+            // Unchecked: rgba($n2,.05) glass with a .25 border (hover .1 bg).
             let bg = if self.hovered {
-                with_alpha(theme.colors.bg_hover, alpha)
+                glass.surface_active
             } else {
-                [0.0, 0.0, 0.0, 0.0]
+                glass.field
             };
+            let border = glass.field_focus_border;
             compositor.push(SceneNode::RoundedRect {
                 x: bx,
                 y: by,
                 w: BOX,
                 h: BOX,
-                color: bg,
-                corner_radius: theme.radius.md,
+                color: with_alpha(bg, bg.0[3] * alpha),
+                corner_radius: BOX_RADIUS,
                 border_width: 1.0,
-                border_color: with_alpha(border, alpha),
+                border_color: with_alpha(border, border.0[3] * alpha),
             });
         }
 
-        if self.checked {
-            let mark = contrast_text(accent);
-            let mark = [mark[0], mark[1], mark[2], alpha];
-            if let Some(node) = icons::icon_at("check", 12.0, mark, bx + 2.0, by + 2.0) {
-                compositor.push(node);
-            }
-        }
-
         if let Some(label) = &self.label {
-            let font = 13.0;
-            let line_height = font * 1.3;
+            let font = 14.0;
+            let line_height = font * 1.4;
+            let text = theme.colors.text_mid;
             compositor.push(SceneNode::Text {
                 key: TextNodeKey::new(label, font, line_height, None),
-                x: bx + BOX + 8.0,
+                x: bx + BOX + 10.0,
                 y: bounds.y + (bounds.h - line_height) / 2.0,
-                color: with_alpha(theme.colors.text, alpha),
+                color: with_alpha(text, text.0[3] * alpha),
             });
         }
     }

@@ -229,10 +229,15 @@ fn tabs_click_changes_active() {
 }
 
 #[test]
-fn tabs_widths_follow_label_length() {
+fn tabs_segments_share_width_equally() {
+    // HOFF tabs are flex-1: equal segments inside the 4px container pad.
     let tabs = Tabs::new(["I", "Considerably longer label"]);
-    let rects = tabs.item_rects(Rect::new(0.0, 0.0, 800.0, 32.0));
-    assert!(rects[1].w > rects[0].w * 2.0);
+    let bounds = Rect::new(0.0, 0.0, 800.0, 44.0);
+    let rects = tabs.item_rects(bounds);
+    assert_eq!(rects[0].w, rects[1].w);
+    assert_eq!(rects[0].x, 4.0);
+    assert_eq!(rects[0].h, 36.0, "36px segments in a 44px strip");
+    assert_eq!(rects[1].x + rects[1].w, 796.0);
 }
 
 // ---------------------------------------------------------------------------
@@ -446,8 +451,8 @@ fn context_menu_click_reports_item_id() {
     let mut m = menu();
     let (_, h) = m.size();
     assert!(h > 0.0);
-    // First item row center: PAD_Y(5) + ITEM_H/2.
-    let (r, id) = m.handle_event(&down(50.0, 10.0 + 5.0 + 14.0), 10.0, 10.0);
+    // First item row center: PAD_Y(8) + ITEM_H(44)/2.
+    let (r, id) = m.handle_event(&down(50.0, 10.0 + 8.0 + 22.0), 10.0, 10.0);
     assert!(r.clicked);
     assert_eq!(id, Some(1));
 }
@@ -455,8 +460,8 @@ fn context_menu_click_reports_item_id() {
 #[test]
 fn context_menu_disabled_item_swallows_click_without_id() {
     let mut m = menu();
-    // Rows: item(28) item(28) sep(9) item(28) item(28); last item center:
-    let y = 10.0 + 5.0 + 28.0 + 28.0 + 9.0 + 28.0 + 14.0;
+    // Rows: item(44) item(44) sep(9) item(44) item(44); last item center:
+    let y = 10.0 + 8.0 + 44.0 + 44.0 + 9.0 + 44.0 + 22.0;
     let (r, id) = m.handle_event(&down(50.0, y), 10.0, 10.0);
     assert!(r.handled);
     assert!(!r.clicked);
@@ -466,7 +471,7 @@ fn context_menu_disabled_item_swallows_click_without_id() {
 #[test]
 fn context_menu_hover_skips_disabled_and_separators() {
     let mut m = menu();
-    let sep_y = 10.0 + 5.0 + 28.0 + 28.0 + 4.0;
+    let sep_y = 10.0 + 8.0 + 44.0 + 44.0 + 4.0;
     m.handle_event(&move_to(50.0, sep_y), 10.0, 10.0);
     assert_eq!(m.hovered(), None);
 }
@@ -526,9 +531,10 @@ fn select_opens_and_picks_option() {
     s.handle_event(&down(50.0, 20.0), bounds);
     assert!(s.is_open());
 
-    // Option 1 ("light"): dropdown starts at bounds bottom + gap.
+    // Option 1 ("light"): dropdown starts at bounds bottom + gap;
+    // PAD_Y(8) + OPTION_H(44) + 22 centers the second option.
     let dd = s.dropdown_rect(bounds);
-    let y = dd.y + 5.0 + 28.0 + 14.0;
+    let y = dd.y + 8.0 + 44.0 + 22.0;
     let r = s.handle_event(&down(50.0, y), bounds);
     assert!(r.clicked);
     assert!(!s.is_open());
@@ -705,4 +711,113 @@ fn virtual_list_empty_has_empty_range() {
     let mut list = VirtualList::new(24.0);
     list.set_viewport(Rect::new(0.0, 0.0, 300.0, 240.0));
     assert_eq!(list.visible_range(), 0..0);
+}
+
+use crate::compositor::{LayerId, SceneNode};
+
+// ---------------------------------------------------------------------------
+// HOFF widget fixtures
+// ---------------------------------------------------------------------------
+
+fn default_nodes(render: impl FnOnce(&mut Compositor, &Theme)) -> Vec<SceneNode> {
+    let theme = Theme::hoff();
+    let mut c = Compositor::new();
+    c.begin_frame();
+    render(&mut c, &theme);
+    c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec()
+}
+
+#[test]
+fn hoff_button_solid_is_graphite_glass_pill() {
+    let b = Button::new("Follow");
+    let nodes = default_nodes(|c, t| b.render(c, Rect::new(0.0, 0.0, 120.0, 44.0), t));
+    // Edge-light underlay first, then the pill surface, then the label.
+    assert!(matches!(nodes[0], SceneNode::GradientRect { angle_deg, .. } if angle_deg == 180.0));
+    match nodes[1] {
+        SceneNode::RoundedRect {
+            color,
+            corner_radius,
+            ..
+        } => {
+            assert!((color[0] - 40.0 / 255.0).abs() < 1e-5, "graphite fill");
+            assert!((color[3] - 0.70).abs() < 1e-5, "rgba(40,40,40,.70)");
+            assert_eq!(corner_radius, 20.5, "pill radius (22) minus the border");
+        }
+        ref other => panic!("expected pill surface, got {other:?}"),
+    }
+    assert!(matches!(nodes.last(), Some(SceneNode::Text { .. })));
+}
+
+#[test]
+fn hoff_switch_track_and_knob_match_spec() {
+    let theme = Theme::hoff();
+    let mut c = Compositor::new();
+    c.begin_frame();
+    let sw = Switch::new(false);
+    sw.render(&mut c, Rect::new(0.0, 0.0, 44.0, 24.0), &theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+
+    match nodes[0] {
+        SceneNode::RoundedRect {
+            w,
+            h,
+            corner_radius,
+            color,
+            ..
+        } => {
+            assert_eq!((w, h), (44.0, 24.0));
+            assert_eq!(corner_radius, 12.0);
+            assert!((color[3] - 0.05).abs() < 1e-5, "off track rgba($n2,.05)");
+        }
+        ref other => panic!("expected track, got {other:?}"),
+    }
+    match nodes[1] {
+        SceneNode::GradientRect { x, y, w, h, .. } => {
+            assert_eq!((w, h), (16.0, 16.0), "16px knob");
+            assert_eq!((x, y), (4.0, 4.0), "knob rests at (4,4)");
+        }
+        ref other => panic!("expected knob, got {other:?}"),
+    }
+}
+
+#[test]
+fn hoff_switch_on_knob_is_white_gradient() {
+    let theme = Theme::hoff();
+    let mut sw = Switch::new(true);
+    // Settle the spring at the on position.
+    for _ in 0..300 {
+        sw.tick(1.0 / 60.0);
+    }
+    let mut c = Compositor::new();
+    c.begin_frame();
+    sw.render(&mut c, Rect::new(0.0, 0.0, 44.0, 24.0), &theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    match nodes[1] {
+        SceneNode::GradientRect {
+            x, color, color2, ..
+        } => {
+            assert!((x - 24.0).abs() < 0.1, "knob travelled 20px");
+            assert!((color[3] - 0.90).abs() < 0.01, "top stop .90");
+            assert!((color2[3] - 0.30).abs() < 0.01, "bottom stop .30");
+        }
+        ref other => panic!("expected gradient knob, got {other:?}"),
+    }
+}
+
+#[test]
+fn hoff_tooltip_is_solid_262626() {
+    let theme = Theme::hoff();
+    let mut tip = Tooltip::new("hint").delay(0.0);
+    tip.set_hover(true, Rect::new(100.0, 100.0, 50.0, 20.0));
+    tip.tick(0.1);
+    let mut c = Compositor::new();
+    c.begin_frame();
+    let layer = c.create_layer(500);
+    tip.render(&mut c, layer, &theme, 800.0, 600.0);
+    let nodes = c.layer(layer).unwrap().nodes().to_vec();
+    assert!(matches!(nodes[0], SceneNode::Shadow { .. }));
+    assert!(
+        matches!(nodes[1], SceneNode::RoundedRect { color, corner_radius, .. }
+        if (color[0] - 0x26 as f32 / 255.0).abs() < 1e-5 && corner_radius == 8.0)
+    );
 }

@@ -138,50 +138,62 @@ impl Slider {
         let t = self.ratio();
         let usable = (bounds.w - KNOB).max(1.0);
         let knob_x = bounds.x + usable * t;
+        let glass = &theme.glass;
+        let text = theme.colors.text;
 
-        // Track (unfilled portion).
+        // Track: rgba($n2,.10).
+        let track = glass.surface_active;
         compositor.push(SceneNode::RoundedRect {
             x: bounds.x,
             y: ty,
             w: bounds.w,
             h: TRACK_H,
-            color: with_alpha(theme.colors.bg_hover, alpha),
+            color: with_alpha(track, track.0[3] * alpha),
             corner_radius: TRACK_H / 2.0,
             border_width: 0.0,
             border_color: [0.0; 4],
         });
 
-        // Filled portion up to the knob center.
+        // Filled portion: the HOFF progress gradient
+        // linear-gradient(90deg, rgba(255,255,255,0) -> .40).
         let fill_w = knob_x + KNOB / 2.0 - bounds.x;
         if fill_w > 1.0 {
-            compositor.push(SceneNode::RoundedRect {
+            compositor.push(SceneNode::GradientRect {
                 x: bounds.x,
                 y: ty,
                 w: fill_w,
                 h: TRACK_H,
-                color: with_alpha(theme.colors.accent, alpha),
+                color: [text.0[0], text.0[1], text.0[2], 0.0],
+                color2: [text.0[0], text.0[1], text.0[2], 0.40 * alpha],
+                // CSS 90deg: transparent stop on the left.
+                angle_deg: 90.0,
                 corner_radius: TRACK_H / 2.0,
                 border_width: 0.0,
                 border_color: [0.0; 4],
             });
         }
 
-        // Knob: grows subtly on hover/drag.
+        // Knob: the white handle gradient (.90 -> .30, top-lit); grows
+        // subtly on hover/drag.
         let grow = if self.dragging || self.hovered {
             1.0
         } else {
             0.0
         };
         let k = KNOB + grow * 2.0;
-        compositor.push(SceneNode::RoundedRect {
+        let top = glass.knob_gradient[0];
+        let bottom = glass.knob_gradient[1];
+        compositor.push(SceneNode::GradientRect {
             x: knob_x - grow,
             y: bounds.y + (bounds.h - k) / 2.0,
             w: k,
             h: k,
-            color: with_alpha(theme.colors.accent, alpha),
+            color: with_alpha(top, top.0[3] * alpha),
+            color2: with_alpha(bottom, bottom.0[3] * alpha),
+            angle_deg: 180.0,
             corner_radius: k / 2.0,
-            border_width: 2.0,
-            border_color: with_alpha(theme.colors.bg, alpha),
+            border_width: 0.0,
+            border_color: [0.0; 4],
         });
     }
 }
