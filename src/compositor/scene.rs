@@ -45,6 +45,11 @@ pub enum SceneNode {
     Path {
         data: crate::path::TessellatedPath,
     },
+    /// Push a clip rect onto the clip stack: following nodes are scissored
+    /// to the intersection of all pushed rects until the matching `PopClip`.
+    PushClip { x: f32, y: f32, w: f32, h: f32 },
+    /// Pop the most recent `PushClip`.
+    PopClip,
     /// Analytic drop shadow of a rounded rect (Evan Wallace approximation,
     /// no blur pass). `x..h` are the bounds of the CASTING rect; the emitted
     /// quad is expanded by the blur and shifted by `offset`.
@@ -150,6 +155,16 @@ impl SceneNode {
                 for c in border_color {
                     c.to_bits().hash(&mut h);
                 }
+            }
+            SceneNode::PushClip { x, y, w, h: rh } => {
+                6u8.hash(&mut h);
+                x.to_bits().hash(&mut h);
+                y.to_bits().hash(&mut h);
+                w.to_bits().hash(&mut h);
+                rh.to_bits().hash(&mut h);
+            }
+            SceneNode::PopClip => {
+                7u8.hash(&mut h);
             }
             SceneNode::Shadow {
                 x,

@@ -1,4 +1,5 @@
 use super::{INITIAL_IB_SIZE, INITIAL_VB_SIZE, Layer};
+use crate::compositor::clip::{ClipStack, record_range};
 use crate::compositor::scene::SceneNode;
 use crate::compositor::vertex::{
     QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction, shadow_padding, shadow_sigma,
@@ -63,20 +64,25 @@ fn path_bounds(vertices: &[QuadVertex]) -> Option<(f32, f32, f32, f32)> {
 
 impl Layer {
     /// Rebuild CPU-side quad geometry (rects + paths), skipping nodes whose
-    /// bounds are entirely outside the viewport. Returns the number of nodes
-    /// culled.
+    /// bounds are entirely outside the viewport or inside an empty clip.
+    /// Returns the number of nodes culled.
     pub(crate) fn build_quad_geometry(&mut self, viewport: (f32, f32)) -> u32 {
         self.quad_vertices.clear();
         self.quad_indices.clear();
+        self.quad_ranges.clear();
+        let mut clips = ClipStack::default();
         let mut culled = 0u32;
 
         for node in &self.nodes {
             match node {
+                SceneNode::PushClip { x, y, w, h } => clips.push([*x, *y, *w, *h]),
+                SceneNode::PopClip => clips.pop(),
                 SceneNode::Rect { x, y, w, h, color } => {
-                    if outside_viewport(viewport, *x, *y, *w, *h) {
+                    if outside_viewport(viewport, *x, *y, *w, *h) || clips.is_empty_clip() {
                         culled += 1;
                         continue;
                     }
+                    let first_index = self.quad_indices.len() as u32;
                     let base = self.quad_vertices.len() as u32;
                     self.quad_vertices.extend_from_slice(&[
                         QuadVertex {
@@ -104,18 +110,30 @@ impl Layer {
                         base + 3,
                         base,
                     ]);
+                    record_range(&mut self.quad_ranges, first_index, 6, clips.current());
                 }
                 SceneNode::Path { data } => {
+                    if clips.is_empty_clip() {
+                        culled += 1;
+                        continue;
+                    }
                     if let Some((bx, by, bw, bh)) = path_bounds(&data.vertices)
                         && outside_viewport(viewport, bx, by, bw, bh)
                     {
                         culled += 1;
                         continue;
                     }
+                    let first_index = self.quad_indices.len() as u32;
                     let base = self.quad_vertices.len() as u32;
                     self.quad_vertices.extend_from_slice(&data.vertices);
                     self.quad_indices
                         .extend(data.indices.iter().map(|i| i + base));
+                    record_range(
+                        &mut self.quad_ranges,
+                        first_index,
+                        data.indices.len() as u32,
+                        clips.current(),
+                    );
                 }
                 _ => {}
             }
@@ -155,10 +173,20 @@ impl Layer {
     pub(crate) fn build_sdf_geometry(&mut self, viewport: (f32, f32)) -> u32 {
         self.sdf_vertices.clear();
         self.sdf_indices.clear();
+        self.sdf_ranges.clear();
+        let mut clips = ClipStack::default();
         let mut culled = 0u32;
 
         for node in &self.nodes {
             let rect = match node {
+                SceneNode::PushClip { x, y, w, h } => {
+                    clips.push([*x, *y, *w, *h]);
+                    continue;
+                }
+                SceneNode::PopClip => {
+                    clips.pop();
+                    continue;
+                }
                 SceneNode::RoundedRect {
                     x,
                     y,
@@ -209,11 +237,14 @@ impl Layer {
                 _ => continue,
             };
 
-            if outside_viewport(viewport, rect.x, rect.y, rect.w, rect.h) {
+            if outside_viewport(viewport, rect.x, rect.y, rect.w, rect.h) || clips.is_empty_clip()
+            {
                 culled += 1;
                 continue;
             }
+            let first_index = self.sdf_indices.len() as u32;
             emit_sdf_rect(&mut self.sdf_vertices, &mut self.sdf_indices, &rect);
+            record_range(&mut self.sdf_ranges, first_index, 6, clips.current());
         }
 
         self.sdf_index_count = self.sdf_indices.len() as u32;
@@ -227,6 +258,8 @@ impl Layer {
     pub(crate) fn build_shadow_geometry(&mut self, viewport: (f32, f32)) -> u32 {
         self.shadow_vertices.clear();
         self.shadow_indices.clear();
+        self.shadow_ranges.clear();
+        let mut clips = ClipStack::default();
         let mut culled = 0u32;
 
         for node in &self.nodes {
@@ -241,13 +274,18 @@ impl Layer {
                 color,
             } = node
             else {
+                match node {
+                    SceneNode::PushClip { x, y, w, h } => clips.push([*x, *y, *w, *h]),
+                    SceneNode::PopClip => clips.pop(),
+                    _ => {}
+                }
                 continue;
             };
 
             let pad = shadow_padding(*blur_radius);
             let (qx, qy) = (x - pad + offset[0], y - pad + offset[1]);
             let (qw, qh) = (w + 2.0 * pad, h + 2.0 * pad);
-            if outside_viewport(viewport, qx, qy, qw, qh) {
+            if outside_viewport(viewport, qx, qy, qw, qh) || clips.is_empty_clip() {
                 culled += 1;
                 continue;
             }
@@ -267,6 +305,7 @@ impl Layer {
                 ([qx, qy + qh], [-half[0], half[1]]),
             ];
 
+            let first_index = self.shadow_indices.len() as u32;
             let base = self.shadow_vertices.len() as u32;
             for (position, local) in corners {
                 self.shadow_vertices.push(ShadowVertex {
@@ -278,6 +317,7 @@ impl Layer {
             }
             self.shadow_indices
                 .extend_from_slice(&[base, base + 1, base + 2, base + 2, base + 3, base]);
+            record_range(&mut self.shadow_ranges, first_index, 6, clips.current());
         }
 
         self.shadow_index_count = self.shadow_indices.len() as u32;

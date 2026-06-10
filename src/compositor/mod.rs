@@ -1,3 +1,4 @@
+mod clip;
 pub(crate) mod drawing;
 mod layer;
 mod layer_ops;
@@ -8,6 +9,9 @@ mod vertex;
 #[cfg(test)]
 mod tests;
 
+pub use clip::{
+    ClipRect, DrawRange, clip_to_scissor, intersect_rects, intersect_scissors, merge_text_groups,
+};
 pub use drawing::{GradientRectParams, RoundedRectParams, ShadowParams};
 pub use layer::{Layer, LayerEffect, LayerId};
 pub use scene::{SceneNode, TextNodeKey};

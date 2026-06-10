@@ -16,49 +16,78 @@ struct TextProps<'a> {
     truncate_chars: Option<&'a usize>,
 }
 
+/// Walk the element tree in the same preorder as `collect_layout_items`
+/// (so `bounds[i]` lines up), wrapping children of `clip_children` elements
+/// in PushClip/PopClip pairs.
 pub(crate) fn emit_scene_nodes(
-    elements: &[&Element],
+    root: &Element,
     bounds: &[ComputedBounds],
     theme: Option<&crate::theme::Theme>,
     out: &mut Vec<SceneNode>,
 ) {
-    for (i, &element) in elements.iter().enumerate() {
-        let b = &bounds[i];
+    let mut cursor = 0usize;
+    emit_element(root, bounds, theme, &mut cursor, out);
+}
 
-        // Resolve intent-derived color when theme is available
-        let intent_color = element
-            .intent
-            .and_then(|intent| theme.map(|t| t.intent_color(intent)));
+fn emit_element(
+    element: &Element,
+    bounds: &[ComputedBounds],
+    theme: Option<&crate::theme::Theme>,
+    cursor: &mut usize,
+    out: &mut Vec<SceneNode>,
+) {
+    let b = &bounds[*cursor];
+    *cursor += 1;
 
-        match &element.kind {
-            ElementKind::Div => {
-                emit_div(element, b, intent_color, out);
-            }
-            ElementKind::Text {
-                content,
-                font_size,
-                line_height,
-                max_width,
-                truncate_chars,
-            } => {
-                emit_text(
-                    element,
-                    b,
-                    intent_color,
-                    &TextProps {
-                        content,
-                        font_size: *font_size,
-                        line_height: *line_height,
-                        max_width: *max_width,
-                        truncate_chars: truncate_chars.as_ref(),
-                    },
-                    out,
-                );
-            }
-            ElementKind::Path { data } => {
-                out.push(SceneNode::Path { data: data.clone() });
-            }
+    // Resolve intent-derived color when theme is available
+    let intent_color = element
+        .intent
+        .and_then(|intent| theme.map(|t| t.intent_color(intent)));
+
+    match &element.kind {
+        ElementKind::Div => {
+            emit_div(element, b, intent_color, out);
         }
+        ElementKind::Text {
+            content,
+            font_size,
+            line_height,
+            max_width,
+            truncate_chars,
+        } => {
+            emit_text(
+                element,
+                b,
+                intent_color,
+                &TextProps {
+                    content,
+                    font_size: *font_size,
+                    line_height: *line_height,
+                    max_width: *max_width,
+                    truncate_chars: truncate_chars.as_ref(),
+                },
+                out,
+            );
+        }
+        ElementKind::Path { data } => {
+            out.push(SceneNode::Path { data: data.clone() });
+        }
+    }
+
+    let clip = element.style.clip_children && !element.children.is_empty();
+    if clip {
+        out.push(SceneNode::PushClip {
+            x: b.x,
+            y: b.y,
+            w: b.width,
+            h: b.height,
+        });
+    }
+    for child in &element.children {
+        emit_element(child, bounds, theme, cursor, out);
+    }
+    if clip {
+        out.push(SceneNode::PopClip);
     }
 }
 

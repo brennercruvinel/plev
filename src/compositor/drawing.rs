@@ -59,6 +59,16 @@ impl Compositor {
         self.push(SceneNode::Rect { x, y, w, h, color });
     }
 
+    /// Scope following nodes to `rect` (intersected with any active clip)
+    /// until the matching `pop_clip`.
+    pub fn push_clip(&mut self, x: f32, y: f32, w: f32, h: f32) {
+        self.push(SceneNode::PushClip { x, y, w, h });
+    }
+
+    pub fn pop_clip(&mut self) {
+        self.push(SceneNode::PopClip);
+    }
+
     pub fn draw_text(&mut self, key: TextNodeKey, x: f32, y: f32, color: [f32; 4]) {
         self.push(SceneNode::Text { key, x, y, color });
     }

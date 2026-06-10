@@ -4,6 +4,7 @@ mod texture;
 use rustc_hash::FxHasher;
 use std::hash::{Hash, Hasher};
 
+use crate::compositor::clip::{ClipRect, ClipStack, DrawRange};
 use crate::compositor::scene::SceneNode;
 use crate::compositor::vertex::{QuadVertex, RectSdfVertex, ShadowVertex};
 use crate::gpu_vec::GpuVec;
@@ -40,21 +41,25 @@ pub struct Layer {
     pub(crate) dirty: bool,
     pub(crate) quad_vertices: Vec<QuadVertex>,
     pub(crate) quad_indices: Vec<u32>,
+    pub(crate) quad_ranges: Vec<DrawRange>,
     pub(crate) quad_vb: Option<GpuVec>,
     pub(crate) quad_ib: Option<GpuVec>,
     pub(crate) quad_index_count: u32,
     pub(crate) sdf_vertices: Vec<RectSdfVertex>,
     pub(crate) sdf_indices: Vec<u32>,
+    pub(crate) sdf_ranges: Vec<DrawRange>,
     pub(crate) sdf_vb: Option<GpuVec>,
     pub(crate) sdf_ib: Option<GpuVec>,
     pub(crate) sdf_index_count: u32,
     pub(crate) shadow_vertices: Vec<ShadowVertex>,
     pub(crate) shadow_indices: Vec<u32>,
+    pub(crate) shadow_ranges: Vec<DrawRange>,
     pub(crate) shadow_vb: Option<GpuVec>,
     pub(crate) shadow_ib: Option<GpuVec>,
     pub(crate) shadow_index_count: u32,
     pub(crate) text_vertices: Vec<crate::text::TextVertex>,
     pub(crate) text_indices: Vec<u32>,
+    pub(crate) text_ranges: Vec<DrawRange>,
     pub(crate) text_vb: Option<GpuVec>,
     pub(crate) text_ib: Option<GpuVec>,
     pub(crate) text_index_count: u32,
@@ -86,21 +91,25 @@ impl Layer {
             dirty: true,
             quad_vertices: Vec::new(),
             quad_indices: Vec::new(),
+            quad_ranges: Vec::new(),
             quad_vb: None,
             quad_ib: None,
             quad_index_count: 0,
             sdf_vertices: Vec::new(),
             sdf_indices: Vec::new(),
+            sdf_ranges: Vec::new(),
             sdf_vb: None,
             sdf_ib: None,
             sdf_index_count: 0,
             shadow_vertices: Vec::new(),
             shadow_indices: Vec::new(),
+            shadow_ranges: Vec::new(),
             shadow_vb: None,
             shadow_ib: None,
             shadow_index_count: 0,
             text_vertices: Vec::new(),
             text_indices: Vec::new(),
+            text_ranges: Vec::new(),
             text_vb: None,
             text_ib: None,
             text_index_count: 0,
@@ -130,8 +139,47 @@ impl Layer {
             .collect()
     }
 
+    /// Text nodes grouped by the clip rect active where they appear, in
+    /// paint order. Consecutive nodes sharing a clip form one group, so the
+    /// render loop can resolve each group and scissor it independently.
+    pub fn text_node_groups(&self) -> Vec<(Vec<SceneNode>, Option<ClipRect>)> {
+        let mut groups: Vec<(Vec<SceneNode>, Option<ClipRect>)> = Vec::new();
+        let mut clips = ClipStack::default();
+
+        for node in &self.nodes {
+            match node {
+                SceneNode::PushClip { x, y, w, h } => clips.push([*x, *y, *w, *h]),
+                SceneNode::PopClip => clips.pop(),
+                SceneNode::Text { .. } => {
+                    let clip = clips.current();
+                    match groups.last_mut() {
+                        Some((nodes, group_clip)) if *group_clip == clip => {
+                            nodes.push(node.clone());
+                        }
+                        _ => groups.push((vec![node.clone()], clip)),
+                    }
+                }
+                _ => {}
+            }
+        }
+        groups
+    }
+
     pub fn has_quads(&self) -> bool {
         self.quad_index_count > 0
+    }
+
+    pub fn quad_draw_ranges(&self) -> &[DrawRange] {
+        &self.quad_ranges
+    }
+    pub fn sdf_draw_ranges(&self) -> &[DrawRange] {
+        &self.sdf_ranges
+    }
+    pub fn shadow_draw_ranges(&self) -> &[DrawRange] {
+        &self.shadow_ranges
+    }
+    pub fn text_draw_ranges(&self) -> &[DrawRange] {
+        &self.text_ranges
     }
 
     pub fn quad_buffers(&self) -> Option<(&wgpu::Buffer, &wgpu::Buffer, u32)> {
@@ -218,9 +266,32 @@ impl Layer {
         vertices: Vec<crate::text::TextVertex>,
         indices: Vec<u32>,
     ) {
+        // Single unclipped range covering everything (callers that resolve
+        // text per clip group use `set_text_data_with_ranges`).
+        let ranges = if indices.is_empty() {
+            Vec::new()
+        } else {
+            vec![DrawRange {
+                first_index: 0,
+                index_count: indices.len() as u32,
+                clip: None,
+            }]
+        };
+        self.set_text_data_with_ranges(device, queue, vertices, indices, ranges);
+    }
+
+    pub fn set_text_data_with_ranges(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        vertices: Vec<crate::text::TextVertex>,
+        indices: Vec<u32>,
+        ranges: Vec<DrawRange>,
+    ) {
         self.text_index_count = indices.len() as u32;
         self.text_vertices = vertices;
         self.text_indices = indices;
+        self.text_ranges = ranges;
 
         if !self.text_vertices.is_empty() {
             let vb = self.text_vb.get_or_insert_with(|| {

@@ -71,27 +71,42 @@ impl super::App {
                 sampler: &gpu.composite_sampler,
             });
 
-        // Resolve text for each dirty layer
+        // Resolve text for each dirty layer, one resolve per clip group so
+        // clipped text (scrolled lists, panels) scissors with its container.
         {
             let layer_info: Vec<_> = self
                 .compositor
                 .layers()
                 .iter()
-                .map(|l| (l.id, l.is_dirty(), l.text_nodes()))
+                .map(|l| (l.id, l.is_dirty(), l.text_node_groups()))
                 .collect();
 
-            for (layer_id, dirty, text_nodes) in layer_info {
+            for (layer_id, dirty, groups) in layer_info {
                 if !dirty {
                     continue;
                 }
-                let (vertices, indices) = text_system.resolve_for_layer(
-                    &gpu.device,
-                    &gpu.queue,
-                    &gpu.text_bind_group_layout,
-                    &text_nodes,
-                );
+                let resolved: Vec<_> = groups
+                    .into_iter()
+                    .map(|(nodes, clip)| {
+                        let (vertices, indices) = text_system.resolve_for_layer(
+                            &gpu.device,
+                            &gpu.queue,
+                            &gpu.text_bind_group_layout,
+                            &nodes,
+                        );
+                        (vertices, indices, clip)
+                    })
+                    .collect();
+                let (vertices, indices, ranges) =
+                    crate::compositor::merge_text_groups(resolved);
                 if let Some(layer) = self.compositor.layer_mut(layer_id) {
-                    layer.set_text_data(&gpu.device, &gpu.queue, vertices, indices);
+                    layer.set_text_data_with_ranges(
+                        &gpu.device,
+                        &gpu.queue,
+                        vertices,
+                        indices,
+                        ranges,
+                    );
                 }
             }
         }

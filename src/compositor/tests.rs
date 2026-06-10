@@ -206,6 +206,213 @@ fn rounded_rect(x: f32, y: f32, w: f32, h: f32) -> SceneNode {
 }
 
 // ---------------------------------------------------------------------------
+// Clip stack
+// ---------------------------------------------------------------------------
+
+#[test]
+fn nested_clips_intersect() {
+    assert_eq!(
+        intersect_rects([0.0, 0.0, 100.0, 100.0], [50.0, 25.0, 100.0, 100.0]),
+        [50.0, 25.0, 50.0, 75.0]
+    );
+    // Disjoint rects produce a degenerate (empty) intersection
+    let empty = intersect_rects([0.0, 0.0, 10.0, 10.0], [20.0, 0.0, 10.0, 10.0]);
+    assert!(empty[2] <= 0.0);
+}
+
+#[test]
+fn clip_to_scissor_clamps_to_viewport() {
+    assert_eq!(
+        clip_to_scissor([-10.0, -10.0, 100.0, 100.0], 800, 600),
+        Some((0, 0, 90, 90))
+    );
+    assert_eq!(
+        clip_to_scissor([750.0, 550.0, 100.0, 100.0], 800, 600),
+        Some((750, 550, 50, 50))
+    );
+    // Entirely outside -> None
+    assert_eq!(clip_to_scissor([900.0, 0.0, 50.0, 50.0], 800, 600), None);
+    assert_eq!(clip_to_scissor([0.0, 0.0, 0.0, 50.0], 800, 600), None);
+}
+
+#[test]
+fn nodes_are_grouped_into_draw_ranges_by_clip() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(rect(0.0, 0.0, 10.0, 10.0)); // unclipped
+    comp.push(rect(10.0, 0.0, 10.0, 10.0)); // unclipped (merges with above)
+    comp.push_clip(0.0, 0.0, 50.0, 50.0);
+    comp.push(rect(20.0, 0.0, 10.0, 10.0)); // clipped
+    comp.push_clip(10.0, 10.0, 50.0, 50.0); // nested: intersection
+    comp.push(rect(30.0, 0.0, 10.0, 10.0)); // clipped (nested)
+    comp.pop_clip();
+    comp.pop_clip();
+    comp.push(rect(40.0, 0.0, 10.0, 10.0)); // unclipped again
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    let ranges = layer.quad_draw_ranges();
+    assert_eq!(ranges.len(), 4);
+
+    assert_eq!(ranges[0], DrawRange {
+        first_index: 0,
+        index_count: 12,
+        clip: None
+    });
+    assert_eq!(ranges[1].clip, Some([0.0, 0.0, 50.0, 50.0]));
+    assert_eq!(ranges[1].first_index, 12);
+    assert_eq!(ranges[1].index_count, 6);
+    // Nested clip is the intersection of both rects
+    assert_eq!(ranges[2].clip, Some([10.0, 10.0, 40.0, 40.0]));
+    assert_eq!(ranges[3].clip, None);
+    assert_eq!(ranges[3].first_index, 24);
+
+    // Ranges tile the index buffer exactly
+    let total: u32 = ranges.iter().map(|r| r.index_count).sum();
+    assert_eq!(total, layer.quad_index_count);
+}
+
+#[test]
+fn unbalanced_pop_clip_is_ignored() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.pop_clip(); // stray pop: must not panic nor clip anything
+    comp.push(rect(0.0, 0.0, 10.0, 10.0));
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(layer.quad_draw_ranges().len(), 1);
+    assert_eq!(layer.quad_draw_ranges()[0].clip, None);
+}
+
+#[test]
+fn empty_clip_intersection_culls_nodes() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push_clip(0.0, 0.0, 50.0, 50.0);
+    comp.push_clip(100.0, 100.0, 50.0, 50.0); // disjoint from the first
+    comp.push(rect(0.0, 0.0, 200.0, 200.0));
+    comp.push(rounded_rect(0.0, 0.0, 200.0, 200.0));
+    comp.pop_clip();
+    comp.pop_clip();
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(layer.quad_index_count, 0);
+    assert_eq!(layer.sdf_index_count, 0);
+    assert_eq!(comp.stats().nodes_culled, 2);
+}
+
+#[test]
+fn clip_applies_to_sdf_and_shadow_ranges() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push_clip(0.0, 0.0, 100.0, 100.0);
+    comp.push(rounded_rect(10.0, 10.0, 50.0, 50.0));
+    comp.push(SceneNode::Shadow {
+        x: 10.0,
+        y: 10.0,
+        w: 50.0,
+        h: 50.0,
+        corner_radius: 4.0,
+        blur_radius: 8.0,
+        offset: [0.0, 2.0],
+        color: [0.0, 0.0, 0.0, 0.5],
+    });
+    comp.pop_clip();
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(layer.sdf_draw_ranges().len(), 1);
+    assert_eq!(layer.sdf_draw_ranges()[0].clip, Some([0.0, 0.0, 100.0, 100.0]));
+    assert_eq!(layer.shadow_draw_ranges().len(), 1);
+    assert_eq!(
+        layer.shadow_draw_ranges()[0].clip,
+        Some([0.0, 0.0, 100.0, 100.0])
+    );
+}
+
+#[test]
+fn text_node_groups_split_by_clip() {
+    fn text_node(label: &str) -> SceneNode {
+        SceneNode::Text {
+            key: TextNodeKey::new(label, 14.0, 18.0, None),
+            x: 0.0,
+            y: 0.0,
+            color: [1.0; 4],
+        }
+    }
+
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(text_node("a"));
+    comp.push(text_node("b"));
+    comp.push_clip(0.0, 0.0, 50.0, 50.0);
+    comp.push(text_node("c"));
+    comp.pop_clip();
+    comp.push(text_node("d"));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    let groups = layer.text_node_groups();
+    assert_eq!(groups.len(), 3);
+    assert_eq!(groups[0].0.len(), 2);
+    assert_eq!(groups[0].1, None);
+    assert_eq!(groups[1].0.len(), 1);
+    assert_eq!(groups[1].1, Some([0.0, 0.0, 50.0, 50.0]));
+    assert_eq!(groups[2].1, None);
+}
+
+#[test]
+fn merge_text_groups_rebases_indices_and_builds_ranges() {
+    fn vertex(x: f32) -> crate::text::TextVertex {
+        crate::text::TextVertex {
+            position: [x, 0.0],
+            uv: [0.0, 0.0],
+            color: [1.0; 4],
+        }
+    }
+
+    let groups = vec![
+        (
+            vec![vertex(0.0), vertex(1.0), vertex(2.0), vertex(3.0)],
+            vec![0, 1, 2, 2, 3, 0],
+            None,
+        ),
+        (
+            vec![vertex(4.0), vertex(5.0), vertex(6.0), vertex(7.0)],
+            vec![0, 1, 2, 2, 3, 0],
+            Some([0.0, 0.0, 50.0, 50.0]),
+        ),
+    ];
+    let (vertices, indices, ranges) = merge_text_groups(groups);
+
+    assert_eq!(vertices.len(), 8);
+    assert_eq!(indices.len(), 12);
+    // Second group's indices rebased past the first group's vertices
+    assert_eq!(&indices[6..], &[4, 5, 6, 6, 7, 4]);
+    assert_eq!(ranges.len(), 2);
+    assert_eq!(ranges[0], DrawRange {
+        first_index: 0,
+        index_count: 6,
+        clip: None
+    });
+    assert_eq!(ranges[1], DrawRange {
+        first_index: 6,
+        index_count: 6,
+        clip: Some([0.0, 0.0, 50.0, 50.0])
+    });
+}
+
+#[test]
+fn intersect_scissors_clamps_and_rejects_empty() {
+    assert_eq!(
+        intersect_scissors((0, 0, 100, 100), (50, 50, 100, 100)),
+        Some((50, 50, 50, 50))
+    );
+    assert_eq!(intersect_scissors((0, 0, 10, 10), (20, 20, 10, 10)), None);
+}
+
+// ---------------------------------------------------------------------------
 // Analytic shadow
 // ---------------------------------------------------------------------------
 

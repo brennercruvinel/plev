@@ -1,4 +1,33 @@
-use crate::compositor::LayerEffect;
+use crate::compositor::{DrawRange, LayerEffect, clip_to_scissor, intersect_scissors};
+
+/// Issue one scissored draw per range: the scissor is the range's clip
+/// (intersection of the PushClip stack) clamped to the viewport and
+/// intersected with the layer's own clip rect. Empty scissors are skipped.
+/// Returns the number of draw calls issued.
+fn draw_clipped_ranges(
+    pass: &mut wgpu::RenderPass<'_>,
+    ranges: &[DrawRange],
+    base_scissor: (u32, u32, u32, u32),
+    vw: u32,
+    vh: u32,
+) -> u32 {
+    let mut draw_calls = 0u32;
+    for range in ranges {
+        let scissor = match range.clip {
+            None => Some(base_scissor),
+            Some(clip) => {
+                clip_to_scissor(clip, vw, vh).and_then(|s| intersect_scissors(s, base_scissor))
+            }
+        };
+        let Some((sx, sy, sw, sh)) = scissor else {
+            continue;
+        };
+        pass.set_scissor_rect(sx, sy, sw, sh);
+        pass.draw_indexed(range.first_index..range.first_index + range.index_count, 0, 0..1);
+        draw_calls += 1;
+    }
+    draw_calls
+}
 
 impl super::App {
     /// Encode one render pass per dirty layer. Returns the number of draw
@@ -10,6 +39,8 @@ impl super::App {
         dirty_layer_ids: &[crate::compositor::LayerId],
         encoder: &mut wgpu::CommandEncoder,
     ) -> u32 {
+        let vw = gpu.surface_config.width;
+        let vh = gpu.surface_config.height;
         let mut draw_calls = 0u32;
         for layer_id in dirty_layer_ids {
             let layer = compositor.layer(*layer_id).unwrap();
@@ -39,47 +70,53 @@ impl super::App {
                 multiview_mask: None,
             });
 
-            if let Some((cx, cy, cw, ch)) = layer.clip_rect {
-                pass.set_scissor_rect(cx, cy, cw, ch);
-            }
+            let base_scissor = layer
+                .clip_rect
+                .and_then(|c| intersect_scissors(c, (0, 0, vw, vh)))
+                .unwrap_or((0, 0, vw, vh));
 
-            if let Some((vb, ib, count)) = layer.quad_buffers() {
+            if let Some((vb, ib, _)) = layer.quad_buffers() {
                 pass.set_pipeline(&gpu.quad_pipeline);
                 pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
                 pass.set_vertex_buffer(0, vb.slice(..));
                 pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
-                pass.draw_indexed(0..count, 0, 0..1);
-                draw_calls += 1;
+                draw_calls +=
+                    draw_clipped_ranges(&mut pass, layer.quad_draw_ranges(), base_scissor, vw, vh);
             }
 
             // Shadows go after plain quads (page backgrounds) but before SDF
             // rects so cards paint on top of their own shadow.
-            if let Some((vb, ib, count)) = layer.shadow_buffers() {
+            if let Some((vb, ib, _)) = layer.shadow_buffers() {
                 pass.set_pipeline(&gpu.shadow_analytic_pipeline);
                 pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
                 pass.set_vertex_buffer(0, vb.slice(..));
                 pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
-                pass.draw_indexed(0..count, 0, 0..1);
-                draw_calls += 1;
+                draw_calls += draw_clipped_ranges(
+                    &mut pass,
+                    layer.shadow_draw_ranges(),
+                    base_scissor,
+                    vw,
+                    vh,
+                );
             }
 
-            if let Some((vb, ib, count)) = layer.sdf_rect_buffers() {
+            if let Some((vb, ib, _)) = layer.sdf_rect_buffers() {
                 pass.set_pipeline(&gpu.rect_sdf_pipeline);
                 pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
                 pass.set_vertex_buffer(0, vb.slice(..));
                 pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
-                pass.draw_indexed(0..count, 0, 0..1);
-                draw_calls += 1;
+                draw_calls +=
+                    draw_clipped_ranges(&mut pass, layer.sdf_draw_ranges(), base_scissor, vw, vh);
             }
 
-            if let Some((vb, ib, count)) = layer.text_buffers() {
+            if let Some((vb, ib, _)) = layer.text_buffers() {
                 pass.set_pipeline(&gpu.text_pipeline);
                 pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
                 pass.set_bind_group(1, &text_system.atlas_bind_group, &[]);
                 pass.set_vertex_buffer(0, vb.slice(..));
                 pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
-                pass.draw_indexed(0..count, 0, 0..1);
-                draw_calls += 1;
+                draw_calls +=
+                    draw_clipped_ranges(&mut pass, layer.text_draw_ranges(), base_scissor, vw, vh);
             }
         }
         draw_calls

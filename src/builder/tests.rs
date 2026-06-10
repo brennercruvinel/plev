@@ -311,6 +311,66 @@ mod tests {
     }
 
     #[test]
+    fn clip_children_wraps_children_in_push_pop() {
+        let el = div()
+            .w(100.0)
+            .h(50.0)
+            .bg("blue")
+            .clip_children()
+            .child(div().w(300.0).h(20.0).bg("red"))
+            .child(div().w(300.0).h(20.0).bg("green"));
+        let nodes = el.render(&mut test_cx());
+
+        // parent rect, PushClip, 2 child rects, PopClip
+        assert_eq!(nodes.len(), 5);
+        assert!(matches!(&nodes[0], SceneNode::Rect { .. }));
+        let SceneNode::PushClip { x, y, w, h } = &nodes[1] else {
+            panic!("Expected PushClip, got {:?}", &nodes[1]);
+        };
+        assert_eq!((*x, *y, *w, *h), (0.0, 0.0, 100.0, 50.0));
+        assert!(matches!(&nodes[2], SceneNode::Rect { .. }));
+        assert!(matches!(&nodes[3], SceneNode::Rect { .. }));
+        assert!(matches!(&nodes[4], SceneNode::PopClip));
+    }
+
+    #[test]
+    fn nested_clip_children_balance_push_pop() {
+        let el = div()
+            .w(100.0)
+            .h(100.0)
+            .clip_children()
+            .child(
+                div()
+                    .w(80.0)
+                    .h(80.0)
+                    .clip_children()
+                    .child(div().w(200.0).h(10.0).bg("red")),
+            );
+        let nodes = el.render(&mut test_cx());
+
+        let pushes = nodes
+            .iter()
+            .filter(|n| matches!(n, SceneNode::PushClip { .. }))
+            .count();
+        let pops = nodes
+            .iter()
+            .filter(|n| matches!(n, SceneNode::PopClip))
+            .count();
+        assert_eq!(pushes, 2);
+        assert_eq!(pops, 2);
+        // Last node closes the outer clip
+        assert!(matches!(nodes.last(), Some(SceneNode::PopClip)));
+    }
+
+    #[test]
+    fn clip_children_without_children_emits_no_clip_nodes() {
+        let el = div().w(100.0).h(50.0).bg("blue").clip_children();
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 1);
+        assert!(matches!(&nodes[0], SceneNode::Rect { .. }));
+    }
+
+    #[test]
     fn shadow_drop_emits_shadow_before_rect() {
         let el = div()
             .w(100.0)
