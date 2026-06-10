@@ -1,11 +1,18 @@
+//! Column header — HOFF social column head: 68px tall, 12px padding,
+//! title in the `title` mixin (20px / 1.2 / 500) at rgba($n2,.56),
+//! optional count chip on the right.
+
 use super::badge;
 use crate::theme::Theme;
 use plev::compositor::{Compositor, SceneNode, TextNodeKey};
 
-const HEADER_H: f32 = 44.0;
+pub const HEADER_H: f32 = 68.0;
 const PAD_X: f32 = 12.0;
+const TITLE_SIZE: f32 = 20.0;
+const TITLE_LINE_H: f32 = 20.0 * 1.2;
 
-/// Draw a panel header with title and optional badge. Returns the header height.
+/// Draw a column header with title and optional count chip.
+/// Returns the header height.
 pub fn draw(
     compositor: &mut Compositor,
     theme: &Theme,
@@ -15,40 +22,24 @@ pub fn draw(
     title: &str,
     badge_text: Option<&str>,
 ) -> f32 {
-    compositor.push(SceneNode::Rect {
-        x,
-        y,
-        w,
-        h: HEADER_H,
-        color: theme.bg_2.to_array(),
-    });
-
     compositor.push(SceneNode::Text {
-        key: TextNodeKey::new(title, 12.0, 16.0, None).with_weight(600),
+        key: TextNodeKey::new(title, TITLE_SIZE, TITLE_LINE_H, None).with_weight(500),
         x: x + PAD_X,
-        y: y + 14.0,
-        color: theme.text_2.to_array(),
+        y: y + (HEADER_H - TITLE_LINE_H) / 2.0,
+        color: theme.text_default.to_array(),
     });
 
     if let Some(text) = badge_text {
+        let badge_w = super::hoff::text_width(text, 12.0) + 16.0;
         badge::draw(
             compositor,
             theme,
-            x + w - PAD_X - 28.0,
-            y + 13.0,
+            x + w - PAD_X - badge_w,
+            y + (HEADER_H - 22.0) / 2.0,
             text,
-            badge::BadgeKind::Neutral,
+            badge::BadgeKind::Tag,
         );
     }
 
-    // Divider
-    compositor.push(SceneNode::Rect {
-        x,
-        y: y + HEADER_H,
-        w,
-        h: 1.0,
-        color: theme.border.to_array(),
-    });
-
-    HEADER_H + 1.0
+    HEADER_H
 }

@@ -15,13 +15,13 @@ impl WorkspaceView {
 
         compositor.begin_frame();
 
-        // Full background
+        // Global frame behind the app — body #444444.
         compositor.push(SceneNode::Rect {
             x: 0.0,
             y: 0.0,
             w: vw,
             h: vh,
-            color: theme.bg_1.to_array(),
+            color: theme.bg_body.to_array(),
         });
 
         // -- Sidebar --
@@ -62,7 +62,7 @@ impl WorkspaceView {
             hover_row,
         );
 
-        // Left resize handle
+        // Left resize handle — dark seam at rest, rgba($n2,.25) when grabbed.
         let handle_hov = self.hover_left_handle || self.dragging_left;
         compositor.push(SceneNode::Rect {
             x: left_x + self.left_w,
@@ -70,9 +70,9 @@ impl WorkspaceView {
             w: RESIZE_HANDLE_W,
             h: content_h,
             color: if handle_hov {
-                [theme.pop.0[0], theme.pop.0[1], theme.pop.0[2], 0.6]
+                theme.field_focus_border.to_array()
             } else {
-                theme.border.to_array()
+                theme.bg_body.to_array()
             },
         });
 
@@ -89,7 +89,7 @@ impl WorkspaceView {
             hover_commit,
         );
 
-        // Right resize handle
+        // Right resize handle — dark seam at rest, rgba($n2,.25) when grabbed.
         let right_handle_hov = self.hover_right_handle || self.dragging_right;
         compositor.push(SceneNode::Rect {
             x: right_x - RESIZE_HANDLE_W,
@@ -97,9 +97,9 @@ impl WorkspaceView {
             w: RESIZE_HANDLE_W,
             h: content_h,
             color: if right_handle_hov {
-                [theme.pop.0[0], theme.pop.0[1], theme.pop.0[2], 0.6]
+                theme.field_focus_border.to_array()
             } else {
-                theme.border.to_array()
+                theme.bg_body.to_array()
             },
         });
 

@@ -1,3 +1,10 @@
+//! Right "Diff" column — HOFF RightSidebar surface (rgba(40,40,40,.8)),
+//! 68px head with the file name in base-2m at rgba($n2,.76). Diff rows keep
+//! the green/red convention but harmonized with the HOFF accents: content
+//! text stays monochrome (.56/.70); only row tints and +/- prefixes carry
+//! #55F08B / #BD3027. Line numbers at the .25 placeholder alpha.
+
+use crate::components::hoff;
 use crate::theme::Theme;
 use plev::compositor::{Compositor, SceneNode, TextNodeKey};
 use plev::scroll::ScrollState;
@@ -26,7 +33,7 @@ pub struct DiffView {
     pub scroll: ScrollState,
 }
 
-const HEADER_H: f32 = 44.0;
+const HEADER_H: f32 = 68.0;
 const LINE_H: f32 = 20.0;
 const LINE_NO_W: f32 = 40.0;
 const CODE_X_OFFSET: f32 = LINE_NO_W * 2.0 + 8.0;
@@ -88,39 +95,25 @@ impl DiffView {
         self.scroll.set_viewport(h - HEADER_H);
         self.scroll.set_content(content_h);
 
-        // Panel background
+        // Column surface — RightSidebar rgba(40,40,40,.8).
         compositor.push(SceneNode::Rect {
             x,
             y,
             w,
             h,
-            color: theme.bg_1.to_array(),
+            color: theme.bg_sidebar.to_array(),
         });
 
-        // Header
-        compositor.push(SceneNode::Rect {
-            x,
-            y,
-            w,
-            h: HEADER_H,
-            color: theme.bg_2.to_array(),
-        });
+        // Head — file name in base-2m (14/500) at .76.
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::new(&self.filename, 12.0, 16.0, Some(w - PAD_X * 2.0))
+            key: TextNodeKey::new(&self.filename, 14.0, 14.0 * 1.4, Some(w - PAD_X * 2.0))
                 .with_weight(500),
             x: x + PAD_X,
-            y: y + 14.0,
-            color: theme.text_1.to_array(),
-        });
-        compositor.push(SceneNode::Rect {
-            x,
-            y: y + HEADER_H,
-            w,
-            h: 1.0,
-            color: theme.border.to_array(),
+            y: y + (HEADER_H - 14.0 * 1.4) / 2.0,
+            color: theme.text_active.to_array(),
         });
 
-        let code_y = y + HEADER_H + 1.0;
+        let code_y = y + HEADER_H;
         let scroll_offset = self.scroll.offset();
 
         for (i, line) in self.lines.iter().enumerate() {
@@ -129,23 +122,25 @@ impl DiffView {
                 continue;
             }
 
-            let (bg, text_col) = line_colors(line.kind, theme);
-            compositor.push(SceneNode::Rect {
-                x,
-                y: ly,
-                w,
-                h: LINE_H,
-                color: bg,
-            });
+            let (bg, prefix_col, text_col) = line_colors(line.kind, theme);
+            if bg[3] > 0.0 {
+                compositor.push(SceneNode::Rect {
+                    x,
+                    y: ly,
+                    w,
+                    h: LINE_H,
+                    color: bg,
+                });
+            }
 
-            // Old line number
+            // Old line number — placeholder alpha (.25).
             if let Some(no) = line.line_no_old {
                 let no_str = no.to_string();
                 compositor.push(SceneNode::Text {
                     key: TextNodeKey::new(&no_str, FONT_SIZE - 1.0, LINE_H, None).with_weight(400),
                     x: x + 4.0,
                     y: ly + (LINE_H - (FONT_SIZE - 1.0) * 1.2) / 2.0,
-                    color: theme.text_3.to_array(),
+                    color: theme.text_placeholder.to_array(),
                 });
             }
             // New line number
@@ -155,11 +150,11 @@ impl DiffView {
                     key: TextNodeKey::new(&no_str, FONT_SIZE - 1.0, LINE_H, None).with_weight(400),
                     x: x + LINE_NO_W + 4.0,
                     y: ly + (LINE_H - (FONT_SIZE - 1.0) * 1.2) / 2.0,
-                    color: theme.text_3.to_array(),
+                    color: theme.text_placeholder.to_array(),
                 });
             }
 
-            // Diff prefix (+/-/ /@@)
+            // Diff prefix (+/-/ /@@) — carries the accent.
             let prefix = match line.kind {
                 DiffLineKind::Added => "+",
                 DiffLineKind::Removed => "-",
@@ -170,10 +165,10 @@ impl DiffView {
                 key: TextNodeKey::new(prefix, FONT_SIZE, LINE_H, None).with_weight(600),
                 x: x + LINE_NO_W * 2.0,
                 y: ly + (LINE_H - FONT_SIZE * 1.2) / 2.0,
-                color: text_col,
+                color: prefix_col,
             });
 
-            // Code content
+            // Code content — monochrome.
             let max_code_w = w - CODE_X_OFFSET - PAD_X;
             compositor.push(SceneNode::Text {
                 key: TextNodeKey::new(&line.content, FONT_SIZE, LINE_H, Some(max_code_w))
@@ -186,39 +181,38 @@ impl DiffView {
 
         // Scrollbar
         if self.scroll.is_scrollable() {
-            let thumb_h = ((h - HEADER_H) * self.scroll.thumb_ratio()).max(20.0);
-            let thumb_y = code_y + ((h - HEADER_H) - thumb_h) * self.scroll.thumb_position();
-            compositor.push(SceneNode::Rect {
-                x: x + w - 4.0,
-                y: thumb_y,
-                w: 4.0,
-                h: thumb_h,
-                color: [theme.text_3.0[0], theme.text_3.0[1], theme.text_3.0[2], 0.5],
-            });
+            hoff::draw_scrollbar(
+                compositor,
+                theme,
+                x + w - 4.0,
+                code_y,
+                h - HEADER_H,
+                &self.scroll,
+            );
         }
     }
 }
 
-fn line_colors(kind: DiffLineKind, theme: &Theme) -> ([f32; 4], [f32; 4]) {
+/// (row bg, prefix color, content color) per diff line kind.
+fn line_colors(kind: DiffLineKind, theme: &Theme) -> ([f32; 4], [f32; 4], [f32; 4]) {
     match kind {
         DiffLineKind::Added => {
-            let c = theme.safe;
-            (
-                [c.0[0] * 0.08, c.0[1] * 0.08, c.0[2] * 0.08, 1.0],
-                c.to_array(),
-            )
+            let g = theme.accent_green.to_array();
+            ([g[0], g[1], g[2], 0.07], g, theme.text_secondary.to_array())
         }
         DiffLineKind::Removed => {
-            let c = theme.danger;
-            (
-                [c.0[0] * 0.08, c.0[1] * 0.03, c.0[2] * 0.03, 1.0],
-                c.to_array(),
-            )
+            let r = theme.accent_red.to_array();
+            ([r[0], r[1], r[2], 0.12], r, theme.text_secondary.to_array())
         }
         DiffLineKind::Header => (
-            [theme.bg_3.0[0], theme.bg_3.0[1], theme.bg_3.0[2], 1.0],
-            theme.pop.to_array(),
+            theme.surface.to_array(),
+            theme.text_muted.to_array(),
+            theme.text_muted.to_array(),
         ),
-        DiffLineKind::Context => (theme.bg_1.to_array(), theme.text_2.to_array()),
+        DiffLineKind::Context => (
+            [0.0; 4],
+            theme.text_default.to_array(),
+            theme.text_default.to_array(),
+        ),
     }
 }

@@ -1,20 +1,29 @@
-use crate::theme::Theme;
-use plev::color::Color;
+//! Confirmation modal — HOFF Modal recipe (`components/Modal`):
+//! overlay rgba(35,34,34,.9); container max-width 400, radius 32,
+//! padding 32; surface rgba(40,40,40,.7) + deep shadow stack +
+//! edge-light 1.5px rgba(255,255,255,.05) (mask 175deg -> 60%).
+
+use super::button::{ButtonKind, ButtonSize, draw_to_layer as draw_button};
+use super::hoff;
+use crate::theme::{SHADOW_MODAL, Theme};
 use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 
-const MODAL_W: f32 = 360.0;
-const MODAL_H: f32 = 162.0;
-const PAD: f32 = 20.0;
-const TITLE_SIZE: f32 = 15.0;
-const BODY_SIZE: f32 = 13.0;
-const BTN_H: f32 = 32.0;
-const BTN_PAD_X: f32 = 16.0;
+const MODAL_W: f32 = 400.0;
+const MODAL_H: f32 = 216.0;
+const PAD: f32 = 32.0;
+/// Title: title mixin (20px / 1.2 / 500).
+const TITLE_SIZE: f32 = 20.0;
+const TITLE_LINE_H: f32 = 20.0 * 1.2;
+/// Body: body-2r (14px / 1.7 / 400).
+const BODY_SIZE: f32 = 14.0;
+const BODY_LINE_H: f32 = 14.0 * 1.7;
 const BTN_GAP: f32 = 8.0;
 
 /// Draw a confirmation modal onto `layer_id`.
 ///
 /// `x`, `y` is the top-left of the dialog box (pre-centered by caller).
 /// Returns `(confirm_rect, cancel_rect)` — callers use these for hit-testing.
+#[allow(clippy::too_many_arguments)]
 pub fn draw(
     compositor: &mut Compositor,
     layer_id: LayerId,
@@ -30,7 +39,7 @@ pub fn draw(
     hover_confirm: bool,
     hover_cancel: bool,
 ) -> ((f32, f32, f32, f32), (f32, f32, f32, f32)) {
-    // Semi-transparent backdrop (full screen)
+    // Full-screen overlay: rgba(35,34,34,.9).
     compositor.push_to_layer(
         layer_id,
         SceneNode::Rect {
@@ -38,128 +47,89 @@ pub fn draw(
             y: 0.0,
             w: vw,
             h: vh,
-            color: Color::rgba(0.0, 0.0, 0.0, 0.45).to_array(),
+            color: theme.bg_overlay.to_array(),
         },
     );
 
-    // Dialog box
-    compositor.push_to_layer(
+    // Deep shadow stack, then glass container with top-lit rim.
+    hoff::shadow_stack(
+        compositor,
         layer_id,
-        SceneNode::RoundedRect {
-            x,
-            y,
-            w: MODAL_W,
-            h: MODAL_H,
-            color: theme.bg_2.to_array(),
-            corner_radius: theme.radius_ml,
-            border_width: 1.0,
-            border_color: theme.border.to_array(),
-        },
+        x,
+        y,
+        MODAL_W,
+        MODAL_H,
+        theme.radius_pill,
+        &SHADOW_MODAL,
+    );
+    hoff::glass(
+        compositor,
+        layer_id,
+        x,
+        y,
+        MODAL_W,
+        MODAL_H,
+        theme.radius_pill,
+        theme.bg_panel,
+        Some((1.5, theme.edge)),
     );
 
-    // Title
+    // Title — 20/500, text-primary (.95).
     compositor.push_to_layer(
         layer_id,
         SceneNode::Text {
-            key: TextNodeKey::new(
-                title,
-                TITLE_SIZE,
-                TITLE_SIZE * 1.3,
-                Some(MODAL_W - PAD * 2.0),
-            )
-            .with_weight(600),
+            key: TextNodeKey::new(title, TITLE_SIZE, TITLE_LINE_H, Some(MODAL_W - PAD * 2.0))
+                .with_weight(500),
             x: x + PAD,
             y: y + PAD,
-            color: theme.text_1.to_array(),
+            color: theme.text_primary.to_array(),
         },
     );
 
-    // Body
+    // Body — 14/1.7, text-secondary (.70).
     compositor.push_to_layer(
         layer_id,
         SceneNode::Text {
-            key: TextNodeKey::new(body, BODY_SIZE, BODY_SIZE * 1.5, Some(MODAL_W - PAD * 2.0)),
+            key: TextNodeKey::new(body, BODY_SIZE, BODY_LINE_H, Some(MODAL_W - PAD * 2.0)),
             x: x + PAD,
-            y: y + PAD + TITLE_SIZE * 1.3 + 8.0,
-            color: theme.text_2.to_array(),
+            y: y + PAD + TITLE_LINE_H + 12.0,
+            color: theme.text_secondary.to_array(),
         },
     );
 
-    // Buttons — right-aligned at bottom
-    let btn_area_y = y + MODAL_H - BTN_H - PAD;
-
-    // Cancel button (ghost, on the left of confirm)
-    let cancel_w = cancel_label.len() as f32 * BODY_SIZE * 0.6 + BTN_PAD_X * 2.0;
-    let confirm_w = confirm_label.len() as f32 * BODY_SIZE * 0.6 + BTN_PAD_X * 2.0;
-
+    // Buttons — 44px pills, right-aligned at the bottom.
+    let btn_h = 44.0;
+    let btn_area_y = y + MODAL_H - btn_h - PAD;
+    let confirm_w = hoff::text_width(confirm_label, 14.0) + 24.0 * 2.0;
+    let cancel_w = hoff::text_width(cancel_label, 14.0) + 24.0 * 2.0;
     let confirm_x = x + MODAL_W - PAD - confirm_w;
     let cancel_x = confirm_x - BTN_GAP - cancel_w;
 
-    // Cancel (ghost)
-    let cancel_bg = if hover_cancel {
-        theme.hover_bg_3
-    } else {
-        Color::rgba(0.0, 0.0, 0.0, 0.0)
-    };
-    compositor.push_to_layer(
+    let cancel_rect = draw_button(
+        compositor,
         layer_id,
-        SceneNode::RoundedRect {
-            x: cancel_x,
-            y: btn_area_y,
-            w: cancel_w,
-            h: BTN_H,
-            color: cancel_bg.to_array(),
-            corner_radius: theme.radius_s,
-            border_width: 1.0,
-            border_color: theme.border.to_array(),
-        },
+        theme,
+        cancel_x,
+        btn_area_y,
+        cancel_label,
+        ButtonKind::Glass,
+        ButtonSize::Md,
+        hover_cancel,
+        false,
     );
-    compositor.push_to_layer(
+    let confirm_rect = draw_button(
+        compositor,
         layer_id,
-        SceneNode::Text {
-            key: TextNodeKey::new(cancel_label, BODY_SIZE, BODY_SIZE * 1.3, None).with_weight(500),
-            x: cancel_x + BTN_PAD_X,
-            y: btn_area_y + (BTN_H - BODY_SIZE * 1.3) / 2.0,
-            color: theme.text_1.to_array(),
-        },
+        theme,
+        confirm_x,
+        btn_area_y,
+        confirm_label,
+        ButtonKind::Danger,
+        ButtonSize::Md,
+        hover_confirm,
+        false,
     );
 
-    // Confirm (danger solid)
-    let confirm_bg = if hover_confirm {
-        Color::rgba(
-            theme.danger.to_array()[0] * 0.85,
-            theme.danger.to_array()[1] * 0.85,
-            theme.danger.to_array()[2] * 0.85,
-            1.0,
-        )
-    } else {
-        theme.danger
-    };
-    compositor.push_to_layer(
-        layer_id,
-        SceneNode::RoundedRect {
-            x: confirm_x,
-            y: btn_area_y,
-            w: confirm_w,
-            h: BTN_H,
-            color: confirm_bg.to_array(),
-            corner_radius: theme.radius_s,
-            border_width: 0.0,
-            border_color: [0.0; 4],
-        },
-    );
-    compositor.push_to_layer(
-        layer_id,
-        SceneNode::Text {
-            key: TextNodeKey::new(confirm_label, BODY_SIZE, BODY_SIZE * 1.3, None).with_weight(500),
-            x: confirm_x + BTN_PAD_X,
-            y: btn_area_y + (BTN_H - BODY_SIZE * 1.3) / 2.0,
-            color: Color::rgba(1.0, 1.0, 1.0, 1.0).to_array(),
-        },
-    );
-
-    let confirm_rect = (confirm_x, btn_area_y, confirm_w, BTN_H);
-    let cancel_rect = (cancel_x, btn_area_y, cancel_w, BTN_H);
     (confirm_rect, cancel_rect)
 }
 

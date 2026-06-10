@@ -9,6 +9,7 @@ pub mod button;
 #[allow(dead_code)]
 pub mod checkbox;
 pub mod context_menu;
+pub mod hoff;
 pub mod modal;
 #[allow(dead_code)]
 pub mod panel_header;

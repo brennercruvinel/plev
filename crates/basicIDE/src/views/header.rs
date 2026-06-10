@@ -1,9 +1,19 @@
+//! Top bar — HOFF column head proportions (68px, 12px padding):
+//! app name in the `title` mixin (20/1.2/500) at rgba($n2,.76), a "plev"
+//! glass tag, repo · branch centered in base-2r at rgba($n2,.4), and the
+//! theme toggle as a 36px glass pill on the right.
+
 use super::workspace::ThemeMode;
+use crate::components::badge::{self, BadgeKind};
 use crate::components::button::{ButtonKind, ButtonSize, draw as draw_button};
+use crate::components::hoff;
 use crate::theme::Theme;
 use plev::compositor::{Compositor, SceneNode, TextNodeKey};
 
-pub const HEADER_H: f32 = 48.0;
+pub const HEADER_H: f32 = 68.0;
+const PAD_X: f32 = 12.0;
+const TITLE_SIZE: f32 = 20.0;
+const TITLE_LINE_H: f32 = 20.0 * 1.2;
 
 pub struct Header {
     theme_btn_rect: (f32, f32, f32, f32),
@@ -35,80 +45,70 @@ impl Header {
         let x = sidebar_w;
         let w = vw - sidebar_w;
 
-        // Bar background
+        // Bar surface — same glass as the sidebar, with a hairline edge below.
         compositor.push(SceneNode::Rect {
-            x,
+            x: 0.0,
             y: 0.0,
-            w,
+            w: vw,
             h: HEADER_H,
-            color: theme.bg_2.to_array(),
+            color: theme.bg_sidebar.to_array(),
         });
-        // Bottom border
         compositor.push(SceneNode::Rect {
-            x,
+            x: 0.0,
             y: HEADER_H - 1.0,
-            w,
+            w: vw,
             h: 1.0,
-            color: theme.border.to_array(),
+            color: theme.edge.to_array(),
         });
 
-        // App name
+        // App name — title (20/500) at .76.
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::new("basicIDE", 14.0, 18.0, None).with_weight(700),
-            x: x + 16.0,
-            y: (HEADER_H - 18.0) / 2.0,
-            color: theme.text_1.to_array(),
+            key: TextNodeKey::new("basicIDE", TITLE_SIZE, TITLE_LINE_H, None).with_weight(500),
+            x: x + PAD_X,
+            y: (HEADER_H - TITLE_LINE_H) / 2.0,
+            color: theme.text_active.to_array(),
         });
 
-        // Plev badge (rounded rect)
-        let badge_x = x + 104.0;
-        let badge_y = (HEADER_H - 20.0) / 2.0;
-        compositor.push(SceneNode::RoundedRect {
-            x: badge_x,
-            y: badge_y,
-            w: 44.0,
-            h: 20.0,
-            color: [theme.pop.0[0], theme.pop.0[1], theme.pop.0[2], 0.15],
-            corner_radius: 4.0,
-            border_width: 0.0,
-            border_color: [0.0; 4],
-        });
-        compositor.push(SceneNode::Text {
-            key: TextNodeKey::new("plev", 11.0, 14.0, None).with_weight(600),
-            x: badge_x + 10.0,
-            y: (HEADER_H - 14.0) / 2.0,
-            color: theme.pop.to_array(),
-        });
+        // "plev" glass tag next to the name.
+        let name_w = hoff::text_width("basicIDE", TITLE_SIZE);
+        badge::draw(
+            compositor,
+            theme,
+            x + PAD_X + name_w + 12.0,
+            (HEADER_H - 22.0) / 2.0,
+            "plev",
+            BadgeKind::Tag,
+        );
 
-        // Repo name + current branch (center)
+        // Repo name + current branch (center) — base-2r at .4.
         let center = if branch_label.is_empty() {
             repo_label.to_string()
         } else {
             format!("{repo_label} \u{00B7} {branch_label}")
         };
-        // Rough centering: ~7px per character at 13px font.
-        let center_w = center.chars().count() as f32 * 7.0;
+        let center_w = hoff::text_width(&center, 14.0);
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::new(&center, 13.0, 18.0, None).with_weight(400),
+            key: TextNodeKey::new(&center, 14.0, 14.0 * 1.4, None).with_weight(400),
             x: x + (w - center_w) / 2.0,
-            y: (HEADER_H - 18.0) / 2.0,
-            color: theme.text_2.to_array(),
+            y: (HEADER_H - 14.0 * 1.4) / 2.0,
+            color: theme.text_muted.to_array(),
         });
 
-        // Theme toggle button (right side)
+        // Theme toggle — 36px glass pill on the right.
         let mode_label = match theme_mode {
             ThemeMode::Dark => "Light",
             ThemeMode::Light => "Dark",
         };
-        let btn_x = x + w - 80.0;
-        let btn_y = (HEADER_H - 28.0) / 2.0;
+        let btn_w = hoff::text_width(mode_label, 14.0) + 16.0 * 2.0;
+        let btn_x = vw - PAD_X - btn_w;
+        let btn_y = (HEADER_H - 36.0) / 2.0;
         self.theme_btn_rect = draw_button(
             compositor,
             theme,
             btn_x,
             btn_y,
             mode_label,
-            ButtonKind::Ghost,
+            ButtonKind::Glass,
             ButtonSize::Sm,
             false,
             false,

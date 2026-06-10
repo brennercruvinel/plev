@@ -1,12 +1,19 @@
-use crate::theme::Theme;
+//! Context menu — the HOFF Actions dropdown (`components/Actions`):
+//! 240px body, radius 24, padding 8, solid #3b3b3b, floating-menu shadow
+//! `0 24px 32px -12px rgba(18,18,18,.10)` + edge-light rim; items 44px
+//! radius 16 base-2sm rgba($n2,.56) -> hover bg rgba($n2,.1) text .76.
+
+use super::hoff;
+use crate::theme::{SHADOW_MENU, Theme};
 use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use plev::overlay::MenuItem;
 
-const MENU_W: f32 = 160.0;
-const ITEM_H: f32 = 32.0;
-const PAD_Y: f32 = 4.0; // top/bottom padding inside the menu
-const PAD_X: f32 = 10.0;
-const FONT_SIZE: f32 = 13.0;
+const MENU_W: f32 = 240.0;
+const ITEM_H: f32 = 44.0;
+const PAD: f32 = 8.0; // padding around the item column
+const ITEM_PAD_X: f32 = 8.0;
+const FONT_SIZE: f32 = 14.0;
+const LINE_H: f32 = 14.0 * 1.4;
 
 /// Draw a context menu onto `layer_id` and return per-item hit rects.
 ///
@@ -22,46 +29,57 @@ pub fn draw(
     items: &[MenuItem],
     hover_item: Option<usize>,
 ) -> (f32, f32, Vec<(f32, f32, f32, f32)>) {
-    let menu_h = PAD_Y * 2.0 + items.len() as f32 * ITEM_H;
+    let menu_h = PAD * 2.0 + items.len() as f32 * ITEM_H;
 
-    // Background + border
-    compositor.push_to_layer(
+    // Floating-menu drop shadow (analytic), then solid body + edge-light.
+    hoff::shadow(
+        compositor,
         layer_id,
-        SceneNode::RoundedRect {
-            x,
-            y,
-            w: MENU_W,
-            h: menu_h,
-            color: theme.bg_2.to_array(),
-            corner_radius: theme.radius_s,
-            border_width: 1.0,
-            border_color: theme.border.to_array(),
-        },
+        x,
+        y,
+        MENU_W,
+        menu_h,
+        theme.radius_dropdown,
+        &SHADOW_MENU,
+    );
+    hoff::glass(
+        compositor,
+        layer_id,
+        x,
+        y,
+        MENU_W,
+        menu_h,
+        theme.radius_dropdown,
+        theme.bg_popover,
+        Some((1.0, theme.edge_strong)),
     );
 
     let mut item_rects = Vec::with_capacity(items.len());
 
     for (i, item) in items.iter().enumerate() {
-        let iy = y + PAD_Y + i as f32 * ITEM_H;
+        let iy = y + PAD + i as f32 * ITEM_H;
+        let hovered = hover_item == Some(i);
 
-        // Hover highlight
-        if hover_item == Some(i) {
+        if hovered {
             compositor.push_to_layer(
                 layer_id,
-                SceneNode::Rect {
-                    x: x + 2.0,
-                    y: iy + 1.0,
-                    w: MENU_W - 4.0,
-                    h: ITEM_H - 2.0,
-                    color: theme.hover_bg_2.to_array(),
+                SceneNode::RoundedRect {
+                    x: x + PAD,
+                    y: iy,
+                    w: MENU_W - PAD * 2.0,
+                    h: ITEM_H,
+                    color: theme.surface_active.to_array(),
+                    corner_radius: theme.radius_item,
+                    border_width: 0.0,
+                    border_color: [0.0; 4],
                 },
             );
         }
 
-        let text_color = if hover_item == Some(i) {
-            theme.text_1
+        let text_color = if hovered {
+            theme.text_active
         } else {
-            theme.text_2
+            theme.text_default
         };
 
         compositor.push_to_layer(
@@ -70,16 +88,17 @@ pub fn draw(
                 key: TextNodeKey::new(
                     &item.label,
                     FONT_SIZE,
-                    FONT_SIZE * 1.4,
-                    Some(MENU_W - PAD_X * 2.0),
-                ),
-                x: x + PAD_X,
-                y: iy + (ITEM_H - FONT_SIZE * 1.4) / 2.0,
+                    LINE_H,
+                    Some(MENU_W - (PAD + ITEM_PAD_X) * 2.0),
+                )
+                .with_weight(600),
+                x: x + PAD + ITEM_PAD_X,
+                y: iy + (ITEM_H - LINE_H) / 2.0,
                 color: text_color.to_array(),
             },
         );
 
-        item_rects.push((x, iy, MENU_W, ITEM_H));
+        item_rects.push((x + PAD, iy, MENU_W - PAD * 2.0, ITEM_H));
     }
 
     (MENU_W, menu_h, item_rects)
