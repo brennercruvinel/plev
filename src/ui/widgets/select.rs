@@ -1,5 +1,6 @@
 use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::theme::Theme;
+use crate::text::{TextMeasurer, TextStyle};
+use crate::theme::{Theme, TypographyScale};
 use crate::ui::icons;
 
 use super::{EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, with_alpha};
@@ -7,8 +8,12 @@ use super::{EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, with_alpha}
 /// HOFF select: 44px pill control (radius 22, base-2m label), options
 /// panel radius 20 / pad 8, 44px options (radius 12) with an 8px dot
 /// marking the active one.
-const FONT: f32 = 14.0;
 const OPTION_H: f32 = 44.0;
+
+/// Label style for the control and its options: base-2m.
+fn label_style() -> TextStyle {
+    TypographyScale::hoff().base_2m()
+}
 const PAD_X: f32 = 16.0;
 const PAD_Y: f32 = 8.0;
 const CHEVRON: f32 = 16.0;
@@ -165,13 +170,13 @@ impl Select {
         ));
 
         if let Some(label) = self.selected_label() {
-            let line_height = FONT * 1.4;
+            let style = label_style();
             // base-2m at rgba($n2,.76).
             let text = theme.colors.text;
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::new(label, FONT, line_height, None).with_weight(500),
+                key: TextNodeKey::from_style(label, &style, None),
                 x: bounds.x + PAD_X,
-                y: bounds.y + (bounds.h - line_height) / 2.0,
+                y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
                 color: with_alpha(text, text.0[3] * 0.8 * alpha),
             });
         }
@@ -216,7 +221,7 @@ impl Select {
             compositor.push_to_layer(layer, node);
         }
 
-        let line_height = FONT * 1.4;
+        let style = label_style();
         for (i, option) in self.options.iter().enumerate() {
             let oy = dd.y + PAD_Y + i as f32 * OPTION_H;
             if oy + OPTION_H > dd.y + dd.h {
@@ -250,9 +255,9 @@ impl Select {
             compositor.push_to_layer(
                 layer,
                 SceneNode::Text {
-                    key: TextNodeKey::new(option, FONT, line_height, None).with_weight(500),
+                    key: TextNodeKey::from_style(option, &style, None),
                     x: dd.x + PAD_X,
-                    y: oy + (OPTION_H - line_height) / 2.0,
+                    y: oy + TextMeasurer::vertical_center(&style, OPTION_H),
                     color: with_alpha(text, text.0[3] * label_alpha),
                 },
             );

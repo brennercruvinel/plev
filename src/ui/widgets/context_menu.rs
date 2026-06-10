@@ -1,13 +1,12 @@
 use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::{Intent, Theme};
+use crate::theme::{Intent, Theme, TypographyScale};
 use crate::ui::icons;
 
 use super::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 
 /// HOFF actions dropdown: 240px body, radius 24, pad 8, solid #3b3b3b;
 /// items 44px, radius 16, pad 0 8, base-2sm rgba($n2,.56) -> .76 hover.
-const FONT: f32 = 14.0;
 const ITEM_H: f32 = 44.0;
 const SEP_H: f32 = 9.0;
 const PAD_X: f32 = 8.0;
@@ -86,9 +85,14 @@ impl ContextMenu {
         self.hovered
     }
 
+    /// Item label style: base-2sm, the same for measuring and rendering.
+    fn label_style() -> TextStyle {
+        TypographyScale::hoff().base_2sm()
+    }
+
     /// Menu size from real text measurement.
     pub fn size(&self) -> (f32, f32) {
-        let style = TextStyle::new(FONT).with_weight(600);
+        let style = Self::label_style();
         let mut w: f32 = MIN_W;
         let mut h = PAD_Y * 2.0;
         for entry in &self.entries {
@@ -205,7 +209,7 @@ impl ContextMenu {
             super::path_rounded_rect_stroke(x, y, w, h, RADIUS, glass.edge_soft.0, 1.0),
         );
 
-        let line_height = FONT * 1.4;
+        let style = Self::label_style();
         for (i, (entry, rect)) in self.entries.iter().zip(self.entry_rects(x, y)).enumerate() {
             match entry {
                 MenuEntry::Separator => {
@@ -266,9 +270,9 @@ impl ContextMenu {
                     compositor.push_to_layer(
                         layer,
                         SceneNode::Text {
-                            key: TextNodeKey::new(label, FONT, line_height, None).with_weight(600),
+                            key: TextNodeKey::from_style(label, &style, None),
                             x: tx,
-                            y: rect.y + (rect.h - line_height) / 2.0,
+                            y: rect.y + TextMeasurer::vertical_center(&style, rect.h),
                             color: fg,
                         },
                     );

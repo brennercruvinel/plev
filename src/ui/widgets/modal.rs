@@ -1,6 +1,6 @@
 use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::{Intent, Theme};
+use crate::theme::{Intent, Theme, TypographyScale};
 
 use super::button::{Button, ButtonVariant};
 use super::{EventResult, Rect, WidgetEvent, glass_pill};
@@ -9,10 +9,18 @@ use super::{EventResult, Rect, WidgetEvent, glass_pill};
 /// scrim rgba(35,34,34,.9), rgba(40,40,40,.7) glass body.
 const WIDTH: f32 = 400.0;
 const PAD: f32 = 32.0;
-const TITLE_FONT: f32 = 20.0;
-const BODY_FONT: f32 = 14.0;
 const BTN_GAP: f32 = 8.0;
 const BTN_H: f32 = 44.0;
+
+/// Title: the HOFF `=title` mixin (20/1.2/500).
+fn title_style() -> TextStyle {
+    TypographyScale::hoff().title()
+}
+
+/// Body: base-2r, the same for measuring and rendering.
+fn body_style() -> TextStyle {
+    TypographyScale::hoff().base_2r()
+}
 
 /// What the user decided.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -57,14 +65,14 @@ impl Modal {
     }
 
     fn body_height(&self) -> f32 {
-        let style = TextStyle::new(BODY_FONT).with_line_height(BODY_FONT * 1.5);
+        let style = body_style();
         let (_, h) = TextMeasurer::measure_styled(&self.body, &style, Some(WIDTH - PAD * 2.0));
-        h.max(BODY_FONT * 1.5)
+        h.max(style.line_height)
     }
 
     /// Centered dialog rect for a viewport.
     pub fn dialog_rect(&self, vw: f32, vh: f32) -> Rect {
-        let h = PAD + TITLE_FONT * 1.2 + 10.0 + self.body_height() + 24.0 + BTN_H + PAD;
+        let h = PAD + title_style().line_height + 10.0 + self.body_height() + 24.0 + BTN_H + PAD;
         Rect::new(
             ((vw - WIDTH) / 2.0).max(0.0),
             ((vh - h) / 2.0).max(0.0),
@@ -171,13 +179,11 @@ impl Modal {
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::new(
+                key: TextNodeKey::from_style(
                     &self.title,
-                    TITLE_FONT,
-                    TITLE_FONT * 1.2,
+                    &title_style(),
                     Some(dialog.w - PAD * 2.0),
-                )
-                .with_weight(500),
+                ),
                 x: dialog.x + PAD,
                 y: dialog.y + PAD,
                 color: theme.colors.text.0,
@@ -186,14 +192,9 @@ impl Modal {
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::new(
-                    &self.body,
-                    BODY_FONT,
-                    BODY_FONT * 1.5,
-                    Some(dialog.w - PAD * 2.0),
-                ),
+                key: TextNodeKey::from_style(&self.body, &body_style(), Some(dialog.w - PAD * 2.0)),
                 x: dialog.x + PAD,
-                y: dialog.y + PAD + TITLE_FONT * 1.2 + 10.0,
+                y: dialog.y + PAD + title_style().line_height + 10.0,
                 color: theme.colors.text_mid.0,
             },
         );

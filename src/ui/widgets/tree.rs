@@ -1,4 +1,5 @@
 use crate::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::text::{TextMeasurer, TextStyle};
 use crate::theme::Theme;
 use crate::ui::icons;
 
@@ -190,7 +191,8 @@ impl Tree {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let line_height = FONT * 1.3;
+        // IDE rows (no HOFF mixin): 13px, tight 1.3 line box.
+        let style = TextStyle::new(FONT).with_line_height(FONT * 1.3);
         for (i, row) in self.visible_rows().iter().enumerate() {
             let ry = bounds.y + i as f32 * ROW_H;
             if ry + ROW_H > bounds.y + bounds.h + ROW_H {
@@ -263,9 +265,9 @@ impl Tree {
             cx += ICON + 6.0;
 
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::new(&row.label, FONT, line_height, None),
+                key: TextNodeKey::from_style(&row.label, &style, None),
                 x: cx,
-                y: ry + (ROW_H - line_height) / 2.0,
+                y: ry + TextMeasurer::vertical_center(&style, ROW_H),
                 color: with_alpha(
                     if is_selected {
                         theme.colors.text
