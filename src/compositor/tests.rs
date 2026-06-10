@@ -993,15 +993,16 @@ fn render_stats_for_known_scene() {
 // Draw sequence (push order across primitive types)
 // ---------------------------------------------------------------------------
 
-/// Kinds of the geometry commands in a layer's sequence, in order.
+/// Kinds of the geometry commands in a layer's sequence, in order
+/// (backdrop commands excluded; see `sequence_of` for the full walk).
 fn sequence_kinds(comp: &Compositor) -> Vec<DrawKind> {
     comp.layer(LayerId::DEFAULT)
         .unwrap()
         .sequence()
         .iter()
-        .map(|cmd| {
-            let DrawCommand::Geometry { kind, .. } = cmd;
-            *kind
+        .filter_map(|cmd| match cmd {
+            DrawCommand::Geometry { kind, .. } => Some(*kind),
+            DrawCommand::BackdropBlur { .. } => None,
         })
         .collect()
 }
@@ -1077,12 +1078,27 @@ fn sequence_merges_adjacent_same_kind_same_clip() {
 
     let layer = comp.layer(LayerId::DEFAULT).unwrap();
     assert_eq!(layer.sequence().len(), 2);
-    let DrawCommand::Geometry { kind, range } = layer.sequence()[0];
-    assert_eq!(kind, DrawKind::Quad);
-    assert_eq!(range.index_count, 12);
-    assert_eq!(range.clip, None);
-    let DrawCommand::Geometry { range, .. } = layer.sequence()[1];
-    assert_eq!(range.clip, Some([0.0, 0.0, 50.0, 50.0]));
+    assert!(matches!(
+        layer.sequence()[0],
+        DrawCommand::Geometry {
+            kind: DrawKind::Quad,
+            range: DrawRange {
+                index_count: 12,
+                clip: None,
+                ..
+            },
+        }
+    ));
+    assert!(matches!(
+        layer.sequence()[1],
+        DrawCommand::Geometry {
+            range: DrawRange {
+                clip: Some([0.0, 0.0, 50.0, 50.0]),
+                ..
+            },
+            ..
+        }
+    ));
 }
 
 #[test]
@@ -1187,6 +1203,163 @@ fn assign_text_ranges_patches_text_commands_in_order() {
     assert_eq!(text_ranges[0].index_count, 6);
     assert_eq!(text_ranges[1].first_index, 6);
     assert_eq!(text_ranges[1].index_count, 12);
+}
+
+// ---------------------------------------------------------------------------
+// Backdrop blur
+// ---------------------------------------------------------------------------
+
+#[test]
+fn backdrop_records_resolve_at_its_point_in_the_sequence() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    // Glass card: page bg, frosted region, translucent fill on top.
+    comp.push(rect(0.0, 0.0, 800.0, 600.0));
+    comp.draw_backdrop_blur(100.0, 100.0, 300.0, 200.0, 24.0, 16.0);
+    comp.push(rounded_rect(100.0, 100.0, 300.0, 200.0));
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    let seq = layer.sequence();
+    assert_eq!(seq.len(), 3);
+    assert!(matches!(
+        seq[0],
+        DrawCommand::Geometry {
+            kind: DrawKind::Quad,
+            ..
+        }
+    ));
+    // The resolve happens BETWEEN the bg and the fill -- everything before
+    // is part of the frosted backdrop, everything after draws on top.
+    assert!(matches!(
+        seq[1],
+        DrawCommand::BackdropBlur {
+            first_index: 0,
+            sigma,
+            clip: None,
+        } if sigma == 16.0
+    ));
+    assert!(matches!(
+        seq[2],
+        DrawCommand::Geometry {
+            kind: DrawKind::SdfRect,
+            ..
+        }
+    ));
+
+    // Quad geometry: the rect itself, with the rounded-corner mask params.
+    assert_eq!(layer.backdrop_vertices.len(), 4);
+    assert_eq!(layer.backdrop_index_count, 6);
+    let v = &layer.backdrop_vertices;
+    assert_eq!(v[0].position, [100.0, 100.0]);
+    assert_eq!(v[2].position, [400.0, 300.0]);
+    assert_eq!(v[0].local, [-150.0, -100.0]);
+    for vert in v {
+        assert_eq!(vert.params, [150.0, 100.0, 24.0, 0.0]);
+    }
+}
+
+#[test]
+fn backdrop_respects_clip_and_culling() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.draw_backdrop_blur(-500.0, 0.0, 100.0, 100.0, 8.0, 4.0); // culled
+    comp.push_clip(0.0, 0.0, 200.0, 200.0);
+    comp.draw_backdrop_blur(10.0, 10.0, 100.0, 100.0, 8.0, 4.0); // clipped
+    comp.pop_clip();
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(comp.stats().nodes_culled, 1);
+    assert_eq!(layer.backdrop_vertices.len(), 4);
+    assert_eq!(layer.sequence().len(), 1);
+    assert!(matches!(
+        layer.sequence()[0],
+        DrawCommand::BackdropBlur {
+            clip: Some([0.0, 0.0, 200.0, 200.0]),
+            ..
+        }
+    ));
+}
+
+#[test]
+fn backdrop_node_participates_in_dirty_tracking() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.draw_backdrop_blur(0.0, 0.0, 100.0, 100.0, 8.0, 12.0);
+    comp.resolve_scene((800.0, 600.0));
+    comp.mark_layer_clean(LayerId::DEFAULT);
+
+    comp.begin_frame();
+    comp.draw_backdrop_blur(0.0, 0.0, 100.0, 100.0, 8.0, 12.0);
+    assert!(!comp.needs_render());
+
+    // Different sigma -> re-render.
+    comp.begin_frame();
+    comp.draw_backdrop_blur(0.0, 0.0, 100.0, 100.0, 8.0, 20.0);
+    assert!(comp.needs_render());
+}
+
+#[test]
+fn layer_with_backdrop_redraws_when_lower_layer_changes() {
+    let mut comp = Compositor::new();
+    let glass = comp.create_layer(10);
+
+    comp.begin_frame();
+    comp.push(rect(0.0, 0.0, 100.0, 100.0)); // default layer (below)
+    comp.push_to_layer(
+        glass,
+        SceneNode::BackdropBlur {
+            x: 10.0,
+            y: 10.0,
+            w: 50.0,
+            h: 50.0,
+            corner_radius: 8.0,
+            sigma: 12.0,
+        },
+    );
+    comp.resolve_scene((800.0, 600.0));
+    comp.mark_layer_clean(LayerId::DEFAULT);
+    comp.mark_layer_clean(glass);
+
+    // Lower layer changes; the glass layer's own scene is identical but it
+    // must re-encode because its backdrop samples the layer below.
+    comp.begin_frame();
+    comp.push(rect(0.0, 0.0, 200.0, 100.0)); // CHANGED
+    comp.push_to_layer(
+        glass,
+        SceneNode::BackdropBlur {
+            x: 10.0,
+            y: 10.0,
+            w: 50.0,
+            h: 50.0,
+            corner_radius: 8.0,
+            sigma: 12.0,
+        },
+    );
+    comp.resolve_scene((800.0, 600.0));
+    assert!(comp.layer(LayerId::DEFAULT).unwrap().is_dirty());
+    assert!(comp.layer(glass).unwrap().is_dirty());
+
+    // And when nothing below changes, the glass layer stays clean.
+    comp.mark_layer_clean(LayerId::DEFAULT);
+    comp.mark_layer_clean(glass);
+    comp.begin_frame();
+    comp.push(rect(0.0, 0.0, 200.0, 100.0));
+    comp.push_to_layer(
+        glass,
+        SceneNode::BackdropBlur {
+            x: 10.0,
+            y: 10.0,
+            w: 50.0,
+            h: 50.0,
+            corner_radius: 8.0,
+            sigma: 12.0,
+        },
+    );
+    comp.resolve_scene((800.0, 600.0));
+    assert!(!comp.layer(LayerId::DEFAULT).unwrap().is_dirty());
+    assert!(!comp.layer(glass).unwrap().is_dirty());
 }
 
 #[test]

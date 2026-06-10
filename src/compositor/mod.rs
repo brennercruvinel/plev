@@ -19,8 +19,8 @@ pub use scene::{SceneNode, TextNodeKey};
 pub use sequence::{DrawCommand, DrawKind};
 pub use stats::RenderStats;
 pub use vertex::{
-    ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction, shadow_padding,
-    shadow_sigma,
+    BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction,
+    shadow_padding, shadow_sigma,
 };
 
 /// GPU resources needed for layer texture resolution and compositing.
@@ -122,6 +122,7 @@ impl Compositor {
                 layer.upload_sdf_geometry(res.device, res.queue);
                 layer.upload_shadow_geometry(res.device, res.queue);
                 layer.upload_image_geometry(res.device, res.queue);
+                layer.upload_backdrop_geometry(res.device, res.queue);
                 log::debug!(
                     "Layer {:?} dirty: {} quads, {} sdf_rects, {} text nodes",
                     layer.id,
@@ -164,6 +165,18 @@ impl Compositor {
             self.stats.sdf_vertices += layer.sdf_vertices.len() as u32;
             self.stats.shadow_vertices += layer.shadow_vertices.len() as u32;
             self.stats.image_vertices += layer.image_vertices.len() as u32;
+        }
+
+        // Backdrop blurs sample what is composited below them, so a layer
+        // holding one must re-encode whenever any lower layer was redrawn
+        // this frame, even if its own scene is unchanged (its geometry is
+        // already built and identical -- only the encode repeats).
+        let mut below_redrawn = false;
+        for layer in &mut self.layers {
+            if below_redrawn && !layer.dirty && layer.has_backdrop_nodes() {
+                layer.dirty = true;
+            }
+            below_redrawn |= layer.dirty;
         }
 
         self.invalidated = false;

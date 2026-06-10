@@ -64,6 +64,23 @@ pub enum SceneNode {
     },
     /// Pop the most recent `PushClip`.
     PopClip,
+    /// Region backdrop blur (CSS `backdrop-filter: blur(sigma)`): at this
+    /// point of the draw sequence, everything already composited below --
+    /// lower layers plus what this layer drew so far -- is resolved to a
+    /// texture, Gaussian-blurred and drawn back clipped to the rounded
+    /// rect. Nodes pushed after draw on top of the frosted region.
+    ///
+    /// Cost: one backdrop resolve (composite + 2-pass blur over the full
+    /// surface) per node; scenes are expected to hold only a few.
+    BackdropBlur {
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        corner_radius: f32,
+        /// Gaussian sigma in pixels.
+        sigma: f32,
+    },
     /// Analytic shadow of a rounded rect (Evan Wallace approximation, no
     /// blur pass). `x..h` are the bounds of the CASTING rect.
     ///
@@ -203,6 +220,22 @@ impl SceneNode {
             }
             SceneNode::PopClip => {
                 7u8.hash(&mut h);
+            }
+            SceneNode::BackdropBlur {
+                x,
+                y,
+                w,
+                h: rh,
+                corner_radius,
+                sigma,
+            } => {
+                9u8.hash(&mut h);
+                x.to_bits().hash(&mut h);
+                y.to_bits().hash(&mut h);
+                w.to_bits().hash(&mut h);
+                rh.to_bits().hash(&mut h);
+                corner_radius.to_bits().hash(&mut h);
+                sigma.to_bits().hash(&mut h);
             }
             SceneNode::Shadow {
                 x,

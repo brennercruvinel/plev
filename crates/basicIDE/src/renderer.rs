@@ -9,8 +9,10 @@
 
 use crate::views::workspace::WorkspaceView;
 use plev::compositor::Compositor;
+use plev::effects::EffectProcessor;
 use plev::gpu::GpuContext;
 use plev::text::TextSystem;
+use plev::texture_pool::TexturePool;
 use plev::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 
 /// Render a single frame: build the scene, resolve layers, encode GPU passes,
@@ -18,6 +20,8 @@ use plev::window::{encode_composite_pass, encode_layer_passes, resolve_layer_tex
 pub fn render_frame(
     gpu: &mut GpuContext,
     text_system: &mut TextSystem,
+    effects: &EffectProcessor,
+    texture_pool: &mut TexturePool,
     compositor: &mut Compositor,
     workspace: &mut WorkspaceView,
 ) {
@@ -76,21 +80,32 @@ pub fn render_frame(
         .map(|l| l.id)
         .collect();
 
-    encode_layer_passes(compositor, gpu, text_system, &dirty_layer_ids, &mut encoder);
+    let theme = workspace.theme();
+    let [cr, cg, cb, ca] = theme.bg_body.to_array();
+    let clear_color = wgpu::Color {
+        r: cr as f64,
+        g: cg as f64,
+        b: cb as f64,
+        a: ca as f64,
+    };
+
+    encode_layer_passes(
+        compositor,
+        gpu,
+        text_system,
+        effects,
+        texture_pool,
+        clear_color,
+        &dirty_layer_ids,
+        &mut encoder,
+    );
     for id in &dirty_layer_ids {
         compositor.mark_layer_clean(*id);
     }
 
-    let theme = workspace.theme();
-    let [cr, cg, cb, ca] = theme.bg_body.to_array();
     encode_composite_pass(
         compositor,
-        wgpu::Color {
-            r: cr as f64,
-            g: cg as f64,
-            b: cb as f64,
-            a: ca as f64,
-        },
+        clear_color,
         gpu,
         &surface_view,
         &[],

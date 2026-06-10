@@ -220,6 +220,16 @@ impl Element {
         self
     }
 
+    /// CSS `backdrop-filter: blur(sigma)`: everything already composited
+    /// under this element (lower layers + earlier siblings) is blurred and
+    /// clipped to the element's rounded bounds, BELOW its background fill
+    /// -- a translucent `bg` over it gives the frosted-glass look. One
+    /// backdrop resolve per element per frame; use sparingly.
+    pub fn backdrop_blur(mut self, sigma: impl IntoF32) -> Self {
+        self.style.backdrop_blur = Some(sigma.into_f32());
+        self
+    }
+
     /// CSS `box-shadow: inset`: analytic shadow falling INSIDE the element,
     /// clipped to its rounded bounds and drawn over the background fill —
     /// the HOFF glass relief (`inset 2px 4px 16px rgba(248,248,248,.06)`).

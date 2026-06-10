@@ -132,6 +132,29 @@ impl Compositor {
         });
     }
 
+    /// Frost a rounded-rect region (CSS `backdrop-filter: blur`): blurs
+    /// everything already composited below this point -- lower layers plus
+    /// what this layer drew so far -- clipped to the rect. Push it BEFORE
+    /// the translucent surface fill that sits on the glass.
+    pub fn draw_backdrop_blur(
+        &mut self,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        corner_radius: f32,
+        sigma: f32,
+    ) {
+        self.push(SceneNode::BackdropBlur {
+            x,
+            y,
+            w,
+            h,
+            corner_radius,
+            sigma,
+        });
+    }
+
     pub fn draw_gradient_rect(&mut self, p: GradientRectParams) {
         self.push(SceneNode::GradientRect {
             x: p.x,

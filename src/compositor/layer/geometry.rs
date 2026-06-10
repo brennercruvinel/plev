@@ -3,8 +3,8 @@ use crate::compositor::clip::{ClipStack, record_range};
 use crate::compositor::scene::SceneNode;
 use crate::compositor::sequence::{DrawCommand, DrawKind, push_geometry};
 use crate::compositor::vertex::{
-    ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction, shadow_padding,
-    shadow_sigma,
+    BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction,
+    shadow_padding, shadow_sigma,
 };
 use crate::gpu_vec::GpuVec;
 
@@ -116,6 +116,8 @@ impl Layer {
         self.image_vertices.clear();
         self.image_indices.clear();
         self.image_ranges.clear();
+        self.backdrop_vertices.clear();
+        self.backdrop_indices.clear();
         self.sequence.clear();
         self.text_groups.clear();
 
@@ -405,6 +407,50 @@ impl Layer {
                     );
                 }
 
+                SceneNode::BackdropBlur {
+                    x,
+                    y,
+                    w,
+                    h,
+                    corner_radius,
+                    sigma,
+                } => {
+                    if outside_viewport(viewport, *x, *y, *w, *h) || clips.is_empty_clip() {
+                        culled += 1;
+                        continue;
+                    }
+                    let params = [w / 2.0, h / 2.0, *corner_radius, 0.0];
+                    let corners = [
+                        ([*x, *y], [-w / 2.0, -h / 2.0]),
+                        ([x + w, *y], [w / 2.0, -h / 2.0]),
+                        ([x + w, y + h], [w / 2.0, h / 2.0]),
+                        ([*x, y + h], [-w / 2.0, h / 2.0]),
+                    ];
+                    let first_index = self.backdrop_indices.len() as u32;
+                    let base = self.backdrop_vertices.len() as u32;
+                    for (position, local) in corners {
+                        self.backdrop_vertices.push(BackdropVertex {
+                            position,
+                            local,
+                            params,
+                        });
+                    }
+                    self.backdrop_indices.extend_from_slice(&[
+                        base,
+                        base + 1,
+                        base + 2,
+                        base + 2,
+                        base + 3,
+                        base,
+                    ]);
+                    // Never merged: each backdrop is its own resolve point.
+                    self.sequence.push(DrawCommand::BackdropBlur {
+                        first_index,
+                        sigma: *sigma,
+                        clip: clips.current(),
+                    });
+                }
+
                 SceneNode::Text { .. } => {
                     let clip = clips.current();
                     // A text node joins the previous group only when nothing
@@ -435,6 +481,7 @@ impl Layer {
         self.sdf_index_count = self.sdf_indices.len() as u32;
         self.shadow_index_count = self.shadow_indices.len() as u32;
         self.image_index_count = self.image_indices.len() as u32;
+        self.backdrop_index_count = self.backdrop_indices.len() as u32;
         culled
     }
 
@@ -507,6 +554,30 @@ impl Layer {
                 )
             });
             ib.upload(device, queue, &self.shadow_indices);
+        }
+    }
+
+    pub(crate) fn upload_backdrop_geometry(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
+        if !self.backdrop_vertices.is_empty() {
+            let vb = self.backdrop_vb.get_or_insert_with(|| {
+                GpuVec::new(
+                    device,
+                    "layer_backdrop_vb",
+                    wgpu::BufferUsages::VERTEX,
+                    INITIAL_VB_SIZE,
+                )
+            });
+            vb.upload(device, queue, &self.backdrop_vertices);
+
+            let ib = self.backdrop_ib.get_or_insert_with(|| {
+                GpuVec::new(
+                    device,
+                    "layer_backdrop_ib",
+                    wgpu::BufferUsages::INDEX,
+                    INITIAL_IB_SIZE,
+                )
+            });
+            ib.upload(device, queue, &self.backdrop_indices);
         }
     }
 

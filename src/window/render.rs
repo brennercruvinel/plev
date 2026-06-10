@@ -127,10 +127,25 @@ impl super::App {
             .map(|l| l.id)
             .collect();
 
+        // Window clear color: composite base AND backdrop-blur base (glass
+        // over the bare background frosts the same color the user sees).
+        let clear_color = {
+            let bg = self.theme.colors.bg.to_array();
+            wgpu::Color {
+                r: bg[0] as f64,
+                g: bg[1] as f64,
+                b: bg[2] as f64,
+                a: 1.0,
+            }
+        };
+
         let layer_draws = super::render_passes::encode_layer_passes(
             &self.compositor,
             gpu,
             text_system,
+            effect_processor,
+            texture_pool,
+            clear_color,
             &dirty_layer_ids,
             &mut encoder,
         );
@@ -146,17 +161,6 @@ impl super::App {
         for id in &dirty_layer_ids {
             self.compositor.mark_layer_clean(*id);
         }
-
-        // Composite pass: draw all visible layers to surface
-        let clear_color = {
-            let bg = self.theme.colors.bg.to_array();
-            wgpu::Color {
-                r: bg[0] as f64,
-                g: bg[1] as f64,
-                b: bg[2] as f64,
-                a: 1.0,
-            }
-        };
         let composite_draws = super::render_passes::encode_composite_pass(
             &self.compositor,
             clear_color,

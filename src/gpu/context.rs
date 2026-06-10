@@ -22,6 +22,9 @@ pub struct GpuContext {
     pub image_pipeline: wgpu::RenderPipeline,
     pub image_bind_group_layout: wgpu::BindGroupLayout,
     pub image_atlas: super::image::ImageAtlasGpu,
+    /// Draws blurred-backdrop quads inside layer passes (group 1 reuses
+    /// the composite texture+sampler layout).
+    pub backdrop_pipeline: wgpu::RenderPipeline,
     // Composite pipeline resources
     pub composite_pipeline: wgpu::RenderPipeline,
     pub composite_bind_group_layout: wgpu::BindGroupLayout,
@@ -329,6 +332,20 @@ impl GpuContext {
             surface_format,
         );
 
+        #[cfg(feature = "hot-reload")]
+        let backdrop_src = crate::hot_reload::shader_source("backdrop.wgsl");
+        #[cfg(not(feature = "hot-reload"))]
+        let backdrop_src: std::borrow::Cow<'_, str> =
+            include_str!("../../shaders/backdrop.wgsl").into();
+        let backdrop_pipeline = Self::create_backdrop_pipeline(
+            &device,
+            &backdrop_src,
+            &projection_bind_group_layout,
+            &composite_bind_group_layout,
+            surface_format,
+            config.msaa_samples,
+        );
+
         let composite_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             label: Some("composite_sampler"),
             address_mode_u: wgpu::AddressMode::ClampToEdge,
@@ -355,6 +372,7 @@ impl GpuContext {
             image_pipeline,
             image_bind_group_layout,
             image_atlas: super::image::ImageAtlasGpu::new(),
+            backdrop_pipeline,
             composite_pipeline,
             composite_bind_group_layout,
             opacity_bind_group_layout,

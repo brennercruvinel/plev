@@ -429,6 +429,33 @@ mod tests {
     }
 
     #[test]
+    fn backdrop_blur_emits_under_the_background_fill() {
+        let el = div()
+            .w(100.0)
+            .h(50.0)
+            .bg([1.0, 1.0, 1.0, 0.05])
+            .rounded(12.0)
+            .backdrop_blur(16.0);
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 2);
+        let SceneNode::BackdropBlur {
+            w,
+            h,
+            corner_radius,
+            sigma,
+            ..
+        } = &nodes[0]
+        else {
+            panic!("Expected BackdropBlur first, got {:?}", &nodes[0]);
+        };
+        assert_eq!((*w, *h), (100.0, 50.0));
+        assert_eq!(*corner_radius, 12.0);
+        assert_eq!(*sigma, 16.0);
+        // The translucent fill paints OVER the frosted backdrop.
+        assert!(matches!(&nodes[1], SceneNode::RoundedRect { .. }));
+    }
+
+    #[test]
     fn shadow_inset_emits_inset_shadow_after_fill() {
         let el = div().w(100.0).h(50.0).bg("blue").rounded(8.0).shadow_inset(
             16.0,

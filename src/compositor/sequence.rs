@@ -33,6 +33,20 @@ pub enum DrawKind {
 pub enum DrawCommand {
     /// Draw `range` from the layer's `kind` geometry buffers.
     Geometry { kind: DrawKind, range: DrawRange },
+    /// Backdrop blur: the encoder suspends the layer pass here, resolves
+    /// everything composited below (lower layers + this layer so far) to a
+    /// texture, blurs it, then resumes the pass drawing the blurred quad
+    /// (`first_index..first_index+6` in the backdrop buffers) clipped to
+    /// its rounded rect. One resolve per command -- see
+    /// [`SceneNode::BackdropBlur`].
+    ///
+    /// [`SceneNode::BackdropBlur`]: crate::compositor::SceneNode::BackdropBlur
+    BackdropBlur {
+        first_index: u32,
+        /// Gaussian sigma in pixels.
+        sigma: f32,
+        clip: Option<ClipRect>,
+    },
 }
 
 /// Append a geometry command, merging into the previous one when it has

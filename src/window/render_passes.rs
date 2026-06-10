@@ -106,16 +106,158 @@ fn bind_draw_kind(
     true
 }
 
+/// Begin (or resume) the render pass targeting a layer's attachment.
+fn begin_layer_pass<'e>(
+    encoder: &'e mut wgpu::CommandEncoder,
+    view: &wgpu::TextureView,
+    resolve_target: Option<&wgpu::TextureView>,
+    load: wgpu::LoadOp<wgpu::Color>,
+) -> wgpu::RenderPass<'e> {
+    encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        label: Some("layer_pass"),
+        color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+            view,
+            resolve_target,
+            ops: wgpu::Operations {
+                load,
+                store: wgpu::StoreOp::Store,
+            },
+            depth_slice: None,
+        })],
+        depth_stencil_attachment: None,
+        timestamp_writes: None,
+        occlusion_query_set: None,
+        multiview_mask: None,
+    })
+}
+
+/// Resolve the backdrop for one `BackdropBlur` command: composite the
+/// background color, every visible layer below `layer_id`, and the
+/// current layer's partial content (everything its pass drew so far) into
+/// a pooled texture, then Gaussian-blur it with the 2-pass effect
+/// processor. Returns the bind group sampling the blurred result plus the
+/// number of draw calls issued.
+///
+/// Cost: one full-surface composite + blur per backdrop node. Scenes are
+/// expected to carry only a few backdrops (cards, bars), so this version
+/// favors correctness over batching; the pooled textures make the steady
+/// state allocation-free.
+#[allow(clippy::too_many_arguments)]
+fn resolve_blurred_backdrop(
+    compositor: &crate::compositor::Compositor,
+    layer_id: crate::compositor::LayerId,
+    gpu: &crate::gpu::GpuContext,
+    effects: &crate::effects::EffectProcessor,
+    texture_pool: &mut crate::texture_pool::TexturePool,
+    background: wgpu::Color,
+    sigma: f32,
+    encoder: &mut wgpu::CommandEncoder,
+) -> (wgpu::BindGroup, u32) {
+    let vw = gpu.surface_config.width;
+    let vh = gpu.surface_config.height;
+    let format = gpu.surface_config.format;
+    let mut draw_calls = 0u32;
+
+    // 1) Compose "everything below this point": clear color, lower layers
+    // in z-order, then this layer's own partial content (its pass was
+    // suspended, so its texture holds what was drawn so far).
+    let compose = texture_pool.acquire(&gpu.device, vw, vh, format);
+    {
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("backdrop_compose_pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: compose.view(),
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(background),
+                    store: wgpu::StoreOp::Store,
+                },
+                depth_slice: None,
+            })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+            multiview_mask: None,
+        });
+        pass.set_pipeline(&gpu.composite_pipeline);
+        for l in compositor.layers() {
+            let is_current = l.id == layer_id;
+            if !is_current && !l.visible {
+                continue;
+            }
+            if let (Some(bg), Some(opacity_bg)) = (l.composite_bind_group(), l.opacity_bind_group())
+            {
+                pass.set_bind_group(0, bg, &[]);
+                pass.set_bind_group(1, opacity_bg, &[]);
+                pass.draw(0..3, 0..1);
+                draw_calls += 1;
+            }
+            if is_current {
+                break;
+            }
+        }
+    }
+
+    // 2) Two-pass Gaussian blur of the composed backdrop.
+    let compose_view = compose.view().clone();
+    let blurred = effects.apply_blur(
+        &mut crate::effects::EffectContext {
+            device: &gpu.device,
+            queue: &gpu.queue,
+            encoder,
+            pool: texture_pool,
+            source_view: &compose_view,
+            width: vw,
+            height: vh,
+        },
+        sigma,
+    );
+    draw_calls += 2;
+    texture_pool.release(compose);
+
+    let backdrop_bg = gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("backdrop_blur_bg"),
+        layout: &gpu.composite_bind_group_layout,
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(blurred.view()),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: wgpu::BindingResource::Sampler(&gpu.composite_sampler),
+            },
+        ],
+    });
+    // Releasing before the sampling draw is recorded is safe: the bind
+    // group keeps the texture alive, and any reuse of the pooled texture
+    // is recorded -- and therefore executes -- after this read.
+    texture_pool.release(blurred);
+
+    (backdrop_bg, draw_calls)
+}
+
 /// Encode one render pass per dirty layer, walking the layer's draw
 /// sequence so primitive types interleave in scene push order (a path
 /// icon over an SDF pill, text behind a later rect). Pipeline switches
 /// happen exactly where the sequence changes kind; consecutive commands
-/// of one kind reuse the bound pipeline. Returns the number of draw calls
-/// issued.
+/// of one kind reuse the bound pipeline.
+///
+/// `BackdropBlur` commands suspend the layer pass (resolving its partial
+/// content), blur everything composited below via
+/// [`resolve_blurred_backdrop`], then resume the pass and draw the
+/// frosted quad; later commands paint on top. `background` is the window
+/// clear color so glass over bare background frosts correctly.
+///
+/// Returns the number of draw calls issued.
+#[allow(clippy::too_many_arguments)]
 pub fn encode_layer_passes(
     compositor: &crate::compositor::Compositor,
     gpu: &crate::gpu::GpuContext,
     text_system: &crate::text::TextSystem,
+    effects: &crate::effects::EffectProcessor,
+    texture_pool: &mut crate::texture_pool::TexturePool,
+    background: wgpu::Color,
     dirty_layer_ids: &[crate::compositor::LayerId],
     encoder: &mut wgpu::CommandEncoder,
 ) -> u32 {
@@ -129,27 +271,17 @@ pub fn encode_layer_passes(
             continue;
         };
 
-        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("layer_pass"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view,
-                resolve_target,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: 0.0,
-                        g: 0.0,
-                        b: 0.0,
-                        a: 0.0,
-                    }),
-                    store: wgpu::StoreOp::Store,
-                },
-                depth_slice: None,
-            })],
-            depth_stencil_attachment: None,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-            multiview_mask: None,
-        });
+        let mut pass = begin_layer_pass(
+            encoder,
+            view,
+            resolve_target,
+            wgpu::LoadOp::Clear(wgpu::Color {
+                r: 0.0,
+                g: 0.0,
+                b: 0.0,
+                a: 0.0,
+            }),
+        );
 
         let base_scissor = layer
             .clip_rect
@@ -157,32 +289,79 @@ pub fn encode_layer_passes(
             .unwrap_or((0, 0, vw, vh));
 
         // The kind currently bound on the pass; `None` until the first
-        // successful bind (or after a bind failed and must be retried).
+        // successful bind (or after a bind failed / the pass restarted).
         let mut bound: Option<DrawKind> = None;
         for cmd in layer.sequence() {
-            let DrawCommand::Geometry { kind, range } = *cmd;
-            if range.index_count == 0 {
-                continue;
-            }
-            let Some((sx, sy, sw, sh)) =
-                command_scissor(range.clip, base_scissor, clip_scale, vw, vh)
-            else {
-                continue;
-            };
-            if bound != Some(kind) {
-                if !bind_draw_kind(&mut pass, kind, layer, gpu, text_system) {
-                    bound = None;
-                    continue;
+            match *cmd {
+                DrawCommand::Geometry { kind, range } => {
+                    if range.index_count == 0 {
+                        continue;
+                    }
+                    let Some((sx, sy, sw, sh)) =
+                        command_scissor(range.clip, base_scissor, clip_scale, vw, vh)
+                    else {
+                        continue;
+                    };
+                    if bound != Some(kind) {
+                        if !bind_draw_kind(&mut pass, kind, layer, gpu, text_system) {
+                            bound = None;
+                            continue;
+                        }
+                        bound = Some(kind);
+                    }
+                    pass.set_scissor_rect(sx, sy, sw, sh);
+                    pass.draw_indexed(
+                        range.first_index..range.first_index + range.index_count,
+                        0,
+                        0..1,
+                    );
+                    draw_calls += 1;
                 }
-                bound = Some(kind);
+                DrawCommand::BackdropBlur {
+                    first_index,
+                    sigma,
+                    clip,
+                } => {
+                    let Some((sx, sy, sw, sh)) =
+                        command_scissor(clip, base_scissor, clip_scale, vw, vh)
+                    else {
+                        continue;
+                    };
+                    let Some((vb, ib, _)) = layer.backdrop_buffers() else {
+                        continue;
+                    };
+
+                    // Suspend the layer pass: ending it resolves what was
+                    // drawn so far into the layer texture (the MSAA
+                    // attachment keeps its samples via StoreOp::Store).
+                    drop(pass);
+
+                    let (backdrop_bg, resolve_draws) = resolve_blurred_backdrop(
+                        compositor,
+                        *layer_id,
+                        gpu,
+                        effects,
+                        texture_pool,
+                        background,
+                        sigma,
+                        encoder,
+                    );
+                    draw_calls += resolve_draws;
+
+                    // Resume on top of the existing content and draw the
+                    // frosted rounded rect.
+                    pass = begin_layer_pass(encoder, view, resolve_target, wgpu::LoadOp::Load);
+                    pass.set_pipeline(&gpu.backdrop_pipeline);
+                    pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
+                    pass.set_bind_group(1, &backdrop_bg, &[]);
+                    pass.set_vertex_buffer(0, vb.slice(..));
+                    pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
+                    pass.set_scissor_rect(sx, sy, sw, sh);
+                    pass.draw_indexed(first_index..first_index + 6, 0, 0..1);
+                    draw_calls += 1;
+                    bound = None;
+                }
             }
-            pass.set_scissor_rect(sx, sy, sw, sh);
-            pass.draw_indexed(
-                range.first_index..range.first_index + range.index_count,
-                0,
-                0..1,
-            );
-            draw_calls += 1;
         }
     }
     draw_calls

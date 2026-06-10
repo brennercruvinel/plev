@@ -7,7 +7,9 @@ use std::hash::{Hash, Hasher};
 use crate::compositor::clip::{ClipRect, DrawRange};
 use crate::compositor::scene::SceneNode;
 use crate::compositor::sequence::{DrawCommand, DrawKind};
-use crate::compositor::vertex::{ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex};
+use crate::compositor::vertex::{
+    BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex,
+};
 use crate::gpu_vec::GpuVec;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -75,6 +77,11 @@ pub struct Layer {
     pub(crate) image_vb: Option<GpuVec>,
     pub(crate) image_ib: Option<GpuVec>,
     pub(crate) image_index_count: u32,
+    pub(crate) backdrop_vertices: Vec<BackdropVertex>,
+    pub(crate) backdrop_indices: Vec<u32>,
+    pub(crate) backdrop_vb: Option<GpuVec>,
+    pub(crate) backdrop_ib: Option<GpuVec>,
+    pub(crate) backdrop_index_count: u32,
     pub(crate) text_vertices: Vec<crate::text::TextVertex>,
     pub(crate) text_indices: Vec<u32>,
     pub(crate) text_ranges: Vec<DrawRange>,
@@ -133,6 +140,11 @@ impl Layer {
             image_vb: None,
             image_ib: None,
             image_index_count: 0,
+            backdrop_vertices: Vec::new(),
+            backdrop_indices: Vec::new(),
+            backdrop_vb: None,
+            backdrop_ib: None,
+            backdrop_index_count: 0,
             text_vertices: Vec::new(),
             text_indices: Vec::new(),
             text_ranges: Vec::new(),
@@ -253,6 +265,24 @@ impl Layer {
 
     pub fn has_text(&self) -> bool {
         self.text_index_count > 0
+    }
+
+    /// Whether the current scene contains backdrop-blur nodes. Layers with
+    /// backdrops must re-encode whenever a lower layer is redrawn (the
+    /// backdrop samples what is composited below).
+    pub fn has_backdrop_nodes(&self) -> bool {
+        self.nodes
+            .iter()
+            .any(|n| matches!(n, SceneNode::BackdropBlur { .. }))
+    }
+
+    pub fn backdrop_buffers(&self) -> Option<(&wgpu::Buffer, &wgpu::Buffer, u32)> {
+        let vb = self.backdrop_vb.as_ref()?;
+        let ib = self.backdrop_ib.as_ref()?;
+        if self.backdrop_index_count == 0 {
+            return None;
+        }
+        Some((vb.buffer(), ib.buffer(), self.backdrop_index_count))
     }
 
     pub fn text_buffers(&self) -> Option<(&wgpu::Buffer, &wgpu::Buffer, u32)> {

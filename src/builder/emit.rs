@@ -137,6 +137,21 @@ fn emit_div(
         });
     }
 
+    // Backdrop blur sits under the background fill: frosted glass is the
+    // blurred backdrop showing through the translucent bg above it.
+    if let Some(sigma) = element.style.backdrop_blur
+        && (b.width > 0.0 || b.height > 0.0)
+    {
+        out.push(SceneNode::BackdropBlur {
+            x: b.x,
+            y: b.y,
+            w: b.width,
+            h: b.height,
+            corner_radius: element.style.corner_radius,
+            sigma,
+        });
+    }
+
     if (has_bg || has_gradient || has_border) && (b.width > 0.0 || b.height > 0.0) {
         let bg_color = intent_color
             .or(element.style.bg)

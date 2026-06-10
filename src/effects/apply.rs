@@ -1,3 +1,5 @@
+use wgpu::util::DeviceExt;
+
 use super::processor::EffectProcessor;
 use super::types::*;
 use crate::texture_pool::{TextureHandle, TexturePool};
@@ -40,13 +42,27 @@ impl EffectProcessor {
         })
     }
 
-    fn create_blur_uniform_bg(&self, device: &wgpu::Device) -> wgpu::BindGroup {
+    /// One-shot uniform buffer + bind group for a blur pass. Transient on
+    /// purpose: `queue.write_buffer` stages ALL writes before the next
+    /// submit executes any pass, so reusing one buffer across the H and V
+    /// passes (or across several blurs in one frame -- e.g. backdrop
+    /// nodes) would make every pass read the LAST write.
+    fn create_blur_uniform_bg(
+        &self,
+        device: &wgpu::Device,
+        uniforms: &BlurUniforms,
+    ) -> wgpu::BindGroup {
+        let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("blur_uniforms"),
+            contents: bytemuck::bytes_of(uniforms),
+            usage: wgpu::BufferUsages::UNIFORM,
+        });
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("blur_uniform_bg"),
             layout: &self.blur_uniform_bgl,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
-                resource: self.blur_uniform_buffer.as_entire_binding(),
+                resource: buffer.as_entire_binding(),
             }],
         })
     }
@@ -62,19 +78,16 @@ impl EffectProcessor {
         let temp_b = ctx
             .pool
             .acquire(ctx.device, ctx.width, ctx.height, self.surface_format);
-        let blur_uniform_bg = self.create_blur_uniform_bg(ctx.device);
 
         // Horizontal pass: source -> temp_a
         {
-            let h_uniforms = BlurUniforms {
-                direction: [1.0, 0.0],
-                texel_size,
-                weights,
-            };
-            ctx.queue.write_buffer(
-                &self.blur_uniform_buffer,
-                0,
-                bytemuck::bytes_of(&h_uniforms),
+            let blur_uniform_bg = self.create_blur_uniform_bg(
+                ctx.device,
+                &BlurUniforms {
+                    direction: [1.0, 0.0],
+                    texel_size,
+                    weights,
+                },
             );
             let source_bg = self.create_source_bind_group(ctx.device, ctx.source_view);
 
@@ -102,15 +115,13 @@ impl EffectProcessor {
 
         // Vertical pass: temp_a -> temp_b
         {
-            let v_uniforms = BlurUniforms {
-                direction: [0.0, 1.0],
-                texel_size,
-                weights,
-            };
-            ctx.queue.write_buffer(
-                &self.blur_uniform_buffer,
-                0,
-                bytemuck::bytes_of(&v_uniforms),
+            let blur_uniform_bg = self.create_blur_uniform_bg(
+                ctx.device,
+                &BlurUniforms {
+                    direction: [0.0, 1.0],
+                    texel_size,
+                    weights,
+                },
             );
             let temp_a_bg = self.create_source_bind_group(ctx.device, temp_a.view());
 
@@ -153,19 +164,21 @@ impl EffectProcessor {
             .acquire(ctx.device, ctx.width, ctx.height, self.surface_format);
 
         {
-            let shadow_uniforms = ShadowUniforms { color };
-            ctx.queue.write_buffer(
-                &self.shadow_uniform_buffer,
-                0,
-                bytemuck::bytes_of(&shadow_uniforms),
-            );
+            // Transient uniforms for the same staged-write reason as blur.
+            let shadow_uniform_buffer =
+                ctx.device
+                    .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                        label: Some("shadow_uniforms"),
+                        contents: bytemuck::bytes_of(&ShadowUniforms { color }),
+                        usage: wgpu::BufferUsages::UNIFORM,
+                    });
             let source_bg = self.create_source_bind_group(ctx.device, ctx.source_view);
             let shadow_uniform_bg = ctx.device.create_bind_group(&wgpu::BindGroupDescriptor {
                 label: Some("shadow_uniform_bg"),
                 layout: &self.shadow_uniform_bgl,
                 entries: &[wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: self.shadow_uniform_buffer.as_entire_binding(),
+                    resource: shadow_uniform_buffer.as_entire_binding(),
                 }],
             });
 

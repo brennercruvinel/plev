@@ -52,7 +52,8 @@ enum GpuState {
     Ready {
         gpu: GpuContext,
         text_system: TextSystem,
-        _pool: TexturePool,
+        effects: plev::effects::EffectProcessor,
+        texture_pool: TexturePool,
     },
 }
 
@@ -326,11 +327,12 @@ impl ApplicationHandler<AppEvent> for App {
         self.scale_factor = window.scale_factor();
         let gpu = pollster::block_on(GpuContext::new(window.clone()));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let pool = TexturePool::new();
+        let effects = plev::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = GpuState::Ready {
             gpu,
             text_system,
-            _pool: pool,
+            effects,
+            texture_pool: TexturePool::new(),
         };
 
         let size = window.inner_size();
@@ -494,12 +496,22 @@ impl ApplicationHandler<AppEvent> for App {
 
             WindowEvent::RedrawRequested => {
                 let GpuState::Ready {
-                    gpu, text_system, ..
+                    gpu,
+                    text_system,
+                    effects,
+                    texture_pool,
                 } = &mut self.state
                 else {
                     return;
                 };
-                renderer::render_frame(gpu, text_system, &mut self.compositor, &mut self.workspace);
+                renderer::render_frame(
+                    gpu,
+                    text_system,
+                    effects,
+                    texture_pool,
+                    &mut self.compositor,
+                    &mut self.workspace,
+                );
             }
 
             _ => {}
