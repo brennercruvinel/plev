@@ -34,10 +34,11 @@ const FONT_SIZE: f32 = 12.0;
 const PAD_X: f32 = 12.0;
 
 impl DiffView {
+    /// Starts empty; the app injects real hunks via [`set_lines`](Self::set_lines).
     pub fn new() -> Self {
         Self {
-            filename: "src/compositor.rs".into(),
-            lines: mock_diff(),
+            filename: String::new(),
+            lines: Vec::new(),
             scroll: ScrollState::new(),
         }
     }
@@ -49,21 +50,28 @@ impl DiffView {
         self.scroll = ScrollState::new();
     }
 
-    /// Update the diff view to show a mock diff for the given file.
-    pub fn set_file(&mut self, path: &str, status: super::unassigned_view::FileStatus) {
+    /// Point the view at a file whose diff is being fetched. The header
+    /// updates immediately; lines arrive later via [`set_lines`](Self::set_lines).
+    pub fn show_file(&mut self, path: &str) {
         self.filename = path.to_string();
-        self.lines = generate_diff_for_file(path, status);
+        self.lines = Vec::new();
         self.scroll = ScrollState::new();
     }
 
-    /// Update the diff view to show a mock diff for a commit.
-    pub fn set_commit(&mut self, message: &str, sha: &str) {
+    /// Point the view at a commit whose diff is being fetched.
+    pub fn show_commit(&mut self, message: &str, sha: &str) {
         self.filename = format!(
             "{} ({})",
             message.get(..40).unwrap_or(message),
             sha.get(..7).unwrap_or(sha)
         );
-        self.lines = generate_commit_diff(message);
+        self.lines = Vec::new();
+        self.scroll = ScrollState::new();
+    }
+
+    /// Replaces the diff content (adapter output of real hunks).
+    pub fn set_lines(&mut self, lines: Vec<DiffLine>) {
+        self.lines = lines;
         self.scroll = ScrollState::new();
     }
 
@@ -213,178 +221,4 @@ fn line_colors(kind: DiffLineKind, theme: &Theme) -> ([f32; 4], [f32; 4]) {
         ),
         DiffLineKind::Context => (theme.bg_1.to_array(), theme.text_2.to_array()),
     }
-}
-
-fn generate_diff_for_file(path: &str, status: super::unassigned_view::FileStatus) -> Vec<DiffLine> {
-    use super::unassigned_view::FileStatus;
-    let ext = path.rsplit('.').next().unwrap_or("");
-    match status {
-        FileStatus::Added => {
-            let mut lines = vec![DiffLine {
-                kind: DiffLineKind::Header,
-                line_no_old: None,
-                line_no_new: None,
-                content: format!("@@ -0,0 +1,5 @@ new file: {}", path),
-            }];
-            for i in 1..=5 {
-                lines.push(DiffLine {
-                    kind: DiffLineKind::Added,
-                    line_no_old: None,
-                    line_no_new: Some(i),
-                    content: format!("// new {} content line {}", ext, i),
-                });
-            }
-            lines
-        }
-        FileStatus::Deleted => {
-            let mut lines = vec![DiffLine {
-                kind: DiffLineKind::Header,
-                line_no_old: None,
-                line_no_new: None,
-                content: format!("@@ -1,5 +0,0 @@ deleted file: {}", path),
-            }];
-            for i in 1..=5 {
-                lines.push(DiffLine {
-                    kind: DiffLineKind::Removed,
-                    line_no_old: Some(i),
-                    line_no_new: None,
-                    content: format!("// removed {} line {}", ext, i),
-                });
-            }
-            lines
-        }
-        _ => {
-            // Modified / Renamed / Untracked — show a mix
-            vec![
-                DiffLine {
-                    kind: DiffLineKind::Header,
-                    line_no_old: None,
-                    line_no_new: None,
-                    content: format!("@@ -10,7 +10,9 @@ changes in {}", path),
-                },
-                DiffLine {
-                    kind: DiffLineKind::Context,
-                    line_no_old: Some(10),
-                    line_no_new: Some(10),
-                    content: format!("use crate::{};", ext),
-                },
-                DiffLine {
-                    kind: DiffLineKind::Context,
-                    line_no_old: Some(11),
-                    line_no_new: Some(11),
-                    content: String::new(),
-                },
-                DiffLine {
-                    kind: DiffLineKind::Removed,
-                    line_no_old: Some(12),
-                    line_no_new: None,
-                    content: "    let old_value = compute();".into(),
-                },
-                DiffLine {
-                    kind: DiffLineKind::Added,
-                    line_no_old: None,
-                    line_no_new: Some(12),
-                    content: "    let new_value = compute_v2();".into(),
-                },
-                DiffLine {
-                    kind: DiffLineKind::Added,
-                    line_no_old: None,
-                    line_no_new: Some(13),
-                    content: "    log::debug!(\"updated\");".into(),
-                },
-                DiffLine {
-                    kind: DiffLineKind::Context,
-                    line_no_old: Some(13),
-                    line_no_new: Some(14),
-                    content: "}".into(),
-                },
-                DiffLine {
-                    kind: DiffLineKind::Context,
-                    line_no_old: Some(14),
-                    line_no_new: Some(15),
-                    content: String::new(),
-                },
-                DiffLine {
-                    kind: DiffLineKind::Context,
-                    line_no_old: Some(15),
-                    line_no_new: Some(16),
-                    content: format!("fn main() {{ /* {} */ }}", path),
-                },
-            ]
-        }
-    }
-}
-
-fn generate_commit_diff(message: &str) -> Vec<DiffLine> {
-    vec![
-        DiffLine {
-            kind: DiffLineKind::Header,
-            line_no_old: None,
-            line_no_new: None,
-            content: format!("@@ commit: {}", message.get(..60).unwrap_or(message)),
-        },
-        DiffLine {
-            kind: DiffLineKind::Context,
-            line_no_old: Some(1),
-            line_no_new: Some(1),
-            content: "// context".into(),
-        },
-        DiffLine {
-            kind: DiffLineKind::Removed,
-            line_no_old: Some(2),
-            line_no_new: None,
-            content: "    old_implementation();".into(),
-        },
-        DiffLine {
-            kind: DiffLineKind::Added,
-            line_no_old: None,
-            line_no_new: Some(2),
-            content: "    new_implementation();".into(),
-        },
-        DiffLine {
-            kind: DiffLineKind::Added,
-            line_no_old: None,
-            line_no_new: Some(3),
-            content: "    additional_feature();".into(),
-        },
-        DiffLine {
-            kind: DiffLineKind::Context,
-            line_no_old: Some(3),
-            line_no_new: Some(4),
-            content: "}".into(),
-        },
-    ]
-}
-
-fn mock_diff() -> Vec<DiffLine> {
-    vec![
-        DiffLine { kind: DiffLineKind::Header, line_no_old: None, line_no_new: None, content: "@@ -62,6 +62,19 @@ pub struct TextNodeKey {".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(62), line_no_new: Some(62), content: "    pub text: String,".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(63), line_no_new: Some(63), content: "    pub font_size_bits: u32,".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(64), line_no_new: Some(64), content: "    pub line_height_bits: u32,".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(65), line_no_new: Some(65), content: "    pub max_width_bits: Option<u32>,".into() },
-        DiffLine { kind: DiffLineKind::Added, line_no_old: None, line_no_new: Some(66), content: "    /// Font weight: 400 = normal, 700 = bold.".into() },
-        DiffLine { kind: DiffLineKind::Added, line_no_old: None, line_no_new: Some(67), content: "    pub font_weight: u16,".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(66), line_no_new: Some(68), content: "}".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(67), line_no_new: Some(69), content: "".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(68), line_no_new: Some(70), content: "impl TextNodeKey {".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(69), line_no_new: Some(71), content: "    pub fn new(text: &str, font_size: f32, line_height: f32, max_width: Option<f32>) -> Self {".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(70), line_no_new: Some(72), content: "        Self {".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(71), line_no_new: Some(73), content: "            text: text.to_string(),".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(72), line_no_new: Some(74), content: "            font_size_bits: font_size.to_bits(),".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(73), line_no_new: Some(75), content: "            line_height_bits: line_height.to_bits(),".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(74), line_no_new: Some(76), content: "            max_width_bits: max_width.map(|w| w.to_bits()),".into() },
-        DiffLine { kind: DiffLineKind::Added, line_no_old: None, line_no_new: Some(77), content: "            font_weight: 400,".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(75), line_no_new: Some(78), content: "        }".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(76), line_no_new: Some(79), content: "    }".into() },
-        DiffLine { kind: DiffLineKind::Added, line_no_old: None, line_no_new: Some(80), content: "".into() },
-        DiffLine { kind: DiffLineKind::Added, line_no_old: None, line_no_new: Some(81), content: "    pub fn with_weight(mut self, weight: u16) -> Self {".into() },
-        DiffLine { kind: DiffLineKind::Added, line_no_old: None, line_no_new: Some(82), content: "        self.font_weight = weight;".into() },
-        DiffLine { kind: DiffLineKind::Added, line_no_old: None, line_no_new: Some(83), content: "        self".into() },
-        DiffLine { kind: DiffLineKind::Added, line_no_old: None, line_no_new: Some(84), content: "    }".into() },
-        DiffLine { kind: DiffLineKind::Context, line_no_old: Some(77), line_no_new: Some(85), content: "}".into() },
-        DiffLine { kind: DiffLineKind::Header, line_no_old: None, line_no_new: None, content: "@@ -243,6 +257,9 @@ buffer.set_text(font_system, &key.text, &attrs, ...)".into() },
-        DiffLine { kind: DiffLineKind::Removed, line_no_old: Some(243), line_no_new: None, content: "                    &Attrs::new(),".into() },
-        DiffLine { kind: DiffLineKind::Added, line_no_old: None, line_no_new: Some(257), content: "                    &Attrs::new().weight(Weight(key.font_weight)),".into() },
-    ]
 }

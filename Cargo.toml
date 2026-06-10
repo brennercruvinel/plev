@@ -10,6 +10,7 @@ members = [
     "crates/basicIDE",
     "crates/editor_core",
     "crates/showcase",
+    "crates/git_backend",
 ]
 
 [package]

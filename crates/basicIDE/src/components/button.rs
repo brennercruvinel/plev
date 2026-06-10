@@ -2,6 +2,8 @@ use crate::theme::Theme;
 use plev::compositor::{Compositor, SceneNode, TextNodeKey};
 
 /// Button visual style variant.
+// Catálogo de design: variantes ainda sem uso nas views ficam disponíveis.
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ButtonKind {
     Solid,
@@ -10,6 +12,7 @@ pub enum ButtonKind {
 }
 
 /// Button size.
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ButtonSize {
     Sm,

@@ -1,5 +1,5 @@
 use super::super::commit_form::CommitFormAction;
-use super::{HEADER_H, RESIZE_HANDLE_W, SIDEBAR_W, WorkspaceView};
+use super::{HEADER_H, PendingAction, RESIZE_HANDLE_W, SIDEBAR_W, UiRequest, WorkspaceView};
 
 impl WorkspaceView {
     /// Handle a left click at (cx, cy). Returns true if state changed.
@@ -29,9 +29,7 @@ impl WorkspaceView {
         // Commit form clicks
         match self.commit_form.hit_test_click(cx, cy) {
             CommitFormAction::Commit => {
-                // Mock commit: just hide the form
-                self.commit_form.hide();
-                return true;
+                return self.submit_commit();
             }
             CommitFormAction::Cancel => {
                 self.commit_form.hide();
@@ -48,9 +46,7 @@ impl WorkspaceView {
             if let Some(idx) = self.unassigned.hit_test(cx, cy) {
                 let changed = self.unassigned.select(Some(idx));
                 if changed {
-                    if let Some(file) = self.unassigned.files.get(idx) {
-                        self.diff.set_file(&file.path, file.status);
-                    }
+                    self.open_file_diff(idx);
                 }
                 return changed;
             }
@@ -61,10 +57,7 @@ impl WorkspaceView {
             if let Some((si, ci)) = self.stacks.hit_test(cx, cy) {
                 let changed = self.stacks.select(Some((si, ci)));
                 if changed {
-                    if let Some(commit) = self.stacks.stacks.get(si).and_then(|s| s.commits.get(ci))
-                    {
-                        self.diff.set_commit(&commit.message, &commit.sha);
-                    }
+                    self.open_commit_diff(si, ci);
                 }
                 return changed;
             }
@@ -98,7 +91,6 @@ impl WorkspaceView {
     pub fn handle_right_click(&mut self, cx: f32, cy: f32) -> bool {
         use plev::overlay::{MenuItem, OverlayKind};
 
-        log::info!("right-click at ({cx:.0}, {cy:.0})");
         // dismiss any existing overlay first
         self.overlay_mgr.pop_all();
         self.ctx_menu_item_rects.clear();
@@ -110,103 +102,141 @@ impl WorkspaceView {
         // Right-click on left panel (unassigned files)
         if cx >= left_x && cx < left_x + self.left_w {
             if let Some(idx) = self.unassigned.hit_test(cx, cy) {
-                let path = self.unassigned.files[idx].path.clone();
+                let staged = self.unassigned.files[idx].staged;
                 let items = vec![
-                    MenuItem::new("Stage file", 0),
+                    if staged {
+                        MenuItem::new("Unstage file", 0)
+                    } else {
+                        MenuItem::new("Stage file", 0)
+                    },
                     MenuItem::new("Discard changes", 1),
                     MenuItem::new("Ignore file", 2),
                 ];
                 // Offset slightly so the menu doesn't sit right under the cursor
-                let id = self.overlay_mgr.push(
-                    OverlayKind::ContextMenu { items },
-                    cx + 2.0,
-                    cy,
-                    0.0,
-                    0.0,
-                );
-                log::info!("opened context menu id={:?} for file[{idx}]={path}", id);
-                // Store which file this menu is for
-                self.pending_discard_idx = Some(idx);
-                let _ = id;
+                self.overlay_mgr
+                    .push(OverlayKind::ContextMenu { items }, cx + 2.0, cy, 0.0, 0.0);
+                self.pending_action = Some(PendingAction::ContextMenu { file_idx: idx });
                 // Also select the row
-                self.unassigned.select(Some(idx));
-                if let Some(file) = self.unassigned.files.get(idx) {
-                    self.diff.set_file(&file.path, file.status);
+                if self.unassigned.select(Some(idx)) {
+                    self.open_file_diff(idx);
                 }
-                let _ = path;
                 return true;
             }
         }
         false
     }
 
-    /// Handle key press. Returns true if state changed.
-    pub fn handle_key_down(&mut self, key: &winit::keyboard::Key) -> bool {
-        use winit::keyboard::{Key, NamedKey};
+    // -- semantic actions (invoked by the keymap dispatcher and tests) -------
 
-        // Escape closes the topmost overlay before anything else
-        if let Key::Named(NamedKey::Escape) = key {
-            if !self.overlay_mgr.is_empty() {
-                self.overlay_mgr.pop();
-                if self.overlay_mgr.is_empty() {
-                    self.ctx_menu_item_rects.clear();
-                    self.modal_confirm_rect = None;
-                    self.modal_cancel_rect = None;
-                    self.pending_discard_idx = None;
-                }
-                return true;
-            }
+    /// Closes the topmost overlay. Returns true if one was open.
+    pub fn close_top_overlay(&mut self) -> bool {
+        if self.overlay_mgr.is_empty() {
+            return false;
         }
+        self.overlay_mgr.pop();
+        if self.overlay_mgr.is_empty() {
+            self.ctx_menu_item_rects.clear();
+            self.modal_confirm_rect = None;
+            self.modal_cancel_rect = None;
+            self.pending_action = None;
+        }
+        true
+    }
 
-        // If commit form is active, route text input there
+    /// Moves the file selection up and refreshes the diff panel.
+    pub fn nav_up(&mut self) -> bool {
+        let changed = self.unassigned.select_prev();
+        if changed {
+            self.show_selected_diff();
+        }
+        changed
+    }
+
+    /// Moves the file selection down and refreshes the diff panel.
+    pub fn nav_down(&mut self) -> bool {
+        let changed = self.unassigned.select_next();
+        if changed {
+            self.show_selected_diff();
+        }
+        changed
+    }
+
+    /// Requests the diff of the currently selected file.
+    pub fn show_selected_diff(&mut self) -> bool {
+        if let Some(idx) = self.unassigned.selected_idx {
+            self.open_file_diff(idx);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Stages the selected file (no-op when already staged).
+    pub fn stage_selected(&mut self) -> bool {
+        let Some(idx) = self.unassigned.selected_idx else {
+            return false;
+        };
+        let Some(file) = self.unassigned.files.get_mut(idx) else {
+            return false;
+        };
+        if file.staged {
+            return false;
+        }
+        file.staged = true;
+        self.requests.push(UiRequest::Stage {
+            path: file.path.clone(),
+        });
+        true
+    }
+
+    /// Asks for confirmation before discarding the selected file.
+    pub fn discard_selected(&mut self) -> bool {
+        let Some(idx) = self.unassigned.selected_idx else {
+            return false;
+        };
+        self.open_discard_modal(idx);
+        true
+    }
+
+    /// Shows/hides the commit form.
+    pub fn toggle_commit_form(&mut self) -> bool {
         if self.commit_form.visible {
-            match key {
-                Key::Named(NamedKey::Escape) => {
-                    self.commit_form.hide();
-                    return true;
-                }
-                Key::Named(NamedKey::Backspace) => {
-                    self.commit_form.backspace();
-                    return true;
-                }
-                Key::Named(NamedKey::Enter) => {
-                    if !self.commit_form.message.is_empty() {
-                        self.commit_form.hide();
-                        return true;
-                    }
-                    return false;
-                }
-                Key::Character(c) => {
-                    for ch in c.chars() {
-                        self.commit_form.append_char(ch);
-                    }
-                    return true;
-                }
-                _ => return false,
-            }
+            self.commit_form.hide();
+        } else {
+            self.commit_form.show();
         }
+        true
+    }
 
-        match key {
-            Key::Named(NamedKey::ArrowUp) => self.unassigned.select_prev(),
-            Key::Named(NamedKey::ArrowDown) => self.unassigned.select_next(),
-            Key::Named(NamedKey::Enter) => {
-                if let Some(file) = self.unassigned.selected_file() {
-                    self.diff.set_file(&file.path, file.status);
-                    true
-                } else {
-                    false
-                }
-            }
-            Key::Character(c) if c == "c" || c == "C" => {
-                // 'C' toggles commit mode
-                if self.commit_form.visible {
-                    self.commit_form.hide();
-                } else {
-                    self.commit_form.show();
-                }
-                true
-            }
-            _ => false,
+    /// Submits the commit form: queues the real commit and hides the form
+    /// (the status/log refresh arrives via git events). No-op while empty.
+    pub fn submit_commit(&mut self) -> bool {
+        if !self.commit_form.visible || self.commit_form.message.is_empty() {
+            return false;
+        }
+        let message = std::mem::take(&mut self.commit_form.message);
+        self.requests.push(UiRequest::Commit { message });
+        self.commit_form.hide();
+        true
+    }
+
+    /// Points the diff panel at file `idx` and queues the real diff fetch.
+    pub(crate) fn open_file_diff(&mut self, idx: usize) {
+        if let Some(file) = self.unassigned.files.get(idx) {
+            self.diff.show_file(&file.path);
+            self.requests.push(UiRequest::FileDiff {
+                path: file.path.clone(),
+            });
+        }
+    }
+
+    /// Points the diff panel at a commit and queues the real diff fetch.
+    pub(crate) fn open_commit_diff(&mut self, si: usize, ci: usize) {
+        if let Some(commit) = self.stacks.stacks.get(si).and_then(|s| s.commits.get(ci)) {
+            self.diff.show_commit(&commit.message, &commit.sha);
+            self.requests.push(UiRequest::CommitDiff {
+                sha: commit.sha.clone(),
+            });
         }
     }
 }

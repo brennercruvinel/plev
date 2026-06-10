@@ -4,6 +4,9 @@
 /// All values are RGBA in 0.0–1.0 range, premultiplied-alpha-safe.
 use plev::color::Color;
 
+// Catálogo de tokens: campos ainda não consumidos pelas views fazem parte
+// da paleta e ficam disponíveis para os próximos componentes.
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub struct Theme {
     // -- Backgrounds --
@@ -109,6 +112,7 @@ pub const LIGHT: Theme = Theme {
 };
 
 /// File status colors.
+#[allow(dead_code)]
 pub struct StatusColors {
     pub modified: Color,
     pub added: Color,
@@ -117,6 +121,7 @@ pub struct StatusColors {
     pub untracked: Color,
 }
 
+#[allow(dead_code)]
 impl StatusColors {
     pub fn dark() -> Self {
         Self {
