@@ -16,49 +16,96 @@ struct TextProps<'a> {
     truncate_chars: Option<&'a usize>,
 }
 
+/// Walk the element tree in the same preorder as `collect_layout_items`
+/// (so `bounds[i]` lines up), wrapping children of `clip_children` elements
+/// in PushClip/PopClip pairs.
 pub(crate) fn emit_scene_nodes(
-    elements: &[&Element],
+    root: &Element,
     bounds: &[ComputedBounds],
     theme: Option<&crate::theme::Theme>,
     out: &mut Vec<SceneNode>,
 ) {
-    for (i, &element) in elements.iter().enumerate() {
-        let b = &bounds[i];
+    let mut cursor = 0usize;
+    emit_element(root, bounds, theme, &mut cursor, out);
+}
 
-        // Resolve intent-derived color when theme is available
-        let intent_color = element
-            .intent
-            .and_then(|intent| theme.map(|t| t.intent_color(intent)));
+fn emit_element(
+    element: &Element,
+    bounds: &[ComputedBounds],
+    theme: Option<&crate::theme::Theme>,
+    cursor: &mut usize,
+    out: &mut Vec<SceneNode>,
+) {
+    let b = &bounds[*cursor];
+    *cursor += 1;
 
-        match &element.kind {
-            ElementKind::Div => {
-                emit_div(element, b, intent_color, out);
-            }
-            ElementKind::Text {
-                content,
-                font_size,
-                line_height,
-                max_width,
-                truncate_chars,
-            } => {
-                emit_text(
-                    element,
-                    b,
-                    intent_color,
-                    &TextProps {
-                        content,
-                        font_size: *font_size,
-                        line_height: *line_height,
-                        max_width: *max_width,
-                        truncate_chars: truncate_chars.as_ref(),
-                    },
-                    out,
-                );
-            }
-            ElementKind::Path { data } => {
-                out.push(SceneNode::Path { data: data.clone() });
+    // Resolve intent-derived color when theme is available
+    let intent_color = element
+        .intent
+        .and_then(|intent| theme.map(|t| t.intent_color(intent)));
+
+    match &element.kind {
+        ElementKind::Div => {
+            emit_div(element, b, intent_color, out);
+        }
+        ElementKind::Text {
+            content,
+            font_size,
+            line_height,
+            max_width,
+            truncate_chars,
+        } => {
+            emit_text(
+                element,
+                b,
+                intent_color,
+                &TextProps {
+                    content,
+                    font_size: *font_size,
+                    line_height: *line_height,
+                    max_width: *max_width,
+                    truncate_chars: truncate_chars.as_ref(),
+                },
+                out,
+            );
+        }
+        ElementKind::Path { data } => {
+            out.push(SceneNode::Path { data: data.clone() });
+        }
+        ElementKind::Image { bytes } => {
+            if let Some(bytes) = bytes
+                && (b.width > 0.0 || b.height > 0.0)
+            {
+                // Memoized by content hash; failures are remembered and
+                // logged once inside the store.
+                if let Ok(handle) = crate::gpu::image::load_image_bytes(bytes) {
+                    out.push(SceneNode::Image {
+                        x: b.x,
+                        y: b.y,
+                        w: b.width,
+                        h: b.height,
+                        image: handle,
+                        corner_radius: element.style.corner_radius,
+                    });
+                }
             }
         }
+    }
+
+    let clip = element.style.clip_children && !element.children.is_empty();
+    if clip {
+        out.push(SceneNode::PushClip {
+            x: b.x,
+            y: b.y,
+            w: b.width,
+            h: b.height,
+        });
+    }
+    for child in &element.children {
+        emit_element(child, bounds, theme, cursor, out);
+    }
+    if clip {
+        out.push(SceneNode::PopClip);
     }
 }
 
@@ -69,16 +116,46 @@ fn emit_div(
     out: &mut Vec<SceneNode>,
 ) {
     let has_bg = element.style.bg.is_some() || intent_color.is_some();
+    let has_gradient = element.style.bg_gradient.is_some();
     let has_border = element.style.border > 0.0;
     let has_radius = element.style.corner_radius > 0.0;
 
-    if (has_bg || has_border) && (b.width > 0.0 || b.height > 0.0) {
+    // Drop shadow first so the rect paints on top of it.
+    if let Some(shadow) = element.style.drop_shadow
+        && (b.width > 0.0 || b.height > 0.0)
+    {
+        out.push(SceneNode::Shadow {
+            x: b.x,
+            y: b.y,
+            w: b.width,
+            h: b.height,
+            corner_radius: element.style.corner_radius,
+            blur_radius: shadow.blur,
+            offset: shadow.offset,
+            color: shadow.color.to_array(),
+        });
+    }
+
+    if (has_bg || has_gradient || has_border) && (b.width > 0.0 || b.height > 0.0) {
         let bg_color = intent_color
             .or(element.style.bg)
             .unwrap_or(crate::color::Color::TRANSPARENT)
             .to_array();
 
-        if has_radius || has_border {
+        if let Some(gradient) = element.style.bg_gradient {
+            out.push(SceneNode::GradientRect {
+                x: b.x,
+                y: b.y,
+                w: b.width,
+                h: b.height,
+                color: gradient.from.to_array(),
+                color2: gradient.to.to_array(),
+                angle_deg: gradient.angle_deg,
+                corner_radius: element.style.corner_radius,
+                border_width: element.style.border,
+                border_color: element.style.border_color.to_array(),
+            });
+        } else if has_radius || has_border {
             out.push(SceneNode::RoundedRect {
                 x: b.x,
                 y: b.y,

@@ -71,30 +71,9 @@ impl super::App {
                 sampler: &gpu.composite_sampler,
             });
 
-        // Resolve text for each dirty layer
-        {
-            let layer_info: Vec<_> = self
-                .compositor
-                .layers()
-                .iter()
-                .map(|l| (l.id, l.is_dirty(), l.text_nodes()))
-                .collect();
-
-            for (layer_id, dirty, text_nodes) in layer_info {
-                if !dirty {
-                    continue;
-                }
-                let (vertices, indices) = text_system.resolve_for_layer(
-                    &gpu.device,
-                    &gpu.queue,
-                    &gpu.text_bind_group_layout,
-                    &text_nodes,
-                );
-                if let Some(layer) = self.compositor.layer_mut(layer_id) {
-                    layer.set_text_data(&gpu.device, &gpu.queue, vertices, indices);
-                }
-            }
-        }
+        // Resolve text for each dirty layer, one resolve per clip group so
+        // clipped text (scrolled lists, panels) scissors with its container.
+        super::render_passes::resolve_layer_text(&mut self.compositor, gpu, text_system);
 
         text_system.finish_frame();
 
@@ -128,6 +107,9 @@ impl super::App {
             }
         }
 
+        // Upload any images loaded while building the scene
+        gpu.prepare_images();
+
         // Encode render passes
         let encode_start = web_time::Instant::now();
         let mut encoder = gpu
@@ -145,7 +127,7 @@ impl super::App {
             .map(|l| l.id)
             .collect();
 
-        let layer_draws = Self::encode_layer_passes(
+        let layer_draws = super::render_passes::encode_layer_passes(
             &self.compositor,
             gpu,
             text_system,
@@ -166,9 +148,18 @@ impl super::App {
         }
 
         // Composite pass: draw all visible layers to surface
-        let composite_draws = Self::encode_composite_pass(
+        let clear_color = {
+            let bg = self.theme.colors.bg.to_array();
+            wgpu::Color {
+                r: bg[0] as f64,
+                g: bg[1] as f64,
+                b: bg[2] as f64,
+                a: 1.0,
+            }
+        };
+        let composite_draws = super::render_passes::encode_composite_pass(
             &self.compositor,
-            &self.theme,
+            clear_color,
             gpu,
             &surface_view,
             &effect_results,

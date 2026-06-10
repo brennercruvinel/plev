@@ -45,6 +45,11 @@ pub(crate) enum ElementKind {
     Path {
         data: crate::path::TessellatedPath,
     },
+    Image {
+        /// Encoded image bytes (png/jpeg); resolved to an atlas handle at
+        /// emit time (memoized by content, so per-frame rebuilds are cheap).
+        bytes: Option<std::sync::Arc<Vec<u8>>>,
+    },
 }
 
 pub struct Element {
@@ -127,8 +132,17 @@ pub fn path(data: crate::path::TessellatedPath) -> Element {
     }
 }
 
+/// An image element; set the source with `.src_bytes(...)`. Sized by the
+/// image's natural dimensions unless `.w()`/`.h()` constrain it.
 pub fn image() -> Element {
-    div()
+    Element {
+        kind: ElementKind::Image { bytes: None },
+        style: Style::default(),
+        layout: LayoutConfig::default(),
+        events: EventHandlers::default(),
+        children: Vec::new(),
+        intent: None,
+    }
 }
 
 pub fn spacer() -> Element {

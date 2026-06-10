@@ -1,3 +1,4 @@
+mod clip;
 pub(crate) mod drawing;
 mod layer;
 mod layer_ops;
@@ -8,11 +9,17 @@ mod vertex;
 #[cfg(test)]
 mod tests;
 
-pub use drawing::RoundedRectParams;
+pub use clip::{
+    ClipRect, DrawRange, clip_to_scissor, intersect_rects, intersect_scissors, merge_text_groups,
+};
+pub use drawing::{GradientRectParams, RoundedRectParams, ShadowParams};
 pub use layer::{Layer, LayerEffect, LayerId};
 pub use scene::{SceneNode, TextNodeKey};
 pub use stats::RenderStats;
-pub use vertex::{QuadVertex, RectSdfVertex};
+pub use vertex::{
+    ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction, shadow_padding,
+    shadow_sigma,
+};
 
 /// GPU resources needed for layer texture resolution and compositing.
 pub struct ResolveResources<'a> {
@@ -111,6 +118,8 @@ impl Compositor {
             if layer.dirty {
                 layer.upload_quad_geometry(res.device, res.queue);
                 layer.upload_sdf_geometry(res.device, res.queue);
+                layer.upload_shadow_geometry(res.device, res.queue);
+                layer.upload_image_geometry(res.device, res.queue);
                 log::debug!(
                     "Layer {:?} dirty: {} quads, {} sdf_rects, {} text nodes",
                     layer.id,
@@ -144,13 +153,17 @@ impl Compositor {
         for layer in &mut self.layers {
             layer.resolve_dirty();
             if layer.dirty {
-                let culled =
-                    layer.build_quad_geometry(viewport) + layer.build_sdf_geometry(viewport);
+                let culled = layer.build_quad_geometry(viewport)
+                    + layer.build_sdf_geometry(viewport)
+                    + layer.build_shadow_geometry(viewport)
+                    + layer.build_image_geometry(viewport);
                 self.stats.layers_redrawn += 1;
                 self.stats.nodes_culled += culled;
             }
             self.stats.quad_vertices += layer.quad_vertices.len() as u32;
             self.stats.sdf_vertices += layer.sdf_vertices.len() as u32;
+            self.stats.shadow_vertices += layer.shadow_vertices.len() as u32;
+            self.stats.image_vertices += layer.image_vertices.len() as u32;
         }
 
         self.invalidated = false;

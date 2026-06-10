@@ -311,6 +311,161 @@ mod tests {
     }
 
     #[test]
+    fn image_src_bytes_emits_image_node_with_natural_size() {
+        // Tiny in-memory PNG (the png feature also enables encoding)
+        let img = ::image::RgbaImage::from_pixel(6, 4, ::image::Rgba([1, 2, 3, 255]));
+        let mut png = std::io::Cursor::new(Vec::new());
+        img.write_to(&mut png, ::image::ImageFormat::Png).unwrap();
+
+        let el = image().src_bytes(png.into_inner()).rounded(3.0);
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 1);
+        let SceneNode::Image {
+            w,
+            h,
+            image: handle,
+            corner_radius,
+            ..
+        } = &nodes[0]
+        else {
+            panic!("Expected Image, got {:?}", &nodes[0]);
+        };
+        // Natural size drives layout when no explicit w/h is set
+        assert_eq!((*w, *h), (6.0, 4.0));
+        assert_eq!((handle.width, handle.height), (6, 4));
+        assert_eq!(*corner_radius, 3.0);
+    }
+
+    #[test]
+    fn image_without_source_emits_nothing() {
+        let el = image().w(50.0).h(50.0);
+        let nodes = el.render(&mut test_cx());
+        assert!(nodes.is_empty());
+    }
+
+    #[test]
+    fn clip_children_wraps_children_in_push_pop() {
+        let el = div()
+            .w(100.0)
+            .h(50.0)
+            .bg("blue")
+            .clip_children()
+            .child(div().w(300.0).h(20.0).bg("red"))
+            .child(div().w(300.0).h(20.0).bg("green"));
+        let nodes = el.render(&mut test_cx());
+
+        // parent rect, PushClip, 2 child rects, PopClip
+        assert_eq!(nodes.len(), 5);
+        assert!(matches!(&nodes[0], SceneNode::Rect { .. }));
+        let SceneNode::PushClip { x, y, w, h } = &nodes[1] else {
+            panic!("Expected PushClip, got {:?}", &nodes[1]);
+        };
+        assert_eq!((*x, *y, *w, *h), (0.0, 0.0, 100.0, 50.0));
+        assert!(matches!(&nodes[2], SceneNode::Rect { .. }));
+        assert!(matches!(&nodes[3], SceneNode::Rect { .. }));
+        assert!(matches!(&nodes[4], SceneNode::PopClip));
+    }
+
+    #[test]
+    fn nested_clip_children_balance_push_pop() {
+        let el = div().w(100.0).h(100.0).clip_children().child(
+            div()
+                .w(80.0)
+                .h(80.0)
+                .clip_children()
+                .child(div().w(200.0).h(10.0).bg("red")),
+        );
+        let nodes = el.render(&mut test_cx());
+
+        let pushes = nodes
+            .iter()
+            .filter(|n| matches!(n, SceneNode::PushClip { .. }))
+            .count();
+        let pops = nodes
+            .iter()
+            .filter(|n| matches!(n, SceneNode::PopClip))
+            .count();
+        assert_eq!(pushes, 2);
+        assert_eq!(pops, 2);
+        // Last node closes the outer clip
+        assert!(matches!(nodes.last(), Some(SceneNode::PopClip)));
+    }
+
+    #[test]
+    fn clip_children_without_children_emits_no_clip_nodes() {
+        let el = div().w(100.0).h(50.0).bg("blue").clip_children();
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 1);
+        assert!(matches!(&nodes[0], SceneNode::Rect { .. }));
+    }
+
+    #[test]
+    fn shadow_drop_emits_shadow_before_rect() {
+        let el = div().w(100.0).h(50.0).bg("blue").rounded(8.0).shadow_drop(
+            16.0,
+            4.0,
+            [0.0, 0.0, 0.0, 0.5],
+        );
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 2);
+        let SceneNode::Shadow {
+            w,
+            h,
+            corner_radius,
+            blur_radius,
+            offset,
+            color,
+            ..
+        } = &nodes[0]
+        else {
+            panic!("Expected Shadow first, got {:?}", &nodes[0]);
+        };
+        assert_eq!((*w, *h), (100.0, 50.0));
+        assert_eq!(*corner_radius, 8.0);
+        assert_eq!(*blur_radius, 16.0);
+        assert_eq!(*offset, [0.0, 4.0]);
+        assert_eq!(*color, [0.0, 0.0, 0.0, 0.5]);
+        assert!(matches!(&nodes[1], SceneNode::RoundedRect { .. }));
+    }
+
+    #[test]
+    fn bg_linear_emits_gradient_rect() {
+        let el = div().w(100.0).h(50.0).rounded(8.0).bg_linear(
+            [1.0, 0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0, 1.0],
+            45.0,
+        );
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 1);
+        let SceneNode::GradientRect {
+            color,
+            color2,
+            angle_deg,
+            corner_radius,
+            ..
+        } = &nodes[0]
+        else {
+            panic!("Expected GradientRect, got {:?}", &nodes[0]);
+        };
+        assert_eq!(*color, [1.0, 0.0, 0.0, 1.0]);
+        assert_eq!(*color2, [0.0, 0.0, 1.0, 1.0]);
+        assert_eq!(*angle_deg, 45.0);
+        assert_eq!(*corner_radius, 8.0);
+    }
+
+    #[test]
+    fn bg_linear_takes_precedence_over_bg() {
+        let el = div()
+            .w(100.0)
+            .h(50.0)
+            .bg("blue")
+            .bg_linear("red", "green", 0.0);
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 1);
+        assert!(matches!(&nodes[0], SceneNode::GradientRect { .. }));
+    }
+
+    #[test]
     fn border_bottom_emits_thin_rect() {
         let el = div().w(200.0).h(40.0).border_bottom(1.0, "gray");
         let nodes = el.render(&mut test_cx());

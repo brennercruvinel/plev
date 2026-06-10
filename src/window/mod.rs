@@ -5,6 +5,8 @@ mod render;
 mod render_passes;
 pub(crate) mod state;
 
+pub use render_passes::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+
 use std::sync::Arc;
 
 use winit::application::ApplicationHandler;

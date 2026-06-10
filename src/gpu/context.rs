@@ -16,8 +16,12 @@ pub struct GpuContext {
     pub projection_bind_group: wgpu::BindGroup,
     pub quad_pipeline: wgpu::RenderPipeline,
     pub rect_sdf_pipeline: wgpu::RenderPipeline,
+    pub shadow_analytic_pipeline: wgpu::RenderPipeline,
     pub text_pipeline: wgpu::RenderPipeline,
     pub text_bind_group_layout: wgpu::BindGroupLayout,
+    pub image_pipeline: wgpu::RenderPipeline,
+    pub image_bind_group_layout: wgpu::BindGroupLayout,
+    pub image_atlas: super::image::ImageAtlasGpu,
     // Composite pipeline resources
     pub composite_pipeline: wgpu::RenderPipeline,
     pub composite_bind_group_layout: wgpu::BindGroupLayout,
@@ -28,6 +32,13 @@ pub struct GpuContext {
 impl GpuContext {
     pub async fn new(window: Arc<Window>) -> Self {
         Self::new_with_config(window, RenderConfig::default()).await
+    }
+
+    /// Sync the image atlas texture with images loaded since the last
+    /// frame. Call once per frame before encoding render passes.
+    pub fn prepare_images(&mut self) {
+        self.image_atlas
+            .prepare(&self.device, &self.queue, &self.image_bind_group_layout);
     }
 
     pub async fn new_with_config(window: Arc<Window>, mut config: RenderConfig) -> Self {
@@ -196,6 +207,19 @@ impl GpuContext {
         );
 
         #[cfg(feature = "hot-reload")]
+        let shadow_src = crate::hot_reload::shader_source("shadow_analytic.wgsl");
+        #[cfg(not(feature = "hot-reload"))]
+        let shadow_src: std::borrow::Cow<'_, str> =
+            include_str!("../../shaders/shadow_analytic.wgsl").into();
+        let shadow_analytic_pipeline = Self::create_shadow_analytic_pipeline(
+            &device,
+            &shadow_src,
+            &projection_bind_group_layout,
+            surface_format,
+            config.msaa_samples,
+        );
+
+        #[cfg(feature = "hot-reload")]
         let text_src = crate::hot_reload::shader_source("text.wgsl");
         #[cfg(not(feature = "hot-reload"))]
         let text_src: std::borrow::Cow<'_, str> = include_str!("../../shaders/text.wgsl").into();
@@ -204,6 +228,44 @@ impl GpuContext {
             &text_src,
             &projection_bind_group_layout,
             &text_bind_group_layout,
+            surface_format,
+            config.msaa_samples,
+        );
+
+        // Image atlas bind group layout (group 1 of the image pipeline);
+        // same shape as the text atlas layout but RGBA8 instead of R8.
+        let image_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                label: Some("image_atlas_bgl"),
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            multisampled: false,
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+            });
+
+        #[cfg(feature = "hot-reload")]
+        let image_src = crate::hot_reload::shader_source("image.wgsl");
+        #[cfg(not(feature = "hot-reload"))]
+        let image_src: std::borrow::Cow<'_, str> = include_str!("../../shaders/image.wgsl").into();
+        let image_pipeline = Self::create_image_pipeline(
+            &device,
+            &image_src,
+            &projection_bind_group_layout,
+            &image_bind_group_layout,
             surface_format,
             config.msaa_samples,
         );
@@ -280,8 +342,12 @@ impl GpuContext {
             projection_bind_group,
             quad_pipeline,
             rect_sdf_pipeline,
+            shadow_analytic_pipeline,
             text_pipeline,
             text_bind_group_layout,
+            image_pipeline,
+            image_bind_group_layout,
+            image_atlas: super::image::ImageAtlasGpu::new(),
             composite_pipeline,
             composite_bind_group_layout,
             opacity_bind_group_layout,

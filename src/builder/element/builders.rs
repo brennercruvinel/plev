@@ -185,6 +185,60 @@ impl Element {
         self.style.bg = Some(color.into_color());
         self
     }
+
+    /// Fill the background with a 2-stop linear gradient. `angle_deg` follows
+    /// the CSS convention: 0 puts `from` at the bottom, 90 puts it at the
+    /// left, measured clockwise. Takes precedence over `bg`.
+    pub fn bg_linear(
+        mut self,
+        from: impl IntoColor,
+        to: impl IntoColor,
+        angle_deg: impl IntoF32,
+    ) -> Self {
+        self.style.bg_gradient = Some(LinearGradient {
+            from: from.into_color(),
+            to: to.into_color(),
+            angle_deg: angle_deg.into_f32(),
+        });
+        self
+    }
+
+    /// Analytic drop shadow under this element: `blur` is the CSS-like blur
+    /// radius, `offset_y` shifts the shadow down. Follows the element's
+    /// corner radius.
+    pub fn shadow_drop(
+        mut self,
+        blur: impl IntoF32,
+        offset_y: impl IntoF32,
+        color: impl IntoColor,
+    ) -> Self {
+        self.style.drop_shadow = Some(DropShadow {
+            blur: blur.into_f32(),
+            offset: [0.0, offset_y.into_f32()],
+            color: color.into_color(),
+        });
+        self
+    }
+
+    /// Clip children to this element's bounds (scissor). Needed so scrolled
+    /// or oversized content does not leak outside panels and lists.
+    pub fn clip_children(mut self) -> Self {
+        self.style.clip_children = true;
+        self
+    }
+
+    /// Set the encoded image bytes (png/jpeg) for an `image()` element.
+    /// Decoding and atlas packing are memoized by content, so passing the
+    /// same bytes every frame (e.g. `include_bytes!`) is cheap.
+    pub fn src_bytes(mut self, bytes: impl Into<Vec<u8>>) -> Self {
+        if let ElementKind::Image {
+            bytes: ref mut slot,
+        } = self.kind
+        {
+            *slot = Some(std::sync::Arc::new(bytes.into()));
+        }
+        self
+    }
     pub fn text_color(mut self, color: impl IntoColor) -> Self {
         self.style.text_color = color.into_color();
         self

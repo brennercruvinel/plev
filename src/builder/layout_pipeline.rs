@@ -86,6 +86,15 @@ pub(crate) fn to_layout_style(element: &Element) -> TaffyLayoutStyle {
 
     // Intrinsic size for leaf elements. Text nodes have no fixed size here:
     // they are measured for real by the layout engine (TextMeasurer).
+    // Natural size of an image element: the decoded dimensions (the load
+    // is memoized by content, so layout and emit share one decode).
+    let image_size = match &element.kind {
+        ElementKind::Image { bytes: Some(bytes) } => {
+            crate::gpu::image::load_image_bytes(bytes).ok()
+        }
+        _ => None,
+    };
+
     let width = match lc.width {
         SizeConstraint::Fixed(v) => Some(v),
         SizeConstraint::Auto => match &element.kind {
@@ -98,6 +107,7 @@ pub(crate) fn to_layout_style(element: &Element) -> TaffyLayoutStyle {
                     .fold(0.0_f32, f32::max);
                 if max_x > 0.0 { Some(max_x) } else { None }
             }
+            ElementKind::Image { .. } => image_size.map(|h| h.width as f32),
             ElementKind::Div => None,
         },
     };
@@ -114,6 +124,7 @@ pub(crate) fn to_layout_style(element: &Element) -> TaffyLayoutStyle {
                     .fold(0.0_f32, f32::max);
                 if max_y > 0.0 { Some(max_y) } else { None }
             }
+            ElementKind::Image { .. } => image_size.map(|h| h.height as f32),
             ElementKind::Div => None,
         },
     };

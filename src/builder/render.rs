@@ -24,7 +24,7 @@ impl Element {
         let bounds = engine.compute(&items, cx.width, cx.height);
 
         let mut nodes = Vec::new();
-        emit_scene_nodes(&elements, &bounds, cx.theme.as_ref(), &mut nodes);
+        emit_scene_nodes(self, &bounds, cx.theme.as_ref(), &mut nodes);
 
         // Collect hit regions for elements with event handlers
         let mut hit_regions = Vec::new();
