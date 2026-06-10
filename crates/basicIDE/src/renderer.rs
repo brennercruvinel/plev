@@ -82,7 +82,8 @@ pub fn render_frame(
         .collect();
 
     let theme = workspace.theme();
-    let [cr, cg, cb, ca] = theme.bg_body.to_array();
+    // Linear clear value (the sRGB surface re-encodes on write).
+    let [cr, cg, cb, ca] = theme.bg_body.to_linear_array();
     let clear_color = wgpu::Color {
         r: cr as f64,
         g: cg as f64,

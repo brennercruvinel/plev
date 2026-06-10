@@ -70,7 +70,9 @@ pub fn render_frame(
         .map(|l| l.id)
         .collect();
 
-    let [cr, cg, cb, ca] = view.theme.colors.bg.to_array();
+    // Linear clear value: the sRGB surface re-encodes on write, so feed it the
+    // linearized theme color (else the page bg shows ~2.5× too light).
+    let [cr, cg, cb, ca] = view.theme.colors.bg.to_linear_array();
     let clear_color = wgpu::Color {
         r: cr as f64,
         g: cg as f64,

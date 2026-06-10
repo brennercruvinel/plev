@@ -57,6 +57,26 @@ impl Color {
     pub const fn to_array(self) -> [f32; 4] {
         self.0
     }
+
+    /// The color with its RGB channels converted from sRGB (the space hex/CSS
+    /// values live in) to linear, alpha untouched.
+    ///
+    /// The window surface is an sRGB format: the GPU encodes linear→sRGB on
+    /// write. Values handed to the GPU must therefore be linear, or an `#303030`
+    /// fill (0.188 sRGB) would be treated as linear and re-encoded to ~0.46
+    /// (#767676) — washing every surface out and crushing contrast. Apply this
+    /// when feeding a color into the clear value or any CPU-built uniform.
+    /// (Vertex colors are linearized in-shader via `srgb_to_linear`.)
+    pub fn to_linear_array(self) -> [f32; 4] {
+        let lin = |c: f32| {
+            if c <= 0.04045 {
+                c / 12.92
+            } else {
+                ((c + 0.055) / 1.055).powf(2.4)
+            }
+        };
+        [lin(self.0[0]), lin(self.0[1]), lin(self.0[2]), self.0[3]]
+    }
 }
 
 pub trait IntoColor {
@@ -159,5 +179,19 @@ mod tests {
     #[test]
     fn to_array() {
         assert_eq!(Color::RED.to_array(), [1.0, 0.0, 0.0, 1.0]);
+    }
+
+    #[test]
+    fn to_linear_array_darkens_srgb_midtones() {
+        // #303030 (the page bg) is 0.188 sRGB; linear is ~0.029. Feeding the
+        // raw sRGB value to an sRGB surface would re-encode it to ~0.46 (the
+        // washed-out bug); the linear value round-trips back to ~0.188 on write.
+        let g = Color::hex(0x303030).to_linear_array();
+        assert!((g[0] - 0.0296).abs() < 0.001, "got {}", g[0]);
+        assert_eq!(g[0], g[1]);
+        assert_eq!(g[3], 1.0, "alpha must stay linear");
+        // Pure black/white are fixed points of the transfer function.
+        assert_eq!(Color::hex(0x000000).to_linear_array()[0], 0.0);
+        assert!((Color::hex(0xFFFFFF).to_linear_array()[0] - 1.0).abs() < 1e-6);
     }
 }

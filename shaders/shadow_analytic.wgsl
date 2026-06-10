@@ -115,7 +115,14 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         alpha = rounded_box_shadow(in.local, sigma, corner, half_size);
     }
 
-    // Premultiplied alpha output
+    // Linearize, then premultiplied alpha output.
     let a = in.color.a * alpha;
-    return vec4(in.color.rgb * a, a);
+    let rgb = srgb_to_linear(in.color.rgb);
+    return vec4(rgb * a, a);
+}
+
+fn srgb_to_linear(c: vec3<f32>) -> vec3<f32> {
+    let lo = c / 12.92;
+    let hi = pow((c + 0.055) / 1.055, vec3<f32>(2.4));
+    return select(hi, lo, c <= vec3<f32>(0.04045));
 }
