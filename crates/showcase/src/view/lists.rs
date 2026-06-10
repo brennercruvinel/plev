@@ -9,6 +9,8 @@ use super::{group_label, panel, text};
 
 const LABEL_H: f32 = 24.0;
 const ROW_H: f32 = 28.0;
+/// Minimum usable list width on very narrow windows.
+const LIST_MIN_W: f32 = 240.0;
 
 pub struct ListsSection {
     pub list: VirtualList,
@@ -54,9 +56,11 @@ impl ListsSection {
         Self { list, tree }
     }
 
-    /// Panel + inner bounds of the virtual list (left half).
+    /// Panel + inner bounds of the virtual list (left half). The list
+    /// follows the window: 52% of the content width, never below
+    /// `LIST_MIN_W` (and never past the content itself).
     pub fn list_bounds(&self, content: Rect) -> Rect {
-        let w = (content.w * 0.52).min(460.0);
+        let w = (content.w * 0.52).max(LIST_MIN_W.min(content.w));
         Rect::new(
             content.x + 1.0,
             content.y + LABEL_H + 1.0,
@@ -182,5 +186,27 @@ impl ListsSection {
                 dim,
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Wide viewport (~1600px window): the list must follow the window
+    /// instead of freezing at the old 460px cap.
+    #[test]
+    fn list_grows_with_wide_content() {
+        let section = ListsSection::new();
+        let content = Rect::new(288.0, 80.0, 1272.0, 700.0);
+        let bounds = section.list_bounds(content);
+        assert!(
+            bounds.w > 460.0,
+            "wide content must stretch the list past the old cap, got {}",
+            bounds.w
+        );
+        // Still proportional, leaving the right half for the tree.
+        assert!((bounds.w - content.w * 0.52).abs() < 0.5);
+        assert!(bounds.x + bounds.w <= content.x + content.w);
     }
 }

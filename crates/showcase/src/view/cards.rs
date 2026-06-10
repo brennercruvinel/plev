@@ -1,5 +1,5 @@
 //! Cards section: the HOFF card deck — every `CardVariant` with sample
-//! data, laid out as a two-column masonry grid.
+//! data, laid out as a content-driven masonry grid.
 
 use plev::compositor::Compositor;
 use plev::gpu::image::{ImageHandle, load_image_rgba};
@@ -10,6 +10,10 @@ use super::group_label;
 
 const GAP: f32 = 16.0;
 const LABEL_H: f32 = 24.0;
+/// Minimum readable card width — the column count derives from it.
+const CARD_MIN_W: f32 = 320.0;
+/// Maximum card width, so columns do not degenerate on ultra-wide windows.
+const CARD_MAX_W: f32 = 520.0;
 
 /// Procedural cover art: a vertical graphite-to-white wash with a soft
 /// diagonal highlight — monochrome, like the deck's PNG previews.
@@ -135,22 +139,28 @@ impl CardsSection {
         Self { cards }
     }
 
-    /// Two-column masonry: each card lands in the currently shorter column.
+    /// Content-driven masonry: as many columns as `content.w` affords (at
+    /// `CARD_MIN_W` each), stretched to fill the row; each card lands in
+    /// the currently shorter column.
     fn layout(&self, content: Rect) -> Vec<Rect> {
-        let col_w = self.cards.first().map(|(_, c)| c.width).unwrap_or(368.0);
-        let cols = if content.w >= col_w * 2.0 + GAP { 2 } else { 1 };
+        let cols = (((content.w + GAP) / (CARD_MIN_W + GAP)).floor() as usize).max(1);
+        let col_w = ((content.w - (cols as f32 - 1.0) * GAP) / cols as f32).min(CARD_MAX_W);
         let mut col_y = vec![content.y; cols];
         self.cards
             .iter()
             .map(|(_, card)| {
-                let (w, h) = card.preferred_size();
+                // Height measured at the stretched width (CTA bodies
+                // re-wrap their text against it).
+                let mut sized = card.clone();
+                sized.width = col_w;
+                let (_, h) = sized.preferred_size();
                 let col = (0..cols)
                     .min_by(|a, b| col_y[*a].total_cmp(&col_y[*b]))
                     .unwrap_or(0);
                 let rect = Rect::new(
                     content.x + col as f32 * (col_w + GAP),
                     col_y[col] + LABEL_H,
-                    w,
+                    col_w,
                     h,
                 );
                 col_y[col] = rect.y + rect.h + GAP + 8.0;
@@ -184,5 +194,56 @@ impl CardsSection {
             group_label(c, label, rect.x, rect.y - LABEL_H + 2.0, theme);
             card.render(c, rect, theme);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Distinct column x positions of a laid-out deck.
+    fn column_xs(rects: &[Rect]) -> Vec<f32> {
+        let mut xs: Vec<f32> = rects.iter().map(|r| r.x).collect();
+        xs.sort_by(f32::total_cmp);
+        xs.dedup();
+        xs
+    }
+
+    /// Wide viewport (~1600px window): the deck must redistribute into
+    /// three or more stretched columns instead of two fixed 368px ones.
+    #[test]
+    fn cards_redistribute_into_three_plus_columns_in_wide_content() {
+        let section = CardsSection::new();
+        let content = Rect::new(288.0, 80.0, 1272.0, 700.0);
+        let rects = section.layout(content);
+
+        let cols = column_xs(&rects);
+        assert!(
+            cols.len() >= 3,
+            "wide content must yield >= 3 columns, got {}",
+            cols.len()
+        );
+
+        // Columns stretch past the old fixed card width but stay clamped.
+        let col_w = rects[0].w;
+        assert!(rects.iter().all(|r| r.w == col_w));
+        assert!(col_w > 368.0, "columns must stretch, got {col_w}");
+        assert!(col_w <= CARD_MAX_W);
+
+        // Nothing reaches past the content rect.
+        let right = content.x + content.w;
+        assert!(rects.iter().all(|r| r.x + r.w <= right + 0.5));
+    }
+
+    /// Narrow viewport: a single column that follows the content width.
+    #[test]
+    fn cards_collapse_to_one_stretched_column_in_narrow_content() {
+        let section = CardsSection::new();
+        let content = Rect::new(288.0, 80.0, 400.0, 700.0);
+        let rects = section.layout(content);
+
+        assert_eq!(column_xs(&rects).len(), 1);
+        assert!(rects.iter().all(|r| r.x == content.x));
+        assert!(rects.iter().all(|r| r.w == content.w));
     }
 }

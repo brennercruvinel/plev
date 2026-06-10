@@ -1,19 +1,30 @@
 //! Forms section: checkbox, switch, slider, progress, select, tabs.
 
 use plev::compositor::{Compositor, LayerId};
-use plev::theme::{Intent, Theme};
+use plev::text::TextMeasurer;
+use plev::theme::{Intent, Theme, TypographyScale};
 use plev::ui::widgets::{
     Checkbox, EventResult, ProgressBar, Rect, Select, Slider, Switch, Tabs, WidgetEvent,
 };
 
 use super::{group_label, text};
 
-const COL_W: f32 = 320.0;
-/// Tab strip width: wide enough that the longest 14px label ("Appearance",
-/// ~78px) keeps generous horizontal breathing room inside its segment —
-/// the folgado pill the GOLDEN_SPEC calls for.
-const TAB_W: f32 = 384.0;
+/// Minimum readable column width: below `2 * COL_MIN_W + COL_GAP` of
+/// content the two columns stack instead of cropping column B.
+const COL_MIN_W: f32 = 300.0;
+/// Maximum column width: controls stay legible on ultra-wide windows.
+const COL_MAX_W: f32 = 480.0;
 const COL_GAP: f32 = 60.0;
+/// Minimum horizontal slack around each tab label inside its segment —
+/// the folgado pill the GOLDEN_SPEC calls for (>= 32px breathing room
+/// plus the strip's own container padding).
+const TAB_SEG_SLACK: f32 = 48.0;
+/// Gutter to the right of the sliders, reserved for their live value
+/// captions ("65", "step 1 — 4") so the captions never spill past the
+/// content rect.
+const SLIDER_VALUE_GUTTER: f32 = 72.0;
+/// Maximum select pill width; it otherwise follows the column.
+const SELECT_MAX_W: f32 = 280.0;
 const ROW_H: f32 = 32.0;
 const LABEL_H: f32 = 24.0;
 const GROUP_GAP: f32 = 26.0;
@@ -48,8 +59,8 @@ impl FormsSection {
     pub fn new(theme: &Theme) -> Self {
         Self {
             // Three roomy segments: the reference keeps each label folgado
-            // inside its pill (GOLDEN_SPEC) — four 14px labels in 320px would
-            // overflow, so the strip below is widened to TAB_W to fit.
+            // inside its pill (GOLDEN_SPEC) — the strip is sized from the
+            // measured labels (see `tab_strip_w`) so every one fits.
             tabs: Tabs::new(["Account", "Appearance", "About"]),
             autosave: Checkbox::new(true).label("Autosave on focus loss"),
             telemetry: Checkbox::new(false).label("Share anonymous usage data"),
@@ -72,18 +83,48 @@ impl FormsSection {
         }
     }
 
+    /// Tab strip width derived from the measured labels (base-2sm, the
+    /// style `Tabs::render` uses): every segment keeps `TAB_SEG_SLACK` of
+    /// breathing room, clamped to `max_w` so it never overflows.
+    fn tab_strip_w(&self, max_w: f32) -> f32 {
+        let style = TypographyScale::hoff().base_2sm();
+        let widest = self
+            .tabs
+            .labels
+            .iter()
+            .map(|l| TextMeasurer::measure_styled(l, &style, None).0)
+            .fold(0.0, f32::max);
+        ((widest + TAB_SEG_SLACK) * self.tabs.labels.len() as f32).min(max_w)
+    }
+
+    /// Content-driven layout: two columns that stretch with `content.w`
+    /// (clamped to `COL_MAX_W` for legibility) and stack into a single
+    /// column when the content is too narrow for both.
     fn layout(&self, content: Rect) -> Layout {
         let (x, y) = (content.x, content.y);
-        let col_b = x + COL_W + COL_GAP;
+        let two_cols = content.w >= COL_MIN_W * 2.0 + COL_GAP;
+        let col_w = if two_cols {
+            ((content.w - COL_GAP) / 2.0).min(COL_MAX_W)
+        } else {
+            content.w.min(COL_MAX_W)
+        };
 
-        // Column A: tabs, checkboxes, switches. HOFF tabs: 44px strip, widened
-        // to TAB_W so each label stays folgado inside its segment.
-        let tabs = Rect::new(x, y + LABEL_H, TAB_W, 44.0);
+        // Column A: tabs, checkboxes, switches. HOFF tabs: 44px strip sized
+        // from its measured labels so each one stays folgado in its segment.
+        // With two columns it may borrow half the inter-column gap (empty
+        // space) — the original design did the same — but never reaches
+        // column B.
+        let tab_max = if two_cols {
+            col_w + COL_GAP / 2.0
+        } else {
+            col_w
+        };
+        let tabs = Rect::new(x, y + LABEL_H, self.tab_strip_w(tab_max), 44.0);
         let cb_y = tabs.y + tabs.h + GROUP_GAP + LABEL_H;
         let checkboxes = [
-            Rect::new(x, cb_y, COL_W, ROW_H),
-            Rect::new(x, cb_y + ROW_H, COL_W, ROW_H),
-            Rect::new(x, cb_y + ROW_H * 2.0, COL_W, ROW_H),
+            Rect::new(x, cb_y, col_w, ROW_H),
+            Rect::new(x, cb_y + ROW_H, col_w, ROW_H),
+            Rect::new(x, cb_y + ROW_H * 2.0, col_w, ROW_H),
         ];
         let sw_y = cb_y + ROW_H * 3.0 + GROUP_GAP + LABEL_H;
         let switches = [
@@ -92,24 +133,31 @@ impl FormsSection {
             Rect::new(x, sw_y + (ROW_H + 4.0) * 2.0, 44.0, ROW_H),
         ];
 
-        // Column B: sliders, progress, select.
-        let sl_y = y + LABEL_H;
+        // Column B: sliders, progress, select — beside column A when the
+        // content fits both, stacked below it otherwise.
+        let (col_b, col_b_y) = if two_cols {
+            (x + col_w + COL_GAP, y)
+        } else {
+            (x, switches[2].y + switches[2].h + GROUP_GAP)
+        };
+        let slider_w = (col_w - SLIDER_VALUE_GUTTER).max(0.0);
+        let sl_y = col_b_y + LABEL_H;
         let sliders = [
-            Rect::new(col_b, sl_y, COL_W, ROW_H),
-            Rect::new(col_b, sl_y + ROW_H + 14.0, COL_W, ROW_H),
-            Rect::new(col_b, sl_y + (ROW_H + 14.0) * 2.0, COL_W, ROW_H),
+            Rect::new(col_b, sl_y, slider_w, ROW_H),
+            Rect::new(col_b, sl_y + ROW_H + 14.0, slider_w, ROW_H),
+            Rect::new(col_b, sl_y + (ROW_H + 14.0) * 2.0, slider_w, ROW_H),
         ];
         let pr_y = sliders[2].y + ROW_H + GROUP_GAP + LABEL_H;
         let progresses = [
-            Rect::new(col_b, pr_y, COL_W, 18.0),
-            Rect::new(col_b, pr_y + 26.0, COL_W, 18.0),
-            Rect::new(col_b, pr_y + 52.0, COL_W, 18.0),
+            Rect::new(col_b, pr_y, col_w, 18.0),
+            Rect::new(col_b, pr_y + 26.0, col_w, 18.0),
+            Rect::new(col_b, pr_y + 52.0, col_w, 18.0),
         ];
-        // HOFF select: 44px pill control.
+        // HOFF select: 44px pill control, following its column.
         let select = Rect::new(
             col_b,
             progresses[2].y + 26.0 + GROUP_GAP + LABEL_H,
-            240.0,
+            col_w.min(SELECT_MAX_W),
             44.0,
         );
 
@@ -219,7 +267,13 @@ impl FormsSection {
             );
         }
 
-        group_label(c, "SLIDERS", layout.sliders[0].x, content.y, theme);
+        group_label(
+            c,
+            "SLIDERS",
+            layout.sliders[0].x,
+            layout.sliders[0].y - LABEL_H,
+            theme,
+        );
         self.volume.render(c, layout.sliders[0], theme);
         text(
             c,
@@ -269,8 +323,72 @@ impl FormsSection {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plev::text::TextMeasurer;
-    use plev::theme::TypographyScale;
+
+    /// Every rect a layout hands out, flattened (for bounds checks).
+    fn all_rects(l: &Layout) -> Vec<Rect> {
+        let mut v = vec![l.tabs, l.select];
+        v.extend(l.checkboxes);
+        v.extend(l.switches);
+        v.extend(l.sliders);
+        v.extend(l.progresses);
+        v
+    }
+
+    /// Narrow viewport (~600px window): the columns must stack instead of
+    /// cropping column B, and nothing may reach past `content.w`.
+    #[test]
+    fn forms_columns_stack_in_narrow_content_without_overflow() {
+        let theme = Theme::hoff();
+        let section = FormsSection::new(&theme);
+        let content = Rect::new(288.0, 80.0, 600.0, 700.0);
+        let layout = section.layout(content);
+
+        // Column B starts at the left edge, below column A.
+        assert_eq!(layout.sliders[0].x, content.x, "column B must stack left");
+        assert!(
+            layout.sliders[0].y > layout.switches[2].y + layout.switches[2].h,
+            "stacked column B must start below column A"
+        );
+
+        let right = content.x + content.w;
+        for r in all_rects(&layout) {
+            assert!(
+                r.x + r.w <= right + 0.5,
+                "rect {:?} overflows content right edge {right}",
+                (r.x, r.y, r.w, r.h)
+            );
+        }
+    }
+
+    /// Wide viewport (~1600px window): the two columns must actually use
+    /// the available width instead of huddling at fixed offsets.
+    #[test]
+    fn forms_columns_spread_in_wide_content() {
+        let theme = Theme::hoff();
+        let section = FormsSection::new(&theme);
+        let content = Rect::new(288.0, 80.0, 1272.0, 700.0);
+        let layout = section.layout(content);
+
+        // Two real columns, side by side.
+        assert!(
+            layout.sliders[0].x > content.x,
+            "wide content must keep column B beside column A"
+        );
+        assert_eq!(layout.sliders[0].y - LABEL_H, content.y);
+
+        // The columns span well past the old fixed 700px footprint.
+        let span = layout.progresses[0].x + layout.progresses[0].w - content.x;
+        assert!(
+            span >= content.w * 0.6,
+            "columns use only {span:.0}px of {:.0}px content",
+            content.w
+        );
+        // …but each column stays clamped for legibility.
+        assert!(layout.progresses[0].w <= COL_MAX_W);
+        // The select follows its column instead of the old fixed x+380.
+        assert_eq!(layout.select.x, layout.sliders[0].x);
+        assert!(layout.select.w <= layout.progresses[0].w);
+    }
 
     /// Every tab label must sit FOLGADO inside its segment: the GOLDEN_SPEC
     /// flags cramped tabs as the broken state. We require at least 16px of

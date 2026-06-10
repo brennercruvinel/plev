@@ -11,6 +11,9 @@ use super::{group_label, text};
 const GAP: f32 = 12.0;
 const LABEL_H: f32 = 24.0;
 const GROUP_GAP: f32 = 34.0;
+/// Minimum demo-area width before the proportional share kicks in (it is
+/// still clamped to the content itself on narrow windows).
+const MENU_AREA_MIN_W: f32 = 560.0;
 
 pub enum OverlayAction {
     None,
@@ -115,10 +118,13 @@ impl OverlaysSection {
         y += th + GROUP_GAP;
 
         y += LABEL_H;
+        // The demo area grows with the window: 60% of the content width,
+        // never below MENU_AREA_MIN_W (clamped to the content on narrow
+        // windows instead of overflowing it).
         let menu_area = Rect::new(
             x,
             y,
-            content.w.min(560.0),
+            (content.w * 0.6).max(MENU_AREA_MIN_W).min(content.w),
             (content.y + content.h - y).max(120.0),
         );
 
@@ -266,5 +272,30 @@ impl OverlaysSection {
         vh: f32,
     ) {
         self.tooltip.render(c, layer, theme, vw, vh);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The context-menu demo area must follow the window instead of
+    /// freezing at the old 560px cap — and never overflow narrow content.
+    #[test]
+    fn menu_area_grows_with_wide_content_and_fits_narrow_content() {
+        let section = OverlaysSection::new();
+
+        let wide = Rect::new(288.0, 80.0, 1272.0, 700.0);
+        let area = section.menu_area(wide);
+        assert!(
+            area.w > 560.0,
+            "wide content must stretch the demo area, got {}",
+            area.w
+        );
+        assert!((area.w - wide.w * 0.6).abs() < 0.5);
+
+        let narrow = Rect::new(288.0, 80.0, 400.0, 700.0);
+        let area = section.menu_area(narrow);
+        assert!(area.w <= narrow.w, "narrow content must clamp the area");
     }
 }
