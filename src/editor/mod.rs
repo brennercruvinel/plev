@@ -14,10 +14,12 @@
 
 mod clipboard;
 mod config;
+mod input;
 mod view;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use clipboard::SystemClipboard;
 pub use clipboard::{ClipboardProvider, LocalClipboard};
 pub use config::{EditorConfig, EditorTheme};
+pub use input::MouseEvent;
 pub use view::{EditorView, Preedit};
