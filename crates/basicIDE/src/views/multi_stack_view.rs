@@ -1,8 +1,10 @@
 //! Center "Stacks" column — HOFF feed container (rgba(40,40,40,.7)) where
 //! every commit is a hoff list card (Post/Follower recipe): radius 20,
 //! padding 12, 8px gap, bg rgba($n2,.02) -> hover .05 -> selected .10 +
-//! edge-light; 44px avatar circle with the author initial, message in
-//! base-2m at rgba($n2,.76), sha + time in caption-r at $text-tertiary.
+//! a soft edge-light at rest (stronger when hovered/selected) and the inset
+//! key-light; 44px avatar circle with the author initial, message (the card
+//! headline) in base-2 semibold at rgba($n2,.95), sha + author + time in
+//! caption-r at $text-tertiary (.50) — the white/.76/.50 hierarchy.
 //! Branch headers show the 8px #55F08B dot when the branch is checked out.
 
 use crate::components::hoff;
@@ -205,19 +207,34 @@ impl MultiStackView {
                         border_width: 0.0,
                         border_color: [0.0; 4],
                     });
-                    if is_sel {
-                        hoff::edge_light(
-                            compositor,
-                            LayerId::DEFAULT,
-                            row_x,
-                            cy,
-                            row_w,
-                            COMMIT_H,
-                            theme.radius_card,
-                            1.0,
-                            theme.edge_strong,
-                        );
-                    }
+                    // Top-lit edge: every card carries a soft rim like the
+                    // HOFF post card; selected/hovered cards get the stronger
+                    // .10 edge. Plus the inset key-light glint for glass depth.
+                    let edge = if is_sel || is_hov {
+                        theme.edge_strong
+                    } else {
+                        theme.edge
+                    };
+                    hoff::edge_light(
+                        compositor,
+                        LayerId::DEFAULT,
+                        row_x,
+                        cy,
+                        row_w,
+                        COMMIT_H,
+                        theme.radius_card,
+                        1.0,
+                        edge,
+                    );
+                    hoff::inset_keylight(
+                        compositor,
+                        LayerId::DEFAULT,
+                        row_x,
+                        cy,
+                        row_w,
+                        COMMIT_H,
+                        theme.radius_card,
+                    );
 
                     // Avatar — 44px circle with the author initial.
                     let avatar_x = row_x + PAD;
@@ -250,25 +267,32 @@ impl MultiStackView {
                     let text_x = avatar_x + AVATAR_SIZE + PAD;
                     let text_w = row_w - AVATAR_SIZE - PAD * 3.0;
 
-                    // Commit message — base-2m (14/500) at .76.
-                    let msg = truncate(&commit.message, 48);
+                    // Commit message — the card headline, like the HOFF post
+                    // card's name: base-2 semibold (14/600) at text-primary
+                    // (.95), the brightest line in the white/.76/.50 ramp.
+                    // Truncated to the column width and drawn WITHOUT a wrap
+                    // max (None) so a long message never spills onto a second
+                    // line and collides with the meta row below.
+                    let msg = truncate_to_width(&commit.message, text_w, 14.0);
                     compositor.push(SceneNode::Text {
-                        key: TextNodeKey::new(&msg, 14.0, 14.0 * 1.4, Some(text_w))
-                            .with_weight(500),
+                        key: TextNodeKey::new(&msg, 14.0, 14.0 * 1.4, None).with_weight(600),
                         x: text_x,
                         y: cy + PAD + 2.0,
-                        color: theme.text_active.to_array(),
+                        color: theme.text_primary.to_array(),
                     });
 
                     // sha · author · time — caption-r at $text-tertiary.
                     let sha_display = commit.sha.get(..7).unwrap_or(&commit.sha);
-                    let meta = format!(
-                        "{} \u{00B7} {} \u{00B7} {}",
-                        sha_display, commit.author, commit.time_ago
+                    let meta = truncate_to_width(
+                        &format!(
+                            "{} \u{00B7} {} \u{00B7} {}",
+                            sha_display, commit.author, commit.time_ago
+                        ),
+                        text_w,
+                        12.0,
                     );
                     compositor.push(SceneNode::Text {
-                        key: TextNodeKey::new(&meta, 12.0, 12.0 * 1.33, Some(text_w))
-                            .with_weight(400),
+                        key: TextNodeKey::new(&meta, 12.0, 12.0 * 1.33, None).with_weight(400),
                         x: text_x,
                         y: cy + PAD + 2.0 + 14.0 * 1.4 + 4.0,
                         color: theme.text_tertiary.to_array(),
@@ -304,11 +328,38 @@ impl MultiStackView {
     }
 }
 
-fn truncate(s: &str, max: usize) -> String {
-    if s.chars().count() <= max {
-        s.to_string()
-    } else {
-        let t: String = s.chars().take(max - 1).collect();
-        format!("{}\u{2026}", t)
+/// Truncate `s` with an ellipsis so it fits on one line of `avail` px at
+/// `font_size`, using the same width estimate the layout uses elsewhere
+/// ([`hoff::text_width`]). Keeps commit rows strictly single-line.
+fn truncate_to_width(s: &str, avail: f32, font_size: f32) -> String {
+    if hoff::text_width(s, font_size) <= avail {
+        return s.to_string();
+    }
+    let ell_w = hoff::text_width("\u{2026}", font_size);
+    let budget = (avail - ell_w).max(0.0);
+    let per_char = font_size * 0.58;
+    let max_chars = (budget / per_char).floor() as usize;
+    let t: String = s.chars().take(max_chars).collect();
+    format!("{}\u{2026}", t.trim_end())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn truncate_to_width_keeps_short_strings() {
+        let s = "fix: bug";
+        assert_eq!(truncate_to_width(s, 500.0, 14.0), s);
+    }
+
+    #[test]
+    fn truncate_to_width_ellipsizes_long_strings_to_one_line() {
+        let s = "a very long commit message that would otherwise wrap onto two lines";
+        let out = truncate_to_width(s, 120.0, 14.0);
+        assert!(out.ends_with('\u{2026}'));
+        assert!(out.chars().count() < s.chars().count());
+        // The result must fit the available width on a single line.
+        assert!(hoff::text_width(&out, 14.0) <= 120.0 + 14.0 * 0.58);
     }
 }
