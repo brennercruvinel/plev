@@ -185,18 +185,28 @@ impl UnassignedView {
             color: theme.text_default.to_array(),
         });
 
-        // File list — card rows inset by the 12px body padding.
+        // File list — card rows inset by the 12px body padding. Rows are
+        // clipped to the list viewport so scrolled rows never paint over
+        // the panel head.
         let list_y = y + HEADER_H;
         let row_x = x + PAD;
         let row_w = w - PAD * 2.0;
         let scroll_offset = self.scroll.offset();
         let mut hit_rects = Vec::with_capacity(self.files.len());
+        compositor.push(SceneNode::PushClip {
+            x,
+            y: list_y,
+            w,
+            h: h - HEADER_H,
+        });
 
         for (i, file) in self.files.iter().enumerate() {
             let item_y = list_y + i as f32 * (ITEM_H + ITEM_GAP) - scroll_offset;
-            // Skip items outside the visible area
+            // Skip items outside the visible area. Their hit rect must be
+            // empty too: a row hidden behind the panel head is not
+            // clickable (the vec stays index-aligned with `files`).
             if item_y + ITEM_H < list_y || item_y > y + h {
-                hit_rects.push((row_x, item_y, row_w, ITEM_H));
+                hit_rects.push((row_x, item_y, 0.0, 0.0));
                 continue;
             }
 
@@ -279,8 +289,13 @@ impl UnassignedView {
                 });
             }
 
-            hit_rects.push((row_x, item_y, row_w, ITEM_H));
+            // Hit rect clamped to the visible part of the row: a row half
+            // hidden under the panel head only responds on its visible half.
+            let top = item_y.max(list_y);
+            let bottom = (item_y + ITEM_H).min(y + h);
+            hit_rects.push((row_x, top, row_w, (bottom - top).max(0.0)));
         }
+        compositor.push(SceneNode::PopClip);
 
         // Scrollbar (if needed)
         if self.scroll.is_scrollable() {

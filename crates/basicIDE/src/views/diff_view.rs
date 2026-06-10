@@ -116,6 +116,13 @@ impl DiffView {
         let code_y = y + HEADER_H;
         let scroll_offset = self.scroll.offset();
 
+        // Scrolled code clips to the area below the panel head.
+        compositor.push(SceneNode::PushClip {
+            x,
+            y: code_y,
+            w,
+            h: h - HEADER_H,
+        });
         for (i, line) in self.lines.iter().enumerate() {
             let ly = code_y + i as f32 * LINE_H - scroll_offset;
             if ly + LINE_H < code_y || ly > y + h {
@@ -178,6 +185,7 @@ impl DiffView {
                 color: text_col,
             });
         }
+        compositor.push(SceneNode::PopClip);
 
         // Scrollbar
         if self.scroll.is_scrollable() {

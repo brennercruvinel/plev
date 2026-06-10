@@ -388,7 +388,10 @@ impl ApplicationHandler<AppEvent> for App {
             }
 
             WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
+                // A Resized follows on most platforms, but invalidating here
+                // is cheap and guarantees a frame on DPI changes.
                 self.scale_factor = scale_factor;
+                self.invalidate();
             }
 
             WindowEvent::CursorMoved { position, .. } => {
@@ -483,6 +486,8 @@ impl ApplicationHandler<AppEvent> for App {
                     MouseScrollDelta::LineDelta(_x, y) => -y * 20.0,
                     MouseScrollDelta::PixelDelta(pos) => -pos.y as f32,
                 };
+                // Scroll invalidates unconditionally: ScrollState clamps, so
+                // a no-op wheel costs one cheap identical-hash frame at most.
                 self.workspace.scroll(cx, scroll_delta);
                 self.invalidate();
             }

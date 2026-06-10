@@ -136,6 +136,13 @@ impl MultiStackView {
         let scroll_offset = self.scroll.offset();
         let mut hit_rects = Vec::new();
         let mut cursor_y = list_y - scroll_offset;
+        // Scrolled feed clips to the area below the panel head.
+        compositor.push(SceneNode::PushClip {
+            x,
+            y: list_y,
+            w,
+            h: h - HEADER_H,
+        });
 
         for (si, stack) in self.stacks.iter().enumerate() {
             // Branch header — base-2sm; checked-out branch gets the green dot.
@@ -267,11 +274,18 @@ impl MultiStackView {
                         color: theme.text_tertiary.to_array(),
                     });
                 }
-                hit_rects.push((si, ci, row_x, cy, row_w, COMMIT_H));
+                // Hit rect clamped to the visible part of the card: cards
+                // hidden behind the panel head are not hoverable/clickable.
+                let top = cy.max(list_y);
+                let bottom = (cy + COMMIT_H).min(y + h);
+                if bottom > top {
+                    hit_rects.push((si, ci, row_x, top, row_w, bottom - top));
+                }
                 cursor_y += COMMIT_H + CARD_GAP;
             }
             cursor_y += 8.0; // gap between stacks
         }
+        compositor.push(SceneNode::PopClip);
 
         // Scrollbar
         if self.scroll.is_scrollable() {
