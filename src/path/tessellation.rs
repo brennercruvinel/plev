@@ -1,8 +1,9 @@
 //! Fill/stroke tessellation via Lyon.
 
 use lyon_tessellation::{
-    BuffersBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor, StrokeOptions,
-    StrokeTessellator, StrokeVertex, StrokeVertexConstructor, VertexBuffers,
+    BuffersBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor, LineCap,
+    LineJoin, StrokeOptions, StrokeTessellator, StrokeVertex, StrokeVertexConstructor,
+    VertexBuffers,
 };
 
 use crate::compositor::QuadVertex;
@@ -84,13 +85,36 @@ pub(super) fn stroke(
     line_width: f32,
     tolerance: f32,
 ) -> TessellatedPath {
+    let options = StrokeOptions::tolerance(tolerance).with_line_width(line_width);
+    stroke_with_options(pb, color, options)
+}
+
+/// Stroke with round caps and joins (the Lucide icon look).
+pub(super) fn stroke_round(
+    pb: PathBuilder,
+    color: [f32; 4],
+    line_width: f32,
+    tolerance: f32,
+) -> TessellatedPath {
+    let options = StrokeOptions::tolerance(tolerance)
+        .with_line_width(line_width)
+        .with_start_cap(LineCap::Round)
+        .with_end_cap(LineCap::Round)
+        .with_line_join(LineJoin::Round);
+    stroke_with_options(pb, color, options)
+}
+
+fn stroke_with_options(
+    pb: PathBuilder,
+    color: [f32; 4],
+    options: StrokeOptions,
+) -> TessellatedPath {
     let hash = compute_commands_hash(&pb.commands);
     let path = pb.builder.build();
 
     let mut buffers: VertexBuffers<QuadVertex, u32> = VertexBuffers::new();
     let mut tessellator = StrokeTessellator::new();
 
-    let options = StrokeOptions::tolerance(tolerance).with_line_width(line_width);
     let result = tessellator.tessellate_path(
         &path,
         &options,

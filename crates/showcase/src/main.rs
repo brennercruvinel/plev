@@ -1,0 +1,218 @@
+//! plev design system showcase.
+//!
+//! Gallery of every `plev::ui::widgets` widget in every state, the Lucide
+//! icon set, and the theme palettes — the visual calling card of the
+//! engine. Frames render on demand; animations (springs, fades) keep
+//! requesting frames only while something is actually moving.
+//!
+//! Run: `cargo run -p showcase [section] [theme]`, e.g.
+//! `cargo run -p showcase icons dracula` — handy for snapshot tooling.
+//!
+//! Keys: `T` toggles dark/light · `1`-`6` jump to a section · `Esc`
+//! closes overlays (or quits).
+
+mod renderer;
+mod view;
+
+use std::sync::Arc;
+
+use plev::animation::FrameClock;
+use plev::compositor::Compositor;
+use plev::gpu::GpuContext;
+use plev::text::TextSystem;
+use plev::ui::widgets::WidgetEvent;
+use view::ShowcaseView;
+use winit::application::ApplicationHandler;
+use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
+use winit::event_loop::{ActiveEventLoop, EventLoop};
+use winit::keyboard::{Key, NamedKey};
+use winit::window::{Window, WindowAttributes, WindowId};
+
+enum GpuState {
+    Uninitialized,
+    Ready {
+        gpu: GpuContext,
+        text_system: TextSystem,
+    },
+}
+
+struct App {
+    window: Option<Arc<Window>>,
+    state: GpuState,
+    compositor: Compositor,
+    view: ShowcaseView,
+    clock: FrameClock,
+    cursor: (f32, f32),
+    scale_factor: f64,
+}
+
+impl App {
+    fn new() -> Self {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        // Optional launch state for demos/snapshots: section, then theme.
+        let mut args = std::env::args().skip(1);
+        if let Some(section) = args.next() {
+            view.jump_to_section(&section);
+        }
+        if let Some(theme) = args.next() {
+            view.apply_theme(&theme);
+        }
+        Self {
+            window: None,
+            state: GpuState::Uninitialized,
+            compositor: Compositor::new(),
+            view,
+            clock: FrameClock::new(),
+            cursor: (0.0, 0.0),
+            scale_factor: 1.0,
+        }
+    }
+
+    fn invalidate(&mut self) {
+        self.compositor.invalidate();
+        if let Some(w) = &self.window {
+            w.request_redraw();
+        }
+    }
+}
+
+impl ApplicationHandler for App {
+    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+        let attrs = WindowAttributes::default()
+            .with_title("plev — design system showcase")
+            .with_inner_size(winit::dpi::LogicalSize::new(1200u32, 800u32));
+        let window = Arc::new(event_loop.create_window(attrs).unwrap());
+        self.window = Some(window.clone());
+
+        self.scale_factor = window.scale_factor();
+        let gpu = pollster::block_on(GpuContext::new(window.clone()));
+        let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
+        self.state = GpuState::Ready { gpu, text_system };
+
+        let size = window.inner_size();
+        let sf = self.scale_factor as f32;
+        let (lw, lh) = (size.width as f32 / sf, size.height as f32 / sf);
+        self.view.resize(lw, lh, sf);
+        if let GpuState::Ready { gpu, .. } = &mut self.state {
+            gpu.set_projection(lw, lh);
+        }
+        self.invalidate();
+    }
+
+    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
+        match event {
+            WindowEvent::CloseRequested => event_loop.exit(),
+
+            WindowEvent::KeyboardInput {
+                event: key_event, ..
+            } => {
+                if key_event.state != ElementState::Pressed {
+                    return;
+                }
+                match &key_event.logical_key {
+                    Key::Named(NamedKey::Escape) => {
+                        if !self.view.close_top_overlay() {
+                            event_loop.exit();
+                        } else {
+                            self.invalidate();
+                        }
+                    }
+                    Key::Character(c) => {
+                        if self.view.handle_key(c.as_str()) {
+                            self.invalidate();
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            WindowEvent::Resized(size) => {
+                let sf = self.scale_factor as f32;
+                let (lw, lh) = (size.width as f32 / sf, size.height as f32 / sf);
+                if let GpuState::Ready { gpu, .. } = &mut self.state {
+                    gpu.resize(size.width, size.height);
+                    gpu.set_projection(lw, lh);
+                }
+                self.view.resize(lw, lh, sf);
+                self.invalidate();
+            }
+
+            WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
+                self.scale_factor = scale_factor;
+            }
+
+            WindowEvent::CursorMoved { position, .. } => {
+                let sf = self.scale_factor as f32;
+                let (x, y) = (position.x as f32 / sf, position.y as f32 / sf);
+                self.cursor = (x, y);
+                if self.view.handle_event(&WidgetEvent::MouseMove { x, y }) {
+                    self.invalidate();
+                }
+            }
+
+            WindowEvent::MouseInput {
+                button: MouseButton::Left,
+                state,
+                ..
+            } => {
+                let (x, y) = self.cursor;
+                let ev = match state {
+                    ElementState::Pressed => WidgetEvent::MouseDown { x, y },
+                    ElementState::Released => WidgetEvent::MouseUp { x, y },
+                };
+                if self.view.handle_event(&ev) {
+                    self.invalidate();
+                }
+            }
+
+            WindowEvent::MouseInput {
+                button: MouseButton::Right,
+                state: ElementState::Pressed,
+                ..
+            } => {
+                let (x, y) = self.cursor;
+                if self.view.handle_right_click(x, y) {
+                    self.invalidate();
+                }
+            }
+
+            WindowEvent::MouseWheel { delta, .. } => {
+                let (x, y) = self.cursor;
+                let delta = match delta {
+                    MouseScrollDelta::LineDelta(_, dy) => -dy * 24.0,
+                    MouseScrollDelta::PixelDelta(pos) => -pos.y as f32,
+                };
+                if self.view.handle_event(&WidgetEvent::Scroll { x, y, delta }) {
+                    self.invalidate();
+                }
+            }
+
+            WindowEvent::RedrawRequested => {
+                let GpuState::Ready { gpu, text_system } = &mut self.state else {
+                    return;
+                };
+                let tick = self.clock.tick();
+                let animating = self.view.tick(tick.dt);
+                renderer::render_frame(gpu, text_system, &mut self.compositor, &mut self.view);
+                if animating {
+                    // Springs still moving: keep the frames coming.
+                    self.compositor.invalidate();
+                    if let Some(w) = &self.window {
+                        w.request_redraw();
+                    }
+                }
+            }
+
+            _ => {}
+        }
+    }
+
+    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {}
+}
+
+fn main() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
+    let event_loop = EventLoop::new().unwrap();
+    let mut app = App::new();
+    event_loop.run_app(&mut app).unwrap();
+}

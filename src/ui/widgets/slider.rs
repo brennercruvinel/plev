@@ -1,0 +1,187 @@
+use crate::compositor::{Compositor, SceneNode};
+use crate::theme::Theme;
+
+use super::{EventResult, Rect, WidgetEvent, with_alpha};
+
+const TRACK_H: f32 = 4.0;
+const KNOB: f32 = 14.0;
+
+/// Horizontal slider. Dragging anywhere on the bounds moves the knob —
+/// the full height is the hit area so 4px tracks aren't a precision game.
+#[derive(Clone, Debug)]
+pub struct Slider {
+    pub min: f32,
+    pub max: f32,
+    pub disabled: bool,
+    /// Snap increment; `None` for continuous.
+    pub step: Option<f32>,
+    value: f32,
+    hovered: bool,
+    dragging: bool,
+}
+
+impl Slider {
+    pub fn new(min: f32, max: f32, value: f32) -> Self {
+        let mut s = Self {
+            min,
+            max,
+            disabled: false,
+            step: None,
+            value: 0.0,
+            hovered: false,
+            dragging: false,
+        };
+        s.set_value(value);
+        s
+    }
+
+    pub fn step(mut self, step: f32) -> Self {
+        self.step = Some(step);
+        self
+    }
+
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+
+    pub fn value(&self) -> f32 {
+        self.value
+    }
+
+    pub fn set_value(&mut self, v: f32) {
+        let v = if let Some(step) = self.step {
+            (v / step).round() * step
+        } else {
+            v
+        };
+        self.value = v.clamp(self.min, self.max);
+    }
+
+    pub fn is_dragging(&self) -> bool {
+        self.dragging
+    }
+
+    pub fn is_hovered(&self) -> bool {
+        self.hovered
+    }
+
+    /// Normalized position 0.0..=1.0.
+    pub fn ratio(&self) -> f32 {
+        if self.max <= self.min {
+            return 0.0;
+        }
+        (self.value - self.min) / (self.max - self.min)
+    }
+
+    fn value_at(&self, x: f32, bounds: Rect) -> f32 {
+        let usable = (bounds.w - KNOB).max(1.0);
+        let t = ((x - bounds.x - KNOB / 2.0) / usable).clamp(0.0, 1.0);
+        self.min + t * (self.max - self.min)
+    }
+
+    pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
+        if self.disabled {
+            if self.hovered || self.dragging {
+                self.hovered = false;
+                self.dragging = false;
+                return EventResult::changed();
+            }
+            return EventResult::IGNORED;
+        }
+        match *event {
+            WidgetEvent::MouseMove { x, y } => {
+                let mut result = EventResult::IGNORED;
+                let inside = bounds.contains(x, y);
+                if inside != self.hovered {
+                    self.hovered = inside;
+                    result = EventResult::changed();
+                }
+                if self.dragging {
+                    let old = self.value;
+                    self.set_value(self.value_at(x, bounds));
+                    if self.value != old {
+                        result = result.merge(EventResult::changed());
+                    }
+                    result.merge(EventResult {
+                        handled: true,
+                        ..EventResult::IGNORED
+                    })
+                } else {
+                    result
+                }
+            }
+            WidgetEvent::MouseDown { x, y } => {
+                if bounds.contains(x, y) {
+                    self.dragging = true;
+                    self.set_value(self.value_at(x, bounds));
+                    EventResult::changed()
+                } else {
+                    EventResult::IGNORED
+                }
+            }
+            WidgetEvent::MouseUp { .. } => {
+                if self.dragging {
+                    self.dragging = false;
+                    EventResult::changed()
+                } else {
+                    EventResult::IGNORED
+                }
+            }
+            WidgetEvent::Scroll { .. } => EventResult::IGNORED,
+        }
+    }
+
+    pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
+        let alpha = if self.disabled { 0.5 } else { 1.0 };
+        let ty = bounds.y + (bounds.h - TRACK_H) / 2.0;
+        let t = self.ratio();
+        let usable = (bounds.w - KNOB).max(1.0);
+        let knob_x = bounds.x + usable * t;
+
+        // Track (unfilled portion).
+        compositor.push(SceneNode::RoundedRect {
+            x: bounds.x,
+            y: ty,
+            w: bounds.w,
+            h: TRACK_H,
+            color: with_alpha(theme.colors.bg_hover, alpha),
+            corner_radius: TRACK_H / 2.0,
+            border_width: 0.0,
+            border_color: [0.0; 4],
+        });
+
+        // Filled portion up to the knob center.
+        let fill_w = knob_x + KNOB / 2.0 - bounds.x;
+        if fill_w > 1.0 {
+            compositor.push(SceneNode::RoundedRect {
+                x: bounds.x,
+                y: ty,
+                w: fill_w,
+                h: TRACK_H,
+                color: with_alpha(theme.colors.accent, alpha),
+                corner_radius: TRACK_H / 2.0,
+                border_width: 0.0,
+                border_color: [0.0; 4],
+            });
+        }
+
+        // Knob: grows subtly on hover/drag.
+        let grow = if self.dragging || self.hovered {
+            1.0
+        } else {
+            0.0
+        };
+        let k = KNOB + grow * 2.0;
+        compositor.push(SceneNode::RoundedRect {
+            x: knob_x - grow,
+            y: bounds.y + (bounds.h - k) / 2.0,
+            w: k,
+            h: k,
+            color: with_alpha(theme.colors.accent, alpha),
+            corner_radius: k / 2.0,
+            border_width: 2.0,
+            border_color: with_alpha(theme.colors.bg, alpha),
+        });
+    }
+}

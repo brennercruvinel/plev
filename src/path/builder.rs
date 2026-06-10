@@ -164,4 +164,20 @@ impl PathBuilder {
     ) -> TessellatedPath {
         tessellation::stroke(self, color, line_width, tolerance)
     }
+
+    /// Stroke with round caps and round joins (Lucide icon style), using the
+    /// configured default tolerance.
+    pub fn stroke_round(self, color: [f32; 4], line_width: f32) -> TessellatedPath {
+        self.stroke_round_with_tolerance(color, line_width, super::default_tolerance())
+    }
+
+    /// Round-cap/round-join stroke with custom tolerance.
+    pub fn stroke_round_with_tolerance(
+        self,
+        color: [f32; 4],
+        line_width: f32,
+        tolerance: f32,
+    ) -> TessellatedPath {
+        tessellation::stroke_round(self, color, line_width, tolerance)
+    }
 }
