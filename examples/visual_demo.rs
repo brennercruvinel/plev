@@ -18,7 +18,9 @@ use plev::winit::event_loop::{ActiveEventLoop, EventLoop};
 use plev::winit::window::{Window, WindowAttributes, WindowId};
 use web_time::Instant;
 
-const BG: [f64; 3] = [0.09, 0.10, 0.12];
+// Linear clear values (sRGB #171A1F linearized): the sRGB surface re-encodes on
+// write, so feeding raw sRGB here would show the bg ~2.5× too light.
+const BG: [f64; 3] = [0.0090, 0.0105, 0.0137];
 const TEXT: [f32; 4] = [0.92, 0.93, 0.95, 1.0];
 const MUTED: [f32; 4] = [0.55, 0.58, 0.64, 1.0];
 const CARD: [f32; 4] = [0.16, 0.17, 0.21, 1.0];

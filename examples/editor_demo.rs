@@ -246,6 +246,15 @@ impl App {
         // Composite all layers to the surface.
         {
             let [r, g, b, a] = self.theme.background;
+            // Linear clear value (the sRGB surface re-encodes on write).
+            let lin = |c: f32| -> f64 {
+                let c = c as f64;
+                if c <= 0.04045 {
+                    c / 12.92
+                } else {
+                    ((c + 0.055) / 1.055).powf(2.4)
+                }
+            };
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("composite_pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -253,9 +262,9 @@ impl App {
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: r as f64,
-                            g: g as f64,
-                            b: b as f64,
+                            r: lin(r),
+                            g: lin(g),
+                            b: lin(b),
                             a: a as f64,
                         }),
                         store: wgpu::StoreOp::Store,
