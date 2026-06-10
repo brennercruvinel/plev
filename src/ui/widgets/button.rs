@@ -1,6 +1,6 @@
 use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::{Intent, Theme};
+use crate::theme::{Intent, Theme, TypographyScale};
 use crate::ui::icons;
 
 use super::{EventResult, Rect, WidgetEvent, glass_pill, intent_fill, with_alpha};
@@ -42,9 +42,16 @@ impl ButtonSize {
     }
 
     pub fn font_size(self) -> f32 {
+        self.text_style().font_size
+    }
+
+    /// Label style, HOFF exact: chips are caption-sm (12/1.33/600), pills
+    /// are base-2sm (14/1.4/600). One source for measuring AND rendering.
+    pub fn text_style(self) -> TextStyle {
+        let ramp = TypographyScale::hoff();
         match self {
-            ButtonSize::Sm => 12.0,
-            ButtonSize::Md | ButtonSize::Lg => 14.0,
+            ButtonSize::Sm => ramp.caption_sm(),
+            ButtonSize::Md | ButtonSize::Lg => ramp.base_2sm(),
         }
     }
 
@@ -126,14 +133,9 @@ impl Button {
         self.size.font_size() + 4.0
     }
 
-    fn font_weight(&self) -> u16 {
-        600
-    }
-
     /// Intrinsic size from real text measurement.
     pub fn preferred_size(&self) -> (f32, f32) {
-        let font = self.size.font_size();
-        let style = TextStyle::new(font).with_weight(self.font_weight());
+        let style = self.size.text_style();
         let (text_w, _) = TextMeasurer::measure_styled(&self.label, &style, None);
         let icon_w = if self.icon.is_some() {
             self.icon_size() + 8.0
@@ -266,8 +268,7 @@ impl Button {
         theme: &Theme,
     ) {
         let (bg, edge, fg) = self.colors(theme);
-        let font = self.size.font_size();
-        let line_height = font * 1.4;
+        let style = self.size.text_style();
         // Pill: HOFF radius 32 clamps to half the 44px height.
         let radius = theme.radius.xl.min(bounds.h / 2.0);
 
@@ -280,7 +281,6 @@ impl Button {
             }
         }
 
-        let style = TextStyle::new(font).with_weight(self.font_weight());
         let (text_w, _) = TextMeasurer::measure_styled(&self.label, &style, None);
         let icon_size = self.icon_size();
         let icon_w = if self.icon.is_some() {
@@ -307,10 +307,9 @@ impl Button {
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::new(&self.label, font, line_height, None)
-                    .with_weight(self.font_weight()),
+                key: TextNodeKey::from_style(&self.label, &style, None),
                 x: cx,
-                y: bounds.y + (bounds.h - line_height) / 2.0,
+                y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
                 color: fg,
             },
         );

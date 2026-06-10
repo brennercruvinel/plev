@@ -306,3 +306,123 @@ fn shaped_text_size_matches_measure() {
     let measured = TextMeasurer::measure_styled("Hello wrap test", &style, Some(60.0));
     assert_eq!(size, measured);
 }
+
+// -- letter-spacing (HOFF body family: 0.025em) --
+
+#[test]
+fn letter_spacing_increases_advance_per_glyph() {
+    // 0.025em at 14px = 0.35px of tracking, the HOFF =body-2r value.
+    let spacing = 0.35;
+    let base = inter(14.0);
+    let spaced = base.clone().with_letter_spacing(spacing);
+    let text = "Research Social";
+    let n = text.chars().count() as f32;
+    let (w0, _) = TextMeasurer::measure_styled(text, &base, None);
+    let (w1, _) = TextMeasurer::measure_styled(text, &spaced, None);
+    let delta = w1 - w0;
+    assert!(
+        delta > 0.0,
+        "tracking must widen the advance ({w0} -> {w1})"
+    );
+    assert!(
+        (delta - spacing * (n - 1.0)).abs() <= 1.0,
+        "delta {delta} should be ~spacing*(n_glyphs-1) = {}",
+        spacing * (n - 1.0)
+    );
+}
+
+#[test]
+fn letter_spacing_distinguishes_measure_cache() {
+    // Same text/style, different spacing: the cached entries must differ,
+    // otherwise pills and tabs measure without their tracking.
+    let text = "Follow";
+    let (w0, _) = TextMeasurer::measure_styled(text, &inter(14.0), None);
+    let (w1, _) = TextMeasurer::measure_styled(text, &inter(14.0).with_letter_spacing(0.35), None);
+    assert!(w1 > w0);
+}
+
+#[test]
+fn text_node_key_distinguishes_letter_spacing() {
+    use crate::compositor::TextNodeKey;
+    use std::hash::{Hash, Hasher};
+
+    let style = inter(14.0);
+    let a = TextNodeKey::from_style("Follow", &style, None);
+    let b = TextNodeKey::from_style("Follow", &style.clone().with_letter_spacing(0.35), None);
+    assert_ne!(a, b, "TextSystem shaping-cache keys must differ");
+
+    let hash = |key: &TextNodeKey| {
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        key.hash(&mut h);
+        h.finish()
+    };
+    assert_ne!(hash(&a), hash(&b));
+    assert_eq!(b.letter_spacing_bits, 0.35_f32.to_bits());
+}
+
+#[test]
+fn text_node_key_from_style_carries_every_field() {
+    use crate::compositor::TextNodeKey;
+
+    let style = TextStyle::new(14.0)
+        .with_line_height(23.8)
+        .with_weight(500)
+        .with_letter_spacing(0.35)
+        .with_family("Inter");
+    let key = TextNodeKey::from_style("post body", &style, Some(320.0));
+    assert_eq!(key.font_size_bits, 14.0_f32.to_bits());
+    assert_eq!(key.line_height_bits, 23.8_f32.to_bits());
+    assert_eq!(key.font_weight, 500);
+    assert_eq!(key.letter_spacing_bits, 0.35_f32.to_bits());
+    assert_eq!(key.font_family.as_deref(), Some("Inter"));
+    assert_eq!(key.max_width_bits, Some(320.0_f32.to_bits()));
+}
+
+// -- vertical centering by real metrics --
+
+#[test]
+fn line_metrics_come_from_real_faces() {
+    let style = inter(14.0);
+    let m = TextMeasurer::line_metrics(&style);
+    assert!(m.ascent > 0.0 && m.descent > 0.0);
+    assert!(m.ascent > m.descent, "Latin faces are top-heavy");
+    assert!(
+        m.glyph_height() < m.line_height,
+        "Inter ascent+descent (~1.21em) fits inside the 1.3 line box"
+    );
+    // The baseline sits inside the line box, below its midpoint.
+    assert!(m.baseline > m.line_height / 2.0 && m.baseline < m.line_height);
+}
+
+#[test]
+fn vertical_center_centers_glyph_box_in_44px_pill() {
+    // base-2sm inside the canonical 44px HOFF button.
+    let style = crate::theme::TypographyScale::hoff().base_2sm();
+    let container_h = 44.0;
+    let y = TextMeasurer::vertical_center(&style, container_h);
+    let m = TextMeasurer::line_metrics(&style);
+    let top_gap = y + m.glyph_top();
+    let bottom_gap = container_h - (y + m.glyph_top() + m.glyph_height());
+    assert!(
+        (top_gap - bottom_gap).abs() < 0.01,
+        "glyph box must be optically centered (top {top_gap} vs bottom {bottom_gap})"
+    );
+    assert!(top_gap > 0.0 && top_gap < container_h / 2.0);
+}
+
+#[test]
+fn vertical_center_consistent_across_ramp() {
+    // Every HOFF style stays strictly inside a 44px control.
+    let ramp = crate::theme::TypographyScale::hoff();
+    for style in [
+        ramp.caption_sm(),
+        ramp.base_2sm(),
+        ramp.base_2m(),
+        ramp.base_m(),
+    ] {
+        let y = TextMeasurer::vertical_center(&style, 44.0);
+        let m = TextMeasurer::line_metrics(&style);
+        assert!(y + m.glyph_top() > 0.0);
+        assert!(y + m.glyph_top() + m.glyph_height() < 44.0);
+    }
+}

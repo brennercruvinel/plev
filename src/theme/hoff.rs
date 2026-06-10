@@ -66,6 +66,25 @@ pub const CARD_SHADOW: Color = Color::rgba(0.0, 0.0, 0.0, 0.40);
 /// Floating menu shadow: `0 24px 32px -12px rgba(18, 18, 18, .10)`.
 pub const MENU_SHADOW: Color = Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.10);
 
+impl TypographyScale {
+    /// The HOFF type ramp (styles/variables.sass): small 10 / caption-r 12 /
+    /// base-2r 14 / base-r 16 / title 20 / headline 32 / h4 36. Widgets that
+    /// measure without a `Theme` in scope use this as the canonical ramp —
+    /// it must stay identical to `Theme::hoff().typography`.
+    pub fn hoff() -> Self {
+        Self {
+            small: 10.0,
+            caption: 12.0,
+            body_sm: 14.0,
+            body: 16.0,
+            title_sm: 20.0,
+            title: 32.0,
+            display: 36.0,
+            line_height_ratio: 1.4,
+        }
+    }
+}
+
 impl Theme {
     /// The HOFF dark-glass theme — plev's default.
     pub fn hoff() -> Self {
@@ -88,17 +107,7 @@ impl Theme {
                 divider: Color::rgba(1.0, 1.0, 1.0, 0.05),
                 border_active: Color::rgba(1.0, 1.0, 1.0, 0.10),
             },
-            // caption-r 12 / base-2r 14 / base-r 16 / title 20 /
-            // headline 32 / h4 36.
-            typography: TypographyScale {
-                caption: 12.0,
-                body_sm: 14.0,
-                body: 16.0,
-                title_sm: 20.0,
-                title: 32.0,
-                display: 36.0,
-                line_height_ratio: 1.4,
-            },
+            typography: TypographyScale::hoff(),
             spacing: SpacingScale {
                 xs: 4.0,
                 sm: 8.0,

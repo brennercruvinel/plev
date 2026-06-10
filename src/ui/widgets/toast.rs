@@ -1,7 +1,7 @@
 use crate::animation::Spring;
 use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::{Intent, Theme};
+use crate::theme::{Intent, Theme, TypographyScale};
 use crate::ui::icons;
 
 use super::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
@@ -14,7 +14,6 @@ const PAD_R: f32 = 16.0;
 const PAD_Y: f32 = 10.0;
 const RADIUS: f32 = 16.0;
 const GAP: f32 = 10.0;
-const FONT: f32 = 14.0;
 const MARGIN: f32 = 12.0;
 const ICON: f32 = 18.0;
 
@@ -150,11 +149,17 @@ impl ToastManager {
             .any(|t| t.anim.is_animating())
     }
 
+    /// Message style: base-2r, the same for measuring and rendering
+    /// (a mismatch here makes multiline toasts overflow their padding).
+    fn text_style() -> TextStyle {
+        TypographyScale::hoff().base_2r()
+    }
+
     fn toast_height(message: &str) -> f32 {
-        let style = TextStyle::new(FONT);
+        let style = Self::text_style();
         let text_w = WIDTH - PAD_L - PAD_R - ICON - 8.0;
         let (_, th) = TextMeasurer::measure_styled(message, &style, Some(text_w));
-        th.max(FONT * 1.4) + PAD_Y * 2.0
+        th.max(style.line_height) + PAD_Y * 2.0
     }
 
     /// On-screen rects for visible toasts (bottom-right, stacking upward),
@@ -243,10 +248,9 @@ impl ToastManager {
             compositor.push_to_layer(
                 layer,
                 SceneNode::Text {
-                    key: TextNodeKey::new(
+                    key: TextNodeKey::from_style(
                         &t.message,
-                        FONT,
-                        FONT * 1.4,
+                        &Self::text_style(),
                         Some(rect.w - PAD_L - PAD_R - ICON - 8.0),
                     ),
                     x: rect.x + PAD_L + ICON + 8.0,

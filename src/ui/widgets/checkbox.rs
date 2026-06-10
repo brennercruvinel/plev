@@ -1,5 +1,6 @@
 use crate::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::theme::Theme;
+use crate::text::TextMeasurer;
+use crate::theme::{Theme, TypographyScale};
 use crate::ui::icons;
 
 use super::{EventResult, Rect, WidgetEvent, contrast_text, with_alpha};
@@ -132,13 +133,13 @@ impl Checkbox {
         }
 
         if let Some(label) = &self.label {
-            let font = 14.0;
-            let line_height = font * 1.4;
+            // Label: base-2r.
+            let style = TypographyScale::hoff().base_2r();
             let text = theme.colors.text_mid;
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::new(label, font, line_height, None),
+                key: TextNodeKey::from_style(label, &style, None),
                 x: bx + BOX + 10.0,
-                y: bounds.y + (bounds.h - line_height) / 2.0,
+                y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
                 color: with_alpha(text, text.0[3] * alpha),
             });
         }

@@ -21,6 +21,9 @@ pub struct TextStyle {
     pub font_size: f32,
     pub line_height: f32,
     pub font_weight: u16,
+    /// Extra advance per glyph in px (CSS `letter-spacing`). The HOFF
+    /// reference uses `0.025em` on its Inter body styles.
+    pub letter_spacing: f32,
     pub font_family: Option<String>,
 }
 
@@ -30,6 +33,7 @@ impl TextStyle {
             font_size,
             line_height: font_size * DEFAULT_LINE_HEIGHT_FACTOR,
             font_weight: 400,
+            letter_spacing: 0.0,
             font_family: None,
         }
     }
@@ -46,6 +50,13 @@ impl TextStyle {
 
     pub fn with_line_height(mut self, line_height: f32) -> Self {
         self.line_height = line_height;
+        self
+    }
+
+    /// Letter spacing in px (convert em values at the call site:
+    /// `em * font_size`).
+    pub fn with_letter_spacing(mut self, letter_spacing: f32) -> Self {
+        self.letter_spacing = letter_spacing;
         self
     }
 }

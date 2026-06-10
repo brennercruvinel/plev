@@ -112,6 +112,10 @@ pub struct TextNodeKey {
     pub line_height_bits: u32,
     pub max_width_bits: Option<u32>,
     pub font_weight: u16,
+    /// Extra advance per glyph (px), `f32::to_bits`. Part of the shaping
+    /// cache key: the same text with different letter spacing shapes to
+    /// different glyph positions.
+    pub letter_spacing_bits: u32,
     pub font_family: Option<String>,
 }
 
@@ -123,12 +127,33 @@ impl TextNodeKey {
             line_height_bits: line_height.to_bits(),
             max_width_bits: max_width.map(|w| w.to_bits()),
             font_weight: 400,
+            letter_spacing_bits: 0.0_f32.to_bits(),
             font_family: None,
+        }
+    }
+
+    /// Build the key from a [`TextStyle`], so widgets measure and render
+    /// with exactly the same typography (size, line height, weight,
+    /// letter spacing, family).
+    pub fn from_style(text: &str, style: &crate::text::TextStyle, max_width: Option<f32>) -> Self {
+        Self {
+            text: text.to_string(),
+            font_size_bits: style.font_size.to_bits(),
+            line_height_bits: style.line_height.to_bits(),
+            max_width_bits: max_width.map(|w| w.to_bits()),
+            font_weight: style.font_weight,
+            letter_spacing_bits: style.letter_spacing.to_bits(),
+            font_family: style.font_family.clone(),
         }
     }
 
     pub fn with_weight(mut self, weight: u16) -> Self {
         self.font_weight = weight;
+        self
+    }
+
+    pub fn with_letter_spacing(mut self, letter_spacing: f32) -> Self {
+        self.letter_spacing_bits = letter_spacing.to_bits();
         self
     }
 

@@ -1,12 +1,11 @@
 use crate::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::Theme;
+use crate::text::TextMeasurer;
+use crate::theme::{Theme, TypographyScale};
 
 use super::{EventResult, Rect, WidgetEvent, glass_pill};
 
 /// HOFF tabs: container radius 22 / pad 4 / rgba(40,40,40,.6); the active
 /// segment is an 18-radius glass block with its own edge-light + shadow.
-const FONT: f32 = 14.0;
 const PAD: f32 = 4.0;
 
 /// Segmented tab strip. Tabs share the width equally (CSS `flex: 1`);
@@ -97,7 +96,8 @@ impl Tabs {
             border_color: [0.0; 4],
         });
 
-        let line_height = FONT * 1.4;
+        // Labels: base-2sm (Tabs.module.sass), one style for measure+render.
+        let style = TypographyScale::hoff().base_2sm();
         let rects = self.item_rects(bounds);
 
         // Active block: shadow + edge-light + rgba($n2,.05) fill.
@@ -129,12 +129,11 @@ impl Tabs {
             } else {
                 theme.colors.text_mid
             };
-            let style = TextStyle::new(FONT).with_weight(600);
             let (text_w, _) = TextMeasurer::measure_styled(label, &style, None);
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::new(label, FONT, line_height, None).with_weight(600),
+                key: TextNodeKey::from_style(label, &style, None),
                 x: rect.x + (rect.w - text_w) / 2.0,
-                y: rect.y + (rect.h - line_height) / 2.0,
+                y: rect.y + TextMeasurer::vertical_center(&style, rect.h),
                 color: color.0,
             });
         }

@@ -3,6 +3,7 @@
 // ============================================================================
 
 use crate::color::Color;
+use crate::text::TextStyle;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpacingScale {
@@ -14,8 +15,14 @@ pub struct SpacingScale {
     pub xxl: f32,
 }
 
+/// Letter spacing of the HOFF Inter "body" family (`=body`, `=body-2*`,
+/// `=hairline` — variables.sass): `0.025em`, converted to px per style.
+pub const BODY_LETTER_SPACING_EM: f32 = 0.025;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct TypographyScale {
+    /// `=small`: 10px in HOFF.
+    pub small: f32,
     pub caption: f32,
     pub body_sm: f32,
     pub body: f32,
@@ -26,8 +33,110 @@ pub struct TypographyScale {
 }
 
 impl TypographyScale {
+    /// Generic fallback ratio. Prefer the named styles below: each HOFF
+    /// mixin has its own exact line-height.
     pub fn line_height(&self, font_size: f32) -> f32 {
         font_size * self.line_height_ratio
+    }
+
+    fn style(size: f32, lh_factor: f32, weight: u16) -> TextStyle {
+        TextStyle::new(size)
+            .with_line_height(size * lh_factor)
+            .with_weight(weight)
+    }
+
+    fn body_style(size: f32, lh_factor: f32, weight: u16) -> TextStyle {
+        Self::style(size, lh_factor, weight).with_letter_spacing(BODY_LETTER_SPACING_EM * size)
+    }
+
+    // -- The HOFF type ramp (styles/variables.sass:39-127), one method per
+    // -- mixin. Line heights and letter spacing are exact, not the generic
+    // -- ratio.
+
+    /// `=h4`: display size, line-height 1, weight 500.
+    pub fn h4(&self) -> TextStyle {
+        Self::style(self.display, 1.0, 500)
+    }
+
+    /// `=title`: 20px in HOFF, line-height 1.2, weight 500.
+    pub fn title(&self) -> TextStyle {
+        Self::style(self.title_sm, 1.2, 500)
+    }
+
+    /// `=base-r`: 16px, line-height 1.5.
+    pub fn base_r(&self) -> TextStyle {
+        Self::style(self.body, 1.5, 400)
+    }
+
+    /// `=base-m`: 16px, line-height 1.5, weight 500.
+    pub fn base_m(&self) -> TextStyle {
+        Self::style(self.body, 1.5, 500)
+    }
+
+    /// `=base-2r`: 14px, line-height 1.4.
+    pub fn base_2r(&self) -> TextStyle {
+        Self::style(self.body_sm, 1.4, 400)
+    }
+
+    /// `=base-2m`: 14px, line-height 1.4, weight 500.
+    pub fn base_2m(&self) -> TextStyle {
+        Self::style(self.body_sm, 1.4, 500)
+    }
+
+    /// `=base-2sm`: 14px, line-height 1.4, weight 600.
+    pub fn base_2sm(&self) -> TextStyle {
+        Self::style(self.body_sm, 1.4, 600)
+    }
+
+    /// `=base-2b`: 14px, line-height 1.4, weight 700.
+    pub fn base_2b(&self) -> TextStyle {
+        Self::style(self.body_sm, 1.4, 700)
+    }
+
+    /// `=caption-r`: 12px, line-height 1.33.
+    pub fn caption_r(&self) -> TextStyle {
+        Self::style(self.caption, 1.33, 400)
+    }
+
+    /// `=caption-sm`: 12px, line-height 1.33, weight 600.
+    pub fn caption_sm(&self) -> TextStyle {
+        Self::style(self.caption, 1.33, 600)
+    }
+
+    /// `=small`: 10px, line-height 1.2.
+    pub fn small_r(&self) -> TextStyle {
+        Self::style(self.small, 1.2, 400)
+    }
+
+    /// `=small-sm`: 10px, line-height 1.2, weight 600.
+    pub fn small_sm(&self) -> TextStyle {
+        Self::style(self.small, 1.2, 600)
+    }
+
+    /// `=body`: 16px, line-height 1.5, letter-spacing 0.025em.
+    pub fn body(&self) -> TextStyle {
+        Self::body_style(self.body, 1.5, 400)
+    }
+
+    /// `=body-2r`: 14px, line-height 1.7, letter-spacing 0.025em.
+    pub fn body_2r(&self) -> TextStyle {
+        Self::body_style(self.body_sm, 1.7, 400)
+    }
+
+    /// `=body-2m`: 14px, line-height 1.7, weight 500, letter-spacing 0.025em.
+    pub fn body_2m(&self) -> TextStyle {
+        Self::body_style(self.body_sm, 1.7, 500)
+    }
+
+    /// `=body-2b`: like `=body-2m` (the reference sets weight 500 on both).
+    pub fn body_2b(&self) -> TextStyle {
+        Self::body_style(self.body_sm, 1.7, 500)
+    }
+
+    /// `=hairline`: 12px, line-height 1.65, weight 500,
+    /// letter-spacing 0.025em.
+    pub fn hairline(&self) -> TextStyle {
+        Self::body_style(self.caption, 1.65, 500)
     }
 }
 

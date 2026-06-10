@@ -13,7 +13,7 @@
 use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::gpu::image::ImageHandle;
 use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::Theme;
+use crate::theme::{Theme, TypographyScale};
 
 use super::{EventResult, Rect, WidgetEvent, glass_pill, with_alpha};
 
@@ -147,7 +147,7 @@ impl Card {
             }
             CardVariant::Chart { .. } => 232.0,
             CardVariant::Cta { body, .. } => {
-                let style = TextStyle::new(16.0).with_line_height(24.0);
+                let style = TypographyScale::hoff().body();
                 let (_, body_h) =
                     TextMeasurer::measure_styled(body, &style, Some(self.width - DETAILS * 2.0));
                 PAD + 24.0 + 8.0 + body_h.max(24.0) + 24.0 + 48.0 + 32.0
@@ -309,9 +309,7 @@ impl Card {
         c: &mut Compositor,
         layer: LayerId,
         s: &str,
-        size: f32,
-        lh: f32,
-        weight: u16,
+        style: &TextStyle,
         x: f32,
         y: f32,
         color: [f32; 4],
@@ -320,7 +318,7 @@ impl Card {
         c.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::new(s, size, lh, max_w).with_weight(weight),
+                key: TextNodeKey::from_style(s, style, max_w),
                 x,
                 y,
                 color,
@@ -426,29 +424,27 @@ impl Card {
             tx += (b.w - PAD * 2.0) / 14.0;
         }
 
-        // Headline 32/1.25/500 $text-primary.
+        let ramp = TypographyScale::hoff();
+        // Headline 32/1.25/500 $text-primary (no mixin: the gradient
+        // headline of the reference cards).
         self.text(
             c,
             layer,
             value,
-            32.0,
-            40.0,
-            500,
+            &TextStyle::new(32.0).with_line_height(40.0).with_weight(500),
             b.x + PAD,
             b.y + PAD + 9.0 + 12.0,
             text.0,
             None,
         );
-        // Dot + label (base2-r, secondary).
+        // Dot + label (base-2r, secondary).
         let label_y = b.y + PAD + 9.0 + 12.0 + 40.0 + 4.0;
         self.dot(c, layer, b.x + PAD, label_y + 4.0, false, theme);
         self.text(
             c,
             layer,
             label,
-            14.0,
-            20.0,
-            400,
+            &ramp.base_2r(),
             b.x + PAD + 20.0,
             label_y,
             theme.colors.text_mid.0,
@@ -457,7 +453,7 @@ impl Card {
 
         // Delta chip: caption-sm in an 8-radius 5% chip, accent-colored.
         if let Some((delta, positive)) = delta {
-            let style = TextStyle::new(12.0).with_weight(600);
+            let style = ramp.caption_sm();
             let (tw, _) = TextMeasurer::measure_styled(delta, &style, None);
             let chip_w = tw + 16.0;
             let chip = Rect::new(
@@ -488,9 +484,7 @@ impl Card {
                 c,
                 layer,
                 delta,
-                12.0,
-                16.0,
-                600,
+                &style,
                 chip.x + 8.0,
                 chip.y + 4.0,
                 accent,
@@ -537,17 +531,16 @@ impl Card {
             }
             if let Some(initial) = name.chars().next() {
                 let s: String = initial.to_uppercase().collect();
-                let style = TextStyle::new(18.0).with_weight(500);
+                // Avatar initial: 18/24/500 (no mixin).
+                let style = TextStyle::new(18.0).with_line_height(24.0).with_weight(500);
                 let (tw, _) = TextMeasurer::measure_styled(&s, &style, None);
                 self.text(
                     c,
                     layer,
                     &s,
-                    18.0,
-                    24.0,
-                    500,
+                    &style,
                     av.x + (av.w - tw) / 2.0,
-                    av.y + (av.h - 24.0) / 2.0,
+                    av.y + TextMeasurer::vertical_center(&style, av.h),
                     text.0,
                     None,
                 );
@@ -559,13 +552,12 @@ impl Card {
         }
 
         // Name (.95, base-2sm) and username (caption-r, .4).
+        let ramp = TypographyScale::hoff();
         self.text(
             c,
             layer,
             name,
-            14.0,
-            20.0,
-            600,
+            &ramp.base_2sm(),
             av.x + av.w + 12.0,
             b.y + pad + 2.0,
             text.0,
@@ -575,9 +567,7 @@ impl Card {
             c,
             layer,
             username,
-            12.0,
-            16.0,
-            400,
+            &ramp.caption_r(),
             av.x + av.w + 12.0,
             b.y + pad + 24.0,
             glass.text_faint.0,
@@ -585,7 +575,7 @@ impl Card {
         );
 
         // Action pill (FollowButton): glass button, caption-sm .70.
-        let style = TextStyle::new(12.0).with_weight(600);
+        let style = ramp.caption_sm();
         let (tw, _) = TextMeasurer::measure_styled(action, &style, None);
         let bw = (tw + 32.0).max(88.0);
         let btn = Rect::new(b.x + b.w - pad - bw, b.y + pad + 2.0, bw, 40.0);
@@ -596,11 +586,9 @@ impl Card {
             c,
             layer,
             action,
-            12.0,
-            16.0,
-            600,
+            &style,
             btn.x + (btn.w - tw) / 2.0,
-            btn.y + (btn.h - 16.0) / 2.0,
+            btn.y + TextMeasurer::vertical_center(&style, btn.h),
             theme.colors.text_mid.0,
             None,
         );
@@ -610,9 +598,7 @@ impl Card {
             c,
             layer,
             bio,
-            14.0,
-            23.8,
-            400,
+            &ramp.body_2r(),
             b.x + pad + 44.0 + 12.0,
             b.y + pad + 44.0 + 6.0,
             glass.text_faint.0,
@@ -703,13 +689,12 @@ impl Card {
             }
         }
         // Play glyph + badge render above the image (text pass).
+        let ramp = TypographyScale::hoff();
         self.text(
             c,
             layer,
             "\u{25B6}",
-            20.0,
-            24.0,
-            400,
+            &TextStyle::new(20.0).with_line_height(24.0),
             box_r.x + box_r.w / 2.0 - 8.0,
             box_r.y + box_r.h / 2.0 - 12.0,
             text.0,
@@ -720,9 +705,7 @@ impl Card {
                 c,
                 layer,
                 badge,
-                12.0,
-                16.0,
-                600,
+                &ramp.caption_sm(),
                 box_r.x + box_r.w - 8.0 - 24.0,
                 box_r.y + 8.0,
                 text.0,
@@ -732,25 +715,12 @@ impl Card {
 
         // Title + caption.
         let ty = box_r.y + box_r.h + PAD;
-        self.text(
-            c,
-            layer,
-            title,
-            20.0,
-            24.0,
-            500,
-            b.x + PAD,
-            ty,
-            text.0,
-            None,
-        );
+        self.text(c, layer, title, &ramp.title(), b.x + PAD, ty, text.0, None);
         self.text(
             c,
             layer,
             caption,
-            14.0,
-            20.0,
-            400,
+            &ramp.base_2r(),
             b.x + PAD,
             ty + 28.0,
             theme.colors.text_mid.0,
@@ -769,14 +739,13 @@ impl Card {
     ) {
         let glass = &theme.glass;
         let text = theme.colors.text;
+        let ramp = TypographyScale::hoff();
 
         self.text(
             c,
             layer,
             title,
-            20.0,
-            24.0,
-            500,
+            &ramp.title(),
             b.x + PAD,
             b.y + PAD,
             text.0,
@@ -858,9 +827,7 @@ impl Card {
                         c,
                         layer,
                         &row.label,
-                        12.0,
-                        16.0,
-                        600,
+                        &ramp.caption_sm(),
                         content_x,
                         r.y + 10.0,
                         theme.colors.text_mid.0,
@@ -915,9 +882,7 @@ impl Card {
                             c,
                             layer,
                             &row.label,
-                            14.0,
-                            20.0,
-                            500,
+                            &ramp.base_2m(),
                             content_x,
                             r.y + 19.0,
                             theme.colors.text_mid.0,
@@ -928,17 +893,15 @@ impl Card {
             }
 
             // Trailing value: caption-sm, primary.
-            let style = TextStyle::new(12.0).with_weight(600);
+            let style = ramp.caption_sm();
             let (tw, _) = TextMeasurer::measure_styled(&row.trailing, &style, None);
             self.text(
                 c,
                 layer,
                 &row.trailing,
-                12.0,
-                16.0,
-                600,
+                &style,
                 r.x + r.w - 18.5 - tw,
-                r.y + (r.h - 16.0) / 2.0,
+                r.y + TextMeasurer::vertical_center(&style, r.h),
                 text.0,
                 None,
             );
@@ -961,29 +924,26 @@ impl Card {
     ) {
         let text = theme.colors.text;
 
-        // Legend: solid dot + value (base-r primary) + label (caption).
+        // Legend: solid dot + value (base-m primary) + label (caption-r).
+        let ramp = TypographyScale::hoff();
         self.dot(c, layer, b.x + PAD, b.y + PAD + 6.0, true, theme);
+        let style = ramp.base_m();
         self.text(
             c,
             layer,
             value,
-            16.0,
-            24.0,
-            500,
+            &style,
             b.x + PAD + 20.0,
             b.y + PAD,
             text.0,
             None,
         );
-        let style = TextStyle::new(16.0).with_weight(500);
         let (vw, _) = TextMeasurer::measure_styled(value, &style, None);
         self.text(
             c,
             layer,
             label,
-            12.0,
-            16.0,
-            400,
+            &ramp.caption_r(),
             b.x + PAD + 20.0 + vw + 12.0,
             b.y + PAD + 4.0,
             theme.colors.text_mid.0,
@@ -1100,17 +1060,16 @@ impl Card {
         let w = b.w - DETAILS * 2.0;
 
         // title 20/1.2/500 primary, mb 8.
-        self.text(c, layer, title, 20.0, 24.0, 500, x, b.y + PAD, text.0, None);
-        // body 16/1.5 secondary, mb 24.
-        let style = TextStyle::new(16.0).with_line_height(24.0);
+        let ramp = TypographyScale::hoff();
+        self.text(c, layer, title, &ramp.title(), x, b.y + PAD, text.0, None);
+        // =body (16/1.5, letter-spacing 0.025em) secondary, mb 24.
+        let style = ramp.body();
         let (_, body_h) = TextMeasurer::measure_styled(body, &style, Some(w));
         self.text(
             c,
             layer,
             body,
-            16.0,
-            24.0,
-            400,
+            &style,
             x,
             b.y + PAD + 24.0 + 8.0,
             theme.colors.text_mid.0,
@@ -1118,7 +1077,7 @@ impl Card {
         );
 
         // CTA pill: pad 12 32, base-m label, 25% edge ring + frozen glow.
-        let bstyle = TextStyle::new(16.0).with_weight(500);
+        let bstyle = ramp.base_m();
         let (tw, _) = TextMeasurer::measure_styled(button, &bstyle, None);
         let btn = Rect::new(
             x,
@@ -1151,11 +1110,9 @@ impl Card {
             c,
             layer,
             button,
-            16.0,
-            24.0,
-            500,
+            &bstyle,
             btn.x + (btn.w - tw) / 2.0,
-            btn.y + 12.0,
+            btn.y + TextMeasurer::vertical_center(&bstyle, btn.h),
             theme.colors.text_mid.0,
             None,
         );
