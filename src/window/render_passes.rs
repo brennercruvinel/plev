@@ -29,16 +29,52 @@ fn draw_clipped_ranges(
     draw_calls
 }
 
-impl super::App {
-    /// Encode one render pass per dirty layer. Returns the number of draw
-    /// calls issued.
-    pub(super) fn encode_layer_passes(
-        compositor: &crate::compositor::Compositor,
-        gpu: &crate::gpu::GpuContext,
-        text_system: &crate::text::TextSystem,
-        dirty_layer_ids: &[crate::compositor::LayerId],
-        encoder: &mut wgpu::CommandEncoder,
-    ) -> u32 {
+/// Resolve text for every dirty layer, one `resolve_for_layer` call per
+/// clip group so clipped text (scrolled lists, panels) scissors with its
+/// container. Shared by the built-in render loop and standalone apps.
+pub fn resolve_layer_text(
+    compositor: &mut crate::compositor::Compositor,
+    gpu: &crate::gpu::GpuContext,
+    text_system: &mut crate::text::TextSystem,
+) {
+    let layer_info: Vec<_> = compositor
+        .layers()
+        .iter()
+        .map(|l| (l.id, l.is_dirty(), l.text_node_groups()))
+        .collect();
+
+    for (layer_id, dirty, groups) in layer_info {
+        if !dirty {
+            continue;
+        }
+        let resolved: Vec<_> = groups
+            .into_iter()
+            .map(|(nodes, clip)| {
+                let (vertices, indices) = text_system.resolve_for_layer(
+                    &gpu.device,
+                    &gpu.queue,
+                    &gpu.text_bind_group_layout,
+                    &nodes,
+                );
+                (vertices, indices, clip)
+            })
+            .collect();
+        let (vertices, indices, ranges) = crate::compositor::merge_text_groups(resolved);
+        if let Some(layer) = compositor.layer_mut(layer_id) {
+            layer.set_text_data_with_ranges(&gpu.device, &gpu.queue, vertices, indices, ranges);
+        }
+    }
+}
+
+/// Encode one render pass per dirty layer. Returns the number of draw
+/// calls issued.
+pub fn encode_layer_passes(
+    compositor: &crate::compositor::Compositor,
+    gpu: &crate::gpu::GpuContext,
+    text_system: &crate::text::TextSystem,
+    dirty_layer_ids: &[crate::compositor::LayerId],
+    encoder: &mut wgpu::CommandEncoder,
+) -> u32 {
         let vw = gpu.surface_config.width;
         let vh = gpu.surface_config.height;
         let mut draw_calls = 0u32;
@@ -130,10 +166,11 @@ impl super::App {
                 draw_calls +=
                     draw_clipped_ranges(&mut pass, layer.text_draw_ranges(), base_scissor, vw, vh);
             }
-        }
-        draw_calls
     }
+    draw_calls
+}
 
+impl super::App {
     pub(super) fn apply_layer_effects(
         compositor: &crate::compositor::Compositor,
         gpu: &mut crate::gpu::GpuContext,
@@ -222,64 +259,56 @@ impl super::App {
 
         effect_results
     }
+}
 
-    /// Encode the composite pass drawing all visible layers to the surface.
-    /// Returns the number of draw calls issued.
-    pub(super) fn encode_composite_pass(
-        compositor: &crate::compositor::Compositor,
-        theme: &crate::theme::Theme,
-        gpu: &crate::gpu::GpuContext,
-        surface_view: &wgpu::TextureView,
-        effect_results: &[(crate::compositor::LayerId, wgpu::BindGroup)],
-        encoder: &mut wgpu::CommandEncoder,
-    ) -> u32 {
-        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("composite_pass"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: surface_view,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear({
-                        let bg = theme.colors.bg.to_array();
-                        wgpu::Color {
-                            r: bg[0] as f64,
-                            g: bg[1] as f64,
-                            b: bg[2] as f64,
-                            a: 1.0,
-                        }
-                    }),
-                    store: wgpu::StoreOp::Store,
-                },
-                depth_slice: None,
-            })],
-            depth_stencil_attachment: None,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-            multiview_mask: None,
-        });
+/// Encode the composite pass drawing all visible layers to the surface.
+/// Returns the number of draw calls issued.
+pub fn encode_composite_pass(
+    compositor: &crate::compositor::Compositor,
+    clear_color: wgpu::Color,
+    gpu: &crate::gpu::GpuContext,
+    surface_view: &wgpu::TextureView,
+    effect_results: &[(crate::compositor::LayerId, wgpu::BindGroup)],
+    encoder: &mut wgpu::CommandEncoder,
+) -> u32 {
+    let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        label: Some("composite_pass"),
+        color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+            view: surface_view,
+            resolve_target: None,
+            ops: wgpu::Operations {
+                load: wgpu::LoadOp::Clear(clear_color),
+                store: wgpu::StoreOp::Store,
+            },
+            depth_slice: None,
+        })],
+        depth_stencil_attachment: None,
+        timestamp_writes: None,
+        occlusion_query_set: None,
+        multiview_mask: None,
+    });
 
-        pass.set_pipeline(&gpu.composite_pipeline);
+    pass.set_pipeline(&gpu.composite_pipeline);
 
-        let mut draw_calls = 0u32;
-        for layer in compositor.layers() {
-            if !layer.visible {
-                continue;
-            }
-            let composite_bg = effect_results
-                .iter()
-                .find(|(id, _)| *id == layer.id)
-                .map(|(_, bg)| bg);
-
-            let orig_composite_bg = layer.composite_bind_group();
-            let final_bg = composite_bg.or(orig_composite_bg);
-
-            if let (Some(bg), Some(opacity_bg)) = (final_bg, layer.opacity_bind_group()) {
-                pass.set_bind_group(0, bg, &[]);
-                pass.set_bind_group(1, opacity_bg, &[]);
-                pass.draw(0..3, 0..1);
-                draw_calls += 1;
-            }
+    let mut draw_calls = 0u32;
+    for layer in compositor.layers() {
+        if !layer.visible {
+            continue;
         }
-        draw_calls
+        let composite_bg = effect_results
+            .iter()
+            .find(|(id, _)| *id == layer.id)
+            .map(|(_, bg)| bg);
+
+        let orig_composite_bg = layer.composite_bind_group();
+        let final_bg = composite_bg.or(orig_composite_bg);
+
+        if let (Some(bg), Some(opacity_bg)) = (final_bg, layer.opacity_bind_group()) {
+            pass.set_bind_group(0, bg, &[]);
+            pass.set_bind_group(1, opacity_bg, &[]);
+            pass.draw(0..3, 0..1);
+            draw_calls += 1;
+        }
     }
+    draw_calls
 }

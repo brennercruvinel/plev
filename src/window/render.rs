@@ -73,43 +73,7 @@ impl super::App {
 
         // Resolve text for each dirty layer, one resolve per clip group so
         // clipped text (scrolled lists, panels) scissors with its container.
-        {
-            let layer_info: Vec<_> = self
-                .compositor
-                .layers()
-                .iter()
-                .map(|l| (l.id, l.is_dirty(), l.text_node_groups()))
-                .collect();
-
-            for (layer_id, dirty, groups) in layer_info {
-                if !dirty {
-                    continue;
-                }
-                let resolved: Vec<_> = groups
-                    .into_iter()
-                    .map(|(nodes, clip)| {
-                        let (vertices, indices) = text_system.resolve_for_layer(
-                            &gpu.device,
-                            &gpu.queue,
-                            &gpu.text_bind_group_layout,
-                            &nodes,
-                        );
-                        (vertices, indices, clip)
-                    })
-                    .collect();
-                let (vertices, indices, ranges) =
-                    crate::compositor::merge_text_groups(resolved);
-                if let Some(layer) = self.compositor.layer_mut(layer_id) {
-                    layer.set_text_data_with_ranges(
-                        &gpu.device,
-                        &gpu.queue,
-                        vertices,
-                        indices,
-                        ranges,
-                    );
-                }
-            }
-        }
+        super::render_passes::resolve_layer_text(&mut self.compositor, gpu, text_system);
 
         text_system.finish_frame();
 
@@ -163,7 +127,7 @@ impl super::App {
             .map(|l| l.id)
             .collect();
 
-        let layer_draws = Self::encode_layer_passes(
+        let layer_draws = super::render_passes::encode_layer_passes(
             &self.compositor,
             gpu,
             text_system,
@@ -184,9 +148,18 @@ impl super::App {
         }
 
         // Composite pass: draw all visible layers to surface
-        let composite_draws = Self::encode_composite_pass(
+        let clear_color = {
+            let bg = self.theme.colors.bg.to_array();
+            wgpu::Color {
+                r: bg[0] as f64,
+                g: bg[1] as f64,
+                b: bg[2] as f64,
+                a: 1.0,
+            }
+        };
+        let composite_draws = super::render_passes::encode_composite_pass(
             &self.compositor,
-            &self.theme,
+            clear_color,
             gpu,
             &surface_view,
             &effect_results,
