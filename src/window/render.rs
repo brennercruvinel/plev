@@ -143,6 +143,9 @@ impl super::App {
             }
         }
 
+        // Upload any images loaded while building the scene
+        gpu.prepare_images();
+
         // Encode render passes
         let encode_start = web_time::Instant::now();
         let mut encoder = gpu

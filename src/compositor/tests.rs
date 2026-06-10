@@ -206,6 +206,75 @@ fn rounded_rect(x: f32, y: f32, w: f32, h: f32) -> SceneNode {
 }
 
 // ---------------------------------------------------------------------------
+// Image sprites
+// ---------------------------------------------------------------------------
+
+#[test]
+fn image_node_emits_pixel_uvs_and_ranges() {
+    let handle = crate::gpu::image::ImageHandle {
+        id: 7,
+        atlas_x: 100,
+        atlas_y: 200,
+        width: 32,
+        height: 16,
+    };
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.draw_image(10.0, 20.0, 64.0, 32.0, handle, 4.0);
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(layer.image_vertices.len(), 4);
+    assert_eq!(layer.image_index_count, 6);
+    assert_eq!(comp.stats().image_vertices, 4);
+
+    let v = &layer.image_vertices;
+    // Quad covers the target bounds, atlas coords are in pixels
+    assert_eq!(v[0].position, [10.0, 20.0]);
+    assert_eq!(v[0].atlas_px, [100.0, 200.0]);
+    assert_eq!(v[2].position, [74.0, 52.0]);
+    assert_eq!(v[2].atlas_px, [132.0, 216.0]);
+    // Sampling clamp is inset half a texel from the image rect
+    assert_eq!(v[0].uv_bounds, [100.5, 200.5, 131.5, 215.5]);
+    // Rounded-corner SDF params: half size + radius
+    assert_eq!(v[0].params, [32.0, 16.0, 4.0, 0.0]);
+
+    assert_eq!(layer.image_draw_ranges().len(), 1);
+    assert_eq!(layer.image_draw_ranges()[0], DrawRange {
+        first_index: 0,
+        index_count: 6,
+        clip: None
+    });
+}
+
+#[test]
+fn image_nodes_respect_culling_and_clip() {
+    let handle = crate::gpu::image::ImageHandle {
+        id: 1,
+        atlas_x: 0,
+        atlas_y: 0,
+        width: 8,
+        height: 8,
+    };
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.draw_image(-500.0, 0.0, 50.0, 50.0, handle, 0.0); // culled
+    comp.push_clip(0.0, 0.0, 100.0, 100.0);
+    comp.draw_image(10.0, 10.0, 50.0, 50.0, handle, 0.0); // clipped
+    comp.pop_clip();
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(layer.image_vertices.len(), 4);
+    assert_eq!(comp.stats().nodes_culled, 1);
+    assert_eq!(layer.image_draw_ranges().len(), 1);
+    assert_eq!(
+        layer.image_draw_ranges()[0].clip,
+        Some([0.0, 0.0, 100.0, 100.0])
+    );
+}
+
+// ---------------------------------------------------------------------------
 // Clip stack
 // ---------------------------------------------------------------------------
 

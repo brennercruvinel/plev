@@ -109,6 +109,18 @@ impl super::App {
                     draw_clipped_ranges(&mut pass, layer.sdf_draw_ranges(), base_scissor, vw, vh);
             }
 
+            if let (Some((vb, ib, _)), Some(image_bg)) =
+                (layer.image_buffers(), gpu.image_atlas.bind_group())
+            {
+                pass.set_pipeline(&gpu.image_pipeline);
+                pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
+                pass.set_bind_group(1, image_bg, &[]);
+                pass.set_vertex_buffer(0, vb.slice(..));
+                pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
+                draw_calls +=
+                    draw_clipped_ranges(&mut pass, layer.image_draw_ranges(), base_scissor, vw, vh);
+            }
+
             if let Some((vb, ib, _)) = layer.text_buffers() {
                 pass.set_pipeline(&gpu.text_pipeline);
                 pass.set_bind_group(0, &gpu.projection_bind_group, &[]);

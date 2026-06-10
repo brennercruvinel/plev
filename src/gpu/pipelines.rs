@@ -1,4 +1,4 @@
-use crate::compositor::{QuadVertex, RectSdfVertex, ShadowVertex};
+use crate::compositor::{ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex};
 use crate::text::TextVertex;
 
 use super::context::GpuContext;
@@ -230,6 +230,62 @@ impl GpuContext {
         })
     }
 
+    pub(super) fn create_image_pipeline(
+        device: &wgpu::Device,
+        shader_source: &str,
+        projection_bgl: &wgpu::BindGroupLayout,
+        image_bgl: &wgpu::BindGroupLayout,
+        surface_format: wgpu::TextureFormat,
+        msaa_samples: u32,
+    ) -> wgpu::RenderPipeline {
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("image_shader"),
+            source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+        });
+        let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("image_pipeline_layout"),
+            bind_group_layouts: &[projection_bgl, image_bgl],
+            immediate_size: 0,
+        });
+        device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("image_pipeline"),
+            layout: Some(&layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: Some("vs_main"),
+                buffers: &[ImageVertex::layout()],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: surface_format,
+                    blend: Some(premultiplied_blend()),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: None,
+                polygon_mode: wgpu::PolygonMode::Fill,
+                unclipped_depth: false,
+                conservative: false,
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState {
+                count: msaa_samples,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
+            multiview_mask: None,
+            cache: None,
+        })
+    }
+
     // -- Hot reload --
 
     #[cfg(feature = "hot-reload")]
@@ -304,6 +360,24 @@ impl GpuContext {
                 }
                 self.text_pipeline = pipeline;
                 log::info!("Reloaded text.wgsl");
+                true
+            }
+            "image.wgsl" => {
+                let guard = self.device.push_error_scope(wgpu::ErrorFilter::Validation);
+                let pipeline = Self::create_image_pipeline(
+                    &self.device,
+                    source,
+                    &self.projection_bind_group_layout,
+                    &self.image_bind_group_layout,
+                    surface_format,
+                    msaa_samples,
+                );
+                if let Some(err) = pollster::block_on(guard.pop()) {
+                    log::error!("Shader reload failed for image.wgsl: {}", err);
+                    return false;
+                }
+                self.image_pipeline = pipeline;
+                log::info!("Reloaded image.wgsl");
                 true
             }
             "composite.wgsl" => {

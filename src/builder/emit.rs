@@ -72,6 +72,24 @@ fn emit_element(
         ElementKind::Path { data } => {
             out.push(SceneNode::Path { data: data.clone() });
         }
+        ElementKind::Image { bytes } => {
+            if let Some(bytes) = bytes
+                && (b.width > 0.0 || b.height > 0.0)
+            {
+                // Memoized by content hash; failures are remembered and
+                // logged once inside the store.
+                if let Ok(handle) = crate::gpu::image::load_image_bytes(bytes) {
+                    out.push(SceneNode::Image {
+                        x: b.x,
+                        y: b.y,
+                        w: b.width,
+                        h: b.height,
+                        image: handle,
+                        corner_radius: element.style.corner_radius,
+                    });
+                }
+            }
+        }
     }
 
     let clip = element.style.clip_children && !element.children.is_empty();

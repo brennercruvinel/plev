@@ -129,6 +129,57 @@ impl ShadowVertex {
     }
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct ImageVertex {
+    pub position: [f32; 2],
+    /// Sample position in atlas pixels (normalized in the shader against
+    /// textureDimensions, so it survives atlas growth).
+    pub atlas_px: [f32; 2],
+    /// Pixel offset from the rect center (rounded-corner SDF mask).
+    pub local: [f32; 2],
+    /// half_w, half_h, corner_radius, unused.
+    pub params: [f32; 4],
+    /// Sampling clamp rect in atlas pixels: min_x, min_y, max_x, max_y.
+    pub uv_bounds: [f32; 4],
+}
+
+impl ImageVertex {
+    pub fn layout() -> wgpu::VertexBufferLayout<'static> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<ImageVertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    shader_location: 0,
+                    format: wgpu::VertexFormat::Float32x2,
+                },
+                wgpu::VertexAttribute {
+                    offset: 8,
+                    shader_location: 1,
+                    format: wgpu::VertexFormat::Float32x2,
+                },
+                wgpu::VertexAttribute {
+                    offset: 16,
+                    shader_location: 2,
+                    format: wgpu::VertexFormat::Float32x2,
+                },
+                wgpu::VertexAttribute {
+                    offset: 24,
+                    shader_location: 3,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: 40,
+                    shader_location: 4,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+            ],
+        }
+    }
+}
+
 /// Gaussian sigma for a CSS-like blur radius (CSS box-shadow convention).
 pub fn shadow_sigma(blur_radius: f32) -> f32 {
     blur_radius / 2.0

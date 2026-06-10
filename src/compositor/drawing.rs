@@ -90,6 +90,26 @@ impl Compositor {
         });
     }
 
+    /// Draw an image from the image atlas (see `gpu::image::load_image_bytes`).
+    pub fn draw_image(
+        &mut self,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        image: crate::gpu::image::ImageHandle,
+        corner_radius: f32,
+    ) {
+        self.push(SceneNode::Image {
+            x,
+            y,
+            w,
+            h,
+            image,
+            corner_radius,
+        });
+    }
+
     /// Draw an analytic drop shadow. Push it BEFORE the rect that casts it
     /// so the rect paints on top.
     pub fn draw_shadow(&mut self, p: ShadowParams) {

@@ -226,6 +226,19 @@ impl Element {
         self.style.clip_children = true;
         self
     }
+
+    /// Set the encoded image bytes (png/jpeg) for an `image()` element.
+    /// Decoding and atlas packing are memoized by content, so passing the
+    /// same bytes every frame (e.g. `include_bytes!`) is cheap.
+    pub fn src_bytes(mut self, bytes: impl Into<Vec<u8>>) -> Self {
+        if let ElementKind::Image {
+            bytes: ref mut slot,
+        } = self.kind
+        {
+            *slot = Some(std::sync::Arc::new(bytes.into()));
+        }
+        self
+    }
     pub fn text_color(mut self, color: impl IntoColor) -> Self {
         self.style.text_color = color.into_color();
         self

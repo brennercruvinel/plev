@@ -2,7 +2,8 @@ use super::{INITIAL_IB_SIZE, INITIAL_VB_SIZE, Layer};
 use crate::compositor::clip::{ClipStack, record_range};
 use crate::compositor::scene::SceneNode;
 use crate::compositor::vertex::{
-    QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction, shadow_padding, shadow_sigma,
+    ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction, shadow_padding,
+    shadow_sigma,
 };
 use crate::gpu_vec::GpuVec;
 
@@ -249,6 +250,96 @@ impl Layer {
 
         self.sdf_index_count = self.sdf_indices.len() as u32;
         culled
+    }
+
+    /// Rebuild CPU-side image sprite geometry. Atlas coordinates are stored
+    /// in pixels (normalized in the shader), so geometry stays valid across
+    /// atlas growth. Returns the number of nodes culled.
+    pub(crate) fn build_image_geometry(&mut self, viewport: (f32, f32)) -> u32 {
+        self.image_vertices.clear();
+        self.image_indices.clear();
+        self.image_ranges.clear();
+        let mut clips = ClipStack::default();
+        let mut culled = 0u32;
+
+        for node in &self.nodes {
+            let SceneNode::Image {
+                x,
+                y,
+                w,
+                h,
+                image,
+                corner_radius,
+            } = node
+            else {
+                match node {
+                    SceneNode::PushClip { x, y, w, h } => clips.push([*x, *y, *w, *h]),
+                    SceneNode::PopClip => clips.pop(),
+                    _ => {}
+                }
+                continue;
+            };
+
+            if outside_viewport(viewport, *x, *y, *w, *h) || clips.is_empty_clip() {
+                culled += 1;
+                continue;
+            }
+
+            let params = [w / 2.0, h / 2.0, *corner_radius, 0.0];
+            let (ax, ay) = (image.atlas_x as f32, image.atlas_y as f32);
+            let (aw, ah) = (image.width as f32, image.height as f32);
+            // Clamp sampling half a texel inside the image rect (the shader
+            // applies it) so linear filtering never bleeds neighbors.
+            let uv_bounds = [ax + 0.5, ay + 0.5, ax + aw - 0.5, ay + ah - 0.5];
+            let corners = [
+                ([*x, *y], [ax, ay], [-w / 2.0, -h / 2.0]),
+                ([x + w, *y], [ax + aw, ay], [w / 2.0, -h / 2.0]),
+                ([x + w, y + h], [ax + aw, ay + ah], [w / 2.0, h / 2.0]),
+                ([*x, y + h], [ax, ay + ah], [-w / 2.0, h / 2.0]),
+            ];
+
+            let first_index = self.image_indices.len() as u32;
+            let base = self.image_vertices.len() as u32;
+            for (position, atlas_px, local) in corners {
+                self.image_vertices.push(ImageVertex {
+                    position,
+                    atlas_px,
+                    local,
+                    params,
+                    uv_bounds,
+                });
+            }
+            self.image_indices
+                .extend_from_slice(&[base, base + 1, base + 2, base + 2, base + 3, base]);
+            record_range(&mut self.image_ranges, first_index, 6, clips.current());
+        }
+
+        self.image_index_count = self.image_indices.len() as u32;
+        culled
+    }
+
+    pub(crate) fn upload_image_geometry(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
+        if !self.image_vertices.is_empty() {
+            let vb = self.image_vb.get_or_insert_with(|| {
+                GpuVec::new(
+                    device,
+                    "layer_image_vb",
+                    wgpu::BufferUsages::VERTEX,
+                    INITIAL_VB_SIZE,
+                )
+            });
+            vb.upload(device, queue, &self.image_vertices);
+
+            let ib = self.image_ib.get_or_insert_with(|| {
+                GpuVec::new(
+                    device,
+                    "layer_image_ib",
+                    wgpu::BufferUsages::INDEX,
+                    INITIAL_IB_SIZE,
+                )
+            });
+            ib.upload(device, queue, &self.image_indices);
+        }
     }
 
     /// Rebuild CPU-side analytic shadow geometry. Each shadow is a single

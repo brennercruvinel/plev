@@ -311,6 +311,39 @@ mod tests {
     }
 
     #[test]
+    fn image_src_bytes_emits_image_node_with_natural_size() {
+        // Tiny in-memory PNG (the png feature also enables encoding)
+        let img = ::image::RgbaImage::from_pixel(6, 4, ::image::Rgba([1, 2, 3, 255]));
+        let mut png = std::io::Cursor::new(Vec::new());
+        img.write_to(&mut png, ::image::ImageFormat::Png).unwrap();
+
+        let el = image().src_bytes(png.into_inner()).rounded(3.0);
+        let nodes = el.render(&mut test_cx());
+        assert_eq!(nodes.len(), 1);
+        let SceneNode::Image {
+            w,
+            h,
+            image: handle,
+            corner_radius,
+            ..
+        } = &nodes[0]
+        else {
+            panic!("Expected Image, got {:?}", &nodes[0]);
+        };
+        // Natural size drives layout when no explicit w/h is set
+        assert_eq!((*w, *h), (6.0, 4.0));
+        assert_eq!((handle.width, handle.height), (6, 4));
+        assert_eq!(*corner_radius, 3.0);
+    }
+
+    #[test]
+    fn image_without_source_emits_nothing() {
+        let el = image().w(50.0).h(50.0);
+        let nodes = el.render(&mut test_cx());
+        assert!(nodes.is_empty());
+    }
+
+    #[test]
     fn clip_children_wraps_children_in_push_pop() {
         let el = div()
             .w(100.0)

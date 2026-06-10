@@ -6,7 +6,7 @@ use std::hash::{Hash, Hasher};
 
 use crate::compositor::clip::{ClipRect, ClipStack, DrawRange};
 use crate::compositor::scene::SceneNode;
-use crate::compositor::vertex::{QuadVertex, RectSdfVertex, ShadowVertex};
+use crate::compositor::vertex::{ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex};
 use crate::gpu_vec::GpuVec;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -57,6 +57,12 @@ pub struct Layer {
     pub(crate) shadow_vb: Option<GpuVec>,
     pub(crate) shadow_ib: Option<GpuVec>,
     pub(crate) shadow_index_count: u32,
+    pub(crate) image_vertices: Vec<ImageVertex>,
+    pub(crate) image_indices: Vec<u32>,
+    pub(crate) image_ranges: Vec<DrawRange>,
+    pub(crate) image_vb: Option<GpuVec>,
+    pub(crate) image_ib: Option<GpuVec>,
+    pub(crate) image_index_count: u32,
     pub(crate) text_vertices: Vec<crate::text::TextVertex>,
     pub(crate) text_indices: Vec<u32>,
     pub(crate) text_ranges: Vec<DrawRange>,
@@ -107,6 +113,12 @@ impl Layer {
             shadow_vb: None,
             shadow_ib: None,
             shadow_index_count: 0,
+            image_vertices: Vec::new(),
+            image_indices: Vec::new(),
+            image_ranges: Vec::new(),
+            image_vb: None,
+            image_ib: None,
+            image_index_count: 0,
             text_vertices: Vec::new(),
             text_indices: Vec::new(),
             text_ranges: Vec::new(),
@@ -178,6 +190,9 @@ impl Layer {
     pub fn shadow_draw_ranges(&self) -> &[DrawRange] {
         &self.shadow_ranges
     }
+    pub fn image_draw_ranges(&self) -> &[DrawRange] {
+        &self.image_ranges
+    }
     pub fn text_draw_ranges(&self) -> &[DrawRange] {
         &self.text_ranges
     }
@@ -215,6 +230,19 @@ impl Layer {
             return None;
         }
         Some((vb.buffer(), ib.buffer(), self.shadow_index_count))
+    }
+
+    pub fn has_images(&self) -> bool {
+        self.image_index_count > 0
+    }
+
+    pub fn image_buffers(&self) -> Option<(&wgpu::Buffer, &wgpu::Buffer, u32)> {
+        let vb = self.image_vb.as_ref()?;
+        let ib = self.image_ib.as_ref()?;
+        if self.image_index_count == 0 {
+            return None;
+        }
+        Some((vb.buffer(), ib.buffer(), self.image_index_count))
     }
 
     pub fn has_text(&self) -> bool {
