@@ -159,6 +159,16 @@ impl CardsSection {
             .collect()
     }
 
+    /// Natural height of the laid-out deck (page scrolling needs it).
+    pub fn content_height(&self, content: Rect) -> f32 {
+        self.layout(content)
+            .iter()
+            .map(|r| r.y + r.h)
+            .fold(content.y, f32::max)
+            - content.y
+            + GAP
+    }
+
     pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
         let rects = self.layout(content);
         let mut result = EventResult::IGNORED;

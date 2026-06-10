@@ -44,6 +44,14 @@ impl IconsSection {
             .collect()
     }
 
+    /// Natural height of the icon grid (page scrolling needs it).
+    pub fn content_height(&self, content: Rect) -> f32 {
+        self.cell_rects(content)
+            .last()
+            .map(|r| r.y + r.h - content.y + GAP)
+            .unwrap_or(0.0)
+    }
+
     pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
         if let WidgetEvent::MouseMove { x, y } = *event {
             let hit = self

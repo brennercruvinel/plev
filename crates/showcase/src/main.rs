@@ -139,7 +139,10 @@ impl ApplicationHandler for App {
             }
 
             WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
+                // A Resized follows on most platforms, but invalidating here
+                // is cheap and guarantees a frame on DPI changes.
                 self.scale_factor = scale_factor;
+                self.invalidate();
             }
 
             WindowEvent::CursorMoved { position, .. } => {

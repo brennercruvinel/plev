@@ -11,6 +11,7 @@ mod theme_gallery;
 
 use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use plev::overlay::{OverlayId, OverlayKind, OverlayManager};
+use plev::scroll::ScrollState;
 use plev::theme::{Intent, Theme};
 use plev::ui::icons;
 use plev::ui::widgets::{
@@ -129,6 +130,10 @@ pub struct ShowcaseView {
     pub theme_name: String,
     pub section: Section,
     sidebar_hover: Option<usize>,
+    /// Page-level vertical scroll, one per section: HOFF pages are taller
+    /// than the window (Cards, Theme, …); without this the wheel is dead
+    /// everywhere outside the virtualized list.
+    page_scroll: [ScrollState; Section::ALL.len()],
 
     pub overlay_mgr: OverlayManager,
     layers: Option<Layers>,
@@ -170,6 +175,7 @@ impl ShowcaseView {
             theme_name: "hoff".to_string(),
             section: Section::Cards,
             sidebar_hover: None,
+            page_scroll: std::array::from_fn(|_| ScrollState::new()),
             overlay_mgr: OverlayManager::new(),
             layers: None,
             toasts: ToastManager::new(),
@@ -191,6 +197,51 @@ impl ShowcaseView {
             (self.width - SIDEBAR_W - PAD * 2.0).max(200.0),
             (self.height - PAD * 2.0 - HEADER_H).max(120.0),
         )
+    }
+
+    fn section_idx(&self) -> usize {
+        Section::ALL
+            .iter()
+            .position(|s| *s == self.section)
+            .unwrap_or(0)
+    }
+
+    /// Current page scroll offset of the active section.
+    pub fn page_offset(&self) -> f32 {
+        self.page_scroll[self.section_idx()].offset()
+    }
+
+    /// Content rect shifted up by the page scroll offset. Sections lay out,
+    /// hit-test and render against this rect so events and pixels always
+    /// agree; the render clips it back to the content viewport.
+    fn page_rect(&self) -> Rect {
+        let mut rect = self.content_rect();
+        rect.y -= self.page_offset();
+        rect
+    }
+
+    /// Natural (unclipped) height of the active section's content.
+    fn section_content_height(&self, content: Rect) -> f32 {
+        match self.section {
+            Section::Cards => self.cards.content_height(content),
+            Section::Buttons => self.buttons.content_height(content),
+            Section::Forms => self.forms.content_height(content),
+            Section::Overlays => self.overlays.content_height(content),
+            // The lists page sizes itself to the viewport; the virtual list
+            // and tree scroll internally.
+            Section::Lists => content.h,
+            Section::Icons => self.icons_gallery.content_height(content),
+            Section::Theme => self.themes.content_height(content, &self.theme),
+        }
+    }
+
+    /// Sync the active section's page scroll limits with the viewport.
+    fn sync_page_scroll(&mut self) {
+        let content = self.content_rect();
+        let height = self.section_content_height(content);
+        let scroll = &mut self.page_scroll[self.section_idx()];
+        scroll.set_viewport(content.h);
+        scroll.set_content(height);
     }
 
     fn set_theme(&mut self, name: &str) {
@@ -252,7 +303,7 @@ impl ShowcaseView {
         if self.section != Section::Overlays || self.active_overlay.is_some() {
             return false;
         }
-        let content = self.content_rect();
+        let content = self.page_rect();
         if !self.overlays.menu_area(content).contains(x, y) {
             return false;
         }
@@ -402,7 +453,7 @@ impl ShowcaseView {
 
         // Open select dropdown gets priority over everything beneath it.
         if self.section == Section::Forms && self.forms.select_is_open() {
-            let r = self.forms.route_select(event, self.content_rect());
+            let r = self.forms.route_select(event, self.page_rect());
             if r.handled || r.changed {
                 return r.changed;
             }
@@ -410,7 +461,17 @@ impl ShowcaseView {
 
         result = result.merge(self.handle_sidebar(event));
 
-        let content = self.content_rect();
+        // Clicks on the header band belong to the chrome: widgets scrolled
+        // underneath it must not receive them.
+        let viewport = self.content_rect();
+        if let WidgetEvent::MouseDown { x, y } = *event
+            && x >= SIDEBAR_W
+            && y < viewport.y
+        {
+            return result.changed;
+        }
+
+        let content = self.page_rect();
         let section_result = match self.section {
             Section::Cards => self.cards.handle_event(event, content),
             Section::Buttons => self.buttons.handle_event(event, content),
@@ -445,6 +506,24 @@ impl ShowcaseView {
             }
         };
         result = result.merge(section_result);
+
+        // Page scroll: when no widget consumed the wheel, scroll the
+        // section itself (HOFF pages overflow the window). Clamped by
+        // ScrollState; only an actual offset change requests a frame.
+        if let WidgetEvent::Scroll { x, delta, .. } = *event
+            && !result.handled
+            && x >= SIDEBAR_W
+        {
+            self.sync_page_scroll();
+            let idx = self.section_idx();
+            let scroll = &mut self.page_scroll[idx];
+            let old = scroll.offset();
+            scroll.scroll_by(delta);
+            if scroll.offset() != old {
+                result = result.merge(EventResult::changed());
+            }
+        }
+
         result.changed
     }
 
@@ -533,7 +612,11 @@ impl ShowcaseView {
         self.render_sidebar(c, &theme);
         self.render_header(c, &theme);
 
-        let content = self.content_rect();
+        // Keep the page scroll clamped to the current viewport/content
+        // (resize can shrink content; the offset must follow).
+        self.sync_page_scroll();
+        let content = self.page_rect();
+        let viewport = self.content_rect();
 
         // Clip the virtualized list (overscan rows) to its panel.
         let clip = if self.section == Section::Lists {
@@ -550,6 +633,14 @@ impl ShowcaseView {
         };
         c.set_layer_clip_rect(layers.list, clip);
 
+        // Scrolled section content clips to the viewport below the header
+        // (PushClip rects are logical; the encoder scales them to physical).
+        c.push(SceneNode::PushClip {
+            x: SIDEBAR_W,
+            y: viewport.y,
+            w: self.width - SIDEBAR_W,
+            h: viewport.h,
+        });
         match self.section {
             Section::Cards => self.cards.render(c, content, &theme),
             Section::Buttons => self.buttons.render(c, content, &theme),
@@ -563,6 +654,7 @@ impl ShowcaseView {
             Section::Icons => self.icons_gallery.render(c, content, &theme),
             Section::Theme => self.themes.render(c, content, &theme, &self.theme_name),
         }
+        c.push(SceneNode::PopClip);
 
         // Active overlay: fade via layer opacity driven by the manager.
         let mut overlay_opacity = 1.0;
@@ -846,5 +938,278 @@ mod tests {
             let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().len();
             assert!(nodes > 10, "{section:?} emitted only {nodes} nodes");
         }
+    }
+
+    // -- Reactivity regression probes (event chain must report changes) ----
+
+    /// Find the y position of a text node on a layer (probe helper).
+    fn text_node_y(c: &Compositor, layer: LayerId, needle: &str) -> Option<f32> {
+        c.layer(layer).unwrap().nodes().iter().find_map(|n| {
+            if let SceneNode::Text { key, y, .. } = n {
+                (key.text == needle).then_some(*y)
+            } else {
+                None
+            }
+        })
+    }
+
+    #[test]
+    fn probe_scroll_over_virtual_list_reports_change_and_shifts_rows() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        view.section = Section::Lists;
+        let mut c = Compositor::new();
+        view.render(&mut c);
+
+        let bounds = view.lists.list_bounds(view.content_rect());
+        let (cx, cy) = bounds.center();
+        let y_before = text_node_y(&c, view.layers.unwrap().list, "Item 0")
+            .expect("Item 0 rendered before scroll");
+
+        let changed = view.handle_event(&WidgetEvent::Scroll {
+            x: cx,
+            y: cy,
+            delta: 48.0,
+        });
+        assert!(changed, "scroll over the virtual list must request redraw");
+        assert!(view.lists.list.scroll.offset() > 0.0, "offset must move");
+
+        view.render(&mut c);
+        let y_after = text_node_y(&c, view.layers.unwrap().list, "Item 0")
+            .expect("Item 0 still in overscan after 48px scroll");
+        assert!(
+            y_after < y_before,
+            "rows must shift up after scrolling down (before={y_before}, after={y_after})"
+        );
+    }
+
+    #[test]
+    fn probe_hover_over_sidebar_reports_change() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        let rect = view.sidebar_item_rects()[2];
+        let (cx, cy) = rect.center();
+        assert!(
+            view.handle_event(&WidgetEvent::MouseMove { x: cx, y: cy }),
+            "hover entering a sidebar item must request redraw"
+        );
+        assert!(
+            !view.handle_event(&WidgetEvent::MouseMove { x: cx, y: cy }),
+            "unchanged hover must not request redraw"
+        );
+        assert!(
+            view.handle_event(&WidgetEvent::MouseMove { x: cx, y: 4.0 }),
+            "hover leaving the sidebar item must request redraw"
+        );
+    }
+
+    #[test]
+    fn probe_hover_over_buttons_reports_change() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        view.section = Section::Buttons;
+        let content = view.content_rect();
+        // First button row starts after the group label.
+        let (cx, cy) = (content.x + 30.0, content.y + 24.0 + 22.0);
+        assert!(
+            view.handle_event(&WidgetEvent::MouseMove { x: cx, y: cy }),
+            "hover entering a button must request redraw"
+        );
+        assert!(
+            view.handle_event(&WidgetEvent::MouseMove {
+                x: cx,
+                y: cy - 200.0
+            }),
+            "hover leaving a button must request redraw"
+        );
+    }
+
+    #[test]
+    fn probe_click_sidebar_switches_section_and_reports_change() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        let rect = view.sidebar_item_rects()[4]; // Lists
+        let (cx, cy) = rect.center();
+        assert!(view.handle_event(&WidgetEvent::MouseDown { x: cx, y: cy }));
+        assert_eq!(view.section, Section::Lists);
+    }
+
+    #[test]
+    fn probe_ticks_settle_with_no_input() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        for section in Section::ALL {
+            view.section = section;
+            let mut c = Compositor::new();
+            view.render(&mut c);
+            let mut animating = true;
+            for _ in 0..600 {
+                animating = view.tick(1.0 / 60.0);
+                if !animating {
+                    break;
+                }
+            }
+            assert!(!animating, "{section:?}: tick never settles (busy loop)");
+        }
+    }
+
+    #[test]
+    fn probe_idle_rerender_is_stable() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        for section in Section::ALL {
+            view.section = section;
+            let mut c = Compositor::new();
+            view.render(&mut c);
+            view.tick(1.0 / 60.0);
+            c.resolve_scene((1200.0, 800.0));
+            for l in c.layers().iter().map(|l| l.id).collect::<Vec<_>>() {
+                c.mark_layer_clean(l);
+            }
+            // No input: the next frame must hash identically.
+            view.tick(1.0 / 60.0);
+            view.render(&mut c);
+            assert!(
+                !c.needs_render(),
+                "{section:?}: idle re-render produced a different scene"
+            );
+        }
+    }
+
+    // -- Page scroll regressions (HOFF pages overflow the 800px window) ----
+
+    #[test]
+    fn wheel_scrolls_overflowing_sections_and_requests_redraw() {
+        for section in [Section::Cards, Section::Theme] {
+            let mut view = ShowcaseView::new(1200.0, 800.0);
+            view.section = section;
+            let mut c = Compositor::new();
+            view.render(&mut c);
+
+            let content = view.content_rect();
+            assert!(
+                view.section_content_height(content) > content.h,
+                "{section:?} fits in 800px now; pick a taller section for this test"
+            );
+
+            let (cx, cy) = content.center();
+            let changed = view.handle_event(&WidgetEvent::Scroll {
+                x: cx,
+                y: cy,
+                delta: 120.0,
+            });
+            assert!(changed, "{section:?}: page scroll must request a redraw");
+            assert!(
+                view.page_offset() > 0.0,
+                "{section:?}: page offset must move"
+            );
+
+            // Scrolling back past the top clamps at zero and still redraws.
+            let changed = view.handle_event(&WidgetEvent::Scroll {
+                x: cx,
+                y: cy,
+                delta: -10_000.0,
+            });
+            assert!(changed);
+            assert_eq!(view.page_offset(), 0.0, "clamped at the top");
+        }
+    }
+
+    #[test]
+    fn page_scroll_shifts_rendered_nodes_and_clips_to_viewport() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        view.section = Section::Theme;
+        let mut c = Compositor::new();
+        view.render(&mut c);
+        let y_before =
+            text_node_y(&c, LayerId::DEFAULT, "PALETTES").expect("palettes label rendered");
+
+        let content = view.content_rect();
+        let (cx, cy) = content.center();
+        assert!(view.handle_event(&WidgetEvent::Scroll {
+            x: cx,
+            y: cy,
+            delta: 100.0,
+        }));
+        view.render(&mut c);
+        let y_after = text_node_y(&c, LayerId::DEFAULT, "PALETTES").expect("still emitted");
+        assert!(
+            (y_before - y_after - 100.0).abs() < 0.5,
+            "nodes must shift up by the scrolled amount (before={y_before}, after={y_after})"
+        );
+
+        // The scrolled content is wrapped in a clip to the content viewport.
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes();
+        let clip = nodes.iter().find_map(|n| match n {
+            SceneNode::PushClip { x, y, w, h } => Some((*x, *y, *w, *h)),
+            _ => None,
+        });
+        let clip = clip.expect("section content must be clipped while scrolled");
+        assert_eq!(clip.0, SIDEBAR_W);
+        assert_eq!(clip.1, content.y);
+    }
+
+    #[test]
+    fn scroll_over_virtual_list_keeps_priority_over_page_scroll() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        view.section = Section::Lists;
+        let mut c = Compositor::new();
+        view.render(&mut c);
+
+        let bounds = view.lists.list_bounds(view.content_rect());
+        let (cx, cy) = bounds.center();
+        assert!(view.handle_event(&WidgetEvent::Scroll {
+            x: cx,
+            y: cy,
+            delta: 48.0,
+        }));
+        assert!(view.lists.list.scroll.offset() > 0.0);
+        assert_eq!(
+            view.page_offset(),
+            0.0,
+            "the lists page itself fits the viewport and must not scroll"
+        );
+    }
+
+    #[test]
+    fn clicks_on_the_header_band_do_not_reach_scrolled_widgets() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        view.section = Section::Theme;
+        let mut c = Compositor::new();
+        view.render(&mut c);
+
+        let content = view.content_rect();
+        let (cx, cy) = content.center();
+        // Scroll until palette cards sit underneath the header band.
+        view.handle_event(&WidgetEvent::Scroll {
+            x: cx,
+            y: cy,
+            delta: 160.0,
+        });
+        let before = view.theme_name.clone();
+        // Click in the header band — must not pick a (hidden) theme card.
+        view.handle_event(&WidgetEvent::MouseDown { x: cx, y: 60.0 });
+        assert_eq!(view.theme_name, before, "header clicks must hit nothing");
+    }
+
+    #[test]
+    fn probe_event_change_marks_compositor_needs_render() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        view.section = Section::Lists;
+        let mut c = Compositor::new();
+        view.render(&mut c);
+        c.resolve_scene((1200.0, 800.0));
+        for l in c.layers().iter().map(|l| l.id).collect::<Vec<_>>() {
+            c.mark_layer_clean(l);
+        }
+        assert!(!c.needs_render(), "clean after render+resolve");
+
+        let bounds = view.lists.list_bounds(view.content_rect());
+        let (cx, cy) = bounds.center();
+        let changed = view.handle_event(&WidgetEvent::Scroll {
+            x: cx,
+            y: cy,
+            delta: 48.0,
+        });
+        assert!(changed);
+        view.render(&mut c);
+        assert!(
+            c.needs_render(),
+            "scrolled scene must be detected as needing render"
+        );
     }
 }

@@ -134,6 +134,14 @@ impl OverlaysSection {
         self.layout(content).menu_area
     }
 
+    /// Natural height of the section (page scrolling needs it). The menu
+    /// area normally fills the remaining viewport; on short windows its
+    /// minimum height makes the page overflow (and scroll).
+    pub fn content_height(&self, content: Rect) -> f32 {
+        let area = self.layout(content).menu_area;
+        area.y + area.h - content.y
+    }
+
     pub fn handle_event(
         &mut self,
         event: &WidgetEvent,
