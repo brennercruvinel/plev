@@ -1,6 +1,7 @@
 //! Frame rendering — resolves the compositor scene graph to GPU through
-//! plev's shared encoders (quads → analytic shadows → SDF rects → images →
-//! text, then composite).
+//! plev's shared encoders: each layer's draw sequence in scene push order
+//! (quads/paths, shadows, SDF rects, images, text and backdrop-blur
+//! resolves interleaved as pushed), then composite.
 //!
 //! The shared helpers honor `SceneNode::PushClip` draw ranges and the
 //! shadow/image passes; the previous hand-rolled encoder silently dropped
