@@ -75,6 +75,7 @@ fn text_measure_spec(element: &Element) -> Option<TextMeasureSpec> {
             font_size: *font_size,
             line_height: *line_height,
             font_weight,
+            letter_spacing: 0.0,
             font_family: None,
         },
         max_width: *max_width,

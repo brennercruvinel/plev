@@ -21,6 +21,7 @@ use crate::layout::ComputedBounds;
 use super::backend::TextStyle;
 
 const MEASURE_CACHE_CAPACITY: usize = 2048;
+const VMETRICS_CACHE_CAPACITY: usize = 256;
 
 thread_local! {
     static MEASURE_CTX: RefCell<MeasureContext> = RefCell::new(MeasureContext::new());
@@ -32,6 +33,8 @@ struct MeasureContext {
     scratch: Buffer,
     // Measurement cache keyed by (text, style, width bucket).
     cache: LruCache<MeasureKey, (f32, f32)>,
+    // Vertical metrics per style (small: one entry per distinct style).
+    vmetrics_cache: LruCache<VMetricsKey, LineMetrics>,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -40,6 +43,7 @@ struct MeasureKey {
     font_size_bits: u32,
     line_height_bits: u32,
     font_weight: u16,
+    letter_spacing_bits: u32,
     font_family: Option<String>,
     // Wrap width rounded to whole pixels (plan: "largura-bucket").
     width_bucket: Option<i32>,
@@ -52,8 +56,30 @@ impl MeasureKey {
             font_size_bits: style.font_size.to_bits(),
             line_height_bits: style.line_height.to_bits(),
             font_weight: style.font_weight,
+            letter_spacing_bits: style.letter_spacing.to_bits(),
             font_family: style.font_family.clone(),
             width_bucket: max_width.map(|w| w.round() as i32),
+        }
+    }
+}
+
+/// Cache key for [`LineMetrics`]: the vertical metrics of a style do not
+/// depend on the text or on letter spacing.
+#[derive(Clone, PartialEq, Eq, Hash)]
+struct VMetricsKey {
+    font_size_bits: u32,
+    line_height_bits: u32,
+    font_weight: u16,
+    font_family: Option<String>,
+}
+
+impl VMetricsKey {
+    fn new(style: &TextStyle) -> Self {
+        Self {
+            font_size_bits: style.font_size.to_bits(),
+            line_height_bits: style.line_height.to_bits(),
+            font_weight: style.font_weight,
+            font_family: style.font_family.clone(),
         }
     }
 }
@@ -66,6 +92,7 @@ impl MeasureContext {
             font_system,
             scratch,
             cache: LruCache::new(NonZeroUsize::new(MEASURE_CACHE_CAPACITY).unwrap()),
+            vmetrics_cache: LruCache::new(NonZeroUsize::new(VMETRICS_CACHE_CAPACITY).unwrap()),
         }
     }
 
@@ -103,7 +130,10 @@ fn new_font_system() -> FontSystem {
 }
 
 fn attrs_for(style: &TextStyle) -> Attrs<'_> {
-    let attrs = Attrs::new().weight(Weight(style.font_weight));
+    let mut attrs = Attrs::new().weight(Weight(style.font_weight));
+    if style.letter_spacing != 0.0 {
+        attrs = attrs.letter_spacing(style.letter_spacing);
+    }
     match style.font_family {
         Some(ref family) => attrs.family(Family::Name(family)),
         None => attrs,
@@ -192,6 +222,39 @@ fn cursor_rect_in(buffer: &Buffer, starts: &[usize], cursor_byte: usize) -> Comp
         }
     }
     rect
+}
+
+// ---------------------------------------------------------------------------
+// LineMetrics — real vertical metrics of a shaped line
+// ---------------------------------------------------------------------------
+
+/// Vertical metrics of a single line shaped with a given style, taken from
+/// the faces cosmic-text actually resolves (`LayoutLine::max_ascent` /
+/// `max_descent`) — not from `font_size` heuristics. All values are px,
+/// y-down, relative to the top of the text buffer.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct LineMetrics {
+    /// Max ascent above the baseline.
+    pub ascent: f32,
+    /// Max descent below the baseline.
+    pub descent: f32,
+    /// Baseline offset from the buffer top (cosmic-text `line_y`, which
+    /// already centers the glyph box inside the line box).
+    pub baseline: f32,
+    /// The line box height (the style's `line_height`).
+    pub line_height: f32,
+}
+
+impl LineMetrics {
+    /// Height of the glyph box (`ascent + descent`).
+    pub fn glyph_height(&self) -> f32 {
+        self.ascent + self.descent
+    }
+
+    /// Top of the glyph box, relative to the buffer top.
+    pub fn glyph_top(&self) -> f32 {
+        self.baseline - self.ascent
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -300,6 +363,52 @@ impl TextMeasurer {
             }
             faces
         })
+    }
+
+    /// Real vertical metrics for a single line of `style` text (cached per
+    /// style). Shapes a probe string: swash ascent/descent are font-wide,
+    /// so the probe's glyphs only pin the resolved face, not the values.
+    pub fn line_metrics(style: &TextStyle) -> LineMetrics {
+        let key = VMetricsKey::new(style);
+        MEASURE_CTX.with(|ctx| {
+            let ctx = &mut *ctx.borrow_mut();
+            if let Some(&m) = ctx.vmetrics_cache.get(&key) {
+                return m;
+            }
+            ctx.prepare("Águj", style, None);
+            let run = ctx.scratch.layout_runs().next();
+            let (baseline, line_height) = run
+                .map(|r| (r.line_y - r.line_top, r.line_height))
+                .unwrap_or((style.line_height * 0.8, style.line_height));
+            let (ascent, descent) = ctx
+                .scratch
+                .lines
+                .first()
+                .and_then(|line| line.layout_opt())
+                .and_then(|layout| layout.first())
+                .map(|l| (l.max_ascent, l.max_descent))
+                // Inter-like fallback if shaping produced nothing.
+                .unwrap_or((style.font_size * 0.97, style.font_size * 0.24));
+            let m = LineMetrics {
+                ascent,
+                descent,
+                baseline,
+                line_height,
+            };
+            ctx.vmetrics_cache.put(key, m);
+            m
+        })
+    }
+
+    /// Y offset (relative to the container top) at which a single line of
+    /// `style` text must be drawn so its *glyph box* — real shaped
+    /// ascent+descent, via [`line_metrics`](Self::line_metrics) — is
+    /// centered in a container of height `container_h`. This is the one
+    /// vertical-centering rule for widget labels (buttons/tabs/pills);
+    /// never center by `font_size / 2.0`.
+    pub fn vertical_center(style: &TextStyle, container_h: f32) -> f32 {
+        let m = Self::line_metrics(style);
+        (container_h - m.glyph_height()) / 2.0 - m.glyph_top()
     }
 
     /// Shape `text` into an owned, queryable `ShapedText` (for `TextBackend`).

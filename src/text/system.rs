@@ -141,17 +141,19 @@ impl TextSystem {
             if !self.shaping_cache.contains_key(key) {
                 let font_size = f32::from_bits(key.font_size_bits);
                 let line_height = f32::from_bits(key.line_height_bits);
+                let letter_spacing = f32::from_bits(key.letter_spacing_bits);
                 let max_width = key.max_width_bits.map(f32::from_bits);
 
                 let mut buffer =
                     Buffer::new(&mut self.font_system, Metrics::new(font_size, line_height));
                 buffer.set_size(&mut self.font_system, max_width, None);
-                let attrs = match key.font_family {
-                    Some(ref family) => Attrs::new()
-                        .weight(Weight(key.font_weight))
-                        .family(Family::Name(family)),
-                    None => Attrs::new().weight(Weight(key.font_weight)),
-                };
+                let mut attrs = Attrs::new().weight(Weight(key.font_weight));
+                if letter_spacing != 0.0 {
+                    attrs = attrs.letter_spacing(letter_spacing);
+                }
+                if let Some(ref family) = key.font_family {
+                    attrs = attrs.family(Family::Name(family));
+                }
                 buffer.set_text(
                     &mut self.font_system,
                     &key.text,
