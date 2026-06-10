@@ -225,11 +225,82 @@ mod tests {
     #[test]
     fn typography_scale_ordering() {
         let t = Theme::dark().typography;
+        assert!(t.small < t.caption);
         assert!(t.caption < t.body_sm);
         assert!(t.body_sm < t.body);
         assert!(t.body < t.title_sm);
         assert!(t.title_sm < t.title);
         assert!(t.title < t.display);
+    }
+
+    /// Every HOFF mixin (variables.sass:39-127) with its exact size,
+    /// line-height, weight and letter-spacing (0.025em -> px).
+    #[test]
+    fn hoff_type_ramp_matches_reference_mixins() {
+        let t = Theme::hoff().typography;
+        assert_eq!(t, TypographyScale::hoff());
+        let cases = [
+            ("h4", t.h4(), 36.0, 36.0, 500, 0.0),
+            ("title", t.title(), 20.0, 24.0, 500, 0.0),
+            ("base-r", t.base_r(), 16.0, 24.0, 400, 0.0),
+            ("base-m", t.base_m(), 16.0, 24.0, 500, 0.0),
+            ("base-2r", t.base_2r(), 14.0, 19.6, 400, 0.0),
+            ("base-2m", t.base_2m(), 14.0, 19.6, 500, 0.0),
+            ("base-2sm", t.base_2sm(), 14.0, 19.6, 600, 0.0),
+            ("base-2b", t.base_2b(), 14.0, 19.6, 700, 0.0),
+            ("caption-r", t.caption_r(), 12.0, 15.96, 400, 0.0),
+            ("caption-sm", t.caption_sm(), 12.0, 15.96, 600, 0.0),
+            ("small", t.small_r(), 10.0, 12.0, 400, 0.0),
+            ("small-sm", t.small_sm(), 10.0, 12.0, 600, 0.0),
+            ("body", t.body(), 16.0, 24.0, 400, 0.4),
+            ("body-2r", t.body_2r(), 14.0, 23.8, 400, 0.35),
+            ("body-2m", t.body_2m(), 14.0, 23.8, 500, 0.35),
+            ("body-2b", t.body_2b(), 14.0, 23.8, 500, 0.35),
+            ("hairline", t.hairline(), 12.0, 19.8, 500, 0.3),
+        ];
+        for (name, style, size, lh, weight, spacing) in cases {
+            assert_eq!(style.font_size, size, "={name}: font-size");
+            assert!(
+                (style.line_height - lh).abs() < 1e-4,
+                "={name}: line-height {} != {lh}",
+                style.line_height
+            );
+            assert_eq!(style.font_weight, weight, "={name}: weight");
+            assert!(
+                (style.letter_spacing - spacing).abs() < 1e-4,
+                "={name}: letter-spacing {} != {spacing}",
+                style.letter_spacing
+            );
+        }
+    }
+
+    /// The Inter body family carries 0.025em tracking; the rest of the
+    /// ramp none — exactly like the reference.
+    #[test]
+    fn hoff_letter_spacing_only_on_body_family() {
+        let t = Theme::hoff().typography;
+        for style in [
+            t.h4(),
+            t.title(),
+            t.base_r(),
+            t.base_2sm(),
+            t.caption_r(),
+            t.small_r(),
+        ] {
+            assert_eq!(style.letter_spacing, 0.0);
+        }
+        for style in [
+            t.body(),
+            t.body_2r(),
+            t.body_2m(),
+            t.body_2b(),
+            t.hairline(),
+        ] {
+            assert!(
+                (style.letter_spacing - 0.025 * style.font_size).abs() < 1e-4,
+                "body-family style must track 0.025em"
+            );
+        }
     }
 
     // -- Effects --

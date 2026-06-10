@@ -131,8 +131,9 @@ fn new_font_system() -> FontSystem {
 
 fn attrs_for(style: &TextStyle) -> Attrs<'_> {
     let mut attrs = Attrs::new().weight(Weight(style.font_weight));
-    if style.letter_spacing != 0.0 {
-        attrs = attrs.letter_spacing(style.letter_spacing);
+    if style.letter_spacing != 0.0 && style.font_size > 0.0 {
+        // cosmic-text tracking is in EM; the engine API is px.
+        attrs = attrs.letter_spacing(style.letter_spacing / style.font_size);
     }
     match style.font_family {
         Some(ref family) => attrs.family(Family::Name(family)),

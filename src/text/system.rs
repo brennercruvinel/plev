@@ -148,8 +148,9 @@ impl TextSystem {
                     Buffer::new(&mut self.font_system, Metrics::new(font_size, line_height));
                 buffer.set_size(&mut self.font_system, max_width, None);
                 let mut attrs = Attrs::new().weight(Weight(key.font_weight));
-                if letter_spacing != 0.0 {
-                    attrs = attrs.letter_spacing(letter_spacing);
+                if letter_spacing != 0.0 && font_size > 0.0 {
+                    // cosmic-text tracking is in EM; the key stores px.
+                    attrs = attrs.letter_spacing(letter_spacing / font_size);
                 }
                 if let Some(ref family) = key.font_family {
                     attrs = attrs.family(Family::Name(family));
