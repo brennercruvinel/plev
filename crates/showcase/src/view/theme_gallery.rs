@@ -1,4 +1,4 @@
-//! Theme section: palette cards, typography ramp, semantic colors.
+//! Theme section: the HOFF token strip, palette cards, typography ramp.
 
 use plev::compositor::{Compositor, SceneNode, TextNodeKey};
 use plev::theme::Theme;
@@ -8,6 +8,7 @@ use plev::ui::widgets::{EventResult, Rect, WidgetEvent};
 use super::{group_label, text};
 
 pub const THEMES: &[&str] = &[
+    "hoff",
     "dark",
     "light",
     "catppuccin",
@@ -35,6 +36,8 @@ const CARD_W: f32 = 168.0;
 const CARD_H: f32 = 84.0;
 const GAP: f32 = 12.0;
 const LABEL_H: f32 = 24.0;
+/// Height of the HOFF token strip above the palette grid.
+const TOKENS_H: f32 = 110.0;
 
 pub struct ThemeSection {
     hovered: Option<usize>,
@@ -55,12 +58,83 @@ impl ThemeSection {
                 let row = i / cols;
                 Rect::new(
                     content.x + col as f32 * (CARD_W + GAP),
-                    content.y + LABEL_H + row as f32 * (CARD_H + GAP),
+                    content.y + TOKENS_H + LABEL_H + row as f32 * (CARD_H + GAP),
                     CARD_W,
                     CARD_H,
                 )
             })
             .collect()
+    }
+
+    /// The HOFF signature strip: the canonical white-alpha ramp and the
+    /// four chromatic accents, drawn with the current theme's glass.
+    fn render_hoff_tokens(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
+        use plev::theme::hoff;
+        group_label(c, "HOFF ALPHAS — #F8F8F8", content.x, content.y, theme);
+        let alphas: [(f32, &str); 7] = [
+            (0.02, ".02"),
+            (0.05, ".05"),
+            (0.10, ".10"),
+            (0.25, ".25"),
+            (0.40, ".40"),
+            (0.70, ".70"),
+            (0.95, ".95"),
+        ];
+        let sw = 56.0;
+        let y = content.y + LABEL_H;
+        for (i, (a, label)) in alphas.iter().enumerate() {
+            let x = content.x + i as f32 * (sw + 8.0);
+            c.push(SceneNode::RoundedRect {
+                x,
+                y,
+                w: sw,
+                h: 36.0,
+                color: [hoff::N2.0[0], hoff::N2.0[1], hoff::N2.0[2], *a],
+                corner_radius: theme.radius.sm,
+                border_width: 1.0,
+                border_color: theme.glass.edge_soft.0,
+            });
+            text(
+                c,
+                label,
+                12.0,
+                600,
+                x + 16.0,
+                y + 40.0,
+                theme.glass.text_faint.0,
+            );
+        }
+
+        // Accents: the only chromatic tokens in the system.
+        let accents = [
+            (hoff::RED, "red"),
+            (hoff::GREEN, "green"),
+            (hoff::GREEN_LIGHT, "repost"),
+            (hoff::ORANGE, "heart"),
+        ];
+        let ax = content.x + alphas.len() as f32 * (sw + 8.0) + 24.0;
+        for (i, (color, label)) in accents.iter().enumerate() {
+            let x = ax + i as f32 * (sw + 8.0);
+            c.push(SceneNode::RoundedRect {
+                x: x + sw / 2.0 - 9.0,
+                y: y + 9.0,
+                w: 18.0,
+                h: 18.0,
+                color: color.0,
+                corner_radius: 9.0,
+                border_width: 0.0,
+                border_color: [0.0; 4],
+            });
+            text(
+                c,
+                label,
+                12.0,
+                400,
+                x + 12.0,
+                y + 40.0,
+                theme.glass.text_faint.0,
+            );
+        }
     }
 
     /// Returns the picked theme name, if a card was clicked.
@@ -92,7 +166,8 @@ impl ThemeSection {
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme, current: &str) {
-        group_label(c, "PALETTES", content.x, content.y, theme);
+        self.render_hoff_tokens(c, content, theme);
+        group_label(c, "PALETTES", content.x, content.y + TOKENS_H, theme);
 
         let rects = self.card_rects(content);
         let mut bottom = content.y;
