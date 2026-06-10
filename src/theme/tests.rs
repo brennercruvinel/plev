@@ -381,6 +381,26 @@ mod tests {
         assert_eq!(hoff::TOOLTIP.0, rgba8(0x26, 0x26, 0x26, 1.0));
     }
 
+    /// Parity contract for the page canvas: the live reference renders on
+    /// graphite, never the GOLDEN_SPEC's "#0E0E0E black" nor the hidden
+    /// #444444 body. Page == #303030, the rail one notch darker (#2E2E2E),
+    /// and a glass card (.02 white over the page) reads a touch LIGHTER.
+    #[test]
+    fn hoff_page_is_measured_graphite_not_black() {
+        let t = Theme::hoff();
+        let bg = t.colors.bg.0;
+        // Graphite, not black: every channel near 0.19 (#303030 = 48/255).
+        assert!((bg[0] - 48.0 / 255.0).abs() < 1e-5, "page bg is #303030");
+        assert!(bg[0] > 0.12 && bg[0] < 0.25, "graphite, not #0E0E0E black");
+        assert_eq!(bg[3], 1.0, "page bg is opaque");
+        // Rail/panel sits one notch darker than the page (measured #2E2E2E).
+        assert!(t.colors.surface.0[0] < bg[0], "rail darker than the page");
+        // A .02 white card glass composited over the page lands lighter.
+        let card_white = t.glass.surface.0;
+        let lifted = bg[0] * (1.0 - card_white[3]) + card_white[0] * card_white[3];
+        assert!(lifted > bg[0], "a glass card reads lighter than the page");
+    }
+
     #[test]
     fn hoff_text_alphas_exact() {
         let t = Theme::hoff();
