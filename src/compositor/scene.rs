@@ -64,9 +64,33 @@ pub enum SceneNode {
     },
     /// Pop the most recent `PushClip`.
     PopClip,
-    /// Analytic drop shadow of a rounded rect (Evan Wallace approximation,
-    /// no blur pass). `x..h` are the bounds of the CASTING rect; the emitted
-    /// quad is expanded by the blur and shifted by `offset`.
+    /// Region backdrop blur (CSS `backdrop-filter: blur(sigma)`): at this
+    /// point of the draw sequence, everything already composited below --
+    /// lower layers plus what this layer drew so far -- is resolved to a
+    /// texture, Gaussian-blurred and drawn back clipped to the rounded
+    /// rect. Nodes pushed after draw on top of the frosted region.
+    ///
+    /// Cost: one backdrop resolve (composite + 2-pass blur over the full
+    /// surface) per node; scenes are expected to hold only a few.
+    BackdropBlur {
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        corner_radius: f32,
+        /// Gaussian sigma in pixels.
+        sigma: f32,
+    },
+    /// Analytic shadow of a rounded rect (Evan Wallace approximation, no
+    /// blur pass). `x..h` are the bounds of the CASTING rect.
+    ///
+    /// Drop (`inset: false`): the emitted quad is expanded by the blur and
+    /// shifted by `offset`; push it BEFORE the rect that casts it.
+    ///
+    /// Inset (`inset: true`): the shadow falls INSIDE the rect (CSS
+    /// `box-shadow: inset`), clipped to the rounded bounds -- the HOFF
+    /// glass key-light (`inset 2px 4px 16px rgba(248,248,248,.06)`). Push
+    /// it AFTER the surface fill so it composites on top.
     Shadow {
         x: f32,
         y: f32,
@@ -77,6 +101,7 @@ pub enum SceneNode {
         blur_radius: f32,
         offset: [f32; 2],
         color: [f32; 4],
+        inset: bool,
     },
 }
 
@@ -196,6 +221,22 @@ impl SceneNode {
             SceneNode::PopClip => {
                 7u8.hash(&mut h);
             }
+            SceneNode::BackdropBlur {
+                x,
+                y,
+                w,
+                h: rh,
+                corner_radius,
+                sigma,
+            } => {
+                9u8.hash(&mut h);
+                x.to_bits().hash(&mut h);
+                y.to_bits().hash(&mut h);
+                w.to_bits().hash(&mut h);
+                rh.to_bits().hash(&mut h);
+                corner_radius.to_bits().hash(&mut h);
+                sigma.to_bits().hash(&mut h);
+            }
             SceneNode::Shadow {
                 x,
                 y,
@@ -205,6 +246,7 @@ impl SceneNode {
                 blur_radius,
                 offset,
                 color,
+                inset,
             } => {
                 5u8.hash(&mut h);
                 x.to_bits().hash(&mut h);
@@ -219,6 +261,7 @@ impl SceneNode {
                 for c in color {
                     c.to_bits().hash(&mut h);
                 }
+                inset.hash(&mut h);
             }
             SceneNode::GradientRect {
                 x,

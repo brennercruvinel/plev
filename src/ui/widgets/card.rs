@@ -267,6 +267,7 @@ impl Card {
                 blur_radius: 24.0,
                 offset: [0.0, 32.0],
                 color: [0.0, 0.0, 0.0, 0.40],
+                inset: false,
             },
         );
         // Card overlay: the page surface one notch more opaque

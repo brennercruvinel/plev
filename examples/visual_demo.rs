@@ -28,6 +28,8 @@ enum AppState {
     Ready {
         gpu: GpuContext,
         text_system: TextSystem,
+        effects: plev::effects::EffectProcessor,
+        texture_pool: plev::texture_pool::TexturePool,
     },
 }
 
@@ -88,6 +90,7 @@ impl DemoApp {
                 blur_radius: blur,
                 offset: [0.0, 6.0],
                 color: [0.0, 0.0, 0.0, 0.55],
+                inset: false,
             });
             self.compositor.draw_rounded_rect(RoundedRectParams {
                 x,
@@ -223,6 +226,8 @@ impl DemoApp {
         let AppState::Ready {
             ref mut gpu,
             ref mut text_system,
+            ref effects,
+            ref mut texture_pool,
         } = self.state
         else {
             return;
@@ -274,19 +279,29 @@ impl DemoApp {
             .map(|l| l.id)
             .collect();
 
-        encode_layer_passes(&self.compositor, gpu, text_system, &dirty_ids, &mut encoder);
+        let clear_color = plev::wgpu::Color {
+            r: BG[0],
+            g: BG[1],
+            b: BG[2],
+            a: 1.0,
+        };
+        encode_layer_passes(
+            &self.compositor,
+            gpu,
+            text_system,
+            effects,
+            texture_pool,
+            clear_color,
+            &dirty_ids,
+            &mut encoder,
+        );
         for id in &dirty_ids {
             self.compositor.mark_layer_clean(*id);
         }
 
         encode_composite_pass(
             &self.compositor,
-            plev::wgpu::Color {
-                r: BG[0],
-                g: BG[1],
-                b: BG[2],
-                a: 1.0,
-            },
+            clear_color,
             gpu,
             &surface_view,
             &[],
@@ -329,7 +344,13 @@ impl ApplicationHandler for DemoApp {
         self.window = Some(window.clone());
         let gpu = pollster::block_on(GpuContext::new(window));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        self.state = AppState::Ready { gpu, text_system };
+        let effects = plev::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        self.state = AppState::Ready {
+            gpu,
+            text_system,
+            effects,
+            texture_pool: plev::texture_pool::TexturePool::new(),
+        };
 
         // Load images once: a real PNG through the decode path and a
         // procedural RGBA pattern.

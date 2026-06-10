@@ -1,9 +1,10 @@
 use super::{INITIAL_IB_SIZE, INITIAL_VB_SIZE, Layer};
 use crate::compositor::clip::{ClipStack, record_range};
 use crate::compositor::scene::SceneNode;
+use crate::compositor::sequence::{DrawCommand, DrawKind, push_geometry};
 use crate::compositor::vertex::{
-    ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction, shadow_padding,
-    shadow_sigma,
+    BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction,
+    shadow_padding, shadow_sigma,
 };
 use crate::gpu_vec::GpuVec;
 
@@ -49,6 +50,29 @@ fn emit_sdf_rect(vertices: &mut Vec<RectSdfVertex>, indices: &mut Vec<u32>, r: &
     indices.extend_from_slice(&[base, base + 1, base + 2, base + 2, base + 3, base]);
 }
 
+/// Emit one SDF rect node (rounded or gradient) into the SDF buffers and
+/// the draw sequence. Returns 1 when culled (free function over disjoint
+/// fields so the caller can keep iterating `self.nodes`).
+#[allow(clippy::too_many_arguments)]
+fn emit_sdf_node(
+    vertices: &mut Vec<RectSdfVertex>,
+    indices: &mut Vec<u32>,
+    ranges: &mut Vec<crate::compositor::clip::DrawRange>,
+    sequence: &mut Vec<DrawCommand>,
+    rect: &SdfRect,
+    viewport: (f32, f32),
+    clips: &ClipStack,
+) -> u32 {
+    if outside_viewport(viewport, rect.x, rect.y, rect.w, rect.h) || clips.is_empty_clip() {
+        return 1;
+    }
+    let first_index = indices.len() as u32;
+    emit_sdf_rect(vertices, indices, rect);
+    record_range(ranges, first_index, 6, clips.current());
+    push_geometry(sequence, DrawKind::SdfRect, first_index, 6, clips.current());
+    0
+}
+
 /// Bounding box of tessellated path vertices, or `None` for empty paths.
 fn path_bounds(vertices: &[QuadVertex]) -> Option<(f32, f32, f32, f32)> {
     let first = vertices.first()?;
@@ -64,13 +88,39 @@ fn path_bounds(vertices: &[QuadVertex]) -> Option<(f32, f32, f32, f32)> {
 }
 
 impl Layer {
-    /// Rebuild CPU-side quad geometry (rects + paths), skipping nodes whose
-    /// bounds are entirely outside the viewport or inside an empty clip.
-    /// Returns the number of nodes culled.
-    pub(crate) fn build_quad_geometry(&mut self, viewport: (f32, f32)) -> u32 {
+    /// Rebuild all CPU-side geometry in ONE walk over the scene nodes, so
+    /// the draw [`sequence`] records the real push order across primitive
+    /// types (quads/paths, shadows, SDF rects, images, text). Nodes whose
+    /// bounds are entirely outside the viewport or inside an empty clip are
+    /// skipped. Returns the number of nodes culled.
+    ///
+    /// Text nodes have no geometry yet (glyphs resolve later on the GPU
+    /// path); they are grouped into [`text_groups`] -- one group per
+    /// maximal run of text nodes not interrupted by another emitted
+    /// primitive or a clip change -- and a placeholder `Text` command is
+    /// recorded per group, patched by [`assign_text_ranges`].
+    ///
+    /// [`sequence`]: Layer::sequence
+    /// [`text_groups`]: Layer::text_node_groups
+    /// [`assign_text_ranges`]: Layer::assign_text_ranges
+    pub(crate) fn build_geometry(&mut self, viewport: (f32, f32)) -> u32 {
         self.quad_vertices.clear();
         self.quad_indices.clear();
         self.quad_ranges.clear();
+        self.sdf_vertices.clear();
+        self.sdf_indices.clear();
+        self.sdf_ranges.clear();
+        self.shadow_vertices.clear();
+        self.shadow_indices.clear();
+        self.shadow_ranges.clear();
+        self.image_vertices.clear();
+        self.image_indices.clear();
+        self.image_ranges.clear();
+        self.backdrop_vertices.clear();
+        self.backdrop_indices.clear();
+        self.sequence.clear();
+        self.text_groups.clear();
+
         let mut clips = ClipStack::default();
         let mut culled = 0u32;
 
@@ -78,6 +128,7 @@ impl Layer {
             match node {
                 SceneNode::PushClip { x, y, w, h } => clips.push([*x, *y, *w, *h]),
                 SceneNode::PopClip => clips.pop(),
+
                 SceneNode::Rect { x, y, w, h, color } => {
                     if outside_viewport(viewport, *x, *y, *w, *h) || clips.is_empty_clip() {
                         culled += 1;
@@ -112,7 +163,15 @@ impl Layer {
                         base,
                     ]);
                     record_range(&mut self.quad_ranges, first_index, 6, clips.current());
+                    push_geometry(
+                        &mut self.sequence,
+                        DrawKind::Quad,
+                        first_index,
+                        6,
+                        clips.current(),
+                    );
                 }
+
                 SceneNode::Path { data } => {
                     if clips.is_empty_clip() {
                         culled += 1;
@@ -135,12 +194,294 @@ impl Layer {
                         data.indices.len() as u32,
                         clips.current(),
                     );
+                    push_geometry(
+                        &mut self.sequence,
+                        DrawKind::Quad,
+                        first_index,
+                        data.indices.len() as u32,
+                        clips.current(),
+                    );
                 }
-                _ => {}
+
+                SceneNode::RoundedRect {
+                    x,
+                    y,
+                    w,
+                    h,
+                    color,
+                    corner_radius,
+                    border_width,
+                    border_color,
+                } => {
+                    let rect = SdfRect {
+                        x: *x,
+                        y: *y,
+                        w: *w,
+                        h: *h,
+                        color: *color,
+                        color2: *color,
+                        gradient: [0.0; 4],
+                        corner_radius: *corner_radius,
+                        border_width: *border_width,
+                        border_color: *border_color,
+                    };
+                    culled += emit_sdf_node(
+                        &mut self.sdf_vertices,
+                        &mut self.sdf_indices,
+                        &mut self.sdf_ranges,
+                        &mut self.sequence,
+                        &rect,
+                        viewport,
+                        &clips,
+                    );
+                }
+
+                SceneNode::GradientRect {
+                    x,
+                    y,
+                    w,
+                    h,
+                    color,
+                    color2,
+                    angle_deg,
+                    corner_radius,
+                    border_width,
+                    border_color,
+                } => {
+                    let dir = gradient_direction(*angle_deg);
+                    let rect = SdfRect {
+                        x: *x,
+                        y: *y,
+                        w: *w,
+                        h: *h,
+                        color: *color,
+                        color2: *color2,
+                        gradient: [dir[0], dir[1], 1.0, 0.0],
+                        corner_radius: *corner_radius,
+                        border_width: *border_width,
+                        border_color: *border_color,
+                    };
+                    culled += emit_sdf_node(
+                        &mut self.sdf_vertices,
+                        &mut self.sdf_indices,
+                        &mut self.sdf_ranges,
+                        &mut self.sequence,
+                        &rect,
+                        viewport,
+                        &clips,
+                    );
+                }
+
+                SceneNode::Shadow {
+                    x,
+                    y,
+                    w,
+                    h,
+                    corner_radius,
+                    blur_radius,
+                    offset,
+                    color,
+                    inset,
+                } => {
+                    // Drop shadows pad the quad by the blur and shift it by
+                    // the offset; inset shadows live entirely inside the
+                    // casting rect, so the quad IS the rect and the offset
+                    // moves only the in-shader mask (params2).
+                    let (qx, qy, qw, qh, half, params2) = if *inset {
+                        (
+                            *x,
+                            *y,
+                            *w,
+                            *h,
+                            [w / 2.0, h / 2.0],
+                            [1.0, offset[0], offset[1], 0.0],
+                        )
+                    } else {
+                        let pad = shadow_padding(*blur_radius);
+                        (
+                            x - pad + offset[0],
+                            y - pad + offset[1],
+                            w + 2.0 * pad,
+                            h + 2.0 * pad,
+                            [w / 2.0 + pad, h / 2.0 + pad],
+                            [0.0; 4],
+                        )
+                    };
+                    if outside_viewport(viewport, qx, qy, qw, qh) || clips.is_empty_clip() {
+                        culled += 1;
+                        continue;
+                    }
+
+                    let params = [w / 2.0, h / 2.0, *corner_radius, shadow_sigma(*blur_radius)];
+                    // Quad corners relative to the rect center (the offset
+                    // rect center for drop shadows).
+                    let corners = [
+                        ([qx, qy], [-half[0], -half[1]]),
+                        ([qx + qw, qy], [half[0], -half[1]]),
+                        ([qx + qw, qy + qh], [half[0], half[1]]),
+                        ([qx, qy + qh], [-half[0], half[1]]),
+                    ];
+
+                    let first_index = self.shadow_indices.len() as u32;
+                    let base = self.shadow_vertices.len() as u32;
+                    for (position, local) in corners {
+                        self.shadow_vertices.push(ShadowVertex {
+                            position,
+                            local,
+                            color: *color,
+                            params,
+                            params2,
+                        });
+                    }
+                    self.shadow_indices.extend_from_slice(&[
+                        base,
+                        base + 1,
+                        base + 2,
+                        base + 2,
+                        base + 3,
+                        base,
+                    ]);
+                    record_range(&mut self.shadow_ranges, first_index, 6, clips.current());
+                    push_geometry(
+                        &mut self.sequence,
+                        DrawKind::Shadow,
+                        first_index,
+                        6,
+                        clips.current(),
+                    );
+                }
+
+                SceneNode::Image {
+                    x,
+                    y,
+                    w,
+                    h,
+                    image,
+                    corner_radius,
+                } => {
+                    if outside_viewport(viewport, *x, *y, *w, *h) || clips.is_empty_clip() {
+                        culled += 1;
+                        continue;
+                    }
+
+                    let params = [w / 2.0, h / 2.0, *corner_radius, 0.0];
+                    let (ax, ay) = (image.atlas_x as f32, image.atlas_y as f32);
+                    let (aw, ah) = (image.width as f32, image.height as f32);
+                    // Clamp sampling half a texel inside the image rect (the
+                    // shader applies it) so linear filtering never bleeds
+                    // neighbors.
+                    let uv_bounds = [ax + 0.5, ay + 0.5, ax + aw - 0.5, ay + ah - 0.5];
+                    let corners = [
+                        ([*x, *y], [ax, ay], [-w / 2.0, -h / 2.0]),
+                        ([x + w, *y], [ax + aw, ay], [w / 2.0, -h / 2.0]),
+                        ([x + w, y + h], [ax + aw, ay + ah], [w / 2.0, h / 2.0]),
+                        ([*x, y + h], [ax, ay + ah], [-w / 2.0, h / 2.0]),
+                    ];
+
+                    let first_index = self.image_indices.len() as u32;
+                    let base = self.image_vertices.len() as u32;
+                    for (position, atlas_px, local) in corners {
+                        self.image_vertices.push(ImageVertex {
+                            position,
+                            atlas_px,
+                            local,
+                            params,
+                            uv_bounds,
+                        });
+                    }
+                    self.image_indices.extend_from_slice(&[
+                        base,
+                        base + 1,
+                        base + 2,
+                        base + 2,
+                        base + 3,
+                        base,
+                    ]);
+                    record_range(&mut self.image_ranges, first_index, 6, clips.current());
+                    push_geometry(
+                        &mut self.sequence,
+                        DrawKind::Image,
+                        first_index,
+                        6,
+                        clips.current(),
+                    );
+                }
+
+                SceneNode::BackdropBlur {
+                    x,
+                    y,
+                    w,
+                    h,
+                    corner_radius,
+                    sigma,
+                } => {
+                    if outside_viewport(viewport, *x, *y, *w, *h) || clips.is_empty_clip() {
+                        culled += 1;
+                        continue;
+                    }
+                    let params = [w / 2.0, h / 2.0, *corner_radius, 0.0];
+                    let corners = [
+                        ([*x, *y], [-w / 2.0, -h / 2.0]),
+                        ([x + w, *y], [w / 2.0, -h / 2.0]),
+                        ([x + w, y + h], [w / 2.0, h / 2.0]),
+                        ([*x, y + h], [-w / 2.0, h / 2.0]),
+                    ];
+                    let first_index = self.backdrop_indices.len() as u32;
+                    let base = self.backdrop_vertices.len() as u32;
+                    for (position, local) in corners {
+                        self.backdrop_vertices.push(BackdropVertex {
+                            position,
+                            local,
+                            params,
+                        });
+                    }
+                    self.backdrop_indices.extend_from_slice(&[
+                        base,
+                        base + 1,
+                        base + 2,
+                        base + 2,
+                        base + 3,
+                        base,
+                    ]);
+                    // Never merged: each backdrop is its own resolve point.
+                    self.sequence.push(DrawCommand::BackdropBlur {
+                        first_index,
+                        sigma: *sigma,
+                        clip: clips.current(),
+                    });
+                }
+
+                SceneNode::Text { .. } => {
+                    let clip = clips.current();
+                    // A text node joins the previous group only when nothing
+                    // else was drawn since (the last sequence command is a
+                    // Text with the same clip); otherwise it starts a new
+                    // group + placeholder command so a rect pushed between
+                    // two texts really draws between them.
+                    let joins_last = matches!(
+                        self.sequence.last(),
+                        Some(DrawCommand::Geometry {
+                            kind: DrawKind::Text,
+                            range,
+                        }) if range.clip == clip
+                    );
+                    if joins_last {
+                        if let Some((nodes, _)) = self.text_groups.last_mut() {
+                            nodes.push(node.clone());
+                        }
+                    } else {
+                        self.text_groups.push((vec![node.clone()], clip));
+                        push_geometry(&mut self.sequence, DrawKind::Text, 0, 0, clip);
+                    }
+                }
             }
         }
 
         self.quad_index_count = self.quad_indices.len() as u32;
+        self.sdf_index_count = self.sdf_indices.len() as u32;
+        self.shadow_index_count = self.shadow_indices.len() as u32;
+        self.image_index_count = self.image_indices.len() as u32;
+        self.backdrop_index_count = self.backdrop_indices.len() as u32;
         culled
     }
 
@@ -168,161 +509,6 @@ impl Layer {
         }
     }
 
-    /// Rebuild CPU-side SDF geometry (rounded + gradient rects), skipping
-    /// nodes entirely outside the viewport. Returns the number of nodes
-    /// culled.
-    pub(crate) fn build_sdf_geometry(&mut self, viewport: (f32, f32)) -> u32 {
-        self.sdf_vertices.clear();
-        self.sdf_indices.clear();
-        self.sdf_ranges.clear();
-        let mut clips = ClipStack::default();
-        let mut culled = 0u32;
-
-        for node in &self.nodes {
-            let rect = match node {
-                SceneNode::PushClip { x, y, w, h } => {
-                    clips.push([*x, *y, *w, *h]);
-                    continue;
-                }
-                SceneNode::PopClip => {
-                    clips.pop();
-                    continue;
-                }
-                SceneNode::RoundedRect {
-                    x,
-                    y,
-                    w,
-                    h,
-                    color,
-                    corner_radius,
-                    border_width,
-                    border_color,
-                } => SdfRect {
-                    x: *x,
-                    y: *y,
-                    w: *w,
-                    h: *h,
-                    color: *color,
-                    color2: *color,
-                    gradient: [0.0; 4],
-                    corner_radius: *corner_radius,
-                    border_width: *border_width,
-                    border_color: *border_color,
-                },
-                SceneNode::GradientRect {
-                    x,
-                    y,
-                    w,
-                    h,
-                    color,
-                    color2,
-                    angle_deg,
-                    corner_radius,
-                    border_width,
-                    border_color,
-                } => {
-                    let dir = gradient_direction(*angle_deg);
-                    SdfRect {
-                        x: *x,
-                        y: *y,
-                        w: *w,
-                        h: *h,
-                        color: *color,
-                        color2: *color2,
-                        gradient: [dir[0], dir[1], 1.0, 0.0],
-                        corner_radius: *corner_radius,
-                        border_width: *border_width,
-                        border_color: *border_color,
-                    }
-                }
-                _ => continue,
-            };
-
-            if outside_viewport(viewport, rect.x, rect.y, rect.w, rect.h) || clips.is_empty_clip() {
-                culled += 1;
-                continue;
-            }
-            let first_index = self.sdf_indices.len() as u32;
-            emit_sdf_rect(&mut self.sdf_vertices, &mut self.sdf_indices, &rect);
-            record_range(&mut self.sdf_ranges, first_index, 6, clips.current());
-        }
-
-        self.sdf_index_count = self.sdf_indices.len() as u32;
-        culled
-    }
-
-    /// Rebuild CPU-side image sprite geometry. Atlas coordinates are stored
-    /// in pixels (normalized in the shader), so geometry stays valid across
-    /// atlas growth. Returns the number of nodes culled.
-    pub(crate) fn build_image_geometry(&mut self, viewport: (f32, f32)) -> u32 {
-        self.image_vertices.clear();
-        self.image_indices.clear();
-        self.image_ranges.clear();
-        let mut clips = ClipStack::default();
-        let mut culled = 0u32;
-
-        for node in &self.nodes {
-            let SceneNode::Image {
-                x,
-                y,
-                w,
-                h,
-                image,
-                corner_radius,
-            } = node
-            else {
-                match node {
-                    SceneNode::PushClip { x, y, w, h } => clips.push([*x, *y, *w, *h]),
-                    SceneNode::PopClip => clips.pop(),
-                    _ => {}
-                }
-                continue;
-            };
-
-            if outside_viewport(viewport, *x, *y, *w, *h) || clips.is_empty_clip() {
-                culled += 1;
-                continue;
-            }
-
-            let params = [w / 2.0, h / 2.0, *corner_radius, 0.0];
-            let (ax, ay) = (image.atlas_x as f32, image.atlas_y as f32);
-            let (aw, ah) = (image.width as f32, image.height as f32);
-            // Clamp sampling half a texel inside the image rect (the shader
-            // applies it) so linear filtering never bleeds neighbors.
-            let uv_bounds = [ax + 0.5, ay + 0.5, ax + aw - 0.5, ay + ah - 0.5];
-            let corners = [
-                ([*x, *y], [ax, ay], [-w / 2.0, -h / 2.0]),
-                ([x + w, *y], [ax + aw, ay], [w / 2.0, -h / 2.0]),
-                ([x + w, y + h], [ax + aw, ay + ah], [w / 2.0, h / 2.0]),
-                ([*x, y + h], [ax, ay + ah], [-w / 2.0, h / 2.0]),
-            ];
-
-            let first_index = self.image_indices.len() as u32;
-            let base = self.image_vertices.len() as u32;
-            for (position, atlas_px, local) in corners {
-                self.image_vertices.push(ImageVertex {
-                    position,
-                    atlas_px,
-                    local,
-                    params,
-                    uv_bounds,
-                });
-            }
-            self.image_indices.extend_from_slice(&[
-                base,
-                base + 1,
-                base + 2,
-                base + 2,
-                base + 3,
-                base,
-            ]);
-            record_range(&mut self.image_ranges, first_index, 6, clips.current());
-        }
-
-        self.image_index_count = self.image_indices.len() as u32;
-        culled
-    }
-
     pub(crate) fn upload_image_geometry(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
         if !self.image_vertices.is_empty() {
             let vb = self.image_vb.get_or_insert_with(|| {
@@ -347,80 +533,6 @@ impl Layer {
         }
     }
 
-    /// Rebuild CPU-side analytic shadow geometry. Each shadow is a single
-    /// quad expanded by the blur padding and shifted by the offset; the
-    /// fragment shader evaluates the blurred rounded-box mask analytically.
-    /// Returns the number of nodes culled.
-    pub(crate) fn build_shadow_geometry(&mut self, viewport: (f32, f32)) -> u32 {
-        self.shadow_vertices.clear();
-        self.shadow_indices.clear();
-        self.shadow_ranges.clear();
-        let mut clips = ClipStack::default();
-        let mut culled = 0u32;
-
-        for node in &self.nodes {
-            let SceneNode::Shadow {
-                x,
-                y,
-                w,
-                h,
-                corner_radius,
-                blur_radius,
-                offset,
-                color,
-            } = node
-            else {
-                match node {
-                    SceneNode::PushClip { x, y, w, h } => clips.push([*x, *y, *w, *h]),
-                    SceneNode::PopClip => clips.pop(),
-                    _ => {}
-                }
-                continue;
-            };
-
-            let pad = shadow_padding(*blur_radius);
-            let (qx, qy) = (x - pad + offset[0], y - pad + offset[1]);
-            let (qw, qh) = (w + 2.0 * pad, h + 2.0 * pad);
-            if outside_viewport(viewport, qx, qy, qw, qh) || clips.is_empty_clip() {
-                culled += 1;
-                continue;
-            }
-
-            let params = [w / 2.0, h / 2.0, *corner_radius, shadow_sigma(*blur_radius)];
-            // Quad corners relative to the (offset) rect center.
-            let half = [w / 2.0 + pad, h / 2.0 + pad];
-            let corners = [
-                ([qx, qy], [-half[0], -half[1]]),
-                ([qx + qw, qy], [half[0], -half[1]]),
-                ([qx + qw, qy + qh], [half[0], half[1]]),
-                ([qx, qy + qh], [-half[0], half[1]]),
-            ];
-
-            let first_index = self.shadow_indices.len() as u32;
-            let base = self.shadow_vertices.len() as u32;
-            for (position, local) in corners {
-                self.shadow_vertices.push(ShadowVertex {
-                    position,
-                    local,
-                    color: *color,
-                    params,
-                });
-            }
-            self.shadow_indices.extend_from_slice(&[
-                base,
-                base + 1,
-                base + 2,
-                base + 2,
-                base + 3,
-                base,
-            ]);
-            record_range(&mut self.shadow_ranges, first_index, 6, clips.current());
-        }
-
-        self.shadow_index_count = self.shadow_indices.len() as u32;
-        culled
-    }
-
     pub(crate) fn upload_shadow_geometry(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
         if !self.shadow_vertices.is_empty() {
             let vb = self.shadow_vb.get_or_insert_with(|| {
@@ -442,6 +554,30 @@ impl Layer {
                 )
             });
             ib.upload(device, queue, &self.shadow_indices);
+        }
+    }
+
+    pub(crate) fn upload_backdrop_geometry(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
+        if !self.backdrop_vertices.is_empty() {
+            let vb = self.backdrop_vb.get_or_insert_with(|| {
+                GpuVec::new(
+                    device,
+                    "layer_backdrop_vb",
+                    wgpu::BufferUsages::VERTEX,
+                    INITIAL_VB_SIZE,
+                )
+            });
+            vb.upload(device, queue, &self.backdrop_vertices);
+
+            let ib = self.backdrop_ib.get_or_insert_with(|| {
+                GpuVec::new(
+                    device,
+                    "layer_backdrop_ib",
+                    wgpu::BufferUsages::INDEX,
+                    INITIAL_IB_SIZE,
+                )
+            });
+            ib.upload(device, queue, &self.backdrop_indices);
         }
     }
 

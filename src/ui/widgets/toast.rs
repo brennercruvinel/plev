@@ -205,11 +205,11 @@ impl ToastManager {
             }
             let accent = intent_fill(theme, t.intent);
 
-            // Notify surface: rgba($n2,.1) glass. Path-based so the intent
-            // icon (a path) stays on top.
+            // Notify surface: rgba($n2,.1) glass; the intent icon pushed
+            // later stays on top (push order is preserved across types).
             compositor.push_to_layer(
                 layer,
-                super::path_rounded_rect(
+                super::rounded_rect(
                     rect.x,
                     rect.y,
                     rect.w,
@@ -220,7 +220,7 @@ impl ToastManager {
             );
             compositor.push_to_layer(
                 layer,
-                super::path_rounded_rect_stroke(
+                super::rounded_rect_stroke(
                     rect.x,
                     rect.y,
                     rect.w,

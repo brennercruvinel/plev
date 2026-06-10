@@ -113,6 +113,7 @@ impl Tabs {
                 blur_radius: 16.0,
                 offset: [0.0, 8.0],
                 color: [18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.20],
+                inset: false,
             });
             for node in glass_pill(*rect, radius, glass.edge.0, 1.5, glass.surface_hover.0) {
                 compositor.push(node);

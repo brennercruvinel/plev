@@ -1,16 +1,20 @@
 //! Frame rendering: resolve the compositor scene graph and encode GPU
-//! passes through plev's shared encoders (quads → analytic shadows →
-//! SDF rects/gradients → images → text, then composite).
+//! passes through plev's shared encoders (the per-layer draw sequence in
+//! push order — including backdrop-blur resolves — then composite).
 
 use crate::view::ShowcaseView;
 use plev::compositor::Compositor;
+use plev::effects::EffectProcessor;
 use plev::gpu::GpuContext;
 use plev::text::TextSystem;
+use plev::texture_pool::TexturePool;
 use plev::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 
 pub fn render_frame(
     gpu: &mut GpuContext,
     text_system: &mut TextSystem,
+    effects: &EffectProcessor,
+    texture_pool: &mut TexturePool,
     compositor: &mut Compositor,
     view: &mut ShowcaseView,
 ) {
@@ -66,20 +70,31 @@ pub fn render_frame(
         .map(|l| l.id)
         .collect();
 
-    encode_layer_passes(compositor, gpu, text_system, &dirty_layer_ids, &mut encoder);
+    let [cr, cg, cb, ca] = view.theme.colors.bg.to_array();
+    let clear_color = wgpu::Color {
+        r: cr as f64,
+        g: cg as f64,
+        b: cb as f64,
+        a: ca as f64,
+    };
+
+    encode_layer_passes(
+        compositor,
+        gpu,
+        text_system,
+        effects,
+        texture_pool,
+        clear_color,
+        &dirty_layer_ids,
+        &mut encoder,
+    );
     for id in &dirty_layer_ids {
         compositor.mark_layer_clean(*id);
     }
 
-    let [cr, cg, cb, ca] = view.theme.colors.bg.to_array();
     encode_composite_pass(
         compositor,
-        wgpu::Color {
-            r: cr as f64,
-            g: cg as f64,
-            b: cb as f64,
-            a: ca as f64,
-        },
+        clear_color,
         gpu,
         &surface_view,
         &[],

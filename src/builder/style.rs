@@ -90,7 +90,8 @@ pub struct LinearGradient {
     pub angle_deg: f32,
 }
 
-/// Analytic drop shadow (see `Element::shadow_drop`).
+/// Analytic shadow spec, shared by drop (`Element::shadow_drop`) and
+/// inset (`Element::shadow_inset`) shadows.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DropShadow {
     pub blur: f32,
@@ -103,6 +104,10 @@ pub struct Style {
     pub bg: Option<Color>,
     pub bg_gradient: Option<LinearGradient>,
     pub drop_shadow: Option<DropShadow>,
+    pub inset_shadow: Option<DropShadow>,
+    /// Gaussian sigma for a region backdrop blur under this element
+    /// (see `Element::backdrop_blur`).
+    pub backdrop_blur: Option<f32>,
     pub clip_children: bool,
     pub text_color: Color,
     pub corner_radius: f32,
@@ -124,6 +129,8 @@ impl Default for Style {
             bg: None,
             bg_gradient: None,
             drop_shadow: None,
+            inset_shadow: None,
+            backdrop_blur: None,
             clip_children: false,
             text_color: Color::WHITE,
             corner_radius: 0.0,

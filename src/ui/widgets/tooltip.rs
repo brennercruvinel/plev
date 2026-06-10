@@ -138,6 +138,7 @@ impl Tooltip {
                 blur_radius: 2.0,
                 offset: [0.0, 1.5],
                 color: [24.0 / 255.0, 24.0 / 255.0, 24.0 / 255.0, 0.15],
+                inset: false,
             },
         );
         compositor.push_to_layer(

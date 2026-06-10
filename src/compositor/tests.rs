@@ -393,6 +393,7 @@ fn clip_applies_to_sdf_and_shadow_ranges() {
         blur_radius: 8.0,
         offset: [0.0, 2.0],
         color: [0.0, 0.0, 0.0, 0.5],
+        inset: false,
     });
     comp.pop_clip();
     comp.resolve_scene((800.0, 600.0));
@@ -410,17 +411,17 @@ fn clip_applies_to_sdf_and_shadow_ranges() {
     );
 }
 
+fn text_node(label: &str) -> SceneNode {
+    SceneNode::Text {
+        key: TextNodeKey::new(label, 14.0, 18.0, None),
+        x: 0.0,
+        y: 0.0,
+        color: [1.0; 4],
+    }
+}
+
 #[test]
 fn text_node_groups_split_by_clip() {
-    fn text_node(label: &str) -> SceneNode {
-        SceneNode::Text {
-            key: TextNodeKey::new(label, 14.0, 18.0, None),
-            x: 0.0,
-            y: 0.0,
-            color: [1.0; 4],
-        }
-    }
-
     let mut comp = Compositor::new();
     comp.begin_frame();
     comp.push(text_node("a"));
@@ -429,6 +430,7 @@ fn text_node_groups_split_by_clip() {
     comp.push(text_node("c"));
     comp.pop_clip();
     comp.push(text_node("d"));
+    comp.resolve_scene((800.0, 600.0));
 
     let layer = comp.layer(LayerId::DEFAULT).unwrap();
     let groups = layer.text_node_groups();
@@ -513,6 +515,7 @@ fn shadow_quad_is_expanded_by_blur_and_shifted_by_offset() {
         blur_radius: 16.0,
         offset: [0.0, 4.0],
         color: [0.0, 0.0, 0.0, 0.5],
+        inset: false,
     });
     comp.resolve_scene((800.0, 600.0));
 
@@ -553,6 +556,7 @@ fn shadow_is_culled_using_expanded_bounds() {
         blur_radius: 20.0,
         offset: [0.0, 0.0],
         color: [0.0, 0.0, 0.0, 1.0],
+        inset: false,
     });
     // Far enough away that not even the expanded quad is visible.
     comp.push(SceneNode::Shadow {
@@ -564,6 +568,7 @@ fn shadow_is_culled_using_expanded_bounds() {
         blur_radius: 20.0,
         offset: [0.0, 0.0],
         color: [0.0, 0.0, 0.0, 1.0],
+        inset: false,
     });
     comp.resolve_scene((800.0, 600.0));
 
@@ -585,6 +590,7 @@ fn shadow_node_participates_in_dirty_tracking() {
             blur_radius,
             offset: [0.0, 2.0],
             color: [0.0, 0.0, 0.0, 0.4],
+            inset: false,
         }
     }
 
@@ -603,6 +609,118 @@ fn shadow_node_participates_in_dirty_tracking() {
     comp.begin_frame();
     comp.push(shadow(9.0));
     assert!(comp.needs_render());
+}
+
+#[test]
+fn inset_shadow_quad_is_the_rect_with_inset_flag_and_offset() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    // HOFF glass relief: inset 2px 4px 16px rgba(248,248,248,.06).
+    comp.push(SceneNode::Shadow {
+        x: 100.0,
+        y: 200.0,
+        w: 80.0,
+        h: 40.0,
+        corner_radius: 8.0,
+        blur_radius: 16.0,
+        offset: [2.0, 4.0],
+        color: [248.0 / 255.0, 248.0 / 255.0, 248.0 / 255.0, 0.06],
+        inset: true,
+    });
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(layer.shadow_vertices.len(), 4);
+    assert_eq!(layer.shadow_index_count, 6);
+
+    let v = &layer.shadow_vertices;
+    // The quad is EXACTLY the casting rect: no blur padding, no offset
+    // shift (the shadow is clipped inside the rect).
+    assert_eq!(v[0].position, [100.0, 200.0]);
+    assert_eq!(v[2].position, [180.0, 240.0]);
+    // Local coords span the plain half extents.
+    assert_eq!(v[0].local, [-40.0, -20.0]);
+    assert_eq!(v[2].local, [40.0, 20.0]);
+    for vert in v {
+        assert_eq!(vert.params, [40.0, 20.0, 8.0, shadow_sigma(16.0)]);
+        // inset flag + offset move only the in-shader mask.
+        assert_eq!(vert.params2, [1.0, 2.0, 4.0, 0.0]);
+    }
+}
+
+#[test]
+fn drop_shadow_keeps_params2_zeroed() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(SceneNode::Shadow {
+        x: 0.0,
+        y: 0.0,
+        w: 10.0,
+        h: 10.0,
+        corner_radius: 2.0,
+        blur_radius: 8.0,
+        offset: [0.0, 2.0],
+        color: [0.0, 0.0, 0.0, 0.4],
+        inset: false,
+    });
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    for vert in &layer.shadow_vertices {
+        assert_eq!(vert.params2, [0.0; 4]);
+    }
+}
+
+#[test]
+fn inset_flag_participates_in_dirty_tracking() {
+    fn shadow(inset: bool) -> SceneNode {
+        SceneNode::Shadow {
+            x: 0.0,
+            y: 0.0,
+            w: 10.0,
+            h: 10.0,
+            corner_radius: 2.0,
+            blur_radius: 8.0,
+            offset: [0.0, 2.0],
+            color: [0.0, 0.0, 0.0, 0.4],
+            inset,
+        }
+    }
+
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(shadow(false));
+    comp.resolve_scene((800.0, 600.0));
+    comp.mark_layer_clean(LayerId::DEFAULT);
+
+    comp.begin_frame();
+    comp.push(shadow(true));
+    assert!(comp.needs_render());
+}
+
+#[test]
+fn inset_shadow_after_fill_stays_on_top_in_sequence() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    // Glass card: fill first, then the inset relief on top of it.
+    comp.push(rounded_rect(10.0, 10.0, 100.0, 50.0));
+    comp.push(SceneNode::Shadow {
+        x: 10.0,
+        y: 10.0,
+        w: 100.0,
+        h: 50.0,
+        corner_radius: 8.0,
+        blur_radius: 16.0,
+        offset: [2.0, 4.0],
+        color: [1.0, 1.0, 1.0, 0.06],
+        inset: true,
+    });
+    comp.resolve_scene((800.0, 600.0));
+
+    assert_eq!(
+        sequence_kinds(&comp),
+        vec![DrawKind::SdfRect, DrawKind::Shadow]
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -869,6 +987,412 @@ fn render_stats_for_known_scene() {
     assert_eq!(s.nodes_culled, 0); // nothing rebuilt, nothing culled this frame
     assert_eq!(s.quad_vertices, 8);
     assert_eq!(s.sdf_vertices, 4);
+}
+
+// ---------------------------------------------------------------------------
+// Draw sequence (push order across primitive types)
+// ---------------------------------------------------------------------------
+
+/// Kinds of the geometry commands in a layer's sequence, in order
+/// (backdrop commands excluded; see `sequence_of` for the full walk).
+fn sequence_kinds(comp: &Compositor) -> Vec<DrawKind> {
+    comp.layer(LayerId::DEFAULT)
+        .unwrap()
+        .sequence()
+        .iter()
+        .filter_map(|cmd| match cmd {
+            DrawCommand::Geometry { kind, .. } => Some(*kind),
+            DrawCommand::BackdropBlur { .. } => None,
+        })
+        .collect()
+}
+
+#[test]
+fn sequence_preserves_push_order_across_kinds() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    // Card composition: quad bg, shadow, SDF pill, path icon on top of the
+    // pill, then a rect over everything.
+    comp.push(rect(0.0, 0.0, 100.0, 100.0));
+    comp.push(SceneNode::Shadow {
+        x: 10.0,
+        y: 10.0,
+        w: 50.0,
+        h: 30.0,
+        corner_radius: 8.0,
+        blur_radius: 8.0,
+        offset: [0.0, 2.0],
+        color: [0.0, 0.0, 0.0, 0.4],
+        inset: false,
+    });
+    comp.push(rounded_rect(10.0, 10.0, 50.0, 30.0));
+    comp.push(SceneNode::Path {
+        data: crate::path::PathBuilder::circle(30.0, 25.0, 6.0).fill([1.0; 4]),
+    });
+    comp.push(rect(0.0, 0.0, 20.0, 20.0));
+    comp.resolve_scene((800.0, 600.0));
+
+    // The path icon and the rect after it are both quad-pipeline geometry
+    // pushed back to back, so they merge into ONE trailing quad command --
+    // what matters is that it draws AFTER the SDF pill.
+    assert_eq!(
+        sequence_kinds(&comp),
+        vec![
+            DrawKind::Quad,
+            DrawKind::Shadow,
+            DrawKind::SdfRect,
+            DrawKind::Quad,
+        ]
+    );
+
+    // The trailing quad command picks up right after the first one in the
+    // shared buffer: order within the buffer still follows push order.
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    let quad_cmds: Vec<_> = layer
+        .sequence()
+        .iter()
+        .filter_map(|cmd| match cmd {
+            DrawCommand::Geometry {
+                kind: DrawKind::Quad,
+                range,
+            } => Some(*range),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(quad_cmds[0].first_index, 0);
+    assert_eq!(quad_cmds[1].first_index, 6); // path picks up after rect 1
+    let total: u32 = quad_cmds.iter().map(|r| r.index_count).sum();
+    assert_eq!(total, layer.quad_index_count);
+}
+
+#[test]
+fn sequence_merges_adjacent_same_kind_same_clip() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(rect(0.0, 0.0, 10.0, 10.0));
+    comp.push(rect(10.0, 0.0, 10.0, 10.0)); // merges with the previous
+    comp.push_clip(0.0, 0.0, 50.0, 50.0);
+    comp.push(rect(20.0, 0.0, 10.0, 10.0)); // new command: clip changed
+    comp.pop_clip();
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(layer.sequence().len(), 2);
+    assert!(matches!(
+        layer.sequence()[0],
+        DrawCommand::Geometry {
+            kind: DrawKind::Quad,
+            range: DrawRange {
+                index_count: 12,
+                clip: None,
+                ..
+            },
+        }
+    ));
+    assert!(matches!(
+        layer.sequence()[1],
+        DrawCommand::Geometry {
+            range: DrawRange {
+                clip: Some([0.0, 0.0, 50.0, 50.0]),
+                ..
+            },
+            ..
+        }
+    ));
+}
+
+#[test]
+fn sequence_does_not_merge_across_interleaved_kind() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(rect(0.0, 0.0, 10.0, 10.0));
+    comp.push(rounded_rect(0.0, 0.0, 10.0, 10.0));
+    comp.push(rect(20.0, 0.0, 10.0, 10.0));
+    comp.resolve_scene((800.0, 600.0));
+
+    assert_eq!(
+        sequence_kinds(&comp),
+        vec![DrawKind::Quad, DrawKind::SdfRect, DrawKind::Quad]
+    );
+}
+
+#[test]
+fn culled_nodes_leave_no_sequence_gap() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(rect(0.0, 0.0, 10.0, 10.0));
+    comp.push(rounded_rect(-500.0, 0.0, 10.0, 10.0)); // culled
+    comp.push(rect(20.0, 0.0, 10.0, 10.0)); // merges with the first rect
+    comp.resolve_scene((800.0, 600.0));
+
+    assert_eq!(sequence_kinds(&comp), vec![DrawKind::Quad]);
+}
+
+#[test]
+fn text_enters_sequence_in_push_order() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(text_node("behind"));
+    comp.push(rect(0.0, 0.0, 10.0, 10.0)); // rect pushed after: covers glyph
+    comp.push(text_node("front"));
+    comp.resolve_scene((800.0, 600.0));
+
+    assert_eq!(
+        sequence_kinds(&comp),
+        vec![DrawKind::Text, DrawKind::Quad, DrawKind::Text]
+    );
+    // One text group per Text command, in order.
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    let groups = layer.text_node_groups();
+    assert_eq!(groups.len(), 2);
+    assert!(matches!(&groups[0].0[0], SceneNode::Text { key, .. } if key.text == "behind"));
+    assert!(matches!(&groups[1].0[0], SceneNode::Text { key, .. } if key.text == "front"));
+}
+
+#[test]
+fn assign_text_ranges_patches_text_commands_in_order() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.push(text_node("a"));
+    comp.push(rect(0.0, 0.0, 10.0, 10.0));
+    comp.push(text_node("b"));
+    comp.resolve_scene((800.0, 600.0));
+
+    // Placeholder ranges before patch.
+    {
+        let layer = comp.layer(LayerId::DEFAULT).unwrap();
+        for cmd in layer.sequence() {
+            if let DrawCommand::Geometry {
+                kind: DrawKind::Text,
+                range,
+            } = cmd
+            {
+                assert_eq!(range.index_count, 0);
+            }
+        }
+    }
+
+    let layer = comp.layer_mut(LayerId::DEFAULT).unwrap();
+    layer.assign_text_ranges(&[
+        DrawRange {
+            first_index: 0,
+            index_count: 6,
+            clip: None,
+        },
+        DrawRange {
+            first_index: 6,
+            index_count: 12,
+            clip: None,
+        },
+    ]);
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    let text_ranges: Vec<_> = layer
+        .sequence()
+        .iter()
+        .filter_map(|cmd| match cmd {
+            DrawCommand::Geometry {
+                kind: DrawKind::Text,
+                range,
+            } => Some(*range),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(text_ranges.len(), 2);
+    assert_eq!(text_ranges[0].first_index, 0);
+    assert_eq!(text_ranges[0].index_count, 6);
+    assert_eq!(text_ranges[1].first_index, 6);
+    assert_eq!(text_ranges[1].index_count, 12);
+}
+
+// ---------------------------------------------------------------------------
+// Backdrop blur
+// ---------------------------------------------------------------------------
+
+#[test]
+fn backdrop_records_resolve_at_its_point_in_the_sequence() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    // Glass card: page bg, frosted region, translucent fill on top.
+    comp.push(rect(0.0, 0.0, 800.0, 600.0));
+    comp.draw_backdrop_blur(100.0, 100.0, 300.0, 200.0, 24.0, 16.0);
+    comp.push(rounded_rect(100.0, 100.0, 300.0, 200.0));
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    let seq = layer.sequence();
+    assert_eq!(seq.len(), 3);
+    assert!(matches!(
+        seq[0],
+        DrawCommand::Geometry {
+            kind: DrawKind::Quad,
+            ..
+        }
+    ));
+    // The resolve happens BETWEEN the bg and the fill -- everything before
+    // is part of the frosted backdrop, everything after draws on top.
+    assert!(matches!(
+        seq[1],
+        DrawCommand::BackdropBlur {
+            first_index: 0,
+            sigma,
+            clip: None,
+        } if sigma == 16.0
+    ));
+    assert!(matches!(
+        seq[2],
+        DrawCommand::Geometry {
+            kind: DrawKind::SdfRect,
+            ..
+        }
+    ));
+
+    // Quad geometry: the rect itself, with the rounded-corner mask params.
+    assert_eq!(layer.backdrop_vertices.len(), 4);
+    assert_eq!(layer.backdrop_index_count, 6);
+    let v = &layer.backdrop_vertices;
+    assert_eq!(v[0].position, [100.0, 100.0]);
+    assert_eq!(v[2].position, [400.0, 300.0]);
+    assert_eq!(v[0].local, [-150.0, -100.0]);
+    for vert in v {
+        assert_eq!(vert.params, [150.0, 100.0, 24.0, 0.0]);
+    }
+}
+
+#[test]
+fn backdrop_respects_clip_and_culling() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.draw_backdrop_blur(-500.0, 0.0, 100.0, 100.0, 8.0, 4.0); // culled
+    comp.push_clip(0.0, 0.0, 200.0, 200.0);
+    comp.draw_backdrop_blur(10.0, 10.0, 100.0, 100.0, 8.0, 4.0); // clipped
+    comp.pop_clip();
+    comp.resolve_scene((800.0, 600.0));
+
+    let layer = comp.layer(LayerId::DEFAULT).unwrap();
+    assert_eq!(comp.stats().nodes_culled, 1);
+    assert_eq!(layer.backdrop_vertices.len(), 4);
+    assert_eq!(layer.sequence().len(), 1);
+    assert!(matches!(
+        layer.sequence()[0],
+        DrawCommand::BackdropBlur {
+            clip: Some([0.0, 0.0, 200.0, 200.0]),
+            ..
+        }
+    ));
+}
+
+#[test]
+fn backdrop_node_participates_in_dirty_tracking() {
+    let mut comp = Compositor::new();
+    comp.begin_frame();
+    comp.draw_backdrop_blur(0.0, 0.0, 100.0, 100.0, 8.0, 12.0);
+    comp.resolve_scene((800.0, 600.0));
+    comp.mark_layer_clean(LayerId::DEFAULT);
+
+    comp.begin_frame();
+    comp.draw_backdrop_blur(0.0, 0.0, 100.0, 100.0, 8.0, 12.0);
+    assert!(!comp.needs_render());
+
+    // Different sigma -> re-render.
+    comp.begin_frame();
+    comp.draw_backdrop_blur(0.0, 0.0, 100.0, 100.0, 8.0, 20.0);
+    assert!(comp.needs_render());
+}
+
+#[test]
+fn layer_with_backdrop_redraws_when_lower_layer_changes() {
+    let mut comp = Compositor::new();
+    let glass = comp.create_layer(10);
+
+    comp.begin_frame();
+    comp.push(rect(0.0, 0.0, 100.0, 100.0)); // default layer (below)
+    comp.push_to_layer(
+        glass,
+        SceneNode::BackdropBlur {
+            x: 10.0,
+            y: 10.0,
+            w: 50.0,
+            h: 50.0,
+            corner_radius: 8.0,
+            sigma: 12.0,
+        },
+    );
+    comp.resolve_scene((800.0, 600.0));
+    comp.mark_layer_clean(LayerId::DEFAULT);
+    comp.mark_layer_clean(glass);
+
+    // Lower layer changes; the glass layer's own scene is identical but it
+    // must re-encode because its backdrop samples the layer below.
+    comp.begin_frame();
+    comp.push(rect(0.0, 0.0, 200.0, 100.0)); // CHANGED
+    comp.push_to_layer(
+        glass,
+        SceneNode::BackdropBlur {
+            x: 10.0,
+            y: 10.0,
+            w: 50.0,
+            h: 50.0,
+            corner_radius: 8.0,
+            sigma: 12.0,
+        },
+    );
+    comp.resolve_scene((800.0, 600.0));
+    assert!(comp.layer(LayerId::DEFAULT).unwrap().is_dirty());
+    assert!(comp.layer(glass).unwrap().is_dirty());
+
+    // And when nothing below changes, the glass layer stays clean.
+    comp.mark_layer_clean(LayerId::DEFAULT);
+    comp.mark_layer_clean(glass);
+    comp.begin_frame();
+    comp.push(rect(0.0, 0.0, 200.0, 100.0));
+    comp.push_to_layer(
+        glass,
+        SceneNode::BackdropBlur {
+            x: 10.0,
+            y: 10.0,
+            w: 50.0,
+            h: 50.0,
+            corner_radius: 8.0,
+            sigma: 12.0,
+        },
+    );
+    comp.resolve_scene((800.0, 600.0));
+    assert!(!comp.layer(LayerId::DEFAULT).unwrap().is_dirty());
+    assert!(!comp.layer(glass).unwrap().is_dirty());
+}
+
+#[test]
+fn merge_text_groups_keeps_one_range_per_group() {
+    fn vertex(x: f32) -> crate::text::TextVertex {
+        crate::text::TextVertex {
+            position: [x, 0.0],
+            uv: [0.0, 0.0],
+            color: [1.0; 4],
+        }
+    }
+
+    // Two groups with the SAME clip (split by a rect between them) plus an
+    // empty group: ranges must stay 1:1 with groups, never merged.
+    let groups = vec![
+        (
+            vec![vertex(0.0), vertex(1.0), vertex(2.0), vertex(3.0)],
+            vec![0, 1, 2, 2, 3, 0],
+            None,
+        ),
+        (Vec::new(), Vec::new(), None),
+        (
+            vec![vertex(4.0), vertex(5.0), vertex(6.0), vertex(7.0)],
+            vec![0, 1, 2, 2, 3, 0],
+            None,
+        ),
+    ];
+    let (_, _, ranges) = merge_text_groups(groups);
+    assert_eq!(ranges.len(), 3);
+    assert_eq!(ranges[0].index_count, 6);
+    assert_eq!(ranges[1].index_count, 0);
+    assert_eq!(ranges[2].first_index, 6);
+    assert_eq!(ranges[2].index_count, 6);
 }
 
 #[test]

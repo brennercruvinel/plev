@@ -91,11 +91,18 @@ impl RectSdfVertex {
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct ShadowVertex {
     pub position: [f32; 2],
-    /// Pixel offset from the shadow rect center (covers the padded quad).
+    /// Pixel offset from the shadow rect center. Drop shadows cover the
+    /// padded quad around the OFFSET rect; inset shadows cover exactly the
+    /// casting rect (the shadow is clipped inside it).
     pub local: [f32; 2],
     pub color: [f32; 4],
     /// half_w, half_h, corner_radius, sigma.
     pub params: [f32; 4],
+    /// inset (>0.5 = inset mode), offset_x, offset_y, unused. Drop shadows
+    /// bake the offset into the quad position and leave this zeroed; inset
+    /// shadows evaluate the blurred mask at `local - offset` in-shader so
+    /// the hard clip to the rect stays put.
+    pub params2: [f32; 4],
 }
 
 impl ShadowVertex {
@@ -122,6 +129,11 @@ impl ShadowVertex {
                 wgpu::VertexAttribute {
                     offset: 32,
                     shader_location: 3,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: 48,
+                    shader_location: 4,
                     format: wgpu::VertexFormat::Float32x4,
                 },
             ],
@@ -173,6 +185,45 @@ impl ImageVertex {
                 wgpu::VertexAttribute {
                     offset: 40,
                     shader_location: 4,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+            ],
+        }
+    }
+}
+
+/// Vertex of a backdrop-blur quad: the blurred backdrop texture is
+/// sampled by framebuffer position in the shader, so only the rounded
+/// rect mask data travels per vertex.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct BackdropVertex {
+    pub position: [f32; 2],
+    /// Pixel offset from the rect center (rounded-corner SDF mask).
+    pub local: [f32; 2],
+    /// half_w, half_h, corner_radius, unused.
+    pub params: [f32; 4],
+}
+
+impl BackdropVertex {
+    pub fn layout() -> wgpu::VertexBufferLayout<'static> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<BackdropVertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    shader_location: 0,
+                    format: wgpu::VertexFormat::Float32x2,
+                },
+                wgpu::VertexAttribute {
+                    offset: 8,
+                    shader_location: 1,
+                    format: wgpu::VertexFormat::Float32x2,
+                },
+                wgpu::VertexAttribute {
+                    offset: 16,
+                    shader_location: 2,
                     format: wgpu::VertexFormat::Float32x4,
                 },
             ],

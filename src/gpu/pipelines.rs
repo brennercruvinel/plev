@@ -1,4 +1,4 @@
-use crate::compositor::{ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex};
+use crate::compositor::{BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex};
 use crate::text::TextVertex;
 
 use super::context::GpuContext;
@@ -286,6 +286,66 @@ impl GpuContext {
         })
     }
 
+    /// Pipeline for blurred-backdrop quads inside layer passes: samples
+    /// the pre-blurred backdrop texture by framebuffer position, masked
+    /// by a rounded-rect SDF. Group 1 reuses the composite texture+sampler
+    /// bind group layout.
+    pub(super) fn create_backdrop_pipeline(
+        device: &wgpu::Device,
+        shader_source: &str,
+        projection_bgl: &wgpu::BindGroupLayout,
+        composite_bgl: &wgpu::BindGroupLayout,
+        surface_format: wgpu::TextureFormat,
+        msaa_samples: u32,
+    ) -> wgpu::RenderPipeline {
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("backdrop_shader"),
+            source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+        });
+        let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("backdrop_pipeline_layout"),
+            bind_group_layouts: &[projection_bgl, composite_bgl],
+            immediate_size: 0,
+        });
+        device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("backdrop_pipeline"),
+            layout: Some(&layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: Some("vs_main"),
+                buffers: &[BackdropVertex::layout()],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: surface_format,
+                    blend: Some(premultiplied_blend()),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: None,
+                polygon_mode: wgpu::PolygonMode::Fill,
+                unclipped_depth: false,
+                conservative: false,
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState {
+                count: msaa_samples,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
+            multiview_mask: None,
+            cache: None,
+        })
+    }
+
     // -- Hot reload --
 
     #[cfg(feature = "hot-reload")]
@@ -378,6 +438,24 @@ impl GpuContext {
                 }
                 self.image_pipeline = pipeline;
                 log::info!("Reloaded image.wgsl");
+                true
+            }
+            "backdrop.wgsl" => {
+                let guard = self.device.push_error_scope(wgpu::ErrorFilter::Validation);
+                let pipeline = Self::create_backdrop_pipeline(
+                    &self.device,
+                    source,
+                    &self.projection_bind_group_layout,
+                    &self.composite_bind_group_layout,
+                    surface_format,
+                    msaa_samples,
+                );
+                if let Some(err) = pollster::block_on(guard.pop()) {
+                    log::error!("Shader reload failed for backdrop.wgsl: {}", err);
+                    return false;
+                }
+                self.backdrop_pipeline = pipeline;
+                log::info!("Reloaded backdrop.wgsl");
                 true
             }
             "composite.wgsl" => {

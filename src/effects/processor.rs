@@ -15,8 +15,6 @@ pub struct EffectProcessor {
     pub shadow_uniform_bgl: wgpu::BindGroupLayout,
     pub composite_uniform_bgl: wgpu::BindGroupLayout,
     pub linear_sampler: wgpu::Sampler,
-    pub(super) blur_uniform_buffer: wgpu::Buffer,
-    pub(super) shadow_uniform_buffer: wgpu::Buffer,
     pub(super) composite_uniform_buffer: wgpu::Buffer,
     pub(super) surface_format: wgpu::TextureFormat,
 }
@@ -125,23 +123,10 @@ impl EffectProcessor {
             surface_format,
         );
 
-        // Uniform buffers (reused across frames)
-        let blur_uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("blur_uniforms"),
-            contents: bytemuck::bytes_of(&BlurUniforms {
-                direction: [1.0, 0.0],
-                texel_size: [0.0, 0.0],
-                weights: [0.0; 16],
-            }),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
-        let shadow_uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("shadow_uniforms"),
-            contents: bytemuck::bytes_of(&ShadowUniforms {
-                color: [0.0, 0.0, 0.0, 0.5],
-            }),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
+        // Blur/shadow uniforms are transient per pass (see `apply.rs`:
+        // staged `write_buffer`s all land before the next submit, so a
+        // shared buffer would leak the last write into every pass). Only
+        // the composite alpha buffer persists.
         let composite_uniform_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("composite_uniforms"),
@@ -161,8 +146,6 @@ impl EffectProcessor {
             shadow_uniform_bgl,
             composite_uniform_bgl,
             linear_sampler,
-            blur_uniform_buffer,
-            shadow_uniform_buffer,
             composite_uniform_buffer,
             surface_format,
         }

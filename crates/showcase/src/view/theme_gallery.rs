@@ -203,9 +203,9 @@ impl ThemeSection {
             let is_current = *name == current;
             let hovered = self.hovered == Some(i);
 
-            // Card painted with the *target* theme's own colors. Path-based
-            // because the current-theme check icon must stack on top.
-            c.push(plev::ui::widgets::path_rounded_rect(
+            // Card painted with the *target* theme's own colors; the
+            // current-theme check icon pushed later stacks on top.
+            c.push(plev::ui::widgets::rounded_rect(
                 rect.x,
                 rect.y,
                 rect.w,
@@ -213,7 +213,7 @@ impl ThemeSection {
                 theme.radius.lg,
                 t.colors.bg_panel.0,
             ));
-            c.push(plev::ui::widgets::path_rounded_rect_stroke(
+            c.push(plev::ui::widgets::rounded_rect_stroke(
                 rect.x,
                 rect.y,
                 rect.w,

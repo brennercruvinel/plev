@@ -34,6 +34,8 @@ enum GpuState {
     Ready {
         gpu: GpuContext,
         text_system: TextSystem,
+        effects: plev::effects::EffectProcessor,
+        texture_pool: plev::texture_pool::TexturePool,
     },
 }
 
@@ -88,7 +90,13 @@ impl ApplicationHandler for App {
         self.scale_factor = window.scale_factor();
         let gpu = pollster::block_on(GpuContext::new(window.clone()));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        self.state = GpuState::Ready { gpu, text_system };
+        let effects = plev::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        self.state = GpuState::Ready {
+            gpu,
+            text_system,
+            effects,
+            texture_pool: plev::texture_pool::TexturePool::new(),
+        };
 
         let size = window.inner_size();
         let sf = self.scale_factor as f32;
@@ -192,12 +200,25 @@ impl ApplicationHandler for App {
             }
 
             WindowEvent::RedrawRequested => {
-                let GpuState::Ready { gpu, text_system } = &mut self.state else {
+                let GpuState::Ready {
+                    gpu,
+                    text_system,
+                    effects,
+                    texture_pool,
+                } = &mut self.state
+                else {
                     return;
                 };
                 let tick = self.clock.tick();
                 let animating = self.view.tick(tick.dt);
-                renderer::render_frame(gpu, text_system, &mut self.compositor, &mut self.view);
+                renderer::render_frame(
+                    gpu,
+                    text_system,
+                    effects,
+                    texture_pool,
+                    &mut self.compositor,
+                    &mut self.view,
+                );
                 if animating {
                     // Springs still moving: keep the frames coming.
                     self.compositor.invalidate();

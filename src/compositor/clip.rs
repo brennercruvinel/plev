@@ -114,9 +114,12 @@ pub(crate) fn record_range(
     });
 }
 
-/// Merge per-clip-group text geometry (as produced by
+/// Merge per-group text geometry (as produced by
 /// `TextSystem::resolve_for_layer` per group) into single vertex/index
 /// buffers plus draw ranges. Indices are rebased onto the merged buffer.
+/// Exactly one range is emitted per group -- even empty ones -- so ranges
+/// stay 1:1 with the layer's `Text` draw commands (see
+/// `Layer::assign_text_ranges`).
 pub fn merge_text_groups(
     groups: Vec<(Vec<crate::text::TextVertex>, Vec<u32>, Option<ClipRect>)>,
 ) -> (Vec<crate::text::TextVertex>, Vec<u32>, Vec<DrawRange>) {
@@ -130,7 +133,11 @@ pub fn merge_text_groups(
         let index_count = group_indices.len() as u32;
         vertices.extend(group_vertices);
         indices.extend(group_indices.into_iter().map(|i| i + vertex_base));
-        record_range(&mut ranges, first_index, index_count, clip);
+        ranges.push(DrawRange {
+            first_index,
+            index_count,
+            clip,
+        });
     }
 
     (vertices, indices, ranges)

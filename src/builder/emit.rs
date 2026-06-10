@@ -133,6 +133,22 @@ fn emit_div(
             blur_radius: shadow.blur,
             offset: shadow.offset,
             color: shadow.color.to_array(),
+            inset: false,
+        });
+    }
+
+    // Backdrop blur sits under the background fill: frosted glass is the
+    // blurred backdrop showing through the translucent bg above it.
+    if let Some(sigma) = element.style.backdrop_blur
+        && (b.width > 0.0 || b.height > 0.0)
+    {
+        out.push(SceneNode::BackdropBlur {
+            x: b.x,
+            y: b.y,
+            w: b.width,
+            h: b.height,
+            corner_radius: element.style.corner_radius,
+            sigma,
         });
     }
 
@@ -175,6 +191,24 @@ fn emit_div(
                 color: bg_color,
             });
         }
+    }
+
+    // Inset shadow AFTER the fill: it composites over the background and
+    // under the children (draw order follows push order).
+    if let Some(shadow) = element.style.inset_shadow
+        && (b.width > 0.0 || b.height > 0.0)
+    {
+        out.push(SceneNode::Shadow {
+            x: b.x,
+            y: b.y,
+            w: b.width,
+            h: b.height,
+            corner_radius: element.style.corner_radius,
+            blur_radius: shadow.blur,
+            offset: shadow.offset,
+            color: shadow.color.to_array(),
+            inset: true,
+        });
     }
 
     // Emit per-side borders as thin Rect nodes

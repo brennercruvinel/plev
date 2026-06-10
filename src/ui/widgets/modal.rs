@@ -155,6 +155,7 @@ impl Modal {
                 blur_radius: 24.0,
                 offset: [0.0, 16.0],
                 color: [5.0 / 255.0, 5.0 / 255.0, 5.0 / 255.0, 0.35],
+                inset: false,
             },
         );
         for node in glass_pill(
