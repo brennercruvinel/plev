@@ -1,6 +1,8 @@
-//! Showcase view: sidebar navigation + one module per gallery section.
+//! Showcase view: HOFF sidebar navigation + one module per gallery
+//! section, framed like the social app (graphite glass over #444444).
 
 mod buttons;
+mod cards;
 mod forms;
 mod icons_gallery;
 mod lists;
@@ -16,10 +18,12 @@ use plev::ui::widgets::{
     path_rounded_rect, path_rounded_rect_stroke,
 };
 
-pub const SIDEBAR_W: f32 = 230.0;
+pub const SIDEBAR_W: f32 = 248.0;
 const PAD: f32 = 40.0;
 /// Vertical space used by the section header (title + blurb).
 const HEADER_H: f32 = 78.0;
+/// HOFF nav link height (48px, radius 12).
+const NAV_H: f32 = 48.0;
 
 // ---------------------------------------------------------------------------
 // Sections
@@ -27,6 +31,7 @@ const HEADER_H: f32 = 78.0;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Section {
+    Cards,
     Buttons,
     Forms,
     Overlays,
@@ -36,7 +41,8 @@ pub enum Section {
 }
 
 impl Section {
-    pub const ALL: [Section; 6] = [
+    pub const ALL: [Section; 7] = [
+        Section::Cards,
         Section::Buttons,
         Section::Forms,
         Section::Overlays,
@@ -47,6 +53,7 @@ impl Section {
 
     fn title(self) -> &'static str {
         match self {
+            Section::Cards => "Cards",
             Section::Buttons => "Buttons",
             Section::Forms => "Forms",
             Section::Overlays => "Overlays",
@@ -58,6 +65,7 @@ impl Section {
 
     fn icon(self) -> &'static str {
         match self {
+            Section::Cards => "clipboard",
             Section::Buttons => "square",
             Section::Forms => "settings",
             Section::Overlays => "copy",
@@ -69,6 +77,9 @@ impl Section {
 
     fn blurb(self) -> &'static str {
         match self {
+            Section::Cards => {
+                "The HOFF card deck: one glass shell, six preview families with live data."
+            }
             Section::Buttons => "Variants, sizes, intents and states of plev::ui::widgets::Button.",
             Section::Forms => "Checkbox, switch, slider, progress, select and tabs.",
             Section::Overlays => {
@@ -76,7 +87,7 @@ impl Section {
             }
             Section::Lists => "Virtualized list with 10,000 rows, and a tree view.",
             Section::Icons => "Lucide icon set, tessellated to GPU paths with per-size caching.",
-            Section::Theme => "Every built-in palette. Click a card to apply it.",
+            Section::Theme => "HOFF tokens and every built-in palette. Click a card to apply it.",
         }
     }
 }
@@ -125,6 +136,7 @@ pub struct ShowcaseView {
     pub toasts: ToastManager,
     active_overlay: Option<ActiveOverlay>,
 
+    cards: cards::CardsSection,
     buttons: buttons::ButtonsSection,
     forms: forms::FormsSection,
     overlays: overlays::OverlaysSection,
@@ -142,11 +154,12 @@ struct Layers {
 
 impl ShowcaseView {
     pub fn new(width: f32, height: f32) -> Self {
-        let theme = Theme::dark();
+        let theme = Theme::hoff();
         Self {
             width,
             height,
             scale_factor: 1.0,
+            cards: cards::CardsSection::new(),
             forms: forms::FormsSection::new(&theme),
             buttons: buttons::ButtonsSection::new(),
             overlays: overlays::OverlaysSection::new(),
@@ -154,8 +167,8 @@ impl ShowcaseView {
             icons_gallery: icons_gallery::IconsSection::new(),
             themes: theme_gallery::ThemeSection::new(),
             theme,
-            theme_name: "dark".to_string(),
-            section: Section::Buttons,
+            theme_name: "hoff".to_string(),
+            section: Section::Cards,
             sidebar_hover: None,
             overlay_mgr: OverlayManager::new(),
             layers: None,
@@ -208,15 +221,15 @@ impl ShowcaseView {
     pub fn handle_key(&mut self, key: &str) -> bool {
         match key {
             "t" | "T" => {
-                let next = if self.theme_name == "light" {
-                    "dark"
-                } else {
-                    "light"
+                let next = match self.theme_name.as_str() {
+                    "hoff" => "dark",
+                    "dark" => "light",
+                    _ => "hoff",
                 };
                 self.set_theme(next);
                 true
             }
-            d @ ("1" | "2" | "3" | "4" | "5" | "6") => {
+            d @ ("1" | "2" | "3" | "4" | "5" | "6" | "7") => {
                 let idx = d.as_bytes()[0] - b'1';
                 self.section = Section::ALL[idx as usize];
                 true
@@ -399,6 +412,7 @@ impl ShowcaseView {
 
         let content = self.content_rect();
         let section_result = match self.section {
+            Section::Cards => self.cards.handle_event(event, content),
             Section::Buttons => self.buttons.handle_event(event, content),
             Section::Forms => self.forms.handle_event(event, content),
             Section::Overlays => {
@@ -464,11 +478,19 @@ impl ShowcaseView {
     }
 
     fn sidebar_item_rects(&self) -> Vec<Rect> {
-        let top = 92.0;
+        // HOFF sidebar: menu under the logo block, 48px links, 4px gap.
+        let top = 96.0;
         Section::ALL
             .iter()
             .enumerate()
-            .map(|(i, _)| Rect::new(10.0, top + i as f32 * 38.0, SIDEBAR_W - 20.0, 34.0))
+            .map(|(i, _)| {
+                Rect::new(
+                    12.0,
+                    top + i as f32 * (NAV_H + 4.0),
+                    SIDEBAR_W - 24.0,
+                    NAV_H,
+                )
+            })
             .collect()
     }
 
@@ -529,6 +551,7 @@ impl ShowcaseView {
         c.set_layer_clip_rect(layers.list, clip);
 
         match self.section {
+            Section::Cards => self.cards.render(c, content, &theme),
             Section::Buttons => self.buttons.render(c, content, &theme),
             Section::Forms => self.forms.render(c, layers.overlay, content, &theme),
             Section::Overlays => {
@@ -564,30 +587,33 @@ impl ShowcaseView {
     }
 
     fn render_sidebar(&self, c: &mut Compositor, theme: &Theme) {
+        let glass = &theme.glass;
+        let text_c = theme.colors.text;
+
+        // HOFF sidebar: surface one notch above the page (rgba(40,40,40,.8))
+        // — path-based so nav icons stack on top.
+        let surface = {
+            let s = theme.colors.surface.0;
+            [s[0], s[1], s[2], (s[3] + 0.1).min(1.0)]
+        };
         c.push(SceneNode::Rect {
             x: 0.0,
             y: 0.0,
             w: SIDEBAR_W,
             h: self.height,
-            color: theme.colors.surface.0,
-        });
-        c.push(SceneNode::Rect {
-            x: SIDEBAR_W - 1.0,
-            y: 0.0,
-            w: 1.0,
-            h: self.height,
-            color: theme.colors.divider.0,
+            color: surface,
         });
 
-        text(c, "plev", 20.0, 700, 20.0, 28.0, theme.colors.text.0);
+        // Logo block: gradient-text feel (primary name, faint subtitle).
+        text(c, "plev", 20.0, 600, 24.0, 26.0, text_c.0);
         text(
             c,
-            "design system",
-            11.0,
-            400,
-            22.0,
+            "HOFF DESIGN SYSTEM",
+            10.0,
+            600,
+            24.0,
             54.0,
-            theme.colors.text_dim.0,
+            glass.text_placeholder.0,
         );
 
         for (i, (section, rect)) in Section::ALL
@@ -597,85 +623,96 @@ impl ShowcaseView {
         {
             let active = *section == self.section;
             let hovered = self.sidebar_hover == Some(i);
+            // NavLink: radius 12, hover .05, active .10 + edge stroke.
             if active || hovered {
-                // Path-based highlight so the section icon stays on top.
                 c.push(path_rounded_rect(
                     rect.x,
                     rect.y,
                     rect.w,
                     rect.h,
-                    theme.radius.md + 2.0,
+                    theme.radius.md,
                     if active {
-                        [
-                            theme.colors.accent.0[0],
-                            theme.colors.accent.0[1],
-                            theme.colors.accent.0[2],
-                            0.12,
-                        ]
+                        glass.surface_active.0
                     } else {
-                        theme.colors.bg_hover.0
+                        glass.surface_hover.0
                     },
                 ));
             }
+            if active {
+                c.push(path_rounded_rect_stroke(
+                    rect.x,
+                    rect.y,
+                    rect.w,
+                    rect.h,
+                    theme.radius.md,
+                    glass.edge.0,
+                    1.0,
+                ));
+            }
+            // Label: rgba($n2,.4) -> .56 hover -> .76 active, base-2sm.
             let fg = if active {
-                theme.colors.text.0
+                with_alpha(text_c.0, text_c.0[3] * 0.8)
+            } else if hovered {
+                with_alpha(text_c.0, text_c.0[3] * 0.59)
             } else {
-                theme.colors.text_mid.0
+                glass.text_faint.0
             };
+            // Icon in its 32px slot (pad 6 + centered 18px glyph).
             if let Some(node) =
-                icons::icon_at(section.icon(), 15.0, fg, rect.x + 12.0, rect.y + 9.5)
+                icons::icon_at(section.icon(), 18.0, fg, rect.x + 13.0, rect.y + 15.0)
             {
                 c.push(node);
             }
             text(
                 c,
                 section.title(),
-                13.0,
-                if active { 600 } else { 400 },
-                rect.x + 36.0,
-                rect.y + (rect.h - 13.0 * 1.3) / 2.0,
+                14.0,
+                600,
+                rect.x + 44.0,
+                rect.y + (rect.h - 14.0 * 1.4) / 2.0,
                 fg,
             );
             text(
                 c,
                 &format!("{}", i + 1),
-                11.0,
+                12.0,
                 400,
-                rect.x + rect.w - 18.0,
-                rect.y + (rect.h - 11.0 * 1.3) / 2.0,
-                theme.colors.text_dim.0,
+                rect.x + rect.w - 22.0,
+                rect.y + (rect.h - 12.0 * 1.33) / 2.0,
+                glass.text_placeholder.0,
             );
         }
 
-        // Footer hints.
-        let hint_y = self.height - 54.0;
+        // Footer hints (sidebar foot, timestamps alpha).
+        let hint_y = self.height - 56.0;
         text(
             c,
-            "T  toggle dark/light",
+            "T  cycle hoff / dark / light",
             11.0,
             400,
-            20.0,
+            24.0,
             hint_y,
-            theme.colors.text_dim.0,
+            glass.text_placeholder.0,
         );
         text(
             c,
             "Esc  close overlays",
             11.0,
             400,
-            20.0,
+            24.0,
             hint_y + 18.0,
-            theme.colors.text_dim.0,
+            glass.text_placeholder.0,
         );
     }
 
     fn render_header(&self, c: &mut Compositor, theme: &Theme) {
         let x = SIDEBAR_W + PAD;
+        // Column header: title 20/1.2/500 (HOFF title mixin).
         text(
             c,
             self.section.title(),
-            24.0,
-            700,
+            20.0,
+            500,
             x,
             PAD,
             theme.colors.text.0,
@@ -683,11 +720,11 @@ impl ShowcaseView {
         text(
             c,
             self.section.blurb(),
-            13.0,
+            14.0,
             400,
             x,
-            PAD + 36.0,
-            theme.colors.text_mid.0,
+            PAD + 32.0,
+            theme.colors.text_dim.0,
         );
     }
 }
@@ -695,6 +732,11 @@ impl ShowcaseView {
 // ---------------------------------------------------------------------------
 // Shared drawing helpers for the section modules
 // ---------------------------------------------------------------------------
+
+/// RGBA with overridden alpha.
+pub(crate) fn with_alpha(c: [f32; 4], a: f32) -> [f32; 4] {
+    [c[0], c[1], c[2], a]
+}
 
 /// Push a single-line text node to the default layer.
 pub(crate) fn text(
@@ -707,20 +749,21 @@ pub(crate) fn text(
     color: [f32; 4],
 ) {
     c.push(SceneNode::Text {
-        key: TextNodeKey::new(s, size, size * 1.3, None).with_weight(weight),
+        key: TextNodeKey::new(s, size, size * 1.4, None).with_weight(weight),
         x,
         y,
         color,
     });
 }
 
-/// Uppercase group label (the small section headings inside content).
+/// Uppercase group label — the HOFF accordion head (12/600, ls .05em,
+/// rgba($n2,.25)).
 pub(crate) fn group_label(c: &mut Compositor, s: &str, x: f32, y: f32, theme: &Theme) {
-    text(c, s, 11.0, 600, x, y, theme.colors.text_dim.0);
+    text(c, s, 12.0, 600, x, y, theme.glass.text_placeholder.0);
 }
 
-/// Soft panel container (cards behind lists, menu demo area, etc.).
-/// Path-based so icon paths drawn on top of it stay visible.
+/// Soft panel container — HOFF list card: radius 20, .02 white glass,
+/// soft edge. Path-based so icon paths drawn on top of it stay visible.
 pub(crate) fn panel(c: &mut Compositor, rect: Rect, theme: &Theme) {
     c.push(path_rounded_rect(
         rect.x,
@@ -728,7 +771,7 @@ pub(crate) fn panel(c: &mut Compositor, rect: Rect, theme: &Theme) {
         rect.w,
         rect.h,
         theme.radius.lg,
-        theme.colors.surface.0,
+        theme.glass.surface.0,
     ));
     c.push(path_rounded_rect_stroke(
         rect.x,
@@ -736,7 +779,72 @@ pub(crate) fn panel(c: &mut Compositor, rect: Rect, theme: &Theme) {
         rect.w,
         rect.h,
         theme.radius.lg,
-        theme.colors.divider.0,
+        theme.glass.edge_soft.0,
         1.0,
     ));
+}
+
+// ---------------------------------------------------------------------------
+// Headless view tests (no GPU: scenes build into a plain compositor)
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn starts_on_cards_with_the_hoff_theme() {
+        let view = ShowcaseView::new(1200.0, 800.0);
+        assert_eq!(view.section, Section::Cards);
+        assert_eq!(view.theme_name, "hoff");
+        // Page frame is the HOFF #444444.
+        assert_eq!(view.theme.colors.bg.0, plev::theme::hoff::PAGE_BG.0);
+    }
+
+    #[test]
+    fn jump_to_section_matches_case_insensitively() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        view.jump_to_section("theme");
+        assert_eq!(view.section, Section::Theme);
+        view.jump_to_section("CARDS");
+        assert_eq!(view.section, Section::Cards);
+        view.jump_to_section("nope");
+        assert_eq!(view.section, Section::Cards, "unknown names are ignored");
+    }
+
+    #[test]
+    fn digit_keys_select_sections_and_t_cycles_themes() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        assert!(view.handle_key("7"));
+        assert_eq!(view.section, Section::Theme);
+        assert!(view.handle_key("1"));
+        assert_eq!(view.section, Section::Cards);
+
+        assert!(view.handle_key("t"));
+        assert_eq!(view.theme_name, "dark");
+        assert!(view.handle_key("t"));
+        assert_eq!(view.theme_name, "light");
+        assert!(view.handle_key("t"));
+        assert_eq!(view.theme_name, "hoff");
+    }
+
+    #[test]
+    fn sidebar_offers_one_nav_link_per_section() {
+        let view = ShowcaseView::new(1200.0, 800.0);
+        let rects = view.sidebar_item_rects();
+        assert_eq!(rects.len(), Section::ALL.len());
+        assert!(rects.iter().all(|r| r.h == NAV_H));
+    }
+
+    #[test]
+    fn every_section_renders_a_scene() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        for section in Section::ALL {
+            view.section = section;
+            let mut c = Compositor::new();
+            view.render(&mut c);
+            let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().len();
+            assert!(nodes > 10, "{section:?} emitted only {nodes} nodes");
+        }
+    }
 }

@@ -1,14 +1,15 @@
 //! plev design system showcase.
 //!
-//! Gallery of every `plev::ui::widgets` widget in every state, the Lucide
-//! icon set, and the theme palettes — the visual calling card of the
-//! engine. Frames render on demand; animations (springs, fades) keep
-//! requesting frames only while something is actually moving.
+//! Gallery of every `plev::ui::widgets` widget in every state, the HOFF
+//! card deck, the Lucide icon set, and the theme palettes — the visual
+//! calling card of the engine. Frames render on demand; animations
+//! (springs, fades) keep requesting frames only while something is
+//! actually moving.
 //!
 //! Run: `cargo run -p showcase [section] [theme]`, e.g.
-//! `cargo run -p showcase icons dracula` — handy for snapshot tooling.
+//! `cargo run -p showcase cards hoff` — handy for snapshot tooling.
 //!
-//! Keys: `T` toggles dark/light · `1`-`6` jump to a section · `Esc`
+//! Keys: `T` cycles hoff/dark/light · `1`-`7` jump to a section · `Esc`
 //! closes overlays (or quits).
 
 mod renderer;

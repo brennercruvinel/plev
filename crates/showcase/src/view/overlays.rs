@@ -231,21 +231,21 @@ impl OverlaysSection {
             y: area.y,
             w: area.w,
             h: area.h,
-            color: theme.colors.surface.0,
+            color: theme.glass.surface.0,
             corner_radius: theme.radius.lg,
             border_width: 1.0,
-            border_color: theme.colors.divider.0,
+            border_color: theme.glass.edge_soft.0,
         });
         let hint = "Right-click anywhere in this area";
-        let (hint_w, _) = plev::text::TextMeasurer::measure(hint, 13.0, None);
+        let (hint_w, _) = plev::text::TextMeasurer::measure(hint, 14.0, None);
         text(
             c,
             hint,
-            13.0,
+            14.0,
             400,
             area.x + (area.w - hint_w) / 2.0,
-            area.y + area.h / 2.0 - 9.0,
-            theme.colors.text_dim.0,
+            area.y + area.h / 2.0 - 10.0,
+            theme.glass.text_placeholder.0,
         );
     }
 

@@ -6,12 +6,17 @@ use crate::ui::icons;
 
 use super::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 
+/// HOFF notify toast: radius 16, pad 10 16 10 8, bg rgba($n2,.1),
+/// gutter 10, 12px from the viewport edge.
 const WIDTH: f32 = 320.0;
-const PAD: f32 = 12.0;
-const GAP: f32 = 8.0;
-const FONT: f32 = 13.0;
-const MARGIN: f32 = 16.0;
-const ICON: f32 = 16.0;
+const PAD_L: f32 = 8.0;
+const PAD_R: f32 = 16.0;
+const PAD_Y: f32 = 10.0;
+const RADIUS: f32 = 16.0;
+const GAP: f32 = 10.0;
+const FONT: f32 = 14.0;
+const MARGIN: f32 = 12.0;
+const ICON: f32 = 18.0;
 
 /// One queued notification.
 #[derive(Clone, Debug)]
@@ -147,9 +152,9 @@ impl ToastManager {
 
     fn toast_height(message: &str) -> f32 {
         let style = TextStyle::new(FONT);
-        let text_w = WIDTH - PAD * 2.0 - ICON - GAP;
+        let text_w = WIDTH - PAD_L - PAD_R - ICON - 8.0;
         let (_, th) = TextMeasurer::measure_styled(message, &style, Some(text_w));
-        th.max(FONT * 1.3) + PAD * 2.0
+        th.max(FONT * 1.4) + PAD_Y * 2.0
     }
 
     /// On-screen rects for visible toasts (bottom-right, stacking upward),
@@ -192,6 +197,7 @@ impl ToastManager {
         vh: f32,
     ) {
         let rects = self.visible_rects(vw, vh);
+        let glass = &theme.glass;
         for (t, rect) in self.visible().zip(rects) {
             let alpha = t.progress();
             if alpha <= 0.01 {
@@ -199,7 +205,8 @@ impl ToastManager {
             }
             let accent = intent_fill(theme, t.intent);
 
-            // Path-based surface so the intent icon (a path) stays on top.
+            // Notify surface: rgba($n2,.1) glass. Path-based so the intent
+            // icon (a path) stays on top.
             compositor.push_to_layer(
                 layer,
                 super::path_rounded_rect(
@@ -207,8 +214,8 @@ impl ToastManager {
                     rect.y,
                     rect.w,
                     rect.h,
-                    theme.radius.lg,
-                    with_alpha(theme.colors.bg_panel, 0.98 * alpha),
+                    RADIUS,
+                    with_alpha(glass.surface_active, glass.surface_active.0[3] * alpha),
                 ),
             );
             compositor.push_to_layer(
@@ -218,46 +225,33 @@ impl ToastManager {
                     rect.y,
                     rect.w,
                     rect.h,
-                    theme.radius.lg,
-                    with_alpha(theme.colors.divider, alpha),
+                    RADIUS,
+                    with_alpha(glass.edge_soft, glass.edge_soft.0[3] * alpha),
                     1.0,
                 ),
-            );
-            // Intent accent bar on the left edge.
-            compositor.push_to_layer(
-                layer,
-                SceneNode::RoundedRect {
-                    x: rect.x,
-                    y: rect.y,
-                    w: 3.0,
-                    h: rect.h,
-                    color: [accent[0], accent[1], accent[2], alpha],
-                    corner_radius: 1.5,
-                    border_width: 0.0,
-                    border_color: [0.0; 4],
-                },
             );
             if let Some(node) = icons::icon_at(
                 t.icon_name(),
                 ICON,
-                [accent[0], accent[1], accent[2], alpha],
-                rect.x + PAD,
-                rect.y + PAD - 1.0,
+                [accent[0], accent[1], accent[2], accent[3] * alpha],
+                rect.x + PAD_L,
+                rect.y + PAD_Y,
             ) {
                 compositor.push_to_layer(layer, node);
             }
+            let text = theme.colors.text;
             compositor.push_to_layer(
                 layer,
                 SceneNode::Text {
                     key: TextNodeKey::new(
                         &t.message,
                         FONT,
-                        FONT * 1.3,
-                        Some(rect.w - PAD * 2.0 - ICON - GAP),
+                        FONT * 1.4,
+                        Some(rect.w - PAD_L - PAD_R - ICON - 8.0),
                     ),
-                    x: rect.x + PAD + ICON + GAP,
-                    y: rect.y + PAD,
-                    color: with_alpha(theme.colors.text, alpha),
+                    x: rect.x + PAD_L + ICON + 8.0,
+                    y: rect.y + PAD_Y,
+                    color: with_alpha(text, text.0[3] * 0.8 * alpha),
                 },
             );
         }

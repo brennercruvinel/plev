@@ -2,15 +2,19 @@ use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::theme::Theme;
 use crate::ui::icons;
 
-use super::{EventResult, Rect, WidgetEvent, with_alpha};
+use super::{EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, with_alpha};
 
-const FONT: f32 = 13.0;
-const OPTION_H: f32 = 28.0;
-const PAD_X: f32 = 10.0;
-const PAD_Y: f32 = 5.0;
-const CHEVRON: f32 = 14.0;
+/// HOFF select: 44px pill control (radius 22, base-2m label), options
+/// panel radius 20 / pad 8, 44px options (radius 12) with an 8px dot
+/// marking the active one.
+const FONT: f32 = 14.0;
+const OPTION_H: f32 = 44.0;
+const PAD_X: f32 = 16.0;
+const PAD_Y: f32 = 8.0;
+const CHEVRON: f32 = 16.0;
 const DROPDOWN_GAP: f32 = 4.0;
-const MAX_DROPDOWN_H: f32 = 280.0;
+const MAX_DROPDOWN_H: f32 = 320.0;
+const DOT: f32 = 8.0;
 
 /// Dropdown select. The closed control renders in normal flow; while
 /// open, render the dropdown via [`render_dropdown`](Select::render_dropdown)
@@ -133,42 +137,42 @@ impl Select {
     /// Render the closed control (selected value + chevron).
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
         let alpha = if self.disabled { 0.5 } else { 1.0 };
-        let border = if self.open {
-            theme.colors.border_active
-        } else if self.hovered {
-            theme.colors.border_active
+        let glass = &theme.glass;
+
+        // Glass pill: rgba($n2,.05), hover .10, focus border rgba($n2,.25).
+        let bg = if self.hovered || self.open {
+            with_alpha(glass.surface_active, glass.surface_active.0[3] * alpha)
         } else {
-            theme.colors.divider
+            with_alpha(glass.field, glass.field.0[3] * alpha)
         };
-        let bg = if self.hovered && !self.open {
-            with_alpha(theme.colors.bg_hover, alpha)
+        let edge = if self.open {
+            with_alpha(
+                glass.field_focus_border,
+                glass.field_focus_border.0[3] * alpha,
+            )
         } else {
-            with_alpha(theme.colors.surface, alpha)
+            with_alpha(glass.edge_soft, glass.edge_soft.0[3] * alpha)
         };
 
         // Path-based background: the chevron icon must stack on top (see
         // path_rounded_rect docs for the pipeline-order constraint).
-        let radius = theme.radius.md + 2.0;
+        let radius = theme.radius.xl.min(bounds.h / 2.0);
         compositor.push(super::path_rounded_rect(
             bounds.x, bounds.y, bounds.w, bounds.h, radius, bg,
         ));
         compositor.push(super::path_rounded_rect_stroke(
-            bounds.x,
-            bounds.y,
-            bounds.w,
-            bounds.h,
-            radius,
-            with_alpha(border, alpha),
-            1.0,
+            bounds.x, bounds.y, bounds.w, bounds.h, radius, edge, 1.5,
         ));
 
         if let Some(label) = self.selected_label() {
-            let line_height = FONT * 1.3;
+            let line_height = FONT * 1.4;
+            // base-2m at rgba($n2,.76).
+            let text = theme.colors.text;
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::new(label, FONT, line_height, None),
+                key: TextNodeKey::new(label, FONT, line_height, None).with_weight(500),
                 x: bounds.x + PAD_X,
                 y: bounds.y + (bounds.h - line_height) / 2.0,
-                color: with_alpha(theme.colors.text, alpha),
+                color: with_alpha(text, text.0[3] * 0.8 * alpha),
             });
         }
 
@@ -180,7 +184,7 @@ impl Select {
         if let Some(node) = icons::icon_at(
             chevron,
             CHEVRON,
-            with_alpha(theme.colors.text_dim, alpha),
+            with_alpha(glass.text_faint, glass.text_faint.0[3] * alpha),
             bounds.x + bounds.w - PAD_X - CHEVRON,
             bounds.y + (bounds.h - CHEVRON) / 2.0,
         ) {
@@ -200,33 +204,19 @@ impl Select {
             return;
         }
         let dd = self.dropdown_rect(bounds);
+        let glass = &theme.glass;
+        let text = theme.colors.text;
 
-        let radius = theme.radius.md + 2.0;
-        compositor.push_to_layer(
-            layer,
-            super::path_rounded_rect(
-                dd.x,
-                dd.y,
-                dd.w,
-                dd.h,
-                radius,
-                with_alpha(theme.colors.bg_panel, 0.99),
-            ),
-        );
-        compositor.push_to_layer(
-            layer,
-            super::path_rounded_rect_stroke(
-                dd.x,
-                dd.y,
-                dd.w,
-                dd.h,
-                radius,
-                with_alpha(theme.colors.divider, 1.0),
-                1.0,
-            ),
-        );
+        // Floating panel: solid popover body, edge-light, deep shadow.
+        // No path icons inside (the active marker is an SDF dot), so the
+        // whole panel can use the gradient edge-light recipe.
+        let radius = theme.radius.lg;
+        compositor.push_to_layer(layer, menu_shadow(dd, radius));
+        for node in glass_pill(dd, radius, glass.edge_soft.0, 1.5, glass.popover.0) {
+            compositor.push_to_layer(layer, node);
+        }
 
-        let line_height = FONT * 1.3;
+        let line_height = FONT * 1.4;
         for (i, option) in self.options.iter().enumerate() {
             let oy = dd.y + PAD_Y + i as f32 * OPTION_H;
             if oy + OPTION_H > dd.y + dd.h {
@@ -235,39 +225,52 @@ impl Select {
             let is_selected = i == self.selected;
             let is_hovered = self.hovered_option == Some(i);
 
-            if is_hovered {
+            if is_hovered || is_selected {
+                // Option: radius 12, active bg rgba($n2,.10).
                 compositor.push_to_layer(
                     layer,
-                    super::path_rounded_rect(
-                        dd.x + 4.0,
-                        oy + 1.0,
-                        dd.w - 8.0,
-                        OPTION_H - 2.0,
-                        theme.radius.md,
-                        with_alpha(theme.colors.bg_hover, 1.0),
-                    ),
+                    SceneNode::RoundedRect {
+                        x: dd.x + PAD_Y,
+                        y: oy,
+                        w: dd.w - PAD_Y * 2.0,
+                        h: OPTION_H,
+                        color: if is_selected {
+                            glass.surface_active.0
+                        } else {
+                            glass.surface_hover.0
+                        },
+                        corner_radius: theme.radius.md.min(OPTION_H / 2.0),
+                        border_width: 0.0,
+                        border_color: [0.0; 4],
+                    },
                 );
             }
+            // base-2m: rgba($n2,.56) -> .76 hovered/selected.
+            let label_alpha = if is_hovered || is_selected { 0.8 } else { 0.59 };
             compositor.push_to_layer(
                 layer,
                 SceneNode::Text {
-                    key: TextNodeKey::new(option, FONT, line_height, None)
-                        .with_weight(if is_selected { 600 } else { 400 }),
+                    key: TextNodeKey::new(option, FONT, line_height, None).with_weight(500),
                     x: dd.x + PAD_X,
                     y: oy + (OPTION_H - line_height) / 2.0,
-                    color: with_alpha(theme.colors.text, 1.0),
+                    color: with_alpha(text, text.0[3] * label_alpha),
                 },
             );
-            if is_selected
-                && let Some(node) = icons::icon_at(
-                    "check",
-                    12.0,
-                    with_alpha(theme.colors.accent, 1.0),
-                    dd.x + dd.w - PAD_X - 12.0,
-                    oy + (OPTION_H - 12.0) / 2.0,
-                )
-            {
-                compositor.push_to_layer(layer, node);
+            if is_selected {
+                // 8px dot on the right marks the active option.
+                compositor.push_to_layer(
+                    layer,
+                    SceneNode::RoundedRect {
+                        x: dd.x + dd.w - PAD_X - DOT,
+                        y: oy + (OPTION_H - DOT) / 2.0,
+                        w: DOT,
+                        h: DOT,
+                        color: text.0,
+                        corner_radius: DOT / 2.0,
+                        border_width: 0.0,
+                        border_color: [0.0; 4],
+                    },
+                );
             }
         }
     }

@@ -69,8 +69,8 @@ impl FormsSection {
         let (x, y) = (content.x, content.y);
         let col_b = x + COL_W + COL_GAP;
 
-        // Column A: tabs, checkboxes, switches.
-        let tabs = Rect::new(x, y + LABEL_H, COL_W, 34.0);
+        // Column A: tabs, checkboxes, switches. HOFF tabs: 44px strip.
+        let tabs = Rect::new(x, y + LABEL_H, COL_W, 44.0);
         let cb_y = tabs.y + tabs.h + GROUP_GAP + LABEL_H;
         let checkboxes = [
             Rect::new(x, cb_y, COL_W, ROW_H),
@@ -97,11 +97,12 @@ impl FormsSection {
             Rect::new(col_b, pr_y + 26.0, COL_W, 18.0),
             Rect::new(col_b, pr_y + 52.0, COL_W, 18.0),
         ];
+        // HOFF select: 44px pill control.
         let select = Rect::new(
             col_b,
             progresses[2].y + 26.0 + GROUP_GAP + LABEL_H,
             240.0,
-            32.0,
+            44.0,
         );
 
         Layout {

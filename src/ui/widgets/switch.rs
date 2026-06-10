@@ -2,13 +2,14 @@ use crate::animation::Spring;
 use crate::compositor::{Compositor, SceneNode};
 use crate::theme::{MotionPhysics, Theme};
 
-use super::{EventResult, Rect, WidgetEvent, contrast_text, with_alpha};
+use super::{EventResult, Rect, WidgetEvent, mix};
 
-/// Track dimensions (the widget centers them inside its bounds).
-const TRACK_W: f32 = 36.0;
-const TRACK_H: f32 = 20.0;
+/// HOFF switch: 44×24 track (radius 12), 16px knob at (4,4) with a 20px
+/// travel. The widget centers the track inside its bounds.
+const TRACK_W: f32 = 44.0;
+const TRACK_H: f32 = 24.0;
 const KNOB: f32 = 16.0;
-const KNOB_PAD: f32 = 2.0;
+const KNOB_PAD: f32 = 4.0;
 
 /// Toggle switch with a spring-animated knob.
 ///
@@ -119,22 +120,17 @@ impl Switch {
         let tx = bounds.x + (bounds.w - TRACK_W) / 2.0;
         let ty = bounds.y + (bounds.h - TRACK_H) / 2.0;
         let t = self.knob_progress();
+        let glass = &theme.glass;
 
-        // Track: blend off-color -> accent with the knob progress so color
-        // and position animate together.
-        let off = theme.colors.bg_hover.0;
-        let on = theme.colors.accent.0;
-        let track = [
-            off[0] + (on[0] - off[0]) * t,
-            off[1] + (on[1] - off[1]) * t,
-            off[2] + (on[2] - off[2]) * t,
-            alpha,
-        ];
-        let border = if self.on || self.hovered {
-            [0.0; 4]
-        } else {
-            with_alpha(theme.colors.divider, alpha)
+        // Track: rgba($n2,.05) off -> rgba(40,40,40,.5) checked, blended
+        // with the knob progress so color and position animate together.
+        let off = glass.field.0;
+        let on = {
+            let b = glass.button.0;
+            [b[0], b[1], b[2], 0.5]
         };
+        let mut track = mix(off, on, t);
+        track[3] *= alpha;
         compositor.push(SceneNode::RoundedRect {
             x: tx,
             y: ty,
@@ -142,19 +138,28 @@ impl Switch {
             h: TRACK_H,
             color: track,
             corner_radius: TRACK_H / 2.0,
-            border_width: if border[3] > 0.0 { 1.0 } else { 0.0 },
-            border_color: border,
+            border_width: 0.0,
+            border_color: [0.0; 4],
         });
 
-        // Knob slides between the padded ends of the track.
+        // Knob slides 20px between the padded ends. Off: flat
+        // rgba($n2,.3); on: the HOFF white handle gradient (.90 -> .30,
+        // top-lit) — blended along the same progress.
         let kx = tx + KNOB_PAD + (TRACK_W - KNOB - KNOB_PAD * 2.0) * t;
-        let knob_color = contrast_text(track);
-        compositor.push(SceneNode::RoundedRect {
+        let flat = glass.knob_gradient[1].0;
+        let mut top = mix(flat, glass.knob_gradient[0].0, t);
+        let mut bottom = flat;
+        top[3] *= alpha;
+        bottom[3] *= alpha;
+        compositor.push(SceneNode::GradientRect {
             x: kx,
             y: ty + KNOB_PAD,
             w: KNOB,
             h: KNOB,
-            color: [knob_color[0], knob_color[1], knob_color[2], alpha],
+            color: top,
+            color2: bottom,
+            // CSS 180deg: bright stop at the top.
+            angle_deg: 180.0,
             corner_radius: KNOB / 2.0,
             border_width: 0.0,
             border_color: [0.0; 4],

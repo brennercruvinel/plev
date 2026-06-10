@@ -5,13 +5,17 @@ use crate::ui::icons;
 
 use super::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 
-const FONT: f32 = 13.0;
-const ITEM_H: f32 = 28.0;
+/// HOFF actions dropdown: 240px body, radius 24, pad 8, solid #3b3b3b;
+/// items 44px, radius 16, pad 0 8, base-2sm rgba($n2,.56) -> .76 hover.
+const FONT: f32 = 14.0;
+const ITEM_H: f32 = 44.0;
 const SEP_H: f32 = 9.0;
-const PAD_X: f32 = 10.0;
-const PAD_Y: f32 = 5.0;
-const ICON: f32 = 14.0;
-const MIN_W: f32 = 160.0;
+const PAD_X: f32 = 8.0;
+const PAD_Y: f32 = 8.0;
+const RADIUS: f32 = 24.0;
+const ITEM_RADIUS: f32 = 16.0;
+const ICON: f32 = 18.0;
+const MIN_W: f32 = 240.0;
 
 /// One row of a [`ContextMenu`].
 #[derive(Clone, Debug)]
@@ -84,7 +88,7 @@ impl ContextMenu {
 
     /// Menu size from real text measurement.
     pub fn size(&self) -> (f32, f32) {
-        let style = TextStyle::new(FONT);
+        let style = TextStyle::new(FONT).with_weight(600);
         let mut w: f32 = MIN_W;
         let mut h = PAD_Y * 2.0;
         for entry in &self.entries {
@@ -92,7 +96,7 @@ impl ContextMenu {
                 MenuEntry::Item { label, icon, .. } => {
                     let (tw, _) = TextMeasurer::measure_styled(label, &style, None);
                     let icon_w = if icon.is_some() { ICON + 8.0 } else { 0.0 };
-                    w = w.max(tw + icon_w + PAD_X * 2.0 + 12.0);
+                    w = w.max(tw + icon_w + PAD_X * 4.0 + 12.0);
                     h += ITEM_H;
                 }
                 MenuEntry::Separator => h += SEP_H,
@@ -186,38 +190,33 @@ impl ContextMenu {
         y: f32,
     ) {
         let (w, h) = self.size();
+        let glass = &theme.glass;
+        let text = theme.colors.text;
 
-        // Path-based surface: row icons are paths and must stack on top.
-        let radius = theme.radius.md + 2.0;
+        // Floating shadow, then a path-based solid #3b3b3b surface: row
+        // icons are paths and must stack on top.
+        compositor.push_to_layer(layer, super::menu_shadow(Rect::new(x, y, w, h), RADIUS));
         compositor.push_to_layer(
             layer,
-            super::path_rounded_rect(x, y, w, h, radius, with_alpha(theme.colors.bg_panel, 0.99)),
+            super::path_rounded_rect(x, y, w, h, RADIUS, glass.popover.0),
         );
         compositor.push_to_layer(
             layer,
-            super::path_rounded_rect_stroke(
-                x,
-                y,
-                w,
-                h,
-                radius,
-                with_alpha(theme.colors.divider, 1.0),
-                1.0,
-            ),
+            super::path_rounded_rect_stroke(x, y, w, h, RADIUS, glass.edge_soft.0, 1.0),
         );
 
-        let line_height = FONT * 1.3;
+        let line_height = FONT * 1.4;
         for (i, (entry, rect)) in self.entries.iter().zip(self.entry_rects(x, y)).enumerate() {
             match entry {
                 MenuEntry::Separator => {
                     compositor.push_to_layer(
                         layer,
                         SceneNode::Rect {
-                            x: rect.x + 6.0,
+                            x: rect.x + PAD_X,
                             y: rect.y + rect.h / 2.0,
-                            w: rect.w - 12.0,
+                            w: rect.w - PAD_X * 2.0,
                             h: 1.0,
-                            color: with_alpha(theme.colors.divider, 1.0),
+                            color: glass.surface_active.0,
                         },
                     );
                 }
@@ -229,27 +228,33 @@ impl ContextMenu {
                     ..
                 } => {
                     let alpha = if *disabled { 0.45 } else { 1.0 };
-                    if self.hovered == Some(i) {
+                    let hovered = self.hovered == Some(i);
+                    if hovered {
+                        // Hover: rgba($n2,.1), radius 16.
                         compositor.push_to_layer(
                             layer,
                             super::path_rounded_rect(
-                                rect.x + 4.0,
-                                rect.y + 1.0,
-                                rect.w - 8.0,
-                                rect.h - 2.0,
-                                theme.radius.md,
-                                with_alpha(theme.colors.bg_hover, 1.0),
+                                rect.x + PAD_X,
+                                rect.y,
+                                rect.w - PAD_X * 2.0,
+                                rect.h,
+                                ITEM_RADIUS,
+                                glass.surface_active.0,
                             ),
                         );
                     }
+                    // base-2sm rgba($n2,.56) -> .76 on hover.
                     let fg = match intent {
-                        Intent::Neutral => with_alpha(theme.colors.text, alpha),
+                        Intent::Neutral => {
+                            let a = if hovered { 0.8 } else { 0.59 };
+                            with_alpha(text, text.0[3] * a * alpha)
+                        }
                         other => {
                             let c = intent_fill(theme, *other);
-                            [c[0], c[1], c[2], alpha]
+                            [c[0], c[1], c[2], c[3] * alpha]
                         }
                     };
-                    let mut tx = rect.x + PAD_X;
+                    let mut tx = rect.x + PAD_X * 2.0;
                     if let Some(name) = icon {
                         if let Some(node) =
                             icons::icon_at(name, ICON, fg, tx, rect.y + (rect.h - ICON) / 2.0)
@@ -261,7 +266,7 @@ impl ContextMenu {
                     compositor.push_to_layer(
                         layer,
                         SceneNode::Text {
-                            key: TextNodeKey::new(label, FONT, line_height, None),
+                            key: TextNodeKey::new(label, FONT, line_height, None).with_weight(600),
                             x: tx,
                             y: rect.y + (rect.h - line_height) / 2.0,
                             color: fg,

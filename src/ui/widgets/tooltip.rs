@@ -2,11 +2,13 @@ use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::text::{TextMeasurer, TextStyle};
 use crate::theme::Theme;
 
-use super::{Rect, with_alpha};
+use super::Rect;
 
+/// HOFF tooltip: solid #262626, radius 8, pad 5 12 3, caption-r
+/// $text-secondary, shadow 0 1.5px 2px rgba(24,24,24,.15).
 const FONT: f32 = 12.0;
-const PAD_X: f32 = 8.0;
-const PAD_Y: f32 = 5.0;
+const PAD_X: f32 = 12.0;
+const PAD_Y: f32 = 4.0;
 const GAP: f32 = 6.0;
 const MAX_W: f32 = 280.0;
 
@@ -97,7 +99,7 @@ impl Tooltip {
         let style = TextStyle::new(FONT);
         let (tw, th) = TextMeasurer::measure_styled(&self.text, &style, Some(MAX_W));
         let w = tw + PAD_X * 2.0;
-        let h = th.max(FONT * 1.3) + PAD_Y * 2.0;
+        let h = th.max(FONT * 1.33) + PAD_Y * 2.0;
 
         let mut x = self.anchor.x + (self.anchor.w - w) / 2.0;
         x = x.clamp(4.0, (vw - w - 4.0).max(4.0));
@@ -124,6 +126,20 @@ impl Tooltip {
         }
         let rect = self.placement(vw, vh);
 
+        let radius = theme.radius.sm;
+        compositor.push_to_layer(
+            layer,
+            SceneNode::Shadow {
+                x: rect.x,
+                y: rect.y,
+                w: rect.w,
+                h: rect.h,
+                corner_radius: radius,
+                blur_radius: 2.0,
+                offset: [0.0, 1.5],
+                color: [24.0 / 255.0, 24.0 / 255.0, 24.0 / 255.0, 0.15],
+            },
+        );
         compositor.push_to_layer(
             layer,
             SceneNode::RoundedRect {
@@ -131,19 +147,19 @@ impl Tooltip {
                 y: rect.y,
                 w: rect.w,
                 h: rect.h,
-                color: with_alpha(theme.colors.bg_panel, 0.98),
-                corner_radius: theme.radius.md + 2.0,
-                border_width: 1.0,
-                border_color: with_alpha(theme.colors.divider, 1.0),
+                color: theme.glass.tooltip.0,
+                corner_radius: radius,
+                border_width: 0.0,
+                border_color: [0.0; 4],
             },
         );
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::new(&self.text, FONT, FONT * 1.3, Some(MAX_W)),
+                key: TextNodeKey::new(&self.text, FONT, FONT * 1.33, Some(MAX_W)),
                 x: rect.x + PAD_X,
                 y: rect.y + PAD_Y,
-                color: with_alpha(theme.colors.text, 1.0),
+                color: theme.colors.text_mid.0,
             },
         );
     }

@@ -274,6 +274,123 @@ mod tests {
         assert!(r.xl < r.full);
     }
 
+    // -- HOFF --
+
+    /// rgba(r8, g8, b8, a) as [f32; 4] — mirrors the SASS source values.
+    fn rgba8(r: u8, g: u8, b: u8, a: f32) -> [f32; 4] {
+        [r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0, a]
+    }
+
+    #[test]
+    fn hoff_is_the_default_theme() {
+        let theme = Theme::default();
+        assert_eq!(theme.colors.bg.0, Theme::hoff().colors.bg.0);
+        assert_eq!(
+            Theme::named("hoff").unwrap().colors.bg.0,
+            Theme::hoff().colors.bg.0
+        );
+    }
+
+    #[test]
+    fn hoff_base_palette_exact() {
+        use crate::theme::hoff;
+        assert_eq!(hoff::N1.0, rgba8(0xff, 0xff, 0xff, 1.0));
+        assert_eq!(hoff::N2.0, rgba8(0xf8, 0xf8, 0xf8, 1.0));
+        assert_eq!(hoff::N3.0, rgba8(0x28, 0x28, 0x28, 1.0));
+        assert_eq!(hoff::N4.0, rgba8(0x12, 0x12, 0x12, 1.0));
+        assert_eq!(hoff::PAGE_BG.0, rgba8(0x44, 0x44, 0x44, 1.0));
+        assert_eq!(hoff::BG_SURFACE.0, rgba8(40, 40, 40, 0.7));
+        assert_eq!(hoff::BG_SIDEBAR.0, rgba8(40, 40, 40, 0.8));
+        assert_eq!(hoff::SCRIM.0, rgba8(35, 34, 34, 0.9));
+        assert_eq!(hoff::POPOVER.0, rgba8(0x3b, 0x3b, 0x3b, 1.0));
+        assert_eq!(hoff::TOOLTIP.0, rgba8(0x26, 0x26, 0x26, 1.0));
+    }
+
+    #[test]
+    fn hoff_text_alphas_exact() {
+        let t = Theme::hoff();
+        // $text-primary / $text-secondary / $text-tertiary over $n2.
+        assert_eq!(t.colors.text.0, rgba8(248, 248, 248, 0.95));
+        assert_eq!(t.colors.text_mid.0, rgba8(248, 248, 248, 0.70));
+        assert_eq!(t.colors.text_dim.0, rgba8(248, 248, 248, 0.50));
+        assert_eq!(t.glass.text_faint.0, rgba8(248, 248, 248, 0.40));
+        assert_eq!(t.glass.text_placeholder.0, rgba8(248, 248, 248, 0.25));
+    }
+
+    #[test]
+    fn hoff_accents_exact() {
+        let t = Theme::hoff();
+        assert_eq!(t.colors.danger.0, rgba8(0xBD, 0x30, 0x27, 1.0));
+        assert_eq!(t.colors.success.0, rgba8(0x55, 0xF0, 0x8B, 1.0));
+        assert_eq!(t.colors.info.0, rgba8(124, 255, 176, 0.7));
+        assert_eq!(t.colors.warning.0, rgba8(255, 77, 0, 0.9));
+    }
+
+    #[test]
+    fn hoff_glass_surfaces_exact() {
+        let g = Theme::hoff().glass;
+        assert_eq!(g.surface.0, rgba8(248, 248, 248, 0.02));
+        assert_eq!(g.surface_hover.0, rgba8(248, 248, 248, 0.05));
+        assert_eq!(g.surface_active.0, rgba8(248, 248, 248, 0.10));
+        assert_eq!(g.button.0, rgba8(40, 40, 40, 0.70));
+        assert_eq!(g.button_hover.0, rgba8(248, 248, 248, 0.10));
+        assert_eq!(g.field.0, rgba8(248, 248, 248, 0.05));
+        assert_eq!(g.field_focus_border.0, rgba8(248, 248, 248, 0.25));
+        assert_eq!(g.edge.0, [1.0, 1.0, 1.0, 0.10]);
+        assert_eq!(g.edge_soft.0, [1.0, 1.0, 1.0, 0.05]);
+        assert_eq!(g.inset_highlight.0, rgba8(248, 248, 248, 0.06));
+        assert_eq!(g.knob_gradient[0].0, rgba8(248, 248, 248, 0.90));
+        assert_eq!(g.knob_gradient[1].0, rgba8(248, 248, 248, 0.30));
+        assert_eq!(g.text_gradient[0].0, rgba8(248, 248, 248, 0.90));
+        assert_eq!(g.text_gradient[1].0, rgba8(248, 248, 248, 0.50));
+    }
+
+    #[test]
+    fn hoff_scales_exact() {
+        let t = Theme::hoff();
+        // Type ramp: caption 12 / base-2 14 / base 16 / title 20 /
+        // headline 32 / h4 36.
+        assert_eq!(t.typography.caption, 12.0);
+        assert_eq!(t.typography.body_sm, 14.0);
+        assert_eq!(t.typography.body, 16.0);
+        assert_eq!(t.typography.title_sm, 20.0);
+        assert_eq!(t.typography.title, 32.0);
+        assert_eq!(t.typography.display, 36.0);
+        // Radii: 8 tooltip / 12 nav / 20 card / 32 pill.
+        assert_eq!(t.radius.sm, 8.0);
+        assert_eq!(t.radius.md, 12.0);
+        assert_eq!(t.radius.lg, 20.0);
+        assert_eq!(t.radius.xl, 32.0);
+        // Spacing: 4 / 8 / 12 / 16 / 24 / 32.
+        assert_eq!(t.spacing.md, 12.0);
+        assert_eq!(t.spacing.xl, 24.0);
+        assert_eq!(t.spacing.xxl, 32.0);
+    }
+
+    #[test]
+    fn hoff_motion_settles_in_200ms() {
+        let t = Theme::hoff();
+        let settle = t.motion.settling_time();
+        assert!(
+            (0.15..=0.25).contains(&settle),
+            "HOFF global transition is .2s, spring settles in {settle}s"
+        );
+        // No overshoot: damping at or above critical.
+        assert!(t.motion.damping_ratio() >= 0.95);
+    }
+
+    #[test]
+    fn non_hoff_themes_carry_derived_glass_tokens() {
+        for name in ["dark", "light", "dracula", "nord"] {
+            let t = Theme::named(name)
+                .or_else(|| (name == "dark").then(Theme::dark))
+                .or_else(|| (name == "light").then(Theme::light))
+                .unwrap();
+            assert!(t.glass.surface.0[3] > 0.0, "{name}: glass derived");
+            assert!(t.glass.edge.0[3] > 0.0, "{name}: edge derived");
+        }
+    }
+
     // -- Accessibility --
 
     #[cfg(feature = "accessibility")]

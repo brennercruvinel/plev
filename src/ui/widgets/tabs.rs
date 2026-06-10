@@ -2,13 +2,15 @@ use crate::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::text::{TextMeasurer, TextStyle};
 use crate::theme::Theme;
 
-use super::{EventResult, Rect, WidgetEvent, with_alpha};
+use super::{EventResult, Rect, WidgetEvent, glass_pill};
 
-const FONT: f32 = 13.0;
-const PAD_X: f32 = 14.0;
-const UNDERLINE: f32 = 2.0;
+/// HOFF tabs: container radius 22 / pad 4 / rgba(40,40,40,.6); the active
+/// segment is an 18-radius glass block with its own edge-light + shadow.
+const FONT: f32 = 14.0;
+const PAD: f32 = 4.0;
 
-/// Horizontal tab strip. Tab widths come from real text measurement.
+/// Segmented tab strip. Tabs share the width equally (CSS `flex: 1`);
+/// give the widget 44px of height for the canonical 36px segments.
 #[derive(Clone, Debug)]
 pub struct Tabs {
     pub labels: Vec<String>,
@@ -29,18 +31,15 @@ impl Tabs {
         self.hovered
     }
 
-    /// Hit rects for each tab within `bounds`.
+    /// Hit rects for each tab within `bounds`: equal-width segments
+    /// inside the 4px container padding.
     pub fn item_rects(&self, bounds: Rect) -> Vec<Rect> {
-        let mut rects = Vec::with_capacity(self.labels.len());
-        let mut x = bounds.x;
-        for label in &self.labels {
-            let style = TextStyle::new(FONT).with_weight(500);
-            let (text_w, _) = TextMeasurer::measure_styled(label, &style, None);
-            let w = (text_w + PAD_X * 2.0).ceil();
-            rects.push(Rect::new(x, bounds.y, w, bounds.h));
-            x += w;
-        }
-        rects
+        let n = self.labels.len().max(1) as f32;
+        let w = (bounds.w - PAD * 2.0) / n;
+        let h = bounds.h - PAD * 2.0;
+        (0..self.labels.len())
+            .map(|i| Rect::new(bounds.x + PAD + i as f32 * w, bounds.y + PAD, w, h))
+            .collect()
     }
 
     fn tab_at(&self, x: f32, y: f32, bounds: Rect) -> Option<usize> {
@@ -80,59 +79,62 @@ impl Tabs {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        // Baseline under the whole strip.
-        compositor.push(SceneNode::Rect {
+        let glass = &theme.glass;
+
+        // Container: rgba(40,40,40,.6), pill radius (22 at 44px height).
+        let container = {
+            let b = glass.button.0;
+            [b[0], b[1], b[2], 0.6]
+        };
+        compositor.push(SceneNode::RoundedRect {
             x: bounds.x,
-            y: bounds.y + bounds.h - 1.0,
+            y: bounds.y,
             w: bounds.w,
-            h: 1.0,
-            color: with_alpha(theme.colors.divider, 1.0),
+            h: bounds.h,
+            color: container,
+            corner_radius: bounds.h / 2.0,
+            border_width: 0.0,
+            border_color: [0.0; 4],
         });
 
-        let line_height = FONT * 1.3;
-        for (i, (label, rect)) in self.labels.iter().zip(self.item_rects(bounds)).enumerate() {
+        let line_height = FONT * 1.4;
+        let rects = self.item_rects(bounds);
+
+        // Active block: shadow + edge-light + rgba($n2,.05) fill.
+        if let Some(rect) = rects.get(self.active) {
+            let radius = rect.h / 2.0;
+            compositor.push(SceneNode::Shadow {
+                x: rect.x,
+                y: rect.y,
+                w: rect.w,
+                h: rect.h,
+                corner_radius: radius,
+                // 0 8px 16px -4px rgba(18,18,18,.20).
+                blur_radius: 16.0,
+                offset: [0.0, 8.0],
+                color: [18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.20],
+            });
+            for node in glass_pill(*rect, radius, glass.edge.0, 1.5, glass.surface_hover.0) {
+                compositor.push(node);
+            }
+        }
+        for (i, (label, rect)) in self.labels.iter().zip(&rects).enumerate() {
             let is_active = i == self.active;
             let is_hovered = self.hovered == Some(i);
 
-            if is_hovered && !is_active {
-                compositor.push(SceneNode::RoundedRect {
-                    x: rect.x + 2.0,
-                    y: rect.y + 4.0,
-                    w: rect.w - 4.0,
-                    h: rect.h - 8.0 - UNDERLINE,
-                    color: with_alpha(theme.colors.bg_hover, 1.0),
-                    corner_radius: theme.radius.md,
-                    border_width: 0.0,
-                    border_color: [0.0; 4],
-                });
-            }
-
-            if is_active {
-                compositor.push(SceneNode::Rect {
-                    x: rect.x,
-                    y: rect.y + rect.h - UNDERLINE,
-                    w: rect.w,
-                    h: UNDERLINE,
-                    color: with_alpha(theme.colors.accent, 1.0),
-                });
-            }
-
-            let color = if is_active {
+            // base-2sm $text-secondary -> $text-primary on hover/active.
+            let color = if is_active || is_hovered {
                 theme.colors.text
-            } else if is_hovered {
-                theme.colors.text_mid
             } else {
-                theme.colors.text_dim
+                theme.colors.text_mid
             };
+            let style = TextStyle::new(FONT).with_weight(600);
+            let (text_w, _) = TextMeasurer::measure_styled(label, &style, None);
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::new(label, FONT, line_height, None).with_weight(if is_active {
-                    600
-                } else {
-                    500
-                }),
-                x: rect.x + PAD_X,
-                y: rect.y + (rect.h - UNDERLINE - line_height) / 2.0,
-                color: with_alpha(color, 1.0),
+                key: TextNodeKey::new(label, FONT, line_height, None).with_weight(600),
+                x: rect.x + (rect.w - text_w) / 2.0,
+                y: rect.y + (rect.h - line_height) / 2.0,
+                color: color.0,
             });
         }
     }
