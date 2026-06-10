@@ -251,11 +251,14 @@ impl Card {
 
     // -- Shells ---------------------------------------------------------------
 
-    /// Deck shell: deep drop shadow + edge-light + rgba(40,40,40,.8).
+    /// Deck shell: deep drop shadow + REAL backdrop blur (frosts the page)
+    /// + edge-light + a translucent graphite glass over the frost + the
+    /// inset key-light. The reference panels frost their backdrop with
+    /// `backdrop-filter: blur(50px)`; plev resolves that per-region.
     fn deck_shell(&self, c: &mut Compositor, layer: LayerId, b: Rect, theme: &Theme) {
         let radius = theme.radius.xl;
         // 0 32px 24px -16px rgba(0,0,0,.40): the -16 spread shrinks the
-        // casting rect.
+        // casting rect. Drawn first so the card frosts/fills on top.
         c.push_to_layer(
             layer,
             SceneNode::Shadow {
@@ -270,16 +273,32 @@ impl Card {
                 inset: false,
             },
         );
-        // Card overlay: the raised graphite panel tone (theme.surface =
-        // #2E2E2E, the measured rgba(40,40,40,.8)/body composite).
-        let fill = theme.colors.surface.0;
+        // Frost everything composited below this region (the canonical
+        // blur(50px) of HOFF panels), then a translucent graphite glass on
+        // top so the deck reads as frosted glass, not a flat panel.
+        c.push_to_layer(
+            layer,
+            SceneNode::BackdropBlur {
+                x: b.x,
+                y: b.y,
+                w: b.w,
+                h: b.h,
+                corner_radius: radius,
+                sigma: theme.effects.blur_sigma,
+            },
+        );
+        let s = theme.colors.surface.0;
+        let fill = [s[0], s[1], s[2], 0.72];
         for node in glass_pill(b, radius, theme.glass.edge_soft.0, 1.5, fill) {
             c.push_to_layer(layer, node);
         }
+        self.inset_keylight(c, layer, b, radius);
     }
 
-    /// Social card shell: radius 20, .02 white glass (.05 hovered),
-    /// stronger edge-light on hover.
+    /// Social card shell: radius 20, real frost + .02 white glass (.05
+    /// hovered) over it, top-lit edge (stronger on hover), inset key-light.
+    /// This is the live POST card: `.02` white over the container reads a
+    /// touch LIGHTER than the page (measured `#343434` vs `#303030`).
     fn social_shell(&self, c: &mut Compositor, layer: LayerId, b: Rect, theme: &Theme) {
         let glass = &theme.glass;
         let radius = theme.radius.lg;
@@ -293,9 +312,43 @@ impl Card {
         } else {
             glass.edge_soft.0
         };
+        // Frost the page beneath the card so the translucent white glass has
+        // real depth (CSS `backdrop-filter: blur(16px)` on social surfaces).
+        c.push_to_layer(
+            layer,
+            SceneNode::BackdropBlur {
+                x: b.x,
+                y: b.y,
+                w: b.w,
+                h: b.h,
+                corner_radius: radius,
+                sigma: 16.0,
+            },
+        );
         for node in glass_pill(b, radius, edge, 1.0, fill) {
             c.push_to_layer(layer, node);
         }
+        self.inset_keylight(c, layer, b, radius);
+    }
+
+    /// HOFF inset key-light: `inset 2px 4px 16px rgba(248,248,248,.06)` — a
+    /// soft highlight bleeding in from the top-left, the glint that makes a
+    /// glass surface feel lit rather than painted.
+    fn inset_keylight(&self, c: &mut Compositor, layer: LayerId, b: Rect, radius: f32) {
+        c.push_to_layer(
+            layer,
+            SceneNode::Shadow {
+                x: b.x,
+                y: b.y,
+                w: b.w,
+                h: b.h,
+                corner_radius: radius,
+                blur_radius: 16.0,
+                offset: [2.0, 4.0],
+                color: [248.0 / 255.0, 248.0 / 255.0, 248.0 / 255.0, 0.06],
+                inset: true,
+            },
+        );
     }
 
     // -- Shared little pieces ---------------------------------------------------

@@ -779,34 +779,49 @@ fn card_default_width_is_hoff_368() {
 }
 
 #[test]
-fn card_deck_shell_emits_shadow_then_edge_then_surface() {
+fn card_deck_shell_emits_shadow_then_frost_then_edge_then_surface() {
     let theme = Theme::hoff();
     let card = &sample_cards()[0]; // Stat: deck shell.
     let nodes = card_nodes(card, &theme);
 
     assert!(
-        matches!(nodes[0], SceneNode::Shadow { color, .. } if color == [0.0, 0.0, 0.0, 0.40]),
+        matches!(nodes[0], SceneNode::Shadow { color, inset, .. }
+            if color == [0.0, 0.0, 0.0, 0.40] && !inset),
         "deck shell starts with the 40%-black drop shadow"
+    );
+    // Real glass: a backdrop blur frosts the page before the fill.
+    assert!(
+        matches!(nodes[1], SceneNode::BackdropBlur { sigma, .. } if sigma > 0.0),
+        "deck shell frosts its backdrop (real glass)"
     );
     // Edge-light underlay: white gradient fading downward.
     assert!(
-        matches!(nodes[1], SceneNode::GradientRect { color, color2, angle_deg, .. }
+        matches!(nodes[2], SceneNode::GradientRect { color, color2, angle_deg, .. }
             if color[3] > 0.0 && color2[3] == 0.0 && angle_deg == 180.0),
         "edge-light underlay fades to transparent"
     );
-    // Surface: rgba(40,40,40,.8) at radius 32 (inset by the 1.5 border).
-    match nodes[2] {
+    // Surface: translucent graphite (theme.surface tone) at radius 32 (inset
+    // by the 1.5 border) — translucent so the frost reads through.
+    match nodes[3] {
         SceneNode::RoundedRect {
             color,
             corner_radius,
             ..
         } => {
-            assert!((color[0] - 40.0 / 255.0).abs() < 1e-5);
-            assert!((color[3] - 0.8).abs() < 1e-5);
+            assert!((color[0] - 46.0 / 255.0).abs() < 1e-5);
+            assert!(color[3] < 1.0 && color[3] > 0.5);
             assert_eq!(corner_radius, 30.5);
         }
         ref other => panic!("expected surface RoundedRect, got {other:?}"),
     }
+    // Inset key-light closes the stack.
+    assert!(
+        nodes
+            .iter()
+            .any(|n| matches!(n, SceneNode::Shadow { inset: true, color, .. }
+                if (color[3] - 0.06).abs() < 1e-5)),
+        "deck shell carries the inset key-light glint"
+    );
 }
 
 #[test]
@@ -817,16 +832,20 @@ fn card_profile_uses_social_surface_and_hover() {
     let bounds = Rect::new(0.0, 0.0, w, h);
 
     let nodes = card_nodes(&card, &theme);
-    // Social shell: no drop shadow, .02 white surface.
-    assert!(!matches!(nodes[0], SceneNode::Shadow { .. }));
-    assert!(matches!(nodes[1], SceneNode::RoundedRect { color, .. }
+    // Social shell: no drop shadow; frost the page, then a .02 white surface.
+    assert!(!matches!(nodes[0], SceneNode::Shadow { inset: false, .. }));
+    assert!(
+        matches!(nodes[0], SceneNode::BackdropBlur { .. }),
+        "social shell frosts its backdrop first"
+    );
+    assert!(matches!(nodes[2], SceneNode::RoundedRect { color, .. }
         if (color[3] - 0.02).abs() < 1e-5));
 
     card.handle_event(&move_to(10.0, 10.0), bounds);
     assert!(card.is_hovered());
     let nodes = card_nodes(&card, &theme);
     assert!(
-        matches!(nodes[1], SceneNode::RoundedRect { color, .. }
+        matches!(nodes[2], SceneNode::RoundedRect { color, .. }
             if (color[3] - 0.05).abs() < 1e-5),
         "hover raises the surface to .05"
     );
