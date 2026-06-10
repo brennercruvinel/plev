@@ -40,7 +40,7 @@ impl super::App {
                 );
 
                 #[cfg(target_arch = "wasm32")]
-                if let Err(e) = super::setup_wasm_canvas(&window) {
+                if let Err(e) = setup_wasm_canvas(&window) {
                     log::error!("WASM canvas setup failed: {e}");
                 }
 
