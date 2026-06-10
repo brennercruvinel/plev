@@ -60,10 +60,22 @@ impl DemoApp {
     fn build_scene(&mut self, _w: f32, _h: f32) {
         let elapsed = self.started.elapsed().as_secs_f32();
 
-        self.label("plev renderer -- visual capabilities", 22.0, 32.0, 24.0, TEXT);
+        self.label(
+            "plev renderer -- visual capabilities",
+            22.0,
+            32.0,
+            24.0,
+            TEXT,
+        );
 
         // -- Analytic shadows at several blur radii --------------------------
-        self.label("analytic shadows (blur 4 / 12 / 24 / 48)", 14.0, 32.0, 68.0, MUTED);
+        self.label(
+            "analytic shadows (blur 4 / 12 / 24 / 48)",
+            14.0,
+            32.0,
+            68.0,
+            MUTED,
+        );
         for (i, blur) in [4.0f32, 12.0, 24.0, 48.0].into_iter().enumerate() {
             let x = 32.0 + i as f32 * 180.0;
             let y = 100.0;
@@ -91,7 +103,13 @@ impl DemoApp {
         }
 
         // -- Linear gradients -------------------------------------------------
-        self.label("linear gradients (0 / 45 / 90 / 135 deg)", 14.0, 32.0, 230.0, MUTED);
+        self.label(
+            "linear gradients (0 / 45 / 90 / 135 deg)",
+            14.0,
+            32.0,
+            230.0,
+            MUTED,
+        );
         let stops = [
             ([0.98, 0.45, 0.25, 1.0], [0.85, 0.20, 0.55, 1.0], 0.0),
             ([0.20, 0.55, 0.95, 1.0], [0.25, 0.90, 0.75, 1.0], 45.0),
@@ -115,7 +133,13 @@ impl DemoApp {
         }
 
         // -- Images from the atlas -------------------------------------------
-        self.label("image atlas (png decode + procedural rgba)", 14.0, 32.0, 356.0, MUTED);
+        self.label(
+            "image atlas (png decode + procedural rgba)",
+            14.0,
+            32.0,
+            356.0,
+            MUTED,
+        );
         if let Some(logo) = self.logo {
             // Keep the aspect ratio at a fixed display height.
             let h = 96.0;
@@ -123,13 +147,21 @@ impl DemoApp {
             self.compositor.draw_image(32.0, 388.0, w, h, logo, 8.0);
         }
         if let Some(pattern) = self.pattern {
-            self.compositor.draw_image(160.0, 388.0, 96.0, 96.0, pattern, 48.0);
-            self.compositor.draw_image(272.0, 388.0, 96.0, 96.0, pattern, 12.0);
+            self.compositor
+                .draw_image(160.0, 388.0, 96.0, 96.0, pattern, 48.0);
+            self.compositor
+                .draw_image(272.0, 388.0, 96.0, 96.0, pattern, 12.0);
         }
 
         // -- Clipped panel with oversized content ------------------------------
         let (px, py, pw, ph) = (420.0, 388.0, 300.0, 180.0);
-        self.label("clip stack (content larger than panel)", 14.0, px, 356.0, MUTED);
+        self.label(
+            "clip stack (content larger than panel)",
+            14.0,
+            px,
+            356.0,
+            MUTED,
+        );
         self.compositor.draw_rounded_rect(RoundedRectParams {
             x: px,
             y: py,
@@ -228,11 +260,11 @@ impl DemoApp {
         text_system.finish_frame();
         gpu.prepare_images();
 
-        let mut encoder = gpu
-            .device
-            .create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
-                label: Some("visual_demo_encoder"),
-            });
+        let mut encoder =
+            gpu.device
+                .create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
+                    label: Some("visual_demo_encoder"),
+                });
 
         let dirty_ids: Vec<_> = self
             .compositor

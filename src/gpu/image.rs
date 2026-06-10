@@ -229,7 +229,11 @@ pub fn load_image_bytes(bytes: &[u8]) -> Result<ImageHandle, ImageError> {
 }
 
 /// Load raw RGBA8 pixels into the global image store (memoized by content).
-pub fn load_image_rgba(width: u32, height: u32, pixels: Vec<u8>) -> Result<ImageHandle, ImageError> {
+pub fn load_image_rgba(
+    width: u32,
+    height: u32,
+    pixels: Vec<u8>,
+) -> Result<ImageHandle, ImageError> {
     IMAGE_STORE.lock().unwrap().load_rgba(width, height, pixels)
 }
 
@@ -441,7 +445,10 @@ mod tests {
             .unwrap();
         let disjoint_x = a.atlas_x + a.width <= b.atlas_x || b.atlas_x + b.width <= a.atlas_x;
         let disjoint_y = a.atlas_y + a.height <= b.atlas_y || b.atlas_y + b.height <= a.atlas_y;
-        assert!(disjoint_x || disjoint_y, "allocations overlap: {a:?} vs {b:?}");
+        assert!(
+            disjoint_x || disjoint_y,
+            "allocations overlap: {a:?} vs {b:?}"
+        );
     }
 
     #[test]
@@ -449,7 +456,9 @@ mod tests {
         let mut store = ImageStore::new();
         assert_eq!(store.atlas_size(), INITIAL_IMAGE_ATLAS_SIZE);
         let w = INITIAL_IMAGE_ATLAS_SIZE + 100;
-        let handle = store.load_rgba(w, 32, solid_rgba(w, 32, [9, 9, 9, 255])).unwrap();
+        let handle = store
+            .load_rgba(w, 32, solid_rgba(w, 32, [9, 9, 9, 255]))
+            .unwrap();
         assert!(store.atlas_size() > INITIAL_IMAGE_ATLAS_SIZE);
         assert_eq!(handle.width, w);
     }

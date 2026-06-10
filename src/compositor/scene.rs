@@ -56,7 +56,12 @@ pub enum SceneNode {
     },
     /// Push a clip rect onto the clip stack: following nodes are scissored
     /// to the intersection of all pushed rects until the matching `PopClip`.
-    PushClip { x: f32, y: f32, w: f32, h: f32 },
+    PushClip {
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+    },
     /// Pop the most recent `PushClip`.
     PopClip,
     /// Analytic drop shadow of a rounded rect (Evan Wallace approximation,

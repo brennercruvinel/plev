@@ -238,8 +238,7 @@ impl Layer {
                 _ => continue,
             };
 
-            if outside_viewport(viewport, rect.x, rect.y, rect.w, rect.h) || clips.is_empty_clip()
-            {
+            if outside_viewport(viewport, rect.x, rect.y, rect.w, rect.h) || clips.is_empty_clip() {
                 culled += 1;
                 continue;
             }
@@ -309,8 +308,14 @@ impl Layer {
                     uv_bounds,
                 });
             }
-            self.image_indices
-                .extend_from_slice(&[base, base + 1, base + 2, base + 2, base + 3, base]);
+            self.image_indices.extend_from_slice(&[
+                base,
+                base + 1,
+                base + 2,
+                base + 2,
+                base + 3,
+                base,
+            ]);
             record_range(&mut self.image_ranges, first_index, 6, clips.current());
         }
 
@@ -381,12 +386,7 @@ impl Layer {
                 continue;
             }
 
-            let params = [
-                w / 2.0,
-                h / 2.0,
-                *corner_radius,
-                shadow_sigma(*blur_radius),
-            ];
+            let params = [w / 2.0, h / 2.0, *corner_radius, shadow_sigma(*blur_radius)];
             // Quad corners relative to the (offset) rect center.
             let half = [w / 2.0 + pad, h / 2.0 + pad];
             let corners = [
@@ -406,8 +406,14 @@ impl Layer {
                     params,
                 });
             }
-            self.shadow_indices
-                .extend_from_slice(&[base, base + 1, base + 2, base + 2, base + 3, base]);
+            self.shadow_indices.extend_from_slice(&[
+                base,
+                base + 1,
+                base + 2,
+                base + 2,
+                base + 3,
+                base,
+            ]);
             record_range(&mut self.shadow_ranges, first_index, 6, clips.current());
         }
 

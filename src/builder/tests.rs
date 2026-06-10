@@ -368,17 +368,13 @@ mod tests {
 
     #[test]
     fn nested_clip_children_balance_push_pop() {
-        let el = div()
-            .w(100.0)
-            .h(100.0)
-            .clip_children()
-            .child(
-                div()
-                    .w(80.0)
-                    .h(80.0)
-                    .clip_children()
-                    .child(div().w(200.0).h(10.0).bg("red")),
-            );
+        let el = div().w(100.0).h(100.0).clip_children().child(
+            div()
+                .w(80.0)
+                .h(80.0)
+                .clip_children()
+                .child(div().w(200.0).h(10.0).bg("red")),
+        );
         let nodes = el.render(&mut test_cx());
 
         let pushes = nodes
@@ -405,12 +401,11 @@ mod tests {
 
     #[test]
     fn shadow_drop_emits_shadow_before_rect() {
-        let el = div()
-            .w(100.0)
-            .h(50.0)
-            .bg("blue")
-            .rounded(8.0)
-            .shadow_drop(16.0, 4.0, [0.0, 0.0, 0.0, 0.5]);
+        let el = div().w(100.0).h(50.0).bg("blue").rounded(8.0).shadow_drop(
+            16.0,
+            4.0,
+            [0.0, 0.0, 0.0, 0.5],
+        );
         let nodes = el.render(&mut test_cx());
         assert_eq!(nodes.len(), 2);
         let SceneNode::Shadow {
@@ -435,11 +430,11 @@ mod tests {
 
     #[test]
     fn bg_linear_emits_gradient_rect() {
-        let el = div()
-            .w(100.0)
-            .h(50.0)
-            .rounded(8.0)
-            .bg_linear([1.0, 0.0, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0], 45.0);
+        let el = div().w(100.0).h(50.0).rounded(8.0).bg_linear(
+            [1.0, 0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0, 1.0],
+            45.0,
+        );
         let nodes = el.render(&mut test_cx());
         assert_eq!(nodes.len(), 1);
         let SceneNode::GradientRect {

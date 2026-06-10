@@ -25,7 +25,10 @@ fn all_engine_shaders_are_valid_wgsl() {
         ),
         ("image.wgsl", include_str!("../../shaders/image.wgsl")),
         ("text.wgsl", include_str!("../../shaders/text.wgsl")),
-        ("composite.wgsl", include_str!("../../shaders/composite.wgsl")),
+        (
+            "composite.wgsl",
+            include_str!("../../shaders/composite.wgsl"),
+        ),
         ("blur.wgsl", include_str!("../../shaders/blur.wgsl")),
         ("shadow.wgsl", include_str!("../../shaders/shadow.wgsl")),
     ];

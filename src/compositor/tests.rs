@@ -240,11 +240,14 @@ fn image_node_emits_pixel_uvs_and_ranges() {
     assert_eq!(v[0].params, [32.0, 16.0, 4.0, 0.0]);
 
     assert_eq!(layer.image_draw_ranges().len(), 1);
-    assert_eq!(layer.image_draw_ranges()[0], DrawRange {
-        first_index: 0,
-        index_count: 6,
-        clip: None
-    });
+    assert_eq!(
+        layer.image_draw_ranges()[0],
+        DrawRange {
+            first_index: 0,
+            index_count: 6,
+            clip: None
+        }
+    );
 }
 
 #[test]
@@ -323,11 +326,14 @@ fn nodes_are_grouped_into_draw_ranges_by_clip() {
     let ranges = layer.quad_draw_ranges();
     assert_eq!(ranges.len(), 4);
 
-    assert_eq!(ranges[0], DrawRange {
-        first_index: 0,
-        index_count: 12,
-        clip: None
-    });
+    assert_eq!(
+        ranges[0],
+        DrawRange {
+            first_index: 0,
+            index_count: 12,
+            clip: None
+        }
+    );
     assert_eq!(ranges[1].clip, Some([0.0, 0.0, 50.0, 50.0]));
     assert_eq!(ranges[1].first_index, 12);
     assert_eq!(ranges[1].index_count, 6);
@@ -393,7 +399,10 @@ fn clip_applies_to_sdf_and_shadow_ranges() {
 
     let layer = comp.layer(LayerId::DEFAULT).unwrap();
     assert_eq!(layer.sdf_draw_ranges().len(), 1);
-    assert_eq!(layer.sdf_draw_ranges()[0].clip, Some([0.0, 0.0, 100.0, 100.0]));
+    assert_eq!(
+        layer.sdf_draw_ranges()[0].clip,
+        Some([0.0, 0.0, 100.0, 100.0])
+    );
     assert_eq!(layer.shadow_draw_ranges().len(), 1);
     assert_eq!(
         layer.shadow_draw_ranges()[0].clip,
@@ -460,16 +469,22 @@ fn merge_text_groups_rebases_indices_and_builds_ranges() {
     // Second group's indices rebased past the first group's vertices
     assert_eq!(&indices[6..], &[4, 5, 6, 6, 7, 4]);
     assert_eq!(ranges.len(), 2);
-    assert_eq!(ranges[0], DrawRange {
-        first_index: 0,
-        index_count: 6,
-        clip: None
-    });
-    assert_eq!(ranges[1], DrawRange {
-        first_index: 6,
-        index_count: 6,
-        clip: Some([0.0, 0.0, 50.0, 50.0])
-    });
+    assert_eq!(
+        ranges[0],
+        DrawRange {
+            first_index: 0,
+            index_count: 6,
+            clip: None
+        }
+    );
+    assert_eq!(
+        ranges[1],
+        DrawRange {
+            first_index: 6,
+            index_count: 6,
+            clip: Some([0.0, 0.0, 50.0, 50.0])
+        }
+    );
 }
 
 #[test]
