@@ -1,0 +1,72 @@
+# Build artifacts
+/target
+dist/
+out/
+
+# Android SDK/NDK (local toolchains, not part of the project)
+ndk/
+emulator/
+platform-tools/
+platforms/
+build-tools/
+system-images/
+licenses/
+.temp/
+
+# Android build outputs & caches (never track)
+android/.gradle/
+android/app/build/
+android/app/src/main/jniLibs/
+android/build/
+
+# Claude Code agent worktrees (keep only commands symlink)
+.claude/worktrees/
+
+# Claude Code memory (agent-local, not project artifacts)
+memory/
+MEMORY.md
+
+# Dependencies
+node_modules/
+vendor/
+.venv/
+venv/
+
+# Caches
+.cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+htmlcov/
+
+# Experiments — source is versioned alongside other examples; build artifacts are not
+crates/exp/**/target/
+
+# Private / experiments (not for public release)
+doc/
+examples-wip/
+.claude/
+ref/
+
+# Environment
+.env
+.env.local
+.env.*.local

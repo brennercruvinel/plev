@@ -1,0 +1,12 @@
+[package]
+name = "snakeGame"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+plev = { path = "../.." }
+web-time = "1.1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+pollster = "0.4"
+env_logger = "0.11"

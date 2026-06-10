@@ -1,0 +1,8 @@
+[package]
+name = "narrate"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+narrate_macro = { path = "../narrate_macro" }
+plev = { path = "../.." }

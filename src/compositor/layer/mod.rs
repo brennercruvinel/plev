@@ -1,0 +1,228 @@
+mod geometry;
+mod texture;
+
+use rustc_hash::FxHasher;
+use std::hash::{Hash, Hasher};
+
+use crate::compositor::scene::SceneNode;
+use crate::compositor::vertex::{QuadVertex, RectSdfVertex};
+use crate::gpu_vec::GpuVec;
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct LayerId(pub u32);
+
+impl LayerId {
+    pub const DEFAULT: LayerId = LayerId(0);
+}
+
+#[derive(Clone, Debug)]
+pub enum LayerEffect {
+    Blur { sigma: f32 },
+    Shadow { sigma: f32, color: [f32; 4] },
+}
+
+pub struct Layer {
+    pub id: LayerId,
+    pub z_order: i32,
+    pub opacity: f32,
+    pub visible: bool,
+    pub effects: Vec<LayerEffect>,
+    pub clip_rect: Option<(u32, u32, u32, u32)>,
+    pub(crate) msaa_texture: Option<wgpu::Texture>,
+    pub(crate) msaa_view: Option<wgpu::TextureView>,
+    pub(crate) texture: Option<wgpu::Texture>,
+    pub(crate) texture_view: Option<wgpu::TextureView>,
+    pub(crate) composite_bind_group: Option<wgpu::BindGroup>,
+    pub(crate) opacity_buffer: Option<wgpu::Buffer>,
+    pub(crate) opacity_bind_group: Option<wgpu::BindGroup>,
+    pub(crate) nodes: Vec<SceneNode>,
+    pub(crate) prev_hash: u64,
+    pub(crate) dirty: bool,
+    pub(crate) quad_vertices: Vec<QuadVertex>,
+    pub(crate) quad_indices: Vec<u32>,
+    pub(crate) quad_vb: Option<GpuVec>,
+    pub(crate) quad_ib: Option<GpuVec>,
+    pub(crate) quad_index_count: u32,
+    pub(crate) sdf_vertices: Vec<RectSdfVertex>,
+    pub(crate) sdf_indices: Vec<u32>,
+    pub(crate) sdf_vb: Option<GpuVec>,
+    pub(crate) sdf_ib: Option<GpuVec>,
+    pub(crate) sdf_index_count: u32,
+    pub(crate) text_vertices: Vec<crate::text::TextVertex>,
+    pub(crate) text_indices: Vec<u32>,
+    pub(crate) text_vb: Option<GpuVec>,
+    pub(crate) text_ib: Option<GpuVec>,
+    pub(crate) text_index_count: u32,
+    pub(crate) tex_width: u32,
+    pub(crate) tex_height: u32,
+}
+
+pub(crate) const INITIAL_VB_SIZE: u64 = 4096;
+pub(crate) const INITIAL_IB_SIZE: u64 = 2048;
+
+impl Layer {
+    pub(crate) fn new(id: LayerId, z_order: i32) -> Self {
+        Self {
+            id,
+            z_order,
+            opacity: 1.0,
+            visible: true,
+            effects: Vec::new(),
+            clip_rect: None,
+            msaa_texture: None,
+            msaa_view: None,
+            texture: None,
+            texture_view: None,
+            composite_bind_group: None,
+            opacity_buffer: None,
+            opacity_bind_group: None,
+            nodes: Vec::new(),
+            prev_hash: 0,
+            dirty: true,
+            quad_vertices: Vec::new(),
+            quad_indices: Vec::new(),
+            quad_vb: None,
+            quad_ib: None,
+            quad_index_count: 0,
+            sdf_vertices: Vec::new(),
+            sdf_indices: Vec::new(),
+            sdf_vb: None,
+            sdf_ib: None,
+            sdf_index_count: 0,
+            text_vertices: Vec::new(),
+            text_indices: Vec::new(),
+            text_vb: None,
+            text_ib: None,
+            text_index_count: 0,
+            tex_width: 0,
+            tex_height: 0,
+        }
+    }
+
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+    pub fn nodes(&self) -> &[SceneNode] {
+        &self.nodes
+    }
+    pub fn effects(&self) -> &[LayerEffect] {
+        &self.effects
+    }
+    pub fn has_effects(&self) -> bool {
+        !self.effects.is_empty()
+    }
+
+    pub fn text_nodes(&self) -> Vec<SceneNode> {
+        self.nodes
+            .iter()
+            .filter(|n| matches!(n, SceneNode::Text { .. }))
+            .cloned()
+            .collect()
+    }
+
+    pub fn has_quads(&self) -> bool {
+        self.quad_index_count > 0
+    }
+
+    pub fn quad_buffers(&self) -> Option<(&wgpu::Buffer, &wgpu::Buffer, u32)> {
+        let vb = self.quad_vb.as_ref()?;
+        let ib = self.quad_ib.as_ref()?;
+        if self.quad_index_count == 0 {
+            return None;
+        }
+        Some((vb.buffer(), ib.buffer(), self.quad_index_count))
+    }
+
+    pub fn has_sdf_rects(&self) -> bool {
+        self.sdf_index_count > 0
+    }
+
+    pub fn sdf_rect_buffers(&self) -> Option<(&wgpu::Buffer, &wgpu::Buffer, u32)> {
+        let vb = self.sdf_vb.as_ref()?;
+        let ib = self.sdf_ib.as_ref()?;
+        if self.sdf_index_count == 0 {
+            return None;
+        }
+        Some((vb.buffer(), ib.buffer(), self.sdf_index_count))
+    }
+
+    pub fn has_text(&self) -> bool {
+        self.text_index_count > 0
+    }
+
+    pub fn text_buffers(&self) -> Option<(&wgpu::Buffer, &wgpu::Buffer, u32)> {
+        let vb = self.text_vb.as_ref()?;
+        let ib = self.text_ib.as_ref()?;
+        if self.text_index_count == 0 {
+            return None;
+        }
+        Some((vb.buffer(), ib.buffer(), self.text_index_count))
+    }
+
+    pub fn msaa_view(&self) -> Option<&wgpu::TextureView> {
+        self.msaa_view.as_ref()
+    }
+    pub fn texture_view(&self) -> Option<&wgpu::TextureView> {
+        self.texture_view.as_ref()
+    }
+    pub fn composite_bind_group(&self) -> Option<&wgpu::BindGroup> {
+        self.composite_bind_group.as_ref()
+    }
+    pub fn opacity_bind_group(&self) -> Option<&wgpu::BindGroup> {
+        self.opacity_bind_group.as_ref()
+    }
+
+    pub fn set_text_data(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        vertices: Vec<crate::text::TextVertex>,
+        indices: Vec<u32>,
+    ) {
+        self.text_index_count = indices.len() as u32;
+        self.text_vertices = vertices;
+        self.text_indices = indices;
+
+        if !self.text_vertices.is_empty() {
+            let vb = self.text_vb.get_or_insert_with(|| {
+                GpuVec::new(
+                    device,
+                    "layer_text_vb",
+                    wgpu::BufferUsages::VERTEX,
+                    INITIAL_VB_SIZE,
+                )
+            });
+            vb.upload(device, queue, &self.text_vertices);
+
+            let ib = self.text_ib.get_or_insert_with(|| {
+                GpuVec::new(
+                    device,
+                    "layer_text_ib",
+                    wgpu::BufferUsages::INDEX,
+                    INITIAL_IB_SIZE,
+                )
+            });
+            ib.upload(device, queue, &self.text_indices);
+        }
+    }
+
+    pub(crate) fn begin_frame(&mut self) {
+        self.nodes.clear();
+    }
+
+    fn compute_hash(&self) -> u64 {
+        let mut scene_hasher = FxHasher::default();
+        for node in &self.nodes {
+            node.hash_u64().hash(&mut scene_hasher);
+        }
+        scene_hasher.finish()
+    }
+
+    pub(crate) fn resolve_dirty(&mut self) {
+        let hash = self.compute_hash();
+        if hash != self.prev_hash {
+            self.dirty = true;
+            self.prev_hash = hash;
+        }
+    }
+}
