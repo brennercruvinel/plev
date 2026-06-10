@@ -19,6 +19,13 @@ pub(crate) enum BufferedEvent {
 }
 
 impl super::App {
+    /// Buffer an input event and invalidate the compositor so the next
+    /// `about_to_wait` schedules a frame to process it.
+    fn buffer_event(&mut self, event: BufferedEvent) {
+        self.event_buffer.push(event);
+        self.compositor.invalidate();
+    }
+
     pub(crate) fn process_buffered_events(&mut self) {
         let events: Vec<BufferedEvent> = self.event_buffer.drain(..).collect();
         for event in events {
@@ -78,6 +85,7 @@ impl super::App {
                 if let GpuState::Ready { ref mut gpu, .. } = self.state {
                     gpu.resize(size.width, size.height);
                 }
+                self.compositor.invalidate();
                 if let Some(ref window) = self.window {
                     self.safe_area = SafeAreaInsets::from_window(window);
                     window.request_redraw();
@@ -85,10 +93,11 @@ impl super::App {
             }
             WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
                 self.scale_factor = scale_factor;
+                self.compositor.invalidate();
                 log::info!("Scale factor changed: {}", scale_factor);
             }
             WindowEvent::Ime(ime) => {
-                self.event_buffer.push(BufferedEvent::Ime(ime));
+                self.buffer_event(BufferedEvent::Ime(ime));
             }
             WindowEvent::RedrawRequested => {
                 // Drain all buffered events before rendering
@@ -98,36 +107,37 @@ impl super::App {
                     log::debug!("Gesture: {:?}", gesture);
                 }
                 self.render();
-                if let Some(ref window) = self.window {
+                // Re-schedule only while animating or when new work arrived
+                // during the frame; otherwise stay idle until invalidated.
+                if let Some(ref window) = self.window
+                    && (self.is_animating || self.compositor.needs_render())
+                {
                     window.request_redraw();
                 }
             }
             WindowEvent::Touch(touch) => {
-                self.event_buffer
-                    .push(BufferedEvent::Touch(touch, Instant::now()));
+                self.buffer_event(BufferedEvent::Touch(touch, Instant::now()));
             }
             WindowEvent::CursorMoved { position, .. } => {
-                self.event_buffer.push(BufferedEvent::CursorMoved(
+                self.buffer_event(BufferedEvent::CursorMoved(
                     position.x as f32,
                     position.y as f32,
                 ));
             }
             WindowEvent::CursorLeft { .. } => {
-                self.event_buffer.push(BufferedEvent::CursorLeft);
+                self.buffer_event(BufferedEvent::CursorLeft);
             }
             WindowEvent::MouseInput { state, button, .. } => {
-                self.event_buffer
-                    .push(BufferedEvent::MouseInput(button, state));
+                self.buffer_event(BufferedEvent::MouseInput(button, state));
             }
             WindowEvent::KeyboardInput { event, .. } => {
-                self.event_buffer.push(BufferedEvent::KeyboardInput(event));
+                self.buffer_event(BufferedEvent::KeyboardInput(event));
             }
             WindowEvent::MouseWheel { delta, .. } => {
-                self.event_buffer.push(BufferedEvent::MouseWheel(delta));
+                self.buffer_event(BufferedEvent::MouseWheel(delta));
             }
             WindowEvent::ModifiersChanged(mods) => {
-                self.event_buffer
-                    .push(BufferedEvent::ModifiersChanged(mods));
+                self.buffer_event(BufferedEvent::ModifiersChanged(mods));
             }
             _ => {}
         }

@@ -6,9 +6,9 @@
 //! timer-based game tick, keyboard input, dirty tracking.
 #![allow(dead_code)]
 
+mod rendering;
 mod state;
 mod ui;
-mod rendering;
 
 use plev::winit::event_loop::EventLoop;
 use rendering::SnakeApp;

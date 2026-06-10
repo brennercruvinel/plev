@@ -67,7 +67,11 @@ impl App {
         }
     }
 
-    fn request_redraw(&self) {
+    /// Mark the scene as changed and schedule a frame. Frames are rendered
+    /// on demand only: without input the event loop stays idle (no
+    /// unconditional `request_redraw`).
+    fn invalidate(&mut self) {
+        self.compositor.invalidate();
         if let Some(w) = &self.window {
             w.request_redraw();
         }
@@ -100,7 +104,7 @@ impl ApplicationHandler for App {
         if let GpuState::Ready { gpu, .. } = &mut self.state {
             gpu.set_projection(lw, lh);
         }
-        self.request_redraw();
+        self.invalidate();
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
@@ -121,12 +125,12 @@ impl ApplicationHandler for App {
                     if let Key::Character(c) = &key_event.logical_key {
                         if c == "t" || c == "T" {
                             self.workspace.toggle_theme();
-                            self.request_redraw();
+                            self.invalidate();
                         }
                     }
                     // File list navigation + overlay Escape handling
                     if self.workspace.handle_key_down(&key_event.logical_key) {
-                        self.request_redraw();
+                        self.invalidate();
                     }
                 }
             }
@@ -140,7 +144,7 @@ impl ApplicationHandler for App {
                     gpu.set_projection(lw, lh);
                 }
                 self.workspace.resize(lw, lh);
-                self.request_redraw();
+                self.invalidate();
             }
 
             WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
@@ -155,7 +159,7 @@ impl ApplicationHandler for App {
 
                 if self.workspace.dragging_left || self.workspace.dragging_right {
                     self.workspace.update_drag(cx);
-                    self.request_redraw();
+                    self.invalidate();
                 }
 
                 let old_lh = self.workspace.hover_left_handle;
@@ -195,7 +199,7 @@ impl ApplicationHandler for App {
                     self.workspace.handle_hover(cx, cy)
                 };
                 if handle_changed || hover_changed {
-                    self.request_redraw();
+                    self.invalidate();
                 }
             }
 
@@ -211,13 +215,13 @@ impl ApplicationHandler for App {
                         Some(Side::Right) => self.workspace.begin_drag_right(cx),
                         None => {
                             if self.workspace.handle_click(cx, cy) {
-                                self.request_redraw();
+                                self.invalidate();
                             }
                         }
                     },
                     ElementState::Released => {
                         self.workspace.end_drag();
-                        self.request_redraw();
+                        self.invalidate();
                     }
                 }
             }
@@ -229,7 +233,7 @@ impl ApplicationHandler for App {
             } => {
                 let (cx, cy) = self.cursor_pos;
                 if self.workspace.handle_right_click(cx, cy) {
-                    self.request_redraw();
+                    self.invalidate();
                 }
             }
 
@@ -240,7 +244,7 @@ impl ApplicationHandler for App {
                     MouseScrollDelta::PixelDelta(pos) => -pos.y as f32,
                 };
                 self.workspace.scroll(cx, scroll_delta);
-                self.request_redraw();
+                self.invalidate();
             }
 
             WindowEvent::RedrawRequested => {

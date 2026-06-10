@@ -55,6 +55,7 @@ pub struct App {
     ime_state: ImeState,
     safe_area: SafeAreaInsets,
     scale_factor: f64,
+    is_animating: bool,
     pub(crate) event_buffer: Vec<BufferedEvent>,
     #[cfg(any(target_arch = "wasm32", target_os = "android"))]
     pub(crate) event_loop_proxy: Option<EventLoopProxy<AppEvent>>,
@@ -98,6 +99,7 @@ impl App {
             ime_state: ImeState::new(),
             safe_area: SafeAreaInsets::default(),
             scale_factor: 1.0,
+            is_animating: false,
             event_buffer: Vec::with_capacity(64),
             #[cfg(feature = "accessibility")]
             a11y_state: crate::accessibility::AccessibilityState::new(),
@@ -140,6 +142,20 @@ impl App {
         }
     }
 
+    /// Keep rendering frames continuously while `animating` is true.
+    /// When false (default), frames are only rendered on demand: input,
+    /// resize, or explicit `Compositor::invalidate` calls.
+    pub fn set_animating(&mut self, animating: bool) {
+        self.is_animating = animating;
+        if animating && let Some(ref window) = self.window {
+            window.request_redraw();
+        }
+    }
+
+    pub fn is_animating(&self) -> bool {
+        self.is_animating
+    }
+
     #[cfg(any(target_arch = "wasm32", target_os = "android"))]
     pub fn new_with_proxy(proxy: EventLoopProxy<AppEvent>) -> Self {
         let compositor = Compositor::new();
@@ -162,6 +178,7 @@ impl App {
             ime_state: ImeState::new(),
             safe_area: SafeAreaInsets::default(),
             scale_factor: 1.0,
+            is_animating: false,
             event_buffer: Vec::with_capacity(64),
             event_loop_proxy: Some(proxy),
             #[cfg(feature = "accessibility")]

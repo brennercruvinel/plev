@@ -1,25 +1,27 @@
 use crate::compositor::LayerEffect;
 
 impl super::App {
+    /// Encode one render pass per dirty layer. Returns the number of draw
+    /// calls issued.
     pub(super) fn encode_layer_passes(
         compositor: &crate::compositor::Compositor,
         gpu: &crate::gpu::GpuContext,
         text_system: &crate::text::TextSystem,
         dirty_layer_ids: &[crate::compositor::LayerId],
         encoder: &mut wgpu::CommandEncoder,
-    ) {
+    ) -> u32 {
+        let mut draw_calls = 0u32;
         for layer_id in dirty_layer_ids {
             let layer = compositor.layer(*layer_id).unwrap();
-            let Some(msaa_v) = layer.msaa_view() else {
+            let Some((view, resolve_target)) = layer.render_attachment() else {
                 continue;
             };
-            let resolve_v = layer.texture_view();
 
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("layer_pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: msaa_v,
-                    resolve_target: resolve_v,
+                    view,
+                    resolve_target,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
                             r: 0.0,
@@ -47,6 +49,7 @@ impl super::App {
                 pass.set_vertex_buffer(0, vb.slice(..));
                 pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
                 pass.draw_indexed(0..count, 0, 0..1);
+                draw_calls += 1;
             }
 
             if let Some((vb, ib, count)) = layer.sdf_rect_buffers() {
@@ -55,6 +58,7 @@ impl super::App {
                 pass.set_vertex_buffer(0, vb.slice(..));
                 pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
                 pass.draw_indexed(0..count, 0, 0..1);
+                draw_calls += 1;
             }
 
             if let Some((vb, ib, count)) = layer.text_buffers() {
@@ -64,8 +68,10 @@ impl super::App {
                 pass.set_vertex_buffer(0, vb.slice(..));
                 pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
                 pass.draw_indexed(0..count, 0, 0..1);
+                draw_calls += 1;
             }
         }
+        draw_calls
     }
 
     pub(super) fn apply_layer_effects(
@@ -157,6 +163,8 @@ impl super::App {
         effect_results
     }
 
+    /// Encode the composite pass drawing all visible layers to the surface.
+    /// Returns the number of draw calls issued.
     pub(super) fn encode_composite_pass(
         compositor: &crate::compositor::Compositor,
         theme: &crate::theme::Theme,
@@ -164,7 +172,7 @@ impl super::App {
         surface_view: &wgpu::TextureView,
         effect_results: &[(crate::compositor::LayerId, wgpu::BindGroup)],
         encoder: &mut wgpu::CommandEncoder,
-    ) {
+    ) -> u32 {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("composite_pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -192,6 +200,7 @@ impl super::App {
 
         pass.set_pipeline(&gpu.composite_pipeline);
 
+        let mut draw_calls = 0u32;
         for layer in compositor.layers() {
             if !layer.visible {
                 continue;
@@ -208,7 +217,9 @@ impl super::App {
                 pass.set_bind_group(0, bg, &[]);
                 pass.set_bind_group(1, opacity_bg, &[]);
                 pass.draw(0..3, 0..1);
+                draw_calls += 1;
             }
         }
+        draw_calls
     }
 }

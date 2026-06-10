@@ -40,6 +40,7 @@ pub fn render_frame(
         format: gpu.surface_format(),
         width: gpu.surface_config.width,
         height: gpu.surface_config.height,
+        msaa_samples: gpu.config.msaa_samples,
         composite_bgl: &gpu.composite_bind_group_layout,
         opacity_bgl: &gpu.opacity_bind_group_layout,
         sampler: &gpu.composite_sampler,
@@ -88,16 +89,15 @@ pub fn render_frame(
 
     for layer_id in &dirty_layer_ids {
         let layer = compositor.layer(*layer_id).unwrap();
-        let Some(msaa_v) = layer.msaa_view() else {
+        let Some((view, resolve_target)) = layer.render_attachment() else {
             continue;
         };
-        let resolve_v = layer.texture_view();
 
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("layer_pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: msaa_v,
-                resolve_target: resolve_v,
+                view,
+                resolve_target,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
                         r: 0.0,

@@ -138,9 +138,10 @@ impl PathBuilder {
             .close()
     }
 
-    /// Fill the path with the given color. Default tolerance 0.1.
+    /// Fill the path with the given color, using the configured default
+    /// tolerance (see [`super::set_default_tolerance`]).
     pub fn fill(self, color: [f32; 4]) -> TessellatedPath {
-        self.fill_with_tolerance(color, 0.1)
+        self.fill_with_tolerance(color, super::default_tolerance())
     }
 
     /// Fill the path with custom tolerance (lower = more vertices, higher quality).
@@ -148,9 +149,10 @@ impl PathBuilder {
         tessellation::fill(self, color, tolerance)
     }
 
-    /// Stroke the path with the given color and line width.
+    /// Stroke the path with the given color and line width, using the
+    /// configured default tolerance.
     pub fn stroke(self, color: [f32; 4], line_width: f32) -> TessellatedPath {
-        self.stroke_with_tolerance(color, line_width, 0.1)
+        self.stroke_with_tolerance(color, line_width, super::default_tolerance())
     }
 
     /// Stroke the path with custom tolerance.

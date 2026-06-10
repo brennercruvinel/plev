@@ -5,18 +5,21 @@ use std::sync::Arc;
 use plev::compositor::Compositor;
 use plev::gpu::GpuContext;
 use plev::text::TextSystem;
-use web_time::Instant;
 use plev::winit::application::ApplicationHandler;
 use plev::winit::event::{ElementState, WindowEvent};
 use plev::winit::event_loop::ActiveEventLoop;
 use plev::winit::keyboard::{Key, NamedKey};
 use plev::winit::window::{Window, WindowAttributes, WindowId};
+use web_time::Instant;
 
 use crate::state::{BG, SnakeGame, TICK_INTERVAL};
 
 pub(crate) enum AppState {
     Uninitialized,
-    Ready { gpu: GpuContext, text_system: TextSystem },
+    Ready {
+        gpu: GpuContext,
+        text_system: TextSystem,
+    },
 }
 
 pub(crate) struct SnakeApp {
@@ -37,10 +40,16 @@ impl SnakeApp {
     }
 
     fn render(&mut self) {
-        let AppState::Ready { ref mut gpu, ref mut text_system } = self.state else {
+        let AppState::Ready {
+            ref mut gpu,
+            ref mut text_system,
+        } = self.state
+        else {
             return;
         };
-        let Some(surface) = gpu.surface.as_ref() else { return };
+        let Some(surface) = gpu.surface.as_ref() else {
+            return;
+        };
         let output = match surface.get_current_texture() {
             Ok(t) => t,
             Err(_) => {
@@ -49,7 +58,9 @@ impl SnakeApp {
             }
         };
 
-        let surface_view = output.texture.create_view(&plev::wgpu::TextureViewDescriptor::default());
+        let surface_view = output
+            .texture
+            .create_view(&plev::wgpu::TextureViewDescriptor::default());
         let w = gpu.surface_config.width as f32;
         let h = gpu.surface_config.height as f32;
 
@@ -68,25 +79,35 @@ impl SnakeApp {
 
         self.game.build_scene(&mut self.compositor, w, h);
 
-        self.compositor.resolve(&plev::compositor::ResolveResources {
-            device: &gpu.device,
-            queue: &gpu.queue,
-            format: gpu.surface_format(),
-            width: gpu.surface_config.width,
-            height: gpu.surface_config.height,
-            composite_bgl: &gpu.composite_bind_group_layout,
-            opacity_bgl: &gpu.opacity_bind_group_layout,
-            sampler: &gpu.composite_sampler,
-        });
+        self.compositor
+            .resolve(&plev::compositor::ResolveResources {
+                device: &gpu.device,
+                queue: &gpu.queue,
+                format: gpu.surface_format(),
+                width: gpu.surface_config.width,
+                height: gpu.surface_config.height,
+                msaa_samples: gpu.config.msaa_samples,
+                composite_bgl: &gpu.composite_bind_group_layout,
+                opacity_bgl: &gpu.opacity_bind_group_layout,
+                sampler: &gpu.composite_sampler,
+            });
 
         {
-            let layer_info: Vec<_> = self.compositor.layers().iter()
+            let layer_info: Vec<_> = self
+                .compositor
+                .layers()
+                .iter()
                 .map(|l| (l.id, l.is_dirty(), l.text_nodes()))
                 .collect();
             for (layer_id, dirty, text_nodes) in layer_info {
-                if !dirty { continue; }
+                if !dirty {
+                    continue;
+                }
                 let (vertices, indices) = text_system.resolve_for_layer(
-                    &gpu.device, &gpu.queue, &gpu.text_bind_group_layout, &text_nodes,
+                    &gpu.device,
+                    &gpu.queue,
+                    &gpu.text_bind_group_layout,
+                    &text_nodes,
                 );
                 if let Some(layer) = self.compositor.layer_mut(layer_id) {
                     layer.set_text_data(&gpu.device, &gpu.queue, vertices, indices);
@@ -95,27 +116,38 @@ impl SnakeApp {
         }
         text_system.finish_frame();
 
-        let mut encoder = gpu.device.create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
-            label: Some("snake_encoder"),
-        });
+        let mut encoder =
+            gpu.device
+                .create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
+                    label: Some("snake_encoder"),
+                });
 
-        let dirty_ids: Vec<_> = self.compositor.layers().iter()
+        let dirty_ids: Vec<_> = self
+            .compositor
+            .layers()
+            .iter()
             .filter(|l| l.visible && l.is_dirty())
             .map(|l| l.id)
             .collect();
 
         for layer_id in &dirty_ids {
             let layer = self.compositor.layer(*layer_id).unwrap();
-            let Some(msaa_v) = layer.msaa_view() else { continue };
-            let resolve_v = layer.texture_view();
+            let Some((view, resolve_target)) = layer.render_attachment() else {
+                continue;
+            };
 
             let mut pass = encoder.begin_render_pass(&plev::wgpu::RenderPassDescriptor {
                 label: Some("layer_pass"),
                 color_attachments: &[Some(plev::wgpu::RenderPassColorAttachment {
-                    view: msaa_v,
-                    resolve_target: resolve_v,
+                    view,
+                    resolve_target,
                     ops: plev::wgpu::Operations {
-                        load: plev::wgpu::LoadOp::Clear(plev::wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }),
+                        load: plev::wgpu::LoadOp::Clear(plev::wgpu::Color {
+                            r: 0.0,
+                            g: 0.0,
+                            b: 0.0,
+                            a: 0.0,
+                        }),
                         store: plev::wgpu::StoreOp::Store,
                     },
                     depth_slice: None,
@@ -164,7 +196,10 @@ impl SnakeApp {
                     resolve_target: None,
                     ops: plev::wgpu::Operations {
                         load: plev::wgpu::LoadOp::Clear(plev::wgpu::Color {
-                            r: BG[0] as f64, g: BG[1] as f64, b: BG[2] as f64, a: 1.0,
+                            r: BG[0] as f64,
+                            g: BG[1] as f64,
+                            b: BG[2] as f64,
+                            a: 1.0,
                         }),
                         store: plev::wgpu::StoreOp::Store,
                     },
@@ -178,8 +213,12 @@ impl SnakeApp {
 
             pass.set_pipeline(&gpu.composite_pipeline);
             for layer in self.compositor.layers() {
-                if !layer.visible { continue; }
-                if let (Some(cbg), Some(obg)) = (layer.composite_bind_group(), layer.opacity_bind_group()) {
+                if !layer.visible {
+                    continue;
+                }
+                if let (Some(cbg), Some(obg)) =
+                    (layer.composite_bind_group(), layer.opacity_bind_group())
+                {
                     pass.set_bind_group(0, cbg, &[]);
                     pass.set_bind_group(1, obg, &[]);
                     pass.draw(0..3, 0..1);
@@ -194,7 +233,9 @@ impl SnakeApp {
 
 impl ApplicationHandler for SnakeApp {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        if self.window.is_some() { return; }
+        if self.window.is_some() {
+            return;
+        }
         let attrs = WindowAttributes::default()
             .with_title("plev -- Snake")
             .with_inner_size(plev::winit::dpi::LogicalSize::new(900, 700));
@@ -212,7 +253,9 @@ impl ApplicationHandler for SnakeApp {
                 if let AppState::Ready { ref mut gpu, .. } = self.state {
                     gpu.resize(size.width, size.height);
                 }
-                if let Some(ref w) = self.window { w.request_redraw(); }
+                if let Some(ref w) = self.window {
+                    w.request_redraw();
+                }
             }
             WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
                 match event.logical_key {
@@ -220,8 +263,12 @@ impl ApplicationHandler for SnakeApp {
                     Key::Named(NamedKey::ArrowDown) => self.game.try_set_dir((0, 1)),
                     Key::Named(NamedKey::ArrowLeft) => self.game.try_set_dir((-1, 0)),
                     Key::Named(NamedKey::ArrowRight) => self.game.try_set_dir((1, 0)),
-                    Key::Named(NamedKey::Space) => { self.game.restart(); }
-                    Key::Character(ref c) if c == "r" || c == "R" => { self.game.restart(); }
+                    Key::Named(NamedKey::Space) => {
+                        self.game.restart();
+                    }
+                    Key::Character(ref c) if c == "r" || c == "R" => {
+                        self.game.restart();
+                    }
                     Key::Character(ref c) if c == "a" || c == "A" => {
                         self.game.ai_mode = !self.game.ai_mode;
                     }
@@ -230,7 +277,9 @@ impl ApplicationHandler for SnakeApp {
             }
             WindowEvent::RedrawRequested => {
                 self.render();
-                if let Some(ref w) = self.window { w.request_redraw(); }
+                if let Some(ref w) = self.window {
+                    w.request_redraw();
+                }
             }
             _ => {}
         }
