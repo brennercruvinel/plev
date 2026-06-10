@@ -8,6 +8,7 @@ members = [
     "crates/scene3D",
     "crates/snakeGame",
     "crates/basicIDE",
+    "crates/editor_core",
 ]
 
 [package]
