@@ -1,4 +1,5 @@
 use crate::layout::{Align, Direction, Justify, LayoutEngine, LayoutStyle};
+use crate::text::{TextMeasurer, TextStyle};
 
 use super::modifier::NodeRef;
 use super::node::{UiHitRect, UiNode, Visual};
@@ -90,7 +91,9 @@ impl Ui {
         let color = self.theme.text[0];
         let size = 13.0;
         let lh = size * 1.4;
-        let w = content.len() as f32 * size * 0.6;
+        let style = TextStyle::new(size).with_line_height(lh);
+        let (w, _) = TextMeasurer::measure_styled(content, &style, None);
+        let w = w.ceil();
         let idx = self.push_node(UiNode {
             layout: LayoutStyle {
                 width: Some(w),
@@ -140,7 +143,9 @@ impl Ui {
         let accent = Accent::Gray;
         let bg = self.theme.accent_bg[UiTheme::accent_idx(accent)];
         let fg = self.theme.accent_fg[UiTheme::accent_idx(accent)];
-        let text_w = label.len() as f32 * 7.0;
+        let style = TextStyle::new(11.0).with_weight(700).with_line_height(14.0);
+        let (text_w, _) = TextMeasurer::measure_styled(label, &style, None);
+        let text_w = text_w.ceil();
         let h = 20.0;
 
         let idx = self.push_node(UiNode {
@@ -192,7 +197,9 @@ impl Ui {
         let accent = Accent::Gray;
         let bg = self.theme.accent_bg[UiTheme::accent_idx(accent)];
         let fg = self.theme.accent_fg[UiTheme::accent_idx(accent)];
-        let text_w = label.len() as f32 * 7.5;
+        let style = TextStyle::new(12.0).with_weight(600).with_line_height(16.0);
+        let (text_w, _) = TextMeasurer::measure_styled(label, &style, None);
+        let text_w = text_w.ceil();
 
         let idx = self.push_node(UiNode {
             layout: LayoutStyle {
