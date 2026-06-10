@@ -36,6 +36,20 @@ pub enum OverlayKind {
     Tooltip { text: String },
 }
 
+/// Entry/exit animation state for an overlay (fade + scale driven by a
+/// [`Spring`] whose physics come from the content's [`Intent`]).
+///
+/// [`Spring`]: crate::animation::Spring
+/// [`Intent`]: crate::theme::Intent
+#[derive(Debug, Clone)]
+pub(super) struct OverlayAnim {
+    /// Progress 0.0 (hidden) -> 1.0 (fully shown).
+    pub(super) spring: crate::animation::Spring<f32>,
+    /// When true the spring is heading back to 0.0; the overlay is removed
+    /// once it settles.
+    pub(super) closing: bool,
+}
+
 /// A single entry in the overlay stack.
 #[derive(Debug, Clone)]
 pub struct Overlay {
@@ -51,4 +65,38 @@ pub struct Overlay {
     /// Compositor layer z_order for this overlay.
     /// Monotonically increasing -- the topmost overlay has the highest value.
     pub z_order: i32,
+    /// `None` for overlays pushed without animation (always fully shown).
+    pub(super) anim: Option<OverlayAnim>,
+}
+
+impl Overlay {
+    /// Animation progress in 0.0..=1.0 (1.0 when not animated).
+    pub fn progress(&self) -> f32 {
+        match &self.anim {
+            Some(a) => a.spring.get().clamp(0.0, 1.0),
+            None => 1.0,
+        }
+    }
+
+    /// Opacity the renderer should apply (e.g. via layer opacity).
+    pub fn opacity(&self) -> f32 {
+        self.progress()
+    }
+
+    /// Scale the renderer should apply around the overlay center:
+    /// 0.96 when hidden -> 1.0 when fully shown.
+    pub fn scale(&self) -> f32 {
+        0.96 + 0.04 * self.progress()
+    }
+
+    /// `true` while the exit animation is running. Closing overlays should
+    /// not receive input.
+    pub fn is_closing(&self) -> bool {
+        self.anim.as_ref().is_some_and(|a| a.closing)
+    }
+
+    /// `true` while the entry/exit spring has not settled.
+    pub fn is_animating(&self) -> bool {
+        self.anim.as_ref().is_some_and(|a| a.spring.is_animating())
+    }
 }
