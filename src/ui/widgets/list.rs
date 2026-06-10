@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::compositor::{Compositor, SceneNode};
+use crate::compositor::{Compositor, LayerId, SceneNode};
 use crate::scroll::ScrollState;
 use crate::theme::Theme;
 
@@ -175,6 +175,19 @@ impl VirtualList {
         compositor: &mut Compositor,
         bounds: Rect,
         theme: &Theme,
+        row_fn: impl FnMut(&mut Compositor, usize, Rect, bool, bool),
+    ) {
+        self.render_with_to_layer(compositor, LayerId::DEFAULT, bounds, theme, row_fn);
+    }
+
+    /// [`render_with`](VirtualList::render_with) targeting a specific layer
+    /// (pair with that layer's clip rect to hide overscan rows).
+    pub fn render_with_to_layer(
+        &mut self,
+        compositor: &mut Compositor,
+        layer: LayerId,
+        bounds: Rect,
+        theme: &Theme,
         mut row_fn: impl FnMut(&mut Compositor, usize, Rect, bool, bool),
     ) {
         self.set_viewport(bounds);
@@ -185,26 +198,38 @@ impl VirtualList {
             let selected = self.selected == Some(index);
 
             if selected {
-                compositor.push(SceneNode::Rect {
-                    x: rect.x,
-                    y: rect.y,
-                    w: rect.w,
-                    h: rect.h,
-                    color: with_alpha(theme.colors.accent, 0.14),
-                });
+                compositor.push_to_layer(
+                    layer,
+                    SceneNode::Rect {
+                        x: rect.x,
+                        y: rect.y,
+                        w: rect.w,
+                        h: rect.h,
+                        color: with_alpha(theme.colors.accent, 0.14),
+                    },
+                );
             } else if hovered {
-                compositor.push(SceneNode::Rect {
-                    x: rect.x,
-                    y: rect.y,
-                    w: rect.w,
-                    h: rect.h,
-                    color: with_alpha(theme.colors.bg_hover, 1.0),
-                });
+                compositor.push_to_layer(
+                    layer,
+                    SceneNode::Rect {
+                        x: rect.x,
+                        y: rect.y,
+                        w: rect.w,
+                        h: rect.h,
+                        color: with_alpha(theme.colors.bg_hover, 1.0),
+                    },
+                );
             }
             row_fn(compositor, index, rect, hovered, selected);
         }
 
+        // The scrollbar stays on the same layer so it is clipped (and
+        // composited) together with the rows.
+        let mut scratch = Vec::new();
         self.scrollbar
-            .render(compositor, bounds, &self.scroll, theme);
+            .render_nodes(&mut scratch, bounds, &self.scroll, theme);
+        for node in scratch {
+            compositor.push_to_layer(layer, node);
+        }
     }
 }

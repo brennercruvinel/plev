@@ -259,8 +259,32 @@ impl Button {
         let (bg, border_color, border_width, fg) = self.colors(theme);
         let font = self.size.font_size();
         let line_height = font * 1.3;
+        let radius = theme.radius.md + 2.0;
 
-        if bg[3] > 0.001 || border_width > 0.0 {
+        if self.icon.is_some() {
+            // Icons are quad-pass paths; an SDF background would paint over
+            // them, so the background becomes path geometry too.
+            if bg[3] > 0.001 {
+                compositor.push_to_layer(
+                    layer,
+                    super::path_rounded_rect(bounds.x, bounds.y, bounds.w, bounds.h, radius, bg),
+                );
+            }
+            if border_width > 0.0 {
+                compositor.push_to_layer(
+                    layer,
+                    super::path_rounded_rect_stroke(
+                        bounds.x,
+                        bounds.y,
+                        bounds.w,
+                        bounds.h,
+                        radius,
+                        border_color,
+                        border_width,
+                    ),
+                );
+            }
+        } else if bg[3] > 0.001 || border_width > 0.0 {
             compositor.push_to_layer(
                 layer,
                 SceneNode::RoundedRect {
@@ -269,7 +293,7 @@ impl Button {
                     w: bounds.w,
                     h: bounds.h,
                     color: bg,
-                    corner_radius: theme.radius.md + 2.0,
+                    corner_radius: radius,
                     border_width,
                     border_color,
                 },

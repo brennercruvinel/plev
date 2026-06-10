@@ -187,18 +187,23 @@ impl ContextMenu {
     ) {
         let (w, h) = self.size();
 
+        // Path-based surface: row icons are paths and must stack on top.
+        let radius = theme.radius.md + 2.0;
         compositor.push_to_layer(
             layer,
-            SceneNode::RoundedRect {
+            super::path_rounded_rect(x, y, w, h, radius, with_alpha(theme.colors.bg_panel, 0.99)),
+        );
+        compositor.push_to_layer(
+            layer,
+            super::path_rounded_rect_stroke(
                 x,
                 y,
                 w,
                 h,
-                color: with_alpha(theme.colors.bg_panel, 0.99),
-                corner_radius: theme.radius.md + 2.0,
-                border_width: 1.0,
-                border_color: with_alpha(theme.colors.divider, 1.0),
-            },
+                radius,
+                with_alpha(theme.colors.divider, 1.0),
+                1.0,
+            ),
         );
 
         let line_height = FONT * 1.3;
@@ -227,16 +232,14 @@ impl ContextMenu {
                     if self.hovered == Some(i) {
                         compositor.push_to_layer(
                             layer,
-                            SceneNode::RoundedRect {
-                                x: rect.x + 4.0,
-                                y: rect.y + 1.0,
-                                w: rect.w - 8.0,
-                                h: rect.h - 2.0,
-                                color: with_alpha(theme.colors.bg_hover, 1.0),
-                                corner_radius: theme.radius.md,
-                                border_width: 0.0,
-                                border_color: [0.0; 4],
-                            },
+                            super::path_rounded_rect(
+                                rect.x + 4.0,
+                                rect.y + 1.0,
+                                rect.w - 8.0,
+                                rect.h - 2.0,
+                                theme.radius.md,
+                                with_alpha(theme.colors.bg_hover, 1.0),
+                            ),
                         );
                     }
                     let fg = match intent {

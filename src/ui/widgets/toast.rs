@@ -199,18 +199,29 @@ impl ToastManager {
             }
             let accent = intent_fill(theme, t.intent);
 
+            // Path-based surface so the intent icon (a path) stays on top.
             compositor.push_to_layer(
                 layer,
-                SceneNode::RoundedRect {
-                    x: rect.x,
-                    y: rect.y,
-                    w: rect.w,
-                    h: rect.h,
-                    color: with_alpha(theme.colors.bg_panel, 0.98 * alpha),
-                    corner_radius: theme.radius.lg,
-                    border_width: 1.0,
-                    border_color: with_alpha(theme.colors.divider, alpha),
-                },
+                super::path_rounded_rect(
+                    rect.x,
+                    rect.y,
+                    rect.w,
+                    rect.h,
+                    theme.radius.lg,
+                    with_alpha(theme.colors.bg_panel, 0.98 * alpha),
+                ),
+            );
+            compositor.push_to_layer(
+                layer,
+                super::path_rounded_rect_stroke(
+                    rect.x,
+                    rect.y,
+                    rect.w,
+                    rect.h,
+                    theme.radius.lg,
+                    with_alpha(theme.colors.divider, alpha),
+                    1.0,
+                ),
             );
             // Intent accent bar on the left edge.
             compositor.push_to_layer(

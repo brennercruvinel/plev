@@ -188,6 +188,21 @@ impl Scrollbar {
         scroll: &ScrollState,
         theme: &Theme,
     ) {
+        let mut nodes = Vec::with_capacity(1);
+        self.render_nodes(&mut nodes, bounds, scroll, theme);
+        for node in nodes {
+            compositor.push(node);
+        }
+    }
+
+    /// Emit scene nodes without a compositor (callers pick the layer).
+    pub fn render_nodes(
+        &self,
+        out: &mut Vec<SceneNode>,
+        bounds: Rect,
+        scroll: &ScrollState,
+        theme: &Theme,
+    ) {
         if !scroll.is_scrollable() {
             return;
         }
@@ -203,7 +218,7 @@ impl Scrollbar {
         } else {
             0.35
         };
-        compositor.push(SceneNode::RoundedRect {
+        out.push(SceneNode::RoundedRect {
             x: thumb.x,
             y: thumb.y,
             w: thumb.w,

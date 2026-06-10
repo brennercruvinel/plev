@@ -92,8 +92,17 @@ impl Checkbox {
         let by = bounds.y + (bounds.h - BOX) / 2.0;
 
         let accent = theme.colors.accent.0;
-        let (bg, border_color, border_width) = if self.checked {
-            ([accent[0], accent[1], accent[2], alpha], [0.0; 4], 0.0)
+        if self.checked {
+            // Path-based fill so the check icon (also a path) stacks on top;
+            // an SDF rect would draw after every path in the layer.
+            compositor.push(super::path_rounded_rect(
+                bx,
+                by,
+                BOX,
+                BOX,
+                theme.radius.md,
+                [accent[0], accent[1], accent[2], alpha],
+            ));
         } else {
             let border = if self.hovered {
                 theme.colors.border_active
@@ -105,19 +114,17 @@ impl Checkbox {
             } else {
                 [0.0, 0.0, 0.0, 0.0]
             };
-            (bg, with_alpha(border, alpha), 1.0)
-        };
-
-        compositor.push(SceneNode::RoundedRect {
-            x: bx,
-            y: by,
-            w: BOX,
-            h: BOX,
-            color: bg,
-            corner_radius: theme.radius.md,
-            border_width,
-            border_color,
-        });
+            compositor.push(SceneNode::RoundedRect {
+                x: bx,
+                y: by,
+                w: BOX,
+                h: BOX,
+                color: bg,
+                corner_radius: theme.radius.md,
+                border_width: 1.0,
+                border_color: with_alpha(border, alpha),
+            });
+        }
 
         if self.checked {
             let mark = contrast_text(accent);

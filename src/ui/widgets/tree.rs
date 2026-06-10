@@ -200,28 +200,25 @@ impl Tree {
             let is_selected = self.selected == Some(row.id);
             let is_hovered = self.hovered_row == Some(i);
 
+            // Path-based highlights: row icons (paths) must stack on top.
             if is_selected {
-                compositor.push(SceneNode::RoundedRect {
-                    x: row_rect.x + 2.0,
-                    y: row_rect.y + 1.0,
-                    w: row_rect.w - 4.0,
-                    h: row_rect.h - 2.0,
-                    color: with_alpha(theme.colors.accent, 0.14),
-                    corner_radius: theme.radius.md,
-                    border_width: 0.0,
-                    border_color: [0.0; 4],
-                });
+                compositor.push(super::path_rounded_rect(
+                    row_rect.x + 2.0,
+                    row_rect.y + 1.0,
+                    row_rect.w - 4.0,
+                    row_rect.h - 2.0,
+                    theme.radius.md,
+                    with_alpha(theme.colors.accent, 0.14),
+                ));
             } else if is_hovered {
-                compositor.push(SceneNode::RoundedRect {
-                    x: row_rect.x + 2.0,
-                    y: row_rect.y + 1.0,
-                    w: row_rect.w - 4.0,
-                    h: row_rect.h - 2.0,
-                    color: with_alpha(theme.colors.bg_hover, 1.0),
-                    corner_radius: theme.radius.md,
-                    border_width: 0.0,
-                    border_color: [0.0; 4],
-                });
+                compositor.push(super::path_rounded_rect(
+                    row_rect.x + 2.0,
+                    row_rect.y + 1.0,
+                    row_rect.w - 4.0,
+                    row_rect.h - 2.0,
+                    theme.radius.md,
+                    with_alpha(theme.colors.bg_hover, 1.0),
+                ));
             }
 
             let mut cx = bounds.x + PAD_X + row.depth as f32 * INDENT;

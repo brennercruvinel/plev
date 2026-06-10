@@ -43,6 +43,12 @@ pub use toast::{Toast, ToastManager};
 pub use tooltip::Tooltip;
 pub use tree::{Tree, TreeNode};
 
+use std::hash::{Hash, Hasher};
+
+use rustc_hash::FxHasher;
+
+use crate::compositor::SceneNode;
+use crate::path::PathBuilder;
 use crate::theme::{Intent, Theme};
 
 // ---------------------------------------------------------------------------
@@ -213,4 +219,67 @@ pub(crate) fn intent_fill(theme: &Theme, intent: Intent) -> [f32; 4] {
         Intent::Destructive => theme.colors.danger.0,
         Intent::Informational => theme.colors.info.0,
     }
+}
+
+// ---------------------------------------------------------------------------
+// Path-based rounded rects (icon-friendly backgrounds)
+// ---------------------------------------------------------------------------
+
+/// Rounded rect filled as tessellated path geometry.
+///
+/// Within a compositor layer the SDF rounded-rect pipeline always draws
+/// *after* the quad pass, so a `SceneNode::RoundedRect` background would
+/// paint over vector icons (`SceneNode::Path` renders in the quad pass).
+/// Backgrounds that carry icons use this instead: background and icon end
+/// up in the same pass, where push order wins.
+pub fn path_rounded_rect(
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
+    radius: f32,
+    color: [f32; 4],
+) -> SceneNode {
+    let mut data = PathBuilder::rounded_rect(x, y, w, h, radius).fill(color);
+    rehash_with_style(&mut data.hash, 0, color, 0.0);
+    SceneNode::Path { data }
+}
+
+/// Rounded-rect border as a stroked path (companion of
+/// [`path_rounded_rect`] for bordered, icon-bearing surfaces).
+pub fn path_rounded_rect_stroke(
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
+    radius: f32,
+    color: [f32; 4],
+    width: f32,
+) -> SceneNode {
+    // Stroke centered on the rect edge: inset by half the width so the
+    // border stays inside the bounds like the SDF border does.
+    let inset = width / 2.0;
+    let mut data = PathBuilder::rounded_rect(
+        x + inset,
+        y + inset,
+        w - width,
+        h - width,
+        (radius - inset).max(0.0),
+    )
+    .stroke(color, width);
+    rehash_with_style(&mut data.hash, 1, color, width);
+    SceneNode::Path { data }
+}
+
+/// Path hashes only cover geometry commands; fold style into the hash so
+/// state changes (hover tints) invalidate the compositor's scene diff.
+fn rehash_with_style(hash: &mut u64, kind: u8, color: [f32; 4], width: f32) {
+    let mut h = FxHasher::default();
+    hash.hash(&mut h);
+    kind.hash(&mut h);
+    for c in color {
+        c.to_bits().hash(&mut h);
+    }
+    width.to_bits().hash(&mut h);
+    *hash = h.finish();
 }

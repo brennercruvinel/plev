@@ -146,16 +146,21 @@ impl Select {
             with_alpha(theme.colors.surface, alpha)
         };
 
-        compositor.push(SceneNode::RoundedRect {
-            x: bounds.x,
-            y: bounds.y,
-            w: bounds.w,
-            h: bounds.h,
-            color: bg,
-            corner_radius: theme.radius.md + 2.0,
-            border_width: 1.0,
-            border_color: with_alpha(border, alpha),
-        });
+        // Path-based background: the chevron icon must stack on top (see
+        // path_rounded_rect docs for the pipeline-order constraint).
+        let radius = theme.radius.md + 2.0;
+        compositor.push(super::path_rounded_rect(
+            bounds.x, bounds.y, bounds.w, bounds.h, radius, bg,
+        ));
+        compositor.push(super::path_rounded_rect_stroke(
+            bounds.x,
+            bounds.y,
+            bounds.w,
+            bounds.h,
+            radius,
+            with_alpha(border, alpha),
+            1.0,
+        ));
 
         if let Some(label) = self.selected_label() {
             let line_height = FONT * 1.3;
@@ -196,18 +201,29 @@ impl Select {
         }
         let dd = self.dropdown_rect(bounds);
 
+        let radius = theme.radius.md + 2.0;
         compositor.push_to_layer(
             layer,
-            SceneNode::RoundedRect {
-                x: dd.x,
-                y: dd.y,
-                w: dd.w,
-                h: dd.h,
-                color: with_alpha(theme.colors.bg_panel, 0.99),
-                corner_radius: theme.radius.md + 2.0,
-                border_width: 1.0,
-                border_color: with_alpha(theme.colors.divider, 1.0),
-            },
+            super::path_rounded_rect(
+                dd.x,
+                dd.y,
+                dd.w,
+                dd.h,
+                radius,
+                with_alpha(theme.colors.bg_panel, 0.99),
+            ),
+        );
+        compositor.push_to_layer(
+            layer,
+            super::path_rounded_rect_stroke(
+                dd.x,
+                dd.y,
+                dd.w,
+                dd.h,
+                radius,
+                with_alpha(theme.colors.divider, 1.0),
+                1.0,
+            ),
         );
 
         let line_height = FONT * 1.3;
@@ -222,16 +238,14 @@ impl Select {
             if is_hovered {
                 compositor.push_to_layer(
                     layer,
-                    SceneNode::RoundedRect {
-                        x: dd.x + 4.0,
-                        y: oy + 1.0,
-                        w: dd.w - 8.0,
-                        h: OPTION_H - 2.0,
-                        color: with_alpha(theme.colors.bg_hover, 1.0),
-                        corner_radius: theme.radius.md,
-                        border_width: 0.0,
-                        border_color: [0.0; 4],
-                    },
+                    super::path_rounded_rect(
+                        dd.x + 4.0,
+                        oy + 1.0,
+                        dd.w - 8.0,
+                        OPTION_H - 2.0,
+                        theme.radius.md,
+                        with_alpha(theme.colors.bg_hover, 1.0),
+                    ),
                 );
             }
             compositor.push_to_layer(
