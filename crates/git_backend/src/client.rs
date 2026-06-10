@@ -5,7 +5,7 @@
 //! callback typically forwards into a `winit::EventLoopProxy` (or any other
 //! wake-up mechanism) — this crate stays UI-agnostic on purpose.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Sender, channel};
 use std::thread::JoinHandle;
 
@@ -88,6 +88,7 @@ pub enum GitEvent {
 pub struct GitClient {
     tx: Sender<GitCommand>,
     handle: Option<JoinHandle<()>>,
+    workdir: PathBuf,
 }
 
 impl GitClient {
@@ -99,6 +100,7 @@ impl GitClient {
         on_event: impl Fn(GitEvent) + Send + 'static,
     ) -> Result<Self> {
         let repo = GitRepo::open(path)?;
+        let workdir = repo.workdir().to_path_buf();
         let (tx, rx) = channel::<GitCommand>();
         let handle = std::thread::Builder::new()
             .name("git-backend".into())
@@ -114,7 +116,14 @@ impl GitClient {
         Ok(Self {
             tx,
             handle: Some(handle),
+            workdir,
         })
+    }
+
+    /// Working tree root of the opened repository (e.g. for window titles
+    /// and file watchers).
+    pub fn workdir(&self) -> &Path {
+        &self.workdir
     }
 
     /// Queues a command; never blocks. Returns `false` if the worker is

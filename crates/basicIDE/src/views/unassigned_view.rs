@@ -38,6 +38,8 @@ impl FileStatus {
 pub struct FileEntry {
     pub path: String,
     pub status: FileStatus,
+    /// `true` when this change is in the index (shown with a dot marker).
+    pub staged: bool,
 }
 
 /// State for the left "Unassigned Changes" panel.
@@ -56,13 +58,26 @@ const PAD_X: f32 = 12.0;
 const FONT_SIZE: f32 = 13.0;
 
 impl UnassignedView {
+    /// Starts empty; the app injects real data via [`set_files`](Self::set_files).
     pub fn new() -> Self {
         Self {
-            files: mock_files(),
+            files: Vec::new(),
             selected_idx: None,
             scroll: ScrollState::new(),
             hit_rects: Vec::new(),
         }
+    }
+
+    /// Replaces the file list (e.g. from a fresh `git status`), keeping the
+    /// selection on the same path when it still exists.
+    pub fn set_files(&mut self, files: Vec<FileEntry>) {
+        let selected_path = self
+            .selected_idx
+            .and_then(|i| self.files.get(i))
+            .map(|f| f.path.clone());
+        self.files = files;
+        self.selected_idx =
+            selected_path.and_then(|path| self.files.iter().position(|f| f.path == path));
     }
 
     pub fn hit_rects(&self) -> &[(f32, f32, f32, f32)] {
@@ -240,6 +255,21 @@ impl UnassignedView {
                 .to_array(),
             });
 
+            // Staged marker: small dot on the right edge of the row.
+            if file.staged {
+                let dot = 6.0;
+                compositor.push(SceneNode::RoundedRect {
+                    x: x + w - PAD_X - dot,
+                    y: item_y + (ITEM_H - dot) / 2.0,
+                    w: dot,
+                    h: dot,
+                    color: theme.safe.to_array(),
+                    corner_radius: dot / 2.0,
+                    border_width: 0.0,
+                    border_color: [0.0; 4],
+                });
+            }
+
             hit_rects.push((x, item_y, w, ITEM_H));
         }
 
@@ -295,89 +325,4 @@ fn truncate_path(path: &str, max_chars: usize) -> String {
         let s: String = path.chars().skip(start).collect();
         format!("\u{2026}{}", s)
     }
-}
-
-fn mock_files() -> Vec<FileEntry> {
-    vec![
-        FileEntry {
-            path: "src/compositor.rs".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "src/builder.rs".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "src/scroll.rs".into(),
-            status: FileStatus::Added,
-        },
-        FileEntry {
-            path: "src/text.rs".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "examples/todo_app.rs".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "Cargo.toml".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "CLAUDE.md".into(),
-            status: FileStatus::Untracked,
-        },
-        FileEntry {
-            path: "src/window.rs".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "src/gpu.rs".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "src/signal.rs".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "shaders/quad.wgsl".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "shaders/text.wgsl".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "crates/basicIDE-plev/src/main.rs".into(),
-            status: FileStatus::Added,
-        },
-        FileEntry {
-            path: "crates/basicIDE-plev/src/theme.rs".into(),
-            status: FileStatus::Added,
-        },
-        FileEntry {
-            path: "assets/fonts/Inter-Regular.ttf".into(),
-            status: FileStatus::Added,
-        },
-        FileEntry {
-            path: "mission/readme.md".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "mission/steps/ongoing/TASK-42.md".into(),
-            status: FileStatus::Added,
-        },
-        FileEntry {
-            path: "src/components/button.rs".into(),
-            status: FileStatus::Deleted,
-        },
-        FileEntry {
-            path: "src/lib.rs".into(),
-            status: FileStatus::Modified,
-        },
-        FileEntry {
-            path: "Cargo.lock".into(),
-            status: FileStatus::Modified,
-        },
-    ]
 }

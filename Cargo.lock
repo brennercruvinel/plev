@@ -484,12 +484,10 @@ name = "basicIDE"
 version = "0.1.0"
 dependencies = [
  "env_logger",
+ "git_backend",
  "log",
  "plev",
  "pollster",
- "serde",
- "serde_json",
- "web-time",
  "wgpu",
  "winit",
 ]

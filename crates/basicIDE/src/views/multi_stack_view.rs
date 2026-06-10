@@ -36,13 +36,33 @@ const AVATAR_SIZE: f32 = 28.0;
 const FONT_SIZE: f32 = 13.0;
 
 impl MultiStackView {
+    /// Starts empty; the app injects real data via [`set_stacks`](Self::set_stacks).
     pub fn new() -> Self {
         Self {
-            stacks: mock_stacks(),
+            stacks: Vec::new(),
             selected_commit: None,
             scroll: ScrollState::new(),
             hit_rects: Vec::new(),
         }
+    }
+
+    /// Replaces the stacks (e.g. from fresh `git log`/`branches` data),
+    /// keeping the selection on the same commit sha when it still exists.
+    pub fn set_stacks(&mut self, stacks: Vec<Stack>) {
+        let selected_sha = self
+            .selected_commit
+            .and_then(|(si, ci)| self.stacks.get(si).and_then(|s| s.commits.get(ci)))
+            .map(|c| c.sha.clone());
+        self.stacks = stacks;
+        self.selected_commit = selected_sha.and_then(|sha| {
+            self.stacks.iter().enumerate().find_map(|(si, stack)| {
+                stack
+                    .commits
+                    .iter()
+                    .position(|c| c.sha == sha)
+                    .map(|ci| (si, ci))
+            })
+        });
     }
 
     /// Hit-test a screen position against commit rows. Returns (stack_idx, commit_idx) if hit.
@@ -311,61 +331,4 @@ fn truncate(s: &str, max: usize) -> String {
         let t: String = s.chars().take(max - 1).collect();
         format!("{}\u{2026}", t)
     }
-}
-
-fn mock_stacks() -> Vec<Stack> {
-    vec![
-        Stack {
-            branch_name: "feat/basicIDE-plev-frontend".into(),
-            is_active: true,
-            commits: vec![
-                CommitEntry {
-                    sha: "a3f2d91e".into(),
-                    message: "feat: add theme.rs with dark/light design tokens".into(),
-                    author: "Brenner".into(),
-                    time_ago: "2m ago".into(),
-                },
-                CommitEntry {
-                    sha: "9b1c4e72".into(),
-                    message: "feat: Phase 0 — font_weight and truncation in builder".into(),
-                    author: "Brenner".into(),
-                    time_ago: "15m ago".into(),
-                },
-                CommitEntry {
-                    sha: "7d8a3f10".into(),
-                    message: "feat: ScrollState in scroll.rs".into(),
-                    author: "Brenner".into(),
-                    time_ago: "1h ago".into(),
-                },
-            ],
-        },
-        Stack {
-            branch_name: "task/TASK-39-scene-memoization".into(),
-            is_active: false,
-            commits: vec![
-                CommitEntry {
-                    sha: "e5c2b9a1".into(),
-                    message: "feat: PartialEq-based dirty flag bubbling for scene cache".into(),
-                    author: "Brenner".into(),
-                    time_ago: "2d ago".into(),
-                },
-                CommitEntry {
-                    sha: "f3d7a840".into(),
-                    message: "test: 12 memoization tests for Component<L>".into(),
-                    author: "Brenner".into(),
-                    time_ago: "2d ago".into(),
-                },
-            ],
-        },
-        Stack {
-            branch_name: "task/TASK-38-event-batching".into(),
-            is_active: false,
-            commits: vec![CommitEntry {
-                sha: "aaea8f03".into(),
-                message: "feat: BufferedEvent drain in about_to_wait — 5-10x GPU reduction".into(),
-                author: "Brenner".into(),
-                time_ago: "3d ago".into(),
-            }],
-        },
-    ]
 }

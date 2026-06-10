@@ -29,6 +29,8 @@ impl Header {
         theme_mode: ThemeMode,
         vw: f32,
         sidebar_w: f32,
+        repo_label: &str,
+        branch_label: &str,
     ) {
         let x = sidebar_w;
         let w = vw - sidebar_w;
@@ -78,10 +80,17 @@ impl Header {
             color: theme.pop.to_array(),
         });
 
-        // Repo name (center)
+        // Repo name + current branch (center)
+        let center = if branch_label.is_empty() {
+            repo_label.to_string()
+        } else {
+            format!("{repo_label} \u{00B7} {branch_label}")
+        };
+        // Rough centering: ~7px per character at 13px font.
+        let center_w = center.chars().count() as f32 * 7.0;
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::new("plev/experiment", 13.0, 18.0, None).with_weight(400),
-            x: x + w / 2.0 - 60.0,
+            key: TextNodeKey::new(&center, 13.0, 18.0, None).with_weight(400),
+            x: x + (w - center_w) / 2.0,
             y: (HEADER_H - 18.0) / 2.0,
             color: theme.text_2.to_array(),
         });

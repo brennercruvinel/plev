@@ -12,7 +12,6 @@ use super::sidebar::SIDEBAR_W;
 use super::sidebar::Sidebar;
 use super::unassigned_view::UnassignedView;
 use plev::compositor::{Compositor, LayerId};
-use plev::dispatch::ActionQueue;
 use plev::overlay::OverlayManager;
 
 pub(crate) const HEADER_H: f32 = super::header::HEADER_H;
@@ -55,18 +54,57 @@ pub struct WorkspaceView {
 
     // Overlay system
     pub overlay_mgr: OverlayManager,
-    pub action_queue: ActionQueue,
     pub(crate) overlay_layer: LayerId,
     // Cached hit rects for overlay interaction
     pub(crate) ctx_menu_item_rects: Vec<(f32, f32, f32, f32)>,
     pub(crate) modal_confirm_rect: Option<(f32, f32, f32, f32)>,
     pub(crate) modal_cancel_rect: Option<(f32, f32, f32, f32)>,
-    // Index of file pending discard confirmation
-    pub(crate) pending_discard_idx: Option<usize>,
+    /// What the open overlay refers to (context menu target / discard
+    /// confirmation). `None` when no overlay-driven action is in flight.
+    pub(crate) pending_action: Option<PendingAction>,
+
+    /// Git operations requested by user interaction; the app drains these
+    /// and forwards them to the git worker (views never call git).
+    pub requests: Vec<UiRequest>,
+
+    /// Repo name + branch shown in the header (injected by the app).
+    pub repo_label: String,
+    pub branch_label: String,
 
     // Window size
     pub vw: f32,
     pub vh: f32,
+}
+
+/// Overlay-driven interaction state: which file the open context menu or
+/// discard-confirmation modal is about.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum PendingAction {
+    ContextMenu { file_idx: usize },
+    ConfirmDiscard { file_idx: usize },
+}
+
+impl PendingAction {
+    pub(crate) fn file_idx(self) -> usize {
+        match self {
+            PendingAction::ContextMenu { file_idx } => file_idx,
+            PendingAction::ConfirmDiscard { file_idx } => file_idx,
+        }
+    }
+}
+
+/// A git operation the UI wants performed. Emitted by interaction handlers
+/// (optimistic view updates happen immediately); the app maps each request
+/// to a `git_backend::GitCommand` on the worker thread.
+#[derive(Clone, Debug, PartialEq)]
+pub enum UiRequest {
+    FileDiff { path: String },
+    CommitDiff { sha: String },
+    Stage { path: String },
+    Unstage { path: String },
+    Discard { path: String },
+    Ignore { path: String },
+    Commit { message: String },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -107,15 +145,23 @@ impl WorkspaceView {
             hover_modal_confirm: false,
             hover_modal_cancel: false,
             overlay_mgr: OverlayManager::new(),
-            action_queue: ActionQueue::new(),
             overlay_layer: LayerId::DEFAULT, // replaced on first render
             ctx_menu_item_rects: Vec::new(),
             modal_confirm_rect: None,
             modal_cancel_rect: None,
-            pending_discard_idx: None,
+            pending_action: None,
+            requests: Vec::new(),
+            repo_label: String::new(),
+            branch_label: String::new(),
             vw,
             vh,
         }
+    }
+
+    /// Takes the git operations queued by interaction handlers since the
+    /// last drain.
+    pub fn take_requests(&mut self) -> Vec<UiRequest> {
+        std::mem::take(&mut self.requests)
     }
 
     /// Create the overlay layer once after the Compositor is available.

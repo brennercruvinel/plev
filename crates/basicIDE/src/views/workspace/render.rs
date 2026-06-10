@@ -28,8 +28,15 @@ impl WorkspaceView {
         self.sidebar.render(compositor, theme, vh, HEADER_H);
 
         // -- Header --
-        self.header
-            .render(compositor, theme, self.theme_mode, vw, SIDEBAR_W);
+        self.header.render(
+            compositor,
+            theme,
+            self.theme_mode,
+            vw,
+            SIDEBAR_W,
+            &self.repo_label,
+            &self.branch_label,
+        );
 
         let content_y = HEADER_H;
         let content_h = vh - HEADER_H;

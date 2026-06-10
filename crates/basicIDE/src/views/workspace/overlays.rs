@@ -1,5 +1,4 @@
-use super::WorkspaceView;
-use crate::actions::{FileAction, ModalAction};
+use super::{PendingAction, UiRequest, WorkspaceView};
 use crate::components::{context_menu, modal};
 use crate::theme::Theme;
 use plev::compositor::{Compositor, SceneNode};
@@ -7,6 +6,10 @@ use plev::overlay::OverlayKind;
 
 impl WorkspaceView {
     /// Handle a click when overlays are active. Returns true if consumed.
+    ///
+    /// Mutations update the view optimistically (the row flips/disappears
+    /// right away) and queue the real git operation in `self.requests`; the
+    /// follow-up status refresh reconciles with reality.
     pub(crate) fn handle_overlay_click(&mut self, cx: f32, cy: f32) -> bool {
         if self.overlay_mgr.is_empty() {
             return false;
@@ -17,35 +20,20 @@ impl WorkspaceView {
             let (rx, ry, rw, rh) = confirm_rect;
             if cx >= rx && cx <= rx + rw && cy >= ry && cy <= ry + rh {
                 // Confirmed -> discard the file
-                if let Some(idx) = self.pending_discard_idx.take() {
-                    if idx < self.unassigned.files.len() {
-                        self.unassigned.files.remove(idx);
-                        // Adjust selection
-                        if self.unassigned.selected_idx == Some(idx) {
-                            self.unassigned.selected_idx = None;
-                        } else if let Some(sel) = self.unassigned.selected_idx {
-                            if sel > idx {
-                                self.unassigned.selected_idx = Some(sel - 1);
-                            }
-                        }
-                        self.diff.clear();
+                if let Some(PendingAction::ConfirmDiscard { file_idx }) = self.pending_action.take()
+                {
+                    if let Some(path) = self.remove_file_row(file_idx) {
+                        self.requests.push(UiRequest::Discard { path });
                     }
                 }
-                self.action_queue.emit(0, ModalAction::Confirmed);
-                self.overlay_mgr.pop_all();
-                self.modal_confirm_rect = None;
-                self.modal_cancel_rect = None;
+                self.dismiss_overlays();
                 return true;
             }
         }
         if let Some(cancel_rect) = self.modal_cancel_rect {
             let (rx, ry, rw, rh) = cancel_rect;
             if cx >= rx && cx <= rx + rw && cy >= ry && cy <= ry + rh {
-                self.action_queue.emit(0, ModalAction::Cancelled);
-                self.pending_discard_idx = None;
-                self.overlay_mgr.pop_all();
-                self.modal_confirm_rect = None;
-                self.modal_cancel_rect = None;
+                self.dismiss_overlays();
                 return true;
             }
         }
@@ -53,28 +41,29 @@ impl WorkspaceView {
         // Check context menu items
         for (i, &(rx, ry, rw, rh)) in self.ctx_menu_item_rects.iter().enumerate() {
             if cx >= rx && cx <= rx + rw && cy >= ry && cy <= ry + rh {
-                let file_idx = self.pending_discard_idx.unwrap_or(0);
+                let file_idx = self
+                    .pending_action
+                    .map(PendingAction::file_idx)
+                    .unwrap_or(0);
                 match i {
                     0 => {
-                        // Stage -- remove from unassigned
-                        if file_idx < self.unassigned.files.len() {
-                            let path = self.unassigned.files[file_idx].path.clone();
-                            self.action_queue
-                                .emit(file_idx as u64, FileAction::Stage(path));
-                            self.unassigned.files.remove(file_idx);
-                            if self.unassigned.selected_idx == Some(file_idx) {
-                                self.unassigned.selected_idx = None;
-                                self.diff.clear();
-                            }
+                        // Stage/Unstage -- flip the staged flag in place
+                        if let Some(file) = self.unassigned.files.get_mut(file_idx) {
+                            file.staged = !file.staged;
+                            let path = file.path.clone();
+                            self.requests.push(if file.staged {
+                                UiRequest::Stage { path }
+                            } else {
+                                UiRequest::Unstage { path }
+                            });
                         }
-                        self.overlay_mgr.pop_all();
-                        self.ctx_menu_item_rects.clear();
-                        self.pending_discard_idx = None;
+                        self.dismiss_overlays();
                     }
                     1 => {
                         // Discard -- show confirmation modal
                         self.overlay_mgr.pop_all(); // close context menu first
                         self.ctx_menu_item_rects.clear();
+                        self.pending_action = Some(PendingAction::ConfirmDiscard { file_idx });
                         let file_name = self
                             .unassigned
                             .files
@@ -100,20 +89,11 @@ impl WorkspaceView {
                         );
                     }
                     2 => {
-                        // Ignore -- remove from list
-                        if file_idx < self.unassigned.files.len() {
-                            let path = self.unassigned.files[file_idx].path.clone();
-                            self.action_queue
-                                .emit(file_idx as u64, FileAction::Ignore(path));
-                            self.unassigned.files.remove(file_idx);
-                            if self.unassigned.selected_idx == Some(file_idx) {
-                                self.unassigned.selected_idx = None;
-                                self.diff.clear();
-                            }
+                        // Ignore -- remove from list, append to .gitignore
+                        if let Some(path) = self.remove_file_row(file_idx) {
+                            self.requests.push(UiRequest::Ignore { path });
                         }
-                        self.overlay_mgr.pop_all();
-                        self.ctx_menu_item_rects.clear();
-                        self.pending_discard_idx = None;
+                        self.dismiss_overlays();
                     }
                     _ => {}
                 }
@@ -123,16 +103,40 @@ impl WorkspaceView {
 
         // Click outside all overlays -- dismiss
         if self.overlay_mgr.hit_test_outside(cx, cy) {
-            self.overlay_mgr.pop_all();
-            self.ctx_menu_item_rects.clear();
-            self.modal_confirm_rect = None;
-            self.modal_cancel_rect = None;
-            self.pending_discard_idx = None;
+            self.dismiss_overlays();
             return true;
         }
 
         // Click inside an overlay but not on an item -- consume without action
         true
+    }
+
+    /// Closes every overlay and clears the cached interaction state.
+    fn dismiss_overlays(&mut self) {
+        self.overlay_mgr.pop_all();
+        self.ctx_menu_item_rects.clear();
+        self.modal_confirm_rect = None;
+        self.modal_cancel_rect = None;
+        self.pending_action = None;
+    }
+
+    /// Optimistically removes a file row (discard/ignore), fixing up the
+    /// selection and clearing the diff if it pointed at the removed row.
+    /// Returns the removed path.
+    fn remove_file_row(&mut self, idx: usize) -> Option<String> {
+        if idx >= self.unassigned.files.len() {
+            return None;
+        }
+        let entry = self.unassigned.files.remove(idx);
+        match self.unassigned.selected_idx {
+            Some(sel) if sel == idx => {
+                self.unassigned.selected_idx = None;
+                self.diff.clear();
+            }
+            Some(sel) if sel > idx => self.unassigned.selected_idx = Some(sel - 1),
+            _ => {}
+        }
+        Some(entry.path)
     }
 
     /// Draw active overlays onto the overlay layer. Must be called after the
