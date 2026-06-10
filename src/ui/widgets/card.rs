@@ -1,10 +1,10 @@
 //! HOFF cards: one glass shell, many previews.
 //!
-//! The reference deck (~60 variants) shares a single recipe — graphite
-//! glass shell (radius 32, `rgba(40,40,40,.8)`), top-lit edge border,
-//! deep drop shadow — and differs only in the preview. [`Card`] ships the
-//! shell plus the most reusable preview families as [`CardVariant`]s:
-//! stat, profile, media, list, chart and CTA.
+//! The reference deck (~60 variants) shares a single recipe — the live
+//! post card's discreet lift (radius 20, `rgba(248,248,248,.02)` white
+//! surface, soft top-lit edge, NO frost/shadow/border) — and differs only
+//! in the preview. [`Card`] ships the shell plus the most reusable preview
+//! families as [`CardVariant`]s: stat, profile, media, list, chart and CTA.
 //!
 //! Rendering uses the SDF pipeline (gradients, analytic shadows), images
 //! and text only — no path icons — so every element stacks correctly
@@ -195,12 +195,9 @@ impl Card {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
-        // Social-style cards (Profile) use the 20-radius .02 surface; the
-        // deck shells use radius 32 + rgba(40,40,40,.8).
-        match &self.variant {
-            CardVariant::Profile { .. } => self.social_shell(c, layer, bounds, theme),
-            _ => self.deck_shell(c, layer, bounds, theme),
-        }
+        // Every card — deck and social — uses the one discreet post-card
+        // shell (radius 20, .02 white surface, soft edge, no frost/shadow).
+        self.deck_shell(c, layer, bounds, theme);
         match &self.variant {
             CardVariant::Stat {
                 value,
@@ -251,94 +248,25 @@ impl Card {
 
     // -- Shells ---------------------------------------------------------------
 
-    /// Deck shell: deep drop shadow + REAL backdrop blur (frosts the page)
-    /// + edge-light + a translucent graphite glass over the frost + the
-    /// inset key-light. The reference panels frost their backdrop with
-    /// `backdrop-filter: blur(50px)`; plev resolves that per-region.
+    /// The HOFF content-card shell — one discreet recipe for the whole
+    /// deck, taken 1:1 from the live POST card (`Post.module.sass`:
+    /// `border-radius: 20px`, `background: rgba($n2,.02)` → `.05` hovered,
+    /// NO `backdrop-filter`, NO `box-shadow`, NO border). Measured live:
+    /// `backdrop-filter:none`, `box-shadow:none`, effective `#343434` over
+    /// the `#303030` container — a whisper LIGHTER than the page, never a
+    /// frosted panel. So: a `.02` white surface (`.05` hovered) at radius
+    /// 20 over a soft 1px edge-light (`.05`, raised to `.10` on hover),
+    /// closed by the faint inset key-light. The reference's `blur(50px)`
+    /// frost is reserved for pills/search/menu (real glass), not for the
+    /// cards of content.
     fn deck_shell(&self, c: &mut Compositor, layer: LayerId, b: Rect, theme: &Theme) {
-        let radius = theme.radius.xl;
-        // 0 32px 24px -16px rgba(0,0,0,.40): the -16 spread shrinks the
-        // casting rect. Drawn first so the card frosts/fills on top.
-        c.push_to_layer(
-            layer,
-            SceneNode::Shadow {
-                x: b.x + 16.0,
-                y: b.y + 16.0,
-                w: b.w - 32.0,
-                h: b.h - 32.0,
-                corner_radius: radius,
-                blur_radius: 24.0,
-                offset: [0.0, 32.0],
-                color: [0.0, 0.0, 0.0, 0.40],
-                inset: false,
-            },
-        );
-        // Frost everything composited below this region (the canonical
-        // blur(50px) of HOFF panels), then a translucent graphite glass on
-        // top so the deck reads as frosted glass, not a flat panel.
-        c.push_to_layer(
-            layer,
-            SceneNode::BackdropBlur {
-                x: b.x,
-                y: b.y,
-                w: b.w,
-                h: b.h,
-                corner_radius: radius,
-                sigma: theme.effects.blur_sigma,
-            },
-        );
-        let s = theme.colors.surface.0;
-        let fill = [s[0], s[1], s[2], 0.72];
-        for node in glass_pill(b, radius, theme.glass.edge_soft.0, 1.5, fill) {
-            c.push_to_layer(layer, node);
-        }
-        // A whisper of white glass over the graphite so the deck reads a
-        // touch LIGHTER than the #303030 page (the measured card lift,
-        // ~#343434), the way the reference panels float above the canvas.
-        c.push_to_layer(
-            layer,
-            super::rounded_rect(
-                b.x + 1.5,
-                b.y + 1.5,
-                (b.w - 3.0).max(0.0),
-                (b.h - 3.0).max(0.0),
-                (radius - 1.5).max(0.0),
-                theme.glass.surface_hover.0,
-            ),
-        );
-        self.inset_keylight(c, layer, b, radius);
-    }
-
-    /// Social card shell: radius 20, real frost + .02 white glass (.05
-    /// hovered) over it, top-lit edge (stronger on hover), inset key-light.
-    /// This is the live POST card: `.02` white over the container reads a
-    /// touch LIGHTER than the page (measured `#343434` vs `#303030`).
-    fn social_shell(&self, c: &mut Compositor, layer: LayerId, b: Rect, theme: &Theme) {
         let glass = &theme.glass;
         let radius = theme.radius.lg;
-        let fill = if self.hovered {
-            glass.surface_hover.0
+        let (fill, edge) = if self.hovered {
+            (glass.surface_hover.0, glass.edge.0)
         } else {
-            glass.surface.0
+            (glass.surface.0, glass.edge_soft.0)
         };
-        let edge = if self.hovered {
-            glass.edge.0
-        } else {
-            glass.edge_soft.0
-        };
-        // Frost the page beneath the card so the translucent white glass has
-        // real depth (CSS `backdrop-filter: blur(16px)` on social surfaces).
-        c.push_to_layer(
-            layer,
-            SceneNode::BackdropBlur {
-                x: b.x,
-                y: b.y,
-                w: b.w,
-                h: b.h,
-                corner_radius: radius,
-                sigma: 16.0,
-            },
-        );
         for node in glass_pill(b, radius, edge, 1.0, fill) {
             c.push_to_layer(layer, node);
         }
@@ -615,7 +543,9 @@ impl Card {
             self.dot(c, layer, av.x - 2.0, av.y - 2.0, true, theme);
         }
 
-        // Name (.95, base-2sm) and username (caption-r, .4).
+        // Name (.95, base-2sm) and username/handle (caption-r, the meta
+        // register $text-tertiary .50 — not the fainter .40, which read
+        // gray-on-gray over the lifted card).
         let ramp = TypographyScale::hoff();
         self.text(
             c,
@@ -634,7 +564,7 @@ impl Card {
             &ramp.caption_r(),
             av.x + av.w + 12.0,
             b.y + pad + 24.0,
-            glass.text_faint.0,
+            theme.colors.text_dim.0,
             None,
         );
 
@@ -657,7 +587,9 @@ impl Card {
             None,
         );
 
-        // Bio: body-2r at .4, clamped to the column, padded-left 56.
+        // Bio: body-2r at the secondary body register ($text-secondary
+        // .70 — the live post body measures ~.56-.76, never the .40 faint
+        // tone that washed out over the card's lift), padded-left 56.
         self.text(
             c,
             layer,
@@ -665,7 +597,7 @@ impl Card {
             &ramp.body_2r(),
             b.x + pad + 44.0 + 12.0,
             b.y + pad + 44.0 + 6.0,
-            glass.text_faint.0,
+            theme.colors.text_mid.0,
             Some(b.w - pad * 2.0 - 56.0),
         );
     }
