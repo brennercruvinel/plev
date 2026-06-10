@@ -1,6 +1,6 @@
 use super::{PendingAction, UiRequest, WorkspaceView};
-use crate::components::{context_menu, modal};
-use crate::theme::Theme;
+use crate::components::{context_menu, hoff, modal};
+use crate::theme::{SHADOW_TOOLTIP, Theme};
 use plev::compositor::{Compositor, SceneNode};
 use plev::overlay::OverlayKind;
 
@@ -206,27 +206,41 @@ impl WorkspaceView {
                     self.modal_cancel_rect = Some(cancel_rect);
                 }
                 OverlayKind::Tooltip { text } => {
-                    // Simple tooltip: text in a small rounded rect
+                    // HOFF tooltip: pad 5 12 3, bg #262626, radius 8,
+                    // caption-r at $text-secondary, shadow 0 1.5 2 rgba(24,24,24,.15).
+                    let line_h = 12.0 * 1.33;
+                    let tip_w = hoff::text_width(text, 12.0) + 24.0;
+                    let tip_h = line_h + 8.0;
+                    hoff::shadow(
+                        compositor,
+                        layer_id,
+                        overlay.x,
+                        overlay.y,
+                        tip_w,
+                        tip_h,
+                        theme.radius_tooltip,
+                        &SHADOW_TOOLTIP,
+                    );
                     compositor.push_to_layer(
                         layer_id,
                         SceneNode::RoundedRect {
                             x: overlay.x,
                             y: overlay.y,
-                            w: text.len() as f32 * 7.5 + 16.0,
-                            h: 26.0,
-                            color: theme.bg_3.to_array(),
-                            corner_radius: theme.radius_s,
-                            border_width: 1.0,
-                            border_color: theme.border.to_array(),
+                            w: tip_w,
+                            h: tip_h,
+                            color: theme.bg_tooltip.to_array(),
+                            corner_radius: theme.radius_tooltip,
+                            border_width: 0.0,
+                            border_color: [0.0; 4],
                         },
                     );
                     compositor.push_to_layer(
                         layer_id,
                         SceneNode::Text {
-                            key: plev::compositor::TextNodeKey::new(text, 12.0, 16.0, None),
-                            x: overlay.x + 8.0,
+                            key: plev::compositor::TextNodeKey::new(text, 12.0, line_h, None),
+                            x: overlay.x + 12.0,
                             y: overlay.y + 5.0,
-                            color: theme.text_2.to_array(),
+                            color: theme.text_secondary.to_array(),
                         },
                     );
                 }

@@ -1,5 +1,13 @@
+//! Center "Stacks" column — HOFF feed container (rgba(40,40,40,.7)) where
+//! every commit is a hoff list card (Post/Follower recipe): radius 20,
+//! padding 12, 8px gap, bg rgba($n2,.02) -> hover .05 -> selected .10 +
+//! edge-light; 44px avatar circle with the author initial, message in
+//! base-2m at rgba($n2,.76), sha + time in caption-r at $text-tertiary.
+//! Branch headers show the 8px #55F08B dot when the branch is checked out.
+
+use crate::components::hoff;
 use crate::theme::Theme;
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
+use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use plev::scroll::ScrollState;
 
 /// A commit in a stack.
@@ -28,12 +36,12 @@ pub struct MultiStackView {
     hit_rects: Vec<(usize, usize, f32, f32, f32, f32)>,
 }
 
-const HEADER_H: f32 = 44.0;
+const HEADER_H: f32 = 68.0;
 const STACK_HEADER_H: f32 = 36.0;
-const COMMIT_H: f32 = 56.0;
-const PAD_X: f32 = 12.0;
-const AVATAR_SIZE: f32 = 28.0;
-const FONT_SIZE: f32 = 13.0;
+const COMMIT_H: f32 = 68.0;
+const CARD_GAP: f32 = 8.0;
+const PAD: f32 = 12.0;
+const AVATAR_SIZE: f32 = 44.0;
 
 impl MultiStackView {
     /// Starts empty; the app injects real data via [`set_stacks`](Self::set_stacks).
@@ -100,202 +108,179 @@ impl MultiStackView {
         let total_h: f32 = self
             .stacks
             .iter()
-            .map(|s| STACK_HEADER_H + s.commits.len() as f32 * COMMIT_H + 8.0)
+            .map(|s| STACK_HEADER_H + s.commits.len() as f32 * (COMMIT_H + CARD_GAP) + 8.0)
             .sum::<f32>();
         self.scroll.set_viewport(h - HEADER_H);
         self.scroll.set_content(total_h);
 
-        // Panel background
+        // Feed surface — $bg-surface rgba(40,40,40,.7).
         compositor.push(SceneNode::Rect {
             x,
             y,
             w,
             h,
-            color: theme.bg_2.to_array(),
+            color: theme.bg_panel.to_array(),
         });
 
-        // Top header
-        compositor.push(SceneNode::Rect {
-            x,
-            y,
-            w,
-            h: HEADER_H,
-            color: theme.bg_3.to_array(),
-        });
+        // Head — title (20/500) at .56.
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::new("Stacks", 12.0, 16.0, None).with_weight(600),
-            x: x + PAD_X,
-            y: y + 14.0,
-            color: theme.text_2.to_array(),
-        });
-        compositor.push(SceneNode::Rect {
-            x,
-            y: y + HEADER_H,
-            w,
-            h: 1.0,
-            color: theme.border.to_array(),
+            key: TextNodeKey::new("Stacks", 20.0, 20.0 * 1.2, None).with_weight(500),
+            x: x + PAD,
+            y: y + (HEADER_H - 20.0 * 1.2) / 2.0,
+            color: theme.text_default.to_array(),
         });
 
-        let list_y = y + HEADER_H + 1.0;
+        let list_y = y + HEADER_H;
+        let row_x = x + PAD;
+        let row_w = w - PAD * 2.0;
         let scroll_offset = self.scroll.offset();
         let mut hit_rects = Vec::new();
         let mut cursor_y = list_y - scroll_offset;
 
         for (si, stack) in self.stacks.iter().enumerate() {
-            // Stack header bar
+            // Branch header — base-2sm; checked-out branch gets the green dot.
             if cursor_y + STACK_HEADER_H > list_y && cursor_y < y + h {
-                let header_bg = if stack.is_active {
-                    theme.bg_3
-                } else {
-                    theme.bg_2
-                };
-                compositor.push(SceneNode::Rect {
-                    x,
-                    y: cursor_y,
-                    w,
-                    h: STACK_HEADER_H,
-                    color: header_bg.to_array(),
-                });
-                // Branch name
-                compositor.push(SceneNode::Text {
-                    key: TextNodeKey::new(
-                        &stack.branch_name,
-                        FONT_SIZE,
-                        FONT_SIZE * 1.3,
-                        Some(w - PAD_X * 2.0),
-                    )
-                    .with_weight(600),
-                    x: x + PAD_X,
-                    y: cursor_y + (STACK_HEADER_H - FONT_SIZE * 1.3) / 2.0,
-                    color: theme.text_1.to_array(),
-                });
-                // Active indicator dot
+                let mut label_x = row_x + PAD;
                 if stack.is_active {
+                    let dot = 8.0;
                     compositor.push(SceneNode::RoundedRect {
-                        x: x + 4.0,
-                        y: cursor_y + STACK_HEADER_H / 2.0 - 3.0,
-                        w: 6.0,
-                        h: 6.0,
-                        color: theme.pop.to_array(),
-                        corner_radius: 3.0,
+                        x: label_x,
+                        y: cursor_y + STACK_HEADER_H / 2.0 - dot / 2.0,
+                        w: dot,
+                        h: dot,
+                        color: theme.accent_green.to_array(),
+                        corner_radius: dot / 2.0,
                         border_width: 0.0,
                         border_color: [0.0; 4],
                     });
+                    label_x += dot + 8.0;
                 }
-                compositor.push(SceneNode::Rect {
-                    x,
-                    y: cursor_y + STACK_HEADER_H - 1.0,
-                    w,
-                    h: 1.0,
-                    color: theme.border.to_array(),
+                compositor.push(SceneNode::Text {
+                    key: TextNodeKey::new(
+                        &stack.branch_name,
+                        14.0,
+                        14.0 * 1.4,
+                        Some(row_w - PAD * 2.0),
+                    )
+                    .with_weight(600),
+                    x: label_x,
+                    y: cursor_y + (STACK_HEADER_H - 14.0 * 1.4) / 2.0,
+                    color: if stack.is_active {
+                        theme.text_active
+                    } else {
+                        theme.text_default
+                    }
+                    .to_array(),
                 });
             }
             cursor_y += STACK_HEADER_H;
 
-            // Commits
+            // Commit cards.
             for (ci, commit) in stack.commits.iter().enumerate() {
                 let cy = cursor_y;
                 if cy + COMMIT_H > list_y && cy < y + h {
                     let is_sel = self.selected_commit == Some((si, ci));
                     let is_hov = hover == Some((si, ci));
-                    let row_bg = if is_sel {
-                        theme.bg_3
+                    let card_bg = if is_sel {
+                        theme.surface_active
                     } else if is_hov {
-                        theme.hover_bg_2
+                        theme.surface_hover
                     } else {
-                        theme.bg_2
+                        theme.surface
                     };
-                    compositor.push(SceneNode::Rect {
-                        x,
+                    compositor.push(SceneNode::RoundedRect {
+                        x: row_x,
                         y: cy,
-                        w,
+                        w: row_w,
                         h: COMMIT_H,
-                        color: row_bg.to_array(),
+                        color: card_bg.to_array(),
+                        corner_radius: theme.radius_card,
+                        border_width: 0.0,
+                        border_color: [0.0; 4],
                     });
-                    // Avatar circle
-                    let avatar_x = x + PAD_X;
+                    if is_sel {
+                        hoff::edge_light(
+                            compositor,
+                            LayerId::DEFAULT,
+                            row_x,
+                            cy,
+                            row_w,
+                            COMMIT_H,
+                            theme.radius_card,
+                            1.0,
+                            theme.edge_strong,
+                        );
+                    }
+
+                    // Avatar — 44px circle with the author initial.
+                    let avatar_x = row_x + PAD;
                     let avatar_y = cy + (COMMIT_H - AVATAR_SIZE) / 2.0;
                     compositor.push(SceneNode::RoundedRect {
                         x: avatar_x,
                         y: avatar_y,
                         w: AVATAR_SIZE,
                         h: AVATAR_SIZE,
-                        color: theme.bg_3.to_array(),
+                        color: theme.chip.to_array(),
                         corner_radius: AVATAR_SIZE / 2.0,
                         border_width: 0.0,
                         border_color: [0.0; 4],
                     });
-                    // Author initial
                     let initial = commit
                         .author
                         .chars()
                         .next()
-                        .map(|c| c.to_string())
+                        .map(|c| c.to_uppercase().to_string())
                         .unwrap_or_default();
+                    let initial_w = hoff::text_width(&initial, 14.0);
                     compositor.push(SceneNode::Text {
-                        key: TextNodeKey::new(&initial, 12.0, 14.0, None).with_weight(600),
-                        x: avatar_x + (AVATAR_SIZE - 8.0) / 2.0,
+                        key: TextNodeKey::new(&initial, 14.0, 14.0, None).with_weight(600),
+                        x: avatar_x + (AVATAR_SIZE - initial_w) / 2.0,
                         y: avatar_y + (AVATAR_SIZE - 14.0) / 2.0,
-                        color: theme.text_2.to_array(),
+                        color: theme.text_active.to_array(),
                     });
-                    // Commit message (truncated)
-                    let msg = truncate(&commit.message, 40);
+
+                    // Text column.
+                    let text_x = avatar_x + AVATAR_SIZE + PAD;
+                    let text_w = row_w - AVATAR_SIZE - PAD * 3.0;
+
+                    // Commit message — base-2m (14/500) at .76.
+                    let msg = truncate(&commit.message, 48);
                     compositor.push(SceneNode::Text {
-                        key: TextNodeKey::new(
-                            &msg,
-                            FONT_SIZE,
-                            FONT_SIZE * 1.3,
-                            Some(w - AVATAR_SIZE - PAD_X * 3.0),
-                        )
-                        .with_weight(400),
-                        x: avatar_x + AVATAR_SIZE + 8.0,
-                        y: cy + 10.0,
-                        color: theme.text_1.to_array(),
+                        key: TextNodeKey::new(&msg, 14.0, 14.0 * 1.4, Some(text_w))
+                            .with_weight(500),
+                        x: text_x,
+                        y: cy + PAD + 2.0,
+                        color: theme.text_active.to_array(),
                     });
-                    // Author + time
-                    let meta = format!("{} \u{00B7} {}", commit.author, commit.time_ago);
-                    compositor.push(SceneNode::Text {
-                        key: TextNodeKey::new(
-                            &meta,
-                            11.0,
-                            14.0,
-                            Some(w - AVATAR_SIZE - PAD_X * 3.0),
-                        )
-                        .with_weight(400),
-                        x: avatar_x + AVATAR_SIZE + 8.0,
-                        y: cy + 10.0 + FONT_SIZE * 1.3 + 2.0,
-                        color: theme.text_3.to_array(),
-                    });
-                    // SHA tag (guard against short hashes)
+
+                    // sha · author · time — caption-r at $text-tertiary.
                     let sha_display = commit.sha.get(..7).unwrap_or(&commit.sha);
+                    let meta = format!(
+                        "{} \u{00B7} {} \u{00B7} {}",
+                        sha_display, commit.author, commit.time_ago
+                    );
                     compositor.push(SceneNode::Text {
-                        key: TextNodeKey::new(sha_display, 10.0, 12.0, None).with_weight(500),
-                        x: x + w - PAD_X - 40.0,
-                        y: cy + (COMMIT_H - 12.0) / 2.0,
-                        color: theme.text_3.to_array(),
-                    });
-                    compositor.push(SceneNode::Rect {
-                        x,
-                        y: cy + COMMIT_H - 1.0,
-                        w,
-                        h: 1.0,
-                        color: theme.border.to_array(),
+                        key: TextNodeKey::new(&meta, 12.0, 12.0 * 1.33, Some(text_w))
+                            .with_weight(400),
+                        x: text_x,
+                        y: cy + PAD + 2.0 + 14.0 * 1.4 + 4.0,
+                        color: theme.text_tertiary.to_array(),
                     });
                 }
-                hit_rects.push((si, ci, x, cy, w, COMMIT_H));
-                cursor_y += COMMIT_H;
+                hit_rects.push((si, ci, row_x, cy, row_w, COMMIT_H));
+                cursor_y += COMMIT_H + CARD_GAP;
             }
             cursor_y += 8.0; // gap between stacks
         }
 
         // Scrollbar
         if self.scroll.is_scrollable() {
-            draw_scrollbar(
+            hoff::draw_scrollbar(
                 compositor,
                 theme,
                 x + w - 4.0,
                 list_y,
-                h - HEADER_H - 1.0,
+                h - HEADER_H,
                 &self.scroll,
             );
         }
@@ -303,25 +288,6 @@ impl MultiStackView {
         self.hit_rects = hit_rects.clone();
         hit_rects
     }
-}
-
-fn draw_scrollbar(
-    compositor: &mut Compositor,
-    theme: &Theme,
-    x: f32,
-    y: f32,
-    h: f32,
-    scroll: &ScrollState,
-) {
-    let thumb_h = (h * scroll.thumb_ratio()).max(24.0);
-    let thumb_y = y + (h - thumb_h) * scroll.thumb_position();
-    compositor.push(SceneNode::Rect {
-        x,
-        y: thumb_y,
-        w: 4.0,
-        h: thumb_h,
-        color: [theme.text_3.0[0], theme.text_3.0[1], theme.text_3.0[2], 0.5],
-    });
 }
 
 fn truncate(s: &str, max: usize) -> String {

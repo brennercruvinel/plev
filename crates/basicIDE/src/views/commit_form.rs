@@ -1,11 +1,16 @@
+//! Inline commit form — HOFF Field recipe: input 52px, radius 12,
+//! bg rgba($n2,.05) with focus border rgba($n2,.25); value in base-2r at
+//! rgba($n2,.76), placeholder at .25. Buttons are the 44px glass pills.
+
 use crate::components::button::{ButtonKind, ButtonSize, draw as draw_button};
 use crate::theme::Theme;
 use plev::compositor::{Compositor, SceneNode, TextNodeKey};
 
 const PAD: f32 = 12.0;
-const INPUT_H: f32 = 32.0;
-const BTN_H: f32 = 32.0;
-const FONT_SIZE: f32 = 13.0;
+const INPUT_H: f32 = 52.0;
+const BTN_H: f32 = 44.0;
+const FONT_SIZE: f32 = 14.0;
+const LINE_H: f32 = 14.0 * 1.4;
 
 /// State for the inline commit form.
 pub struct CommitForm {
@@ -88,25 +93,17 @@ impl CommitForm {
 
         let total_h = PAD + INPUT_H + PAD + BTN_H + PAD;
 
-        // Form background
+        // Column surface behind the form (same as the Changes column).
         compositor.push(SceneNode::Rect {
             x,
             y,
             w,
             h: total_h,
-            color: theme.bg_3.to_array(),
+            color: theme.bg_sidebar.to_array(),
         });
 
-        // Top divider
-        compositor.push(SceneNode::Rect {
-            x,
-            y,
-            w,
-            h: 1.0,
-            color: theme.border.to_array(),
-        });
-
-        // Input field (simple text box)
+        // Field — 52px, radius 12, bg rgba($n2,.05); the active form shows
+        // the focus border rgba($n2,.25).
         let input_x = x + PAD;
         let input_y = y + PAD;
         let input_w = w - PAD * 2.0;
@@ -117,32 +114,32 @@ impl CommitForm {
             y: input_y,
             w: input_w,
             h: INPUT_H,
-            color: theme.bg_1.to_array(),
-            corner_radius: 4.0,
-            border_width: 1.0,
-            border_color: theme.border_focus.to_array(),
+            color: theme.field_bg.to_array(),
+            corner_radius: theme.radius_nav,
+            border_width: 1.5,
+            border_color: theme.field_focus_border.to_array(),
         });
 
-        // Message text or placeholder
+        // Message text or placeholder — base-2r .76 / placeholder .25.
         let display_text = if self.message.is_empty() {
             "Commit message..."
         } else {
             &self.message
         };
         let text_color = if self.message.is_empty() {
-            theme.text_3.to_array()
+            theme.text_placeholder.to_array()
         } else {
-            theme.text_1.to_array()
+            theme.text_active.to_array()
         };
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::new(display_text, FONT_SIZE, 18.0, Some(input_w - 16.0))
+            key: TextNodeKey::new(display_text, FONT_SIZE, LINE_H, Some(input_w - 36.0))
                 .with_weight(400),
-            x: input_x + 8.0,
-            y: input_y + (INPUT_H - 18.0) / 2.0,
+            x: input_x + 18.0,
+            y: input_y + (INPUT_H - LINE_H) / 2.0,
             color: text_color,
         });
 
-        // Buttons row
+        // Buttons row — 44px glass pills.
         let btn_y = input_y + INPUT_H + PAD;
         self.commit_btn_rect = draw_button(
             compositor,
@@ -150,8 +147,8 @@ impl CommitForm {
             input_x,
             btn_y,
             "Commit",
-            ButtonKind::Solid,
-            ButtonSize::Sm,
+            ButtonKind::Glass,
+            ButtonSize::Md,
             false,
             self.message.is_empty(),
         );
@@ -164,7 +161,7 @@ impl CommitForm {
             btn_y,
             "Cancel",
             ButtonKind::Ghost,
-            ButtonSize::Sm,
+            ButtonSize::Md,
             false,
             false,
         );

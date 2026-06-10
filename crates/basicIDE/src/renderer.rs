@@ -150,7 +150,7 @@ pub fn render_frame(
     }
 
     let theme = workspace.theme();
-    let [cr, cg, cb, ca] = theme.bg_1.to_array();
+    let [cr, cg, cb, ca] = theme.bg_body.to_array();
 
     // Composite pass: draw all visible layers to surface
     {

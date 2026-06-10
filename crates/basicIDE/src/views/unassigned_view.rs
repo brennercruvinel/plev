@@ -1,5 +1,12 @@
-use crate::theme::Theme;
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
+//! Left "Changes" column — HOFF row-sidebar (rgba(40,40,40,.8)) with a
+//! 68px title head and 44px list rows in the Actions-item recipe:
+//! radius 16, bg rgba($n2,.02) -> hover .05 -> selected .10 + edge-light;
+//! filename in base-2sm at rgba($n2,.56) (.76 selected), status letter in
+//! the HOFF accent set, staged marker = 8px #55F08B "new" dot.
+
+use crate::components::hoff;
+use crate::theme::{StatusColors, Theme};
+use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use plev::scroll::ScrollState;
 
 /// File change status.
@@ -23,12 +30,13 @@ impl FileStatus {
         }
     }
     fn color(self, theme: &Theme) -> [f32; 4] {
+        let s = StatusColors::of(theme);
         match self {
-            FileStatus::Modified => theme.warn.to_array(),
-            FileStatus::Added => theme.safe.to_array(),
-            FileStatus::Deleted => theme.danger.to_array(),
-            FileStatus::Renamed => theme.pop.to_array(),
-            FileStatus::Untracked => theme.text_3.to_array(),
+            FileStatus::Modified => s.modified.to_array(),
+            FileStatus::Added => s.added.to_array(),
+            FileStatus::Deleted => s.deleted.to_array(),
+            FileStatus::Renamed => s.renamed.to_array(),
+            FileStatus::Untracked => s.untracked.to_array(),
         }
     }
 }
@@ -51,11 +59,13 @@ pub struct UnassignedView {
     hit_rects: Vec<(f32, f32, f32, f32)>,
 }
 
-const ITEM_H: f32 = 36.0;
-const HEADER_H: f32 = 44.0;
+const HEADER_H: f32 = 68.0;
+const ITEM_H: f32 = 44.0;
+const ITEM_GAP: f32 = 4.0;
+const PAD: f32 = 12.0;
 const STATUS_W: f32 = 18.0;
-const PAD_X: f32 = 12.0;
-const FONT_SIZE: f32 = 13.0;
+const FONT_SIZE: f32 = 14.0;
+const LINE_H: f32 = 14.0 * 1.4;
 
 impl UnassignedView {
     /// Starts empty; the app injects real data via [`set_files`](Self::set_files).
@@ -133,75 +143,60 @@ impl UnassignedView {
         h: f32,
         hover_idx: Option<usize>,
     ) -> Vec<(f32, f32, f32, f32)> {
-        let content_h = self.files.len() as f32 * ITEM_H;
+        let content_h = self.files.len() as f32 * (ITEM_H + ITEM_GAP);
         self.scroll.set_viewport(h - HEADER_H);
         self.scroll.set_content(content_h);
 
-        // Panel background
+        // Column surface — row-sidebar rgba(40,40,40,.8).
         compositor.push(SceneNode::Rect {
             x,
             y,
             w,
             h,
-            color: theme.bg_1.to_array(),
+            color: theme.bg_sidebar.to_array(),
         });
 
-        // Header
-        compositor.push(SceneNode::Rect {
-            x,
-            y,
-            w,
-            h: HEADER_H,
-            color: theme.bg_2.to_array(),
-        });
+        // Head — title (20/500) at .56 + count chip.
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::new("Changes", 12.0, 16.0, None).with_weight(600),
-            x: x + PAD_X,
-            y: y + 14.0,
-            color: theme.text_2.to_array(),
+            key: TextNodeKey::new("Changes", 20.0, 20.0 * 1.2, None).with_weight(500),
+            x: x + PAD,
+            y: y + (HEADER_H - 20.0 * 1.2) / 2.0,
+            color: theme.text_default.to_array(),
         });
-        // File count badge (pill)
         let count_str = self.files.len().to_string();
-        let badge_w = count_str.len() as f32 * 7.0 + 12.0;
-        let badge_h = 18.0;
-        let badge_x = x + w - PAD_X - badge_w;
-        let badge_y = y + (HEADER_H - badge_h) / 2.0;
+        let chip_w = hoff::text_width(&count_str, 12.0) + 16.0;
+        let chip_h = 22.0;
+        let chip_x = x + w - PAD - chip_w;
+        let chip_y = y + (HEADER_H - chip_h) / 2.0;
         compositor.push(SceneNode::RoundedRect {
-            x: badge_x,
-            y: badge_y,
-            w: badge_w,
-            h: badge_h,
-            color: theme.bg_3.to_array(),
-            corner_radius: badge_h / 2.0,
+            x: chip_x,
+            y: chip_y,
+            w: chip_w,
+            h: chip_h,
+            color: theme.chip.to_array(),
+            corner_radius: theme.radius_tooltip,
             border_width: 0.0,
             border_color: [0.0; 4],
         });
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::new(&count_str, 11.0, 14.0, None).with_weight(600),
-            x: badge_x + 6.0,
-            y: badge_y + 2.0,
-            color: theme.text_2.to_array(),
+            key: TextNodeKey::new(&count_str, 12.0, 12.0 * 1.33, None).with_weight(600),
+            x: chip_x + 8.0,
+            y: chip_y + (chip_h - 12.0 * 1.33) / 2.0,
+            color: theme.text_default.to_array(),
         });
 
-        // Divider below header
-        compositor.push(SceneNode::Rect {
-            x,
-            y: y + HEADER_H,
-            w,
-            h: 1.0,
-            color: theme.border.to_array(),
-        });
-
-        // File list
-        let list_y = y + HEADER_H + 1.0;
+        // File list — card rows inset by the 12px body padding.
+        let list_y = y + HEADER_H;
+        let row_x = x + PAD;
+        let row_w = w - PAD * 2.0;
         let scroll_offset = self.scroll.offset();
         let mut hit_rects = Vec::with_capacity(self.files.len());
 
         for (i, file) in self.files.iter().enumerate() {
-            let item_y = list_y + i as f32 * ITEM_H - scroll_offset;
+            let item_y = list_y + i as f32 * (ITEM_H + ITEM_GAP) - scroll_offset;
             // Skip items outside the visible area
             if item_y + ITEM_H < list_y || item_y > y + h {
-                hit_rects.push((x, item_y, w, ITEM_H));
+                hit_rects.push((row_x, item_y, row_w, ITEM_H));
                 continue;
             }
 
@@ -209,76 +204,92 @@ impl UnassignedView {
             let is_hovered = hover_idx == Some(i);
 
             let row_bg = if is_selected {
-                theme.bg_3
+                theme.surface_active
             } else if is_hovered {
-                theme.hover_bg_1
+                theme.surface_hover
             } else {
-                theme.bg_1
+                theme.surface
             };
 
-            compositor.push(SceneNode::Rect {
-                x,
+            compositor.push(SceneNode::RoundedRect {
+                x: row_x,
                 y: item_y,
-                w,
+                w: row_w,
                 h: ITEM_H,
                 color: row_bg.to_array(),
+                corner_radius: theme.radius_item,
+                border_width: 0.0,
+                border_color: [0.0; 4],
             });
+            if is_selected {
+                hoff::edge_light(
+                    compositor,
+                    LayerId::DEFAULT,
+                    row_x,
+                    item_y,
+                    row_w,
+                    ITEM_H,
+                    theme.radius_item,
+                    1.0,
+                    theme.edge_strong,
+                );
+            }
 
-            // Status badge (single letter)
+            // Status letter — caption-sm in the HOFF accent for the state.
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::new(file.status.label(), FONT_SIZE, FONT_SIZE * 1.3, None)
-                    .with_weight(700),
-                x: x + PAD_X,
-                y: item_y + (ITEM_H - FONT_SIZE * 1.3) / 2.0,
+                key: TextNodeKey::new(file.status.label(), 12.0, 12.0 * 1.33, None)
+                    .with_weight(600),
+                x: row_x + PAD,
+                y: item_y + (ITEM_H - 12.0 * 1.33) / 2.0,
                 color: file.status.color(theme),
             });
 
-            // Filename (truncated)
+            // Filename — base-2sm, .56 at rest, .76 selected.
             let display_name = truncate_path(&file.path, 32);
             compositor.push(SceneNode::Text {
                 key: TextNodeKey::new(
                     &display_name,
                     FONT_SIZE,
-                    FONT_SIZE * 1.3,
-                    Some(w - STATUS_W - PAD_X * 3.0),
+                    LINE_H,
+                    Some(row_w - STATUS_W - PAD * 3.0),
                 )
-                .with_weight(400),
-                x: x + PAD_X + STATUS_W,
-                y: item_y + (ITEM_H - FONT_SIZE * 1.3) / 2.0,
-                color: if is_selected {
-                    theme.text_1
+                .with_weight(600),
+                x: row_x + PAD + STATUS_W,
+                y: item_y + (ITEM_H - LINE_H) / 2.0,
+                color: if is_selected || is_hovered {
+                    theme.text_active
                 } else {
-                    theme.text_2
+                    theme.text_default
                 }
                 .to_array(),
             });
 
-            // Staged marker: small dot on the right edge of the row.
+            // Staged marker — the 8px green "new" dot.
             if file.staged {
-                let dot = 6.0;
+                let dot = 8.0;
                 compositor.push(SceneNode::RoundedRect {
-                    x: x + w - PAD_X - dot,
+                    x: row_x + row_w - PAD - dot,
                     y: item_y + (ITEM_H - dot) / 2.0,
                     w: dot,
                     h: dot,
-                    color: theme.safe.to_array(),
+                    color: theme.accent_green.to_array(),
                     corner_radius: dot / 2.0,
                     border_width: 0.0,
                     border_color: [0.0; 4],
                 });
             }
 
-            hit_rects.push((x, item_y, w, ITEM_H));
+            hit_rects.push((row_x, item_y, row_w, ITEM_H));
         }
 
         // Scrollbar (if needed)
         if self.scroll.is_scrollable() {
-            draw_scrollbar(
+            hoff::draw_scrollbar(
                 compositor,
                 theme,
                 x + w - 4.0,
                 list_y,
-                h - HEADER_H - 1.0,
+                h - HEADER_H,
                 &self.scroll,
             );
         }
@@ -286,33 +297,6 @@ impl UnassignedView {
         self.hit_rects = hit_rects.clone();
         hit_rects
     }
-}
-
-fn draw_scrollbar(
-    compositor: &mut Compositor,
-    theme: &Theme,
-    x: f32,
-    y: f32,
-    h: f32,
-    scroll: &ScrollState,
-) {
-    let track_h = h;
-    let thumb_h = (track_h * scroll.thumb_ratio()).max(24.0);
-    let thumb_y = y + (track_h - thumb_h) * scroll.thumb_position();
-    compositor.push(SceneNode::Rect {
-        x,
-        y,
-        w: 4.0,
-        h: track_h,
-        color: [0.0, 0.0, 0.0, 0.0],
-    });
-    compositor.push(SceneNode::Rect {
-        x,
-        y: thumb_y,
-        w: 4.0,
-        h: thumb_h,
-        color: [theme.text_3.0[0], theme.text_3.0[1], theme.text_3.0[2], 0.5],
-    });
 }
 
 fn truncate_path(path: &str, max_chars: usize) -> String {
