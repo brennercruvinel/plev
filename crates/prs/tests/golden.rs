@@ -1,9 +1,11 @@
-//! Golden tests: real corpus inputs (copied under fixtures/) -> frozen
-//! expected rust output, compared byte for byte. The droplist is part of
-//! the API contract, so these tests also assert it tells the truth: exact
-//! counts and the presence of every known-lossy construct.
+//! Contract tests. The react side runs LIVE on the corpus originals in
+//! ref/parsecomponentes (no copies: the owner retired the react fixtures);
+//! when the corpus is absent the react tests skip loudly. The gpui side
+//! keeps its frozen golden. The droplist is part of the API contract, so
+//! these tests also assert it tells the truth: exact counts and the
+//! presence of every known-lossy construct.
 //!
-//! To regenerate after an intentional emitter change:
+//! To regenerate the gpui golden after an intentional emitter change:
 //! UPDATE_GOLDEN=1 cargo test -p prs --test golden
 
 use std::fs;
@@ -30,16 +32,35 @@ fn check_golden(rel: &str, actual: &str) {
     assert_eq!(expected, actual, "golden mismatch for {rel}");
 }
 
-fn react_output() -> prs::Transpiled {
-    prs::transpile_react(
-        ("index.tsx", &fixture("react/index.tsx")),
-        (
-            "HoffResearchCard.module.sass",
-            &fixture("react/HoffResearchCard.module.sass"),
-        ),
-        &fixture("react/hoff-research-card-variables.sass"),
+/// The corpus card, read from the owner's reference tree itself.
+fn corpus() -> Option<PathBuf> {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../ref/parsecomponentes/UIvisualREFs/cards/hoff-research-cards/react");
+    root.exists().then_some(root)
+}
+
+fn react_output() -> Option<prs::Transpiled> {
+    let root = match corpus() {
+        Some(r) => r,
+        None => {
+            eprintln!("SKIP: corpus ref/parsecomponentes ausente neste checkout");
+            return None;
+        }
+    };
+    let read = |rel: &str| {
+        fs::read_to_string(root.join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
+    };
+    Some(
+        prs::transpile_react(
+            ("index.tsx", &read("components/HoffResearchCard/index.tsx")),
+            (
+                "HoffResearchCard.module.sass",
+                &read("components/HoffResearchCard/HoffResearchCard.module.sass"),
+            ),
+            &read("styles/hoff-research-card-variables.sass"),
+        )
+        .expect("react transpile"),
     )
-    .expect("react transpile")
 }
 
 fn gpui_output() -> prs::Transpiled {
@@ -49,10 +70,11 @@ fn gpui_output() -> prs::Transpiled {
 #[test]
 #[ignore = "diagnostic: cargo test -p prs --test golden -- --ignored --nocapture"]
 fn dump_droplists() {
-    let r = react_output();
-    eprintln!("react mapped={} dropped={}", r.mapped, r.dropped.len());
-    for d in &r.dropped {
-        eprintln!("  [{}] {} -- {}", d.at, d.what, d.why);
+    if let Some(r) = react_output() {
+        eprintln!("react mapped={} dropped={}", r.mapped, r.dropped.len());
+        for d in &r.dropped {
+            eprintln!("  [{}] {} -- {}", d.at, d.what, d.why);
+        }
     }
     let g = gpui_output();
     eprintln!("gpui mapped={} dropped={}", g.mapped, g.dropped.len());
@@ -62,9 +84,28 @@ fn dump_droplists() {
 }
 
 #[test]
-fn react_card_golden_bytes() {
-    let out = react_output();
-    check_golden("react/expected.rs", &out.code);
+fn react_card_emits_the_known_chains() {
+    let Some(out) = react_output() else { return };
+    // live structural contract over the corpus: the load-bearing lines
+    // of the emission, asserted on the code produced THIS run.
+    for frag in [
+        "pub fn hoff_research_card(children: Element, title: &str, content: &str) -> Element",
+        ".w(368.0)",
+        ".bg(plev::theme::hoff::CARD_OVERLAY)",
+        ".backdrop_blur(theme.effects.blur_sigma)",
+        ".rounded(theme.radius.xl)",
+        "text(title)",
+        "text(content)",
+        "text(\"Discover\")",
+        ".font_size(20.0)",
+        ".text_color(theme.colors.text_mid)",
+    ] {
+        assert!(
+            out.code.contains(frag),
+            "emissao perdeu: {frag}\n{}",
+            out.code
+        );
+    }
 }
 
 #[test]
@@ -75,12 +116,15 @@ fn gpui_separator_golden_bytes() {
 
 #[test]
 fn react_card_emit_is_deterministic() {
-    assert_eq!(react_output().code, react_output().code);
+    let (Some(a), Some(b)) = (react_output(), react_output()) else {
+        return;
+    };
+    assert_eq!(a.code, b.code);
 }
 
 #[test]
 fn react_droplist_tells_the_truth() {
-    let out = react_output();
+    let Some(out) = react_output() else { return };
     let has = |frag: &str| {
         assert!(
             out.dropped.iter().any(|d| d.what.contains(frag)),

@@ -3623,7 +3623,9 @@ dependencies = [
 name = "prs"
 version = "0.1.0"
 dependencies = [
+ "env_logger",
  "plev",
+ "pollster",
  "thiserror 2.0.18",
  "tree-sitter",
  "tree-sitter-rust",

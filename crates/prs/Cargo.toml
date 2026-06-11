@@ -12,6 +12,9 @@ tree-sitter-rust = "0.24"
 thiserror = "2"
 
 [dev-dependencies]
+# janela do preview ao vivo (examples/preview.rs)
+pollster = "0.4"
+env_logger = "0.11"
 # The emitted golden outputs are compiled and executed by
 # tests/emitted_compiles.rs, so the engine is a dev-dependency only.
 plev = { path = "../.." }
