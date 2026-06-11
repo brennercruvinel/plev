@@ -70,7 +70,11 @@ op lists that act inside their keyframe segment. both encoder modes
 exist: mode a lowers an authored timeline (write), mode b discovers
 deltas from a sampled frame sequence (discover): slot diffing emits the
 structural ops, per-prop runs merge into linear segments, snapshots are
-inserted on discontinuity and on the random access cadence. crates/anm
+inserted on discontinuity and on the random access cadence. an
+encoder-side optimizer (optimize) runs idempotent passes over any
+timeline before encoding: static track collapse, rdp keyframe
+reduction and collinear segment fusion, tolerances expressed in wire
+quantization steps with lossless-on-the-wire defaults. crates/anm
 also ships the player: AnimationTick-driven, deterministic f32
 timeline, windowed
 segment evaluation plus segment-local structural op replay (seek stays

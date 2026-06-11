@@ -18,6 +18,9 @@
 //! - [`discover`]: encoder mode B, delta discovery from a sampled frame
 //!   sequence: snapshots in, structural ops, linear segment chains and
 //!   random-access keyframes out; the result feeds [`write::encode`]
+//! - [`optimize`]: encoder-side passes over any timeline (authored or
+//!   discovered): static track collapse, RDP keyframe reduction and
+//!   collinear segment fusion, tolerances in wire quantization steps
 //! - [`read`]: strict decoder back to the IR; typed errors, never a
 //!   panic on malformed input, round-trips the encoder output
 //! - [`play`]: deterministic player per the spec's player contract:
@@ -35,6 +38,7 @@ mod discover_fit;
 pub mod easing;
 pub mod ir;
 pub mod lower;
+pub mod optimize;
 pub mod play;
 mod play_eval;
 pub mod quant;
@@ -52,6 +56,7 @@ pub use ir::{
     ReplaceNode, Segment, Timeline, Track, Value,
 };
 pub use lower::LoweredAsset;
+pub use optimize::{OptimizeCfg, optimize};
 pub use play::AnmPlayer;
 pub use read::{Document, ReadError, decode};
 pub use write::{WriteError, encode};
@@ -70,6 +75,10 @@ mod tests_ir;
 mod tests_lower;
 #[cfg(test)]
 mod tests_ops;
+#[cfg(test)]
+mod tests_optimize;
+#[cfg(test)]
+mod tests_optimize_pipe;
 #[cfg(test)]
 mod tests_play;
 #[cfg(test)]

@@ -4,6 +4,7 @@ members = [
     ".",
     "macros",
     "crates/anm",
+    "crates/prs",
     "crates/narrate_macro",
     "crates/narrate",
     "crates/scene-3d",
@@ -12,6 +13,7 @@ members = [
     "crates/editor_core",
     "crates/showcase",
     "crates/git_backend",
+    "crates/lot",
 ]
 
 [package]
@@ -64,6 +66,7 @@ notify-debouncer-full = { version = "0.4", optional = true }
 [dev-dependencies]
 narrate = { path = "crates/narrate" }
 criterion = { version = "0.5", features = ["html_reports"] }
+lot = { path = "crates/lot" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster = "0.4"

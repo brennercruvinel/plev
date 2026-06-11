@@ -141,6 +141,29 @@ props (from the engine-fit study):
   pinned against the held tail of a dead chain from an earlier life in
   the same segment. output feeds encoder mode a unchanged
 
+## optimizer passes (encoder-side, format-neutral)
+
+optimize (crates/anm/src/optimize.rs) runs between authoring or
+discovery and encode, on the IR only; the wire layout and frozen
+fixtures never change. three passes over any validated timeline:
+static track collapse (a chain that never strays from its base value
+past the tolerance is removed; the snapshot already carries the
+value), RDP keyframe reduction (Ramer-Douglas-Peucker over each
+track's value x time polyline; deviation is measured at the sample's
+own time, endpoints and extremes survive), and collinear fusion
+(consecutive linear segments whose shared landing sits on the pair's
+chord merge). tolerances are counted in quantization steps of each
+prop's wire grid, so one number means the same visual error on every
+prop; the defaults are half a step, the error quantization already
+commits, so default optimization is lossless on the wire. only linear
+segments merge: an eased curve does not survive re-parameterization,
+so non-linear segments bound the reduction runs. the passes iterate to
+a fixpoint and collapse decisions are order independent: optimizing
+twice equals optimizing once. discover's pin tracks (twin tracks on
+one (node, prop) in one keyframe window) are never collapsed, and a
+track whose base a later place/replace would shift keeps its first
+segment intact.
+
 ## core prerequisite (one line)
 
 SceneNode must derive PartialEq for structural round-trip tests

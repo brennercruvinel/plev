@@ -1,0 +1,17 @@
+# prs: parse-resolve-emit transpiler poc (react/tsx + gpui -> plev builder).
+# See src/lib.rs for the three-stage architecture and the droplist contract.
+[package]
+name = "prs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tree-sitter = "0.25"
+tree-sitter-typescript = "0.23"
+tree-sitter-rust = "0.24"
+thiserror = "2"
+
+[dev-dependencies]
+# The emitted golden outputs are compiled and executed by
+# tests/emitted_compiles.rs, so the engine is a dev-dependency only.
+plev = { path = "../.." }
