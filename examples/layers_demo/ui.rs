@@ -51,7 +51,7 @@ pub fn build_header(comp: &mut plev::compositor::Compositor, w: f32, margin: f32
     );
 }
 
-pub fn build_info_card(comp: &mut plev::compositor::Compositor, w: f32, margin: f32) {
+pub fn build_info_card(comp: &mut plev::compositor::Compositor, _w: f32, margin: f32) {
     let header_h = 70.0;
     let card_x = margin;
     let card_y = header_h + 20.0;

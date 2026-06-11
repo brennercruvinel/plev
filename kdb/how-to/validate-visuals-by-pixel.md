@@ -61,3 +61,21 @@ six gigabytes of apparent "leak" in this project was orphan processes,
 while the app itself measured a stable 115 MB. measure RSS of the live
 process before diagnosing a leak, and sweep orphans (`pgrep -fl <app>`)
 after every automated capture batch.
+
+## color profiles in captures (learned 2026-06-11)
+
+screencapture saves in the MONITOR's ICC profile, not sRGB. on a wide or
+calibrated display the raw pixel of a true #303030 background measures
+(42,42,42) and produces a false FAIL of delta 6. always convert the
+capture to sRGB before sampling (PIL ImageCms profileToProfile with the
+embedded profile), after which the same pixel measures (48,48,48) exact.
+the capture pipeline must treat the embedded profile as part of the
+measurement, never sample raw bytes from an ICC-tagged png.
+
+## machine-in-use etiquette
+
+launching apps for capture steals focus; if the user is typing, their
+keystrokes leak into the app under test and corrupt captures (observed:
+sections switched, a todo deleted). restore the user's frontmost app
+immediately after each capture and re-verify the app state before
+measuring.

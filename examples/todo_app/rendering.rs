@@ -8,7 +8,7 @@ use plev::texture_pool::TexturePool;
 use plev::winit::application::ApplicationHandler;
 use plev::winit::event::{ElementState, WindowEvent};
 use plev::winit::event_loop::ActiveEventLoop;
-use plev::winit::window::{Window, WindowAttributes, WindowId};
+use plev::winit::window::{WindowAttributes, WindowId};
 
 use crate::state::{BG, GpuState, TodoApp};
 
