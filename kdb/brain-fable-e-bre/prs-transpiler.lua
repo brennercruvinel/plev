@@ -44,5 +44,18 @@ do poc.
 
 graphify (ref doc-only): grafos de codebase; talvez refatorar a ideia para
 visualizar a arvore de elementos transpilada (diagnostico do parser).
+
+nota corpus (2026-06-11, ordem do brenner: usar, ler, enxergar os
+padroes): o corpus completo do parser e MAIOR que o poc e fica
+registrado para as fases seguintes: (a) hoff-research-briefs (o segundo
+app next real dele, ainda nao tocado) junto do social como alvo de
+transpilacao de TELAS inteiras, nao so cards; (b) gpui-component traz
+alem dos widgets: themes/ + .theme-schema.json (o PADRAO de theming
+serializado a minerar para o nosso tema), docs/ e examples/ (a
+estrutura de documentacao e galeria), skills/ (como eles instruem
+agentes); (c) ref/render-texts (vello/parley/glyphon/swash/floem/slint)
+e a fila da tese de texto/render; (d) OpenUSD e a fila do 3D/cenas.
+nenhum desses pode ser esquecido: cada um vira consumidor nomeado em
+workflow proprio.
 ]],
 }
