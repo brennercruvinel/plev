@@ -66,6 +66,8 @@ examples-wip/
 # ref/: clones de estudo ficam fora; a curadoria (study-*.lua, READMEs de amostras) entra
 ref/**
 !ref/*/
+ref/OpenUSD/
+ref/winit/
 !ref/*/study-*.lua
 !ref/anim/swf-samples/
 !ref/anim/swf-samples/README.md
