@@ -8,6 +8,9 @@ use plev::input::{InputEvent, InputState, PressState, ViewId};
 use plev::text::TextSystem;
 use plev::winit::window::Window;
 
+// Ready is ~2320 B vs 0 for Uninitialized; one instance lives for the
+// whole process, so boxing would only add indirection on the render path.
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum State {
     Uninitialized,
     Ready {
@@ -44,20 +47,19 @@ impl InputDemoApp {
         for event in events {
             match event {
                 InputEvent::Click(click) => {
-                    if click.state == PressState::Pressed {
-                        if let Some(btn_id) = self.button_view_id {
-                            if click.view_id == btn_id {
-                                self.click_count += 1;
-                                log::info!("Button clicked! Count: {}", self.click_count);
-                            }
-                        }
+                    if click.state == PressState::Pressed
+                        && let Some(btn_id) = self.button_view_id
+                        && click.view_id == btn_id
+                    {
+                        self.click_count += 1;
+                        log::info!("Button clicked! Count: {}", self.click_count);
                     }
                 }
                 InputEvent::Hover(hover) => {
-                    if let Some(btn_id) = self.button_view_id {
-                        if hover.view_id == btn_id {
-                            self.button_hovered = hover.entered;
-                        }
+                    if let Some(btn_id) = self.button_view_id
+                        && hover.view_id == btn_id
+                    {
+                        self.button_hovered = hover.entered;
                     }
                 }
                 InputEvent::Key(key) => {

@@ -214,12 +214,11 @@ impl SnakeGame {
         self.body.push_front(self.head);
         self.set_cell(self.head, Cell::Head);
 
-        if !ate {
-            if let Some(tail) = self.body.pop_back() {
-                if tail != self.head {
-                    self.set_cell(tail, Cell::Empty);
-                }
-            }
+        if !ate
+            && let Some(tail) = self.body.pop_back()
+            && tail != self.head
+        {
+            self.set_cell(tail, Cell::Empty);
         }
     }
 

@@ -29,6 +29,9 @@ use web_time::Instant;
 // write, so feeding raw sRGB here would show the bg ~2.5× too light.
 const BG: [f64; 3] = [0.0090, 0.0105, 0.0137];
 
+// Ready is ~2464 B vs 0 for Uninitialized; one instance lives for the
+// whole process, so boxing would only add indirection on the render path.
+#[allow(clippy::large_enum_variant)]
 enum AppState {
     Uninitialized,
     Ready {

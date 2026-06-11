@@ -149,7 +149,7 @@ fn child_if_works() {
 
 #[test]
 fn children_each_works() {
-    let el = div().children_each(|| vec!["a", "b", "c"], |item| text(item));
+    let el = div().children_each(|| vec!["a", "b", "c"], text);
     assert_eq!(el.render(&mut test_cx()).len(), 3);
 }
 

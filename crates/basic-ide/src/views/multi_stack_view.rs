@@ -97,6 +97,9 @@ impl MultiStackView {
     }
 
     /// Returns hit rects: Vec<(stack_idx, commit_idx, x, y, w, h)>
+    // Panel geometry stays flat like every other render fn (card.rs
+    // trade-off); a rect bag would be repacked at the call site.
+    #[allow(clippy::too_many_arguments)]
     pub fn render(
         &mut self,
         compositor: &mut Compositor,

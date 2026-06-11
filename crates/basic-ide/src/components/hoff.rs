@@ -13,6 +13,9 @@ use plev::text::{TextMeasurer, TextStyle};
 
 /// Push one CSS-like box-shadow layer. `spread` is emulated by
 /// expanding/shrinking the casting rect (plev shadows have no spread).
+// Geometry args mirror SceneNode::Shadow's fields; a rect bag would be
+// repacked at every call site (same trade-off as plev's card.rs).
+#[allow(clippy::too_many_arguments)]
 pub fn shadow(
     compositor: &mut Compositor,
     layer: LayerId,
@@ -45,6 +48,8 @@ pub fn shadow(
 }
 
 /// Push a whole box-shadow stack (e.g. [`crate::theme::SHADOW_MODAL`]).
+// Same geometry-mirrors-SceneNode signature as `shadow` above.
+#[allow(clippy::too_many_arguments)]
 pub fn shadow_stack(
     compositor: &mut Compositor,
     layer: LayerId,
@@ -66,6 +71,8 @@ pub fn shadow_stack(
 ///
 /// Emulated with a border-only rounded rect drawn twice under clip rects:
 /// full strength on the top 40%, half strength from 40% to 65%.
+// Geometry args mirror SceneNode::RoundedRect's fields (see card.rs).
+#[allow(clippy::too_many_arguments)]
 pub fn edge_light(
     compositor: &mut Compositor,
     layer: LayerId,
@@ -152,6 +159,8 @@ pub fn inset_keylight(
 
 /// Glass surface: background fill + optional edge-light rim.
 /// `edge` is `(border_width, color)`.
+// Geometry args mirror SceneNode::RoundedRect's fields (see card.rs).
+#[allow(clippy::too_many_arguments)]
 pub fn glass(
     compositor: &mut Compositor,
     layer: LayerId,

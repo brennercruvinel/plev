@@ -33,6 +33,9 @@ impl Header {
         cx >= bx && cx <= bx + bw && cy >= by && cy <= by + bh
     }
 
+    // One over the limit; a bag struct for two labels + two widths would
+    // just be repacked here (card.rs trade-off).
+    #[allow(clippy::too_many_arguments)]
     pub fn render(
         &mut self,
         compositor: &mut Compositor,

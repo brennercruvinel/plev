@@ -133,6 +133,9 @@ impl InputDemoApp {
         output.present();
     }
 
+    // Demo helper; the args are the already-derived card/button geometry
+    // and a bag struct would just be repacked at the single call site.
+    #[allow(clippy::too_many_arguments)]
     fn build_button_card(
         compositor: &mut Compositor,
         left_x: f32,

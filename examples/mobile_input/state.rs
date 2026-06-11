@@ -10,6 +10,9 @@ use plev::platform::SafeAreaInsets;
 use plev::text::TextSystem;
 use plev::winit::window::Window;
 
+// Ready is ~2320 B vs 0 for Uninitialized; one instance lives for the
+// whole process, so boxing would only add indirection on the render path.
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum State {
     Uninitialized,
     Ready {

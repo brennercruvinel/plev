@@ -66,9 +66,7 @@ fn build_scene(app: &mut App, vw: f32, vh: f32) {
     let gap = 16.0;
     let cols = 4.0;
     let card_w = (vw - margin * 2.0 - gap * (cols - 1.0)) / cols;
-    let card_h = ((vh - 70.0 - 32.0 - margin * 2.0 - gap) / 2.0)
-        .min(280.0)
-        .max(180.0);
+    let card_h = ((vh - 70.0 - 32.0 - margin * 2.0 - gap) / 2.0).clamp(180.0, 280.0);
     let y0 = 70.0 + margin;
     let y1 = y0 + card_h + gap;
 

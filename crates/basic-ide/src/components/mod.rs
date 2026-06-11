@@ -1,3 +1,6 @@
+/// Hit rect `(x, y, w, h)` returned by component draw fns for hit-testing.
+pub type Rect = (f32, f32, f32, f32);
+
 // Componentes ainda não conectados às views mantêm um allow(dead_code)
 // local até o port completar — assim o resto do crate fica sujeito ao
 // lint normalmente.

@@ -5,6 +5,7 @@
 //! above the scrim, + the deep shadow stack + edge-light 1.5px
 //! rgba(255,255,255,.05) (mask 175deg -> 60%).
 
+use super::Rect;
 use super::button::{ButtonKind, ButtonSize, draw_to_layer as draw_button, width_for};
 use super::hoff;
 use crate::theme::{SHADOW_MODAL, Theme};
@@ -40,7 +41,7 @@ pub fn draw(
     cancel_label: &str,
     hover_confirm: bool,
     hover_cancel: bool,
-) -> ((f32, f32, f32, f32), (f32, f32, f32, f32)) {
+) -> (Rect, Rect) {
     // Full-screen overlay: rgba(35,34,34,.9).
     compositor.push_to_layer(
         layer_id,

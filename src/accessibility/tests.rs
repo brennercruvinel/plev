@@ -1,4 +1,7 @@
 #[cfg(test)]
+// The inner module only carries the cfg(test) gate for this
+// tests.rs file; the same-name nesting is deliberate.
+#[allow(clippy::module_inception)]
 mod tests {
     use crate::accessibility::focus::{FocusDirection, FocusGraph};
     use crate::accessibility::id_map::{ROOT_NODE_ID, node_id_to_view_id, view_id_to_node_id};

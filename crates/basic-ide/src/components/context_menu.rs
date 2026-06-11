@@ -3,6 +3,7 @@
 //! `0 24px 32px -12px rgba(18,18,18,.10)` + edge-light rim; items 44px
 //! radius 16 base-2sm rgba($n2,.56) -> hover bg rgba($n2,.1) text .76.
 
+use super::Rect;
 use super::hoff;
 use crate::theme::{SHADOW_MENU, Theme};
 use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
@@ -28,7 +29,7 @@ pub fn draw(
     y: f32,
     items: &[MenuItem],
     hover_item: Option<usize>,
-) -> (f32, f32, Vec<(f32, f32, f32, f32)>) {
+) -> (f32, f32, Vec<Rect>) {
     let menu_h = PAD * 2.0 + items.len() as f32 * ITEM_H;
 
     // Floating-menu drop shadow (analytic), then solid body + edge-light.

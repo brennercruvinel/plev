@@ -134,6 +134,9 @@ impl UnassignedView {
 
     /// Build and render into a compositor layer.
     /// Returns a list of (x, y, w, h) hit rects for each file row (for click detection).
+    // Panel geometry stays flat like every other render fn (card.rs
+    // trade-off); a rect bag would be repacked at the call site.
+    #[allow(clippy::too_many_arguments)]
     pub fn render(
         &mut self,
         compositor: &mut Compositor,

@@ -21,10 +21,9 @@ impl WorkspaceView {
             if cx >= rx && cx <= rx + rw && cy >= ry && cy <= ry + rh {
                 // Confirmed -> discard the file
                 if let Some(PendingAction::ConfirmDiscard { file_idx }) = self.pending_action.take()
+                    && let Some(path) = self.remove_file_row(file_idx)
                 {
-                    if let Some(path) = self.remove_file_row(file_idx) {
-                        self.requests.push(UiRequest::Discard { path });
-                    }
+                    self.requests.push(UiRequest::Discard { path });
                 }
                 self.dismiss_overlays();
                 return true;
@@ -172,7 +171,7 @@ impl WorkspaceView {
                         theme,
                         overlay.x,
                         overlay.y,
-                        &items,
+                        items,
                         self.hover_overlay_item,
                     );
                     self.ctx_menu_item_rects = item_rects;
@@ -195,10 +194,10 @@ impl WorkspaceView {
                         self.vh,
                         overlay.x,
                         overlay.y,
-                        &title,
-                        &body,
-                        &confirm,
-                        &cancel,
+                        title,
+                        body,
+                        confirm,
+                        cancel,
                         self.hover_modal_confirm,
                         self.hover_modal_cancel,
                     );
@@ -267,15 +266,21 @@ impl WorkspaceView {
                 break;
             }
         }
-        if let Some((rx, ry, rw, rh)) = self.modal_confirm_rect {
-            if cx >= rx && cx <= rx + rw && cy >= ry && cy <= ry + rh {
-                self.hover_modal_confirm = true;
-            }
+        if let Some((rx, ry, rw, rh)) = self.modal_confirm_rect
+            && cx >= rx
+            && cx <= rx + rw
+            && cy >= ry
+            && cy <= ry + rh
+        {
+            self.hover_modal_confirm = true;
         }
-        if let Some((rx, ry, rw, rh)) = self.modal_cancel_rect {
-            if cx >= rx && cx <= rx + rw && cy >= ry && cy <= ry + rh {
-                self.hover_modal_cancel = true;
-            }
+        if let Some((rx, ry, rw, rh)) = self.modal_cancel_rect
+            && cx >= rx
+            && cx <= rx + rw
+            && cy >= ry
+            && cy <= ry + rh
+        {
+            self.hover_modal_cancel = true;
         }
 
         old_item != self.hover_overlay_item

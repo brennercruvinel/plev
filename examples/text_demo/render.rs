@@ -122,7 +122,8 @@ impl TextDemoApp {
 
         // (label, text, size, line height, advance, weight, color): the
         // scale demo carries semantic weights so the hierarchy is visible.
-        let samples: &[(&str, &str, f32, f32, f32, u16, [f32; 4])] = &[
+        type Sample = (&'static str, &'static str, f32, f32, f32, u16, [f32; 4]);
+        let samples: &[Sample] = &[
             (
                 "36px  Display",
                 "The quick brown fox",

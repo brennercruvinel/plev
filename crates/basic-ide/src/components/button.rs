@@ -68,6 +68,8 @@ pub fn width_for(label: &str, size: ButtonSize) -> f32 {
 }
 
 /// Draw a button on the default layer and return its bounding box.
+// Thin forwarder to `draw_to_layer`; shares its flat parameter list.
+#[allow(clippy::too_many_arguments)]
 pub fn draw(
     compositor: &mut Compositor,
     theme: &Theme,

@@ -47,6 +47,9 @@ enum AppEvent {
 // GPU state
 // ---------------------------------------------------------------------------
 
+// Ready is ~2464 B vs 0 for Uninitialized; one instance lives for the
+// whole process, so boxing would only add indirection on the render path.
+#[allow(clippy::large_enum_variant)]
 enum GpuState {
     Uninitialized,
     Ready {

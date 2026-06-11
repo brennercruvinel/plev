@@ -5,6 +5,9 @@ use plev::path::PathBuilder;
 
 use crate::shapes::*;
 
+// One over the limit; the args are the shared row-grid metrics already
+// unpacked by the caller (same trade-off as plev's card.rs).
+#[allow(clippy::too_many_arguments)]
 pub fn draw_row2(
     comp: &mut Compositor,
     margin: f32,
@@ -98,7 +101,9 @@ fn draw_button_gallery(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, car
 
     let bw = card_w - 24.0;
     let bh = 30.0;
-    let btns: &[(&str, [f32; 4], f32, f32, [f32; 4])] = &[
+    // (label, fill, corner radius, border width, border color).
+    type ButtonSpec = (&'static str, [f32; 4], f32, f32, [f32; 4]);
+    let btns: &[ButtonSpec] = &[
         ("Primary", ACCENT, 6.0, 0.0, [0.0; 4]),
         ("Success", GREEN, 6.0, 0.0, [0.0; 4]),
         ("Danger", RED, 6.0, 0.0, [0.0; 4]),

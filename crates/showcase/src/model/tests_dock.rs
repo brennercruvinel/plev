@@ -143,7 +143,7 @@ fn cursor_blinks_only_while_the_panel_is_visible() {
         dock.update(DT);
         match dock.cursor_alpha() {
             a if a > 0.9 => seen_on = true,
-            a if a == 0.0 => seen_off = true,
+            0.0 => seen_off = true,
             _ => {}
         }
     }

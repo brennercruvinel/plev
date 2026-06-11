@@ -1,4 +1,7 @@
 #[cfg(test)]
+// The inner module only carries the cfg(test) gate for this
+// tests.rs file; the same-name nesting is deliberate.
+#[allow(clippy::module_inception)]
 mod tests {
     use crate::theme::*;
 

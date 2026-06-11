@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests_intent {
+mod tests {
     use crate::builder::*;
     use crate::color::Color;
     use crate::compositor::SceneNode;

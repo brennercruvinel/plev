@@ -18,8 +18,8 @@ fn gaussian_weights_sum_to_one() {
 fn gaussian_weights_zero_sigma() {
     let w = gaussian_weights(0.0);
     assert_eq!(w[0], 1.0);
-    for i in 1..7 {
-        assert_eq!(w[i], 0.0);
+    for &tail in &w[1..7] {
+        assert_eq!(tail, 0.0);
     }
 }
 
@@ -42,7 +42,7 @@ fn gaussian_weights_symmetric_decay() {
 #[test]
 fn gaussian_weights_padding_is_zero() {
     let w = gaussian_weights(3.0);
-    for i in 7..16 {
-        assert_eq!(w[i], 0.0, "padding index {} should be zero", i);
+    for (i, &pad) in w.iter().enumerate().take(16).skip(7) {
+        assert_eq!(pad, 0.0, "padding index {} should be zero", i);
     }
 }

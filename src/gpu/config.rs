@@ -74,8 +74,10 @@ mod tests {
 
     #[test]
     fn effective_msaa_clamps_unsupported_values() {
-        let mut config = RenderConfig::default();
-        config.msaa_samples = 1;
+        let mut config = RenderConfig {
+            msaa_samples: 1,
+            ..Default::default()
+        };
         assert_eq!(config.effective_msaa_samples(), 1);
         config.msaa_samples = 4;
         assert_eq!(config.effective_msaa_samples(), 4);

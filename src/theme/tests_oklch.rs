@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests_oklch {
+mod tests {
     use crate::color::Color;
     use crate::theme::Oklch;
 

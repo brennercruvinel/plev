@@ -100,28 +100,29 @@ impl WorkspaceView {
         let (left_x, _) = self.panel_bounds();
 
         // Right-click on left panel (unassigned files)
-        if cx >= left_x && cx < left_x + self.left_w {
-            if let Some(idx) = self.unassigned.hit_test(cx, cy) {
-                let staged = self.unassigned.files[idx].staged;
-                let items = vec![
-                    if staged {
-                        MenuItem::new("Unstage file", 0)
-                    } else {
-                        MenuItem::new("Stage file", 0)
-                    },
-                    MenuItem::new("Discard changes", 1),
-                    MenuItem::new("Ignore file", 2),
-                ];
-                // Offset slightly so the menu doesn't sit right under the cursor
-                self.overlay_mgr
-                    .push(OverlayKind::ContextMenu { items }, cx + 2.0, cy, 0.0, 0.0);
-                self.pending_action = Some(PendingAction::ContextMenu { file_idx: idx });
-                // Also select the row
-                if self.unassigned.select(Some(idx)) {
-                    self.open_file_diff(idx);
-                }
-                return true;
+        if cx >= left_x
+            && cx < left_x + self.left_w
+            && let Some(idx) = self.unassigned.hit_test(cx, cy)
+        {
+            let staged = self.unassigned.files[idx].staged;
+            let items = vec![
+                if staged {
+                    MenuItem::new("Unstage file", 0)
+                } else {
+                    MenuItem::new("Stage file", 0)
+                },
+                MenuItem::new("Discard changes", 1),
+                MenuItem::new("Ignore file", 2),
+            ];
+            // Offset slightly so the menu doesn't sit right under the cursor
+            self.overlay_mgr
+                .push(OverlayKind::ContextMenu { items }, cx + 2.0, cy, 0.0, 0.0);
+            self.pending_action = Some(PendingAction::ContextMenu { file_idx: idx });
+            // Also select the row
+            if self.unassigned.select(Some(idx)) {
+                self.open_file_diff(idx);
             }
+            return true;
         }
         false
     }

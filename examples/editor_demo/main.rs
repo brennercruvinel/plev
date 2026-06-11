@@ -30,6 +30,9 @@ use winit::window::{Window, WindowAttributes, WindowId};
 // GPU state
 // ---------------------------------------------------------------------------
 
+// Ready is ~2320 B vs 0 for Uninitialized; one instance lives for the
+// whole process, so boxing would only add indirection on the render path.
+#[allow(clippy::large_enum_variant)]
 enum GpuState {
     Uninitialized,
     Ready {
@@ -313,7 +316,7 @@ fn demo_text() -> String {
     s.push_str("//   - cmd-z / cmd-shift-z, cmd-a, home/end, pageup/pagedown\n");
     s.push_str("//   - an IME (e.g. Japanese) composes inline with an underline\n");
     s.push_str("//   - cmd-s saves when a file argument was given\n");
-    s.push_str("\n");
+    s.push('\n');
     for i in 0..38 {
         s.push_str(&format!("/// Block {i}: five lines of sample content.\n"));
         s.push_str(&format!("fn sample_{i}(input: &str) -> usize {{\n"));

@@ -50,6 +50,9 @@ enum UserEvent {
     },
 }
 
+// Ready is ~2464 B vs 0 for Uninitialized; one instance lives for the
+// whole process, so boxing would only add indirection on the render path.
+#[allow(clippy::large_enum_variant)]
 enum GpuState {
     Uninitialized,
     Ready {
@@ -231,10 +234,8 @@ impl ApplicationHandler<UserEvent> for App {
                             self.invalidate();
                         }
                     }
-                    Key::Character(c) => {
-                        if self.view.handle_key(c.as_str()) {
-                            self.invalidate();
-                        }
+                    Key::Character(c) if self.view.handle_key(c.as_str()) => {
+                        self.invalidate();
                     }
                     _ => {}
                 }

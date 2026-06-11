@@ -19,6 +19,9 @@ use plev::winit::event::WindowEvent;
 use plev::winit::event_loop::{ActiveEventLoop, EventLoop};
 use plev::winit::window::{Window, WindowAttributes, WindowId};
 
+// Ready is ~2352 B vs 0 for Uninitialized; one instance lives for the
+// whole process, so boxing would only add indirection on the render path.
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum GpuState {
     Uninitialized,
     Ready {

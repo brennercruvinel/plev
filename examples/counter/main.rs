@@ -25,6 +25,9 @@ use lifecycle::Counter;
 
 // --- App ------------------------------------------------------------------
 
+// Ready is ~2320 B vs 0 for Uninitialized; one instance lives for the
+// whole process, so boxing would only add indirection on the render path.
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum AppState {
     Uninitialized,
     Ready {
