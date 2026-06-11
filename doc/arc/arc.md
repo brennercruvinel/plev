@@ -61,5 +61,9 @@ research-notes), ios metal (needs entry point + safe areas), linux/windows
 
 pre-1.0: no api stability promised. library code must not panic on user
 input paths; tessellation and parsers degrade gracefully (log + empty
-output). binary/format versioning will follow the anim-format poc rules
-when that lands (frozen golden fixtures, additive optional fields).
+output). binary/format versioning follows the anim-format rules
+implemented in crates/anm (doc/anm-format-v0.md): explicit version,
+frozen golden fixture, per-section checksums. crates/anm also ships the
+player: AnimationTick-driven, deterministic f32 timeline, windowed
+segment evaluation, play/pause/scrub via signals, lowering its ir scene
+to SceneNodes that the app pushes per frame.
