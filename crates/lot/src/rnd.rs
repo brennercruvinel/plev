@@ -6,7 +6,7 @@
 use std::collections::HashSet;
 
 use crate::gem::{self, Mat, Sub};
-use crate::kfr::{eval, eval1, eval2, eval_path};
+use crate::kfr::{eval, eval_path, eval1, eval2};
 use crate::mdl::{Animation, Layer, Shape, Transform};
 use plev::path::TessellatedPath;
 
@@ -138,12 +138,11 @@ fn style_color(s: &Shape, alpha: f64, t: f64) -> [f32; 4] {
 
 /// Solid approximation of a gradient: average of the rgb stops.
 fn grad_color(s: &Shape, alpha: f64, t: f64) -> [f32; 4] {
-    let stops = s
-        .g
-        .as_ref()
-        .and_then(|g| g.k.as_ref())
-        .map(|p| eval(p, t))
-        .unwrap_or_default();
+    let stops =
+        s.g.as_ref()
+            .and_then(|g| g.k.as_ref())
+            .map(|p| eval(p, t))
+            .unwrap_or_default();
     let n = s.g.as_ref().map(|g| g.p.max(1) as usize).unwrap_or(1);
     let (mut r, mut gr, mut b, mut cnt) = (0.0, 0.0, 0.0, 0.0);
     for i in 0..n {
@@ -256,7 +255,10 @@ fn walk_shapes(
             }
             "tr" => {} // group transform, applied above
             other => {
-                warn_once(warned, &format!("shape type '{other}' unsupported, skipped"));
+                warn_once(
+                    warned,
+                    &format!("shape type '{other}' unsupported, skipped"),
+                );
             }
         }
     }

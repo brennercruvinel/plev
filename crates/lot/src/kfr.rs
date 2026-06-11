@@ -206,10 +206,7 @@ pub fn eval_path(prop: &Prop, t: f64) -> Option<PathData> {
         let (t0, t1) = (kf_t(&w[0]), kf_t(&w[1]));
         if t < t1 {
             let p0 = seg_at(&w[0])?;
-            let p1 = w[0]
-                .get("e")
-                .and_then(parse_path)
-                .or_else(|| seg_at(&w[1]));
+            let p1 = w[0].get("e").and_then(parse_path).or_else(|| seg_at(&w[1]));
             let Some(p1) = p1 else { return Some(p0) };
             let u = ((t - t0) / (t1 - t0).max(1e-9)).clamp(0.0, 1.0);
             let e = ease_factor(&w[0], u);
