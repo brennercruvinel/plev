@@ -89,6 +89,15 @@ vivo, não do CSS estático):
 
 ## Decisões registradas nesta sessão
 
+- **Histórico expurgado (git filter-repo)** — 3.333 artefatos de build e dois
+  blobs >100MB (libphi.a 392MB) removidos de TODO o histórico antes do
+  primeiro push (.git: 417MB → 1,9MB). Hashes antigos citados em docs/kdb
+  foram remapeados. Backup pré-expurgo: gpurust-git-backup-pre-filter
+- **Remote privado** — origin = github.com/brennercruvinel/plevdev (privado)
+- **Lição git mv**: `git mv` de diretório re-stageia destinos por cima do
+  gitignore (foi assim que o target/ voltou no rename) — conferir
+  `git status` após mv de diretórios com filhos ignorados
+
 - **Fundo = grafite #303030, não preto** — o `GOLDEN_SPEC.md` inicial dizia
   "#0E0E0E preto" (erro de olho); a medição ao vivo provou grafite. Os tokens
   seguem o medido (`src/theme/hoff.rs`, teste `hoff_page_is_measured_graphite_not_black`)
@@ -107,7 +116,7 @@ vivo, não do CSS estático):
 ## O que falta (backlog priorizado)
 
 ### Visual / fidelidade
-- [x] ~~Propagar `to_linear_array` aos examples~~ (feito, commit 775e74b)
+- [x] ~~Propagar `to_linear_array` aos examples~~ (feito, commit 01d67df)
 - [x] ~~Auditar gamma em casos restantes~~ (web era o caso restante; corrigido)
 - [ ] **Subtítulo de página do showcase não quebra linha** — cortado à direita
       em janela estreita (visto no browser a 700px); medir e wrappar

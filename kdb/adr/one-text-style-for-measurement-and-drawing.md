@@ -3,7 +3,7 @@ type: adr
 status: accepted
 tags: [text, layout, cosmic-text, measurement, typography]
 date: 2026-06-10
-commit: 20519b3
+commit: f15198a
 ---
 
 # one TextStyle per text run, shared by measurement and drawing

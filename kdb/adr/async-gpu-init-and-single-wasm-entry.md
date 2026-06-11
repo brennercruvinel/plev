@@ -3,7 +3,7 @@ type: adr
 status: accepted
 tags: [wasm, webgpu, winit, async, entry-point, trunk]
 date: 2026-06-10
-commit: 34a9893
+commit: 55c8aa7
 ---
 
 # async GPU initialization and one wasm entry point per module

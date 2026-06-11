@@ -2,7 +2,7 @@
 type: how-to
 tags: [wasm, trunk, webgpu, build, deploy, web]
 date: 2026-06-10
-commit: 34a9893
+commit: 55c8aa7
 ---
 
 # how to build and serve the web target

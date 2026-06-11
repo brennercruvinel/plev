@@ -3,7 +3,7 @@ type: adr
 status: accepted
 tags: [fonts, cosmic-text, typography, fontdb, rubik]
 date: 2026-06-10
-commit: dea96ef
+commit: 21fdc8c
 ---
 
 # embed every font weight the UI uses, and pin the default families

@@ -2,7 +2,7 @@
 type: explanation
 tags: [gamma, srgb, color-theory, wgpu, webgpu, rendering]
 date: 2026-06-10
-commit: 39ea42e
+commit: 2a33933
 ---
 
 # the two gamma bugs: one assumption, two opposite failures

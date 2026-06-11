@@ -2,7 +2,7 @@
 type: how-to
 tags: [agents, orchestration, workflows, worktrees, verification, process]
 date: 2026-06-10
-commit: ac40423
+commit: bb34a1c
 ---
 
 # how to orchestrate coding agents on this repo

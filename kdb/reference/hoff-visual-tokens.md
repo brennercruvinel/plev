@@ -2,7 +2,7 @@
 type: reference
 tags: [design-tokens, hoff, theme, colors, typography, measured]
 date: 2026-06-10
-commit: d06d756
+commit: 9c5fbd3
 ---
 
 # hoff visual tokens (measured)

@@ -2,7 +2,7 @@
 type: explanation
 tags: [architecture, layering, engine, apps, anti-patterns, process]
 date: 2026-06-10
-commit: ac40423
+commit: bb34a1c
 ---
 
 # why the apps bypassed the engine, and what that costs

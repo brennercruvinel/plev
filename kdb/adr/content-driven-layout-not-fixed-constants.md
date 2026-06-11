@@ -3,7 +3,7 @@ type: adr
 status: accepted
 tags: [layout, taffy, flex, responsiveness, resize]
 date: 2026-06-10
-commit: 4bfbb88
+commit: 15f096f
 ---
 
 # container geometry derives from available space, never from constants

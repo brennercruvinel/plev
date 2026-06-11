@@ -3,7 +3,7 @@ type: adr
 status: accepted
 tags: [design-tokens, fidelity, measurement, reference, theming]
 date: 2026-06-10
-commit: d06d756
+commit: 9c5fbd3
 ---
 
 # design tokens come from measurement of the live reference, not from eyes or static CSS

@@ -3,7 +3,7 @@ type: adr
 status: accepted
 tags: [rendering, events, invalidation, render-on-demand, reactivity]
 date: 2026-06-10
-commit: d27bfad
+commit: 83720e3
 ---
 
 # render on demand makes invalidation a correctness contract

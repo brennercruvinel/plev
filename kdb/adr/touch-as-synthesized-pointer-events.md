@@ -3,7 +3,7 @@ type: adr
 status: accepted
 tags: [input, touch, mobile, gestures, events]
 date: 2026-06-10
-commit: eacb8e9
+commit: 5854941
 ---
 
 # touch input synthesizes pointer events into the existing mouse path

@@ -3,7 +3,7 @@ type: adr
 status: accepted
 tags: [webgpu, srgb, gamma, wasm, surface, wgpu]
 date: 2026-06-10
-commit: 39ea42e
+commit: 2a33933
 ---
 
 # render into an sRGB view when the surface format cannot be sRGB

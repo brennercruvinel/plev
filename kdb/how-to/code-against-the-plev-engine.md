@@ -2,7 +2,7 @@
 type: how-to
 tags: [plev, engine, widgets, layout, text, color, clipping, checklist]
 date: 2026-06-10
-commit: ac40423
+commit: bb34a1c
 ---
 
 # how to code against the plev engine
