@@ -63,7 +63,13 @@ htmlcov/
 # Private / experiments (not for public release)
 examples-wip/
 .claude/
-ref/
+# ref/: clones de estudo ficam fora; a curadoria (study-*.lua, READMEs de amostras) entra
+ref/**
+!ref/*/
+!ref/*/study-*.lua
+!ref/anim/swf-samples/
+!ref/anim/swf-samples/README.md
+!ref/lang/min-sized-rust.md
 
 # Environment
 .env

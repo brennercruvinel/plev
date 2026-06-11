@@ -51,5 +51,14 @@ a clonar (por consumidor):
 
 gate da fase: du -sh por item, total novo <8GB, cada clone com study.lua
 apontando de volta pra este no, commit ao final.
+
+nota ws-refs (2026-06-11): clones executados. synfig, opentoonz e
+pencil2d NAO clonados (arqueologia pesada): ficam doc-only, estudar
+pela documentacao/web se o ws-anim precisar. slint nao duplicado (copia
+viva em ref/render-texts/slint; ponteiro em ref/mining/study-slint.lua).
+warpdotdev/warp clonado shallow (752MB, abaixo do gate de 1.5GB).
+shadcn-ui/ui clonado como ref/mining/shadcn-ui. amostras: 9 swf
+classicos (<5MB cada, verificados com file) em ref/anim/swf-samples/ e
+8 json em ref/anim/lottie-samples/ vindos do proprio clone lottie-web.
 ]],
 }
