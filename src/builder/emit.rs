@@ -305,7 +305,11 @@ pub(crate) fn resolve_display_text<'a>(
 /// (`emit_text`) both build from this, so the renderer always draws exactly
 /// what layout measured; diverging copies are what made `.tracking()` text
 /// overflow its container.
-pub(crate) fn resolved_text_style(element: &Element, font_size: f32, line_height: f32) -> TextStyle {
+pub(crate) fn resolved_text_style(
+    element: &Element,
+    font_size: f32,
+    line_height: f32,
+) -> TextStyle {
     TextStyle {
         font_size,
         line_height,

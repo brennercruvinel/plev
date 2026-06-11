@@ -94,6 +94,9 @@ fn test_percent_tracks_parent_resize() {
         ]
     };
 
-    assert_eq!(engine.compute(&items(1000.0), 1000.0, 600.0)[1].width, 500.0);
+    assert_eq!(
+        engine.compute(&items(1000.0), 1000.0, 600.0)[1].width,
+        500.0
+    );
     assert_eq!(engine.compute(&items(600.0), 1000.0, 600.0)[1].width, 300.0);
 }

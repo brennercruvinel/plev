@@ -128,7 +128,12 @@ impl App {
         self.editor
             .render(&mut self.compositor, bounds, &self.theme);
 
-        render::present_frame(gpu, text_system, &mut self.compositor, self.theme.background);
+        render::present_frame(
+            gpu,
+            text_system,
+            &mut self.compositor,
+            self.theme.background,
+        );
     }
 }
 

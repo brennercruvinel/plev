@@ -15,9 +15,7 @@ fn column_layout_stacks_vertically() {
         .child(text("Second"));
     let nodes = el.render(&mut test_cx());
     assert_eq!(nodes.len(), 2);
-    if let (SceneNode::Text { y: y1, .. }, SceneNode::Text { y: y2, .. }) =
-        (&nodes[0], &nodes[1])
-    {
+    if let (SceneNode::Text { y: y1, .. }, SceneNode::Text { y: y2, .. }) = (&nodes[0], &nodes[1]) {
         assert!(*y2 > *y1, "Column layout: y2={} > y1={}", y2, y1);
     }
 }
@@ -31,9 +29,7 @@ fn row_layout_stacks_horizontally() {
         .child(text("Right"));
     let nodes = el.render(&mut test_cx());
     assert_eq!(nodes.len(), 2);
-    if let (SceneNode::Text { x: x1, .. }, SceneNode::Text { x: x2, .. }) =
-        (&nodes[0], &nodes[1])
-    {
+    if let (SceneNode::Text { x: x1, .. }, SceneNode::Text { x: x2, .. }) = (&nodes[0], &nodes[1]) {
         assert!(*x2 > *x1, "Row layout: x2={} > x1={}", x2, x1);
     }
 }
@@ -99,10 +95,7 @@ fn measure_spec_and_node_key_share_one_text_style() {
     assert_eq!(key.line_height_bits, spec.style.line_height.to_bits());
     assert_eq!(key.font_weight, spec.style.font_weight);
     assert_eq!(key.font_weight, 700);
-    assert_eq!(
-        key.letter_spacing_bits,
-        spec.style.letter_spacing.to_bits()
-    );
+    assert_eq!(key.letter_spacing_bits, spec.style.letter_spacing.to_bits());
     assert_eq!(key.font_family, spec.style.font_family);
 }
 

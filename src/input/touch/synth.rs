@@ -132,9 +132,21 @@ mod tests {
         let mut synth = TouchPointerSynth::new();
         synth.synthesize(1, TouchPhase::Started, 10.0, 10.0);
         // Second finger lands (pinch start): no pointer events at all.
-        assert!(synth.synthesize(2, TouchPhase::Started, 90.0, 90.0).is_empty());
-        assert!(synth.synthesize(2, TouchPhase::Moved, 95.0, 95.0).is_empty());
-        assert!(synth.synthesize(2, TouchPhase::Ended, 99.0, 99.0).is_empty());
+        assert!(
+            synth
+                .synthesize(2, TouchPhase::Started, 90.0, 90.0)
+                .is_empty()
+        );
+        assert!(
+            synth
+                .synthesize(2, TouchPhase::Moved, 95.0, 95.0)
+                .is_empty()
+        );
+        assert!(
+            synth
+                .synthesize(2, TouchPhase::Ended, 99.0, 99.0)
+                .is_empty()
+        );
         // Primary finger still drives the pointer afterwards.
         let events = synth.synthesize(1, TouchPhase::Moved, 12.0, 12.0);
         assert_eq!(events, vec![E::CursorMoved { x: 12.0, y: 12.0 }]);
@@ -157,7 +169,15 @@ mod tests {
         let mut synth = TouchPointerSynth::new();
         // Move/end without a Started (e.g. events from before a focus
         // change): nothing is synthesized.
-        assert!(synth.synthesize(5, TouchPhase::Moved, 10.0, 10.0).is_empty());
-        assert!(synth.synthesize(5, TouchPhase::Ended, 10.0, 10.0).is_empty());
+        assert!(
+            synth
+                .synthesize(5, TouchPhase::Moved, 10.0, 10.0)
+                .is_empty()
+        );
+        assert!(
+            synth
+                .synthesize(5, TouchPhase::Ended, 10.0, 10.0)
+                .is_empty()
+        );
     }
 }

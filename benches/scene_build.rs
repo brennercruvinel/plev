@@ -32,39 +32,31 @@ fn bench_push_paths(c: &mut Criterion) {
     let mut group = c.benchmark_group("push_paths");
 
     for count in [100, 1_000] {
-        group.bench_with_input(
-            BenchmarkId::new("circles", count),
-            &count,
-            |b, &n| {
-                b.iter(|| {
-                    let mut comp = Compositor::new();
-                    for i in 0..n {
-                        let f = i as f32;
-                        let path = PathBuilder::circle(f * 10.0, f * 10.0, 50.0)
-                            .fill([1.0, 0.0, 0.0, 1.0]);
-                        comp.draw_path(path);
-                    }
-                    black_box(&comp);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("circles", count), &count, |b, &n| {
+            b.iter(|| {
+                let mut comp = Compositor::new();
+                for i in 0..n {
+                    let f = i as f32;
+                    let path =
+                        PathBuilder::circle(f * 10.0, f * 10.0, 50.0).fill([1.0, 0.0, 0.0, 1.0]);
+                    comp.draw_path(path);
+                }
+                black_box(&comp);
+            });
+        });
 
-        group.bench_with_input(
-            BenchmarkId::new("rrects", count),
-            &count,
-            |b, &n| {
-                b.iter(|| {
-                    let mut comp = Compositor::new();
-                    for i in 0..n {
-                        let f = i as f32;
-                        let path = PathBuilder::rounded_rect(f * 10.0, f * 10.0, 200.0, 100.0, 12.0)
-                            .fill([0.0, 0.0, 1.0, 1.0]);
-                        comp.draw_path(path);
-                    }
-                    black_box(&comp);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("rrects", count), &count, |b, &n| {
+            b.iter(|| {
+                let mut comp = Compositor::new();
+                for i in 0..n {
+                    let f = i as f32;
+                    let path = PathBuilder::rounded_rect(f * 10.0, f * 10.0, 200.0, 100.0, 12.0)
+                        .fill([0.0, 0.0, 1.0, 1.0]);
+                    comp.draw_path(path);
+                }
+                black_box(&comp);
+            });
+        });
     }
     group.finish();
 }
@@ -111,7 +103,9 @@ fn bench_tessellation(c: &mut Criterion) {
 
     group.bench_function("rounded_rect_200x100_r12", |b| {
         b.iter(|| {
-            black_box(PathBuilder::rounded_rect(0.0, 0.0, 200.0, 100.0, 12.0).fill([0.0, 1.0, 0.0, 1.0]));
+            black_box(
+                PathBuilder::rounded_rect(0.0, 0.0, 200.0, 100.0, 12.0).fill([0.0, 1.0, 0.0, 1.0]),
+            );
         });
     });
 
@@ -121,7 +115,8 @@ fn bench_tessellation(c: &mut Criterion) {
             let inner = 35.0_f32;
             let mut pb = PathBuilder::new();
             for i in 0..5 {
-                let angle_outer = std::f32::consts::FRAC_PI_2 + (i as f32) * std::f32::consts::TAU / 5.0;
+                let angle_outer =
+                    std::f32::consts::FRAC_PI_2 + (i as f32) * std::f32::consts::TAU / 5.0;
                 let angle_inner = angle_outer + std::f32::consts::TAU / 10.0;
                 let ox = 100.0 + outer * angle_outer.cos();
                 let oy = 100.0 - outer * angle_outer.sin();

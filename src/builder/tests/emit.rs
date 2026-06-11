@@ -184,11 +184,13 @@ fn clip_children_without_children_emits_no_clip_nodes() {
 
 #[test]
 fn shadow_drop_emits_shadow_before_rect() {
-    let el = div().w(100.0).h(50.0).bg("blue").rounded(8.0).shadow_drop(
-        16.0,
-        4.0,
-        [0.0, 0.0, 0.0, 0.5],
-    );
+    let el =
+        div()
+            .w(100.0)
+            .h(50.0)
+            .bg("blue")
+            .rounded(8.0)
+            .shadow_drop(16.0, 4.0, [0.0, 0.0, 0.0, 0.5]);
     let nodes = el.render(&mut test_cx());
     assert_eq!(nodes.len(), 2);
     let SceneNode::Shadow {

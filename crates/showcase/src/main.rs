@@ -31,9 +31,9 @@ use plev::ui::widgets::WidgetEvent;
 use view::ShowcaseView;
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
-use winit::event_loop::{ActiveEventLoop, EventLoop};
 #[cfg(target_arch = "wasm32")]
 use winit::event_loop::EventLoopProxy;
+use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::keyboard::{Key, NamedKey};
 use winit::window::{Window, WindowAttributes, WindowId};
 

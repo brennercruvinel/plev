@@ -172,7 +172,14 @@ impl UnassignedView {
         let chip_h = 22.0;
         let chip_x = x + w - PAD - chip_w;
         let chip_y = y + (HEADER_H - chip_h) / 2.0;
-        badge::draw(compositor, theme, chip_x, chip_y, &count_str, BadgeKind::Tag);
+        badge::draw(
+            compositor,
+            theme,
+            chip_x,
+            chip_y,
+            &count_str,
+            BadgeKind::Tag,
+        );
 
         // File list — card rows inset by the 12px body padding. Rows are
         // clipped to the list viewport so scrolled rows never paint over

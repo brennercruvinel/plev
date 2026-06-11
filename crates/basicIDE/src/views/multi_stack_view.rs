@@ -258,9 +258,8 @@ impl MultiStackView {
                         .unwrap_or_default();
                     // One style measures the initial AND draws it, so it
                     // sits centered in the 44px disc.
-                    let initial_style = TextStyle::new(14.0)
-                        .with_line_height(14.0)
-                        .with_weight(600);
+                    let initial_style =
+                        TextStyle::new(14.0).with_line_height(14.0).with_weight(600);
                     let initial_w = hoff::measure_text(&initial, &initial_style);
                     compositor.push(SceneNode::Text {
                         key: TextNodeKey::from_style(&initial, &initial_style, None),
