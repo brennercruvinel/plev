@@ -5,9 +5,9 @@ members = [
     "macros",
     "crates/narrate_macro",
     "crates/narrate",
-    "crates/scene3D",
-    "crates/snakeGame",
-    "crates/basicIDE",
+    "crates/scene-3d",
+    "crates/snake-game",
+    "crates/basic-ide",
     "crates/editor_core",
     "crates/showcase",
     "crates/git_backend",
@@ -25,7 +25,7 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 default = ["accessibility"]
 accessibility = ["dep:accesskit", "dep:accesskit_winit"]
 # Exports the engine's own `#[wasm_bindgen(start)]` entry point on wasm32.
-# Off by default so downstream apps (showcase, basicIDE, ...) can define
+# Off by default so downstream apps (showcase, basic-ide, ...) can define
 # their own browser entry without colliding with the engine's.
 web-entry = []
 android-game-activity = ["winit/android-game-activity"]

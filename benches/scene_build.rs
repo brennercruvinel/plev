@@ -1,5 +1,5 @@
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
+use plev::compositor::{Compositor, TextNodeKey};
 use plev::path::PathBuilder;
 use plev::signal::create_signal;
 

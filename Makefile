@@ -37,11 +37,11 @@ bench: ## Run benchmarks
 
 .PHONY: run
 run: ## Run main showcase app
-	cargo run --bin plev-app
+	cargo run -p showcase
 
 .PHONY: snake
 snake: ## Run snake game demo
-	cargo run --example snake
+	cargo run -p snake-game
 
 .PHONY: wasm
 wasm: ## Serve WASM build (port 8080)

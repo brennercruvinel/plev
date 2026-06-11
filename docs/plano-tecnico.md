@@ -144,7 +144,7 @@ pub type MeasureFn = Box<dyn FnMut(Size<Option<f32>>, Size<AvailableSpace>, &mut
 | `crates/editor_core`, `src/editor` | WS-C |
 | `src/input`, `src/actions` (novo), `src/dispatch.rs` | WS-D |
 | `src/ui`, `src/theme`, `src/overlay`, `src/animation` | WS-E |
-| `crates/git_backend`, `crates/basicIDE` | WS-G |
+| `crates/git_backend`, `crates/basic-ide` | WS-G |
 | `src/accessibility`, `crates/plev_kittest` | WS-H |
 
 - **Feature flags**: código novo entra atrás de Cargo feature desligada
@@ -303,7 +303,7 @@ contexto (modelo Zed).
 6. Persistência: `keymap.json` do usuário com hot-reload (notify já é dep).
 
 **Entrega:** zero `match` de teclas hardcoded nos apps
-(hoje: `crates/basicIDE/src/main.rs:110-131`).
+(hoje: `crates/basic-ide/src/main.rs:110-131`).
 
 ### WS-E · `ws/design-system` — UI
 

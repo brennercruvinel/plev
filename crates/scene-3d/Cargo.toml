@@ -1,11 +1,11 @@
-# Nome de pacote/bin não pode começar com dígito → `scene3D` (dir segue scene3D).
+# Nome de pacote/bin não pode começar com dígito → `scene-3d`.
 [package]
-name = "scene3D"
+name = "scene-3d"
 version = "0.1.0"
 edition = "2024"
 
 [[bin]]
-name = "scene3D"
+name = "scene-3d"
 path = "src/main.rs"
 
 [dependencies]

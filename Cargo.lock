@@ -503,7 +503,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
-name = "basicIDE"
+name = "basic-ide"
 version = "0.1.0"
 dependencies = [
  "env_logger",
@@ -3897,7 +3897,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "scene3D"
+name = "scene-3d"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
@@ -4180,7 +4180,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9676b89cd56310a87b93dec47b11af744f34d5fc9f367b829474eec0a891350d"
 
 [[package]]
-name = "snakeGame"
+name = "snake-game"
 version = "0.1.0"
 dependencies = [
  "env_logger",
