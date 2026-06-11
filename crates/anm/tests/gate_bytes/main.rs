@@ -31,10 +31,14 @@
 //!   ripple.json 11458 -> 1617 gz; starfish.json 24780 -> 3144 gz.
 //! run: cargo test -p anm --test bench_lottie -- --nocapture
 
+mod dense;
+mod girl;
 mod kfs;
+mod lot;
 
 use anm::{
-    Asset, AssetKind, Easing, Keyframe, Node, NodeKind, Prop, Props, Timeline, decode, encode,
+    Asset, AssetKind, Easing, Keyframe, Node, NodeKind, OptimizeCfg, Prop, Props, Timeline, decode,
+    encode, optimize,
 };
 use kfs::{Kfs, cb, rect, starfish_limbs};
 
@@ -77,6 +81,24 @@ fn report(b: &Bench) {
         } else {
             "FAIL"
         }
+    );
+}
+
+/// Encode again through the default optimizer and print the delta;
+/// these timelines are authored with eased (non-linear) segments, so
+/// the passes can only act where a chain is static or linear.
+fn print_optimized(name: &str, timeline: &Timeline, assets: &[Asset], raw: usize) {
+    let opt_tl = optimize(timeline, &OptimizeCfg::default()).expect("bench timeline optimizes");
+    let opt = encode(&opt_tl, assets, &[]).expect("optimized bench timeline encodes");
+    let segs = |tl: &Timeline| tl.tracks.iter().map(|t| t.segments.len()).sum::<usize>();
+    println!(
+        "  [{name}] optimizer: {raw} B -> {} B ({:+} B); tracks {} -> {}, segments {} -> {}",
+        opt.len(),
+        opt.len() as i64 - raw as i64,
+        timeline.tracks.len(),
+        opt_tl.tracks.len(),
+        segs(timeline),
+        segs(&opt_tl)
     );
 }
 
@@ -155,6 +177,7 @@ fn bench_ripple_vs_lottie() {
     };
     let bytes = encode(&timeline, &[], &[]).expect("ripple timeline encodes");
     decode(&bytes).expect("ripple anm decodes back");
+    print_optimized("ripple", &timeline, &[], bytes.len());
     report(&Bench {
         name: "ripple.json (materialized: no instancing/expressions/loop in v0)",
         anm_bytes: bytes.len(),
@@ -276,6 +299,7 @@ fn bench_starfish_vs_lottie() {
     }];
     let bytes = encode(&timeline, &assets, &[]).expect("starfish timeline encodes");
     decode(&bytes).expect("starfish anm decodes back");
+    print_optimized("starfish", &timeline, &assets, bytes.len());
     report(&Bench {
         name: "starfish.json (parenting baked, blink as eyelid rect)",
         anm_bytes: bytes.len(),

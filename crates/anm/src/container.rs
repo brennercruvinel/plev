@@ -100,6 +100,16 @@ pub struct Desc {
     pub text: String,
 }
 
+/// Convention over the description track: importers open the first
+/// entry with `stage WxH` so a player learns the composition bounds
+/// from the format itself, no importer linked at playback.
+pub fn stage_size(descs: &[Desc]) -> Option<(f32, f32)> {
+    let text = &descs.iter().find(|d| d.keyframe == 0)?.text;
+    let spec = text.strip_prefix("stage ")?.split(' ').next()?;
+    let (w, h) = spec.split_once('x')?;
+    Some((w.parse().ok()?, h.parse().ok()?))
+}
+
 pub fn put_u16(buf: &mut Vec<u8>, v: u16) {
     buf.extend_from_slice(&v.to_le_bytes());
 }

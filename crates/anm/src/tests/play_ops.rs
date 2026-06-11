@@ -6,8 +6,8 @@
 
 use crate::ir::{Keyframe, PlaceNode, Prop, RemoveNode, Track};
 use crate::play::AnmPlayer;
-use crate::tests_ops::ops_timeline;
-use crate::tests_write::{rect, seg};
+use crate::tests::ops::ops_timeline;
+use crate::tests::write::{rect, seg};
 use plev::animation::AnimationTick;
 use plev::compositor::SceneNode;
 

@@ -11,9 +11,9 @@ use crate::ir::{IrError, Keyframe, Node, Prop, Timeline};
 use crate::optimize::{OptimizeCfg, optimize};
 use crate::play::AnmPlayer;
 use crate::read::decode;
-use crate::tests_discover::{assert_reproduced, cfg as discover_cfg};
-use crate::tests_optimize::{assert_quantized_parity, col, lin, seg, track};
-use crate::tests_write::rect;
+use crate::tests::discover::{assert_reproduced, cfg as discover_cfg};
+use crate::tests::optimize::{assert_quantized_parity, col, lin, seg, track};
+use crate::tests::write::rect;
 use crate::write::encode;
 use plev::compositor::SceneNode;
 

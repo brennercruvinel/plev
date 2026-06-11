@@ -7,10 +7,10 @@ use crate::easing::{Easing, quantize_curve};
 use crate::ir::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
 use crate::quant;
 use crate::read::decode;
-use crate::tests_golden::golden_doc;
+use crate::tests::golden::golden_doc;
 use crate::write::encode;
 
-const GOLDEN: &[u8] = include_bytes!("../fixtures/golden_v0_minimal.anm");
+const GOLDEN: &[u8] = include_bytes!("../../fixtures/golden_v0_minimal.anm");
 
 /// What the decoder must hand back for a value that went through the
 /// wire: the quantized-grid form of the authored value.

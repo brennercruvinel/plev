@@ -66,7 +66,11 @@ fn fit_eps(prop: Prop) -> f32 {
 /// Did `prop` move further than the discontinuity tolerance in one
 /// sample step?
 pub(crate) fn jumped(prop: Prop, a: Value, b: Value, scalar_tol: f32, color_tol: f32) -> bool {
-    let tol = if prop.is_color() { color_tol } else { scalar_tol };
+    let tol = if prop.is_color() {
+        color_tol
+    } else {
+        scalar_tol
+    };
     dist(a, b) > tol
 }
 

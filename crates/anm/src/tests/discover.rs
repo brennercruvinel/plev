@@ -14,7 +14,7 @@ use crate::lower::lower_scene;
 use crate::play::AnmPlayer;
 use crate::quant;
 use crate::read::decode;
-use crate::tests_write::rect;
+use crate::tests::write::rect;
 use crate::write::encode;
 use plev::compositor::SceneNode;
 
@@ -86,7 +86,10 @@ fn linear_motion_collapses_to_one_segment() {
     assert!(tl.places.is_empty() && tl.replaces.is_empty() && tl.removes.is_empty());
     assert_eq!(tl.tracks.len(), 1);
     let track = &tl.tracks[0];
-    assert_eq!((track.node_id, track.prop, track.start_t), (1, Prop::X, 0.0));
+    assert_eq!(
+        (track.node_id, track.prop, track.start_t),
+        (1, Prop::X, 0.0)
+    );
     assert_eq!(track.segments, vec![seg(50.0, 2.0)], "one segment, not N");
     assert_eq!((tl.duration_s, tl.fps_hint), (2.0, 4));
     assert_reproduced(&tl, &frames);
@@ -114,19 +117,31 @@ fn discontinuity_becomes_a_keyframe() {
     let frames: Vec<(f32, Vec<Node>)> = (0..=8)
         .map(|i| {
             let t = i as f32 * 0.25;
-            let x = if t < 1.0 { 10.0 + 20.0 * t } else { 100.0 + 20.0 * (t - 1.0) };
+            let x = if t < 1.0 {
+                10.0 + 20.0 * t
+            } else {
+                100.0 + 20.0 * (t - 1.0)
+            };
             (t, vec![rect(1, 0, x)])
         })
         .collect();
     let tl = discover(&frames, &cfg(100.0, 8.0)).unwrap();
     let kf_ts: Vec<f32> = tl.keyframes.iter().map(|k| k.t).collect();
-    assert_eq!(kf_ts, vec![0.0, 1.0], "the 75px jump snapshots, cadence is off");
+    assert_eq!(
+        kf_ts,
+        vec![0.0, 1.0],
+        "the 75px jump snapshots, cadence is off"
+    );
     assert_eq!(
         tl.keyframes[1].snapshot[0].props.get(Prop::X),
         Some(Value::Scalar(100.0))
     );
     assert_eq!(tl.tracks.len(), 2);
-    assert_eq!(tl.tracks[0].segments, vec![seg(25.0, 0.75)], "jump never lands");
+    assert_eq!(
+        tl.tracks[0].segments,
+        vec![seg(25.0, 0.75)],
+        "jump never lands"
+    );
     assert_eq!(tl.tracks[1].start_t, 1.0);
     assert_eq!(tl.tracks[1].segments, vec![seg(120.0, 1.0)]);
     assert_reproduced(&tl, &frames);
@@ -142,7 +157,11 @@ fn cadence_inserts_keyframes_and_motion_lands_on_them() {
         .collect();
     let tl = discover(&frames, &cfg(1.0, 8.0)).unwrap();
     let kf_ts: Vec<f32> = tl.keyframes.iter().map(|k| k.t).collect();
-    assert_eq!(kf_ts, vec![0.0, 1.0, 2.0, 3.0, 4.0], "random access cadence");
+    assert_eq!(
+        kf_ts,
+        vec![0.0, 1.0, 2.0, 3.0, 4.0],
+        "random access cadence"
+    );
     assert_eq!(tl.tracks.len(), 4);
     for (w, track) in tl.tracks.iter().enumerate() {
         assert_eq!(track.start_t, w as f32);
@@ -229,7 +248,11 @@ fn input_quantizes_to_the_wire_grid() {
         Value::Scalar(0.0),
         "angles wrap the turn"
     );
-    let tl = discover(&[(0.0, vec![rect(1, 0, 10.013)])], &DiscoverConfig::default()).unwrap();
+    let tl = discover(
+        &[(0.0, vec![rect(1, 0, 10.013)])],
+        &DiscoverConfig::default(),
+    )
+    .unwrap();
     assert_eq!(
         tl.keyframes[0].snapshot[0].props.get(Prop::X),
         Some(Value::Scalar(10.0))

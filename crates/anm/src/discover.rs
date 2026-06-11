@@ -195,7 +195,9 @@ fn fps_hint(samples: usize, duration_s: f32) -> u16 {
     if samples < 2 || duration_s <= 0.0 {
         return 60;
     }
-    ((samples - 1) as f32 / duration_s).round().clamp(1.0, 65535.0) as u16
+    ((samples - 1) as f32 / duration_s)
+        .round()
+        .clamp(1.0, 65535.0) as u16
 }
 
 /// Diff consecutive frames inside one keyframe window. Slot

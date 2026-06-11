@@ -7,8 +7,8 @@
 use crate::discover::discover;
 use crate::ir::{Node, PlaceNode, RemoveNode, ReplaceNode};
 use crate::play::AnmPlayer;
-use crate::tests_discover::{assert_reproduced, cfg, seg};
-use crate::tests_write::rect;
+use crate::tests::discover::{assert_reproduced, cfg, seg};
+use crate::tests::write::rect;
 use plev::compositor::SceneNode;
 
 fn rect_x(scene: &[SceneNode], at: usize) -> f32 {
@@ -54,7 +54,11 @@ fn slot_handover_becomes_replace() {
     let frames: Vec<(f32, Vec<Node>)> = (0..=8)
         .map(|i| {
             let t = i as f32 * 0.25;
-            let node = if i < 4 { rect(2, 1, 20.0) } else { rect(3, 1, 30.0) };
+            let node = if i < 4 {
+                rect(2, 1, 20.0)
+            } else {
+                rect(3, 1, 30.0)
+            };
             (t, vec![node])
         })
         .collect();

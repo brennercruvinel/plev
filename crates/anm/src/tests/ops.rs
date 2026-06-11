@@ -9,10 +9,10 @@ use crate::ir::{
     IrError, Keyframe, PlaceNode, Prop, RemoveNode, ReplaceNode, Timeline, Track, Value,
 };
 use crate::read::decode;
-use crate::tests_write::{parse, rect, seg};
+use crate::tests::write::{parse, rect, seg};
 use crate::write::encode;
 
-const GOLDEN_OPS: &[u8] = include_bytes!("../fixtures/golden_v0_ops.anm");
+const GOLDEN_OPS: &[u8] = include_bytes!("../../fixtures/golden_v0_ops.anm");
 
 /// One rect in the snapshot, a second life at depth 1: placed at 0.5,
 /// replaced at 1.0, removed at 1.5, plus one modify chain on node 1.

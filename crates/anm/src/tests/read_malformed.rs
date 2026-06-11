@@ -6,9 +6,9 @@ use crate::container::{self, DeltaOp, SEC_DELTA, SEC_DESC, SEC_KEYFRAME, Section
 use crate::easing::EasingTable;
 use crate::ir::Node;
 use crate::read::{ReadError, decode};
-use crate::tests_write::parse;
+use crate::tests::write::parse;
 
-const GOLDEN: &[u8] = include_bytes!("../fixtures/golden_v0_minimal.anm");
+const GOLDEN: &[u8] = include_bytes!("../../fixtures/golden_v0_minimal.anm");
 
 #[test]
 fn every_truncation_prefix_errs_without_panic() {
@@ -99,7 +99,7 @@ fn kf_payload(t: f32, nodes: &[Node]) -> Vec<u8> {
 fn one_rect_kf() -> Section {
     Section {
         tag: SEC_KEYFRAME,
-        payload: kf_payload(0.0, &[crate::tests_write::rect(1, 0, 10.0)]),
+        payload: kf_payload(0.0, &[crate::tests::write::rect(1, 0, 10.0)]),
     }
 }
 
@@ -117,7 +117,7 @@ fn file_with_delta(payload: Vec<u8>) -> Vec<u8> {
 #[test]
 fn malformed_structural_ops_err_without_panic() {
     let table = EasingTable::default();
-    let node = crate::tests_write::rect(2, 1, 0.0);
+    let node = crate::tests::write::rect(2, 1, 0.0);
     // unknown op code is still typed.
     let bytes = file_with_delta(vec![1, 0, 9]); // op_count 1, op code 9
     assert_eq!(decode(&bytes).unwrap_err(), ReadError::UnknownOpCode(9));

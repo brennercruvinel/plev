@@ -28,10 +28,15 @@
 //!   reactive play/pause/scrub surface via plev signals
 //! - [`lower`]: IR scene -> `SceneNode` mapping plus the
 //!   `LoweredAsset` bank for asset-backed nodes
+//! - [`asset_path`]: the payload layout behind `AssetKind::Path`
+//!   (uniform color, twips vertices, u16 indices; deterministic chunk
+//!   split under the u16 asset limit), so importers pack and players
+//!   unpack tessellated geometry through one codec
 //!
 //! the `script` cargo feature is reserved for the rhai sidecar and is
 //! intentionally empty in v0.
 
+pub mod asset_path;
 pub mod container;
 pub mod discover;
 mod discover_fit;
@@ -47,7 +52,7 @@ mod read_sec;
 mod validate;
 pub mod write;
 
-pub use container::{Asset, AssetKind, Desc};
+pub use container::{Asset, AssetKind, Desc, stage_size};
 pub use discover::{DiscoverConfig, DiscoverError, discover};
 pub use discover_fit::quantize_value;
 pub use easing::Easing;
@@ -62,34 +67,4 @@ pub use read::{Document, ReadError, decode};
 pub use write::{WriteError, encode};
 
 #[cfg(test)]
-mod tests_discover;
-#[cfg(test)]
-mod tests_discover_ops;
-#[cfg(test)]
-mod tests_easing;
-#[cfg(test)]
-mod tests_golden;
-#[cfg(test)]
-mod tests_ir;
-#[cfg(test)]
-mod tests_lower;
-#[cfg(test)]
-mod tests_ops;
-#[cfg(test)]
-mod tests_optimize;
-#[cfg(test)]
-mod tests_optimize_pipe;
-#[cfg(test)]
-mod tests_play;
-#[cfg(test)]
-mod tests_play_ops;
-#[cfg(test)]
-mod tests_prop;
-#[cfg(test)]
-mod tests_quant;
-#[cfg(test)]
-mod tests_read;
-#[cfg(test)]
-mod tests_read_malformed;
-#[cfg(test)]
-mod tests_write;
+mod tests;

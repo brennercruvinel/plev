@@ -8,8 +8,8 @@ use crate::easing::Easing;
 use crate::ir::{Keyframe, Prop, Segment, Timeline, Track, Value};
 use crate::optimize::{OptimizeCfg, optimize};
 use crate::play::AnmPlayer;
-use crate::tests_discover::q_scene;
-use crate::tests_write::rect;
+use crate::tests::discover::q_scene;
+use crate::tests::write::rect;
 
 pub(crate) fn seg(target: f32, dur_s: f32, easing: Easing) -> Segment {
     Segment {

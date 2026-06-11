@@ -5,7 +5,7 @@
 use crate::container::{Asset, AssetKind, Desc, SEC_DELTA, SEC_DESC, SEC_KEYFRAME};
 use crate::easing::Easing;
 use crate::ir::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
-use crate::tests_write::{parse, rect, scalar, seg};
+use crate::tests::write::{parse, rect, scalar, seg};
 use crate::write::encode;
 use sha2::{Digest, Sha256};
 
@@ -78,7 +78,7 @@ pub(crate) fn golden_doc() -> (Timeline, Vec<Asset>, Vec<Desc>) {
 /// spec entry, never a fixture refresh.
 #[test]
 fn golden_fixture_is_frozen_byte_for_byte() {
-    let golden = include_bytes!("../fixtures/golden_v0_minimal.anm");
+    let golden = include_bytes!("../../fixtures/golden_v0_minimal.anm");
     let (timeline, assets, descs) = golden_doc();
     let bytes = encode(&timeline, &assets, &descs).unwrap();
     assert_eq!(bytes.as_slice(), golden.as_slice());
