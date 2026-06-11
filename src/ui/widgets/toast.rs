@@ -137,8 +137,8 @@ impl ToastManager {
                 }
             }
         }
-        self.toasts
-            .retain(|t| !(t.closing && !t.anim.is_animating()));
+        // Drop a toast once its close animation has finished.
+        self.toasts.retain(|t| !t.closing || t.anim.is_animating());
         self.is_animating()
     }
 

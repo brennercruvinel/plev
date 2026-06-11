@@ -165,20 +165,20 @@ impl ContextMenu {
                 }
             }
             WidgetEvent::MouseDown { x: px, y: py } => {
-                if let Some(i) = self.item_at(px, py, x, y) {
-                    if let MenuEntry::Item { id, disabled, .. } = &self.entries[i] {
-                        if *disabled {
-                            // Swallow the click but do nothing.
-                            return (
-                                EventResult {
-                                    handled: true,
-                                    ..EventResult::IGNORED
-                                },
-                                None,
-                            );
-                        }
-                        return (EventResult::clicked(), Some(*id));
+                if let Some(i) = self.item_at(px, py, x, y)
+                    && let MenuEntry::Item { id, disabled, .. } = &self.entries[i]
+                {
+                    if *disabled {
+                        // Swallow the click but do nothing.
+                        return (
+                            EventResult {
+                                handled: true,
+                                ..EventResult::IGNORED
+                            },
+                            None,
+                        );
                     }
+                    return (EventResult::clicked(), Some(*id));
                 }
                 (EventResult::IGNORED, None)
             }

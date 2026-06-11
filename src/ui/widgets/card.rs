@@ -1040,6 +1040,9 @@ impl Card {
         }
     }
 
+    // The parameters mirror `CardVariant::Cta`'s fields, like the other
+    // render_* dispatch helpers; a bag struct would only duplicate the enum.
+    #[allow(clippy::too_many_arguments)]
     fn render_cta(
         &self,
         c: &mut Compositor,

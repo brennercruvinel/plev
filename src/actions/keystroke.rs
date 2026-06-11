@@ -111,8 +111,7 @@ impl FromStr for Keystroke {
 
         let mut modifiers = Modifiers::default();
         let mut rest = lowered.as_str();
-        loop {
-            let Some(idx) = rest.find('-') else { break };
+        while let Some(idx) = rest.find('-') {
             // A trailing '-' is part of the key (e.g. "ctrl--"), not a
             // modifier separator.
             if idx + 1 >= rest.len() {

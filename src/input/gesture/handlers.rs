@@ -52,17 +52,15 @@ impl GestureRecognizer {
                     phase: Phase::Cancelled,
                 }));
             }
-            GestureState::Pinching => {
-                if self.tracker.active_count() < 2 {
-                    self.pending_events.push(GestureEvent::Pinch(PinchEvent {
-                        center: Point { x: 0.0, y: 0.0 },
-                        scale: self.last_pinch_scale,
-                        delta_scale: 0.0,
-                        phase: Phase::Cancelled,
-                    }));
-                    self.initial_pinch_distance = None;
-                    self.last_pinch_scale = 1.0;
-                }
+            GestureState::Pinching if self.tracker.active_count() < 2 => {
+                self.pending_events.push(GestureEvent::Pinch(PinchEvent {
+                    center: Point { x: 0.0, y: 0.0 },
+                    scale: self.last_pinch_scale,
+                    delta_scale: 0.0,
+                    phase: Phase::Cancelled,
+                }));
+                self.initial_pinch_distance = None;
+                self.last_pinch_scale = 1.0;
             }
             _ => {}
         }

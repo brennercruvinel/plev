@@ -269,10 +269,8 @@ impl EditorView {
                 self.set_primary_selection(Selection::new(drag.anchor, head));
                 true
             }
-            MouseEvent::Up => {
-                let was_dragging = self.drag.take().is_some();
-                was_dragging
-            }
+            // Changed only when a drag was in progress.
+            MouseEvent::Up => self.drag.take().is_some(),
             MouseEvent::Wheel { dy } => {
                 let before = self.scroll.offset();
                 self.scroll.scroll_by(dy);

@@ -454,7 +454,7 @@ fn parse_svg_path(d: &str, scale: f32) -> Option<PathBuilder> {
                 prev_quad_ctrl = None;
             }
             b'C' | b'S' => {
-                let (c1x, c1y) = if cmd.to_ascii_uppercase() == b'C' {
+                let (c1x, c1y) = if cmd.eq_ignore_ascii_case(&b'C') {
                     let (a, b) = (p.number()?, p.number()?);
                     if rel { (cx + a, cy + b) } else { (a, b) }
                 } else {
@@ -478,7 +478,7 @@ fn parse_svg_path(d: &str, scale: f32) -> Option<PathBuilder> {
                 (cx, cy) = (nx, ny);
             }
             b'Q' | b'T' => {
-                let (qx, qy) = if cmd.to_ascii_uppercase() == b'Q' {
+                let (qx, qy) = if cmd.eq_ignore_ascii_case(&b'Q') {
                     let (a, b) = (p.number()?, p.number()?);
                     if rel { (cx + a, cy + b) } else { (a, b) }
                 } else {
