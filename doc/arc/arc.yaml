@@ -1,0 +1,45 @@
+# machine-readable architecture map. agents read this at task start.
+# update together with arc.md and arc.mmd on any structural change.
+project: plev
+kind: gpu-first compositing engine
+language: rust (edition 2024)
+stack: [wgpu 28, winit 0.30, cosmic-text 0.18, taffy 0.9, lyon]
+targets:
+  shipping: [macos-metal, web-webgpu]
+  in-progress: [android-vulkan]
+  pending: [ios-metal, linux-vulkan, windows-d3d12]
+modules:
+  gpu:        { path: src/gpu,        role: device/surface/pipelines, contracts: [srgb-view-formats, surface_render_view-only] }
+  compositor: { path: src/compositor, role: scene nodes + dirty layers, depends: [gpu] }
+  text:       { path: src/text,       role: shaping + glyph atlas + TextMeasurer, depends: [gpu], contracts: [one-textstyle-measure-and-draw] }
+  path:       { path: src/path,       role: lyon tessellation, contracts: [auto-finish-open-subpaths] }
+  layout:     { path: src/layout,     role: taffy wrapper (flex, percent, measure-fns), depends: [text] }
+  input:      { path: src/input,      role: pointer + hit regions + touch synth + gestures }
+  animation:  { path: src/animation,  role: tween/frameclock/easing (dt-based) }
+  signal:     { path: src/signal,     role: reactive primitives }
+  window:     { path: src/window,     role: app runner, render-on-demand, render passes, wasm canvas, depends: [gpu, compositor, text, input] }
+  theme:      { path: src/theme,      role: measured hoff tokens, oklch }
+  ui:         { path: src/ui,         role: retained widgets + icons }
+  builder:    { path: src/builder,    role: declarative element tree -> layout -> emit, depends: [layout, text] }
+  component:  { path: src/component,  role: Lifecycle trait }
+  view:       { path: src/view,       role: View trait + ViewContext }
+  text_input: { path: src/text_input, role: single-line field widget }
+  platform:   { path: [src/platform.rs, src/ime.rs, src/lifecycle.rs], role: safe areas, ime, app lifecycle }
+crates:
+  showcase:   { path: crates/showcase,  role: widget gallery app, targets: [desktop, web] }
+  basic-ide:  { path: crates/basic-ide, role: git client app }
+  editor_core:{ path: crates/editor_core, role: rope/transactions/multi-cursor, pure }
+  git_backend:{ path: crates/git_backend, role: gix + cli git operations, desktop-only }
+  narrate:    { path: [crates/narrate, crates/narrate_macro], role: ui dsl (experimental) }
+  macros:     { path: macros,           role: proc-macros }
+knowledge:
+  operating-manual: kdb/how-to/code-against-the-plev-engine.md
+  visual-tokens: kdb/reference/hoff-visual-tokens.md
+  pixel-validation: kdb/how-to/validate-visuals-by-pixel.md
+  brain: kdb/brain-fable-e-bre/readme.md
+invariants:
+  - one TextStyle per run shared by measure and draw
+  - srgb decode once in, encode once out (surface_render_view)
+  - geometry derives from available space
+  - visible change implies invalidation
+  - wasm check must stay green

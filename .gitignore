@@ -61,7 +61,6 @@ htmlcov/
 # Experiments — source is versioned alongside other examples; build artifacts are not
 
 # Private / experiments (not for public release)
-doc/
 examples-wip/
 .claude/
 ref/

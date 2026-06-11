@@ -1,0 +1,65 @@
+---
+type: reference
+tags: [architecture, modules, contracts, data-flow]
+date: 2026-06-11
+status: living
+---
+
+# plev architecture
+
+single human reference. machine map: arc.yaml. visual map: arc.mmd.
+update all three together when structure changes.
+
+## layers, bottom up
+
+| layer | path | role |
+|---|---|---|
+| gpu | src/gpu/ | wgpu device/surface/pipelines; srgb view formats; image atlas |
+| compositor | src/compositor/ | scene nodes, layers with dirty hashes, resolve to gpu buffers |
+| text | src/text/ | cosmic-text shaping, gpu glyph atlas, TextMeasurer (the only width source) |
+| path | src/path/ | lyon tessellation behind PathBuilder (auto-finishes open subpaths) |
+| layout | src/layout/ | taffy wrapper: flex, percent, text measure functions |
+| input | src/input/ | pointer state, hit regions, touch tracker + gesture recognizer, touch-to-pointer synth |
+| animation | src/animation/ | Tween, FrameClock, easing (dt-based; web_time) |
+| signal | src/signal/ | reactive primitives (create_signal, runtime) |
+| window | src/window/ | App runner: event loop, render-on-demand, render passes, wasm canvas |
+| theme | src/theme/ | measured hoff tokens, oklch tooling, intents |
+| ui | src/ui/ | retained widgets (~15) + immediate builder + lucide icons |
+| builder | src/builder/ | declarative element tree (div/text/button), layout pipeline, emit |
+| component/view | src/component/, src/view/ | Lifecycle trait, View trait, ViewContext |
+| platform | src/platform.rs, src/ime.rs, src/lifecycle.rs | safe areas, ime, app lifecycle |
+
+apps consume the engine; they never reimplement engine capabilities
+(kdb/explanation/why-the-apps-bypassed-the-engine.md).
+
+## frame flow
+
+event -> input state / app state mutation -> invalidate (request_redraw)
+-> build scene (per-frame regeneration, no retained diffing) -> compositor
+resolve (dirty layers only) -> text resolve (atlas) -> encode layer passes
+(quads, sdf, shadows, images, text, backdrop blur, in push order) ->
+composite pass to the srgb surface view -> present. unchanged layers cost
+zero gpu work.
+
+## binding contracts (violations are defects even if pixels look right)
+
+1. one TextStyle per text run, shared by measurement and drawing
+2. srgb decode exactly once entering gpu work; encode exactly once at the
+   surface write (surface_render_view; to_linear_array)
+3. container geometry derives from available space, never from constants
+4. visible state change implies invalidation (render on demand)
+5. clip rects are logical; scale by clip_scale for physical scissors
+
+## targets
+
+macos metal (shipping), browser webgpu via trunk/wasm32 (shipping, same
+pixel as desktop), android vulkan (scaffolding, see kdb brain
+research-notes), ios metal (needs entry point + safe areas), linux/windows
+(untested, wgpu primary backends).
+
+## errors and versioning
+
+pre-1.0: no api stability promised. library code must not panic on user
+input paths; tessellation and parsers degrade gracefully (log + empty
+output). binary/format versioning will follow the anim-format poc rules
+when that lands (frozen golden fixtures, additive optional fields).

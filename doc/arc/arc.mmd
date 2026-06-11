@@ -1,0 +1,24 @@
+%% plev frame flow. update with arc.md/arc.yaml on structural change.
+sequenceDiagram
+    participant E as event (winit/touch/ime)
+    participant I as input state
+    participant A as app state
+    participant S as scene build (per frame)
+    participant C as compositor (dirty layers)
+    participant T as text system (atlas)
+    participant G as gpu passes
+    participant P as surface (srgb view)
+
+    E->>I: pointer / synthesized touch
+    I->>A: hit regions -> events drained
+    A->>A: mutate state
+    A->>C: invalidate + request_redraw
+    Note over A,C: render on demand: no change, no frame
+    A->>S: build scene nodes
+    S->>C: push to layers (hash per layer)
+    C->>C: resolve only dirty layers
+    C->>T: resolve text runs (one TextStyle measure==draw)
+    T->>G: glyph atlas quads
+    C->>G: encode layer passes (quads, sdf, shadow, image, text, backdrop)
+    G->>P: composite into srgb view (encode-on-write)
+    P->>P: present (identical pixels on every target)
