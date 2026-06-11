@@ -33,6 +33,8 @@ crates:
   git_backend:{ path: crates/git_backend, role: gix + cli git operations, desktop-only }
   narrate:    { path: [crates/narrate, crates/narrate_macro], role: ui dsl (experimental) }
   macros:     { path: macros,           role: proc-macros }
+  lot:        { path: crates/lot,       role: lottie (bodymovin) importer: serde model + keyframe eval + hierarchical render to TessellatedPath (rnd), and the exit door cnv: sample once, dedup payloads, discover deltas, encode .anm; playback then runs on anm only, depends: [path], emits-to: [anm] }
+  prs:        { path: crates/prs,       role: parse-resolve-emit transpiler poc (react tsx+sass and gpui -> plev builder source via tree-sitter; HOFF token mapping, honest droplist with file:line, golden + compile tests), depends: [builder, theme (emitted code only)] }
   anm:        { path: crates/anm,       role: binary animation codec (ir/validate/write/read) with full delta ops (modify tracks + place/replace/remove), delta discovery from sampled frames (discover/discover_fit: encoder mode b, slot diffing + linear segment fitting + keyframes on discontinuity and cadence), encoder-side optimizer (optimize: idempotent static collapse + rdp keyframe reduction + collinear fusion, tolerances in wire quantization steps) + deterministic player (play/play_eval: tick-driven, windowed eval, segment-local op replay, signals, lowers ir to SceneNode), depends: [animation, signal, compositor] }
 knowledge:
   operating-manual: kdb/how-to/code-against-the-plev-engine.md

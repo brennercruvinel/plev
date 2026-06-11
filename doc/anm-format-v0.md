@@ -141,6 +141,29 @@ props (from the engine-fit study):
   pinned against the held tail of a dead chain from an earlier life in
   the same segment. output feeds encoder mode a unchanged
 
+## path asset payload (v0, defined 2026-06-11)
+
+asset payloads are opaque to the container; the Path kind's bytes are
+defined by crates/anm/src/asset_path.rs so importers and players meet
+through one codec: color rgba8 (tessellation assigns one color to every
+vertex), vertex_count u16, index_count u32, vertices as i32 twips pairs,
+indices u16. positions quantize to the twips grid, so sub-twip float
+jitter packs to identical bytes and dedup-by-payload holds across
+frames (a static shape is one asset, one unchanged node, zero delta
+bytes). a payload too large for the u16 asset limit splits at triangle
+boundaries deterministically. the description track's first entry
+carries `stage WxH` (container::stage_size), so a player learns the
+composition bounds from the file alone.
+
+the lot::cnv bridge (lottie json sampled once -> dedup -> discover ->
+encode) measured on the 5 corpus files: cards 0.36x and explosion 0.74x
+of the json size; girl 6.5x, snake 42x, money 53x. discrete motion wins
+already; 60fps full-body morphs pay v0's sampled-geometry cost
+(morph = cpu re-tessellation, every moving shape is a new asset per
+sample). the v1 lever is morph tracks: interpolated path assets, the
+swf DefineMorphShape lesson, so the file carries the curve instead of
+the samples.
+
 ## optimizer passes (encoder-side, format-neutral)
 
 optimize (crates/anm/src/optimize.rs) runs between authoring or

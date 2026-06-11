@@ -33,6 +33,13 @@ update all three together when structure changes.
 apps consume the engine; they never reimplement engine capabilities
 (kdb/explanation/why-the-apps-bypassed-the-engine.md).
 
+tooling: crates/prs is a parse-resolve-emit transpiler poc (tree-sitter)
+that turns one react component (hoff research card) and one gpui widget
+(separator) into plev builder source, mapping colors to hoff theme tokens
+and reporting every unrepresentable construct on a droplist with
+file:line; golden byte tests plus compile-and-run tests over the emitted
+code live in crates/prs/tests.
+
 ## frame flow
 
 event -> input state / app state mutation -> invalidate (request_redraw)
