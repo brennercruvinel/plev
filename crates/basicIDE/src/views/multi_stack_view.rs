@@ -283,7 +283,7 @@ impl MultiStackView {
                     let msg_style = TextStyle::new(14.0)
                         .with_line_height(14.0 * 1.4)
                         .with_weight(600);
-                    let msg = truncate_to_width(&commit.message, text_w, &msg_style);
+                    let msg = hoff::truncate_to_width(&commit.message, text_w, &msg_style);
                     compositor.push(SceneNode::Text {
                         key: TextNodeKey::from_style(&msg, &msg_style, None),
                         x: text_x,
@@ -294,7 +294,7 @@ impl MultiStackView {
                     // sha · author · time — caption-r at $text-tertiary.
                     let meta_style = TextStyle::new(12.0).with_line_height(12.0 * 1.33);
                     let sha_display = commit.sha.get(..7).unwrap_or(&commit.sha);
-                    let meta = truncate_to_width(
+                    let meta = hoff::truncate_to_width(
                         &format!(
                             "{} \u{00B7} {} \u{00B7} {}",
                             sha_display, commit.author, commit.time_ago
@@ -336,84 +336,5 @@ impl MultiStackView {
 
         self.hit_rects = hit_rects.clone();
         hit_rects
-    }
-}
-
-/// Truncate `s` with an ellipsis so it fits on one line of `avail` px,
-/// measured with the SAME [`TextStyle`] the caller draws with (real shaping
-/// via [`hoff::measure_text`], not a per-char estimate). Keeps commit rows
-/// strictly single-line.
-fn truncate_to_width(s: &str, avail: f32, style: &TextStyle) -> String {
-    if hoff::measure_text(s, style) <= avail {
-        return s.to_string();
-    }
-    let chars: Vec<char> = s.chars().collect();
-    let candidate = |n: usize| -> String {
-        let t: String = chars[..n].iter().collect();
-        format!("{}\u{2026}", t.trim_end())
-    };
-    // Largest prefix whose "prefix…" really fits, by binary search on the
-    // char count (each probe is a cached real measurement).
-    let (mut lo, mut hi) = (0usize, chars.len().saturating_sub(1));
-    while lo < hi {
-        let mid = (lo + hi).div_ceil(2);
-        if hoff::measure_text(&candidate(mid), style) <= avail {
-            lo = mid;
-        } else {
-            hi = mid - 1;
-        }
-    }
-    candidate(lo)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn style_14_600() -> TextStyle {
-        TextStyle::new(14.0)
-            .with_line_height(14.0 * 1.4)
-            .with_weight(600)
-    }
-
-    #[test]
-    fn truncate_to_width_keeps_short_strings() {
-        let s = "fix: bug";
-        assert_eq!(truncate_to_width(s, 500.0, &style_14_600()), s);
-    }
-
-    #[test]
-    fn truncate_to_width_ellipsizes_long_strings_to_one_line() {
-        let s = "a very long commit message that would otherwise wrap onto two lines";
-        let style = style_14_600();
-        let out = truncate_to_width(s, 120.0, &style);
-        assert!(out.ends_with('\u{2026}'));
-        assert!(out.chars().count() < s.chars().count());
-        // The result must REALLY fit: measured with the same shaping the
-        // renderer uses, no heuristic slack. (The old per-char model only
-        // guaranteed `<= avail + one estimated char`.)
-        assert!(hoff::measure_text(&out, &style) <= 120.0);
-    }
-
-    #[test]
-    fn truncate_to_width_maximizes_kept_text() {
-        // Regression against over-truncation: the cut must land exactly at
-        // the real shaped limit (largest prefix whose "prefix…" fits), not
-        // at a per-char guess. Brute-force the optimum and compare.
-        let s = "a very long commit message that would otherwise wrap onto two lines";
-        let style = style_14_600();
-        let avail = 120.0;
-        let out = truncate_to_width(s, avail, &style);
-
-        let chars: Vec<char> = s.chars().collect();
-        let candidate = |n: usize| -> String {
-            let t: String = chars[..n].iter().collect();
-            format!("{}\u{2026}", t.trim_end())
-        };
-        let best = (0..chars.len())
-            .rev()
-            .find(|&n| hoff::measure_text(&candidate(n), &style) <= avail)
-            .expect("at least the bare ellipsis fits 120px");
-        assert_eq!(out, candidate(best));
     }
 }

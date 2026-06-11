@@ -3,7 +3,22 @@ use wgpu::util::DeviceExt;
 use winit::window::Window;
 
 use super::config::RenderConfig;
-use super::utils::ortho_projection;
+use super::utils::{ortho_projection, texture_sampler_bgl, uniform_bgl};
+
+/// Per-pipeline WGSL source: read from disk when `hot-reload` is enabled,
+/// embedded at compile time otherwise.
+macro_rules! shader_src {
+    ($name:literal) => {{
+        #[cfg(feature = "hot-reload")]
+        {
+            crate::hot_reload::shader_source($name)
+        }
+        #[cfg(not(feature = "hot-reload"))]
+        {
+            std::borrow::Cow::<'static, str>::from(include_str!(concat!("../../shaders/", $name)))
+        }
+    }};
+}
 
 pub struct GpuContext {
     pub device: wgpu::Device,
@@ -156,19 +171,7 @@ impl GpuContext {
         });
 
         let projection_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("projection_bgl"),
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                }],
-            });
+            uniform_bgl(&device, "projection_bgl", wgpu::ShaderStages::VERTEX);
 
         let projection_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("projection_bg"),
@@ -180,75 +183,37 @@ impl GpuContext {
         });
 
         // Text atlas bind group layout (group 1)
-        let text_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("text_atlas_bgl"),
-                entries: &[
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                            multisampled: false,
-                        },
-                        count: None,
-                    },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                        count: None,
-                    },
-                ],
-            });
+        let text_bind_group_layout = texture_sampler_bgl(&device, "text_atlas_bgl");
 
         // -- Pipelines (extracted for hot-reload support) --
 
-        #[cfg(feature = "hot-reload")]
-        let quad_src = crate::hot_reload::shader_source("quad.wgsl");
-        #[cfg(not(feature = "hot-reload"))]
-        let quad_src: std::borrow::Cow<'_, str> = include_str!("../../shaders/quad.wgsl").into();
         let quad_pipeline = Self::create_quad_pipeline(
             &device,
-            &quad_src,
+            &shader_src!("quad.wgsl"),
             &projection_bind_group_layout,
             render_format,
             config.msaa_samples,
         );
 
-        #[cfg(feature = "hot-reload")]
-        let sdf_src = crate::hot_reload::shader_source("rect_sdf.wgsl");
-        #[cfg(not(feature = "hot-reload"))]
-        let sdf_src: std::borrow::Cow<'_, str> = include_str!("../../shaders/rect_sdf.wgsl").into();
         let rect_sdf_pipeline = Self::create_rect_sdf_pipeline(
             &device,
-            &sdf_src,
+            &shader_src!("rect_sdf.wgsl"),
             &projection_bind_group_layout,
             render_format,
             config.msaa_samples,
         );
 
-        #[cfg(feature = "hot-reload")]
-        let shadow_src = crate::hot_reload::shader_source("shadow_analytic.wgsl");
-        #[cfg(not(feature = "hot-reload"))]
-        let shadow_src: std::borrow::Cow<'_, str> =
-            include_str!("../../shaders/shadow_analytic.wgsl").into();
         let shadow_analytic_pipeline = Self::create_shadow_analytic_pipeline(
             &device,
-            &shadow_src,
+            &shader_src!("shadow_analytic.wgsl"),
             &projection_bind_group_layout,
             render_format,
             config.msaa_samples,
         );
 
-        #[cfg(feature = "hot-reload")]
-        let text_src = crate::hot_reload::shader_source("text.wgsl");
-        #[cfg(not(feature = "hot-reload"))]
-        let text_src: std::borrow::Cow<'_, str> = include_str!("../../shaders/text.wgsl").into();
         let text_pipeline = Self::create_text_pipeline(
             &device,
-            &text_src,
+            &shader_src!("text.wgsl"),
             &projection_bind_group_layout,
             &text_bind_group_layout,
             render_format,
@@ -257,36 +222,11 @@ impl GpuContext {
 
         // Image atlas bind group layout (group 1 of the image pipeline);
         // same shape as the text atlas layout but RGBA8 instead of R8.
-        let image_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("image_atlas_bgl"),
-                entries: &[
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                            multisampled: false,
-                        },
-                        count: None,
-                    },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                        count: None,
-                    },
-                ],
-            });
+        let image_bind_group_layout = texture_sampler_bgl(&device, "image_atlas_bgl");
 
-        #[cfg(feature = "hot-reload")]
-        let image_src = crate::hot_reload::shader_source("image.wgsl");
-        #[cfg(not(feature = "hot-reload"))]
-        let image_src: std::borrow::Cow<'_, str> = include_str!("../../shaders/image.wgsl").into();
         let image_pipeline = Self::create_image_pipeline(
             &device,
-            &image_src,
+            &shader_src!("image.wgsl"),
             &projection_bind_group_layout,
             &image_bind_group_layout,
             render_format,
@@ -294,65 +234,22 @@ impl GpuContext {
         );
 
         // Composite bind group layouts (struct fields, not recreated on reload)
-        let composite_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("composite_bgl"),
-                entries: &[
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                            multisampled: false,
-                        },
-                        count: None,
-                    },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                        count: None,
-                    },
-                ],
-            });
+        let composite_bind_group_layout = texture_sampler_bgl(&device, "composite_bgl");
 
         let opacity_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("opacity_bgl"),
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                }],
-            });
+            uniform_bgl(&device, "opacity_bgl", wgpu::ShaderStages::FRAGMENT);
 
-        #[cfg(feature = "hot-reload")]
-        let comp_src = crate::hot_reload::shader_source("composite.wgsl");
-        #[cfg(not(feature = "hot-reload"))]
-        let comp_src: std::borrow::Cow<'_, str> =
-            include_str!("../../shaders/composite.wgsl").into();
         let composite_pipeline = Self::create_composite_pipeline(
             &device,
-            &comp_src,
+            &shader_src!("composite.wgsl"),
             &composite_bind_group_layout,
             &opacity_bind_group_layout,
             render_format,
         );
 
-        #[cfg(feature = "hot-reload")]
-        let backdrop_src = crate::hot_reload::shader_source("backdrop.wgsl");
-        #[cfg(not(feature = "hot-reload"))]
-        let backdrop_src: std::borrow::Cow<'_, str> =
-            include_str!("../../shaders/backdrop.wgsl").into();
         let backdrop_pipeline = Self::create_backdrop_pipeline(
             &device,
-            &backdrop_src,
+            &shader_src!("backdrop.wgsl"),
             &projection_bind_group_layout,
             &composite_bind_group_layout,
             render_format,

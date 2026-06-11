@@ -3,6 +3,7 @@ mod emit;
 mod layout_pipeline;
 mod render;
 mod style;
+#[cfg(test)]
 mod tests;
 mod tests_intent;
 mod traits;

@@ -1,6 +1,10 @@
 //! HOFF "dark glass" drawing recipes shared by every component:
 //! edge-light borders (top-lit rim that fades out), analytic drop-shadow
-//! stacks (`SceneNode::Shadow`) and glass surfaces.
+//! stacks (`SceneNode::Shadow`), glass surfaces and real-shaping text
+//! measurement helpers.
+
+#[cfg(test)]
+mod tests;
 
 use crate::theme::ShadowSpec;
 use plev::color::Color;
@@ -189,6 +193,33 @@ pub fn measure_text(text: &str, style: &TextStyle) -> f32 {
     TextMeasurer::measure_styled(text, style, None).0
 }
 
+/// Truncate `s` with an ellipsis so it fits on one line of `avail` px,
+/// measured with the SAME [`TextStyle`] the caller draws with (real shaping
+/// via [`measure_text`], not a per-char estimate). Keeps rows strictly
+/// single-line.
+pub fn truncate_to_width(s: &str, avail: f32, style: &TextStyle) -> String {
+    if measure_text(s, style) <= avail {
+        return s.to_string();
+    }
+    let chars: Vec<char> = s.chars().collect();
+    let candidate = |n: usize| -> String {
+        let t: String = chars[..n].iter().collect();
+        format!("{}\u{2026}", t.trim_end())
+    };
+    // Largest prefix whose "prefix…" really fits, by binary search on the
+    // char count (each probe is a cached real measurement).
+    let (mut lo, mut hi) = (0usize, chars.len().saturating_sub(1));
+    while lo < hi {
+        let mid = (lo + hi).div_ceil(2);
+        if measure_text(&candidate(mid), style) <= avail {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    candidate(lo)
+}
+
 /// Scrollbar thumb — 4px wide, rgba($n2,.25), rounded; no track.
 pub fn draw_scrollbar(
     compositor: &mut Compositor,
@@ -210,221 +241,4 @@ pub fn draw_scrollbar(
         border_width: 0.0,
         border_color: [0.0; 4],
     });
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::theme::{SHADOW_MENU, SHADOW_MODAL};
-
-    fn nodes(compositor: &Compositor) -> &[SceneNode] {
-        compositor.layer(LayerId::DEFAULT).unwrap().nodes()
-    }
-
-    #[test]
-    fn shadow_emulates_negative_spread_by_shrinking_rect() {
-        let mut c = Compositor::new();
-        c.begin_frame();
-        // SHADOW_MENU: 0 24px 32px -12px rgba(18,18,18,.10)
-        shadow(
-            &mut c,
-            LayerId::DEFAULT,
-            100.0,
-            50.0,
-            240.0,
-            180.0,
-            24.0,
-            &SHADOW_MENU,
-        );
-        let n = nodes(&c);
-        assert_eq!(n.len(), 1);
-        match &n[0] {
-            SceneNode::Shadow {
-                x,
-                y,
-                w,
-                h,
-                corner_radius,
-                blur_radius,
-                offset,
-                color,
-                ..
-            } => {
-                // spread -12 shrinks the casting rect by 12px each side
-                assert_eq!((*x, *y), (112.0, 62.0));
-                assert_eq!((*w, *h), (216.0, 156.0));
-                assert_eq!(*corner_radius, 12.0);
-                assert_eq!(*blur_radius, 32.0);
-                assert_eq!(*offset, [0.0, 24.0]);
-                assert!((color[3] - 0.10).abs() < 1e-6);
-            }
-            other => panic!("expected Shadow node, got {other:?}"),
-        }
-    }
-
-    #[test]
-    fn shadow_with_spread_collapsing_rect_is_skipped() {
-        let mut c = Compositor::new();
-        c.begin_frame();
-        shadow(
-            &mut c,
-            LayerId::DEFAULT,
-            0.0,
-            0.0,
-            20.0,
-            20.0,
-            8.0,
-            &SHADOW_MODAL[0],
-        );
-        // spread -16 on a 20px rect collapses it -> nothing drawn
-        assert!(nodes(&c).is_empty());
-    }
-
-    #[test]
-    fn shadow_stack_pushes_one_node_per_spec() {
-        let mut c = Compositor::new();
-        c.begin_frame();
-        shadow_stack(
-            &mut c,
-            LayerId::DEFAULT,
-            0.0,
-            0.0,
-            400.0,
-            216.0,
-            32.0,
-            &SHADOW_MODAL,
-        );
-        let count = nodes(&c)
-            .iter()
-            .filter(|n| matches!(n, SceneNode::Shadow { .. }))
-            .count();
-        assert_eq!(count, SHADOW_MODAL.len());
-    }
-
-    #[test]
-    fn edge_light_draws_two_masked_rings() {
-        let mut c = Compositor::new();
-        c.begin_frame();
-        let color = Color::rgba(1.0, 1.0, 1.0, 0.10);
-        edge_light(
-            &mut c,
-            LayerId::DEFAULT,
-            0.0,
-            0.0,
-            100.0,
-            40.0,
-            12.0,
-            1.5,
-            color,
-        );
-        let n = nodes(&c);
-        // clip + ring + pop, twice
-        assert_eq!(n.len(), 6);
-        assert!(matches!(n[0], SceneNode::PushClip { .. }));
-        assert!(matches!(n[2], SceneNode::PopClip));
-        assert!(matches!(n[3], SceneNode::PushClip { .. }));
-        assert!(matches!(n[5], SceneNode::PopClip));
-        let ring_alpha = |node: &SceneNode| match node {
-            SceneNode::RoundedRect {
-                border_width,
-                border_color,
-                color,
-                ..
-            } => {
-                assert_eq!(*border_width, 1.5);
-                assert_eq!(color[3], 0.0, "ring must be border-only");
-                border_color[3]
-            }
-            other => panic!("expected RoundedRect ring, got {other:?}"),
-        };
-        let full = ring_alpha(&n[1]);
-        let faded = ring_alpha(&n[4]);
-        assert!((full - 0.10).abs() < 1e-6);
-        assert!((faded - 0.05).abs() < 1e-6, "tail ring is half strength");
-    }
-
-    #[test]
-    fn glass_fills_background_then_rims() {
-        let mut c = Compositor::new();
-        c.begin_frame();
-        let bg = Color::rgba(40.0 / 255.0, 40.0 / 255.0, 40.0 / 255.0, 0.7);
-        let edge = Color::rgba(1.0, 1.0, 1.0, 0.05);
-        glass(
-            &mut c,
-            LayerId::DEFAULT,
-            0.0,
-            0.0,
-            240.0,
-            120.0,
-            24.0,
-            bg,
-            Some((1.0, edge)),
-        );
-        let n = nodes(&c);
-        // 1 fill + 6 edge-light nodes
-        assert_eq!(n.len(), 7);
-        match &n[0] {
-            SceneNode::RoundedRect {
-                color,
-                corner_radius,
-                border_width,
-                ..
-            } => {
-                assert!((color[3] - 0.7).abs() < 1e-6);
-                assert_eq!(*corner_radius, 24.0);
-                assert_eq!(*border_width, 0.0);
-            }
-            other => panic!("expected fill RoundedRect, got {other:?}"),
-        }
-    }
-
-    #[test]
-    fn measure_text_uses_real_shaping_not_per_char_heuristic() {
-        // "Commit" at 14px weight 600 (the button label style). The old
-        // per-char heuristic (`chars * size * 0.58`) gave 48.72px; the real
-        // Rubik SemiBold shaping is ~53.7px (verified against the
-        // rasterizer's FontSystem). Sizing pills with the heuristic made
-        // labels overflow their shapes by up to ~10%.
-        let style = TextStyle::new(14.0).with_weight(600);
-        let measured = measure_text("Commit", &style);
-        let old_heuristic = "Commit".chars().count() as f32 * 14.0 * 0.58;
-        assert!(
-            (measured - old_heuristic).abs() > 1.0,
-            "measure_text must differ from the old heuristic: real {measured} vs heuristic {old_heuristic}"
-        );
-        assert!(
-            (50.0..60.0).contains(&measured),
-            "Commit @14/600 should shape to ~53.7px, got {measured}"
-        );
-    }
-
-    #[test]
-    fn measure_text_respects_font_weight() {
-        // Weight is part of the style: SemiBold advances are wider than
-        // Regular for the same string — the heuristic could not see this.
-        let regular = measure_text("MODIFIED", &TextStyle::new(14.0));
-        let semibold = measure_text("MODIFIED", &TextStyle::new(14.0).with_weight(600));
-        assert!(
-            semibold > regular,
-            "600 ({semibold}) must measure wider than 400 ({regular})"
-        );
-    }
-
-    #[test]
-    fn glass_without_edge_is_a_single_fill() {
-        let mut c = Compositor::new();
-        c.begin_frame();
-        glass(
-            &mut c,
-            LayerId::DEFAULT,
-            0.0,
-            0.0,
-            100.0,
-            44.0,
-            16.0,
-            Color::rgba(1.0, 1.0, 1.0, 0.02),
-            None,
-        );
-        assert_eq!(nodes(&c).len(), 1);
-    }
 }
