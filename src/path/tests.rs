@@ -95,3 +95,29 @@ fn quadratic_bezier_works() {
         .fill([1.0, 0.0, 0.0, 1.0]);
     assert!(!path.vertices.is_empty());
 }
+
+#[test]
+fn open_path_stroke_does_not_panic() {
+    // Regression: stroking an open sub-path (move_to/line_to, no close or
+    // end_open) previously hit Lyon's "build() called before end()" abort —
+    // a non-unwinding panic inside the macOS draw callback. The line-chart
+    // case from the charts demo.
+    let path = PathBuilder::new()
+        .move_to(0.0, 0.0)
+        .line_to(50.0, 20.0)
+        .line_to(100.0, 0.0)
+        .stroke([1.0, 1.0, 1.0, 1.0], 2.0);
+    assert!(!path.vertices.is_empty());
+    assert!(!path.indices.is_empty());
+}
+
+#[test]
+fn open_path_fill_does_not_panic() {
+    // Same guarantee for fills: an unclosed polyline must tessellate, not abort.
+    let path = PathBuilder::new()
+        .move_to(0.0, 0.0)
+        .line_to(100.0, 0.0)
+        .line_to(100.0, 100.0)
+        .fill([1.0, 1.0, 1.0, 1.0]);
+    assert!(!path.vertices.is_empty());
+}

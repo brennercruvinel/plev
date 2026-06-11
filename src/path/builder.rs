@@ -12,6 +12,10 @@ use super::types::{PathCommand, TessellatedPath};
 pub struct PathBuilder {
     pub(crate) builder: lyon_path::path::Builder,
     pub(crate) commands: Vec<PathCommand>,
+    /// Whether a sub-path is currently open (started via `move_to`, not yet
+    /// ended via `close`/`end_open`). Lyon's `build()` panics on an open
+    /// sub-path, so tessellation finalizes it first via `finish_open`.
+    open: bool,
 }
 
 impl Default for PathBuilder {
@@ -25,11 +29,13 @@ impl PathBuilder {
         Self {
             builder: lyon_path::Path::builder(),
             commands: Vec::new(),
+            open: false,
         }
     }
 
     pub fn move_to(mut self, x: f32, y: f32) -> Self {
         self.builder.begin(point(x, y));
+        self.open = true;
         self.commands
             .push(PathCommand::MoveTo(x.to_bits(), y.to_bits()));
         self
@@ -73,6 +79,7 @@ impl PathBuilder {
 
     pub fn close(mut self) -> Self {
         self.builder.end(true);
+        self.open = false;
         self.commands.push(PathCommand::Close);
         self
     }
@@ -80,7 +87,20 @@ impl PathBuilder {
     /// End the current sub-path without closing it (for open strokes).
     pub fn end_open(mut self) -> Self {
         self.builder.end(false);
+        self.open = false;
         self
+    }
+
+    /// Finalize a still-open sub-path so the underlying Lyon builder can be
+    /// `build()`-ed safely. Lyon aborts (non-unwinding panic on macOS, inside
+    /// the objc2 draw callback) if a sub-path was started with `begin()` but
+    /// never ended; a stroke over an open polyline — the common case for line
+    /// charts — would otherwise crash the whole frame. Idempotent.
+    pub(crate) fn finish_open(&mut self) {
+        if self.open {
+            self.builder.end(false);
+            self.open = false;
+        }
     }
 
     /// Convenience: build a circle path.

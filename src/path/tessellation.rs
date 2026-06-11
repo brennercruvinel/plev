@@ -45,8 +45,9 @@ impl StrokeVertexConstructor<QuadVertex> for StrokeWithColor {
 // Fill tessellation
 // ---------------------------------------------------------------------------
 
-pub(super) fn fill(pb: PathBuilder, color: [f32; 4], tolerance: f32) -> TessellatedPath {
+pub(super) fn fill(mut pb: PathBuilder, color: [f32; 4], tolerance: f32) -> TessellatedPath {
     let hash = compute_commands_hash(&pb.commands);
+    pb.finish_open();
     let path = pb.builder.build();
 
     let mut buffers: VertexBuffers<QuadVertex, u32> = VertexBuffers::new();
@@ -105,11 +106,12 @@ pub(super) fn stroke_round(
 }
 
 fn stroke_with_options(
-    pb: PathBuilder,
+    mut pb: PathBuilder,
     color: [f32; 4],
     options: StrokeOptions,
 ) -> TessellatedPath {
     let hash = compute_commands_hash(&pb.commands);
+    pb.finish_open();
     let path = pb.builder.build();
 
     let mut buffers: VertexBuffers<QuadVertex, u32> = VertexBuffers::new();
