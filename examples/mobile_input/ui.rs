@@ -53,13 +53,13 @@ impl MobileInputApp {
         self.compositor
             .draw_rect(cx, header_y, content_w, header_h, HEADER_BG);
         self.compositor.draw_text(
-            TextNodeKey::new("MOBILE INPUT", 24.0, 30.0, None),
+            TextNodeKey::from_style("MOBILE INPUT", &title_style(24.0, 30.0), None),
             cx + pad,
             header_y + 14.0,
             TEXT,
         );
         self.compositor.draw_text(
-            TextNodeKey::new("Safe areas, IME, Lifecycle", 12.0, 16.0, None),
+            TextNodeKey::from_style("Safe areas, IME, Lifecycle", &body_style(12.0, 16.0), None),
             cx + pad,
             header_y + 46.0,
             TEXT_DIM,
@@ -78,12 +78,11 @@ impl MobileInputApp {
         // Instructions
         let help_y = card2_y + 110.0 + 20.0;
         self.compositor.draw_text(
-            TextNodeKey::new(
+            TextNodeKey::from_style(
                 "On mobile: tap the text field to open keyboard.\n\
                  Safe area insets shown as colored bars at screen edges.\n\
                  On desktop: insets are zero, IME works with physical keyboard.",
-                12.0,
-                17.0,
+                &body_style(12.0, 17.0),
                 Some(card_w),
             ),
             card_x,
@@ -99,10 +98,9 @@ impl MobileInputApp {
         self.compositor
             .draw_rect(cx, footer_y, content_w, 1.0, DIVIDER);
         self.compositor.draw_text(
-            TextNodeKey::new(
+            TextNodeKey::from_style(
                 "Safe area insets  |  IME composing  |  Lifecycle transitions",
-                11.0,
-                14.0,
+                &body_style(11.0, 14.0),
                 None,
             ),
             cx + pad,
@@ -119,7 +117,7 @@ impl MobileInputApp {
             .draw_rect(card_x, card1_y, card_w, 2.0, ACCENT);
 
         self.compositor.draw_text(
-            TextNodeKey::new("STATUS", 11.0, 14.0, None),
+            TextNodeKey::from_style("STATUS", &card_title_style(11.0, 14.0), None),
             card_x + 16.0,
             card1_y + 12.0,
             ACCENT,
@@ -127,7 +125,7 @@ impl MobileInputApp {
 
         let lifecycle_str = format!("Lifecycle:  {}", self.lifecycle.state());
         self.compositor.draw_text(
-            TextNodeKey::new(&lifecycle_str, 13.0, 18.0, Some(card_w - 32.0)),
+            TextNodeKey::from_style(&lifecycle_str, &code_style(13.0, 18.0), Some(card_w - 32.0)),
             card_x + 16.0,
             card1_y + 32.0,
             TEXT,
@@ -135,7 +133,7 @@ impl MobileInputApp {
 
         let scale_str = format!("Scale:  {:.1}x", self.scale_factor);
         self.compositor.draw_text(
-            TextNodeKey::new(&scale_str, 13.0, 18.0, None),
+            TextNodeKey::from_style(&scale_str, &code_style(13.0, 18.0), None),
             card_x + 16.0,
             card1_y + 52.0,
             TEXT,
@@ -148,7 +146,7 @@ impl MobileInputApp {
         };
         let kb_str = format!("Keyboard:  {}", kb_label);
         self.compositor.draw_text(
-            TextNodeKey::new(&kb_str, 13.0, 18.0, None),
+            TextNodeKey::from_style(&kb_str, &code_style(13.0, 18.0), None),
             card_x + card_w * 0.4,
             card1_y + 52.0,
             TEXT,
@@ -160,7 +158,7 @@ impl MobileInputApp {
             sa.top, sa.bottom, sa.left, sa.right,
         );
         self.compositor.draw_text(
-            TextNodeKey::new(&insets_str, 13.0, 18.0, None),
+            TextNodeKey::from_style(&insets_str, &code_style(13.0, 18.0), None),
             card_x + 16.0,
             card1_y + 72.0,
             TEXT_DIM,
@@ -175,7 +173,7 @@ impl MobileInputApp {
             .draw_rect(card_x, card2_y, card_w, 2.0, CYAN);
 
         self.compositor.draw_text(
-            TextNodeKey::new("TEXT INPUT", 11.0, 14.0, None),
+            TextNodeKey::from_style("TEXT INPUT", &card_title_style(11.0, 14.0), None),
             card_x + 16.0,
             card2_y + 12.0,
             CYAN,
@@ -213,14 +211,18 @@ impl MobileInputApp {
         };
 
         self.compositor.draw_text(
-            TextNodeKey::new(&display_text, 14.0, 20.0, Some(field_w - 16.0)),
+            TextNodeKey::from_style(&display_text, &body_style(14.0, 20.0), Some(field_w - 16.0)),
             field_x + 8.0,
             field_y + 10.0,
             text_color,
         );
 
         self.compositor.draw_text(
-            TextNodeKey::new("IME preedit composing is shown inline", 11.0, 14.0, None),
+            TextNodeKey::from_style(
+                "IME preedit composing is shown inline",
+                &body_style(11.0, 14.0),
+                None,
+            ),
             card_x + 16.0,
             card2_y + 84.0,
             TEXT_DIM,

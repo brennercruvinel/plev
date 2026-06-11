@@ -1,6 +1,7 @@
 // Rendering: scene construction and GPU submission for the input demo.
 
 use plev::compositor::{Compositor, TextNodeKey};
+use plev::text::TextMeasurer;
 
 use crate::palette::*;
 use crate::state::{InputDemoApp, State};
@@ -52,16 +53,19 @@ impl InputDemoApp {
         // Header
         compositor.draw_rect(0.0, 0.0, w, header_h, HEADER_BG);
         compositor.draw_text(
-            TextNodeKey::new("INPUT SYSTEM", 24.0, 30.0, Some(w - margin * 2.0)),
+            TextNodeKey::from_style(
+                "INPUT SYSTEM",
+                &title_style(24.0, 30.0),
+                Some(w - margin * 2.0),
+            ),
             margin,
             16.0,
             TEXT,
         );
         compositor.draw_text(
-            TextNodeKey::new(
+            TextNodeKey::from_style(
                 "Hit regions, hover states, event queue",
-                12.0,
-                16.0,
+                &body_style(12.0, 16.0),
                 Some(w - margin * 2.0),
             ),
             margin,
@@ -108,10 +112,9 @@ impl InputDemoApp {
         compositor.draw_rect(0.0, footer_y - 1.0, w, 1.0, DIVIDER);
         compositor.draw_rect(0.0, footer_y, w, footer_h, FOOTER_BG);
         compositor.draw_text(
-            TextNodeKey::new(
+            TextNodeKey::from_style(
                 "InputState  |  ViewId hit testing  |  Gesture recognizer",
-                11.0,
-                14.0,
+                &body_style(11.0, 14.0),
                 Some(w - margin * 2.0),
             ),
             margin,
@@ -146,7 +149,11 @@ impl InputDemoApp {
         card(compositor, left_x, content_y, left_w, card_h, ACCENT);
 
         compositor.draw_text(
-            TextNodeKey::new("INTERACTIVE BUTTON", 11.0, 14.0, Some(left_w - 32.0)),
+            TextNodeKey::from_style(
+                "INTERACTIVE BUTTON",
+                &card_title_style(11.0, 14.0),
+                Some(left_w - 32.0),
+            ),
             left_x + 16.0,
             content_y + 16.0,
             ACCENT,
@@ -167,10 +174,14 @@ impl InputDemoApp {
             BTN_BORDER,
         );
         compositor.draw_rect(btn_x, btn_y, btn_w, btn_h, btn_bg);
+        // Center the label from its measured size: the same style measures
+        // and draws, so the text cannot drift off-center.
+        let btn_style = label_style(16.0, 20.0);
+        let (btn_tw, btn_th) = TextMeasurer::measure_styled("Click me!", &btn_style, None);
         compositor.draw_text(
-            TextNodeKey::new("Click me!", 16.0, 20.0, Some(btn_w - 20.0)),
-            btn_x + 46.0,
-            btn_y + 12.0,
+            TextNodeKey::from_style("Click me!", &btn_style, Some(btn_w - 20.0)),
+            btn_x + (btn_w - btn_tw) / 2.0,
+            btn_y + (btn_h - btn_th) / 2.0,
             btn_label_color,
         );
 
@@ -185,14 +196,22 @@ impl InputDemoApp {
             [0.08, 0.08, 0.13, 1.0],
         );
         compositor.draw_text(
-            TextNodeKey::new("CLICK COUNT", 11.0, 14.0, Some(counter_w - 24.0)),
+            TextNodeKey::from_style(
+                "CLICK COUNT",
+                &label_style(11.0, 14.0),
+                Some(counter_w - 24.0),
+            ),
             counter_x + 12.0,
             counter_y + 8.0,
             TEXT_DIM,
         );
         let count_str = format!("{}", click_count);
         compositor.draw_text(
-            TextNodeKey::new(&count_str, 20.0, 26.0, Some(counter_w - 24.0)),
+            TextNodeKey::from_style(
+                &count_str,
+                &code_style(20.0, 26.0).with_weight(700),
+                Some(counter_w - 24.0),
+            ),
             counter_x + 12.0,
             counter_y + 24.0,
             ACCENT,
@@ -205,7 +224,7 @@ impl InputDemoApp {
         };
         let hint_color = if button_hovered { ACCENT } else { TEXT_DIM };
         compositor.draw_text(
-            TextNodeKey::new(hint_text, 11.0, 14.0, Some(left_w - 32.0)),
+            TextNodeKey::from_style(hint_text, &body_style(11.0, 14.0), Some(left_w - 32.0)),
             left_x + 16.0,
             counter_y + 60.0,
             hint_color,
@@ -222,7 +241,11 @@ impl InputDemoApp {
         card(compositor, right_x, content_y, right_w, card_h, CYAN);
 
         compositor.draw_text(
-            TextNodeKey::new("EVENT TYPES", 11.0, 14.0, Some(right_w - 32.0)),
+            TextNodeKey::from_style(
+                "EVENT TYPES",
+                &card_title_style(11.0, 14.0),
+                Some(right_w - 32.0),
+            ),
             right_x + 16.0,
             content_y + 16.0,
             CYAN,
@@ -249,14 +272,14 @@ impl InputDemoApp {
         for (name, desc) in &events_list {
             compositor.draw_rect(ev_x, ey + 4.0, 4.0, 4.0, CYAN);
             compositor.draw_text(
-                TextNodeKey::new(name, 14.0, 20.0, Some(ev_max_w - 16.0)),
+                TextNodeKey::from_style(name, &label_style(14.0, 20.0), Some(ev_max_w - 16.0)),
                 ev_x + 12.0,
                 ey,
                 TEXT,
             );
             ey += 20.0;
             compositor.draw_text(
-                TextNodeKey::new(desc, 11.0, 14.0, Some(ev_max_w - 16.0)),
+                TextNodeKey::from_style(desc, &code_style(11.0, 14.0), Some(ev_max_w - 16.0)),
                 ev_x + 12.0,
                 ey,
                 TEXT_DIM,
@@ -266,10 +289,9 @@ impl InputDemoApp {
 
         compositor.draw_rect(right_x + 16.0, ey + 8.0, right_w - 32.0, 1.0, DIVIDER);
         compositor.draw_text(
-            TextNodeKey::new(
+            TextNodeKey::from_style(
                 "Hit regions: register_hit_region(id, x, y, w, h)",
-                11.0,
-                14.0,
+                &code_style(11.0, 14.0),
                 Some(ev_max_w),
             ),
             ev_x,

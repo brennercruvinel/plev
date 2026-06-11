@@ -25,7 +25,7 @@ pub(crate) fn render(app: &mut App) {
 }
 
 fn build_scene(app: &mut App, vw: f32, vh: f32) {
-    use crate::shapes::{DIVIDER, TEXT, TEXT_DIM};
+    use crate::shapes::{DIVIDER, TEXT, TEXT_DIM, body_style, title_style};
     use plev::compositor::{SceneNode, TextNodeKey};
 
     app.compositor.begin_frame();
@@ -46,16 +46,15 @@ fn build_scene(app: &mut App, vw: f32, vh: f32) {
         color: DIVIDER,
     });
     app.compositor.draw_text(
-        TextNodeKey::new("SDF SHAPES", 28.0, 34.0, Some(vw - 64.0)),
+        TextNodeKey::from_style("SDF SHAPES", &title_style(28.0, 34.0), Some(vw - 64.0)),
         32.0,
         12.0,
         TEXT,
     );
     app.compositor.draw_text(
-        TextNodeKey::new(
+        TextNodeKey::from_style(
             "RoundedRect + PathBuilder + Composition",
-            12.0,
-            16.0,
+            &body_style(12.0, 16.0),
             Some(vw - 64.0),
         ),
         32.0,
@@ -95,10 +94,9 @@ fn build_scene(app: &mut App, vw: f32, vh: f32) {
         color: DIVIDER,
     });
     app.compositor.draw_text(
-        TextNodeKey::new(
+        TextNodeKey::from_style(
             "RoundedRect SDF + PathBuilder (Lyon) + pseudo-shadows | All cross-platform",
-            10.0,
-            14.0,
+            &body_style(10.0, 14.0),
             Some(vw - 64.0),
         ),
         32.0,

@@ -44,16 +44,19 @@ impl TextDemoApp {
         // Header
         compositor.draw_rect(0.0, 0.0, w, header_h, HEADER_BG);
         compositor.draw_text(
-            TextNodeKey::new("TEXT SYSTEM", 24.0, 30.0, Some(w - margin * 2.0)),
+            TextNodeKey::from_style(
+                "TEXT SYSTEM",
+                &title_style(24.0, 30.0),
+                Some(w - margin * 2.0),
+            ),
             margin,
             16.0,
             TEXT,
         );
         compositor.draw_text(
-            TextNodeKey::new(
+            TextNodeKey::from_style(
                 "cosmic-text + HarfBuzz shaping + Glyph atlas",
-                12.0,
-                16.0,
+                &body_style(12.0, 16.0),
                 Some(w - margin * 2.0),
             ),
             margin,
@@ -75,10 +78,9 @@ impl TextDemoApp {
         compositor.draw_rect(0.0, footer_y - 1.0, w, 1.0, DIVIDER);
         compositor.draw_rect(0.0, footer_y, w, footer_h, FOOTER_BG);
         compositor.draw_text(
-            TextNodeKey::new(
+            TextNodeKey::from_style(
                 "Glyph atlas: R8Unorm 512x512->4096  |  etagere packing  |  LRU eviction",
-                11.0,
-                14.0,
+                &body_style(11.0, 14.0),
                 Some(w - margin * 2.0),
             ),
             margin,
@@ -103,7 +105,11 @@ impl TextDemoApp {
         card(compositor, left_x, content_y, left_w, content_h, CYAN);
 
         compositor.draw_text(
-            TextNodeKey::new("TYPOGRAPHY SCALE", 11.0, 14.0, Some(left_w - 32.0)),
+            TextNodeKey::from_style(
+                "TYPOGRAPHY SCALE",
+                &card_title_style(11.0, 14.0),
+                Some(left_w - 32.0),
+            ),
             left_x + 16.0,
             content_y + 16.0,
             CYAN,
@@ -114,13 +120,16 @@ impl TextDemoApp {
         let sw = left_w - 32.0;
         let mut ty = content_y + 48.0;
 
-        let samples: &[(&str, &str, f32, f32, f32, [f32; 4])] = &[
+        // (label, text, size, line height, advance, weight, color): the
+        // scale demo carries semantic weights so the hierarchy is visible.
+        let samples: &[(&str, &str, f32, f32, f32, u16, [f32; 4])] = &[
             (
                 "36px  Display",
                 "The quick brown fox",
                 36.0,
                 44.0,
                 52.0,
+                700,
                 TEXT,
             ),
             (
@@ -129,6 +138,7 @@ impl TextDemoApp {
                 24.0,
                 30.0,
                 38.0,
+                600,
                 TEXT,
             ),
             (
@@ -137,6 +147,7 @@ impl TextDemoApp {
                 18.0,
                 24.0,
                 32.0,
+                400,
                 TEXT_MID,
             ),
             (
@@ -145,6 +156,7 @@ impl TextDemoApp {
                 14.0,
                 20.0,
                 28.0,
+                400,
                 TEXT_MID,
             ),
             (
@@ -153,19 +165,26 @@ impl TextDemoApp {
                 11.0,
                 14.0,
                 0.0,
+                400,
                 TEXT_MID,
             ),
         ];
 
-        for (label, text, size, lh, advance, color) in samples {
+        for (label, text, size, lh, advance, weight, color) in samples {
             compositor.draw_text(
-                TextNodeKey::new(label, 11.0, 14.0, Some(sw)),
+                TextNodeKey::from_style(label, &label_style(11.0, 14.0), Some(sw)),
                 sx,
                 ty,
                 TEXT_DIM,
             );
             ty += 16.0;
-            compositor.draw_text(TextNodeKey::new(text, *size, *lh, Some(sw)), sx, ty, *color);
+            let sample_style = body_style(*size, *lh).with_weight(*weight);
+            compositor.draw_text(
+                TextNodeKey::from_style(text, &sample_style, Some(sw)),
+                sx,
+                ty,
+                *color,
+            );
             ty += advance;
         }
     }
@@ -184,7 +203,11 @@ impl TextDemoApp {
         card(compositor, right_x, content_y, right_w, top_card_h, GREEN);
 
         compositor.draw_text(
-            TextNodeKey::new("UNICODE", 11.0, 14.0, Some(right_w - 32.0)),
+            TextNodeKey::from_style(
+                "UNICODE",
+                &card_title_style(11.0, 14.0),
+                Some(right_w - 32.0),
+            ),
             right_x + 16.0,
             content_y + 16.0,
             GREEN,
@@ -219,13 +242,18 @@ impl TextDemoApp {
 
         for (label, text) in unicode_samples {
             compositor.draw_text(
-                TextNodeKey::new(label, 11.0, 14.0, Some(uw)),
+                TextNodeKey::from_style(label, &label_style(11.0, 14.0), Some(uw)),
                 ux,
                 uy,
                 TEXT_DIM,
             );
             uy += 14.0;
-            compositor.draw_text(TextNodeKey::new(text, 14.0, 20.0, Some(uw)), ux, uy, TEXT);
+            compositor.draw_text(
+                TextNodeKey::from_style(text, &body_style(14.0, 20.0), Some(uw)),
+                ux,
+                uy,
+                TEXT,
+            );
             uy += 26.0;
         }
     }
@@ -246,7 +274,11 @@ impl TextDemoApp {
         card(compositor, right_x, wrap_y, right_w, bottom_card_h, PURPLE);
 
         compositor.draw_text(
-            TextNodeKey::new("TEXT WRAPPING", 11.0, 14.0, Some(right_w - 32.0)),
+            TextNodeKey::from_style(
+                "TEXT WRAPPING",
+                &card_title_style(11.0, 14.0),
+                Some(right_w - 32.0),
+            ),
             right_x + 16.0,
             wrap_y + 16.0,
             PURPLE,
@@ -254,14 +286,13 @@ impl TextDemoApp {
         compositor.draw_rect(right_x + 16.0, wrap_y + 36.0, right_w - 32.0, 1.0, DIVIDER);
 
         compositor.draw_text(
-            TextNodeKey::new(
+            TextNodeKey::from_style(
                 "Φ renders text via a glyph atlas built with etagere rectangle packing. \
                  Each unique (text, font_size) pair is shaped once by cosmic-text and cached \
                  in an FxHashMap. The atlas starts at 512x512 R8Unorm and grows up to 4096x4096 \
                  with LRU eviction for least-recently-used glyphs. This paragraph demonstrates \
                  automatic line wrapping within the card boundary.",
-                13.0,
-                18.0,
+                &body_style(13.0, 18.0),
                 Some(right_w - 32.0),
             ),
             right_x + 16.0,

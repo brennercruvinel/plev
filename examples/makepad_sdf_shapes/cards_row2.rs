@@ -47,7 +47,7 @@ fn draw_animated_pulse(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, car
         color: PINK,
     });
     comp.draw_text(
-        TextNodeKey::new("ANIMATED PULSE", 12.0, 16.0, None),
+        TextNodeKey::from_style("ANIMATED PULSE", &card_title_style(12.0, 16.0), None),
         cx + 12.0,
         cy + 10.0,
         PINK,
@@ -90,7 +90,7 @@ fn draw_button_gallery(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, car
         color: YELLOW,
     });
     comp.draw_text(
-        TextNodeKey::new("BUTTON GALLERY", 12.0, 16.0, None),
+        TextNodeKey::from_style("BUTTON GALLERY", &card_title_style(12.0, 16.0), None),
         cx + 12.0,
         cy + 10.0,
         YELLOW,
@@ -126,7 +126,7 @@ fn draw_button_gallery(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, car
         });
         let text_color = if bg[3] < 0.1 { ACCENT } else { TEXT };
         comp.draw_text(
-            TextNodeKey::new(label, 11.0, 15.0, Some(bw - 16.0)),
+            TextNodeKey::from_style(label, &label_style(11.0, 15.0), Some(bw - 16.0)),
             cx + 20.0,
             by + 8.0,
             text_color,
@@ -152,7 +152,7 @@ fn draw_color_palette(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card
         color: ORANGE,
     });
     comp.draw_text(
-        TextNodeKey::new("COLOR PALETTE", 12.0, 16.0, None),
+        TextNodeKey::from_style("COLOR PALETTE", &card_title_style(12.0, 16.0), None),
         cx + 12.0,
         cy + 10.0,
         ORANGE,
@@ -186,7 +186,7 @@ fn draw_color_palette(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card
             border_color: [0.0; 4],
         });
         comp.draw_text(
-            TextNodeKey::new(name, 9.0, 12.0, Some(sw)),
+            TextNodeKey::from_style(name, &label_style(9.0, 12.0), Some(sw)),
             sx + 2.0,
             sy + sh + 4.0,
             TEXT_DIM,
@@ -232,7 +232,7 @@ fn draw_bezier_paths(
         color: RED,
     });
     comp.draw_text(
-        TextNodeKey::new("BEZIER PATHS", 12.0, 16.0, None),
+        TextNodeKey::from_style("BEZIER PATHS", &card_title_style(12.0, 16.0), None),
         cx + 12.0,
         cy + 10.0,
         RED,
@@ -281,7 +281,7 @@ fn draw_bezier_paths(
     comp.draw_path(b2.close().fill([ORANGE[0], ORANGE[1], ORANGE[2], 0.25]));
 
     comp.draw_text(
-        TextNodeKey::new("cubic_to + animated", 9.0, 12.0, None),
+        TextNodeKey::from_style("cubic_to + animated", &code_style(9.0, 12.0), None),
         cx + 12.0,
         cy + card_h - 18.0,
         TEXT_DIM,

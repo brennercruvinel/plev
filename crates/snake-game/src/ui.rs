@@ -1,9 +1,37 @@
 //! Scene building for the Snake example.
 
 use plev::compositor::{Compositor, RoundedRectParams, TextNodeKey};
+use plev::text::{TextMeasurer, TextStyle};
 use web_time::Instant;
 
 use crate::state::*;
+
+// One TextStyle per run, shared by measurement and drawing
+// (kdb/adr/one-text-style-for-measurement-and-drawing.md). Weights are
+// semantic: 700 title, 500 label, 400 body; score and fps counters render
+// in JetBrains Mono.
+
+fn title_style(size: f32, line_height: f32) -> TextStyle {
+    TextStyle::new(size)
+        .with_line_height(line_height)
+        .with_weight(700)
+}
+
+fn label_style(size: f32, line_height: f32) -> TextStyle {
+    TextStyle::new(size)
+        .with_line_height(line_height)
+        .with_weight(500)
+}
+
+fn body_style(size: f32, line_height: f32) -> TextStyle {
+    TextStyle::new(size).with_line_height(line_height)
+}
+
+fn code_style(size: f32, line_height: f32) -> TextStyle {
+    TextStyle::new(size)
+        .with_line_height(line_height)
+        .with_family("JetBrains Mono")
+}
 
 impl SnakeGame {
     pub(crate) fn build_scene(&mut self, compositor: &mut Compositor, w: f32, h: f32) {
@@ -51,7 +79,7 @@ impl SnakeGame {
 
         let title = if self.ai_mode { "SNAKE (AI)" } else { "SNAKE" };
         compositor.draw_text(
-            TextNodeKey::new(title, 22.0, 28.0, None),
+            TextNodeKey::from_style(title, &title_style(22.0, 28.0), None),
             24.0,
             10.0,
             TEXT_COLOR,
@@ -59,29 +87,33 @@ impl SnakeGame {
 
         let score_text = format!("Score: {}   High: {}", self.score, self.high_score);
         compositor.draw_text(
-            TextNodeKey::new(&score_text, 13.0, 18.0, None),
+            TextNodeKey::from_style(&score_text, &code_style(13.0, 18.0), None),
             24.0,
             34.0,
             TEXT_DIM,
         );
 
-        // Mode badge
+        // Mode badge: the pill derives its width from the measured label
+        // (same style measures and draws), padding 8px each side.
         let mode_label = if self.ai_mode { "AI" } else { "MANUAL" };
-        let badge_w = if self.ai_mode { 32.0 } else { 64.0 };
+        let badge_style = label_style(11.0, 14.0);
+        let (badge_tw, badge_th) = TextMeasurer::measure_styled(mode_label, &badge_style, None);
+        let badge_w = badge_tw + 16.0;
+        let badge_h = 22.0;
         compositor.draw_rounded_rect(RoundedRectParams {
             x: w - 24.0 - badge_w,
             y: 14.0,
             w: badge_w,
-            h: 22.0,
+            h: badge_h,
             color: ACCENT,
             corner_radius: 4.0,
             border_width: 0.0,
             border_color: [0.0; 4],
         });
         compositor.draw_text(
-            TextNodeKey::new(mode_label, 11.0, 14.0, Some(badge_w - 8.0)),
-            w - 24.0 - badge_w + 4.0,
-            18.0,
+            TextNodeKey::from_style(mode_label, &badge_style, None),
+            w - 24.0 - badge_w + 8.0,
+            14.0 + (badge_h - badge_th) / 2.0,
             TEXT_COLOR,
         );
     }
@@ -261,16 +293,23 @@ impl SnakeGame {
         total_h: f32,
     ) {
         compositor.draw_rect(ox, oy, total_w, total_h, [0.0, 0.0, 0.0, 0.6]);
+        // Both overlay lines center on their measured width: one style per
+        // run measures and draws, so centering holds for any score.
+        let over_style = title_style(32.0, 40.0);
+        let (over_tw, _) = TextMeasurer::measure_styled("GAME OVER", &over_style, Some(total_w));
         compositor.draw_text(
-            TextNodeKey::new("GAME OVER", 32.0, 40.0, Some(total_w)),
-            ox + total_w / 2.0 - 100.0,
+            TextNodeKey::from_style("GAME OVER", &over_style, Some(total_w)),
+            ox + (total_w - over_tw) / 2.0,
             oy + total_h / 2.0 - 30.0,
             [1.0, 0.3, 0.25, 1.0],
         );
         let restart_text = format!("Score: {} | Press SPACE or R to restart", self.score);
+        let restart_style = body_style(14.0, 18.0);
+        let (restart_tw, _) =
+            TextMeasurer::measure_styled(&restart_text, &restart_style, Some(total_w));
         compositor.draw_text(
-            TextNodeKey::new(&restart_text, 14.0, 18.0, Some(total_w)),
-            ox + total_w / 2.0 - 140.0,
+            TextNodeKey::from_style(&restart_text, &restart_style, Some(total_w)),
+            ox + (total_w - restart_tw) / 2.0,
             oy + total_h / 2.0 + 14.0,
             TEXT_DIM,
         );
@@ -280,20 +319,23 @@ impl SnakeGame {
         compositor.draw_rect(0.0, h - FOOTER_H, w, FOOTER_H, [0.05, 0.05, 0.09, 1.0]);
         compositor.draw_rect(0.0, h - FOOTER_H, w, 1.0, DIVIDER);
         compositor.draw_text(
-            TextNodeKey::new(
+            TextNodeKey::from_style(
                 "plev Engine | Arrow keys: move | A: toggle AI | Space/R: restart",
-                10.0,
-                13.0,
+                &body_style(10.0, 13.0),
                 Some(w - 200.0),
             ),
             24.0,
             h - FOOTER_H + 8.0,
             TEXT_DIM,
         );
+        // Right-align the fps counter from its measured width, mirroring
+        // the 24px left padding of the footer text.
         let fps = format!("{:.0} FPS | F{}", self.fps_display, self.frame);
+        let fps_style = code_style(10.0, 13.0);
+        let (fps_tw, _) = TextMeasurer::measure_styled(&fps, &fps_style, None);
         compositor.draw_text(
-            TextNodeKey::new(&fps, 10.0, 13.0, Some(120.0)),
-            w - 140.0,
+            TextNodeKey::from_style(&fps, &fps_style, None),
+            w - 24.0 - fps_tw,
             h - FOOTER_H + 8.0,
             TEXT_DIM,
         );

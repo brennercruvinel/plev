@@ -29,7 +29,11 @@ pub fn build_header(comp: &mut plev::compositor::Compositor, w: f32, margin: f32
     comp.push_to_layer(
         LayerId::DEFAULT,
         SceneNode::Text {
-            key: TextNodeKey::new("LAYER SYSTEM", 24.0, 30.0, Some(w - margin * 2.0)),
+            key: TextNodeKey::from_style(
+                "LAYER SYSTEM",
+                &title_style(24.0, 30.0),
+                Some(w - margin * 2.0),
+            ),
             x: margin,
             y: 16.0,
             color: TEXT,
@@ -38,10 +42,9 @@ pub fn build_header(comp: &mut plev::compositor::Compositor, w: f32, margin: f32
     comp.push_to_layer(
         LayerId::DEFAULT,
         SceneNode::Text {
-            key: TextNodeKey::new(
+            key: TextNodeKey::from_style(
                 "Per-layer dirty tracking + offscreen composition",
-                12.0,
-                16.0,
+                &body_style(12.0, 16.0),
                 Some(w - margin * 2.0),
             ),
             x: margin,
@@ -81,7 +84,11 @@ pub fn build_info_card(comp: &mut plev::compositor::Compositor, _w: f32, margin:
     comp.push_to_layer(
         LayerId::DEFAULT,
         SceneNode::Text {
-            key: TextNodeKey::new("LAYER INFO", 13.0, 17.0, Some(card_w - 32.0)),
+            key: TextNodeKey::from_style(
+                "LAYER INFO",
+                &card_title_style(13.0, 17.0),
+                Some(card_w - 32.0),
+            ),
             x: card_x + 16.0,
             y: card_y + 14.0,
             color: GREEN,
@@ -122,7 +129,11 @@ pub fn build_info_card(comp: &mut plev::compositor::Compositor, _w: f32, margin:
         comp.push_to_layer(
             LayerId::DEFAULT,
             SceneNode::Text {
-                key: TextNodeKey::new(line, 12.0, 16.0, Some(info_max_w - 16.0)),
+                key: TextNodeKey::from_style(
+                    line,
+                    &code_style(12.0, 16.0),
+                    Some(info_max_w - 16.0),
+                ),
                 x: info_x + 12.0,
                 y: iy,
                 color: *color,
@@ -144,10 +155,9 @@ pub fn build_info_card(comp: &mut plev::compositor::Compositor, _w: f32, margin:
     comp.push_to_layer(
         LayerId::DEFAULT,
         SceneNode::Text {
-            key: TextNodeKey::new(
+            key: TextNodeKey::from_style(
                 "Unchanged layers = zero GPU work per frame",
-                11.0,
-                14.0,
+                &body_style(11.0, 14.0),
                 Some(info_max_w),
             ),
             x: info_x,
@@ -183,10 +193,9 @@ pub fn build_footer(comp: &mut plev::compositor::Compositor, w: f32, h: f32, mar
     comp.push_to_layer(
         LayerId::DEFAULT,
         SceneNode::Text {
-            key: TextNodeKey::new(
+            key: TextNodeKey::from_style(
                 "Per-layer offscreen textures  |  FxHash dirty tracking  |  Composite pass",
-                11.0,
-                15.0,
+                &body_style(11.0, 15.0),
                 Some(w - margin * 2.0),
             ),
             x: margin,
@@ -237,10 +246,9 @@ pub fn build_foreground(
     comp.push_to_layer(
         fg_layer,
         SceneNode::Text {
-            key: TextNodeKey::new(
+            key: TextNodeKey::from_style(
                 &format!("FOREGROUND (phase {})", phase),
-                14.0,
-                18.0,
+                &card_title_style(14.0, 18.0),
                 Some(fg_card_w - 20.0),
             ),
             x: fx + 10.0,
@@ -251,10 +259,9 @@ pub fn build_foreground(
     comp.push_to_layer(
         fg_layer,
         SceneNode::Text {
-            key: TextNodeKey::new(
+            key: TextNodeKey::from_style(
                 "Dynamic layer, 80% opacity, z_order=1",
-                11.0,
-                14.0,
+                &body_style(11.0, 14.0),
                 Some(fg_card_w - 20.0),
             ),
             x: fx + 10.0,

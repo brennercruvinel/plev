@@ -4,13 +4,35 @@
 use plev::compositor::{
     Compositor, GradientRectParams, RoundedRectParams, ShadowParams, TextNodeKey,
 };
+use plev::text::TextStyle;
 
 const TEXT: [f32; 4] = [0.92, 0.93, 0.95, 1.0];
 const MUTED: [f32; 4] = [0.55, 0.58, 0.64, 1.0];
 const CARD: [f32; 4] = [0.16, 0.17, 0.21, 1.0];
 
-fn label(c: &mut Compositor, text: &str, size: f32, x: f32, y: f32, color: [f32; 4]) {
-    c.draw_text(TextNodeKey::new(text, size, size * 1.3, None), x, y, color);
+// One TextStyle per run, shared by measurement and drawing
+// (kdb/adr/one-text-style-for-measurement-and-drawing.md). Weights are
+// semantic: 700 page title, 500 section label, 400 body; numeric readouts
+// render in JetBrains Mono.
+
+fn title_style(size: f32) -> TextStyle {
+    TextStyle::new(size).with_weight(700)
+}
+
+fn section_style(size: f32) -> TextStyle {
+    TextStyle::new(size).with_weight(500)
+}
+
+fn body_style(size: f32) -> TextStyle {
+    TextStyle::new(size)
+}
+
+fn code_style(size: f32) -> TextStyle {
+    TextStyle::new(size).with_family("JetBrains Mono")
+}
+
+fn label(c: &mut Compositor, text: &str, style: &TextStyle, x: f32, y: f32, color: [f32; 4]) {
+    c.draw_text(TextNodeKey::from_style(text, style, None), x, y, color);
 }
 
 /// Build the whole demo scene into `c`. `elapsed` drives the animated
@@ -24,7 +46,7 @@ pub fn build_scene(
     label(
         c,
         "plev renderer -- visual capabilities",
-        22.0,
+        &title_style(22.0),
         32.0,
         24.0,
         TEXT,
@@ -34,7 +56,7 @@ pub fn build_scene(
     label(
         c,
         "analytic shadows (blur 4 / 12 / 24 / 48)",
-        14.0,
+        &section_style(14.0),
         32.0,
         68.0,
         MUTED,
@@ -63,14 +85,21 @@ pub fn build_scene(
             border_width: 1.0,
             border_color: [1.0, 1.0, 1.0, 0.08],
         });
-        label(c, &format!("blur {blur}"), 13.0, x + 16.0, y + 36.0, TEXT);
+        label(
+            c,
+            &format!("blur {blur}"),
+            &code_style(13.0),
+            x + 16.0,
+            y + 36.0,
+            TEXT,
+        );
     }
 
     // -- Linear gradients -------------------------------------------------
     label(
         c,
         "linear gradients (0 / 45 / 90 / 135 deg)",
-        14.0,
+        &section_style(14.0),
         32.0,
         230.0,
         MUTED,
@@ -101,7 +130,7 @@ pub fn build_scene(
     label(
         c,
         "image atlas (png decode + procedural rgba)",
-        14.0,
+        &section_style(14.0),
         32.0,
         356.0,
         MUTED,
@@ -122,7 +151,7 @@ pub fn build_scene(
     label(
         c,
         "clip stack (content larger than panel)",
-        14.0,
+        &section_style(14.0),
         px,
         356.0,
         MUTED,
@@ -161,7 +190,7 @@ pub fn build_scene(
         label(
             c,
             &format!("row {row} -- clipped to the panel bounds"),
-            12.0,
+            &body_style(12.0),
             px + 16.0,
             y + 4.0,
             TEXT,

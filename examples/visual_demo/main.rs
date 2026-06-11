@@ -2,19 +2,26 @@
 //! 2-stop linear gradients, images from the atlas, and a clipped panel
 //! whose content is larger than the panel (scissored scrolling).
 //!
+//! Also demonstrates the perf instrumentation: the HUD overlay starts on
+//! (toggle with the `p` key) and a compact perf line logs every 120 frames
+//! (`RUST_LOG=info`).
+//!
 //! Run: `cargo run --example visual_demo`
 
 mod scene;
 
 use std::sync::Arc;
 
-use plev::compositor::Compositor;
-use plev::gpu::GpuContext;
+use plev::animation::FrameClock;
+use plev::compositor::{Compositor, Layer};
+use plev::gpu::{GpuContext, RenderConfig};
+use plev::perf::{MemoryStats, PerfHud, PerfMonitor, process_rss_bytes};
 use plev::text::TextSystem;
 use plev::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 use plev::winit::application::ApplicationHandler;
-use plev::winit::event::WindowEvent;
+use plev::winit::event::{ElementState, WindowEvent};
 use plev::winit::event_loop::{ActiveEventLoop, EventLoop};
+use plev::winit::keyboard::Key;
 use plev::winit::window::{Window, WindowAttributes, WindowId};
 use web_time::Instant;
 
@@ -39,6 +46,9 @@ struct DemoApp {
     started: Instant,
     logo: Option<plev::gpu::ImageHandle>,
     pattern: Option<plev::gpu::ImageHandle>,
+    frame_clock: FrameClock,
+    perf: PerfMonitor,
+    hud: PerfHud,
 }
 
 impl DemoApp {
@@ -50,6 +60,9 @@ impl DemoApp {
             started: Instant::now(),
             logo: None,
             pattern: None,
+            frame_clock: FrameClock::new(),
+            perf: PerfMonitor::new(),
+            hud: PerfHud::new(),
         }
     }
 
@@ -57,6 +70,7 @@ impl DemoApp {
         let AppState::Ready { .. } = self.state else {
             return;
         };
+        let tick = self.frame_clock.tick();
 
         // Build the scene first (immutable borrow of gpu happens below).
         self.compositor.begin_frame();
@@ -90,6 +104,20 @@ impl DemoApp {
 
         text_system.begin_frame();
 
+        // Perf HUD overlay (toggled with `p`): drawn by the compositor on
+        // its own layer, after the app scene and before resolve. Shows the
+        // previous frame's snapshot.
+        if gpu.config.perf_hud {
+            let snapshot = self.perf.snapshot();
+            self.hud.draw(
+                &mut self.compositor,
+                &snapshot,
+                gpu.surface_config.width as f32,
+            );
+        } else {
+            self.hud.clear(&mut self.compositor);
+        }
+
         self.compositor
             .resolve(&plev::compositor::ResolveResources {
                 device: &gpu.device,
@@ -107,6 +135,7 @@ impl DemoApp {
         text_system.finish_frame();
         gpu.prepare_images();
 
+        let encode_start = Instant::now();
         let mut encoder =
             gpu.device
                 .create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
@@ -127,7 +156,7 @@ impl DemoApp {
             b: BG[2],
             a: 1.0,
         };
-        encode_layer_passes(
+        let layer_draws = encode_layer_passes(
             &self.compositor,
             gpu,
             text_system,
@@ -141,7 +170,7 @@ impl DemoApp {
             self.compositor.mark_layer_clean(*id);
         }
 
-        encode_composite_pass(
+        let composite_draws = encode_composite_pass(
             &self.compositor,
             clear_color,
             gpu,
@@ -152,6 +181,35 @@ impl DemoApp {
 
         gpu.queue.submit(std::iter::once(encoder.finish()));
         output.present();
+
+        // Feed the perf monitor from the engine's own counters.
+        let glyphs: u32 = self
+            .compositor
+            .layers()
+            .iter()
+            .map(Layer::glyph_count)
+            .sum();
+        self.compositor.record_encode_stats(
+            layer_draws + composite_draws,
+            glyphs,
+            encode_start.elapsed().as_micros() as u64,
+        );
+        self.perf.record_frame(tick, self.compositor.stats());
+        self.perf.record_memory(MemoryStats {
+            glyph_atlas_bytes: text_system.atlas_memory_bytes(),
+            texture_pool_bytes: texture_pool.memory_bytes(),
+            layer_bytes: self.compositor.gpu_memory_bytes(),
+            process_rss_bytes: process_rss_bytes(),
+        });
+        if gpu.config.perf_log
+            && gpu.config.perf_log_interval > 0
+            && self
+                .perf
+                .frames()
+                .is_multiple_of(u64::from(gpu.config.perf_log_interval))
+        {
+            log::info!("{}", self.perf.snapshot().log_line());
+        }
     }
 }
 
@@ -165,7 +223,14 @@ impl ApplicationHandler for DemoApp {
             .with_inner_size(plev::winit::dpi::LogicalSize::new(780, 620));
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
         self.window = Some(window.clone());
-        let gpu = pollster::block_on(GpuContext::new(window));
+        // Perf instrumentation on for the demo (defaults are off): HUD
+        // visible at start, compact log line every 120 frames.
+        let config = RenderConfig {
+            perf_hud: true,
+            perf_log: true,
+            ..RenderConfig::default()
+        };
+        let gpu = pollster::block_on(GpuContext::new_with_config(window, config));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
         let effects = plev::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = AppState::Ready {
@@ -201,6 +266,15 @@ impl ApplicationHandler for DemoApp {
                 // Continuous redraw: the clipped panel scroll is animated.
                 if let Some(ref w) = self.window {
                     w.request_redraw();
+                }
+            }
+            WindowEvent::KeyboardInput { event, .. } => {
+                // `p` toggles the perf HUD overlay.
+                if event.state == ElementState::Pressed
+                    && matches!(event.logical_key.as_ref(), Key::Character("p"))
+                    && let AppState::Ready { ref mut gpu, .. } = self.state
+                {
+                    gpu.config.perf_hud = !gpu.config.perf_hud;
                 }
             }
             _ => {}

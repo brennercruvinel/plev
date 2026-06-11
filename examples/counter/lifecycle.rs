@@ -2,6 +2,7 @@
 
 use plev::component::Lifecycle;
 use plev::compositor::{SceneNode, TextNodeKey};
+use plev::text::TextStyle;
 use plev::view::ViewContext;
 
 // --- Color palette --------------------------------------------------------
@@ -23,6 +24,32 @@ pub const HEADER_H: f32 = 70.0;
 pub const FOOTER_H: f32 = 32.0;
 pub const MARGIN: f32 = 32.0;
 pub const ACCENT_BAR_H: f32 = 2.0;
+
+// --- Typography -------------------------------------------------------------
+// One TextStyle per run, shared by measurement and drawing
+// (kdb/adr/one-text-style-for-measurement-and-drawing.md). Weights are
+// semantic: 700 page title, 600 card title, 500 label, 400 body; code and
+// counters render in JetBrains Mono.
+
+pub fn title_style(size: f32) -> TextStyle {
+    TextStyle::new(size).with_weight(700)
+}
+
+pub fn card_title_style(size: f32) -> TextStyle {
+    TextStyle::new(size).with_weight(600)
+}
+
+pub fn label_style(size: f32) -> TextStyle {
+    TextStyle::new(size).with_weight(500)
+}
+
+pub fn body_style(size: f32) -> TextStyle {
+    TextStyle::new(size)
+}
+
+pub fn code_style(size: f32) -> TextStyle {
+    TextStyle::new(size).with_family("JetBrains Mono")
+}
 
 // --- Counter Lifecycle ----------------------------------------------------
 
@@ -64,7 +91,11 @@ impl Lifecycle for Counter {
             color: ACCENT_DIM,
         });
         nodes.push(SceneNode::Text {
-            key: TextNodeKey::new("FRAME COUNTER", 11.0, 14.3, Some(card_w - 32.0)),
+            key: TextNodeKey::from_style(
+                "FRAME COUNTER",
+                &card_title_style(11.0),
+                Some(card_w - 32.0),
+            ),
             x: card_x + 16.0,
             y: card_y + 16.0,
             color: ORANGE,
@@ -72,13 +103,17 @@ impl Lifecycle for Counter {
 
         let count_str = format!("{}", count);
         nodes.push(SceneNode::Text {
-            key: TextNodeKey::new(&count_str, 38.0, 49.4, Some(card_w - 32.0)),
+            key: TextNodeKey::from_style(
+                &count_str,
+                &code_style(38.0).with_weight(700),
+                Some(card_w - 32.0),
+            ),
             x: card_x + 16.0,
             y: card_y + 44.0,
             color: ORANGE,
         });
         nodes.push(SceneNode::Text {
-            key: TextNodeKey::new("frames", 11.0, 14.3, Some(card_w - 32.0)),
+            key: TextNodeKey::from_style("frames", &label_style(11.0), Some(card_w - 32.0)),
             x: card_x + 16.0,
             y: card_y + 100.0,
             color: TEXT_DIM,
@@ -91,10 +126,9 @@ impl Lifecycle for Counter {
             color: DIVIDER,
         });
         nodes.push(SceneNode::Text {
-            key: TextNodeKey::new(
+            key: TextNodeKey::from_style(
                 "on_update() increments every frame",
-                10.0,
-                13.0,
+                &code_style(10.0),
                 Some(card_w - 32.0),
             ),
             x: card_x + 16.0,

@@ -1,7 +1,8 @@
-//! Shape primitives and color palette for the SDF shapes demo.
+//! Shape primitives, color palette and typography for the SDF shapes demo.
 
 use plev::compositor::{Compositor, SceneNode};
 use plev::path::PathBuilder;
+use plev::text::TextStyle;
 
 // ---------------------------------------------------------------------------
 // Color palette
@@ -21,6 +22,41 @@ pub const PINK: [f32; 4] = [1.0, 0.40, 0.70, 1.0];
 pub const TEXT: [f32; 4] = [0.93, 0.93, 0.96, 1.0];
 pub const TEXT_DIM: [f32; 4] = [0.50, 0.50, 0.60, 1.0];
 pub const DIVIDER: [f32; 4] = [0.16, 0.16, 0.22, 1.0];
+
+// ---------------------------------------------------------------------------
+// Typography: one TextStyle per run, shared by measurement and drawing
+// (kdb/adr/one-text-style-for-measurement-and-drawing.md). Weights are
+// semantic: 700 page title, 600 card title, 500 label, 400 body; code
+// references render in JetBrains Mono.
+// ---------------------------------------------------------------------------
+
+pub fn title_style(size: f32, line_height: f32) -> TextStyle {
+    TextStyle::new(size)
+        .with_line_height(line_height)
+        .with_weight(700)
+}
+
+pub fn card_title_style(size: f32, line_height: f32) -> TextStyle {
+    TextStyle::new(size)
+        .with_line_height(line_height)
+        .with_weight(600)
+}
+
+pub fn label_style(size: f32, line_height: f32) -> TextStyle {
+    TextStyle::new(size)
+        .with_line_height(line_height)
+        .with_weight(500)
+}
+
+pub fn body_style(size: f32, line_height: f32) -> TextStyle {
+    TextStyle::new(size).with_line_height(line_height)
+}
+
+pub fn code_style(size: f32, line_height: f32) -> TextStyle {
+    TextStyle::new(size)
+        .with_line_height(line_height)
+        .with_family("JetBrains Mono")
+}
 
 // ---------------------------------------------------------------------------
 // Shape helpers

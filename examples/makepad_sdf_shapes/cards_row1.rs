@@ -37,7 +37,7 @@ fn draw_rounded_rects(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card
         color: ACCENT,
     });
     comp.draw_text(
-        TextNodeKey::new("ROUNDED RECTS", 12.0, 16.0, None),
+        TextNodeKey::from_style("ROUNDED RECTS", &card_title_style(12.0, 16.0), None),
         cx + 12.0,
         cy + 10.0,
         ACCENT,
@@ -60,7 +60,7 @@ fn draw_rounded_rects(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card
         });
         let label = format!("r={}", *r as u32);
         comp.draw_text(
-            TextNodeKey::new(&label, 9.0, 12.0, Some(rw)),
+            TextNodeKey::from_style(&label, &code_style(9.0, 12.0), Some(rw)),
             rx + 4.0,
             ry + 64.0,
             TEXT_DIM,
@@ -83,7 +83,7 @@ fn draw_rounded_rects(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card
             border_color: *bc,
         });
         comp.draw_text(
-            TextNodeKey::new(label, 9.0, 12.0, Some(bw)),
+            TextNodeKey::from_style(label, &code_style(9.0, 12.0), Some(bw)),
             bx + 4.0,
             by + 54.0,
             TEXT_DIM,
@@ -109,7 +109,7 @@ fn draw_circles_rings(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card
         color: CYAN,
     });
     comp.draw_text(
-        TextNodeKey::new("CIRCLES & RINGS", 12.0, 16.0, None),
+        TextNodeKey::from_style("CIRCLES & RINGS", &card_title_style(12.0, 16.0), None),
         cx + 12.0,
         cy + 10.0,
         CYAN,
@@ -153,7 +153,7 @@ fn draw_circles_rings(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card
     }
 
     comp.draw_text(
-        TextNodeKey::new("PathBuilder::circle", 9.0, 12.0, None),
+        TextNodeKey::from_style("PathBuilder::circle", &code_style(9.0, 12.0), None),
         cx + 12.0,
         cy + card_h - 18.0,
         TEXT_DIM,
@@ -178,7 +178,7 @@ fn draw_polygons(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card_h: f
         color: GREEN,
     });
     comp.draw_text(
-        TextNodeKey::new("POLYGONS", 12.0, 16.0, None),
+        TextNodeKey::from_style("POLYGONS", &card_title_style(12.0, 16.0), None),
         cx + 12.0,
         cy + 10.0,
         GREEN,
@@ -197,7 +197,7 @@ fn draw_polygons(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card_h: f
         let r = (pw / 2.0 - 6.0).min(28.0);
         push_polygon(comp, px, py, r, *sides, *color);
         comp.draw_text(
-            TextNodeKey::new(label, 9.0, 12.0, Some(pw)),
+            TextNodeKey::from_style(label, &label_style(9.0, 12.0), Some(pw)),
             cx + 12.0 + i as f32 * pw,
             cy + 105.0,
             TEXT_DIM,
@@ -212,7 +212,7 @@ fn draw_polygons(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card_h: f
         let r = (sw / 2.0 - 8.0).min(24.0);
         push_star(comp, sx, sy, r, r * 0.45, *pts, *color);
         comp.draw_text(
-            TextNodeKey::new(label, 9.0, 12.0, Some(sw)),
+            TextNodeKey::from_style(label, &label_style(9.0, 12.0), Some(sw)),
             cx + 12.0 + i as f32 * sw,
             cy + 190.0,
             TEXT_DIM,
@@ -238,7 +238,7 @@ fn draw_depth_shadow(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card_
         color: PURPLE,
     });
     comp.draw_text(
-        TextNodeKey::new("DEPTH & SHADOW", 12.0, 16.0, None),
+        TextNodeKey::from_style("DEPTH & SHADOW", &card_title_style(12.0, 16.0), None),
         cx + 12.0,
         cy + 10.0,
         PURPLE,
@@ -262,7 +262,7 @@ fn draw_depth_shadow(comp: &mut Compositor, cx: f32, cy: f32, card_w: f32, card_
             border_color: [0.0; 4],
         });
         comp.draw_text(
-            TextNodeKey::new(label, 9.0, 12.0, Some(lw)),
+            TextNodeKey::from_style(label, &label_style(9.0, 12.0), Some(lw)),
             lx + 2.0,
             ly + 64.0,
             TEXT_DIM,

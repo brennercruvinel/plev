@@ -45,16 +45,19 @@ pub fn render(app: &mut CounterApp) {
         color: HEADER_BG,
     });
     app.compositor.draw_text(
-        TextNodeKey::new("COMPONENT COUNTER", 24.0, 31.2, Some(w - MARGIN * 2.0)),
+        TextNodeKey::from_style(
+            "COMPONENT COUNTER",
+            &title_style(24.0),
+            Some(w - MARGIN * 2.0),
+        ),
         MARGIN,
         16.0,
         TEXT,
     );
     app.compositor.draw_text(
-        TextNodeKey::new(
+        TextNodeKey::from_style(
             "State persists between frames via Lifecycle trait",
-            12.0,
-            15.6,
+            &body_style(12.0),
             Some(w - MARGIN * 2.0),
         ),
         MARGIN,
@@ -259,7 +262,7 @@ fn build_info_card(comp: &mut plev::compositor::Compositor, w: f32) {
         color: CYAN,
     });
     comp.draw_text(
-        TextNodeKey::new("LIFECYCLE", 11.0, 14.3, Some(info_w - 32.0)),
+        TextNodeKey::from_style("LIFECYCLE", &card_title_style(11.0), Some(info_w - 32.0)),
         info_x + 16.0,
         info_y + 16.0,
         CYAN,
@@ -273,7 +276,7 @@ fn build_info_card(comp: &mut plev::compositor::Compositor, w: f32) {
     for (i, label) in labels.iter().enumerate() {
         let ly = info_y + 46.0 + (i as f32) * 24.0;
         comp.draw_text(
-            TextNodeKey::new(label, 11.0, 14.3, Some(info_w - 32.0)),
+            TextNodeKey::from_style(label, &code_style(11.0), Some(info_w - 32.0)),
             info_x + 16.0,
             ly,
             TEXT_DIM,
@@ -288,10 +291,9 @@ fn build_info_card(comp: &mut plev::compositor::Compositor, w: f32) {
         color: DIVIDER,
     });
     comp.draw_text(
-        TextNodeKey::new(
+        TextNodeKey::from_style(
             "Component<T> caches SceneNodes",
-            10.0,
-            13.0,
+            &code_style(10.0),
             Some(info_w - 32.0),
         ),
         info_x + 16.0,
@@ -317,10 +319,9 @@ fn build_footer(comp: &mut plev::compositor::Compositor, w: f32, h: f32) {
         color: FOOTER_BG,
     });
     comp.draw_text(
-        TextNodeKey::new(
+        TextNodeKey::from_style(
             "Component<Counter>  |  Lifecycle trait  |  Cached SceneNodes",
-            11.0,
-            14.3,
+            &body_style(11.0),
             Some(w - MARGIN * 2.0),
         ),
         MARGIN,
