@@ -1,7 +1,7 @@
 # plev — Status do Projeto
 
 > Estado vivo do trabalho. Atualizado a cada onda. Complementa
-> `docs/PLANO_TECNICO.md` (a arquitetura-alvo, que não muda).
+> `docs/plano-tecnico.md` (a arquitetura-alvo, que não muda).
 
 ## Resumo
 

@@ -37,7 +37,7 @@ pub(super) fn register_embedded_fonts(db: &mut Database) {
     db.load_font_data(include_bytes!("../../assets/fonts/JetBrainsMono-Regular.ttf").to_vec());
     db.load_font_data(include_bytes!("../../assets/fonts/JetBrainsMono-Bold.ttf").to_vec());
 
-    // Codicons — VS Code icon font (MIT).
+    // Codicons — VS Code icon font (CC BY 4.0; texto em assets/fonts/).
     db.load_font_data(include_bytes!("../../assets/fonts/codicons.ttf").to_vec());
 
     // `font_family: None` (the engine default) shapes as `Family::SansSerif`.

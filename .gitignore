@@ -1,5 +1,6 @@
 # Build artifacts
-/target
+target/
+rust_out
 dist/
 out/
 
@@ -58,7 +59,6 @@ coverage/
 htmlcov/
 
 # Experiments — source is versioned alongside other examples; build artifacts are not
-crates/exp/**/target/
 
 # Private / experiments (not for public release)
 doc/

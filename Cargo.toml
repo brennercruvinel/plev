@@ -93,3 +93,7 @@ target_sdk_version = 35
 debuggable = true
 has_code = false
 theme = "@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
+
+[[bench]]
+name = "scene_build"
+harness = false
