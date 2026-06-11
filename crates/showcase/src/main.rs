@@ -18,6 +18,7 @@
 //! Keys: `T` cycles hoff/dark/light · `1`-`7` jump to a section · `Esc`
 //! closes overlays (or quits).
 
+mod keys;
 mod renderer;
 mod view;
 
@@ -220,6 +221,13 @@ impl ApplicationHandler<UserEvent> for App {
                         if !self.view.close_top_overlay() {
                             event_loop.exit();
                         } else {
+                            self.invalidate();
+                        }
+                    }
+                    // Space and the editing keys bridge through keys.rs
+                    // (the view stays winit-free).
+                    Key::Named(named) => {
+                        if keys::handle_named(&mut self.view, named) {
                             self.invalidate();
                         }
                     }

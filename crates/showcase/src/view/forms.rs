@@ -1,8 +1,16 @@
-//! Forms section: checkbox, switch, slider, progress, select, tabs.
+//! Forms section: text fields, checkbox, switch, slider, progress,
+//! select and tabs. Owns the section-local keyboard focus: Tab cycles
+//! the focusable widgets in reading order (see `focus.rs`), Escape
+//! blurs, a click in a text field places the caret.
 
+mod fields;
+mod focus;
 #[cfg(test)]
 mod tests;
 
+pub use focus::EditKey;
+
+use fields::TextFields;
 use plev::compositor::{Compositor, LayerId};
 use plev::text::TextMeasurer;
 use plev::theme::{Intent, Theme, TypographyScale};
@@ -33,6 +41,7 @@ const LABEL_H: f32 = 24.0;
 const GROUP_GAP: f32 = 26.0;
 
 pub struct FormsSection {
+    fields: TextFields,
     tabs: Tabs,
     autosave: Checkbox,
     telemetry: Checkbox,
@@ -47,9 +56,12 @@ pub struct FormsSection {
     progress_ok: ProgressBar,
     progress_err: ProgressBar,
     select: Select,
+    /// Section-local keyboard focus: a tab-order slot (see `focus.rs`).
+    focus: Option<usize>,
 }
 
 struct Layout {
+    fields: [Rect; fields::COUNT],
     tabs: Rect,
     checkboxes: [Rect; 3],
     switches: [Rect; 3],
@@ -61,6 +73,7 @@ struct Layout {
 impl FormsSection {
     pub fn new(theme: &Theme) -> Self {
         Self {
+            fields: TextFields::new(theme),
             // Three roomy segments: the reference keeps each label folgado
             // inside its pill (GOLDEN_SPEC) — the strip is sized from the
             // measured labels (see `tab_strip_w`) so every one fits.
@@ -83,6 +96,7 @@ impl FormsSection {
                 ["System default", "Always dark", "Always light", "Scheduled"],
                 0,
             ),
+            focus: None,
         }
     }
 
@@ -112,17 +126,26 @@ impl FormsSection {
             content.w.min(COL_MAX_W)
         };
 
-        // Column A: tabs, checkboxes, switches. HOFF tabs: 44px strip sized
-        // from its measured labels so each one stays folgado in its segment.
-        // With two columns it may borrow half the inter-column gap (empty
-        // space) — the original design did the same — but never reaches
-        // column B.
+        // Column A: text fields (opening the column and the tab order),
+        // tabs, checkboxes, switches; the preview line trails the fields.
+        let fields = TextFields::rects(x, y + LABEL_H, col_w);
+        let preview_bottom = fields[fields::COUNT - 1].y + fields::FIELD_H + 8.0 + LABEL_H;
+
+        // HOFF tabs: 44px strip sized from its measured labels so each one
+        // stays folgado in its segment. With two columns it may borrow half
+        // the inter-column gap (empty space, like the original design) but
+        // never reaches column B.
         let tab_max = if two_cols {
             col_w + COL_GAP / 2.0
         } else {
             col_w
         };
-        let tabs = Rect::new(x, y + LABEL_H, self.tab_strip_w(tab_max), 44.0);
+        let tabs = Rect::new(
+            x,
+            preview_bottom + GROUP_GAP + LABEL_H,
+            self.tab_strip_w(tab_max),
+            44.0,
+        );
         let cb_y = tabs.y + tabs.h + GROUP_GAP + LABEL_H;
         let checkboxes = [
             Rect::new(x, cb_y, col_w, ROW_H),
@@ -165,6 +188,7 @@ impl FormsSection {
         );
 
         Layout {
+            fields,
             tabs,
             checkboxes,
             switches,
@@ -199,6 +223,21 @@ impl FormsSection {
     pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
         let layout = self.layout(content);
         let mut r = EventResult::IGNORED;
+
+        // A click inside a field focuses it and places the caret; a click
+        // anywhere else blurs (and still reaches the widget underneath).
+        if let WidgetEvent::MouseDown { x, y } = *event {
+            if let Some(i) = layout.fields.iter().position(|f| f.contains(x, y)) {
+                self.set_focus(Some(i));
+                self.fields.click(i, x - layout.fields[i].x);
+                return EventResult::changed();
+            }
+            if self.focus.is_some() {
+                self.set_focus(None);
+                r = r.merge(EventResult::changed());
+            }
+        }
+
         r = r.merge(self.tabs.handle_event(event, layout.tabs));
         r = r.merge(self.autosave.handle_event(event, layout.checkboxes[0]));
         r = r.merge(self.telemetry.handle_event(event, layout.checkboxes[1]));
@@ -215,19 +254,24 @@ impl FormsSection {
         r
     }
 
-    /// Advance switch springs. Returns `true` while animating.
+    /// Advance switch springs and the text-field cursor blink. Returns
+    /// `true` while animating (a focused field keeps frames coming).
     pub fn tick(&mut self, dt: f32) -> bool {
         let a = self.focus_mode.tick(dt);
         let b = self.wrap_lines.tick(dt);
         let c = self.locked_switch.tick(dt);
-        a || b || c
+        let d = self.fields.tick(dt);
+        a || b || c || d
     }
 
     pub fn render(&self, c: &mut Compositor, overlay: LayerId, content: Rect, theme: &Theme) {
         let layout = self.layout(content);
         let dim = theme.colors.text_mid.0;
 
-        group_label(c, "TABS", content.x, content.y, theme);
+        group_label(c, "TEXT FIELDS", content.x, content.y, theme);
+        self.fields.render(c, &layout.fields, theme);
+
+        group_label(c, "TABS", content.x, layout.tabs.y - LABEL_H, theme);
         self.tabs.render(c, layout.tabs, theme);
 
         group_label(

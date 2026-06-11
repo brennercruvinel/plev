@@ -1,8 +1,13 @@
+//! HOFF segmented tabs: a radius-22 graphite strip whose equal-width
+//! segments share one base-2sm style for measurement and drawing; the
+//! active segment is a shadowed, edge-lit glass block. Keyboard focus
+//! ([`Tabs::set_focused`]) rings the whole strip with the accent ring.
+
 use crate::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::text::TextMeasurer;
 use crate::theme::{Theme, TypographyScale};
 
-use super::{EventResult, Rect, WidgetEvent, glass_pill};
+use super::{EventResult, Rect, WidgetEvent, focus_ring, glass_pill};
 
 /// HOFF tabs: container radius 22 / pad 4 / rgba(40,40,40,.6); the active
 /// segment is an 18-radius glass block with its own edge-light + shadow.
@@ -15,6 +20,7 @@ pub struct Tabs {
     pub labels: Vec<String>,
     pub active: usize,
     hovered: Option<usize>,
+    focused: bool,
 }
 
 impl Tabs {
@@ -23,11 +29,22 @@ impl Tabs {
             labels: labels.into_iter().map(Into::into).collect(),
             active: 0,
             hovered: None,
+            focused: false,
         }
     }
 
     pub fn hovered(&self) -> Option<usize> {
         self.hovered
+    }
+
+    /// Keyboard focus, driven by the owning view (plev has no global
+    /// focus chain). The ring wraps the whole strip.
+    pub fn set_focused(&mut self, focused: bool) {
+        self.focused = focused;
+    }
+
+    pub fn is_focused(&self) -> bool {
+        self.focused
     }
 
     /// Hit rects for each tab within `bounds`: equal-width segments
@@ -79,6 +96,10 @@ impl Tabs {
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
         let glass = &theme.glass;
+
+        if self.focused {
+            compositor.push(focus_ring(bounds, bounds.h / 2.0, theme));
+        }
 
         // Container: rgba(40,40,40,.6), pill radius (22 at 44px height).
         let container = {

@@ -1,9 +1,14 @@
+//! HOFF checkbox: 18px radius-6 box, white fill with a dark check when
+//! on, `rgba($n2,.05)` glass with a `.25` border when off, plus an
+//! optional base-2r trailing label. The whole bounds are the hit area;
+//! keyboard focus ([`Checkbox::set_focused`]) rings the box itself.
+
 use crate::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::text::TextMeasurer;
 use crate::theme::{Theme, TypographyScale};
 use crate::ui::icons;
 
-use super::{EventResult, Rect, WidgetEvent, contrast_text, with_alpha};
+use super::{EventResult, Rect, WidgetEvent, contrast_text, focus_ring, with_alpha};
 
 /// Box edge length.
 const BOX: f32 = 18.0;
@@ -19,6 +24,7 @@ pub struct Checkbox {
     pub disabled: bool,
     hovered: bool,
     pressed: bool,
+    focused: bool,
 }
 
 impl Checkbox {
@@ -29,6 +35,7 @@ impl Checkbox {
             disabled: false,
             hovered: false,
             pressed: false,
+            focused: false,
         }
     }
 
@@ -44,6 +51,16 @@ impl Checkbox {
 
     pub fn is_hovered(&self) -> bool {
         self.hovered
+    }
+
+    /// Keyboard focus, driven by the owning view (plev has no global focus
+    /// chain). Disabled checkboxes refuse focus.
+    pub fn set_focused(&mut self, focused: bool) {
+        self.focused = focused && !self.disabled;
+    }
+
+    pub fn is_focused(&self) -> bool {
+        self.focused
     }
 
     pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
@@ -94,6 +111,11 @@ impl Checkbox {
         let bx = bounds.x;
         let by = bounds.y + (bounds.h - BOX) / 2.0;
         let glass = &theme.glass;
+
+        if self.focused {
+            // Ring the box, not the label: that is where the action is.
+            compositor.push(focus_ring(Rect::new(bx, by, BOX, BOX), BOX_RADIUS, theme));
+        }
 
         if self.checked {
             // Filled white ($text-primary) with a dark check on top (push

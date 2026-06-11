@@ -1,9 +1,14 @@
+//! HOFF select: a 44px glass pill control (base-2m value + chevron) that
+//! opens a floating radius-20 options panel on an overlay layer, the
+//! active option marked by an 8px dot. Keyboard focus
+//! ([`Select::set_focused`]) rings the closed pill with the accent ring.
+
 use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::text::{TextMeasurer, TextStyle};
 use crate::theme::{Theme, TypographyScale};
 use crate::ui::icons;
 
-use super::{EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, with_alpha};
+use super::{EventResult, Rect, WidgetEvent, focus_ring, glass_pill, menu_shadow, with_alpha};
 
 /// HOFF select: 44px pill control (radius 22, base-2m label), options
 /// panel radius 20 / pad 8, 44px options (radius 12) with an 8px dot
@@ -32,6 +37,7 @@ pub struct Select {
     open: bool,
     hovered: bool,
     hovered_option: Option<usize>,
+    focused: bool,
 }
 
 impl Select {
@@ -45,6 +51,7 @@ impl Select {
             open: false,
             hovered: false,
             hovered_option: None,
+            focused: false,
         }
     }
 
@@ -55,6 +62,16 @@ impl Select {
 
     pub fn is_open(&self) -> bool {
         self.open
+    }
+
+    /// Keyboard focus, driven by the owning view (plev has no global focus
+    /// chain). Disabled selects refuse focus.
+    pub fn set_focused(&mut self, focused: bool) {
+        self.focused = focused && !self.disabled;
+    }
+
+    pub fn is_focused(&self) -> bool {
+        self.focused
     }
 
     pub fn close(&mut self) {
@@ -162,6 +179,9 @@ impl Select {
         // Glass field; the chevron icon pushed later stacks on top (the
         // compositor preserves push order across primitive types).
         let radius = theme.radius.xl.min(bounds.h / 2.0);
+        if self.focused {
+            compositor.push(focus_ring(bounds, radius, theme));
+        }
         compositor.push(super::rounded_rect(
             bounds.x, bounds.y, bounds.w, bounds.h, radius, bg,
         ));

@@ -1,8 +1,10 @@
 use super::*;
+use plev::compositor::SceneNode;
 
 /// Every rect a layout hands out, flattened (for bounds checks).
 fn all_rects(l: &Layout) -> Vec<Rect> {
     let mut v = vec![l.tabs, l.select];
+    v.extend(l.fields);
     v.extend(l.checkboxes);
     v.extend(l.switches);
     v.extend(l.sliders);
@@ -91,4 +93,229 @@ fn forms_tabs_keep_every_label_folgado() {
             slack
         );
     }
+}
+
+// ---------------------------------------------------------------------------
+// Text fields + section focus
+// ---------------------------------------------------------------------------
+
+/// Content rect matching the page layout origin.
+fn content() -> Rect {
+    Rect::new(288.0, 80.0, 760.0, 700.0)
+}
+
+/// Default-layer scene of the whole section (headless, no GPU).
+fn scene_nodes(section: &FormsSection, content: Rect) -> Vec<SceneNode> {
+    let theme = Theme::hoff();
+    let mut c = Compositor::new();
+    c.begin_frame();
+    let overlay = c.create_layer(100);
+    section.render(&mut c, overlay, content, &theme);
+    c.layer(plev::compositor::LayerId::DEFAULT)
+        .unwrap()
+        .nodes()
+        .to_vec()
+}
+
+/// Focus rings in the scene: border-only rounded rects, 2px, theme accent.
+fn ring_positions(nodes: &[SceneNode]) -> Vec<(f32, f32)> {
+    let accent = Theme::hoff().colors.accent.0;
+    nodes
+        .iter()
+        .filter_map(|n| match *n {
+            SceneNode::RoundedRect {
+                x,
+                y,
+                color,
+                border_width,
+                border_color,
+                ..
+            } if color[3] == 0.0 && border_width == 2.0 && border_color == accent => Some((x, y)),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Tab walks the order (fields first), wraps at the end, Escape blurs.
+#[test]
+fn tab_cycles_fields_then_widgets_and_wraps() {
+    let theme = Theme::hoff();
+    let mut s = FormsSection::new(&theme);
+    assert_eq!(s.focus_index(), None);
+
+    // First Tab lands on the first text field.
+    assert!(s.handle_edit_key(EditKey::Tab));
+    assert_eq!(s.focus_index(), Some(0));
+    assert_eq!(s.fields.focused(), Some(0));
+
+    // Through the fields, onto the library widgets.
+    s.handle_edit_key(EditKey::Tab);
+    s.handle_edit_key(EditKey::Tab);
+    assert_eq!(s.fields.focused(), Some(2));
+    s.handle_edit_key(EditKey::Tab);
+    assert_eq!(s.fields.focused(), None, "fields blur when focus moves on");
+    assert!(s.tabs.is_focused(), "slot 3 is the tab strip");
+
+    // March to the last slot (select), then wrap back to field 0.
+    for _ in 0..7 {
+        s.handle_edit_key(EditKey::Tab);
+    }
+    assert!(s.select.is_focused(), "last slot is the select");
+    s.handle_edit_key(EditKey::Tab);
+    assert_eq!(s.focus_index(), Some(0), "Tab wraps to the first field");
+    assert!(!s.select.is_focused());
+
+    // Escape blurs everything; a second Escape reports nothing to do.
+    assert!(s.handle_escape());
+    assert_eq!(s.focus_index(), None);
+    assert_eq!(s.fields.focused(), None);
+    assert!(!s.handle_escape());
+}
+
+/// A click inside a field focuses it and places the caret on the clicked
+/// glyph (real shaping via TextMeasurer, not chars * factor).
+#[test]
+fn click_focuses_field_and_places_caret() {
+    let theme = Theme::hoff();
+    let mut s = FormsSection::new(&theme);
+    let layout = s.layout(content());
+    let field = layout.fields[1];
+
+    // Click the empty second field: focus + caret at 0.
+    let (cx, cy) = field.center();
+    let r = s.handle_event(&WidgetEvent::MouseDown { x: cx, y: cy }, content());
+    assert!(r.changed);
+    assert_eq!(s.focus_index(), Some(1));
+
+    // Type, then click exactly where the caret for byte 4 sits
+    // (8px inner padding before the text).
+    assert!(s.handle_text("Brenner"));
+    assert_eq!(s.fields.value(1), "Brenner");
+    let x = field.x + 8.0 + TextMeasurer::cursor_x("Brenner", fields::FIELD_FONT, 4);
+    s.handle_event(&WidgetEvent::MouseDown { x, y: cy }, content());
+    assert_eq!(s.fields.cursor(1), 4);
+
+    // A click outside every field blurs the section but is not swallowed.
+    let r = s.handle_event(
+        &WidgetEvent::MouseDown {
+            x: content().x + 1.0,
+            y: content().y + content().h - 1.0,
+        },
+        content(),
+    );
+    assert_eq!(s.focus_index(), None);
+    assert!(r.changed);
+}
+
+/// Characters only reach a field while one is focused, and editing keys
+/// edit the focused buffer.
+#[test]
+fn typing_requires_focus_and_editing_keys_edit() {
+    let theme = Theme::hoff();
+    let mut s = FormsSection::new(&theme);
+    assert!(!s.handle_text("x"), "no focus: the shell keeps the key");
+
+    s.handle_edit_key(EditKey::Tab);
+    s.handle_text("abc");
+    s.handle_edit_key(EditKey::Left);
+    s.handle_edit_key(EditKey::Backspace);
+    assert_eq!(s.fields.value(0), "ac");
+    s.handle_edit_key(EditKey::End);
+    s.handle_edit_key(EditKey::Delete); // nothing right of the caret
+    assert_eq!(s.fields.value(0), "ac");
+
+    // Editing keys without a field focused (focus on the tab strip) are
+    // not consumed.
+    for _ in 0..3 {
+        s.handle_edit_key(EditKey::Tab);
+    }
+    assert!(s.tabs.is_focused());
+    assert!(!s.handle_edit_key(EditKey::Backspace));
+}
+
+/// The scene mirrors the typed value live (field text + preview line).
+#[test]
+fn scene_shows_typed_value_and_live_preview() {
+    let theme = Theme::hoff();
+    let mut s = FormsSection::new(&theme);
+
+    let texts = |s: &FormsSection| -> Vec<String> {
+        scene_nodes(s, content())
+            .iter()
+            .filter_map(|n| match n {
+                SceneNode::Text { key, .. } => Some(key.text.clone()),
+                _ => None,
+            })
+            .collect()
+    };
+    let before = texts(&s);
+    assert!(before.iter().any(|t| t == "TEXT FIELDS"), "group label");
+    assert!(
+        before.iter().any(|t| t == "Full name"),
+        "placeholder shows while empty"
+    );
+    assert!(before.iter().any(|t| t == "live value: (empty)"));
+
+    s.handle_edit_key(EditKey::Tab);
+    s.handle_text("Ada");
+    let after = texts(&s);
+    assert!(after.iter().any(|t| t == "Ada"), "typed value rendered");
+    assert!(
+        after.iter().any(|t| t == "live value: Ada"),
+        "preview mirrors the buffer live"
+    );
+}
+
+/// The accent focus ring follows the focused widget through the scene.
+#[test]
+fn focus_ring_tracks_focus_through_the_scene() {
+    let theme = Theme::hoff();
+    let mut s = FormsSection::new(&theme);
+    let layout = s.layout(content());
+
+    assert!(
+        ring_positions(&scene_nodes(&s, content())).is_empty(),
+        "no focus, no ring"
+    );
+
+    // Field 0 focused: one ring, 4px (offset+stroke) outside the field.
+    s.handle_edit_key(EditKey::Tab);
+    let rings = ring_positions(&scene_nodes(&s, content()));
+    assert_eq!(
+        rings,
+        vec![(layout.fields[0].x - 4.0, layout.fields[0].y - 4.0)]
+    );
+
+    // Move to the tab strip: the ring follows (drawn by the widget).
+    for _ in 0..3 {
+        s.handle_edit_key(EditKey::Tab);
+    }
+    let rings = ring_positions(&scene_nodes(&s, content()));
+    assert_eq!(rings, vec![(layout.tabs.x - 4.0, layout.tabs.y - 4.0)]);
+}
+
+/// While a field is focused the section keeps requesting frames (cursor
+/// blink) and the view-level shortcuts stay out of the buffer's way.
+#[test]
+fn focused_field_animates_and_captures_view_shortcuts() {
+    use super::super::{Section, ShowcaseView};
+
+    let theme = Theme::hoff();
+    let mut s = FormsSection::new(&theme);
+    assert!(!s.tick(0.016), "idle section requests no frames");
+    s.handle_edit_key(EditKey::Tab);
+    assert!(s.tick(0.016), "blink needs frames while focused");
+
+    let mut view = ShowcaseView::new(1200.0, 800.0);
+    view.section = Section::Forms;
+    assert!(view.handle_key("t"), "shortcut consumed (theme toggles)");
+    assert_eq!(view.theme_name, "dark");
+    view.forms.handle_edit_key(EditKey::Tab);
+    assert!(view.handle_key("t"), "focused field captures the char");
+    assert_eq!(view.theme_name, "dark", "theme must NOT toggle");
+    assert_eq!(view.forms.fields.value(0), "t");
+
+    // Escape blurs via the same path the shell uses.
+    assert!(view.close_top_overlay());
+    assert_eq!(view.forms.focus_index(), None);
 }

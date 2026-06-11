@@ -1,7 +1,9 @@
 use rustc_hash::FxHasher;
 use std::hash::{Hash, Hasher};
 
-#[derive(Clone, Debug)]
+// PartialEq is the anm codec prerequisite (doc/anm-format-v0.md): structural
+// round-trip tests compare decoded scenes against originals.
+#[derive(Clone, Debug, PartialEq)]
 pub enum SceneNode {
     Rect {
         x: f32,

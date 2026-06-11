@@ -1,9 +1,14 @@
+//! HOFF push button: glass pill in four variants (solid, outline, ghost,
+//! danger) and three control heights, label measured and drawn with one
+//! `TextStyle`. Click fires on release inside the bounds; keyboard focus
+//! (via [`Button::set_focused`]) draws the shared accent focus ring.
+
 use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::text::{TextMeasurer, TextStyle};
 use crate::theme::{Intent, Theme, TypographyScale};
 use crate::ui::icons;
 
-use super::{EventResult, Rect, WidgetEvent, glass_pill, intent_fill, with_alpha};
+use super::{EventResult, Rect, WidgetEvent, focus_ring, glass_pill, intent_fill, with_alpha};
 
 /// Visual variant, HOFF naming.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -80,6 +85,7 @@ pub struct Button {
     pub icon: Option<&'static str>,
     hovered: bool,
     pressed: bool,
+    focused: bool,
 }
 
 impl Button {
@@ -93,6 +99,7 @@ impl Button {
             icon: None,
             hovered: false,
             pressed: false,
+            focused: false,
         }
     }
 
@@ -127,6 +134,16 @@ impl Button {
 
     pub fn is_pressed(&self) -> bool {
         self.pressed
+    }
+
+    /// Keyboard focus, driven by the owning view (plev has no global focus
+    /// chain). Disabled buttons refuse focus.
+    pub fn set_focused(&mut self, focused: bool) {
+        self.focused = focused && !self.disabled;
+    }
+
+    pub fn is_focused(&self) -> bool {
+        self.focused
     }
 
     fn icon_size(&self) -> f32 {
@@ -271,6 +288,10 @@ impl Button {
         let style = self.size.text_style();
         // Pill: HOFF radius 32 clamps to half the 44px height.
         let radius = theme.radius.xl.min(bounds.h / 2.0);
+
+        if self.focused {
+            compositor.push_to_layer(layer, focus_ring(bounds, radius, theme));
+        }
 
         if bg[3] > 0.001 || edge[3] > 0.001 {
             // Edge-light underlay + glass fill (HOFF :before border). Icon

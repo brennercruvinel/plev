@@ -10,7 +10,7 @@ use crate::compositor::QuadVertex;
 // TessellatedPath -- pre-tessellated geometry ready for the GPU
 // ---------------------------------------------------------------------------
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TessellatedPath {
     pub vertices: Vec<QuadVertex>,
     pub indices: Vec<u32>,

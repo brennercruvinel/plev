@@ -1,13 +1,19 @@
 //! Showcase view: HOFF sidebar navigation + one module per gallery
 //! section, framed like the social app (graphite glass over #444444).
 
+mod app;
+mod builder_tour;
 mod buttons;
 mod cards;
+mod charts;
+mod dock;
 mod forms;
 mod icons_gallery;
 mod lists;
 mod overlays;
 mod theme_gallery;
+
+pub use forms::EditKey;
 
 use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use plev::overlay::{OverlayId, OverlayKind, OverlayManager};
@@ -39,10 +45,14 @@ pub enum Section {
     Lists,
     Icons,
     Theme,
+    Charts,
+    Dock,
+    App,
+    Builder,
 }
 
 impl Section {
-    pub const ALL: [Section; 7] = [
+    pub const ALL: [Section; 11] = [
         Section::Cards,
         Section::Buttons,
         Section::Forms,
@@ -50,6 +60,10 @@ impl Section {
         Section::Lists,
         Section::Icons,
         Section::Theme,
+        Section::Charts,
+        Section::Dock,
+        Section::App,
+        Section::Builder,
     ];
 
     fn title(self) -> &'static str {
@@ -61,6 +75,10 @@ impl Section {
             Section::Lists => "Lists",
             Section::Icons => "Icons",
             Section::Theme => "Theme",
+            Section::Charts => "Charts",
+            Section::Dock => "Dock",
+            Section::App => "App",
+            Section::Builder => "Builder",
         }
     }
 
@@ -73,6 +91,10 @@ impl Section {
             Section::Lists => "file",
             Section::Icons => "eye",
             Section::Theme => "sun",
+            Section::Charts => "git-branch",
+            Section::Dock => "terminal",
+            Section::App => "check",
+            Section::Builder => "code",
         }
     }
 
@@ -89,6 +111,14 @@ impl Section {
             Section::Lists => "Virtualized list with 10,000 rows, and a tree view.",
             Section::Icons => "Lucide icon set, tessellated to GPU paths with per-size caching.",
             Section::Theme => "HOFF tokens and every built-in palette. Click a card to apply it.",
+            Section::Charts => {
+                "Line, bars, stacked area and donut, drawn from a pure tested geometry core."
+            }
+            Section::Dock => "Floating message dock: glass blur, hover lift, width morph on click.",
+            Section::App => "A complete small todo app: domain state, per-item animation, input.",
+            Section::Builder => {
+                "Builder tour with real hit regions and measured, content-driven layout."
+            }
         }
     }
 }
@@ -148,6 +178,10 @@ pub struct ShowcaseView {
     lists: lists::ListsSection,
     icons_gallery: icons_gallery::IconsSection,
     themes: theme_gallery::ThemeSection,
+    charts: charts::ChartsSection,
+    dock: dock::DockSection,
+    app: app::AppSection,
+    builder_tour: builder_tour::BuilderSection,
 }
 
 #[derive(Clone, Copy)]
@@ -171,6 +205,10 @@ impl ShowcaseView {
             lists: lists::ListsSection::new(),
             icons_gallery: icons_gallery::IconsSection::new(),
             themes: theme_gallery::ThemeSection::new(),
+            charts: charts::ChartsSection::new(),
+            dock: dock::DockSection::new(),
+            app: app::AppSection::new(),
+            builder_tour: builder_tour::BuilderSection::new(),
             theme,
             theme_name: "hoff".to_string(),
             section: Section::Cards,
@@ -232,6 +270,10 @@ impl ShowcaseView {
             Section::Lists => content.h,
             Section::Icons => self.icons_gallery.content_height(content),
             Section::Theme => self.themes.content_height(content, &self.theme),
+            Section::Charts => self.charts.content_height(content),
+            Section::Dock => self.dock.content_height(content),
+            Section::App => self.app.content_height(content),
+            Section::Builder => self.builder_tour.content_height(content),
         }
     }
 
@@ -270,6 +312,11 @@ impl ShowcaseView {
 
     /// Returns `true` when the key was consumed (and a redraw is needed).
     pub fn handle_key(&mut self, key: &str) -> bool {
+        // A focused text field owns the characters: "t" types, it does
+        // not switch the theme.
+        if self.section == Section::Forms && self.forms.handle_text(key) {
+            return true;
+        }
         match key {
             "t" | "T" => {
                 let next = match self.theme_name.as_str() {
@@ -280,23 +327,40 @@ impl ShowcaseView {
                 self.set_theme(next);
                 true
             }
-            d @ ("1" | "2" | "3" | "4" | "5" | "6" | "7") => {
+            d @ ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9") => {
                 let idx = d.as_bytes()[0] - b'1';
                 self.section = Section::ALL[idx as usize];
+                true
+            }
+            // "0" reads as 10 (matching the sidebar numbering); sections
+            // past the tenth are reachable via the sidebar.
+            "0" if Section::ALL.len() >= 10 => {
+                self.section = Section::ALL[9];
                 true
             }
             _ => false,
         }
     }
 
-    /// Close the topmost overlay (Escape). Returns `false` when there was
-    /// nothing to close (caller may quit).
+    /// Close the topmost overlay (Escape): forms focus blurs first, then
+    /// the open select, then the overlay stack. Returns `false` when
+    /// there was nothing to close (caller may quit).
     pub fn close_top_overlay(&mut self) -> bool {
+        if self.section == Section::Forms && self.forms.handle_escape() {
+            return true;
+        }
         if self.forms.select_is_open() {
             self.forms.close_select();
             return true;
         }
         self.overlay_mgr.pop_animated().is_some()
+    }
+
+    /// Non-character editing keys (Tab, Backspace, arrows…) forwarded by
+    /// the platform shell. Only the Forms section consumes them today:
+    /// Tab cycles its widgets, the rest edit the focused text field.
+    pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        self.section == Section::Forms && self.forms.handle_edit_key(key)
     }
 
     pub fn handle_right_click(&mut self, x: f32, y: f32) -> bool {
@@ -497,6 +561,10 @@ impl ShowcaseView {
             }
             Section::Lists => self.lists.handle_event(event, content),
             Section::Icons => self.icons_gallery.handle_event(event, content),
+            Section::Charts => self.charts.handle_event(event, content),
+            Section::Dock => self.dock.handle_event(event, content),
+            Section::App => self.app.handle_event(event, content),
+            Section::Builder => self.builder_tour.handle_event(event, content),
             Section::Theme => {
                 let (r, picked) = self.themes.handle_event(event, content);
                 if let Some(name) = picked {
@@ -583,6 +651,16 @@ impl ShowcaseView {
         animating |= self.forms.tick(dt);
         animating |= self.lists.tick(dt);
         animating |= self.overlays.tick(dt);
+        // Dock motion only while its section is visible: an open panel
+        // blinks its caret forever, which would busy-loop other sections.
+        if self.section == Section::Dock {
+            animating |= self.dock.tick(dt);
+        }
+        // Charts reveal only while visible: replay is click-triggered, so
+        // off-screen frames would be wasted work.
+        if self.section == Section::Charts {
+            animating |= self.charts.tick(dt);
+        }
 
         // Drop overlay widgets whose exit animation finished.
         if let Some(active) = &self.active_overlay {
@@ -653,6 +731,10 @@ impl ShowcaseView {
             Section::Lists => self.lists.render(c, layers.list, content, &theme),
             Section::Icons => self.icons_gallery.render(c, content, &theme),
             Section::Theme => self.themes.render(c, content, &theme, &self.theme_name),
+            Section::Charts => self.charts.render(c, content, &theme),
+            Section::Dock => self.dock.render(c, content, &theme),
+            Section::App => self.app.render(c, content, &theme),
+            Section::Builder => self.builder_tour.render(c, content, &theme),
         }
         c.push(SceneNode::PopClip);
 
@@ -906,6 +988,12 @@ mod tests {
         let mut view = ShowcaseView::new(1200.0, 800.0);
         assert!(view.handle_key("7"));
         assert_eq!(view.section, Section::Theme);
+        assert!(view.handle_key("8"));
+        assert_eq!(view.section, Section::Charts);
+        assert!(view.handle_key("9"));
+        assert_eq!(view.section, Section::Dock);
+        assert!(view.handle_key("0"), "0 reads as 10");
+        assert_eq!(view.section, Section::App);
         assert!(view.handle_key("1"));
         assert_eq!(view.section, Section::Cards);
 

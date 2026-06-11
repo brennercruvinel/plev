@@ -30,6 +30,8 @@ mod tree;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_focus;
 
 pub use button::{Button, ButtonSize, ButtonVariant};
 pub use card::{Card, CardListRow, CardVariant};
@@ -251,6 +253,28 @@ pub fn glass_pill(
         },
     ]
 }
+
+/// Keyboard-focus ring: a [`FOCUS_RING_WIDTH`]px stroke in the theme
+/// accent, floating [`FOCUS_RING_OFFSET`]px outside the control's visual
+/// rect and following its corner radius. Every form widget draws this
+/// from `render` when focused, so focus reads identically across the kit.
+pub fn focus_ring(rect: Rect, radius: f32, theme: &Theme) -> SceneNode {
+    let inflate = FOCUS_RING_OFFSET + FOCUS_RING_WIDTH;
+    rounded_rect_stroke(
+        rect.x - inflate,
+        rect.y - inflate,
+        rect.w + inflate * 2.0,
+        rect.h + inflate * 2.0,
+        radius + inflate,
+        theme.colors.accent.0,
+        FOCUS_RING_WIDTH,
+    )
+}
+
+/// Focus ring stroke width (px).
+pub const FOCUS_RING_WIDTH: f32 = 2.0;
+/// Gap between a control's edge and the inner edge of its focus ring (px).
+pub const FOCUS_RING_OFFSET: f32 = 2.0;
 
 /// Floating-menu drop shadow (HOFF: `0 24px 32px -12px rgba(18,18,18,.10)`
 /// over the deep stack). One analytic shadow node approximates the stack.

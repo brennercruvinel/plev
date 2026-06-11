@@ -1,7 +1,12 @@
+//! HOFF slider: 4px glass track with the white 90deg progress gradient
+//! and a top-lit 14px knob that grows on hover/drag. The full bounds are
+//! the hit area (no 4px precision games); keyboard focus
+//! ([`Slider::set_focused`]) rings those bounds with the accent ring.
+
 use crate::compositor::{Compositor, SceneNode};
 use crate::theme::Theme;
 
-use super::{EventResult, Rect, WidgetEvent, with_alpha};
+use super::{EventResult, Rect, WidgetEvent, focus_ring, with_alpha};
 
 const TRACK_H: f32 = 4.0;
 const KNOB: f32 = 14.0;
@@ -18,6 +23,7 @@ pub struct Slider {
     value: f32,
     hovered: bool,
     dragging: bool,
+    focused: bool,
 }
 
 impl Slider {
@@ -30,6 +36,7 @@ impl Slider {
             value: 0.0,
             hovered: false,
             dragging: false,
+            focused: false,
         };
         s.set_value(value);
         s
@@ -64,6 +71,16 @@ impl Slider {
 
     pub fn is_hovered(&self) -> bool {
         self.hovered
+    }
+
+    /// Keyboard focus, driven by the owning view (plev has no global focus
+    /// chain). Disabled sliders refuse focus.
+    pub fn set_focused(&mut self, focused: bool) {
+        self.focused = focused && !self.disabled;
+    }
+
+    pub fn is_focused(&self) -> bool {
+        self.focused
     }
 
     /// Normalized position 0.0..=1.0.
@@ -140,6 +157,10 @@ impl Slider {
         let knob_x = bounds.x + usable * t;
         let glass = &theme.glass;
         let text = theme.colors.text;
+
+        if self.focused {
+            compositor.push(focus_ring(bounds, bounds.h / 2.0, theme));
+        }
 
         // Track: rgba($n2,.10).
         let track = glass.surface_active;

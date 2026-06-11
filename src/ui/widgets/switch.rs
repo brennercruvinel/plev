@@ -1,8 +1,13 @@
+//! HOFF toggle switch: 44x24 pill track with a 16px spring-animated knob
+//! (graphite track fading to the white handle gradient as it travels).
+//! Tick it every frame while animating; keyboard focus
+//! ([`Switch::set_focused`]) rings the track with the accent focus ring.
+
 use crate::animation::Spring;
 use crate::compositor::{Compositor, SceneNode};
 use crate::theme::{MotionPhysics, Theme};
 
-use super::{EventResult, Rect, WidgetEvent, mix};
+use super::{EventResult, Rect, WidgetEvent, focus_ring, mix};
 
 /// HOFF switch: 44×24 track (radius 12), 16px knob at (4,4) with a 20px
 /// travel. The widget centers the track inside its bounds.
@@ -21,6 +26,7 @@ pub struct Switch {
     pub disabled: bool,
     hovered: bool,
     pressed: bool,
+    focused: bool,
     /// Knob position progress: 0.0 = off, 1.0 = on.
     knob: Spring<f32>,
 }
@@ -32,6 +38,7 @@ impl Switch {
             disabled: false,
             hovered: false,
             pressed: false,
+            focused: false,
             knob: Spring::new(if on { 1.0 } else { 0.0 }),
         }
     }
@@ -50,6 +57,16 @@ impl Switch {
 
     pub fn is_hovered(&self) -> bool {
         self.hovered
+    }
+
+    /// Keyboard focus, driven by the owning view (plev has no global focus
+    /// chain). Disabled switches refuse focus.
+    pub fn set_focused(&mut self, focused: bool) {
+        self.focused = focused && !self.disabled;
+    }
+
+    pub fn is_focused(&self) -> bool {
+        self.focused
     }
 
     /// Knob animation progress (0.0..=1.0), exposed for tests.
@@ -121,6 +138,15 @@ impl Switch {
         let ty = bounds.y + (bounds.h - TRACK_H) / 2.0;
         let t = self.knob_progress();
         let glass = &theme.glass;
+
+        if self.focused {
+            // Ring the visible track, not the (larger) hit bounds.
+            compositor.push(focus_ring(
+                Rect::new(tx, ty, TRACK_W, TRACK_H),
+                TRACK_H / 2.0,
+                theme,
+            ));
+        }
 
         // Track: rgba($n2,.05) off -> rgba(40,40,40,.5) checked, blended
         // with the knob progress so color and position animate together.

@@ -3,6 +3,7 @@
 members = [
     ".",
     "macros",
+    "crates/anm",
     "crates/narrate_macro",
     "crates/narrate",
     "crates/scene-3d",

@@ -1,5 +1,5 @@
 #[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Copy, Clone, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct QuadVertex {
     pub position: [f32; 2],
     pub color: [f32; 4],
