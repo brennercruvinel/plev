@@ -5,7 +5,10 @@
 
 use crate::container::{Asset, AssetKind, Desc};
 use crate::easing::{Easing, PRESETS};
-use crate::ir::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
+use crate::ir::{
+    Keyframe, Node, NodeKind, PlaceNode, Prop, Props, RemoveNode, ReplaceNode, Segment, Timeline,
+    Track, Value,
+};
 use crate::quant;
 use crate::read::decode;
 use crate::write::encode;
@@ -90,11 +93,33 @@ fn rect(id: u16, depth: u16, x: f32, y: f32, w: f32, h: f32, c: [f32; 4]) -> Nod
     }
 }
 
+/// One structural delta op: kind 0 place, 1 replace, 2 remove, at a
+/// centisecond t in [0,1] (owned by the opening keyframe like the
+/// chains), on a depth disjoint from the snapshot's (so removes always
+/// leave the tracked nodes alone).
+type OpSpec = (u8, u32, u16, (f32, f32, [f32; 4]));
+
+fn arb_op_spec() -> impl Strategy<Value = OpSpec> {
+    (
+        0..3u8,
+        0..=100u32,
+        100..104u16,
+        (grid_px(), grid_px(), grid_color()),
+    )
+}
+
 /// All chains share one start in [0,1] owned by the opening keyframe;
 /// the optional second keyframe sits at t >= 2, so chains (max end
 /// 1.9s) never change owner. Emission order node-by-node, X before
-/// Color, is the encoder's canonical order, which the decoder restores.
-fn build(specs: Vec<NodeSpec>, start: u32, second: Option<(u32, Vec<f32>)>) -> Timeline {
+/// Color, is the encoder's canonical order, which the decoder restores;
+/// op lists get sorted to canonical (t, depth) order below for the same
+/// reason (Timeline equality is ordered).
+fn build(
+    specs: Vec<NodeSpec>,
+    start: u32,
+    second: Option<(u32, Vec<f32>)>,
+    ops: Vec<OpSpec>,
+) -> Timeline {
     let start_t = start as f32 / 100.0;
     let mut snapshot = Vec::new();
     let mut tracks = Vec::new();
@@ -125,11 +150,29 @@ fn build(specs: Vec<NodeSpec>, start: u32, second: Option<(u32, Vec<f32>)>) -> T
             snapshot,
         });
     }
+    let mut places = Vec::new();
+    let mut replaces = Vec::new();
+    let mut removes = Vec::new();
+    for (i, (kind, t_cs, depth, (x, y, c))) in ops.into_iter().enumerate() {
+        let t = t_cs as f32 / 100.0;
+        let node = rect(200 + i as u16, depth, x, y, 10.0, 10.0, c);
+        match kind {
+            0 => places.push(PlaceNode { t, node }),
+            1 => replaces.push(ReplaceNode { t, depth, node }),
+            _ => removes.push(RemoveNode { t, depth }),
+        }
+    }
+    places.sort_by_key(|p| (p.t.to_bits(), p.node.depth));
+    replaces.sort_by_key(|r| (r.t.to_bits(), r.depth));
+    removes.sort_by_key(|r| (r.t.to_bits(), r.depth));
     Timeline {
         duration_s: 10.0,
         fps_hint: 60,
         keyframes,
         tracks,
+        places,
+        replaces,
+        removes,
     }
 }
 
@@ -138,8 +181,9 @@ fn arb_timeline() -> impl Strategy<Value = Timeline> {
         pvec(arb_node_spec(), 1..=4),
         0..=100u32,
         proptest::option::of((200..=900u32, pvec(grid_px(), 4))),
+        pvec(arb_op_spec(), 0..=4),
     )
-        .prop_map(|(specs, start, second)| build(specs, start, second))
+        .prop_map(|(specs, start, second, ops)| build(specs, start, second, ops))
 }
 
 fn arb_assets() -> impl Strategy<Value = Vec<Asset>> {

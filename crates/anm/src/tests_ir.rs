@@ -45,6 +45,7 @@ fn minimal_timeline() -> Timeline {
                 },
             ],
         }],
+        ..Timeline::default()
     }
 }
 

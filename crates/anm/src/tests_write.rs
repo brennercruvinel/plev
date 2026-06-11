@@ -35,6 +35,7 @@ fn one_node_timeline(tracks: Vec<Track>) -> Timeline {
             snapshot: vec![rect(1, 0, 10.0)],
         }],
         tracks,
+        ..Timeline::default()
     }
 }
 
@@ -321,8 +322,8 @@ fn description_track_errors_are_rejected() {
     );
 }
 
-/// Mode A only emits modify, but place/replace/remove are part of the
-/// frozen wire format (mode B, hand-built blocks); pin their bytes.
+/// Pin the wire bytes of the structural ops; encoder coverage of their
+/// timeline lists lives in tests_ops.
 #[test]
 fn place_replace_remove_ops_serialize_per_spec() {
     let table = EasingTable::default();
@@ -353,7 +354,7 @@ fn place_replace_remove_ops_serialize_per_spec() {
     buf.clear();
     let remove = DeltaOp::Remove {
         at_s: 0.25,
-        node_id: 7,
+        depth: 7,
     };
     container::put_op(&mut buf, &remove, &table);
     let mut expect = vec![3u8]; // OP_REMOVE

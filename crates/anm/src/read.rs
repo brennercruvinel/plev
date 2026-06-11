@@ -6,10 +6,8 @@
 //! `crate::read_sec`.
 //!
 //! scope notes:
-//! - place|replace|remove are valid wire ops (mode B, hand-built
-//!   blocks) but the timeline IR (keyframes + tracks) has no form for
-//!   them, so decoding one is [`ReadError::UnrepresentableOp`]; mode A
-//!   encoder output never carries them
+//! - modify ops become tracks; place|replace|remove ops become the
+//!   timeline's structural op lists, each in wire order
 //! - script (X) sections are checksum-verified, then skipped: playback
 //!   never requires scripting (spec decision 8)
 //! - values come back on their quantization grid (twips, rgba8, u16
@@ -20,7 +18,7 @@ use crate::container::{
     Asset, Desc, MAGIC, SEC_DELTA, SEC_DESC, SEC_KEYFRAME, SEC_SCRIPT, VERSION,
 };
 use crate::ir::{IrError, Timeline};
-use crate::read_sec::{Cur, parse_asset, parse_delta, parse_descs, parse_keyframe};
+use crate::read_sec::{Cur, DeltaOut, parse_asset, parse_delta, parse_descs, parse_keyframe};
 use sha2::{Digest, Sha256};
 
 #[derive(Debug, PartialEq, thiserror::Error)]
@@ -51,8 +49,6 @@ pub enum ReadError {
     UnknownPresenceBits(u16),
     #[error("unknown delta op code {0}")]
     UnknownOpCode(u8),
-    #[error("op code {0} (place|replace|remove) has no timeline IR form in v0")]
-    UnrepresentableOp(u8),
     #[error("easing byte {0:#04x} is reserved")]
     UnknownEasing(u8),
     #[error("custom curve index {index} outside the table of {len}")]
@@ -104,7 +100,7 @@ pub fn decode(bytes: &[u8]) -> Result<Document, ReadError> {
     let hdr = parse_header(bytes)?;
     check_sections(bytes, &hdr)?;
     let mut keyframes = Vec::new();
-    let mut tracks = Vec::new();
+    let mut deltas = DeltaOut::default();
     let mut descs = Vec::new();
     for entry in &hdr.index {
         // in bounds: check_sections proved the index tiles the file.
@@ -116,7 +112,7 @@ pub fn decode(bytes: &[u8]) -> Result<Document, ReadError> {
                     .last()
                     .map(|kf| kf.t)
                     .ok_or(ReadError::DeltaBeforeKeyframe)?;
-                parse_delta(payload, t, &hdr.curves, &mut tracks)?;
+                parse_delta(payload, t, &hdr.curves, &mut deltas)?;
             }
             SEC_DESC => descs = parse_descs(payload)?,
             _ => {} // SEC_SCRIPT: sidecar for anm/script players, opaque here
@@ -135,7 +131,10 @@ pub fn decode(bytes: &[u8]) -> Result<Document, ReadError> {
         duration_s: hdr.duration_s,
         fps_hint: hdr.fps_hint,
         keyframes,
-        tracks,
+        tracks: deltas.tracks,
+        places: deltas.places,
+        replaces: deltas.replaces,
+        removes: deltas.removes,
     };
     timeline.validate()?;
     Ok(Document {

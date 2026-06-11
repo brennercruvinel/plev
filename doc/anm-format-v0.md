@@ -69,6 +69,29 @@ sections: K (keyframe snapshot: full node list at time t), D (delta block:
 ops until next keyframe), X (script sidecar, optional), T (description
 track). checksums per section (sha256, nest lesson).
 
+## delta ops (D block semantics)
+
+every op carries at_s, its offset from the owning keyframe's t. modify
+carries node_id plus per-prop segment chains and lowers to IR tracks.
+the structural ops address depth slots, because the scene is a flat map
+depth -> node (decision 1): place and replace carry a full node whose
+depth names the slot (an occupied slot is overwritten); remove carries
+depth u16. in the IR they are the timeline lists PlaceNode{t, node},
+ReplaceNode{t, depth, node} (node.depth must equal depth) and
+RemoveNode{t, depth}. ops act only inside their keyframe segment; the
+next snapshot resets the scene, which is what keeps seek O(1): the
+player replays the current segment's ops only, never the file. at one
+instant application order is place, replace, remove, each depth
+ascending; the encoder serializes modify ops first (kept byte-identical
+with pre-ops files), then structural ops in that same canonical order.
+
+note (2026-06-11): the remove operand became decodable in this revision
+as depth; earlier decoders rejected every structural op, so no file
+ever carried the node_id reading an early container.rs comment
+described. golden fixtures: golden_v0_minimal.anm (modify only, frozen
+at first release) and golden_v0_ops.anm (all four ops, frozen when they
+became decodable).
+
 ## node model (anm IR, decoupled from SceneNode)
 
 the codec works on its own IR mirroring plev's animatable surface, so the
@@ -106,7 +129,17 @@ props (from the engine-fit study):
   packs segments and discovers per-field presence
 - b (basic, v0): from a sampled frame sequence: diff consecutive
   snapshots, emit modify ops, linear segments, keyframe insertion on
-  discontinuity. curve fitting (easing recovery) is v1
+  discontinuity. curve fitting (easing recovery) is v1. implemented as
+  discover (crates/anm/src/discover.rs): samples are quantized to the
+  wire grid before diffing, slot transitions become place | replace |
+  remove (an id moving depth is remove + place), per-prop runs merge
+  greedily into linear segments while every interior sample stays
+  within half a quantization step of the line (linear motion is one
+  segment at any sample rate), and snapshots are also inserted on a
+  configurable random access cadence, with continuous props landing on
+  them so motion crosses cadence keyframes smoothly. a re-placed id is
+  pinned against the held tail of a dead chain from an earlier life in
+  the same segment. output feeds encoder mode a unchanged
 
 ## core prerequisite (one line)
 

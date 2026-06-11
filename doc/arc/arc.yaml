@@ -33,7 +33,7 @@ crates:
   git_backend:{ path: crates/git_backend, role: gix + cli git operations, desktop-only }
   narrate:    { path: [crates/narrate, crates/narrate_macro], role: ui dsl (experimental) }
   macros:     { path: macros,           role: proc-macros }
-  anm:        { path: crates/anm,       role: binary animation codec (ir/write/read) + deterministic player (play: tick-driven, windowed eval, signals, lowers ir to SceneNode), depends: [animation, signal, compositor] }
+  anm:        { path: crates/anm,       role: binary animation codec (ir/validate/write/read) with full delta ops (modify tracks + place/replace/remove), delta discovery from sampled frames (discover/discover_fit: encoder mode b, slot diffing + linear segment fitting + keyframes on discontinuity and cadence) + deterministic player (play/play_eval: tick-driven, windowed eval, segment-local op replay, signals, lowers ir to SceneNode), depends: [animation, signal, compositor] }
 knowledge:
   operating-manual: kdb/how-to/code-against-the-plev-engine.md
   visual-tokens: kdb/reference/hoff-visual-tokens.md

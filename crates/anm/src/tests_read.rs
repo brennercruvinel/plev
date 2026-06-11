@@ -6,9 +6,8 @@ use crate::container::{Asset, AssetKind, Desc};
 use crate::easing::{Easing, quantize_curve};
 use crate::ir::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
 use crate::quant;
-use crate::read::{ReadError, decode};
+use crate::read::decode;
 use crate::tests_golden::golden_doc;
-use crate::tests_write::parse;
 use crate::write::encode;
 
 const GOLDEN: &[u8] = include_bytes!("../fixtures/golden_v0_minimal.anm");
@@ -165,6 +164,7 @@ fn round_trip_covers_every_node_kind_and_value_type() {
                 segments: vec![seg(gray, Easing::EaseInOutBounce)],
             },
         ],
+        ..Timeline::default()
     };
     let assets = vec![
         Asset {

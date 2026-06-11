@@ -59,6 +59,7 @@ pub(crate) fn golden_doc() -> (Timeline, Vec<Asset>, Vec<Desc>) {
                 }],
             },
         ],
+        ..Timeline::default()
     };
     let assets = vec![Asset {
         kind: AssetKind::TextStyle,

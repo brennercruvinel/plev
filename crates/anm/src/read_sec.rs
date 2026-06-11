@@ -5,9 +5,22 @@
 
 use crate::container::{self, Asset, AssetKind, Desc, OP_MODIFY, OP_PLACE, OP_REMOVE, OP_REPLACE};
 use crate::easing::{CUSTOM_BEZIER_BYTE, Easing};
-use crate::ir::{Keyframe, Node, NodeKind, Prop, Props, Segment, Track, Value};
+use crate::ir::{
+    Keyframe, Node, NodeKind, PlaceNode, Prop, Props, RemoveNode, ReplaceNode, Segment, Track,
+    Value,
+};
 use crate::quant;
 use crate::read::ReadError;
+
+/// Everything D blocks decode into, in wire order per list: modify ops
+/// become tracks, the structural ops their timeline lists.
+#[derive(Default)]
+pub(crate) struct DeltaOut {
+    pub(crate) tracks: Vec<Track>,
+    pub(crate) places: Vec<PlaceNode>,
+    pub(crate) replaces: Vec<ReplaceNode>,
+    pub(crate) removes: Vec<RemoveNode>,
+}
 
 /// Bounds-checked little-endian cursor; every read names the field it
 /// was after, so truncation errors point at it.
@@ -154,22 +167,27 @@ fn read_value(c: &mut Cur, prop: Prop) -> Result<Value, ReadError> {
     })
 }
 
-/// One D block: modify ops become tracks anchored at `kf_t + at_s`,
-/// pushed in wire order, which is the encoder's canonical track order.
+/// One D block: every op anchors at `kf_t + at_s` and lands in `out` in
+/// wire order, which is the encoder's canonical order per list.
 pub(crate) fn parse_delta(
     payload: &[u8],
     kf_t: f32,
     curves: &[[u8; 4]],
-    tracks: &mut Vec<Track>,
+    out: &mut DeltaOut,
 ) -> Result<(), ReadError> {
     let mut c = Cur::new(payload);
     for _ in 0..c.u16("op_count")? {
-        match c.u8("op code")? {
+        let code = c.u8("op code")?;
+        if ![OP_MODIFY, OP_PLACE, OP_REPLACE, OP_REMOVE].contains(&code) {
+            return Err(ReadError::UnknownOpCode(code));
+        }
+        let at_s = c.f32("op at_s")?;
+        if at_s < 0.0 {
+            return Err(ReadError::BadValue { what: "op at_s" });
+        }
+        let t = kf_t + at_s;
+        match code {
             OP_MODIFY => {
-                let at_s = c.f32("op at_s")?;
-                if at_s < 0.0 {
-                    return Err(ReadError::BadValue { what: "op at_s" });
-                }
                 let node_id = c.u16("op node id")?;
                 for prop in mask_props(c.u16("modify presence")?)? {
                     let seg_count = c.u16("seg_count")?;
@@ -177,17 +195,32 @@ pub(crate) fn parse_delta(
                     for _ in 0..seg_count {
                         segments.push(parse_segment(&mut c, prop, curves)?);
                     }
-                    tracks.push(Track {
+                    out.tracks.push(Track {
                         node_id,
                         prop,
-                        start_t: kf_t + at_s,
+                        start_t: t,
                         segments,
                     });
                 }
             }
-            code @ (OP_PLACE | OP_REPLACE | OP_REMOVE) => {
-                return Err(ReadError::UnrepresentableOp(code));
+            OP_PLACE => {
+                let node = parse_node(&mut c)?;
+                out.places.push(PlaceNode { t, node });
             }
+            OP_REPLACE => {
+                let node = parse_node(&mut c)?;
+                out.replaces.push(ReplaceNode {
+                    t,
+                    depth: node.depth,
+                    node,
+                });
+            }
+            OP_REMOVE => {
+                let depth = c.u16("op depth")?;
+                out.removes.push(RemoveNode { t, depth });
+            }
+            // validated above; kept as an error so a decoder bug can
+            // never panic on attacker-controlled input
             code => return Err(ReadError::UnknownOpCode(code)),
         }
     }

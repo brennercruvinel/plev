@@ -1,14 +1,12 @@
 //! malformed-input and wire-robustness tests for the anm decoder:
-//! truncation, bit flips, checksums, magic/version, unknown sections and
-//! delta ops the v0 timeline ir cannot represent.
+//! truncation, bit flips, checksums, magic/version, unknown sections
+//! and malformed delta ops.
 
 use crate::container::{self, DeltaOp, SEC_DELTA, SEC_DESC, SEC_KEYFRAME, Section};
 use crate::easing::EasingTable;
-use crate::ir::{Node, NodeKind, Props};
+use crate::ir::Node;
 use crate::read::{ReadError, decode};
-use crate::tests_golden::golden_doc;
 use crate::tests_write::parse;
-use crate::write::encode;
 
 const GOLDEN: &[u8] = include_bytes!("../fixtures/golden_v0_minimal.anm");
 
@@ -117,38 +115,41 @@ fn file_with_delta(payload: Vec<u8>) -> Vec<u8> {
 }
 
 #[test]
-fn place_replace_remove_are_unrepresentable_in_the_timeline_ir() {
+fn malformed_structural_ops_err_without_panic() {
     let table = EasingTable::default();
     let node = crate::tests_write::rect(2, 1, 0.0);
-    let ops = [
-        (
-            0u8,
-            DeltaOp::Place {
-                at_s: 0.0,
-                node: node.clone(),
-            },
-        ),
-        (2u8, DeltaOp::Replace { at_s: 0.0, node }),
-        (
-            3u8,
-            DeltaOp::Remove {
-                at_s: 0.0,
-                node_id: 1,
-            },
-        ),
-    ];
-    for (code, op) in ops {
-        let mut payload = Vec::new();
-        container::put_u16(&mut payload, 1);
-        container::put_op(&mut payload, &op, &table);
-        let bytes = file_with_delta(payload);
-        assert_eq!(
-            decode(&bytes).unwrap_err(),
-            ReadError::UnrepresentableOp(code)
-        );
-    }
+    // unknown op code is still typed.
     let bytes = file_with_delta(vec![1, 0, 9]); // op_count 1, op code 9
     assert_eq!(decode(&bytes).unwrap_err(), ReadError::UnknownOpCode(9));
+    // negative at_s on a structural op.
+    let mut payload = Vec::new();
+    container::put_u16(&mut payload, 1);
+    container::put_op(
+        &mut payload,
+        &DeltaOp::Remove {
+            at_s: -0.5,
+            depth: 0,
+        },
+        &table,
+    );
+    assert_eq!(
+        decode(&file_with_delta(payload)).unwrap_err(),
+        ReadError::BadValue { what: "op at_s" }
+    );
+    // every truncation prefix of a place op errs, never panics.
+    let mut payload = Vec::new();
+    container::put_u16(&mut payload, 1);
+    container::put_op(&mut payload, &DeltaOp::Place { at_s: 0.0, node }, &table);
+    for len in 2..payload.len() {
+        let bytes = file_with_delta(payload[..len].to_vec());
+        assert!(decode(&bytes).is_err(), "place prefix of {len} bytes");
+    }
+    // trailing garbage after the last op is typed.
+    payload.push(0);
+    assert_eq!(
+        decode(&file_with_delta(payload)).unwrap_err(),
+        ReadError::TrailingPayload('D')
+    );
 }
 
 /// One modify op down to the easing byte, hand-built so reserved easing

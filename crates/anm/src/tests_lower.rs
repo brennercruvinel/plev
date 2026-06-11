@@ -232,6 +232,7 @@ fn asset_timeline() -> Timeline {
                 dur_s: 1.0,
             }],
         }],
+        ..Timeline::default()
     }
 }
 

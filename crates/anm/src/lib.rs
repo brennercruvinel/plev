@@ -15,6 +15,9 @@
 //!   tables, section index with sha256, K/D/T payloads), LE byte-aligned
 //! - [`write`]: encoder mode A, lowering an authored timeline; golden
 //!   fixture frozen at fixtures/golden_v0_minimal.anm
+//! - [`discover`]: encoder mode B, delta discovery from a sampled frame
+//!   sequence: snapshots in, structural ops, linear segment chains and
+//!   random-access keyframes out; the result feeds [`write::encode`]
 //! - [`read`]: strict decoder back to the IR; typed errors, never a
 //!   panic on malformed input, round-trips the encoder output
 //! - [`play`]: deterministic player per the spec's player contract:
@@ -27,26 +30,36 @@
 //! intentionally empty in v0.
 
 pub mod container;
+pub mod discover;
+mod discover_fit;
 pub mod easing;
 pub mod ir;
 pub mod lower;
 pub mod play;
+mod play_eval;
 pub mod quant;
 pub mod read;
 mod read_sec;
+mod validate;
 pub mod write;
 
 pub use container::{Asset, AssetKind, Desc};
+pub use discover::{DiscoverConfig, DiscoverError, discover};
+pub use discover_fit::quantize_value;
 pub use easing::Easing;
 pub use ir::{
-    AssetId, Depth, IrError, Keyframe, Node, NodeId, NodeKind, Prop, Props, Segment, Timeline,
-    Track, Value,
+    AssetId, Depth, IrError, Keyframe, Node, NodeId, NodeKind, PlaceNode, Prop, Props, RemoveNode,
+    ReplaceNode, Segment, Timeline, Track, Value,
 };
 pub use lower::LoweredAsset;
 pub use play::AnmPlayer;
 pub use read::{Document, ReadError, decode};
 pub use write::{WriteError, encode};
 
+#[cfg(test)]
+mod tests_discover;
+#[cfg(test)]
+mod tests_discover_ops;
 #[cfg(test)]
 mod tests_easing;
 #[cfg(test)]
@@ -56,7 +69,11 @@ mod tests_ir;
 #[cfg(test)]
 mod tests_lower;
 #[cfg(test)]
+mod tests_ops;
+#[cfg(test)]
 mod tests_play;
+#[cfg(test)]
+mod tests_play_ops;
 #[cfg(test)]
 mod tests_prop;
 #[cfg(test)]

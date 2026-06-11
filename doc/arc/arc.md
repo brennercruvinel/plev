@@ -64,7 +64,15 @@ pre-1.0: no api stability promised. library code must not panic on user
 input paths; tessellation and parsers degrade gracefully (log + empty
 output). binary/format versioning follows the anim-format rules
 implemented in crates/anm (doc/anm-format-v0.md): explicit version,
-frozen golden fixture, per-section checksums. crates/anm also ships the
-player: AnimationTick-driven, deterministic f32 timeline, windowed
-segment evaluation, play/pause/scrub via signals, lowering its ir scene
+frozen golden fixtures, per-section checksums. the full delta op set is
+decodable: modify becomes tracks, place/replace/remove become timeline
+op lists that act inside their keyframe segment. both encoder modes
+exist: mode a lowers an authored timeline (write), mode b discovers
+deltas from a sampled frame sequence (discover): slot diffing emits the
+structural ops, per-prop runs merge into linear segments, snapshots are
+inserted on discontinuity and on the random access cadence. crates/anm
+also ships the player: AnimationTick-driven, deterministic f32
+timeline, windowed
+segment evaluation plus segment-local structural op replay (seek stays
+O(1) in frames), play/pause/scrub via signals, lowering its ir scene
 to SceneNodes that the app pushes per frame.

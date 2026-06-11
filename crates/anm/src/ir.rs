@@ -210,13 +210,46 @@ impl Track {
     }
 }
 
-/// The authored animation: keyframes plus discovered deltas.
+/// Mid-segment node arrival: at time `t` the scene gains `node` at
+/// `node.depth`. An occupied depth is overwritten (swf place lesson:
+/// the scene is a flat map depth -> node).
 #[derive(Clone, Debug, PartialEq)]
+pub struct PlaceNode {
+    pub t: f32,
+    pub node: Node,
+}
+
+/// Mid-segment swap: at time `t` the slot `depth` holds `node` instead
+/// of whatever occupied it. `node.depth` must equal `depth`
+/// (`Timeline::validate`); the wire carries only the node.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ReplaceNode {
+    pub t: f32,
+    pub depth: Depth,
+    pub node: Node,
+}
+
+/// Mid-segment departure: at time `t` the slot `depth` empties.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RemoveNode {
+    pub t: f32,
+    pub depth: Depth,
+}
+
+/// The authored animation: keyframes plus discovered deltas. Structural
+/// ops (places, replaces, removes) act only within the keyframe segment
+/// owning their `t`; the next snapshot resets the scene. At one instant
+/// they apply place, replace, remove, each depth-ascending. The derived
+/// `Default` is an empty (invalid) timeline, useful as a literal base.
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Timeline {
     pub duration_s: f32,
     pub fps_hint: u16,
     pub keyframes: Vec<Keyframe>,
     pub tracks: Vec<Track>,
+    pub places: Vec<PlaceNode>,
+    pub replaces: Vec<ReplaceNode>,
+    pub removes: Vec<RemoveNode>,
 }
 
 #[derive(Debug, PartialEq, thiserror::Error)]
@@ -243,96 +276,12 @@ pub enum IrError {
         end_t: f32,
         duration_s: f32,
     },
-}
-
-fn check_value(prop: Prop, value: Value) -> Result<(), IrError> {
-    let ok = match value {
-        Value::Scalar(_) => !prop.is_color(),
-        Value::Color(_) => prop.is_color(),
-    };
-    if ok {
-        Ok(())
-    } else {
-        let expected = if prop.is_color() { "color" } else { "scalar" };
-        Err(IrError::ValueKindMismatch { prop, expected })
-    }
-}
-
-impl Timeline {
-    /// Structural validation: ordered keyframes, flat-map snapshots,
-    /// props within each kind's animatable surface, tracks anchored to
-    /// known nodes and inside the duration.
-    pub fn validate(&self) -> Result<(), IrError> {
-        match self.keyframes.first() {
-            Some(first) if first.t == 0.0 => {}
-            _ => return Err(IrError::MissingOpeningKeyframe),
-        }
-        let mut prev_t = f32::NEG_INFINITY;
-        for kf in &self.keyframes {
-            if kf.t <= prev_t || kf.t > self.duration_s {
-                return Err(IrError::KeyframeOutOfOrder { t: kf.t });
-            }
-            prev_t = kf.t;
-            let mut seen: Vec<(Depth, NodeId)> = Vec::with_capacity(kf.snapshot.len());
-            for node in &kf.snapshot {
-                if seen.iter().any(|(d, _)| *d == node.depth) {
-                    return Err(IrError::DuplicateDepth {
-                        t: kf.t,
-                        depth: node.depth,
-                    });
-                }
-                if seen.iter().any(|(_, i)| *i == node.id) {
-                    return Err(IrError::DuplicateNodeId {
-                        t: kf.t,
-                        id: node.id,
-                    });
-                }
-                seen.push((node.depth, node.id));
-                for (prop, value) in node.props.iter() {
-                    if !node.kind.allows(*prop) {
-                        return Err(IrError::PropNotAnimatable {
-                            kind: node.kind.name(),
-                            prop: *prop,
-                        });
-                    }
-                    check_value(*prop, *value)?;
-                }
-            }
-        }
-        for track in &self.tracks {
-            let kind = self
-                .keyframes
-                .iter()
-                .flat_map(|kf| kf.snapshot.iter())
-                .find(|n| n.id == track.node_id)
-                .map(|n| n.kind)
-                .ok_or(IrError::UnknownNode {
-                    node_id: track.node_id,
-                })?;
-            if !kind.allows(track.prop) {
-                return Err(IrError::PropNotAnimatable {
-                    kind: kind.name(),
-                    prop: track.prop,
-                });
-            }
-            for seg in &track.segments {
-                if seg.dur_s <= 0.0 {
-                    return Err(IrError::NonPositiveDuration {
-                        node_id: track.node_id,
-                    });
-                }
-                check_value(track.prop, seg.target)?;
-            }
-            // half a frame of f32 slack at the default 60fps hint
-            let end_t = track.end_t();
-            if track.start_t < 0.0 || end_t > self.duration_s + 1e-4 {
-                return Err(IrError::TrackPastEnd {
-                    node_id: track.node_id,
-                    end_t,
-                    duration_s: self.duration_s,
-                });
-            }
-        }
-        Ok(())
-    }
+    #[error("delta op at t={t} is outside [0, duration {duration_s}]")]
+    OpOutOfRange { t: f32, duration_s: f32 },
+    #[error("replace at t={t} targets depth {depth} but its node sits at depth {node_depth}")]
+    ReplaceDepthMismatch {
+        t: f32,
+        depth: Depth,
+        node_depth: Depth,
+    },
 }

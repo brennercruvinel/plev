@@ -151,6 +151,7 @@ fn bench_ripple_vs_lottie() {
         fps_hint: 60,
         keyframes: vec![Keyframe { t: 0.0, snapshot }],
         tracks,
+        ..Timeline::default()
     };
     let bytes = encode(&timeline, &[], &[]).expect("ripple timeline encodes");
     decode(&bytes).expect("ripple anm decodes back");
@@ -190,6 +191,7 @@ fn bench_ripple_vs_lottie() {
         fps_hint: 60,
         keyframes: vec![Keyframe { t: 0.0, snapshot }],
         tracks,
+        ..Timeline::default()
     };
     let cell_bytes = encode(&cell, &[], &[]).expect("unit cell encodes");
     println!(
@@ -263,6 +265,7 @@ fn bench_starfish_vs_lottie() {
         fps_hint: 60,
         keyframes: vec![Keyframe { t: 0.0, snapshot }],
         tracks,
+        ..Timeline::default()
     };
     // body geometry the renderer needs: 10 vertices x (v,in,out) x 2
     // coords x i32 twips = 240 B, the quantized weight of the json path.

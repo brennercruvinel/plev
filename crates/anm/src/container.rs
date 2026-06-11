@@ -29,17 +29,21 @@
 //!
 //! D payload := op_count u16, op*. every op starts op_code u8
 //!   (0 place | 1 modify | 2 replace | 3 remove), at_s f32 (offset from
-//!   the owning keyframe's t). place|replace carry a full node; remove
-//!   carries node_id u16; modify carries node_id u16, presence u16, and
-//!   per present prop ascending: seg_count u16, seg*. an unchanged
-//!   field has no presence bit and costs zero bytes.
+//!   the owning keyframe's t). place|replace carry a full node (its
+//!   depth names the slot); remove carries depth u16 (the scene is a
+//!   flat map depth -> node, so structural ops address slots); modify
+//!   carries node_id u16, presence u16, and per present prop ascending:
+//!   seg_count u16, seg*. an unchanged field has no presence bit and
+//!   costs zero bytes. the remove operand was first decodable in this
+//!   revision (earlier decoders rejected every structural op), so no
+//!   wire ever carried the node_id reading container.rs once described.
 //! seg := easing u8, curve_idx u16 (only when easing == 0xFF),
 //!   dur_s f32, target value
 //!
 //! T payload := desc_count u16, (keyframe u16, len u16, utf8)*
 
 use crate::easing::{Easing, EasingTable, quantize_curve};
-use crate::ir::{Node, NodeId, NodeKind, Prop, Segment, Value};
+use crate::ir::{Depth, Node, NodeId, NodeKind, Prop, Segment, Value};
 use crate::quant;
 use sha2::{Digest, Sha256};
 
@@ -206,8 +210,8 @@ pub fn put_segment(buf: &mut Vec<u8>, prop: Prop, seg: &Segment, table: &EasingT
 }
 
 /// One delta op. `at_s` is the start offset from the owning keyframe's
-/// t. Mode A lowering emits only `Modify`; the other ops are part of
-/// the frozen wire format for mode B and hand-built blocks.
+/// t. Mode A lowering emits modify from tracks and place|replace|remove
+/// from the timeline's structural op lists.
 #[derive(Clone, Debug, PartialEq)]
 pub enum DeltaOp {
     Place {
@@ -225,7 +229,7 @@ pub enum DeltaOp {
     },
     Remove {
         at_s: f32,
-        node_id: NodeId,
+        depth: Depth,
     },
 }
 
@@ -269,10 +273,10 @@ pub fn put_op(buf: &mut Vec<u8>, op: &DeltaOp, table: &EasingTable) {
             put_f32(buf, *at_s);
             put_node(buf, node);
         }
-        DeltaOp::Remove { at_s, node_id } => {
+        DeltaOp::Remove { at_s, depth } => {
             buf.push(OP_REMOVE);
             put_f32(buf, *at_s);
-            put_u16(buf, *node_id);
+            put_u16(buf, *depth);
         }
     }
 }

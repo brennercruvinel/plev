@@ -78,6 +78,7 @@ fn demo() -> Timeline {
                 segments: vec![seg(Value::Scalar(0.0), Easing::EaseOutCubic, 1.0)],
             },
         ],
+        ..Timeline::default()
     }
 }
 
@@ -99,6 +100,7 @@ fn two_windows() -> Timeline {
                 seg(Value::Scalar(0.0), Easing::Linear, 1.0),
             ],
         }],
+        ..Timeline::default()
     }
 }
 

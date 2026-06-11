@@ -4,13 +4,17 @@
 //! unchanged field costs zero bytes. byte layout in `crate::container`.
 //!
 //! determinism contract: the same timeline always encodes to the same
-//! bytes. every traversal is canonically ordered (ops by start offset
-//! then node id, props by wire id, custom curves first-seen in that
-//! same order), so no hash-map iteration ever reaches the file.
+//! bytes. every traversal is canonically ordered (modify ops by start
+//! offset then node id, props by wire id, structural ops after them by
+//! start offset then place < replace < remove then depth, custom curves
+//! first-seen in that same order), so no hash-map iteration ever
+//! reaches the file. round-trip equality therefore holds for timelines
+//! whose op lists are already in canonical order, the decoder's output
+//! order.
 
 use crate::container::{self, Asset, DeltaOp, Desc, SEC_DELTA, SEC_DESC, SEC_KEYFRAME, Section};
 use crate::easing::EasingTable;
-use crate::ir::{IrError, Keyframe, NodeId, Prop, Segment, Timeline};
+use crate::ir::{Depth, IrError, Keyframe, NodeId, Prop, Segment, Timeline};
 
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum WriteError {
@@ -48,6 +52,7 @@ pub fn encode(
     timeline.validate()?;
     check_limits(timeline, assets, descs)?;
     let blocks = group_tracks(timeline)?;
+    let structural = group_structural(timeline);
     let easings = intern_curves(&blocks);
     if easings.len() > u16::MAX as usize {
         return Err(WriteError::TooMany {
@@ -56,15 +61,18 @@ pub fn encode(
     }
 
     let mut sections = Vec::with_capacity(timeline.keyframes.len() * 2 + 1);
-    for (kf, ops) in timeline.keyframes.iter().zip(&blocks) {
+    for ((kf, ops), extra) in timeline.keyframes.iter().zip(&blocks).zip(&structural) {
         sections.push(Section {
             tag: SEC_KEYFRAME,
             payload: keyframe_payload(kf),
         });
-        if !ops.is_empty() {
+        if ops.len() + extra.len() > u16::MAX as usize {
+            return Err(WriteError::TooMany { what: "delta op" });
+        }
+        if !ops.is_empty() || !extra.is_empty() {
             sections.push(Section {
                 tag: SEC_DELTA,
-                payload: delta_payload(ops, &easings),
+                payload: delta_payload(ops, extra, &easings),
             });
         }
     }
@@ -125,13 +133,7 @@ fn check_limits(timeline: &Timeline, assets: &[Asset], descs: &[Desc]) -> Result
 fn group_tracks(timeline: &Timeline) -> Result<Vec<Vec<OpDraft>>, WriteError> {
     let mut blocks: Vec<Vec<OpDraft>> = (0..timeline.keyframes.len()).map(|_| Vec::new()).collect();
     for track in &timeline.tracks {
-        // validate() guarantees an opening keyframe at t=0 and
-        // start_t >= 0, so the owner always exists.
-        let owner = timeline
-            .keyframes
-            .iter()
-            .rposition(|kf| kf.t <= track.start_t)
-            .expect("validated timeline opens at t=0");
+        let owner = owner_keyframe(timeline, track.start_t);
         let at_s = track.start_t - timeline.keyframes[owner].t;
         let ops = &mut blocks[owner];
         let op = match ops
@@ -169,6 +171,64 @@ fn group_tracks(timeline: &Timeline) -> Result<Vec<Vec<OpDraft>>, WriteError> {
     Ok(blocks)
 }
 
+/// Last keyframe at or before `t`. validate() guarantees an opening
+/// keyframe at t=0 and t >= 0, so the owner always exists.
+fn owner_keyframe(timeline: &Timeline, t: f32) -> usize {
+    timeline
+        .keyframes
+        .iter()
+        .rposition(|kf| kf.t <= t)
+        .expect("validated timeline opens at t=0")
+}
+
+/// Assign every structural op to its owner keyframe and sort each block
+/// canonically: start offset, then place < replace < remove, then
+/// depth. This is also the player's application order at one instant.
+fn group_structural(timeline: &Timeline) -> Vec<Vec<DeltaOp>> {
+    let mut blocks: Vec<Vec<(u8, Depth, DeltaOp)>> =
+        (0..timeline.keyframes.len()).map(|_| Vec::new()).collect();
+    let mut push = |t: f32, rank: u8, depth: Depth, build: &dyn Fn(f32) -> DeltaOp| {
+        let owner = owner_keyframe(timeline, t);
+        let at_s = t - timeline.keyframes[owner].t;
+        blocks[owner].push((rank, depth, build(at_s)));
+    };
+    for p in &timeline.places {
+        push(p.t, 0, p.node.depth, &|at_s| DeltaOp::Place {
+            at_s,
+            node: p.node.clone(),
+        });
+    }
+    for r in &timeline.replaces {
+        push(r.t, 1, r.depth, &|at_s| DeltaOp::Replace {
+            at_s,
+            node: r.node.clone(),
+        });
+    }
+    for r in &timeline.removes {
+        push(r.t, 2, r.depth, &|at_s| DeltaOp::Remove {
+            at_s,
+            depth: r.depth,
+        });
+    }
+    blocks
+        .into_iter()
+        .map(|mut ops| {
+            // at_s >= 0 always, so the bit pattern orders like the float.
+            ops.sort_by_key(|(rank, depth, op)| (op_at_s(op).to_bits(), *rank, *depth));
+            ops.into_iter().map(|(.., op)| op).collect()
+        })
+        .collect()
+}
+
+fn op_at_s(op: &DeltaOp) -> f32 {
+    match op {
+        DeltaOp::Place { at_s, .. }
+        | DeltaOp::Modify { at_s, .. }
+        | DeltaOp::Replace { at_s, .. }
+        | DeltaOp::Remove { at_s, .. } => *at_s,
+    }
+}
+
 /// Walk the blocks in serialization order and intern every custom
 /// curve, so table indices are stable and deduped (spec decision 4).
 fn intern_curves(blocks: &[Vec<OpDraft>]) -> EasingTable {
@@ -195,9 +255,11 @@ fn keyframe_payload(kf: &Keyframe) -> Vec<u8> {
     buf
 }
 
-fn delta_payload(ops: &[OpDraft], easings: &EasingTable) -> Vec<u8> {
+/// Modify ops first (their canonical order is the pre-structural wire,
+/// keeping older files byte-identical), then the structural ops.
+fn delta_payload(ops: &[OpDraft], structural: &[DeltaOp], easings: &EasingTable) -> Vec<u8> {
     let mut buf = Vec::new();
-    container::put_u16(&mut buf, ops.len() as u16);
+    container::put_u16(&mut buf, (ops.len() + structural.len()) as u16);
     for op in ops {
         let wire = DeltaOp::Modify {
             at_s: op.at_s,
@@ -205,6 +267,9 @@ fn delta_payload(ops: &[OpDraft], easings: &EasingTable) -> Vec<u8> {
             props: op.props.clone(),
         };
         container::put_op(&mut buf, &wire, easings);
+    }
+    for op in structural {
+        container::put_op(&mut buf, op, easings);
     }
     buf
 }
