@@ -59,5 +59,17 @@ delta autorado SEM keyframes (seek O(n)) -> nosso I-frame e a inovacao;
 rhai medido: 1.1us/call AST cacheada, 226KB gzip na dieta wasm -> feature
 opcional do player, nunca requisito de playback; pre-requisito de core:
 PartialEq em SceneNode (1 linha). spec consolidada: doc/anm-format-v0.md.
+
+nota interatividade (2026-06-11, fixtures MONEY/interactivebototnbar):
+dotlottie v2 embarca state machines declarativas: inputs tipados
+(Event/String), estados PlaybackState/GlobalState, transicoes com
+guards, interactions (Click/PointerDown por hit-area de layer,
+OnComplete encadeando), markers fatiando a timeline em segmentos
+nomeados. comportamento de jogo em ~22KB SEM engine de script.
+decisao de roadmap: tier 1 de interatividade do anm = track de SM
+declarativa sobre NodeId + hit regions (render_interactive) + signal/;
+rhai e tier 2, so quando a SM nao bastar. nosso seek O(1) torna
+segment/goto trivial (o swf pagava replay do frame 1). leitura
+obrigatoria antes de tocar no anm: ref/lottie/study-samples.lua.
 ]],
 }
