@@ -1,28 +1,31 @@
-//! Lottie player: renders a lottie json file with the `lot` crate on a
-//! plev window. Loops at the file's native frame rate.
+//! prs_card: renders the OUTPUT of the prs transpiler on a plev
+//! window. The card function included below is the golden fixture the
+//! parser emits from the react+sass corpus (crates/prs/fixtures/react)
+//! verbatim; this binary proves the transpiled code is real plev code
+//! that lays out, measures text and draws.
 //!
-//! Run: `cargo run --example lottie_player -- path/to/animation.json`
-//! (default: ref/lottie/SNAKE). Space pauses, left/right arrows scrub
-//! by half a second.
+//! Run: `cargo run --release --example prs_card`
 
 use std::sync::Arc;
 
-use lot::{Mat, Player};
-use plev::animation::FrameClock;
+use plev::builder::{Element, Justify, div};
 use plev::compositor::Compositor;
 use plev::gpu::{GpuContext, RenderConfig};
+use plev::input::InputState;
 use plev::text::TextSystem;
+use plev::view::ViewContext;
 use plev::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 use plev::winit::application::ApplicationHandler;
-use plev::winit::event::{ElementState, WindowEvent};
+use plev::winit::event::WindowEvent;
 use plev::winit::event_loop::{ActiveEventLoop, EventLoop};
-use plev::winit::keyboard::{Key, NamedKey};
 use plev::winit::window::{Window, WindowAttributes, WindowId};
 
-const DEFAULT_FILE: &str = "ref/lottie/SNAKE/fd5e87b4-1189-11ee-9745-e700d1385b38.json";
+mod card {
+    // the parser's emitted output, byte-identical to the golden test.
+    include!("../../crates/prs/fixtures/react/expected.rs");
+}
 
-// Linear clear values (sRGB graphite #171A1F linearized): the sRGB surface
-// re-encodes on write, so raw sRGB here would render ~2.5x too light.
+// Linear clear values (sRGB graphite #171A1F linearized).
 const BG: [f64; 3] = [0.0090, 0.0105, 0.0137];
 
 enum AppState {
@@ -35,76 +38,43 @@ enum AppState {
     },
 }
 
-struct LottieApp {
+struct CardApp {
     window: Option<Arc<Window>>,
     state: AppState,
     compositor: Compositor,
-    clock: FrameClock,
-    player: Player,
-    title: String,
-    frame: f64,
-    paused: bool,
+    input: InputState,
 }
 
-impl LottieApp {
-    fn new(player: Player, title: String) -> Self {
-        let frame = player.anim.ip;
-        Self {
-            window: None,
-            state: AppState::Uninitialized,
-            compositor: Compositor::new(),
-            clock: FrameClock::new(),
-            player,
-            title,
-            frame,
-            paused: false,
-        }
-    }
+/// The preview slot the site fills with an image; a quiet glass block
+/// stands in, so the card's own chrome is what is being judged.
+fn preview() -> Element {
+    let theme = plev::theme::Theme::hoff();
+    div()
+        .w(336.0)
+        .h(336.0)
+        .rounded(theme.radius.lg)
+        .bg(plev::theme::hoff::n2(0.08))
+        .border(1.0)
+        .border_color(theme.glass.edge_soft)
+}
 
-    fn wrap_frame(&mut self) {
-        let (ip, op) = (self.player.anim.ip, self.player.anim.op);
-        let dur = (op - ip).max(1.0);
-        self.frame = ip + (self.frame - ip).rem_euclid(dur);
-    }
+fn scene(w: f32, h: f32) -> Element {
+    div()
+        .w(w)
+        .h(h)
+        .col()
+        .align_center()
+        .justify(Justify::Center)
+        .child(card::hoff_research_card(
+            preview(),
+            "Pesquisa HOFF",
+            "Este card foi transpilado do react+sass do corpus pelo prs: \
+             layout, vidro, tipografia e tokens emitidos como codigo plev.",
+        ))
+}
 
-    fn scrub(&mut self, seconds: f64) {
-        self.frame += seconds * self.player.anim.fr;
-        self.wrap_frame();
-    }
-
+impl CardApp {
     fn render(&mut self) {
-        let AppState::Ready { .. } = self.state else {
-            return;
-        };
-        let tick = self.clock.tick();
-        if !self.paused {
-            self.frame += f64::from(tick.dt) * self.player.anim.fr;
-            self.wrap_frame();
-        }
-
-        let (vw, vh) = match &self.state {
-            AppState::Ready { gpu, .. } => (
-                gpu.surface_config.width as f64,
-                gpu.surface_config.height as f64,
-            ),
-            AppState::Uninitialized => return,
-        };
-        let (aw, ah) = (self.player.anim.w, self.player.anim.h);
-        let s = (vw / aw).min(vh / ah) * 0.95;
-        let root = Mat {
-            a: s,
-            b: 0.0,
-            c: 0.0,
-            d: s,
-            e: (vw - aw * s) / 2.0,
-            f: (vh - ah * s) / 2.0,
-        };
-
-        self.compositor.begin_frame();
-        for path in self.player.render(self.frame, root) {
-            self.compositor.draw_path(path);
-        }
-
         let AppState::Ready {
             ref mut gpu,
             ref mut text_system,
@@ -114,6 +84,20 @@ impl LottieApp {
         else {
             return;
         };
+        let sf = self.window.as_ref().map_or(1.0, |w| w.scale_factor()) as f32;
+        let (w, h) = (
+            gpu.surface_config.width as f32 / sf,
+            gpu.surface_config.height as f32 / sf,
+        );
+        self.compositor.begin_frame();
+        let mut cx = ViewContext::new(w, h).with_theme(plev::theme::Theme::hoff());
+        plev::builder::render_element_to_compositor(
+            &scene(w, h),
+            &mut self.compositor,
+            &mut self.input,
+            &mut cx,
+        );
+
         let Some(surface) = gpu.surface.as_ref() else {
             return;
         };
@@ -125,7 +109,6 @@ impl LottieApp {
             }
         };
         let surface_view = gpu.surface_render_view(&output);
-
         text_system.begin_frame();
         self.compositor
             .resolve(&plev::compositor::ResolveResources {
@@ -146,7 +129,7 @@ impl LottieApp {
         let mut encoder =
             gpu.device
                 .create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
-                    label: Some("lottie_player_encoder"),
+                    label: Some("prs_card_encoder"),
                 });
         let dirty_ids: Vec<_> = self
             .compositor
@@ -187,14 +170,14 @@ impl LottieApp {
     }
 }
 
-impl ApplicationHandler for LottieApp {
+impl ApplicationHandler for CardApp {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.window.is_some() {
             return;
         }
         let attrs = WindowAttributes::default()
-            .with_title(self.title.clone())
-            .with_inner_size(plev::winit::dpi::LogicalSize::new(640, 640));
+            .with_title("prs: card react+sass transpilado para plev".to_string())
+            .with_inner_size(plev::winit::dpi::LogicalSize::new(560.0, 760.0));
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
         self.window = Some(window.clone());
         let gpu = pollster::block_on(GpuContext::new_with_config(window, RenderConfig::default()));
@@ -225,17 +208,6 @@ impl ApplicationHandler for LottieApp {
                     w.request_redraw();
                 }
             }
-            WindowEvent::KeyboardInput { event, .. } => {
-                if event.state != ElementState::Pressed {
-                    return;
-                }
-                match event.logical_key {
-                    Key::Named(NamedKey::Space) => self.paused = !self.paused,
-                    Key::Named(NamedKey::ArrowLeft) => self.scrub(-0.5),
-                    Key::Named(NamedKey::ArrowRight) => self.scrub(0.5),
-                    _ => {}
-                }
-            }
             _ => {}
         }
     }
@@ -243,37 +215,12 @@ impl ApplicationHandler for LottieApp {
 
 fn main() {
     env_logger::init();
-    let path = std::env::args()
-        .nth(1)
-        .unwrap_or_else(|| DEFAULT_FILE.to_string());
-    let text = match std::fs::read_to_string(&path) {
-        Ok(t) => t,
-        Err(e) => {
-            eprintln!("cannot read {path}: {e}");
-            std::process::exit(1);
-        }
-    };
-    let anim = match lot::Animation::from_json(&text) {
-        Ok(a) => a,
-        Err(e) => {
-            eprintln!("cannot parse {path}: {e}");
-            std::process::exit(1);
-        }
-    };
-    log::info!(
-        "lottie {}x{} frames {}..{} @ {} fps, {} layers",
-        anim.w,
-        anim.h,
-        anim.ip,
-        anim.op,
-        anim.fr,
-        anim.layers.len()
-    );
-    let title = std::path::Path::new(&path)
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_else(|| path.clone());
     let event_loop = EventLoop::new().unwrap();
-    let mut app = LottieApp::new(Player::new(anim), title);
+    let mut app = CardApp {
+        window: None,
+        state: AppState::Uninitialized,
+        compositor: Compositor::new(),
+        input: InputState::new(),
+    };
     event_loop.run_app(&mut app).unwrap();
 }

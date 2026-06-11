@@ -219,6 +219,7 @@ version = "0.1.0"
 dependencies = [
  "plev",
  "proptest",
+ "serde_json",
  "sha2",
  "thiserror 2.0.18",
 ]
@@ -2653,6 +2654,7 @@ checksum = "953f07c43838f8e6f9758cab68bf5bed85465e7587ebe0b823f1bcd81978ad3a"
 name = "lot"
 version = "0.1.0"
 dependencies = [
+ "anm",
  "log",
  "plev",
  "serde",
@@ -3428,6 +3430,7 @@ dependencies = [
  "accesskit",
  "accesskit_winit",
  "android_logger",
+ "anm",
  "arboard",
  "bytemuck",
  "console_error_panic_hook",
