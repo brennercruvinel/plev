@@ -50,5 +50,14 @@ restricoes: leve de verdade (kilobytes); playback deterministico em todo
 alvo (FrameClock e o relogio; nada de Date::now no caminho quente);
 cross-device desde o dia um (android, ios, macos, linux, windows, web,
 embarcados); nenhuma ui antes do codec round-tripar com testes.
+
+nota estudos (2026-06-11): 4 estudos guiados concluidos. baselines
+medidos: lottie 1.9-321 KB/s (gzip para 10-13 por cento; nascer <= gzip
+sem gzip), swf delta puro ~1.7 KB/s (10-15 bytes/objeto/frame, baked);
+8 presets de easing cobrem 87 por cento de 6166 keyframes lottie; swf e
+delta autorado SEM keyframes (seek O(n)) -> nosso I-frame e a inovacao;
+rhai medido: 1.1us/call AST cacheada, 226KB gzip na dieta wasm -> feature
+opcional do player, nunca requisito de playback; pre-requisito de core:
+PartialEq em SceneNode (1 linha). spec consolidada: doc/anm-format-v0.md.
 ]],
 }
