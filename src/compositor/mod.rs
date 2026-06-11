@@ -2,6 +2,7 @@ mod clip;
 pub(crate) mod drawing;
 mod layer;
 mod layer_ops;
+mod memory;
 mod scene;
 mod sequence;
 mod stats;

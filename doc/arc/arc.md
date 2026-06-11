@@ -21,6 +21,7 @@ update all three together when structure changes.
 | layout | src/layout/ | taffy wrapper: flex, percent, text measure functions |
 | input | src/input/ | pointer state, hit regions, touch tracker + gesture recognizer, touch-to-pointer synth |
 | animation | src/animation/ | Tween, FrameClock, easing (dt-based; web_time) |
+| perf | src/perf/ | PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None) |
 | signal | src/signal/ | reactive primitives (create_signal, runtime) |
 | window | src/window/ | App runner: event loop, render-on-demand, render passes, wasm canvas |
 | theme | src/theme/ | measured hoff tokens, oklch tooling, intents |

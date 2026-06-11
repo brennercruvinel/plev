@@ -26,6 +26,7 @@ use crate::gpu::GpuContext;
 use crate::ime::ImeState;
 use crate::input::{InputState, TouchInputState, TouchPointerSynth};
 use crate::lifecycle::LifecycleManager;
+use crate::perf::{PerfHud, PerfMonitor};
 use crate::platform::SafeAreaInsets;
 use crate::signal::{ReadSignal, WriteSignal, create_signal};
 use crate::text::TextSystem;
@@ -64,6 +65,8 @@ pub struct App {
     safe_area: SafeAreaInsets,
     scale_factor: f64,
     is_animating: bool,
+    perf: PerfMonitor,
+    perf_hud: PerfHud,
     pub(crate) event_buffer: Vec<BufferedEvent>,
     #[cfg(any(target_arch = "wasm32", target_os = "android"))]
     pub(crate) event_loop_proxy: Option<EventLoopProxy<AppEvent>>,
@@ -109,6 +112,8 @@ impl App {
             safe_area: SafeAreaInsets::default(),
             scale_factor: 1.0,
             is_animating: false,
+            perf: PerfMonitor::new(),
+            perf_hud: PerfHud::new(),
             event_buffer: Vec::with_capacity(64),
             #[cfg(feature = "accessibility")]
             a11y_state: crate::accessibility::AccessibilityState::new(),
@@ -165,6 +170,13 @@ impl App {
         self.is_animating
     }
 
+    /// Whether the perf HUD forces continuous frames. The overlay text
+    /// changes every frame, so while it is on the render loop cannot go
+    /// idle: that invalidation cost is the price of live measurement.
+    pub(crate) fn perf_overlay_active(&self) -> bool {
+        matches!(&self.state, GpuState::Ready { gpu, .. } if gpu.config.perf_hud)
+    }
+
     #[cfg(any(target_arch = "wasm32", target_os = "android"))]
     pub fn new_with_proxy(proxy: EventLoopProxy<AppEvent>) -> Self {
         let compositor = Compositor::new();
@@ -189,6 +201,8 @@ impl App {
             safe_area: SafeAreaInsets::default(),
             scale_factor: 1.0,
             is_animating: false,
+            perf: PerfMonitor::new(),
+            perf_hud: PerfHud::new(),
             event_buffer: Vec::with_capacity(64),
             event_loop_proxy: Some(proxy),
             #[cfg(feature = "accessibility")]

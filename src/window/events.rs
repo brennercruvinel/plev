@@ -136,8 +136,11 @@ impl super::App {
                 self.render();
                 // Re-schedule only while animating or when new work arrived
                 // during the frame; otherwise stay idle until invalidated.
+                // The perf HUD counts as animation: it redraws every frame.
                 if let Some(ref window) = self.window
-                    && (self.is_animating || self.compositor.needs_render())
+                    && (self.is_animating
+                        || self.perf_overlay_active()
+                        || self.compositor.needs_render())
                 {
                     window.request_redraw();
                 }

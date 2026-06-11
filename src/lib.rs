@@ -37,6 +37,9 @@ pub mod ui;
 // -- Animation
 pub mod animation;
 
+// -- Performance instrumentation
+pub mod perf;
+
 // -- Platform
 pub mod lifecycle;
 pub mod platform;

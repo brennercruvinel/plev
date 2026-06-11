@@ -117,6 +117,20 @@ impl TexturePool {
         }
     }
 
+    /// Estimated resident bytes of all pooled textures (in use or not:
+    /// the pool is grow-only). Feeds the perf monitor's memory stats.
+    pub fn memory_bytes(&self) -> u64 {
+        self.entries
+            .iter()
+            .map(|(key, entries)| {
+                u64::from(key.width)
+                    * u64::from(key.height)
+                    * bytes_per_pixel(key.format)
+                    * entries.len() as u64
+            })
+            .sum()
+    }
+
     /// Drop textures that don't match the given surface dimensions.
     pub fn invalidate_size(&mut self, width: u32, height: u32) {
         self.entries.retain(|key, entries| {
@@ -135,6 +149,19 @@ impl TexturePool {
                 true
             }
         });
+    }
+}
+
+/// Bytes per pixel for the formats the pool actually sees (surface and
+/// effect formats). Unknown formats fall back to 4 (the common case).
+fn bytes_per_pixel(format: wgpu::TextureFormat) -> u64 {
+    use wgpu::TextureFormat as F;
+    match format {
+        F::R8Unorm => 1,
+        F::Rg8Unorm => 2,
+        F::Rgba8Unorm | F::Rgba8UnormSrgb | F::Bgra8Unorm | F::Bgra8UnormSrgb => 4,
+        F::Rgba16Float => 8,
+        _ => 4,
     }
 }
 
@@ -167,5 +194,15 @@ mod tests {
     fn pool_starts_empty() {
         let pool = TexturePool::new();
         assert!(pool.entries.is_empty());
+        assert_eq!(pool.memory_bytes(), 0);
+    }
+
+    #[test]
+    fn bytes_per_pixel_matches_known_formats() {
+        assert_eq!(bytes_per_pixel(wgpu::TextureFormat::R8Unorm), 1);
+        assert_eq!(bytes_per_pixel(wgpu::TextureFormat::Bgra8UnormSrgb), 4);
+        assert_eq!(bytes_per_pixel(wgpu::TextureFormat::Rgba16Float), 8);
+        // Unknown formats estimate 4 bytes.
+        assert_eq!(bytes_per_pixel(wgpu::TextureFormat::Depth32Float), 4);
     }
 }

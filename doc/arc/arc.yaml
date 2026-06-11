@@ -16,6 +16,7 @@ modules:
   layout:     { path: src/layout,     role: taffy wrapper (flex, percent, measure-fns), depends: [text] }
   input:      { path: src/input,      role: pointer + hit regions + touch synth + gestures }
   animation:  { path: src/animation,  role: tween/frameclock/easing (dt-based) }
+  perf:       { path: src/perf,       role: PerfMonitor rolling windows (fps, dt percentiles, cpu micros, memory) + PerfHud overlay, depends: [animation, compositor, text], contracts: [pure-no-gpu, hud-implies-continuous-frames] }
   signal:     { path: src/signal,     role: reactive primitives }
   window:     { path: src/window,     role: app runner, render-on-demand, render passes, wasm canvas, depends: [gpu, compositor, text, input] }
   theme:      { path: src/theme,      role: measured hoff tokens, oklch }

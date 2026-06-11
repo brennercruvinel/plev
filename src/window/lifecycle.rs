@@ -182,8 +182,9 @@ impl super::App {
 
         // Render on demand: schedule a frame only when something changed or
         // an animation is running; otherwise the event loop stays idle.
+        // The perf HUD counts as animation: it redraws every frame.
         if let Some(ref window) = self.window
-            && (self.is_animating || self.compositor.needs_render())
+            && (self.is_animating || self.perf_overlay_active() || self.compositor.needs_render())
         {
             window.request_redraw();
         }

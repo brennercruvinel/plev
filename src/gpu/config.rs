@@ -16,6 +16,17 @@ pub struct RenderConfig {
     /// Default tolerance for path tessellation (lower = more vertices,
     /// smoother curves).
     pub path_tolerance: f32,
+    /// Log a compact perf line (`PerfSnapshot::log_line`) every
+    /// `perf_log_interval` frames. Off by default: no spam.
+    pub perf_log: bool,
+    /// Frames between perf log lines when `perf_log` is on.
+    pub perf_log_interval: u32,
+    /// Draw the perf HUD overlay (top-right, engine-drawn). While on, the
+    /// engine `App` renders continuously instead of on demand: the HUD
+    /// text changes every frame, and live measurement needs live frames.
+    /// That idle cost is the price of measuring; toggle off to return to
+    /// render-on-demand.
+    pub perf_hud: bool,
 }
 
 impl Default for RenderConfig {
@@ -24,6 +35,9 @@ impl Default for RenderConfig {
             msaa_samples: 4,
             present_mode: wgpu::PresentMode::AutoVsync,
             path_tolerance: 0.1,
+            perf_log: false,
+            perf_log_interval: 120,
+            perf_hud: false,
         }
     }
 }
@@ -52,6 +66,10 @@ mod tests {
         assert_eq!(config.present_mode, wgpu::PresentMode::AutoVsync);
         assert_eq!(config.path_tolerance, 0.1);
         assert_eq!(crate::path::default_tolerance(), 0.1);
+        // Perf instrumentation is opt-in: no log spam, no HUD by default.
+        assert!(!config.perf_log);
+        assert_eq!(config.perf_log_interval, 120);
+        assert!(!config.perf_hud);
     }
 
     #[test]

@@ -59,4 +59,10 @@ impl GpuVec {
     pub fn buffer(&self) -> &wgpu::Buffer {
         &self.buffer
     }
+
+    /// Allocated GPU bytes (capacity, not the live byte count: the buffer
+    /// grows and never shrinks). Feeds the perf monitor's memory stats.
+    pub fn capacity_bytes(&self) -> u64 {
+        self.capacity
+    }
 }

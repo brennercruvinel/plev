@@ -55,6 +55,21 @@ impl super::App {
         text_system.begin_frame();
         self.ime_state.begin_frame();
 
+        // Perf HUD: engine-drawn overlay on its own high-z layer, fed with
+        // the previous frame's snapshot (this frame's numbers land after
+        // submit). Drawn before resolve so it enters this frame's passes.
+        if gpu.config.perf_hud {
+            let viewport_w = gpu
+                .logical_size
+                .map(|(w, _)| w)
+                .unwrap_or(gpu.surface_config.width as f32);
+            let snapshot = self.perf.snapshot();
+            self.perf_hud
+                .draw(&mut self.compositor, &snapshot, viewport_w);
+        } else {
+            self.perf_hud.clear(&mut self.compositor);
+        }
+
         // Resolve compositor
         self.compositor
             .resolve(&crate::compositor::ResolveResources {
@@ -185,5 +200,24 @@ impl super::App {
             glyphs,
             encode_start.elapsed().as_micros() as u64,
         );
+
+        // Feed the perf monitor from the existing per-frame sources.
+        self.perf
+            .record_frame(self.animation_tick, self.compositor.stats());
+        self.perf.record_memory(crate::perf::MemoryStats {
+            glyph_atlas_bytes: text_system.atlas_memory_bytes(),
+            texture_pool_bytes: texture_pool.memory_bytes(),
+            layer_bytes: self.compositor.gpu_memory_bytes(),
+            process_rss_bytes: crate::perf::process_rss_bytes(),
+        });
+        if gpu.config.perf_log
+            && gpu.config.perf_log_interval > 0
+            && self
+                .perf
+                .frames()
+                .is_multiple_of(u64::from(gpu.config.perf_log_interval))
+        {
+            log::info!("{}", self.perf.snapshot().log_line());
+        }
     }
 }

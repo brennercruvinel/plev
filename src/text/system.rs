@@ -207,6 +207,12 @@ impl TextSystem {
         (vertices, indices)
     }
 
+    /// Resident bytes of the glyph atlas texture (R8Unorm, 1 byte per
+    /// pixel). Feeds the perf monitor's memory stats.
+    pub fn atlas_memory_bytes(&self) -> u64 {
+        u64::from(self.atlas_size) * u64::from(self.atlas_size)
+    }
+
     /// Purge all caches in response to memory pressure.
     pub fn purge_caches(&mut self) {
         let count = self.shaping_cache.len();
