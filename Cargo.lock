@@ -503,20 +503,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
-name = "basic-ide"
-version = "0.1.0"
-dependencies = [
- "env_logger",
- "git_backend",
- "log",
- "notify",
- "plev",
- "pollster",
- "wgpu",
- "winit",
-]
-
-[[package]]
 name = "bit-set"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1084,15 +1070,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 
 [[package]]
-name = "editor_core"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "ropey",
- "unicode-segmentation",
-]
-
-[[package]]
 name = "either"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1482,7 +1459,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "git_backend"
+name = "git"
 version = "0.1.0"
 dependencies = [
  "gix",
@@ -2307,6 +2284,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3d3067d79b975e8844ca9eb072e16b31c3c1c36928edf9c6789548c524d0d954"
 
 [[package]]
+name = "ide"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "git",
+ "log",
+ "notify",
+ "plev",
+ "pollster",
+ "wgpu",
+ "winit",
+]
+
+[[package]]
 name = "image"
 version = "0.25.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2832,12 +2823,12 @@ dependencies = [
 name = "narrate"
 version = "0.1.0"
 dependencies = [
- "narrate_macro",
+ "narrate-macro",
  "plev",
 ]
 
 [[package]]
-name = "narrate_macro"
+name = "narrate-macro"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
@@ -3449,7 +3440,6 @@ dependencies = [
  "console_log",
  "cosmic-text",
  "criterion",
- "editor_core",
  "env_logger",
  "etagere",
  "image",
@@ -3465,6 +3455,7 @@ dependencies = [
  "notify",
  "notify-debouncer-full",
  "pollster",
+ "rope",
  "rustc-hash 2.1.2",
  "serde",
  "serde_json",
@@ -3842,6 +3833,15 @@ name = "renderdoc-sys"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
+
+[[package]]
+name = "rope"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "ropey",
+ "unicode-segmentation",
+]
 
 [[package]]
 name = "ropey"

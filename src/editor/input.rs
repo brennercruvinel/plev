@@ -2,7 +2,7 @@
 
 use std::ops::Range;
 
-use editor_core::{Selection, SelectionSet, Transaction, movement};
+use rope::{Selection, SelectionSet, Transaction, movement};
 use unicode_segmentation::UnicodeSegmentation;
 use winit::event::Ime;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
@@ -148,7 +148,7 @@ impl EditorView {
     }
 
     /// Apply a horizontal/jump movement to every selection.
-    fn move_each(&mut self, f: impl FnMut(&editor_core::Rope, Selection) -> Selection) {
+    fn move_each(&mut self, f: impl FnMut(&rope::Rope, Selection) -> Selection) {
         self.document.transform_selections(f);
         self.goal.clear();
         self.scroll_to_cursor();
@@ -159,7 +159,7 @@ impl EditorView {
     fn move_vertical(&mut self, delta: isize, extend: bool) {
         let count = self.document.selections().len();
         if self.goal.len() != count {
-            self.goal = vec![editor_core::GoalColumn::new(); count];
+            self.goal = vec![rope::GoalColumn::new(); count];
         }
         let goals = &mut self.goal;
         let mut i = 0;

@@ -1,7 +1,7 @@
 //! Multi-line, multi-cursor text editor widget (plan §WS-C fase 2).
 //!
 //! Built on the headless foundations:
-//! - [`editor_core`]: rope document, transactional edits, multi-cursor
+//! - [`rope`]: rope document, transactional edits, multi-cursor
 //!   selections and undo history;
 //! - [`TextMeasurer`](crate::text::TextMeasurer): GPU-free shaping for
 //!   hit-testing and caret geometry;

@@ -2,7 +2,7 @@
 //!
 //! GPU-native 3-panel workspace UI (no Tauri, no WebView, no JavaScript)
 //! showing a real repository: status, log, branches and diffs come from
-//! `git_backend` running on a worker thread; the UI thread never blocks.
+//! `git` running on a worker thread; the UI thread never blocks.
 //!
 //! Run: `cargo run -p basicIDE [path-to-repo]` (defaults to the cwd).
 
@@ -17,7 +17,7 @@ mod watcher;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use git_backend::{GitClient, GitCommand, GitEvent};
+use git::{GitClient, GitCommand, GitEvent};
 use plev::actions::{
     Action, ActionRegistry, ContextStack, KeyContext, KeymapMatcher, MatchResult,
     keystroke_from_key_event,
@@ -85,8 +85,8 @@ struct App {
     _fs_watcher: Option<watcher::FsWatcher>,
     diff_target: Option<DiffTarget>,
     /// Last log/branches payloads — the stacks panel needs both.
-    log_cache: Vec<git_backend::Commit>,
-    branch_cache: Vec<git_backend::Branch>,
+    log_cache: Vec<git::Commit>,
+    branch_cache: Vec<git::Branch>,
 
     // Keymap dispatch (Zed model): keystroke -> matcher -> name -> registry.
     modifiers: ModifiersState,

@@ -13,12 +13,12 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use editor_core::Document;
 use plev::compositor::Compositor;
 use plev::editor::{EditorTheme, EditorView, MouseEvent};
 use plev::gpu::GpuContext;
 use plev::layout::ComputedBounds;
 use plev::text::TextSystem;
+use rope::Document;
 use winit::application::ApplicationHandler;
 use winit::dpi::{LogicalPosition, LogicalSize};
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};

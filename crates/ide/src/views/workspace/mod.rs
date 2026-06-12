@@ -104,7 +104,7 @@ impl PendingAction {
 
 /// A git operation the UI wants performed. Emitted by interaction handlers
 /// (optimistic view updates happen immediately); the app maps each request
-/// to a `git_backend::GitCommand` on the worker thread.
+/// to a `git::GitCommand` on the worker thread.
 #[derive(Clone, Debug, PartialEq)]
 pub enum UiRequest {
     FileDiff { path: String },

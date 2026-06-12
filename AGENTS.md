@@ -11,7 +11,7 @@ plev: a gpu-first compositing engine in rust (wgpu 28, winit 0.30,
 cosmic-text 0.18, taffy 0.9). one codebase, identical rendering on macos,
 browser (webgpu/wasm), and (in progress) android, ios, linux, windows.
 apps: crates/showcase (widget gallery, also runs in the browser),
-crates/basic-ide (real git client). knowledge base: kdb/. architecture:
+crates/ide (real git client). knowledge base: kdb/. architecture:
 doc/arc/.
 
 ## at task start

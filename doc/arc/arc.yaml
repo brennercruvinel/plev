@@ -28,9 +28,9 @@ modules:
   platform:   { path: [src/platform.rs, src/ime.rs, src/lifecycle.rs], role: safe areas, ime, app lifecycle }
 crates:
   showcase:   { path: crates/showcase,  role: widget gallery app, targets: [desktop, web] }
-  basic-ide:  { path: crates/basic-ide, role: git client app }
-  editor_core:{ path: crates/editor_core, role: rope/transactions/multi-cursor, pure }
-  git_backend:{ path: crates/git_backend, role: gix + cli git operations, desktop-only }
+  ide:  { path: crates/ide, role: git client app }
+  rope:{ path: crates/rope, role: rope/transactions/multi-cursor, pure }
+  git:{ path: crates/git, role: gix + cli git operations, desktop-only }
   narrate:    { path: [crates/narrate, crates/narrate_macro], role: ui dsl (experimental) }
   macros:     { path: macros,           role: proc-macros }
   lot:        { path: crates/lot,       role: lottie (bodymovin) importer: serde model + keyframe eval + hierarchical render to TessellatedPath (rnd), and the exit door cnv: sample once, dedup payloads, discover deltas, encode .monster; playback then runs on monster only, depends: [path], emits-to: [monster] }

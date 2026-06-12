@@ -2,7 +2,7 @@
 
 use std::ops::Range;
 
-use editor_core::{Document, GoalColumn, Selection};
+use rope::{Document, GoalColumn, Selection};
 
 use crate::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::layout::ComputedBounds;
@@ -46,7 +46,7 @@ pub(super) struct ClickRecord {
 
 /// Multi-line, multi-cursor text editor widget.
 ///
-/// Owns an [`editor_core::Document`] and renders it as compositor scene
+/// Owns an [`rope::Document`] and renders it as compositor scene
 /// nodes. Rendering is virtualized: only the lines intersecting the viewport
 /// (plus [`EditorConfig::overscan_lines`]) are shaped and emitted, so
 /// documents with hundreds of thousands of lines render in constant time.

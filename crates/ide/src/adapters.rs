@@ -1,7 +1,7 @@
-//! Maps `git_backend` data into basicIDE view models.
+//! Maps `git` data into basicIDE view models.
 //!
 //! The views own plain structs (`FileEntry`, `Stack`, `DiffLine`) and never
-//! see gix or git_backend types; this module is the single conversion point,
+//! see gix or git types; this module is the single conversion point,
 //! so swapping the backend touches nothing else.
 
 use crate::views::diff_view::{DiffLine, DiffLineKind};
@@ -9,7 +9,7 @@ use crate::views::multi_stack_view::{CommitEntry, Stack};
 use crate::views::unassigned_view::{FileEntry, FileStatus};
 
 /// Converts a status listing into file rows, preserving git's path order.
-pub fn file_entries(status: &[git_backend::FileStatus]) -> Vec<FileEntry> {
+pub fn file_entries(status: &[git::FileStatus]) -> Vec<FileEntry> {
     status
         .iter()
         .map(|s| FileEntry {
@@ -20,20 +20,20 @@ pub fn file_entries(status: &[git_backend::FileStatus]) -> Vec<FileEntry> {
         .collect()
 }
 
-fn status_kind(kind: git_backend::StatusKind) -> FileStatus {
+fn status_kind(kind: git::StatusKind) -> FileStatus {
     match kind {
-        git_backend::StatusKind::Added => FileStatus::Added,
-        git_backend::StatusKind::Modified => FileStatus::Modified,
-        git_backend::StatusKind::Deleted => FileStatus::Deleted,
-        git_backend::StatusKind::Renamed => FileStatus::Renamed,
-        git_backend::StatusKind::Untracked => FileStatus::Untracked,
+        git::StatusKind::Added => FileStatus::Added,
+        git::StatusKind::Modified => FileStatus::Modified,
+        git::StatusKind::Deleted => FileStatus::Deleted,
+        git::StatusKind::Renamed => FileStatus::Renamed,
+        git::StatusKind::Untracked => FileStatus::Untracked,
     }
 }
 
 /// Builds the stacks panel: the checked-out branch carries the HEAD log,
 /// other local branches appear as headers (their logs are not walked —
-/// `git_backend::GitRepo::log` follows HEAD only).
-pub fn stacks(branches: &[git_backend::Branch], log: &[git_backend::Commit]) -> Vec<Stack> {
+/// `git::GitRepo::log` follows HEAD only).
+pub fn stacks(branches: &[git::Branch], log: &[git::Commit]) -> Vec<Stack> {
     let now = unix_now();
     let mut stacks: Vec<Stack> = Vec::with_capacity(branches.len().max(1));
     for branch in branches {
@@ -64,7 +64,7 @@ pub fn stacks(branches: &[git_backend::Branch], log: &[git_backend::Commit]) -> 
     stacks
 }
 
-fn commit_entry(commit: &git_backend::Commit, now: i64) -> CommitEntry {
+fn commit_entry(commit: &git::Commit, now: i64) -> CommitEntry {
     CommitEntry {
         sha: commit.sha.clone(),
         message: commit.message.clone(),
@@ -75,7 +75,7 @@ fn commit_entry(commit: &git_backend::Commit, now: i64) -> CommitEntry {
 
 /// Flattens diff hunks into renderable lines (hunk headers become
 /// `DiffLineKind::Header` rows).
-pub fn diff_lines(hunks: &[git_backend::Hunk]) -> Vec<DiffLine> {
+pub fn diff_lines(hunks: &[git::Hunk]) -> Vec<DiffLine> {
     let mut lines = Vec::new();
     for hunk in hunks {
         lines.push(DiffLine {
@@ -87,9 +87,9 @@ pub fn diff_lines(hunks: &[git_backend::Hunk]) -> Vec<DiffLine> {
         for line in &hunk.lines {
             lines.push(DiffLine {
                 kind: match line.kind {
-                    git_backend::DiffLineKind::Context => DiffLineKind::Context,
-                    git_backend::DiffLineKind::Add => DiffLineKind::Added,
-                    git_backend::DiffLineKind::Remove => DiffLineKind::Removed,
+                    git::DiffLineKind::Context => DiffLineKind::Context,
+                    git::DiffLineKind::Add => DiffLineKind::Added,
+                    git::DiffLineKind::Remove => DiffLineKind::Removed,
                 },
                 line_no_old: line.old_no,
                 line_no_new: line.new_no,
@@ -142,16 +142,16 @@ mod tests {
     #[test]
     fn stacks_put_active_branch_first_with_log() {
         let branches = vec![
-            git_backend::Branch {
+            git::Branch {
                 name: "feature/x".into(),
                 is_head: false,
             },
-            git_backend::Branch {
+            git::Branch {
                 name: "main".into(),
                 is_head: true,
             },
         ];
-        let log = vec![git_backend::Commit {
+        let log = vec![git::Commit {
             sha: "a".repeat(40),
             short_sha: "aaaaaaa".into(),
             message: "subject".into(),
@@ -169,17 +169,17 @@ mod tests {
 
     #[test]
     fn diff_lines_flatten_hunks_with_headers() {
-        let hunks = vec![git_backend::Hunk {
+        let hunks = vec![git::Hunk {
             header: "@@ -1,2 +1,2 @@".into(),
             lines: vec![
-                git_backend::DiffLine {
-                    kind: git_backend::DiffLineKind::Remove,
+                git::DiffLine {
+                    kind: git::DiffLineKind::Remove,
                     content: "old".into(),
                     old_no: Some(1),
                     new_no: None,
                 },
-                git_backend::DiffLine {
-                    kind: git_backend::DiffLineKind::Add,
+                git::DiffLine {
+                    kind: git::DiffLineKind::Add,
                     content: "new".into(),
                     old_no: None,
                     new_no: Some(1),

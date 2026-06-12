@@ -1,5 +1,5 @@
 [package]
-name = "git_backend"
+name = "git"
 version = "0.1.0"
 edition = "2024"
 description = "Git backend for plev apps: gix for reads, git CLI for the rest. No UI dependencies."

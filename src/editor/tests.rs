@@ -3,7 +3,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use editor_core::{Document, Selection, SelectionSet};
+use rope::{Document, Selection, SelectionSet};
 use winit::event::Ime;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 

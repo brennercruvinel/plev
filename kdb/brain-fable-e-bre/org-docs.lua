@@ -44,7 +44,7 @@ fila de workflows (ordem do plano plev aprovado):
 5. ws-plev-web: shell semantico, url=statechart, llm.txt, cwv
    (plev)
 6. ws-org: 3-char + mdbook; ws-ide: minerar warp/gitcomet/difftastic/
-   gitlogue/CodeEditSourceEditor pro basic-ide
+   gitlogue/CodeEditSourceEditor pro ide
 
 loop de validacao continua (papel do orquestrador, pedido explicito):
 reviso cada fase contra o gate antes da proxima; falha = re-queue com o
