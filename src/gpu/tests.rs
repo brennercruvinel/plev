@@ -17,21 +17,18 @@ fn validate_wgsl(name: &str, source: &str) {
 #[test]
 fn all_engine_shaders_are_valid_wgsl() {
     let shaders = [
-        ("quad.wgsl", include_str!("../../shaders/quad.wgsl")),
-        ("rect_sdf.wgsl", include_str!("../../shaders/rect_sdf.wgsl")),
+        ("quad.wgsl", include_str!("shaders/quad.wgsl")),
+        ("rect_sdf.wgsl", include_str!("shaders/rect_sdf.wgsl")),
         (
             "shadow_analytic.wgsl",
-            include_str!("../../shaders/shadow_analytic.wgsl"),
+            include_str!("shaders/shadow_analytic.wgsl"),
         ),
-        ("image.wgsl", include_str!("../../shaders/image.wgsl")),
-        ("backdrop.wgsl", include_str!("../../shaders/backdrop.wgsl")),
-        ("text.wgsl", include_str!("../../shaders/text.wgsl")),
-        (
-            "composite.wgsl",
-            include_str!("../../shaders/composite.wgsl"),
-        ),
-        ("blur.wgsl", include_str!("../../shaders/blur.wgsl")),
-        ("shadow.wgsl", include_str!("../../shaders/shadow.wgsl")),
+        ("image.wgsl", include_str!("shaders/image.wgsl")),
+        ("backdrop.wgsl", include_str!("shaders/backdrop.wgsl")),
+        ("text.wgsl", include_str!("shaders/text.wgsl")),
+        ("composite.wgsl", include_str!("shaders/composite.wgsl")),
+        ("blur.wgsl", include_str!("shaders/blur.wgsl")),
+        ("shadow.wgsl", include_str!("shaders/shadow.wgsl")),
     ];
     for (name, source) in shaders {
         validate_wgsl(name, source);

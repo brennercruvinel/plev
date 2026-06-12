@@ -1,6 +1,6 @@
 //! Hot reload for development.
 //!
-//! Watches `shaders/*.wgsl` for shader changes and `src/`/`examples/` for
+//! Watches `src/gpu/shaders/*.wgsl` for shader changes and `src/`/`examples/` for
 //! plev_narrate! DSL changes. Feature-gated behind `hot-reload`.
 //!
 //! - Tier 1 (Shader): file watcher + pipeline recreation
@@ -48,15 +48,15 @@ pub fn shader_source(filename: &str) -> Cow<'static, str> {
 
 pub(crate) fn fallback_shader(filename: &str) -> &'static str {
     match filename {
-        "quad.wgsl" => include_str!("../../shaders/quad.wgsl"),
-        "text.wgsl" => include_str!("../../shaders/text.wgsl"),
-        "rect_sdf.wgsl" => include_str!("../../shaders/rect_sdf.wgsl"),
-        "shadow_analytic.wgsl" => include_str!("../../shaders/shadow_analytic.wgsl"),
-        "image.wgsl" => include_str!("../../shaders/image.wgsl"),
-        "backdrop.wgsl" => include_str!("../../shaders/backdrop.wgsl"),
-        "composite.wgsl" => include_str!("../../shaders/composite.wgsl"),
-        "blur.wgsl" => include_str!("../../shaders/blur.wgsl"),
-        "shadow.wgsl" => include_str!("../../shaders/shadow.wgsl"),
+        "quad.wgsl" => include_str!("../gpu/shaders/quad.wgsl"),
+        "text.wgsl" => include_str!("../gpu/shaders/text.wgsl"),
+        "rect_sdf.wgsl" => include_str!("../gpu/shaders/rect_sdf.wgsl"),
+        "shadow_analytic.wgsl" => include_str!("../gpu/shaders/shadow_analytic.wgsl"),
+        "image.wgsl" => include_str!("../gpu/shaders/image.wgsl"),
+        "backdrop.wgsl" => include_str!("../gpu/shaders/backdrop.wgsl"),
+        "composite.wgsl" => include_str!("../gpu/shaders/composite.wgsl"),
+        "blur.wgsl" => include_str!("../gpu/shaders/blur.wgsl"),
+        "shadow.wgsl" => include_str!("../gpu/shaders/shadow.wgsl"),
         _ => {
             log::error!("Unknown shader for fallback: {}", filename);
             ""

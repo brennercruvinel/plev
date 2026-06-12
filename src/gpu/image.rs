@@ -1,6 +1,6 @@
 //! Image atlas: decoded images are packed into one RGBA8 atlas texture
 //! (etagere shelf allocation, same scheme as the glyph atlas) and drawn by
-//! the sprite pipeline (`shaders/image.wgsl`).
+//! the sprite pipeline (`src/gpu/shaders/image.wgsl`).
 //!
 //! The store is split in two so loading works without a GPU:
 //! - [`ImageStore`] (CPU): decode + dedupe + atlas layout + staged pixel

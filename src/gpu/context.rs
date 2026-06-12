@@ -15,7 +15,7 @@ macro_rules! shader_src {
         }
         #[cfg(not(feature = "hot-reload"))]
         {
-            std::borrow::Cow::<'static, str>::from(include_str!(concat!("../../shaders/", $name)))
+            std::borrow::Cow::<'static, str>::from(include_str!(concat!("shaders/", $name)))
         }
     }};
 }

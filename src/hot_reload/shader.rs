@@ -8,7 +8,7 @@ use notify::EventKind;
 use notify::RecursiveMode;
 use notify_debouncer_full::new_debouncer;
 
-/// Watches the `shaders/` directory for `.wgsl` file changes.
+/// Watches the `src/gpu/shaders/` directory for `.wgsl` file changes.
 ///
 /// Uses `notify-debouncer-full` with 500ms debounce. The watcher runs on a
 /// background thread; poll with [`ShaderWatcher::poll_changes`] from the
