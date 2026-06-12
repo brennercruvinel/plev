@@ -5,7 +5,7 @@ return {
   dom = "references",
   dat = "2026-06-11",
   ttl = "mapa de clones com instrucao de estudo embutida (criar, nao copiar)",
-  lnk = { "anm-formato", "edt-flash-novo", "prs-transpiler", "shc-absorcao", "ths-compilador" },
+  lnk = { "monster-formato", "edt-flash-novo", "prs-transpiler", "shc-absorcao", "ths-compilador" },
   txt = [[
 regra do brenner: nao adianta clonar e largar. cada clone ganha um
 study.lua ao lado (mesmo formato de no): por que esta aqui, o que extrair,
@@ -65,6 +65,6 @@ nota ws-anim (2026-06-11): brenner salvou amostras reais em ref/lottie/
 (cards, explosion, girl, MONEY com state machines interativas, SNAKE;
 json + dotlottie + webm + svg lado a lado). study-samples.lua ao lado
 carrega os baselines medidos de bytes/s e o modelo de interatividade
-declarativa do dotlottie v2; leitura obrigatoria antes de tocar no anm.
+declarativa do dotlottie v2; leitura obrigatoria antes de tocar no monster.
 ]],
 }

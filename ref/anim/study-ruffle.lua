@@ -5,7 +5,7 @@ return {
   dom = "anim",
   dat = "2026-06-11",
   ttl = "emulador do flash player em rust (desktop e wasm); leitor canonico do formato swf",
-  lnk = { "ref-study", "anm-formato" },
+  lnk = { "ref-study", "monster-formato" },
   txt = [=[
 por que esta aqui: COMO o swf codifica tweens (matrizes, morphs,
 place/remove object) e como o player invalida e renderiza com

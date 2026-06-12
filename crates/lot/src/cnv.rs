@@ -1,9 +1,9 @@
-//! Conversion: a parsed lottie animation -> a self-contained .anm
+//! Conversion: a parsed lottie animation -> a self-contained .monster
 //! file. This is the bridge that retires the json at the door: `lot`
 //! reads it ONCE, samples the composition through [`crate::rnd`],
-//! dedups the tessellated geometry into the anm asset table, and the
-//! anm encoder discovers the deltas. Playback afterwards is
-//! `anm::AnmPlayer` over our format; no lottie code runs.
+//! dedups the tessellated geometry into the monster asset table, and the
+//! monster encoder discovers the deltas. Playback afterwards is
+//! `monster::MonsterPlayer` over our format; no lottie code runs.
 //!
 //! the dedup thesis (swf display list at shape granularity): payloads
 //! are compared as exact quantized bytes, so a static shape is one
@@ -18,8 +18,8 @@ use std::collections::HashMap;
 use crate::gem::Mat;
 use crate::mdl::Animation;
 use crate::rnd::Player;
-use anm::asset_path::pack_chunks;
-use anm::{
+use monster::asset_path::pack_chunks;
+use monster::{
     Asset, AssetKind, Desc, DiscoverConfig, DiscoverError, Node, NodeKind, Props, WriteError,
     discover, encode,
 };
@@ -40,13 +40,13 @@ pub struct Stats {
     pub places: usize,
     pub replaces: usize,
     pub removes: usize,
-    pub anm_bytes: usize,
+    pub monster_bytes: usize,
 }
 
 #[derive(Debug)]
 pub enum CnvError {
     Json(serde_json::Error),
-    /// Nothing visible in any sampled frame: an empty .anm would lie.
+    /// Nothing visible in any sampled frame: an empty .monster would lie.
     NothingToConvert,
     /// More distinct payloads than u16 asset ids; resample lower.
     TooManyAssets {
@@ -74,7 +74,7 @@ impl std::fmt::Display for CnvError {
                 write!(f, "frame {at_frame} holds more than 65535 shapes")
             }
             CnvError::Discover(e) => write!(f, "delta discovery: {e}"),
-            CnvError::Write(e) => write!(f, "anm encode: {e}"),
+            CnvError::Write(e) => write!(f, "monster encode: {e}"),
         }
     }
 }
@@ -99,7 +99,7 @@ impl From<WriteError> for CnvError {
     }
 }
 
-/// Convert lottie json text into .anm bytes plus the measured stats.
+/// Convert lottie json text into .monster bytes plus the measured stats.
 /// `name` labels the description track (the format's text channel,
 /// spec decision 7); the first keyframe's entry carries the stage size
 /// machine-readably as `stage WxH`, which is how a player learns the
@@ -171,7 +171,7 @@ pub fn convert(json: &str, name: &str) -> Result<(Vec<u8>, Stats), CnvError> {
         places: timeline.places.len(),
         replaces: timeline.replaces.len(),
         removes: timeline.removes.len(),
-        anm_bytes: bytes.len(),
+        monster_bytes: bytes.len(),
     };
     Ok((bytes, stats))
 }

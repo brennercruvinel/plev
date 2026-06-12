@@ -5,7 +5,7 @@ return {
   dom = "lang",
   dat = "2026-06-11",
   ttl = "linguagem de script embarcada e engine de avaliacao para rust",
-  lnk = { "ref-study", "anm-formato" },
+  lnk = { "ref-study", "monster-formato" },
   txt = [=[
 por que esta aqui: scripting embarcado rust; o espirito actionscript para
 o nosso runtime de animacao. api de engine/scope/eventos e a fronteira

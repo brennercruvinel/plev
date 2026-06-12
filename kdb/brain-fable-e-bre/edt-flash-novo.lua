@@ -5,7 +5,7 @@ return {
   dom = "animation-editor",
   dat = "2026-06-11",
   ttl = "a gui minima de autoria: o novo flash, construido no proprio plev",
-  lnk = { "anm-formato", "ths-compilador", "ref-study" },
+  lnk = { "monster-formato", "ths-compilador", "ref-study" },
   txt = [[
 vamos ter sim uma gui minima para construir/autorar animacoes, tipo o
 flash. dogfooding: o editor e um app plev (prova a engine enquanto cria
@@ -13,7 +13,7 @@ conteudo pra ela). nasce DEPOIS do codec e do scripting verdes (backend
 antes de ui, sempre).
 
 forma minima v0 (crate 3-char, ex: mot):
-- stage central: renderiza a cena do formato anm em edicao
+- stage central: renderiza a cena do formato monster em edicao
 - timeline embaixo: keyframes visiveis, scrub, play/pause, fps
 - painel de propriedades: posicao/escala/rotacao/cor/easing do no
   selecionado
@@ -38,7 +38,7 @@ arqueologia (estudar para nao repetir, nunca copiar):
 - thorvg: vetor leve com lottie player embutido; concorrente direto do
   nosso player
 
-o pecado a nao repetir (ver sem-boitata): o flash morreu de opacidade
+o pecado a nao repetir (ver plev): o flash morreu de opacidade
 semantica. o nosso formato carrega a track de descricao textual e o
 editor a expoe como campo de autoria (o autor descreve a cena; o nlp
 leve do build so preenche o que faltar).

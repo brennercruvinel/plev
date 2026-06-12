@@ -5,7 +5,7 @@ return {
   dom = "anim",
   dat = "2026-06-11",
   ttl = "amostras lottie/dotlottie/webm reais: baselines bytes/s e o modelo de interatividade declarativa a superar",
-  lnk = { "ref-study", "anm-formato" },
+  lnk = { "ref-study", "monster-formato" },
   txt = [=[
 diretiva do brenner: nao e para entender lottie, e para fazer a NOSSA
 engine. leitura obrigatoria antes de tocar no anm ou em demo de

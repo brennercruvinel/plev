@@ -5,7 +5,7 @@ return {
   dom = "anim",
   dat = "2026-06-11",
   ttl = "player js oficial do formato lottie (after effects via bodymovin)",
-  lnk = { "ref-study", "anm-formato" },
+  lnk = { "ref-study", "monster-formato" },
   txt = [=[
 por que esta aqui: modelo de keyframes/expressoes/mascaras do after
 effects serializado em json; e o contraexemplo de peso: o formato e

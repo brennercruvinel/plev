@@ -1,0 +1,27 @@
+# monster: binary animation codec for plev (doc/monster-format-v0.md).
+[package]
+name = "monster"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+# Reserved for the rhai script sidecar (spec decision 8): playback of
+# tweens never requires scripting, so the feature stays empty until the
+# player lands. When wired: rhai with default-features = false,
+# features = ["std", "f32_float"].
+script = []
+
+[dependencies]
+plev = { path = "../.." }
+# per-section checksums in the container (spec: sha256, nest lesson);
+# default-features off keeps the wasm-safe pure-rust path.
+sha2 = { version = "0.10", default-features = false }
+thiserror = "2"
+
+[dev-dependencies]
+# round-trip property tests over generated timelines (spec benchmark
+# gate: decode(encode(t)) structurally identical, property-tested).
+proptest = "1"
+# the dense lottie benches (tests/bench_lottie/dense.rs) read the
+# explosion and girl jsons from ref/lottie at test time.
+serde_json = "1"

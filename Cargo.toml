@@ -3,11 +3,11 @@
 members = [
     ".",
     "macros",
-    "crates/anm",
     "crates/basic-ide",
     "crates/editor_core",
     "crates/git_backend",
     "crates/lot",
+    "crates/monster",
     "crates/narrate",
     "crates/narrate_macro",
     "crates/prs",
@@ -67,7 +67,7 @@ notify-debouncer-full = { version = "0.4", optional = true }
 narrate = { path = "crates/narrate" }
 criterion = { version = "0.5", features = ["html_reports"] }
 lot = { path = "crates/lot" }
-anm = { path = "crates/anm" }
+monster = { path = "crates/monster" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster = "0.4"

@@ -1,7 +1,7 @@
 //! lot: lottie (bodymovin) importer for the plev engine. Reads the
 //! json once and either renders it directly ([`rnd`]) or converts it
-//! to our .anm format ([`cnv`]); after conversion playback runs on
-//! `anm::AnmPlayer` and no lottie code executes.
+//! to our .monster format ([`cnv`]); after conversion playback runs on
+//! `monster::MonsterPlayer` and no lottie code executes.
 //!
 //! Supported subset: shape layers (ty 4), null layers (ty 3) with
 //! parenting, precomps (ty 0), static and keyframed transforms with

@@ -5,7 +5,7 @@ return {
   dom = "anim",
   dat = "2026-06-11",
   ttl = "motor vetorial leve em c++ (~150KB) com player lottie embutido",
-  lnk = { "ref-study", "anm-formato" },
+  lnk = { "ref-study", "monster-formato" },
   txt = [=[
 por que esta aqui: player vetorial leve com lottie embutido; concorrente
 direto do nosso player. estudar a api de cena e a disciplina de binario

@@ -5,7 +5,7 @@ return {
   dom = "organization",
   dat = "2026-06-11",
   ttl = "organizacao: 3-char, doc/, mdbook, fila de workflows, loop de validacao",
-  lnk = { "idx-brain", "shc-absorcao", "sem-boitata" },
+  lnk = { "idx-brain", "shc-absorcao", "plev" },
   txt = [[
 nomenclatura: dirs/docs/assets em kebab-case ingles; source idiomatico a
 linguagem; tokens estilo apl de 3 chars para pastas/arquivos/itens onde o
@@ -33,16 +33,16 @@ drasticamente mais leve). AGENTS.md na raiz e a fonte UNICA de instrucao
 de agentes (codex e afins leem por default; claude/gemini/cursor apontam
 pra ele; sem CLAUDE.md/GEMINI.md paralelos).
 
-fila de workflows (ordem do plano boitata aprovado):
+fila de workflows (ordem do plano plev aprovado):
 1. ws-refs: clones com study.lua embutido (ref-study)
 2. ws-anim (LIDER): estudo -> spec -> codec -> rhai -> auto-animate nativo
-   -> gui de autoria -> aba motion (anm-formato, edt-flash-novo)
+   -> gui de autoria -> aba motion (monster-formato, edt-flash-novo)
 3. ws-showcase (paralelo, arvore disjunta): abas + biblioteca com focus
    states (shc-absorcao)
 4. ws-parser: tree-sitter/topiary, corpus gpui-component + 4 cards,
    verificacao tripla (prs-transpiler)
-5. ws-boitata-web: shell semantico, url=statechart, llm.txt, cwv
-   (sem-boitata)
+5. ws-plev-web: shell semantico, url=statechart, llm.txt, cwv
+   (plev)
 6. ws-org: 3-char + mdbook; ws-ide: minerar warp/gitcomet/difftastic/
    gitlogue/CodeEditSourceEditor pro basic-ide
 

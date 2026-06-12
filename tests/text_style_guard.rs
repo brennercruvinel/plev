@@ -17,9 +17,9 @@ const SKIP_DIRS: [&str; 6] = [".git", "target", "ref", "dist", "tmp", "node_modu
 
 /// Path prefixes (relative to the repo root, '/'-separated) where the raw
 /// constructor is legitimate: the engine that defines it, its inline
-/// tests, its benches, and this guard itself. crates/anm builds raw keys
+/// tests, its benches, and this guard itself. crates/monster builds raw keys
 /// in codec round-trip tests and is engine-side tooling.
-const ALLOWED_PREFIXES: [&str; 4] = ["src/", "benches/", "tests/", "crates/anm/src/"];
+const ALLOWED_PREFIXES: [&str; 4] = ["src/", "benches/", "tests/", "crates/monster/src/"];
 
 /// Known pre-ADR call sites pending their own migration, listed file by
 /// file so no new file (and no new crate) can add a raw constructor call.

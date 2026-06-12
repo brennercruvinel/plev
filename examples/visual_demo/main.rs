@@ -245,7 +245,7 @@ impl ApplicationHandler for DemoApp {
 
         // Load images once: a real PNG through the decode path and a
         // procedural RGBA pattern.
-        self.logo = plev::gpu::load_image_bytes(include_bytes!("../../assets/logo-phi.png"))
+        self.logo = plev::gpu::load_image_bytes(include_bytes!("../../assets/logo-plev.png"))
             .inspect_err(|e| log::warn!("logo load failed: {e}"))
             .ok();
         self.pattern = plev::gpu::load_image_rgba(64, 64, scene::procedural_pattern(64))

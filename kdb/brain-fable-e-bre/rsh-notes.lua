@@ -5,7 +5,7 @@ return {
   dom = "research-raw",
   dat = "2026-06-11",
   ttl = "notas cruas: taffy, makepad, winit, touch, narrate, android, wgpu",
-  lnk = { "shc-absorcao", "anm-formato", "org-docs" },
+  lnk = { "shc-absorcao", "monster-formato", "org-docs" },
   txt = [[
 notas de estudo do brenner, perto da fonte. sao insumos, nao decisoes.
 

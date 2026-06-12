@@ -15,7 +15,7 @@ sequenceDiagram
     A->>C: invalidate + request_redraw
     Note over A,C: render on demand: no change, no frame
     A->>S: build scene nodes
-    %% animation playback: crates/anm AnmPlayer consumes the tick at A
+    %% animation playback: crates/monster MonsterPlayer consumes the tick at A
     %% and hands S a lowered SceneNode scene (scene_at)
     S->>C: push to layers (hash per layer)
     C->>C: resolve only dirty layers

@@ -1,3 +1,4 @@
+
 return {
   id  = "vis-unificada",
   typ = "thesis",
@@ -5,7 +6,7 @@ return {
   dom = "vision",
   dat = "2026-06-11",
   ttl = "a tese: compositing unificado, um binario, seis alvos",
-  lnk = { "ths-compilador", "sem-boitata", "anm-formato", "prs-transpiler" },
+  lnk = { "ths-compilador", "plev", "monster-formato", "prs-transpiler" },
   txt = [[
 a fronteira entre renderizacao nativa e renderizacao web nao e
 constrangimento fisico, e acidente historico. se a separacao e acidental,

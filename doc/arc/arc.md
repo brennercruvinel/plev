@@ -70,7 +70,7 @@ research-notes), ios metal (needs entry point + safe areas), linux/windows
 pre-1.0: no api stability promised. library code must not panic on user
 input paths; tessellation and parsers degrade gracefully (log + empty
 output). binary/format versioning follows the anim-format rules
-implemented in crates/anm (doc/anm-format-v0.md): explicit version,
+implemented in crates/monster (doc/monster-format-v0.md): explicit version,
 frozen golden fixtures, per-section checksums. the full delta op set is
 decodable: modify becomes tracks, place/replace/remove become timeline
 op lists that act inside their keyframe segment. both encoder modes
@@ -81,7 +81,7 @@ inserted on discontinuity and on the random access cadence. an
 encoder-side optimizer (optimize) runs idempotent passes over any
 timeline before encoding: static track collapse, rdp keyframe
 reduction and collinear segment fusion, tolerances expressed in wire
-quantization steps with lossless-on-the-wire defaults. crates/anm
+quantization steps with lossless-on-the-wire defaults. crates/monster
 also ships the player: AnimationTick-driven, deterministic f32
 timeline, windowed
 segment evaluation plus segment-local structural op replay (seek stays

@@ -5,7 +5,7 @@ return {
   dom = "architecture",
   dat = "2026-06-11",
   ttl = "framework e compilador, nao runtime: o colapso das 4 camadas",
-  lnk = { "vis-unificada", "sem-boitata", "cam-1", "cam-2", "cam-3", "cam-4" },
+  lnk = { "vis-unificada", "plev", "cam-1", "cam-2", "cam-3", "cam-4" },
   txt = [[
 provocacao do brenner para refletir o projeto inteiro, inclusive nos
 workflows (preservada quase verbatim; e norte de pesquisa, nao regra

@@ -9,18 +9,18 @@ status: living
 
 ## unreleased
 
-- anm bridge: lottie retired at the door. lot::cnv samples a lottie once,
+- monster bridge: lottie retired at the door. lot::cnv samples a lottie once,
   dedups tessellated payloads into the asset table (exact quantized bytes:
-  a static shape is one asset and zero delta bytes) and encodes .anm;
+  a static shape is one asset and zero delta bytes) and encodes .monster;
   asset_path defines the Path payload wire (uniform color, twips vertices,
   u16 indices, deterministic chunk split); stage size travels in the
-  description track (stage WxH). examples: lot2anm (converter cli),
-  anm_player (decodes and plays .anm, zero lottie linked).
+  description track (stage WxH). examples: lot2monster (converter cli),
+  monster_player (decodes and plays .monster, zero lottie linked).
   measured on the 5 corpus files: cards 0.36x and explosion 0.74x of the
   json (format wins on discrete motion); girl 6.5x, snake 42x, money 53x
   (60fps full-body morphs pay v0's sampled-geometry cost; v1 lever:
   morph tracks, the swf DefineMorphShape lesson)
-- anm: encoder mode B (discover) + optimizer passes + full delta ops
+- monster: encoder mode B (discover) + optimizer passes + full delta ops
   decodable; bench vs json/gzip/webm on 4 fixtures; mode B e2e gate
   (max deviation 0.0375 px / 0.0035 per channel); 124 crate tests
 - prs transpiler poc: react tsx+sass card and gpui separator emitted as

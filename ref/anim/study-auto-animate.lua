@@ -5,7 +5,7 @@ return {
   dom = "anim",
   dat = "2026-06-11",
   ttl = "utilitario zero-config que anima transicoes de layout com uma chamada",
-  lnk = { "ref-study", "anm-formato" },
+  lnk = { "ref-study", "monster-formato" },
   txt = [=[
 por que esta aqui: a ergonomia (uma chamada anima transicoes de layout
 automaticamente); queremos isso NATIVO no plev, no nivel do engine de

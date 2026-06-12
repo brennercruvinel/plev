@@ -42,7 +42,7 @@ biblioteca (entregavel 2: "nao um monte de coisa jogada"):
   adicionar focused + focus ring consistente + navegacao por tab
 - doc-header por widget no padrao do card.rs; re-exportar TextInput junto
 - hover ja e consistente; manter
-- auto-animate nativo (anm-formato item d) chega para todos de graca
+- auto-animate nativo (monster-formato item d) chega para todos de graca
 
 gates por aba: testes puros de geometria/estado; viewport 600/1500px;
 captura window-id com pixel vs tokens hoff; hover E focus visiveis;
