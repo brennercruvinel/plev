@@ -3,7 +3,7 @@
 //! patterns: `styles.x`, `styles["x"]`, `cn(styles.x, { [styles.y]: cond })`,
 //! `{identifier}` children and literal text children.
 
-use crate::PrsError;
+use crate::ParserError;
 use tree_sitter::Node;
 
 #[derive(Debug, Clone)]
@@ -32,24 +32,24 @@ pub struct TsxComponent {
     pub root: TsxNode,
 }
 
-pub fn parse_tsx(src: &str) -> Result<TsxComponent, PrsError> {
+pub fn parse_tsx(src: &str) -> Result<TsxComponent, ParserError> {
     let mut parser = tree_sitter::Parser::new();
     parser
         .set_language(&tree_sitter_typescript::LANGUAGE_TSX.into())
-        .map_err(|e| PrsError::Parse(format!("tsx grammar: {e}")))?;
+        .map_err(|e| ParserError::Parse(format!("tsx grammar: {e}")))?;
     let tree = parser
         .parse(src, None)
-        .ok_or_else(|| PrsError::Parse("tree-sitter returned no tsx tree".into()))?;
+        .ok_or_else(|| ParserError::Parse("tree-sitter returned no tsx tree".into()))?;
     if tree.root_node().has_error() {
-        return Err(PrsError::Parse("tsx source has syntax errors".into()));
+        return Err(ParserError::Parse("tsx source has syntax errors".into()));
     }
     let name = component_name(tree.root_node(), src)
-        .ok_or_else(|| PrsError::Parse("no arrow-function component found".into()))?;
+        .ok_or_else(|| ParserError::Parse("no arrow-function component found".into()))?;
     let jsx = find_kind(
         tree.root_node(),
         &["jsx_element", "jsx_self_closing_element"],
     )
-    .ok_or_else(|| PrsError::Parse("no JSX root element found".into()))?;
+    .ok_or_else(|| ParserError::Parse("no JSX root element found".into()))?;
     Ok(TsxComponent {
         name,
         root: convert(jsx, src),

@@ -3320,6 +3320,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "parser"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "plev",
+ "pollster",
+ "thiserror 2.0.18",
+ "tree-sitter",
+ "tree-sitter-rust",
+ "tree-sitter-typescript",
+]
+
+[[package]]
 name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3617,19 +3630,6 @@ dependencies = [
  "rusty-fork",
  "tempfile",
  "unarray",
-]
-
-[[package]]
-name = "prs"
-version = "0.1.0"
-dependencies = [
- "env_logger",
- "plev",
- "pollster",
- "thiserror 2.0.18",
- "tree-sitter",
- "tree-sitter-rust",
- "tree-sitter-typescript",
 ]
 
 [[package]]

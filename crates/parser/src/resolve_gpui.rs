@@ -1,4 +1,4 @@
-//! Stage 2 (gpui): builder chains -> PrsNode tree via the gpui->plev method
+//! Stage 2 (gpui): builder chains -> ParserNode tree via the gpui->plev method
 //! table from the separator study. The transpiled instance is the one the
 //! study dissected: `Separator::horizontal().label(..)` (horizontal, solid,
 //! label present, theme border color). Match arms and setters of other
@@ -16,14 +16,14 @@ use crate::ir::{Dropped, Param, Prop, Resolution, TextValue, snake_case};
 /// Variant configuration of the transpiled instance.
 const TARGET_ARMS: &[(&str, &str)] = &[("axis", "Horizontal"), ("line_style", "Solid")];
 
-pub fn resolve_gpui(src: &GpuiSource, file: &str) -> Result<Resolution, crate::PrsError> {
+pub fn resolve_gpui(src: &GpuiSource, file: &str) -> Result<Resolution, crate::ParserError> {
     let render = src
         .fns
         .iter()
         .find(|f| f.name == "render")
-        .ok_or_else(|| crate::PrsError::Parse("no render fn in gpui source".into()))?;
+        .ok_or_else(|| crate::ParserError::Parse("no render fn in gpui source".into()))?;
     let Some(GExpr::Chain { calls, .. }) = &render.tail else {
-        return Err(crate::PrsError::Parse(
+        return Err(crate::ParserError::Parse(
             "render fn does not end in a builder chain".into(),
         ));
     };

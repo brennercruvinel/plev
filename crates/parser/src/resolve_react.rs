@@ -1,4 +1,4 @@
-//! Stage 2 (react): tsx tree + sass rules -> PrsNode tree, params, droplist.
+//! Stage 2 (react): tsx tree + sass rules -> ParserNode tree, params, droplist.
 //!
 //! Three documented rewrites keep the layout content-driven (the manual's
 //! rule) instead of position-based:
@@ -13,7 +13,7 @@
 //! Everything else that does not map lands on the droplist with file:line.
 
 use crate::css_map::{MapOut, is_text_prop, map_decl, px};
-use crate::ir::{Dropped, Param, Prop, PrsNode, Resolution, Tag, TextValue, snake_case};
+use crate::ir::{Dropped, Param, ParserNode, Prop, Resolution, Tag, TextValue, snake_case};
 use crate::sass::{Decl, Rule, class_decls};
 use crate::tsx::{TsxChild, TsxComponent, TsxNode};
 use std::collections::HashSet;
@@ -36,7 +36,7 @@ pub fn resolve_react(
     };
     let root = match cx.node(&comp.root) {
         Resolved::Node { node, .. } => node,
-        _ => PrsNode {
+        _ => ParserNode {
             tag: Tag::Div,
             props: vec![],
             children: vec![],
@@ -55,7 +55,7 @@ pub fn resolve_react(
 
 enum Resolved {
     Node {
-        node: PrsNode,
+        node: ParserNode,
         spacer: Option<f32>,
     },
     /// `position: absolute; inset: 0` layer: props belong to the parent.
@@ -135,7 +135,7 @@ impl<'a> Ctx<'a> {
 
         let (mut node_props, text_props): (Vec<Prop>, Vec<Prop>) =
             props.into_iter().partition(|p| !is_text_prop(p.name));
-        let mut children: Vec<PrsNode> = Vec::new();
+        let mut children: Vec<ParserNode> = Vec::new();
         let mut first = true;
         for child in &tsx.children {
             match child {
@@ -163,7 +163,7 @@ impl<'a> Ctx<'a> {
                     }
                     Resolved::Gone => {}
                 },
-                TsxChild::Text(t, _) => children.push(PrsNode {
+                TsxChild::Text(t, _) => children.push(ParserNode {
                     tag: Tag::Text(TextValue::Literal(t.clone())),
                     props: vec![],
                     children: vec![],
@@ -171,14 +171,14 @@ impl<'a> Ctx<'a> {
                 TsxChild::Expr(name, _) => {
                     if text_props.is_empty() {
                         self.params.push(Param::Slot(name.clone()));
-                        children.push(PrsNode {
+                        children.push(ParserNode {
                             tag: Tag::Slot(name.clone()),
                             props: vec![],
                             children: vec![],
                         });
                     } else {
                         self.params.push(Param::Text(name.clone()));
-                        children.push(PrsNode {
+                        children.push(ParserNode {
                             tag: Tag::Text(TextValue::Param(name.clone())),
                             props: vec![],
                             children: vec![],
@@ -212,7 +212,7 @@ impl<'a> Ctx<'a> {
             };
         }
         Resolved::Node {
-            node: PrsNode {
+            node: ParserNode {
                 tag: Tag::Div,
                 props: node_props,
                 children,
@@ -348,8 +348,8 @@ impl<'a> Ctx<'a> {
     }
 }
 
-fn spacer_div(h: f32) -> PrsNode {
-    PrsNode {
+fn spacer_div(h: f32) -> ParserNode {
+    ParserNode {
         tag: Tag::Div,
         props: vec![Prop::f32("h", h)],
         children: vec![],

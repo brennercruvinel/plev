@@ -10,7 +10,7 @@ members = [
     "crates/monster",
     "crates/narrate",
     "crates/narrate_macro",
-    "crates/prs",
+    "crates/parser",
     "crates/scene-3d",
     "crates/showcase",
     "crates/snake-game",

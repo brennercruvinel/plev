@@ -1,5 +1,5 @@
 return {
-  id  = "prs-transpiler",
+  id  = "parser-transpiler",
   typ = "poc",
   sts = "fila",
   dom = "parser-transpiler",

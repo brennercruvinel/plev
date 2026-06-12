@@ -23,12 +23,12 @@ status: living
 - monster: encoder mode B (discover) + optimizer passes + full delta ops
   decodable; bench vs json/gzip/webm on 4 fixtures; mode B e2e gate
   (max deviation 0.0375 px / 0.0035 per channel); 124 crate tests
-- prs transpiler poc: react tsx+sass card and gpui separator emitted as
+- parser transpiler poc: react tsx+sass card and gpui separator emitted as
   plev builder source; goldens byte-identical to the corpus copies;
   honest droplist (38 entries with file:line and reason, count frozen in
-  test); emitted code compiles and renders (examples/prs_card; known
+  test); emitted code compiles and renders (examples/parser_card; known
   defect: body text run does not wrap yet)
-- workspace clippy clean again (7 prs lints); fmt clean
+- workspace clippy clean again (7 parser lints); fmt clean
 
 - brain knowledge base: kdb/brain-fable-e-bre/ (vision, anim format poc,
   transpiler poc, semantics/a11y, research notes, org plan)

@@ -1,7 +1,7 @@
 //! The parser's command line: react component sources in, plev builder
 //! code out, droplist on stderr.
 //!
-//! Run: `cargo run -p prs --example transpile -- <index.tsx> <module.sass> <vars.sass>`
+//! Run: `cargo run -p parser --example transpile -- <index.tsx> <module.sass> <vars.sass>`
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -22,7 +22,7 @@ fn main() {
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_else(|| p.to_string())
     };
-    match prs::transpile_react((&name(tsx), &tsx_src), (&name(sass), &sass_src), &vars_src) {
+    match parser::transpile_react((&name(tsx), &tsx_src), (&name(sass), &sass_src), &vars_src) {
         Ok(out) => {
             println!("{}", out.code);
             eprintln!(

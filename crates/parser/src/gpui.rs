@@ -4,7 +4,7 @@
 //! line numbers, so the resolver can pick variant arms and report drops
 //! with file:line.
 
-use crate::PrsError;
+use crate::ParserError;
 use tree_sitter::Node;
 
 #[derive(Debug, Clone)]
@@ -60,16 +60,16 @@ pub struct GpuiSource {
     pub fns: Vec<GFn>,
 }
 
-pub fn parse_gpui(src: &str) -> Result<GpuiSource, PrsError> {
+pub fn parse_gpui(src: &str) -> Result<GpuiSource, ParserError> {
     let mut parser = tree_sitter::Parser::new();
     parser
         .set_language(&tree_sitter_rust::LANGUAGE.into())
-        .map_err(|e| PrsError::Parse(format!("rust grammar: {e}")))?;
+        .map_err(|e| ParserError::Parse(format!("rust grammar: {e}")))?;
     let tree = parser
         .parse(src, None)
-        .ok_or_else(|| PrsError::Parse("tree-sitter returned no rust tree".into()))?;
+        .ok_or_else(|| ParserError::Parse("tree-sitter returned no rust tree".into()))?;
     if tree.root_node().has_error() {
-        return Err(PrsError::Parse("rust source has syntax errors".into()));
+        return Err(ParserError::Parse("rust source has syntax errors".into()));
     }
     let mut out = GpuiSource {
         widget: None,
@@ -77,7 +77,9 @@ pub fn parse_gpui(src: &str) -> Result<GpuiSource, PrsError> {
     };
     collect(tree.root_node(), src, &mut out);
     if out.fns.is_empty() {
-        return Err(PrsError::Parse("no functions found in gpui source".into()));
+        return Err(ParserError::Parse(
+            "no functions found in gpui source".into(),
+        ));
     }
     Ok(out)
 }

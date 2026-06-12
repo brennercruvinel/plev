@@ -5,7 +5,7 @@ return {
   dom = "references",
   dat = "2026-06-11",
   ttl = "mapa de clones com instrucao de estudo embutida (criar, nao copiar)",
-  lnk = { "monster-formato", "edt-flash-novo", "prs-transpiler", "shc-absorcao", "ths-compilador" },
+  lnk = { "monster-formato", "edt-flash-novo", "parser-transpiler", "shc-absorcao", "ths-compilador" },
   txt = [[
 regra do brenner: nao adianta clonar e largar. cada clone ganha um
 study.lua ao lado (mesmo formato de no): por que esta aqui, o que extrair,

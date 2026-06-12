@@ -1,7 +1,7 @@
-# prs: parse-resolve-emit transpiler poc (react/tsx + gpui -> plev builder).
+# parser: parse-resolve-emit transpiler poc (react/tsx + gpui -> plev builder).
 # See src/lib.rs for the three-stage architecture and the droplist contract.
 [package]
-name = "prs"
+name = "parser"
 version = "0.1.0"
 edition = "2024"
 

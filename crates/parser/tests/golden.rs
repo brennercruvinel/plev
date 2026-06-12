@@ -6,7 +6,7 @@
 //! presence of every known-lossy construct.
 //!
 //! To regenerate the gpui golden after an intentional emitter change:
-//! UPDATE_GOLDEN=1 cargo test -p prs --test golden
+//! UPDATE_GOLDEN=1 cargo test -p parser --test golden
 
 use std::fs;
 use std::path::PathBuf;
@@ -39,7 +39,7 @@ fn corpus() -> Option<PathBuf> {
     root.exists().then_some(root)
 }
 
-fn react_output() -> Option<prs::Transpiled> {
+fn react_output() -> Option<parser::Transpiled> {
     let root = match corpus() {
         Some(r) => r,
         None => {
@@ -51,7 +51,7 @@ fn react_output() -> Option<prs::Transpiled> {
         fs::read_to_string(root.join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
     };
     Some(
-        prs::transpile_react(
+        parser::transpile_react(
             ("index.tsx", &read("components/HoffResearchCard/index.tsx")),
             (
                 "HoffResearchCard.module.sass",
@@ -63,12 +63,12 @@ fn react_output() -> Option<prs::Transpiled> {
     )
 }
 
-fn gpui_output() -> prs::Transpiled {
-    prs::transpile_gpui(("separator.rs", &fixture("gpui/separator.rs"))).expect("gpui transpile")
+fn gpui_output() -> parser::Transpiled {
+    parser::transpile_gpui(("separator.rs", &fixture("gpui/separator.rs"))).expect("gpui transpile")
 }
 
 #[test]
-#[ignore = "diagnostic: cargo test -p prs --test golden -- --ignored --nocapture"]
+#[ignore = "diagnostic: cargo test -p parser --test golden -- --ignored --nocapture"]
 fn dump_droplists() {
     if let Some(r) = react_output() {
         eprintln!("react mapped={} dropped={}", r.mapped, r.dropped.len());

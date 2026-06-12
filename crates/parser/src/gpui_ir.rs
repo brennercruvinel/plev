@@ -1,11 +1,11 @@
 //! Working types and small helpers shared by the gpui resolver: the
-//! mutable node under construction (PrsNode plus the flags the flank
+//! mutable node under construction (ParserNode plus the flags the flank
 //! rewrite needs) and accessors over the parsed chain mini-AST.
 
 use crate::gpui::{GCall, GExpr};
-use crate::ir::{Prop, PrsNode, Tag, TextValue};
+use crate::ir::{ParserNode, Prop, Tag, TextValue};
 
-/// Node under construction: a PrsNode plus the absolute/full-width flags
+/// Node under construction: a ParserNode plus the absolute/full-width flags
 /// consumed by the flank rewrite.
 #[derive(Default)]
 pub(crate) struct WNode {
@@ -18,12 +18,12 @@ pub(crate) struct WNode {
     pub full_main: bool,
 }
 
-pub(crate) fn finish(w: WNode) -> PrsNode {
+pub(crate) fn finish(w: WNode) -> ParserNode {
     let tag = match w.text {
         Some(t) => Tag::Text(t),
         None => Tag::Div,
     };
-    PrsNode {
+    ParserNode {
         tag,
         props: w.props,
         children: w.children.into_iter().map(finish).collect(),

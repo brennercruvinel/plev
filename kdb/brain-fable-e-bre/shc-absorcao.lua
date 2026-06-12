@@ -5,7 +5,7 @@ return {
   dom = "showcase-library",
   dat = "2026-06-11",
   ttl = "absorver as demos phi no showcase + biblioteca linda e responsiva",
-  lnk = { "ref-study", "prs-transpiler", "org-docs" },
+  lnk = { "ref-study", "parser-transpiler", "org-docs" },
   txt = [[
 diretiva: nao copiar o visual nem o formato das demos; aprender, refatorar,
 absorver o que ha de bom (dock, input, animacao, layout) padronizado na

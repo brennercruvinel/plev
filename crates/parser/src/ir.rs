@@ -1,15 +1,15 @@
-//! prs intermediate representation: the framework-neutral element tree that
+//! parser intermediate representation: the framework-neutral element tree that
 //! stage 1 (parse) feeds and stage 3 (emit) prints. Props are already
 //! normalized to plev builder method names; values carry either literals or
 //! theme-token rust expressions resolved by stage 2.
 
 /// One node of the transpiled element tree.
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrsNode {
+pub struct ParserNode {
     pub tag: Tag,
     /// Normalized props in source order; each one prints as `.name(args)`.
     pub props: Vec<Prop>,
-    pub children: Vec<PrsNode>,
+    pub children: Vec<ParserNode>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -97,7 +97,7 @@ impl Dropped {
 pub struct Resolution {
     pub fn_name: String,
     pub source_label: String,
-    pub root: PrsNode,
+    pub root: ParserNode,
     pub params: Vec<Param>,
     /// Count of source constructs faithfully represented (incl. no-ops that
     /// hold in plev by construction, e.g. `box-sizing: border-box`).

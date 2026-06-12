@@ -7,7 +7,7 @@ return {
   ttl = "indice do brain fable e bre: grafo de chunks de conhecimento",
   lnk = {
     "vis-unificada", "ths-compilador", "plev",
-    "monster-formato", "edt-flash-novo", "prs-transpiler",
+    "monster-formato", "edt-flash-novo", "parser-transpiler",
     "shc-absorcao", "rsh-notes", "org-docs", "ref-study",
     "cam-1", "cam-2", "cam-3", "cam-4",
   },
@@ -22,7 +22,7 @@ ao seu no.
 mapa: vis-unificada (a tese do compositing unico, norte de tudo),
 ths-compilador (framework e compilador, nao runtime), plev (o pecado
 semantico do flash e os olhos pro crawler), monster-formato (h264 para vetores),
-edt-flash-novo (a gui minima de autoria), prs-transpiler (qualquer ui ->
+edt-flash-novo (a gui minima de autoria), parser-transpiler (qualquer ui ->
 plev), shc-absorcao (demos -> showcase), rsh-notes (notas cruas de
 pesquisa), org-docs (organizacao e fila de workflows), ref-study (mapa de
 clones com instrucoes de estudo), cam-1..4 (descritores dos catalogos das

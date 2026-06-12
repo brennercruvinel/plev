@@ -6,7 +6,7 @@ return {
   dom = "vision",
   dat = "2026-06-11",
   ttl = "a tese: compositing unificado, um binario, seis alvos",
-  lnk = { "ths-compilador", "plev", "monster-formato", "prs-transpiler" },
+  lnk = { "ths-compilador", "plev", "monster-formato", "parser-transpiler" },
   txt = [[
 a fronteira entre renderizacao nativa e renderizacao web nao e
 constrangimento fisico, e acidente historico. se a separacao e acidental,

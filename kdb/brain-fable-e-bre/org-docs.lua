@@ -40,7 +40,7 @@ fila de workflows (ordem do plano plev aprovado):
 3. ws-showcase (paralelo, arvore disjunta): abas + biblioteca com focus
    states (shc-absorcao)
 4. ws-parser: tree-sitter/topiary, corpus gpui-component + 4 cards,
-   verificacao tripla (prs-transpiler)
+   verificacao tripla (parser-transpiler)
 5. ws-plev-web: shell semantico, url=statechart, llm.txt, cwv
    (plev)
 6. ws-org: 3-char + mdbook; ws-ide: minerar warp/gitcomet/difftastic/

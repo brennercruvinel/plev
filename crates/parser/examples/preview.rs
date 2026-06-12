@@ -3,10 +3,11 @@
 //! straight from the resolver's IR. Nothing is generated on disk and
 //! nothing is hand-written per component: what you see is the parse.
 //!
-//! Run: `cargo run -p prs --example preview -- <index.tsx> <module.sass> <vars.sass>`
+//! Run: `cargo run -p parser --example preview -- <index.tsx> <module.sass> <vars.sass>`
 
 use std::sync::Arc;
 
+use parser::ir::{Arg, ParserNode, Tag, TextValue};
 use plev::builder::{Element, Justify, div, text};
 use plev::color::Color;
 use plev::compositor::Compositor;
@@ -20,7 +21,6 @@ use plev::winit::application::ApplicationHandler;
 use plev::winit::event::WindowEvent;
 use plev::winit::event_loop::{ActiveEventLoop, EventLoop};
 use plev::winit::window::{Window, WindowAttributes, WindowId};
-use prs::ir::{Arg, PrsNode, Tag, TextValue};
 
 const BG: [f64; 3] = [0.0090, 0.0105, 0.0137];
 
@@ -132,9 +132,9 @@ fn apply(el: Element, theme: &Theme, name: &str, args: &[Arg]) -> Element {
     }
 }
 
-/// PrsNode -> Element, recursively. Params render as their own name,
+/// ParserNode -> Element, recursively. Params render as their own name,
 /// slots as a quiet glass block: the component's chrome is the subject.
-fn build(node: &PrsNode, theme: &Theme) -> Element {
+fn build(node: &ParserNode, theme: &Theme) -> Element {
     let mut el = match &node.tag {
         Tag::Div => div(),
         Tag::Text(TextValue::Literal(s)) => text(s),
@@ -171,7 +171,7 @@ struct PreviewApp {
     state: AppState,
     compositor: Compositor,
     input: InputState,
-    root: PrsNode,
+    root: ParserNode,
     title: String,
 }
 
@@ -238,7 +238,7 @@ impl PreviewApp {
         let mut encoder =
             gpu.device
                 .create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
-                    label: Some("prs_preview_encoder"),
+                    label: Some("parser_preview_encoder"),
                 });
         let dirty: Vec<_> = self
             .compositor
@@ -341,17 +341,17 @@ fn main() {
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_else(|| p.clone())
     };
-    let component = match prs::tsx::parse_tsx(&read(tsx)) {
+    let component = match parser::tsx::parse_tsx(&read(tsx)) {
         Ok(c) => c,
         Err(e) => {
             eprintln!("tsx: {e}");
             std::process::exit(1);
         }
     };
-    let rules = prs::sass::parse_sass(&read(sass), &read(vars));
-    let res = prs::resolve_react::resolve_react(&component, &rules, &name(tsx), &name(sass));
+    let rules = parser::sass::parse_sass(&read(sass), &read(vars));
+    let res = parser::resolve_react::resolve_react(&component, &rules, &name(tsx), &name(sass));
     let title = format!(
-        "prs preview: {} - {} mapeadas, {} droplist",
+        "parser preview: {} - {} mapeadas, {} droplist",
         res.fn_name,
         res.mapped,
         res.dropped.len()
