@@ -3934,20 +3934,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "scene-3d"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "env_logger",
- "log",
- "plev",
- "pollster",
- "serde",
- "serde_json",
- "wgpu",
-]
-
-[[package]]
 name = "scoped-tls"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4227,16 +4213,6 @@ name = "smol_str"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9676b89cd56310a87b93dec47b11af744f34d5fc9f367b829474eec0a891350d"
-
-[[package]]
-name = "snake-game"
-version = "0.1.0"
-dependencies = [
- "env_logger",
- "plev",
- "pollster",
- "web-time",
-]
 
 [[package]]
 name = "spirv"

@@ -41,7 +41,7 @@ run: ## Run main showcase app
 
 .PHONY: snake
 snake: ## Run snake game demo
-	cargo run -p snake-game
+	cargo run --example snake
 
 .PHONY: wasm
 wasm: ## Serve WASM build (port 8080)

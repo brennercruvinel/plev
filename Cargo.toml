@@ -11,9 +11,7 @@ members = [
     "crates/narrate-macro",
     "crates/parser",
     "crates/rope",
-    "crates/scene-3d",
     "crates/showcase",
-    "crates/snake-game",
 ]
 
 [package]
