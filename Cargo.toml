@@ -14,10 +14,22 @@ members = [
     "crates/showcase",
 ]
 
-# Metadados herdados por todos os crates (`version.workspace = true`).
+# Metadados herdados por todos os crates (`version.workspace = true`,
+# `description` fica por crate). Privados: `publish = false` em cada um.
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.85"
+authors = ["Brenner Cruvinel <brennertalks@gmail.com>"]
+repository = "https://github.com/brennercruvinel/plevdev"
+
+# Lints unificados (herdados via `[lints] workspace = true`). Mantem a
+# barra onde o codigo ja esta: clippy limpo sob -D warnings.
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+
+[workspace.lints.clippy]
+uninlined_format_args = "warn"
 
 # Fonte única de versão para toda dependência compartilhada. Os crates
 # referenciam com `<dep>.workspace = true`; features extras por crate via
@@ -103,9 +115,13 @@ opt-level = 2
 name = "plev"
 version.workspace = true
 edition.workspace = true
+publish = false
 
 [lib]
 crate-type = ["cdylib", "staticlib", "rlib"]
+
+[lints]
+workspace = true
 
 [features]
 default = ["accessibility"]

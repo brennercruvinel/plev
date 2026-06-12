@@ -4,6 +4,8 @@
 name = "parser"
 version.workspace = true
 edition.workspace = true
+publish = false
+description = "Universal UI transpiler PoC: react/tsx + gpui sources to plev builder code, with an honest droplist"
 
 [dependencies]
 tree-sitter.workspace = true
@@ -18,3 +20,6 @@ env_logger.workspace = true
 # The emitted golden outputs are compiled and executed by
 # tests/emitted_compiles.rs, so the engine is a dev-dependency only.
 plev.workspace = true
+
+[lints]
+workspace = true

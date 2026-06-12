@@ -2,7 +2,12 @@
 name = "narrate"
 version.workspace = true
 edition.workspace = true
+publish = false
+description = "Experimental declarative UI DSL facade for plev"
 
 [dependencies]
 narrate-macro.workspace = true
 plev.workspace = true
+
+[lints]
+workspace = true

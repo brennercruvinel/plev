@@ -2,6 +2,7 @@
 name = "ide"
 version.workspace = true
 edition.workspace = true
+publish = false
 description = "Simple IDE test"
 
 [[bin]]
@@ -18,3 +19,6 @@ env_logger.workspace = true
 pollster.workspace = true
 # Same major as plev's optional hot-reload dep (shared build cache).
 notify.workspace = true
+
+[lints]
+workspace = true

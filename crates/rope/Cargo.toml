@@ -2,6 +2,8 @@
 name = "rope"
 version.workspace = true
 edition.workspace = true
+publish = false
+description = "Rope-based text editing core: document, transactions, multi-cursor, history (pure, no UI)"
 
 [dependencies]
 ropey.workspace = true
@@ -9,3 +11,6 @@ unicode-segmentation.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true
+
+[lints]
+workspace = true

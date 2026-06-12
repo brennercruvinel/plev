@@ -2,6 +2,8 @@
 name = "lot"
 version.workspace = true
 edition.workspace = true
+publish = false
+description = "Lottie (bodymovin) importer for plev: render directly or convert to the .monster format"
 
 [dependencies]
 plev.workspace = true
@@ -10,3 +12,6 @@ monster.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 log.workspace = true
+
+[lints]
+workspace = true

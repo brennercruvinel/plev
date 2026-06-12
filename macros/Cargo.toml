@@ -2,6 +2,8 @@
 name = "macros"
 version.workspace = true
 edition.workspace = true
+publish = false
+description = "Proc-macros for plev: the #[component] attribute"
 
 [lib]
 proc-macro = true
@@ -10,3 +12,6 @@ proc-macro = true
 syn.workspace = true
 quote.workspace = true
 proc-macro2.workspace = true
+
+[lints]
+workspace = true
