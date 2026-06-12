@@ -236,7 +236,7 @@ pub fn draw_scrollbar(
     x: f32,
     y: f32,
     h: f32,
-    scroll: &plev::scroll::ScrollState,
+    scroll: &plev::input::scroll::ScrollState,
 ) {
     let thumb_h = (h * scroll.thumb_ratio()).max(24.0);
     let thumb_y = y + (h - thumb_h) * scroll.thumb_position();

@@ -4,9 +4,9 @@ use std::sync::Arc;
 
 use plev::compositor::Compositor;
 use plev::gpu::GpuContext;
-use plev::ime::ImeState;
-use plev::lifecycle::LifecycleManager;
 use plev::platform::SafeAreaInsets;
+use plev::platform::ime::ImeState;
+use plev::platform::lifecycle::LifecycleManager;
 use plev::text::TextSystem;
 use plev::winit::window::Window;
 

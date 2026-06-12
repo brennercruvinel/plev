@@ -6,7 +6,7 @@ use crate::compositor::vertex::{
     BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction,
     shadow_padding, shadow_sigma,
 };
-use crate::gpu_vec::GpuVec;
+use crate::gpu::vec::GpuVec;
 
 /// Resolved per-rect parameters shared by the solid and gradient SDF paths.
 struct SdfRect {

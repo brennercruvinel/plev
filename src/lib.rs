@@ -5,9 +5,7 @@ pub mod error;
 pub mod compositor;
 pub mod effects;
 pub mod gpu;
-pub mod gpu_vec;
 pub mod path;
-pub mod texture_pool;
 
 // -- Text
 pub mod editor;
@@ -16,10 +14,7 @@ pub mod text_input;
 
 // -- Input & Events
 pub mod actions;
-pub mod dispatch;
-pub mod ime;
 pub mod input;
-pub mod scroll;
 
 // -- Reactive & Components
 pub mod builder;
@@ -41,7 +36,6 @@ pub mod animation;
 pub mod perf;
 
 // -- Platform
-pub mod lifecycle;
 pub mod platform;
 pub mod window;
 

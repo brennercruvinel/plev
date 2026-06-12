@@ -17,7 +17,7 @@ mod layout;
 #[cfg(test)]
 mod tests;
 
-use plev::scroll::ScrollState;
+use plev::input::scroll::ScrollState;
 use plev::text_input::TextInput;
 use plev::ui::widgets::{Checkbox, EventResult, Rect, WidgetEvent};
 use showcase::model::todo::{Filter, TodoModel};

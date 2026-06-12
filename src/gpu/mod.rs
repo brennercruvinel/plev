@@ -3,7 +3,9 @@ mod context;
 pub mod image;
 mod pipelines;
 mod surface;
+pub mod texture_pool;
 pub(crate) mod utils;
+pub mod vec;
 
 #[cfg(test)]
 mod tests;

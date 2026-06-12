@@ -5,8 +5,8 @@ use std::ops::Range;
 use rope::{Document, GoalColumn, Selection};
 
 use crate::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::input::scroll::ScrollState;
 use crate::layout::ComputedBounds;
-use crate::scroll::ScrollState;
 use crate::text::TextMeasurer;
 
 use super::clipboard::{ClipboardProvider, default_clipboard};

@@ -5,7 +5,7 @@
 //! [`ContextStack`] into an action *name*, and the [`ActionRegistry`] builds
 //! the corresponding boxed [`Action`] for dispatch.
 //!
-//! The per-frame [`ActionQueue`](crate::dispatch::ActionQueue) keeps working
+//! The per-frame [`ActionQueue`](crate::input::dispatch::ActionQueue) keeps working
 //! for widget-to-parent communication; this module adds the global,
 //! declaratively-bound layer on top of it.
 

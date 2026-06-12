@@ -5,7 +5,7 @@ use winit::window::WindowAttributes;
 
 use super::AppEvent;
 use super::state::GpuState;
-use crate::lifecycle::AppState;
+use crate::platform::lifecycle::AppState;
 
 impl super::App {
     pub(crate) fn handle_resumed(&mut self, event_loop: &ActiveEventLoop) {

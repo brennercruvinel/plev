@@ -4,8 +4,8 @@ use winit::window::Window;
 
 use crate::effects::EffectProcessor;
 use crate::gpu::GpuContext;
+use crate::gpu::texture_pool::TexturePool;
 use crate::text::TextSystem;
-use crate::texture_pool::TexturePool;
 
 #[cfg(target_arch = "wasm32")]
 use super::AppEvent;

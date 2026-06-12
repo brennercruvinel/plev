@@ -14,12 +14,12 @@ update all three together when structure changes.
 
 | layer | path | role |
 |---|---|---|
-| gpu | src/gpu/ | wgpu device/surface/pipelines; srgb view formats; image atlas |
+| gpu | src/gpu/ | wgpu device/surface/pipelines; srgb view formats; image atlas; GpuVec buffers (vec); texture_pool |
 | compositor | src/compositor/ | scene nodes, layers with dirty hashes, resolve to gpu buffers |
 | text | src/text/ | cosmic-text shaping, gpu glyph atlas, TextMeasurer (the only width source) |
 | path | src/path/ | lyon tessellation behind PathBuilder (auto-finishes open subpaths) |
 | layout | src/layout/ | taffy wrapper: flex, percent, text measure functions |
-| input | src/input/ | pointer state, hit regions, touch tracker + gesture recognizer, touch-to-pointer synth |
+| input | src/input/ | pointer state, hit regions, touch tracker + gesture recognizer, touch-to-pointer synth, scroll, dispatch |
 | animation | src/animation/ | Tween, FrameClock, easing (dt-based; web_time) |
 | perf | src/perf/ | PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None) |
 | signal | src/signal/ | reactive primitives (create_signal, runtime) |
@@ -28,7 +28,7 @@ update all three together when structure changes.
 | ui | src/ui/ | retained widgets (~15) + immediate builder + lucide icons |
 | builder | src/builder/ | declarative element tree (div/text/button), layout pipeline, emit |
 | component/view | src/component/, src/view/ | Lifecycle trait, View trait, ViewContext |
-| platform | src/platform.rs, src/ime.rs, src/lifecycle.rs | safe areas, ime, app lifecycle |
+| platform | src/platform/ | safe areas (mod), ime, app lifecycle |
 
 apps consume the engine; they never reimplement engine capabilities
 (kdb/explanation/why-the-apps-bypassed-the-engine.md).

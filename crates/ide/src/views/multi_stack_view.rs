@@ -10,7 +10,7 @@
 use crate::components::hoff;
 use crate::theme::Theme;
 use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use plev::scroll::ScrollState;
+use plev::input::scroll::ScrollState;
 use plev::text::TextStyle;
 
 /// A commit in a stack.

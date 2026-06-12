@@ -162,7 +162,7 @@ enum AppState {
         gpu: GpuContext,
         text_system: TextSystem,
         effects: plev::effects::EffectProcessor,
-        texture_pool: plev::texture_pool::TexturePool,
+        texture_pool: plev::gpu::texture_pool::TexturePool,
     },
 }
 
@@ -296,7 +296,7 @@ impl ApplicationHandler for PreviewApp {
             gpu,
             text_system,
             effects,
-            texture_pool: plev::texture_pool::TexturePool::new(),
+            texture_pool: plev::gpu::texture_pool::TexturePool::new(),
         };
     }
 

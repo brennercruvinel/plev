@@ -11,8 +11,8 @@ mod ui;
 use std::sync::Arc;
 
 use plev::gpu::GpuContext;
-use plev::lifecycle::AppState;
 use plev::platform::SafeAreaInsets;
+use plev::platform::lifecycle::AppState;
 use plev::text::TextSystem;
 use plev::winit::application::ApplicationHandler;
 use plev::winit::event::WindowEvent;

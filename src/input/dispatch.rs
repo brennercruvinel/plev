@@ -8,7 +8,7 @@ use std::any::Any;
 ///
 /// # Example
 /// ```rust
-/// use plev::dispatch::{ActionQueue, WidgetAction};
+/// use plev::input::dispatch::{ActionQueue, WidgetAction};
 ///
 /// #[derive(Debug, PartialEq)]
 /// enum FileAction { Stage(String), Discard(String) }

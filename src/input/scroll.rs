@@ -5,7 +5,7 @@
 ///
 /// # Example
 /// ```
-/// use plev::scroll::ScrollState;
+/// use plev::input::scroll::ScrollState;
 /// let mut scroll = ScrollState::new();
 /// scroll.set_viewport(400.0);
 /// scroll.set_content(1200.0);

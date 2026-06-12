@@ -3,7 +3,7 @@
 //! the driver for nothing.
 
 use super::{Compositor, Layer};
-use crate::gpu_vec::GpuVec;
+use crate::gpu::vec::GpuVec;
 
 /// Layer textures use the (4-byte) surface format; MSAA targets hold 4
 /// samples per pixel (the engine clamps msaa_samples to 1 or 4).

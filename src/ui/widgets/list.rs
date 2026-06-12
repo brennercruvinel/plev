@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use crate::compositor::{Compositor, LayerId, SceneNode};
-use crate::scroll::ScrollState;
+use crate::input::scroll::ScrollState;
 use crate::theme::Theme;
 
 use super::scrollbar::Scrollbar;

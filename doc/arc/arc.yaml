@@ -9,12 +9,12 @@ targets:
   in-progress: [android-vulkan]
   pending: [ios-metal, linux-vulkan, windows-d3d12]
 modules:
-  gpu:        { path: src/gpu,        role: device/surface/pipelines, contracts: [srgb-view-formats, surface_render_view-only] }
+  gpu:        { path: src/gpu,        role: device/surface/pipelines + GpuVec buffers (vec) + texture_pool, contracts: [srgb-view-formats, surface_render_view-only] }
   compositor: { path: src/compositor, role: scene nodes + dirty layers, depends: [gpu] }
   text:       { path: src/text,       role: shaping + glyph atlas + TextMeasurer, depends: [gpu], contracts: [one-textstyle-measure-and-draw] }
   path:       { path: src/path,       role: lyon tessellation, contracts: [auto-finish-open-subpaths] }
   layout:     { path: src/layout,     role: taffy wrapper (flex, percent, measure-fns), depends: [text] }
-  input:      { path: src/input,      role: pointer + hit regions + touch synth + gestures }
+  input:      { path: src/input,      role: pointer + hit regions + touch synth + gestures + scroll + dispatch }
   animation:  { path: src/animation,  role: tween/frameclock/easing (dt-based) }
   perf:       { path: src/perf,       role: PerfMonitor rolling windows (fps, dt percentiles, cpu micros, memory) + PerfHud overlay, depends: [animation, compositor, text], contracts: [pure-no-gpu, hud-implies-continuous-frames] }
   signal:     { path: src/signal,     role: reactive primitives }
@@ -25,7 +25,7 @@ modules:
   component:  { path: src/component,  role: Lifecycle trait }
   view:       { path: src/view,       role: View trait + ViewContext }
   text_input: { path: src/text_input, role: single-line field widget }
-  platform:   { path: [src/platform.rs, src/ime.rs, src/lifecycle.rs], role: safe areas, ime, app lifecycle }
+  platform:   { path: src/platform,   role: safe areas + ime + app lifecycle (mod/ime/lifecycle) }
 crates:
   showcase:   { path: crates/showcase,  role: widget gallery app, targets: [desktop, web] }
   ide:  { path: crates/ide, role: git client app }

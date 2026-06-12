@@ -12,8 +12,8 @@ use crate::views::workspace::WorkspaceView;
 use plev::compositor::Compositor;
 use plev::effects::EffectProcessor;
 use plev::gpu::GpuContext;
+use plev::gpu::texture_pool::TexturePool;
 use plev::text::TextSystem;
-use plev::texture_pool::TexturePool;
 use plev::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 
 /// Render a single frame: build the scene, resolve layers, encode GPU passes,

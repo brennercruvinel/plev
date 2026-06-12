@@ -23,14 +23,14 @@ use crate::animation::{AnimationTick, FrameClock};
 use crate::compositor::Compositor;
 use crate::effects::EffectProcessor;
 use crate::gpu::GpuContext;
-use crate::ime::ImeState;
+use crate::gpu::texture_pool::TexturePool;
 use crate::input::{InputState, TouchInputState, TouchPointerSynth};
-use crate::lifecycle::LifecycleManager;
 use crate::perf::{PerfHud, PerfMonitor};
 use crate::platform::SafeAreaInsets;
+use crate::platform::ime::ImeState;
+use crate::platform::lifecycle::LifecycleManager;
 use crate::signal::{ReadSignal, WriteSignal, create_signal};
 use crate::text::TextSystem;
-use crate::texture_pool::TexturePool;
 
 use events::BufferedEvent;
 use state::GpuState;

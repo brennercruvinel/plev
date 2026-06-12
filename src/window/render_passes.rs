@@ -148,7 +148,7 @@ fn resolve_blurred_backdrop(
     layer_id: crate::compositor::LayerId,
     gpu: &crate::gpu::GpuContext,
     effects: &crate::effects::EffectProcessor,
-    texture_pool: &mut crate::texture_pool::TexturePool,
+    texture_pool: &mut crate::gpu::texture_pool::TexturePool,
     background: wgpu::Color,
     sigma: f32,
     encoder: &mut wgpu::CommandEncoder,
@@ -256,7 +256,7 @@ pub fn encode_layer_passes(
     gpu: &crate::gpu::GpuContext,
     text_system: &crate::text::TextSystem,
     effects: &crate::effects::EffectProcessor,
-    texture_pool: &mut crate::texture_pool::TexturePool,
+    texture_pool: &mut crate::gpu::texture_pool::TexturePool,
     background: wgpu::Color,
     dirty_layer_ids: &[crate::compositor::LayerId],
     encoder: &mut wgpu::CommandEncoder,
@@ -372,7 +372,7 @@ impl super::App {
         compositor: &crate::compositor::Compositor,
         gpu: &mut crate::gpu::GpuContext,
         effect_processor: &crate::effects::EffectProcessor,
-        texture_pool: &mut crate::texture_pool::TexturePool,
+        texture_pool: &mut crate::gpu::texture_pool::TexturePool,
         encoder: &mut wgpu::CommandEncoder,
     ) -> Vec<(crate::compositor::LayerId, wgpu::BindGroup)> {
         let mut effect_results: Vec<(crate::compositor::LayerId, wgpu::BindGroup)> = Vec::new();
@@ -392,7 +392,7 @@ impl super::App {
             }
             let layer = compositor.layer(*layer_id).unwrap();
             let source_view = layer.texture_view().unwrap();
-            let mut current_view_owner: Option<crate::texture_pool::TextureHandle> = None;
+            let mut current_view_owner: Option<crate::gpu::texture_pool::TextureHandle> = None;
 
             for effect in effects {
                 let sv = current_view_owner

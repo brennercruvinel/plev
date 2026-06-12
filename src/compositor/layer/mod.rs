@@ -10,7 +10,7 @@ use crate::compositor::sequence::{DrawCommand, DrawKind};
 use crate::compositor::vertex::{
     BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex,
 };
-use crate::gpu_vec::GpuVec;
+use crate::gpu::vec::GpuVec;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct LayerId(pub u32);

@@ -364,8 +364,8 @@ fn toast_render_emits_nodes() {
 // Scrollbar
 // ---------------------------------------------------------------------------
 
-fn scrolled_state() -> crate::scroll::ScrollState {
-    let mut s = crate::scroll::ScrollState::new();
+fn scrolled_state() -> crate::input::scroll::ScrollState {
+    let mut s = crate::input::scroll::ScrollState::new();
     s.set_viewport(200.0);
     s.set_content(800.0);
     s
@@ -425,7 +425,7 @@ fn scrollbar_drag_moves_scroll() {
 fn scrollbar_inert_when_content_fits() {
     let mut sb = Scrollbar::new();
     let bounds = Rect::new(0.0, 0.0, 300.0, 200.0);
-    let mut scroll = crate::scroll::ScrollState::new();
+    let mut scroll = crate::input::scroll::ScrollState::new();
     scroll.set_viewport(200.0);
     scroll.set_content(100.0);
     let r = sb.handle_event(&down(295.0, 100.0), bounds, &mut scroll);

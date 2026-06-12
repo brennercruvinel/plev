@@ -24,8 +24,8 @@ use plev::actions::{
 };
 use plev::compositor::Compositor;
 use plev::gpu::GpuContext;
+use plev::gpu::texture_pool::TexturePool;
 use plev::text::TextSystem;
-use plev::texture_pool::TexturePool;
 use views::workspace::{Side, UiRequest, WorkspaceView};
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};

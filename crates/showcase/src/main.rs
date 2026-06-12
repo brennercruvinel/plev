@@ -46,7 +46,7 @@ enum UserEvent {
         gpu: GpuContext,
         text_system: TextSystem,
         effects: plev::effects::EffectProcessor,
-        texture_pool: plev::texture_pool::TexturePool,
+        texture_pool: plev::gpu::texture_pool::TexturePool,
     },
 }
 
@@ -59,7 +59,7 @@ enum GpuState {
         gpu: GpuContext,
         text_system: TextSystem,
         effects: plev::effects::EffectProcessor,
-        texture_pool: plev::texture_pool::TexturePool,
+        texture_pool: plev::gpu::texture_pool::TexturePool,
     },
 }
 
@@ -163,7 +163,7 @@ impl ApplicationHandler<UserEvent> for App {
                 gpu,
                 text_system,
                 effects,
-                texture_pool: plev::texture_pool::TexturePool::new(),
+                texture_pool: plev::gpu::texture_pool::TexturePool::new(),
             };
             self.configure_viewport();
         }
@@ -181,7 +181,7 @@ impl ApplicationHandler<UserEvent> for App {
                     gpu,
                     text_system,
                     effects,
-                    texture_pool: plev::texture_pool::TexturePool::new(),
+                    texture_pool: plev::gpu::texture_pool::TexturePool::new(),
                 });
             });
         }

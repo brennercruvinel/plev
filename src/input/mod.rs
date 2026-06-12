@@ -1,4 +1,6 @@
+pub mod dispatch;
 pub mod gesture;
+pub mod scroll;
 pub mod touch;
 mod types;
 

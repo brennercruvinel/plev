@@ -7,7 +7,7 @@
 use crate::components::hoff;
 use crate::theme::Theme;
 use plev::compositor::{Compositor, SceneNode, TextNodeKey};
-use plev::scroll::ScrollState;
+use plev::input::scroll::ScrollState;
 
 /// A single line in a diff.
 #[derive(Clone, Debug)]
