@@ -1,7 +1,7 @@
 [package]
 name = "showcase"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 description = "plev design system gallery — every widget, every state, every theme"
 
 [[bin]]
@@ -9,18 +9,18 @@ name = "showcase"
 path = "src/main.rs"
 
 [dependencies]
-plev = { path = "../..", package = "plev" }
-wgpu = "28"
-winit = { version = "0.30", features = ["rwh_06"] }
-log = "0.4"
-web-time = "1.1"
+plev.workspace = true
+wgpu.workspace = true
+winit.workspace = true
+log.workspace = true
+web-time.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-env_logger = "0.11"
-pollster = "0.4"
+env_logger.workspace = true
+pollster.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4"
-console_log = "1"
-console_error_panic_hook = "0.1"
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+console_log.workspace = true
+console_error_panic_hook.workspace = true

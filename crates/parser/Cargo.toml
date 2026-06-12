@@ -2,19 +2,19 @@
 # See src/lib.rs for the three-stage architecture and the droplist contract.
 [package]
 name = "parser"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
-tree-sitter = "0.25"
-tree-sitter-typescript = "0.23"
-tree-sitter-rust = "0.24"
-thiserror = "2"
+tree-sitter.workspace = true
+tree-sitter-typescript.workspace = true
+tree-sitter-rust.workspace = true
+thiserror.workspace = true
 
 [dev-dependencies]
 # janela do preview ao vivo (examples/preview.rs)
-pollster = "0.4"
-env_logger = "0.11"
+pollster.workspace = true
+env_logger.workspace = true
 # The emitted golden outputs are compiled and executed by
 # tests/emitted_compiles.rs, so the engine is a dev-dependency only.
-plev = { path = "../.." }
+plev.workspace = true

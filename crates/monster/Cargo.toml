@@ -1,8 +1,8 @@
 # monster: binary animation codec for plev (doc/monster-format-v0.md).
 [package]
 name = "monster"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 
 [features]
 # Reserved for the rhai script sidecar (spec decision 8): playback of
@@ -12,16 +12,16 @@ edition = "2024"
 script = []
 
 [dependencies]
-plev = { path = "../.." }
+plev.workspace = true
 # per-section checksums in the container (spec: sha256, nest lesson);
 # default-features off keeps the wasm-safe pure-rust path.
-sha2 = { version = "0.10", default-features = false }
-thiserror = "2"
+sha2.workspace = true
+thiserror.workspace = true
 
 [dev-dependencies]
 # round-trip property tests over generated timelines (spec benchmark
 # gate: decode(encode(t)) structurally identical, property-tested).
-proptest = "1"
+proptest.workspace = true
 # the dense lottie benches (tests/bench_lottie/dense.rs) read the
 # explosion and girl jsons from ref/lottie at test time.
-serde_json = "1"
+serde_json.workspace = true

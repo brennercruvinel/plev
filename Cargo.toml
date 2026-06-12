@@ -14,10 +14,95 @@ members = [
     "crates/showcase",
 ]
 
-[package]
-name = "plev"
+# Metadados herdados por todos os crates (`version.workspace = true`).
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
+
+# Fonte única de versão para toda dependência compartilhada. Os crates
+# referenciam com `<dep>.workspace = true`; features extras por crate via
+# `{ workspace = true, features = [...] }`.
+[workspace.dependencies]
+# -- internos (path)
+plev = { path = "." }
+git = { path = "crates/git" }
+lot = { path = "crates/lot" }
+macros = { path = "macros" }
+monster = { path = "crates/monster" }
+narrate = { path = "crates/narrate" }
+narrate-macro = { path = "crates/narrate-macro" }
+rope = { path = "crates/rope" }
+# -- gpu / janela
+wgpu = "28"
+winit = { version = "0.30", features = ["rwh_06"] }
+bytemuck = { version = "1", features = ["derive"] }
+# -- texto / layout / vetor
+cosmic-text = "0.18"
+taffy = "0.9"
+ropey = "1.6"
+unicode-segmentation = "1"
+lyon_tessellation = "1"
+lyon_path = "1"
+etagere = "0.2"
+# -- dados / util
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+log = "0.4"
+indexmap = "2"
+lru = "0.16"
+rustc-hash = "2.1"
+slotmap = "1.1"
+web-time = "1.1"
+sha2 = { version = "0.10", default-features = false }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+gix = { version = "0.84", default-features = false, features = ["sha1", "revision", "parallel"] }
+# -- proc-macro
+syn = { version = "2", features = ["full", "extra-traits"] }
+quote = "1"
+proc-macro2 = "1"
+# -- tree-sitter (parser)
+tree-sitter = "0.25"
+tree-sitter-typescript = "0.23"
+tree-sitter-rust = "0.24"
+# -- runtime nativo
+pollster = "0.4"
+env_logger = "0.11"
+arboard = { version = "3", default-features = false }
+notify = "7"
+notify-debouncer-full = "0.4"
+android_logger = "0.14"
+# -- wasm
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["Document", "Window", "Element", "HtmlCanvasElement", "Performance", "console"] }
+console_log = "1"
+console_error_panic_hook = "0.1"
+# -- acessibilidade
+accesskit = "0.24"
+accesskit_winit = "0.32"
+# -- testes
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1"
+trybuild = "1"
+tempfile = "3"
+
+# Release: lto fina + uma unidade de codegen (binarios menores e mais
+# rapidos; build de release um pouco mais lento, aceitavel).
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+# Dev: dependencias compiladas com otimizacao (build incremental do
+# proprio codigo segue rapido, mas deps pesadas como wgpu nao arrastam
+# o runtime de debug).
+[profile.dev.package."*"]
+opt-level = 2
+
+[package]
+name = "plev"
+version.workspace = true
+edition.workspace = true
 
 [lib]
 crate-type = ["cdylib", "staticlib", "rlib"]
@@ -33,56 +118,51 @@ android-game-activity = ["winit/android-game-activity"]
 hot-reload = ["dep:notify", "dep:notify-debouncer-full"]
 
 [dependencies]
-wgpu = "28"
-winit = { version = "0.30", features = ["rwh_06"] }
-cosmic-text = "0.18"
-etagere = "0.2"
-bytemuck = { version = "1", features = ["derive"] }
-lru = "0.16"
-rustc-hash = "2.1"
-log = "0.4"
-macros = { path = "macros" }
-taffy = "0.9"
-slotmap = "1.1"
-web-time = "1.1"
-indexmap = "2"
-lyon_tessellation = "1"
-lyon_path = "1"
-# Image decode for the image atlas (png/jpeg only; no default codecs)
-image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
-# Keymap JSON (actions/keymap.rs)
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-# Editor widget (editor/)
-rope = { path = "crates/rope" }
-unicode-segmentation = "1"
-accesskit = { version = "0.24", optional = true }
-accesskit_winit = { version = "0.32", optional = true }
-notify = { version = "7", optional = true }
-notify-debouncer-full = { version = "0.4", optional = true }
+wgpu.workspace = true
+winit.workspace = true
+cosmic-text.workspace = true
+etagere.workspace = true
+bytemuck.workspace = true
+lru.workspace = true
+rustc-hash.workspace = true
+log.workspace = true
+macros.workspace = true
+taffy.workspace = true
+slotmap.workspace = true
+web-time.workspace = true
+indexmap.workspace = true
+lyon_tessellation.workspace = true
+lyon_path.workspace = true
+image.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+rope.workspace = true
+unicode-segmentation.workspace = true
+accesskit = { workspace = true, optional = true }
+accesskit_winit = { workspace = true, optional = true }
+notify = { workspace = true, optional = true }
+notify-debouncer-full = { workspace = true, optional = true }
 
 [dev-dependencies]
-narrate = { path = "crates/narrate" }
-criterion = { version = "0.5", features = ["html_reports"] }
-lot = { path = "crates/lot" }
-monster = { path = "crates/monster" }
+narrate.workspace = true
+criterion.workspace = true
+lot.workspace = true
+monster.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-pollster = "0.4"
-env_logger = "0.11"
-# System clipboard for the editor widget (editor/clipboard.rs);
-# default features pull in image-data support we don't need.
-arboard = { version = "3", default-features = false }
+pollster.workspace = true
+env_logger.workspace = true
+arboard.workspace = true
 
 [target.'cfg(target_os = "android")'.dependencies]
-android_logger = "0.14"
+android_logger.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3", features = ["Document", "Window", "Element", "HtmlCanvasElement", "Performance", "console"] }
-console_log = "1"
-console_error_panic_hook = "0.1"
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+web-sys.workspace = true
+console_log.workspace = true
+console_error_panic_hook.workspace = true
 
 [package.metadata.android]
 package = "com.plev.engine"

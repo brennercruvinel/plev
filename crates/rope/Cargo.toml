@@ -1,11 +1,11 @@
 [package]
 name = "rope"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
-ropey = "1.6"
-unicode-segmentation = "1"
+ropey.workspace = true
+unicode-segmentation.workspace = true
 
 [dev-dependencies]
-proptest = "1"
+proptest.workspace = true

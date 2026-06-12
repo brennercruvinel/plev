@@ -1,8 +1,8 @@
 [package]
 name = "narrate"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
-narrate-macro = { path = "../narrate-macro" }
-plev = { path = "../.." }
+narrate-macro.workspace = true
+plev.workspace = true
