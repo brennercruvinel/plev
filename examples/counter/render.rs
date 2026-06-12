@@ -3,7 +3,7 @@
 use plev::compositor::{SceneNode, TextNodeKey};
 use plev::view::ViewContext;
 
-use crate::platform::lifecycle::*;
+use crate::lifecycle::*;
 use crate::{AppState, CounterApp};
 
 pub fn render(app: &mut CounterApp) {
