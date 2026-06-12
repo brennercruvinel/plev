@@ -6,7 +6,7 @@
 //! (toggle with the `p` key) and a compact perf line logs every 120 frames
 //! (`RUST_LOG=info`).
 //!
-//! Run: `cargo run --example visual_demo`
+//! Run: `cargo run --example visual`
 
 mod scene;
 
@@ -142,7 +142,7 @@ impl DemoApp {
         let mut encoder =
             gpu.device
                 .create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
-                    label: Some("visual_demo_encoder"),
+                    label: Some("visual_encoder"),
                 });
 
         let dirty_ids: Vec<_> = self

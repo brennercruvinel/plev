@@ -1,10 +1,10 @@
-// GPU resolve and submit for the text demo.
+// GPU resolve and submit for the input demo.
 
 use plev::compositor::Compositor;
 
 use crate::palette::BG;
 
-pub fn gpu_submit(
+pub fn gpu_resolve_and_submit(
     compositor: &mut Compositor,
     gpu: &mut plev::gpu::GpuContext,
     text_system: &mut plev::text::TextSystem,
@@ -48,7 +48,7 @@ pub fn gpu_submit(
     let mut encoder = gpu
         .device
         .create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
-            label: Some("text_demo_encoder"),
+            label: Some("input_encoder"),
         });
 
     let dirty_layer_ids: Vec<_> = compositor
@@ -101,7 +101,6 @@ pub fn gpu_submit(
             pass.draw_indexed(0..count, 0, 0..1);
         }
     }
-
     for id in &dirty_layer_ids {
         compositor.mark_layer_clean(*id);
     }
@@ -137,11 +136,11 @@ pub fn gpu_submit(
             if !layer.visible {
                 continue;
             }
-            if let (Some(composite_bg), Some(opacity_bg)) =
+            if let (Some(cbg), Some(obg)) =
                 (layer.composite_bind_group(), layer.opacity_bind_group())
             {
-                pass.set_bind_group(0, composite_bg, &[]);
-                pass.set_bind_group(1, opacity_bg, &[]);
+                pass.set_bind_group(0, cbg, &[]);
+                pass.set_bind_group(1, obg, &[]);
                 pass.draw(0..3, 0..1);
             }
         }

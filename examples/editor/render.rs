@@ -65,7 +65,7 @@ pub fn present_frame(
     let mut encoder = gpu
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("editor_demo_frame"),
+            label: Some("editor_frame"),
         });
 
     let dirty_layer_ids: Vec<_> = compositor

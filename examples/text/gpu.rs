@@ -1,83 +1,16 @@
-//! Render logic for the layers demo: scene building + GPU submission.
+// GPU resolve and submit for the text demo.
 
-use plev::compositor::SceneNode;
+use plev::compositor::Compositor;
 
-use crate::palette::*;
-use crate::ui;
-use crate::{LayersDemoApp, State};
+use crate::palette::BG;
 
-pub fn render(app: &mut LayersDemoApp) {
-    let State::Ready {
-        ref mut gpu,
-        ref mut text_system,
-    } = app.state
-    else {
-        return;
-    };
-
-    let surface = match gpu.surface.as_ref() {
-        Some(s) => s,
-        None => return,
-    };
-
-    let output = match surface.get_current_texture() {
-        Ok(t) => t,
-        Err(_) => {
-            gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
-            return;
-        }
-    };
-
-    let surface_view = gpu.surface_render_view(&output);
-
-    let w = gpu.surface_config.width as f32;
-    let h = gpu.surface_config.height as f32;
-
-    app.compositor.begin_frame();
-    text_system.begin_frame();
-
-    let margin = 32.0;
-
-    // ====================================================================
-    // Background layer (static dot grid)
-    // ====================================================================
-    let dot_spacing = 40.0;
-    let cols = (w / dot_spacing) as i32 + 1;
-    let rows = (h / dot_spacing) as i32 + 1;
-    for row in 0..rows {
-        for col in 0..cols {
-            let dx = col as f32 * dot_spacing;
-            let dy = row as f32 * dot_spacing;
-            app.compositor.push_to_layer(
-                app.bg_layer,
-                SceneNode::Rect {
-                    x: dx,
-                    y: dy,
-                    w: 1.0,
-                    h: 1.0,
-                    color: DOT_COLOR,
-                },
-            );
-        }
-    }
-
-    // ====================================================================
-    // Default layer (UI chrome + info card)
-    // ====================================================================
-    ui::build_header(&mut app.compositor, w, margin);
-    ui::build_info_card(&mut app.compositor, w, margin);
-    ui::build_footer(&mut app.compositor, w, h, margin);
-
-    // ====================================================================
-    // Foreground layer (dynamic -- changes every 60 frames)
-    // ====================================================================
-    ui::build_foreground(&mut app.compositor, app.fg_layer, app.frame_count, w, h);
-    app.frame_count += 1;
-
-    // ====================================================================
-    // Resolve all layers
-    // ====================================================================
-    app.compositor.resolve(&plev::compositor::ResolveResources {
+pub fn gpu_submit(
+    compositor: &mut Compositor,
+    gpu: &mut plev::gpu::GpuContext,
+    text_system: &mut plev::text::TextSystem,
+    surface_view: &plev::wgpu::TextureView,
+) {
+    compositor.resolve(&plev::compositor::ResolveResources {
         msaa_samples: gpu.config.msaa_samples,
         device: &gpu.device,
         queue: &gpu.queue,
@@ -90,8 +23,7 @@ pub fn render(app: &mut LayersDemoApp) {
     });
 
     {
-        let layer_info: Vec<_> = app
-            .compositor
+        let layer_info: Vec<_> = compositor
             .layers()
             .iter()
             .map(|l| (l.id, l.is_dirty(), l.text_nodes()))
@@ -106,7 +38,7 @@ pub fn render(app: &mut LayersDemoApp) {
                 &gpu.text_bind_group_layout,
                 &text_nodes,
             );
-            if let Some(layer) = app.compositor.layer_mut(layer_id) {
+            if let Some(layer) = compositor.layer_mut(layer_id) {
                 layer.set_text_data(&gpu.device, &gpu.queue, vertices, indices);
             }
         }
@@ -116,11 +48,10 @@ pub fn render(app: &mut LayersDemoApp) {
     let mut encoder = gpu
         .device
         .create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
-            label: Some("layers_demo_encoder"),
+            label: Some("text_encoder"),
         });
 
-    let dirty_layer_ids: Vec<_> = app
-        .compositor
+    let dirty_layer_ids: Vec<_> = compositor
         .layers()
         .iter()
         .filter(|l| l.visible && l.is_dirty())
@@ -128,12 +59,11 @@ pub fn render(app: &mut LayersDemoApp) {
         .collect();
 
     for layer_id in &dirty_layer_ids {
-        let layer = app.compositor.layer(*layer_id).unwrap();
+        let layer = compositor.layer(*layer_id).unwrap();
         let Some(msaa_v) = layer.msaa_view() else {
             continue;
         };
         let resolve_v = layer.texture_view();
-
         let mut pass = encoder.begin_render_pass(&plev::wgpu::RenderPassDescriptor {
             label: Some("layer_pass"),
             color_attachments: &[Some(plev::wgpu::RenderPassColorAttachment {
@@ -155,7 +85,6 @@ pub fn render(app: &mut LayersDemoApp) {
             occlusion_query_set: None,
             multiview_mask: None,
         });
-
         if let Some((vb, ib, count)) = layer.quad_buffers() {
             pass.set_pipeline(&gpu.quad_pipeline);
             pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
@@ -163,7 +92,6 @@ pub fn render(app: &mut LayersDemoApp) {
             pass.set_index_buffer(ib.slice(..), plev::wgpu::IndexFormat::Uint32);
             pass.draw_indexed(0..count, 0, 0..1);
         }
-
         if let Some((vb, ib, count)) = layer.text_buffers() {
             pass.set_pipeline(&gpu.text_pipeline);
             pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
@@ -175,15 +103,14 @@ pub fn render(app: &mut LayersDemoApp) {
     }
 
     for id in &dirty_layer_ids {
-        app.compositor.mark_layer_clean(*id);
+        compositor.mark_layer_clean(*id);
     }
 
-    // Composite pass
     {
         let mut pass = encoder.begin_render_pass(&plev::wgpu::RenderPassDescriptor {
             label: Some("composite_pass"),
             color_attachments: &[Some(plev::wgpu::RenderPassColorAttachment {
-                view: &surface_view,
+                view: surface_view,
                 resolve_target: None,
                 ops: plev::wgpu::Operations {
                     load: plev::wgpu::LoadOp::Clear({
@@ -205,9 +132,8 @@ pub fn render(app: &mut LayersDemoApp) {
             occlusion_query_set: None,
             multiview_mask: None,
         });
-
         pass.set_pipeline(&gpu.composite_pipeline);
-        for layer in app.compositor.layers() {
+        for layer in compositor.layers() {
             if !layer.visible {
                 continue;
             }
@@ -222,5 +148,4 @@ pub fn render(app: &mut LayersDemoApp) {
     }
 
     gpu.queue.submit(std::iter::once(encoder.finish()));
-    output.present();
 }

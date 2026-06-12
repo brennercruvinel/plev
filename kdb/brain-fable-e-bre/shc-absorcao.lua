@@ -30,7 +30,7 @@ mapa de absorcao (da analise individual das 10 demos):
 - todo_app: aba app (o app completo pequeno): dominio TodoItem/Filter +
   animacoes Tween por item + TextInput + filtros (achou 2 heuristicas
   chars*fator classicas; mata-las e parte da licao)
-- text_input_demo: campos de linha unica entram no forms (o widget
+- text_input: campos de linha unica entram no forms (o widget
   TextInput tem hoje ZERO consumidores): foco por click e tab, escape
   desfoca, click posiciona cursor
 - counter: padrao Component/Lifecycle como exemplo minimo com estado

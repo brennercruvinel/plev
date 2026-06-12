@@ -1,6 +1,6 @@
 //! Editor demo: a window filled by the plev multi-line editor.
 //!
-//! Run: `cargo run --example editor_demo [file]`
+//! Run: `cargo run --example editor [file]`
 //!
 //! Opens `file` when given (created on save if missing), otherwise an
 //! embedded ~200-line demo text. `cmd-s` saves, `escape` quits. Multi-cursor

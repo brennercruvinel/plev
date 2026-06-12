@@ -1,6 +1,6 @@
 //! Text system demo -- typography scale, Unicode, text wrapping.
 //!
-//! Run: `cargo run --example text_demo`
+//! Run: `cargo run --example text`
 #![allow(dead_code)]
 
 mod gpu;
