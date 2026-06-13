@@ -44,7 +44,14 @@ user-facing behavior.
 - any handler that changes visible state must invalidate (render on demand)
 - accessibility, reduced motion, wcag contrast and cross-density are
   native requirements, not retrofits
-- cargo check --target wasm32-unknown-unknown -p showcase must stay green
+
+## the gate (every change passes all four)
+
+- cargo test --workspace
+- cargo clippy --workspace --all-targets -- -D warnings
+- cargo fmt --check
+- cargo check --target wasm32-unknown-unknown -p showcase (cheapest
+  cross-platform guard)
 
 ## things to avoid
 

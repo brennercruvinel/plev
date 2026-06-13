@@ -1,5 +1,7 @@
 # machine-readable architecture map. agents read this at task start.
-# update together with arc.md and arc.mmd on any structural change.
+# canonical source of the arc trio: arc.md is the human projection, arc.mmd
+# the frame-flow view; on divergence this file wins. update all three
+# together on any structural change.
 project: plev
 kind: gpu-first compositing engine
 language: rust (edition 2024)
