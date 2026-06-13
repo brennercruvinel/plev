@@ -1,7 +1,7 @@
 ---
 type: reference
 tags: [architecture, modules, contracts, data-flow]
-date: 2026-06-11
+date: 2026-06-12
 status: living
 ---
 
@@ -14,7 +14,7 @@ update all three together when structure changes.
 
 | layer | path | role |
 |---|---|---|
-| gpu | src/gpu/ | wgpu device/surface/pipelines; srgb view formats; image atlas; GpuVec buffers (vec); texture_pool |
+| gpu | src/gpu/ | wgpu device/surface/pipelines; srgb view formats; image atlas; GpuVec buffers (vec); texture_pool; wgsl shaders (src/gpu/shaders) |
 | compositor | src/compositor/ | scene nodes, layers with dirty hashes, resolve to gpu buffers |
 | text | src/text/ | cosmic-text shaping, gpu glyph atlas, TextMeasurer (the only width source) |
 | path | src/path/ | lyon tessellation behind PathBuilder (auto-finishes open subpaths) |
@@ -32,6 +32,26 @@ update all three together when structure changes.
 
 apps consume the engine; they never reimplement engine capabilities
 (kdb/explanation/why-the-apps-bypassed-the-engine.md).
+
+## workspace tiers
+
+three tiers (ADR workspace-engine-at-root-libs-in-crates-demos-in-examples):
+
+| tier | where | members |
+|---|---|---|
+| engine | root crate `plev` | src/ (the layers above) |
+| libraries and apps | crates/ | git, ide, lot, monster, narrate, narrate-macro, parser, rope, showcase |
+| demos | examples/ | 16 windowed (counter, editor, charts, snake, scene3d, monster_player...) + 1 cli (lot2monsters) |
+
+crate roles: `monster` binary animation codec (.monster, ADR
+binary-animation-format-with-discovered-deltas); `lot` lottie importer that
+converts to .monster and never embeds a foreign runtime (ADR
+import-foreign-formats-by-conversion-not-embedding); `parser` ui transpiler
+poc; `rope` text-editing core; `git` git ops; `ide` git client app;
+`showcase` design-system gallery; `narrate`/`narrate-macro` experimental
+dsl; `macros` the #[component] proc-macro. cargo hygiene: workspace.package,
+workspace.dependencies (single version source), workspace.lints, tuned
+profiles; every crate publish = false.
 
 tooling: crates/parser is a parse-resolve-emit transpiler poc (tree-sitter)
 that turns one react component (hoff research card) and one gpui widget

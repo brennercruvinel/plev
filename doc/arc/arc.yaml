@@ -9,7 +9,7 @@ targets:
   in-progress: [android-vulkan]
   pending: [ios-metal, linux-vulkan, windows-d3d12]
 modules:
-  gpu:        { path: src/gpu,        role: device/surface/pipelines + GpuVec buffers (vec) + texture_pool, contracts: [srgb-view-formats, surface_render_view-only] }
+  gpu:        { path: src/gpu,        role: device/surface/pipelines + GpuVec buffers (vec) + texture_pool + wgsl shaders (src/gpu/shaders), contracts: [srgb-view-formats, surface_render_view-only] }
   compositor: { path: src/compositor, role: scene nodes + dirty layers, depends: [gpu] }
   text:       { path: src/text,       role: shaping + glyph atlas + TextMeasurer, depends: [gpu], contracts: [one-textstyle-measure-and-draw] }
   path:       { path: src/path,       role: lyon tessellation, contracts: [auto-finish-open-subpaths] }
@@ -27,15 +27,20 @@ modules:
   text_input: { path: src/text_input, role: single-line field widget }
   platform:   { path: src/platform,   role: safe areas + ime + app lifecycle (mod/ime/lifecycle) }
 crates:
-  showcase:   { path: crates/showcase,  role: widget gallery app, targets: [desktop, web] }
-  ide:  { path: crates/ide, role: git client app }
-  rope:{ path: crates/rope, role: rope/transactions/multi-cursor, pure }
-  git:{ path: crates/git, role: gix + cli git operations, desktop-only }
-  narrate:    { path: [crates/narrate, crates/narrate_macro], role: ui dsl (experimental) }
-  macros:     { path: macros,           role: proc-macros }
+  showcase:   { path: crates/showcase,  role: widget gallery app (11 tabs), targets: [desktop, web] }
+  ide:        { path: crates/ide,       role: plev-native git client app, depends: [git, plev] }
+  rope:       { path: crates/rope,      role: rope/transactions/multi-cursor/history, pure (no ui) }
+  git:        { path: crates/git,       role: gix reads + git cli mutations, desktop-only }
+  narrate:    { path: [crates/narrate, crates/narrate-macro], role: ui dsl (experimental) }
+  macros:     { path: macros,           role: proc-macros (the #[component] attribute) }
   lot:        { path: crates/lot,       role: lottie (bodymovin) importer: serde model + keyframe eval + hierarchical render to TessellatedPath (rnd), and the exit door cnv: sample once, dedup payloads, discover deltas, encode .monster; playback then runs on monster only, depends: [path], emits-to: [monster] }
   parser:        { path: crates/parser,       role: parse-resolve-emit transpiler poc (react tsx+sass and gpui -> plev builder source via tree-sitter; HOFF token mapping, honest droplist with file:line, golden + compile tests), depends: [builder, theme (emitted code only)] }
   monster:        { path: crates/monster,       role: binary animation codec (ir/validate/write/read) with full delta ops (modify tracks + place/replace/remove), delta discovery from sampled frames (discover/discover_fit: encoder mode b, slot diffing + linear segment fitting + keyframes on discontinuity and cadence), encoder-side optimizer (optimize: idempotent static collapse + rdp keyframe reduction + collinear fusion, tolerances in wire quantization steps) + deterministic player (play/play_eval: tick-driven, windowed eval, segment-local op replay, signals, lowers ir to SceneNode), depends: [animation, signal, compositor] }
+examples:
+  # demos of the engine; cargo auto-discovers examples/<name>/main.rs, no Cargo.toml.
+  windowed: [counter, editor, input, layers, mobile_input, sdf_shapes, text, text_input, todo, visual, builder, charts, scene3d, snake, lottie_player, monster_player]
+  cli: [lot2monsters]
+  note: scene3d and snake-game were crates; they are demos and moved here (commit e6f7091)
 knowledge:
   operating-manual: kdb/how-to/code-against-the-plev-engine.md
   visual-tokens: kdb/reference/hoff-visual-tokens.md
