@@ -17,64 +17,22 @@ doc/arc/.
 ## at task start
 
 1. read doc/arc/arc.yaml and doc/arc/arc.mmd in a short pass to preserve
-   structure and naming patterns; for vision and workstream context, read
-   the brain graph starting at kdb/brain-fable-e-bre/idx-brain.lua (lua
-   nodes, lnk fields are the graph edges)
+   structure and naming patterns; skim kdb/adr/ for the decisions already
+   made and the reasons behind them
 2. read kdb/how-to/code-against-the-plev-engine.md before touching ui or
    rendering code; it encodes every defect class this repo already paid for
 3. check whether the engine already provides the capability before
    reimplementing anything in an app
 
 ## conventions
+read -> doc/.conventions/conventions.lua (lua, parses with luajit; the
+quick keys are tests, backend_before_ui, naming, file_hygiene, docs,
+arc_sync, doc_sync, audit_on_finish, style).
 
-### tests
-every change ships with real tests, no mocks: happy path, error path, one
-edge case minimum. test against real artifacts (rendered scenes, measured
-pixels, golden fixtures), never mocked interfaces. nothing merges without
-executable proof. visual claims require pixel measurements, not "looks the
-same" (kdb/how-to/validate-visuals-by-pixel.md).
-
-### backend before ui
-no ui is built before the logic behind it is implemented and tested.
-chart geometry, state machines, codecs, parsers: pure modules with unit
-tests first, pixels second.
-
-### naming
-directories, docs and assets: kebab-case english. source files: idiomatic
-to the language. prefer apl-style 3-char tokens for modules and codebase
-items where the token stays unambiguous (src/sig, src/win style); never
-sacrifice clarity for the count. when proposing renames or moves, list them
-as mv commands, fix every touched import, and run the suite after.
-
-### file hygiene
-hard limit 369 lines per source file; operational target for new files is
-~220. a file created or modified in a session that exceeds the limit must
-be read in full and split along single-responsibility lines. generated
-files and lockfiles are exempt.
-
-### docs
-diataxis style. all lowercase except acronyms. no emojis. no em-dash (use
-comma, semicolon, period or hyphen). no decorative markdown. every doc
-starts with yaml frontmatter (type, tags, date, and commit or status) for
-semantic retrieval. design notes that turn out wrong get a note on top;
-they are not deleted.
-
-### architecture sync
-after any implementation, refactor, rename or doc move that changes
-architecture, boundaries, data flow, module layout, public contracts or
-runtime behavior, update doc/arc/arc.md, arc.yaml and arc.mmd in the same
-change. keep them concise. no parallel second architecture document.
-
-### audit when finishing a task
-run a full audit over every change in the session, no summarizing, from
-devops, code quality and secops angles. write a temporary markdown manifest
-under your tmp folder to track executed tasks. identify dead code, stale
-generated files, items in wrong folders; fix or report. run tests after.
-
-### style
-commit messages in plain english or portuguese, no conventional-commits
-prefix; the body explains the why, the diff shows the what. code comments
-state constraints the code cannot show, nothing else.
+follow it, and update conventions.lua in the same change whenever a new
+convention is established. keep doc/arc/{arc.md, arc.yaml, arc.mmd} and
+README.md current after any change that affects structure, contracts, or
+user-facing behavior.
 
 ## engine rules (the short list; the manual has the detail)
 
@@ -103,7 +61,6 @@ state constraints the code cannot show, nothing else.
 - avoid unsafe without a `// SAFETY:` comment naming the invariant
 - avoid emojis and em-dashes anywhere in project files
 - avoid building parallel implementations of engine capabilities in apps
-  (kdb/explanation/why-the-apps-bypassed-the-engine.md)
 - create, never copy: repositories under ref/ are study material with an
   embedded study.lua stating what to extract and what not to copy; the
   goal is to revolutionize, not to port

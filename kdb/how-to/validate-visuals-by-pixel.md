@@ -28,7 +28,7 @@ has not verified.
 - sample pixels from the capture with python PIL
   (`Image.open(p).getpixel((x, y))`) at documented coordinates: page
   background, sidebar, one card. compare to the token table in
-  kdb/reference/hoff-visual-tokens.md
+  src/theme/hoff.rs
 
 ## web target
 

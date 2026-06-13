@@ -105,7 +105,7 @@ and search. it plays on the same engine that draws the ui. `lot` reads a
 lottie json once, converts it to `.monster`, and never embeds a foreign
 runtime. discrete motion already beats the source json on size; full-body
 morphs wait on the v1 morph-track lever. see
-[doc/monster-format-v0.md](doc/monster-format-v0.md).
+[kdb/adr/monster-format-v0.md](kdb/adr/monster-format-v0.md).
 
 ## the parser
 
@@ -134,7 +134,7 @@ a raw key instead of going through the one-TextStyle path.
 
 - [doc/arc/arc.md](doc/arc/arc.md) for architecture, contracts, frame flow.
 - [doc/arc/arc.yaml](doc/arc/arc.yaml) for the machine-readable map agents read.
-- [doc/monster-format-v0.md](doc/monster-format-v0.md) for the animation format spec.
+- [kdb/adr/monster-format-v0.md](kdb/adr/monster-format-v0.md) for the animation format spec.
 - [kdb/adr/](kdb/adr/) for the architecture decision records.
 - [kdb/how-to/code-against-the-plev-engine.md](kdb/how-to/code-against-the-plev-engine.md) for the operating manual.
 - [AGENTS.md](AGENTS.md) for the single instruction source for ai agents and contributors. route every tool here, no per-tool files.

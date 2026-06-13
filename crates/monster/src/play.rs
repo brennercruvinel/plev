@@ -1,4 +1,4 @@
-//! monster v0 player (doc/monster-format-v0.md "player contract"): owns a
+//! monster v0 player (kdb/adr/monster-format-v0.md "player contract"): owns a
 //! deterministic f32 timeline, driven by [`AnimationTick`] handed in by
 //! the runner; FrameClock is the clock, the player never reads a wall
 //! clock, so the same tick sequence always produces the same scenes.

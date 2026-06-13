@@ -1,6 +1,6 @@
 //! monster: binary animation codec for plev. the poetic frame: h264 for
 //! vectors; keyframes are I-frames, interframes are discovered deltas,
-//! the renderer interpolates (doc/monster-format-v0.md).
+//! the renderer interpolates (kdb/adr/monster-format-v0.md).
 //!
 //! v0 ground work, backend before ui:
 //! - [`ir`]: the codec's own node and timeline model, decoupled from

@@ -30,8 +30,8 @@ update all three together when structure changes.
 | component/view | src/component/, src/view/ | Lifecycle trait, View trait, ViewContext |
 | platform | src/platform/ | safe areas (mod), ime, app lifecycle |
 
-apps consume the engine; they never reimplement engine capabilities
-(kdb/explanation/why-the-apps-bypassed-the-engine.md).
+apps consume the engine; they never reimplement engine capabilities (ADR
+content-driven-layout-not-fixed-constants and the engine manual record why).
 
 ## workspace tiers
 
@@ -81,8 +81,8 @@ zero gpu work.
 ## targets
 
 macos metal (shipping), browser webgpu via trunk/wasm32 (shipping, same
-pixel as desktop), android vulkan (scaffolding, see kdb brain
-research-notes), ios metal (needs entry point + safe areas), linux/windows
+pixel as desktop), android vulkan (scaffolding), ios metal (needs entry
+point + safe areas), linux/windows
 (untested, wgpu primary backends).
 
 ## errors and versioning
@@ -90,7 +90,7 @@ research-notes), ios metal (needs entry point + safe areas), linux/windows
 pre-1.0: no api stability promised. library code must not panic on user
 input paths; tessellation and parsers degrade gracefully (log + empty
 output). binary/format versioning follows the anim-format rules
-implemented in crates/monster (doc/monster-format-v0.md): explicit version,
+implemented in crates/monster (kdb/adr/monster-format-v0.md): explicit version,
 frozen golden fixtures, per-section checksums. the full delta op set is
 decodable: modify becomes tracks, place/replace/remove become timeline
 op lists that act inside their keyframe segment. both encoder modes

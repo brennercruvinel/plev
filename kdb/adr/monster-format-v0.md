@@ -9,7 +9,7 @@ status: draft-v0
 
 synthesis of four guided studies (swf/ruffle, lottie/thorvg, editors,
 rhai/engine-fit; full reports in session transcripts, distilled findings
-in kdb/brain-fable-e-bre/monster-formato.lua). the poetic frame: h264 for
+in the brain notes). the poetic frame: h264 for
 vectors. keyframes are I-frames, interframes are discovered deltas, the
 renderer interpolates.
 

@@ -30,7 +30,7 @@ fn every_assigned_byte_decodes_back_to_its_own_id() {
 
 #[test]
 fn spec_anchor_ids_hold() {
-    // doc/monster-format-v0.md decision 4: 0x00 linear, 0x01 hold,
+    // kdb/adr/monster-format-v0.md decision 4: 0x00 linear, 0x01 hold,
     // 0x02 ae-default (ease-in-out).
     assert_eq!(Easing::Linear.byte(), 0x00);
     assert_eq!(Easing::Hold.byte(), 0x01);

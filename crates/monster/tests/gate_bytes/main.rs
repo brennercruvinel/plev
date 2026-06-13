@@ -1,4 +1,4 @@
-//! bench vs lottie (spec gate, doc/monster-format-v0.md): IR timelines that
+//! bench vs lottie (spec gate, kdb/adr/monster-format-v0.md): IR timelines that
 //! reproduce the animation semantics of the two lightest samples in
 //! ref/anim/lottie-samples, encoded and measured against the json and
 //! its gzip -9 (the spec ruler: monster born at or below the gzip size).

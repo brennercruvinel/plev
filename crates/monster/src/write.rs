@@ -1,4 +1,4 @@
-//! monster v0 encoder, mode A of doc/monster-format-v0.md: lowering from an
+//! monster v0 encoder, mode A of kdb/adr/monster-format-v0.md: lowering from an
 //! authored track model. tracks already exist; the encoder packs
 //! segments into modify ops and discovers per-field presence, so an
 //! unchanged field costs zero bytes. byte layout in `crate::container`.

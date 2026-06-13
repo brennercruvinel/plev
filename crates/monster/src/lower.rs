@@ -1,5 +1,5 @@
 //! lowering monster IR scenes to plev `SceneNode`s, the player half of the
-//! spec's node model (doc/monster-format-v0.md): the codec's IR mirrors the
+//! spec's node model (kdb/adr/monster-format-v0.md): the codec's IR mirrors the
 //! animatable surface, the player maps it onto the real compositor enum
 //! at render time, so the frozen format never chases `SceneNode`.
 //!

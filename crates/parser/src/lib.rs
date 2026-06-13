@@ -9,8 +9,8 @@
 //!    documented flow rewrites, fill the droplist with file:line entries
 //! 3. emit   (emit.rs): deterministic rust source against `plev::builder`
 //!
-//! Scope is brutally small and honest (kdb/brain-fable-e-bre/
-//! parser-transpiler.lua): one react component instance (the hoff research
+//! Scope is brutally small and honest (ADR transpiler-reports-every-
+//! unmapped-construct): one react component instance (the hoff research
 //! card, base variant) and one gpui widget instance (the horizontal labeled
 //! separator). The emitted code obeys kdb/how-to/code-against-the-plev-
 //! engine.md: theme tokens where colors hit the HOFF palette, one TextStyle

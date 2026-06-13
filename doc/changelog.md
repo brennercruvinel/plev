@@ -9,6 +9,21 @@ status: living
 
 ## unreleased
 
+- workspace organized to tiers: engine at root, libraries and apps in
+  crates (git, ide, lot, monster, narrate, narrate-macro, parser, rope,
+  showcase), demos in examples. crate renames (editor_core to rope,
+  git_backend to git, basic-ide to ide, prs to parser, anm to monster,
+  narrate_macro to narrate-macro). shaders moved into src/gpu/shaders.
+  cargo to workspace.package + workspace.dependencies + workspace.lints +
+  tuned profiles; every crate publish = false with a description.
+- kdb consolidated to adr + how-to. the brain .lua graph and the framework
+  catalogs were retired (drifted, parallel source of truth); the monster
+  spec moved to kdb/adr/monster-format-v0.md; conventions moved to
+  doc/.conventions/conventions.lua; AGENTS.md points to both. four new ADRs
+  (monster format, import-by-conversion, transpiler droplist, workspace).
+- qa pass: clippy --all-targets -D warnings clean (uninlined format args
+  made idiomatic), naming residue fixed (basicIDE to plev ide), README in
+  english added, arc trio refreshed. 1274 tests green.
 - monster bridge: lottie retired at the door. lot::cnv samples a lottie once,
   dedups tessellated payloads into the asset table (exact quantized bytes:
   a static shape is one asset and zero delta bytes) and encodes .monster;

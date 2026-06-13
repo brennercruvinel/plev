@@ -1,5 +1,5 @@
 //! easing model: mirrors the `plev::animation::Easing` presets and adds
-//! the 1-byte wire representation of doc/monster-format-v0.md decision 4.
+//! the 1-byte wire representation of kdb/adr/monster-format-v0.md decision 4.
 //!
 //! wire table: 0x00 linear, 0x01 hold, 0x02 ae-default (lowered as
 //! ease-in-out), 0x03..=0x20 named presets, 0xFF custom cubic bezier

@@ -43,9 +43,10 @@ examples:
   note: scene3d and snake-game were crates; they are demos and moved here (commit e6f7091)
 knowledge:
   operating-manual: kdb/how-to/code-against-the-plev-engine.md
-  visual-tokens: kdb/reference/hoff-visual-tokens.md
   pixel-validation: kdb/how-to/validate-visuals-by-pixel.md
-  brain: kdb/brain-fable-e-bre/readme.md
+  visual-tokens: src/theme/hoff.rs
+  decisions: kdb/adr/
+  conventions: doc/.conventions/conventions.lua
 invariants:
   - one TextStyle per run shared by measure and draw
   - srgb decode once in, encode once out (surface_render_view)
