@@ -287,7 +287,7 @@ diff --git a/f b/f
     // Combined diff of a merge commit: `git show <merge>` emits `@@@` headers
     // with two `-` columns and 2-char line prefixes. The old parser read the
     // second `-` column as the `+` start and panicked ("bad hunk header"),
-    // crashing basicIDE when a merge commit was opened.
+    // crashing plev ide when a merge commit was opened.
     const COMBINED_MERGE: &str = "\
 diff --cc src/ui/menu.rs
 index aaa,bbb..ccc

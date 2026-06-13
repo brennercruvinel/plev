@@ -1,4 +1,4 @@
-//! Design token system for basicIDE — HOFF visual language.
+//! Design token system for plev ide - HOFF visual language.
 //!
 //! Tokens transcribed 1:1 from the HOFF social/cards specs
 //! (`ref/hoff-research-social/styles/variables.sass` et al.):

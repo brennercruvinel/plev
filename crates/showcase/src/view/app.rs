@@ -40,7 +40,7 @@ pub struct AppSection {
 impl AppSection {
     pub fn new() -> Self {
         let mut model = TodoModel::new();
-        model.add("Absorb the phi demos into the showcase");
+        model.add("Absorb the plev demos into the showcase");
         model.add("Measure text, never estimate it");
         if let Some(id) = model.add("Port the todo domain (tested first)") {
             model.toggle(id);

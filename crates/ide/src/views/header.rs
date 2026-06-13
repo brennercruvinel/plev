@@ -71,14 +71,14 @@ impl Header {
             .with_line_height(TITLE_LINE_H)
             .with_weight(500);
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::from_style("basicIDE", &title_style, None),
+            key: TextNodeKey::from_style("plev ide", &title_style, None),
             x: x + PAD_X,
             y: (HEADER_H - TITLE_LINE_H) / 2.0,
             color: theme.text_active.to_array(),
         });
 
         // "plev" glass tag next to the name.
-        let name_w = hoff::measure_text("basicIDE", &title_style);
+        let name_w = hoff::measure_text("plev ide", &title_style);
         badge::draw(
             compositor,
             theme,

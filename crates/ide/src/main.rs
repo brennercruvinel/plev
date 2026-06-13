@@ -1,10 +1,10 @@
-//! basicIDE — plev-native git client.
+//! plev ide - plev-native git client.
 //!
 //! GPU-native 3-panel workspace UI (no Tauri, no WebView, no JavaScript)
 //! showing a real repository: status, log, branches and diffs come from
 //! `git` running on a worker thread; the UI thread never blocks.
 //!
-//! Run: `cargo run -p basicIDE [path-to-repo]` (defaults to the cwd).
+//! Run: `cargo run -p ide [path-to-repo]` (defaults to the cwd).
 
 mod actions;
 mod adapters;
@@ -320,7 +320,7 @@ impl App {
 
 impl ApplicationHandler<AppEvent> for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let title = format!("basicIDE — {}", self.workspace.repo_label);
+        let title = format!("plev ide - {}", self.workspace.repo_label);
         let attrs = WindowAttributes::default()
             .with_title(title)
             .with_inner_size(winit::dpi::LogicalSize::new(1280u32, 800u32));
@@ -546,7 +546,7 @@ fn main() {
         Ok(git) => git,
         Err(e) => {
             eprintln!(
-                "basicIDE: cannot open a git repository at `{}`: {e}",
+                "plev ide: cannot open a git repository at `{}`: {e}",
                 repo_path.display()
             );
             std::process::exit(1);

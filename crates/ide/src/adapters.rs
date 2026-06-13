@@ -1,4 +1,4 @@
-//! Maps `git` data into basicIDE view models.
+//! Maps `git` data into plev ide view models.
 //!
 //! The views own plain structs (`FileEntry`, `Stack`, `DiffLine`) and never
 //! see gix or git types; this module is the single conversion point,

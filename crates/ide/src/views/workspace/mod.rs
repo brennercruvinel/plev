@@ -21,7 +21,7 @@ const LEFT_DEFAULT_W: f32 = 280.0;
 const RIGHT_DEFAULT_W: f32 = 340.0;
 const RIGHT_MIN_W: f32 = 220.0;
 
-/// Three-panel workspace layout — mirrors basicIDE's MainViewport.
+/// Three-panel workspace layout — mirrors plev ide's MainViewport.
 pub struct WorkspaceView {
     /// EFFECTIVE left panel width used by layout/render — re-derived from
     /// `left_w_desired` on every resize/drag (clamped to available space).

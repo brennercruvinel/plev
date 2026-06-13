@@ -10,6 +10,7 @@ mod charts;
 mod palette;
 mod render;
 mod state;
+mod submit;
 
 use std::sync::Arc;
 

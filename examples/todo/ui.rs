@@ -148,7 +148,7 @@ impl TodoApp {
             color: DIVIDER,
         });
         self.compositor.draw_text(
-            TextNodeKey::from_style("phi todos", &style(28.0, 36.0), Some(cw)),
+            TextNodeKey::from_style("plev todos", &style(28.0, 36.0), Some(cw)),
             cx,
             16.0,
             ACCENT,
