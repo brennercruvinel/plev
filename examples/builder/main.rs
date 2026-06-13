@@ -16,6 +16,7 @@ use plev::winit::event::WindowEvent;
 use plev::winit::event_loop::{ActiveEventLoop, EventLoop};
 use plev::winit::window::{Window, WindowAttributes, WindowId};
 
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum GpuState {
     Uninitialized,
     Ready {

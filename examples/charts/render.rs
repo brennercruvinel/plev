@@ -58,9 +58,7 @@ impl App {
         let margin = 20.0;
         let gap = 14.0;
         let half_w = (vw - margin * 2.0 - gap) / 2.0;
-        let half_h = ((vh - 60.0 - 28.0 - margin * 2.0 - gap) / 2.0)
-            .min(300.0)
-            .max(160.0);
+        let half_h = ((vh - 60.0 - 28.0 - margin * 2.0 - gap) / 2.0).clamp(160.0, 300.0);
         let y0 = 60.0 + margin;
         let y1 = y0 + half_h + gap;
         let r = self.reveal.get();

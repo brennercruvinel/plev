@@ -54,7 +54,7 @@ impl Compositor {
         if let Some(layer) = self.layers.iter_mut().find(|l| l.id == layer_id) {
             layer.nodes.push(node);
         } else {
-            log::warn!("push_to_layer: layer {:?} not found", layer_id);
+            log::warn!("push_to_layer: layer {layer_id:?} not found");
         }
     }
 

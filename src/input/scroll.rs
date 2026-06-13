@@ -284,9 +284,7 @@ mod tests {
         let d_dist = (ss_d.offset() - 200.0).abs();
         assert!(
             d_dist <= n_dist + 1.0,
-            "destructive dist={} should be <= neutral dist={}",
-            d_dist,
-            n_dist
+            "destructive dist={d_dist} should be <= neutral dist={n_dist}"
         );
     }
 

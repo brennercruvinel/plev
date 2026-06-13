@@ -55,8 +55,8 @@ mod tests {
         let black_l = Color::BLACK.to_oklch().l;
         let gray_l = Color::GRAY.to_oklch().l;
         let white_l = Color::WHITE.to_oklch().l;
-        assert!(black_l < gray_l, "black L={} < gray L={}", black_l, gray_l);
-        assert!(gray_l < white_l, "gray L={} < white L={}", gray_l, white_l);
+        assert!(black_l < gray_l, "black L={black_l} < gray L={gray_l}");
+        assert!(gray_l < white_l, "gray L={gray_l} < white L={white_l}");
     }
 
     #[test]
@@ -95,9 +95,7 @@ mod tests {
         let expected = (base_h + 120.0).rem_euclid(360.0);
         assert!(
             (shifted_h - expected).abs() < 5.0,
-            "shifted hue={} expected ~{}",
-            shifted_h,
-            expected,
+            "shifted hue={shifted_h} expected ~{expected}",
         );
     }
 
@@ -140,10 +138,7 @@ mod tests {
             let l_curr = colors[i].to_oklch().l;
             assert!(
                 l_curr >= l_prev,
-                "step {}: L={} should be >= L={}",
-                i,
-                l_curr,
-                l_prev
+                "step {i}: L={l_curr} should be >= L={l_prev}"
             );
         }
     }

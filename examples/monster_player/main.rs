@@ -27,6 +27,7 @@ use plev::winit::window::{Window, WindowAttributes, WindowId};
 const BG: [f64; 3] = [0.0090, 0.0105, 0.0137];
 const WINDOW: f32 = 640.0;
 
+#[allow(clippy::large_enum_variant)]
 enum AppState {
     Uninitialized,
     Ready {

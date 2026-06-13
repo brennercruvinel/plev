@@ -15,7 +15,7 @@ mod tests {
             let view = ViewId(i);
             let node = view_id_to_node_id(view);
             let back = node_id_to_view_id(node);
-            assert_eq!(back, Some(view), "round trip failed for ViewId({})", i);
+            assert_eq!(back, Some(view), "round trip failed for ViewId({i})");
         }
     }
 

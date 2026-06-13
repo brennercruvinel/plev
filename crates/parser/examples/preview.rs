@@ -156,6 +156,7 @@ fn build(node: &ParserNode, theme: &Theme) -> Element {
     el
 }
 
+#[allow(clippy::large_enum_variant)]
 enum AppState {
     Uninitialized,
     Ready {

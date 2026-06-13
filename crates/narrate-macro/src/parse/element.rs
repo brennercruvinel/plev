@@ -26,7 +26,7 @@ impl Parse for NarrateElement {
             if let Some(suggestion) = suggest_similar(&name, ELEMENT_NAMES) {
                 return syn::Error::new(
                     span,
-                    format!("unknown element `{}`. Did you mean `{}`?", name, suggestion,),
+                    format!("unknown element `{name}`. Did you mean `{suggestion}`?",),
                 );
             }
 
@@ -35,9 +35,8 @@ impl Parse for NarrateElement {
                 return syn::Error::new(
                     span,
                     format!(
-                        "unknown element `{}`. `{}` is a modifier, not an element. \
-                         Modifiers go after the element name, e.g. `div {} \"value\"`",
-                        name, suggestion, suggestion,
+                        "unknown element `{name}`. `{suggestion}` is a modifier, not an element. \
+                         Modifiers go after the element name, e.g. `div {suggestion} \"value\"`",
                     ),
                 );
             }
@@ -45,9 +44,8 @@ impl Parse for NarrateElement {
             syn::Error::new(
                 span,
                 format!(
-                    "unknown element `{}`. Expected one of: row, col, div, text, button, \
+                    "unknown element `{name}`. Expected one of: row, col, div, text, button, \
                      image, spacer, or a PascalCase component name like `MyWidget`",
-                    name,
                 ),
             )
         })?;

@@ -27,7 +27,7 @@ pub(crate) fn render(app: &mut App) {
         }
         Err(plev::wgpu::SurfaceError::Timeout) => return,
         Err(e) => {
-            log::error!("Surface error: {:?}", e);
+            log::error!("Surface error: {e:?}");
             return;
         }
     };

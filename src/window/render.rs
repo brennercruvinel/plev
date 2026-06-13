@@ -45,7 +45,7 @@ impl super::App {
                 return;
             }
             Err(e) => {
-                log::error!("Surface error: {:?}", e);
+                log::error!("Surface error: {e:?}");
                 return;
             }
         };

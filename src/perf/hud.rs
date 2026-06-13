@@ -120,7 +120,7 @@ fn hud_lines(s: &PerfSnapshot) -> Vec<String> {
         },
     ];
     if let Some(gpu) = s.gpu_micros {
-        lines.push(format!("gpu time {:>8} us", gpu));
+        lines.push(format!("gpu time {gpu:>8} us"));
     }
     lines
 }

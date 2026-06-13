@@ -52,10 +52,7 @@ pub fn parse_modifiers(input: ParseStream) -> syn::Result<Vec<Modifier>> {
                 let bad_ident: Ident = input.parse()?;
                 return Err(syn::Error::new(
                     bad_ident.span(),
-                    format!(
-                        "unknown modifier `{}`. Did you mean `{}`?",
-                        ident_str, suggestion,
-                    ),
+                    format!("unknown modifier `{ident_str}`. Did you mean `{suggestion}`?",),
                 ));
             }
             break;
@@ -79,18 +76,13 @@ pub fn parse_modifiers(input: ParseStream) -> syn::Result<Vec<Modifier>> {
                 | ModifierKey::Rounded
                 | ModifierKey::Shadow
                 | ModifierKey::Border => {
-                    format!(
-                        "modifier `{}` requires a value, e.g. `{} \"value\"`",
-                        ident_str, ident_str,
-                    )
+                    format!("modifier `{ident_str}` requires a value, e.g. `{ident_str} \"value\"`",)
                 }
-                ModifierKey::Opacity => format!(
-                    "modifier `{}` requires a value, e.g. `{} 0.5`",
-                    ident_str, ident_str,
-                ),
+                ModifierKey::Opacity => {
+                    format!("modifier `{ident_str}` requires a value, e.g. `{ident_str} 0.5`",)
+                }
                 _ => format!(
-                    "modifier `{}` requires a value, e.g. `{} 4` or `{} {{expr}}`",
-                    ident_str, ident_str, ident_str,
+                    "modifier `{ident_str}` requires a value, e.g. `{ident_str} 4` or `{ident_str} {{expr}}`",
                 ),
             };
             return Err(syn::Error::new(span, example));

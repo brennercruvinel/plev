@@ -101,7 +101,7 @@ impl Lifecycle for Counter {
             color: ORANGE,
         });
 
-        let count_str = format!("{}", count);
+        let count_str = format!("{count}");
         nodes.push(SceneNode::Text {
             key: TextNodeKey::from_style(
                 &count_str,

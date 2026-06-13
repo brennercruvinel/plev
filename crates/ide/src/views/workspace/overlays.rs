@@ -102,10 +102,7 @@ impl WorkspaceView {
         self.overlay_mgr.push(
             OverlayKind::Modal {
                 title: "Discard changes?".into(),
-                body: format!(
-                    "Discard all changes to {}? This cannot be undone.",
-                    file_name
-                ),
+                body: format!("Discard all changes to {file_name}? This cannot be undone."),
                 confirm: "Discard".into(),
                 cancel: "Cancel".into(),
             },

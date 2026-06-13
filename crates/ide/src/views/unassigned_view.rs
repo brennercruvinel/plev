@@ -324,6 +324,6 @@ fn truncate_path(path: &str, max_chars: usize) -> String {
     } else {
         let start = path.chars().count() - max_chars + 1;
         let s: String = path.chars().skip(start).collect();
-        format!("\u{2026}{}", s)
+        format!("\u{2026}{s}")
     }
 }

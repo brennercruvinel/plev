@@ -25,6 +25,7 @@ const DEFAULT_FILE: &str = "ref/lottie/SNAKE/fd5e87b4-1189-11ee-9745-e700d1385b3
 // re-encodes on write, so raw sRGB here would render ~2.5x too light.
 const BG: [f64; 3] = [0.0090, 0.0105, 0.0137];
 
+#[allow(clippy::large_enum_variant)]
 enum AppState {
     Uninitialized,
     Ready {

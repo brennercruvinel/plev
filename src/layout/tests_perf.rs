@@ -113,8 +113,6 @@ fn test_1000_nodes_under_1ms() {
     };
     assert!(
         elapsed < threshold,
-        "Layout of 1001 nodes took {:?} (> {:?})",
-        elapsed,
-        threshold
+        "Layout of 1001 nodes took {elapsed:?} (> {threshold:?})"
     );
 }

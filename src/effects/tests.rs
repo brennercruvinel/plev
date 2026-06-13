@@ -7,9 +7,7 @@ fn gaussian_weights_sum_to_one() {
         let sum: f32 = w[0] + 2.0 * w[1..7].iter().sum::<f32>();
         assert!(
             (sum - 1.0).abs() < 1e-5,
-            "sigma={}: sum={} (expected 1.0)",
-            sigma,
-            sum
+            "sigma={sigma}: sum={sum} (expected 1.0)"
         );
     }
 }
@@ -43,6 +41,6 @@ fn gaussian_weights_symmetric_decay() {
 fn gaussian_weights_padding_is_zero() {
     let w = gaussian_weights(3.0);
     for (i, &pad) in w.iter().enumerate().take(16).skip(7) {
-        assert_eq!(pad, 0.0, "padding index {} should be zero", i);
+        assert_eq!(pad, 0.0, "padding index {i} should be zero");
     }
 }

@@ -88,7 +88,7 @@ impl GpuContext {
             bytemuck::cast_slice(&projection_data),
         );
 
-        log::info!("Surface recreated: {}x{}", width, height);
+        log::info!("Surface recreated: {width}x{height}");
     }
 
     /// Override the projection matrix with custom logical dimensions.

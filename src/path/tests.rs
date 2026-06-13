@@ -10,7 +10,7 @@ fn circle_produces_vertices() {
     // Indices must be valid
     let max_idx = path.vertices.len() as u32;
     for &i in &path.indices {
-        assert!(i < max_idx, "index {} out of range (max {})", i, max_idx);
+        assert!(i < max_idx, "index {i} out of range (max {max_idx})");
     }
 }
 

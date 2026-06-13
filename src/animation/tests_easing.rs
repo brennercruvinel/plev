@@ -5,15 +5,11 @@ fn assert_endpoints(easing: Easing) {
     let v1 = ease(1.0, easing);
     assert!(
         (v0 - 0.0).abs() < 0.01,
-        "{:?}: ease(0) = {} (expected ~0)",
-        easing,
-        v0
+        "{easing:?}: ease(0) = {v0} (expected ~0)"
     );
     assert!(
         (v1 - 1.0).abs() < 0.01,
-        "{:?}: ease(1) = {} (expected ~1)",
-        easing,
-        v1
+        "{easing:?}: ease(1) = {v1} (expected ~1)"
     );
 }
 
@@ -109,13 +105,13 @@ fn easing_clamps_input() {
 #[test]
 fn ease_in_slower_at_start() {
     let v = ease(0.25, Easing::EaseIn);
-    assert!(v < 0.25, "EaseIn at 0.25 should be < 0.25, got {}", v);
+    assert!(v < 0.25, "EaseIn at 0.25 should be < 0.25, got {v}");
 }
 
 #[test]
 fn ease_out_faster_at_start() {
     let v = ease(0.25, Easing::EaseOut);
-    assert!(v > 0.25, "EaseOut at 0.25 should be > 0.25, got {}", v);
+    assert!(v > 0.25, "EaseOut at 0.25 should be > 0.25, got {v}");
 }
 
 #[test]

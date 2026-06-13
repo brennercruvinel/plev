@@ -373,7 +373,7 @@ impl TodoApp {
         let counter_text = if active == 1 {
             "1 item left".to_string()
         } else {
-            format!("{} items left", active)
+            format!("{active} items left")
         };
         self.compositor.draw_text(
             TextNodeKey::from_style(&counter_text, &style(13.0, 17.0), Some(200.0)),

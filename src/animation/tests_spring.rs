@@ -50,8 +50,7 @@ fn spring_overshoots_with_low_damping() {
     }
     assert!(
         max_val > 100.0,
-        "Under-damped spring should overshoot, max was {}",
-        max_val
+        "Under-damped spring should overshoot, max was {max_val}"
     );
 }
 
@@ -97,15 +96,11 @@ fn spring_frame_rate_independence() {
     let v120 = s120.get();
     assert!(
         (v30 - v60).abs() < 0.5,
-        "30fps vs 60fps should match: {} vs {}",
-        v30,
-        v60
+        "30fps vs 60fps should match: {v30} vs {v60}"
     );
     assert!(
         (v60 - v120).abs() < 0.5,
-        "60fps vs 120fps should match: {} vs {}",
-        v60,
-        v120
+        "60fps vs 120fps should match: {v60} vs {v120}"
     );
 }
 
@@ -116,11 +111,10 @@ fn spring_high_stiffness_stable() {
     for _ in 0..600 {
         s.tick(1.0 / 60.0);
         let v = s.get();
-        assert!(v.is_finite(), "Spring value should be finite, got {}", v);
+        assert!(v.is_finite(), "Spring value should be finite, got {v}");
         assert!(
             v.abs() < 10000.0,
-            "Spring value should not diverge, got {}",
-            v
+            "Spring value should not diverge, got {v}"
         );
     }
     assert!(
@@ -135,8 +129,7 @@ fn spring_damping_ratio() {
     let ratio = s.damping_ratio();
     assert!(
         (ratio - 1.0).abs() < 0.01,
-        "Expected critical damping (ratio=1.0), got {}",
-        ratio
+        "Expected critical damping (ratio=1.0), got {ratio}"
     );
 
     let s2: Spring<f32> = Spring::new(0.0).with_config(100.0, 10.0, 1.0);
@@ -157,8 +150,7 @@ fn spring_critically_damped_no_overshoot() {
     }
     assert!(
         max_val <= 100.5,
-        "Critically damped should not significantly overshoot, max was {}",
-        max_val
+        "Critically damped should not significantly overshoot, max was {max_val}"
     );
 }
 

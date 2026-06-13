@@ -11,6 +11,7 @@ use plev::winit::window::Window;
 
 use crate::charts::ChartData;
 
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum GpuState {
     Uninitialized,
     Ready {

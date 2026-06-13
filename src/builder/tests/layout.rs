@@ -16,7 +16,7 @@ fn column_layout_stacks_vertically() {
     let nodes = el.render(&mut test_cx());
     assert_eq!(nodes.len(), 2);
     if let (SceneNode::Text { y: y1, .. }, SceneNode::Text { y: y2, .. }) = (&nodes[0], &nodes[1]) {
-        assert!(*y2 > *y1, "Column layout: y2={} > y1={}", y2, y1);
+        assert!(*y2 > *y1, "Column layout: y2={y2} > y1={y1}");
     }
 }
 
@@ -30,7 +30,7 @@ fn row_layout_stacks_horizontally() {
     let nodes = el.render(&mut test_cx());
     assert_eq!(nodes.len(), 2);
     if let (SceneNode::Text { x: x1, .. }, SceneNode::Text { x: x2, .. }) = (&nodes[0], &nodes[1]) {
-        assert!(*x2 > *x1, "Row layout: x2={} > x1={}", x2, x1);
+        assert!(*x2 > *x1, "Row layout: x2={x2} > x1={x1}");
     }
 }
 

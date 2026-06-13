@@ -220,10 +220,7 @@ impl TextSystem {
         self.glyph_cache.clear();
         self.allocator =
             BucketedAtlasAllocator::new(size2(self.atlas_size as i32, self.atlas_size as i32));
-        log::info!(
-            "Purged caches: {} shaping entries, glyph atlas reset",
-            count
-        );
+        log::info!("Purged caches: {count} shaping entries, glyph atlas reset");
     }
 
     /// Call after all resolve_for_layer calls. Evicts unused shaping entries.

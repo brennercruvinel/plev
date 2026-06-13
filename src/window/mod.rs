@@ -238,7 +238,7 @@ pub(crate) struct PlevActionHandler;
 #[cfg(feature = "accessibility")]
 impl accesskit::ActionHandler for PlevActionHandler {
     fn do_action(&mut self, _request: accesskit::ActionRequest) {
-        log::debug!("AccessKit action: {:?}", _request);
+        log::debug!("AccessKit action: {_request:?}");
     }
 }
 

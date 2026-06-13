@@ -144,7 +144,7 @@ impl MobileInputApp {
         } else {
             "hidden"
         };
-        let kb_str = format!("Keyboard:  {}", kb_label);
+        let kb_str = format!("Keyboard:  {kb_label}");
         self.compositor.draw_text(
             TextNodeKey::from_style(&kb_str, &code_style(13.0, 18.0), None),
             card_x + card_w * 0.4,

@@ -12,6 +12,7 @@ use plev::winit::event::ElementState;
 use plev::winit::keyboard::{Key, NamedKey};
 use plev::winit::window::Window;
 
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum GpuState {
     Uninitialized,
     Ready {

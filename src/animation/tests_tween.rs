@@ -57,7 +57,7 @@ fn tween_tick_progresses() {
     tw.set_target(100.0);
     tw.tick(0.5);
     let v = tw.get();
-    assert!((v - 50.0).abs() < 1.0, "Expected ~50 at t=0.5, got {}", v);
+    assert!((v - 50.0).abs() < 1.0, "Expected ~50 at t=0.5, got {v}");
 }
 
 #[test]
@@ -77,8 +77,7 @@ fn tween_eased() {
     let v = tw.get();
     assert!(
         (v - 25.0).abs() < 1.0,
-        "EaseIn at half should be ~25, got {}",
-        v
+        "EaseIn at half should be ~25, got {v}"
     );
 }
 
@@ -92,8 +91,7 @@ fn tween_retarget() {
     let v = tw.get();
     assert!(
         (v - 125.0).abs() < 5.0,
-        "Retarget midpoint expected ~125, got {}",
-        v
+        "Retarget midpoint expected ~125, got {v}"
     );
 }
 
@@ -143,8 +141,7 @@ fn tween_with_delay() {
     let v = tw.get();
     assert!(
         (v - 50.0).abs() < 2.0,
-        "After delay + 0.5s, expected ~50, got {}",
-        v
+        "After delay + 0.5s, expected ~50, got {v}"
     );
 }
 
@@ -178,30 +175,23 @@ fn tween_with_reverse() {
     let v1 = tw.get();
     assert!(
         (v1 - 50.0).abs() < 2.0,
-        "Forward half: expected ~50, got {}",
-        v1
+        "Forward half: expected ~50, got {v1}"
     );
     tw.tick(0.5);
     let v2 = tw.get();
-    assert!(
-        (v2 - 100.0).abs() < 2.0,
-        "At peak: expected ~100, got {}",
-        v2
-    );
+    assert!((v2 - 100.0).abs() < 2.0, "At peak: expected ~100, got {v2}");
     tw.tick(0.5);
     let v3 = tw.get();
     assert!(
         (v3 - 50.0).abs() < 2.0,
-        "Reverse half: expected ~50, got {}",
-        v3
+        "Reverse half: expected ~50, got {v3}"
     );
     tw.tick(0.5);
     assert_eq!(tw.state(), TweenState::Completed);
     let v4 = tw.get();
     assert!(
         (v4 - 0.0).abs() < 0.01,
-        "Completed reverse: expected from (0), got {}",
-        v4
+        "Completed reverse: expected from (0), got {v4}"
     );
 }
 
@@ -243,8 +233,6 @@ fn tween_from_motion_destructive_faster() {
         .clamp(0.1, 2.0);
     assert!(
         dest_time < neutral_time,
-        "destructive={}s should be < neutral={}s",
-        dest_time,
-        neutral_time
+        "destructive={dest_time}s should be < neutral={neutral_time}s"
     );
 }

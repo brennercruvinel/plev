@@ -54,10 +54,10 @@ impl Parse for OnStmt {
         let event_ident: Ident = input.parse()?;
         let event = EventKind::from_ident(&event_ident).ok_or_else(|| {
             let name = event_ident.to_string();
-            let mut msg = format!("unknown event `{}`", name);
+            let mut msg = format!("unknown event `{name}`");
 
             if let Some(suggestion) = suggest_similar(&name, EVENT_NAMES) {
-                msg.push_str(&format!(". Did you mean `{}`?", suggestion));
+                msg.push_str(&format!(". Did you mean `{suggestion}`?"));
             } else {
                 msg.push_str(". Expected one of: click, hover, key, focus, blur, scroll");
             }
@@ -70,9 +70,8 @@ impl Parse for OnStmt {
                     .unwrap_or(&name);
                 if let Some(suggestion) = suggest_similar(without_prefix, EVENT_NAMES) {
                     msg = format!(
-                        "unknown event `{}`. In plev_narrate!, use `on {}` (two words) \
-                         instead of `{}`",
-                        name, suggestion, name,
+                        "unknown event `{name}`. In plev_narrate!, use `on {suggestion}` (two words) \
+                         instead of `{name}`",
                     );
                 }
             }
@@ -249,7 +248,7 @@ fn parse_block_item(input: ParseStream) -> syn::Result<BlockItem> {
             if let Some(suggestion) = suggest_similar(&name, BLOCK_KEYWORDS) {
                 return Err(syn::Error::new(
                     ident.span(),
-                    format!("unknown keyword `{}`. Did you mean `{}`?", name, suggestion,),
+                    format!("unknown keyword `{name}`. Did you mean `{suggestion}`?",),
                 ));
             }
         }

@@ -67,6 +67,7 @@ pub(crate) fn draw_grid(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn draw_line_chart(
     comp: &mut Compositor,
     data: &[f32],

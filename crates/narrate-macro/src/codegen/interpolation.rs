@@ -18,8 +18,7 @@ pub(crate) fn show_to_tokens(show: &ShowStmt) -> TokenStream {
                     .map(|e| match syn::parse_str::<syn::Expr>(e) {
                         Ok(expr) => quote! { #expr },
                         Err(err) => {
-                            let msg =
-                                format!("invalid expression in string interpolation: {}", err);
+                            let msg = format!("invalid expression in string interpolation: {err}");
                             quote! { compile_error!(#msg) }
                         }
                     })

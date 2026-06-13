@@ -132,8 +132,7 @@ mod tests {
             let m = theme.intent_motion(*intent);
             assert_ne!(
                 m.stiffness, theme.motion.stiffness,
-                "{:?} motion should differ from neutral",
-                intent,
+                "{intent:?} motion should differ from neutral",
             );
         }
     }
@@ -174,14 +173,14 @@ mod tests {
     fn natural_frequency_positive() {
         let theme = Theme::dark();
         let freq = theme.motion.natural_frequency();
-        assert!(freq > 0.0, "freq={}", freq);
+        assert!(freq > 0.0, "freq={freq}");
     }
 
     #[test]
     fn settling_time_finite() {
         let theme = Theme::dark();
         let t = theme.motion.settling_time();
-        assert!(t > 0.0 && t < 10.0, "settling={}s", t);
+        assert!(t > 0.0 && t < 10.0, "settling={t}s");
     }
 
     #[test]
@@ -208,11 +207,11 @@ mod tests {
         ] {
             let m = theme.intent_motion(intent);
             let (s, d, mass) = m.to_spring_config();
-            assert!(s > 0.0, "{:?}: stiffness must be positive", intent);
-            assert!(d > 0.0, "{:?}: damping must be positive", intent);
-            assert!(mass > 0.0, "{:?}: mass must be positive", intent);
+            assert!(s > 0.0, "{intent:?}: stiffness must be positive");
+            assert!(d > 0.0, "{intent:?}: damping must be positive");
+            assert!(mass > 0.0, "{intent:?}: mass must be positive");
             let ratio = m.damping_ratio();
-            assert!(ratio > 0.0 && ratio < 10.0, "{:?}: ratio={}", intent, ratio);
+            assert!(ratio > 0.0 && ratio < 10.0, "{intent:?}: ratio={ratio}");
         }
     }
 

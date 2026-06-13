@@ -52,7 +52,7 @@ impl LifecycleManager {
         }
         let old = self.state;
         self.state = new_state;
-        log::info!("Lifecycle: {:?} -> {:?}", old, new_state);
+        log::info!("Lifecycle: {old:?} -> {new_state:?}");
         for cb in &self.callbacks {
             cb(old, new_state);
         }

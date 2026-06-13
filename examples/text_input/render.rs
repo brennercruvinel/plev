@@ -136,7 +136,7 @@ impl TextInputApp {
 
         for (i, (input, label)) in self.inputs.iter().zip(labels.iter()).enumerate() {
             let text = if input.buffer.is_empty() {
-                format!("{}: (empty)", label)
+                format!("{label}: (empty)")
             } else {
                 format!("{}: {}", label, input.buffer.text())
             };

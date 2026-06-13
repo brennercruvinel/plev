@@ -208,7 +208,7 @@ impl InputDemoApp {
             counter_y + 8.0,
             TEXT_DIM,
         );
-        let count_str = format!("{}", click_count);
+        let count_str = format!("{click_count}");
         compositor.draw_text(
             TextNodeKey::from_style(
                 &count_str,

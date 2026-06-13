@@ -113,10 +113,7 @@ impl ReactiveRuntime {
             if let Some(sub) = self.nodes.get(sub_id)
                 && sub.running
             {
-                panic!(
-                    "Circular dependency detected: node {:?} is notified while running",
-                    sub_id
-                );
+                panic!("Circular dependency detected: node {sub_id:?} is notified while running");
             }
             if let Some(sub) = self.nodes.get_mut(sub_id) {
                 match (&sub.kind, sub.state) {

@@ -121,7 +121,7 @@ impl super::App {
             WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
                 self.scale_factor = scale_factor;
                 self.compositor.invalidate();
-                log::info!("Scale factor changed: {}", scale_factor);
+                log::info!("Scale factor changed: {scale_factor}");
             }
             WindowEvent::Ime(ime) => {
                 self.buffer_event(BufferedEvent::Ime(ime));
@@ -131,7 +131,7 @@ impl super::App {
                 self.process_buffered_events();
                 self.touch_input.tick(Instant::now());
                 for gesture in self.touch_input.drain_events() {
-                    log::debug!("Gesture: {:?}", gesture);
+                    log::debug!("Gesture: {gesture:?}");
                 }
                 self.render();
                 // Re-schedule only while animating or when new work arrived

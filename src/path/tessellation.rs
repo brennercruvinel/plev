@@ -61,7 +61,7 @@ pub(super) fn fill(mut pb: PathBuilder, color: [f32; 4], tolerance: f32) -> Tess
     );
 
     if let Err(e) = result {
-        log::warn!("Path fill tessellation failed: {:?}", e);
+        log::warn!("Path fill tessellation failed: {e:?}");
         return TessellatedPath {
             vertices: Vec::new(),
             indices: Vec::new(),
@@ -124,7 +124,7 @@ fn stroke_with_options(
     );
 
     if let Err(e) = result {
-        log::warn!("Path stroke tessellation failed: {:?}", e);
+        log::warn!("Path stroke tessellation failed: {e:?}");
         return TessellatedPath {
             vertices: Vec::new(),
             indices: Vec::new(),

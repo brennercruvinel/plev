@@ -105,6 +105,7 @@ impl TodoItem {
 // GPU state enum
 // ---------------------------------------------------------------------------
 
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum GpuState {
     Uninitialized,
     Ready {

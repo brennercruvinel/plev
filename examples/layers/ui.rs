@@ -247,7 +247,7 @@ pub fn build_foreground(
         fg_layer,
         SceneNode::Text {
             key: TextNodeKey::from_style(
-                &format!("FOREGROUND (phase {})", phase),
+                &format!("FOREGROUND (phase {phase})"),
                 &card_title_style(14.0, 18.0),
                 Some(fg_card_w - 20.0),
             ),

@@ -84,10 +84,7 @@ pub(crate) fn execute_effect(id: NodeId) {
         rt.clear_sources(id);
         let node = rt.nodes.get_mut(id)?;
         if node.running {
-            panic!(
-                "Circular dependency detected: effect {:?} is already running",
-                id
-            );
+            panic!("Circular dependency detected: effect {id:?} is already running");
         }
         node.running = true;
         let f = match &node.kind {
@@ -174,10 +171,7 @@ pub(crate) fn execute_memo_update(id: NodeId) {
         rt.clear_sources(id);
         let node = rt.nodes.get_mut(id)?;
         if node.running {
-            panic!(
-                "Circular dependency detected: memo {:?} is already running",
-                id
-            );
+            panic!("Circular dependency detected: memo {id:?} is already running");
         }
         node.running = true;
         let (f, compare) = match &node.kind {
