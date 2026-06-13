@@ -13,7 +13,7 @@ commit: 15f096f
 the engine ships a complete flex system (taffy behind
 `LayoutEngine::compute`, which receives the viewport on every call, with
 text measure functions attached). a grep proved that neither shipped app
-consumed it: showcase and basicIDE positioned rectangles manually with
+consumed it: showcase and ide positioned rectangles manually with
 fixed constants (column width 320, tab strip 384, card 368, side panels
 280/340). the resize pipeline itself was mechanically correct (surface
 reconfigured, projection reapplied, scene rebuilt), but the rebuilt
@@ -23,7 +23,7 @@ galleries) computed columns from the available width and were the only
 responsive screens, demonstrating that the correct pattern already existed
 in the repository.
 
-a second defect compounded it: basicIDE clamped panel widths destructively
+a second defect compounded it: ide clamped panel widths destructively
 on shrink, overwriting the stored value, so growing the window never
 restored the user's layout.
 

@@ -37,7 +37,7 @@ target a view created with the sRGB format.
 
 - web background measured (8,8,8) before, (48,48,48) after, identical to
   desktop. one code path, every platform encodes the same way
-- all seven render call sites (engine window, showcase, basicIDE, scene3D,
+- all seven render call sites (engine window, showcase, ide, scene3d,
   snakeGame, both examples) were migrated to `surface_render_view`
 
 ## avoid

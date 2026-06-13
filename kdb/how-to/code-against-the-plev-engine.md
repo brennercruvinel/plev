@@ -8,7 +8,7 @@ commit: bb34a1c
 # how to code against the plev engine
 
 this is the operating manual distilled from every defect found and fixed
-while building showcase and basicIDE on plev (wgpu 28, winit 0.30,
+while building showcase and ide on plev (wgpu 28, winit 0.30,
 cosmic-text 0.18, taffy 0.9). each rule below was violated at least once
 in this repository, shipped a visible defect, and was then root-caused.
 agents and developers should treat violations as defects even when the

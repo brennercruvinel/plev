@@ -17,7 +17,7 @@ rasterizer drew the text with another model.
 
 observed instances:
 
-- basicIDE sized every shape with a per-character heuristic
+- ide sized every shape with a per-character heuristic
   (`chars * font_size * 0.58`) while drawing with real shaping in rubik
   weight 600. measured error ranged from -10% (text overflows) to +21%
   (pill too wide)
@@ -43,7 +43,7 @@ key that includes weight and letter spacing.
 - shape width becomes `measured text + padding` by construction. the
   defect class is closed rather than patched per widget
 - one replacement point (`hoff::measure_text`) fixed twelve call sites in
-  basicIDE simultaneously
+  ide simultaneously
 - regression tests assert that the measured width differs from the old
   heuristic and that drawn shapes fit real shaped labels
 
