@@ -77,13 +77,14 @@ reads as a graph node, the project's own format.
   -- delete.
   docs = "diataxis, lowercase, yaml frontmatter, no emoji, no em-dash; wrong notes corrected on top, not deleted",
 
-  -- after any change to structure, boundaries, data flow, module layout,
-  -- public contracts or runtime behavior, update the arc trio in the same
-  -- change. arc.yaml is the canonical machine map; arc.md is the human
-  -- projection; arc.mmd is the frame-flow view. on divergence arc.yaml
-  -- wins. keep all three small so syncing them stays cheap; one
-  -- architecture doc, no parallel second.
-  arc_sync = "update doc/arc/{arc.yaml(canonical),arc.md,arc.mmd} together on structural change; arc.yaml wins on divergence",
+  -- the source of truth for what exists is Cargo.toml members and the
+  -- examples/ dir, never a doc. tests/arc_sync_guard.rs enforces it: every
+  -- workspace crate must be named in arc.yaml, arc.md and README, every
+  -- example in arc.yaml, or the build fails naming the missing one. so
+  -- drift is a red test, not a silent lie. arc.yaml is the canonical
+  -- machine map, arc.md the human projection, arc.mmd the frame-flow view;
+  -- on a wording divergence arc.yaml wins. keep them small.
+  arc_sync = "Cargo.toml + examples/ are the truth; tests/arc_sync_guard enforces every crate/example is named in the arc docs + README; arc.yaml canonical on wording",
 
   -- keep README.md current after user-facing changes (new crate, new run
   -- command, new format behavior). keep this conventions file current when
