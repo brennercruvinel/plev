@@ -40,7 +40,7 @@ three tiers (ADR workspace-engine-at-root-libs-in-crates-demos-in-examples):
 | tier | where | members |
 |---|---|---|
 | engine | root crate `plev` | src/ (the layers above) |
-| libraries and apps | crates/ | git, ide, lot, monster, narrate, narrate-macro, parser, rope, showcase |
+| libraries and apps | crates/ | git, ide, lot, monster, narrate, narrate-macro, parser, prime_creatures, rope, showcase |
 | demos | examples/ | 16 windowed (counter, editor, charts, snake, scene3d, monster_player...) + 1 cli (lot2monsters) |
 
 crate roles: `monster` binary animation codec (.monster, ADR
@@ -48,8 +48,10 @@ binary-animation-format-with-discovered-deltas); `lot` lottie importer that
 converts to .monster and never embeds a foreign runtime (ADR
 import-foreign-formats-by-conversion-not-embedding); `parser` ui transpiler
 poc; `rope` text-editing core; `git` git ops; `ide` git client app;
-`showcase` design-system gallery; `narrate`/`narrate-macro` experimental
-dsl; `macros` the #[component] proc-macro. cargo hygiene: workspace.package,
+`showcase` design-system gallery; `prime_creatures` an emergent particle
+swarm driven by prime coherence (port of the codepen demo);
+`narrate`/`narrate-macro` experimental dsl; `macros` the #[component]
+proc-macro. cargo hygiene: workspace.package,
 workspace.dependencies (single version source), workspace.lints, tuned
 profiles; every crate publish = false.
 
