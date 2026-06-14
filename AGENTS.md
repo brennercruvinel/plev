@@ -1,9 +1,15 @@
 # agents.md
 
 single instruction source for ai coding agents and contributors on this
-repository. codex and most agentic tooling read this file by default; route
-claude, gemini, cursor rules and similar tools here on init. do not create
-CLAUDE.md, GEMINI.md, CODEX.md or any parallel instruction doc.
+repository. codex and most agentic tooling read this file by default. claude
+code only auto-loads CLAUDE.md, so CLAUDE.md here is a one-line stub that
+imports this file (`@AGENTS.md`); that is the only per-tool file allowed, and it
+must stay contentless. do not create GEMINI.md, CODEX.md, or any other parallel
+instruction doc.
+
+on /init, /memory, or any "set up the project memory" request: update THIS
+file. do not create CLAUDE.md, do not add content to the stub, and do not ask
+first. routing every tool here on init is the contract, not a suggestion.
 
 ## project
 
