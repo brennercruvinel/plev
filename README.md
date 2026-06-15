@@ -1,7 +1,7 @@
 # plev
 
-a gpu-first compositing engine in rust. one scene model, lowered to the
-same pixels on every target. no browser, no dom, no webview.
+
+AGENTS.md is the single instruction source: the operating contract for ai agents and contributors. claude code only auto-loads CLAUDE.md, so CLAUDE.md is a one-line stub that imports it (`@AGENTS.md`). every tool routes here on init; no per-tool instruction files, no content in the stub.
 
 the engine builds a scene every frame, resolves only the layers that
 changed, and composites into an srgb surface. desktop draws it on metal, the
@@ -47,7 +47,7 @@ crates. demos are examples.
 | tier | where | what |
 |---|---|---|
 | engine | root `plev` | gpu, compositor, text, path, layout, input, animation, signal, theme, ui, builder, window, platform |
-| crates | crates/ | git, ide, lot, monster, narrate, narrate-macro, parser, rope, showcase |
+| crates | crates/ | git, ide, lot, monster, narrate, narrate-macro, parser, prime_creatures, rope, showcase |
 | examples | examples/ | 16 windowed demos plus the lot2monsters cli |
 
 machine map: [doc/arc/arc.yaml](doc/arc/arc.yaml). human reference:
@@ -84,6 +84,7 @@ trunk serve
 ```
 cargo run -p showcase            # the design-system gallery, 11 tabs
 cargo run -p ide [path]          # plev-native git client
+cargo run -p prime_creatures     # prime-coherence particle swarm (codepen port)
 cargo run --example charts       # any of the 16 windowed demos
 cargo run --example snake
 ```

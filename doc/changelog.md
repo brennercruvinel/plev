@@ -9,6 +9,13 @@ status: living
 
 ## unreleased
 
+- prime number creatures (crates/prime_creatures): the Entropic Life XVI canvas
+  demo ported to a native plev crate, desktop and wasm. pure, tested sim core
+  (seeded rng, prime coherence matrix 250x250 in four modes, grid-local steering
+  physics with kuramoto sync); faithful render through the layer encoder, motion
+  trails by position history, cyan bond links via paths, glow halos, breathing
+  cores, logical-pixel world, fixed-timestep loop, left-mouse brush. ADR:
+  motion-trails-by-position-history. study clone under ref/prime-number-creatures.
 - workspace organized to tiers: engine at root, libraries and apps in
   crates (git, ide, lot, monster, narrate, narrate-macro, parser, rope,
   showcase), demos in examples. crate renames (editor_core to rope,

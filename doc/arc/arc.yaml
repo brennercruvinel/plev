@@ -30,6 +30,7 @@ modules:
   platform:   { path: src/platform,   role: safe areas + ime + app lifecycle (mod/ime/lifecycle) }
 crates:
   showcase:   { path: crates/showcase,  role: widget gallery app (11 tabs), targets: [desktop, web] }
+  prime_creatures: { path: crates/prime_creatures, role: prime number creatures particle sandbox (codepen port); seeded sim core (rng/primes/coherence/params) + color (hsl->srgb) + windowed clear skeleton; physics/scene/controls land in later milestones, targets: [desktop, web] }
   ide:        { path: crates/ide,       role: plev-native git client app, depends: [git, plev] }
   rope:       { path: crates/rope,      role: rope/transactions/multi-cursor/history, pure (no ui) }
   git:        { path: crates/git,       role: gix reads + git cli mutations, desktop-only }
