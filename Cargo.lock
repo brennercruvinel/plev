@@ -3572,6 +3572,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "prime_creatures"
+version = "0.1.0"
+dependencies = [
+ "console_error_panic_hook",
+ "console_log",
+ "env_logger",
+ "log",
+ "plev",
+ "pollster",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-time",
+ "wgpu",
+ "winit",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
