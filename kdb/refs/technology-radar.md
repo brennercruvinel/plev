@@ -1,19 +1,19 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
 domain: research
 ---
 
-# technology radar, φ
+# technology radar, plev
 
 **data:** 2026-03-11
 **escopo:** resumo executivo da analise de ecossistema (50+ repos, 12 categorias)
 
 ---
 
-## posicao do φ
+## posicao do plev
 
 compositing engine GPU-first em rust. nicho unico: shaders identicos em 6 targets (metal, vulkan, dx12, webgpu), dirty tracking per-layer, text de producao. nenhum competidor resolve esse problema completo.
 
@@ -22,9 +22,9 @@ compositing engine GPU-first em rust. nicho unico: shaders identicos em 6 target
 | ameaca | severidade | mitigacao |
 |--------|-----------|-----------|
 | makepad amadurece e adiciona a11y + text quality | media | executar task-30 (a11y) e manter text quality como diferencial |
-| dioxus blitz (wgpu renderer) fica estavel | media | φ e camada abaixo, pode ser consumido por frameworks como blitz |
+| dioxus blitz (wgpu renderer) fica estavel | media | plev e camada abaixo, pode ser consumido por frameworks como blitz |
 | parley torna cosmic-text obsoleto | alta | task-32 planeja avaliacao. migrar se necessario |
-| iced adiciona dirty tracking real | media | φ ja tem, manter lideranca tecnica |
+| iced adiciona dirty tracking real | media | plev ja tem, manter lideranca tecnica |
 
 ## acoes imediatas (fase 4)
 
@@ -46,7 +46,7 @@ compositing engine GPU-first em rust. nicho unico: shaders identicos em 6 target
 
 ## principio
 
-estas sao referencias para insight. φ nao precisa de nenhuma dessas libs para funcionar, ja funciona com 325 testes, 17 examples, 6 targets, animation system, editable text e todo app demo. as integracoes ampliam capacidade sem comprometer a arquitetura core.
+estas sao referencias para insight. plev nao precisa de nenhuma dessas libs para funcionar, ja funciona com 325 testes, 17 examples, 6 targets, animation system, editable text e todo app demo. as integracoes ampliam capacidade sem comprometer a arquitetura core.
 
 ## documentacao completa
 

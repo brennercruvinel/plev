@@ -1,7 +1,7 @@
 //! Data, animation state, and utilities for the MessageDock example.
 
-use phi::compositor::Compositor;
-use phi::input::ViewId;
+use plev::compositor::Compositor;
+use plev::input::ViewId;
 
 // ── Color Palette ──────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ pub(crate) fn smooth_color(current: [f32; 4], target: [f32; 4], speed: f32) -> [
 
 /// Push a pixel-snapped rect.
 pub(crate) fn draw_rect(comp: &mut Compositor, x: f32, y: f32, w: f32, h: f32, color: [f32; 4]) {
-    comp.push(phi::compositor::SceneNode::Rect {
+    comp.push(plev::compositor::SceneNode::Rect {
         x: px(x), y: px(y), w: px(w).max(0.0), h: px(h).max(0.0), color,
     });
 }

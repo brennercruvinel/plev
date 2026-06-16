@@ -1,29 +1,29 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-13
 domain: competitive
 ---
 
-# makepad visual feature inventory vs φ gap analysis
+# makepad visual feature inventory vs plev gap analysis
 
 date: 2026-03-13
 
 ## legend
-- [x] φ supports
-- [ ] gap - φ does not support yet
+- [x] plev supports
+- [ ] gap - plev does not support yet
 - [~] partial support
 
 ---
 
 ## a. drawing primitives
 
-| feature | makepad | φ | notes |
+| feature | makepad | plev | notes |
 |---------|---------|------|-------|
 | solid rect | drawquad/drawcolor | scenenode::rect | done |
-| rounded rect | SDF box, per-corner radius | scenenode::roundedrect (uniform radius) | [~] φ has uniform radius only, makepad has per-corner |
-| border | 2-layer beveled borders | roundedrect border_width + border_color | [~] φ has single border, no bevel |
+| rounded rect | SDF box, per-corner radius | scenenode::roundedrect (uniform radius) | [~] plev has uniform radius only, makepad has per-corner |
+| border | 2-layer beveled borders | roundedrect border_width + border_color | [~] plev has single border, no bevel |
 | circle | SDF circle | -- | [ ] gap: need SDF circle or use roundedrect with radius=50% |
 | arc | SDF arc with round/flat caps | -- | [ ] gap |
 | hexagon | SDF hexagon | -- | [ ] gap |
@@ -36,7 +36,7 @@ date: 2026-03-13
 
 ## b. color & gradients
 
-| feature | makepad | φ | notes |
+| feature | makepad | plev | notes |
 |---------|---------|------|-------|
 | solid color | yes | yes | done |
 | linear gradient | yes (h/v/angle) | -- | [ ] gap: shader needs gradient uniforms |
@@ -47,7 +47,7 @@ date: 2026-03-13
 
 ## c. text
 
-| feature | makepad | φ | notes |
+| feature | makepad | plev | notes |
 |---------|---------|------|-------|
 | shaped text (harfbuzz) | yes (rustybuzz) | yes (cosmic-text/harfbuzz) | done |
 | glyph atlas | yes (msdf) | yes (r8unorm bitmap) | done (different approach) |
@@ -60,7 +60,7 @@ date: 2026-03-13
 
 ## d. effects
 
-| feature | makepad | φ | notes |
+| feature | makepad | plev | notes |
 |---------|---------|------|-------|
 | gaussian blur | yes | 13-tap separable (effects.rs) | done |
 | box shadow | SDF shadow function | shadow silhouette pass | done |
@@ -72,7 +72,7 @@ date: 2026-03-13
 
 ## e. layout
 
-| feature | makepad | φ | notes |
+| feature | makepad | plev | notes |
 |---------|---------|------|-------|
 | flexbox | custom flow | taffy 0.9 | done |
 | absolute positioning | yes | yes | done |
@@ -82,7 +82,7 @@ date: 2026-03-13
 
 ## f. widgets / components
 
-| feature | makepad | φ | notes |
+| feature | makepad | plev | notes |
 |---------|---------|------|-------|
 | button | 6 variants | builder API button() | [~] basic only |
 | checkbox | toggle + 3-state | -- | [ ] gap |
@@ -105,7 +105,7 @@ date: 2026-03-13
 
 ## g. animation
 
-| feature | makepad | φ | notes |
+| feature | makepad | plev | notes |
 |---------|---------|------|-------|
 | 31 easing functions | yes | yes (animation.rs) | done |
 | tween (duration) | yes | tween<t> | done |
@@ -116,7 +116,7 @@ date: 2026-03-13
 
 ## h. input
 
-| feature | makepad | φ | notes |
+| feature | makepad | plev | notes |
 |---------|---------|------|-------|
 | mouse events | yes | inputstate | done |
 | touch events | yes | gesturerecognizer | done |
@@ -127,7 +127,7 @@ date: 2026-03-13
 
 ## i. platform
 
-| feature | makepad | φ | notes |
+| feature | makepad | plev | notes |
 |---------|---------|------|-------|
 | macos/metal | yes | yes | done |
 | ios/metal | yes | yes | done |
@@ -135,7 +135,7 @@ date: 2026-03-13
 | android/vulkan | yes | yes | done |
 | windows/dx12 | yes | yes | done |
 | browser/webgpu | yes | yes | done |
-| safe area insets | no | yes | φ advantage |
+| safe area insets | no | yes | plev advantage |
 
 ---
 

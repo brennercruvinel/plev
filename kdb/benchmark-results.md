@@ -1,12 +1,12 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
 domain: research
 ---
 
-# benchmark results, φ v0.2
+# benchmark results, plev v0.2
 
 machine: macbook pro m4, macos, rust 1.94.0, criterion 0.5
 date: 2026-03-11

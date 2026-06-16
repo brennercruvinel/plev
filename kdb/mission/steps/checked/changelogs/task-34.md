@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-11
@@ -28,7 +28,7 @@ domain: changelog
   - **b1** stream-of-arrays encoding (vello), ignore soa, adapt transform dedup
   - **b2** scene fragment caching via append (vello), **adapt** (high priority)
   - **b3** epoch-based cache eviction (vello), adapt for shaping cache
-  - **b4** turtle layout (makepad), ignore (taffy is correct for φ)
+  - **b4** turtle layout (makepad), ignore (taffy is correct for plev)
   - **b5** instanced draw call batching (makepad), adapt post-task-31
   - **b6** view/element/widget tree separation (xilem), adapt for component trait
   - **b7** memoize + partialeq data (xilem), **adapt** (component-level)
@@ -37,7 +37,7 @@ domain: changelog
 
 ### fase c completa, animacao (natura, keyframe, mina)
 - 6 patterns extraidos (c1-c6):
-  - **c1** analytical spring solver (natura), bug de corretude: φ euler vs analitico
+  - **c1** analytical spring solver (natura), bug de corretude: plev euler vs analitico
   - **c2** keyframesequence com easing per-segment, maior feature gap
   - **c3** state animator com transition blending
   - **c4** timeline repeat/reverse/delay

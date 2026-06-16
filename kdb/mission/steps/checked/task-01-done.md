@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-13
@@ -9,7 +9,7 @@ domain: task-tracking
 # task-01: view trait + viewcontext
 
 ## objetivo
-criar a abstração base `View` que encapsula a produção de `SceneNode`s. o usuário do φ deve declarar views que produzem cena, sem tocar no compositor diretamente.
+criar a abstração base `View` que encapsula a produção de `SceneNode`s. o usuário do plev deve declarar views que produzem cena, sem tocar no compositor diretamente.
 
 ## contexto
 hoje o `window.rs` empurra `SceneNode::Rect` e `SceneNode::Text` diretamente no compositor. a camada de view abstrai isso, cada view recebe um `ViewContext` e retorna scenenodes. isso é o passo fundamental para a API declarativa futura.

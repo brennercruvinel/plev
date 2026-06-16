@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-13
@@ -9,7 +9,7 @@ domain: task-tracking
 # task-34: exploracao e extracao de ideias dos repos de referencia, P2
 
 ## objetivo
-analisar o codigo-fonte dos 56 repositorios clonados em `/Users/aac/Dev/bc/bunker/repos/` e extrair padroes, tecnicas e ideias concretas aplicaveis ao φ. nao e para copiar codigo, e para estudar, entender e documentar decisoes arquiteturais que informem o desenvolvimento futuro.
+analisar o codigo-fonte dos 56 repositorios clonados em `/Users/aac/Dev/bc/bunker/repos/` e extrair padroes, tecnicas e ideias concretas aplicaveis ao plev. nao e para copiar codigo, e para estudar, entender e documentar decisoes arquiteturais que informem o desenvolvimento futuro.
 
 ## justificativa
 as 12 analises em `mission/knowledge/refs/` documentaram apis, features e conceitos de alto nivel. mas o valor real esta no codigo-fonte: como accesskit constroi a arvore, como makepad faz layout+draw simultaneo, como egui integra acessibilidade, como keyframe implementa o trait cantween, como vello faz encoding em streams. ter os repos clonados sem estudar o codigo e desperdicar a referencia.
@@ -35,7 +35,7 @@ as 12 analises em `mission/knowledge/refs/` documentaram apis, features e concei
 
 ### fase c: animacao e motion (validar task-27)
 
-- [x] **natura (natura):** analytical spring solver com coeficientes pre-computados. bug encontrado: φ usa euler (frame-rate dependent), natura usa solucao analitica (incondicionalmente estavel). 1 pattern (c1).
+- [x] **natura (natura):** analytical spring solver com coeficientes pre-computados. bug encontrado: plev usa euler (frame-rate dependent), natura usa solucao analitica (incondicionalmente estavel). 1 pattern (c1).
 - [x] **keyframe (keyframe):** keyframesequence com easing per-segment, const-generic array cantween, step/hold easing. 3 patterns (c2, c5, c6).
 - [x] **mina (mina):** stateanimator com transition blending, timeline repeat/reverse/delay. 2 patterns (c3, c4).
 
@@ -58,7 +58,7 @@ as 12 analises em `mission/knowledge/refs/` documentaram apis, features e concei
 
 ## criterios de aceite
 1. [x] um documento `mission/knowledge/extracted-patterns.md` com patterns concretos extraidos do codigo
-2. [x] cada pattern inclui: repo fonte, arquivo/funcao, descricao, aplicabilidade ao φ, decisao (adotar/adaptar/ignorar)
+2. [x] cada pattern inclui: repo fonte, arquivo/funcao, descricao, aplicabilidade ao plev, decisao (adotar/adaptar/ignorar)
 3. [x] pelo menos 15 patterns documentados cobrindo rendering, a11y, animation, text, UX, **38 patterns extraidos**
 
 ## resultado
@@ -69,5 +69,5 @@ as 12 analises em `mission/knowledge/refs/` documentaram apis, features e concei
 
 ## fora de escopo
 - copiar codigo de terceiros (violar licencas)
-- modificar o φ nesta task (apenas documentar)
+- modificar o plev nesta task (apenas documentar)
 - analisar todos os 56 repos (foco nos 17 da checklist)

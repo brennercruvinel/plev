@@ -2,14 +2,14 @@
 
 use std::sync::Arc;
 
-use phi::compositor::Compositor;
-use phi::gpu::GpuContext;
-use phi::input::InputState;
-use phi::text::TextSystem;
-use phi::winit::application::ApplicationHandler;
-use phi::winit::event::WindowEvent;
-use phi::winit::event_loop::ActiveEventLoop;
-use phi::winit::window::{Window, WindowAttributes, WindowId};
+use plev::compositor::Compositor;
+use plev::gpu::GpuContext;
+use plev::input::InputState;
+use plev::text::TextSystem;
+use plev::winit::application::ApplicationHandler;
+use plev::winit::event::WindowEvent;
+use plev::winit::event_loop::ActiveEventLoop;
+use plev::winit::window::{Window, WindowAttributes, WindowId};
 
 use crate::state::{AnimatedDock, BG};
 
@@ -51,14 +51,14 @@ impl App {
             Ok(t) => t,
             Err(_) => { gpu.resize(gpu.surface_config.width, gpu.surface_config.height); return; }
         };
-        let view = output.texture.create_view(&phi::wgpu::TextureViewDescriptor::default());
+        let view = output.texture.create_view(&plev::wgpu::TextureViewDescriptor::default());
         let w = gpu.surface_config.width as f32;
         let h = gpu.surface_config.height as f32;
 
         text_system.begin_frame();
         self.dock.build_scene(&mut self.compositor, &mut self.input_state, w, h, self.frame);
 
-        self.compositor.resolve(&phi::compositor::ResolveResources {
+        self.compositor.resolve(&plev::compositor::ResolveResources {
             device: &gpu.device,
             queue: &gpu.queue,
             format: gpu.surface_format(),
@@ -82,7 +82,7 @@ impl App {
         }
         text_system.finish_frame();
 
-        let mut encoder = gpu.device.create_command_encoder(&phi::wgpu::CommandEncoderDescriptor {
+        let mut encoder = gpu.device.create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
             label: Some("dock_encoder"),
         });
         let dirty_layer_ids: Vec<_> = self.compositor.layers().iter()
@@ -92,13 +92,13 @@ impl App {
             let layer = self.compositor.layer(*layer_id).unwrap();
             let Some(msaa_v) = layer.msaa_view() else { continue };
             let resolve_v = layer.texture_view();
-            let mut pass = encoder.begin_render_pass(&phi::wgpu::RenderPassDescriptor {
+            let mut pass = encoder.begin_render_pass(&plev::wgpu::RenderPassDescriptor {
                 label: Some("layer_pass"),
-                color_attachments: &[Some(phi::wgpu::RenderPassColorAttachment {
+                color_attachments: &[Some(plev::wgpu::RenderPassColorAttachment {
                     view: msaa_v, resolve_target: resolve_v,
-                    ops: phi::wgpu::Operations {
-                        load: phi::wgpu::LoadOp::Clear(phi::wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }),
-                        store: phi::wgpu::StoreOp::Store,
+                    ops: plev::wgpu::Operations {
+                        load: plev::wgpu::LoadOp::Clear(plev::wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }),
+                        store: plev::wgpu::StoreOp::Store,
                     },
                     depth_slice: None,
                 })],
@@ -109,7 +109,7 @@ impl App {
                 pass.set_pipeline(&gpu.quad_pipeline);
                 pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
                 pass.set_vertex_buffer(0, vb.slice(..));
-                pass.set_index_buffer(ib.slice(..), phi::wgpu::IndexFormat::Uint32);
+                pass.set_index_buffer(ib.slice(..), plev::wgpu::IndexFormat::Uint32);
                 pass.draw_indexed(0..count, 0, 0..1);
             }
             if let Some((vb, ib, count)) = layer.text_buffers() {
@@ -117,22 +117,22 @@ impl App {
                 pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
                 pass.set_bind_group(1, &text_system.atlas_bind_group, &[]);
                 pass.set_vertex_buffer(0, vb.slice(..));
-                pass.set_index_buffer(ib.slice(..), phi::wgpu::IndexFormat::Uint32);
+                pass.set_index_buffer(ib.slice(..), plev::wgpu::IndexFormat::Uint32);
                 pass.draw_indexed(0..count, 0, 0..1);
             }
         }
         for id in &dirty_layer_ids { self.compositor.mark_layer_clean(*id); }
 
         {
-            let mut pass = encoder.begin_render_pass(&phi::wgpu::RenderPassDescriptor {
+            let mut pass = encoder.begin_render_pass(&plev::wgpu::RenderPassDescriptor {
                 label: Some("composite_pass"),
-                color_attachments: &[Some(phi::wgpu::RenderPassColorAttachment {
+                color_attachments: &[Some(plev::wgpu::RenderPassColorAttachment {
                     view: &view, resolve_target: None,
-                    ops: phi::wgpu::Operations {
-                        load: phi::wgpu::LoadOp::Clear(phi::wgpu::Color {
+                    ops: plev::wgpu::Operations {
+                        load: plev::wgpu::LoadOp::Clear(plev::wgpu::Color {
                             r: BG[0] as f64, g: BG[1] as f64, b: BG[2] as f64, a: 1.0,
                         }),
-                        store: phi::wgpu::StoreOp::Store,
+                        store: plev::wgpu::StoreOp::Store,
                     },
                     depth_slice: None,
                 })],
@@ -159,8 +159,8 @@ impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.window.is_some() { return; }
         let attrs = WindowAttributes::default()
-            .with_title("Phi -- MessageDock Demo")
-            .with_inner_size(phi::winit::dpi::LogicalSize::new(960, 640));
+            .with_title("plev -- MessageDock Demo")
+            .with_inner_size(plev::winit::dpi::LogicalSize::new(960, 640));
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
         self.window = Some(window.clone());
         let gpu = pollster::block_on(GpuContext::new(window));

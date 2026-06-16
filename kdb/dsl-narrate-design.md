@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-08
@@ -57,13 +57,13 @@ interpolação implementada como scanner de `{...}` no string literal:
 
 ### geração de código
 
-output wrappado em bloco com `use ::phi_narrate::builder::*;`, paths qualificados via crate name, import isolado no bloco (sem leak para scope externo).
+output wrappado em bloco com `use ::plev_narrate::builder::*;`, paths qualificados via crate name, import isolado no bloco (sem leak para scope externo).
 
 ## stubs (temporários até task-05)
 
-builder stubs em `phi_narrate::builder` usam generics (`<V>`) para aceitar qualquer tipo. sem validação semântica, erros de tipo serão pegos pela builder API real quando mergeada.
+builder stubs em `plev_narrate::builder` usam generics (`<V>`) para aceitar qualquer tipo. sem validação semântica, erros de tipo serão pegos pela builder API real quando mergeada.
 
 ## crates
 
-- `phi_narrate_macro`, proc-macro crate (syn/quote/proc-macro2)
-- `phi_narrate`, re-export + stubs (sem dependência em φ por enquanto)
+- `plev_narrate_macro`, proc-macro crate (syn/quote/proc-macro2)
+- `plev_narrate`, re-export + stubs (sem dependência em plev por enquanto)

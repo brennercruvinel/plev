@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-13
@@ -12,7 +12,7 @@ domain: task-tracking
 estender o input system para suportar touch (multi-touch) e reconhecimento de gestos (tap, swipe, pinch, long-press). essencial para mobile.
 
 ## contexto
-winit entrega `Touch` events com touch id, position e phase (started, moved, ended, cancelled). o φ precisa traduzir sequências de touch em gestos reconhecidos e despachá-los para views.
+winit entrega `Touch` events com touch id, position e phase (started, moved, ended, cancelled). o plev precisa traduzir sequências de touch em gestos reconhecidos e despachá-los para views.
 
 ## dependências
 - task-09 (input system base, keyboard + mouse)

@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-13
@@ -25,7 +25,7 @@ parley tem apis superiores (cursor, selection, inlinebox, accesskit bridge), mas
 - parley 0.9+ com API estabilizada
 - issue #70 (WASM) fechada
 - skrifa com capacidade de bitmap masks para atlas
-- ou quando φ precisar de inlinebox / accesskit text bridge
+- ou quando plev precisar de inlinebox / accesskit text bridge
 
 ## checklist
 - [x] comparar API de cursor: parley global byte index + geometry() vs cosmic-text line-local

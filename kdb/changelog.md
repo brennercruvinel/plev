@@ -58,7 +58,7 @@ status: living
   yaml, mmd); doc/.conventions
 - path: open sub-paths auto-finished before tessellation (lyon abort
   fixed at the root); 2 regression tests
-- 11 phi-era demos ported as official examples (crate rename, msaa field,
+- 11 plev-era demos ported as official examples (crate rename, msaa field,
   srgb view, linear clears); makepad_charts verified alive
 - test surface: 1022 passing, 0 failed
 

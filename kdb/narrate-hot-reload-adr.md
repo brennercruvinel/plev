@@ -1,18 +1,18 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-22
 domain: hot-reload
 ---
 
-# adotamos runtime parser + override map para hot reload de phi_narrate! DSL
+# adotamos runtime parser + override map para hot reload de plev_narrate! DSL
 
 brenner@phi.engineer
 
 ## contexto
 
-tier 1 (shader hot reload) funciona via file watcher + pipeline recreation. para tier 2 precisavamos de hot reload para phi_narrate! DSL blocks sem recompilacao.
+tier 1 (shader hot reload) funciona via file watcher + pipeline recreation. para tier 2 precisavamos de hot reload para plev_narrate! DSL blocks sem recompilacao.
 
 tres abordagens avaliadas:
 1. **literal pool** (dioxus pattern): so trocar valores literais, complexo de implementar
@@ -25,13 +25,13 @@ full re-parse com override map. runtime parser hand-written em narrate_runtime.r
 
 ## consequencias
 
-ganhamos: editar cores, tamanhos, layout, texto estatico e nesting em phi_narrate! blocks sem recompilar. mudancas aparecem no proximo frame (~500ms debounce).
+ganhamos: editar cores, tamanhos, layout, texto estatico e nesting em plev_narrate! blocks sem recompilar. mudancas aparecem no proximo frame (~500ms debounce).
 
 perdemos: on/when/each/bind blocks (rust code) nao sao interpretados. expressoes em modifiers skipped. custom components renderizados como placeholder. preservacao de estado across reload deferred.
 
 ## patterns que funcionaram
 
-1. **narrate_resolve() no phi crate (nao phi_narrate)**: evita circular dependency. proc-macro gera `::phi::narrate_resolve(file!(), line!(), || { ... })`.
+1. **narrate_resolve() no plev crate (nao plev_narrate)**: evita circular dependency. proc-macro gera `::plev::narrate_resolve(file!(), line!(), || { ... })`.
 
 2. **re-parse on access**: element nao e clone (contem box<dyn fnmut> em eventhandlers). armazenar DSL text e re-parsear e o(microsegundos) para blocos tipicos.
 
@@ -45,4 +45,4 @@ perdemos: on/when/each/bind blocks (rust code) nao sao interpretados. expressoes
 
 2. **file!() retorna path relativo**: watcher reporta paths absolutos, file!() retorna relativo ao crate root. strip_prefix(cargo_manifest_dir) para normalizar.
 
-3. **plev_narrate legado**: codegen referenciava `::plev_narrate::` (nome antigo do crate). corrigido para `::phi_narrate::`.
+3. **plev_narrate legado**: codegen referenciava `::plev_narrate::` (nome antigo do crate). corrigido para `::plev_narrate::`.

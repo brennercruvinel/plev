@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -13,7 +13,7 @@ status: completo
 
 ## escopo
 
-analise de bibliotecas rust para charts e visualizacao de dados, avaliando relevancia para futuras aplicacoes construidas sobre φ.
+analise de bibliotecas rust para charts e visualizacao de dados, avaliando relevancia para futuras aplicacoes construidas sobre plev.
 
 ---
 
@@ -35,13 +35,13 @@ analise de bibliotecas rust para charts e visualizacao de dados, avaliando relev
 
 **licenca:** MIT.
 
-**relevancia para φ:**
-- plotters *nao* renderiza via GPU pipeline proprio, usa backends de rasterizacao (bitmap) ou markup (SVG/canvas). para φ, a integracao direta dos backends existentes nao faz sentido.
+**relevancia para plev:**
+- plotters *nao* renderiza via GPU pipeline proprio, usa backends de rasterizacao (bitmap) ou markup (SVG/canvas). para plev, a integracao direta dos backends existentes nao faz sentido.
 - o modelo de abstracoes (drawingarea com coordenadas mapeadas, chartcontext com eixos/mesh, elementos composiveis) e referencia excelente para design de API de charts.
-- o pattern de `ab_glyph` feature (embedded fonts, pure rust, sem system dependencies) valida a mesma decisao tomada em φ para WASM/ios/android.
+- o pattern de `ab_glyph` feature (embedded fonts, pure rust, sem system dependencies) valida a mesma decisao tomada em plev para WASM/ios/android.
 - a granularidade de features (series individuais como opt-in) e modelo a seguir para evitar bloat.
 
-**insight principal:** a separacao `DrawingBackend` -> `DrawingArea` -> `ChartContext` -> `Element` permite que a mesma especificacao de chart renderize em qualquer backend. se φ criar um `PlottersBackend` que emita `SceneNode::Rect` e `SceneNode::Text`, toda a galeria de plotters funcionaria sobre o engine GPU sem modificacao do codigo de chart.
+**insight principal:** a separacao `DrawingBackend` -> `DrawingArea` -> `ChartContext` -> `Element` permite que a mesma especificacao de chart renderize em qualquer backend. se plev criar um `PlottersBackend` que emita `SceneNode::Rect` e `SceneNode::Text`, toda a galeria de plotters funcionaria sobre o engine GPU sem modificacao do codigo de chart.
 
 **limitacao:** nao tem suporte nativo a interatividade (zoom, pan, tooltips), e fundamentalmente um gerador de imagens estaticas. a composicao de elementos e CPU-bound; nao ha batching GPU. 176 issues abertas, atividade de manutencao reduzida (ultimo push fev/2026).
 
@@ -64,13 +64,13 @@ analise de bibliotecas rust para charts e visualizacao de dados, avaliando relev
 
 **licenca:** MIT or apache-2.0.
 
-**relevancia para φ:**
-- dependencia no runtime javascript do echarts torna integracao direta com φ inviavel. φ e GPU-first; charming e JS-first.
-- a API declarativa e referencia de ergonomia excelente. a forma como `Chart::new().legend(...).series(Pie::new()...)` compoe components e analogo ao builder pattern de φ.
+**relevancia para plev:**
+- dependencia no runtime javascript do echarts torna integracao direta com plev inviavel. plev e GPU-first; charming e JS-first.
+- a API declarativa e referencia de ergonomia excelente. a forma como `Chart::new().legend(...).series(Pie::new()...)` compoe components e analogo ao builder pattern de plev.
 - o catalogo de chart types (30+) e temas (14) serve como benchmark de feature completeness para qualquer sistema de charts futuro.
 - o approach `WasmRenderer` demonstra que charts echarts em WASM sao possiveis, mas com overhead de runtime JS embutido.
 
-**insight principal:** charming valida que uma API rust declarativa pode mapear 1:1 para a riqueza do echarts. porem, a dependencia em javascript (via deno_core no server ou runtime JS no browser) e o preco dessa riqueza. para φ, o caminho seria implementar rendering nativo dos chart types mais comuns (line, bar, pie, scatter) diretamente em scenenodes, usando a API declarativa de charming como inspiracao de ergonomia.
+**insight principal:** charming valida que uma API rust declarativa pode mapear 1:1 para a riqueza do echarts. porem, a dependencia em javascript (via deno_core no server ou runtime JS no browser) e o preco dessa riqueza. para plev, o caminho seria implementar rendering nativo dos chart types mais comuns (line, bar, pie, scatter) diretamente em scenenodes, usando a API declarativa de charming como inspiracao de ergonomia.
 
 **limitacao:** nao e uma lib de rendering, e um gerador de specs. toda renderizacao e delegada ao echarts JS. o `ImageRenderer` adiciona ~30mb de dependencia (deno_core). feature `ssr` e `wasm` sao mutuamente exclusivas. 21 issues abertas.
 
@@ -96,10 +96,10 @@ analise de bibliotecas rust para charts e visualizacao de dados, avaliando relev
 
 **licenca:** MIT.
 
-**relevancia para φ:**
-- egui_graphs resolve um problema diferente de charts, visualizacao de grafos (nodes + edges). relevante se φ precisar de network visualization, dependency graphs, knowledge graphs, etc.
-- o sistema de layouts plugavel (trait + state + composable extras) e referencia de design para qualquer sistema de layout automatico em φ.
-- o pattern de "styling hooks vs custom drawer" (tabela comparativa no readme) e modelo de extensibilidade que φ poderia adotar: hooks para tweaks rapidos, traits para customizacao total.
+**relevancia para plev:**
+- egui_graphs resolve um problema diferente de charts, visualizacao de grafos (nodes + edges). relevante se plev precisar de network visualization, dependency graphs, knowledge graphs, etc.
+- o sistema de layouts plugavel (trait + state + composable extras) e referencia de design para qualquer sistema de layout automatico em plev.
+- o pattern de "styling hooks vs custom drawer" (tabela comparativa no readme) e modelo de extensibilidade que plev poderia adotar: hooks para tweaks rapidos, traits para customizacao total.
 - a integracao com petgraph como data structure e pattern reutilizavel, petgraph e o standard de facto para grafos em rust.
 
 **insight principal:** o sistema de extras composiveis para force-directed layout (`FruchtermanReingoldWithExtras<E>` onde e e tupla de extras) demonstra como parametrizar algoritmos de layout sem explosion combinatoria. cada extra acumula no displacement vector em ordem da tupla. esse pattern de composicao e aplicavel alem de graph layout.
@@ -110,32 +110,32 @@ analise de bibliotecas rust para charts e visualizacao de dados, avaliando relev
 
 ## padroes cross-cutting
 
-1. **backend abstraction e universal.** plotters (drawingbackend trait), charming (3 renderers), egui_graphs (egui widget). todas separam especificacao visual de renderizacao. para φ, isso sugere que um chart system deveria definir chart specs independentes do rendering pipeline.
+1. **backend abstraction e universal.** plotters (drawingbackend trait), charming (3 renderers), egui_graphs (egui widget). todas separam especificacao visual de renderizacao. para plev, isso sugere que um chart system deveria definir chart specs independentes do rendering pipeline.
 
-2. **WASM e first-class em todas.** plotters via canvasbackend, charming via wasmrenderer, egui_graphs via eframe WASM. nenhuma trata WASM como afterthought. φ ja tem WASM support nativo, um chart system sobre φ herdaria isso automaticamente.
+2. **WASM e first-class em todas.** plotters via canvasbackend, charming via wasmrenderer, egui_graphs via eframe WASM. nenhuma trata WASM como afterthought. plev ja tem WASM support nativo, um chart system sobre plev herdaria isso automaticamente.
 
-3. **declarative builder API e o padrao.** todas usam builder pattern para construcao de charts/grafos. `ChartBuilder::on(&root).caption(...).build_cartesian_2d(...)` (plotters), `Chart::new().legend(...).series(...)` (charming), `GraphView::new(&mut graph).with_styles(...)` (egui_graphs). φ ja usa builder pattern (builder.rs), charts seriam extensao natural.
+3. **declarative builder API e o padrao.** todas usam builder pattern para construcao de charts/grafos. `ChartBuilder::on(&root).caption(...).build_cartesian_2d(...)` (plotters), `Chart::new().legend(...).series(...)` (charming), `GraphView::new(&mut graph).with_styles(...)` (egui_graphs). plev ja usa builder pattern (builder.rs), charts seriam extensao natural.
 
-4. **interatividade e o divisor de aguas.** plotters nao tem. charming delega ao echarts JS. egui_graphs implementa nativamente (zoom, pan, drag, events). para φ, interatividade nativa e vantagem competitiva: charts GPU-rendered com hit-testing, gestures e signals integrados.
+4. **interatividade e o divisor de aguas.** plotters nao tem. charming delega ao echarts JS. egui_graphs implementa nativamente (zoom, pan, drag, events). para plev, interatividade nativa e vantagem competitiva: charts GPU-rendered com hit-testing, gestures e signals integrados.
 
-5. **fonts sao problema recorrente.** plotters oferece `ab_glyph` (embedded, pure rust) vs `ttf` (system fonts). charming delega ao echarts. egui_graphs usa epaint/egui fonts. φ ja resolveu isso com cosmic-text + embedded inter font para WASM/ios/android.
+5. **fonts sao problema recorrente.** plotters oferece `ab_glyph` (embedded, pure rust) vs `ttf` (system fonts). charming delega ao echarts. egui_graphs usa epaint/egui fonts. plev ja resolveu isso com cosmic-text + embedded inter font para WASM/ios/android.
 
 ---
 
-## implicacoes para φ
+## implicacoes para plev
 
 ### curto prazo (nao bloqueia roadmap atual)
-nenhuma dessas libs se integra diretamente com φ. todas dependem de seus proprios sistemas de rendering (bitmap, SVG, canvas JS, egui). nao ha acao imediata necessaria.
+nenhuma dessas libs se integra diretamente com plev. todas dependem de seus proprios sistemas de rendering (bitmap, SVG, canvas JS, egui). nao ha acao imediata necessaria.
 
 ### medio prazo (quando apps precisarem de charts)
-1. **plottersbackend**: implementar `plotters::drawing::DrawingBackend` que emite `SceneNode::Rect` e `SceneNode::Text` para o compositor φ. isso daria acesso a toda a galeria de plotters (line, bar, histogram, candlestick, etc.) renderizada via GPU pipeline do φ. custo estimado: 1 backend adapter (~500 linhas).
+1. **plottersbackend**: implementar `plotters::drawing::DrawingBackend` que emite `SceneNode::Rect` e `SceneNode::Text` para o compositor plev. isso daria acesso a toda a galeria de plotters (line, bar, histogram, candlestick, etc.) renderizada via GPU pipeline do plev. custo estimado: 1 backend adapter (~500 linhas).
 
-2. **chart primitivas nativas**: para charts interativos (tooltips, zoom, cross-hair), implementar line/bar/pie/scatter diretamente como views/components φ, com hit-testing e signals integrados. API inspirada em charming (declarativa, composivel). custo: significativamente maior, mas resultado superior em performance e interatividade.
+2. **chart primitivas nativas**: para charts interativos (tooltips, zoom, cross-hair), implementar line/bar/pie/scatter diretamente como views/components plev, com hit-testing e signals integrados. API inspirada em charming (declarativa, composivel). custo: significativamente maior, mas resultado superior em performance e interatividade.
 
 ### longo prazo (graph visualization)
-3. **graph widget**: se φ precisar de network visualization, o design de egui_graphs (layouts plugaveis, styling hooks, petgraph backing) e blueprint. a implementacao seria sobre o sistema de views/components de φ, com layout algorithms como modulos independentes.
+3. **graph widget**: se plev precisar de network visualization, o design de egui_graphs (layouts plugaveis, styling hooks, petgraph backing) e blueprint. a implementacao seria sobre o sistema de views/components de plev, com layout algorithms como modulos independentes.
 
 ### o que nao fazer
-- nao embutir echarts JS via charming, contradiz a filosofia GPU-first de φ.
+- nao embutir echarts JS via charming, contradiz a filosofia GPU-first de plev.
 - nao tentar replicar a galeria completa de 30+ chart types de uma vez, comeca com line, bar, pie, scatter.
 - nao acoplar chart specs ao rendering, manter separacao spec/render como plotters faz.

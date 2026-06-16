@@ -1,7 +1,7 @@
 //! Scene building, event processing, and animation updates for the dock.
 
-use phi::compositor::{Compositor, TextNodeKey};
-use phi::input::{InputEvent, InputState, PressState};
+use plev::compositor::{Compositor, TextNodeKey};
+use plev::input::{InputEvent, InputState, PressState};
 
 use crate::state::*;
 
@@ -253,7 +253,7 @@ impl AnimatedDock {
 
     fn build_chrome(&self, comp: &mut Compositor, vw: f32, vh: f32, frame: u64) {
         comp.draw_text(
-            TextNodeKey::new("PHI ENGINE", 36.0, 44.0, Some(vw - 80.0)),
+            TextNodeKey::new("plev ENGINE", 36.0, 44.0, Some(vw - 80.0)),
             40.0, 40.0, TEXT_PRIMARY,
         );
         comp.draw_text(

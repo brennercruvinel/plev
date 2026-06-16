@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: in-progress
 last-updated: 2026-03-22
@@ -34,7 +34,7 @@ domain: task-tracking
   - tokenizer hand-written (ident, str, int, float, braces, comma, pipe)
   - recursive descent parser: elements, modifiers (30+), body blocks, show
   - on/when/each/bind blocks consumed sem interpretacao (require rust evaluation)
-  - extract_narrate_blocks(): encontra phi_narrate!/plev_narrate! em source text
+  - extract_narrate_blocks(): encontra plev_narrate!/plev_narrate! em source text
   - 27 testes (tokenizer, parser elements/modifiers/nesting, skipped blocks, extraction)
 - `src/hot_reload.rs` (extendido):
   - narrateoverrides: global hashmap<(file,line), DSL text> com lazylock<mutex>
@@ -48,16 +48,16 @@ domain: task-tracking
 - `src/window.rs`:
   - narrate_watcher field em app
   - check_narrate_reload() poll em about_to_wait()
-- `crates/phi_narrate_macro/src/codegen.rs`:
-  - wrap output: `::phi::narrate_resolve(file!(), line!(), || { ... })`
-  - fix: plev_narrate -> phi_narrate em error messages e use statement
-- `crates/phi_narrate_macro/src/parse/block_item.rs`: fix plev_narrate -> phi_narrate
+- `crates/plev_narrate_macro/src/codegen.rs`:
+  - wrap output: `::plev::narrate_resolve(file!(), line!(), || { ... })`
+  - fix: plev_narrate -> plev_narrate em error messages e use statement
+- `crates/plev_narrate_macro/src/parse/block_item.rs`: fix plev_narrate -> plev_narrate
 - 343 testes totais passando, zero regressao
 - compilacao sem hot-reload feature ok (zero overhead)
 
 #### decisoes de design tier 2
 - re-parse on access (nao cache element): element nao e clone (contem box<dyn fnmut>)
-- narrate_resolve() no phi crate (nao phi_narrate): evita circular dependency
+- narrate_resolve() no plev crate (nao plev_narrate): evita circular dependency
 - runtime parser hand-written (nao syn): DSL simples, evita dependencia syn em runtime
 - on/when/each/bind skipped: contem rust code, nao interpretavel sem eval
 - preservacao de estado across reload deferred: requer component id system
@@ -71,7 +71,7 @@ domain: task-tracking
 ### sessao 2026-03-22 (validacao e testes)
 
 #### fix compilacao
-- `crates/phi_narrate/tests/integration.rs`: renomeado `plev_narrate` -> `phi_narrate` (import + 12 invocacoes)
+- `crates/plev_narrate/tests/integration.rs`: renomeado `plev_narrate` -> `plev_narrate` (import + 12 invocacoes)
 - 12 integration tests agora compilam e passam
 
 #### path matching validado
@@ -88,12 +88,12 @@ domain: task-tracking
   - `parse_skip_mixed_on_when_each_preserves_static_content`: 3 blocos dinamicos skipped consecutivos, header e footer preservados
 
 #### teste e2e pipeline completo
-- `e2e_extract_store_lookup_with_dynamic_blocks`: simula arquivo .rs com phi_narrate! contendo on/when/each
+- `e2e_extract_store_lookup_with_dynamic_blocks`: simula arquivo .rs com plev_narrate! contendo on/when/each
   - extract_narrate_blocks() extrai 1 bloco com line number correto
   - update_narrate_overrides() armazena no override map
   - narrate_override() encontra o override e retorna element funcional
   - element renderiza com texto estatico preservado (dashboard, footer)
 
 #### contagem final
-- 450 passed, 0 failed, 3 ignored (pre-existentes em phi-clinic)
+- 450 passed, 0 failed, 3 ignored (pre-existentes em plev-clinic)
 - delta vs baseline: +18 testes (12 integration + 3 hot_reload + 2 skip + 1 e2e)

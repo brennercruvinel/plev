@@ -1,17 +1,17 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-13
 domain: project-rules
 ---
 
-# φ, regras técnicas
+# plev, regras técnicas
 
 ## arquitetura
 - backend sempre antes de UI
 - testes sempre antes de mover task para checked
-- scenenode é a unidade de compositing, nenhum consumer do φ toca no compositor diretamente
+- scenenode é a unidade de compositing, nenhum consumer do plev toca no compositor diretamente
 - renderer tem dois targets de compilação, não dois renderers
 
 ## performance
@@ -28,7 +28,7 @@ domain: project-rules
 - glyphon tem issues em shaping complexo (árabe, devanagari), testar com textos multilíngues antes de declarar suporte
 - WASM GPU init é async e não pode setar self diretamente, usar eventloopproxy pattern (ver knowledge/wasm-webgpu-validation.md)
 - trunk requer `data-target-name` no index.html quando há bin + lib com mesmo package name
-- binário é `φ-app`, não `φ`, evita colisão de artifact WASM com a lib
+- binário é `plev-app`, não `plev`, evita colisão de artifact WASM com a lib
 - `Limits::downlevel_webgl2_defaults()` não é para webgpu, usar `Limits::default()` para webgpu
 - `main.rs` precisa de `#[cfg(not(target_arch = "wasm32"))]` guard (env_logger não existe no WASM)
 - android emulador swiftshader trava em `create_render_pipeline()`, deve usar `hw.gpu.mode=host` no config.ini
@@ -55,7 +55,7 @@ domain: project-rules
 - módulos: gpu.rs, gpu_vec.rs, text.rs, compositor.rs, window.rs, view.rs, animation.rs, text_input.rs, dispatch.rs, overlay.rs, lib.rs, main.rs
 - shaders em shaders/ como arquivos .wgsl separados (quad.wgsl, text.wgsl, rect_sdf.wgsl, composite.wgsl, blur.wgsl, shadow.wgsl)
 - examples em examples/, 20 examples incluindo animation_demo, text_input_demo, todo_app, message_dock
-- binário nativo: `cargo run --bin φ-app` (renomeado para evitar colisão com lib WASM)
+- binário nativo: `cargo run --bin plev-app` (renomeado para evitar colisão com lib WASM)
 - WASM: `trunk serve` (usa lib.rs com wasm_main via wasm_bindgen(start))
 
 ## trabalho paralelo (múltiplos agentes/devs)
@@ -127,14 +127,14 @@ domain: project-rules
 - consultar antes de implementar task-30 (a11y), task-31 (lyon), melhorias em animation.rs ou signal.rs
 
 ## action dispatch (task-42)
-- `ActionQueue` vive no core φ (`src/dispatch.rs`), infra generica, nao especifica de app
+- `ActionQueue` vive no core plev (`src/dispatch.rs`), infra generica, nao especifica de app
 - `WidgetAction` trait = `Any + Send + 'static`, send para futuro multi-thread
 - `emit<A>(source, action)` + `drain_typed<A>()`, typed no site de uso, erased internamente
 - filhos emitem, parents drenam, fluxo unidirecional, sem event bus global
 - `drain_typed` retorna itens do tipo pedido, devolve o resto ao vec interno (o(n) por drain)
 
 ## overlay system (task-42)
-- `OverlayManager` vive no core φ (`src/overlay.rs`), pure data, sem GPU refs
+- `OverlayManager` vive no core plev (`src/overlay.rs`), pure data, sem GPU refs
 - z-order base 1000 (constante `BASE_Z`), overlays sempre acima do conteudo principal
 - `push()` aceita w/h = 0.0 para bounds desconhecidos; `set_bounds()` apos primeiro render
 - `hit_test_outside()` ignora overlays com zero bounds (nao conta como hit)
@@ -143,7 +143,7 @@ domain: project-rules
 - dismiss: click-outside via `hit_test_outside()`, escape via `pop()`
 
 ## hot reload (gap-1 tier 1)
-- feature flag `hot-reload`: `cargo run --bin phi-app --features hot-reload`
+- feature flag `hot-reload`: `cargo run --bin plev-app --features hot-reload`
 - shaders: file watcher em `shaders/*.wgsl` via notify + debounce 500ms
 - WGSL invalido = log::error, pipeline antigo preservado (graceful degradation via push_error_scope/guard.pop())
 - WASM: nao suportado (compile_error guard em hot_reload.rs)

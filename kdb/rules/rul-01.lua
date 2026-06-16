@@ -7,8 +7,8 @@ return {
   ttl = "fronteira app engine",
   lnk = { "idx-rules" },
   txt = [[
-codigo de aplicacao nunca importa wgpu, scenenode, gpuvec, compositor, nem qualquer tipo do rendering pipeline. a app fala com φ exclusivamente via builder.rs (elements) e signal.rs (reatividade).
+codigo de aplicacao nunca importa wgpu, scenenode, gpuvec, compositor, nem qualquer tipo do rendering pipeline. a app fala com plev exclusivamente via builder.rs (elements) e signal.rs (reatividade).
 
-acoplamento direto com internals do renderer significa que qualquer refactor no φ, trocar packing do atlas, mudar pipeline de blur, adicionar backend metal ou vulkan, quebra codigo de app com blast radius imprevisivel. a fronteira forca que mudancas na engine sejam invisiveis para consumers. a mesma decisao esta documentada no architecture do xilem como separacao entre view e widget, a camada view e descartavel entre ciclos, a camada widget (masonry) e retained. a app nunca toca masonry diretamente.
+acoplamento direto com internals do renderer significa que qualquer refactor no plev, trocar packing do atlas, mudar pipeline de blur, adicionar backend metal ou vulkan, quebra codigo de app com blast radius imprevisivel. a fronteira forca que mudancas na engine sejam invisiveis para consumers. a mesma decisao esta documentada no architecture do xilem como separacao entre view e widget, a camada view e descartavel entre ciclos, a camada widget (masonry) e retained. a app nunca toca masonry diretamente.
 ]],
 }

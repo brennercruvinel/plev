@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-08
@@ -15,7 +15,7 @@ domain: changelog
 - hit-testing linear scan reverso, z-order por ordem de registro
 - bubbling only (sem capture phase), simplicidade
 - click-to-focus, escape-to-blur, foco simples
-- modifierstate proprio do φ, abstrai winit::modifiers
+- modifierstate proprio do plev, abstrai winit::modifiers
 - keyinput enum com named(namedkey) e character(string), mapeia winit::key
 
 ### arquivos criados/modificados

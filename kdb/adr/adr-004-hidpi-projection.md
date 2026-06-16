@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-04-05
@@ -11,10 +11,10 @@ commit: 73c46ff
 
 ## contexto
 
-o engine phi renderiza via wgpu com projecao ortografica configurada em
+o engine plev renderiza via wgpu com projecao ortografica configurada em
 physical pixels (surface_config.width/height). o showcase principal
 funciona corretamente porque dimensoes e font sizes sao calibrados para
-physical pixels. o gitbutler-phi, porem, utiliza constantes em logical
+physical pixels. o gitbutler-plev, porem, utiliza constantes em logical
 pixels (sidebar 48px, header 48px) resultando em elementos minusculos
 em displays retina (scale_factor=2, physical=2560x1600, logical=1280x800).
 

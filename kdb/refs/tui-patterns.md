@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -13,7 +13,7 @@ status: completo
 
 ## escopo
 
-padroes de UX extraidos de aplicacoes tui em rust que se traduzem para frameworks de UI baseados em GPU como φ. o foco e em navegacao, composicao de componentes, atualizacao de dados em tempo real, busca/filtro e layout responsivo, nao em detalhes de renderizacao terminal.
+padroes de UX extraidos de aplicacoes tui em rust que se traduzem para frameworks de UI baseados em GPU como plev. o foco e em navegacao, composicao de componentes, atualizacao de dados em tempo real, busca/filtro e layout responsivo, nao em detalhes de renderizacao terminal.
 
 ---
 
@@ -137,44 +137,44 @@ framework de extensibilidade para shell zsh (nao e rust, mas os patterns de plug
 
 ---
 
-## implicacoes para φ
+## implicacoes para plev
 
 ### navegacao
 
-o sistema de input de φ (`input/mod.rs`, `input/touch.rs`, `input/gesture.rs`) ja suporta event queue e hit-testing. os padroes tui indicam que:
+o sistema de input de plev (`input/mod.rs`, `input/touch.rs`, `input/gesture.rs`) ja suporta event queue e hit-testing. os padroes tui indicam que:
 
-- **keybindings contextuais** sao mais usaveis que atalhos globais. o gesturerecognizer de 6 estados de φ poderia ser estendido com um sistema de contexto que altera o significado de gestos conforme o componente focado.
-- **focus management** (qual componente recebe input) e prerequisito para qualquer sistema de navegacao. os tuis resolvem isso com tab cycling e click-to-focus. φ precisara de um focus tree integrado ao hit-testing existente.
+- **keybindings contextuais** sao mais usaveis que atalhos globais. o gesturerecognizer de 6 estados de plev poderia ser estendido com um sistema de contexto que altera o significado de gestos conforme o componente focado.
+- **focus management** (qual componente recebe input) e prerequisito para qualquer sistema de navegacao. os tuis resolvem isso com tab cycling e click-to-focus. plev precisara de um focus tree integrado ao hit-testing existente.
 - **help contextual** (mostrar atalhos disponiveis) e expectativa de usuarios. um componente de overlay que mostra keybindings do contexto atual seria equivalente ao `?`/`h` dos tuis.
 
 ### composicao de componentes
 
-o sistema view/component de φ (`view.rs`, `component.rs`, `builder.rs`) ja define lifecycle (mount/update/unmount). os padroes tui referencam:
+o sistema view/component de plev (`view.rs`, `component.rs`, `builder.rs`) ja define lifecycle (mount/update/unmount). os padroes tui referencam:
 
-- **estado local por componente** (nao global) e o padrao dominante. o sistema de signals de φ (`signal.rs`) ja suporta isso via `create_signal()` com readsignal/writesignal por componente.
-- **actions como mensagens** entre componentes (ratatui component architecture) e analogo ao sistema de signals push-pull de φ. a diferenca e que signals sao reativos (push automatico) enquanto actions sao imperativas (dispatch explicito). φ pode oferecer ambos.
-- **canais/fontes de dados abstratas** (television) sugerem que φ deveria separar a interface de dados (trait datasource ou similar) da UI que consome esses dados. isso permitiria que o mesmo componente visual renderize dados de qualquer fonte sem acoplamento.
+- **estado local por componente** (nao global) e o padrao dominante. o sistema de signals de plev (`signal.rs`) ja suporta isso via `create_signal()` com readsignal/writesignal por componente.
+- **actions como mensagens** entre componentes (ratatui component architecture) e analogo ao sistema de signals push-pull de plev. a diferenca e que signals sao reativos (push automatico) enquanto actions sao imperativas (dispatch explicito). plev pode oferecer ambos.
+- **canais/fontes de dados abstratas** (television) sugerem que plev deveria separar a interface de dados (trait datasource ou similar) da UI que consome esses dados. isso permitiria que o mesmo componente visual renderize dados de qualquer fonte sem acoplamento.
 
 ### dados em tempo real
 
-- **separacao i/o da thread de rendering** e universal nos tuis e ja e pratica em φ (GPU init async, compositor com dirty tracking). o padrao de oha (tokio workers -> agregador -> render tick) e modelo direto para dashboards sobre φ.
-- **FPS configuravel** e relevante para φ. o render loop de φ poderia expor um knob de FPS target, permitindo que apps de monitoramento operem a 16 FPS enquanto apps interativos rodem a 60 FPS, economizando GPU.
-- **historico temporal** (zenith) requer que o sistema de dados mantenha buffer circular ou persistencia. isso e responsabilidade da app, nao do engine, mas φ poderia oferecer primitivas (ring buffer signal, time-series data source) que facilitam implementacao.
+- **separacao i/o da thread de rendering** e universal nos tuis e ja e pratica em plev (GPU init async, compositor com dirty tracking). o padrao de oha (tokio workers -> agregador -> render tick) e modelo direto para dashboards sobre plev.
+- **FPS configuravel** e relevante para plev. o render loop de plev poderia expor um knob de FPS target, permitindo que apps de monitoramento operem a 16 FPS enquanto apps interativos rodem a 60 FPS, economizando GPU.
+- **historico temporal** (zenith) requer que o sistema de dados mantenha buffer circular ou persistencia. isso e responsabilidade da app, nao do engine, mas plev poderia oferecer primitivas (ring buffer signal, time-series data source) que facilitam implementacao.
 
 ### busca e filtro
 
-- **fuzzy matching** (nucleo, fzf) e expectativa em qualquer campo de busca moderno. φ nao precisa implementar fuzzy matching no engine, isso e responsabilidade da app. porem, um componente de texto input com hook para filtro customizado (via closure ou signal) facilitaria integracao com libs como nucleo.
-- **filtro incremental** (cada tecla refina resultados) requer que o rendering seja rapido o suficiente para re-layout a cada keystroke. o dirty tracking do compositor φ (fxhasher, unchanged layer = zero GPU work) ja viabiliza isso.
+- **fuzzy matching** (nucleo, fzf) e expectativa em qualquer campo de busca moderno. plev nao precisa implementar fuzzy matching no engine, isso e responsabilidade da app. porem, um componente de texto input com hook para filtro customizado (via closure ou signal) facilitaria integracao com libs como nucleo.
+- **filtro incremental** (cada tecla refina resultados) requer que o rendering seja rapido o suficiente para re-layout a cada keystroke. o dirty tracking do compositor plev (fxhasher, unchanged layer = zero GPU work) ja viabiliza isso.
 
 ### layout responsivo
 
-- **layout declarativo hierarquico** e o que φ ja tem via taffy 0.9 flexbox (`layout.rs`). os padroes tui confirmam que row/column/ratio e suficiente para a maioria dos layouts.
-- **toggle de visibilidade** com redistribuicao automatica de espaco e nativo em flexbox (display:none colapsa o node). φ ja suporta isso via `set_layer_visible()`.
-- **resize interativo de paineis** (arrastar divisor) requer gestures sobre divisores virtuais. o sistema de input de φ (touch.rs, gesture.rs) ja tem o gesturerecognizer necessario, falta apenas o componente de divisor que traduz drag em mudanca de flex-basis.
-- **backend-agnostic widgets** (ratzilla dombackend vs canvasbackend) validam a decisao de φ de manter render loop, shaders e scene graph sem branches de plataforma. widgets φ devem emitir scenenodes sem saber se o backend e metal, vulkan, dx12 ou webgpu.
+- **layout declarativo hierarquico** e o que plev ja tem via taffy 0.9 flexbox (`layout.rs`). os padroes tui confirmam que row/column/ratio e suficiente para a maioria dos layouts.
+- **toggle de visibilidade** com redistribuicao automatica de espaco e nativo em flexbox (display:none colapsa o node). plev ja suporta isso via `set_layer_visible()`.
+- **resize interativo de paineis** (arrastar divisor) requer gestures sobre divisores virtuais. o sistema de input de plev (touch.rs, gesture.rs) ja tem o gesturerecognizer necessario, falta apenas o componente de divisor que traduz drag em mudanca de flex-basis.
+- **backend-agnostic widgets** (ratzilla dombackend vs canvasbackend) validam a decisao de plev de manter render loop, shaders e scene graph sem branches de plataforma. widgets plev devem emitir scenenodes sem saber se o backend e metal, vulkan, dx12 ou webgpu.
 
 ### plugin/extensibilidade
 
-- **degradacao graciosa** (ohmyzsh) e aplicavel ao sistema de componentes de φ. componentes opcionais devem ter fallback (render vazio, noop handlers) em vez de panic quando dependencias estao ausentes.
-- **lifecycle de carregamento ordenado** (ohmyzsh: libs -> custom -> plugins -> theme) e relevante para inicializacao de apps φ. o mount order de componentes deveria ser determinístico e documentado.
-- **plugin system via scripting** (yazi/lua) nao e prioridade para φ engine, mas apps construidas sobre φ poderiam adotar o pattern de yazi: runtime lua embutido com API globals tipadas para acesso controlado ao estado da aplicacao.
+- **degradacao graciosa** (ohmyzsh) e aplicavel ao sistema de componentes de plev. componentes opcionais devem ter fallback (render vazio, noop handlers) em vez de panic quando dependencias estao ausentes.
+- **lifecycle de carregamento ordenado** (ohmyzsh: libs -> custom -> plugins -> theme) e relevante para inicializacao de apps plev. o mount order de componentes deveria ser determinístico e documentado.
+- **plugin system via scripting** (yazi/lua) nao e prioridade para plev engine, mas apps construidas sobre plev poderiam adotar o pattern de yazi: runtime lua embutido com API globals tipadas para acesso controlado ao estado da aplicacao.

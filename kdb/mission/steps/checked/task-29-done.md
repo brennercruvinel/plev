@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-13
@@ -9,7 +9,7 @@ domain: task-tracking
 # task-29: app demo real (proof of life)
 
 ## objetivo
-app não-trivial construído inteiramente com φ. prova que o engine funciona para algo além de demos isolados. deve usar: animações (task-27), texto editável (task-28), signals, layout, layers, input, tudo junto.
+app não-trivial construído inteiramente com plev. prova que o engine funciona para algo além de demos isolados. deve usar: animações (task-27), texto editável (task-28), signals, layout, layers, input, tudo junto.
 
 ## dependências
 - task-27 (animation system), transições e easing
@@ -38,7 +38,7 @@ app não-trivial construído inteiramente com φ. prova que o engine funciona pa
 
 ```
 ┌─────────────────────────────────┐
-│         ✦ φ todos            │  ← header, fonte grande
+│         ✦ plev todos            │  ← header, fonte grande
 │                                 │
 │  ┌───────────────────────┬────┐ │
 │  │ What needs to be done?│ Add│ │  ← text input + botão
@@ -92,9 +92,9 @@ app não-trivial construído inteiramente com φ. prova que o engine funciona pa
 ### fase f, validacao
 - [x] cargo check --workspace --examples: zero warnings
 - [x] cargo test --workspace: 325 testes
-- [x] codigo legivel como showcase da API φ
+- [x] codigo legivel como showcase da API plev
 
-## uso das apis do φ (prova de integração)
+## uso das apis do plev (prova de integração)
 
 | feature do engine | uso no todo app |
 |-------------------|-----------------|

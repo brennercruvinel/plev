@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -10,7 +10,7 @@ domain: wasm
 
 ## escopo
 
-levantamento factual de sete ferramentas do ecossistema webassembly relevantes para o φ, engine de composicao GPU-first em rust que ja utiliza trunk para builds WASM/webgpu. o objetivo e documentar estado atual, arquitetura e implicacoes praticas, nao recomendar adocao.
+levantamento factual de sete ferramentas do ecossistema webassembly relevantes para o plev, engine de composicao GPU-first em rust que ja utiliza trunk para builds WASM/webgpu. o objetivo e documentar estado atual, arquitetura e implicacoes praticas, nao recomendar adocao.
 
 data da pesquisa: 2026-03-11.
 
@@ -24,9 +24,9 @@ data da pesquisa: 2026-03-11.
 
 **arquitetura:** pipeline baseado em assets: o HTML fonte referencia o crate rust, trunk resolve dependencias (WASM, CSS, scss, JS snippets, imagens), invoca `cargo build --target wasm32-unknown-unknown`, executa `wasm-bindgen`, empacota tudo em `dist/`. dev-server com hot-reload via websocket e proxy http configuraveis.
 
-**relevancia para φ:** ferramenta atual do projeto. `index.html` com `data-target-name="φ"` gera o artefato WASM. o entry point e `#[wasm_bindgen(start)] fn wasm_main()` em `lib.rs`. o binario se chama `φ-app` (nao `φ`) justamente para evitar colisao de nomes com o artefato WASM gerado pelo trunk.
+**relevancia para plev:** ferramenta atual do projeto. `index.html` com `data-target-name="plev"` gera o artefato WASM. o entry point e `#[wasm_bindgen(start)] fn wasm_main()` em `lib.rs`. o binario se chama `plev-app` (nao `plev`) justamente para evitar colisao de nomes com o artefato WASM gerado pelo trunk.
 
-**insight principal:** trunk e opinativo, funciona bem para spas rust-puras onde o HTML e minimo e o rust controla tudo via wasm-bindgen. esse modelo encaixa perfeitamente no φ, que renderiza via webgpu canvas sem DOM.
+**insight principal:** trunk e opinativo, funciona bem para spas rust-puras onde o HTML e minimo e o rust controla tudo via wasm-bindgen. esse modelo encaixa perfeitamente no plev, que renderiza via webgpu canvas sem DOM.
 
 **limitacao:** 127 issues abertas. ultima release (v0.21.14) em maio de 2025, gap de ~10 meses sem release nova ate a data desta pesquisa. nao suporta webassembly component model. nao gera pacotes npm (o artefato e um bundle auto-contido, nao uma lib JS reutilizavel). nao tem suporte nativo a code splitting ou lazy loading de modulos WASM.
 
@@ -38,7 +38,7 @@ data da pesquisa: 2026-03-11.
 
 **arquitetura:** pipeline: `cargo build --target wasm32-unknown-unknown` -> `wasm-bindgen` (gera glue JS + `.wasm`) -> `wasm-opt` (otimizacao opcional) -> gera `package.json` com metadados do `Cargo.toml`. suporta targets: `bundler` (webpack/rollup), `web` (esm nativo), `nodejs`, `no-modules`. inclui subcomandos `test` (wasm-pack test via headless browser), `pack`, `publish`.
 
-**relevancia para φ:** cenario futuro, se φ expuser uma API JS para embedding em aplicacoes web existentes (ex: um componente react que renderiza via φ internamente), wasm-pack seria o caminho para distribuir via npm. atualmente irrelevante porque φ e auto-contido (nao e uma lib JS).
+**relevancia para plev:** cenario futuro, se plev expuser uma API JS para embedding em aplicacoes web existentes (ex: um componente react que renderiza via plev internamente), wasm-pack seria o caminho para distribuir via npm. atualmente irrelevante porque plev e auto-contido (nao e uma lib JS).
 
 **insight principal:** wasm-pack e complementar ao trunk, nao substituto. trunk serve aplicacoes completas; wasm-pack empacota bibliotecas para consumo JS. um projeto pode usar ambos: wasm-pack para o core como pacote npm, trunk para a demo/showcase.
 
@@ -56,7 +56,7 @@ data da pesquisa: 2026-03-11.
 
 memoria persistente entre chamadas ao mesmo plugin. http controlado pelo host (sem depender de WASI). limitadores de tempo e memoria por plugin.
 
-**relevancia para φ:** alta para arquitetura futura. se φ evoluir para permitir plugins de terceiros (ex: shaders customizados, widgets, efeitos visuais, geradores de cena), o modelo extism resolve o problema de executar codigo nao-confiavel com isolamento. o host (engine φ) controlaria exatamente quais recursos cada plugin acessa. cada plugin seria um `.wasm` que implementa uma interface definida pelo φ.
+**relevancia para plev:** alta para arquitetura futura. se plev evoluir para permitir plugins de terceiros (ex: shaders customizados, widgets, efeitos visuais, geradores de cena), o modelo extism resolve o problema de executar codigo nao-confiavel com isolamento. o host (engine plev) controlaria exatamente quais recursos cada plugin acessa. cada plugin seria um `.wasm` que implementa uma interface definida pelo plev.
 
 **insight principal:** o modelo de host functions do extism e o padrao mais maduro para plugin systems em WASM. a separacao host SDK / plugin pdk permite que autores de plugins usem qualquer linguagem que compile para WASM, nao apenas rust.
 
@@ -74,7 +74,7 @@ memoria persistente entre chamadas ao mesmo plugin. http controlado pelo host (s
 
 internamente, caminha a arvore serde e constroi objetos JS via chamadas wasm-bindgen diretas, evitando o round-trip `Rust -> JSON string -> JS parse` que `serde-json` + `JsValue::from_serde()` faria.
 
-**relevancia para φ:** relevante se φ implementar comunicacao bidirecional com JS no target WASM, ex: receber configuracao de cena como objeto JS, enviar metricas de performance, ou expor API de criacao de nodes via JS. a diferenca de performance vs JSON e significativa para objetos grandes ou chamadas frequentes.
+**relevancia para plev:** relevante se plev implementar comunicacao bidirecional com JS no target WASM, ex: receber configuracao de cena como objeto JS, enviar metricas de performance, ou expor API de criacao de nodes via JS. a diferenca de performance vs JSON e significativa para objetos grandes ou chamadas frequentes.
 
 **insight principal:** o readme afirma "much smaller code size overhead than JSON, and, in most common cases, much faster serialization/deserialization." a vantagem nao e so velocidade, e tamanho do binario WASM, porque nao precisa incluir o parser JSON completo do serde_json.
 
@@ -90,9 +90,9 @@ internamente, caminha a arvore serde e constroi objetos JS via chamadas wasm-bin
 
 sdks oficiais: rust, javascript, python, go. sdks comunitarios: zig, moonbit.
 
-**relevancia para φ:** baixa para o core. spin e voltado para backend serverless, nao rendering. porem, relevante se φ tiver um servico backend (ex: asset server, collaboration server, render farm), componentes spin poderiam processar requests com latencia sub-milissegundo de cold start (vantagem WASM vs containers).
+**relevancia para plev:** baixa para o core. spin e voltado para backend serverless, nao rendering. porem, relevante se plev tiver um servico backend (ex: asset server, collaboration server, render farm), componentes spin poderiam processar requests com latencia sub-milissegundo de cold start (vantagem WASM vs containers).
 
-**insight principal:** o webassembly component model que spin adota e o futuro da interoperabilidade WASM. componentes podem se compor e comunicar via interfaces tipadas (wit, webassembly interface types). se esse modelo amadurecer, φ poderia definir interfaces wit para plugins, tornando-os interoperaveis entre runtimes.
+**insight principal:** o webassembly component model que spin adota e o futuro da interoperabilidade WASM. componentes podem se compor e comunicar via interfaces tipadas (wit, webassembly interface types). se esse modelo amadurecer, plev poderia definir interfaces wit para plugins, tornando-os interoperaveis entre runtimes.
 
 **limitacao:** foco exclusivo em servidor (sem suporte a browser/client-side). custom triggers so em rust. algumas apis nao disponiveis em todos os sdks (ex: mysql nao disponivel em python, redis trigger nao disponivel em c#). plataforma fermyon cloud e comercial.
 
@@ -104,7 +104,7 @@ sdks oficiais: rust, javascript, python, go. sdks comunitarios: zig, moonbit.
 
 **arquitetura:** cada modulo WASM roda como um processo leve com stack, heap e syscalls proprios. scheduler preemptivo com work-stealing. comunicacao via canais (channels), nao memoria compartilhada. permissoes granulares por processo (filesystem, memoria, rede). suporte a distribuicao entre nodes.
 
-**relevancia para φ:** conceitual. o modelo de processos isolados com supervisao e relevante se φ precisar de concorrencia robusta no lado servidor (ex: multiple render contexts, hot-reload de plugins sem derrubar o host). o padrao "let it crash" do erlang, aplicado via WASM isolation, e elegante para fault tolerance.
+**relevancia para plev:** conceitual. o modelo de processos isolados com supervisao e relevante se plev precisar de concorrencia robusta no lado servidor (ex: multiple render contexts, hot-reload de plugins sem derrubar o host). o padrao "let it crash" do erlang, aplicado via WASM isolation, e elegante para fault tolerance.
 
 **insight principal:** lunatic demonstra que WASM pode servir como mecanismo de isolamento de processos alem de sandbox de seguranca. cada processo WASM e mais leve que uma thread OS e mais isolado que uma green thread.
 
@@ -120,7 +120,7 @@ sdks oficiais: rust, javascript, python, go. sdks comunitarios: zig, moonbit.
 
 macro `#[event(fetch)]` define o handler principal. request/response seguem a API fetch padrao (ou `http` crate com flag).
 
-**relevancia para φ:** especifica para deploy na cloudflare. relevante se φ tiver servicos edge (ex: asset cdn inteligente, pre-processamento de cenas, API gateway). nao relevante para o engine em si.
+**relevancia para plev:** especifica para deploy na cloudflare. relevante se plev tiver servicos edge (ex: asset cdn inteligente, pre-processamento de cenas, API gateway). nao relevante para o engine em si.
 
 **insight principal:** demonstra o padrao "rust -> WASM -> edge" em producao. a integracao com axum via feature flag e um bom exemplo de como manter compatibilidade entre runtime nativo e WASM com o mesmo codigo http.
 
@@ -144,19 +144,19 @@ macro `#[event(fetch)]` define o handler principal. request/response seguem a AP
 
 ---
 
-## implicacoes para φ
+## implicacoes para plev
 
 ### curto prazo (manter)
-- **trunk** continua adequado para o build WASM do φ. o modelo spa sem DOM e exatamente o caso de uso. monitorar o gap de releases, se trunk for abandonado, a alternativa mais proxima e configurar `wasm-pack` com target `web` + dev-server externo (ex: vite).
+- **trunk** continua adequado para o build WASM do plev. o modelo spa sem DOM e exatamente o caso de uso. monitorar o gap de releases, se trunk for abandonado, a alternativa mais proxima e configurar `wasm-pack` com target `web` + dev-server externo (ex: vite).
 
 ### medio prazo (considerar)
-- **serde-wasm-bindgen**, se φ expuser API JS no target WASM (configuracao de cena, eventos, metricas), usar serde-wasm-bindgen em vez de serde_json para a fronteira rust<->JS. ganho duplo: performance e tamanho do binario.
-- **wasm-pack**, se φ precisar ser distribuido como pacote npm (embedding em apps react/vue/svelte), wasm-pack gera o pacote. pode coexistir com trunk.
+- **serde-wasm-bindgen**, se plev expuser API JS no target WASM (configuracao de cena, eventos, metricas), usar serde-wasm-bindgen em vez de serde_json para a fronteira rust<->JS. ganho duplo: performance e tamanho do binario.
+- **wasm-pack**, se plev precisar ser distribuido como pacote npm (embedding em apps react/vue/svelte), wasm-pack gera o pacote. pode coexistir com trunk.
 
 ### longo prazo (inspiracao arquitetural)
-- **extism**, modelo de referencia se φ implementar plugin system. host functions definidas pelo engine, plugins como `.wasm` com pdk. isolamento gratuito. suporte multi-linguagem para autores de plugins.
-- **webassembly component model (via spin)**, definir interfaces wit para plugins φ tornaria os plugins interoperaveis e versionaveis. depende da maturidade do toolchain (wit-bindgen, wasm-tools).
+- **extism**, modelo de referencia se plev implementar plugin system. host functions definidas pelo engine, plugins como `.wasm` com pdk. isolamento gratuito. suporte multi-linguagem para autores de plugins.
+- **webassembly component model (via spin)**, definir interfaces wit para plugins plev tornaria os plugins interoperaveis e versionaveis. depende da maturidade do toolchain (wit-bindgen, wasm-tools).
 - **lunatic**, o conceito de processos isolados com supervisao e relevante para fault tolerance em render pipelines complexos, mas o projeto em si nao e recomendavel dado o estado de manutencao.
 
 ### nao relevante
-- **spin** e **workers-rs**, voltados para backend serverless. so se tornam relevantes se φ tiver servicos de infraestrutura (asset server, collaboration, render-as-a-service).
+- **spin** e **workers-rs**, voltados para backend serverless. so se tornam relevantes se plev tiver servicos de infraestrutura (asset server, collaboration, render-as-a-service).

@@ -1,12 +1,12 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: in-progress
 last-updated: 2026-03-13
 domain: task-tracking
 ---
 
-# changelog, task-42: φ event dispatch + gitbutler UI port
+# changelog, task-42: plev event dispatch + gitbutler UI port
 
 ## 2026-03-12
 
@@ -45,6 +45,6 @@ domain: task-tracking
 - steps 7-9 pendentes (context_menu render, modal render, wiring)
 
 ### reorganizacao (2026-03-13)
-- crate extraido de `experiment/gitbutler/crates/gitbutler-φ/` para `experiment/gitbutler-φ/`
+- crate extraido de `experiment/gitbutler/crates/gitbutler-plev/` para `experiment/gitbutler-plev/`
 - clone monorepo gitbutler (2.4gb) removido
-- path φ dependency atualizado: `"../../../.."` -> `"../.."`
+- path plev dependency atualizado: `"../../../.."` -> `"../.."`

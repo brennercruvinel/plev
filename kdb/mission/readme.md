@@ -1,18 +1,18 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: active
 last-updated: 2026-03-13
 domain: project-status
 ---
 
-# φ, estado do projeto
+# plev, estado do projeto
 
 ## o que e
 compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, ios/metal, linux/vulkan, android/vulkan, windows/dx12, browser/webgpu). nao e framework de widgets. e a camada que transforma scene graphs em draw calls na GPU de forma identica em todos os targets.
 
 ## estado atual (2026-03-13)
-- v0.3 funcional: 34 tasks concluidas + task-42 em andamento, 404 testes, ~15.000 LOC core + ~3.800 LOC gitbutler-φ, 20 examples
+- v0.3 funcional: 34 tasks concluidas + task-42 em andamento, 404 testes, ~15.000 LOC core + ~3.800 LOC gitbutler-plev, 20 examples
 - build nativo funcionando no macos com metal
 - fase 0 (fundamental) completa, 14 subsistemas core
 - fase 1 (integracao end-to-end) completa, DSL + builder + effects + input integrados
@@ -43,7 +43,7 @@ compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, io
 | task-11 | android build + lifecycle | done |
 | task-12 | ios build + lifecycle | done |
 | task-13 | mobile specifics (safe areas, IME) | done |
-| task-14 | phi_narrate! DSL verbal | done |
+| task-14 | plev_narrate! DSL verbal | done |
 
 ### fase 1, integracao end-to-end (p0), completa
 | task | descricao | status |
@@ -107,7 +107,7 @@ compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, io
 ### experiment, gitbutler port (proof of real app)
 | task | descricao | status |
 |------|-----------|--------|
-| task-42 | gitbutler φ port (tauri/svelte -> rust GPU-native) | em andamento, phases 0-3 done (~3800 LOC), phase 4 parcial (dispatch+overlay core done, context menu/modal render pendente). crate em `experiment/gitbutler-φ/` |
+| task-42 | gitbutler plev port (tauri/svelte -> rust GPU-native) | em andamento, phases 0-3 done (~3800 LOC), phase 4 parcial (dispatch+overlay core done, context menu/modal render pendente). crate em `experiment/gitbutler-plev/` |
 
 ### research
 | task | descricao | status |
@@ -157,7 +157,7 @@ compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, io
 - [x] android build + lifecycle, task-11
 - [x] ios build + lifecycle, task-12
 - [x] mobile specifics (safe areas, IME, scale factor), task-13
-- [x] DSL verbal (phi_narrate!), 66 testes, format interpolation, task-14
+- [x] DSL verbal (plev_narrate!), 66 testes, format interpolation, task-14
 - [x] pipeline DSL -> builder -> compositor end-to-end, task-15
 - [x] effects integrados com layers, task-16
 - [x] input layer-aware hit-testing, task-17

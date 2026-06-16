@@ -2,11 +2,11 @@
 
 use std::sync::Arc;
 
-use phi::compositor::Compositor;
-use phi::gpu::GpuContext;
-use phi::input::{GestureEvent, Phase, SwipeDirection, TouchInputState};
-use phi::text::TextSystem;
-use phi::winit::window::Window;
+use plev::compositor::Compositor;
+use plev::gpu::GpuContext;
+use plev::input::{GestureEvent, Phase, SwipeDirection, TouchInputState};
+use plev::text::TextSystem;
+use plev::winit::window::Window;
 
 pub(crate) enum State {
     Uninitialized,

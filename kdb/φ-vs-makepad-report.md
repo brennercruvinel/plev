@@ -1,12 +1,12 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-13
 domain: competitive
 ---
 
-# relatorio tecnico: φ vs makepad
+# relatorio tecnico: plev vs makepad
 
 analise comparativa de arquitetura, padroes de design, e licoes para construir
 uma interface de nivel profissional.
@@ -15,17 +15,17 @@ data: 2026-03-13
 
 ---
 
-## parte 1 - φ
+## parte 1 - plev
 
 ### 1.1 ideia central
 
-φ e um **motor de composicao GPU-first** - nao um framework de widgets, mas
+plev e um **motor de composicao GPU-first** - nao um framework de widgets, mas
 a camada de renderizacao que fica *embaixo* de um. a tese e: separar completamente
 o problema de "colocar pixels corretos na tela de forma eficiente" do problema de
 "organizar widgets, estado, e interacao".
 
 a maioria dos frameworks UI em rust (iced, dioxus, xilem, makepad) mistura as duas
-camadas. φ aposta que a camada de renderizacao, feita corretamente uma vez, pode
+camadas. plev aposta que a camada de renderizacao, feita corretamente uma vez, pode
 servir multiplos paradigmas de UI acima dela.
 
 alvos: macos/metal, ios/metal, linux/vulkan, android/vulkan, windows/dx12,
@@ -194,7 +194,7 @@ o padrao central e:
 3. o turtle (cursor) caminha pelo espaco conforme widgets sao desenhados
 4. layout e drawing sao a mesma operacao - nao ha fase de layout separada
 
-diferenca fundamental com φ: **makepad nao separa layout de rendering**.
+diferenca fundamental com plev: **makepad nao separa layout de rendering**.
 o turtle avanca enquanto widgets sao desenhados. isso simplifica o modelo mental
 mas acopla layout a GPU.
 
@@ -321,7 +321,7 @@ o screenshot mostra a ide makepad rodando no browser via webassembly:
 - sidebar direita com "worldview" (preview 3d)
 - tudo responsivo, com splitters arrastáveis
 
-para φ atingir esse nivel de interface, precisa adotar padroes especificos.
+para plev atingir esse nivel de interface, precisa adotar padroes especificos.
 a seguir, cada padrao necessario e como implementa-lo sobre a arquitetura existente.
 
 ---
@@ -333,7 +333,7 @@ dockitem e uma arvore recursiva binaria. cada no e splitter (divide horizontal o
 vertical) ou tabs (agrupa conteudo). drag-drop entre paineis reestrutura a arvore.
 o estado serializa para disco.
 
-**o que φ precisa:**
+**o que plev precisa:**
 
 ```rust
 enum DockNode {
@@ -349,7 +349,7 @@ enum DockNode {
 }
 ```
 
-sobre a camada existente de φ:
+sobre a camada existente de plev:
 - `DockNode` e pura dados - nao conhece GPU
 - um `DockRenderer` traversa a arvore, calcula bounds com taffy (ja integrado),
   e emite `SceneNode::Rect` para cada painel/splitter/tab bar
@@ -360,7 +360,7 @@ sobre a camada existente de φ:
 **LOC estimado:** ~400 para docknode + renderer, ~200 para drag-drop, ~100 para
 serialization. total: ~700 LOC.
 
-**diferencial φ:** como o dock e pura dados, ele pode ser testado unitariamente
+**diferencial plev:** como o dock e pura dados, ele pode ser testado unitariamente
 sem GPU. makepad precisa do cx para testar dock.
 
 ---
@@ -372,7 +372,7 @@ fenwick tree mapeia posicao de scroll para indice de item em o(log n). apenas it
 visiveis sao instanciados (~20 simultaneos). fsm de scroll com 6 estados (stopped,
 drag, flick, pulldown, scrollingto, tailing).
 
-**o que φ precisa:**
+**o que plev precisa:**
 
 ```rust
 struct VirtualList {
@@ -384,7 +384,7 @@ struct VirtualList {
 }
 ```
 
-sobre a camada existente de φ:
+sobre a camada existente de plev:
 - `FenwickTree` e pura dados, ~150 LOC
 - `ScrollState` reutiliza `Spring<f64>` existente para fisica de deceleration
 - items renderizados sao `Vec<SceneNode>` cacheados no `item_cache`
@@ -394,7 +394,7 @@ sobre a camada existente de φ:
 
 **LOC estimado:** ~150 fenwick + ~200 virtuallist + ~100 scrollstate. total: ~450 LOC.
 
-**diferencial φ:** o dirty tracking por hash significa que scroll sem mudanca
+**diferencial plev:** o dirty tracking por hash significa que scroll sem mudanca
 de conteudo custa zero upload. makepad re-renderiza mesmo items identicos se
 a posicao mudou.
 
@@ -407,7 +407,7 @@ a posicao mudou.
 `ScriptObjectRef` (referencia para DSL). widget so e criado quando necessario
 (`item_or_create()`). entre frames, widgets persistem no componentmap.
 
-**o que φ precisa:**
+**o que plev precisa:**
 
 ```rust
 struct ComponentPool<S> {
@@ -416,7 +416,7 @@ struct ComponentPool<S> {
 }
 ```
 
-sobre a camada existente de φ:
+sobre a camada existente de plev:
 - `Component<L>` ja tem lifecycle (mount/update/unmount) e cache de nodes
 - `needs_render` flag ja existe - so re-renderizar quando invalidado
 - `state_mut()` ja auto-invalida
@@ -446,7 +446,7 @@ for action in cx.actions() {
 
 nao ha event bus global. actions sobem pela arvore. o parent decide o que fazer.
 
-**o que φ precisa:**
+**o que plev precisa:**
 
 o sistema de eventos atual (`input/mod.rs`) trata eventos de sistema (mouse, touch,
 keyboard). falta a camada de actions de widget. proposta:
@@ -485,7 +485,7 @@ THEME_FONT_SIZE = 11.0
 
 widgets referenciam: `color: (THEME_COLOR_BG)`. mudar a variavel atualiza todos.
 
-**o que φ precisa:**
+**o que plev precisa:**
 
 ```rust
 struct Theme {
@@ -510,7 +510,7 @@ widget customizado que renderiza arvore hierarquica com indentacao, icones de
 pasta, expand/collapse animado. usa portallist internamente para virtualizar
 arvores grandes.
 
-**o que φ precisa:**
+**o que plev precisa:**
 
 ```rust
 struct FileTree {
@@ -538,7 +538,7 @@ eficiente que arvore recursiva para rendering (acesso sequencial de memoria).
 - scroll virtual (portallist de linhas)
 - undo/redo stack
 
-**o que φ precisa (simplificado):**
+**o que plev precisa (simplificado):**
 
 a base ja existe em `text_input.rs` - textbuffer com cursor, selecao, insert/delete,
 blink 530ms. para chegar a editor de codigo:
@@ -588,7 +588,7 @@ Prioridade 3 (polish):
 **total geral estimado: ~2930 LOC incrementais** sobre os 12k existentes.
 
 para comparacao, o equivalente no makepad ocupa ~6500 LOC (dock.rs 1767 +
-portal_list.rs 2452 + widget.rs 1755 + turtle.rs parcial). φ precisa de
+portal_list.rs 2452 + widget.rs 1755 + turtle.rs parcial). plev precisa de
 menos da metade porque reutiliza infraestrutura existente (taffy para layout,
 gesturerecognizer para drag, dirty tracking por hash, spring para animacao).
 
@@ -596,20 +596,20 @@ gesturerecognizer para drag, dirty tracking por hash, spring para animacao).
 
 ## parte 4 - diferencas fundamentais de filosofia
 
-| aspecto | φ | makepad |
+| aspecto | plev | makepad |
 |---------|------|---------|
 | **escopo** | motor de composicao | framework completo + ide |
 | **layout** | taffy (flexbox externo) | turtle (cursor interno) |
 | **dirty tracking** | hash de 64 bits por camada | comparacao de posicao de rect |
 | **separacao** | rendering desacoplado de widgets | tudo acoplado |
-| **DSL** | phi_narrate! (proc-macro) | script_mod! (script VM + hot reload) |
+| **DSL** | plev_narrate! (proc-macro) | script_mod! (script VM + hot reload) |
 | **shaders** | WGSL padrao (wgpu) | DSL propria compilada por plataforma |
 | **texto** | cosmic-text (externo) | sistema proprio |
 | **tamanho** | 12k LOC (core) | 1m LOC (tudo) |
 | **testabilidade** | testes unitarios sem GPU | requer cx para maioria dos testes |
 | **hot reload** | nao (ainda) | sim (DSL + shaders) |
 
-### vantagens do φ
+### vantagens do plev
 
 1. **testabilidade** - scene graph, signals, animations, dock (futuro) sao todos
    testáveis sem GPU. makepad precisa inicializar cx para testar quase tudo.
@@ -630,7 +630,7 @@ gesturerecognizer para drag, dirty tracking por hash, spring para animacao).
 1. **hot reload** - editar UI sem recompilar rust. produtividade superior.
 
 2. **widgets prontos** - dock, portallist, filetree, codeeditor, button, slider,
-   dropdown, etc. φ tem a base mas nao os widgets.
+   dropdown, etc. plev tem a base mas nao os widgets.
 
 3. **ecossistema integrado** - shader DSL + layout + widgets + ide = tudo
    funciona junto sem fricção.
@@ -645,7 +645,7 @@ gesturerecognizer para drag, dirty tracking por hash, spring para animacao).
 
 ## parte 5 - conclusao
 
-φ nao precisa virar makepad. a forca do φ e a separacao limpa entre
+plev nao precisa virar makepad. a forca do plev e a separacao limpa entre
 rendering e semantica de UI. o que precisa e construir os **widgets de infraestrutura**
 (dock, virtuallist, filetree, codeeditor) *sobre* a camada de composicao existente,
 preservando a testabilidade e modularidade.
@@ -660,6 +660,6 @@ porque a infraestrutura de base ja esta solida:
 
 o caminho nao e copiar makepad, mas **aprender os padroes certos** (fenwick tree,
 docknode recursivo, lazy instantiation, typed actions) e implementa-los de forma
-que se integrem naturalmente com a arquitetura hash-based dirty tracking do φ.
+que se integrem naturalmente com a arquitetura hash-based dirty tracking do plev.
 
 a meta e: **mesma qualidade visual, metade do codigo, o dobro dos testes.**

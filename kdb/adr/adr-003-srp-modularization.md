@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-04-05
@@ -14,7 +14,7 @@ aceita (2026-04-05)
 
 ## contexto
 
-o codebase do phi engine acumulou 27 arquivos .rs acima de 300 linhas,
+o codebase do plev engine acumulou 27 arquivos .rs acima de 300 linhas,
 com o maior (narrate_runtime.rs) atingindo 1219 linhas. multiplas
 responsabilidades coexistiam em arquivos unicos: definicoes de tipos,
 logica de execucao, API publica e testes.

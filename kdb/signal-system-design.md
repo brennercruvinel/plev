@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-08
@@ -48,4 +48,4 @@ via closure no momento da criação. isso permite comparar box<dyn any> sem conh
 ## trabalho paralelo
 com 17+ agentes claude code compartilhando o mesmo diretório, `git checkout` e `git stash`
 causam race conditions constantes. worktrees (`git worktree add /tmp/...`) são a única forma
-segura de trabalhar. o worktree `/tmp/φ-task04` foi usado para esta task.
+segura de trabalhar. o worktree `/tmp/plev-task04` foi usado para esta task.
