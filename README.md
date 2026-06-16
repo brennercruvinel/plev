@@ -96,6 +96,35 @@ cargo run --example lot2monsters in.json out.monster   # convert once
 cargo run --example monster_player out.monster         # play ours, no lottie
 ```
 
+## mobile
+
+the showcase runs natively on android and ios from the same engine. it is a
+library (`crate-type = ["lib", "cdylib", "staticlib"]`) whose app shell exposes
+one entry point per platform; there is no kotlin or swift ui, every pixel is
+drawn on the gpu by plev.
+
+ios (simulator) needs xcode, the `aarch64-apple-ios-sim` rust target and
+`xcodegen`:
+
+```
+cd ios/showcase
+./build_ios.sh      # cargo staticlib + xcodegen + xcodebuild
+./run_ios.sh        # boot a simulator, install, launch, screenshot
+```
+
+android needs the sdk/ndk, a jdk 17 and `cargo-ndk`:
+
+```
+cd android
+./build_android.sh  # cargo-ndk -> jniLibs (arm64-v8a, x86_64) + gradle apk
+                    # -> app/build/outputs/apk/debug/app-debug.apk
+```
+
+a GameActivity host (`MainActivity.kt`) loads `libshowcase.so` and hands off to
+the rust `android_main`; on ios a thin objc `main.m` calls `showcase_ios_main`.
+the engine keeps its own `android_main` behind the `android-entry` feature (off
+by default) so downstream apps ship their own without a symbol clash.
+
 ## the monster format
 
 a binary animation format, magic `MON0`, frozen at v1. keyframes are full
