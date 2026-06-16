@@ -1,21 +1,3 @@
-//! dense lottie benches, shared infrastructure plus the explosion
-//! fixture; the girl fixture lives in `girl.rs`. both read their json
-//! from ref/lottie at test time, map honestly to monster v0 IR and encode
-//! with mode A plus the default optimizer.
-//!
-//! mapping honesty notes, explosion (read the json before touching the
-//! numbers): explosion/Explosion.json (698654 B, 30 fps, 51 f = 1.7 s,
-//! 17 layers, zero animated properties) is pure cel animation, every
-//! layer one hand-drawn phase shown for exactly 3 frames (348 static
-//! paths, 12045 vertices, 334 paints). monster mapping: one snapshot
-//! keyframe per cel, each shape a path node whose asset weighs
-//! verts x 24 B (v/in/out x 2 coords x i32 twips, the starfish
-//! precedent) plus a per-cel style asset of paints x 8 B; static group
-//! transforms are pre-baked into coordinates. no tracks, no ops:
-//! nothing for the optimizer, the bytes are geometry. the audit
-//! expects webm to win here (cel animation is video territory); the
-//! number is recorded either way.
-//!
 //! rulers measured in-session (stat -f %z; gzip -9 -c | wc -c):
 //!   explosion json 698654 -> 207434 gz, webm 38642;
 //!   girl json 742135 -> 122861 gz, webm 111344.
