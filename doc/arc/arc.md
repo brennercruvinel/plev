@@ -83,8 +83,9 @@ zero gpu work.
 ## targets
 
 macos metal (shipping), browser webgpu via trunk/wasm32 (shipping, same
-pixel as desktop), android vulkan (scaffolding), ios metal (needs entry
-point + safe areas), linux/windows
+pixel as desktop), android vulkan and ios metal (both run the showcase: an
+apk via a GameActivity host, and the ios simulator via a thin objc shell that
+calls `showcase_ios_main`; see `android/` and `ios/showcase/`), linux/windows
 (untested, wgpu primary backends).
 
 ## errors and versioning
