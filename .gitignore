@@ -20,6 +20,12 @@ android/.gradle/
 android/app/build/
 android/app/src/main/jniLibs/
 android/build/
+*.apk
+
+# iOS build outputs & generated Xcode project + Info.plist (xcodegen regenerates them)
+ios/showcase/build/
+ios/showcase/ShowcaseDemo.xcodeproj/
+ios/showcase/Info.plist
 
 # Claude Code agent worktrees (keep only commands symlink)
 .claude/worktrees/

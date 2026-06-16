@@ -1,0 +1,57 @@
+# xcodegen spec for the plev showcase iOS demo.
+#
+# The app is a thin shell: `Sources/main.m` calls `showcase_ios_main`, exported
+# by the Rust staticlib (libshowcase.a, crate-type "staticlib"). winit drives
+# UIApplicationMain from inside that call. Build the staticlib first with
+#   cargo build -p showcase --lib --target <triple>
+# then point LIBRARY_SEARCH_PATHS at target/<triple>/<profile> (passed by the
+# build script). Regenerate with `xcodegen generate` in this directory.
+name: ShowcaseDemo
+options:
+  bundleIdPrefix: com.plev
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+targets:
+  ShowcaseDemo:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: plev showcase
+        UILaunchScreen: {}
+        UIRequiredDeviceCapabilities:
+          - metal
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.plev.showcase
+        # Simulator on Apple Silicon is arm64; the Rust staticlib is arm64 only.
+        ARCHS: arm64
+        EXCLUDED_ARCHS: x86_64
+        ONLY_ACTIVE_ARCH: YES
+        # The Rust staticlib already bundles all Rust deps; only system
+        # frameworks remain. build_ios.sh appends the absolute path to
+        # libshowcase.a (linking it by name would pick the cdylib .dylib).
+        OTHER_LDFLAGS:
+          - $(inherited)
+          - -lc++
+    dependencies:
+      - sdk: UIKit.framework
+      - sdk: Metal.framework
+      - sdk: QuartzCore.framework
+      - sdk: Foundation.framework
+      - sdk: CoreGraphics.framework
+      - sdk: Security.framework
