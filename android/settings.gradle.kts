@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "plev"
-include ':app'
+rootProject.name = "plev-showcase"
+include(":app")
