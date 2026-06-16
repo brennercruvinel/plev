@@ -89,7 +89,13 @@ pub fn run_event_loop(event_loop: winit::event_loop::EventLoop<window::AppEvent>
     event_loop.run_app(&mut app).unwrap();
 }
 
-#[cfg(target_os = "android")]
+/// Android entry point for the engine's built-in [`window::App`].
+///
+/// Gated behind the `android-entry` cargo feature (off by default), mirroring
+/// `web-entry`: a cdylib exports exactly one `android_main` symbol, so a
+/// downstream app (showcase, ide, ...) that ships its own GameActivity entry
+/// must be able to opt out and define its own.
+#[cfg(all(target_os = "android", feature = "android-entry"))]
 #[unsafe(no_mangle)]
 fn android_main(app: winit::platform::android::activity::AndroidApp) {
     use winit::platform::android::EventLoopBuilderExtAndroid;

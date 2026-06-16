@@ -33,12 +33,12 @@ impl ClipboardProvider for LocalClipboard {
 
 /// OS clipboard via arboard. Construction can fail in headless environments;
 /// the inner handle is then `None` and operations become no-ops.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub struct SystemClipboard {
     inner: Option<arboard::Clipboard>,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 impl SystemClipboard {
     pub fn new() -> Self {
         let inner = arboard::Clipboard::new()
@@ -48,14 +48,14 @@ impl SystemClipboard {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 impl Default for SystemClipboard {
     fn default() -> Self {
         Self::new()
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 impl ClipboardProvider for SystemClipboard {
     fn get_text(&mut self) -> Option<String> {
         self.inner.as_mut()?.get_text().ok()
@@ -72,11 +72,13 @@ impl ClipboardProvider for SystemClipboard {
 
 /// The default clipboard for the current platform.
 pub(crate) fn default_clipboard() -> Box<dyn ClipboardProvider> {
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     {
         Box::new(SystemClipboard::new())
     }
-    #[cfg(target_arch = "wasm32")]
+    // Mobile and wasm have no arboard backend: fall back to the in-memory
+    // clipboard (a platform clipboard can replace this per-target later).
+    #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
     {
         Box::new(LocalClipboard::new())
     }
