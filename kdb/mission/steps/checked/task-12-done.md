@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-13
@@ -9,7 +9,7 @@ domain: task-tracking
 # task-12: ios build + lifecycle
 
 ## objetivo
-fazer o φ compilar e rodar em ios via winit + metal (wgpu). font loading com embedded font (mesmo padrão WASM).
+fazer o plev compilar e rodar em ios via winit + metal (wgpu). font loading com embedded font (mesmo padrão WASM).
 
 ## contexto
 winit 0.30 suporta ios. wgpu usa metal no ios (mesmo backend que macos). o código platform-specific existente (`not(target_arch = "wasm32")`) já cobre ios para GPU e window init. apenas font loading precisa de branch ios-specific.

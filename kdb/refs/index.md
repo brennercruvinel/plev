@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -15,7 +15,7 @@ domain: research
 |------|-----------|--------|--------|
 | 2026-03-11 | `competitors.md` | makepad, dioxus, leptos, yew, slint, ribir, compose mp | completo |
 | 2026-03-11 | `linebender-ecosystem.md` | xilem, vello, velato, parley, kurbo, peniko, fearless-simd | completo |
-| 2026-03-11 | `accessibility.md` | accesskit analise profunda, mapeamento para φ | completo |
+| 2026-03-11 | `accessibility.md` | accesskit analise profunda, mapeamento para plev | completo |
 | 2026-03-11 | `animation-motion.md` | dotlottie-rs, rive, natura, keyframe, mina, easing, interpolation | completo |
 | 2026-03-11 | `math-physics-geometry.md` | glam, rapier, nalgebra, lyon | completo |
 | 2026-03-11 | `wasm-tooling.md` | trunk, wasm-pack, extism, serde-wasm-bindgen, spin, lunatic, workers-rs | completo |
@@ -36,6 +36,6 @@ domain: research
 
 ## documentos de sintese
 
-- **`competitive-positioning.md`**, onde φ se encaixa vs todos os competidores
+- **`competitive-positioning.md`**, onde plev se encaixa vs todos os competidores
 - **`integration-candidates.md`**, quais libs adotar, avaliar, acompanhar, ou ignorar
 - **`technology-radar.md`**, resumo executivo para decisoes rapidas

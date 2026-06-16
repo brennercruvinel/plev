@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: in-progress
 last-updated: 2026-03-22
@@ -14,9 +14,9 @@ branch: task/gap-1-hot-reload
 
 ## objetivo
 
-implementar hot reload para o phi em 3 tiers:
+implementar hot reload para o plev em 3 tiers:
 - tier 1: shader hot reload (vello pattern), prioridade
-- tier 2: DSL hot reload (makepad pattern, phi_narrate!), complexo
+- tier 2: DSL hot reload (makepad pattern, plev_narrate!), complexo
 - tier 3: rust code hot reload (subsecond), pesquisa
 
 ## design
@@ -41,16 +41,16 @@ ver `mission/knowledge/hot-reload-design.md` para pesquisa completa (7 implement
 - [x] runtime parser: src/narrate_runtime.rs (tokenizer + recursive descent parser -> element)
 - [x] overridemap: hashmap<(file, line), DSL text> com re-parse on access
 - [x] narratewatcher: file watcher para src/ e examples/ (.rs files)
-- [x] extract_narrate_blocks(): extrai phi_narrate! blocks de source text
+- [x] extract_narrate_blocks(): extrai plev_narrate! blocks de source text
 - [x] narrate_resolve(): proc-macro wraps output com override check
-- [x] codegen modificado: ::phi::narrate_resolve(file!(), line!(), || { ... })
-- [x] corrigido plev_narrate -> phi_narrate em codegen e error messages
+- [x] codegen modificado: ::plev::narrate_resolve(file!(), line!(), || { ... })
+- [x] corrigido plev_narrate -> plev_narrate em codegen e error messages
 - [x] integrar narrate watcher no event loop (about_to_wait)
 - [x] 27 testes unitarios (tokenizer, parser, block extraction, overrides)
 - [x] 343 testes totais passando (312 core + 4 shader + 27 narrate)
 - [x] compila sem hot-reload feature (zero overhead path)
 - [ ] preservar estado do componente across reload (deferred, requer component id system)
-- [ ] teste manual end-to-end (editar .rs com phi_narrate!, ver mudanca)
+- [ ] teste manual end-to-end (editar .rs com plev_narrate!, ver mudanca)
 
 ## checklist, tier 3 (subsecond)
 
@@ -78,5 +78,5 @@ ver `mission/knowledge/hot-reload-design.md` para pesquisa completa (7 implement
 - src/hot_reload.rs (narratewatcher, narrateoverrides, narrate_override, process_narrate_file)
 - src/lib.rs (narrate_runtime mod + narrate_resolve fn)
 - src/window.rs (narrate_watcher field + check_narrate_reload)
-- crates/phi_narrate_macro/src/codegen.rs (wrap com narrate_resolve, fix plev->phi)
-- crates/phi_narrate_macro/src/parse/block_item.rs (fix plev->phi)
+- crates/plev_narrate_macro/src/codegen.rs (wrap com narrate_resolve, fix plev->phi)
+- crates/plev_narrate_macro/src/parse/block_item.rs (fix plev->phi)

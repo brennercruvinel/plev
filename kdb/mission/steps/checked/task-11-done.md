@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-13
@@ -9,7 +9,7 @@ domain: task-tracking
 # task-11: android build + lifecycle, done
 
 ## objetivo
-fazer o φ compilar e rodar em android via `android-activity` crate + winit. vulkan como backend GPU.
+fazer o plev compilar e rodar em android via `android-activity` crate + winit. vulkan como backend GPU.
 
 ## checklist de conclusao
 - [x] cargo.toml configurado para target android (feature android-game-activity, android_logger, metadata APK)

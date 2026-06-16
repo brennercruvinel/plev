@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -26,9 +26,9 @@ data: 2026-03-11
 
 **key insight:** the shared `table` + `memory` pattern allows dynamically compiled modules to call each other and access the same data stack. this is how extensibility works without serialization overhead.
 
-**applicability to φ:** if φ ever supports user-defined WASM plugins (task-33), the shared-table pattern is the zero-copy way to let plugins call host functions and each other. however, for φ's use case (UI component plugins), the extism-style message-passing model is more practical and safer.
+**applicability to plev:** if plev ever supports user-defined WASM plugins (task-33), the shared-table pattern is the zero-copy way to let plugins call host functions and each other. however, for plev's use case (UI component plugins), the extism-style message-passing model is more practical and safer.
 
-**decision:** watch, fascinating technique but too low-level for φ's plugin needs. the principle of "shared table for interop" is worth remembering if we ever need hot-patching shaders or animation curves from WASM.
+**decision:** watch, fascinating technique but too low-level for plev's plugin needs. the principle of "shared table for interop" is worth remembering if we ever need hot-patching shaders or animation curves from WASM.
 
 ---
 
@@ -58,14 +58,14 @@ data: 2026-03-11
 
 **key insight:** the separation between `CompiledPlugin` (reusable, `Clone`) and `Plugin` (stateful, per-call) allows pre-compilation to be done once and shared. the fuel+epoch dual mechanism provides both deterministic (fuel) and wall-clock (epoch) limits.
 
-**applicability to φ:** direct model for task-33 (WASM plugins). key decisions to adopt:
+**applicability to plev:** direct model for task-33 (WASM plugins). key decisions to adopt:
 - builder pattern for plugin construction
 - manifest-based configuration (allowed hosts, memory limits, timeouts)
 - input/output via linear memory offsets (not shared memory)
 - host functions as typed closures with `CurrentPlugin` context
 - fuel budgets for untrusted plugins
 
-**decision:** adapt, φ should use extism or a similar wasmtime-based approach for plugins. the builder+manifest pattern is solid. the exact pdk can be simplified for φ's needs (UI components don't need http, vars, etc.).
+**decision:** adapt, plev should use extism or a similar wasmtime-based approach for plugins. the builder+manifest pattern is solid. the exact pdk can be simplified for plev's needs (UI components don't need http, vars, etc.).
 
 ---
 
@@ -101,9 +101,9 @@ the propagation works as follows:
 - **thread-local observer** for auto-tracking: `OBSERVER` is a `RefCell<Option<ObserverState>>` in a `thread_local!`. when reading a signal, if there's a current observer, the signal adds it as a subscriber.
 - **arcrwsignal vs rwsignal**: two tiers, `Arc`-based (reference-counted, `Clone` but not `Copy`) and arena-allocated (`Copy`, disposed with owner). arena signals are just thin wrappers around arc signals stored in an owner.
 
-**comparison with φ:**
+**comparison with plev:**
 
-| aspect | φ | leptos |
+| aspect | plev | leptos |
 |--------|------|--------|
 | storage | slotmap (generational keys) | arc<rwlock<t>> + owner arena |
 | thread safety | single-thread only (refcell) | send+sync (rwlock) |
@@ -115,12 +115,12 @@ the propagation works as follows:
 
 **key insight:** leptos's use of fxindexset for subscriber ordering prevents a subtle correctness bug: if an outer effect (e.g., a conditional that checks `.is_some()`) must run before an inner effect (that unwraps), maintaining insertion order in the subscriber set guarantees this.
 
-**applicability to φ:** φ's signal system already implements the same three-state algorithm. the main gap is:
+**applicability to plev:** plev's signal system already implements the same three-state algorithm. the main gap is:
 1. **vec for subscribers**, o(n) contains-check on every track(). should migrate to fxindexset for correctness (ordering) and performance (dedup).
-2. **no send+sync**, fine for now (single-threaded rendering), but if φ ever moves signal updates to a background thread, the leptos model shows how.
-3. **no owner/disposal hierarchy**, leptos ties signal lifetime to an owner that cleans up on component unmount. φ's `dispose_node()` is manual.
+2. **no send+sync**, fine for now (single-threaded rendering), but if plev ever moves signal updates to a background thread, the leptos model shows how.
+3. **no owner/disposal hierarchy**, leptos ties signal lifetime to an owner that cleans up on component unmount. plev's `dispose_node()` is manual.
 
-**decision:** adapt, migrate `subscribers: Vec<NodeId>` and `sources: Vec<NodeId>` to fxindexset<nodeid> for correctness and performance. consider adding an owner system when φ has proper component mounting/unmounting.
+**decision:** adapt, migrate `subscribers: Vec<NodeId>` and `sources: Vec<NodeId>` to fxindexset<nodeid> for correctness and performance. consider adding an owner system when plev has proper component mounting/unmounting.
 
 ---
 
@@ -147,11 +147,11 @@ the propagation works as follows:
 
 **key insight:** the peek/read split is better API design than untracked/tracked write. it puts the control at the point of consumption (where you know *why* you don't need to track) rather than at the point of mutation (where the consequences are non-local).
 
-**applicability to φ:**
-- φ's readsignal.get() always tracks. there is no peek() equivalent. adding `get_untracked()` / `peek()` would be useful for logging, debugging, or performance-critical paths where you know re-render is not needed.
-- the drop-guard write notification pattern is cleaner than φ's current `WriteSignal::update()` which notifies inside the with_runtime closure. if φ ever supports guards (`signal.write()` returning a `WriteGuard`), the drop pattern should be used.
+**applicability to plev:**
+- plev's readsignal.get() always tracks. there is no peek() equivalent. adding `get_untracked()` / `peek()` would be useful for logging, debugging, or performance-critical paths where you know re-render is not needed.
+- the drop-guard write notification pattern is cleaner than plev's current `WriteSignal::update()` which notifies inside the with_runtime closure. if plev ever supports guards (`signal.write()` returning a `WriteGuard`), the drop pattern should be used.
 
-**decision:** adapt, add `ReadSignal::peek()` (untracked read) to φ's signal API. the generational-box `Copy` approach is elegant but would require a significant rewrite of φ's slotmap-based system for marginal gain (φ signals are already copy via slotmap keys).
+**decision:** adapt, add `ReadSignal::peek()` (untracked read) to plev's signal API. the generational-box `Copy` approach is elegant but would require a significant rewrite of plev's slotmap-based system for marginal gain (plev signals are already copy via slotmap keys).
 
 ---
 
@@ -159,13 +159,13 @@ the propagation works as follows:
 
 **source:** slint, `/Users/aac/Dev/bc/bunker/repos/rust-ecosystem/slint/internal/core/properties.rs` (lines 830-1027, 100-400)
 
-**description:** slint's `Property<T>` is a fundamentally different reactive model from leptos/dioxus/φ signals:
+**description:** slint's `Property<T>` is a fundamentally different reactive model from leptos/dioxus/plev signals:
 
 1. **lazy evaluation**: bindings are not pushed eagerly. when a source changes, dependents are marked dirty but not recomputed. recomputation happens only when `Property::get()` is called (pull on demand). this is ideal for UI where most properties are only read during rendering.
 
 2. **propertyhandle as tagged pointer**: the `handle` field stores either a pointer to a `BindingHolder` (if bit 1 is set) or a pointer to the `DependencyListHead` (if not). bit 0 is a borrow lock flag. this packs the entire state into a single `usize`.
 
-3. **intrusive doubly-linked list** for dependencies: `DependencyNode<T>` forms an intrusive linked list. when a binding is dropped, it automatically removes itself from all dependency lists. no garbage collection needed, the destructor handles cleanup. this is `O(1)` removal (unlike φ's `Vec::retain` which is `O(n)`).
+3. **intrusive doubly-linked list** for dependencies: `DependencyNode<T>` forms an intrusive linked list. when a binding is dropped, it automatically removes itself from all dependency lists. no garbage collection needed, the destructor handles cleanup. this is `O(1)` removal (unlike plev's `Vec::retain` which is `O(n)`).
 
 4. **bindingcallable trait + vtable pattern**: bindings are type-erased via a hand-written vtable (`BindingVTable`) with function pointers for `drop`, `evaluate`, `mark_dirty`, `intercept_set`, `intercept_set_binding`. this avoids `dyn Trait` overhead and allows `#[repr(C)]` for FFI with the slint c++ runtime.
 
@@ -175,12 +175,12 @@ the propagation works as follows:
 
 7. **twowaybinding**: bindings can intercept `set()` via `intercept_set()`, enabling bidirectional data flow (e.g., a text input that both reads from and writes to a model property).
 
-**key insight:** the lazy evaluation model is superior for rendering engines. in a frame, you might have 10,000 properties, but only 200 change per frame, and only the ones actually read during `build_scene()` need to be recomputed. φ's current model eagerly propagates to effects, which is fine for small graphs but could be wasteful at scale.
+**key insight:** the lazy evaluation model is superior for rendering engines. in a frame, you might have 10,000 properties, but only 200 change per frame, and only the ones actually read during `build_scene()` need to be recomputed. plev's current model eagerly propagates to effects, which is fine for small graphs but could be wasteful at scale.
 
-**applicability to φ:**
-- the lazy-pull model aligns well with φ's frame lifecycle: signals change -> mark dirty -> during `build_scene()`, reading a dirty memo triggers recomputation. φ already does this for memos (lazy) but effects run eagerly. for pure rendering (no side effects), lazy is better.
-- the intrusive list for `O(1)` dependency cleanup is superior to φ's `Vec::retain()`, but requires pin + unsafe code. the complexity tradeoff is not worth it yet at φ's scale.
-- the constant-property sentinel is a free optimization φ could adopt: if a signal is created and never written to, skip tracking entirely.
+**applicability to plev:**
+- the lazy-pull model aligns well with plev's frame lifecycle: signals change -> mark dirty -> during `build_scene()`, reading a dirty memo triggers recomputation. plev already does this for memos (lazy) but effects run eagerly. for pure rendering (no side effects), lazy is better.
+- the intrusive list for `O(1)` dependency cleanup is superior to plev's `Vec::retain()`, but requires pin + unsafe code. the complexity tradeoff is not worth it yet at plev's scale.
+- the constant-property sentinel is a free optimization plev could adopt: if a signal is created and never written to, skip tracking entirely.
 
 **decision:** watch for lazy evaluation; adopt constant-signal sentinel. the intrusive list is too much unsafe for the current phase. the constant-signal optimization (if a signal has never been written, skip dependency tracking) is zero-cost to implement.
 
@@ -223,11 +223,11 @@ the `_prev = Observer::replace(Some(self.clone()))` call returns a guard that, w
 
 additionally, `ObserverState` has an `untracked: bool` field. this enables `untrack()` without removing the observer from the stack, it just sets a flag. reads check the flag and skip tracking if set.
 
-**comparison with φ:** φ uses `observer_stack: Vec<NodeId>` with explicit push/pop in `with_runtime`. if a closure panics between push and pop, the stack is corrupted. leptos's RAII guard prevents this.
+**comparison with plev:** plev uses `observer_stack: Vec<NodeId>` with explicit push/pop in `with_runtime`. if a closure panics between push and pop, the stack is corrupted. leptos's RAII guard prevents this.
 
-**applicability to φ:** the RAII observer guard pattern should be adopted. the `untracked` flag on the observer state is also a clean way to implement `untrack()` without stack manipulation.
+**applicability to plev:** the RAII observer guard pattern should be adopted. the `untracked` flag on the observer state is also a clean way to implement `untrack()` without stack manipulation.
 
-**decision:** adopt, replace φ's explicit push/pop observer stack with a drop guard. this prevents stack corruption on panic and simplifies the borrow-safety dance.
+**decision:** adopt, replace plev's explicit push/pop observer stack with a drop guard. this prevents stack corruption on panic and simplifies the borrow-safety dance.
 
 ---
 
@@ -242,15 +242,15 @@ additionally, `ObserverState` has an `untracked: bool` field. this enables `untr
 - ios sim special-case: `#[cfg(all(target_os = "ios", target_abi = "sim"))]` switches to `VelloCpuWindowRenderer` (no GPU on ios simulator)
 - `CustomPaintSource` trait for user-defined wgpu rendering within the framework
 
-**key insight:** dioxus does not have its own GPU renderer. it delegates to vello (via the `anyrender` abstraction). blitz (mentioned in the task) is now a separate project. this validates φ's approach of building its own GPU renderer, there's a gap in the ecosystem for a lightweight, GPU-first renderer that isn't vello's full compute pipeline.
+**key insight:** dioxus does not have its own GPU renderer. it delegates to vello (via the `anyrender` abstraction). blitz (mentioned in the task) is now a separate project. this validates plev's approach of building its own GPU renderer, there's a gap in the ecosystem for a lightweight, GPU-first renderer that isn't vello's full compute pipeline.
 
-**applicability to φ:** validates φ's strategic positioning. dioxus depends on vello, which is a heavy compute-shader pipeline. φ's fragment-only approach (quad + text pipelines, no compute) is deliberately lighter and more portable.
+**applicability to plev:** validates plev's strategic positioning. dioxus depends on vello, which is a heavy compute-shader pipeline. plev's fragment-only approach (quad + text pipelines, no compute) is deliberately lighter and more portable.
 
 **decision:** ignore (for code patterns) but note for strategic validation.
 
 ---
 
-## summary: decisions for φ
+## summary: decisions for plev
 
 | # | pattern | source | decision | priority |
 |---|---------|--------|----------|----------|
@@ -262,7 +262,7 @@ additionally, `ObserverState` has an `untracked: bool` field. this enables `untr
 | 6 | RAII observer drop guard | leptos | adopt | high |
 | 7 | vello delegation validates own renderer | dioxus | strategic note |, |
 
-### concrete action items for φ signals:
+### concrete action items for plev signals:
 
 1. **replace `Vec<NodeId>` with `FxIndexSet<NodeId>`** for `sources` and `subscribers` in `ReactiveNode`. this fixes both the o(n) `contains()` check on every `track()` and ensures subscriber execution order matches insertion order (pattern 3).
 

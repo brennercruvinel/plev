@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-11
@@ -11,7 +11,7 @@ domain: task-tracking
 ## status: done (2026-03-11)
 
 ## objetivo
-analisar 50+ repositorios de referencia e criar documentacao estruturada em 12 categorias para informar decisoes de arquitetura e integracao do φ.
+analisar 50+ repositorios de referencia e criar documentacao estruturada em 12 categorias para informar decisoes de arquitetura e integracao do plev.
 
 ## resultado
 - 12 documentos de referencia em `mission/knowledge/refs/`

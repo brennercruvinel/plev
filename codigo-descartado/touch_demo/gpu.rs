@@ -1,8 +1,8 @@
 // GPU resolve, layer passes, and composite submission.
 
-use phi::compositor::Compositor;
-use phi::gpu::GpuContext;
-use phi::text::TextSystem;
+use plev::compositor::Compositor;
+use plev::gpu::GpuContext;
+use plev::text::TextSystem;
 
 use crate::palette::*;
 
@@ -10,10 +10,10 @@ pub fn submit(
     compositor: &mut Compositor,
     gpu: &mut GpuContext,
     text_system: &mut TextSystem,
-    surface_view: &phi::wgpu::TextureView,
-    output: phi::wgpu::SurfaceTexture,
+    surface_view: &plev::wgpu::TextureView,
+    output: plev::wgpu::SurfaceTexture,
 ) {
-    compositor.resolve(&phi::compositor::ResolveResources {
+    compositor.resolve(&plev::compositor::ResolveResources {
         device: &gpu.device,
         queue: &gpu.queue,
         format: gpu.surface_format(),
@@ -39,7 +39,7 @@ pub fn submit(
     }
     text_system.finish_frame();
 
-    let mut encoder = gpu.device.create_command_encoder(&phi::wgpu::CommandEncoderDescriptor {
+    let mut encoder = gpu.device.create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
         label: Some("touch_demo_encoder"),
     });
 
@@ -50,14 +50,14 @@ pub fn submit(
         let layer = compositor.layer(*layer_id).unwrap();
         let Some(msaa_v) = layer.msaa_view() else { continue; };
         let resolve_v = layer.texture_view();
-        let mut pass = encoder.begin_render_pass(&phi::wgpu::RenderPassDescriptor {
+        let mut pass = encoder.begin_render_pass(&plev::wgpu::RenderPassDescriptor {
             label: Some("layer_pass"),
-            color_attachments: &[Some(phi::wgpu::RenderPassColorAttachment {
+            color_attachments: &[Some(plev::wgpu::RenderPassColorAttachment {
                 view: msaa_v,
                 resolve_target: resolve_v,
-                ops: phi::wgpu::Operations {
-                    load: phi::wgpu::LoadOp::Clear(phi::wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }),
-                    store: phi::wgpu::StoreOp::Store,
+                ops: plev::wgpu::Operations {
+                    load: plev::wgpu::LoadOp::Clear(plev::wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }),
+                    store: plev::wgpu::StoreOp::Store,
                 },
                 depth_slice: None,
             })],
@@ -68,7 +68,7 @@ pub fn submit(
             pass.set_pipeline(&gpu.quad_pipeline);
             pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
             pass.set_vertex_buffer(0, vb.slice(..));
-            pass.set_index_buffer(ib.slice(..), phi::wgpu::IndexFormat::Uint32);
+            pass.set_index_buffer(ib.slice(..), plev::wgpu::IndexFormat::Uint32);
             pass.draw_indexed(0..count, 0, 0..1);
         }
         if let Some((vb, ib, count)) = layer.text_buffers() {
@@ -76,22 +76,22 @@ pub fn submit(
             pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
             pass.set_bind_group(1, &text_system.atlas_bind_group, &[]);
             pass.set_vertex_buffer(0, vb.slice(..));
-            pass.set_index_buffer(ib.slice(..), phi::wgpu::IndexFormat::Uint32);
+            pass.set_index_buffer(ib.slice(..), plev::wgpu::IndexFormat::Uint32);
             pass.draw_indexed(0..count, 0, 0..1);
         }
     }
     for id in &dirty_layer_ids { compositor.mark_layer_clean(*id); }
 
     {
-        let mut pass = encoder.begin_render_pass(&phi::wgpu::RenderPassDescriptor {
+        let mut pass = encoder.begin_render_pass(&plev::wgpu::RenderPassDescriptor {
             label: Some("composite_pass"),
-            color_attachments: &[Some(phi::wgpu::RenderPassColorAttachment {
+            color_attachments: &[Some(plev::wgpu::RenderPassColorAttachment {
                 view: surface_view, resolve_target: None,
-                ops: phi::wgpu::Operations {
-                    load: phi::wgpu::LoadOp::Clear(phi::wgpu::Color {
+                ops: plev::wgpu::Operations {
+                    load: plev::wgpu::LoadOp::Clear(plev::wgpu::Color {
                         r: BG[0] as f64, g: BG[1] as f64, b: BG[2] as f64, a: 1.0,
                     }),
-                    store: phi::wgpu::StoreOp::Store,
+                    store: plev::wgpu::StoreOp::Store,
                 },
                 depth_slice: None,
             })],

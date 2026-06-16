@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -10,7 +10,7 @@ domain: geometry
 
 ## escopo
 
-analise factual de quatro bibliotecas rust relevantes para um motor de composicao GPU-first (φ): matematica linear com SIMD, fisica 2d/3d, algebra linear completa, e tesselacao de paths para GPU. foco em arquitetura interna, compatibilidade WASM/multi-plataforma, e viabilidade de integracao com pipeline wgpu existente.
+analise factual de quatro bibliotecas rust relevantes para um motor de composicao GPU-first (plev): matematica linear com SIMD, fisica 2d/3d, algebra linear completa, e tesselacao de paths para GPU. foco em arquitetura interna, compatibilidade WASM/multi-plataforma, e viabilidade de integracao com pipeline wgpu existente.
 
 dados coletados em marco de 2026 via github, crates.io, documentacao oficial e benchmarks publicados.
 
@@ -30,13 +30,13 @@ dados coletados em marco de 2026 via github, crates.io, documentacao oficial e b
 - WASM: simd128 ativado via `RUSTFLAGS="-C target-feature=+simd128"`. fallback escalar automatico se nao disponivel.
 - 38.6m+ downloads totais no crates.io (81 versoes). MSRV 1.68.2.
 
-**relevancia para φ:**
-- φ ja usa `[f32; 2]` e `[f32; 4]` crus para posicoes e cores nos vertex buffers. glam substituiria com vec2/vec4 tipados, ganhando operacoes SIMD (lerp, normalize, transform) sem overhead.
+**relevancia para plev:**
+- plev ja usa `[f32; 2]` e `[f32; 4]` crus para posicoes e cores nos vertex buffers. glam substituiria com vec2/vec4 tipados, ganhando operacoes SIMD (lerp, normalize, transform) sem overhead.
 - `bytemuck::Pod` implementado para todos os tipos glam, upload direto para GPU via `bytemuck::cast_slice()`.
-- mat4 com projecao ortografica (y-down, como φ usa) disponivel via `Mat4::orthographic_rh`.
+- mat4 com projecao ortografica (y-down, como plev usa) disponivel via `Mat4::orthographic_rh`.
 - bevy, wgpu-examples, e a maioria do ecossistema rust game-dev usa glam. interop sem friccao.
 
-**insight principal:** glam nao usa generics/traits para tipos matematicos. consequencia: mat4::inverse() retorna mat4 (nao option<mat4>), assumindo que a matriz e invertivel. se nao for, o resultado contem nan. isso e uma decisao de performance, evita branch no hot path. para φ (projecao ortografica bem-comportada), isso e seguro.
+**insight principal:** glam nao usa generics/traits para tipos matematicos. consequencia: mat4::inverse() retorna mat4 (nao option<mat4>), assumindo que a matriz e invertivel. se nao for, o resultado contem nan. isso e uma decisao de performance, evita branch no hot path. para plev (projecao ortografica bem-comportada), isso e seguro.
 
 **limitacao:** sem decomposicoes matriciais (svd, qr, lu). sem matrizes de dimensao arbitraria. projetado exclusivamente para 2d/3d/4d, nao e algebra linear geral.
 
@@ -57,13 +57,13 @@ dados coletados em marco de 2026 via github, crates.io, documentacao oficial e b
 - serializacao de estado: snapshot + restore do estado completo da simulacao (serde).
 - 700k+ downloads (rapier2d), 1.1m+ (rapier3d) no crates.io.
 
-**relevancia para φ:**
-- φ e um motor de composicao, nao game engine. fisica completa (rigid bodies, joints, CCD) e excessiva para o escopo atual.
+**relevancia para plev:**
+- plev e um motor de composicao, nao game engine. fisica completa (rigid bodies, joints, CCD) e excessiva para o escopo atual.
 - caso de uso potencial futuro: scroll deceleration com atrito fisico, spring animations com integracao verlet, deteccao de colisao para drag-and-drop complexo.
-- querypipeline isoladamente poderia ser util para spatial queries (point-in-shape, ray casting), mas φ ja tem hit-testing linear reverso que e suficiente para UI.
+- querypipeline isoladamente poderia ser util para spatial queries (point-in-shape, ray casting), mas plev ja tem hit-testing linear reverso que e suficiente para UI.
 - peso: rapier2d traz nalgebra + parry2d + simba como dependencias transitivas, impacto significativo em compile time e binary size.
 
-**insight principal:** o novo BVH dinamico com SIMD do rapier e estado-da-arte para broad-phase. se φ eventualmente precisar de spatial indexing para milhares de elementos interativos, a arquitetura do parry (que pode ser usada independente do rapier) seria a referencia.
+**insight principal:** o novo BVH dinamico com SIMD do rapier e estado-da-arte para broad-phase. se plev eventualmente precisar de spatial indexing para milhares de elementos interativos, a arquitetura do parry (que pode ser usada independente do rapier) seria a referencia.
 
 **limitacao:** rapier nao e modular no sentido de "use so o solver de colisao sem o pipeline de fisica". usar parry2d diretamente e possivel mas a API e de nivel mais baixo. compile time significativo (~30s clean build adicionais estimado).
 
@@ -83,12 +83,12 @@ dados coletados em marco de 2026 via github, crates.io, documentacao oficial e b
 - 55m+ downloads totais no crates.io (121 versoes).
 - usado por rapier, parry, e todo ecossistema dimforge.
 
-**relevancia para φ:**
-- φ nao precisa de decomposicoes matriciais, matrizes esparsas, ou dimensoes dinamicas. o escopo de nalgebra excede vastamente as necessidades de um compositor GPU 2d.
+**relevancia para plev:**
+- plev nao precisa de decomposicoes matriciais, matrizes esparsas, ou dimensoes dinamicas. o escopo de nalgebra excede vastamente as necessidades de um compositor GPU 2d.
 - nalgebra-glm poderia ser uma alternativa a glam, mas benchmarks (mathbench-rs) mostram glam 1.5-3x mais rapido em operacoes comuns (mat4 mul, inverse, transform) devido a SIMD nativo e inlining agressivo.
-- se φ adotar rapier/parry no futuro, nalgebra entra como dependencia transitiva automaticamente, nao precisa ser adotada diretamente.
+- se plev adotar rapier/parry no futuro, nalgebra entra como dependencia transitiva automaticamente, nao precisa ser adotada diretamente.
 
-**insight principal:** nalgebra usa generics pesados (matrix<t,r,c,s>) que impactam compile time e dificultam inlining em hot paths. glam evita isso por design. para operacoes de graficos 2d/3d (que sao 99% do uso em φ), glam e objetivamente superior em ergonomia e performance.
+**insight principal:** nalgebra usa generics pesados (matrix<t,r,c,s>) que impactam compile time e dificultam inlining em hot paths. glam evita isso por design. para operacoes de graficos 2d/3d (que sao 99% do uso em plev), glam e objetivamente superior em ergonomia e performance.
 
 **limitacao:** performance inferior a glam em operacoes 3d/4d comuns. curva de aprendizado maior por causa do sistema de tipos generico. `Matrix::inverse()` retorna `Option<Matrix>` (correto matematicamente, mas branch no hot path).
 
@@ -127,11 +127,11 @@ dados coletados em marco de 2026 via github, crates.io, documentacao oficial e b
 
 - 3.3m+ downloads totais no crates.io (62 versoes). MSRV nao documentado. estavel desde 1.0 (jan 2021, ultimo breaking change).
 
-**relevancia para φ (critica):**
+**relevancia para plev (critica):**
 
-φ atualmente renderiza apenas quads (retangulos axis-aligned) via instanced rendering. lyon e a ponte para formas arbitrarias:
+plev atualmente renderiza apenas quads (retangulos axis-aligned) via instanced rendering. lyon e a ponte para formas arbitrarias:
 
-1. **rounded rectangles:** lyon tem tessellator especializado (`lyon::tessellation::basic_shapes::fill_rounded_rectangle`). alternativa ao approach atual de φ que faz rounding no fragment shader (SDF). tradeoff: tessellacao gera mais vertices mas elimina branch no shader.
+1. **rounded rectangles:** lyon tem tessellator especializado (`lyon::tessellation::basic_shapes::fill_rounded_rectangle`). alternativa ao approach atual de plev que faz rounding no fragment shader (SDF). tradeoff: tessellacao gera mais vertices mas elimina branch no shader.
 
 2. **custom shapes para icones:** paths SVG tesselados uma vez no init, geometry mantida na GPU. zero work per-frame para icones estaticos.
 
@@ -139,23 +139,23 @@ dados coletados em marco de 2026 via github, crates.io, documentacao oficial e b
 
 4. **integracao com pipeline wgpu existente:**
    - lyon gera `VertexBuffers { vertices: Vec<GpuVertex>, indices: Vec<u32> }` onde `GpuVertex` e definido pelo usuario.
-   - para φ: definir `GpuVertex` com `position: [f32; 2]` + `color: [f32; 4]` (mesmo layout do quad pipeline atual).
+   - para plev: definir `GpuVertex` com `position: [f32; 2]` + `color: [f32; 4]` (mesmo layout do quad pipeline atual).
    - upload para `wgpu::Buffer` via `bytemuck::cast_slice()`.
    - renderizar com `draw_indexed()` no mesmo render pass dos quads.
    - pode compartilhar o mesmo shader (quad.wgsl) se o vertex layout for identico, ou usar shader dedicado para shapes (com antialiasing via SDF no edge).
 
 5. **tessellacao e offline:** acontece no CPU, tipicamente uma vez (shapes estaticas) ou quando path muda (animacao de morph). nao e per-frame para UI estatica. custo: ~1ms para paths complexos (tiger SVG completo), microsegundos para formas simples.
 
-**insight principal:** o exemplo oficial `lyon/examples/wgpu/` demonstra o padrao completo: define `GpuVertex` customizado, tessela no init, faz upload unico para GPU, renderiza com `draw_indexed()`. a geometria fica persistente na GPU, exatamente o pattern que φ ja usa com gpuvec (grow-only). a integracao seria natural: lyon gera a geometria, gpuvec armazena, o render pass desenha.
+**insight principal:** o exemplo oficial `lyon/examples/wgpu/` demonstra o padrao completo: define `GpuVertex` customizado, tessela no init, faz upload unico para GPU, renderiza com `draw_indexed()`. a geometria fica persistente na GPU, exatamente o pattern que plev ja usa com gpuvec (grow-only). a integracao seria natural: lyon gera a geometria, gpuvec armazena, o render pass desenha.
 
-**limitacao:** lyon faz tesselacao no CPU, para paths muito complexos com animacao per-frame (morphing SVG), o custo pode ser relevante. nao faz antialiasing (responsabilidade do shader/MSAA). nao renderiza texto (φ ja tem sistema proprio com cosmic-text). nao tem suporte a gradientes ou texturas no tessellator, isso e responsabilidade do shader.
+**limitacao:** lyon faz tesselacao no CPU, para paths muito complexos com animacao per-frame (morphing SVG), o custo pode ser relevante. nao faz antialiasing (responsabilidade do shader/MSAA). nao renderiza texto (plev ja tem sistema proprio com cosmic-text). nao tem suporte a gradientes ou texturas no tessellator, isso e responsabilidade do shader.
 
 ---
 
 ## padroes cross-cutting
 
 ### 1. SIMD multi-plataforma e realidade
-glam, rapier, e lyon todos lidam com SIMD de formas diferentes. glam abstrai sse2/NEON/simd128 internamente. rapier usa nalgebra+simba para SIMD. lyon opera no nivel escalar (tesselacao e CPU-bound, nao SIMD). para φ, o unico SIMD relevante no hot path e o de glam (transformacoes de vertices).
+glam, rapier, e lyon todos lidam com SIMD de formas diferentes. glam abstrai sse2/NEON/simd128 internamente. rapier usa nalgebra+simba para SIMD. lyon opera no nivel escalar (tesselacao e CPU-bound, nao SIMD). para plev, o unico SIMD relevante no hot path e o de glam (transformacoes de vertices).
 
 ### 2. bytemuck como ponte cpu-gpu
 glam + bytemuck e o padrao de facto para upload de dados para wgpu. lyon + bytemuck (via vertex type customizado com `#[repr(C)]` + `Pod + Zeroable`) completa o pipeline. nalgebra nao tem suporte bytemuck nativo, mais um motivo para preferir glam.
@@ -177,18 +177,18 @@ todos suportam WASM. glam e lyon sao `no_std` friendly. nalgebra suporta `no_std
 
 ---
 
-## implicacoes para φ
+## implicacoes para plev
 
 ### adocao imediata recomendada
 
 **glam**, substituir `[f32; 2]` / `[f32; 4]` crus por `Vec2` / `Vec4` nos vertex buffers e transformacoes. adicionar `Mat4` para projecao (substituir calculo manual atual). feature `bytemuck` para upload GPU. feature `serde` se serialization de scene for necessario. impacto: melhoria de ergonomia e performance SIMD com zero risco de regressao.
 
-**lyon**, adicionar como dependencia para shapes customizadas quando φ expandir alem de quads. integracao natural com gpuvec existente. nao precisa ser imediata, quando o primeiro caso de uso aparecer (rounded rect via tessellacao, icone SVG, chart), lyon e a escolha obvia e bem-testada. considerar `lyon_tessellation` isoladamente (sem `lyon_path`) se quiser minimizar dependencias.
+**lyon**, adicionar como dependencia para shapes customizadas quando plev expandir alem de quads. integracao natural com gpuvec existente. nao precisa ser imediata, quando o primeiro caso de uso aparecer (rounded rect via tessellacao, icone SVG, chart), lyon e a escolha obvia e bem-testada. considerar `lyon_tessellation` isoladamente (sem `lyon_path`) se quiser minimizar dependencias.
 
 ### monitorar
 
-**rapier / parry**, nao adotar agora. φ nao precisa de fisica. se spring animations ou scroll physics forem implementadas, considerar: (a) implementar verlet/spring manualmente (< 50 linhas), ou (b) usar parry2d isoladamente para spatial queries se o numero de elementos interativos justificar BVH. rapier completo e overkill.
+**rapier / parry**, nao adotar agora. plev nao precisa de fisica. se spring animations ou scroll physics forem implementadas, considerar: (a) implementar verlet/spring manualmente (< 50 linhas), ou (b) usar parry2d isoladamente para spatial queries se o numero de elementos interativos justificar BVH. rapier completo e overkill.
 
 ### nao adotar
 
-**nalgebra**, nao ha caso de uso que justifique nalgebra sobre glam para φ. se rapier/parry for adotado no futuro, nalgebra entra como dependencia transitiva e fica encapsulada, φ nao deve usar nalgebra diretamente na API publica.
+**nalgebra**, nao ha caso de uso que justifique nalgebra sobre glam para plev. se rapier/parry for adotado no futuro, nalgebra entra como dependencia transitiva e fica encapsulada, plev nao deve usar nalgebra diretamente na API publica.

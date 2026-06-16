@@ -1,21 +1,21 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: in-progress
 last-updated: 2026-03-13
 domain: task-tracking
 ---
 
-# task-42: φ event dispatch + gitbutler UI port
+# task-42: plev event dispatch + gitbutler UI port
 
 ## objetivo
-port do frontend tauri/svelte do gitbutler para φ nativo (100% rust, sem webview). demonstrar que φ e capaz de apps reais de producao. implementar infra de dispatch e overlays no core φ.
+port do frontend tauri/svelte do gitbutler para plev nativo (100% rust, sem webview). demonstrar que plev e capaz de apps reais de producao. implementar infra de dispatch e overlays no core plev.
 
 ## branch
-`task/TASK-42-φ-event-dispatch`
+`task/TASK-42-plev-event-dispatch`
 
 ## dependencias
-nenhuma task pendente. usa core φ (compositor, text, input, signal, layout).
+nenhuma task pendente. usa core plev (compositor, text, input, signal, layout).
 
 ## fases
 
@@ -44,7 +44,7 @@ nenhuma task pendente. usa core φ (compositor, text, input, signal, layout).
 - [x] text input no form
 
 ### fase 4, typed dispatch + overlays (em andamento)
-- [x] step 1-6: `src/dispatch.rs` (core), `src/overlay.rs` (core), `src/actions.rs` (gitbutler-φ)
+- [x] step 1-6: `src/dispatch.rs` (core), `src/overlay.rs` (core), `src/actions.rs` (gitbutler-plev)
 - [x] 26 testes passando
 - [ ] step 7: context_menu.rs render
 - [ ] step 8: modal.rs render
@@ -61,7 +61,7 @@ nenhuma task pendente. usa core φ (compositor, text, input, signal, layout).
 - [ ] scrollbar auto-hide
 
 ## notas
-- dispatch.rs e overlay.rs ficam no core φ (infra generica)
+- dispatch.rs e overlay.rs ficam no core plev (infra generica)
 - widgetaction trait = any + send + 'static
-- crate: `experiment/gitbutler-φ/`
+- crate: `experiment/gitbutler-plev/`
 - ~3800 LOC total (incluindo dispatch/overlay no core)

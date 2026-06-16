@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-08
@@ -32,7 +32,7 @@ closures em inputstate criam problemas de borrow checker (app possui inputstate 
 process_events() e compositor.begin_frame() devem ser chamados antes do destructuring do gpustate, senão self está emprestado mutavelmente duas vezes.
 
 ## coordenadas
-winit cursormoved entrega physicalposition<f64>. projeção ortográfica do φ usa pixels físicos. logo position.x as f32 mapeia diretamente - sem conversão DPI.
+winit cursormoved entrega physicalposition<f64>. projeção ortográfica do plev usa pixels físicos. logo position.x as f32 mapeia diretamente - sem conversão DPI.
 
 ## viewid
 resetado a cada frame (begin_frame reseta next_id para 0). viewid é estável entre frames desde que a ordem de registro não mude (immediate mode).

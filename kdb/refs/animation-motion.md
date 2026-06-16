@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -10,7 +10,7 @@ domain: animation
 
 ## escopo
 
-analise factual de sete bibliotecas rust de animacao e movimento relevantes para task-27 (animation system) do φ: players de animacao vetorial com runtime completo, spring physics, tweening com keyframes, transicoes CSS-like, easing functions, e traits de interpolacao generica. foco em arquitetura interna, API design, compatibilidade WASM/multi-plataforma, e licoes aplicaveis ao design do sistema de animacao do φ.
+analise factual de sete bibliotecas rust de animacao e movimento relevantes para task-27 (animation system) do plev: players de animacao vetorial com runtime completo, spring physics, tweening com keyframes, transicoes CSS-like, easing functions, e traits de interpolacao generica. foco em arquitetura interna, API design, compatibilidade WASM/multi-plataforma, e licoes aplicaveis ao design do sistema de animacao do plev.
 
 dados coletados em marco de 2026 via github, crates.io, docs.rs e documentacao oficial.
 
@@ -30,14 +30,14 @@ dados coletados em marco de 2026 via github, crates.io, docs.rs e documentacao o
 - tweening entre frames adicionado em v0.1.39 (mar 2025): cubic bezier easing com control points p1(x1,y1) e p2(x2,y2) para interpolacao suave entre frames arbitrarios.
 - build system com makefile cross-platform (android, apple, WASM, linux). linguagens: rust 89.9%, makefile 7%.
 
-**relevancia para φ:**
-- modelo de "orquestrador rust + renderer nativo" e analogamente o que φ faz (rust + wgpu). a separacao clara entre logica de animacao e rendering e um pattern validado.
-- state machines para transicoes interativas e relevante para task-27: φ poderia adotar pattern similar para gerenciar estados de UI (idle -> hover -> pressed -> active).
+**relevancia para plev:**
+- modelo de "orquestrador rust + renderer nativo" e analogamente o que plev faz (rust + wgpu). a separacao clara entre logica de animacao e rendering e um pattern validado.
+- state machines para transicoes interativas e relevante para task-27: plev poderia adotar pattern similar para gerenciar estados de UI (idle -> hover -> pressed -> active).
 - o tweening cubic bezier entre frames e exatamente o que task-27 precisa implementar internamente para `CubicBezier(f32,f32,f32,f32)` no enum easing.
 
-**insight principal:** dotlottie-rs demonstra que um runtime de animacao robusto pode ser construido com rust orquestrando e uma engine de rendering executando. o valor do rust nao esta nos pixels, esta no controle de estado, timing e coordenacao cross-platform. φ ja tem essa arquitetura, task-27 adiciona a camada temporal.
+**insight principal:** dotlottie-rs demonstra que um runtime de animacao robusto pode ser construido com rust orquestrando e uma engine de rendering executando. o valor do rust nao esta nos pixels, esta no controle de estado, timing e coordenacao cross-platform. plev ja tem essa arquitetura, task-27 adiciona a camada temporal.
 
-**limitacao:** thorvg como dependencia c++ linkada estaticamente e inviavel para φ (que e pure rust + wgpu). o formato lottie (JSON-based, orientado a motion design) nao se aplica a UI transitions. relevancia e puramente arquitetural/conceitual.
+**limitacao:** thorvg como dependencia c++ linkada estaticamente e inviavel para plev (que e pure rust + wgpu). o formato lottie (JSON-based, orientado a motion design) nao se aplica a UI transitions. relevancia e puramente arquitetural/conceitual.
 
 ---
 
@@ -52,14 +52,14 @@ dados coletados em marco de 2026 via github, crates.io, docs.rs e documentacao o
 - requer c compiler e git submodules inicializados antes de compilar, dependencia pesada no build.
 - sem publicacao no crates.io, uso via git dependency.
 
-**relevancia para φ:**
+**relevancia para plev:**
 - o conceito de state machine de animacao do rive e o mais sofisticado entre as libs analisadas. para task-27, o pattern "estado atual + transicao condicional + blending entre estados" e valioso como referencia arquitetural.
-- vello como renderer 2d via wgpu e tecnicamente adjacente ao φ. analisar como rive-rs integra com vello pode informar futuras decisoes sobre vector rendering (task-31).
-- a separacao entre "definicao de animacao" (editor) e "runtime de animacao" (rive-rs) e um pattern maduro. φ pode eventualmente consumir arquivos de animacao, mas task-27 foca em animacao programatica.
+- vello como renderer 2d via wgpu e tecnicamente adjacente ao plev. analisar como rive-rs integra com vello pode informar futuras decisoes sobre vector rendering (task-31).
+- a separacao entre "definicao de animacao" (editor) e "runtime de animacao" (rive-rs) e um pattern maduro. plev pode eventualmente consumir arquivos de animacao, mas task-27 foca em animacao programatica.
 
 **insight principal:** state machines de animacao com blending condicional sao o padrao da industria para animacoes interativas complexas (jogos, UI rica). task-27 comeca com tweens simples, mas a arquitetura deve permitir evolucao para state machines se necessario (nao fechar portas).
 
-**limitacao:** nao publicado no crates.io. dependencia pesada em c++ compilado. vello ainda tem inconsistencias de rendering. comercialmente atrelado ao editor rive, nao e uma lib generica de animacao. para φ, valor e puramente conceitual.
+**limitacao:** nao publicado no crates.io. dependencia pesada em c++ compilado. vello ainda tem inconsistencias de rendering. comercialmente atrelado ao editor rive, nao e uma lib generica de animacao. para plev, valor e puramente conceitual.
 
 ---
 
@@ -79,12 +79,12 @@ dados coletados em marco de 2026 via github, crates.io, docs.rs e documentacao o
 - suporte a animation groups (controle batch), pause/resume individual, event listeners para completion.
 - rust 100%, edition 2021.
 
-**relevancia para φ (alta, task-27 fase d):**
+**relevancia para plev (alta, task-27 fase d):**
 - task-27 fase d especifica `create_spring(initial, stiffness, damping)` como stretch goal. natura implementa exatamente isso.
 - o modelo matematico (damped harmonic oscillator) e o padrao para spring animations em UI (ios uispringanimation, android springforce, react-spring usam o mesmo modelo).
 - API minima: configura angular_frequency + damping_ratio, alimenta dt por frame, recebe posicao atualizada. sem overhead, sem alocacoes.
-- framework-agnostico: encaixa no loop de rendering do φ sem friccao. basta passar o `dt` do `AnimationTick` proposto no task-27.
-- licenca unlicense permite literalmente copiar o algoritmo para dentro do φ se preferir nao adicionar dependencia.
+- framework-agnostico: encaixa no loop de rendering do plev sem friccao. basta passar o `dt` do `AnimationTick` proposto no task-27.
+- licenca unlicense permite literalmente copiar o algoritmo para dentro do plev se preferir nao adicionar dependencia.
 
 **insight principal:** o algoritmo de spring (damped harmonic oscillator) cabe em ~100 linhas de rust puro. a equacao diferencial tem solucao analitica para cada modo de damping, nao e integracao numerica (euler/verlet), e formula fechada por frame. isso significa: zero acumulo de erro, determinismo independente de framerate, custo computacional negligivel por spring.
 
@@ -106,16 +106,16 @@ dados coletados em marco de 2026 via github, crates.io, docs.rs e documentacao o
 - feature `mint_types`: interop com ecossistema mint (glam tem feature mint para conversao).
 - 475k+ downloads, 7 versoes publicadas. estavel desde v1.0.
 
-**relevancia para φ (alta, task-27 fase b e c):**
+**relevancia para plev (alta, task-27 fase b e c):**
 - o design de `ease(function, from, to, t)` e exatamente o que task-27 especifica em `ease(t, easing) -> f32`.
 - o `CanTween` trait e analogo ao `Interpolate` trait que task-27 propoe para f32, [f32;4], (f32,f32). mesmo conceito, mesma necessidade.
-- `AnimationSequence` com `advance_by(dt)` demonstra o pattern de timeline que φ pode adotar: sequencia de valores interpolados avancada por delta time a cada frame.
+- `AnimationSequence` com `advance_by(dt)` demonstra o pattern de timeline que plev pode adotar: sequencia de valores interpolados avancada por delta time a cada frame.
 - bezier customizavel (CSS `cubic-bezier` equivalent) ja implementado, task-27 pode referenciar ou ate usar diretamente.
-- no_std + mint interop = dependencia segura e leve para φ.
+- no_std + mint interop = dependencia segura e leve para plev.
 
-**insight principal:** keyframe valida a abordagem de task-27: o trait `CanTween` (= `Interpolate` do φ) + `ease()` puro + timeline com `advance_by(dt)` e suficiente para animacoes de UI. a complexidade adicional (state machines, springs, physics) e ortogonal e pode ser composta por cima.
+**insight principal:** keyframe valida a abordagem de task-27: o trait `CanTween` (= `Interpolate` do plev) + `ease()` puro + timeline com `advance_by(dt)` e suficiente para animacoes de UI. a complexidade adicional (state machines, springs, physics) e ortogonal e pode ser composta por cima.
 
-**limitacao:** usa f64 internamente (cantween retorna f64). φ opera em f32 (vertex buffers, uniforms, shaders). conversao f64->f32 nao e problema de performance mas e atrito ergonomico. nao tem spring physics. nao tem state management, e puramente funcional (calcula valor, nao gerencia estado).
+**limitacao:** usa f64 internamente (cantween retorna f64). plev opera em f32 (vertex buffers, uniforms, shaders). conversao f64->f32 nao e problema de performance mas e atrito ergonomico. nao tem spring physics. nao tem state management, e puramente funcional (calcula valor, nao gerencia estado).
 
 ---
 
@@ -135,12 +135,12 @@ dados coletados em marco de 2026 via github, crates.io, docs.rs e documentacao o
 - dependencia em `enum-map` para state animators (roadmap menciona remocao futura).
 - 11k downloads, 2 versoes publicadas.
 
-**relevancia para φ (media-alta, task-27 design reference):**
-- o stateanimator e a resposta mais direta para "como animar transicoes de estado em UI": define estado idle, hover, pressed como enum, associa valores para cada, e o animator interpola automaticamente na transicao. isso e exatamente o que messagedock example do φ faz manualmente.
+**relevancia para plev (media-alta, task-27 design reference):**
+- o stateanimator e a resposta mais direta para "como animar transicoes de estado em UI": define estado idle, hover, pressed como enum, associa valores para cada, e o animator interpola automaticamente na transicao. isso e exatamente o que messagedock example do plev faz manualmente.
 - o pattern "framework-agnostico, usuario avanca tempo" e identico ao que task-27 propoe: `AnimationTick` fornece dt, tween avanca internamente.
-- sintaxe CSS-like (`timeline!` com porcentagens, easing keywords) e boa referencia de ergonomia, mas φ provavelmente nao precisa de proc-macro dedicada para animacao (signals + tween sao suficientes).
+- sintaxe CSS-like (`timeline!` com porcentagens, easing keywords) e boa referencia de ergonomia, mas plev provavelmente nao precisa de proc-macro dedicada para animacao (signals + tween sao suficientes).
 
-**insight principal:** o stateanimator de mina resolve um problema real que task-27 nao aborda explicitamente: gerenciamento de transicoes bidirecional entre estados. quando hover entra, anima para valores de hover; quando sai, anima de volta. o tween<t> proposto em task-27 faz isso via `.set_target()`, mas sem conceito formal de "estado". considerar se φ eventualmente precisa de um pattern mais estruturado.
+**insight principal:** o stateanimator de mina resolve um problema real que task-27 nao aborda explicitamente: gerenciamento de transicoes bidirecional entre estados. quando hover entra, anima para valores de hover; quando sai, anima de volta. o tween<t> proposto em task-27 faz isso via `.set_target()`, mas sem conceito formal de "estado". considerar se plev eventualmente precisa de um pattern mais estruturado.
 
 **limitacao:** comunidade muito pequena (21 stars, 11k downloads). dependencia em enum-map para states. documentacao limitada (readme bom, docs.rs basico). v0.1.1, API nao estavel.
 
@@ -160,12 +160,12 @@ dados coletados em marco de 2026 via github, crates.io, docs.rs e documentacao o
 
 **nota:** existe tambem o crate `easing` (joliv/easing, v0.0.5) que usa iterators para easing e tem abordagem diferente (16 funcoes, sem documentacao). e o crate `easings` que normaliza para t in [0,1]. o ecossistema de easing em rust e fragmentado.
 
-**relevancia para φ (media, task-27 fase b referencia):**
+**relevancia para plev (media, task-27 fase b referencia):**
 - as 30 funcoes de penner sao o catalogo padrao da industria. task-27 fase b especifica apenas 4 (linear, easein, easeout, easeinout cubic) + cubicbezier. o catalogo completo de penner pode ser adicionado futuramente.
 - a assinatura penner classica (t,b,c,d) e menos ergonomica que a abordagem moderna (t normalizado em [0,1], resultado em [0,1]). task-27 deve usar a abordagem moderna.
-- com ~909k downloads, easer valida que funcoes penner sao utility code amplamente reutilizado. mas a implementacao e trivial (~5 linhas por funcao) e nao justifica dependencia externa para φ.
+- com ~909k downloads, easer valida que funcoes penner sao utility code amplamente reutilizado. mas a implementacao e trivial (~5 linhas por funcao) e nao justifica dependencia externa para plev.
 
-**insight principal:** easing functions sao commodity. a implementacao e matematica pura (polinomios, trigonometria) e cabe em <200 linhas para as 30 funcoes. para φ, implementar internamente (inline, f32, t normalizado) e preferivel a depender de crate externo, evita conversao f64/f32, controla API, zero overhead.
+**insight principal:** easing functions sao commodity. a implementacao e matematica pura (polinomios, trigonometria) e cabe em <200 linhas para as 30 funcoes. para plev, implementar internamente (inline, f32, t normalizado) e preferivel a depender de crate externo, evita conversao f64/f32, controla API, zero overhead.
 
 **limitacao:** assinatura penner nao-normalizada e arcaica. repo sem atividade desde 2018. dependencia em num-traits e desnecessaria para f32 puro.
 
@@ -184,7 +184,7 @@ dados coletados em marco de 2026 via github, crates.io, docs.rs e documentacao o
 - mantido por pistondevelopers (sven nilsen). 10 versoes, 900k+ downloads.
 - estavel: v0.3.0, sem breaking changes recentes.
 
-**relevancia para φ (media, task-27 design reference):**
+**relevancia para plev (media, task-27 design reference):**
 - o `Lerp` trait e a abordagem mais simples possivel para interpolacao generica. o `Interpolate` trait que task-27 propoe pode seguir este design exato.
 - `EaseFunction` enum com 30 variantes e referencia direta para o `Easing` enum do task-27. mesma abordagem (enum + match + formula matematica).
 - `cub_bez(a, b, c, d, t)` e a implementacao de bezier cubico que task-27 precisa para `CubicBezier(f32,f32,f32,f32)`.
@@ -225,7 +225,7 @@ ambos produzem um valor por frame. a interface de consumo e identica (`.get() ->
 
 ### 5. f32 vs f64
 
-keyframe e easer usam f64 internamente. interpolation suporta ambos via generics. para φ (GPU pipeline f32), a conversao e atrito desnecessario. implementacao interna em f32 e preferivel.
+keyframe e easer usam f64 internamente. interpolation suporta ambos via generics. para plev (GPU pipeline f32), a conversao e atrito desnecessario. implementacao interna em f32 e preferivel.
 
 ### 6. cubic bezier e o padrao para easing customizado
 
@@ -233,7 +233,7 @@ CSS `cubic-bezier(x1,y1,x2,y2)` e suportado por keyframe (beziercurve), dotlotti
 
 ---
 
-## implicacoes para φ
+## implicacoes para plev
 
 ### decisoes de design para task-27
 
@@ -264,7 +264,7 @@ isso nao precisa estar no scope de task-27, mas nao deve ser impedido pelo desig
 
 ### monitorar
 
-**keyframe**, se φ precisar de sequencias de keyframes complexas (multi-step animations), keyframe e a referencia mais madura. a 475k downloads e estavel desde v1.0.
+**keyframe**, se plev precisar de sequencias de keyframes complexas (multi-step animations), keyframe e a referencia mais madura. a 475k downloads e estavel desde v1.0.
 
 **natura**, se task-27 fase d implementar springs, o algoritmo de natura (ryan juckett) e a referencia exata. unlicense permite vendoring direto.
 

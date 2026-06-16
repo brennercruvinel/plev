@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-08
@@ -37,7 +37,7 @@ Frame:
 - `Rect` fields: `left, right, top, bottom` (nao start/end)
 - root node com auto size = 0px - precisa explicit size ou ser child com flex_grow
 
-## tipos φ (wrapping taffy)
+## tipos plev (wrapping taffy)
 
 - `Direction`: row | column
 - `Align`: start | center | end | stretch

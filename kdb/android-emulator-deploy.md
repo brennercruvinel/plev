@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-09
@@ -9,10 +9,10 @@ domain: build-android
 # android emulator deploy
 
 ## resumo
-φ rodando no android emulador (pixel 8, API 35, arm64-v8a) com showcase completo renderizando, quads, texto, layers, effects, input.
+plev rodando no android emulador (pixel 8, API 35, arm64-v8a) com showcase completo renderizando, quads, texto, layers, effects, input.
 
 ## stack de build
-- **cargo-ndk** cross-compila `libφ.so` para `aarch64-linux-android`
+- **cargo-ndk** cross-compila `libplev.so` para `aarch64-linux-android`
 - **gradle** empacota o APK com `MainActivity extends GameActivity` (java)
 - **android-activity** crate v0.6.0 + **games-activity** aar 2.0.2 (versões devem coincidir)
 - `android/` dir no repo: `settings.gradle`, `build.gradle`, `app/build.gradle`, `AndroidManifest.xml`, `MainActivity.java`, `styles.xml`
@@ -21,7 +21,7 @@ domain: build-android
 ```bash
 cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs/ build --features android-game-activity
 cd android && ./gradlew installDebug
-adb shell am start -n com.φ.engine/.MainActivity
+adb shell am start -n com.plev.engine/.MainActivity
 ```
 
 ## problema crítico: swiftshader trava

@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-13
@@ -11,12 +11,12 @@ tier 1 - concorrentes diretos (GPU-first, rust, cross-platform)
 1. makepad
    github.com/makepad/makepad
 
-justificativa: o projeto mais próximo do phi. GPU-first, rendering próprio (metal,
+justificativa: o projeto mais próximo do plev. GPU-first, rendering próprio (metal,
 dx11, opengl, webgl), cross-platform incluindo ios/android/WASM. possui DSL
 live-editable e sistema de layout próprio (turtle). vocês já têm gap analysis
 detalhado no kdb. diferenças fundamentais: makepad não tem acessibilidade, usa
-texto customizado com problemas de unicode, e o codebase é ~1m LOC vs ~30k do phi.
-phi usa wgpu (webgpu unificado) enquanto makepad mantém backends separados por
+texto customizado com problemas de unicode, e o codebase é ~1m LOC vs ~30k do plev.
+plev usa wgpu (webgpu unificado) enquanto makepad mantém backends separados por
 plataforma.
 
 2. ribir
@@ -36,10 +36,10 @@ tier 2 - frameworks rust UI com rendering próprio
 3. iced
    github.com/iced-rs/iced
 
-justificativa: arquitetura elm (como phi), renderiza via wgpu, cross-platform
+justificativa: arquitetura elm (como plev), renderiza via wgpu, cross-platform
 (desktop + WASM). diferença chave: iced é retained-mode com widget tree
 tradicional, não tem compositing por layers, não tem dirty tracking por hash como
-phi. sem suporte mobile nativo. texto via cosmic-text (mesmo que phi).
+phi. sem suporte mobile nativo. texto via cosmic-text (mesmo que plev).
 
 4. xilem
    github.com/linebender/xilem
@@ -47,8 +47,8 @@ phi. sem suporte mobile nativo. texto via cosmic-text (mesmo que phi).
 justificativa: projeto linebender (mesma equipe do druid), usa vello (GPU 2d
 renderer baseado em compute shaders) + wgpu. arquitetura reativa inspirada em
 swiftui. diferença: vello usa path rendering via compute shaders (abordagem
-diferente dos SDF shaders do phi). ecossistema linebender inclui parley (text
-layout), que o technology radar do phi identifica como possível substituto futuro
+diferente dos SDF shaders do plev). ecossistema linebender inclui parley (text
+layout), que o technology radar do plev identifica como possível substituto futuro
 do cosmic-text.
 
 5. floem
@@ -57,7 +57,7 @@ do cosmic-text.
 justificativa: do time do lapce editor. sistema reativo com signals (similar ao
 phi), rendering GPU. usa peniko + vello para renderização. diferença: floem é
 focado em desktop, sem target mobile. possui reactive system inspirado em leptos
-(mesmo paradigma que influenciou o signal.rs do phi).
+(mesmo paradigma que influenciou o signal.rs do plev).
 
 6. gpui (dentro do zed)
    github.com/zed-industries/zed
@@ -77,22 +77,22 @@ tier 3 - frameworks rust UI com abordagem diferente
 justificativa: DSL declarativa com 32+ passes de otimização, 3 backends de
 rendering (femtovg, skia, software). cross-platform incluindo embedded. diferença
 fundamental: não é GPU-first (o backend software é o principal), DSL compilada vs
-builder pattern do phi. maturidade comercial superior (empresa por trás).
+builder pattern do plev. maturidade comercial superior (empresa por trás).
 
 8. dioxus
    github.com/dioxuslabs/dioxus
 
 justificativa: react-like em rust, cross-platform (desktop, mobile, web).
-recentemente adicionou blitz (renderer nativo wgpu). diferença: phi seria uma
+recentemente adicionou blitz (renderer nativo wgpu). diferença: plev seria uma
 camada de rendering abaixo do dioxus, não um concorrente direto. dioxus opera no
-nível de framework de aplicação, phi no nível de motor de composição.
+nível de framework de aplicação, plev no nível de motor de composição.
 
 9. egui
    github.com/emilk/egui
 
 justificativa: immediate-mode gui, backend wgpu, WASM nativo. amplamente adotado.
 diferença fundamental: immediate-mode (redesenha tudo todo frame) vs retained-mode
-com dirty tracking do phi. sem acessibilidade nativa, sem layout flexbox, sem
+com dirty tracking do plev. sem acessibilidade nativa, sem layout flexbox, sem
 compositing por layers. foco em ferramentas/debug, não em aplicações de produção.
 
 10. vizia
@@ -111,14 +111,14 @@ tier 4 - influências arquiteturais (não concorrentes diretos)
 
 justificativa: não é um framework de UI nativo, é web-only. porém o sistema reativo
 de fine-grained signals (readsignal/writesignal, push-pull hybrid) é a referência
-arquitetural direta do signal.rs do phi. vosso kdb confirma isso.
+arquitetural direta do signal.rs do plev. vosso kdb confirma isso.
 
 12. bevy (UI module)
     github.com/bevyengine/bevy
 
 justificativa: game engine com módulo de UI baseado em ECS + wgpu. rendering
 GPU-first. diferença: ECS architecture (entity-component-system) é fundamentalmente
-diferente do model reativo do phi. UI é secundário ao game engine.
+diferente do model reativo do plev. UI é secundário ao game engine.
 
 ---
 
@@ -129,7 +129,7 @@ tier 5 - fora do ecossistema rust (referências cross-industry)
 
 justificativa: referência de arquitetura mais próxima em termos de conceito.
 flutter também possui rendering próprio (impeller, sucessor do skia), sem DOM,
-cross-platform completo (mobile, desktop, web). o posicionamento do phi como "skia
+cross-platform completo (mobile, desktop, web). o posicionamento do plev como "skia
 para rust" espelha o que impeller é para flutter. diferença: dart vs rust, gc vs
 ownership.
 
@@ -138,7 +138,7 @@ ownership.
 
 justificativa: GPU 2d renderer puro, compute shader-based (não vertex shaders como
 phi). mesmo ecossistema wgpu. é o renderer do xilem. abordagem técnica oposta:
-vello faz path rendering via compute, phi faz SDF + tessellation via
+vello faz path rendering via compute, plev faz SDF + tessellation via
 vertex/fragment pipelines.
 
 ---
@@ -148,7 +148,7 @@ mapa de posicionamento
                       GPU-first
                          |
                          |
-            makepad      |      phi
+            makepad      |      plev
                          |          gpui (zed)
             floem        |      iced
                          |
@@ -161,6 +161,6 @@ mapa de posicionamento
                          |
                      cpu/software
 
-o nicho único do phi: motor de composição GPU-first (nível skia/impeller) com
+o nicho único do plev: motor de composição GPU-first (nível skia/impeller) com
 acessibilidade nativa, dirty tracking por hash, shaders webgpu unificados e ~30k
 LOC. nenhum outro projeto rust combina todas essas propriedades simultaneamente.

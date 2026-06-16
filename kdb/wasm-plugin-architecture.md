@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -43,18 +43,18 @@ domain: wasm
 ### minimal plugin interface (FFI)
 ```
 // Plugin exports:
-fn φ_build_scene(width: f32, height: f32) -> *const u8  // returns serialized SceneNodes
-fn φ_handle_event(event_ptr: *const u8, len: u32) -> u32
-fn φ_init() -> u32
+fn plev_build_scene(width: f32, height: f32) -> *const u8  // returns serialized SceneNodes
+fn plev_handle_event(event_ptr: *const u8, len: u32) -> u32
+fn plev_init() -> u32
 
 // Host exports (callable from plugin):
-fn φ_push_rect(x: f32, y: f32, w: f32, h: f32, r: f32, g: f32, b: f32, a: f32)
-fn φ_push_text(text_ptr: *const u8, text_len: u32, x: f32, y: f32, size: f32)
-fn φ_log(msg_ptr: *const u8, msg_len: u32)
+fn plev_push_rect(x: f32, y: f32, w: f32, h: f32, r: f32, g: f32, b: f32, a: f32)
+fn plev_push_text(text_ptr: *const u8, text_len: u32, x: f32, y: f32, size: f32)
+fn plev_log(msg_ptr: *const u8, msg_len: u32)
 ```
 
 ### communication model
-- **preferred**: host function calls (plugin calls `φ_push_rect` etc.)
+- **preferred**: host function calls (plugin calls `plev_push_rect` etc.)
   - pro: zero serialization, minimal copies
   - con: wider API surface, harder to version
 - **alternative**: shared linear memory with serialized scenenodes
@@ -80,13 +80,13 @@ fn φ_log(msg_ptr: *const u8, msg_len: u32)
 ## 4. recommendation
 
 **wait.** the plugin system is p4 priority. current value proposition:
-- φ targets 6 platforms. WASM plugins only work well on 3 (macos/linux/windows).
+- plev targets 6 platforms. WASM plugins only work well on 3 (macos/linux/windows).
 - ios/android/browser need different solutions or AOT compilation.
 - the API is still evolving (task-31/30 just landed). plugins need a stable API to target.
 
 **when ready:**
 1. use `extism` for plugin loading (highest-level, least code)
-2. host function interface (`φ_push_rect/text/path`) over shared memory
+2. host function interface (`plev_push_rect/text/path`) over shared memory
 3. feature-gate as `plugins = ["dep:extism"]`
 4. desktop-only initially, mobile/WASM stretch goals
 
@@ -94,7 +94,7 @@ fn φ_log(msg_ptr: *const u8, msg_len: u32)
 
 | component | size (release) |
 |-----------|---------------|
-| φ (current) | ~8mb |
+| plev (current) | ~8mb |
 | + extism/wasmtime | ~14mb (+6mb) |
 | + wasmer singlepass | ~12mb (+4mb) |
 

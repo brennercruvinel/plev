@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-22
@@ -9,11 +9,11 @@ commit: 3a53399
 
 # adotamos shader hot reload via notify file watcher sobre dylib reloading
 
-brenner@φ.engineer
+brenner@plev.engineer
 
 ## contexto
 
-o phi engine embarcava shaders via `include_str!()` em compile-time. qualquer mudanca visual em shaders exigia recompilacao completa (~7s no m4). para iteracao rapida de efeitos visuais, precisavamos de live editing. avaliamos 7 implementacoes de hot reload em projetos rust (vello, rerun, makepad, leptos, dioxus, hot-lib-reloader, subsecond).
+o plev engine embarcava shaders via `include_str!()` em compile-time. qualquer mudanca visual em shaders exigia recompilacao completa (~7s no m4). para iteracao rapida de efeitos visuais, precisavamos de live editing. avaliamos 7 implementacoes de hot reload em projetos rust (vello, rerun, makepad, leptos, dioxus, hot-lib-reloader, subsecond).
 
 ## decisao
 
@@ -57,7 +57,7 @@ o watcher roda em background thread (notify). precisavamos sinalizar o event loo
 
 ### decisao
 
-channel polling (b). o `EventLoopProxy` no phi e restrito a `#[cfg(any(wasm32, android))]` e estender para native exigiria refatorar `App::new()` em todas as plataformas.
+channel polling (b). o `EventLoopProxy` no plev e restrito a `#[cfg(any(wasm32, android))]` e estender para native exigiria refatorar `App::new()` em todas as plataformas.
 
 ### consequencias
 

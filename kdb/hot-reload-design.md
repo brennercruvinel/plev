@@ -1,12 +1,12 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-22
 domain: hot-reload
 ---
 
-# hot reload design - phi
+# hot reload design - plev
 
 data: 2026-03-22
 task: gap-1
@@ -27,7 +27,7 @@ task: gap-1
 
 flutter estudado como referencia: dart VM JIT + kernel snapshots + 3-tree reconciliation. impossivel replicar em rust (sem VM), mas o pattern element-tree-preserves-state e aplicavel.
 
-## analise de fronteira - o que cruza o hot reload boundary no phi
+## analise de fronteira - o que cruza o hot reload boundary no plev
 
 ### cruza (safe, todos send+sync):
 - `SceneNode` - enum com f32, [f32;4], string. zero box<dyn>, zero closures
@@ -59,10 +59,10 @@ USER CODE (reloadable) --> Vec<SceneNode> --> ENGINE (fixed)
 - **referencia:** `bunker/repos/3d-graphics/rendering/vello/examples/with_winit/src/hot_reload.rs`
 - **referencia:** `bunker/repos/rerun/crates/viewer/re_renderer/src/file_server.rs`
 
-### tier 2 - DSL hot reload (makepad pattern, adaptado para phi_narrate!)
+### tier 2 - DSL hot reload (makepad pattern, adaptado para plev_narrate!)
 **abordagem:**
-- phi_narrate! blocks compilam para element trees
-- file watcher detecta mudanca em .rs contendo phi_narrate!
+- plev_narrate! blocks compilam para element trees
+- file watcher detecta mudanca em .rs contendo plev_narrate!
 - re-parse apenas o bloco macro (syn AST visitor, pattern do leptos)
 - override map: `HashMap<BlockId, Vec<Element>>` - override sempre consultado antes do compilado
 - estado do componente preservado (element tree e recriada, state nao)
@@ -86,27 +86,27 @@ USER CODE (reloadable) --> Vec<SceneNode> --> ENGINE (fixed)
 - linux: dlclose + tls = memory leak (nao descarrega)
 - typeid muda entre loads (quebra dispatch.rs que usa any + downcast)
 - macos: codesigning obrigatorio para cada dylib reload
-- phi usa `Box<dyn Any + Send>` no actionqueue - typeid across dylib boundary = ub
+- plev usa `Box<dyn Any + Send>` no actionqueue - typeid across dylib boundary = ub
 
 ## por que nao flutter-style
 
 - requer VM com JIT + late binding
 - rust e AOT compiled, sem vtable lookup implicito
-- pattern de 3-tree (widget/element/renderobject) e aplicavel ao phi mas como **otimizacao de rendering** (gap 2: retained tree), nao como mecanismo de hot reload
+- pattern de 3-tree (widget/element/renderobject) e aplicavel ao plev mas como **otimizacao de rendering** (gap 2: retained tree), nao como mecanismo de hot reload
 
 ## ordem de implementacao
 
 1. **tier 1 (shader)** - vello pattern direto
-2. **tier 2 (DSL)** - requer phi_narrate parser acessivel em runtime
+2. **tier 2 (DSL)** - requer plev_narrate parser acessivel em runtime
 3. **tier 3 (subsecond)** - avaliar compatibilidade com wgpu event loop
 
-## cruzamento com arquitetura phi
+## cruzamento com arquitetura plev
 
-| subsistema phi | tier 1 | tier 2 | tier 3 |
+| subsistema plev | tier 1 | tier 2 | tier 3 |
 |----------------|--------|--------|--------|
 | gpu.rs (pipelines) | re-create pipeline on shader change | n/a | n/a |
 | compositor/ (scenenode) | n/a | override map injeta scenenodes | subsecond::call wrapa build_scene |
-| builder/ (element) | n/a | re-parse phi_narrate! -> element tree | reload build_ui() |
+| builder/ (element) | n/a | re-parse plev_narrate! -> element tree | reload build_ui() |
 | text.rs (shaping) | n/a | re-shape em text nodes alterados | automatico |
 | signal.rs (state) | n/a | preservado (override nao toca state) | preservado (jump table nao reseta) |
 | window.rs (event loop) | watcher thread paralelo | watcher thread paralelo | thinlink externo |
@@ -117,7 +117,7 @@ USER CODE (reloadable) --> Vec<SceneNode> --> ENGINE (fixed)
 |-------|-----|------|
 | notify 7 | file system events (cross-platform) | 1, 2 |
 | notify-debouncer-full 0.4 | debounce 500ms | 1, 2 |
-| syn 2 (full, span-locations) | AST parsing de phi_narrate! | 2 |
+| syn 2 (full, span-locations) | AST parsing de plev_narrate! | 2 |
 | subsecond 0.7 | jump table + thinlink | 3 |
 
 ## arquivos de referencia no bunker 

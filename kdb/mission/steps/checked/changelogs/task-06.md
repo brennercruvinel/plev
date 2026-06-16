@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-08
@@ -12,7 +12,7 @@ domain: changelog
 
 ### início da task
 - branch `task/TASK-06-wasm-validation` criada a partir de `master`
-- worktree isolado em `/Users/aac/Dev/φ-task06`
+- worktree isolado em `/Users/aac/Dev/plev-task06`
 
 ### fase 1: fix bug init GPU WASM
 - **bug:** `spawn_local` criava gpucontext async mas nunca armazenava de volta no app
@@ -30,8 +30,8 @@ domain: changelog
 - `src/lib.rs`: eventloop::with_user_event(), proxy para app::new()
 - `src/main.rs`: mesmo pattern + cfg guard para WASM
 - `src/gpu.rs`: limits default() para WASM
-- `Cargo.toml`: feature "performance" no web-sys, binário renomeado para `φ-app`
-- `index.html`: `data-target-name="φ"` para evitar colisão trunk
+- `Cargo.toml`: feature "performance" no web-sys, binário renomeado para `plev-app`
+- `index.html`: `data-target-name="plev"` para evitar colisão trunk
 
 ### fase 3: compilação e build WASM
 - `cargo check --target wasm32-unknown-unknown`, ok, zero warnings
@@ -42,5 +42,5 @@ domain: changelog
 
 ### descobertas
 - trunk 0.21 não suporta `data-type="main"`, usar `data-target-name` explícito
-- colisão de artifacts quando bin e lib têm mesmo nome, renomear bin para `φ-app`
+- colisão de artifacts quando bin e lib têm mesmo nome, renomear bin para `plev-app`
 - worktree necessário quando múltiplos agentes modificam mesmo diretório

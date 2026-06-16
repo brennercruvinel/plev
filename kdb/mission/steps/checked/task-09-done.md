@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-13
@@ -9,17 +9,17 @@ domain: task-tracking
 # task-09: input system, keyboard + mouse
 
 ## objetivo
-implementar sistema de input para teclado e mouse/pointer. events de winit são traduzidos para o modelo de eventos do φ e despachados para views via hit-testing.
+implementar sistema de input para teclado e mouse/pointer. events de winit são traduzidos para o modelo de eventos do plev e despachados para views via hit-testing.
 
 ## contexto
-winit já entrega `WindowEvent::KeyboardInput`, `MouseInput`, `CursorMoved`, etc. o φ precisa: (1) traduzir para eventos próprios, (2) fazer hit-testing para determinar qual view recebe o evento, (3) despachar para handlers registrados via `.on_click()`, `.on_key()`.
+winit já entrega `WindowEvent::KeyboardInput`, `MouseInput`, `CursorMoved`, etc. o plev precisa: (1) traduzir para eventos próprios, (2) fazer hit-testing para determinar qual view recebe o evento, (3) despachar para handlers registrados via `.on_click()`, `.on_key()`.
 
 ## dependências
 - task-01 (view trait, views registram handlers)
 - task-03 (layout engine, hit-testing precisa de bounds calculados)
 
 ## checklist de conclusão
-- [x] event types próprios: `ClickEvent`, `φKeyEvent`, `HoverEvent`, `ScrollEvent`
+- [x] event types próprios: `ClickEvent`, `plevKeyEvent`, `HoverEvent`, `ScrollEvent`
 - [x] hit-testing: dado cursor position, determinar qual view está sob o cursor (respeitando z-order)
 - [x] despacho de eventos: event queue com hit-testing reverso (bubbling aproximado por containment geométrico)
 - [x] focus system básico: click-to-focus (se focusable), escape-to-blur, click fora limpa focus

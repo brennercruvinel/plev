@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-13
@@ -28,12 +28,12 @@ implementado sistema de acessibilidade completo via accesskit, feature-gated com
 - **id mapping**: viewid(u64) <-> nodeid(u64), root = u64::max
 
 ### handlers
-- φactivationhandler: retorna initial tree com window root
-- φactionhandler: log actions (click/focus) para debug
-- φdeactivationhandler: log desconexao de screen reader
+- plevactivationhandler: retorna initial tree com window root
+- plevactionhandler: log actions (click/focus) para debug
+- plevdeactivationhandler: log desconexao de screen reader
 
 ### widget-to-role mapping
-| φ type | accesskit role |
+| plev type | accesskit role |
 |-----------|---------------|
 | hitregion(focusable) | button |
 | hitregion(!focusable) | genericcontainer |

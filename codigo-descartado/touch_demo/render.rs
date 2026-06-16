@@ -1,6 +1,6 @@
 // Rendering: scene construction for the touch demo.
 
-use phi::compositor::{Compositor, TextNodeKey};
+use plev::compositor::{Compositor, TextNodeKey};
 
 use crate::palette::*;
 use crate::state::{State, TouchDemoApp};
@@ -32,7 +32,7 @@ impl TouchDemoApp {
 
         let view = output
             .texture
-            .create_view(&phi::wgpu::TextureViewDescriptor::default());
+            .create_view(&plev::wgpu::TextureViewDescriptor::default());
 
         let w = gpu.surface_config.width as f32;
         let h = gpu.surface_config.height as f32;

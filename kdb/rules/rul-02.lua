@@ -4,12 +4,12 @@ return {
   sts = "reference",
   dom = "state",
   dat = "2026-03-13",
-  ttl = "estado de dominio fora do phi",
+  ttl = "estado de dominio fora do plev",
   lnk = { "idx-rules" },
   txt = [[
-signals do φ armazenam exclusivamente estado de ui: scroll position, painel aberto, hover state, selecao ativa, modo de edicao. dados de dominio, usuario autenticado, lista de entidades, sessao, configuracao persistida, vivem em structs rust puros, owned pela app, sem dependencia de φ.
+signals do plev armazenam exclusivamente estado de ui: scroll position, painel aberto, hover state, selecao ativa, modo de edicao. dados de dominio, usuario autenticado, lista de entidades, sessao, configuracao persistida, vivem em structs rust puros, owned pela app, sem dependencia de plev.
 
-estado de dominio dentro de signals cria dependencia circular: testar logica de negocio exige instanciar o sistema reativo do φ, que exige event loop, que exige window. zero testes unitarios na pratica porque o setup e proibitivo.
+estado de dominio dentro de signals cria dependencia circular: testar logica de negocio exige instanciar o sistema reativo do plev, que exige event loop, que exige window. zero testes unitarios na pratica porque o setup e proibitivo.
 
 para estado hibrido, dados de dominio que a ui precisa transformar localmente, como lista filtrada ou ordenada, o protocolo padrao e derivacao pura: o dominio expoe o dado bruto via referencia imutavel, a ui computa a view como funcao pura no momento do render, sem armazenar o resultado derivado como estado.
 

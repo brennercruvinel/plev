@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -38,9 +38,9 @@ the `drain_events!()` macro dispatches each event sequentially and checks `NEED_
 
 **key insight:** the 10ms throttle + batch-of-50 design means rapid keypresses (e.g., holding down arrow) process all pending events before triggering a single render. this is o(1) renders per user-perceivable frame, not o(n) renders per keypress.
 
-**applicability to φ:** φ's event queue (`src/input/mod.rs`) processes events individually in `process_event()`. during rapid touch/keyboard input, each event triggers scene rebuild + GPU submit. a batch-drain approach would let φ accumulate events per frame, process all, then do one compositor.resolve() + render_pass(). this is especially valuable on mobile where touch move events fire at 120hz+.
+**applicability to plev:** plev's event queue (`src/input/mod.rs`) processes events individually in `process_event()`. during rapid touch/keyboard input, each event triggers scene rebuild + GPU submit. a batch-drain approach would let plev accumulate events per frame, process all, then do one compositor.resolve() + render_pass(). this is especially valuable on mobile where touch move events fire at 120hz+.
 
-**decision:** **adapt.** φ is not async/tokio-based, but the concept maps directly: drain all pending winit events before calling begin_frame()/build_scene()/resolve()/render(). winit 0.30 already batches via `about_to_wait()`, the pattern would be to accumulate input events during `window_event()` and process them all in `about_to_wait()` before rendering.
+**decision:** **adapt.** plev is not async/tokio-based, but the concept maps directly: drain all pending winit events before calling begin_frame()/build_scene()/resolve()/render(). winit 0.30 already batches via `about_to_wait()`, the pattern would be to accumulate input events during `window_event()` and process them all in `about_to_wait()` before rendering.
 
 ---
 
@@ -58,9 +58,9 @@ the dispatcher sets this flag. partial renders use `compare_exchange(0, 2)`, the
 
 **key insight:** not all state changes require a full repaint. background task progress, cursor blinks, and notifications can be drawn as overlays on top of the existing frame. this saves the cost of re-laying-out and re-rendering the entire UI for high-frequency updates.
 
-**applicability to φ:** φ's compositor already has per-layer dirty tracking via fxhasher. the atomic-flag pattern could complement this: when only a cursor blink or animation tick occurs (no actual scene change), φ could skip `build_scene()` entirely and only update the specific layer that changed. the 3-state flag (none/partial/full) maps to: 0=skip frame, 1=full rebuild, 2=update only animation/cursor layers.
+**applicability to plev:** plev's compositor already has per-layer dirty tracking via fxhasher. the atomic-flag pattern could complement this: when only a cursor blink or animation tick occurs (no actual scene change), plev could skip `build_scene()` entirely and only update the specific layer that changed. the 3-state flag (none/partial/full) maps to: 0=skip frame, 1=full rebuild, 2=update only animation/cursor layers.
 
-**decision:** **adapt.** the concept of tiered render urgency is directly applicable. instead of a global atomic, φ could track this per-layer: each layer has a dirty flag, and the frame loop skips scene rebuild for unchanged layers. this is partially implemented via fxhasher dirty tracking, but the explicit "partial render" concept (only animate, don't rebuild scene) is new.
+**decision:** **adapt.** the concept of tiered render urgency is directly applicable. instead of a global atomic, plev could track this per-layer: each layer has a dirty flag, and the frame loop skips scene rebuild for unchanged layers. this is partially implemented via fxhasher dirty tracking, but the explicit "partial render" concept (only animate, don't rebuild scene) is new.
 
 ---
 
@@ -86,9 +86,9 @@ pub enum Event {
 
 **key insight:** the two-phase dispatch (router -> executor) cleanly separates "which action does this key trigger?" from "what does this action do?". the layer enum prevents accidental cross-modal interaction. fallthrough (cmp -> input) allows composable modal behaviors without duplicating keybindings.
 
-**applicability to φ:** φ's input system uses a flat event queue with linear hit-testing. there's no concept of modal layers for keyboard routing. for a UI toolkit, modal input contexts (e.g., text editing mode, dialog mode, navigation mode) are essential. a layer enum + keymap-per-layer would let φ users define different keyboard behaviors for different UI states without custom dispatch logic.
+**applicability to plev:** plev's input system uses a flat event queue with linear hit-testing. there's no concept of modal layers for keyboard routing. for a UI toolkit, modal input contexts (e.g., text editing mode, dialog mode, navigation mode) are essential. a layer enum + keymap-per-layer would let plev users define different keyboard behaviors for different UI states without custom dispatch logic.
 
-**decision:** **adapt.** φ doesn't need 11 layers, but the concept of inputcontext (an enum of active modes) with per-context keymaps is valuable. this would live alongside the existing hit-test system: hit-testing handles spatial (mouse/touch) routing, while inputcontext handles keyboard modal routing.
+**decision:** **adapt.** plev doesn't need 11 layers, but the concept of inputcontext (an enum of active modes) with per-context keymaps is valuable. this would live alongside the existing hit-test system: hit-testing handles spatial (mouse/touch) routing, while inputcontext handles keyboard modal routing.
 
 ---
 
@@ -111,7 +111,7 @@ the `Ongoing` registry tracks all active tasks. `cancel(id)` marks a task as can
 
 **key insight:** priority channels prevent expensive background operations (file copy, plugin execution) from blocking lightweight operations (metadata fetch, UI updates). the cancellation pattern (token checked via select!) means work stops immediately when no longer needed, not at the next polling interval.
 
-**applicability to φ:** φ doesn't have a task scheduler yet, but will need one for: async image loading, font shaping of large text, preloading offscreen content, and plugin execution. the priority-channel pattern would prevent a large image decode from blocking a font cache miss that's needed for the current frame.
+**applicability to plev:** plev doesn't have a task scheduler yet, but will need one for: async image loading, font shaping of large text, preloading offscreen content, and plugin execution. the priority-channel pattern would prevent a large image decode from blocking a font cache miss that's needed for the current frame.
 
 **decision:** **adopt** (when building async task system). the 3-level priority (high=frame-critical, normal=visible-soon, low=background) maps perfectly to GPU rendering priorities. the cancellation-via-token pattern is better than kill/abort because it allows cleanup (GPU resource release).
 
@@ -130,9 +130,9 @@ the host exposes 6 global tables to plugins: `ui` (render elements), `ya` (utili
 
 **key insight:** two-tier VM isolation (shared for UI, isolated for tasks) balances performance (shared VM avoids lua init overhead for UI) with safety (isolated vms prevent task plugins from corrupting UI state). the limited global surface (`ui`, `ya`, `fs`, `ps`, `rt`, `th`) acts as a capability system, plugins can only do what the host explicitly exposes.
 
-**applicability to φ:** task-33 (WASM plugins) could adopt the two-tier model: a shared WASM instance for UI extensions (custom components, themes) and isolated instances for background tasks (data processing, network). the capability-table pattern (explicit host function groups) maps directly to WASM imports/exports.
+**applicability to plev:** task-33 (WASM plugins) could adopt the two-tier model: a shared WASM instance for UI extensions (custom components, themes) and isolated instances for background tasks (data processing, network). the capability-table pattern (explicit host function groups) maps directly to WASM imports/exports.
 
-**decision:** **adapt** (for task-33). the two-tier isolation concept is directly transferable. WASM replaces lua, but the architecture (shared UI instance + isolated task instances + curated host API) is the same. the 6 global tables pattern suggests a plugin API design: `φ.ui`, `φ.layout`, `φ.input`, `φ.animation`, `φ.data`.
+**decision:** **adapt** (for task-33). the two-tier isolation concept is directly transferable. WASM replaces lua, but the architecture (shared UI instance + isolated task instances + curated host API) is the same. the 6 global tables pattern suggests a plugin API design: `plev.ui`, `plev.layout`, `plev.input`, `plev.animation`, `plev.data`.
 
 ---
 
@@ -157,9 +157,9 @@ the `ChannelKind` enum wraps all three and uses a `delegate_to_channel!` macro t
 
 **key insight:** the injector/matcher split decouples data production (async, IO-bound) from data consumption (CPU-bound fuzzy matching). the 10k batch + 4-concurrent-flush pipeline keeps both the IO thread and the matcher thread saturated without unbounded memory growth. the three-tier processor design (plain/ansi/display) shows how to optimize for the common case (plain text) while supporting rich formatting.
 
-**applicability to φ:** φ's compositor processes data synchronously. for features like search/filter in list views, autocomplete, or asset loading, the injector/matcher pattern provides a ready-made architecture: a background thread feeds data into a lock-free channel, and the UI thread queries results each frame via `results(num_entries, offset)`. the batch-flush pattern is also applicable to loading large datasets (e.g., log viewers, data tables).
+**applicability to plev:** plev's compositor processes data synchronously. for features like search/filter in list views, autocomplete, or asset loading, the injector/matcher pattern provides a ready-made architecture: a background thread feeds data into a lock-free channel, and the UI thread queries results each frame via `results(num_entries, offset)`. the batch-flush pattern is also applicable to loading large datasets (e.g., log viewers, data tables).
 
-**decision:** **adapt** (when building list/search components). the injector pattern is more general than fuzzy search, it's a way to bridge async data production with synchronous UI rendering. φ could use this for any "streaming data source" component.
+**decision:** **adapt** (when building list/search components). the injector pattern is more general than fuzzy search, it's a way to bridge async data production with synchronous UI rendering. plev could use this for any "streaming data source" component.
 
 ---
 
@@ -180,9 +180,9 @@ the reload suppression is particularly clever: when switching channels, a 200ms 
 
 **key insight:** not all user actions need the same rendering response. rapid data changes (channel loading) should throttle renders to avoid wasted work, while direct user interactions (typing, clicking) need immediate visual feedback. the `affects_results()` classification lets the system skip expensive data pipeline processing for actions that only affect visual chrome.
 
-**applicability to φ:** φ could classify scene changes by impact: (1) structural changes (new nodes, removed nodes) need full resolve, (2) property changes (opacity, color) need only buffer updates, (3) animation ticks where nothing visually changes can skip the GPU entirely. the reload-suppression pattern is directly applicable to φ's layer system: when swapping layer content, suppress rendering for 1-2 frames to avoid partial-update flicker.
+**applicability to plev:** plev could classify scene changes by impact: (1) structural changes (new nodes, removed nodes) need full resolve, (2) property changes (opacity, color) need only buffer updates, (3) animation ticks where nothing visually changes can skip the GPU entirely. the reload-suppression pattern is directly applicable to plev's layer system: when swapping layer content, suppress rendering for 1-2 frames to avoid partial-update flicker.
 
-**decision:** **adapt.** the tiered rendering concept extends φ's existing dirty tracking. currently, φ hashes the entire scene per-layer. adding action classification would let it skip hashing entirely for actions known to not affect the scene (e.g., input focus change with no visual effect).
+**decision:** **adapt.** the tiered rendering concept extends plev's existing dirty tracking. currently, plev hashes the entire scene per-layer. adding action classification would let it skip hashing entirely for actions known to not affect the scene (e.g., input focus change with no visual effect).
 
 ---
 
@@ -199,9 +199,9 @@ the `MissingRequirementsPopup` shows when a channel requires binaries that aren'
 
 **key insight:** modes share infrastructure (input bar, fuzzy matching, rendering) but have independent state (picker position, data source). this is cheaper than full screen transitions because only the data source and result list change, the chrome stays the same. the "meta-channel" pattern (remotecontrol is itself a searchable list) shows how a system can be self-describing.
 
-**applicability to φ:** for any app built on φ that needs modal navigation (e.g., command palette, settings panel, search overlay), the shared-chrome-with-swappable-data pattern avoids full-screen rebuilds. in φ's compositor terms: the chrome layers stay cached, only the content layer's scene nodes change. this maximizes dirty-tracking efficiency.
+**applicability to plev:** for any app built on plev that needs modal navigation (e.g., command palette, settings panel, search overlay), the shared-chrome-with-swappable-data pattern avoids full-screen rebuilds. in plev's compositor terms: the chrome layers stay cached, only the content layer's scene nodes change. this maximizes dirty-tracking efficiency.
 
-**decision:** **adapt.** the mode enum + shared input pattern is a UX pattern for φ applications, not for the engine itself. but φ could provide a `ModalStack` component that manages mode transitions with layer-aware caching: push a mode = create new content layer, pop = destroy it, chrome layers persist unchanged.
+**decision:** **adapt.** the mode enum + shared input pattern is a UX pattern for plev applications, not for the engine itself. but plev could provide a `ModalStack` component that manages mode transitions with layer-aware caching: push a mode = create new content layer, pop = destroy it, chrome layers persist unchanged.
 
 ---
 
@@ -234,9 +234,9 @@ the navigation mapping algorithm (lines 40-350 of `layout_manager.rs`) works in 
 
 **key insight:** declarative layout in config files lets users customize their dashboard without code changes. the auto-computed navigation graph means keyboard navigation "just works" for any layout, users don't need to manually wire up widget transitions. the two-pass algorithm (position -> neighbor mapping) is o(n^2) in widgets but runs once at startup.
 
-**applicability to φ:** φ uses taffy for flexbox layout, which is more powerful than ratio-based rows/columns. but the auto-navigation concept is valuable: given a layout tree, φ could automatically compute directional focus navigation (tab/shift-tab, arrow keys) without requiring developers to manually specify focus order. this is also required for accessibility (task-30), screen readers need a logical focus traversal order.
+**applicability to plev:** plev uses taffy for flexbox layout, which is more powerful than ratio-based rows/columns. but the auto-navigation concept is valuable: given a layout tree, plev could automatically compute directional focus navigation (tab/shift-tab, arrow keys) without requiring developers to manually specify focus order. this is also required for accessibility (task-30), screen readers need a logical focus traversal order.
 
-**decision:** **adapt** (for focus navigation). the TOML layout format itself isn't applicable (φ has taffy + DSL), but the auto-computed directional navigation from layout geometry is directly useful. it would be a function: `compute_focus_graph(layout: &ComputedLayout) -> FocusGraph` where focusgraph maps each focusable widget to its directional neighbors.
+**decision:** **adapt** (for focus navigation). the TOML layout format itself isn't applicable (plev has taffy + DSL), but the auto-computed directional navigation from layout geometry is directly useful. it would be a function: `compute_focus_graph(layout: &ComputedLayout) -> FocusGraph` where focusgraph maps each focusable widget to its directional neighbors.
 
 ---
 
@@ -265,7 +265,7 @@ esc exits expanded mode. widget navigation (ctrl+arrows) is disabled while expan
 
 **key insight:** the implementation is trivially simple (one boolean + one branch in the render path) but provides high UX value: users can drill into any widget for detail, then return to the overview. the key design choice is that expansion doesn't destroy state, the widget keeps its scroll position, selection, and data when toggling back.
 
-**applicability to φ:** for dashboard-style applications, a maximize/restore pattern is essential. in φ's layer system, this could be implemented as: (1) store the current layout, (2) set the target widget's layer to z_order=max and bounds=fullscreen, (3) set all other layers to invisible. on restore, revert. since φ has per-layer dirty tracking, the invisible layers incur zero GPU cost while maximized.
+**applicability to plev:** for dashboard-style applications, a maximize/restore pattern is essential. in plev's layer system, this could be implemented as: (1) store the current layout, (2) set the target widget's layer to z_order=max and bounds=fullscreen, (3) set all other layers to invisible. on restore, revert. since plev has per-layer dirty tracking, the invisible layers incur zero GPU cost while maximized.
 
 **decision:** **adopt** (as a utility pattern). this is simple enough to implement as a helper function or component behavior. `fn maximize_widget(compositor, widget_layer_id)` and `fn restore_layout(compositor)`. the layer visibility system already supports this.
 
@@ -291,9 +291,9 @@ this is separate from the render loop: input events trigger immediate re-renders
 
 **key insight:** separating data collection rate from render rate is critical for resource-intensive monitoring. the minimum floor (250ms) prevents users from accidentally pegging their CPU. the cancellable sleep pattern ensures clean shutdown without threads hanging.
 
-**applicability to φ:** φ runs at display refresh rate (typically 60fps = 16.6ms). for applications that poll external data (network, sensors, databases), a configurable poll rate separate from the render rate avoids unnecessary work. this is a pattern for φ applications rather than the engine itself, but the engine could provide a `Timer` utility that fires events at configurable intervals, integrated with the event loop.
+**applicability to plev:** plev runs at display refresh rate (typically 60fps = 16.6ms). for applications that poll external data (network, sensors, databases), a configurable poll rate separate from the render rate avoids unnecessary work. this is a pattern for plev applications rather than the engine itself, but the engine could provide a `Timer` utility that fires events at configurable intervals, integrated with the event loop.
 
-**decision:** **adapt** (as engine utility). a `PollTimer { interval: Duration, callback: fn() }` component that integrates with φ's event queue would let applications separate data polling from rendering. the minimum-floor concept prevents footgun configurations.
+**decision:** **adapt** (as engine utility). a `PollTimer { interval: Duration, callback: fn() }` component that integrates with plev's event queue would let applications separate data polling from rendering. the minimum-floor concept prevents footgun configurations.
 
 ---
 
@@ -308,17 +308,17 @@ this is separate from the render loop: input events trigger immediate re-renders
 | 5 | two-tier plugin isolation | yazi | adapt (task-33) | low, informs WASM plugin design |
 | 6 | channel/injector data abstraction | television | adapt (future) | low, for list/search components |
 | 7 | render gating by action type | television | adapt | medium, complements dirty tracking |
-| 8 | mode transitions + shared chrome | television | adapt | low, UX pattern for apps on φ |
+| 8 | mode transitions + shared chrome | television | adapt | low, UX pattern for apps on plev |
 | 9 | auto-navigation from layout | bottom | adapt | high, needed for a11y (task-30) |
 | 10 | widget maximize/restore | bottom | adopt | low, trivial + high UX value |
 | 11 | configurable update rate | bottom | adapt | low, engine utility for data-polling apps |
 
-## top 4 patterns for φ (immediate relevance)
+## top 4 patterns for plev (immediate relevance)
 
-1. **event batching (pattern 1):** highest impact. φ processes every winit event individually; batching before render would cut GPU work by 5-10x during rapid input. implementation: accumulate events in `window_event()`, process batch in `about_to_wait()`.
+1. **event batching (pattern 1):** highest impact. plev processes every winit event individually; batching before render would cut GPU work by 5-10x during rapid input. implementation: accumulate events in `window_event()`, process batch in `about_to_wait()`.
 
 2. **auto-navigation from layout (pattern 9):** required for accessibility (task-30). given taffy's computed layout, auto-generate a directional focus graph. bottom proves the two-pass algorithm (position map -> neighbor lookup) works for arbitrary layouts.
 
-3. **partial render flag (pattern 2):** extends φ's existing per-layer fxhash dirty tracking with explicit "skip frame entirely" and "update only animation layers" states. reduces wasted frames during idle.
+3. **partial render flag (pattern 2):** extends plev's existing per-layer fxhash dirty tracking with explicit "skip frame entirely" and "update only animation layers" states. reduces wasted frames during idle.
 
-4. **layer-based action routing (pattern 3):** φ needs modal keyboard input for text editing vs navigation vs dialog contexts. the layer enum + fallthrough pattern provides a clean model.
+4. **layer-based action routing (pattern 3):** plev needs modal keyboard input for text editing vs navigation vs dialog contexts. the layer enum + fallthrough pattern provides a clean model.

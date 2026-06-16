@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -9,13 +9,13 @@ domain: wasm
 # reference analysis: emuladores e WASM runtimes
 
 **data:** 2026-03-11
-**contexto:** pesquisa para suporte futuro a fortran, inform 6/7 e outras linguagens rodando no browser via φ.
+**contexto:** pesquisa para suporte futuro a fortran, inform 6/7 e outras linguagens rodando no browser via plev.
 
 ---
 
 ## escopo
 
-como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia para arquitetura futura de plugins/linguagens no φ. foco em: rendering loop, interface host-guest, gerenciamento de memoria e frame timing.
+como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia para arquitetura futura de plugins/linguagens no plev. foco em: rendering loop, interface host-guest, gerenciamento de memoria e frame timing.
 
 ---
 
@@ -39,7 +39,7 @@ como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia pa
 - **plugin system:** hooks para `canvas`, `graphics`, e outros pontos de extensao. permite intercecao e transformacao dos dados de frame.
 - **pause/resume:** detecta `visibilitychange` no document para auto-pause quando tab perde foco.
 
-**relevancia para φ:**
+**relevancia para plev:**
 - modelo de separacao emulacao (worker) vs renderizacao (main thread) e diretamente aplicavel.
 - o padrao de enviar frame buffers via postmessage/sharedarraybuffer e relevante para qualquer linguagem que produza output grafico.
 - frame skip e um conceito util se o runtime guest for mais lento que 60fps.
@@ -47,7 +47,7 @@ como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia pa
 
 **insight principal:** a emulacao roda desacoplada do rendering, o WASM core "ticking" em worker produz frames, e o main thread consome no ritmo do requestanimationframe. isso evita que emulacao lenta trave o UI e que emulacao rapida desperdice GPU renders.
 
-**limitacao:** canvas 2d (nao webgpu/webgl). nao resolve acesso a GPU do guest, o guest produz pixels em memoria linear e o host renderiza. para φ, o guest precisaria produzir scene nodes, nao pixels brutos.
+**limitacao:** canvas 2d (nao webgpu/webgl). nao resolve acesso a GPU do guest, o guest produz pixels em memoria linear e o host renderiza. para plev, o guest precisaria produzir scene nodes, nao pixels brutos.
 
 ---
 
@@ -70,15 +70,15 @@ como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia pa
 - **standalone shell:** usa wasmtime como engine nativo, tambem funciona fora do browser.
 - **compilacao AOT:** `waforthc` compila forth para executavel nativo via WASM como representacao intermediaria.
 
-**relevancia para φ:**
+**relevancia para plev:**
 - modelo exemplar de linguagem compilando para WASM dentro de WASM. diretamente aplicavel ao cenario fortran/inform.
-- o padrao de host bindings (bind/bindasync) e o exato mecanismo que φ precisaria: a linguagem guest chama funcoes do host (renderizacao, i/o, file system).
+- o padrao de host bindings (bind/bindasync) e o exato mecanismo que plev precisaria: a linguagem guest chama funcoes do host (renderizacao, i/o, file system).
 - a function table compartilhada e o mecanismo de comunicacao, cada modulo compilado registra funcoes nela.
 - 14kb para um runtime completo demonstra que e viavel embeder runtimes leves.
 
 **insight principal:** WASM nao tem JIT nativo, entao waforth contorna isso compilando cada word como um modulo WASM separado e carregando dinamicamente via JS API. esse padrao (compile -> load module -> register in table) e o unico caminho para compilacao dinamica em WASM ate a proposta de JIT compilation ser aprovada.
 
-**limitacao:** o carregamento dinamico de modulos requer javascript (webassembly.instantiate e async). em ambiente puramente WASM (sem JS host) nao e possivel. para φ rodando via WASM, o host φ (rust compilado para WASM) precisaria de uma bridge JS para carregar modulos dinamicos.
+**limitacao:** o carregamento dinamico de modulos requer javascript (webassembly.instantiate e async). em ambiente puramente WASM (sem JS host) nao e possivel. para plev rodando via WASM, o host plev (rust compilado para WASM) precisaria de uma bridge JS para carregar modulos dinamicos.
 
 ---
 
@@ -100,15 +100,15 @@ como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia pa
 - **gradle plugin:** gera classes kotlin type-safe a partir de exports WASM. usa chasm para jvm/native, e engines embarcados (v8, spidermonkey, jsc) para targets JS.
 - **proposals suportadas:** tail call, extended const, typed function refs, gc, multiple memories, exception handling, extended name sections, wide arithmetic.
 
-**relevancia para φ:**
-- chasm demonstra como construir um WASM runtime cross-platform de verdade. se φ quiser executar WASM modules nativamente (fora do browser), este e o modelo.
-- o padrao de hostfunction e diretamente analogo ao que φ precisaria: funcoes do engine expostas para o WASM guest.
+**relevancia para plev:**
+- chasm demonstra como construir um WASM runtime cross-platform de verdade. se plev quiser executar WASM modules nativamente (fora do browser), este e o modelo.
+- o padrao de hostfunction e diretamente analogo ao que plev precisaria: funcoes do engine expostas para o WASM guest.
 - o gradle plugin (gerar API tipada a partir de .wasm) e uma ideia aplicavel: um build step que gera rust bindings a partir dos exports de um modulo WASM.
 - suporte a gc proposal e relevante para linguagens com garbage collection (como inform 7).
 
-**insight principal:** o pattern `store + module + instance + invoke` e o padrao universal de embedding WASM. qualquer runtime φ precisaria dessas quatro abstracoes. chasm mostra que e viavel implementar isso em ~6k linhas de kotlin, um runtime WASM nao precisa ser massivo.
+**insight principal:** o pattern `store + module + instance + invoke` e o padrao universal de embedding WASM. qualquer runtime plev precisaria dessas quatro abstracoes. chasm mostra que e viavel implementar isso em ~6k linhas de kotlin, um runtime WASM nao precisa ser massivo.
 
-**limitacao:** nao e um runtime de alta performance (interpretador, nao JIT). para φ no browser, o WASM runtime do proprio browser (v8/spidermonkey) seria preferivel. chasm e mais relevante para o cenario nativo (desktop/mobile) onde nao ha runtime WASM built-in.
+**limitacao:** nao e um runtime de alta performance (interpretador, nao JIT). para plev no browser, o WASM runtime do proprio browser (v8/spidermonkey) seria preferivel. chasm e mais relevante para o cenario nativo (desktop/mobile) onde nao ha runtime WASM built-in.
 
 ---
 
@@ -134,15 +134,15 @@ como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia pa
 - **monitors/instrumentacao:** sistema de monitors (built-in e custom) para analise de execucao. suporte a whamm! (DSL de instrumentacao WASM).
 - **targets:** x86-darwin, x86-linux, x86-64-linux, jar (jvm), wasm.
 
-**relevancia para φ:**
-- modelo de referencia para instrumentacao e introspeccao de WASM modules. se φ quiser debugger ou profiler para linguagens guest, wizard mostra como.
+**relevancia para plev:**
+- modelo de referencia para instrumentacao e introspeccao de WASM modules. se plev quiser debugger ou profiler para linguagens guest, wizard mostra como.
 - o parser push-based e ideal para streaming, carregar modulos WASM progressivamente enquanto faz download.
 - o conceito de "control transfer information" (metadata pre-computada para branches) e relevante para performance de interpretadores.
 - stack-switching (wasmfx) e relevante para coroutines/fibers em linguagens guest.
 
-**insight principal:** wizard prioriza "simplicity and functionality first", a arquitetura soma requisitos presentes e futuros antes de otimizar. escrito em virgil (linguagem gc), proposals como wasm gc reutilizam o collector da linguagem host, mantendo o engine pequeno. essa filosofia de design e relevante para φ: nao otimizar prematuramente o runtime, mas garantir que a arquitetura comporte extensoes futuras.
+**insight principal:** wizard prioriza "simplicity and functionality first", a arquitetura soma requisitos presentes e futuros antes de otimizar. escrito em virgil (linguagem gc), proposals como wasm gc reutilizam o collector da linguagem host, mantendo o engine pequeno. essa filosofia de design e relevante para plev: nao otimizar prematuramente o runtime, mas garantir que a arquitetura comporte extensoes futuras.
 
-**limitacao:** escrito em virgil (linguagem pouco conhecida, criada pelo mesmo autor). nao e possivel integrar diretamente no φ. valor e puramente de referencia arquitetural. sem releases formais no github.
+**limitacao:** escrito em virgil (linguagem pouco conhecida, criada pelo mesmo autor). nao e possivel integrar diretamente no plev. valor e puramente de referencia arquitetural. sem releases formais no github.
 
 ---
 
@@ -162,13 +162,13 @@ como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia pa
 - **WASI:** implementacao de WASI preview 1 para filesystem, clock, stdout. exemplos incluem http requests, directory listing, stdout capture.
 - **performance:** interpretador puro, sem JIT. ~10x mais rapido no pypy que no cpython (design JIT-friendly). nao compete com runtimes nativos em velocidade.
 
-**relevancia para φ:**
+**relevancia para plev:**
 - demonstra a simplicidade minima de um runtime WASM: decoder + executor + host bindings em ~8 arquivos.
 - o padrao `Runtime -> instance -> invocate` e o mesmo de chasm, reforando que e universal.
 - util como referencia para entender internals de WASM (opcodes, leb128, memoria linear) sem a complexidade de engines de producao.
 - WASI support mostra o contrato minimo para dar syscalls a um guest.
 
-**insight principal:** um runtime WASM funcional cabe em poucos milhares de linhas de python puro. a complexidade nao esta no runtime em si, mas nas proposals avanadas (gc, SIMD, threads). para um mvp de runtime em φ, o subconjunto core e tratavel.
+**insight principal:** um runtime WASM funcional cabe em poucos milhares de linhas de python puro. a complexidade nao esta no runtime em si, mas nas proposals avanadas (gc, SIMD, threads). para um mvp de runtime em plev, o subconjunto core e tratavel.
 
 **limitacao:** performance inutilizavel para producao (interpretador python puro). nao suporta SIMD, threads, gc proposal. valor e exclusivamente educacional e de prototipagem.
 
@@ -180,8 +180,8 @@ como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia pa
 
 - **padrao dominante:** requestanimationframe no main thread, emulacao em web worker. o worker "ticka" a CPU do guest e produz frame buffers. o main thread consome os buffers no ritmo do vsync.
 - **frame skip:** quando o guest nao acompanha 60fps, pula frames de renderizacao mas continua tickando a emulacao.
-- **canvas vs GPU:** wasmboy usa canvas 2d com `putImageData`. para φ, o guest produziria scene nodes (nao pixels), e o compositor φ renderizaria via webgpu.
-- **visibility change:** emuladores pausam automaticamente quando a tab perde foco (event `visibilitychange`). φ ja faz isso no lifecycle nativo, precisa equivalente para guest runtimes.
+- **canvas vs GPU:** wasmboy usa canvas 2d com `putImageData`. para plev, o guest produziria scene nodes (nao pixels), e o compositor plev renderizaria via webgpu.
+- **visibility change:** emuladores pausam automaticamente quando a tab perde foco (event `visibilitychange`). plev ja faz isso no lifecycle nativo, precisa equivalente para guest runtimes.
 
 ### interface host-guest em runtimes
 
@@ -196,34 +196,34 @@ como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia pa
 - **memoria linear:** o guest tem acesso a uma memoria linear (arraybuffer). o host le/escreve nela para troca de dados (frame buffers, strings, structs).
 - **sharedarraybuffer:** wasmboy usa quando disponivel para zero-copy entre worker e main thread. fallback para transferable buffers (muda ownership, nao copia).
 - **gc:** chasm e wizard suportam a wasm gc proposal (structs e arrays gerenciados pelo engine). relevante para linguagens com gc (inform 7, potencialmente fortran moderno).
-- **grow-only:** memorias WASM crescem mas nao encolhem (como `GpuVec` do φ, coincidencia arquitetural util).
+- **grow-only:** memorias WASM crescem mas nao encolhem (como `GpuVec` do plev, coincidencia arquitetural util).
 
 ### frame timing e sincronizacao
 
 - **requestanimationframe:** unico mecanismo confiavel para vsync no browser. emuladores o usam no main thread e desacoplam a emulacao.
 - **performance.now():** para medicao de tempo dentro de WASM, o host precisa expor uma funcao de clock (o WASM nao tem acesso a relogio nativo).
-- **batch execution:** wasmboy executa n ciclos de CPU por batch, nao um por frame. o batch size e calibrado para manter ~60fps. analogia: o runtime φ executaria n instrucoes do guest por frame do compositor.
+- **batch execution:** wasmboy executa n ciclos de CPU por batch, nao um por frame. o batch size e calibrado para manter ~60fps. analogia: o runtime plev executaria n instrucoes do guest por frame do compositor.
 
 ---
 
-## implicacoes para φ
+## implicacoes para plev
 
 ### arquitetura recomendada para runtime de linguagens
 
-1. **modelo worker (browser):** a linguagem guest roda em web worker. produz comandos de cena (nao pixels) que sao transferidos para o main thread onde o compositor φ renderiza via webgpu. isso desacopla a velocidade do guest da taxa de refresh.
+1. **modelo worker (browser):** a linguagem guest roda em web worker. produz comandos de cena (nao pixels) que sao transferidos para o main thread onde o compositor plev renderiza via webgpu. isso desacopla a velocidade do guest da taxa de refresh.
 
-2. **interface via host bindings:** definir um conjunto de funcoes φ que o guest pode importar:
-   - `φ_push_rect(layer, x, y, w, h, r, g, b, a)` -> scenenode::rect
-   - `φ_push_text(layer, x, y, text_ptr, text_len, size)` -> scenenode::text
-   - `φ_begin_frame()`, `φ_end_frame()`
-   - `φ_get_input()` -> eventos de input
-   - `φ_log(ptr, len)` -> console
+2. **interface via host bindings:** definir um conjunto de funcoes plev que o guest pode importar:
+   - `plev_push_rect(layer, x, y, w, h, r, g, b, a)` -> scenenode::rect
+   - `plev_push_text(layer, x, y, text_ptr, text_len, size)` -> scenenode::text
+   - `plev_begin_frame()`, `plev_end_frame()`
+   - `plev_get_input()` -> eventos de input
+   - `plev_log(ptr, len)` -> console
 
 3. **memoria compartilhada:** o guest escreve dados (strings, structs) na sua memoria linear. o host le via offsets. para dados grandes (textures), usar sharedarraybuffer quando disponivel.
 
 4. **padrao store-module-instance:** seguir o padrao universal (chasm, pywasm, wizard):
    ```
-   store = φWasmStore::new()
+   store = plevWasmStore::new()
    module = store.load(wasm_bytes)
    instance = store.instantiate(module, imports)
    store.invoke(instance, "main", args)
@@ -235,14 +235,14 @@ como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia pa
 
 ### prioridades de implementacao
 
-- **fase 1:** host bindings minimos (rect, text, input). um modulo WASM guest que chama essas funcoes para produzir uma cena φ. proof of concept.
+- **fase 1:** host bindings minimos (rect, text, input). um modulo WASM guest que chama essas funcoes para produzir uma cena plev. proof of concept.
 - **fase 2:** WASI preview 1 para suportar fortran compilado com WASI-SDK. o compilador fortran (flang/lfortran) ja suporta target WASM.
-- **fase 3:** inform 6/7 via glulx VM compilada para WASM (ja existem projetos como `glulx-wasm`). o guest rodaria a VM que interpreta o jogo, e produziria output via host bindings φ.
+- **fase 3:** inform 6/7 via glulx VM compilada para WASM (ja existem projetos como `glulx-wasm`). o guest rodaria a VM que interpreta o jogo, e produziria output via host bindings plev.
 - **fase 4:** compilacao dinamica e instrumentacao (inspirado em waforth e wizard monitors).
 
 ### riscos identificados
 
-- **WASM JIT proposal:** ainda nao aprovada. linguagens que precisam de compilacao dinamica dependem do workaround waforth (carregar modulos via JS API), que requer bridge JS mesmo no target WASM nativo do φ.
-- **performance de interpretadores:** um runtime WASM interpretado (como pywasm) e ordens de magnitude mais lento que compilado. para targets nativos do φ, usar wasmer/wasmtime como backend (nao implementar interpretador proprio).
+- **WASM JIT proposal:** ainda nao aprovada. linguagens que precisam de compilacao dinamica dependem do workaround waforth (carregar modulos via JS API), que requer bridge JS mesmo no target WASM nativo do plev.
+- **performance de interpretadores:** um runtime WASM interpretado (como pywasm) e ordens de magnitude mais lento que compilado. para targets nativos do plev, usar wasmer/wasmtime como backend (nao implementar interpretador proprio).
 - **sharedarraybuffer:** requer headers coop/coep no servidor. sem ele, a transferencia de frame buffers entre worker e main thread copia dados.
 - **wasm gc:** necessario para linguagens com gc. a proposal e recente e nem todos os browsers suportam completamente.

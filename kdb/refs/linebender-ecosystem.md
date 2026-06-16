@@ -1,22 +1,22 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
 domain: text
 ---
 
-# ecossistema linebender, analise para φ
+# ecossistema linebender, analise para plev
 
 **data:** 2026-03-11
-**contexto:** pesquisa de referencia para task-32 (text upgrade assessment) e decisoes arquiteturais futuras do φ.
+**contexto:** pesquisa de referencia para task-32 (text upgrade assessment) e decisoes arquiteturais futuras do plev.
 **metodologia:** dados coletados via github API, crates.io API, blogs oficiais linebender (tmil-11..24), deepwiki, e prs de projetos consumidores (egui, bevy, slint).
 
 ---
 
 ## sumario executivo
 
-o ecossistema linebender e a tentativa mais ambiciosa de construir um stack de rendering 2d completo em rust puro, de SIMD ate gui declarativa. sete projetos interconectados, liderados por raph levien (ex-google fonts), com financiamento NLnet para 2026. para φ, o ponto de maior impacto imediato e parley como substituto do cosmic-text (task-32). os demais projetos oferecem licoes arquiteturais, nao dependencias diretas.
+o ecossistema linebender e a tentativa mais ambiciosa de construir um stack de rendering 2d completo em rust puro, de SIMD ate gui declarativa. sete projetos interconectados, liderados por raph levien (ex-google fonts), com financiamento NLnet para 2026. para plev, o ponto de maior impacto imediato e parley como substituto do cosmic-text (task-32). os demais projetos oferecem licoes arquiteturais, nao dependencias diretas.
 
 ---
 
@@ -35,13 +35,13 @@ o ecossistema linebender e a tentativa mais ambiciosa de construir um stack de r
 - **performance:** 177 fps para paris-30k (1600x1600) em m1 max. otimizacao recente: -30% memoria em wide tile commands, eliminacao de overdraw para imagens opacas
 - **hibrido (novo 2025):** roda em webgl2 (firefox sem webgpu), blending completo, gradientes, multiplos atlas de imagem. vello CPU usa sparse strips com SIMD
 
-**relevancia para φ:**
-- o modelo de encoding em streams paralelos e superior ao nosso scenenode -> hash -> upload. φ poderia adotar encoding incremental em streams separados para dirty tracking mais granular
-- o backend hibrido resolve o problema que φ tem com webgl2 fallback, estudar a divisao CPU/GPU
+**relevancia para plev:**
+- o modelo de encoding em streams paralelos e superior ao nosso scenenode -> hash -> upload. plev poderia adotar encoding incremental em streams separados para dirty tracking mais granular
+- o backend hibrido resolve o problema que plev tem com webgl2 fallback, estudar a divisao CPU/GPU
 - o pattern scene -> encoding -> resolver (atlas, gradientes, glyph cache) e mais limpo que nosso acoplamento compositor/text
-- tile-based coarse/fine e relevante se φ evoluir para path rendering (task-31)
+- tile-based coarse/fine e relevante se plev evoluir para path rendering (task-31)
 
-**insight principal:** o encoding em streams multiplexados com prefix-sum e a inovacao real. nao e o compute shader em si, e a estrutura de dados que permite paralelismo. φ pode aprender o pattern de streams sem adotar compute shaders.
+**insight principal:** o encoding em streams multiplexados com prefix-sum e a inovacao real. nao e o compute shader em si, e a estrutura de dados que permite paralelismo. plev pode aprender o pattern de streams sem adotar compute shaders.
 
 **limitacao:** requer compute shaders (webgpu), o que exclui webgl2 no backend puro. o backend hibrido e novo e incompleto. alpha state, API instavel, breaking changes frequentes. complexidade enorme (13+ shader stages) para quem so precisa de quads + texto.
 
@@ -59,15 +59,15 @@ o ecossistema linebender e a tentativa mais ambiciosa de construir um stack de r
 - **xilem web:** backend alternativo para browser via DOM, mesmo modelo de view tree
 - **MSRV 1.88**, plataformas: linux, BSD, macos, windows. ios/android nao suportado ainda
 
-**relevancia para φ:**
-- o padrao de diff-on-retained-tree e diretamente relevante para o sistema de views/components de φ (task-05). φ reconstroi a scene inteira por frame; xilem mostra como fazer diff incremental
-- a separacao xilem (reactive) / masonry (retained widgets) e analoga a separacao que φ precisa entre builder API e compositor
+**relevancia para plev:**
+- o padrao de diff-on-retained-tree e diretamente relevante para o sistema de views/components de plev (task-05). plev reconstroi a scene inteira por frame; xilem mostra como fazer diff incremental
+- a separacao xilem (reactive) / masonry (retained widgets) e analoga a separacao que plev precisa entre builder API e compositor
 - accesskit integration e referencia para task-30
-- o pattern de view tree tipado estaticamente evita o overhead de virtual dispatch que φ tem com `Box<dyn View>`
+- o pattern de view tree tipado estaticamente evita o overhead de virtual dispatch que plev tem com `Box<dyn View>`
 
-**insight principal:** a separacao em 3 camadas (view tree efemero -> element tree intermediario -> widget tree retido) permite que o paradigma declarativo mude sem tocar na infra de rendering. φ mistura as 3 camadas.
+**insight principal:** a separacao em 3 camadas (view tree efemero -> element tree intermediario -> widget tree retido) permite que o paradigma declarativo mude sem tocar na infra de rendering. plev mistura as 3 camadas.
 
-**limitacao:** 6.286 downloads totais, adocao minima. experimental, API instavel. nao suporta mobile. depende de vello (compute shaders), o que limita targets. para φ, que ja tem seu proprio pipeline de rendering, adotar xilem nao faz sentido, mas o pattern de diff e valioso.
+**limitacao:** 6.286 downloads totais, adocao minima. experimental, API instavel. nao suporta mobile. depende de vello (compute shaders), o que limita targets. para plev, que ja tem seu proprio pipeline de rendering, adotar xilem nao faz sentido, mas o pattern de diff e valioso.
 
 ---
 
@@ -122,15 +122,15 @@ PlainEditor com shift-click, triple-click (paragrafo), Ctrl+A
 
 **nota:** cosmic-text 0.18 tambem usa harfrust (^0.5.0). ambas as libs compartilham o mesmo shaper agora.
 
-**relevancia para φ:**
+**relevancia para plev:**
 - **candidato direto para substituir cosmic-text** (task-32). vantagens: inline boxes, cursor/selection API superior, accesskit built-in, icu4x para unicode correto, adocao por egui e slint
-- plaineditor resolve problemas que φ precisaria implementar manualmente sobre cosmic-text para task-28 (editable text)
-- fontique substitui o pattern manual de font loading que φ tem (cfg gates para WASM/ios/android)
+- plaineditor resolve problemas que plev precisaria implementar manualmente sobre cosmic-text para task-28 (editable text)
+- fontique substitui o pattern manual de font loading que plev tem (cfg gates para WASM/ios/android)
 - a migracao de icu4x (dez/2025) melhora correcao unicode mas pode impactar tamanho WASM
 
-**insight principal:** parley esta convergindo como o padrao de fato para texto em rust, egui migrando, slint ja migrou (v1.14), bevy avaliando. a stack harfrust + skrifa + fontique + icu4x e 100% rust sem FFI, o que alinha perfeitamente com a filosofia de φ (um codebase, seis targets).
+**insight principal:** parley esta convergindo como o padrao de fato para texto em rust, egui migrando, slint ja migrou (v1.14), bevy avaliando. a stack harfrust + skrifa + fontique + icu4x e 100% rust sem FFI, o que alinha perfeitamente com a filosofia de plev (um codebase, seis targets).
 
-**limitacao:** 534 stars vs 2.004 do cosmic-text. menos battle-tested em producao. API ainda em evolucao (0.7.0). migracao requer reescrever o textsystem de φ (shaping cache, atlas, borrow split pattern). benchmarks quantitativos parley vs cosmic-text ainda nao publicados (prometidos para nov/2025, nao confirmados). MSRV 1.88 (φ usa 1.94, ok).
+**limitacao:** 534 stars vs 2.004 do cosmic-text. menos battle-tested em producao. API ainda em evolucao (0.7.0). migracao requer reescrever o textsystem de plev (shaping cache, atlas, borrow split pattern). benchmarks quantitativos parley vs cosmic-text ainda nao publicados (prometidos para nov/2025, nao confirmados). MSRV 1.88 (plev usa 1.94, ok).
 
 ---
 
@@ -143,14 +143,14 @@ PlainEditor com shift-click, triple-click (paragrafo), Ctrl+A
 - cobertura da spec lottie: incompleta mas funcional para grande numero de animacoes
 - depende diretamente de vello para rendering
 
-**relevancia para φ:**
-- se φ implementar task-27 (animation system) e task-31 (vector paths), lottie support seria possivel
-- o pattern de "parser -> intermediate repr -> scene encoding" e reusavel: φ poderia ter seu proprio encoder lottie que emite scenenodes em vez de vello::scene
+**relevancia para plev:**
+- se plev implementar task-27 (animation system) e task-31 (vector paths), lottie support seria possivel
+- o pattern de "parser -> intermediate repr -> scene encoding" e reusavel: plev poderia ter seu proprio encoder lottie que emite scenenodes em vez de vello::scene
 - demonstra que animacoes complexas sao viaveis com scene graph + path rendering
 
-**insight principal:** lottie e o formato de animacao mais usado em apps mobile. ter support e diferencial competitivo. mas depende de path rendering (task-31) que φ ainda nao tem.
+**insight principal:** lottie e o formato de animacao mais usado em apps mobile. ter support e diferencial competitivo. mas depende de path rendering (task-31) que plev ainda nao tem.
 
-**limitacao:** acoplado a vello. para φ, seria necessario reimplementar o encoding. cobertura incompleta da spec lottie. baixa adocao (13.848 downloads).
+**limitacao:** acoplado a vello. para plev, seria necessario reimplementar o encoding. cobertura incompleta da spec lottie. baixa adocao (13.848 downloads).
 
 ---
 
@@ -166,15 +166,15 @@ PlainEditor com shift-click, triple-click (paragrafo), Ctrl+A
 - otimizacao recente: `CubicBez::nearest` 3000x mais rapido via poly-cool quintic solver
 - 16.4m downloads, MSRV 1.82, no_std compativel
 
-**relevancia para φ:**
-- **dependencia direta candidata** para task-31 (vector paths). kurbo fornece a geometria; φ precisaria de tessellation (lyon) ou encoding para GPU
-- bezpath -> flatten -> line segments e exatamente o que φ precisaria para path rendering
-- rect, roundedrect ja sao tipos que φ reimplementa. kurbo e mais correto (precisao numerica)
+**relevancia para plev:**
+- **dependencia direta candidata** para task-31 (vector paths). kurbo fornece a geometria; plev precisaria de tessellation (lyon) ou encoding para GPU
+- bezpath -> flatten -> line segments e exatamente o que plev precisaria para path rendering
+- rect, roundedrect ja sao tipos que plev reimplementa. kurbo e mais correto (precisao numerica)
 - usado por vello, peniko, xilem, linguagem comum do ecossistema
 
 **insight principal:** kurbo e a biblioteca de geometria 2d mais madura e correta em rust. 16m downloads demonstra confianca do ecossistema. para task-31, usar kurbo em vez de implementar proprios tipos geometricos e a decisao correta.
 
-**limitacao:** nao faz rendering, so geometria. φ precisaria de tessellation (lyon/etagere) ou shader de curvas para desenhar os paths. adiciona dependencia mas e leve (no_std).
+**limitacao:** nao faz rendering, so geometria. plev precisaria de tessellation (lyon/etagere) ou shader de curvas para desenhar os paths. adiciona dependencia mas e leve (no_std).
 
 ---
 
@@ -190,14 +190,14 @@ PlainEditor com shift-click, triple-click (paragrafo), Ctrl+A
 - sem geometria (kurbo), sem rendering (vello), apenas tipos de estilo
 - 772.279 downloads
 
-**relevancia para φ:**
-- φ usa `[f32; 4]` para cores e structs proprias para gradientes. peniko oferece tipos mais ricos e corretos (CSS color level 4, color spaces)
-- se φ adotar kurbo (task-31) e/ou parley, peniko viria como dependencia transitiva
+**relevancia para plev:**
+- plev usa `[f32; 4]` para cores e structs proprias para gradientes. peniko oferece tipos mais ricos e corretos (CSS color level 4, color spaces)
+- se plev adotar kurbo (task-31) e/ou parley, peniko viria como dependencia transitiva
 - o pattern de separar "tipos de estilo" em crate independente e bom para API publica
 
-**insight principal:** peniko e invisivel mas ubiquo, e a linguagem de tipos entre todos os crates linebender. adotar peniko (ou seus patterns) unifica a API de estilo de φ.
+**insight principal:** peniko e invisivel mas ubiquo, e a linguagem de tipos entre todos os crates linebender. adotar peniko (ou seus patterns) unifica a API de estilo de plev.
 
-**limitacao:** dependencia adicional sem beneficio imediato se φ nao adotar outros crates linebender. o sistema de color e overkill para quem so precisa de srgb com premultiplied alpha. φ ja tem premultiplied alpha em todo o pipeline, peniko usa straight alpha por default.
+**limitacao:** dependencia adicional sem beneficio imediato se plev nao adotar outros crates linebender. o sistema de color e overkill para quem so precisa de srgb com premultiplied alpha. plev ja tem premultiplied alpha em todo o pipeline, peniko usa straight alpha por default.
 
 ---
 
@@ -213,14 +213,14 @@ PlainEditor com shift-click, triple-click (paragrafo), Ctrl+A
 - **codegen:** `fearless_simd_gen` gera boilerplate automaticamente
 - **451.015 downloads**, MSRV 1.88
 
-**relevancia para φ:**
-- φ nao usa SIMD explicitamente, mas se implementar CPU fallback (como vello CPU) ou otimizacoes de layout/text, fearless_simd seria a escolha
+**relevancia para plev:**
+- plev nao usa SIMD explicitamente, mas se implementar CPU fallback (como vello CPU) ou otimizacoes de layout/text, fearless_simd seria a escolha
 - para task-25 (benchmarks), SIMD pode ser o diferencial em text shaping ou atlas packing
 - a abordagem "safe SIMD via marker types" e elegante e evita o problema de `unsafe` spread que SIMD normalmente causa
 
-**insight principal:** SIMD portavel seguro em rust agora e viavel. se φ precisar de hot path otimizado (atlas packing, geometry flattening, color conversion), fearless_simd e a opcao. mas e prematuro adicionar antes de ter profiling que justifique.
+**insight principal:** SIMD portavel seguro em rust agora e viavel. se plev precisar de hot path otimizado (atlas packing, geometry flattening, color conversion), fearless_simd e a opcao. mas e prematuro adicionar antes de ter profiling que justifique.
 
-**limitacao:** pre-producao, apis incompletas, breaking changes frequentes. boilerplate de codegen significativo. nao suporta avx2/AVX-512 completo. para φ, so faria sentido apos profiling mostrar que um hot path especifico e CPU-bound e SIMD-amigavel.
+**limitacao:** pre-producao, apis incompletas, breaking changes frequentes. boilerplate de codegen significativo. nao suporta avx2/AVX-512 completo. para plev, so faria sentido apos profiling mostrar que um hot path especifico e CPU-bound e SIMD-amigavel.
 
 ---
 
@@ -252,13 +252,13 @@ tabela de comparacao direta para informar task-32:
 | **MSRV** | 1.88 | nao documentado |
 | **estabilidade API** | pre-1.0, breaking changes | pre-1.0, mais estavel |
 
-### veredito para φ (task-32)
+### veredito para plev (task-32)
 
 **recomendacao: migrar para parley, mas nao antes de task-28 (editable text).**
 
 razoes a favor:
 1. plaineditor resolve 80% do trabalho de task-28 (cursor, selecao, shift-click, geometria por linha)
-2. inline boxes sao necessarios para widgets dentro de texto (futuro de φ)
+2. inline boxes sao necessarios para widgets dentro de texto (futuro de plev)
 3. icu4x garante correcao unicode (bidi, segmentacao) que implementacao propria do cosmic-text pode errar
 4. tendencia de ecossistema: egui, slint, potencialmente bevy estao migrando
 5. NLnet grants garantem desenvolvimento ativo em 2026
@@ -268,7 +268,7 @@ razoes contra:
 1. cosmic-text tem 7x mais downloads, mais battle-tested
 2. benchmarks quantitativos nao publicados
 3. API ainda instavel (0.7.0)
-4. migracao requer reescrever textsystem de φ (shaping cache, atlas management, borrow split pattern)
+4. migracao requer reescrever textsystem de plev (shaping cache, atlas management, borrow split pattern)
 5. fontique pode ter gaps vs fontdb em plataformas especificas
 
 **estrategia sugerida:**
@@ -283,30 +283,30 @@ razoes contra:
 ## padroes cross-cutting
 
 ### 1. stack rust puro (zero FFI)
-todos os crates linebender evitam dependencias c. harfrust substitui harfbuzz-c, skrifa substitui freetype, icu4x substitui ICU-c. isso simplifica cross-compilation para todos os 6 targets de φ e elimina a classe inteira de bugs de FFI/linking.
+todos os crates linebender evitam dependencias c. harfrust substitui harfbuzz-c, skrifa substitui freetype, icu4x substitui ICU-c. isso simplifica cross-compilation para todos os 6 targets de plev e elimina a classe inteira de bugs de FFI/linking.
 
 ### 2. encoding em streams separados
-vello separa scene data em 5+ streams (tag, path, draw, transform, linewidth) para processamento paralelo. φ usa um unico `Vec<SceneNode>` por layer. a separacao em streams permitiria dirty tracking por tipo de dado (so transforms mudaram? so redspacha o stream de transforms).
+vello separa scene data em 5+ streams (tag, path, draw, transform, linewidth) para processamento paralelo. plev usa um unico `Vec<SceneNode>` por layer. a separacao em streams permitiria dirty tracking por tipo de dado (so transforms mudaram? so redspacha o stream de transforms).
 
 ### 3. trait-based abstraction com types compartilhados
-kurbo (geometria) + peniko (estilo) formam a linguagem de tipos entre todos os crates. φ usa tipos ad-hoc (`[f32; 4]` para cor, structs proprias para rect). padronizar tipos facilitaria interop futura.
+kurbo (geometria) + peniko (estilo) formam a linguagem de tipos entre todos os crates. plev usa tipos ad-hoc (`[f32; 4]` para cor, structs proprias para rect). padronizar tipos facilitaria interop futura.
 
 ### 4. view tree efemero -> retained tree
-xilem reconstroi view tree completo por update, faz diff, aplica mutacoes minimas no widget tree retido. φ reconstroi a scene inteira por frame. para UI complexa, o diff de xilem sera ordens de magnitude mais eficiente.
+xilem reconstroi view tree completo por update, faz diff, aplica mutacoes minimas no widget tree retido. plev reconstroi a scene inteira por frame. para UI complexa, o diff de xilem sera ordens de magnitude mais eficiente.
 
 ### 5. fallback gracioso (GPU -> hibrido -> CPU)
-vello oferece 3 backends. φ assume compute-capable GPU (wgpu). para cobertura real de 6 targets (especialmente webgl2 browsers), um fallback CPU ou hibrido seria necessario. vello demonstrou que e possivel com a mesma API.
+vello oferece 3 backends. plev assume compute-capable GPU (wgpu). para cobertura real de 6 targets (especialmente webgl2 browsers), um fallback CPU ou hibrido seria necessario. vello demonstrou que e possivel com a mesma API.
 
 ### 6. SIMD como otimizacao de hot path
-fearless_simd e usado por vello CPU para rasterizacao. o pattern e: profiling primeiro, SIMD depois, nunca prematuramente. φ deveria seguir o mesmo princio, SIMD so apos task-25 (benchmarks) identificar bottlenecks.
+fearless_simd e usado por vello CPU para rasterizacao. o pattern e: profiling primeiro, SIMD depois, nunca prematuramente. plev deveria seguir o mesmo princio, SIMD so apos task-25 (benchmarks) identificar bottlenecks.
 
 ---
 
-## implicacoes para φ
+## implicacoes para plev
 
 ### curto prazo (task-27..29)
 - **task-28 (editable text):** avaliar usar plaineditor do parley em vez de implementar cursor/selecao manualmente sobre cosmic-text. se cosmic-text for mantido, implementar manualmente e mais trabalho mas mantem dependencia atual
-- **task-27 (animation):** velato mostra que lottie e possivel com path rendering, mas φ precisa de task-31 primeiro. animation system proprio e a decisao correta por agora
+- **task-27 (animation):** velato mostra que lottie e possivel com path rendering, mas plev precisa de task-31 primeiro. animation system proprio e a decisao correta por agora
 
 ### medio prazo (task-30..32)
 - **task-31 (vector paths):** kurbo para geometria. tessellation via lyon ou encoding proprio para GPU. nao adotar vello inteiro, so os tipos geometricos
@@ -314,13 +314,13 @@ fearless_simd e usado por vello CPU para rasterizacao. o pattern e: profiling pr
 - **task-30 (accessibility):** parley tem accesskit built-in. se migrar texto para parley, acessibilidade de texto vem de graca
 
 ### longo prazo (task-33+)
-- **diff incremental:** o pattern de xilem (view tree efemero -> diff -> retained tree) e o proximo salto de performance para φ. considerar como evolucao do sistema de views/components
-- **fallback rendering:** se φ quiser webgl2 (firefox sem webgpu), o modelo hibrido de vello e referencia. nao copiar, entender a divisao CPU/GPU
-- **tipos padronizados:** adotar kurbo + peniko gradualmente alinha φ com o ecossistema rust de graficos 2d
+- **diff incremental:** o pattern de xilem (view tree efemero -> diff -> retained tree) e o proximo salto de performance para plev. considerar como evolucao do sistema de views/components
+- **fallback rendering:** se plev quiser webgl2 (firefox sem webgpu), o modelo hibrido de vello e referencia. nao copiar, entender a divisao CPU/GPU
+- **tipos padronizados:** adotar kurbo + peniko gradualmente alinha plev com o ecossistema rust de graficos 2d
 
 ### o que nao fazer
-- **nao adotar vello como renderer.** φ tem seu proprio pipeline otimizado para quads + texto. vello e para path rendering generico, overhead desnecessario para o caso de uso de φ
-- **nao adotar xilem como framework.** φ e a camada abaixo, equivalente a masonry, nao a xilem. as licoes de diff sao valiosas, a dependencia nao
+- **nao adotar vello como renderer.** plev tem seu proprio pipeline otimizado para quads + texto. vello e para path rendering generico, overhead desnecessario para o caso de uso de plev
+- **nao adotar xilem como framework.** plev e a camada abaixo, equivalente a masonry, nao a xilem. as licoes de diff sao valiosas, a dependencia nao
 - **nao adicionar SIMD prematuramente.** sem profiling (task-25), SIMD e otimizacao especulativa
 - **nao migrar para parley sem dados.** feature flag, benchmark, decisao baseada em evidencia
 

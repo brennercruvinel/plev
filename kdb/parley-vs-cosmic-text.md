@@ -1,15 +1,15 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
 domain: text
 ---
 
-# parley vs cosmic-text - factual comparison for φ
+# parley vs cosmic-text - factual comparison for plev
 
 **date:** 2026-03-11
-**context:** φ uses cosmic-text 0.18.2. task-32 assesses whether to migrate to parley.
+**context:** plev uses cosmic-text 0.18.2. task-32 assesses whether to migrate to parley.
 
 ---
 
@@ -116,7 +116,7 @@ editor.selection_bounds() -> Option<(Cursor, Cursor)>
 editor.draw(font_system, cache, text_color, cursor_color, selection_color, selected_text_color, callback)
 ```
 
-selection geometry is **not exposed** as a separate API. the `Editor.draw()` method handles selection highlight rendering internally through its callback, mixing layout and rendering concerns. if you want custom rendering (like φ's GPU pipeline), you must reverse-engineer selection rectangles from cursor positions.
+selection geometry is **not exposed** as a separate API. the `Editor.draw()` method handles selection highlight rendering internally through its callback, mixing layout and rendering concerns. if you want custom rendering (like plev's GPU pipeline), you must reverse-engineer selection rectangles from cursor positions.
 
 ### parley
 
@@ -146,7 +146,7 @@ selection.shift_click_extension(layout, x, y) -> Self
 
 ### verdict
 
-**parley is dramatically better.** the `geometry_with` callback provides zero-allocation selection rectangle computation, per-line. this maps directly to φ's `SceneNode::Rect` emission for selection highlights. cosmic-text's approach forces you either to use its opaque `Editor.draw()` or to manually compute rectangles. parley also handles multi-line selection correctly with per-line boundingbox results.
+**parley is dramatically better.** the `geometry_with` callback provides zero-allocation selection rectangle computation, per-line. this maps directly to plev's `SceneNode::Rect` emission for selection highlights. cosmic-text's approach forces you either to use its opaque `Editor.draw()` or to manually compute rectangles. parley also handles multi-line selection correctly with per-line boundingbox results.
 
 ---
 
@@ -187,7 +187,7 @@ for item in line.items() {
 
 - has `wasm-web` feature flag for locale detection
 - uses `fontdb` which supports embedded fonts via `Database::load_font_data(bytes)`
-- φ already uses cosmic-text on WASM successfully (include_bytes + fontdb)
+- plev already uses cosmic-text on WASM successfully (include_bytes + fontdb)
 - battle-tested in cosmic desktop ecosystem (though cosmic itself doesn't target WASM)
 
 ### parley
@@ -201,7 +201,7 @@ for item in line.items() {
 
 ### verdict
 
-**cosmic-text is more mature on WASM.** both work, but cosmic-text's WASM path is well-trodden (φ already uses it). parley's WASM support is confirmed functional but requires manual feature flag management and has no official documentation/examples. the open issue suggests the story isn't finalized.
+**cosmic-text is more mature on WASM.** both work, but cosmic-text's WASM path is well-trodden (plev already uses it). parley's WASM support is confirmed functional but requires manual feature flag management and has no official documentation/examples. the open issue suggests the story isn't finalized.
 
 ---
 
@@ -253,7 +253,7 @@ for item in line.items() {
 
 ### key difference: rasterization
 
-φ currently uses `SwashCache::get_image_uncached()` to produce alpha masks for the glyph atlas. **parley does not include a rasterizer.** migration would require:
+plev currently uses `SwashCache::get_image_uncached()` to produce alpha masks for the glyph atlas. **parley does not include a rasterizer.** migration would require:
 - using `skrifa` to get glyph outlines, then rasterizing them yourself (CPU-side)
 - or keeping `swash` as a direct dependency alongside parley
 - or using a different rasterizer
@@ -262,7 +262,7 @@ this is the single biggest migration cost beyond API changes.
 
 ### verdict
 
-**roughly equivalent for shaping/layout.** cosmic-text's bundled swash rasterizer is a significant convenience. parley's separation of concerns is cleaner architecturally but creates more integration work for GPU engines that need bitmap atlas patterns (like φ).
+**roughly equivalent for shaping/layout.** cosmic-text's bundled swash rasterizer is a significant convenience. parley's separation of concerns is cleaner architecturally but creates more integration work for GPU engines that need bitmap atlas patterns (like plev).
 
 ---
 
@@ -270,7 +270,7 @@ this is the single biggest migration cost beyond API changes.
 
 ### cosmic-text
 
-no built-in accesskit support. φ would need to build the accessibility bridge manually.
+no built-in accesskit support. plev would need to build the accessibility bridge manually.
 
 ### parley
 
@@ -281,13 +281,13 @@ built-in `accesskit` feature flag with:
 
 ### verdict
 
-**parley wins.** since φ already has an `accessibility` feature with accesskit (task-30), parley's built-in bridge would eliminate manual mapping code.
+**parley wins.** since plev already has an `accessibility` feature with accesskit (task-30), parley's built-in bridge would eliminate manual mapping code.
 
 ---
 
 ## 10. migration cost assessment
 
-### what currently uses cosmic-text in φ
+### what currently uses cosmic-text in plev
 
 | file | usage | migration difficulty |
 |---|---|---|
@@ -340,7 +340,7 @@ built-in `accesskit` feature flag with:
 
 ### verdict
 
-**parley's plaineditor is better for GPU engines.** cosmic-text's editor wants to own rendering. parley's editor gives you the layout and lets you render it - exactly what φ needs.
+**parley's plaineditor is better for GPU engines.** cosmic-text's editor wants to own rendering. parley's editor gives you the layout and lets you render it - exactly what plev needs.
 
 ---
 
@@ -352,7 +352,7 @@ built-in `accesskit` feature flag with:
 | selection geometry | opaque (inside editor.draw) | `geometry_with` callback, zero-alloc | **parley** |
 | inlinebox | not supported | full support | **parley** |
 | shaping engine | harfrust | harfrust | **tie** |
-| WASM compatibility | mature, tested in φ | works but needs manual setup, open issue | **cosmic-text** |
+| WASM compatibility | mature, tested in plev | works but needs manual setup, open issue | **cosmic-text** |
 | stability | 0.18, production in cosmic de | 0.7, self-described "alpha" | **cosmic-text** |
 | breaking change frequency | moderate | high (every release) | **cosmic-text** |
 | rasterization | swashcache included | not included (layout only) | **cosmic-text** |
@@ -373,11 +373,11 @@ built-in `accesskit` feature flag with:
 
 1. **parley is alpha.** every minor version breaks the API. migrating now means migrating again in 3-4 months when 0.8 ships. and again at 0.9. the API churn cost compounds.
 
-2. **the rasterization gap is real.** φ's text pipeline depends on swashcache for bitmap glyph rasterization into the atlas. parley doesn't provide this. adding a skrifa-based rasterizer or keeping swash alongside parley adds complexity with no clear benefit today.
+2. **the rasterization gap is real.** plev's text pipeline depends on swashcache for bitmap glyph rasterization into the atlas. parley doesn't provide this. adding a skrifa-based rasterizer or keeping swash alongside parley adds complexity with no clear benefit today.
 
-3. **φ's text_input.rs doesn't use cosmic-text's cursor API anyway.** the current `cursor_to_x`/`x_to_cursor` functions are approximate and font-system-independent. the benefit of parley's cursor API only materializes when φ needs true font-aware cursor positioning (bidi text, variable-width fonts, multi-line editing). that's a future need, not a current one.
+3. **plev's text_input.rs doesn't use cosmic-text's cursor API anyway.** the current `cursor_to_x`/`x_to_cursor` functions are approximate and font-system-independent. the benefit of parley's cursor API only materializes when plev needs true font-aware cursor positioning (bidi text, variable-width fonts, multi-line editing). that's a future need, not a current one.
 
-4. **WASM is a first-class target for φ.** cosmic-text's WASM path is proven. parley's WASM story has an open issue and no official examples.
+4. **WASM is a first-class target for plev.** cosmic-text's WASM path is proven. parley's WASM story has an open issue and no official examples.
 
 5. **the shaping engine is the same.** both use harfrust. there's no performance or compatibility benefit on the shaping side.
 
@@ -393,11 +393,11 @@ built-in `accesskit` feature flag with:
 
 - **prepare:** structure `text.rs` to isolate cosmic-text types behind a thin abstraction layer. when migration time comes, only the abstraction internals change.
 
-- **migrate when:** parley reaches 0.9+, WASM issue #70 is closed, and skrifa (or a parley-ecosystem rasterizer) can produce bitmap masks for atlas rendering. or when φ needs inlinebox / rich text / accesskit text bridge - those features don't exist in cosmic-text and can't be added without forking.
+- **migrate when:** parley reaches 0.9+, WASM issue #70 is closed, and skrifa (or a parley-ecosystem rasterizer) can produce bitmap masks for atlas rendering. or when plev needs inlinebox / rich text / accesskit text bridge - those features don't exist in cosmic-text and can't be added without forking.
 
 ### decision matrix trigger
 
-| if φ needs... | action |
+| if plev needs... | action |
 |---|---|
 | better cursor positioning (bidi, multi-line) | use cosmic-text buffer::hit() first |
 | inlinebox / embedded elements in text | migrate to parley (no alternative) |

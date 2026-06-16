@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -13,13 +13,13 @@ status: completo
 
 ## escopo
 
-analise profunda do accesskit como solucao de acessibilidade para o φ. cobertura: arquitetura interna, platform adapters, API surface, integracoes existentes (egui, bevy, slint), mapeamento concreto para a arquitetura do φ (scenenode, hitregion, builder API, event loop winit), e implicacoes para task-30.
+analise profunda do accesskit como solucao de acessibilidade para o plev. cobertura: arquitetura interna, platform adapters, API surface, integracoes existentes (egui, bevy, slint), mapeamento concreto para a arquitetura do plev (scenenode, hitregion, builder API, event loop winit), e implicacoes para task-30.
 
 ---
 
 ## accesskit (accesskit/accesskit), 1.4k stars, v0.24.0
 
-**o que e:** infraestrutura de acessibilidade cross-platform para UI toolkits em rust. resolve o problema de toolkits que renderizam seus proprios elementos de UI (como φ faz via wgpu) e que, por isso, nao recebem acessibilidade automatica do sistema operacional. fornece uma abstracao sobre as apis nativas de acessibilidade de cada plataforma, de modo que o toolkit implementa a acessibilidade uma unica vez. schema canonico definido em rust; bindings automaticos para c (cbindgen) e python (pyo3). licenca: apache-2.0 or MIT (parcialmente BSD-3-clause por derivacoes do chromium). usado por 23.1k projetos. 11m+ downloads no crates.io.
+**o que e:** infraestrutura de acessibilidade cross-platform para UI toolkits em rust. resolve o problema de toolkits que renderizam seus proprios elementos de UI (como plev faz via wgpu) e que, por isso, nao recebem acessibilidade automatica do sistema operacional. fornece uma abstracao sobre as apis nativas de acessibilidade de cada plataforma, de modo que o toolkit implementa a acessibilidade uma unica vez. schema canonico definido em rust; bindings automaticos para c (cbindgen) e python (pyo3). licenca: apache-2.0 or MIT (parcialmente BSD-3-clause por derivacoes do chromium). usado por 23.1k projetos. 11m+ downloads no crates.io.
 
 **arquitetura:**
 
@@ -83,20 +83,20 @@ o design e inspirado diretamente na arquitetura multi-processo do chromium para 
 - implementa a API de acessibilidade java do android via JNI
 - suporta talkback
 - status: **early/experimental**, 19k downloads, mas ja presente no accesskit_winit como feature opcional
-- funciona com android-activity/gameactivity (mesmo setup que φ usa)
+- funciona com android-activity/gameactivity (mesmo setup que plev usa)
 
 ### ios, nsaccessibility (uikit)
 - status: **planejado, nao implementado**
 - o blog do accesskit lista ios como futuro, dependente de funding
 - nao existe crate `accesskit_ios` publicado
-- implicacao para φ: ios sera a plataforma sem a11y automatica via accesskit no curto prazo
+- implicacao para plev: ios sera a plataforma sem a11y automatica via accesskit no curto prazo
 
 ### web/WASM, ARIA
 - status: **planejado, nao implementado**
 - o autor reconhece como "provavelmente o mais dificil" dos adapters
 - a ideia: gerar elementos DOM ocultos com atributos ARIA que espelham a arvore de acessibilidade do canvas webgpu
 - nao existe crate `accesskit_web` publicado
-- implicacao para φ: WASM target precisara de solucao manual (DOM overlay) ou aguardar o adapter
+- implicacao para plev: WASM target precisara de solucao manual (DOM overlay) ou aguardar o adapter
 
 ---
 
@@ -123,7 +123,7 @@ egui (emilk/egui) foi o primeiro toolkit pure-rust e o primeiro immediate-mode g
 
 6. **thread safety**: `ActionHandler::do_action()` pode ser chamado de qualquer thread. egui resolve isso enfileirando acoes (mutex) e processando na thread principal no proximo frame.
 
-**licao para φ:** o padrao lazy + placeholder e essencial para nao impactar performance de quem nao usa AT. a construcao de treeupdate por frame (sem delta manual) simplifica a implementacao, o adapter faz o diffing.
+**licao para plev:** o padrao lazy + placeholder e essencial para nao impactar performance de quem nao usa AT. a construcao de treeupdate por frame (sem delta manual) simplifica a implementacao, o adapter faz o diffing.
 
 ---
 
@@ -143,21 +143,21 @@ bevy (bevyengine/bevy) integrou accesskit na v0.10, tornando-se o primeiro game 
 
 5. **desde bevy 0.15**: `accesskit` nao e mais re-exportado por `bevy_a11y`, usuarios adicionam como dependencia separada.
 
-**licao para φ:** o padrao de "wrapper component que traduz para accesskit::node" e diretamente aplicavel. em φ, o equivalente seria um campo `accessibility: Option<AccessibilityInfo>` no element do builder, traduzido para `accesskit::Node` durante o resolve.
+**licao para plev:** o padrao de "wrapper component que traduz para accesskit::node" e diretamente aplicavel. em plev, o equivalente seria um campo `accessibility: Option<AccessibilityInfo>` no element do builder, traduzido para `accesskit::Node` durante o resolve.
 
 ---
 
 ## integracao com winit (accesskit_winit)
 
 **versao atual:** 0.32.2 (4 marco 2026)
-**dependencia winit:** `^0.30.5`, **compativel com φ que usa winit 0.30**
+**dependencia winit:** `^0.30.5`, **compativel com plev que usa winit 0.30**
 
 o `accesskit_winit` e o crate recomendado para integrar accesskit com winit. ele abstrai a criacao e gerenciamento do platform adapter correto para cada OS.
 
 **API principal, `Adapter`:**
 
 ```rust
-// Construtor via EventLoopProxy (recomendado para φ)
+// Construtor via EventLoopProxy (recomendado para plev)
 Adapter::with_event_loop_proxy<T>(
     window: &Window,
     proxy: EventLoopProxy<T>,
@@ -192,13 +192,13 @@ adapter.update_if_active(updater: impl FnOnce() -> TreeUpdate)
 
 **fluxo de integracao com winit 0.30:**
 
-1. criar `EventLoop::<AppEvent>::with_user_event()` (φ ja faz isso)
+1. criar `EventLoop::<AppEvent>::with_user_event()` (plev ja faz isso)
 2. no `resumed()`, criar o `Adapter` com o proxy do event loop
 3. em `window_event()`, chamar `adapter.process_event()` antes de processar o evento
 4. ao receber `accesskit_winit::Event` via user_event, processar action requests
 5. apos cada mudanca de UI, chamar `adapter.update_if_active(|| tree_update)`
 
-**implicacao critica:** o `AppEvent` de φ precisara de uma nova variante para eventos accesskit:
+**implicacao critica:** o `AppEvent` de plev precisara de uma nova variante para eventos accesskit:
 ```rust
 pub enum AppEvent {
     GpuReady { ... },
@@ -220,9 +220,9 @@ e `AppEvent` precisa implementar `From<accesskit_winit::Event>`.
 - prioridade dependente de funding e contribuicoes voluntarias
 - nao ha timeline publica
 
-**alternativa para φ (WASM):**
+**alternativa para plev (WASM):**
 - gerar manualmente um DOM overlay com `<div role="button" aria-label="...">` ocultos que espelham o scene graph
-- usar `web-sys` para manipular o DOM (φ ja depende de web-sys)
+- usar `web-sys` para manipular o DOM (plev ja depende de web-sys)
 - cada hitregion geraria um elemento DOM posicionado absolutamente, invisivel visualmente mas acessivel por screen readers
 - esta e a mesma abordagem que o adapter accesskit planeja automatizar
 
@@ -253,9 +253,9 @@ metodos principais:
 - `set_transform(Affine)`, transformacao 2d
 - `set_toggled(Toggled)`, para checkboxes/switches
 
-**`Role`**: enum com 182 variantes. as mais relevantes para φ:
+**`Role`**: enum com 182 variantes. as mais relevantes para plev:
 
-| role | uso em φ |
+| role | uso em plev |
 |------|-------------|
 | `GenericContainer` | scenenode::rect sem semantica especifica, div() |
 | `Label` / `StaticText` | scenenode::text (texto nao editavel) |
@@ -340,11 +340,11 @@ pub struct Tree {
 
 ---
 
-## mapeamento para φ
+## mapeamento para plev
 
 ### scenenode -> accesskit node
 
-| φ | accesskit role | propriedades |
+| plev | accesskit role | propriedades |
 |------|---------------|--------------|
 | `SceneNode::Rect` | `Role::GenericContainer` | `bounds(Rect{x,y,w,h})` |
 | `SceneNode::Text` | `Role::Label` | `bounds`, `label(texto)`, `set_text_direction` |
@@ -356,7 +356,7 @@ pub struct Tree {
 | janela root | `Role::Window` | `children([layer_ids])`, usado como root da tree |
 
 **geracao de nodeid:**
-- `ViewId(u64)` do φ ja e um identificador unico estavel
+- `ViewId(u64)` do plev ja e um identificador unico estavel
 - converter para `NodeId`: `NodeId(NonZeroU128::new(view_id.0 as u128 + 1).unwrap())`
 - reservar nodeid(1) para o window root
 - cada layer pode ter nodeid baseado em `LayerId.0 + offset`
@@ -419,7 +419,7 @@ button("Enviar")
 
 ### event loop integration com winit
 
-φ usa `ApplicationHandler<AppEvent>`. mudancas necessarias:
+plev usa `ApplicationHandler<AppEvent>`. mudancas necessarias:
 
 **1. estender appevent:**
 ```rust
@@ -497,7 +497,7 @@ nenhuma outra dependencia necessaria, accesskit_winit puxa os platform adapters 
 **2. novo modulo `src/accessibility.rs`:**
 - `AccessibilityState` struct: mantem mapa `ViewId -> NodeId`, focus atual, flag de ativacao
 - `fn build_tree(compositor: &Compositor, input_state: &InputState) -> TreeUpdate`, percorre layers + nodes + hit_regions e gera a arvore
-- `fn handle_action(request: ActionRequest, input_state: &mut InputState)`, traduz acoes AT para eventos φ
+- `fn handle_action(request: ActionRequest, input_state: &mut InputState)`, traduz acoes AT para eventos plev
 
 **3. plataformas cobertas automaticamente pelo accesskit_winit 0.32.2:**
 - macos: sim (nsaccessibility, voiceover)
@@ -509,7 +509,7 @@ nenhuma outra dependencia necessaria, accesskit_winit puxa os platform adapters 
 
 **4. gap de plataformas:**
 - ios: sem accesskit. opcao futura: wrapper manual de uiaccessibility, ou aguardar accesskit_ios.
-- WASM: sem accesskit. opcao: DOM overlay manual com aria-* attributes via web-sys. φ ja depende de web-sys. viavel como implementacao separada.
+- WASM: sem accesskit. opcao: DOM overlay manual com aria-* attributes via web-sys. plev ja depende de web-sys. viavel como implementacao separada.
 
 **5. estimativa de LOC atualizada:**
 - `src/accessibility.rs`: ~300-400 LOC (state + tree builder + action handler)
@@ -522,7 +522,7 @@ nenhuma outra dependencia necessaria, accesskit_winit puxa os platform adapters 
 
 **6. riscos identificados:**
 - `accesskit_winit::Event` precisa ser `From<>` para `AppEvent`, e `AppEvent` ja nao e `Clone` (contem gpucontext). verificar que os variants sao independentes.
-- o adapter deve ser criado antes da window ser exibida pela primeira vez (restricao do accesskit_winit). em φ, a window e criada no `resumed()`, o adapter deve ser criado imediatamente apos `create_window()`.
+- o adapter deve ser criado antes da window ser exibida pela primeira vez (restricao do accesskit_winit). em plev, a window e criada no `resumed()`, o adapter deve ser criado imediatamente apos `create_window()`.
 - actionhandler e chamado de qualquer thread, acoes devem ser enfileiradas (ex: `Arc<Mutex<Vec<ActionRequest>>>`) e drenadas na main thread antes do render.
 - android: `accesskit_android` e feature opcional do accesskit_winit. precisa habilitar explicitamente no cargo.toml ou por cfg.
 

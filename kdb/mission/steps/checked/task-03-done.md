@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-13
@@ -29,4 +29,4 @@ implementar sistema de layout que calcula posição e tamanho de views antes de 
 - `src/view.rs`: viewcontext.bounds, view.layout(), view.children(), containerview
 - `src/window.rs`: two-phase rendering com collect_layout_items + walk_and_render
 - `examples/layout_demo.rs`: demo de layout sem GPU
-- taffy wrappado como detalhe de implementação, consumidores usam tipos φ
+- taffy wrappado como detalhe de implementação, consumidores usam tipos plev

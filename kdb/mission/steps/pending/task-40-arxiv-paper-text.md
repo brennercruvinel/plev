@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: pending
 last-updated: 2026-03-13
@@ -9,7 +9,7 @@ domain: task-tracking
 # task-40: paper arxiv, texto completo
 
 ## objetivo
-escrever o texto completo do paper "φ: a GPU-first compositing engine for cross-platform UI rendering" para submissao ao arxiv.
+escrever o texto completo do paper "plev: a GPU-first compositing engine for cross-platform UI rendering" para submissao ao arxiv.
 
 ## contexto
 - outline completo disponivel: `mission/knowledge/arxiv-paper-outline.md`
@@ -29,7 +29,7 @@ escrever o texto completo do paper "φ: a GPU-first compositing engine for cross
 - [ ] 2. related work, tabela + paragrafos (dados do refs/competitors.md)
 - [ ] 3. architecture, frame lifecycle, scene graph, dois pipelines, text system, gpuvec, effects
 - [ ] 4. cross-platform strategy, wgpu abstraction, android/ios/WASM especificos
-- [ ] 5. verbal DSL phi_narrate!, gramatica EBNF, codegen, levenshtein DX
+- [ ] 5. verbal DSL plev_narrate!, gramatica EBNF, codegen, levenshtein DX
 - [ ] 6. accessibility, accesskit lazy activation, focusgraph, WASM null adapter
 - [ ] 7. vector paths, lyon + fillvertexconstructor, dirty tracking integration
 - [ ] 8. reactive primitives, signal system, RAII guard, fxindexset, peek()

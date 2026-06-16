@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-30
@@ -7,11 +7,11 @@ domain: lint
 commit: 6b141ed..813a4e5
 ---
 
-# adotamos phierror como tipo de erro unificado e eliminamos debt de lint
+# adotamos pleverror como tipo de erro unificado e eliminamos debt de lint
 
 ## contexto
 
-o projeto phi v0.3 operava sem tipo de erro próprio. código de produção dependia de
+o projeto plev v0.3 operava sem tipo de erro próprio. código de produção dependia de
 tipos concretos de dependências externas (`notify::Error`, `wgpu::Error`) e de
 `.unwrap()` extensivo em paths WASM. paralelamente, 98 atributos `#[allow(dead_code)]`
 acumulados em `examples-wip/` e no parser DSL degradavam a relação sinal/ruído do
@@ -25,9 +25,9 @@ shutdown do receiver.
 
 ## decisões
 
-### adr-1: adotamos phierror sem dependência de thiserror
+### adr-1: adotamos pleverror sem dependência de thiserror
 
-**decisão.** criamos `src/error.rs` com `enum PhiError` (variantes: `Window`, `Gpu`,
+**decisão.** criamos `src/error.rs` com `enum plevError` (variantes: `Window`, `Gpu`,
 `Wasm`, `Watcher`) implementando `Display`, `Error` e `From` manualmente, sem crate
 externo.
 
@@ -36,7 +36,7 @@ externo.
   variantes. proporção custo/benefício não justifica para enum pequeno.
 - `anyhow`: perde pattern matching nos callsites. apropriado para aplicações, não para
   engine/biblioteca.
-- `miette`: rich diagnostics com source spans. excelente para `phi-clinic` (crate de
+- `miette`: rich diagnostics com source spans. excelente para `plev-clinic` (crate de
   diagnóstico), desproporcional para o core.
 
 **consequências.**
@@ -48,7 +48,7 @@ externo.
 ### adr-2: extraímos setup WASM para função com error propagation
 
 **decisão.** os 8 `.unwrap()` encadeados em `window.rs:650-664` foram substituídos
-por `setup_wasm_canvas() -> PhiResult<()>`, com `.ok_or()` para cada step web-sys e
+por `setup_wasm_canvas() -> plevResult<()>`, com `.ok_or()` para cada step web-sys e
 fallback 800x600 para dimensões de viewport.
 
 **consequências.**
@@ -57,7 +57,7 @@ fallback 800x600 para dimensões de viewport.
 - perda: `log::error!` no callsite em vez de panic; se o canvas falhar, a app continua
   sem renderização. para produção, pode ser necessário adicionar um panic explícito ou
   fallback visual.
-- o `create_window().expect("Phi: failed to create window")` permanece como panic
+- o `create_window().expect("plev: failed to create window")` permanece como panic
   intencional: sem janela, o engine não pode operar.
 
 ### adr-3: consolidamos dead_code allows em nível de módulo/arquivo
@@ -109,7 +109,7 @@ terminal), apenas observabilidade.
 
 | arquivo | natureza da mudança |
 |---------|---------------------|
-| `src/error.rs` | novo: phierror enum, display, error, from impls |
+| `src/error.rs` | novo: pleverror enum, display, error, from impls |
 | `src/lib.rs` | +`pub mod error` |
 | `src/window.rs` | setup_wasm_canvas() helper, .expect(), comments em unused_mut |
 | `src/hot_reload.rs` | log::warn! substituindo let _ = |
@@ -117,8 +117,8 @@ terminal), apenas observabilidade.
 | `src/builder/mod.rs` | 11 test panics -> let-else com {:?} |
 | `src/input/mod.rs` | 7 test panics -> let-else com {:?} |
 | `src/component.rs` | 4 test panics -> let-else com {:?} |
-| `crates/phi_narrate_macro/src/parse/mod.rs` | consolidação de dead_code allows |
-| `crates/phi_narrate_macro/src/parse/block_item.rs` | remoção de allows individuais |
-| `crates/phi_narrate_macro/src/parse/element.rs` | remoção de allow individual |
-| `crates/phi_narrate_macro/src/parse/modifier.rs` | remoção de allow individual |
+| `crates/plev_narrate_macro/src/parse/mod.rs` | consolidação de dead_code allows |
+| `crates/plev_narrate_macro/src/parse/block_item.rs` | remoção de allows individuais |
+| `crates/plev_narrate_macro/src/parse/element.rs` | remoção de allow individual |
+| `crates/plev_narrate_macro/src/parse/modifier.rs` | remoção de allow individual |
 | `examples-wip/` (7 arquivos) | 83 allows -> 7 #![allow(dead_code)] (gitignored) |

@@ -18,7 +18,7 @@ pub(crate) const DIVIDER: [f32; 4] = [0.18, 0.18, 0.25, 1.0];
 
 pub(crate) const FOOTER_BG: [f32; 4] = [0.07, 0.07, 0.12, 1.0];
 
-use phi::compositor::Compositor;
+use plev::compositor::Compositor;
 
 pub(crate) fn card(compositor: &mut Compositor, x: f32, y: f32, w: f32, h: f32, accent: [f32; 4]) {
     compositor.draw_rect(x, y, w, h, SURFACE);

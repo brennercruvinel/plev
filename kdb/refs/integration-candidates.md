@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
@@ -66,7 +66,7 @@ categorias:
 - **versao:** 1.0.16, 3.3m downloads, estavel
 - **quando:** task-31 (vector paths)
 - **custo:** ~600-800 LOC, 1 crate + novo shader + novo scenenode variant
-- **justificativa:** path -> triangles para GPU e exatamente o que φ precisa para shapes customizados. exemplo oficial wgpu existe. integra naturalmente com gpuvec
+- **justificativa:** path -> triangles para GPU e exatamente o que plev precisa para shapes customizados. exemplo oficial wgpu existe. integra naturalmente com gpuvec
 - **risco:** baixo, API estavel (1.x), pattern de integracao documentado
 
 ### glam, SIMD math
@@ -82,14 +82,14 @@ categorias:
 
 ### vello, 2d compute renderer
 - **porque watch:** arquitetura de encoding em streams e inovadora (dirty tracking mais granular), mas requer compute shaders. complexidade enorme para quem so precisa de quads + texto. acompanhar backend hibrido (webgl2 fallback)
-- **trigger para reavaliar:** se φ precisar de path rendering complexo alem do que lyon oferece
+- **trigger para reavaliar:** se plev precisar de path rendering complexo alem do que lyon oferece
 
 ### dotlottie-rs / rive, animacao lottie/rive
-- **porque watch:** dotlottie-rs usa thorvg (c++), rive-rs sem release estavel. ambos resolvem animacao vetorial complexa que φ nao precisa ainda
+- **porque watch:** dotlottie-rs usa thorvg (c++), rive-rs sem release estavel. ambos resolvem animacao vetorial complexa que plev nao precisa ainda
 - **trigger para reavaliar:** se demo app (task-29) precisar de animacoes importadas de design tools
 
 ### velato, lottie para vello
-- **porque watch:** depende de vello. relevante apenas se φ adotar vello no futuro
+- **porque watch:** depende de vello. relevante apenas se plev adotar vello no futuro
 
 ### fearless-simd, SIMD portavel
 - **porque watch:** prematuro ate task-25 (benchmarks) identificar hot paths CPU-bound
@@ -100,12 +100,12 @@ categorias:
 - **trigger para reavaliar:** quando task-33 fase 1 iniciar
 
 ### kurbo, 2d geometry
-- **porque watch:** viria como dependencia transitiva se adotar parley. standalone, menos relevante que lyon para φ
+- **porque watch:** viria como dependencia transitiva se adotar parley. standalone, menos relevante que lyon para plev
 - **trigger para reavaliar:** se task-32 recomendar parley
 
 ### serde-wasm-bindgen
-- **porque watch:** relevante se φ expor API javascript. menor binario e mais rapido que serde_json para WASM<->JS
-- **trigger para reavaliar:** se φ publicar npm package
+- **porque watch:** relevante se plev expor API javascript. menor binario e mais rapido que serde_json para WASM<->JS
+- **trigger para reavaliar:** se plev publicar npm package
 
 ---
 
@@ -113,14 +113,14 @@ categorias:
 
 ### nalgebra, algebra linear completa
 - **porque hold:** overkill para UI. generics pesados, compile time 2-3x pior que glam, 1.5-3x mais lento em operacoes 3d/4d comuns
-- **alternativa:** glam para tudo que φ precisa
+- **alternativa:** glam para tudo que plev precisa
 
 ### rapier, physics 2d/3d
-- **porque hold:** φ nao precisa de physics engine. spring animations sao ~50 LOC de verlet integration manual (referencia: natura crate). rapier traz nalgebra + parry + simba como deps
+- **porque hold:** plev nao precisa de physics engine. spring animations sao ~50 LOC de verlet integration manual (referencia: natura crate). rapier traz nalgebra + parry + simba como deps
 - **alternativa:** implementar damped harmonic oscillator internamente (~100 LOC, unlicense do natura permite vendor)
 
 ### dioxus/leptos/yew como dependencia
-- **porque hold:** sao frameworks de aplicacao, nao libs. φ e a camada abaixo. sem ponto de integracao
+- **porque hold:** sao frameworks de aplicacao, nao libs. plev e a camada abaixo. sem ponto de integracao
 - **alternativa:** inspirar-se nos patterns (signals, hot-reload) sem depender
 
 ### lunatic, WASM runtime erlang-inspired

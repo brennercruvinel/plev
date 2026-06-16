@@ -1,8 +1,8 @@
-//! MessageDock -- animated floating dock component built with Phi.
+//! MessageDock -- animated floating dock component built with plev.
 //!
 //! Inspired by modern chat docks with character avatars, hover animations,
 //! expand/collapse transitions, and message input -- all rendered via GPU
-//! using Phi's compositor, text system, and input hit-testing.
+//! using plev's compositor, text system, and input hit-testing.
 //!
 //! Run: cargo run --example message_dock
 #![allow(dead_code)]
@@ -11,7 +11,7 @@ mod state;
 mod ui;
 mod rendering;
 
-use phi::winit::event_loop::EventLoop;
+use plev::winit::event_loop::EventLoop;
 use rendering::App;
 
 fn main() {

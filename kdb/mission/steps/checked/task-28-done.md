@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-13
@@ -20,7 +20,7 @@ input de texto editável com cursor, edição básica e integração com IME. m�
 
 ### o que já existe
 - **IME** (`ime.rs`): state machine completa, preedit_text, committed_text, keyboard show/hide
-- **input** (`input/mod.rs`): φkeyevent com campo `text: Option<String>`, focus tracking, hit regions focáveis
+- **input** (`input/mod.rs`): plevkeyevent com campo `text: Option<String>`, focus tracking, hit regions focáveis
 - **text rendering** (`text.rs`): cosmic-text buffer -> layout_runs() -> glyph quads no atlas
 - **compositor** (`compositor.rs`): scenenode::text com textnodekey (text, font_size, line_height, max_width)
 - **window** (`window.rs`): já processa `WindowEvent::Ime` e `WindowEvent::KeyboardInput`
@@ -34,7 +34,7 @@ input de texto editável com cursor, edição básica e integração com IME. m�
 - **conexão IME->textbuffer**: committed_text inserido no buffer, preedit renderizado inline
 
 ### decisão: não usar cosmic-text editor
-cosmic-text tem um `Editor` mas ele assume controle total do buffer e requer integração profunda. para φ (immediate mode, scene graph), é mais limpo ter nosso próprio textbuffer leve que usa cosmic-text apenas para shaping + glyph metrics.
+cosmic-text tem um `Editor` mas ele assume controle total do buffer e requer integração profunda. para plev (immediate mode, scene graph), é mais limpo ter nosso próprio textbuffer leve que usa cosmic-text apenas para shaping + glyph metrics.
 
 ## design
 
@@ -69,7 +69,7 @@ text_input()
     .on_change(|new_text| { ... })
 ```
 
-internamente: registra hitregion focável, processa φkeyevent quando focado, renderiza texto + cursor.
+internamente: registra hitregion focável, processa plevkeyevent quando focado, renderiza texto + cursor.
 
 ### cursor<->pixel via cosmic-text
 para mapear cursor position -> x coordinate:

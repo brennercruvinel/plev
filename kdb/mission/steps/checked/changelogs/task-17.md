@@ -1,5 +1,5 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: done
 last-updated: 2026-03-08
@@ -27,6 +27,6 @@ domain: changelog
 - 6 new tests: invisible layer skip, zero-opacity skip, visible layer on top, focusable skip, defaults, begin_frame reset
 
 ### resultado
-- 216 testes passando (150 φ + 12 integration + 54 macro)
+- 216 testes passando (150 plev + 12 integration + 54 macro)
 - zero mudanças em compositor.rs (layer info pushed via inputstate API)
 - backward compatible: sem set_current_layer, regions são visible/opacity=1.0

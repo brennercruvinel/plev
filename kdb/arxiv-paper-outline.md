@@ -1,22 +1,22 @@
 ---
-project: phi
+project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2026-03-11
 domain: paper
 ---
 
-# φ: a GPU-first compositing engine for cross-platform UI rendering
+# plev: a GPU-first compositing engine for cross-platform UI rendering
 ## arxiv paper outline
 
 ### abstract (~150 words)
-we present φ, an open-source GPU-first compositing engine written in rust that targets six platforms (macos, ios, linux, android, windows, web) from a single codebase via wgpu. unlike existing approaches that either sacrifice performance for portability (react native, flutter) or sacrifice portability for performance (GPUI), φ achieves both through: (1) a two-pass scene graph with per-layer fxhash dirty tracking that eliminates redundant GPU work, (2) premultiplied-alpha compositing with zero platform branches in the render path, (3) a verbal declarative DSL (phi_narrate!) that compiles to the same scene graph, and (4) feature-gated accessibility via accesskit. benchmarks on apple m4 show scene construction at 159-222m rects/s, dirty tracking overhead of 3.3us/1000 nodes, and lyon vector tessellation at 1.5-3.7us/shape. the engine comprises ~14,000 LOC with 370+ tests.
+we present plev, an open-source GPU-first compositing engine written in rust that targets six platforms (macos, ios, linux, android, windows, web) from a single codebase via wgpu. unlike existing approaches that either sacrifice performance for portability (react native, flutter) or sacrifice portability for performance (GPUI), plev achieves both through: (1) a two-pass scene graph with per-layer fxhash dirty tracking that eliminates redundant GPU work, (2) premultiplied-alpha compositing with zero platform branches in the render path, (3) a verbal declarative DSL (plev_narrate!) that compiles to the same scene graph, and (4) feature-gated accessibility via accesskit. benchmarks on apple m4 show scene construction at 159-222m rects/s, dirty tracking overhead of 3.3us/1000 nodes, and lyon vector tessellation at 1.5-3.7us/shape. the engine comprises ~14,000 LOC with 370+ tests.
 
 ### 1. introduction
 - problem: UI rendering fragmentation across platforms
 - existing solutions: web-based (electron), platform-native (swiftui/jetpack), cross-platform frameworks (flutter, react native)
 - gap: no GPU-first compositing engine focused on the rendering layer (not widgets)
-- contribution: φ fills this gap with a single rust codebase, zero platform branches in rendering, and a novel verbal DSL
+- contribution: plev fills this gap with a single rust codebase, zero platform branches in rendering, and a novel verbal DSL
 
 ### 2. related work
 | system | language | GPU | platforms | approach |
@@ -27,7 +27,7 @@ we present φ, an open-source GPU-first compositing engine written in rust that 
 | iced | rust | wgpu | 5 | elm architecture |
 | xilem | rust | vello | 4 | linebender, research stage |
 | flutter | dart | skia/impeller | 4 | widget framework, large runtime |
-| φ | rust | wgpu | 6 | scene graph + compositing, not widgets |
+| plev | rust | wgpu | 6 | scene graph + compositing, not widgets |
 
 ### 3. architecture
 - 3.1 frame lifecycle (begin_frame -> build_scene -> resolve -> render -> present)
@@ -45,11 +45,11 @@ we present φ, an open-source GPU-first compositing engine written in rust that 
 - 4.4 ios: aarch64-apple-ios-sim, no with_inner_size, metal surface persistence
 - 4.5 WASM: eventloopproxy async GPU init, web_time::instant, trunk build (2.4mb)
 
-### 5. verbal DSL: phi_narrate!
+### 5. verbal DSL: plev_narrate!
 - 5.1 motivation: HTML/JSX ergonomics without xml syntax in rust
 - 5.2 grammar: element-first, english-like modifiers, format interpolation
 - 5.3 implementation: proc-macro with recursive descent parser, levenshtein suggestions
-- 5.4 example: `phi_narrate! { div padded(20) color("blue") { text font_size(24) show("Hello") } }`
+- 5.4 example: `plev_narrate! { div padded(20) color("blue") { text font_size(24) show("Hello") } }`
 
 ### 6. accessibility
 - feature-gated accesskit integration
@@ -85,4 +85,4 @@ we present φ, an open-source GPU-first compositing engine written in rust that 
 - plugin system deferred (WASM-in-WASM problematic)
 
 ### 11. conclusion
-φ demonstrates that a single-codebase GPU compositing engine can achieve high performance across six platforms without sacrificing correctness or accessibility. the key insight is that platform differences belong in initialization, not rendering - enabling a render path with zero platform branches.
+plev demonstrates that a single-codebase GPU compositing engine can achieve high performance across six platforms without sacrificing correctness or accessibility. the key insight is that platform differences belong in initialization, not rendering - enabling a render path with zero platform branches.

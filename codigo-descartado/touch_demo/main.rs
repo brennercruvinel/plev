@@ -11,12 +11,12 @@ mod state;
 use std::sync::Arc;
 use std::time::Instant;
 
-use phi::gpu::GpuContext;
-use phi::text::TextSystem;
-use phi::winit::application::ApplicationHandler;
-use phi::winit::event::WindowEvent;
-use phi::winit::event_loop::{ActiveEventLoop, EventLoop};
-use phi::winit::window::{WindowAttributes, WindowId};
+use plev::gpu::GpuContext;
+use plev::text::TextSystem;
+use plev::winit::application::ApplicationHandler;
+use plev::winit::event::WindowEvent;
+use plev::winit::event_loop::{ActiveEventLoop, EventLoop};
+use plev::winit::window::{WindowAttributes, WindowId};
 
 use crate::state::{State, TouchDemoApp};
 
@@ -26,8 +26,8 @@ impl ApplicationHandler for TouchDemoApp {
             return;
         }
         let attrs = WindowAttributes::default()
-            .with_title("Phi -- Touch & Gestures")
-            .with_inner_size(phi::winit::dpi::LogicalSize::new(900, 650));
+            .with_title("plev -- Touch & Gestures")
+            .with_inner_size(plev::winit::dpi::LogicalSize::new(900, 650));
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
         self.window = Some(window.clone());
         let gpu = pollster::block_on(GpuContext::new(window));
