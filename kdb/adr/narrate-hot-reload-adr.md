@@ -8,7 +8,7 @@ domain: hot-reload
 
 # adotamos runtime parser + override map para hot reload de plev_narrate! DSL
 
-brenner@phi.engineer
+brenner@plev.engineer
 
 ## contexto
 

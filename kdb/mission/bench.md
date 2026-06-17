@@ -39,7 +39,7 @@ tier 2 - frameworks rust UI com rendering próprio
 justificativa: arquitetura elm (como plev), renderiza via wgpu, cross-platform
 (desktop + WASM). diferença chave: iced é retained-mode com widget tree
 tradicional, não tem compositing por layers, não tem dirty tracking por hash como
-phi. sem suporte mobile nativo. texto via cosmic-text (mesmo que plev).
+plev. sem suporte mobile nativo. texto via cosmic-text (mesmo que plev).
 
 4. xilem
    github.com/linebender/xilem
@@ -55,7 +55,7 @@ do cosmic-text.
    github.com/lapce/floem
 
 justificativa: do time do lapce editor. sistema reativo com signals (similar ao
-phi), rendering GPU. usa peniko + vello para renderização. diferença: floem é
+plev), rendering GPU. usa peniko + vello para renderização. diferença: floem é
 focado em desktop, sem target mobile. possui reactive system inspirado em leptos
 (mesmo paradigma que influenciou o signal.rs do plev).
 
@@ -137,7 +137,7 @@ ownership.
     github.com/linebender/vello
 
 justificativa: GPU 2d renderer puro, compute shader-based (não vertex shaders como
-phi). mesmo ecossistema wgpu. é o renderer do xilem. abordagem técnica oposta:
+plev). mesmo ecossistema wgpu. é o renderer do xilem. abordagem técnica oposta:
 vello faz path rendering via compute, plev faz SDF + tessellation via
 vertex/fragment pipelines.
 

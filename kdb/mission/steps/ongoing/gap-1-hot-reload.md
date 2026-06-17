@@ -78,5 +78,5 @@ ver `mission/knowledge/hot-reload-design.md` para pesquisa completa (7 implement
 - src/hot_reload.rs (narratewatcher, narrateoverrides, narrate_override, process_narrate_file)
 - src/lib.rs (narrate_runtime mod + narrate_resolve fn)
 - src/window.rs (narrate_watcher field + check_narrate_reload)
-- crates/plev_narrate_macro/src/codegen.rs (wrap com narrate_resolve, fix plev->phi)
-- crates/plev_narrate_macro/src/parse/block_item.rs (fix plev->phi)
+- crates/narrate-macro/src/codegen.rs (wrap com narrate_resolve, paths atualizados para plev)
+- crates/narrate-macro/src/parse/block_item.rs (paths atualizados para plev)

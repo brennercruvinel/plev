@@ -118,7 +118,7 @@ impl App {
                     file_row(ui, "A", "src/ui.rs", Accent::Safe);
                     file_row(ui, "D", "src/old_layout.rs", Accent::Danger);
                     file_row(ui, "M", "Cargo.toml", Accent::Warn);
-                    file_row(ui, "?", "CLAUDE.md", Accent::Gray);
+                    file_row(ui, "?", "system_prompt.md", Accent::Gray);
                 });
                 ui.modify(fl).pad(0.0, 20.0).bg(theme.bg[0]).corner(8.0).border(1.0, theme.border);
             });
