@@ -256,7 +256,7 @@ fn mock_files() -> Vec<FileEntry> {
         FileEntry { path: "src/text.rs".into(), status: FileStatus::Modified },
         FileEntry { path: "examples/todo_app.rs".into(), status: FileStatus::Modified },
         FileEntry { path: "Cargo.toml".into(), status: FileStatus::Modified },
-        FileEntry { path: "CLAUDE.md".into(), status: FileStatus::Untracked },
+        FileEntry { path: "system_prompt.md".into(), status: FileStatus::Untracked },
         FileEntry { path: "src/window.rs".into(), status: FileStatus::Modified },
         FileEntry { path: "src/gpu.rs".into(), status: FileStatus::Modified },
         FileEntry { path: "src/signal.rs".into(), status: FileStatus::Modified },
