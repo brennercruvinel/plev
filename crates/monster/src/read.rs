@@ -1,4 +1,4 @@
-//! monster v0 decoder: parses the container of kdb/adr/monster-format-v0.md back
+//! monster v0 decoder
 //! into the timeline IR. strict by design: magic, version, flags,
 //! section tiling, per-section sha256 and full payload consumption are
 //! all enforced; malformed or truncated input returns a typed

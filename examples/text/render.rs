@@ -288,7 +288,7 @@ impl TextDemoApp {
 
         compositor.draw_text(
             TextNodeKey::from_style(
-                "Φ renders text via a glyph atlas built with etagere rectangle packing. \
+                "plev renders text via a glyph atlas built with etagere rectangle packing. \
                  Each unique (text, font_size) pair is shaped once by cosmic-text and cached \
                  in an FxHashMap. The atlas starts at 512x512 R8Unorm and grows up to 4096x4096 \
                  with LRU eviction for least-recently-used glyphs. This paragraph demonstrates \
