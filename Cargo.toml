@@ -132,6 +132,9 @@ accessibility = ["dep:accesskit", "dep:accesskit_winit"]
 # their own browser entry without colliding with the engine's.
 web-entry = []
 android-game-activity = ["winit/android-game-activity"]
+# Exports the engine's own `android_main` entry on android. Off by default so
+# downstream apps can ship their own GameActivity entry without symbol clash.
+android-entry = []
 hot-reload = ["dep:notify", "dep:notify-debouncer-full"]
 
 [dependencies]
@@ -169,6 +172,10 @@ monster.workspace = true
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster.workspace = true
 env_logger.workspace = true
+
+# arboard is a desktop clipboard backend (no android/ios platform impl); mobile
+# falls back to the in-memory clipboard, so it is desktop-only here.
+[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
 arboard.workspace = true
 
 [target.'cfg(target_os = "android")'.dependencies]

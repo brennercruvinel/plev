@@ -1,4 +1,4 @@
-//! structural validation of [`Timeline`]: the IR contract every codec
+//! structural validation of [`Timeline`]
 //! entry point (encoder, decoder, player) enforces before trusting a
 //! timeline. split from `crate::ir` to keep the model file within the
 //! repository's size budget; the impl stays on [`Timeline`].

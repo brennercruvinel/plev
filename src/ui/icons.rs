@@ -639,14 +639,14 @@ fn arc_to_cubics(
         return pb.line_to(x2 * scale, y2 * scale);
     }
     let (mut rx, mut ry) = (rx.abs(), ry.abs());
-    let phi = rotation_deg.to_radians();
-    let (sin_phi, cos_phi) = phi.sin_cos();
+    let plev = rotation_deg.to_radians();
+    let (sin_plev, cos_plev) = plev.sin_cos();
 
     // Step 1: midpoint coordinates.
     let dx2 = (x1 - x2) / 2.0;
     let dy2 = (y1 - y2) / 2.0;
-    let x1p = cos_phi * dx2 + sin_phi * dy2;
-    let y1p = -sin_phi * dx2 + cos_phi * dy2;
+    let x1p = cos_plev * dx2 + sin_plev * dy2;
+    let y1p = -sin_plev * dx2 + cos_plev * dy2;
 
     // Correct out-of-range radii.
     let lambda = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry);
@@ -673,8 +673,8 @@ fn arc_to_cubics(
     let cyp = -coef * ry * x1p / rx;
 
     // Step 3: center in original coordinates.
-    let cx = cos_phi * cxp - sin_phi * cyp + (x1 + x2) / 2.0;
-    let cy = sin_phi * cxp + cos_phi * cyp + (y1 + y2) / 2.0;
+    let cx = cos_plev * cxp - sin_plev * cyp + (x1 + x2) / 2.0;
+    let cy = sin_plev * cxp + cos_plev * cyp + (y1 + y2) / 2.0;
 
     // Step 4: start angle and sweep extent.
     let angle = |ux: f32, uy: f32, vx: f32, vy: f32| -> f32 {
@@ -707,15 +707,15 @@ fn arc_to_cubics(
     let point = |t: f32| -> (f32, f32) {
         let (sin_t, cos_t) = t.sin_cos();
         (
-            cx + rx * cos_t * cos_phi - ry * sin_t * sin_phi,
-            cy + rx * cos_t * sin_phi + ry * sin_t * cos_phi,
+            cx + rx * cos_t * cos_plev - ry * sin_t * sin_plev,
+            cy + rx * cos_t * sin_plev + ry * sin_t * cos_plev,
         )
     };
     let derivative = |t: f32| -> (f32, f32) {
         let (sin_t, cos_t) = t.sin_cos();
         (
-            -rx * sin_t * cos_phi - ry * cos_t * sin_phi,
-            -rx * sin_t * sin_phi + ry * cos_t * cos_phi,
+            -rx * sin_t * cos_plev - ry * cos_t * sin_plev,
+            -rx * sin_t * sin_plev + ry * cos_t * cos_plev,
         )
     };
 
