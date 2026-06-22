@@ -15,8 +15,9 @@ first. routing every tool here on init is the contract, not a suggestion.
 
 plev: a gpu-first compositing engine in rust (wgpu 28, winit 0.30,
 cosmic-text 0.18, taffy 0.9). one codebase, identical rendering on macos,
-browser (webgpu/wasm), and (in progress) android, ios, linux, windows.
-apps: crates/showcase (widget gallery, also runs in the browser),
+browser (webgpu/wasm), and android + ios (the showcase runs on both via the
+native shells in android/ and ios/showcase/; see "## running"). linux/windows
+pending. apps: crates/showcase (widget gallery, also runs in the browser),
 crates/ide (real git client). knowledge base: kdb/. architecture:
 doc/arc/.
 
@@ -58,6 +59,23 @@ user-facing behavior.
 - cargo fmt --check
 - cargo check --target wasm32-unknown-unknown -p showcase (cheapest
   cross-platform guard)
+
+## running
+
+- apps: `cargo run -p showcase [section] [theme]` (gallery; `trunk serve`
+  from the root for web), `cargo run -p ide [path]` (git client),
+  `cargo run --example <name>` (any examples/<name>/main.rs)
+- one test: `cargo test -p <crate> <name>` (substring match, e.g.
+  `cargo test -p rope movement`); a whole crate: `cargo test -p <crate>`
+- mobile (the showcase is the demo): `ios/showcase/build_ios.sh` then
+  `ios/showcase/run_ios.sh` (needs xcode + xcodegen + the
+  aarch64-apple-ios-sim target; runs on the simulator);
+  `android/build_android.sh` (cargo-ndk -> jniLibs + gradle apk; needs the
+  android sdk/ndk, a jdk 17 and cargo-ndk). the showcase is a lib whose
+  shell crates/showcase/src/app.rs exposes run/run_web/android_main/
+  showcase_ios_main; the engine gates its own android_main behind the
+  `android-entry` cargo feature (off) so an app exports its own without a
+  symbol clash. arboard (clipboard) is desktop-only; mobile uses LocalClipboard.
 
 ## things to avoid
 

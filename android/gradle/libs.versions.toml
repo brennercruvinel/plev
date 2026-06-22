@@ -1,0 +1,18 @@
+# Version catalog for the plev showcase Android app.
+# games-activity must match the GameActivity C++ glue bundled in the Rust
+# `android-activity` crate (0.6.x -> games-activity 3.0.5); a mismatch crashes
+# at the JNI boundary.
+[versions]
+agp = "9.2.1"
+games-activity = "3.0.5"
+appcompat = "1.7.0"
+
+[libraries]
+games-activity = { group = "androidx.games", name = "games-activity", version.ref = "games-activity" }
+# GameActivity 3.0.x extends AppCompatActivity, so appcompat must be on the
+# classpath (and the app theme must be a Theme.AppCompat descendant).
+appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+
+[plugins]
+# AGP 9 bundles Kotlin support, so no separate kotlin-android plugin is needed.
+android-application = { id = "com.android.application", version.ref = "agp" }

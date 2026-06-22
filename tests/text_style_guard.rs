@@ -12,8 +12,17 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Directories never scanned (build output, vendored study material, vcs).
-const SKIP_DIRS: [&str; 6] = [".git", "target", "ref", "dist", "tmp", "node_modules"];
+/// Directories never scanned (build output, vendored study material,
+/// discarded code kept for reference, vcs).
+const SKIP_DIRS: [&str; 7] = [
+    ".git",
+    "target",
+    "ref",
+    "codigo-descartado",
+    "dist",
+    "tmp",
+    "node_modules",
+];
 
 /// Path prefixes (relative to the repo root, '/'-separated) where the raw
 /// constructor is legitimate: the engine that defines it, its inline

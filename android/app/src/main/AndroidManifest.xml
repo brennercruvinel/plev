@@ -2,17 +2,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
         android:allowBackup="false"
-        android:label="φ"
-        android:theme="@style/φTheme">
+        android:label="plev showcase"
+        android:theme="@style/Theme.Showcase">
+        <!-- GameActivity host. `android.app.lib_name` selects the native lib
+             (libshowcase.so); winit drives the surface from android_main. -->
         <activity
             android:name=".MainActivity"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            android:exported="true">
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density|uiMode|navigation|keyboard"
+            android:launchMode="singleTop"
+            android:resizeableActivity="true">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="showcase" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <meta-data android:name="android.app.lib_name" android:value="plev" />
         </activity>
     </application>
 </manifest>
