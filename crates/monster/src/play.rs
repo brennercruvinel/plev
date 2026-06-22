@@ -1,32 +1,3 @@
-//! monster v0 player (kdb/adr/monster-format-v0.md "player contract"): owns a
-//! deterministic f32 timeline, driven by [`AnimationTick`] handed in by
-//! the runner; FrameClock is the clock, the player never reads a wall
-//! clock, so the same tick sequence always produces the same scenes.
-//! segments are sampled through plev's `ease()` (via
-//! [`crate::easing::Easing::sample`]) and [`Interpolate`], the same
-//! curve and lerp library ui animation uses.
-//!
-//! evaluation is windowed (theatre lesson): each track caches the
-//! segment whose validity window `[t0, t1)` contains the playhead plus
-//! the value the segment starts from. ticks inside the window never
-//! re-search the chain; only crossing a boundary re-derives the cursor,
-//! and [`MonsterPlayer::segment_searches`] counts those re-derivations so
-//! tests can prove it. seek is O(1) in frames (the swf lesson): the
-//! governing keyframe snapshot plus direct evaluation of its delta
-//! tracks at t, never a per-frame replay. structural ops (place,
-//! replace, remove) replay covers the current segment only, so a
-//! segment without ops keeps the pure windowed path. sub-epsilon ticks
-//! are dropped whole (thorvg lesson), so a paused-in-all-but-name frame
-//! costs nothing and changes nothing.
-//!
-//! the reactive surface (playing, time) publishes through plev signals;
-//! the showcase motion tab binds to those. the player produces scenes,
-//! it does not push them: the embedding app pushes `scene()` per frame
-//! and the compositor's dirty hash makes unchanged pushes free.
-//!
-//! cursor caches, keyframe plans and op replay live in
-//! `crate::play_eval`.
-
 use crate::ir::{IrError, Node, Timeline};
 use crate::lower::{LoweredAsset, lower_scene};
 use crate::play_eval::{
