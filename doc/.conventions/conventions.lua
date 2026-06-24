@@ -75,7 +75,7 @@ reads as a graph node, the project's own format.
   -- opens with yaml frontmatter (type, tags, date, commit or status). a
   -- design note that turns out wrong gets a correction on top, never a
   -- delete.
-  docs = "diataxis, lowercase, yaml frontmatter, no emoji, no em-dash; wrong notes corrected on top, not deleted",
+"diataxis, lowercase, yaml frontmatter, no emoji, no em-dash; wrong notes corrected on top, not deleted",
 
   -- the source of truth for what exists is Cargo.toml members and the
   -- examples/ dir, never a doc. tests/arc_sync_guard.rs enforces it: every
