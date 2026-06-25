@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use crate::gem::{self, Mat, Sub};
 use crate::kfr::{eval, eval_path, eval1, eval2};
 use crate::mdl::{Animation, Layer, Shape, Transform};
-use plev::path::TessellatedPath;
+use engine::path::TessellatedPath;
 
 pub struct Player {
     pub anim: Animation,

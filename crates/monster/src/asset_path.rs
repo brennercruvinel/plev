@@ -17,8 +17,8 @@
 //! split is deterministic, so dedup still holds across frames.
 
 use crate::quant::{bytes_to_rgba, px_to_twips, rgba_to_bytes, twips_to_px};
-use plev::compositor::QuadVertex;
-use plev::path::TessellatedPath;
+use engine::compositor::QuadVertex;
+use engine::path::TessellatedPath;
 
 /// Fixed payload head: color rgba8 + vertex_count u16 + index_count u32.
 const HEAD: usize = 4 + 2 + 4;
@@ -104,7 +104,7 @@ pub fn unpack(data: &[u8]) -> Option<TessellatedPath> {
     let color = bytes_to_rgba([data[0], data[1], data[2], data[3]]);
     let vcount = usize::from(u16::from_le_bytes([data[4], data[5]]));
     let icount = u32::from_le_bytes([data[6], data[7], data[8], data[9]]) as usize;
-    if data.len() != HEAD + vcount * VERT + icount * IDX || !icount.is_multiple_of(3) {
+    if data.len() != HEAD + vcount * VERT + icount * IDX || icount % 3 != 0 {
         return None;
     }
     let mut vertices = Vec::with_capacity(vcount);

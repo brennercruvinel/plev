@@ -2,6 +2,7 @@
 name = "ide"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 publish = false
 description = "Simple IDE test"
 
@@ -10,7 +11,7 @@ name = "ide"
 path = "src/main.rs"
 
 [dependencies]
-plev.workspace = true
+engine.workspace = true
 git.workspace = true
 wgpu.workspace = true
 winit.workspace = true

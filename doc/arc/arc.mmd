@@ -25,5 +25,5 @@ sequenceDiagram
     G->>P: composite into srgb view (encode-on-write)
     P->>P: present (identical pixels on every target)
     %% perf (opt-in via RenderConfig): AnimationTick + RenderStats feed
-    %% src/perf PerfMonitor after submit; log line every N frames and/or
+    %% crates/engine/src/perf PerfMonitor after submit; log line every N frames and/or
     %% PerfHud overlay layer drawn by C (hud on = continuous frames)

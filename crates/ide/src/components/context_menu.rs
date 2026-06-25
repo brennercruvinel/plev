@@ -6,8 +6,8 @@
 use super::Rect;
 use super::hoff;
 use crate::theme::{SHADOW_MENU, Theme};
-use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use plev::overlay::MenuItem;
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::overlay::MenuItem;
 
 const MENU_W: f32 = 240.0;
 const ITEM_H: f32 = 44.0;
@@ -18,9 +18,9 @@ const LINE_H: f32 = 14.0 * 1.4;
 
 /// Draw a context menu onto `layer_id` and return per-item hit rects.
 ///
-/// `x`, `y` is the top-left of the menu (from [`plev::overlay::Overlay`]).
+/// `x`, `y` is the top-left of the menu (from [`engine::overlay::Overlay`]).
 /// Returns `(menu_w, menu_h, item_rects)` so the caller can call
-/// [`plev::overlay::OverlayManager::set_bounds`] on the first frame.
+/// [`engine::overlay::OverlayManager::set_bounds`] on the first frame.
 pub fn draw(
     compositor: &mut Compositor,
     layer_id: LayerId,

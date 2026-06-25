@@ -1,0 +1,33 @@
+[package]
+name = "prime"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "prime number creatures, an emergent particle swarm driven by prime coherence (port of the codepen demo) on the plev engine"
+
+# Both a lib (pure, gpu-free backend modules, unit tested) and a bin (the
+# windowed app). Same pattern as crates/showcase: src/lib.rs is auto-detected.
+[[bin]]
+name = "prime"
+path = "src/main.rs"
+
+[dependencies]
+engine.workspace = true
+wgpu.workspace = true
+winit.workspace = true
+log.workspace = true
+web-time.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+env_logger.workspace = true
+pollster.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+console_log.workspace = true
+console_error_panic_hook.workspace = true
+
+[lints]
+workspace = true

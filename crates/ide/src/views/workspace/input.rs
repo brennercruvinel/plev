@@ -89,7 +89,7 @@ impl WorkspaceView {
 
     /// Handle a right-click at (cx, cy). Returns true if an overlay was opened.
     pub fn handle_right_click(&mut self, cx: f32, cy: f32) -> bool {
-        use plev::overlay::{MenuItem, OverlayKind};
+        use engine::overlay::{MenuItem, OverlayKind};
 
         // dismiss any existing overlay first
         self.overlay_mgr.pop_all();

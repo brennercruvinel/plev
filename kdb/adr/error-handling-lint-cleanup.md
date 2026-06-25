@@ -99,10 +99,10 @@ terminal), apenas observabilidade.
 
 ## relação com regras existentes
 
-- **rule-13 (error handling tipado):** `PhiError` implementa parcialmente esta regra
-  para o engine core. a regra descreve `AppError` para apps; `PhiError` é o análogo
+- **rule-13 (error handling tipado):** `PlevError` implementa parcialmente esta regra
+  para o engine core. a regra descreve `AppError` para apps; `PlevError` é o análogo
   para a camada de engine. a próxima etapa é migrar `Result<_, notify::Error>` em
-  `hot_reload.rs` para `PhiResult<_>` e eliminar `.unwrap()` remanescentes em
+  `hot_reload.rs` para `PlevResult<_>` e eliminar `.unwrap()` remanescentes em
   `gpu.rs` e `effects.rs`.
 
 ## arquivos modificados nesta sessão

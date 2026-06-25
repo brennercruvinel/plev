@@ -7,9 +7,9 @@
 mod tests;
 
 use crate::theme::ShadowSpec;
-use plev::color::Color;
-use plev::compositor::{Compositor, LayerId, SceneNode};
-use plev::text::{TextMeasurer, TextStyle};
+use engine::color::Color;
+use engine::compositor::{Compositor, LayerId, SceneNode};
+use engine::text::{TextMeasurer, TextStyle};
 
 /// Push one CSS-like box-shadow layer. `spread` is emulated by
 /// expanding/shrinking the casting rect (plev shadows have no spread).
@@ -191,7 +191,7 @@ pub fn glass(
 }
 
 /// Real single-line text width via the engine's shaper
-/// ([`plev::text::TextMeasurer`]): same `FontSystem`, faces (Rubik default
+/// ([`engine::text::TextMeasurer`]): same `FontSystem`, faces (Rubik default
 /// family) and cache as the rasterizer, so a shape sized with this never
 /// disagrees with the glyphs drawn on top of it.
 ///
@@ -236,7 +236,7 @@ pub fn draw_scrollbar(
     x: f32,
     y: f32,
     h: f32,
-    scroll: &plev::input::scroll::ScrollState,
+    scroll: &engine::input::scroll::ScrollState,
 ) {
     let thumb_h = (h * scroll.thumb_ratio()).max(24.0);
     let thumb_y = y + (h - thumb_h) * scroll.thumb_position();

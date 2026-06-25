@@ -1,8 +1,9 @@
 [workspace]
-# Todos os crates do projeto são members (aparecem como targets na IDE).
+resolver = "2"
+# Todos os crates do projeto sao members (aparecem como targets na IDE).
 members = [
-    ".",
-    "macros",
+    "crates/engine",
+    "crates/macros",
     "crates/git",
     "crates/ide",
     "crates/lot",
@@ -10,7 +11,7 @@ members = [
     "crates/narrate",
     "crates/narrate-macro",
     "crates/parser",
-    "crates/prime_creatures",
+    "crates/prime",
     "crates/rope",
     "crates/showcase",
 ]
@@ -37,10 +38,10 @@ uninlined_format_args = "warn"
 # `{ workspace = true, features = [...] }`.
 [workspace.dependencies]
 # -- internos (path)
-plev = { path = "." }
+engine = { path = "crates/engine" }
 git = { path = "crates/git" }
 lot = { path = "crates/lot" }
-macros = { path = "macros" }
+macros = { path = "crates/macros" }
 monster = { path = "crates/monster" }
 narrate = { path = "crates/narrate" }
 narrate-macro = { path = "crates/narrate-macro" }
@@ -111,96 +112,3 @@ codegen-units = 1
 # o runtime de debug).
 [profile.dev.package."*"]
 opt-level = 2
-
-[package]
-name = "plev"
-version.workspace = true
-edition.workspace = true
-publish = false
-
-[lib]
-crate-type = ["cdylib", "staticlib", "rlib"]
-
-[lints]
-workspace = true
-
-[features]
-default = ["accessibility"]
-accessibility = ["dep:accesskit", "dep:accesskit_winit"]
-# Exports the engine's own `#[wasm_bindgen(start)]` entry point on wasm32.
-# Off by default so downstream apps (showcase, ide, ...) can define
-# their own browser entry without colliding with the engine's.
-web-entry = []
-android-game-activity = ["winit/android-game-activity"]
-# Exports the engine's own `android_main` entry on android. Off by default so
-# downstream apps can ship their own GameActivity entry without symbol clash.
-android-entry = []
-hot-reload = ["dep:notify", "dep:notify-debouncer-full"]
-
-[dependencies]
-wgpu.workspace = true
-winit.workspace = true
-cosmic-text.workspace = true
-etagere.workspace = true
-bytemuck.workspace = true
-lru.workspace = true
-rustc-hash.workspace = true
-log.workspace = true
-macros.workspace = true
-taffy.workspace = true
-slotmap.workspace = true
-web-time.workspace = true
-indexmap.workspace = true
-lyon_tessellation.workspace = true
-lyon_path.workspace = true
-image.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-rope.workspace = true
-unicode-segmentation.workspace = true
-accesskit = { workspace = true, optional = true }
-accesskit_winit = { workspace = true, optional = true }
-notify = { workspace = true, optional = true }
-notify-debouncer-full = { workspace = true, optional = true }
-
-[dev-dependencies]
-narrate.workspace = true
-criterion.workspace = true
-lot.workspace = true
-monster.workspace = true
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-pollster.workspace = true
-env_logger.workspace = true
-
-# arboard is a desktop clipboard backend (no android/ios platform impl); mobile
-# falls back to the in-memory clipboard, so it is desktop-only here.
-[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
-arboard.workspace = true
-
-[target.'cfg(target_os = "android")'.dependencies]
-android_logger.workspace = true
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen.workspace = true
-wasm-bindgen-futures.workspace = true
-web-sys.workspace = true
-console_log.workspace = true
-console_error_panic_hook.workspace = true
-
-[package.metadata.android]
-package = "com.plev.engine"
-label = "plev"
-
-[package.metadata.android.sdk]
-min_sdk_version = 28
-target_sdk_version = 35
-
-[package.metadata.android.application]
-debuggable = true
-has_code = false
-theme = "@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
-
-[[bench]]
-name = "scene_build"
-harness = false

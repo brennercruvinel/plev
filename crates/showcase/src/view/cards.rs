@@ -1,10 +1,10 @@
 //! Cards section: the HOFF card deck — every `CardVariant` with sample
 //! data, laid out as a content-driven masonry grid.
 
-use plev::compositor::Compositor;
-use plev::gpu::image::{ImageHandle, load_image_rgba};
-use plev::theme::Theme;
-use plev::ui::widgets::{Card, CardListRow, CardVariant, EventResult, Rect, WidgetEvent};
+use engine::compositor::Compositor;
+use engine::gpu::image::{ImageHandle, load_image_rgba};
+use engine::theme::Theme;
+use engine::ui::widgets::{Card, CardListRow, CardVariant, EventResult, Rect, WidgetEvent};
 
 use super::group_label;
 

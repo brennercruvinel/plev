@@ -15,12 +15,12 @@ mod theme_gallery;
 
 pub use forms::EditKey;
 
-use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use plev::input::scroll::ScrollState;
-use plev::overlay::{OverlayId, OverlayKind, OverlayManager};
-use plev::theme::{Intent, Theme};
-use plev::ui::icons;
-use plev::ui::widgets::{
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::input::scroll::ScrollState;
+use engine::overlay::{OverlayId, OverlayKind, OverlayManager};
+use engine::theme::{Intent, Theme};
+use engine::ui::icons;
+use engine::ui::widgets::{
     ContextMenu, EventResult, Modal, ModalAction, Rect, ToastManager, WidgetEvent, rounded_rect,
     rounded_rect_stroke,
 };
@@ -103,7 +103,9 @@ impl Section {
             Section::Cards => {
                 "The HOFF card deck: one glass shell, six preview families with live data."
             }
-            Section::Buttons => "Variants, sizes, intents and states of plev::ui::widgets::Button.",
+            Section::Buttons => {
+                "Variants, sizes, intents and states of engine::ui::widgets::Button."
+            }
             Section::Forms => "Checkbox, switch, slider, progress, select and tabs.",
             Section::Overlays => {
                 "Modal, context menu, tooltip and toasts — spring physics per intent."
@@ -969,7 +971,7 @@ mod tests {
         assert_eq!(view.section, Section::Cards);
         assert_eq!(view.theme_name, "hoff");
         // Page frame is the HOFF #444444.
-        assert_eq!(view.theme.colors.bg.0, plev::theme::hoff::PAGE_BG.0);
+        assert_eq!(view.theme.colors.bg.0, engine::theme::hoff::PAGE_BG.0);
     }
 
     #[test]

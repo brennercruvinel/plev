@@ -14,41 +14,44 @@ update all three together when structure changes.
 
 | layer | path | role |
 |---|---|---|
-| gpu | src/gpu/ | wgpu device/surface/pipelines; srgb view formats; image atlas; GpuVec buffers (vec); texture_pool; wgsl shaders (src/gpu/shaders) |
-| compositor | src/compositor/ | scene nodes, layers with dirty hashes, resolve to gpu buffers |
-| text | src/text/ | cosmic-text shaping, gpu glyph atlas, TextMeasurer (the only width source) |
-| path | src/path/ | lyon tessellation behind PathBuilder (auto-finishes open subpaths) |
-| layout | src/layout/ | taffy wrapper: flex, percent, text measure functions |
-| input | src/input/ | pointer state, hit regions, touch tracker + gesture recognizer, touch-to-pointer synth, scroll, dispatch |
-| animation | src/animation/ | Tween, FrameClock, easing (dt-based; web_time) |
-| perf | src/perf/ | PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None) |
-| signal | src/signal/ | reactive primitives (create_signal, runtime) |
-| window | src/window/ | App runner: event loop, render-on-demand, render passes, wasm canvas |
-| theme | src/theme/ | measured hoff tokens, oklch tooling, intents |
-| ui | src/ui/ | retained widgets (~15) + immediate builder + lucide icons |
-| builder | src/builder/ | declarative element tree (div/text/button), layout pipeline, emit |
-| component/view | src/component/, src/view/ | Lifecycle trait, View trait, ViewContext |
-| platform | src/platform/ | safe areas (mod), ime, app lifecycle |
+| gpu | crates/engine/src/gpu/ | wgpu device/surface/pipelines; srgb view formats; image atlas; GpuVec buffers (vec); texture_pool; wgsl shaders (crates/engine/src/gpu/shaders) |
+| compositor | crates/engine/src/compositor/ | scene nodes, layers with dirty hashes, resolve to gpu buffers |
+| text | crates/engine/src/text/ | cosmic-text shaping, gpu glyph atlas, TextMeasurer (the only width source) |
+| path | crates/engine/src/path/ | lyon tessellation behind PathBuilder (auto-finishes open subpaths) |
+| layout | crates/engine/src/layout/ | taffy wrapper: flex, percent, text measure functions |
+| input | crates/engine/src/input/ | pointer state, hit regions, touch tracker + gesture recognizer, touch-to-pointer synth, scroll, dispatch |
+| animation | crates/engine/src/animation/ | Tween, FrameClock, easing (dt-based; web_time) |
+| perf | crates/engine/src/perf/ | PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None) |
+| signal | crates/engine/src/signal/ | reactive primitives (create_signal, runtime) |
+| window | crates/engine/src/window/ | App runner: event loop, render-on-demand, render passes, wasm canvas |
+| theme | crates/engine/src/theme/ | measured hoff tokens, oklch tooling, intents |
+| ui | crates/engine/src/ui/ | retained widgets (~15) + immediate builder + lucide icons |
+| builder | crates/engine/src/builder/ | declarative element tree (div/text/button), layout pipeline, emit |
+| component/view | crates/engine/src/component/, crates/engine/src/view/ | Lifecycle trait, View trait, ViewContext |
+| platform | crates/engine/src/platform/ | safe areas (mod), ime, app lifecycle |
 
 apps consume the engine; they never reimplement engine capabilities (ADR
 content-driven-layout-not-fixed-constants and the engine manual record why).
 
 ## workspace tiers
 
-three tiers (ADR workspace-engine-at-root-libs-in-crates-demos-in-examples):
+three tiers (ADR workspace-engine-at-root-libs-in-crates-demos-in-examples,
+updated: the engine moved from the root crate to crates/engine, the root is
+now a virtual workspace):
 
 | tier | where | members |
 |---|---|---|
-| engine | root crate `plev` | src/ (the layers above) |
-| libraries and apps | crates/ | git, ide, lot, monster, narrate, narrate-macro, parser, prime_creatures, rope, showcase |
-| demos | examples/ | 16 windowed (counter, editor, charts, snake, scene3d, monster_player...) + 1 cli (lot2monsters) |
+| engine | crate `engine` (crates/engine) | the layers above, plus the examples/ demos it ships |
+| libraries and apps | crates/ | git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rope, showcase |
+| demos | crates/engine/examples/ | 16 windowed (counter, editor, charts, snake, scene3d, monster_player...) + 1 cli (lot2monsters) |
 
-crate roles: `monster` binary animation codec (.monster, ADR
+crate roles: `engine` the compositing engine itself (every app builds on it);
+`monster` binary animation codec (.monster, ADR
 binary-animation-format-with-discovered-deltas); `lot` lottie importer that
 converts to .monster and never embeds a foreign runtime (ADR
 import-foreign-formats-by-conversion-not-embedding); `parser` ui transpiler
 poc; `rope` text-editing core; `git` git ops; `ide` git client app;
-`showcase` design-system gallery; `prime_creatures` an emergent particle
+`showcase` design-system gallery; `prime` an emergent particle
 swarm driven by prime coherence (port of the codepen demo);
 `narrate`/`narrate-macro` experimental dsl; `macros` the #[component]
 proc-macro. cargo hygiene: workspace.package,

@@ -6,9 +6,9 @@
 use crate::ir::{Keyframe, Node, NodeKind, Prop, Props, Timeline, Value};
 use crate::lower::{LoweredAsset, lower_node, lower_scene};
 use crate::play::MonsterPlayer;
-use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use plev::gpu::ImageHandle;
-use plev::path::TessellatedPath;
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::gpu::ImageHandle;
+use engine::path::TessellatedPath;
 
 fn node(id: u16, depth: u16, kind: NodeKind, props: Props) -> Node {
     Node {

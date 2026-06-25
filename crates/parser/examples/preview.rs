@@ -7,20 +7,20 @@
 
 use std::sync::Arc;
 
+use engine::builder::{Element, Justify, div, text};
+use engine::color::Color;
+use engine::compositor::Compositor;
+use engine::gpu::{GpuContext, RenderConfig};
+use engine::input::InputState;
+use engine::text::TextSystem;
+use engine::theme::Theme;
+use engine::view::ViewContext;
+use engine::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+use engine::winit::application::ApplicationHandler;
+use engine::winit::event::WindowEvent;
+use engine::winit::event_loop::{ActiveEventLoop, EventLoop};
+use engine::winit::window::{Window, WindowAttributes, WindowId};
 use parser::ir::{Arg, ParserNode, Tag, TextValue};
-use plev::builder::{Element, Justify, div, text};
-use plev::color::Color;
-use plev::compositor::Compositor;
-use plev::gpu::{GpuContext, RenderConfig};
-use plev::input::InputState;
-use plev::text::TextSystem;
-use plev::theme::Theme;
-use plev::view::ViewContext;
-use plev::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
-use plev::winit::application::ApplicationHandler;
-use plev::winit::event::WindowEvent;
-use plev::winit::event_loop::{ActiveEventLoop, EventLoop};
-use plev::winit::window::{Window, WindowAttributes, WindowId};
 
 const BG: [f64; 3] = [0.0090, 0.0105, 0.0137];
 
@@ -38,14 +38,14 @@ fn color_of(theme: &Theme, token: &str) -> Color {
         "theme.glass.edge_soft" => theme.glass.edge_soft,
         "theme.glass.edge" => theme.glass.edge,
         "theme.glass.button" => theme.glass.button,
-        "plev::theme::hoff::CARD_OVERLAY" => plev::theme::hoff::CARD_OVERLAY,
-        t if t.starts_with("plev::theme::hoff::n2(") => {
-            plev::theme::hoff::n2(call(t).unwrap_or(1.0))
+        "engine::theme::hoff::CARD_OVERLAY" => engine::theme::hoff::CARD_OVERLAY,
+        t if t.starts_with("engine::theme::hoff::n2(") => {
+            engine::theme::hoff::n2(call(t).unwrap_or(1.0))
         }
-        t if t.starts_with("plev::theme::hoff::n3(") => {
-            plev::theme::hoff::n3(call(t).unwrap_or(1.0))
+        t if t.starts_with("engine::theme::hoff::n3(") => {
+            engine::theme::hoff::n3(call(t).unwrap_or(1.0))
         }
-        t if t.starts_with("plev::color::Color::rgba(") => {
+        t if t.starts_with("engine::color::Color::rgba(") => {
             let inner = t.split_once('(').map(|(_, r)| r.trim_end_matches(')'));
             let v: Vec<f32> = inner
                 .unwrap_or("")
@@ -144,7 +144,7 @@ fn build(node: &ParserNode, theme: &Theme) -> Element {
             div()
                 .min_h(64.0)
                 .rounded(12.0)
-                .bg(plev::theme::hoff::n2(0.06))
+                .bg(engine::theme::hoff::n2(0.06))
         }
     };
     for prop in &node.props {
@@ -162,8 +162,8 @@ enum AppState {
     Ready {
         gpu: GpuContext,
         text_system: TextSystem,
-        effects: plev::effects::EffectProcessor,
-        texture_pool: plev::gpu::texture_pool::TexturePool,
+        effects: engine::effects::EffectProcessor,
+        texture_pool: engine::gpu::texture_pool::TexturePool,
     },
 }
 
@@ -202,7 +202,7 @@ impl PreviewApp {
             .child(build(&self.root, &theme));
         self.compositor.begin_frame();
         let mut cx = ViewContext::new(w, h).with_theme(theme);
-        plev::builder::render_element_to_compositor(
+        engine::builder::render_element_to_compositor(
             &scene,
             &mut self.compositor,
             &mut self.input,
@@ -222,7 +222,7 @@ impl PreviewApp {
         let surface_view = gpu.surface_render_view(&output);
         text_system.begin_frame();
         self.compositor
-            .resolve(&plev::compositor::ResolveResources {
+            .resolve(&engine::compositor::ResolveResources {
                 device: &gpu.device,
                 queue: &gpu.queue,
                 format: gpu.surface_format(),
@@ -238,7 +238,7 @@ impl PreviewApp {
         gpu.prepare_images();
         let mut encoder =
             gpu.device
-                .create_command_encoder(&plev::wgpu::CommandEncoderDescriptor {
+                .create_command_encoder(&engine::wgpu::CommandEncoderDescriptor {
                     label: Some("parser_preview_encoder"),
                 });
         let dirty: Vec<_> = self
@@ -248,7 +248,7 @@ impl PreviewApp {
             .filter(|l| l.visible && l.is_dirty())
             .map(|l| l.id)
             .collect();
-        let clear = plev::wgpu::Color {
+        let clear = engine::wgpu::Color {
             r: BG[0],
             g: BG[1],
             b: BG[2],
@@ -287,17 +287,17 @@ impl ApplicationHandler for PreviewApp {
         }
         let attrs = WindowAttributes::default()
             .with_title(self.title.clone())
-            .with_inner_size(plev::winit::dpi::LogicalSize::new(560.0, 760.0));
+            .with_inner_size(engine::winit::dpi::LogicalSize::new(560.0, 760.0));
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
         self.window = Some(window.clone());
         let gpu = pollster::block_on(GpuContext::new_with_config(window, RenderConfig::default()));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let effects = plev::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        let effects = engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = AppState::Ready {
             gpu,
             text_system,
             effects,
-            texture_pool: plev::gpu::texture_pool::TexturePool::new(),
+            texture_pool: engine::gpu::texture_pool::TexturePool::new(),
         };
     }
 

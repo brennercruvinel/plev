@@ -2,6 +2,7 @@
 name = "git"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 publish = false
 description = "Git backend for plev apps: gix for reads, git CLI for the rest. No UI dependencies."
 

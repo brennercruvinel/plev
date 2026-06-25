@@ -41,14 +41,15 @@ sequenceDiagram
     P->>P: present (identical pixels on every target)
 ```
 
-three tiers. the engine is the root crate. libraries and apps are separate
-crates. demos are examples.
+three tiers. the engine is its own crate at `crates/engine`; the repo root is
+a virtual workspace. libraries and apps are sibling crates. demos are the
+engine's examples.
 
 | tier | where | what |
 |---|---|---|
-| engine | root `plev` | gpu, compositor, text, path, layout, input, animation, signal, theme, ui, builder, window, platform |
-| crates | crates/ | git, ide, lot, monster, narrate, narrate-macro, parser, prime_creatures, rope, showcase |
-| examples | examples/ | 16 windowed demos plus the lot2monsters cli |
+| engine | crate `engine` (crates/engine) | gpu, compositor, text, path, layout, input, animation, signal, theme, ui, builder, window, platform |
+| crates | crates/ | git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rope, showcase |
+| examples | crates/engine/examples/ | 16 windowed demos plus the lot2monsters cli |
 
 machine map: [doc/arc/arc.yaml](doc/arc/arc.yaml). human reference:
 [doc/arc/arc.md](doc/arc/arc.md). frame-flow diagram:
@@ -82,18 +83,18 @@ trunk serve
 ## run
 
 ```
-cargo run -p showcase            # the design-system gallery, 11 tabs
-cargo run -p ide [path]          # plev-native git client
-cargo run -p prime_creatures     # prime-coherence particle swarm (codepen port)
-cargo run --example charts       # any of the 16 windowed demos
-cargo run --example snake
+cargo run -p showcase                  # the design-system gallery, 11 tabs
+cargo run -p ide [path]                # plev-native git client
+cargo run -p prime                     # prime-coherence particle swarm (codepen port)
+cargo run -p engine --example charts   # any of the 16 windowed demos
+cargo run -p engine --example snake
 ```
 
 the monster animation pipeline, lottie in and our format out:
 
 ```
-cargo run --example lot2monsters in.json out.monster   # convert once
-cargo run --example monster_player out.monster         # play ours, no lottie
+cargo run -p engine --example lot2monsters in.json out.monster   # convert once
+cargo run -p engine --example monster_player out.monster         # play ours, no lottie
 ```
 
 ## mobile
@@ -159,6 +160,18 @@ cargo fmt --check
 
 a guard test scans the repo and fails if any code draws text by constructing
 a raw key instead of going through the one-TextStyle path.
+
+criterion benches live on the hot path of each crate (`engine` scene build,
+`rope` edits, `monster` codec, `lot` conversion, `parser` transpile):
+
+```
+cargo bench                      # all benches
+cargo bench -p rope              # one crate
+```
+
+the `monster` dense-lottie benches read large samples from `ref/lottie`
+(gitignored study material); when it is absent they skip with a notice
+instead of failing.
 
 ## reference
 

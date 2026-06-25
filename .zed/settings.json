@@ -1,0 +1,50 @@
+{
+  "//": "zed workspace settings for plev. tuned for a heavy wgpu/winit workspace: clippy as the check command, format on save, and large generated trees kept out of the file scan so the editor stays fast.",
+  "format_on_save": "on",
+  "formatter": "language_server",
+  "languages": {
+    "Rust": {
+      "format_on_save": "on",
+      "tab_size": 4
+    }
+  },
+  "lsp": {
+    "rust-analyzer": {
+      "initialization_options": {
+        "check": {
+          "command": "clippy",
+          "allTargets": true,
+          "extraArgs": ["--", "-D", "warnings"]
+        },
+        "cargo": {
+          "allTargets": true,
+          "buildScripts": { "enable": true }
+        },
+        "procMacro": { "enable": true },
+        "files": {
+          "excludeDirs": [
+            "target",
+            "dist",
+            "android/app/build",
+            "android/build",
+            "ios/showcase/build",
+            "ref",
+            "codigo-descartado"
+          ]
+        },
+        "rustfmt": { "extraArgs": ["+stable"] }
+      }
+    }
+  },
+  "file_scan_exclusions": [
+    "**/target",
+    "**/dist",
+    "**/.git",
+    "android/app/build",
+    "android/build",
+    "ios/showcase/build",
+    "**/*.monster",
+    "ref",
+    "codigo-descartado"
+  ]
+}

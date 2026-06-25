@@ -8,8 +8,8 @@ use crate::ir::{Keyframe, PlaceNode, Prop, RemoveNode, Track};
 use crate::play::MonsterPlayer;
 use crate::tests::ops::ops_timeline;
 use crate::tests::write::{rect, seg};
-use plev::animation::AnimationTick;
-use plev::compositor::SceneNode;
+use engine::animation::AnimationTick;
+use engine::compositor::SceneNode;
 
 fn rect_x(scene: &[SceneNode], at: usize) -> f32 {
     match &scene[at] {

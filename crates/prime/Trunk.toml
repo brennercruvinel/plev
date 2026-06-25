@@ -1,0 +1,15 @@
+# Trunk config for the web build of prime (`trunk serve` from this
+# directory). index.html points at this crate's Cargo.toml (bin
+# "prime"); trunk runs cargo for wasm32-unknown-unknown, applies
+# wasm-bindgen, and emits into dist/. Port differs from the showcase (8080).
+
+[build]
+target = "index.html"
+dist = "dist"
+# Engine plus cosmic-text in debug wasm is huge and slow; always ship opt.
+release = true
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8081
+open = false

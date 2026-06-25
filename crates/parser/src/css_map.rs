@@ -262,12 +262,12 @@ pub fn color_token((r, g, b, a): (u8, u8, u8, f32)) -> String {
         (255, 255, 255) if close(a, 0.05) => "theme.glass.edge_soft".into(),
         (255, 255, 255) if close(a, 0.10) => "theme.glass.edge".into(),
         // Pre-composed card shell tone; see the hoff.rs compositing note.
-        (40, 40, 40) if close(a, 0.80) => "plev::theme::hoff::CARD_OVERLAY".into(),
+        (40, 40, 40) if close(a, 0.80) => "engine::theme::hoff::CARD_OVERLAY".into(),
         (40, 40, 40) if close(a, 0.70) => "theme.glass.button".into(),
-        (248, 248, 248) => format!("plev::theme::hoff::n2({})", fmt_f32(a)),
-        (40, 40, 40) => format!("plev::theme::hoff::n3({})", fmt_f32(a)),
+        (248, 248, 248) => format!("engine::theme::hoff::n2({})", fmt_f32(a)),
+        (40, 40, 40) => format!("engine::theme::hoff::n3({})", fmt_f32(a)),
         _ => format!(
-            "plev::color::Color::rgba({}, {}, {}, {})",
+            "engine::color::Color::rgba({}, {}, {}, {})",
             fmt_f32(r as f32 / 255.0),
             fmt_f32(g as f32 / 255.0),
             fmt_f32(b as f32 / 255.0),

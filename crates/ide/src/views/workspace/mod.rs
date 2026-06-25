@@ -11,8 +11,8 @@ use super::multi_stack_view::MultiStackView;
 use super::sidebar::SIDEBAR_W;
 use super::sidebar::Sidebar;
 use super::unassigned_view::UnassignedView;
-use plev::compositor::{Compositor, LayerId};
-use plev::overlay::OverlayManager;
+use engine::compositor::{Compositor, LayerId};
+use engine::overlay::OverlayManager;
 
 pub(crate) const HEADER_H: f32 = super::header::HEADER_H;
 pub(crate) const RESIZE_HANDLE_W: f32 = 4.0;

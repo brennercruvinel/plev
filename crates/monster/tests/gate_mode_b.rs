@@ -9,11 +9,11 @@
 //! because discovery fits and RDP each spend strictly less than half a
 //! step. byte and B/s numbers print with --nocapture.
 
+use engine::compositor::SceneNode;
 use monster::{
     DiscoverConfig, Easing, MonsterPlayer, Node, NodeKind, OptimizeCfg, Prop, Props, Value, decode,
     discover, encode, optimize, quantize_value,
 };
-use plev::compositor::SceneNode;
 
 const FPS: usize = 60;
 const DUR_S: f32 = 4.0;

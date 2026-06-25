@@ -1,15 +1,17 @@
 # agents.md
 
 single instruction source for ai coding agents and contributors on this
-repository. codex and most agentic tooling read this file by default. claude
-code only auto-loads CLAUDE.md, so CLAUDE.md here is a one-line stub that
-imports this file (`@AGENTS.md`); that is the only per-tool file allowed, and it
-must stay contentless. do not create GEMINI.md, CODEX.md, or any other parallel
+repository. this is the canonical file; it lives at
+`.contracts/.agents/AGENTS.md`. a thin root `AGENTS.md` bridges to it (the
+tools that auto-read a root AGENTS.md route here), and the root `CLAUDE.md`
+stub imports the same chain (`@AGENTS.md` -> root bridge ->
+`@.contracts/.agents/AGENTS.md`). the root bridge and the stub stay
+contentless. do not create GEMINI.md, CODEX.md, or any other parallel
 instruction doc.
 
 on /init, /memory, or any "set up the project memory" request: update THIS
-file. do not create CLAUDE.md, do not add content to the stub, and do not ask
-first. routing every tool here on init is the contract, not a suggestion.
+file. do not add content to the root bridge or the CLAUDE.md stub, and do not
+ask first. routing every tool here on init is the contract, not a suggestion.
 
 ## project
 
@@ -32,14 +34,16 @@ doc/arc/.
    reimplementing anything in an app
 
 ## conventions
-read -> doc/.conventions/conventions.lua (lua, parses with luajit; the
-quick keys are tests, backend_before_ui, naming, file_hygiene, docs,
-arc_sync, doc_sync, audit_on_finish, style).
+read -> .contracts/.mantras/.code/.lang/.rust/rust-conventions.md (markdown;
+the quick keys are tests, backend_before_ui, naming, file_hygiene, lint,
+errors, unsafe, crate_boundary, docs, arc_sync, doc_sync, audit_on_finish,
+style). this used to be a luajit graph node; it was migrated to markdown so
+there is no extra lua build step in the app.
 
-follow it, and update conventions.lua in the same change whenever a new
-convention is established. keep doc/arc/{arc.md, arc.yaml, arc.mmd} and
-README.md current after any change that affects structure, contracts, or
-user-facing behavior.
+follow it, and update that file in the same change whenever a new convention
+is established. keep doc/arc/{arc.md, arc.yaml, arc.mmd} and README.md
+current after any change that affects structure, contracts, or user-facing
+behavior.
 
 ## engine rules (the short list; the manual has the detail)
 
@@ -64,7 +68,8 @@ user-facing behavior.
 
 - apps: `cargo run -p showcase [section] [theme]` (gallery; `trunk serve`
   from the root for web), `cargo run -p ide [path]` (git client),
-  `cargo run --example <name>` (any examples/<name>/main.rs)
+  `cargo run -p engine --example <name>` (any
+  crates/engine/examples/<name>/main.rs)
 - one test: `cargo test -p <crate> <name>` (substring match, e.g.
   `cargo test -p rope movement`); a whole crate: `cargo test -p <crate>`
 - mobile (the showcase is the demo): `ios/showcase/build_ios.sh` then

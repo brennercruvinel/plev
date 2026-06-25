@@ -129,7 +129,7 @@ fn commits_hidden_behind_the_stacks_head_are_not_hit() {
 
 #[test]
 fn scrolled_panels_clip_rows_to_the_list_viewport() {
-    use plev::compositor::{LayerId, SceneNode};
+    use engine::compositor::{LayerId, SceneNode};
     let mut w = WorkspaceView::new(1280.0, 800.0);
     w.unassigned.set_files(many_files(60));
     let mut c = Compositor::new();
