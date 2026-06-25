@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+      <title>Brenner - database indexes</title>
+      <link>https://brennercruvinel.com</link>
+      <description>Opinionated, modern, pretty, and clean Zola theme.</description>
+      <generator>Zola</generator>
+      <language>en</language>
+      <atom:link href="https://brennercruvinel.com/tags/database-indexes/rss.xml" rel="self" type="application/rss+xml"/>
+      <lastBuildDate>Thu, 01 Jan 2026 22:09:56 +0000</lastBuildDate>
+      <item>
+          <title>a short note about database indexes</title>
+          <pubDate>Thu, 01 Jan 2026 22:09:56 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-short-note-about-database-indexes/</link>
+          <guid>https://brennercruvinel.com/blog/a-short-note-about-database-indexes/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-short-note-about-database-indexes/">&lt;p&gt;I keep coming back to database indexes, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Database indexes shows up across backend work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>on database indexes</title>
+          <pubDate>Wed, 10 Jul 2024 23:27:21 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/on-database-indexes/</link>
+          <guid>https://brennercruvinel.com/blog/on-database-indexes/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/on-database-indexes/">&lt;p&gt;I spent a while getting database indexes wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Database indexes shows up across backend work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>rethinking database indexes</title>
+          <pubDate>Sun, 07 Aug 2022 03:06:06 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/rethinking-database-indexes/</link>
+          <guid>https://brennercruvinel.com/blog/rethinking-database-indexes/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/rethinking-database-indexes/">&lt;p&gt;Short post: database indexes is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Database indexes shows up across backend work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+    </channel>
+</rss>

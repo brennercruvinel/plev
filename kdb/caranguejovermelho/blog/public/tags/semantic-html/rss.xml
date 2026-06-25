@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+      <title>Brenner - semantic html</title>
+      <link>https://brennercruvinel.com</link>
+      <description>Opinionated, modern, pretty, and clean Zola theme.</description>
+      <generator>Zola</generator>
+      <language>en</language>
+      <atom:link href="https://brennercruvinel.com/tags/semantic-html/rss.xml" rel="self" type="application/rss+xml"/>
+      <lastBuildDate>Tue, 21 Apr 2026 06:01:13 +0000</lastBuildDate>
+      <item>
+          <title>thinking about semantic html</title>
+          <pubDate>Tue, 21 Apr 2026 06:01:13 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/thinking-about-semantic-html/</link>
+          <guid>https://brennercruvinel.com/blog/thinking-about-semantic-html/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/thinking-about-semantic-html/">&lt;p&gt;I spent a while getting semantic html wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Semantic html shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>a short note about semantic html</title>
+          <pubDate>Fri, 14 Nov 2025 23:52:29 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-short-note-about-semantic-html/</link>
+          <guid>https://brennercruvinel.com/blog/a-short-note-about-semantic-html/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-short-note-about-semantic-html/">&lt;p&gt;Every few months semantic html bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Semantic html shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>what i learned about semantic html</title>
+          <pubDate>Tue, 13 Apr 2021 09:17:06 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/what-i-learned-about-semantic-html/</link>
+          <guid>https://brennercruvinel.com/blog/what-i-learned-about-semantic-html/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/what-i-learned-about-semantic-html/">&lt;p&gt;Every few months semantic html bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Semantic html shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>semantic html, revisited</title>
+          <pubDate>Sun, 25 Oct 2020 07:31:23 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/semantic-html-revisited/</link>
+          <guid>https://brennercruvinel.com/blog/semantic-html-revisited/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/semantic-html-revisited/">&lt;p&gt;Short post: semantic html is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Semantic html shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>semantic html in practice</title>
+          <pubDate>Mon, 15 Jul 2019 18:49:29 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/semantic-html-in-practice/</link>
+          <guid>https://brennercruvinel.com/blog/semantic-html-in-practice/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/semantic-html-in-practice/">&lt;p&gt;Every few months semantic html bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Semantic html shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>what i learned about semantic html</title>
+          <pubDate>Fri, 13 Jun 2014 14:51:24 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/what-i-learned-about-semantic-html-2/</link>
+          <guid>https://brennercruvinel.com/blog/what-i-learned-about-semantic-html-2/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/what-i-learned-about-semantic-html-2/">&lt;p&gt;A quick write-up on semantic html, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Semantic html shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+    </channel>
+</rss>

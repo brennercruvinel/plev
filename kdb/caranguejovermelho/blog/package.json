@@ -1,0 +1,19 @@
+{
+  "name": "brennercruvinel.com",
+  "version": "6.3.0",
+  "description": "Dev tooling (linters) for the Brenner Zola theme. The site itself builds with Zola, not Node.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "lint:css": "stylelint \"sass/**/*.scss\"",
+    "lint:js": "eslint \"static/**/*.js\"",
+    "lint": "npm run lint:css && npm run lint:js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "eslint": "^9.13.0",
+    "globals": "^15.11.0",
+    "stylelint": "^16.10.0",
+    "stylelint-config-standard-scss": "^13.1.0"
+  }
+}

@@ -1,0 +1,32 @@
+{#
+  ai / answer-engine optimization metadata.
+  complements the json-ld @graph with lightweight hints for generative
+  engines. all values are optional and degrade gracefully.
+#}
+{%- if page and page.date -%}
+	{%- set ai_type = "article" -%}
+{%- elif page or section -%}
+	{%- set ai_type = "webpage" -%}
+{%- else -%}
+	{%- set ai_type = "website" -%}
+{%- endif -%}
+
+<meta name="ai.content_type" content="{{ ai_type }}" />
+<meta name="ai.language" content="{{ lang }}" />
+<meta name="ai.publisher" content="{{ config.title | escape }}" />
+<meta name="ai.indexable" content="{% if page.extra.noindex or section.extra.noindex %}false{% else %}true{% endif %}" />
+{%- if page.extra.tldr %}
+	<meta name="ai.summary" content="{{ page.extra.tldr | escape }}" />
+{%- endif %}
+{%- if page.word_count %}
+	<meta name="ai.word_count" content="{{ page.word_count }}" />
+{%- endif %}
+{%- if page.reading_time %}
+	<meta name="ai.reading_time" content="{{ page.reading_time }}" />
+{%- endif %}
+{%- if page.taxonomies.tags %}
+	<meta name="ai.related_topics" content="{{ page.taxonomies.tags | join(sep=', ') | escape }}" />
+{%- endif %}
+{%- if config.extra.organization_knows_about %}
+	<meta name="ai.topics" content="{{ config.extra.organization_knows_about | join(sep=', ') | escape }}" />
+{%- endif %}

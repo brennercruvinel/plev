@@ -1,0 +1,20 @@
+{#
+  visible breadcrumb trail. mirrors the BreadcrumbList in partials/schema.html
+  (triple concordance: visible html == structured data). rendered on pages and
+  posts; skipped on the homepage and when the page has no ancestors.
+#}
+{%- if page and page.ancestors -%}
+	{%- set home_label = macros_translate::translate(key="home", default="Home", language_strings=language_strings) -%}
+	<nav class="breadcrumb" aria-label="Breadcrumb">
+		<ol>
+			<li><a href="{{ config.base_url | safe }}">{{ home_label }}</a></li>
+			{%- for ancestor in page.ancestors -%}
+				{%- if ancestor != "_index.md" -%}
+					{%- set ancestor_section = get_section(path=ancestor, metadata_only=true) -%}
+					<li><a href="{{ ancestor_section.permalink | safe }}">{{ ancestor_section.title }}</a></li>
+				{%- endif -%}
+			{%- endfor -%}
+			<li aria-current="page">{{ page.title }}</li>
+		</ol>
+	</nav>
+{%- endif -%}

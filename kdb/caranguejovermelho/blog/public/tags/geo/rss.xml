@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+      <title>Brenner - geo</title>
+      <link>https://brennercruvinel.com</link>
+      <description>Opinionated, modern, pretty, and clean Zola theme.</description>
+      <generator>Zola</generator>
+      <language>en</language>
+      <atom:link href="https://brennercruvinel.com/tags/geo/rss.xml" rel="self" type="application/rss+xml"/>
+      <lastBuildDate>Sat, 28 Mar 2026 00:19:35 +0000</lastBuildDate>
+      <item>
+          <title>rethinking zero-click search</title>
+          <pubDate>Sat, 28 Mar 2026 00:19:35 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/rethinking-zero-click-search/</link>
+          <guid>https://brennercruvinel.com/blog/rethinking-zero-click-search/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/rethinking-zero-click-search/">&lt;p&gt;A quick write-up on zero-click search, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Zero-click search shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>what i learned about entity seo</title>
+          <pubDate>Sun, 11 May 2025 14:19:25 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/what-i-learned-about-entity-seo/</link>
+          <guid>https://brennercruvinel.com/blog/what-i-learned-about-entity-seo/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/what-i-learned-about-entity-seo/">&lt;p&gt;Every few months entity seo bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Entity seo shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>zero-click search in practice</title>
+          <pubDate>Wed, 19 Mar 2025 06:50:35 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/zero-click-search-in-practice-2/</link>
+          <guid>https://brennercruvinel.com/blog/zero-click-search-in-practice-2/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/zero-click-search-in-practice-2/">&lt;p&gt;I spent a while getting zero-click search wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Zero-click search shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>a short note about speakable content</title>
+          <pubDate>Sat, 21 Dec 2024 02:30:26 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-short-note-about-speakable-content/</link>
+          <guid>https://brennercruvinel.com/blog/a-short-note-about-speakable-content/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-short-note-about-speakable-content/">&lt;p&gt;I keep coming back to speakable content, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Speakable content shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>on schema graphs</title>
+          <pubDate>Sat, 02 Mar 2024 03:09:06 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/on-schema-graphs/</link>
+          <guid>https://brennercruvinel.com/blog/on-schema-graphs/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/on-schema-graphs/">&lt;p&gt;A quick write-up on schema graphs, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Schema graphs shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>structured data in practice</title>
+          <pubDate>Tue, 29 Aug 2023 20:14:08 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/structured-data-in-practice/</link>
+          <guid>https://brennercruvinel.com/blog/structured-data-in-practice/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/structured-data-in-practice/">&lt;p&gt;Every few months structured data bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Structured data shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>thinking about structured data</title>
+          <pubDate>Thu, 22 Jun 2023 01:33:51 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/thinking-about-structured-data/</link>
+          <guid>https://brennercruvinel.com/blog/thinking-about-structured-data/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/thinking-about-structured-data/">&lt;p&gt;I keep coming back to structured data, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Structured data shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>a short note about answer engines</title>
+          <pubDate>Thu, 15 Sep 2022 14:15:29 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-short-note-about-answer-engines/</link>
+          <guid>https://brennercruvinel.com/blog/a-short-note-about-answer-engines/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-short-note-about-answer-engines/">&lt;p&gt;Every few months answer engines bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Answer engines shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>on proprietary data</title>
+          <pubDate>Mon, 31 Jan 2022 01:54:58 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/on-proprietary-data/</link>
+          <guid>https://brennercruvinel.com/blog/on-proprietary-data/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/on-proprietary-data/">&lt;p&gt;A quick write-up on proprietary data, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Proprietary data shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>a small guide to citations over rankings</title>
+          <pubDate>Tue, 21 Dec 2021 01:01:29 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-small-guide-to-citations-over-rankings/</link>
+          <guid>https://brennercruvinel.com/blog/a-small-guide-to-citations-over-rankings/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-small-guide-to-citations-over-rankings/">&lt;p&gt;I spent a while getting citations over rankings wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Citations over rankings shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>what i learned about answer engines</title>
+          <pubDate>Sun, 03 Oct 2021 19:58:48 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/what-i-learned-about-answer-engines/</link>
+          <guid>https://brennercruvinel.com/blog/what-i-learned-about-answer-engines/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/what-i-learned-about-answer-engines/">&lt;p&gt;I keep coming back to answer engines, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Answer engines shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>on schema graphs</title>
+          <pubDate>Tue, 21 Sep 2021 10:56:25 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/on-schema-graphs-2/</link>
+          <guid>https://brennercruvinel.com/blog/on-schema-graphs-2/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/on-schema-graphs-2/">&lt;p&gt;I spent a while getting schema graphs wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Schema graphs shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>speakable content, revisited</title>
+          <pubDate>Fri, 13 Aug 2021 11:02:30 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/speakable-content-revisited/</link>
+          <guid>https://brennercruvinel.com/blog/speakable-content-revisited/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/speakable-content-revisited/">&lt;p&gt;Short post: speakable content is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Speakable content shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>on answer engines</title>
+          <pubDate>Mon, 14 Jun 2021 11:45:30 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/on-answer-engines/</link>
+          <guid>https://brennercruvinel.com/blog/on-answer-engines/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/on-answer-engines/">&lt;p&gt;Every few months answer engines bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Answer engines shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>a short note about schema graphs</title>
+          <pubDate>Thu, 27 Feb 2020 11:42:47 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-short-note-about-schema-graphs/</link>
+          <guid>https://brennercruvinel.com/blog/a-short-note-about-schema-graphs/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-short-note-about-schema-graphs/">&lt;p&gt;A quick write-up on schema graphs, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Schema graphs shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>what i learned about the knowledge graph</title>
+          <pubDate>Wed, 18 Dec 2019 07:20:15 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/what-i-learned-about-the-knowledge-graph/</link>
+          <guid>https://brennercruvinel.com/blog/what-i-learned-about-the-knowledge-graph/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/what-i-learned-about-the-knowledge-graph/">&lt;p&gt;A quick write-up on the knowledge graph, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The knowledge graph shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>schema graphs in practice</title>
+          <pubDate>Wed, 31 Jul 2019 18:40:48 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/schema-graphs-in-practice/</link>
+          <guid>https://brennercruvinel.com/blog/schema-graphs-in-practice/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/schema-graphs-in-practice/">&lt;p&gt;Every few months schema graphs bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Schema graphs shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>rethinking answer engines</title>
+          <pubDate>Tue, 04 Dec 2018 09:46:20 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/rethinking-answer-engines/</link>
+          <guid>https://brennercruvinel.com/blog/rethinking-answer-engines/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/rethinking-answer-engines/">&lt;p&gt;A quick write-up on answer engines, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Answer engines shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>on schema graphs</title>
+          <pubDate>Sat, 30 Dec 2017 01:06:39 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/on-schema-graphs-3/</link>
+          <guid>https://brennercruvinel.com/blog/on-schema-graphs-3/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/on-schema-graphs-3/">&lt;p&gt;I keep coming back to schema graphs, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Schema graphs shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>the case for answer engines</title>
+          <pubDate>Sun, 02 Jul 2017 00:03:14 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/the-case-for-answer-engines/</link>
+          <guid>https://brennercruvinel.com/blog/the-case-for-answer-engines/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/the-case-for-answer-engines/">&lt;p&gt;I spent a while getting answer engines wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Answer engines shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>the case for the knowledge graph</title>
+          <pubDate>Mon, 04 May 2015 00:47:07 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/the-case-for-the-knowledge-graph/</link>
+          <guid>https://brennercruvinel.com/blog/the-case-for-the-knowledge-graph/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/the-case-for-the-knowledge-graph/">&lt;p&gt;I keep coming back to the knowledge graph, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The knowledge graph shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>the case for speakable content</title>
+          <pubDate>Wed, 17 Sep 2014 15:55:55 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/the-case-for-speakable-content/</link>
+          <guid>https://brennercruvinel.com/blog/the-case-for-speakable-content/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/the-case-for-speakable-content/">&lt;p&gt;A quick write-up on speakable content, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Speakable content shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>thinking about schema graphs</title>
+          <pubDate>Mon, 04 Mar 2013 01:11:20 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/thinking-about-schema-graphs/</link>
+          <guid>https://brennercruvinel.com/blog/thinking-about-schema-graphs/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/thinking-about-schema-graphs/">&lt;p&gt;A quick write-up on schema graphs, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Schema graphs shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>zero-click search, revisited</title>
+          <pubDate>Sun, 24 Feb 2013 20:15:57 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/zero-click-search-revisited/</link>
+          <guid>https://brennercruvinel.com/blog/zero-click-search-revisited/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/zero-click-search-revisited/">&lt;p&gt;I spent a while getting zero-click search wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Zero-click search shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>what i learned about schema graphs</title>
+          <pubDate>Sat, 19 Jan 2013 06:14:30 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/what-i-learned-about-schema-graphs/</link>
+          <guid>https://brennercruvinel.com/blog/what-i-learned-about-schema-graphs/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/what-i-learned-about-schema-graphs/">&lt;p&gt;A quick write-up on schema graphs, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Schema graphs shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>notes on citations over rankings</title>
+          <pubDate>Wed, 28 Nov 2012 00:42:54 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/notes-on-citations-over-rankings/</link>
+          <guid>https://brennercruvinel.com/blog/notes-on-citations-over-rankings/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/notes-on-citations-over-rankings/">&lt;p&gt;I spent a while getting citations over rankings wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Citations over rankings shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>entity seo in practice</title>
+          <pubDate>Thu, 22 Mar 2012 02:26:53 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/entity-seo-in-practice/</link>
+          <guid>https://brennercruvinel.com/blog/entity-seo-in-practice/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/entity-seo-in-practice/">&lt;p&gt;Every few months entity seo bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Entity seo shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>answer engines, revisited</title>
+          <pubDate>Sat, 04 Feb 2012 00:16:23 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/answer-engines-revisited/</link>
+          <guid>https://brennercruvinel.com/blog/answer-engines-revisited/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/answer-engines-revisited/">&lt;p&gt;Short post: answer engines is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Answer engines shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>zero-click search in practice</title>
+          <pubDate>Sat, 12 Nov 2011 15:46:43 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/zero-click-search-in-practice/</link>
+          <guid>https://brennercruvinel.com/blog/zero-click-search-in-practice/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/zero-click-search-in-practice/">&lt;p&gt;I keep coming back to zero-click search, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Zero-click search shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>thinking about entity seo</title>
+          <pubDate>Mon, 16 May 2011 23:39:04 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/thinking-about-entity-seo/</link>
+          <guid>https://brennercruvinel.com/blog/thinking-about-entity-seo/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/thinking-about-entity-seo/">&lt;p&gt;I keep coming back to entity seo, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Entity seo shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>what i learned about zero-click search</title>
+          <pubDate>Tue, 23 Nov 2010 22:38:48 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/what-i-learned-about-zero-click-search/</link>
+          <guid>https://brennercruvinel.com/blog/what-i-learned-about-zero-click-search/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/what-i-learned-about-zero-click-search/">&lt;p&gt;I keep coming back to zero-click search, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Zero-click search shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>rethinking structured data</title>
+          <pubDate>Fri, 27 Nov 2009 17:04:43 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/rethinking-structured-data/</link>
+          <guid>https://brennercruvinel.com/blog/rethinking-structured-data/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/rethinking-structured-data/">&lt;p&gt;A quick write-up on structured data, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Structured data shows up across seo work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+    </channel>
+</rss>

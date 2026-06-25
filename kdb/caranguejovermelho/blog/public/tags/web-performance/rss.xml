@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+      <title>Brenner - web performance</title>
+      <link>https://brennercruvinel.com</link>
+      <description>Opinionated, modern, pretty, and clean Zola theme.</description>
+      <generator>Zola</generator>
+      <language>en</language>
+      <atom:link href="https://brennercruvinel.com/tags/web-performance/rss.xml" rel="self" type="application/rss+xml"/>
+      <lastBuildDate>Wed, 10 Nov 2021 15:10:15 +0000</lastBuildDate>
+      <item>
+          <title>a small guide to web performance</title>
+          <pubDate>Wed, 10 Nov 2021 15:10:15 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-small-guide-to-web-performance-2/</link>
+          <guid>https://brennercruvinel.com/blog/a-small-guide-to-web-performance-2/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-small-guide-to-web-performance-2/">&lt;p&gt;Every few months web performance bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Web performance shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>notes on web performance</title>
+          <pubDate>Thu, 13 Feb 2020 21:03:13 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/notes-on-web-performance/</link>
+          <guid>https://brennercruvinel.com/blog/notes-on-web-performance/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/notes-on-web-performance/">&lt;p&gt;I spent a while getting web performance wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Web performance shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>on web performance</title>
+          <pubDate>Wed, 01 Nov 2017 00:54:45 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/on-web-performance/</link>
+          <guid>https://brennercruvinel.com/blog/on-web-performance/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/on-web-performance/">&lt;p&gt;Every few months web performance bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Web performance shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>web performance in practice</title>
+          <pubDate>Tue, 01 Nov 2011 20:37:38 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/web-performance-in-practice/</link>
+          <guid>https://brennercruvinel.com/blog/web-performance-in-practice/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/web-performance-in-practice/">&lt;p&gt;Short post: web performance is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Web performance shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>a small guide to web performance</title>
+          <pubDate>Tue, 21 Apr 2009 05:15:07 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-small-guide-to-web-performance/</link>
+          <guid>https://brennercruvinel.com/blog/a-small-guide-to-web-performance/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-small-guide-to-web-performance/">&lt;p&gt;A quick write-up on web performance, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Web performance shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+    </channel>
+</rss>

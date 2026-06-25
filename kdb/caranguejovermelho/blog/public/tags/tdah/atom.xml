@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Brenner - TDAH</title>
+    <subtitle>Opinionated, modern, pretty, and clean Zola theme.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://brennercruvinel.com/tags/tdah/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://brennercruvinel.com"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2022-03-22T00:00:00+00:00</updated>
+    <id>https://brennercruvinel.com/tags/tdah/atom.xml</id>
+    <entry xml:lang="en">
+        <title>TDAH no Brasil e no mundo: dados e descobertas</title>
+        <published>2022-03-22T00:00:00+00:00</published>
+        <updated>2022-03-22T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/2022/tdahnobrasilmundo/"/>
+        <id>https://brennercruvinel.com/blog/2022/tdahnobrasilmundo/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/2022/tdahnobrasilmundo/">&lt;p&gt;Com base nas informações disponíveis até 2025, aqui estão 200 descobertas e dados atualizados sobre o Transtorno de Déficit de Atenção com Hiperatividade (TDAH), organizados por Brasil e mundo.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;br-brasil&quot;&gt;🇧🇷 Brasil&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;bar-chart-prevalencia-e-diagnostico&quot;&gt;📊 Prevalência e Diagnóstico&lt;&#x2F;h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Prevalência estimada entre 5% e 8% da população.&lt;&#x2F;li&gt;
+&lt;li&gt;Aumento no número de diagnósticos devido à maior conscientização e acesso a serviços de saúde.&lt;&#x2F;li&gt;
+&lt;li&gt;Diagnóstico clínico baseado em critérios do DSM-5, sem exames laboratoriais específicos.&lt;&#x2F;li&gt;
+&lt;li&gt;Alta taxa de comorbidades; 70% das crianças com TDAH apresentam pelo menos uma outra condição associada.&lt;&#x2F;li&gt;
+&lt;li&gt;Forte componente genético; cerca de 30% das crianças diagnosticadas têm um ou ambos os pais com o transtorno.&lt;&#x2F;li&gt;
+&lt;li&gt;Diagnóstico precoce é fundamental para melhor prognóstico e intervenção eficaz.&lt;&#x2F;li&gt;
+&lt;li&gt;Sistema Único de Saúde (SUS) oferece atendimento por meio da Rede de Atenção Psicossocial (RAPS).&lt;&#x2F;li&gt;
+&lt;li&gt;Atenção Primária à Saúde desempenha papel crucial na identificação e encaminhamento de casos.&lt;&#x2F;li&gt;
+&lt;li&gt;Centros de Atenção Psicossocial (CAPS) são pontos estratégicos para tratamento.&lt;&#x2F;li&gt;
+&lt;li&gt;Falta de dados específicos sobre TDAH em adultos no Brasil.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;brain-caracteristicas-e-sintomas&quot;&gt;🧠 Características e Sintomas&lt;&#x2F;h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Sintomas principais incluem desatenção, hiperatividade e impulsividade.&lt;&#x2F;li&gt;
+&lt;li&gt;Sintomas podem variar ao longo da vida e entre indivíduos.&lt;&#x2F;li&gt;
+&lt;li&gt;Dificuldades em funções executivas, como organização e planejamento.&lt;&#x2F;li&gt;
+&lt;li&gt;Problemas de regulação emocional e controle de impulsos.&lt;&#x2F;li&gt;
+&lt;li&gt;Alta incidência de comportamentos opositores e desafiadores.&lt;&#x2F;li&gt;
+&lt;li&gt;Dificuldades acadêmicas e de aprendizagem são comuns.&lt;&#x2F;li&gt;
+&lt;li&gt;Problemas de relacionamento interpessoal e social.&lt;&#x2F;li&gt;
+&lt;li&gt;Baixa autoestima e sentimentos de inadequação.&lt;&#x2F;li&gt;
+&lt;li&gt;Tendência a procrastinação e dificuldade em concluir tarefas.&lt;&#x2F;li&gt;
+&lt;li&gt;Sensibilidade à crítica e rejeição.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;link-comorbidades-e-correlacoes&quot;&gt;🔗 Comorbidades e Correlações&lt;&#x2F;h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Alta prevalência de comorbidades, incluindo ansiedade, depressão e transtornos de aprendizagem.&lt;&#x2F;li&gt;
+&lt;li&gt;Cerca de 30% das pessoas com TDAH também apresentam Transtorno Obsessivo-Compulsivo (TOC).&lt;&#x2F;li&gt;
+&lt;li&gt;Estimativa de 25% das pessoas com TDAH também apresentarem Transtorno de Ansiedade Generalizada (TAG).&lt;&#x2F;li&gt;
+&lt;li&gt;Risco aumentado de uso de substâncias e vícios.&lt;&#x2F;li&gt;
+&lt;li&gt;Correlação com transtornos do espectro autista (TEA) em alguns casos.&lt;&#x2F;li&gt;
+&lt;li&gt;Associação com transtornos de conduta e comportamento desafiador.&lt;&#x2F;li&gt;
+&lt;li&gt;Maior incidência de distúrbios do sono.&lt;&#x2F;li&gt;
+&lt;li&gt;Problemas de alimentação e seletividade alimentar.&lt;&#x2F;li&gt;
+&lt;li&gt;Dificuldades sensoriais e de processamento sensorial.&lt;&#x2F;li&gt;
+&lt;li&gt;Maior propensão a acidentes e comportamentos de risco.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;chart-with-upwards-trend-dados-populacionais-e-sociais&quot;&gt;📈 Dados Populacionais e Sociais&lt;&#x2F;h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Maior prevalência em meninos durante a infância; diferença de diagnóstico diminui na idade adulta.&lt;&#x2F;li&gt;
+&lt;li&gt;Subdiagnóstico em meninas devido a manifestações menos evidentes.&lt;&#x2F;li&gt;
+&lt;li&gt;Impacto significativo na vida acadêmica e profissional.&lt;&#x2F;li&gt;
+&lt;li&gt;Desafios na transição da adolescência para a vida adulta.&lt;&#x2F;li&gt;
+&lt;li&gt;Estigma social associado ao diagnóstico de TDAH.&lt;&#x2F;li&gt;
+&lt;li&gt;Necessidade de políticas públicas para inclusão e suporte.&lt;&#x2F;li&gt;
+&lt;li&gt;Importância de programas educacionais adaptados.&lt;&#x2F;li&gt;
+&lt;li&gt;Falta de formação adequada de profissionais da educação sobre TDAH.&lt;&#x2F;li&gt;
+&lt;li&gt;Desigualdade no acesso a diagnóstico e tratamento entre regiões.&lt;&#x2F;li&gt;
+&lt;li&gt;Necessidade de campanhas de conscientização e informação.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;earth-africa-mundo&quot;&gt;🌍 Mundo&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;bar-chart-prevalencia-e-diagnostico-1&quot;&gt;📊 Prevalência e Diagnóstico&lt;&#x2F;h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Prevalência global estimada entre 5% e 8% em crianças e adolescentes.&lt;&#x2F;li&gt;
+&lt;li&gt;Prevalência em adultos estimada em 2,58% globalmente.&lt;&#x2F;li&gt;
+&lt;li&gt;Maior prevalência em países de baixa e média renda (8%) comparado a países de alta renda (3,25%).&lt;&#x2F;li&gt;
+&lt;li&gt;Diferença de diagnóstico entre meninos e meninas na infância é de cerca de 2,3:1; na idade adulta, essa razão se aproxima de 1,5:1.&lt;&#x2F;li&gt;
+&lt;li&gt;Redução dos sintomas com o aumento da idade.&lt;&#x2F;li&gt;
+&lt;li&gt;Diagnóstico persistente em adultos definido como atendimento aos critérios diagnósticos na idade adulta, com confirmação dos sintomas na infância.&lt;&#x2F;li&gt;
+&lt;li&gt;Prevalência de TDAH sintomático em adultos estimada em 6,76% em 2020.&lt;&#x2F;li&gt;
+&lt;li&gt;Prevalência de tratamento em adultos mais velhos estimada em 0,09%.&lt;&#x2F;li&gt;
+&lt;li&gt;Diferença entre diagnóstico por pesquisa (2,18%) e diagnóstico clínico (0,23%) em adultos mais velhos.&lt;&#x2F;li&gt;
+&lt;li&gt;Discrepância pode ser explicada por superestimação das escalas ou subdiagnóstico clínico.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;brain-caracteristicas-e-sintomas-1&quot;&gt;🧠 Características e Sintomas&lt;&#x2F;h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Sintomas principais incluem desatenção, hiperatividade e impulsividade.&lt;&#x2F;li&gt;
+&lt;li&gt;Sintomas podem variar ao longo da vida e entre indivíduos.&lt;&#x2F;li&gt;
+&lt;li&gt;Dificuldades em funções executivas, como organização e planejamento.&lt;&#x2F;li&gt;
+&lt;li&gt;Problemas de regulação emocional e controle de impulsos.&lt;&#x2F;li&gt;
+&lt;li&gt;Alta incidência de comportamentos opositores e desafiadores.&lt;&#x2F;li&gt;
+&lt;li&gt;Dificuldades acadêmicas e de aprendizagem são comuns.&lt;&#x2F;li&gt;
+&lt;li&gt;Problemas de relacionamento interpessoal e social.&lt;&#x2F;li&gt;
+&lt;li&gt;Baixa autoestima e sentimentos de inadequação.&lt;&#x2F;li&gt;
+&lt;li&gt;Tendência a procrastinação e dificuldade em concluir tarefas.&lt;&#x2F;li&gt;
+&lt;li&gt;Sensibilidade à crítica e rejeição.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;link-comorbidades-e-correlacoes-1&quot;&gt;🔗 Comorbidades e Correlações&lt;&#x2F;h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Alta prevalência de comorbidades, incluindo ansiedade, depressão e transtornos de aprendizagem.&lt;&#x2F;li&gt;
+&lt;li&gt;Cerca de 30% das pessoas com TDAH também apresentam Transtorno Obsessivo-Compulsivo (TOC).&lt;&#x2F;li&gt;
+&lt;li&gt;Estimativa de 25% das pessoas com TDAH também apresentarem Transtorno de Ansiedade Generalizada (TAG).&lt;&#x2F;li&gt;
+&lt;li&gt;Risco aumentado de uso de substâncias e vícios.&lt;&#x2F;li&gt;
+&lt;li&gt;Correlação com transtornos do espectro autista (TEA) em alguns casos.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h2 id=&quot;link-correlacoes-com-vicios-e-outros-transtornos&quot;&gt;🔗 Correlações com Vícios e Outros Transtornos&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Abuso de substâncias&lt;&#x2F;strong&gt;: Crianças com TDAH são de duas a três vezes mais propensas a usar e abusar de substâncias do que a população em geral.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Comorbidades&lt;&#x2F;strong&gt;: Alta prevalência de comorbidades, incluindo ansiedade, depressão e transtornos de aprendizagem.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Dependência de internet&lt;&#x2F;strong&gt;: Adolescentes com TDAH podem ter maior vulnerabilidade à dependência de internet, especialmente em jogos online.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;clipboard-comportamentos-e-habitos-associados&quot;&gt;📋 Comportamentos e Hábitos Associados&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Desorganização&lt;&#x2F;strong&gt;: Dificuldade em manter ambientes e tarefas organizadas.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Baixa autoestima&lt;&#x2F;strong&gt;: Sentimentos de inadequação devido às dificuldades enfrentadas.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Dificuldades acadêmicas e profissionais&lt;&#x2F;strong&gt;: Desempenho abaixo do esperado em ambientes escolares e de trabalho.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Relacionamentos interpessoais&lt;&#x2F;strong&gt;: Desafios na manutenção de relacionamentos estáveis.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Comportamentos de risco&lt;&#x2F;strong&gt;: Maior propensão a comportamentos impulsivos que podem levar a acidentes ou situações perigosas.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;bar-chart-estatisticas-e-comportamentos-associados&quot;&gt;📊 Estatísticas e Comportamentos Associados&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Maior risco de uso de substâncias&lt;&#x2F;strong&gt;: Crianças com TDAH são de duas a três vezes mais propensas a usar e abusar de substâncias do que a população em geral.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Uso de cannabis&lt;&#x2F;strong&gt;: Jovens adultos com TDAH estão desproporcionalmente representados entre os usuários de cannabis.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Comorbidades&lt;&#x2F;strong&gt;: Até 50% dos adolescentes com TDAH podem desenvolver comorbidades, como transtorno de ansiedade (cerca de 25%), transtorno opositor e desafiador e de conduta (30 a 50%), distúrbios de aprendizagem (10 a 25%) e abuso de substâncias, cerca de 9 a 40%.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Fatores de risco adicionais&lt;&#x2F;strong&gt;: Além dos sintomas do TDAH, fatores como depressão, ansiedade, dificuldades escolares e baixa autoestima aumentam o risco de dependência de substâncias.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Design para TDAH e pessoas neurodivergentes</title>
+        <published>2022-02-15T00:00:00+00:00</published>
+        <updated>2022-02-15T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/designparatdah/"/>
+        <id>https://brennercruvinel.com/blog/designparatdah/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/designparatdah/">&lt;p&gt;Há uma base sólida de estudos e diretrizes sobre design de interfaces voltadas para pessoas com TDAH e outras condições neurodivergentes. Abaixo, segue um resumo das principais descobertas e recomendações:&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;carga-cognitiva-e-tdah&quot;&gt;Carga Cognitiva e TDAH&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Indivíduos com TDAH apresentam desempenho reduzido e maior variabilidade de tempo de reação sob alta carga cognitiva, enquanto cargas perceptivas elevadas podem melhorar o desempenho e a eficiência das redes cerebrais.&lt;&#x2F;li&gt;
+&lt;li&gt;Em ambientes de desenvolvimento integrados (IDEs), a carga perceptiva afeta a eficiência de programadores com sintomas de TDAH. Ambientes visualmente limpos melhoram o desempenho em tarefas cognitivamente exigentes.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;percepcao-de-cores-e-sensibilidade-visual&quot;&gt;Percepção de Cores e Sensibilidade Visual&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Adolescentes com TDAH podem apresentar alterações na percepção de cores, especialmente em tons vermelho-verde, indicando diferenças na função visual.&lt;&#x2F;li&gt;
+&lt;li&gt;Paletas de cores suaves e de baixa saturação são recomendadas para minimizar a sobrecarga sensorial. Cores vibrantes ou contrastes fortes podem causar desconforto visual.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;principios-de-design-cognitivo&quot;&gt;Princípios de Design Cognitivo&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Princípios de design cognitivo adaptados para neurodivergentes enfatizam:
+&lt;ul&gt;
+&lt;li&gt;Consistência visual e funcional.&lt;&#x2F;li&gt;
+&lt;li&gt;Uso de elementos familiares e previsíveis.&lt;&#x2F;li&gt;
+&lt;li&gt;Redução de informações irrelevantes.&lt;&#x2F;li&gt;
+&lt;li&gt;Agrupamento lógico de dados.&lt;&#x2F;li&gt;
+&lt;li&gt;Apresentação de informações novas com auxílios interpretativos.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;praticas-de-ux-inclusivo&quot;&gt;Práticas de UX Inclusivo&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Para usuários neurodivergentes, recomenda-se:
+&lt;ul&gt;
+&lt;li&gt;Interfaces personalizáveis (ajuste de tamanho de fonte, contraste, modo escuro).&lt;&#x2F;li&gt;
+&lt;li&gt;Evitar animações rápidas ou sons intrusivos.&lt;&#x2F;li&gt;
+&lt;li&gt;Navegação clara e consistente.&lt;&#x2F;li&gt;
+&lt;li&gt;Divisão de informações em blocos menores.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;diretrizes-e-recursos-adicionais&quot;&gt;Diretrizes e Recursos Adicionais&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;As Diretrizes de Acessibilidade para Conteúdo Web (WCAG) fornecem uma base para acessibilidade digital, mas podem não cobrir todas as necessidades cognitivas.&lt;&#x2F;li&gt;
+&lt;li&gt;O BBC GEL oferece diretrizes específicas para acessibilidade cognitiva, incluindo padrões de design e práticas recomendadas.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;Essas informações podem ser aplicadas para criar interfaces mais acessíveis e confortáveis para pessoas com TDAH e outras condições neurodivergentes.&lt;&#x2F;p&gt;
+&lt;p&gt;Há uma base sólida de estudos e diretrizes sobre design de interfaces voltadas para pessoas com TDAH e outras condições neurodivergentes. Abaixo, segue um resumo das principais descobertas e recomendações:&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;carga-cognitiva-e-tdah-1&quot;&gt;Carga Cognitiva e TDAH&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Indivíduos com TDAH apresentam desempenho reduzido e maior variabilidade de tempo de reação sob alta carga cognitiva, enquanto cargas perceptivas elevadas podem melhorar o desempenho e a eficiência das redes cerebrais.&lt;&#x2F;li&gt;
+&lt;li&gt;Em ambientes de desenvolvimento integrados (IDEs), a carga perceptiva afeta a eficiência de programadores com sintomas de TDAH. Ambientes visualmente limpos melhoram o desempenho em tarefas cognitivamente exigentes.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;percepcao-de-cores-e-sensibilidade-visual-1&quot;&gt;Percepção de Cores e Sensibilidade Visual&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Adolescentes com TDAH podem apresentar alterações na percepção de cores, especialmente em tons vermelho-verde, indicando diferenças na função visual.&lt;&#x2F;li&gt;
+&lt;li&gt;Paletas de cores suaves e de baixa saturação são recomendadas para minimizar a sobrecarga sensorial. Cores vibrantes ou contrastes fortes podem causar desconforto visual.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;principios-de-design-cognitivo-1&quot;&gt;Princípios de Design Cognitivo&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Princípios de design cognitivo adaptados para neurodivergentes enfatizam:
+&lt;ul&gt;
+&lt;li&gt;Consistência visual e funcional.&lt;&#x2F;li&gt;
+&lt;li&gt;Uso de elementos familiares e previsíveis.&lt;&#x2F;li&gt;
+&lt;li&gt;Redução de informações irrelevantes.&lt;&#x2F;li&gt;
+&lt;li&gt;Agrupamento lógico de dados.&lt;&#x2F;li&gt;
+&lt;li&gt;Apresentação de informações novas com auxílios interpretativos.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;praticas-de-ux-inclusivo-1&quot;&gt;Práticas de UX Inclusivo&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Para usuários neurodivergentes, recomenda-se:
+&lt;ul&gt;
+&lt;li&gt;Interfaces personalizáveis (ajuste de tamanho de fonte, contraste, modo escuro).&lt;&#x2F;li&gt;
+&lt;li&gt;Evitar animações rápidas ou sons intrusivos.&lt;&#x2F;li&gt;
+&lt;li&gt;Navegação clara e consistente.&lt;&#x2F;li&gt;
+&lt;li&gt;Divisão de informações em blocos menores.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;h3 id=&quot;diretrizes-e-recursos-adicionais-1&quot;&gt;Diretrizes e Recursos Adicionais&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;As Diretrizes de Acessibilidade para Conteúdo Web (WCAG) fornecem uma base para acessibilidade digital, mas podem não cobrir todas as necessidades cognitivas.&lt;&#x2F;li&gt;
+&lt;li&gt;O BBC GEL oferece diretrizes específicas para acessibilidade cognitiva, incluindo padrões de design e práticas recomendadas.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;Essas informações podem ser aplicadas para criar interfaces mais acessíveis e confortáveis para pessoas com TDAH e outras condições neurodivergentes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

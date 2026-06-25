@@ -1,0 +1,14 @@
+# Ruff config: https://docs.astral.sh/ruff
+# only the helper scripts in scripts/ are python; content notebooks (if any) and
+# generated output are excluded.
+line-length = 100
+target-version = "py311"
+extend-exclude = ["public", "static"]
+
+[lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = []
+
+[format]
+quote-style = "double"
+indent-style = "space"

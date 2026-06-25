@@ -1,0 +1,1117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Brenner - writing</title>
+    <subtitle>Opinionated, modern, pretty, and clean Zola theme.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://brennercruvinel.com/tags/writing/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://brennercruvinel.com"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2025-06-03T08:30:16+00:00</updated>
+    <id>https://brennercruvinel.com/tags/writing/atom.xml</id>
+    <entry xml:lang="en">
+        <title>notes on editing ruthlessly</title>
+        <published>2025-06-03T08:30:16+00:00</published>
+        <updated>2025-06-03T08:30:16+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/notes-on-editing-ruthlessly-2/"/>
+        <id>https://brennercruvinel.com/blog/notes-on-editing-ruthlessly-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/notes-on-editing-ruthlessly-2/">&lt;p&gt;I keep coming back to editing ruthlessly, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Editing ruthlessly shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a short note about thinking on paper</title>
+        <published>2025-05-02T01:09:49+00:00</published>
+        <updated>2025-05-02T01:09:49+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-short-note-about-thinking-on-paper/"/>
+        <id>https://brennercruvinel.com/blog/a-short-note-about-thinking-on-paper/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-short-note-about-thinking-on-paper/">&lt;p&gt;A quick write-up on thinking on paper, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Thinking on paper shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>on editing ruthlessly</title>
+        <published>2024-09-04T11:28:24+00:00</published>
+        <updated>2024-09-04T11:28:24+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/on-editing-ruthlessly/"/>
+        <id>https://brennercruvinel.com/blog/on-editing-ruthlessly/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/on-editing-ruthlessly/">&lt;p&gt;A quick write-up on editing ruthlessly, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Editing ruthlessly shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the rewrite in practice</title>
+        <published>2024-05-31T06:53:42+00:00</published>
+        <updated>2024-05-31T06:53:42+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-rewrite-in-practice-3/"/>
+        <id>https://brennercruvinel.com/blog/the-rewrite-in-practice-3/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-rewrite-in-practice-3/">&lt;p&gt;I keep coming back to the rewrite, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The rewrite shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a short note about the first sentence</title>
+        <published>2024-05-10T01:52:34+00:00</published>
+        <updated>2024-05-10T01:52:34+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-short-note-about-the-first-sentence/"/>
+        <id>https://brennercruvinel.com/blog/a-short-note-about-the-first-sentence/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-short-note-about-the-first-sentence/">&lt;p&gt;Short post: the first sentence is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The first sentence shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking notes to self</title>
+        <published>2023-11-25T12:55:46+00:00</published>
+        <updated>2023-11-25T12:55:46+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-notes-to-self/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-notes-to-self/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-notes-to-self/">&lt;p&gt;A quick write-up on notes to self, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Notes to self shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>what i learned about the first sentence</title>
+        <published>2023-09-18T08:48:47+00:00</published>
+        <updated>2023-09-18T08:48:47+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/what-i-learned-about-the-first-sentence/"/>
+        <id>https://brennercruvinel.com/blog/what-i-learned-about-the-first-sentence/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/what-i-learned-about-the-first-sentence/">&lt;p&gt;Short post: the first sentence is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The first sentence shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>notes to self, revisited</title>
+        <published>2023-08-31T12:38:54+00:00</published>
+        <updated>2023-08-31T12:38:54+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/notes-to-self-revisited/"/>
+        <id>https://brennercruvinel.com/blog/notes-to-self-revisited/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/notes-to-self-revisited/">&lt;p&gt;I keep coming back to notes to self, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Notes to self shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking thinking on paper</title>
+        <published>2022-03-11T08:20:39+00:00</published>
+        <updated>2022-03-11T08:20:39+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-thinking-on-paper/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-thinking-on-paper/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-thinking-on-paper/">&lt;p&gt;I spent a while getting thinking on paper wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Thinking on paper shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>notes on killing adverbs</title>
+        <published>2022-02-08T09:22:30+00:00</published>
+        <updated>2022-02-08T09:22:30+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/notes-on-killing-adverbs/"/>
+        <id>https://brennercruvinel.com/blog/notes-on-killing-adverbs/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/notes-on-killing-adverbs/">&lt;p&gt;Every few months killing adverbs bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Killing adverbs shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the rewrite in practice</title>
+        <published>2021-08-17T19:54:33+00:00</published>
+        <updated>2021-08-17T19:54:33+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-rewrite-in-practice-2/"/>
+        <id>https://brennercruvinel.com/blog/the-rewrite-in-practice-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-rewrite-in-practice-2/">&lt;p&gt;I keep coming back to the rewrite, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The rewrite shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>thinking about the first sentence</title>
+        <published>2020-12-31T23:39:04+00:00</published>
+        <updated>2020-12-31T23:39:04+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/thinking-about-the-first-sentence/"/>
+        <id>https://brennercruvinel.com/blog/thinking-about-the-first-sentence/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/thinking-about-the-first-sentence/">&lt;p&gt;Every few months the first sentence bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The first sentence shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the case for structure before style</title>
+        <published>2020-12-23T17:31:54+00:00</published>
+        <updated>2020-12-23T17:31:54+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-case-for-structure-before-style/"/>
+        <id>https://brennercruvinel.com/blog/the-case-for-structure-before-style/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-case-for-structure-before-style/">&lt;p&gt;I keep coming back to structure before style, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Structure before style shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>thinking on paper in practice</title>
+        <published>2020-06-07T15:03:57+00:00</published>
+        <updated>2020-06-07T15:03:57+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/thinking-on-paper-in-practice/"/>
+        <id>https://brennercruvinel.com/blog/thinking-on-paper-in-practice/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/thinking-on-paper-in-practice/">&lt;p&gt;I keep coming back to thinking on paper, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Thinking on paper shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>thinking about the rewrite</title>
+        <published>2020-02-17T17:08:24+00:00</published>
+        <updated>2020-02-17T17:08:24+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/thinking-about-the-rewrite/"/>
+        <id>https://brennercruvinel.com/blog/thinking-about-the-rewrite/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/thinking-about-the-rewrite/">&lt;p&gt;I spent a while getting the rewrite wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The rewrite shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>killing adverbs in practice</title>
+        <published>2019-07-13T09:29:52+00:00</published>
+        <updated>2019-07-13T09:29:52+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/killing-adverbs-in-practice/"/>
+        <id>https://brennercruvinel.com/blog/killing-adverbs-in-practice/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/killing-adverbs-in-practice/">&lt;p&gt;Every few months killing adverbs bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Killing adverbs shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>notes on structure before style</title>
+        <published>2019-06-24T10:45:48+00:00</published>
+        <updated>2019-06-24T10:45:48+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/notes-on-structure-before-style/"/>
+        <id>https://brennercruvinel.com/blog/notes-on-structure-before-style/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/notes-on-structure-before-style/">&lt;p&gt;A quick write-up on structure before style, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Structure before style shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a small guide to writing for skimmers</title>
+        <published>2019-06-16T16:10:49+00:00</published>
+        <updated>2019-06-16T16:10:49+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-small-guide-to-writing-for-skimmers/"/>
+        <id>https://brennercruvinel.com/blog/a-small-guide-to-writing-for-skimmers/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-small-guide-to-writing-for-skimmers/">&lt;p&gt;Every few months writing for skimmers bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Writing for skimmers shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a short note about writing clearly</title>
+        <published>2019-02-07T21:53:54+00:00</published>
+        <updated>2019-02-07T21:53:54+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-short-note-about-writing-clearly/"/>
+        <id>https://brennercruvinel.com/blog/a-short-note-about-writing-clearly/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-short-note-about-writing-clearly/">&lt;p&gt;Short post: writing clearly is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Writing clearly shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the rewrite, revisited</title>
+        <published>2018-01-28T17:48:17+00:00</published>
+        <updated>2018-01-28T17:48:17+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-rewrite-revisited/"/>
+        <id>https://brennercruvinel.com/blog/the-rewrite-revisited/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-rewrite-revisited/">&lt;p&gt;Short post: the rewrite is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The rewrite shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>what i learned about writing clearly</title>
+        <published>2017-05-15T10:52:23+00:00</published>
+        <updated>2017-05-15T10:52:23+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/what-i-learned-about-writing-clearly/"/>
+        <id>https://brennercruvinel.com/blog/what-i-learned-about-writing-clearly/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/what-i-learned-about-writing-clearly/">&lt;p&gt;A quick write-up on writing clearly, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Writing clearly shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the rewrite in practice</title>
+        <published>2015-05-04T20:39:45+00:00</published>
+        <updated>2015-05-04T20:39:45+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-rewrite-in-practice/"/>
+        <id>https://brennercruvinel.com/blog/the-rewrite-in-practice/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-rewrite-in-practice/">&lt;p&gt;I spent a while getting the rewrite wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The rewrite shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>structure before style, revisited</title>
+        <published>2015-03-12T00:01:22+00:00</published>
+        <updated>2015-03-12T00:01:22+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/structure-before-style-revisited/"/>
+        <id>https://brennercruvinel.com/blog/structure-before-style-revisited/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/structure-before-style-revisited/">&lt;p&gt;Short post: structure before style is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Structure before style shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a small guide to writing for skimmers</title>
+        <published>2015-01-18T03:19:12+00:00</published>
+        <updated>2015-01-18T03:19:12+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-small-guide-to-writing-for-skimmers-2/"/>
+        <id>https://brennercruvinel.com/blog/a-small-guide-to-writing-for-skimmers-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-small-guide-to-writing-for-skimmers-2/">&lt;p&gt;Short post: writing for skimmers is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Writing for skimmers shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the case for killing adverbs</title>
+        <published>2015-01-17T19:36:33+00:00</published>
+        <updated>2015-01-17T19:36:33+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-case-for-killing-adverbs/"/>
+        <id>https://brennercruvinel.com/blog/the-case-for-killing-adverbs/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-case-for-killing-adverbs/">&lt;p&gt;I spent a while getting killing adverbs wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Killing adverbs shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>editing ruthlessly, revisited</title>
+        <published>2014-09-06T01:47:42+00:00</published>
+        <updated>2014-09-06T01:47:42+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/editing-ruthlessly-revisited/"/>
+        <id>https://brennercruvinel.com/blog/editing-ruthlessly-revisited/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/editing-ruthlessly-revisited/">&lt;p&gt;Short post: editing ruthlessly is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Editing ruthlessly shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>thinking about structure before style</title>
+        <published>2014-08-17T05:19:31+00:00</published>
+        <updated>2014-08-17T05:19:31+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/thinking-about-structure-before-style/"/>
+        <id>https://brennercruvinel.com/blog/thinking-about-structure-before-style/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/thinking-about-structure-before-style/">&lt;p&gt;I keep coming back to structure before style, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Structure before style shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>notes on editing ruthlessly</title>
+        <published>2014-02-26T14:26:48+00:00</published>
+        <updated>2014-02-26T14:26:48+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/notes-on-editing-ruthlessly/"/>
+        <id>https://brennercruvinel.com/blog/notes-on-editing-ruthlessly/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/notes-on-editing-ruthlessly/">&lt;p&gt;Every few months editing ruthlessly bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Editing ruthlessly shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the first sentence, revisited</title>
+        <published>2013-04-23T18:19:52+00:00</published>
+        <updated>2013-04-23T18:19:52+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-first-sentence-revisited-2/"/>
+        <id>https://brennercruvinel.com/blog/the-first-sentence-revisited-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-first-sentence-revisited-2/">&lt;p&gt;Short post: the first sentence is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The first sentence shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking structure before style</title>
+        <published>2013-03-06T11:39:49+00:00</published>
+        <updated>2013-03-06T11:39:49+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-structure-before-style-2/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-structure-before-style-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-structure-before-style-2/">&lt;p&gt;I keep coming back to structure before style, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Structure before style shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking structure before style</title>
+        <published>2013-02-28T20:34:06+00:00</published>
+        <updated>2013-02-28T20:34:06+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-structure-before-style/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-structure-before-style/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-structure-before-style/">&lt;p&gt;Short post: structure before style is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Structure before style shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>thinking about editing ruthlessly</title>
+        <published>2012-11-17T06:39:25+00:00</published>
+        <updated>2012-11-17T06:39:25+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/thinking-about-editing-ruthlessly/"/>
+        <id>https://brennercruvinel.com/blog/thinking-about-editing-ruthlessly/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/thinking-about-editing-ruthlessly/">&lt;p&gt;I spent a while getting editing ruthlessly wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Editing ruthlessly shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking the first sentence</title>
+        <published>2011-06-05T05:16:13+00:00</published>
+        <updated>2011-06-05T05:16:13+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-the-first-sentence/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-the-first-sentence/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-the-first-sentence/">&lt;p&gt;A quick write-up on the first sentence, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The first sentence shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a short note about the rewrite</title>
+        <published>2011-01-18T12:04:43+00:00</published>
+        <updated>2011-01-18T12:04:43+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-short-note-about-the-rewrite/"/>
+        <id>https://brennercruvinel.com/blog/a-short-note-about-the-rewrite/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-short-note-about-the-rewrite/">&lt;p&gt;A quick write-up on the rewrite, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The rewrite shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the first sentence, revisited</title>
+        <published>2010-11-14T11:17:19+00:00</published>
+        <updated>2010-11-14T11:17:19+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-first-sentence-revisited/"/>
+        <id>https://brennercruvinel.com/blog/the-first-sentence-revisited/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-first-sentence-revisited/">&lt;p&gt;I keep coming back to the first sentence, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The first sentence shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>notes on the first sentence</title>
+        <published>2010-10-22T02:50:17+00:00</published>
+        <updated>2010-10-22T02:50:17+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/notes-on-the-first-sentence-2/"/>
+        <id>https://brennercruvinel.com/blog/notes-on-the-first-sentence-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/notes-on-the-first-sentence-2/">&lt;p&gt;I keep coming back to the first sentence, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The first sentence shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the first sentence in practice</title>
+        <published>2010-06-16T13:35:11+00:00</published>
+        <updated>2010-06-16T13:35:11+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-first-sentence-in-practice/"/>
+        <id>https://brennercruvinel.com/blog/the-first-sentence-in-practice/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-first-sentence-in-practice/">&lt;p&gt;Every few months the first sentence bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The first sentence shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>notes on the first sentence</title>
+        <published>2009-10-07T14:07:40+00:00</published>
+        <updated>2009-10-07T14:07:40+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/notes-on-the-first-sentence/"/>
+        <id>https://brennercruvinel.com/blog/notes-on-the-first-sentence/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/notes-on-the-first-sentence/">&lt;p&gt;I keep coming back to the first sentence, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The first sentence shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>thinking on paper, revisited</title>
+        <published>2009-08-22T10:37:42+00:00</published>
+        <updated>2009-08-22T10:37:42+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/thinking-on-paper-revisited/"/>
+        <id>https://brennercruvinel.com/blog/thinking-on-paper-revisited/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/thinking-on-paper-revisited/">&lt;p&gt;I keep coming back to thinking on paper, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Thinking on paper shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking the first sentence</title>
+        <published>2009-07-25T10:56:08+00:00</published>
+        <updated>2009-07-25T10:56:08+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-the-first-sentence-2/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-the-first-sentence-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-the-first-sentence-2/">&lt;p&gt;I keep coming back to the first sentence, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;The first sentence shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking writing for skimmers</title>
+        <published>2009-03-25T14:07:32+00:00</published>
+        <updated>2009-03-25T14:07:32+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-writing-for-skimmers/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-writing-for-skimmers/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-writing-for-skimmers/">&lt;p&gt;Every few months writing for skimmers bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Writing for skimmers shows up across writing work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

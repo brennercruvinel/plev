@@ -1,0 +1,125 @@
+{#
+  structured data as a single @graph per page.
+  entity-first: persistent nodes (Organization, WebSite, Person) are anchored
+  at the domain root with stable @id and referenced everywhere by @id. the
+  page node (BlogPosting / WebPage) is anchored at the page url and references
+  the persistent nodes. centralized here so there is never plugin-style
+  duplication of Organization/WebSite blocks.
+#}
+{%- set base = config.base_url | trim_end_matches(pat="/") -%}
+{%- set author_name = config.author | default(value=config.title) -%}
+
+{#- collect sameAs for the organization: footer socials + optional extras -#}
+{%- set_global org_sameas = [] -%}
+{%- if config.extra.footer.socials -%}
+	{%- for social in config.extra.footer.socials -%}
+		{%- set_global org_sameas = org_sameas | concat(with=social.url) -%}
+	{%- endfor -%}
+{%- endif -%}
+{%- if config.extra.organization_sameas -%}
+	{%- set_global org_sameas = org_sameas | concat(with=config.extra.organization_sameas) -%}
+{%- endif -%}
+
+{#- page entity values -#}
+{%- if page.description -%}
+	{%- set page_desc = page.description -%}
+{%- elif section.description -%}
+	{%- set page_desc = section.description -%}
+{%- else -%}
+	{%- set page_desc = config.description -%}
+{%- endif -%}
+
+{%- if page.extra.card -%}
+	{%- set page_image = get_url(path=page.colocated_path ~ page.extra.card) -%}
+{%- elif section.extra.card -%}
+	{%- set page_image = get_url(path=section.colocated_path ~ section.extra.card) -%}
+{%- elif page.extra.banner -%}
+	{%- set banner = resize_image(path=page.colocated_path ~ page.extra.banner, width=1200, height=628, op="fill") -%}
+	{%- set page_image = banner.url -%}
+{%- else -%}
+	{%- set page_image = get_url(path="card.png") -%}
+{%- endif -%}
+
+{#- breadcrumb ancestor paths (excludes the root _index.md; home is added explicitly) -#}
+{%- set_global crumb_paths = [] -%}
+{%- if page and page.ancestors -%}
+	{%- for ancestor in page.ancestors -%}
+		{%- if ancestor != "_index.md" -%}
+			{%- set_global crumb_paths = crumb_paths | concat(with=ancestor) -%}
+		{%- endif -%}
+	{%- endfor -%}
+{%- endif -%}
+
+<script type="application/ld+json">
+{
+"@context":"https://schema.org",
+"@graph":[
+{
+"@type":"Organization",
+"@id":"{{ base | safe }}/#organization",
+"name":{{ config.title | json_encode | safe }},
+"url":"{{ base | safe }}/",
+"logo":{"@type":"ImageObject","url":"{{ get_url(path='apple-touch-icon.png') | safe }}"}
+{%- if org_sameas | length > 0 %},"sameAs":{{ org_sameas | json_encode | safe }}{%- endif %}
+{%- if config.extra.organization_knows_about %},"knowsAbout":{{ config.extra.organization_knows_about | json_encode | safe }}{%- endif %}
+},
+{
+"@type":"WebSite",
+"@id":"{{ base | safe }}/#website",
+"url":"{{ base | safe }}/",
+"name":{{ config.title | json_encode | safe }},
+"description":{{ config.description | json_encode | safe }},
+"inLanguage":"{{ lang }}",
+"publisher":{"@id":"{{ base | safe }}/#organization"}
+{%- if config.extra.search_url %},"potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"{{ config.extra.search_url | safe }}{search_term_string}"},"query-input":"required name=search_term_string"}{%- endif %}
+},
+{
+"@type":"Person",
+"@id":"{{ base | safe }}/#person",
+"name":{{ author_name | json_encode | safe }}
+{%- if config.extra.author_sameas %},"sameAs":{{ config.extra.author_sameas | json_encode | safe }}{%- endif %}
+{%- if config.extra.organization_knows_about %},"knowsAbout":{{ config.extra.organization_knows_about | json_encode | safe }}{%- endif %}
+}
+{%- if page and page.date %},
+{
+"@type":"BlogPosting",
+"@id":"{{ current_url | safe }}#article",
+"mainEntityOfPage":{"@id":"{{ current_url | safe }}#article"},
+"isPartOf":{"@id":"{{ base | safe }}/#website"},
+"headline":{{ page.title | json_encode | safe }},
+"description":{{ page_desc | json_encode | safe }},
+"image":{{ page_image | json_encode | safe }},
+"datePublished":"{{ page.date | date(format='%Y-%m-%dT%H:%M:%S%z') }}",
+"dateModified":"{{ page.updated | default(value=page.date) | date(format='%Y-%m-%dT%H:%M:%S%z') }}",
+"author":{"@id":"{{ base | safe }}/#person"},
+"publisher":{"@id":"{{ base | safe }}/#organization"},
+"inLanguage":"{{ lang }}",
+"wordCount":{{ page.word_count | default(value=0) }},
+"speakable":{"@type":"SpeakableSpecification","cssSelector":[".tldr","h1","h2"]}
+{%- if page.taxonomies.tags %},"keywords":{{ page.taxonomies.tags | json_encode | safe }}{%- endif %}
+}
+{%- elif page or section %},
+{
+"@type":"WebPage",
+"@id":"{{ current_url | safe }}#webpage",
+"url":"{{ current_url | safe }}",
+"name":{{ page.title | default(value=section.title) | default(value=config.title) | json_encode | safe }},
+"description":{{ page_desc | json_encode | safe }},
+"isPartOf":{"@id":"{{ base | safe }}/#website"},
+"inLanguage":"{{ lang }}"
+}
+{%- endif %}
+{%- if page and page.ancestors %},
+{
+"@type":"BreadcrumbList",
+"@id":"{{ current_url | safe }}#breadcrumb",
+"itemListElement":[
+{"@type":"ListItem","position":1,"name":"Home","item":"{{ base | safe }}/"}
+{%- for crumb_path in crumb_paths %}{%- set crumb_section = get_section(path=crumb_path, metadata_only=true) %},{"@type":"ListItem","position":{{ loop.index + 1 }},"name":{{ crumb_section.title | json_encode | safe }},"item":"{{ crumb_section.permalink | safe }}"}{%- endfor %},
+{"@type":"ListItem","position":{{ crumb_paths | length + 2 }},"name":{{ page.title | json_encode | safe }},"item":"{{ current_url | safe }}"}
+]
+}
+{%- endif %}
+]
+}
+</script>
