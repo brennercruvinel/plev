@@ -1,71 +1,219 @@
-abstração de UI por superset com mapeamento pra widgets nativos
+---
+title: experimento mon, nota de trabalho
+status: trabalho vivo
+tags: [mon, ui-superset, design-tokens, aria-apg, lottie, monster, swf]
+date: 2026-06-12
+ancoras: [crates/lot, crates/monster, crates/parser, kdb/adr/monster-format-v0.md, kdb/adr/binary-animation-format-with-discovered-deltas.md, kdb/adr/import-foreign-formats-by-conversion-not-embedding.md, kdb/adr/transpiler-reports-every-unmapped-construct.md]
+---
 
- Listar o vocabulário de cada plataforma, achar a interseção (o grafo de similaridades), definir um declarativo único sobre a interseção, e ter dois modos de saída (desenha na GPU igual em todo lugar, OU mapeia pro componente nativo de cada um). Isso é uma ideia coerente.
+# experimento mon
 
+nota de trabalho, nao conclusao. o mon e a parte viva do projeto, as ~30
+paginas que o livro deixou abertas de proposito. registro aqui a tese, o que
+ja existe la fora, e os buracos que ainda nao sei fechar. o valor desta nota
+nao e ter resolvido, e ser honesto sobre o que e dificil.
 
-o React Native e o .NET MAUI. Você escreve <Button>, e ele vira UIButton no iOS e um botão Material no Android. Exatamente o seu "botão vira o botão local da aplicação". Já é assim.
+## a tese: um superset de UI sobre a intersecao
 
+a ideia, na forma mais limpa que consegui escrever: listar o vocabulario de UI
+de cada plataforma, achar a intersecao (o grafo de similaridades), definir um
+declarativo unico sobre essa intersecao, e ter dois modos de saida. um modo
+desenha na GPU, identico em todo lugar. o outro mapeia para o componente nativo
+de cada sistema. eu escrevo `Button` uma vez, e ele vira ou um quad desenhado
+pela engine, ou o `UIButton` do iOS e o botao Material do Android.
 
- o FlutterMesmo Button, mesmo pixel em todo lugar, via Skia.
+isso e uma ideia coerente. nao e nova, e isso e bom, quer dizer que tem
+precedente para estudar.
 
+## o que ja existe
 
-Problema um, a interseção é pequena e a diferença é infinita. Botão, texto, lista, sim, fáceis, todo mundo tem. Mas o trabalho real de um app não está aí. Está no date picker do iOS que rola em tambor versus o calendário do Android, no comportamento de "voltar" (botão físico no Android, swipe da borda no iOS, inexistente no desktop), no teclado que empurra a tela de um jeito em cada OS, na permissão de câmera que tem fluxo diferente, no scroll com bounce do iOS versus o overscroll glow do Android. Seu grafo de "o que cada um tem e não tem" não é uma lista, é um espaço combinatório que cresce a cada versão de cada OS. Apple muda coisa todo ano. Seu grafo está desatualizado no dia do lançamento.
+o React Native e o .NET MAUI escolheram o mapa para o nativo. voce escreve um
+botao e ele vira o controle local de cada OS. e exatamente o "vira o botao da
+plataforma". ja e assim, ja funciona, ja tem boné de produção.
 
-Problema dois, e esse é o assassino: comportamento não é mapeável, só aparência é. Você consegue mapear que um botão iOS e um Android são "o mesmo botão". Você NÃO consegue mapear o que acontece quando o usuário arrasta o dedo da borda esquerda. No iOS isso é navegação de sistema. No Android é outra coisa. Quando você abstrai pra um declarativo único, você tem que escolher UM comportamento, e aí você quebra a expectativa nativa de pelo menos uma plataforma. A aparência converge, o comportamento diverge, e usuário sente o comportamento mais que a aparência. É por isso que o Flutter, mesmo desenhando tudo, teve que criar Cupertino e Material separados. A unificação te empurra de volta pra ramificação.
+o Flutter escolheu o outro lado: mesmo `Button`, mesmo pixel em todo lugar, via
+Skia. e a referencia conceitual do plev, o "skia para rust". desenha tudo,
+controla tudo.
 
-mapeamento é determinístico, é compilador, é tabela de equivalência e geração de código.
+os dois modos do mon nao sao invencao, sao os dois caminhos que a industria ja
+tomou separados. a aposta do experimento e que da para ter os dois atras do
+mesmo declarativo, com uma camada de token no meio. a duvida e se isso resolve
+o problema ou so move o problema para a camada de token.
 
+## buraco 1: a intersecao e pequena e a diferenca e infinita
 
-texto não é desenhar letrinha. É seleção, é cursor piscando, é teclado virtual subindo, é autocorreção, é o menu de copiar/colar, é troca de idioma, é escrita da direita pra esquerda (árabe, hebraico), é composição de caracteres asiáticos (IME). Tudo isso o campo de texto nativo te dá pronto. No modo GPU você reimplementa esse universo inteiro, e é onde os toolkits own-rendering historicamente mais sofrem. Até o Flutter levou anos pra acertar seleção de texto bem.
+botao, texto, lista. faceis, todo mundo tem. mas o trabalho real de um app nao
+mora ai. mora no date picker do iOS que rola em tambor contra o calendario do
+Android. no "voltar" que e botao fisico no Android, swipe de borda no iOS, e
+nao existe no desktop. no teclado virtual que empurra a tela de um jeito
+diferente em cada OS. na permissao de camera com fluxo proprio. no scroll com
+bounce do iOS contra o overscroll glow do Android.
 
+o grafo de "o que cada um tem e nao tem" nao e uma lista, e um espaco
+combinatorio que cresce a cada versao de cada OS. a Apple muda coisa todo ano.
+o grafo esta desatualizado no dia do lançamento. essa e a primeira parede.
 
- integração com o sistema. O menu de contexto nativo, o "compartilhar" do iOS, o autofill de senha, o date picker que combina com o resto do celular, o teclado que aparece com o layout certo. Tudo isso é do sistema. Desenhando na GPU, ou você reconstrói cada um (e fica parecido mas não igual), ou você abre mão. E o usuário sente: o app fica com aquele leve "isso não é daqui" que você não consegue nomear mas percebe.
+## buraco 2: comportamento nao e mapeavel, so aparencia e
 
+esse e o que mais me incomoda. eu consigo mapear que um botao iOS e um botao
+Android sao "o mesmo botao". eu nao consigo mapear o que acontece quando o dedo
+arrasta da borda esquerda. no iOS isso e navegacao de sistema. no Android e
+outra coisa. quando abstraio para um declarativo unico, sou obrigado a escolher
+UM comportamento, e ai quebro a expectativa nativa de pelo menos uma
+plataforma. a aparencia converge, o comportamento diverge, e o usuario sente o
+comportamento mais do que a aparencia.
 
- 100% GPU: controle absoluto do pixel (animação maluca, efeito custom, nada te limita), consistência total (idêntico em todo lugar, zero surpresa por plataforma), e uma base de código de UI só de verdade. É por isso que jogos são todos GPU, a UI de jogo não tem botão nativo nenhum, é tudo desenhado, e ninguém reclama, porque ali consistência e controle valem mais que integração com o sistema.
+e por isso que o Flutter, mesmo desenhando tudo, teve que criar Cupertino e
+Material separados. a unificacao empurra de volta para a ramificacao. o mapa
+em si e deterministico (e compilador, tabela de equivalencia, geracao de
+codigo). o comportamento nao cabe na tabela.
 
+## o buraco do texto nativo e da integracao com o sistema
 
- Buracos:
+texto nao e desenhar letrinha. e selecao, cursor piscando, teclado subindo,
+autocorrecao, menu de copiar e colar, troca de idioma, escrita da direita para
+a esquerda (arabe, hebraico), composicao de caracteres asiaticos (IME). o campo
+de texto nativo entrega esse universo pronto. no modo GPU eu reimplemento tudo,
+e e historicamente onde os toolkits de own-rendering mais sofrem. ate o Flutter
+levou anos para acertar selecao de texto.
 
- Buraco um, o "idêntico em todas as plataformas" tem asterisco em duas pontas. Mobile (iOS principalmente) e web são os elos fracos dessa pilha. winit e wgpu rodam no desktop lindamente, na web via WebGPU (com fallback), mas iOS é território onde toda essa stack ainda é imatura, suporte parcial, caminhos acidentados. Repare que o repose lista desktop, Android e WebAssembly como alvos, e descreve a acessibilidade fora do desktop como em progresso. iOS nem aparece com firmeza. Então a stack é "universal no desktop + Android + web", não "universal incluindo iOS". É o mesmo padrão que você já tinha notado no GPUI.
+o mesmo vale para a integracao com o sistema: menu de contexto, share sheet do
+iOS, autofill de senha, o date picker que combina com o resto do celular.
+desenhando na GPU, ou eu reconstruo cada um (fica parecido, nao igual), ou abro
+mao. e o usuario sente aquele leve "isso nao e daqui" que nao se nomeia mas se
+percebe.
 
+## a troca que o 100% GPU te da
 
+em troca de abrir mao do nativo, o caminho 100% GPU compra controle absoluto do
+pixel, consistencia total entre plataformas, e uma base de UI unica de verdade.
+e por isso que jogos sao todos GPU: a UI de jogo nao tem botao nativo nenhum, e
+tudo desenhado, e ninguem reclama, porque ali consistencia e controle valem
+mais que integracao. o plev e desse lado por padrao. o modo nativo seria a
+saida de escape para quando integracao importar mais que consistencia.
 
-analisar  testar; 
+## a camada que segura o superset: design tokens
 
+a peca que torna o superset coerente e a camada de design token. cor,
+espacamento, raio, sombra, tipografia, duracao de animacao, tudo como dado puro,
+independente de plataforma. o componente nunca usa um valor cru, ele referencia
+um token. essa indirecao e o que deixa o sistema re-tematizavel e o que faz o
+mesmo `Button` significar a mesma coisa no Mac, no iOS e na web. sem a camada de
+token, sobram componentes bonitos e um sistema incoerente. o `parser` ja faz a
+ponta disso quando mapeia cor para token de tema.
 
-O risco silencioso aqui é que mesmo wgpu não garante pixel idêntico de graça: rasterização de borda, arredondamento de subpixel no texto, e blending sRGB podem divergir entre backends (Metal vs Vulkan vs o WebGPU do browser X). Você tem o contrato certo no lugar (sRGB decode once / encode once at surface write, e measure == draw via uma TextStyle só). A pergunta de estudo é: você está validando isso com teste de snapshot pixel-a-pixel cross-backend, ou é "idêntico por construção, confiando no contrato"? Porque a diferença entre os dois é onde os toolkits sérios gastam anos. O guard test que você tem cobre o caminho do texto (proíbe key cru), mas não necessariamente a igualdade de saída entre Metal e WebGPU.
+o design system vive na camada de token mais a definicao declarativa, nao na
+renderizacao. e isso que da universalidade sem reescrever componente por
+plataforma. os dois back-ends de saida (GPU ou nativo) consomem a mesma camada.
 
+## o grafo canonico: ARIA APG
 
-acessibilidade. O .monster ter description track por keyframe é um toque inteligente, mas é a acessibilidade da animação, não a da UI. A árvore semântica dos widgets (botão, campo, foco, leitor de tela) é o que some quando você desenha tudo na GPU. Não vi accesskit no README. Lembra que a gente conversou que isso é table stakes e some por padrão no GPU-first? Se ele não está na fundação, ele vira remendo depois, e remendo de acessibilidade é dívida que cobra juro alto. Vale checar se está e só não foi citado, ou se é um buraco real.
+a fonte canonica para o "grafo de componentes" e o W3C ARIA Authoring Practices
+Guide (APG). cada padrao de UI com o comportamento esperado, a interacao de
+teclado, os estados. o APG e a definicao comportamental neutra de plataforma:
+ele nao diz como o Material desenha um combobox, diz o que um combobox E e como
+ele se comporta. e o nivel de abstracao certo para uma engine, porque o `Button`
+precisa saber o que e um botao (semantica, teclado, estados), nao como o iOS o
+pinta.
 
+honestidade aqui: o engine ja tem accesskit (feature `accessibility`,
+accesskit 0.24), entao a arvore semantica de widget existe, nao e remendo
+futuro. o que ainda NAO existe e o grafo APG materializado como tabela de
+padroes dentro do mon. o APG define a semantica, o accesskit a expoe, e a tabela
+que casa os dois e aspiracao, nao codigo. marcar como nao implementado.
 
-parser que vira código de outro framework em builder plev, mapeando cor pra token de tema e reportando num droplist tudo que não consegue representar com arquivo e linha, sem dropar nada em silêncio. Isso é a materialização exata daquela ideia de "grafo de equivalências" que você descreveu três mensagens atrás. O detalhe honesto: o valor dele depende inteiramente da taxa de drop. Um transpiler que cospe droplist gigante em todo input real é um relatório de incompatibilidade, não um conversor. Qual a cobertura em um index.tsx de verdade, não de brinquedo? Esse número é o que diz se o parser é ferramenta ou demo.
+## o parser: o grafo de equivalencias materializado (numeros honestos)
 
+o `parser` (parse, resolve, emit) e a materializacao parcial do grafo de
+equivalencias: le UI de outro framework e cospe codigo builder do plev,
+mapeando cor para token de tema e reportando num droplist, com arquivo e linha,
+tudo que nao consegue representar. nada sai em silencio (ADR
+transpiler-reports-every-unmapped-construct, commit 5eecb0a).
 
-sobre iun viersibildiade e tokens:
+o detalhe honesto: o valor do parser depende inteiramente da taxa de drop. um
+transpiler que cospe droplist gigante em todo input real e um relatorio de
+incompatibilidade, nao um conversor. no corpus real do dono (40 componentes em
+dois apps) ele produziu 402 propriedades mapeadas e 709 entradas de droplist,
+zero crash. a card de teste congela `mapped == 51` e `dropped.len() == 51`. a
+pergunta de estudo segue de pe: qual a cobertura num index.tsx de verdade, nao
+de brinquedo. esse numero e o que diz se o parser e ferramenta ou demo.
 
+## o formato binario: swf/flash contra .monster
 
- token. Você define uma camada de design tokens (cor, espaçamento, raio, sombra, tipografia, duração de animação) como dados puros, independentes de plataforma. O componente nunca usa um valor cru, ele referencia um token. Foi isso que teu parser já faz quando "mapeia cor pra token de tema". Essa indireção é o que deixa o sistema coerente e re-tematizável, e é o que faz o mesmo Button significar a mesma coisa no Mac, no iOS e na web. Sem camada de token, você tem componentes bonitos e um sistema incoerente.
+a sub-area mais madura do experimento. o problema: como enviar animacao vetorial
+que e pequena, seekable, e renderiza na mesma engine que desenha a UI. as
+opcoes existentes falham cada uma em um ponto (ADR
+binary-animation-format-with-discovered-deltas, commit a4ad0c0):
 
+- lottie e JSON, 1.9 a 321 KB por segundo de animacao, parseado a cada frame, e
+  apoiado num runtime estrangeiro que ja embarcou um motor JS inteiro para tocar
+  clipe com script.
+- swf assa uma tag por objeto por frame e paga replay O(n) em todo rewind,
+  porque nao tem ponto de acesso aleatorio.
+- video cru (webm) ganha em cel animation densa mas joga fora a natureza vetorial
+  e a estrutura semantica.
 
- dois outputs d ebacked possiveis:
+o `.monster`, magic `MON0`. o frame poetico: h264 para vetores.
 
- 
- dois back-ends de saída, desenha na GPU (idêntico em todo lugar, teu caminho padrão) ou mapeia pro nativo quando você quiser integração. O design system vive na camada de token + definição declarativa, não na renderização. Isso é o que te dá universalidade sem reescrever componente por plataforma.
+- keyframe = snapshot de cena inteira = acesso aleatorio. seek O(1) em frames. o
+  swf nao tinha isso.
+- interframe = delta descoberto: place, modify, replace, remove, mais segmentos
+  por propriedade com easing e duracao. o player interpola. fps-independente,
+  scrubbable. o swf assava uma tag por frame; o mon manda a curva.
+- payload deduplicado: um shape estatico vira um asset referenciado por todo
+  frame, comparado por bytes quantizados exatos. o no nunca muda e o encoder de
+  delta emite zero byte para ele. e a licao da display list do swf, na
+  granularidade de shape.
+- player deterministico: dirigido por AnimationTick do runner, sem wall clock,
+  avaliacao em janela, superficie reativa via signal.
+- description track: UTF-8 opcional por keyframe, a semente de acessibilidade e
+  busca que o flash nunca teve. e a a11y DA ANIMACAO, distinta da arvore de
+  widget do accesskit. nao confundir as duas.
 
+numeros honestos do corpus, e aqui mora o asterisco: cards 0.36x e explosion
+0.74x do tamanho do JSON lottie (ganha). girl 6.5x, snake 42x, money 53x. o
+movimento de corpo inteiro a 60fps paga o custo do v0, porque morph = re-
+tessela cada shape em movimento num asset novo por amostra. a alavanca v1 e
+morph track: guardar a curva, nao as amostras (licao do DefineMorphShape do
+swf). e a comparacao 0.36x..53x e contra o JSON do lottie, nao contra bytes de
+swf. o "mon bate o swf" e gate de design (swf mediu ~1.7 KB/s, 10-15 bytes por
+objeto movido por frame), nao head-to-head medido no corpus. marcar.
 
+import por conversao, nunca por embedding (ADR
+import-foreign-formats-by-conversion-not-embedding, commit a044613): o `lot` le
+o JSON do lottie uma vez, offline, e converte. depois disso o playback roda no
+`monster::MonsterPlayer` e nenhum codigo lottie executa. o JSON morre na porta.
 
- A fonte canônica, a que todo design system sério usa de referência, é o W3C ARIA Authoring Practices Guide (APG). É exatamente o "grafo de componentes" que você procura: cada padrão de UI com comportamento esperado, interação de teclado e estados.
- A lista de padrões (a tabela que você quer): https://www.w3.org/WAI/ARIA/apg/patterns/
- 
- Repositório no GitHub: https://github.com/w3c/aria-practices
+## os asteriscos honestos
 
+o "identico em todas as plataformas" tem asterisco em duas pontas.
 
-o APG é a definição comportamental neutra de plataforma. Ele não te diz "como o Material desenha", te diz "o que um combobox É e como ele se comporta". É o nível de abstração certo pro seu engine, porque o teu Button precisa saber o que é um botão (semântica + teclado + estados), não como o iOS pinta um. E casa direto com teu accesskit: APG define a semântica, accesskit a expõe.
+primeiro, o pixel. mesmo o wgpu nao garante pixel identico de graca. rasterizacao
+de borda, arredondamento de subpixel no texto, e blending sRGB podem divergir
+entre backends (Metal contra Vulkan contra o WebGPU do browser). o contrato esta
+no lugar certo (sRGB decode once na entrada, encode once no surface write via
+`surface_render_view`; measure == draw com uma TextStyle so). e foi verificado
+por pixel: o fundo mediu (8,8,8) antes e (48,48,48) depois, web batendo com o
+desktop (ADR render-into-an-srgb-view-format, commit 2a33933). mas isso e UM
+ponto de amostra, nao snapshot pixel-a-pixel cross-backend. a igualdade entre
+Metal e WebGPU e "identica por construcao, confiando no contrato", nao provada
+por teste de snapshot. e exatamente ai que os toolkits serios gastam anos.
 
+segundo, o alcance. mobile (iOS principalmente) e web sao os elos fracos da
+stack. winit e wgpu rodam lindamente no desktop, na web via WebGPU com fallback,
+mas iOS ainda e terreno imaturo. a stack honesta e "universal no desktop +
+Android + web", nao "universal incluindo iOS com a mesma maturidade". e o mesmo
+padrao que ja tinha notado no GPUI.
 
-https://areweguiyet.com/
+## estado e proximos passos
 
+- [x] `lot`: importer lottie, render direto ou conversao para .monster
+- [x] `monster`: codec binario v0, delta discovery, optimizer, player deterministico
+- [x] `parser`: transpiler poc com droplist file:line, contas congeladas em teste
+- [ ] morph track (v1): guardar a curva do path, nao as amostras
+- [ ] grafo APG materializado como tabela de padroes dentro do mon
+- [ ] modo de saida nativo (hoje so o caminho GPU existe de verdade)
+- [ ] snapshot pixel-a-pixel cross-backend (Metal vs Vulkan vs WebGPU)
 
-Rust bindings oesquisar mais
+referencia de fundo: areweguiyet.com (o estado das GUIs em rust, citado de
+proposito, com ironia: a meta nao e fazer mais uma).
