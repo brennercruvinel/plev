@@ -24,8 +24,8 @@ pub use bars::{Bar, BarChart, bar_chart};
 pub use donut::{Donut, DonutSlice, LegendItem, donut, slice_polygon};
 pub use line::{Dot, LineChart, line_chart};
 
-use plev::text::{TextMeasurer, TextStyle};
-use plev::ui::widgets::Rect;
+use engine::text::{TextMeasurer, TextStyle};
+use engine::ui::widgets::Rect;
 
 /// A measured text primitive. the `TextStyle` used for measurement travels
 /// with the label so the draw site provably reuses the same style (one

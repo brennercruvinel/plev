@@ -3,8 +3,8 @@
 //! asset limit, and graceful rejection of malformed bytes.
 
 use crate::asset_path::{pack_chunks, unpack};
-use plev::compositor::QuadVertex;
-use plev::path::TessellatedPath;
+use engine::compositor::QuadVertex;
+use engine::path::TessellatedPath;
 
 fn path(positions: &[[f32; 2]], indices: &[u32], color: [f32; 4]) -> TessellatedPath {
     TessellatedPath {

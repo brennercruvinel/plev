@@ -1,7 +1,7 @@
 //! Hairline separators — rgba(255,255,255,.05), the HOFF edge color.
 
 use crate::theme::Theme;
-use plev::compositor::{Compositor, SceneNode};
+use engine::compositor::{Compositor, SceneNode};
 
 /// Emit a 1px horizontal divider at (x, y) of width w.
 pub fn horizontal(compositor: &mut Compositor, theme: &Theme, x: f32, y: f32, w: f32) {

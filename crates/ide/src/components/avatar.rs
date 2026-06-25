@@ -4,8 +4,8 @@
 
 use super::hoff;
 use crate::theme::Theme;
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
-use plev::text::TextStyle;
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::text::TextStyle;
 
 /// Draw an avatar circle with an initial letter inside.
 pub fn draw(compositor: &mut Compositor, theme: &Theme, x: f32, y: f32, size: f32, initial: &str) {

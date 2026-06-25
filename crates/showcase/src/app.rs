@@ -14,11 +14,11 @@ use std::sync::Arc;
 
 use crate::view::ShowcaseView;
 use crate::{keys, renderer};
-use plev::animation::FrameClock;
-use plev::compositor::Compositor;
-use plev::gpu::GpuContext;
-use plev::text::TextSystem;
-use plev::ui::widgets::WidgetEvent;
+use engine::animation::FrameClock;
+use engine::compositor::Compositor;
+use engine::gpu::GpuContext;
+use engine::text::TextSystem;
+use engine::ui::widgets::WidgetEvent;
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
 #[cfg(target_arch = "wasm32")]
@@ -34,8 +34,8 @@ enum UserEvent {
     GpuReady {
         gpu: GpuContext,
         text_system: TextSystem,
-        effects: plev::effects::EffectProcessor,
-        texture_pool: plev::gpu::texture_pool::TexturePool,
+        effects: engine::effects::EffectProcessor,
+        texture_pool: engine::gpu::texture_pool::TexturePool,
     },
 }
 
@@ -47,8 +47,8 @@ enum GpuState {
     Ready {
         gpu: GpuContext,
         text_system: TextSystem,
-        effects: plev::effects::EffectProcessor,
-        texture_pool: plev::gpu::texture_pool::TexturePool,
+        effects: engine::effects::EffectProcessor,
+        texture_pool: engine::gpu::texture_pool::TexturePool,
     },
 }
 
@@ -136,7 +136,7 @@ impl ApplicationHandler<UserEvent> for App {
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
 
         #[cfg(target_arch = "wasm32")]
-        if let Err(e) = plev::window::setup_wasm_canvas(&window) {
+        if let Err(e) = engine::window::setup_wasm_canvas(&window) {
             log::error!("WASM canvas setup failed: {e}");
         }
 
@@ -147,12 +147,12 @@ impl ApplicationHandler<UserEvent> for App {
         {
             let gpu = pollster::block_on(GpuContext::new(window));
             let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-            let effects = plev::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+            let effects = engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
             self.state = GpuState::Ready {
                 gpu,
                 text_system,
                 effects,
-                texture_pool: plev::gpu::texture_pool::TexturePool::new(),
+                texture_pool: engine::gpu::texture_pool::TexturePool::new(),
             };
             self.configure_viewport();
         }
@@ -165,12 +165,12 @@ impl ApplicationHandler<UserEvent> for App {
                 let gpu = GpuContext::new(window).await;
                 let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
                 let effects =
-                    plev::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+                    engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
                 let _ = proxy.send_event(UserEvent::GpuReady {
                     gpu,
                     text_system,
                     effects,
-                    texture_pool: plev::gpu::texture_pool::TexturePool::new(),
+                    texture_pool: engine::gpu::texture_pool::TexturePool::new(),
                 });
             });
         }

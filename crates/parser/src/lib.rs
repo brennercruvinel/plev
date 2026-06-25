@@ -7,7 +7,7 @@
 //! 2. resolve (resolve_react.rs via css_map.rs, resolve_gpui.rs): normalize
 //!    to the ParserNode IR, map colors to HOFF theme tokens, apply the
 //!    documented flow rewrites, fill the droplist with file:line entries
-//! 3. emit   (emit.rs): deterministic rust source against `plev::builder`
+//! 3. emit   (emit.rs): deterministic rust source against `engine::builder`
 //!
 //! Scope is brutally small and honest (ADR transpiler-reports-every-
 //! unmapped-construct): one react component instance (the hoff research

@@ -1,0 +1,35 @@
+# typos contract for the plev workspace (crate-ci/typos).
+#
+# discovery: typos walks up from the path it checks looking for typos.toml.
+# this file lives under .contracts to keep the root clean; CI and the .zed
+# task pass it with `typos --config <this>`. it catches spelling slips in
+# code, comments and docs without flagging the project's domain vocabulary.
+
+[files]
+extend-exclude = [
+    "target/",
+    "dist/",
+    "**/*.lock",
+    "**/*.monster",
+    "android/app/build/",
+    "ios/showcase/build/",
+    "ref/",
+    "codigo-descartado/",
+]
+
+[default.extend-words]
+# project and domain vocabulary that is not a typo.
+plev = "plev"
+hoff = "hoff"
+oklch = "oklch"
+srgb = "srgb"
+taffy = "taffy"
+wgpu = "wgpu"
+winit = "winit"
+gpui = "gpui"
+bodymovin = "bodymovin"
+
+[default]
+# the project writes docs and comments in english and portuguese; let the
+# locale-agnostic dictionary run and lean on extend-words for domain terms.
+locale = "en"

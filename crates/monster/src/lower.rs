@@ -13,9 +13,9 @@
 //! emits nodes in ascending depth: the compositor paints in push order.
 
 use crate::ir::{Node, NodeKind, Prop, Props, Value};
-use plev::compositor::{SceneNode, TextNodeKey};
-use plev::gpu::ImageHandle;
-use plev::path::TessellatedPath;
+use engine::compositor::{SceneNode, TextNodeKey};
+use engine::gpu::ImageHandle;
+use engine::path::TessellatedPath;
 
 /// Runtime resource behind an `AssetId`. The bank is positional: index
 /// in the slice == asset id, mirroring the file's asset table, so a

@@ -1,8 +1,8 @@
 //! Overlays section: modal, toasts, tooltip, context menu.
 
-use plev::compositor::{Compositor, LayerId, SceneNode};
-use plev::theme::{Intent, Theme};
-use plev::ui::widgets::{
+use engine::compositor::{Compositor, LayerId, SceneNode};
+use engine::theme::{Intent, Theme};
+use engine::ui::widgets::{
     Button, ButtonVariant, ContextMenu, EventResult, MenuEntry, Rect, Tooltip, WidgetEvent,
 };
 
@@ -251,7 +251,7 @@ impl OverlaysSection {
             border_color: theme.glass.edge_soft.0,
         });
         let hint = "Right-click anywhere in this area";
-        let (hint_w, _) = plev::text::TextMeasurer::measure(hint, 14.0, None);
+        let (hint_w, _) = engine::text::TextMeasurer::measure(hint, 14.0, None);
         text(
             c,
             hint,

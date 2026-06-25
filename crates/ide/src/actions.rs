@@ -6,14 +6,14 @@
 //! shortcuts are data, not `match` arms — a user keymap can later be
 //! appended on top of the default one to override bindings.
 
-use plev::actions::{ActionRegistry, Keymap};
+use engine::actions::{ActionRegistry, Keymap};
 
-plev::actions!(app, [Quit]);
-plev::actions!(theme, [Toggle]);
-plev::actions!(nav, [Up, Down]);
-plev::actions!(file, [ShowDiff, Stage, Discard]);
-plev::actions!(commit, [OpenForm, Submit, Cancel, Backspace]);
-plev::actions!(overlay, [Close]);
+engine::actions!(app, [Quit]);
+engine::actions!(theme, [Toggle]);
+engine::actions!(nav, [Up, Down]);
+engine::actions!(file, [ShowDiff, Stage, Discard]);
+engine::actions!(commit, [OpenForm, Submit, Cancel, Backspace]);
+engine::actions!(overlay, [Close]);
 
 /// All actions the app can dispatch, in palette-friendly order.
 pub fn registry() -> ActionRegistry {
@@ -42,7 +42,7 @@ pub fn default_keymap() -> Keymap {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plev::actions::{ContextStack, KeyContext, KeymapMatcher, MatchResult};
+    use engine::actions::{ContextStack, KeyContext, KeymapMatcher, MatchResult};
 
     fn stack(names: &[&str]) -> ContextStack {
         names

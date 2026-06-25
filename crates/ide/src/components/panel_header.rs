@@ -4,7 +4,7 @@
 
 use super::badge;
 use crate::theme::Theme;
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 
 pub const HEADER_H: f32 = 68.0;
 const PAD_X: f32 = 12.0;

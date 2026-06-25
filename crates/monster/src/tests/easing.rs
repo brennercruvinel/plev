@@ -2,7 +2,7 @@
 //! spec anchor ids, custom bezier escape, plev mirror round-trip.
 
 use crate::easing::{CUSTOM_BEZIER_BYTE, Easing, MAX_PRESET_BYTE, PRESETS};
-use plev::animation::Easing as PlevEasing;
+use engine::animation::Easing as PlevEasing;
 
 #[test]
 fn preset_byte_roundtrip_is_bijective() {

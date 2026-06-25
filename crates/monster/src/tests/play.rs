@@ -6,8 +6,8 @@
 use crate::easing::Easing;
 use crate::ir::{IrError, Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
 use crate::play::{EPSILON_S, MonsterPlayer};
-use plev::animation::{AnimationTick, Interpolate};
-use plev::compositor::SceneNode;
+use engine::animation::{AnimationTick, Interpolate};
+use engine::compositor::SceneNode;
 
 fn tick(dt: f32) -> AnimationTick {
     // elapsed is wall-clock data; the player must key off dt alone.
@@ -238,7 +238,7 @@ fn sampling_matches_plev_ease_and_interpolate() {
     // first segment of node 1: 0 -> 100 over 0.5s, EaseInOut
     let expected = 0.0f32.lerp(
         &100.0,
-        plev::animation::ease(0.25 / 0.5, plev::animation::Easing::EaseInOut),
+        engine::animation::ease(0.25 / 0.5, engine::animation::Easing::EaseInOut),
     );
     assert_eq!(rect_x(&p.scene_at(0.25), 0), expected);
 }
@@ -280,7 +280,7 @@ fn next_keyframe_snapshot_resets_earlier_tracks() {
     // and node 2's own chain (240 -> 0, EaseOutCubic) is halfway in
     let expected = 240.0f32.lerp(
         &0.0,
-        plev::animation::ease(0.5, plev::animation::Easing::EaseOutCubic),
+        engine::animation::ease(0.5, engine::animation::Easing::EaseOutCubic),
     );
     assert_eq!(rect_x(&scene, 1), expected);
 }

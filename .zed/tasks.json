@@ -1,0 +1,44 @@
+[
+  {
+    "label": "gate: full (fmt + clippy + test + wasm)",
+    "command": "cargo fmt --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace && cargo check --target wasm32-unknown-unknown -p showcase",
+    "use_new_terminal": false,
+    "reveal": "always"
+  },
+  {
+    "label": "gate: test",
+    "command": "cargo test --workspace"
+  },
+  {
+    "label": "gate: clippy",
+    "command": "cargo clippy --workspace --all-targets -- -D warnings"
+  },
+  {
+    "label": "gate: fmt check",
+    "command": "cargo fmt --check"
+  },
+  {
+    "label": "gate: wasm check (showcase)",
+    "command": "cargo check --target wasm32-unknown-unknown -p showcase"
+  },
+  {
+    "label": "typos (contract config)",
+    "command": "typos --config .contracts/.mantras/.code/.lang/.rust/typos.toml"
+  },
+  {
+    "label": "run: showcase",
+    "command": "cargo run -p showcase"
+  },
+  {
+    "label": "run: ide",
+    "command": "cargo run -p ide"
+  },
+  {
+    "label": "run: example ($ZED_SYMBOL)",
+    "command": "cargo run -p engine --example $ZED_SYMBOL"
+  },
+  {
+    "label": "web: trunk serve (showcase)",
+    "command": "trunk serve"
+  }
+]

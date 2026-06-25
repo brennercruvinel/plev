@@ -28,9 +28,9 @@ echo ">> building showcase cdylib via cargo-ndk (arm64-v8a, x86_64, $PROFILE)"
     -o "$JNILIBS" \
     build -p showcase --lib $CARGO_PROFILE_FLAG )
 
-# cargo-ndk also emits plev's own cdylib (libplev.so); it is dead weight —
-# libshowcase.so statically links plev and GameActivity loads only "showcase".
-find "$JNILIBS" -name 'libplev.so' -delete
+# cargo-ndk also emits engine's own cdylib (libengine.so); it is dead weight —
+# libshowcase.so statically links engine and GameActivity loads only "showcase".
+find "$JNILIBS" -name 'libengine.so' -delete
 
 echo ">> jniLibs:"; find "$JNILIBS" -name 'libshowcase.so' -exec ls -la {} \;
 

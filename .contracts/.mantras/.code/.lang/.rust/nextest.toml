@@ -1,0 +1,22 @@
+# cargo-nextest contract for the plev workspace.
+#
+# discovery: nextest reads .config/nextest.toml at the workspace root, or the
+# path in NEXTEST_CONFIG_FILE. this file lives under .contracts to keep the
+# root clean; CI and the .zed test task pass it with
+# `cargo nextest run --config-file <this>`. the current gate uses
+# `cargo test --workspace`; nextest is the faster optional runner.
+
+[profile.default]
+# surface flaky behavior instead of hiding it: a test that needs a retry is a
+# bug to file, not a knob to crank. keep retries at zero.
+retries = 0
+# show output for failures so a red run is debuggable from the log alone.
+failure-output = "immediate-final"
+# fail the run if a test goes silent for too long (deadlock guard).
+slow-timeout = { period = "30s", terminate-after = 4 }
+
+[profile.ci]
+# CI wants the full picture, not a fail-fast bail on the first red.
+fail-fast = false
+failure-output = "immediate-final"
+final-status-level = "fail"

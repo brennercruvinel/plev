@@ -1,17 +1,17 @@
-//! Builder tour: the declarative plev::builder API live. The demo card is
+//! Builder tour: the declarative engine::builder API live. The demo card is
 //! a real Element tree rendered via render_interactive, so its buttons are
 //! REAL engine hit regions (the old demo drew fake buttons via View::render)
 //! and a counter proves reactivity: click, state changes, the tree rebuilds.
 //! The source panel besides it shows the code in JetBrains Mono. Named
-//! builder_tour to not collide with the engine's plev::builder.
+//! builder_tour to not collide with the engine's engine::builder.
 
-use plev::builder::{Element, button, div, text as btext};
-use plev::color::Color;
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
-use plev::text::{TextMeasurer, TextStyle};
-use plev::theme::Theme;
-use plev::ui::widgets::{EventResult, Rect, WidgetEvent};
-use plev::view::ViewContext;
+use engine::builder::{Element, button, div, text as btext};
+use engine::color::Color;
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::text::{TextMeasurer, TextStyle};
+use engine::theme::Theme;
+use engine::ui::widgets::{EventResult, Rect, WidgetEvent};
+use engine::view::ViewContext;
 
 use super::{group_label, panel};
 
@@ -258,7 +258,7 @@ impl BuilderSection {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plev::compositor::LayerId;
+    use engine::compositor::LayerId;
 
     fn content(w: f32) -> Rect {
         Rect::new(288.0, 118.0, w, 682.0)

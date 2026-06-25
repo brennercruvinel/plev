@@ -12,8 +12,8 @@ mod scrolling;
 
 use super::*;
 use crate::views::unassigned_view::{FileEntry, FileStatus};
-use plev::compositor::Compositor;
-use plev::overlay::OverlayKind;
+use engine::compositor::Compositor;
+use engine::overlay::OverlayKind;
 
 fn sample_files() -> Vec<FileEntry> {
     let entry = |path: &str, status, staged| FileEntry {

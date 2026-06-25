@@ -2,16 +2,24 @@
 name = "lot"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 publish = false
 description = "Lottie (bodymovin) importer for plev: render directly or convert to the .monster format"
 
 [dependencies]
-plev.workspace = true
+engine.workspace = true
 # the export half of the importer: lottie in, our .monster out (cnv.rs).
 monster.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 log.workspace = true
 
+[dev-dependencies]
+criterion.workspace = true
+
 [lints]
 workspace = true
+
+[[bench]]
+name = "convert"
+harness = false

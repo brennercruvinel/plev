@@ -4,9 +4,9 @@
 //!
 //! v0 ground work, backend before ui:
 //! - [`ir`]: the codec's own node and timeline model, decoupled from
-//!   `plev::SceneNode` so the frozen format never chases the internal
+//!   `engine::SceneNode` so the frozen format never chases the internal
 //!   enum; the player lowers `ir::Node` to `SceneNode` at render time
-//! - [`easing`]: presets mirroring `plev::animation::Easing` plus the
+//! - [`easing`]: presets mirroring `engine::animation::Easing` plus the
 //!   1-byte wire ids and the custom cubic bezier escape (0xFF)
 //! - [`quant`]: pure quantization primitives, f32 in memory and
 //!   integers in the file (twips, rgba8, u16 fixed, bezier u8)

@@ -6,8 +6,8 @@
 
 use super::hoff;
 use crate::theme::Theme;
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
-use plev::text::TextStyle;
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::text::TextStyle;
 
 /// Badge kind.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -103,7 +103,7 @@ pub fn draw(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plev::compositor::LayerId;
+    use engine::compositor::LayerId;
 
     /// Regression: the chip rect must fit the REAL shaped label plus both
     /// paddings. "MODIFIED" @12/600 was one of the labels the old per-char
