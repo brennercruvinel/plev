@@ -1,0 +1,62 @@
+<style type="text/css">
+	:root {
+		{%- if page.extra.accent_color -%}
+			--accent-color: {{ page.extra.accent_color | safe }};
+		{%- elif section.extra.accent_color -%}
+			--accent-color: {{ section.extra.accent_color | safe }};
+		{%- else -%}
+			--accent-color: {{ config.extra.accent_color | default(value="#6f8396") | safe }};
+		{%- endif -%}
+
+		{%- set content_align = config.extra.content_align | default(value="center") -%}
+		{%- if content_align == "right" -%}
+			{%- set content_justify = "flex-end" -%}
+		{%- elif content_align == "left" -%}
+			{%- set content_justify = "flex-start" -%}
+		{%- else -%}
+			{%- set content_justify = "center" -%}
+		{%- endif -%}
+		--content-align: {{ content_align | safe }};
+		--content-justify: {{ content_justify | safe }};
+	}
+
+	{%- if page.extra.accent_color_dark -%}
+		[data-theme="dark"] {
+			--accent-color: {{ page.extra.accent_color_dark | safe }};
+		}
+
+		@media (prefers-color-scheme: dark) {
+			:root:not([data-theme="light"]) {
+				--accent-color: {{ page.extra.accent_color_dark | safe }};
+			}
+		}
+	{%- elif section.extra.accent_color_dark -%}
+		[data-theme="dark"] {
+			--accent-color: {{ section.extra.accent_color_dark | safe }};
+		}
+
+		@media (prefers-color-scheme: dark) {
+			:root:not([data-theme="light"]) {
+				--accent-color: {{ section.extra.accent_color_dark | safe }};
+			}
+		}
+	{%- elif config.extra.accent_color_dark -%}
+		[data-theme="dark"] {
+			--accent-color: {{ config.extra.accent_color_dark | safe }};
+		}
+
+		@media (prefers-color-scheme: dark) {
+			:root:not([data-theme="light"]) {
+				--accent-color: {{ config.extra.accent_color_dark | safe }};
+			}
+		}
+	{%- endif -%}
+
+	{%- if config.extra.debug.layout -%}
+		*,
+		*::before,
+		*::after {
+			outline: solid 1px var(--accent-color);
+		}
+	{%- endif -%}
+</style>

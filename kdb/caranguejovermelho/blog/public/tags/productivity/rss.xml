@@ -1,0 +1,678 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+      <title>Brenner - productivity</title>
+      <link>https://brennercruvinel.com</link>
+      <description>Opinionated, modern, pretty, and clean Zola theme.</description>
+      <generator>Zola</generator>
+      <language>en</language>
+      <atom:link href="https://brennercruvinel.com/tags/productivity/rss.xml" rel="self" type="application/rss+xml"/>
+      <lastBuildDate>Wed, 18 Mar 2026 02:31:42 +0000</lastBuildDate>
+      <item>
+          <title>the case for small commits</title>
+          <pubDate>Wed, 18 Mar 2026 02:31:42 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/the-case-for-small-commits/</link>
+          <guid>https://brennercruvinel.com/blog/the-case-for-small-commits/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/the-case-for-small-commits/">&lt;p&gt;I spent a while getting small commits wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Small commits shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>notes on plain text everything</title>
+          <pubDate>Sun, 11 Jan 2026 20:31:38 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/notes-on-plain-text-everything/</link>
+          <guid>https://brennercruvinel.com/blog/notes-on-plain-text-everything/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/notes-on-plain-text-everything/">&lt;p&gt;Short post: plain text everything is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Plain text everything shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>a short note about inbox zero</title>
+          <pubDate>Sat, 20 Dec 2025 16:47:05 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-short-note-about-inbox-zero/</link>
+          <guid>https://brennercruvinel.com/blog/a-short-note-about-inbox-zero/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-short-note-about-inbox-zero/">&lt;p&gt;Every few months inbox zero bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Inbox zero shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>inbox zero in practice</title>
+          <pubDate>Tue, 01 Jul 2025 18:46:51 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/inbox-zero-in-practice/</link>
+          <guid>https://brennercruvinel.com/blog/inbox-zero-in-practice/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/inbox-zero-in-practice/">&lt;p&gt;Short post: inbox zero is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Inbox zero shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>thinking about small commits</title>
+          <pubDate>Thu, 27 Mar 2025 19:16:36 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/thinking-about-small-commits/</link>
+          <guid>https://brennercruvinel.com/blog/thinking-about-small-commits/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/thinking-about-small-commits/">&lt;p&gt;I spent a while getting small commits wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Small commits shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>on single tasking</title>
+          <pubDate>Thu, 20 Feb 2025 14:18:41 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/on-single-tasking/</link>
+          <guid>https://brennercruvinel.com/blog/on-single-tasking/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/on-single-tasking/">&lt;p&gt;Every few months single tasking bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Single tasking shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>plain text everything, revisited</title>
+          <pubDate>Sun, 14 Jul 2024 19:56:14 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/plain-text-everything-revisited/</link>
+          <guid>https://brennercruvinel.com/blog/plain-text-everything-revisited/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/plain-text-everything-revisited/">&lt;p&gt;Every few months plain text everything bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Plain text everything shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>thinking about weekly reviews</title>
+          <pubDate>Sun, 04 Feb 2024 13:02:20 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/thinking-about-weekly-reviews/</link>
+          <guid>https://brennercruvinel.com/blog/thinking-about-weekly-reviews/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/thinking-about-weekly-reviews/">&lt;p&gt;I spent a while getting weekly reviews wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Weekly reviews shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>on plain text everything</title>
+          <pubDate>Wed, 31 Jan 2024 15:55:26 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/on-plain-text-everything/</link>
+          <guid>https://brennercruvinel.com/blog/on-plain-text-everything/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/on-plain-text-everything/">&lt;p&gt;I spent a while getting plain text everything wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Plain text everything shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>saying no in practice</title>
+          <pubDate>Tue, 31 Oct 2023 10:56:35 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/saying-no-in-practice/</link>
+          <guid>https://brennercruvinel.com/blog/saying-no-in-practice/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/saying-no-in-practice/">&lt;p&gt;A quick write-up on saying no, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Saying no shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>rethinking deep work</title>
+          <pubDate>Sun, 12 Dec 2021 11:16:40 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/rethinking-deep-work/</link>
+          <guid>https://brennercruvinel.com/blog/rethinking-deep-work/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/rethinking-deep-work/">&lt;p&gt;I keep coming back to deep work, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Deep work shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>the case for plain text everything</title>
+          <pubDate>Wed, 20 May 2020 07:08:03 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/the-case-for-plain-text-everything-2/</link>
+          <guid>https://brennercruvinel.com/blog/the-case-for-plain-text-everything-2/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/the-case-for-plain-text-everything-2/">&lt;p&gt;Every few months plain text everything bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Plain text everything shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>rethinking weekly reviews</title>
+          <pubDate>Tue, 10 Mar 2020 11:27:06 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/rethinking-weekly-reviews/</link>
+          <guid>https://brennercruvinel.com/blog/rethinking-weekly-reviews/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/rethinking-weekly-reviews/">&lt;p&gt;Short post: weekly reviews is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Weekly reviews shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>thinking about single tasking</title>
+          <pubDate>Mon, 06 May 2019 02:09:50 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/thinking-about-single-tasking/</link>
+          <guid>https://brennercruvinel.com/blog/thinking-about-single-tasking/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/thinking-about-single-tasking/">&lt;p&gt;A quick write-up on single tasking, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Single tasking shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>rethinking weekly reviews</title>
+          <pubDate>Sun, 25 Nov 2018 07:17:53 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/rethinking-weekly-reviews-2/</link>
+          <guid>https://brennercruvinel.com/blog/rethinking-weekly-reviews-2/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/rethinking-weekly-reviews-2/">&lt;p&gt;I keep coming back to weekly reviews, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Weekly reviews shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>what i learned about small commits</title>
+          <pubDate>Fri, 16 Jun 2017 03:01:01 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/what-i-learned-about-small-commits/</link>
+          <guid>https://brennercruvinel.com/blog/what-i-learned-about-small-commits/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/what-i-learned-about-small-commits/">&lt;p&gt;A quick write-up on small commits, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Small commits shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>what i learned about inbox zero</title>
+          <pubDate>Fri, 21 Apr 2017 00:03:18 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/what-i-learned-about-inbox-zero/</link>
+          <guid>https://brennercruvinel.com/blog/what-i-learned-about-inbox-zero/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/what-i-learned-about-inbox-zero/">&lt;p&gt;Short post: inbox zero is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Inbox zero shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>a small guide to deep work</title>
+          <pubDate>Thu, 09 Feb 2017 01:09:25 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-small-guide-to-deep-work/</link>
+          <guid>https://brennercruvinel.com/blog/a-small-guide-to-deep-work/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-small-guide-to-deep-work/">&lt;p&gt;I keep coming back to deep work, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Deep work shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>the case for plain text everything</title>
+          <pubDate>Tue, 11 Oct 2016 05:02:41 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/the-case-for-plain-text-everything/</link>
+          <guid>https://brennercruvinel.com/blog/the-case-for-plain-text-everything/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/the-case-for-plain-text-everything/">&lt;p&gt;I spent a while getting plain text everything wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Plain text everything shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>keyboard over mouse, revisited</title>
+          <pubDate>Mon, 14 Sep 2015 17:27:29 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/keyboard-over-mouse-revisited/</link>
+          <guid>https://brennercruvinel.com/blog/keyboard-over-mouse-revisited/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/keyboard-over-mouse-revisited/">&lt;p&gt;A quick write-up on keyboard over mouse, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Keyboard over mouse shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>the case for automating the boring parts</title>
+          <pubDate>Sun, 05 Jul 2015 18:34:16 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/the-case-for-automating-the-boring-parts-2/</link>
+          <guid>https://brennercruvinel.com/blog/the-case-for-automating-the-boring-parts-2/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/the-case-for-automating-the-boring-parts-2/">&lt;p&gt;I keep coming back to automating the boring parts, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Automating the boring parts shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>automating the boring parts, revisited</title>
+          <pubDate>Wed, 20 May 2015 15:07:44 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/automating-the-boring-parts-revisited/</link>
+          <guid>https://brennercruvinel.com/blog/automating-the-boring-parts-revisited/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/automating-the-boring-parts-revisited/">&lt;p&gt;I spent a while getting automating the boring parts wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Automating the boring parts shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>the case for deep work</title>
+          <pubDate>Fri, 03 Oct 2014 03:31:53 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/the-case-for-deep-work/</link>
+          <guid>https://brennercruvinel.com/blog/the-case-for-deep-work/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/the-case-for-deep-work/">&lt;p&gt;Every few months deep work bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Deep work shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>the case for saying no</title>
+          <pubDate>Tue, 02 Sep 2014 15:55:47 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/the-case-for-saying-no/</link>
+          <guid>https://brennercruvinel.com/blog/the-case-for-saying-no/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/the-case-for-saying-no/">&lt;p&gt;Short post: saying no is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Saying no shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>the case for automating the boring parts</title>
+          <pubDate>Tue, 15 Oct 2013 02:31:23 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/the-case-for-automating-the-boring-parts/</link>
+          <guid>https://brennercruvinel.com/blog/the-case-for-automating-the-boring-parts/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/the-case-for-automating-the-boring-parts/">&lt;p&gt;Short post: automating the boring parts is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Automating the boring parts shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>a short note about inbox zero</title>
+          <pubDate>Tue, 24 Sep 2013 14:27:33 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-short-note-about-inbox-zero-2/</link>
+          <guid>https://brennercruvinel.com/blog/a-short-note-about-inbox-zero-2/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-short-note-about-inbox-zero-2/">&lt;p&gt;Short post: inbox zero is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Inbox zero shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>a short note about inbox zero</title>
+          <pubDate>Fri, 10 May 2013 09:57:51 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/a-short-note-about-inbox-zero-3/</link>
+          <guid>https://brennercruvinel.com/blog/a-short-note-about-inbox-zero-3/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/a-short-note-about-inbox-zero-3/">&lt;p&gt;I spent a while getting inbox zero wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Inbox zero shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>thinking about automating the boring parts</title>
+          <pubDate>Tue, 30 Apr 2013 08:46:38 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/thinking-about-automating-the-boring-parts/</link>
+          <guid>https://brennercruvinel.com/blog/thinking-about-automating-the-boring-parts/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/thinking-about-automating-the-boring-parts/">&lt;p&gt;I keep coming back to automating the boring parts, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Automating the boring parts shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>what i learned about plain text everything</title>
+          <pubDate>Fri, 08 Mar 2013 03:11:57 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/what-i-learned-about-plain-text-everything/</link>
+          <guid>https://brennercruvinel.com/blog/what-i-learned-about-plain-text-everything/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/what-i-learned-about-plain-text-everything/">&lt;p&gt;I spent a while getting plain text everything wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Plain text everything shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>on keyboard over mouse</title>
+          <pubDate>Mon, 26 Sep 2011 13:35:23 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/on-keyboard-over-mouse/</link>
+          <guid>https://brennercruvinel.com/blog/on-keyboard-over-mouse/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/on-keyboard-over-mouse/">&lt;p&gt;Every few months keyboard over mouse bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Keyboard over mouse shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>thinking about inbox zero</title>
+          <pubDate>Sun, 03 Apr 2011 17:09:38 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/thinking-about-inbox-zero/</link>
+          <guid>https://brennercruvinel.com/blog/thinking-about-inbox-zero/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/thinking-about-inbox-zero/">&lt;p&gt;A quick write-up on inbox zero, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Inbox zero shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>notes on keyboard over mouse</title>
+          <pubDate>Thu, 09 Sep 2010 04:06:21 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/notes-on-keyboard-over-mouse/</link>
+          <guid>https://brennercruvinel.com/blog/notes-on-keyboard-over-mouse/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/notes-on-keyboard-over-mouse/">&lt;p&gt;A quick write-up on keyboard over mouse, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Keyboard over mouse shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>the case for single tasking</title>
+          <pubDate>Fri, 30 Jul 2010 15:31:20 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/the-case-for-single-tasking/</link>
+          <guid>https://brennercruvinel.com/blog/the-case-for-single-tasking/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/the-case-for-single-tasking/">&lt;p&gt;Every few months single tasking bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Single tasking shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>saying no, revisited</title>
+          <pubDate>Sat, 15 May 2010 14:51:02 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/saying-no-revisited/</link>
+          <guid>https://brennercruvinel.com/blog/saying-no-revisited/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/saying-no-revisited/">&lt;p&gt;I spent a while getting saying no wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Saying no shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>deep work, revisited</title>
+          <pubDate>Sun, 27 Dec 2009 10:27:31 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/deep-work-revisited/</link>
+          <guid>https://brennercruvinel.com/blog/deep-work-revisited/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/deep-work-revisited/">&lt;p&gt;Short post: deep work is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Deep work shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>on small commits</title>
+          <pubDate>Wed, 24 Jun 2009 13:41:18 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/on-small-commits/</link>
+          <guid>https://brennercruvinel.com/blog/on-small-commits/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/on-small-commits/">&lt;p&gt;I keep coming back to small commits, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Small commits shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>inbox zero, revisited</title>
+          <pubDate>Tue, 17 Feb 2009 12:32:26 +0000</pubDate>
+          <author>Brenner Cruvinel</author>
+          <link>https://brennercruvinel.com/blog/inbox-zero-revisited/</link>
+          <guid>https://brennercruvinel.com/blog/inbox-zero-revisited/</guid>
+          <description xml:base="https://brennercruvinel.com/blog/inbox-zero-revisited/">&lt;p&gt;Short post: inbox zero is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Inbox zero shows up across productivity work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</description>
+      </item>
+    </channel>
+</rss>

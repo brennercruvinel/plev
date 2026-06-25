@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Brenner - responsive design</title>
+    <subtitle>Opinionated, modern, pretty, and clean Zola theme.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://brennercruvinel.com/tags/responsive-design/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://brennercruvinel.com"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2024-02-22T07:40:02+00:00</updated>
+    <id>https://brennercruvinel.com/tags/responsive-design/atom.xml</id>
+    <entry xml:lang="en">
+        <title>on responsive design</title>
+        <published>2024-02-22T07:40:02+00:00</published>
+        <updated>2024-02-22T07:40:02+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/on-responsive-design-2/"/>
+        <id>https://brennercruvinel.com/blog/on-responsive-design-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/on-responsive-design-2/">&lt;p&gt;Short post: responsive design is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Responsive design shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>responsive design, revisited</title>
+        <published>2018-08-29T14:10:11+00:00</published>
+        <updated>2018-08-29T14:10:11+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/responsive-design-revisited/"/>
+        <id>https://brennercruvinel.com/blog/responsive-design-revisited/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/responsive-design-revisited/">&lt;p&gt;A quick write-up on responsive design, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Responsive design shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>responsive design in practice</title>
+        <published>2018-02-06T08:48:43+00:00</published>
+        <updated>2018-02-06T08:48:43+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/responsive-design-in-practice/"/>
+        <id>https://brennercruvinel.com/blog/responsive-design-in-practice/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/responsive-design-in-practice/">&lt;p&gt;A quick write-up on responsive design, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Responsive design shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the case for responsive design</title>
+        <published>2012-09-30T02:33:03+00:00</published>
+        <updated>2012-09-30T02:33:03+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-case-for-responsive-design/"/>
+        <id>https://brennercruvinel.com/blog/the-case-for-responsive-design/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-case-for-responsive-design/">&lt;p&gt;Every few months responsive design bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Responsive design shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a short note about responsive design</title>
+        <published>2011-03-27T06:16:37+00:00</published>
+        <updated>2011-03-27T06:16:37+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-short-note-about-responsive-design/"/>
+        <id>https://brennercruvinel.com/blog/a-short-note-about-responsive-design/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-short-note-about-responsive-design/">&lt;p&gt;A quick write-up on responsive design, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Responsive design shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>on responsive design</title>
+        <published>2011-01-13T19:53:21+00:00</published>
+        <updated>2011-01-13T19:53:21+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/on-responsive-design/"/>
+        <id>https://brennercruvinel.com/blog/on-responsive-design/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/on-responsive-design/">&lt;p&gt;I spent a while getting responsive design wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Responsive design shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

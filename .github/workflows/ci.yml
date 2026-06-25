@@ -53,3 +53,18 @@ jobs:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --target wasm32-unknown-unknown -p showcase
+
+  typos:
+    name: typos (advisory)
+    runs-on: ubuntu-latest
+    # non-blocking on purpose: this repo is bilingual (english + portuguese
+    # comments), so an english spell-checker will flag real portuguese words.
+    # the job surfaces genuine english typos as annotations without ever
+    # failing a PR for portuguese content. recurring false positives go in the
+    # allowlist at .contracts/.mantras/.code/.lang/.rust/typos.toml.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: crate-ci/typos@master
+        with:
+          config: .contracts/.mantras/.code/.lang/.rust/typos.toml

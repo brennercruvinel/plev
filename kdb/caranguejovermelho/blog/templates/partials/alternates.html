@@ -1,0 +1,23 @@
+{#
+  hreflang alternates.
+  declares every translated version of the current page to search engines and
+  points x-default at the default-language version. avoids duplicate-content
+  ambiguity across languages. only emitted for page/section contexts (taxonomy
+  pages do not expose translations in zola).
+#}
+{%- if page or section -%}
+	{%- set current = page | default(value=section) -%}
+	{%- set current_lang = current.lang | default(value=config.default_language) -%}
+
+	<link rel="alternate" hreflang="{{ current_lang }}" href="{{ current.permalink | safe }}" />
+	{%- if current_lang == config.default_language %}
+		<link rel="alternate" hreflang="x-default" href="{{ current.permalink | safe }}" />
+	{%- endif %}
+
+	{%- for translation in current.translations | default(value=[]) %}
+		<link rel="alternate" hreflang="{{ translation.lang }}" href="{{ translation.permalink | safe }}" />
+		{%- if translation.lang == config.default_language %}
+			<link rel="alternate" hreflang="x-default" href="{{ translation.permalink | safe }}" />
+		{%- endif %}
+	{%- endfor %}
+{%- endif -%}

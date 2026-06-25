@@ -1,0 +1,1036 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Brenner - ux</title>
+    <subtitle>Opinionated, modern, pretty, and clean Zola theme.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://brennercruvinel.com/tags/ux/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://brennercruvinel.com"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2026-03-23T21:44:39+00:00</updated>
+    <id>https://brennercruvinel.com/tags/ux/atom.xml</id>
+    <entry xml:lang="en">
+        <title>what i learned about whitespace</title>
+        <published>2026-03-23T21:44:39+00:00</published>
+        <updated>2026-03-23T21:44:39+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/what-i-learned-about-whitespace/"/>
+        <id>https://brennercruvinel.com/blog/what-i-learned-about-whitespace/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/what-i-learned-about-whitespace/">&lt;p&gt;Short post: whitespace is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Whitespace shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the case for grid systems</title>
+        <published>2025-03-20T23:59:49+00:00</published>
+        <updated>2025-03-20T23:59:49+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-case-for-grid-systems/"/>
+        <id>https://brennercruvinel.com/blog/the-case-for-grid-systems/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-case-for-grid-systems/">&lt;p&gt;A quick write-up on grid systems, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Grid systems shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a short note about color contrast</title>
+        <published>2024-05-14T19:23:41+00:00</published>
+        <updated>2024-05-14T19:23:41+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-short-note-about-color-contrast/"/>
+        <id>https://brennercruvinel.com/blog/a-short-note-about-color-contrast/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-short-note-about-color-contrast/">&lt;p&gt;I keep coming back to color contrast, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Color contrast shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>grid systems, revisited</title>
+        <published>2024-02-11T05:40:14+00:00</published>
+        <updated>2024-02-11T05:40:14+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/grid-systems-revisited/"/>
+        <id>https://brennercruvinel.com/blog/grid-systems-revisited/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/grid-systems-revisited/">&lt;p&gt;I spent a while getting grid systems wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Grid systems shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>what i learned about dark mode</title>
+        <published>2023-11-30T05:34:20+00:00</published>
+        <updated>2023-11-30T05:34:20+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/what-i-learned-about-dark-mode/"/>
+        <id>https://brennercruvinel.com/blog/what-i-learned-about-dark-mode/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/what-i-learned-about-dark-mode/">&lt;p&gt;Short post: dark mode is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Dark mode shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a small guide to whitespace</title>
+        <published>2023-06-27T02:38:16+00:00</published>
+        <updated>2023-06-27T02:38:16+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-small-guide-to-whitespace/"/>
+        <id>https://brennercruvinel.com/blog/a-small-guide-to-whitespace/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-small-guide-to-whitespace/">&lt;p&gt;Every few months whitespace bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Whitespace shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>notes on empty states</title>
+        <published>2022-09-01T07:43:11+00:00</published>
+        <updated>2022-09-01T07:43:11+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/notes-on-empty-states/"/>
+        <id>https://brennercruvinel.com/blog/notes-on-empty-states/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/notes-on-empty-states/">&lt;p&gt;I keep coming back to empty states, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Empty states shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>on grid systems</title>
+        <published>2022-06-20T23:50:27+00:00</published>
+        <updated>2022-06-20T23:50:27+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/on-grid-systems/"/>
+        <id>https://brennercruvinel.com/blog/on-grid-systems/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/on-grid-systems/">&lt;p&gt;Every few months grid systems bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Grid systems shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>thinking about motion design</title>
+        <published>2022-04-24T04:19:41+00:00</published>
+        <updated>2022-04-24T04:19:41+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/thinking-about-motion-design/"/>
+        <id>https://brennercruvinel.com/blog/thinking-about-motion-design/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/thinking-about-motion-design/">&lt;p&gt;I keep coming back to motion design, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Motion design shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the case for dark mode</title>
+        <published>2021-09-23T05:35:57+00:00</published>
+        <updated>2021-09-23T05:35:57+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-case-for-dark-mode-2/"/>
+        <id>https://brennercruvinel.com/blog/the-case-for-dark-mode-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-case-for-dark-mode-2/">&lt;p&gt;Short post: dark mode is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Dark mode shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>what i learned about color contrast</title>
+        <published>2020-12-13T09:04:48+00:00</published>
+        <updated>2020-12-13T09:04:48+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/what-i-learned-about-color-contrast/"/>
+        <id>https://brennercruvinel.com/blog/what-i-learned-about-color-contrast/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/what-i-learned-about-color-contrast/">&lt;p&gt;I spent a while getting color contrast wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Color contrast shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a short note about motion design</title>
+        <published>2020-09-20T08:45:42+00:00</published>
+        <updated>2020-09-20T08:45:42+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-short-note-about-motion-design/"/>
+        <id>https://brennercruvinel.com/blog/a-short-note-about-motion-design/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-short-note-about-motion-design/">&lt;p&gt;A quick write-up on motion design, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Motion design shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the case for dark mode</title>
+        <published>2019-12-03T12:39:22+00:00</published>
+        <updated>2019-12-03T12:39:22+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-case-for-dark-mode/"/>
+        <id>https://brennercruvinel.com/blog/the-case-for-dark-mode/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-case-for-dark-mode/">&lt;p&gt;I spent a while getting dark mode wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Dark mode shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking typography</title>
+        <published>2019-03-06T09:03:38+00:00</published>
+        <updated>2019-03-06T09:03:38+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-typography/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-typography/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-typography/">&lt;p&gt;I keep coming back to typography, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Typography shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>thinking about dark mode</title>
+        <published>2018-06-26T15:16:56+00:00</published>
+        <updated>2018-06-26T15:16:56+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/thinking-about-dark-mode/"/>
+        <id>https://brennercruvinel.com/blog/thinking-about-dark-mode/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/thinking-about-dark-mode/">&lt;p&gt;I spent a while getting dark mode wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Dark mode shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>on typography</title>
+        <published>2018-03-09T01:02:49+00:00</published>
+        <updated>2018-03-09T01:02:49+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/on-typography/"/>
+        <id>https://brennercruvinel.com/blog/on-typography/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/on-typography/">&lt;p&gt;I spent a while getting typography wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Typography shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the case for motion design</title>
+        <published>2018-01-10T10:20:22+00:00</published>
+        <updated>2018-01-10T10:20:22+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-case-for-motion-design/"/>
+        <id>https://brennercruvinel.com/blog/the-case-for-motion-design/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-case-for-motion-design/">&lt;p&gt;A quick write-up on motion design, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Motion design shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a small guide to dark mode</title>
+        <published>2017-07-23T23:59:37+00:00</published>
+        <updated>2017-07-23T23:59:37+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-small-guide-to-dark-mode/"/>
+        <id>https://brennercruvinel.com/blog/a-small-guide-to-dark-mode/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-small-guide-to-dark-mode/">&lt;p&gt;Short post: dark mode is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Dark mode shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>notes on visual hierarchy</title>
+        <published>2017-06-08T23:19:35+00:00</published>
+        <updated>2017-06-08T23:19:35+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/notes-on-visual-hierarchy/"/>
+        <id>https://brennercruvinel.com/blog/notes-on-visual-hierarchy/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/notes-on-visual-hierarchy/">&lt;p&gt;A quick write-up on visual hierarchy, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Visual hierarchy shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>micro-interactions in practice</title>
+        <published>2016-11-18T16:35:29+00:00</published>
+        <updated>2016-11-18T16:35:29+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/micro-interactions-in-practice/"/>
+        <id>https://brennercruvinel.com/blog/micro-interactions-in-practice/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/micro-interactions-in-practice/">&lt;p&gt;Short post: micro-interactions is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Micro-interactions shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the case for grid systems</title>
+        <published>2016-02-21T04:24:41+00:00</published>
+        <updated>2016-02-21T04:24:41+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-case-for-grid-systems-2/"/>
+        <id>https://brennercruvinel.com/blog/the-case-for-grid-systems-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-case-for-grid-systems-2/">&lt;p&gt;A quick write-up on grid systems, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Grid systems shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking color contrast</title>
+        <published>2016-02-12T07:13:44+00:00</published>
+        <updated>2016-02-12T07:13:44+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-color-contrast/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-color-contrast/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-color-contrast/">&lt;p&gt;Every few months color contrast bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Color contrast shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>what i learned about whitespace</title>
+        <published>2015-12-15T22:31:12+00:00</published>
+        <updated>2015-12-15T22:31:12+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/what-i-learned-about-whitespace-2/"/>
+        <id>https://brennercruvinel.com/blog/what-i-learned-about-whitespace-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/what-i-learned-about-whitespace-2/">&lt;p&gt;A quick write-up on whitespace, mostly so future me stops relearning it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Whitespace shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>color contrast, revisited</title>
+        <published>2015-04-25T00:07:31+00:00</published>
+        <updated>2015-04-25T00:07:31+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/color-contrast-revisited/"/>
+        <id>https://brennercruvinel.com/blog/color-contrast-revisited/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/color-contrast-revisited/">&lt;p&gt;I spent a while getting color contrast wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Color contrast shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking grid systems</title>
+        <published>2015-03-17T23:24:07+00:00</published>
+        <updated>2015-03-17T23:24:07+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-grid-systems/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-grid-systems/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-grid-systems/">&lt;p&gt;Every few months grid systems bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Grid systems shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking micro-interactions</title>
+        <published>2015-01-18T06:12:54+00:00</published>
+        <updated>2015-01-18T06:12:54+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-micro-interactions/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-micro-interactions/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-micro-interactions/">&lt;p&gt;Every few months micro-interactions bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Micro-interactions shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>on color contrast</title>
+        <published>2014-08-19T03:18:24+00:00</published>
+        <updated>2014-08-19T03:18:24+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/on-color-contrast/"/>
+        <id>https://brennercruvinel.com/blog/on-color-contrast/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/on-color-contrast/">&lt;p&gt;I keep coming back to color contrast, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Color contrast shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>grid systems, revisited</title>
+        <published>2014-07-04T02:12:37+00:00</published>
+        <updated>2014-07-04T02:12:37+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/grid-systems-revisited-3/"/>
+        <id>https://brennercruvinel.com/blog/grid-systems-revisited-3/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/grid-systems-revisited-3/">&lt;p&gt;Every few months grid systems bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Grid systems shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a short note about iconography</title>
+        <published>2013-08-08T01:58:51+00:00</published>
+        <updated>2013-08-08T01:58:51+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-short-note-about-iconography/"/>
+        <id>https://brennercruvinel.com/blog/a-short-note-about-iconography/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-short-note-about-iconography/">&lt;p&gt;I keep coming back to iconography, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Iconography shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Optimise for the reader who shows up six months from now with no context.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>iconography, revisited</title>
+        <published>2012-10-08T11:36:26+00:00</published>
+        <updated>2012-10-08T11:36:26+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/iconography-revisited/"/>
+        <id>https://brennercruvinel.com/blog/iconography-revisited/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/iconography-revisited/">&lt;p&gt;Short post: iconography is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Iconography shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>thinking about iconography</title>
+        <published>2012-09-25T23:00:39+00:00</published>
+        <updated>2012-09-25T23:00:39+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/thinking-about-iconography/"/>
+        <id>https://brennercruvinel.com/blog/thinking-about-iconography/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/thinking-about-iconography/">&lt;p&gt;Every few months iconography bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Iconography shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>whitespace, revisited</title>
+        <published>2012-09-05T09:26:45+00:00</published>
+        <updated>2012-09-05T09:26:45+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/whitespace-revisited/"/>
+        <id>https://brennercruvinel.com/blog/whitespace-revisited/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/whitespace-revisited/">&lt;p&gt;Every few months whitespace bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Whitespace shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>notes on loading states</title>
+        <published>2012-09-04T14:17:43+00:00</published>
+        <updated>2012-09-04T14:17:43+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/notes-on-loading-states/"/>
+        <id>https://brennercruvinel.com/blog/notes-on-loading-states/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/notes-on-loading-states/">&lt;p&gt;Every few months loading states bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Loading states shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>grid systems, revisited</title>
+        <published>2011-11-02T15:15:18+00:00</published>
+        <updated>2011-11-02T15:15:18+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/grid-systems-revisited-2/"/>
+        <id>https://brennercruvinel.com/blog/grid-systems-revisited-2/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/grid-systems-revisited-2/">&lt;p&gt;I spent a while getting grid systems wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Grid systems shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>what i learned about loading states</title>
+        <published>2011-10-06T14:22:31+00:00</published>
+        <updated>2011-10-06T14:22:31+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/what-i-learned-about-loading-states/"/>
+        <id>https://brennercruvinel.com/blog/what-i-learned-about-loading-states/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/what-i-learned-about-loading-states/">&lt;p&gt;Short post: loading states is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Loading states shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;The fix that survives is the one the next person can understand.&lt;&#x2F;li&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>dark mode in practice</title>
+        <published>2010-10-28T22:29:43+00:00</published>
+        <updated>2010-10-28T22:29:43+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/dark-mode-in-practice/"/>
+        <id>https://brennercruvinel.com/blog/dark-mode-in-practice/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/dark-mode-in-practice/">&lt;p&gt;Every few months dark mode bites me again. This is what finally stuck.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Dark mode shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>the case for empty states</title>
+        <published>2010-06-19T22:49:30+00:00</published>
+        <updated>2010-06-19T22:49:30+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/the-case-for-empty-states/"/>
+        <id>https://brennercruvinel.com/blog/the-case-for-empty-states/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/the-case-for-empty-states/">&lt;p&gt;I spent a while getting empty states wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Empty states shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Measure before you change anything; intuition is a poor profiler.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>thinking about micro-interactions</title>
+        <published>2009-02-19T22:52:07+00:00</published>
+        <updated>2009-02-19T22:52:07+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/thinking-about-micro-interactions/"/>
+        <id>https://brennercruvinel.com/blog/thinking-about-micro-interactions/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/thinking-about-micro-interactions/">&lt;p&gt;I keep coming back to micro-interactions, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Micro-interactions shows up across design work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;li&gt;If it is hard to test, that is the design telling you something.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

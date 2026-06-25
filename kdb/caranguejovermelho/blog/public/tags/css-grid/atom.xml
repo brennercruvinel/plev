@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Brenner - css grid</title>
+    <subtitle>Opinionated, modern, pretty, and clean Zola theme.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://brennercruvinel.com/tags/css-grid/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://brennercruvinel.com"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2020-02-20T15:49:04+00:00</updated>
+    <id>https://brennercruvinel.com/tags/css-grid/atom.xml</id>
+    <entry xml:lang="en">
+        <title>notes on css grid</title>
+        <published>2020-02-20T15:49:04+00:00</published>
+        <updated>2020-02-20T15:49:04+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/notes-on-css-grid/"/>
+        <id>https://brennercruvinel.com/blog/notes-on-css-grid/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/notes-on-css-grid/">&lt;p&gt;I spent a while getting css grid wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Css grid shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>rethinking css grid</title>
+        <published>2019-07-13T18:39:24+00:00</published>
+        <updated>2019-07-13T18:39:24+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/rethinking-css-grid/"/>
+        <id>https://brennercruvinel.com/blog/rethinking-css-grid/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/rethinking-css-grid/">&lt;p&gt;I spent a while getting css grid wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Css grid shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Most of the value is in deleting, not adding.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>thinking about css grid</title>
+        <published>2016-05-24T00:54:22+00:00</published>
+        <updated>2016-05-24T00:54:22+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/thinking-about-css-grid/"/>
+        <id>https://brennercruvinel.com/blog/thinking-about-css-grid/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/thinking-about-css-grid/">&lt;p&gt;I spent a while getting css grid wrong. Here is the version that works for me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Css grid shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;li&gt;Start with the smallest thing that works, then make it boring on purpose.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>what i learned about css grid</title>
+        <published>2016-04-02T04:45:42+00:00</published>
+        <updated>2016-04-02T04:45:42+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/what-i-learned-about-css-grid/"/>
+        <id>https://brennercruvinel.com/blog/what-i-learned-about-css-grid/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/what-i-learned-about-css-grid/">&lt;p&gt;Short post: css grid is one of those things that looks simple until it isn’t.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Css grid shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write it down once, link to it everywhere.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>a small guide to css grid</title>
+        <published>2010-04-23T08:52:15+00:00</published>
+        <updated>2010-04-23T08:52:15+00:00</updated>
+        
+        <author>
+          <name>
+            Brenner Cruvinel
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://brennercruvinel.com/blog/a-small-guide-to-css-grid/"/>
+        <id>https://brennercruvinel.com/blog/a-small-guide-to-css-grid/</id>
+        
+        <content type="html" xml:base="https://brennercruvinel.com/blog/a-small-guide-to-css-grid/">&lt;p&gt;I keep coming back to css grid, so here are the notes I wish I had earlier.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-it-matters&quot;&gt;why it matters&lt;&#x2F;h2&gt;
+&lt;p&gt;Css grid shows up across web work more often than it deserves credit for. The details are small, but they compound.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-works-for-me&quot;&gt;what works for me&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Prefer the obvious solution; clever costs interest forever.&lt;&#x2F;li&gt;
+&lt;li&gt;Make the default path the correct path so nobody has to remember the rule.&lt;&#x2F;li&gt;
+&lt;li&gt;Name it after what it does, not after how it does it.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;None of this is a law. It is just the shape that kept working after enough mistakes.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

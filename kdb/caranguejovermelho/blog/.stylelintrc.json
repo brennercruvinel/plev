@@ -1,0 +1,15 @@
+{
+  "extends": "stylelint-config-standard-scss",
+  "rules": {
+    "custom-property-pattern": null,
+    "selector-class-pattern": null,
+    "scss/dollar-variable-pattern": null,
+    "declaration-no-important": null,
+    "color-function-notation": null,
+    "alpha-value-notation": null,
+    "scss/operator-no-newline-after": null,
+    "no-descending-specificity": null,
+    "media-feature-range-notation": null
+  },
+  "ignoreFiles": ["public/**/*", "static/**/*.css"]
+}
