@@ -8,6 +8,7 @@ members = [
     "crates/ide",
     "crates/lot",
     "crates/monster",
+    "crates/svg",
     "crates/narrate",
     "crates/narrate-macro",
     "crates/parser",
@@ -46,6 +47,7 @@ monster = { path = "crates/monster" }
 narrate = { path = "crates/narrate" }
 narrate-macro = { path = "crates/narrate-macro" }
 rope = { path = "crates/rope" }
+svg = { path = "crates/svg" }
 # -- gpu / janela
 wgpu = "28"
 winit = { version = "0.30", features = ["rwh_06"] }
@@ -58,6 +60,11 @@ unicode-segmentation = "1"
 lyon_tessellation = "1"
 lyon_path = "1"
 etagere = "0.2"
+# svg importer: usvg normalizes a whole svg document (groups, transforms,
+# gradients, use/defs, shape-to-path) into a flat tree we tessellate.
+# default-features off drops fontdb/text-to-path (wasm-safe, deterministic);
+# text is skipped like lot skips it. 0.45 is the last release on msrv 1.85.
+usvg = { version = "0.45", default-features = false }
 # -- dados / util
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
