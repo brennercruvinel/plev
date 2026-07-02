@@ -1,0 +1,20 @@
+[package]
+name = "svg"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "SVG importer for plev: normalize with usvg, tessellate, convert to the .monster format"
+
+[dependencies]
+engine.workspace = true
+# the export half of the importer: svg in, our .monster out (cnv.rs).
+monster.workspace = true
+# usvg does the hard svg work (groups, transforms, gradients, use/defs,
+# shape-to-path); we only tessellate its flat path tree.
+usvg.workspace = true
+log.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true
