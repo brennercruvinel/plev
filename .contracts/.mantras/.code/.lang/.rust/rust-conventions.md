@@ -120,6 +120,17 @@ prefix; the body explains the why, the diff shows the what. agents do not
 commit; the orchestrator commits thematically. code comments state
 constraints the code cannot show (and `// SAFETY:` for unsafe), nothing else.
 
+## learnings
+
+experiments live in refs/, the gitignored working area (see AGENTS.md):
+examples, demos, clones of other apps, proofs of concept. importing those and
+testing them against plev is the main source of new rules. when an experiment
+closes and its work migrates to an example or a crate, fold what it taught
+back into this file and the sibling rule files (clippy.toml, typos.toml,
+nextest.toml) in the same change: a new typing or naming rule, a spell-checker
+false positive, a lint threshold, a flaky-test finding. these files are
+living; an undocumented learning is a learning lost.
+
 ## engine manual
 
 engine rules live in the manual; the short list is in AGENTS.md. the manual:

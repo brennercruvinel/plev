@@ -1,6 +1,6 @@
 //! nice-number axis scale: classic 1-2-5 tick algorithm (heckbert's "nice
 //! numbers for graph labels", same granularity family plotters uses in
-//! `key_points`, ref/vis/plotters). pure math, no text, no gpu.
+//! `key_points`, refs/vis/plotters). pure math, no text, no gpu.
 
 /// A resolved value axis: nice bounds enclosing the data range plus the
 /// tick values, ascending. `min`/`max` are what the plot scales against.

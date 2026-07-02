@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: active
-last-updated: 2026-03-13
+last-updated: 2026-06-29
 domain: project-status
 ---
 
@@ -11,16 +11,23 @@ domain: project-status
 ## o que e
 compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, ios/metal, linux/vulkan, android/vulkan, windows/dx12, browser/webgpu). nao e framework de widgets. e a camada que transforma scene graphs em draw calls na GPU de forma identica em todos os targets.
 
-## estado atual (2026-03-13)
-- v0.3 funcional: 34 tasks concluidas + task-42 em andamento, 404 testes, ~15.000 LOC core + ~3.800 LOC gitbutler-plev, 20 examples
-- build nativo funcionando no macos com metal
-- fase 0 (fundamental) completa, 14 subsistemas core
-- fase 1 (integracao end-to-end) completa, DSL + builder + effects + input integrados
-- fase 2 (mobile/WASM) parcial, android emulador ok, ios check ok, WASM build ok
-- fase 3 (polish) parcial, docs, DX, CI/CD feitos
-- fase 4 (proof of life) completa, animation + editable text + todo app demo + vector paths + accessibility
-- fase 4b (quick wins) completa, spring solver, signal hardening, animation enhancements, event batching
-- fase 5 (paper) parcial, benchmarks feitos, outline criado
+## estado atual (2026-06-29)
+nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do primeiro push em plevdev). a linha do tempo real do projeto vive na documentacao datada (adr/, este mapa) e no codigo, nao no git.
+
+- 52 tasks concluidas (fase 0 a fase 11); pendentes task-39/40/41 (release); em andamento task-18/19/20, task-42 e gap-1
+- 12 crates: engine (core) + libs/apps git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rope, showcase
+- ~1274 testes verdes no workspace, clippy -D warnings limpo, fmt limpo
+- build nativo no macos (metal), web (webgpu/wasm, pixel-identico ao desktop), android (apk no emulador), ios (no simulador)
+- fase 0 (fundamental) e fase 1 (integracao end-to-end) completas
+- fase 2 (mobile/WASM) parcial, apk buildando, showcase no simulador ios, web rodando; device fisico e link ios completo pendentes
+- fase 3 (polish) parcial, docs, DX, CI/CD feitos, license pendente
+- fase 4 (proof of life) e fase 4b (quick wins) completas
+- fase 5 (paper) parcial, benchmarks e outline feitos, texto pendente
+- fase 6 (extensibilidade) parcial, research de plugins e extracao de padroes feitos
+- fase 8 (formatos) completa, monster codec + lot importer + parser transpiler
+- fase 9 (edicao e apps) completa, rope + git backend + ide git client
+- fase 10 (demos e plataforma) completa, prime creatures + showcase multiplataforma
+- fase 11 (organizacao) completa, workspace restructure + rebrand + modularizacao SRP
 - research completo, 50+ repos analisados, 12 docs, technology radar, pattern extraction
 
 ---
@@ -55,9 +62,9 @@ compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, io
 ### fase 2, mobile/WASM testing (p1), parcial
 | task | descricao | status |
 |------|-----------|--------|
-| task-18 | android build & device test | parcial (.so ok, APK wrapper + deploy + lifecycle tests pendentes) |
-| task-19 | ios simulator test | parcial (check ok, link pendente xcode) |
-| task-20 | WASM visual validation | parcial (build 2.4mb ok, visual test pendente) |
+| task-18 | android build & device test | parcial (apk buildando no emulador via task-50; device fisico pendente) |
+| task-19 | ios simulator test | parcial (rodando no simulador via task-50; device fisico + link xcode completo pendentes) |
+| task-20 | WASM visual validation | parcial (build 2.4mb + showcase na web ok; screenshot diff formal pendente) |
 
 ### fase 3, polish (p2), parcial
 | task | descricao | status |
@@ -107,12 +114,38 @@ compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, io
 ### experiment, gitbutler port (proof of real app)
 | task | descricao | status |
 |------|-----------|--------|
-| task-42 | gitbutler plev port (tauri/svelte -> rust GPU-native) | em andamento, phases 0-3 done (~3800 LOC), phase 4 parcial (dispatch+overlay core done, context menu/modal render pendente). crate em `experiment/gitbutler-plev/` |
+| task-42 | gitbutler plev port (tauri/svelte -> rust GPU-native) | dispatch tipado + overlay foram para a engine; o app evoluiu para o crate `crates/ide` (ver task-48). resta polir context menu/modal render |
 
 ### research
 | task | descricao | status |
 |------|-----------|--------|
 | task-ref | research briefing (50+ repos) | done, 12 docs em refs/, technology radar |
+
+### fase 8, formatos e interop (junho), completa
+| task | descricao | status |
+|------|-----------|--------|
+| task-43 | monster, codec binario de animacao v0 | done, MON0, seek O(1), delta descoberto, 124 testes |
+| task-44 | lot, importer lottie + ponte para .monster | done, conversao offline, subset honesto, zero embedding |
+| task-45 | parser, transpiler poc (react/gpui -> builder) | done, droplist file:line, contagens congeladas |
+
+### fase 9, edicao e apps reais (junho), completa
+| task | descricao | status |
+|------|-----------|--------|
+| task-46 | rope, nucleo de edicao (document/transaction/history) | done, estilo helix, 77 testes, headless |
+| task-47 | git, backend (gix reads + cli mutations + client threaded) | done, ui nunca bloqueia, 25 testes |
+| task-48 | ide, git client nativo em plev | done, workspace/diff/commit, 55 testes (evolui de task-42) |
+
+### fase 10, demos e plataforma (junho), completa
+| task | descricao | status |
+|------|-----------|--------|
+| task-49 | prime number creatures (port entropic life) | done, sim core puro, render fiel, desktop + web |
+| task-50 | showcase multiplataforma como lib | done, entries desktop/web/android/ios, apk + simulador |
+
+### fase 11, organizacao profissional (abril/junho), completa
+| task | descricao | status |
+|------|-----------|--------|
+| task-51 | workspace restructure + rebrand phi->plev | done, 3 tiers, renames, cargo workspace |
+| task-52 | modularizacao SRP (limite 300 linhas) | done, 44 monolitos divididos, API inalterada, 470 testes |
 
 ---
 

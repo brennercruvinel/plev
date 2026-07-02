@@ -1,5 +1,5 @@
 //! Contract tests. The react side runs LIVE on the corpus originals in
-//! ref/parsecomponentes (no copies: the owner retired the react fixtures);
+//! refs/parsecomponentes (no copies: the owner retired the react fixtures);
 //! when the corpus is absent the react tests skip loudly. The gpui side
 //! keeps its frozen golden. The droplist is part of the API contract, so
 //! these tests also assert it tells the truth: exact counts and the
@@ -35,7 +35,7 @@ fn check_golden(rel: &str, actual: &str) {
 /// The corpus card, read from the owner's reference tree itself.
 fn corpus() -> Option<PathBuf> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../ref/parsecomponentes/UIvisualREFs/cards/hoff-research-cards/react");
+        .join("../../refs/parsecomponentes/UIvisualREFs/cards/hoff-research-cards/react");
     root.exists().then_some(root)
 }
 
@@ -43,7 +43,7 @@ fn react_output() -> Option<parser::Transpiled> {
     let root = match corpus() {
         Some(r) => r,
         None => {
-            eprintln!("SKIP: corpus ref/parsecomponentes ausente neste checkout");
+            eprintln!("SKIP: corpus refs/parsecomponentes ausente neste checkout");
             return None;
         }
     };

@@ -19,7 +19,7 @@ extend-exclude = [
     "**/*.monster",
     "android/app/build/",
     "ios/showcase/build/",
-    "ref/",
+    "refs/",
     "codigo-descartado/",
     # kdb/ is the knowledge base: long-form bilingual prose (mostly
     # portuguese), where an english spell-checker is all false positives and

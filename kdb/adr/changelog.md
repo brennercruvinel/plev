@@ -15,7 +15,7 @@ status: living
   physics with kuramoto sync); faithful render through the layer encoder, motion
   trails by position history, cyan bond links via paths, glow halos, breathing
   cores, logical-pixel world, fixed-timestep loop, left-mouse brush. ADR:
-  motion-trails-by-position-history. study clone under ref/prime-number-creatures.
+  motion-trails-by-position-history. study clone under refs/prime-number-creatures.
 - workspace organized to tiers: engine at root, libraries and apps in
   crates (git, ide, lot, monster, narrate, narrate-macro, parser, rope,
   showcase), demos in examples. crate renames (editor_core to rope,

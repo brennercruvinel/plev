@@ -21,3 +21,14 @@ domain: task-tracking
 - após SDK disponível: `cargo build --target aarch64-apple-ios-sim` deve linkar
 - deploy via ios-sim.sh no simulator
 - teste visual: quad rendering, text, metal pipeline, safe areas
+
+## sessão 2 (2026-06-16)
+
+### avanço via task-50 (showcase multiplataforma)
+- [x] xcodegen gera o xcodeproj de project.yml; shell objc (main.m) chama showcase_ios_main
+- [x] build_ios.sh (cargo staticlib + xcodegen + xcodebuild) e run_ios.sh (boot simulador, install, launch, screenshot)
+- [x] showcase rodando no simulador ios (aarch64-apple-ios-sim)
+
+### pendente
+- device físico real
+- validação visual formal (screenshot diff) contra o desktop

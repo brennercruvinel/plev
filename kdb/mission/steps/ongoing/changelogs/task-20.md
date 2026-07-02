@@ -28,3 +28,13 @@ domain: task-tracking
 ### warnings (esperados)
 - `mut gpu` unused (cfg-condicional, usado no native mas não WASM)
 - `touch_input` field never read (será usado quando input integration completa)
+
+## sessão 2 (2026-06-16)
+
+### avanço
+- [x] trunk serve com showcase rodando no browser (webgpu)
+- [x] web bate o desktop por amostra de pixel (fundo 48,48,48), via render em view sRGB
+- [x] prime creatures também roda na web
+
+### pendente
+- screenshot diff formal native vs web em critical paths com baseline versionado

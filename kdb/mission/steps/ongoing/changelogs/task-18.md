@@ -29,3 +29,14 @@ domain: task-tracking
 
 ### warnings (esperados)
 - `mut attrs` unused em window.rs (cfg-condicional, usado em desktop/ios mas não android)
+
+## sessão 2 (2026-06-16)
+
+### avanço via task-50 (showcase multiplataforma)
+- [x] APK wrapper resolvido: gradle kts + cargo-ndk geram jniLibs (arm64-v8a, x86_64) e o app-debug.apk
+- [x] host GameActivity (MainActivity.kt) carrega libshowcase.so e entrega ao android_main
+- [x] showcase rodando no emulador android (mesma cena que desktop e web)
+
+### pendente
+- deploy e teste em device físico real
+- lifecycle testing completo (background/foreground, rotate)
