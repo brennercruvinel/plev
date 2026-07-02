@@ -46,8 +46,8 @@ engine's examples.
 | tier | where | what |
 |---|---|---|
 | engine | crate `engine` (crates/engine) | gpu, compositor, text, path, layout, input, animation, signal, theme, ui, builder, window, platform |
-| crates | crates/ | git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rope, showcase |
-| examples | crates/engine/examples/ | 16 windowed demos plus the lot2monsters cli |
+| crates | crates/ | git, ide, lot, macros, monster, svg, narrate, narrate-macro, parser, prime, rope, showcase |
+| examples | crates/engine/examples/ | 16 windowed demos plus the lot2monsters and svg2monster clis |
 
 machine map: [doc/arc/arc.yaml](doc/arc/arc.yaml). human reference:
 [doc/arc/arc.md](doc/arc/arc.md). frame-flow diagram:
@@ -88,12 +88,18 @@ cargo run -p engine --example charts   # any of the 16 windowed demos
 cargo run -p engine --example snake
 ```
 
-the monster animation pipeline, lottie in and our format out:
+the monster animation pipeline, a foreign format in and our format out:
 
 ```
-cargo run -p engine --example lot2monsters in.json out.monster   # convert once
-cargo run -p engine --example monster_player out.monster         # play ours, no lottie
+cargo run -p engine --example lot2monsters in.json out.monster   # lottie -> monster
+cargo run -p engine --example svg2monster  in.svg  out.monster   # svg (still) -> monster
+cargo run -p engine --example monster_player out.monster         # play ours, no foreign code
 ```
+
+`svg` imports a still image (usvg normalizes the document, we tessellate the
+paths into one keyframe); gradients approximate to a solid color and filters,
+masks, clips and text are skipped, so raster-heavy svgs reduce to their vector
+core.
 
 ## mobile
 
