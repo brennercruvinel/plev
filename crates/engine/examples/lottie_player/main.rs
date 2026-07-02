@@ -2,7 +2,7 @@
 //! plev window. Loops at the file's native frame rate.
 //!
 //! Run: `cargo run --example lottie_player -- path/to/animation.json`
-//! (default: ref/lottie/SNAKE). Space pauses, left/right arrows scrub
+//! (default: refs/lottie/SNAKE). Space pauses, left/right arrows scrub
 //! by half a second.
 
 use std::sync::Arc;
@@ -19,7 +19,7 @@ use engine::winit::keyboard::{Key, NamedKey};
 use engine::winit::window::{Window, WindowAttributes, WindowId};
 use lot::{Mat, Player};
 
-const DEFAULT_FILE: &str = "ref/lottie/SNAKE/fd5e87b4-1189-11ee-9745-e700d1385b38.json";
+const DEFAULT_FILE: &str = "refs/lottie/SNAKE/fd5e87b4-1189-11ee-9745-e700d1385b38.json";
 
 // Linear clear values (sRGB graphite #171A1F linearized): the sRGB surface
 // re-encodes on write, so raw sRGB here would render ~2.5x too light.

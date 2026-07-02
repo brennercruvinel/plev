@@ -56,3 +56,17 @@ date: 2026-03-11
 3. **dirty tracking**: 3.3us for 1000 rects. static scenes are essentially free after frame 1.
 4. **tessellation**: 1.5-3.7us per shape. fast enough for hundreds of shapes per frame if needed.
 5. **signal overhead**: 67ns per create+get+set cycle, negligible.
+
+## per-crate benches added since (junho 2026)
+
+os numeros acima sao da v0.2 (scene build, dirty tracking, tessellation, signals, text hashing). as ondas de junho adicionaram criterion benches no hot path de cada crate novo, ainda nao medidos aqui em tabela:
+
+| crate | bench | mede | task |
+|-------|-------|------|------|
+| monster | `benches/codec.rs` | encode/decode/optimize de uma cena snapshot | task-43 |
+| lot | `benches/convert.rs` | conversao lottie json para .monster | task-44 |
+| parser | `benches/transpile.rs` | transpile end-to-end do separator gpui | task-45 |
+| rope | `benches/edit.rs` | build mais insert/delete roundtrip | task-46 |
+| engine | `benches/scene_build.rs` | custo de scene build por frame | task-25 |
+
+os benches densos do monster leem amostras grandes de `ref/lottie` (material de estudo gitignored); quando ausente, pulam com aviso em vez de falhar. rodar com `cargo bench` (tudo) ou `cargo bench -p <crate>`.

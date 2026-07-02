@@ -1,8 +1,6 @@
 # plev
 
 
-AGENTS.md is the single instruction source: the operating contract for ai agents and contributors. claude code only auto-loads CLAUDE.md, so CLAUDE.md is a one-line stub that imports it (`@AGENTS.md`). every tool routes here on init; no per-tool instruction files, no content in the stub.
-
 the engine builds a scene every frame, resolves only the layers that
 changed, and composites into an srgb surface. desktop draws it on metal, the
 web draws it on webgpu, and the pixels are identical because the same code
@@ -169,7 +167,7 @@ cargo bench                      # all benches
 cargo bench -p rope              # one crate
 ```
 
-the `monster` dense-lottie benches read large samples from `ref/lottie`
+the `monster` dense-lottie benches read large samples from `refs/lottie`
 (gitignored study material); when it is absent they skip with a notice
 instead of failing.
 
@@ -188,3 +186,5 @@ Brenner Cruvinel.
 (∂μfμν = jν)
 
 MIT.
+
+AGENTS.md is the single instruction source: the operating contract for ai agents and contributors. claude code only auto-loads CLAUDE.md, so CLAUDE.md is a one-line stub that imports it (`@AGENTS.md`). every tool routes here on init; no per-tool instruction files, no content in the stub.

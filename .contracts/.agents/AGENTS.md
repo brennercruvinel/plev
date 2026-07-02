@@ -82,6 +82,26 @@ behavior.
   `android-entry` cargo feature (off) so an app exports its own without a
   symbol clash. arboard (clipboard) is desktop-only; mobile uses LocalClipboard.
 
+## refs (working area)
+
+refs/ is the gitignored working area for anything experimental built with the
+engine: examples, demos, throwaway tests, clones of other apps, and proofs of
+concept. it is scratch by design, only the curation tracks (study-*.lua,
+sample READMEs); the rest stays out of git. develop inside it under the same
+contracts as the rest of the repo, the gate and the conventions still apply.
+
+clones of other apps follow create, never copy: each carries a study.lua
+stating what to extract and what not to port; the goal is to revolutionize,
+not to mirror.
+
+on closing an experiment, migrate the proven work to its home, an example
+under crates/engine/examples/<name> or a crate under crates/ (per context),
+and leave the scratch behind in refs/. in that same change fold every learning
+back into the rule files: rust-conventions.md and the sibling
+.contracts/.mantras/.code/.lang/.rust/{clippy.toml, typos.toml, nextest.toml}.
+importing and testing against plev is the main source of those conventions;
+keep them living.
+
 ## things to avoid
 
 - avoid band-aids; fix root causes (the project history punishes patches)
@@ -97,6 +117,5 @@ behavior.
 - avoid unsafe without a `// SAFETY:` comment naming the invariant
 - avoid emojis and em-dashes anywhere in project files
 - avoid building parallel implementations of engine capabilities in apps
-- create, never copy: repositories under ref/ are study material with an
-  embedded study.lua stating what to extract and what not to copy; the
-  goal is to revolutionize, not to port
+- create, never copy: clones under refs/ are study material; extract the
+  pattern and rebuild it, never port (see ## refs)

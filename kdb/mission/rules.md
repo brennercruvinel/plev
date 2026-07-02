@@ -1,157 +1,215 @@
+# Regras de arquitetura do plev
+
+- **id:** idx-rules
+- **typ:** index
+- **sts:** reference
+- **dom:** architecture-rule
+- **dat:** 2026-03-13
+
+As 15 regras-principio (antes mantras + rules, fundidos em um no por principio) que governam a arquitetura do plev. Cada no `rul-nn` e uma regra com seu corpo cru. As arestas `lnk` ligam regras relacionadas: rul-07 -> rul-11 (side effects e persistencia via trait), rul-12 -> rul-10 (i18n depende de text layout).
+
+Ordem: 01 fronteira app/engine, 02 estado de dominio fora do plev, 03 fluxo unidirecional, 04 composicao sobre heranca, 05 layout declarativo, 06 navegacao como enum, 07 side effects isolados, 08 theming como struct, 09 acessibilidade via accesskit, 10 text layout via parley, 11 persistencia via trait, 12 internacionalizacao, 13 error handling tipado, 14 props minimas, 15 testabilidade por camada.
+
+| Regra | Dominio | Titulo |
+|-------|---------|--------|
+| [rul-01](#rul-01--fronteira-app-engine) | boundary | fronteira app engine |
+| [rul-02](#rul-02--estado-de-dominio-fora-do-plev) | state | estado de dominio fora do plev |
+| [rul-03](#rul-03--fluxo-unidirecional) | data-flow | fluxo unidirecional |
+| [rul-04](#rul-04--composicao-sobre-heranca) | composition | composicao sobre heranca |
+| [rul-05](#rul-05--layout-declarativo-nunca-manual) | layout | layout declarativo nunca manual |
+| [rul-06](#rul-06--navegacao-como-enum) | navigation | navegacao como enum |
+| [rul-07](#rul-07--side-effects-isolados-com-abstracao-de-runtime) | side-effects | side effects isolados com abstracao de runtime |
+| [rul-08](#rul-08--theming-como-struct-com-dimensoes-comportamentais) | theming | theming como struct com dimensoes comportamentais |
+| [rul-09](#rul-09--acessibilidade-como-constraint-via-accesskit) | accessibility | acessibilidade como constraint via accesskit |
+| [rul-10](#rul-10--text-layout-via-parley-com-suporte-bidi) | text | text layout via parley com suporte bidi |
+| [rul-11](#rul-11--persistencia-via-trait-com-migracao-versionada) | persistence | persistencia via trait com migracao versionada |
+| [rul-12](#rul-12--internacionalizacao-alem-de-text-layout) | i18n | internacionalizacao alem de text layout |
+| [rul-13](#rul-13--error-handling-tipado-e-visivel) | errors | error handling tipado e visivel |
+| [rul-14](#rul-14--props-minimas-com-contexto-explicito) | components | props minimas com contexto explicito |
+| [rul-15](#rul-15--testabilidade-por-camada-sem-gpu) | testing | testabilidade por camada sem gpu |
+
 ---
-project: plev
-audience: [ai-agents, contributors]
-status: reference
-last-updated: 2026-03-13
-domain: project-rules
+
+## rul-01 — fronteira app engine
+
+- **dom:** boundary
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
+
+Codigo de aplicacao nunca importa wgpu, scenenode, gpuvec, compositor, nem qualquer tipo do rendering pipeline. A app fala com plev exclusivamente via `builder.rs` (elements) e `signal.rs` (reatividade).
+
+Acoplamento direto com internals do renderer significa que qualquer refactor no plev, trocar packing do atlas, mudar pipeline de blur, adicionar backend metal ou vulkan, quebra codigo de app com blast radius imprevisivel. A fronteira forca que mudancas na engine sejam invisiveis para consumers. A mesma decisao esta documentada no architecture do xilem como separacao entre view e widget, a camada view e descartavel entre ciclos, a camada widget (masonry) e retained. A app nunca toca masonry diretamente.
+
 ---
 
-# plev, regras técnicas
+## rul-02 — estado de dominio fora do plev
 
-## arquitetura
-- backend sempre antes de UI
-- testes sempre antes de mover task para checked
-- scenenode é a unidade de compositing, nenhum consumer do plev toca no compositor diretamente
-- renderer tem dois targets de compilação, não dois renderers
+- **dom:** state
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
 
-## performance
-- fxhashmap para qualquer cache em hot path, nunca hashmap padrão (siphash é 2-3x mais lento para chaves de inteiros)
-- gpuvec cresce, nunca encolhe, re-alocar buffer gera fragmentação e latência
-- shaping via harfbuzz é caro, cache keyed por (text, font_size_bits, line_height_bits, max_width_bits), invalidar só quando conteúdo ou tamanho muda
-- dirty tracking via fxhasher per layer, no steady state: layer limpa = zero render pass, zero geometry, zero shaping
-- premultiplied alpha em todo o pipeline, shaders outputam `rgb*a, a`, blend state `One/OneMinusSrcAlpha`
+Signals do plev armazenam exclusivamente estado de ui: scroll position, painel aberto, hover state, selecao ativa, modo de edicao. Dados de dominio, usuario autenticado, lista de entidades, sessao, configuracao persistida, vivem em structs rust puros, owned pela app, sem dependencia de plev.
 
-## armadilhas conhecidas
-- atlas de glifos pode fragmentar em textos multilíngues longos, LRU mitiga, mas tuning necessário para fallbacks bidirecionais
-- immediate mode por frame sem dirty tracking gera re-submissões desnecessárias à GPU, sempre verificar hash antes de re-upload
-- wgpu no WASM é mais lento em compute shaders que nativo, evitar compute shaders em path crítico por enquanto
-- glyphon tem issues em shaping complexo (árabe, devanagari), testar com textos multilíngues antes de declarar suporte
-- WASM GPU init é async e não pode setar self diretamente, usar eventloopproxy pattern (ver knowledge/wasm-webgpu-validation.md)
-- trunk requer `data-target-name` no index.html quando há bin + lib com mesmo package name
-- binário é `plev-app`, não `plev`, evita colisão de artifact WASM com a lib
-- `Limits::downlevel_webgl2_defaults()` não é para webgpu, usar `Limits::default()` para webgpu
-- `main.rs` precisa de `#[cfg(not(target_arch = "wasm32"))]` guard (env_logger não existe no WASM)
-- android emulador swiftshader trava em `create_render_pipeline()`, deve usar `hw.gpu.mode=host` no config.ini
-- xcrun no macos pode falhar com arm64/arm64e mismatch, usar `DEVELOPER_DIR=/Library/Developer/CommandLineTools SDKROOT=...MacOSX.sdk`
-- escalar font_size durante animacao causa re-shaping a cada frame, manter font_size fixo, animar posicao/opacity
-- `gen` e keyword reservada em rust edition 2024, nao usar como identificador
+Estado de dominio dentro de signals cria dependencia circular: testar logica de negocio exige instanciar o sistema reativo do plev, que exige event loop, que exige window. Zero testes unitarios na pratica porque o setup e proibitivo.
 
-## animacao
-- pixel-snap (`v.round()`) em todas as coordenadas durante animacao, evita shimmer sub-pixel
-- font size fixo durante animacao, escalar font_size muda textnodekey hash, causa re-shaping jitter a cada frame
-- usar web_time::instant (nao std::time::instant), panic em wasm32
-- snap threshold: 0.5px para posicoes, 0.005 para valores normalizados (opacity)
-- spring<t> usa solver analitico (task-35), coeficientes pre-computados, 3 regimes (sub/critico/super amortecido), frame-rate independent. incondicionalmente estavel para qualquer dt e stiffness alto.
-- keyframesequence disponivel para animacoes multi-step (fade-in -> hold -> slide-out), task-37
-- tween suporta repeat/reverse/delay via with_repeat()/with_reverse()/with_delay(), task-37
-- animationstate<s, t> disponivel para blend-on-transition entre estados, task-37
+Para estado hibrido, dados de dominio que a ui precisa transformar localmente, como lista filtrada ou ordenada, o protocolo padrao e derivacao pura: o dominio expoe o dado bruto via referencia imutavel, a ui computa a view como funcao pura no momento do render, sem armazenar o resultado derivado como estado.
 
-## editable text
-- textinput desacoplado do imestate, nao acoplar diretamente, usar `handle_ime()` como ponte
-- cursor blink: 530ms toggle, resetar ao digitar
-- cursor_to_x/x_to_cursor: aproximacao `font_size * 0.6` por char (monospace assumption ate cosmic-text cursor API)
+Excecao obrigatoria para memoizacao: quando a transformacao opera sobre colecoes grandes ou tem custo computacional mensuravel, usar no memoize equivalente ao do xilem, que prune a view tree quando as dependencias nao mudaram entre ciclos. Memoizacao e cache controlado com invalidacao explicita por dependencia, nao e estado de dominio, nao viola a separacao. Derivacao e funcao nao cache e o padrao; memoizacao com dependencias declaradas e a excecao justificada por profile, nao por preferencia.
 
-## convenções de código
-- módulos: gpu.rs, gpu_vec.rs, text.rs, compositor.rs, window.rs, view.rs, animation.rs, text_input.rs, dispatch.rs, overlay.rs, lib.rs, main.rs
-- shaders em shaders/ como arquivos .wgsl separados (quad.wgsl, text.wgsl, rect_sdf.wgsl, composite.wgsl, blur.wgsl, shadow.wgsl)
-- examples em examples/, 20 examples incluindo animation_demo, text_input_demo, todo_app, message_dock
-- binário nativo: `cargo run --bin plev-app` (renomeado para evitar colisão com lib WASM)
-- WASM: `trunk serve` (usa lib.rs com wasm_main via wasm_bindgen(start))
+---
 
-## trabalho paralelo (múltiplos agentes/devs)
-- múltiplos agentes claude code e desenvolvedores humanos trabalham simultaneamente neste projeto
-- cada task = uma branch: `task/TASK-XX-nome-curto` criada a partir de `master`
-- nunca commitar direto na `master`, todo trabalho na branch da task
-- antes de criar branch, verificar `git branch -a` para não duplicar
-- **usar git worktree** quando outro agente está modificando o mesmo working directory
-- ao concluir task: PR para `master` ou avisar usuário para merge
-- se precisar alterar arquivo que outra task também altera: registrar no changelog e avisar usuário
-- conflitos de merge são responsabilidade de quem faz merge para `master`, resolver antes de mergear
+## rul-03 — fluxo unidirecional
 
-## adaptação do plano
-- o plano evolui com o desenvolvimento, tasks, checklist, dependências e arquitetura podem mudar conforme descobertas surgem durante implementação e testes
-- ao descobrir que algo planejado está errado ou incompleto: corrigir a task imediatamente, não esperar
-- ao descobrir nova dependência entre tasks: atualizar ambas as tasks e registrar em knowledge/
-- ao mudar decisão arquitetural: registrar em knowledge/ com justificativa, atualizar este arquivo, e revisar tasks pendentes afetadas
-- tasks descartadas vão para checked/ com nota de descarte, nunca deletar, o histórico importa
+- **dom:** data-flow
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
 
-## integridade de informação
-- nunca escrever código ou documentação baseado em suposição sobre apis, comportamentos de plataforma ou convenções
-- se não souber: pesquisar na documentação oficial (docs.rs, github, web), ler código-fonte da dependência, verificar issues/changelogs
-- se após pesquisar ainda houver dúvida: registrar em knowledge/ e perguntar ao usuário
-- apis de wgpu, cosmic-text, winit mudam entre versões, sempre confirmar contra a versão exata no cargo.toml antes de usar
-- nunca chutar nome de método, flag ou comportamento, o custo de pesquisar é minutos, o custo de código errado é horas
+Toda mutacao de estado segue: userinput -> action (enum tipado) -> handler centralizado -> estado mutado -> re-render. Callbacks de componentes emitem actions via `actionqueue.emit()`, nunca mutam estado diretamente.
 
-## acessibilidade
-- todo elemento interativo deve ter semantic role para accessibility (accesskit, task-30)
-- screen readers sao requisito de producao, nao feature opcional
-- accesskit usa lazy activation (zero cost sem screen reader), pattern ak1
-- per-frame treeupdate acumulado via fxhashmap durante build_scene, pattern ak2
-- viewid(u32) -> nodeid(u64) via cast direto, root em nodeid(0), pattern ak4
-- focus routing: action::focus -> inputstate.focused_view + inputevent::focus sintetico, pattern ak5
-- WASM: null adapter compile-time, zero overhead, pattern ak6
-- auto-navigation de layout: computedbounds -> focusgraph com vizinhos direcionais, pattern d8
+Mutacao espalhada em callbacks cria estado inconsistente, componente a muta x, callback de b le x no estado antigo, render mostra dado stale. Com fluxo unidirecional, toda mutacao e rastreavel via log do action stream, reproduzivel via replay de actions, e o estado e sempre consistente no momento do render porque mutacoes sao batch-processadas entre frames. O modelo e equivalente ao the elm architecture, que demonstrou escalar para aplicacoes de producao desde 2012. A diferenca em plev e que o enum de actions e tipado em rust com exaustividade garantida em compile time.
 
-## vector paths
-- shapes vetoriais passam por tessellation (lyon), nao gerar triangulos manualmente
-- fill only primeiro; stroke/caps/joins em iteracao futura
-- **lyon reusar quad pipeline existente** via fillvertexconstructor<quadvertex>, nao criar shader path.wgsl separado (pattern a5/a6)
-- tessellate uma vez, armazenar index ranges, draw por muitos frames, integra com dirty tracking existente
+---
 
-## tempo cross-platform
-- usar web-time (nao std::time::instant) para tempo cross-platform, wraps performance.now() no WASM
-- std::time::instant causa panic em wasm32 (ver armadilhas conhecidas)
+## rul-04 — composicao sobre heranca
 
-## avaliacao de dependencias
-- antes de adicionar qualquer dependencia: consultar mission/knowledge/refs/integration-candidates.md
-- categorias: adopt (usar agora) / evaluate (testar) / watch (acompanhar) / hold (nao usar)
+- **dom:** composition
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
 
-## signal system (corrigido task-36)
-- subscribers usam fxindexset, o(1) insert/remove/contains (era vec o(n), pattern f1)
-- observer stack usa RAII `ObserverGuard`, panic-safe, impossivel esquecer pop (pattern f4)
-- `ReadSignal::peek()` disponivel, leitura untracked para logging/debug (pattern f2)
-- constant-signal sentinel (pattern f3 de slint), skipped, overhead minimo nao justificava complexidade
+Componentes sao funcoes `fn(props) -> element`. Sem trait objects de widget como interface publica na camada de app, sem hierarquia de tipos, sem dyn widget em composicao estatica de ui. Componente complexo e composicao de componentes simples via `child()`.
 
-## event processing (implementado task-38)
-- bufferedevent enum + batch-drain: acumular em window_event(), processar todos em about_to_wait(), um unico render por frame
-- 5-10x reducao de trabalho GPU durante input rapido (touch 120hz+)
+Para listas com tipos heterogeneos de item, o padrao correto e enum com variantes: `listitem::text(textitem)`, `listitem::image(imageitem)`, `listitem::action(actionitem)` com match exaustivo no render. Exaustividade em compile time, zero dispatch dinamico.
 
-## scene caching
-- scene cache per-component ja implementado em `component.rs`: `cached_nodes: Option<Vec<SceneNode>>`, `needs_render: bool`, `invalidate()`, `state_mut()` seta needs_render automaticamente
-- a cache e do `Component<L>`, nao do compositor, o dirty tracking do compositor opera no nivel de layer (fxhasher)
-- para reutilizar nodes cacheados: nao chamar `state_mut()` (usa `state()` readonly) e nao chamar `invalidate()`
-- proximo passo (sem task criada): b7 memoizacao via partialeq para pular render() quando props nao mudam, b8 dirty flag bubbling per-component com merge_up
+Para sistemas de plugin onde o tipo e genuinamente desconhecido em compile time, `box<dyn component>` e permitido exclusivamente no pluginregistry, modulo isolado em `src/plugins/registry.rs`, com interface publica que expoe apenas `fn registered_components() -> vec<componentdescriptor>`. Componentdescriptor e struct serializable com metadata estatico. O `box<dyn component>` nunca escapa do registry para o codigo de composicao de ui. Sem essa fronteira arquitetural explicita, camada de plugins expande ate contaminar a composicao estatica.
 
-## patterns de referencia
-- documento master: `mission/knowledge/extracted-patterns.md`, 38 patterns de 17 repos
-- consultar antes de implementar task-30 (a11y), task-31 (lyon), melhorias em animation.rs ou signal.rs
+---
 
-## action dispatch (task-42)
-- `ActionQueue` vive no core plev (`src/dispatch.rs`), infra generica, nao especifica de app
-- `WidgetAction` trait = `Any + Send + 'static`, send para futuro multi-thread
-- `emit<A>(source, action)` + `drain_typed<A>()`, typed no site de uso, erased internamente
-- filhos emitem, parents drenam, fluxo unidirecional, sem event bus global
-- `drain_typed` retorna itens do tipo pedido, devolve o resto ao vec interno (o(n) por drain)
+## rul-05 — layout declarativo nunca manual
 
-## overlay system (task-42)
-- `OverlayManager` vive no core plev (`src/overlay.rs`), pure data, sem GPU refs
-- z-order base 1000 (constante `BASE_Z`), overlays sempre acima do conteudo principal
-- `push()` aceita w/h = 0.0 para bounds desconhecidos; `set_bounds()` apos primeiro render
-- `hit_test_outside()` ignora overlays com zero bounds (nao conta como hit)
-- `pop_id()` reassigna z-orders para manter contiguidade
-- renderizacao: consumer itera `stack` e cria scenenodes em layers com z_order do overlay
-- dismiss: click-outside via `hit_test_outside()`, escape via `pop()`
+- **dom:** layout
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
 
-## hot reload (gap-1 tier 1)
-- feature flag `hot-reload`: `cargo run --bin plev-app --features hot-reload`
-- shaders: file watcher em `shaders/*.wgsl` via notify + debounce 500ms
-- WGSL invalido = log::error, pipeline antigo preservado (graceful degradation via push_error_scope/guard.pop())
-- WASM: nao suportado (compile_error guard em hot_reload.rs)
-- sem feature flag: shaders embutidos via include_str!(), zero overhead
-- `composite.wgsl` e usado por gpucontext e effectprocessor, reload atualiza ambos
-- pipeline creation extraido em metodos reutilizaveis (create_*_pipeline) para reload e init
+Posicionamento usa exclusivamente as primitivas de layout do plev via taffy: col, row, gap, p, w, h, grow, shrink, basis. Zero coordenadas absolutas calculadas manualmente. Zero offsets hardcoded.
 
-## regras que o claude deve seguir
-- antes de qualquer implementação: ler esta lista inteira
-- ao descobrir nova armadilha: adicionar aqui imediatamente
-- ao mudar decisão arquitetural: registrar em knowledge/ com justificativa
+Plev executa em 6 plataformas com densidades de pixel radicalmente diferentes, retina 2x, android mdpi ate xxxhdpi, browser zoom, hidpi linux. Coordenadas manuais quebram em variacoes de tela, dpi, orientacao e resize. Taffy resolve constraints via flexbox e grid automaticamente com o mesmo algoritmo do browser mas sem dom. Posicao manual cria bugs que so aparecem em devices especificos, os mais caros de diagnosticar porque nao sao reproduziveis em desenvolvimento.
+
+---
+
+## rul-06 — navegacao como enum
+
+- **dom:** navigation
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
+
+Telas e rotas da app sao variantes de um enum rust. Transicao e mutar o valor do enum no estado. O render faz match exaustivo no enum para decidir o que renderizar. Zero string matching, zero router framework.
+
+Rust garante exaustividade no match, adicionar uma tela nova e esquecer de trata-la e erro de compilacao, nao bug em producao. Strings sao frageis: typo em `/setings` compila e mostra tela branca. Enums com dados associados, `screen::userprofile { id: userid }`, `screen::documenteditor { doc_id: docid, mode: editmode }`, carregam parametros type-safe sem runtime de routing, sem regex de path matching, verificaveis em compile time.
+
+---
+
+## rul-07 — side effects isolados com abstracao de runtime
+
+- **dom:** side-effects
+- **dat:** 2026-03-13
+- **lnk:** idx-rules, rul-11
+
+Nenhum io, network, filesystem, ipc, timers longos, acontece dentro de `render()`, dentro de callbacks de componente, ou de forma sincrona dentro de handlers de action. Io dispara via spawn assincrono e retorna como nova action no fluxo normal.
+
+O spawn de tasks usa tokio no nativo e wasm-bindgen-futures no browser. Essa divergencia nao pode vazar para o codigo de dominio como `cfg(target_arch)` inline, isso criaria exatamente o acoplamento de plataforma que rul-11 proibe. O padrao correto e definir `trait taskspawner { fn spawn(&self, fut: impl future<output = action> + static); }` com implementacoes concretas por plataforma injetadas na inicializacao, junto com o trait storage. O codigo de dominio chama `spawner.spawn(...)` sem saber o runtime subjacente. Platform-awareness fica confinada ao ponto de inicializacao do app.
+
+---
+
+## rul-08 — theming como struct com dimensoes comportamentais
+
+- **dom:** theming
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
+
+Definir struct theme com todas as dimensoes de design como tokens de primeira classe. Cores, escala tipografica, escala de espacamento e border radius sao a camada visual. Motion physics, mass, tension, friction como parametros globais do sistema cinetico, e intent tokens, intent: destructive, constructive, neutral, informational como dado estrutural que propaga para cor, motion e aria simultaneamente, sao camadas comportamentais obrigatorias. Componentes recebem `&theme` e leem tokens dele. Zero valores visuais ou comportamentais hardcoded.
+
+Com struct, dark mode e `theme::dark()`, rebranding e um novo theme, e a sensacao fisica do produto, leveza ou solidez, e controlavel via `theme.motion.mass` e `theme.motion.tension` propagando coerentemente para todos os comportamentos cineticos. E a unica arquitetura onde coerencia fisica global e uma propriedade de design em vez de animacoes por-componente sem relacao sistemica. Nao existe equivalente publico em nenhum framework rust atualmente.
+
+---
+
+## rul-09 — acessibilidade como constraint via accesskit
+
+- **dom:** accessibility
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
+
+Toda arvore de elementos do plev mantem uma arvore de acessibilidade paralela via accesskit. Nao e feature opcional, e parte do contrato de cada componente desde a primeira implementacao.
+
+Plev nao tem dom. O browser nao constroi a arvore de acessibilidade automaticamente porque nao ha html. Em rendering custom via skia ou wgpu, a arvore precisa ser construida explicitamente ou o produto e inacessivel para screen readers em todas as plataformas. Accesskit fornece adapters portaveis, at-spi no linux, nsaccessibility no macos, ui automation no windows, sem implementacao manual por plataforma. Sem essa regra como constraint arquitetural, acessibilidade sera postergada ate producao, onde o custo de retrofit e uma ordem de magnitude maior.
+
+---
+
+## rul-10 — text layout via parley com suporte bidi
+
+- **dom:** text
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
+
+Todo rendering de texto passa por parley (linebender). Zero implementacao manual de text layout. Bidi, scripts complexos (devanagari, tailandes, arabe, hebraico) e features opentype sao suportados por construcao via harfrust.
+
+Text layout correto e um dos problemas computacionalmente mais complexos em ui, line breaking, word wrapping, ligatures, kerning, bidi reordering, combining characters. Implementacao manual produz resultado que parece correto em ingles e quebra silenciosamente em qualquer outro script. Parley resolve isso com o mesmo rigor do browser, em rust, sem dependencia de sistema operacional.
+
+---
+
+## rul-11 — persistencia via trait com migracao versionada
+
+- **dom:** persistence
+- **dat:** 2026-03-13
+- **lnk:** idx-rules, rul-07
+
+Definir `trait storage { fn load(...) -> result<t>; fn save(...) -> result<()>; }`. Implementacoes concretas, rusqlite, sled, indexeddb, filesystem, ficam em modulos separados injetados na inicializacao. Dominio e ui dependem do trait, nunca da implementacao.
+
+Alem do trait de acesso, definir `trait migration { fn version() -> u32; fn up(db: &mut dyn storage) -> result<()>; }` com vetor de migrations aplicadas em ordem na inicializacao. Schema de dados persistidos versiona junto com o codigo, toda mudanca de estrutura e uma nova migration registrada. App em producao com dados reais nao pode assumir que o schema no device do usuario corresponde ao schema atual do codigo. Sem migrations, atualizacoes de app ou corrompem dados silenciosamente ou exigem reset forcado, ambos sao falhas de produto.
+
+---
+
+## rul-12 — internacionalizacao alem de text layout
+
+- **dom:** i18n
+- **dat:** 2026-03-13
+- **lnk:** idx-rules, rul-10
+
+Strings visiveis ao usuario vivem exclusivamente em arquivos de localizacao, formato fluent (project fluent da mozilla) por ser o unico sistema que resolve pluralizacao, genero gramatical e variacoes contextuais como dado, nao como logica condicional no codigo. Zero string literal em portugues, ingles ou qualquer idioma dentro de componentes. Zero formatacao manual de data, numero, moeda ou unidade, usar icu4x como unica fonte de formatacao locale-aware.
+
+Rtl layout e consequencia de locale, nao de configuracao manual. Taffy suporta direction rtl como propriedade de layout, ativar globalmente quando o locale detectado e rtl. Suporte a scripts (rul-10) e suporte a localizacao sao problemas ortogonais: parley garante que arabe renderiza corretamente; esta regra garante que o texto correto em arabe esta disponivel e formatado corretamente para o contexto.
+
+---
+
+## rul-13 — error handling tipado e visivel
+
+- **dom:** errors
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
+
+Definir enum apperror com variantes semanticas: networktimeout, storagecorrupted, `invalidinput { field: static str, reason: string }`, authexpired, `ratelimited { retry_after: duration }`. Todo result na app usa apperror. Erros se tornam estado visivel, inline message, toast, retry button, via action no fluxo normal. Zero `unwrap()` em codigo de producao. Zero erro silencioso.
+
+`unwrap()` e panic em producao. Erros silenciosos criam dados corrompidos que aparecem horas depois. Erros como strings genericas impedem handling granular: retry faz sentido para networktimeout, fallback para storagecorrupted, validacao inline para invalidinput. Enum tipado com match exaustivo garante que todo erro tem tratamento explicito decidido em compile time.
+
+---
+
+## rul-14 — props minimas com contexto explicito
+
+- **dom:** components
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
+
+Componente com mais de 5 props deve ser quebrado em componentes menores ou receber struct de configuracao. Dado que o componente nao usa diretamente, so repassa para filhos, vai via contexto ou e passado diretamente ao filho que precisa.
+
+Contexto em plev segue o modelo do xilem env, dado disponivel para toda a subarvore sem passar explicitamente em cada nivel, com tipagem estatica garantindo que o dado existe no contexto antes de ser consumido. Prop drilling profundo cria acoplamento vertical: mudar um campo no nivel 5 exige editar os niveis 1 a 4 que so repassam o valor.
+
+---
+
+## rul-15 — testabilidade por camada sem gpu
+
+- **dom:** testing
+- **dat:** 2026-03-13
+- **lnk:** idx-rules
+
+Tres niveis obrigatorios. Dominio: unit tests puros com test, sem plev, sem window, em milissegundos. Componentes: snapshot do element tree retornado, element e struct rust inspecionavel sem necessidade de render. Integracao: headless render para screenshot diff apenas em critical paths com baseline versionado no repositorio.
+
+Para snapshot de componentes, element expoe apenas campos deterministicamente comparaveis: tipo, props estruturais, filhos, intent tokens. Closures de callback sao opacas em teste, representadas por identificador de tipo, nao por conteudo. Igualdade estrutural do element tree nao inclui callbacks. Testes de componente verificam estrutura e semantica, nao identidade de funcao. Testes que precisam de gpu sao lentos, flaky por diferencas de driver e impossiveis em ci sem hardware dedicado. A separacao em camadas nao e preferencia, e a condicao para que testes sejam executados com frequencia suficiente para ter valor.

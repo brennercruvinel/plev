@@ -1,6 +1,6 @@
 //! bench helpers: a piecewise keyframed scalar mirroring one lottie
 //! property (boundaries, values, easings), plus the starfish limb data
-//! lifted verbatim from ref/anim/lottie-samples/starfish.json.
+//! lifted verbatim from refs/anim/lottie-samples/starfish.json.
 
 use monster::{Easing, Node, NodeKind, Prop, Props, Segment, Track, Value};
 

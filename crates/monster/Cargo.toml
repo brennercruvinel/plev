@@ -26,7 +26,7 @@ thiserror.workspace = true
 # gate: decode(encode(t)) structurally identical, property-tested).
 proptest.workspace = true
 # the dense lottie benches (tests/bench_lottie/dense.rs) read the
-# explosion and girl jsons from ref/lottie at test time.
+# explosion and girl jsons from refs/lottie at test time.
 serde_json.workspace = true
 criterion.workspace = true
 
