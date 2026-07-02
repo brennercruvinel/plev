@@ -61,6 +61,7 @@ narrate.workspace = true
 criterion.workspace = true
 lot.workspace = true
 monster.workspace = true
+svg.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster.workspace = true
