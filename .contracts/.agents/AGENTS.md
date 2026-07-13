@@ -63,6 +63,8 @@ behavior.
 - cargo check --target wasm32-unknown-unknown -p showcase (cheapest
   cross-platform guard)
 
+script/gate runs the four in order and stops on the first red.
+
 ## running
 
 - apps: `cargo run -p showcase [section] [theme]` (gallery; `trunk serve`

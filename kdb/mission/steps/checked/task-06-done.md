@@ -26,7 +26,7 @@ garantir que o plev compila para `wasm32-unknown-unknown` e roda no browser com 
 
 ## itens que requerem teste manual no browser
 > estes itens dependem de abrir o browser com webgpu e verificar visualmente.
-> comando: `cd /Users/aac/Dev/plev-task06 && trunk serve`
+> comando: `cd ../plev-task06 && trunk serve`
 
 - rendering visual no chrome/firefox/safari
 - text rendering via atlas

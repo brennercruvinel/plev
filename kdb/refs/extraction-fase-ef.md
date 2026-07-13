@@ -14,7 +14,7 @@ data: 2026-03-11
 
 ## pattern 1: dynamic WASM module compilation via shared table+memory
 
-**source:** waforth, `/Users/aac/Dev/bc/bunker/repos/deployment/wasm-browser/waforth/src/waforth.wat` (lines 254-2576) + `src/web/waforth.ts` (lines 207-232)
+**source:** waforth, `bunker/repos/deployment/wasm-browser/waforth/src/waforth.wat` (lines 254-2576) + `src/web/waforth.ts` (lines 207-232)
 
 **description:** waforth compiles forth words to WASM *at runtime* from within WASM itself. the core waforth module is hand-written wat that:
 
@@ -34,7 +34,7 @@ data: 2026-03-11
 
 ## pattern 2: extism plugin lifecycle with fuel-based sandboxing
 
-**source:** extism, `/Users/aac/Dev/bc/bunker/repos/deployment/wasm-browser/extism/runtime/src/plugin.rs` (lines 130-185, 869-1009) + `plugin_builder.rs` + `pdk.rs`
+**source:** extism, `bunker/repos/deployment/wasm-browser/extism/runtime/src/plugin.rs` (lines 130-185, 869-1009) + `plugin_builder.rs` + `pdk.rs`
 
 **description:** extism implements a complete plugin lifecycle:
 
@@ -72,11 +72,11 @@ data: 2026-03-11
 ## pattern 3: leptos three-state push-pull reactive graph (clean/check/dirty)
 
 **source:** leptos reactive_graph, files:
-- `/Users/aac/Dev/bc/bunker/repos/rust-ecosystem/leptos/reactive_graph/src/graph/node.rs`
-- `/Users/aac/Dev/bc/bunker/repos/rust-ecosystem/leptos/reactive_graph/src/graph/subscriber.rs`
-- `/Users/aac/Dev/bc/bunker/repos/rust-ecosystem/leptos/reactive_graph/src/graph/sets.rs`
-- `/Users/aac/Dev/bc/bunker/repos/rust-ecosystem/leptos/reactive_graph/src/computed/inner.rs`
-- `/Users/aac/Dev/bc/bunker/repos/rust-ecosystem/leptos/reactive_graph/src/signal/arc_rw.rs`
+- `bunker/repos/rust-ecosystem/leptos/reactive_graph/src/graph/node.rs`
+- `bunker/repos/rust-ecosystem/leptos/reactive_graph/src/graph/subscriber.rs`
+- `bunker/repos/rust-ecosystem/leptos/reactive_graph/src/graph/sets.rs`
+- `bunker/repos/rust-ecosystem/leptos/reactive_graph/src/computed/inner.rs`
+- `bunker/repos/rust-ecosystem/leptos/reactive_graph/src/signal/arc_rw.rs`
 
 **description:** leptos implements the "reactively" algorithm with three states:
 
@@ -126,7 +126,7 @@ the propagation works as follows:
 
 ## pattern 4: dioxus generational-box copy signals with drop-guard notification
 
-**source:** dioxus signals, `/Users/aac/Dev/bc/bunker/repos/rust-ecosystem/dioxus/packages/signals/src/signal.rs` (lines 1-551)
+**source:** dioxus signals, `bunker/repos/rust-ecosystem/dioxus/packages/signals/src/signal.rs` (lines 1-551)
 
 **description:** dioxus signals use `generational-box` for arena storage, giving them the ability to be `Copy` (not just `Clone`). the key innovations:
 
@@ -157,7 +157,7 @@ the propagation works as follows:
 
 ## pattern 5: slint property<t> with lazy binding evaluation and intrusive dependency lists
 
-**source:** slint, `/Users/aac/Dev/bc/bunker/repos/rust-ecosystem/slint/internal/core/properties.rs` (lines 830-1027, 100-400)
+**source:** slint, `bunker/repos/rust-ecosystem/slint/internal/core/properties.rs` (lines 830-1027, 100-400)
 
 **description:** slint's `Property<T>` is a fundamentally different reactive model from leptos/dioxus/plev signals:
 
@@ -188,7 +188,7 @@ the propagation works as follows:
 
 ## pattern 6: leptos observer stack with RAII drop guard
 
-**source:** leptos reactive_graph, `/Users/aac/Dev/bc/bunker/repos/rust-ecosystem/leptos/reactive_graph/src/graph/subscriber.rs` (lines 7-99)
+**source:** leptos reactive_graph, `bunker/repos/rust-ecosystem/leptos/reactive_graph/src/graph/subscriber.rs` (lines 7-99)
 
 **description:** leptos manages the current observer (the effect/memo currently executing and tracking dependencies) with an elegant RAII pattern:
 
@@ -233,7 +233,7 @@ additionally, `ObserverState` has an `untracked: bool` field. this enables `untr
 
 ## pattern 7: dioxus native renderer via vello (anyrender abstraction)
 
-**source:** dioxus native, `/Users/aac/Dev/bc/bunker/repos/rust-ecosystem/dioxus/packages/native/src/dioxus_renderer.rs`
+**source:** dioxus native, `bunker/repos/rust-ecosystem/dioxus/packages/native/src/dioxus_renderer.rs`
 
 **description:** dioxus's native renderer wraps `anyrender_vello::VelloWindowRenderer` behind a `WindowRenderer` trait. key points:
 

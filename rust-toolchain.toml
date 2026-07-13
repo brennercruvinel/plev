@@ -1,0 +1,7 @@
+# pins the toolchain for everyone (rustup reads this). edition 2024 needs
+# 1.85+, so stable is the floor. wasm32 ships with the toolchain because the
+# gate's cross-platform guard checks it on every change.
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]

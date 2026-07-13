@@ -16,7 +16,12 @@ status: living
   arc sync guard, the instruction source (.contracts/.agents/AGENTS.md,
   the only instruction file; the root carries none), the pr template and
   typos.toml follow the new paths; the svg crate and the svg2monster cli
-  entered the arc trio. ADR: one-knowledge-tree-and-a-minimal-root.
+  entered the arc trio. the root gained LICENSE (mit),
+  rust-toolchain.toml (stable + wasm32 pinned) and .gitattributes, and
+  lost .env.example and the Makefile (script/gate runs the four-part
+  gate; the other targets were one cargo call each). study-clone
+  references in kdb now name the repository and the inner path, never a
+  machine path. ADR: one-knowledge-tree-and-a-minimal-root.
 - prime number creatures (crates/prime_creatures): the Entropic Life XVI canvas
   demo ported to a native plev crate, desktop and wasm. pure, tested sim core
   (seeded rng, prime coherence matrix 250x250 in four modes, grid-local steering

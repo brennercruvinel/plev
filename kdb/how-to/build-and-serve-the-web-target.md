@@ -14,12 +14,13 @@ rustup target add wasm32-unknown-unknown   # once
 trunk build --release                      # repo root; writes dist/
 ```
 
-trunk reads the root index.html (canvas styled 100vw/100vh, background
-#303030 to avoid a white flash) and Trunk.toml, builds the showcase bin
-for wasm32, runs wasm-bindgen with the CLI version matching Cargo.lock,
-and emits hashed artifacts into dist/.
+trunk reads web/index.html (canvas styled 100vw/100vh, background
+#303030 to avoid a white flash) and the root Trunk.toml, builds the
+showcase bin for wasm32, runs wasm-bindgen with the CLI version matching
+Cargo.lock, and emits hashed artifacts into dist/.
 
-`make wasm` runs `trunk serve` (port 8080, watch mode) for development.
+`trunk serve` from the root (port 8080, watch mode) is the development
+loop.
 
 ## serve
 
