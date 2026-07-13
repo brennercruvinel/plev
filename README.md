@@ -49,9 +49,9 @@ engine's examples.
 | crates | crates/ | git, ide, lot, macros, monster, svg, narrate, narrate-macro, parser, prime, rope, showcase |
 | examples | crates/engine/examples/ | 16 windowed demos plus the lot2monsters and svg2monster clis |
 
-machine map: [doc/arc/arc.yaml](doc/arc/arc.yaml). human reference:
-[doc/arc/arc.md](doc/arc/arc.md). frame-flow diagram:
-[doc/arc/arc.mmd](doc/arc/arc.mmd).
+machine map: [kdb/arc/arc.yaml](kdb/arc/arc.yaml). human reference:
+[kdb/arc/arc.md](kdb/arc/arc.md). frame-flow diagram:
+[kdb/arc/arc.mmd](kdb/arc/arc.mmd).
 
 ## binding contracts
 
@@ -179,12 +179,12 @@ instead of failing.
 
 ## reference
 
-- [doc/arc/arc.md](doc/arc/arc.md) for architecture, contracts, frame flow.
-- [doc/arc/arc.yaml](doc/arc/arc.yaml) for the machine-readable map agents read.
+- [kdb/arc/arc.md](kdb/arc/arc.md) for architecture, contracts, frame flow.
+- [kdb/arc/arc.yaml](kdb/arc/arc.yaml) for the machine-readable map agents read.
 - [kdb/adr/monster-format-v0.md](kdb/adr/monster-format-v0.md) for the animation format spec.
 - [kdb/adr/](kdb/adr/) for the architecture decision records.
 - [kdb/how-to/code-against-the-plev-engine.md](kdb/how-to/code-against-the-plev-engine.md) for the operating manual.
-- [AGENTS.md](AGENTS.md) for the single instruction source for ai agents and contributors. route every tool here, no per-tool files.
+- [.contracts/.agents/AGENTS.md](.contracts/.agents/AGENTS.md) for the single instruction source for ai agents and contributors. route every tool here, no per-tool files.
 
 ## license
 
@@ -193,4 +193,4 @@ Brenner Cruvinel.
 
 MIT.
 
-AGENTS.md is the single instruction source: the operating contract for ai agents and contributors. claude code only auto-loads CLAUDE.md, so CLAUDE.md is a one-line stub that imports it (`@AGENTS.md`). every tool routes here on init; no per-tool instruction files, no content in the stub.
+`.contracts/.agents/AGENTS.md` is the single instruction source: the operating contract for ai agents and contributors. the root carries no instruction file; every tool routes to that path on init, no per-tool files.

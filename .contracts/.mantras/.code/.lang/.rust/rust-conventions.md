@@ -36,7 +36,7 @@ second.
 
 the dividing line, so agents do not oscillate: under `src/` (any crate)
 module directories and files are snake_case, rust mandates it and the
-compiler gives no real choice. `kdb/`, `doc/`, assets and every other
+compiler gives no real choice. `kdb/`, assets and every other
 non-source path are kebab-case english. a crate package name in Cargo.toml
 may be kebab (`narrate-macro`), but the lib name normalizes to snake, so the
 import is `use narrate_macro`. prefer short, global names (3 to 9 chars where
@@ -94,11 +94,11 @@ that turns out wrong gets a correction on top, never a delete.
 
 the source of truth for what exists is Cargo.toml members and the
 `crates/engine/examples/` dir, never a doc. `crates/engine/tests/arc_sync_guard.rs`
-enforces it: every workspace crate must be named in arc.yaml, arc.md and
-README, every example in arc.yaml, or the build fails naming the missing
-one. so drift is a red test, not a silent lie. arc.yaml is the canonical
-machine map, arc.md the human projection, arc.mmd the frame-flow view; on a
-wording divergence arc.yaml wins. keep them small.
+enforces it: every workspace crate must be named in kdb/arc/arc.yaml,
+kdb/arc/arc.md and README, every example in arc.yaml, or the build fails
+naming the missing one. so drift is a red test, not a silent lie. arc.yaml
+is the canonical machine map, arc.md the human projection, arc.mmd the
+frame-flow view; on a wording divergence arc.yaml wins. keep them small.
 
 ## doc sync
 
