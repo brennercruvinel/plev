@@ -19,7 +19,7 @@ fn div_with_bg_and_size_produces_rect() {
     let nodes = el.render(&mut test_cx());
     assert_eq!(nodes.len(), 1);
     let SceneNode::Rect { w, h, color, .. } = &nodes[0] else {
-        panic!("Expected Rect, got {:?}", &nodes[0]);
+        panic!("Expected Rect, got {:?}", nodes[0]);
     };
     assert_eq!(*w, 100.0);
     assert_eq!(*h, 50.0);
@@ -32,7 +32,7 @@ fn text_produces_text_node() {
     let nodes = el.render(&mut test_cx());
     assert_eq!(nodes.len(), 1);
     let SceneNode::Text { key, color, .. } = &nodes[0] else {
-        panic!("Expected Text, got {:?}", &nodes[0]);
+        panic!("Expected Text, got {:?}", nodes[0]);
     };
     assert_eq!(key.text, "Hello");
     assert_eq!(key.font_size_bits, 16.0_f32.to_bits());
@@ -44,7 +44,7 @@ fn text_font_size_changes_size_and_line_height() {
     let el = text("Hi").font_size(32.0);
     let nodes = el.render(&mut test_cx());
     let SceneNode::Text { key, .. } = &nodes[0] else {
-        panic!("Expected Text, got {:?}", &nodes[0]);
+        panic!("Expected Text, got {:?}", nodes[0]);
     };
     assert_eq!(key.font_size_bits, 32.0_f32.to_bits());
     assert_eq!(key.line_height_bits, (32.0_f32 * 1.3).to_bits());
@@ -55,7 +55,7 @@ fn text_color_applied() {
     let el = text("Hi").text_color("red");
     let nodes = el.render(&mut test_cx());
     let SceneNode::Text { color, .. } = &nodes[0] else {
-        panic!("Expected Text, got {:?}", &nodes[0]);
+        panic!("Expected Text, got {:?}", nodes[0]);
     };
     assert_eq!(*color, Color::RED.to_array());
 }
@@ -111,7 +111,7 @@ fn image_src_bytes_emits_image_node_with_natural_size() {
         ..
     } = &nodes[0]
     else {
-        panic!("Expected Image, got {:?}", &nodes[0]);
+        panic!("Expected Image, got {:?}", nodes[0]);
     };
     // Natural size drives layout when no explicit w/h is set
     assert_eq!((*w, *h), (6.0, 4.0));
@@ -141,7 +141,7 @@ fn clip_children_wraps_children_in_push_pop() {
     assert_eq!(nodes.len(), 5);
     assert!(matches!(&nodes[0], SceneNode::Rect { .. }));
     let SceneNode::PushClip { x, y, w, h } = &nodes[1] else {
-        panic!("Expected PushClip, got {:?}", &nodes[1]);
+        panic!("Expected PushClip, got {:?}", nodes[1]);
     };
     assert_eq!((*x, *y, *w, *h), (0.0, 0.0, 100.0, 50.0));
     assert!(matches!(&nodes[2], SceneNode::Rect { .. }));
@@ -203,7 +203,7 @@ fn shadow_drop_emits_shadow_before_rect() {
         ..
     } = &nodes[0]
     else {
-        panic!("Expected Shadow first, got {:?}", &nodes[0]);
+        panic!("Expected Shadow first, got {:?}", nodes[0]);
     };
     assert_eq!((*w, *h), (100.0, 50.0));
     assert_eq!(*corner_radius, 8.0);
@@ -231,7 +231,7 @@ fn backdrop_blur_emits_under_the_background_fill() {
         ..
     } = &nodes[0]
     else {
-        panic!("Expected BackdropBlur first, got {:?}", &nodes[0]);
+        panic!("Expected BackdropBlur first, got {:?}", nodes[0]);
     };
     assert_eq!((*w, *h), (100.0, 50.0));
     assert_eq!(*corner_radius, 12.0);
@@ -260,7 +260,7 @@ fn shadow_inset_emits_inset_shadow_after_fill() {
         ..
     } = &nodes[1]
     else {
-        panic!("Expected inset Shadow after fill, got {:?}", &nodes[1]);
+        panic!("Expected inset Shadow after fill, got {:?}", nodes[1]);
     };
     assert_eq!((*w, *h), (100.0, 50.0));
     assert_eq!(*corner_radius, 8.0);
@@ -286,7 +286,7 @@ fn bg_linear_emits_gradient_rect() {
         ..
     } = &nodes[0]
     else {
-        panic!("Expected GradientRect, got {:?}", &nodes[0]);
+        panic!("Expected GradientRect, got {:?}", nodes[0]);
     };
     assert_eq!(*color, [1.0, 0.0, 0.0, 1.0]);
     assert_eq!(*color2, [0.0, 0.0, 1.0, 1.0]);
@@ -313,7 +313,7 @@ fn border_bottom_emits_thin_rect() {
     // border_bottom emits a thin Rect at the bottom
     assert_eq!(nodes.len(), 1);
     let SceneNode::Rect { y, h, .. } = &nodes[0] else {
-        panic!("Expected Rect for border-bottom, got {:?}", &nodes[0]);
+        panic!("Expected Rect for border-bottom, got {:?}", nodes[0]);
     };
     assert_eq!(*h, 1.0);
     assert_eq!(*y, 39.0); // 40.0 - 1.0
