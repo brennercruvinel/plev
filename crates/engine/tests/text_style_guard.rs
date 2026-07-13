@@ -1,6 +1,6 @@
 //! Guard: raw `TextNodeKey::new` is confined to the engine.
 //!
-//! The ADR kdb/adr/one-text-style-for-measurement-and-drawing.md decides
+//! The ADR docs/adr/one-text-style-for-measurement-and-drawing.md decides
 //! that a text run owns exactly one `TextStyle`, input to both
 //! `TextMeasurer::measure_styled` (sizing) and `TextNodeKey::from_style`
 //! (drawing). `TextNodeKey::new` hardcodes weight 400, letter spacing 0
@@ -105,7 +105,7 @@ fn raw_text_node_key_stays_inside_the_engine() {
         "raw TextNodeKey::new found outside the engine ({} occurrence(s)):\n{}\n\
          build one engine::text::TextStyle per text run and pass it to both\n\
          TextMeasurer::measure_styled and TextNodeKey::from_style.\n\
-         see kdb/adr/one-text-style-for-measurement-and-drawing.md",
+         see docs/adr/one-text-style-for-measurement-and-drawing.md",
         violations.len(),
         violations.join("\n")
     );

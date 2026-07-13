@@ -25,7 +25,7 @@ pub const DIVIDER: [f32; 4] = [0.16, 0.16, 0.22, 1.0];
 
 // ---------------------------------------------------------------------------
 // Typography: one TextStyle per run, shared by measurement and drawing
-// (kdb/adr/one-text-style-for-measurement-and-drawing.md). Weights are
+// (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 page title, 600 card title, 500 label, 400 body; code
 // references render in JetBrains Mono.
 // ---------------------------------------------------------------------------

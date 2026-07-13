@@ -19,15 +19,15 @@ cosmic-text 0.18, taffy 0.9). one codebase, identical rendering on macos,
 browser (webgpu/wasm), and android + ios (the showcase runs on both via the
 native shells in android/ and ios/showcase/; see "## running"). linux/windows
 pending. apps: crates/showcase (widget gallery, also runs in the browser),
-crates/ide (real git client). knowledge base: kdb/ (adr, arc, how-to,
-mission, refs). architecture: kdb/arc/.
+crates/ide (real git client). knowledge base: docs/ (adr, arc, how-to,
+mission, refs). architecture: docs/arc/.
 
 ## at task start
 
-1. read kdb/arc/arc.yaml and kdb/arc/arc.mmd in a short pass to preserve
-   structure and naming patterns; skim kdb/adr/ for the decisions already
+1. read docs/arc/arc.yaml and docs/arc/arc.mmd in a short pass to preserve
+   structure and naming patterns; skim docs/adr/ for the decisions already
    made and the reasons behind them
-2. read kdb/how-to/code-against-the-plev-engine.md before touching ui or
+2. read docs/how-to/code-against-the-plev-engine.md before touching ui or
    rendering code; it encodes every defect class this repo already paid for
 3. check whether the engine already provides the capability before
    reimplementing anything in an app
@@ -40,7 +40,7 @@ style). this used to be a luajit graph node; it was migrated to markdown so
 there is no extra lua build step in the app.
 
 follow it, and update that file in the same change whenever a new convention
-is established. keep kdb/arc/{arc.md, arc.yaml, arc.mmd} and README.md
+is established. keep docs/arc/{arc.md, arc.yaml, arc.mmd} and README.md
 current after any change that affects structure, contracts, or user-facing
 behavior.
 
@@ -67,8 +67,9 @@ script/gate runs the four in order and stops on the first red.
 
 ## running
 
-- apps: `cargo run -p showcase [section] [theme]` (gallery; `trunk serve`
-  from the root for web), `cargo run -p ide [path]` (git client),
+- apps: `cargo run -p showcase [section] [theme]` (gallery; `script/web`
+  runs `trunk --config web serve` for the browser), `cargo run -p ide
+  [path]` (git client),
   `cargo run -p engine --example <name>` (any
   crates/engine/examples/<name>/main.rs)
 - one test: `cargo test -p <crate> <name>` (substring match, e.g.

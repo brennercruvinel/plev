@@ -12,7 +12,7 @@
 //! Scope is brutally small and honest (ADR transpiler-reports-every-
 //! unmapped-construct): one react component instance (the hoff research
 //! card, base variant) and one gpui widget instance (the horizontal labeled
-//! separator). The emitted code obeys kdb/how-to/code-against-the-plev-
+//! separator). The emitted code obeys docs/how-to/code-against-the-plev-
 //! engine.md: theme tokens where colors hit the HOFF palette, one TextStyle
 //! per text run, content-driven layout (no absolute positioning).
 

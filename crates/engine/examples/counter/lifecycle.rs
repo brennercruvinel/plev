@@ -27,7 +27,7 @@ pub const ACCENT_BAR_H: f32 = 2.0;
 
 // --- Typography -------------------------------------------------------------
 // One TextStyle per run, shared by measurement and drawing
-// (kdb/adr/one-text-style-for-measurement-and-drawing.md). Weights are
+// (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 page title, 600 card title, 500 label, 400 body; code and
 // counters render in JetBrains Mono.
 

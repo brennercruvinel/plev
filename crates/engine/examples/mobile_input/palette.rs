@@ -21,7 +21,7 @@ pub(crate) const DIVIDER: [f32; 4] = [0.18, 0.18, 0.25, 1.0];
 pub(crate) const FOOTER_BG: [f32; 4] = [0.07, 0.07, 0.12, 1.0];
 
 // One TextStyle per run, shared by measurement and drawing
-// (kdb/adr/one-text-style-for-measurement-and-drawing.md). Weights are
+// (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 page title, 600 card title, 400 body; numeric status
 // readouts render in JetBrains Mono.
 

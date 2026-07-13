@@ -1,4 +1,4 @@
-# monster: binary animation codec for plev (kdb/adr/monster-format-v0.md).
+# monster: binary animation codec for plev (docs/adr/monster-format-v0.md).
 [package]
 name = "monster"
 version.workspace = true

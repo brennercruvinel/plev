@@ -13,7 +13,9 @@ layout:
   # updated: engine moved from the root crate to crates/engine).
   root: virtual workspace (Cargo.toml = members + workspace.package/deps/lints/profiles only)
   engine: crates/engine
-  knowledge: kdb (adr + arc + how-to + mission + refs; this file lives at kdb/arc/arc.yaml)
+  knowledge: docs (adr + arc + how-to + mission + refs; this file lives at docs/arc/arc.yaml)
+  web: web (Trunk.toml + index.html + dist output; script/web is the dev loop)
+  scripts: script (gate = the four-part gate, web = trunk dev loop)
   contracts: .contracts (.agents/AGENTS.md instruction source; .mantras/.code/.lang/.rust tool configs + conventions)
 targets:
   shipping: [macos-metal, web-webgpu]
@@ -75,10 +77,10 @@ benches:
   lot: benches/convert.rs (lottie json -> .monster)
   parser: benches/transpile.rs (gpui separator transpile end to end)
 knowledge:
-  operating-manual: kdb/how-to/code-against-the-plev-engine.md
-  pixel-validation: kdb/how-to/validate-visuals-by-pixel.md
+  operating-manual: docs/how-to/code-against-the-plev-engine.md
+  pixel-validation: docs/how-to/validate-visuals-by-pixel.md
   visual-tokens: crates/engine/src/theme/hoff.rs
-  decisions: kdb/adr/
+  decisions: docs/adr/
   conventions: .contracts/.mantras/.code/.lang/.rust/rust-conventions.md
 invariants:
   - one TextStyle per run shared by measure and draw
