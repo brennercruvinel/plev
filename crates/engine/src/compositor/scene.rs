@@ -1,7 +1,7 @@
 use rustc_hash::FxHasher;
 use std::hash::{Hash, Hasher};
 
-// PartialEq is the monster codec prerequisite (kdb/adr/monster-format-v0.md): structural
+// PartialEq is the monster codec prerequisite (docs/adr/monster-format-v0.md): structural
 // round-trip tests compare decoded scenes against originals.
 #[derive(Clone, Debug, PartialEq)]
 pub enum SceneNode {

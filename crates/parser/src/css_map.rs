@@ -1,6 +1,6 @@
 //! Stage 2 (react, declaration level): one resolved css declaration -> plev
 //! builder props, a recognized no-op, or a drop reason. Colors that hit the
-//! HOFF palette become theme tokens (kdb/how-to/code-against-the-plev-engine
+//! HOFF palette become theme tokens (docs/how-to/code-against-the-plev-engine
 //! .md: tokens over literals); everything else stays an exact literal.
 
 use crate::ir::{Arg, Prop};

@@ -1,4 +1,4 @@
-//! monster IR v0 (kdb/adr/monster-format-v0.md, "node model"): the codec works on
+//! monster IR v0 (docs/adr/monster-format-v0.md, "node model"): the codec works on
 //! its own model mirroring plev's animatable surface, so the frozen
 //! format never chases `SceneNode`; the player lowers `Node` to
 //! `SceneNode` at render time.

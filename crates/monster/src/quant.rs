@@ -1,4 +1,4 @@
-//! quantization primitives of kdb/adr/monster-format-v0.md decision 5: values
+//! quantization primitives of docs/adr/monster-format-v0.md decision 5: values
 //! are quantized in the file and f32 in memory. coordinates are i32
 //! twentieths of a logical px (the twips lesson: integer determinism),
 //! colors rgba8, angles and ratios u16 fixed point, custom bezier

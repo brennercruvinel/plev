@@ -8,7 +8,7 @@ labels: bug
 ## what happens
 
 <!-- the observed behavior. for a visual bug, attach a screenshot and, if you
-can, the measured pixels (kdb/how-to/validate-visuals-by-pixel.md). -->
+can, the measured pixels (docs/how-to/validate-visuals-by-pixel.md). -->
 
 ## what should happen
 
