@@ -11,25 +11,25 @@ commit: 55c8aa7
 
 ```
 rustup target add wasm32-unknown-unknown   # once
-trunk build --release                      # repo root; writes dist/
+script/web build --release                 # repo root; writes web/dist/
 ```
 
 trunk reads web/index.html (canvas styled 100vw/100vh, background
-#303030 to avoid a white flash) and the root Trunk.toml, builds the
-showcase bin for wasm32, runs wasm-bindgen with the CLI version matching
-Cargo.lock, and emits hashed artifacts into dist/.
+#303030 to avoid a white flash) and web/Trunk.toml, builds the showcase
+bin for wasm32, runs wasm-bindgen with the CLI version matching
+Cargo.lock, and emits hashed artifacts into web/dist/.
 
-`trunk serve` from the root (port 8080, watch mode) is the development
+`script/web` from the root (port 8080, watch mode) is the development
 loop.
 
 ## serve
 
-any static server over dist/ works; wasm must be served with the
+any static server over web/dist/ works; wasm must be served with the
 `application/wasm` MIME type for `instantiateStreaming` (python
 `http.server` does this correctly):
 
 ```
-python3 -m http.server 8090 --directory dist
+python3 -m http.server 8090 --directory web/dist
 ```
 
 ## runtime requirements
@@ -44,7 +44,7 @@ python3 -m http.server 8090 --directory dist
 ## verification checklist
 
 1. `cargo check --target wasm32-unknown-unknown -p showcase` green
-2. `trunk build --release` succeeds, index/js/wasm respond 200
+2. `script/web build --release` succeeds, index/js/wasm respond 200
 3. browser console shows "GPU context ready (async)"
 4. background pixel samples 48,48,48 (see validate-visuals-by-pixel)
 5. resizing the browser window reflows the layout (cards change column

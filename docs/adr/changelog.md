@@ -9,19 +9,21 @@ status: living
 
 ## unreleased
 
-- one knowledge tree: the arc trio moved from doc/arc/ to kdb/arc/ and
-  doc/ was retired (its changelog copy was the stale duplicate of this
-  file). notes.md moves under kdb/, the trunk entry to web/index.html,
-  and the root keeps only the files whose tools resolve them there. the
-  arc sync guard, the instruction source (.contracts/.agents/AGENTS.md,
-  the only instruction file; the root carries none), the pr template and
-  typos.toml follow the new paths; the svg crate and the svg2monster cli
-  entered the arc trio. the root gained LICENSE (mit),
+- one knowledge tree: kdb/ renamed to docs/ and the arc trio moved into
+  it (docs/arc/, from doc/arc/); doc/ was retired (its changelog copy
+  was the stale duplicate of this file). the mon working note left the
+  root for docs/mission/steps/ongoing/mon-experiment-notes.md. web/ owns
+  the web target end to end (Trunk.toml, index.html, dist output) and
+  script/ owns the commands (gate, web). the arc sync guard, the
+  instruction source (.contracts/.agents/AGENTS.md, the only
+  instruction file; the root carries none), the pr template, typos.toml
+  and the crate docstrings follow the new paths; the svg crate and the
+  svg2monster cli entered the arc trio. the root gained LICENSE (mit),
   rust-toolchain.toml (stable + wasm32 pinned) and .gitattributes, and
   lost .env.example and the Makefile (script/gate runs the four-part
   gate; the other targets were one cargo call each). study-clone
-  references in kdb now name the repository and the inner path, never a
-  machine path. ADR: one-knowledge-tree-and-a-minimal-root.
+  references in docs now name the repository and the inner path, never
+  a machine path. ADR: one-knowledge-tree-and-a-minimal-root.
 - prime number creatures (crates/prime_creatures): the Entropic Life XVI canvas
   demo ported to a native plev crate, desktop and wasm. pure, tested sim core
   (seeded rng, prime coherence matrix 250x250 in four modes, grid-local steering

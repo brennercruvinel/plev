@@ -3,7 +3,7 @@ title: experimento mon, nota de trabalho
 status: trabalho vivo
 tags: [mon, ui-superset, design-tokens, aria-apg, lottie, monster, swf]
 date: 2026-06-12
-ancoras: [crates/lot, crates/monster, crates/parser, kdb/adr/monster-format-v0.md, kdb/adr/binary-animation-format-with-discovered-deltas.md, kdb/adr/import-foreign-formats-by-conversion-not-embedding.md, kdb/adr/transpiler-reports-every-unmapped-construct.md]
+ancoras: [crates/lot, crates/monster, crates/parser, docs/adr/monster-format-v0.md, docs/adr/binary-animation-format-with-discovered-deltas.md, docs/adr/import-foreign-formats-by-conversion-not-embedding.md, docs/adr/transpiler-reports-every-unmapped-construct.md]
 ---
 
 # experimento mon

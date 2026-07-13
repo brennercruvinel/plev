@@ -21,7 +21,7 @@ pub const FOOTER_BG: [f32; 4] = [0.07, 0.07, 0.12, 1.0];
 pub const DOT_COLOR: [f32; 4] = [0.12, 0.12, 0.18, 1.0];
 
 // One TextStyle per run, shared by measurement and drawing
-// (kdb/adr/one-text-style-for-measurement-and-drawing.md). Weights are
+// (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 page title, 600 card title, 400 body; aligned readouts
 // render in JetBrains Mono.
 
