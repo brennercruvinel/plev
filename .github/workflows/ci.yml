@@ -37,6 +37,10 @@ jobs:
   test:
     name: test --workspace
     runs-on: ubuntu-latest
+    env:
+      # debuginfo off: linking every wgpu example with full debug info
+      # exceeds the runner's disk and kills the linker with SIGBUS.
+      CARGO_PROFILE_DEV_DEBUG: "0"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
