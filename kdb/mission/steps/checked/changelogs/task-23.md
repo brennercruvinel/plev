@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-12-14
 domain: changelog
 ---
 
 # changelog, task-23: CI/CD
 
-## sessao 1 (2026-03-08)
+## sessao 1 (2021-12-14)
 
 ### criado
 - `.github/workflows/ci.yml` com 6 jobs paralelos

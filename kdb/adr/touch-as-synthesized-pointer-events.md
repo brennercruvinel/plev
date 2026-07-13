@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [input, touch, mobile, gestures, events]
-date: 2026-06-10
+date: 2025-01-27
 commit: 5854941
 ---
 

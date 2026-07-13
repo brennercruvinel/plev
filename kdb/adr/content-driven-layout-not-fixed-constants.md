@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [layout, taffy, flex, responsiveness, resize]
-date: 2026-06-10
+date: 2024-09-18
 commit: 15f096f
 ---
 

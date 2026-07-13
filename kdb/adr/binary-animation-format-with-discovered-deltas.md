@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [animation, monster, codec, format, delta, keyframes]
-date: 2026-06-12
+date: 2025-05-14
 commit: a4ad0c0
 ---
 

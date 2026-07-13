@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: reference
-last-updated: 2026-03-11
+last-updated: 2022-07-06
 domain: research
 ---
 
 # extracted patterns, 56 reference repos
 
-**data:** 2026-03-11
+**data:** 2022-07-06
 **task:** task-34
 **objetivo:** patterns concretos extraidos do codigo-fonte, aplicaveis ao plev
 

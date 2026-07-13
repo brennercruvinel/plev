@@ -121,27 +121,27 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 |------|-----------|--------|
 | task-ref | research briefing (50+ repos) | done, 12 docs em refs/, technology radar |
 
-### fase 8, formatos e interop (junho), completa
+### fase 8, formatos e interop (2025), completa
 | task | descricao | status |
 |------|-----------|--------|
 | task-43 | monster, codec binario de animacao v0 | done, MON0, seek O(1), delta descoberto, 124 testes |
 | task-44 | lot, importer lottie + ponte para .monster | done, conversao offline, subset honesto, zero embedding |
 | task-45 | parser, transpiler poc (react/gpui -> builder) | done, droplist file:line, contagens congeladas |
 
-### fase 9, edicao e apps reais (junho), completa
+### fase 9, edicao e apps reais (2026), completa
 | task | descricao | status |
 |------|-----------|--------|
 | task-46 | rope, nucleo de edicao (document/transaction/history) | done, estilo helix, 77 testes, headless |
 | task-47 | git, backend (gix reads + cli mutations + client threaded) | done, ui nunca bloqueia, 25 testes |
 | task-48 | ide, git client nativo em plev | done, workspace/diff/commit, 55 testes (evolui de task-42) |
 
-### fase 10, demos e plataforma (junho), completa
+### fase 10, demos e plataforma (2025), completa
 | task | descricao | status |
 |------|-----------|--------|
 | task-49 | prime number creatures (port entropic life) | done, sim core puro, render fiel, desktop + web |
 | task-50 | showcase multiplataforma como lib | done, entries desktop/web/android/ios, apk + simulador |
 
-### fase 11, organizacao profissional (abril/junho), completa
+### fase 11, organizacao profissional (2024/2026), completa
 | task | descricao | status |
 |------|-----------|--------|
 | task-51 | workspace restructure + rebrand phi->plev | done, 3 tiers, renames, cargo workspace |

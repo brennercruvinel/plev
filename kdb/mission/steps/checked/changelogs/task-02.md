@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-03-24
 domain: changelog
 ---
 
 # task-02 changelog
 
-## 2026-03-08
+## 2021-03-24
 - criado `src/component.rs` com trait `Lifecycle` e struct `Component<L>`
 - adicionado `pub mod component;` em `src/lib.rs`
 - integrado `Component<Counter>` no `window.rs` (app principal)

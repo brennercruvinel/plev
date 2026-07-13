@@ -1,7 +1,7 @@
 ---
 type: reference
 tags: [changelog, versions]
-date: 2026-06-11
+date: 2026-06-20
 status: living
 ---
 

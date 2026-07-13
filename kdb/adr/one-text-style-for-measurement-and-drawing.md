@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [text, layout, cosmic-text, measurement, typography]
-date: 2026-06-10
+date: 2024-10-29
 commit: f15198a
 ---
 

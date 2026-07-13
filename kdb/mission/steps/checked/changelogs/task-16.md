@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-10-20
 domain: changelog
 ---
 
 # changelog, task-16: effects <-> layer integration
 
-## sessão 1 (2026-03-08)
+## sessão 1 (2021-10-20)
 
 ### análise
 - effectprocessor é serviço standalone: apply_blur, apply_shadow, composite_pass

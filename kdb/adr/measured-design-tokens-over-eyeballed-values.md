@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [design-tokens, fidelity, measurement, reference, theming]
-date: 2026-06-10
+date: 2024-12-19
 commit: 9c5fbd3
 ---
 

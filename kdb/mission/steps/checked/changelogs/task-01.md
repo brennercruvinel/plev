@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-03-06
 domain: changelog
 ---
 
 # changelog, task-01: view trait + viewcontext
 
-## 2026-03-08
+## 2021-03-06
 
 ### decisões de design
 - `ViewContext` sem referência ao compositor, views retornam `Vec<SceneNode>`, caller empurra pro compositor

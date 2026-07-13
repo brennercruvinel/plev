@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-05-19
 domain: changelog
 ---
 
 # changelog, task-05: API declarativa + builder pattern
 
-## 2026-03-08
+## 2021-05-19
 - task iniciada, branch `task/TASK-05-declarative-api`
 - implementado `color.rs`: color, intocolor, constantes nomeadas, hex/rgb/rgba
 - implementado `builder.rs`: element tree, div/text/button, builders, flatten, scope

@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: reference
-last-updated: 2026-03-11
+last-updated: 2022-08-11
 domain: text
 ---
 
 # parley vs cosmic-text - factual comparison for plev
 
-**date:** 2026-03-11
+**date:** 2022-08-11
 **context:** plev uses cosmic-text 0.18.2. task-32 assesses whether to migrate to parley.
 
 ---

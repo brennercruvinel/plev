@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-11-30
 domain: changelog
 ---
 
 # changelog, task-21: documentacao DSL narrate
 
-## sessao 1 (2026-03-08)
+## sessao 1 (2021-11-30)
 
 ### criado
 - `docs/narrate-syntax.md` (967 linhas)

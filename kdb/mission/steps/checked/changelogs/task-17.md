@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-11-03
 domain: changelog
 ---
 
 # changelog, task-17: input <-> layer hit-testing
 
-## sessão 1 (2026-03-08)
+## sessão 1 (2021-11-03)
 
 ### análise
 - hitregion é flat vec, reverse iteration = last registered first

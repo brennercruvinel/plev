@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [wasm, webgpu, winit, async, entry-point, trunk]
-date: 2026-06-10
+date: 2025-02-10
 commit: 55c8aa7
 ---
 

@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [parser, transpiler, droplist, honesty, diagnostics]
-date: 2026-06-12
+date: 2025-07-08
 commit: 5eecb0a
 ---
 

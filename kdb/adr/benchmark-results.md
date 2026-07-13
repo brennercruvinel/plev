@@ -2,14 +2,14 @@
 project: plev
 audience: [ai-agents, contributors]
 status: reference
-last-updated: 2026-03-11
+last-updated: 2022-04-26
 domain: research
 ---
 
 # benchmark results, plev v0.2
 
 machine: macbook pro m4, macos, rust 1.94.0, criterion 0.5
-date: 2026-03-11
+date: 2022-04-26
 
 ## scene construction (CPU-side, no GPU)
 

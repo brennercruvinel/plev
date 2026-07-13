@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: reference
-last-updated: 2026-04-05
+last-updated: 2024-05-21
 domain: modularization
 ---
 
@@ -10,7 +10,7 @@ domain: modularization
 
 ## status
 
-aceita (2026-04-05)
+aceita (2024-05-21)
 
 ## contexto
 

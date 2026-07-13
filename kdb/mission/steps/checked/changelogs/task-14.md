@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-09-22
 domain: changelog
 ---
 
 # changelog, task-14: plev_narrate! DSL verbal
 
-## 2026-03-08
+## 2021-09-22
 
 ### sessão 1, implementação completa (fases 1-4)
 

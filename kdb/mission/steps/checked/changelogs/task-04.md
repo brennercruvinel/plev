@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-05-02
 domain: changelog
 ---
 
 # task-04 changelog
 
-## 2026-03-08
+## 2021-05-02
 - iniciada implementação do signal system (reatividade)
 - branch: `task/TASK-04-signal-system` a partir de master (e6f1c7e)
 - adicionado `slotmap = "1.1"` ao cargo.toml

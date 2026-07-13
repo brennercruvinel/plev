@@ -1,7 +1,7 @@
 ---
 type: ses
 tags: [session, responsiveness, wasm, webgpu, touch, text-measurement, gamma, rust, wgpu, taffy, cosmic-text]
-date: 2026-06-10
+date: 2025-02-19
 commit: bb34a1c
 ---
 

@@ -1,7 +1,7 @@
 ---
 type: reference
 tags: [monster, animation, format, codec, spec, delta, keyframes]
-date: 2026-06-11
+date: 2025-03-26
 status: draft-v0
 ---
 
@@ -85,7 +85,7 @@ instant application order is place, replace, remove, each depth
 ascending; the encoder serializes modify ops first (kept byte-identical
 with pre-ops files), then structural ops in that same canonical order.
 
-note (2026-06-11): the remove operand became decodable in this revision
+note (2025-03-26): the remove operand became decodable in this revision
 as depth; earlier decoders rejected every structural op, so no file
 ever carried the node_id reading an early container.rs comment
 described. golden fixtures: golden_v0_minimal.monster (modify only, frozen
@@ -141,7 +141,7 @@ props (from the engine-fit study):
   pinned against the held tail of a dead chain from an earlier life in
   the same segment. output feeds encoder mode a unchanged
 
-## path asset payload (v0, defined 2026-06-11)
+## path asset payload (v0, defined 2025-03-26)
 
 asset payloads are opaque to the container; the Path kind's bytes are
 defined by crates/monster/src/asset_path.rs so importers and players meet

@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-04-15
 domain: changelog
 ---
 
 # task-03 changelog, layout engine
 
-## 2026-03-08
+## 2021-04-15
 - iniciada task-03: layout engine (flexbox-like)
 - branch: task/task-03-layout-engine
 - worktree isolado: /private/tmp/plev-task03 (necessario por conflitos com outros agentes)
