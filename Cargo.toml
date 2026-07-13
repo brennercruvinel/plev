@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-# Todos os crates do projeto sao members (aparecem como targets na IDE).
+# Every crate in the project is a member (each shows up as an IDE target).
 members = [
     "crates/engine",
     "crates/macros",
@@ -17,8 +17,8 @@ members = [
     "crates/showcase",
 ]
 
-# Metadados herdados por todos os crates (`version.workspace = true`,
-# `description` fica por crate). Privados: `publish = false` em cada um.
+# Metadata inherited by every crate (`version.workspace = true`;
+# `description` stays per crate). Private: `publish = false` on each one.
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
@@ -26,19 +26,19 @@ rust-version = "1.85"
 authors = ["Brenner Cruvinel <brennertalks@gmail.com>"]
 repository = "https://github.com/brennercruvinel/plevdev"
 
-# Lints unificados (herdados via `[lints] workspace = true`). Mantem a
-# barra onde o codigo ja esta: clippy limpo sob -D warnings.
+# Unified lints (inherited via `[lints] workspace = true`). Keeps the bar
+# where the code already is: clippy clean under -D warnings.
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"
 
 [workspace.lints.clippy]
 uninlined_format_args = "warn"
 
-# Fonte única de versão para toda dependência compartilhada. Os crates
-# referenciam com `<dep>.workspace = true`; features extras por crate via
+# Single version source for every shared dependency. Crates reference it
+# with `<dep>.workspace = true`; extra per-crate features via
 # `{ workspace = true, features = [...] }`.
 [workspace.dependencies]
-# -- internos (path)
+# -- internal (path)
 engine = { path = "crates/engine" }
 git = { path = "crates/git" }
 lot = { path = "crates/lot" }
@@ -48,11 +48,11 @@ narrate = { path = "crates/narrate" }
 narrate-macro = { path = "crates/narrate-macro" }
 rope = { path = "crates/rope" }
 svg = { path = "crates/svg" }
-# -- gpu / janela
+# -- gpu / window
 wgpu = "28"
 winit = { version = "0.30", features = ["rwh_06"] }
 bytemuck = { version = "1", features = ["derive"] }
-# -- texto / layout / vetor
+# -- text / layout / vector
 cosmic-text = "0.18"
 taffy = "0.9"
 ropey = "1.6"
@@ -65,7 +65,7 @@ etagere = "0.2"
 # default-features off drops fontdb/text-to-path (wasm-safe, deterministic);
 # text is skipped like lot skips it. 0.45 is the last release on msrv 1.85.
 usvg = { version = "0.45", default-features = false }
-# -- dados / util
+# -- data / util
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
@@ -86,7 +86,7 @@ proc-macro2 = "1"
 tree-sitter = "0.25"
 tree-sitter-typescript = "0.23"
 tree-sitter-rust = "0.24"
-# -- runtime nativo
+# -- native runtime
 pollster = "0.4"
 env_logger = "0.11"
 arboard = { version = "3", default-features = false }
@@ -99,23 +99,23 @@ wasm-bindgen-futures = "0.4"
 web-sys = { version = "0.3", features = ["Document", "Window", "Element", "HtmlCanvasElement", "Performance", "console"] }
 console_log = "1"
 console_error_panic_hook = "0.1"
-# -- acessibilidade
+# -- accessibility
 accesskit = "0.24"
 accesskit_winit = "0.32"
-# -- testes
+# -- tests
 criterion = { version = "0.5", features = ["html_reports"] }
 proptest = "1"
 trybuild = "1"
 tempfile = "3"
 
-# Release: lto fina + uma unidade de codegen (binarios menores e mais
-# rapidos; build de release um pouco mais lento, aceitavel).
+# Release: thin lto + one codegen unit (smaller, faster binaries; a
+# slightly slower release build, acceptable).
 [profile.release]
 lto = "thin"
 codegen-units = 1
 
-# Dev: dependencias compiladas com otimizacao (build incremental do
-# proprio codigo segue rapido, mas deps pesadas como wgpu nao arrastam
-# o runtime de debug).
+# Dev: dependencies compiled with optimization (incremental builds of our
+# own code stay fast, but heavy deps like wgpu do not drag the debug
+# runtime).
 [profile.dev.package."*"]
 opt-level = 2
