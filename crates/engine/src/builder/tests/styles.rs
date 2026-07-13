@@ -107,7 +107,7 @@ fn text_child_merges_content() {
     let nodes = el.render(&mut test_cx());
     assert_eq!(nodes.len(), 1);
     let SceneNode::Text { key, .. } = &nodes[0] else {
-        panic!("Expected Text, got {:?}", &nodes[0]);
+        panic!("Expected Text, got {:?}", nodes[0]);
     };
     assert_eq!(key.text, "Hello");
 }
@@ -117,7 +117,7 @@ fn text_child_format_string() {
     let el = text("").child(format!("Count: {}", 42));
     let nodes = el.render(&mut test_cx());
     let SceneNode::Text { key, .. } = &nodes[0] else {
-        panic!("Expected Text, got {:?}", &nodes[0]);
+        panic!("Expected Text, got {:?}", nodes[0]);
     };
     assert_eq!(key.text, "Count: 42");
 }

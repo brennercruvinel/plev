@@ -86,7 +86,7 @@ mod tests {
         let nodes = comp.render(&mut cx);
         assert_eq!(nodes.len(), 1);
         let SceneNode::Rect { color, .. } = &nodes[0] else {
-            panic!("Expected Rect, got {:?}", &nodes[0]);
+            panic!("Expected Rect, got {:?}", nodes[0]);
         };
         assert_eq!(color[0], 0.0);
     }
