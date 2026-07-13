@@ -25,7 +25,7 @@ compilar, gerar APK e testar em device/emulator android.
 - [ ] testar lifecycle: background/foreground, rotate, memory warning
 
 ## notas
-- NDK: `/Users/aac/Dev/plev/ndk/27.2.12479018/`
+- NDK: `ndk/27.2.12479018/` (raiz do repo, gitignored)
 - cargo-ndk v4.1.2 instalado
 - emulator + system-images arm64 API 35 disponíveis
 - APK wrapper é bloqueio para deploy

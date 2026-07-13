@@ -9,7 +9,7 @@ domain: research
 # pattern extraction: parley, lyon, glam-rs
 
 extracted 2026-03-11 by source code study of reference repos.
-source repos: `/Users/aac/Dev/bc/bunker/repos/3d-graphics/rendering/{parley,lyon,glam-rs}/`
+source repos: `bunker/repos/3d-graphics/rendering/{parley,lyon,glam-rs}/`
 
 ---
 
