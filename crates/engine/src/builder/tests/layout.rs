@@ -69,7 +69,7 @@ fn tracking_reaches_text_node_key() {
     let el = text("Research Social").tracking(2.0);
     let nodes = el.render(&mut test_cx());
     let SceneNode::Text { key, .. } = &nodes[0] else {
-        panic!("Expected Text, got {:?}", &nodes[0]);
+        panic!("Expected Text, got {:?}", nodes[0]);
     };
     assert_eq!(key.letter_spacing_bits, 2.0_f32.to_bits());
 }
@@ -88,7 +88,7 @@ fn measure_spec_and_node_key_share_one_text_style() {
 
     let nodes = el.render(&mut test_cx());
     let SceneNode::Text { key, .. } = &nodes[0] else {
-        panic!("Expected Text, got {:?}", &nodes[0]);
+        panic!("Expected Text, got {:?}", nodes[0]);
     };
 
     assert_eq!(key.font_size_bits, spec.style.font_size.to_bits());
