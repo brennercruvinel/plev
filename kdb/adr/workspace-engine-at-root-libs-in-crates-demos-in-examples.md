@@ -8,6 +8,11 @@ commit: c2a90f1
 
 # engine at root, libraries and apps in crates, demos in examples
 
+update (2026-07-13): the engine later moved from the root crate to
+crates/engine and the root became a virtual workspace; the three tiers
+stand. the docs layout that followed (arc trio into kdb/arc/, minimal
+root) is in one-knowledge-tree-and-a-minimal-root.md.
+
 ## context
 
 the workspace had grown inconsistent: crate names mixed kebab and snake

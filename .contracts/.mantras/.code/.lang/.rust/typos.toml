@@ -23,9 +23,15 @@ extend-exclude = [
     "codigo-descartado/",
     # kdb/ is the knowledge base: long-form bilingual prose (mostly
     # portuguese), where an english spell-checker is all false positives and
-    # no signal. typos earns its keep on code and the english-facing docs.
-    "kdb/",
+    # no signal. typos earns its keep on code and the english-facing docs;
+    # kdb/arc/ is english-facing (the arc trio), so it stays checked.
+    "kdb/adr/",
+    "kdb/how-to/",
+    "kdb/mission/",
+    "kdb/refs/",
+    "kdb/livrocaranguejovermelho/",
     # notes.md is a bilingual scratch doc; same story.
+    "kdb/notes.md",
     "notes.md",
     # these narrate-macro tests are FULL of deliberate misspellings: they test
     # the did-you-mean / levenshtein suggestion path (buton -> button, scrolll
