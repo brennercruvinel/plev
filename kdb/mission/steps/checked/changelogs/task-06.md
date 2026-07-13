@@ -12,7 +12,7 @@ domain: changelog
 
 ### início da task
 - branch `task/TASK-06-wasm-validation` criada a partir de `master`
-- worktree isolado em `/Users/aac/Dev/plev-task06`
+- worktree isolado em `../plev-task06` (worktree irmao do repo)
 
 ### fase 1: fix bug init GPU WASM
 - **bug:** `spawn_local` criava gpucontext async mas nunca armazenava de volta no app

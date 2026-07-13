@@ -9,7 +9,7 @@ domain: task-tracking
 # task-34: exploracao e extracao de ideias dos repos de referencia, P2
 
 ## objetivo
-analisar o codigo-fonte dos 56 repositorios clonados em `/Users/aac/Dev/bc/bunker/repos/` e extrair padroes, tecnicas e ideias concretas aplicaveis ao plev. nao e para copiar codigo, e para estudar, entender e documentar decisoes arquiteturais que informem o desenvolvimento futuro.
+analisar o codigo-fonte dos 56 repositorios clonados em `bunker/repos/` (colecao local de clones de estudo, fora do repo) e extrair padroes, tecnicas e ideias concretas aplicaveis ao plev. nao e para copiar codigo, e para estudar, entender e documentar decisoes arquiteturais que informem o desenvolvimento futuro.
 
 ## justificativa
 as 12 analises em `mission/knowledge/refs/` documentaram apis, features e conceitos de alto nivel. mas o valor real esta no codigo-fonte: como accesskit constroi a arvore, como makepad faz layout+draw simultaneo, como egui integra acessibilidade, como keyframe implementa o trait cantween, como vello faz encoding em streams. ter os repos clonados sem estudar o codigo e desperdicar a referencia.

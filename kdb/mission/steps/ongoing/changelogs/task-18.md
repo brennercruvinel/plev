@@ -17,7 +17,7 @@ domain: task-tracking
 - NDK 27.2.12479018 com toolchain darwin-x86_64, API level 33
 
 ### ambiente
-- NDK em `/Users/aac/Dev/plev/ndk/27.2.12479018/`
+- NDK em `ndk/27.2.12479018/` (raiz do repo, gitignored)
 - emulator + system-images/android-35/google_apis/arm64-v8a disponíveis
 - platform-tools/adb disponível (v37.0.0)
 - cargo-ndk v4.1.2 instalado

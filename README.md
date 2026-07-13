@@ -160,6 +160,7 @@ cargo run -p parser --example preview    index.tsx module.sass vars.sass
 cargo test --workspace
 cargo clippy --workspace
 cargo fmt --check
+./script/gate     # the full four-part gate, stops on the first red
 ```
 
 a guard test scans the repo and fails if any code draws text by constructing

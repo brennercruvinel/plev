@@ -32,7 +32,6 @@ extend-exclude = [
     "kdb/livrocaranguejovermelho/",
     # notes.md is a bilingual scratch doc; same story.
     "kdb/notes.md",
-    "notes.md",
     # these narrate-macro tests are FULL of deliberate misspellings: they test
     # the did-you-mean / levenshtein suggestion path (buton -> button, scrolll
     # -> scroll). flagging them is exactly backwards.
