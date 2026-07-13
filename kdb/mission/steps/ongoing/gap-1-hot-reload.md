@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: in-progress
-last-updated: 2026-03-22
+last-updated: 2024-01-25
 domain: task-tracking
 ---
 
 # gap-1: hot reload system
 
-data: 2026-03-22
+data: 2024-01-25
 status: em andamento
 branch: task/gap-1-hot-reload
 

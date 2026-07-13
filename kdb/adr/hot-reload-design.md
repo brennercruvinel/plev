@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: reference
-last-updated: 2026-03-22
+last-updated: 2024-01-22
 domain: hot-reload
 ---
 
 # hot reload design - plev
 
-data: 2026-03-22
+data: 2024-01-22
 task: gap-1
 
 ## pesquisa de campo

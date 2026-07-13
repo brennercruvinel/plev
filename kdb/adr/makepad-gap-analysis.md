@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: reference
-last-updated: 2026-03-13
+last-updated: 2022-11-19
 domain: competitive
 ---
 
 # makepad visual feature inventory vs plev gap analysis
 
-date: 2026-03-13
+date: 2022-11-19
 
 ## legend
 - [x] plev supports

@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-05-06
 domain: task-tracking
 ---
 
@@ -22,6 +22,6 @@ implementar primitivas reativas: `create_signal`, `create_effect`, `create_memo`
 - [x] `cargo test` passa com 15 testes de reatividade (19 total)
 - [x] zero alocações em steady state (signal não mudou = zero work)
 
-## concluída em: 2026-03-08
+## concluída em: 2021-05-06
 ## branch: `task/TASK-04-signal-system`
 ## commits: f676b7d, 188fb7e

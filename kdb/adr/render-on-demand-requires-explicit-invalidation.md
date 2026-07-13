@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [rendering, events, invalidation, render-on-demand, reactivity]
-date: 2026-06-10
+date: 2024-10-07
 commit: 83720e3
 ---
 

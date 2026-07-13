@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [workspace, cargo, organization, structure]
-date: 2026-06-12
+date: 2025-08-18
 commit: c2a90f1
 ---
 

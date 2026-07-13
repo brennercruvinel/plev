@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-06-14
+last-updated: 2025-09-26
 domain: changelog
 ---
 

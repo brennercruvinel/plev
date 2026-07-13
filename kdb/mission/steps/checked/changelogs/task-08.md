@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-07-01
 domain: changelog
 ---
 
 # task-08 changelog
 
-## 2026-03-08, fases a-d implementadas
+## 2021-07-01, fases a-d implementadas
 
 ### decisões técnicas
 - **fragment shader only** (sem compute), portátil para WASM, conforme rules.md

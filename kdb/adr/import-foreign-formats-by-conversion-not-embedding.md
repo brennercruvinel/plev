@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [lottie, lot, monster, import, architecture]
-date: 2026-06-12
+date: 2025-06-10
 commit: a044613
 ---
 

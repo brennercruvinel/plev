@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [rendering, particles, trails, render-on-demand]
-date: 2026-06-14
+date: 2025-09-24
 ---
 
 # motion trails come from position history, not framebuffer accumulation

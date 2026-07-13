@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: in-progress
-last-updated: 2026-03-22
+last-updated: 2024-01-25
 domain: task-tracking
 ---
 
 # gap-1: hot reload, changelog
 
-## 2026-03-22
+## 2024-01-25
 
 ### iniciado
 - branch task/gap-1-hot-reload criada
@@ -68,7 +68,7 @@ domain: task-tracking
 - token cloning em parser: ok para dev-only feature
 - div sem dimensoes explicitas (w/h) gera 0 scene nodes (sem visual), testes devem usar `w X h Y`
 
-### sessao 2026-03-22 (validacao e testes)
+### sessao 2024-01-25 (validacao e testes)
 
 #### fix compilacao
 - `crates/plev_narrate/tests/integration.rs`: renomeado `plev_narrate` -> `plev_narrate` (import + 12 invocacoes)

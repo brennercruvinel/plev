@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-08-25
 domain: changelog
 ---
 
 # changelog, task-12: ios build + lifecycle
 
-## 2026-03-08
+## 2021-08-25
 
 ### implementação completa
 - branch `task/TASK-12-ios-worktree` criada a partir de `master` (e6f1c7e)

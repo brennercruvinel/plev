@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [webgpu, srgb, gamma, wasm, surface, wgpu]
-date: 2026-06-10
+date: 2024-12-04
 commit: 2a33933
 ---
 

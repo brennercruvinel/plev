@@ -4,7 +4,7 @@
 - **typ:** index
 - **sts:** reference
 - **dom:** architecture-rule
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 
 As 15 regras-principio (antes mantras + rules, fundidos em um no por principio) que governam a arquitetura do plev. Cada no `rul-nn` e uma regra com seu corpo cru. As arestas `lnk` ligam regras relacionadas: rul-07 -> rul-11 (side effects e persistencia via trait), rul-12 -> rul-10 (i18n depende de text layout).
 
@@ -33,7 +33,7 @@ Ordem: 01 fronteira app/engine, 02 estado de dominio fora do plev, 03 fluxo unid
 ## rul-01 — fronteira app engine
 
 - **dom:** boundary
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Codigo de aplicacao nunca importa wgpu, scenenode, gpuvec, compositor, nem qualquer tipo do rendering pipeline. A app fala com plev exclusivamente via `builder.rs` (elements) e `signal.rs` (reatividade).
@@ -45,7 +45,7 @@ Acoplamento direto com internals do renderer significa que qualquer refactor no 
 ## rul-02 — estado de dominio fora do plev
 
 - **dom:** state
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Signals do plev armazenam exclusivamente estado de ui: scroll position, painel aberto, hover state, selecao ativa, modo de edicao. Dados de dominio, usuario autenticado, lista de entidades, sessao, configuracao persistida, vivem em structs rust puros, owned pela app, sem dependencia de plev.
@@ -61,7 +61,7 @@ Excecao obrigatoria para memoizacao: quando a transformacao opera sobre colecoes
 ## rul-03 — fluxo unidirecional
 
 - **dom:** data-flow
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Toda mutacao de estado segue: userinput -> action (enum tipado) -> handler centralizado -> estado mutado -> re-render. Callbacks de componentes emitem actions via `actionqueue.emit()`, nunca mutam estado diretamente.
@@ -73,7 +73,7 @@ Mutacao espalhada em callbacks cria estado inconsistente, componente a muta x, c
 ## rul-04 — composicao sobre heranca
 
 - **dom:** composition
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Componentes sao funcoes `fn(props) -> element`. Sem trait objects de widget como interface publica na camada de app, sem hierarquia de tipos, sem dyn widget em composicao estatica de ui. Componente complexo e composicao de componentes simples via `child()`.
@@ -87,7 +87,7 @@ Para sistemas de plugin onde o tipo e genuinamente desconhecido em compile time,
 ## rul-05 — layout declarativo nunca manual
 
 - **dom:** layout
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Posicionamento usa exclusivamente as primitivas de layout do plev via taffy: col, row, gap, p, w, h, grow, shrink, basis. Zero coordenadas absolutas calculadas manualmente. Zero offsets hardcoded.
@@ -99,7 +99,7 @@ Plev executa em 6 plataformas com densidades de pixel radicalmente diferentes, r
 ## rul-06 — navegacao como enum
 
 - **dom:** navigation
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Telas e rotas da app sao variantes de um enum rust. Transicao e mutar o valor do enum no estado. O render faz match exaustivo no enum para decidir o que renderizar. Zero string matching, zero router framework.
@@ -111,7 +111,7 @@ Rust garante exaustividade no match, adicionar uma tela nova e esquecer de trata
 ## rul-07 — side effects isolados com abstracao de runtime
 
 - **dom:** side-effects
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules, rul-11
 
 Nenhum io, network, filesystem, ipc, timers longos, acontece dentro de `render()`, dentro de callbacks de componente, ou de forma sincrona dentro de handlers de action. Io dispara via spawn assincrono e retorna como nova action no fluxo normal.
@@ -123,7 +123,7 @@ O spawn de tasks usa tokio no nativo e wasm-bindgen-futures no browser. Essa div
 ## rul-08 — theming como struct com dimensoes comportamentais
 
 - **dom:** theming
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Definir struct theme com todas as dimensoes de design como tokens de primeira classe. Cores, escala tipografica, escala de espacamento e border radius sao a camada visual. Motion physics, mass, tension, friction como parametros globais do sistema cinetico, e intent tokens, intent: destructive, constructive, neutral, informational como dado estrutural que propaga para cor, motion e aria simultaneamente, sao camadas comportamentais obrigatorias. Componentes recebem `&theme` e leem tokens dele. Zero valores visuais ou comportamentais hardcoded.
@@ -135,7 +135,7 @@ Com struct, dark mode e `theme::dark()`, rebranding e um novo theme, e a sensaca
 ## rul-09 — acessibilidade como constraint via accesskit
 
 - **dom:** accessibility
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Toda arvore de elementos do plev mantem uma arvore de acessibilidade paralela via accesskit. Nao e feature opcional, e parte do contrato de cada componente desde a primeira implementacao.
@@ -147,7 +147,7 @@ Plev nao tem dom. O browser nao constroi a arvore de acessibilidade automaticame
 ## rul-10 — text layout via parley com suporte bidi
 
 - **dom:** text
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Todo rendering de texto passa por parley (linebender). Zero implementacao manual de text layout. Bidi, scripts complexos (devanagari, tailandes, arabe, hebraico) e features opentype sao suportados por construcao via harfrust.
@@ -159,7 +159,7 @@ Text layout correto e um dos problemas computacionalmente mais complexos em ui, 
 ## rul-11 — persistencia via trait com migracao versionada
 
 - **dom:** persistence
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules, rul-07
 
 Definir `trait storage { fn load(...) -> result<t>; fn save(...) -> result<()>; }`. Implementacoes concretas, rusqlite, sled, indexeddb, filesystem, ficam em modulos separados injetados na inicializacao. Dominio e ui dependem do trait, nunca da implementacao.
@@ -171,7 +171,7 @@ Alem do trait de acesso, definir `trait migration { fn version() -> u32; fn up(d
 ## rul-12 — internacionalizacao alem de text layout
 
 - **dom:** i18n
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules, rul-10
 
 Strings visiveis ao usuario vivem exclusivamente em arquivos de localizacao, formato fluent (project fluent da mozilla) por ser o unico sistema que resolve pluralizacao, genero gramatical e variacoes contextuais como dado, nao como logica condicional no codigo. Zero string literal em portugues, ingles ou qualquer idioma dentro de componentes. Zero formatacao manual de data, numero, moeda ou unidade, usar icu4x como unica fonte de formatacao locale-aware.
@@ -183,7 +183,7 @@ Rtl layout e consequencia de locale, nao de configuracao manual. Taffy suporta d
 ## rul-13 — error handling tipado e visivel
 
 - **dom:** errors
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Definir enum apperror com variantes semanticas: networktimeout, storagecorrupted, `invalidinput { field: static str, reason: string }`, authexpired, `ratelimited { retry_after: duration }`. Todo result na app usa apperror. Erros se tornam estado visivel, inline message, toast, retry button, via action no fluxo normal. Zero `unwrap()` em codigo de producao. Zero erro silencioso.
@@ -195,7 +195,7 @@ Definir enum apperror com variantes semanticas: networktimeout, storagecorrupted
 ## rul-14 — props minimas com contexto explicito
 
 - **dom:** components
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Componente com mais de 5 props deve ser quebrado em componentes menores ou receber struct de configuracao. Dado que o componente nao usa diretamente, so repassa para filhos, vai via contexto ou e passado diretamente ao filho que precisa.
@@ -207,7 +207,7 @@ Contexto em plev segue o modelo do xilem env, dado disponivel para toda a subarv
 ## rul-15 — testabilidade por camada sem gpu
 
 - **dom:** testing
-- **dat:** 2026-03-13
+- **dat:** 2022-11-14
 - **lnk:** idx-rules
 
 Tres niveis obrigatorios. Dominio: unit tests puros com test, sem plev, sem window, em milissegundos. Componentes: snapshot do element tree retornado, element e struct rust inspecionavel sem necessidade de render. Integracao: headless render para screenshot diff apenas em critical paths com baseline versionado no repositorio.

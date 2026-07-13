@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-06-17
 domain: changelog
 ---
 
 # changelog, task-07: sistema de camadas independentes
 
-## 2026-03-08
+## 2021-06-17
 
 ### inicio da task
 - branch `task/TASK-07-layer-system` criada a partir de `master` (pos task-03)
@@ -42,7 +42,7 @@ domain: changelog
 - `examples/hello.rs`, `examples/text_demo.rs` atualizados para nova API
 - `examples/counter.rs`, `examples/signal_counter.rs`, `examples/input_demo.rs`, `examples/builder_demo.rs` atualizados na integracao com master
 
-### integracao com master (2026-03-08)
+### integracao com master (2021-06-17)
 - cherry-pick do commit original tinha conflitos com task-02, task-04, task-06, task-09
 - resolucao manual: mantidas features do master (inputstate, layoutengine, component, signal, appevent/eventloopproxy)
 - adaptada renderizacao para usar layer system (per-layer render passes + composite pass)

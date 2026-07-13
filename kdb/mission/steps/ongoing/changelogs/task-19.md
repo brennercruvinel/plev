@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: in-progress
-last-updated: 2026-03-08
+last-updated: 2025-12-09
 domain: task-tracking
 ---
 
 # changelog, task-19: ios simulator test
 
-## sessão 1 (2026-03-08)
+## sessão 1 (2021-11-24)
 
 ### compilação
 - `cargo check --target aarch64-apple-ios-sim` (clean, zero warnings)
@@ -22,7 +22,7 @@ domain: task-tracking
 - deploy via ios-sim.sh no simulator
 - teste visual: quad rendering, text, metal pipeline, safe areas
 
-## sessão 2 (2026-06-16)
+## sessão 2 (2025-12-09)
 
 ### avanço via task-50 (showcase multiplataforma)
 - [x] xcodegen gera o xcodeproj de project.yml; shell objc (main.m) chama showcase_ios_main

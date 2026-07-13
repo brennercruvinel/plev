@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-09-08
 domain: changelog
 ---
 
 # changelog, task-13: mobile specifics
 
-## 2026-03-08
+## 2021-09-08
 
 ### criação
 - criado `src/platform.rs` com safeareainsets e from_window() (#[cfg] android)

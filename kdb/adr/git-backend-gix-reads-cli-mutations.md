@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [git, backend, gix, threading, apps]
-date: 2026-06-24
+date: 2026-04-01
 ---
 
 # git backend: gix for reads, git CLI for mutations, a worker thread for the UI

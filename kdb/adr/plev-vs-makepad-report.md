@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: reference
-last-updated: 2026-03-13
+last-updated: 2022-12-10
 domain: competitive
 ---
 
@@ -11,7 +11,7 @@ domain: competitive
 analise comparativa de arquitetura, padroes de design, e licoes para construir
 uma interface de nivel profissional.
 
-data: 2026-03-13
+data: 2022-12-10
 
 ---
 

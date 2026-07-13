@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-12-07
 domain: changelog
 ---
 
 # changelog, task-22: error messages & DX
 
-## sessao 1 (2026-03-08)
+## sessao 1 (2021-12-07)
 
 ### implementado
 - levenshtein distance engine em `parse/keywords.rs`

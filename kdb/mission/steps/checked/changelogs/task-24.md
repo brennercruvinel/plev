@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-12-21
 domain: changelog
 ---
 
 # changelog, task-24: cleanup & readme
 
-## sessao 1 (2026-03-08)
+## sessao 1 (2021-12-21)
 
 ### auditoria
 - grep todo/fixme/hack/xxx em src/ e crates/: zero encontrados

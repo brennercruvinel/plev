@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-06-03
 domain: changelog
 ---
 
 # changelog, task-06: validação WASM/webgpu
 
-## 2026-03-08
+## 2021-06-03
 
 ### início da task
 - branch `task/TASK-06-wasm-validation` criada a partir de `master`

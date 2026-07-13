@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [fonts, cosmic-text, typography, fontdb, rubik]
-date: 2026-06-10
+date: 2025-01-08
 commit: 21fdc8c
 ---
 

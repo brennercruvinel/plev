@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [text-editing, rope, helix, transactions, undo]
-date: 2026-06-24
+date: 2026-03-04
 ---
 
 # the text editing core follows helix: document is rope plus selections plus history

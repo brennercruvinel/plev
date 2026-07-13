@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: in-progress
-last-updated: 2026-03-13
+last-updated: 2022-10-19
 domain: task-tracking
 ---
 
 # changelog, task-42: plev event dispatch + gitbutler UI port
 
-## 2026-03-12
+## 2022-10-06
 
 ### fase 0, framework extensions
 - criado `shaders/rect_sdf.wgsl` com SDF rounded box (inigo quilez formula)
@@ -35,7 +35,7 @@ domain: task-tracking
 - tecla c toggle commit mode
 - text input com character/backspace/enter/escape
 
-## 2026-03-13
+## 2022-10-19
 
 ### fase 4, typed dispatch + overlays (steps 1-6)
 - `src/dispatch.rs` (211 LOC): actionqueue com typed drain via any downcast
@@ -44,7 +44,7 @@ domain: task-tracking
 - 26 testes passando (dispatch + overlay + doctests)
 - steps 7-9 pendentes (context_menu render, modal render, wiring)
 
-### reorganizacao (2026-03-13)
+### reorganizacao (2022-10-19)
 - crate extraido de `experiment/gitbutler/crates/gitbutler-plev/` para `experiment/gitbutler-plev/`
 - clone monorepo gitbutler (2.4gb) removido
 - path plev dependency atualizado: `"../../../.."` -> `"../.."`

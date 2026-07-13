@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-07-15
 domain: changelog
 ---
 
 # task-09 changelog
 
-## 2026-03-08, implementacao completa
+## 2021-07-15, implementacao completa
 
 ### decisoes
 - event queue (nao closures), evita problemas de borrow checker

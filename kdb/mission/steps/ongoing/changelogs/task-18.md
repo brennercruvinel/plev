@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: in-progress
-last-updated: 2026-03-08
+last-updated: 2025-11-26
 domain: task-tracking
 ---
 
 # changelog, task-18: android build & device test
 
-## sessão 1 (2026-03-08)
+## sessão 1 (2021-11-17)
 
 ### compilação
 - `cargo check --target aarch64-linux-android --features android-game-activity`
@@ -30,7 +30,7 @@ domain: task-tracking
 ### warnings (esperados)
 - `mut attrs` unused em window.rs (cfg-condicional, usado em desktop/ios mas não android)
 
-## sessão 2 (2026-06-16)
+## sessão 2 (2025-11-26)
 
 ### avanço via task-50 (showcase multiplataforma)
 - [x] APK wrapper resolvido: gradle kts + cargo-ndk geram jniLibs (arm64-v8a, x86_64) e o app-debug.apk

@@ -2,7 +2,7 @@
 title: experimento mon, nota de trabalho
 status: trabalho vivo
 tags: [mon, ui-superset, design-tokens, aria-apg, lottie, monster, swf]
-date: 2026-06-12
+date: 2025-07-29
 ancoras: [crates/lot, crates/monster, crates/parser, kdb/adr/monster-format-v0.md, kdb/adr/binary-animation-format-with-discovered-deltas.md, kdb/adr/import-foreign-formats-by-conversion-not-embedding.md, kdb/adr/transpiler-reports-every-unmapped-construct.md]
 ---
 

@@ -2,13 +2,13 @@
 project: plev
 audience: [ai-agents, contributors]
 status: done
-last-updated: 2026-03-08
+last-updated: 2021-08-11
 domain: changelog
 ---
 
 # changelog, task-11: android build + lifecycle
 
-## sessão 1 (2026-03-08)
+## sessão 1 (2021-08-11)
 
 ### implementado
 - cargo.toml: `android-game-activity` feature, `android_logger`, APK metadata

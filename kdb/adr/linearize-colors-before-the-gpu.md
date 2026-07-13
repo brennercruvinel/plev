@@ -2,7 +2,7 @@
 type: adr
 status: accepted
 tags: [gamma, srgb, color, wgpu, shaders, rendering]
-date: 2026-06-10
+date: 2024-11-20
 commit: 69013d1
 ---
 
