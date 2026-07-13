@@ -1,23 +1,23 @@
 pub use narrate_macro::plev_narrate;
 
-/// Bridge module: re-exports from the real `plev::builder` API.
+/// Bridge module: re-exports from the real `engine::builder` API.
 ///
 /// The `plev_narrate!` macro generates code referencing `::narrate::builder::*`.
 /// This module provides all symbols the generated code needs, using the real
 /// builder implementations instead of the previous stubs.
 pub mod builder {
     // Re-export everything from the real builder
-    pub use plev::builder::{
+    pub use engine::builder::{
         Align, ClickEvent, Direction, Element, EventHandlers, FocusEvent, HoverEvent, IntoF32,
         IntoRadius, IntoView, Justify, KeyEvent, LayoutConfig, Scope, ScrollEvent, SizeConstraint,
         Spacing, Style, div,
     };
-    pub use plev::color::{Color, IntoColor};
+    pub use engine::color::{Color, IntoColor};
 
     /// No-arg `text()` for DSL — creates an empty text element.
     /// Content is set via `.child("content")` which merges into the text node.
     pub fn text() -> Element {
-        plev::builder::text("")
+        engine::builder::text("")
     }
 
     /// No-arg `button()` for DSL — creates a styled container.
@@ -31,11 +31,11 @@ pub mod builder {
 
     /// Placeholder `image()` constructor for DSL.
     pub fn image() -> Element {
-        plev::builder::image()
+        engine::builder::image()
     }
 
     /// `spacer()` constructor — grows to fill available space.
     pub fn spacer() -> Element {
-        plev::builder::spacer()
+        engine::builder::spacer()
     }
 }

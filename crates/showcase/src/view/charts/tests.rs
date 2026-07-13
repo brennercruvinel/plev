@@ -2,9 +2,9 @@
 //! lifecycle (replay on click, settles, no busy loop) and a headless
 //! mid-reveal scene probe. No GPU anywhere.
 
-use plev::compositor::{Compositor, LayerId, SceneNode};
-use plev::theme::Theme;
-use plev::ui::widgets::{Rect, WidgetEvent};
+use engine::compositor::{Compositor, LayerId, SceneNode};
+use engine::theme::Theme;
+use engine::ui::widgets::{Rect, WidgetEvent};
 
 use super::ChartsSection;
 

@@ -1,11 +1,11 @@
 //! Design token system for plev ide - HOFF visual language.
 //!
 //! Tokens transcribed 1:1 from the HOFF social/cards specs
-//! (`ref/hoff-research-social/styles/variables.sass` et al.):
+//! (`refs/hoff-research-social/styles/variables.sass` et al.):
 //! a monochromatic "dark glass" system where almost every color derives
 //! from `$n2 = #f8f8f8` or `$n3 = #282828` with an alpha, plus three
 //! chromatic accents (red #BD3027, green #55F08B, orange #FF4D00).
-use plev::color::Color;
+use engine::color::Color;
 
 // -- Base palette ($n1..$n4 from variables.sass) ----------------------------
 // Catálogo de tokens: constantes ainda não consumidas pelas views fazem

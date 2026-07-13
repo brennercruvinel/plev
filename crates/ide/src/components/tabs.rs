@@ -6,8 +6,8 @@
 
 use super::hoff;
 use crate::theme::{SHADOW_TABS_BLOCK, Theme};
-use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use plev::text::TextStyle;
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::text::TextStyle;
 
 const PAD: f32 = 4.0;
 const BTN_H: f32 = 36.0;
@@ -109,7 +109,7 @@ pub fn draw(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plev::compositor::Compositor;
+    use engine::compositor::Compositor;
 
     /// Segments are clamped to min-content: in a container too narrow for
     /// its labels, each segment still fits its widest REAL shaped label

@@ -7,12 +7,12 @@
 //! 2. resolve (resolve_react.rs via css_map.rs, resolve_gpui.rs): normalize
 //!    to the ParserNode IR, map colors to HOFF theme tokens, apply the
 //!    documented flow rewrites, fill the droplist with file:line entries
-//! 3. emit   (emit.rs): deterministic rust source against `plev::builder`
+//! 3. emit   (emit.rs): deterministic rust source against `engine::builder`
 //!
 //! Scope is brutally small and honest (ADR transpiler-reports-every-
 //! unmapped-construct): one react component instance (the hoff research
 //! card, base variant) and one gpui widget instance (the horizontal labeled
-//! separator). The emitted code obeys kdb/how-to/code-against-the-plev-
+//! separator). The emitted code obeys docs/how-to/code-against-the-plev-
 //! engine.md: theme tokens where colors hit the HOFF palette, one TextStyle
 //! per text run, content-driven layout (no absolute positioning).
 

@@ -1,0 +1,9 @@
+#!/bin/sh
+# the four-part gate from .contracts/.agents/AGENTS.md; every change passes
+# all four. one command per part so the first red names the failing gate.
+set -e
+
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+cargo fmt --check
+cargo check --target wasm32-unknown-unknown -p showcase

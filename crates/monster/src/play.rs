@@ -3,9 +3,9 @@ use crate::lower::{LoweredAsset, lower_scene};
 use crate::play_eval::{
     Cursor, DEAD, KfPlan, apply_ops, default_value, derive_cursor, plan, sample,
 };
-use plev::animation::AnimationTick;
-use plev::compositor::SceneNode;
-use plev::signal::{ReadSignal, WriteSignal, create_signal};
+use engine::animation::AnimationTick;
+use engine::compositor::SceneNode;
+use engine::signal::{ReadSignal, WriteSignal, create_signal};
 
 /// Ticks advancing the playhead by less than this many seconds are
 /// dropped whole: at the format's quantization grid nothing visible can

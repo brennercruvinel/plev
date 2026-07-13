@@ -11,7 +11,7 @@
 //! evaluation replays the current segment's ops only, never the file.
 
 use crate::ir::{Node, Prop, Timeline, Track, Value};
-use plev::animation::Interpolate;
+use engine::animation::Interpolate;
 
 /// v0 default for a prop never given a value: scalars read 0,
 /// colors transparent black (mirrors `crate::lower`).

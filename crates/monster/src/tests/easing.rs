@@ -2,7 +2,7 @@
 //! spec anchor ids, custom bezier escape, plev mirror round-trip.
 
 use crate::easing::{CUSTOM_BEZIER_BYTE, Easing, MAX_PRESET_BYTE, PRESETS};
-use plev::animation::Easing as PlevEasing;
+use engine::animation::Easing as PlevEasing;
 
 #[test]
 fn preset_byte_roundtrip_is_bijective() {
@@ -30,7 +30,7 @@ fn every_assigned_byte_decodes_back_to_its_own_id() {
 
 #[test]
 fn spec_anchor_ids_hold() {
-    // kdb/adr/monster-format-v0.md decision 4: 0x00 linear, 0x01 hold,
+    // docs/adr/monster-format-v0.md decision 4: 0x00 linear, 0x01 hold,
     // 0x02 ae-default (ease-in-out).
     assert_eq!(Easing::Linear.byte(), 0x00);
     assert_eq!(Easing::Hold.byte(), 0x01);

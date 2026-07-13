@@ -1,10 +1,10 @@
 //! Icons section: the full Lucide set in a hoverable grid.
 
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
-use plev::text::TextMeasurer;
-use plev::theme::Theme;
-use plev::ui::icons;
-use plev::ui::widgets::{EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::text::TextMeasurer;
+use engine::theme::Theme;
+use engine::ui::icons;
+use engine::ui::widgets::{EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
 
 const CELL_W: f32 = 104.0;
 const CELL_H: f32 = 72.0;

@@ -503,6 +503,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
+name = "base64"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+
+[[package]]
 name = "bit-set"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1008,6 +1014,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
 
 [[package]]
+name = "data-url"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "be1e0bca6c3637f992fc1cc7cbc52a78c1ef6db076dbf1059c4323d6a2048376"
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1089,6 +1101,50 @@ name = "endi"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "66b7e2430c6dff6a955451e2cfc438f09cea1965a9d6f87f7e3b90decc014099"
+
+[[package]]
+name = "engine"
+version = "0.1.0"
+dependencies = [
+ "accesskit",
+ "accesskit_winit",
+ "android_logger",
+ "arboard",
+ "bytemuck",
+ "console_error_panic_hook",
+ "console_log",
+ "cosmic-text",
+ "criterion",
+ "env_logger",
+ "etagere",
+ "image",
+ "indexmap",
+ "log",
+ "lot",
+ "lru",
+ "lyon_path",
+ "lyon_tessellation",
+ "macros",
+ "monster",
+ "narrate",
+ "notify",
+ "notify-debouncer-full",
+ "pollster",
+ "rope",
+ "rustc-hash 2.1.2",
+ "serde",
+ "serde_json",
+ "slotmap",
+ "svg",
+ "taffy",
+ "unicode-segmentation",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "web-time",
+ "wgpu",
+ "winit",
+]
 
 [[package]]
 name = "enumflags2"
@@ -1265,6 +1321,12 @@ dependencies = [
  "crc32fast",
  "miniz_oxide",
 ]
+
+[[package]]
+name = "float-cmp"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
 
 [[package]]
 name = "float_next_after"
@@ -2287,11 +2349,11 @@ checksum = "3d3067d79b975e8844ca9eb072e16b31c3c1c36928edf9c6789548c524d0d954"
 name = "ide"
 version = "0.1.0"
 dependencies = [
+ "engine",
  "env_logger",
  "git",
  "log",
  "notify",
- "plev",
  "pollster",
  "wgpu",
  "winit",
@@ -2311,6 +2373,12 @@ dependencies = [
  "zune-core",
  "zune-jpeg",
 ]
+
+[[package]]
+name = "imagesize"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "edcd27d72f2f071c64249075f42e205ff93c9a4c5f6c6da53e79ed9f9832c285"
 
 [[package]]
 name = "indexmap"
@@ -2552,6 +2620,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "kurbo"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c62026ae44756f8a599ba21140f350303d4f08dcdcc71b5ad9c9bb8128c13c62"
+dependencies = [
+ "arrayvec",
+ "euclid",
+ "smallvec",
+]
+
+[[package]]
 name = "leb128fmt"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2634,9 +2713,10 @@ checksum = "953f07c43838f8e6f9758cab68bf5bed85465e7587ebe0b823f1bcd81978ad3a"
 name = "lot"
 version = "0.1.0"
 dependencies = [
+ "criterion",
+ "engine",
  "log",
  "monster",
- "plev",
  "serde",
  "serde_json",
 ]
@@ -2776,7 +2856,8 @@ dependencies = [
 name = "monster"
 version = "0.1.0"
 dependencies = [
- "plev",
+ "criterion",
+ "engine",
  "proptest",
  "serde_json",
  "sha2",
@@ -2823,8 +2904,8 @@ dependencies = [
 name = "narrate"
 version = "0.1.0"
 dependencies = [
+ "engine",
  "narrate-macro",
- "plev",
 ]
 
 [[package]]
@@ -3314,8 +3395,9 @@ dependencies = [
 name = "parser"
 version = "0.1.0"
 dependencies = [
+ "criterion",
+ "engine",
  "env_logger",
- "plev",
  "pollster",
  "thiserror 2.0.18",
  "tree-sitter",
@@ -3379,6 +3461,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "pico-args"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5be167a7af36ee22fe3115051bc51f6e6c7054c9348e28deb4f49bd6f705a315"
+
+[[package]]
 name = "pin-project"
 version = "1.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3426,49 +3514,6 @@ name = "plain"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
-
-[[package]]
-name = "plev"
-version = "0.1.0"
-dependencies = [
- "accesskit",
- "accesskit_winit",
- "android_logger",
- "arboard",
- "bytemuck",
- "console_error_panic_hook",
- "console_log",
- "cosmic-text",
- "criterion",
- "env_logger",
- "etagere",
- "image",
- "indexmap",
- "log",
- "lot",
- "lru",
- "lyon_path",
- "lyon_tessellation",
- "macros",
- "monster",
- "narrate",
- "notify",
- "notify-debouncer-full",
- "pollster",
- "rope",
- "rustc-hash 2.1.2",
- "serde",
- "serde_json",
- "slotmap",
- "taffy",
- "unicode-segmentation",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "web-time",
- "wgpu",
- "winit",
-]
 
 [[package]]
 name = "plotters"
@@ -3572,14 +3617,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "prime_creatures"
+name = "prime"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
  "console_log",
+ "engine",
  "env_logger",
  "log",
- "plev",
  "pollster",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -3855,6 +3900,7 @@ checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 name = "rope"
 version = "0.1.0"
 dependencies = [
+ "criterion",
  "proptest",
  "ropey",
  "unicode-segmentation",
@@ -4102,9 +4148,9 @@ dependencies = [
  "android_logger",
  "console_error_panic_hook",
  "console_log",
+ "engine",
  "env_logger",
  "log",
- "plev",
  "pollster",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -4144,6 +4190,15 @@ name = "simdutf8"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
+
+[[package]]
+name = "simplecss"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a9c6883ca9c3c7c90e888de77b7a5c849c779d25d74a1269b0218b14e8b136c"
+dependencies = [
+ "log",
+]
 
 [[package]]
 name = "siphasher"
@@ -4270,12 +4325,36 @@ name = "strict-num"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6637bab7722d379c8b41ba849228d680cc12d0a45ba1fa2b48f2a30577a06731"
+dependencies = [
+ "float-cmp",
+]
+
+[[package]]
+name = "svg"
+version = "0.1.0"
+dependencies = [
+ "engine",
+ "log",
+ "monster",
+ "thiserror 2.0.18",
+ "usvg",
+]
 
 [[package]]
 name = "svg_fmt"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0193cc4331cfd2f3d2011ef287590868599a2f33c3e69bc22c1a3d3acf9e02fb"
+
+[[package]]
+name = "svgtypes"
+version = "0.15.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68c7541fff44b35860c1a7a47a7cadf3e4a304c457b58f9870d9706ece028afc"
+dependencies = [
+ "kurbo",
+ "siphasher",
+]
 
 [[package]]
 name = "swash"
@@ -4663,6 +4742,28 @@ name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
+
+[[package]]
+name = "usvg"
+version = "0.45.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "80be9b06fbae3b8b303400ab20778c80bbaf338f563afe567cf3c9eea17b47ef"
+dependencies = [
+ "base64",
+ "data-url",
+ "flate2",
+ "imagesize",
+ "kurbo",
+ "log",
+ "pico-args",
+ "roxmltree",
+ "simplecss",
+ "siphasher",
+ "strict-num",
+ "svgtypes",
+ "tiny-skia-path",
+ "xmlwriter",
+]
 
 [[package]]
 name = "utf8parse"
@@ -5608,6 +5709,12 @@ name = "xml-rs"
 version = "0.8.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ae8337f8a065cfc972643663ea4279e04e7256de865aa66fe25cec5fb912d3f"
+
+[[package]]
+name = "xmlwriter"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 
 [[package]]
 name = "yazi"

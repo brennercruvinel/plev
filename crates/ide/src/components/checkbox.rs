@@ -4,7 +4,7 @@
 //! text-primary. Radius 6 (micro-action).
 
 use crate::theme::Theme;
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 
 const SIZE: f32 = 16.0;
 const BORDER_W: f32 = 1.5;

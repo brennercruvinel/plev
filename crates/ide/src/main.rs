@@ -17,15 +17,15 @@ mod watcher;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use git::{GitClient, GitCommand, GitEvent};
-use plev::actions::{
+use engine::actions::{
     Action, ActionRegistry, ContextStack, KeyContext, KeymapMatcher, MatchResult,
     keystroke_from_key_event,
 };
-use plev::compositor::Compositor;
-use plev::gpu::GpuContext;
-use plev::gpu::texture_pool::TexturePool;
-use plev::text::TextSystem;
+use engine::compositor::Compositor;
+use engine::gpu::GpuContext;
+use engine::gpu::texture_pool::TexturePool;
+use engine::text::TextSystem;
+use git::{GitClient, GitCommand, GitEvent};
 use views::workspace::{Side, UiRequest, WorkspaceView};
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
@@ -55,7 +55,7 @@ enum GpuState {
     Ready {
         gpu: GpuContext,
         text_system: TextSystem,
-        effects: plev::effects::EffectProcessor,
+        effects: engine::effects::EffectProcessor,
         texture_pool: TexturePool,
     },
 }
@@ -330,7 +330,7 @@ impl ApplicationHandler<AppEvent> for App {
         self.scale_factor = window.scale_factor();
         let gpu = pollster::block_on(GpuContext::new(window.clone()));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let effects = plev::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        let effects = engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = GpuState::Ready {
             gpu,
             text_system,

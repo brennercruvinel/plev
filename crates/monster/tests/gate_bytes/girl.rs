@@ -23,7 +23,7 @@
 //! keyframe, without bezier slicing (v0 cannot slice a curve), which
 //! also drops morph keyframes outside their layer's visibility.
 
-use crate::dense::{Dense, encode_pair, load, path_node, report};
+use crate::dense::{Dense, encode_pair, fixture_missing, load, path_node, report};
 use crate::lot::{NumKf, Scan, f, scan_layer};
 use monster::{
     Asset, AssetKind, Keyframe, Node, NodeKind, PlaceNode, Prop, Props, RemoveNode, ReplaceNode,
@@ -150,6 +150,9 @@ fn scan_all(doc: &serde_json::Value, fr: f32, dur: f32) -> Vec<Scan> {
 
 #[test]
 fn bench_girl_vs_lottie() {
+    if fixture_missing("girl/json.json") {
+        return;
+    }
     let doc = load("girl/json.json");
     let fr = f(&doc["fr"]);
     let dur = (f(&doc["op"]) - f(&doc["ip"])) / fr;

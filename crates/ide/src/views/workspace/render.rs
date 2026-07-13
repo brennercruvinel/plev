@@ -1,5 +1,5 @@
 use super::{HEADER_H, RESIZE_HANDLE_W, SIDEBAR_W, ThemeMode, WorkspaceView};
-use plev::compositor::{Compositor, SceneNode};
+use engine::compositor::{Compositor, SceneNode};
 
 impl WorkspaceView {
     /// Full render — clears and rebuilds everything.

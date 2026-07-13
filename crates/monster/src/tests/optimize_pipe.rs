@@ -15,7 +15,7 @@ use crate::tests::discover::{assert_reproduced, cfg as discover_cfg};
 use crate::tests::optimize::{assert_quantized_parity, col, lin, seg, track};
 use crate::tests::write::rect;
 use crate::write::encode;
-use plev::compositor::SceneNode;
+use engine::compositor::SceneNode;
 
 /// 2 px on coordinates, 40/255 per color channel, 0.6 px for RDP.
 fn aggressive() -> OptimizeCfg {

@@ -1,8 +1,8 @@
 use super::{PendingAction, UiRequest, WorkspaceView};
 use crate::components::{context_menu, hoff, modal};
 use crate::theme::{SHADOW_TOOLTIP, Theme};
-use plev::compositor::{Compositor, SceneNode};
-use plev::overlay::OverlayKind;
+use engine::compositor::{Compositor, SceneNode};
+use engine::overlay::OverlayKind;
 
 impl WorkspaceView {
     /// Handle a click when overlays are active. Returns true if consumed.
@@ -207,7 +207,7 @@ impl WorkspaceView {
                     // One caption-r style (12/1.33/400) measures the bubble
                     // and draws the text, so long tips never leak out.
                     let line_h = 12.0 * 1.33;
-                    let tip_style = plev::text::TextStyle::new(12.0).with_line_height(line_h);
+                    let tip_style = engine::text::TextStyle::new(12.0).with_line_height(line_h);
                     let tip_w = hoff::measure_text(text, &tip_style) + 24.0;
                     let tip_h = line_h + 8.0;
                     hoff::shadow(
@@ -236,7 +236,9 @@ impl WorkspaceView {
                     compositor.push_to_layer(
                         layer_id,
                         SceneNode::Text {
-                            key: plev::compositor::TextNodeKey::from_style(text, &tip_style, None),
+                            key: engine::compositor::TextNodeKey::from_style(
+                                text, &tip_style, None,
+                            ),
                             x: overlay.x + 12.0,
                             y: overlay.y + 5.0,
                             color: theme.text_secondary.to_array(),

@@ -9,7 +9,7 @@ use super::Rect;
 use super::button::{ButtonKind, ButtonSize, draw_to_layer as draw_button, width_for};
 use super::hoff;
 use crate::theme::{SHADOW_MODAL, Theme};
-use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 
 const MODAL_W: f32 = 400.0;
 const MODAL_H: f32 = 216.0;

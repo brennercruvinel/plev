@@ -3,7 +3,7 @@
 //! of truth for rects). No GPU: scenes build into a plain compositor.
 
 use super::*;
-use plev::compositor::LayerId;
+use engine::compositor::LayerId;
 use showcase::model::dock::DockState;
 
 const DT: f32 = 1.0 / 60.0;

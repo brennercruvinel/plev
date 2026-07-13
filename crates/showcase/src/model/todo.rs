@@ -3,10 +3,10 @@
 //! pure state, no gpu, no window, no text measurement. absorbed from
 //! examples/todo_app/state.rs minus its layout heuristics: the demo
 //! estimated label width as chars * 8, which is a defect class here
-//! (kdb/how-to/code-against-the-plev-engine.md). any text measure the
+//! (docs/how-to/code-against-the-plev-engine.md). any text measure the
 //! ui needs comes from TextMeasurer at draw time, never from this model.
 
-use plev::animation::{Easing, Tween};
+use engine::animation::{Easing, Tween};
 
 /// Seconds for the enter fade-in of a freshly added item.
 const ENTER_SECS: f32 = 0.3;

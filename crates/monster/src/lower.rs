@@ -1,5 +1,5 @@
 //! lowering monster IR scenes to plev `SceneNode`s, the player half of the
-//! spec's node model (kdb/adr/monster-format-v0.md): the codec's IR mirrors the
+//! spec's node model (docs/adr/monster-format-v0.md): the codec's IR mirrors the
 //! animatable surface, the player maps it onto the real compositor enum
 //! at render time, so the frozen format never chases `SceneNode`.
 //!
@@ -13,9 +13,9 @@
 //! emits nodes in ascending depth: the compositor paints in push order.
 
 use crate::ir::{Node, NodeKind, Prop, Props, Value};
-use plev::compositor::{SceneNode, TextNodeKey};
-use plev::gpu::ImageHandle;
-use plev::path::TessellatedPath;
+use engine::compositor::{SceneNode, TextNodeKey};
+use engine::gpu::ImageHandle;
+use engine::path::TessellatedPath;
 
 /// Runtime resource behind an `AssetId`. The bank is positional: index
 /// in the slice == asset id, mirroring the file's asset table, so a

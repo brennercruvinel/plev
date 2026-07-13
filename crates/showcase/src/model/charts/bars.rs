@@ -3,8 +3,8 @@
 //! examples/makepad_charts/charts.rs; the fixed 0..1 normalization is
 //! replaced by a nice-tick axis so bar heights reconstruct their values.
 
-use plev::text::TextStyle;
-use plev::ui::widgets::Rect;
+use engine::text::TextStyle;
+use engine::ui::widgets::Rect;
 
 use super::{Axis, Label, drop_colliding, format_tick, nice_ticks};
 

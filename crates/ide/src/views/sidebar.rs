@@ -6,7 +6,7 @@
 
 use crate::components::hoff;
 use crate::theme::Theme;
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 
 /// Collapsed HOFF sidebar width.
 pub const SIDEBAR_W: f32 = 72.0;
@@ -74,7 +74,7 @@ impl Sidebar {
             });
             hoff::edge_light(
                 compositor,
-                plev::compositor::LayerId::DEFAULT,
+                engine::compositor::LayerId::DEFAULT,
                 item_x,
                 y,
                 item_w,

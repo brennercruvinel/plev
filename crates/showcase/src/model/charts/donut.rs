@@ -7,8 +7,8 @@
 
 use std::f32::consts::{FRAC_PI_2, TAU};
 
-use plev::text::TextStyle;
-use plev::ui::widgets::Rect;
+use engine::text::TextStyle;
+use engine::ui::widgets::Rect;
 
 use super::Label;
 

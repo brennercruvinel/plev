@@ -1,0 +1,19 @@
+# clippy contract for the plev workspace.
+#
+# discovery: clippy auto-loads clippy.toml from the workspace root or
+# CARGO_MANIFEST_DIR. this file lives under .contracts to keep the root
+# clean, so .cargo/config.toml sets CLIPPY_CONF_DIR to this directory. shared
+# lint LEVELS (warn/deny) live in [workspace.lints] in the root Cargo.toml;
+# this file holds clippy's threshold-style tunables only.
+
+# msrv is not set here on purpose: clippy reads it from the single source,
+# `rust-version` in the workspace Cargo.toml (1.85). the codebase keeps to
+# that floor (modulo checks use `% k == 0`, not the 1.87-only
+# u64::is_multiple_of), so clippy's incompatible_msrv lint has nothing to
+# flag and manual_is_multiple_of stays inactive below 1.87.
+
+# the file-hygiene convention targets ~220 and hard-caps 369 lines; clippy's
+# own type-complexity and argument thresholds stay at sane defaults. raise
+# here only with a one-line reason, never to silence a real smell.
+too-many-arguments-threshold = 8
+type-complexity-threshold = 250

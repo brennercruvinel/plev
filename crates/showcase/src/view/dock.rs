@@ -10,11 +10,11 @@
 //! edge-lit translucent pill) and all text centering is measured with one
 //! TextStyle per run for measurement and drawing.
 
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
-use plev::text::{TextMeasurer, TextStyle};
-use plev::theme::Theme;
-use plev::ui::icons;
-use plev::ui::widgets::{
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::text::{TextMeasurer, TextStyle};
+use engine::theme::Theme;
+use engine::ui::icons;
+use engine::ui::widgets::{
     EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, rounded_rect, rounded_rect_stroke,
 };
 use showcase::model::dock::{AVATARS, DockModel};

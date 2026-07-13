@@ -30,7 +30,7 @@ pub fn generate(block: NarrateBlock) -> TokenStream {
         {
             #[allow(unused_imports)]
             use ::narrate::builder::*;
-            ::plev::narrate_resolve(file!(), line!(), || {
+            ::engine::narrate_resolve(file!(), line!(), || {
                 #elem
             })
         }
