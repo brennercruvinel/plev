@@ -11,7 +11,7 @@ const MUTED: [f32; 4] = [0.55, 0.58, 0.64, 1.0];
 const CARD: [f32; 4] = [0.16, 0.17, 0.21, 1.0];
 
 // One TextStyle per run, shared by measurement and drawing
-// (kdb/adr/one-text-style-for-measurement-and-drawing.md). Weights are
+// (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 page title, 500 section label, 400 body; numeric readouts
 // render in JetBrains Mono.
 

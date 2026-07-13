@@ -39,6 +39,6 @@
   },
   {
     "label": "web: trunk serve (showcase)",
-    "command": "trunk serve"
+    "command": "trunk --config web serve"
   }
 ]

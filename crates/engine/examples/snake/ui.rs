@@ -7,7 +7,7 @@ use web_time::Instant;
 use crate::state::*;
 
 // One TextStyle per run, shared by measurement and drawing
-// (kdb/adr/one-text-style-for-measurement-and-drawing.md). Weights are
+// (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 title, 500 label, 400 body; score and fps counters render
 // in JetBrains Mono.
 

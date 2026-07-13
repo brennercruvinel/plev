@@ -49,9 +49,9 @@ engine's examples.
 | crates | crates/ | git, ide, lot, macros, monster, svg, narrate, narrate-macro, parser, prime, rope, showcase |
 | examples | crates/engine/examples/ | 16 windowed demos plus the lot2monsters and svg2monster clis |
 
-machine map: [kdb/arc/arc.yaml](kdb/arc/arc.yaml). human reference:
-[kdb/arc/arc.md](kdb/arc/arc.md). frame-flow diagram:
-[kdb/arc/arc.mmd](kdb/arc/arc.mmd).
+machine map: [docs/arc/arc.yaml](docs/arc/arc.yaml). human reference:
+[docs/arc/arc.md](docs/arc/arc.md). frame-flow diagram:
+[docs/arc/arc.mmd](docs/arc/arc.mmd).
 
 ## binding contracts
 
@@ -75,7 +75,7 @@ cargo build --release --workspace
 web build (same pixels as desktop):
 
 ```
-trunk serve
+./script/web
 ```
 
 ## run
@@ -140,7 +140,7 @@ and search. it plays on the same engine that draws the ui. `lot` reads a
 lottie json once, converts it to `.monster`, and never embeds a foreign
 runtime. discrete motion already beats the source json on size; full-body
 morphs wait on the v1 morph-track lever. see
-[kdb/adr/monster-format-v0.md](kdb/adr/monster-format-v0.md).
+[docs/adr/monster-format-v0.md](docs/adr/monster-format-v0.md).
 
 ## the parser
 
@@ -180,11 +180,11 @@ instead of failing.
 
 ## reference
 
-- [kdb/arc/arc.md](kdb/arc/arc.md) for architecture, contracts, frame flow.
-- [kdb/arc/arc.yaml](kdb/arc/arc.yaml) for the machine-readable map agents read.
-- [kdb/adr/monster-format-v0.md](kdb/adr/monster-format-v0.md) for the animation format spec.
-- [kdb/adr/](kdb/adr/) for the architecture decision records.
-- [kdb/how-to/code-against-the-plev-engine.md](kdb/how-to/code-against-the-plev-engine.md) for the operating manual.
+- [docs/arc/arc.md](docs/arc/arc.md) for architecture, contracts, frame flow.
+- [docs/arc/arc.yaml](docs/arc/arc.yaml) for the machine-readable map agents read.
+- [docs/adr/monster-format-v0.md](docs/adr/monster-format-v0.md) for the animation format spec.
+- [docs/adr/](docs/adr/) for the architecture decision records.
+- [docs/how-to/code-against-the-plev-engine.md](docs/how-to/code-against-the-plev-engine.md) for the operating manual.
 - [.contracts/.agents/AGENTS.md](.contracts/.agents/AGENTS.md) for the single instruction source for ai agents and contributors. route every tool here, no per-tool files.
 
 ## license

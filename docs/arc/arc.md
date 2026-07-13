@@ -98,7 +98,7 @@ calls `showcase_ios_main`; see `android/` and `ios/showcase/`), linux/windows
 pre-1.0: no api stability promised. library code must not panic on user
 input paths; tessellation and parsers degrade gracefully (log + empty
 output). binary/format versioning follows the anim-format rules
-implemented in crates/monster (kdb/adr/monster-format-v0.md): explicit version,
+implemented in crates/monster (docs/adr/monster-format-v0.md): explicit version,
 frozen golden fixtures, per-section checksums. the full delta op set is
 decodable: modify becomes tracks, place/replace/remove become timeline
 op lists that act inside their keyframe segment. both encoder modes
