@@ -14,7 +14,7 @@ mod tests {
         let el = text("hello").uppercase();
         let nodes = el.render(&mut test_cx());
         let SceneNode::Text { key, .. } = &nodes[0] else {
-            panic!("Expected Text, got {:?}", &nodes[0]);
+            panic!("Expected Text, got {:?}", nodes[0]);
         };
         assert_eq!(key.text, "HELLO");
     }
@@ -67,7 +67,7 @@ mod tests {
         let nodes = el.render(&mut cx);
         assert_eq!(nodes.len(), 1);
         let SceneNode::Rect { color, .. } = &nodes[0] else {
-            panic!("Expected Rect from intent-colored div, got {:?}", &nodes[0]);
+            panic!("Expected Rect from intent-colored div, got {:?}", nodes[0]);
         };
         let danger = theme.intent_color(Intent::Destructive).to_array();
         assert_eq!(*color, danger);
@@ -82,7 +82,7 @@ mod tests {
         let nodes = el.render(&mut cx);
         assert_eq!(nodes.len(), 1);
         let SceneNode::Text { color, .. } = &nodes[0] else {
-            panic!("Expected Text, got {:?}", &nodes[0]);
+            panic!("Expected Text, got {:?}", nodes[0]);
         };
         let danger = theme.intent_color(Intent::Destructive).to_array();
         assert_eq!(*color, danger);
@@ -94,7 +94,7 @@ mod tests {
         let nodes = el.render(&mut test_cx());
         assert_eq!(nodes.len(), 1);
         let SceneNode::Rect { color, .. } = &nodes[0] else {
-            panic!("Expected Rect, got {:?}", &nodes[0]);
+            panic!("Expected Rect, got {:?}", nodes[0]);
         };
         assert_eq!(*color, Color::BLUE.to_array());
     }
