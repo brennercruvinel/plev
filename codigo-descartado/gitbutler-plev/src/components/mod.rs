@@ -1,9 +1,0 @@
-pub mod avatar;
-pub mod badge;
-pub mod button;
-pub mod checkbox;
-pub mod context_menu;
-pub mod modal;
-pub mod panel_header;
-pub mod separator;
-pub mod tabs;

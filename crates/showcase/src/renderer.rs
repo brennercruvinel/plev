@@ -3,12 +3,12 @@
 //! push order — including backdrop-blur resolves — then composite).
 
 use crate::view::ShowcaseView;
-use plev::compositor::Compositor;
-use plev::effects::EffectProcessor;
-use plev::gpu::GpuContext;
-use plev::gpu::texture_pool::TexturePool;
-use plev::text::TextSystem;
-use plev::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+use engine::compositor::Compositor;
+use engine::effects::EffectProcessor;
+use engine::gpu::GpuContext;
+use engine::gpu::texture_pool::TexturePool;
+use engine::text::TextSystem;
+use engine::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 
 pub fn render_frame(
     gpu: &mut GpuContext,
@@ -35,7 +35,7 @@ pub fn render_frame(
     };
     let surface_view = gpu.surface_render_view(&output);
 
-    compositor.resolve(&plev::compositor::ResolveResources {
+    compositor.resolve(&engine::compositor::ResolveResources {
         device: &gpu.device,
         queue: &gpu.queue,
         format: gpu.surface_format(),

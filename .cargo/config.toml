@@ -1,0 +1,12 @@
+# cargo config for the plev workspace.
+#
+# the tool contracts (clippy/nextest/typos) live under
+# .contracts/.mantras/.code/.lang/.rust to keep the repo root clean. clippy
+# only auto-discovers clippy.toml at the workspace root, so point it at the
+# contract dir via CLIPPY_CONF_DIR. `relative = true` resolves the path
+# against this config's workspace root, so it holds for every contributor.
+# if this fails to propagate, clippy falls back to its defaults (the prior
+# behavior, since the repo had no clippy.toml before), so the gate never
+# breaks because of this wiring.
+[env]
+CLIPPY_CONF_DIR = { value = ".contracts/.mantras/.code/.lang/.rust", relative = true }

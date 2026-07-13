@@ -7,8 +7,8 @@
 use crate::components::badge::{self, BadgeKind};
 use crate::components::hoff;
 use crate::theme::{StatusColors, Theme};
-use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use plev::input::scroll::ScrollState;
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::input::scroll::ScrollState;
 
 /// File change status.
 #[derive(Clone, Copy, Debug, PartialEq)]

@@ -1,9 +1,9 @@
 //! Geometry: 2x3 affine matrices, transform composition, and conversion
 //! of lottie shape primitives into transformed cubic subpaths ready for
-//! tessellation through `plev::path::PathBuilder`.
+//! tessellation through `engine::path::PathBuilder`.
 
 use crate::kfr::PathData;
-use plev::path::{PathBuilder, TessellatedPath};
+use engine::path::{PathBuilder, TessellatedPath};
 
 /// Row-major 2x3 affine matrix: x' = a*x + c*y + e; y' = b*x + d*y + f.
 #[derive(Clone, Copy)]

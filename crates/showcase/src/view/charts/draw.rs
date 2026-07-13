@@ -6,10 +6,10 @@
 
 use std::f32::consts::TAU;
 
-use plev::compositor::{Compositor, SceneNode, TextNodeKey};
-use plev::path::PathBuilder;
-use plev::theme::Theme;
-use plev::ui::widgets::{Rect, rounded_rect};
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::path::PathBuilder;
+use engine::theme::Theme;
+use engine::ui::widgets::{Rect, rounded_rect};
 use showcase::model::charts as geom;
 
 use crate::view::with_alpha;

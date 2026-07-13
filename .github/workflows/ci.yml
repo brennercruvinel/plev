@@ -1,0 +1,74 @@
+name: ci
+
+# the four-part gate from AGENTS.md, one job per part so a red check names
+# the failing gate. clippy is the canonical check command; fmt, test and the
+# wasm cross-platform guard run alongside it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  fmt:
+    name: fmt --check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --check
+
+  clippy:
+    name: clippy -D warnings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+
+  test:
+    name: test --workspace
+    runs-on: ubuntu-latest
+    env:
+      # debuginfo off: linking every wgpu example with full debug info
+      # exceeds the runner's disk and kills the linker with SIGBUS.
+      CARGO_PROFILE_DEV_DEBUG: "0"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace
+
+  wasm:
+    name: wasm check (showcase)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --target wasm32-unknown-unknown -p showcase
+
+  typos:
+    name: typos (advisory)
+    runs-on: ubuntu-latest
+    # non-blocking on purpose: this repo is bilingual (english + portuguese
+    # comments), so an english spell-checker will flag real portuguese words.
+    # the job surfaces genuine english typos as annotations without ever
+    # failing a PR for portuguese content. recurring false positives go in the
+    # allowlist at .contracts/.mantras/.code/.lang/.rust/typos.toml.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: crate-ci/typos@master
+        with:
+          config: .contracts/.mantras/.code/.lang/.rust/typos.toml

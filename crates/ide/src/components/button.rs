@@ -5,8 +5,8 @@
 
 use super::hoff;
 use crate::theme::Theme;
-use plev::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use plev::text::TextStyle;
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::text::TextStyle;
 
 /// Button visual style variant.
 // Catálogo de design: variantes ainda sem uso nas views ficam disponíveis.
@@ -133,7 +133,7 @@ pub fn draw_to_layer(
             if hovered {
                 theme.surface_hover
             } else {
-                plev::color::Color::TRANSPARENT
+                engine::color::Color::TRANSPARENT
             },
             if hovered {
                 theme.text_active
@@ -203,8 +203,8 @@ pub fn draw_to_layer(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plev::compositor::LayerId;
-    use plev::text::TextMeasurer;
+    use engine::compositor::LayerId;
+    use engine::text::TextMeasurer;
 
     /// Regression for the "label leaks out of the pill" bug: the drawn
     /// shape must be at least the REAL measured label width plus both

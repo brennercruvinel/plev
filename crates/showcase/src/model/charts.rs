@@ -6,7 +6,7 @@
 //! math absorbed from examples/makepad_charts/charts.rs (line with axes,
 //! grid and dots; bars; stacked area; donut) and rebuilt content-driven:
 //! value ranges come from nice-number ticks (the 1-2-5 granularity family,
-//! same idea as plotters' `key_points` in ref/vis/plotters), gutters come
+//! same idea as plotters' `key_points` in refs/vis/plotters), gutters come
 //! from label widths measured via `TextMeasurer`, never from char-count
 //! heuristics.
 
@@ -24,8 +24,8 @@ pub use bars::{Bar, BarChart, bar_chart};
 pub use donut::{Donut, DonutSlice, LegendItem, donut, slice_polygon};
 pub use line::{Dot, LineChart, line_chart};
 
-use plev::text::{TextMeasurer, TextStyle};
-use plev::ui::widgets::Rect;
+use engine::text::{TextMeasurer, TextStyle};
+use engine::ui::widgets::Rect;
 
 /// A measured text primitive. the `TextStyle` used for measurement travels
 /// with the label so the draw site provably reuses the same style (one

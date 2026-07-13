@@ -15,7 +15,7 @@ pub const VERT_BYTES: usize = 24;
 /// Static paint weight: rgba8 plus width or gradient extras.
 pub const PAINT_BYTES: usize = 8;
 
-const REF: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../ref/lottie");
+const REF: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../refs/lottie");
 const EXPLOSION_JSON_BYTES: usize = 698654;
 const EXPLOSION_GZIP_BYTES: usize = 207434;
 const EXPLOSION_WEBM_BYTES: usize = 38642;
@@ -24,6 +24,20 @@ pub fn load(name: &str) -> J {
     let path = format!("{REF}/{name}");
     let bytes = std::fs::read(&path).unwrap_or_else(|e| panic!("dense bench reads {path}: {e}"));
     serde_json::from_slice(&bytes).expect("ref lottie json parses")
+}
+
+/// The dense benches measure against large lottie json under `refs/lottie`,
+/// which is gitignored study material (AGENTS.md). when it is absent (a fresh
+/// clone, CI, a sandbox), the bench has nothing to weigh, so it skips with a
+/// notice instead of failing: a missing study fixture is not a regression.
+/// returns true (and prints the skip line) when the fixture is not present.
+pub fn fixture_missing(name: &str) -> bool {
+    let path = format!("{REF}/{name}");
+    if std::path::Path::new(&path).exists() {
+        return false;
+    }
+    eprintln!("skip: ref lottie fixture absent ({path}); populate refs/lottie to run this bench");
+    true
 }
 
 pub struct Dense {
@@ -86,6 +100,9 @@ pub fn encode_pair(tl: &Timeline, assets: &[Asset]) -> (usize, usize, Timeline) 
 
 #[test]
 fn bench_explosion_vs_lottie() {
+    if fixture_missing("explosion/Explosion.json") {
+        return;
+    }
     let doc = load("explosion/Explosion.json");
     let fr = f(&doc["fr"]);
     let dur = (f(&doc["op"]) - f(&doc["ip"])) / fr;

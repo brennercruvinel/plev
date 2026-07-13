@@ -2,9 +2,9 @@
 //! the counter are measured with TextMeasurer (one style per run, shared
 //! with drawing); constants exist only as min, max and gap.
 
-use plev::text::{TextMeasurer, TextStyle};
-use plev::theme::TypographyScale;
-use plev::ui::widgets::Rect;
+use engine::text::{TextMeasurer, TextStyle};
+use engine::theme::TypographyScale;
+use engine::ui::widgets::Rect;
 use showcase::model::todo::Filter;
 
 pub(super) const PAD: f32 = 24.0;

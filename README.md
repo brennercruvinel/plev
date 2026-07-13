@@ -1,8 +1,6 @@
 # plev
 
 
-AGENTS.md is the single instruction source: the operating contract for ai agents and contributors. claude code only auto-loads CLAUDE.md, so CLAUDE.md is a one-line stub that imports it (`@AGENTS.md`). every tool routes here on init; no per-tool instruction files, no content in the stub.
-
 the engine builds a scene every frame, resolves only the layers that
 changed, and composites into an srgb surface. desktop draws it on metal, the
 web draws it on webgpu, and the pixels are identical because the same code
@@ -41,18 +39,19 @@ sequenceDiagram
     P->>P: present (identical pixels on every target)
 ```
 
-three tiers. the engine is the root crate. libraries and apps are separate
-crates. demos are examples.
+three tiers. the engine is its own crate at `crates/engine`; the repo root is
+a virtual workspace. libraries and apps are sibling crates. demos are the
+engine's examples.
 
 | tier | where | what |
 |---|---|---|
-| engine | root `plev` | gpu, compositor, text, path, layout, input, animation, signal, theme, ui, builder, window, platform |
-| crates | crates/ | git, ide, lot, monster, narrate, narrate-macro, parser, prime_creatures, rope, showcase |
-| examples | examples/ | 16 windowed demos plus the lot2monsters cli |
+| engine | crate `engine` (crates/engine) | gpu, compositor, text, path, layout, input, animation, signal, theme, ui, builder, window, platform |
+| crates | crates/ | git, ide, lot, macros, monster, svg, narrate, narrate-macro, parser, prime, rope, showcase |
+| examples | crates/engine/examples/ | 16 windowed demos plus the lot2monsters and svg2monster clis |
 
-machine map: [doc/arc/arc.yaml](doc/arc/arc.yaml). human reference:
-[doc/arc/arc.md](doc/arc/arc.md). frame-flow diagram:
-[doc/arc/arc.mmd](doc/arc/arc.mmd).
+machine map: [docs/arc/arc.yaml](docs/arc/arc.yaml). human reference:
+[docs/arc/arc.md](docs/arc/arc.md). frame-flow diagram:
+[docs/arc/arc.mmd](docs/arc/arc.mmd).
 
 ## binding contracts
 
@@ -76,25 +75,31 @@ cargo build --release --workspace
 web build (same pixels as desktop):
 
 ```
-trunk serve
+./script/web
 ```
 
 ## run
 
 ```
-cargo run -p showcase            # the design-system gallery, 11 tabs
-cargo run -p ide [path]          # plev-native git client
-cargo run -p prime_creatures     # prime-coherence particle swarm (codepen port)
-cargo run --example charts       # any of the 16 windowed demos
-cargo run --example snake
+cargo run -p showcase                  # the design-system gallery, 11 tabs
+cargo run -p ide [path]                # plev-native git client
+cargo run -p prime                     # prime-coherence particle swarm (codepen port)
+cargo run -p engine --example charts   # any of the 16 windowed demos
+cargo run -p engine --example snake
 ```
 
-the monster animation pipeline, lottie in and our format out:
+the monster animation pipeline, a foreign format in and our format out:
 
 ```
-cargo run --example lot2monsters in.json out.monster   # convert once
-cargo run --example monster_player out.monster         # play ours, no lottie
+cargo run -p engine --example lot2monsters in.json out.monster   # lottie -> monster
+cargo run -p engine --example svg2monster  in.svg  out.monster   # svg (still) -> monster
+cargo run -p engine --example monster_player out.monster         # play ours, no foreign code
 ```
+
+`svg` imports a still image (usvg normalizes the document, we tessellate the
+paths into one keyframe); gradients approximate to a solid color and filters,
+masks, clips and text are skipped, so raster-heavy svgs reduce to their vector
+core.
 
 ## mobile
 
@@ -135,7 +140,7 @@ and search. it plays on the same engine that draws the ui. `lot` reads a
 lottie json once, converts it to `.monster`, and never embeds a foreign
 runtime. discrete motion already beats the source json on size; full-body
 morphs wait on the v1 morph-track lever. see
-[kdb/adr/monster-format-v0.md](kdb/adr/monster-format-v0.md).
+[docs/adr/monster-format-v0.md](docs/adr/monster-format-v0.md).
 
 ## the parser
 
@@ -155,19 +160,32 @@ cargo run -p parser --example preview    index.tsx module.sass vars.sass
 cargo test --workspace
 cargo clippy --workspace
 cargo fmt --check
+./script/gate     # the full four-part gate, stops on the first red
 ```
 
 a guard test scans the repo and fails if any code draws text by constructing
 a raw key instead of going through the one-TextStyle path.
 
+criterion benches live on the hot path of each crate (`engine` scene build,
+`rope` edits, `monster` codec, `lot` conversion, `parser` transpile):
+
+```
+cargo bench                      # all benches
+cargo bench -p rope              # one crate
+```
+
+the `monster` dense-lottie benches read large samples from `refs/lottie`
+(gitignored study material); when it is absent they skip with a notice
+instead of failing.
+
 ## reference
 
-- [doc/arc/arc.md](doc/arc/arc.md) for architecture, contracts, frame flow.
-- [doc/arc/arc.yaml](doc/arc/arc.yaml) for the machine-readable map agents read.
-- [kdb/adr/monster-format-v0.md](kdb/adr/monster-format-v0.md) for the animation format spec.
-- [kdb/adr/](kdb/adr/) for the architecture decision records.
-- [kdb/how-to/code-against-the-plev-engine.md](kdb/how-to/code-against-the-plev-engine.md) for the operating manual.
-- [AGENTS.md](AGENTS.md) for the single instruction source for ai agents and contributors. route every tool here, no per-tool files.
+- [docs/arc/arc.md](docs/arc/arc.md) for architecture, contracts, frame flow.
+- [docs/arc/arc.yaml](docs/arc/arc.yaml) for the machine-readable map agents read.
+- [docs/adr/monster-format-v0.md](docs/adr/monster-format-v0.md) for the animation format spec.
+- [docs/adr/](docs/adr/) for the architecture decision records.
+- [docs/how-to/code-against-the-plev-engine.md](docs/how-to/code-against-the-plev-engine.md) for the operating manual.
+- [.contracts/.agents/AGENTS.md](.contracts/.agents/AGENTS.md) for the single instruction source for ai agents and contributors. route every tool here, no per-tool files.
 
 ## license
 
@@ -175,3 +193,5 @@ Brenner Cruvinel.
 (∂μfμν = jν)
 
 MIT.
+
+`.contracts/.agents/AGENTS.md` is the single instruction source: the operating contract for ai agents and contributors. the root carries no instruction file; every tool routes to that path on init, no per-tool files.

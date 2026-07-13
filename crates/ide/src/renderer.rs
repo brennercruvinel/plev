@@ -9,12 +9,12 @@
 //! panel heads.
 
 use crate::views::workspace::WorkspaceView;
-use plev::compositor::Compositor;
-use plev::effects::EffectProcessor;
-use plev::gpu::GpuContext;
-use plev::gpu::texture_pool::TexturePool;
-use plev::text::TextSystem;
-use plev::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+use engine::compositor::Compositor;
+use engine::effects::EffectProcessor;
+use engine::gpu::GpuContext;
+use engine::gpu::texture_pool::TexturePool;
+use engine::text::TextSystem;
+use engine::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 
 /// Render a single frame: build the scene, resolve layers, encode GPU passes,
 /// and present. Called once per `RedrawRequested`.
@@ -45,7 +45,7 @@ pub fn render_frame(
     let surface_view = gpu.surface_render_view(&output);
 
     // Resolve compositor (upload dirty layers to GPU)
-    compositor.resolve(&plev::compositor::ResolveResources {
+    compositor.resolve(&engine::compositor::ResolveResources {
         device: &gpu.device,
         queue: &gpu.queue,
         format: gpu.surface_format(),

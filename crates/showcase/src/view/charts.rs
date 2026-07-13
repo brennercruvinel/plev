@@ -10,10 +10,10 @@ mod draw;
 #[cfg(test)]
 mod tests;
 
-use plev::animation::{Easing, Tween};
-use plev::compositor::Compositor;
-use plev::theme::Theme;
-use plev::ui::widgets::{EventResult, Rect, WidgetEvent};
+use engine::animation::{Easing, Tween};
+use engine::compositor::Compositor;
+use engine::theme::Theme;
+use engine::ui::widgets::{EventResult, Rect, WidgetEvent};
 
 use super::{group_label, panel, text};
 

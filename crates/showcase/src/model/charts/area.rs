@@ -3,7 +3,7 @@
 //! here each band is a real polygon between cumulative sums, so bands
 //! tile exactly and every thickness reconstructs its value.
 
-use plev::ui::widgets::Rect;
+use engine::ui::widgets::Rect;
 
 use super::{Axis, nice_ticks};
 

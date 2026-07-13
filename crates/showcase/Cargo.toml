@@ -2,6 +2,7 @@
 name = "showcase"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 publish = false
 description = "plev design system gallery — every widget, every state, every theme"
 
@@ -16,7 +17,7 @@ name = "showcase"
 path = "src/main.rs"
 
 [dependencies]
-plev.workspace = true
+engine.workspace = true
 wgpu.workspace = true
 winit.workspace = true
 log.workspace = true
@@ -35,7 +36,7 @@ console_error_panic_hook.workspace = true
 # Android pulls the GameActivity winit backend (via the engine feature) and a
 # logcat-backed logger; the cdylib above is what gets packaged into the APK.
 [target.'cfg(target_os = "android")'.dependencies]
-plev = { workspace = true, features = ["android-game-activity"] }
+engine = { workspace = true, features = ["android-game-activity"] }
 android_logger.workspace = true
 
 [lints]

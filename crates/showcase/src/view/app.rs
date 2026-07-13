@@ -1,5 +1,5 @@
 //! App section: the canonical small-but-complete todo app over the tested
-//! domain model (showcase::model::todo). plev::text_input::TextInput owns
+//! domain model (showcase::model::todo). engine::text_input::TextInput owns
 //! editing, focus, blink and cursor byte mapping; rows pair the design
 //! system Checkbox with a strike-through whose width comes from
 //! TextMeasurer (never chars * factor); filters are HOFF glass pills; the
@@ -17,9 +17,9 @@ mod layout;
 #[cfg(test)]
 mod tests;
 
-use plev::input::scroll::ScrollState;
-use plev::text_input::TextInput;
-use plev::ui::widgets::{Checkbox, EventResult, Rect, WidgetEvent};
+use engine::input::scroll::ScrollState;
+use engine::text_input::TextInput;
+use engine::ui::widgets::{Checkbox, EventResult, Rect, WidgetEvent};
 use showcase::model::todo::{Filter, TodoModel};
 
 use super::EditKey;

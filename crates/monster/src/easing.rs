@@ -1,5 +1,5 @@
-//! easing model: mirrors the `plev::animation::Easing` presets and adds
-//! the 1-byte wire representation of kdb/adr/monster-format-v0.md decision 4.
+//! easing model: mirrors the `engine::animation::Easing` presets and adds
+//! the 1-byte wire representation of docs/adr/monster-format-v0.md decision 4.
 //!
 //! wire table: 0x00 linear, 0x01 hold, 0x02 ae-default (lowered as
 //! ease-in-out), 0x03..=0x20 named presets, 0xFF custom cubic bezier
@@ -12,7 +12,7 @@
 //! at 0x20. 0x21..=0xFE stay reserved.
 
 use crate::quant;
-use plev::animation::Easing as PlevEasing;
+use engine::animation::Easing as PlevEasing;
 
 /// Wire id of a custom cubic bezier segment.
 pub const CUSTOM_BEZIER_BYTE: u8 = 0xFF;
@@ -20,7 +20,7 @@ pub const CUSTOM_BEZIER_BYTE: u8 = 0xFF;
 /// Highest assigned preset id; 0x21..=0xFE are reserved.
 pub const MAX_PRESET_BYTE: u8 = 0x20;
 
-/// Easing of a segment. Preset variants mirror `plev::animation::Easing`
+/// Easing of a segment. Preset variants mirror `engine::animation::Easing`
 /// one to one; `CustomBezier` mirrors `plev`'s `CubicBezier` with f32
 /// control points in memory (x in [0,1], y in [-0.5,1.5] on the wire).
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -160,7 +160,7 @@ impl Easing {
     /// Sample the eased progress at `t` in [0,1] through plev's own
     /// `ease()`, so the player and ui animation share one curve library.
     pub fn sample(self, t: f32) -> f32 {
-        plev::animation::ease(t, self.into())
+        engine::animation::ease(t, self.into())
     }
 }
 

@@ -16,7 +16,7 @@ use crate::quant;
 use crate::read::decode;
 use crate::tests::write::rect;
 use crate::write::encode;
-use plev::compositor::SceneNode;
+use engine::compositor::SceneNode;
 
 pub(crate) fn cfg(keyframe_every_s: f32, scalar_jump: f32) -> DiscoverConfig {
     DiscoverConfig {

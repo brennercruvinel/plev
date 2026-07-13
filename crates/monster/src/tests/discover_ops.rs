@@ -9,7 +9,7 @@ use crate::ir::{Node, PlaceNode, RemoveNode, ReplaceNode};
 use crate::play::MonsterPlayer;
 use crate::tests::discover::{assert_reproduced, cfg, seg};
 use crate::tests::write::rect;
-use plev::compositor::SceneNode;
+use engine::compositor::SceneNode;
 
 fn rect_x(scene: &[SceneNode], at: usize) -> f32 {
     match &scene[at] {
