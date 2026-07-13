@@ -1,0 +1,88 @@
+# machine-readable architecture map. agents read this at task start.
+# canonical source of the arc trio: arc.md is the human projection, arc.mmd
+# the frame-flow view; on divergence this file wins. update all three
+# together on any structural change.
+project: plev
+kind: gpu-first compositing engine
+language: rust (edition 2024)
+stack: [wgpu 28, winit 0.30, cosmic-text 0.18, taffy 0.9, lyon]
+layout:
+  # the engine is a crate now, crates/engine; the root is a virtual
+  # workspace. apps and libraries are sibling crates; demos are the engine's
+  # examples (ADR workspace-engine-at-root-libs-in-crates-demos-in-examples,
+  # updated: engine moved from the root crate to crates/engine).
+  root: virtual workspace (Cargo.toml = members + workspace.package/deps/lints/profiles only)
+  engine: crates/engine
+  knowledge: kdb (adr + arc + how-to + mission + refs; this file lives at kdb/arc/arc.yaml)
+  contracts: .contracts (.agents/AGENTS.md instruction source; .mantras/.code/.lang/.rust tool configs + conventions)
+targets:
+  shipping: [macos-metal, web-webgpu]
+  # android + ios both run the showcase now (apk via GameActivity; ios on the
+  # simulator via a thin objc shell). see platform-apps below.
+  in-progress: [android-vulkan, ios-metal]
+  pending: [linux-vulkan, windows-d3d12]
+modules:
+  # the engine's internal layers, under crates/engine/src.
+  gpu:        { path: crates/engine/src/gpu,        role: device/surface/pipelines + GpuVec buffers (vec) + texture_pool + wgsl shaders (gpu/shaders), contracts: [srgb-view-formats, surface_render_view-only] }
+  compositor: { path: crates/engine/src/compositor, role: scene nodes + dirty layers, depends: [gpu] }
+  text:       { path: crates/engine/src/text,       role: shaping + glyph atlas + TextMeasurer, depends: [gpu], contracts: [one-textstyle-measure-and-draw] }
+  path:       { path: crates/engine/src/path,       role: lyon tessellation, contracts: [auto-finish-open-subpaths] }
+  layout:     { path: crates/engine/src/layout,     role: taffy wrapper (flex, percent, measure-fns), depends: [text] }
+  input:      { path: crates/engine/src/input,      role: pointer + hit regions + touch synth + gestures + scroll + dispatch }
+  animation:  { path: crates/engine/src/animation,  role: tween/frameclock/easing (dt-based) }
+  perf:       { path: crates/engine/src/perf,       role: PerfMonitor rolling windows (fps, dt percentiles, cpu micros, memory) + PerfHud overlay, depends: [animation, compositor, text], contracts: [pure-no-gpu, hud-implies-continuous-frames] }
+  signal:     { path: crates/engine/src/signal,     role: reactive primitives }
+  window:     { path: crates/engine/src/window,     role: app runner, render-on-demand, render passes, wasm canvas, depends: [gpu, compositor, text, input] }
+  theme:      { path: crates/engine/src/theme,      role: measured hoff tokens, oklch }
+  ui:         { path: crates/engine/src/ui,         role: retained widgets + icons }
+  builder:    { path: crates/engine/src/builder,    role: declarative element tree -> layout -> emit, depends: [layout, text] }
+  component:  { path: crates/engine/src/component,  role: Lifecycle trait }
+  view:       { path: crates/engine/src/view,       role: View trait + ViewContext }
+  text_input: { path: crates/engine/src/text_input, role: single-line field widget }
+  platform:   { path: crates/engine/src/platform,   role: safe areas + ime + app lifecycle (mod/ime/lifecycle) }
+crates:
+  engine:     { path: crates/engine,    role: the gpu-first compositing engine itself (the modules above); a lib (crate-type cdylib+staticlib+rlib) every app and crate builds on; ships the examples/ demos }
+  showcase:   { path: crates/showcase,  role: widget gallery app (11 tabs); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main, depends: [engine], targets: [desktop, web, android, ios] }
+  prime:      { path: crates/prime, role: prime number creatures particle sandbox (codepen port); seeded sim core (rng/primes/coherence/params) + color (hsl->srgb) + windowed clear skeleton; physics/scene/controls land in later milestones, depends: [engine], targets: [desktop, web] }
+  ide:        { path: crates/ide,       role: plev-native git client app, depends: [git, engine] }
+  rope:       { path: crates/rope,      role: rope/transactions/multi-cursor/history, pure (no ui) }
+  git:        { path: crates/git,       role: gix reads + git cli mutations, desktop-only }
+  narrate:    { path: [crates/narrate, crates/narrate-macro], role: ui dsl (experimental), depends: [engine] }
+  macros:     { path: crates/macros,    role: proc-macros (the #[component] attribute) }
+  lot:        { path: crates/lot,       role: lottie (bodymovin) importer: serde model + keyframe eval + hierarchical render to TessellatedPath (rnd), and the exit door cnv: sample once, dedup payloads, discover deltas, encode .monster; playback then runs on monster only, depends: [engine, path], emits-to: [monster] }
+  svg:        { path: crates/svg,       role: svg (still image) importer: usvg normalizes the document (groups, transforms, use/defs, shape-to-path), lyon tessellates the flat tree into one keyframe, encode .monster; gradients approximate to a solid, filters/masks/clips/text are skipped visibly, depends: [engine, monster], emits-to: [monster] }
+  parser:     { path: crates/parser,    role: parse-resolve-emit transpiler poc (react tsx+sass and gpui -> plev builder source via tree-sitter; HOFF token mapping, honest droplist with file:line, golden + compile tests), depends: [engine, builder, theme (emitted code only)] }
+  monster:    { path: crates/monster,   role: binary animation codec (ir/validate/write/read) with full delta ops (modify tracks + place/replace/remove), delta discovery from sampled frames (discover/discover_fit: encoder mode b, slot diffing + linear segment fitting + keyframes on discontinuity and cadence), encoder-side optimizer (optimize: idempotent static collapse + rdp keyframe reduction + collinear fusion, tolerances in wire quantization steps) + deterministic player (play/play_eval: tick-driven, windowed eval, segment-local op replay, signals, lowers ir to SceneNode), depends: [engine, animation, signal, compositor] }
+platform-apps:
+  # native host shells that load the showcase as their gpu app. the engine
+  # gates its own android_main behind the `android-entry` feature (off) so a
+  # downstream cdylib can export its own, mirroring `web-entry`.
+  android: { path: android, role: GameActivity host (Kotlin/AGP 9 + Gradle 9.4 kts, version catalog, games-activity 3.0.5 matching android-activity 0.6) loading libshowcase.so; build_android.sh = cargo-ndk jniLibs (arm64-v8a, x86_64) + gradle apk }
+  ios:     { path: ios/showcase, role: thin objc shell (Sources/main.m) calling showcase_ios_main, linked against the showcase staticlib; xcodegen project.yml + build_ios.sh/run_ios.sh (simulator) }
+examples:
+  # demos of the engine, under crates/engine/examples. cargo auto-discovers
+  # examples/<name>/main.rs, no Cargo.toml. run with `cargo run -p engine
+  # --example <name>`.
+  windowed: [counter, editor, input, layers, mobile_input, sdf_shapes, text, text_input, todo, visual, builder, charts, scene3d, snake, lottie_player, monster_player]
+  cli: [lot2monsters, svg2monster]
+  note: scene3d and snake-game were crates; they are demos and moved here (commit e6f7091). examples moved from the root into crates/engine/examples when the engine became its own crate.
+benches:
+  # criterion benches (harness = false) on each crate's hot path. run with
+  # `cargo bench -p <crate>`.
+  engine: benches/scene_build.rs (scene build cost)
+  rope: benches/edit.rs (build + insert/delete roundtrip)
+  monster: benches/codec.rs (encode/decode/optimize a snapshot scene)
+  lot: benches/convert.rs (lottie json -> .monster)
+  parser: benches/transpile.rs (gpui separator transpile end to end)
+knowledge:
+  operating-manual: kdb/how-to/code-against-the-plev-engine.md
+  pixel-validation: kdb/how-to/validate-visuals-by-pixel.md
+  visual-tokens: crates/engine/src/theme/hoff.rs
+  decisions: kdb/adr/
+  conventions: .contracts/.mantras/.code/.lang/.rust/rust-conventions.md
+invariants:
+  - one TextStyle per run shared by measure and draw
+  - srgb decode once in, encode once out (surface_render_view)
+  - geometry derives from available space
+  - visible change implies invalidation
+  - wasm check must stay green

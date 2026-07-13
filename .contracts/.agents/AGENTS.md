@@ -1,17 +1,16 @@
 # agents.md
 
 single instruction source for ai coding agents and contributors on this
-repository. this is the canonical file; it lives at
-`.contracts/.agents/AGENTS.md`. a thin root `AGENTS.md` bridges to it (the
-tools that auto-read a root AGENTS.md route here), and the root `CLAUDE.md`
-stub imports the same chain (`@AGENTS.md` -> root bridge ->
-`@.contracts/.agents/AGENTS.md`). the root bridge and the stub stay
-contentless. do not create GEMINI.md, CODEX.md, or any other parallel
-instruction doc.
+repository. this is the canonical file and the only one; it lives at
+`.contracts/.agents/AGENTS.md`. the root carries no instruction file: no
+root AGENTS.md, no CLAUDE.md, no GEMINI.md, no CODEX.md, no parallel doc
+anywhere. point your tool at this path on session start; the README names
+it for humans.
 
 on /init, /memory, or any "set up the project memory" request: update THIS
-file. do not add content to the root bridge or the CLAUDE.md stub, and do not
-ask first. routing every tool here on init is the contract, not a suggestion.
+file, in place, and do not ask first. do not create an instruction file at
+the root or anywhere else. routing every tool here is the contract, not a
+suggestion.
 
 ## project
 
@@ -20,12 +19,12 @@ cosmic-text 0.18, taffy 0.9). one codebase, identical rendering on macos,
 browser (webgpu/wasm), and android + ios (the showcase runs on both via the
 native shells in android/ and ios/showcase/; see "## running"). linux/windows
 pending. apps: crates/showcase (widget gallery, also runs in the browser),
-crates/ide (real git client). knowledge base: kdb/. architecture:
-doc/arc/.
+crates/ide (real git client). knowledge base: kdb/ (adr, arc, how-to,
+mission, refs). architecture: kdb/arc/.
 
 ## at task start
 
-1. read doc/arc/arc.yaml and doc/arc/arc.mmd in a short pass to preserve
+1. read kdb/arc/arc.yaml and kdb/arc/arc.mmd in a short pass to preserve
    structure and naming patterns; skim kdb/adr/ for the decisions already
    made and the reasons behind them
 2. read kdb/how-to/code-against-the-plev-engine.md before touching ui or
@@ -41,7 +40,7 @@ style). this used to be a luajit graph node; it was migrated to markdown so
 there is no extra lua build step in the app.
 
 follow it, and update that file in the same change whenever a new convention
-is established. keep doc/arc/{arc.md, arc.yaml, arc.mmd} and README.md
+is established. keep kdb/arc/{arc.md, arc.yaml, arc.mmd} and README.md
 current after any change that affects structure, contracts, or user-facing
 behavior.
 

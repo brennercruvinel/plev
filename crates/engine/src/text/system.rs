@@ -168,7 +168,7 @@ impl TextSystem {
                     .insert(key.clone(), ShapedEntry { buffer });
                 log::debug!(
                     "Shaping cache miss: {:?}",
-                    &key.text.get(..40.min(key.text.len()))
+                    key.text.get(..40.min(key.text.len()))
                 );
             }
         }
@@ -183,7 +183,7 @@ impl TextSystem {
             let Some(shaped) = self.shaping_cache.remove(key) else {
                 log::warn!(
                     "Shaping cache missing entry for text node {:?}; skipping",
-                    &key.text.get(..40.min(key.text.len()))
+                    key.text.get(..40.min(key.text.len()))
                 );
                 continue;
             };

@@ -52,7 +52,7 @@ fn hover_enter_leave() {
     let events = input.drain_events();
     assert_eq!(events.len(), 1);
     let InputEvent::Hover(h) = &events[0] else {
-        panic!("Expected HoverEvent, got {:?}", &events[0]);
+        panic!("Expected HoverEvent, got {:?}", events[0]);
     };
     assert_eq!(h.view_id, ViewId(0));
     assert!(h.entered);
@@ -63,7 +63,7 @@ fn hover_enter_leave() {
     let events = input.drain_events();
     assert_eq!(events.len(), 1);
     let InputEvent::Hover(h) = &events[0] else {
-        panic!("Expected HoverEvent, got {:?}", &events[0]);
+        panic!("Expected HoverEvent, got {:?}", events[0]);
     };
     assert_eq!(h.view_id, ViewId(0));
     assert!(!h.entered);
@@ -84,12 +84,12 @@ fn hover_transition_between_views() {
     let events = input.drain_events();
     assert_eq!(events.len(), 2);
     let InputEvent::Hover(h) = &events[0] else {
-        panic!("Expected HoverLeave, got {:?}", &events[0]);
+        panic!("Expected HoverLeave, got {:?}", events[0]);
     };
     assert_eq!(h.view_id, ViewId(0));
     assert!(!h.entered);
     let InputEvent::Hover(h) = &events[1] else {
-        panic!("Expected HoverEnter, got {:?}", &events[1]);
+        panic!("Expected HoverEnter, got {:?}", events[1]);
     };
     assert_eq!(h.view_id, ViewId(1));
     assert!(h.entered);
@@ -111,7 +111,7 @@ fn cursor_left_generates_hover_leave() {
     let events = input.drain_events();
     assert_eq!(events.len(), 1);
     let InputEvent::Hover(h) = &events[0] else {
-        panic!("Expected HoverLeave, got {:?}", &events[0]);
+        panic!("Expected HoverLeave, got {:?}", events[0]);
     };
     assert!(!h.entered);
 }
@@ -131,7 +131,7 @@ fn click_generates_event_and_updates_focus() {
     let events = input.drain_events();
     assert_eq!(events.len(), 1);
     let InputEvent::Click(c) = &events[0] else {
-        panic!("Expected ClickEvent, got {:?}", &events[0]);
+        panic!("Expected ClickEvent, got {:?}", events[0]);
     };
     assert_eq!(c.view_id, ViewId(0));
     assert_eq!(c.button, PointerButton::Primary);
@@ -181,7 +181,7 @@ fn scroll_generates_event() {
     let events = input.drain_events();
     assert_eq!(events.len(), 1);
     let InputEvent::Scroll(s) = &events[0] else {
-        panic!("Expected ScrollEvent, got {:?}", &events[0]);
+        panic!("Expected ScrollEvent, got {:?}", events[0]);
     };
     assert_eq!(s.view_id, ViewId(0));
     assert_eq!(s.delta_y, -3.0);
