@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: active
-last-updated: 2026-06-29
+last-updated: 2026-07-13
 domain: index
 ---
 
@@ -97,6 +97,12 @@ status usados: `reference` (conhecimento congelado de uma sessao), `accepted` (d
 | data | adr | status | resumo |
 |------|-----|--------|--------|
 | 2025-08-18 | [workspace-engine-at-root-libs-in-crates-demos-in-examples](workspace-engine-at-root-libs-in-crates-demos-in-examples.md) | accepted | tres tiers: engine na raiz, libs e apps em crates/, demos em examples/; workspace.package/dependencies/lints; shaders em src/gpu/shaders |
+
+## organizacao do workspace (2026)
+
+| data | adr | status | resumo |
+|------|-----|--------|--------|
+| 2026-07-13 | [one-knowledge-tree-and-a-minimal-root](one-knowledge-tree-and-a-minimal-root.md) | accepted | kdb/ como arvore unica de conhecimento (arc absorvido de doc/), entry web em web/index.html, raiz so com o que as ferramentas exigem la |
 
 ## demos (2025)
 

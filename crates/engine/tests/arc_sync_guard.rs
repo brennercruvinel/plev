@@ -2,7 +2,7 @@
 //!
 //! The source of truth for what exists is Cargo.toml `members` and the
 //! examples/ directory, never a doc. Three architecture views are kept by
-//! hand (doc/arc/arc.yaml the canonical machine map, arc.md the human
+//! hand (kdb/arc/arc.yaml the canonical machine map, arc.md the human
 //! projection, README.md the home page), so they drift on the first rush.
 //! This test makes drift a failing build instead of a silent lie: every
 //! workspace crate must be named in arc.yaml, arc.md and README, and every
@@ -13,7 +13,7 @@ use std::fs;
 use std::path::PathBuf;
 
 /// this guard lives in the engine crate (crates/engine), so the workspace
-/// root is two levels up. the workspace Cargo.toml, doc/ and README live
+/// root is two levels up. the workspace Cargo.toml, kdb/ and README live
 /// there; the examples/ dir is the engine's own.
 fn wroot() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -63,8 +63,8 @@ fn examples() -> Vec<String> {
 fn every_crate_is_named_in_arc_yaml_arc_md_and_readme() {
     let crates = workspace_crates();
     for (rel, body) in [
-        ("doc/arc/arc.yaml", read("doc/arc/arc.yaml")),
-        ("doc/arc/arc.md", read("doc/arc/arc.md")),
+        ("kdb/arc/arc.yaml", read("kdb/arc/arc.yaml")),
+        ("kdb/arc/arc.md", read("kdb/arc/arc.md")),
         ("README.md", read("README.md")),
     ] {
         let missing: Vec<&String> = crates
@@ -81,7 +81,7 @@ fn every_crate_is_named_in_arc_yaml_arc_md_and_readme() {
 
 #[test]
 fn every_example_is_named_in_arc_yaml() {
-    let body = read("doc/arc/arc.yaml");
+    let body = read("kdb/arc/arc.yaml");
     let examples = examples();
     let missing: Vec<&String> = examples
         .iter()
@@ -89,7 +89,7 @@ fn every_example_is_named_in_arc_yaml() {
         .collect();
     assert!(
         missing.is_empty(),
-        "doc/arc/arc.yaml does not list these examples: {missing:?}. \
+        "kdb/arc/arc.yaml does not list these examples: {missing:?}. \
          add them under the examples section."
     );
 }

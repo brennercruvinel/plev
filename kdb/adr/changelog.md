@@ -9,6 +9,14 @@ status: living
 
 ## unreleased
 
+- one knowledge tree: the arc trio moved from doc/arc/ to kdb/arc/ and
+  doc/ was retired (its changelog copy was the stale duplicate of this
+  file). notes.md moves under kdb/, the trunk entry to web/index.html,
+  and the root keeps only the files whose tools resolve them there. the
+  arc sync guard, the instruction source (.contracts/.agents/AGENTS.md,
+  the only instruction file; the root carries none), the pr template and
+  typos.toml follow the new paths; the svg crate and the svg2monster cli
+  entered the arc trio. ADR: one-knowledge-tree-and-a-minimal-root.
 - prime number creatures (crates/prime_creatures): the Entropic Life XVI canvas
   demo ported to a native plev crate, desktop and wasm. pure, tested sim core
   (seeded rng, prime coherence matrix 250x250 in four modes, grid-local steering
