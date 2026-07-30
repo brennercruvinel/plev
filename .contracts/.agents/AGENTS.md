@@ -69,11 +69,16 @@ script/gate runs the four in order and stops on the first red.
 
 - apps: `cargo run -p showcase [section] [theme]` (gallery; `script/web`
   runs `trunk --config web serve` for the browser), `cargo run -p ide
-  [path]` (git client),
+  [path]` (git client), `cargo run -p prime` (particle swarm),
   `cargo run -p engine --example <name>` (any
   crates/engine/examples/<name>/main.rs)
 - one test: `cargo test -p <crate> <name>` (substring match, e.g.
   `cargo test -p rope movement`); a whole crate: `cargo test -p <crate>`
+- nextest (optional, faster):
+  `cargo nextest run --config-file .contracts/.mantras/.code/.lang/.rust/nextest.toml`
+- benches: `cargo bench -p <crate>` (criterion, on each crate's hot path
+  under crates/*/benches; bare `cargo bench` also release-builds the
+  bench-less app crates, so prefer `-p`)
 - mobile (the showcase is the demo): `ios/showcase/build_ios.sh` then
   `ios/showcase/run_ios.sh` (needs xcode + xcodegen + the
   aarch64-apple-ios-sim target; runs on the simulator);
