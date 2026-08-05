@@ -13,7 +13,8 @@ scryfall.py / mtgdb.py / edhrec.py and the vault notes they're built from):
   no bulk export and asks that it only be queried on demand).
 
 Runs in a background thread so the request that starts it returns
-immediately; progress is exposed via get_status() for the frontend to poll.
+immediately; progress (a single task label + an overall 0-100 percent
+spanning every phase) is exposed via get_status() for the frontend to poll.
 """
 import glob
 import os
@@ -33,10 +34,15 @@ import edhrec  # noqa: E402
 
 from db import get_app_db, get_cards_db  # noqa: E402
 
+# how much of the overall 0-100 bar each phase accounts for
+DOWNLOAD_WEIGHT = 70
+BUILD_WEIGHT = 20
+SYNERGY_WEIGHT = 10
+
 _status = {
     "state": "idle",  # idle | running | done | error
-    "step": None,
-    "log": [],
+    "task": None,      # current task label, no file sizes — this is what the UI shows
+    "percent": 0,
     "started_at": None,
     "finished_at": None,
     "error": None,
@@ -47,7 +53,7 @@ _lock = threading.Lock()
 
 def get_status():
     with _lock:
-        return dict(_status, log=list(_status["log"]))
+        return dict(_status)
 
 
 def is_running():
@@ -55,16 +61,17 @@ def is_running():
         return _status["state"] == "running"
 
 
-def _log(msg):
+def _progress(task, percent):
     with _lock:
-        _status["log"].append(msg)
-        _status["step"] = msg
+        _status["task"] = task
+        _status["percent"] = max(0, min(100, round(percent, 1)))
 
 
 def _begin():
     with _lock:
         _status["state"] = "running"
-        _status["log"] = []
+        _status["task"] = None
+        _status["percent"] = 0
         _status["error"] = None
         _status["result"] = None
         _status["started_at"] = time.time()
@@ -77,6 +84,8 @@ def _finish(state, error=None, result=None):
         _status["error"] = error
         _status["result"] = result
         _status["finished_at"] = time.time()
+        if state == "done":
+            _status["percent"] = 100
 
 
 def fetch_one_commander(name, with_combos=True):
@@ -98,20 +107,12 @@ def fetch_one_commander(name, with_combos=True):
     return True, None
 
 
-def _download_bulk(bulk_type):
-    """Downloads a Scryfall bulk data file and drops any older file of the same kind."""
-    data = scryfall._get("/bulk-data")
-    items = data.get("data", [])
-    match = next((x for x in items if x["type"] == bulk_type), None)
-    if not match:
-        raise RuntimeError(f"tipo de bulk data não encontrado no Scryfall: {bulk_type}")
-
+def _download_bulk_file(match, on_bytes):
+    """Streams one Scryfall bulk data file to disk, reporting bytes read via on_bytes(n)."""
     uri = match.get("download_uri") or match.get("jsonl_download_uri")
-    mb = match.get("compressed_size", 0) / 1024 / 1024
     filename = uri.split("/")[-1].split("?")[0]
     dest = os.path.join(DATA_DIR, filename)
 
-    _log(f"Baixando {bulk_type} do Scryfall (~{mb:.0f} MB)…")
     req = urllib.request.Request(uri, headers={"User-Agent": scryfall.USER_AGENT})
     tmp_dest = dest + ".part"
     with urllib.request.urlopen(req, timeout=600) as resp, open(tmp_dest, "wb") as out:
@@ -120,30 +121,53 @@ def _download_bulk(bulk_type):
             if not block:
                 break
             out.write(block)
+            on_bytes(len(block))
     os.replace(tmp_dest, dest)
-
-    prefix = "oracle-cards-" if bulk_type == "oracle_cards" else "all-cards-"
-    for f in glob.glob(os.path.join(DATA_DIR, f"{prefix}*.jsonl.gz")):
-        if f != dest:
-            os.remove(f)
     return dest
+
+
+def _cleanup_old_bulk_files(keep):
+    """Removes previous downloads of the same kind so mtgdb.py's "newest" glob never picks a stale one."""
+    for prefix in ("oracle-cards-", "all-cards-"):
+        for f in glob.glob(os.path.join(DATA_DIR, f"{prefix}*.jsonl.gz")):
+            if f not in keep:
+                os.remove(f)
 
 
 def _run(refresh_synergy):
     try:
         os.makedirs(DATA_DIR, exist_ok=True)
 
-        _download_bulk("oracle_cards")
-        _download_bulk("all_cards")
+        task = "Baixando base de cartas do Scryfall…"
+        _progress(task, 0)
+        listing = scryfall._get("/bulk-data")
+        items = listing.get("data", [])
+        oracle_match = next((x for x in items if x["type"] == "oracle_cards"), None)
+        all_match = next((x for x in items if x["type"] == "all_cards"), None)
+        if not oracle_match or not all_match:
+            raise RuntimeError("Scryfall não retornou os arquivos de bulk data esperados.")
 
-        _log("Reconstruindo o índice local (SQLite)…")
+        total_bytes = (oracle_match.get("compressed_size") or 0) + (all_match.get("compressed_size") or 0)
+        downloaded = {"n": 0}
+
+        def on_bytes(n):
+            downloaded["n"] += n
+            frac = (downloaded["n"] / total_bytes) if total_bytes else 0
+            _progress(task, DOWNLOAD_WEIGHT * min(1.0, frac))
+
+        oracle_dest = _download_bulk_file(oracle_match, on_bytes)
+        all_dest = _download_bulk_file(all_match, on_bytes)
+        _cleanup_old_bulk_files(keep={oracle_dest, all_dest})
+
+        task = "Reconstruindo o índice local…"
+        _progress(task, DOWNLOAD_WEIGHT)
         mtgdb.cmd_build(None)
 
         cdb = get_cards_db()
         n_cards = cdb.execute("SELECT COUNT(*) FROM cards").fetchone()[0]
         n_pt = cdb.execute("SELECT COUNT(DISTINCT printed_name) FROM names_pt").fetchone()[0]
         cdb.close()
-        _log(f"Índice pronto: {n_cards:,} cartas, {n_pt:,} nomes em português.")
+        _progress(task, DOWNLOAD_WEIGHT + BUILD_WEIGHT)
 
         synergy_updated = []
         if refresh_synergy:
@@ -153,15 +177,14 @@ def _run(refresh_synergy):
                 for r in con.execute("SELECT DISTINCT commander_name FROM decks").fetchall()
             })
             con.close()
-            for name in commanders:
-                _log(f"Atualizando sinergia (EDHREC): {name}…")
-                ok, err = fetch_one_commander(name, with_combos=True)
-                if not ok:
-                    _log(f"  não foi possível atualizar '{name}': {err}")
-                    continue
-                synergy_updated.append(name)
+            n = len(commanders)
+            for i, name in enumerate(commanders):
+                _progress(f"Atualizando sinergia: {name}…", DOWNLOAD_WEIGHT + BUILD_WEIGHT + SYNERGY_WEIGHT * i / max(n, 1))
+                ok, _err = fetch_one_commander(name, with_combos=True)
+                if ok:
+                    synergy_updated.append(name)
 
-        _log("Concluído.")
+        _progress("Concluído.", 100)
         _finish("done", result={
             "cards": n_cards, "pt_names": n_pt, "synergy_updated": synergy_updated,
         })
@@ -169,7 +192,7 @@ def _run(refresh_synergy):
         # BaseException, not Exception: mtgdb.cmd_build() can call sys.exit() on a
         # missing file, which raises SystemExit — must still flip state out of
         # "running" or a stuck job would block every future update attempt.
-        _log(f"Erro: {e}")
+        _progress(f"Erro: {e}", get_status()["percent"])
         _finish("error", error=str(e))
 
 

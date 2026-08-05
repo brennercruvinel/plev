@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=12";
-import { renderScanner } from "./scanner.js?v=12";
-import { activityIcon, manaCostHtml } from "./icons.js?v=12";
+import { api } from "./api.js?v=13";
+import { renderScanner } from "./scanner.js?v=13";
+import { activityIcon, manaCostHtml } from "./icons.js?v=13";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -170,19 +170,39 @@ async function wireDataUpdatePanel(onDone) {
   }
 }
 
+function progressBarHtml() {
+  return `
+    <div class="update-progress-label">
+      <span id="update-task-text"></span>
+      <span id="update-percent-text"></span>
+    </div>
+    <div class="update-progress-bar"><div class="update-progress-fill" id="update-progress-fill" style="width:0%"></div></div>
+    <div id="update-error-text" class="update-error" style="display:none"></div>`;
+}
+
 function pollDataUpdate(statusEl, btn, onDone) {
+  statusEl.innerHTML = progressBarHtml();
+  const taskText = statusEl.querySelector("#update-task-text");
+  const percentText = statusEl.querySelector("#update-percent-text");
+  const fill = statusEl.querySelector("#update-progress-fill");
+  const errorText = statusEl.querySelector("#update-error-text");
+
   const tick = async () => {
     if (!document.body.contains(statusEl)) return; // user navigated away — stop polling from here
     const status = await api.dataUpdateStatus();
-    statusEl.innerHTML = `<div class="update-log">${status.log.map((l) => `<div>${l}</div>`).join("")}</div>`;
+    const pct = Math.round(status.percent || 0);
+    taskText.textContent = status.task || "";
+    percentText.textContent = `${pct}%`;
+    fill.style.width = `${pct}%`;
     if (status.state === "running") {
-      setTimeout(tick, 1500);
+      setTimeout(tick, 1000);
       return;
     }
     btn.disabled = false;
     btn.textContent = btn.dataset.idleLabel || "Atualizar base de dados";
     if (status.state === "error") {
-      statusEl.innerHTML += `<div class="update-error">Falhou: ${status.error}</div>`;
+      errorText.textContent = `Falhou: ${status.error}`;
+      errorText.style.display = "block";
     } else if (status.state === "done" && (location.hash.slice(1) || "dashboard") === "dashboard") {
       onDone?.();
     }
