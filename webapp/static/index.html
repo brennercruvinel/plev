@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Spellbook</title>
+<link rel="stylesheet" href="/assets/css/style.css?v=5">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <nav class="sidebar">
+    <div class="brand"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span> Spellbook</div>
+    <button class="nav-item" data-route="dashboard"><span class="ic">◆</span> Visão Geral</button>
+    <button class="nav-item" data-route="decks"><span class="ic">▤</span> Meus Decks</button>
+    <button class="nav-item" data-route="collection"><span class="ic">▦</span> Coleção</button>
+    <button class="nav-item" data-route="scanner"><span class="ic">◎</span> Scanner</button>
+    <button class="nav-item" data-route="games"><span class="ic">◐</span> Partidas</button>
+    <div class="sidebar-footer">
+      <span class="badge-offline"><span class="dot"></span> offline-first</span>
+      <div style="margin-top:8px;">Dados: base local Scryfall (38k cartas) + EDHREC cacheado. Só preço ao vivo precisa de rede.</div>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+<script type="module" src="/assets/js/app.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Bases de dados baixadas (bulk data do Scryfall, cache do EDHREC) — grandes demais pro git
+# e reconstruíveis via scryfall.py / mtgdb.py build / edhrec.py fetch
+data/
+
+# Coleção pessoal real (decks, cartas, partidas) — fica só local, nunca no repositório
+webapp/app.db
+
+# Python
+__pycache__/
+*.pyc
+.DS_Store
