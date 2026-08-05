@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=7";
-import { renderScanner } from "./scanner.js?v=7";
-import { activityIcon, manaCostHtml } from "./icons.js?v=7";
+import { api } from "./api.js?v=9";
+import { renderScanner } from "./scanner.js?v=9";
+import { activityIcon, manaCostHtml } from "./icons.js?v=9";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -583,8 +583,8 @@ export async function showCardModal(name) {
     const c = await api.card(name);
     const ptNames = (c.pt_names || []).map((p) => p.printed_name).filter((v, i, a) => a.indexOf(v) === i);
     backdrop.querySelector(".modal").innerHTML = h`
-      <div style="display:flex;gap:16px;flex-wrap:wrap">
-        ${c.image_uri ? `<img src="${c.image_uri}" style="width:200px;border-radius:12px" alt="${c.name}">` : ""}
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+        ${c.image_uri ? `<img src="${c.image_uri}" style="width:200px;height:auto;border-radius:12px;flex-shrink:0" alt="${c.name}">` : ""}
         <div style="flex:1;min-width:200px">
           <h3 style="margin-bottom:2px">${c.name}</h3>
           <div style="margin-bottom:6px">${manaCostHtml(c.mana_cost)}</div>

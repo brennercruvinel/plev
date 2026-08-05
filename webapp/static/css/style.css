@@ -181,20 +181,22 @@ a { color: inherit; }
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 18px;
+    overflow: hidden;
     cursor: pointer;
     display: flex;
-    gap: 14px;
+    flex-direction: column;
     transition: border-color .15s, transform .15s;
 }
 .deck-card:hover { border-color: var(--accent); transform: translateY(-2px); }
 .deck-card-thumb {
-    width: 64px; flex-shrink: 0; border-radius: 8px; overflow: hidden;
-    aspect-ratio: 63 / 88; background: var(--bg-card);
+    width: 100%;
+    /* matches Scryfall's art_crop aspect ratio (~626x457) so the artwork isn't cropped further */
+    aspect-ratio: 626 / 457;
+    background: var(--bg-card);
 }
 .deck-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.deck-card-thumb .no-image { display: flex; align-items: center; justify-content: center; height: 100%; padding: 4px; text-align: center; font-size: 9px; color: var(--text-faint); }
-.deck-card-body { flex: 1; min-width: 0; }
+.deck-card-thumb .no-image { display: flex; align-items: center; justify-content: center; height: 100%; padding: 8px; text-align: center; font-size: 11px; color: var(--text-faint); }
+.deck-card-body { padding: 16px 18px 18px; }
 .deck-card h3 { margin: 0 0 6px; font-size: 17px; }
 .deck-card .philosophy { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 14px; min-height: 40px; }
 .deck-card .meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }

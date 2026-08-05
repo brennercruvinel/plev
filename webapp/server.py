@@ -170,7 +170,8 @@ def list_decks():
         c = cdb.execute("SELECT image_uri FROM cards WHERE name = ? COLLATE NOCASE", (d["commander_name"],)).fetchone()
         if not c:
             c = cdb.execute("SELECT image_uri FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{d['commander_name']}%",)).fetchone()
-        commander_image = c["image_uri"] if c else None
+        # art_crop shows just the illustration (no card frame) — right fit for a small tile thumbnail
+        commander_image = c["image_uri"].replace("/normal/", "/art_crop/") if c and c["image_uri"] else None
         out.append({**dict(d), "total_cards": total, "wins": wins, "losses": losses, "commander_image": commander_image})
     cdb.close()
     con.close()
