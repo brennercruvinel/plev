@@ -99,7 +99,8 @@ a { color: inherit; }
 
 .nav-item:hover { background: var(--bg-card); color: var(--text); }
 .nav-item.active { background: var(--bg-card); color: var(--accent-bright); }
-.nav-item .ic { font-size: 16px; width: 18px; text-align: center; }
+.nav-item .ic { font-size: 16px; width: 18px; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
+.nav-item .ic svg { width: 16px; height: 16px; }
 
 .sidebar-footer {
     margin-top: auto;
@@ -125,6 +126,11 @@ a { color: inherit; }
 /* ---------- Main content ---------- */
 
 .main { flex: 1; padding: 28px 32px 60px; max-width: 1400px; }
+
+.breadcrumb { font-size: 12.5px; color: var(--text-faint); margin-bottom: 10px; }
+.breadcrumb a { color: var(--text-dim); text-decoration: none; }
+.breadcrumb a:hover { color: var(--accent-bright); }
+.breadcrumb .sep { margin: 0 7px; }
 
 .page-header {
     display: flex;
@@ -288,6 +294,16 @@ a { color: inherit; }
 .card-row .qty { color: var(--text-faint); font-size: 12px; width: 20px; }
 .card-row .name { flex: 1; font-size: 13.5px; }
 .card-row .cost { font-size: 12px; color: var(--mana-b); font-family: monospace; }
+
+.mana-cost { display: inline-flex; gap: 2px; vertical-align: middle; }
+.mana-sym {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+    font-size: 10px; font-weight: 800; font-family: Georgia, "Times New Roman", serif;
+    color: #1a1a1a; border: 1px solid rgba(0,0,0,.35);
+    line-height: 1;
+}
+.mana-sym-hybrid { font-size: 7px; letter-spacing: -0.5px; }
 .card-row .shared-tag {
     font-size: 10.5px; background: rgba(217,164,65,.15); color: var(--warn);
     padding: 2px 7px; border-radius: 20px; white-space: nowrap;
@@ -306,7 +322,29 @@ a { color: inherit; }
 .synergy-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
 .synergy-item:last-child { border-bottom: none; }
 .synergy-item .name { font-weight: 600; }
-.synergy-item .meta { color: var(--text-faint); font-size: 11.5px; margin-top: 2px; }
+.synergy-item .name:hover { color: var(--accent-bright); }
+.synergy-item .meta { color: var(--text-faint); font-size: 11.5px; margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.own-tag {
+    display: inline-flex; padding: 2px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+}
+.own-tag.tag-available { background: rgba(76,175,125,.15); color: var(--good); }
+.own-tag.tag-missing { background: rgba(217,85,107,.15); color: var(--bad); }
+.own-tag.tag-other-deck { background: rgba(217,164,65,.15); color: var(--warn); }
+
+.overage-warning {
+    font-size: 12px; padding: 8px 10px; border-radius: var(--radius-sm);
+    background: rgba(217,164,65,.12); color: var(--warn); margin-bottom: 10px;
+    border: 1px solid rgba(217,164,65,.3);
+}
+.overage-warning.bad { background: rgba(217,85,107,.12); color: var(--bad); border-color: rgba(217,85,107,.3); }
+
+.tile-remove {
+    position: absolute; bottom: 6px; right: 6px; z-index: 2;
+    padding: 3px 7px !important; opacity: 0; transition: opacity .15s;
+}
+.mtg-card:hover .tile-remove { opacity: 1; }
 
 /* ---------- Scanner ---------- */
 

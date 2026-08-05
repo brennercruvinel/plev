@@ -11,3 +11,42 @@ const ICONS = {
 export function activityIcon(type) {
   return ICONS[type] || ICONS.default;
 }
+
+// ---------------------------------------------------------- custo de mana ----
+
+// Cores oficiais aproximadas dos símbolos de mana do Magic.
+const MANA_COLORS = {
+  W: "#fffbd5",
+  U: "#aae0fa",
+  B: "#cbc2bf",
+  R: "#f9aa8f",
+  G: "#9bd3ae",
+  C: "#ccc",
+};
+
+function singleSymbolHtml(inner) {
+  if (/^\d+$/.test(inner)) {
+    return `<span class="mana-sym" style="background:#d8d3c9">${inner}</span>`;
+  }
+  if (inner === "X" || inner === "Y" || inner === "Z") {
+    return `<span class="mana-sym" style="background:#d8d3c9">${inner}</span>`;
+  }
+  if (MANA_COLORS[inner]) {
+    return `<span class="mana-sym" style="background:${MANA_COLORS[inner]}">${inner}</span>`;
+  }
+  // híbrido (ex: B/P, 2/B, W/U) — mostra os dois componentes bem pequenos
+  if (inner.includes("/")) {
+    const parts = inner.split("/");
+    const bg = MANA_COLORS[parts[parts.length - 1]] || "#d8d3c9";
+    return `<span class="mana-sym mana-sym-hybrid" style="background:${bg}">${parts.join("/")}</span>`;
+  }
+  return `<span class="mana-sym" style="background:#d8d3c9">${inner}</span>`;
+}
+
+/** Renderiza um custo de mana ("{3}{B}{B}") como símbolos redondos coloridos, estilo MTG real. */
+export function manaCostHtml(cost) {
+  if (!cost) return "";
+  const symbols = cost.match(/\{[^}]+\}/g);
+  if (!symbols) return "";
+  return `<span class="mana-cost">${symbols.map((s) => singleSymbolHtml(s.slice(1, -1))).join("")}</span>`;
+}

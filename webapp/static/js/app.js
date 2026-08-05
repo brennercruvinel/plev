@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=5";
-import { renderScanner } from "./scanner.js?v=5";
-import { activityIcon } from "./icons.js?v=5";
+import { api } from "./api.js?v=6";
+import { renderScanner } from "./scanner.js?v=6";
+import { activityIcon, manaCostHtml } from "./icons.js?v=6";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -42,11 +42,6 @@ window.addEventListener("hashchange", navigate);
 
 function h(strings, ...values) {
   return strings.reduce((acc, s, i) => acc + s + (values[i] ?? ""), "");
-}
-
-function manaSymbols(cost) {
-  if (!cost) return "";
-  return cost;
 }
 
 function priceLabel(p) {
@@ -144,9 +139,31 @@ const CATEGORY_LABELS = {
 };
 const CATEGORY_ORDER = ["Comandante", "Land", "Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker", "Outro"];
 
+let deckViewMode = "list"; // "list" ou "grid" — estilo MTG Arena (card view / text view)
+
+function buildOwnershipMap(collectionAll) {
+  const map = {};
+  for (const c of collectionAll) map[c.card_name.toLowerCase()] = c;
+  return map;
+}
+
+function ownershipTag(cardName, ownershipMap) {
+  const entry = ownershipMap[cardName.toLowerCase()];
+  if (!entry) return { label: "Missing", cls: "tag-missing" };
+  const isFree = entry.decks.some((d) => d.deck_name === "Livre");
+  if (isFree) return { label: "Available", cls: "tag-available" };
+  const otherDeck = entry.decks.find((d) => d.deck_name !== "Livre");
+  return { label: otherDeck ? otherDeck.deck_name : "Available", cls: "tag-other-deck" };
+}
+
 async function renderDeckDetail([idStr]) {
   const id = Number(idStr);
-  const [deck, synergy] = await Promise.all([api.deck(id), api.deckSynergy(id).catch(() => ({ cached: false }))]);
+  const [deck, synergy, collectionAll] = await Promise.all([
+    api.deck(id),
+    api.deckSynergy(id).catch(() => ({ cached: false })),
+    api.collection("all"),
+  ]);
+  const ownershipMap = buildOwnershipMap(collectionAll);
 
   const maxCmc = Math.max(1, ...Object.keys(deck.mana_curve).map(Number));
   const maxCount = Math.max(1, ...Object.values(deck.mana_curve));
@@ -159,10 +176,23 @@ async function renderDeckDetail([idStr]) {
       return { label, count };
     });
 
+  const overage = deck.total_cards - 100;
+  let overageWarning = "";
+  if (overage === 0) {
+    overageWarning = `<div class="overage-warning">Deck completo (100/100). Adicionar outra carta vai deixar 101 — remova 1 antes ou depois.</div>`;
+  } else if (overage > 0) {
+    overageWarning = `<div class="overage-warning bad">Deck com ${overage} carta${overage > 1 ? "s" : ""} além do limite — remova ${overage} antes de continuar.</div>`;
+  }
+
   mainEl.innerHTML = h`
+    <div class="breadcrumb"><a href="#decks" data-nav="decks">Meus Decks</a><span class="sep">/</span>${deck.name}</div>
     <div class="page-header">
       <div><h1>${deck.name}</h1><p>${deck.philosophy || ""}</p></div>
       <span class="count-pill ${deck.is_valid_100 ? "ok" : "bad"}" style="font-size:15px">${deck.total_cards}/100</span>
+    </div>
+    <div class="mode-toggle">
+      <span class="chip ${deckViewMode === "list" ? "active" : ""}" data-view="list">Lista</span>
+      <span class="chip ${deckViewMode === "grid" ? "active" : ""}" data-view="grid">Visual</span>
     </div>
     <div class="builder-layout">
       <div id="deck-cards"></div>
@@ -176,44 +206,37 @@ async function renderDeckDetail([idStr]) {
         </div>
         <div class="sidebar-panel">
           <h3>Adicionar carta</h3>
+          ${overageWarning}
           <input type="text" id="add-card-input" placeholder="Nome (PT ou EN)…" style="width:100%;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text);font-size:13px;margin-bottom:8px;">
           <div id="add-card-results"></div>
         </div>
-        ${synergyPanelHtml(synergy)}
+        ${synergyPanelHtml(synergy, ownershipMap)}
       </div>
     </div>
   `;
 
-  const cardsWrap = document.getElementById("deck-cards");
-  cardsWrap.innerHTML = CATEGORY_ORDER.filter((c) => deck.by_type[c]?.length)
-    .map((cat) => {
-      const cards = deck.by_type[cat];
-      const rows = cards
-        .map((c) => {
-          const sharedTag = c.shared_with?.length
-            ? `<span class="shared-tag">também em ${c.shared_with.map((s) => s.deck).join(", ")}</span>`
-            : "";
-          return h`
-            <div class="card-row">
-              <span class="qty">${c.quantity}x</span>
-              <span class="name" data-card-view="${c.card_name}" style="cursor:pointer">${c.card_name}</span>
-              ${sharedTag}
-              <span class="cost">${manaSymbols(c.mana_cost)}</span>
-              ${cat !== "Comandante" ? `<button class="btn small secondary" data-remove="${c.id}">✕</button>` : ""}
-            </div>`;
-        })
-        .join("");
-      return `<div class="category-block"><h4>${CATEGORY_LABELS[cat] || cat} <span class="n">(${cards.length})</span></h4>${rows}</div>`;
-    })
-    .join("");
+  document.querySelector('[data-nav="decks"]').addEventListener("click", (e) => {
+    e.preventDefault();
+    location.hash = "#decks";
+  });
 
-  cardsWrap.querySelectorAll("[data-remove]").forEach((btn) =>
-    btn.addEventListener("click", async () => {
+  document.querySelectorAll("[data-view]").forEach((chip) =>
+    chip.addEventListener("click", () => {
+      deckViewMode = chip.dataset.view;
+      renderDeckDetail([idStr]);
+    })
+  );
+
+  renderDeckCards(deck);
+
+  mainEl.querySelectorAll("[data-remove]").forEach((btn) =>
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
       await api.removeDeckCard(id, Number(btn.dataset.remove));
       renderDeckDetail([idStr]);
     })
   );
-  cardsWrap.querySelectorAll("[data-card-view]").forEach((el) =>
+  mainEl.querySelectorAll("[data-card-view]").forEach((el) =>
     el.addEventListener("click", () => showCardModal(el.dataset.cardView))
   );
 
@@ -226,7 +249,7 @@ async function renderDeckDetail([idStr]) {
     debounce = setTimeout(async () => {
       const results = await api.searchCards(q, 8);
       document.getElementById("add-card-results").innerHTML = results
-        .map((c) => h`<div class="card-row" data-add="${c.name}" style="cursor:pointer"><span class="name">${c.name}</span><span class="cost">${manaSymbols(c.mana_cost)}</span></div>`)
+        .map((c) => h`<div class="card-row" data-add="${c.name}" style="cursor:pointer"><span class="name">${c.name}</span><span class="cost">${manaCostHtml(c.mana_cost)}</span></div>`)
         .join("");
       document.querySelectorAll("[data-add]").forEach((el) =>
         el.addEventListener("click", async () => {
@@ -240,12 +263,67 @@ async function renderDeckDetail([idStr]) {
   });
 }
 
-function synergyPanelHtml(synergy) {
+function renderDeckCards(deck) {
+  const cardsWrap = document.getElementById("deck-cards");
+  const categories = CATEGORY_ORDER.filter((c) => deck.by_type[c]?.length);
+
+  if (deckViewMode === "grid") {
+    cardsWrap.innerHTML = categories
+      .map((cat) => {
+        const cards = deck.by_type[cat];
+        const tiles = cards
+          .map((c) => h`
+            <div class="mtg-card" data-card-view="${c.card_name}">
+              ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
+              <span class="qty-badge">${c.quantity}x</span>
+              ${cat !== "Comandante" ? `<button class="btn small secondary tile-remove" data-remove="${c.id}">✕</button>` : ""}
+            </div>`)
+          .join("");
+        return `<div class="category-block"><h4>${CATEGORY_LABELS[cat] || cat} <span class="n">(${cards.length})</span></h4><div class="card-grid">${tiles}</div></div>`;
+      })
+      .join("");
+    return;
+  }
+
+  cardsWrap.innerHTML = categories
+    .map((cat) => {
+      const cards = deck.by_type[cat];
+      const rows = cards
+        .map((c) => {
+          const sharedTag = c.shared_with?.length
+            ? `<span class="shared-tag">também em ${c.shared_with.map((s) => s.deck).join(", ")}</span>`
+            : "";
+          return h`
+            <div class="card-row">
+              <span class="qty">${c.quantity}x</span>
+              <span class="name" data-card-view="${c.card_name}" style="cursor:pointer">${c.card_name}</span>
+              ${sharedTag}
+              <span class="cost">${manaCostHtml(c.mana_cost)}</span>
+              ${cat !== "Comandante" ? `<button class="btn small secondary" data-remove="${c.id}">✕</button>` : ""}
+            </div>`;
+        })
+        .join("");
+      return `<div class="category-block"><h4>${CATEGORY_LABELS[cat] || cat} <span class="n">(${cards.length})</span></h4>${rows}</div>`;
+    })
+    .join("");
+}
+
+function synergyPanelHtml(synergy, ownershipMap) {
   if (!synergy.cached) {
     return `<div class="sidebar-panel" style="margin-top:16px"><h3>Sinergia (EDHREC)</h3><div class="empty-state" style="padding:20px 10px">${synergy.message || "Sem cache."}</div></div>`;
   }
   const recs = (synergy.recommendations || []).slice(0, 8)
-    .map((r) => h`<div class="synergy-item"><div class="name">${r.name}</div><div class="meta">sinergia ${r.synergy >= 0 ? "+" : ""}${r.synergy?.toFixed(2)} · ${r.num_decks?.toLocaleString("pt-BR")} decks</div></div>`)
+    .map((r) => {
+      const tag = ownershipTag(r.name, ownershipMap);
+      return h`
+        <div class="synergy-item">
+          <div class="name" data-card-view="${r.name}" style="cursor:pointer">${r.name}</div>
+          <div class="meta">
+            sinergia ${r.synergy >= 0 ? "+" : ""}${r.synergy?.toFixed(2)} · ${r.num_decks?.toLocaleString("pt-BR")} decks
+            <span class="own-tag ${tag.cls}">${tag.label}</span>
+          </div>
+        </div>`;
+    })
     .join("");
   const similar = (synergy.similar_commanders || []).slice(0, 5).map((s) => `<span class="chip">${s}</span>`).join(" ");
   return h`
@@ -406,7 +484,7 @@ export async function showCardModal(name) {
         ${c.image_uri ? `<img src="${c.image_uri}" style="width:200px;border-radius:12px" alt="${c.name}">` : ""}
         <div style="flex:1;min-width:200px">
           <h3 style="margin-bottom:2px">${c.name}</h3>
-          <div style="color:var(--mana-b);font-family:monospace;margin-bottom:6px">${c.mana_cost || ""}</div>
+          <div style="margin-bottom:6px">${manaCostHtml(c.mana_cost)}</div>
           <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px">${c.type_line || ""}</div>
           <div class="oracle">${(c.oracle_text || "").replace(/\n/g, "<br>")}</div>
           ${ptNames.length ? `<div style="margin-top:10px;font-size:12px;color:var(--text-faint)">PT oficial: ${ptNames.join(" / ")}</div>` : ""}

@@ -1,4 +1,5 @@
-import { api } from "./api.js?v=5";
+import { api } from "./api.js?v=6";
+import { manaCostHtml } from "./icons.js?v=6";
 
 const ICON_LIST = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="vertical-align:-2px"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
 const ICON_BOOK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="vertical-align:-2px"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
@@ -134,7 +135,7 @@ function renderCandidates(candidates) {
         ${c.image_uri ? `<img src="${c.image_uri}">` : `<div style="width:48px;height:67px;background:var(--bg-card);border-radius:4px"></div>`}
         <div class="info">
           <div class="name">${c.name}${c.pt_name ? ` <span style="color:var(--text-faint);font-weight:400">(${c.pt_name})</span>` : ""}</div>
-          <div class="type">${c.type_line || ""} ${c.mana_cost || ""}</div>
+          <div class="type">${c.type_line || ""} ${manaCostHtml(c.mana_cost)}</div>
         </div>
       </div>`
     )
@@ -195,7 +196,7 @@ async function showPokedexDetail(name) {
     panel.innerHTML = `
       ${c.image_uri ? `<img src="${c.image_uri}">` : ""}
       <h3 style="margin:0 0 4px">${c.name}</h3>
-      <div style="font-family:monospace;color:var(--mana-b);margin-bottom:8px">${c.mana_cost || ""} · ${c.type_line || ""}</div>
+      <div style="margin-bottom:8px">${manaCostHtml(c.mana_cost)} · ${c.type_line || ""}</div>
       <div class="oracle">${(c.oracle_text || "").replace(/\n/g, "<br>")}</div>
       <div style="margin-top:12px;font-size:12px;color:var(--text-dim)">Preço: ${c.price_usd ? `$${c.price_usd}` : "—"} · EDHREC #${c.edhrec_rank ?? "?"}</div>
       <div class="qa-box">
