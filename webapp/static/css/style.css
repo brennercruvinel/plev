@@ -223,6 +223,15 @@ a { color: inherit; }
 .deck-card-thumb .no-image { display: flex; align-items: center; justify-content: center; height: 100%; padding: 8px; text-align: center; font-size: 11px; color: var(--text-faint); }
 .deck-card-body { padding: 16px 18px 18px; }
 .deck-card h3 { margin: 0 0 6px; font-size: 17px; }
+.deck-add-tile {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    border: 1.5px dashed var(--border-light); border-radius: var(--radius);
+    background: transparent; cursor: pointer; color: var(--text-dim);
+    min-height: 160px; transition: border-color .15s, background .15s, color .15s;
+}
+.deck-add-tile:hover { border-color: var(--accent); background: var(--bg-elevated); color: var(--accent-bright); }
+.deck-add-tile .plus { font-size: 30px; font-weight: 300; line-height: 1; }
+.deck-add-tile .label { font-size: 13px; font-weight: 600; }
 .deck-card .philosophy { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 14px; min-height: 40px; }
 .deck-card .meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
 .count-pill { padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; }

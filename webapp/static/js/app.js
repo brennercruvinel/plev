@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=13";
-import { renderScanner } from "./scanner.js?v=13";
-import { activityIcon, manaCostHtml } from "./icons.js?v=13";
+import { api } from "./api.js?v=14";
+import { renderScanner } from "./scanner.js?v=14";
+import { activityIcon, manaCostHtml } from "./icons.js?v=14";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -65,7 +65,10 @@ async function renderDashboard() {
   mainEl.innerHTML = h`
     <div class="page-header">
       <div><h1>Visão Geral</h1><p>Seu laboratório de coleção e decks — tudo lido do banco local.</p></div>
-      <button class="btn" id="add-card-btn">+ Adicionar Carta</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn secondary" id="dash-new-deck-btn">+ Novo Deck</button>
+        <button class="btn" id="add-card-btn">+ Adicionar Carta</button>
+      </div>
     </div>
     ${dataUpdatePanelHtml(dataInfo)}
     <div class="stat-grid">
@@ -85,13 +88,19 @@ async function renderDashboard() {
 
   document.getElementById("dash-decks").innerHTML = decks
     .map(deckCardHtml)
-    .join("");
+    .join("") + h`
+      <div class="deck-add-tile" id="dash-new-deck-tile">
+        <span class="plus">+</span>
+        <span class="label">Novo Deck</span>
+      </div>`;
   document.querySelectorAll("[data-deck-link]").forEach((el) =>
     el.addEventListener("click", () => (location.hash = `#deck/${el.dataset.deckLink}`))
   );
   document.getElementById("add-card-btn").addEventListener("click", () =>
     openAddCardModal({ onSaved: renderDashboard })
   );
+  document.getElementById("dash-new-deck-btn").addEventListener("click", () => openNewDeckModal());
+  document.getElementById("dash-new-deck-tile").addEventListener("click", () => openNewDeckModal());
   wireDataUpdatePanel(renderDashboard);
 
   document.getElementById("dash-activity").innerHTML = activity
