@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=14";
-import { renderScanner } from "./scanner.js?v=14";
-import { activityIcon, manaCostHtml } from "./icons.js?v=14";
+import { api } from "./api.js?v=15";
+import { renderScanner } from "./scanner.js?v=15";
+import { activityIcon, manaCostHtml } from "./icons.js?v=15";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -66,8 +66,8 @@ async function renderDashboard() {
     <div class="page-header">
       <div><h1>Visão Geral</h1><p>Seu laboratório de coleção e decks — tudo lido do banco local.</p></div>
       <div style="display:flex;gap:10px">
-        <button class="btn secondary" id="dash-new-deck-btn">+ Novo Deck</button>
         <button class="btn" id="add-card-btn">+ Adicionar Carta</button>
+        <button class="btn secondary" id="dash-new-deck-btn">Novo Deck</button>
       </div>
     </div>
     ${dataUpdatePanelHtml(dataInfo)}
