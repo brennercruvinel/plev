@@ -18,6 +18,7 @@ export const api = {
   createDeck: (payload) => req("/decks", { method: "POST", body: JSON.stringify(payload) }),
   deleteDeck: (id) => req(`/decks/${id}`, { method: "DELETE" }),
   deckSynergy: (id) => req(`/decks/${id}/synergy`),
+  fetchDeckSynergy: (id) => req(`/decks/${id}/synergy/fetch`, { method: "POST" }),
   addDeckCard: (id, card_name, quantity = 1) =>
     req(`/decks/${id}/cards`, { method: "POST", body: JSON.stringify({ card_name, quantity }) }),
   removeDeckCard: (deckId, cardId) => req(`/decks/${deckId}/cards/${cardId}`, { method: "DELETE" }),

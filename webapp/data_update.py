@@ -79,6 +79,25 @@ def _finish(state, error=None, result=None):
         _status["finished_at"] = time.time()
 
 
+def fetch_one_commander(name, with_combos=True):
+    """Fetches and caches EDHREC synergy for a single commander. Returns (ok, error)."""
+    import json
+    slug = edhrec.slugify(name)
+    data, err = edhrec._fetch_json(f"{edhrec.BASE}/commanders/{slug}.json")
+    if err:
+        return False, err
+    os.makedirs(os.path.join(edhrec.CACHE, "commanders"), exist_ok=True)
+    with open(edhrec._cache_path("commanders", slug), "w", encoding="utf-8") as fh:
+        json.dump(data, fh, ensure_ascii=False)
+    if with_combos:
+        os.makedirs(os.path.join(edhrec.CACHE, "combos"), exist_ok=True)
+        cdata, cerr = edhrec._fetch_json(f"{edhrec.BASE}/combos/{slug}.json")
+        if not cerr:
+            with open(edhrec._cache_path("combos", slug), "w", encoding="utf-8") as fh:
+                json.dump(cdata, fh, ensure_ascii=False)
+    return True, None
+
+
 def _download_bulk(bulk_type):
     """Downloads a Scryfall bulk data file and drops any older file of the same kind."""
     data = scryfall._get("/bulk-data")
@@ -136,15 +155,10 @@ def _run(refresh_synergy):
             con.close()
             for name in commanders:
                 _log(f"Atualizando sinergia (EDHREC): {name}…")
-                slug = edhrec.slugify(name)
-                data, err = edhrec._fetch_json(f"{edhrec.BASE}/commanders/{slug}.json")
-                if err:
+                ok, err = fetch_one_commander(name, with_combos=True)
+                if not ok:
                     _log(f"  não foi possível atualizar '{name}': {err}")
                     continue
-                os.makedirs(os.path.join(edhrec.CACHE, "commanders"), exist_ok=True)
-                import json
-                with open(edhrec._cache_path("commanders", slug), "w", encoding="utf-8") as fh:
-                    json.dump(data, fh, ensure_ascii=False)
                 synergy_updated.append(name)
 
         _log("Concluído.")

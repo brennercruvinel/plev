@@ -17,7 +17,7 @@ Both are in `.gitignore`. To run on any machine, rebuild both with the steps bel
 
 ```bash
 # 1. Python dependencies (no Node.js needed)
-pip3 install --user fastapi uvicorn "pydantic<3" python-multipart pymupdf
+pip3 install --user fastapi uvicorn "pydantic<3"
 
 # 2. run (starts with an empty database — no card index, no decks, no collection)
 cd webapp

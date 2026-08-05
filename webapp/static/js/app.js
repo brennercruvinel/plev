@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=11";
-import { renderScanner } from "./scanner.js?v=11";
-import { activityIcon, manaCostHtml } from "./icons.js?v=11";
+import { api } from "./api.js?v=12";
+import { renderScanner } from "./scanner.js?v=12";
+import { activityIcon, manaCostHtml } from "./icons.js?v=12";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -398,6 +398,23 @@ async function renderDeckDetail([idStr]) {
     location.hash = "#decks";
   });
 
+  const fetchSynergyBtn = document.getElementById("fetch-synergy-btn");
+  if (fetchSynergyBtn) {
+    fetchSynergyBtn.addEventListener("click", async () => {
+      const statusEl = document.getElementById("fetch-synergy-status");
+      fetchSynergyBtn.disabled = true;
+      fetchSynergyBtn.textContent = "Buscando…";
+      try {
+        await api.fetchDeckSynergy(id);
+        renderDeckDetail([idStr]);
+      } catch (err) {
+        fetchSynergyBtn.disabled = false;
+        fetchSynergyBtn.textContent = "Buscar sinergia agora";
+        statusEl.textContent = `Falhou: ${err.message}`;
+      }
+    });
+  }
+
   document.querySelectorAll("[data-view]").forEach((chip) =>
     chip.addEventListener("click", () => {
       deckViewMode = chip.dataset.view;
@@ -488,7 +505,13 @@ function renderDeckCards(deck) {
 
 function synergyPanelHtml(synergy, ownershipMap) {
   if (!synergy.cached) {
-    return `<div class="sidebar-panel" style="margin-top:16px"><h3>Sinergia (EDHREC)</h3><div class="empty-state" style="padding:20px 10px">${synergy.message || "Sem cache."}</div></div>`;
+    return `
+      <div class="sidebar-panel" style="margin-top:16px">
+        <h3>Sinergia (EDHREC)</h3>
+        <div class="empty-state" style="padding:20px 10px 10px">Sem cache do EDHREC para este comandante ainda.</div>
+        <button class="btn" id="fetch-synergy-btn" style="width:100%">Buscar sinergia agora</button>
+        <div id="fetch-synergy-status" style="margin-top:8px;font-size:12px;color:var(--text-dim)"></div>
+      </div>`;
   }
   const recs = (synergy.recommendations || []).slice(0, 8)
     .map((r) => {
@@ -584,7 +607,7 @@ async function renderGames() {
   mainEl.innerHTML = h`
     <div class="page-header">
       <div><h1>Partidas</h1><p>Registre vitórias, derrotas e o que mais apareceu — pra entender o motor de cada deck.</p></div>
-      <button class="btn" id="new-game-btn">+ Registrar partida</button>
+      <button class="btn" id="new-game-btn" ${decks.length ? "" : "disabled title=\"Crie um deck primeiro\""}>+ Registrar partida</button>
     </div>
     <div class="stat-grid">
       <div class="stat-card"><div class="label">Taxa de vitória</div><div class="value">${stats.win_rate ?? "—"}${stats.win_rate != null ? "%" : ""}</div><div class="sub">${stats.total_games} partidas</div></div>
@@ -608,9 +631,11 @@ async function renderGames() {
         <span class="opp">${g.played_at}</span>
         ${g.notes ? `<div class="notes">${g.notes}</div>` : ""}
       </div>`)
-    .join("") || `<div class="empty-state">Nenhuma partida registrada.</div>`;
+    .join("") || `<div class="empty-state">${decks.length ? "Nenhuma partida registrada." : "Crie um deck primeiro (Meus Decks) para poder registrar partidas."}</div>`;
 
-  document.getElementById("new-game-btn").addEventListener("click", () => openGameModal(decks));
+  if (decks.length) {
+    document.getElementById("new-game-btn").addEventListener("click", () => openGameModal(decks));
+  }
 }
 
 function openGameModal(decks) {

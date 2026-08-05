@@ -389,6 +389,20 @@ def deck_synergy(deck_id: int):
     return {"cached": True, "recommendations": high_synergy[:15], "similar_commanders": similar}
 
 
+@app.post("/api/decks/{deck_id}/synergy/fetch")
+def fetch_deck_synergy(deck_id: int):
+    """Fetches EDHREC synergy for just this deck's commander — lightweight alternative to a full data update."""
+    con = get_app_db()
+    deck = con.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
+    con.close()
+    if not deck:
+        raise HTTPException(404, "Deck não encontrado")
+    ok, err = data_update.fetch_one_commander(deck["commander_name"], with_combos=True)
+    if not ok:
+        raise HTTPException(502, f"Não foi possível buscar no EDHREC: {err}")
+    return {"ok": True}
+
+
 # --------------------------------------------------------------- collection ----
 
 @app.get("/api/collection")
