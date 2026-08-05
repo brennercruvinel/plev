@@ -41,7 +41,7 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HERE, "data", "edhrec")
 BASE = "https://json.edhrec.com/pages"
-USER_AGENT = "FelipeNavarroMTGVault/1.0 (uso pessoal, consulta sob demanda)"
+USER_AGENT = "SpellbookMTG/1.0 (https://github.com/ofelipenavarro/spellbook-mtg; on-demand personal lookup)"
 MIN_INTERVAL = 0.5  # no official public API: be polite to their server
 
 _last_request = 0.0

@@ -1,6 +1,8 @@
 # Spellbook — MTG Collection & Deck Manager
 
-Local prototype for managing a Magic: The Gathering collection and decks (mono-black Commander). Runs 100% offline after initial setup — no Node.js, just Python (FastAPI + SQLite) and a static HTML/CSS/JS frontend.
+Local app for managing a Magic: The Gathering collection and Commander decks — any commander, any colors, any player. Runs 100% offline after initial setup — no Node.js, just Python (FastAPI + SQLite) and a static HTML/CSS/JS frontend.
+
+Everything is created from the UI: use "**+ Novo Deck**" (Meus Decks) to start a deck for any commander, and "**+ Adicionar Carta**" (Dashboard/Coleção) to add cards to your collection. No editing Python files or seed data required — those only exist to load the original author's own decks as a worked example.
 
 Full design-decision documentation lives in the Obsidian vault: `MTG/App - Protótipo Spellbook.md` (in Portuguese — that's the owner's personal knowledge base).
 
@@ -25,19 +27,19 @@ mv oracle-cards-*.jsonl.gz all-cards-*.jsonl.gz data/
 # 3. build the local index (SQLite, ~14s)
 python3 mtgdb.py build
 
-# 4. (optional) cache EDHREC synergy for your commanders
-python3 edhrec.py fetch "Syr Konrad, the Grim" --combos
-python3 edhrec.py fetch "Toshiro Umezawa" --combos
-
-# 5. populate the app database with your decks (edit webapp/seed.py with your own collection)
+# 4. run (starts with an empty database — no decks, no collection)
 cd webapp
-python3 seed.py
-
-# 6. run
 python3 -m uvicorn server:app --port 8420
 ```
 
-Visit **http://127.0.0.1:8420**.
+Visit **http://127.0.0.1:8420** and use "+ Novo Deck" / "+ Adicionar Carta" to build your own decks and collection from the UI.
+
+Deck synergy suggestions (EDHREC) are cached per commander and fetched on demand — the first time you open a deck with no cache yet, the sidebar shows the exact command to run, e.g.:
+```bash
+python3 edhrec.py fetch "Your Commander's Name" --combos
+```
+
+`webapp/seed.py` is optional — it's a worked example that loads the original author's own two decks (Syr Konrad, Toshiro Umezawa) instead of starting empty. Skip it unless you specifically want that sample data.
 
 ## Why there's no GitHub Pages
 
@@ -52,7 +54,7 @@ edhrec.py       — EDHREC synergy/combo cache per commander
 webapp/
   server.py     — FastAPI API (decks, collection, scanner, games, activity log)
   db.py         — app database schema (SQLite)
-  seed.py       — populates the database with real decks/collection
+  seed.py       — optional: loads the author's own decks/collection as sample data
   static/       — frontend (plain HTML/CSS/JS, no build step)
 ```
 

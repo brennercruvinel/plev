@@ -27,7 +27,7 @@ import urllib.parse
 import urllib.request
 
 API = "https://api.scryfall.com"
-USER_AGENT = "FelipeNavarroMTGVault/1.0"
+USER_AGENT = "SpellbookMTG/1.0 (https://github.com/ofelipenavarro/spellbook-mtg)"
 MIN_INTERVAL = 0.1  # Scryfall asks for 50-100ms between requests
 
 _last_request = 0.0

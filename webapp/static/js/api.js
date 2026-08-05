@@ -15,6 +15,8 @@ async function req(path, opts = {}) {
 export const api = {
   decks: () => req("/decks"),
   deck: (id) => req(`/decks/${id}`),
+  createDeck: (payload) => req("/decks", { method: "POST", body: JSON.stringify(payload) }),
+  deleteDeck: (id) => req(`/decks/${id}`, { method: "DELETE" }),
   deckSynergy: (id) => req(`/decks/${id}/synergy`),
   addDeckCard: (id, card_name, quantity = 1) =>
     req(`/decks/${id}/cards`, { method: "POST", body: JSON.stringify({ card_name, quantity }) }),

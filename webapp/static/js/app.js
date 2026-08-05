@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=9";
-import { renderScanner } from "./scanner.js?v=9";
-import { activityIcon, manaCostHtml } from "./icons.js?v=9";
+import { api } from "./api.js?v=10";
+import { renderScanner } from "./scanner.js?v=10";
+import { activityIcon, manaCostHtml } from "./icons.js?v=10";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -132,13 +132,92 @@ function deckCardHtml(d) {
 async function renderDecksList() {
   const decks = await api.decks();
   mainEl.innerHTML = h`
-    <div class="page-header"><div><h1>Meus Decks</h1><p>Clique num deck para editar, ver curva de mana e sugestões de sinergia.</p></div></div>
+    <div class="page-header">
+      <div><h1>Meus Decks</h1><p>Clique num deck para editar, ver curva de mana e sugestões de sinergia.</p></div>
+      <button class="btn" id="new-deck-btn">+ Novo Deck</button>
+    </div>
     <div class="deck-grid" id="decks-grid"></div>
   `;
   document.getElementById("decks-grid").innerHTML = decks.map(deckCardHtml).join("");
   document.querySelectorAll("[data-deck-link]").forEach((el) =>
     el.addEventListener("click", () => (location.hash = `#deck/${el.dataset.deckLink}`))
   );
+  document.getElementById("new-deck-btn").addEventListener("click", () => openNewDeckModal());
+}
+
+async function openNewDeckModal() {
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = h`
+    <div class="modal">
+      <h3>Novo deck</h3>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--text-dim)">Comandante *</label>
+        <input type="text" id="nd-commander" placeholder="Nome (PT ou EN)…" autocomplete="off"
+          style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
+        <div id="nd-suggestions"></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--text-dim)">Nome do deck *</label>
+        <input type="text" id="nd-name" placeholder="Ex: Syr Konrad Aristocratas"
+          style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-dim)">Estratégia / filosofia (opcional)</label>
+        <textarea id="nd-philosophy" rows="3" style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text);font-family:inherit"></textarea>
+      </div>
+      <div id="nd-error" style="color:var(--bad);font-size:12px;margin-top:10px;display:none">Preencha comandante e nome do deck.</div>
+      <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
+        <button class="btn secondary" id="nd-cancel">Cancelar</button>
+        <button class="btn" id="nd-save">Criar deck</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+
+  const commanderInput = backdrop.querySelector("#nd-commander");
+  const suggestionsEl = backdrop.querySelector("#nd-suggestions");
+  commanderInput.focus();
+  let debounce;
+  commanderInput.addEventListener("input", () => {
+    clearTimeout(debounce);
+    const q = commanderInput.value.trim();
+    if (q.length < 2) { suggestionsEl.innerHTML = ""; return; }
+    debounce = setTimeout(async () => {
+      const results = await api.searchCards(q, 6);
+      suggestionsEl.innerHTML = results
+        .map((c) => h`<div class="card-row" data-pick="${c.name}" style="cursor:pointer"><span class="name">${c.name}</span><span class="cost">${manaCostHtml(c.mana_cost)}</span></div>`)
+        .join("");
+      suggestionsEl.querySelectorAll("[data-pick]").forEach((el) =>
+        el.addEventListener("click", () => {
+          commanderInput.value = el.dataset.pick;
+          suggestionsEl.innerHTML = "";
+          if (!backdrop.querySelector("#nd-name").value.trim()) {
+            backdrop.querySelector("#nd-name").value = el.dataset.pick;
+          }
+        })
+      );
+    }, 250);
+  });
+
+  backdrop.querySelector("#nd-cancel").addEventListener("click", () => backdrop.remove());
+  backdrop.querySelector("#nd-save").addEventListener("click", async () => {
+    const commander_name = commanderInput.value.trim();
+    const name = backdrop.querySelector("#nd-name").value.trim();
+    if (!commander_name || !name) {
+      backdrop.querySelector("#nd-error").style.display = "block";
+      return;
+    }
+    const saveBtn = backdrop.querySelector("#nd-save");
+    saveBtn.disabled = true;
+    const { id } = await api.createDeck({
+      name,
+      commander_name,
+      philosophy: backdrop.querySelector("#nd-philosophy").value.trim() || null,
+    });
+    backdrop.remove();
+    location.hash = `#deck/${id}`;
+  });
 }
 
 const CATEGORY_LABELS = {
@@ -197,7 +276,10 @@ async function renderDeckDetail([idStr]) {
     <div class="breadcrumb"><a href="#decks" data-nav="decks">Meus Decks</a><span class="sep">/</span>${deck.name}</div>
     <div class="page-header">
       <div><h1>${deck.name}</h1><p>${deck.philosophy || ""}</p></div>
-      <span class="count-pill ${deck.is_valid_100 ? "ok" : "bad"}" style="font-size:15px">${deck.total_cards}/100</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="count-pill ${deck.is_valid_100 ? "ok" : "bad"}" style="font-size:15px">${deck.total_cards}/100</span>
+        <button class="btn secondary small" id="delete-deck-btn">Excluir deck</button>
+      </div>
     </div>
     <div class="mode-toggle">
       <span class="chip ${deckViewMode === "list" ? "active" : ""}" data-view="list">Lista</span>
@@ -226,6 +308,12 @@ async function renderDeckDetail([idStr]) {
 
   document.querySelector('[data-nav="decks"]').addEventListener("click", (e) => {
     e.preventDefault();
+    location.hash = "#decks";
+  });
+
+  document.getElementById("delete-deck-btn").addEventListener("click", async () => {
+    if (!confirm(`Excluir o deck "${deck.name}"? As cartas voltam pra coleção livre — isso não pode ser desfeito.`)) return;
+    await api.deleteDeck(id);
     location.hash = "#decks";
   });
 

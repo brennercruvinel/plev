@@ -178,6 +178,45 @@ def list_decks():
     return out
 
 
+class DeckIn(BaseModel):
+    name: str
+    commander_name: str
+    philosophy: Optional[str] = None
+
+
+@app.post("/api/decks")
+def create_deck(payload: DeckIn):
+    con = get_app_db()
+    cur = con.execute(
+        "INSERT INTO decks (name, commander_name, philosophy) VALUES (?, ?, ?)",
+        (payload.name, payload.commander_name, payload.philosophy),
+    )
+    deck_id = cur.lastrowid
+    con.execute(
+        "INSERT INTO deck_cards (deck_id, card_name, quantity, is_commander) VALUES (?, ?, 1, 1)",
+        (deck_id, payload.commander_name),
+    )
+    log_activity(con, "deck_built", f"Deck {payload.name} criado (comandante: {payload.commander_name})")
+    con.commit()
+    con.close()
+    return {"ok": True, "id": deck_id}
+
+
+@app.delete("/api/decks/{deck_id}")
+def delete_deck(deck_id: int):
+    con = get_app_db()
+    deck = con.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
+    if not deck:
+        con.close()
+        raise HTTPException(404, "Deck não encontrado")
+    # deck_cards cascades (ON DELETE CASCADE); collection rows just lose their allocation (ON DELETE SET NULL)
+    con.execute("DELETE FROM decks WHERE id = ?", (deck_id,))
+    log_activity(con, "deck_disassembled", f"Deck {deck['name']} removido")
+    con.commit()
+    con.close()
+    return {"ok": True}
+
+
 @app.get("/api/decks/{deck_id}")
 def get_deck(deck_id: int):
     con = get_app_db()
