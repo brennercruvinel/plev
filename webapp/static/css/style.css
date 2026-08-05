@@ -195,7 +195,7 @@ a { color: inherit; }
 .wl { color: var(--text-dim); }
 .wl b.win { color: var(--good); } .wl b.loss { color: var(--bad); }
 
-/* ---------- Histórico de atividades ---------- */
+/* ---------- Activity log ---------- */
 
 .activity-row {
     display: flex; align-items: center; gap: 12px;
@@ -212,7 +212,7 @@ a { color: inherit; }
 .activity-desc { flex: 1; font-size: 13.5px; }
 .activity-ts { font-size: 11.5px; color: var(--text-faint); white-space: nowrap; }
 
-/* ---------- Card grid (coleção / arena style) ---------- */
+/* ---------- Card grid (collection / arena style) ---------- */
 
 .filters-bar {
     display: flex; gap: 10px; flex-wrap: wrap; align-items: center;

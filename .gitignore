@@ -1,8 +1,8 @@
-# Bases de dados baixadas (bulk data do Scryfall, cache do EDHREC) — grandes demais pro git
-# e reconstruíveis via scryfall.py / mtgdb.py build / edhrec.py fetch
+# Downloaded databases (Scryfall bulk data, EDHREC cache) — too large for git
+# and fully reconstructible via scryfall.py / mtgdb.py build / edhrec.py fetch
 data/
 
-# Coleção pessoal real (decks, cartas, partidas) — fica só local, nunca no repositório
+# Real personal collection (decks, cards, games) — stays local only, never in the repo
 webapp/app.db
 
 # Python

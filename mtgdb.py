@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Base de dados local de Magic, construída a partir do bulk data do Scryfall.
+Local Magic card database, built from Scryfall's bulk data.
 
-Lê os arquivos .jsonl.gz em streaming (sem descomprimir) e monta um índice SQLite,
-permitindo consulta instantânea e offline de todas as cartas já lançadas —
-inclusive busca pelo nome em português, útil porque a coleção física é em PT-BR.
+Streams the .jsonl.gz files (without fully decompressing) and builds a SQLite
+index, enabling instant offline lookup of every card ever printed — including
+by Portuguese name, since the owner's physical collection is in PT-BR.
 
-Uso:
-    ./mtgdb.py build                      # constrói/reconstrói o índice
-    ./mtgdb.py card "Vona's Hunger"       # consulta (aceita nome em PT ou EN)
+Usage (CLI output is in Portuguese, matching the owner's daily workflow):
+    ./mtgdb.py build                      # builds/rebuilds the index
+    ./mtgdb.py card "Vona's Hunger"       # lookup (accepts PT or EN name)
     ./mtgdb.py card "Fome de Vona"
     ./mtgdb.py search "sacrifice" --type Instant --color B
-    ./mtgdb.py pt "Vento Pestilento"      # traduz PT -> EN
+    ./mtgdb.py pt "Vento Pestilento"      # translates PT -> EN
     ./mtgdb.py stats
 """
 
@@ -183,10 +183,11 @@ def fmt(r, verbose=True):
 
 
 def official_pt(con, oracle_id):
-    """Todos os nomes oficiais em PT de uma carta, com as edições onde saíram.
+    """All official PT names for a card, with the sets they were printed in.
 
-    Vem do campo printed_name do Scryfall — o texto impresso na carta física.
-    Nunca é tradução gerada; se não há impressão em PT, retorna lista vazia.
+    Comes from Scryfall's printed_name field — the text physically printed on
+    the card. Never a generated translation; returns an empty list if there's
+    no PT printing.
     """
     rows = con.execute(
         "SELECT printed_name, GROUP_CONCAT(DISTINCT set_code) sets FROM names_pt "
@@ -196,10 +197,10 @@ def official_pt(con, oracle_id):
 
 
 def _lookup(con, name):
-    """Resolve um nome (EN ou PT oficial) para uma carta.
+    """Resolves a name (EN or official PT) to a card.
 
-    Retorna (carta, rótulo_da_correspondência). Correspondências aproximadas são
-    sempre rotuladas como tal — nunca devolvidas como se fossem exatas.
+    Returns (card, match_label). Approximate matches are always labeled as
+    such — never returned as if they were exact.
     """
     r = con.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (name,)).fetchone()
     if r:
@@ -215,7 +216,7 @@ def _lookup(con, name):
     elif len(rows) > 1:
         return None, f"AMBÍGUO: {len(rows)} cartas diferentes usam esse nome em português"
 
-    # Correspondência parcial — sempre sinalizada, nunca silenciosa
+    # Partial match — always flagged, never silent
     r = con.execute("SELECT * FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1",
                     (f"%{name}%",)).fetchone()
     if r:
@@ -256,7 +257,7 @@ def cmd_card(args):
 
 
 def cmd_pt(args):
-    """Traduz nome em português -> inglês, usando só os nomes oficiais impressos."""
+    """Translates a Portuguese name -> English, using only official printed names."""
     con = _connect()
     exact = con.execute(
         "SELECT DISTINCT n.printed_name, c.name, c.type_line, c.mana_cost, c.oracle_id "

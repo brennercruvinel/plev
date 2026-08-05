@@ -38,7 +38,7 @@ navItems.forEach((el) => {
 });
 window.addEventListener("hashchange", navigate);
 
-// ---------------------------------------------------------------- utils ----
+// ----------------------------------------------------------------- utils ----
 
 function h(strings, ...values) {
   return strings.reduce((acc, s, i) => acc + s + (values[i] ?? ""), "");
@@ -48,7 +48,7 @@ function priceLabel(p) {
   return p ? `$${Number(p).toFixed(2)}` : "—";
 }
 
-// ------------------------------------------------------------ dashboard ----
+// ------------------------------------------------------------- dashboard ----
 
 async function renderDashboard() {
   const [decks, collectionTotal, freeCollection, activity] = await Promise.all([
@@ -100,7 +100,7 @@ async function renderDashboard() {
 }
 
 function formatTs(ts) {
-  // ts vem como "YYYY-MM-DD HH:MM:SS" (UTC, do SQLite datetime('now'))
+  // ts comes as "YYYY-MM-DD HH:MM:SS" (UTC, from SQLite datetime('now'))
   const d = new Date(ts.replace(" ", "T") + "Z");
   return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
@@ -118,7 +118,7 @@ function deckCardHtml(d) {
     </div>`;
 }
 
-// -------------------------------------------------------------- decks ----
+// --------------------------------------------------------------- decks ----
 
 async function renderDecksList() {
   const decks = await api.decks();
@@ -139,7 +139,7 @@ const CATEGORY_LABELS = {
 };
 const CATEGORY_ORDER = ["Comandante", "Land", "Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker", "Outro"];
 
-let deckViewMode = "list"; // "list" ou "grid" — estilo MTG Arena (card view / text view)
+let deckViewMode = "list"; // "list" or "grid" — MTG Arena style (card view / text view)
 
 function buildOwnershipMap(collectionAll) {
   const map = {};
@@ -334,7 +334,7 @@ function synergyPanelHtml(synergy, ownershipMap) {
     </div>`;
 }
 
-// ---------------------------------------------------------- collection ----
+// ------------------------------------------------------------ collection ----
 
 let collectionFilter = "all";
 
@@ -364,7 +364,7 @@ async function renderCollection() {
     const items = await api.collection(collectionFilter, q);
     grid.innerHTML = items
       .map((c) => {
-        // uma carta pode ter várias entradas (uma por deck/cópia) — já vem agrupada e somada da API
+        // a card can have several entries (one per deck/copy) — already grouped and summed by the API
         const realDecks = [...new Set(c.decks.filter((d) => d.deck_name !== "Livre").map((d) => d.deck_name))];
         const isAllocated = realDecks.length > 0;
         return h`
@@ -392,7 +392,7 @@ async function renderCollection() {
   load();
 }
 
-// -------------------------------------------------------------- games ----
+// --------------------------------------------------------------- games ----
 
 async function renderGames() {
   const [decks, games, stats] = await Promise.all([api.decks(), api.games(), api.gamesStats()]);
@@ -467,7 +467,7 @@ function openGameModal(decks) {
   });
 }
 
-// ---------------------------------------------------------- card modal ----
+// ------------------------------------------------------------ card modal ----
 
 export async function showCardModal(name) {
   const backdrop = document.createElement("div");

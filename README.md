@@ -1,63 +1,63 @@
 # Spellbook — MTG Collection & Deck Manager
 
-Protótipo local de gestão de coleção e decks de Magic: The Gathering (mono-black Commander). Roda 100% offline depois da configuração inicial — sem Node.js, só Python (FastAPI + SQLite) e um front-end estático em HTML/CSS/JS puro.
+Local prototype for managing a Magic: The Gathering collection and decks (mono-black Commander). Runs 100% offline after initial setup — no Node.js, just Python (FastAPI + SQLite) and a static HTML/CSS/JS frontend.
 
-Documentação completa das decisões de design no vault Obsidian: `MTG/App - Protótipo Spellbook.md`.
+Full design-decision documentation lives in the Obsidian vault: `MTG/App - Protótipo Spellbook.md` (in Portuguese — that's the owner's personal knowledge base).
 
-## Por que este repositório não tem os dados
+## Why this repository doesn't include the data
 
-- `data/` (base do Scryfall + cache do EDHREC) tem ~430 MB — acima do limite de arquivo do GitHub, e totalmente reconstruível a partir da API pública do Scryfall.
-- `webapp/app.db` é a coleção/decks reais — dado pessoal, fica só local.
+- `data/` (Scryfall bulk data + EDHREC cache) is ~430 MB — over GitHub's file size limit, and fully reconstructible from Scryfall's public API.
+- `webapp/app.db` is the real collection/decks — personal data, stays local only.
 
-Ambos estão no `.gitignore`. Para rodar em qualquer máquina, reconstrua os dois com os passos abaixo.
+Both are in `.gitignore`. To run on any machine, rebuild both with the steps below.
 
-## Setup do zero
+## Setup from scratch
 
 ```bash
-# 1. dependências Python (sem Node.js necessário)
+# 1. Python dependencies (no Node.js needed)
 pip3 install --user fastapi uvicorn "pydantic<3" python-multipart pymupdf
 
-# 2. baixar a base de cartas do Scryfall (bulk data oficial, gratuito, sem API key)
+# 2. download the Scryfall card database (official bulk data, free, no API key)
 python3 scryfall.py bulk oracle_cards --download
-python3 scryfall.py bulk all_cards --download   # ~370MB, nomes em PT + imagens
+python3 scryfall.py bulk all_cards --download   # ~370MB, includes PT names + images
 mv oracle-cards-*.jsonl.gz all-cards-*.jsonl.gz data/
 
-# 3. construir o índice local (SQLite, ~14s)
+# 3. build the local index (SQLite, ~14s)
 python3 mtgdb.py build
 
-# 4. (opcional) cachear sinergia do EDHREC pros seus comandantes
+# 4. (optional) cache EDHREC synergy for your commanders
 python3 edhrec.py fetch "Syr Konrad, the Grim" --combos
 python3 edhrec.py fetch "Toshiro Umezawa" --combos
 
-# 5. popular o banco do app com os decks (edite webapp/seed.py com sua própria coleção)
+# 5. populate the app database with your decks (edit webapp/seed.py with your own collection)
 cd webapp
 python3 seed.py
 
-# 6. rodar
+# 6. run
 python3 -m uvicorn server:app --port 8420
 ```
 
-Acesse **http://127.0.0.1:8420**.
+Visit **http://127.0.0.1:8420**.
 
-## Por que não tem GitHub Pages
+## Why there's no GitHub Pages
 
-GitHub Pages só serve arquivos estáticos — não roda o back-end Python (FastAPI) do qual todo o app depende (decks, coleção, scanner, partidas). Rodar localmente com `uvicorn` é a forma de usar isto em qualquer computador.
+GitHub Pages only serves static files — it can't run the Python (FastAPI) backend the whole app depends on (decks, collection, scanner, games). Running locally with `uvicorn` is how this gets used on any computer.
 
-## Estrutura
+## Structure
 
 ```
-scryfall.py     — CLI cliente da API do Scryfall (busca, decklist, bulk data)
-mtgdb.py        — constrói/consulta o índice SQLite local de cartas (offline)
-edhrec.py       — cache de sinergia/combos do EDHREC por comandante
+scryfall.py     — Scryfall API CLI client (search, decklist validation, bulk data)
+mtgdb.py        — builds/queries the local SQLite card index (offline)
+edhrec.py       — EDHREC synergy/combo cache per commander
 webapp/
-  server.py     — API FastAPI (decks, coleção, scanner, partidas, histórico)
-  db.py         — schema do banco do app (SQLite)
-  seed.py       — popula o banco com decks/coleção reais
-  static/       — front-end (HTML/CSS/JS puro, sem build)
+  server.py     — FastAPI API (decks, collection, scanner, games, activity log)
+  db.py         — app database schema (SQLite)
+  seed.py       — populates the database with real decks/collection
+  static/       — frontend (plain HTML/CSS/JS, no build step)
 ```
 
-## Ferramentas usadas pelo app (nenhuma exige API key)
+## Tools used by the app (none require an API key)
 
-- Base de cartas: Scryfall bulk data (38k+ cartas, nomes oficiais em PT, imagens)
-- Sinergia de deck: EDHREC (cache local por comandante)
-- OCR do scanner: Tesseract.js (carregado via CDN na primeira vez, depois em cache do navegador)
+- Card database: Scryfall bulk data (38k+ cards, official PT names, images)
+- Deck synergy: EDHREC (cached locally per commander)
+- Scanner OCR: Tesseract.js (loaded from CDN on first use, then browser-cached)

@@ -1,4 +1,4 @@
-// Ícones SVG minimalistas (estilo line-icon), nunca emoji. currentColor herda a cor do texto.
+// Minimalist SVG line-icons, never emoji. currentColor inherits the text color.
 const ICONS = {
   card_new: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>`,
   card_added_deck: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 5 12 10 7"/><path d="M5 12h12"/></svg>`,
@@ -12,9 +12,9 @@ export function activityIcon(type) {
   return ICONS[type] || ICONS.default;
 }
 
-// ---------------------------------------------------------- custo de mana ----
+// ------------------------------------------------------------- mana cost ----
 
-// Cores oficiais aproximadas dos símbolos de mana do Magic.
+// Approximate official colors of Magic's mana symbols.
 const MANA_COLORS = {
   W: "#fffbd5",
   U: "#aae0fa",
@@ -34,7 +34,7 @@ function singleSymbolHtml(inner) {
   if (MANA_COLORS[inner]) {
     return `<span class="mana-sym" style="background:${MANA_COLORS[inner]}">${inner}</span>`;
   }
-  // híbrido (ex: B/P, 2/B, W/U) — mostra os dois componentes bem pequenos
+  // hybrid (e.g. B/P, 2/B, W/U) — shows both components very small
   if (inner.includes("/")) {
     const parts = inner.split("/");
     const bg = MANA_COLORS[parts[parts.length - 1]] || "#d8d3c9";
@@ -43,7 +43,7 @@ function singleSymbolHtml(inner) {
   return `<span class="mana-sym" style="background:#d8d3c9">${inner}</span>`;
 }
 
-/** Renderiza um custo de mana ("{3}{B}{B}") como símbolos redondos coloridos, estilo MTG real. */
+/** Renders a mana cost ("{3}{B}{B}") as colored round symbols, matching real MTG style. */
 export function manaCostHtml(cost) {
   if (!cost) return "";
   const symbols = cost.match(/\{[^}]+\}/g);

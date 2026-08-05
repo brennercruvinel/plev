@@ -1,4 +1,4 @@
-"""Acesso aos dois bancos: app.db (dados do Felipe) e mtg.sqlite (base de cartas, somente leitura)."""
+"""Access to the two databases: app.db (the owner's data) and mtg.sqlite (card database, read-only)."""
 import os
 import sqlite3
 
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS activity (
 
 
 def log_activity(con, type_, description):
-    """Registra um evento no histórico do app (tela Visão Geral)."""
+    """Records an event in the app's activity log (Overview screen)."""
     con.execute("INSERT INTO activity (type, description) VALUES (?, ?)", (type_, description))
 
 

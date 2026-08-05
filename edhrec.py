@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
 """
-Cache local de sinergia de cartas do EDHREC, para consulta OFFLINE de deckbuilding.
+Local cache of EDHREC card synergy data, for OFFLINE deckbuilding lookups.
 
-Diferença importante para o scryfall.py/mtgdb.py: o EDHREC não publica um
-dump oficial com a base inteira. Cada comandante/tema é uma página própria.
-Por isso o fluxo aqui é em duas etapas:
+Key difference from scryfall.py/mtgdb.py: EDHREC doesn't publish an official
+dump of its whole database. Each commander/theme is its own page. So the flow
+here is two steps:
 
-  1. `fetch` — precisa de internet, busca e SALVA a página localmente
-  2. `recs` / `combos` / `similar` — sempre offline, lê só do que já foi salvo
+  1. `fetch` — needs internet, fetches and SAVES the page locally
+  2. `recs` / `combos` / `similar` — always offline, only reads what's saved
 
-Faça o fetch dos comandantes que você joga (ou pensa em jogar) enquanto tem
-internet em casa; depois disso a consulta funciona em qualquer lugar, sem rede.
+Fetch the commanders you play (or are considering) while you have internet at
+home; after that, lookups work anywhere, no network needed.
 
-Usa endpoints JSON que o próprio site do EDHREC consome (json.edhrec.com) —
-não é uma API oficialmente documentada/suportada por eles, então pode mudar
-sem aviso. Por isso: só busque sob demanda (um comandante de cada vez,
-quando você realmente for usá-lo), nunca varra o site inteiro.
+Uses the JSON endpoints EDHREC's own site consumes (json.edhrec.com) — not an
+officially documented/supported API, so it can change without notice. Because
+of that: only fetch on demand (one commander at a time, when you're actually
+about to use it), never crawl the whole site.
 
-Uso:
-    ./edhrec.py fetch "Syr Konrad, the Grim"     # busca e cacheia (precisa net)
-    ./edhrec.py fetch "Syr Konrad, the Grim" --combos   # também busca combos
-    ./edhrec.py recs "Syr Konrad, the Grim"      # lê do cache (offline)
+Usage (CLI output is in Portuguese, matching the owner's daily workflow):
+    ./edhrec.py fetch "Syr Konrad, the Grim"     # fetches and caches (needs net)
+    ./edhrec.py fetch "Syr Konrad, the Grim" --combos   # also fetches combos
+    ./edhrec.py recs "Syr Konrad, the Grim"      # reads from cache (offline)
     ./edhrec.py recs "Syr Konrad, the Grim" --list "High Synergy Cards"
-    ./edhrec.py combos "Syr Konrad, the Grim"    # combos conhecidos (offline)
-    ./edhrec.py similar "Syr Konrad, the Grim"   # comandantes parecidos (offline)
-    ./edhrec.py list                              # o que já está cacheado
+    ./edhrec.py combos "Syr Konrad, the Grim"    # known combos (offline)
+    ./edhrec.py similar "Syr Konrad, the Grim"   # similar commanders (offline)
+    ./edhrec.py list                              # what's already cached
 """
 
 import argparse
@@ -42,13 +42,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HERE, "data", "edhrec")
 BASE = "https://json.edhrec.com/pages"
 USER_AGENT = "FelipeNavarroMTGVault/1.0 (uso pessoal, consulta sob demanda)"
-MIN_INTERVAL = 0.5  # sem API pública oficial: sermos educados com o servidor deles
+MIN_INTERVAL = 0.5  # no official public API: be polite to their server
 
 _last_request = 0.0
 
 
 def slugify(name):
-    """Converte um nome de carta/comandante pro formato de slug do EDHREC."""
+    """Converts a card/commander name to EDHREC's slug format."""
     name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
     name = name.lower()
     name = re.sub(r"[^a-z0-9]+", "-", name)

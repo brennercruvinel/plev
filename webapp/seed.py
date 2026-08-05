@@ -1,4 +1,9 @@
-"""Popula app.db com os dois decks reais do Felipe e o inventário conhecido (2026-08-02)."""
+"""Populates app.db with the owner's two real decks and known inventory (2026-08-02).
+
+Text values kept in Portuguese here (deck philosophy, card notes, activity log
+messages, game notes) are actual app content the owner sees on screen — this
+file's own comments and docstrings are in English per the repo's convention.
+"""
 from db import get_app_db, init_db, log_activity
 
 SYR_KONRAD = {
@@ -26,7 +31,7 @@ SYR_KONRAD = {
         "Mind Stone": 1, "Sol Ring": 1, "Swiftfoot Boots": 1, "Worn Powerstone": 1,
         "Liliana, Death's Majesty": 1,
     },
-    # impressões conhecidas por nome de carta (o resto fica sem set/lang confirmado)
+    # known printings by card name (everything else has no confirmed set/lang)
     "printings": {
         "Return to Action": {"lang": "ja"},
         "Victimize": {"lang": "ja"},
@@ -60,7 +65,7 @@ TOSHIRO = {
     "printings": {},
 }
 
-# Cartas fora de qualquer deck no momento, mas que Felipe possui (Colecao - Inventario Geral.md)
+# Cards not currently in any deck, but owned (see Colecao - Inventario Geral.md in the vault)
 FREE_CARDS = [
     "Cornered by Black Mages", "Poison the Cup", "Tribute to Hunger", "Undying Malice",
     "Sudden Edict", "Indulgent Tormentor", "Lord of the Forsaken", "Morlun, Devourer of Spiders",
@@ -84,12 +89,12 @@ def seed_deck(con, deck_def):
             "INSERT INTO deck_cards (deck_id, card_name, quantity, is_commander) VALUES (?, ?, ?, ?)",
             (deck_id, card_name, qty, 0),
         )
-    # comandante como entrada própria (não estava nos dicts de cartas acima)
+    # commander as its own entry (wasn't in the card dicts above)
     con.execute(
         "INSERT INTO deck_cards (deck_id, card_name, quantity, is_commander) VALUES (?, ?, 1, 1)",
         (deck_id, deck_def["commander"]),
     )
-    # coleção: cada carta do deck vira uma cópia alocada
+    # collection: each deck card becomes one allocated copy
     for card_name, qty in deck_def["cards"].items():
         printing = deck_def["printings"].get(card_name, {})
         con.execute(
@@ -126,7 +131,7 @@ def main():
             (card_name,),
         )
 
-    # alguns jogos de exemplo, pra mostrar a tela de estatisticas funcionando com dado real informado
+    # a few sample games, to show the stats screen working with real reported data
     games = [
         (syr_id, "2026-07-20", "vitoria", "Golos, Zaxara, Meren", 9, "Combo Mindcrank+Bloodchief não saiu, venceu no attrition"),
         (syr_id, "2026-07-27", "derrota", "Atraxa, Korvold", 7, "Board wipe adversário levou tudo antes do Konrad estabilizar"),

@@ -1,10 +1,16 @@
 """
-Spellbook — protótipo local de gestão de coleção/decks.
+Spellbook — local prototype for collection/deck management.
 
-Roda 100% em localhost. Os dados de cartas (38k+ cartas, nomes em português oficiais,
-imagens) vêm do banco local mtg.sqlite (bulk data do Scryfall, já baixado e indexado —
-ver MTG/API Scryfall - Acesso e Uso.md no vault). Nenhuma chamada de rede é necessária
-para os dados core; só a busca de preço ao vivo (opcional) usa a API do Scryfall.
+Runs 100% on localhost. Card data (38k+ cards, official Portuguese names,
+images) comes from the local mtg.sqlite database (Scryfall bulk data, already
+downloaded and indexed — see MTG/API Scryfall - Acesso e Uso.md in the vault).
+No network call is needed for core data; only optional live price lookups use
+the Scryfall API.
+
+Note: user-facing strings returned by this API (error messages, activity log
+descriptions, etc.) are intentionally in Portuguese — that's the app's actual
+interface language for its owner. Only this file's own comments/docstrings
+follow the repository's English convention.
 """
 import os
 import re
@@ -40,7 +46,7 @@ def card_row_to_dict(r):
 
 
 def lookup_card(name: str):
-    """Acha uma carta pelo nome (inglês exato, português exato, ou aproximado)."""
+    """Finds a card by name (exact English, exact Portuguese, or approximate)."""
     cdb = get_cards_db()
     r = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (name,)).fetchone()
     if r:
@@ -62,7 +68,7 @@ def lookup_card(name: str):
     return None, None
 
 
-# ---------------------------------------------------------------- cartas ----
+# ------------------------------------------------------------------ cards ----
 
 @app.get("/api/cards/search")
 def search_cards(q: str = "", limit: int = 30):
@@ -100,11 +106,11 @@ def get_card(name: str):
 
 @app.post("/api/scan/recognize")
 def scan_recognize(payload: dict):
-    """Recebe texto (extraído via OCR no navegador) e devolve as cartas mais parecidas.
+    """Takes text (extracted via OCR in the browser) and returns the closest-matching cards.
 
-    Isto NÃO é reconhecimento visual da carta — é fuzzy-match de texto contra os
-    38 mil nomes (inglês + português oficiais) da base local. É rápido e funciona
-    offline; a precisão depende da qualidade do OCR no frame capturado.
+    This is NOT visual card recognition — it's a fuzzy text match against the
+    38k names (English + official Portuguese) in the local database. It's fast
+    and works offline; accuracy depends on the OCR quality on the captured frame.
     """
     text = (payload.get("text") or "").strip()
     if not text:
@@ -176,7 +182,7 @@ def get_deck(deck_id: int):
         "SELECT * FROM deck_cards WHERE deck_id = ? ORDER BY is_commander DESC, card_name", (deck_id,)
     ).fetchall()
 
-    # cartas alocadas a OUTRO deck com o mesmo nome (duplicatas entre decks)
+    # cards allocated to ANOTHER deck under the same name (cross-deck duplicates)
     other_alloc = con.execute(
         """
         SELECT card_name, decks.name as other_deck, decks.id as other_deck_id
@@ -264,7 +270,7 @@ def remove_deck_card(deck_id: int, card_id: int):
 
 @app.get("/api/decks/{deck_id}/synergy")
 def deck_synergy(deck_id: int):
-    """Sinergia cacheada do EDHREC pro comandante deste deck — 100% offline (arquivo local)."""
+    """Cached EDHREC synergy for this deck's commander — 100% offline (local file)."""
     con = get_app_db()
     deck = con.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
     current_cards = {r["card_name"] for r in con.execute(
@@ -295,15 +301,16 @@ def deck_synergy(deck_id: int):
     return {"cached": True, "recommendations": high_synergy[:15], "similar_commanders": similar}
 
 
-# ------------------------------------------------------------- coleção ----
+# --------------------------------------------------------------- collection ----
 
 @app.get("/api/collection")
 def list_collection(status: str = "all", q: str = ""):
-    """Uma linha por carta (agrupada) — soma as unidades e lista os decks onde estão alocadas.
+    """One row per card (grouped) — sums units and lists which decks they're allocated to.
 
-    Uma mesma carta pode ter várias entradas na tabela `collection` (uma por cópia/deck).
-    Isso é o que importa pra saber "quantas unidades reais eu tenho" e não confundir com
-    "quantas cópias diferentes existem" — ver [[Colecao - Inventario Geral]] no vault.
+    The same card can have multiple entries in the `collection` table (one per
+    copy/deck). This grouping is what matters for "how many units do I actually
+    own", as opposed to "how many separate entries exist" — see
+    [[Colecao - Inventario Geral]] in the vault.
     """
     con = get_app_db()
     sql = """
@@ -352,7 +359,7 @@ def list_collection(status: str = "all", q: str = ""):
 
 @app.get("/api/collection/total")
 def collection_total():
-    """Total de unidades cadastradas na coleção, contando repetidas (aloc adas + livres)."""
+    """Total units registered in the collection, counting duplicates (allocated + free)."""
     con = get_app_db()
     total = con.execute("SELECT COALESCE(SUM(quantity), 0) FROM collection").fetchone()[0]
     distinct = con.execute("SELECT COUNT(DISTINCT card_name) FROM collection").fetchone()[0]
@@ -362,7 +369,7 @@ def collection_total():
 
 @app.get("/api/activity")
 def list_activity(limit: int = 30):
-    """Histórico de ações no app — cartas novas, entradas/saídas de deck, decks montados etc."""
+    """App activity log — new cards, decks joined/left, decks built, etc."""
     con = get_app_db()
     rows = con.execute(
         "SELECT * FROM activity ORDER BY ts DESC, id DESC LIMIT ?", (limit,)
@@ -373,7 +380,7 @@ def list_activity(limit: int = 30):
 
 @app.get("/api/collection/duplicates")
 def collection_duplicates():
-    """Cartas alocadas em 2+ decks ao mesmo tempo — 2 cópias possuídas, uma por deck."""
+    """Cards allocated to 2+ decks at once — 2 owned copies, one per deck."""
     con = get_app_db()
     rows = con.execute(
         """
@@ -430,7 +437,7 @@ def allocate_collection(entry_id: int, payload: AllocateIn):
     return {"ok": True}
 
 
-# -------------------------------------------------------------- partidas ----
+# --------------------------------------------------------------- games ----
 
 class GameIn(BaseModel):
     deck_id: int
@@ -504,10 +511,10 @@ def games_stats(deck_id: Optional[int] = None):
     }
 
 
-# ---------------------------------------------------------- estático/spa ----
+# ------------------------------------------------------------ static/spa ----
 
 class NoCacheStaticFiles(StaticFiles):
-    """Evita que o navegador guarde em cache JS/CSS entre edições durante o desenvolvimento."""
+    """Prevents the browser from caching JS/CSS across edits during development."""
 
     async def get_response(self, path, scope):
         response = await super().get_response(path, scope)

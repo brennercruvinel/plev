@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Cliente de linha de comando para a API do Scryfall.
+Command-line client for the Scryfall API.
 
-Sem dependências externas (só stdlib) e sem API key — a API do Scryfall é pública.
-Respeita os limites de uso pedidos pelo Scryfall: User-Agent identificável,
-Accept: application/json e intervalo mínimo entre requisições.
+No external dependencies (stdlib only) and no API key — Scryfall's API is
+public. Honors Scryfall's requested usage limits: identifiable User-Agent,
+Accept: application/json, and a minimum interval between requests.
 
-Uso:
-    ./scryfall.py card "Syr Konrad, the Grim"      # busca exata (cai pra fuzzy)
-    ./scryfall.py search "c:b t:instant cmc<=2"    # sintaxe de busca do Scryfall
-    ./scryfall.py rulings "Syr Konrad, the Grim"   # rulings oficiais da carta
-    ./scryfall.py deck lista.md                    # verifica uma decklist inteira
-    ./scryfall.py bulk                             # lista os arquivos de bulk data
-    ./scryfall.py bulk oracle_cards --download     # baixa um arquivo de bulk data
+Usage (CLI output is in Portuguese, matching the owner's daily workflow):
+    ./scryfall.py card "Syr Konrad, the Grim"      # exact lookup (falls back to fuzzy)
+    ./scryfall.py search "c:b t:instant cmc<=2"    # Scryfall search syntax
+    ./scryfall.py rulings "Syr Konrad, the Grim"   # official rulings for the card
+    ./scryfall.py deck lista.md                    # validates a whole decklist
+    ./scryfall.py bulk                             # lists available bulk data files
+    ./scryfall.py bulk oracle_cards --download     # downloads a bulk data file
 
-Saída legível por padrão; use --json para o objeto bruto do Scryfall.
+Human-readable output by default; use --json for the raw Scryfall object.
 """
 
 import argparse
@@ -28,13 +28,13 @@ import urllib.request
 
 API = "https://api.scryfall.com"
 USER_AGENT = "FelipeNavarroMTGVault/1.0"
-MIN_INTERVAL = 0.1  # Scryfall pede 50–100ms entre requisições
+MIN_INTERVAL = 0.1  # Scryfall asks for 50-100ms between requests
 
 _last_request = 0.0
 
 
 def _get(path, params=None, base=API):
-    """GET com rate limiting e headers exigidos pelo Scryfall."""
+    """GET with rate limiting and the headers Scryfall requires."""
     global _last_request
     elapsed = time.time() - _last_request
     if elapsed < MIN_INTERVAL:
@@ -59,7 +59,7 @@ def _get(path, params=None, base=API):
 
 
 def _post(path, payload):
-    """POST com rate limiting (usado pelo endpoint /cards/collection)."""
+    """POST with rate limiting (used by the /cards/collection endpoint)."""
     global _last_request
     elapsed = time.time() - _last_request
     if elapsed < MIN_INTERVAL:
@@ -87,7 +87,7 @@ def _post(path, payload):
 
 
 def fmt_card(c, verbose=True):
-    """Formata um objeto de carta para leitura no terminal."""
+    """Formats a card object for terminal reading."""
     if c.get("object") == "error":
         return f"  ERRO: {c.get('details', 'desconhecido')}"
 
@@ -170,7 +170,7 @@ DECKLINE = re.compile(r"^\s*(?:(\d+)\s*x?\s+)?(.+?)\s*$")
 
 
 def parse_decklist(path):
-    """Lê uma decklist em texto: '1 Nome da Carta' ou '1x Nome' ou só 'Nome'."""
+    """Reads a text decklist: '1 Card Name', '1x Name', or just 'Name'."""
     entries = []
     with open(path, encoding="utf-8") as fh:
         for raw in fh:
@@ -181,7 +181,7 @@ def parse_decklist(path):
             if not m:
                 continue
             qty, name = m.group(1), m.group(2).strip()
-            name = re.sub(r"\s*\([^)]*\)\s*$", "", name)  # remove "(set)" no fim
+            name = re.sub(r"\s*\([^)]*\)\s*$", "", name)  # strip trailing "(set)"
             if name:
                 entries.append((int(qty) if qty else 1, name))
     return entries
@@ -196,7 +196,7 @@ def cmd_deck(args):
     print(f"Verificando {len(entries)} entrada(s) de {args.file}\n")
     found, missing = [], []
 
-    # /cards/collection aceita até 75 identificadores por requisição
+    # /cards/collection accepts up to 75 identifiers per request
     for i in range(0, len(entries), 75):
         chunk = entries[i : i + 75]
         payload = {"identifiers": [{"name": n} for _, n in chunk]}
