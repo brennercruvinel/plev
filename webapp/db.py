@@ -77,9 +77,23 @@ def get_cards_db():
     return con
 
 
+MIGRATIONS = [
+    ("collection", "artist", "ALTER TABLE collection ADD COLUMN artist TEXT"),
+]
+
+
+def run_migrations(con):
+    """Adds columns to tables that already existed before the column was introduced (CREATE TABLE IF NOT EXISTS won't do this)."""
+    for table, column, ddl in MIGRATIONS:
+        cols = [row["name"] for row in con.execute(f"PRAGMA table_info({table})")]
+        if column not in cols:
+            con.execute(ddl)
+
+
 def init_db():
     con = get_app_db()
     con.executescript(SCHEMA)
+    run_migrations(con)
     con.commit()
     con.close()
 

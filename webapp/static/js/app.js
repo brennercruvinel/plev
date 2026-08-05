@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=6";
-import { renderScanner } from "./scanner.js?v=6";
-import { activityIcon, manaCostHtml } from "./icons.js?v=6";
+import { api } from "./api.js?v=7";
+import { renderScanner } from "./scanner.js?v=7";
+import { activityIcon, manaCostHtml } from "./icons.js?v=7";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -64,6 +64,7 @@ async function renderDashboard() {
   mainEl.innerHTML = h`
     <div class="page-header">
       <div><h1>Visão Geral</h1><p>Seu laboratório de coleção e decks — tudo lido do banco local.</p></div>
+      <button class="btn" id="add-card-btn">+ Adicionar Carta</button>
     </div>
     <div class="stat-grid">
       <div class="stat-card"><div class="label">Decks montados</div><div class="value">${decks.length}</div><div class="sub">${totalCards} cartas ao todo</div></div>
@@ -85,6 +86,9 @@ async function renderDashboard() {
     .join("");
   document.querySelectorAll("[data-deck-link]").forEach((el) =>
     el.addEventListener("click", () => (location.hash = `#deck/${el.dataset.deckLink}`))
+  );
+  document.getElementById("add-card-btn").addEventListener("click", () =>
+    openAddCardModal({ onSaved: renderDashboard })
   );
 
   document.getElementById("dash-activity").innerHTML = activity
@@ -109,11 +113,16 @@ function deckCardHtml(d) {
   const cls = d.total_cards === 100 ? "ok" : "bad";
   return h`
     <div class="deck-card" data-deck-link="${d.id}">
-      <h3>${d.name}</h3>
-      <div class="philosophy">${d.philosophy || ""}</div>
-      <div class="meta-row">
-        <span class="count-pill ${cls}">${d.total_cards}/100</span>
-        <span class="wl">${d.wins}<b class="win">V</b> · ${d.losses}<b class="loss">D</b></span>
+      <div class="deck-card-thumb">
+        ${d.commander_image ? `<img src="${d.commander_image}" alt="${d.commander_name}">` : `<div class="no-image">${d.commander_name}</div>`}
+      </div>
+      <div class="deck-card-body">
+        <h3>${d.name}</h3>
+        <div class="philosophy">${d.philosophy || ""}</div>
+        <div class="meta-row">
+          <span class="count-pill ${cls}">${d.total_cards}/100</span>
+          <span class="wl">${d.wins}<b class="win">V</b> · ${d.losses}<b class="loss">D</b></span>
+        </div>
       </div>
     </div>`;
 }
@@ -340,7 +349,10 @@ let collectionFilter = "all";
 
 async function renderCollection() {
   mainEl.innerHTML = h`
-    <div class="page-header"><div><h1>Coleção</h1><p>Toda carta possuída — vermelho e opaco quando alocada a um deck (com o nome do deck/comandante); sem nada por cima quando livre.</p></div></div>
+    <div class="page-header">
+      <div><h1>Coleção</h1><p>Toda carta possuída — vermelho e opaco quando alocada a um deck (com o nome do deck/comandante); sem nada por cima quando livre.</p></div>
+      <button class="btn small" id="add-card-btn">+ Adicionar Carta</button>
+    </div>
     <div class="filters-bar">
       <input type="text" id="coll-search" placeholder="Buscar carta (PT ou EN)…">
       <span class="chip active" data-filter="all">Todas</span>
@@ -389,6 +401,9 @@ async function renderCollection() {
     })
   );
   document.getElementById("coll-search").addEventListener("input", () => load());
+  document.getElementById("add-card-btn").addEventListener("click", () =>
+    openAddCardModal({ onSaved: load })
+  );
   load();
 }
 
@@ -464,6 +479,94 @@ function openGameModal(decks) {
     });
     backdrop.remove();
     renderGames();
+  });
+}
+
+// ------------------------------------------------------------ add card ----
+
+async function openAddCardModal({ onSaved } = {}) {
+  const decks = await api.decks();
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = h`
+    <div class="modal">
+      <h3>Adicionar carta</h3>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--text-dim)">Nome da carta *</label>
+        <input type="text" id="ac-name" placeholder="Nome (PT ou EN)…" autocomplete="off"
+          style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
+        <div id="ac-suggestions"></div>
+      </div>
+      <div class="form-grid">
+        <div><label>Edição (set)</label><input type="text" id="ac-set" placeholder="Ex: znr"></div>
+        <div><label>Artista</label><input type="text" id="ac-artist" placeholder="Nome do artista"></div>
+        <div><label>Idioma</label><select id="ac-lang"><option value="en">Inglês</option><option value="pt">Português</option></select></div>
+        <div><label>Quantidade</label><input type="number" id="ac-qty" min="1" value="1"></div>
+      </div>
+      <div style="margin-top:12px">
+        <label style="font-size:12px;color:var(--text-dim)">Alocar a um deck (opcional)</label>
+        <select id="ac-deck" style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
+          <option value="">Nenhum (fica livre na coleção)</option>
+          ${decks.map((d) => `<option value="${d.id}">${d.name}</option>`).join("")}
+        </select>
+      </div>
+      <div style="margin-top:12px">
+        <label style="font-size:12px;color:var(--text-dim)">Notas</label>
+        <textarea id="ac-notes" rows="2" style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text);font-family:inherit"></textarea>
+      </div>
+      <div id="ac-error" style="color:var(--bad);font-size:12px;margin-top:10px;display:none">Preencha o nome da carta.</div>
+      <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
+        <button class="btn secondary" id="ac-cancel">Cancelar</button>
+        <button class="btn" id="ac-save">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+
+  const nameInput = backdrop.querySelector("#ac-name");
+  const suggestionsEl = backdrop.querySelector("#ac-suggestions");
+  nameInput.focus();
+  let debounce;
+  nameInput.addEventListener("input", () => {
+    clearTimeout(debounce);
+    const q = nameInput.value.trim();
+    if (q.length < 2) { suggestionsEl.innerHTML = ""; return; }
+    debounce = setTimeout(async () => {
+      const results = await api.searchCards(q, 6);
+      suggestionsEl.innerHTML = results
+        .map((c) => h`<div class="card-row" data-pick="${c.name}" style="cursor:pointer"><span class="name">${c.name}</span><span class="cost">${manaCostHtml(c.mana_cost)}</span></div>`)
+        .join("");
+      suggestionsEl.querySelectorAll("[data-pick]").forEach((el) =>
+        el.addEventListener("click", () => {
+          nameInput.value = el.dataset.pick;
+          suggestionsEl.innerHTML = "";
+        })
+      );
+    }, 250);
+  });
+
+  backdrop.querySelector("#ac-cancel").addEventListener("click", () => backdrop.remove());
+  backdrop.querySelector("#ac-save").addEventListener("click", async () => {
+    const card_name = nameInput.value.trim();
+    if (!card_name) {
+      backdrop.querySelector("#ac-error").style.display = "block";
+      nameInput.focus();
+      return;
+    }
+    const saveBtn = backdrop.querySelector("#ac-save");
+    saveBtn.disabled = true;
+    const deckVal = backdrop.querySelector("#ac-deck").value;
+    await api.addCollection({
+      card_name,
+      set_code: backdrop.querySelector("#ac-set").value.trim() || null,
+      artist: backdrop.querySelector("#ac-artist").value.trim() || null,
+      lang: backdrop.querySelector("#ac-lang").value,
+      quantity: Number(backdrop.querySelector("#ac-qty").value) || 1,
+      notes: backdrop.querySelector("#ac-notes").value.trim() || null,
+      deck_id: deckVal ? Number(deckVal) : null,
+    });
+    backdrop.remove();
+    onSaved?.();
   });
 }
 

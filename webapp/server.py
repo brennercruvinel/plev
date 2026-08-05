@@ -155,6 +155,7 @@ def classify(type_line: str) -> str:
 def list_decks():
     con = get_app_db()
     decks = con.execute("SELECT * FROM decks ORDER BY id").fetchall()
+    cdb = get_cards_db()
     out = []
     for d in decks:
         total = con.execute(
@@ -166,7 +167,12 @@ def list_decks():
         losses = con.execute(
             "SELECT COUNT(*) FROM games WHERE deck_id = ? AND result = 'derrota'", (d["id"],)
         ).fetchone()[0]
-        out.append({**dict(d), "total_cards": total, "wins": wins, "losses": losses})
+        c = cdb.execute("SELECT image_uri FROM cards WHERE name = ? COLLATE NOCASE", (d["commander_name"],)).fetchone()
+        if not c:
+            c = cdb.execute("SELECT image_uri FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{d['commander_name']}%",)).fetchone()
+        commander_image = c["image_uri"] if c else None
+        out.append({**dict(d), "total_cards": total, "wins": wins, "losses": losses, "commander_image": commander_image})
+    cdb.close()
     con.close()
     return out
 
@@ -398,23 +404,34 @@ def collection_duplicates():
 class CollectionIn(BaseModel):
     card_name: str
     set_code: Optional[str] = None
+    artist: Optional[str] = None
     lang: str = "en"
     quantity: int = 1
     notes: Optional[str] = None
+    deck_id: Optional[int] = None
 
 
 @app.post("/api/collection")
 def add_collection(payload: CollectionIn):
     con = get_app_db()
-    con.execute(
-        "INSERT INTO collection (card_name, set_code, lang, quantity, notes) VALUES (?,?,?,?,?)",
-        (payload.card_name, payload.set_code, payload.lang, payload.quantity, payload.notes),
+    cur = con.execute(
+        "INSERT INTO collection (card_name, set_code, artist, lang, quantity, notes, allocated_deck_id) VALUES (?,?,?,?,?,?,?)",
+        (payload.card_name, payload.set_code, payload.artist, payload.lang, payload.quantity, payload.notes, payload.deck_id),
     )
     qty_label = f"{payload.quantity}x " if payload.quantity != 1 else ""
-    log_activity(con, "card_new", f"{qty_label}{payload.card_name} adicionada à coleção")
+    if payload.deck_id:
+        deck = con.execute("SELECT name FROM decks WHERE id = ?", (payload.deck_id,)).fetchone()
+        con.execute(
+            "INSERT INTO deck_cards (deck_id, card_name, quantity) VALUES (?, ?, ?)",
+            (payload.deck_id, payload.card_name, payload.quantity),
+        )
+        log_activity(con, "card_new", f"{qty_label}{payload.card_name} adicionada à coleção e ao deck {deck['name'] if deck else '?'}")
+    else:
+        log_activity(con, "card_new", f"{qty_label}{payload.card_name} adicionada à coleção")
     con.commit()
+    entry_id = cur.lastrowid
     con.close()
-    return {"ok": True}
+    return {"ok": True, "id": entry_id}
 
 
 class AllocateIn(BaseModel):
