@@ -25,6 +25,7 @@ from pydantic import BaseModel
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from db import get_app_db, get_cards_db, init_db, log_activity  # noqa: E402
+import data_update  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 EDHREC_CACHE = os.path.join(os.path.dirname(HERE), "data", "edhrec")
@@ -48,6 +49,8 @@ def card_row_to_dict(r):
 def lookup_card(name: str):
     """Finds a card by name (exact English, exact Portuguese, or approximate)."""
     cdb = get_cards_db()
+    if cdb is None:
+        return None, "sem base de cartas — use 'Atualizar base de dados' na Visão Geral"
     r = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (name,)).fetchone()
     if r:
         cdb.close()
@@ -73,6 +76,8 @@ def lookup_card(name: str):
 @app.get("/api/cards/search")
 def search_cards(q: str = "", limit: int = 30):
     cdb = get_cards_db()
+    if cdb is None:
+        return []
     q_like = f"%{q}%"
     rows = cdb.execute(
         """
@@ -116,6 +121,8 @@ def scan_recognize(payload: dict):
     if not text:
         return {"candidates": []}
     cdb = get_cards_db()
+    if cdb is None:
+        return {"candidates": [], "searched_text": text}
     words = [w for w in re.split(r"[^a-zA-ZÀ-ÿ]+", text) if len(w) >= 3]
     candidates = {}
     for w in words[:6]:
@@ -135,6 +142,35 @@ def scan_recognize(payload: dict):
             candidates[r["oracle_id"]] = card_row_to_dict(r)
     cdb.close()
     return {"candidates": list(candidates.values())[:10], "searched_text": text}
+
+
+# ------------------------------------------------------------- data update ----
+
+@app.get("/api/data/info")
+def data_info():
+    """Current state of the local card index — powers the "Atualizar base de dados" card on the Dashboard."""
+    cdb = get_cards_db()
+    if cdb is None:
+        return {"exists": False, "cards": 0, "pt_names": 0, "built_at": None}
+    n_cards = cdb.execute("SELECT COUNT(*) FROM cards").fetchone()[0]
+    n_pt = cdb.execute("SELECT COUNT(DISTINCT printed_name) FROM names_pt").fetchone()[0]
+    cdb.close()
+    from db import CARDS_DB
+    built_at = os.path.getmtime(CARDS_DB) if os.path.exists(CARDS_DB) else None
+    return {"exists": True, "cards": n_cards, "pt_names": n_pt, "built_at": built_at}
+
+
+@app.post("/api/data/update")
+def data_update_start():
+    started = data_update.start(refresh_synergy=True)
+    if not started:
+        raise HTTPException(409, "Uma atualização já está em andamento.")
+    return {"ok": True}
+
+
+@app.get("/api/data/update/status")
+def data_update_status():
+    return data_update.get_status()
 
 
 # ----------------------------------------------------------------- decks ----
@@ -167,13 +203,16 @@ def list_decks():
         losses = con.execute(
             "SELECT COUNT(*) FROM games WHERE deck_id = ? AND result = 'derrota'", (d["id"],)
         ).fetchone()[0]
-        c = cdb.execute("SELECT image_uri FROM cards WHERE name = ? COLLATE NOCASE", (d["commander_name"],)).fetchone()
-        if not c:
-            c = cdb.execute("SELECT image_uri FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{d['commander_name']}%",)).fetchone()
-        # art_crop shows just the illustration (no card frame) — right fit for a small tile thumbnail
-        commander_image = c["image_uri"].replace("/normal/", "/art_crop/") if c and c["image_uri"] else None
+        commander_image = None
+        if cdb is not None:
+            c = cdb.execute("SELECT image_uri FROM cards WHERE name = ? COLLATE NOCASE", (d["commander_name"],)).fetchone()
+            if not c:
+                c = cdb.execute("SELECT image_uri FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{d['commander_name']}%",)).fetchone()
+            # art_crop shows just the illustration (no card frame) — right fit for a small tile thumbnail
+            commander_image = c["image_uri"].replace("/normal/", "/art_crop/") if c and c["image_uri"] else None
         out.append({**dict(d), "total_cards": total, "wins": wins, "losses": losses, "commander_image": commander_image})
-    cdb.close()
+    if cdb is not None:
+        cdb.close()
     con.close()
     return out
 
@@ -247,9 +286,11 @@ def get_deck(deck_id: int):
     total = 0
     mana_curve = {}
     for dc in dcards:
-        r = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (dc["card_name"],)).fetchone()
-        if not r:
-            r = cdb.execute("SELECT * FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{dc['card_name']}%",)).fetchone()
+        r = None
+        if cdb is not None:
+            r = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (dc["card_name"],)).fetchone()
+            if not r:
+                r = cdb.execute("SELECT * FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{dc['card_name']}%",)).fetchone()
         info = card_row_to_dict(r) if r else {"name": dc["card_name"], "type_line": "?", "cmc": 0}
         cat = "Comandante" if dc["is_commander"] else classify(info.get("type_line", ""))
         entry = {
@@ -264,7 +305,8 @@ def get_deck(deck_id: int):
         if not dc["is_commander"] and "Land" not in (info.get("type_line") or ""):
             cmc = int(info.get("cmc") or 0)
             mana_curve[cmc] = mana_curve.get(cmc, 0) + dc["quantity"]
-    cdb.close()
+    if cdb is not None:
+        cdb.close()
 
     return {
         **dict(deck),
@@ -392,13 +434,15 @@ def list_collection(status: str = "all", q: str = ""):
     cdb = get_cards_db()
     out = []
     for card_name, g in grouped.items():
-        c = cdb.execute("SELECT type_line, mana_cost, image_uri, colors, rarity, price_usd FROM cards WHERE name = ? COLLATE NOCASE", (card_name,)).fetchone()
-        if not c:
-            c = cdb.execute("SELECT type_line, mana_cost, image_uri, colors, rarity, price_usd FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{card_name}%",)).fetchone()
-        if c:
-            g.update(dict(c))
+        if cdb is not None:
+            c = cdb.execute("SELECT type_line, mana_cost, image_uri, colors, rarity, price_usd FROM cards WHERE name = ? COLLATE NOCASE", (card_name,)).fetchone()
+            if not c:
+                c = cdb.execute("SELECT type_line, mana_cost, image_uri, colors, rarity, price_usd FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{card_name}%",)).fetchone()
+            if c:
+                g.update(dict(c))
         out.append(g)
-    cdb.close()
+    if cdb is not None:
+        cdb.close()
     out.sort(key=lambda x: x["card_name"])
     return out
 

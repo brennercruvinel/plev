@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=10";
-import { renderScanner } from "./scanner.js?v=10";
-import { activityIcon, manaCostHtml } from "./icons.js?v=10";
+import { api } from "./api.js?v=11";
+import { renderScanner } from "./scanner.js?v=11";
+import { activityIcon, manaCostHtml } from "./icons.js?v=11";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -51,11 +51,12 @@ function priceLabel(p) {
 // ------------------------------------------------------------- dashboard ----
 
 async function renderDashboard() {
-  const [decks, collectionTotal, freeCollection, activity] = await Promise.all([
+  const [decks, collectionTotal, freeCollection, activity, dataInfo] = await Promise.all([
     api.decks(),
     api.collectionTotal(),
     api.collection("free"),
     api.activity(12),
+    api.dataInfo(),
   ]);
   const totalCards = decks.reduce((s, d) => s + d.total_cards, 0);
   const totalGames = decks.reduce((s, d) => s + d.wins + d.losses, 0);
@@ -66,6 +67,7 @@ async function renderDashboard() {
       <div><h1>Visão Geral</h1><p>Seu laboratório de coleção e decks — tudo lido do banco local.</p></div>
       <button class="btn" id="add-card-btn">+ Adicionar Carta</button>
     </div>
+    ${dataUpdatePanelHtml(dataInfo)}
     <div class="stat-grid">
       <div class="stat-card"><div class="label">Decks montados</div><div class="value">${decks.length}</div><div class="sub">${totalCards} cartas ao todo</div></div>
       <div class="stat-card"><div class="label">Cartas na coleção</div><div class="value">${collectionTotal.total_units}</div><div class="sub">${collectionTotal.distinct_cards} nomes distintos, com repetidas</div></div>
@@ -90,6 +92,7 @@ async function renderDashboard() {
   document.getElementById("add-card-btn").addEventListener("click", () =>
     openAddCardModal({ onSaved: renderDashboard })
   );
+  wireDataUpdatePanel(renderDashboard);
 
   document.getElementById("dash-activity").innerHTML = activity
     .map(
@@ -107,6 +110,84 @@ function formatTs(ts) {
   // ts comes as "YYYY-MM-DD HH:MM:SS" (UTC, from SQLite datetime('now'))
   const d = new Date(ts.replace(" ", "T") + "Z");
   return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
+// ------------------------------------------------------------ data update ----
+
+function formatBuiltAt(unixSeconds) {
+  if (!unixSeconds) return null;
+  return new Date(unixSeconds * 1000).toLocaleString("pt-BR", {
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
+}
+
+function dataUpdatePanelHtml(info) {
+  if (!info.exists) {
+    return h`
+      <div class="data-update-panel warn">
+        <h3>Base de cartas ainda não configurada</h3>
+        <p>Baixa a base pública do Scryfall (cartas, nomes oficiais em português, imagens) — precisa de internet só nesta etapa; depois funciona 100% offline. Também atualiza a sinergia (EDHREC) dos seus comandantes.</p>
+        <button class="btn" id="update-data-btn">Baixar base de dados agora</button>
+        <div id="update-data-status"></div>
+      </div>`;
+  }
+  return h`
+    <div class="data-update-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <h3 style="margin:0 0 4px">Base de dados de cartas</h3>
+          <p style="margin:0">${info.cards.toLocaleString("pt-BR")} cartas · ${info.pt_names.toLocaleString("pt-BR")} nomes em português${info.built_at ? ` · atualizada em ${formatBuiltAt(info.built_at)}` : ""}</p>
+        </div>
+        <button class="btn secondary" id="update-data-btn">Atualizar base de dados</button>
+      </div>
+      <div id="update-data-status"></div>
+    </div>`;
+}
+
+async function wireDataUpdatePanel(onDone) {
+  const btn = document.getElementById("update-data-btn");
+  const statusEl = document.getElementById("update-data-status");
+  if (!btn) return;
+  btn.dataset.idleLabel = btn.textContent;
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.textContent = "Atualizando…";
+    try {
+      await api.startDataUpdate();
+    } catch (err) {
+      // 409 = already running (e.g. started from another tab) — just start polling
+    }
+    pollDataUpdate(statusEl, btn, onDone);
+  });
+
+  // resume polling if an update was already in progress (e.g. page was reloaded mid-update)
+  const status = await api.dataUpdateStatus();
+  if (status.state === "running") {
+    btn.disabled = true;
+    btn.textContent = "Atualizando…";
+    pollDataUpdate(statusEl, btn, onDone);
+  }
+}
+
+function pollDataUpdate(statusEl, btn, onDone) {
+  const tick = async () => {
+    if (!document.body.contains(statusEl)) return; // user navigated away — stop polling from here
+    const status = await api.dataUpdateStatus();
+    statusEl.innerHTML = `<div class="update-log">${status.log.map((l) => `<div>${l}</div>`).join("")}</div>`;
+    if (status.state === "running") {
+      setTimeout(tick, 1500);
+      return;
+    }
+    btn.disabled = false;
+    btn.textContent = btn.dataset.idleLabel || "Atualizar base de dados";
+    if (status.state === "error") {
+      statusEl.innerHTML += `<div class="update-error">Falhou: ${status.error}</div>`;
+    } else if (status.state === "done" && (location.hash.slice(1) || "dashboard") === "dashboard") {
+      onDone?.();
+    }
+  };
+  tick();
 }
 
 function deckCardHtml(d) {

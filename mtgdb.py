@@ -48,9 +48,10 @@ def cmd_build(args):
         sys.exit("Arquivo oracle-cards-*.jsonl.gz não encontrado em data/")
 
     os.makedirs(DATA, exist_ok=True)
-    if os.path.exists(DB):
-        os.remove(DB)
-    con = sqlite3.connect(DB)
+    tmp_db = DB + ".tmp"
+    if os.path.exists(tmp_db):
+        os.remove(tmp_db)
+    con = sqlite3.connect(tmp_db)
 
     con.executescript("""
         CREATE TABLE cards (
@@ -160,6 +161,9 @@ def cmd_build(args):
 
     con.execute("VACUUM")
     con.close()
+    # atomic swap — readers with an already-open connection keep working off the old
+    # inode until they reconnect; nobody ever sees a half-built file at the final path
+    os.replace(tmp_db, DB)
     size = os.path.getsize(DB) / 1024 / 1024
     print(f"\nÍndice pronto: {DB} ({size:.1f} MB)")
     return 0

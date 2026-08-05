@@ -72,6 +72,9 @@ def get_app_db():
 
 
 def get_cards_db():
+    """Returns None if the card index hasn't been built yet (fresh install, before the first data update)."""
+    if not os.path.exists(CARDS_DB):
+        return None
     con = sqlite3.connect(f"file:{CARDS_DB}?mode=ro", uri=True)
     con.row_factory = sqlite3.Row
     return con

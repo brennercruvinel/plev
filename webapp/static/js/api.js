@@ -34,6 +34,10 @@ export const api = {
 
   activity: (limit = 30) => req(`/activity?limit=${limit}`),
 
+  dataInfo: () => req("/data/info"),
+  startDataUpdate: () => req("/data/update", { method: "POST" }),
+  dataUpdateStatus: () => req("/data/update/status"),
+
   games: (deckId) => req(`/games${deckId ? `?deck_id=${deckId}` : ""}`),
   addGame: (payload) => req("/games", { method: "POST", body: JSON.stringify(payload) }),
   gamesStats: (deckId) => req(`/games/stats${deckId ? `?deck_id=${deckId}` : ""}`),
