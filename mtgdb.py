@@ -60,7 +60,8 @@ def cmd_build(args):
             oracle_text TEXT, power TEXT, toughness TEXT, loyalty TEXT,
             colors TEXT, color_identity TEXT, rarity TEXT, set_code TEXT,
             keywords TEXT, commander_legal TEXT, price_usd TEXT,
-            reserved INTEGER, edhrec_rank INTEGER, uri TEXT, image_uri TEXT
+            reserved INTEGER, edhrec_rank INTEGER, uri TEXT, image_uri TEXT,
+            game_changer INTEGER
         );
         CREATE TABLE names_pt (
             printed_name TEXT, oracle_id TEXT, set_code TEXT
@@ -110,15 +111,16 @@ def cmd_build(args):
                 (c.get("prices") or {}).get("usd"),
                 1 if c.get("reserved") else 0, c.get("edhrec_rank"),
                 c.get("scryfall_uri"), image_uri(c),
+                1 if c.get("game_changer") else 0,
             ))
             n += 1
             if len(rows) >= 5000:
                 con.executemany(
-                    "INSERT OR REPLACE INTO cards VALUES (%s)" % ",".join("?" * 20), rows)
+                    "INSERT OR REPLACE INTO cards VALUES (%s)" % ",".join("?" * 21), rows)
                 rows.clear()
     if rows:
         con.executemany(
-            "INSERT OR REPLACE INTO cards VALUES (%s)" % ",".join("?" * 20), rows)
+            "INSERT OR REPLACE INTO cards VALUES (%s)" % ",".join("?" * 21), rows)
     con.commit()
     print(f"  {n:,} cartas únicas indexadas")
 

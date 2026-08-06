@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=15";
-import { renderScanner } from "./scanner.js?v=15";
-import { activityIcon, manaCostHtml } from "./icons.js?v=15";
+import { api } from "./api.js?v=16";
+import { renderScanner } from "./scanner.js?v=16";
+import { activityIcon, manaCostHtml } from "./icons.js?v=16";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -51,12 +51,11 @@ function priceLabel(p) {
 // ------------------------------------------------------------- dashboard ----
 
 async function renderDashboard() {
-  const [decks, collectionTotal, freeCollection, activity, dataInfo] = await Promise.all([
+  const [decks, collectionTotal, freeCollection, activity] = await Promise.all([
     api.decks(),
     api.collectionTotal(),
     api.collection("free"),
     api.activity(12),
-    api.dataInfo(),
   ]);
   const totalCards = decks.reduce((s, d) => s + d.total_cards, 0);
   const totalGames = decks.reduce((s, d) => s + d.wins + d.losses, 0);
@@ -70,7 +69,6 @@ async function renderDashboard() {
         <button class="btn secondary" id="dash-new-deck-btn">Novo Deck</button>
       </div>
     </div>
-    ${dataUpdatePanelHtml(dataInfo)}
     <div class="stat-grid">
       <div class="stat-card"><div class="label">Decks montados</div><div class="value">${decks.length}</div><div class="sub">${totalCards} cartas ao todo</div></div>
       <div class="stat-card"><div class="label">Cartas na coleção</div><div class="value">${collectionTotal.total_units}</div><div class="sub">${collectionTotal.distinct_cards} nomes distintos, com repetidas</div></div>
@@ -101,7 +99,6 @@ async function renderDashboard() {
   );
   document.getElementById("dash-new-deck-btn").addEventListener("click", () => openNewDeckModal());
   document.getElementById("dash-new-deck-tile").addEventListener("click", () => openNewDeckModal());
-  wireDataUpdatePanel(renderDashboard);
 
   document.getElementById("dash-activity").innerHTML = activity
     .map(
@@ -121,7 +118,52 @@ function formatTs(ts) {
   return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
-// ------------------------------------------------------------ data update ----
+// -------------------------------------------------------- background jobs ----
+// Shared progress-bar UI for any backend job that exposes {state, task, percent, error}
+// (data_update.py and deck_wizard.py both follow this exact shape).
+
+function progressBarHtml(prefix) {
+  return `
+    <div class="update-progress-label">
+      <span id="${prefix}-task-text" class="update-task-text"></span>
+      <span id="${prefix}-percent-text" class="update-percent-text"></span>
+    </div>
+    <div class="update-progress-bar"><div class="update-progress-fill" id="${prefix}-progress-fill" style="width:0%"></div></div>
+    <div id="${prefix}-error-text" class="update-error" style="display:none"></div>`;
+}
+
+function pollJob(statusEl, prefix, fetchStatusFn, { onDone, onError, onSettle } = {}) {
+  statusEl.innerHTML = progressBarHtml(prefix);
+  const taskText = statusEl.querySelector(`#${prefix}-task-text`);
+  const percentText = statusEl.querySelector(`#${prefix}-percent-text`);
+  const fill = statusEl.querySelector(`#${prefix}-progress-fill`);
+  const errorText = statusEl.querySelector(`#${prefix}-error-text`);
+
+  const tick = async () => {
+    if (!document.body.contains(statusEl)) return; // user navigated away — stop polling from here
+    const status = await fetchStatusFn();
+    const pct = Math.round(status.percent || 0);
+    taskText.textContent = status.task || "";
+    percentText.textContent = `${pct}%`;
+    fill.style.width = `${pct}%`;
+    if (status.state === "running") {
+      setTimeout(tick, 1000);
+      return;
+    }
+    onSettle?.(status);
+    if (status.state === "error") {
+      errorText.textContent = `Falhou: ${status.error}`;
+      errorText.style.display = "block";
+      onError?.(status);
+    } else if (status.state === "done") {
+      onDone?.(status);
+    }
+  };
+  tick();
+}
+
+// -------------------------------------------------- sidebar data-base panel ----
+// Lives in the sidebar footer (persists across every page, not just the Dashboard).
 
 function formatBuiltAt(unixSeconds) {
   if (!unixSeconds) return null;
@@ -130,34 +172,35 @@ function formatBuiltAt(unixSeconds) {
   });
 }
 
-function dataUpdatePanelHtml(info) {
+function sidebarDataPanelHtml(info) {
   if (!info.exists) {
     return h`
-      <div class="data-update-panel warn">
-        <h3>Base de cartas ainda não configurada</h3>
-        <p>Baixa a base pública do Scryfall (cartas, nomes oficiais em português, imagens) — precisa de internet só nesta etapa; depois funciona 100% offline. Também atualiza a sinergia (EDHREC) dos seus comandantes.</p>
-        <button class="btn" id="update-data-btn">Baixar base de dados agora</button>
-        <div id="update-data-status"></div>
-      </div>`;
+      <div class="sidebar-data-info warn">Base de cartas ainda não configurada.</div>
+      <button class="btn small" id="update-data-btn" style="width:100%;margin-top:6px">Baixar base de dados agora</button>
+      <div id="update-data-status"></div>`;
   }
   return h`
-    <div class="data-update-panel">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-        <div>
-          <h3 style="margin:0 0 4px">Base de dados de cartas</h3>
-          <p style="margin:0">${info.cards.toLocaleString("pt-BR")} cartas · ${info.pt_names.toLocaleString("pt-BR")} nomes em português${info.built_at ? ` · atualizada em ${formatBuiltAt(info.built_at)}` : ""}</p>
-        </div>
-        <button class="btn secondary" id="update-data-btn">Atualizar base de dados</button>
-      </div>
-      <div id="update-data-status"></div>
-    </div>`;
+    <div class="sidebar-data-info">Dados: ${info.cards.toLocaleString("pt-BR")} cartas + EDHREC cacheado${info.built_at ? ` · atualizado em ${formatBuiltAt(info.built_at)}` : ""}. Só preço ao vivo precisa de rede.</div>
+    <button class="btn small secondary" id="update-data-btn" style="width:100%;margin-top:6px">Atualizar base de dados</button>
+    <div id="update-data-status"></div>`;
 }
 
-async function wireDataUpdatePanel(onDone) {
+async function renderSidebarDataPanel() {
+  const panelEl = document.getElementById("sidebar-data-panel");
+  if (!panelEl) return;
+  const info = await api.dataInfo();
+  panelEl.innerHTML = sidebarDataPanelHtml(info);
+
   const btn = document.getElementById("update-data-btn");
   const statusEl = document.getElementById("update-data-status");
-  if (!btn) return;
   btn.dataset.idleLabel = btn.textContent;
+
+  const startPolling = () => {
+    pollJob(statusEl, "update-data", api.dataUpdateStatus, {
+      onSettle: () => { btn.disabled = false; btn.textContent = btn.dataset.idleLabel; },
+      onDone: () => { renderSidebarDataPanel(); navigate(); }, // refresh sidebar info + whatever page is showing
+    });
+  };
 
   btn.addEventListener("click", async () => {
     btn.disabled = true;
@@ -167,7 +210,7 @@ async function wireDataUpdatePanel(onDone) {
     } catch (err) {
       // 409 = already running (e.g. started from another tab) — just start polling
     }
-    pollDataUpdate(statusEl, btn, onDone);
+    startPolling();
   });
 
   // resume polling if an update was already in progress (e.g. page was reloaded mid-update)
@@ -175,48 +218,8 @@ async function wireDataUpdatePanel(onDone) {
   if (status.state === "running") {
     btn.disabled = true;
     btn.textContent = "Atualizando…";
-    pollDataUpdate(statusEl, btn, onDone);
+    startPolling();
   }
-}
-
-function progressBarHtml() {
-  return `
-    <div class="update-progress-label">
-      <span id="update-task-text"></span>
-      <span id="update-percent-text"></span>
-    </div>
-    <div class="update-progress-bar"><div class="update-progress-fill" id="update-progress-fill" style="width:0%"></div></div>
-    <div id="update-error-text" class="update-error" style="display:none"></div>`;
-}
-
-function pollDataUpdate(statusEl, btn, onDone) {
-  statusEl.innerHTML = progressBarHtml();
-  const taskText = statusEl.querySelector("#update-task-text");
-  const percentText = statusEl.querySelector("#update-percent-text");
-  const fill = statusEl.querySelector("#update-progress-fill");
-  const errorText = statusEl.querySelector("#update-error-text");
-
-  const tick = async () => {
-    if (!document.body.contains(statusEl)) return; // user navigated away — stop polling from here
-    const status = await api.dataUpdateStatus();
-    const pct = Math.round(status.percent || 0);
-    taskText.textContent = status.task || "";
-    percentText.textContent = `${pct}%`;
-    fill.style.width = `${pct}%`;
-    if (status.state === "running") {
-      setTimeout(tick, 1000);
-      return;
-    }
-    btn.disabled = false;
-    btn.textContent = btn.dataset.idleLabel || "Atualizar base de dados";
-    if (status.state === "error") {
-      errorText.textContent = `Falhou: ${status.error}`;
-      errorText.style.display = "block";
-    } else if (status.state === "done" && (location.hash.slice(1) || "dashboard") === "dashboard") {
-      onDone?.();
-    }
-  };
-  tick();
 }
 
 function deckCardHtml(d) {
@@ -255,6 +258,14 @@ async function renderDecksList() {
   document.getElementById("new-deck-btn").addEventListener("click", () => openNewDeckModal());
 }
 
+const BRACKET_LABELS = {
+  1: "1 — Exhibition (ultra-casual)",
+  2: "2 — Core (nível de precon)",
+  3: "3 — Upgraded (até 3 Game Changers)",
+  4: "4 — Optimized (sem restrições)",
+  5: "5 — cEDH (poder máximo)",
+};
+
 async function openNewDeckModal() {
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
@@ -272,11 +283,28 @@ async function openNewDeckModal() {
         <input type="text" id="nd-name" placeholder="Ex: Syr Konrad Aristocratas"
           style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
       </div>
+
+      <label class="toggle-row" style="margin-bottom:12px">
+        <input type="checkbox" id="nd-auto">
+        <span>Montar automaticamente</span>
+      </label>
+      <div id="nd-auto-options" style="display:none;margin-bottom:12px">
+        <p style="margin:0 0 10px;font-size:12px;color:var(--text-dim);line-height:1.5">
+          Preenche as 99 cartas a partir da base local do Scryfall, sinergia do EDHREC e do guia de proporções
+          (terrenos, ramp, compra, remoção, proteção) — sem IA generativa, toda carta é verificada na base local antes de entrar no deck.
+        </p>
+        <label style="font-size:12px;color:var(--text-dim)">Bracket alvo</label>
+        <select id="nd-bracket" style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
+          ${Object.entries(BRACKET_LABELS).map(([v, label]) => `<option value="${v}" ${v === "3" ? "selected" : ""}>${label}</option>`).join("")}
+        </select>
+      </div>
+
       <div>
-        <label style="font-size:12px;color:var(--text-dim)">Estratégia / filosofia (opcional)</label>
+        <label style="font-size:12px;color:var(--text-dim)" id="nd-philosophy-label">Estratégia / filosofia (opcional)</label>
         <textarea id="nd-philosophy" rows="3" style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text);font-family:inherit"></textarea>
       </div>
       <div id="nd-error" style="color:var(--bad);font-size:12px;margin-top:10px;display:none">Preencha comandante e nome do deck.</div>
+      <div id="nd-build-status"></div>
       <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
         <button class="btn secondary" id="nd-cancel">Cancelar</button>
         <button class="btn" id="nd-save">Criar deck</button>
@@ -287,7 +315,20 @@ async function openNewDeckModal() {
 
   const commanderInput = backdrop.querySelector("#nd-commander");
   const suggestionsEl = backdrop.querySelector("#nd-suggestions");
+  const autoToggle = backdrop.querySelector("#nd-auto");
+  const autoOptions = backdrop.querySelector("#nd-auto-options");
+  const philosophyLabel = backdrop.querySelector("#nd-philosophy-label");
+  const saveBtn = backdrop.querySelector("#nd-save");
   commanderInput.focus();
+
+  autoToggle.addEventListener("change", () => {
+    autoOptions.style.display = autoToggle.checked ? "block" : "none";
+    philosophyLabel.textContent = autoToggle.checked
+      ? "Estratégia / filosofia (opcional — substitui o texto gerado automaticamente)"
+      : "Estratégia / filosofia (opcional)";
+    saveBtn.textContent = autoToggle.checked ? "Montar deck" : "Criar deck";
+  });
+
   let debounce;
   commanderInput.addEventListener("input", () => {
     clearTimeout(debounce);
@@ -318,15 +359,37 @@ async function openNewDeckModal() {
       backdrop.querySelector("#nd-error").style.display = "block";
       return;
     }
-    const saveBtn = backdrop.querySelector("#nd-save");
+    const philosophy = backdrop.querySelector("#nd-philosophy").value.trim() || null;
     saveBtn.disabled = true;
-    const { id } = await api.createDeck({
-      name,
-      commander_name,
-      philosophy: backdrop.querySelector("#nd-philosophy").value.trim() || null,
+    commanderInput.disabled = true;
+
+    if (!autoToggle.checked) {
+      const { id } = await api.createDeck({ name, commander_name, philosophy });
+      backdrop.remove();
+      location.hash = `#deck/${id}`;
+      return;
+    }
+
+    const bracket = Number(backdrop.querySelector("#nd-bracket").value);
+    const statusEl = backdrop.querySelector("#nd-build-status");
+    try {
+      await api.startAutoBuildDeck({ name, commander_name, bracket, philosophy });
+    } catch (err) {
+      saveBtn.disabled = false;
+      commanderInput.disabled = false;
+      statusEl.innerHTML = `<div class="update-error">${err.message}</div>`;
+      return;
+    }
+    pollJob(statusEl, "nd-build", api.autoBuildStatus, {
+      onDone: (status) => {
+        backdrop.remove();
+        location.hash = `#deck/${status.result.deck_id}`;
+      },
+      onError: () => {
+        saveBtn.disabled = false;
+        commanderInput.disabled = false;
+      },
     });
-    backdrop.remove();
-    location.hash = `#deck/${id}`;
   });
 }
 
@@ -853,3 +916,4 @@ function highlightMatch(text, q) {
 }
 
 navigate();
+renderSidebarDataPanel();

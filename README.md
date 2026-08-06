@@ -2,7 +2,7 @@
 
 Local app for managing a Magic: The Gathering collection and Commander decks — any commander, any colors, any player. Runs 100% offline after initial setup — no Node.js, just Python (FastAPI + SQLite) and a static HTML/CSS/JS frontend.
 
-Everything is created from the UI: use "**+ Novo Deck**" (Meus Decks) to start a deck for any commander, and "**+ Adicionar Carta**" (Dashboard/Coleção) to add cards to your collection. No editing Python files or seed data required — those only exist to load the original author's own decks as a worked example.
+Everything is created from the UI: use "**Novo Deck**" (Dashboard/Meus Decks) to start a deck for any commander — optionally toggle "**Montar automaticamente**" to have it filled out deterministically (lands/ramp/draw/removal ratios + EDHREC synergy for that commander — no LLM involved, every card is verified against the local index before being added) — and "**+ Adicionar Carta**" (Dashboard/Coleção) to add cards to your collection. No editing Python files or seed data required — those only exist to load the original author's own decks as a worked example.
 
 Full design-decision documentation lives in the Obsidian vault: `MTG/App - Protótipo Spellbook.md` (in Portuguese — that's the owner's personal knowledge base).
 
@@ -24,9 +24,9 @@ cd webapp
 python3 -m uvicorn server:app --port 8420
 ```
 
-Visit **http://127.0.0.1:8420**. The Dashboard opens with a "**Baixar base de dados agora**" panel — click it to download Scryfall's card database (official bulk data, ~400MB, no API key) and build the local index in one step; needs internet only for this. After that, use "+ Novo Deck" / "+ Adicionar Carta" to build your own decks and collection from the UI, 100% offline.
+Visit **http://127.0.0.1:8420**. The sidebar shows a "**Baixar base de dados agora**" panel — click it to download Scryfall's card database (official bulk data, ~400MB, no API key) and build the local index in one step; needs internet only for this. After that, use "Novo Deck" / "+ Adicionar Carta" to build your own decks and collection from the UI, 100% offline.
 
-When a new set/block releases, click "**Atualizar base de dados**" on the Dashboard any time to re-download and reindex — it also refreshes EDHREC synergy for the commanders already in your decks. The same thing can be done from the terminal if you prefer:
+When a new set/block releases, click "**Atualizar base de dados**" (sidebar, visible on every page) any time to re-download and reindex — it also refreshes EDHREC synergy for the commanders already in your decks. The same thing can be done from the terminal if you prefer:
 ```bash
 python3 scryfall.py bulk oracle_cards --download
 python3 scryfall.py bulk all_cards --download   # includes PT names + images
@@ -51,6 +51,8 @@ webapp/
   server.py     — FastAPI API (decks, collection, scanner, games, activity log)
   db.py         — app database schema (SQLite)
   data_update.py — background job behind the "Atualizar base de dados" button
+  deck_wizard.py — deterministic deckbuilder behind "Montar automaticamente" (no LLM)
+  knowledge/    — deckbuilding_guide.json: ratios/brackets used by deck_wizard.py
   seed.py       — optional: loads the author's own decks/collection as sample data
   static/       — frontend (plain HTML/CSS/JS, no build step)
 ```

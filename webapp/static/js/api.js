@@ -17,6 +17,8 @@ export const api = {
   deck: (id) => req(`/decks/${id}`),
   createDeck: (payload) => req("/decks", { method: "POST", body: JSON.stringify(payload) }),
   deleteDeck: (id) => req(`/decks/${id}`, { method: "DELETE" }),
+  startAutoBuildDeck: (payload) => req("/decks/auto-build", { method: "POST", body: JSON.stringify(payload) }),
+  autoBuildStatus: () => req("/decks/auto-build/status"),
   deckSynergy: (id) => req(`/decks/${id}/synergy`),
   fetchDeckSynergy: (id) => req(`/decks/${id}/synergy/fetch`, { method: "POST" }),
   addDeckCard: (id, card_name, quantity = 1) =>

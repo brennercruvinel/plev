@@ -1,0 +1,71 @@
+{
+  "_source": "Guia Completo de Deckbuilding para Magic: The Gathering Commander (EDH) — consolidated research report",
+  "_vault_note": "MTG/Deckbuilding - Guia e Proporcoes.md",
+  "_added": "2026-08-05",
+  "_caveat": "Ratios are community consensus, not official rules. Only deck construction rules (100 cards, singleton, color identity, commander tax, 40 life, 21 commander damage) and the ban list are official. Game Changers is a living list revised every ~3-4 months — always resolve it live via Scryfall (is:gamechanger), never from a frozen snapshot.",
+
+  "deck_size": 99,
+  "ratios": {
+    "lands": {"min": 36, "max": 38, "notes": "Cut for low curve + heavy ramp (33-35) or cEDH fast mana (28-30). Raise for high-curve battlecruiser (38-40)."},
+    "ramp": {"min": 10, "max": 12, "notes": "Mix of mana rocks (color-flexible, universal), land ramp (survives board wipes), and dorks (fast but die to wipes)."},
+    "draw": {"min": 8, "max": 12, "notes": "Prefer repeatable/engine draw over one-shot burst. If the commander already draws cards, this can be trimmed."},
+    "removal_total": {"min": 8, "max": 10, "notes": "Sum of spot removal + board wipes."},
+    "board_wipes": {"min": 2, "max": 4, "notes": "Subset of removal_total."},
+    "protection": {"min": 3, "max": 6, "notes": "Counterspells, commander protection (hexproof/indestructible grants), combat tricks."},
+    "wincons": {"min": 2, "max": 10, "notes": "Combat finishers, combos, or alternate win conditions. Never skip this category."},
+    "synergy_fill": "Whatever remains after the categories above are satisfied — this is where commander-specific EDHREC synergy picks go."
+  },
+
+  "brackets": [
+    {"level": 1, "name": "Exhibition", "expected_turns": "9+", "rules": "No Game Changers, no intentional 2-card combos, no mass land denial, no extra turns (except very thematic exceptions)."},
+    {"level": 2, "name": "Core", "expected_turns": "8+", "rules": "Roughly modern precon power. No Game Changers, no mass land denial, no chained extra turns, no 2-card combos."},
+    {"level": 3, "name": "Upgraded", "expected_turns": "6+", "rules": "Up to 3 Game Changers allowed. No mass land denial, no cheap/early 2-card combos."},
+    {"level": 4, "name": "Optimized", "expected_turns": "4+", "rules": "No restrictions beyond the ban list — fast mana, combos, mass land denial, unlimited Game Changers."},
+    {"level": 5, "name": "cEDH", "expected_turns": "any", "rules": "Maximum power, tournament/metagame mindset."}
+  ],
+  "game_changers_note": "Resolve the current list live via a local Scryfall search for is:gamechanger — do not hardcode this list, it changes every few months (40 cards at launch Feb/2025, 53 at the Feb/2026 update, with cards like Kinnan/Yuriko/Winota removed along the way). Sol Ring has never been on this list.",
+  "mass_land_denial_note": "Cards that destroy/exile/lock 4+ lands per player without replacement (Armageddon, Winter Orb, Blood Moon-style effects) should not appear in brackets 1-3.",
+
+  "categories_scryfall_query_hints": {
+    "note": "This app's local card index has no community otags (those are a separate Scryfall-side project not in the bulk data dump), so category membership is approximated from type_line/oracle_text keyword heuristics rather than otag:ramp/otag:removal — treat these as candidate filters, not ground truth.",
+    "ramp": ["search mana rocks by type Artifact + oracle_text mentions of adding mana", "land-ramp sorceries/instants whose oracle_text says 'search your library for a ... land'", "mana dorks: Creature with oracle_text tap-for-mana ability"],
+    "draw": ["oracle_text mentions 'draw a card' or 'draw two cards' as a repeatable/triggered effect"],
+    "removal_spot": ["Instant/Sorcery whose oracle_text destroys/exiles/counters a single permanent or player's creature"],
+    "board_wipes": ["oracle_text destroys/exiles all creatures or all permanents of a type"],
+    "protection": ["oracle_text grants hexproof/indestructible/protection, or counters spells"],
+    "wincons": ["high-impact finishers: large power/toughness with evasion, X-damage spells, alternate win conditions in oracle_text"]
+  },
+
+  "archetypes": [
+    "Voltron", "Aristocrats", "Group Hug", "Group Slug", "Stax/Prison", "Combo",
+    "Control", "Aggro", "Tokens/Go-wide", "Reanimator", "Spellslinger", "Tribal/Typal",
+    "Superfriends", "Landfall", "Artifacts matter", "Enchantress", "Chaos", "Blink/Flicker"
+  ],
+
+  "manabase": {
+    "karsten_99_card_sources_single_pip": 22,
+    "karsten_99_card_sources_double_pip": 29,
+    "note": "Approximations (community-applied ~1.6x multiplier over Karsten's published 60-card numbers: 14/21/23 sources for single/double/triple pip at ~90% consistency). Prioritize untapped fixing and Command Tower.",
+    "land_quality_order": ["fetch lands", "ABUR duals", "shock lands", "triomes", "check/pain/slow/filter lands", "generic fetchers (Evolving Wilds)", "utility (Command Tower, etc.)"]
+  },
+
+  "common_mistakes": [
+    "Too few lands/ramp (the #1 beginner mistake — cutting lands to fit exciting cards)",
+    "Too little interaction/removal",
+    "Too little card draw",
+    "No clear win condition",
+    "Curve too top-heavy without enough ramp",
+    "Too many tapped lands",
+    "Too many tutors/wipes for a casual table",
+    "Depending 100% on the commander with no backup plan",
+    "Confusing 'strong on-theme cards' with a functional deck (still needs the ramp/draw/removal skeleton)"
+  ],
+
+  "build_order_recommendation": [
+    "1. Resolve commander's color identity and confirm it's a legal commander (local Scryfall DB).",
+    "2. Fill the skeleton first: lands, ramp, draw, removal (incl. wipes), protection, wincons — using the ratios above.",
+    "3. Fetch/read EDHREC synergy for this commander (cached locally) to identify the highest-synergy cards not yet placed.",
+    "4. Fill remaining slots with synergy picks, respecting the target bracket's Game Changers/combo/MLD limits.",
+    "5. Every card name in the final list must be verified to exist in the local card index, be within color identity, and be commander-legal before being written to the deck — never emit a card name that wasn't validated this way."
+  ]
+}

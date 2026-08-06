@@ -26,6 +26,7 @@ from pydantic import BaseModel
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from db import get_app_db, get_cards_db, init_db, log_activity  # noqa: E402
 import data_update  # noqa: E402
+import deck_wizard  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 EDHREC_CACHE = os.path.join(os.path.dirname(HERE), "data", "edhrec")
@@ -239,6 +240,27 @@ def create_deck(payload: DeckIn):
     con.commit()
     con.close()
     return {"ok": True, "id": deck_id}
+
+
+class DeckAutoBuildIn(BaseModel):
+    name: str
+    commander_name: str
+    bracket: int = 3
+    philosophy: Optional[str] = None
+
+
+@app.post("/api/decks/auto-build")
+def auto_build_deck(payload: DeckAutoBuildIn):
+    """Deterministic deckbuilder (no LLM) — see deck_wizard.py. Runs as a background job like data updates."""
+    started = deck_wizard.start(payload.name, payload.commander_name, payload.bracket, payload.philosophy)
+    if not started:
+        raise HTTPException(409, "Uma montagem automática já está em andamento.")
+    return {"ok": True}
+
+
+@app.get("/api/decks/auto-build/status")
+def auto_build_status():
+    return deck_wizard.get_status()
 
 
 @app.delete("/api/decks/{deck_id}")
