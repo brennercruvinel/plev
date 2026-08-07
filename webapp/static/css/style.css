@@ -372,6 +372,16 @@ a { color: inherit; }
     .card-stack { --stack-card-w: 140px; }
 }
 
+/* Category stacks laid out as columns side by side (not one long vertical
+   chain of stacks) so the whole deck is reachable in a single scroll. */
+.stack-columns {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 24px;
+}
+.stack-columns .category-block { margin-bottom: 0; }
+
 /* ---------- Deck builder ---------- */
 
 .builder-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
