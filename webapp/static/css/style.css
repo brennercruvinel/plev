@@ -1,17 +1,17 @@
 :root {
-    --bg: #0c0a10;
-    --bg-elevated: #16131c;
-    --bg-card: #1c1824;
-    --bg-card-hover: #241f2e;
-    --border: #2e2838;
-    --border-light: #3d3549;
-    --text: #f0ecf5;
-    --text-dim: #a89fb8;
-    --text-faint: #6f6580;
-    --accent: #b3336b;
-    --accent-bright: #e8558f;
-    --accent-glow: rgba(179, 51, 107, 0.35);
-    --mana-b: #8b7ab8;
+    --bg: #0e0d1c;
+    --bg-elevated: #15142a;
+    --bg-card: #1b1a33;
+    --bg-card-hover: #23223f;
+    --border: #2b2a48;
+    --border-light: #38375c;
+    --text: #eef0fa;
+    --text-dim: #9ea3c4;
+    --text-faint: #6b6f92;
+    --accent: #3163c4;
+    --accent-bright: #34c98f;
+    --accent-glow: rgba(52, 145, 175, 0.35);
+    --mana-b: #5b8fe6;
     --good: #4caf7d;
     --bad: #d9556b;
     --warn: #d9a441;
@@ -33,7 +33,7 @@ html, body {
 
 body {
     background-image:
-        radial-gradient(ellipse 800px 500px at 20% -10%, rgba(139, 122, 184, 0.08), transparent),
+        radial-gradient(ellipse 800px 500px at 20% -10%, rgba(52, 201, 143, 0.07), transparent),
         radial-gradient(ellipse 600px 400px at 90% 10%, var(--accent-glow), transparent 60%);
     background-attachment: fixed;
     min-height: 100vh;
@@ -234,8 +234,16 @@ a { color: inherit; }
 }
 .deck-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .deck-card-thumb .no-image { display: flex; align-items: center; justify-content: center; height: 100%; padding: 8px; text-align: center; font-size: 11px; color: var(--text-faint); }
+/* Partner-commander decks split the thumbnail so both faces show, instead of only ever
+   picturing the primary commander. */
+.deck-card-thumb.split { display: flex; }
+.deck-card-thumb.split img, .deck-card-thumb.split .no-image { width: 50%; flex-shrink: 0; }
 .deck-card-body { padding: 16px 18px 18px; }
-.deck-card h3 { margin: 0 0 6px; font-size: 17px; }
+.deck-card h3 { margin: 0 0 4px; font-size: 17px; }
+.deck-card-commander {
+    font-size: 12.5px; color: var(--text-dim); margin-bottom: 10px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .deck-add-tile {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
     border: 1.5px dashed var(--border-light); border-radius: var(--radius);
@@ -246,11 +254,18 @@ a { color: inherit; }
 .deck-add-tile .plus { font-size: 30px; font-weight: 300; line-height: 1; }
 .deck-add-tile .label { font-size: 13px; font-weight: 600; }
 .deck-card .philosophy { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 14px; min-height: 40px; }
-.deck-card .meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
-.count-pill { padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; }
+.deck-card .meta-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.count-pill { padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; flex-shrink: 0; }
 .count-pill.ok { background: rgba(76,175,125,.15); color: var(--good); }
 .count-pill.bad { background: rgba(217,85,107,.15); color: var(--bad); }
-.wl { color: var(--text-dim); }
+.deck-card-colors { display: flex; gap: 3px; }
+.color-pip {
+    width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800; color: #1a1a1a;
+}
+.color-pip .mana-sym-inline svg { width: 11px; height: 11px; }
+.wl { color: var(--text-dim); margin-left: auto; flex-shrink: 0; }
 .wl b.win { color: var(--good); } .wl b.loss { color: var(--bad); }
 
 /* ---------- Activity log ---------- */
