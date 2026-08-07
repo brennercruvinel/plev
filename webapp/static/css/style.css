@@ -137,7 +137,10 @@ a { color: inherit; }
 
 /* ---------- Main content ---------- */
 
-.main { flex: 1; padding: 28px 32px 60px; max-width: 1400px; }
+/* min-width:0 stops any oversized descendant (long unwrapped text, fixed-width rows, etc.)
+   from propagating its min-content size up through .main and blowing the whole page out past
+   the viewport — the same class of bug fixed on .deck-card and .card-row .shared-tag below. */
+.main { flex: 1; min-width: 0; padding: 28px 32px 60px; max-width: 1400px; }
 
 .breadcrumb { font-size: 12.5px; color: var(--text-faint); margin-bottom: 10px; }
 .breadcrumb a { color: var(--text-dim); text-decoration: none; }
@@ -270,8 +273,11 @@ a { color: inherit; }
     font-size: 9px; font-weight: 800; color: #1a1a1a;
 }
 .color-pip .mana-sym-inline svg { width: 11px; height: 11px; }
-.wl { color: var(--text-dim); margin-left: auto; flex-shrink: 0; }
-.wl b.win { color: var(--good); } .wl b.loss { color: var(--bad); }
+.wl { display: flex; align-items: center; gap: 8px; color: var(--text-dim); margin-left: auto; flex-shrink: 0; }
+.wl-item { display: inline-flex; align-items: center; gap: 3px; font-weight: 700; }
+.wl-item svg { width: 13px; height: 13px; display: block; }
+.wl-item.win { color: var(--good); }
+.wl-item.loss { color: var(--bad); }
 
 /* ---------- Activity log ---------- */
 
@@ -466,6 +472,10 @@ a { color: inherit; }
 /* ---------- Deck builder ---------- */
 
 .builder-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+/* Grid items default to min-width:auto — without this override, the 1fr column grows to fit
+   whatever its widest unwrapped content wants (a long shared-tag pill, a wide row, etc.),
+   which was dragging the whole page wider than the viewport. */
+.builder-layout > * { min-width: 0; }
 @media (max-width: 900px) { .builder-layout { grid-template-columns: 1fr; } }
 
 .category-block { margin-bottom: 22px; }
@@ -482,23 +492,37 @@ a { color: inherit; }
     transition: background .15s;
 }
 .card-row:hover { background: var(--bg-elevated); border-color: var(--border); }
-.card-row .qty { color: var(--text-faint); font-size: 12px; width: 20px; }
-.card-row .name { flex: 1; font-size: 13.5px; }
-.card-row .cost { font-size: 12px; color: var(--mana-b); font-family: monospace; }
+.card-row .qty { color: var(--text-faint); font-size: 12px; width: 20px; flex-shrink: 0; }
+/* min-width:0 so this can actually shrink below its text's natural length instead of
+   forcing the row (and the whole page, through the flex/grid chain above it — see the
+   .card-row .shared-tag comment below) wider than the viewport. */
+.card-row .name { flex: 1; font-size: 13.5px; min-width: 0; }
+.card-row .cost { font-size: 12px; color: var(--mana-b); font-family: monospace; flex-shrink: 0; }
 
-.mana-cost { display: inline-flex; gap: 2px; vertical-align: middle; }
+.mana-cost { display: inline-flex; gap: 3px; vertical-align: middle; }
 .mana-sym {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
-    font-size: 10px; font-weight: 800; font-family: Georgia, "Times New Roman", serif;
-    color: #1a1a1a; border: 1px solid rgba(0,0,0,.35);
+    width: 17px; height: 17px; border-radius: 50%; flex-shrink: 0;
+    /* Generic-number/X-Y-Z pips render as text (colored glyphs render an SVG instead — see
+       icons.js) — a plain sans-serif reads far more clearly at this size than a serif face,
+       which blurred into a smudge below ~12px. */
+    font-size: 10.5px; font-weight: 800; font-family: var(--font);
+    color: #16151f; border: 1px solid rgba(0,0,0,.3);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
     line-height: 1;
 }
-.mana-sym-hybrid { font-size: 7px; letter-spacing: -0.5px; }
-.mana-sym svg { width: 11px; height: 11px; display: block; }
+.mana-sym-hybrid { font-size: 7.5px; letter-spacing: -0.4px; font-weight: 700; }
+.mana-sym svg { width: 12px; height: 12px; display: block; }
 .card-row .shared-tag {
     font-size: 10.5px; background: rgba(217,164,65,.15); color: var(--warn);
     padding: 2px 7px; border-radius: 20px; white-space: nowrap;
+    /* A widely-reused staple can be "shared" with a dozen decks — capped + ellipsized so this
+       pill can't force the row (and the whole page, since nothing above it stops a flex/grid
+       min-content blowout) wider than the viewport. Full list is in the title tooltip.
+       min-width:0 is the part that actually matters: flex items default to min-width:auto,
+       which uses the UNTRUNCATED text as a size floor regardless of max-width/overflow — without
+       overriding it, this pill would still refuse to shrink below its full content width. */
+    max-width: 220px; min-width: 0; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1;
 }
 
 .sidebar-panel {
@@ -535,9 +559,19 @@ a { color: inherit; }
 .commander-cost { margin-top: 4px; }
 
 .curve-bars { display: flex; align-items: flex-end; gap: 4px; height: 90px; margin-bottom: 8px; }
-.curve-bar { flex: 1; background: linear-gradient(to top, var(--accent), var(--mana-b)); border-radius: 3px 3px 0 0; min-height: 2px; position: relative; }
+/* Each bar is a column-reverse stack of per-color segments (see curveBarSegmentsHtml in app.js)
+   instead of one flat accent-colored block, so the mix of colors at each mana value is visible
+   at a glance. overflow:hidden clips whichever segment lands on top to the bar's rounded corner. */
+.curve-bar {
+    flex: 1; display: flex; flex-direction: column-reverse;
+    min-height: 2px; border-radius: 3px 3px 0 0; overflow: hidden;
+}
+.curve-bar-seg { width: 100%; }
 .curve-labels { display: flex; gap: 4px; font-size: 10px; color: var(--text-faint); }
 .curve-labels span { flex: 1; text-align: center; }
+.curve-legend { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 10px; font-size: 10.5px; color: var(--text-faint); }
+.curve-legend-item { display: inline-flex; align-items: center; gap: 4px; }
+.curve-legend-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
 .synergy-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
 .synergy-item:last-child { border-bottom: none; }
