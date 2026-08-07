@@ -1,4 +1,4 @@
-import { api } from "./api.js?v=21";
+import { api } from "./api.js?v=22";
 import { renderScanner } from "./scanner.js?v=21";
 import { activityIcon, manaCostHtml, manaGlyphSvg, resultIcon } from "./icons.js?v=23";
 
@@ -58,16 +58,40 @@ async function renderNavDecksList(activeId) {
     )
     .join("");
   el.querySelectorAll("[data-deck-link]").forEach((btn) =>
-    btn.addEventListener("click", () => (location.hash = `#deck/${btn.dataset.deckLink}`))
+    btn.addEventListener("click", () => {
+      location.hash = `#deck/${btn.dataset.deckLink}`;
+      btn.blur();
+    })
   );
 }
 
+// Buttons keep browser focus after a click (Chrome/Edge default) — left unchecked, that keeps
+// .sidebar's :focus-within true after navigating, which held the collapsed sidebar (and, on the
+// decks route, the whole deck sub-list) stuck open until focus moved elsewhere. Blurring right
+// after navigating lets it collapse again as soon as the mouse isn't over it, same as it would
+// on hover alone.
 navItems.forEach((el) => {
   el.addEventListener("click", () => {
     location.hash = "#" + el.dataset.route;
+    el.blur();
   });
 });
 window.addEventListener("hashchange", navigate);
+
+// Closes the deck-detail "Exportar" dropdown, the "Adicionar carta" inline search, and the
+// "Filtro" menu on an outside click — registered once here (not inside renderDeckDetail, which
+// re-runs on every card add/remove) so it doesn't pile up a new document-level listener on every
+// re-render. Harmless no-op on any page without these elements. Outside-click (rather than blur)
+// is used because a plain blur handler would fire, and collapse the dropdown, before a click on
+// one of the rows/chips inside it gets a chance to register.
+document.addEventListener("click", (e) => {
+  const dropdown = document.getElementById("export-dropdown");
+  if (dropdown && !dropdown.contains(e.target)) dropdown.classList.remove("open");
+  const addCardWrap = document.getElementById("add-card-inline");
+  if (addCardWrap && !addCardWrap.contains(e.target)) addCardWrap.classList.remove("expanded");
+  const filterDropdown = document.getElementById("filter-dropdown");
+  if (filterDropdown && !filterDropdown.contains(e.target)) filterDropdown.classList.remove("open");
+});
 
 // ----------------------------------------------------------------- utils ----
 
@@ -94,7 +118,7 @@ async function renderDashboard() {
 
   mainEl.innerHTML = h`
     <div class="page-header">
-      <div><h1>Visão Geral</h1><p>Seu laboratório de coleção e decks — tudo lido do banco local.</p></div>
+      <div><h1>Home</h1><p>Seu laboratório de coleção e decks — tudo lido do banco local.</p></div>
       <div style="display:flex;gap:10px">
         <button class="btn" id="add-card-btn">+ Adicionar Carta</button>
         <button class="btn secondary" id="dash-new-deck-btn">Novo Deck</button>
@@ -269,15 +293,36 @@ function colorIdentityPipsHtml(identity) {
     .join("");
 }
 
+/** Deck.tags is stored as a plain comma-separated string (see db.py) — split/trim/drop-empties
+ * here rather than parsing JSON, so a hand-typed "Competitivo,, Budget ," doesn't need any
+ * special-casing beyond what .filter(Boolean) already does. */
+function parseDeckTags(tagsStr) {
+  return (tagsStr || "").split(",").map((t) => t.trim()).filter(Boolean);
+}
+
+/** Small non-interactive pills for a deck's custom tags (see openEditDeckModal) — shared between
+ * the deck grid thumbnails and the deck detail header so both stay visually consistent. Rendered
+ * inline right next to the deck name at both call sites (see the wrapping flex row there). */
+function deckTagsHtml(tagsStr) {
+  const tags = parseDeckTags(tagsStr);
+  if (!tags.length) return "";
+  return `<div class="deck-tags">${tags.map((t) => `<span class="deck-tag">${t}</span>`).join("")}</div>`;
+}
+
 function deckCardHtml(d) {
   const cls = d.total_cards === 100 ? "ok" : "bad";
   const hasPartner = !!d.commander_name_2;
+  // Custom tags render as an overlay on the art itself (top-left corner) rather than as text
+  // next to the deck name — reads faster as a label on the "cover" of the deck, and doesn't
+  // compete with the name for space in the already-tight card body below.
   const thumb = hasPartner
     ? `<div class="deck-card-thumb split">
+        ${deckTagsHtml(d.tags)}
         ${d.commander_image ? `<img src="${d.commander_image}" alt="${d.commander_name}">` : `<div class="no-image">${d.commander_name}</div>`}
         ${d.commander_image_2 ? `<img src="${d.commander_image_2}" alt="${d.commander_name_2}">` : `<div class="no-image">${d.commander_name_2}</div>`}
       </div>`
     : `<div class="deck-card-thumb">
+        ${deckTagsHtml(d.tags)}
         ${d.commander_image ? `<img src="${d.commander_image}" alt="${d.commander_name}">` : `<div class="no-image">${d.commander_name}</div>`}
       </div>`;
   const commanderLine = hasPartner ? `${d.commander_name} + ${d.commander_name_2}` : d.commander_name;
@@ -367,9 +412,14 @@ async function openNewDeckModal() {
         </select>
       </div>
 
-      <div>
+      <div style="margin-bottom:12px">
         <label style="font-size:12px;color:var(--text-dim)" id="nd-philosophy-label">Estratégia / filosofia (opcional)</label>
         <textarea id="nd-philosophy" rows="3" style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text);font-family:inherit"></textarea>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-dim)">Tags (opcional, separadas por vírgula)</label>
+        <input type="text" id="nd-tags" placeholder="Ex: Competitivo, Orçamento baixo, cEDH"
+          style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
       </div>
       <div id="nd-error" style="color:var(--bad);font-size:12px;margin-top:10px;display:none">Preencha comandante e nome do deck.</div>
       <div id="nd-build-status"></div>
@@ -437,11 +487,12 @@ async function openNewDeckModal() {
       return;
     }
     const philosophy = backdrop.querySelector("#nd-philosophy").value.trim() || null;
+    const tags = backdrop.querySelector("#nd-tags").value.trim() || null;
     saveBtn.disabled = true;
     commanderInput.disabled = true;
 
     if (!autoToggle.checked) {
-      const { id } = await api.createDeck({ name, commander_name, commander_name_2, philosophy });
+      const { id } = await api.createDeck({ name, commander_name, commander_name_2, philosophy, tags });
       backdrop.remove();
       location.hash = `#deck/${id}`;
       return;
@@ -493,9 +544,14 @@ async function openEditDeckModal(deck, onSaved) {
         <input type="text" id="ed-name" value="${deck.name}"
           style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
       </div>
-      <div>
+      <div style="margin-bottom:12px">
         <label style="font-size:12px;color:var(--text-dim)">Estratégia / filosofia</label>
         <textarea id="ed-philosophy" rows="3" style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text);font-family:inherit">${deck.philosophy || ""}</textarea>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-dim)">Tags (separadas por vírgula)</label>
+        <input type="text" id="ed-tags" value="${deck.tags || ""}" placeholder="Ex: Competitivo, Orçamento baixo, cEDH"
+          style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
       </div>
       <p style="margin:10px 0 0;font-size:11.5px;color:var(--text-faint)">Trocar um comandante aqui remove a carta antiga do deck (a menos que ela também esteja na lista como carta comum) e adiciona a nova como comandante, 1 cópia.</p>
       <div id="ed-error" style="color:var(--bad);font-size:12px;margin-top:10px;display:none">Preencha comandante e nome do deck.</div>
@@ -544,10 +600,11 @@ async function openEditDeckModal(deck, onSaved) {
       return;
     }
     const philosophy = backdrop.querySelector("#ed-philosophy").value.trim() || null;
+    const tags = backdrop.querySelector("#ed-tags").value.trim() || null;
     const saveBtn = backdrop.querySelector("#ed-save");
     saveBtn.disabled = true;
     try {
-      await api.updateDeck(deck.id, { name, commander_name, commander_name_2, philosophy });
+      await api.updateDeck(deck.id, { name, commander_name, commander_name_2, philosophy, tags });
       backdrop.remove();
       onSaved?.();
     } catch (err) {
@@ -694,11 +751,24 @@ const FILTERABLE_TYPES = CATEGORY_ORDER.filter((c) => c !== "Comandante");
 const CMC_BUCKETS = ["0", "1", "2", "3", "4", "5", "6+"];
 const FILTER_COLORS = { W: "#fffbd5", U: "#aae0fa", B: "#cbc2bf", R: "#f9aa8f", G: "#9bd3ae", C: "#8b8398" };
 
-let deckViewMode = "list"; // "list", "grid" (MTG Arena tiles), or "stack" (Moxfield-style overlap)
+let deckViewMode = "stack"; // "list", "grid" (MTG Arena tiles), or "stack" (Moxfield-style overlap) — default view
+const VIEW_MODES = ["list", "grid", "stack"];
+const VIEW_MODE_LABELS = { list: "Lista", grid: "Visual", stack: "Empilhado" };
 
 // Deck card filter/sort state — module-level so it survives view-mode switches and persists
 // across decks in the same session (matches how deckViewMode already behaves).
-let deckFilters = { q: "", types: new Set(), colors: new Set(), cmcs: new Set(), sort: "name" };
+// groupBy: "type" (default, existing category headers) or "tag" (EDHREC theme tags — see
+// currentDeckTags / filteredDeckByTag below).
+let deckFilters = { q: "", types: new Set(), colors: new Set(), cmcs: new Set(), sort: "name", groupBy: "type" };
+
+// card_name -> [tag, ...], populated per-deck from GET /decks/:id/tags (EDHREC cardlist
+// headers for the deck's commander) right before renderDeckCards can use it.
+let currentDeckTags = {};
+
+// Collapsed by default (see synergyPanelHtml) — not something you need to see every time you
+// open a deck. Tracked at module level so it survives the re-render triggered by adding/removing
+// a card instead of snapping shut again on every action.
+let synergyPanelOpen = false;
 
 function deckFiltersActive() {
   return !!(deckFilters.q || deckFilters.types.size || deckFilters.colors.size || deckFilters.cmcs.size);
@@ -709,8 +779,20 @@ function cardCmcBucket(cmc) {
   return n >= 6 ? "6+" : String(n);
 }
 
+// Client-side mirror of the backend's classify() — needed so per-card type filtering still
+// works when cards are grouped by tag instead of by type (there's no "category" bucket to
+// pre-filter by in that mode, so each card has to be checked individually).
+function cardCategory(c) {
+  const t = c.type_line || "";
+  for (const cat of ["Land", "Creature", "Planeswalker", "Battle", "Artifact", "Enchantment", "Instant", "Sorcery"]) {
+    if (t.includes(cat)) return cat;
+  }
+  return "Outro";
+}
+
 function cardMatchesFilters(c) {
   if (deckFilters.q && !c.card_name.toLowerCase().includes(deckFilters.q.toLowerCase())) return false;
+  if (deckFilters.types.size && !deckFilters.types.has(cardCategory(c))) return false;
   if (deckFilters.colors.size) {
     const letters = c.colors ? c.colors.split("") : [];
     const isColorless = letters.length === 0;
@@ -759,7 +841,111 @@ function filteredDeckByType(deck) {
   return out;
 }
 
-function deckFilterBarHtml() {
+/** Groups deck cards (excluding the commander, same as filteredDeckByType) by their EDHREC
+ * theme tags ("Subtipo") instead of by card type. A card with 2+ tags (e.g. both "Removal" and
+ * "Utility Creature") shows up under each — that's expected for a theme browser, not a bug: the
+ * same card really does serve both roles. Cards with no cached EDHREC tag fall back to their own
+ * card type (the same category filteredDeckByType would've used) instead of a generic
+ * catch-all group, so every card still lands somewhere meaningful. */
+function filteredDeckByTag(deck, tagsMap) {
+  const allCards = Object.entries(deck.by_type || {})
+    .filter(([cat]) => cat !== "Comandante")
+    .flatMap(([, cards]) => cards)
+    .filter(cardMatchesFilters);
+  const out = {};
+  for (const c of allCards) {
+    const tags = tagsMap[c.card_name]?.length ? tagsMap[c.card_name] : [CATEGORY_LABELS[cardCategory(c)] || cardCategory(c)];
+    for (const t of tags) {
+      (out[t] = out[t] || []).push(c);
+    }
+  }
+  for (const t of Object.keys(out)) out[t] = sortDeckCards(out[t]);
+  return out;
+}
+
+// Every non-commander card in the deck, same filtering (search/type/color/CMC) applied
+// regardless of how the results end up grouped.
+function nonCommanderFilteredCards(deck) {
+  return Object.entries(deck.by_type || {})
+    .filter(([cat]) => cat !== "Comandante")
+    .flatMap(([, cards]) => cards)
+    .filter(cardMatchesFilters);
+}
+
+/** Groups pre-filtered cards by a single-valued key function — shared by the color/CMC/rarity
+ * group-by modes (each card lands in exactly one bucket, unlike the tag mode above where a
+ * card can have several tags at once). */
+function groupCardsByKey(cards, keyFn) {
+  const out = {};
+  for (const c of cards) (out[keyFn(c)] = out[keyFn(c)] || []).push(c);
+  for (const k of Object.keys(out)) out[k] = sortDeckCards(out[k]);
+  return out;
+}
+
+const COLOR_GROUP_LABELS = { W: "Branco", U: "Azul", B: "Preto", R: "Vermelho", G: "Verde", M: "Multicolor", C: "Incolor" };
+function colorGroupKey(c) {
+  const letters = (c.colors || "").split("").filter(Boolean);
+  return letters.length === 0 ? "C" : letters.length === 1 ? letters[0] : "M";
+}
+
+const RARITY_ORDER = ["common", "uncommon", "rare", "mythic", "special", "bonus"];
+const RARITY_LABELS = { common: "Comum", uncommon: "Incomum", rare: "Rara", mythic: "Mítica", special: "Especial", bonus: "Bônus" };
+function rarityGroupKey(c) {
+  return c.rarity || "outro";
+}
+
+const GROUP_MODES = ["type", "tag", "color", "cmc", "rarity"];
+const GROUP_MODE_LABELS = { type: "Tipo", tag: "Subtipo", color: "Cor", cmc: "Custo", rarity: "Raridade" };
+
+/** Single entry point for "how are the deck's cards currently organized" — returns the grouped
+ * cards, the order/set of group keys to render, and how to turn a key into a display label.
+ * Each group-by mode (see GROUP_MODES) plugs in here rather than renderDeckCards branching on
+ * deckFilters.groupBy directly, so adding another mode later is a single addition to this switch. */
+function computeDeckGroups(deck) {
+  switch (deckFilters.groupBy) {
+    case "tag": {
+      const groups = filteredDeckByTag(deck, currentDeckTags);
+      return { groups, groupKeys: Object.keys(groups).sort((a, b) => a.localeCompare(b)), groupLabel: (k) => k };
+    }
+    case "color": {
+      const groups = groupCardsByKey(nonCommanderFilteredCards(deck), colorGroupKey);
+      return { groups, groupKeys: CURVE_COLOR_ORDER.filter((c) => groups[c]?.length), groupLabel: (k) => COLOR_GROUP_LABELS[k] || k };
+    }
+    case "cmc": {
+      const groups = groupCardsByKey(nonCommanderFilteredCards(deck), (c) => cardCmcBucket(c.cmc));
+      return { groups, groupKeys: CMC_BUCKETS.filter((v) => groups[v]?.length), groupLabel: (k) => k };
+    }
+    case "rarity": {
+      const groups = groupCardsByKey(nonCommanderFilteredCards(deck), rarityGroupKey);
+      const order = [...RARITY_ORDER, ...Object.keys(groups).filter((k) => !RARITY_ORDER.includes(k))];
+      return { groups, groupKeys: order.filter((k) => groups[k]?.length), groupLabel: (k) => RARITY_LABELS[k] || (k === "outro" ? "Outra" : k) };
+    }
+    default: {
+      const groups = filteredDeckByType(deck);
+      return { groups, groupKeys: CATEGORY_ORDER.filter((c) => c !== "Comandante" && groups[c]?.length), groupLabel: (k) => CATEGORY_LABELS[k] || k };
+    }
+  }
+}
+
+/** Just the "Filtro" trigger button — a separate function from the menu body below so refreshing
+ * the filter state (deckFiltersActive() badge) can swap the button without touching the open/
+ * closed state of the menu, which lives on the wrapping #filter-dropdown element instead.
+ * Icon-only circular button, deliberately styled to match the sort control right next to it
+ * (.sort-icon-wrap/.sort-icon-glyph) rather than a labeled .btn — a plain <button> here instead
+ * of the invisible-<select>-overlay trick sort uses, since this opens a custom menu, not a
+ * native dropdown. */
+function filterToggleBtnHtml() {
+  return h`
+    <button type="button" class="filter-toggle-btn" id="filter-toggle-btn" title="Filtro" aria-label="Filtro" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54Z"/></svg>
+      ${deckFiltersActive() ? `<span class="filter-badge"></span>` : ""}
+    </button>`;
+}
+
+/** The filter menu body (search/type/color/CMC) — previously its own always-visible bar
+ * (.filters-bar) above the card list; now tucked behind the "Filtro" button in the view/group/
+ * sort toolbar instead, so it only takes up screen space while you're actually adjusting it. */
+function filterMenuContentHtml() {
   const typeChips = FILTERABLE_TYPES.map(
     (t) => `<span class="chip type-chip ${deckFilters.types.has(t) ? "active" : ""}" data-deck-type="${t}" title="${CATEGORY_LABELS[t]}">${FILTER_TYPE_LABELS[t]}</span>`
   ).join("");
@@ -777,31 +963,178 @@ function deckFilterBarHtml() {
   ).join("");
 
   return h`
-    <div class="filters-bar" id="deck-filters">
-      <div class="search-collapse ${deckFilters.q ? "expanded" : ""}" id="deck-search-wrap">
-        <button type="button" class="search-icon-btn" id="deck-search-toggle" title="Buscar carta" aria-label="Buscar carta">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        </button>
-        <input type="text" id="deck-filter-q" class="search-collapse-input" placeholder="Buscar carta no deck…" value="${deckFilters.q}">
+    <div class="filter-menu" id="filter-menu">
+      <div class="filter-group filter-group-block">
+        <span class="filter-group-label">Buscar</span>
+        <input type="text" id="deck-filter-q" placeholder="Nome da carta no deck…" value="${deckFilters.q}">
       </div>
       <div class="filter-group"><span class="filter-group-label">Tipo</span>${typeChips}</div>
       <div class="filter-group"><span class="filter-group-label">Cor</span>${colorChips}</div>
       <div class="filter-group"><span class="filter-group-label">CMC</span>${cmcChips}</div>
-      <div class="sort-icon-wrap" title="Ordenar">
-        <span class="sort-icon-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg></span>
-        <select id="deck-sort" class="sort-icon-select" aria-label="Ordenar">
-          <option value="name" ${deckFilters.sort === "name" ? "selected" : ""}>Nome (A-Z)</option>
-          <option value="cmc-asc" ${deckFilters.sort === "cmc-asc" ? "selected" : ""}>Custo de mana ↑</option>
-          <option value="cmc-desc" ${deckFilters.sort === "cmc-desc" ? "selected" : ""}>Custo de mana ↓</option>
-          <option value="price-desc" ${deckFilters.sort === "price-desc" ? "selected" : ""}>Preço ↓</option>
-          <option value="qty-desc" ${deckFilters.sort === "qty-desc" ? "selected" : ""}>Quantidade ↓</option>
-        </select>
-      </div>
       ${deckFiltersActive() ? `<button class="btn small secondary" id="deck-filter-clear">Limpar filtros</button>` : ""}
     </div>`;
 }
 
+function filterMenuHtml() {
+  return h`
+    <div class="filter-dropdown" id="filter-dropdown">
+      ${filterToggleBtnHtml()}
+      ${filterMenuContentHtml()}
+    </div>`;
+}
+
+/** Filter menu + view mode + group-by + sort controls, all in one toolbar. The search/type/color/
+ * CMC filters (what's included) live behind the "Filtro" dropdown (see filterMenuHtml above) so
+ * they don't compete for space with everything else here, which controls how the resulting cards
+ * are displayed and organized — this toolbar lives right above the card groups it affects. */
+function viewControlsHtml(tagsAvailable) {
+  const viewChips = VIEW_MODES.map(
+    (v) => `<span class="chip ${deckViewMode === v ? "active" : ""}" data-view="${v}">${VIEW_MODE_LABELS[v]}</span>`
+  ).join("");
+  const groupChips = GROUP_MODES.map((mode) => {
+    const hint = mode === "tag" && !tagsAvailable
+      ? ' title="Sem tags do EDHREC cacheadas para este comandante — cartas sem tag usam o tipo"'
+      : "";
+    return `<span class="chip ${deckFilters.groupBy === mode ? "active" : ""}" data-group-by="${mode}"${hint}>${GROUP_MODE_LABELS[mode]}</span>`;
+  }).join("");
+  return h`
+    <div class="filters-bar cards-toolbar" id="cards-toolbar">
+      <div class="filter-group">
+        <span class="filter-group-label">Adicionar Card</span>
+        <div class="search-collapse add-card-inline" id="add-card-inline">
+          <button type="button" class="search-icon-btn" id="add-card-toggle" title="Adicionar carta ao deck" aria-label="Adicionar carta ao deck">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+          </button>
+          <input type="text" id="add-card-input" class="search-collapse-input" placeholder="Adicionar carta (PT ou EN)…" autocomplete="off">
+          <div id="add-card-results" class="add-card-results-dropdown"></div>
+        </div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-group-label">Visualização</span>
+        ${viewChips}
+      </div>
+      <div class="filter-group">
+        <span class="filter-group-label">Agrupar</span>
+        ${groupChips}
+      </div>
+      <div class="filter-group">
+        <span class="filter-group-label">Filtro</span>
+        ${filterMenuHtml()}
+      </div>
+      <div class="filter-group">
+        <span class="filter-group-label">Ordenar</span>
+        <div class="sort-icon-wrap" title="Ordenar">
+          <span class="sort-icon-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg></span>
+          <select id="deck-sort" class="sort-icon-select" aria-label="Ordenar">
+            <option value="name" ${deckFilters.sort === "name" ? "selected" : ""}>Nome (A-Z)</option>
+            <option value="cmc-asc" ${deckFilters.sort === "cmc-asc" ? "selected" : ""}>Custo de mana ↑</option>
+            <option value="cmc-desc" ${deckFilters.sort === "cmc-desc" ? "selected" : ""}>Custo de mana ↓</option>
+            <option value="price-desc" ${deckFilters.sort === "price-desc" ? "selected" : ""}>Preço ↓</option>
+            <option value="qty-desc" ${deckFilters.sort === "qty-desc" ? "selected" : ""}>Quantidade ↓</option>
+          </select>
+        </div>
+      </div>
+    </div>`;
+}
+
+function wireCardsToolbar(deck) {
+  document.querySelectorAll("[data-view]").forEach((chip) =>
+    chip.addEventListener("click", () => {
+      deckViewMode = chip.dataset.view;
+      refreshCardsToolbar(deck);
+    })
+  );
+  document.querySelectorAll("[data-group-by]").forEach((chip) =>
+    chip.addEventListener("click", () => {
+      deckFilters.groupBy = chip.dataset.groupBy;
+      refreshCardsToolbar(deck);
+    })
+  );
+  document.getElementById("deck-sort").addEventListener("change", (e) => {
+    deckFilters.sort = e.target.value;
+    renderDeckCards(deck);
+  });
+  wireAddCardInline(deck);
+  wireDeckFilterBar(deck);
+}
+
+/** The "Adicionar carta" search — lives right in the view/group/sort toolbar (next to the card
+ * groups it fills), collapsed to a plain icon until clicked. Results show as a dropdown under
+ * the input instead of a permanent sidebar block, since it's only needed while actively
+ * searching. Re-wired every time the toolbar re-renders (wireCardsToolbar → here), same as the
+ * view/group chips and sort select right next to it. */
+function wireAddCardInline(deck) {
+  const wrap = document.getElementById("add-card-inline");
+  const toggle = document.getElementById("add-card-toggle");
+  const input = document.getElementById("add-card-input");
+  const resultsEl = document.getElementById("add-card-results");
+
+  toggle.addEventListener("click", () => {
+    wrap.classList.add("expanded");
+    input.focus();
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    input.value = "";
+    resultsEl.innerHTML = "";
+    wrap.classList.remove("expanded");
+    input.blur();
+  });
+
+  let debounce;
+  input.addEventListener("input", () => {
+    clearTimeout(debounce);
+    const q = input.value.trim();
+    if (q.length < 2) { resultsEl.innerHTML = ""; return; }
+    debounce = setTimeout(async () => {
+      const results = await api.searchCards(q, 8);
+      // Two different cards can share the exact same printed name (e.g. "Phyrexian Hydra" the
+      // 5-mana creature vs. the token it makes) — each shows up as its own row here already
+      // (search returns every distinct oracle_id), so the type line is shown as a subtitle and
+      // the oracle_id is carried through the click so the right one actually gets added.
+      resultsEl.innerHTML = results
+        .map(
+          (c) => h`
+          <div class="card-row" data-add="${c.name}" data-add-oracle="${c.oracle_id || ""}" style="cursor:pointer">
+            <span class="name">${c.name}${c.type_line ? `<span class="card-row-sub">${c.type_line}</span>` : ""}</span>
+            <span class="cost">${manaCostHtml(c.mana_cost)}</span>
+          </div>`
+        )
+        .join("");
+      resultsEl.querySelectorAll("[data-add]").forEach((el) =>
+        el.addEventListener("click", async () => {
+          try {
+            const added = await addCardToDeckWithConfirm(deck.id, el.dataset.add, el.dataset.addOracle || null);
+            if (!added) return;
+            input.value = "";
+            resultsEl.innerHTML = "";
+            renderDeckDetail([String(deck.id)]);
+          } catch (err) {
+            alert(`Falhou ao adicionar: ${err.message}`);
+          }
+        })
+      );
+    }, 250);
+  });
+}
+
+/** Re-renders the toolbar (to reflect the new active view/group-by chip) plus the card list below it. */
+function refreshCardsToolbar(deck) {
+  const tagsAvailable = Object.keys(currentDeckTags).length > 0;
+  document.getElementById("cards-toolbar").outerHTML = viewControlsHtml(tagsAvailable);
+  wireCardsToolbar(deck);
+  renderDeckCards(deck);
+}
+
 function wireDeckFilterBar(deck) {
+  document.getElementById("filter-toggle-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const dropdown = document.getElementById("filter-dropdown");
+    const willOpen = !dropdown.classList.contains("open");
+    dropdown.classList.toggle("open", willOpen);
+    e.currentTarget.setAttribute("aria-expanded", String(willOpen));
+  });
+
   const qInput = document.getElementById("deck-filter-q");
   let debounce;
   qInput.addEventListener("input", () => {
@@ -810,27 +1143,6 @@ function wireDeckFilterBar(deck) {
       deckFilters.q = qInput.value.trim();
       renderDeckCards(deck);
     }, 200);
-  });
-
-  // Search starts as a bare icon and only grows into a text field once you actually mean to use
-  // it — collapses back down on blur if left empty, but stays open while a search term is active
-  // (or while focused) so you're not fighting the field to type something in.
-  const searchWrap = document.getElementById("deck-search-wrap");
-  const searchToggle = document.getElementById("deck-search-toggle");
-  searchToggle.addEventListener("click", () => {
-    searchWrap.classList.add("expanded");
-    qInput.focus();
-  });
-  qInput.addEventListener("blur", () => {
-    if (!qInput.value.trim()) searchWrap.classList.remove("expanded");
-  });
-  qInput.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-    qInput.value = "";
-    deckFilters.q = "";
-    searchWrap.classList.remove("expanded");
-    qInput.blur();
-    renderDeckCards(deck);
   });
 
   document.querySelectorAll("[data-deck-type]").forEach((chip) =>
@@ -854,22 +1166,21 @@ function wireDeckFilterBar(deck) {
       refreshDeckFilterBar(deck);
     })
   );
-  document.getElementById("deck-sort").addEventListener("change", (e) => {
-    deckFilters.sort = e.target.value;
-    renderDeckCards(deck);
-  });
   const clearBtn = document.getElementById("deck-filter-clear");
   if (clearBtn) {
     clearBtn.addEventListener("click", () => {
-      deckFilters = { q: "", types: new Set(), colors: new Set(), cmcs: new Set(), sort: deckFilters.sort };
+      deckFilters = { q: "", types: new Set(), colors: new Set(), cmcs: new Set(), sort: deckFilters.sort, groupBy: deckFilters.groupBy };
       refreshDeckFilterBar(deck);
     });
   }
 }
 
-/** Re-renders just the filter bar (to reflect new active/dimmed chip states) plus the card list below it. */
+/** Re-renders the toggle button (for the active-filter badge) and the menu body (for the new
+ * chip states) — but NOT the #filter-dropdown wrapper itself, so its "open" class (and thus
+ * whether the menu is actually showing) survives toggling a chip inside it. */
 function refreshDeckFilterBar(deck) {
-  document.getElementById("deck-filters").outerHTML = deckFilterBarHtml();
+  document.getElementById("filter-toggle-btn").outerHTML = filterToggleBtnHtml();
+  document.getElementById("filter-menu").outerHTML = filterMenuContentHtml();
   wireDeckFilterBar(deck);
   renderDeckCards(deck);
 }
@@ -927,14 +1238,38 @@ function curveBarSegmentsHtml(byColor, maxCount) {
     .join("");
 }
 
+/** Adds a card to the deck. Commander is singleton, so the backend rejects a second copy of
+ * anything but a basic land (or another explicitly-unlimited card) with 409 + needs_confirmation
+ * — this catches that, asks the user to confirm, and resubmits with confirm:true if they agree.
+ * Returns false (no throw) if the user declined, so callers can just bail out quietly. */
+async function addCardToDeckWithConfirm(deckId, cardName, oracleId = null) {
+  try {
+    await api.addDeckCard(deckId, cardName, 1, oracleId);
+    return true;
+  } catch (err) {
+    if (err.status === 409 && err.body?.detail?.needs_confirmation) {
+      const qty = err.body.detail.existing_quantity;
+      if (!confirm(`"${cardName}" já está no deck (${qty}x). Adicionar mais uma cópia mesmo assim?`)) {
+        return false;
+      }
+      await api.addDeckCard(deckId, cardName, 1, oracleId, true);
+      return true;
+    }
+    throw err;
+  }
+}
+
 async function renderDeckDetail([idStr]) {
   const id = Number(idStr);
-  const [deck, synergy, collectionAll] = await Promise.all([
+  const [deck, synergy, collectionAll, tagsResp] = await Promise.all([
     api.deck(id),
     api.deckSynergy(id).catch(() => ({ cached: false })),
     api.collection("all"),
+    api.deckTags(id).catch(() => ({ cached: false, tags: {} })),
   ]);
   const ownershipMap = buildOwnershipMap(collectionAll);
+  currentDeckTags = tagsResp.tags || {};
+  const tagsAvailable = Object.keys(currentDeckTags).length > 0;
 
   const maxCmc = Math.max(1, ...Object.keys(deck.mana_curve).map(Number));
   const maxCount = Math.max(1, ...Object.values(deck.mana_curve));
@@ -968,43 +1303,51 @@ async function renderDeckDetail([idStr]) {
   mainEl.innerHTML = h`
     <div class="breadcrumb"><a href="#decks" data-nav="decks">Meus Decks</a><span class="sep">/</span>${deck.name}</div>
     <div class="page-header">
-      <div><h1>${deck.name}</h1><p>${deck.philosophy || ""}</p></div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span class="count-pill ${deck.is_valid_100 ? "ok" : "bad"}" style="font-size:15px">${deck.total_cards}/100</span>
-        <button class="btn secondary small" id="import-deck-btn">Importar decklist</button>
-        <button class="btn secondary small" id="edit-deck-btn">Editar deck</button>
-        <button class="btn secondary small" id="delete-deck-btn">Excluir deck</button>
-      </div>
-    </div>
-    <div class="mode-toggle">
-      <span class="chip ${deckViewMode === "list" ? "active" : ""}" data-view="list">Lista</span>
-      <span class="chip ${deckViewMode === "grid" ? "active" : ""}" data-view="grid">Visual</span>
-      <span class="chip ${deckViewMode === "stack" ? "active" : ""}" data-view="stack">Empilhado</span>
-    </div>
-    ${deckFilterBarHtml()}
-    <div class="builder-layout">
-      <div id="deck-cards"></div>
       <div>
-        ${commanderPanelHtml(deck)}
-        <div class="sidebar-panel" style="margin-bottom:16px">
-          <h3>Curva de mana</h3>
-          <div class="curve-bars">
-            ${curveBars.map((b) => `<div class="curve-bar" title="${b.count} cartas">${curveBarSegmentsHtml(b.byColor, maxCount)}</div>`).join("")}
-          </div>
-          <div class="curve-labels">${curveBars.map((b) => `<span>${b.label}</span>`).join("")}</div>
-          <div class="curve-legend">
-            ${CURVE_COLOR_ORDER.filter((c) => curveBars.some((b) => b.byColor[c])).map((c) => `<span class="curve-legend-item"><span class="dot" style="background:${CURVE_COLORS[c]}"></span>${c === "M" ? "Multi" : c === "C" ? "Incolor" : c}</span>`).join("")}
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <h1>${deck.name}</h1>
+          ${deckTagsHtml(deck.tags)}
+        </div>
+        <p>${deck.philosophy || ""}</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="count-pill ${deck.is_valid_100 ? "ok" : "bad"}" style="font-size:15px">${deck.total_cards}/100</span>
+        <div class="export-dropdown" id="export-dropdown">
+          <button class="btn secondary small" id="export-toggle-btn" aria-haspopup="true" aria-expanded="false">Exportar ▾</button>
+          <div class="export-menu" id="export-menu">
+            <a href="/api/decks/${id}/export?format=moxfield" download>Formato Moxfield (.txt)</a>
+            <a href="/api/decks/${id}/export?format=text" download>Texto simples (.txt)</a>
           </div>
         </div>
-        <div class="sidebar-panel">
-          <h3>Adicionar carta</h3>
-          ${overageWarning}
-          <input type="text" id="add-card-input" placeholder="Nome (PT ou EN)…" style="width:100%;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text);font-size:13px;margin-bottom:8px;">
-          <div id="add-card-results"></div>
-        </div>
-        ${synergyPanelHtml(synergy, ownershipMap)}
+        <button class="btn secondary small" id="import-deck-btn">Importar decklist</button>
+        <button class="btn icon-btn secondary small" id="edit-deck-btn" title="Editar deck" aria-label="Editar deck">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+        </button>
+        <button class="btn icon-btn danger small" id="delete-deck-btn" title="Excluir deck" aria-label="Excluir deck">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>
       </div>
     </div>
+    ${overageWarning}
+    <div class="deck-stats-bar">
+      ${commanderPanelHtml(deck)}
+      <div class="stats-bar-col">
+        ${synergyPanelHtml(synergy, ownershipMap)}
+        ${similarCommandersPanelHtml(synergy)}
+      </div>
+      <div class="stats-bar-panel curve-panel">
+        <h3>Curva de mana</h3>
+        <div class="curve-bars">
+          ${curveBars.map((b) => `<div class="curve-bar" title="${b.count} cartas">${curveBarSegmentsHtml(b.byColor, maxCount)}</div>`).join("")}
+        </div>
+        <div class="curve-labels">${curveBars.map((b) => `<span>${b.label}</span>`).join("")}</div>
+        <div class="curve-legend">
+          ${CURVE_COLOR_ORDER.filter((c) => curveBars.some((b) => b.byColor[c])).map((c) => `<span class="curve-legend-item"><span class="dot" style="background:${CURVE_COLORS[c]}"></span>${c === "M" ? "Multi" : c === "C" ? "Incolor" : c}</span>`).join("")}
+        </div>
+      </div>
+    </div>
+    ${viewControlsHtml(tagsAvailable)}
+    <div id="deck-cards"></div>
   `;
 
   document.querySelector('[data-nav="decks"]').addEventListener("click", (e) => {
@@ -1025,6 +1368,22 @@ async function renderDeckDetail([idStr]) {
     openImportDeckModal(id, () => renderDeckDetail([idStr]))
   );
 
+  // Export dropdown — two plain <a download> links (Moxfield-format / plain-text) straight to
+  // the export endpoint, so the browser just downloads the file with no extra JS plumbing.
+  // Only the open/close toggle needs wiring here; the outside-click-closes behavior is a single
+  // delegated listener registered once at module scope (see bottom of file), not re-added on
+  // every render.
+  document.getElementById("export-toggle-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const dropdown = document.getElementById("export-dropdown");
+    const willOpen = !dropdown.classList.contains("open");
+    dropdown.classList.toggle("open", willOpen);
+    e.currentTarget.setAttribute("aria-expanded", String(willOpen));
+  });
+  document.getElementById("export-menu").addEventListener("click", () => {
+    document.getElementById("export-dropdown")?.classList.remove("open");
+  });
+
   const fetchSynergyBtn = document.getElementById("fetch-synergy-btn");
   if (fetchSynergyBtn) {
     fetchSynergyBtn.addEventListener("click", async () => {
@@ -1042,13 +1401,6 @@ async function renderDeckDetail([idStr]) {
     });
   }
 
-  document.querySelectorAll("[data-view]").forEach((chip) =>
-    chip.addEventListener("click", () => {
-      deckViewMode = chip.dataset.view;
-      renderDeckDetail([idStr]);
-    })
-  );
-
   // Synergy suggestions can be added straight to the deck — no need to retype the name in "Adicionar carta".
   document.querySelectorAll("[data-add-synergy]").forEach((btn) =>
     btn.addEventListener("click", async (e) => {
@@ -1056,8 +1408,10 @@ async function renderDeckDetail([idStr]) {
       btn.disabled = true;
       btn.textContent = "…";
       try {
-        await api.addDeckCard(id, btn.dataset.addSynergy, 1);
-        renderDeckDetail([idStr]);
+        const added = await addCardToDeckWithConfirm(id, btn.dataset.addSynergy);
+        if (added) { renderDeckDetail([idStr]); return; }
+        btn.disabled = false;
+        btn.textContent = "+";
       } catch (err) {
         console.error(err);
         btn.disabled = false;
@@ -1075,80 +1429,69 @@ async function renderDeckDetail([idStr]) {
   document.querySelectorAll(".commander-card[data-card-view]").forEach((el) =>
     el.addEventListener("click", () => showCardModal(el.dataset.cardView))
   );
-
-  wireDeckFilterBar(deck);
-  renderDeckCards(deck);
-
-  const input = document.getElementById("add-card-input");
-  let debounce;
-  input.addEventListener("input", () => {
-    clearTimeout(debounce);
-    const q = input.value.trim();
-    if (q.length < 2) { document.getElementById("add-card-results").innerHTML = ""; return; }
-    debounce = setTimeout(async () => {
-      const results = await api.searchCards(q, 8);
-      document.getElementById("add-card-results").innerHTML = results
-        .map((c) => h`<div class="card-row" data-add="${c.name}" style="cursor:pointer"><span class="name">${c.name}</span><span class="cost">${manaCostHtml(c.mana_cost)}</span></div>`)
-        .join("");
-      document.querySelectorAll("[data-add]").forEach((el) =>
-        el.addEventListener("click", async () => {
-          await api.addDeckCard(id, el.dataset.add, 1);
-          input.value = "";
-          document.getElementById("add-card-results").innerHTML = "";
-          renderDeckDetail([idStr]);
-        })
-      );
-    }, 250);
+  // Remembers whether the synergy panel was expanded, so re-rendering the page (e.g. after
+  // adding a card) doesn't snap it shut again if the user had it open.
+  document.getElementById("synergy-details")?.addEventListener("toggle", (e) => {
+    synergyPanelOpen = e.target.open;
   });
+
+  wireCardsToolbar(deck);
+  renderDeckCards(deck);
+}
+
+/** Sum of quantities across a group's cards — the count that belongs next to a group header.
+ * NOT cards.length: a group of "31x Swamp" is one distinct deck_cards row but 31 actual cards,
+ * and the header should say 31, not 1. */
+function groupQuantity(cards) {
+  return cards.reduce((s, c) => s + c.quantity, 0);
 }
 
 function renderDeckCards(deck) {
   const cardsWrap = document.getElementById("deck-cards");
-  const byType = filteredDeckByType(deck);
-  // Comandante has its own highlighted panel in the sidebar (see commanderPanelHtml) so it
-  // doesn't repeat inside the regular card list here.
-  const categories = CATEGORY_ORDER.filter((c) => c !== "Comandante" && byType[c]?.length);
+  // Comandante has its own highlighted panel in the top stats bar (see commanderPanelHtml) so
+  // every group-by mode excludes it from the regular card list here — see computeDeckGroups.
+  const { groups, groupKeys, groupLabel } = computeDeckGroups(deck);
 
-  if (!categories.length) {
+  if (!groupKeys.length) {
     cardsWrap.innerHTML = `<div class="empty-state">Nenhuma carta corresponde aos filtros atuais.</div>`;
     return;
   }
 
   if (deckViewMode === "grid") {
-    cardsWrap.innerHTML = categories
-      .map((cat) => {
-        const cards = byType[cat];
+    cardsWrap.innerHTML = groupKeys
+      .map((key) => {
+        const cards = groups[key];
         const tiles = cards
           .map((c) => h`
             <div class="mtg-card" data-card-view="${c.card_name}">
               ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
               <span class="qty-badge">${c.quantity}x</span>
-              ${cat !== "Comandante" ? `<button class="btn small secondary tile-remove" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>` : ""}
+              <button class="btn small secondary tile-remove" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>
             </div>`)
           .join("");
-        return `<div class="category-block"><h4>${CATEGORY_LABELS[cat] || cat} <span class="n">(${cards.length})</span></h4><div class="card-grid">${tiles}</div></div>`;
+        return `<div class="category-block"><h4>${groupLabel(key)} <span class="n">(${groupQuantity(cards)})</span></h4><div class="card-grid">${tiles}</div></div>`;
       })
       .join("");
   } else if (deckViewMode === "stack") {
     // Columns side by side (not one category block under another) so the whole deck
     // fits in a single scroll instead of a long vertical chain of separate stacks.
-    cardsWrap.innerHTML = `<div class="stack-columns">${categories
-      .map((cat) => {
-        const cards = byType[cat];
+    cardsWrap.innerHTML = `<div class="stack-columns">${groupKeys
+      .map((key) => {
+        const cards = groups[key];
         const items = cards
           .map((c) => h`
             <div class="stack-item" data-card-view="${c.card_name}">
               ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
-              ${cat !== "Comandante" ? `<button class="btn small secondary tile-remove" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>` : ""}
+              <button class="btn small secondary tile-remove" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>
             </div>`)
           .join("");
-        return `<div class="category-block"><h4>${CATEGORY_LABELS[cat] || cat} <span class="n">(${cards.length})</span></h4><div class="card-stack">${items}</div></div>`;
+        return `<div class="category-block"><h4>${groupLabel(key)} <span class="n">(${groupQuantity(cards)})</span></h4><div class="card-stack">${items}</div></div>`;
       })
       .join("")}</div>`;
   } else {
-    cardsWrap.innerHTML = categories
-      .map((cat) => {
-        const cards = byType[cat];
+    cardsWrap.innerHTML = groupKeys
+      .map((key) => {
+        const cards = groups[key];
         const rows = cards
           .map((c) => {
             // Widely-reused staples (basic lands, ramp, etc.) can be "shared" with a dozen other
@@ -1165,11 +1508,11 @@ function renderDeckCards(deck) {
                 <span class="name" data-card-view="${c.card_name}" style="cursor:pointer">${c.card_name}</span>
                 ${sharedTag}
                 <span class="cost">${manaCostHtml(c.mana_cost)}</span>
-                ${cat !== "Comandante" ? `<button class="btn small secondary" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>` : ""}
+                <button class="btn small secondary" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>
               </div>`;
           })
           .join("");
-        return `<div class="category-block"><h4>${CATEGORY_LABELS[cat] || cat} <span class="n">(${cards.length})</span></h4>${rows}</div>`;
+        return `<div class="category-block"><h4>${groupLabel(key)} <span class="n">(${groupQuantity(cards)})</span></h4>${rows}</div>`;
       })
       .join("");
   }
@@ -1188,12 +1531,14 @@ function renderDeckCards(deck) {
   );
 }
 
-/** Pulled out of the main card list into its own highlighted sidebar panel, above the mana
- * curve, so the commander (or commander pair, for partners) stands out from the rest of the
- * deck while browsing instead of blending into the first category block. */
+/** Pulled out of the main card list into its own highlighted panel in the top stats bar, next to
+ * the mana curve, so the commander (or commander pair, for partners) stands out from the rest of
+ * the deck while browsing instead of blending into the first category block. */
 function commanderPanelHtml(deck) {
   const commanders = deck.by_type["Comandante"] || [];
   if (!commanders.length) return "";
+  // Deck tags show next to the deck name in the page header on this page (see renderDeckDetail)
+  // — only the "Meus Decks" thumbnails overlay them on the art itself.
   const cards = commanders
     .map((c) => h`
       <div class="commander-card" data-card-view="${c.card_name}">
@@ -1206,8 +1551,7 @@ function commanderPanelHtml(deck) {
       </div>`)
     .join("");
   return h`
-    <div class="sidebar-panel commander-panel" style="margin-bottom:16px">
-      <h3>Comandante${commanders.length > 1 ? "s" : ""}</h3>
+    <div class="stats-bar-panel commander-panel">
       <div class="commander-list">${cards}</div>
     </div>`;
 }
@@ -1215,7 +1559,7 @@ function commanderPanelHtml(deck) {
 function synergyPanelHtml(synergy, ownershipMap) {
   if (!synergy.cached) {
     return `
-      <div class="sidebar-panel" style="margin-top:16px">
+      <div class="stats-bar-panel">
         <h3>Sinergia (EDHREC)</h3>
         <div class="empty-state" style="padding:20px 10px 10px">Sem cache do EDHREC para este comandante ainda.</div>
         <button class="btn" id="fetch-synergy-btn" style="width:100%">Buscar sinergia agora</button>
@@ -1236,12 +1580,29 @@ function synergyPanelHtml(synergy, ownershipMap) {
         </div>`;
     })
     .join("");
-  const similar = (synergy.similar_commanders || []).slice(0, 5).map((s) => `<span class="chip">${s}</span>`).join(" ");
+  // Collapsed by default (see synergyPanelOpen) — useful when you want it, but not something
+  // you need staring at you every time you open a deck, so <details>/<summary> keeps it one
+  // click away instead of always taking up space in the top stats bar.
   return h`
-    <div class="sidebar-panel" style="margin-top:16px">
-      <h3>Sugestões de sinergia — ainda não no deck</h3>
-      ${recs || '<div class="empty-state" style="padding:10px">Nada fora do deck nas categorias de alta sinergia.</div>'}
-      ${similar ? `<h3 style="margin-top:16px">Comandantes parecidos</h3><div style="display:flex;flex-wrap:wrap;gap:6px">${similar}</div>` : ""}
+    <details class="stats-bar-panel synergy-panel" id="synergy-details" ${synergyPanelOpen ? "open" : ""}>
+      <summary>Cards relacionados</summary>
+      <div class="synergy-body">
+        ${recs || '<div class="empty-state" style="padding:10px">Nada fora do deck nas categorias de alta sinergia.</div>'}
+      </div>
+    </details>`;
+}
+
+/** "Comandantes parecidos" — split out of the synergy panel above and rendered as its own panel
+ * right underneath it (see the .stats-bar-col wrapper in renderDeckDetail), since it's a
+ * different kind of suggestion (whole other commanders, not cards to add to this deck). */
+function similarCommandersPanelHtml(synergy) {
+  if (!synergy.cached) return "";
+  const similar = (synergy.similar_commanders || []).slice(0, 5).map((s) => `<span class="chip">${s}</span>`).join(" ");
+  if (!similar) return "";
+  return h`
+    <div class="stats-bar-panel">
+      <h3>Comandantes parecidos</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${similar}</div>
     </div>`;
 }
 
