@@ -209,20 +209,34 @@ def list_decks():
         losses = con.execute(
             "SELECT COUNT(*) FROM games WHERE deck_id = ? AND result = 'derrota'", (d["id"],)
         ).fetchone()[0]
-        def _art_crop(commander_name):
+        def _card_row(commander_name):
             if cdb is None or not commander_name:
                 return None
-            c = cdb.execute("SELECT image_uri FROM cards WHERE name = ? COLLATE NOCASE", (commander_name,)).fetchone()
+            c = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (commander_name,)).fetchone()
             if not c:
-                c = cdb.execute("SELECT image_uri FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{commander_name}%",)).fetchone()
-            # art_crop shows just the illustration (no card frame) — right fit for a small tile thumbnail
-            return c["image_uri"].replace("/normal/", "/art_crop/") if c and c["image_uri"] else None
+                c = cdb.execute("SELECT * FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{commander_name}%",)).fetchone()
+            return c
 
-        commander_image = _art_crop(d["commander_name"])
-        commander_image_2 = _art_crop(d["commander_name_2"]) if "commander_name_2" in d.keys() else None
+        def _art_crop(row):
+            # art_crop shows just the illustration (no card frame) — right fit for a small tile thumbnail
+            return row["image_uri"].replace("/normal/", "/art_crop/") if row and row["image_uri"] else None
+
+        commander_2_name = d["commander_name_2"] if "commander_name_2" in d.keys() else None
+        row1 = _card_row(d["commander_name"])
+        row2 = _card_row(commander_2_name)
+        commander_image = _art_crop(row1)
+        commander_image_2 = _art_crop(row2)
+        # Deck's overall color identity is just the commander(s)' combined identity — standard
+        # EDH convention, and cheap to compute here vs. scanning every card in the deck.
+        identity_letters = []
+        for row in (row1, row2):
+            if row and row["color_identity"]:
+                identity_letters += list(row["color_identity"])
+        color_identity = "".join(dict.fromkeys(l for l in "WUBRG" if l in identity_letters))
         out.append({
             **dict(d), "total_cards": total, "wins": wins, "losses": losses,
             "commander_image": commander_image, "commander_image_2": commander_image_2,
+            "color_identity": color_identity,
         })
     if cdb is not None:
         cdb.close()
