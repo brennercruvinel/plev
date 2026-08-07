@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS decks (
     name TEXT NOT NULL,
     commander_name TEXT NOT NULL,
     philosophy TEXT,
+    tags TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -20,7 +21,8 @@ CREATE TABLE IF NOT EXISTS deck_cards (
     deck_id INTEGER NOT NULL REFERENCES decks(id) ON DELETE CASCADE,
     card_name TEXT NOT NULL,
     quantity INTEGER NOT NULL DEFAULT 1,
-    is_commander INTEGER NOT NULL DEFAULT 0
+    is_commander INTEGER NOT NULL DEFAULT 0,
+    oracle_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS collection (
@@ -31,7 +33,8 @@ CREATE TABLE IF NOT EXISTS collection (
     quantity INTEGER NOT NULL DEFAULT 1,
     allocated_deck_id INTEGER REFERENCES decks(id) ON DELETE SET NULL,
     notes TEXT,
-    created_at TEXT DEFAULT (datetime('now'))
+    created_at TEXT DEFAULT (datetime('now')),
+    oracle_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS games (
@@ -83,6 +86,16 @@ def get_cards_db():
 MIGRATIONS = [
     ("collection", "artist", "ALTER TABLE collection ADD COLUMN artist TEXT"),
     ("decks", "commander_name_2", "ALTER TABLE decks ADD COLUMN commander_name_2 TEXT"),
+    # Distinguishes cards that share a printed name but are actually different game objects
+    # (e.g. "Phyrexian Hydra" the 5-mana creature vs. the token of the same name) — lets the
+    # deck/collection remember exactly which oracle_id was picked instead of always resolving
+    # an ambiguous name to whichever row the cards index happens to return first.
+    ("deck_cards", "oracle_id", "ALTER TABLE deck_cards ADD COLUMN oracle_id TEXT"),
+    ("collection", "oracle_id", "ALTER TABLE collection ADD COLUMN oracle_id TEXT"),
+    # Free-text, comma-separated custom labels the owner assigns per deck (e.g. "Competitivo,
+    # Orçamento baixo") — purely descriptive, no relation to the EDHREC card tags used for
+    # grouping cards within a single deck (see the /decks/{id}/tags endpoint in server.py).
+    ("decks", "tags", "ALTER TABLE decks ADD COLUMN tags TEXT"),
 ]
 
 
