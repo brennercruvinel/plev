@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=18";
-import { renderScanner } from "./scanner.js?v=18";
-import { activityIcon, manaCostHtml, manaGlyphSvg } from "./icons.js?v=18";
+import { api } from "./api.js?v=19";
+import { renderScanner } from "./scanner.js?v=19";
+import { activityIcon, manaCostHtml, manaGlyphSvg } from "./icons.js?v=19";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -29,7 +29,13 @@ async function navigate() {
     mainEl.innerHTML = `<div class="empty-state">Erro: ${err.message}</div>`;
     console.error(err);
   }
-  renderNavDecksList(route === "deck" ? rest[0] : null);
+  // Sub-item lists (currently just the deck list under "Meus Decks") stay hidden unless
+  // you're actually browsing that section — no point showing every deck name while you're
+  // on the Scanner or Coleção pages. Same "visible" toggle pattern would apply to any
+  // future sidebar sub-list.
+  const onDecksSection = route === "decks" || route === "deck";
+  document.getElementById("nav-decks-list")?.classList.toggle("visible", onDecksSection);
+  if (onDecksSection) renderNavDecksList(route === "deck" ? rest[0] : null);
 }
 
 // Deck sub-list under "Meus Decks" in the sidebar — lets you jump straight to any deck
@@ -644,7 +650,14 @@ const CATEGORY_LABELS = {
   Instant: "Instantâneas", Sorcery: "Feitiços", Artifact: "Artefatos",
   Enchantment: "Encantamentos", Planeswalker: "Planeswalker", Outro: "Outro",
 };
-const CATEGORY_ORDER = ["Comandante", "Land", "Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker", "Outro"];
+const CATEGORY_ORDER = ["Comandante", "Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker", "Outro", "Land"];
+// Short labels just for the type filter chips — the full CATEGORY_LABELS names (used for section
+// headers) run long enough that six of them plus the color/CMC rows push the filter bar to wrap
+// across several lines; these abbreviations keep the whole bar closer to a single line.
+const FILTER_TYPE_LABELS = {
+  Land: "Terreno", Creature: "Criatura", Instant: "Inst.", Sorcery: "Feit.",
+  Artifact: "Art.", Enchantment: "Enc.", Planeswalker: "PW", Outro: "Outro",
+};
 // Filterable by the type chips — the commander(s) are always shown regardless of filters, so this
 // list intentionally excludes "Comandante": losing sight of your own commander via a filter would be confusing.
 const FILTERABLE_TYPES = CATEGORY_ORDER.filter((c) => c !== "Comandante");
@@ -718,7 +731,7 @@ function filteredDeckByType(deck) {
 
 function deckFilterBarHtml() {
   const typeChips = FILTERABLE_TYPES.map(
-    (t) => `<span class="chip ${deckFilters.types.has(t) ? "active" : ""}" data-deck-type="${t}">${CATEGORY_LABELS[t]}</span>`
+    (t) => `<span class="chip type-chip ${deckFilters.types.has(t) ? "active" : ""}" data-deck-type="${t}" title="${CATEGORY_LABELS[t]}">${FILTER_TYPE_LABELS[t]}</span>`
   ).join("");
   const colorChips = Object.entries(FILTER_COLORS)
     .map(([c, bg]) => {
@@ -930,16 +943,22 @@ async function renderDeckDetail([idStr]) {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
       btn.disabled = true;
-      btn.textContent = "Adicionando…";
+      btn.textContent = "…";
       try {
         await api.addDeckCard(id, btn.dataset.addSynergy, 1);
         renderDeckDetail([idStr]);
       } catch (err) {
         console.error(err);
         btn.disabled = false;
-        btn.textContent = "Falhou — tentar de novo";
+        btn.textContent = "✕";
       }
     })
+  );
+
+  // Synergy suggestion names weren't wired to the card preview modal (that wiring is scoped
+  // to the deck card list below) — the sidebar panel needs its own click handler.
+  document.querySelectorAll(".synergy-item [data-card-view]").forEach((el) =>
+    el.addEventListener("click", () => showCardModal(el.dataset.cardView))
   );
 
   wireDeckFilterBar(deck);
@@ -1065,7 +1084,7 @@ function synergyPanelHtml(synergy, ownershipMap) {
           <div class="meta">
             sinergia ${r.synergy >= 0 ? "+" : ""}${r.synergy?.toFixed(2)} · ${r.num_decks?.toLocaleString("pt-BR")} decks
             <span class="own-tag ${tag.cls}">${tag.label}</span>
-            <button class="btn small secondary" data-add-synergy="${r.name}" style="margin-left:auto">+ Adicionar</button>
+            <button class="btn small secondary synergy-add-btn" data-add-synergy="${r.name}" title="Adicionar ao deck" style="margin-left:auto">+</button>
           </div>
         </div>`;
     })
