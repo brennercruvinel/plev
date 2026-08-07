@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=19";
-import { renderScanner } from "./scanner.js?v=19";
-import { activityIcon, manaCostHtml, manaGlyphSvg } from "./icons.js?v=19";
+import { api } from "./api.js?v=20";
+import { renderScanner } from "./scanner.js?v=20";
+import { activityIcon, manaCostHtml, manaGlyphSvg } from "./icons.js?v=20";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -748,17 +748,25 @@ function deckFilterBarHtml() {
 
   return h`
     <div class="filters-bar" id="deck-filters">
-      <input type="text" id="deck-filter-q" placeholder="Buscar carta no deck…" value="${deckFilters.q}">
+      <div class="search-collapse ${deckFilters.q ? "expanded" : ""}" id="deck-search-wrap">
+        <button type="button" class="search-icon-btn" id="deck-search-toggle" title="Buscar carta" aria-label="Buscar carta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <input type="text" id="deck-filter-q" class="search-collapse-input" placeholder="Buscar carta no deck…" value="${deckFilters.q}">
+      </div>
       <div class="filter-group"><span class="filter-group-label">Tipo</span>${typeChips}</div>
       <div class="filter-group"><span class="filter-group-label">Cor</span>${colorChips}</div>
       <div class="filter-group"><span class="filter-group-label">CMC</span>${cmcChips}</div>
-      <select id="deck-sort">
-        <option value="name" ${deckFilters.sort === "name" ? "selected" : ""}>Nome (A-Z)</option>
-        <option value="cmc-asc" ${deckFilters.sort === "cmc-asc" ? "selected" : ""}>Custo de mana ↑</option>
-        <option value="cmc-desc" ${deckFilters.sort === "cmc-desc" ? "selected" : ""}>Custo de mana ↓</option>
-        <option value="price-desc" ${deckFilters.sort === "price-desc" ? "selected" : ""}>Preço ↓</option>
-        <option value="qty-desc" ${deckFilters.sort === "qty-desc" ? "selected" : ""}>Quantidade ↓</option>
-      </select>
+      <div class="sort-icon-wrap" title="Ordenar">
+        <span class="sort-icon-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg></span>
+        <select id="deck-sort" class="sort-icon-select" aria-label="Ordenar">
+          <option value="name" ${deckFilters.sort === "name" ? "selected" : ""}>Nome (A-Z)</option>
+          <option value="cmc-asc" ${deckFilters.sort === "cmc-asc" ? "selected" : ""}>Custo de mana ↑</option>
+          <option value="cmc-desc" ${deckFilters.sort === "cmc-desc" ? "selected" : ""}>Custo de mana ↓</option>
+          <option value="price-desc" ${deckFilters.sort === "price-desc" ? "selected" : ""}>Preço ↓</option>
+          <option value="qty-desc" ${deckFilters.sort === "qty-desc" ? "selected" : ""}>Quantidade ↓</option>
+        </select>
+      </div>
       ${deckFiltersActive() ? `<button class="btn small secondary" id="deck-filter-clear">Limpar filtros</button>` : ""}
     </div>`;
 }
@@ -772,6 +780,27 @@ function wireDeckFilterBar(deck) {
       deckFilters.q = qInput.value.trim();
       renderDeckCards(deck);
     }, 200);
+  });
+
+  // Search starts as a bare icon and only grows into a text field once you actually mean to use
+  // it — collapses back down on blur if left empty, but stays open while a search term is active
+  // (or while focused) so you're not fighting the field to type something in.
+  const searchWrap = document.getElementById("deck-search-wrap");
+  const searchToggle = document.getElementById("deck-search-toggle");
+  searchToggle.addEventListener("click", () => {
+    searchWrap.classList.add("expanded");
+    qInput.focus();
+  });
+  qInput.addEventListener("blur", () => {
+    if (!qInput.value.trim()) searchWrap.classList.remove("expanded");
+  });
+  qInput.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    qInput.value = "";
+    deckFilters.q = "";
+    searchWrap.classList.remove("expanded");
+    qInput.blur();
+    renderDeckCards(deck);
   });
 
   document.querySelectorAll("[data-deck-type]").forEach((chip) =>
@@ -878,6 +907,7 @@ async function renderDeckDetail([idStr]) {
     <div class="builder-layout">
       <div id="deck-cards"></div>
       <div>
+        ${commanderPanelHtml(deck)}
         <div class="sidebar-panel" style="margin-bottom:16px">
           <h3>Curva de mana</h3>
           <div class="curve-bars">
@@ -960,6 +990,10 @@ async function renderDeckDetail([idStr]) {
   document.querySelectorAll(".synergy-item [data-card-view]").forEach((el) =>
     el.addEventListener("click", () => showCardModal(el.dataset.cardView))
   );
+  // Same deal for the commander panel, now that it lives outside the main card list.
+  document.querySelectorAll(".commander-card[data-card-view]").forEach((el) =>
+    el.addEventListener("click", () => showCardModal(el.dataset.cardView))
+  );
 
   wireDeckFilterBar(deck);
   renderDeckCards(deck);
@@ -990,7 +1024,9 @@ async function renderDeckDetail([idStr]) {
 function renderDeckCards(deck) {
   const cardsWrap = document.getElementById("deck-cards");
   const byType = filteredDeckByType(deck);
-  const categories = CATEGORY_ORDER.filter((c) => byType[c]?.length);
+  // Comandante has its own highlighted panel in the sidebar (see commanderPanelHtml) so it
+  // doesn't repeat inside the regular card list here.
+  const categories = CATEGORY_ORDER.filter((c) => c !== "Comandante" && byType[c]?.length);
 
   if (!categories.length) {
     cardsWrap.innerHTML = `<div class="empty-state">Nenhuma carta corresponde aos filtros atuais.</div>`;
@@ -1063,6 +1099,30 @@ function renderDeckCards(deck) {
   cardsWrap.querySelectorAll("[data-card-view]").forEach((el) =>
     el.addEventListener("click", () => showCardModal(el.dataset.cardView))
   );
+}
+
+/** Pulled out of the main card list into its own highlighted sidebar panel, above the mana
+ * curve, so the commander (or commander pair, for partners) stands out from the rest of the
+ * deck while browsing instead of blending into the first category block. */
+function commanderPanelHtml(deck) {
+  const commanders = deck.by_type["Comandante"] || [];
+  if (!commanders.length) return "";
+  const cards = commanders
+    .map((c) => h`
+      <div class="commander-card" data-card-view="${c.card_name}">
+        ${c.image_uri ? `<img src="${c.image_uri}" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
+        <div class="commander-info">
+          <div class="commander-name">${c.card_name}</div>
+          <div class="commander-type">${c.type_line || ""}</div>
+          <div class="commander-cost">${manaCostHtml(c.mana_cost)}</div>
+        </div>
+      </div>`)
+    .join("");
+  return h`
+    <div class="sidebar-panel commander-panel" style="margin-bottom:16px">
+      <h3>Comandante${commanders.length > 1 ? "s" : ""}</h3>
+      <div class="commander-list">${cards}</div>
+    </div>`;
 }
 
 function synergyPanelHtml(synergy, ownershipMap) {
