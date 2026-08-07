@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=16";
-import { renderScanner } from "./scanner.js?v=16";
-import { activityIcon, manaCostHtml } from "./icons.js?v=16";
+import { api } from "./api.js?v=17";
+import { renderScanner } from "./scanner.js?v=17";
+import { activityIcon, manaCostHtml } from "./icons.js?v=17";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -899,6 +899,23 @@ async function renderDeckDetail([idStr]) {
     })
   );
 
+  // Synergy suggestions can be added straight to the deck — no need to retype the name in "Adicionar carta".
+  document.querySelectorAll("[data-add-synergy]").forEach((btn) =>
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      btn.disabled = true;
+      btn.textContent = "Adicionando…";
+      try {
+        await api.addDeckCard(id, btn.dataset.addSynergy, 1);
+        renderDeckDetail([idStr]);
+      } catch (err) {
+        console.error(err);
+        btn.disabled = false;
+        btn.textContent = "Falhou — tentar de novo";
+      }
+    })
+  );
+
   wireDeckFilterBar(deck);
   renderDeckCards(deck);
 
@@ -951,7 +968,9 @@ function renderDeckCards(deck) {
       })
       .join("");
   } else if (deckViewMode === "stack") {
-    cardsWrap.innerHTML = categories
+    // Columns side by side (not one category block under another) so the whole deck
+    // fits in a single scroll instead of a long vertical chain of separate stacks.
+    cardsWrap.innerHTML = `<div class="stack-columns">${categories
       .map((cat) => {
         const cards = byType[cat];
         const items = cards
@@ -964,7 +983,7 @@ function renderDeckCards(deck) {
           .join("");
         return `<div class="category-block"><h4>${CATEGORY_LABELS[cat] || cat} <span class="n">(${cards.length})</span></h4><div class="card-stack">${items}</div></div>`;
       })
-      .join("");
+      .join("")}</div>`;
   } else {
     cardsWrap.innerHTML = categories
       .map((cat) => {
@@ -1020,6 +1039,7 @@ function synergyPanelHtml(synergy, ownershipMap) {
           <div class="meta">
             sinergia ${r.synergy >= 0 ? "+" : ""}${r.synergy?.toFixed(2)} · ${r.num_decks?.toLocaleString("pt-BR")} decks
             <span class="own-tag ${tag.cls}">${tag.label}</span>
+            <button class="btn small secondary" data-add-synergy="${r.name}" style="margin-left:auto">+ Adicionar</button>
           </div>
         </div>`;
     })
