@@ -18,7 +18,7 @@ import sys
 import unicodedata
 from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from db import get_app_db, get_cards_db, init_db, log_activity  # noqa: E402
 import data_update  # noqa: E402
 import deck_wizard  # noqa: E402
+import decklist_import  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 EDHREC_CACHE = os.path.join(os.path.dirname(HERE), "data", "edhrec")
@@ -47,14 +48,11 @@ def card_row_to_dict(r):
     return d
 
 
-def lookup_card(name: str):
-    """Finds a card by name (exact English, exact Portuguese, or approximate)."""
-    cdb = get_cards_db()
-    if cdb is None:
-        return None, "sem base de cartas — use 'Atualizar base de dados' na Visão Geral"
+def _lookup_card_in(cdb, name: str):
+    """Same matching rules as lookup_card(), but reuses an already-open cards
+    connection — used by decklist import, which looks up many names in a row."""
     r = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (name,)).fetchone()
     if r:
-        cdb.close()
         return card_row_to_dict(r), "exata"
     row = cdb.execute(
         "SELECT DISTINCT oracle_id FROM names_pt WHERE printed_name = ? COLLATE NOCASE", (name,)
@@ -62,14 +60,21 @@ def lookup_card(name: str):
     if len(row) == 1:
         r = cdb.execute("SELECT * FROM cards WHERE oracle_id = ?", (row[0]["oracle_id"],)).fetchone()
         if r:
-            cdb.close()
             return card_row_to_dict(r), "exata (nome em português)"
     r = cdb.execute("SELECT * FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"%{name}%",)).fetchone()
     if r:
-        cdb.close()
         return card_row_to_dict(r), "aproximada"
-    cdb.close()
     return None, None
+
+
+def lookup_card(name: str):
+    """Finds a card by name (exact English, exact Portuguese, or approximate)."""
+    cdb = get_cards_db()
+    if cdb is None:
+        return None, "sem base de cartas — use 'Atualizar base de dados' na Visão Geral"
+    result = _lookup_card_in(cdb, name)
+    cdb.close()
+    return result
 
 
 # ------------------------------------------------------------------ cards ----
@@ -204,14 +209,35 @@ def list_decks():
         losses = con.execute(
             "SELECT COUNT(*) FROM games WHERE deck_id = ? AND result = 'derrota'", (d["id"],)
         ).fetchone()[0]
-        commander_image = None
-        if cdb is not None:
-            c = cdb.execute("SELECT image_uri FROM cards WHERE name = ? COLLATE NOCASE", (d["commander_name"],)).fetchone()
+        def _card_row(commander_name):
+            if cdb is None or not commander_name:
+                return None
+            c = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (commander_name,)).fetchone()
             if not c:
-                c = cdb.execute("SELECT image_uri FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{d['commander_name']}%",)).fetchone()
+                c = cdb.execute("SELECT * FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{commander_name}%",)).fetchone()
+            return c
+
+        def _art_crop(row):
             # art_crop shows just the illustration (no card frame) — right fit for a small tile thumbnail
-            commander_image = c["image_uri"].replace("/normal/", "/art_crop/") if c and c["image_uri"] else None
-        out.append({**dict(d), "total_cards": total, "wins": wins, "losses": losses, "commander_image": commander_image})
+            return row["image_uri"].replace("/normal/", "/art_crop/") if row and row["image_uri"] else None
+
+        commander_2_name = d["commander_name_2"] if "commander_name_2" in d.keys() else None
+        row1 = _card_row(d["commander_name"])
+        row2 = _card_row(commander_2_name)
+        commander_image = _art_crop(row1)
+        commander_image_2 = _art_crop(row2)
+        # Deck's overall color identity is just the commander(s)' combined identity — standard
+        # EDH convention, and cheap to compute here vs. scanning every card in the deck.
+        identity_letters = []
+        for row in (row1, row2):
+            if row and row["color_identity"]:
+                identity_letters += list(row["color_identity"])
+        color_identity = "".join(dict.fromkeys(l for l in "WUBRG" if l in identity_letters))
+        out.append({
+            **dict(d), "total_cards": total, "wins": wins, "losses": losses,
+            "commander_image": commander_image, "commander_image_2": commander_image_2,
+            "color_identity": color_identity,
+        })
     if cdb is not None:
         cdb.close()
     con.close()
@@ -221,25 +247,95 @@ def list_decks():
 class DeckIn(BaseModel):
     name: str
     commander_name: str
+    commander_name_2: Optional[str] = None  # partner / background co-commander, if any
     philosophy: Optional[str] = None
 
 
 @app.post("/api/decks")
 def create_deck(payload: DeckIn):
     con = get_app_db()
+    commander_2 = (payload.commander_name_2 or "").strip() or None
     cur = con.execute(
-        "INSERT INTO decks (name, commander_name, philosophy) VALUES (?, ?, ?)",
-        (payload.name, payload.commander_name, payload.philosophy),
+        "INSERT INTO decks (name, commander_name, commander_name_2, philosophy) VALUES (?, ?, ?, ?)",
+        (payload.name, payload.commander_name, commander_2, payload.philosophy),
     )
     deck_id = cur.lastrowid
     con.execute(
         "INSERT INTO deck_cards (deck_id, card_name, quantity, is_commander) VALUES (?, ?, 1, 1)",
         (deck_id, payload.commander_name),
     )
-    log_activity(con, "deck_built", f"Deck {payload.name} criado (comandante: {payload.commander_name})")
+    if commander_2:
+        con.execute(
+            "INSERT INTO deck_cards (deck_id, card_name, quantity, is_commander) VALUES (?, ?, 1, 1)",
+            (deck_id, commander_2),
+        )
+    label = payload.commander_name + (f" + {commander_2}" if commander_2 else "")
+    log_activity(con, "deck_built", f"Deck {payload.name} criado (comandante: {label})")
     con.commit()
     con.close()
     return {"ok": True, "id": deck_id}
+
+
+class DeckEditIn(BaseModel):
+    name: str
+    commander_name: str
+    commander_name_2: Optional[str] = None
+    philosophy: Optional[str] = None
+
+
+@app.put("/api/decks/{deck_id}")
+def update_deck(deck_id: int, payload: DeckEditIn):
+    """Renames a deck and/or swaps its commander(s) — how the UI lets you add a
+    partner commander, replace one, or drop a partner after the fact.
+
+    Reconciles the deck_cards rows flagged is_commander=1 to match the new
+    commander set: cards that stop being a commander lose the flag's row
+    entirely (unless already added as a normal spell, in which case it's just
+    unflagged), and newly-named commanders get a 1-copy row if not already present.
+    """
+    con = get_app_db()
+    deck = con.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
+    if not deck:
+        con.close()
+        raise HTTPException(404, "Deck não encontrado")
+
+    new_c1 = payload.commander_name.strip()
+    new_c2 = (payload.commander_name_2 or "").strip() or None
+    if not new_c1:
+        con.close()
+        raise HTTPException(400, "Comandante principal é obrigatório.")
+
+    old_set = {n for n in (deck["commander_name"], deck["commander_name_2"] if "commander_name_2" in deck.keys() else None) if n}
+    new_set = {n for n in (new_c1, new_c2) if n}
+
+    con.execute(
+        "UPDATE decks SET name = ?, philosophy = ?, commander_name = ?, commander_name_2 = ? WHERE id = ?",
+        (payload.name, payload.philosophy, new_c1, new_c2, deck_id),
+    )
+
+    for old_name in old_set - new_set:
+        con.execute(
+            "DELETE FROM deck_cards WHERE deck_id = ? AND card_name = ? COLLATE NOCASE AND is_commander = 1",
+            (deck_id, old_name),
+        )
+    for new_name in new_set - old_set:
+        existing = con.execute(
+            "SELECT id FROM deck_cards WHERE deck_id = ? AND card_name = ? COLLATE NOCASE",
+            (deck_id, new_name),
+        ).fetchone()
+        if existing:
+            con.execute("UPDATE deck_cards SET is_commander = 1 WHERE id = ?", (existing["id"],))
+        else:
+            con.execute(
+                "INSERT INTO deck_cards (deck_id, card_name, quantity, is_commander) VALUES (?, ?, 1, 1)",
+                (deck_id, new_name),
+            )
+
+    label = new_c1 + (f" + {new_c2}" if new_c2 else "")
+    log_activity(con, "deck_built", f"Deck {payload.name} editado (comandante: {label})")
+    con.commit()
+    con.close()
+    return {"ok": True}
 
 
 class DeckAutoBuildIn(BaseModel):
@@ -320,6 +416,7 @@ def get_deck(deck_id: int):
             "mana_cost": info.get("mana_cost"), "type_line": info.get("type_line"),
             "image_uri": info.get("image_uri"), "cmc": info.get("cmc"),
             "price_usd": info.get("price_usd"), "edhrec_rank": info.get("edhrec_rank"),
+            "colors": info.get("colors"), "color_identity": info.get("color_identity"),
             "shared_with": other_map.get(dc["card_name"], []),
         }
         by_type.setdefault(cat, []).append(entry)
@@ -378,9 +475,143 @@ def remove_deck_card(deck_id: int, card_id: int):
     return {"ok": True}
 
 
+# ---------------------------------------------------------- decklist import ----
+# Paste from Moxfield/Archidekt/plain text, or upload a .txt/.csv/.xlsx file.
+# Two-step flow: /import/preview(-file) parses + matches against the local
+# index without writing anything; /import/commit writes only what the user
+# confirmed. Never silently adds a card the parser merely guessed at.
+
+def _match_entries(entries):
+    cdb = get_cards_db()
+    matched, not_found = [], []
+    seen = {}
+    for qty, name in entries:
+        key = name.lower()
+        if key in seen:
+            seen[key]["quantity"] += qty
+            continue
+        if cdb is None:
+            item = {"requested_name": name, "quantity": qty}
+            not_found.append(item)
+            seen[key] = item
+            continue
+        card, how = _lookup_card_in(cdb, name)
+        if card:
+            item = {
+                "name": card["name"], "quantity": qty, "requested_name": name, "match_type": how,
+                "mana_cost": card.get("mana_cost"), "type_line": card.get("type_line"),
+                "image_uri": card.get("image_uri"),
+            }
+            matched.append(item)
+        else:
+            item = {"requested_name": name, "quantity": qty}
+            not_found.append(item)
+        seen[key] = item
+    if cdb is not None:
+        cdb.close()
+    return {"matched": matched, "not_found": not_found, "total_lines": len(entries)}
+
+
+class ImportPreviewIn(BaseModel):
+    text: str
+
+
+@app.post("/api/decks/{deck_id}/import/preview")
+def import_preview(deck_id: int, payload: ImportPreviewIn):
+    con = get_app_db()
+    deck = con.execute("SELECT id FROM decks WHERE id = ?", (deck_id,)).fetchone()
+    con.close()
+    if not deck:
+        raise HTTPException(404, "Deck não encontrado")
+    entries = decklist_import.parse_text(payload.text)
+    if not entries:
+        raise HTTPException(400, "Não encontrei nenhuma carta reconhecível no texto colado.")
+    return _match_entries(entries)
+
+
+@app.post("/api/decks/{deck_id}/import/preview-file")
+async def import_preview_file(deck_id: int, file: UploadFile = File(...)):
+    con = get_app_db()
+    deck = con.execute("SELECT id FROM decks WHERE id = ?", (deck_id,)).fetchone()
+    con.close()
+    if not deck:
+        raise HTTPException(404, "Deck não encontrado")
+    raw = await file.read()
+    fname = (file.filename or "").lower()
+    try:
+        if fname.endswith(".xlsx"):
+            entries = decklist_import.parse_xlsx(raw)
+        elif fname.endswith(".csv"):
+            entries = decklist_import.parse_csv(raw.decode("utf-8", errors="replace"))
+        else:
+            entries = decklist_import.parse_text(raw.decode("utf-8", errors="replace"))
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))
+    if not entries:
+        raise HTTPException(400, "Não encontrei nenhuma carta reconhecível no arquivo.")
+    return _match_entries(entries)
+
+
+class ImportCommitIn(BaseModel):
+    cards: List[DeckCardIn]
+    mode: str = "merge"  # "merge" adds/increments; "replace" clears non-commander cards first
+
+
+@app.post("/api/decks/{deck_id}/import/commit")
+def import_commit(deck_id: int, payload: ImportCommitIn):
+    con = get_app_db()
+    deck = con.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
+    if not deck:
+        con.close()
+        raise HTTPException(404, "Deck não encontrado")
+
+    if payload.mode == "replace":
+        con.execute("DELETE FROM deck_cards WHERE deck_id = ? AND is_commander = 0", (deck_id,))
+
+    added = 0
+    for card in payload.cards:
+        if not card.card_name.strip():
+            continue
+        existing = con.execute(
+            "SELECT id, quantity FROM deck_cards WHERE deck_id = ? AND card_name = ? COLLATE NOCASE AND is_commander = 0",
+            (deck_id, card.card_name),
+        ).fetchone()
+        if existing:
+            con.execute("UPDATE deck_cards SET quantity = quantity + ? WHERE id = ?", (card.quantity, existing["id"]))
+        else:
+            con.execute(
+                "INSERT INTO deck_cards (deck_id, card_name, quantity, is_commander) VALUES (?, ?, ?, 0)",
+                (deck_id, card.card_name, card.quantity),
+            )
+        con.execute(
+            "INSERT INTO collection (card_name, lang, quantity, allocated_deck_id, notes) VALUES (?, 'en', ?, ?, 'Importado via decklist')",
+            (card.card_name, card.quantity, deck_id),
+        )
+        added += card.quantity
+
+    mode_label = "substituindo cartas existentes" if payload.mode == "replace" else "mesclado com o deck atual"
+    log_activity(con, "card_added_deck", f"{added} carta(s) importada(s) para o deck {deck['name']} ({mode_label})")
+    con.commit()
+    con.close()
+    return {"ok": True, "added": added}
+
+
+def _deck_commanders(deck):
+    names = [deck["commander_name"]]
+    c2 = deck["commander_name_2"] if "commander_name_2" in deck.keys() else None
+    if c2:
+        names.append(c2)
+    return names
+
+
 @app.get("/api/decks/{deck_id}/synergy")
 def deck_synergy(deck_id: int):
-    """Cached EDHREC synergy for this deck's commander — 100% offline (local file)."""
+    """Cached EDHREC synergy for this deck's commander(s) — 100% offline (local file).
+
+    With a partner/background pair, synergy from both commanders' cached pages
+    is merged (best synergy score kept per card) so recommendations reflect
+    the whole command zone, not just the first-listed commander.
+    """
     con = get_app_db()
     deck = con.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
     current_cards = {r["card_name"] for r in con.execute(
@@ -390,38 +621,59 @@ def deck_synergy(deck_id: int):
     if not deck:
         raise HTTPException(404, "Deck não encontrado")
 
-    slug = slugify(deck["commander_name"])
-    path = os.path.join(EDHREC_CACHE, "commanders", f"{slug}.json")
-    if not os.path.exists(path):
-        return {"cached": False, "message": "Sem cache do EDHREC para este comandante. "
-                                              f"Rode: ./edhrec.py fetch \"{deck['commander_name']}\""}
     import json
-    data = json.load(open(path, encoding="utf-8"))
-    cardlists = data.get("container", {}).get("json_dict", {}).get("cardlists", [])
-    high_synergy = []
-    for cl in cardlists:
-        if "High Synergy" in cl.get("header", "") or "Top Cards" in cl.get("header", ""):
-            for v in cl.get("cardviews", []):
-                if v["name"] not in current_cards:
-                    high_synergy.append({
-                        "name": v["name"], "synergy": v.get("synergy"), "num_decks": v.get("num_decks"),
-                        "already_owned": v["name"] in current_cards,
-                    })
-    similar = data.get("similar") or []
-    return {"cached": True, "recommendations": high_synergy[:15], "similar_commanders": similar}
+    commanders = _deck_commanders(deck)
+    missing = []
+    merged = {}
+    similar_all = []
+    for name in commanders:
+        slug = slugify(name)
+        path = os.path.join(EDHREC_CACHE, "commanders", f"{slug}.json")
+        if not os.path.exists(path):
+            missing.append(name)
+            continue
+        data = json.load(open(path, encoding="utf-8"))
+        cardlists = data.get("container", {}).get("json_dict", {}).get("cardlists", [])
+        for cl in cardlists:
+            if "High Synergy" in cl.get("header", "") or "Top Cards" in cl.get("header", ""):
+                for v in cl.get("cardviews", []):
+                    if v["name"] in current_cards:
+                        continue
+                    existing = merged.get(v["name"])
+                    if existing is None or (v.get("synergy") or 0) > (existing.get("synergy") or 0):
+                        merged[v["name"]] = {
+                            "name": v["name"], "synergy": v.get("synergy"), "num_decks": v.get("num_decks"),
+                            "already_owned": False,
+                        }
+        similar_all.extend(data.get("similar") or [])
+
+    if len(missing) == len(commanders):
+        rode = " e ".join(f'./edhrec.py fetch "{n}"' for n in missing)
+        return {"cached": False, "message": f"Sem cache do EDHREC para {' e '.join(missing)}. Rode: {rode}"}
+
+    high_synergy = sorted(merged.values(), key=lambda x: -(x["synergy"] or -999))
+    similar = [s for s in dict.fromkeys(similar_all) if s not in commanders]
+    return {
+        "cached": True, "recommendations": high_synergy[:15], "similar_commanders": similar[:8],
+        "missing_cache_for": missing,
+    }
 
 
 @app.post("/api/decks/{deck_id}/synergy/fetch")
 def fetch_deck_synergy(deck_id: int):
-    """Fetches EDHREC synergy for just this deck's commander — lightweight alternative to a full data update."""
+    """Fetches EDHREC synergy for this deck's commander(s) — lightweight alternative to a full data update."""
     con = get_app_db()
     deck = con.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
     con.close()
     if not deck:
         raise HTTPException(404, "Deck não encontrado")
-    ok, err = data_update.fetch_one_commander(deck["commander_name"], with_combos=True)
-    if not ok:
-        raise HTTPException(502, f"Não foi possível buscar no EDHREC: {err}")
+    errors = []
+    for name in _deck_commanders(deck):
+        ok, err = data_update.fetch_one_commander(name, with_combos=True)
+        if not ok:
+            errors.append(f"{name}: {err}")
+    if errors:
+        raise HTTPException(502, f"Não foi possível buscar no EDHREC: {'; '.join(errors)}")
     return {"ok": True}
 
 

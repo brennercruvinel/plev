@@ -24,12 +24,51 @@ const MANA_COLORS = {
   C: "#ccc",
 };
 
+// Flat black-silhouette glyphs (sun / droplet / skull / flame / tree / diamond), drawn to
+// read clearly at 16px on their pastel color-pip backgrounds — mirrors the classic MTG pip set.
+const GLYPH_FILL = "#1a1a1a";
+function sunburstPoints(cx, cy, outerR, innerR, spikes) {
+  const pts = [];
+  for (let i = 0; i < spikes * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (Math.PI / spikes) * i - Math.PI / 2;
+    pts.push(`${(cx + r * Math.cos(angle)).toFixed(2)},${(cy + r * Math.sin(angle)).toFixed(2)}`);
+  }
+  return pts.join(" ");
+}
+function circleSubpath(cx, cy, r) {
+  return `M${cx - r} ${cy} A${r} ${r} 0 1 0 ${cx + r} ${cy} A${r} ${r} 0 1 0 ${cx - r} ${cy} Z`;
+}
+const MANA_GLYPHS = {
+  // White — spiky sun.
+  W: `<svg viewBox="0 0 24 24"><polygon points="${sunburstPoints(12, 12, 11, 6.2, 9)}" fill="${GLYPH_FILL}"/><circle cx="12" cy="12" r="4.1" fill="${GLYPH_FILL}"/></svg>`,
+  // Blue — water droplet.
+  U: `<svg viewBox="0 0 24 24"><path d="M12 2.3C12 2.3 5 11.2 5 15.7a7 7 0 0 0 14 0C19 11.2 12 2.3 12 2.3z" fill="${GLYPH_FILL}"/></svg>`,
+  // Black — skull, eye sockets cut out via evenodd.
+  B: `<svg viewBox="0 0 24 24"><path fill-rule="evenodd" fill="${GLYPH_FILL}" d="M12 3.4c-4.3 0-7.7 3.3-7.7 7.4 0 2.9 1.7 5.4 4.3 6.6.1 1 .2 1.9.2 1.9h6.4s.1-.9.2-1.9c2.6-1.2 4.3-3.7 4.3-6.6 0-4.1-3.4-7.4-7.7-7.4z ${circleSubpath(8.9, 10.6, 1.7)} ${circleSubpath(15.1, 10.6, 1.7)}"/></svg>`,
+  // Red — flame.
+  R: `<svg viewBox="0 0 24 24"><path fill-rule="evenodd" fill="${GLYPH_FILL}" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.176 7.547 7.547 0 01-1.705-1.715.75.75 0 00-1.152-.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 011.925-3.545 3.75 3.75 0 013.255 3.717z"/></svg>`,
+  // Green — tree / canopy on a trunk.
+  G: `<svg viewBox="0 0 24 24"><circle cx="9" cy="10.3" r="3.9" fill="${GLYPH_FILL}"/><circle cx="15" cy="10.3" r="3.9" fill="${GLYPH_FILL}"/><circle cx="12" cy="7.4" r="4.2" fill="${GLYPH_FILL}"/><rect x="10.6" y="13" width="2.8" height="6.3" rx="1.2" fill="${GLYPH_FILL}"/></svg>`,
+  // Colorless — diamond (tilted square).
+  C: `<svg viewBox="0 0 24 24"><rect x="6.2" y="6.2" width="11.6" height="11.6" rx="1.5" fill="${GLYPH_FILL}" transform="rotate(45 12 12)"/></svg>`,
+};
+
+/** Returns the flat icon glyph (sun/droplet/skull/flame/tree/diamond) for W/U/B/R/G/C, or null
+ * if the letter has no icon — callers can fall back to the plain letter. */
+export function manaGlyphSvg(letter) {
+  return MANA_GLYPHS[letter] || null;
+}
+
 function singleSymbolHtml(inner) {
   if (/^\d+$/.test(inner)) {
     return `<span class="mana-sym" style="background:#d8d3c9">${inner}</span>`;
   }
   if (inner === "X" || inner === "Y" || inner === "Z") {
     return `<span class="mana-sym" style="background:#d8d3c9">${inner}</span>`;
+  }
+  if (MANA_GLYPHS[inner]) {
+    return `<span class="mana-sym" style="background:${MANA_COLORS[inner]}" title="${inner}">${MANA_GLYPHS[inner]}</span>`;
   }
   if (MANA_COLORS[inner]) {
     return `<span class="mana-sym" style="background:${MANA_COLORS[inner]}">${inner}</span>`;

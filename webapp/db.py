@@ -82,6 +82,7 @@ def get_cards_db():
 
 MIGRATIONS = [
     ("collection", "artist", "ALTER TABLE collection ADD COLUMN artist TEXT"),
+    ("decks", "commander_name_2", "ALTER TABLE decks ADD COLUMN commander_name_2 TEXT"),
 ]
 
 
