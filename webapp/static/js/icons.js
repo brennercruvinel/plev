@@ -24,8 +24,8 @@ const MANA_COLORS = {
   C: "#ccc",
 };
 
-// Flat black-silhouette glyphs (sun / droplet / skull / flame / tree), drawn to read
-// clearly at 16px on their pastel color-pip backgrounds — mirrors the classic MTG pip set.
+// Flat black-silhouette glyphs (sun / droplet / skull / flame / tree / diamond), drawn to
+// read clearly at 16px on their pastel color-pip backgrounds — mirrors the classic MTG pip set.
 const GLYPH_FILL = "#1a1a1a";
 function sunburstPoints(cx, cy, outerR, innerR, spikes) {
   const pts = [];
@@ -50,10 +50,12 @@ const MANA_GLYPHS = {
   R: `<svg viewBox="0 0 24 24"><path fill-rule="evenodd" fill="${GLYPH_FILL}" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.176 7.547 7.547 0 01-1.705-1.715.75.75 0 00-1.152-.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 011.925-3.545 3.75 3.75 0 013.255 3.717z"/></svg>`,
   // Green — tree / canopy on a trunk.
   G: `<svg viewBox="0 0 24 24"><circle cx="9" cy="10.3" r="3.9" fill="${GLYPH_FILL}"/><circle cx="15" cy="10.3" r="3.9" fill="${GLYPH_FILL}"/><circle cx="12" cy="7.4" r="4.2" fill="${GLYPH_FILL}"/><rect x="10.6" y="13" width="2.8" height="6.3" rx="1.2" fill="${GLYPH_FILL}"/></svg>`,
+  // Colorless — diamond (tilted square).
+  C: `<svg viewBox="0 0 24 24"><rect x="6.2" y="6.2" width="11.6" height="11.6" rx="1.5" fill="${GLYPH_FILL}" transform="rotate(45 12 12)"/></svg>`,
 };
 
-/** Returns the flat icon glyph (sun/droplet/skull/flame/tree) for W/U/B/R/G, or null if the
- * letter has no icon (e.g. "C" colorless) — callers can fall back to the plain letter. */
+/** Returns the flat icon glyph (sun/droplet/skull/flame/tree/diamond) for W/U/B/R/G/C, or null
+ * if the letter has no icon — callers can fall back to the plain letter. */
 export function manaGlyphSvg(letter) {
   return MANA_GLYPHS[letter] || null;
 }
