@@ -45,8 +45,13 @@ a { color: inherit; }
 
 /* ---------- Sidebar / nav ---------- */
 
+/* Collapsed to icon-only by default (frees up horizontal space for wide pages like the deck
+   detail stack view) and expands to show labels on hover or keyboard focus — a plain width
+   transition rather than an absolutely-positioned overlay, so it stays a normal flex sibling of
+   .main with no extra offset/z-index bookkeeping. Hovering briefly reflows .main by the same
+   ~150px the sidebar grows by; that's an acceptable trade for not having to fake the overlay. */
 .sidebar {
-    width: 220px;
+    width: 64px;
     flex-shrink: 0;
     background: var(--bg-elevated);
     border-right: 1px solid var(--border);
@@ -57,6 +62,37 @@ a { color: inherit; }
     display: flex;
     flex-direction: column;
     gap: 4px;
+    overflow: hidden;
+    transition: width .18s ease;
+    z-index: 30;
+}
+.sidebar:hover, .sidebar:focus-within {
+    width: 220px;
+}
+/* Text labels next to each icon — faded out (not display:none, so the width transition above
+   has something to animate past) whenever the sidebar is collapsed; the icons themselves
+   (.ic, .brand-mark, the offline dot) stay visible at every width. */
+.nav-label {
+    white-space: nowrap;
+    flex-shrink: 0;
+    opacity: 1;
+    transition: opacity .15s ease .05s;
+}
+.sidebar:not(:hover):not(:focus-within) .nav-label {
+    opacity: 0;
+    transition: opacity .1s ease;
+}
+/* The data-update panel in the footer is a block of running text with no icon equivalent, so
+   collapsing to icon-only just hides it outright (rather than fading an icon-less blob) —
+   pointer-events:none keeps its (invisible, off to the right) buttons unclickable while hidden. */
+#sidebar-data-panel {
+    opacity: 1;
+    transition: opacity .15s ease .05s;
+}
+.sidebar:not(:hover):not(:focus-within) #sidebar-data-panel {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .1s ease;
 }
 
 .brand {
@@ -67,10 +103,12 @@ a { color: inherit; }
     font-weight: 700;
     font-size: 17px;
     letter-spacing: -0.02em;
+    white-space: nowrap;
 }
 
 .brand-mark {
     width: 30px; height: 30px;
+    flex-shrink: 0;
     border-radius: 8px;
     overflow: hidden;
     display: flex; align-items: center; justify-content: center;
@@ -94,17 +132,32 @@ a { color: inherit; }
     background: none;
     width: 100%;
     text-align: left;
+    white-space: nowrap;
 }
 
 .nav-item:hover { background: var(--bg-card); color: var(--text); }
 .nav-item.active { background: var(--bg-card); color: var(--accent-bright); }
-.nav-item .ic { font-size: 16px; width: 18px; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
+.nav-item .ic { font-size: 16px; width: 18px; flex-shrink: 0; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
 .nav-item .ic svg { width: 16px; height: 16px; }
 
 /* Deck names listed under "Meus Decks" so you can jump straight into any deck — hidden
    unless that section is the one you're actually browsing (toggled via .visible in app.js). */
-.nav-subitems { display: none; flex-direction: column; margin: 2px 0 6px 30px; gap: 1px; }
+.nav-subitems {
+    display: none; flex-direction: column; margin: 2px 0 6px 30px; gap: 1px;
+    opacity: 1; white-space: nowrap; overflow: hidden;
+    max-height: 800px; /* generous cap — comfortably above any realistic deck list's real height */
+    transition: opacity .15s ease .05s, max-height .2s ease, margin .2s ease;
+}
 .nav-subitems.visible { display: flex; }
+/* Deck names would otherwise render (clipped, non-interactive) in the collapsed 64px rail — held
+   back until the sidebar is actually expanded, same as the other labels/panels above. max-height
+   (not just opacity) collapses the space it reserves too, so the rail's own height shrinks back
+   down to just its nav-item rows instead of leaving a tall blank gap where the invisible deck
+   list used to be. */
+.sidebar:not(:hover):not(:focus-within) .nav-subitems {
+    opacity: 0; pointer-events: none; max-height: 0; margin-top: 0; margin-bottom: 0;
+    transition: opacity .1s ease, max-height .15s ease, margin .15s ease;
+}
 .nav-subitem {
     display: block; width: 100%; text-align: left; border: none; background: none;
     color: var(--text-faint); font-size: 12.5px; padding: 6px 10px; border-radius: 6px;
@@ -155,8 +208,26 @@ a { color: inherit; }
     flex-wrap: wrap;
     gap: 10px;
 }
-.page-header h1 { font-size: 24px; margin: 0; letter-spacing: -0.02em; }
+.page-header h1 { font-size: 32px; margin: 0; letter-spacing: -0.02em; }
 .page-header p { color: var(--text-dim); margin: 4px 0 0; font-size: 14px; }
+
+/* Custom per-deck labels (see openEditDeckModal) — purely informational pills, not filter chips,
+   so they get their own muted look instead of reusing .chip (which implies clickable/toggleable).
+   Shared between the deck detail header (right under the name) and the "Meus Decks" thumbnails. */
+/* Sits inline next to the deck name (h1 on the detail page, h3 on a "Meus Decks" thumbnail) —
+   the wrapping flex row with a gap lives at each call site since the two spots need slightly
+   different gaps/margins, so this only needs to lay out the pills themselves. */
+.deck-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+/* Translucent + blurred rather than the solid .bg-card look used elsewhere, since these sit
+   directly on top of artwork (see the two overlay placements below) and shouldn't fully block
+   whatever's underneath — just legible enough to read at a glance. */
+.deck-tag {
+    font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
+    background: rgba(18, 17, 36, .55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, .12); color: var(--text);
+    text-transform: uppercase; letter-spacing: .04em;
+    white-space: nowrap;
+}
 
 .btn {
     background: var(--accent);
@@ -175,6 +246,15 @@ a { color: inherit; }
 .btn.secondary:hover { background: var(--bg-card-hover); }
 .btn.small { padding: 6px 10px; font-size: 12px; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Square icon-only buttons (edit/delete deck, etc.) — same footprint as .btn.small but with
+   equal padding on every side, since there's no label text to give the box its width. */
+.btn.icon-btn { display: inline-flex; align-items: center; justify-content: center; padding: 7px; }
+.btn.icon-btn svg { width: 15px; height: 15px; display: block; }
+/* Delete is destructive, so it gets its own red treatment instead of the neutral .secondary
+   look — makes it visually distinct from "Editar" at a glance, not just by icon shape. */
+.btn.danger { background: rgba(217,85,107,.12); border: 1px solid rgba(217,85,107,.35); color: var(--bad); }
+.btn.danger:hover { background: rgba(217,85,107,.22); }
 
 /* ---------- Sidebar data-base panel ---------- */
 
@@ -236,10 +316,16 @@ a { color: inherit; }
 .deck-card:hover { border-color: var(--accent); transform: translateY(-2px); }
 .deck-card-thumb {
     width: 100%;
+    position: relative;
     /* matches Scryfall's art_crop aspect ratio (~626x457) so the artwork isn't cropped further */
     aspect-ratio: 626 / 457;
     background: var(--bg-card);
 }
+/* Custom deck tags (see deckTagsHtml) sit on top of the art, top-left corner, same overlay-badge
+   idea as .mtg-card .qty-badge on the collection page — sits at the bottom edge (rather than
+   over the top of the art, which is usually where the more interesting part of the illustration
+   is) and stays translucent so it never fully hides what's underneath. */
+.deck-card-thumb .deck-tags { position: absolute; bottom: 8px; left: 8px; right: 8px; z-index: 2; }
 .deck-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .deck-card-thumb .no-image { display: flex; align-items: center; justify-content: center; height: 100%; padding: 8px; text-align: center; font-size: 11px; color: var(--text-faint); }
 /* Partner-commander decks split the thumbnail so both faces show, instead of only ever
@@ -340,9 +426,27 @@ a { color: inherit; }
 }
 .sort-icon-glyph svg { width: 15px; height: 15px; display: block; }
 .sort-icon-wrap:hover .sort-icon-glyph, .sort-icon-wrap:focus-within .sort-icon-glyph { background: var(--bg-card-hover); color: var(--text); }
-.filters-bar select.sort-icon-select {
+/* Scoped to .sort-icon-wrap itself (not to a specific parent bar) — this control has moved
+   between .filters-bar and .cards-toolbar before; scoping it to the wrapper it's always inside
+   keeps the invisible-overlay trick working regardless of which toolbar it lives in. Previously
+   scoped to ".filters-bar select.sort-icon-select", which silently stopped matching (and let the
+   native, unstyled <select> render on top of the glyph) the moment the control moved out of the
+   filter bar. */
+.sort-icon-wrap select.sort-icon-select {
     position: absolute; inset: 0; width: 100%; height: 100%; padding: 0;
     opacity: 0; border: none; cursor: pointer; appearance: none;
+}
+
+/* "Adicionar carta" — lives in the view/group/sort toolbar right above the card groups it fills,
+   collapsed to a plain icon (reuses .search-collapse/.search-icon-btn from the deck search
+   above) until clicked. Results render as a dropdown anchored under the input instead of a
+   permanent panel, since the list is only relevant while actively searching. */
+.add-card-inline { position: relative; }
+.add-card-results-dropdown:not(:empty) {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
+    min-width: 300px; max-height: 320px; overflow-y: auto;
+    background: var(--bg-elevated); border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm); box-shadow: 0 10px 28px rgba(0,0,0,.45); padding: 6px;
 }
 .chip {
     padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
@@ -365,6 +469,15 @@ a { color: inherit; }
 .chip.color-chip.active { border-color: var(--text); box-shadow: 0 0 0 2px var(--accent-glow); }
 .mana-sym-inline { display: inline-flex; align-items: center; justify-content: center; }
 .mana-sym-inline svg { width: 15px; height: 15px; display: block; }
+
+/* View mode + group-by + sort toolbar for the deck card list — deliberately separate from the
+   deck-page .filters-bar above it (which controls what's included, i.e. search/type/color/CMC)
+   and placed right above the card groups it organizes. Shares the .filters-bar look (boxed,
+   bordered) via the combined "filters-bar cards-toolbar" class on its wrapper, but keeps its own
+   selector for the one layout tweak it needs (space-between instead of the default packed gap). */
+.cards-toolbar {
+    justify-content: space-between;
+}
 
 .size-slider-row {
     display: flex; align-items: center; gap: 10px; width: 100%;
@@ -408,9 +521,8 @@ a { color: inherit; }
 }
 
 /* ---------- Stacked deck view (Moxfield-style overlapping cards) ---------- */
-/* Cards overlap vertically so only a sliver of each card's own art (which already prints the
-   name/cost in its own title bar) shows; hovering (or focusing, for keyboard users) lifts a
-   card clear of the ones below it to reveal the full art. */
+/* Cards overlap vertically so only a name strip shows; hovering (or focusing, for
+   keyboard users) lifts a card clear of the ones below it to reveal the full art. */
 
 .card-stack {
     display: flex;
@@ -428,7 +540,7 @@ a { color: inherit; }
     border: 1px solid var(--border);
     cursor: pointer;
     box-shadow: 0 2px 6px rgba(0,0,0,.35);
-    /* Reveals ~34px (enough for the card's own printed name band) — recomputed from
+    /* Reveals ~34px (enough for the name band printed on the card) — recomputed from
        --stack-card-w via its 63:88 aspect ratio, so resizing the variable stays in sync. */
     margin-top: calc(-1 * (var(--stack-card-w) * 88 / 63) + 34px);
     transition: box-shadow .15s ease;
@@ -452,24 +564,93 @@ a { color: inherit; }
     .card-stack { --stack-card-w: 140px; }
 }
 
-/* Category stacks laid out as columns side by side (not one long vertical
-   chain of stacks) so the whole deck is reachable in a single scroll. */
+/* Category stacks laid out as columns side by side (not one long vertical chain of stacks).
+   Deliberately non-wrapping: the deck-stats-bar above no longer eats a 320px sidebar column,
+   so a typical Commander deck's categories fit in one row — wide decks (more categories than
+   fit) scroll horizontally instead of breaking to a second row, which kept misaligning columns
+   with their headers. */
 .stack-columns {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: flex-start;
     gap: 24px;
+    overflow-x: auto;
+    padding-bottom: 10px;
 }
-.stack-columns .category-block { margin-bottom: 0; }
+.stack-columns .category-block { margin-bottom: 0; flex-shrink: 0; }
+
+/* Export dropdown (deck page header) — plain <a download> links inside a small popover, closed
+   by default and toggled/closed via app.js (button click, outside click, or picking an option). */
+.export-dropdown { position: relative; }
+.export-menu {
+    display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 10;
+    min-width: 200px; background: var(--bg-elevated); border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm); box-shadow: 0 10px 28px rgba(0,0,0,.45); padding: 6px;
+}
+.export-dropdown.open .export-menu { display: flex; flex-direction: column; gap: 2px; }
+.export-menu a {
+    display: block; padding: 8px 10px; border-radius: 6px; font-size: 12.5px;
+    color: var(--text); text-decoration: none; white-space: nowrap; transition: background .15s;
+}
+.export-menu a:hover { background: var(--bg-card); color: var(--accent-bright); }
+
+/* Deck card search/type/color/CMC filters — used to be their own permanently-visible bar above
+   the card list; now tucked behind a "Filtro" button in the view/group/sort toolbar instead (see
+   filterMenuHtml in app.js). The toggle button is deliberately styled to match the sort control
+   right next to it (same circular-icon footprint as .sort-icon-wrap/.sort-icon-glyph) rather than
+   the .export-dropdown's labeled-pill look, since Filtro and Ordenar are the same kind of control
+   (an icon that opens something) sitting side by side. */
+.filter-dropdown { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
+.filter-toggle-btn {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: 0; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border-light);
+    color: var(--text-dim); cursor: pointer; transition: background .15s, color .15s;
+}
+.filter-toggle-btn:hover { background: var(--bg-card-hover); color: var(--text); }
+.filter-dropdown.open .filter-toggle-btn { background: var(--bg-card-hover); color: var(--text); }
+.filter-toggle-btn svg { width: 15px; height: 15px; display: block; }
+.filter-badge {
+    position: absolute; top: -1px; right: -1px;
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent-bright);
+    box-shadow: 0 0 0 2px var(--bg-elevated);
+}
+.filter-menu {
+    display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
+    min-width: 320px; max-width: 420px; flex-direction: column; gap: 12px;
+    background: var(--bg-elevated); border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm); box-shadow: 0 10px 28px rgba(0,0,0,.45); padding: 14px;
+}
+.filter-dropdown.open .filter-menu { display: flex; }
+.filter-group-block { flex-direction: column; align-items: stretch; }
+.filter-menu input[type=text] {
+    width: 100%; padding: 8px 11px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light); background: var(--bg-card); color: var(--text);
+    font-size: 13px; font-family: var(--font);
+}
 
 /* ---------- Deck builder ---------- */
 
-.builder-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
-/* Grid items default to min-width:auto — without this override, the 1fr column grows to fit
-   whatever its widest unwrapped content wants (a long shared-tag pill, a wide row, etc.),
-   which was dragging the whole page wider than the viewport. */
-.builder-layout > * { min-width: 0; }
-@media (max-width: 900px) { .builder-layout { grid-template-columns: 1fr; } }
+/* Commander/mana-curve/add-card/synergy panels used to live in a 320px sticky sidebar next to
+   the card list (.builder-layout); moved into one horizontal row at the top of the page instead
+   (below the deck name/stats, above the filter+view toolbar), so the card list gets the full
+   page width for its stack columns. Panels wrap onto a second row on narrow viewports rather
+   than forcing horizontal scroll of the whole page. */
+/* align-items:stretch (the flex default) so the commander panel and the mana-curve panel match
+   whichever column ends up tallest — usually the middle "Cards relacionados"/"Comandantes
+   parecidos" stack once synergy is expanded — instead of stopping short and leaving a visible
+   gap of bare page background underneath them. */
+.deck-stats-bar { display: flex; flex-wrap: wrap; align-items: stretch; gap: 16px; margin-bottom: 20px; }
+.stats-bar-panel {
+    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; flex: 1 1 260px; min-width: 0;
+}
+.stats-bar-panel h3 { font-size: 14px; margin: 0 0 12px; }
+
+/* "Comandantes parecidos" sits in its own panel directly under "Cards relacionados" instead of
+   inside it — this column groups the two vertically as one flex item of .deck-stats-bar, so they
+   still occupy a single "slot" in the horizontal row rather than each claiming their own. */
+.stats-bar-col { display: flex; flex-direction: column; gap: 16px; flex: 1 1 260px; min-width: 0; }
+.stats-bar-col > .stats-bar-panel { flex: 0 0 auto; }
 
 .category-block { margin-bottom: 22px; }
 .category-block h4 {
@@ -490,6 +671,10 @@ a { color: inherit; }
    forcing the row (and the whole page, through the flex/grid chain above it — see the
    .card-row .shared-tag comment below) wider than the viewport. */
 .card-row .name { flex: 1; font-size: 13.5px; min-width: 0; }
+/* Search-suggestion rows (add-card autocomplete) show the type line under the name — the only
+   way to tell apart two different cards that happen to share the same printed name, e.g.
+   "Phyrexian Hydra" the 5-mana creature vs. the token of the same name it makes. */
+.card-row .card-row-sub { display: block; font-size: 10.5px; color: var(--text-faint); font-weight: 400; margin-top: 1px; }
 .card-row .cost { font-size: 12px; color: var(--mana-b); font-family: monospace; flex-shrink: 0; }
 
 .mana-cost { display: inline-flex; gap: 3px; vertical-align: middle; }
@@ -525,31 +710,42 @@ a { color: inherit; }
 .sidebar-panel h3 { font-size: 14px; margin: 0 0 12px; }
 
 /* Commander panel — highlighted with an accent border/glow so it stands out from the rest of
-   the sidebar (and from the plain card list it used to sit inside of). */
+   the top stats bar. No heading label (the enlarged art + name make it self-evident what this
+   panel is) — all the extra vertical room that freed up goes into a bigger portrait and name. */
 .commander-panel {
     border-color: var(--accent);
     box-shadow: 0 0 0 1px var(--accent-glow), 0 8px 22px var(--accent-glow);
 }
-.commander-panel h3 { color: var(--accent-bright); }
-.commander-list { display: flex; flex-direction: column; gap: 10px; }
+/* .deck-stats-bar stretches every column to match the tallest one (usually the "Cards
+   relacionados"/"Comandantes parecidos" stack once synergy is expanded) — without this, the
+   commander portrait and mana curve would just sit at the top of their now-taller boxes with a
+   bare gap underneath. Centering their content as a group instead makes the extra room read as
+   intentional breathing space rather than a leftover hole. */
+.commander-panel, .curve-panel {
+    display: flex; flex-direction: column; justify-content: center;
+}
+.commander-list { display: flex; flex-direction: column; gap: 16px; }
 .commander-card {
-    display: flex; align-items: center; gap: 10px; padding: 6px;
+    display: flex; align-items: center; gap: 18px; padding: 8px;
     border-radius: var(--radius-sm); cursor: pointer; transition: background .15s;
 }
 .commander-card:hover { background: var(--bg-card); }
+/* Sized up now that the panel stretches to match its taller neighbors (see .commander-panel
+   above) — there's real vertical room to spend on the portrait instead of leaving it small in
+   the middle of a much bigger box. */
 .commander-card img {
-    width: 56px; height: 78px; object-fit: cover; border-radius: 6px; flex-shrink: 0;
+    width: 128px; height: 179px; object-fit: cover; border-radius: 10px; flex-shrink: 0;
     border: 1px solid var(--border-light);
 }
 .commander-card .no-image {
-    width: 56px; height: 78px; border-radius: 6px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; padding: 4px;
-    text-align: center; font-size: 9px; background: var(--bg-card); color: var(--text-faint);
+    width: 128px; height: 179px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; padding: 6px;
+    text-align: center; font-size: 11px; background: var(--bg-card); color: var(--text-faint);
 }
 .commander-info { min-width: 0; }
-.commander-name { font-weight: 700; font-size: 13.5px; }
-.commander-type { font-size: 11px; color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.commander-cost { margin-top: 4px; }
+.commander-name { font-weight: 800; font-size: 22px; line-height: 1.2; color: var(--accent-bright); letter-spacing: -0.01em; }
+.commander-type { font-size: 13.5px; color: var(--text-dim); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.commander-cost { margin-top: 10px; }
 
 .curve-bars { display: flex; align-items: flex-end; gap: 4px; height: 90px; margin-bottom: 8px; }
 /* Each bar is a column-reverse stack of per-color segments (see curveBarSegmentsHtml in app.js)
@@ -565,6 +761,20 @@ a { color: inherit; }
 .curve-legend { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 10px; font-size: 10.5px; color: var(--text-faint); }
 .curve-legend-item { display: inline-flex; align-items: center; gap: 4px; }
 .curve-legend-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* Synergy panel is a native <details>/<summary> — collapsed by default (see synergyPanelOpen in
+   app.js), one click away instead of always eating sidebar space every time a deck is opened. */
+.synergy-panel summary {
+    font-size: 14px; font-weight: 600; cursor: pointer; list-style: none;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.synergy-panel summary::-webkit-details-marker { display: none; }
+.synergy-panel summary::after {
+    content: "›"; flex-shrink: 0; transform: rotate(90deg); transition: transform .15s;
+    color: var(--text-faint); font-size: 16px; line-height: 1;
+}
+.synergy-panel[open] summary::after { transform: rotate(-90deg); }
+.synergy-panel .synergy-body { margin-top: 12px; }
 
 .synergy-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
 .synergy-item:last-child { border-bottom: none; }
@@ -668,15 +878,19 @@ a { color: inherit; }
 
 @media (max-width: 760px) {
     #app { flex-direction: column; }
-    .sidebar {
+    /* The hover-to-expand collapse behavior above is desktop-only — mobile already gets its own
+       bottom-bar layout, and there's no "hover" on touch, so both the width and the .nav-label
+       fade are pinned back to their always-expanded state here regardless of hover/focus. */
+    .sidebar, .sidebar:hover, .sidebar:focus-within {
         position: fixed; bottom: 0; left: 0; right: 0; top: auto; height: auto; width: 100%;
         flex-direction: row; justify-content: space-around; padding: 8px; z-index: 50;
-        border-right: none; border-top: 1px solid var(--border);
+        border-right: none; border-top: 1px solid var(--border); overflow: visible;
     }
     .brand, .sidebar-footer, .nav-subitems { display: none; }
     .nav-item { flex-direction: column; font-size: 10px; padding: 6px; gap: 2px; width: auto; text-align: center; }
     .nav-item .ic { font-size: 20px; }
+    .nav-label, .sidebar:not(:hover):not(:focus-within) .nav-label { opacity: 1; }
     .main { padding: 16px 14px 90px; }
-    .builder-layout, .scanner-layout { grid-template-columns: 1fr; }
+    .scanner-layout { grid-template-columns: 1fr; }
     .card-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
 }
