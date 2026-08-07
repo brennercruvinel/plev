@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=20";
-import { renderScanner } from "./scanner.js?v=20";
-import { activityIcon, manaCostHtml, manaGlyphSvg } from "./icons.js?v=20";
+import { api } from "./api.js?v=21";
+import { renderScanner } from "./scanner.js?v=21";
+import { activityIcon, manaCostHtml, manaGlyphSvg } from "./icons.js?v=21";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -253,18 +253,45 @@ async function renderSidebarDataPanel() {
   }
 }
 
+/** Small colored circles for a deck's color identity (commander's colors, combined for
+ * partners) — reuses the same palette/glyphs as the deck filter bar's color chips, just
+ * non-interactive and sized down to fit a deck card. */
+function colorIdentityPipsHtml(identity) {
+  const letters = identity ? identity.split("") : [];
+  if (!letters.length) letters.push("C"); // truly colorless commander
+  return letters
+    .map((l) => {
+      const glyph = manaGlyphSvg(l);
+      return `<span class="color-pip" style="background:${FILTER_COLORS[l] || "#8b8398"}" title="${l}">${
+        glyph ? `<span class="mana-sym-inline">${glyph}</span>` : l
+      }</span>`;
+    })
+    .join("");
+}
+
 function deckCardHtml(d) {
   const cls = d.total_cards === 100 ? "ok" : "bad";
+  const hasPartner = !!d.commander_name_2;
+  const thumb = hasPartner
+    ? `<div class="deck-card-thumb split">
+        ${d.commander_image ? `<img src="${d.commander_image}" alt="${d.commander_name}">` : `<div class="no-image">${d.commander_name}</div>`}
+        ${d.commander_image_2 ? `<img src="${d.commander_image_2}" alt="${d.commander_name_2}">` : `<div class="no-image">${d.commander_name_2}</div>`}
+      </div>`
+    : `<div class="deck-card-thumb">
+        ${d.commander_image ? `<img src="${d.commander_image}" alt="${d.commander_name}">` : `<div class="no-image">${d.commander_name}</div>`}
+      </div>`;
+  const commanderLine = hasPartner ? `${d.commander_name} + ${d.commander_name_2}` : d.commander_name;
+
   return h`
     <div class="deck-card" data-deck-link="${d.id}">
-      <div class="deck-card-thumb">
-        ${d.commander_image ? `<img src="${d.commander_image}" alt="${d.commander_name}">` : `<div class="no-image">${d.commander_name}</div>`}
-      </div>
+      ${thumb}
       <div class="deck-card-body">
         <h3>${d.name}</h3>
+        <div class="deck-card-commander">${commanderLine}</div>
         <div class="philosophy">${d.philosophy || ""}</div>
         <div class="meta-row">
           <span class="count-pill ${cls}">${d.total_cards}/100</span>
+          <span class="deck-card-colors">${colorIdentityPipsHtml(d.color_identity)}</span>
           <span class="wl">${d.wins}<b class="win">V</b> · ${d.losses}<b class="loss">D</b></span>
         </div>
       </div>
@@ -1042,7 +1069,7 @@ function renderDeckCards(deck) {
             <div class="mtg-card" data-card-view="${c.card_name}">
               ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
               <span class="qty-badge">${c.quantity}x</span>
-              ${cat !== "Comandante" ? `<button class="btn small secondary tile-remove" data-remove="${c.id}">✕</button>` : ""}
+              ${cat !== "Comandante" ? `<button class="btn small secondary tile-remove" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>` : ""}
             </div>`)
           .join("");
         return `<div class="category-block"><h4>${CATEGORY_LABELS[cat] || cat} <span class="n">(${cards.length})</span></h4><div class="card-grid">${tiles}</div></div>`;
@@ -1059,7 +1086,7 @@ function renderDeckCards(deck) {
             <div class="stack-item" data-card-view="${c.card_name}">
               ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
               <div class="stack-name-bar">${c.quantity > 1 ? `${c.quantity}x ` : ""}${c.card_name}</div>
-              ${cat !== "Comandante" ? `<button class="btn small secondary tile-remove" data-remove="${c.id}">✕</button>` : ""}
+              ${cat !== "Comandante" ? `<button class="btn small secondary tile-remove" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>` : ""}
             </div>`)
           .join("");
         return `<div class="category-block"><h4>${CATEGORY_LABELS[cat] || cat} <span class="n">(${cards.length})</span></h4><div class="card-stack">${items}</div></div>`;
@@ -1080,7 +1107,7 @@ function renderDeckCards(deck) {
                 <span class="name" data-card-view="${c.card_name}" style="cursor:pointer">${c.card_name}</span>
                 ${sharedTag}
                 <span class="cost">${manaCostHtml(c.mana_cost)}</span>
-                ${cat !== "Comandante" ? `<button class="btn small secondary" data-remove="${c.id}">✕</button>` : ""}
+                ${cat !== "Comandante" ? `<button class="btn small secondary" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>` : ""}
               </div>`;
           })
           .join("");
@@ -1092,6 +1119,8 @@ function renderDeckCards(deck) {
   cardsWrap.querySelectorAll("[data-remove]").forEach((btn) =>
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
+      const cardName = btn.dataset.removeName || "esta carta";
+      if (!confirm(`Remover ${cardName} do deck?`)) return;
       await api.removeDeckCard(deck.id, Number(btn.dataset.remove));
       renderDeckDetail([String(deck.id)]);
     })
