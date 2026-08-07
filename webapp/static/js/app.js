@@ -1,6 +1,6 @@
 import { api } from "./api.js?v=21";
 import { renderScanner } from "./scanner.js?v=21";
-import { activityIcon, manaCostHtml, manaGlyphSvg } from "./icons.js?v=21";
+import { activityIcon, manaCostHtml, manaGlyphSvg, resultIcon } from "./icons.js?v=23";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -292,7 +292,10 @@ function deckCardHtml(d) {
         <div class="meta-row">
           <span class="count-pill ${cls}">${d.total_cards}/100</span>
           <span class="deck-card-colors">${colorIdentityPipsHtml(d.color_identity)}</span>
-          <span class="wl">${d.wins}<b class="win">V</b> · ${d.losses}<b class="loss">D</b></span>
+          <span class="wl">
+            <span class="wl-item win">${resultIcon("win")}${d.wins}</span>
+            <span class="wl-item loss">${resultIcon("loss")}${d.losses}</span>
+          </span>
         </div>
       </div>
     </div>`;
@@ -886,6 +889,44 @@ function ownershipTag(cardName, ownershipMap) {
   return { label: otherDeck ? otherDeck.deck_name : "Available", cls: "tag-other-deck" };
 }
 
+// Order colors are stacked in each curve bar (bottom to top) and shown in the legend.
+// "M" = multicolor cards (2+ colors), grouped together rather than split, since MTG deck tools
+// conventionally show multicolor as its own gold segment instead of dividing it between colors.
+const CURVE_COLOR_ORDER = ["W", "U", "B", "R", "G", "M", "C"];
+// Deliberately its own palette rather than reusing FILTER_COLORS (the mana-pip colors): those
+// pastels are tuned for a black glyph drawn on top, but as flat, unlabeled chart segments they
+// read poorly — black in particular ("B") all but disappears against the dark page background.
+// Here B gets a proper dark charcoal and C a lighter neutral, so every segment stays legible.
+const CURVE_COLORS = { W: "#f0e6b0", U: "#6ec3f5", B: "#4a4655", R: "#ef8c68", G: "#7fc98a", M: "#d9b45c", C: "#a8a4c0" };
+
+/** Buckets every non-commander, non-land card in the deck by CMC, then by color (W/U/B/R/G,
+ * "M" for multicolor, "C" for colorless) — mirrors the backend's mana_curve totals but split
+ * out per color so the sidebar chart can render a stacked column per mana value. */
+function manaCurveByColorData(deck) {
+  const buckets = {};
+  Object.entries(deck.by_type || {}).forEach(([cat, cards]) => {
+    if (cat === "Comandante") return;
+    cards.forEach((c) => {
+      if ((c.type_line || "").includes("Land")) return;
+      const cmc = Math.trunc(c.cmc || 0);
+      const letters = (c.colors || "").split("").filter(Boolean);
+      const key = letters.length === 0 ? "C" : letters.length === 1 ? letters[0] : "M";
+      buckets[cmc] = buckets[cmc] || {};
+      buckets[cmc][key] = (buckets[cmc][key] || 0) + c.quantity;
+    });
+  });
+  return buckets;
+}
+
+function curveBarSegmentsHtml(byColor, maxCount) {
+  return CURVE_COLOR_ORDER.filter((c) => byColor[c])
+    .map((c) => {
+      const heightPx = Math.max(2, (byColor[c] / maxCount) * 90);
+      return `<div class="curve-bar-seg" style="height:${heightPx}px;background:${CURVE_COLORS[c]}" title="${byColor[c]} ${c === "M" ? "multicolor" : c === "C" ? "incolor" : c}"></div>`;
+    })
+    .join("");
+}
+
 async function renderDeckDetail([idStr]) {
   const id = Number(idStr);
   const [deck, synergy, collectionAll] = await Promise.all([
@@ -897,14 +938,24 @@ async function renderDeckDetail([idStr]) {
 
   const maxCmc = Math.max(1, ...Object.keys(deck.mana_curve).map(Number));
   const maxCount = Math.max(1, ...Object.values(deck.mana_curve));
+  const curveByColor = manaCurveByColorData(deck);
   const curveBars = Array.from({ length: Math.min(maxCmc, 7) + 1 }, (_, i) => i)
     .map((cmc) => {
       const label = cmc === 7 ? "7+" : String(cmc);
       const count = cmc === 7
         ? Object.entries(deck.mana_curve).filter(([k]) => Number(k) >= 7).reduce((s, [, v]) => s + v, 0)
         : (deck.mana_curve[cmc] || 0);
-      return { label, count };
-    });
+      const byColor = cmc === 7
+        ? Object.entries(curveByColor).filter(([k]) => Number(k) >= 7).reduce((acc, [, colors]) => {
+            Object.entries(colors).forEach(([c, n]) => { acc[c] = (acc[c] || 0) + n; });
+            return acc;
+          }, {})
+        : curveByColor[cmc] || {};
+      return { label, count, byColor };
+    })
+    // Most decks have no 0-cost spells (Ornithopter, Mishra's Bauble, etc. are the exception),
+    // so an always-empty leading column just wastes space — drop it unless it's actually used.
+    .filter((b) => b.label !== "0" || b.count > 0);
 
   const overage = deck.total_cards - 100;
   let overageWarning = "";
@@ -938,9 +989,12 @@ async function renderDeckDetail([idStr]) {
         <div class="sidebar-panel" style="margin-bottom:16px">
           <h3>Curva de mana</h3>
           <div class="curve-bars">
-            ${curveBars.map((b) => `<div class="curve-bar" style="height:${Math.max(4, (b.count / maxCount) * 90)}px" title="${b.count} cartas"></div>`).join("")}
+            ${curveBars.map((b) => `<div class="curve-bar" title="${b.count} cartas">${curveBarSegmentsHtml(b.byColor, maxCount)}</div>`).join("")}
           </div>
           <div class="curve-labels">${curveBars.map((b) => `<span>${b.label}</span>`).join("")}</div>
+          <div class="curve-legend">
+            ${CURVE_COLOR_ORDER.filter((c) => curveBars.some((b) => b.byColor[c])).map((c) => `<span class="curve-legend-item"><span class="dot" style="background:${CURVE_COLORS[c]}"></span>${c === "M" ? "Multi" : c === "C" ? "Incolor" : c}</span>`).join("")}
+          </div>
         </div>
         <div class="sidebar-panel">
           <h3>Adicionar carta</h3>
@@ -1085,7 +1139,6 @@ function renderDeckCards(deck) {
           .map((c) => h`
             <div class="stack-item" data-card-view="${c.card_name}">
               ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
-              <div class="stack-name-bar">${c.quantity > 1 ? `${c.quantity}x ` : ""}${c.card_name}</div>
               ${cat !== "Comandante" ? `<button class="btn small secondary tile-remove" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>` : ""}
             </div>`)
           .join("");
@@ -1098,8 +1151,13 @@ function renderDeckCards(deck) {
         const cards = byType[cat];
         const rows = cards
           .map((c) => {
+            // Widely-reused staples (basic lands, ramp, etc.) can be "shared" with a dozen other
+            // decks — without a cap, that whole comma-joined list rendered on one unbreakable
+            // line and blew the row (and the whole page) out past the viewport. Truncate visibly,
+            // keep the full list in the title tooltip.
+            const sharedList = (c.shared_with || []).map((s) => s.deck).join(", ");
             const sharedTag = c.shared_with?.length
-              ? `<span class="shared-tag">também em ${c.shared_with.map((s) => s.deck).join(", ")}</span>`
+              ? `<span class="shared-tag" title="também em ${sharedList}">também em ${sharedList}</span>`
               : "";
             return h`
               <div class="card-row">
