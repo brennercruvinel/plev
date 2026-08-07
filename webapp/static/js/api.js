@@ -6,8 +6,15 @@ async function req(path, opts = {}) {
     ...opts,
   });
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`${res.status} ${path}: ${body}`);
+    const text = await res.text();
+    let body;
+    try { body = JSON.parse(text); } catch { body = text; }
+    // status + parsed body are attached to the thrown error so callers can react to specific
+    // cases (e.g. 409 "card already in deck, needs confirmation") instead of just showing text.
+    const err = new Error(`${res.status} ${path}: ${text}`);
+    err.status = res.status;
+    err.body = body;
+    throw err;
   }
   return res.json();
 }
@@ -22,8 +29,9 @@ export const api = {
   autoBuildStatus: () => req("/decks/auto-build/status"),
   deckSynergy: (id) => req(`/decks/${id}/synergy`),
   fetchDeckSynergy: (id) => req(`/decks/${id}/synergy/fetch`, { method: "POST" }),
-  addDeckCard: (id, card_name, quantity = 1) =>
-    req(`/decks/${id}/cards`, { method: "POST", body: JSON.stringify({ card_name, quantity }) }),
+  deckTags: (id) => req(`/decks/${id}/tags`),
+  addDeckCard: (id, card_name, quantity = 1, oracle_id = null, confirm = false) =>
+    req(`/decks/${id}/cards`, { method: "POST", body: JSON.stringify({ card_name, quantity, oracle_id, confirm }) }),
   removeDeckCard: (deckId, cardId) => req(`/decks/${deckId}/cards/${cardId}`, { method: "DELETE" }),
 
   // Decklist import — text/CSV go through req() as JSON; the file variant needs
@@ -41,7 +49,9 @@ export const api = {
     req(`/decks/${id}/import/commit`, { method: "POST", body: JSON.stringify({ cards, mode }) }),
 
   searchCards: (q, limit = 24) => req(`/cards/search?q=${encodeURIComponent(q)}&limit=${limit}`),
-  card: (name) => req(`/cards/${encodeURIComponent(name)}`),
+  card: (name, oracleId = null) =>
+    req(`/cards/${encodeURIComponent(name)}${oracleId ? `?oracle_id=${encodeURIComponent(oracleId)}` : ""}`),
+  cardVariants: (name) => req(`/cards/${encodeURIComponent(name)}/variants`),
   scanRecognize: (text) => req("/scan/recognize", { method: "POST", body: JSON.stringify({ text }) }),
 
   collection: (status = "all", q = "") => req(`/collection?status=${status}&q=${encodeURIComponent(q)}`),
