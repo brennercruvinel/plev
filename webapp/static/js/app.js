@@ -1,6 +1,6 @@
-import { api } from "./api.js?v=17";
-import { renderScanner } from "./scanner.js?v=17";
-import { activityIcon, manaCostHtml } from "./icons.js?v=17";
+import { api } from "./api.js?v=18";
+import { renderScanner } from "./scanner.js?v=18";
+import { activityIcon, manaCostHtml, manaGlyphSvg } from "./icons.js?v=18";
 
 const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -29,6 +29,31 @@ async function navigate() {
     mainEl.innerHTML = `<div class="empty-state">Erro: ${err.message}</div>`;
     console.error(err);
   }
+  renderNavDecksList(route === "deck" ? rest[0] : null);
+}
+
+// Deck sub-list under "Meus Decks" in the sidebar — lets you jump straight to any deck
+// without going back to the deck grid first. Refreshed on every navigation so it stays
+// in sync after a deck is created, renamed, or deleted.
+let navDecksCache = null;
+async function renderNavDecksList(activeId) {
+  const el = document.getElementById("nav-decks-list");
+  if (!el) return;
+  try {
+    navDecksCache = await api.decks();
+  } catch (err) {
+    console.error(err);
+    return;
+  }
+  el.innerHTML = navDecksCache
+    .map(
+      (d) =>
+        `<button class="nav-subitem ${String(d.id) === String(activeId) ? "active" : ""}" data-deck-link="${d.id}" title="${d.name}">${d.name}</button>`
+    )
+    .join("");
+  el.querySelectorAll("[data-deck-link]").forEach((btn) =>
+    btn.addEventListener("click", () => (location.hash = `#deck/${btn.dataset.deckLink}`))
+  );
 }
 
 navItems.forEach((el) => {
@@ -699,8 +724,9 @@ function deckFilterBarHtml() {
     .map(([c, bg]) => {
       const dimmed = deckFilters.colors.size && !deckFilters.colors.has(c);
       const active = deckFilters.colors.has(c);
+      const glyph = manaGlyphSvg(c);
       return `<span class="chip color-chip ${active ? "active" : ""}" data-deck-color="${c}"
-        style="background:${bg};color:#1a1a1a;opacity:${dimmed ? 0.35 : 1}">${c}</span>`;
+        style="background:${bg};color:#1a1a1a;opacity:${dimmed ? 0.35 : 1}">${glyph ? `<span class="mana-sym-inline">${glyph}</span>` : c}</span>`;
     })
     .join("");
   const cmcChips = CMC_BUCKETS.map(
