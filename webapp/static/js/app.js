@@ -125,10 +125,10 @@ async function renderDashboard() {
       </div>
     </div>
     <div class="stat-grid">
-      <div class="stat-card"><div class="label">Decks montados</div><div class="value">${decks.length}</div><div class="sub">${totalCards} cartas ao todo</div></div>
-      <div class="stat-card"><div class="label">Cartas na coleção</div><div class="value">${collectionTotal.total_units}</div><div class="sub">${collectionTotal.distinct_cards} nomes distintos, com repetidas</div></div>
-      <div class="stat-card"><div class="label">Cartas livres</div><div class="value">${freeCollection.length}</div><div class="sub">fora de deck montado</div></div>
-      <div class="stat-card"><div class="label">Partidas registradas</div><div class="value">${totalGames}</div><div class="sub">${totalWins} vitórias</div></div>
+      <div class="stat-card clickable" data-stat-nav="decks"><div class="label">Decks montados</div><div class="value">${decks.length}</div><div class="sub">${totalCards} cartas ao todo</div></div>
+      <div class="stat-card clickable" data-stat-nav="collection"><div class="label">Cartas na coleção</div><div class="value">${collectionTotal.total_units}</div><div class="sub">${collectionTotal.distinct_cards} nomes distintos, com repetidas</div></div>
+      <div class="stat-card clickable" data-stat-nav="collection"><div class="label">Cartas livres</div><div class="value">${freeCollection.length}</div><div class="sub">fora de deck montado</div></div>
+      <div class="stat-card clickable" data-stat-nav="games"><div class="label">Partidas registradas</div><div class="value">${totalGames}</div><div class="sub">${totalWins} vitórias</div></div>
     </div>
 
     <div class="page-header"><h1 style="font-size:17px">Seus decks</h1></div>
@@ -154,6 +154,9 @@ async function renderDashboard() {
   );
   document.getElementById("dash-new-deck-btn").addEventListener("click", () => openNewDeckModal());
   document.getElementById("dash-new-deck-tile").addEventListener("click", () => openNewDeckModal());
+  document.querySelectorAll("[data-stat-nav]").forEach((el) =>
+    el.addEventListener("click", () => (location.hash = `#${el.dataset.statNav}`))
+  );
 
   document.getElementById("dash-activity").innerHTML = activity
     .map(
