@@ -101,8 +101,10 @@ a { color: inherit; }
 .nav-item .ic { font-size: 16px; width: 18px; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
 .nav-item .ic svg { width: 16px; height: 16px; }
 
-/* Deck names listed under "Meus Decks" so you can jump straight into any deck. */
-.nav-subitems { display: flex; flex-direction: column; margin: 2px 0 6px 30px; gap: 1px; }
+/* Deck names listed under "Meus Decks" so you can jump straight into any deck — hidden
+   unless that section is the one you're actually browsing (toggled via .visible in app.js). */
+.nav-subitems { display: none; flex-direction: column; margin: 2px 0 6px 30px; gap: 1px; }
+.nav-subitems.visible { display: flex; }
 .nav-subitem {
     display: block; width: 100%; text-align: left; border: none; background: none;
     color: var(--text-faint); font-size: 12.5px; padding: 6px 10px; border-radius: 6px;
@@ -290,6 +292,9 @@ a { color: inherit; }
 /* Deck filter bar (type/color/CMC chips + sort) — reuses .filters-bar/.chip from the collection page. */
 .filter-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .filter-group-label { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .05em; margin-right: 2px; }
+/* Type chips use abbreviated labels (see FILTER_TYPE_LABELS in app.js) plus tighter padding —
+   the full category names made this row alone wider than the rest of the filter bar combined. */
+.chip.type-chip { padding: 4px 8px; font-size: 11px; }
 .chip.color-chip {
     border: 2px solid transparent; font-weight: 800; transition: opacity .15s, box-shadow .15s;
     width: 26px; height: 26px; padding: 0; border-radius: 50%;
@@ -363,11 +368,16 @@ a { color: inherit; }
     /* Reveals ~34px (enough for the name band printed on the card) — recomputed from
        --stack-card-w via its 63:88 aspect ratio, so resizing the variable stays in sync. */
     margin-top: calc(-1 * (var(--stack-card-w) * 88 / 63) + 34px);
-    transition: margin-top .15s ease, box-shadow .15s ease;
+    /* Hover/focus reveal uses a transform (not margin-top) so it's paint-only — it doesn't
+       reflow the stack, which is what made mousing down through a pile feel like chasing a
+       moving target. Every card's layout slot stays put; only the hovered one visually slides
+       down over its neighbors. */
+    transform: translateY(0);
+    transition: transform .15s ease, box-shadow .15s ease;
 }
 .stack-item:first-child { margin-top: 0; }
 .stack-item:hover, .stack-item:focus-visible {
-    margin-top: -14px;
+    transform: translateY(calc((var(--stack-card-w) * 88 / 63) - 48px));
     z-index: 50;
     box-shadow: 0 16px 36px rgba(0,0,0,.6);
 }
@@ -451,6 +461,9 @@ a { color: inherit; }
 .synergy-item .name { font-weight: 600; }
 .synergy-item .name:hover { color: var(--accent-bright); }
 .synergy-item .meta { color: var(--text-faint); font-size: 11.5px; margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.synergy-add-btn {
+    padding: 3px 9px !important; line-height: 1.4; font-size: 14px !important; font-weight: 700;
+}
 
 .own-tag {
     display: inline-flex; padding: 2px 8px; border-radius: 20px;
