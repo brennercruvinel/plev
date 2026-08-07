@@ -408,8 +408,9 @@ a { color: inherit; }
 }
 
 /* ---------- Stacked deck view (Moxfield-style overlapping cards) ---------- */
-/* Cards overlap vertically so only a name strip shows; hovering (or focusing, for
-   keyboard users) lifts a card clear of the ones below it to reveal the full art. */
+/* Cards overlap vertically so only a sliver of each card's own art (which already prints the
+   name/cost in its own title bar) shows; hovering (or focusing, for keyboard users) lifts a
+   card clear of the ones below it to reveal the full art. */
 
 .card-stack {
     display: flex;
@@ -427,7 +428,7 @@ a { color: inherit; }
     border: 1px solid var(--border);
     cursor: pointer;
     box-shadow: 0 2px 6px rgba(0,0,0,.35);
-    /* Reveals ~34px (enough for the name band printed on the card) — recomputed from
+    /* Reveals ~34px (enough for the card's own printed name band) — recomputed from
        --stack-card-w via its 63:88 aspect ratio, so resizing the variable stays in sync. */
     margin-top: calc(-1 * (var(--stack-card-w) * 88 / 63) + 34px);
     transition: box-shadow .15s ease;
@@ -444,14 +445,6 @@ a { color: inherit; }
 }
 .stack-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .stack-item .no-image { display: flex; align-items: center; justify-content: center; height: 100%; padding: 10px; text-align: center; font-size: 12px; color: var(--text-dim); }
-.stack-name-bar {
-    position: absolute; top: 0; left: 0; right: 0;
-    background: linear-gradient(to bottom, rgba(12,10,16,.94), rgba(12,10,16,.8) 75%, transparent);
-    color: var(--text); font-size: 12.5px; font-weight: 600;
-    padding: 7px 10px 16px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    pointer-events: none;
-}
 .stack-item .tile-remove { position: absolute; bottom: 6px; right: 6px; z-index: 2; padding: 3px 7px !important; opacity: 0; transition: opacity .15s; }
 .stack-item:hover .tile-remove { opacity: 1; }
 
