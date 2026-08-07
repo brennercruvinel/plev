@@ -20,7 +20,7 @@ from typing import List, Optional
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -77,6 +77,22 @@ def lookup_card(name: str):
     return result
 
 
+# A handful of cards explicitly allow unlimited copies in a Commander deck (basic lands, plus
+# cards like Relentless Rats / Persistent Petitioners / Dragon's Approach / Shadowborn Apostle /
+# Nazgûl that print "A deck can have any number of cards named ..."). Everything else is capped
+# at one copy by the format's singleton rule, so adding a second copy is very likely a mistake —
+# see allows_unlimited_copies() / the duplicate-card confirmation in add_deck_card().
+BASIC_LAND_NAMES = {"Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Snow-Covered Plains",
+                     "Snow-Covered Island", "Snow-Covered Swamp", "Snow-Covered Mountain", "Snow-Covered Forest"}
+
+
+def allows_unlimited_copies(info, card_name: str) -> bool:
+    if card_name in BASIC_LAND_NAMES:
+        return True
+    text = ((info or {}).get("oracle_text") or "").lower()
+    return "a deck can have any number of cards named" in text
+
+
 # ------------------------------------------------------------------ cards ----
 
 @app.get("/api/cards/search")
@@ -100,11 +116,25 @@ def search_cards(q: str = "", limit: int = 30):
 
 
 @app.get("/api/cards/{name}")
-def get_card(name: str):
-    card, how = lookup_card(name)
-    if not card:
-        raise HTTPException(404, f"Carta não encontrada: {name}")
-    cdb = get_cards_db()
+def get_card(name: str, oracle_id: Optional[str] = None):
+    """Looks up a card by name, or — when the caller already knows exactly which printing it
+    wants (picked from a disambiguation list, e.g. two different cards both named "Phyrexian
+    Hydra") — by oracle_id directly, bypassing the ambiguous name match entirely."""
+    if oracle_id:
+        cdb = get_cards_db()
+        if cdb is None:
+            raise HTTPException(404, f"Carta não encontrada: {name}")
+        r = cdb.execute("SELECT * FROM cards WHERE oracle_id = ?", (oracle_id,)).fetchone()
+        card = card_row_to_dict(r) if r else None
+        how = "exata (oracle_id)" if card else None
+        if not card:
+            cdb.close()
+            raise HTTPException(404, f"Carta não encontrada: {name}")
+    else:
+        card, how = lookup_card(name)
+        if not card:
+            raise HTTPException(404, f"Carta não encontrada: {name}")
+        cdb = get_cards_db()
     pts = cdb.execute(
         "SELECT DISTINCT printed_name, set_code FROM names_pt WHERE oracle_id = ?",
         (card["oracle_id"],),
@@ -113,6 +143,19 @@ def get_card(name: str):
     card["match_type"] = how
     card["pt_names"] = [dict(p) for p in pts]
     return card
+
+
+@app.get("/api/cards/{name}/variants")
+def card_variants(name: str):
+    """All distinct cards (by oracle_id) that share this exact printed name — e.g. "Phyrexian
+    Hydra" the 5-mana creature and "Phyrexian Hydra" the token it makes. When this returns more
+    than one row, the frontend shows a picker instead of silently defaulting to one of them."""
+    cdb = get_cards_db()
+    if cdb is None:
+        return []
+    rows = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (name,)).fetchall()
+    cdb.close()
+    return [card_row_to_dict(r) for r in rows]
 
 
 @app.post("/api/scan/recognize")
@@ -244,20 +287,37 @@ def list_decks():
     return out
 
 
+def _normalize_tags(raw: Optional[str]) -> Optional[str]:
+    """Trims, drops empties, and de-dupes (case-insensitively) a comma-separated tag string —
+    shared by create/edit so "Competitivo, competitivo ,, Budget" always lands the same way."""
+    if not raw:
+        return None
+    seen = set()
+    out = []
+    for t in raw.split(","):
+        t = t.strip()
+        if t and t.lower() not in seen:
+            seen.add(t.lower())
+            out.append(t)
+    return ", ".join(out) or None
+
+
 class DeckIn(BaseModel):
     name: str
     commander_name: str
     commander_name_2: Optional[str] = None  # partner / background co-commander, if any
     philosophy: Optional[str] = None
+    tags: Optional[str] = None  # comma-separated custom labels, e.g. "Competitivo, Budget"
 
 
 @app.post("/api/decks")
 def create_deck(payload: DeckIn):
     con = get_app_db()
     commander_2 = (payload.commander_name_2 or "").strip() or None
+    tags = _normalize_tags(payload.tags)
     cur = con.execute(
-        "INSERT INTO decks (name, commander_name, commander_name_2, philosophy) VALUES (?, ?, ?, ?)",
-        (payload.name, payload.commander_name, commander_2, payload.philosophy),
+        "INSERT INTO decks (name, commander_name, commander_name_2, philosophy, tags) VALUES (?, ?, ?, ?, ?)",
+        (payload.name, payload.commander_name, commander_2, payload.philosophy, tags),
     )
     deck_id = cur.lastrowid
     con.execute(
@@ -281,6 +341,7 @@ class DeckEditIn(BaseModel):
     commander_name: str
     commander_name_2: Optional[str] = None
     philosophy: Optional[str] = None
+    tags: Optional[str] = None  # comma-separated custom labels, e.g. "Competitivo, Budget"
 
 
 @app.put("/api/decks/{deck_id}")
@@ -309,8 +370,8 @@ def update_deck(deck_id: int, payload: DeckEditIn):
     new_set = {n for n in (new_c1, new_c2) if n}
 
     con.execute(
-        "UPDATE decks SET name = ?, philosophy = ?, commander_name = ?, commander_name_2 = ? WHERE id = ?",
-        (payload.name, payload.philosophy, new_c1, new_c2, deck_id),
+        "UPDATE decks SET name = ?, philosophy = ?, commander_name = ?, commander_name_2 = ?, tags = ? WHERE id = ?",
+        (payload.name, payload.philosophy, new_c1, new_c2, _normalize_tags(payload.tags), deck_id),
     )
 
     for old_name in old_set - new_set:
@@ -405,18 +466,27 @@ def get_deck(deck_id: int):
     mana_curve = {}
     for dc in dcards:
         r = None
+        dc_oracle_id = dc["oracle_id"] if "oracle_id" in dc.keys() else None
         if cdb is not None:
-            r = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (dc["card_name"],)).fetchone()
+            # A specific printing was picked (disambiguated, e.g. one of two cards both named
+            # "Phyrexian Hydra") — resolve unambiguously by oracle_id first. Only fall back to
+            # the name-based (possibly ambiguous) lookup for older rows that predate this.
+            if dc_oracle_id:
+                r = cdb.execute("SELECT * FROM cards WHERE oracle_id = ?", (dc_oracle_id,)).fetchone()
+            if not r:
+                r = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (dc["card_name"],)).fetchone()
             if not r:
                 r = cdb.execute("SELECT * FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{dc['card_name']}%",)).fetchone()
         info = card_row_to_dict(r) if r else {"name": dc["card_name"], "type_line": "?", "cmc": 0}
         cat = "Comandante" if dc["is_commander"] else classify(info.get("type_line", ""))
         entry = {
             "card_name": dc["card_name"], "quantity": dc["quantity"], "id": dc["id"],
+            "oracle_id": info.get("oracle_id"),
             "mana_cost": info.get("mana_cost"), "type_line": info.get("type_line"),
             "image_uri": info.get("image_uri"), "cmc": info.get("cmc"),
             "price_usd": info.get("price_usd"), "edhrec_rank": info.get("edhrec_rank"),
             "colors": info.get("colors"), "color_identity": info.get("color_identity"),
+            "rarity": info.get("rarity"),
             "shared_with": other_map.get(dc["card_name"], []),
         }
         by_type.setdefault(cat, []).append(entry)
@@ -439,6 +509,8 @@ def get_deck(deck_id: int):
 class DeckCardIn(BaseModel):
     card_name: str
     quantity: int = 1
+    oracle_id: Optional[str] = None  # picked from a disambiguation list, when the name is shared by 2+ cards
+    confirm: bool = False  # set after the user confirms adding a card that's already in the deck
 
 
 @app.post("/api/decks/{deck_id}/cards")
@@ -448,13 +520,53 @@ def add_deck_card(deck_id: int, payload: DeckCardIn):
     if not deck:
         con.close()
         raise HTTPException(404, "Deck não encontrado")
+
+    cdb = get_cards_db()
+    info = None
+    if cdb is not None:
+        if payload.oracle_id:
+            r = cdb.execute("SELECT * FROM cards WHERE oracle_id = ?", (payload.oracle_id,)).fetchone()
+        else:
+            r = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (payload.card_name,)).fetchone()
+        info = card_row_to_dict(r) if r else None
+        cdb.close()
+
+    # Commander is singleton — only basic lands and a handful of explicitly-unlimited cards
+    # (Relentless Rats, Shadowborn Apostle, etc.) can have more than 1 copy. Anything else
+    # already in the deck needs an explicit confirm before a second copy is added.
+    if not allows_unlimited_copies(info, payload.card_name) and not payload.confirm:
+        existing_qty = con.execute(
+            "SELECT COALESCE(SUM(quantity),0) FROM deck_cards WHERE deck_id = ? AND card_name = ? COLLATE NOCASE",
+            (deck_id, payload.card_name),
+        ).fetchone()[0]
+        if existing_qty:
+            con.close()
+            raise HTTPException(409, {
+                "needs_confirmation": True,
+                "card_name": payload.card_name,
+                "existing_quantity": existing_qty,
+            })
+
+    # Merge into an existing row for the same (name, oracle_id) pair rather than always
+    # inserting a fresh one — otherwise adding "Swamp" one at a time via the search box builds
+    # up a pile of separate 1x rows instead of a single row whose quantity actually adds up.
+    # oracle_id is matched with IS (not =) so two NULLs — i.e. two adds where no specific
+    # printing was picked — still count as the same card, while a disambiguated printing only
+    # merges with rows that picked that exact same printing.
+    existing_row = con.execute(
+        "SELECT id FROM deck_cards WHERE deck_id = ? AND card_name = ? COLLATE NOCASE AND is_commander = 0 AND oracle_id IS ?",
+        (deck_id, payload.card_name, payload.oracle_id),
+    ).fetchone()
+    if existing_row:
+        con.execute("UPDATE deck_cards SET quantity = quantity + ? WHERE id = ?", (payload.quantity, existing_row["id"]))
+    else:
+        con.execute(
+            "INSERT INTO deck_cards (deck_id, card_name, quantity, oracle_id) VALUES (?, ?, ?, ?)",
+            (deck_id, payload.card_name, payload.quantity, payload.oracle_id),
+        )
     con.execute(
-        "INSERT INTO deck_cards (deck_id, card_name, quantity) VALUES (?, ?, ?)",
-        (deck_id, payload.card_name, payload.quantity),
-    )
-    con.execute(
-        "INSERT INTO collection (card_name, lang, quantity, allocated_deck_id, notes) VALUES (?, 'en', ?, ?, 'Adicionado via app')",
-        (payload.card_name, payload.quantity, deck_id),
+        "INSERT INTO collection (card_name, lang, quantity, allocated_deck_id, oracle_id, notes) VALUES (?, 'en', ?, ?, ?, 'Adicionado via app')",
+        (payload.card_name, payload.quantity, deck_id, payload.oracle_id),
     )
     log_activity(con, "card_added_deck", f"{payload.card_name} entrou no deck {deck['name']}")
     con.commit()
@@ -473,6 +585,57 @@ def remove_deck_card(deck_id: int, card_id: int):
     con.commit()
     con.close()
     return {"ok": True}
+
+
+# -------------------------------------------------------------- deck export ----
+# Downloadable decklist, in either of two plain-text shapes:
+#   "text"     — bare "qty name" per line, no zones/headers. The most universally-accepted
+#                shape (also exactly what this app's own decklist_import.py reads back in).
+#   "moxfield" — same, but with "Commander (n)" / "Deck (n)" section headers, which Moxfield's
+#                paste-to-import recognizes (as does decklist_import.SECTION_HEADER_RE here).
+# No card lookups needed — this only ever reads what's already stored in deck_cards, so it
+# works even without the card index built.
+
+@app.get("/api/decks/{deck_id}/export")
+def export_deck(deck_id: int, format: str = "text"):
+    con = get_app_db()
+    deck = con.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
+    if not deck:
+        con.close()
+        raise HTTPException(404, "Deck não encontrado")
+    cards = con.execute(
+        "SELECT * FROM deck_cards WHERE deck_id = ? ORDER BY is_commander DESC, card_name COLLATE NOCASE",
+        (deck_id,),
+    ).fetchall()
+    con.close()
+
+    commanders = [c for c in cards if c["is_commander"]]
+    others = [c for c in cards if not c["is_commander"]]
+
+    def card_line(c):
+        return f"{c['quantity']} {c['card_name']}"
+
+    if format == "moxfield":
+        lines = []
+        if commanders:
+            lines.append(f"Commander ({sum(c['quantity'] for c in commanders)})")
+            lines += [card_line(c) for c in commanders]
+            lines.append("")
+        lines.append(f"Deck ({sum(c['quantity'] for c in others)})")
+        lines += [card_line(c) for c in others]
+        body = "\n".join(lines).strip("\n") + "\n"
+        suffix = "-moxfield"
+    else:
+        lines = [card_line(c) for c in commanders + others]
+        body = "\n".join(lines) + "\n"
+        suffix = ""
+
+    filename = f"{slugify(deck['name']) or 'deck'}{suffix}.txt"
+    return Response(
+        content=body,
+        media_type="text/plain; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ---------------------------------------------------------- decklist import ----
@@ -677,6 +840,52 @@ def fetch_deck_synergy(deck_id: int):
     return {"ok": True}
 
 
+# EDHREC cardlist headers that are too generic to work as a "tag" for browsing — every card in
+# a High Synergy/Top Cards/New Cards list, plus these existing ones, would just end up bucketed
+# together, defeating the point of grouping by theme.
+GENERIC_TAG_HEADERS = {"top cards", "new cards", "high synergy cards"}
+
+
+@app.get("/api/decks/{deck_id}/tags")
+def deck_card_tags(deck_id: int):
+    """Contextual tags for the cards actually in this deck, sourced from the EDHREC cardlist
+    headers on the deck's commander(s) — e.g. "Removal", "Ramp", "Recursion". 100% offline,
+    reads the same cached commander JSON as /synergy. Lets the deck page group cards by theme
+    instead of just by card type.
+    """
+    con = get_app_db()
+    deck = con.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
+    if not deck:
+        con.close()
+        raise HTTPException(404, "Deck não encontrado")
+    deck_card_names = {r["card_name"] for r in con.execute(
+        "SELECT card_name FROM deck_cards WHERE deck_id = ?", (deck_id,)
+    ).fetchall()}
+    con.close()
+
+    import json
+    tag_map = {}
+    any_cached = False
+    for name in _deck_commanders(deck):
+        slug = slugify(name)
+        path = os.path.join(EDHREC_CACHE, "commanders", f"{slug}.json")
+        if not os.path.exists(path):
+            continue
+        any_cached = True
+        data = json.load(open(path, encoding="utf-8"))
+        cardlists = data.get("container", {}).get("json_dict", {}).get("cardlists", [])
+        for cl in cardlists:
+            header = (cl.get("header") or "").strip()
+            if not header or header.lower() in GENERIC_TAG_HEADERS:
+                continue
+            for v in cl.get("cardviews", []):
+                cname = v.get("name")
+                if cname in deck_card_names:
+                    tag_map.setdefault(cname, set()).add(header)
+
+    return {"cached": any_cached, "tags": {name: sorted(tags) for name, tags in tag_map.items()}}
+
+
 # --------------------------------------------------------------- collection ----
 
 @app.get("/api/collection")
@@ -781,21 +990,22 @@ class CollectionIn(BaseModel):
     quantity: int = 1
     notes: Optional[str] = None
     deck_id: Optional[int] = None
+    oracle_id: Optional[str] = None  # picked from a disambiguation list, when the name is shared by 2+ cards
 
 
 @app.post("/api/collection")
 def add_collection(payload: CollectionIn):
     con = get_app_db()
     cur = con.execute(
-        "INSERT INTO collection (card_name, set_code, artist, lang, quantity, notes, allocated_deck_id) VALUES (?,?,?,?,?,?,?)",
-        (payload.card_name, payload.set_code, payload.artist, payload.lang, payload.quantity, payload.notes, payload.deck_id),
+        "INSERT INTO collection (card_name, set_code, artist, lang, quantity, notes, allocated_deck_id, oracle_id) VALUES (?,?,?,?,?,?,?,?)",
+        (payload.card_name, payload.set_code, payload.artist, payload.lang, payload.quantity, payload.notes, payload.deck_id, payload.oracle_id),
     )
     qty_label = f"{payload.quantity}x " if payload.quantity != 1 else ""
     if payload.deck_id:
         deck = con.execute("SELECT name FROM decks WHERE id = ?", (payload.deck_id,)).fetchone()
         con.execute(
-            "INSERT INTO deck_cards (deck_id, card_name, quantity) VALUES (?, ?, ?)",
-            (payload.deck_id, payload.card_name, payload.quantity),
+            "INSERT INTO deck_cards (deck_id, card_name, quantity, oracle_id) VALUES (?, ?, ?, ?)",
+            (payload.deck_id, payload.card_name, payload.quantity, payload.oracle_id),
         )
         log_activity(con, "card_new", f"{qty_label}{payload.card_name} adicionada à coleção e ao deck {deck['name'] if deck else '?'}")
     else:
