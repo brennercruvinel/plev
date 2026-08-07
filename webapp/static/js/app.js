@@ -206,13 +206,13 @@ function formatBuiltAt(unixSeconds) {
 function sidebarDataPanelHtml(info) {
   if (!info.exists) {
     return h`
-      <div class="sidebar-data-info warn">Base de cartas ainda não configurada.</div>
-      <button class="btn small" id="update-data-btn" style="width:100%;margin-top:6px">Baixar base de dados agora</button>
+      <button class="btn small" id="update-data-btn" style="width:100%;margin-top:16px">Baixar base de dados agora</button>
+      <div class="sidebar-data-info warn" style="margin-top:8px">Base de cartas ainda não configurada.</div>
       <div id="update-data-status"></div>`;
   }
   return h`
-    <div class="sidebar-data-info">Dados: ${info.cards.toLocaleString("pt-BR")} cartas + EDHREC cacheado${info.built_at ? ` · atualizado em ${formatBuiltAt(info.built_at)}` : ""}. Só preço ao vivo precisa de rede.</div>
-    <button class="btn small secondary" id="update-data-btn" style="width:100%;margin-top:6px">Atualizar base de dados</button>
+    <button class="btn small secondary" id="update-data-btn" style="width:100%;margin-top:16px">Atualizar base de dados</button>
+    <div class="sidebar-data-info" style="margin-top:8px">Dados: ${info.cards.toLocaleString("pt-BR")} cartas + EDHREC cacheado${info.built_at ? ` · atualizado em ${formatBuiltAt(info.built_at)}` : ""}. Só preço ao vivo precisa de rede.</div>
     <div id="update-data-status"></div>`;
 }
 
