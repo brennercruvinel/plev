@@ -282,6 +282,42 @@ a { color: inherit; }
     padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font);
 }
 .filters-bar input[type=text] { flex: 1; min-width: 180px; }
+
+/* Deck card search — collapses down to just the icon button so it doesn't compete with the
+   type/color/CMC chips for space; expands into a real text field only when you click it (or
+   already have an active search term, so a filtered view doesn't silently hide the search box). */
+.search-collapse { display: flex; align-items: center; flex: 0 0 auto; }
+.search-icon-btn {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 32px; height: 32px; padding: 0; border-radius: 50%;
+    background: var(--bg-card); border: 1px solid var(--border-light); color: var(--text-dim);
+    cursor: pointer; transition: background .15s, color .15s;
+}
+.search-icon-btn:hover { background: var(--bg-card-hover); color: var(--text); }
+.search-icon-btn svg { width: 15px; height: 15px; display: block; }
+.filters-bar input.search-collapse-input {
+    flex: 0 0 auto; width: 0; min-width: 0; padding: 0; margin-left: 0; border: none; opacity: 0;
+    transition: width .2s ease, padding .2s ease, margin-left .2s ease, opacity .15s ease;
+}
+.search-collapse.expanded .search-collapse-input {
+    width: 200px; padding: 8px 12px; margin-left: 8px; opacity: 1; border: 1px solid var(--border-light);
+}
+
+/* Sort control — same icon-button footprint as the search toggle. The real <select> sits
+   invisible on top of the glyph (full size, opacity 0) so it stays a native, keyboard- and
+   screen-reader-friendly dropdown; only its closed-state trigger is replaced visually. */
+.sort-icon-wrap { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
+.sort-icon-glyph {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border-light);
+    color: var(--text-dim); pointer-events: none; transition: background .15s, color .15s;
+}
+.sort-icon-glyph svg { width: 15px; height: 15px; display: block; }
+.sort-icon-wrap:hover .sort-icon-glyph, .sort-icon-wrap:focus-within .sort-icon-glyph { background: var(--bg-card-hover); color: var(--text); }
+.filters-bar select.sort-icon-select {
+    position: absolute; inset: 0; width: 100%; height: 100%; padding: 0;
+    opacity: 0; border: none; cursor: pointer; appearance: none;
+}
 .chip {
     padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
     background: var(--bg-card); border: 1px solid var(--border-light); color: var(--text-dim);
@@ -368,16 +404,15 @@ a { color: inherit; }
     /* Reveals ~34px (enough for the name band printed on the card) — recomputed from
        --stack-card-w via its 63:88 aspect ratio, so resizing the variable stays in sync. */
     margin-top: calc(-1 * (var(--stack-card-w) * 88 / 63) + 34px);
-    /* Hover/focus reveal uses a transform (not margin-top) so it's paint-only — it doesn't
-       reflow the stack, which is what made mousing down through a pile feel like chasing a
-       moving target. Every card's layout slot stays put; only the hovered one visually slides
-       down over its neighbors. */
-    transform: translateY(0);
-    transition: transform .15s ease, box-shadow .15s ease;
+    transition: box-shadow .15s ease;
 }
 .stack-item:first-child { margin-top: 0; }
+/* Hover/focus reveal is pure z-index, no transform and no margin change. Each card's box
+   already spans its full height in its layout slot — it's only hidden because the next card
+   in DOM order paints over it. Raising z-index just lets it paint on top of its neighbors in
+   place, so nothing moves and the cursor never ends up hovering empty space (which is what
+   caused the reflow-jitter and, later, the translateY chase-the-card bug). */
 .stack-item:hover, .stack-item:focus-visible {
-    transform: translateY(calc((var(--stack-card-w) * 88 / 63) - 48px));
     z-index: 50;
     box-shadow: 0 16px 36px rgba(0,0,0,.6);
 }
@@ -451,6 +486,34 @@ a { color: inherit; }
     padding: 16px; position: sticky; top: 20px;
 }
 .sidebar-panel h3 { font-size: 14px; margin: 0 0 12px; }
+
+/* Commander panel — highlighted with an accent border/glow so it stands out from the rest of
+   the sidebar (and from the plain card list it used to sit inside of). */
+.commander-panel {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-glow), 0 8px 22px var(--accent-glow);
+}
+.commander-panel h3 { color: var(--accent-bright); }
+.commander-list { display: flex; flex-direction: column; gap: 10px; }
+.commander-card {
+    display: flex; align-items: center; gap: 10px; padding: 6px;
+    border-radius: var(--radius-sm); cursor: pointer; transition: background .15s;
+}
+.commander-card:hover { background: var(--bg-card); }
+.commander-card img {
+    width: 56px; height: 78px; object-fit: cover; border-radius: 6px; flex-shrink: 0;
+    border: 1px solid var(--border-light);
+}
+.commander-card .no-image {
+    width: 56px; height: 78px; border-radius: 6px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; padding: 4px;
+    text-align: center; font-size: 9px; background: var(--bg-card); color: var(--text-faint);
+}
+.commander-info { min-width: 0; }
+.commander-name { font-weight: 700; font-size: 13.5px; }
+.commander-type { font-size: 11px; color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.commander-cost { margin-top: 4px; }
+
 .curve-bars { display: flex; align-items: flex-end; gap: 4px; height: 90px; margin-bottom: 8px; }
 .curve-bar { flex: 1; background: linear-gradient(to top, var(--accent), var(--mana-b)); border-radius: 3px 3px 0 0; min-height: 2px; position: relative; }
 .curve-labels { display: flex; gap: 4px; font-size: 10px; color: var(--text-faint); }
