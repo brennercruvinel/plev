@@ -51,14 +51,14 @@ fn main() {
         .setup(move |app| {
             use tauri::WebviewWindowBuilder;
 
+            paths::ensure_dirs();
             if let Err(e) = db::init_app_db() {
                 eprintln!("failed to initialise app.db: {e}");
             }
 
             let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
-            // Port 0 and read back what was assigned: a fixed port would collide with the Python
-            // dev server (and with a second copy of this app), and the failure mode is a blank
-            // window that gives no hint why.
+            // Port 0 and read back what was assigned: a fixed port would collide with a second
+            // copy of this app, and the failure mode is a blank window that gives no hint why.
             let listener = rt
                 .block_on(async {
                     tokio::net::TcpListener::bind(SocketAddr::from((Ipv4Addr::LOCALHOST, 0))).await
