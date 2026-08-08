@@ -21,8 +21,8 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 
-use crate::api::CARD_COLS;
 use crate::db::{fold_text, open_app_db, open_cards_db};
+use crate::routes::cards::CARD_COLS;
 
 // Midpoints of the guide's ranges; land count + these sum to 99, +1 commander = 100.
 const T_LANDS: usize = 37;
@@ -106,8 +106,6 @@ struct Candidate {
     name: String,
     oracle_id: String,
     mana_cost: String,
-    color_identity: String,
-    type_line: String,
     category: &'static str,
     game_changer: bool,
     mld: bool,
@@ -136,7 +134,6 @@ pub struct BuildOutcome {
     pub meta: Value,
 }
 
-/// What the user already owns, keyed by folded card name -> (is_free, deck_name_if_allocated).
 /// How many physical copies of one card the user owns, and where they are.
 ///
 /// Every row in `collection` is real cardboard: a card sleeved in two decks is two rows, because
@@ -150,9 +147,6 @@ pub struct Copies {
 }
 
 impl Copies {
-    pub fn total(&self) -> i64 {
-        self.free + self.by_deck.values().map(|(_, q)| q).sum::<i64>()
-    }
     /// Copies sitting in decks other than `deck_id`, as (deck name, copies).
     pub fn elsewhere(&self, deck_id: i64) -> Vec<(String, i64)> {
         let mut v: Vec<(String, i64)> = self
@@ -249,6 +243,7 @@ pub fn build(p: &AutoBuildIn) -> Result<BuildOutcome, String> {
 
         for row in rows.flatten() {
             let (name, oracle_id, mana_cost, ci, type_line, text, gc, rank) = row;
+            let _ = &ci; // used for the color-identity filter above, not stored on the candidate
             if name.eq_ignore_ascii_case(&commander_name) {
                 continue;
             }
@@ -281,8 +276,6 @@ pub fn build(p: &AutoBuildIn) -> Result<BuildOutcome, String> {
                 name,
                 oracle_id,
                 mana_cost,
-                color_identity: ci,
-                type_line,
                 category,
                 game_changer: gc == 1,
                 mld: is_mass_land_denial(&text_lower),
@@ -321,7 +314,7 @@ pub fn build(p: &AutoBuildIn) -> Result<BuildOutcome, String> {
         true
     };
 
-    let mut take = |cat: &str, n: usize, chosen: &mut Vec<Candidate>, gc_left: &mut usize, taken: &mut HashSet<String>| {
+    let take = |cat: &str, n: usize, chosen: &mut Vec<Candidate>, gc_left: &mut usize, taken: &mut HashSet<String>| {
         let mut got = 0;
         for c in pool.iter().filter(|c| c.category == cat) {
             if got >= n {

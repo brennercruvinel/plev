@@ -53,7 +53,8 @@ it works offline. Use **"Atualizar base de dados"** the same way whenever a new 
 
 ## Status of the port
 
-The desktop app is the product; the FastAPI web version under `webapp/` is retired.
+The desktop app is the product. The FastAPI web version has been removed — it is in git
+history if it is ever needed.
 
 Everything works natively except the scanner: decks (create / edit / delete, incl. partner
 commanders), collection (add one at a time or by pasting a list, allocate, free), games,
@@ -61,7 +62,9 @@ card search and detail with accent-insensitive matching, auto-build with ownersh
 decklist import, EDHREC synergy, and the data update.
 
 The **scanner** (camera + OCR) is the one remaining feature and is marked "em breve" in the
-app. Until it lands, add cards by pasting a list or importing a decklist.
+app. Until it lands, add cards by pasting a list or importing a decklist. The old browser-OCR
+prototype was removed rather than left to rot: it depended on a CDN script the app no longer
+loads, and an offline-first app needs an approach that doesn't reach for the network.
 
 The app makes no network requests at all except the ones you ask for: the data update and
 fetching a commander's EDHREC page. Card art is still loaded from scryfall.io URLs, so the
@@ -70,25 +73,24 @@ grids need a connection to show images — caching those locally is the next off
 ## Structure
 
 ```
-desktop/src-tauri/     the app
+desktop/src-tauri/     the app (Rust)
   src/main.rs          window + embedded HTTP server on a loopback port
-  src/api.rs           read endpoints (cards, decks, collection, games)
-  src/writes.rs        write endpoints
+  src/routes/          one module per domain, each owning its reads and its writes
   src/wizard.rs        deterministic deckbuilder, with ownership modes (no LLM)
   src/update.rs        Scryfall bulk download + index rebuild + EDHREC refresh
-  src/edhrec.rs        per-commander synergy cache (fetch on demand, read offline)
-  src/decklist.rs      decklist parsing (Moxfield / Archidekt / plain text)
   src/db.rs            SQLite access, schema + migrations, accent folding
-  src/paths.rs         where data and the frontend are resolved from
+desktop/ui/            the frontend (plain ES modules, no build step), bundled into the .app
 
-webapp/static/         the frontend (plain HTML/CSS/JS, no build step);
-                       bundled into the .app at build time
+docs/ARCHITECTURE.md   how it fits together and where to add things
+docs/deckbuilding_guide.json  the ratios/brackets research behind wizard.rs
 
-scryfall.py            Scryfall API CLI — still handy standalone, no longer needed by the app
+scryfall.py            Scryfall API CLI — standalone, not used by the app
 mtgdb.py               same, for the card index
 edhrec.py              same, for the synergy cache
-webapp/*.py            retired FastAPI version, kept for reference
 ```
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) before adding a feature — it covers where
+things go and the two invariants (copies are physical; the card index may not exist yet).
 
 ## Tools used by the app (none require an API key)
 

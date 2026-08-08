@@ -90,7 +90,7 @@ pub fn static_dir() -> PathBuf {
     if let Ok(cwd) = std::env::current_dir() {
         let mut cur = Some(cwd.as_path());
         while let Some(dir) = cur {
-            let candidate = dir.join("webapp").join("static");
+            let candidate = dir.join("desktop").join("ui");
             if candidate.is_dir() {
                 return candidate;
             }
@@ -108,10 +108,6 @@ pub fn app_db() -> PathBuf {
     app_db_dir().join("app.db")
 }
 
-/// Locally cached card art, for true offline use (the index stores remote scryfall.io URLs).
-pub fn images_dir() -> PathBuf {
-    data_dir().join("images")
-}
 
 /// Creates the app-data layout on first run. Safe to call every launch.
 pub fn ensure_dirs() {

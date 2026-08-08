@@ -2,17 +2,17 @@
 //
 // Starts the embedded HTTP server on a free loopback port, then points the Tauri webview at it.
 // Serving the existing frontend over http:// (rather than Tauri's asset protocol) is deliberate:
-// webapp/static/js/api.js calls relative /api/* paths with fetch(), so it runs here unmodified.
+// desktop/ui/js/api.js calls relative /api/* paths with fetch(), so it runs here unmodified.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod api;
 mod db;
 mod decklist;
 mod edhrec;
+mod http;
 mod paths;
+mod routes;
 mod update;
 mod wizard;
-mod writes;
 
 use axum::{
     http::header,
@@ -31,8 +31,7 @@ async fn serve(listener: tokio::net::TcpListener) {
     // static dir via app.mount("/assets", ...). Serving the directory at the router root instead
     // makes every /assets/* request 404 — the window then renders raw unstyled HTML with no JS.
     let app = Router::new()
-        .merge(api::router())
-        .merge(writes::router())
+        .merge(routes::router())
         .route(
             "/",
             get(move || {
@@ -51,6 +50,23 @@ async fn serve(listener: tokio::net::TcpListener) {
             }),
         )
         .nest_service("/assets", ServeDir::new(&static_dir));
+
+    // Opt-in request log. The window has no devtools in a release build, so when the frontend
+    // misbehaves there is otherwise no way to tell "the JS never ran" from "it ran and the API
+    // answered wrongly" — run with SPELLBOOK_LOG_REQUESTS=1 and the difference is one glance.
+    let app = if std::env::var("SPELLBOOK_LOG_REQUESTS").is_ok() {
+        app.layer(axum::middleware::from_fn(
+            |req: axum::extract::Request, next: axum::middleware::Next| async move {
+                let (method, uri) = (req.method().clone(), req.uri().clone());
+                let res = next.run(req).await;
+                println!("[req] {method} {uri} -> {}", res.status().as_u16());
+                res
+            },
+        ))
+    } else {
+        app
+    };
+
     let _ = axum::serve(listener, app).await;
 }
 

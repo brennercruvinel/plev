@@ -101,6 +101,24 @@ pub fn init_app_db() -> Result<()> {
     Ok(())
 }
 
+/// Appends to the activity feed the home screen shows. Deliberately infallible: a deck edit that
+/// succeeded must not be reported as failed because its history line didn't write.
+pub fn log_activity(con: &Connection, type_: &str, description: &str) {
+    let _ = con.execute(
+        "INSERT INTO activity (type, description) VALUES (?1, ?2)",
+        rusqlite::params![type_, description],
+    );
+}
+
+/// A deck's name, or None if the id doesn't exist — used for the messages in the activity log.
+pub fn deck_name(con: &Connection, deck_id: i64) -> Option<String> {
+    use rusqlite::OptionalExtension;
+    con.query_row("SELECT name FROM decks WHERE id = ?1", [deck_id], |r| r.get(0))
+        .optional()
+        .ok()
+        .flatten()
+}
+
 /// Read-only handle to the card index, or None when it hasn't been built yet (fresh install).
 /// Every caller must degrade gracefully — same contract as get_cards_db() in Python.
 pub fn open_cards_db() -> Option<Connection> {

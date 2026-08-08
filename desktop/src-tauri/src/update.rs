@@ -47,9 +47,6 @@ fn set_progress(task: &str, percent: f64) {
     s.percent = percent.clamp(0.0, 100.0);
 }
 
-pub fn is_running() -> bool {
-    STATUS.lock().unwrap().state == "running"
-}
 
 /// Kicks off the update on a worker thread. Returns false if one is already in flight.
 pub fn start() -> bool {

@@ -36,9 +36,6 @@ fn cache_path(kind: &str, slug: &str) -> PathBuf {
     paths::data_dir().join("edhrec").join(kind).join(format!("{slug}.json"))
 }
 
-pub fn is_cached(commander: &str) -> bool {
-    cache_path("commanders", &slugify(commander)).exists()
-}
 
 fn read_cache(kind: &str, commander: &str) -> Option<Value> {
     let raw = std::fs::read_to_string(cache_path(kind, &slugify(commander))).ok()?;

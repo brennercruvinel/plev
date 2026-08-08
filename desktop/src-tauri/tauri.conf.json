@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.felipenavarro.spellbook",
   "build": {
-    "frontendDist": "../../webapp/static"
+    "frontendDist": "../ui"
   },
   "app": {
     "windows": [],
@@ -22,7 +22,7 @@
       "icons/icon.png"
     ],
     "resources": {
-      "../../webapp/static": "static"
+      "../ui": "static"
     },
     "macOS": {
       "minimumSystemVersion": "10.15"
