@@ -418,6 +418,13 @@ async fn get_deck(Path(deck_id): Path<i64>) -> impl IntoResponse {
             Value::Object(by_type.into_iter().map(|(k, v)| (k, Value::Array(v))).collect()),
         );
         m.insert("mana_curve".into(), Value::Object(curve));
+        // Per-card ownership so the deck view can flag what isn't owned (or is on loan from
+        // another deck). Computed on read so it tracks the collection as it changes.
+        let own = crate::wizard::deck_ownership(&con, deck_id);
+        m.insert(
+            "ownership".into(),
+            Value::Object(own.into_iter().collect::<serde_json::Map<_, _>>()),
+        );
     }
     Json(deck).into_response()
 }
@@ -730,4 +737,5 @@ pub fn router() -> Router {
         .route("/api/activity", get(list_activity))
         .route("/api/data/info", get(data_info))
         .route("/api/data/update/status", get(data_update_status))
+        .route("/api/decks/auto-build/status", get(crate::writes::auto_build_status))
 }

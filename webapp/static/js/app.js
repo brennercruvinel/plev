@@ -413,6 +413,20 @@ async function openNewDeckModal() {
         <select id="nd-bracket" style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
           ${Object.entries(BRACKET_LABELS).map(([v, label]) => `<option value="${v}" ${v === "3" ? "selected" : ""}>${label}</option>`).join("")}
         </select>
+
+        <label style="font-size:12px;color:var(--text-dim);display:block;margin-top:12px">Quais cartas usar</label>
+        <label class="toggle-row" style="align-items:flex-start;margin-top:6px">
+          <input type="radio" name="nd-mode" value="suggest" checked style="margin-top:3px">
+          <span><b>Sugerir as melhores</b><br>
+            <span style="color:var(--text-dim);font-size:12px">Monta o melhor deck possível, mesmo com cartas que você não tem — as que faltam ficam marcadas para você comprar.</span>
+          </span>
+        </label>
+        <label class="toggle-row" style="align-items:flex-start;margin-top:8px">
+          <input type="radio" name="nd-mode" value="owned" style="margin-top:3px">
+          <span><b>Só o que tenho na coleção</b><br>
+            <span style="color:var(--text-dim);font-size:12px">Deck montável hoje. Cartas que estão em outro deck entram marcadas, avisando que você teria que desmontá-lo.</span>
+          </span>
+        </label>
       </div>
 
       <div style="margin-bottom:12px">
@@ -504,7 +518,8 @@ async function openNewDeckModal() {
     const bracket = Number(backdrop.querySelector("#nd-bracket").value);
     const statusEl = backdrop.querySelector("#nd-build-status");
     try {
-      await api.startAutoBuildDeck({ name, commander_name, bracket, philosophy });
+      const mode = backdrop.querySelector('input[name="nd-mode"]:checked')?.value || "suggest";
+      await api.startAutoBuildDeck({ name, commander_name, bracket, philosophy, mode });
     } catch (err) {
       saveBtn.disabled = false;
       commanderInput.disabled = false;
@@ -521,6 +536,55 @@ async function openNewDeckModal() {
         commanderInput.disabled = false;
       },
     });
+  });
+}
+
+/// Deleting a deck has two very different meanings depending on whether you physically own its
+/// cards: a real deck you're taking apart should leave its cards in the collection, while a
+/// planned/auto-built list you never bought should take them out with it. Asking is the only way
+/// to know which — guessing either way silently corrupts the collection count.
+async function openDeleteDeckModal(deck, id) {
+  const inCollection = (await api.collection("allocated"))
+    .filter((c) => c.decks.some((d) => d.deck_id === id))
+    .reduce((sum, c) => sum + c.decks.filter((d) => d.deck_id === id).reduce((s, d) => s + d.quantity, 0), 0);
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = h`
+    <div class="modal">
+      <h3>Excluir "${deck.name}"</h3>
+      <p style="color:var(--text-dim);font-size:13px;line-height:1.5;margin:0 0 14px">
+        ${inCollection
+          ? `Este deck tem <b>${inCollection}</b> carta(s) registradas na sua coleção. O que fazer com elas?`
+          : "Nenhuma carta deste deck está registrada na sua coleção, então nada será removido de lá."}
+      </p>
+      ${inCollection ? `
+      <label class="toggle-row" style="align-items:flex-start;margin-bottom:12px">
+        <input type="radio" name="del-mode" value="free" checked style="margin-top:3px">
+        <span><b>Devolver para cartas livres</b><br>
+          <span style="color:var(--text-dim);font-size:12px">Você tem essas cartas fisicamente — o deck foi desmontado, mas elas continuam na coleção.</span>
+        </span>
+      </label>
+      <label class="toggle-row" style="align-items:flex-start">
+        <input type="radio" name="del-mode" value="remove" style="margin-top:3px">
+        <span><b>Remover também da coleção</b><br>
+          <span style="color:var(--text-dim);font-size:12px">Você não tem essas cartas — era uma lista planejada. Some da coleção junto com o deck.</span>
+        </span>
+      </label>` : ""}
+      <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
+        <button class="btn secondary" id="dd-cancel">Cancelar</button>
+        <button class="btn danger" id="dd-confirm">Excluir deck</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  backdrop.querySelector("#dd-cancel").addEventListener("click", () => backdrop.remove());
+  backdrop.querySelector("#dd-confirm").addEventListener("click", async (e) => {
+    e.target.disabled = true;
+    const mode = backdrop.querySelector('input[name="del-mode"]:checked')?.value || "free";
+    await api.deleteDeck(id, mode);
+    backdrop.remove();
+    location.hash = "#decks";
   });
 }
 
@@ -1358,11 +1422,9 @@ async function renderDeckDetail([idStr]) {
     location.hash = "#decks";
   });
 
-  document.getElementById("delete-deck-btn").addEventListener("click", async () => {
-    if (!confirm(`Excluir o deck "${deck.name}"? As cartas voltam pra coleção livre — isso não pode ser desfeito.`)) return;
-    await api.deleteDeck(id);
-    location.hash = "#decks";
-  });
+  document.getElementById("delete-deck-btn").addEventListener("click", () =>
+    openDeleteDeckModal(deck, id)
+  );
 
   document.getElementById("edit-deck-btn").addEventListener("click", () =>
     openEditDeckModal(deck, () => renderDeckDetail([idStr]))

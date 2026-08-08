@@ -24,7 +24,9 @@ export const api = {
   deck: (id) => req(`/decks/${id}`),
   createDeck: (payload) => req("/decks", { method: "POST", body: JSON.stringify(payload) }),
   updateDeck: (id, payload) => req(`/decks/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
-  deleteDeck: (id) => req(`/decks/${id}`, { method: "DELETE" }),
+  // mode: "free" (default) leaves the deck's cards in the collection, unallocated;
+  // "remove" also deletes those collection rows, for a deck whose cards were never owned.
+  deleteDeck: (id, mode = "free") => req(`/decks/${id}?mode=${mode}`, { method: "DELETE" }),
   startAutoBuildDeck: (payload) => req("/decks/auto-build", { method: "POST", body: JSON.stringify(payload) }),
   autoBuildStatus: () => req("/decks/auto-build/status"),
   deckSynergy: (id) => req(`/decks/${id}/synergy`),

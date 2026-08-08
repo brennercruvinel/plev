@@ -6,7 +6,7 @@
 //! commander(s) change, and writing the same activity-log lines (which the Dashboard renders).
 
 use axum::{
-    extract::Path,
+    extract::{Path, Query},
     http::StatusCode,
     response::IntoResponse,
     routing::{delete, patch, post, put},
@@ -181,17 +181,46 @@ async fn update_deck(Path(deck_id): Path<i64>, Json(p): Json<DeckIn>) -> impl In
     Json(json!({ "ok": true })).into_response()
 }
 
-async fn delete_deck(Path(deck_id): Path<i64>) -> impl IntoResponse {
+#[derive(Deserialize)]
+pub struct DeleteDeckQuery {
+    /// "free" (default) keeps the deck's cards in the collection, just unallocated — the deck was
+    /// taken apart but you still own the cards. "remove" deletes those collection rows too, for a
+    /// deck whose cards were never physically owned (e.g. an auto-built list used as a shopping
+    /// plan). Defaulting to "free" keeps the destructive option strictly opt-in.
+    #[serde(default)]
+    mode: Option<String>,
+}
+
+async fn delete_deck(
+    Path(deck_id): Path<i64>,
+    Query(q): Query<DeleteDeckQuery>,
+) -> impl IntoResponse {
     let Ok(con) = open_app_db() else {
         return oops(StatusCode::INTERNAL_SERVER_ERROR, "Banco indisponível").into_response();
     };
     let Some(name) = deck_name(&con, deck_id) else {
         return oops(StatusCode::NOT_FOUND, "Deck não encontrado").into_response();
     };
-    // deck_cards cascades; collection rows just lose their allocation (ON DELETE SET NULL).
+    let remove_from_collection = q.mode.as_deref() == Some("remove");
+
+    let mut removed = 0usize;
+    if remove_from_collection {
+        // Only the rows this deck owns — anything already free, or allocated elsewhere, is
+        // untouched. Runs before the DELETE, since the FK would otherwise null the link first.
+        removed = con
+            .execute("DELETE FROM collection WHERE allocated_deck_id = ?1", [deck_id])
+            .unwrap_or(0);
+    }
+    // deck_cards cascades; any remaining collection rows fall back to ON DELETE SET NULL.
     let _ = con.execute("DELETE FROM decks WHERE id = ?1", [deck_id]);
-    log_activity(&con, "deck_disassembled", &format!("Deck {name} removido"));
-    Json(json!({ "ok": true })).into_response()
+
+    let msg = if remove_from_collection {
+        format!("Deck {name} removido (e {removed} carta(s) tiradas da coleção)")
+    } else {
+        format!("Deck {name} removido (cartas voltaram para a coleção livre)")
+    };
+    log_activity(&con, "deck_disassembled", &msg);
+    Json(json!({ "ok": true, "removed_from_collection": removed })).into_response()
 }
 
 // --------------------------------------------------------------- deck cards ----
@@ -467,8 +496,51 @@ async fn add_game(Json(p): Json<GameIn>) -> impl IntoResponse {
     Json(json!({ "ok": true, "id": game_id })).into_response()
 }
 
+/// Synchronous, unlike the Python version's background job: the whole build is a few local
+/// SQLite queries and finishes well inside a normal request, so there's no progress to poll.
+/// The frontend's existing polling loop still works — it sees "done" on its first tick.
+async fn auto_build(Json(p): Json<crate::wizard::AutoBuildIn>) -> impl IntoResponse {
+    match crate::wizard::build(&p) {
+        Ok(out) => {
+            let mut st = LAST_BUILD.lock().unwrap();
+            *st = Some(json!({ "deck_id": out.deck_id, "meta": out.meta }));
+            Json(json!({ "ok": true })).into_response()
+        }
+        Err(e) => {
+            let mut st = LAST_BUILD.lock().unwrap();
+            *st = None;
+            *LAST_ERROR.lock().unwrap() = Some(e.clone());
+            oops(StatusCode::BAD_REQUEST, &e).into_response()
+        }
+    }
+}
+
+pub static LAST_BUILD: std::sync::Mutex<Option<Value>> = std::sync::Mutex::new(None);
+pub static LAST_ERROR: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
+
+/// Mirrors deck_wizard.get_status(): the dialog polls this and navigates to result.deck_id.
+pub async fn auto_build_status() -> Json<Value> {
+    if let Some(result) = LAST_BUILD.lock().unwrap().clone() {
+        return Json(json!({
+            "state": "done", "task": "Concluído.", "percent": 100,
+            "error": Value::Null, "result": result,
+        }));
+    }
+    if let Some(err) = LAST_ERROR.lock().unwrap().clone() {
+        return Json(json!({
+            "state": "error", "task": Value::Null, "percent": 0,
+            "error": err, "result": Value::Null,
+        }));
+    }
+    Json(json!({
+        "state": "idle", "task": Value::Null, "percent": 0,
+        "error": Value::Null, "result": Value::Null,
+    }))
+}
+
 pub fn router() -> Router {
     Router::new()
+        .route("/api/decks/auto-build", post(auto_build))
         .route("/api/decks", post(create_deck))
         .route("/api/decks/:id", put(update_deck).delete(delete_deck))
         .route("/api/decks/:id/cards", post(add_deck_card))

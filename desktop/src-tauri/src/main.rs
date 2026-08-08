@@ -8,6 +8,7 @@
 mod api;
 mod db;
 mod paths;
+mod wizard;
 mod writes;
 
 use axum::{response::Html, routing::get, Router};
