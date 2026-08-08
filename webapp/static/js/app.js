@@ -1,5 +1,4 @@
 import { api } from "./api.js?v=22";
-import { renderScanner } from "./scanner.js?v=21";
 import { activityIcon, manaCostHtml, manaGlyphSvg, resultIcon } from "./icons.js?v=23";
 
 const mainEl = document.getElementById("main");
@@ -10,7 +9,9 @@ const routes = {
   decks: renderDecksList,
   deck: renderDeckDetail,
   collection: renderCollection,
-  scanner: (params) => renderScanner(mainEl, params, { showCardModal }),
+  // Scanner is the last feature slated for the native port; until then the page states that
+  // plainly instead of exposing a camera flow whose backend isn't there.
+  scanner: () => renderScannerSoon(),
   games: renderGames,
 };
 
@@ -168,6 +169,21 @@ async function renderDashboard() {
       </div>`
     )
     .join("") || `<div class="empty-state">Nenhuma atividade ainda — mexa num deck ou na coleção pra ver o histórico aqui.</div>`;
+}
+
+function renderScannerSoon() {
+  mainEl.innerHTML = h`
+    <div class="page-header">
+      <div><h1>Scanner</h1><p>Reconhecimento de cartas pela câmera.</p></div>
+    </div>
+    <div class="ownership-summary" style="border-left-color:var(--accent)">
+      <div class="own-line">
+        <span class="own-tag tag-other-deck">Em breve</span>
+        <span>Esta é a última funcionalidade pendente do app nativo. Enquanto isso, use
+          <b>+ Adicionar Carta</b> (com o modo <b>Adicionar por lista</b>) ou
+          <b>Importar decklist</b> na tela do deck.</span>
+      </div>
+    </div>`;
 }
 
 function formatTs(ts) {

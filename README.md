@@ -46,29 +46,26 @@ The frontend ships inside the .app bundle, so an installed copy doesn't depend o
 repository being present at all. The card index is not bundled (~31MB, and it's yours):
 it's rebuilt from Scryfall's public bulk data.
 
-Until the in-app updater is ported to Rust, build the index with the Python CLIs at the
-repo root and copy it into place:
-
-```bash
-pip3 install --user -r requirements.txt
-python3 scryfall.py bulk oracle_cards --download
-python3 scryfall.py bulk all_cards --download   # includes PT names + images
-mv oracle-cards-*.jsonl.gz all-cards-*.jsonl.gz data/
-python3 mtgdb.py build
-cp data/mtg.sqlite ~/Library/Application\ Support/Spellbook/data/
-```
+On first launch the sidebar offers **"Baixar base de dados agora"** — one click downloads
+Scryfall's bulk export (~400MB), builds the index, and caches EDHREC synergy for whichever
+commanders your decks use. That's the only step that needs the internet; everything after
+it works offline. Use **"Atualizar base de dados"** the same way whenever a new set drops.
 
 ## Status of the port
 
-The desktop app is the product; the FastAPI web version under `webapp/` is retired and
-kept only for the CLI/data-building code it shares.
+The desktop app is the product; the FastAPI web version under `webapp/` is retired.
 
-Working natively: decks (create / edit / delete, incl. partner commanders), collection
-(add, allocate, free), games, card search and detail with accent-insensitive matching,
-and auto-build with ownership modes.
+Everything works natively except the scanner: decks (create / edit / delete, incl. partner
+commanders), collection (add one at a time or by pasting a list, allocate, free), games,
+card search and detail with accent-insensitive matching, auto-build with ownership modes,
+decklist import, EDHREC synergy, and the data update.
 
-Not ported yet — use the Python CLIs meanwhile: the in-app data update, decklist import,
-EDHREC synergy fetch, and the scanner.
+The **scanner** (camera + OCR) is the one remaining feature and is marked "em breve" in the
+app. Until it lands, add cards by pasting a list or importing a decklist.
+
+The app makes no network requests at all except the ones you ask for: the data update and
+fetching a commander's EDHREC page. Card art is still loaded from scryfall.io URLs, so the
+grids need a connection to show images — caching those locally is the next offline step.
 
 ## Structure
 
@@ -78,20 +75,23 @@ desktop/src-tauri/     the app
   src/api.rs           read endpoints (cards, decks, collection, games)
   src/writes.rs        write endpoints
   src/wizard.rs        deterministic deckbuilder, with ownership modes (no LLM)
+  src/update.rs        Scryfall bulk download + index rebuild + EDHREC refresh
+  src/edhrec.rs        per-commander synergy cache (fetch on demand, read offline)
+  src/decklist.rs      decklist parsing (Moxfield / Archidekt / plain text)
   src/db.rs            SQLite access, schema + migrations, accent folding
   src/paths.rs         where data and the frontend are resolved from
 
 webapp/static/         the frontend (plain HTML/CSS/JS, no build step);
                        bundled into the .app at build time
 
-scryfall.py            Scryfall API CLI (search, decklist validation, bulk data)
-mtgdb.py               builds/queries the SQLite card index
-edhrec.py              EDHREC synergy/combo cache per commander
-webapp/*.py            retired FastAPI version, kept for the shared data-building code
+scryfall.py            Scryfall API CLI — still handy standalone, no longer needed by the app
+mtgdb.py               same, for the card index
+edhrec.py              same, for the synergy cache
+webapp/*.py            retired FastAPI version, kept for reference
 ```
 
 ## Tools used by the app (none require an API key)
 
 - Card database: Scryfall bulk data (38k+ cards, official PT names, images)
 - Deck synergy: EDHREC (cached locally per commander)
-- Scanner OCR: Tesseract.js (CDN on first use — the one remaining online dependency)
+- Scanner OCR: not implemented yet (see "Status of the port")

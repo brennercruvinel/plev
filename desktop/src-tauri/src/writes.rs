@@ -538,8 +538,184 @@ pub async fn auto_build_status() -> Json<Value> {
     }))
 }
 
+// ------------------------------------------------------- data update / synergy ----
+
+async fn data_update_start() -> impl IntoResponse {
+    if crate::update::start() {
+        Json(json!({ "ok": true })).into_response()
+    } else {
+        oops(StatusCode::CONFLICT, "Uma atualização já está em andamento.").into_response()
+    }
+}
+
+/// Fetches the EDHREC page for this deck's commander(s) on demand — the "Buscar sinergia agora"
+/// button. Needs network; everything downstream of it reads the cache offline.
+async fn fetch_deck_synergy(Path(deck_id): Path<i64>) -> impl IntoResponse {
+    let Ok(con) = open_app_db() else {
+        return oops(StatusCode::INTERNAL_SERVER_ERROR, "Banco indisponível").into_response();
+    };
+    let commander: Option<String> = con
+        .query_row("SELECT commander_name FROM decks WHERE id = ?1", [deck_id], |r| r.get(0))
+        .optional()
+        .ok()
+        .flatten();
+    let Some(commander) = commander else {
+        return oops(StatusCode::NOT_FOUND, "Deck não encontrado").into_response();
+    };
+    match crate::edhrec::fetch(&commander, true) {
+        Ok(()) => Json(json!({ "ok": true })).into_response(),
+        Err(e) => oops(StatusCode::BAD_GATEWAY, &e).into_response(),
+    }
+}
+
+// ---------------------------------------------------------- decklist import ----
+
+#[derive(Deserialize)]
+pub struct ImportPreviewIn {
+    text: String,
+}
+
+/// Parses + matches without writing anything. The user confirms the preview before any insert,
+/// so a name the parser guessed wrong is surfaced rather than silently added.
+async fn import_preview(
+    Path(deck_id): Path<i64>,
+    Json(p): Json<ImportPreviewIn>,
+) -> impl IntoResponse {
+    let Ok(con) = open_app_db() else {
+        return oops(StatusCode::INTERNAL_SERVER_ERROR, "Banco indisponível").into_response();
+    };
+    if deck_name(&con, deck_id).is_none() {
+        return oops(StatusCode::NOT_FOUND, "Deck não encontrado").into_response();
+    }
+    let entries = crate::decklist::parse_text(&p.text);
+    if entries.is_empty() {
+        return oops(StatusCode::BAD_REQUEST, "Não encontrei nenhuma carta reconhecível no texto colado.")
+            .into_response();
+    }
+
+    let cdb = open_cards_db();
+    let (mut matched, mut not_found): (Vec<Value>, Vec<Value>) = (Vec::new(), Vec::new());
+    let mut seen: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    let total = entries.len();
+
+    for (qty, name) in entries {
+        let key = name.to_lowercase();
+        // Repeated lines for the same card add up rather than becoming separate preview rows.
+        if let Some(&i) = seen.get(&key) {
+            if let Some(item) = matched.get_mut(i) {
+                if let Some(q) = item.get_mut("quantity").and_then(|q| q.as_i64().map(|v| v + qty)) {
+                    item["quantity"] = json!(q);
+                }
+            }
+            continue;
+        }
+        let found = cdb.as_ref().and_then(|c| crate::api::lookup_card_in(c, &name));
+        match found {
+            Some((card, how)) => {
+                seen.insert(key, matched.len());
+                matched.push(json!({
+                    "name": card.get("name").cloned().unwrap_or(Value::Null),
+                    "quantity": qty,
+                    "requested_name": name,
+                    "match_type": how,
+                    "mana_cost": card.get("mana_cost").cloned().unwrap_or(Value::Null),
+                    "type_line": card.get("type_line").cloned().unwrap_or(Value::Null),
+                    "image_uri": card.get("image_uri").cloned().unwrap_or(Value::Null),
+                }));
+            }
+            None => not_found.push(json!({ "requested_name": name, "quantity": qty })),
+        }
+    }
+    Json(json!({ "matched": matched, "not_found": not_found, "total_lines": total })).into_response()
+}
+
+#[derive(Deserialize)]
+pub struct ImportCard {
+    card_name: String,
+    #[serde(default = "one")]
+    quantity: i64,
+}
+
+#[derive(Deserialize)]
+pub struct ImportCommitIn {
+    cards: Vec<ImportCard>,
+    #[serde(default)]
+    mode: Option<String>,
+}
+
+async fn import_commit(
+    Path(deck_id): Path<i64>,
+    Json(p): Json<ImportCommitIn>,
+) -> impl IntoResponse {
+    let Ok(con) = open_app_db() else {
+        return oops(StatusCode::INTERNAL_SERVER_ERROR, "Banco indisponível").into_response();
+    };
+    let Some(dname) = deck_name(&con, deck_id) else {
+        return oops(StatusCode::NOT_FOUND, "Deck não encontrado").into_response();
+    };
+    let replace = p.mode.as_deref() == Some("replace");
+    if replace {
+        // Commanders are kept — replacing the list shouldn't decapitate the deck.
+        let _ = con.execute(
+            "DELETE FROM deck_cards WHERE deck_id = ?1 AND is_commander = 0",
+            [deck_id],
+        );
+    }
+
+    let mut added = 0i64;
+    for card in &p.cards {
+        let name = card.card_name.trim();
+        if name.is_empty() {
+            continue;
+        }
+        let existing: Option<i64> = con
+            .query_row(
+                "SELECT id FROM deck_cards WHERE deck_id = ?1 AND card_name = ?2 COLLATE NOCASE
+                 AND is_commander = 0",
+                params![deck_id, name],
+                |r| r.get(0),
+            )
+            .optional()
+            .ok()
+            .flatten();
+        match existing {
+            Some(id) => {
+                let _ = con.execute(
+                    "UPDATE deck_cards SET quantity = quantity + ?1 WHERE id = ?2",
+                    params![card.quantity, id],
+                );
+            }
+            None => {
+                let _ = con.execute(
+                    "INSERT INTO deck_cards (deck_id, card_name, quantity, is_commander)
+                     VALUES (?1, ?2, ?3, 0)",
+                    params![deck_id, name, card.quantity],
+                );
+            }
+        }
+        let _ = con.execute(
+            "INSERT INTO collection (card_name, lang, quantity, allocated_deck_id, notes)
+             VALUES (?1, 'en', ?2, ?3, 'Importado via decklist')",
+            params![name, card.quantity, deck_id],
+        );
+        added += card.quantity;
+    }
+
+    let label = if replace { "substituindo cartas existentes" } else { "mesclado com o deck atual" };
+    log_activity(
+        &con,
+        "card_added_deck",
+        &format!("{added} carta(s) importada(s) para o deck {dname} ({label})"),
+    );
+    Json(json!({ "ok": true, "added": added })).into_response()
+}
+
 pub fn router() -> Router {
     Router::new()
+        .route("/api/data/update", post(data_update_start))
+        .route("/api/decks/:id/synergy/fetch", post(fetch_deck_synergy))
+        .route("/api/decks/:id/import/preview", post(import_preview))
+        .route("/api/decks/:id/import/commit", post(import_commit))
         .route("/api/decks/auto-build", post(auto_build))
         .route("/api/decks", post(create_deck))
         .route("/api/decks/:id", put(update_deck).delete(delete_deck))

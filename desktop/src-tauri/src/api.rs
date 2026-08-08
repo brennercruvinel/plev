@@ -84,7 +84,7 @@ async fn search_cards(Query(p): Query<SearchQuery>) -> Json<Value> {
 }
 
 /// Port of _lookup_card_in(): exact, then accent-folded, then Portuguese, then approximate.
-fn lookup_card_in(cdb: &Connection, name: &str) -> Option<(Value, String)> {
+pub fn lookup_card_in(cdb: &Connection, name: &str) -> Option<(Value, String)> {
     let folded = fold_text(name);
     let one = |sql: &str, p: &[&dyn rusqlite::ToSql]| -> Option<Value> {
         let mut stmt = cdb.prepare(sql).ok()?;
@@ -698,23 +698,44 @@ async fn data_info() -> Json<Value> {
     Json(json!({ "exists": true, "cards": cards, "pt_names": pt, "built_at": built_at }))
 }
 
-/// The data-update job (download Scryfall bulk + rebuild the index) isn't ported yet. The sidebar
-/// polls this on every page load, so returning the idle shape keeps the UI quiet instead of
-/// leaving an unhandled 404 rejection in the console.
+/// Progress of the background data update, polled by the sidebar panel.
 async fn data_update_status() -> Json<Value> {
+    let s = crate::update::STATUS.lock().unwrap();
     Json(json!({
-        "state": "idle", "task": Value::Null, "percent": 0,
-        "error": Value::Null, "result": Value::Null,
+        "state": s.state,
+        "task": s.task.clone().map_or(Value::Null, Value::from),
+        "percent": s.percent,
+        "error": s.error.clone().map_or(Value::Null, Value::from),
+        "result": s.result.clone().unwrap_or(Value::Null),
     }))
 }
 
-/// Same for the per-deck EDHREC synergy panel: not ported yet, so report "no cache" rather than
-/// 404 — the frontend already knows how to render that state.
-async fn deck_synergy(Path(_id): Path<i64>) -> Json<Value> {
-    Json(json!({
-        "cached": false,
-        "message": "Sinergia ainda não disponível nesta versão desktop.",
-    }))
+/// Cached EDHREC synergy for this deck's commander — reads local files only, never the network.
+async fn deck_synergy(Path(deck_id): Path<i64>) -> Json<Value> {
+    let Ok(con) = open_app_db() else { return Json(json!({ "cached": false })) };
+    let commander: Option<String> = con
+        .query_row("SELECT commander_name FROM decks WHERE id = ?1", [deck_id], |r| r.get(0))
+        .ok();
+    let Some(commander) = commander else { return Json(json!({ "cached": false })) };
+
+    let in_deck: Vec<String> = (|| -> rusqlite::Result<Vec<String>> {
+        let mut stmt = con.prepare("SELECT card_name FROM deck_cards WHERE deck_id = ?1")?;
+        let rows = stmt.query_map([deck_id], |r| r.get::<_, String>(0))?;
+        rows.collect()
+    })()
+    .unwrap_or_default();
+
+    match crate::edhrec::recommendations(&commander, &in_deck) {
+        Some((recs, similar)) => Json(json!({
+            "cached": true,
+            "recommendations": recs,
+            "similar_commanders": similar,
+        })),
+        None => Json(json!({
+            "cached": false,
+            "message": format!("Sem cache do EDHREC para {commander}."),
+        })),
+    }
 }
 
 async fn deck_tags(Path(_id): Path<i64>) -> Json<Value> {

@@ -21,6 +21,11 @@ rusqlite = { version = "0.31", features = ["bundled"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 dirs = "5"
+# Data update: downloads Scryfall's bulk files and the EDHREC pages. ureq is a small blocking
+# client (no async runtime needed on the worker thread); rustls avoids linking system OpenSSL,
+# which keeps the build self-contained.
+ureq = { version = "2", default-features = false, features = ["tls", "gzip"] }
+flate2 = "1"
 
 [features]
 default = ["custom-protocol"]

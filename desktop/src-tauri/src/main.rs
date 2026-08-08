@@ -7,7 +7,10 @@
 
 mod api;
 mod db;
+mod decklist;
+mod edhrec;
 mod paths;
+mod update;
 mod wizard;
 mod writes;
 
