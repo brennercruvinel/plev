@@ -1,11 +1,14 @@
 //! Where the two databases and the frontend live.
 //!
 //! Resolution order, so the same binary works both when run from the repo during development
-//! and when installed as a bundled app on any of the three targets:
-//!   1. $SPELLBOOK_DATA_DIR / $SPELLBOOK_STATIC_DIR — explicit override, used by tests.
-//!   2. The repo layout (../../data, ../../webapp), detected by walking up from the executable
+//! and when installed as a bundled app:
+//!   1. $SPELLBOOK_DATA_DIR / $SPELLBOOK_APP_DB_DIR / $SPELLBOOK_STATIC_DIR — explicit
+//!      override, used by tests.
+//!   2. config.json in the app-data directory — how an installed .app (which sits outside the
+//!      repo, so step 3 can't work) is pointed at an existing data/app.db.
+//!   3. The repo layout (../../data, ../../webapp), detected by walking up from the executable
 //!      and from the current directory.
-//!   3. The OS application-data directory (~/Library/Application Support/Spellbook on macOS,
+//!   4. The OS application-data directory (~/Library/Application Support/Spellbook on macOS,
 //!      %APPDATA%\Spellbook on Windows, ~/.local/share/spellbook on Linux).
 //!
 //! The card index (mtg.sqlite, ~31MB) and the bulk downloads are deliberately NOT bundled into
@@ -45,10 +48,38 @@ fn app_data_dir() -> PathBuf {
     base.join("Spellbook")
 }
 
+/// Optional `config.json` in the app-data dir, e.g.
+///     { "data_dir": "/path/to/repo/data", "app_db_dir": "/path/to/repo/webapp" }
+///
+/// Needed because an installed .app lives outside the repo, so walking up from the executable
+/// can't find `data/` or `app.db` any more. Rather than hardcoding a machine-specific path into
+/// the bundle (which would break on anyone else's Mac), the bundle stays generic and the pointer
+/// lives beside the user's own data. Absent or unreadable, the normal resolution order applies.
+fn config_value(key: &str) -> Option<PathBuf> {
+    let raw = std::fs::read_to_string(app_data_dir().join("config.json")).ok()?;
+    // Deliberately a hand-rolled scan rather than pulling serde_json into this module: the file
+    // has at most a couple of string keys, and a malformed one must never stop the app booting.
+    let needle = format!("\"{key}\"");
+    let after = raw.split(&needle).nth(1)?;
+    let after = after.split(':').nth(1)?;
+    let start = after.find('"')? + 1;
+    let rest = &after[start..];
+    let end = rest.find('"')?;
+    let path = PathBuf::from(&rest[..end]);
+    if path.is_dir() {
+        Some(path)
+    } else {
+        None
+    }
+}
+
 /// Directory holding mtg.sqlite and the edhrec/ cache.
 pub fn data_dir() -> PathBuf {
     if let Ok(p) = std::env::var("SPELLBOOK_DATA_DIR") {
         return PathBuf::from(p);
+    }
+    if let Some(p) = config_value("data_dir") {
+        return p;
     }
     if let Some(root) = detect_repo_root() {
         return root.join("data");
@@ -61,6 +92,9 @@ pub fn app_db_dir() -> PathBuf {
     if let Ok(p) = std::env::var("SPELLBOOK_APP_DB_DIR") {
         return PathBuf::from(p);
     }
+    if let Some(p) = config_value("app_db_dir") {
+        return p;
+    }
     if let Some(root) = detect_repo_root() {
         return root.join("webapp");
     }
@@ -71,6 +105,9 @@ pub fn app_db_dir() -> PathBuf {
 pub fn static_dir() -> PathBuf {
     if let Ok(p) = std::env::var("SPELLBOOK_STATIC_DIR") {
         return PathBuf::from(p);
+    }
+    if let Some(p) = config_value("static_dir") {
+        return p;
     }
     if let Some(root) = detect_repo_root() {
         return root.join("webapp").join("static");

@@ -37,32 +37,44 @@ async fn serve(listener: tokio::net::TcpListener) {
 }
 
 fn main() {
-    if let Err(e) = db::init_app_db() {
-        eprintln!("failed to initialise app.db: {e}");
-    }
-
-    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
-
-    // Bind to port 0 and read back the assigned port: fixed ports collide with the Python dev
-    // server (and with a second copy of this app), and the failure mode there is a blank window.
-    let listener = rt
-        .block_on(async { tokio::net::TcpListener::bind(SocketAddr::from((Ipv4Addr::LOCALHOST, 0))).await })
-        .expect("bind loopback");
-    let port = listener.local_addr().expect("local addr").port();
-
-    std::thread::spawn(move || {
-        rt.block_on(serve(listener));
-    });
-
-    let url = format!("http://127.0.0.1:{port}");
-    println!("Spellbook serving on {url}");
-    println!("  static: {}", paths::static_dir().display());
-    println!("  cards : {}", paths::cards_db().display());
-    println!("  app db: {}", paths::app_db().display());
-
+    // Everything that touches the databases runs inside setup(), i.e. after Tauri has brought up
+    // the NSApplication event loop.
+    //
+    // This matters on macOS: the user's app.db can live under ~/Documents, which is TCC-protected.
+    // A GUI-launched app opening a file there blocks in open(2) until the user answers the
+    // "allow access to Documents" prompt — and that prompt can only be presented once the process
+    // is a running UI app. Doing the SQLite open before Builder::run() therefore deadlocked on
+    // launch: the app sat there with one thread, no window, and no prompt, forever. (Launching
+    // the same binary from a terminal worked, because it inherited the terminal's own grant —
+    // which is exactly why this only ever reproduced from the Dock.)
     tauri::Builder::default()
         .setup(move |app| {
             use tauri::WebviewWindowBuilder;
+
+            if let Err(e) = db::init_app_db() {
+                eprintln!("failed to initialise app.db: {e}");
+            }
+
+            let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+            // Port 0 and read back what was assigned: a fixed port would collide with the Python
+            // dev server (and with a second copy of this app), and the failure mode is a blank
+            // window that gives no hint why.
+            let listener = rt
+                .block_on(async {
+                    tokio::net::TcpListener::bind(SocketAddr::from((Ipv4Addr::LOCALHOST, 0))).await
+                })
+                .expect("bind loopback");
+            let port = listener.local_addr().expect("local addr").port();
+            std::thread::spawn(move || {
+                rt.block_on(serve(listener));
+            });
+
+            let url = format!("http://127.0.0.1:{port}");
+            println!("Spellbook serving on {url}");
+            println!("  static: {}", paths::static_dir().display());
+            println!("  cards : {}", paths::cards_db().display());
+            println!("  app db: {}", paths::app_db().display());
+
             let parsed = url.parse().expect("valid url");
             WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::External(parsed))
                 .title("Spellbook")

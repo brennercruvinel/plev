@@ -23,6 +23,9 @@
     ],
     "resources": {
       "../../webapp/static": "static"
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15"
     }
   }
 }

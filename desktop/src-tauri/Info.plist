@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- app.db and the card index can live in a repo under ~/Documents, which is TCC-protected;
+       macOS requires this string to present the access prompt instead of silently failing. -->
+  <key>NSDocumentsFolderUsageDescription</key>
+  <string>O Spellbook precisa acessar a pasta onde estão sua coleção e a base de cartas.</string>
+  <key>NSDownloadsFolderUsageDescription</key>
+  <string>Para importar decklists que você baixou.</string>
+</dict>
+</plist>
