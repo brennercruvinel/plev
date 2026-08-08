@@ -895,3 +895,36 @@ a { color: inherit; }
     .scanner-layout { grid-template-columns: 1fr; }
     .card-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
 }
+
+/* ---------- Deck card ownership signalling ---------- */
+/* Which cards in a deck you don't actually own (or would have to pull from another deck).
+   Colours reuse the .own-tag palette already used by the synergy suggestions panel. */
+
+.ownership-summary {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--warn);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+}
+.ownership-summary .own-line { display: flex; align-items: center; gap: 8px; line-height: 1.5; }
+.ownership-summary .own-line + .own-line { margin-top: 6px; }
+.own-list {
+    margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--text-dim); line-height: 1.7;
+}
+.linklike {
+    background: none; border: none; padding: 0; margin-left: 4px;
+    color: var(--accent-bright); font-size: 12px; cursor: pointer; text-decoration: underline;
+}
+
+/* Corner dot for the image views, where a text pill would cover the art. */
+.own-dot {
+    position: absolute; top: 6px; left: 6px;
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 2px solid var(--bg); z-index: 2;
+}
+.own-dot.tag-missing { background: var(--bad); }
+.own-dot.tag-other-deck { background: var(--warn); }

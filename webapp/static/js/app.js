@@ -1396,6 +1396,7 @@ async function renderDeckDetail([idStr]) {
       </div>
     </div>
     ${overageWarning}
+    ${ownershipSummaryHtml(deck)}
     <div class="deck-stats-bar">
       ${commanderPanelHtml(deck)}
       <div class="stats-bar-col">
@@ -1425,6 +1426,13 @@ async function renderDeckDetail([idStr]) {
   document.getElementById("delete-deck-btn").addEventListener("click", () =>
     openDeleteDeckModal(deck, id)
   );
+
+  document.getElementById("own-toggle-missing")?.addEventListener("click", (e) => {
+    const list = document.getElementById("own-missing-list");
+    const open = list.style.display !== "none";
+    list.style.display = open ? "none" : "block";
+    e.target.textContent = open ? "ver lista" : "ocultar";
+  });
 
   document.getElementById("edit-deck-btn").addEventListener("click", () =>
     openEditDeckModal(deck, () => renderDeckDetail([idStr]))
@@ -1511,8 +1519,70 @@ function groupQuantity(cards) {
   return cards.reduce((s, c) => s + c.quantity, 0);
 }
 
+/// Banner above the card list summarising what this deck would cost you to actually build:
+/// how many cards you don't own (the shopping list) and how many you'd have to pull out of
+/// another deck. Silent when the deck is fully owned and free — nothing to warn about.
+function ownershipSummaryHtml(deck) {
+  const o = deck.ownership;
+  if (!o) return "";
+  const missing = Object.entries(o).filter(([, v]) => v.status === "missing").map(([n]) => n);
+  const borrowed = Object.entries(o).filter(([, v]) => v.status === "owned_in_deck");
+  if (!missing.length && !borrowed.length) return "";
+
+  const byDeck = {};
+  for (const [name, v] of borrowed) (byDeck[v.deck] ||= []).push(name);
+
+  return h`
+    <div class="ownership-summary">
+      ${missing.length ? `
+        <div class="own-line">
+          <span class="own-tag tag-missing">${missing.length}</span>
+          <span>carta(s) que você <b>não tem</b> na coleção
+            <button class="linklike" id="own-toggle-missing">ver lista</button>
+          </span>
+        </div>
+        <div id="own-missing-list" class="own-list" style="display:none">${missing.sort().join(" · ")}</div>` : ""}
+      ${borrowed.length ? `
+        <div class="own-line">
+          <span class="own-tag tag-other-deck">${borrowed.length}</span>
+          <span>carta(s) que você tem, mas estão em: <b>${Object.keys(byDeck).join(", ")}</b> — usar aqui significa desmontar</span>
+        </div>` : ""}
+    </div>`;
+}
+
+/// Per-card ownership, as computed by the backend (deck.ownership). Returns null for cards whose
+/// status the backend didn't report (e.g. the commander, or an older backend that predates the
+/// field) so nothing is flagged on a guess.
+function deckOwnTag(cardName, ownership) {
+  const o = ownership?.[cardName];
+  if (!o) return null;
+  if (o.status === "missing") {
+    return { label: "Não tenho", cls: "tag-missing", title: "Esta carta não está na sua coleção — precisa comprar." };
+  }
+  if (o.status === "owned_in_deck") {
+    return {
+      label: o.deck || "Em outro deck",
+      cls: "tag-other-deck",
+      title: `Você tem esta carta, mas ela está em "${o.deck}" — usá-la aqui significa desmontar aquele deck.`,
+    };
+  }
+  return null; // owned_free is the normal case; badging it would just add noise
+}
+
+function ownTagHtml(cardName, ownership) {
+  const t = deckOwnTag(cardName, ownership);
+  return t ? `<span class="own-tag ${t.cls}" title="${t.title}">${t.label}</span>` : "";
+}
+
+/// Small corner dot for the image-based views, where a text pill wouldn't fit over the art.
+function ownDotHtml(cardName, ownership) {
+  const t = deckOwnTag(cardName, ownership);
+  return t ? `<span class="own-dot ${t.cls}" title="${t.title}"></span>` : "";
+}
+
 function renderDeckCards(deck) {
   const cardsWrap = document.getElementById("deck-cards");
+  const ownership = deck.ownership || null;
   // Comandante has its own highlighted panel in the top stats bar (see commanderPanelHtml) so
   // every group-by mode excludes it from the regular card list here — see computeDeckGroups.
   const { groups, groupKeys, groupLabel } = computeDeckGroups(deck);
@@ -1531,6 +1601,7 @@ function renderDeckCards(deck) {
             <div class="mtg-card" data-card-view="${c.card_name}">
               ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
               <span class="qty-badge">${c.quantity}x</span>
+              ${ownDotHtml(c.card_name, ownership)}
               <button class="btn small secondary tile-remove" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>
             </div>`)
           .join("");
@@ -1547,6 +1618,7 @@ function renderDeckCards(deck) {
           .map((c) => h`
             <div class="stack-item" data-card-view="${c.card_name}">
               ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
+              ${ownDotHtml(c.card_name, ownership)}
               <button class="btn small secondary tile-remove" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>
             </div>`)
           .join("");
@@ -1571,6 +1643,7 @@ function renderDeckCards(deck) {
               <div class="card-row">
                 <span class="qty">${c.quantity}x</span>
                 <span class="name" data-card-view="${c.card_name}" style="cursor:pointer">${c.card_name}</span>
+                ${ownTagHtml(c.card_name, ownership)}
                 ${sharedTag}
                 <span class="cost">${manaCostHtml(c.mana_cost)}</span>
                 <button class="btn small secondary" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>
