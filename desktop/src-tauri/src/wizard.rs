@@ -137,10 +137,40 @@ pub struct BuildOutcome {
 }
 
 /// What the user already owns, keyed by folded card name -> (is_free, deck_name_if_allocated).
-fn collection_index(con: &Connection) -> HashMap<String, (bool, Option<String>)> {
-    let mut map: HashMap<String, (bool, Option<String>)> = HashMap::new();
+/// How many physical copies of one card the user owns, and where they are.
+///
+/// Every row in `collection` is real cardboard: a card sleeved in two decks is two rows, because
+/// it is two cards. Collapsing that to a yes/no "do you own it" was what made a deck report its
+/// own copies as borrowed from itself — the counts have to survive all the way to the UI.
+#[derive(Default, Clone)]
+pub struct Copies {
+    pub free: i64,
+    /// deck_id -> (deck name, copies allocated to it)
+    pub by_deck: HashMap<i64, (String, i64)>,
+}
+
+impl Copies {
+    pub fn total(&self) -> i64 {
+        self.free + self.by_deck.values().map(|(_, q)| q).sum::<i64>()
+    }
+    /// Copies sitting in decks other than `deck_id`, as (deck name, copies).
+    pub fn elsewhere(&self, deck_id: i64) -> Vec<(String, i64)> {
+        let mut v: Vec<(String, i64)> = self
+            .by_deck
+            .iter()
+            .filter(|(id, _)| **id != deck_id)
+            .map(|(_, (n, q))| (n.clone(), *q))
+            .collect();
+        v.sort();
+        v
+    }
+}
+
+/// Folded card name -> copies owned. Folded so a name typed without accents still finds its card.
+fn collection_index(con: &Connection) -> HashMap<String, Copies> {
+    let mut map: HashMap<String, Copies> = HashMap::new();
     let Ok(mut stmt) = con.prepare(
-        "SELECT collection.card_name, collection.allocated_deck_id, decks.name
+        "SELECT collection.card_name, collection.allocated_deck_id, decks.name, collection.quantity
          FROM collection LEFT JOIN decks ON decks.id = collection.allocated_deck_id",
     ) else {
         return map;
@@ -150,18 +180,19 @@ fn collection_index(con: &Connection) -> HashMap<String, (bool, Option<String>)>
             r.get::<_, String>(0)?,
             r.get::<_, Option<i64>>(1)?,
             r.get::<_, Option<String>>(2)?,
+            r.get::<_, i64>(3)?,
         ))
     }) else {
         return map;
     };
-    for (name, deck_id, deck_name) in rows.flatten() {
-        let key = fold_text(&name);
-        let free = deck_id.is_none();
-        let e = map.entry(key).or_insert((false, None));
-        if free {
-            e.0 = true; // a free copy trumps an allocated one for eligibility
-        } else if e.1.is_none() {
-            e.1 = deck_name;
+    for (name, deck_id, deck_name, quantity) in rows.flatten() {
+        let e = map.entry(fold_text(&name)).or_default();
+        match deck_id {
+            None => e.free += quantity,
+            Some(id) => {
+                let slot = e.by_deck.entry(id).or_insert_with(|| (deck_name.unwrap_or_default(), 0));
+                slot.1 += quantity;
+            }
         }
     }
     map
@@ -230,10 +261,15 @@ pub fn build(p: &AutoBuildIn) -> Result<BuildOutcome, String> {
                 continue; // basics handled separately (v1 scope: no curated nonbasic lands)
             }
 
-            let key = fold_text(&name);
-            let (ownership, owned_in_deck) = match owned.get(&key) {
-                Some((true, _)) => ("owned_free", None),
-                Some((false, d)) => ("owned_in_deck", d.clone()),
+            // A deck being built doesn't exist yet, so every copy the user owns is fair game:
+            // free copies first, then ones that would have to come out of another deck.
+            let copies = owned.get(&fold_text(&name));
+            let (ownership, owned_in_deck) = match copies {
+                Some(c) if c.free > 0 => ("owned_free", None),
+                Some(c) => match c.elsewhere(-1).first() {
+                    Some((deck, _)) => ("owned_in_deck", Some(deck.clone())),
+                    None => ("missing", None),
+                },
                 None => ("missing", None),
             };
             // In "owned" mode the pool is the collection — anything not owned is out entirely.
@@ -435,20 +471,37 @@ fn build_manabase(ci: &str, chosen: &[Candidate], land_count: usize) -> Vec<(Str
 pub fn deck_ownership(con: &Connection, deck_id: i64) -> HashMap<String, Value> {
     let owned = collection_index(con);
     let mut out = HashMap::new();
-    let Ok(mut stmt) =
-        con.prepare("SELECT card_name FROM deck_cards WHERE deck_id = ?1 AND is_commander = 0")
+    let Ok(mut stmt) = con.prepare(
+        "SELECT card_name, quantity FROM deck_cards WHERE deck_id = ?1 AND is_commander = 0",
+    ) else {
+        return out;
+    };
+    let Ok(rows) = stmt.query_map([deck_id], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?)))
     else {
         return out;
     };
-    let Ok(rows) = stmt.query_map([deck_id], |r| r.get::<_, String>(0)) else {
-        return out;
-    };
-    for name in rows.flatten() {
-        let key = fold_text(&name);
-        let v = match owned.get(&key) {
-            Some((true, _)) => json!({ "status": "owned_free" }),
-            Some((false, d)) => json!({ "status": "owned_in_deck", "deck": d }),
-            None => json!({ "status": "missing" }),
+    for (name, needed) in rows.flatten() {
+        let copies = owned.get(&fold_text(&name)).cloned().unwrap_or_default();
+        let here = copies.by_deck.get(&deck_id).map(|(_, q)| *q).unwrap_or(0);
+        let elsewhere = copies.elsewhere(deck_id);
+
+        // The deck's own copies come first: a card this deck already holds is simply here, no
+        // matter how many other decks also run one. Only the shortfall is worth flagging, and
+        // only then does it matter whether a spare is free or sleeved in another deck.
+        let short = needed - here;
+        let v = if short <= 0 {
+            json!({ "status": "owned_here", "copies": here })
+        } else if copies.free > 0 {
+            json!({ "status": "owned_free", "copies": copies.free, "short": short })
+        } else if let Some((deck, _)) = elsewhere.first() {
+            json!({
+                "status": "owned_in_deck",
+                "deck": deck,
+                "decks": elsewhere.iter().map(|(n, q)| json!({ "deck": n, "copies": q })).collect::<Vec<_>>(),
+                "short": short,
+            })
+        } else {
+            json!({ "status": "missing", "short": short })
         };
         out.insert(name, v);
     }

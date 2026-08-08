@@ -347,8 +347,18 @@ async fn remove_deck_card(Path((deck_id, card_id)): Path<(i64, i64)>) -> impl In
         "DELETE FROM deck_cards WHERE id = ?1 AND deck_id = ?2",
         params![card_id, deck_id],
     );
+    // The physical copy goes back in the box, not out of existence. Leaving it allocated to a
+    // deck that no longer lists it is what let phantom copies accumulate: the collection kept
+    // counting cards as sleeved in decks they had already been pulled from.
+    if let Some(ref cn) = card_name {
+        let _ = con.execute(
+            "UPDATE collection SET allocated_deck_id = NULL
+             WHERE allocated_deck_id = ?1 AND card_name = ?2 COLLATE NOCASE",
+            params![deck_id, cn],
+        );
+    }
     if let (Some(cn), Some(dn)) = (card_name, dname) {
-        log_activity(&con, "card_removed_deck", &format!("{cn} saiu do deck {dn}"));
+        log_activity(&con, "card_removed_deck", &format!("{cn} saiu do deck {dn} (cópia voltou para as livres)"));
     }
     Json(json!({ "ok": true })).into_response()
 }
@@ -658,6 +668,16 @@ async fn import_commit(
         // Commanders are kept — replacing the list shouldn't decapitate the deck.
         let _ = con.execute(
             "DELETE FROM deck_cards WHERE deck_id = ?1 AND is_commander = 0",
+            [deck_id],
+        );
+        // Release the physical copies those rows stood for, or they'd stay counted as sleeved in
+        // this deck forever. The commander's copy stays put, matching the row that survived.
+        let _ = con.execute(
+            "UPDATE collection SET allocated_deck_id = NULL
+             WHERE allocated_deck_id = ?1
+               AND card_name COLLATE NOCASE NOT IN (
+                   SELECT card_name FROM deck_cards WHERE deck_id = ?1 AND is_commander = 1
+               )",
             [deck_id],
         );
     }

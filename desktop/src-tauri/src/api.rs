@@ -584,7 +584,70 @@ async fn collection_total() -> Json<Value> {
     let distinct: i64 = con
         .query_row("SELECT COUNT(DISTINCT card_name) FROM collection", [], |r| r.get(0))
         .unwrap_or(0);
-    Json(json!({ "total_units": total, "distinct_cards": distinct }))
+    // Free/allocated are counted in copies, not names. The home screen used to show how many
+    // distinct cards had a free copy, which reads as a card count and undercounts every playset.
+    let free: i64 = con
+        .query_row(
+            "SELECT COALESCE(SUM(quantity), 0) FROM collection WHERE allocated_deck_id IS NULL",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap_or(0);
+    Json(json!({
+        "total_units": total,
+        "distinct_cards": distinct,
+        "free_units": free,
+        "allocated_units": total - free,
+    }))
+}
+
+#[derive(Deserialize)]
+pub struct CardCopiesQuery {
+    name: String,
+}
+
+/// Every physical copy of one exact card name: how many are free and which decks hold the rest.
+/// Exact match (folded), unlike /api/collection's substring search — the card modal is asking
+/// about one card, and "Swamp" must not pick up "Swamp Mosquito".
+async fn card_copies(Query(p): Query<CardCopiesQuery>) -> Json<Value> {
+    let Ok(con) = open_app_db() else { return Json(json!({ "total": 0, "free": 0, "decks": [] })) };
+    // fold_text() is a Rust function, not a registered SQLite one, so the accent-insensitive
+    // comparison happens here rather than in the WHERE clause. The collection is a few hundred
+    // rows — small enough that scanning it costs less than keeping a folded column in sync.
+    let wanted = crate::db::fold_text(&p.name);
+    let rows: Vec<(String, Option<i64>, Option<String>, i64)> = (|| -> rusqlite::Result<_> {
+        let mut stmt = con.prepare(
+            "SELECT collection.card_name, collection.allocated_deck_id, decks.name,
+                    collection.quantity
+             FROM collection LEFT JOIN decks ON decks.id = collection.allocated_deck_id",
+        )?;
+        let rows = stmt.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?;
+        rows.collect()
+    })()
+    .unwrap_or_default();
+
+    let mut free = 0i64;
+    let mut by_deck: HashMap<i64, (String, i64)> = HashMap::new();
+    for (card_name, deck_id, deck_name, quantity) in rows {
+        if crate::db::fold_text(&card_name) != wanted {
+            continue;
+        }
+        match deck_id {
+            None => free += quantity,
+            Some(id) => {
+                let e = by_deck.entry(id).or_insert_with(|| (deck_name.unwrap_or_default(), 0));
+                e.1 += quantity;
+            }
+        }
+    }
+    let mut decks: Vec<Value> = by_deck
+        .into_iter()
+        .map(|(id, (name, qty))| json!({ "deck_id": id, "deck_name": name, "copies": qty }))
+        .collect();
+    decks.sort_by_key(|v| v["deck_name"].as_str().unwrap_or("").to_lowercase());
+    let in_decks: i64 = decks.iter().filter_map(|v| v["copies"].as_i64()).sum();
+
+    Json(json!({ "total": free + in_decks, "free": free, "decks": decks }))
 }
 
 // ------------------------------------------------------- games / activity ----
@@ -753,6 +816,7 @@ pub fn router() -> Router {
         .route("/api/decks/:id/tags", get(deck_tags))
         .route("/api/collection", get(list_collection))
         .route("/api/collection/total", get(collection_total))
+        .route("/api/collection/copies", get(card_copies))
         .route("/api/games", get(list_games))
         .route("/api/games/stats", get(games_stats))
         .route("/api/activity", get(list_activity))

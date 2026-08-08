@@ -1,4 +1,4 @@
-import { api } from "./api.js?v=23";
+import { api } from "./api.js?v=24";
 import { activityIcon, manaCostHtml, manaGlyphSvg, resultIcon } from "./icons.js?v=23";
 
 const mainEl = document.getElementById("main");
@@ -128,7 +128,7 @@ async function renderDashboard() {
     <div class="stat-grid">
       <div class="stat-card clickable" data-stat-nav="decks"><div class="label">Decks montados</div><div class="value">${decks.length}</div><div class="sub">${totalCards} cartas ao todo</div></div>
       <div class="stat-card clickable" data-stat-nav="collection"><div class="label">Cartas na coleção</div><div class="value">${collectionTotal.total_units}</div><div class="sub">${collectionTotal.distinct_cards} nomes distintos, com repetidas</div></div>
-      <div class="stat-card clickable" data-stat-nav="collection"><div class="label">Cartas livres</div><div class="value">${freeCollection.length}</div><div class="sub">fora de deck montado</div></div>
+      <div class="stat-card clickable" data-stat-nav="collection"><div class="label">Cartas livres</div><div class="value">${collectionTotal.free_units}</div><div class="sub">${freeCollection.length} nomes · ${collectionTotal.allocated_units} em decks</div></div>
       <div class="stat-card clickable" data-stat-nav="games"><div class="label">Partidas registradas</div><div class="value">${totalGames}</div><div class="sub">${totalWins} vitórias</div></div>
     </div>
 
@@ -1606,7 +1606,7 @@ function ownershipSummaryHtml(deck) {
       ${borrowed.length ? `
         <div class="own-line">
           <span class="own-tag tag-other-deck">${borrowed.length}</span>
-          <span>carta(s) que você tem, mas estão em: <b>${Object.keys(byDeck).join(", ")}</b> — usar aqui significa desmontar</span>
+          <span>carta(s) sem cópia própria neste deck — a sua está em: <b>${Object.keys(byDeck).join(", ")}</b>, usar aqui significa desmontar</span>
         </div>` : ""}
     </div>`;
 }
@@ -1621,13 +1621,17 @@ function deckOwnTag(cardName, ownership) {
     return { label: "Não tenho", cls: "tag-missing", title: "Esta carta não está na sua coleção — precisa comprar." };
   }
   if (o.status === "owned_in_deck") {
+    const where = (o.decks || [{ deck: o.deck, copies: 1 }])
+      .map((d) => `${d.copies}x em "${d.deck}"`)
+      .join(", ");
     return {
       label: o.deck || "Em outro deck",
       cls: "tag-other-deck",
-      title: `Você tem esta carta, mas ela está em "${o.deck}" — usá-la aqui significa desmontar aquele deck.`,
+      title: `Este deck não tem cópia própria desta carta. Suas cópias: ${where} — usá-la aqui significa desmontar aquele deck.`,
     };
   }
-  return null; // owned_free is the normal case; badging it would just add noise
+  // owned_here (this deck has its own copy) and owned_free both mean nothing to resolve.
+  return null;
 }
 
 function ownTagHtml(cardName, ownership) {
@@ -1838,14 +1842,28 @@ async function renderCollection() {
     const items = await api.collection(collectionFilter, q);
     grid.innerHTML = items
       .map((c) => {
-        // a card can have several entries (one per deck/copy) — already grouped and summed by the API
-        const realDecks = [...new Set(c.decks.filter((d) => d.deck_name !== "Livre").map((d) => d.deck_name))];
-        const isAllocated = realDecks.length > 0;
+        // Each entry is a physical copy (or a stack of them): a card sleeved in two decks shows
+        // up as two entries, because it is two cards. Sum them per deck so the tile can say how
+        // many copies exist and where they are, instead of just naming the decks.
+        const inDecks = c.decks.filter((d) => d.deck_name !== "Livre");
+        const free = c.decks.reduce((n, d) => (d.deck_name === "Livre" ? n + d.quantity : n), 0);
+        const perDeck = new Map();
+        for (const d of inDecks) perDeck.set(d.deck_name, (perDeck.get(d.deck_name) || 0) + d.quantity);
+        const isAllocated = perDeck.size > 0;
+        const deckLabel = [...perDeck]
+          .map(([name, qty]) => (qty > 1 ? `${name} (${qty}x)` : name))
+          .join(" + ");
+        const title = [
+          `${c.total_quantity} cópia(s) de ${c.card_name}`,
+          free ? `${free} livre(s)` : null,
+          ...[...perDeck].map(([name, qty]) => `${qty} em ${name}`),
+        ].filter(Boolean).join(" · ");
         return h`
-          <div class="mtg-card ${isAllocated ? "allocated" : ""}" data-card-view="${c.card_name}">
+          <div class="mtg-card ${isAllocated ? "allocated" : ""}" data-card-view="${c.card_name}" title="${title}">
             ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" decoding="async" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
             <span class="qty-badge">${c.total_quantity}x</span>
-            ${isAllocated ? `<div class="deck-badge">${realDecks.join(" + ")}</div>` : ""}
+            ${free && isAllocated ? `<span class="free-badge">${free} livre${free > 1 ? "s" : ""}</span>` : ""}
+            ${isAllocated ? `<div class="deck-badge">${deckLabel}</div>` : ""}
           </div>`;
       })
       .join("") || `<div class="empty-state">Nada encontrado.</div>`;
@@ -1856,7 +1874,8 @@ async function renderCollection() {
   // re-attaching hundreds of listeners each time.
   grid.addEventListener("click", (e) => {
     const tile = e.target.closest("[data-card-view]");
-    if (tile) showCardModal(tile.dataset.cardView);
+    // load() so adding a unit from the modal updates the tile's count behind it.
+    if (tile) showCardModal(tile.dataset.cardView, load);
   });
 
   document.querySelectorAll("[data-filter]").forEach((chip) =>
@@ -2130,7 +2149,104 @@ async function openAddCardModal({ onSaved } = {}) {
 
 // ------------------------------------------------------------ card modal ----
 
-export async function showCardModal(name) {
+/// Panel inside the card modal: how many physical copies the user owns, where they are, and a
+/// way to add one more. Two ways in, because they answer different questions — "I bought another
+/// one" needs nothing but a count, while cataloguing a specific printing needs set/artist/lang.
+async function renderCopiesBox(backdrop, cardName, onCollectionChange) {
+  const box = backdrop.querySelector("#copies-box");
+  if (!box) return;
+  box.innerHTML = `<div class="sidebar-panel"><div class="empty-state" style="padding:10px">Carregando cópias…</div></div>`;
+
+  let copies;
+  try {
+    copies = await api.cardCopies(cardName);
+  } catch {
+    box.innerHTML = "";
+    return;
+  }
+
+  const where = [
+    copies.free ? `<span class="copy-dot dot-free"></span>${copies.free} livre${copies.free > 1 ? "s" : ""}` : null,
+    ...copies.decks.map((d) => `<span class="copy-dot dot-deck"></span>${d.copies} em <b>${d.deck_name}</b>`),
+  ].filter(Boolean);
+
+  box.innerHTML = h`
+    <div class="sidebar-panel">
+      <h3>Suas cópias
+        <span class="own-tag ${copies.total ? "tag-in-deck" : "tag-missing"}" style="margin-left:6px">${copies.total}x</span>
+      </h3>
+      <div class="own-list" style="display:block;margin-top:2px">
+        ${copies.total ? where.join(" &nbsp;·&nbsp; ") : "Você ainda não tem nenhuma cópia desta carta."}
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
+        <button class="btn small" id="cp-add-one">+ 1 unidade</button>
+        <button class="btn secondary small" id="cp-add-detailed">Adicionar com detalhes…</button>
+        <span id="cp-msg" style="font-size:12px;color:var(--text-faint)"></span>
+      </div>
+
+      <div id="cp-detail" style="display:none;margin-top:12px">
+        <div class="form-grid">
+          <div><label>Edição (set)</label><input type="text" id="cp-set" placeholder="Ex: znr" maxlength="10"></div>
+          <div><label>Artista</label><input type="text" id="cp-artist" placeholder="Nome do artista"></div>
+          <div><label>Idioma</label><select id="cp-lang"><option value="en">Inglês</option><option value="pt">Português</option></select></div>
+          <div><label>Quantidade</label><input type="number" id="cp-qty" min="1" value="1"></div>
+        </div>
+        <div style="margin-top:12px">
+          <label style="font-size:12px;color:var(--text-dim)">Notas</label>
+          <input type="text" id="cp-notes" placeholder="Ex: foil, comprada na loja X"
+            style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+          <button class="btn secondary small" id="cp-cancel">Cancelar</button>
+          <button class="btn small" id="cp-save">Adicionar à coleção</button>
+        </div>
+      </div>
+    </div>`;
+
+  const msg = box.querySelector("#cp-msg");
+  const detail = box.querySelector("#cp-detail");
+
+  // New copies land unallocated: buying a card doesn't put it in a deck, and the deck views
+  // decide what's available by reading the free count.
+  async function addCopy(payload, btn) {
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Adicionando…";
+    try {
+      await api.addCollection({ card_name: cardName, ...payload });
+      await renderCopiesBox(backdrop, cardName, onCollectionChange);
+      onCollectionChange?.();
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.style.color = "var(--bad)";
+      btn.disabled = false;
+      btn.textContent = label;
+    }
+  }
+
+  box.querySelector("#cp-add-one").addEventListener("click", (e) =>
+    addCopy({ quantity: 1, notes: "Unidade avulsa" }, e.currentTarget)
+  );
+  box.querySelector("#cp-add-detailed").addEventListener("click", () => {
+    detail.style.display = detail.style.display === "none" ? "block" : "none";
+  });
+  box.querySelector("#cp-cancel").addEventListener("click", () => { detail.style.display = "none"; });
+  box.querySelector("#cp-save").addEventListener("click", (e) =>
+    addCopy(
+      {
+        set_code: box.querySelector("#cp-set").value.trim().toUpperCase() || null,
+        artist: box.querySelector("#cp-artist").value.trim() || null,
+        lang: box.querySelector("#cp-lang").value,
+        quantity: Math.max(1, parseInt(box.querySelector("#cp-qty").value, 10) || 1),
+        notes: box.querySelector("#cp-notes").value.trim() || null,
+      },
+      e.currentTarget
+    )
+  );
+}
+
+export async function showCardModal(name, onCollectionChange) {
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
   backdrop.innerHTML = `<div class="modal"><div class="empty-state">Carregando…</div></div>`;
@@ -2143,7 +2259,10 @@ export async function showCardModal(name) {
     backdrop.querySelector(".modal").innerHTML = h`
       <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
         ${c.image_uri ? `<img src="${c.image_uri}" style="width:200px;height:auto;border-radius:12px;flex-shrink:0" alt="${c.name}">` : ""}
-        <div style="flex:1;min-width:200px">
+        <!-- 200px art + this minimum has to stay under the modal's inner width, or the flex wraps
+             and the art jumps above the text the moment a scrollbar appears. The art keeps its
+             own width and aspect ratio either way — it is never squeezed to fit. -->
+        <div style="flex:1;min-width:170px">
           <h3 style="margin-bottom:2px">${c.name}</h3>
           <div style="margin-bottom:6px">${manaCostHtml(c.mana_cost)}</div>
           <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px">${c.type_line || ""}</div>
@@ -2156,6 +2275,7 @@ export async function showCardModal(name) {
           </div>
         </div>
       </div>
+      <div id="copies-box" style="margin-top:16px"></div>
       <div class="qa-box">
         <label style="font-size:12px;color:var(--text-dim)">Perguntar sobre esta carta (busca no texto/oracle — não é IA generativa)</label>
         <input type="text" id="qa-input" placeholder="Ex: sinergia, cemitério, sacrifício…" style="margin-top:6px">
@@ -2163,6 +2283,7 @@ export async function showCardModal(name) {
       </div>
       <div style="margin-top:16px;text-align:right"><button class="btn secondary" id="modal-close">Fechar</button></div>
     `;
+    renderCopiesBox(backdrop, c.name, onCollectionChange);
     backdrop.querySelector("#modal-close").addEventListener("click", () => backdrop.remove());
     backdrop.querySelector("#qa-input").addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;

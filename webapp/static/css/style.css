@@ -520,6 +520,14 @@ a { color: inherit; }
     color: white; font-size: 10.5px; padding: 14px 8px 6px; font-weight: 600;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* Shown only when a card has copies in decks AND spare ones in the box — the qty badge alone
+   can't say whether "3x" means three sleeved or two sleeved and one available. */
+.mtg-card .free-badge {
+    position: absolute; top: 6px; left: 6px;
+    background: rgba(12,10,16,.85); color: var(--good);
+    font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 20px;
+    border: 1px solid rgba(90,190,140,.4);
+}
 
 /* ---------- Stacked deck view (Moxfield-style overlapping cards) ---------- */
 /* Cards overlap vertically so only a name strip shows; hovering (or focusing, for
@@ -793,6 +801,7 @@ a { color: inherit; }
 .own-tag.tag-available { background: rgba(76,175,125,.15); color: var(--good); }
 .own-tag.tag-missing { background: rgba(217,85,107,.15); color: var(--bad); }
 .own-tag.tag-other-deck { background: rgba(217,164,65,.15); color: var(--warn); }
+.own-tag.tag-in-deck { background: rgba(124,124,232,.16); color: var(--accent); }
 
 .overage-warning {
     font-size: 12px; padding: 8px 10px; border-radius: var(--radius-sm);
@@ -928,3 +937,11 @@ a { color: inherit; }
 }
 .own-dot.tag-missing { background: var(--bad); }
 .own-dot.tag-other-deck { background: var(--warn); }
+
+/* Inline sibling of .own-dot, for running text rather than over card art. */
+.copy-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    margin-right: 5px; vertical-align: middle;
+}
+.copy-dot.dot-free { background: var(--good); }
+.copy-dot.dot-deck { background: var(--warn); }
