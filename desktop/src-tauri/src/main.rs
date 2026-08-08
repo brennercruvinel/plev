@@ -14,7 +14,12 @@ mod update;
 mod wizard;
 mod writes;
 
-use axum::{response::Html, routing::get, Router};
+use axum::{
+    http::header,
+    response::{Html, IntoResponse},
+    routing::get,
+    Router,
+};
 use std::net::{Ipv4Addr, SocketAddr};
 use tower_http::services::ServeDir;
 
@@ -32,7 +37,17 @@ async fn serve(listener: tokio::net::TcpListener) {
             "/",
             get(move || {
                 let index = index.clone();
-                async move { Html(std::fs::read_to_string(index).unwrap_or_default()) }
+                async move {
+                    // The webview's HTTP cache survives app restarts, so a cached index.html would
+                    // keep requesting the previous ?v= asset URLs — an update would install but
+                    // never actually show. The asset URLs stay cacheable; only this one small
+                    // document, which names them, must always be fetched fresh.
+                    (
+                        [(header::CACHE_CONTROL, "no-store")],
+                        Html(std::fs::read_to_string(index).unwrap_or_default()),
+                    )
+                        .into_response()
+                }
             }),
         )
         .nest_service("/assets", ServeDir::new(&static_dir));

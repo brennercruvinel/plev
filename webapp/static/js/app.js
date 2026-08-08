@@ -1,4 +1,4 @@
-import { api } from "./api.js?v=22";
+import { api } from "./api.js?v=23";
 import { activityIcon, manaCostHtml, manaGlyphSvg, resultIcon } from "./icons.js?v=23";
 
 const mainEl = document.getElementById("main");
@@ -705,15 +705,18 @@ async function openImportDeckModal(deckId, onImported) {
     <div class="modal" style="max-width:560px">
       <h3>Importar decklist</h3>
       <p style="font-size:12.5px;color:var(--text-dim);line-height:1.5;margin-top:-6px">
-        Cole uma lista (Moxfield, Archidekt, ou texto simples — "1 Nome da Carta" por linha) ou envie um arquivo .txt/.csv/.xlsx.
+        Cole uma lista (Moxfield, Archidekt, ou texto simples — "1 Nome da Carta" por linha) ou carregue um arquivo .txt/.csv.
         Nada é adicionado ao deck até você confirmar a pré-visualização abaixo.
       </p>
       <textarea id="im-text" rows="6" placeholder="1 Sol Ring&#10;1 Arcane Signet&#10;1 Command Tower&#10;..."
         style="width:100%;margin-top:6px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text);font-family:monospace;font-size:12.5px"></textarea>
       <div style="display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap">
-        <button class="btn secondary small" id="im-preview-text">Pré-visualizar texto colado</button>
-        <span style="font-size:12px;color:var(--text-faint)">ou envie um arquivo:</span>
-        <input type="file" id="im-file" accept=".txt,.csv,.xlsx" style="font-size:12px;color:var(--text-dim)">
+        <!-- The native file input is styled by the OS and can't be themed, so it's hidden and
+             driven by a real app button. Picking a file fills the textarea above, which keeps a
+             single source of truth: whatever you can see is exactly what gets imported. -->
+        <input type="file" id="im-file" accept=".txt,.csv" style="display:none">
+        <button class="btn secondary small" id="im-file-btn">Carregar arquivo (.txt/.csv)</button>
+        <span id="im-file-name" style="font-size:12px;color:var(--text-faint)"></span>
       </div>
       <div id="im-results" style="margin-top:16px"></div>
       <div id="im-mode-wrap" style="display:none;margin-top:14px">
@@ -724,6 +727,7 @@ async function openImportDeckModal(deckId, onImported) {
       <div id="im-error" style="color:var(--bad);font-size:12px;margin-top:10px;display:none"></div>
       <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
         <button class="btn secondary" id="im-cancel">Cancelar</button>
+        <button class="btn" id="im-preview-text">Pré-visualizar</button>
         <button class="btn" id="im-confirm" style="display:none">Confirmar importação</button>
       </div>
     </div>`;
@@ -765,32 +769,73 @@ async function openImportDeckModal(deckId, onImported) {
       </div>`;
     backdrop.querySelector("#im-mode-wrap").style.display = data.matched.length ? "block" : "none";
     backdrop.querySelector("#im-confirm").style.display = data.matched.length ? "inline-block" : "none";
+    // Once there's something to confirm, "Pré-visualizar" would be a second primary button
+    // competing with it; editing the text brings it back via resetPreview().
+    backdrop.querySelector("#im-preview-text").style.display = data.matched.length ? "none" : "inline-block";
   }
 
-  backdrop.querySelector("#im-preview-text").addEventListener("click", async () => {
-    const text = backdrop.querySelector("#im-text").value;
-    const errEl = backdrop.querySelector("#im-error");
+  const textEl = backdrop.querySelector("#im-text");
+  const errEl = backdrop.querySelector("#im-error");
+  const previewBtn = backdrop.querySelector("#im-preview-text");
+  const fileEl = backdrop.querySelector("#im-file");
+
+  function showError(msg) {
+    errEl.textContent = msg;
+    errEl.style.display = "block";
+  }
+
+  /** Drops a stale preview whenever the text changes, so "Confirmar" can never import
+      something other than what's on screen. */
+  function resetPreview() {
+    previewData = null;
+    backdrop.querySelector("#im-results").innerHTML = "";
+    backdrop.querySelector("#im-mode-wrap").style.display = "none";
+    backdrop.querySelector("#im-confirm").style.display = "none";
+    previewBtn.style.display = "inline-block";
     errEl.style.display = "none";
-    if (!text.trim()) return;
+  }
+
+  async function runPreview() {
+    const text = textEl.value;
+    errEl.style.display = "none";
+    if (!text.trim()) {
+      showError("Cole ou digite uma decklist antes de pré-visualizar.");
+      textEl.focus();
+      return;
+    }
+    previewBtn.disabled = true;
+    previewBtn.textContent = "Lendo…";
     try {
       renderPreview(await api.importPreviewText(deckId, text));
     } catch (err) {
-      errEl.textContent = err.message;
-      errEl.style.display = "block";
+      showError(err.message);
+    } finally {
+      previewBtn.disabled = false;
+      previewBtn.textContent = "Pré-visualizar";
     }
-  });
+  }
 
-  backdrop.querySelector("#im-file").addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    const errEl = backdrop.querySelector("#im-error");
-    errEl.style.display = "none";
+  previewBtn.addEventListener("click", runPreview);
+  textEl.addEventListener("input", resetPreview);
+
+  backdrop.querySelector("#im-file-btn").addEventListener("click", () => fileEl.click());
+
+  // The file is read here in the browser and dropped into the textarea rather than uploaded,
+  // so the user sees and can edit exactly what will be imported — and both paths share one
+  // preview endpoint.
+  fileEl.addEventListener("change", () => {
+    const file = fileEl.files[0];
     if (!file) return;
-    try {
-      renderPreview(await api.importPreviewFile(deckId, file));
-    } catch (err) {
-      errEl.textContent = err.message;
-      errEl.style.display = "block";
-    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      resetPreview();
+      textEl.value = String(reader.result || "");
+      backdrop.querySelector("#im-file-name").textContent = file.name;
+      runPreview();
+    };
+    reader.onerror = () => showError(`Não foi possível ler "${file.name}".`);
+    reader.readAsText(file);
+    fileEl.value = ""; // let the same file be picked again after an edit
   });
 
   backdrop.querySelector("#im-cancel").addEventListener("click", () => backdrop.remove());

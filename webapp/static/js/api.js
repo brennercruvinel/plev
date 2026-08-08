@@ -36,17 +36,11 @@ export const api = {
     req(`/decks/${id}/cards`, { method: "POST", body: JSON.stringify({ card_name, quantity, oracle_id, confirm }) }),
   removeDeckCard: (deckId, cardId) => req(`/decks/${deckId}/cards/${cardId}`, { method: "DELETE" }),
 
-  // Decklist import — text/CSV go through req() as JSON; the file variant needs
-  // multipart/form-data, so it bypasses req()'s forced "Content-Type: application/json".
+  // Decklist import. There is deliberately no file-upload variant: uploaded .txt/.csv files are
+  // read in the browser and dropped into the textarea, so every import — pasted or loaded from
+  // disk — goes through this one endpoint and shows the user exactly what will be imported.
   importPreviewText: (id, text) =>
     req(`/decks/${id}/import/preview`, { method: "POST", body: JSON.stringify({ text }) }),
-  importPreviewFile: async (id, file) => {
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch(`${BASE}/decks/${id}/import/preview-file`, { method: "POST", body: fd });
-    if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
-    return res.json();
-  },
   importCommit: (id, cards, mode) =>
     req(`/decks/${id}/import/commit`, { method: "POST", body: JSON.stringify({ cards, mode }) }),
 
