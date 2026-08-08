@@ -8,6 +8,7 @@
 mod api;
 mod db;
 mod paths;
+mod writes;
 
 use axum::{response::Html, routing::get, Router};
 use std::net::{Ipv4Addr, SocketAddr};
@@ -22,6 +23,7 @@ async fn serve(listener: tokio::net::TcpListener) {
     // makes every /assets/* request 404 — the window then renders raw unstyled HTML with no JS.
     let app = Router::new()
         .merge(api::router())
+        .merge(writes::router())
         .route(
             "/",
             get(move || {

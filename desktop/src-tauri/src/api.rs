@@ -20,7 +20,7 @@ use std::collections::HashMap;
 use crate::db::{fold_text, open_app_db, open_cards_db};
 use crate::paths;
 
-const CARD_COLS: &str = "oracle_id, name, mana_cost, cmc, type_line, oracle_text, power, toughness, \
+pub const CARD_COLS: &str = "oracle_id, name, mana_cost, cmc, type_line, oracle_text, power, toughness, \
      loyalty, colors, color_identity, rarity, set_code, keywords, commander_legal, price_usd, \
      reserved, edhrec_rank, uri, image_uri, game_changer";
 
@@ -584,7 +584,7 @@ async fn collection_total() -> Json<Value> {
 
 async fn list_games() -> Json<Value> {
     let Ok(con) = open_app_db() else { return Json(json!([])) };
-    let out = (|| -> rusqlite::Result<Vec<Value>> {
+    let mut out = (|| -> rusqlite::Result<Vec<Value>> {
         let mut stmt = con.prepare(
             "SELECT games.id, games.deck_id, games.played_at, games.result, games.opponents,
                     games.turns, games.notes, decks.name
@@ -602,6 +602,21 @@ async fn list_games() -> Json<Value> {
         rows.collect()
     })()
     .unwrap_or_default();
+
+    // The standout cards recorded per game — the Partidas page lists them under each row.
+    for game in out.iter_mut() {
+        let Some(id) = game.get("id").and_then(|v| v.as_i64()) else { continue };
+        let names: Vec<Value> = (|| -> rusqlite::Result<Vec<Value>> {
+            let mut stmt =
+                con.prepare("SELECT card_name FROM game_highlights WHERE game_id = ?1")?;
+            let rows = stmt.query_map([id], |r| Ok(Value::from(r.get::<_, String>(0)?)))?;
+            rows.collect()
+        })()
+        .unwrap_or_default();
+        if let Some(m) = game.as_object_mut() {
+            m.insert("highlights".into(), Value::Array(names));
+        }
+    }
     Json(Value::Array(out))
 }
 
