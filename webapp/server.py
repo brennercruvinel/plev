@@ -24,7 +24,8 @@ from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from db import get_app_db, get_cards_db, init_db, log_activity  # noqa: E402
+from db import get_app_db, get_cards_db, init_db, ensure_cards_indexes, log_activity  # noqa: E402
+from mtgdb import fold_text  # noqa: E402  (repo root; db.py puts it on sys.path)
 import data_update  # noqa: E402
 import deck_wizard  # noqa: E402
 import decklist_import  # noqa: E402
@@ -34,6 +35,7 @@ EDHREC_CACHE = os.path.join(os.path.dirname(HERE), "data", "edhrec")
 
 app = FastAPI(title="Spellbook")
 init_db()
+ensure_cards_indexes()  # self-heals a card index built before idx_pt_oracle existed
 
 
 def slugify(name: str) -> str:
@@ -50,18 +52,36 @@ def card_row_to_dict(r):
 
 def _lookup_card_in(cdb, name: str):
     """Same matching rules as lookup_card(), but reuses an already-open cards
-    connection — used by decklist import, which looks up many names in a row."""
+    connection — used by decklist import, which looks up many names in a row.
+
+    Every exact step also tries the accent-folded form, so a hand-typed "Seance Board" or
+    "A Ascensao da Onda Faminta" resolves to the accented printed name (see mtgdb.fold_text —
+    42% of the Portuguese names carry accents). Folded matching runs after the plain one so an
+    exact literal hit always wins.
+    """
+    folded = fold_text(name)
     r = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (name,)).fetchone()
     if r:
         return card_row_to_dict(r), "exata"
+    r = cdb.execute("SELECT * FROM cards WHERE name_folded = ?", (folded,)).fetchone()
+    if r:
+        return card_row_to_dict(r), "exata"
+
     row = cdb.execute(
         "SELECT DISTINCT oracle_id FROM names_pt WHERE printed_name = ? COLLATE NOCASE", (name,)
     ).fetchall()
+    if not row:
+        row = cdb.execute(
+            "SELECT DISTINCT oracle_id FROM names_pt WHERE printed_name_folded = ?", (folded,)
+        ).fetchall()
     if len(row) == 1:
         r = cdb.execute("SELECT * FROM cards WHERE oracle_id = ?", (row[0]["oracle_id"],)).fetchone()
         if r:
             return card_row_to_dict(r), "exata (nome em português)"
+
     r = cdb.execute("SELECT * FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"%{name}%",)).fetchone()
+    if not r:
+        r = cdb.execute("SELECT * FROM cards WHERE name_folded LIKE ? LIMIT 1", (f"%{folded}%",)).fetchone()
     if r:
         return card_row_to_dict(r), "aproximada"
     return None, None
@@ -100,12 +120,15 @@ def search_cards(q: str = "", limit: int = 30):
     cdb = get_cards_db()
     if cdb is None:
         return []
-    q_like = f"%{q}%"
+    # Matching is done on the accent-folded columns so typing without accents still finds
+    # "Séance Board" / "A Ascensão da Onda Faminta" (see mtgdb.fold_text). fold_text also
+    # lowercases, which makes this case-insensitive without needing COLLATE NOCASE.
+    q_like = f"%{fold_text(q)}%"
     rows = cdb.execute(
         """
         SELECT c.* FROM cards c
-        WHERE c.name LIKE ? COLLATE NOCASE
-           OR c.oracle_id IN (SELECT oracle_id FROM names_pt WHERE printed_name LIKE ? COLLATE NOCASE)
+        WHERE c.name_folded LIKE ?
+           OR c.oracle_id IN (SELECT oracle_id FROM names_pt WHERE printed_name_folded LIKE ?)
         ORDER BY (CASE WHEN c.edhrec_rank IS NULL THEN 999999 ELSE c.edhrec_rank END) ASC
         LIMIT ?
         """,
@@ -461,6 +484,24 @@ def get_deck(deck_id: int):
     con.close()
 
     cdb = get_cards_db()
+    # Batch the card-index lookups for the whole deck up front (a 100-card deck previously issued
+    # ~100 separate queries). Two maps: by oracle_id for rows where a specific printing was picked
+    # (disambiguated, e.g. one of two cards both named "Phyrexian Hydra"), by lowercased name for
+    # everything else.
+    by_oracle, by_name = {}, {}
+    if cdb is not None and dcards:
+        want_oracle = {dc["oracle_id"] for dc in dcards if "oracle_id" in dc.keys() and dc["oracle_id"]}
+        want_names = {dc["card_name"] for dc in dcards}
+        for ids in (list(want_oracle)[i:i + 400] for i in range(0, len(want_oracle), 400)):
+            ph = ",".join("?" * len(ids))
+            for r in cdb.execute(f"SELECT * FROM cards WHERE oracle_id IN ({ph})", ids):
+                by_oracle[r["oracle_id"]] = r
+        names = list(want_names)
+        for chunk in (names[i:i + 400] for i in range(0, len(names), 400)):
+            ph = ",".join("?" * len(chunk))
+            for r in cdb.execute(f"SELECT * FROM cards WHERE name COLLATE NOCASE IN ({ph})", chunk):
+                by_name.setdefault(r["name"].lower(), r)
+
     by_type = {}
     total = 0
     mana_curve = {}
@@ -468,14 +509,12 @@ def get_deck(deck_id: int):
         r = None
         dc_oracle_id = dc["oracle_id"] if "oracle_id" in dc.keys() else None
         if cdb is not None:
-            # A specific printing was picked (disambiguated, e.g. one of two cards both named
-            # "Phyrexian Hydra") — resolve unambiguously by oracle_id first. Only fall back to
-            # the name-based (possibly ambiguous) lookup for older rows that predate this.
             if dc_oracle_id:
-                r = cdb.execute("SELECT * FROM cards WHERE oracle_id = ?", (dc_oracle_id,)).fetchone()
+                r = by_oracle.get(dc_oracle_id)
             if not r:
-                r = cdb.execute("SELECT * FROM cards WHERE name = ? COLLATE NOCASE", (dc["card_name"],)).fetchone()
+                r = by_name.get(dc["card_name"].lower())
             if not r:
+                # Prefix fallback for names that don't match exactly — rare, so per-card is fine here.
                 r = cdb.execute("SELECT * FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{dc['card_name']}%",)).fetchone()
         info = card_row_to_dict(r) if r else {"name": dc["card_name"], "type_line": "?", "cmc": 0}
         cat = "Comandante" if dc["is_commander"] else classify(info.get("type_line", ""))
@@ -929,16 +968,32 @@ def list_collection(status: str = "all", q: str = ""):
         })
 
     cdb = get_cards_db()
-    out = []
-    for card_name, g in grouped.items():
-        if cdb is not None:
-            c = cdb.execute("SELECT type_line, mana_cost, image_uri, colors, rarity, price_usd FROM cards WHERE name = ? COLLATE NOCASE", (card_name,)).fetchone()
-            if not c:
-                c = cdb.execute("SELECT type_line, mana_cost, image_uri, colors, rarity, price_usd FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{card_name}%",)).fetchone()
-            if c:
-                g.update(dict(c))
-        out.append(g)
+    out = list(grouped.values())
     if cdb is not None:
+        # One batched lookup for every distinct card name instead of a query per name — the
+        # collection page renders hundreds of tiles, so the per-name version issued hundreds of
+        # round trips. Names are matched case-insensitively (same as the old `= ? COLLATE NOCASE`)
+        # by keying the result on lowercased name.
+        cols = "name, type_line, mana_cost, image_uri, colors, rarity, price_usd"
+        by_name = {}
+        names = list(grouped.keys())
+        for chunk in (names[i:i + 400] for i in range(0, len(names), 400)):  # stay under SQLite's variable limit
+            placeholders = ",".join("?" * len(chunk))
+            for r in cdb.execute(f"SELECT {cols} FROM cards WHERE name COLLATE NOCASE IN ({placeholders})", chunk):
+                by_name.setdefault(r["name"].lower(), r)
+
+        for card_name, g in grouped.items():
+            c = by_name.get(card_name.lower())
+            if c is None:
+                # Fallback for names that don't match exactly (older hand-entered rows). Rare, so
+                # keeping it per-name is fine — it no longer runs for the common case.
+                c = cdb.execute(
+                    f"SELECT {cols} FROM cards WHERE name LIKE ? COLLATE NOCASE LIMIT 1", (f"{card_name}%",)
+                ).fetchone()
+            if c:
+                d = dict(c)
+                d.pop("name", None)  # keep the collection's own card_name, not the index's casing
+                g.update(d)
         cdb.close()
     out.sort(key=lambda x: x["card_name"])
     return out

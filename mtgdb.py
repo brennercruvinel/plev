@@ -22,10 +22,27 @@ import json
 import os
 import sqlite3
 import sys
+import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
 DB = os.path.join(DATA, "mtg.sqlite")
+
+
+def fold_text(s):
+    """Lowercased, accent-stripped form used for forgiving name matching.
+
+    SQLite's NOCASE collation is ASCII-only, so 'Séance' never matches a typed
+    'Seance' — and 42% of the Portuguese printed names carry accents, which is
+    exactly what gets typed by hand. Both the cards and names_pt tables store a
+    folded copy of the name (see the *_folded columns) so lookups can compare
+    fold_text(user_input) against an indexed column instead of scanning.
+    """
+    if s is None:
+        return None
+    return "".join(
+        c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c)
+    ).lower()
 
 
 def _newest(pattern):
@@ -61,14 +78,22 @@ def cmd_build(args):
             colors TEXT, color_identity TEXT, rarity TEXT, set_code TEXT,
             keywords TEXT, commander_legal TEXT, price_usd TEXT,
             reserved INTEGER, edhrec_rank INTEGER, uri TEXT, image_uri TEXT,
-            game_changer INTEGER
+            game_changer INTEGER, name_folded TEXT
         );
         CREATE TABLE names_pt (
-            printed_name TEXT, oracle_id TEXT, set_code TEXT
+            printed_name TEXT, oracle_id TEXT, set_code TEXT, printed_name_folded TEXT
         );
         CREATE INDEX idx_name ON cards(name COLLATE NOCASE);
         CREATE INDEX idx_type ON cards(type_line);
         CREATE INDEX idx_pt ON names_pt(printed_name COLLATE NOCASE);
+        -- Reverse direction of idx_pt: card -> its Portuguese printed names. Without this,
+        -- every card-detail lookup (and the PT half of every autocomplete query) full-scans
+        -- names_pt (~25k rows). See webapp/db.py ensure_cards_indexes(), which adds this to
+        -- an already-built index so existing installs don't need a full rebuild.
+        CREATE INDEX idx_pt_oracle ON names_pt(oracle_id);
+        -- Accent-insensitive lookup (see fold_text) — 'Seance Board' must find 'Séance Board'.
+        CREATE INDEX idx_name_folded ON cards(name_folded);
+        CREATE INDEX idx_pt_folded ON names_pt(printed_name_folded);
     """)
 
     def face(c, key):
@@ -112,15 +137,16 @@ def cmd_build(args):
                 1 if c.get("reserved") else 0, c.get("edhrec_rank"),
                 c.get("scryfall_uri"), image_uri(c),
                 1 if c.get("game_changer") else 0,
+                fold_text(c.get("name")),
             ))
             n += 1
             if len(rows) >= 5000:
                 con.executemany(
-                    "INSERT OR REPLACE INTO cards VALUES (%s)" % ",".join("?" * 21), rows)
+                    "INSERT OR REPLACE INTO cards VALUES (%s)" % ",".join("?" * 22), rows)
                 rows.clear()
     if rows:
         con.executemany(
-            "INSERT OR REPLACE INTO cards VALUES (%s)" % ",".join("?" * 21), rows)
+            "INSERT OR REPLACE INTO cards VALUES (%s)" % ",".join("?" * 22), rows)
     con.commit()
     print(f"  {n:,} cartas únicas indexadas")
 
@@ -149,13 +175,13 @@ def cmd_build(args):
                 if key in seen:
                     continue
                 seen.add(key)
-                rows.append((pn, oid, c.get("set")))
+                rows.append((pn, oid, c.get("set"), fold_text(pn)))
                 n_pt += 1
                 if len(rows) >= 5000:
-                    con.executemany("INSERT INTO names_pt VALUES (?,?,?)", rows)
+                    con.executemany("INSERT INTO names_pt VALUES (?,?,?,?)", rows)
                     rows.clear()
         if rows:
-            con.executemany("INSERT INTO names_pt VALUES (?,?,?)", rows)
+            con.executemany("INSERT INTO names_pt VALUES (?,?,?,?)", rows)
         con.commit()
         print(f"  {n_pt:,} nomes em português indexados")
     else:

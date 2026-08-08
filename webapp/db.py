@@ -1,10 +1,18 @@
 """Access to the two databases: app.db (the owner's data) and mtg.sqlite (card database, read-only)."""
 import os
 import sqlite3
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
 APP_DB = os.path.join(HERE, "app.db")
-CARDS_DB = os.path.join(os.path.dirname(HERE), "data", "mtg.sqlite")
+CARDS_DB = os.path.join(ROOT, "data", "mtg.sqlite")
+
+# mtgdb.py (repo root) owns the card-index schema, including fold_text() — the same normalization
+# used to populate the folded columns at build time must be used to query them. Same sys.path
+# pattern as data_update.py / deck_wizard.py.
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS decks (
@@ -105,6 +113,60 @@ def run_migrations(con):
         cols = [row["name"] for row in con.execute(f"PRAGMA table_info({table})")]
         if column not in cols:
             con.execute(ddl)
+
+
+# Schema the app's queries rely on that a card index built by an older mtgdb.py won't have.
+# Applying it here (rather than only in mtgdb.py's schema) means an existing install self-heals
+# on the next server start instead of needing a full ~400MB re-download and rebuild.
+CARDS_INDEXES = [
+    "CREATE INDEX IF NOT EXISTS idx_pt_oracle ON names_pt(oracle_id)",
+    "CREATE INDEX IF NOT EXISTS idx_name_folded ON cards(name_folded)",
+    "CREATE INDEX IF NOT EXISTS idx_pt_folded ON names_pt(printed_name_folded)",
+]
+
+# (table, column, DDL, source column to backfill from) — accent-folded copies of the name columns,
+# used for forgiving lookups. See mtgdb.fold_text().
+CARDS_COLUMNS = [
+    ("cards", "name_folded", "ALTER TABLE cards ADD COLUMN name_folded TEXT", "name"),
+    ("names_pt", "printed_name_folded", "ALTER TABLE names_pt ADD COLUMN printed_name_folded TEXT", "printed_name"),
+]
+
+
+def ensure_cards_indexes():
+    """Best-effort: brings an already-built card index up to the schema the app expects (folded
+    name columns + indexes). Silently skips when the index hasn't been built yet or the file isn't
+    writable — it's an optimization, never a requirement, and the app works without it."""
+    if not os.path.exists(CARDS_DB):
+        return
+    try:
+        from mtgdb import fold_text
+    except ImportError:
+        return
+    try:
+        con = sqlite3.connect(CARDS_DB)
+        con.row_factory = sqlite3.Row
+        try:
+            for table, column, ddl, src in CARDS_COLUMNS:
+                cols = [r["name"] for r in con.execute(f"PRAGMA table_info({table})")]
+                if column not in cols:
+                    con.execute(ddl)
+                # Backfill anything still NULL — covers both a freshly added column and a
+                # previous run that was interrupted partway through.
+                todo = con.execute(
+                    f"SELECT rowid, {src} FROM {table} WHERE {column} IS NULL AND {src} IS NOT NULL"
+                ).fetchall()
+                if todo:
+                    con.executemany(
+                        f"UPDATE {table} SET {column} = ? WHERE rowid = ?",
+                        [(fold_text(r[src]), r["rowid"]) for r in todo],
+                    )
+            for ddl in CARDS_INDEXES:
+                con.execute(ddl)
+            con.commit()
+        finally:
+            con.close()
+    except sqlite3.Error:
+        pass  # read-only file, locked by another process, etc. — the app still works, just slower
 
 
 def init_db():

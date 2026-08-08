@@ -1,0 +1,15 @@
+# Spellbook runtime dependencies.
+#   pip3 install --user -r requirements.txt
+#
+# Everything else the app uses is Python standard library (sqlite3, urllib, gzip, csv, ...),
+# and the frontend is plain HTML/CSS/JS with no build step — there is no Node/npm requirement.
+# Tested on Python 3.9 (macOS Command Line Tools); no 3.10+ syntax is used.
+
+fastapi
+uvicorn
+pydantic<3
+python-multipart   # required by FastAPI's UploadFile — decklist import from .txt/.csv/.xlsx
+
+# Optional: only needed to import a decklist from an .xlsx file.
+# .txt and .csv import work without it, and the app degrades with a clear message if it's absent.
+# openpyxl

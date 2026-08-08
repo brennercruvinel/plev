@@ -1647,16 +1647,21 @@ async function renderCollection() {
         const isAllocated = realDecks.length > 0;
         return h`
           <div class="mtg-card ${isAllocated ? "allocated" : ""}" data-card-view="${c.card_name}">
-            ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
+            ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" decoding="async" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
             <span class="qty-badge">${c.total_quantity}x</span>
             ${isAllocated ? `<div class="deck-badge">${realDecks.join(" + ")}</div>` : ""}
           </div>`;
       })
       .join("") || `<div class="empty-state">Nada encontrado.</div>`;
-    document.querySelectorAll("[data-card-view]").forEach((el) =>
-      el.addEventListener("click", () => showCardModal(el.dataset.cardView))
-    );
   }
+
+  // One delegated listener on the grid instead of one per tile — the collection renders hundreds
+  // of cards, and load() re-runs on every filter/search change, so per-tile binding meant
+  // re-attaching hundreds of listeners each time.
+  grid.addEventListener("click", (e) => {
+    const tile = e.target.closest("[data-card-view]");
+    if (tile) showCardModal(tile.dataset.cardView);
+  });
 
   document.querySelectorAll("[data-filter]").forEach((chip) =>
     chip.addEventListener("click", () => {
@@ -1666,7 +1671,13 @@ async function renderCollection() {
       load();
     })
   );
-  document.getElementById("coll-search").addEventListener("input", () => load());
+  // Debounced: without this every keystroke fired a full /api/collection request and re-rendered
+  // the whole grid. Same 250ms used by the card-name autocompletes elsewhere in this file.
+  let searchDebounce;
+  document.getElementById("coll-search").addEventListener("input", () => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(load, 250);
+  });
   document.getElementById("add-card-btn").addEventListener("click", () =>
     openAddCardModal({ onSaved: load })
   );
