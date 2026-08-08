@@ -71,7 +71,7 @@ a { color: inherit; }
 }
 /* Text labels next to each icon — faded out (not display:none, so the width transition above
    has something to animate past) whenever the sidebar is collapsed; the icons themselves
-   (.ic, .brand-mark, the offline dot) stay visible at every width. */
+   (.ic, .brand-mark) stay visible at every width. */
 .nav-label {
     white-space: nowrap;
     flex-shrink: 0;
@@ -82,14 +82,16 @@ a { color: inherit; }
     opacity: 0;
     transition: opacity .1s ease;
 }
-/* The data-update panel in the footer is a block of running text with no icon equivalent, so
-   collapsing to icon-only just hides it outright (rather than fading an icon-less blob) —
-   pointer-events:none keeps its (invisible, off to the right) buttons unclickable while hidden. */
-#sidebar-data-panel {
+/* The data-update panel and the offline-first badge are both icon-less blocks (running text /
+   a labeled pill) with nothing sensible to show in the collapsed icon-only rail, so — unlike
+   the per-icon .nav-label fade above — they hide outright; pointer-events:none keeps the
+   data panel's (invisible, off to the right) buttons unclickable while hidden. */
+#sidebar-data-panel, .badge-offline {
     opacity: 1;
     transition: opacity .15s ease .05s;
 }
-.sidebar:not(:hover):not(:focus-within) #sidebar-data-panel {
+.sidebar:not(:hover):not(:focus-within) #sidebar-data-panel,
+.sidebar:not(:hover):not(:focus-within) .badge-offline {
     opacity: 0;
     pointer-events: none;
     transition: opacity .1s ease;
@@ -109,12 +111,8 @@ a { color: inherit; }
 .brand-mark {
     width: 30px; height: 30px;
     flex-shrink: 0;
-    border-radius: 8px;
-    overflow: hidden;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px var(--accent-glow);
 }
-.brand-mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .nav-item {
     display: flex;
