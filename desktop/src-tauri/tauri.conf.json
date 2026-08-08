@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Spellbook",
+  "version": "0.1.0",
+  "identifier": "com.felipenavarro.spellbook",
+  "build": {
+    "frontendDist": "../../webapp/static"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg", "nsis", "deb", "appimage"],
+    "icon": ["icons/icon.png"],
+    "resources": {
+      "../../webapp/static": "static"
+    }
+  }
+}

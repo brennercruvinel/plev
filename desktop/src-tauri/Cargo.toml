@@ -1,0 +1,33 @@
+[package]
+name = "spellbook"
+version = "0.1.0"
+description = "Spellbook — MTG collection & deck manager"
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+# Embedded HTTP server: the existing frontend talks to /api/* over fetch(), so serving the same
+# routes here keeps webapp/static working byte-for-byte instead of rewriting it onto Tauri IPC.
+axum = "0.7"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
+tower-http = { version = "0.5", features = ["fs"] }
+# "bundled" compiles SQLite into the binary — no system libsqlite3 on any target, which is what
+# makes the Windows/Linux builds portable.
+rusqlite = { version = "0.31", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "5"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
