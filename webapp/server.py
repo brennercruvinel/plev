@@ -982,6 +982,40 @@ def collection_duplicates():
     return [dict(r) for r in rows]
 
 
+# ---------------------------------------------------------- collection: add by list ----
+# "Adicionar por lista" mode of the add-card dialog — a fast path for registering many
+# cards at once, always 1 unit each, edition-agnostic. Reuses decklist_import.parse_text()
+# for the same tolerant line parsing the deck-import feature uses (quantity prefixes,
+# trailing set/collector annotations, section headers), but deliberately ignores any
+# parsed quantity and never merges duplicate lines — each line is resolved and reported
+# on its own, 1:1, so the frontend can point at exactly which line failed.
+
+class BulkResolveIn(BaseModel):
+    text: str
+
+
+@app.post("/api/collection/bulk-resolve")
+def bulk_resolve_collection(payload: BulkResolveIn):
+    """Parses + resolves each line against the local index. Writes nothing — the frontend
+    commits each resolved line via the existing POST /api/collection, same as a single add."""
+    entries = decklist_import.parse_text(payload.text)
+    cdb = get_cards_db()
+    out = []
+    for _qty, name in entries:
+        if cdb is None:
+            out.append({"input": name, "card_name": None, "lang": None, "oracle_id": None})
+            continue
+        card, how = _lookup_card_in(cdb, name)
+        if card:
+            lang = "pt" if how and "português" in how else "en"
+            out.append({"input": name, "card_name": card["name"], "lang": lang, "oracle_id": card["oracle_id"]})
+        else:
+            out.append({"input": name, "card_name": None, "lang": None, "oracle_id": None})
+    if cdb is not None:
+        cdb.close()
+    return out
+
+
 class CollectionIn(BaseModel):
     card_name: str
     set_code: Optional[str] = None

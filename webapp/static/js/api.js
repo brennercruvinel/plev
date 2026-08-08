@@ -58,6 +58,7 @@ export const api = {
   collectionDuplicates: () => req("/collection/duplicates"),
   collectionTotal: () => req("/collection/total"),
   addCollection: (payload) => req("/collection", { method: "POST", body: JSON.stringify(payload) }),
+  bulkResolveCollection: (text) => req("/collection/bulk-resolve", { method: "POST", body: JSON.stringify({ text }) }),
   allocate: (id, deck_id) => req(`/collection/${id}/allocate`, { method: "PATCH", body: JSON.stringify({ deck_id }) }),
 
   activity: (limit = 30) => req(`/activity?limit=${limit}`),
