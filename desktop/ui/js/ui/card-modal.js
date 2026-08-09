@@ -1,6 +1,6 @@
-import { api } from "../api.js?v=24";
-import { manaCostHtml } from "../icons.js?v=24";
-import { h, highlightMatch, priceLabel } from "../util.js?v=1";
+import { api } from "../api.js?v=25";
+import { manaCostHtml } from "../icons.js?v=25";
+import { h, highlightMatch, priceLabel } from "../util.js?v=2";
 
 async function renderCopiesBox(backdrop, cardName, onCollectionChange) {
   const box = backdrop.querySelector("#copies-box");

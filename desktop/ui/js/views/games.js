@@ -1,6 +1,6 @@
-import { api } from "../api.js?v=24";
-import { mainEl } from "../router.js?v=1";
-import { h } from "../util.js?v=1";
+import { api } from "../api.js?v=25";
+import { mainEl } from "../router.js?v=2";
+import { h } from "../util.js?v=2";
 
 export async function renderGames() {
   const [decks, games, stats] = await Promise.all([api.decks(), api.games(), api.gamesStats()]);

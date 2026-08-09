@@ -91,7 +91,7 @@ async fn list_decks() -> Json<Value> {
                 Some((card, _)) => (
                     card.get("image_uri")
                         .and_then(|v| v.as_str())
-                        .map(|u| Value::from(u.replace("/normal/", "/art_crop/")))
+                        .map(|u| Value::from(u.replace("/normal/", "/art_crop/")))  // already a /img/ path
                         .unwrap_or(Value::Null),
                     card.get("color_identity").cloned().unwrap_or(Value::Null),
                 ),

@@ -103,9 +103,17 @@ function singleSymbolHtml(inner) {
 }
 
 /** Renders a mana cost ("{3}{B}{B}") as colored round symbols, matching real MTG style. */
+// Two-faced cards (split, modal DFC, adventures) carry both costs in one string, separated by
+// " // " exactly as their two names are. Pulling out every {symbol} with one regex silently
+// dropped that separator and ran the faces together, so "{2}{W} // {1}{U}" rendered as a single
+// four-symbol cost that exists on no card. Each side is rendered on its own, and the "//" is
+// kept as a visible divider — matching how the name is already shown.
 export function manaCostHtml(cost) {
   if (!cost) return "";
-  const symbols = cost.match(/\{[^}]+\}/g);
-  if (!symbols) return "";
-  return `<span class="mana-cost">${symbols.map((s) => singleSymbolHtml(s.slice(1, -1))).join("")}</span>`;
+  const faces = String(cost)
+    .split("//")
+    .map((face) => (face.match(/\{[^}]+\}/g) || []).map((s) => singleSymbolHtml(s.slice(1, -1))).join(""))
+    .filter((html) => html !== "");
+  if (!faces.length) return "";
+  return `<span class="mana-cost">${faces.join('<span class="mana-split">//</span>')}</span>`;
 }

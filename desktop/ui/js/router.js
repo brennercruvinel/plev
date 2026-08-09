@@ -4,7 +4,7 @@
 // through `registerRoutes`, so adding a page means writing a view module and naming it once in
 // app.js — the router never grows a new branch, and it can't end up importing half the app.
 
-import { api } from "./api.js?v=24";
+import { api } from "./api.js?v=25";
 
 export const mainEl = document.getElementById("main");
 const navItems = document.querySelectorAll(".nav-item");
@@ -90,8 +90,19 @@ window.addEventListener("hashchange", navigate);
 document.addEventListener("click", (e) => {
   const dropdown = document.getElementById("export-dropdown");
   if (dropdown && !dropdown.contains(e.target)) dropdown.classList.remove("open");
-  const addCardWrap = document.getElementById("add-card-inline");
-  if (addCardWrap && !addCardWrap.contains(e.target)) addCardWrap.classList.remove("expanded");
   const filterDropdown = document.getElementById("filter-dropdown");
   if (filterDropdown && !filterDropdown.contains(e.target)) filterDropdown.classList.remove("open");
+
+  const addCardWrap = document.getElementById("add-card-inline");
+  if (addCardWrap && !addCardWrap.contains(e.target)) {
+    addCardWrap.classList.remove("expanded");
+    // The results list is shown by `.add-card-results-dropdown:not(:empty)`, i.e. by having
+    // content — not by the `expanded` class. Collapsing the wrapper alone therefore left the
+    // suggestions floating over the page with no way to dismiss them: clicking outside ran this
+    // handler and visibly did nothing. Emptying it is what actually closes the thing.
+    const results = addCardWrap.querySelector(".add-card-results-dropdown");
+    if (results) results.innerHTML = "";
+    const input = addCardWrap.querySelector("input");
+    if (input) input.value = "";
+  }
 });

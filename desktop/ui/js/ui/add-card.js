@@ -1,6 +1,6 @@
-import { api } from "../api.js?v=24";
-import { manaCostHtml } from "../icons.js?v=24";
-import { h } from "../util.js?v=1";
+import { api } from "../api.js?v=25";
+import { manaCostHtml } from "../icons.js?v=25";
+import { h } from "../util.js?v=2";
 
 export async function openAddCardModal({ onSaved } = {}) {
   const decks = await api.decks();

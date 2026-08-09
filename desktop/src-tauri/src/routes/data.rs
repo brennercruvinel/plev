@@ -13,6 +13,12 @@ use serde_json::{json, Value};
 use crate::db::open_cards_db;
 use crate::http::{conflict, ok};
 use crate::paths;
+use axum::extract::Path as AxumPath;
+use axum::http::{header, StatusCode};
+use axum::response::Redirect;
+
+use crate::images;
+
 
 async fn data_info() -> Json<Value> {
     let Some(cdb) = open_cards_db() else {
@@ -20,7 +26,7 @@ async fn data_info() -> Json<Value> {
     };
     let cards: i64 = cdb.query_row("SELECT COUNT(*) FROM cards", [], |r| r.get(0)).unwrap_or(0);
     let pt: i64 = cdb
-        .query_row("SELECT COUNT(DISTINCT printed_name) FROM names_pt", [], |r| r.get(0))
+        .query_row("SELECT COUNT(DISTINCT printed_name) FROM names_localized", [], |r| r.get(0))
         .unwrap_or(0);
     let built_at = std::fs::metadata(paths::cards_db())
         .ok()
@@ -51,9 +57,58 @@ async fn data_update_start() -> impl IntoResponse {
     }
 }
 
+// Serves cached card art. Falls back to a redirect rather than a 404 so the app still shows
+// images while the cache is still filling, and so a card added by a newer Scryfall drop than the
+// last image sync isn't a permanent hole.
+async fn card_image(AxumPath(rel): AxumPath<String>) -> axum::response::Response {
+    use axum::response::IntoResponse;
+    if let Some(clean) = images::relative_path(&format!("{}{}", images::HOST, rel)) {
+        let file = images::cached_file(&clean);
+        if let Ok(bytes) = std::fs::read(&file) {
+            // Immutable: a printing's art never changes, so the webview should never re-ask.
+            return (
+                [
+                    (header::CONTENT_TYPE, "image/jpeg"),
+                    (header::CACHE_CONTROL, "public, max-age=31536000, immutable"),
+                ],
+                bytes,
+            )
+                .into_response();
+        }
+        return Redirect::temporary(&format!("{}{}", images::HOST, clean)).into_response();
+    }
+    StatusCode::NOT_FOUND.into_response()
+}
+
+/// Stops an update in flight. The already-downloaded art stays: the cache is resumable, so
+/// "cancel" means "pause", and re-running picks up exactly where this left off.
+async fn data_update_cancel() -> impl IntoResponse {
+    crate::update::cancel();
+    ok()
+}
+
+/// How much art is cached, so the sidebar can say whether the app is genuinely offline-ready.
+async fn images_info() -> Json<Value> {
+    let bytes = images::cache_size_bytes();
+    let cached: i64 = crate::db::open_cards_db()
+        .and_then(|c| {
+            c.query_row("SELECT COUNT(*) FROM cards WHERE image_uri IS NOT NULL", [], |r| r.get(0))
+                .ok()
+        })
+        .unwrap_or(0);
+    Json(json!({
+        "bytes": bytes,
+        "gb": (bytes as f64 / 1_073_741_824.0 * 100.0).round() / 100.0,
+        "cards_with_art": cached,
+    }))
+}
+
 pub fn router() -> Router {
     Router::new()
         .route("/api/data/info", get(data_info))
         .route("/api/data/update", post(data_update_start))
         .route("/api/data/update/status", get(data_update_status))
+        .route("/api/data/images", get(images_info))
+        .route("/api/data/update/cancel", post(data_update_cancel))
+        .route("/img/*rel", get(card_image))
 }

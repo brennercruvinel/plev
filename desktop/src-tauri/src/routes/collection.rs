@@ -16,7 +16,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
-use crate::db::{deck_name, log_activity, open_app_db, open_cards_db};
+use crate::db::{deck_name, fold_text, log_activity, open_app_db, open_cards_db};
 use crate::http::{db_unavailable, ok, server_error};
 
 /// serde default for `quantity`: adding a card means one copy unless told otherwise.
@@ -45,8 +45,36 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
         "allocated" => sql.push_str(" AND collection.allocated_deck_id IS NOT NULL"),
         _ => {}
     }
+    // The collection stores whichever name the card was entered under — usually English. Matching
+    // only that string is why searching "Anel Solar" found nothing while "Sol Ring" did. The
+    // card index knows every printed name, so the search resolves the term through it first and
+    // matches the resulting English names too. Accent-folded, so "cemiterio" finds "Cemitério".
+    let mut extra_names: Vec<String> = Vec::new();
     if !p.q.is_empty() {
-        sql.push_str(" AND collection.card_name LIKE ?1 COLLATE NOCASE");
+        if let Some(cdb) = open_cards_db() {
+            let like = format!("%{}%", fold_text(&p.q));
+            extra_names = (|| -> rusqlite::Result<Vec<String>> {
+                let mut stmt = cdb.prepare(
+                    "SELECT DISTINCT c.name FROM cards c
+                     JOIN names_localized n ON n.oracle_id = c.oracle_id
+                     WHERE n.printed_name_folded LIKE ?1 LIMIT 400",
+                )?;
+                let rows = stmt.query_map([&like], |r| r.get::<_, String>(0))?;
+                rows.collect()
+            })()
+            .unwrap_or_default();
+        }
+        if extra_names.is_empty() {
+            sql.push_str(" AND collection.card_name LIKE ?1 COLLATE NOCASE");
+        } else {
+            let ph = std::iter::repeat("?").take(extra_names.len())
+                .collect::<Vec<_>>().join(",");
+            sql.push_str(&format!(
+                " AND (collection.card_name LIKE ?1 COLLATE NOCASE
+                       OR collection.card_name COLLATE NOCASE IN ({}))",
+                ph.replace('?', "?")
+            ));
+        }
     }
     sql.push_str(" ORDER BY collection.card_name");
 
@@ -68,7 +96,11 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
                 read(&mut stmt, &[])
             } else {
                 let like = format!("%{}%", p.q);
-                read(&mut stmt, &[&like])
+                let mut params: Vec<&dyn rusqlite::ToSql> = vec![&like];
+                for n in &extra_names {
+                    params.push(n);
+                }
+                read(&mut stmt, params.as_slice())
             }
         }
         Err(_) => Vec::new(),
@@ -111,7 +143,7 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
                         json!({
                             "type_line": r.get::<_, Option<String>>(1)?,
                             "mana_cost": r.get::<_, Option<String>>(2)?,
-                            "image_uri": r.get::<_, Option<String>>(3)?,
+                            "image_uri": r.get::<_, Option<String>>(3)?.map(|u| crate::images::local_url(&u)),
                             "colors": r.get::<_, Option<String>>(4)?,
                             "rarity": r.get::<_, Option<String>>(5)?,
                             "price_usd": r.get::<_, Option<String>>(6)?,
@@ -148,7 +180,7 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
                         Ok(json!({
                             "type_line": r.get::<_, Option<String>>(0)?,
                             "mana_cost": r.get::<_, Option<String>>(1)?,
-                            "image_uri": r.get::<_, Option<String>>(2)?,
+                            "image_uri": r.get::<_, Option<String>>(2)?.map(|u| crate::images::local_url(&u)),
                             "colors": r.get::<_, Option<String>>(3)?,
                             "rarity": r.get::<_, Option<String>>(4)?,
                             "price_usd": r.get::<_, Option<String>>(5)?,

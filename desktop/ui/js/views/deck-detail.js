@@ -1,10 +1,10 @@
-import { api } from "../api.js?v=24";
-import { manaCostHtml, manaGlyphSvg } from "../icons.js?v=24";
-import { FILTER_COLORS, deckTagsHtml } from "../deck-bits.js?v=1";
-import { mainEl } from "../router.js?v=1";
-import { showCardModal } from "../ui/card-modal.js?v=1";
-import { h } from "../util.js?v=1";
-import { openDeleteDeckModal, openEditDeckModal, openImportDeckModal } from "../views/decks.js?v=1";
+import { api } from "../api.js?v=25";
+import { manaCostHtml, manaGlyphSvg } from "../icons.js?v=25";
+import { FILTER_COLORS, deckTagsHtml } from "../deck-bits.js?v=2";
+import { mainEl } from "../router.js?v=2";
+import { showCardModal } from "../ui/card-modal.js?v=2";
+import { h } from "../util.js?v=2";
+import { openDeleteDeckModal, openEditDeckModal, openImportDeckModal } from "../views/decks.js?v=2";
 
 const CATEGORY_LABELS = {
   Comandante: "Comandante", Land: "Terrenos", Creature: "Criaturas",
@@ -477,11 +477,15 @@ function ownershipTag(cardName, ownershipMap) {
 // "M" = multicolor cards (2+ colors), grouped together rather than split, since MTG deck tools
 // conventionally show multicolor as its own gold segment instead of dividing it between colors.
 const CURVE_COLOR_ORDER = ["W", "U", "B", "R", "G", "M", "C"];
-// Deliberately its own palette rather than reusing FILTER_COLORS (the mana-pip colors): those
-// pastels are tuned for a black glyph drawn on top, but as flat, unlabeled chart segments they
-// read poorly — black in particular ("B") all but disappears against the dark page background.
-// Here B gets a proper dark charcoal and C a lighter neutral, so every segment stays legible.
-const CURVE_COLORS = { W: "#f0e6b0", U: "#6ec3f5", B: "#4a4655", R: "#ef8c68", G: "#7fc98a", M: "#d9b45c", C: "#a8a4c0" };
+// Its own palette rather than FILTER_COLORS (the mana-pip pastels, tuned for a black glyph drawn
+// on top). Every value here clears WCAG 1.4.11's 3:1 against the panel background (#18172e) —
+// measured, not eyeballed; the worst case is 6.07:1.
+//
+// "B" is the one that isn't the literal mana colour: charcoal on a dark panel measured 1.74:1,
+// which is why a mono-black deck's curve read as an undifferentiated grey block. It borrows the
+// app's own violet instead, so black decks look like this app rather than like a rendering bug.
+// U and G are pulled toward --accent and --accent-bright for the same reason.
+const CURVE_COLORS = { W: "#efe6bb", U: "#6aa9f0", B: "#9b8fd6", R: "#ef8f74", G: "#5fcf98", M: "#d9b45c", C: "#b9b5d4" };
 
 /** Buckets every non-commander, non-land card in the deck by CMC, then by color (W/U/B/R/G,
  * "M" for multicolor, "C" for colorless) — mirrors the backend's mana_curve totals but split
@@ -565,12 +569,17 @@ export async function renderDeckDetail([idStr]) {
     // so an always-empty leading column just wastes space — drop it unless it's actually used.
     .filter((b) => b.label !== "0" || b.count > 0);
 
+  // A banner that only says "everything is fine" is a banner the eye learns to skip, which is
+  // exactly what you don't want the day it turns into a real warning. The 100/100 pill above
+  // already states a complete deck, so the banner is reserved for the two states that need an
+  // action: over the limit, and short of it.
   const overage = deck.total_cards - 100;
   let overageWarning = "";
-  if (overage === 0) {
-    overageWarning = `<div class="overage-warning">Deck completo (100/100). Adicionar outra carta vai deixar 101 — remova 1 antes ou depois.</div>`;
-  } else if (overage > 0) {
+  if (overage > 0) {
     overageWarning = `<div class="overage-warning bad">Deck com ${overage} carta${overage > 1 ? "s" : ""} além do limite — remova ${overage} antes de continuar.</div>`;
+  } else if (overage < 0) {
+    const missing = -overage;
+    overageWarning = `<div class="overage-warning">Faltam ${missing} carta${missing > 1 ? "s" : ""} para fechar os 100. Use <b>Adicionar card</b>, <b>Importar decklist</b>, ou veja as sugestões de sinergia acima.</div>`;
   }
 
   mainEl.innerHTML = h`
@@ -790,6 +799,58 @@ function ownDotHtml(cardName, ownership) {
   return t ? `<span class="own-dot ${t.cls}" title="${t.title}"></span>` : "";
 }
 
+// Cursor-following preview for the stacked view. Lives at the document level (one node, reused)
+// rather than one per card: the stack renders a hundred of them, and a preview per card meant a
+// hundred hidden images the browser would still decode.
+//
+// Positioned to the right of the cursor, flipping to the left only when it would run past the
+// window edge — so it never covers what you are about to click, which was the whole complaint
+// about the previous hover-to-lift behaviour.
+function cardPeek() {
+  let el = document.getElementById("card-peek");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "card-peek";
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function attachStackPeek(container) {
+  const GAP = 18;
+  const el = cardPeek();
+  let current = null;
+
+  const place = (e) => {
+    const w = el.offsetWidth || 240;
+    const h = el.offsetHeight || 336;
+    const flip = e.clientX + GAP + w > window.innerWidth;
+    el.style.left = `${flip ? e.clientX - GAP - w : e.clientX + GAP}px`;
+    // Keep the whole preview on screen vertically as well, near the bottom of a long stack.
+    el.style.top = `${Math.max(8, Math.min(e.clientY - h / 2, window.innerHeight - h - 8))}px`;
+  };
+
+  container.addEventListener("mouseover", (e) => {
+    const item = e.target.closest(".stack-item");
+    if (!item || item === current) return;
+    const img = item.querySelector("img");
+    if (!img) return;
+    current = item;
+    el.innerHTML = `<img src="${img.src}" alt="">`;
+    el.classList.add("visible");
+    place(e);
+  });
+  container.addEventListener("mousemove", (e) => {
+    if (current) place(e);
+  });
+  container.addEventListener("mouseout", (e) => {
+    if (!e.relatedTarget || !e.relatedTarget.closest?.(".stack-item")) {
+      current = null;
+      el.classList.remove("visible");
+    }
+  });
+}
+
 function renderDeckCards(deck) {
   const cardsWrap = document.getElementById("deck-cards");
   const ownership = deck.ownership || null;
@@ -841,14 +902,19 @@ function renderDeckCards(deck) {
         const cards = groups[key];
         const rows = cards
           .map((c) => {
-            // Widely-reused staples (basic lands, ramp, etc.) can be "shared" with a dozen other
-            // decks — without a cap, that whole comma-joined list rendered on one unbreakable
-            // line and blew the row (and the whole page) out past the viewport. Truncate visibly,
-            // keep the full list in the title tooltip.
+            // "também em X" used to appear whenever another deck listed the same card name — which
+            // says nothing useful, because owning two copies and lending one out look identical
+            // from a name match. What matters is whether THIS deck has its own copy. When it
+            // does, the card is simply here and the tag is noise, so it is dropped; when it
+            // doesn't, ownTagHtml already says where the single copy actually is. The remaining
+            // job of this tag is the genuinely informative middle case: you own a copy here AND
+            // other decks run their own, which is worth knowing before you pull one apart.
+            const own = ownership?.[c.card_name];
             const sharedList = (c.shared_with || []).map((s) => s.deck).join(", ");
-            const sharedTag = c.shared_with?.length
-              ? `<span class="shared-tag" title="também em ${sharedList}">também em ${sharedList}</span>`
-              : "";
+            const sharedTag =
+              c.shared_with?.length && own?.status === "owned_here"
+                ? `<span class="shared-tag" title="Você tem cópias próprias aqui e em: ${sharedList}. Nada precisa ser desmontado.">cópia própria · também em ${sharedList}</span>`
+                : "";
             return h`
               <div class="card-row">
                 <span class="qty">${c.quantity}x</span>
@@ -864,6 +930,8 @@ function renderDeckCards(deck) {
       })
       .join("");
   }
+
+  if (deckViewMode === "stack") attachStackPeek(cardsWrap);
 
   cardsWrap.querySelectorAll("[data-remove]").forEach((btn) =>
     btn.addEventListener("click", async (e) => {

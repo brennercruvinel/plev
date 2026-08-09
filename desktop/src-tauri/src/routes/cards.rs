@@ -43,7 +43,11 @@ pub fn card_row_to_json(r: &rusqlite::Row) -> rusqlite::Result<Value> {
         "cmc".into(),
         r.get::<_, Option<f64>>("cmc").unwrap_or(None).map_or(Value::Null, |v| json!(v)),
     );
-    Ok(Value::Object(m))
+    // Art is served from the local cache (see images.rs) with a redirect fallback, so the grids
+    // keep working offline. Rewritten here, at the single point every card object is built.
+    let mut v = Value::Object(m);
+    crate::images::rewrite_card(&mut v);
+    Ok(v)
 }
 
 #[derive(Deserialize)]
@@ -62,7 +66,7 @@ async fn search_cards(Query(p): Query<SearchQuery>) -> Json<Value> {
     let sql = format!(
         "SELECT {CARD_COLS} FROM cards c
          WHERE c.name_folded LIKE ?1
-            OR c.oracle_id IN (SELECT oracle_id FROM names_pt WHERE printed_name_folded LIKE ?1)
+            OR c.oracle_id IN (SELECT oracle_id FROM names_localized WHERE printed_name_folded LIKE ?1)
          ORDER BY (CASE WHEN c.edhrec_rank IS NULL THEN 999999 ELSE c.edhrec_rank END) ASC
          LIMIT ?2"
     );
@@ -106,12 +110,14 @@ pub fn lookup_card_in(cdb: &Connection, name: &str) -> Option<(Value, String)> {
         .unwrap_or_default()
     };
     let mut ids = pt_ids(
-        "SELECT DISTINCT oracle_id FROM names_pt WHERE printed_name = ?1 COLLATE NOCASE",
+        "SELECT oracle_id FROM names_localized WHERE printed_name = ?1 COLLATE NOCASE
+             GROUP BY oracle_id ORDER BY MIN(lang_rank)",
         name,
     );
     if ids.is_empty() {
         ids = pt_ids(
-            "SELECT DISTINCT oracle_id FROM names_pt WHERE printed_name_folded = ?1",
+            "SELECT oracle_id FROM names_localized WHERE printed_name_folded = ?1
+                 GROUP BY oracle_id ORDER BY MIN(lang_rank)",
             &folded,
         );
     }
@@ -120,7 +126,7 @@ pub fn lookup_card_in(cdb: &Connection, name: &str) -> Option<(Value, String)> {
             &format!("SELECT {CARD_COLS} FROM cards WHERE oracle_id = ?1"),
             &[&ids[0]],
         ) {
-            return Some((v, "exata (nome em português)".into()));
+            return Some((v, "exata (nome traduzido)".into()));
         }
     }
 
@@ -165,12 +171,14 @@ async fn get_card(Path(name): Path<String>, Query(q): Query<CardQuery>) -> impl 
     let oid = card.get("oracle_id").and_then(|v| v.as_str()).unwrap_or("").to_string();
     let pts: Vec<Value> = (|| -> rusqlite::Result<Vec<Value>> {
         let mut stmt = cdb.prepare(
-            "SELECT DISTINCT printed_name, set_code FROM names_pt WHERE oracle_id = ?1",
+            "SELECT printed_name, set_code, lang FROM names_localized WHERE oracle_id = ?1
+             GROUP BY lang HAVING MIN(lang_rank) ORDER BY lang_rank",
         )?;
         let rows = stmt.query_map([&oid], |r| {
             Ok(json!({
                 "printed_name": r.get::<_, Option<String>>(0)?,
                 "set_code": r.get::<_, Option<String>>(1)?,
+                "lang": r.get::<_, Option<String>>(2)?,
             }))
         })?;
         rows.collect()

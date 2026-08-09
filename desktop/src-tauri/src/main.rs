@@ -9,6 +9,7 @@ mod db;
 mod decklist;
 mod edhrec;
 mod http;
+mod images;
 mod paths;
 mod routes;
 mod update;

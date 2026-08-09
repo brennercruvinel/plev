@@ -101,7 +101,9 @@ a { color: inherit; }
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 6px 10px 22px;
+    /* Left padding matches .nav-item so the logo and the nav icons share a centre line: with the
+       sidebar collapsed to icons only, anything else leaves the logo visibly off-axis. */
+    padding: 6px 12px 22px;
     font-weight: 700;
     font-size: 17px;
     letter-spacing: -0.02em;
@@ -109,10 +111,15 @@ a { color: inherit; }
 }
 
 .brand-mark {
-    width: 30px; height: 30px;
+    /* Same 18px box as .nav-item .ic — that box is what fixes the centre line. The artwork inside
+       is allowed to overflow it symmetrically, which is how the logo reads slightly larger than
+       the nav icons without shifting off centre. */
+    width: 18px; height: 18px;
     flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
+    overflow: visible;
 }
+.brand-mark svg { width: 24px; height: 24px; display: block; }
 
 .nav-item {
     display: flex;
@@ -445,7 +452,7 @@ a { color: inherit; }
 .add-card-inline { position: relative; }
 .add-card-results-dropdown:not(:empty) {
     position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
-    min-width: 300px; max-height: 320px; overflow-y: auto;
+    min-width: 300px; max-width: min(420px, calc(100vw - 32px)); max-height: 320px; overflow-y: auto;
     background: var(--bg-elevated); border: 1px solid var(--border-light);
     border-radius: var(--radius-sm); box-shadow: 0 10px 28px rgba(0,0,0,.45); padding: 6px;
 }
@@ -560,10 +567,25 @@ a { color: inherit; }
    in DOM order paints over it. Raising z-index just lets it paint on top of its neighbors in
    place, so nothing moves and the cursor never ends up hovering empty space (which is what
    caused the reflow-jitter and, later, the translateY chase-the-card bug). */
+/* Hovering no longer raises the card over its neighbours. Lifting it covered the very cards
+   you were about to reach for, so browsing a stack meant fighting whichever card you happened
+   to pass over. The card stays put and a preview follows the cursor instead (see #card-peek),
+   which leaves every name band clickable at all times. */
 .stack-item:hover, .stack-item:focus-visible {
-    z-index: 50;
-    box-shadow: 0 16px 36px rgba(0,0,0,.6);
+    box-shadow: 0 0 0 2px var(--accent-bright) inset;
 }
+
+/* Cursor-following card preview. Fixed-position and pointer-events:none so it can never sit
+   between the pointer and the card underneath it. */
+#card-peek {
+    position: fixed; z-index: 200; pointer-events: none;
+    width: 240px; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 18px 48px rgba(0,0,0,.65);
+    border: 1px solid var(--border-light);
+    opacity: 0; transition: opacity .12s ease;
+}
+#card-peek.visible { opacity: 1; }
+#card-peek img { width: 100%; height: auto; display: block; }
 .stack-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .stack-item .no-image { display: flex; align-items: center; justify-content: center; height: 100%; padding: 10px; text-align: center; font-size: 12px; color: var(--text-dim); }
 .stack-item .tile-remove { position: absolute; bottom: 6px; right: 6px; z-index: 2; padding: 3px 7px !important; opacity: 0; transition: opacity .15s; }
@@ -623,9 +645,12 @@ a { color: inherit; }
     width: 8px; height: 8px; border-radius: 50%; background: var(--accent-bright);
     box-shadow: 0 0 0 2px var(--bg-elevated);
 }
+/* Right-anchored, not left. "Filtro" and "Ordenar" sit at the right end of the toolbar, so a
+   left-anchored 320-420px menu opened past the window edge and clipped its own controls.
+   Anchoring to the right edge keeps the whole menu inside the app at any window width. */
 .filter-menu {
-    display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
-    min-width: 320px; max-width: 420px; flex-direction: column; gap: 12px;
+    display: none; position: absolute; top: calc(100% + 6px); right: 0; left: auto; z-index: 20;
+    min-width: 320px; max-width: min(420px, calc(100vw - 32px)); flex-direction: column; gap: 12px;
     background: var(--bg-elevated); border: 1px solid var(--border-light);
     border-radius: var(--radius-sm); box-shadow: 0 10px 28px rgba(0,0,0,.45); padding: 14px;
 }
@@ -764,7 +789,11 @@ a { color: inherit; }
     flex: 1; display: flex; flex-direction: column-reverse;
     min-height: 2px; border-radius: 3px 3px 0 0; overflow: hidden;
 }
-.curve-bar-seg { width: 100%; }
+/* A hairline of the panel background between stacked segments. Adjacent mana colours differ
+   strongly in hue but only slightly in luminance, so without a separator the boundary vanishes
+   for anyone reading the chart without colour — the line carries it regardless. */
+.curve-bar-seg { width: 100%; box-shadow: 0 -1px 0 var(--bg-elevated); }
+.curve-bar-seg:first-child { box-shadow: none; }
 .curve-labels { display: flex; gap: 4px; font-size: 10px; color: var(--text-faint); }
 .curve-labels span { flex: 1; text-align: center; }
 .curve-legend { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 10px; font-size: 10.5px; color: var(--text-faint); }
@@ -793,6 +822,10 @@ a { color: inherit; }
 .synergy-add-btn {
     padding: 3px 9px !important; line-height: 1.4; font-size: 14px !important; font-weight: 700;
 }
+
+/* Divider between the two halves of a split/DFC mana cost — dim enough to read as punctuation
+   rather than as another mana symbol. */
+.mana-split { margin: 0 4px; color: var(--text-faint); font-size: 11px; font-weight: 700; }
 
 .own-tag {
     display: inline-flex; padding: 2px 8px; border-radius: 20px;

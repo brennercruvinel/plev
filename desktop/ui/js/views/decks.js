@@ -1,8 +1,8 @@
-import { api } from "../api.js?v=24";
-import { manaCostHtml } from "../icons.js?v=24";
-import { BRACKET_LABELS, deckCardHtml } from "../deck-bits.js?v=1";
-import { mainEl } from "../router.js?v=1";
-import { h, pollJob } from "../util.js?v=1";
+import { api } from "../api.js?v=25";
+import { manaCostHtml } from "../icons.js?v=25";
+import { BRACKET_LABELS, deckCardHtml } from "../deck-bits.js?v=2";
+import { mainEl } from "../router.js?v=2";
+import { h, pollJob } from "../util.js?v=2";
 
 export async function renderDecksList() {
   const decks = await api.decks();
@@ -328,6 +328,16 @@ export async function openEditDeckModal(deck, onSaved) {
 }
 
 export async function openImportDeckModal(deckId, onImported) {
+  // Non-commander cards currently in the deck — the number "Trocar o deck inteiro" would remove.
+  let currentDeckSize = NaN;
+  api
+    .deck(deckId)
+    .then((d) => {
+      currentDeckSize = Object.entries(d.by_type || {})
+        .filter(([cat]) => cat !== "Comandante")
+        .reduce((n, [, cards]) => n + cards.reduce((m, c) => m + (c.quantity || 0), 0), 0);
+    })
+    .catch(() => {});
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
   backdrop.innerHTML = h`
@@ -348,15 +358,20 @@ export async function openImportDeckModal(deckId, onImported) {
         <span id="im-file-name" style="font-size:12px;color:var(--text-faint)"></span>
       </div>
       <div id="im-results" style="margin-top:16px"></div>
+      <!-- The old label said "as cartas (comuns) já no deck", which reads as though the choice
+           only touched the overlap. "Substituir" wipes the whole deck, so the copy now says so
+           and names the number of cards at stake. -->
       <div id="im-mode-wrap" style="display:none;margin-top:14px">
-        <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:6px">O que fazer com as cartas (comuns) já no deck?</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:4px;cursor:pointer"><input type="radio" name="im-mode" value="merge" checked> Mesclar (soma às cartas existentes)</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="im-mode" value="replace"> Substituir (remove as cartas não-comandante atuais antes de importar)</label>
+        <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:6px">Este deck já tem cartas. O que fazer?</label>
+        <label style="display:flex;align-items:flex-start;gap:6px;font-size:13px;margin-bottom:6px;cursor:pointer"><input type="radio" name="im-mode" value="merge" checked style="margin-top:3px">
+          <span>Somar à lista atual<br><span style="font-size:12px;color:var(--text-faint)">Cartas repetidas viram 2x, 3x… As novas entram normalmente.</span></span></label>
+        <label style="display:flex;align-items:flex-start;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="im-mode" value="replace" style="margin-top:3px">
+          <span>Trocar o deck inteiro por esta lista<br><span style="font-size:12px;color:var(--bad)" id="im-replace-warn">Remove as cartas atuais do deck. O comandante fica.</span></span></label>
       </div>
       <div id="im-error" style="color:var(--bad);font-size:12px;margin-top:10px;display:none"></div>
       <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
         <button class="btn secondary" id="im-cancel">Cancelar</button>
-        <button class="btn" id="im-preview-text">Pré-visualizar</button>
+        <button class="btn" id="im-preview-text" disabled>Importar</button>
         <button class="btn" id="im-confirm" style="display:none">Confirmar importação</button>
       </div>
     </div>`;
@@ -396,6 +411,14 @@ export async function openImportDeckModal(deckId, onImported) {
         ${matchedRows || '<div class="empty-state" style="padding:10px">Nenhuma carta reconhecida.</div>'}
         ${notFoundRows ? `<h3 style="margin-top:14px;color:var(--bad)">Não encontradas (${data.not_found.length}) — confira o nome e tente de novo</h3>${notFoundRows}` : ""}
       </div>`;
+    // Naming the real number is what makes the consequence concrete: "remove as 99 cartas
+    // atuais" lands where "remove as cartas atuais" slides past.
+    const warn = backdrop.querySelector("#im-replace-warn");
+    if (warn && Number.isFinite(currentDeckSize)) {
+      warn.textContent = currentDeckSize
+        ? `Remove as ${currentDeckSize} cartas atuais do deck. O comandante fica.`
+        : "O deck não tem outras cartas — as duas opções fazem o mesmo.";
+    }
     backdrop.querySelector("#im-mode-wrap").style.display = data.matched.length ? "block" : "none";
     backdrop.querySelector("#im-confirm").style.display = data.matched.length ? "inline-block" : "none";
     // Once there's something to confirm, "Pré-visualizar" would be a second primary button
@@ -421,17 +444,14 @@ export async function openImportDeckModal(deckId, onImported) {
     backdrop.querySelector("#im-mode-wrap").style.display = "none";
     backdrop.querySelector("#im-confirm").style.display = "none";
     previewBtn.style.display = "inline-block";
+    syncImportEnabled();
     errEl.style.display = "none";
   }
 
   async function runPreview() {
     const text = textEl.value;
     errEl.style.display = "none";
-    if (!text.trim()) {
-      showError("Cole ou digite uma decklist antes de pré-visualizar.");
-      textEl.focus();
-      return;
-    }
+    if (!text.trim()) return; // the button is disabled in this state; belt and braces
     previewBtn.disabled = true;
     previewBtn.textContent = "Lendo…";
     try {
@@ -440,12 +460,22 @@ export async function openImportDeckModal(deckId, onImported) {
       showError(err.message);
     } finally {
       previewBtn.disabled = false;
-      previewBtn.textContent = "Pré-visualizar";
+      previewBtn.textContent = "Importar";
+      syncImportEnabled();
     }
   }
 
+  // The button is the only way in, so it must never be clickable with nothing to import — an
+  // empty click previously just surfaced an error the user could have been spared.
+  function syncImportEnabled() {
+    previewBtn.disabled = !textEl.value.trim();
+  }
+
   previewBtn.addEventListener("click", runPreview);
-  textEl.addEventListener("input", resetPreview);
+  textEl.addEventListener("input", () => {
+    resetPreview();
+    syncImportEnabled();
+  });
 
   backdrop.querySelector("#im-file-btn").addEventListener("click", () => fileEl.click());
 
@@ -460,6 +490,7 @@ export async function openImportDeckModal(deckId, onImported) {
       resetPreview();
       textEl.value = String(reader.result || "");
       backdrop.querySelector("#im-file-name").textContent = file.name;
+      syncImportEnabled();
       runPreview();
     };
     reader.onerror = () => showError(`Não foi possível ler "${file.name}".`);

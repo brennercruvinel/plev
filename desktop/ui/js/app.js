@@ -7,13 +7,13 @@
 // To add a page: write `views/<name>.js` exporting a render function, add the route below, and
 // add a matching `data-route` button in index.html. Nothing else has to change.
 
-import { registerRoutes, navigate } from "./router.js?v=1";
-import { renderSidebarDataPanel } from "./sidebar.js?v=1";
-import { renderDashboard, renderScannerSoon } from "./views/home.js?v=1";
-import { renderDecksList } from "./views/decks.js?v=1";
-import { renderDeckDetail } from "./views/deck-detail.js?v=1";
-import { renderCollection } from "./views/collection.js?v=1";
-import { renderGames } from "./views/games.js?v=1";
+import { registerRoutes, navigate } from "./router.js?v=2";
+import { renderSidebarDataPanel } from "./sidebar.js?v=2";
+import { renderDashboard, renderScannerSoon } from "./views/home.js?v=2";
+import { renderDecksList } from "./views/decks.js?v=2";
+import { renderDeckDetail } from "./views/deck-detail.js?v=2";
+import { renderCollection } from "./views/collection.js?v=2";
+import { renderGames } from "./views/games.js?v=2";
 
 registerRoutes({
   dashboard: renderDashboard,

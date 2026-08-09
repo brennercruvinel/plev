@@ -1,8 +1,8 @@
-import { api } from "../api.js?v=24";
-import { mainEl } from "../router.js?v=1";
-import { openAddCardModal } from "../ui/add-card.js?v=1";
-import { showCardModal } from "../ui/card-modal.js?v=1";
-import { h } from "../util.js?v=1";
+import { api } from "../api.js?v=25";
+import { mainEl } from "../router.js?v=2";
+import { openAddCardModal } from "../ui/add-card.js?v=2";
+import { showCardModal } from "../ui/card-modal.js?v=2";
+import { h } from "../util.js?v=2";
 
 let collectionFilter = "all";
 
