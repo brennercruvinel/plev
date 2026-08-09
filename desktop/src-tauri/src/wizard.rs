@@ -465,7 +465,10 @@ pub fn deck_ownership(con: &Connection, deck_id: i64) -> HashMap<String, Value> 
     let owned = collection_index(con);
     let mut out = HashMap::new();
     let Ok(mut stmt) = con.prepare(
-        "SELECT card_name, quantity FROM deck_cards WHERE deck_id = ?1 AND is_commander = 0",
+        // Commanders included. They were excluded here, which is why a commander you don't own
+        // showed no "não tenho" tag anywhere while still counting toward the deck's 100 — the one
+        // card guaranteed to be in every game was the one card the app never checked.
+        "SELECT card_name, quantity FROM deck_cards WHERE deck_id = ?1",
     ) else {
         return out;
     };

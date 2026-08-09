@@ -588,8 +588,9 @@ a { color: inherit; }
 #card-peek img { width: 100%; height: auto; display: block; }
 .stack-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .stack-item .no-image { display: flex; align-items: center; justify-content: center; height: 100%; padding: 10px; text-align: center; font-size: 12px; color: var(--text-dim); }
-.stack-item .tile-remove { position: absolute; bottom: 6px; right: 6px; z-index: 2; padding: 3px 7px !important; opacity: 0; transition: opacity .15s; }
-.stack-item:hover .tile-remove { opacity: 1; }
+/* No per-card remove button in the stacked view. With the hover preview following the cursor,
+   a button that appeared on hover sat under the preview and fought it for the pointer; removing
+   a card belongs to the list view, where every row already has one. */
 
 @media (max-width: 760px) {
     .card-stack { --stack-card-w: 140px; }
@@ -978,3 +979,44 @@ a { color: inherit; }
 }
 .copy-dot.dot-free { background: var(--good); }
 .copy-dot.dot-deck { background: var(--warn); }
+
+/* ---------- Toasts ---------- */
+/* Bottom-right so it never covers the sidebar or the primary action row at the top of a page.
+   pointer-events:none on the stack keeps it from swallowing clicks on whatever is underneath. */
+#toast-stack {
+    position: fixed; right: 20px; bottom: 20px; z-index: 300;
+    display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+    pointer-events: none;
+}
+.toast {
+    background: var(--bg-elevated); color: var(--text);
+    border: 1px solid var(--border-light); border-left: 3px solid var(--accent-bright);
+    border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px;
+    box-shadow: 0 10px 28px rgba(0,0,0,.5); max-width: 340px;
+    opacity: 0; transform: translateY(6px); transition: opacity .2s ease, transform .2s ease;
+}
+.toast.visible { opacity: 1; transform: translateY(0); }
+.toast.bad { border-left-color: var(--bad); }
+
+/* ---------- Per-copy rows in the card modal ---------- */
+.copy-units { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.copy-unit {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: var(--radius-sm);
+    background: var(--bg-card); border: 1px solid var(--border);
+    font-size: 12.5px;
+}
+.copy-unit-where { flex-shrink: 0; }
+.copy-unit-detail {
+    flex: 1; min-width: 0; color: var(--text-faint); font-size: 11.5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Destructive, so it stays muted until pointed at — a row of red trashcans reads as an error
+   state rather than as an available action. */
+.copy-unit .icon-btn.danger {
+    flex-shrink: 0; color: var(--text-faint); background: none; border: none;
+    padding: 4px; border-radius: 6px; cursor: pointer; display: inline-flex;
+    transition: color .15s, background .15s;
+}
+.copy-unit .icon-btn.danger:hover { color: var(--bad); background: rgba(217,85,107,.12); }
+.copy-unit .icon-btn.danger:disabled { opacity: .4; cursor: default; }

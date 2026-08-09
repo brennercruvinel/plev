@@ -1,5 +1,5 @@
 import { manaGlyphSvg, resultIcon } from "./icons.js?v=25";
-import { h } from "./util.js?v=2";
+import { h } from "./util.js?v=3";
 
 function colorIdentityPipsHtml(identity) {
   const letters = identity ? identity.split("") : [];

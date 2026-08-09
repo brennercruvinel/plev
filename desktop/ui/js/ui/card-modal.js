@@ -1,6 +1,54 @@
 import { api } from "../api.js?v=25";
 import { manaCostHtml } from "../icons.js?v=25";
-import { h, highlightMatch, priceLabel } from "../util.js?v=2";
+import { h, highlightMatch, priceLabel, toast } from "../util.js?v=3";
+
+// One row per stored copy, each with its own delete. A row can represent several identical
+// copies (quantity > 1), in which case deleting takes one off rather than discarding the stack —
+// the label says how many are behind it so that isn't a surprise.
+function unitRowHtml(e) {
+  const where = e.deck_name
+    ? `<span class="copy-dot dot-deck"></span>${e.deck_name}`
+    : `<span class="copy-dot dot-free"></span>Livre`;
+  const details = [
+    e.set_code ? String(e.set_code).toUpperCase() : null,
+    e.lang && e.lang !== "en" ? String(e.lang).toUpperCase() : null,
+    e.notes || null,
+  ].filter(Boolean).join(" · ");
+  return `
+    <div class="copy-unit" data-entry="${e.id}">
+      <span class="copy-unit-where">${where}${e.quantity > 1 ? ` <b>${e.quantity}x</b>` : ""}</span>
+      <span class="copy-unit-detail">${details}</span>
+      <button class="icon-btn danger" data-del-entry="${e.id}" title="Remover uma unidade" aria-label="Remover uma unidade">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+    </div>`;
+}
+
+// Deleting the last copy of a card removes it from the collection entirely, which is a different
+// thing from thinning a playset — so that one asks first, and says exactly what will happen.
+function confirmLastCopy(cardName) {
+  return new Promise((resolve) => {
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    backdrop.innerHTML = h`
+      <div class="modal" style="max-width:420px">
+        <h3>Remover da coleção?</h3>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.5">
+          Esta é a <b>última cópia</b> de <b>${cardName}</b>. Removê-la tira a carta da sua coleção
+          — ela deixa de aparecer nas buscas e nas sugestões de "cartas que você tem".
+        </p>
+        <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
+          <button class="btn secondary" id="lc-cancel">Cancelar</button>
+          <button class="btn danger" id="lc-ok">Remover</button>
+        </div>
+      </div>`;
+    document.body.appendChild(backdrop);
+    const done = (v) => { backdrop.remove(); resolve(v); };
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) done(false); });
+    backdrop.querySelector("#lc-cancel").addEventListener("click", () => done(false));
+    backdrop.querySelector("#lc-ok").addEventListener("click", () => done(true));
+  });
+}
 
 async function renderCopiesBox(backdrop, cardName, onCollectionChange) {
   const box = backdrop.querySelector("#copies-box");
@@ -28,6 +76,8 @@ async function renderCopiesBox(backdrop, cardName, onCollectionChange) {
       <div class="own-list" style="display:block;margin-top:2px">
         ${copies.total ? where.join(" &nbsp;·&nbsp; ") : "Você ainda não tem nenhuma cópia desta carta."}
       </div>
+
+      ${copies.entries?.length ? `<div class="copy-units">${copies.entries.map(unitRowHtml).join("")}</div>` : ""}
 
       <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
         <button class="btn small" id="cp-add-one">+ 1 unidade</button>
@@ -64,7 +114,9 @@ async function renderCopiesBox(backdrop, cardName, onCollectionChange) {
     btn.disabled = true;
     btn.textContent = "Adicionando…";
     try {
+      const qty = payload.quantity || 1;
       await api.addCollection({ card_name: cardName, ...payload });
+      toast(qty > 1 ? `${qty} cópias de ${cardName} adicionadas.` : `${cardName} adicionada à coleção.`);
       await renderCopiesBox(backdrop, cardName, onCollectionChange);
       onCollectionChange?.();
     } catch (err) {
@@ -74,6 +126,30 @@ async function renderCopiesBox(backdrop, cardName, onCollectionChange) {
       btn.textContent = label;
     }
   }
+
+  box.querySelectorAll("[data-del-entry]").forEach((btn) =>
+    btn.addEventListener("click", async () => {
+      const entryId = Number(btn.dataset.delEntry);
+      const entry = copies.entries.find((e) => e.id === entryId);
+      // Last copy overall = this row holds the only remaining unit of the card.
+      const isLast = copies.total === 1 && entry?.quantity === 1;
+      if (isLast && !(await confirmLastCopy(cardName))) return;
+      btn.disabled = true;
+      try {
+        const res = await api.deleteCollectionEntry(entryId);
+        toast(
+          res.remaining === 0
+            ? `${cardName} removida da coleção.`
+            : `1 cópia removida — restam ${res.remaining}.`
+        );
+        await renderCopiesBox(backdrop, cardName, onCollectionChange);
+        onCollectionChange?.();
+      } catch (err) {
+        toast(err.message, "bad");
+        btn.disabled = false;
+      }
+    })
+  );
 
   box.querySelector("#cp-add-one").addEventListener("click", (e) =>
     addCopy({ quantity: 1, notes: "Unidade avulsa" }, e.currentTarget)

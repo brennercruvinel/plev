@@ -1,10 +1,10 @@
 import { api } from "../api.js?v=25";
 import { activityIcon } from "../icons.js?v=25";
-import { deckCardHtml } from "../deck-bits.js?v=2";
-import { mainEl } from "../router.js?v=2";
-import { openAddCardModal } from "../ui/add-card.js?v=2";
-import { formatTs, h } from "../util.js?v=2";
-import { openNewDeckModal } from "../views/decks.js?v=2";
+import { deckCardHtml } from "../deck-bits.js?v=3";
+import { mainEl } from "../router.js?v=3";
+import { openAddCardModal } from "../ui/add-card.js?v=3";
+import { formatTs, h } from "../util.js?v=3";
+import { openNewDeckModal } from "../views/decks.js?v=3";
 
 export async function renderDashboard() {
   const [decks, collectionTotal, freeCollection, activity] = await Promise.all([

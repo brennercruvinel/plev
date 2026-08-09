@@ -1,10 +1,17 @@
 import { api } from "../api.js?v=25";
-import { mainEl } from "../router.js?v=2";
-import { openAddCardModal } from "../ui/add-card.js?v=2";
-import { showCardModal } from "../ui/card-modal.js?v=2";
-import { h } from "../util.js?v=2";
+import { mainEl } from "../router.js?v=3";
+import { openAddCardModal } from "../ui/add-card.js?v=3";
+import { showCardModal } from "../ui/card-modal.js?v=3";
+import { h } from "../util.js?v=3";
+import {
+  filterDropdownHtml, filterMenuContentHtml, filterToggleBtnHtml, matchesFilters, newFilterState,
+  wireFilterMenu,
+} from "../ui/card-filters.js?v=3";
 
 let collectionFilter = "all";
+// Same type/colour/CMC/rarity filters as the deck page, plus rarity — kept at module level so a
+// filtered view survives opening a card and coming back.
+const collFilters = newFilterState();
 
 export async function renderCollection() {
   mainEl.innerHTML = h`
@@ -17,6 +24,7 @@ export async function renderCollection() {
       <span class="chip active" data-filter="all">Todas</span>
       <span class="chip" data-filter="allocated">Em decks</span>
       <span class="chip" data-filter="free">Livres</span>
+      ${filterDropdownHtml(collFilters, { rarity: true, search: false })}
       <div class="size-slider-row">
         <label for="card-size">Tamanho</label>
         <input type="range" id="card-size" min="100" max="280" step="10" value="160">
@@ -32,7 +40,10 @@ export async function renderCollection() {
 
   async function load() {
     const q = document.getElementById("coll-search").value.trim();
-    const items = await api.collection(collectionFilter, q);
+    const all = await api.collection(collectionFilter, q);
+    // Server-side search stays (it resolves translated names); the chip filters run here, over
+    // data the list already carries, so toggling a chip doesn't cost a round trip.
+    const items = all.filter((c) => matchesFilters(c, collFilters));
     grid.innerHTML = items
       .map((c) => {
         // Each entry is a physical copy (or a stack of them): a card sleeved in two decks shows
@@ -59,7 +70,8 @@ export async function renderCollection() {
             ${isAllocated ? `<div class="deck-badge">${deckLabel}</div>` : ""}
           </div>`;
       })
-      .join("") || `<div class="empty-state">Nada encontrado.</div>`;
+      .join("") ||
+      `<div class="empty-state">${all.length ? "Nenhuma carta corresponde aos filtros." : "Nada encontrado."}</div>`;
   }
 
   // One delegated listener on the grid instead of one per tile — the collection renders hundreds
@@ -89,6 +101,23 @@ export async function renderCollection() {
   document.getElementById("add-card-btn").addEventListener("click", () =>
     openAddCardModal({ onSaved: load })
   );
+
+  // Mirrors refreshDeckFilterBar: redraw the badge and the chip states without touching the
+  // #filter-dropdown wrapper, so the menu doesn't slam shut every time a chip is toggled.
+  function refreshFilterMenu() {
+    document.getElementById("filter-toggle-btn").outerHTML = filterToggleBtnHtml(collFilters);
+    document.getElementById("filter-menu").outerHTML = filterMenuContentHtml(collFilters, {
+      rarity: true,
+      search: false, // the collection's own search box above is server-side and multi-language
+    });
+    wireFilters();
+    load();
+  }
+  function wireFilters() {
+    wireFilterMenu(collFilters, (structural) => (structural ? refreshFilterMenu() : load()));
+  }
+  wireFilters();
+
   load();
 }
 

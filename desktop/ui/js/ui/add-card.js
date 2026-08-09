@@ -1,6 +1,6 @@
 import { api } from "../api.js?v=25";
 import { manaCostHtml } from "../icons.js?v=25";
-import { h } from "../util.js?v=2";
+import { h, toast } from "../util.js?v=3";
 
 export async function openAddCardModal({ onSaved } = {}) {
   const decks = await api.decks();
@@ -118,16 +118,20 @@ export async function openAddCardModal({ onSaved } = {}) {
       }
       saveBtn.disabled = true;
       const deckVal = backdrop.querySelector("#ac-deck").value;
+      const qty = Number(backdrop.querySelector("#ac-qty").value) || 1;
       await api.addCollection({
         card_name,
         set_code: backdrop.querySelector("#ac-set").value.trim() || null,
         artist: backdrop.querySelector("#ac-artist").value.trim() || null,
         lang: backdrop.querySelector("#ac-lang").value,
-        quantity: Number(backdrop.querySelector("#ac-qty").value) || 1,
+        quantity: qty,
         notes: backdrop.querySelector("#ac-notes").value.trim() || null,
         deck_id: deckVal ? Number(deckVal) : null,
       });
       backdrop.remove();
+      // The modal closes over whatever list is underneath, so without this the write left no
+      // trace on screen and looked like it hadn't happened.
+      toast(qty > 1 ? `${qty} cópias de ${card_name} adicionadas.` : `${card_name} adicionada à coleção.`);
       onSaved?.();
       return;
     }
@@ -161,6 +165,7 @@ export async function openAddCardModal({ onSaved } = {}) {
     saveBtn.disabled = false;
     if (!missing.length) {
       backdrop.remove();
+      toast(`${found.length} carta${found.length > 1 ? "s" : ""} adicionada${found.length > 1 ? "s" : ""} à coleção.`);
       onSaved?.();
       return;
     }

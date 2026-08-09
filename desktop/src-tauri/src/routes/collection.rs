@@ -17,7 +17,7 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 
 use crate::db::{deck_name, fold_text, log_activity, open_app_db, open_cards_db};
-use crate::http::{db_unavailable, ok, server_error};
+use crate::http::{db_unavailable, not_found, ok, server_error};
 
 /// serde default for `quantity`: adding a card means one copy unless told otherwise.
 fn one() -> i64 { 1 }
@@ -130,7 +130,7 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
         for chunk in order.chunks(400) {
             let ph = std::iter::repeat("?").take(chunk.len()).collect::<Vec<_>>().join(",");
             let sql = format!(
-                "SELECT name, type_line, mana_cost, image_uri, colors, rarity, price_usd
+                "SELECT name, type_line, mana_cost, image_uri, colors, rarity, price_usd, cmc
                  FROM cards WHERE name COLLATE NOCASE IN ({ph})"
             );
             if let Ok(mut stmt) = c.prepare(&sql) {
@@ -147,6 +147,7 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
                             "colors": r.get::<_, Option<String>>(4)?,
                             "rarity": r.get::<_, Option<String>>(5)?,
                             "price_usd": r.get::<_, Option<String>>(6)?,
+                            "cmc": r.get::<_, Option<f64>>(7)?,
                         }),
                     ))
                 }) {
@@ -171,7 +172,7 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
             // Prefix fallback for hand-entered names that don't match exactly.
             cdb.as_ref().and_then(|c| {
                 c.prepare(
-                    "SELECT type_line, mana_cost, image_uri, colors, rarity, price_usd
+                    "SELECT type_line, mana_cost, image_uri, colors, rarity, price_usd, cmc
                      FROM cards WHERE name LIKE ?1 COLLATE NOCASE LIMIT 1",
                 )
                 .ok()
@@ -184,6 +185,7 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
                             "colors": r.get::<_, Option<String>>(3)?,
                             "rarity": r.get::<_, Option<String>>(4)?,
                             "price_usd": r.get::<_, Option<String>>(5)?,
+                            "cmc": r.get::<_, Option<f64>>(6)?,
                         }))
                     })
                     .ok()
@@ -239,23 +241,42 @@ async fn card_copies(Query(p): Query<CardCopiesQuery>) -> Json<Value> {
     // comparison happens here rather than in the WHERE clause. The collection is a few hundred
     // rows — small enough that scanning it costs less than keeping a folded column in sync.
     let wanted = crate::db::fold_text(&p.name);
-    let rows: Vec<(String, Option<i64>, Option<String>, i64)> = (|| -> rusqlite::Result<_> {
-        let mut stmt = con.prepare(
-            "SELECT collection.card_name, collection.allocated_deck_id, decks.name,
-                    collection.quantity
-             FROM collection LEFT JOIN decks ON decks.id = collection.allocated_deck_id",
-        )?;
-        let rows = stmt.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?;
-        rows.collect()
-    })()
-    .unwrap_or_default();
+    let rows: Vec<(i64, String, Option<i64>, Option<String>, i64, Option<String>, Option<String>, String)> =
+        (|| -> rusqlite::Result<_> {
+            let mut stmt = con.prepare(
+                "SELECT collection.id, collection.card_name, collection.allocated_deck_id,
+                        decks.name, collection.quantity, collection.set_code, collection.notes,
+                        collection.lang
+                 FROM collection LEFT JOIN decks ON decks.id = collection.allocated_deck_id
+                 ORDER BY collection.allocated_deck_id IS NOT NULL, collection.id",
+            )?;
+            let rows = stmt.query_map([], |r| {
+                Ok((
+                    r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?,
+                    r.get(7)?,
+                ))
+            })?;
+            rows.collect()
+        })()
+        .unwrap_or_default();
 
     let mut free = 0i64;
     let mut by_deck: HashMap<i64, (String, i64)> = HashMap::new();
-    for (card_name, deck_id, deck_name, quantity) in rows {
+    // Individual rows too, so the UI can offer a delete per copy rather than only a total.
+    let mut entries: Vec<Value> = Vec::new();
+    for (id, card_name, deck_id, deck_name, quantity, set_code, notes, lang) in rows {
         if crate::db::fold_text(&card_name) != wanted {
             continue;
         }
+        entries.push(json!({
+            "id": id,
+            "quantity": quantity,
+            "deck_id": deck_id,
+            "deck_name": deck_name.clone(),
+            "set_code": set_code,
+            "lang": lang,
+            "notes": notes,
+        }));
         match deck_id {
             None => free += quantity,
             Some(id) => {
@@ -271,7 +292,7 @@ async fn card_copies(Query(p): Query<CardCopiesQuery>) -> Json<Value> {
     decks.sort_by_key(|v| v["deck_name"].as_str().unwrap_or("").to_lowercase());
     let in_decks: i64 = decks.iter().filter_map(|v| v["copies"].as_i64()).sum();
 
-    Json(json!({ "total": free + in_decks, "free": free, "decks": decks }))
+    Json(json!({ "total": free + in_decks, "free": free, "decks": decks, "entries": entries }))
 }
 
 #[derive(Deserialize)]
@@ -374,10 +395,88 @@ async fn allocate_collection(
     ok().into_response()
 }
 
+/// Removes one physical copy. A row can stand for several identical copies (`quantity`), so this
+/// decrements first and only deletes the row when it reaches zero — "delete one unit" must not
+/// silently discard a stack of four.
+///
+/// Reports whether that was the last copy of the card anywhere, so the UI can tell the difference
+/// between thinning a playset and dropping a card out of the collection entirely.
+async fn delete_collection_entry(Path(entry_id): Path<i64>) -> impl IntoResponse {
+    let Ok(con) = open_app_db() else {
+        return db_unavailable().into_response();
+    };
+    let row: Option<(String, i64, Option<i64>)> = con
+        .query_row(
+            "SELECT card_name, quantity, allocated_deck_id FROM collection WHERE id = ?1",
+            [entry_id],
+            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+        )
+        .optional()
+        .ok()
+        .flatten();
+    let Some((card_name, quantity, deck_id)) = row else {
+        return not_found("Cópia não encontrada").into_response();
+    };
+
+    if quantity > 1 {
+        let _ = con.execute(
+            "UPDATE collection SET quantity = quantity - 1 WHERE id = ?1",
+            [entry_id],
+        );
+    } else {
+        let _ = con.execute("DELETE FROM collection WHERE id = ?1", [entry_id]);
+    }
+
+    // A copy that was sleeved in a deck leaves that deck's list short by one — the deck_cards row
+    // has to follow, or the deck would keep claiming a card that no longer exists.
+    if let Some(did) = deck_id {
+        let deck_row: Option<(i64, i64)> = con
+            .query_row(
+                "SELECT id, quantity FROM deck_cards
+                 WHERE deck_id = ?1 AND card_name = ?2 COLLATE NOCASE",
+                params![did, card_name],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()
+            .ok()
+            .flatten();
+        if let Some((row_id, dq)) = deck_row {
+            if dq > 1 {
+                let _ = con.execute(
+                    "UPDATE deck_cards SET quantity = quantity - 1 WHERE id = ?1",
+                    [row_id],
+                );
+            } else {
+                let _ = con.execute("DELETE FROM deck_cards WHERE id = ?1", [row_id]);
+            }
+        }
+    }
+
+    let remaining: i64 = con
+        .query_row(
+            "SELECT COALESCE(SUM(quantity), 0) FROM collection WHERE card_name = ?1 COLLATE NOCASE",
+            [&card_name],
+            |r| r.get(0),
+        )
+        .unwrap_or(0);
+
+    log_activity(
+        &con,
+        "card_removed",
+        &if remaining == 0 {
+            format!("{card_name} saiu da coleção (última cópia)")
+        } else {
+            format!("1 cópia de {card_name} removida da coleção ({remaining} restante(s))")
+        },
+    );
+    Json(json!({ "ok": true, "remaining": remaining, "card_name": card_name })).into_response()
+}
+
 pub fn router() -> Router {
     Router::new()
         .route("/api/collection", get(list_collection).post(add_collection))
         .route("/api/collection/total", get(collection_total))
         .route("/api/collection/copies", get(card_copies))
         .route("/api/collection/:id/allocate", patch(allocate_collection))
+        .route("/api/collection/:id", axum::routing::delete(delete_collection_entry))
 }

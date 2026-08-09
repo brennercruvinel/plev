@@ -73,3 +73,28 @@ export function highlightMatch(text, q) {
   if (idx === -1) return text.slice(0, 80);
   return text.slice(Math.max(0, idx - 30), idx + q.length + 30);
 }
+
+
+// Transient confirmation for actions whose result isn't visible where the user is looking — a
+// card added from a modal that stays open, a copy removed from a list further down the page.
+// One shared stack, bottom-right, auto-dismissing: anything that needs a decision belongs in a
+// dialog instead, so nothing here is ever interactive.
+export function toast(message, kind = "ok") {
+  let stack = document.getElementById("toast-stack");
+  if (!stack) {
+    stack = document.createElement("div");
+    stack.id = "toast-stack";
+    document.body.appendChild(stack);
+  }
+  const el = document.createElement("div");
+  el.className = `toast ${kind}`;
+  el.setAttribute("role", "status");
+  el.textContent = message;
+  stack.appendChild(el);
+  // Next frame, so the entry transition actually runs instead of being skipped.
+  requestAnimationFrame(() => el.classList.add("visible"));
+  setTimeout(() => {
+    el.classList.remove("visible");
+    setTimeout(() => el.remove(), 250);
+  }, 2600);
+}

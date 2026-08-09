@@ -1,6 +1,6 @@
 import { api } from "./api.js?v=25";
-import { navigate } from "./router.js?v=2";
-import { formatBuiltAt, h, pollJob } from "./util.js?v=2";
+import { navigate } from "./router.js?v=3";
+import { formatBuiltAt, h, pollJob } from "./util.js?v=3";
 
 function sidebarDataPanelHtml(info) {
   if (!info.exists) {

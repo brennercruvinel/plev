@@ -1,8 +1,8 @@
 import { api } from "../api.js?v=25";
 import { manaCostHtml } from "../icons.js?v=25";
-import { BRACKET_LABELS, deckCardHtml } from "../deck-bits.js?v=2";
-import { mainEl } from "../router.js?v=2";
-import { h, pollJob } from "../util.js?v=2";
+import { BRACKET_LABELS, deckCardHtml } from "../deck-bits.js?v=3";
+import { mainEl } from "../router.js?v=3";
+import { h, pollJob } from "../util.js?v=3";
 
 export async function renderDecksList() {
   const decks = await api.decks();

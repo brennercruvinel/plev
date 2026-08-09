@@ -53,6 +53,8 @@ export const api = {
   collection: (status = "all", q = "") => req(`/collection?status=${status}&q=${encodeURIComponent(q)}`),
   collectionDuplicates: () => req("/collection/duplicates"),
   collectionTotal: () => req("/collection/total"),
+  // Removes one physical copy from an entry; the row goes away only when its last unit does.
+  deleteCollectionEntry: (id) => req(`/collection/${id}`, { method: "DELETE" }),
   // Physical copies of one exact card: how many are free, and which decks hold the rest.
   cardCopies: (name) => req(`/collection/copies?name=${encodeURIComponent(name)}`),
   addCollection: (payload) => req("/collection", { method: "POST", body: JSON.stringify(payload) }),

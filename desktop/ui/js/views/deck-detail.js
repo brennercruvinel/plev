@@ -1,28 +1,16 @@
 import { api } from "../api.js?v=25";
 import { manaCostHtml, manaGlyphSvg } from "../icons.js?v=25";
-import { FILTER_COLORS, deckTagsHtml } from "../deck-bits.js?v=2";
-import { mainEl } from "../router.js?v=2";
-import { showCardModal } from "../ui/card-modal.js?v=2";
-import { h } from "../util.js?v=2";
-import { openDeleteDeckModal, openEditDeckModal, openImportDeckModal } from "../views/decks.js?v=2";
+import { deckTagsHtml } from "../deck-bits.js?v=3";
+import {
+  CATEGORY_LABELS, CATEGORY_ORDER, CMC_BUCKETS, cardCategory, cardCmcBucket, filterDropdownHtml,
+  filterMenuContentHtml, filterToggleBtnHtml, filtersActive, matchesFilters, newFilterState,
+  wireFilterMenu,
+} from "../ui/card-filters.js?v=3";
+import { mainEl } from "../router.js?v=3";
+import { showCardModal } from "../ui/card-modal.js?v=3";
+import { h } from "../util.js?v=3";
+import { openDeleteDeckModal, openEditDeckModal, openImportDeckModal } from "../views/decks.js?v=3";
 
-const CATEGORY_LABELS = {
-  Comandante: "Comandante", Land: "Terrenos", Creature: "Criaturas",
-  Instant: "Instantâneas", Sorcery: "Feitiços", Artifact: "Artefatos",
-  Enchantment: "Encantamentos", Planeswalker: "Planeswalker", Outro: "Outro",
-};
-const CATEGORY_ORDER = ["Comandante", "Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker", "Outro", "Land"];
-// Short labels just for the type filter chips — the full CATEGORY_LABELS names (used for section
-// headers) run long enough that six of them plus the color/CMC rows push the filter bar to wrap
-// across several lines; these abbreviations keep the whole bar closer to a single line.
-const FILTER_TYPE_LABELS = {
-  Land: "Terreno", Creature: "Criatura", Instant: "Inst.", Sorcery: "Feit.",
-  Artifact: "Art.", Enchantment: "Enc.", Planeswalker: "PW", Outro: "Outro",
-};
-// Filterable by the type chips — the commander(s) are always shown regardless of filters, so this
-// list intentionally excludes "Comandante": losing sight of your own commander via a filter would be confusing.
-const FILTERABLE_TYPES = CATEGORY_ORDER.filter((c) => c !== "Comandante");
-const CMC_BUCKETS = ["0", "1", "2", "3", "4", "5", "6+"];
 
 let deckViewMode = "stack"; // "list", "grid" (MTG Arena tiles), or "stack" (Moxfield-style overlap) — default view
 const VIEW_MODES = ["list", "grid", "stack"];
@@ -32,7 +20,11 @@ const VIEW_MODE_LABELS = { list: "Lista", grid: "Visual", stack: "Empilhado" };
 // across decks in the same session (matches how deckViewMode already behaves).
 // groupBy: "type" (default, existing category headers) or "tag" (EDHREC theme tags — see
 // currentDeckTags / filteredDeckByTag below).
-let deckFilters = { q: "", types: new Set(), colors: new Set(), cmcs: new Set(), sort: "name", groupBy: "type" };
+const deckFilters = newFilterState({ sort: "name", groupBy: "type" });
+
+const deckFiltersActive = () => filtersActive(deckFilters);
+const cardMatchesFilters = (c) => matchesFilters(c, deckFilters);
+const filterMenuHtml = () => filterDropdownHtml(deckFilters, { placeholder: "Nome da carta no deck…" });
 
 // card_name -> [tag, ...], populated per-deck from GET /decks/:id/tags (EDHREC cardlist
 // headers for the deck's commander) right before renderDeckCards can use it.
@@ -43,38 +35,12 @@ let currentDeckTags = {};
 // a card instead of snapping shut again on every action.
 let synergyPanelOpen = false;
 
-function deckFiltersActive() {
-  return !!(deckFilters.q || deckFilters.types.size || deckFilters.colors.size || deckFilters.cmcs.size);
-}
 
-function cardCmcBucket(cmc) {
-  const n = Math.floor(cmc || 0);
-  return n >= 6 ? "6+" : String(n);
-}
 
 // Client-side mirror of the backend's classify() — needed so per-card type filtering still
 // works when cards are grouped by tag instead of by type (there's no "category" bucket to
 // pre-filter by in that mode, so each card has to be checked individually).
-function cardCategory(c) {
-  const t = c.type_line || "";
-  for (const cat of ["Land", "Creature", "Planeswalker", "Battle", "Artifact", "Enchantment", "Instant", "Sorcery"]) {
-    if (t.includes(cat)) return cat;
-  }
-  return "Outro";
-}
 
-function cardMatchesFilters(c) {
-  if (deckFilters.q && !c.card_name.toLowerCase().includes(deckFilters.q.toLowerCase())) return false;
-  if (deckFilters.types.size && !deckFilters.types.has(cardCategory(c))) return false;
-  if (deckFilters.colors.size) {
-    const letters = c.colors ? c.colors.split("") : [];
-    const isColorless = letters.length === 0;
-    const hit = (isColorless && deckFilters.colors.has("C")) || letters.some((l) => deckFilters.colors.has(l));
-    if (!hit) return false;
-  }
-  if (deckFilters.cmcs.size && !deckFilters.cmcs.has(cardCmcBucket(c.cmc))) return false;
-  return true;
-}
 
 function sortDeckCards(cards) {
   const arr = [...cards];
@@ -207,54 +173,11 @@ function computeDeckGroups(deck) {
  * (.sort-icon-wrap/.sort-icon-glyph) rather than a labeled .btn — a plain <button> here instead
  * of the invisible-<select>-overlay trick sort uses, since this opens a custom menu, not a
  * native dropdown. */
-function filterToggleBtnHtml() {
-  return h`
-    <button type="button" class="filter-toggle-btn" id="filter-toggle-btn" title="Filtro" aria-label="Filtro" aria-haspopup="true" aria-expanded="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54Z"/></svg>
-      ${deckFiltersActive() ? `<span class="filter-badge"></span>` : ""}
-    </button>`;
-}
 
 /** The filter menu body (search/type/color/CMC) — previously its own always-visible bar
  * (.filters-bar) above the card list; now tucked behind the "Filtro" button in the view/group/
  * sort toolbar instead, so it only takes up screen space while you're actually adjusting it. */
-function filterMenuContentHtml() {
-  const typeChips = FILTERABLE_TYPES.map(
-    (t) => `<span class="chip type-chip ${deckFilters.types.has(t) ? "active" : ""}" data-deck-type="${t}" title="${CATEGORY_LABELS[t]}">${FILTER_TYPE_LABELS[t]}</span>`
-  ).join("");
-  const colorChips = Object.entries(FILTER_COLORS)
-    .map(([c, bg]) => {
-      const dimmed = deckFilters.colors.size && !deckFilters.colors.has(c);
-      const active = deckFilters.colors.has(c);
-      const glyph = manaGlyphSvg(c);
-      return `<span class="chip color-chip ${active ? "active" : ""}" data-deck-color="${c}"
-        style="background:${bg};color:#1a1a1a;opacity:${dimmed ? 0.35 : 1}">${glyph ? `<span class="mana-sym-inline">${glyph}</span>` : c}</span>`;
-    })
-    .join("");
-  const cmcChips = CMC_BUCKETS.map(
-    (v) => `<span class="chip ${deckFilters.cmcs.has(v) ? "active" : ""}" data-deck-cmc="${v}">${v}</span>`
-  ).join("");
 
-  return h`
-    <div class="filter-menu" id="filter-menu">
-      <div class="filter-group filter-group-block">
-        <span class="filter-group-label">Buscar</span>
-        <input type="text" id="deck-filter-q" placeholder="Nome da carta no deck…" value="${deckFilters.q}">
-      </div>
-      <div class="filter-group"><span class="filter-group-label">Tipo</span>${typeChips}</div>
-      <div class="filter-group"><span class="filter-group-label">Cor</span>${colorChips}</div>
-      <div class="filter-group"><span class="filter-group-label">CMC</span>${cmcChips}</div>
-      ${deckFiltersActive() ? `<button class="btn small secondary" id="deck-filter-clear">Limpar filtros</button>` : ""}
-    </div>`;
-}
-
-function filterMenuHtml() {
-  return h`
-    <div class="filter-dropdown" id="filter-dropdown">
-      ${filterToggleBtnHtml()}
-      ${filterMenuContentHtml()}
-    </div>`;
-}
 
 /** Filter menu + view mode + group-by + sort controls, all in one toolbar. The search/type/color/
  * CMC filters (what's included) live behind the "Filtro" dropdown (see filterMenuHtml above) so
@@ -400,60 +323,20 @@ function refreshCardsToolbar(deck) {
 }
 
 function wireDeckFilterBar(deck) {
-  document.getElementById("filter-toggle-btn").addEventListener("click", (e) => {
-    e.stopPropagation();
-    const dropdown = document.getElementById("filter-dropdown");
-    const willOpen = !dropdown.classList.contains("open");
-    dropdown.classList.toggle("open", willOpen);
-    e.currentTarget.setAttribute("aria-expanded", String(willOpen));
+  wireFilterMenu(deckFilters, (structural) => {
+    if (structural) refreshDeckFilterBar(deck);
+    else renderDeckCards(deck);
   });
-
-  const qInput = document.getElementById("deck-filter-q");
-  let debounce;
-  qInput.addEventListener("input", () => {
-    clearTimeout(debounce);
-    debounce = setTimeout(() => {
-      deckFilters.q = qInput.value.trim();
-      renderDeckCards(deck);
-    }, 200);
-  });
-
-  document.querySelectorAll("[data-deck-type]").forEach((chip) =>
-    chip.addEventListener("click", () => {
-      const t = chip.dataset.deckType;
-      deckFilters.types.has(t) ? deckFilters.types.delete(t) : deckFilters.types.add(t);
-      refreshDeckFilterBar(deck);
-    })
-  );
-  document.querySelectorAll("[data-deck-color]").forEach((chip) =>
-    chip.addEventListener("click", () => {
-      const c = chip.dataset.deckColor;
-      deckFilters.colors.has(c) ? deckFilters.colors.delete(c) : deckFilters.colors.add(c);
-      refreshDeckFilterBar(deck);
-    })
-  );
-  document.querySelectorAll("[data-deck-cmc]").forEach((chip) =>
-    chip.addEventListener("click", () => {
-      const v = chip.dataset.deckCmc;
-      deckFilters.cmcs.has(v) ? deckFilters.cmcs.delete(v) : deckFilters.cmcs.add(v);
-      refreshDeckFilterBar(deck);
-    })
-  );
-  const clearBtn = document.getElementById("deck-filter-clear");
-  if (clearBtn) {
-    clearBtn.addEventListener("click", () => {
-      deckFilters = { q: "", types: new Set(), colors: new Set(), cmcs: new Set(), sort: deckFilters.sort, groupBy: deckFilters.groupBy };
-      refreshDeckFilterBar(deck);
-    });
-  }
 }
 
 /** Re-renders the toggle button (for the active-filter badge) and the menu body (for the new
  * chip states) — but NOT the #filter-dropdown wrapper itself, so its "open" class (and thus
  * whether the menu is actually showing) survives toggling a chip inside it. */
 function refreshDeckFilterBar(deck) {
-  document.getElementById("filter-toggle-btn").outerHTML = filterToggleBtnHtml();
-  document.getElementById("filter-menu").outerHTML = filterMenuContentHtml();
+  document.getElementById("filter-toggle-btn").outerHTML = filterToggleBtnHtml(deckFilters);
+  document.getElementById("filter-menu").outerHTML = filterMenuContentHtml(deckFilters, {
+    placeholder: "Nome da carta no deck…",
+  });
   wireDeckFilterBar(deck);
   renderDeckCards(deck);
 }
@@ -890,7 +773,6 @@ function renderDeckCards(deck) {
             <div class="stack-item" data-card-view="${c.card_name}">
               ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
               ${ownDotHtml(c.card_name, ownership)}
-              <button class="btn small secondary tile-remove" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>
             </div>`)
           .join("");
         return `<div class="category-block"><h4>${groupLabel(key)} <span class="n">(${groupQuantity(cards)})</span></h4><div class="card-stack">${items}</div></div>`;
