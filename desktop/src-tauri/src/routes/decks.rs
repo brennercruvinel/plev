@@ -206,7 +206,7 @@ async fn get_deck(Path(deck_id): Path<i64>) -> impl IntoResponse {
             "card_name": card_name, "quantity": quantity, "id": row_id,
             "oracle_id": get("oracle_id"), "mana_cost": get("mana_cost"),
             "type_line": if type_line == "?" { Value::from("?") } else { Value::from(type_line.clone()) },
-            "image_uri": get("image_uri"), "cmc": get("cmc"),
+            "image_uri": get("image_uri"), "image_uri_back": get("image_uri_back"), "cmc": get("cmc"),
             "price_usd": get("price_usd"), "edhrec_rank": get("edhrec_rank"),
             "colors": get("colors"), "color_identity": get("color_identity"),
             "rarity": get("rarity"),
@@ -713,6 +713,7 @@ async fn import_preview(
                     "mana_cost": card.get("mana_cost").cloned().unwrap_or(Value::Null),
                     "type_line": card.get("type_line").cloned().unwrap_or(Value::Null),
                     "image_uri": card.get("image_uri").cloned().unwrap_or(Value::Null),
+                    "image_uri_back": card.get("image_uri_back").cloned().unwrap_or(Value::Null),
                 }));
             }
             None => not_found.push(json!({ "requested_name": name, "quantity": qty })),

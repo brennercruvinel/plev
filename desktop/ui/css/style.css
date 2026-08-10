@@ -1020,3 +1020,29 @@ a { color: inherit; }
 }
 .copy-unit .icon-btn.danger:hover { color: var(--bad); background: rgba(217,85,107,.12); }
 .copy-unit .icon-btn.danger:disabled { opacity: .4; cursor: default; }
+
+/* ---------- Two-faced cards ---------- */
+/* The wrapper only exists to anchor the button; it must not change the image's box, or every
+   grid that sizes cards by their <img> would shift the moment a two-faced card appears. */
+.card-face-wrap { display: contents; }
+.card-flip-btn {
+    position: absolute; bottom: 6px; left: 6px; z-index: 3;
+    width: 26px; height: 26px; padding: 0; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(12,10,16,.82); color: var(--text-dim);
+    border: 1px solid var(--border-light); cursor: pointer;
+    opacity: 0; transition: opacity .15s, color .15s, background .15s;
+}
+.card-flip-btn svg { width: 14px; height: 14px; display: block; }
+.card-flip-btn:hover { background: var(--bg-card-hover); color: var(--accent-bright); }
+.card-flip-btn[aria-pressed="true"] { opacity: 1; color: var(--accent-bright); }
+/* Revealed on hover/focus so it doesn't sit permanently over the art — except once flipped,
+   where it stays visible as the only way back. */
+.mtg-card:hover .card-flip-btn,
+.stack-item:hover .card-flip-btn,
+.card-flip-btn:focus-visible { opacity: 1; }
+/* In the card modal the image is the subject, so the control is always there. The header row is
+   a plain flex container, so it needs to become the positioning context for the button. */
+.modal .card-flip-btn { opacity: 1; bottom: 8px; left: 8px; }
+.modal-card-img { width: 200px; height: auto; border-radius: 12px; flex-shrink: 0; display: block; }
+.modal .card-face-wrap { display: inline-block; position: relative; flex-shrink: 0; }

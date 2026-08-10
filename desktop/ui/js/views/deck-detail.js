@@ -9,6 +9,7 @@ import {
 import { mainEl } from "../router.js?v=3";
 import { showCardModal } from "../ui/card-modal.js?v=3";
 import { h } from "../util.js?v=3";
+import { cardImgHtml, wireCardFlips } from "../ui/card-face.js?v=1";
 import { openDeleteDeckModal, openEditDeckModal, openImportDeckModal } from "../views/decks.js?v=3";
 
 
@@ -753,7 +754,7 @@ function renderDeckCards(deck) {
         const tiles = cards
           .map((c) => h`
             <div class="mtg-card" data-card-view="${c.card_name}">
-              ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
+              ${cardImgHtml(c, { attrs: 'loading="lazy"' })}
               <span class="qty-badge">${c.quantity}x</span>
               ${ownDotHtml(c.card_name, ownership)}
               <button class="btn small secondary tile-remove" data-remove="${c.id}" data-remove-name="${c.card_name}">✕</button>
@@ -771,7 +772,7 @@ function renderDeckCards(deck) {
         const items = cards
           .map((c) => h`
             <div class="stack-item" data-card-view="${c.card_name}">
-              ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
+              ${cardImgHtml(c, { attrs: 'loading="lazy"' })}
               ${ownDotHtml(c.card_name, ownership)}
             </div>`)
           .join("");
@@ -813,6 +814,7 @@ function renderDeckCards(deck) {
       .join("");
   }
 
+  wireCardFlips(cardsWrap);
   if (deckViewMode === "stack") attachStackPeek(cardsWrap);
 
   cardsWrap.querySelectorAll("[data-remove]").forEach((btn) =>
@@ -840,7 +842,7 @@ function commanderPanelHtml(deck) {
   const cards = commanders
     .map((c) => h`
       <div class="commander-card" data-card-view="${c.card_name}">
-        ${c.image_uri ? `<img src="${c.image_uri}" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
+        ${cardImgHtml(c)}
         <div class="commander-info">
           <div class="commander-name">${c.card_name}</div>
           <div class="commander-type">${c.type_line || ""}</div>

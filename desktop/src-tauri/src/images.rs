@@ -50,12 +50,14 @@ pub fn local_url(url: &str) -> String {
     }
 }
 
-/// Rewrites the `image_uri` field of a card JSON object in place.
+/// Rewrites a card's image fields in place — both faces, since a two-sided card's back is
+/// cached and served exactly like its front.
 pub fn rewrite_card(card: &mut serde_json::Value) {
-    if let Some(u) = card.get("image_uri").and_then(|v| v.as_str()) {
+    for field in ["image_uri", "image_uri_back"] {
+        let Some(u) = card.get(field).and_then(|v| v.as_str()) else { continue };
         let local = local_url(u);
         if let Some(m) = card.as_object_mut() {
-            m.insert("image_uri".into(), serde_json::Value::from(local));
+            m.insert(field.into(), serde_json::Value::from(local));
         }
     }
 }

@@ -174,7 +174,11 @@ CREATE TABLE cards (
     colors TEXT, color_identity TEXT, rarity TEXT, set_code TEXT,
     keywords TEXT, commander_legal TEXT, price_usd TEXT,
     reserved INTEGER, edhrec_rank INTEGER, uri TEXT, image_uri TEXT,
-    game_changer INTEGER, name_folded TEXT
+    game_changer INTEGER, name_folded TEXT,
+    -- Scryfall's layout, and the second physical face when there is one. A "//" in the name is
+    -- not enough to tell them apart: a split or adventure card prints both halves on one piece of
+    -- cardboard, while a transform or modal DFC has a genuine back that has to be shown somehow.
+    layout TEXT, image_uri_back TEXT
 );
 CREATE TABLE names_localized (
     printed_name TEXT, oracle_id TEXT, set_code TEXT, printed_name_folded TEXT,
@@ -201,6 +205,21 @@ fn face(v: &Value, k: &str) -> Option<String> {
     let faces = v.get("card_faces")?.as_array()?;
     let parts: Vec<String> = faces.iter().filter_map(|f| s(f, k)).collect();
     (!parts.is_empty()).then(|| parts.join(" // "))
+}
+
+/// The second face's image, for the layouts that have one. Split, flip, adventure and aftermath
+/// cards all carry two names but a single printed face, so they get None — offering to "flip"
+/// them would promise a side that doesn't exist.
+fn image_uri_back(v: &Value) -> Option<String> {
+    const TWO_SIDED: [&str; 5] =
+        ["transform", "modal_dfc", "double_faced_token", "reversible_card", "art_series"];
+    let layout = s(v, "layout")?;
+    if !TWO_SIDED.contains(&layout.as_str()) {
+        return None;
+    }
+    let faces = v.get("card_faces")?.as_array()?;
+    let back = faces.get(1)?.get("image_uris")?;
+    s(back, "normal").or_else(|| s(back, "large")).or_else(|| s(back, "small"))
 }
 
 fn image_uri(v: &Value) -> Option<String> {
@@ -242,7 +261,7 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
         let mut stmt = tx
             .prepare(
                 "INSERT OR REPLACE INTO cards VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,
-                                                      ?14,?15,?16,?17,?18,?19,?20,?21,?22)",
+                                                      ?14,?15,?16,?17,?18,?19,?20,?21,?22,?23,?24)",
             )
             .map_err(|e| e.to_string())?;
         let f = std::fs::File::open(oracle).map_err(|e| e.to_string())?;
@@ -286,6 +305,8 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
                 image_uri(&c),
                 c.get("game_changer").and_then(|x| x.as_bool()).unwrap_or(false) as i64,
                 fold_text(&name),
+                s(&c, "layout"),
+                image_uri_back(&c),
             ])
             .map_err(|e| e.to_string())?;
             n_cards += 1;
@@ -349,7 +370,12 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
 fn cache_images(on_progress: &mut dyn FnMut(usize, usize, u64)) -> Result<(u64, u64), String> {
     let cdb = crate::db::open_cards_db().ok_or("Índice de cartas indisponível")?;
     let urls: Vec<String> = (|| -> rusqlite::Result<Vec<String>> {
-        let mut stmt = cdb.prepare("SELECT image_uri FROM cards WHERE image_uri IS NOT NULL")?;
+        // Both faces: a transform card whose back was never cached shows a broken image the
+        // moment the user flips it offline, which is exactly the case the cache exists for.
+        let mut stmt = cdb.prepare(
+            "SELECT image_uri FROM cards WHERE image_uri IS NOT NULL
+             UNION SELECT image_uri_back FROM cards WHERE image_uri_back IS NOT NULL",
+        )?;
         let rows = stmt.query_map([], |r| r.get::<_, String>(0))?;
         rows.collect()
     })()

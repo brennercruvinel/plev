@@ -1,6 +1,7 @@
 import { api } from "../api.js?v=25";
 import { manaCostHtml } from "../icons.js?v=25";
 import { h, highlightMatch, priceLabel, toast } from "../util.js?v=3";
+import { cardImgHtml, wireCardFlips } from "./card-face.js?v=1";
 
 // One row per stored copy, each with its own delete. A row can represent several identical
 // copies (quantity > 1), in which case deleting takes one off rather than discarding the stack —
@@ -184,7 +185,7 @@ export async function showCardModal(name, onCollectionChange) {
     const ptNames = (c.pt_names || []).map((p) => p.printed_name).filter((v, i, a) => a.indexOf(v) === i);
     backdrop.querySelector(".modal").innerHTML = h`
       <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
-        ${c.image_uri ? `<img src="${c.image_uri}" style="width:200px;height:auto;border-radius:12px;flex-shrink:0" alt="${c.name}">` : ""}
+        ${cardImgHtml(c, { cls: "modal-card-img" })}
         <!-- 200px art + this minimum has to stay under the modal's inner width, or the flex wraps
              and the art jumps above the text the moment a scrollbar appears. The art keeps its
              own width and aspect ratio either way — it is never squeezed to fit. -->
@@ -209,6 +210,7 @@ export async function showCardModal(name, onCollectionChange) {
       </div>
       <div style="margin-top:16px;text-align:right"><button class="btn secondary" id="modal-close">Fechar</button></div>
     `;
+    wireCardFlips(backdrop.querySelector(".modal"));
     renderCopiesBox(backdrop, c.name, onCollectionChange);
     backdrop.querySelector("#modal-close").addEventListener("click", () => backdrop.remove());
     backdrop.querySelector("#qa-input").addEventListener("keydown", (e) => {

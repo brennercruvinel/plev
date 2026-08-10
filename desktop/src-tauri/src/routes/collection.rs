@@ -130,7 +130,7 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
         for chunk in order.chunks(400) {
             let ph = std::iter::repeat("?").take(chunk.len()).collect::<Vec<_>>().join(",");
             let sql = format!(
-                "SELECT name, type_line, mana_cost, image_uri, colors, rarity, price_usd, cmc
+                "SELECT name, type_line, mana_cost, image_uri, colors, rarity, price_usd, cmc, image_uri_back
                  FROM cards WHERE name COLLATE NOCASE IN ({ph})"
             );
             if let Ok(mut stmt) = c.prepare(&sql) {
@@ -148,6 +148,8 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
                             "rarity": r.get::<_, Option<String>>(5)?,
                             "price_usd": r.get::<_, Option<String>>(6)?,
                             "cmc": r.get::<_, Option<f64>>(7)?,
+                            "image_uri_back": r.get::<_, Option<String>>(8)?
+                                .map(|u| crate::images::local_url(&u)),
                         }),
                     ))
                 }) {
@@ -172,7 +174,7 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
             // Prefix fallback for hand-entered names that don't match exactly.
             cdb.as_ref().and_then(|c| {
                 c.prepare(
-                    "SELECT type_line, mana_cost, image_uri, colors, rarity, price_usd, cmc
+                    "SELECT type_line, mana_cost, image_uri, colors, rarity, price_usd, cmc, image_uri_back
                      FROM cards WHERE name LIKE ?1 COLLATE NOCASE LIMIT 1",
                 )
                 .ok()
@@ -186,6 +188,8 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
                             "rarity": r.get::<_, Option<String>>(4)?,
                             "price_usd": r.get::<_, Option<String>>(5)?,
                             "cmc": r.get::<_, Option<f64>>(6)?,
+                            "image_uri_back": r.get::<_, Option<String>>(7)?
+                                .map(|u| crate::images::local_url(&u)),
                         }))
                     })
                     .ok()
@@ -320,12 +324,18 @@ async fn add_collection(Json(p): Json<CollectionIn>) -> impl IntoResponse {
     let Ok(con) = open_app_db() else {
         return db_unavailable().into_response();
     };
+    // Store the index's spelling, not whatever reached this endpoint. Without it the same card
+    // accumulates rows under "Murderous Rider" and "Murderous Rider // Swift End", and every
+    // count that groups by name sees two cards.
+    let card_name = open_cards_db()
+        .and_then(|cdb| crate::routes::cards::canonical_name(&cdb, &p.card_name))
+        .unwrap_or_else(|| p.card_name.clone());
     if con
         .execute(
             "INSERT INTO collection (card_name, set_code, artist, lang, quantity, notes,
                                      allocated_deck_id, oracle_id)
              VALUES (?1,?2,?3,?4,?5,?6,?7,?8)",
-            params![p.card_name, p.set_code, p.artist, p.lang, p.quantity, p.notes, p.deck_id, p.oracle_id],
+            params![card_name, p.set_code, p.artist, p.lang, p.quantity, p.notes, p.deck_id, p.oracle_id],
         )
         .is_err()
     {
@@ -340,18 +350,18 @@ async fn add_collection(Json(p): Json<CollectionIn>) -> impl IntoResponse {
             let _ = con.execute(
                 "INSERT INTO deck_cards (deck_id, card_name, quantity, oracle_id)
                  VALUES (?1, ?2, ?3, ?4)",
-                params![did, p.card_name, p.quantity, p.oracle_id],
+                params![did, card_name, p.quantity, p.oracle_id],
             );
             log_activity(
                 &con,
                 "card_new",
-                &format!("{qty_label}{} adicionada à coleção e ao deck {dn}", p.card_name),
+                &format!("{qty_label}{card_name} adicionada à coleção e ao deck {dn}"),
             );
         }
         None => log_activity(
             &con,
             "card_new",
-            &format!("{qty_label}{} adicionada à coleção", p.card_name),
+            &format!("{qty_label}{card_name} adicionada à coleção"),
         ),
     }
     Json(json!({ "ok": true, "id": entry_id })).into_response()

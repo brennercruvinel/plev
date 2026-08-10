@@ -19,7 +19,7 @@ use crate::http::not_found;
 
 pub const CARD_COLS: &str = "oracle_id, name, mana_cost, cmc, type_line, oracle_text, power, toughness, \
      loyalty, colors, color_identity, rarity, set_code, keywords, commander_legal, price_usd, \
-     reserved, edhrec_rank, uri, image_uri, game_changer";
+     reserved, edhrec_rank, uri, image_uri, game_changer, layout, image_uri_back";
 
 /// Turns a card row into the same JSON object shape the Python endpoints return.
 pub fn card_row_to_json(r: &rusqlite::Row) -> rusqlite::Result<Value> {
@@ -37,7 +37,7 @@ pub fn card_row_to_json(r: &rusqlite::Row) -> rusqlite::Result<Value> {
     s!("oracle_id"); s!("name"); s!("mana_cost"); s!("type_line"); s!("oracle_text");
     s!("power"); s!("toughness"); s!("loyalty"); s!("colors"); s!("color_identity");
     s!("rarity"); s!("set_code"); s!("keywords"); s!("commander_legal"); s!("price_usd");
-    s!("uri"); s!("image_uri");
+    s!("uri"); s!("image_uri"); s!("layout"); s!("image_uri_back");
     i!("reserved"); i!("edhrec_rank"); i!("game_changer");
     m.insert(
         "cmc".into(),
@@ -100,6 +100,19 @@ pub fn lookup_card_in(cdb: &Connection, name: &str) -> Option<(Value, String)> {
         return Some((v, "exata".into()));
     }
 
+    // Front face of a two-faced card. Exporters and older imports write "Murderous Rider" where
+    // the index carries "Murderous Rider // Swift End"; this is a full match on the part before
+    // the separator, not a substring guess, so it belongs with the exact matches rather than in
+    // the LIKE fallback below — which would return it as "aproximada" and leave callers that
+    // only trust exact matches (canonical_name) unable to place a card they can clearly name.
+    let front = format!("{folded} // %");
+    if let Some(v) = one(
+        &format!("SELECT {CARD_COLS} FROM cards WHERE name_folded LIKE ?1 ORDER BY length(name) LIMIT 1"),
+        &[&front],
+    ) {
+        return Some((v, "exata (face frontal)".into()));
+    }
+
     // Portuguese printed name -> oracle_id, only when unambiguous.
     let pt_ids = |sql: &str, param: &str| -> Vec<String> {
         (|| -> rusqlite::Result<Vec<String>> {
@@ -145,6 +158,24 @@ pub fn lookup_card_in(cdb: &Connection, name: &str) -> Option<(Value, String)> {
         return Some((v, "aproximada".into()));
     }
     None
+}
+
+/// The index's own spelling of a card, for anything that stores a name as data.
+///
+/// `collection.card_name` and `deck_cards.card_name` are free text, and the write paths disagree
+/// about which spelling to use: an Adventure card is "Murderous Rider" from one and "Murderous
+/// Rider // Swift End" from another, and a name typed without accents stays that way. Two rows
+/// for one card then look like two different cards to anything grouping by the string.
+///
+/// Returns None for approximate matches — renaming a row on a fuzzy hit would turn a typo into
+/// a confident claim about a card the user never entered.
+pub fn canonical_name(cdb: &Connection, raw: &str) -> Option<String> {
+    let (card, how) = lookup_card_in(cdb, raw)?;
+    if !how.starts_with("exata") {
+        return None;
+    }
+    let name = card.get("name")?.as_str()?.to_string();
+    (name != raw).then_some(name)
 }
 
 #[derive(Deserialize)]

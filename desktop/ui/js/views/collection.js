@@ -3,6 +3,7 @@ import { mainEl } from "../router.js?v=3";
 import { openAddCardModal } from "../ui/add-card.js?v=3";
 import { showCardModal } from "../ui/card-modal.js?v=3";
 import { h } from "../util.js?v=3";
+import { cardImgHtml, wireCardFlips } from "../ui/card-face.js?v=1";
 import {
   filterDropdownHtml, filterMenuContentHtml, filterToggleBtnHtml, matchesFilters, newFilterState,
   wireFilterMenu,
@@ -64,7 +65,7 @@ export async function renderCollection() {
         ].filter(Boolean).join(" · ");
         return h`
           <div class="mtg-card ${isAllocated ? "allocated" : ""}" data-card-view="${c.card_name}" title="${title}">
-            ${c.image_uri ? `<img src="${c.image_uri}" loading="lazy" decoding="async" alt="${c.card_name}">` : `<div class="no-image">${c.card_name}</div>`}
+            ${cardImgHtml(c, { attrs: 'loading="lazy" decoding="async"' })}
             <span class="qty-badge">${c.total_quantity}x</span>
             ${free && isAllocated ? `<span class="free-badge">${free} livre${free > 1 ? "s" : ""}</span>` : ""}
             ${isAllocated ? `<div class="deck-badge">${deckLabel}</div>` : ""}
@@ -77,6 +78,7 @@ export async function renderCollection() {
   // One delegated listener on the grid instead of one per tile — the collection renders hundreds
   // of cards, and load() re-runs on every filter/search change, so per-tile binding meant
   // re-attaching hundreds of listeners each time.
+  wireCardFlips(grid);
   grid.addEventListener("click", (e) => {
     const tile = e.target.closest("[data-card-view]");
     // load() so adding a unit from the modal updates the tile's count behind it.

@@ -11,6 +11,7 @@ mod edhrec;
 mod http;
 mod images;
 mod paths;
+mod repair;
 mod routes;
 mod update;
 mod wizard;
@@ -90,6 +91,10 @@ fn main() {
             if let Err(e) = db::init_app_db() {
                 eprintln!("failed to initialise app.db: {e}");
             }
+            // Converge stored card names on the index's spelling. Idempotent and a few hundred
+            // rows, so it runs every launch: the index is rebuilt by updates, and a name the app
+            // couldn't place before may be placeable now.
+            repair::canonicalise_card_names();
 
             let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
             // Port 0 and read back what was assigned: a fixed port would collide with a second
