@@ -8,8 +8,9 @@ import {
 } from "../ui/card-filters.js?v=3";
 import { mainEl } from "../router.js?v=3";
 import { showCardModal } from "../ui/card-modal.js?v=3";
-import { h } from "../util.js?v=3";
+import { h, toast } from "../util.js?v=3";
 import { cardImgHtml, wireCardFlips } from "../ui/card-face.js?v=1";
+import { confirmDialog } from "../ui/confirm.js?v=1";
 import { openDeleteDeckModal, openEditDeckModal, openImportDeckModal } from "../views/decks.js?v=3";
 
 
@@ -307,7 +308,7 @@ function wireAddCardInline(deck) {
             resultsEl.innerHTML = "";
             renderDeckDetail([String(deck.id)]);
           } catch (err) {
-            alert(`Falhou ao adicionar: ${err.message}`);
+            toast(`Falhou ao adicionar: ${err.message}`, "bad");
           }
         })
       );
@@ -410,9 +411,12 @@ async function addCardToDeckWithConfirm(deckId, cardName, oracleId = null) {
   } catch (err) {
     if (err.status === 409 && err.body?.detail?.needs_confirmation) {
       const qty = err.body.detail.existing_quantity;
-      if (!confirm(`"${cardName}" já está no deck (${qty}x). Adicionar mais uma cópia mesmo assim?`)) {
-        return false;
-      }
+      const ok = await confirmDialog({
+        title: "Adicionar outra cópia?",
+        message: `${cardName} já está neste deck (${qty}x). Adicionar mais uma?`,
+        confirmLabel: "Adicionar",
+      });
+      if (!ok) return false;
       await api.addDeckCard(deckId, cardName, 1, oracleId, true);
       return true;
     }
@@ -821,9 +825,20 @@ function renderDeckCards(deck) {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const cardName = btn.dataset.removeName || "esta carta";
-      if (!confirm(`Remover ${cardName} do deck?`)) return;
-      await api.removeDeckCard(deck.id, Number(btn.dataset.remove));
-      renderDeckDetail([String(deck.id)]);
+      const ok = await confirmDialog({
+        title: "Remover do deck?",
+        message: `${cardName} sai do deck e a cópia volta para as cartas livres da coleção.`,
+        confirmLabel: "Remover",
+        danger: true,
+      });
+      if (!ok) return;
+      try {
+        await api.removeDeckCard(deck.id, Number(btn.dataset.remove));
+        toast(`${cardName} saiu do deck.`);
+        renderDeckDetail([String(deck.id)]);
+      } catch (err) {
+        toast(err.message, "bad");
+      }
     })
   );
   cardsWrap.querySelectorAll("[data-card-view]").forEach((el) =>

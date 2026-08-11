@@ -489,6 +489,70 @@ fn allows_unlimited_copies(oracle_text: Option<&str>, card_name: &str) -> bool {
         .unwrap_or(false)
 }
 
+/// Puts `quantity` copies of a card into a deck, taking free ones from the collection first.
+///
+/// Adding a card to a deck used to INSERT a collection row unconditionally, so putting a card you
+/// already owned into a deck invented a second copy: own one, add it, and the collection reported
+/// two. Cardboard doesn't appear because a deck listed it — a copy is claimed if one is sitting
+/// free, and only genuinely new cardboard is recorded as new.
+///
+/// A free row can stand for several identical copies, so claiming one out of a stack splits it:
+/// the free row loses one and an allocated row gains it.
+fn claim_copies(
+    con: &Connection,
+    deck_id: i64,
+    card_name: &str,
+    quantity: i64,
+    oracle_id: Option<&str>,
+    note: &str,
+) {
+    let mut still_needed = quantity;
+
+    while still_needed > 0 {
+        let free: Option<(i64, i64)> = con
+            .query_row(
+                "SELECT id, quantity FROM collection
+                 WHERE allocated_deck_id IS NULL AND card_name = ?1 COLLATE NOCASE
+                 ORDER BY id LIMIT 1",
+                params![card_name],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()
+            .ok()
+            .flatten();
+        let Some((row_id, have)) = free else { break };
+
+        let take = have.min(still_needed);
+        if take == have {
+            // The whole row moves into the deck; no split needed.
+            let _ = con.execute(
+                "UPDATE collection SET allocated_deck_id = ?1 WHERE id = ?2",
+                params![deck_id, row_id],
+            );
+        } else {
+            let _ = con.execute(
+                "UPDATE collection SET quantity = quantity - ?1 WHERE id = ?2",
+                params![take, row_id],
+            );
+            let _ = con.execute(
+                "INSERT INTO collection (card_name, lang, quantity, allocated_deck_id, oracle_id, notes)
+                 VALUES (?1, 'en', ?2, ?3, ?4, ?5)",
+                params![card_name, take, deck_id, oracle_id, note],
+            );
+        }
+        still_needed -= take;
+    }
+
+    // Whatever the collection couldn't cover is cardboard the user is telling us they have.
+    if still_needed > 0 {
+        let _ = con.execute(
+            "INSERT INTO collection (card_name, lang, quantity, allocated_deck_id, oracle_id, notes)
+             VALUES (?1, 'en', ?2, ?3, ?4, ?5)",
+            params![card_name, still_needed, deck_id, oracle_id, note],
+        );
+    }
+}
+
 async fn add_deck_card(Path(deck_id): Path<i64>, Json(p): Json<DeckCardIn>) -> impl IntoResponse {
     let Ok(con) = open_app_db() else {
         return db_unavailable().into_response();
@@ -496,6 +560,11 @@ async fn add_deck_card(Path(deck_id): Path<i64>, Json(p): Json<DeckCardIn>) -> i
     let Some(dname) = deck_name(&con, deck_id) else {
         return not_found("Deck não encontrado").into_response();
     };
+    // Same reason as add_collection: store the index's spelling, so a card entered here and a
+    // card entered there end up as one card rather than two.
+    let card_name = open_cards_db()
+        .and_then(|cdb| crate::routes::cards::canonical_name(&cdb, &p.card_name))
+        .unwrap_or_else(|| p.card_name.clone());
 
     let oracle_text: Option<String> = open_cards_db().and_then(|cdb| {
         let sql = match p.oracle_id {
@@ -536,7 +605,7 @@ async fn add_deck_card(Path(deck_id): Path<i64>, Json(p): Json<DeckCardIn>) -> i
         .query_row(
             "SELECT id FROM deck_cards WHERE deck_id = ?1 AND card_name = ?2 COLLATE NOCASE
              AND is_commander = 0 AND oracle_id IS ?3",
-            params![deck_id, p.card_name, p.oracle_id],
+            params![deck_id, card_name, p.oracle_id],
             |r| r.get(0),
         )
         .optional()
@@ -553,16 +622,12 @@ async fn add_deck_card(Path(deck_id): Path<i64>, Json(p): Json<DeckCardIn>) -> i
             let _ = con.execute(
                 "INSERT INTO deck_cards (deck_id, card_name, quantity, oracle_id)
                  VALUES (?1, ?2, ?3, ?4)",
-                params![deck_id, p.card_name, p.quantity, p.oracle_id],
+                params![deck_id, card_name, p.quantity, p.oracle_id],
             );
         }
     }
-    let _ = con.execute(
-        "INSERT INTO collection (card_name, lang, quantity, allocated_deck_id, oracle_id, notes)
-         VALUES (?1, 'en', ?2, ?3, ?4, 'Adicionado via app')",
-        params![p.card_name, p.quantity, deck_id, p.oracle_id],
-    );
-    log_activity(&con, "card_added_deck", &format!("{} entrou no deck {dname}", p.card_name));
+    claim_copies(&con, deck_id, &card_name, p.quantity, p.oracle_id.as_deref(), "Adicionado via app");
+    log_activity(&con, "card_added_deck", &format!("{card_name} entrou no deck {dname}"));
     ok().into_response()
 }
 
@@ -796,11 +861,7 @@ async fn import_commit(
                 );
             }
         }
-        let _ = con.execute(
-            "INSERT INTO collection (card_name, lang, quantity, allocated_deck_id, notes)
-             VALUES (?1, 'en', ?2, ?3, 'Importado via decklist')",
-            params![name, card.quantity, deck_id],
-        );
+        claim_copies(&con, deck_id, name, card.quantity, None, "Importado via decklist");
         added += card.quantity;
     }
 

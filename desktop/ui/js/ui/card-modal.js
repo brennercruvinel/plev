@@ -2,6 +2,7 @@ import { api } from "../api.js?v=25";
 import { manaCostHtml } from "../icons.js?v=25";
 import { h, highlightMatch, priceLabel, toast } from "../util.js?v=3";
 import { cardImgHtml, wireCardFlips } from "./card-face.js?v=1";
+import { confirmDialog } from "./confirm.js?v=1";
 
 // One row per stored copy, each with its own delete. A row can represent several identical
 // copies (quantity > 1), in which case deleting takes one off rather than discarding the stack —
@@ -26,28 +27,13 @@ function unitRowHtml(e) {
 }
 
 // Deleting the last copy of a card removes it from the collection entirely, which is a different
-// thing from thinning a playset — so that one asks first, and says exactly what will happen.
+// thing from thinning a playset — so that one asks first, and says exactly what it means.
 function confirmLastCopy(cardName) {
-  return new Promise((resolve) => {
-    const backdrop = document.createElement("div");
-    backdrop.className = "modal-backdrop";
-    backdrop.innerHTML = h`
-      <div class="modal" style="max-width:420px">
-        <h3>Remover da coleção?</h3>
-        <p style="font-size:13px;color:var(--text-dim);line-height:1.5">
-          Esta é a <b>última cópia</b> de <b>${cardName}</b>. Removê-la tira a carta da sua coleção
-          — ela deixa de aparecer nas buscas e nas sugestões de "cartas que você tem".
-        </p>
-        <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
-          <button class="btn secondary" id="lc-cancel">Cancelar</button>
-          <button class="btn danger" id="lc-ok">Remover</button>
-        </div>
-      </div>`;
-    document.body.appendChild(backdrop);
-    const done = (v) => { backdrop.remove(); resolve(v); };
-    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) done(false); });
-    backdrop.querySelector("#lc-cancel").addEventListener("click", () => done(false));
-    backdrop.querySelector("#lc-ok").addEventListener("click", () => done(true));
+  return confirmDialog({
+    title: "Remover da coleção?",
+    message: `Esta é a última cópia de ${cardName}. Removê-la tira a carta da sua coleção — ela deixa de aparecer nas buscas e nas sugestões de "cartas que você tem".`,
+    confirmLabel: "Remover",
+    danger: true,
   });
 }
 
