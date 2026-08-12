@@ -180,6 +180,13 @@ CREATE TABLE cards (
     -- cardboard, while a transform or modal DFC has a genuine back that has to be shown somehow.
     layout TEXT, image_uri_back TEXT
 );
+-- One row per set, built from the same bulk data. Scryfall does not localise set names, so
+-- `name` is English for every language of card; the autocomplete matches the code too, which is
+-- what people actually remember for recent sets.
+CREATE TABLE sets (
+    code TEXT PRIMARY KEY, name TEXT, name_folded TEXT,
+    released_at TEXT, set_type TEXT, cards INTEGER
+);
 CREATE TABLE names_localized (
     printed_name TEXT, oracle_id TEXT, set_code TEXT, printed_name_folded TEXT,
     lang TEXT NOT NULL DEFAULT 'pt', lang_rank INTEGER NOT NULL DEFAULT 1
@@ -191,6 +198,7 @@ CREATE INDEX idx_loc_oracle ON names_localized(oracle_id);
 CREATE INDEX idx_name_folded ON cards(name_folded);
 CREATE INDEX idx_loc_folded ON names_localized(printed_name_folded);
 CREATE INDEX idx_loc_lang ON names_localized(lang);
+CREATE INDEX idx_sets_folded ON sets(name_folded);
 "#;
 
 fn s(v: &Value, k: &str) -> Option<String> {
@@ -323,6 +331,8 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
             .prepare("INSERT INTO names_localized VALUES (?1,?2,?3,?4,?5,?6)")
             .map_err(|e| e.to_string())?;
         let mut seen = std::collections::HashSet::new();
+        let mut sets: std::collections::HashMap<String, (String, Option<String>, Option<String>, i64)> =
+            std::collections::HashMap::new();
         let f = std::fs::File::open(all).map_err(|e| e.to_string())?;
         for line in BufReader::new(GzDecoder::new(f)).lines() {
             let line = line.map_err(|e| e.to_string())?;
@@ -331,6 +341,15 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
                 continue;
             }
             let Ok(c) = serde_json::from_str::<Value>(line) else { continue };
+            // Sets are collected before the language filter: a set whose cards were never printed
+            // in one of our eight languages still needs to be pickable in the set autocomplete.
+            if let (Some(code), Some(set_name)) = (s(&c, "set"), s(&c, "set_name")) {
+                let e = sets.entry(code).or_insert_with(|| {
+                    (set_name, s(&c, "released_at"), s(&c, "set_type"), 0i64)
+                });
+                e.3 += 1;
+            }
+
             let Some(lang) = c.get("lang").and_then(|l| l.as_str()) else { continue };
             let Some(rank) = lang_rank(lang) else { continue };
             let pn = s(&c, "printed_name").or_else(|| {
@@ -350,6 +369,16 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
             n_pt += 1;
         }
         drop(stmt);
+
+        let mut set_stmt = tx
+            .prepare("INSERT OR REPLACE INTO sets VALUES (?1,?2,?3,?4,?5,?6)")
+            .map_err(|e| e.to_string())?;
+        for (code, (name, released, set_type, cards)) in &sets {
+            set_stmt
+                .execute(params![code, name, fold_text(name), released, set_type, cards])
+                .map_err(|e| e.to_string())?;
+        }
+        drop(set_stmt);
         tx.commit().map_err(|e| e.to_string())?;
     }
 

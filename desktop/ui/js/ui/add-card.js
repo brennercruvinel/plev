@@ -1,6 +1,7 @@
 import { api } from "../api.js?v=25";
 import { manaCostHtml } from "../icons.js?v=25";
 import { h, toast } from "../util.js?v=3";
+import { getSetCode, setInputHtml, wireSetPicker } from "./set-picker.js?v=1";
 
 export async function openAddCardModal({ onSaved } = {}) {
   const decks = await api.decks();
@@ -16,6 +17,7 @@ export async function openAddCardModal({ onSaved } = {}) {
       <div class="mode-toggle" style="margin-bottom:16px">
         <span class="chip active" data-ac-mode="single">Uma carta</span>
         <span class="chip" data-ac-mode="list">Adicionar por lista</span>
+        <span class="chip" data-ac-mode="wishlist">Wishlist</span>
       </div>
 
       <div id="ac-single-wrap">
@@ -26,7 +28,7 @@ export async function openAddCardModal({ onSaved } = {}) {
           <div id="ac-suggestions"></div>
         </div>
         <div class="form-grid">
-          <div><label>Edição (set)</label><input type="text" id="ac-set" placeholder="Ex: znr"></div>
+          <div><label>Edição</label>${setInputHtml("ac-set")}</div>
           <div><label>Artista</label><input type="text" id="ac-artist" placeholder="Nome do artista"></div>
           <div><label>Idioma</label><select id="ac-lang"><option value="en">Inglês</option><option value="pt">Português</option></select></div>
           <div><label>Quantidade</label><input type="number" id="ac-qty" min="1" value="1"></div>
@@ -57,6 +59,30 @@ export async function openAddCardModal({ onSaved } = {}) {
         <div id="ac-list-status" style="margin-top:12px;font-size:13px"></div>
       </div>
 
+      <div id="ac-wish-wrap" style="display:none">
+        <p style="font-size:12.5px;color:var(--text-dim);line-height:1.5;margin:0 0 12px">
+          Cartas que você quer comprar. Não entram na coleção nem contam como cartas que você tem —
+          quando comprar, é um clique para movê-las.
+        </p>
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;color:var(--text-dim)">Nome da carta *</label>
+          <input type="text" id="aw-name" placeholder="Nome (PT ou EN)…" autocomplete="off"
+            style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
+          <div id="aw-suggestions"></div>
+        </div>
+        <div class="form-grid">
+          <div><label>Edição</label>${setInputHtml("aw-set")}</div>
+          <div><label>Artista</label><input type="text" id="aw-artist" placeholder="Nome do artista"></div>
+          <div><label>Idioma</label><select id="aw-lang"><option value="en">Inglês</option><option value="pt">Português</option></select></div>
+          <div><label>Quantidade</label><input type="number" id="aw-qty" min="1" value="1"></div>
+        </div>
+        <div style="margin-top:12px">
+          <label style="font-size:12px;color:var(--text-dim)">Notas</label>
+          <textarea id="aw-notes" rows="2" placeholder="Ex: foil, versão retro, comprar até R$ 40"
+            style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text);font-family:inherit"></textarea>
+        </div>
+      </div>
+
       <div id="ac-error" style="color:var(--bad);font-size:12px;margin-top:10px;display:none">Preencha o nome da carta.</div>
       <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
         <button class="btn secondary" id="ac-cancel">Cancelar</button>
@@ -67,42 +93,55 @@ export async function openAddCardModal({ onSaved } = {}) {
   backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
 
   let mode = "single";
-  const singleWrap = backdrop.querySelector("#ac-single-wrap");
-  const listWrap = backdrop.querySelector("#ac-list-wrap");
+  const wraps = {
+    single: backdrop.querySelector("#ac-single-wrap"),
+    list: backdrop.querySelector("#ac-list-wrap"),
+    wishlist: backdrop.querySelector("#ac-wish-wrap"),
+  };
+  const firstField = { single: "#ac-name", list: "#ac-list-text", wishlist: "#aw-name" };
   const errorEl = backdrop.querySelector("#ac-error");
   backdrop.querySelectorAll("[data-ac-mode]").forEach((chip) =>
     chip.addEventListener("click", () => {
       mode = chip.dataset.acMode;
       backdrop.querySelectorAll("[data-ac-mode]").forEach((c) => c.classList.toggle("active", c === chip));
-      singleWrap.style.display = mode === "single" ? "block" : "none";
-      listWrap.style.display = mode === "list" ? "block" : "none";
+      for (const [key, el] of Object.entries(wraps)) el.style.display = key === mode ? "block" : "none";
       errorEl.style.display = "none";
-      if (mode === "single") backdrop.querySelector("#ac-name").focus();
-      else backdrop.querySelector("#ac-list-text").focus();
+      backdrop.querySelector(firstField[mode])?.focus();
+      backdrop.querySelector("#ac-save").textContent = mode === "wishlist" ? "Adicionar à wishlist" : "Salvar";
     })
   );
 
-  const nameInput = backdrop.querySelector("#ac-name");
-  const suggestionsEl = backdrop.querySelector("#ac-suggestions");
-  nameInput.focus();
-  let debounce;
-  nameInput.addEventListener("input", () => {
-    clearTimeout(debounce);
-    const q = nameInput.value.trim();
-    if (q.length < 2) { suggestionsEl.innerHTML = ""; return; }
-    debounce = setTimeout(async () => {
-      const results = await api.searchCards(q, 6);
-      suggestionsEl.innerHTML = results
-        .map((c) => h`<div class="card-row" data-pick="${c.name}" style="cursor:pointer"><span class="name">${c.name}</span><span class="cost">${manaCostHtml(c.mana_cost)}</span></div>`)
-        .join("");
-      suggestionsEl.querySelectorAll("[data-pick]").forEach((el) =>
-        el.addEventListener("click", () => {
-          nameInput.value = el.dataset.pick;
-          suggestionsEl.innerHTML = "";
-        })
-      );
-    }, 250);
-  });
+  wireSetPicker(backdrop, "ac-set");
+  wireSetPicker(backdrop, "aw-set");
+
+  // Both name fields get the same autocomplete — the wishlist needs it just as much, since the
+  // whole point of recording a card you don't own is getting its name right.
+  function wireNameSearch(inputSel, listSel) {
+    const nameInput = backdrop.querySelector(inputSel);
+    const suggestionsEl = backdrop.querySelector(listSel);
+    if (!nameInput) return;
+    let debounce;
+    nameInput.addEventListener("input", () => {
+      clearTimeout(debounce);
+      const q = nameInput.value.trim();
+      if (q.length < 2) { suggestionsEl.innerHTML = ""; return; }
+      debounce = setTimeout(async () => {
+        const results = await api.searchCards(q, 6);
+        suggestionsEl.innerHTML = results
+          .map((c) => h`<div class="card-row" data-pick="${c.name}" style="cursor:pointer"><span class="name">${c.name}</span><span class="cost">${manaCostHtml(c.mana_cost)}</span></div>`)
+          .join("");
+        suggestionsEl.querySelectorAll("[data-pick]").forEach((el) =>
+          el.addEventListener("click", () => {
+            nameInput.value = el.dataset.pick;
+            suggestionsEl.innerHTML = "";
+          })
+        );
+      }, 250);
+    });
+  }
+  wireNameSearch("#ac-name", "#ac-suggestions");
+  wireNameSearch("#aw-name", "#aw-suggestions");
+  backdrop.querySelector("#ac-name").focus();
 
   backdrop.querySelector("#ac-cancel").addEventListener("click", () => backdrop.remove());
   backdrop.querySelector("#ac-save").addEventListener("click", async () => {
@@ -121,7 +160,7 @@ export async function openAddCardModal({ onSaved } = {}) {
       const qty = Number(backdrop.querySelector("#ac-qty").value) || 1;
       await api.addCollection({
         card_name,
-        set_code: backdrop.querySelector("#ac-set").value.trim() || null,
+        set_code: getSetCode(backdrop, "ac-set"),
         artist: backdrop.querySelector("#ac-artist").value.trim() || null,
         lang: backdrop.querySelector("#ac-lang").value,
         quantity: qty,
@@ -133,6 +172,36 @@ export async function openAddCardModal({ onSaved } = {}) {
       // trace on screen and looked like it hadn't happened.
       toast(qty > 1 ? `${qty} cópias de ${card_name} adicionadas.` : `${card_name} adicionada à coleção.`);
       onSaved?.();
+      return;
+    }
+
+    if (mode === "wishlist") {
+      const card_name = backdrop.querySelector("#aw-name").value.trim();
+      if (!card_name) {
+        errorEl.textContent = "Preencha o nome da carta.";
+        errorEl.style.display = "block";
+        backdrop.querySelector("#aw-name").focus();
+        return;
+      }
+      saveBtn.disabled = true;
+      const qty = Number(backdrop.querySelector("#aw-qty").value) || 1;
+      try {
+        await api.addWishlist({
+          card_name,
+          set_code: getSetCode(backdrop, "aw-set"),
+          artist: backdrop.querySelector("#aw-artist").value.trim() || null,
+          lang: backdrop.querySelector("#aw-lang").value,
+          quantity: qty,
+          notes: backdrop.querySelector("#aw-notes").value.trim() || null,
+        });
+        backdrop.remove();
+        toast(qty > 1 ? `${qty}x ${card_name} na wishlist.` : `${card_name} entrou na wishlist.`);
+        onSaved?.();
+      } catch (err) {
+        saveBtn.disabled = false;
+        errorEl.textContent = err.message;
+        errorEl.style.display = "block";
+      }
       return;
     }
 

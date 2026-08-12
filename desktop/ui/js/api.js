@@ -44,6 +44,16 @@ export const api = {
   importCommit: (id, cards, mode) =>
     req(`/decks/${id}/import/commit`, { method: "POST", body: JSON.stringify({ cards, mode }) }),
 
+  // Set autocomplete — names are English (Scryfall doesn't localise them), so the code matches too.
+  sets: (q, limit = 12) => req(`/sets?q=${encodeURIComponent(q)}&limit=${limit}`),
+
+  // Wishlist: cards wanted but not owned. Same grouped shape as the collection.
+  wishlist: (q = "") => req(`/wishlist?q=${encodeURIComponent(q)}`),
+  wishlistTotal: () => req("/wishlist/total"),
+  addWishlist: (payload) => req("/wishlist", { method: "POST", body: JSON.stringify(payload) }),
+  deleteWishlistEntry: (id) => req(`/wishlist/${id}`, { method: "DELETE" }),
+  acquireWishlistEntry: (id) => req(`/wishlist/${id}/acquire`, { method: "POST" }),
+
   searchCards: (q, limit = 24) => req(`/cards/search?q=${encodeURIComponent(q)}&limit=${limit}`),
   card: (name, oracleId = null) =>
     req(`/cards/${encodeURIComponent(name)}${oracleId ? `?oracle_id=${encodeURIComponent(oracleId)}` : ""}`),

@@ -13,6 +13,7 @@ import { renderDashboard, renderScannerSoon } from "./views/home.js?v=3";
 import { renderDecksList } from "./views/decks.js?v=3";
 import { renderDeckDetail } from "./views/deck-detail.js?v=3";
 import { renderCollection } from "./views/collection.js?v=3";
+import { renderWishlist } from "./views/wishlist.js?v=1";
 import { renderGames } from "./views/games.js?v=3";
 
 registerRoutes({
@@ -23,6 +24,7 @@ registerRoutes({
   // destructures per character, and deck 12 would silently load deck 1.
   deck: renderDeckDetail,
   collection: renderCollection,
+  wishlist: renderWishlist,
   scanner: renderScannerSoon,
   games: renderGames,
 });

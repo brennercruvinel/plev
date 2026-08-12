@@ -3,15 +3,16 @@ import { activityIcon } from "../icons.js?v=25";
 import { deckCardHtml } from "../deck-bits.js?v=3";
 import { mainEl } from "../router.js?v=3";
 import { openAddCardModal } from "../ui/add-card.js?v=3";
-import { formatTs, h } from "../util.js?v=3";
+import { formatTs, h, priceLabel } from "../util.js?v=3";
 import { openNewDeckModal } from "../views/decks.js?v=3";
 
 export async function renderDashboard() {
-  const [decks, collectionTotal, freeCollection, activity] = await Promise.all([
+  const [decks, collectionTotal, freeCollection, activity, wishlistTotal] = await Promise.all([
     api.decks(),
     api.collectionTotal(),
     api.collection("free"),
     api.activity(12),
+    api.wishlistTotal(),
   ]);
   const totalCards = decks.reduce((s, d) => s + d.total_cards, 0);
   const totalGames = decks.reduce((s, d) => s + d.wins + d.losses, 0);
@@ -29,6 +30,7 @@ export async function renderDashboard() {
       <div class="stat-card clickable" data-stat-nav="decks"><div class="label">Decks montados</div><div class="value">${decks.length}</div><div class="sub">${totalCards} cartas ao todo</div></div>
       <div class="stat-card clickable" data-stat-nav="collection"><div class="label">Cartas na coleção</div><div class="value">${collectionTotal.total_units}</div><div class="sub">${collectionTotal.distinct_cards} nomes distintos, com repetidas</div></div>
       <div class="stat-card clickable" data-stat-nav="collection"><div class="label">Cartas livres</div><div class="value">${collectionTotal.free_units}</div><div class="sub">${freeCollection.length} nomes · ${collectionTotal.allocated_units} em decks</div></div>
+      <div class="stat-card clickable" data-stat-nav="wishlist"><div class="label">Wishlist</div><div class="value">${wishlistTotal.total_units}</div><div class="sub">${wishlistTotal.distinct_cards} nomes · ~${priceLabel(String(wishlistTotal.price_usd))}</div></div>
       <div class="stat-card clickable" data-stat-nav="games"><div class="label">Partidas registradas</div><div class="value">${totalGames}</div><div class="sub">${totalWins} vitórias</div></div>
     </div>
 

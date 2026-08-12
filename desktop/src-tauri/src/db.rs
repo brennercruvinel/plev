@@ -37,6 +37,20 @@ CREATE TABLE IF NOT EXISTS collection (
     notes TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
+-- Cards the user wants but doesn't own. Deliberately its own table rather than a flag on
+-- `collection`: a wishlist entry is not cardboard, and every count in the app treats a
+-- collection row as a card you physically have.
+CREATE TABLE IF NOT EXISTS wishlist (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    card_name TEXT NOT NULL,
+    set_code TEXT,
+    artist TEXT,
+    lang TEXT NOT NULL DEFAULT 'en',
+    quantity INTEGER NOT NULL DEFAULT 1,
+    notes TEXT,
+    oracle_id TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
 CREATE TABLE IF NOT EXISTS games (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     deck_id INTEGER NOT NULL REFERENCES decks(id) ON DELETE CASCADE,

@@ -1046,3 +1046,54 @@ a { color: inherit; }
 .modal .card-flip-btn { opacity: 1; bottom: 8px; left: 8px; }
 .modal-card-img { width: 200px; height: auto; border-radius: 12px; flex-shrink: 0; display: block; }
 .modal .card-face-wrap { display: inline-block; position: relative; flex-shrink: 0; }
+
+/* ---------- Set autocomplete ---------- */
+.set-picker { position: relative; }
+.set-picker-list:not(:empty) {
+    /* Wider than the field it hangs off: the input sits in a two-column form grid, and set names
+       ("Innistrad: Crimson Vow") do not fit in ~190px — truncating them defeats the point of
+       searching by name. Capped to the viewport so it can't run off the dialog. */
+    position: absolute; top: calc(100% + 4px); left: 0; z-index: 40;
+    min-width: 340px; max-width: min(420px, calc(100vw - 48px));
+    max-height: 260px; overflow-y: auto;
+    background: var(--bg-elevated); border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm); box-shadow: 0 10px 28px rgba(0,0,0,.45); padding: 4px;
+}
+.set-picker-item {
+    display: grid; grid-template-columns: 46px 1fr auto; gap: 8px; align-items: center;
+    width: 100%; padding: 7px 8px; border: none; background: none; cursor: pointer;
+    border-radius: 6px; text-align: left; color: var(--text); font-size: 12.5px;
+    font-family: var(--font);
+}
+.set-picker-item:hover, .set-picker-item.active { background: var(--bg-card); }
+.set-picker-code {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
+    color: var(--accent-bright); background: rgba(78,207,143,.12);
+    padding: 2px 5px; border-radius: 4px; text-align: center;
+}
+.set-picker-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.set-picker-year { color: var(--text-faint); font-size: 11px; }
+
+/* ---------- Wishlist ---------- */
+/* Wishlist tiles carry two actions the collection doesn't, so they get their own overlay rather
+   than borrowing .deck-badge — a wanted card has no deck to name. */
+.wl-summary { font-size: 12.5px; color: var(--text-dim); white-space: nowrap; }
+.wish-card .wish-price {
+    position: absolute; top: 6px; left: 6px; z-index: 2;
+    background: rgba(12,10,16,.85); color: var(--warn);
+    font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 20px;
+    border: 1px solid rgba(217,164,65,.35);
+}
+.wish-actions {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 3;
+    display: flex; gap: 6px; align-items: center; justify-content: space-between;
+    padding: 8px 6px 6px;
+    background: linear-gradient(to top, rgba(12,10,16,.92), transparent);
+    opacity: 0; transition: opacity .15s;
+}
+.wish-card:hover .wish-actions, .wish-card:focus-within .wish-actions { opacity: 1; }
+.wish-actions .icon-btn.danger {
+    background: none; border: none; padding: 5px; border-radius: 6px; cursor: pointer;
+    color: var(--text-dim); display: inline-flex; transition: color .15s, background .15s;
+}
+.wish-actions .icon-btn.danger:hover { color: var(--bad); background: rgba(217,85,107,.16); }

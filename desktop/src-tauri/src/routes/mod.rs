@@ -16,6 +16,7 @@ pub mod collection;
 pub mod data;
 pub mod decks;
 pub mod games;
+pub mod wishlist;
 
 pub fn router() -> Router {
     Router::new()
@@ -24,4 +25,5 @@ pub fn router() -> Router {
         .merge(collection::router())
         .merge(games::router())
         .merge(data::router())
+        .merge(wishlist::router())
 }

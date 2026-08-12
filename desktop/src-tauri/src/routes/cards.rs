@@ -235,9 +235,69 @@ async fn card_variants(Path(name): Path<String>) -> Json<Value> {
     Json(Value::Array(out))
 }
 
+#[derive(Deserialize)]
+pub struct SetsQuery {
+    #[serde(default)]
+    q: String,
+    #[serde(default = "sets_limit")]
+    limit: i64,
+}
+fn sets_limit() -> i64 { 12 }
+
+/// Set autocomplete. Matches the name accent-folded *and* the code, because for recent sets the
+/// three-letter code is what people remember, and Scryfall does not localise set names — so
+/// matching only a translated name would find nothing.
+///
+/// Ordered newest first: a set you are cataloguing is far more likely to be recent than to be
+/// from 1995, and an alphabetical list buries every current set.
+async fn list_sets(Query(p): Query<SetsQuery>) -> Json<Value> {
+    let Some(cdb) = open_cards_db() else { return Json(json!([])) };
+    let like = format!("%{}%", fold_text(&p.q));
+    let code_like = format!("{}%", p.q.to_lowercase());
+    let out = (|| -> rusqlite::Result<Vec<Value>> {
+        // Ranked, not just filtered. A raw "newest first" buried Dominaria United under its own
+        // token, art-series and promo sets — the ones nobody catalogues a card into. Real sets
+        // come first, then a name that *starts* with what was typed, then recency.
+        let starts = format!("{}%", fold_text(&p.q));
+        let mut stmt = cdb.prepare(
+            "SELECT code, name, released_at, set_type, cards FROM sets
+             WHERE name_folded LIKE ?1 OR code LIKE ?2
+             ORDER BY
+               (code = ?4) DESC,
+               CASE set_type
+                 WHEN 'expansion' THEN 0 WHEN 'core' THEN 0
+                 WHEN 'masters' THEN 1 WHEN 'draft_innovation' THEN 1 WHEN 'commander' THEN 1
+                 WHEN 'starter' THEN 2 WHEN 'duel_deck' THEN 2 WHEN 'box' THEN 2
+                 WHEN 'token' THEN 8 WHEN 'memorabilia' THEN 9 WHEN 'minigame' THEN 9
+                 WHEN 'promo' THEN 7 WHEN 'alchemy' THEN 7
+                 ELSE 4
+               END ASC,
+               (name_folded LIKE ?5) DESC,
+               released_at DESC
+             LIMIT ?3",
+        )?;
+        let rows = stmt.query_map(
+            rusqlite::params![like, code_like, p.limit, p.q.to_lowercase(), starts],
+            |r| {
+            Ok(json!({
+                "code": r.get::<_, String>(0)?,
+                "name": r.get::<_, Option<String>>(1)?,
+                "released_at": r.get::<_, Option<String>>(2)?,
+                "set_type": r.get::<_, Option<String>>(3)?,
+                "cards": r.get::<_, Option<i64>>(4)?,
+            }))
+            },
+        )?;
+        rows.collect()
+    })()
+    .unwrap_or_default();
+    Json(Value::Array(out))
+}
+
 pub fn router() -> Router {
     Router::new()
         .route("/api/cards/search", get(search_cards))
         .route("/api/cards/:name", get(get_card))
         .route("/api/cards/:name/variants", get(card_variants))
+        .route("/api/sets", get(list_sets))
 }
