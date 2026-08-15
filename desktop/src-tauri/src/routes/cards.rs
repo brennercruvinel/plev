@@ -235,12 +235,69 @@ async fn card_variants(Path(name): Path<String>) -> Json<Value> {
     Json(Value::Array(out))
 }
 
+/// Every distinct artwork of a card, newest printing first.
+///
+/// Split, adventure and other single-faced "//" cards have one art per printing like anything
+/// else; two-sided cards carry both faces here, so the flip control keeps working per printing.
+async fn card_printings(Path(name): Path<String>) -> Json<Value> {
+    let Some(cdb) = open_cards_db() else { return Json(json!([])) };
+    let Some((card, _)) = lookup_card_in(&cdb, &name) else { return Json(json!([])) };
+    let Some(oid) = card.get("oracle_id").and_then(|v| v.as_str()) else {
+        return Json(json!([]));
+    };
+    let out = (|| -> rusqlite::Result<Vec<Value>> {
+        let mut stmt = cdb.prepare(
+            "SELECT p.set_code, p.collector_number, p.artist, p.image_uri, p.image_uri_back,
+                    p.released_at, s.name
+             FROM printings p LEFT JOIN sets s ON s.code = p.set_code
+             WHERE p.oracle_id = ?1
+             ORDER BY p.released_at DESC",
+        )?;
+        let rows = stmt.query_map([oid], |r| {
+            let mut v = json!({
+                "set_code": r.get::<_, Option<String>>(0)?,
+                "collector_number": r.get::<_, Option<String>>(1)?,
+                "artist": r.get::<_, Option<String>>(2)?,
+                "image_uri": r.get::<_, Option<String>>(3)?,
+                "image_uri_back": r.get::<_, Option<String>>(4)?,
+                "released_at": r.get::<_, Option<String>>(5)?,
+                "set_name": r.get::<_, Option<String>>(6)?,
+            });
+            crate::images::rewrite_card(&mut v);
+            Ok(v)
+        })?;
+        rows.collect()
+    })()
+    .unwrap_or_default();
+    Json(Value::Array(out))
+}
+
+/// The image of one specific printing, so a copy recorded as being from a given set shows that
+/// set's art rather than whichever printing the index happens to treat as canonical.
+pub fn printing_image(cdb: &Connection, oracle_id: &str, set_code: &str) -> Option<(String, Option<String>)> {
+    use rusqlite::OptionalExtension;
+    cdb.query_row(
+        "SELECT image_uri, image_uri_back FROM printings
+         WHERE oracle_id = ?1 AND set_code = ?2 COLLATE NOCASE
+         ORDER BY released_at DESC LIMIT 1",
+        rusqlite::params![oracle_id, set_code],
+        |r| Ok((r.get::<_, Option<String>>(0)?, r.get::<_, Option<String>>(1)?)),
+    )
+    .optional()
+    .ok()
+    .flatten()
+    .and_then(|(f, b)| f.map(|f| (crate::images::local_url(&f), b.map(|b| crate::images::local_url(&b)))))
+}
+
 #[derive(Deserialize)]
 pub struct SetsQuery {
     #[serde(default)]
     q: String,
     #[serde(default = "sets_limit")]
     limit: i64,
+    /// When present, only sets this card was actually printed in.
+    #[serde(default)]
+    card: Option<String>,
 }
 fn sets_limit() -> i64 { 12 }
 
@@ -252,6 +309,45 @@ fn sets_limit() -> i64 { 12 }
 /// from 1995, and an alphabetical list buries every current set.
 async fn list_sets(Query(p): Query<SetsQuery>) -> Json<Value> {
     let Some(cdb) = open_cards_db() else { return Json(json!([])) };
+
+    // Scoped to one card when the form already knows which card is being recorded. Offering the
+    // full 1,047 sets lets someone pick a set the card was never printed in — which then resolves
+    // to no artwork at all, silently. Scoping makes the field answer the question actually being
+    // asked: "which printing of this card do I have?"
+    if let Some(card) = p.card.as_deref().filter(|c| !c.trim().is_empty()) {
+        let oid = lookup_card_in(&cdb, card)
+            .and_then(|(c, _)| c.get("oracle_id").and_then(|v| v.as_str()).map(String::from));
+        if let Some(oid) = oid {
+            let like = format!("%{}%", fold_text(&p.q));
+            let code_like = format!("{}%", p.q.to_lowercase());
+            let out = (|| -> rusqlite::Result<Vec<Value>> {
+                let mut stmt = cdb.prepare(
+                    "SELECT DISTINCT p.set_code, s.name, s.released_at, s.set_type, s.cards
+                     FROM printings p LEFT JOIN sets s ON s.code = p.set_code
+                     WHERE p.oracle_id = ?1
+                       AND (?2 = '' OR s.name_folded LIKE ?3 OR p.set_code LIKE ?4)
+                     ORDER BY s.released_at DESC
+                     LIMIT ?5",
+                )?;
+                let rows = stmt.query_map(
+                    rusqlite::params![oid, p.q, like, code_like, p.limit.max(40)],
+                    |r| {
+                        Ok(json!({
+                            "code": r.get::<_, Option<String>>(0)?,
+                            "name": r.get::<_, Option<String>>(1)?,
+                            "released_at": r.get::<_, Option<String>>(2)?,
+                            "set_type": r.get::<_, Option<String>>(3)?,
+                            "cards": r.get::<_, Option<i64>>(4)?,
+                        }))
+                    },
+                )?;
+                rows.collect()
+            })()
+            .unwrap_or_default();
+            return Json(Value::Array(out));
+        }
+    }
+
     let like = format!("%{}%", fold_text(&p.q));
     let code_like = format!("{}%", p.q.to_lowercase());
     let out = (|| -> rusqlite::Result<Vec<Value>> {
@@ -299,5 +395,6 @@ pub fn router() -> Router {
         .route("/api/cards/search", get(search_cards))
         .route("/api/cards/:name", get(get_card))
         .route("/api/cards/:name/variants", get(card_variants))
+        .route("/api/cards/:name/printings", get(card_printings))
         .route("/api/sets", get(list_sets))
 }

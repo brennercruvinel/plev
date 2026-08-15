@@ -111,8 +111,8 @@ export async function openAddCardModal({ onSaved } = {}) {
     })
   );
 
-  wireSetPicker(backdrop, "ac-set");
-  wireSetPicker(backdrop, "aw-set");
+  wireSetPicker(backdrop, "ac-set", "#ac-name");
+  wireSetPicker(backdrop, "aw-set", "#aw-name");
 
   // Both name fields get the same autocomplete — the wishlist needs it just as much, since the
   // whole point of recording a card you don't own is getting its name right.
@@ -148,30 +148,42 @@ export async function openAddCardModal({ onSaved } = {}) {
     const saveBtn = backdrop.querySelector("#ac-save");
 
     if (mode === "single") {
-      const card_name = nameInput.value.trim();
+      // Queried here rather than closed over: the name input used to be a module-level const,
+      // but moving the autocomplete into wireNameSearch took the binding with it, so this
+      // referenced a variable that no longer existed in scope — the click threw and Salvar
+      // silently did nothing.
+      const nameField = backdrop.querySelector("#ac-name");
+      const card_name = nameField.value.trim();
       if (!card_name) {
         errorEl.textContent = "Preencha o nome da carta.";
         errorEl.style.display = "block";
-        nameInput.focus();
+        nameField.focus();
         return;
       }
       saveBtn.disabled = true;
       const deckVal = backdrop.querySelector("#ac-deck").value;
       const qty = Number(backdrop.querySelector("#ac-qty").value) || 1;
-      await api.addCollection({
-        card_name,
-        set_code: getSetCode(backdrop, "ac-set"),
-        artist: backdrop.querySelector("#ac-artist").value.trim() || null,
-        lang: backdrop.querySelector("#ac-lang").value,
-        quantity: qty,
-        notes: backdrop.querySelector("#ac-notes").value.trim() || null,
-        deck_id: deckVal ? Number(deckVal) : null,
-      });
-      backdrop.remove();
-      // The modal closes over whatever list is underneath, so without this the write left no
-      // trace on screen and looked like it hadn't happened.
-      toast(qty > 1 ? `${qty} cópias de ${card_name} adicionadas.` : `${card_name} adicionada à coleção.`);
-      onSaved?.();
+      try {
+        await api.addCollection({
+          card_name,
+          set_code: getSetCode(backdrop, "ac-set"),
+          artist: backdrop.querySelector("#ac-artist").value.trim() || null,
+          lang: backdrop.querySelector("#ac-lang").value,
+          quantity: qty,
+          notes: backdrop.querySelector("#ac-notes").value.trim() || null,
+          deck_id: deckVal ? Number(deckVal) : null,
+        });
+        backdrop.remove();
+        // The modal closes over whatever list is underneath, so without this the write left no
+        // trace on screen and looked like it hadn't happened.
+        toast(qty > 1 ? `${qty} cópias de ${card_name} adicionadas.` : `${card_name} adicionada à coleção.`);
+        onSaved?.();
+      } catch (err) {
+        // Without this the button stayed disabled on any failure and the dialog looked frozen.
+        saveBtn.disabled = false;
+        errorEl.textContent = err.message;
+        errorEl.style.display = "block";
+      }
       return;
     }
 

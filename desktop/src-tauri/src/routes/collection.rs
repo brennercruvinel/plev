@@ -272,6 +272,17 @@ async fn card_copies(Query(p): Query<CardCopiesQuery>) -> Json<Value> {
         if crate::db::fold_text(&card_name) != wanted {
             continue;
         }
+        // Each copy shows the art of the set it was recorded from — the whole point of noting
+        // the set on a copy you own.
+        let art = set_code.as_deref().and_then(|sc| {
+            let cdb = open_cards_db()?;
+            let oid = crate::routes::cards::lookup_card_in(&cdb, &card_name)?
+                .0
+                .get("oracle_id")?
+                .as_str()?
+                .to_string();
+            crate::routes::cards::printing_image(&cdb, &oid, sc)
+        });
         entries.push(json!({
             "id": id,
             "quantity": quantity,
@@ -280,6 +291,8 @@ async fn card_copies(Query(p): Query<CardCopiesQuery>) -> Json<Value> {
             "set_code": set_code,
             "lang": lang,
             "notes": notes,
+            "image_uri": art.as_ref().map(|(f, _)| f.clone()),
+            "image_uri_back": art.as_ref().and_then(|(_, b)| b.clone()),
         }));
         match deck_id {
             None => free += quantity,

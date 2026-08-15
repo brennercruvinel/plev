@@ -180,6 +180,22 @@ CREATE TABLE cards (
     -- cardboard, while a transform or modal DFC has a genuine back that has to be shown somehow.
     layout TEXT, image_uri_back TEXT
 );
+-- One row per distinct artwork of a card. 8,159 of 38k cards have more than one, and someone
+-- cataloguing a collection cares which one is sitting in the binder.
+--
+-- Metadata only: all 51k artworks would be ~8GB of extra images on top of the 6.7GB already
+-- cached, so images are downloaded for the printings the user actually owns and the /img route
+-- falls back to the network for the rest.
+CREATE TABLE printings (
+    oracle_id TEXT, set_code TEXT, illustration_id TEXT, collector_number TEXT,
+    artist TEXT, image_uri TEXT, image_uri_back TEXT, released_at TEXT,
+    -- Keyed by set as well as artwork, not artwork alone. Deduplicating on illustration_id kept
+    -- one printing per art and dropped the rest, so a copy recorded as being from 2XM matched
+    -- nothing: the row that survived was the reprint that happened to be read first. The set is
+    -- what the user records, so it has to be part of the identity.
+    PRIMARY KEY (oracle_id, set_code, illustration_id)
+);
+
 -- One row per set, built from the same bulk data. Scryfall does not localise set names, so
 -- `name` is English for every language of card; the autocomplete matches the code too, which is
 -- what people actually remember for recent sets.
@@ -199,6 +215,8 @@ CREATE INDEX idx_name_folded ON cards(name_folded);
 CREATE INDEX idx_loc_folded ON names_localized(printed_name_folded);
 CREATE INDEX idx_loc_lang ON names_localized(lang);
 CREATE INDEX idx_sets_folded ON sets(name_folded);
+CREATE INDEX idx_printings_oracle ON printings(oracle_id);
+CREATE INDEX idx_printings_set ON printings(oracle_id, set_code);
 "#;
 
 fn s(v: &Value, k: &str) -> Option<String> {
@@ -333,6 +351,11 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
         let mut seen = std::collections::HashSet::new();
         let mut sets: std::collections::HashMap<String, (String, Option<String>, Option<String>, i64)> =
             std::collections::HashMap::new();
+        #[allow(clippy::type_complexity)]
+        let mut printings: std::collections::HashMap<
+            (String, String, String),
+            (Option<String>, Option<String>, Option<String>, Option<String>, Option<String>),
+        > = std::collections::HashMap::new();
         let f = std::fs::File::open(all).map_err(|e| e.to_string())?;
         for line in BufReader::new(GzDecoder::new(f)).lines() {
             let line = line.map_err(|e| e.to_string())?;
@@ -341,6 +364,29 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
                 continue;
             }
             let Ok(c) = serde_json::from_str::<Value>(line) else { continue };
+            // English printings only. The artwork is what varies here, and a card's non-English
+            // printings reuse the same illustrations — carrying all 538k rows would multiply the
+            // table for no extra art.
+            if c.get("lang").and_then(|l| l.as_str()) == Some("en") {
+                let iid = s(&c, "illustration_id").or_else(|| {
+                    let faces = c.get("card_faces")?.as_array()?;
+                    s(faces.first()?, "illustration_id")
+                });
+                if let (Some(oid), Some(iid), Some(set_code)) =
+                    (s(&c, "oracle_id"), iid, s(&c, "set"))
+                {
+                    printings.entry((oid, set_code, iid)).or_insert_with(|| {
+                        (
+                            s(&c, "collector_number"),
+                            s(&c, "artist"),
+                            image_uri(&c),
+                            image_uri_back(&c),
+                            s(&c, "released_at"),
+                        )
+                    });
+                }
+            }
+
             // Sets are collected before the language filter: a set whose cards were never printed
             // in one of our eight languages still needs to be pickable in the set autocomplete.
             if let (Some(code), Some(set_name)) = (s(&c, "set"), s(&c, "set_name")) {
@@ -379,6 +425,16 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
                 .map_err(|e| e.to_string())?;
         }
         drop(set_stmt);
+
+        let mut pr_stmt = tx
+            .prepare("INSERT OR REPLACE INTO printings VALUES (?1,?2,?3,?4,?5,?6,?7,?8)")
+            .map_err(|e| e.to_string())?;
+        for ((oid, set_code, iid), (num, artist, img, img_back, released)) in &printings {
+            pr_stmt
+                .execute(params![oid, set_code, iid, num, artist, img, img_back, released])
+                .map_err(|e| e.to_string())?;
+        }
+        drop(pr_stmt);
         tx.commit().map_err(|e| e.to_string())?;
     }
 

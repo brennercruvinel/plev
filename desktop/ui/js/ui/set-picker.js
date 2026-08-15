@@ -27,7 +27,7 @@ export function setInputHtml(id, value = "") {
  * Free text is kept rather than forced to a match: a promo or a set the index doesn't know is
  * still worth recording, and silently clearing what someone typed is worse than storing it.
  */
-export function wireSetPicker(root, id) {
+export function wireSetPicker(root, id, cardNameSel = null) {
   const input = root.querySelector(`#${id}`);
   const hidden = root.querySelector(`#${id}-code`);
   const list = root.querySelector(`#${id}-list`);
@@ -36,6 +36,8 @@ export function wireSetPicker(root, id) {
   let debounce;
   let items = [];
   let active = -1;
+  const cardName = () =>
+    (cardNameSel && root.querySelector(cardNameSel)?.value.trim()) || "";
 
   const close = () => {
     list.innerHTML = "";
@@ -70,13 +72,26 @@ export function wireSetPicker(root, id) {
     if (!q) return close();
     debounce = setTimeout(async () => {
       try {
-        items = await api.sets(q);
+        items = await api.sets(q, cardName());
         active = -1;
         render();
       } catch {
         close();
       }
     }, 180);
+  });
+
+  // With a card already chosen, focusing the empty field lists its printings straight away —
+  // there is no useful "type to narrow" step when the answer is a handful of sets.
+  input.addEventListener("focus", async () => {
+    if (input.value.trim() || !cardName()) return;
+    try {
+      items = await api.sets("", cardName());
+      active = -1;
+      render();
+    } catch {
+      close();
+    }
   });
 
   input.addEventListener("keydown", (e) => {

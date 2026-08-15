@@ -37,6 +37,73 @@ function confirmLastCopy(cardName) {
   });
 }
 
+async function renderArtPicker(backdrop, card) {
+  const box = backdrop.querySelector("#art-box");
+  if (!box) return;
+  let printings = [];
+  let owned = new Set();
+  try {
+    const [p, copies] = await Promise.all([
+      api.cardPrintings(card.name),
+      api.cardCopies(card.name).catch(() => ({ entries: [] })),
+    ]);
+    printings = p;
+    owned = new Set(
+      (copies.entries || []).map((e) => (e.set_code || "").toLowerCase()).filter(Boolean)
+    );
+  } catch {
+    return;
+  }
+  if (printings.length < 2) return; // one art: nothing to choose between
+
+  const mainImg = backdrop.querySelector(".modal img");
+  box.innerHTML = h`
+    <div class="art-picker">
+      <div class="art-picker-head">
+        <span>${printings.length} artes</span>
+        ${owned.size ? `<span class="art-owned-note">• marcadas são as suas</span>` : ""}
+      </div>
+      <div class="art-strip">
+        ${printings
+          .map(
+            (p, i) => `
+          <button type="button" class="art-thumb ${owned.has((p.set_code || "").toLowerCase()) ? "owned" : ""} ${i === 0 ? "active" : ""}"
+            data-art="${i}" title="${p.set_name || p.set_code || ""}${p.artist ? ` — ${p.artist}` : ""}">
+            <img src="${p.image_uri}" alt="" loading="lazy">
+            <span class="art-thumb-set">${(p.set_code || "").toUpperCase()}</span>
+          </button>`
+          )
+          .join("")}
+      </div>
+      <div class="art-caption" id="art-caption"></div>
+    </div>`;
+
+  const caption = box.querySelector("#art-caption");
+  const show = (i) => {
+    const p = printings[i];
+    if (mainImg) mainImg.src = p.image_uri;
+    // Keep the flip button in step: after switching printings it must flip *this* printing.
+    const flip = backdrop.querySelector(".card-flip-btn");
+    if (flip) {
+      flip.style.display = p.image_uri_back ? "" : "none";
+      flip.dataset.flipFront = p.image_uri;
+      flip.dataset.flipBack = p.image_uri_back || p.image_uri;
+      flip.setAttribute("aria-pressed", "false");
+    }
+    caption.innerHTML = h`${p.set_name || p.set_code || ""}${p.artist ? ` · ${p.artist}` : ""}${
+      p.released_at ? ` · ${String(p.released_at).slice(0, 4)}` : ""
+    }`;
+    box.querySelectorAll("[data-art]").forEach((b) =>
+      b.classList.toggle("active", Number(b.dataset.art) === i)
+    );
+  };
+  box.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-art]");
+    if (btn) show(Number(btn.dataset.art));
+  });
+  show(0);
+}
+
 async function renderCopiesBox(backdrop, cardName, onCollectionChange) {
   const box = backdrop.querySelector("#copies-box");
   if (!box) return;
@@ -188,6 +255,7 @@ export async function showCardModal(name, onCollectionChange) {
           </div>
         </div>
       </div>
+      <div id="art-box" style="margin-top:14px"></div>
       <div id="copies-box" style="margin-top:16px"></div>
       <div class="qa-box">
         <label style="font-size:12px;color:var(--text-dim)">Perguntar sobre esta carta (busca no texto/oracle — não é IA generativa)</label>
@@ -197,6 +265,7 @@ export async function showCardModal(name, onCollectionChange) {
       <div style="margin-top:16px;text-align:right"><button class="btn secondary" id="modal-close">Fechar</button></div>
     `;
     wireCardFlips(backdrop.querySelector(".modal"));
+    renderArtPicker(backdrop, c);
     renderCopiesBox(backdrop, c.name, onCollectionChange);
     backdrop.querySelector("#modal-close").addEventListener("click", () => backdrop.remove());
     backdrop.querySelector("#qa-input").addEventListener("keydown", (e) => {

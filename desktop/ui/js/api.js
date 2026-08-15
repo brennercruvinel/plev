@@ -45,7 +45,10 @@ export const api = {
     req(`/decks/${id}/import/commit`, { method: "POST", body: JSON.stringify({ cards, mode }) }),
 
   // Set autocomplete — names are English (Scryfall doesn't localise them), so the code matches too.
-  sets: (q, limit = 12) => req(`/sets?q=${encodeURIComponent(q)}&limit=${limit}`),
+  // `card` scopes the list to sets that actually printed it — without it the field happily
+  // accepts a set the card was never in, which then resolves to no artwork.
+  sets: (q, card = "", limit = 12) =>
+    req(`/sets?q=${encodeURIComponent(q)}&limit=${limit}${card ? `&card=${encodeURIComponent(card)}` : ""}`),
 
   // Wishlist: cards wanted but not owned. Same grouped shape as the collection.
   wishlist: (q = "") => req(`/wishlist?q=${encodeURIComponent(q)}`),
@@ -66,6 +69,8 @@ export const api = {
   // Removes one physical copy from an entry; the row goes away only when its last unit does.
   deleteCollectionEntry: (id) => req(`/collection/${id}`, { method: "DELETE" }),
   // Physical copies of one exact card: how many are free, and which decks hold the rest.
+  // Every distinct artwork of a card — 8k of 38k cards have more than one.
+  cardPrintings: (name) => req(`/cards/${encodeURIComponent(name)}/printings`),
   cardCopies: (name) => req(`/collection/copies?name=${encodeURIComponent(name)}`),
   addCollection: (payload) => req("/collection", { method: "POST", body: JSON.stringify(payload) }),
   bulkResolveCollection: (text) => req("/collection/bulk-resolve", { method: "POST", body: JSON.stringify({ text }) }),
