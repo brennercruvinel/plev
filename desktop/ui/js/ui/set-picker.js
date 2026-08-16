@@ -27,7 +27,12 @@ export function setInputHtml(id, value = "") {
  * Free text is kept rather than forced to a match: a promo or a set the index doesn't know is
  * still worth recording, and silently clearing what someone typed is worse than storing it.
  */
-export function wireSetPicker(root, id, cardNameSel = null) {
+/**
+ * `card` scopes the list to one card's printings. Pass a selector when the name lives in a field
+ * the user is still editing, or a plain string when the card is already known — the card modal
+ * knows it, and has no name field to read.
+ */
+export function wireSetPicker(root, id, card = null) {
   const input = root.querySelector(`#${id}`);
   const hidden = root.querySelector(`#${id}-code`);
   const list = root.querySelector(`#${id}-list`);
@@ -36,8 +41,13 @@ export function wireSetPicker(root, id, cardNameSel = null) {
   let debounce;
   let items = [];
   let active = -1;
-  const cardName = () =>
-    (cardNameSel && root.querySelector(cardNameSel)?.value.trim()) || "";
+  const cardName = () => {
+    if (!card) return "";
+    if (typeof card === "string" && card.startsWith("#")) {
+      return root.querySelector(card)?.value.trim() || "";
+    }
+    return typeof card === "string" ? card : "";
+  };
 
   const close = () => {
     list.innerHTML = "";
@@ -51,6 +61,12 @@ export function wireSetPicker(root, id, cardNameSel = null) {
   };
 
   const render = () => {
+    // The card modal scrolls (max-height + overflow-y), so a dropdown opening near its bottom
+    // would be clipped by the modal rather than overlaying it. Bringing it into view keeps the
+    // suggestions reachable wherever the field happens to sit.
+    requestAnimationFrame(() => {
+      if (list.innerHTML) list.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
     list.innerHTML = items
       .map((s, i) => {
         const year = s.released_at ? String(s.released_at).slice(0, 4) : "";

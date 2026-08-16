@@ -3,6 +3,7 @@ import { manaCostHtml } from "../icons.js?v=25";
 import { h, highlightMatch, priceLabel, toast } from "../util.js?v=3";
 import { cardImgHtml, wireCardFlips } from "./card-face.js?v=1";
 import { confirmDialog } from "./confirm.js?v=1";
+import { getSetCode, setInputHtml, wireSetPicker } from "./set-picker.js?v=2";
 
 // One row per stored copy, each with its own delete. A row can represent several identical
 // copies (quantity > 1), in which case deleting takes one off rather than discarding the stack —
@@ -141,7 +142,7 @@ async function renderCopiesBox(backdrop, cardName, onCollectionChange) {
 
       <div id="cp-detail" style="display:none;margin-top:12px">
         <div class="form-grid">
-          <div><label>Edição (set)</label><input type="text" id="cp-set" placeholder="Ex: znr" maxlength="10"></div>
+          <div><label>Edição</label>${setInputHtml("cp-set")}</div>
           <div><label>Artista</label><input type="text" id="cp-artist" placeholder="Nome do artista"></div>
           <div><label>Idioma</label><select id="cp-lang"><option value="en">Inglês</option><option value="pt">Português</option></select></div>
           <div><label>Quantidade</label><input type="number" id="cp-qty" min="1" value="1"></div>
@@ -181,6 +182,10 @@ async function renderCopiesBox(backdrop, cardName, onCollectionChange) {
     }
   }
 
+  // Same picker as the add-card dialog, scoped to this card — the modal already knows which
+  // card it is showing, so the field lists only its printings.
+  wireSetPicker(box, "cp-set", cardName);
+
   box.querySelectorAll("[data-del-entry]").forEach((btn) =>
     btn.addEventListener("click", async () => {
       const entryId = Number(btn.dataset.delEntry);
@@ -215,7 +220,7 @@ async function renderCopiesBox(backdrop, cardName, onCollectionChange) {
   box.querySelector("#cp-save").addEventListener("click", (e) =>
     addCopy(
       {
-        set_code: box.querySelector("#cp-set").value.trim().toUpperCase() || null,
+        set_code: getSetCode(box, "cp-set"),
         artist: box.querySelector("#cp-artist").value.trim() || null,
         lang: box.querySelector("#cp-lang").value,
         quantity: Math.max(1, parseInt(box.querySelector("#cp-qty").value, 10) || 1),

@@ -201,6 +201,39 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
                 m.insert(k, v);
             }
         }
+
+        // The tile shows the art of the printing you actually own, not the index's canonical one.
+        // Without this a Secret Lair copy displayed the regular-set illustration — the card was
+        // right and the picture wasn't, which is the one thing a collection view must get right.
+        // With copies from several sets the first is used; the card modal lists them all.
+        if let Some(ref c) = cdb {
+            let owned_set = decks
+                .iter()
+                .filter_map(|d| d.get("set_code").and_then(|v| v.as_str()))
+                .find(|s| !s.is_empty())
+                .map(String::from);
+            if let (Some(set_code), Some(oid)) = (
+                owned_set,
+                obj.get("oracle_id")
+                    .and_then(|v| v.as_str())
+                    .map(String::from)
+                    .or_else(|| {
+                        crate::routes::cards::lookup_card_in(c, card_name)
+                            .and_then(|(v, _)| v.get("oracle_id")?.as_str().map(String::from))
+                    }),
+            ) {
+                if let Some((front, back)) =
+                    crate::routes::cards::printing_image(c, &oid, &set_code)
+                {
+                    if let Some(m) = obj.as_object_mut() {
+                        m.insert("image_uri".into(), Value::from(front));
+                        if let Some(b) = back {
+                            m.insert("image_uri_back".into(), Value::from(b));
+                        }
+                    }
+                }
+            }
+        }
         out.push(obj);
     }
     Json(Value::Array(out))
