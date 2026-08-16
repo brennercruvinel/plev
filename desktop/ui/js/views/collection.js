@@ -14,6 +14,39 @@ let collectionFilter = "all";
 // filtered view survives opening a card and coming back.
 const collFilters = newFilterState();
 
+// Sort order, module-level like the filters so it survives opening a card and coming back.
+// "added" uses the acquisition dates the API returns per card: a card with several copies has
+// several dates, so newest sorts on the most recent and oldest on the first.
+let collSort = "name-asc";
+const COLL_SORTS = {
+  "name-asc": "Nome (A-Z)",
+  "name-desc": "Nome (Z-A)",
+  "added-desc": "Adicionado por último",
+  "added-asc": "Adicionado primeiro",
+};
+
+function sortCollection(items) {
+  const byName = (a, b) => a.card_name.localeCompare(b.card_name, "pt-BR");
+  // Cards predating the created_at column sort last under "newest" and first under "oldest",
+  // which is where an unknown date honestly belongs in each direction.
+  const ts = (v, fallback) => (v ? Date.parse(v.replace(" ", "T") + "Z") : fallback);
+  const arr = [...items];
+  switch (collSort) {
+    case "name-desc":
+      arr.sort((a, b) => byName(b, a));
+      break;
+    case "added-desc":
+      arr.sort((a, b) => ts(b.last_added, 0) - ts(a.last_added, 0) || byName(a, b));
+      break;
+    case "added-asc":
+      arr.sort((a, b) => ts(a.first_added, Infinity) - ts(b.first_added, Infinity) || byName(a, b));
+      break;
+    default:
+      arr.sort(byName);
+  }
+  return arr;
+}
+
 export async function renderCollection() {
   mainEl.innerHTML = h`
     <div class="page-header">
@@ -26,6 +59,14 @@ export async function renderCollection() {
       <span class="chip" data-filter="allocated">Em decks</span>
       <span class="chip" data-filter="free">Livres</span>
       ${filterDropdownHtml(collFilters, { rarity: true, search: false })}
+      <div class="sort-icon-wrap" title="Ordenar">
+        <span class="sort-icon-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg></span>
+        <select id="coll-sort" class="sort-icon-select" aria-label="Ordenar">
+          ${Object.entries(COLL_SORTS)
+            .map(([v, label]) => `<option value="${v}" ${collSort === v ? "selected" : ""}>${label}</option>`)
+            .join("")}
+        </select>
+      </div>
       <div class="size-slider-row">
         <label for="card-size">Tamanho</label>
         <input type="range" id="card-size" min="100" max="280" step="10" value="160">
@@ -44,7 +85,7 @@ export async function renderCollection() {
     const all = await api.collection(collectionFilter, q);
     // Server-side search stays (it resolves translated names); the chip filters run here, over
     // data the list already carries, so toggling a chip doesn't cost a round trip.
-    const items = all.filter((c) => matchesFilters(c, collFilters));
+    const items = sortCollection(all.filter((c) => matchesFilters(c, collFilters)));
     grid.innerHTML = items
       .map((c) => {
         // Each entry is a physical copy (or a stack of them): a card sleeved in two decks shows
@@ -95,6 +136,11 @@ export async function renderCollection() {
   );
   // Debounced: without this every keystroke fired a full /api/collection request and re-rendered
   // the whole grid. Same 250ms used by the card-name autocompletes elsewhere in this file.
+  document.getElementById("coll-sort").addEventListener("change", (e) => {
+    collSort = e.target.value;
+    load();
+  });
+
   let searchDebounce;
   document.getElementById("coll-search").addEventListener("input", () => {
     clearTimeout(searchDebounce);

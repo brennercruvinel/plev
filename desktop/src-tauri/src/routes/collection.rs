@@ -37,7 +37,8 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
 
     let mut sql = String::from(
         "SELECT collection.id, collection.card_name, collection.quantity, collection.lang,
-                collection.set_code, collection.allocated_deck_id, decks.name
+                collection.set_code, collection.allocated_deck_id, decks.name,
+                collection.created_at
          FROM collection LEFT JOIN decks ON decks.id = collection.allocated_deck_id WHERE 1=1",
     );
     match p.status.as_str() {
@@ -78,13 +79,13 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
     }
     sql.push_str(" ORDER BY collection.card_name");
 
-    type Row = (i64, String, i64, String, Option<String>, Option<i64>, Option<String>);
+    type Row = (i64, String, i64, String, Option<String>, Option<i64>, Option<String>, Option<String>);
     let read = |stmt: &mut rusqlite::Statement, params: &[&dyn rusqlite::ToSql]| -> Vec<Row> {
         stmt.query_map(params, |r| {
             Ok((
                 r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?,
                 r.get::<_, Option<String>>(4)?, r.get::<_, Option<i64>>(5)?,
-                r.get::<_, Option<String>>(6)?,
+                r.get::<_, Option<String>>(6)?, r.get::<_, Option<String>>(7)?,
             ))
         })
         .map(|rows| rows.flatten().collect())
@@ -108,11 +109,16 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
 
     // Group by card name, summing units — same shape the Python endpoint returns.
     let mut order: Vec<String> = Vec::new();
-    let mut grouped: HashMap<String, (i64, Vec<Value>, Vec<i64>)> = HashMap::new();
-    for (id, card_name, quantity, lang, set_code, deck_id, deck_name) in rows {
+    // Also the oldest and newest acquisition dates across a card's copies, so the collection can
+    // be ordered by when things arrived. Grouping by name means a card has several dates; the
+    // extremes are what "added first" and "added last" actually mean for the group.
+    #[allow(clippy::type_complexity)]
+    let mut grouped: HashMap<String, (i64, Vec<Value>, Vec<i64>, Option<String>, Option<String>)> =
+        HashMap::new();
+    for (id, card_name, quantity, lang, set_code, deck_id, deck_name, created_at) in rows {
         let e = grouped.entry(card_name.clone()).or_insert_with(|| {
             order.push(card_name.clone());
-            (0, Vec::new(), Vec::new())
+            (0, Vec::new(), Vec::new(), None, None)
         });
         e.0 += quantity;
         e.2.push(id);
@@ -120,7 +126,16 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
             "deck_id": deck_id,
             "deck_name": deck_name.unwrap_or_else(|| "Livre".into()),
             "quantity": quantity, "lang": lang, "set_code": set_code,
+            "created_at": created_at.clone(),
         }));
+        if let Some(ts) = created_at {
+            if e.3.as_ref().is_none_or(|cur| ts < *cur) {
+                e.3 = Some(ts.clone());
+            }
+            if e.4.as_ref().is_none_or(|cur| ts > *cur) {
+                e.4 = Some(ts);
+            }
+        }
     }
 
     // Batched enrichment (one IN(...) per chunk) instead of a query per card name.
@@ -163,12 +178,15 @@ async fn list_collection(Query(p): Query<CollectionQuery>) -> Json<Value> {
 
     let mut out = Vec::new();
     for card_name in &order {
-        let (total_quantity, decks, entry_ids) = grouped.get(card_name).unwrap();
+        let (total_quantity, decks, entry_ids, first_added, last_added) =
+            grouped.get(card_name).unwrap();
         let mut obj = json!({
             "card_name": card_name,
             "total_quantity": total_quantity,
             "decks": decks,
             "entry_ids": entry_ids,
+            "first_added": first_added,
+            "last_added": last_added,
         });
         let enrich = by_name.get(&card_name.to_lowercase()).cloned().or_else(|| {
             // Prefix fallback for hand-entered names that don't match exactly.
