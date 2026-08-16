@@ -278,19 +278,20 @@ async fn card_copies(Query(p): Query<CardCopiesQuery>) -> Json<Value> {
     // comparison happens here rather than in the WHERE clause. The collection is a few hundred
     // rows — small enough that scanning it costs less than keeping a folded column in sync.
     let wanted = crate::db::fold_text(&p.name);
-    let rows: Vec<(i64, String, Option<i64>, Option<String>, i64, Option<String>, Option<String>, String)> =
+    #[allow(clippy::type_complexity)]
+    let rows: Vec<(i64, String, Option<i64>, Option<String>, i64, Option<String>, Option<String>, String, Option<String>)> =
         (|| -> rusqlite::Result<_> {
             let mut stmt = con.prepare(
                 "SELECT collection.id, collection.card_name, collection.allocated_deck_id,
                         decks.name, collection.quantity, collection.set_code, collection.notes,
-                        collection.lang
+                        collection.lang, collection.artist
                  FROM collection LEFT JOIN decks ON decks.id = collection.allocated_deck_id
                  ORDER BY collection.allocated_deck_id IS NOT NULL, collection.id",
             )?;
             let rows = stmt.query_map([], |r| {
                 Ok((
                     r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?,
-                    r.get(7)?,
+                    r.get(7)?, r.get(8)?,
                 ))
             })?;
             rows.collect()
@@ -301,7 +302,7 @@ async fn card_copies(Query(p): Query<CardCopiesQuery>) -> Json<Value> {
     let mut by_deck: HashMap<i64, (String, i64)> = HashMap::new();
     // Individual rows too, so the UI can offer a delete per copy rather than only a total.
     let mut entries: Vec<Value> = Vec::new();
-    for (id, card_name, deck_id, deck_name, quantity, set_code, notes, lang) in rows {
+    for (id, card_name, deck_id, deck_name, quantity, set_code, notes, lang, artist) in rows {
         if crate::db::fold_text(&card_name) != wanted {
             continue;
         }
@@ -323,6 +324,7 @@ async fn card_copies(Query(p): Query<CardCopiesQuery>) -> Json<Value> {
             "deck_name": deck_name.clone(),
             "set_code": set_code,
             "lang": lang,
+            "artist": artist,
             "notes": notes,
             "image_uri": art.as_ref().map(|(f, _)| f.clone()),
             "image_uri_back": art.as_ref().and_then(|(_, b)| b.clone()),
@@ -528,11 +530,89 @@ async fn delete_collection_entry(Path(entry_id): Path<i64>) -> impl IntoResponse
     Json(json!({ "ok": true, "remaining": remaining, "card_name": card_name })).into_response()
 }
 
+#[derive(Deserialize)]
+pub struct CollectionEditIn {
+    #[serde(default)]
+    set_code: Option<String>,
+    #[serde(default)]
+    artist: Option<String>,
+    #[serde(default)]
+    lang: Option<String>,
+    #[serde(default)]
+    quantity: Option<i64>,
+    #[serde(default)]
+    notes: Option<String>,
+}
+
+/// Edits one stored copy in place.
+///
+/// Deliberately cannot change `card_name` or `allocated_deck_id`. Renaming would turn this copy
+/// into a different card; reallocating is what /allocate is for. The point of editing in place is
+/// that a copy sleeved in a deck can gain its set and artist without leaving the deck — deleting
+/// and re-adding was the only way before, and that pulled the card out of the deck.
+///
+/// Changing the quantity of a copy that *is* in a deck moves the deck's count with it, or the
+/// deck would keep claiming cards the collection no longer says exist.
+async fn edit_collection_entry(
+    Path(entry_id): Path<i64>,
+    Json(p): Json<CollectionEditIn>,
+) -> impl IntoResponse {
+    let Ok(con) = open_app_db() else {
+        return db_unavailable().into_response();
+    };
+    let row: Option<(String, i64, Option<i64>)> = con
+        .query_row(
+            "SELECT card_name, quantity, allocated_deck_id FROM collection WHERE id = ?1",
+            [entry_id],
+            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+        )
+        .optional()
+        .ok()
+        .flatten();
+    let Some((card_name, old_qty, deck_id)) = row else {
+        return not_found("Cópia não encontrada").into_response();
+    };
+
+    let new_qty = p.quantity.unwrap_or(old_qty).max(1);
+    // COALESCE so an omitted field keeps its stored value, while an explicitly empty string
+    // clears it — "I don't know the artist" has to be expressible.
+    if con
+        .execute(
+            "UPDATE collection SET
+                set_code = COALESCE(?1, set_code),
+                artist   = COALESCE(?2, artist),
+                lang     = COALESCE(?3, lang),
+                quantity = ?4,
+                notes    = COALESCE(?5, notes)
+             WHERE id = ?6",
+            params![p.set_code, p.artist, p.lang, new_qty, p.notes, entry_id],
+        )
+        .is_err()
+    {
+        return server_error("Falha ao salvar").into_response();
+    }
+
+    if let (Some(did), true) = (deck_id, new_qty != old_qty) {
+        let delta = new_qty - old_qty;
+        let _ = con.execute(
+            "UPDATE deck_cards SET quantity = MAX(1, quantity + ?1)
+             WHERE deck_id = ?2 AND card_name = ?3 COLLATE NOCASE",
+            params![delta, did, card_name],
+        );
+    }
+
+    log_activity(&con, "card_edited", &format!("Detalhes de {card_name} atualizados"));
+    ok().into_response()
+}
+
 pub fn router() -> Router {
     Router::new()
         .route("/api/collection", get(list_collection).post(add_collection))
         .route("/api/collection/total", get(collection_total))
         .route("/api/collection/copies", get(card_copies))
         .route("/api/collection/:id/allocate", patch(allocate_collection))
-        .route("/api/collection/:id", axum::routing::delete(delete_collection_entry))
+        .route(
+            "/api/collection/:id",
+            axum::routing::delete(delete_collection_entry).patch(edit_collection_entry),
+        )
 }

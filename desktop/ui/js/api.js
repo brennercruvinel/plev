@@ -68,6 +68,9 @@ export const api = {
   collectionTotal: () => req("/collection/total"),
   // Removes one physical copy from an entry; the row goes away only when its last unit does.
   deleteCollectionEntry: (id) => req(`/collection/${id}`, { method: "DELETE" }),
+  // Edits a stored copy in place. Cannot change the card or its deck — see the Rust handler.
+  editCollectionEntry: (id, payload) =>
+    req(`/collection/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   // Physical copies of one exact card: how many are free, and which decks hold the rest.
   // Every distinct artwork of a card — 8k of 38k cards have more than one.
   cardPrintings: (name) => req(`/cards/${encodeURIComponent(name)}/printings`),

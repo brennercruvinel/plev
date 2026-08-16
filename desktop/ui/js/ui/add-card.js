@@ -1,7 +1,7 @@
 import { api } from "../api.js?v=25";
 import { manaCostHtml } from "../icons.js?v=25";
 import { h, toast } from "../util.js?v=3";
-import { getSetCode, setInputHtml, wireSetPicker } from "./set-picker.js?v=2";
+import { getSetCode, setInputHtml, wireSetPicker } from "./set-picker.js?v=3";
 
 export async function openAddCardModal({ onSaved } = {}) {
   const decks = await api.decks();

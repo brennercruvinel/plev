@@ -3,11 +3,45 @@ import { manaCostHtml } from "../icons.js?v=25";
 import { h, highlightMatch, priceLabel, toast } from "../util.js?v=3";
 import { cardImgHtml, wireCardFlips } from "./card-face.js?v=1";
 import { confirmDialog } from "./confirm.js?v=1";
-import { getSetCode, setInputHtml, wireSetPicker } from "./set-picker.js?v=2";
+import { getSetCode, setInputHtml, wireSetPicker } from "./set-picker.js?v=3";
 
 // One row per stored copy, each with its own delete. A row can represent several identical
 // copies (quantity > 1), in which case deleting takes one off rather than discarding the stack —
 // the label says how many are behind it so that isn't a surprise.
+// Editing a stored copy in place. The alternative was delete-and-re-add, which for a copy sleeved
+// in a deck meant pulling the card out of the deck to correct its set — so the form deliberately
+// offers no way to change the card or its deck: only the details that were missing or wrong.
+function editUnitFormHtml(e) {
+  return `
+    <div class="copy-unit-edit" data-edit-form="${e.id}">
+      <div class="form-grid">
+        <div><label>Edição</label>${setInputHtml(`ce-set-${e.id}`, e.set_code || "")}</div>
+        <div><label>Artista</label><input type="text" id="ce-artist-${e.id}" placeholder="Nome do artista" value="${e.artist || ""}"></div>
+        <div><label>Idioma</label>
+          <select id="ce-lang-${e.id}">
+            <option value="en" ${e.lang === "en" ? "selected" : ""}>Inglês</option>
+            <option value="pt" ${e.lang === "pt" ? "selected" : ""}>Português</option>
+            <option value="es" ${e.lang === "es" ? "selected" : ""}>Espanhol</option>
+            <option value="fr" ${e.lang === "fr" ? "selected" : ""}>Francês</option>
+            <option value="it" ${e.lang === "it" ? "selected" : ""}>Italiano</option>
+            <option value="ja" ${e.lang === "ja" ? "selected" : ""}>Japonês</option>
+          </select>
+        </div>
+        <div><label>Quantidade</label><input type="number" id="ce-qty-${e.id}" min="1" value="${e.quantity}"></div>
+      </div>
+      <div style="margin-top:10px">
+        <label style="font-size:12px;color:var(--text-dim)">Notas</label>
+        <input type="text" id="ce-notes-${e.id}" placeholder="Ex: foil, assinada, comprada na loja X" value="${e.notes || ""}"
+          style="width:100%;margin-top:5px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-card);color:var(--text)">
+      </div>
+      ${e.deck_name ? `<p class="copy-unit-note">Esta cópia está em <b>${e.deck_name}</b> e continua lá — editar detalhes não a tira do deck.</p>` : ""}
+      <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
+        <button class="btn secondary small" data-edit-cancel="${e.id}">Cancelar</button>
+        <button class="btn small" data-edit-save="${e.id}">Salvar</button>
+      </div>
+    </div>`;
+}
+
 function unitRowHtml(e) {
   const where = e.deck_name
     ? `<span class="copy-dot dot-deck"></span>${e.deck_name}`
@@ -20,7 +54,10 @@ function unitRowHtml(e) {
   return `
     <div class="copy-unit" data-entry="${e.id}">
       <span class="copy-unit-where">${where}${e.quantity > 1 ? ` <b>${e.quantity}x</b>` : ""}</span>
-      <span class="copy-unit-detail">${details}</span>
+      <span class="copy-unit-detail">${details || "sem detalhes"}</span>
+      <button class="icon-btn" data-edit-entry="${e.id}" title="Editar detalhes" aria-label="Editar detalhes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </button>
       <button class="icon-btn danger" data-del-entry="${e.id}" title="Remover uma unidade" aria-label="Remover uma unidade">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
       </button>
@@ -185,6 +222,40 @@ async function renderCopiesBox(backdrop, cardName, onCollectionChange) {
   // Same picker as the add-card dialog, scoped to this card — the modal already knows which
   // card it is showing, so the field lists only its printings.
   wireSetPicker(box, "cp-set", cardName);
+
+  box.querySelectorAll("[data-edit-entry]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const id = Number(btn.dataset.editEntry);
+      const row = box.querySelector(`[data-entry="${id}"]`);
+      if (box.querySelector(`[data-edit-form="${id}"]`)) return; // already open
+      const entry = copies.entries.find((x) => x.id === id);
+      row.insertAdjacentHTML("afterend", editUnitFormHtml(entry));
+      const form = box.querySelector(`[data-edit-form="${id}"]`);
+      wireSetPicker(form, `ce-set-${id}`, cardName);
+      form.querySelector(`[data-edit-cancel="${id}"]`).addEventListener("click", () => form.remove());
+      form.querySelector(`[data-edit-save="${id}"]`).addEventListener("click", async (ev) => {
+        const save = ev.currentTarget;
+        save.disabled = true;
+        save.textContent = "Salvando…";
+        try {
+          await api.editCollectionEntry(id, {
+            set_code: getSetCode(form, `ce-set-${id}`) || "",
+            artist: form.querySelector(`#ce-artist-${id}`).value.trim(),
+            lang: form.querySelector(`#ce-lang-${id}`).value,
+            quantity: Math.max(1, parseInt(form.querySelector(`#ce-qty-${id}`).value, 10) || 1),
+            notes: form.querySelector(`#ce-notes-${id}`).value.trim(),
+          });
+          toast("Detalhes atualizados.");
+          await renderCopiesBox(backdrop, cardName, onCollectionChange);
+          onCollectionChange?.();
+        } catch (err) {
+          toast(err.message, "bad");
+          save.disabled = false;
+          save.textContent = "Salvar";
+        }
+      });
+    })
+  );
 
   box.querySelectorAll("[data-del-entry]").forEach((btn) =>
     btn.addEventListener("click", async () => {

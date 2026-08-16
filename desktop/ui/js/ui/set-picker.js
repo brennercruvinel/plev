@@ -100,7 +100,9 @@ export function wireSetPicker(root, id, card = null) {
   // With a card already chosen, focusing the empty field lists its printings straight away —
   // there is no useful "type to narrow" step when the answer is a handful of sets.
   input.addEventListener("focus", async () => {
-    if (input.value.trim() || !cardName()) return;
+    // Also when the field already holds a value: editing an existing copy pre-fills it, and the
+    // whole reason to open this field is to change what is there.
+    if (!cardName()) return;
     try {
       items = await api.sets("", cardName());
       active = -1;
