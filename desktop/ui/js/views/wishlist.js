@@ -9,6 +9,7 @@ import {
   wireFilterMenu,
 } from "../ui/card-filters.js?v=3";
 import { h, priceLabel, toast } from "../util.js?v=3";
+import { attachClear } from "../ui/search-field.js?v=1";
 
 // Same controls as the collection — search, chip filters, size slider, card modal — because it is
 // the same job on a different list. The API returns the same grouped shape for exactly that
@@ -122,6 +123,8 @@ export async function renderWishlist() {
     wireFilterMenu(wishFilters, (structural) => (structural ? refreshFilterMenu() : load()));
   }
   wireFilters();
+
+  attachClear(document.getElementById("wl-search"));
 
   let searchDebounce;
   document.getElementById("wl-search").addEventListener("input", () => {

@@ -1266,3 +1266,26 @@ a { color: inherit; }
     .art-strip { padding-bottom: 4px; }
     .art-thumb { width: 48px; }
 }
+
+/* ---------- Search field clear button ---------- */
+/* The wrapper has to inherit the sizing the input used to carry, since attachClear() slips it
+   between the input and its original parent — .filters-bar sizes its children with flex, and a
+   bare wrapper would collapse to content width and shrink the field. */
+.search-field { position: relative; display: flex; align-items: center; }
+.filters-bar .search-field { flex: 1; min-width: 180px; }
+.filters-bar .search-field input[type=text] { width: 100%; min-width: 0; }
+.filter-group-block .search-field { width: 100%; }
+.filter-group-block .search-field input[type=text] { width: 100%; }
+/* Room for the button so a long query doesn't run underneath it. */
+.search-field input[type=text] { padding-right: 32px; }
+.search-clear {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    display: none; align-items: center; justify-content: center;
+    width: 20px; height: 20px; padding: 0; border: none; border-radius: 50%;
+    background: var(--bg-card-hover); color: var(--text-faint);
+    cursor: pointer; transition: color .15s, background .15s;
+}
+.search-clear svg { width: 11px; height: 11px; display: block; }
+/* Only shown when there is something to clear — an always-present X on an empty field is noise. */
+.search-field.has-value .search-clear { display: inline-flex; }
+.search-clear:hover { color: var(--text); background: var(--border-light); }

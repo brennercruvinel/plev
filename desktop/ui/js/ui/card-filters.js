@@ -10,6 +10,7 @@
 import { manaGlyphSvg } from "../icons.js?v=25";
 import { FILTER_COLORS } from "../deck-bits.js?v=3";
 import { h } from "../util.js?v=3";
+import { attachClear } from "./search-field.js?v=1";
 
 export const CATEGORY_LABELS = {
   Comandante: "Comandante", Land: "Terrenos", Creature: "Criaturas",
@@ -133,6 +134,7 @@ export function wireFilterMenu(f, onChange) {
   });
 
   const qInput = document.getElementById("deck-filter-q");
+  if (qInput) attachClear(qInput);
   let debounce;
   qInput?.addEventListener("input", () => {
     clearTimeout(debounce);

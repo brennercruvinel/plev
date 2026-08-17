@@ -3,6 +3,7 @@ import { mainEl } from "../router.js?v=3";
 import { openAddCardModal } from "../ui/add-card.js?v=3";
 import { showCardModal } from "../ui/card-modal.js?v=3";
 import { h } from "../util.js?v=3";
+import { attachClear } from "../ui/search-field.js?v=1";
 import { cardImgHtml, wireCardFlips } from "../ui/card-face.js?v=1";
 import {
   filterDropdownHtml, filterMenuContentHtml, filterToggleBtnHtml, matchesFilters, newFilterState,
@@ -140,6 +141,8 @@ export async function renderCollection() {
     collSort = e.target.value;
     load();
   });
+
+  attachClear(document.getElementById("coll-search"));
 
   let searchDebounce;
   document.getElementById("coll-search").addEventListener("input", () => {
