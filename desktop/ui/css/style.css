@@ -198,7 +198,20 @@ a { color: inherit; }
 /* min-width:0 stops any oversized descendant (long unwrapped text, fixed-width rows, etc.)
    from propagating its min-content size up through .main and blowing the whole page out past
    the viewport — the same class of bug fixed on .deck-card and .card-row .shared-tag below. */
-.main { flex: 1; min-width: 0; padding: 28px 32px 60px; max-width: 1400px; }
+/* Fluid, then capped and centred — not pinned at a fixed width.
+   A hard max-width:1400px meant that on a 1920px display (the single most common desktop
+   resolution) the page stopped at 1400 and left ~520px of dead space hard against the right
+   edge: the window was full-screen and the app was not. It now fills whatever it is given and
+   only caps on genuinely huge displays (1440p+, ultrawide, 4K), where an uncapped page would
+   stretch card rows and running text past the point of being readable — centred there, so the
+   leftover space is symmetric instead of a lopsided gutter. */
+.main {
+    flex: 1;
+    min-width: 0;
+    padding: 28px 32px 60px;
+    max-width: min(100%, 2100px);
+    margin-inline: auto;
+}
 
 .breadcrumb { font-size: 12.5px; color: var(--text-faint); margin-bottom: 10px; }
 .breadcrumb a { color: var(--text-dim); text-decoration: none; }
@@ -592,7 +605,7 @@ a { color: inherit; }
    a button that appeared on hover sat under the preview and fought it for the pointer; removing
    a card belongs to the list view, where every row already has one. */
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
     .card-stack { --stack-card-w: 140px; }
 }
 
@@ -920,7 +933,7 @@ a { color: inherit; }
 
 .mobile-topbar { display: none; }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
     #app { flex-direction: column; }
     /* The hover-to-expand collapse behavior above is desktop-only — mobile already gets its own
        bottom-bar layout, and there's no "hover" on touch, so both the width and the .nav-label
@@ -1149,3 +1162,107 @@ a { color: inherit; }
     transition: color .15s, background .15s;
 }
 .copy-unit .icon-btn:hover { color: var(--accent-bright); background: var(--bg-card-hover); }
+
+/* ============================================================================
+   Responsive layer
+   ============================================================================
+   Breakpoints are anchored to the CSS widths that actually occur, not round
+   numbers. Per StatCounter-derived 2026 figures: 1920x1080 is by far the most
+   common desktop resolution, 1366x768 the next; 768x1024 leads tablets; and
+   360x800 / 390x844 / 393x852 / 414x896 cover most phones.
+
+     <= 480    phones (360-430 CSS px)
+     <= 768    iPad portrait, and any desktop window dragged this narrow
+     <= 1024   tablet landscape, 1366x768 laptops, half-screen splits
+     >= 1600   comfortable desktop
+     >= 2100   1920 full-screen and up (2560, 3440 ultrawide, 3840)
+
+   This is a desktop app, so the phone tiers are not about phones — nobody runs
+   it on iOS or Android. They are about narrow windows, which hit exactly the
+   same widths, and about the frontend staying usable if it is ever reused.
+   ============================================================================ */
+
+/* ---------- Phones and very narrow windows (<= 480) ---------- */
+@media (max-width: 480px) {
+    .main { padding: 14px 12px 96px; }
+    .page-header h1 { font-size: 24px; }
+    .page-header p { font-size: 13px; }
+    /* One readable column rather than two cramped ones. */
+    .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card { padding: 12px; }
+    .stat-card .value { font-size: 26px; }
+    .deck-grid { grid-template-columns: 1fr; }
+    .card-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+    /* The slider costs a whole row at this width and the grid already adapts. */
+    .size-slider-row { display: none; }
+    .filters-bar { padding: 10px; gap: 8px; }
+    .filters-bar input[type=text] { min-width: 0; flex: 1 1 100%; }
+    /* Full-bleed dialogs: a 480px modal inside a 360px viewport is mostly backdrop. */
+    .modal-backdrop { padding: 10px; }
+    .modal { max-width: 100%; padding: 16px; }
+    .form-grid { grid-template-columns: 1fr; }
+    /* The cursor preview has no place on a touch-sized window. */
+    #card-peek { display: none; }
+    .deck-stats-bar { flex-direction: column; }
+    .art-thumb { width: 52px; }
+}
+
+/* ---------- iPad portrait and narrow desktop windows (<= 768) ---------- */
+@media (max-width: 768px) {
+    .page-header h1 { font-size: 27px; }
+    .stat-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .deck-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    /* Panels stack instead of squeezing three columns into a phone-width row. */
+    .deck-stats-bar { flex-wrap: wrap; }
+    .stats-bar-panel { flex: 1 1 100%; }
+    /* Only the minimum widths break at this size — the anchoring is already right (the filter
+       menu hangs off the right of its toggle, the set list off the left of its field). Centring
+       them with left:50%+translateX(-50%) would be wrong: the toggle is a 32px box, so half of
+       it is 16px, and pulling a ~720px menu back by half its own width puts its left edge off
+       the screen entirely. Cap the width and leave the anchors alone. */
+    .filter-menu {
+        min-width: 0;
+        max-width: calc(100vw - 40px);
+    }
+    .set-picker-list:not(:empty) {
+        min-width: 0;
+        max-width: calc(100vw - 56px);
+    }
+    #card-peek { width: min(200px, 40vw); }
+}
+
+/* ---------- Tablet landscape, 1366x768 laptops, half-screen splits ---------- */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .main { padding: 22px 20px 60px; }
+    .stat-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+    /* Three panels at this width leave each one too narrow to read; two is honest. */
+    .stats-bar-panel { flex: 1 1 300px; }
+}
+
+/* ---------- Comfortable desktop (>= 1600) ---------- */
+@media (min-width: 1600px) {
+    .main { padding: 32px 40px 72px; }
+    .page-header h1 { font-size: 36px; }
+    .deck-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+}
+
+/* ---------- 1920 full-screen and larger (>= 2100 available to .main) ----------
+   The cap on .main has bitten by now, so this is about using the extra room for
+   density rather than for stretching: bigger default card tiles and wider deck
+   thumbnails, not wider text. */
+@media (min-width: 2100px) {
+    .main { padding: 36px 48px 80px; }
+    .card-grid { grid-template-columns: repeat(auto-fill, minmax(var(--card-min, 190px), 1fr)); }
+    .deck-grid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+    .stat-grid { gap: 18px; }
+    .art-thumb { width: 76px; }
+}
+
+/* ---------- Short windows ----------
+   Height matters independently of width: a 1366x768 laptop, or any window
+   dragged short, leaves a modal capped at 85vh with almost no room. */
+@media (max-height: 720px) {
+    .modal { max-height: 92vh; padding: 18px; }
+    .art-strip { padding-bottom: 4px; }
+    .art-thumb { width: 48px; }
+}
