@@ -1,13 +1,13 @@
 # plev
 
 
-the engine builds a scene every frame, resolves only the layers that
+this is a personal experiment.this engine builds a scene every frame, resolves only the layers that
 changed, and composites into an srgb surface. desktop draws it on metal, the
 web draws it on webgpu, and the pixels are identical because the same code
 runs on both. glass, backdrop blur, analytic shadows, content-driven layout,
 real text shaping. the apps consume the engine. nothing bypasses it.
 
-the differentiator is not one feature. it is the set: a compositor with
+ompositor with
 dirty-layer caching, a measured visual language, the same pixel on every
 platform, and an animation format of its own. those pieces do not exist
 assembled anywhere else.
