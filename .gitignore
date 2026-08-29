@@ -84,3 +84,4 @@ refs/winit/
 .env
 .env.local
 .env.*.local
+.kimi-code/

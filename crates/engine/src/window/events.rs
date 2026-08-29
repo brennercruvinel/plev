@@ -27,7 +27,7 @@ impl super::App {
     }
 
     pub(crate) fn process_buffered_events(&mut self) {
-        let events: Vec<BufferedEvent> = self.event_buffer.drain(..).collect();
+        let events: Vec<BufferedEvent> = std::mem::take(&mut self.event_buffer);
         for event in events {
             match event {
                 BufferedEvent::CursorMoved(x, y) => {
