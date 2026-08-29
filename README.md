@@ -46,7 +46,7 @@ engine's examples.
 | tier | where | what |
 |---|---|---|
 | engine | crate `engine` (crates/engine) | gpu, compositor, text, path, layout, input, animation, signal, theme, ui, builder, window, platform |
-| crates | crates/ | git, ide, lot, macros, monster, svg, narrate, narrate-macro, parser, prime, rope, showcase |
+| crates | crates/ | git, ide, lot, macros, monster, svg, narrate, narrate-macro, nestui, parser, prime, rope, showcase |
 | examples | crates/engine/examples/ | 16 windowed demos plus the lot2monsters and svg2monster clis |
 
 machine map: [docs/arc/arc.yaml](docs/arc/arc.yaml). human reference:
@@ -82,6 +82,7 @@ web build (same pixels as desktop):
 
 ```
 cargo run -p showcase                  # the design-system gallery, 11 tabs
+cargo run -p nestui [file.nest]        # .nest vector-db explorer (drop a file to open)
 cargo run -p ide [path]                # plev-native git client
 cargo run -p prime                     # prime-coherence particle swarm (codepen port)
 cargo run -p engine --example charts   # any of the 16 windowed demos

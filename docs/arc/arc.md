@@ -42,7 +42,7 @@ now a virtual workspace):
 | tier | where | members |
 |---|---|---|
 | engine | crate `engine` (crates/engine) | the layers above, plus the examples/ demos it ships |
-| libraries and apps | crates/ | git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rope, showcase, svg |
+| libraries and apps | crates/ | git, ide, lot, macros, monster, narrate, narrate-macro, nestui, parser, prime, rope, showcase, svg |
 | demos | crates/engine/examples/ | 16 windowed (counter, editor, charts, snake, scene3d, monster_player...) + 2 clis (lot2monsters, svg2monster) |
 
 crate roles: `engine` the compositing engine itself (every app builds on it);
@@ -54,7 +54,9 @@ importer on the same exit door (usvg normalizes, lyon tessellates into one
 keyframe, .monster out; gradients approximate to a solid, filters/masks/
 clips/text are skipped visibly); `parser` ui transpiler poc; `rope`
 text-editing core; `git` git ops; `ide` git client app; `showcase`
-design-system gallery; `prime` an emergent particle swarm driven by prime
+design-system gallery; `nestui` .nest vector-db explorer (desktop via
+mmap nest-runtime + worker thread, web via a portable in-memory reader);
+`prime` an emergent particle swarm driven by prime
 coherence (port of the codepen demo); `narrate`/`narrate-macro` experimental
 dsl; `macros` the #[component] proc-macro. cargo hygiene: workspace.package,
 workspace.dependencies (single version source), workspace.lints, tuned

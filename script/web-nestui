@@ -1,0 +1,10 @@
+#!/bin/sh
+# development loop for the nestui web target: trunk reads
+# web/nestui/Trunk.toml and web/nestui/index.html, serves on
+# 127.0.0.1:8081 in watch mode. extra args pass through (e.g.
+# `script/web-nestui build` for a dist build).
+set -e
+
+cmd="${1:-serve}"
+[ $# -gt 0 ] && shift
+exec trunk --config web/nestui "$cmd" "$@"

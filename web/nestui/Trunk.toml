@@ -1,0 +1,17 @@
+# Trunk config for the web build of nestui. run from the repo root:
+# `script/web-nestui` (wraps `trunk --config web/nestui serve`).
+#
+# index.html points at crates/nestui/Cargo.toml (bin "nestui"); trunk
+# runs cargo for wasm32-unknown-unknown, applies wasm-bindgen (version
+# pinned by Cargo.lock), and emits everything into web/nestui/dist/.
+
+[build]
+target = "index.html"
+dist = "dist"
+# Engine + cosmic-text in debug wasm is huge and slow; always ship opt.
+release = true
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8081
+open = false

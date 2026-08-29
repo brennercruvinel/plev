@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="icon" href="data:,">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>nestui — nest database explorer</title>
+    <!-- Trunk builds the nestui bin to wasm and injects the JS glue. -->
+    <link data-trunk rel="rust" href="../../crates/nestui/Cargo.toml" data-bin="nestui" />
+    <style>
+      /* Match the app's dark surface so there's no white flash
+         while the wasm module loads and the GPU initializes. */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #303030;
+      }
+
+      /* The canvas (appended to <body> by engine::window::setup_wasm_canvas)
+         is sized by CSS: winit's ResizeObserver turns CSS size changes into
+         WindowEvent::Resized, so the app tracks the browser window. */
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>

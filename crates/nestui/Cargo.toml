@@ -1,0 +1,64 @@
+[package]
+name = "nestui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "nestui — desktop (and future web) explorer for .nest vector databases, built on plev"
+
+# lib: rlib for the desktop/web bin; cdylib is the android `.so` (GameActivity
+# loads it and calls `android_main`); staticlib is the iOS `.a` linked by the
+# Xcode app (which calls `nestui_ios_main`). Same shape as showcase.
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "nestui"
+path = "src/main.rs"
+
+[dependencies]
+engine.workspace = true
+wgpu.workspace = true
+winit.workspace = true
+log.workspace = true
+web-time.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+env_logger.workspace = true
+pollster.workspace = true
+thiserror.workspace = true
+nest-format.workspace = true
+nest-runtime.workspace = true
+
+# The nest backend is mmap + std::fs based: native only for now. The view
+# model types it produces are the future wasm backend's target shape.
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+tempfile.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+js-sys.workspace = true
+web-sys = { workspace = true, features = [
+    "HtmlInputElement",
+    "HtmlElement",
+    "CssStyleDeclaration",
+    "FileList",
+    "File",
+    "Blob",
+    "FileReader",
+] }
+console_log.workspace = true
+console_error_panic_hook.workspace = true
+
+# Android pulls the GameActivity winit backend (via the engine feature) and a
+# logcat-backed logger; the cdylib above is what gets packaged into the APK.
+[target.'cfg(target_os = "android")'.dependencies]
+engine = { workspace = true, features = ["android-game-activity"] }
+android_logger.workspace = true
+
+[lints]
+workspace = true
