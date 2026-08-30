@@ -12,6 +12,7 @@
 //! being browsed.
 
 mod collection;
+pub mod components;
 mod deck_tile;
 mod decks;
 mod games;
