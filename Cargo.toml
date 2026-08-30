@@ -1,6 +1,10 @@
 [workspace]
 resolver = "2"
 # Every crate in the project is a member (each shows up as an IDE target).
+# nestui is deliberately NOT a member: its native backend path-depends on the
+# sibling nest workspace (../nest), so including it would break this workspace
+# for anyone without a nest checkout (public repo, CI). it lives excluded with
+# its own manifest/workspace — see crates/nestui/Cargo.toml and script/gate.
 members = [
     "crates/engine",
     "crates/macros",
@@ -11,12 +15,12 @@ members = [
     "crates/svg",
     "crates/narrate",
     "crates/narrate-macro",
-    "crates/nestui",
     "crates/parser",
     "crates/prime",
     "crates/rope",
     "crates/showcase",
 ]
+exclude = ["crates/nestui"]
 
 # Metadata inherited by every crate (`version.workspace = true`;
 # `description` stays per crate). Private: `publish = false` on each one.
@@ -25,7 +29,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["Brenner Cruvinel <brennertalks@gmail.com>"]
-repository = "https://github.com/brennercruvinel/plevdev"
+repository = "https://github.com/brennercruvinel/plev"
 
 # Unified lints (inherited via `[lints] workspace = true`). Keeps the bar
 # where the code already is: clippy clean under -D warnings.
@@ -49,11 +53,6 @@ narrate = { path = "crates/narrate" }
 narrate-macro = { path = "crates/narrate-macro" }
 rope = { path = "crates/rope" }
 svg = { path = "crates/svg" }
-# nest vector database (sibling workspace, read-only): nestui's backend.
-# nest pins sha2 0.11 while this workspace pins 0.10 — both coexist in the
-# lockfile, no unification needed.
-nest-format = { path = "../nest/crates/nest-format" }
-nest-runtime = { path = "../nest/crates/nest-runtime" }
 # -- gpu / window
 wgpu = "28"
 winit = { version = "0.30", features = ["rwh_06"] }

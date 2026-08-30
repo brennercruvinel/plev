@@ -67,7 +67,9 @@ keyframe, .monster out; gradients approximate to a solid, filters/masks/
 clips/text are skipped visibly); `parser` ui transpiler poc; `rope`
 text-editing core; `git` git ops; `ide` git client app; `showcase`
 design-system gallery; `nestui` .nest vector-db explorer (desktop via
-mmap nest-runtime + worker thread, web via a portable in-memory reader);
+mmap nest-runtime + worker thread, web via a portable in-memory reader) —
+its own workspace, excluded from the root one because the native backend
+path-depends on the sibling nest checkout at `../nest`;
 `prime` an emergent particle swarm driven by prime
 coherence (port of the codepen demo); `narrate`/`narrate-macro` experimental
 dsl; `macros` the #[component] proc-macro. cargo hygiene: workspace.package,

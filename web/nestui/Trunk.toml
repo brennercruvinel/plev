@@ -3,7 +3,10 @@
 #
 # index.html points at crates/nestui/Cargo.toml (bin "nestui"); trunk
 # runs cargo for wasm32-unknown-unknown, applies wasm-bindgen (version
-# pinned by Cargo.lock), and emits everything into web/nestui/dist/.
+# pinned by crates/nestui/Cargo.lock), and emits everything into
+# web/nestui/dist/. nestui is its own workspace (excluded from the root
+# one); the native nest backend is cfg'd out on wasm, but cargo still
+# reads its manifest, so the sibling nest checkout at ../nest must exist.
 
 [build]
 target = "index.html"
