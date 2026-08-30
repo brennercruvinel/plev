@@ -118,7 +118,7 @@ analise de bibliotecas rust para charts e visualizacao de dados, avaliando relev
 
 4. **interatividade e o divisor de aguas.** plotters nao tem. charming delega ao echarts JS. egui_graphs implementa nativamente (zoom, pan, drag, events). para plev, interatividade nativa e vantagem competitiva: charts GPU-rendered com hit-testing, gestures e signals integrados.
 
-5. **fonts sao problema recorrente.** plotters oferece `ab_glyph` (embedded, pure rust) vs `ttf` (system fonts). charming delega ao echarts. egui_graphs usa epaint/egui fonts. plev ja resolveu isso com cosmic-text + embedded inter font para WASM/ios/android.
+5. **fonts sao problema recorrente.** plotters oferece `ab_glyph` (embedded, pure rust) vs `ttf` (system fonts). charming delega ao echarts. egui_graphs usa epaint/egui fonts. plev ja resolveu isso com cosmic-text + fontes embutidas (inclusive sans) para WASM/ios/android.
 
 ---
 

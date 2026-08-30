@@ -19,7 +19,7 @@ sequenceDiagram
     %% and hands S a lowered SceneNode scene (scene_at)
     S->>C: push to layers (hash per layer)
     C->>C: resolve only dirty layers
-    C->>T: resolve text runs (one TextStyle measure==draw)
+    C->>T: resolve text runs (one TextStyle measure==draw, atlas raster at hidpi scale)
     T->>G: glyph atlas quads
     C->>G: encode layer passes (quads, sdf, shadow, image, text, backdrop)
     G->>P: composite into srgb view (encode-on-write)

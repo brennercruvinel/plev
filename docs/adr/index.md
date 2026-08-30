@@ -78,7 +78,7 @@ status usados: `reference` (conhecimento congelado de uma sessao), `accepted` (d
 | 2024-11-20 | [linearize-colors-before-the-gpu](linearize-colors-before-the-gpu.md) | accepted | cores sRGB linearizadas: to_linear_array() para clears/uniforms, vertex colors no shader; bug #303030 |
 | 2024-12-04 | [render-into-an-srgb-view-format](render-into-an-srgb-view-format.md) | accepted | view sRGB quando a surface nao pode ser sRGB; surface_render_view(); web bate (48,48,48) com o desktop |
 | 2024-12-19 | [measured-design-tokens-over-eyeballed-values](measured-design-tokens-over-eyeballed-values.md) | accepted | token entra no tema so com medicao do render vivo, nao de stylesheet nem de olho; graphite #303030 pinned por teste |
-| 2025-01-08 | [embed-every-font-weight-in-use](embed-every-font-weight-in-use.md) | accepted | rubik 400/500/600/700 embutidos, familias default pinadas, determinismo |
+| 2025-01-08 | [embed-every-font-weight-in-use](embed-every-font-weight-in-use.md) | accepted | familia unica embutida (inclusive sans 300-700, desde 2026-08; antes rubik 400-700), familias default pinadas, determinismo |
 | 2025-01-27 | [touch-as-synthesized-pointer-events](touch-as-synthesized-pointer-events.md) | accepted | touch sintetiza pointer events no caminho de mouse existente, sem vocabulario paralelo de evento |
 | 2025-02-10 | [async-gpu-init-and-single-wasm-entry](async-gpu-init-and-single-wasm-entry.md) | accepted | spawn_local + eventloopproxy para GPU init async, feature web-entry, canvas 100vw/100vh |
 | 2025-02-19 | [responsiveness-multiplatform-and-fidelity](responsiveness-multiplatform-and-fidelity.md) | reference | registro de sessao: text spill, distribuicao responsiva, gamma do browser, touch, licoes |

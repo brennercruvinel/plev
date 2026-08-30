@@ -12,6 +12,17 @@ domain: project-status
 compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, ios/metal, linux/vulkan, android/vulkan, windows/dx12, browser/webgpu). nao e framework de widgets. e a camada que transforma scene graphs em draw calls na GPU de forma identica em todos os targets.
 
 ## estado atual (2026-06-29)
+
+> update 2026-08-30: repo publico. 14 crates (entraram svg e nestui, o
+> explorador de bancos .nest em plev). fonte unica inclusive sans embutida
+> (300-700), tracking zerado, texto rasterizado em escala fisica (fix
+> hidpi) com detector de fallback. novos widgets de app real (chip,
+> empty-state, spinner, split-pane, icon-button), charts promovidos a
+> engine, engine::graph + GraphView. showcase com 14 tabs e sidebar com
+> scroll. ci matrix macos+ubuntu+wasm. padrao oficial de app registrado
+> em docs/adr/official-app-pattern.md. o mapa de tasks abaixo reflete
+> 2026-06-29 e nao foi reescrito.
+
 nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do primeiro push em plevdev). a linha do tempo real do projeto vive na documentacao datada (adr/, este mapa) e no codigo, nao no git.
 
 - 52 tasks concluidas (fase 0 a fase 11); pendentes task-39/40/41 (release); em andamento task-18/19/20, task-42 e gap-1
