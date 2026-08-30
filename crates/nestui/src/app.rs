@@ -71,7 +71,12 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
+        // `mut` is only needed on native, where the launch-argument open
+        // below mutates the view; on wasm there are no process args.
+        #[cfg(not(target_arch = "wasm32"))]
         let mut view = NestuiView::new(1200.0, 800.0);
+        #[cfg(target_arch = "wasm32")]
+        let view = NestuiView::new(1200.0, 800.0);
         // Optional launch argument on native: a .nest path to open at
         // startup. (Empty iterator on wasm — no process args in the
         // browser.)

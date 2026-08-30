@@ -65,7 +65,7 @@ pub struct Explorer {
     chunks_loading: bool,
     /// chunk_id → ordinal, built once when texts arrive (result previews).
     chunk_index: Option<HashMap<String, usize>>,
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     clipboard: engine::clipboard::SystemClipboard,
     empty_state: engine::ui::widgets::EmptyState,
     open: OpenScreen,
@@ -109,7 +109,7 @@ impl Explorer {
             chunks: None,
             chunks_loading: false,
             chunk_index: None,
-            #[cfg(not(any(target_os = "android", target_os = "ios")))]
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             clipboard: engine::clipboard::SystemClipboard::new(),
             empty_state: engine::ui::widgets::EmptyState::new(
                 "no database open yet",
@@ -355,13 +355,13 @@ impl Explorer {
         false
     }
 
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     fn copy(&mut self, text: &str) {
         use engine::clipboard::ClipboardProvider;
         self.clipboard.set_text(text);
     }
 
-    #[cfg(any(target_os = "android", target_os = "ios"))]
+    #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
     fn copy(&mut self, _text: &str) {}
 
     /// Validate and dispatch a search. Vector queries parse as JSON arrays
