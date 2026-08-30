@@ -225,9 +225,7 @@ pub struct SpellbookView {
 struct Layers {
     /// Scrolled, clipped screen content (grids and lists).
     content: LayerId,
-    /// Modals and menus, above the content. Unused until the first dialog
-    /// lands; the layer exists so z-order is fixed from the start.
-    #[allow(dead_code)]
+    /// Modals and menus, above the content.
     overlay: LayerId,
     toast: LayerId,
 }
@@ -417,6 +415,36 @@ impl SpellbookView {
         let mut result = self.toasts.handle_event(event, self.width, self.height);
         if result.clicked {
             return true;
+        }
+
+        // An open overlay owns the whole window: events go to the screen
+        // first, and the sidebar only sees what the overlay let through.
+        if self.overlay_open() {
+            let mut ctx = ScreenCtx {
+                tx: &self.tx,
+                actions: &mut self.actions,
+            };
+            let overlay_result = match self.route {
+                Route::Home => self.home.handle_overlay_event(event, &mut ctx),
+                Route::Decks | Route::Deck(_) => self.decks.handle_overlay_event(event, &mut ctx),
+                Route::Collection => self.collection.handle_overlay_event(event, &mut ctx),
+                Route::Wishlist => self.wishlist.handle_overlay_event(event, &mut ctx),
+                Route::Scanner => self.scanner.handle_overlay_event(event, &mut ctx),
+                Route::Games => self.games.handle_overlay_event(event, &mut ctx),
+            };
+            self.drain_actions();
+            result = result.merge(overlay_result);
+            if result.handled || result.clicked {
+                return true;
+            }
+            // A click the overlay ignored is a click on the backdrop: it must
+            // not fall through to the content or the rail underneath.
+            if matches!(
+                event,
+                WidgetEvent::MouseDown { .. } | WidgetEvent::MouseUp { .. }
+            ) {
+                return result.changed;
+            }
         }
 
         result = result.merge(self.handle_sidebar(event));
@@ -623,6 +651,18 @@ impl SpellbookView {
         animating
     }
 
+    /// Whether the active screen has a modal or menu open over the page.
+    fn overlay_open(&self) -> bool {
+        match self.route {
+            Route::Home => self.home.overlay_open(),
+            Route::Decks | Route::Deck(_) => self.decks.overlay_open(),
+            Route::Collection => self.collection.overlay_open(),
+            Route::Wishlist => self.wishlist.overlay_open(),
+            Route::Scanner => self.scanner.overlay_open(),
+            Route::Games => self.games.overlay_open(),
+        }
+    }
+
     // -- Rendering -------------------------------------------------------------
 
     fn ensure_layers(&mut self, c: &mut Compositor) -> Layers {
@@ -681,6 +721,38 @@ impl SpellbookView {
                 .render(c, layers.content, content, &theme, &mut self.art),
         }
         c.push(SceneNode::PopClip);
+
+        // Overlays draw over the whole window, outside the content clip.
+        let window_rect = Rect::new(0.0, 0.0, self.width, self.height);
+        match self.route {
+            Route::Home => {
+                self.home
+                    .render_overlay(c, layers.overlay, window_rect, &theme, &mut self.art)
+            }
+            Route::Decks | Route::Deck(_) => {
+                self.decks
+                    .render_overlay(c, layers.overlay, window_rect, &theme, &mut self.art)
+            }
+            Route::Collection => self.collection.render_overlay(
+                c,
+                layers.overlay,
+                window_rect,
+                &theme,
+                &mut self.art,
+            ),
+            Route::Wishlist => {
+                self.wishlist
+                    .render_overlay(c, layers.overlay, window_rect, &theme, &mut self.art)
+            }
+            Route::Scanner => {
+                self.scanner
+                    .render_overlay(c, layers.overlay, window_rect, &theme, &mut self.art)
+            }
+            Route::Games => {
+                self.games
+                    .render_overlay(c, layers.overlay, window_rect, &theme, &mut self.art)
+            }
+        }
 
         self.toasts
             .render(c, layers.toast, &theme, self.width, self.height);

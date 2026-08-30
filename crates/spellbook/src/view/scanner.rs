@@ -51,6 +51,32 @@ impl ScannerScreen {
         false
     }
 
+    /// Whether a modal or menu is open over the page. While `true` the shell
+    /// routes pointer events here first via `handle_overlay_event`.
+    pub fn overlay_open(&self) -> bool {
+        false
+    }
+
+    /// Pointer event while an overlay is open.
+    pub fn handle_overlay_event(
+        &mut self,
+        _event: &WidgetEvent,
+        _ctx: &mut ScreenCtx,
+    ) -> EventResult {
+        EventResult::IGNORED
+    }
+
+    /// Modals and menus, drawn over the whole window after the content clip.
+    pub fn render_overlay(
+        &mut self,
+        _c: &mut Compositor,
+        _layer: LayerId,
+        _window: Rect,
+        _theme: &Theme,
+        _art: &mut ArtCache,
+    ) {
+    }
+
     pub fn content_height(&self, content: Rect) -> f32 {
         content.h
     }
