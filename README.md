@@ -18,18 +18,25 @@ real was a children's education app for my daughter, one hundred percent
 rust, and it needed an engine that didn't exist. so plev became the
 engine underneath that dream.
 
-this is not a contender. [flutter](https://flutter.dev),
-[egui](https://github.com/emilk/egui), [makepad](https://makepad.dev),
-[dioxus](https://dioxuslabs.com), [iced](https://iced.rs) and
-[gpui](https://www.gpui.rs) are serious projects built by serious teams,
-and plev owes them research and respect. this repo is a personal
-experiment, a study in public: what it takes to build a small indie
-engine with real memory control, performance first, everything on the
-GPU, that runs on any device and is ready for the LLM era.
+let me be honest about what this is and what it is not. plev does not
+compete with [flutter](https://flutter.dev), [egui](https://github.com/emilk/egui),
+[dioxus](https://dioxuslabs.com) or [iced](https://iced.rs) — those are
+serious projects built by serious teams, and i am one person learning in
+public. some i studied more than i ever used: [makepad](https://makepad.dev)
+and zed's [gpui](https://www.gpui.rs) are among the highest-level
+engineering works i have seen in recent years, and [bevy](https://bevyengine.org)
+taught me how a rust project can stay both ambitious and welcoming. plev
+owes them most of what is good here. what is left, the mistakes, are
+mine.
 
-it already serves beyond the original dream. [nest](https://github.com/hoffresearch/nest),
+so this repo is exactly what it looks like: a personal experiment, done
+humbly and in the open — what it takes for one person to build a small
+indie engine with real memory control, performance first, everything on
+the GPU, running on any device, ready for the LLM era. it already serves
+beyond the original dream: [nest](https://github.com/hoffresearch/nest),
 a sovereign embedded vector database, ships its explorer GUI
-(`crates/nestui`) on plev.
+(`crates/nestui`) on plev. and the dream itself is still ahead: the
+children's app that started all of this is the next thing to build.
 
 if any of this resonates, come build with me.
 
