@@ -44,6 +44,10 @@ pub struct OpenScreen {
 
 impl OpenScreen {
     pub fn new(theme: &Theme) -> Self {
+        // `theme` only feeds the native path Field; on wasm there is no
+        // filesystem path entry.
+        #[cfg(target_arch = "wasm32")]
+        let _ = theme;
         #[cfg(not(target_arch = "wasm32"))]
         let label = "Open";
         #[cfg(target_arch = "wasm32")]

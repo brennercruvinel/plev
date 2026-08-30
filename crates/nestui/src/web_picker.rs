@@ -59,8 +59,11 @@ fn ensure_input(proxy: EventLoopProxy<UserEvent>) -> Option<web_sys::HtmlInputEl
                     }
                 };
                 let proxy = proxy.clone();
+                // FileReader is a JsValue handle: clone it for the closure so
+                // the outer binding stays usable for set_onload/read.
+                let reader_for_load = reader.clone();
                 let on_load = Closure::wrap(Box::new(move || {
-                    if let Ok(buf) = reader.result() {
+                    if let Ok(buf) = reader_for_load.result() {
                         let array = js_sys::Uint8Array::new(&buf);
                         let mut bytes = vec![0u8; array.length() as usize];
                         array.copy_to(&mut bytes);
