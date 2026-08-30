@@ -1,0 +1,133 @@
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+body {
+	font-family: "Inter", sans-serif;
+	background-color: #f5f5f5;
+	color: #1a1a1a;
+}
+
+.wrapper {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-height: 100vh;
+}
+
+.section {
+	width: 100%;
+	max-width: 940px;
+	padding: 40px 16px;
+	text-align: center;
+}
+
+.section-title {
+	font-size: 1.8rem;
+	line-height: 1.2;
+	font-weight: 700;
+	margin-bottom: 8px;
+}
+
+.section-desc {
+	color: #555;
+	font-size: 1rem;
+	line-height: 1.5;
+	margin-bottom: 40px;
+}
+
+.card-wrapper {
+	position: relative;
+}
+
+.card {
+	--r: 30px; /* radius */
+	--s: 40px; /* inner curve size */
+	background-color: #fff;
+	padding: 24px;
+	width: 100%;
+	text-align: left;
+	border-radius: 30px;
+	clip-path: shape(
+		from 0 0,
+		hline to calc(100% - var(--s) - 2 * var(--r)),
+		arc by var(--r) var(--r) of var(--r) cw,
+		arc by var(--s) var(--s) of var(--s),
+		arc by var(--r) var(--r) of var(--r) cw,
+		vline to 100%,
+		hline to 0
+	);
+}
+
+.card-circle {
+	width: 60px;
+	height: 60px;
+	background-color: #fff;
+	position: absolute;
+	top: 0;
+	right: 0;
+	border-radius: 50%;
+	font-size: 1.5rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-weight: 700;
+}
+
+.card-title {
+	font-size: 1.2rem;
+	font-weight: 700;
+	margin-bottom: 10px;
+	padding-right: 70px;
+}
+
+.card-desc {
+	font-size: 0.875rem;
+	line-height: 1.5;
+	color: #666;
+	margin-bottom: 12px;
+	padding-right: 65px;
+}
+
+.card-figure {
+	height: 200px;
+	background-color: #eee;
+	border-radius: 20px;
+	position: relative;
+	overflow: hidden;
+}
+
+.card-img {
+	height: 100%;
+	position: absolute;
+	width: 100%;
+	inset: 0;
+	object-fit: cover;
+}
+
+.swiper-pagination {
+	position: static;
+	margin-top: 24px;
+}
+
+.no-support {
+	position: fixed;
+	inset: 0;
+	background-color: #000d;
+	display: grid;
+	place-items: center;
+	align-content: center;
+	gap: 1em;
+	z-index: 10;
+	color: #fff;
+	text-align: center;
+	padding: 1rem;
+}
+
+@supports (clip-path: shape(from 0 0, move to 0 0)) {
+	.no-support {
+		display: none;
+	}
+}

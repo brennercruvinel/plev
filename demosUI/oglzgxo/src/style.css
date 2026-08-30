@@ -1,0 +1,234 @@
+@import url(https://fonts.bunny.net/css?family=jura:300,500);
+@layer base, mouse, credits, demo;
+
+@layer demo{
+  :root{
+    --mouse-color: steelblue;
+  }
+  @property --img-w{
+    syntax: "<percentage>";
+    inherits: true;
+    initial-value: 100%;
+  }
+  @property --img-h{
+    syntax: "<percentage>";
+    inherits: true;
+    initial-value: 100%;
+  }
+  @property --opacity{
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 1;
+  }
+  @property --scale{
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 1;
+  }
+  body{
+  	min-height: 200vh;
+  }
+  
+  
+  .wrapper{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    width: min(80vw, 900px);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2vw;
+    
+    .group{
+			--i: sibling-index();
+      --animation-delay: calc(var(--i) * .5ms);
+      display: grid;
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      grid-template-columns: subgrid;
+      grid-template-rows: subgrid;
+			@supports  (animation-timeline: scroll()) {
+				animation-duration: 1ms;
+				animation-timing-function: ease-in-out;
+				animation-timeline: scroll(root y);
+				animation-name: --scroll-animation-cards;
+				animation-delay: var( --animation-delay);
+				scale: var(--scale,0);
+				opacity: var(--scale,0);
+			}
+      
+      > div {
+				
+        position: relative;
+        aspect-ratio: 4/5;
+        border-radius: 20px;
+      }
+      & img{
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        translate: -50% -50%;
+         width: var(--img-w);
+        height: var(--img-h);
+        display: block;
+        object-fit: cover;
+        border-radius: 20px;
+          transition: all 300ms linear;  
+      }
+      &:nth-child(1){
+        > *{
+          grid-column: 1;
+          &:nth-of-type(even) {
+            grid-column: -2;
+          }
+        }
+      }
+      &:nth-child(2){
+        > *{
+          grid-column: 2;
+          &:nth-of-type(even) {
+            grid-column: -3;
+          }
+        }
+      }
+      &:nth-child(3){
+        > *{
+          grid-column: 3;
+          &:nth-of-type(even) {
+            grid-row: -1;
+          }
+        }
+      }
+      /* center child */
+      &:nth-child(4){
+        --i:3;
+        @supports  (animation-timeline: scroll()) {
+					animation-name: --scroll-animation-center;
+					--scale: 1;
+					--opacity: 1;
+					--img-w: 100%;
+					--img-h: 100%;
+				}
+        > *{
+          grid-column: 3 / span 1;
+          grid-row: 2 / span 1;
+          z-index: 2;
+        }
+      }
+    }
+  }
+  /* center image resize */
+  @keyframes --scroll-animation-center{
+    50%,100%{
+			--img-w: 550%;
+			--img-h: 325%;
+    }
+  }
+  /* surrounding images scale*/
+  @keyframes --scroll-animation-cards{
+    0%{
+      --scale: 1;
+      --opacity: 1;
+    }
+    100%{
+      --scale: 0;
+      --opacity: 0;
+    }
+  }
+}
+
+@layer credits{
+	.credit{
+    position: fixed;
+    bottom: 1em;
+    left: 50%;
+    translate: -50% 0;
+    font-size: .8rem;
+    text-wrap: nowrap;
+    & > a{
+      color: steelblue;
+      transition: color 150ms ease-in-out;
+      &:where(:hover,:focus-visible){
+        color: deeppink;
+      }
+    }
+  }
+}
+
+@layer mouse{
+  
+  .mouse {
+    pointer-events: none;
+		position: fixed;
+		top:10px;
+		left: 50%;
+    translate: -50% 0;
+		display: block;
+		width: 50px;
+		height: 50px;
+		opacity: 1;
+    color:var(--mouse-color);
+     display: none;
+		animation-name: mouse;
+		animation-duration: 1s;
+		animation-timing-function: linear;
+		animation-fill-mode: forwards;
+		animation-timeline: scroll(nearest block);
+    @supports  (animation-timeline: scroll()) {
+      display: block;
+    }
+	}
+	@keyframes mouse {
+		
+		50%,100% {
+			opacity: 0;
+		}
+	}
+}
+
+
+ /* general styling not relevant for this demo */
+@layer base {
+	* {
+		box-sizing: border-box;
+	}
+	:root {
+		color-scheme: light dark;
+		--bg-dark: rgb(12, 10, 9);
+		--bg-light: rgb(248, 244, 238);
+		--txt-light: rgb(10, 10, 10);
+		--txt-dark: rgb(245, 245, 245););
+		--line-light: rgba(0 0 0 / .25);
+		--line-dark: rgba(255 255 255 / .25);
+    
+    --clr-bg: light-dark(var(--bg-light), var(--bg-dark));
+    --clr-txt: light-dark(var(--txt-light), var(--txt-dark));
+    --clr-lines: light-dark(var(--line-light), var(--line-dark));
+	}
+ 
+	body {
+		background-color: var(--clr-bg);
+		color: var(--clr-txt);
+		min-height: 100svh;
+		margin: 0;
+		padding: 2rem;
+		font-family: "Jura", sans-serif;
+		font-size: 1rem;
+		line-height: 1.5;
+    display: grid;
+    place-items: center;
+    gap: 2rem;
+		@supports not (animation-timeline: scroll()) {
+			 &::before {
+					content:"Sorry, your browser doesn't support animation-timeline";
+					position: fixed;
+					top: 2rem;
+					left: 50%;
+					translate: -50% 0;
+					font-size: 0.8rem;
+				}
+			}
+	}
+}

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebGL Concave Gallery</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: #fff0
+}
+
+body {
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: #000;
+    touch-action: none
+}
+
+canvas {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    outline: none;
+    cursor: grab;
+    touch-action: none
+}
+
+canvas:active {
+    cursor: grabbing
+}
+
+.loading {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 20px;
+    z-index: 1000;
+    background: rgb(0 0 0 / .8);
+    padding: 20px 40px;
+    border-radius: 10px;
+    font-family: monospace;
+    pointer-events: none
+}
+
+.cache {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background-color: #000;
+    z-index: 999
+}
+
+.fullscreen-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    background: rgb(0 0 0 / .8);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s
+}
+
+.fullscreen-btn:hover {
+    transform: scale(1.1)
+}
+
+.hint {
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    z-index: 10;
+    background: rgb(0 0 0 / .8);
+    padding: 8px;
+    border-radius: 8px;
+    opacity: .85;
+    font-size: 13px;
+    color: #fff;
+    pointer-events: none
+}
+
+.hint a {
+    color: tomato;
+    text-decoration: none;
+    pointer-events: auto
+}
+
+.copy {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    top: #000;
+    background: rgb(255 255 255 / .9);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 100;
+    pointer-events: none
+}
+
+@media (max-width:768px) {
+    .controls {
+        font-size: 10px;
+        padding: 8px 16px;
+        white-space: normal;
+        text-align: center;
+        bottom: 70px
+    }
+
+    .focus-hint {
+        bottom: 120px;
+        font-size: 10px
+    }
+}
+  </style>
+</head>
+<body>
+<div class="cache"></div>
+<div class="loading">Loading... 0%</div>
+
+<button class="fullscreen-btn" aria-label="Plein écran">
+    <i class="fas fa-expand"></i>
+</button>
+<div id="ui" class="hint">Photo by <a href="https://unsplash.com/fr/@dynamicwang?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText" target="_blank" rel="noopener nofollow">Dynamic Wang</a> on <a href="https://unsplash.com/fr/@dynamicwang?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText" target="_blank" rel="noopener nofollow">Unsplash</a> || Scroll / drag / use - or +</div>
+<div class="copy">&Toc</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
+  <script>
+const MES_IMAGES = ["https://images.unsplash.com/photo-1698732276362-8a2d4f3c5145?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698732211807-d42a4879ff74?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729855527-5841d0e07c1b?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729821290-73bd6aff963b?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729821220-a52dca70bb82?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729257645-fad43df40e78?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729427290-288304ab8ff6?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729508209-e3e6f416402e?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729441571-b27930077f88?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729270990-b3bbb9016640?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698732221127-273f31f35145?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698732309955-bf43b5fc42e8?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698732212041-f87b665ba24a?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729864548-f1709c3eed50?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729829738-6b99ec54aec7?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729314322-b0d02538e428?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729471043-766ae9483308?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729388582-6d1653bbe6be?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729288573-49b73109622b?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698732308311-98592dadedcc?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729302937-e7e51b12ea11?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698732324898-b1f727b276e1?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729843518-1f87b231a03b?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729866704-30dde61828a1?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729853801-b2fd6291ef89?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698732229186-c89dce3132da?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729476058-dc0c2a31d365?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729465968-84755867a62b?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729459414-a8020734e66f?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729301262-e34de7c05757?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698732296902-8274cc649ba7?w=500&h=500&fit=crop", 
+                    "https://images.unsplash.com/photo-1698729325349-bd930df34217?w=500&h=500&fit=crop"];
+class InfinitePortraitGallery {
+    constructor() {
+        this.canvas = document.createElement('canvas');
+        this.canvas.setAttribute('tabindex', '0');
+        this.canvas.style.outline = 'none';
+        document.body.appendChild(this.canvas);
+        this.gl = this.canvas.getContext('webgl', {
+            alpha: !0,
+            premultipliedAlpha: !1
+        });
+        if (!this.gl) {
+            alert('WebGL non supporté sur ce navigateur');
+            return
+        }
+        this.images = [];
+        this.textures = [];
+        this.imageWidth = 180;
+        this.imageHeight = 180;
+        this.gap = 25;
+        this.viewOffset = {
+            x: 0,
+            y: 0
+        };
+        this.drag = {
+            isDragging: !1,
+            lastX: 0,
+            lastY: 0,
+            velocityX: 0,
+            velocityY: 0
+        };
+        this.inertia = 0.95;
+        this.bulgeStrength = 0.4;
+        this.bulgeRadius = 1.5;
+        this.adjustedBulgeRadius = this.bulgeRadius;
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+        this.init();
+        this.loadPortraitImages();
+        this.setupEventListeners();
+        this.setupFullscreen();
+        this.animate()
+    }
+    resizeCanvas() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        const diagonal = Math.sqrt(Math.pow(this.canvas.width / Math.min(this.canvas.width, this.canvas.height), 2) + Math.pow(this.canvas.height / Math.min(this.canvas.width, this.canvas.height), 2));
+        this.adjustedBulgeRadius = Math.max(this.bulgeRadius, diagonal * 0.6 * 1.2);
+        if (this.gl) this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    }
+    init() {
+        const vsSource = `
+        attribute vec2 aPosition;
+        attribute vec2 aTexCoord;
+        varying vec2 vTexCoord;
+        uniform vec2 uResolution;
+        uniform vec2 uOffset;
+        uniform float uRotation;
+        uniform vec2 uImagePosition;
+        uniform float uBulgeStrength;
+        uniform float uBulgeRadius;
+
+        vec2 applyBulgeEffect(vec2 pos){
+            vec2 normalizedPos = pos / uResolution;
+            vec2 center = vec2(0.5, 0.5);
+            vec2 delta = normalizedPos - center;
+
+            float aspect = uResolution.x / uResolution.y;
+            delta.x *= aspect;
+
+            float dist = length(delta);
+
+            if(dist < uBulgeRadius){
+                float t = dist / uBulgeRadius;
+                float z = sqrt(0.5 - t * t);
+                delta *= 0.35 + uBulgeStrength / z;
+                delta.x /= aspect;
+
+                normalizedPos = center + delta;
+                pos = normalizedPos * uResolution;
+            }
+            return pos;
+        }
+
+        void main(){
+            vec2 pos = aPosition * vec2(${this.imageWidth}, ${this.imageHeight});
+            pos += uImagePosition;
+            pos -= uOffset;
+
+            vec2 center = uImagePosition + vec2(${this.imageWidth/2.0}, ${this.imageHeight/2.0}) - uOffset;
+            pos -= center;
+            float cosR = cos(uRotation);
+            float sinR = sin(uRotation);
+            pos = vec2(pos.x*cosR - pos.y*sinR, pos.x*sinR + pos.y*cosR);
+            pos += center;
+
+            pos = applyBulgeEffect(pos);
+
+            vec2 clip = pos / uResolution * 2.0 - 1.0;
+            gl_Position = vec4(clip, 0.0, 1.0);
+            vTexCoord = aTexCoord;
+        }
+        `;
+        const fsSource = `
+        precision mediump float;
+        varying vec2 vTexCoord;
+        uniform sampler2D uSampler;
+        void main(){
+            vec2 uv = vec2(vTexCoord.x, 1.0 - vTexCoord.y);
+            vec4 color = texture2D(uSampler, uv);
+            if(color.a < 0.01) discard;
+            gl_FragColor = color;
+        }
+        `;
+        this.program = this.createProgram(vsSource, fsSource);
+        const SUBDIV = 32;
+        const positions = [];
+        const texCoords = [];
+        const indices = [];
+        for (let y = 0; y <= SUBDIV; y++) {
+            for (let x = 0; x <= SUBDIV; x++) {
+                positions.push(x / SUBDIV, y / SUBDIV);
+                texCoords.push(x / SUBDIV, y / SUBDIV)
+            }
+        }
+        for (let y = 0; y < SUBDIV; y++) {
+            for (let x = 0; x < SUBDIV; x++) {
+                const i = y * (SUBDIV + 1) + x;
+                indices.push(i, i + 1, i + SUBDIV + 1);
+                indices.push(i + 1, i + SUBDIV + 2, i + SUBDIV + 1)
+            }
+        }
+        this.indexCount = indices.length;
+        this.positionBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(positions), this.gl.STATIC_DRAW);
+        this.texCoordBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texCoordBuffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords), this.gl.STATIC_DRAW);
+        this.indexBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), this.gl.STATIC_DRAW);
+        this.gl.enable(this.gl.BLEND);
+        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
+    }
+    async loadPortraitImages() {
+        const loadingElement = document.querySelector('.loading');
+        const cacheElement = document.querySelector('.cache');
+        const imageSources = MES_IMAGES && MES_IMAGES.length > 0 ? MES_IMAGES : this.getDefaultImages();
+        const imageCount = Math.max(50, imageSources.length);
+        const loadPromises = [];
+        for (let i = 0; i < imageCount; i++) {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            const src = imageSources[i % imageSources.length];
+            img.src = src;
+            const promise = new Promise((resolve) => {
+                img.onload = () => {
+                    this.images.push(img);
+                    this.textures.push(this.createTexture(img));
+                    resolve()
+                };
+                img.onerror = () => {
+                    img.src = `https://picsum.photos/id/${(i % 100) + 1}/${this.imageWidth}/${this.imageHeight}`;
+                    img.onload = () => {
+                        this.images.push(img);
+                        this.textures.push(this.createTexture(img));
+                        resolve()
+                    };
+                    img.onerror = resolve
+                }
+            });
+            loadPromises.push(promise)
+        }
+        let loaded = 0;
+        const total = loadPromises.length;
+        for (const promise of loadPromises) {
+            await promise;
+            loaded++;
+            loadingElement.textContent = `Chargement... ${Math.round(loaded / total * 100)}%`
+        }
+        loadingElement.style.display = 'none';
+        cacheElement.style.display = 'none'
+    }
+    getDefaultImages() {
+        const portraitIds = [1011, 1015, 1018, 1020, 1023, 1025, 1029, 1031, 1033, 1035];
+        return portraitIds.map(id => `https://picsum.photos/id/${id}/${this.imageWidth}/${this.imageHeight}`)
+    }
+    createTexture(img) {
+        const tex = this.gl.createTexture();
+        this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, img);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+        return tex
+    }
+    getVisibleTiles() {
+        const tiles = [];
+        const tileW = this.imageWidth + this.gap;
+        const tileH = this.imageHeight + this.gap;
+        const visibleLeft = this.viewOffset.x - this.canvas.width;
+        const visibleRight = this.viewOffset.x + this.canvas.width * 2;
+        const visibleTop = this.viewOffset.y - this.canvas.height;
+        const visibleBottom = this.viewOffset.y + this.canvas.height * 2;
+        const tilesX = Math.ceil(Math.sqrt(this.images.length));
+        const tilesY = Math.ceil(this.images.length / tilesX);
+        for (let y = Math.floor(visibleTop / tileH) - 1; y <= Math.ceil(visibleBottom / tileH) + 1; y++) {
+            for (let x = Math.floor(visibleLeft / tileW) - 1; x <= Math.ceil(visibleRight / tileW) + 1; x++) {
+                const hash = (x * 7919 + y * 7307) % this.images.length;
+                const idx = Math.abs(hash);
+                tiles.push({
+                    x: x * tileW,
+                    y: y * tileH,
+                    imageIndex: idx
+                })
+            }
+        }
+        return tiles
+    }
+    render() {
+        if (!this.program || this.images.length === 0) return;
+        this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+        this.gl.clearColor(0, 0, 0, 0);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        this.gl.useProgram(this.program);
+        const posLoc = this.gl.getAttribLocation(this.program, 'aPosition');
+        this.gl.enableVertexAttribArray(posLoc);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+        this.gl.vertexAttribPointer(posLoc, 2, this.gl.FLOAT, !1, 0, 0);
+        const texLoc = this.gl.getAttribLocation(this.program, 'aTexCoord');
+        this.gl.enableVertexAttribArray(texLoc);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texCoordBuffer);
+        this.gl.vertexAttribPointer(texLoc, 2, this.gl.FLOAT, !1, 0, 0);
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+        const resLoc = this.gl.getUniformLocation(this.program, 'uResolution');
+        this.gl.uniform2f(resLoc, this.canvas.width, this.canvas.height);
+        const offsetLoc = this.gl.getUniformLocation(this.program, 'uOffset');
+        const imgPosLoc = this.gl.getUniformLocation(this.program, 'uImagePosition');
+        const samplerLoc = this.gl.getUniformLocation(this.program, 'uSampler');
+        const bulgeStrengthLoc = this.gl.getUniformLocation(this.program, 'uBulgeStrength');
+        const bulgeRadiusLoc = this.gl.getUniformLocation(this.program, 'uBulgeRadius');
+        this.gl.uniform1f(bulgeStrengthLoc, this.bulgeStrength);
+        this.gl.uniform1f(bulgeRadiusLoc, this.adjustedBulgeRadius);
+        const visibleTiles = this.getVisibleTiles();
+        for (const t of visibleTiles) {
+            this.gl.uniform2f(offsetLoc, this.viewOffset.x, this.viewOffset.y);
+            this.gl.uniform2f(imgPosLoc, t.x, t.y);
+            this.gl.activeTexture(this.gl.TEXTURE0);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures[t.imageIndex]);
+            this.gl.uniform1i(samplerLoc, 0);
+            this.gl.drawElements(this.gl.TRIANGLES, this.indexCount, this.gl.UNSIGNED_SHORT, 0)
+        }
+    }
+    setupEventListeners() {
+        const setFocus = () => {
+            this.canvas.focus()
+        };
+        this.canvas.addEventListener('click', setFocus);
+        this.canvas.addEventListener('touchstart', setFocus);
+        this.canvas.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            this.drag.isDragging = !0;
+            this.drag.lastX = e.clientX;
+            this.drag.lastY = e.clientY;
+            this.canvas.style.cursor = 'grabbing'
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!this.drag.isDragging) return;
+            e.preventDefault();
+            const dx = e.clientX - this.drag.lastX;
+            const dy = e.clientY - this.drag.lastY;
+            this.drag.velocityX = dx * 0.3 + this.drag.velocityX * 0.7;
+            this.drag.velocityY = dy * 0.3 + this.drag.velocityY * 0.7;
+            this.viewOffset.x -= this.drag.velocityX;
+            this.viewOffset.y -= this.drag.velocityY;
+            this.drag.lastX = e.clientX;
+            this.drag.lastY = e.clientY
+        });
+        window.addEventListener('mouseup', () => {
+            this.drag.isDragging = !1;
+            this.canvas.style.cursor = 'grab'
+        });
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.drag.isDragging = !0;
+            this.drag.lastX = e.touches[0].clientX;
+            this.drag.lastY = e.touches[0].clientY
+        });
+        window.addEventListener('touchmove', (e) => {
+            if (!this.drag.isDragging) return;
+            e.preventDefault();
+            const dx = e.touches[0].clientX - this.drag.lastX;
+            const dy = e.touches[0].clientY - this.drag.lastY;
+            this.drag.velocityX = dx * 0.3 + this.drag.velocityX * 0.7;
+            this.drag.velocityY = dy * 0.3 + this.drag.velocityY * 0.7;
+            this.viewOffset.x -= this.drag.velocityX;
+            this.viewOffset.y -= this.drag.velocityY;
+            this.drag.lastX = e.touches[0].clientX;
+            this.drag.lastY = e.touches[0].clientY
+        });
+        window.addEventListener('touchend', () => {
+            this.drag.isDragging = !1
+        });
+        this.canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            this.drag.velocityX += e.deltaX * 0.5;
+            this.drag.velocityY += e.deltaY * 0.5
+        });
+        this.canvas.addEventListener('keydown', (e) => {
+            e.preventDefault();
+            switch (e.key) {
+                case '+':
+                case '=':
+                    this.bulgeStrength = Math.min(1.5, this.bulgeStrength + 0.05);
+                    break;
+                case '-':
+                case '_':
+                    this.bulgeStrength = Math.max(0, this.bulgeStrength - 0.05);
+                    break;
+                case '[':
+                    this.bulgeRadius = Math.max(0.5, this.bulgeRadius - 0.05);
+                    this.resizeCanvas();
+                    break;
+                case ']':
+                    this.bulgeRadius = Math.min(3, this.bulgeRadius + 0.05);
+                    this.resizeCanvas();
+                    break;
+                case 'r':
+                case 'R':
+                    this.bulgeStrength = 0.6;
+                    this.bulgeRadius = 1.5;
+                    this.resizeCanvas();
+                    break;
+                default:
+                    console.log(`⌨️ Touche: ${e.key}`)
+            }
+        });
+        console.log("&Toc on codepen - https://codepen.io/ol-ivier");
+    }
+    setupFullscreen() {
+        const fullscreenBtn = document.querySelector('.fullscreen-btn');
+        const icon = fullscreenBtn.querySelector('i');
+        const toggleFullscreen = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Erreur plein écran: ${err.message}`)
+                });
+                icon.className = 'fas fa-compress'
+            } else {
+                document.exitFullscreen();
+                icon.className = 'fas fa-expand'
+            }
+        };
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        document.addEventListener('fullscreenchange', () => {
+            icon.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
+            setTimeout(() => this.resizeCanvas(), 100)
+        })
+    }
+    animate() {
+        if (!this.drag.isDragging) {
+            this.viewOffset.x -= this.drag.velocityX;
+            this.viewOffset.y -= this.drag.velocityY;
+            this.drag.velocityX *= this.inertia;
+            this.drag.velocityY *= this.inertia;
+            if (Math.abs(this.drag.velocityX) < 0.01) this.drag.velocityX = 0;
+            if (Math.abs(this.drag.velocityY) < 0.01) this.drag.velocityY = 0
+        }
+        this.render();
+        requestAnimationFrame(() => this.animate())
+    }
+    createProgram(vsSource, fsSource) {
+        const vs = this.loadShader(this.gl.VERTEX_SHADER, vsSource);
+        const fs = this.loadShader(this.gl.FRAGMENT_SHADER, fsSource);
+        const prog = this.gl.createProgram();
+        this.gl.attachShader(prog, vs);
+        this.gl.attachShader(prog, fs);
+        this.gl.linkProgram(prog);
+        if (!this.gl.getProgramParameter(prog, this.gl.LINK_STATUS)) {
+            console.error('Erreur programme:', this.gl.getProgramInfoLog(prog));
+            return null
+        }
+        return prog
+    }
+    loadShader(type, source) {
+        const shader = this.gl.createShader(type);
+        this.gl.shaderSource(shader, source);
+        this.gl.compileShader(shader);
+        if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+            console.error('Erreur shader:', this.gl.getShaderInfoLog(shader));
+            this.gl.deleteShader(shader);
+            return null
+        }
+        return shader
+    }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    new InfinitePortraitGallery()
+})
+  </script>
+</body>
+</html>

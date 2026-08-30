@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>world language family tree</title>
+    <link rel="stylesheet" href="./style.css">
+
+  </head>
+    
+  <body>
+  <div class="title">World Language Families</div>
+<canvas id="canvas"></canvas>
+<div class="tooltip" id="tip"></div>
+<div class="legend">
+<div class="legend-item">
+<div class="legend-icon expand">+</div> Tap to expand
+        </div>
+<div class="legend-item">
+<div class="legend-icon leaf"></div> End of branch
+        </div>
+<div class="legend-item mobile-hint">Drag to scroll • Pinch to zoom</div>
+</div>
+<div class="ctrl">
+<button onclick="reset()">Reset View</button>
+<button onclick="expandAll()">Expand All</button>
+<button onclick="collapseAll()">Collapse All</button>
+</div>
+    <script  src="./script.js"></script>
+
+  </body>
+  
+</html>

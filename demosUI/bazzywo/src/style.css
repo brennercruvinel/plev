@@ -1,0 +1,235 @@
+body { font-family: ui-sans-serif, system-ui, sans-serif; }
+[data-blok="xypad"] {
+	--bgc: hsl(200, 25%, 85%);
+	--thumb-bdc: hsl(200, 35%, 70%);
+	--thumb-bdc--active: hsl(200, 35%, 60%);
+	--thumb-bdw: 0.5rem;
+	--thumb-bgc: hsl(200, 35%, 85%);
+	--thumb-bgc--active: hsla(200, 35%, 65%, 0.5);
+	--thumb-bxsh-w: .25rem;
+	--thumb-w: 4rem;
+
+	aspect-ratio: 1;
+	background-color: var(--bgc);
+	border: 0;
+	margin: 0;
+	max-width: var(--maw, 20rem);
+	padding: 0;
+	position: relative;
+	touch-action: none;
+	user-select: none;
+	width: 100%;
+}
+[data-blok="xypad"] [name="xyPoint"] {
+	background-color: var(--thumb-bgc);
+	block-size: var(--thumb-w);
+	border: var(--thumb-bdw) solid var(--thumb-bdc);
+	border-radius: var(--thumb-bdrs, 50%);
+	inline-size: var(--thumb-w);
+	outline: none;
+	touch-action: none;
+	transform: translate3d(calc(1px * var(--tx)), calc(1px * var(--ty)), 0);
+	user-select: none;
+}
+/* STATE */
+[name="xyPoint"]:focus-visible {
+	box-shadow: 0 0 0 var(--thumb-bxsh-w) var(--thumb-bdc-inner, var(--bgc)), 0 0 0 calc(2 * var(--thumb-bxsh-w)) var(--thumb-bdc--active);
+}
+[name="xyPoint"]:active {
+	--thumb-bdc: var(--thumb-bdc--active);
+	--thumb-bgc: var(--thumb-bgc--active);
+}
+/* Support for browsers, that do not support `aspect-ratio` */
+@supports not (aspect-ratio: 1) {
+	[data-blok="xypad"]:after {
+		content: "";
+		display: block;
+		padding-bottom: calc(100% - var(--thumb-w));
+	}
+}
+[data-blok="kaoss"] {
+	--bdrs: 1.25rem;
+	--bgc: hsl(var(--hue), 50%, 50%);
+	--c: hsl(var(--hue), 40%, 20%);
+	--gap: 0.8rem;
+	--h: 0;
+	--hue: 180;
+	--s: 100%;
+	--l: 50%;
+	--a: 1;
+	background-color: var(--bgc);
+	border: 0;
+	border-radius: var(--bdrs);
+	padding: var(--gap);
+	max-width: var(--w, 25rem);
+}
+[data-blok="kaoss"] [data-blok="xypad"] {
+	--bgc: var(--c);
+	--maw: auto;
+	--thumb-bdc: hsl(var(--hue), 35%, 99%);
+	--thumb-bdc--active: hsl(var(--hue), 50%, 60%);
+	--thumb-bdc-inner: hsl(0, 0%, 33%);
+	--thumb-bgc: transparent;
+	--thumb-bgc--active: hsla(var(--hue), 100%, 60%, 0.8);
+	border-radius: calc(var(--bdrs) - (var(--gap) / 2));
+	margin-block-end: var(--gap);
+}
+[name="xyPoint"]:active {
+	box-shadow: inset 0 0 .75rem 0.25rem hsla(var(--hue), 100%, 95%, 0.65), 0 0 1.5rem 0 hsl(calc(var(--hue) + 10) 100% 40%), 0 0 1.5rem 0 hsl(var(--hue) 100% 30%);
+}
+[data-blok="kaoss"] details {
+	font-family: ui-monospace, monospace;
+	font-size: small;
+	text-align: center;
+}
+[data-blok="kaoss"] summary {
+	outline: none;
+}
+
+[data-blok="kaoss"] [data-blok="radio-group"] {
+	--bdc: var(--c);
+	--icon-bgc--active: var(--c);
+	--icon-c: var(--c);
+	margin-block-end: var(--gap);
+} 
+
+[data-blok="radio-group"] {
+	--bdc: currentColor;
+	--bdrs: 0.25rem;
+	--bdrs-inner: calc(var(--bdrs) - var(--bdw));
+	--bdw: 1px;
+	--bg: transparent;
+	--fz: 0.675rem;
+	--h: 1.5rem;
+	--icon-bgc: transparent;
+	--icon-bgc--active: #111;
+	--icon-c: #111;
+	--icon-c--active: #FFF;
+
+	background: var(--bg);
+	border: var(--bdw) solid var(--bdc);
+	border-radius: var(--bdrs);
+	box-sizing: border-box;
+	display: flex;
+	height: var(--h);
+	margin: 0;
+	padding: 0;
+}
+[data-blok="radio-group"] input { 
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	height: 1px;
+	left: 0;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}
+[data-blok="radio-group"] input:checked + span,
+[data-blok="radio-group"] input:checked + svg {
+	--icon-bgc: var(--icon-bgc--active);
+	--icon-c: var(--icon-c--active);
+}
+[data-blok="radio-group"] label {
+	flex: 1;
+}
+[data-blok="radio-group"] label:not(:last-of-type) {
+	border-inline-end: var(--bdw) solid var(--bdc);
+}
+[data-blok="radio-group"] label:first-of-type svg {
+	border-end-start-radius: var(--bdrs-inner);
+	border-start-start-radius: var(--bdrs-inner);
+}
+[data-blok="radio-group"] label:last-of-type svg {
+	border-end-end-radius: var(--bdrs-inner);
+	border-start-end-radius: var(--bdrs-inner);
+}
+[data-blok="radio-group"] span {
+	align-items: center;
+	background-color: var(--icon-bgc);
+	color: var(--icon-c);
+	display: flex;
+	font-size: var(--fz);
+	height: 100%;
+	justify-content: center;
+	user-select: none;
+}
+[data-blok="radio-group"] svg {
+	background-color: var(--icon-bgc);
+	fill: none;
+	height: 100%;
+	max-height: calc(var(--h) - (2 * var(--bdw)));
+	pointer-events: none;
+	stroke: var(--icon-c);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	stroke-width: 1.5;
+	width: 100%;
+}
+
+[data-blok="range"],
+[data-blok="range"]::-webkit-slider-runnable-track,
+[data-blok="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+}
+[data-blok="range"] {
+	background-color: transparent;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 100% var(--track-h);
+	border-radius: var(--bdrs, 0);
+	height: var(--thumb-h);
+	margin: 0;
+	outline: 0;
+	pointer-events: none;
+	position: relative;
+	width: var(--rng-w, inherit);
+}
+[data-blok="range"]::-moz-range-thumb {
+	background: var(--thumb-bgc);
+	border: var(--thumb-bdw) solid var(--thumb-bdc);
+	border-radius: var(--thumb-bdrs, 50%);
+	box-shadow: var(--bxsh, none);
+	height: var(--thumb-h);
+	pointer-events: auto;
+	width: var(--thumb-w);
+}
+[data-blok="range"]::-webkit-slider-thumb {
+	background: var(--thumb-bgc);
+	border: var(--thumb-bdw) solid var(--thumb-bdc);
+	border-radius: var(--thumb-bdrs, 50%);
+	box-shadow: var(--bxsh, none);
+	height: var(--thumb-h);
+	pointer-events: auto;
+	width: var(--thumb-w);
+}
+[data-blok="range"]:focus-visible {
+	--bxsh: 0 0 0 1px #FFF, 0 0 0 4px var(--bgc);
+}
+[name="gain"],
+[name="hue"] {
+	--thumb-bdc: white;
+	--thumb-bdw: 2px;
+	--thumb-h: 1.5rem;
+	--thumb-w: 1.5rem;
+	--bdrs: .25rem;
+	--rng-w: 100%;
+	background-image: linear-gradient(to right, var(--c), var(--c));
+	margin-block-end: var(--gap);
+}
+[name="hue"] {
+	background-image: linear-gradient(to right,
+		hsl(0, 50%, 50%), 
+		hsl(30, 50%, 50%), 
+		hsl(60, 50%, 50%),
+		hsl(90, 50%, 50%),
+		hsl(120, 50%, 50%),
+		hsl(150, 50%, 50%),
+		hsl(180, 50%, 50%),
+		hsl(210, 50%, 50%),
+		hsl(240, 50%, 50%),
+		hsl(270, 50%, 50%),
+		hsl(300, 50%, 50%),
+		hsl(330, 50%, 50%));
+}

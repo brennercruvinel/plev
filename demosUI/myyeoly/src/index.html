@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  
+
+    
+
+    <meta name="apple-mobile-web-app-title" content="CodePen">
+
+    
+
+    
+
+
+
+  
+    
+
+
+  <title>Folder Recolour</title>
+
+    
+  
+  <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
+
+  
+  
+<style>
+body {
+ background-color: #f3f5f8;
+ overflow: hidden;
+ text-align:center;
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+}
+
+body,
+html {
+ height: 100%;
+ width: 100%;
+ margin: 0;
+ padding: 0;
+}
+
+svg {
+ width: 100%;
+ height: 100%;
+ visibility: hidden;
+ 
+}
+
+.dot {
+  cursor: pointer;
+}
+.gradOverlay {
+  mix-blend-mode: overlay;
+}
+</style>
+
+  <script>
+  window.console = window.console || function(t) {};
+</script>
+
+  
+  
+</head>
+
+<body translate="no">
+  <svg id="mainSVG" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1080 1080" style="visibility: visible;">
+  <defs>
+
+    <filter id="glow" x="-100%" y="-100%" width="250%" height="250%">
+      <feGaussianBlur stdDeviation="7" result="coloredBlur"></feGaussianBlur>
+      <feOffset dx="0" dy="0" result="offsetblur"></feOffset>
+      <feFlood id="glowAlpha" flood-color="black" flood-opacity="0.4"></feFlood>
+      <feComposite in2="offsetblur" operator="in"></feComposite>
+      <feMerge>
+        <feMergeNode></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+    <clipPath id="mainMask">
+      <path class="mainMask" d="M864.51,787.3H210.18c-36.45,0-66-29.55-66-66V192.12c0-34.15,27.69-61.84,61.84-61.84h164.94c7.37,0,14.57,2.24,20.63,6.43l52.03,38.35c15.42,11.37,34.08,17.5,53.24,17.5h371.38c30.52,0,55.26,24.74,55.26,55.26v480.47c0,32.58-26.42,59-59,59Z" fill="#f85f60"></path>
+    </clipPath>
+
+    <linearGradient id="backGrad" x1="533.84" y1="50" x2="533.84" y2="269.59" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"></stop>
+      <stop offset="1" stop-color="#000"></stop>
+    </linearGradient>
+
+    <linearGradient id="frontGrad" x1="128.32" y1="514.49" x2="933.02" y2="514.49" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000"></stop>
+      <stop offset=".05" stop-color="#787878" stop-opacity=".53"></stop>
+      <stop offset=".32" stop-color="#fff" stop-opacity="0"></stop>
+      <stop offset=".68" stop-color="#fff" stop-opacity="0"></stop>
+      <stop offset=".95" stop-color="#878787" stop-opacity=".47"></stop>
+      <stop offset="1" stop-color="#000"></stop>
+    </linearGradient>
+
+    <linearGradient id="barGrad" x1="532.72" y1="699.13" x2="532.72" y2="771.46" gradientUnits="userSpaceOnUse">
+      <stop offset=".35" stop-color="#000" stop-opacity="0"></stop>
+      <stop offset=".52" stop-color="#fff" stop-opacity=".2"></stop>
+      <stop offset=".7" stop-color="#000" stop-opacity="0"></stop>
+    </linearGradient>
+    <linearGradient id="barGrad-2" y1="673.38" y2="745.7" xlink:href="#barGrad"></linearGradient>
+
+    <circle class="dot" cx="0" cy="0" r="40" fill="#ff695e"></circle>
+    <g class="folder">
+
+      <clipPath class="dotClip">
+        <circle class="dotMask" cx="0" cy="0" r="20" stroke="#ff695e" stroke-width="0" fill="black"></circle>
+      </clipPath>
+      <g class="dotContainer">
+        <g class="main" clip-path="url(#mainMask)">
+          <path class="back" d="M864.51,787.3H210.18c-36.45,0-66-29.55-66-66V192.12c0-34.15,27.69-61.84,61.84-61.84h164.94c7.37,0,14.57,2.24,20.63,6.43l52.03,38.35c15.42,11.37,34.08,17.5,53.24,17.5h371.38c30.52,0,55.26,24.74,55.26,55.26v480.47c0,32.58-26.42,59-59,59Z" fill="#f85f60"></path>
+          <path class="gradOverlay" d="M864.51,787.3H210.18c-36.45,0-66-29.55-66-66V192.12c0-34.15,27.69-61.84,61.84-61.84h164.94c7.37,0,14.57,2.24,20.63,6.43l52.03,38.35c15.42,11.37,34.08,17.5,53.24,17.5h371.38c30.52,0,55.26,24.74,55.26,55.26v480.47c0,32.58-26.42,59-59,59Z" fill="url(#backGrad)" opacity="0.97"></path>
+          <path class="front" d="M200.95,241.68h660.72c34.13,0,61.84,27.71,61.84,61.84v424.77c0,32.56-26.44,59-59,59H210.18c-36.43,0-66-29.57-66-66v-422.84c0-31.33,25.44-56.77,56.77-56.77Z" fill="#f85f60"></path>
+          <path class="gradOverlay" d="M200.95,241.68h660.72c34.13,0,61.84,27.71,61.84,61.84v424.77c0,32.56-26.44,59-59,59H210.18c-36.43,0-66-29.57-66-66v-422.84c0-31.33,25.44-56.77,56.77-56.77Z" fill="url(#frontGrad)" opacity="1"></path>
+          <g opacity="0.3">
+            <rect x="136" y="724.45" width="800" height="21.8" fill="url(#barGrad)"></rect>
+            <rect x="136" y="698.69" width="800" height="21.8" fill="url(#barGrad-2)"></rect>
+          </g>
+        </g>
+      </g>
+
+    </g>
+  </defs>
+<g id="folderContainer" filter="url(#glow)">
+  <g class="folder">
+
+      <clipPath class="dotClip" id="_e5sf5kroo">
+        <circle class="dotMask" cx="0" cy="0" r="800" stroke="#ff695e" stroke-width="0" fill="black" data-svg-origin="-20 -20" transform="matrix(1,0,0,1,230,540)" style="translate: none; rotate: none; scale: none; transform-origin: 0px 0px;"></circle>
+      </clipPath>
+      <g class="dotContainer" clip-path="url(#_e5sf5kroo)">
+        <g class="main" clip-path="url(#mainMask)">
+          <path class="back" d="M864.51,787.3H210.18c-36.45,0-66-29.55-66-66V192.12c0-34.15,27.69-61.84,61.84-61.84h164.94c7.37,0,14.57,2.24,20.63,6.43l52.03,38.35c15.42,11.37,34.08,17.5,53.24,17.5h371.38c30.52,0,55.26,24.74,55.26,55.26v480.47c0,32.58-26.42,59-59,59Z" fill="#f85f60" style="fill: rgb(248, 95, 96);"></path>
+          <path class="gradOverlay" d="M864.51,787.3H210.18c-36.45,0-66-29.55-66-66V192.12c0-34.15,27.69-61.84,61.84-61.84h164.94c7.37,0,14.57,2.24,20.63,6.43l52.03,38.35c15.42,11.37,34.08,17.5,53.24,17.5h371.38c30.52,0,55.26,24.74,55.26,55.26v480.47c0,32.58-26.42,59-59,59Z" fill="url(#backGrad)" opacity="0.97"></path>
+          <path class="front" d="M200.95,241.68h660.72c34.13,0,61.84,27.71,61.84,61.84v424.77c0,32.56-26.44,59-59,59H210.18c-36.43,0-66-29.57-66-66v-422.84c0-31.33,25.44-56.77,56.77-56.77Z" fill="#f85f60" style="fill: rgb(248, 95, 96);"></path>
+          <path class="gradOverlay" d="M200.95,241.68h660.72c34.13,0,61.84,27.71,61.84,61.84v424.77c0,32.56-26.44,59-59,59H210.18c-36.43,0-66-29.57-66-66v-422.84c0-31.33,25.44-56.77,56.77-56.77Z" fill="url(#frontGrad)" opacity="1"></path>
+          <g opacity="0.3">
+            <rect x="136" y="724.45" width="800" height="21.8" fill="url(#barGrad)"></rect>
+            <rect x="136" y="698.69" width="800" height="21.8" fill="url(#barGrad-2)"></rect>
+          </g>
+        </g>
+      </g>
+
+    <circle class="dot" cx="0" cy="0" r="0" fill="#ff695e" data-svg-origin="-40 -40" transform="matrix(1,0,0,1,230,540)" style="fill: rgb(248, 95, 96); translate: none; rotate: none; scale: none;"></circle></g></g>
+<g id="btnContainer">
+  <circle class="outline" cx="0" cy="0" r="48" stroke="#ff695e" stroke-width="2" fill="none" data-svg-origin="-48 -48" transform="matrix(1,0,0,1,230,913)" style="translate: none; rotate: none; scale: none; transform-origin: 0px 0px;"></circle>
+  <circle class="dot" cx="0" cy="0" r="40" fill="#ff695e" data-svg-origin="0 0" transform="matrix(1,0,0,1,230,913)" style="translate: none; rotate: none; scale: none; transform-origin: 0px 0px; fill: rgb(248, 95, 96);"></circle><circle class="dot" cx="0" cy="0" r="40" fill="#ff695e" data-svg-origin="0 0" transform="matrix(1,0,0,1,330,913)" style="translate: none; rotate: none; scale: none; transform-origin: 0px 0px; fill: rgb(248, 170, 71);"></circle><circle class="dot" cx="0" cy="0" r="40" fill="#ff695e" data-svg-origin="0 0" transform="matrix(1,0,0,1,430,913)" style="translate: none; rotate: none; scale: none; transform-origin: 0px 0px; fill: rgb(251, 217, 109);"></circle><circle class="dot" cx="0" cy="0" r="40" fill="#ff695e" data-svg-origin="0 0" transform="matrix(1,0,0,1,530,913)" style="translate: none; rotate: none; scale: none; transform-origin: 0px 0px; fill: rgb(122, 212, 248);"></circle><circle class="dot" cx="0" cy="0" r="40" fill="#ff695e" data-svg-origin="0 0" transform="matrix(1,0,0,1,630,913)" style="translate: none; rotate: none; scale: none; transform-origin: 0px 0px; fill: rgb(136, 241, 147);"></circle><circle class="dot" cx="0" cy="0" r="40" fill="#ff695e" data-svg-origin="0 0" transform="matrix(1,0,0,1,730,913)" style="translate: none; rotate: none; scale: none; transform-origin: 0px 0px; fill: rgb(176, 80, 212);"></circle><circle class="dot" cx="0" cy="0" r="40" fill="#ff695e" data-svg-origin="0 0" transform="matrix(1,0,0,1,830,913)" style="translate: none; rotate: none; scale: none; transform-origin: 0px 0px; fill: rgb(50, 50, 50);"></circle></g>
+</svg>
+  <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+    <script id="rendered-js">
+gsap.config({ trialWarn: false });
+let select = s => document.querySelector(s),
+mainSVG = select('#mainSVG'),
+folderContainer = select('#folderContainer'),
+btnContainer = select('#btnContainer'),
+colorArray = ["f85f60", "f8aa47", "fbd96d", "7ad4f8", "88f193", "b050d4", "323232"],
+dot = select('.dot'),
+outline = select('.outline'),
+spacerX = 100,
+dotPosArr = [],
+currColor = 0,
+folder = select('.folder'),
+folderArr = [],
+btnArr = [];
+
+
+colorArray = colorArray.map(x => Array.from(x)[0] == '#' ? x : `#${x}`);
+const interp = gsap.utils.interpolate(colorArray);
+
+gsap.set('svg', {
+  visibility: 'visible' });
+
+
+function getUniqueID() {
+  return `_${Math.random().
+  toString(36).
+  substr(2, 9)}`;
+}
+
+function newFolder(obj) {
+
+  let clone = folder.cloneNode(true);
+  folderContainer.appendChild(clone);
+  folderArr.push(clone);
+  let q = gsap.utils.selector(clone);
+  let GUID = getUniqueID();
+  q('.dotClip')[0].id = GUID;
+  q('.dotContainer')[0].setAttribute('clip-path', `url(#${GUID})`);
+  let dotMask = q('.dotMask')[0];
+  let tempDot = dot.cloneNode(true);
+  clone.appendChild(tempDot);
+  let back = q('.back')[0];
+  let front = q('.front')[0];
+  gsap.set([back, front, tempDot], {
+    fill: colorArray[currColor] });
+
+  let tl = gsap.timeline({ paused: true });
+  tl.fromTo(tempDot, {
+    ...dotPosArr[currColor] },
+  {
+    //x: 540,
+    y: 540,
+    attr: {
+      r: 20 },
+
+    ease: 'expo' }).
+
+  set(tempDot, {
+    attr: {
+      r: 0 } }).
+
+
+  set(dotMask, {
+    x: dotPosArr[currColor].x,
+    y: 540 }).
+
+  to(dotMask, {
+    attr: {
+      r: 800 },
+
+    duration: 0.32,
+    ease: 'linear' });
+
+
+  if (obj.init) {
+    tl.progress(1);
+  } else {
+    tl.play();
+  }
+
+}
+
+function setColor(colorId) {
+  currColor = colorId;
+  gsap.to(outline, {
+    ...dotPosArr[colorId],
+    ease: 'elastic(0.35, 0.73)',
+    stroke: colorArray[colorId],
+    duration: 0.5 });
+
+}
+colorArray.forEach((i, c) => {
+  let clone = dot.cloneNode(true);
+  btnContainer.appendChild(clone);
+  btnArr.push(clone);
+  let pos = { x: 230 + c * spacerX, y: 913 };
+  dotPosArr.push(pos);
+  gsap.set(clone, {
+    transformOrigin: '50% 50%',
+    fill: i,
+    x: pos.x,
+    y: pos.y });
+
+
+  clone.addEventListener('click', function (e) {
+    if (currColor == c) return;
+
+
+    if (folderArr.length > 2) {
+      gsap.to(folderArr[0], {
+        opacity: 0,
+        duration: 0.2,
+        ease: 'linear',
+        onComplete: function () {
+          folderContainer.removeChild(folderArr[0]);
+          folderArr.shift();
+        } });
+
+    }
+    setColor(c);
+    newFolder({ init: false });
+  });
+  /*   clone.addEventListener('pointerover', (function(e) {
+      gsap.to(btnArr, {
+          scale: gsap.utils.distribute({
+            base: 0.6,
+            amount: -0.4,
+            from: c,
+            //ease: 'expo.inOut'
+          }),
+      })
+      
+    }))
+     */
+});
+
+gsap.set(outline, { ...dotPosArr[currColor] });
+
+newFolder({ init: true });
+//# sourceURL=pen.js
+  </script>
+
+  
+
+
+
+</body></html>

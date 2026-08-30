@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frosted Glass Profile Card UI</title>
+
+
+
+  <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap");
+
+
+
+body {
+  font-family: "Raleway", sans-serif;
+  display: flex;
+  justify-content: center;
+  background-color: #dddddd;
+  margin: 0;
+  color: #222222;
+  padding-top: 2rem;
+}
+
+.user-card {
+  width: 400px;
+  height: 550px;
+  border: 12px solid #fff;
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  background: #000; /* fallback */
+}
+
+.user-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  backdrop-filter: blur(30px) saturate(220%);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.01) 30%,
+    rgba(255, 255, 255, 0.03) 50%,
+    rgba(255, 255, 255, 0.08) 70%,
+    rgba(255, 255, 255, 0.15) 85%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.1) 40%,
+    rgba(0, 0, 0, 0.5) 55%,
+    black 75%
+  );
+}
+
+.user-card__media {
+  margin: 0;
+}
+.user-card__avatar {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.user-card__body {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  color: #ddd;
+  z-index: 1;
+}
+
+.user-card__header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.user-card__name {
+  font-size: 1.6rem;
+  line-height: 1.1;
+  font-weight: 600;
+}
+.user-card__badge {
+  width: 24px;
+  height: 24px;
+}
+.user-card__description {
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+}
+
+.user-card__footer {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.user-card__stats {
+  display: flex;
+  gap: 16px;
+}
+
+.user-card__stat {
+  display: flex;
+  align-items: center;
+  font-family: "Inter", sans-serif;
+  gap: 4px;
+  font-size: 0.975rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 40px;
+  padding: 0.3rem 0.71rem;
+  color: #222222;
+}
+.user-card__stat-value {
+  font-weight: 600;
+}
+
+.user-card__actions {
+  display: flex;
+  align-items: center;
+}
+.user-card__follow-btn {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #222222;
+  border-radius: 40px;
+  font-family: inherit;
+  font-size: 1.2rem;
+  display: flex;
+  line-height: 1;
+  align-items: center;
+  gap: 4px;
+  padding: 0.5rem 0.8rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: background 0.2s ease, transform 0.3s ease;
+}
+.user-card__follow-btn:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+.user-card__follow-btn:active {
+  transform: translateY(1px);
+}
+.user-card__follow-btn:focus-visible {
+  outline: 2px solid #333;
+  outline-offset: 3px;
+}
+.user-card__follow-btn svg {
+  width: 32px;
+  height: 32px;
+}
+
+@media (max-width: 480px) {
+  .user-card {
+    width: 320px;
+    height: 520px;
+    border-width: 10px;
+  }
+  .user-card__name {
+    font-size: 1.4rem;
+  }
+  .user-card__description {
+    font-size: 1.05rem;
+  }
+  .user-card__follow-btn {
+    font-size: 1.05rem;
+  }
+}
+  </style>
+</head>
+<body>
+<div class="user-card">
+      <figure class="user-card__media">
+        <img src="https://images.pexels.com/photos/4850291/pexels-photo-4850291.jpeg" alt="Sophie Bennett" class="user-card__avatar">
+      </figure>
+      <div class="user-card__body">
+        <div class="user-card__header">
+          <h2 class="user-card__name">Woman Name</h2>
+          <svg fill="#28bf1b" class="user-card__badge" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"></path></svg>
+        </div>
+        <p class="user-card__description">
+          Front-end Developer who focuses on amazing user experiences.
+        </p>
+        <div class="user-card__footer">
+          <div class="user-card__stats">
+            <div class="user-card__stat">
+              <svg fill="#222222" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                
+                <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,6A2,2 0 0,0 10,8A2,2 0 0,0 12,10A2,2 0 0,0 14,8A2,2 0 0,0 12,6M12,13C14.67,13 20,14.33 20,17V20H4V17C4,14.33 9.33,13 12,13M12,14.9C9.03,14.9 5.9,16.36 5.9,17V18.1H18.1V17C18.1,16.36 14.97,14.9 12,14.9Z"></path>
+              </svg>
+              <span class="user-card__stat-value">675</span>
+            </div>
+            <div class="user-card__stat">
+              <svg fill="#222222" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                
+                <path d="M13.13 22.19L11.5 18.36C13.07 17.78 14.54 17 15.9 16.09L13.13 22.19M5.64 12.5L1.81 10.87L7.91 8.1C7 9.46 6.22 10.93 5.64 12.5M19.22 4C19.5 4 19.75 4 19.96 4.05C20.13 5.44 19.94 8.3 16.66 11.58C14.96 13.29 12.93 14.6 10.65 15.47L8.5 13.37C9.42 11.06 10.73 9.03 12.42 7.34C15.18 4.58 17.64 4 19.22 4M19.22 2C17.24 2 14.24 2.69 11 5.93C8.81 8.12 7.5 10.53 6.65 12.64C6.37 13.39 6.56 14.21 7.11 14.77L9.24 16.89C9.62 17.27 10.13 17.5 10.66 17.5C10.89 17.5 11.13 17.44 11.36 17.35C13.5 16.53 15.88 15.19 18.07 13C23.73 7.34 21.61 2.39 21.61 2.39S20.7 2 19.22 2M14.54 9.46C13.76 8.68 13.76 7.41 14.54 6.63S16.59 5.85 17.37 6.63C18.14 7.41 18.15 8.68 17.37 9.46C16.59 10.24 15.32 10.24 14.54 9.46M8.88 16.53L7.47 15.12L8.88 16.53M6.24 22L9.88 18.36C9.54 18.27 9.21 18.12 8.91 17.91L4.83 22H6.24M2 22H3.41L8.18 17.24L6.76 15.83L2 20.59V22M2 19.17L6.09 15.09C5.88 14.79 5.73 14.47 5.64 14.12L2 17.76V19.17Z"></path>
+              </svg>
+              <span class="user-card__stat-value">18</span>
+            </div>
+          </div>
+          <div class="user-card__actions">
+            <button class="user-card__follow-btn">
+              <svg fill="#222222" width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                
+                <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"></path>
+              </svg>
+              <span class="user-card__follow-label">Follow</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  <script>
+
+  window.console = window.console || function(t) {};
+
+  </script>
+</body>
+</html>

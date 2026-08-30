@@ -1,0 +1,206 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #030508;
+            color: #e0e0e0;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        #canvas {
+            display: block;
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(10, 14, 18, 0.95);
+            border: 1px solid #1a2530;
+            border-radius: 8px;
+            padding: 12px 16px;
+            max-width: 320px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.12s;
+            z-index: 1000;
+            color: #e0e0e0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+        }
+
+        .tooltip h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #fff;
+        }
+
+        .tooltip .meta {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .tooltip .spk {
+            font-size: 14px;
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        .tooltip .total {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .tooltip p {
+            font-size: 12px;
+            color: #cbd5e1;
+            line-height: 1.4;
+            margin-top: 6px;
+        }
+
+        .tooltip .hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .ctrl {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            display: flex;
+            gap: 6px;
+            z-index: 100;
+        }
+
+        .ctrl button {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .ctrl button:hover {
+            background: rgba(51, 65, 85, 0.9);
+            border-color: #64748b;
+            color: #fff;
+        }
+
+        .title {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #94a3b8;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            z-index: 100;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .legend {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            display: flex;
+            gap: 16px;
+            font-size: 10px;
+            color: #94a3b8;
+            z-index: 100;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .legend-icon.expand {
+            background: rgba(51, 65, 85, 0.5);
+            color: #cbd5e1;
+            border: 1px solid #475569;
+        }
+
+        .legend-icon.leaf {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid #475569;
+        }
+
+        .mobile-hint {
+            display: none;
+        }
+
+        @media (pointer: coarse) {
+            .legend {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-end;
+            }
+
+            .mobile-hint {
+                display: flex;
+                font-size: 10px;
+                color: #64748b;
+            }
+
+            .ctrl {
+                bottom: auto;
+                top: 12px;
+                left: auto;
+                right: 12px;
+            }
+
+            .ctrl button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .legend {
+                bottom: 12px;
+                right: 12px;
+                gap: 6px;
+            }
+
+            .legend-item {
+                font-size: 9px;
+            }
+
+            .title {
+                font-size: 9px;
+            }
+        }

@@ -1,0 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=IM+Fell+DW+Pica+SC&display=swap");
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  background-color: #ececec;
+  font-family: "IM Fell DW Pica SC", serif;
+  display: grid;
+  place-content: center;
+}

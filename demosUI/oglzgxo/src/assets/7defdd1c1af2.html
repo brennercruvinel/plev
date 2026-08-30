@@ -1,0 +1,2696 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  
+
+  <title>The Craft of UI: Playbook CSS scroll animation w/ subgrid</title>
+
+  
+
+<style type="text/css">@font-face {font-family:Lato;font-style:normal;font-weight:400;src:url(/cf-fonts/s/lato/5.2.7/latin/400/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Lato;font-style:normal;font-weight:400;src:url(/cf-fonts/s/lato/5.2.7/latin-ext/400/normal.woff2);unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Lato;font-style:normal;font-weight:700;src:url(/cf-fonts/s/lato/5.2.7/latin/700/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Lato;font-style:normal;font-weight:700;src:url(/cf-fonts/s/lato/5.2.7/latin-ext/700/normal.woff2);unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Lato;font-style:normal;font-weight:900;src:url(/cf-fonts/s/lato/5.2.7/latin-ext/900/normal.woff2);unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Lato;font-style:normal;font-weight:900;src:url(/cf-fonts/s/lato/5.2.7/latin/900/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Lato;font-style:italic;font-weight:400;src:url(/cf-fonts/s/lato/5.2.7/latin-ext/400/italic.woff2);unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Lato;font-style:italic;font-weight:400;src:url(/cf-fonts/s/lato/5.2.7/latin/400/italic.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Lato;font-style:italic;font-weight:700;src:url(/cf-fonts/s/lato/5.2.7/latin-ext/700/italic.woff2);unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Lato;font-style:italic;font-weight:700;src:url(/cf-fonts/s/lato/5.2.7/latin/700/italic.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Lato;font-style:italic;font-weight:900;src:url(/cf-fonts/s/lato/5.2.7/latin/900/italic.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Lato;font-style:italic;font-weight:900;src:url(/cf-fonts/s/lato/5.2.7/latin-ext/900/italic.woff2);unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}</style>
+      <meta name="twitter:title" content="The Craft of UI: Playbook CSS scroll animation w/ subgrid">
+    <meta name="twitter:description" content="Read about how to make this demo here: https://craftofui.substack.com/p/scrolling-a-page-out-of-the-playbook...">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://shots.codepen.io/username/pen/VYZwOwd-800.jpg?version=1733485956">
+
+
+    <meta property="og:image" content="https://shots.codepen.io/username/pen/VYZwOwd-800.jpg?version=1733485956" itemprop="thumbnailUrl">
+    <meta property="og:title" content="The Craft of UI: Playbook CSS scroll animation w/ subgrid">
+    <meta property="og:url" content="https://codepen.io/jh3y/details/VYZwOwd">
+    <meta property="og:description" content="Read about how to make this demo here: https://craftofui.substack.com/p/scrolling-a-page-out-of-the-playbook...">
+
+
+  <link rel="alternate" type="application/json+oembed"
+  href="https://codepen.io/api/oembed?url=https%3A%2F%2Fcodepen.io%2Fjh3y%2Fpen%2FVYZwOwd&format=json"
+  title="The Craft of UI: Playbook CSS scroll animation w/ subgrid" />
+
+
+  <link rel="stylesheet" href="https://cpwebassets.codepen.io/assets/global/global-4d2dbf7b9c7393b9f005b43dd9a104a1d4f205c562e4d80fbd5b31dcb738795f.css" media="all" />
+  <link rel="stylesheet" href="https://cpwebassets.codepen.io/assets/packs/css/everypage-934879d1.css" />
+  <link rel="stylesheet" href="https://cpwebassets.codepen.io/assets/editor/editor-28e58047cdd10ddb866ce3eec8396fbb6003052a056114ce089680172508765f.css" media="all" />
+
+  
+  <meta name="description" content="Read about how to make this demo here: https://craftofui.substack.com/p/scrolling-a-page-out-of-the-playbook...">
+
+  
+
+
+<link rel="stylesheet" href="https://cpwebassets.codepen.io/assets/editor/themes/twilight-17aa2c8bbfe74907b477e19b46d4dcb9165990a73d66fa82db594bcb16475591.css" id="cm-theme" />
+
+<style id="cm-font-family" class="cm-font-family" nonce="zGEAds3ZnBo=">
+  
+  .CodeMirror,
+  .console-logs .console-line,
+  .console-command-line-input,
+  .console-message,
+  .CodeMirror-hint {
+    font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo,
+  monospace;
+  }
+</style>
+
+<style id="cm-font-size" nonce="zGEAds3ZnBo=">
+  .CodeMirror,
+  .console-logs .console-line,
+  .console-command-line-input,
+  .console-message,
+  .CodeMirror-hint {
+    font-size: 15px;
+  }
+</style>
+
+
+
+
+
+
+  
+
+    <link rel="apple-touch-icon" type="image/png" href="https://cpwebassets.codepen.io/assets/favicon/apple-touch-icon-5ae1a0698dcc2402e9712f7d01ed509a57814f994c660df9f7a952f3060705ee.png" />
+
+    <meta name="apple-mobile-web-app-title" content="CodePen">
+
+    <link rel="icon" type="image/x-icon" href="https://cpwebassets.codepen.io/assets/favicon/favicon-aec34940fbc1a6e787974dcd360f2c6b63348d4b1f4e06c77743096d55480f33.ico" />
+
+    <link rel="mask-icon" type="image/x-icon" href="https://cpwebassets.codepen.io/assets/favicon/logo-pin-b4b4269c16397ad2f0f7a01bcdf513a1994f4c94b8af2f191c09eb0d601762b1.svg" color="#111" />
+
+
+
+
+  <meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="6OHRxSis3M1HHlE6kTkiGLRf2bY91mfSZWtYFNY4wmZC_Yz7ZQg_Z2-dqhz9Xm3QpAYFLhmdK0fJe9iNjpN2ww" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+</head>
+
+<body class="room-editor editor state-htmlOn-cssOn-jsOn twilight preload prelayout
+  layout-top
+ logged-in
+">
+  
+
+  
+<header class="main-header" id="main-header">
+</header>
+<div class="item-settings-modal tab-layout tab-layout-modal pen  item-settings-modal-half" id="item-settings-modal">
+
+  <header class="item-settings-modal-header tab-layout-header">
+    <h2 class="item-settings-modal-header-title tab-layout-header-title">Pen Settings</h2>
+    <div class="save-and-close-wrap">
+      <button type="button" class="button mini-button button-no-right-margin close" id="top-close-settings">
+        <svg class="icon-x" viewBox="0 0 100 100">
+          <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="tabs tab-layout-wrapper settings-tabs-wrapper">
+
+    <nav id="settings-tabs" class="no-mobile-nav tab-layout-tabs item-settings-tabs  notranslate" translate="no">
+
+      <div class="tab-layout-tab-group">
+            <a
+              id="settings-html-tab"
+              href="#settings-html"
+              class="settings-tab-html"
+              data-type="html">
+              HTML
+            </a>
+            <a
+              id="settings-css-tab"
+              href="#settings-css"
+              class="settings-tab-css"
+              data-type="css">
+              CSS
+            </a>
+            <a
+              id="settings-js-tab"
+              href="#settings-js"
+              class="settings-tab-js"
+              data-type="js">
+              JS
+            </a>
+
+      </div>
+
+      <div class="tab-layout-tab-group">
+            <a
+              id="settings-behavior-tab"
+              href="#settings-behavior"
+              class="settings-tab-behavior"
+              data-type="behavior">
+              Behavior
+            </a>
+            <a
+              id="settings-editor-tab"
+              href="#settings-editor"
+              class="settings-tab-editor"
+              data-type="editor">
+              Editor
+            </a>
+      </div>
+    </nav>
+
+      <div class="settings tab-page" id="settings-html">
+        <h3 aria-label="HTML">HTML</h3>
+
+<div class="settings-row top-label-form normal-labels">
+
+  <h4>
+    <label for="html-preprocessor">
+      HTML Preprocessor
+    </label>
+  </h4>
+
+  <div class="help-flyout-link">
+    <svg class="icon-help" viewBox="0 0 100 100">
+      <path d="M75,0H25C11.19,0,0,11.193,0,25v50c0,13.802,11.19,25,25,25h50c13.811,0,25-11.198,25-25V25C100,11.193,88.811,0,75,0z
+   M57.203,85.067H41.504V72.542h15.699V85.067L57.203,85.067z M73.357,42.041c-0.84,2.066-1.873,3.834-3.102,5.298
+  c-1.235,1.474-2.604,2.718-4.101,3.751c-1.498,1.035-2.922,2.066-4.249,3.101c-1.333,1.034-1.553,2.214-2.596,3.547
+  c-1.025,1.335-0.977,3.004-0.977,5.006v3.924H41.668v-4.623c0-2.864,1.366-5.265,2.27-7.202c0.896-1.935,2.255-3.581,3.459-4.947
+  c1.196-1.367,2.62-2.556,3.955-3.557c1.327-0.993,2.637-1.993,3.776-2.995c1.123-1.001,2.083-2.1,2.783-3.304
+  c0.7-1.197,1.043-2.694,0.977-4.5c0-3.06-0.74-5.33-2.245-6.795c-1.498-1.465-3.582-2.206-6.25-2.206c-1.8,0-3.337,0.351-4.639,1.05
+  c-1.303,0.7-2.369,1.635-3.199,2.808c-0.837,1.163-1.448,3.593-1.847,5.156c-0.407,1.57-0.602,6.115-0.602,6.115H25.399
+  c0.073-8.333,0.684-7.963,1.855-10.965c1.164-2.995,2.8-6.132,4.899-8.33c2.099-2.197,4.63-4.179,7.601-5.417
+  c2.962-1.228,6.283-1.977,9.945-1.977c4.736,0,8.683,0.581,11.856,1.876c3.167,1.302,5.713,2.889,7.65,4.817
+  c1.929,1.937,3.312,4.004,4.149,6.234c0.831,2.237,1.245,4.313,1.245,6.242C74.601,37.354,74.187,39.975,73.357,42.041z"/>
+    </svg>
+    <div class="help-flyout help-flyout-reverse">
+      <h5>About HTML Preprocessors</h5>
+      <svg class="icon-x" viewBox="0 0 100 100">
+        <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+      </svg>
+      <p>HTML preprocessors can make writing HTML more powerful or convenient. For instance, Markdown is designed to be easier to write and read for text documents and you could write a loop in Pug.</p>
+      <p><a href="https://blog.codepen.io/documentation/editor/using-html-preprocessors/" target="_blank" rel="noopener">Learn more</a> &middot; <a href="/versions/" target="_blank" rel="noopener">Versions</a></p>
+    </div>
+  </div>
+
+  <div class="custom-select-wrap">
+    <select name="html-preprocessor" id="html-preprocessor" class="fullwidth">
+          <option value="none">None</option>
+          <option value="haml">Haml</option>
+          <option value="markdown">Markdown</option>
+          <option value="slim">Slim</option>
+          <option value="pug">Pug</option>
+    </select>
+    <div class="select-icon">
+      <svg viewBox="-122.9 121.1 105.9 61.9" class="icon-arrow-down-mini">
+        <path d="M-63.2,180.3l43.5-43.5c1.7-1.7,2.7-4,2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.7l-37.2,37.2l-37.2-37.2
+        c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.6c-1.9,1.8-2.8,4.2-2.8,6.6c0,2.3,0.9,4.6,2.6,6.5l0,0c11.4,11.5,41,41.2,43,43.3l0.2,0.2
+        C-73.5,183.9-66.8,183.9-63.2,180.3z"/>
+      </svg>
+      <svg viewBox="-122.9 121.1 105.9 61.9" class="icon-arrow-down-mini">
+        <path d="M-63.2,180.3l43.5-43.5c1.7-1.7,2.7-4,2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.7l-37.2,37.2l-37.2-37.2
+        c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.6c-1.9,1.8-2.8,4.2-2.8,6.6c0,2.3,0.9,4.6,2.6,6.5l0,0c11.4,11.5,41,41.2,43,43.3l0.2,0.2
+        C-73.5,183.9-66.8,183.9-63.2,180.3z"/>
+      </svg>
+    </div>
+  </div>
+
+</div>
+
+<div class="settings-row top-label-form normal-labels">
+
+  <h4>
+    <label for="html-classes">Add Class(es) to &lt;html></label>
+  </h4>
+
+  <div class="help-flyout-link">
+    <svg class="icon-help" viewBox="0 0 100 100">
+      <path d="M75,0H25C11.19,0,0,11.193,0,25v50c0,13.802,11.19,25,25,25h50c13.811,0,25-11.198,25-25V25C100,11.193,88.811,0,75,0z
+   M57.203,85.067H41.504V72.542h15.699V85.067L57.203,85.067z M73.357,42.041c-0.84,2.066-1.873,3.834-3.102,5.298
+  c-1.235,1.474-2.604,2.718-4.101,3.751c-1.498,1.035-2.922,2.066-4.249,3.101c-1.333,1.034-1.553,2.214-2.596,3.547
+  c-1.025,1.335-0.977,3.004-0.977,5.006v3.924H41.668v-4.623c0-2.864,1.366-5.265,2.27-7.202c0.896-1.935,2.255-3.581,3.459-4.947
+  c1.196-1.367,2.62-2.556,3.955-3.557c1.327-0.993,2.637-1.993,3.776-2.995c1.123-1.001,2.083-2.1,2.783-3.304
+  c0.7-1.197,1.043-2.694,0.977-4.5c0-3.06-0.74-5.33-2.245-6.795c-1.498-1.465-3.582-2.206-6.25-2.206c-1.8,0-3.337,0.351-4.639,1.05
+  c-1.303,0.7-2.369,1.635-3.199,2.808c-0.837,1.163-1.448,3.593-1.847,5.156c-0.407,1.57-0.602,6.115-0.602,6.115H25.399
+  c0.073-8.333,0.684-7.963,1.855-10.965c1.164-2.995,2.8-6.132,4.899-8.33c2.099-2.197,4.63-4.179,7.601-5.417
+  c2.962-1.228,6.283-1.977,9.945-1.977c4.736,0,8.683,0.581,11.856,1.876c3.167,1.302,5.713,2.889,7.65,4.817
+  c1.929,1.937,3.312,4.004,4.149,6.234c0.831,2.237,1.245,4.313,1.245,6.242C74.601,37.354,74.187,39.975,73.357,42.041z"/>
+    </svg>
+    <div class="help-flyout help-flyout-reverse">
+      <h5>Adding Classes</h5>
+      <svg class="icon-x" viewBox="0 0 100 100">
+        <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+      </svg>
+      <p>In CodePen, whatever you write in the HTML editor is what goes within the <code>&lt;body></code> tags in <a target="_blank" rel="noopener" href="https://blog.codepen.io/documentation/features/preview-template/">a basic HTML5 template</a>. So you don't have access to higher-up elements like the <code>&lt;html></code> tag. If you want to add classes there that can affect the whole document, this is the place to do it.</p>
+    </div>
+  </div>
+
+  <input type="text" id="html-classes" name="html-classes" class="fullwidth" placeholder="e.g. single post post-1234" maxlength="250">
+
+</div>
+
+<div class="settings-row top-label-form normal-labels">
+
+  <h4>
+    <label for="head-content">Stuff for &lt;head></label>
+  </h4>
+
+  <div class="help-flyout-link">
+    <svg class="icon-help" viewBox="0 0 100 100">
+      <path d="M75,0H25C11.19,0,0,11.193,0,25v50c0,13.802,11.19,25,25,25h50c13.811,0,25-11.198,25-25V25C100,11.193,88.811,0,75,0z
+   M57.203,85.067H41.504V72.542h15.699V85.067L57.203,85.067z M73.357,42.041c-0.84,2.066-1.873,3.834-3.102,5.298
+  c-1.235,1.474-2.604,2.718-4.101,3.751c-1.498,1.035-2.922,2.066-4.249,3.101c-1.333,1.034-1.553,2.214-2.596,3.547
+  c-1.025,1.335-0.977,3.004-0.977,5.006v3.924H41.668v-4.623c0-2.864,1.366-5.265,2.27-7.202c0.896-1.935,2.255-3.581,3.459-4.947
+  c1.196-1.367,2.62-2.556,3.955-3.557c1.327-0.993,2.637-1.993,3.776-2.995c1.123-1.001,2.083-2.1,2.783-3.304
+  c0.7-1.197,1.043-2.694,0.977-4.5c0-3.06-0.74-5.33-2.245-6.795c-1.498-1.465-3.582-2.206-6.25-2.206c-1.8,0-3.337,0.351-4.639,1.05
+  c-1.303,0.7-2.369,1.635-3.199,2.808c-0.837,1.163-1.448,3.593-1.847,5.156c-0.407,1.57-0.602,6.115-0.602,6.115H25.399
+  c0.073-8.333,0.684-7.963,1.855-10.965c1.164-2.995,2.8-6.132,4.899-8.33c2.099-2.197,4.63-4.179,7.601-5.417
+  c2.962-1.228,6.283-1.977,9.945-1.977c4.736,0,8.683,0.581,11.856,1.876c3.167,1.302,5.713,2.889,7.65,4.817
+  c1.929,1.937,3.312,4.004,4.149,6.234c0.831,2.237,1.245,4.313,1.245,6.242C74.601,37.354,74.187,39.975,73.357,42.041z"/>
+    </svg>
+    <div class="help-flyout help-flyout-reverse">
+      <h5>About the &lt;head></h5>
+      <svg class="icon-x" viewBox="0 0 100 100">
+        <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+      </svg>
+      <p>In CodePen, whatever you write in the HTML editor is what goes within the <code>&lt;body></code> tags in <a target="_blank" rel="noopener" href="https://blog.codepen.io/documentation/features/preview-template/">a basic HTML5 template</a>. If you need things in the <code>&lt;head></code> of the document, put that code here.</p>
+    </div>
+  </div>
+
+  <div class="head-content-wrapper">
+    <textarea id="head-content" name="head-content" class="fullwidth is-code head-content notranslate" translate="no" placeholder="e.g. &lt;meta>, &lt;link>, &lt;script>"></textarea>
+    <span class="insecure-resource-tooltip resource-problem-tooltip">
+      <div class="help-flyout-link">
+        <span class="icon-help">!</span>
+        <div class="help-flyout help-flyout-reverse">
+          <svg class="icon-x" viewBox="0 0 100 100">
+            <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+          </svg>
+          <h5>Insecure Resource</h5>
+          <p>The resource you are linking to is using the 'http' protocol, which may not work when the browser is using https.</p>
+        </div>
+      </div>
+    </span>
+  </div>
+
+  <button class="button mini-button button-medium" id="meta-tag-insert">↑ Insert the most common viewport meta tag</button>
+
+</div>
+
+      </div>
+      <div class="settings tab-page" id="settings-css">
+        <h3 aria-label="CSS">CSS</h3>
+
+<div class="settings-row top-label-form normal-labels">
+
+  <h4>
+    <label for="css-preprocessor">
+      CSS Preprocessor
+    </label>
+  </h4>
+
+  <div class="help-flyout-link">
+    <svg class="icon-help" viewBox="0 0 100 100">
+      <path d="M75,0H25C11.19,0,0,11.193,0,25v50c0,13.802,11.19,25,25,25h50c13.811,0,25-11.198,25-25V25C100,11.193,88.811,0,75,0z
+   M57.203,85.067H41.504V72.542h15.699V85.067L57.203,85.067z M73.357,42.041c-0.84,2.066-1.873,3.834-3.102,5.298
+  c-1.235,1.474-2.604,2.718-4.101,3.751c-1.498,1.035-2.922,2.066-4.249,3.101c-1.333,1.034-1.553,2.214-2.596,3.547
+  c-1.025,1.335-0.977,3.004-0.977,5.006v3.924H41.668v-4.623c0-2.864,1.366-5.265,2.27-7.202c0.896-1.935,2.255-3.581,3.459-4.947
+  c1.196-1.367,2.62-2.556,3.955-3.557c1.327-0.993,2.637-1.993,3.776-2.995c1.123-1.001,2.083-2.1,2.783-3.304
+  c0.7-1.197,1.043-2.694,0.977-4.5c0-3.06-0.74-5.33-2.245-6.795c-1.498-1.465-3.582-2.206-6.25-2.206c-1.8,0-3.337,0.351-4.639,1.05
+  c-1.303,0.7-2.369,1.635-3.199,2.808c-0.837,1.163-1.448,3.593-1.847,5.156c-0.407,1.57-0.602,6.115-0.602,6.115H25.399
+  c0.073-8.333,0.684-7.963,1.855-10.965c1.164-2.995,2.8-6.132,4.899-8.33c2.099-2.197,4.63-4.179,7.601-5.417
+  c2.962-1.228,6.283-1.977,9.945-1.977c4.736,0,8.683,0.581,11.856,1.876c3.167,1.302,5.713,2.889,7.65,4.817
+  c1.929,1.937,3.312,4.004,4.149,6.234c0.831,2.237,1.245,4.313,1.245,6.242C74.601,37.354,74.187,39.975,73.357,42.041z"/>
+    </svg>
+    <div class="help-flyout help-flyout-reverse">
+      <h5>About CSS Preprocessors</h5>
+      <svg class="icon-x" viewBox="0 0 100 100">
+        <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+      </svg>
+      <p>CSS preprocessors help make authoring CSS easier. All of them offer things like variables and mixins to provide convenient abstractions.</p>
+      <p><a href="https://blog.codepen.io/documentation/editor/using-css-preprocessors/" target="_blank">Learn more</a> &middot; <a href="/versions/" target="_blank">Versions</a></p>
+    </div>
+  </div>
+
+  <div class="custom-select-wrap">
+    <select name="css-preprocessor" id="css-preprocessor" class="fullwidth css-preprocessor">
+        <option value="none">None</option>
+        <option value="less">Less</option>
+        <option value="scss">SCSS</option>
+        <option value="sass">Sass</option>
+        <option value="stylus">Stylus</option>
+        <option value="postcss">PostCSS</option>
+    </select>
+    <div class="select-icon">
+      <svg viewBox="-122.9 121.1 105.9 61.9" class="icon-arrow-down-mini">
+        <path d="M-63.2,180.3l43.5-43.5c1.7-1.7,2.7-4,2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.7l-37.2,37.2l-37.2-37.2
+        c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.6c-1.9,1.8-2.8,4.2-2.8,6.6c0,2.3,0.9,4.6,2.6,6.5l0,0c11.4,11.5,41,41.2,43,43.3l0.2,0.2
+        C-73.5,183.9-66.8,183.9-63.2,180.3z"/>
+      </svg>
+      <svg viewBox="-122.9 121.1 105.9 61.9" class="icon-arrow-down-mini">
+        <path d="M-63.2,180.3l43.5-43.5c1.7-1.7,2.7-4,2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.7l-37.2,37.2l-37.2-37.2
+        c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.6c-1.9,1.8-2.8,4.2-2.8,6.6c0,2.3,0.9,4.6,2.6,6.5l0,0c11.4,11.5,41,41.2,43,43.3l0.2,0.2
+        C-73.5,183.9-66.8,183.9-63.2,180.3z"/>
+      </svg>
+    </div>
+  </div>
+
+  <div id="need-an-addon" class="align-right hide">
+    <a id="css-need-an-addon-button" href="#0" class="button button-medium mini-button need-an-addon-button">
+      Need an add-on?
+    </a>
+  </div>
+
+  <div class="add-ons add-ons-scss hide" id="add-ons"></div>
+
+</div>
+
+<div id="startercss-options-form" class="settings-row top-label-form">
+
+  <h4>
+    CSS Base
+  </h4>
+
+  <div class="help-flyout-link">
+    <svg class="icon-help" viewBox="0 0 100 100">
+      <path d="M75,0H25C11.19,0,0,11.193,0,25v50c0,13.802,11.19,25,25,25h50c13.811,0,25-11.198,25-25V25C100,11.193,88.811,0,75,0z
+   M57.203,85.067H41.504V72.542h15.699V85.067L57.203,85.067z M73.357,42.041c-0.84,2.066-1.873,3.834-3.102,5.298
+  c-1.235,1.474-2.604,2.718-4.101,3.751c-1.498,1.035-2.922,2.066-4.249,3.101c-1.333,1.034-1.553,2.214-2.596,3.547
+  c-1.025,1.335-0.977,3.004-0.977,5.006v3.924H41.668v-4.623c0-2.864,1.366-5.265,2.27-7.202c0.896-1.935,2.255-3.581,3.459-4.947
+  c1.196-1.367,2.62-2.556,3.955-3.557c1.327-0.993,2.637-1.993,3.776-2.995c1.123-1.001,2.083-2.1,2.783-3.304
+  c0.7-1.197,1.043-2.694,0.977-4.5c0-3.06-0.74-5.33-2.245-6.795c-1.498-1.465-3.582-2.206-6.25-2.206c-1.8,0-3.337,0.351-4.639,1.05
+  c-1.303,0.7-2.369,1.635-3.199,2.808c-0.837,1.163-1.448,3.593-1.847,5.156c-0.407,1.57-0.602,6.115-0.602,6.115H25.399
+  c0.073-8.333,0.684-7.963,1.855-10.965c1.164-2.995,2.8-6.132,4.899-8.33c2.099-2.197,4.63-4.179,7.601-5.417
+  c2.962-1.228,6.283-1.977,9.945-1.977c4.736,0,8.683,0.581,11.856,1.876c3.167,1.302,5.713,2.889,7.65,4.817
+  c1.929,1.937,3.312,4.004,4.149,6.234c0.831,2.237,1.245,4.313,1.245,6.242C74.601,37.354,74.187,39.975,73.357,42.041z"/>
+    </svg>
+    <div class="help-flyout help-flyout-reverse">
+      <h5>About CSS Base</h5>
+      <svg class="icon-x" viewBox="0 0 100 100">
+        <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+      </svg>
+      <p>It's a common practice to apply CSS to a page that styles elements such that they are consistent across all browsers. We offer two of the most popular choices: <a href="http://necolas.github.io/normalize.css/" target="_blank" rel="noopener">normalize.css</a> and a <a href="http://meyerweb.com/eric/tools/css/reset/" target="_blank" rel="noopener">reset</a>. Or, choose <b>Neither</b> and nothing will be applied.</p>
+    </div>
+  </div>
+
+  <ul class="radio-list">
+      <li>
+        <input type="radio" id="startercss-normalize" name="startercss" checked value="normalize">
+        <label for="startercss-normalize" class="small-inline">Normalize</label>
+      </li>
+      <li>
+        <input type="radio" id="startercss-reset" name="startercss" checked value="reset">
+        <label for="startercss-reset" class="small-inline">Reset</label>
+      </li>
+      <li>
+        <input type="radio" id="startercss-neither" name="startercss" checked value="neither">
+        <label for="startercss-neither" class="small-inline">Neither</label>
+      </li>
+  </ul>
+
+</div>
+
+<div id="prefix-options-form" class="settings-row top-label-form">
+
+  <h4>
+    Vendor Prefixing
+  </h4>
+
+  <div class="help-flyout-link">
+    <svg class="icon-help" viewBox="0 0 100 100">
+      <path d="M75,0H25C11.19,0,0,11.193,0,25v50c0,13.802,11.19,25,25,25h50c13.811,0,25-11.198,25-25V25C100,11.193,88.811,0,75,0z
+   M57.203,85.067H41.504V72.542h15.699V85.067L57.203,85.067z M73.357,42.041c-0.84,2.066-1.873,3.834-3.102,5.298
+  c-1.235,1.474-2.604,2.718-4.101,3.751c-1.498,1.035-2.922,2.066-4.249,3.101c-1.333,1.034-1.553,2.214-2.596,3.547
+  c-1.025,1.335-0.977,3.004-0.977,5.006v3.924H41.668v-4.623c0-2.864,1.366-5.265,2.27-7.202c0.896-1.935,2.255-3.581,3.459-4.947
+  c1.196-1.367,2.62-2.556,3.955-3.557c1.327-0.993,2.637-1.993,3.776-2.995c1.123-1.001,2.083-2.1,2.783-3.304
+  c0.7-1.197,1.043-2.694,0.977-4.5c0-3.06-0.74-5.33-2.245-6.795c-1.498-1.465-3.582-2.206-6.25-2.206c-1.8,0-3.337,0.351-4.639,1.05
+  c-1.303,0.7-2.369,1.635-3.199,2.808c-0.837,1.163-1.448,3.593-1.847,5.156c-0.407,1.57-0.602,6.115-0.602,6.115H25.399
+  c0.073-8.333,0.684-7.963,1.855-10.965c1.164-2.995,2.8-6.132,4.899-8.33c2.099-2.197,4.63-4.179,7.601-5.417
+  c2.962-1.228,6.283-1.977,9.945-1.977c4.736,0,8.683,0.581,11.856,1.876c3.167,1.302,5.713,2.889,7.65,4.817
+  c1.929,1.937,3.312,4.004,4.149,6.234c0.831,2.237,1.245,4.313,1.245,6.242C74.601,37.354,74.187,39.975,73.357,42.041z"/>
+    </svg>
+    <div class="help-flyout help-flyout-reverse">
+      <h5>About Vendor Prefixing</h5>
+      <svg class="icon-x" viewBox="0 0 100 100">
+        <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+      </svg>
+      <p>To get the best cross-browser support, it is a common practice to apply vendor prefixes to CSS properties and values that require them to work. For instance <code>-webkit-</code> or <code>-moz-</code>.</p>
+      <p>We offer two popular choices: <a href="https://github.com/postcss/autoprefixer" target="blank" rel="noopener">Autoprefixer</a> (which processes your CSS server-side) and <a href="http://leaverou.github.io/prefixfree/" target="_blank" rel="noopener">-prefix-free</a> (which applies prefixes via a script, client-side).</p>
+    </div>
+  </div>
+
+  <ul class="radio-list">
+      <li>
+        <input type="radio" id="prefix-autoprefixer" name="prefix" value="autoprefixer">
+        <label for="prefix-autoprefixer" class="small-inline">Autoprefixer</label>
+      </li>
+      <li>
+        <input type="radio" id="prefix-prefixfree" name="prefix" value="prefixfree">
+        <label for="prefix-prefixfree" class="small-inline">Prefixfree</label>
+      </li>
+      <li>
+        <input type="radio" id="prefix-neither" name="prefix" value="neither">
+        <label for="prefix-neither" class="small-inline">Neither</label>
+      </li>
+  </ul>
+</div>
+
+<div id="external-css-resources" class="settings-row">
+
+  <h4>
+    Add External Stylesheets/Pens
+  </h4>
+
+  <p>Any URLs added here will be added as <code>&lt;link></code>s in order, and before the CSS in the editor. You can use the CSS from another Pen by using its URL and the proper <a href="https://blog.codepen.io/documentation/url-extensions/">URL extension</a>.</p>
+
+  <div class="resource-search-bar">
+    <svg class="icon icon-mag" viewBox="0 0 56.7 56.7">
+      <path d="M42.8,7.3C33-2.4,17.1-2.4,7.3,7.3c-9.8,9.8-9.8,25.7,0,35.5c8.7,8.7,22.2,9.7,32,2.9l9.6,9.6c1.8,1.8,4.7,1.8,6.4,0
+	c1.8-1.8,1.8-4.7,0-6.4l-9.6-9.6C52.5,29.5,51.5,16,42.8,7.3z M36.6,36.6c-6.4,6.4-16.7,6.4-23.1,0s-6.4-16.7,0-23.1
+	c6.4-6.4,16.7-6.4,23.1,0C43,19.9,43,30.3,36.6,36.6z"/>
+    </svg>
+
+    <input id="external-css-search" type="text" value="" placeholder="Search for resources (Bootstrap, Foundation, Animate.css...)">
+  </div>
+
+  <div class="algolia-shoutout">
+    <a href="https://www.algolia.com/?utm_source=react-instantsearch&utm_medium=website&utm_content=codepen.io&utm_campaign=poweredby" target="_blank">
+      Powered by <img alt="Algolia" src="https://cpwebassets.codepen.io/assets/settings/algolia-9e1c0c887f4db420704b2a79926864019ef156bcecc9d5774a7e4eaa731fc5b5.svg" />
+    </a>
+  </div>
+
+  <div class="help-flyout-link">
+    <svg class="icon-help" viewBox="0 0 100 100">
+      <path d="M75,0H25C11.19,0,0,11.193,0,25v50c0,13.802,11.19,25,25,25h50c13.811,0,25-11.198,25-25V25C100,11.193,88.811,0,75,0z
+   M57.203,85.067H41.504V72.542h15.699V85.067L57.203,85.067z M73.357,42.041c-0.84,2.066-1.873,3.834-3.102,5.298
+  c-1.235,1.474-2.604,2.718-4.101,3.751c-1.498,1.035-2.922,2.066-4.249,3.101c-1.333,1.034-1.553,2.214-2.596,3.547
+  c-1.025,1.335-0.977,3.004-0.977,5.006v3.924H41.668v-4.623c0-2.864,1.366-5.265,2.27-7.202c0.896-1.935,2.255-3.581,3.459-4.947
+  c1.196-1.367,2.62-2.556,3.955-3.557c1.327-0.993,2.637-1.993,3.776-2.995c1.123-1.001,2.083-2.1,2.783-3.304
+  c0.7-1.197,1.043-2.694,0.977-4.5c0-3.06-0.74-5.33-2.245-6.795c-1.498-1.465-3.582-2.206-6.25-2.206c-1.8,0-3.337,0.351-4.639,1.05
+  c-1.303,0.7-2.369,1.635-3.199,2.808c-0.837,1.163-1.448,3.593-1.847,5.156c-0.407,1.57-0.602,6.115-0.602,6.115H25.399
+  c0.073-8.333,0.684-7.963,1.855-10.965c1.164-2.995,2.8-6.132,4.899-8.33c2.099-2.197,4.63-4.179,7.601-5.417
+  c2.962-1.228,6.283-1.977,9.945-1.977c4.736,0,8.683,0.581,11.856,1.876c3.167,1.302,5.713,2.889,7.65,4.817
+  c1.929,1.937,3.312,4.004,4.149,6.234c0.831,2.237,1.245,4.313,1.245,6.242C74.601,37.354,74.187,39.975,73.357,42.041z"/>
+    </svg>
+    <div class="help-flyout help-flyout-reverse">
+      <h5>About External Resources</h5>
+      <svg class="icon-x" viewBox="0 0 100 100">
+        <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+      </svg>
+      <p>You can apply CSS to your Pen from any stylesheet on the web. Just put a URL to it here and we'll apply it, in the order you have them, before the CSS in the Pen itself.</p>
+      <p>You can also link to another Pen here (use the <code>.css</code> <a href="https://blog.codepen.io/documentation/url-extensions/">URL Extension</a>) and we'll pull the CSS from that Pen and include it. If it's using a <em>matching</em> preprocessor, use the appropriate URL Extension and we'll combine the code before preprocessing, so you can use the linked Pen as a true dependency.</p>
+      <p><a href="https://blog.codepen.io/documentation/editor/adding-external-resources/" target="_blank" rel="noopener">Learn more</a></p>
+    </div>
+  </div>
+
+  <div id="css-external-resources" class="external-resource-wrapper">
+</div>
+
+<script id="css-external-resources-template" nonce="zGEAds3ZnBo=" type="text/template">
+  <div data-view-id="<%= view_id %>" class="external-resource-url-row <%= insecure_resource %>">
+
+    <span class="move-external-url">
+      <svg viewBox="0 0 17 20" class="icon-drag-handle" width="20" height="17">
+        <path d="m1.5 3a1.5 1.5 0 0 1 0-3h17a1.5 1.5 0 0 1 0 3zm0 7a1.5 1.5 0 0 1 0-3h17a1.5 1.5 0 0 1 0 3zm0 7a1.5 1.5 0 0 1 0-3h17a1.5 1.5 0 0 1 0 3z"/>
+      </svg>
+    </span>
+
+    <input
+      id="external-resource-input-<%= view_id %>"
+      class="fullwidth css-resource external-resource"
+      type="text"
+      pattern="^((ftp|http|https):)?\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$"
+      name="external-css"
+      placeholder="<%= placeholder %>"
+      value="<%= url %>"
+      data-view-id="<%= view_id %>">
+
+    <span class="insecure-resource-tooltip resource-problem-tooltip">
+      <div class="help-flyout-link">
+        <span class="icon-help">?</span>
+        <div class="help-flyout help-flyout-reverse">
+          <svg class="icon-x" viewBox="0 0 100 100">
+            <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+          </svg>
+          <h5>Insecure Resource</h5>
+          <p>You are linking to a resource using the non-secure http:// protocol, which may not work when the browser is using https:// like CodePen enforces.</p>
+        </div>
+      </div>
+    </span>
+
+    <span class="not-using-url-extension-tooltip resource-problem-tooltip">
+      <div class="help-flyout-link">
+        <span class="icon-help">?</span>
+        <div class="help-flyout help-flyout-reverse">
+          <svg class="icon-x" viewBox="0 0 100 100">
+            <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+          </svg>
+          <h5>URL Extension Required</h5>
+          <p>When linking another Pen as a resource, make sure you use a <a href="https://blog.codepen.io/documentation/url-extensions/">URL Extension</a> of the type of code you want to link to. Either <code>.css</code>, <code>.js</code>, or the extension of a matching code processor.</p>
+        </div>
+      </div>
+    </span>
+
+    <div class="resource-actions">
+      <span class="remove-external-url external-url-option" data-view-id="<%= view_id %>">
+        <svg class="icon-x" viewBox="0 0 100 100" width="12" height="12">
+          <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+        </svg>
+      </span>
+
+      <a id="external-resource-input-view-link-<%= view_id %>" class="open-external-url external-url-option" target="_blank" rel="noopener" data-view-id="<%= view_id %>" href="<%= url %>">
+        <svg viewBox="0 0 30.5 16.5" id="icon-eye" width="14" height="14">
+          <path d="M15.3,0C8.9,0,3.3,3.3,0,8.3c3.3,5,8.9,8.3,15.3,8.3c6.4,0,12-3.3,15.3-8.3C27.3,3.3,21.7,0,15.3,0z M15.3,14.5 c-3.4,0-6.2-2.8-6.2-6.2C9,4.8,11.8,2,15.3,2c3.4,0,6.2,2.8,6.2,6.2C21.5,11.7,18.7,14.5,15.3,14.5z"/>
+        </svg>
+      </a>
+    </div>
+
+  </div>
+</script>
+
+
+  <div class="external-resource-actions group">
+    <span id="add-css-resource" class="button mini-button button-medium add-resource" data-type="css">
+      <span data-type="css">+ add another resource</span>
+    </span>
+  </div>
+
+</div>
+
+      </div>
+      <div class="settings tab-page" id="settings-js">
+        <div class="item-settings-javascript normal-labels">
+
+
+    <h3>
+      JavaScript
+    </h3>
+
+    <div class="item-settings-javascript-preprocessor settings-row">
+
+      <h4>
+        <label for="js-preprocessor">
+          JavaScript Preprocessor
+        </label>
+      </h4>
+
+      <div class="help-flyout-link">
+        <svg class="icon-help" viewBox="0 0 100 100" width="14" height="14">
+          <path d="M75,0H25C11.19,0,0,11.193,0,25v50c0,13.802,11.19,25,25,25h50c13.811,0,25-11.198,25-25V25C100,11.193,88.811,0,75,0z
+   M57.203,85.067H41.504V72.542h15.699V85.067L57.203,85.067z M73.357,42.041c-0.84,2.066-1.873,3.834-3.102,5.298
+  c-1.235,1.474-2.604,2.718-4.101,3.751c-1.498,1.035-2.922,2.066-4.249,3.101c-1.333,1.034-1.553,2.214-2.596,3.547
+  c-1.025,1.335-0.977,3.004-0.977,5.006v3.924H41.668v-4.623c0-2.864,1.366-5.265,2.27-7.202c0.896-1.935,2.255-3.581,3.459-4.947
+  c1.196-1.367,2.62-2.556,3.955-3.557c1.327-0.993,2.637-1.993,3.776-2.995c1.123-1.001,2.083-2.1,2.783-3.304
+  c0.7-1.197,1.043-2.694,0.977-4.5c0-3.06-0.74-5.33-2.245-6.795c-1.498-1.465-3.582-2.206-6.25-2.206c-1.8,0-3.337,0.351-4.639,1.05
+  c-1.303,0.7-2.369,1.635-3.199,2.808c-0.837,1.163-1.448,3.593-1.847,5.156c-0.407,1.57-0.602,6.115-0.602,6.115H25.399
+  c0.073-8.333,0.684-7.963,1.855-10.965c1.164-2.995,2.8-6.132,4.899-8.33c2.099-2.197,4.63-4.179,7.601-5.417
+  c2.962-1.228,6.283-1.977,9.945-1.977c4.736,0,8.683,0.581,11.856,1.876c3.167,1.302,5.713,2.889,7.65,4.817
+  c1.929,1.937,3.312,4.004,4.149,6.234c0.831,2.237,1.245,4.313,1.245,6.242C74.601,37.354,74.187,39.975,73.357,42.041z"/>
+        </svg>
+        <div class="help-flyout help-flyout-reverse">
+          <h5>About JavaScript Preprocessors</h5>
+          <svg class="icon-x" viewBox="0 0 100 100" width="12" height="12">
+            <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+          </svg>
+          <p>JavaScript preprocessors can help make authoring JavaScript easier and more convenient.</p>
+          <p><a href="https://blog.codepen.io/documentation/editor/using-js-preprocessors/" target="_blank" rel="noopener">Learn more</a> &middot; <a href="/versions/" target="_blank">Versions</a></p>
+        </div>
+      </div>
+
+      <div class="custom-select-wrap">
+        <select name="js-preprocessor" id="js-preprocessor" class="fullwidth">
+            <option value="none">None</option>
+            <option value="babel">Babel</option>
+            <option value="typescript">TypeScript</option>
+            <option value="coffeescript">CoffeeScript</option>
+            <option value="livescript">LiveScript</option>
+        </select>
+        <div class="select-icon">
+          <svg viewBox="-122.9 121.1 105.9 61.9" class="icon-arrow-down-mini">
+            <path d="M-63.2,180.3l43.5-43.5c1.7-1.7,2.7-4,2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.7l-37.2,37.2l-37.2-37.2
+        c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.6c-1.9,1.8-2.8,4.2-2.8,6.6c0,2.3,0.9,4.6,2.6,6.5l0,0c11.4,11.5,41,41.2,43,43.3l0.2,0.2
+        C-73.5,183.9-66.8,183.9-63.2,180.3z"/>
+          </svg>
+          <svg viewBox="-122.9 121.1 105.9 61.9" class="icon-arrow-down-mini">
+            <path d="M-63.2,180.3l43.5-43.5c1.7-1.7,2.7-4,2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.7l-37.2,37.2l-37.2-37.2
+        c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.6c-1.9,1.8-2.8,4.2-2.8,6.6c0,2.3,0.9,4.6,2.6,6.5l0,0c11.4,11.5,41,41.2,43,43.3l0.2,0.2
+        C-73.5,183.9-66.8,183.9-63.2,180.3z"/>
+          </svg>
+        </div>
+      </div>
+
+      <p><small>Babel includes JSX processing.</small></p>
+
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div id="external-js-resources" class="item-settings-javascript-external settings-row external-js-resources top-label-form">
+
+      <h4>
+        Add External Scripts/Pens
+      </h4>
+
+      <p>Any URL's added here will be added as <code>&lt;script></code>s in order, and run <em>before</em> the JavaScript in the editor. You can use the URL of any other Pen and it will include the JavaScript from that Pen.</p>
+
+      <div class="resource-search-bar">
+        <svg viewBox="0 0 56.7 56.7" class="icon icon-mag" width="18" height="18">
+          <path d="M42.8,7.3C33-2.4,17.1-2.4,7.3,7.3c-9.8,9.8-9.8,25.7,0,35.5c8.7,8.7,22.2,9.7,32,2.9l9.6,9.6c1.8,1.8,4.7,1.8,6.4,0
+	c1.8-1.8,1.8-4.7,0-6.4l-9.6-9.6C52.5,29.5,51.5,16,42.8,7.3z M36.6,36.6c-6.4,6.4-16.7,6.4-23.1,0s-6.4-16.7,0-23.1
+	c6.4-6.4,16.7-6.4,23.1,0C43,19.9,43,30.3,36.6,36.6z"/>
+        </svg>
+
+        <input id="external-js-search" type="text" value="" placeholder="Search CDNjs (jQuery, Lodash, React, Angular, Vue.js, Ember...)">
+      </div>
+
+      <div class="algolia-shoutout">
+        <a href="https://www.algolia.com/?utm_source=react-instantsearch&utm_medium=website&utm_content=codepen.io&utm_campaign=poweredby" target="_blank">
+          Powered by <img alt="Algolia" src="https://cpwebassets.codepen.io/assets/settings/algolia-9e1c0c887f4db420704b2a79926864019ef156bcecc9d5774a7e4eaa731fc5b5.svg" />
+        </a>
+      </div>
+
+      <div class="help-flyout-link">
+        <svg class="icon-help" viewBox="0 0 100 100" width="14" height="14">
+          <path d="M75,0H25C11.19,0,0,11.193,0,25v50c0,13.802,11.19,25,25,25h50c13.811,0,25-11.198,25-25V25C100,11.193,88.811,0,75,0z
+   M57.203,85.067H41.504V72.542h15.699V85.067L57.203,85.067z M73.357,42.041c-0.84,2.066-1.873,3.834-3.102,5.298
+  c-1.235,1.474-2.604,2.718-4.101,3.751c-1.498,1.035-2.922,2.066-4.249,3.101c-1.333,1.034-1.553,2.214-2.596,3.547
+  c-1.025,1.335-0.977,3.004-0.977,5.006v3.924H41.668v-4.623c0-2.864,1.366-5.265,2.27-7.202c0.896-1.935,2.255-3.581,3.459-4.947
+  c1.196-1.367,2.62-2.556,3.955-3.557c1.327-0.993,2.637-1.993,3.776-2.995c1.123-1.001,2.083-2.1,2.783-3.304
+  c0.7-1.197,1.043-2.694,0.977-4.5c0-3.06-0.74-5.33-2.245-6.795c-1.498-1.465-3.582-2.206-6.25-2.206c-1.8,0-3.337,0.351-4.639,1.05
+  c-1.303,0.7-2.369,1.635-3.199,2.808c-0.837,1.163-1.448,3.593-1.847,5.156c-0.407,1.57-0.602,6.115-0.602,6.115H25.399
+  c0.073-8.333,0.684-7.963,1.855-10.965c1.164-2.995,2.8-6.132,4.899-8.33c2.099-2.197,4.63-4.179,7.601-5.417
+  c2.962-1.228,6.283-1.977,9.945-1.977c4.736,0,8.683,0.581,11.856,1.876c3.167,1.302,5.713,2.889,7.65,4.817
+  c1.929,1.937,3.312,4.004,4.149,6.234c0.831,2.237,1.245,4.313,1.245,6.242C74.601,37.354,74.187,39.975,73.357,42.041z"/>
+        </svg>
+        <div class="help-flyout help-flyout-reverse">
+          <h5>About External Resources</h5>
+          <svg class="icon-x" viewBox="0 0 100 100" height="12" width="12">
+            <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+          </svg>
+          <p>You can apply a script from anywhere on the web to your Pen. Just put a URL to it here and we'll add it, in the order you have them, before the JavaScript in the Pen itself.</p>
+          <p>If the script you link to has the file extension of a preprocessor, we'll attempt to process it before applying.</p>
+          <p>You can also link to another Pen here, and we'll pull the JavaScript from that Pen and include it. If it's using a matching preprocessor, we'll combine the code before preprocessing, so you can use the linked Pen as a true dependency.</p>
+          <p><a href="https://blog.codepen.io/documentation/adding-external-resources/" rel="noopener" target="_blank">Learn more</a></p>
+        </div>
+      </div>
+
+      <div id="js-external-resources" class="external-resource-wrapper">
+</div>
+
+<script id="js-external-resources-template" nonce="zGEAds3ZnBo=" type="text/template">
+  <div data-view-id="<%= view_id %>" class="external-resource-url-row <%= insecure_resource %>">
+
+    <span class="move-external-url">
+      <svg viewBox="0 0 17 20" class="icon-drag-handle" width="20" height="17">
+        <path d="m1.5 3a1.5 1.5 0 0 1 0-3h17a1.5 1.5 0 0 1 0 3zm0 7a1.5 1.5 0 0 1 0-3h17a1.5 1.5 0 0 1 0 3zm0 7a1.5 1.5 0 0 1 0-3h17a1.5 1.5 0 0 1 0 3z"/>
+      </svg>
+    </span>
+
+    <input
+      id="external-resource-input-<%= view_id %>"
+      class="fullwidth js-resource external-resource"
+      type="text"
+      pattern="^((ftp|http|https):)?\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$"
+      name="external-js"
+      placeholder="<%= placeholder %>"
+      value="<%= url %>"
+      data-view-id="<%= view_id %>">
+
+    <span class="insecure-resource-tooltip resource-problem-tooltip">
+      <div class="help-flyout-link">
+        <span class="icon-help">?</span>
+        <div class="help-flyout help-flyout-reverse">
+          <svg class="icon-x" viewBox="0 0 100 100">
+            <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+          </svg>
+          <h5>Insecure Resource</h5>
+          <p>You are linking to a resource using the non-secure http:// protocol, which may not work when the browser is using https:// like CodePen enforces.</p>
+        </div>
+      </div>
+    </span>
+
+    <span class="not-using-url-extension-tooltip resource-problem-tooltip">
+      <div class="help-flyout-link">
+        <span class="icon-help">?</span>
+        <div class="help-flyout help-flyout-reverse">
+          <svg class="icon-x" viewBox="0 0 100 100">
+            <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+          </svg>
+          <h5>URL Extension Required</h5>
+          <p>When linking another Pen as a resource, make sure you use a <a href="https://blog.codepen.io/documentation/url-extensions/">URL Extension</a> of the type of code you want to link to. Either <code>.css</code>, <code>.js</code>, or the extension of a matching code processor.</p>
+        </div>
+      </div>
+    </span>
+
+    <div class="resource-actions">
+      <span class="remove-external-url external-url-option" data-view-id="<%= view_id %>">
+        <svg class="icon-x" viewBox="0 0 100 100" width="12" height="12">
+          <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+        </svg>
+      </span>
+
+      <a id="external-resource-input-view-link-<%= view_id %>" class="open-external-url external-url-option" target="_blank" rel="noopener" data-view-id="<%= view_id %>" href="<%= url %>">
+        <svg viewBox="0 0 30.5 16.5" id="icon-eye" width="14" height="14">
+          <path d="M15.3,0C8.9,0,3.3,3.3,0,8.3c3.3,5,8.9,8.3,15.3,8.3c6.4,0,12-3.3,15.3-8.3C27.3,3.3,21.7,0,15.3,0z M15.3,14.5 c-3.4,0-6.2-2.8-6.2-6.2C9,4.8,11.8,2,15.3,2c3.4,0,6.2,2.8,6.2,6.2C21.5,11.7,18.7,14.5,15.3,14.5z"/>
+        </svg>
+      </a>
+    </div>
+
+  </div>
+</script>
+
+
+      <div class="external-resource-actions group">
+        <span id="add-js-resource" class="button button-medium mini-button add-resource" data-type="js">
+          <span data-type="js">+ add another resource</span>
+        </span>
+      </div>
+    </div>
+
+  <h3 aria-label="Packages">Packages</h3>
+
+  <div class="item-settings-packages settings-row" id="item-settings-packages">
+
+    <h4>Add Packages</h4>
+
+    <p>Search for and use JavaScript packages from <a href="https://www.npmjs.com/" target="blank" rel="noopener">npm</a> here. By selecting a package, an <code>import</code> statement will be added to the top of the JavaScript editor for this package.</p>
+
+    <div class="resource-search-bar">
+      <svg viewBox="0 0 56.7 56.7" class="icon icon-mag" width="18" height="18">
+        <path d="M42.8,7.3C33-2.4,17.1-2.4,7.3,7.3c-9.8,9.8-9.8,25.7,0,35.5c8.7,8.7,22.2,9.7,32,2.9l9.6,9.6c1.8,1.8,4.7,1.8,6.4,0
+c1.8-1.8,1.8-4.7,0-6.4l-9.6-9.6C52.5,29.5,51.5,16,42.8,7.3z M36.6,36.6c-6.4,6.4-16.7,6.4-23.1,0s-6.4-16.7,0-23.1
+c6.4-6.4,16.7-6.4,23.1,0C43,19.9,43,30.3,36.6,36.6z"/>
+      </svg>
+      <input id="packages-search" type="text" value="" placeholder="Search npm and add a package...">
+    </div>
+
+    <div class="algolia-shoutout">
+      <a href="https://www.algolia.com/?utm_source=react-instantsearch&utm_medium=website&utm_content=codepen.io&utm_campaign=poweredby" target="_blank">
+        Powered by <img alt="Algolia" src="https://cpwebassets.codepen.io/assets/settings/algolia-9e1c0c887f4db420704b2a79926864019ef156bcecc9d5774a7e4eaa731fc5b5.svg" />
+      </a>
+    </div>
+
+    <div class="help-flyout-link">
+      <svg class="icon-help" viewBox="0 0 100 100" width="14" height="14">
+        <path d="M75,0H25C11.19,0,0,11.193,0,25v50c0,13.802,11.19,25,25,25h50c13.811,0,25-11.198,25-25V25C100,11.193,88.811,0,75,0z
+   M57.203,85.067H41.504V72.542h15.699V85.067L57.203,85.067z M73.357,42.041c-0.84,2.066-1.873,3.834-3.102,5.298
+  c-1.235,1.474-2.604,2.718-4.101,3.751c-1.498,1.035-2.922,2.066-4.249,3.101c-1.333,1.034-1.553,2.214-2.596,3.547
+  c-1.025,1.335-0.977,3.004-0.977,5.006v3.924H41.668v-4.623c0-2.864,1.366-5.265,2.27-7.202c0.896-1.935,2.255-3.581,3.459-4.947
+  c1.196-1.367,2.62-2.556,3.955-3.557c1.327-0.993,2.637-1.993,3.776-2.995c1.123-1.001,2.083-2.1,2.783-3.304
+  c0.7-1.197,1.043-2.694,0.977-4.5c0-3.06-0.74-5.33-2.245-6.795c-1.498-1.465-3.582-2.206-6.25-2.206c-1.8,0-3.337,0.351-4.639,1.05
+  c-1.303,0.7-2.369,1.635-3.199,2.808c-0.837,1.163-1.448,3.593-1.847,5.156c-0.407,1.57-0.602,6.115-0.602,6.115H25.399
+  c0.073-8.333,0.684-7.963,1.855-10.965c1.164-2.995,2.8-6.132,4.899-8.33c2.099-2.197,4.63-4.179,7.601-5.417
+  c2.962-1.228,6.283-1.977,9.945-1.977c4.736,0,8.683,0.581,11.856,1.876c3.167,1.302,5.713,2.889,7.65,4.817
+  c1.929,1.937,3.312,4.004,4.149,6.234c0.831,2.237,1.245,4.313,1.245,6.242C74.601,37.354,74.187,39.975,73.357,42.041z"/>
+      </svg>
+      <div class="help-flyout help-flyout-reverse">
+        <h5>About Packages</h5>
+        <svg class="icon-x" viewBox="0 0 100 100" width="12" height="12">
+          <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+        </svg>
+        <p>Using packages here is powered by <a href="https://esm.sh/">esm.sh</a>, which makes packages from npm not only available on a CDN, but prepares them for native JavaScript ESM usage.</p>
+        <p>All packages are different, so refer to their docs for how they work.</p>
+        <p>If you're using React / ReactDOM, make sure to turn on Babel for the JSX processing.</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+      </div>
+
+      <div class="settings tab-page" id="settings-behavior">
+        <h3 aria-label="Pen Behavior">Behavior</h3>
+
+<div class="settings-row">
+
+  <h4>Auto Save</h4>
+
+  <div>
+    <p class="hint">If active, Pens will autosave every 30 seconds after being saved once.</p>
+
+    <div class="ios-toggle-mega-label-wrap">
+      <span class="ios-toggle ios-toggle-reverse">
+        <input type="checkbox" id="auto-save" name="auto-save" checked>
+        <label for="auto-save"></label>
+        <label for="auto-save" class="ios-toggle-mega-label"></label>
+      </span>
+    </div>
+  </div>
+
+</div>
+
+<div class="settings-row">
+
+  <h4>Auto-Updating Preview</h4>
+
+  <p class="hint">If enabled, the preview panel updates automatically as you code. If disabled, use the "Run" button to update.</p>
+
+  <div class="ios-toggle-mega-label-wrap">
+    <span class="ios-toggle ios-toggle-reverse">
+      <input type="checkbox" id="auto-run" name="auto-run" checked>
+      <label for="auto-run"></label>
+      <label for="auto-run" class="ios-toggle-mega-label"></label>
+    </span>
+  </div>
+
+</div>
+
+<div class="settings-row">
+
+  <h4>Format on Save</h4>
+
+  <p class="hint">If enabled, your code will be formatted when you actively save your Pen. <strong><span class="inline-note">Note:</span> your code becomes un-folded during formatting.</strong></p>
+
+  <div class="ios-toggle-mega-label-wrap">
+    <span class="ios-toggle ios-toggle-reverse">
+      <input type="checkbox" id="format_on_save" name="format_on_save">
+      <label for="format_on_save"></label>
+      <label for="format_on_save" class="ios-toggle-mega-label"></label>
+    </span>
+  </div>
+
+
+</div>
+
+      </div>
+      <div class="settings tab-page" id="settings-editor">
+        <h3 aria-label="Editor Settings">Editor Settings</h3>
+
+<div id="editor-settings-form" class="settings-row top-label-form">
+
+  <h4>
+    Code Indentation
+  </h4>
+
+  <ul class="radio-list">
+    <li>
+      <input type="radio" id="indent-with-spaces" name="indent-with" value="spaces" checked>
+      <label for="indent-with-spaces" class="small-inline">Spaces</label>
+    </li>
+    <li>
+      <input type="radio" id="indent-with-tabs" name="indent-with" value="tabs">
+      <label for="indent-with-tabs" class="small-inline">Tabs</label>
+    </li>
+  </ul>
+
+</div>
+
+<div class="settings-row top-label-form normal-labels">
+
+  <h4>
+    <label for="tab-size">
+      Code Indent width
+    </label>
+  </h4>
+
+  <div class="custom-select-wrap">
+    <select id="tab-size" class="fullwidth" name="tab-size">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+    </select>
+    <div class="select-icon">
+      <svg viewBox="-122.9 121.1 105.9 61.9" class="icon-arrow-down-mini">
+        <path d="M-63.2,180.3l43.5-43.5c1.7-1.7,2.7-4,2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.7l-37.2,37.2l-37.2-37.2
+        c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.6c-1.9,1.8-2.8,4.2-2.8,6.6c0,2.3,0.9,4.6,2.6,6.5l0,0c11.4,11.5,41,41.2,43,43.3l0.2,0.2
+        C-73.5,183.9-66.8,183.9-63.2,180.3z"/>
+      </svg>
+      <svg viewBox="-122.9 121.1 105.9 61.9" class="icon-arrow-down-mini">
+        <path d="M-63.2,180.3l43.5-43.5c1.7-1.7,2.7-4,2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.7l-37.2,37.2l-37.2-37.2
+        c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.6c-1.9,1.8-2.8,4.2-2.8,6.6c0,2.3,0.9,4.6,2.6,6.5l0,0c11.4,11.5,41,41.2,43,43.3l0.2,0.2
+        C-73.5,183.9-66.8,183.9-63.2,180.3z"/>
+      </svg>
+    </div>
+  </div>
+
+</div>
+
+<div class="settings-row">
+
+  <h4>Want to change your Syntax Highlighting theme, Fonts and more?</h4>
+
+  <p>Visit <a href="/settings/editor" target="_blank">your global Editor Settings</a>.</p>
+
+</div>
+
+      </div>
+  </div>
+
+  <footer>
+    <div class="save-and-close-wrap">
+        <input type="button" class="button button-small green button-no-right-margin close" value="Close" id="close-settings">
+    </div>
+  </footer>
+</div>
+
+
+<div class="page-wrap">
+
+  <div class="boxes">
+
+    <div class="mobile-editor-nav">
+          <button id="html-toggle" class="selected"><span>HTML</span></button>
+          <button id="css-toggle" ><span>CSS</span></button>
+          <button id="js-toggle" ><span>JS</span></button>
+      <button id="result-toggle" class="selected"><span>Result</span></button>
+    </div>
+
+    <div class="top-boxes editor-parent" data-number-of-editors="3" elementtiming="pen-editors">
+
+
+
+        <div class="editor-resizer html-editor-resizer" title="Double-click to expand."></div>
+
+        <div id="box-html" class="box box-html" data-type="html">
+
+          <div class="powers">
+            <div class="powers-drag-handle" title="Double-click to expand."></div>
+
+            <div class="editor-actions-left">
+              <h2 class="box-title html-editor-title" id="html-editor-title">
+
+                  <svg viewBox="0 0 15 15" class="file-type-icon" id="icon-file-html">
+    <rect fill="#FF3C41" width="15" height="15" rx="4"/>
+    <path d="M10.97 2.29a.563.563 0 0 0-.495-.29.572.572 0 0 0-.488.277l-5.905 9.86a.565.565 0 0 0-.007.574c.102.18.287.289.495.289a.572.572 0 0 0 .488-.277l5.905-9.86a.565.565 0 0 0 .007-.574" fill="#28282B"/>
+  </svg>
+
+
+                <span class="box-title-name">
+                  HTML
+                </span>
+                <span class="box-title-preprocessor-name "></span>
+              </h2>
+
+            </div>
+
+            <div class="editor-actions-right">
+              <div class="collaborators-indicators"></div>
+
+              <button id="settings-pane-html" class="button button-medium mini-button settings-nub" data-type="html" title="Open HTML Settings">
+                <svg viewBox="0 0 100 100" id="icon-gear" width="10" height="10">
+                  <path d="M87.687,45.077c-0.313-2.433-0.816-4.807-1.542-7.079l8.145-11.73l-5.827-7.515l-0.094-0.123l-5.824-7.514
+                    l-12.955,5.577c-2.041-1.265-4.192-2.362-6.459-3.219L59.42,0h-9.34h-0.153h-9.341l-3.709,13.474
+                    c-2.27,0.857-4.421,1.955-6.463,3.222l-12.957-5.577l-5.825,7.514l-0.097,0.124l-5.822,7.517l8.146,11.731
+                    c-0.726,2.271-1.233,4.645-1.544,7.079L0,52.032l2.08,9.375l0.033,0.15l2.08,9.375l14.001,0.761c1.295,2.028,2.771,3.926,4.4,5.668
+                    l-2.396,14.227l8.416,4.173l0.138,0.067L37.169,100l9.309-10.796c1.161,0.109,2.335,0.173,3.524,0.173s2.358-0.074,3.52-0.184
+                    l9.317,10.804l8.415-4.173l0.141-0.066l8.413-4.172l-2.396-14.228c1.628-1.741,3.104-3.64,4.4-5.672l14-0.759l2.078-9.375
+                    l0.035-0.154L100,52.025L87.687,45.077z M50.003,34.51c8.435,0,15.272,7.035,15.272,15.719c0,8.679-6.839,15.717-15.272,15.717
+                    c-8.436,0-15.272-7.038-15.272-15.717C34.731,41.545,41.569,34.51,50.003,34.51z"/>
+                </svg>
+              </button>
+
+              <button class="button mini-button button-medium editor-dropdown-button editor-dropdown-button-html" data-dropdown="#editor-dropdown-html" aria-haspopup="true" aria-expanded="false">
+  <span class="visually-hidden">
+    HTML Options
+  </span>
+  <svg viewBox="-122.9 121.1 105.9 61.9" class="icon-arrow-down-mini" width="10" height="10">
+    <path d="M-63.2,180.3l43.5-43.5c1.7-1.7,2.7-4,2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.7l-37.2,37.2l-37.2-37.2
+    c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.6c-1.9,1.8-2.8,4.2-2.8,6.6c0,2.3,0.9,4.6,2.6,6.5l0,0c11.4,11.5,41,41.2,43,43.3l0.2,0.2
+    C-73.5,183.9-66.8,183.9-63.2,180.3z"/>
+  </svg>
+</button>
+
+
+              <ul id="editor-dropdown-html" class="link-list is-dropdown editor-dropdown editor-dropdown-html" data-dropdown-position="css" data-dropdown-type="html">
+    <li class="editor-dropdown-list-item">
+      <button
+        id="tidy-html"
+        class="invisible-button tidy-code-button"
+        data-editor-type="html"
+      >
+        Format HTML
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="view-compiled-html"
+        class="invisible-button view-compiled-button"
+        data-editor-type="html"
+      >
+        View Compiled HTML
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="analyze-html"
+        class="invisible-button analyze-button"
+        data-editor-type="html"
+      >
+        Analyze HTML
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="maximize-html-editor"
+        class="invisible-button maximize-button"
+        data-editor-type="html"
+      >
+        Maximize HTML Editor
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="minimize-html-editor"
+        class="invisible-button minimize-button"
+        data-editor-type="html"
+      >
+        Minimize HTML Editor
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="fold-all-html"
+        class="invisible-button fold-all-button"
+        data-editor-type="html"
+      >
+        Fold All
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="unfold-all-html"
+        class="invisible-button unfold-all-button"
+        data-editor-type="html"
+      >
+        Unfold All
+      </button>
+    </li>
+</ul>
+
+            </div>
+          </div>
+
+          <div class="code-wrap notranslate" translate="no">
+            <pre id="html" class="code-box" aria-labelledby="html-editor-title">
+              <code>
+                &lt;!-- Newsletter issue on how to build this: https://craftofui.substack.com/p/scrolling-a-page-out-of-the-playbook --&gt;
+
+
+&lt;div class=&quot;content-wrap&quot;&gt;
+      &lt;header&gt;
+        &lt;h1 class=&quot;fluid&quot;&gt;let&#39;s&lt;br /&gt;scroll.&lt;/h1&gt;
+      &lt;/header&gt;
+      &lt;main&gt;
+        &lt;section&gt;
+          &lt;div class=&quot;content&quot;&gt;
+            &lt;div class=&quot;grid&quot;&gt;
+              &lt;div class=&quot;layer&quot;&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1463100099107-aa0980c362e6?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjZ8fGZhc2hpb258ZW58MHx8MHx8fDA%3D&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1556304044-0699e31c6a34?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8OTJ8fGZhc2hpb258ZW58MHx8MHx8fDA%3D&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1590330297626-d7aff25a0431?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTA3fHxmYXNoaW9ufGVufDB8fDB8fHww&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTk1fHxmYXNoaW9ufGVufDB8fDB8fHww&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1488161628813-04466f872be2?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8NzR8fG1vZGVsJTIwZmFzaGlvbiUyMHN0cmVldHxlbnwwfHwwfHx8MA%3D%3D&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1565321590372-09331b9dd1eb?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGFpciUyMGpvcmRhbnxlbnwwfHwwfHx8MA%3D%3D&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=1&quot; alt=&quot;&quot; /&gt; --&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=2&quot; alt=&quot;&quot; /&gt; --&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=3&quot; alt=&quot;&quot; /&gt; --&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=4&quot; alt=&quot;&quot; /&gt; --&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=5&quot; alt=&quot;&quot; /&gt; --&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=6&quot; alt=&quot;&quot; /&gt; --&gt;
+              &lt;/div&gt;
+              &lt;div class=&quot;layer&quot;&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1531525645387-7f14be1bdbbd?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjM4fHxwcm9kdWN0fGVufDB8fDB8fHww&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1637414165749-9b3cd88b8271?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjd8fHRlY2glMjBwcm9kdWN0fGVufDB8fDB8fHww&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1699911251220-8e0de3b5ce88?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8b25ld2hlZWx8ZW58MHx8MHx8fDA%3D&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1667483629944-6414ad0648c5?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fGx1eHVyeSUyMHdhdGNofGVufDB8fDB8fHww&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://plus.unsplash.com/premium_photo-1706078438060-d76ced26d8d5?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjF8fGNhbWVyYSUyMHBvbGFyb2lkfGVufDB8fDB8fHww&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1525385444278-b7968e7e28dc?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDZ8fGl0ZW18ZW58MHx8MHx8fDA%3D&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=7&quot; alt=&quot;&quot; /&gt; --&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=8&quot; alt=&quot;&quot; /&gt; --&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=9&quot; alt=&quot;&quot; /&gt; --&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=10&quot; alt=&quot;&quot; /&gt; --&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=11&quot; alt=&quot;&quot; /&gt; --&gt;
+                &lt;!-- &lt;img src=&quot;https://picsum.photos/400/500?random=12&quot; alt=&quot;&quot; /&gt; --&gt;
+              &lt;/div&gt;
+              &lt;div class=&quot;layer&quot;&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/reserve/LJIZlzHgQ7WPSh5KVTCB_Typewriter.jpg?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aXRlbXxlbnwwfHwwfHx8MA%3D%3D&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;img
+                    src=&quot;https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmFzaGlvbnxlbnwwfHwwfHx8MA%3D%3D&quot;
+                    alt=&quot;&quot;
+                  /&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div class=&quot;scaler&quot;&gt;
+                &lt;img
+                  src=&quot;https://assets.codepen.io/605876/model-shades.jpg?format=auto&amp;quality=100&quot;
+                  alt=&quot;&quot;
+                /&gt;
+&lt;!--                 &lt;img src=&quot;./model-shades.jpg&quot; alt=&quot;&quot; /&gt; --&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/section&gt;
+        &lt;section&gt;
+          &lt;h2 class=&quot;fluid&quot;&gt;fin.&lt;/h2&gt;
+        &lt;/section&gt;
+      &lt;/main&gt;
+    &lt;/div&gt;
+    &lt;footer&gt;
+      &lt;span aria-hidden=&quot;true&quot;
+        &gt;ʕ&lt;span class=&quot;arm&quot;&gt;ノ&lt;/span&gt;•ᴥ•ʔ&lt;span class=&quot;arm&quot;&gt;ノ&lt;/span&gt;
+        &lt;span class=&quot;spring&quot;&gt;&lt;span&gt;︵&lt;/span&gt;&lt;/span&gt;
+        &lt;span class=&quot;table&quot;&gt;┻━┻&lt;/span&gt;&lt;/span
+      &gt;&amp;nbsp;&amp;copy; jhey &#39;24
+    &lt;/footer&gt;
+    &lt;a
+      class=&quot;bear-link&quot;
+      href=&quot;https://twitter.com/intent/follow?screen_name=jh3yy&quot;
+      target=&quot;_blank&quot;
+      rel=&quot;noreferrer noopener&quot;
+    &gt;
+      &lt;svg
+        class=&quot;w-9&quot;
+        viewBox=&quot;0 0 969 955&quot;
+        fill=&quot;none&quot;
+        xmlns=&quot;http://www.w3.org/2000/svg&quot;
+      &gt;
+        &lt;circle
+          cx=&quot;161.191&quot;
+          cy=&quot;320.191&quot;
+          r=&quot;133.191&quot;
+          stroke=&quot;currentColor&quot;
+          stroke-width=&quot;20&quot;
+        &gt;&lt;/circle&gt;
+        &lt;circle
+          cx=&quot;806.809&quot;
+          cy=&quot;320.191&quot;
+          r=&quot;133.191&quot;
+          stroke=&quot;currentColor&quot;
+          stroke-width=&quot;20&quot;
+        &gt;&lt;/circle&gt;
+        &lt;circle
+          cx=&quot;695.019&quot;
+          cy=&quot;587.733&quot;
+          r=&quot;31.4016&quot;
+          fill=&quot;currentColor&quot;
+        &gt;&lt;/circle&gt;
+        &lt;circle
+          cx=&quot;272.981&quot;
+          cy=&quot;587.733&quot;
+          r=&quot;31.4016&quot;
+          fill=&quot;currentColor&quot;
+        &gt;&lt;/circle&gt;
+        &lt;path
+          d=&quot;M564.388 712.083C564.388 743.994 526.035 779.911 483.372 779.911C440.709 779.911 402.356 743.994 402.356 712.083C402.356 680.173 440.709 664.353 483.372 664.353C526.035 664.353 564.388 680.173 564.388 712.083Z&quot;
+          fill=&quot;currentColor&quot;
+        &gt;&lt;/path&gt;
+        &lt;rect
+          x=&quot;310.42&quot;
+          y=&quot;448.31&quot;
+          width=&quot;343.468&quot;
+          height=&quot;51.4986&quot;
+          fill=&quot;#FF1E1E&quot;
+        &gt;&lt;/rect&gt;
+        &lt;path
+          fill-rule=&quot;evenodd&quot;
+          clip-rule=&quot;evenodd&quot;
+          d=&quot;M745.643 288.24C815.368 344.185 854.539 432.623 854.539 511.741H614.938V454.652C614.938 433.113 597.477 415.652 575.938 415.652H388.37C366.831 415.652 349.37 433.113 349.37 454.652V511.741L110.949 511.741C110.949 432.623 150.12 344.185 219.845 288.24C289.57 232.295 384.138 200.865 482.744 200.865C581.35 200.865 675.918 232.295 745.643 288.24Z&quot;
+          fill=&quot;currentColor&quot;
+        &gt;&lt;/path&gt;
+      &lt;/svg&gt;
+    &lt;/a&gt;
+              </code>
+            </pre>
+            <div class="error-bar" id="error-bar-html">
+              <span class="error-icon" data-type="html">
+                !
+              </span>
+            </div>
+            <span class="code-editor-status"></span>
+          </div>
+
+        </div>
+
+
+
+
+        <div class="editor-resizer css-editor-resizer" title="Double-click to expand."></div>
+
+        <div id="box-css" class="box box-css" data-type="css">
+
+          <div class="powers">
+            <div class="powers-drag-handle" title="Double-click to expand."></div>
+
+            <div class="editor-actions-left">
+              <h2 class="box-title css-editor-title" id="css-editor-title">
+
+                  <svg viewBox="0 0 15 15" class="file-type-icon" id="icon-file-css">
+    <rect fill="#0EBEFF" width="15" height="15" rx="4"/><path d="M8 8.366l1.845 1.065a.507.507 0 0 0 .686-.181.507.507 0 0 0-.186-.685L8.5 7.5l1.845-1.065a.507.507 0 0 0 .186-.685.507.507 0 0 0-.686-.181L8 6.634v-2.13A.507.507 0 0 0 7.5 4c-.268 0-.5.225-.5.503v2.131L5.155 5.569a.507.507 0 0 0-.686.181.507.507 0 0 0 .186.685L6.5 7.5 4.655 8.565a.507.507 0 0 0-.186.685c.134.232.445.32.686.181L7 8.366v2.13c0 .271.224.504.5.504.268 0 .5-.225.5-.503V8.366z" fill="#282828"/>
+  </svg>
+
+
+                <span class="box-title-name">
+                  CSS
+                </span>
+                <span class="box-title-preprocessor-name "></span>
+              </h2>
+
+            </div>
+
+            <div class="editor-actions-right">
+              <div class="collaborators-indicators"></div>
+
+              <button id="settings-pane-css" class="button button-medium mini-button settings-nub" data-type="css" title="Open CSS Settings">
+                <svg viewBox="0 0 100 100" id="icon-gear" width="10" height="10">
+                  <path d="M87.687,45.077c-0.313-2.433-0.816-4.807-1.542-7.079l8.145-11.73l-5.827-7.515l-0.094-0.123l-5.824-7.514
+                    l-12.955,5.577c-2.041-1.265-4.192-2.362-6.459-3.219L59.42,0h-9.34h-0.153h-9.341l-3.709,13.474
+                    c-2.27,0.857-4.421,1.955-6.463,3.222l-12.957-5.577l-5.825,7.514l-0.097,0.124l-5.822,7.517l8.146,11.731
+                    c-0.726,2.271-1.233,4.645-1.544,7.079L0,52.032l2.08,9.375l0.033,0.15l2.08,9.375l14.001,0.761c1.295,2.028,2.771,3.926,4.4,5.668
+                    l-2.396,14.227l8.416,4.173l0.138,0.067L37.169,100l9.309-10.796c1.161,0.109,2.335,0.173,3.524,0.173s2.358-0.074,3.52-0.184
+                    l9.317,10.804l8.415-4.173l0.141-0.066l8.413-4.172l-2.396-14.228c1.628-1.741,3.104-3.64,4.4-5.672l14-0.759l2.078-9.375
+                    l0.035-0.154L100,52.025L87.687,45.077z M50.003,34.51c8.435,0,15.272,7.035,15.272,15.719c0,8.679-6.839,15.717-15.272,15.717
+                    c-8.436,0-15.272-7.038-15.272-15.717C34.731,41.545,41.569,34.51,50.003,34.51z"/>
+                </svg>
+              </button>
+
+              <button class="button mini-button button-medium editor-dropdown-button editor-dropdown-button-css" data-dropdown="#editor-dropdown-css" aria-haspopup="true" aria-expanded="false">
+  <span class="visually-hidden">
+    CSS Options
+  </span>
+  <svg viewBox="-122.9 121.1 105.9 61.9" class="icon-arrow-down-mini" width="10" height="10">
+    <path d="M-63.2,180.3l43.5-43.5c1.7-1.7,2.7-4,2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.7l-37.2,37.2l-37.2-37.2
+    c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.6c-1.9,1.8-2.8,4.2-2.8,6.6c0,2.3,0.9,4.6,2.6,6.5l0,0c11.4,11.5,41,41.2,43,43.3l0.2,0.2
+    C-73.5,183.9-66.8,183.9-63.2,180.3z"/>
+  </svg>
+</button>
+
+
+              <ul id="editor-dropdown-css" class="link-list is-dropdown editor-dropdown editor-dropdown-css" data-dropdown-position="css" data-dropdown-type="css">
+    <li class="editor-dropdown-list-item">
+      <button
+        id="tidy-css"
+        class="invisible-button tidy-code-button"
+        data-editor-type="css"
+      >
+        Format CSS
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="view-compiled-css"
+        class="invisible-button view-compiled-button"
+        data-editor-type="css"
+      >
+        View Compiled CSS
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="analyze-css"
+        class="invisible-button analyze-button"
+        data-editor-type="css"
+      >
+        Analyze CSS
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="maximize-css-editor"
+        class="invisible-button maximize-button"
+        data-editor-type="css"
+      >
+        Maximize CSS Editor
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="minimize-css-editor"
+        class="invisible-button minimize-button"
+        data-editor-type="css"
+      >
+        Minimize CSS Editor
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="fold-all-css"
+        class="invisible-button fold-all-button"
+        data-editor-type="css"
+      >
+        Fold All
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="unfold-all-css"
+        class="invisible-button unfold-all-button"
+        data-editor-type="css"
+      >
+        Unfold All
+      </button>
+    </li>
+</ul>
+
+            </div>
+          </div>
+
+          <div class="code-wrap notranslate" translate="no">
+            <pre id="css" class="code-box" aria-labelledby="css-editor-title">
+              <code>
+                /* @import &#39;normalize.css&#39; layer(normalize); */
+@import url(&#39;https://unpkg.com/normalize.css&#39;) layer(normalize);
+
+@layer normalize, base, demo, grid, setup, scroll, novelty;
+
+@layer novelty {
+  @property --flip {
+    syntax: &#39;&lt;number&gt;&#39;;
+    inherits: true;
+    initial-value: 0;
+  }
+  @keyframes flip {
+    to {
+      --flip: 1;
+    }
+  }
+  [data-enhanced=&#39;true&#39;] {
+    @media (prefers-reduced-motion: no-preference) {
+      @supports (animation-timeline: scroll()) and (animation-range: 0 100%) {
+        footer &gt; span {
+          animation: flip both steps(1, end);
+          animation-timeline: scroll(root);
+        }
+
+        footer .arm {
+          opacity: var(--flip);
+        }
+
+        footer .table {
+          display: inline-block;
+          transform-origin: 0 50%;
+          rotate: calc((-180 + (var(--flip) * 180)) * 1deg);
+          translate: calc(16% + (var(--flip) * -16%)) calc(var(--flip) * -45%);
+          transform: translateY(calc(var(--flip) * 90%));
+          transition-property: translate, rotate, transform;
+          transition-duration: calc(var(--flip) * 0.2s);
+          transition-duration: 0.2s, 0.24s, 0.5s;
+        }
+
+        .spring {
+          outline: 1px dashed red;
+          clip-path: inset(0 0 0 0);
+        }
+
+        .spring span {
+          rotate: calc(-180deg + (var(--flip) * 180deg));
+          display: inline-block;
+          transform-origin: 50% 150%;
+          transition: rotate 0.24s;
+        }
+      }
+    }
+  }
+}
+
+@layer scroll {
+  :root {
+    --power-1-out: linear(
+      0 0%,
+      0.0027 3.64%,
+      0.0106 7.29%,
+      0.0425 14.58%,
+      0.0957 21.87%,
+      0.1701 29.16%,
+      0.2477 35.19%,
+      0.3401 41.23%,
+      0.5982 55.18%,
+      0.7044 61.56%,
+      0.7987 68.28%,
+      0.875 75%,
+      0.9297 81.25%,
+      0.9687 87.5%,
+      0.9922 93.75%,
+      1 100%
+    );
+    --power-2-out: linear(
+      0 0%,
+      0.0036 9.62%,
+      0.0185 16.66%,
+      0.0489 23.03%,
+      0.0962 28.86%,
+      0.1705 34.93%,
+      0.269 40.66%,
+      0.3867 45.89%,
+      0.5833 52.95%,
+      0.683 57.05%,
+      0.7829 62.14%,
+      0.8621 67.46%,
+      0.8991 70.68%,
+      0.9299 74.03%,
+      0.9545 77.52%,
+      0.9735 81.21%,
+      0.9865 85%,
+      0.9949 89.15%,
+      1 100%
+    );
+    --power-3-out: linear(
+      0 0%,
+      0.0029 13.8%,
+      0.0184 21.9%,
+      0.0339 25.51%,
+      0.0551 28.81%,
+      0.0827 31.88%,
+      0.1168 34.76%,
+      0.1962 39.57%,
+      0.3005 44.02%,
+      0.4084 47.53%,
+      0.6242 53.45%,
+      0.7493 57.93%,
+      0.8495 62.97%,
+      0.8888 65.67%,
+      0.9213 68.51%,
+      0.9629 73.9%,
+      0.9876 80.16%,
+      0.998 87.5%,
+      1 100%
+    );
+    --power-4-out: linear(
+      0 0%,
+      0.0012 14.95%,
+      0.0089 22.36%,
+      0.0297 28.43%,
+      0.0668 33.43%,
+      0.0979 36.08%,
+      0.1363 38.55%,
+      0.2373 43.07%,
+      0.3675 47.01%,
+      0.5984 52.15%,
+      0.7121 55.23%,
+      0.8192 59.21%,
+      0.898 63.62%,
+      0.9297 66.23%,
+      0.9546 69.06%,
+      0.9733 72.17%,
+      0.9864 75.67%,
+      0.9982 83.73%,
+      1 100%
+    );
+    --sine: linear(
+      0 0%,
+      0.2861 18.47%,
+      0.4829 32.08%,
+      0.6437 44.52%,
+      0.7712 56.07%,
+      0.8722 67.47%,
+      0.9115 73.02%,
+      0.9434 78.49%,
+      0.9682 83.91%,
+      0.9859 89.3%,
+      0.9965 94.66%,
+      1 100%
+    );
+  }
+  @keyframes fade {
+    0%,
+    55% {
+      opacity: 0;
+    }
+  }
+  @keyframes reveal {
+    0%,
+    30% {
+      scale: 0;
+    }
+  }
+  @keyframes scale-x {
+    0%,
+    10% {
+      width: calc(100vw - (2 * var(--gutter)));
+    }
+  }
+  @keyframes scale-y {
+    0%,
+    10% {
+      height: calc(100vh - (2 * var(--gutter)));
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-enhanced=&#39;true&#39;] {
+      main section:first-of-type {
+        min-height: 240vh;
+      }
+
+      @supports (animation-timeline: scroll()) and (animation-range: 0 100%) {
+        main section:first-of-type {
+          view-timeline: --runner;
+        }
+
+        &amp;[data-center=&#39;true&#39;] {
+          .scaler img {
+            animation-name: scale-x, scale-y;
+            animation-fill-mode: both;
+            animation-timing-function: var(--power-2-out), var(--power-1-out);
+            animation-timeline: --runner, --runner;
+            animation-range: entry 100% exit -20%;
+          }
+        }
+
+        &amp;[data-layers=&#39;true&#39;] {
+          .grid .layer {
+            animation-name: fade, reveal;
+            animation-fill-mode: both;
+            animation-timeline: --runner, --runner;
+            animation-timing-function: var(--sine), var(--power-1-out);
+            animation-range: entry 100% exit 0%;
+          }
+          &amp;[data-stagger=&#39;timing&#39;] .grid .layer {
+            &amp;:nth-of-type(1) {
+              animation-timing-function: var(--sine), var(--power-1-out);
+            }
+            &amp;:nth-of-type(2) {
+              animation-timing-function: var(--sine), var(--power-3-out);
+            }
+            &amp;:nth-of-type(3) {
+              animation-timing-function: var(--sine), var(--power-4-out);
+            }
+          }
+          &amp;[data-stagger=&#39;range&#39;] .grid .layer {
+            &amp;:nth-of-type(1) {
+              animation-range: entry 100% exit 0%;
+            }
+            &amp;:nth-of-type(2) {
+              animation-range: entry 100% exit -10%;
+            }
+            &amp;:nth-of-type(3) {
+              animation-range: entry 100% exit -20%;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@layer setup {
+  /* gross calculations here to appease Safari and Firefox */
+  :root {
+    --container-width: 1600px;
+    --gap: clamp(10px, 7.35vw, 80px);
+    --gutter: 2rem;
+  }
+  @media (max-width: 600px) {
+    :root {
+      --gutter: 1rem;
+    }
+  }
+
+  .content {
+    min-height: 100vh;
+    width: 100vw;
+    display: flex;
+    place-items: center;
+    align-content: center;
+    position: sticky;
+    top: 0;
+  }
+
+  .scaler {
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+    img {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      translate: -50% -50%;
+      object-fit: cover;
+      border-radius: 1rem;
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+@layer grid {
+  /* it&#39;s a 5x3 grid using subgrid, always centered */
+  .grid {
+    --offset: 0;
+    width: 1600px;
+    max-width: calc(100% - (2 * var(--gutter)));
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(3, auto);
+    gap: var(--gap);
+    margin: 0 auto;
+    align-content: center;
+    /* hmm */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+  }
+
+  /* .grid img {
+    width: 10vw;
+    height: 12vw;
+  } */
+
+  @media (max-width: 600px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+      --offset: -1;
+    }
+
+    .grid &gt; div:nth-of-type(1) {
+      display: none;
+    }
+  }
+
+  .grid &gt; .layer {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+  }
+
+  .grid &gt; div:nth-of-type(1) div:nth-of-type(odd) {
+    grid-column: 1;
+  }
+  .grid &gt; div:nth-of-type(1) div:nth-of-type(even) {
+    grid-column: -2;
+  }
+
+  .grid &gt; div:nth-of-type(2) div:nth-of-type(odd) {
+    grid-column: calc(2 + var(--offset));
+  }
+  .grid &gt; div:nth-of-type(2) div:nth-of-type(even) {
+    grid-column: calc(-3 - var(--offset));
+  }
+
+  .grid &gt; div:nth-of-type(3) div {
+    grid-column: calc(3 + var(--offset));
+
+    &amp;:last-of-type {
+      grid-row: -1;
+    }
+  }
+
+  .grid .scaler {
+    position: relative;
+    grid-area: 2 / calc(3 + var(--offset));
+  }
+
+  .grid img {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: 1rem;
+  }
+}
+
+@layer demo {
+  html {
+    scrollbar-color: red #0000;
+  }
+  body {
+    background: canvasText;
+  }
+  h1 {
+    --font-level: 8;
+    line-height: 0.6;
+  }
+  h2 {
+    --font-level: 4;
+  }
+  header {
+    min-height: 100vh;
+    display: grid;
+    margin: 0 auto;
+    align-content: center;
+    max-width: calc(100% - (2 * var(--gutter)));
+    padding-left: 48px;
+    text-align: left;
+  }
+  body {
+    display: block;
+  }
+
+  main,
+  section {
+    max-width: 100%;
+  }
+
+  section {
+    min-height: 100vh;
+  }
+
+  .content {
+    overflow: hidden;
+  }
+
+  main section:last-of-type {
+    display: grid;
+    place-items: center;
+  }
+
+  .content-wrap {
+    overflow: clip;
+    background: light-dark(#fff, #000);
+    z-index: 2;
+  }
+
+  footer {
+    padding: 4rem 2rem;
+    text-align: center;
+    position: sticky;
+    bottom: 0;
+    background: canvasText;
+    color: canvas;
+    width: 100%;
+    z-index: -1;
+    background: radial-gradient(hsl(0 0% 0% / 0.1) 2px, #0000 0) 50% 50% / 40px
+        40px,
+      canvasText;
+  }
+}
+
+@layer base {
+  :root {
+    --font-size-min: 16;
+    --font-size-max: 20;
+    --font-ratio-min: 1.2;
+    --font-ratio-max: 1.33;
+    --font-width-min: 375;
+    --font-width-max: 1500;
+  }
+
+  html {
+    color-scheme: light dark;
+  }
+
+  [data-theme=&#39;light&#39;] {
+    color-scheme: light only;
+  }
+
+  [data-theme=&#39;dark&#39;] {
+    color-scheme: dark only;
+  }
+
+  :where(.fluid) {
+    --fluid-min: calc(
+      var(--font-size-min) * pow(var(--font-ratio-min), var(--font-level, 0))
+    );
+    --fluid-max: calc(
+      var(--font-size-max) * pow(var(--font-ratio-max), var(--font-level, 0))
+    );
+    --fluid-preferred: calc(
+      (var(--fluid-max) - var(--fluid-min)) /
+        (var(--font-width-max) - var(--font-width-min))
+    );
+    --fluid-type: clamp(
+      (var(--fluid-min) / 16) * 1rem,
+      ((var(--fluid-min) / 16) * 1rem) -
+        (((var(--fluid-preferred) * var(--font-width-min)) / 16) * 1rem) +
+        (var(--fluid-preferred) * var(--variable-unit, 100vi)),
+      (var(--fluid-max) / 16) * 1rem
+    );
+    font-size: var(--fluid-type);
+  }
+
+  *,
+  *:after,
+  *:before {
+    box-sizing: border-box;
+  }
+
+  body {
+    background: light-dark(#fff, #000);
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    font-family: &#39;SF Pro Text&#39;, &#39;SF Pro Icons&#39;, &#39;AOS Icons&#39;, &#39;Helvetica Neue&#39;,
+      Helvetica, Arial, sans-serif, system-ui;
+  }
+
+  .content-wrap::before {
+    --size: 45px;
+    --line: color-mix(in lch, canvasText, transparent 70%);
+    content: &#39;&#39;;
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    background: linear-gradient(
+          90deg,
+          var(--line) 1px,
+          transparent 1px var(--size)
+        )
+        50% 50% / var(--size) var(--size),
+      linear-gradient(var(--line) 1px, transparent 1px var(--size)) 50% 50% /
+        var(--size) var(--size);
+    mask: linear-gradient(-20deg, transparent 50%, white);
+    top: 0;
+    transform-style: flat;
+    pointer-events: none;
+  }
+
+  .bear-link {
+    color: canvasText;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    width: 48px;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    opacity: 0.8;
+  }
+
+  :where(.x-link, .bear-link):is(:hover, :focus-visible) {
+    opacity: 1;
+  }
+
+  .bear-link svg {
+    width: 75%;
+  }
+
+  /* Utilities */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+[data-stick=&#39;true&#39;] div.tp-dfwv {
+  position: fixed;
+}
+
+              </code>
+            </pre>
+            <div class="error-bar" id="error-bar-css">
+              <span class="error-icon" data-type="css">
+                !
+              </span>
+            </div>
+            <span class="code-editor-status"></span>
+          </div>
+
+        </div>
+
+
+
+
+        <div class="editor-resizer js-editor-resizer" title="Double-click to expand."></div>
+
+        <div id="box-js" class="box box-js" data-type="js">
+
+          <div class="powers">
+            <div class="powers-drag-handle" title="Double-click to expand."></div>
+
+            <div class="editor-actions-left">
+              <h2 class="box-title js-editor-title" id="js-editor-title">
+
+                  <svg viewBox="0 0 15 15" class="file-type-icon" id="icon-file-js">
+    <rect fill="#FCD000" width="15" height="15" rx="4"/>
+    <path d="M6.554 3.705c0 .267-.19.496-.452.543-1.2.217-2.12 1.61-2.12 3.275 0 1.665.92 3.057 2.12 3.274a.554.554 0 0 1-.205 1.087c-1.733-.322-3.022-2.175-3.022-4.361 0-2.187 1.289-4.04 3.022-4.362a.554.554 0 0 1 .657.544zm1.892 0c0-.347.316-.607.657-.544 1.733.322 3.022 2.175 3.022 4.362 0 2.186-1.289 4.04-3.022 4.361a.554.554 0 0 1-.205-1.087c1.2-.217 2.12-1.61 2.12-3.274 0-1.665-.92-3.058-2.12-3.275a.551.551 0 0 1-.452-.543z" fill="#282828"/>
+  </svg>
+
+
+                <span class="box-title-name">
+                  JS
+                </span>
+                <span class="box-title-preprocessor-name "></span>
+              </h2>
+
+            </div>
+
+            <div class="editor-actions-right">
+              <div class="collaborators-indicators"></div>
+
+              <button id="settings-pane-js" class="button button-medium mini-button settings-nub" data-type="js" title="Open JS Settings">
+                <svg viewBox="0 0 100 100" id="icon-gear" width="10" height="10">
+                  <path d="M87.687,45.077c-0.313-2.433-0.816-4.807-1.542-7.079l8.145-11.73l-5.827-7.515l-0.094-0.123l-5.824-7.514
+                    l-12.955,5.577c-2.041-1.265-4.192-2.362-6.459-3.219L59.42,0h-9.34h-0.153h-9.341l-3.709,13.474
+                    c-2.27,0.857-4.421,1.955-6.463,3.222l-12.957-5.577l-5.825,7.514l-0.097,0.124l-5.822,7.517l8.146,11.731
+                    c-0.726,2.271-1.233,4.645-1.544,7.079L0,52.032l2.08,9.375l0.033,0.15l2.08,9.375l14.001,0.761c1.295,2.028,2.771,3.926,4.4,5.668
+                    l-2.396,14.227l8.416,4.173l0.138,0.067L37.169,100l9.309-10.796c1.161,0.109,2.335,0.173,3.524,0.173s2.358-0.074,3.52-0.184
+                    l9.317,10.804l8.415-4.173l0.141-0.066l8.413-4.172l-2.396-14.228c1.628-1.741,3.104-3.64,4.4-5.672l14-0.759l2.078-9.375
+                    l0.035-0.154L100,52.025L87.687,45.077z M50.003,34.51c8.435,0,15.272,7.035,15.272,15.719c0,8.679-6.839,15.717-15.272,15.717
+                    c-8.436,0-15.272-7.038-15.272-15.717C34.731,41.545,41.569,34.51,50.003,34.51z"/>
+                </svg>
+              </button>
+
+              <button class="button mini-button button-medium editor-dropdown-button editor-dropdown-button-js" data-dropdown="#editor-dropdown-js" aria-haspopup="true" aria-expanded="false">
+  <span class="visually-hidden">
+    JS Options
+  </span>
+  <svg viewBox="-122.9 121.1 105.9 61.9" class="icon-arrow-down-mini" width="10" height="10">
+    <path d="M-63.2,180.3l43.5-43.5c1.7-1.7,2.7-4,2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.7l-37.2,37.2l-37.2-37.2
+    c-1.7-1.7-4-2.7-6.5-2.7s-4.8,1-6.5,2.6c-1.9,1.8-2.8,4.2-2.8,6.6c0,2.3,0.9,4.6,2.6,6.5l0,0c11.4,11.5,41,41.2,43,43.3l0.2,0.2
+    C-73.5,183.9-66.8,183.9-63.2,180.3z"/>
+  </svg>
+</button>
+
+
+              <ul id="editor-dropdown-js" class="link-list is-dropdown editor-dropdown editor-dropdown-js" data-dropdown-position="css" data-dropdown-type="js">
+    <li class="editor-dropdown-list-item">
+      <button
+        id="tidy-js"
+        class="invisible-button tidy-code-button"
+        data-editor-type="js"
+      >
+        Format JavaScript
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="view-compiled-js"
+        class="invisible-button view-compiled-button"
+        data-editor-type="js"
+      >
+        View Compiled JavaScript
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="analyze-js"
+        class="invisible-button analyze-button"
+        data-editor-type="js"
+      >
+        Analyze JavaScript
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="maximize-js-editor"
+        class="invisible-button maximize-button"
+        data-editor-type="js"
+      >
+        Maximize JavaScript Editor
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="minimize-js-editor"
+        class="invisible-button minimize-button"
+        data-editor-type="js"
+      >
+        Minimize JavaScript Editor
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="fold-all-js"
+        class="invisible-button fold-all-button"
+        data-editor-type="js"
+      >
+        Fold All
+      </button>
+    </li>
+    <li class="editor-dropdown-list-item">
+      <button
+        id="unfold-all-js"
+        class="invisible-button unfold-all-button"
+        data-editor-type="js"
+      >
+        Unfold All
+      </button>
+    </li>
+</ul>
+
+            </div>
+          </div>
+
+          <div class="code-wrap notranslate" translate="no">
+            <pre id="js" class="code-box" aria-labelledby="js-editor-title">
+              <code>
+                // Newsletter issue: https://craftofui.substack.com/p/scrolling-a-page-out-of-the-playbook
+
+import { Pane } from &#39;https://esm.sh/tweakpane@4.0.4&#39;
+import gsap from &#39;https://esm.sh/gsap@3.12.0&#39;
+import ScrollTrigger from &#39;https://esm.sh/gsap@3.12.0/ScrollTrigger&#39;
+
+let layersCtrl
+let centerCtrl
+let staggerCtrl
+let scalerTl
+let layersTl
+
+const hasScrollSupport = CSS.supports(
+  &#39;(animation-timeline: view()) and (animation-range: 0 100%)&#39;
+)
+
+const config = {
+  theme: &#39;system&#39;,
+  enhanced: true,
+  stick: true,
+  layers: true,
+  center: true,
+  stagger: &#39;range&#39;,
+}
+
+const ctrl = new Pane({
+  title: &#39;Config&#39;,
+  expanded: true,
+})
+
+if (!hasScrollSupport) {
+  gsap.registerPlugin(ScrollTrigger)
+  console.info(&#39;GSAP ScrollTrigger registered&#39;)
+}
+
+const update = () =&gt; {
+  document.documentElement.dataset.theme = config.theme
+  document.documentElement.dataset.enhanced = config.enhanced
+  document.documentElement.dataset.stick = config.stick
+  document.documentElement.dataset.center = config.center
+  document.documentElement.dataset.layers = config.layers
+  document.documentElement.dataset.stagger = config.stagger
+
+  if (config.enhanced &amp;&amp; !hasScrollSupport) {
+    scalerTl = gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: &#39;main section:first-of-type&#39;,
+          start: &#39;top -10%&#39;,
+          end: &#39;bottom 80%&#39;,
+          scrub: true,
+        },
+      })
+      .from(
+        &#39;.scaler img&#39;,
+        {
+          height: window.innerHeight - 32,
+          ease: &#39;power1.inOut&#39;,
+        },
+        0
+      )
+      .from(
+        &#39;.scaler img&#39;,
+        {
+          width: window.innerWidth - 32,
+          ease: &#39;power2.inOut&#39;,
+        },
+        0
+      )
+    // then the layers
+    layersTl = gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: &#39;main section:first-of-type&#39;,
+          start: &#39;top -40%&#39;,
+          end: &#39;bottom bottom&#39;,
+          scrub: true,
+        },
+      })
+      .from(
+        &#39;.layer:nth-of-type(1)&#39;,
+        {
+          opacity: 0,
+          ease: &#39;sine.out&#39;,
+        },
+        0
+      )
+      .from(
+        &#39;.layer:nth-of-type(1)&#39;,
+        {
+          scale: 0,
+          ease: &#39;power1.inOut&#39;,
+        },
+        0
+      )
+      .from(
+        &#39;.layer:nth-of-type(2)&#39;,
+        {
+          opacity: 0,
+          ease: &#39;sine.out&#39;,
+        },
+        0
+      )
+      .from(
+        &#39;.layer:nth-of-type(2)&#39;,
+        {
+          scale: 0,
+          ease: &#39;power3.inOut&#39;,
+        },
+        0
+      )
+      .from(
+        &#39;.layer:nth-of-type(3)&#39;,
+        {
+          opacity: 0,
+          ease: &#39;sine.out&#39;,
+        },
+        0
+      )
+      .from(
+        &#39;.layer:nth-of-type(3)&#39;,
+        {
+          scale: 0,
+          ease: &#39;power4.inOut&#39;,
+        },
+        0
+      )
+  } else {
+    gsap.set([&#39;.scaler img&#39;, &#39;.layer&#39;], {
+      attr: {
+        style: undefined,
+      },
+    })
+    scalerTl?.kill()
+    layersTl?.kill()
+    scalerTl = undefined
+    layersTl = undefined
+  }
+
+  if (hasScrollSupport) {
+    layersCtrl.hidden = !config.enhanced
+    staggerCtrl.hidden = !config.enhanced
+    centerCtrl.hidden = !config.enhanced
+  }
+}
+
+const sync = (event) =&gt; {
+  if (
+    !document.startViewTransition ||
+    event.target.controller.view.labelElement.innerText !== &#39;Theme&#39;
+  )
+    return update()
+  document.startViewTransition(() =&gt; update())
+}
+
+ctrl.addBinding(config, &#39;enhanced&#39;, {
+  label: &#39;Enhance&#39;,
+})
+
+if (hasScrollSupport) {
+  centerCtrl = ctrl.addBinding(config, &#39;center&#39;, {
+    label: &#39;Center&#39;,
+    hidden: !config.enhanced,
+  })
+  layersCtrl = ctrl.addBinding(config, &#39;layers&#39;, {
+    label: &#39;Layers&#39;,
+    hidden: !config.enhanced,
+  })
+  staggerCtrl = ctrl.addBinding(config, &#39;stagger&#39;, {
+    label: &#39;Stagger&#39;,
+    options: {
+      Range: &#39;range&#39;,
+      Timing: &#39;timing&#39;,
+    },
+    hidden: !config.enhanced,
+  })
+}
+ctrl.addBinding(config, &#39;stick&#39;, {
+  label: &#39;Stick&#39;,
+})
+
+ctrl.addBinding(config, &#39;theme&#39;, {
+  label: &#39;Theme&#39;,
+  options: {
+    System: &#39;system&#39;,
+    Light: &#39;light&#39;,
+    Dark: &#39;dark&#39;,
+  },
+})
+
+ctrl.on(&#39;change&#39;, sync)
+update()
+
+              </code>
+            </pre>
+            <div class="error-bar" id="error-bar-js">
+              <span class="error-icon" data-type="js">
+                !
+              </span>
+            </div>
+            <span class="code-editor-status"></span>
+          </div>
+
+            <div class="react-pen-editor-imports" data-props-type="js"></div>
+        </div>
+
+
+
+    </div>
+
+    <div id="resizer" class="resizer">
+      <span></span>
+      <div id="width-readout" class="width-readout">999px</div>
+      <div id="pen-ad"></div>
+    </div>
+
+      <section id="drawer" class="comments">
+
+      </section>
+
+    <div class="output-container">
+      <div class="output-sizer"> 
+        <div id="result_div" class="result">
+          <iframe id="result"
+            name="CodePen"
+            title="CodePen Preview"
+            src="https://codepen.io/jh3y/fullpage/VYZwOwd?view="
+            sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+            allow="accelerometer *; bluetooth *; camera *; clipboard-read *; clipboard-write *; display-capture *; encrypted-media *; geolocation *; gyroscope *; language-detector *; language-model *; local-network-access *; microphone *; midi *; rewriter *; serial *; summarizer *; translator *; web-share *; writer *; xr-spatial-tracking *"
+            scrolling="auto" allowTransparency="true" allowpaymentrequest="true" allowfullscreen="true"
+            class="result-iframe "
+            loading="lazy"
+          >
+          </iframe>
+
+
+          <div id="editor-drag-cover" class="drag-cover"></div>
+
+        </div>
+
+        <div id="box-console" class="box box-console notranslate" translate="no">
+
+  <div class="editor-resizer editor-resizer-console" title="Drag to resize. Double-click to expand."></div>
+
+  <div class="powers">
+    <div class="powers-drag-handle" title="Drag to resize. Double-click to expand."></div>
+    <div class="editor-actions-left">
+      <h2 class="box-title"><span class="box-title-name">Console</span></h2>
+    </div>
+    <div class="editor-actions-right">
+        <button class="button button-medium mini-button console-clear-button" title="Clear">
+          Clear
+        </button>
+        <button class="button button-medium mini-button close-editor-button" data-type="console" title="Close">
+          <svg class="icon-x" viewBox="0 0 100 100">
+            <path d="M96.8 83.7L63.1 50l33.7-33.7c3.6-3.6 3.6-9.4 0-13.1s-9.5-3.6-13.1 0L50 36.9 16.3 3.2C12.7-.4 6.9-.4 3.2 3.2s-3.6 9.5 0 13.1L36.9 50 3.2 83.7c-3.6 3.6-3.6 9.4 0 13.1s9.5 3.6 13.1 0L50 63.1l33.7 33.7c3.6 3.6 9.4 3.6 13.1 0s3.6-9.5 0-13.1z"/>
+          </svg>
+        </button>
+      </div>
+  </div>
+
+  <div class="console-wrap">
+    <div class="console-entries short-no-scroll"></div>
+    <div class="console-command-line">
+      <span class="console-arrow forwards"></span>
+      <textarea class="console-command-line-input auto-expand" rows="1" data-min-rows="1"></textarea>
+    </div>
+  </div>
+
+</div>
+
+
+      </div> 
+
+    </div>
+
+  </div>
+
+</div>
+
+<div id="asset-bin-goes-here"></div>
+
+  <footer id="react-pen-footer" class="site-footer editor-footer"></footer>
+
+<div id="keycommands" class="modal modal-neutral">
+<div class="keycommands-container">
+
+  <section class="editor-commands inline-editor-commands">
+
+    <h2>Editor Commands</h2>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key pc_only">Ctrl</span>
+        <span class="key mac_only">Ctrl</span>
+        <span class="key">Space</span>
+      </kbd>
+      Autocomplete
+    </div>
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key">F</span>
+      </kbd>
+      Find
+    </div>
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key">G</span>
+      </kbd>
+      Find Next
+    </div>
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key" title="Shift">⇧</span>
+        <span class="key">G</span>
+      </kbd>
+      Find Previous
+    </div>
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key pc_only" title="Shift">⇧</span>
+        <span class="key mac_only">Opt</span>
+        <span class="key">F</span>
+      </kbd>
+      Find & Replace
+    </div>
+    <div class="key-group mac_only">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key" title="Shift">⇧</span>
+        <span class="key">F</span>
+      </kbd>
+      Format Code
+    </div>
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key">[</span>
+      </kbd>
+      Indent Code Right
+    </div>
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key">]</span>
+      </kbd>
+      Indent Code Left
+    </div>
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key" title="Shift">⇧</span>
+        <span class="key">Tab</span>
+      </kbd>
+      Auto Indent Code
+    </div>
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key">/</span>
+      </kbd>
+      Line Comment
+    </div>
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key pc_only" title="Shift">⇧</span>
+        <span class="key mac_only">Opt</span>
+        <span class="key">/</span>
+      </kbd>
+      Block Comment
+    </div>
+
+    <p class="inline-tab-triggers">Also see: <a href="https://blog.codepen.io/documentation/features/tab-triggers/" target="_blank" rel="noopener">Tab Triggers</a></p>
+
+  </section>
+
+  <section class="editor-commands">
+
+    <h2>Editor Focus</h2>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key pc_only">Alt</span>
+        <span class="key mac_only">Opt</span>
+        <span class="key">1</span>
+      </kbd>
+      HTML Editor
+    </div>
+
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key pc_only">Alt</span>
+        <span class="key mac_only">Opt</span>
+        <span class="key">2</span>
+      </kbd>
+      CSS Editor
+    </div>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key pc_only">Alt</span>
+        <span class="key mac_only">Opt</span>
+        <span class="key">3</span>
+      </kbd>
+      JS Editor
+    </div>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key pc_only">Alt</span>
+        <span class="key mac_only">Opt</span>
+        <span class="key">4</span>
+      </kbd>
+      Toggle Console
+    </div>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key pc_only">Alt</span>
+        <span class="key mac_only">Opt</span>
+        <span class="key">0</span>
+      </kbd>
+      Preview
+    </div>
+
+
+    <div class="key-group">
+
+      <kbd class="keycommand">
+        <span class="key">Esc</span>
+      </kbd>
+
+      Exit currently focused editor
+    </div>
+  </section>
+
+
+  <section class="editor-commands">
+
+    <h2>Misc</h2>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key" title="Shift">⇧</span>
+        <span class="key">7</span>
+      </kbd>
+      Re-run Preview
+    </div>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key" title="Shift">⇧</span>
+        <span class="key">8</span>
+      </kbd>
+      Clear All Analyze Errors
+    </div>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key" title="Shift">⇧</span>
+        <span class="key">9</span>
+      </kbd>
+      Open This Dialog
+    </div>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key" title="Shift">⇧</span>
+        <span class="key">0</span>
+      </kbd>
+      Open Debug View
+    </div>
+
+    <h2>HTML Specific</h2>
+
+    <div class="key-group">
+
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key" title="Shift">⇧</span>
+        <span class="key">A</span>
+      </kbd>
+      Wrap With...
+    </div>
+
+    <h2>Pen Actions</h2>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key">P</span>
+      </kbd>
+      Create New Pen
+    </div>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key">S</span>
+      </kbd>
+      Save
+    </div>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key" title="Shift">⇧</span>
+        <span class="key">S</span>
+      </kbd>
+      Save As Private <span style="border-radius: 2px; padding: 1px 6px 2px 5px; color: black !important; background: var(--cp-color-yellow); white-space: nowrap; text-shadow: none; letter-spacing: 0; font-size: 71%; position: relative; top: -1px;">PRO</span>
+    </div>
+
+    <div class="key-group">
+      <kbd class="keycommand">
+        <span class="key -command"></span>
+        <span class="key">I</span>
+      </kbd>
+      Info Panel (if owned)
+    </div>
+
+  </section>
+</div>
+</div>
+
+
+  
+
+
+
+  <div id="popup-overlay" class="overlay popup-overlay"></div>
+  <div id="modal-overlay" class="overlay modal-overlay"></div>
+
+  <noscript>
+
+  <input type="checkbox" class="modal-closing-trick" id="modal-closing-trick">
+
+  <div class="overlay noscript-overlay" style="display: block;"></div>
+
+  <div class="modal modal-message group modal-warning">
+
+    <div class="modal-title">CodePen requires JavaScript to render the code and preview areas in this view.</div>
+
+    <p>Trying <a href="https://codepen.io/jh3y/debug/VYZwOwd">viewing this Pen in Debug Mode</a>, which is the preview area without any iframe and does not require JavaScript. Although what the preview is of might!</p>
+
+    <p>Need to know how to enable JavaScript? <a href="http://enable-javascript.com/" target="_blank" rel="noopener">Go here.</a></p>
+
+    <label class="button button-medium" for="modal-closing-trick">Close this, use anyway.</label>
+
+  </div>
+
+</noscript>
+
+
+   <textarea id="init-data" style="display:none">{&quot;__browser&quot;:{&quot;country&quot;:&quot;BR&quot;,&quot;device&quot;:&quot;unknown_device&quot;,&quot;mobile&quot;:false,&quot;name&quot;:&quot;chrome&quot;,&quot;platform&quot;:&quot;mac&quot;,&quot;version&quot;:&quot;131&quot;},&quot;__constants&quot;:{},&quot;__CPDATA&quot;:{&quot;domain_iframe&quot;:&quot;https://cdpn.io&quot;,&quot;environment&quot;:&quot;production&quot;,&quot;host&quot;:&quot;codepen.io&quot;,&quot;iframe_allow&quot;:&quot;accelerometer *; bluetooth *; camera *; clipboard-read *; clipboard-write *; display-capture *; encrypted-media *; geolocation *; gyroscope *; language-detector *; language-model *; local-network-access *; microphone *; midi *; rewriter *; serial *; summarizer *; translator *; web-share *; writer *; xr-spatial-tracking *&quot;,&quot;iframe_sandbox&quot;:&quot;allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts allow-top-navigation-by-user-activation&quot;},&quot;__graphql&quot;:{&quot;data&quot;:{&quot;data&quot;:{&quot;sessionUser&quot;:{&quot;id&quot;:&quot;VYzvVX&quot;,&quot;name&quot;:&quot;brennercruvinel&quot;,&quot;title&quot;:&quot;brennercruvinel&quot;,&quot;avatar&quot;:&quot;https://assets.codepen.io/t-1/user-default-avatar.jpg?format=auto&amp;version=0&quot;,&quot;currentContext&quot;:{&quot;id&quot;:&quot;VYzvVX&quot;,&quot;title&quot;:&quot;brennercruvinel&quot;,&quot;name&quot;:&quot;brennercruvinel&quot;,&quot;avatar&quot;:&quot;https://assets.codepen.io/t-1/user-default-avatar.jpg?format=auto&amp;version=0&quot;,&quot;username&quot;:&quot;brennercruvinel&quot;,&quot;__typename&quot;:&quot;User&quot;},&quot;currentTeamId&quot;:null,&quot;username&quot;:&quot;brennercruvinel&quot;,&quot;admin&quot;:false,&quot;anon&quot;:false,&quot;pro&quot;:false,&quot;verified&quot;:true,&quot;featureFlags&quot;:[],&quot;teams&quot;:[],&quot;__typename&quot;:&quot;User&quot;}}},&quot;url&quot;:&quot;https://codepen.io/graphql&quot;,&quot;api&quot;:&quot;cprails&quot;},&quot;__user&quot;:{&quot;anon&quot;:false,&quot;base_url&quot;:&quot;/brennercruvinel/&quot;,&quot;cohorts&quot;:[],&quot;current_team_hashid&quot;:null,&quot;current_team_id&quot;:0,&quot;hashid&quot;:&quot;VYzvVX&quot;,&quot;id&quot;:5285747,&quot;itemType&quot;:&quot;user&quot;,&quot;name&quot;:&quot;brennercruvinel&quot;,&quot;paid&quot;:false,&quot;tier&quot;:0,&quot;username&quot;:&quot;brennercruvinel&quot;,&quot;created_at&quot;:&quot;2020-11-04T16:42:28.000Z&quot;,&quot;email_verified&quot;:true,&quot;collections_count&quot;:6,&quot;collections_private_count&quot;:1,&quot;followers_count&quot;:0,&quot;followings_count&quot;:15,&quot;pens_count&quot;:21,&quot;pens_private_count&quot;:0,&quot;projects_count&quot;:0,&quot;projects_private_count&quot;:0},&quot;__firebase&quot;:{&quot;config&quot;:{&quot;apiKey&quot;:&quot;AIzaSyBgLAe7N_MdFpuVofMkcQLGwwhUu5tuxls&quot;,&quot;authDomain&quot;:&quot;codepen-store-production.firebaseapp.com&quot;,&quot;databaseURL&quot;:&quot;https://codepen-store-production.firebaseio.com&quot;,&quot;disabled&quot;:false,&quot;projectId&quot;:&quot;codepen-store-production&quot;},&quot;token&quot;:&quot;eyJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJodHRwczovL2lkZW50aXR5dG9vbGtpdC5nb29nbGVhcGlzLmNvbS9nb29nbGUuaWRlbnRpdHkuaWRlbnRpdHl0b29sa2l0LnYxLklkZW50aXR5VG9vbGtpdCIsImNsYWltcyI6eyJvd25lcklkIjoiVll6dlZYIiwiYWRtaW4iOmZhbHNlfSwiZXhwIjoxNzgyMzQ2ODA5LCJpYXQiOjE3ODIzNDMyMDksImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLThva3lsQGNvZGVwZW4tc3RvcmUtcHJvZHVjdGlvbi5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN1YiI6ImZpcmViYXNlLWFkbWluc2RrLThva3lsQGNvZGVwZW4tc3RvcmUtcHJvZHVjdGlvbi5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInVpZCI6IlZZenZWWCJ9.TbMt0egdAyDJTG6ldN4bmx637bw6QrzvGAEzp9z-3ROHPMwXHRLblLQ8-7qtT-3gFPnmEpjAFSpPW-QE_cLurEA5jkyzKU7Cqo60tttsP4VH3ZmhkbcuQ9DyExYpjfHnZ4tnCQ7dPPr6_vINtBlRggfikhYfV7FlG33RpOlX39eqXDWaNBgvxBCHRGX8Uv2cJJECFM_QIMN6lV8KAQcKxwoDkWdWBiRxfLmKNvNy-GmZABgWj8Qrdey_6c7USju87MDUV2ntFZo6pdf-Muwkwq10-Ivaqj1UyqId8yqFJ1hVfoRMp8arB921tXxMW-WryFJTPvG-xGQm0kjoVI5muw&quot;},&quot;__pay_stripe_public_key&quot;:&quot;pk_live_2GndomDfiklqpSNQn8FrGuwZSMIMzha7DkLJqlYe7IR0ihKAlKdiHg68JJc5eVPt68rzAjzAAVXcUwjySHRCsgjQQ00gtRBUFNH&quot;,&quot;__pay_braintree_env&quot;:&quot;production&quot;,&quot;__boomboom&quot;:{&quot;serve_url&quot;:&quot;https://cdpn.io/cpe/boomboom&quot;,&quot;store_url&quot;:&quot;https://codepen.io/cpe/boomboom/store&quot;},&quot;__editor_config&quot;:{&quot;id&quot;:&quot;classic&quot;,&quot;editors&quot;:[{&quot;id&quot;:&quot;html&quot;,&quot;type&quot;:&quot;html&quot;,&quot;name&quot;:&quot;HTML&quot;,&quot;showEditor&quot;:true,&quot;showSettings&quot;:true,&quot;showProcessors&quot;:true,&quot;embeds&quot;:{&quot;showViewCompiled&quot;:true},&quot;settings&quot;:[{&quot;id&quot;:&quot;processor&quot;,&quot;name&quot;:&quot;HTML Preprocessor&quot;,&quot;type&quot;:&quot;select&quot;,&quot;visible&quot;:true,&quot;values&quot;:[{&quot;id&quot;:&quot;none&quot;,&quot;name&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;,&quot;default&quot;:true},{&quot;id&quot;:&quot;haml&quot;,&quot;name&quot;:&quot;Haml&quot;,&quot;value&quot;:&quot;haml&quot;},{&quot;id&quot;:&quot;markdown&quot;,&quot;name&quot;:&quot;Markdown&quot;,&quot;value&quot;:&quot;markdown&quot;},{&quot;id&quot;:&quot;slim&quot;,&quot;name&quot;:&quot;Slim&quot;,&quot;value&quot;:&quot;slim&quot;},{&quot;id&quot;:&quot;pug&quot;,&quot;name&quot;:&quot;Pug&quot;,&quot;value&quot;:&quot;pug&quot;}]},{&quot;id&quot;:&quot;html_classes&quot;,&quot;name&quot;:&quot;Add Class(es) to &lt;html&gt;&quot;,&quot;type&quot;:&quot;input&quot;,&quot;placeholder&quot;:&quot;e.g. single post post-1234&quot;,&quot;visible&quot;:true},{&quot;id&quot;:&quot;head&quot;,&quot;name&quot;:&quot;Stuff for &lt;head&gt;&quot;,&quot;type&quot;:&quot;textarea&quot;,&quot;placeholder&quot;:&quot;e.g. &lt;meta&gt;, &lt;link&gt;, &lt;script&gt;&quot;,&quot;visible&quot;:true}],&quot;actions&quot;:[{&quot;id&quot;:&quot;tidy_html&quot;,&quot;type&quot;:&quot;tidy_code&quot;,&quot;name&quot;:&quot;Format HTML&quot;,&quot;disabled_processors&quot;:[&quot;haml&quot;,&quot;slim&quot;]},{&quot;id&quot;:&quot;view_compiled_html&quot;,&quot;type&quot;:&quot;view_compiled&quot;,&quot;name&quot;:&quot;View Compiled HTML&quot;,&quot;disabled_processors&quot;:[&quot;none&quot;],&quot;showInEmbeds&quot;:true},{&quot;id&quot;:&quot;analyze_html&quot;,&quot;type&quot;:&quot;analyze&quot;,&quot;name&quot;:&quot;Analyze HTML&quot;},{&quot;id&quot;:&quot;maximize_html_editor&quot;,&quot;type&quot;:&quot;maximize&quot;,&quot;name&quot;:&quot;Maximize HTML Editor&quot;},{&quot;id&quot;:&quot;minimize_html_editor&quot;,&quot;type&quot;:&quot;minimize&quot;,&quot;name&quot;:&quot;Minimize HTML Editor&quot;},{&quot;id&quot;:&quot;fold_all_html&quot;,&quot;type&quot;:&quot;fold_all&quot;,&quot;name&quot;:&quot;Fold All&quot;},{&quot;id&quot;:&quot;unfold_all_html&quot;,&quot;type&quot;:&quot;unfold_all&quot;,&quot;name&quot;:&quot;Unfold All&quot;}],&quot;processors&quot;:[{&quot;id&quot;:&quot;none&quot;,&quot;name&quot;:&quot;None&quot;},{&quot;id&quot;:&quot;haml&quot;,&quot;name&quot;:&quot;Haml&quot;},{&quot;id&quot;:&quot;markdown&quot;,&quot;name&quot;:&quot;Markdown&quot;},{&quot;id&quot;:&quot;slim&quot;,&quot;name&quot;:&quot;Slim&quot;},{&quot;id&quot;:&quot;pug&quot;,&quot;name&quot;:&quot;Pug&quot;}]},{&quot;id&quot;:&quot;css&quot;,&quot;type&quot;:&quot;css&quot;,&quot;name&quot;:&quot;CSS&quot;,&quot;showEditor&quot;:true,&quot;showSettings&quot;:true,&quot;showProcessors&quot;:true,&quot;showVendorPrefixing&quot;:true,&quot;embeds&quot;:{&quot;showViewCompiled&quot;:true},&quot;actions&quot;:[{&quot;id&quot;:&quot;tidy_css&quot;,&quot;type&quot;:&quot;tidy_code&quot;,&quot;name&quot;:&quot;Format CSS&quot;,&quot;disabled_processors&quot;:[&quot;sass&quot;,&quot;stylus&quot;]},{&quot;id&quot;:&quot;view_compiled_css&quot;,&quot;type&quot;:&quot;view_compiled&quot;,&quot;name&quot;:&quot;View Compiled CSS&quot;,&quot;disabled_processors&quot;:[&quot;none&quot;],&quot;disabled_prefixes&quot;:[&quot;neither&quot;,&quot;prefixfree&quot;]},{&quot;id&quot;:&quot;analyze_css&quot;,&quot;type&quot;:&quot;analyze&quot;,&quot;name&quot;:&quot;Analyze CSS&quot;},{&quot;id&quot;:&quot;maximize_css_editor&quot;,&quot;type&quot;:&quot;maximize&quot;,&quot;name&quot;:&quot;Maximize CSS Editor&quot;},{&quot;id&quot;:&quot;minimize_css_editor&quot;,&quot;type&quot;:&quot;minimize&quot;,&quot;name&quot;:&quot;Minimize CSS Editor&quot;},{&quot;id&quot;:&quot;fold_all_css&quot;,&quot;type&quot;:&quot;fold_all&quot;,&quot;name&quot;:&quot;Fold All&quot;,&quot;disabled_processors&quot;:[&quot;sass&quot;]},{&quot;id&quot;:&quot;unfold_all_css&quot;,&quot;type&quot;:&quot;unfold_all&quot;,&quot;name&quot;:&quot;Unfold All&quot;,&quot;disabled_processors&quot;:[&quot;sass&quot;]}],&quot;processors&quot;:[{&quot;id&quot;:&quot;none&quot;,&quot;name&quot;:&quot;None&quot;},{&quot;id&quot;:&quot;less&quot;,&quot;name&quot;:&quot;Less&quot;},{&quot;id&quot;:&quot;scss&quot;,&quot;name&quot;:&quot;SCSS&quot;},{&quot;id&quot;:&quot;sass&quot;,&quot;name&quot;:&quot;Sass&quot;},{&quot;id&quot;:&quot;stylus&quot;,&quot;name&quot;:&quot;Stylus&quot;},{&quot;id&quot;:&quot;postcss&quot;,&quot;name&quot;:&quot;PostCSS&quot;}],&quot;parSuffixes&quot;:[&quot;less&quot;,&quot;scss&quot;,&quot;sass&quot;,&quot;styl&quot;]},{&quot;id&quot;:&quot;js&quot;,&quot;type&quot;:&quot;js&quot;,&quot;name&quot;:&quot;JS&quot;,&quot;showEditor&quot;:true,&quot;showSettings&quot;:true,&quot;showProcessors&quot;:true,&quot;detectImports&quot;:true,&quot;externalResourcesHidden&quot;:false,&quot;embeds&quot;:{&quot;showViewCompiled&quot;:true},&quot;actions&quot;:[{&quot;id&quot;:&quot;tidy_js&quot;,&quot;type&quot;:&quot;tidy_code&quot;,&quot;name&quot;:&quot;Format JavaScript&quot;,&quot;disabled_processors&quot;:[&quot;coffeescript, livescript&quot;]},{&quot;id&quot;:&quot;view_compiled_js&quot;,&quot;type&quot;:&quot;view_compiled&quot;,&quot;name&quot;:&quot;View Compiled JavaScript&quot;,&quot;disabled_processors&quot;:[&quot;none&quot;]},{&quot;id&quot;:&quot;analyze_js&quot;,&quot;type&quot;:&quot;analyze&quot;,&quot;name&quot;:&quot;Analyze JavaScript&quot;},{&quot;id&quot;:&quot;maximize_js_editor&quot;,&quot;type&quot;:&quot;maximize&quot;,&quot;name&quot;:&quot;Maximize JavaScript Editor&quot;},{&quot;id&quot;:&quot;minimize_js_editor&quot;,&quot;type&quot;:&quot;minimize&quot;,&quot;name&quot;:&quot;Minimize JavaScript Editor&quot;},{&quot;id&quot;:&quot;fold_all_js&quot;,&quot;type&quot;:&quot;fold_all&quot;,&quot;name&quot;:&quot;Fold All&quot;},{&quot;id&quot;:&quot;unfold_all_js&quot;,&quot;type&quot;:&quot;unfold_all&quot;,&quot;name&quot;:&quot;Unfold All&quot;}],&quot;processors&quot;:[{&quot;id&quot;:&quot;none&quot;,&quot;name&quot;:&quot;None&quot;},{&quot;id&quot;:&quot;babel&quot;,&quot;name&quot;:&quot;Babel&quot;},{&quot;id&quot;:&quot;typescript&quot;,&quot;name&quot;:&quot;TypeScript&quot;},{&quot;id&quot;:&quot;coffeescript&quot;,&quot;name&quot;:&quot;CoffeeScript&quot;},{&quot;id&quot;:&quot;livescript&quot;,&quot;name&quot;:&quot;LiveScript&quot;}]}],&quot;formatters&quot;:[{&quot;id&quot;:&quot;classic&quot;,&quot;name&quot;:&quot;Classic&quot;,&quot;runOn&quot;:[{&quot;eventType&quot;:&quot;demand&quot;}],&quot;url&quot;:&quot;https://fi593g2v2a.execute-api.us-west-2.amazonaws.com/production/format&quot;}],&quot;layout&quot;:{&quot;default&quot;:&quot;top&quot;},&quot;linters&quot;:[{&quot;id&quot;:&quot;classic&quot;,&quot;name&quot;:&quot;Classic&quot;,&quot;runOn&quot;:[{&quot;eventType&quot;:&quot;demand&quot;}],&quot;url&quot;:&quot;https://fi593g2v2a.execute-api.us-west-2.amazonaws.com/production/lint&quot;}],&quot;preview&quot;:{&quot;intervalMaxWaitMS&quot;:3500,&quot;intervalMS&quot;:1200},&quot;settings&quot;:[{&quot;id&quot;:&quot;behavior&quot;,&quot;name&quot;:&quot;Behavior&quot;,&quot;type&quot;:&quot;setting&quot;},{&quot;id&quot;:&quot;editor&quot;,&quot;name&quot;:&quot;Editor&quot;,&quot;type&quot;:&quot;setting&quot;}]},&quot;__item&quot;:&quot;{\&quot;editor_settings\&quot;:{\&quot;auto_run\&quot;:true,\&quot;autocomplete\&quot;:false,\&quot;code_folding\&quot;:true,\&quot;css_pre_processor\&quot;:\&quot;none\&quot;,\&quot;css_prefix\&quot;:\&quot;neither\&quot;,\&quot;css_starter\&quot;:\&quot;neither\&quot;,\&quot;default_template\&quot;:null,\&quot;emmet_active\&quot;:true,\&quot;font_size\&quot;:\&quot;15\&quot;,\&quot;font_type\&quot;:\&quot;system\&quot;,\&quot;format_on_save\&quot;:false,\&quot;html_pre_processor\&quot;:\&quot;none\&quot;,\&quot;indent_with\&quot;:\&quot;spaces\&quot;,\&quot;js_pre_processor\&quot;:\&quot;none\&quot;,\&quot;key_bindings\&quot;:\&quot;normal\&quot;,\&quot;line_numbers\&quot;:true,\&quot;line_wrapping\&quot;:true,\&quot;match_brackets\&quot;:true,\&quot;snippets\&quot;:{\&quot;markupSnippets\&quot;:{},\&quot;stylesheetSnippets\&quot;:{}},\&quot;tab_size\&quot;:2,\&quot;theme\&quot;:\&quot;twilight\&quot;,\&quot;id\&quot;:\&quot;VYZwOwd\&quot;,\&quot;auto_save\&quot;:true},\&quot;hashid\&quot;:\&quot;VYZwOwd\&quot;,\&quot;itemType\&quot;:\&quot;pen\&quot;,\&quot;resources\&quot;:[],\&quot;tags\&quot;:[],\&quot;id\&quot;:78339447,\&quot;user_id\&quot;:605876,\&quot;html\&quot;:\&quot;&lt;!-- Newsletter issue on how to build this: https://craftofui.substack.com/p/scrolling-a-page-out-of-the-playbook --&gt;\\n\\n\\n&lt;div class=\\\&quot;content-wrap\\\&quot;&gt;\\n      &lt;header&gt;\\n        &lt;h1 class=\\\&quot;fluid\\\&quot;&gt;let&#39;s&lt;br /&gt;scroll.&lt;/h1&gt;\\n      &lt;/header&gt;\\n      &lt;main&gt;\\n        &lt;section&gt;\\n          &lt;div class=\\\&quot;content\\\&quot;&gt;\\n            &lt;div class=\\\&quot;grid\\\&quot;&gt;\\n              &lt;div class=\\\&quot;layer\\\&quot;&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1463100099107-aa0980c362e6?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjZ8fGZhc2hpb258ZW58MHx8MHx8fDA%3D\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1556304044-0699e31c6a34?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8OTJ8fGZhc2hpb258ZW58MHx8MHx8fDA%3D\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1590330297626-d7aff25a0431?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTA3fHxmYXNoaW9ufGVufDB8fDB8fHww\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTk1fHxmYXNoaW9ufGVufDB8fDB8fHww\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1488161628813-04466f872be2?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8NzR8fG1vZGVsJTIwZmFzaGlvbiUyMHN0cmVldHxlbnwwfHwwfHx8MA%3D%3D\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1565321590372-09331b9dd1eb?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGFpciUyMGpvcmRhbnxlbnwwfHwwfHx8MA%3D%3D\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=1\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=2\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=3\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=4\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=5\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=6\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n              &lt;/div&gt;\\n              &lt;div class=\\\&quot;layer\\\&quot;&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1531525645387-7f14be1bdbbd?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjM4fHxwcm9kdWN0fGVufDB8fDB8fHww\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1637414165749-9b3cd88b8271?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjd8fHRlY2glMjBwcm9kdWN0fGVufDB8fDB8fHww\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1699911251220-8e0de3b5ce88?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8b25ld2hlZWx8ZW58MHx8MHx8fDA%3D\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1667483629944-6414ad0648c5?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fGx1eHVyeSUyMHdhdGNofGVufDB8fDB8fHww\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://plus.unsplash.com/premium_photo-1706078438060-d76ced26d8d5?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjF8fGNhbWVyYSUyMHBvbGFyb2lkfGVufDB8fDB8fHww\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1525385444278-b7968e7e28dc?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDZ8fGl0ZW18ZW58MHx8MHx8fDA%3D\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=7\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=8\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=9\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=10\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=11\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n                &lt;!-- &lt;img src=\\\&quot;https://picsum.photos/400/500?random=12\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n              &lt;/div&gt;\\n              &lt;div class=\\\&quot;layer\\\&quot;&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/reserve/LJIZlzHgQ7WPSh5KVTCB_Typewriter.jpg?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aXRlbXxlbnwwfHwwfHx8MA%3D%3D\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n                &lt;div&gt;\\n                  &lt;img\\n                    src=\\\&quot;https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmFzaGlvbnxlbnwwfHwwfHx8MA%3D%3D\\\&quot;\\n                    alt=\\\&quot;\\\&quot;\\n                  /&gt;\\n                &lt;/div&gt;\\n              &lt;/div&gt;\\n              &lt;div class=\\\&quot;scaler\\\&quot;&gt;\\n                &lt;img\\n                  src=\\\&quot;https://assets.codepen.io/605876/model-shades.jpg?format=auto&amp;quality=100\\\&quot;\\n                  alt=\\\&quot;\\\&quot;\\n                /&gt;\\n&lt;!--                 &lt;img src=\\\&quot;./model-shades.jpg\\\&quot; alt=\\\&quot;\\\&quot; /&gt; --&gt;\\n              &lt;/div&gt;\\n            &lt;/div&gt;\\n          &lt;/div&gt;\\n        &lt;/section&gt;\\n        &lt;section&gt;\\n          &lt;h2 class=\\\&quot;fluid\\\&quot;&gt;fin.&lt;/h2&gt;\\n        &lt;/section&gt;\\n      &lt;/main&gt;\\n    &lt;/div&gt;\\n    &lt;footer&gt;\\n      &lt;span aria-hidden=\\\&quot;true\\\&quot;\\n        &gt;ʕ&lt;span class=\\\&quot;arm\\\&quot;&gt;ノ&lt;/span&gt;•ᴥ•ʔ&lt;span class=\\\&quot;arm\\\&quot;&gt;ノ&lt;/span&gt;\\n        &lt;span class=\\\&quot;spring\\\&quot;&gt;&lt;span&gt;︵&lt;/span&gt;&lt;/span&gt;\\n        &lt;span class=\\\&quot;table\\\&quot;&gt;┻━┻&lt;/span&gt;&lt;/span\\n      &gt;&amp;nbsp;&amp;copy; jhey &#39;24\\n    &lt;/footer&gt;\\n    &lt;a\\n      class=\\\&quot;bear-link\\\&quot;\\n      href=\\\&quot;https://twitter.com/intent/follow?screen_name=jh3yy\\\&quot;\\n      target=\\\&quot;_blank\\\&quot;\\n      rel=\\\&quot;noreferrer noopener\\\&quot;\\n    &gt;\\n      &lt;svg\\n        class=\\\&quot;w-9\\\&quot;\\n        viewBox=\\\&quot;0 0 969 955\\\&quot;\\n        fill=\\\&quot;none\\\&quot;\\n        xmlns=\\\&quot;http://www.w3.org/2000/svg\\\&quot;\\n      &gt;\\n        &lt;circle\\n          cx=\\\&quot;161.191\\\&quot;\\n          cy=\\\&quot;320.191\\\&quot;\\n          r=\\\&quot;133.191\\\&quot;\\n          stroke=\\\&quot;currentColor\\\&quot;\\n          stroke-width=\\\&quot;20\\\&quot;\\n        &gt;&lt;/circle&gt;\\n        &lt;circle\\n          cx=\\\&quot;806.809\\\&quot;\\n          cy=\\\&quot;320.191\\\&quot;\\n          r=\\\&quot;133.191\\\&quot;\\n          stroke=\\\&quot;currentColor\\\&quot;\\n          stroke-width=\\\&quot;20\\\&quot;\\n        &gt;&lt;/circle&gt;\\n        &lt;circle\\n          cx=\\\&quot;695.019\\\&quot;\\n          cy=\\\&quot;587.733\\\&quot;\\n          r=\\\&quot;31.4016\\\&quot;\\n          fill=\\\&quot;currentColor\\\&quot;\\n        &gt;&lt;/circle&gt;\\n        &lt;circle\\n          cx=\\\&quot;272.981\\\&quot;\\n          cy=\\\&quot;587.733\\\&quot;\\n          r=\\\&quot;31.4016\\\&quot;\\n          fill=\\\&quot;currentColor\\\&quot;\\n        &gt;&lt;/circle&gt;\\n        &lt;path\\n          d=\\\&quot;M564.388 712.083C564.388 743.994 526.035 779.911 483.372 779.911C440.709 779.911 402.356 743.994 402.356 712.083C402.356 680.173 440.709 664.353 483.372 664.353C526.035 664.353 564.388 680.173 564.388 712.083Z\\\&quot;\\n          fill=\\\&quot;currentColor\\\&quot;\\n        &gt;&lt;/path&gt;\\n        &lt;rect\\n          x=\\\&quot;310.42\\\&quot;\\n          y=\\\&quot;448.31\\\&quot;\\n          width=\\\&quot;343.468\\\&quot;\\n          height=\\\&quot;51.4986\\\&quot;\\n          fill=\\\&quot;#FF1E1E\\\&quot;\\n        &gt;&lt;/rect&gt;\\n        &lt;path\\n          fill-rule=\\\&quot;evenodd\\\&quot;\\n          clip-rule=\\\&quot;evenodd\\\&quot;\\n          d=\\\&quot;M745.643 288.24C815.368 344.185 854.539 432.623 854.539 511.741H614.938V454.652C614.938 433.113 597.477 415.652 575.938 415.652H388.37C366.831 415.652 349.37 433.113 349.37 454.652V511.741L110.949 511.741C110.949 432.623 150.12 344.185 219.845 288.24C289.57 232.295 384.138 200.865 482.744 200.865C581.35 200.865 675.918 232.295 745.643 288.24Z\\\&quot;\\n          fill=\\\&quot;currentColor\\\&quot;\\n        &gt;&lt;/path&gt;\\n      &lt;/svg&gt;\\n    &lt;/a&gt;\&quot;,\&quot;css\&quot;:\&quot;/* @import &#39;normalize.css&#39; layer(normalize); */\\n@import url(&#39;https://unpkg.com/normalize.css&#39;) layer(normalize);\\n\\n@layer normalize, base, demo, grid, setup, scroll, novelty;\\n\\n@layer novelty {\\n  @property --flip {\\n    syntax: &#39;&lt;number&gt;&#39;;\\n    inherits: true;\\n    initial-value: 0;\\n  }\\n  @keyframes flip {\\n    to {\\n      --flip: 1;\\n    }\\n  }\\n  [data-enhanced=&#39;true&#39;] {\\n    @media (prefers-reduced-motion: no-preference) {\\n      @supports (animation-timeline: scroll()) and (animation-range: 0 100%) {\\n        footer &gt; span {\\n          animation: flip both steps(1, end);\\n          animation-timeline: scroll(root);\\n        }\\n\\n        footer .arm {\\n          opacity: var(--flip);\\n        }\\n\\n        footer .table {\\n          display: inline-block;\\n          transform-origin: 0 50%;\\n          rotate: calc((-180 + (var(--flip) * 180)) * 1deg);\\n          translate: calc(16% + (var(--flip) * -16%)) calc(var(--flip) * -45%);\\n          transform: translateY(calc(var(--flip) * 90%));\\n          transition-property: translate, rotate, transform;\\n          transition-duration: calc(var(--flip) * 0.2s);\\n          transition-duration: 0.2s, 0.24s, 0.5s;\\n        }\\n\\n        .spring {\\n          outline: 1px dashed red;\\n          clip-path: inset(0 0 0 0);\\n        }\\n\\n        .spring span {\\n          rotate: calc(-180deg + (var(--flip) * 180deg));\\n          display: inline-block;\\n          transform-origin: 50% 150%;\\n          transition: rotate 0.24s;\\n        }\\n      }\\n    }\\n  }\\n}\\n\\n@layer scroll {\\n  :root {\\n    --power-1-out: linear(\\n      0 0%,\\n      0.0027 3.64%,\\n      0.0106 7.29%,\\n      0.0425 14.58%,\\n      0.0957 21.87%,\\n      0.1701 29.16%,\\n      0.2477 35.19%,\\n      0.3401 41.23%,\\n      0.5982 55.18%,\\n      0.7044 61.56%,\\n      0.7987 68.28%,\\n      0.875 75%,\\n      0.9297 81.25%,\\n      0.9687 87.5%,\\n      0.9922 93.75%,\\n      1 100%\\n    );\\n    --power-2-out: linear(\\n      0 0%,\\n      0.0036 9.62%,\\n      0.0185 16.66%,\\n      0.0489 23.03%,\\n      0.0962 28.86%,\\n      0.1705 34.93%,\\n      0.269 40.66%,\\n      0.3867 45.89%,\\n      0.5833 52.95%,\\n      0.683 57.05%,\\n      0.7829 62.14%,\\n      0.8621 67.46%,\\n      0.8991 70.68%,\\n      0.9299 74.03%,\\n      0.9545 77.52%,\\n      0.9735 81.21%,\\n      0.9865 85%,\\n      0.9949 89.15%,\\n      1 100%\\n    );\\n    --power-3-out: linear(\\n      0 0%,\\n      0.0029 13.8%,\\n      0.0184 21.9%,\\n      0.0339 25.51%,\\n      0.0551 28.81%,\\n      0.0827 31.88%,\\n      0.1168 34.76%,\\n      0.1962 39.57%,\\n      0.3005 44.02%,\\n      0.4084 47.53%,\\n      0.6242 53.45%,\\n      0.7493 57.93%,\\n      0.8495 62.97%,\\n      0.8888 65.67%,\\n      0.9213 68.51%,\\n      0.9629 73.9%,\\n      0.9876 80.16%,\\n      0.998 87.5%,\\n      1 100%\\n    );\\n    --power-4-out: linear(\\n      0 0%,\\n      0.0012 14.95%,\\n      0.0089 22.36%,\\n      0.0297 28.43%,\\n      0.0668 33.43%,\\n      0.0979 36.08%,\\n      0.1363 38.55%,\\n      0.2373 43.07%,\\n      0.3675 47.01%,\\n      0.5984 52.15%,\\n      0.7121 55.23%,\\n      0.8192 59.21%,\\n      0.898 63.62%,\\n      0.9297 66.23%,\\n      0.9546 69.06%,\\n      0.9733 72.17%,\\n      0.9864 75.67%,\\n      0.9982 83.73%,\\n      1 100%\\n    );\\n    --sine: linear(\\n      0 0%,\\n      0.2861 18.47%,\\n      0.4829 32.08%,\\n      0.6437 44.52%,\\n      0.7712 56.07%,\\n      0.8722 67.47%,\\n      0.9115 73.02%,\\n      0.9434 78.49%,\\n      0.9682 83.91%,\\n      0.9859 89.3%,\\n      0.9965 94.66%,\\n      1 100%\\n    );\\n  }\\n  @keyframes fade {\\n    0%,\\n    55% {\\n      opacity: 0;\\n    }\\n  }\\n  @keyframes reveal {\\n    0%,\\n    30% {\\n      scale: 0;\\n    }\\n  }\\n  @keyframes scale-x {\\n    0%,\\n    10% {\\n      width: calc(100vw - (2 * var(--gutter)));\\n    }\\n  }\\n  @keyframes scale-y {\\n    0%,\\n    10% {\\n      height: calc(100vh - (2 * var(--gutter)));\\n    }\\n  }\\n  @media (prefers-reduced-motion: no-preference) {\\n    [data-enhanced=&#39;true&#39;] {\\n      main section:first-of-type {\\n        min-height: 240vh;\\n      }\\n\\n      @supports (animation-timeline: scroll()) and (animation-range: 0 100%) {\\n        main section:first-of-type {\\n          view-timeline: --runner;\\n        }\\n\\n        &amp;[data-center=&#39;true&#39;] {\\n          .scaler img {\\n            animation-name: scale-x, scale-y;\\n            animation-fill-mode: both;\\n            animation-timing-function: var(--power-2-out), var(--power-1-out);\\n            animation-timeline: --runner, --runner;\\n            animation-range: entry 100% exit -20%;\\n          }\\n        }\\n\\n        &amp;[data-layers=&#39;true&#39;] {\\n          .grid .layer {\\n            animation-name: fade, reveal;\\n            animation-fill-mode: both;\\n            animation-timeline: --runner, --runner;\\n            animation-timing-function: var(--sine), var(--power-1-out);\\n            animation-range: entry 100% exit 0%;\\n          }\\n          &amp;[data-stagger=&#39;timing&#39;] .grid .layer {\\n            &amp;:nth-of-type(1) {\\n              animation-timing-function: var(--sine), var(--power-1-out);\\n            }\\n            &amp;:nth-of-type(2) {\\n              animation-timing-function: var(--sine), var(--power-3-out);\\n            }\\n            &amp;:nth-of-type(3) {\\n              animation-timing-function: var(--sine), var(--power-4-out);\\n            }\\n          }\\n          &amp;[data-stagger=&#39;range&#39;] .grid .layer {\\n            &amp;:nth-of-type(1) {\\n              animation-range: entry 100% exit 0%;\\n            }\\n            &amp;:nth-of-type(2) {\\n              animation-range: entry 100% exit -10%;\\n            }\\n            &amp;:nth-of-type(3) {\\n              animation-range: entry 100% exit -20%;\\n            }\\n          }\\n        }\\n      }\\n    }\\n  }\\n}\\n\\n@layer setup {\\n  /* gross calculations here to appease Safari and Firefox */\\n  :root {\\n    --container-width: 1600px;\\n    --gap: clamp(10px, 7.35vw, 80px);\\n    --gutter: 2rem;\\n  }\\n  @media (max-width: 600px) {\\n    :root {\\n      --gutter: 1rem;\\n    }\\n  }\\n\\n  .content {\\n    min-height: 100vh;\\n    width: 100vw;\\n    display: flex;\\n    place-items: center;\\n    align-content: center;\\n    position: sticky;\\n    top: 0;\\n  }\\n\\n  .scaler {\\n    z-index: 2;\\n    width: 100%;\\n    height: 100%;\\n    position: relative;\\n\\n    img {\\n      position: absolute;\\n      top: 50%;\\n      left: 50%;\\n      translate: -50% -50%;\\n      object-fit: cover;\\n      border-radius: 1rem;\\n      width: 100%;\\n      height: 100%;\\n    }\\n  }\\n}\\n\\n@layer grid {\\n  /* it&#39;s a 5x3 grid using subgrid, always centered */\\n  .grid {\\n    --offset: 0;\\n    width: 1600px;\\n    max-width: calc(100% - (2 * var(--gutter)));\\n    display: grid;\\n    grid-template-columns: repeat(5, 1fr);\\n    grid-template-rows: repeat(3, auto);\\n    gap: var(--gap);\\n    margin: 0 auto;\\n    align-content: center;\\n    /* hmm */\\n    position: absolute;\\n    top: 50%;\\n    left: 50%;\\n    translate: -50% -50%;\\n  }\\n\\n  /* .grid img {\\n    width: 10vw;\\n    height: 12vw;\\n  } */\\n\\n  @media (max-width: 600px) {\\n    .grid {\\n      grid-template-columns: repeat(3, 1fr);\\n      --offset: -1;\\n    }\\n\\n    .grid &gt; div:nth-of-type(1) {\\n      display: none;\\n    }\\n  }\\n\\n  .grid &gt; .layer {\\n    display: grid;\\n    grid-column: 1 / -1;\\n    grid-row: 1 / -1;\\n    grid-template-columns: subgrid;\\n    grid-template-rows: subgrid;\\n  }\\n\\n  .grid &gt; div:nth-of-type(1) div:nth-of-type(odd) {\\n    grid-column: 1;\\n  }\\n  .grid &gt; div:nth-of-type(1) div:nth-of-type(even) {\\n    grid-column: -2;\\n  }\\n\\n  .grid &gt; div:nth-of-type(2) div:nth-of-type(odd) {\\n    grid-column: calc(2 + var(--offset));\\n  }\\n  .grid &gt; div:nth-of-type(2) div:nth-of-type(even) {\\n    grid-column: calc(-3 - var(--offset));\\n  }\\n\\n  .grid &gt; div:nth-of-type(3) div {\\n    grid-column: calc(3 + var(--offset));\\n\\n    &amp;:last-of-type {\\n      grid-row: -1;\\n    }\\n  }\\n\\n  .grid .scaler {\\n    position: relative;\\n    grid-area: 2 / calc(3 + var(--offset));\\n  }\\n\\n  .grid img {\\n    width: 100%;\\n    aspect-ratio: 4 / 5;\\n    object-fit: cover;\\n    border-radius: 1rem;\\n  }\\n}\\n\\n@layer demo {\\n  html {\\n    scrollbar-color: red #0000;\\n  }\\n  body {\\n    background: canvasText;\\n  }\\n  h1 {\\n    --font-level: 8;\\n    line-height: 0.6;\\n  }\\n  h2 {\\n    --font-level: 4;\\n  }\\n  header {\\n    min-height: 100vh;\\n    display: grid;\\n    margin: 0 auto;\\n    align-content: center;\\n    max-width: calc(100% - (2 * var(--gutter)));\\n    padding-left: 48px;\\n    text-align: left;\\n  }\\n  body {\\n    display: block;\\n  }\\n\\n  main,\\n  section {\\n    max-width: 100%;\\n  }\\n\\n  section {\\n    min-height: 100vh;\\n  }\\n\\n  .content {\\n    overflow: hidden;\\n  }\\n\\n  main section:last-of-type {\\n    display: grid;\\n    place-items: center;\\n  }\\n\\n  .content-wrap {\\n    overflow: clip;\\n    background: light-dark(#fff, #000);\\n    z-index: 2;\\n  }\\n\\n  footer {\\n    padding: 4rem 2rem;\\n    text-align: center;\\n    position: sticky;\\n    bottom: 0;\\n    background: canvasText;\\n    color: canvas;\\n    width: 100%;\\n    z-index: -1;\\n    background: radial-gradient(hsl(0 0% 0% / 0.1) 2px, #0000 0) 50% 50% / 40px\\n        40px,\\n      canvasText;\\n  }\\n}\\n\\n@layer base {\\n  :root {\\n    --font-size-min: 16;\\n    --font-size-max: 20;\\n    --font-ratio-min: 1.2;\\n    --font-ratio-max: 1.33;\\n    --font-width-min: 375;\\n    --font-width-max: 1500;\\n  }\\n\\n  html {\\n    color-scheme: light dark;\\n  }\\n\\n  [data-theme=&#39;light&#39;] {\\n    color-scheme: light only;\\n  }\\n\\n  [data-theme=&#39;dark&#39;] {\\n    color-scheme: dark only;\\n  }\\n\\n  :where(.fluid) {\\n    --fluid-min: calc(\\n      var(--font-size-min) * pow(var(--font-ratio-min), var(--font-level, 0))\\n    );\\n    --fluid-max: calc(\\n      var(--font-size-max) * pow(var(--font-ratio-max), var(--font-level, 0))\\n    );\\n    --fluid-preferred: calc(\\n      (var(--fluid-max) - var(--fluid-min)) /\\n        (var(--font-width-max) - var(--font-width-min))\\n    );\\n    --fluid-type: clamp(\\n      (var(--fluid-min) / 16) * 1rem,\\n      ((var(--fluid-min) / 16) * 1rem) -\\n        (((var(--fluid-preferred) * var(--font-width-min)) / 16) * 1rem) +\\n        (var(--fluid-preferred) * var(--variable-unit, 100vi)),\\n      (var(--fluid-max) / 16) * 1rem\\n    );\\n    font-size: var(--fluid-type);\\n  }\\n\\n  *,\\n  *:after,\\n  *:before {\\n    box-sizing: border-box;\\n  }\\n\\n  body {\\n    background: light-dark(#fff, #000);\\n    display: grid;\\n    place-items: center;\\n    min-height: 100vh;\\n    font-family: &#39;SF Pro Text&#39;, &#39;SF Pro Icons&#39;, &#39;AOS Icons&#39;, &#39;Helvetica Neue&#39;,\\n      Helvetica, Arial, sans-serif, system-ui;\\n  }\\n\\n  .content-wrap::before {\\n    --size: 45px;\\n    --line: color-mix(in lch, canvasText, transparent 70%);\\n    content: &#39;&#39;;\\n    height: 100vh;\\n    width: 100vw;\\n    position: fixed;\\n    background: linear-gradient(\\n          90deg,\\n          var(--line) 1px,\\n          transparent 1px var(--size)\\n        )\\n        50% 50% / var(--size) var(--size),\\n      linear-gradient(var(--line) 1px, transparent 1px var(--size)) 50% 50% /\\n        var(--size) var(--size);\\n    mask: linear-gradient(-20deg, transparent 50%, white);\\n    top: 0;\\n    transform-style: flat;\\n    pointer-events: none;\\n  }\\n\\n  .bear-link {\\n    color: canvasText;\\n    position: fixed;\\n    top: 1rem;\\n    left: 1rem;\\n    width: 48px;\\n    aspect-ratio: 1;\\n    display: grid;\\n    place-items: center;\\n    opacity: 0.8;\\n  }\\n\\n  :where(.x-link, .bear-link):is(:hover, :focus-visible) {\\n    opacity: 1;\\n  }\\n\\n  .bear-link svg {\\n    width: 75%;\\n  }\\n\\n  /* Utilities */\\n  .sr-only {\\n    position: absolute;\\n    width: 1px;\\n    height: 1px;\\n    padding: 0;\\n    margin: -1px;\\n    overflow: hidden;\\n    clip: rect(0, 0, 0, 0);\\n    white-space: nowrap;\\n    border-width: 0;\\n  }\\n}\\n\\n[data-stick=&#39;true&#39;] div.tp-dfwv {\\n  position: fixed;\\n}\\n\&quot;,\&quot;js\&quot;:\&quot;// Newsletter issue: https://craftofui.substack.com/p/scrolling-a-page-out-of-the-playbook\\n\\nimport { Pane } from &#39;https://esm.sh/tweakpane@4.0.4&#39;\\nimport gsap from &#39;https://esm.sh/gsap@3.12.0&#39;\\nimport ScrollTrigger from &#39;https://esm.sh/gsap@3.12.0/ScrollTrigger&#39;\\n\\nlet layersCtrl\\nlet centerCtrl\\nlet staggerCtrl\\nlet scalerTl\\nlet layersTl\\n\\nconst hasScrollSupport = CSS.supports(\\n  &#39;(animation-timeline: view()) and (animation-range: 0 100%)&#39;\\n)\\n\\nconst config = {\\n  theme: &#39;system&#39;,\\n  enhanced: true,\\n  stick: true,\\n  layers: true,\\n  center: true,\\n  stagger: &#39;range&#39;,\\n}\\n\\nconst ctrl = new Pane({\\n  title: &#39;Config&#39;,\\n  expanded: true,\\n})\\n\\nif (!hasScrollSupport) {\\n  gsap.registerPlugin(ScrollTrigger)\\n  console.info(&#39;GSAP ScrollTrigger registered&#39;)\\n}\\n\\nconst update = () =&gt; {\\n  document.documentElement.dataset.theme = config.theme\\n  document.documentElement.dataset.enhanced = config.enhanced\\n  document.documentElement.dataset.stick = config.stick\\n  document.documentElement.dataset.center = config.center\\n  document.documentElement.dataset.layers = config.layers\\n  document.documentElement.dataset.stagger = config.stagger\\n\\n  if (config.enhanced &amp;&amp; !hasScrollSupport) {\\n    scalerTl = gsap\\n      .timeline({\\n        scrollTrigger: {\\n          trigger: &#39;main section:first-of-type&#39;,\\n          start: &#39;top -10%&#39;,\\n          end: &#39;bottom 80%&#39;,\\n          scrub: true,\\n        },\\n      })\\n      .from(\\n        &#39;.scaler img&#39;,\\n        {\\n          height: window.innerHeight - 32,\\n          ease: &#39;power1.inOut&#39;,\\n        },\\n        0\\n      )\\n      .from(\\n        &#39;.scaler img&#39;,\\n        {\\n          width: window.innerWidth - 32,\\n          ease: &#39;power2.inOut&#39;,\\n        },\\n        0\\n      )\\n    // then the layers\\n    layersTl = gsap\\n      .timeline({\\n        scrollTrigger: {\\n          trigger: &#39;main section:first-of-type&#39;,\\n          start: &#39;top -40%&#39;,\\n          end: &#39;bottom bottom&#39;,\\n          scrub: true,\\n        },\\n      })\\n      .from(\\n        &#39;.layer:nth-of-type(1)&#39;,\\n        {\\n          opacity: 0,\\n          ease: &#39;sine.out&#39;,\\n        },\\n        0\\n      )\\n      .from(\\n        &#39;.layer:nth-of-type(1)&#39;,\\n        {\\n          scale: 0,\\n          ease: &#39;power1.inOut&#39;,\\n        },\\n        0\\n      )\\n      .from(\\n        &#39;.layer:nth-of-type(2)&#39;,\\n        {\\n          opacity: 0,\\n          ease: &#39;sine.out&#39;,\\n        },\\n        0\\n      )\\n      .from(\\n        &#39;.layer:nth-of-type(2)&#39;,\\n        {\\n          scale: 0,\\n          ease: &#39;power3.inOut&#39;,\\n        },\\n        0\\n      )\\n      .from(\\n        &#39;.layer:nth-of-type(3)&#39;,\\n        {\\n          opacity: 0,\\n          ease: &#39;sine.out&#39;,\\n        },\\n        0\\n      )\\n      .from(\\n        &#39;.layer:nth-of-type(3)&#39;,\\n        {\\n          scale: 0,\\n          ease: &#39;power4.inOut&#39;,\\n        },\\n        0\\n      )\\n  } else {\\n    gsap.set([&#39;.scaler img&#39;, &#39;.layer&#39;], {\\n      attr: {\\n        style: undefined,\\n      },\\n    })\\n    scalerTl?.kill()\\n    layersTl?.kill()\\n    scalerTl = undefined\\n    layersTl = undefined\\n  }\\n\\n  if (hasScrollSupport) {\\n    layersCtrl.hidden = !config.enhanced\\n    staggerCtrl.hidden = !config.enhanced\\n    centerCtrl.hidden = !config.enhanced\\n  }\\n}\\n\\nconst sync = (event) =&gt; {\\n  if (\\n    !document.startViewTransition ||\\n    event.target.controller.view.labelElement.innerText !== &#39;Theme&#39;\\n  )\\n    return update()\\n  document.startViewTransition(() =&gt; update())\\n}\\n\\nctrl.addBinding(config, &#39;enhanced&#39;, {\\n  label: &#39;Enhance&#39;,\\n})\\n\\nif (hasScrollSupport) {\\n  centerCtrl = ctrl.addBinding(config, &#39;center&#39;, {\\n    label: &#39;Center&#39;,\\n    hidden: !config.enhanced,\\n  })\\n  layersCtrl = ctrl.addBinding(config, &#39;layers&#39;, {\\n    label: &#39;Layers&#39;,\\n    hidden: !config.enhanced,\\n  })\\n  staggerCtrl = ctrl.addBinding(config, &#39;stagger&#39;, {\\n    label: &#39;Stagger&#39;,\\n    options: {\\n      Range: &#39;range&#39;,\\n      Timing: &#39;timing&#39;,\\n    },\\n    hidden: !config.enhanced,\\n  })\\n}\\nctrl.addBinding(config, &#39;stick&#39;, {\\n  label: &#39;Stick&#39;,\\n})\\n\\nctrl.addBinding(config, &#39;theme&#39;, {\\n  label: &#39;Theme&#39;,\\n  options: {\\n    System: &#39;system&#39;,\\n    Light: &#39;light&#39;,\\n    Dark: &#39;dark&#39;,\\n  },\\n})\\n\\nctrl.on(&#39;change&#39;, sync)\\nupdate()\\n\&quot;,\&quot;html_pre_processor\&quot;:\&quot;none\&quot;,\&quot;css_pre_processor\&quot;:\&quot;none\&quot;,\&quot;js_pre_processor\&quot;:\&quot;babel\&quot;,\&quot;html_classes\&quot;:\&quot;\&quot;,\&quot;css_starter\&quot;:\&quot;neither\&quot;,\&quot;js_library\&quot;:null,\&quot;created_at\&quot;:\&quot;2024-11-28T02:29:23.179Z\&quot;,\&quot;updated_at\&quot;:\&quot;2024-12-06T11:52:36.456Z\&quot;,\&quot;title\&quot;:\&quot;The Craft of UI: Playbook CSS scroll animation w/ subgrid\&quot;,\&quot;description\&quot;:\&quot;Read about how to make this demo here: https://craftofui.substack.com/p/scrolling-a-page-out-of-the-playbook\&quot;,\&quot;slug_hash\&quot;:\&quot;VYZwOwd\&quot;,\&quot;head\&quot;:\&quot;&lt;meta\\n      name=\\\&quot;viewport\\\&quot;\\n      content=\\\&quot;width=device-width, initial-scale=1, user-scalable=0, maximum-scale=1.0\\\&quot;\\n    /&gt;\&quot;,\&quot;private\&quot;:false,\&quot;has_animation\&quot;:true,\&quot;team_id\&quot;:0,\&quot;css_prefix\&quot;:\&quot;autoprefixer\&quot;,\&quot;template\&quot;:false,\&quot;parent_id\&quot;:0,\&quot;comments_count\&quot;:1,\&quot;custom_screenshot_filename\&quot;:null,\&quot;loves_count\&quot;:886,\&quot;pick\&quot;:false,\&quot;popularity\&quot;:6496,\&quot;views_count\&quot;:20557,\&quot;pick_visible_at\&quot;:null,\&quot;cpid\&quot;:\&quot;0193709a-086b-7c72-864f-7d4e78a2c36c\&quot;,\&quot;is_new_editor_pen\&quot;:false,\&quot;access\&quot;:\&quot;Public\&quot;,\&quot;pen_hash\&quot;:null}&quot;,&quot;__layoutType&quot;:&quot;top&quot;,&quot;__pageType&quot;:&quot;pen&quot;,&quot;__profiled&quot;:{&quot;base_url&quot;:&quot;/jh3y&quot;,&quot;hashid&quot;:&quot;eqVvrw&quot;,&quot;id&quot;:605876,&quot;name&quot;:&quot;Jhey&quot;,&quot;type&quot;:&quot;user&quot;,&quot;username&quot;:&quot;jh3y&quot;},&quot;__processorsMap&quot;:{&quot;autoprefixer&quot;:&quot;autoprefixer-10&quot;,&quot;babel&quot;:&quot;babel-7&quot;,&quot;coffeescript&quot;:&quot;coffeescript-2&quot;,&quot;format-1&quot;:&quot;format-1&quot;,&quot;flutter&quot;:&quot;flutter-1&quot;,&quot;haml&quot;:&quot;haml-4&quot;,&quot;less&quot;:&quot;less-3&quot;,&quot;lint-1&quot;:&quot;lint-1&quot;,&quot;livescript&quot;:&quot;livescript-1&quot;,&quot;markdown&quot;:&quot;markdown-11&quot;,&quot;postcss&quot;:&quot;postcss-7&quot;,&quot;pug&quot;:&quot;pug-2&quot;,&quot;sass&quot;:&quot;sass-1&quot;,&quot;scss&quot;:&quot;sass-1&quot;,&quot;sass-ruby-3&quot;:&quot;sass-ruby-3&quot;,&quot;sass-ruby-compass-3&quot;:&quot;sass-ruby-compass-3&quot;,&quot;slim&quot;:&quot;slim-3&quot;,&quot;stylus&quot;:&quot;stylus-0&quot;,&quot;typescript&quot;:&quot;typescript-4&quot;,&quot;vue&quot;:&quot;vue-2&quot;,&quot;vue3&quot;:&quot;vue-3&quot;},&quot;__rtData&quot;:&quot;{\&quot;maxMembers\&quot;:0,\&quot;roomID\&quot;:\&quot;VYZwOwd/live\&quot;,\&quot;roomType\&quot;:\&quot;live\&quot;,\&quot;updatedAt\&quot;:1733485956,\&quot;user\&quot;:{\&quot;id\&quot;:\&quot;VYzvVX\&quot;,\&quot;hashid\&quot;:\&quot;VYzvVX\&quot;,\&quot;name\&quot;:\&quot;brennercruvinel\&quot;,\&quot;username\&quot;:\&quot;brennercruvinel\&quot;,\&quot;role\&quot;:\&quot;editor\&quot;}}&quot;,&quot;__eijs&quot;:&quot;https://public.codepenassets.com/embed/index.js&quot;,&quot;__favicon_mask_icon&quot;:&quot;https://cpwebassets.codepen.io/assets/favicon/logo-pin-b4b4269c16397ad2f0f7a01bcdf513a1994f4c94b8af2f191c09eb0d601762b1.svg&quot;,&quot;__favicon_shortcut_icon&quot;:&quot;https://cpwebassets.codepen.io/assets/favicon/favicon-aec34940fbc1a6e787974dcd360f2c6b63348d4b1f4e06c77743096d55480f33.ico&quot;,&quot;__path_to_iframe_console_runner&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/iframe/iframeConsoleRunner-100b2a29d7a68d0f5c9eb0b3f9e63783410ea00dcab106def20a0ab3cf4a8804.js&quot;,&quot;__path_to_iframe_runtime_errors&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/iframe/iframeRuntimeErrors-4f205f2c14e769b448bcf477de2938c681660d5038bc464e3700256713ebe261.js&quot;,&quot;__path_to_processor_worker&quot;:&quot;https://cpwebassets.codepen.io/assets/packs/router.js&quot;,&quot;__path_to_stop_execution_on_timeout&quot;:&quot;https://cpwebassets.codepen.io/assets/common/stopExecutionOnTimeout-f07739098a39bd4e74ddd974652dac904146f33fdc1ecab356e8c809a05faccb.js&quot;,&quot;__pen_normalize_css_url&quot;:&quot;https://public.codepenassets.com/css/normalize-5.0.0.min.css&quot;,&quot;__pen_prefix_free_url&quot;:&quot;https://public.codepenassets.com/js/prefixfree-1.0.7.min.js&quot;,&quot;__pen_reset_css_url&quot;:&quot;https://public.codepenassets.com/css/reset-2.0.min.css&quot;,&quot;__theme_url_twilight&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/twilight-17aa2c8bbfe74907b477e19b46d4dcb9165990a73d66fa82db594bcb16475591.css&quot;,&quot;__theme_url_solarized_dark&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/solarized-dark-845c0248634fea32dc08003bd34ef6daade68e70a938bbd4985a15cbfe926094.css&quot;,&quot;__theme_url_tomorrow_night&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/tomorrow-night-c87e07aafbcb95c7cda8df994e773a9d870a74945200cd377610d502f3766be0.css&quot;,&quot;__theme_url_oceanic_dark&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/oceanic-dark-2bf98b7191512d309d4b8494e8404fd1003bb1479551a29c16dd1bf53c9f2eeb.css&quot;,&quot;__theme_url_panda&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/panda-83e0d1a9ceaef09b32320a67e2da17da459b40d63d257725a6b94e1af12daa3a.css&quot;,&quot;__theme_url_duotone_dark&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/duotone-dark-c16f4e900ed4adc8302ff3d4eeb52ad099a0fa9516af9ecc5f3c9b0eb9a1757c.css&quot;,&quot;__theme_url_highcontrast_dark&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/highcontrast-dark-39d45d39fe61762e26f6ed00ec11f0882aee62ec512843111829f5469dc11e54.css&quot;,&quot;__theme_url_classic&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/classic-e947dc7cc72d6e7e8b7143bcd01b7b0ce79ea7cd30ddadbddf7c28e576dc3266.css&quot;,&quot;__theme_url_solarized_light&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/solarized-light-81b76e2afa7167287d0d14e8fc90fef58d8a0e64a0a10659b6a37f58ee367bac.css&quot;,&quot;__theme_url_xq_light&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/xq-light-15a89885959d027998703f27b069855d5cfaa8ccc2cef96d8496d483a0c8ba3e.css&quot;,&quot;__theme_url_oceanic_light&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/oceanic-light-2286dec69607e26c0b8c7928678ed2808f5daed7e932a925ffff1b0de30e49d4.css&quot;,&quot;__theme_url_mdn_like&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/mdn-like-8326450d2022b616bb7212a6b78515276ffb59a666fc755ff6a2fcf4a9f802ba.css&quot;,&quot;__theme_url_duotone_light&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/duotone-light-fdd286c45b4deaf152a89bebfd3a64e61b9339a0ca71889744c9a8f833837398.css&quot;,&quot;__theme_url_highcontrast_light&quot;:&quot;https://cpwebassets.codepen.io/assets/editor/themes/highcontrast-light-00fe2075d208666906a9cab3c5713806d6261717d7aac604711d4512cf82dae9.css&quot;}</textarea>
+
+  <script src="https://cpwebassets.codepen.io/assets/common/browser_support-2c1a3d31dbc6b5746fb7dacdbc81dd613906db219f13147c66864a6c3448246c.js"></script>
+  <script src="https://cpwebassets.codepen.io/assets/common/everypage-4ab01c7f453fd64e33598c75f12d7eb600e9e38a6ff48222e13df706ddb2e08e.js"></script>
+
+
+  <script src="https://cpwebassets.codepen.io/assets/packs/js/vendor-2333a2260b2d50676c65.chunk.js"></script>
+<script src="https://cpwebassets.codepen.io/assets/packs/js/everypage-c5e815a8dad02a6d85f0.js"></script>
+  <script src="https://cpwebassets.codepen.io/assets/packs/js/vendor-2333a2260b2d50676c65.chunk.js"></script>
+<script src="https://cpwebassets.codepen.io/assets/packs/js/processorRouter-96666922eb1825a91890.js"></script>
+    <script src="https://static.filestackapi.com/filestack-js/3.x.x/filestack.min.js"></script>
+  <script src="https://cpwebassets.codepen.io/assets/editor/global/commonLibs-18d595d95e5894ceae5661c7e40deeca7df254309b42f89edce76949b15a0f31.js"></script>
+
+<script src="https://cpwebassets.codepen.io/assets/editor/global/codemirror-e628acccbc140ed80f9daa48b5e64c775855e64a41d7fad48e7583a7819aa9d6.js"></script>
+  <script src="https://cpwebassets.codepen.io/assets/libs/emmet-codemirror-plugin-96396a4ad085138a7f4e501477590b84cedf5a10d5298bdeb2da448cada82d11.js"></script>
+
+
+  <script src="https://cpwebassets.codepen.io/assets/editor/pen/index-d0f28194f07a2b64b0f526b3a0112a8527b85e8b9a1ef4b5873ede849c19070a.js"></script>
+
+
+
+
+</body>
+
+</html>
