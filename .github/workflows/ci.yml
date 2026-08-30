@@ -56,7 +56,7 @@ jobs:
       - run: cargo test --workspace
 
   wasm:
-    name: wasm check (showcase + nestui)
+    name: wasm check (showcase)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -64,9 +64,31 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
-      # the cross-platform guard covers both apps that ship to the web.
       - run: cargo check --target wasm32-unknown-unknown -p showcase
-      - run: cargo check --target wasm32-unknown-unknown -p nestui
+
+  nestui:
+    # nestui is excluded from the root workspace: its native backend
+    # path-depends on the sibling nest workspace. this job recreates that
+    # layout (nest checked out at ../nest relative to the plev root) and runs
+    # the nestui gate: native tests, clippy, and the wasm web target.
+    name: nestui (sibling nest checkout)
+    runs-on: macos-latest
+    env:
+      CARGO_PROFILE_DEV_DEBUG: "0"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          repository: hoffresearch/nest
+          path: nest-src
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+          targets: wasm32-unknown-unknown
+      - run: ln -sfn "$GITHUB_WORKSPACE/nest-src" "$(dirname "$GITHUB_WORKSPACE")/nest"
+      - run: cargo test --manifest-path crates/nestui/Cargo.toml
+      - run: cargo clippy --manifest-path crates/nestui/Cargo.toml --all-targets -- -D warnings
+      - run: cargo check --manifest-path crates/nestui/Cargo.toml --target wasm32-unknown-unknown
 
   typos:
     name: typos (advisory)

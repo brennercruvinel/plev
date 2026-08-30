@@ -100,11 +100,19 @@ requires rust edition 2024.
 cargo build --release --workspace
 
 cargo run -p showcase                  # the design-system gallery, 14 tabs
-cargo run -p nestui [file.nest]        # .nest vector-db explorer (drop a file to open)
 cargo run -p ide [path]                # plev-native git client
 cargo run -p prime                     # prime-coherence particle swarm (codepen port)
 cargo run -p engine --example charts   # any of the 16 windowed demos
 cargo run -p engine --example snake
+```
+
+nestui, the .nest vector-db explorer, is its own workspace because its
+native backend path-depends on a sibling checkout of
+[nest](https://github.com/hoffresearch/nest) at `../nest`. with nest
+cloned next to plev:
+
+```
+cargo run --manifest-path crates/nestui/Cargo.toml [file.nest]   # drop a file to open
 ```
 
 web build (same pixels as desktop):

@@ -26,3 +26,16 @@ else
     echo "warning: skipping the wasm32 check — rust-std for wasm32-unknown-unknown" >&2
     echo "         is not installed (Homebrew rust). the leg runs in CI." >&2
 fi
+
+# nestui leg. nestui is excluded from the root workspace because its native
+# backend path-depends on the sibling nest workspace; when that checkout is
+# absent the leg skips with a warning and CI (.github/workflows/ci.yml) is
+# the verification.
+if [ -f ../nest/crates/nest-format/Cargo.toml ]; then
+    cargo test --manifest-path crates/nestui/Cargo.toml
+    cargo clippy --manifest-path crates/nestui/Cargo.toml --all-targets -- -D warnings
+    cargo fmt --check --manifest-path crates/nestui/Cargo.toml
+else
+    echo "warning: skipping nestui — sibling nest checkout not found at ../nest." >&2
+    echo "         the leg runs in CI (.github/workflows/ci.yml)." >&2
+fi

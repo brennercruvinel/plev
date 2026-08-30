@@ -37,7 +37,7 @@ impl ShortcutMap {
     }
 
     /// Bind a keystroke string (`"cmd-o"`, `"ctrl-shift-p"`, `"f5"`) to
-    /// an id. Panics on an unparseable keystroke — bindings are
+    /// an id. Panics on an unparsable keystroke — bindings are
     /// programmer constants, so a malformed one is a bug, not a runtime
     /// condition (same contract as `"lit".parse::<Keystroke>()` in the
     /// declarative keymap).

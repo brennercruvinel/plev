@@ -1,10 +1,17 @@
 [package]
 name = "nestui"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
 publish = false
 description = "nestui — desktop (and future web) explorer for .nest vector databases, built on plev"
+
+# nestui is NOT a member of the root workspace (see the exclude + comment in
+# the root Cargo.toml): the native backend path-depends on the sibling nest
+# checkout (../nest relative to the plev repo root), so membership would break
+# the root workspace for anyone without nest. this crate is its own workspace;
+# build it with --manifest-path crates/nestui/Cargo.toml or from this dir.
+[workspace]
 
 # lib: rlib for the desktop/web bin; cdylib is the android `.so` (GameActivity
 # loads it and calls `android_main`); staticlib is the iOS `.a` linked by the
@@ -17,32 +24,35 @@ name = "nestui"
 path = "src/main.rs"
 
 [dependencies]
-engine.workspace = true
-wgpu.workspace = true
-winit.workspace = true
-log.workspace = true
-web-time.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-sha2.workspace = true
+engine = { path = "../engine" }
+wgpu = "28"
+winit = { version = "0.30", features = ["rwh_06"] }
+log = "0.4"
+web-time = "1.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = { version = "0.10", default-features = false }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-env_logger.workspace = true
-pollster.workspace = true
-thiserror.workspace = true
-nest-format.workspace = true
-nest-runtime.workspace = true
+env_logger = "0.11"
+pollster = "0.4"
+thiserror = "2"
+# nest vector database (sibling workspace, read-only): the native backend.
+# nest pins sha2 0.11 while nestui pins 0.10 — both coexist in the lockfile,
+# no unification needed.
+nest-format = { path = "../../../nest/crates/nest-format" }
+nest-runtime = { path = "../../../nest/crates/nest-runtime" }
 
 # The nest backend is mmap + std::fs based: native only for now. The view
 # model types it produces are the future wasm backend's target shape.
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-tempfile.workspace = true
+tempfile = "3"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen.workspace = true
-wasm-bindgen-futures.workspace = true
-js-sys.workspace = true
-web-sys = { workspace = true, features = [
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = [
     "HtmlInputElement",
     "HtmlElement",
     "CssStyleDeclaration",
@@ -51,14 +61,27 @@ web-sys = { workspace = true, features = [
     "Blob",
     "FileReader",
 ] }
-console_log.workspace = true
-console_error_panic_hook.workspace = true
+console_log = "1"
+console_error_panic_hook = "0.1"
 
 # Android pulls the GameActivity winit backend (via the engine feature) and a
 # logcat-backed logger; the cdylib above is what gets packaged into the APK.
 [target.'cfg(target_os = "android")'.dependencies]
-engine = { workspace = true, features = ["android-game-activity"] }
-android_logger.workspace = true
+engine = { path = "../engine", features = ["android-game-activity"] }
+android_logger = "0.14"
 
-[lints]
-workspace = true
+# Same bar as the root workspace (which this crate no longer inherits).
+[lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+
+[lints.clippy]
+uninlined_format_args = "warn"
+
+# Same profiles as the root workspace: thin lto on release; deps optimized in
+# dev so heavy crates like wgpu do not drag the debug runtime.
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+[profile.dev.package."*"]
+opt-level = 2
