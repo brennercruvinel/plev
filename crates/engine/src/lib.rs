@@ -12,6 +12,15 @@ pub mod editor;
 pub mod text;
 pub mod text_input;
 
+// -- Clipboard (first-level; the editor's own sync stays in `editor`)
+pub mod clipboard;
+
+// -- Charts (pure geometry + scene-node emission; see charts/mod.rs)
+pub mod charts;
+
+// -- Graph canvas geometry (CSR layout + pan/zoom transform)
+pub mod graph;
+
 // -- Input & Events
 pub mod actions;
 pub mod input;

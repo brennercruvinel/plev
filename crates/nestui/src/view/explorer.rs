@@ -56,6 +56,9 @@ pub struct Explorer {
     /// The Open screen's picker button was clicked (web only).
     #[cfg(target_arch = "wasm32")]
     pick_requested: bool,
+    /// Global shortcuts (Cmd/Ctrl+O, Cmd/Ctrl+1..=6), matched as engine
+    /// `Keystroke`s so the view stays winit-free.
+    shortcuts: engine::actions::shortcuts::ShortcutMap,
     embedder: Option<Result<String, String>>,
     file_hover: bool,
     chunks: Option<ChunksData>,
@@ -63,8 +66,8 @@ pub struct Explorer {
     /// chunk_id → ordinal, built once when texts arrive (result previews).
     chunk_index: Option<HashMap<String, usize>>,
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    clipboard: engine::editor::SystemClipboard,
-    empty_cta: Button,
+    clipboard: engine::clipboard::SystemClipboard,
+    empty_state: engine::ui::widgets::EmptyState,
     open: OpenScreen,
     overview: OverviewScreen,
     search: SearchScreen,
@@ -95,6 +98,7 @@ impl Explorer {
             recents_path,
             #[cfg(target_arch = "wasm32")]
             pick_requested: false,
+            shortcuts: build_shortcuts(),
             // On the web there is no python bridge: the text-mode hint
             // says so up front instead of failing on submission.
             #[cfg(target_arch = "wasm32")]
@@ -106,8 +110,13 @@ impl Explorer {
             chunks_loading: false,
             chunk_index: None,
             #[cfg(not(any(target_os = "android", target_os = "ios")))]
-            clipboard: engine::editor::SystemClipboard::new(),
-            empty_cta: Button::new("Open a database").icon("folder-open"),
+            clipboard: engine::clipboard::SystemClipboard::new(),
+            empty_state: engine::ui::widgets::EmptyState::new(
+                "no database open yet",
+                "Open a .nest file from the Open tab to explore it here.",
+            )
+            .icon("folder-open")
+            .cta(Button::new("Open a database").icon("folder-open")),
             open: OpenScreen::new(theme),
             overview: OverviewScreen::new(),
             search: SearchScreen::new(theme),
@@ -325,30 +334,30 @@ impl Explorer {
         }
     }
 
-    /// Global shortcuts (Cmd/Ctrl held): `o` jumps to Open, `1..=6` jump
-    /// to tabs. Plain characters never reach here (they type into fields).
-    pub fn handle_shortcut(&mut self, key: &str) -> bool {
-        match key {
-            "o" | "O" => {
-                self.switch_screen(Screen::Open);
-                true
-            }
-            d @ ("1" | "2" | "3" | "4" | "5" | "6") => {
-                let idx = (d.as_bytes()[0] - b'1') as usize;
-                if idx < Screen::TABS.len() {
-                    self.switch_screen(Screen::TABS[idx]);
-                    true
-                } else {
-                    false
-                }
-            }
-            _ => false,
+    /// Global shortcut dispatch: the shell turns winit keys into engine
+    /// `Keystroke`s; the map resolves them to "open" / "tab:N".
+    pub fn handle_keystroke(&mut self, keystroke: &engine::actions::Keystroke) -> bool {
+        let Some(id) = self.shortcuts.get(keystroke) else {
+            return false;
+        };
+        if id == "open" {
+            self.switch_screen(Screen::Open);
+            return true;
         }
+        if let Some(idx) = id
+            .strip_prefix("tab:")
+            .and_then(|i| i.parse::<usize>().ok())
+            && idx < Screen::TABS.len()
+        {
+            self.switch_screen(Screen::TABS[idx]);
+            return true;
+        }
+        false
     }
 
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     fn copy(&mut self, text: &str) {
-        use engine::editor::ClipboardProvider;
+        use engine::clipboard::ClipboardProvider;
         self.clipboard.set_text(text);
     }
 
@@ -543,25 +552,14 @@ impl Explorer {
         result.changed || acted
     }
 
-    /// The empty-state CTA (screens without an open db).
+    /// The empty-state CTA (screens without an open db): the engine
+    /// `EmptyState` centers itself; its CTA jumps to Open.
     fn handle_empty_cta(&mut self, event: &WidgetEvent, content: Rect) -> (EventResult, Action) {
-        let r = self
-            .empty_cta
-            .handle_event(event, self.empty_cta_rect(content));
+        let r = self.empty_state.handle_event(event, content);
         if r.clicked {
             return (r, Action::Goto(Screen::Open));
         }
         (r, Action::None)
-    }
-
-    fn empty_cta_rect(&self, content: Rect) -> Rect {
-        let (w, h) = self.empty_cta.preferred_size();
-        Rect::new(
-            content.x + (content.w - w) / 2.0,
-            content.y + content.h / 2.0,
-            w,
-            h,
-        )
     }
 
     // -- Animation -------------------------------------------------------------
@@ -571,6 +569,7 @@ impl Explorer {
         animating |= self.search.tick(dt);
         animating |= self.chunks_screen.tick(dt);
         animating |= self.graph_screen.tick(dt);
+        animating |= self.stats_screen.tick(dt);
         animating
     }
 
@@ -616,10 +615,10 @@ impl Explorer {
             None => "no database open".to_string(),
         };
         let subtitle_style = engine::text::TextStyle::new(12.0);
-        let subtitle = super::truncate_to_width(
+        let subtitle = engine::text::TextMeasurer::truncate_to_width(
             &subtitle,
-            (self.width - PAD * 2.0 - 90.0).max(80.0),
             &subtitle_style,
+            (self.width - PAD * 2.0 - 90.0).max(80.0),
         );
         text(
             c,
@@ -757,7 +756,9 @@ impl Explorer {
         toasts.render(c, layers.toast, theme, vw, vh);
     }
 
-    /// Empty state: centered message + optional CTA to the Open screen.
+    /// Empty state: the engine `EmptyState` (icon + title + message + CTA
+    /// to Open). `msg` overrides the default message (e.g. the graph-less
+    /// explanation), `show_cta` toggles the button.
     fn render_empty(
         &mut self,
         c: &mut Compositor,
@@ -766,23 +767,29 @@ impl Explorer {
         msg: &str,
         show_cta: bool,
     ) {
-        let style = engine::text::TextStyle::new(14.0);
-        let msg = super::truncate_to_width(msg, content.w, &style);
-        let (tw, _) = engine::text::TextMeasurer::measure_styled(&msg, &style, None);
-        text(
-            c,
-            &msg,
-            14.0,
-            500,
-            content.x + (content.w - tw) / 2.0,
-            content.y + content.h / 2.0 - 32.0,
-            theme.colors.text_dim.0,
-        );
-        if show_cta {
-            self.empty_cta
-                .render(c, self.empty_cta_rect(content), theme);
+        if msg != "no database open yet" {
+            self.empty_state.message = msg.to_string();
         }
+        if !show_cta {
+            self.empty_state.cta = None;
+        }
+        self.empty_state.render(c, content, theme);
     }
+}
+
+/// The global shortcut table: Cmd/Ctrl+O jumps to Open, Cmd/Ctrl+1..=6
+/// jump to tabs. Both modifier spellings bind the same id (macOS vs the
+/// rest).
+fn build_shortcuts() -> engine::actions::shortcuts::ShortcutMap {
+    let mut map = engine::actions::shortcuts::ShortcutMap::new()
+        .bind("cmd-o", "open")
+        .bind("ctrl-o", "open");
+    for i in 0..Screen::TABS.len() {
+        map = map
+            .bind(format!("cmd-{}", i + 1).as_str(), format!("tab:{i}"))
+            .bind(format!("ctrl-{}", i + 1).as_str(), format!("tab:{i}"));
+    }
+    map
 }
 
 // ---------------------------------------------------------------------------
@@ -823,16 +830,18 @@ mod tests {
     #[test]
     fn shortcuts_jump_to_tabs() {
         let (mut ex, _, _) = harness();
-        assert!(ex.handle_shortcut("o") || true); // "o" → Open (already there)
-        assert!(ex.handle_shortcut("3"));
+        let ks = |s: &str| s.parse::<engine::actions::Keystroke>().unwrap();
+        assert!(ex.handle_keystroke(&ks("cmd-3")));
         assert_eq!(ex.screen(), Screen::Search);
-        assert!(ex.handle_shortcut("5"));
+        assert!(ex.handle_keystroke(&ks("ctrl-5")));
         assert_eq!(ex.screen(), Screen::Graph);
-        assert!(ex.handle_shortcut("6"));
+        assert!(ex.handle_keystroke(&ks("cmd-6")));
         assert_eq!(ex.screen(), Screen::Stats);
-        assert!(!ex.handle_shortcut("9"));
+        // Unbound and bare keys do not match.
+        assert!(!ex.handle_keystroke(&ks("cmd-9")));
+        assert!(!ex.handle_keystroke(&ks("3")));
         assert_eq!(ex.screen(), Screen::Stats);
-        assert!(ex.handle_shortcut("o"));
+        assert!(ex.handle_keystroke(&ks("cmd-o")));
         assert_eq!(ex.screen(), Screen::Open);
     }
 
@@ -910,7 +919,7 @@ mod tests {
         let (mut ex, mut toasts, theme) = harness();
         ex.switch_screen(Screen::Overview);
         assert!(ex.db.is_none());
-        let cta = ex.empty_cta_rect(ex.content_rect());
+        let cta = ex.empty_state.cta_rect(ex.content_rect()).unwrap();
         let (x, y) = cta.center();
         click(&mut ex, &mut toasts, &theme, x, y);
         assert_eq!(ex.screen(), Screen::Open);

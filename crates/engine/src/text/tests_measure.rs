@@ -430,3 +430,87 @@ fn vertical_center_consistent_across_ramp() {
         assert!(y + m.glyph_top() + m.glyph_height() < 44.0);
     }
 }
+
+// -- truncate_to_width (single-line ellipsis via real shaping) -------------
+
+#[test]
+fn truncate_keeps_text_that_fits() {
+    let s = "short enough";
+    assert_eq!(TextMeasurer::truncate_to_width(s, &inter(14.0), 500.0), s);
+}
+
+#[test]
+fn truncate_empty_string_stays_empty() {
+    assert_eq!(TextMeasurer::truncate_to_width("", &inter(14.0), 100.0), "");
+}
+
+#[test]
+fn truncate_ellipsizes_to_one_line_that_really_fits() {
+    let style = inter(14.0);
+    let long = "the quick brown fox jumps over the lazy dog, again and again and again";
+    let out = TextMeasurer::truncate_to_width(long, &style, 120.0);
+    assert!(out.ends_with('\u{2026}'));
+    assert!(out.len() < long.len());
+    // The ADR invariant: measured with the SAME style the caller draws.
+    let (w, _) = TextMeasurer::measure_styled(&out, &style, None);
+    assert!(w <= 120.0, "truncated width {w} exceeds max_width");
+}
+
+#[test]
+fn truncate_maximizes_the_kept_prefix() {
+    let style = inter(14.0);
+    let long = "abcdefghij".repeat(20);
+    let out = TextMeasurer::truncate_to_width(&long, &style, 200.0);
+    let kept_graphemes = out.trim_end_matches('\u{2026}').chars().count();
+    // The next candidate (one more grapheme + ellipsis) must overflow.
+    let wider: String = long.chars().take(kept_graphemes + 1).collect();
+    let (w, _) = TextMeasurer::measure_styled(&format!("{wider}\u{2026}"), &style, None);
+    assert!(w > 200.0, "a longer prefix still fits: {w} <= 200");
+}
+
+#[test]
+fn truncate_trims_trailing_whitespace_before_the_ellipsis() {
+    let style = inter(14.0);
+    // Spaces land right at the cut: "aaa aaa aaa …" must not keep a
+    // dangling space before "…".
+    let s = "aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa";
+    let out = TextMeasurer::truncate_to_width(s, &style, 100.0);
+    assert!(out.ends_with('\u{2026}'));
+    assert!(!out.ends_with(" \u{2026}"), "trailing space kept: {out:?}");
+}
+
+#[test]
+fn truncate_never_splits_a_grapheme_cluster() {
+    let style = inter(14.0);
+    // Flag emoji are one grapheme made of two regional indicators; a
+    // char-wise cut would split them into lone (invalid) indicators.
+    let s = "🇧🇷🇧🇷🇧🇷🇧🇷🇧🇷🇧🇷🇧🇷🇧🇷 tail text here";
+    let out = TextMeasurer::truncate_to_width(s, &style, 80.0);
+    assert!(out.ends_with('\u{2026}'));
+    // The kept part must be a grapheme-aligned prefix: a char-wise cut
+    // can produce a prefix that still passes `starts_with` (a lone
+    // regional indicator), so check alignment against the input's
+    // grapheme boundaries directly.
+    use unicode_segmentation::UnicodeSegmentation;
+    let kept = out.trim_end_matches('\u{2026}');
+    let aligned: Vec<String> = (0..=s.graphemes(true).count())
+        .map(|k| s.graphemes(true).take(k).collect())
+        .collect();
+    assert!(
+        aligned.iter().any(|p| p == kept),
+        "output prefix {kept:?} is not a grapheme-aligned prefix of the input"
+    );
+}
+
+#[test]
+fn truncate_returns_the_ellipsis_when_nothing_fits() {
+    let style = inter(14.0);
+    // max_width smaller than the ellipsis itself: the minimal signal.
+    let out = TextMeasurer::truncate_to_width("hello world", &style, 1.0);
+    assert_eq!(out, "\u{2026}");
+    // Zero and negative widths behave the same (no panic, no empty).
+    assert_eq!(
+        TextMeasurer::truncate_to_width("hello", &style, 0.0),
+        "\u{2026}"
+    );
+}

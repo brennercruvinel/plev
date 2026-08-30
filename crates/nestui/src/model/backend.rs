@@ -194,22 +194,23 @@ impl NestBackend {
         ))
     }
 
-    /// The CSR graph copied into the view-owned [`crate::model::graph::GraphData`]
-    /// (the runtime's `CsrIndex` never leaves this module).
-    pub fn graph_data(&self) -> Option<crate::model::graph::GraphData> {
+    /// The CSR graph copied into the engine's
+    /// [`GraphData`](engine::graph::GraphData) (the runtime's `CsrIndex`
+    /// never leaves this module).
+    pub fn graph_data(&self) -> Option<engine::graph::GraphData> {
         let g = self.graph.as_ref()?;
         let n = g.n_nodes();
-        let mut data = crate::model::graph::GraphData {
+        let mut data = engine::graph::GraphData {
             n_nodes: n,
             offsets: Vec::with_capacity(n + 1),
             neighbors: Vec::new(),
-            edge_types: Vec::new(),
+            kinds: Vec::new(),
         };
         data.offsets.push(0);
         for node in 0..n {
             for (i, &dst) in g.neighbors(node).iter().enumerate() {
                 data.neighbors.push(dst);
-                data.edge_types.push(g.edge_type(node, i).unwrap_or(0));
+                data.kinds.push(g.edge_type(node, i).unwrap_or(0));
             }
             data.offsets.push(data.neighbors.len() as u32);
         }

@@ -1,12 +1,11 @@
 //! Charts section: line with axes/grid/dots, bars, stacked area and donut
-//! with legend, all drawn from the pure tested geometry core in
-//! `showcase::model::charts` (backend before ui). The 2x2 grid is
+//! with legend, all drawn from `engine::charts` (the pure tested geometry
+//! core + scene-node emission, promoted from this app in engine F3). The 2x2 grid is
 //! content-driven and stacks to one column in narrow windows (cards.rs
 //! pattern). A Tween reveal in the style of the old makepad_charts demo
 //! (1.5s ease-out cubic) replays on click; while it runs, `tick()` keeps
 //! requesting frames, so render on demand never freezes mid-animation.
 
-mod draw;
 #[cfg(test)]
 mod tests;
 
@@ -137,10 +136,10 @@ impl ChartsSection {
             let (w, h) = ((p.w - PAD * 2.0).max(0.0), (p.h - HEAD_H - PAD).max(0.0));
             Rect::new(p.x + PAD, p.y + HEAD_H, w, h)
         };
-        draw::line(c, &self.line_data, inner(&rects[0]), theme, r);
-        draw::bars(c, &self.bar_data, inner(&rects[1]), theme, r);
-        draw::area(c, &self.area_a, &self.area_b, inner(&rects[2]), theme, r);
-        draw::donut(c, &self.donut_items, inner(&rects[3]), theme, r);
+        engine::charts::draw::line(c, &self.line_data, inner(&rects[0]), theme, r);
+        engine::charts::draw::bars(c, &self.bar_data, inner(&rects[1]), theme, r);
+        engine::charts::draw::area(c, &self.area_a, &self.area_b, inner(&rects[2]), theme, r);
+        engine::charts::draw::donut(c, &self.donut_items, inner(&rects[3]), theme, r);
 
         let bottom = rects.iter().map(|p| p.y + p.h).fold(content.y, f32::max);
         text(

@@ -3,8 +3,8 @@
 
 use std::f32::consts::{FRAC_PI_2, TAU};
 
-use engine::text::TextStyle;
-use engine::ui::widgets::Rect;
+use crate::text::TextStyle;
+use crate::ui::widgets::Rect;
 
 use super::{donut, rects_overlap, slice_polygon};
 

@@ -250,8 +250,8 @@ impl ApplicationHandler<UserEvent> for App {
                             target_os = "ios"
                         )))]
                         if paste {
-                            use engine::editor::ClipboardProvider;
-                            let mut clipboard = engine::editor::SystemClipboard::new();
+                            use engine::clipboard::ClipboardProvider;
+                            let mut clipboard = engine::clipboard::SystemClipboard::new();
                             if let Some(text) = clipboard.get_text()
                                 && self.view.handle_paste(&text)
                             {
@@ -262,8 +262,17 @@ impl ApplicationHandler<UserEvent> for App {
                         if plain && self.view.handle_key(c.as_str()) {
                             self.invalidate();
                         }
-                        // Cmd/Ctrl shortcuts: tab jumps and Open.
-                        if !plain && !paste && self.view.handle_shortcut(c.as_str()) {
+                        // Cmd/Ctrl shortcuts: tab jumps and Open (bridged
+                        // to engine Keystrokes here so the view stays
+                        // winit-free).
+                        if !plain
+                            && !paste
+                            && let Some(ks) = engine::actions::keystroke_from_logical_key(
+                                &key_event.logical_key,
+                                self.modifiers,
+                            )
+                            && self.view.handle_keystroke(&ks)
+                        {
                             self.invalidate();
                         }
                     }

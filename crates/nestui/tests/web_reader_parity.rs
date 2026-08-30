@@ -139,10 +139,7 @@ fn graph_decode_matches_the_runtime_csr() {
     let native_graph = native.graph_data().expect("graph decoded");
     assert_eq!(web_graph, native_graph);
     assert_eq!(web_graph.neighbors(0), &[1, 2]);
-    assert_eq!(
-        web_graph.edge_type(0, 1),
-        Some(nestui::model::graph::EDGE_SEMANTIC)
-    );
+    assert_eq!(web_graph.kind(0, 1), Some(1)); // SEMANTIC
 }
 
 #[test]

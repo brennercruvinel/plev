@@ -8,12 +8,12 @@
 use engine::compositor::Compositor;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
-use engine::ui::widgets::{Button, EventResult, Rect, Slider, WidgetEvent, rounded_rect};
+use engine::ui::widgets::{Button, EventResult, Rect, Slider, Spinner, SpinnerSize, WidgetEvent};
 
 use crate::model::bench::{BenchmarkView, LatencyStats};
 use crate::model::types::OpenedDbView;
 
-use super::{Action, fmt_bytes, group_label, panel, text, truncate_to_width};
+use super::{Action, fmt_bytes, group_label, panel, text};
 
 const GAP: f32 = 16.0;
 const CARD_PAD: f32 = 20.0;
@@ -24,6 +24,7 @@ pub struct StatsScreen {
     n_slider: Slider,
     k_slider: Slider,
     run_button: Button,
+    spinner: Spinner,
     pub running: bool,
     /// (done, total) while the benchmark runs.
     pub progress: (usize, usize),
@@ -37,6 +38,7 @@ impl StatsScreen {
             n_slider: Slider::new(10.0, 500.0, 50.0).step(10.0),
             k_slider: Slider::new(1.0, 100.0, 10.0).step(1.0),
             run_button: Button::new("Run benchmark").icon("play"),
+            spinner: Spinner::new().size(SpinnerSize::Sm),
             running: false,
             progress: (0, 0),
             result: None,
@@ -50,6 +52,11 @@ impl StatsScreen {
         self.progress = (0, 0);
         self.result = None;
         self.error = String::new();
+    }
+
+    /// The spinner animates only while the benchmark runs.
+    pub fn tick(&mut self, dt: f32) -> bool {
+        self.running && self.spinner.tick(dt)
     }
 
     pub fn fold_result(&mut self, result: Result<BenchmarkView, String>) {
@@ -156,8 +163,10 @@ impl StatsScreen {
 
         let mut y = content.y + 44.0 + GAP;
 
-        // Status: progress or error.
+        // Status: progress (with spinner) or error.
         if self.running {
+            self.spinner
+                .render(c, Rect::new(content.x, y - 1.0, 16.0, 16.0), theme);
             text(
                 c,
                 &format!(
@@ -166,14 +175,14 @@ impl StatsScreen {
                 ),
                 13.0,
                 400,
-                content.x,
+                content.x + 24.0,
                 y,
                 theme.colors.text_dim.0,
             );
             y += 28.0;
         } else if !self.error.is_empty() {
             let style = TextStyle::new(13.0);
-            let msg = truncate_to_width(&self.error, content.w, &style);
+            let msg = TextMeasurer::truncate_to_width(&self.error, &style, content.w);
             text(c, &msg, 13.0, 500, content.x, y, theme.colors.danger.0);
             y += 28.0;
         }
@@ -260,57 +269,26 @@ impl StatsScreen {
             rect.y + CARD_PAD,
             theme,
         );
-        let max = db
+        // Engine hbars: name column from real measurement, proportional
+        // meter, value label right.
+        let items: Vec<(String, f64, String)> = db
             .inspect
             .sections
             .iter()
-            .map(|s| s.size)
-            .max()
-            .unwrap_or(1)
-            .max(1) as f32;
-        let name_w = 160.0;
-        let size_w = 88.0;
-        let bar_w = (rect.w - CARD_PAD * 2.0 - name_w - size_w - 16.0).max(40.0);
-        let label_style = TextStyle::new(12.0);
-        for (row, section) in db.inspect.sections.iter().enumerate() {
-            let y = rect.y + CARD_PAD + 24.0 + row as f32 * (BAR_H + 8.0);
-            let name = truncate_to_width(&section.name, name_w - 8.0, &label_style);
-            text(
-                c,
-                &name,
-                12.0,
-                500,
+            .map(|s| (s.name.clone(), s.size as f64, fmt_bytes(s.size)))
+            .collect();
+        engine::charts::draw::hbars(
+            c,
+            &items,
+            Rect::new(
                 rect.x + CARD_PAD,
-                y + 3.0,
-                theme.colors.text_mid.0,
-            );
-            let frac = section.size as f32 / max;
-            c.push(rounded_rect(
-                rect.x + CARD_PAD + name_w,
-                y,
-                bar_w,
-                BAR_H,
-                4.0,
-                theme.glass.surface_active.0,
-            ));
-            c.push(rounded_rect(
-                rect.x + CARD_PAD + name_w,
-                y,
-                bar_w * frac,
-                BAR_H,
-                4.0,
-                theme.colors.accent.0,
-            ));
-            text(
-                c,
-                &fmt_bytes(section.size),
-                12.0,
-                400,
-                rect.x + CARD_PAD + name_w + bar_w + 8.0,
-                y + 3.0,
-                theme.colors.text_dim.0,
-            );
-        }
+                rect.y + CARD_PAD + 24.0,
+                rect.w - CARD_PAD * 2.0,
+                items.len() as f32 * (BAR_H + 8.0),
+            ),
+            theme,
+            BAR_H + 8.0,
+        );
     }
 
     /// Benchmark cards: exact latency; ANN latency + recall when present.

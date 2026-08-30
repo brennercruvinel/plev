@@ -119,7 +119,7 @@ fn run_command(backend: &mut Option<NestBackend>, command: NestCommand, tx: &Sen
                     Some(data) => {
                         // Layout in a fixed 1000×1000 world box; the view
                         // fits it to the viewport with a ViewTransform.
-                        Ok(crate::model::graph::compute_layout(&data, 1000.0, 1000.0))
+                        Ok(engine::graph::compute_layout(&data, 1000.0, 1000.0))
                     }
                     None => Err("no graph section in this file".to_string()),
                 },

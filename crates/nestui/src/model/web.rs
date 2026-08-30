@@ -101,7 +101,7 @@ impl WebWorker {
                         Some(file) => match file.graph_data() {
                             // The O(n²) layout runs inline here — see the
                             // module docs for the blocking note.
-                            Some(data) => Ok(super::graph::compute_layout(&data, 1000.0, 1000.0)),
+                            Some(data) => Ok(engine::graph::compute_layout(&data, 1000.0, 1000.0)),
                             None => Err("no graph section in this file".to_string()),
                         },
                         None => Err("no database open".to_string()),

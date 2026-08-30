@@ -2,7 +2,6 @@
 //! (agents.md, backend before ui). everything here is gpu-free, window-free
 //! and unit tested before any view consumes it.
 
-pub mod charts;
 pub mod dock;
 pub mod todo;
 
