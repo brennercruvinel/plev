@@ -59,6 +59,15 @@ static ICONS: &[(&str, &[Shape])] = &[
             Path("M12 17h.01"),
         ],
     ),
+    (
+        "book-open",
+        &[
+            Path("M12 7v14"),
+            Path(
+                "M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z",
+            ),
+        ],
+    ),
     ("check", &[Path("M20 6 9 17l-5-5")]),
     ("chevron-down", &[Path("m6 9 6 6 6-6")]),
     ("chevron-left", &[Path("m15 18-6-6 6-6")]),
@@ -129,11 +138,45 @@ static ICONS: &[(&str, &[Shape])] = &[
         ],
     ),
     (
+        "heart",
+        &[Path(
+            "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z",
+        )],
+    ),
+    (
+        "house",
+        &[
+            Path("M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"),
+            Path(
+                "M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+            ),
+        ],
+    ),
+    (
         "info",
         &[
             Circle(12.0, 12.0, 10.0),
             Path("M12 16v-4"),
             Path("M12 8h.01"),
+        ],
+    ),
+    (
+        "layers",
+        &[
+            Path(
+                "M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z",
+            ),
+            Path("M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"),
+            Path("M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"),
+        ],
+    ),
+    (
+        "layout-grid",
+        &[
+            SvgRect(3.0, 3.0, 7.0, 7.0, 1.0),
+            SvgRect(14.0, 3.0, 7.0, 7.0, 1.0),
+            SvgRect(14.0, 14.0, 7.0, 7.0, 1.0),
+            SvgRect(3.0, 14.0, 7.0, 7.0, 1.0),
         ],
     ),
     ("minus", &[Path("M5 12h14")]),
@@ -758,6 +801,18 @@ mod tests {
             );
             assert_eq!(path.indices.len() % 3, 0, "icon '{name}' not triangles");
         }
+    }
+
+    /// `icon_names` documents its result as sorted, and it returns the table
+    /// verbatim - so the table is what has to stay sorted. Nothing enforced
+    /// that before, and an icon appended at the end would have made the doc
+    /// quietly false for every caller that renders the set as a list.
+    #[test]
+    fn the_icon_table_is_sorted_by_name() {
+        let names = icon_names();
+        let mut sorted = names.clone();
+        sorted.sort_unstable();
+        assert_eq!(names, sorted, "ICONS must stay in alphabetical order");
     }
 
     #[test]
