@@ -16,7 +16,7 @@ use engine::theme::{Intent, Theme};
 use engine::ui::widgets::{EmptyState, EventResult, Rect, WidgetEvent, rounded_rect};
 use spellbook_core::client::{Command, Event, HomeData};
 
-use super::{Route, ScreenCtx, deck_tile, grid_columns, group_label, panel, text};
+use super::{EditKey, Route, ScreenCtx, deck_tile, grid_columns, group_label, panel, text};
 use crate::art::ArtCache;
 
 const STAT_H: f32 = 92.0;
@@ -73,6 +73,24 @@ impl HomeScreen {
                 true
             }
         }
+    }
+
+    /// Nothing on the dashboard takes text yet - the search fields live on
+    /// the data screens.
+    pub fn handle_text(&mut self, _s: &str, _ctx: &mut ScreenCtx) -> bool {
+        false
+    }
+
+    pub fn handle_edit_key(&mut self, _key: EditKey, _ctx: &mut ScreenCtx) -> bool {
+        false
+    }
+
+    pub fn handle_escape(&mut self) -> bool {
+        false
+    }
+
+    pub fn tick(&mut self, _dt: f32) -> bool {
+        false
     }
 
     // -- Layout ---------------------------------------------------------------

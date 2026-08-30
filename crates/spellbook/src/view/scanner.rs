@@ -10,7 +10,7 @@ use engine::theme::Theme;
 use engine::ui::widgets::{EmptyState, EventResult, Rect, WidgetEvent};
 use spellbook_core::client::Event;
 
-use super::{Route, ScreenCtx};
+use super::{EditKey, Route, ScreenCtx};
 use crate::art::ArtCache;
 
 pub struct ScannerScreen {
@@ -32,6 +32,22 @@ impl ScannerScreen {
     pub fn on_enter(&mut self, _route: Route, _ctx: &mut ScreenCtx) {}
 
     pub fn on_event(&mut self, _event: &Event, _ctx: &mut ScreenCtx) -> bool {
+        false
+    }
+
+    pub fn handle_text(&mut self, _s: &str, _ctx: &mut ScreenCtx) -> bool {
+        false
+    }
+
+    pub fn handle_edit_key(&mut self, _key: EditKey, _ctx: &mut ScreenCtx) -> bool {
+        false
+    }
+
+    pub fn handle_escape(&mut self) -> bool {
+        false
+    }
+
+    pub fn tick(&mut self, _dt: f32) -> bool {
         false
     }
 

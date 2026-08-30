@@ -21,7 +21,7 @@ use engine::gpu::texture_pool::TexturePool;
 use engine::text::TextSystem;
 use engine::ui::widgets::WidgetEvent;
 use spellbook_core::client::{Command, Event, SpellbookClient};
-use view::SpellbookView;
+use view::{EditKey, SpellbookView};
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy};
@@ -144,10 +144,39 @@ impl ApplicationHandler<AppEvent> for App {
             WindowEvent::KeyboardInput {
                 event: key_event, ..
             } => {
-                if key_event.state == ElementState::Pressed
-                    && matches!(key_event.logical_key, Key::Named(NamedKey::Escape))
-                {
-                    event_loop.exit();
+                if key_event.state != ElementState::Pressed {
+                    return;
+                }
+                let consumed = match &key_event.logical_key {
+                    Key::Named(NamedKey::Escape) => {
+                        // A screen with something open consumes Escape; with
+                        // nothing open it falls through to quitting.
+                        if self.view.handle_escape() {
+                            true
+                        } else {
+                            event_loop.exit();
+                            false
+                        }
+                    }
+                    Key::Named(named) => {
+                        let edit = match named {
+                            NamedKey::Tab => Some(EditKey::Tab),
+                            NamedKey::Enter => Some(EditKey::Enter),
+                            NamedKey::Backspace => Some(EditKey::Backspace),
+                            NamedKey::Delete => Some(EditKey::Delete),
+                            NamedKey::ArrowLeft => Some(EditKey::Left),
+                            NamedKey::ArrowRight => Some(EditKey::Right),
+                            NamedKey::Home => Some(EditKey::Home),
+                            NamedKey::End => Some(EditKey::End),
+                            _ => None,
+                        };
+                        edit.is_some_and(|k| self.view.handle_edit_key(k))
+                    }
+                    Key::Character(c) => self.view.handle_text(c.as_str()),
+                    _ => false,
+                };
+                if consumed {
+                    self.invalidate();
                 }
             }
 

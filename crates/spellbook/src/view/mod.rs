@@ -146,6 +146,20 @@ pub enum ScreenAction {
     Toast(String, Intent),
 }
 
+/// Non-character editing keys the platform shell forwards (winit-free, so
+/// headless tests can drive them). Same idea as the showcase's EditKey.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EditKey {
+    Tab,
+    Enter,
+    Backspace,
+    Delete,
+    Left,
+    Right,
+    Home,
+    End,
+}
+
 /// What every screen gets on each call: the command channel to the worker
 /// thread, and the action queue.
 pub struct ScreenCtx<'a> {
@@ -460,6 +474,60 @@ impl SpellbookView {
         result.changed
     }
 
+    /// Type characters into whatever the active screen has focused. Returns
+    /// `true` when a screen consumed them (and a redraw is needed).
+    pub fn handle_text(&mut self, s: &str) -> bool {
+        let changed = {
+            let mut ctx = ScreenCtx {
+                tx: &self.tx,
+                actions: &mut self.actions,
+            };
+            match self.route {
+                Route::Home => self.home.handle_text(s, &mut ctx),
+                Route::Decks | Route::Deck(_) => self.decks.handle_text(s, &mut ctx),
+                Route::Collection => self.collection.handle_text(s, &mut ctx),
+                Route::Wishlist => self.wishlist.handle_text(s, &mut ctx),
+                Route::Scanner => self.scanner.handle_text(s, &mut ctx),
+                Route::Games => self.games.handle_text(s, &mut ctx),
+            }
+        };
+        self.drain_actions();
+        changed
+    }
+
+    /// Route a non-character editing key to the active screen.
+    pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        let changed = {
+            let mut ctx = ScreenCtx {
+                tx: &self.tx,
+                actions: &mut self.actions,
+            };
+            match self.route {
+                Route::Home => self.home.handle_edit_key(key, &mut ctx),
+                Route::Decks | Route::Deck(_) => self.decks.handle_edit_key(key, &mut ctx),
+                Route::Collection => self.collection.handle_edit_key(key, &mut ctx),
+                Route::Wishlist => self.wishlist.handle_edit_key(key, &mut ctx),
+                Route::Scanner => self.scanner.handle_edit_key(key, &mut ctx),
+                Route::Games => self.games.handle_edit_key(key, &mut ctx),
+            }
+        };
+        self.drain_actions();
+        changed
+    }
+
+    /// Escape first blurs or closes whatever the screen has open. `false`
+    /// when nothing was, which the shell reads as "exit the app".
+    pub fn handle_escape(&mut self) -> bool {
+        match self.route {
+            Route::Home => self.home.handle_escape(),
+            Route::Decks | Route::Deck(_) => self.decks.handle_escape(),
+            Route::Collection => self.collection.handle_escape(),
+            Route::Wishlist => self.wishlist.handle_escape(),
+            Route::Scanner => self.scanner.handle_escape(),
+            Route::Games => self.games.handle_escape(),
+        }
+    }
+
     /// Scrollable band of the rail: below the logo, above the footer panel.
     /// Derived from the window height, never a constant.
     fn sidebar_viewport(&self) -> Rect {
@@ -536,11 +604,21 @@ impl SpellbookView {
         }
     }
 
-    /// Advance animations. Returns `true` while anything is moving.
+    /// Advance animations. Returns `true` while anything is moving. The
+    /// active screen ticks too: a focused text field's cursor blink needs
+    /// frames under render-on-demand.
     pub fn tick(&mut self, dt: f32) -> bool {
         let mut animating = false;
         animating |= self.toasts.tick(dt);
         animating |= self.overlay_mgr.tick(dt);
+        animating |= match self.route {
+            Route::Home => self.home.tick(dt),
+            Route::Decks | Route::Deck(_) => self.decks.tick(dt),
+            Route::Collection => self.collection.tick(dt),
+            Route::Wishlist => self.wishlist.tick(dt),
+            Route::Scanner => self.scanner.tick(dt),
+            Route::Games => self.games.tick(dt),
+        };
         animating
     }
 
