@@ -27,7 +27,7 @@ modules:
   # the engine's internal layers, under crates/engine/src.
   gpu:        { path: crates/engine/src/gpu,        role: device/surface/pipelines + GpuVec buffers (vec) + texture_pool + wgsl shaders (gpu/shaders), contracts: [srgb-view-formats, surface_render_view-only] }
   compositor: { path: crates/engine/src/compositor, role: scene nodes + dirty layers, depends: [gpu] }
-  text:       { path: crates/engine/src/text,       role: shaping + glyph atlas + TextMeasurer, depends: [gpu], contracts: [one-textstyle-measure-and-draw] }
+  text:       { path: crates/engine/src/text,       role: shaping + glyph atlas + TextMeasurer, depends: [gpu], contracts: [one-textstyle-measure-and-draw, glyphs-rasterize-at-raster-scale-hidpi, warn-once-on-non-embedded-font] }
   path:       { path: crates/engine/src/path,       role: lyon tessellation, contracts: [auto-finish-open-subpaths] }
   layout:     { path: crates/engine/src/layout,     role: taffy wrapper (flex, percent, measure-fns), depends: [text] }
   input:      { path: crates/engine/src/input,      role: pointer + hit regions + touch synth + gestures + scroll + dispatch }
@@ -36,7 +36,10 @@ modules:
   signal:     { path: crates/engine/src/signal,     role: reactive primitives (experimental: no new app code without an ADR, see official-app-pattern) }
   window:     { path: crates/engine/src/window,     role: app runner, render-on-demand, render passes, wasm canvas, depends: [gpu, compositor, text, input] }
   theme:      { path: crates/engine/src/theme,      role: measured hoff tokens, oklch }
-  ui:         { path: crates/engine/src/ui,         role: retained widgets + icons }
+  ui:         { path: crates/engine/src/ui,         role: retained widgets (incl. chip, empty-state, spinner, split-pane, icon-button) + icons }
+  charts:     { path: crates/engine/src/charts,     role: chart model + draw helpers (bars, meter, hbars), promoted from the showcase; same handle_event/render contract as widgets }
+  graph:      { path: crates/engine/src/graph,      role: graph model + force layout + GraphView pan/zoom canvas widget }
+  clipboard:  { path: crates/engine/src/clipboard,  role: the one clipboard entry point (re-export of editor::SystemClipboard) }
   builder:    { path: crates/engine/src/builder,    role: declarative element tree -> layout -> emit (supported for prototypes/demos), depends: [layout, text] }
   component:  { path: crates/engine/src/component,  role: Lifecycle trait (experimental, see official-app-pattern) }
   view:       { path: crates/engine/src/view,       role: View trait + ViewContext (experimental, see official-app-pattern) }

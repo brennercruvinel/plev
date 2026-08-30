@@ -9,6 +9,32 @@ status: living
 
 ## unreleased
 
+- engine wave (2026-08): inclusive sans replaces rubik+inter as the one
+  embedded family (SIL OFL, five upright weights 300-700, sans family
+  pinned in fontdb, ~2.1mb lighter); body letter-spacing zeroed (the
+  0.025em token was calibrated for rubik). HiDPI text fixed at the root:
+  glyphs rasterize at physical scale (TextSystem::set_raster_scale,
+  hooked centrally in resolve_layer_text, cache purged on change), no
+  more stretched bitmaps on retina. register_embedded_fonts now returns
+  the registered ids and emit_glyphs warns once per non-embedded font
+  actually shaped (caught a CJK/math demo string and a text "play"
+  glyph, both fixed). ADR updates: embed-every-font-weight-in-use,
+  adr-004-hidpi-projection.
+- widgets for real apps: chip, empty state, indeterminate spinner,
+  split pane, icon button; engine::charts promoted from the showcase
+  (model + draw + meter/hbars) and engine::graph + GraphView (force
+  layout, pan/zoom canvas) with the same handle_event/render contract
+  as every widget. TextMeasurer::truncate_to_width (grapheme-aware),
+  engine::clipboard re-export, actions::ShortcutMap for the simple
+  keymap case. ADR: official-app-pattern.
+- nestui (crates/nestui): .nest vector-db explorer on plev, 6 tabs
+  (open/overview/search/chunks/graph/stats), native backend via
+  nest-format/nest-runtime path deps + worker thread, portable wasm
+  reader (nestread) for the web target.
+- showcase 12 -> 14 tabs (typography, effects), scrollable sidebar.
+  ci matrix: macos + ubuntu + wasm (.github/workflows/ci.yml);
+  script/gate skips the wasm leg with a warning when the rust-std wasm
+  target is absent (Homebrew rust), CI stays the full verification.
 - one knowledge tree: kdb/ renamed to docs/ and the arc trio moved into
   it (docs/arc/, from doc/arc/); doc/ was retired (its changelog copy
   was the stale duplicate of this file). the mon working note left the

@@ -16,7 +16,7 @@ update all three together when structure changes.
 |---|---|---|
 | gpu | crates/engine/src/gpu/ | wgpu device/surface/pipelines; srgb view formats; image atlas; GpuVec buffers (vec); texture_pool; wgsl shaders (crates/engine/src/gpu/shaders) |
 | compositor | crates/engine/src/compositor/ | scene nodes, layers with dirty hashes, resolve to gpu buffers |
-| text | crates/engine/src/text/ | cosmic-text shaping, gpu glyph atlas, TextMeasurer (the only width source) |
+| text | crates/engine/src/text/ | cosmic-text shaping, gpu glyph atlas (rasterized at the hidpi raster scale, warns once per non-embedded font), TextMeasurer (the only width source) |
 | path | crates/engine/src/path/ | lyon tessellation behind PathBuilder (auto-finishes open subpaths) |
 | layout | crates/engine/src/layout/ | taffy wrapper: flex, percent, text measure functions |
 | input | crates/engine/src/input/ | pointer state, hit regions, touch tracker + gesture recognizer, touch-to-pointer synth, scroll, dispatch |
@@ -25,7 +25,9 @@ update all three together when structure changes.
 | signal | crates/engine/src/signal/ | reactive primitives (experimental — see below) |
 | window | crates/engine/src/window/ | App runner: event loop, render-on-demand, render passes, wasm canvas |
 | theme | crates/engine/src/theme/ | measured hoff tokens, oklch tooling, intents |
-| ui | crates/engine/src/ui/ | retained widgets (~20) + immediate builder + lucide icons |
+| ui | crates/engine/src/ui/ | retained widgets (21, incl. chip, empty-state, spinner, split-pane, icon-button) + immediate builder + lucide icons |
+| charts/graph | crates/engine/src/charts/, crates/engine/src/graph/ | dataviz on the same widget contract: chart model + draw helpers; graph model, force layout, GraphView canvas |
+| clipboard | crates/engine/src/clipboard | the one clipboard entry point (re-export of editor::SystemClipboard) |
 | builder | crates/engine/src/builder/ | declarative element tree (div/text/button), layout pipeline, emit — supported for prototypes/demos |
 | component/view | crates/engine/src/component/, crates/engine/src/view/ | Lifecycle trait, View trait, ViewContext (experimental — see below) |
 
