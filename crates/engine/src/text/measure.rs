@@ -336,6 +336,48 @@ impl TextMeasurer {
         })
     }
 
+    /// Truncate `text` with an ellipsis so it fits on one line of
+    /// `max_width` px, measured with the SAME [`TextStyle`] the caller
+    /// draws with (ADR one-text-style-for-measurement-and-drawing: pass
+    /// the style you hand to `TextNodeKey::from_style`, never an
+    /// arithmetic width estimate). Grapheme-cluster aware — a cluster
+    /// (emoji, combining marks) is never split.
+    ///
+    /// Returns `text` unchanged when it fits; otherwise the longest
+    /// prefix (trailing whitespace trimmed) followed by "…". When even
+    /// the ellipsis alone is wider than `max_width`, returns "…" — the
+    /// minimal "there was more here" signal; layout bugs belong to the
+    /// caller.
+    ///
+    /// Probes are cached measurements (binary search over grapheme
+    /// count), so this is cheap enough for per-frame row rendering.
+    pub fn truncate_to_width(text: &str, style: &TextStyle, max_width: f32) -> String {
+        const ELLIPSIS: &str = "\u{2026}";
+        if text.is_empty() {
+            return String::new();
+        }
+        if Self::measure_styled(text, style, None).0 <= max_width {
+            return text.to_string();
+        }
+        use unicode_segmentation::UnicodeSegmentation;
+        let graphemes: Vec<&str> = text.graphemes(true).collect();
+        let candidate = |n: usize| -> String {
+            let prefix: String = graphemes[..n].concat();
+            format!("{}{ELLIPSIS}", prefix.trim_end())
+        };
+        // Largest grapheme prefix whose "prefix…" really fits.
+        let (mut lo, mut hi) = (0usize, graphemes.len().saturating_sub(1));
+        while lo < hi {
+            let mid = (lo + hi).div_ceil(2);
+            if Self::measure_styled(&candidate(mid), style, None).0 <= max_width {
+                lo = mid;
+            } else {
+                hi = mid - 1;
+            }
+        }
+        candidate(lo)
+    }
+
     /// Distinct `(family, weight)` of the faces used to shape `text` with
     /// `style`, in glyph order. Diagnostic API: guards against family
     /// fallback when a requested weight has no matching embedded face

@@ -12,6 +12,7 @@
 pub mod context;
 pub mod keymap;
 pub mod keystroke;
+pub mod shortcuts;
 pub mod winit_keys;
 
 pub use context::{ContextStack, KeyContext, Predicate, PredicateParseError};

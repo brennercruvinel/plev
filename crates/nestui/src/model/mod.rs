@@ -6,7 +6,8 @@
 //!   vocabulary every backend speaks.
 //! - [`nestread`]: portable in-memory .nest reader (all targets; the web
 //!   backend's engine, unit-tested natively against the real writer).
-//! - [`graph`], [`bench`]: pure geometry/stats (all targets).
+//! - [`bench`]: pure benchmark stats (all targets). Graph geometry moved
+//!   to `engine::graph` in design-system F3.
 //! - [`backend`] + [`worker`] (native): mmap runtime + worker thread.
 //! - [`web`] (wasm): inline worker over `nestread`.
 //!
@@ -14,7 +15,6 @@
 //! `spawn`/`send`/`try_recv` surface.
 
 pub mod bench;
-pub mod graph;
 pub mod nestread;
 pub mod types;
 

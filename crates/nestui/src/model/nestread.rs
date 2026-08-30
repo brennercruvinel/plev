@@ -27,11 +27,11 @@ use std::path::PathBuf;
 use web_time::Instant;
 
 use super::bench::{BenchmarkView, gen_queries, latency_stats};
-use super::graph::GraphData;
 use super::types::{
     ChunkMeta, ChunksData, InspectView, ManifestView, OpenedDbView, SearchHitView,
     SearchResultsView, SectionInfo,
 };
+use engine::graph::GraphData;
 
 // Section ids (mirror nest_format::layout; the view model never names
 // nest crates).
@@ -561,7 +561,7 @@ impl NestBytes {
             n_nodes,
             offsets: offsets.iter().map(|&o| o as u32).collect(),
             neighbors,
-            edge_types,
+            kinds: edge_types,
         }))
     }
 

@@ -8,16 +8,17 @@
 //! and the shell validates against the open database.
 
 use engine::compositor::{Compositor, LayerId};
-use engine::text::TextStyle;
+use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
 use engine::ui::widgets::{
-    Button, EventResult, Rect, Select, Slider, Tabs, VirtualList, WidgetEvent,
+    Button, EventResult, IconButton, Rect, Select, Slider, Spinner, SpinnerSize, Tabs, VirtualList,
+    WidgetEvent,
 };
 
 use crate::model::types::{SearchMode, SearchResultsView};
 
 use super::field::{FIELD_H, Field};
-use super::{Action, EditKey, group_label, panel, short_id, text, truncate_to_width};
+use super::{Action, EditKey, group_label, panel, short_id, text};
 
 const GAP: f32 = 12.0;
 const ROW_H: f32 = 56.0;
@@ -50,7 +51,8 @@ pub struct SearchScreen {
     k: Slider,
     search_button: Button,
     results: VirtualList,
-    copy_citation: Button,
+    copy_citation: IconButton,
+    spinner: Spinner,
     pub result: Option<SearchResultsView>,
     pub error: String,
     pub pending: bool,
@@ -65,10 +67,9 @@ impl SearchScreen {
             k: Slider::new(1.0, 100.0, 10.0).step(1.0),
             search_button: Button::new("Search").icon("search"),
             results: VirtualList::new(ROW_H),
-            copy_citation: Button::new("copy citation")
-                .size(engine::ui::widgets::ButtonSize::Sm)
-                .variant(engine::ui::widgets::ButtonVariant::Ghost)
-                .icon("copy"),
+            copy_citation: IconButton::new("copy")
+                .variant(engine::ui::widgets::ButtonVariant::Ghost),
+            spinner: Spinner::new().size(SpinnerSize::Sm),
             result: None,
             error: String::new(),
             pending: false,
@@ -297,7 +298,8 @@ impl SearchScreen {
     }
 
     pub fn tick(&mut self, dt: f32) -> bool {
-        self.query.tick(dt) | self.results.tick(dt)
+        let spinning = self.pending && self.spinner.tick(dt);
+        self.query.tick(dt) | self.results.tick(dt) | spinning
     }
 
     fn copy_rect(&self, explain: Rect) -> Rect {
@@ -340,7 +342,7 @@ impl SearchScreen {
         // Status line: error (destructive) > pending > mode hint.
         if !self.error.is_empty() {
             let style = TextStyle::new(13.0);
-            let msg = truncate_to_width(&self.error, content.w, &style);
+            let msg = TextMeasurer::truncate_to_width(&self.error, &style, content.w);
             text(
                 c,
                 &msg,
@@ -368,7 +370,7 @@ impl SearchScreen {
             && let Some(Err(reason)) = ctx.embedder
         {
             let style = TextStyle::new(13.0);
-            let msg = truncate_to_width(reason, content.w, &style);
+            let msg = TextMeasurer::truncate_to_width(reason, &style, content.w);
             text(
                 c,
                 &msg,
@@ -428,25 +430,14 @@ fn render_results(
             return;
         };
         let pad = 12.0;
-        // Score bar (proportional, clamped) + numeric value.
+        // Score meter (engine charts helper) + numeric value.
         let bar_w = 64.0;
-        let frac = hit.score.clamp(0.0, 1.0);
-        c.push(engine::ui::widgets::rounded_rect(
-            row.x + pad,
-            row.y + 10.0,
-            bar_w,
-            6.0,
-            3.0,
-            theme.glass.surface_active.0,
-        ));
-        c.push(engine::ui::widgets::rounded_rect(
-            row.x + pad,
-            row.y + 10.0,
-            bar_w * frac,
-            6.0,
-            3.0,
-            theme.colors.accent.0,
-        ));
+        engine::charts::draw::meter(
+            c,
+            hit.score,
+            Rect::new(row.x + pad, row.y + 10.0, bar_w, 6.0),
+            theme,
+        );
         text(
             c,
             &format!("{:.4}", hit.score),
@@ -476,7 +467,7 @@ fn render_results(
         } else {
             format!("{} · {}", hit.source_uri, preview)
         };
-        let sub = truncate_to_width(&sub, row.w - pad * 2.0, &bar_style);
+        let sub = TextMeasurer::truncate_to_width(&sub, &bar_style, row.w - pad * 2.0);
         text(
             c,
             &sub,
@@ -492,7 +483,7 @@ fn render_results(
 /// The explain panel: route, candidate counts, recall and the
 /// rerank-source honesty line, plus the selected hit's citation.
 fn render_explain(
-    copy_citation: &Button,
+    copy_citation: &IconButton,
     copy_rect: Rect,
     c: &mut Compositor,
     rect: Rect,
@@ -537,7 +528,7 @@ fn render_explain(
     for (key, value) in rows {
         text(c, key, 12.0, 600, rect.x + 16.0, y, theme.colors.text_dim.0);
         let style = TextStyle::new(12.0);
-        let v = truncate_to_width(&value, rect.w - 32.0 - 128.0, &style);
+        let v = TextMeasurer::truncate_to_width(&value, &style, rect.w - 32.0 - 128.0);
         text(
             c,
             &v,
@@ -556,7 +547,7 @@ fn render_explain(
     {
         group_label(c, "SELECTED", rect.x + 16.0, y + 12.0, theme);
         let style = TextStyle::new(12.0);
-        let id = truncate_to_width(&hit.citation_id, rect.w - 32.0, &style);
+        let id = TextMeasurer::truncate_to_width(&hit.citation_id, &style, rect.w - 32.0);
         text(
             c,
             &id,

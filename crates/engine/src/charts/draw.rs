@@ -1,23 +1,29 @@
-//! Chart drawing: turns the pure geometry from `showcase::model::charts`
-//! into scene nodes. Every label is drawn with exactly the `TextStyle` it
-//! was measured with (the `Label` carries it), and the reveal parameter
-//! `r` in 0..=1 scales primitives the way the old makepad_charts demo did:
-//! the line sweeps open, bars grow, bands rise, the ring sweeps clockwise.
+//! Chart drawing: turns the pure geometry from [`crate::charts`] into
+//! scene nodes. Every label is drawn with exactly the `TextStyle` it was
+//! measured with (the [`Label`](crate::charts::Label) carries it), and the
+//! reveal parameter `r` in 0..=1 scales primitives the way the original
+//! makepad_charts demo did: the line sweeps open, bars grow, bands rise,
+//! the ring sweeps clockwise. `r = 1.0` is the settled state.
 
 use std::f32::consts::TAU;
 
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::path::PathBuilder;
-use engine::theme::Theme;
-use engine::ui::widgets::{Rect, rounded_rect};
-use showcase::model::charts as geom;
+use crate::charts as geom;
+use crate::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::path::PathBuilder;
+use crate::text::TextMeasurer;
+use crate::theme::Theme;
+use crate::ui::widgets::{Rect, rounded_rect};
 
-use crate::view::with_alpha;
+/// RGBA with overridden alpha (the widgets' `with_alpha` takes a `Color`;
+/// chart drawing works in raw RGBA from theme tokens).
+fn with_alpha(c: [f32; 4], a: f32) -> [f32; 4] {
+    [c[0], c[1], c[2], a]
+}
 
 /// Monochrome HOFF alpha ramp for donut slices and legend swatches.
 const DONUT_ALPHAS: [f32; 5] = [0.90, 0.62, 0.40, 0.24, 0.12];
 
-pub(super) fn line(c: &mut Compositor, data: &[f32], rect: Rect, theme: &Theme, r: f32) {
+pub fn line(c: &mut Compositor, data: &[f32], rect: Rect, theme: &Theme, r: f32) {
     let chart = geom::line_chart(data, rect, 3.0, theme.typography.small_sm());
     let divider = theme.colors.divider.0;
     let plot = chart.plot;
@@ -48,7 +54,7 @@ pub(super) fn line(c: &mut Compositor, data: &[f32], rect: Rect, theme: &Theme, 
     c.push(SceneNode::PopClip);
 }
 
-pub(super) fn bars(c: &mut Compositor, data: &[f32], rect: Rect, theme: &Theme, r: f32) {
+pub fn bars(c: &mut Compositor, data: &[f32], rect: Rect, theme: &Theme, r: f32) {
     let chart = geom::bar_chart(data, rect, 8.0, theme.typography.small_sm());
     let baseline = rect.y + rect.h;
     line_rect(c, rect.x, baseline, rect.w, 1.0, theme.glass.edge.0);
@@ -80,7 +86,7 @@ pub(super) fn bars(c: &mut Compositor, data: &[f32], rect: Rect, theme: &Theme, 
     }
 }
 
-pub(super) fn area(c: &mut Compositor, a: &[f32], b: &[f32], rect: Rect, theme: &Theme, r: f32) {
+pub fn area(c: &mut Compositor, a: &[f32], b: &[f32], rect: Rect, theme: &Theme, r: f32) {
     let stack = geom::stacked_area(&[a, b], rect);
     for t in &stack.axis.ticks {
         let y = rect.y + rect.h * (1.0 - stack.axis.normalize(*t));
@@ -94,7 +100,7 @@ pub(super) fn area(c: &mut Compositor, a: &[f32], b: &[f32], rect: Rect, theme: 
             .collect()
     };
     let (text_c, green) = (theme.colors.text.0, theme.colors.success.0);
-    let fills = [with_alpha(text_c, 0.16), with_alpha(green, 0.30)];
+    let fills = [with_alpha(text_c, 0.16), with_alpha(text_c, 0.30)];
     let edges = [with_alpha(text_c, 0.55), with_alpha(green, 0.90)];
     for (i, band) in stack.bands.iter().enumerate() {
         polygon(c, &lift(&band.polygon), fills[i % 2]);
@@ -102,7 +108,7 @@ pub(super) fn area(c: &mut Compositor, a: &[f32], b: &[f32], rect: Rect, theme: 
     }
 }
 
-pub(super) fn donut(c: &mut Compositor, items: &[(&str, f32)], rect: Rect, theme: &Theme, r: f32) {
+pub fn donut(c: &mut Compositor, items: &[(&str, f32)], rect: Rect, theme: &Theme, r: f32) {
     let ty = &theme.typography;
     let d = geom::donut(items, rect, "100%", ty.title(), ty.caption_r());
     let text_c = theme.colors.text.0;
@@ -135,6 +141,93 @@ pub(super) fn donut(c: &mut Compositor, items: &[(&str, f32)], rect: Rect, theme
         let color = with_alpha(text_c, alpha_of(item.index));
         c.push(rounded_rect(sw.x, sw.y, sw.w, sw.h, 3.0, color));
         label(c, &item.label, theme.colors.text_mid.0);
+    }
+}
+
+/// Single score/progress meter: track + proportional fill (the nestui
+/// score-bar pattern). `value` is clamped to 0..=1.
+pub fn meter(c: &mut Compositor, value: f32, rect: Rect, theme: &Theme) {
+    let frac = value.clamp(0.0, 1.0);
+    c.push(rounded_rect(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        rect.h / 2.0,
+        theme.glass.surface_active.0,
+    ));
+    if frac > 0.001 {
+        c.push(rounded_rect(
+            rect.x,
+            rect.y,
+            rect.w * frac,
+            rect.h,
+            rect.h / 2.0,
+            theme.colors.accent.0,
+        ));
+    }
+}
+
+/// Horizontal labeled bars: name label left, proportional bar, value
+/// label right-aligned. Bars scale to the largest value; rows flow from
+/// `rect.y` down, `row_h` apart, at most `rect.h` worth of rows. Labels
+/// are really measured — the name column width comes from the widest
+/// name, never a char count.
+pub fn hbars(
+    c: &mut Compositor,
+    items: &[(String, f64, String)],
+    rect: Rect,
+    theme: &Theme,
+    row_h: f32,
+) {
+    if items.is_empty() {
+        return;
+    }
+    let style = theme.typography.caption_r();
+    let name_w = items
+        .iter()
+        .map(|(name, _, _)| TextMeasurer::measure_styled(name, &style, None).0)
+        .fold(0.0, f32::max)
+        + 8.0;
+    let value_w = items
+        .iter()
+        .map(|(_, _, value)| TextMeasurer::measure_styled(value, &style, None).0)
+        .fold(0.0, f32::max)
+        + 8.0;
+    let max = items
+        .iter()
+        .map(|(_, v, _)| *v)
+        .fold(0.0, f64::max)
+        .max(1e-9);
+    for (i, (name, value, value_label)) in items.iter().enumerate() {
+        let y = rect.y + i as f32 * row_h;
+        if y + row_h > rect.y + rect.h {
+            break;
+        }
+        let ty = y + (row_h - style.line_height) / 2.0;
+        c.push(SceneNode::Text {
+            key: TextNodeKey::from_style(name, &style, None),
+            x: rect.x,
+            y: ty,
+            color: theme.colors.text_mid.0,
+        });
+        let bar_x = rect.x + name_w;
+        let bar_w = (rect.w - name_w - value_w).max(0.0);
+        let bar_h = (row_h * 0.6).min(18.0);
+        let bar_y = y + (row_h - bar_h) / 2.0;
+        meter(
+            c,
+            (*value / max) as f32,
+            Rect::new(bar_x, bar_y, bar_w, bar_h),
+            theme,
+        );
+        let (vw, _) = TextMeasurer::measure_styled(value_label, &style, None);
+        c.push(SceneNode::Text {
+            key: TextNodeKey::from_style(value_label, &style, None),
+            x: rect.x + rect.w - vw,
+            y: ty,
+            color: theme.colors.text_dim.0,
+        });
     }
 }
 

@@ -5,13 +5,16 @@
 //! in as render context.
 
 use engine::compositor::Compositor;
+use engine::text::TextMeasurer;
 use engine::theme::Theme;
-use engine::ui::widgets::{Button, EventResult, Rect, WidgetEvent, rounded_rect_stroke};
+use engine::ui::widgets::{
+    Button, EventResult, Rect, Spinner, SpinnerSize, WidgetEvent, rounded_rect_stroke,
+};
 
 use super::field::FIELD_H;
 #[cfg(not(target_arch = "wasm32"))]
 use super::field::Field;
-use super::{Action, group_label, panel, text, truncate_to_width};
+use super::{Action, group_label, panel, text};
 
 const GAP: f32 = 12.0;
 const ROW_H: f32 = 40.0;
@@ -35,6 +38,8 @@ pub struct OpenScreen {
     path: Field,
     open_button: Button,
     recents_hover: Option<usize>,
+    spinner: Spinner,
+    opening: bool,
 }
 
 impl OpenScreen {
@@ -48,6 +53,8 @@ impl OpenScreen {
             path: Field::new("/path/to/corpus.nest", theme),
             open_button: Button::new(label).icon("folder-open"),
             recents_hover: None,
+            spinner: Spinner::new().size(SpinnerSize::Sm),
+            opening: false,
         }
     }
 
@@ -86,6 +93,7 @@ impl OpenScreen {
         recents: &[String],
         opening: bool,
     ) -> (EventResult, Action) {
+        self.opening = opening;
         #[cfg(not(target_arch = "wasm32"))]
         {
             self.open_button.disabled = opening || self.path.is_empty();
@@ -173,12 +181,14 @@ impl OpenScreen {
     }
 
     pub fn tick(&mut self, dt: f32) -> bool {
+        // The spinner animates only while an open is in flight.
+        let spinning = self.opening && self.spinner.tick(dt);
         #[cfg(not(target_arch = "wasm32"))]
-        return self.path.tick(dt);
+        return self.path.tick(dt) | spinning;
         #[cfg(target_arch = "wasm32")]
         {
             let _ = dt;
-            false
+            spinning
         }
     }
 
@@ -203,6 +213,18 @@ impl OpenScreen {
             .to_string();
         }
         self.open_button.render(c, button, theme);
+        if ctx.opening {
+            self.spinner.render(
+                c,
+                Rect::new(
+                    button.x + button.w + GAP,
+                    button.y + (button.h - 16.0) / 2.0,
+                    16.0,
+                    16.0,
+                ),
+                theme,
+            );
+        }
 
         // Status line: the last open error (destructive) or the hint.
         let status_y = content.y + button.h.max(FIELD_H) + GAP;
@@ -265,7 +287,7 @@ impl OpenScreen {
                     embedder_y,
                     theme.colors.text_mid.0,
                 );
-                let msg = truncate_to_width(reason, content.w - 92.0, &style_14);
+                let msg = TextMeasurer::truncate_to_width(reason, &style_14, content.w - 92.0);
                 text(
                     c,
                     &msg,
@@ -313,7 +335,7 @@ impl OpenScreen {
                 ) {
                     c.push(node);
                 }
-                let label = truncate_to_width(path, rect.w - 44.0, &style_14);
+                let label = TextMeasurer::truncate_to_width(path, &style_14, rect.w - 44.0);
                 text(
                     c,
                     &label,

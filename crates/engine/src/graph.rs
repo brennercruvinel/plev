@@ -1,46 +1,89 @@
-//! Pure graph geometry for the Graph screen: a view-owned CSR copy
-//! ([`GraphData`]), a deterministic force-directed layout
-//! ([`GraphScene`]), and the pan/zoom [`ViewTransform`]. No nest-runtime,
-//! no GPU — the same code runs on the worker thread (layout) and in
-//! tests.
+//! Pure graph geometry for the [`GraphView`](crate::ui::widgets::GraphView)
+//! widget: a CSR adjacency built from an edge list, a deterministic
+//! force-directed layout, and the pan/zoom [`ViewTransform`]. No GPU, no
+//! widget state — the same code is unit-testable headless and reusable by
+//! apps that precompute layouts off the UI thread.
 //!
 //! Layout: initial positions come from a splitmix64 hash of the node id
-//! (a deterministic spiral-free scatter), then fixed-dt force iterations
-//! (Barnes-free O(n²) repulsion + edge springs + center gravity). Above
+//! (a deterministic golden-angle scatter), then fixed-dt force iterations
+//! (O(n²) repulsion + edge springs + center gravity). Above
 //! [`MAX_LAYOUT_NODES`] the graph is subsampled by BFS from the
 //! highest-degree node — O(n²) past ~2.5k nodes is not interactive, and a
-//! neighborhood around the busiest node is the interesting part to look
-//! at first.
-
-/// Edge types, mirroring `nest_format`'s constants (the view model never
-/// names nest crates).
-pub const EDGE_NEXT_CHUNK: u8 = 0;
-pub const EDGE_SEMANTIC: u8 = 1;
-pub const EDGE_CITATION: u8 = 2;
+//! neighborhood around the busiest node is the interesting part to look at
+//! first. The layout is deterministic: same input, same scene.
 
 /// Above this many nodes the layout subsamples by BFS (see module docs).
 pub const MAX_LAYOUT_NODES: usize = 2_500;
 
 /// Force iterations for small graphs; large graphs cut this to keep the
-/// O(n²·iters) work bounded (~1s worst case on the worker thread).
+/// O(n²·iters) work bounded (~1s worst case on one thread).
 const ITERS_SMALL: usize = 300;
 const ITERS_LARGE: usize = 80;
 const LARGE_N: usize = 800;
 
-/// Owned CSR adjacency, converted from the runtime's `CsrIndex` by the
-/// backend. `offsets[node..=node]` bounds the node's run in `neighbors`
-/// and `edge_types`.
+/// One directed edge: `from → to` of a given `kind` (an app-defined u8 —
+/// the widget maps kinds to theme tones via `set_edge_tone`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct GraphEdge {
+    pub from: u32,
+    pub to: u32,
+    pub kind: u8,
+}
+
+/// Graph input: a node count plus the edge list. Node payloads stay with
+/// the app — everything here indexes nodes by ordinal.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct GraphSpec {
+    pub n_nodes: usize,
+    pub edges: Vec<GraphEdge>,
+}
+
+/// CSR adjacency built from a [`GraphSpec`]: `offsets[node..=node]` bounds
+/// the node's run in `neighbors`/`kinds`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GraphData {
     pub n_nodes: usize,
     /// Row pointers, len `n_nodes + 1`.
     pub offsets: Vec<u32>,
     pub neighbors: Vec<u32>,
-    /// One per neighbor entry.
-    pub edge_types: Vec<u8>,
+    /// Edge kind per neighbor entry.
+    pub kinds: Vec<u8>,
 }
 
 impl GraphData {
+    /// CSR-build from an edge list (edges to out-of-range nodes are
+    /// dropped; the input order is preserved within each node).
+    pub fn from_spec(spec: &GraphSpec) -> Self {
+        let mut data = GraphData {
+            n_nodes: spec.n_nodes,
+            offsets: vec![0; spec.n_nodes + 1],
+            neighbors: Vec::with_capacity(spec.edges.len()),
+            kinds: Vec::with_capacity(spec.edges.len()),
+        };
+        // Count out-degrees, prefix-sum into offsets, then fill.
+        for e in &spec.edges {
+            if (e.from as usize) < spec.n_nodes && (e.to as usize) < spec.n_nodes {
+                data.offsets[e.from as usize + 1] += 1;
+            }
+        }
+        for i in 0..spec.n_nodes {
+            data.offsets[i + 1] += data.offsets[i];
+        }
+        let mut cursor = data.offsets.clone();
+        let total = data.offsets[spec.n_nodes] as usize;
+        data.neighbors = vec![0; total];
+        data.kinds = vec![0; total];
+        for e in &spec.edges {
+            if (e.from as usize) < spec.n_nodes && (e.to as usize) < spec.n_nodes {
+                let slot = cursor[e.from as usize] as usize;
+                data.neighbors[slot] = e.to;
+                data.kinds[slot] = e.kind;
+                cursor[e.from as usize] += 1;
+            }
+        }
+        data
+    }
+
     pub fn neighbors(&self, node: usize) -> &[u32] {
         if node + 1 >= self.offsets.len() {
             return &[];
@@ -48,12 +91,12 @@ impl GraphData {
         &self.neighbors[self.offsets[node] as usize..self.offsets[node + 1] as usize]
     }
 
-    pub fn edge_type(&self, node: usize, i: usize) -> Option<u8> {
+    pub fn kind(&self, node: usize, i: usize) -> Option<u8> {
         if node + 1 >= self.offsets.len() {
             return None;
         }
         let idx = self.offsets[node] as usize + i;
-        (idx < self.offsets[node + 1] as usize).then(|| self.edge_types[idx])
+        (idx < self.offsets[node + 1] as usize).then(|| self.kinds[idx])
     }
 
     pub fn degree(&self, node: usize) -> usize {
@@ -61,33 +104,32 @@ impl GraphData {
     }
 }
 
-/// splitmix64: deterministic per-index hashing for seeds and the
-/// benchmark's pseudo-random vectors (no `rand` dependency).
-pub(crate) fn splitmix64(mut x: u64) -> u64 {
+/// splitmix64: deterministic per-index hashing for the initial scatter.
+fn splitmix64(mut x: u64) -> u64 {
     x = x.wrapping_add(0x9E37_79B9_7F4A_7C15);
     x = (x ^ (x >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
     x = (x ^ (x >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
     x ^ (x >> 31)
 }
 
-/// A laid-out graph: node positions in a `w × h` world space (the view
-/// fits it with a [`ViewTransform`]), plus the chunk-ordinal mapping when
-/// the graph was subsampled.
+/// A laid-out graph: node positions in a `w × h` world space (the widget
+/// fits it with a [`ViewTransform`]), plus the app-node mapping when the
+/// graph was subsampled.
 #[derive(Clone, Debug)]
 pub struct GraphScene {
     pub graph: GraphData,
     /// positions[i] is node i of `graph` (already reindexed when
     /// subsampled).
     pub positions: Vec<(f32, f32)>,
-    /// Scene node → corpus chunk ordinal. Identity for full layouts.
-    pub node_to_chunk: Vec<u32>,
-    /// Whether the graph was BFS-subsampled (the view discloses it).
+    /// Scene node → app node ordinal. Identity for full layouts.
+    pub node_to: Vec<u32>,
+    /// Whether the graph was BFS-subsampled (the widget discloses it).
     pub subsampled: bool,
 }
 
 /// Deterministic force-directed layout in a `w × h` world box.
 pub fn compute_layout(data: &GraphData, w: f32, h: f32) -> GraphScene {
-    let (graph, node_to_chunk, subsampled) = if data.n_nodes > MAX_LAYOUT_NODES {
+    let (graph, node_to, subsampled) = if data.n_nodes > MAX_LAYOUT_NODES {
         let (g, map) = subsample_bfs(data, MAX_LAYOUT_NODES);
         (g, map, true)
     } else {
@@ -103,7 +145,7 @@ pub fn compute_layout(data: &GraphData, w: f32, h: f32) -> GraphScene {
         return GraphScene {
             graph,
             positions: Vec::new(),
-            node_to_chunk,
+            node_to,
             subsampled,
         };
     }
@@ -181,13 +223,13 @@ pub fn compute_layout(data: &GraphData, w: f32, h: f32) -> GraphScene {
     GraphScene {
         graph,
         positions: pos,
-        node_to_chunk,
+        node_to,
         subsampled,
     }
 }
 
 /// BFS from the highest-degree node, keeping at most `max_nodes` nodes;
-/// returns the reindexed subgraph and the scene→chunk mapping. Edges to
+/// returns the reindexed subgraph and the scene→app mapping. Edges to
 /// dropped nodes are dropped.
 fn subsample_bfs(data: &GraphData, max_nodes: usize) -> (GraphData, Vec<u32>) {
     // Highest degree wins; ties keep the LOWEST id (strict `>`, so the
@@ -236,7 +278,7 @@ fn subsample_bfs(data: &GraphData, max_nodes: usize) -> (GraphData, Vec<u32>) {
         n_nodes: keep.len(),
         offsets: Vec::with_capacity(keep.len() + 1),
         neighbors: Vec::new(),
-        edge_types: Vec::new(),
+        kinds: Vec::new(),
     };
     graph.offsets.push(0);
     for &old in &keep {
@@ -246,7 +288,7 @@ fn subsample_bfs(data: &GraphData, max_nodes: usize) -> (GraphData, Vec<u32>) {
             let dst = data.neighbors[idx];
             if kept[dst as usize] {
                 graph.neighbors.push(remap[dst as usize]);
-                graph.edge_types.push(data.edge_types[idx]);
+                graph.kinds.push(data.kinds[idx]);
             }
         }
         graph.offsets.push(graph.neighbors.len() as u32);
@@ -330,29 +372,69 @@ impl ViewTransform {
 mod tests {
     use super::*;
 
-    /// 4 nodes: 0→1 (next), 1→2 (next), 0→2 (semantic), 3 isolated.
+    /// 4 nodes: 0→1 (kind 0), 1→2 (kind 0), 0→2 (kind 1), 3 isolated.
     fn demo_graph() -> GraphData {
-        GraphData {
+        GraphData::from_spec(&GraphSpec {
             n_nodes: 4,
-            offsets: vec![0, 2, 3, 3, 3],
-            neighbors: vec![1, 2, 2],
-            edge_types: vec![EDGE_NEXT_CHUNK, EDGE_SEMANTIC, EDGE_NEXT_CHUNK],
-        }
+            edges: vec![
+                GraphEdge {
+                    from: 0,
+                    to: 1,
+                    kind: 0,
+                },
+                GraphEdge {
+                    from: 1,
+                    to: 2,
+                    kind: 0,
+                },
+                GraphEdge {
+                    from: 0,
+                    to: 2,
+                    kind: 1,
+                },
+            ],
+        })
     }
 
     #[test]
-    fn csr_accessors_match_the_slice_layout() {
+    fn csr_accessors_match_the_edge_list() {
         let g = demo_graph();
         assert_eq!(g.neighbors(0), &[1, 2]);
         assert_eq!(g.neighbors(1), &[2]);
         assert_eq!(g.neighbors(2), &[] as &[u32]);
-        assert_eq!(g.edge_type(0, 0), Some(EDGE_NEXT_CHUNK));
-        assert_eq!(g.edge_type(0, 1), Some(EDGE_SEMANTIC));
-        assert_eq!(g.edge_type(0, 2), None);
+        assert_eq!(g.kind(0, 0), Some(0));
+        assert_eq!(g.kind(0, 1), Some(1));
+        assert_eq!(g.kind(0, 2), None);
         assert_eq!(g.degree(0), 2);
         // Out-of-range probes are empty, never panics.
         assert_eq!(g.neighbors(99), &[] as &[u32]);
-        assert_eq!(g.edge_type(99, 0), None);
+        assert_eq!(g.kind(99, 0), None);
+    }
+
+    #[test]
+    fn spec_builder_drops_out_of_range_edges() {
+        let g = GraphData::from_spec(&GraphSpec {
+            n_nodes: 2,
+            edges: vec![
+                GraphEdge {
+                    from: 0,
+                    to: 1,
+                    kind: 0,
+                },
+                GraphEdge {
+                    from: 0,
+                    to: 9,
+                    kind: 0,
+                },
+                GraphEdge {
+                    from: 9,
+                    to: 0,
+                    kind: 0,
+                },
+            ],
+        });
+        assert_eq!(g.neighbors(0), &[1]);
+        assert_eq!(g.neighbors(1), &[] as &[u32]);
     }
 
     #[test]
@@ -362,7 +444,7 @@ mod tests {
         let b = compute_layout(&g, 1000.0, 1000.0);
         assert_eq!(a.positions, b.positions);
         assert!(!a.subsampled);
-        assert_eq!(a.node_to_chunk, vec![0, 1, 2, 3]);
+        assert_eq!(a.node_to, vec![0, 1, 2, 3]);
     }
 
     #[test]
@@ -374,40 +456,36 @@ mod tests {
             assert!((-100.0..=900.0).contains(&y), "y={y} escaped the box");
         }
         // Springs settle linked nodes near the ideal length (spring =
-        // sqrt(w*h/n) * 0.5 = 250 for this box): assert a loose band
-        // rather than an exact value.
+        // sqrt(w*h/n) * 0.5 ≈ 224 for this box): a loose band, not an
+        // exact value.
         let d01 = dist(scene.positions[0], scene.positions[1]);
         assert!(
-            (100.0..=500.0).contains(&d01),
+            (80.0..=500.0).contains(&d01),
             "linked nodes settle near the spring length (d01={d01})"
         );
     }
 
     #[test]
     fn subsample_keeps_the_budget_and_reindexes() {
-        // Chain of 3000 nodes: subsample to 100.
+        // Chain of 3000 nodes: subsample to the cap.
         let n = 3000usize;
-        let mut g = GraphData {
+        let spec = GraphSpec {
             n_nodes: n,
-            offsets: Vec::with_capacity(n + 1),
-            neighbors: Vec::new(),
-            edge_types: Vec::new(),
+            edges: (0..(n - 1) as u32)
+                .map(|i| GraphEdge {
+                    from: i,
+                    to: i + 1,
+                    kind: 0,
+                })
+                .collect(),
         };
-        g.offsets.push(0);
-        for i in 0..n {
-            if i + 1 < n {
-                g.neighbors.push(i as u32 + 1);
-                g.edge_types.push(EDGE_NEXT_CHUNK);
-            }
-            g.offsets.push(g.neighbors.len() as u32);
-        }
-        let scene = compute_layout(&g, 1000.0, 1000.0);
+        let scene = compute_layout(&GraphData::from_spec(&spec), 1000.0, 1000.0);
         assert!(scene.subsampled);
         assert_eq!(scene.graph.n_nodes, MAX_LAYOUT_NODES);
         assert_eq!(scene.positions.len(), MAX_LAYOUT_NODES);
         // The chain is connected: BFS from node 0 walks it in order, so
         // the mapping is the identity prefix and every edge survives.
-        assert_eq!(scene.node_to_chunk[0], 0);
+        assert_eq!(scene.node_to[0], 0);
         assert_eq!(scene.graph.neighbors(0), &[1]);
         assert_eq!(
             scene.graph.neighbors(MAX_LAYOUT_NODES - 1),

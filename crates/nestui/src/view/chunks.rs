@@ -12,12 +12,12 @@ use engine::input::scroll::ScrollState;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
 use engine::ui::widgets::{
-    Button, ButtonSize, ButtonVariant, EventResult, Rect, Scrollbar, VirtualList, WidgetEvent,
+    EventResult, IconButton, Rect, Scrollbar, Spinner, SpinnerSize, VirtualList, WidgetEvent,
 };
 
 use crate::model::types::ChunksData;
 
-use super::{Action, group_label, panel, short_id, text, truncate_to_width};
+use super::{Action, group_label, panel, short_id, text};
 
 const ROW_H: f32 = 48.0;
 const GAP: f32 = 16.0;
@@ -27,7 +27,9 @@ pub struct ChunksScreen {
     list: VirtualList,
     detail_scroll: ScrollState,
     detail_scrollbar: Scrollbar,
-    copy_id: Button,
+    copy_id: IconButton,
+    spinner: Spinner,
+    loading: bool,
 }
 
 impl ChunksScreen {
@@ -36,10 +38,9 @@ impl ChunksScreen {
             list: VirtualList::new(ROW_H),
             detail_scroll: ScrollState::new(),
             detail_scrollbar: Scrollbar::new(),
-            copy_id: Button::new("copy id")
-                .size(ButtonSize::Sm)
-                .variant(ButtonVariant::Ghost)
-                .icon("copy"),
+            copy_id: IconButton::new("copy").variant(engine::ui::widgets::ButtonVariant::Ghost),
+            spinner: Spinner::new().size(SpinnerSize::Sm),
+            loading: false,
         }
     }
 
@@ -144,7 +145,8 @@ impl ChunksScreen {
     }
 
     pub fn tick(&mut self, dt: f32) -> bool {
-        self.list.tick(dt) | self.detail_scrollbar.tick(dt)
+        let spinning = self.loading && self.spinner.tick(dt);
+        self.list.tick(dt) | self.detail_scrollbar.tick(dt) | spinning
     }
 
     pub fn render(
@@ -157,7 +159,32 @@ impl ChunksScreen {
         loading: bool,
     ) {
         self.list.set_item_count(ids.len());
+        self.loading = loading;
         let (list_rect, detail) = self.layout(content);
+
+        // While the first decode is in flight, center a spinner + note
+        // over the list area.
+        if loading && data.is_none() && list_rect.w > 0.0 {
+            self.spinner.render(
+                c,
+                Rect::new(
+                    list_rect.x + (list_rect.w - 24.0) / 2.0,
+                    list_rect.y + 60.0,
+                    24.0,
+                    24.0,
+                ),
+                theme,
+            );
+            text(
+                c,
+                "loading chunk texts…",
+                13.0,
+                400,
+                list_rect.x + (list_rect.w - 24.0) / 2.0 - 56.0,
+                list_rect.y + 96.0,
+                theme.colors.text_dim.0,
+            );
+        }
 
         if list_rect.w > 0.0 {
             let preview_style = TextStyle::new(12.0);
@@ -188,9 +215,11 @@ impl ChunksScreen {
                         theme.colors.text.0,
                     );
                     let preview = match (preview_of(i), loading) {
-                        (Some(p), _) => {
-                            truncate_to_width(p, row.w - pad * 2.0 - 52.0, &preview_style)
-                        }
+                        (Some(p), _) => TextMeasurer::truncate_to_width(
+                            p,
+                            &preview_style,
+                            row.w - pad * 2.0 - 52.0,
+                        ),
                         (None, true) => "loading texts…".to_string(),
                         (None, false) => String::new(),
                     };
@@ -234,7 +263,7 @@ impl ChunksScreen {
         let id_style = TextStyle::new(13.0).with_weight(500);
         let id = ids.get(sel).map(String::as_str).unwrap_or("");
         let id_w = detail.w - DETAIL_PAD * 2.0 - self.copy_rect(detail).w - 8.0;
-        let short = truncate_to_width(id, id_w, &id_style);
+        let short = TextMeasurer::truncate_to_width(id, &id_style, id_w);
         text(
             c,
             &short,
@@ -254,7 +283,7 @@ impl ChunksScreen {
             None => ("(spans not loaded)".to_string(), String::new()),
         };
         let meta_style = TextStyle::new(12.0);
-        let uri = truncate_to_width(&uri, detail.w - DETAIL_PAD * 2.0, &meta_style);
+        let uri = TextMeasurer::truncate_to_width(&uri, &meta_style, detail.w - DETAIL_PAD * 2.0);
         text(
             c,
             &uri,

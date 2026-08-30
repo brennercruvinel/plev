@@ -20,7 +20,6 @@ mod search;
 mod stats;
 
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
 use engine::ui::widgets::{Rect, ToastManager, WidgetEvent, rounded_rect, rounded_rect_stroke};
 
@@ -174,9 +173,11 @@ impl NestuiView {
         self.explorer.handle_paste(text)
     }
 
-    /// Global shortcuts with Cmd/Ctrl held: `o` → Open, `1..=6` → tabs.
-    pub fn handle_shortcut(&mut self, key: &str) -> bool {
-        self.explorer.handle_shortcut(key)
+    /// Global shortcut dispatch (Cmd/Ctrl+O, Cmd/Ctrl+1..=6): the shell
+    /// turns winit keys into engine `Keystroke`s; the view never sees
+    /// winit types.
+    pub fn handle_keystroke(&mut self, keystroke: &engine::actions::Keystroke) -> bool {
+        self.explorer.handle_keystroke(keystroke)
     }
 
     /// Non-character editing keys forwarded by the platform shell.
@@ -282,33 +283,6 @@ pub(crate) fn panel(c: &mut Compositor, rect: Rect, theme: &Theme) {
     ));
 }
 
-/// Truncate `s` with an ellipsis so it fits on one line of `avail` px,
-/// measured with the SAME [`TextStyle`] the caller draws with (real
-/// shaping, never a per-char estimate). Port of the ide's
-/// `components::hoff::truncate_to_width`.
-pub(crate) fn truncate_to_width(s: &str, avail: f32, style: &TextStyle) -> String {
-    if TextMeasurer::measure_styled(s, style, None).0 <= avail {
-        return s.to_string();
-    }
-    let chars: Vec<char> = s.chars().collect();
-    let candidate = |n: usize| -> String {
-        let t: String = chars[..n].iter().collect();
-        format!("{}\u{2026}", t.trim_end())
-    };
-    // Largest prefix whose "prefix…" really fits, by binary search on the
-    // char count (each probe is a cached real measurement).
-    let (mut lo, mut hi) = (0usize, chars.len().saturating_sub(1));
-    while lo < hi {
-        let mid = (lo + hi).div_ceil(2);
-        if TextMeasurer::measure_styled(&candidate(mid), style, None).0 <= avail {
-            lo = mid;
-        } else {
-            hi = mid - 1;
-        }
-    }
-    candidate(lo)
-}
-
 /// A chunk id rendered short: strip the `sha256:` prefix, keep 12 hex
 /// chars (fixed char count — hashes are fixed-width, no shaping needed).
 pub(crate) fn short_id(chunk_id: &str) -> String {
@@ -317,7 +291,6 @@ pub(crate) fn short_id(chunk_id: &str) -> String {
     format!("{short}…")
 }
 
-/// Human byte size (KiB/MiB/GiB), no dependencies.
 pub(crate) fn fmt_bytes(n: u64) -> String {
     const UNITS: [&str; 4] = ["B", "KiB", "MiB", "GiB"];
     let mut v = n as f64;
@@ -433,17 +406,23 @@ pub(crate) mod fixtures {
     }
 
     /// A small laid-out graph over the fake db's 3 chunks (0→1→2 chain).
-    pub fn fake_graph_scene() -> crate::model::graph::GraphScene {
-        let data = crate::model::graph::GraphData {
+    pub fn fake_graph_scene() -> engine::graph::GraphScene {
+        let spec = engine::graph::GraphSpec {
             n_nodes: 3,
-            offsets: vec![0, 1, 2, 2],
-            neighbors: vec![1, 2],
-            edge_types: vec![
-                crate::model::graph::EDGE_NEXT_CHUNK,
-                crate::model::graph::EDGE_NEXT_CHUNK,
+            edges: vec![
+                engine::graph::GraphEdge {
+                    from: 0,
+                    to: 1,
+                    kind: 0,
+                },
+                engine::graph::GraphEdge {
+                    from: 1,
+                    to: 2,
+                    kind: 0,
+                },
             ],
         };
-        crate::model::graph::compute_layout(&data, 1000.0, 1000.0)
+        engine::graph::compute_layout(&engine::graph::GraphData::from_spec(&spec), 1000.0, 1000.0)
     }
 }
 
@@ -467,18 +446,6 @@ mod tests {
             let mut c = Compositor::new();
             view.render(&mut c);
         }
-    }
-
-    #[test]
-    fn truncate_to_width_ellipsizes_and_keeps_short_strings() {
-        let style = TextStyle::new(14.0);
-        let short = "abc";
-        assert_eq!(truncate_to_width(short, 500.0, &style), short);
-        let long = "x".repeat(400);
-        let out = truncate_to_width(&long, 100.0, &style);
-        assert!(out.ends_with('\u{2026}'));
-        assert!(TextMeasurer::measure_styled(&out, &style, None).0 <= 100.0);
-        assert!(out.len() < long.len());
     }
 
     #[test]

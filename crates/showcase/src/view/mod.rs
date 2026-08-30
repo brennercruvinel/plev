@@ -7,6 +7,7 @@ mod buttons;
 mod cards;
 mod charts;
 mod dock;
+mod extras;
 mod forms;
 mod icons_gallery;
 mod lists;
@@ -49,10 +50,11 @@ pub enum Section {
     Dock,
     App,
     Builder,
+    Extras,
 }
 
 impl Section {
-    pub const ALL: [Section; 11] = [
+    pub const ALL: [Section; 12] = [
         Section::Cards,
         Section::Buttons,
         Section::Forms,
@@ -64,6 +66,7 @@ impl Section {
         Section::Dock,
         Section::App,
         Section::Builder,
+        Section::Extras,
     ];
 
     fn title(self) -> &'static str {
@@ -79,6 +82,7 @@ impl Section {
             Section::Dock => "Dock",
             Section::App => "App",
             Section::Builder => "Builder",
+            Section::Extras => "Extras",
         }
     }
 
@@ -95,6 +99,7 @@ impl Section {
             Section::Dock => "terminal",
             Section::App => "check",
             Section::Builder => "code",
+            Section::Extras => "plus",
         }
     }
 
@@ -120,6 +125,9 @@ impl Section {
             Section::App => "A complete small todo app: domain state, per-item animation, input.",
             Section::Builder => {
                 "Builder tour with real hit regions and measured, content-driven layout."
+            }
+            Section::Extras => {
+                "App-level widgets: chips, icon buttons, spinners, empty state, split pane."
             }
         }
     }
@@ -184,6 +192,7 @@ pub struct ShowcaseView {
     dock: dock::DockSection,
     app: app::AppSection,
     builder_tour: builder_tour::BuilderSection,
+    extras: extras::ExtrasSection,
 }
 
 #[derive(Clone, Copy)]
@@ -211,6 +220,7 @@ impl ShowcaseView {
             dock: dock::DockSection::new(),
             app: app::AppSection::new(),
             builder_tour: builder_tour::BuilderSection::new(),
+            extras: extras::ExtrasSection::new(),
             theme,
             theme_name: "hoff".to_string(),
             section: Section::Cards,
@@ -276,6 +286,7 @@ impl ShowcaseView {
             Section::Dock => self.dock.content_height(content),
             Section::App => self.app.content_height(content),
             Section::Builder => self.builder_tour.content_height(content),
+            Section::Extras => self.extras.content_height(content),
         }
     }
 
@@ -567,6 +578,7 @@ impl ShowcaseView {
             Section::Dock => self.dock.handle_event(event, content),
             Section::App => self.app.handle_event(event, content),
             Section::Builder => self.builder_tour.handle_event(event, content),
+            Section::Extras => self.extras.handle_event(event, content),
             Section::Theme => {
                 let (r, picked) = self.themes.handle_event(event, content);
                 if let Some(name) = picked {
@@ -663,6 +675,10 @@ impl ShowcaseView {
         if self.section == Section::Charts {
             animating |= self.charts.tick(dt);
         }
+        // Spinners rotate only while the Extras section is visible.
+        if self.section == Section::Extras {
+            animating |= self.extras.tick(dt);
+        }
 
         // Drop overlay widgets whose exit animation finished.
         if let Some(active) = &self.active_overlay {
@@ -737,6 +753,7 @@ impl ShowcaseView {
             Section::Dock => self.dock.render(c, content, &theme),
             Section::App => self.app.render(c, content, &theme),
             Section::Builder => self.builder_tour.render(c, content, &theme),
+            Section::Extras => self.extras.render(c, content, &theme),
         }
         c.push(SceneNode::PopClip);
 

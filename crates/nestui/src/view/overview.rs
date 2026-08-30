@@ -8,17 +8,15 @@
 use engine::compositor::Compositor;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
-use engine::ui::widgets::{Button, ButtonSize, EventResult, Rect, WidgetEvent, rounded_rect};
+use engine::ui::widgets::{EventResult, IconButton, Rect, WidgetEvent};
 
 use crate::model::types::OpenedDbView;
 
-use super::{Action, fmt_bytes, group_label, panel, text, truncate_to_width};
+use super::{Action, fmt_bytes, group_label, panel, text};
 
 const CARD_PAD: f32 = 20.0;
 const ROW_H: f32 = 26.0;
 const CARD_GAP: f32 = 24.0;
-const CHIP_H: f32 = 28.0;
-const CHIP_PAD: f32 = 12.0;
 const CHIP_GAP: f32 = 8.0;
 /// Key column width as a fraction of the card's inner width.
 const KEY_FRAC: f32 = 0.28;
@@ -42,10 +40,21 @@ struct Layout {
     identity: Rect,
     manifest: Rect,
     chips: Rect,
+    chip_rects: Vec<Rect>,
     sections: Rect,
     copy_buttons: [(CopyTarget, Rect); 3],
     section_rows: Vec<Rect>,
     total_h: f32,
+}
+
+/// A capability chip: present = Constructive, absent = Neutral outline
+/// (engine `Chip`; static — capabilities are not clickable).
+fn chip_for(label: &str, present: bool) -> engine::ui::widgets::Chip {
+    engine::ui::widgets::Chip::new(label).intent(if present {
+        engine::theme::Intent::Constructive
+    } else {
+        engine::theme::Intent::Neutral
+    })
 }
 
 fn chips(db: &OpenedDbView) -> Vec<(&'static str, bool)> {
@@ -132,26 +141,33 @@ fn layout(content: Rect, db: &OpenedDbView) -> Layout {
         card_h(&manifest_card),
     );
 
-    // Chips wrap in rows of equal height against the content width.
-    let chip_style = TextStyle::new(12.0).with_weight(600);
+    // Chips wrap in rows against the content width, sized by the engine
+    // Chip's own measured preferred size.
     let chip_list = chips(db);
     let mut cx = content.x;
-    let mut chip_rows = 1usize;
-    for (label, _) in &chip_list {
-        let (tw, _) = TextMeasurer::measure_styled(label, &chip_style, None);
-        let w = tw + CHIP_PAD * 2.0;
-        if cx + w > content.x + content.w {
-            chip_rows += 1;
+    let mut cy_rows = 1usize;
+    let mut chip_rects = Vec::with_capacity(chip_list.len());
+    let mut row_top = 0.0_f32;
+    for &(label, present) in &chip_list {
+        let (w, h) = chip_for(label, present).preferred_size();
+        if cx + w > content.x + content.w && cx > content.x {
+            cy_rows += 1;
+            row_top += h + CHIP_GAP;
             cx = content.x;
         }
+        chip_rects.push(Rect::new(cx, row_top, w, h));
         cx += w + CHIP_GAP;
     }
     let chips_y = manifest.y + manifest.h + CARD_GAP + 24.0;
+    for r in &mut chip_rects {
+        r.y += chips_y;
+    }
+    let chip_h = chip_rects.first().map(|r| r.h).unwrap_or(0.0);
     let chips_rect = Rect::new(
         content.x,
         chips_y,
         content.w,
-        chip_rows as f32 * (CHIP_H + CHIP_GAP),
+        cy_rows as f32 * (chip_h + CHIP_GAP),
     );
 
     let sections_y = chips_rect.y + chips_rect.h + CARD_GAP + 24.0;
@@ -183,7 +199,9 @@ fn layout(content: Rect, db: &OpenedDbView) -> Layout {
             if let Some(t) = target {
                 let row_y = rect.y + CARD_PAD + 24.0 + i as f32 * ROW_H;
                 let slot = copy_buttons.iter_mut().find(|(ct, _)| *ct == *t).unwrap();
-                slot.1 = Rect::new(rect.x + rect.w - CARD_PAD - 64.0, row_y - 2.0, 64.0, 28.0);
+                // 40px square (ButtonSize::Sm); the ghost variant has no
+                // fill, so overhanging the 26px row is invisible.
+                slot.1 = Rect::new(rect.x + rect.w - CARD_PAD - 40.0, row_y - 7.0, 40.0, 40.0);
             }
         }
     };
@@ -194,6 +212,7 @@ fn layout(content: Rect, db: &OpenedDbView) -> Layout {
         identity,
         manifest,
         chips: chips_rect,
+        chip_rects,
         sections,
         copy_buttons,
         section_rows,
@@ -202,9 +221,9 @@ fn layout(content: Rect, db: &OpenedDbView) -> Layout {
 }
 
 pub struct OverviewScreen {
-    copy_file: Button,
-    copy_content: Button,
-    copy_model: Button,
+    copy_file: IconButton,
+    copy_content: IconButton,
+    copy_model: IconButton,
     /// Page scroll: the overview is taller than the viewport (cards +
     /// section table), so it scrolls like a HOFF page.
     scroll: engine::input::scroll::ScrollState,
@@ -212,12 +231,7 @@ pub struct OverviewScreen {
 
 impl OverviewScreen {
     pub fn new() -> Self {
-        let copy = || {
-            Button::new("copy")
-                .size(ButtonSize::Sm)
-                .variant(engine::ui::widgets::ButtonVariant::Ghost)
-                .icon("copy")
-        };
+        let copy = || IconButton::new("copy").variant(engine::ui::widgets::ButtonVariant::Ghost);
         Self {
             copy_file: copy(),
             copy_content: copy(),
@@ -245,7 +259,7 @@ impl OverviewScreen {
         )
     }
 
-    fn button_for(&mut self, target: CopyTarget) -> &mut Button {
+    fn button_for(&mut self, target: CopyTarget) -> &mut IconButton {
         match target {
             CopyTarget::File => &mut self.copy_file,
             CopyTarget::Content => &mut self.copy_content,
@@ -314,7 +328,6 @@ impl OverviewScreen {
         let l = layout(content, db);
         let [identity_card, manifest_card] = cards(db);
         let value_style = TextStyle::new(13.0).with_weight(400);
-        let chip_style = TextStyle::new(12.0).with_weight(600);
 
         for (card, rect) in [(&identity_card, l.identity), (&manifest_card, l.manifest)] {
             panel(c, rect, theme);
@@ -337,7 +350,7 @@ impl OverviewScreen {
                 } else {
                     rect.w - CARD_PAD * 2.0 - key_w
                 };
-                let value = truncate_to_width(value, value_w, &value_style);
+                let value = TextMeasurer::truncate_to_width(value, &value_style, value_w);
                 text(
                     c,
                     &value,
@@ -353,26 +366,11 @@ impl OverviewScreen {
             self.button_for(*target).render(c, *rect, theme);
         }
 
-        // Capability chips: present = constructive, absent = neutral dim.
+        // Capability chips (engine Chip): present = constructive, absent
+        // = neutral dim outline.
         group_label(c, "CAPABILITIES", content.x, l.chips.y - 24.0, theme);
-        let mut cx = l.chips.x;
-        let mut cy = l.chips.y;
-        for (label, present) in chips(db) {
-            let (tw, _) = TextMeasurer::measure_styled(label, &chip_style, None);
-            let w = tw + CHIP_PAD * 2.0;
-            if cx + w > l.chips.x + l.chips.w {
-                cx = l.chips.x;
-                cy += CHIP_H + CHIP_GAP;
-            }
-            let (bg, fg) = if present {
-                let s = theme.colors.success.0;
-                ([s[0], s[1], s[2], 0.12], theme.colors.success.0)
-            } else {
-                (theme.glass.surface.0, theme.colors.text_dim.0)
-            };
-            c.push(rounded_rect(cx, cy, w, CHIP_H, theme.radius.full, bg));
-            text(c, label, 12.0, 600, cx + CHIP_PAD, cy + 7.0, fg);
-            cx += w + CHIP_GAP;
+        for ((label, present), rect) in chips(db).iter().zip(&l.chip_rects) {
+            chip_for(label, *present).render(c, *rect, theme);
         }
 
         // Section table: id, name, size.
@@ -390,10 +388,10 @@ impl OverviewScreen {
                 rect.y + 6.0,
                 theme.colors.text_dim.0,
             );
-            let name = truncate_to_width(
+            let name = TextMeasurer::truncate_to_width(
                 &section.name,
-                rect.w - CARD_PAD * 2.0 - id_w - size_w,
                 &value_style,
+                rect.w - CARD_PAD * 2.0 - id_w - size_w,
             );
             text(
                 c,

@@ -254,7 +254,7 @@ pub enum NestEvent {
     SearchResults(Result<SearchResultsView, String>),
     ChunksLoaded(Result<ChunksData, String>),
     /// The laid-out graph (positions included — computed by the worker).
-    GraphLoaded(Result<crate::model::graph::GraphScene, String>),
+    GraphLoaded(Result<engine::graph::GraphScene, String>),
     /// Benchmark progress heartbeat (`done` of `total` queries).
     BenchmarkProgress {
         done: usize,

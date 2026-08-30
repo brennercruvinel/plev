@@ -37,6 +37,30 @@ icons galleries were the in-repo proof of correct responsive layout).
 - letter spacing, weight and line height all change advance. if any new
   typography attribute is added, plumb it through measurement and drawing
   in the same commit
+- single-line truncation is `TextMeasurer::truncate_to_width(text, style,
+  max_width)` — the same style you draw with, grapheme-safe, cached. do
+  not port per-app ellipsis helpers (the ide and nestui both grew one
+  before this landed)
+
+## small app utilities
+
+- clipboard: `engine::clipboard` (`SystemClipboard` on desktop,
+  `LocalClipboard` for tests/wasm). no need to import from
+  `engine::editor` anymore (that path still works)
+- charts live in `engine::charts`: pure geometry (`line_chart`,
+  `bar_chart`, `stacked_area`, `donut`) + `charts::draw` scene emission.
+  charts carry no widget state — the owning view keeps the optional
+  reveal `Tween<f32>`; `charts::draw::meter`/`hbars` cover the simple
+  bar-meter patterns. network canvases: `engine::graph` (deterministic
+  force layout, `ViewTransform`, BFS subsampling over 2.5k nodes) +
+  `ui::widgets::GraphView` (pan/zoom/hover/selection; the app owns
+  tooltips and detail panels via `hovered()`/`selected()`)
+- simple global shortcuts (`cmd+o`, `cmd+1..6`): build a
+  `engine::actions::shortcuts::ShortcutMap` (`bind("cmd-o", "open")`) and
+  match with `match_logical_key(&key_event.logical_key, modifiers)` where
+  the shell tracks `ModifiersState` from `WindowEvent::ModifiersChanged`.
+  reach for the full `KeymapMatcher`/`ActionRegistry` only when you need
+  contexts, multi-stroke sequences or user-configurable keymaps
 
 ## color
 

@@ -1043,3 +1043,233 @@ fn hoff_tooltip_is_solid_262626() {
         if (color[0] - 0x26 as f32 / 255.0).abs() < 1e-5 && corner_radius == 8.0)
     );
 }
+
+// ---------------------------------------------------------------------------
+// Chip
+// ---------------------------------------------------------------------------
+
+#[test]
+fn chip_preferred_size_uses_real_measurement() {
+    let chip = Chip::new("ann");
+    let (w, h) = chip.preferred_size();
+    assert_eq!(h, CHIP_H);
+    let (tw, _) = crate::text::TextMeasurer::measure_styled(
+        "ann",
+        &crate::theme::TypographyScale::hoff().caption_sm(),
+        None,
+    );
+    assert!((w - (tw + 24.0)).abs() < 1.0, "width is text + padding");
+}
+
+#[test]
+fn chip_is_static_by_default_and_clicks_when_interactive() {
+    let mut chip = Chip::new("tag");
+    let r = click(|e| chip.handle_event(e, B));
+    assert_eq!(r, EventResult::IGNORED, "static chips swallow nothing");
+
+    let mut chip = Chip::new("tag").interactive(true);
+    let r = click(|e| chip.handle_event(e, B));
+    assert!(r.clicked);
+    // Press cancelled by releasing outside.
+    chip.handle_event(&down(20.0, 20.0), B);
+    let r = chip.handle_event(&up(500.0, 500.0), B);
+    assert!(!r.clicked);
+    assert!(r.changed);
+}
+
+#[test]
+fn chip_renders_every_intent_and_variant_without_gpu() {
+    let theme = Theme::hoff();
+    for intent in [
+        Intent::Neutral,
+        Intent::Constructive,
+        Intent::Destructive,
+        Intent::Informational,
+    ] {
+        for selected in [false, true] {
+            let mut c = Compositor::new();
+            Chip::new("capability")
+                .intent(intent)
+                .selected(selected)
+                .render(&mut c, B, &theme);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// EmptyState
+// ---------------------------------------------------------------------------
+
+#[test]
+fn empty_state_centers_its_stack_and_routes_cta_clicks() {
+    let mut es = EmptyState::new("No database", "Open a .nest file to explore it.")
+        .icon("folder-open")
+        .cta(Button::new("Open"));
+    let bounds = Rect::new(0.0, 0.0, 800.0, 600.0);
+    // The CTA is centered horizontally; find it by probing the center.
+    let cta = es.cta.as_ref().unwrap().preferred_size();
+    let cx = bounds.x + (bounds.w - cta.0) / 2.0 + 2.0;
+    // Probe vertically: scan for the cta's y band.
+    let mut fired = false;
+    for y in (0..600).step_by(4) {
+        let r = click(|e| es.handle_event(e, bounds));
+        let _ = (cx, y);
+        if r.clicked {
+            fired = true;
+            break;
+        }
+        let r1 = es.handle_event(&down(cx, y as f32), bounds);
+        let r2 = es.handle_event(&up(cx, y as f32), bounds);
+        if r1.merge(r2).clicked {
+            fired = true;
+            break;
+        }
+    }
+    assert!(fired, "the CTA is clickable somewhere in the stack");
+}
+
+#[test]
+fn empty_state_without_cta_is_inert() {
+    let mut es = EmptyState::new("Title", "Message");
+    let r = click(|e| es.handle_event(e, B));
+    assert_eq!(r, EventResult::IGNORED);
+}
+
+#[test]
+fn empty_state_renders_narrow_and_wide_without_gpu() {
+    let theme = Theme::hoff();
+    for w in [320.0, 1600.0] {
+        let mut c = Compositor::new();
+        EmptyState::new(
+            "A fairly long empty-state title",
+            "A long message that must wrap against the available width rather than run edge to edge in the panel it is given.",
+        )
+        .icon("file")
+        .cta(Button::new("Do the thing"))
+        .render(&mut c, Rect::new(0.0, 0.0, w, 600.0), &theme);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Spinner
+// ---------------------------------------------------------------------------
+
+#[test]
+fn spinner_tick_advances_the_angle_and_always_animates() {
+    let mut s = Spinner::new();
+    assert_eq!(s.angle(), 0.0);
+    assert!(s.tick(0.1));
+    let a = s.angle();
+    assert!(a > 0.0);
+    assert!(s.tick(0.1));
+    assert!(s.angle() > a);
+    // Wraps after a full turn, never grows unbounded.
+    for _ in 0..100 {
+        s.tick(1.0);
+    }
+    assert!(s.angle() < std::f32::consts::TAU);
+}
+
+#[test]
+fn spinner_renders_every_size_without_gpu() {
+    let theme = Theme::hoff();
+    for size in [SpinnerSize::Sm, SpinnerSize::Md, SpinnerSize::Lg] {
+        let mut c = Compositor::new();
+        let mut s = Spinner::new().size(size);
+        s.tick(0.2);
+        s.render(&mut c, B, &theme);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// SplitPane
+// ---------------------------------------------------------------------------
+
+#[test]
+fn split_pane_rects_partition_the_bounds() {
+    let sp = SplitPane::new(SplitDirection::Horizontal, 0.25);
+    let bounds = Rect::new(0.0, 0.0, 1000.0, 600.0);
+    let first = sp.first_rect(bounds);
+    let second = sp.second_rect(bounds);
+    // 25% of (1000 - 2px divider) = 249.5; the second pane gets the rest.
+    assert!((first.w - 249.5).abs() < 0.01);
+    assert!((second.w - 748.5).abs() < 0.01);
+    assert!((second.x - (first.x + first.w + 2.0)).abs() < 0.01);
+
+    let v = SplitPane::new(SplitDirection::Vertical, 0.5);
+    let first = v.first_rect(bounds);
+    let second = v.second_rect(bounds);
+    assert!((first.h - 299.0).abs() < 0.01);
+    assert!((second.y - (first.y + first.h + 2.0)).abs() < 0.01);
+}
+
+#[test]
+fn split_pane_drag_updates_ratio_and_clamps_pane_minimums() {
+    let mut sp = SplitPane::new(SplitDirection::Horizontal, 0.5);
+    let bounds = Rect::new(0.0, 0.0, 1000.0, 600.0);
+    // Drag starts on the divider (x ≈ 499).
+    let r = sp.handle_event(&down(499.0, 300.0), bounds);
+    assert!(r.changed);
+    assert!(sp.is_dragging());
+    sp.handle_event(&move_to(750.0, 300.0), bounds);
+    assert!((sp.ratio() - 0.751).abs() < 0.01);
+    let r = sp.handle_event(&up(750.0, 300.0), bounds);
+    assert!(r.changed);
+    assert!(!sp.is_dragging());
+
+    // Dragging past the edge clamps the panes at their px minimums, and
+    // the ratio survives to expand again. Grab the divider at its CURRENT
+    // position (the first drag moved it).
+    let dx = sp.divider_rect(bounds).x + 1.0;
+    sp.handle_event(&down(dx, 300.0), bounds);
+    sp.handle_event(&move_to(-500.0, 300.0), bounds);
+    assert_eq!(sp.ratio(), 0.0);
+    assert_eq!(sp.first_rect(bounds).w, sp.min_first);
+    sp.handle_event(&up(-500.0, 300.0), bounds);
+}
+
+#[test]
+fn split_pane_hover_and_render_without_gpu() {
+    let theme = Theme::hoff();
+    let mut sp = SplitPane::new(SplitDirection::Horizontal, 0.5);
+    let bounds = Rect::new(0.0, 0.0, 1000.0, 600.0);
+    assert!(sp.handle_event(&move_to(499.0, 300.0), bounds).changed);
+    assert!(sp.is_hovered());
+    let mut c = Compositor::new();
+    sp.render(&mut c, bounds, &theme);
+}
+
+// ---------------------------------------------------------------------------
+// IconButton
+// ---------------------------------------------------------------------------
+
+#[test]
+fn icon_button_click_contract_matches_button() {
+    let mut b = IconButton::new("copy");
+    assert!(!b.handle_event(&down(20.0, 20.0), B).clicked);
+    assert!(b.is_pressed());
+    assert!(b.handle_event(&up(20.0, 20.0), B).clicked);
+
+    let mut b = IconButton::new("copy").disabled(true);
+    let r = click(|e| b.handle_event(e, B));
+    assert!(!r.clicked);
+}
+
+#[test]
+fn icon_button_is_square_and_renders_all_variants() {
+    let (w, h) = IconButton::new("x").preferred_size();
+    assert_eq!(w, h);
+    let theme = Theme::hoff();
+    for variant in [
+        ButtonVariant::Solid,
+        ButtonVariant::Outline,
+        ButtonVariant::Ghost,
+        ButtonVariant::Danger,
+    ] {
+        let mut c = Compositor::new();
+        IconButton::new("trash")
+            .variant(variant)
+            .intent(Intent::Destructive)
+            .render(&mut c, B, &theme);
+    }
+}
