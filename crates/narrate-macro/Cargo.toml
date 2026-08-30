@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish = false
-description = "Proc-macro backend for the narrate UI DSL"
+description = "Proc-macro backend for the narrate UI DSL (experimental — not the official app pattern)"
 
 [lib]
 proc-macro = true

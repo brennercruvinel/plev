@@ -78,6 +78,19 @@ web build (same pixels as desktop):
 ./script/web
 ```
 
+## toolchain
+
+use [rustup](https://rustup.rs): it reads `rust-toolchain.toml` (stable +
+rustfmt/clippy + the wasm32 target) and is required for the web/wasm legs.
+a Homebrew rust ignores that file and ships no wasm32 std — `script/gate`
+then skips the wasm check with a warning and CI (.github/workflows/ci.yml)
+is the only full verification.
+
+```
+rustup target add wasm32-unknown-unknown   # the gate's wasm leg
+cargo install trunk                        # script/web dev loop
+```
+
 ## run
 
 ```

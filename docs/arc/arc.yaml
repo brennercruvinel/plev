@@ -33,13 +33,13 @@ modules:
   input:      { path: crates/engine/src/input,      role: pointer + hit regions + touch synth + gestures + scroll + dispatch }
   animation:  { path: crates/engine/src/animation,  role: tween/frameclock/easing (dt-based) }
   perf:       { path: crates/engine/src/perf,       role: PerfMonitor rolling windows (fps, dt percentiles, cpu micros, memory) + PerfHud overlay, depends: [animation, compositor, text], contracts: [pure-no-gpu, hud-implies-continuous-frames] }
-  signal:     { path: crates/engine/src/signal,     role: reactive primitives }
+  signal:     { path: crates/engine/src/signal,     role: reactive primitives (experimental: no new app code without an ADR, see official-app-pattern) }
   window:     { path: crates/engine/src/window,     role: app runner, render-on-demand, render passes, wasm canvas, depends: [gpu, compositor, text, input] }
   theme:      { path: crates/engine/src/theme,      role: measured hoff tokens, oklch }
   ui:         { path: crates/engine/src/ui,         role: retained widgets + icons }
-  builder:    { path: crates/engine/src/builder,    role: declarative element tree -> layout -> emit, depends: [layout, text] }
-  component:  { path: crates/engine/src/component,  role: Lifecycle trait }
-  view:       { path: crates/engine/src/view,       role: View trait + ViewContext }
+  builder:    { path: crates/engine/src/builder,    role: declarative element tree -> layout -> emit (supported for prototypes/demos), depends: [layout, text] }
+  component:  { path: crates/engine/src/component,  role: Lifecycle trait (experimental, see official-app-pattern) }
+  view:       { path: crates/engine/src/view,       role: View trait + ViewContext (experimental, see official-app-pattern) }
   text_input: { path: crates/engine/src/text_input, role: single-line field widget }
   platform:   { path: crates/engine/src/platform,   role: safe areas + ime + app lifecycle (mod/ime/lifecycle) }
 crates:

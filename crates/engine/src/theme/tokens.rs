@@ -15,9 +15,13 @@ pub struct SpacingScale {
     pub xxl: f32,
 }
 
-/// Letter spacing of the HOFF "body" family (`=body`, `=body-2*`,
-/// `=hairline` — variables.sass): `0.025em`, converted to px per style.
-pub const BODY_LETTER_SPACING_EM: f32 = 0.025;
+/// Letter spacing of the body family (`=body`, `=body-2*`, `=hairline`),
+/// converted to px per style. The HOFF sass reference tracks `0.025em` —
+/// calibrated for Rubik, a narrow face. Inclusive Sans is ~10% wider with
+/// generous built-in sidebearings, so the same tracking reads as gaps;
+/// the body family tracks `0.0` (font's natural spacing) since the
+/// Inclusive Sans swap (2026-08).
+pub const BODY_LETTER_SPACING_EM: f32 = 0.0;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TypographyScale {
@@ -113,17 +117,17 @@ impl TypographyScale {
         Self::style(self.small, 1.2, 600)
     }
 
-    /// `=body`: 16px, line-height 1.5, letter-spacing 0.025em.
+    /// `=body`: 16px, line-height 1.5.
     pub fn body(&self) -> TextStyle {
         Self::body_style(self.body, 1.5, 400)
     }
 
-    /// `=body-2r`: 14px, line-height 1.7, letter-spacing 0.025em.
+    /// `=body-2r`: 14px, line-height 1.7.
     pub fn body_2r(&self) -> TextStyle {
         Self::body_style(self.body_sm, 1.7, 400)
     }
 
-    /// `=body-2m`: 14px, line-height 1.7, weight 500, letter-spacing 0.025em.
+    /// `=body-2m`: 14px, line-height 1.7, weight 500.
     pub fn body_2m(&self) -> TextStyle {
         Self::body_style(self.body_sm, 1.7, 500)
     }
@@ -133,8 +137,7 @@ impl TypographyScale {
         Self::body_style(self.body_sm, 1.7, 500)
     }
 
-    /// `=hairline`: 12px, line-height 1.65, weight 500,
-    /// letter-spacing 0.025em.
+    /// `=hairline`: 12px, line-height 1.65, weight 500.
     pub fn hairline(&self) -> TextStyle {
         Self::body_style(self.caption, 1.65, 500)
     }

@@ -180,6 +180,30 @@ fn default_family_resolves_inclusive_sans_faces_for_all_ui_weights() {
     }
 }
 
+/// End-to-end canary: a string shaped through the real pipeline (attrs ->
+/// fontdb -> cosmic-text layout, the same `FontSystem` setup the rasterizer
+/// uses) must produce the Inclusive Sans advance. If the embedded faces
+/// failed to register, a desktop fontdb would silently fall back to a system
+/// sans with a visibly different width (measured: Helvetica Neue ~88px,
+/// Menlo ~96px for this string at 16px). 93.3px was measured live from the
+/// embedded face; the tight band pins it.
+#[test]
+fn default_family_shapes_with_the_embedded_inclusive_sans_advance() {
+    let (w, _) = TextMeasurer::measure_styled("Hello, World!", &TextStyle::new(16.0), None);
+    assert!(
+        (w - 93.3).abs() < 1.0,
+        "default-family advance {w}px is not the embedded Inclusive Sans (~93.3px): \
+         the embedded faces failed to load and text fell back to a system font"
+    );
+    // Explicit family and default family must shape identically (the pin is
+    // what makes `font_family: None` deterministic).
+    let (explicit, _) = TextMeasurer::measure_styled("Hello, World!", &sans(16.0), None);
+    assert!(
+        (w - explicit).abs() < 0.01,
+        "default ({w}) and explicit Inclusive Sans ({explicit}) must match"
+    );
+}
+
 // -- cursor_x / hit_test round-trip --
 
 fn char_boundaries(text: &str) -> Vec<usize> {
@@ -312,11 +336,11 @@ fn shaped_text_size_matches_measure() {
     assert_eq!(size, measured);
 }
 
-// -- letter-spacing (HOFF body family: 0.025em) --
+// -- letter-spacing (the shaping feature; the HOFF ramp tracks 0) --
 
 #[test]
 fn letter_spacing_increases_advance_per_glyph() {
-    // 0.025em at 14px = 0.35px of tracking, the HOFF =body-2r value.
+    // 0.35px of tracking per glyph (the old Rubik-era =body-2r value).
     let spacing = 0.35;
     let base = sans(14.0);
     let spaced = base.clone().with_letter_spacing(spacing);

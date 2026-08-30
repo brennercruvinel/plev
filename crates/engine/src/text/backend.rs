@@ -22,7 +22,8 @@ pub struct TextStyle {
     pub line_height: f32,
     pub font_weight: u16,
     /// Extra advance per glyph in px (CSS `letter-spacing`). The HOFF
-    /// reference uses `0.025em` on its body styles.
+    /// ramp tracks 0 since the Inclusive Sans swap (2026-08); the knob
+    /// stays for call sites that need explicit tracking.
     pub letter_spacing: f32,
     pub font_family: Option<String>,
 }

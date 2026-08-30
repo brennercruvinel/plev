@@ -1061,7 +1061,7 @@ impl Card {
         // title 20/1.2/500 primary, mb 8.
         let ramp = TypographyScale::hoff();
         self.text(c, layer, title, &ramp.title(), x, b.y + PAD, text.0, None);
-        // =body (16/1.5, letter-spacing 0.025em) secondary, mb 24.
+        // =body (16/1.5) secondary, mb 24.
         let style = ramp.body();
         let (_, body_h) = TextMeasurer::measure_styled(body, &style, Some(w));
         self.text(

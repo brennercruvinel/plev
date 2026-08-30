@@ -2,6 +2,9 @@
 //! framework goes in, plev builder code comes out, and everything that does
 //! not survive the trip is reported on a droplist, never dropped silently.
 //!
+//! **Experimental** -- a research poc, not a supported app path
+//! (docs/adr/official-app-pattern.md).
+//!
 //! Three stages, one module each per source language:
 //! 1. parse  (tsx.rs, sass.rs, gpui.rs): tree-sitter -> raw trees/chains
 //! 2. resolve (resolve_react.rs via css_map.rs, resolve_gpui.rs): normalize

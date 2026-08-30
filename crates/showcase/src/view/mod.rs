@@ -34,6 +34,10 @@ const PAD: f32 = 40.0;
 const HEADER_H: f32 = 78.0;
 /// HOFF nav link height (48px, radius 12).
 const NAV_H: f32 = 48.0;
+/// Sidebar logo block height: the nav links start below it.
+const SIDEBAR_TOP: f32 = 96.0;
+/// Sidebar footer band (two hint lines + margin) at the window bottom.
+const SIDEBAR_FOOTER_H: f32 = 64.0;
 
 // ---------------------------------------------------------------------------
 // Sections
@@ -186,6 +190,8 @@ pub struct ShowcaseView {
     pub theme_name: String,
     pub section: Section,
     sidebar_hover: Option<usize>,
+    /// The rail's own scroll: 14 links x 52px overflow short windows.
+    sidebar_scroll: ScrollState,
     /// Page-level vertical scroll, one per section: HOFF pages are taller
     /// than the window (Cards, Theme, …); without this the wheel is dead
     /// everywhere outside the virtualized list.
@@ -245,6 +251,7 @@ impl ShowcaseView {
             theme_name: "hoff".to_string(),
             section: Section::Cards,
             sidebar_hover: None,
+            sidebar_scroll: ScrollState::new(),
             page_scroll: std::array::from_fn(|_| ScrollState::new()),
             overlay_mgr: OverlayManager::new(),
             layers: None,
@@ -613,6 +620,20 @@ impl ShowcaseView {
         };
         result = result.merge(section_result);
 
+        // Sidebar scroll: the 14 nav links are taller than a short window,
+        // so the rail scrolls on its own (the page scroll is for content).
+        if let WidgetEvent::Scroll { x, delta, .. } = *event
+            && !result.handled
+            && x < SIDEBAR_W
+        {
+            self.sync_sidebar_scroll();
+            let old = self.sidebar_scroll.offset();
+            self.sidebar_scroll.scroll_by(delta);
+            if self.sidebar_scroll.offset() != old {
+                result = result.merge(EventResult::changed());
+            }
+        }
+
         // Page scroll: when no widget consumed the wheel, scroll the
         // section itself (HOFF pages overflow the window). Clamped by
         // ScrollState; only an actual offset change requests a frame.
@@ -633,11 +654,37 @@ impl ShowcaseView {
         result.changed
     }
 
+    /// Scrollable band of the sidebar: below the logo block, above the
+    /// footer hints. Derived from the window height, never a constant.
+    fn sidebar_viewport(&self) -> Rect {
+        Rect::new(
+            0.0,
+            SIDEBAR_TOP,
+            SIDEBAR_W,
+            (self.height - SIDEBAR_TOP - SIDEBAR_FOOTER_H).max(NAV_H),
+        )
+    }
+
+    /// Sync the sidebar scroll limits with the window height.
+    fn sync_sidebar_scroll(&mut self) {
+        let viewport = self.sidebar_viewport();
+        self.sidebar_scroll.set_viewport(viewport.h);
+        self.sidebar_scroll
+            .set_content(Section::ALL.len() as f32 * (NAV_H + 4.0));
+    }
+
     fn handle_sidebar(&mut self, event: &WidgetEvent) -> EventResult {
         let items = self.sidebar_item_rects();
+        let viewport = self.sidebar_viewport();
         match *event {
             WidgetEvent::MouseMove { x, y } => {
-                let hit = items.iter().position(|r| r.contains(x, y));
+                // Items scrolled outside the band are clipped visually; they
+                // must not hover or hit either.
+                let hit = if viewport.contains(x, y) {
+                    items.iter().position(|r| r.contains(x, y))
+                } else {
+                    None
+                };
                 if hit != self.sidebar_hover {
                     self.sidebar_hover = hit;
                     EventResult::changed()
@@ -646,7 +693,12 @@ impl ShowcaseView {
                 }
             }
             WidgetEvent::MouseDown { x, y } => {
-                if let Some(i) = items.iter().position(|r| r.contains(x, y)) {
+                let hit = if viewport.contains(x, y) {
+                    items.iter().position(|r| r.contains(x, y))
+                } else {
+                    None
+                };
+                if let Some(i) = hit {
                     if Section::ALL[i] != self.section {
                         self.section = Section::ALL[i];
                         return EventResult::clicked();
@@ -663,15 +715,17 @@ impl ShowcaseView {
     }
 
     fn sidebar_item_rects(&self) -> Vec<Rect> {
-        // HOFF sidebar: menu under the logo block, 48px links, 4px gap.
-        let top = 96.0;
+        // HOFF sidebar: menu under the logo block, 48px links, 4px gap,
+        // shifted up by the sidebar's own scroll offset (the 14 links are
+        // taller than a short window; the rail scrolls independently).
+        let offset = self.sidebar_scroll.offset();
         Section::ALL
             .iter()
             .enumerate()
             .map(|(i, _)| {
                 Rect::new(
                     12.0,
-                    top + i as f32 * (NAV_H + 4.0),
+                    SIDEBAR_TOP + i as f32 * (NAV_H + 4.0) - offset,
                     SIDEBAR_W - 24.0,
                     NAV_H,
                 )
@@ -729,6 +783,7 @@ impl ShowcaseView {
         let layers = self.ensure_layers(c);
         let theme = self.theme.clone();
 
+        self.sync_sidebar_scroll();
         self.render_sidebar(c, &theme);
         self.render_header(c, &theme);
 
@@ -831,6 +886,15 @@ impl ShowcaseView {
             glass.text_placeholder.0,
         );
 
+        // Nav links live in their own scrollable band (sidebar_scroll),
+        // clipped so scrolled links never paint over the logo or footer.
+        let band = self.sidebar_viewport();
+        c.push(SceneNode::PushClip {
+            x: band.x,
+            y: band.y,
+            w: band.w,
+            h: band.h,
+        });
         for (i, (section, rect)) in Section::ALL
             .iter()
             .zip(self.sidebar_item_rects())
@@ -897,6 +961,7 @@ impl ShowcaseView {
                 glass.text_placeholder.0,
             );
         }
+        c.push(SceneNode::PopClip);
 
         // Footer hints (sidebar foot, timestamps alpha).
         let hint_y = self.height - 56.0;
@@ -1015,6 +1080,108 @@ mod tests {
         assert_eq!(view.theme_name, "hoff");
         // Page frame is the HOFF #444444.
         assert_eq!(view.theme.colors.bg.0, engine::theme::hoff::PAGE_BG.0);
+    }
+
+    // -- Sidebar responsiveness (14 links x 52px need ~824px of height) ----
+
+    #[test]
+    fn sidebar_scrolls_in_short_windows_and_stays_put_in_tall_ones() {
+        // Short: the links overflow the band, the rail becomes scrollable.
+        let mut view = ShowcaseView::new(1024.0, 600.0);
+        let mut c = Compositor::new();
+        view.render(&mut c);
+        assert!(
+            view.sidebar_scroll.is_scrollable(),
+            "600px window: 14 links must overflow the sidebar band"
+        );
+        let last_before = view.sidebar_item_rects().last().unwrap().y;
+        let band_bottom = view.sidebar_viewport().y + view.sidebar_viewport().h;
+        assert!(
+            last_before + NAV_H > band_bottom,
+            "last link must start below the visible band"
+        );
+
+        // Wheel over the rail scrolls the rail, not the page.
+        let changed = view.handle_event(&WidgetEvent::Scroll {
+            x: 100.0,
+            y: 400.0,
+            delta: 200.0,
+        });
+        assert!(changed, "sidebar scroll must request a redraw");
+        assert!(view.sidebar_scroll.offset() > 0.0);
+        assert_eq!(view.page_offset(), 0.0, "page must not scroll");
+        let last_after = view.sidebar_item_rects().last().unwrap().y;
+        assert!(last_after < last_before, "links must move up");
+
+        // Tall: everything fits, the offset stays clamped at zero.
+        let mut tall = ShowcaseView::new(1200.0, 1000.0);
+        tall.render(&mut c);
+        assert!(!tall.sidebar_scroll.is_scrollable());
+        let changed = tall.handle_event(&WidgetEvent::Scroll {
+            x: 100.0,
+            y: 400.0,
+            delta: 200.0,
+        });
+        assert!(!changed, "nothing to scroll: no redraw");
+        assert_eq!(tall.sidebar_scroll.offset(), 0.0);
+    }
+
+    #[test]
+    fn sidebar_links_clip_to_their_band_and_do_not_hit_outside_it() {
+        let mut view = ShowcaseView::new(1024.0, 600.0);
+        let mut c = Compositor::new();
+        view.render(&mut c);
+        let band = view.sidebar_viewport();
+        let has_band_clip = c.layer(LayerId::DEFAULT).unwrap().nodes().iter().any(|n| {
+            matches!(n, SceneNode::PushClip { x, y, w, h }
+                    if *x == band.x && *y == band.y && *w == band.w && *h == band.h)
+        });
+        assert!(has_band_clip, "sidebar links must be clipped to the band");
+
+        // A point below the band (footer zone) must not hover a link that
+        // scrolled-space-wise would live there.
+        let below = band.y + band.h + 10.0;
+        assert!(below < view.height, "test point must be inside the window");
+        assert!(
+            !view.handle_event(&WidgetEvent::MouseMove { x: 100.0, y: below }),
+            "footer zone must not hover a clipped link"
+        );
+        assert_eq!(view.sidebar_hover, None);
+    }
+
+    #[test]
+    fn sidebar_labels_fit_their_slot_in_the_ui_font() {
+        // The label sits between the icon (x+44) and the index number
+        // (right edge - 22): measure every title in the embedded UI font
+        // (Inclusive Sans 14/600, the base-2sm style the rail draws with).
+        let slot = SIDEBAR_W - 24.0 - 44.0 - 22.0 - 8.0;
+        let style = engine::text::TextStyle::new(14.0)
+            .with_line_height(14.0 * 1.4)
+            .with_weight(600);
+        for section in Section::ALL {
+            let (w, _) = engine::text::TextMeasurer::measure_styled(section.title(), &style, None);
+            assert!(
+                w <= slot,
+                "{section:?} label measures {w:.1}px, over the {slot:.1}px slot"
+            );
+        }
+    }
+
+    #[test]
+    fn every_section_renders_in_short_viewports() {
+        // Width-only probes missed the sidebar overflow: pin short heights.
+        for (w, h) in [(1280.0, 700.0), (1024.0, 600.0)] {
+            let mut view = ShowcaseView::new(w, h);
+            for section in Section::ALL {
+                view.section = section;
+                let mut c = Compositor::new();
+                view.render(&mut c);
+                let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().len();
+                assert!(nodes > 10, "{section:?} at {w}x{h} emitted {nodes} nodes");
+                // Page scroll limits track the real viewport height.
+                assert_eq!(view.page_offset(), 0.0);
+            }
+        }
     }
 
     #[test]
@@ -1262,10 +1429,11 @@ mod tests {
             "nodes must shift up by the scrolled amount (before={y_before}, after={y_after})"
         );
 
-        // The scrolled content is wrapped in a clip to the content viewport.
+        // The scrolled content is wrapped in a clip to the content viewport
+        // (the sidebar band has its own clip at x=0 — find the content one).
         let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes();
         let clip = nodes.iter().find_map(|n| match n {
-            SceneNode::PushClip { x, y, w, h } => Some((*x, *y, *w, *h)),
+            SceneNode::PushClip { x, y, w, h } if *x == SIDEBAR_W => Some((*x, *y, *w, *h)),
             _ => None,
         });
         let clip = clip.expect("section content must be clipped while scrolled");

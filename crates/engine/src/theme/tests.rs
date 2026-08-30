@@ -236,7 +236,9 @@ mod tests {
     }
 
     /// Every HOFF mixin (variables.sass:39-127) with its exact size,
-    /// line-height, weight and letter-spacing (0.025em -> px).
+    /// line-height and weight. Letter spacing: 0 everywhere since the
+    /// Inclusive Sans swap (the sass reference's 0.025em body tracking
+    /// was calibrated for Rubik).
     #[test]
     fn hoff_type_ramp_matches_reference_mixins() {
         let t = Theme::hoff().typography;
@@ -254,11 +256,11 @@ mod tests {
             ("caption-sm", t.caption_sm(), 12.0, 15.96, 600, 0.0),
             ("small", t.small_r(), 10.0, 12.0, 400, 0.0),
             ("small-sm", t.small_sm(), 10.0, 12.0, 600, 0.0),
-            ("body", t.body(), 16.0, 24.0, 400, 0.4),
-            ("body-2r", t.body_2r(), 14.0, 23.8, 400, 0.35),
-            ("body-2m", t.body_2m(), 14.0, 23.8, 500, 0.35),
-            ("body-2b", t.body_2b(), 14.0, 23.8, 500, 0.35),
-            ("hairline", t.hairline(), 12.0, 19.8, 500, 0.3),
+            ("body", t.body(), 16.0, 24.0, 400, 0.0),
+            ("body-2r", t.body_2r(), 14.0, 23.8, 400, 0.0),
+            ("body-2m", t.body_2m(), 14.0, 23.8, 500, 0.0),
+            ("body-2b", t.body_2b(), 14.0, 23.8, 500, 0.0),
+            ("hairline", t.hairline(), 12.0, 19.8, 500, 0.0),
         ];
         for (name, style, size, lh, weight, spacing) in cases {
             assert_eq!(style.font_size, size, "={name}: font-size");
@@ -276,10 +278,12 @@ mod tests {
         }
     }
 
-    /// The body family carries 0.025em tracking; the rest of the
-    /// ramp none — exactly like the reference.
+    /// No ramp style carries tracking since the Inclusive Sans swap
+    /// (2026-08): the font's natural spacing replaces the old Rubik-era
+    /// 0.025em body tracking. The token stays (BODY_LETTER_SPACING_EM)
+    /// so a future face can re-enable tracking in one place.
     #[test]
-    fn hoff_letter_spacing_only_on_body_family() {
+    fn hoff_ramp_has_no_letter_spacing() {
         let t = Theme::hoff().typography;
         for style in [
             t.h4(),
@@ -288,20 +292,13 @@ mod tests {
             t.base_2sm(),
             t.caption_r(),
             t.small_r(),
-        ] {
-            assert_eq!(style.letter_spacing, 0.0);
-        }
-        for style in [
             t.body(),
             t.body_2r(),
             t.body_2m(),
             t.body_2b(),
             t.hairline(),
         ] {
-            assert!(
-                (style.letter_spacing - 0.025 * style.font_size).abs() < 1e-4,
-                "body-family style must track 0.025em"
-            );
+            assert_eq!(style.letter_spacing, 0.0);
         }
     }
 

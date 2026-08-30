@@ -24,8 +24,12 @@ jobs:
       - run: cargo fmt --check
 
   clippy:
-    name: clippy -D warnings
-    runs-on: ubuntu-latest
+    name: clippy -D warnings (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
@@ -35,8 +39,12 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
 
   test:
-    name: test --workspace
-    runs-on: ubuntu-latest
+    name: test --workspace (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     env:
       # debuginfo off: linking every wgpu example with full debug info
       # exceeds the runner's disk and kills the linker with SIGBUS.
@@ -48,7 +56,7 @@ jobs:
       - run: cargo test --workspace
 
   wasm:
-    name: wasm check (showcase)
+    name: wasm check (showcase + nestui)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -56,7 +64,9 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
+      # the cross-platform guard covers both apps that ship to the web.
       - run: cargo check --target wasm32-unknown-unknown -p showcase
+      - run: cargo check --target wasm32-unknown-unknown -p nestui
 
   typos:
     name: typos (advisory)
