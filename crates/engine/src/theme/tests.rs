@@ -276,7 +276,7 @@ mod tests {
         }
     }
 
-    /// The Inter body family carries 0.025em tracking; the rest of the
+    /// The body family carries 0.025em tracking; the rest of the
     /// ramp none — exactly like the reference.
     #[test]
     fn hoff_letter_spacing_only_on_body_family() {

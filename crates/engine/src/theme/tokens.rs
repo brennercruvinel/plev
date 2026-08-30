@@ -15,7 +15,7 @@ pub struct SpacingScale {
     pub xxl: f32,
 }
 
-/// Letter spacing of the HOFF Inter "body" family (`=body`, `=body-2*`,
+/// Letter spacing of the HOFF "body" family (`=body`, `=body-2*`,
 /// `=hairline` — variables.sass): `0.025em`, converted to px per style.
 pub const BODY_LETTER_SPACING_EM: f32 = 0.025;
 

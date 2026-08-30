@@ -7,12 +7,14 @@ mod buttons;
 mod cards;
 mod charts;
 mod dock;
+mod effects;
 mod extras;
 mod forms;
 mod icons_gallery;
 mod lists;
 mod overlays;
 mod theme_gallery;
+mod typography;
 
 pub use forms::EditKey;
 
@@ -51,10 +53,12 @@ pub enum Section {
     App,
     Builder,
     Extras,
+    Typography,
+    Effects,
 }
 
 impl Section {
-    pub const ALL: [Section; 12] = [
+    pub const ALL: [Section; 14] = [
         Section::Cards,
         Section::Buttons,
         Section::Forms,
@@ -67,6 +71,8 @@ impl Section {
         Section::App,
         Section::Builder,
         Section::Extras,
+        Section::Typography,
+        Section::Effects,
     ];
 
     fn title(self) -> &'static str {
@@ -83,6 +89,8 @@ impl Section {
             Section::App => "App",
             Section::Builder => "Builder",
             Section::Extras => "Extras",
+            Section::Typography => "Typography",
+            Section::Effects => "Effects",
         }
     }
 
@@ -100,6 +108,8 @@ impl Section {
             Section::App => "check",
             Section::Builder => "code",
             Section::Extras => "plus",
+            Section::Typography => "info",
+            Section::Effects => "moon",
         }
     }
 
@@ -128,6 +138,12 @@ impl Section {
             }
             Section::Extras => {
                 "App-level widgets: chips, icon buttons, spinners, empty state, split pane."
+            }
+            Section::Typography => {
+                "The HOFF scale set in Inclusive Sans — every weight embedded, every readout measured live."
+            }
+            Section::Effects => {
+                "Analytic shadows, gradients, backdrop blur, clip stack and tessellated vector shapes."
             }
         }
     }
@@ -193,6 +209,8 @@ pub struct ShowcaseView {
     app: app::AppSection,
     builder_tour: builder_tour::BuilderSection,
     extras: extras::ExtrasSection,
+    typography: typography::TypographySection,
+    effects: effects::EffectsSection,
 }
 
 #[derive(Clone, Copy)]
@@ -221,6 +239,8 @@ impl ShowcaseView {
             app: app::AppSection::new(),
             builder_tour: builder_tour::BuilderSection::new(),
             extras: extras::ExtrasSection::new(),
+            typography: typography::TypographySection::new(),
+            effects: effects::EffectsSection::new(),
             theme,
             theme_name: "hoff".to_string(),
             section: Section::Cards,
@@ -287,6 +307,8 @@ impl ShowcaseView {
             Section::App => self.app.content_height(content),
             Section::Builder => self.builder_tour.content_height(content),
             Section::Extras => self.extras.content_height(content),
+            Section::Typography => self.typography.content_height(content),
+            Section::Effects => self.effects.content_height(content, &self.theme),
         }
     }
 
@@ -579,6 +601,8 @@ impl ShowcaseView {
             Section::App => self.app.handle_event(event, content),
             Section::Builder => self.builder_tour.handle_event(event, content),
             Section::Extras => self.extras.handle_event(event, content),
+            Section::Typography => self.typography.handle_event(event, content),
+            Section::Effects => self.effects.handle_event(event, content),
             Section::Theme => {
                 let (r, picked) = self.themes.handle_event(event, content);
                 if let Some(name) = picked {
@@ -754,6 +778,8 @@ impl ShowcaseView {
             Section::App => self.app.render(c, content, &theme),
             Section::Builder => self.builder_tour.render(c, content, &theme),
             Section::Extras => self.extras.render(c, content, &theme),
+            Section::Typography => self.typography.render(c, content, &theme),
+            Section::Effects => self.effects.render(c, content, &theme),
         }
         c.push(SceneNode::PopClip);
 

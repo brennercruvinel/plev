@@ -81,7 +81,7 @@ web build (same pixels as desktop):
 ## run
 
 ```
-cargo run -p showcase                  # the design-system gallery, 12 tabs
+cargo run -p showcase                  # the design-system gallery, 14 tabs
 cargo run -p nestui [file.nest]        # .nest vector-db explorer (drop a file to open)
 cargo run -p ide [path]                # plev-native git client
 cargo run -p prime                     # prime-coherence particle swarm (codepen port)

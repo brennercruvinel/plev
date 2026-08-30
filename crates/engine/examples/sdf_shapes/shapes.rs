@@ -1,6 +1,6 @@
 //! Shape primitives, color palette and typography for the SDF shapes demo.
 
-use engine::compositor::{Compositor, SceneNode};
+use engine::compositor::{Compositor, ShadowParams};
 use engine::path::PathBuilder;
 use engine::text::TextStyle;
 
@@ -84,18 +84,25 @@ pub fn push_ring(comp: &mut Compositor, cx: f32, cy: f32, r_out: f32, r_in: f32,
     comp.draw_path(b.close().fill(color));
 }
 
+/// Analytic soft shadow (`Compositor::draw_shadow`, Evan Wallace
+/// approximation — no blur pass). `layers` is a leftover of the old
+/// stacked-translucent-rects POC and now maps to elevation: more layers,
+/// larger blur and drop. `0` means flat (no shadow).
 pub fn push_shadow(comp: &mut Compositor, x: f32, y: f32, w: f32, h: f32, layers: u32) {
-    for i in 0..layers {
-        let spread = (layers - i) as f32 * 2.5;
-        let alpha = 0.015 + i as f32 * 0.008;
-        comp.push(SceneNode::Rect {
-            x: x - spread + 2.0,
-            y: y - spread + 3.0,
-            w: w + spread * 2.0,
-            h: h + spread * 2.0,
-            color: [0.0, 0.0, 0.0, alpha],
-        });
+    if layers == 0 {
+        return;
     }
+    comp.draw_shadow(ShadowParams {
+        x,
+        y,
+        w,
+        h,
+        corner_radius: 6.0,
+        blur_radius: layers as f32 * 3.0,
+        offset: [0.0, layers as f32 * 0.8],
+        color: [0.0, 0.0, 0.0, 0.45],
+        inset: false,
+    });
 }
 
 pub fn push_star(

@@ -22,7 +22,7 @@ pub struct TextStyle {
     pub line_height: f32,
     pub font_weight: u16,
     /// Extra advance per glyph in px (CSS `letter-spacing`). The HOFF
-    /// reference uses `0.025em` on its Inter body styles.
+    /// reference uses `0.025em` on its body styles.
     pub letter_spacing: f32,
     pub font_family: Option<String>,
 }

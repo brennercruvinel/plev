@@ -7,8 +7,8 @@
 //! expensive to build per call.
 //!
 //! The font set mirrors `TextSystem::new` (system fonts on desktop plus the
-//! embedded faces from `super::fonts`: Inter 400/500/600/700, JetBrains Mono,
-//! Codicons) so measurements match what is rasterized.
+//! embedded faces from `super::fonts`: Inclusive Sans 300/400/500/600/700,
+//! JetBrains Mono, Codicons) so measurements match what is rasterized.
 
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
@@ -430,7 +430,7 @@ impl TextMeasurer {
                 .and_then(|line| line.layout_opt())
                 .and_then(|layout| layout.first())
                 .map(|l| (l.max_ascent, l.max_descent))
-                // Inter-like fallback if shaping produced nothing.
+                // Last-resort fallback if shaping produced nothing.
                 .unwrap_or((style.font_size * 0.97, style.font_size * 0.24));
             let m = LineMetrics {
                 ascent,

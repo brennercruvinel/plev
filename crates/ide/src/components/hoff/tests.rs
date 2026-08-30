@@ -166,7 +166,7 @@ fn glass_fills_background_then_rims() {
 fn measure_text_uses_real_shaping_not_per_char_heuristic() {
     // "Commit" at 14px weight 600 (the button label style). The old
     // per-char heuristic (`chars * size * 0.58`) gave 48.72px; the real
-    // Rubik SemiBold shaping is ~53.7px (verified against the
+    // Inclusive Sans SemiBold shaping is ~53.7px (verified against the
     // rasterizer's FontSystem). Sizing pills with the heuristic made
     // labels overflow their shapes by up to ~10%.
     let style = TextStyle::new(14.0).with_weight(600);

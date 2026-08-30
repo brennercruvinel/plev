@@ -9,7 +9,7 @@ fn text_leaf(content: &str, font_size: f32) -> LayoutItem {
         children: vec![],
         text: Some(TextMeasureSpec {
             content: content.to_string(),
-            style: crate::text::TextStyle::new(font_size).with_family("Inter"),
+            style: crate::text::TextStyle::new(font_size).with_family("Inclusive Sans"),
             max_width: None,
         }),
     }
@@ -33,7 +33,7 @@ fn test_text_leaf_gets_measured_size() {
 
     let (w, h) = crate::text::TextMeasurer::measure_styled(
         "Hello, World!",
-        &crate::text::TextStyle::new(16.0).with_family("Inter"),
+        &crate::text::TextStyle::new(16.0).with_family("Inclusive Sans"),
         None,
     );
     assert!(
@@ -92,7 +92,7 @@ fn test_text_leaf_wraps_in_narrow_container() {
     ];
     let bounds = engine.compute(&items, 800.0, 600.0);
 
-    let style = crate::text::TextStyle::new(16.0).with_family("Inter");
+    let style = crate::text::TextStyle::new(16.0).with_family("Inclusive Sans");
     let (_, single_line_h) = crate::text::TextMeasurer::measure_styled("a", &style, None);
     assert!(bounds[1].width <= 80.0 + 0.5);
     assert!(
