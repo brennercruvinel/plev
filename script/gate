@@ -3,7 +3,26 @@
 # all four. one command per part so the first red names the failing gate.
 set -e
 
+# toolchain guard: rustup honors rust-toolchain.toml; a Homebrew rust ignores
+# it and ships no wasm32 std, so the fourth leg is not checkable there.
+if ! command -v rustup >/dev/null 2>&1; then
+    echo "warning: rustup not found — a Homebrew rust ignores rust-toolchain.toml." >&2
+    echo "         the pinned toolchain is not verified locally; run the gate via" >&2
+    echo "         CI (.github/workflows/ci.yml) or install rustup." >&2
+fi
+
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --check
-cargo check --target wasm32-unknown-unknown -p showcase
+
+# wasm cross-platform guard. Skippable only when the std for the target is
+# genuinely absent (Homebrew rust); with rustup the target comes from
+# rust-toolchain.toml and this leg always runs.
+if command -v rustup >/dev/null 2>&1; then
+    cargo check --target wasm32-unknown-unknown -p showcase
+elif [ -d "$(rustc --print sysroot)/lib/rustlib/wasm32-unknown-unknown" ]; then
+    cargo check --target wasm32-unknown-unknown -p showcase
+else
+    echo "warning: skipping the wasm32 check — rust-std for wasm32-unknown-unknown" >&2
+    echo "         is not installed (Homebrew rust). the leg runs in CI." >&2
+fi

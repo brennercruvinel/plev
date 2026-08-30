@@ -1,4 +1,9 @@
 //! View trait and built-in view implementations.
+//!
+//! **Experimental** -- not the official app pattern (state in structs +
+//! retained widgets + explicit invalidation is; the showcase is the
+//! template). Do not build new app code on this module without an ADR
+//! (docs/adr/official-app-pattern.md).
 
 mod context;
 #[cfg(test)]

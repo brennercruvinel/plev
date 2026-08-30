@@ -22,12 +22,22 @@ update all three together when structure changes.
 | input | crates/engine/src/input/ | pointer state, hit regions, touch tracker + gesture recognizer, touch-to-pointer synth, scroll, dispatch |
 | animation | crates/engine/src/animation/ | Tween, FrameClock, easing (dt-based; web_time) |
 | perf | crates/engine/src/perf/ | PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None) |
-| signal | crates/engine/src/signal/ | reactive primitives (create_signal, runtime) |
+| signal | crates/engine/src/signal/ | reactive primitives (experimental — see below) |
 | window | crates/engine/src/window/ | App runner: event loop, render-on-demand, render passes, wasm canvas |
 | theme | crates/engine/src/theme/ | measured hoff tokens, oklch tooling, intents |
-| ui | crates/engine/src/ui/ | retained widgets (~15) + immediate builder + lucide icons |
-| builder | crates/engine/src/builder/ | declarative element tree (div/text/button), layout pipeline, emit |
-| component/view | crates/engine/src/component/, crates/engine/src/view/ | Lifecycle trait, View trait, ViewContext |
+| ui | crates/engine/src/ui/ | retained widgets (~20) + immediate builder + lucide icons |
+| builder | crates/engine/src/builder/ | declarative element tree (div/text/button), layout pipeline, emit — supported for prototypes/demos |
+| component/view | crates/engine/src/component/, crates/engine/src/view/ | Lifecycle trait, View trait, ViewContext (experimental — see below) |
+
+## building an app: the official pattern
+
+one pattern ships: **state in plain structs + retained widgets + explicit
+invalidation** (ADR official-app-pattern). the showcase is the template:
+section structs own state, widgets return EventResult, handlers merge
+results and report `changed`, tick advances animations gated by the
+visible section. the declarative builder is supported for prototypes and
+demos. `view`, `component`, `signal` and `narrate` are experimental — no
+new app code without an ADR.
 | platform | crates/engine/src/platform/ | safe areas (mod), ime, app lifecycle |
 
 apps consume the engine; they never reimplement engine capabilities (ADR

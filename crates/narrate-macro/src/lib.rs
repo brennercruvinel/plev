@@ -1,3 +1,7 @@
+//! Proc-macro backend for the experimental narrate UI dsl. **Not the
+//! official app pattern** (docs/adr/official-app-pattern.md) -- do not
+//! build new app code on this crate without an ADR.
+
 mod codegen;
 mod parse;
 

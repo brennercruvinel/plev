@@ -8,6 +8,14 @@ commit: 21fdc8c
 
 # embed every font weight the UI uses, and pin the default families
 
+> updated 2026-08-30: rubik was replaced by inclusive sans (SIL OFL, five
+> upright weights 300–700 embedded; italics upstream but unused), and inter
+> was dropped — the ui family is now one, not two. the pinned default is
+> `db.set_sans_serif_family("Inclusive Sans")` and the kill test is now
+> `default_family_resolves_inclusive_sans_faces_for_all_ui_weights`. the
+> decision below (embed every weight, pin the default families) stands
+> unchanged.
+
 ## context
 
 the UI requested inter at weights 500, 600 and 700 while only the 400 face

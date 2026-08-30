@@ -104,6 +104,12 @@ status usados: `reference` (conhecimento congelado de uma sessao), `accepted` (d
 |------|-----|--------|--------|
 | 2026-07-13 | [one-knowledge-tree-and-a-minimal-root](one-knowledge-tree-and-a-minimal-root.md) | accepted | docs/ como arvore unica de conhecimento (kdb renomeado, arc absorvido de doc/), web/ dono do alvo web, script/ dono dos comandos, raiz so com o que as ferramentas exigem la |
 
+## padroes de app (2026)
+
+| data | adr | status | resumo |
+|------|-----|--------|--------|
+| 2026-08-30 | [official-app-pattern](official-app-pattern.md) | accepted | padrao oficial: estado em structs + widgets retidos + invalidacao explicita (template: showcase); builder para prototipos/demos; view/component/signal/narrate experimentais |
+
 ## demos (2025)
 
 | data | adr | status | resumo |

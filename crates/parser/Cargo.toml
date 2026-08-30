@@ -6,7 +6,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish = false
-description = "Universal UI transpiler PoC: react/tsx + gpui sources to plev builder code, with an honest droplist"
+description = "UI transpiler PoC (experimental): react/tsx + gpui sources to plev builder code, with an honest droplist"
 
 [dependencies]
 tree-sitter.workspace = true

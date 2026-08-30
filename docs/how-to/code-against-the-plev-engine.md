@@ -14,6 +14,16 @@ in this repository, shipped a visible defect, and was then root-caused.
 agents and developers should treat violations as defects even when the
 screen currently looks correct.
 
+## the official app pattern
+
+state lives in plain structs, ui is built from retained widgets
+(`engine::ui::widgets`), and every visible mutation invalidates
+(`EventResult::changed` / request redraw). the showcase is the template
+app. the declarative builder (`engine::builder`) is supported for
+prototypes and demos; `view`, `component`, `signal` and `narrate` are
+experimental — do not start app code on them
+(docs/adr/official-app-pattern.md).
+
 ## before writing anything
 
 check whether the engine already provides the capability. the engine had
