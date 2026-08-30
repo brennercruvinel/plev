@@ -33,6 +33,17 @@ pub struct TextSystem {
     // Staging buffers used during resolve_for_layer
     pub(super) staging_vertices: Vec<TextVertex>,
     pub(super) staging_indices: Vec<u32>,
+    /// Physical pixels per logical pixel. Glyph bitmaps are rasterized at
+    /// `font_size * raster_scale` so text stays crisp on HiDPI surfaces;
+    /// quad geometry stays in logical coordinates (the projection matrix
+    /// scales it back up 1:1). Set via [`Self::set_raster_scale`].
+    pub(super) raster_scale: f32,
+    /// Faces registered by [`super::fonts::register_embedded_fonts`]. Any
+    /// glyph rasterized from a face outside this set came from a system
+    /// fallback — a silent font leak we want to hear about.
+    pub(super) embedded_fonts: FxHashSet<cosmic_text::fontdb::ID>,
+    /// font_ids already warned about (warn once per face).
+    pub(super) warned_fallback_fonts: FxHashSet<cosmic_text::fontdb::ID>,
 }
 
 pub(super) const INITIAL_ATLAS_SIZE: u32 = 512;
@@ -56,7 +67,7 @@ impl TextSystem {
             cosmic_text::fontdb::Database::new(),
         );
 
-        super::fonts::register_embedded_fonts(font_system.db_mut());
+        let embedded_fonts = super::fonts::register_embedded_fonts(font_system.db_mut());
 
         let swash_cache = SwashCache::new();
         let allocator = BucketedAtlasAllocator::new(size2(
@@ -106,6 +117,24 @@ impl TextSystem {
             keys_this_frame: FxHashSet::default(),
             staging_vertices: Vec::new(),
             staging_indices: Vec::new(),
+            raster_scale: 1.0,
+            embedded_fonts: embedded_fonts.into_iter().collect(),
+            warned_fallback_fonts: FxHashSet::default(),
+        }
+    }
+
+    /// Physical pixels per logical pixel (HiDPI raster scale). Glyph bitmaps
+    /// are rasterized at `font_size * scale`; when the scale changes the
+    /// cached bitmaps are invalid and the glyph cache is reset (shaping is
+    /// scale-independent and survives).
+    pub fn set_raster_scale(&mut self, scale: f32) {
+        let scale = scale.max(0.01);
+        if (self.raster_scale - scale).abs() > 1e-6 {
+            log::info!("Text raster scale: {} -> {scale}", self.raster_scale);
+            self.raster_scale = scale;
+            self.glyph_cache.clear();
+            self.allocator =
+                BucketedAtlasAllocator::new(size2(self.atlas_size as i32, self.atlas_size as i32));
         }
     }
 

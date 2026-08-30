@@ -47,10 +47,35 @@ pub(super) fn emit_glyphs(
     y: f32,
     color: [f32; 4],
 ) {
+    // Glyphs are rasterized at physical resolution (`raster_scale`); quad
+    // geometry is mapped back to logical coordinates, which the projection
+    // matrix scales 1:1 onto the surface. Rasterizing at scale 1.0 here
+    // would stretch small bitmaps over HiDPI pixels — visibly blurry text.
+    let scale = sys.raster_scale;
     for run in buffer.layout_runs() {
         let line_y = y + run.line_y;
         for glyph in run.glyphs.iter() {
-            let physical = glyph.physical((x, line_y), 1.0);
+            // Silent font leak detector: a glyph shaped into a face outside
+            // the embedded set came from the system fallback chain — on
+            // screen that reads as "some text is a different font". Warn
+            // once per face, with the offending cluster for debugging.
+            if !sys.embedded_fonts.is_empty()
+                && !sys.embedded_fonts.contains(&glyph.font_id)
+                && sys.warned_fallback_fonts.insert(glyph.font_id)
+            {
+                let family = sys
+                    .font_system
+                    .db()
+                    .face(glyph.font_id)
+                    .and_then(|f| f.families.first().map(|(name, _)| name.clone()))
+                    .unwrap_or_else(|| "<unknown>".to_string());
+                let cluster = run.text.get(glyph.start..glyph.end).unwrap_or("?");
+                log::warn!(
+                    "text fallback: cluster {cluster:?} rasterized from non-embedded \
+                     face '{family}' — check family/weight/glyph coverage"
+                );
+            }
+            let physical = glyph.physical((x * scale, line_y * scale), scale);
             let cache_key = GlyphCacheKey::from_cosmic(&physical.cache_key);
             sys.glyphs_in_use.insert(cache_key);
 
@@ -74,10 +99,10 @@ pub(super) fn emit_glyphs(
                 continue;
             }
 
-            let gx = physical.x as f32 + entry.left;
-            let gy = physical.y as f32 - entry.top;
-            let gw = entry.width as f32;
-            let gh = entry.height as f32;
+            let gx = (physical.x as f32 + entry.left) / scale;
+            let gy = (physical.y as f32 - entry.top) / scale;
+            let gw = entry.width as f32 / scale;
+            let gh = entry.height as f32 / scale;
 
             let atlas = sys.atlas_size as f32;
             let u0 = entry.atlas_x as f32 / atlas;

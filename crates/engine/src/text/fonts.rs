@@ -26,7 +26,14 @@
 use cosmic_text::fontdb::Database;
 
 /// Register every embedded face and pin the generic family defaults.
-pub(super) fn register_embedded_fonts(db: &mut Database) {
+/// Returns the fontdb IDs of the embedded faces so the rasterizer can
+/// detect silent fallbacks to non-embedded (system) faces.
+pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<cosmic_text::fontdb::ID> {
+    // load_font_data returns (); snapshot the face set to learn which IDs
+    // the embedded faces got (desktop DBs already hold system faces).
+    let before: std::collections::HashSet<cosmic_text::fontdb::ID> =
+        db.faces().map(|f| f.id).collect();
+
     // Inclusive Sans (SIL OFL, assets/fonts/LICENSE-InclusiveSans-OFL.txt) — UI sans.
     db.load_font_data(include_bytes!("../../assets/fonts/InclusiveSans-Light.ttf").to_vec());
     db.load_font_data(include_bytes!("../../assets/fonts/InclusiveSans-Regular.ttf").to_vec());
@@ -48,4 +55,8 @@ pub(super) fn register_embedded_fonts(db: &mut Database) {
     // sans-serif to Inclusive Sans for deterministic shaping.
     db.set_sans_serif_family("Inclusive Sans");
     db.set_monospace_family("JetBrains Mono");
+    db.faces()
+        .filter(|f| !before.contains(&f.id))
+        .map(|f| f.id)
+        .collect()
 }

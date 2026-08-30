@@ -32,3 +32,12 @@ configurar a surface com physical pixels.
 3. `ScaleFactorChanged` deve ser tratado para atualizar o fator.
 4. o pattern e: surface em physical, projecao em logical, coordenadas
    de scene graph em logical. a GPU faz o upscale automaticamente.
+
+> **atualizacao 2026-08-30:** a consequencia 4 valia para geometria
+> (SDF/vetorial escala sem perda) mas NAO para texto: glyph bitmaps eram
+> rasterizados em tamanho logical e esticados pela projecao — texto
+> visivelmente borrado em retina. corrigido: `TextSystem` rasteriza
+> glyphs em `font_size * raster_scale` (derivado de `clip_scale()` no
+> `resolve_layer_text`, central para todos os apps) e mapeia os quads de
+> volta para logical. o detector de fallback de fonte (warn quando um
+> glyph rasteriza de uma face nao-embutida) foi adicionado junto.
