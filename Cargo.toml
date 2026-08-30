@@ -1,0 +1,37 @@
+# Spellbook is two crates, mirroring how plev separates a backend from its app
+# (crates/git + crates/ide): `spellbook-core` owns the data and knows nothing
+# about the screen, `spellbook` is the plev UI and never blocks on IO.
+[workspace]
+resolver = "2"
+members = ["crates/spellbook", "crates/spellbook-core"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["Brenner Cruvinel <brennertalks@gmail.com>"]
+
+[workspace.dependencies]
+spellbook-core = { path = "crates/spellbook-core" }
+# The engine lives in its own repository and its own cargo workspace; the path
+# dependency inherits plev's `workspace.dependencies` from there, so the
+# version pins for wgpu/winit/cosmic-text stay owned by plev alone.
+engine = { path = "../hoff/plevdev/crates/engine" }
+winit = { version = "0.30", features = ["rwh_06"] }
+wgpu = "28"
+rusqlite = { version = "0.31", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "5"
+ureq = { version = "2", default-features = false, features = ["tls", "gzip"] }
+flate2 = "1"
+log = "0.4"
+env_logger = "0.11"
+pollster = "0.4"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+[profile.dev.package."*"]
+opt-level = 2

@@ -1,0 +1,16 @@
+[package]
+name = "spellbook-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Spellbook data layer: card index, collection, decks - no UI"
+
+[dependencies]
+rusqlite.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+dirs.workspace = true
+ureq.workspace = true
+flate2.workspace = true
+log.workspace = true
