@@ -45,7 +45,7 @@ impl ListsSection {
                 7,
                 "assets",
                 vec![
-                    TreeNode::leaf(8, "Inter-Regular.ttf"),
+                    TreeNode::leaf(8, "InclusiveSans-Regular.ttf"),
                     TreeNode::leaf(9, "codicons.ttf"),
                 ],
             ),

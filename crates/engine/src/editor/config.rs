@@ -10,7 +10,7 @@ pub struct EditorConfig {
     /// Height of one text line in logical pixels. Every line has this exact
     /// height — that uniformity is what makes line virtualization O(visible).
     pub line_height: f32,
-    /// Font family for code; `None` uses the engine default (Inter).
+    /// Font family for code; `None` uses the engine default (Inclusive Sans).
     pub font_family: Option<String>,
     /// Whether to draw the line-number gutter.
     pub show_gutter: bool,

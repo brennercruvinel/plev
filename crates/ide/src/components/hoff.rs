@@ -191,8 +191,8 @@ pub fn glass(
 }
 
 /// Real single-line text width via the engine's shaper
-/// ([`engine::text::TextMeasurer`]): same `FontSystem`, faces (Rubik default
-/// family) and cache as the rasterizer, so a shape sized with this never
+/// ([`engine::text::TextMeasurer`]): same `FontSystem`, faces (Inclusive Sans
+/// default family) and cache as the rasterizer, so a shape sized with this never
 /// disagrees with the glyphs drawn on top of it.
 ///
 /// Golden rule: build ONE [`TextStyle`] per label and use it BOTH here and

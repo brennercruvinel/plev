@@ -137,7 +137,7 @@ fn react_droplist_tells_the_truth() {
     has("@keyframes button-circle");
     has("conditional class previewBorder");
     has("mask-image"); // gradient border fades
-    has("font-family"); // Rubik is not an embedded face
+    has("font-family"); // the reference font is not an embedded face
     has(".hoff-research-cardSquare"); // modifier variants
     has(".hoff-research-cardHorizontal");
     has("@media"); // responsive variants
