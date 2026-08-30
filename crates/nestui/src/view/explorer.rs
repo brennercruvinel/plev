@@ -159,6 +159,8 @@ impl Explorer {
         std::mem::take(&mut self.pick_requested)
     }
 
+    /// Drag-and-drop hover feedback (native only: no file drag on the web).
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn set_file_hover(&mut self, hovering: bool) {
         self.file_hover = hovering;
     }
