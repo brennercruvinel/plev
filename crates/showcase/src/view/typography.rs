@@ -143,10 +143,14 @@ impl TypographySection {
             text: "JetBrains Mono — code, readouts, data".to_string(),
         });
         right.push(Line::Group("UNICODE"));
+        // Only glyphs the embedded faces actually cover: anything else
+        // silently rasterizes from a system font (the engine warns about
+        // non-embedded faces at raster time). Inclusive Sans is Latin-only;
+        // CJK/math/Greek demos would be that fallback, not our typography.
         for text in [
             "Café naïve résumé façade über",
-            "漢字ひらがなカタカナ",
-            "∀x ∈ ℝ: x² ≥ 0 | αβγδ | ←↑→↓",
+            "¿Qué? ¡Sí! «guillemets» „quotes“ — dash …",
+            "€ £ ¥ © ® ™ · • ° àéîõü",
         ] {
             right.push(Line::Plain {
                 style: TextStyle::new(14.0).with_line_height(20.0),

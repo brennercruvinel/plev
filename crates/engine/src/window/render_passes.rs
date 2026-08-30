@@ -30,11 +30,19 @@ fn command_scissor(
 /// Resolve text for every dirty layer, one `resolve_for_layer` call per
 /// clip group so clipped text (scrolled lists, panels) scissors with its
 /// container. Shared by the built-in render loop and standalone apps.
+///
+/// Also syncs the glyph raster scale with the active projection: scenes
+/// laid out in logical coordinates on a HiDPI surface need glyph bitmaps
+/// at physical resolution, or text renders blurry (bitmaps stretched by
+/// the projection). Derived here so every app gets it without plumbing.
 pub fn resolve_layer_text(
     compositor: &mut crate::compositor::Compositor,
     gpu: &crate::gpu::GpuContext,
     text_system: &mut crate::text::TextSystem,
 ) {
+    let (scale, _) = gpu.clip_scale();
+    text_system.set_raster_scale(scale);
+
     let layer_info: Vec<_> = compositor
         .layers()
         .iter()

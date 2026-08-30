@@ -684,18 +684,20 @@ impl Card {
                 c.push_to_layer(layer, node);
             }
         }
-        // Play glyph + badge render above the image (text pass).
+        // Play icon + badge render above the image. The triangle is the
+        // vector Lucide icon, not a text glyph: ▶ (U+25B6) is not covered
+        // by the embedded UI faces and would silently rasterize from a
+        // system font.
         let ramp = TypographyScale::hoff();
-        self.text(
-            c,
-            layer,
-            "\u{25B6}",
-            &TextStyle::new(20.0).with_line_height(24.0),
-            box_r.x + box_r.w / 2.0 - 8.0,
-            box_r.y + box_r.h / 2.0 - 12.0,
+        if let Some(icon) = crate::ui::icons::icon_at(
+            "play",
+            22.0,
             text.0,
-            None,
-        );
+            box_r.x + box_r.w / 2.0 - 11.0,
+            box_r.y + box_r.h / 2.0 - 11.0,
+        ) {
+            c.push_to_layer(layer, icon);
+        }
         if let Some(badge) = badge {
             self.text(
                 c,
