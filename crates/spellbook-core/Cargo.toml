@@ -13,4 +13,5 @@ serde_json.workspace = true
 dirs.workspace = true
 ureq.workspace = true
 flate2.workspace = true
+image.workspace = true
 log.workspace = true

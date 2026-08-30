@@ -10,3 +10,8 @@
 //! decides what runs where.
 
 pub mod cards;
+pub mod collection;
+pub mod data;
+pub mod decks;
+pub mod games;
+pub mod wishlist;

@@ -9,7 +9,7 @@
 //! one — readers keep using the old file until the moment it's replaced.
 
 use flate2::read::GzDecoder;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use serde_json::Value;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::sync::Mutex;
@@ -73,7 +73,6 @@ fn set_progress(task: &str, percent: f64) {
     s.percent = percent.clamp(0.0, 100.0);
 }
 
-
 /// Kicks off the update on a worker thread. Returns false if one is already in flight.
 pub fn start() -> bool {
     {
@@ -120,17 +119,25 @@ fn bulk_listing() -> Result<(BulkFile, BulkFile), String> {
         .into_string()
         .map_err(|e| e.to_string())?;
     let v: Value = serde_json::from_str(&body).map_err(|e| e.to_string())?;
-    let items = v.get("data").and_then(|d| d.as_array()).ok_or("resposta inesperada do Scryfall")?;
+    let items = v
+        .get("data")
+        .and_then(|d| d.as_array())
+        .ok_or("resposta inesperada do Scryfall")?;
 
     let pick = |kind: &str| -> Option<BulkFile> {
-        let it = items.iter().find(|x| x.get("type").and_then(|t| t.as_str()) == Some(kind))?;
+        let it = items
+            .iter()
+            .find(|x| x.get("type").and_then(|t| t.as_str()) == Some(kind))?;
         Some(BulkFile {
             uri: it
                 .get("download_uri")
                 .or_else(|| it.get("jsonl_download_uri"))?
                 .as_str()?
                 .to_string(),
-            size: it.get("compressed_size").and_then(|s| s.as_u64()).unwrap_or(0),
+            size: it
+                .get("compressed_size")
+                .and_then(|s| s.as_u64())
+                .unwrap_or(0),
         })
     };
     let oracle = pick("oracle_cards").ok_or("bulk oracle_cards não encontrado")?;
@@ -139,7 +146,11 @@ fn bulk_listing() -> Result<(BulkFile, BulkFile), String> {
 }
 
 /// Streams one bulk file to disk, reporting bytes read so the bar moves during the long download.
-fn download(file: &BulkFile, dest: &std::path::Path, on_bytes: &mut dyn FnMut(u64)) -> Result<(), String> {
+fn download(
+    file: &BulkFile,
+    dest: &std::path::Path,
+    on_bytes: &mut dyn FnMut(u64),
+) -> Result<(), String> {
     let resp = ureq::get(&file.uri)
         .set("User-Agent", USER_AGENT)
         .call()
@@ -237,20 +248,29 @@ fn face(v: &Value, k: &str) -> Option<String> {
 /// cards all carry two names but a single printed face, so they get None — offering to "flip"
 /// them would promise a side that doesn't exist.
 fn image_uri_back(v: &Value) -> Option<String> {
-    const TWO_SIDED: [&str; 5] =
-        ["transform", "modal_dfc", "double_faced_token", "reversible_card", "art_series"];
+    const TWO_SIDED: [&str; 5] = [
+        "transform",
+        "modal_dfc",
+        "double_faced_token",
+        "reversible_card",
+        "art_series",
+    ];
     let layout = s(v, "layout")?;
     if !TWO_SIDED.contains(&layout.as_str()) {
         return None;
     }
     let faces = v.get("card_faces")?.as_array()?;
     let back = faces.get(1)?.get("image_uris")?;
-    s(back, "normal").or_else(|| s(back, "large")).or_else(|| s(back, "small"))
+    s(back, "normal")
+        .or_else(|| s(back, "large"))
+        .or_else(|| s(back, "small"))
 }
 
 fn image_uri(v: &Value) -> Option<String> {
     let from = |o: &Value| {
-        s(o, "normal").or_else(|| s(o, "large")).or_else(|| s(o, "small"))
+        s(o, "normal")
+            .or_else(|| s(o, "large"))
+            .or_else(|| s(o, "small"))
     };
     if let Some(iu) = v.get("image_uris") {
         if let Some(u) = from(iu) {
@@ -278,7 +298,8 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
     let _ = std::fs::remove_file(&tmp);
     let con = Connection::open(&tmp).map_err(|e| e.to_string())?;
     con.execute_batch(INDEX_SCHEMA).map_err(|e| e.to_string())?;
-    con.execute_batch("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF;").ok();
+    con.execute_batch("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF;")
+        .ok();
 
     // ---- cards, from oracle_cards ----
     let mut n_cards = 0i64;
@@ -297,7 +318,9 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
             if line.is_empty() || line == "[" || line == "]" {
                 continue;
             }
-            let Ok(c) = serde_json::from_str::<Value>(line) else { continue };
+            let Ok(c) = serde_json::from_str::<Value>(line) else {
+                continue;
+            };
             if c.get("object").and_then(|o| o.as_str()) != Some("card") {
                 continue;
             }
@@ -312,24 +335,37 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
                 face(&c, "power"),
                 face(&c, "toughness"),
                 s(&c, "loyalty"),
-                c.get("colors").and_then(|x| x.as_array())
+                c.get("colors")
+                    .and_then(|x| x.as_array())
                     .map(|a| a.iter().filter_map(|v| v.as_str()).collect::<String>())
                     .unwrap_or_default(),
-                c.get("color_identity").and_then(|x| x.as_array())
+                c.get("color_identity")
+                    .and_then(|x| x.as_array())
                     .map(|a| a.iter().filter_map(|v| v.as_str()).collect::<String>())
                     .unwrap_or_default(),
                 s(&c, "rarity"),
                 s(&c, "set"),
-                c.get("keywords").and_then(|x| x.as_array())
-                    .map(|a| a.iter().filter_map(|v| v.as_str()).collect::<Vec<_>>().join(","))
+                c.get("keywords")
+                    .and_then(|x| x.as_array())
+                    .map(|a| a
+                        .iter()
+                        .filter_map(|v| v.as_str())
+                        .collect::<Vec<_>>()
+                        .join(","))
                     .unwrap_or_default(),
-                c.get("legalities").and_then(|l| l.get("commander")).and_then(|x| x.as_str()),
-                c.get("prices").and_then(|p| p.get("usd")).and_then(|x| x.as_str()),
+                c.get("legalities")
+                    .and_then(|l| l.get("commander"))
+                    .and_then(|x| x.as_str()),
+                c.get("prices")
+                    .and_then(|p| p.get("usd"))
+                    .and_then(|x| x.as_str()),
                 c.get("reserved").and_then(|x| x.as_bool()).unwrap_or(false) as i64,
                 c.get("edhrec_rank").and_then(|x| x.as_i64()),
                 s(&c, "scryfall_uri"),
                 image_uri(&c),
-                c.get("game_changer").and_then(|x| x.as_bool()).unwrap_or(false) as i64,
+                c.get("game_changer")
+                    .and_then(|x| x.as_bool())
+                    .unwrap_or(false) as i64,
                 fold_text(&name),
                 s(&c, "layout"),
                 image_uri_back(&c),
@@ -349,12 +385,20 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
             .prepare("INSERT INTO names_localized VALUES (?1,?2,?3,?4,?5,?6)")
             .map_err(|e| e.to_string())?;
         let mut seen = std::collections::HashSet::new();
-        let mut sets: std::collections::HashMap<String, (String, Option<String>, Option<String>, i64)> =
-            std::collections::HashMap::new();
+        let mut sets: std::collections::HashMap<
+            String,
+            (String, Option<String>, Option<String>, i64),
+        > = std::collections::HashMap::new();
         #[allow(clippy::type_complexity)]
         let mut printings: std::collections::HashMap<
             (String, String, String),
-            (Option<String>, Option<String>, Option<String>, Option<String>, Option<String>),
+            (
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                Option<String>,
+            ),
         > = std::collections::HashMap::new();
         let f = std::fs::File::open(all).map_err(|e| e.to_string())?;
         for line in BufReader::new(GzDecoder::new(f)).lines() {
@@ -363,7 +407,9 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
             if line.is_empty() || line == "[" || line == "]" {
                 continue;
             }
-            let Ok(c) = serde_json::from_str::<Value>(line) else { continue };
+            let Ok(c) = serde_json::from_str::<Value>(line) else {
+                continue;
+            };
             // English printings only. The artwork is what varies here, and a card's non-English
             // printings reuse the same illustrations — carrying all 538k rows would multiply the
             // table for no extra art.
@@ -390,21 +436,27 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
             // Sets are collected before the language filter: a set whose cards were never printed
             // in one of our eight languages still needs to be pickable in the set autocomplete.
             if let (Some(code), Some(set_name)) = (s(&c, "set"), s(&c, "set_name")) {
-                let e = sets.entry(code).or_insert_with(|| {
-                    (set_name, s(&c, "released_at"), s(&c, "set_type"), 0i64)
-                });
+                let e = sets
+                    .entry(code)
+                    .or_insert_with(|| (set_name, s(&c, "released_at"), s(&c, "set_type"), 0i64));
                 e.3 += 1;
             }
 
-            let Some(lang) = c.get("lang").and_then(|l| l.as_str()) else { continue };
-            let Some(rank) = lang_rank(lang) else { continue };
+            let Some(lang) = c.get("lang").and_then(|l| l.as_str()) else {
+                continue;
+            };
+            let Some(rank) = lang_rank(lang) else {
+                continue;
+            };
             let pn = s(&c, "printed_name").or_else(|| {
                 let faces = c.get("card_faces")?.as_array()?;
                 let parts: Vec<String> =
                     faces.iter().filter_map(|f| s(f, "printed_name")).collect();
                 (!parts.is_empty()).then(|| parts.join(" // "))
             });
-            let (Some(pn), Some(oid)) = (pn, s(&c, "oracle_id")) else { continue };
+            let (Some(pn), Some(oid)) = (pn, s(&c, "oracle_id")) else {
+                continue;
+            };
             // One row per (name, card, language): the same printed name recurs across every set
             // a card was printed in, and storing each would multiply the table for no gain.
             if !seen.insert((pn.to_lowercase(), oid.clone(), lang.to_string())) {
@@ -421,7 +473,14 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
             .map_err(|e| e.to_string())?;
         for (code, (name, released, set_type, cards)) in &sets {
             set_stmt
-                .execute(params![code, name, fold_text(name), released, set_type, cards])
+                .execute(params![
+                    code,
+                    name,
+                    fold_text(name),
+                    released,
+                    set_type,
+                    cards
+                ])
                 .map_err(|e| e.to_string())?;
         }
         drop(set_stmt);
@@ -431,7 +490,9 @@ fn build_index(oracle: &std::path::Path, all: &std::path::Path) -> Result<(i64, 
             .map_err(|e| e.to_string())?;
         for ((oid, set_code, iid), (num, artist, img, img_back, released)) in &printings {
             pr_stmt
-                .execute(params![oid, set_code, iid, num, artist, img, img_back, released])
+                .execute(params![
+                    oid, set_code, iid, num, artist, img, img_back, released
+                ])
                 .map_err(|e| e.to_string())?;
         }
         drop(pr_stmt);
@@ -491,8 +552,12 @@ fn cache_images(on_progress: &mut dyn FnMut(usize, usize, u64)) -> Result<(u64, 
     std::thread::scope(|scope| {
         for _ in 0..IMAGE_WORKERS {
             let (next, fetched, failed, bytes, gate, targets) = (
-                next.clone(), fetched.clone(), failed.clone(),
-                bytes.clone(), gate.clone(), targets.clone(),
+                next.clone(),
+                fetched.clone(),
+                failed.clone(),
+                bytes.clone(),
+                gate.clone(),
+                targets.clone(),
             );
             scope.spawn(move || {
                 let agent = ureq::AgentBuilder::new()
@@ -563,7 +628,9 @@ fn fetch_image(agent: &ureq::Agent, url: &str, dest: &std::path::Path) -> Result
         std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
     }
     let mut buf = Vec::new();
-    resp.into_reader().read_to_end(&mut buf).map_err(|e| e.to_string())?;
+    resp.into_reader()
+        .read_to_end(&mut buf)
+        .map_err(|e| e.to_string())?;
     // Write-then-rename: a crash mid-write must not leave a truncated JPEG that the cache would
     // then happily serve forever, since "the file exists" is the whole skip condition.
     let tmp = dest.with_extension("part");

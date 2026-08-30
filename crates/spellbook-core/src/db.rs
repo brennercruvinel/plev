@@ -75,10 +75,26 @@ CREATE TABLE IF NOT EXISTS activity (
 
 /// (table, column, DDL) — mirrors MIGRATIONS in webapp/db.py.
 const MIGRATIONS: &[(&str, &str, &str)] = &[
-    ("collection", "artist", "ALTER TABLE collection ADD COLUMN artist TEXT"),
-    ("decks", "commander_name_2", "ALTER TABLE decks ADD COLUMN commander_name_2 TEXT"),
-    ("deck_cards", "oracle_id", "ALTER TABLE deck_cards ADD COLUMN oracle_id TEXT"),
-    ("collection", "oracle_id", "ALTER TABLE collection ADD COLUMN oracle_id TEXT"),
+    (
+        "collection",
+        "artist",
+        "ALTER TABLE collection ADD COLUMN artist TEXT",
+    ),
+    (
+        "decks",
+        "commander_name_2",
+        "ALTER TABLE decks ADD COLUMN commander_name_2 TEXT",
+    ),
+    (
+        "deck_cards",
+        "oracle_id",
+        "ALTER TABLE deck_cards ADD COLUMN oracle_id TEXT",
+    ),
+    (
+        "collection",
+        "oracle_id",
+        "ALTER TABLE collection ADD COLUMN oracle_id TEXT",
+    ),
     ("decks", "tags", "ALTER TABLE decks ADD COLUMN tags TEXT"),
 ];
 
@@ -127,10 +143,12 @@ pub fn log_activity(con: &Connection, type_: &str, description: &str) {
 /// A deck's name, or None if the id doesn't exist — used for the messages in the activity log.
 pub fn deck_name(con: &Connection, deck_id: i64) -> Option<String> {
     use rusqlite::OptionalExtension;
-    con.query_row("SELECT name FROM decks WHERE id = ?1", [deck_id], |r| r.get(0))
-        .optional()
-        .ok()
-        .flatten()
+    con.query_row("SELECT name FROM decks WHERE id = ?1", [deck_id], |r| {
+        r.get(0)
+    })
+    .optional()
+    .ok()
+    .flatten()
 }
 
 /// Read-only handle to the card index, or None when it hasn't been built yet (fresh install).
@@ -163,22 +181,70 @@ fn unicode_decompose(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 8);
     for c in s.chars() {
         match c {
-            'À'|'Á'|'Â'|'Ã'|'Ä'|'Å' => { out.push('A'); out.push('\u{0301}'); }
-            'à'|'á'|'â'|'ã'|'ä'|'å' => { out.push('a'); out.push('\u{0301}'); }
-            'È'|'É'|'Ê'|'Ë' => { out.push('E'); out.push('\u{0301}'); }
-            'è'|'é'|'ê'|'ë' => { out.push('e'); out.push('\u{0301}'); }
-            'Ì'|'Í'|'Î'|'Ï' => { out.push('I'); out.push('\u{0301}'); }
-            'ì'|'í'|'î'|'ï' => { out.push('i'); out.push('\u{0301}'); }
-            'Ò'|'Ó'|'Ô'|'Õ'|'Ö' => { out.push('O'); out.push('\u{0301}'); }
-            'ò'|'ó'|'ô'|'õ'|'ö' => { out.push('o'); out.push('\u{0301}'); }
-            'Ù'|'Ú'|'Û'|'Ü' => { out.push('U'); out.push('\u{0301}'); }
-            'ù'|'ú'|'û'|'ü' => { out.push('u'); out.push('\u{0301}'); }
-            'Ç' => { out.push('C'); out.push('\u{0301}'); }
-            'ç' => { out.push('c'); out.push('\u{0301}'); }
-            'Ñ' => { out.push('N'); out.push('\u{0301}'); }
-            'ñ' => { out.push('n'); out.push('\u{0301}'); }
-            'Ý' => { out.push('Y'); out.push('\u{0301}'); }
-            'ý'|'ÿ' => { out.push('y'); out.push('\u{0301}'); }
+            'À' | 'Á' | 'Â' | 'Ã' | 'Ä' | 'Å' => {
+                out.push('A');
+                out.push('\u{0301}');
+            }
+            'à' | 'á' | 'â' | 'ã' | 'ä' | 'å' => {
+                out.push('a');
+                out.push('\u{0301}');
+            }
+            'È' | 'É' | 'Ê' | 'Ë' => {
+                out.push('E');
+                out.push('\u{0301}');
+            }
+            'è' | 'é' | 'ê' | 'ë' => {
+                out.push('e');
+                out.push('\u{0301}');
+            }
+            'Ì' | 'Í' | 'Î' | 'Ï' => {
+                out.push('I');
+                out.push('\u{0301}');
+            }
+            'ì' | 'í' | 'î' | 'ï' => {
+                out.push('i');
+                out.push('\u{0301}');
+            }
+            'Ò' | 'Ó' | 'Ô' | 'Õ' | 'Ö' => {
+                out.push('O');
+                out.push('\u{0301}');
+            }
+            'ò' | 'ó' | 'ô' | 'õ' | 'ö' => {
+                out.push('o');
+                out.push('\u{0301}');
+            }
+            'Ù' | 'Ú' | 'Û' | 'Ü' => {
+                out.push('U');
+                out.push('\u{0301}');
+            }
+            'ù' | 'ú' | 'û' | 'ü' => {
+                out.push('u');
+                out.push('\u{0301}');
+            }
+            'Ç' => {
+                out.push('C');
+                out.push('\u{0301}');
+            }
+            'ç' => {
+                out.push('c');
+                out.push('\u{0301}');
+            }
+            'Ñ' => {
+                out.push('N');
+                out.push('\u{0301}');
+            }
+            'ñ' => {
+                out.push('n');
+                out.push('\u{0301}');
+            }
+            'Ý' => {
+                out.push('Y');
+                out.push('\u{0301}');
+            }
+            'ý' | 'ÿ' => {
+                out.push('y');
+                out.push('\u{0301}');
+            }
             'Æ' => out.push_str("AE"),
             'æ' => out.push_str("ae"),
             'Ø' => out.push('O'),
@@ -196,8 +262,14 @@ mod tests {
     #[test]
     fn folds_accents_like_the_python_version() {
         assert_eq!(fold_text("Séance Board"), "seance board");
-        assert_eq!(fold_text("Andúril, Flame of the West"), "anduril, flame of the west");
-        assert_eq!(fold_text("A Ascensão da Onda Faminta"), "a ascensao da onda faminta");
+        assert_eq!(
+            fold_text("Andúril, Flame of the West"),
+            "anduril, flame of the west"
+        );
+        assert_eq!(
+            fold_text("A Ascensão da Onda Faminta"),
+            "a ascensao da onda faminta"
+        );
         assert_eq!(fold_text("Adéwalé"), "adewale");
         // already-plain text is only lowercased
         assert_eq!(fold_text("Sol Ring"), "sol ring");

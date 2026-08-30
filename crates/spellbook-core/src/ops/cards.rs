@@ -230,10 +230,12 @@ pub fn get(name: &str, oracle_id: Option<&str>) -> Result<CardDetail> {
     let cdb = open_cards_db().ok_or_else(missing)?;
 
     let found = if let Some(oid) = oracle_id {
-        cdb.prepare(&format!("SELECT {CARD_COLS} FROM cards WHERE oracle_id = ?1"))
-            .ok()
-            .and_then(|mut s| s.query_row([oid], Card::from_row).ok())
-            .map(|c| (c, MatchKind::ExactOracleId))
+        cdb.prepare(&format!(
+            "SELECT {CARD_COLS} FROM cards WHERE oracle_id = ?1"
+        ))
+        .ok()
+        .and_then(|mut s| s.query_row([oid], Card::from_row).ok())
+        .map(|c| (c, MatchKind::ExactOracleId))
     } else {
         lookup_card_in(&cdb, name)
     };
@@ -360,9 +362,7 @@ pub fn sets(q: &str, card: Option<&str>, limit: i64) -> Vec<SetInfo> {
     let Some(cdb) = open_cards_db() else {
         return Vec::new();
     };
-    let read = |stmt: &mut rusqlite::Statement,
-                params: &[&dyn rusqlite::ToSql]|
-     -> Vec<SetInfo> {
+    let read = |stmt: &mut rusqlite::Statement, params: &[&dyn rusqlite::ToSql]| -> Vec<SetInfo> {
         (|| -> rusqlite::Result<Vec<SetInfo>> {
             let rows = stmt.query_map(params, |r| {
                 Ok(SetInfo {

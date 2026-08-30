@@ -33,9 +33,11 @@ pub fn slugify(name: &str) -> String {
 }
 
 fn cache_path(kind: &str, slug: &str) -> PathBuf {
-    paths::data_dir().join("edhrec").join(kind).join(format!("{slug}.json"))
+    paths::data_dir()
+        .join("edhrec")
+        .join(kind)
+        .join(format!("{slug}.json"))
 }
-
 
 fn read_cache(kind: &str, commander: &str) -> Option<Value> {
     let raw = std::fs::read_to_string(cache_path(kind, &slugify(commander))).ok()?;
@@ -60,7 +62,7 @@ pub fn fetch(commander: &str, with_combos: bool) -> Result<(), String> {
             Err(ureq::Error::Status(404, _)) => {
                 return Err(format!(
                     "O EDHREC não tem página para \"{commander}\" (slug: {slug})."
-                ))
+                ));
             }
             Err(e) => return Err(format!("Não consegui falar com o EDHREC: {e}")),
         };
@@ -75,7 +77,10 @@ pub fn fetch(commander: &str, with_combos: bool) -> Result<(), String> {
 
 /// Card recommendations for a commander, minus anything already in the deck — the shape the
 /// synergy panel expects. Returns None when nothing is cached yet.
-pub fn recommendations(commander: &str, already_in_deck: &[String]) -> Option<(Vec<Value>, Vec<Value>)> {
+pub fn recommendations(
+    commander: &str,
+    already_in_deck: &[String],
+) -> Option<(Vec<Value>, Vec<Value>)> {
     let data = read_cache("commanders", commander)?;
     let have: Vec<String> = already_in_deck.iter().map(|n| n.to_lowercase()).collect();
 
@@ -93,8 +98,15 @@ pub fn recommendations(commander: &str, already_in_deck: &[String]) -> Option<(V
             if !(header.contains("High Synergy") || header.contains("Top Cards")) {
                 continue;
             }
-            for v in list.get("cardviews").and_then(|c| c.as_array()).into_iter().flatten() {
-                let Some(name) = v.get("name").and_then(|n| n.as_str()) else { continue };
+            for v in list
+                .get("cardviews")
+                .and_then(|c| c.as_array())
+                .into_iter()
+                .flatten()
+            {
+                let Some(name) = v.get("name").and_then(|n| n.as_str()) else {
+                    continue;
+                };
                 if have.contains(&name.to_lowercase()) {
                     continue;
                 }
@@ -127,6 +139,9 @@ mod tests {
         assert_eq!(slugify("Krenko, Mob Boss"), "krenko-mob-boss");
         assert_eq!(slugify("Atraxa, Praetors' Voice"), "atraxa-praetors-voice");
         // accents are stripped, not hyphenated
-        assert_eq!(slugify("Adéwalé, Breaker of Chains"), "adewale-breaker-of-chains");
+        assert_eq!(
+            slugify("Adéwalé, Breaker of Chains"),
+            "adewale-breaker-of-chains"
+        );
     }
 }

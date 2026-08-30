@@ -20,8 +20,10 @@ pub mod error;
 pub mod images;
 pub mod ops;
 pub mod paths;
+pub mod repair;
 pub mod types;
 pub mod update;
+pub mod wizard;
 
 pub use error::{Error, Result};
 pub use types::{Activity, Card, ImageRef};
@@ -38,4 +40,5 @@ pub fn init() {
     if let Err(e) = db::init_app_db() {
         log::error!("failed to initialise app.db: {e}");
     }
+    repair::canonicalise_card_names();
 }

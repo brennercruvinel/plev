@@ -25,6 +25,9 @@ serde_json = "1"
 dirs = "5"
 ureq = { version = "2", default-features = false, features = ["tls", "gzip"] }
 flate2 = "1"
+# Decodes cached card art on the worker thread. jpeg covers Scryfall; png covers
+# anything hand-added. No default features: the rest of the format list is dead weight.
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 log = "0.4"
 env_logger = "0.11"
 pollster = "0.4"

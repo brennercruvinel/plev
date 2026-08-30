@@ -12,10 +12,32 @@
 /// doesn't start with a quantity, so a real card that happens to start with one of these words
 /// ("Landfall Ritual") still reads normally.
 const SECTION_WORDS: &[&str] = &[
-    "commander", "commanders", "deck", "mainboard", "maybeboard", "sideboard", "companion",
-    "creature", "creatures", "land", "lands", "instant", "instants", "sorcery", "sorceries",
-    "artifact", "artifacts", "enchantment", "enchantments", "planeswalker", "planeswalkers",
-    "battle", "battles", "other", "spell", "spells",
+    "commander",
+    "commanders",
+    "deck",
+    "mainboard",
+    "maybeboard",
+    "sideboard",
+    "companion",
+    "creature",
+    "creatures",
+    "land",
+    "lands",
+    "instant",
+    "instants",
+    "sorcery",
+    "sorceries",
+    "artifact",
+    "artifacts",
+    "enchantment",
+    "enchantments",
+    "planeswalker",
+    "planeswalkers",
+    "battle",
+    "battles",
+    "other",
+    "spell",
+    "spells",
 ];
 
 fn is_section_header(line: &str) -> bool {
@@ -68,7 +90,8 @@ fn strip_set_info(name: &str) -> String {
                 if toks2.len() > 1 {
                     let l = toks2[toks2.len() - 1];
                     let looks_like_set = (2..=6).contains(&l.len())
-                        && l.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit());
+                        && l.chars()
+                            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit());
                     if looks_like_set {
                         cur = toks2[..toks2.len() - 1].join(" ");
                     }
@@ -100,7 +123,10 @@ pub fn parse_text(text: &str) -> Vec<(i64, String)> {
         let digits: String = line.chars().take_while(|c| c.is_ascii_digit()).collect();
         if !digits.is_empty() {
             let after = &line[digits.len()..];
-            let after = after.strip_prefix('x').or_else(|| after.strip_prefix('X')).unwrap_or(after);
+            let after = after
+                .strip_prefix('x')
+                .or_else(|| after.strip_prefix('X'))
+                .unwrap_or(after);
             if after.starts_with(char::is_whitespace) || digits.len() < line.len() {
                 if let Ok(n) = digits.parse::<i64>() {
                     let trimmed = after.trim_start();

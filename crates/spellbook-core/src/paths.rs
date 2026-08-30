@@ -61,7 +61,11 @@ fn resolve(env_key: &str, config_key: &str, default: PathBuf) -> PathBuf {
 
 /// Directory holding mtg.sqlite, the edhrec/ cache and cached images.
 pub fn data_dir() -> PathBuf {
-    resolve("SPELLBOOK_DATA_DIR", "data_dir", app_data_dir().join("data"))
+    resolve(
+        "SPELLBOOK_DATA_DIR",
+        "data_dir",
+        app_data_dir().join("data"),
+    )
 }
 
 /// Directory holding app.db (the user's own decks/collection).
@@ -107,7 +111,6 @@ pub fn cards_db() -> PathBuf {
 pub fn app_db() -> PathBuf {
     app_db_dir().join("app.db")
 }
-
 
 /// Creates the app-data layout on first run. Safe to call every launch.
 pub fn ensure_dirs() {
