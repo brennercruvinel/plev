@@ -35,7 +35,7 @@ pub struct ArtImage {
 
 /// Everything the dashboard shows, in one round trip: the old page fired four
 /// HTTP requests on load; here it is one command and one event.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct HomeData {
     pub totals: collection::CollectionTotals,
     pub wishlist: wishlist::WishlistTotals,
@@ -53,40 +53,98 @@ pub enum Command {
     LoadHome,
 
     // -- Card index -----------------------------------------------------------
-    SearchCards { q: String, limit: i64 },
-    GetCard { name: String, oracle_id: Option<String> },
-    CardPrintings { name: String },
-    CardVariants { name: String },
-    SearchSets { q: String, card: Option<String>, limit: i64 },
+    SearchCards {
+        q: String,
+        limit: i64,
+    },
+    GetCard {
+        name: String,
+        oracle_id: Option<String>,
+    },
+    CardPrintings {
+        name: String,
+    },
+    CardVariants {
+        name: String,
+    },
+    SearchSets {
+        q: String,
+        card: Option<String>,
+        limit: i64,
+    },
 
     // -- Collection -----------------------------------------------------------
-    ListCollection { status: String, q: String },
-    CardCopies { name: String },
+    ListCollection {
+        status: String,
+        q: String,
+    },
+    CardCopies {
+        name: String,
+    },
     AddCollection(Box<collection::CollectionIn>),
-    EditCollection { entry_id: i64, patch: Box<collection::CollectionEditIn> },
-    DeleteCollection { entry_id: i64 },
-    AllocateCollection { entry_id: i64, deck_id: Option<i64> },
+    EditCollection {
+        entry_id: i64,
+        patch: Box<collection::CollectionEditIn>,
+    },
+    DeleteCollection {
+        entry_id: i64,
+    },
+    AllocateCollection {
+        entry_id: i64,
+        deck_id: Option<i64>,
+    },
 
     // -- Decks ----------------------------------------------------------------
     ListDecks,
-    GetDeck { deck_id: i64 },
-    DeckSynergy { deck_id: i64 },
+    GetDeck {
+        deck_id: i64,
+    },
+    DeckSynergy {
+        deck_id: i64,
+    },
     CreateDeck(Box<decks::DeckIn>),
-    UpdateDeck { deck_id: i64, patch: Box<decks::DeckIn> },
-    DeleteDeck { deck_id: i64, mode: decks::DeleteMode },
-    AddDeckCard { deck_id: i64, card: Box<decks::DeckCardIn> },
-    RemoveDeckCard { deck_id: i64, card_id: i64 },
-    ImportPreview { deck_id: i64, text: String },
-    ImportCommit { deck_id: i64, cards: Vec<decks::ImportCard>, mode: decks::ImportMode },
+    UpdateDeck {
+        deck_id: i64,
+        patch: Box<decks::DeckIn>,
+    },
+    DeleteDeck {
+        deck_id: i64,
+        mode: decks::DeleteMode,
+    },
+    AddDeckCard {
+        deck_id: i64,
+        card: Box<decks::DeckCardIn>,
+    },
+    RemoveDeckCard {
+        deck_id: i64,
+        card_id: i64,
+    },
+    ImportPreview {
+        deck_id: i64,
+        text: String,
+    },
+    ImportCommit {
+        deck_id: i64,
+        cards: Vec<decks::ImportCard>,
+        mode: decks::ImportMode,
+    },
     AutoBuild(Box<AutoBuildIn>),
     AutoBuildStatus,
-    FetchDeckSynergy { deck_id: i64 },
+    FetchDeckSynergy {
+        deck_id: i64,
+    },
 
     // -- Wishlist -------------------------------------------------------------
-    ListWishlist { q: String },
+    ListWishlist {
+        q: String,
+    },
     AddWishlist(Box<wishlist::WishlistIn>),
-    DeleteWishlist { entry_id: i64 },
-    AcquireWishlist { entry_id: i64 },
+    DeleteWishlist {
+        entry_id: i64,
+    },
+    AcquireWishlist {
+        entry_id: i64,
+    },
 
     // -- Games ----------------------------------------------------------------
     ListGames,
@@ -104,7 +162,10 @@ pub enum Command {
     /// Load `rel` from the image cache, downscaled to `max_edge` device
     /// pixels. Batched by the shell: one command per frame's worth of misses,
     /// not one per tile.
-    LoadArt { rels: Vec<String>, max_edge: u32 },
+    LoadArt {
+        rels: Vec<String>,
+        max_edge: u32,
+    },
 }
 
 /// Results delivered to the event callback, one per command.
@@ -119,27 +180,54 @@ pub enum Event {
 
     CardsFound(Vec<Card>),
     CardLoaded(Result<Box<cards::CardDetail>>),
-    PrintingsLoaded { name: String, printings: Vec<cards::Printing> },
-    VariantsLoaded { name: String, variants: Vec<Card> },
+    PrintingsLoaded {
+        name: String,
+        printings: Vec<cards::Printing>,
+    },
+    VariantsLoaded {
+        name: String,
+        variants: Vec<Card>,
+    },
     SetsFound(Vec<cards::SetInfo>),
 
     CollectionListed(Vec<collection::CollectionEntry>),
-    CardCopiesLoaded { name: String, copies: Box<collection::CardCopies> },
+    CardCopiesLoaded {
+        name: String,
+        copies: Box<collection::CardCopies>,
+    },
     CollectionAdded(Result<i64>),
     CollectionEdited(Result<()>),
     CollectionDeleted(Result<collection::CopyRemoved>),
     CollectionAllocated(Result<()>),
 
     DecksListed(Vec<decks::DeckSummary>),
-    DeckLoaded { deck_id: i64, result: Result<Box<decks::DeckDetail>> },
-    SynergyLoaded { deck_id: i64, synergy: Box<decks::Synergy> },
+    DeckLoaded {
+        deck_id: i64,
+        result: Result<Box<decks::DeckDetail>>,
+    },
+    SynergyLoaded {
+        deck_id: i64,
+        synergy: Box<decks::Synergy>,
+    },
     DeckCreated(Result<i64>),
     DeckUpdated(Result<()>),
     DeckDeleted(Result<usize>),
-    DeckCardAdded { deck_id: i64, result: Result<()> },
-    DeckCardRemoved { deck_id: i64, result: Result<()> },
-    ImportPreviewed { deck_id: i64, result: Result<Box<decks::ImportPreview>> },
-    ImportCommitted { deck_id: i64, result: Result<i64> },
+    DeckCardAdded {
+        deck_id: i64,
+        result: Result<()>,
+    },
+    DeckCardRemoved {
+        deck_id: i64,
+        result: Result<()>,
+    },
+    ImportPreviewed {
+        deck_id: i64,
+        result: Result<Box<decks::ImportPreview>>,
+    },
+    ImportCommitted {
+        deck_id: i64,
+        result: Result<i64>,
+    },
     AutoBuildFinished(Result<()>),
     AutoBuildStatus(decks::AutoBuildStatus),
 
@@ -158,7 +246,9 @@ pub enum Event {
     ImagesInfoLoaded(data::ImagesInfo),
 
     /// One batch of art answers, in the same order the paths were asked.
-    ArtLoaded { images: Vec<(String, Option<ArtImage>)> },
+    ArtLoaded {
+        images: Vec<(String, Option<ArtImage>)>,
+    },
 }
 
 /// Handle to the worker thread. Dropping it shuts the worker down and waits
@@ -241,9 +331,9 @@ fn run(command: Command, on_event: &(impl Fn(Event) + ?Sized)) {
             on_event(E::SetsFound(cards::sets(&q, card.as_deref(), limit)))
         }
 
-        C::ListCollection { status, q } => {
-            on_event(E::CollectionListed(collection::list_collection(&status, &q)))
-        }
+        C::ListCollection { status, q } => on_event(E::CollectionListed(
+            collection::list_collection(&status, &q),
+        )),
         C::CardCopies { name } => {
             let copies = collection::card_copies(&name);
             on_event(E::CardCopiesLoaded {
@@ -332,13 +422,12 @@ fn run(command: Command, on_event: &(impl Fn(Event) + ?Sized)) {
             let images = rels
                 .into_iter()
                 .map(|rel| {
-                    let art = crate::images::load_scaled(&rel, max_edge).map(|(w, h, pixels)| {
-                        ArtImage {
+                    let art =
+                        crate::images::load_scaled(&rel, max_edge).map(|(w, h, pixels)| ArtImage {
                             width: w,
                             height: h,
                             pixels,
-                        }
-                    });
+                        });
                     (rel, art)
                 })
                 .collect();
