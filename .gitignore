@@ -5,7 +5,7 @@ data/
 # Real personal collection (decks, cards, games) — stays local only, never in the repo
 desktop/ui/app.db
 
-# Python
+# Pythonroda pr
 __pycache__/
 *.pyc
 .DS_Store
@@ -17,3 +17,4 @@ rules.md
 
 # Cargo build output for the plev-native app (regenerated; hundreds of MB)
 /target/
+demosUI/

@@ -15,13 +15,11 @@
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{Theme, TypographyScale};
-use engine::ui::widgets::{
-    EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, rounded_rect, with_alpha,
-};
+use engine::ui::widgets::{EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, rounded_rect};
 use spellbook_core::client::Command;
 use spellbook_core::ops::cards::SetInfo;
 
-use super::super::{EditKey, ScreenCtx};
+use super::super::{EditKey, ScreenCtx, with_alpha};
 use super::field::LabeledField;
 
 /// Suggestion rows shown at once. The JS listed everything the API
@@ -127,6 +125,11 @@ impl SetPicker {
 
     pub fn is_open(&self) -> bool {
         self.open
+    }
+
+    /// Scope the list to one card's printings, or drop the scope.
+    pub fn set_card(&mut self, card: Option<String>) {
+        self.card = card;
     }
 
     fn close(&mut self) {
@@ -327,7 +330,10 @@ impl SetPicker {
                     ),
                     x: row.x + 10.0,
                     y: row.y + TextMeasurer::vertical_center(&style, ROW_H),
-                    color: with_alpha(theme.colors.text, theme.colors.text.0[3] * 0.8),
+                    color: with_alpha(
+                        theme.colors.text.0,
+                        theme.colors.text.0[3] * 0.8,
+                    ),
                 },
             );
             c.push_to_layer(
