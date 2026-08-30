@@ -18,6 +18,7 @@ pub mod decklist;
 pub mod edhrec;
 pub mod error;
 pub mod images;
+pub mod ops;
 pub mod paths;
 pub mod types;
 pub mod update;
