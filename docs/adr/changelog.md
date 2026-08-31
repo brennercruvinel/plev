@@ -9,6 +9,38 @@ status: living
 
 ## unreleased
 
+- glyph atlas lifecycle fixed (2026-08-31): LRU capacity drops now return
+  their rectangles to the allocator (ignored `push` returns had orphaned
+  slots until the atlas saturated and eviction corrupted every static
+  panel); glyph cache capacity 4096 -> 32768; the atlas grows to max
+  before evicting; every slot reuse marks atlas_disturbed and forces all
+  layers to re-resolve next frame; empty glyphs carry alloc_id None
+  instead of the sentinel AllocId(0) that made eviction corrupt etagere's
+  refcounts (panic diagnosed by the user); multi-frame headless rendering
+  in probe::render_frames + regression test.
+- glyph raster survives a monitor change (2026-08-31): a raster-scale
+  change resets the glyph cache and the atlas allocator, but layers whose
+  scene had not changed were skipped and kept sampling repacked texels —
+  scrambled text after dragging a window between displays of different DPI.
+  set_raster_scale is now #[must_use] and reports the change; every layer
+  re-resolves when it does. Also fixed an atlas allocation leaked on every
+  successful eviction (allocate-to-test then discard), which filled the
+  atlas with unevictable orphans until glyphs were dropped outright.
+- glyph raster path made pixel-exact (2026-08-31): the atlas cache key is
+  now cosmic-text's `CacheKey` verbatim — it had dropped `x_bin`, `y_bin`
+  and `font_weight`, so repeats of a character in a different subpixel
+  phase reused the first bitmap *and* its placement (up to 0.75 physical
+  px off, mask built for the wrong phase). glyph slots now reserve a
+  transparent gutter on all four sides and upload as one zeroed padded
+  block, so linear filtering cannot bleed a neighbour in — or the pixels
+  of a previously evicted occupant. quad UVs are texels now, normalized in
+  text.wgsl against `textureDimensions`, so an atlas grow partway through a
+  frame no longer invalidates quads already emitted. see
+  docs/adr/glyph-raster-identity-and-atlas-isolation.md
+- jetbrains mono removed (2026-08-31): inclusive sans is the single
+  embedded family; ~550kb less embedded font data, monospace pinned to it
+  as well since no mono face ships.
+
 - engine wave (2026-08): inclusive sans replaces rubik+inter as the one
   embedded family (SIL OFL, five upright weights 300-700, sans family
   pinned in fontdb, ~2.1mb lighter); body letter-spacing zeroed (the

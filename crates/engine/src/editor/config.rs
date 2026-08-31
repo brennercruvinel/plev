@@ -28,7 +28,7 @@ impl Default for EditorConfig {
         Self {
             font_size: 14.0,
             line_height: 21.0,
-            font_family: Some("JetBrains Mono".to_string()),
+            font_family: Some("Inclusive Sans".to_string()),
             show_gutter: true,
             tab_width: 4,
             cursor_blink_interval: 0.53,

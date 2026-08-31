@@ -98,3 +98,7 @@ theme = "@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
 [[bench]]
 name = "scene_build"
 harness = false
+
+[[example]]
+name = "text_probe"
+path = "examples/text_probe/main.rs"

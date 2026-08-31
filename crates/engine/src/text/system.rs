@@ -1,4 +1,4 @@
-use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, SwashCache, Weight};
+use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight};
 use etagere::{BucketedAtlasAllocator, size2};
 use lru::LruCache;
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -16,7 +16,6 @@ use super::vertex::TextVertex;
 
 pub struct TextSystem {
     pub font_system: FontSystem,
-    pub(super) swash_cache: SwashCache,
     // Glyph atlas
     pub(super) allocator: BucketedAtlasAllocator,
     pub(super) glyph_cache: LruCache<GlyphCacheKey, GlyphEntry>,
@@ -44,11 +43,22 @@ pub struct TextSystem {
     pub(super) embedded_fonts: FxHashSet<cosmic_text::fontdb::ID>,
     /// font_ids already warned about (warn once per face).
     pub(super) warned_fallback_fonts: FxHashSet<cosmic_text::fontdb::ID>,
+    /// Set when an atlas slot was reused for a different glyph (eviction, a
+    /// raster-scale change, a purge). Any layer that was skipped this frame
+    /// is still pointing at the old slot, so the caller has to re-resolve
+    /// everything. Read and cleared with [`Self::take_atlas_disturbed`].
+    pub(super) atlas_disturbed: bool,
 }
 
 pub(super) const INITIAL_ATLAS_SIZE: u32 = 512;
 pub(super) const MAX_ATLAS_SIZE: u32 = 4096;
-const GLYPH_CACHE_CAPACITY: usize = 4096;
+/// Must comfortably exceed the glyph count a full atlas can hold, or the
+/// LRU capacity starts dropping entries while their bitmaps still fit —
+/// churn with no memory win. A 4096x4096 atlas holds roughly 16k average
+/// UI-size slots, and the cache key is per (face, glyph, size, weight,
+/// subpixel bin), so distinct entries multiply fast. Entries are ~64 bytes;
+/// 32k of them is ~2 MB against the atlas's 16 MB.
+const GLYPH_CACHE_CAPACITY: usize = 32768;
 
 impl TextSystem {
     pub fn new(device: &wgpu::Device, text_bind_group_layout: &wgpu::BindGroupLayout) -> Self {
@@ -69,7 +79,6 @@ impl TextSystem {
 
         let embedded_fonts = super::fonts::register_embedded_fonts(font_system.db_mut());
 
-        let swash_cache = SwashCache::new();
         let allocator = BucketedAtlasAllocator::new(size2(
             INITIAL_ATLAS_SIZE as i32,
             INITIAL_ATLAS_SIZE as i32,
@@ -104,7 +113,7 @@ impl TextSystem {
 
         Self {
             font_system,
-            swash_cache,
+
             allocator,
             glyph_cache,
             glyphs_in_use: FxHashSet::default(),
@@ -120,6 +129,7 @@ impl TextSystem {
             raster_scale: 1.0,
             embedded_fonts: embedded_fonts.into_iter().collect(),
             warned_fallback_fonts: FxHashSet::default(),
+            atlas_disturbed: false,
         }
     }
 
@@ -127,15 +137,35 @@ impl TextSystem {
     /// are rasterized at `font_size * scale`; when the scale changes the
     /// cached bitmaps are invalid and the glyph cache is reset (shaping is
     /// scale-independent and survives).
-    pub fn set_raster_scale(&mut self, scale: f32) {
+    ///
+    /// Returns `true` when the scale actually changed. **Callers must then
+    /// re-resolve every layer's text, dirty or not.** Resetting the cache
+    /// and the allocator hands the whole atlas back as free space, so the
+    /// next glyphs are packed over slots that layers rendered at the old
+    /// scale are still pointing at; a layer skipped because its scene did
+    /// not change would keep drawing those texels, which now hold different
+    /// glyphs. That is what makes a window dragged from a 2x laptop panel
+    /// to a 1x external display come back scrambled.
+    #[must_use = "a scale change invalidates every layer's text vertices"]
+    pub fn set_raster_scale(&mut self, scale: f32) -> bool {
         let scale = scale.max(0.01);
-        if (self.raster_scale - scale).abs() > 1e-6 {
-            log::info!("Text raster scale: {} -> {scale}", self.raster_scale);
-            self.raster_scale = scale;
-            self.glyph_cache.clear();
-            self.allocator =
-                BucketedAtlasAllocator::new(size2(self.atlas_size as i32, self.atlas_size as i32));
+        if (self.raster_scale - scale).abs() <= 1e-6 {
+            return false;
         }
+        log::info!("Text raster scale: {} -> {scale}", self.raster_scale);
+        self.raster_scale = scale;
+        self.glyph_cache.clear();
+        self.allocator =
+            BucketedAtlasAllocator::new(size2(self.atlas_size as i32, self.atlas_size as i32));
+        self.atlas_disturbed = true;
+        true
+    }
+
+    /// Whether the atlas was repacked since the last check, clearing the
+    /// flag. When it returns `true` every layer's text vertices are stale,
+    /// including layers whose scene did not change.
+    pub fn take_atlas_disturbed(&mut self) -> bool {
+        std::mem::take(&mut self.atlas_disturbed)
     }
 
     /// Call at the start of each frame before resolve_for_layer calls.
@@ -249,6 +279,7 @@ impl TextSystem {
         self.glyph_cache.clear();
         self.allocator =
             BucketedAtlasAllocator::new(size2(self.atlas_size as i32, self.atlas_size as i32));
+        self.atlas_disturbed = true;
         log::info!("Purged caches: {count} shaping entries, glyph atlas reset");
     }
 

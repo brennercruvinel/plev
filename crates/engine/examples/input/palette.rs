@@ -32,7 +32,7 @@ pub(crate) fn card(compositor: &mut Compositor, x: f32, y: f32, w: f32, h: f32, 
 // One TextStyle per run, shared by measurement and drawing
 // (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 page title, 600 card title, 500 label, 400 body; code and
-// counters render in JetBrains Mono.
+// counters render in the same embedded Inclusive Sans (the only UI family).
 
 pub(crate) fn title_style(size: f32, line_height: f32) -> TextStyle {
     TextStyle::new(size)
@@ -59,5 +59,5 @@ pub(crate) fn body_style(size: f32, line_height: f32) -> TextStyle {
 pub(crate) fn code_style(size: f32, line_height: f32) -> TextStyle {
     TextStyle::new(size)
         .with_line_height(line_height)
-        .with_family("JetBrains Mono")
+        .with_family("Inclusive Sans")
 }

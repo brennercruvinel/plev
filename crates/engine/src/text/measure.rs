@@ -7,8 +7,8 @@
 //! expensive to build per call.
 //!
 //! The font set mirrors `TextSystem::new` (system fonts on desktop plus the
-//! embedded faces from `super::fonts`: Inclusive Sans 300/400/500/600/700,
-//! JetBrains Mono, Codicons) so measurements match what is rasterized.
+//! embedded faces from `super::fonts`: Inclusive Sans 300/400/500/600/700
+//! and Codicons) so measurements match what is rasterized.
 
 use std::cell::RefCell;
 use std::num::NonZeroUsize;

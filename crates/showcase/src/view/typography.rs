@@ -1,5 +1,6 @@
 //! Typography section: the HOFF type scale set in the embedded UI typeface
-//! (Inclusive Sans 400/500/600/700; JetBrains Mono for code). Absorbs the
+//! (Inclusive Sans 400/500/600/700, the single embedded UI family — code,
+//! readouts and body all share it). Absorbs the
 //! `text` engine example's patterns into the design system: every specimen
 //! is drawn with the same `TextStyle` that measures it and every readout
 //! (advances, wrapped heights) is a live `TextMeasurer` value, never an
@@ -81,10 +82,10 @@ fn weight_ladder() -> [(TextStyle, u16); 4] {
 
 const WEIGHT_SAMPLE: &str = "Sphinx of black quartz";
 
-fn mono_style(size: f32) -> TextStyle {
+fn code_style(size: f32) -> TextStyle {
     TextStyle::new(size)
         .with_line_height(size * 1.4)
-        .with_family("JetBrains Mono")
+        .with_family("Inclusive Sans")
 }
 
 fn readout_style() -> TextStyle {
@@ -139,8 +140,8 @@ impl TypographySection {
             text: "Inclusive Sans — the embedded UI sans".to_string(),
         });
         right.push(Line::Plain {
-            style: mono_style(13.0),
-            text: "JetBrains Mono — code, readouts, data".to_string(),
+            style: code_style(13.0),
+            text: "Inclusive Sans — also code, readouts, data".to_string(),
         });
         right.push(Line::Group("UNICODE"));
         // Only glyphs the embedded faces actually cover: anything else
@@ -274,7 +275,7 @@ impl TypographySection {
                     );
                     let readout = format!("{weight} · {advance:.1}px");
                     c.draw_text(
-                        TextNodeKey::from_style(&readout, &mono_style(12.0), None),
+                        TextNodeKey::from_style(&readout, &code_style(12.0), None),
                         x + advance + 16.0,
                         *y + 3.0,
                         dim,

@@ -234,28 +234,9 @@ impl TextInputApp {
                 sampler: &gpu.composite_sampler,
             });
 
-        {
-            let layer_info: Vec<_> = self
-                .compositor
-                .layers()
-                .iter()
-                .map(|l| (l.id, l.is_dirty(), l.text_nodes()))
-                .collect();
-            for (layer_id, dirty, text_nodes) in layer_info {
-                if !dirty {
-                    continue;
-                }
-                let (vertices, indices) = text_system.resolve_for_layer(
-                    &gpu.device,
-                    &gpu.queue,
-                    &gpu.text_bind_group_layout,
-                    &text_nodes,
-                );
-                if let Some(layer) = self.compositor.layer_mut(layer_id) {
-                    layer.set_text_data(&gpu.device, &gpu.queue, vertices, indices);
-                }
-            }
-        }
+        // Resolve text per clip group so the ranges patched into the
+        // draw sequence line up 1:1 with its Text commands.
+        engine::window::resolve_layer_text(&mut self.compositor, gpu, text_system);
         text_system.finish_frame();
 
         let mut encoder =

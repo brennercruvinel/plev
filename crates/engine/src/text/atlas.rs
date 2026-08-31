@@ -6,7 +6,10 @@ use super::system::{MAX_ATLAS_SIZE, TextSystem};
 use super::vertex::TextVertex;
 
 use cosmic_text::Buffer;
-use etagere::AllocId;
+
+/// Empty texels reserved around every glyph in the atlas. One texel on each
+/// side is what a bilinear tap can reach past the UV rect.
+pub(super) const GLYPH_PADDING: u32 = 1;
 
 pub(super) fn create_atlas_texture(
     device: &wgpu::Device,
@@ -76,7 +79,7 @@ pub(super) fn emit_glyphs(
                 );
             }
             let physical = glyph.physical((x * scale, line_y * scale), scale);
-            let cache_key = GlyphCacheKey::from_cosmic(&physical.cache_key);
+            let cache_key = physical.cache_key;
             sys.glyphs_in_use.insert(cache_key);
 
             let entry = if let Some(entry) = sys.glyph_cache.get(&cache_key) {
@@ -87,7 +90,6 @@ pub(super) fn emit_glyphs(
                     gpu.device,
                     gpu.queue,
                     gpu.text_bind_group_layout,
-                    &physical.cache_key,
                     cache_key,
                 ) {
                     Some(entry) => entry,
@@ -104,11 +106,7 @@ pub(super) fn emit_glyphs(
             let gw = entry.width as f32 / scale;
             let gh = entry.height as f32 / scale;
 
-            let atlas = sys.atlas_size as f32;
-            let u0 = entry.atlas_x as f32 / atlas;
-            let v0 = entry.atlas_y as f32 / atlas;
-            let u1 = (entry.atlas_x + entry.width) as f32 / atlas;
-            let v1 = (entry.atlas_y + entry.height) as f32 / atlas;
+            let [u0, v0, u1, v1] = glyph_uv_rect(&entry);
 
             let base = sys.staging_vertices.len() as u32;
             sys.staging_vertices.extend_from_slice(&[
@@ -145,17 +143,42 @@ pub(super) fn emit_glyphs(
     }
 }
 
+/// Atlas rect of a glyph as `[u0, v0, u1, v1]` in **texels**.
+///
+/// Deliberately not normalized: the shader divides by the size of the atlas
+/// bound at draw time (see `text.wgsl`). Normalizing here bakes in the atlas
+/// size at emit time, and the atlas can double later in the same frame —
+/// every quad emitted before that grow would then sample the wrong region
+/// and glyphs render as pieces of other glyphs.
+pub(super) fn glyph_uv_rect(entry: &GlyphEntry) -> [f32; 4] {
+    [
+        entry.atlas_x as f32,
+        entry.atlas_y as f32,
+        (entry.atlas_x + entry.width) as f32,
+        (entry.atlas_y + entry.height) as f32,
+    ]
+}
+
 pub(super) fn rasterize_and_upload(
     sys: &mut TextSystem,
     device: &wgpu::Device,
     queue: &wgpu::Queue,
     text_bind_group_layout: &wgpu::BindGroupLayout,
-    cosmic_key: &cosmic_text::CacheKey,
     cache_key: GlyphCacheKey,
 ) -> Option<GlyphEntry> {
-    let image = sys
-        .swash_cache
-        .get_image_uncached(&mut sys.font_system, *cosmic_key)?;
+    // Um contexto swash NOVO por rasterização — nunca o compartilhado.
+    //
+    // O `ScaleContext` interno do `SwashCache` guarda estado por fonte entre
+    // chamadas, e intercalar corpos diferentes da MESMA face contamina esse
+    // estado: a mesma CacheKey (fonte, glyph, size=40px, bin) rasterizou ora
+    // o bitmap correto de 40px (14x29 para o 'f'), ora o bitmap do corpo
+    // rasterizado antes (24x52, vindo dos 72px do h4) — medido ao vivo, com
+    // shaping e chave provados corretos. Na tela: títulos com letras de
+    // outros tamanhos no meio, pior quanto mais corpos coexistem (a
+    // Typography inteira). Rasterização acontece só em cache-miss do atlas
+    // (uma vez por glifo), então o contexto fresco custa nada por frame.
+    let mut swash = cosmic_text::SwashCache::new();
+    let image = swash.get_image_uncached(&mut sys.font_system, cache_key)?;
 
     if image.content != SwashContent::Mask {
         return None;
@@ -166,7 +189,7 @@ pub(super) fn rasterize_and_upload(
 
     if gw == 0 || gh == 0 {
         let entry = GlyphEntry {
-            alloc_id: AllocId::deserialize(0),
+            alloc_id: None,
             atlas_x: 0,
             atlas_y: 0,
             width: 0,
@@ -174,18 +197,45 @@ pub(super) fn rasterize_and_upload(
             left: image.placement.left as f32,
             top: image.placement.top as f32,
         };
-        sys.glyph_cache.put(cache_key, entry.clone());
+        cache_insert(sys, cache_key, entry.clone());
         return Some(entry);
     }
 
-    let padded_w = gw as i32 + 1;
-    let padded_h = gh as i32 + 1;
+    // Reserve a transparent border on *every* side, not just right/bottom.
+    // The atlas is sampled with `FilterMode::Linear`, so a quad whose device
+    // position is off by any fraction of a texel blends the texels just
+    // outside its UV rect into the glyph. With glyphs packed edge to edge
+    // that neighbour is another glyph, which reads on screen as ghost
+    // strokes overlapping the letter. A one-texel empty gutter all round
+    // means the worst case bleeds transparency instead.
+    let padded_w = gw as i32 + GLYPH_PADDING as i32 * 2;
+    let padded_h = gh as i32 + GLYPH_PADDING as i32 * 2;
 
+    // Grow before evicting.
+    //
+    // Eviction is only safe for glyphs nothing is still drawing, and
+    // `glyphs_in_use` cannot tell us that: it holds the glyphs resolved in
+    // *this* frame, while a layer whose scene did not change keeps the
+    // vertex buffer it built earlier and is skipped by `resolve_layer_text`.
+    // Its glyphs therefore look unused, get evicted, and their atlas slots
+    // are handed to other glyphs — while that layer goes on sampling them.
+    // On screen: a static sidebar whose letters turn into other letters.
+    //
+    // So the atlas grows to MAX_ATLAS_SIZE first and only evicts when it
+    // cannot grow any further. A UI never reaches that; when something does,
+    // the disturbance is recorded so every layer re-resolves.
     let alloc = loop {
         if let Some(alloc) = sys.allocator.allocate(size2(padded_w, padded_h)) {
             break alloc;
         }
 
+        if sys.atlas_size < MAX_ATLAS_SIZE {
+            let new_size = (sys.atlas_size * 2).min(MAX_ATLAS_SIZE);
+            grow_atlas(sys, device, queue, text_bind_group_layout, new_size);
+            continue;
+        }
+
+        let mut freed = None;
         let mut evicted = false;
         while let Some((evict_key, evict_entry)) = sys.glyph_cache.peek_lru() {
             if sys.glyphs_in_use.contains(evict_key) {
@@ -193,62 +243,92 @@ pub(super) fn rasterize_and_upload(
             }
             let evict_alloc_id = evict_entry.alloc_id;
             let evict_key_copy = *evict_key;
-            sys.allocator.deallocate(evict_alloc_id);
+            // Only glyphs that actually reserved a rectangle give one back.
+            // Empty glyphs (spaces) carry `None`; the old sentinel
+            // `AllocId::deserialize(0)` was a *valid* id and decremented
+            // another glyph's bucket, tripping etagere's
+            // `assertion failed: bucket.refcount > 0`.
+            if let Some(id) = evict_alloc_id {
+                sys.allocator.deallocate(id);
+            }
             sys.glyph_cache.pop(&evict_key_copy);
+            sys.atlas_disturbed = true;
             evicted = true;
 
-            if sys.allocator.allocate(size2(padded_w, padded_h)).is_some() {
+            // Keep the allocation this eviction made room for; allocating
+            // only to test and then dropping the result leaked the rectangle
+            // (reserved in the allocator, absent from `glyph_cache`, so
+            // nothing could ever evict it).
+            if let Some(alloc) = sys.allocator.allocate(size2(padded_w, padded_h)) {
+                freed = Some(alloc);
                 break;
             }
         }
+        if let Some(alloc) = freed {
+            break alloc;
+        }
 
         if !evicted {
-            let new_size = (sys.atlas_size * 2).min(MAX_ATLAS_SIZE);
-            if new_size == sys.atlas_size {
-                log::warn!(
-                    "Glyph atlas full at maximum size {}x{}: cannot allocate glyph_id={} \
-                     ({}x{} px); glyph will not be rendered",
-                    sys.atlas_size,
-                    sys.atlas_size,
-                    cache_key.glyph_id,
-                    padded_w,
-                    padded_h
-                );
-                return None;
-            }
-            grow_atlas(sys, device, queue, text_bind_group_layout, new_size);
+            log::warn!(
+                "Glyph atlas full at maximum size {}x{}: cannot allocate glyph_id={} \
+                 ({}x{} px); glyph will not be rendered",
+                sys.atlas_size,
+                sys.atlas_size,
+                cache_key.glyph_id,
+                padded_w,
+                padded_h
+            );
+            return None;
         }
     };
 
-    let atlas_x = u32::try_from(alloc.rectangle.min.x).expect("atlas x coordinate negative");
-    let atlas_y = u32::try_from(alloc.rectangle.min.y).expect("atlas y coordinate negative");
+    // The allocation covers glyph + gutter; the bitmap goes at the inset
+    // origin so the gutter stays empty on all four sides.
+    let slot_x = u32::try_from(alloc.rectangle.min.x).expect("atlas x coordinate negative");
+    let slot_y = u32::try_from(alloc.rectangle.min.y).expect("atlas y coordinate negative");
+    let atlas_x = slot_x + GLYPH_PADDING;
+    let atlas_y = slot_y + GLYPH_PADDING;
+
+    // Upload glyph *and* gutter in one write. Uploading only the glyph would
+    // leave whatever the previously evicted occupant wrote in the gutter, and
+    // a bilinear tap would sample those stale texels — the very bleed the
+    // padding exists to prevent. A zeroed padded block makes the border
+    // transparent by construction.
+    let pw = padded_w as u32;
+    let ph = padded_h as u32;
+    let mut padded = vec![0u8; (pw * ph) as usize];
+    for row in 0..gh {
+        let src = (row * gw) as usize;
+        let dst = ((row + GLYPH_PADDING) * pw + GLYPH_PADDING) as usize;
+        padded[dst..dst + gw as usize].copy_from_slice(&image.data[src..src + gw as usize]);
+    }
 
     queue.write_texture(
         wgpu::TexelCopyTextureInfo {
             texture: &sys.atlas_texture,
             mip_level: 0,
             origin: wgpu::Origin3d {
-                x: atlas_x,
-                y: atlas_y,
+                x: slot_x,
+                y: slot_y,
                 z: 0,
             },
             aspect: wgpu::TextureAspect::All,
         },
-        &image.data,
+        &padded,
         wgpu::TexelCopyBufferLayout {
             offset: 0,
-            bytes_per_row: Some(gw),
-            rows_per_image: Some(gh),
+            bytes_per_row: Some(pw),
+            rows_per_image: Some(ph),
         },
         wgpu::Extent3d {
-            width: gw,
-            height: gh,
+            width: pw,
+            height: ph,
             depth_or_array_layers: 1,
         },
     );
 
     let entry = GlyphEntry {
-        alloc_id: alloc.id,
+        alloc_id: Some(alloc.id),
         atlas_x,
         atlas_y,
         width: gw,
@@ -256,7 +336,7 @@ pub(super) fn rasterize_and_upload(
         left: image.placement.left as f32,
         top: image.placement.top as f32,
     };
-    sys.glyph_cache.put(cache_key, entry.clone());
+    cache_insert(sys, cache_key, entry.clone());
     log::debug!(
         "Atlas alloc: glyph_id={} at ({}, {}), size={}x{}",
         cache_key.glyph_id,
@@ -266,6 +346,30 @@ pub(super) fn rasterize_and_upload(
         gh
     );
     Some(entry)
+}
+
+/// Insert into the glyph cache, giving back the atlas rectangle of whatever
+/// the LRU capacity pushed out.
+///
+/// `LruCache::put` at capacity drops its least-recently-used entry and
+/// *returns* it; ignoring that return leaked the dropped entry's rectangle —
+/// still reserved in the allocator, no longer reachable through the cache,
+/// so no eviction could ever free it. Under sustained churn the orphans
+/// consumed the entire atlas: it grew to `MAX_ATLAS_SIZE`, then real
+/// eviction ran on every frame, and every eviction hands a slot that some
+/// skipped layer still references to a different glyph. On screen that is
+/// rolling corruption — letters swapping into other letters and sizes.
+fn cache_insert(sys: &mut TextSystem, key: GlyphCacheKey, entry: GlyphEntry) {
+    if let Some((dropped_key, dropped)) = sys.glyph_cache.push(key, entry) {
+        // `push` returns the replaced value for the *same* key, or the
+        // capacity-evicted LRU pair for a different key. Either way its
+        // rectangle is now unreachable and must go back to the allocator.
+        if let Some(id) = dropped.alloc_id {
+            sys.allocator.deallocate(id);
+            sys.atlas_disturbed = true;
+        }
+        let _ = dropped_key;
+    }
 }
 
 pub(super) fn grow_atlas(

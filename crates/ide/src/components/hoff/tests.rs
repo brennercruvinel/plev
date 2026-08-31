@@ -260,3 +260,121 @@ fn truncate_to_width_maximizes_kept_text() {
         .expect("at least the bare ellipsis fits 120px");
     assert_eq!(out, candidate(best));
 }
+
+// -- elide_path (segment-aware, measured) -----------------------------------
+
+/// The screenshot regression: a character-count cut produced
+/// "…ts/fonts/JetBrainsMono-Bold.ttf", whose leading "ts/" is the severed
+/// tail of "assets". Elision must land on separators, never mid-segment.
+#[test]
+fn elide_path_never_cuts_inside_a_segment() {
+    let path = "crates/engine/assets/fonts/JetBrainsMono-Bold.ttf";
+    let style = style_14_600();
+    let out = elide_path(path, 200.0, &style);
+
+    assert!(
+        out.contains('\u{2026}'),
+        "expected an elided path, got {out:?}"
+    );
+    for segment in out.split('/') {
+        if segment == "\u{2026}" {
+            continue;
+        }
+        assert!(
+            path.split('/').any(|s| s == segment) || segment.ends_with('\u{2026}'),
+            "{segment:?} is not a whole segment of the original path ({out:?})"
+        );
+    }
+}
+
+#[test]
+fn elide_path_keeps_the_file_name() {
+    let path = "crates/engine/assets/fonts/JetBrainsMono-Bold.ttf";
+    let style = style_14_600();
+    // Wide enough for the name plus an elided prefix.
+    let out = elide_path(path, 260.0, &style);
+    assert!(
+        out.ends_with("JetBrainsMono-Bold.ttf"),
+        "the file name identifies the row and must survive: {out:?}"
+    );
+}
+
+#[test]
+fn elide_path_result_actually_fits() {
+    let path = "crates/engine/assets/fonts/JetBrainsMono-Bold.ttf";
+    let style = style_14_600();
+    for avail in [60.0f32, 90.0, 140.0, 200.0, 260.0, 400.0] {
+        let out = elide_path(path, avail, &style);
+        assert!(
+            measure_text(&out, &style) <= avail,
+            "elide_path({avail}) returned {out:?}, which measures \
+             {}px — wider than the column it has to fit",
+            measure_text(&out, &style)
+        );
+    }
+}
+
+/// The old helper took a fixed char count, so the same path rendered the
+/// same way in a narrow panel and a wide one. Elision must track the width.
+#[test]
+fn elide_path_adapts_to_the_available_width() {
+    let path = "crates/engine/assets/fonts/JetBrainsMono-Bold.ttf";
+    let style = style_14_600();
+    let narrow = elide_path(path, 150.0, &style);
+    let wide = elide_path(path, 300.0, &style);
+    assert_ne!(
+        narrow, wide,
+        "a wider column must show more of the path, not the same fixed cut"
+    );
+    assert!(measure_text(&narrow, &style) <= measure_text(&wide, &style));
+}
+
+#[test]
+fn elide_path_leaves_a_fitting_path_alone() {
+    let path = "src/main.rs";
+    let style = style_14_600();
+    assert_eq!(elide_path(path, 500.0, &style), path);
+}
+
+#[test]
+fn elide_path_falls_back_to_the_name_when_nothing_fits() {
+    let style = style_14_600();
+    let out = elide_path(
+        "crates/engine/assets/fonts/JetBrainsMono-Bold.ttf",
+        30.0,
+        &style,
+    );
+    assert!(measure_text(&out, &style) <= 30.0);
+    assert!(!out.is_empty());
+}
+
+/// A bare file name has no segments to drop; it still has to fit.
+#[test]
+fn elide_path_handles_a_single_segment() {
+    let style = style_14_600();
+    let out = elide_path("JetBrainsMono-Bold.ttf", 60.0, &style);
+    assert!(measure_text(&out, &style) <= 60.0);
+    assert!(out.ends_with('\u{2026}'));
+}
+
+/// `truncate_to_width` is the engine's measurer, not a second
+/// implementation of it. The IDE used to walk `chars()`, which splits
+/// grapheme clusters into lone code points (half a flag emoji) and drifts
+/// from what the rasterizer will actually draw.
+#[test]
+fn truncate_to_width_delegates_to_the_engine_measurer() {
+    let style = style_14_600();
+    for s in [
+        "a very long commit message that would otherwise wrap onto two lines",
+        "\u{1F1E7}\u{1F1F7}\u{1F1E7}\u{1F1F7}\u{1F1E7}\u{1F1F7} tail text here",
+        "short",
+    ] {
+        for avail in [30.0f32, 80.0, 200.0] {
+            assert_eq!(
+                truncate_to_width(s, avail, &style),
+                engine::text::TextMeasurer::truncate_to_width(s, &style, avail),
+                "{s:?} at {avail}px diverged from the engine measurer"
+            );
+        }
+    }
+}

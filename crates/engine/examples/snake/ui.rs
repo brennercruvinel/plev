@@ -9,7 +9,7 @@ use crate::state::*;
 // One TextStyle per run, shared by measurement and drawing
 // (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 title, 500 label, 400 body; score and fps counters render
-// in JetBrains Mono.
+// in the same embedded Inclusive Sans (the only UI family).
 
 fn title_style(size: f32, line_height: f32) -> TextStyle {
     TextStyle::new(size)
@@ -30,7 +30,7 @@ fn body_style(size: f32, line_height: f32) -> TextStyle {
 fn code_style(size: f32, line_height: f32) -> TextStyle {
     TextStyle::new(size)
         .with_line_height(line_height)
-        .with_family("JetBrains Mono")
+        .with_family("Inclusive Sans")
 }
 
 impl SnakeGame {

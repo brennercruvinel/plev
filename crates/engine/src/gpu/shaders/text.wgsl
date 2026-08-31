@@ -12,6 +12,14 @@ var atlas_sampler: sampler;
 
 struct VertexInput {
     @location(0) position: vec2<f32>,
+    // Glyph atlas coordinates in TEXELS, not normalized. The atlas doubles
+    // in size when it fills up, and it can do so partway through a frame,
+    // after quads have already been emitted. Normalized UVs baked against
+    // the old size would then sample the wrong half of the grown texture
+    // (visible as glyphs rendering as fragments of other glyphs). A grow
+    // copies the old atlas to the new one at the same texel origin, so
+    // texel coordinates stay valid across it; the fragment shader divides
+    // by the size of whatever texture is actually bound.
     @location(1) uv: vec2<f32>,
     @location(2) color: vec4<f32>,
 }
@@ -39,7 +47,8 @@ fn srgb_to_linear(c: vec3<f32>) -> vec3<f32> {
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    let alpha = textureSample(atlas_texture, atlas_sampler, in.uv).r;
+    let dims = vec2<f32>(textureDimensions(atlas_texture));
+    let alpha = textureSample(atlas_texture, atlas_sampler, in.uv / dims).r;
     // Linearize, then premultiplied alpha output.
     let a = in.color.a * alpha;
     let rgb = srgb_to_linear(in.color.rgb);

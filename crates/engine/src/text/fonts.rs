@@ -41,10 +41,6 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<cosmic_text::fon
     db.load_font_data(include_bytes!("../../assets/fonts/InclusiveSans-SemiBold.ttf").to_vec());
     db.load_font_data(include_bytes!("../../assets/fonts/InclusiveSans-Bold.ttf").to_vec());
 
-    // JetBrains Mono — code font.
-    db.load_font_data(include_bytes!("../../assets/fonts/JetBrainsMono-Regular.ttf").to_vec());
-    db.load_font_data(include_bytes!("../../assets/fonts/JetBrainsMono-Bold.ttf").to_vec());
-
     // Codicons — VS Code icon font (CC BY 4.0; texto em assets/fonts/).
     db.load_font_data(include_bytes!("../../assets/fonts/codicons.ttf").to_vec());
 
@@ -52,9 +48,12 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<cosmic_text::fon
     // cosmic-text points that at "Open Sans", which is neither embedded nor
     // installed on most systems, so default-family text would resolve through
     // the per-word fallback chain (arbitrary faces once weight != 400). Pin
-    // sans-serif to Inclusive Sans for deterministic shaping.
+    // sans-serif to Inclusive Sans for deterministic shaping. Monospace is
+    // pinned to the same family: no mono face is embedded, so leaving the
+    // cosmic-text default would send `Family::Monospace` text through the
+    // platform fallback chain.
     db.set_sans_serif_family("Inclusive Sans");
-    db.set_monospace_family("JetBrains Mono");
+    db.set_monospace_family("Inclusive Sans");
     db.faces()
         .filter(|f| !before.contains(&f.id))
         .map(|f| f.id)

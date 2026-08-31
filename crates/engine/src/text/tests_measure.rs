@@ -5,10 +5,6 @@ fn sans(font_size: f32) -> TextStyle {
     TextStyle::new(font_size).with_family("Inclusive Sans")
 }
 
-fn mono(font_size: f32) -> TextStyle {
-    TextStyle::new(font_size).with_family("JetBrains Mono")
-}
-
 // -- measure --
 
 #[test]
@@ -24,17 +20,6 @@ fn proportional_font_iiii_narrower_than_wwww() {
     assert!(
         narrow < wide,
         "Inclusive Sans is proportional: 'iiii' ({narrow}) must be narrower than 'WWWW' ({wide})"
-    );
-}
-
-#[test]
-fn monospace_font_iiii_same_width_as_wwww() {
-    let (narrow, _) = TextMeasurer::measure_styled("iiii", &mono(16.0), None);
-    let (wide, _) = TextMeasurer::measure_styled("WWWW", &mono(16.0), None);
-    assert!(narrow > 0.0);
-    assert!(
-        (narrow - wide).abs() < 0.5,
-        "JetBrains Mono is monospace: 'iiii' ({narrow}) must equal 'WWWW' ({wide})"
     );
 }
 
@@ -84,8 +69,8 @@ fn measure_is_cached() {
 
 #[test]
 fn bold_weight_measures_at_least_regular() {
-    let regular = mono(16.0);
-    let bold = mono(16.0).with_weight(700);
+    let regular = sans(16.0);
+    let bold = sans(16.0).with_weight(700);
     let (rw, _) = TextMeasurer::measure_styled("Hello", &regular, None);
     let (bw, _) = TextMeasurer::measure_styled("Hello", &bold, None);
     assert!(
@@ -230,8 +215,8 @@ fn round_trip_proportional() {
 }
 
 #[test]
-fn round_trip_monospace() {
-    assert_round_trip("Hello, World!", &mono(16.0));
+fn round_trip_digits_and_punctuation() {
+    assert_round_trip("1,632.00 — (42%)", &sans(16.0));
 }
 
 #[test]
