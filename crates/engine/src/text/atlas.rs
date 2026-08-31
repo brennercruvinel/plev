@@ -146,10 +146,8 @@ pub(super) fn emit_glyphs(
 /// Atlas rect of a glyph as `[u0, v0, u1, v1]` in **texels**.
 ///
 /// Deliberately not normalized: the shader divides by the size of the atlas
-/// bound at draw time (see `text.wgsl`). Normalizing here bakes in the atlas
-/// size at emit time, and the atlas can double later in the same frame —
-/// every quad emitted before that grow would then sample the wrong region
-/// and glyphs render as pieces of other glyphs.
+/// bound at draw time (see `text.wgsl`), so quads emitted before a mid-frame
+/// atlas grow stay valid.
 pub(super) fn glyph_uv_rect(entry: &GlyphEntry) -> [f32; 4] {
     [
         entry.atlas_x as f32,
@@ -166,17 +164,11 @@ pub(super) fn rasterize_and_upload(
     text_bind_group_layout: &wgpu::BindGroupLayout,
     cache_key: GlyphCacheKey,
 ) -> Option<GlyphEntry> {
-    // Um contexto swash NOVO por rasterização — nunca o compartilhado.
-    //
-    // O `ScaleContext` interno do `SwashCache` guarda estado por fonte entre
-    // chamadas, e intercalar corpos diferentes da MESMA face contamina esse
-    // estado: a mesma CacheKey (fonte, glyph, size=40px, bin) rasterizou ora
-    // o bitmap correto de 40px (14x29 para o 'f'), ora o bitmap do corpo
-    // rasterizado antes (24x52, vindo dos 72px do h4) — medido ao vivo, com
-    // shaping e chave provados corretos. Na tela: títulos com letras de
-    // outros tamanhos no meio, pior quanto mais corpos coexistem (a
-    // Typography inteira). Rasterização acontece só em cache-miss do atlas
-    // (uma vez por glifo), então o contexto fresco custa nada por frame.
+    // Fresh swash context per rasterization: the shared `ScaleContext`
+    // keeps per-font state across calls, and interleaving sizes of one face
+    // can make a CacheKey rasterize at a stale size. Rasterization only
+    // happens on an atlas cache miss (once per glyph), so this costs
+    // nothing per frame.
     let mut swash = cosmic_text::SwashCache::new();
     let image = swash.get_image_uncached(&mut sys.font_system, cache_key)?;
 
@@ -201,29 +193,17 @@ pub(super) fn rasterize_and_upload(
         return Some(entry);
     }
 
-    // Reserve a transparent border on *every* side, not just right/bottom.
-    // The atlas is sampled with `FilterMode::Linear`, so a quad whose device
-    // position is off by any fraction of a texel blends the texels just
-    // outside its UV rect into the glyph. With glyphs packed edge to edge
-    // that neighbour is another glyph, which reads on screen as ghost
-    // strokes overlapping the letter. A one-texel empty gutter all round
-    // means the worst case bleeds transparency instead.
+    // Transparent border on every side: the atlas samples with
+    // `FilterMode::Linear`, and a bilinear tap can reach one texel past the
+    // UV rect — the gutter makes it bleed transparency, not a neighbour.
     let padded_w = gw as i32 + GLYPH_PADDING as i32 * 2;
     let padded_h = gh as i32 + GLYPH_PADDING as i32 * 2;
 
-    // Grow before evicting.
-    //
-    // Eviction is only safe for glyphs nothing is still drawing, and
-    // `glyphs_in_use` cannot tell us that: it holds the glyphs resolved in
-    // *this* frame, while a layer whose scene did not change keeps the
-    // vertex buffer it built earlier and is skipped by `resolve_layer_text`.
-    // Its glyphs therefore look unused, get evicted, and their atlas slots
-    // are handed to other glyphs — while that layer goes on sampling them.
-    // On screen: a static sidebar whose letters turn into other letters.
-    //
-    // So the atlas grows to MAX_ATLAS_SIZE first and only evicts when it
-    // cannot grow any further. A UI never reaches that; when something does,
-    // the disturbance is recorded so every layer re-resolves.
+    // Grow before evicting: eviction is only safe for glyphs nothing still
+    // draws, and `glyphs_in_use` only covers layers resolved this frame — a
+    // skipped layer's retained vertices still reference their slots. The
+    // atlas grows to MAX_ATLAS_SIZE first; when it must evict anyway, the
+    // disturbance is recorded so every layer re-resolves next frame.
     let alloc = loop {
         if let Some(alloc) = sys.allocator.allocate(size2(padded_w, padded_h)) {
             break alloc;
@@ -243,11 +223,8 @@ pub(super) fn rasterize_and_upload(
             }
             let evict_alloc_id = evict_entry.alloc_id;
             let evict_key_copy = *evict_key;
-            // Only glyphs that actually reserved a rectangle give one back.
-            // Empty glyphs (spaces) carry `None`; the old sentinel
-            // `AllocId::deserialize(0)` was a *valid* id and decremented
-            // another glyph's bucket, tripping etagere's
-            // `assertion failed: bucket.refcount > 0`.
+            // Only glyphs that actually reserved a rectangle give one back
+            // (empty glyphs carry `None`).
             if let Some(id) = evict_alloc_id {
                 sys.allocator.deallocate(id);
             }
@@ -255,10 +232,8 @@ pub(super) fn rasterize_and_upload(
             sys.atlas_disturbed = true;
             evicted = true;
 
-            // Keep the allocation this eviction made room for; allocating
-            // only to test and then dropping the result leaked the rectangle
-            // (reserved in the allocator, absent from `glyph_cache`, so
-            // nothing could ever evict it).
+            // Keep the allocation this eviction made room for — a probe
+            // allocation whose result is dropped would leak the rectangle.
             if let Some(alloc) = sys.allocator.allocate(size2(padded_w, padded_h)) {
                 freed = Some(alloc);
                 break;
@@ -289,11 +264,8 @@ pub(super) fn rasterize_and_upload(
     let atlas_x = slot_x + GLYPH_PADDING;
     let atlas_y = slot_y + GLYPH_PADDING;
 
-    // Upload glyph *and* gutter in one write. Uploading only the glyph would
-    // leave whatever the previously evicted occupant wrote in the gutter, and
-    // a bilinear tap would sample those stale texels — the very bleed the
-    // padding exists to prevent. A zeroed padded block makes the border
-    // transparent by construction.
+    // Upload glyph and gutter as one zeroed block: a reused slot's border
+    // must be transparent, not whatever its previous occupant left there.
     let pw = padded_w as u32;
     let ph = padded_h as u32;
     let mut padded = vec![0u8; (pw * ph) as usize];
@@ -349,16 +321,8 @@ pub(super) fn rasterize_and_upload(
 }
 
 /// Insert into the glyph cache, giving back the atlas rectangle of whatever
-/// the LRU capacity pushed out.
-///
-/// `LruCache::put` at capacity drops its least-recently-used entry and
-/// *returns* it; ignoring that return leaked the dropped entry's rectangle —
-/// still reserved in the allocator, no longer reachable through the cache,
-/// so no eviction could ever free it. Under sustained churn the orphans
-/// consumed the entire atlas: it grew to `MAX_ATLAS_SIZE`, then real
-/// eviction ran on every frame, and every eviction hands a slot that some
-/// skipped layer still references to a different glyph. On screen that is
-/// rolling corruption — letters swapping into other letters and sizes.
+/// the LRU capacity pushed out — a dropped entry's rectangle must return to
+/// the allocator, or it stays reserved with nothing able to free it.
 fn cache_insert(sys: &mut TextSystem, key: GlyphCacheKey, entry: GlyphEntry) {
     if let Some((dropped_key, dropped)) = sys.glyph_cache.push(key, entry) {
         // `push` returns the replaced value for the *same* key, or the

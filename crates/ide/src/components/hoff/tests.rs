@@ -263,9 +263,8 @@ fn truncate_to_width_maximizes_kept_text() {
 
 // -- elide_path (segment-aware, measured) -----------------------------------
 
-/// The screenshot regression: a character-count cut produced
-/// "…ts/fonts/JetBrainsMono-Bold.ttf", whose leading "ts/" is the severed
-/// tail of "assets". Elision must land on separators, never mid-segment.
+/// Elision must land on path separators, never mid-segment: a cut inside a
+/// segment produces a directory name that does not exist.
 #[test]
 fn elide_path_never_cuts_inside_a_segment() {
     let path = "crates/engine/assets/fonts/JetBrainsMono-Bold.ttf";

@@ -44,11 +44,9 @@ PROBE_FILL=1 cargo run -p engine --example text_probe -- out.png 2.0
 ```
 
 `PROBE_FILL=1` pushes enough distinct glyph/size/weight combinations through
-the atlas that it has to **grow partway through the frame**. This matters:
-the corruption described in
-docs/adr/glyph-raster-identity-and-atlas-isolation.md is invisible to any
-probe that draws a single line, and a clean one-line render was briefly
-mistaken for a clean engine. A probe that cannot reach the failing state
+the atlas that it has to **grow partway through the frame** — the atlas
+lifecycle (docs/adr/glyph-raster-identity-and-atlas-isolation.md) only
+exercises under that pressure. A probe that cannot reach the failing state
 proves nothing.
 
 The renderer behind it is `engine::text::probe` (offscreen texture, real

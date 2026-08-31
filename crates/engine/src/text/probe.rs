@@ -6,10 +6,9 @@
 //! same shader, same blend state — into an offscreen texture and returns
 //! RGBA8.
 //!
-//! It exists because the defect in
-//! `docs/adr/glyph-raster-identity-and-atlas-isolation.md` only appears once
-//! the glyph atlas has had to grow, which no probe that draws a single line
-//! will ever reach.
+//! Multi-frame rendering (`render_frames`) exists because atlas-lifecycle
+//! behavior only shows under accumulated state: grown atlas, evictions,
+//! layers retained across frames.
 
 use crate::compositor::{SceneNode, TextNodeKey};
 use crate::text::{TextStyle, TextSystem, TextVertex};
@@ -94,9 +93,8 @@ impl Rendered {
 /// atlas must grow partway through the frame.
 ///
 /// The initial atlas holds a few hundred glyphs; a real screen of widgets
-/// exceeds that routinely, and the grow is where quads emitted earlier in
-/// the frame used to go stale. Any pixel test that wants to cover the
-/// rasterizer under realistic pressure needs these.
+/// exceeds that routinely, so pixel tests that want realistic atlas
+/// pressure start from these.
 pub fn atlas_filling_specimens() -> Vec<(String, TextStyle)> {
     const ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let mut out = Vec::new();
@@ -116,11 +114,9 @@ pub fn atlas_filling_specimens() -> Vec<(String, TextStyle)> {
 /// A compositor layer: its text, and whether the app re-resolves it every
 /// frame.
 ///
-/// `static_layer` models the common case the single-frame path cannot: a
-/// sidebar or header whose scene never changes, so it is skipped by
-/// `resolve_layer_text` and keeps the vertex buffer it built on frame one.
-/// Those retained vertices still point into the glyph atlas, which later
-/// frames keep mutating.
+/// `static_layer` models a sidebar or header whose scene never changes: it
+/// is skipped by `resolve_layer_text` and keeps the vertex buffer it built
+/// on frame one, still pointing into the shared glyph atlas.
 pub struct Layer {
     pub specimens: Vec<Specimen>,
     pub redraws_every_frame: bool,
@@ -148,10 +144,8 @@ impl Layer {
 /// vertex buffer — static layers included, still holding the vertices they
 /// built on frame one.
 ///
-/// This is the shape of the real render loop, and it is the only way to see
-/// defects that need more than one frame: a glyph the atlas evicted because
-/// no layer resolved this frame is still referenced by the static layer that
-/// drew it earlier.
+/// This is the shape of the real render loop: retained buffers and the
+/// shared atlas interact across frames, not within one.
 pub fn render_frames(
     layers: &[Layer],
     frames: usize,

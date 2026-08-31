@@ -56,9 +56,8 @@ fn glyph_cache_key_is_the_whole_cosmic_key() {
     assert_is_cosmic_key(&key);
 }
 
-/// The regression that motivated the key fix: one string puts the same
-/// character in several subpixel bins, and each bin is a distinct bitmap.
-/// A key without `x_bin` maps them all onto the first one rasterized.
+/// One string puts the same character in several subpixel bins, and each
+/// bin is a distinct bitmap: keys must keep them distinct.
 #[test]
 fn same_char_in_different_subpixel_bins_gets_distinct_keys() {
     let style = crate::theme::TypographyScale::hoff().title();
@@ -255,8 +254,7 @@ fn glyph_quads_land_on_whole_physical_pixels() {
 /// those layers would keep sampling repacked texels.
 #[test]
 fn set_raster_scale_reports_whether_it_changed() {
-    // GPU-free: the flag is what render_passes branches on, and getting it
-    // wrong is the difference between a repaint and a scrambled panel.
+    // The flag is what render_passes branches on to force a full re-resolve.
     let Some(mut sys) = test_text_system() else {
         eprintln!("no GPU adapter; skipping");
         return;
