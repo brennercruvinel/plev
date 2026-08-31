@@ -9,6 +9,7 @@ use crate::components::hoff;
 use crate::theme::{StatusColors, Theme};
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
+use engine::text::TextStyle;
 
 /// File change status.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -259,15 +260,16 @@ impl UnassignedView {
             });
 
             // Filename — base-2sm, .56 at rest, .76 selected.
-            let display_name = truncate_path(&file.path, 32);
+            // One style for measuring and drawing (the label is elided to
+            // the same width the text node is capped at, in the same face
+            // and weight it is drawn in).
+            let name_w = row_w - STATUS_W - PAD * 3.0;
+            let name_style = TextStyle::new(FONT_SIZE)
+                .with_line_height(LINE_H)
+                .with_weight(600);
+            let display_name = hoff::elide_path(&file.path, name_w, &name_style);
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::new(
-                    &display_name,
-                    FONT_SIZE,
-                    LINE_H,
-                    Some(row_w - STATUS_W - PAD * 3.0),
-                )
-                .with_weight(600),
+                key: TextNodeKey::from_style(&display_name, &name_style, Some(name_w)),
                 x: row_x + PAD + STATUS_W,
                 y: item_y + (ITEM_H - LINE_H) / 2.0,
                 color: if is_selected || is_hovered {
@@ -315,15 +317,5 @@ impl UnassignedView {
 
         self.hit_rects = hit_rects.clone();
         hit_rects
-    }
-}
-
-fn truncate_path(path: &str, max_chars: usize) -> String {
-    if path.chars().count() <= max_chars {
-        path.to_string()
-    } else {
-        let start = path.chars().count() - max_chars + 1;
-        let s: String = path.chars().skip(start).collect();
-        format!("\u{2026}{s}")
     }
 }

@@ -29,7 +29,7 @@ pub const ACCENT_BAR_H: f32 = 2.0;
 // One TextStyle per run, shared by measurement and drawing
 // (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 page title, 600 card title, 500 label, 400 body; code and
-// counters render in JetBrains Mono.
+// counters render in the same embedded Inclusive Sans (the only UI family).
 
 pub fn title_style(size: f32) -> TextStyle {
     TextStyle::new(size).with_weight(700)
@@ -48,7 +48,7 @@ pub fn body_style(size: f32) -> TextStyle {
 }
 
 pub fn code_style(size: f32) -> TextStyle {
-    TextStyle::new(size).with_family("JetBrains Mono")
+    TextStyle::new(size).with_family("Inclusive Sans")
 }
 
 // --- Counter Lifecycle ----------------------------------------------------

@@ -43,11 +43,11 @@ struct Layout {
     total_h: f32,
 }
 
-fn mono(text: &str, size: f32) -> (TextStyle, String) {
+fn code(text: &str, size: f32) -> (TextStyle, String) {
     (
         TextStyle::new(size)
             .with_line_height(size * 1.4)
-            .with_family("JetBrains Mono"),
+            .with_family("Inclusive Sans"),
         text.to_string(),
     )
 }
@@ -184,7 +184,7 @@ impl EffectsSection {
                 border_width: 1.0,
                 border_color: theme.glass.edge_soft.0,
             });
-            let (style, caption) = mono(caption, 12.0);
+            let (style, caption) = code(caption, 12.0);
             c.draw_text(
                 TextNodeKey::from_style(&caption, &style, None),
                 rect.x + 14.0,

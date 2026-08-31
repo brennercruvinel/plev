@@ -70,8 +70,9 @@ examples:
   # examples/<name>/main.rs, no Cargo.toml. run with `cargo run -p engine
   # --example <name>`.
   windowed: [counter, editor, input, layers, mobile_input, sdf_shapes, text, text_input, todo, visual, builder, charts, scene3d, snake, lottie_player, monster_player]
-  cli: [lot2monsters, svg2monster]
-  note: scene3d and snake-game were crates; they are demos and moved here (commit e6f7091). examples moved from the root into crates/engine/examples when the engine became its own crate.
+  cli: [lot2monsters, svg2monster, text_probe]
+  note: text_probe is headless (offscreen wgpu -> png, no window); it is the tool behind docs/how-to/validate-visuals-by-pixel.md when the OS denies screen capture.
+  note2: scene3d and snake-game were crates; they are demos and moved here (commit e6f7091). examples moved from the root into crates/engine/examples when the engine became its own crate.
 benches:
   # criterion benches (harness = false) on each crate's hot path. run with
   # `cargo bench -p <crate>`.

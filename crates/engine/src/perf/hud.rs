@@ -2,8 +2,9 @@
 //! high-z layer, anchored to the top-right corner.
 //!
 //! Pure compositor calls, so it is testable headlessly. Text uses one
-//! [`TextStyle`] (JetBrains Mono) shared by `TextMeasurer::measure_styled`
-//! and `TextNodeKey::from_style`, per the one-style-measure-and-draw ADR.
+//! [`TextStyle`] (Inclusive Sans, the embedded UI family) shared by
+//! `TextMeasurer::measure_styled` and `TextNodeKey::from_style`, per the
+//! one-style-measure-and-draw ADR.
 //! The layer is created lazily on the first draw and removed by
 //! [`PerfHud::clear`], so a disabled HUD costs no layer texture.
 
@@ -56,7 +57,7 @@ impl PerfHud {
             }
         };
 
-        let style = TextStyle::new(FONT_SIZE).with_family("JetBrains Mono");
+        let style = TextStyle::new(FONT_SIZE).with_family("Inclusive Sans");
         let lines = hud_lines(snapshot);
         let text_w = lines
             .iter()

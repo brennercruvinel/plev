@@ -23,7 +23,7 @@ pub const DOT_COLOR: [f32; 4] = [0.12, 0.12, 0.18, 1.0];
 // One TextStyle per run, shared by measurement and drawing
 // (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 page title, 600 card title, 400 body; aligned readouts
-// render in JetBrains Mono.
+// render in the same embedded Inclusive Sans (the only UI family).
 
 pub fn title_style(size: f32, line_height: f32) -> TextStyle {
     TextStyle::new(size)
@@ -44,5 +44,5 @@ pub fn body_style(size: f32, line_height: f32) -> TextStyle {
 pub fn code_style(size: f32, line_height: f32) -> TextStyle {
     TextStyle::new(size)
         .with_line_height(line_height)
-        .with_family("JetBrains Mono")
+        .with_family("Inclusive Sans")
 }

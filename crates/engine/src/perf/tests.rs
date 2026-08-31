@@ -242,7 +242,7 @@ fn hud_draws_panel_and_text_on_own_high_z_layer() {
     assert_eq!(texts.len(), 4);
     for key in texts {
         // One TextStyle for measure and draw: from_style carries the family.
-        assert_eq!(key.font_family.as_deref(), Some("JetBrains Mono"));
+        assert_eq!(key.font_family.as_deref(), Some("Inclusive Sans"));
     }
 }
 

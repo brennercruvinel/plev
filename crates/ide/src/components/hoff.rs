@@ -203,30 +203,59 @@ pub fn measure_text(text: &str, style: &TextStyle) -> f32 {
 }
 
 /// Truncate `s` with an ellipsis so it fits on one line of `avail` px,
-/// measured with the SAME [`TextStyle`] the caller draws with (real shaping
-/// via [`measure_text`], not a per-char estimate). Keeps rows strictly
-/// single-line.
+/// measured with the SAME [`TextStyle`] the caller draws with.
+///
+/// Delegates to the engine's measurer: it shapes with the faces the
+/// rasterizer draws with and cuts on grapheme boundaries, so it cannot split
+/// a cluster the way a `chars()` walk can (flag emoji, combining marks).
 pub fn truncate_to_width(s: &str, avail: f32, style: &TextStyle) -> String {
-    if measure_text(s, style) <= avail {
-        return s.to_string();
+    TextMeasurer::truncate_to_width(s, style, avail)
+}
+
+/// Fit a path into `avail` px by dropping whole directory segments, keeping
+/// the file name.
+///
+/// A character-count cut mangles paths: 32 chars of
+/// `crates/engine/assets/fonts/JetBrainsMono-Bold.ttf` taken from the right
+/// give `…ts/fonts/JetBrainsMono-Bold.ttf`, whose leading `ts/` is the
+/// tail of `assets` and reads as a directory that does not exist. It is also
+/// blind to the column it must fit and to the font it will be drawn in, so
+/// one fixed count is too long in a narrow panel and needlessly short in a
+/// wide one.
+///
+/// Segments are dropped from the middle: the file name identifies the row
+/// and the leading directory places it, so `crates/…/fonts/Name.ttf`
+/// keeps both. When even `…/name` will not fit, the name itself is
+/// ellipsized by measurement.
+pub fn elide_path(path: &str, avail: f32, style: &TextStyle) -> String {
+    if measure_text(path, style) <= avail {
+        return path.to_string();
     }
-    let chars: Vec<char> = s.chars().collect();
-    let candidate = |n: usize| -> String {
-        let t: String = chars[..n].iter().collect();
-        format!("{}\u{2026}", t.trim_end())
-    };
-    // Largest prefix whose "prefix…" really fits, by binary search on the
-    // char count (each probe is a cached real measurement).
-    let (mut lo, mut hi) = (0usize, chars.len().saturating_sub(1));
-    while lo < hi {
-        let mid = (lo + hi).div_ceil(2);
-        if measure_text(&candidate(mid), style) <= avail {
-            lo = mid;
-        } else {
-            hi = mid - 1;
+
+    let segments: Vec<&str> = path.split('/').collect();
+    if segments.len() > 2 {
+        // Keep as many leading segments as fit, always eliding at least one
+        // so the ellipsis marks the gap.
+        for keep in (1..segments.len() - 1).rev() {
+            let candidate = format!(
+                "{}/\u{2026}/{}",
+                segments[..keep].join("/"),
+                segments[keep + 1..].join("/")
+            );
+            if measure_text(&candidate, style) <= avail {
+                return candidate;
+            }
+        }
+        let minimal = format!("\u{2026}/{}", segments[segments.len() - 1]);
+        if measure_text(&minimal, style) <= avail {
+            return minimal;
         }
     }
-    candidate(lo)
+
+    // One segment, or nothing short enough: fall back to a measured
+    // ellipsis on the file name alone.
+    let name = segments.last().copied().unwrap_or(path);
+    truncate_to_width(name, avail, style)
 }
 
 /// Scrollbar thumb — 4px wide, rgba($n2,.25), rounded; no track.

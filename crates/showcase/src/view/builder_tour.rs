@@ -2,7 +2,8 @@
 //! a real Element tree rendered via render_interactive, so its buttons are
 //! REAL engine hit regions (the old demo drew fake buttons via View::render)
 //! and a counter proves reactivity: click, state changes, the tree rebuilds.
-//! The source panel besides it shows the code in JetBrains Mono. Named
+//! The source panel besides it shows the code in Inclusive Sans, the
+//! embedded UI family. Named
 //! builder_tour to not collide with the engine's engine::builder.
 
 use engine::builder::{Element, button, div, text as btext};
@@ -84,7 +85,7 @@ const CODE: &[&str] = &[
 fn code_style() -> TextStyle {
     let mut style = TextStyle::new(12.0);
     style.line_height = CODE_LINE_H;
-    style.font_family = Some("JetBrains Mono".to_string());
+    style.font_family = Some("Inclusive Sans".to_string());
     style
 }
 
@@ -347,17 +348,21 @@ mod tests {
         s.render(&mut c, wide, &theme);
         assert!(has_text(&c, "0"), "counter starts at 0");
 
-        let mono = c
+        let code_lines = c
             .layer(LayerId::DEFAULT)
             .unwrap()
             .nodes()
             .iter()
             .filter(|n| {
                 matches!(n, SceneNode::Text { key, .. }
-                    if key.font_family.as_deref() == Some("JetBrains Mono"))
+                    if key.font_family.as_deref() == Some("Inclusive Sans"))
             })
             .count();
-        assert_eq!(mono, CODE.len(), "every code line draws in JetBrains Mono");
+        assert_eq!(
+            code_lines,
+            CODE.len(),
+            "every code line draws in Inclusive Sans"
+        );
 
         let (x, y) = zones(&s, wide)[1].center();
         assert!(s.handle_event(&down(x, y), wide).changed);

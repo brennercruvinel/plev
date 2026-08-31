@@ -27,7 +27,7 @@ pub const DIVIDER: [f32; 4] = [0.16, 0.16, 0.22, 1.0];
 // Typography: one TextStyle per run, shared by measurement and drawing
 // (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 page title, 600 card title, 500 label, 400 body; code
-// references render in JetBrains Mono.
+// references render in the same embedded Inclusive Sans (the only UI family).
 // ---------------------------------------------------------------------------
 
 pub fn title_style(size: f32, line_height: f32) -> TextStyle {
@@ -55,7 +55,7 @@ pub fn body_style(size: f32, line_height: f32) -> TextStyle {
 pub fn code_style(size: f32, line_height: f32) -> TextStyle {
     TextStyle::new(size)
         .with_line_height(line_height)
-        .with_family("JetBrains Mono")
+        .with_family("Inclusive Sans")
 }
 
 // ---------------------------------------------------------------------------

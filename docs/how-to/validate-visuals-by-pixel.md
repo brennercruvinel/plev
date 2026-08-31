@@ -30,6 +30,33 @@ has not verified.
   background, sidebar, one card. compare to the token table in
   src/theme/hoff.rs
 
+## headless, when screen capture is unavailable
+
+`screencapture` needs the Screen Recording permission and `osascript` needs
+Accessibility; a terminal that has neither returns "could not create image
+from display" and there is no window route at all. That is also the state of
+CI. Do not stop there and do not fall back to reasoning about the code — the
+engine renders offscreen:
+
+```
+cargo run -p engine --example text_probe -- out.png 2.0      # 2.0 = raster scale
+PROBE_FILL=1 cargo run -p engine --example text_probe -- out.png 2.0
+```
+
+`PROBE_FILL=1` pushes enough distinct glyph/size/weight combinations through
+the atlas that it has to **grow partway through the frame**. This matters:
+the corruption described in
+docs/adr/glyph-raster-identity-and-atlas-isolation.md is invisible to any
+probe that draws a single line, and a clean one-line render was briefly
+mistaken for a clean engine. A probe that cannot reach the failing state
+proves nothing.
+
+The renderer behind it is `engine::text::probe` (offscreen texture, real
+`TextSystem`, real shader, readback to RGBA8). `crates/engine/tests/
+text_raster_pixels.rs` uses the same entry point for assertions instead of
+eyeballing, notably "a string renders identically whether or not the atlas
+grew". Tests skip when no GPU adapter is present rather than failing.
+
 ## web target
 
 - chrome's `--headless=new --screenshot` mode hangs on winit/wgpu apps:
