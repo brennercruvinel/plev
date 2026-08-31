@@ -12,14 +12,10 @@ var atlas_sampler: sampler;
 
 struct VertexInput {
     @location(0) position: vec2<f32>,
-    // Glyph atlas coordinates in TEXELS, not normalized. The atlas doubles
-    // in size when it fills up, and it can do so partway through a frame,
-    // after quads have already been emitted. Normalized UVs baked against
-    // the old size would then sample the wrong half of the grown texture
-    // (visible as glyphs rendering as fragments of other glyphs). A grow
-    // copies the old atlas to the new one at the same texel origin, so
-    // texel coordinates stay valid across it; the fragment shader divides
-    // by the size of whatever texture is actually bound.
+    // Glyph atlas coordinates in TEXELS, not normalized: the atlas can grow
+    // partway through a frame, and a grow copies the old contents to the
+    // same texel origin — so texel coordinates stay valid while normalized
+    // ones would not. The fragment shader divides by the bound texture size.
     @location(1) uv: vec2<f32>,
     @location(2) color: vec4<f32>,
 }
