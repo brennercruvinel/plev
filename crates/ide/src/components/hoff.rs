@@ -215,13 +215,9 @@ pub fn truncate_to_width(s: &str, avail: f32, style: &TextStyle) -> String {
 /// Fit a path into `avail` px by dropping whole directory segments, keeping
 /// the file name.
 ///
-/// A character-count cut mangles paths: 32 chars of
-/// `crates/engine/assets/fonts/JetBrainsMono-Bold.ttf` taken from the right
-/// give `…ts/fonts/JetBrainsMono-Bold.ttf`, whose leading `ts/` is the
-/// tail of `assets` and reads as a directory that does not exist. It is also
-/// blind to the column it must fit and to the font it will be drawn in, so
-/// one fixed count is too long in a narrow panel and needlessly short in a
-/// wide one.
+/// A character-count cut lands mid-segment (producing directory names that
+/// do not exist) and is blind to both the column width and the font; this
+/// measures with the same style the caller draws with.
 ///
 /// Segments are dropped from the middle: the file name identifies the row
 /// and the leading directory places it, so `crates/…/fonts/Name.ttf`
