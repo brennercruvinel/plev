@@ -1,4 +1,4 @@
-use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, SwashCache, Weight};
+use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight};
 use etagere::{BucketedAtlasAllocator, size2};
 use lru::LruCache;
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -16,7 +16,6 @@ use super::vertex::TextVertex;
 
 pub struct TextSystem {
     pub font_system: FontSystem,
-    pub(super) swash_cache: SwashCache,
     // Glyph atlas
     pub(super) allocator: BucketedAtlasAllocator,
     pub(super) glyph_cache: LruCache<GlyphCacheKey, GlyphEntry>,
@@ -80,7 +79,6 @@ impl TextSystem {
 
         let embedded_fonts = super::fonts::register_embedded_fonts(font_system.db_mut());
 
-        let swash_cache = SwashCache::new();
         let allocator = BucketedAtlasAllocator::new(size2(
             INITIAL_ATLAS_SIZE as i32,
             INITIAL_ATLAS_SIZE as i32,
@@ -115,7 +113,7 @@ impl TextSystem {
 
         Self {
             font_system,
-            swash_cache,
+
             allocator,
             glyph_cache,
             glyphs_in_use: FxHashSet::default(),

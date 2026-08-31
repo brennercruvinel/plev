@@ -166,9 +166,19 @@ pub(super) fn rasterize_and_upload(
     text_bind_group_layout: &wgpu::BindGroupLayout,
     cache_key: GlyphCacheKey,
 ) -> Option<GlyphEntry> {
-    let image = sys
-        .swash_cache
-        .get_image_uncached(&mut sys.font_system, cache_key)?;
+    // Um contexto swash NOVO por rasterização — nunca o compartilhado.
+    //
+    // O `ScaleContext` interno do `SwashCache` guarda estado por fonte entre
+    // chamadas, e intercalar corpos diferentes da MESMA face contamina esse
+    // estado: a mesma CacheKey (fonte, glyph, size=40px, bin) rasterizou ora
+    // o bitmap correto de 40px (14x29 para o 'f'), ora o bitmap do corpo
+    // rasterizado antes (24x52, vindo dos 72px do h4) — medido ao vivo, com
+    // shaping e chave provados corretos. Na tela: títulos com letras de
+    // outros tamanhos no meio, pior quanto mais corpos coexistem (a
+    // Typography inteira). Rasterização acontece só em cache-miss do atlas
+    // (uma vez por glifo), então o contexto fresco custa nada por frame.
+    let mut swash = cosmic_text::SwashCache::new();
+    let image = swash.get_image_uncached(&mut sys.font_system, cache_key)?;
 
     if image.content != SwashContent::Mask {
         return None;
