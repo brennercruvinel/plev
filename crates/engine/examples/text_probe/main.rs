@@ -11,7 +11,9 @@ use engine::text::TextStyle;
 use engine::text::probe::{Specimen, render};
 
 fn main() {
-    let _ = env_logger::builder().filter_level(log::LevelFilter::Info).try_init();
+    let _ = env_logger::builder()
+        .filter_level(log::LevelFilter::Info)
+        .try_init();
     let mut args = std::env::args().skip(1);
     let out = args.next().unwrap_or_else(|| "text_probe.png".into());
     let scale: f32 = args.next().and_then(|s| s.parse().ok()).unwrap_or(2.0);

@@ -22,7 +22,17 @@ pub(crate) type GlyphCacheKey = cosmic_text::CacheKey;
 
 #[derive(Clone, Debug)]
 pub(crate) struct GlyphEntry {
-    pub(crate) alloc_id: etagere::AllocId,
+    /// The atlas rectangle backing this glyph, or `None` for a glyph with no
+    /// bitmap at all (a space, and anything else swash rasterizes to a
+    /// zero-size mask).
+    ///
+    /// Empty glyphs reserve nothing, so there is nothing to hand back on
+    /// eviction. This used to be a plain `AllocId` with `AllocId::deserialize(0)`
+    /// standing in for "none" — but that is a *valid* id (bucket 0,
+    /// generation 0), so evicting a space called `deallocate` on another
+    /// glyph's live bucket and drove its refcount below zero:
+    /// `assertion failed: bucket.refcount > 0` inside etagere.
+    pub(crate) alloc_id: Option<etagere::AllocId>,
     pub(crate) atlas_x: u32,
     pub(crate) atlas_y: u32,
     pub(crate) width: u32,

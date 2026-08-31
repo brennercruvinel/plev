@@ -196,3 +196,67 @@ fn ink_counts_glyph_coverage_not_background() {
         img.ink()
     );
 }
+
+/// The multi-frame regression: a static layer must survive frames of heavy
+/// atlas churn untouched.
+///
+/// This needs more than one frame, which is why every earlier single-frame
+/// probe missed it. Two defects conspired: `LruCache::put` at capacity
+/// dropped entries without returning their atlas rectangles (orphans
+/// saturated the atlas until real eviction ran on every frame), and
+/// eviction reused slots that skipped layers still referenced. On screen:
+/// a static sidebar whose letters turned into other letters and sizes.
+#[test]
+fn a_static_layer_survives_frames_of_atlas_churn() {
+    use engine::text::probe::{Layer, render_frames};
+
+    let sidebar_style = TextStyle::new(14.0).with_line_height(19.6).with_weight(500);
+    let heading = TextStyle::new(28.0).with_line_height(28.0).with_weight(600);
+    let statics = vec![
+        Specimen::new("Forms", heading, 300.0, 16.0),
+        Specimen::new("Cards", sidebar_style.clone(), 20.0, 20.0),
+        Specimen::new("Buttons", sidebar_style.clone(), 20.0, 50.0),
+        Specimen::new("Typography", sidebar_style.clone(), 20.0, 80.0),
+        Specimen::new("Effects", sidebar_style, 20.0, 110.0),
+    ];
+
+    // Per-frame font sizes: every frame adds a fresh set of glyph entries,
+    // churning the cache and forcing atlas growth.
+    const ALPHA: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let mut churn = Vec::new();
+    for f in 0..24 {
+        for (wi, w) in [400u16, 500, 600, 700].iter().enumerate() {
+            let size = 9.0 + f as f32 * 0.63 + wi as f32 * 0.11;
+            churn.push(Specimen::new(
+                ALPHA,
+                TextStyle::new(size)
+                    .with_line_height(size * 1.4)
+                    .with_weight(*w),
+                300.0,
+                170.0 + (f % 6) as f32 * 40.0 + wi as f32 * 9.0,
+            ));
+        }
+    }
+
+    let reference = [Layer::static_layer(statics.clone())];
+    let churned = [Layer::static_layer(statics), Layer::dynamic(churn)];
+
+    let Some(clean) = render_frames(&reference, 1, 1100, 420, 2.0) else {
+        eprintln!("no GPU adapter; skipping");
+        return;
+    };
+    let Some(after) = render_frames(&churned, 24, 1100, 420, 2.0) else {
+        return;
+    };
+
+    // The static band: everything left of the churn column.
+    let band_w = (280.0f32 * 2.0) as u32;
+    for row in 0..clean.height {
+        let a = &clean.rgba[(row * clean.width * 4) as usize..][..(band_w * 4) as usize];
+        let b = &after.rgba[(row * after.width * 4) as usize..][..(band_w * 4) as usize];
+        assert_eq!(
+            a, b,
+            "static sidebar row {row} changed after 24 frames of atlas churn"
+        );
+    }
+}

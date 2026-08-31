@@ -88,6 +88,29 @@ rectangle stayed reserved in the allocator but was never recorded in
 fills with orphans, grows to `MAX_ATLAS_SIZE`, and then drops glyphs
 outright — text silently missing rather than scrambled.
 
+**6. the LRU capacity drop leaked its atlas rectangle — the root of the
+persistent corruption.** `LruCache::put` at capacity drops the
+least-recently-used entry and returns it; the return was ignored, so the
+dropped glyph's rectangle stayed reserved in the allocator while nothing
+could reach it any more. Orphans accumulated until they consumed the whole
+atlas; it grew to `MAX_ATLAS_SIZE`, then real eviction ran on every frame,
+and every eviction handed a slot some skipped layer still referenced to a
+different glyph. Rolling, permanent corruption — letters swapping into
+other letters and sizes, worst in static panels. Fixing the cache key made
+this *worse* before it made anything better: per-subpixel-bin and
+per-weight entries multiplied the entry count past the 4096 capacity within
+seconds. The capacity is now 32768 (sized to exceed what a full atlas can
+hold) and the dropped entry's rectangle goes back to the allocator, marked
+as a disturbance.
+
+**7. the empty-glyph sentinel corrupted the allocator on eviction.**
+Zero-size glyphs (spaces) were cached with `AllocId::deserialize(0)` — a
+*valid* id (bucket 0, generation 0). Evicting a space deallocated another
+glyph's live bucket and drove etagere into
+`assertion failed: bucket.refcount > 0`. Found and diagnosed by the user
+from the backtrace. `GlyphEntry.alloc_id` is `Option<AllocId>` now; empty
+glyphs carry `None` and eviction skips them.
+
 defects 1 and 3 compound: 1 guarantees the quad sits at a fractional offset
 from the bitmap it samples, and 2 then blends in whatever is adjacent.
 
@@ -109,6 +132,12 @@ from the bitmap it samples, and 2 then blends in whatever is adjacent.
   did, via the named `must_resolve_text` predicate
 - eviction keeps the allocation it made room for instead of allocating
   twice and discarding the first
+- the atlas grows to `MAX_ATLAS_SIZE` *before* evicting anything: eviction
+  is only safe for glyphs nothing still draws, and `glyphs_in_use` cannot
+  see the retained buffers of layers that were skipped this frame
+- every operation that reuses or frees an atlas slot (eviction, capacity
+  drop, scale change, purge) records `atlas_disturbed`; the next frame
+  re-resolves every layer
 
 ## consequences
 
@@ -144,6 +173,13 @@ from the bitmap it samples, and 2 then blends in whatever is adjacent.
 - never invalidate a shared cache without invalidating everything that
   points into it. resetting the atlas allocator is not a local operation
 - never call an allocator to ask "is there room" and drop the answer
+- never ignore what a bounded cache returns from `put`/`push` when the
+  values own external resources — the return IS the eviction
+- a sentinel value for "no allocation" must not be a valid allocation id.
+  `Option` exists
+- a single-frame probe cannot see any of this. the reproduction is a
+  static layer plus frames of churn (`probe::render_frames`), and the
+  regression test is `a_static_layer_survives_frames_of_atlas_churn`
 - do not trust a visual read of a render, in either direction. a one-line
   probe looked clean and the engine was not; a stress render looked
   "letter-spaced" and measurement showed the advances were exactly linear.

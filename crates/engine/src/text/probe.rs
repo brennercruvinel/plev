@@ -20,6 +20,7 @@ use wgpu::util::DeviceExt;
 const INK_THRESHOLD: u8 = 170;
 
 /// One line of the scene: what to draw, in which style, and where.
+#[derive(Clone)]
 pub struct Specimen {
     pub text: String,
     pub style: TextStyle,
@@ -61,7 +62,10 @@ impl Rendered {
     /// `> 60` counts the whole canvas and any comparison built on it is
     /// vacuous.
     pub fn ink(&self) -> usize {
-        self.rgba.chunks_exact(4).filter(|p| p[0] > INK_THRESHOLD).count()
+        self.rgba
+            .chunks_exact(4)
+            .filter(|p| p[0] > INK_THRESHOLD)
+            .count()
     }
 
     /// Horizontal extent of the ink in rows `y..y + h`, as
@@ -109,6 +113,61 @@ pub fn atlas_filling_specimens() -> Vec<(String, TextStyle)> {
     out
 }
 
+/// A compositor layer: its text, and whether the app re-resolves it every
+/// frame.
+///
+/// `static_layer` models the common case the single-frame path cannot: a
+/// sidebar or header whose scene never changes, so it is skipped by
+/// `resolve_layer_text` and keeps the vertex buffer it built on frame one.
+/// Those retained vertices still point into the glyph atlas, which later
+/// frames keep mutating.
+pub struct Layer {
+    pub specimens: Vec<Specimen>,
+    pub redraws_every_frame: bool,
+}
+
+impl Layer {
+    /// Re-resolved every frame (animated content, hover states).
+    pub fn dynamic(specimens: Vec<Specimen>) -> Self {
+        Self {
+            specimens,
+            redraws_every_frame: true,
+        }
+    }
+
+    /// Resolved once and then skipped, like a static panel.
+    pub fn static_layer(specimens: Vec<Specimen>) -> Self {
+        Self {
+            specimens,
+            redraws_every_frame: false,
+        }
+    }
+}
+
+/// Render `frames` frames of `layers`, then draw every layer's *current*
+/// vertex buffer — static layers included, still holding the vertices they
+/// built on frame one.
+///
+/// This is the shape of the real render loop, and it is the only way to see
+/// defects that need more than one frame: a glyph the atlas evicted because
+/// no layer resolved this frame is still referenced by the static layer that
+/// drew it earlier.
+pub fn render_frames(
+    layers: &[Layer],
+    frames: usize,
+    logical_w: u32,
+    logical_h: u32,
+    raster_scale: f32,
+) -> Option<Rendered> {
+    pollster::block_on(render_frames_async(
+        layers,
+        frames,
+        logical_w,
+        logical_h,
+        raster_scale,
+    ))
+}
+
 /// Render `specimens` into a `logical_w x logical_h` scene at `raster_scale`.
 ///
 /// `None` when no GPU adapter is available, so callers can skip instead of
@@ -122,12 +181,61 @@ pub fn render(
     pollster::block_on(render_async(specimens, logical_w, logical_h, raster_scale))
 }
 
+async fn render_frames_async(
+    layers: &[Layer],
+    frames: usize,
+    logical_w: u32,
+    logical_h: u32,
+    scale: f32,
+) -> Option<Rendered> {
+    render_impl(RenderJob {
+        layers,
+        frames,
+        logical_w,
+        logical_h,
+        scale,
+    })
+    .await
+}
+
+struct RenderJob<'a> {
+    layers: &'a [Layer],
+    frames: usize,
+    logical_w: u32,
+    logical_h: u32,
+    scale: f32,
+}
+
 async fn render_async(
     specimens: &[Specimen],
     logical_w: u32,
     logical_h: u32,
     scale: f32,
 ) -> Option<Rendered> {
+    let layers = [Layer::dynamic(
+        specimens
+            .iter()
+            .map(|s| Specimen::new(s.text.clone(), s.style.clone(), s.x, s.y))
+            .collect(),
+    )];
+    render_impl(RenderJob {
+        layers: &layers,
+        frames: 1,
+        logical_w,
+        logical_h,
+        scale,
+    })
+    .await
+}
+
+async fn render_impl(job: RenderJob<'_>) -> Option<Rendered> {
+    let RenderJob {
+        layers,
+        frames,
+        logical_w,
+        logical_h,
+        scale,
+    } = job;
     let w = logical_w;
     let h = logical_h;
     let instance = wgpu::Instance::default();
@@ -256,30 +364,57 @@ async fn render_async(
     let mut text = TextSystem::new(&device, &atlas_bgl);
     // Fresh TextSystem per render, so there is nothing stale to invalidate.
     let _ = text.set_raster_scale(scale);
-    text.begin_frame();
 
-    let nodes: Vec<_> = specimens
+    // Each layer keeps the vertices from the last frame that resolved it —
+    // a static layer keeps frame one's forever, exactly like a clean layer
+    // in `resolve_layer_text`.
+    let mut buffers: Vec<(Vec<TextVertex>, Vec<u32>)> =
+        layers.iter().map(|_| (Vec::new(), Vec::new())).collect();
+
+    for frame in 0..frames.max(1) {
+        text.begin_frame();
+        // Mirror `resolve_layer_text`: a disturbance recorded during the
+        // previous frame (eviction, scale change) forces every layer this
+        // frame, static ones included.
+        let disturbed = text.take_atlas_disturbed();
+        for (i, layer) in layers.iter().enumerate() {
+            if frame > 0 && !layer.redraws_every_frame && !disturbed {
+                continue;
+            }
+            let nodes: Vec<_> = layer
+                .specimens
+                .iter()
+                .map(|s| SceneNode::Text {
+                    key: TextNodeKey::from_style(&s.text, &s.style, None),
+                    x: s.x,
+                    y: s.y,
+                    color: [1.0, 1.0, 1.0, 1.0],
+                })
+                .collect();
+            buffers[i] = text.resolve_for_layer(&device, &queue, &atlas_bgl, &nodes);
+        }
+        text.finish_frame();
+    }
+
+    let gpu_buffers: Vec<_> = buffers
         .iter()
-        .map(|s| SceneNode::Text {
-            key: TextNodeKey::from_style(&s.text, &s.style, None),
-            x: s.x,
-            y: s.y,
-            color: [1.0, 1.0, 1.0, 1.0],
+        .filter(|(v, i)| !v.is_empty() && !i.is_empty())
+        .map(|(v, i)| {
+            (
+                device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("v"),
+                    contents: bytemuck::cast_slice(v),
+                    usage: wgpu::BufferUsages::VERTEX,
+                }),
+                device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("i"),
+                    contents: bytemuck::cast_slice(i),
+                    usage: wgpu::BufferUsages::INDEX,
+                }),
+                i.len() as u32,
+            )
         })
         .collect();
-
-    let (verts, idx) = text.resolve_for_layer(&device, &queue, &atlas_bgl, &nodes);
-
-    let vbuf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        label: Some("v"),
-        contents: bytemuck::cast_slice(&verts),
-        usage: wgpu::BufferUsages::VERTEX,
-    });
-    let ibuf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        label: Some("i"),
-        contents: bytemuck::cast_slice(&idx),
-        usage: wgpu::BufferUsages::INDEX,
-    });
 
     // --- render + readback ------------------------------------------------
     let target = device.create_texture(&wgpu::TextureDescriptor {
@@ -329,9 +464,11 @@ async fn render_async(
         pass.set_pipeline(&pipeline);
         pass.set_bind_group(0, &proj_bg, &[]);
         pass.set_bind_group(1, &text.atlas_bind_group, &[]);
-        pass.set_vertex_buffer(0, vbuf.slice(..));
-        pass.set_index_buffer(ibuf.slice(..), wgpu::IndexFormat::Uint32);
-        pass.draw_indexed(0..idx.len() as u32, 0, 0..1);
+        for (vbuf, ibuf, count) in &gpu_buffers {
+            pass.set_vertex_buffer(0, vbuf.slice(..));
+            pass.set_index_buffer(ibuf.slice(..), wgpu::IndexFormat::Uint32);
+            pass.draw_indexed(0..*count, 0, 0..1);
+        }
     }
     enc.copy_texture_to_buffer(
         wgpu::TexelCopyTextureInfo {

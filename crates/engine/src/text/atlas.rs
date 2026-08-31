@@ -6,7 +6,6 @@ use super::system::{MAX_ATLAS_SIZE, TextSystem};
 use super::vertex::TextVertex;
 
 use cosmic_text::Buffer;
-use etagere::AllocId;
 
 /// Empty texels reserved around every glyph in the atlas. One texel on each
 /// side is what a bilinear tap can reach past the UV rect.
@@ -180,7 +179,7 @@ pub(super) fn rasterize_and_upload(
 
     if gw == 0 || gh == 0 {
         let entry = GlyphEntry {
-            alloc_id: AllocId::deserialize(0),
+            alloc_id: None,
             atlas_x: 0,
             atlas_y: 0,
             width: 0,
@@ -188,7 +187,7 @@ pub(super) fn rasterize_and_upload(
             left: image.placement.left as f32,
             top: image.placement.top as f32,
         };
-        sys.glyph_cache.put(cache_key, entry.clone());
+        cache_insert(sys, cache_key, entry.clone());
         return Some(entry);
     }
 
@@ -202,30 +201,54 @@ pub(super) fn rasterize_and_upload(
     let padded_w = gw as i32 + GLYPH_PADDING as i32 * 2;
     let padded_h = gh as i32 + GLYPH_PADDING as i32 * 2;
 
+    // Grow before evicting.
+    //
+    // Eviction is only safe for glyphs nothing is still drawing, and
+    // `glyphs_in_use` cannot tell us that: it holds the glyphs resolved in
+    // *this* frame, while a layer whose scene did not change keeps the
+    // vertex buffer it built earlier and is skipped by `resolve_layer_text`.
+    // Its glyphs therefore look unused, get evicted, and their atlas slots
+    // are handed to other glyphs — while that layer goes on sampling them.
+    // On screen: a static sidebar whose letters turn into other letters.
+    //
+    // So the atlas grows to MAX_ATLAS_SIZE first and only evicts when it
+    // cannot grow any further. A UI never reaches that; when something does,
+    // the disturbance is recorded so every layer re-resolves.
     let alloc = loop {
         if let Some(alloc) = sys.allocator.allocate(size2(padded_w, padded_h)) {
             break alloc;
         }
 
-        let mut evicted = false;
+        if sys.atlas_size < MAX_ATLAS_SIZE {
+            let new_size = (sys.atlas_size * 2).min(MAX_ATLAS_SIZE);
+            grow_atlas(sys, device, queue, text_bind_group_layout, new_size);
+            continue;
+        }
+
         let mut freed = None;
+        let mut evicted = false;
         while let Some((evict_key, evict_entry)) = sys.glyph_cache.peek_lru() {
             if sys.glyphs_in_use.contains(evict_key) {
                 break;
             }
             let evict_alloc_id = evict_entry.alloc_id;
             let evict_key_copy = *evict_key;
-            sys.allocator.deallocate(evict_alloc_id);
+            // Only glyphs that actually reserved a rectangle give one back.
+            // Empty glyphs (spaces) carry `None`; the old sentinel
+            // `AllocId::deserialize(0)` was a *valid* id and decremented
+            // another glyph's bucket, tripping etagere's
+            // `assertion failed: bucket.refcount > 0`.
+            if let Some(id) = evict_alloc_id {
+                sys.allocator.deallocate(id);
+            }
             sys.glyph_cache.pop(&evict_key_copy);
+            sys.atlas_disturbed = true;
             evicted = true;
 
-            // Keep the allocation this eviction made room for. Allocating
-            // here only to test for space and then dropping the result
-            // leaked the rectangle: it stayed reserved in the allocator but
-            // was never recorded in `glyph_cache`, so nothing could ever
-            // evict it. Under sustained eviction the atlas fills with those
-            // orphans, grows to MAX_ATLAS_SIZE and then starts dropping
-            // glyphs outright.
+            // Keep the allocation this eviction made room for; allocating
+            // only to test and then dropping the result leaked the rectangle
+            // (reserved in the allocator, absent from `glyph_cache`, so
+            // nothing could ever evict it).
             if let Some(alloc) = sys.allocator.allocate(size2(padded_w, padded_h)) {
                 freed = Some(alloc);
                 break;
@@ -236,20 +259,16 @@ pub(super) fn rasterize_and_upload(
         }
 
         if !evicted {
-            let new_size = (sys.atlas_size * 2).min(MAX_ATLAS_SIZE);
-            if new_size == sys.atlas_size {
-                log::warn!(
-                    "Glyph atlas full at maximum size {}x{}: cannot allocate glyph_id={} \
-                     ({}x{} px); glyph will not be rendered",
-                    sys.atlas_size,
-                    sys.atlas_size,
-                    cache_key.glyph_id,
-                    padded_w,
-                    padded_h
-                );
-                return None;
-            }
-            grow_atlas(sys, device, queue, text_bind_group_layout, new_size);
+            log::warn!(
+                "Glyph atlas full at maximum size {}x{}: cannot allocate glyph_id={} \
+                 ({}x{} px); glyph will not be rendered",
+                sys.atlas_size,
+                sys.atlas_size,
+                cache_key.glyph_id,
+                padded_w,
+                padded_h
+            );
+            return None;
         }
     };
 
@@ -299,7 +318,7 @@ pub(super) fn rasterize_and_upload(
     );
 
     let entry = GlyphEntry {
-        alloc_id: alloc.id,
+        alloc_id: Some(alloc.id),
         atlas_x,
         atlas_y,
         width: gw,
@@ -307,7 +326,7 @@ pub(super) fn rasterize_and_upload(
         left: image.placement.left as f32,
         top: image.placement.top as f32,
     };
-    sys.glyph_cache.put(cache_key, entry.clone());
+    cache_insert(sys, cache_key, entry.clone());
     log::debug!(
         "Atlas alloc: glyph_id={} at ({}, {}), size={}x{}",
         cache_key.glyph_id,
@@ -317,6 +336,30 @@ pub(super) fn rasterize_and_upload(
         gh
     );
     Some(entry)
+}
+
+/// Insert into the glyph cache, giving back the atlas rectangle of whatever
+/// the LRU capacity pushed out.
+///
+/// `LruCache::put` at capacity drops its least-recently-used entry and
+/// *returns* it; ignoring that return leaked the dropped entry's rectangle —
+/// still reserved in the allocator, no longer reachable through the cache,
+/// so no eviction could ever free it. Under sustained churn the orphans
+/// consumed the entire atlas: it grew to `MAX_ATLAS_SIZE`, then real
+/// eviction ran on every frame, and every eviction hands a slot that some
+/// skipped layer still references to a different glyph. On screen that is
+/// rolling corruption — letters swapping into other letters and sizes.
+fn cache_insert(sys: &mut TextSystem, key: GlyphCacheKey, entry: GlyphEntry) {
+    if let Some((dropped_key, dropped)) = sys.glyph_cache.push(key, entry) {
+        // `push` returns the replaced value for the *same* key, or the
+        // capacity-evicted LRU pair for a different key. Either way its
+        // rectangle is now unreachable and must go back to the allocator.
+        if let Some(id) = dropped.alloc_id {
+            sys.allocator.deallocate(id);
+            sys.atlas_disturbed = true;
+        }
+        let _ = dropped_key;
+    }
 }
 
 pub(super) fn grow_atlas(

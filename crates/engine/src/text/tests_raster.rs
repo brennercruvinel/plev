@@ -179,7 +179,7 @@ fn padded_upload_block_zeroes_the_gutter() {
 #[test]
 fn emitted_uvs_are_texels_so_they_survive_an_atlas_grow() {
     let entry = GlyphEntry {
-        alloc_id: etagere::AllocId::deserialize(0),
+        alloc_id: None,
         atlas_x: 40,
         atlas_y: 64,
         width: 7,
