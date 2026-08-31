@@ -97,14 +97,32 @@ fn resolve_interpreter_from(nest_python: Option<String>, start: Option<PathBuf>)
     "python3".into()
 }
 
-/// Locate the offline potion embedder script. Resolution order mirrors the
-/// CLI (`default_potion_embedder_path`): the nest repo layout relative to
-/// the cwd, the nest dev checkout sibling of this crate, the XDG data dir,
-/// and `<exe>/../share/nest/forge/`.
-pub fn default_embedder_path() -> Option<PathBuf> {
-    let rel = PathBuf::from("python")
-        .join("forge")
-        .join("embed_query_potion.py");
+/// Script that can reproduce the corpus model, from the manifest's
+/// `embedding_model`: potion corpora take the offline potion table, any
+/// other name takes the sentence-transformers bridge (`embed_query.py`),
+/// which echoes the manifest name and fingerprints the local snapshot —
+/// mirroring the CLI, where `search-text` uses `embed_query.py` and
+/// `ask`/`retrieve` use the potion script.
+fn embedder_script_rel(embedding_model: &str) -> PathBuf {
+    if embedding_model.contains("potion") {
+        PathBuf::from("python")
+            .join("forge")
+            .join("embed_query_potion.py")
+    } else {
+        PathBuf::from("python").join("embed_query.py")
+    }
+}
+
+/// Locate the embedder script for `embedding_model`. Resolution order
+/// mirrors the CLI (`default_potion_embedder_path`): the nest repo layout
+/// relative to the cwd, the nest dev checkout sibling of this crate, the
+/// XDG data dir, and `<exe>/../share/nest/`.
+pub fn default_embedder_path(embedding_model: &str) -> Option<PathBuf> {
+    let rel = embedder_script_rel(embedding_model);
+    // Installed layouts drop the repo's `python/` prefix: the scripts land
+    // under `nest/` directly (`nest/forge/embed_query_potion.py`,
+    // `nest/embed_query.py`).
+    let installed_rel: PathBuf = rel.components().skip(1).collect();
     let data_home = std::env::var("XDG_DATA_HOME")
         .ok()
         .map(PathBuf::from)
@@ -129,8 +147,8 @@ pub fn default_embedder_path() -> Option<PathBuf> {
                 .join("../../../nest")
                 .join(&rel),
         ),
-        data_home.map(|d| d.join("nest").join("forge").join("embed_query_potion.py")),
-        exe_share.map(|s| s.join("nest").join("forge").join("embed_query_potion.py")),
+        data_home.map(|d| d.join("nest").join(&installed_rel)),
+        exe_share.map(|s| s.join("nest").join(&installed_rel)),
     ];
     candidates.into_iter().flatten().find(|c| c.exists())
 }
@@ -221,7 +239,7 @@ pub fn embed_query(
     model_hash: &str,
     query: &str,
 ) -> Result<Vec<f32>, EmbedError> {
-    let embedder = default_embedder_path().ok_or(EmbedError::EmbedderNotFound)?;
+    let embedder = default_embedder_path(embedding_model).ok_or(EmbedError::EmbedderNotFound)?;
     let interpreter = resolve_interpreter();
     let args = vec![
         embedder.to_string_lossy().into_owned(),
@@ -235,14 +253,16 @@ pub fn embed_query(
 }
 
 /// Cheap capability probe for the Open screen: interpreter resolves and
-/// answers `--version`, and the embedder script exists. Returns a short
-/// human-readable status (e.g. "Python 3.13.1 · potion embedder found").
+/// answers `--version`, and at least one embedder script exists. Returns a
+/// short human-readable status (e.g. "Python 3.13.1 · embedder: …").
 pub fn check_embedder() -> Result<String, String> {
     let interpreter = resolve_interpreter();
     let out = run_with_timeout(&interpreter, &["--version".to_string()])
         .map_err(|e| format!("{interpreter}: {e}"))?;
     let version = String::from_utf8_lossy(&out).trim().to_string();
-    let embedder = default_embedder_path().ok_or("potion embedder script not found".to_string())?;
+    let embedder = default_embedder_path("potion")
+        .or_else(|| default_embedder_path(""))
+        .ok_or("embedder script not found".to_string())?;
     Ok(format!("{version} · embedder: {}", embedder.display()))
 }
 
@@ -288,6 +308,14 @@ mod tests {
             embedding_dim: dim,
             vector: vec![0.0; dim],
         }
+    }
+
+    #[test]
+    fn dispatches_the_script_by_manifest_model() {
+        assert!(
+            embedder_script_rel("minishlab/potion-base-8M/v1").ends_with("embed_query_potion.py")
+        );
+        assert!(embedder_script_rel("all-MiniLM-L6-v2").ends_with("embed_query.py"));
     }
 
     #[test]
