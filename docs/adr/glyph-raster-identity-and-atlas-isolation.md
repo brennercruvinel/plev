@@ -31,7 +31,20 @@ what actually located it was refusing to guess further:
 that isolated the defect to the raster path, and the probe's `CacheKey`
 column showed it directly.
 
-## the three defects
+## why it looked resolution-dependent
+
+reported as "the big screen breaks, the small mac screen works". that is the
+shape of the atlas defect, not a separate one: a larger window shows more
+text, more distinct glyphs fill the atlas, and the atlas grows. on the
+smaller panel the same scene may never reach the first grow, so it renders
+correctly. dragging the window between displays adds the second trigger
+below.
+
+a one-line probe cannot see either. the reproduction is `PROBE_FILL=1`,
+which pushes enough glyph/size/weight combinations through the atlas to
+force a grow.
+
+## the defects
 
 **1. the atlas cache key dropped three of seven identity fields.**
 `GlyphCacheKey` kept `font_id`, `glyph_id`, `font_size_bits` and `flags`,
@@ -58,6 +71,23 @@ old texture into the new one at the same origin. quads emitted before a
 grow carried `x / old_size`; after it they sampled half-scale — the wrong
 region entirely, which reads as glyphs made of pieces of other glyphs.
 
+**4. a raster-scale change stranded the layers it did not re-resolve.**
+`set_raster_scale` resets the glyph cache and rebuilds the atlas allocator,
+handing the entire atlas back as free space. But `resolve_layer_text` skips
+layers whose scene did not change, so those layers kept vertices pointing at
+texels that the next glyphs were then packed over. This is the second half
+of the resolution-dependence: it fires when a window moves between displays
+of different DPI (a 2x laptop panel to a 1x external one), not when it is
+merely large.
+
+**5. eviction leaked an atlas allocation each time it succeeded.** The
+eviction loop called `allocate` to test whether it had freed enough room and
+dropped the result, then let the outer loop allocate again. The probe
+rectangle stayed reserved in the allocator but was never recorded in
+`glyph_cache`, so nothing could evict it. Under sustained eviction the atlas
+fills with orphans, grows to `MAX_ATLAS_SIZE`, and then drops glyphs
+outright — text silently missing rather than scrambled.
+
 defects 1 and 3 compound: 1 guarantees the quad sits at a fractional offset
 from the bitmap it samples, and 2 then blends in whatever is adjacent.
 
@@ -74,6 +104,11 @@ from the bitmap it samples, and 2 then blends in whatever is adjacent.
   `textureDimensions(atlas_texture)`, so the division happens against the
   atlas actually bound at draw time and a grow cannot invalidate a quad.
   this needs no uniform and no bind-group change
+- `set_raster_scale` returns whether the scale changed and is
+  `#[must_use]`; `resolve_layer_text` re-resolves **every** layer when it
+  did, via the named `must_resolve_text` predicate
+- eviction keeps the allocation it made room for instead of allocating
+  twice and discarding the first
 
 ## consequences
 
@@ -83,9 +118,16 @@ from the bitmap it samples, and 2 then blends in whatever is adjacent.
 - text is pixel-exact: the quad origin is integral in physical pixels
   (`physical.x` and `placement.left` are both physical integers), and it now
   samples the bitmap rasterized for its own subpixel phase
-- `tests_raster.rs` pins all three. each was verified as a kill test:
-  narrowing the key fails to compile, `GLYPH_PADDING = 0` fails the gutter
-  test, and normalizing in `glyph_uv_rect` fails the texel-UV test
+- `tests_raster.rs` pins the GPU-free invariants and
+  `tests/text_raster_pixels.rs` + `tests/text_drawn_extent.rs` pin the
+  rendered pixels, including "a string renders identically whether or not
+  the atlas grew" and "the painted run is as wide as the measured run" at
+  scales 1.0 through 3.0 and at fractional factors. They skip, rather than
+  fail, without a GPU adapter
+- verified as kill tests: narrowing the key fails to compile,
+  `GLYPH_PADDING = 0` fails the gutter test, and normalizing in
+  `glyph_uv_rect` fails the atlas-grow pixel test with the production
+  symptom
 
 ## avoid
 
@@ -99,3 +141,11 @@ from the bitmap it samples, and 2 then blends in whatever is adjacent.
   the probe cost minutes and the guesses cost more
 - padding a glyph slot is not the same as clearing it. an evicted slot keeps
   its pixels until something writes over them
+- never invalidate a shared cache without invalidating everything that
+  points into it. resetting the atlas allocator is not a local operation
+- never call an allocator to ask "is there room" and drop the answer
+- do not trust a visual read of a render, in either direction. a one-line
+  probe looked clean and the engine was not; a stress render looked
+  "letter-spaced" and measurement showed the advances were exactly linear.
+  the numbers settled both — `tests/text_drawn_extent.rs` compares painted
+  extent against the measurer instead of an eye

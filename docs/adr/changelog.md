@@ -9,6 +9,14 @@ status: living
 
 ## unreleased
 
+- glyph raster survives a monitor change (2026-08-31): a raster-scale
+  change resets the glyph cache and the atlas allocator, but layers whose
+  scene had not changed were skipped and kept sampling repacked texels —
+  scrambled text after dragging a window between displays of different DPI.
+  set_raster_scale is now #[must_use] and reports the change; every layer
+  re-resolves when it does. Also fixed an atlas allocation leaked on every
+  successful eviction (allocate-to-test then discard), which filled the
+  atlas with unevictable orphans until glyphs were dropped outright.
 - glyph raster path made pixel-exact (2026-08-31): the atlas cache key is
   now cosmic-text's `CacheKey` verbatim — it had dropped `x_bin`, `y_bin`
   and `font_weight`, so repeats of a character in a different subpixel
