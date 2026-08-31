@@ -27,6 +27,39 @@ fn command_scissor(
     }
 }
 
+/// Whether a layer's text must be re-resolved this frame.
+///
+/// Normally only layers whose scene changed need it. A raster-scale change
+/// is the exception: it resets the glyph cache and hands the whole atlas
+/// back to the allocator, so the vertices of an untouched layer point at
+/// texels that the next glyphs will be packed over. Skipping those layers
+/// is what made a window dragged between displays of different DPI come
+/// back with scrambled text.
+pub(crate) fn must_resolve_text(layer_dirty: bool, raster_scale_changed: bool) -> bool {
+    layer_dirty || raster_scale_changed
+}
+
+#[cfg(test)]
+mod resolve_gate_tests {
+    use super::must_resolve_text;
+
+    #[test]
+    fn clean_layers_are_skipped_normally() {
+        assert!(!must_resolve_text(false, false));
+        assert!(must_resolve_text(true, false));
+    }
+
+    #[test]
+    fn a_raster_scale_change_forces_even_clean_layers() {
+        assert!(
+            must_resolve_text(false, true),
+            "a clean layer keeps vertices into an atlas that the scale change \
+             just repacked; it must be re-resolved"
+        );
+        assert!(must_resolve_text(true, true));
+    }
+}
+
 /// Resolve text for every dirty layer, one `resolve_for_layer` call per
 /// clip group so clipped text (scrolled lists, panels) scissors with its
 /// container. Shared by the built-in render loop and standalone apps.
@@ -41,7 +74,10 @@ pub fn resolve_layer_text(
     text_system: &mut crate::text::TextSystem,
 ) {
     let (scale, _) = gpu.clip_scale();
-    text_system.set_raster_scale(scale);
+    // A scale change resets the glyph cache and repacks the atlas, so every
+    // layer's text vertices are stale — including layers whose scene did not
+    // change and would otherwise be skipped below.
+    let scale_changed = text_system.set_raster_scale(scale);
 
     let layer_info: Vec<_> = compositor
         .layers()
@@ -50,7 +86,7 @@ pub fn resolve_layer_text(
         .collect();
 
     for (layer_id, dirty, groups) in layer_info {
-        if !dirty {
+        if !must_resolve_text(dirty, scale_changed) {
             continue;
         }
         let resolved: Vec<_> = groups

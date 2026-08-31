@@ -138,3 +138,61 @@ fn raster_scale_does_not_leak_between_renders() {
         "a 1x render between two 2x renders changed the 2x pixels"
     );
 }
+
+/// Dragging a window between monitors: the same scene, rendered after the
+/// raster scale has changed, must look like the scene rendered at that scale
+/// from the start.
+///
+/// Pre-fix, a scale change reset the glyph cache and the atlas allocator
+/// while layers whose scene had not changed kept their vertices, so they
+/// went on sampling texels that had been repacked with other glyphs.
+#[test]
+fn a_scale_change_does_not_leave_stale_glyphs_behind() {
+    let ramp = engine::theme::TypographyScale::hoff();
+    let mut s = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
+    for (i, (text, style)) in engine::text::probe::atlas_filling_specimens()
+        .into_iter()
+        .enumerate()
+    {
+        s.push(Specimen::new(text, style, 20.0, 80.0 + i as f32 * 40.0));
+    }
+    let height = 80 + 40 * 32 + 40;
+
+    // Laptop panel, then external display, then back.
+    let Some(first_at_2x) = render(&s, W, height, 2.0) else {
+        eprintln!("no GPU adapter; skipping");
+        return;
+    };
+    let Some(_at_1x) = render(&s, W, height, 1.0) else {
+        return;
+    };
+    let Some(again_at_2x) = render(&s, W, height, 2.0) else {
+        return;
+    };
+
+    assert_eq!(
+        first_at_2x.rgba, again_at_2x.rgba,
+        "the scene rendered differently after a round trip through another \
+         raster scale: glyph bitmaps or atlas slots survived the change"
+    );
+}
+
+/// Ink is glyph coverage, not canvas. The threshold has to sit above the
+/// cleared background or every comparison built on `ink()` is vacuous —
+/// `crowded.ink() > alone.ink()` would then just be comparing image areas.
+#[test]
+fn ink_counts_glyph_coverage_not_background() {
+    let ramp = engine::theme::TypographyScale::hoff();
+    let s = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
+    let Some(img) = render(&s, W, 200, SCALE) else {
+        eprintln!("no GPU adapter; skipping");
+        return;
+    };
+    let total = (img.width * img.height) as usize;
+    assert!(img.ink() > 0, "the string drew nothing");
+    assert!(
+        img.ink() < total / 4,
+        "ink() counted {} of {total} pixels — it is counting the background",
+        img.ink()
+    );
+}

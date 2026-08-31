@@ -254,7 +254,8 @@ async fn render_async(
 
     // --- the scene --------------------------------------------------------
     let mut text = TextSystem::new(&device, &atlas_bgl);
-    text.set_raster_scale(scale);
+    // Fresh TextSystem per render, so there is nothing stale to invalidate.
+    let _ = text.set_raster_scale(scale);
     text.begin_frame();
 
     let nodes: Vec<_> = specimens

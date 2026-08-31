@@ -127,15 +127,27 @@ impl TextSystem {
     /// are rasterized at `font_size * scale`; when the scale changes the
     /// cached bitmaps are invalid and the glyph cache is reset (shaping is
     /// scale-independent and survives).
-    pub fn set_raster_scale(&mut self, scale: f32) {
+    ///
+    /// Returns `true` when the scale actually changed. **Callers must then
+    /// re-resolve every layer's text, dirty or not.** Resetting the cache
+    /// and the allocator hands the whole atlas back as free space, so the
+    /// next glyphs are packed over slots that layers rendered at the old
+    /// scale are still pointing at; a layer skipped because its scene did
+    /// not change would keep drawing those texels, which now hold different
+    /// glyphs. That is what makes a window dragged from a 2x laptop panel
+    /// to a 1x external display come back scrambled.
+    #[must_use = "a scale change invalidates every layer's text vertices"]
+    pub fn set_raster_scale(&mut self, scale: f32) -> bool {
         let scale = scale.max(0.01);
-        if (self.raster_scale - scale).abs() > 1e-6 {
-            log::info!("Text raster scale: {} -> {scale}", self.raster_scale);
-            self.raster_scale = scale;
-            self.glyph_cache.clear();
-            self.allocator =
-                BucketedAtlasAllocator::new(size2(self.atlas_size as i32, self.atlas_size as i32));
+        if (self.raster_scale - scale).abs() <= 1e-6 {
+            return false;
         }
+        log::info!("Text raster scale: {} -> {scale}", self.raster_scale);
+        self.raster_scale = scale;
+        self.glyph_cache.clear();
+        self.allocator =
+            BucketedAtlasAllocator::new(size2(self.atlas_size as i32, self.atlas_size as i32));
+        true
     }
 
     /// Call at the start of each frame before resolve_for_layer calls.

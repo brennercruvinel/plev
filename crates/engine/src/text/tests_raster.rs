@@ -246,3 +246,59 @@ fn glyph_quads_land_on_whole_physical_pixels() {
         }
     }
 }
+
+// -- raster scale changes (dragging a window between monitors) --------------
+
+/// A scale change resets the glyph cache and hands the whole atlas back to
+/// the allocator, so every quad already emitted is stale. The setter has to
+/// say so, because the caller skips layers whose scene did not change and
+/// those layers would keep sampling repacked texels.
+#[test]
+fn set_raster_scale_reports_whether_it_changed() {
+    // GPU-free: the flag is what render_passes branches on, and getting it
+    // wrong is the difference between a repaint and a scrambled panel.
+    let Some(mut sys) = test_text_system() else {
+        eprintln!("no GPU adapter; skipping");
+        return;
+    };
+    assert!(sys.set_raster_scale(2.0), "1.0 -> 2.0 is a change");
+    assert!(!sys.set_raster_scale(2.0), "2.0 -> 2.0 is not");
+    assert!(sys.set_raster_scale(1.0), "2.0 -> 1.0 is a change");
+    // Fractional factors are real (macOS "More Space", many external panels).
+    assert!(sys.set_raster_scale(1.5));
+    assert!(!sys.set_raster_scale(1.5));
+}
+
+fn test_text_system() -> Option<crate::text::TextSystem> {
+    let instance = wgpu::Instance::default();
+    let adapter =
+        pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions::default()))
+            .ok()?;
+    let (device, _queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
+        label: Some("raster_scale_test"),
+        ..Default::default()
+    }))
+    .ok()?;
+    let bgl = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        label: None,
+        entries: &[
+            wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Texture {
+                    sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                    view_dimension: wgpu::TextureViewDimension::D2,
+                    multisampled: false,
+                },
+                count: None,
+            },
+            wgpu::BindGroupLayoutEntry {
+                binding: 1,
+                visibility: wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                count: None,
+            },
+        ],
+    });
+    Some(crate::text::TextSystem::new(&device, &bgl))
+}

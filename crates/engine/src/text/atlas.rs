@@ -208,6 +208,7 @@ pub(super) fn rasterize_and_upload(
         }
 
         let mut evicted = false;
+        let mut freed = None;
         while let Some((evict_key, evict_entry)) = sys.glyph_cache.peek_lru() {
             if sys.glyphs_in_use.contains(evict_key) {
                 break;
@@ -218,9 +219,20 @@ pub(super) fn rasterize_and_upload(
             sys.glyph_cache.pop(&evict_key_copy);
             evicted = true;
 
-            if sys.allocator.allocate(size2(padded_w, padded_h)).is_some() {
+            // Keep the allocation this eviction made room for. Allocating
+            // here only to test for space and then dropping the result
+            // leaked the rectangle: it stayed reserved in the allocator but
+            // was never recorded in `glyph_cache`, so nothing could ever
+            // evict it. Under sustained eviction the atlas fills with those
+            // orphans, grows to MAX_ATLAS_SIZE and then starts dropping
+            // glyphs outright.
+            if let Some(alloc) = sys.allocator.allocate(size2(padded_w, padded_h)) {
+                freed = Some(alloc);
                 break;
             }
+        }
+        if let Some(alloc) = freed {
+            break alloc;
         }
 
         if !evicted {
