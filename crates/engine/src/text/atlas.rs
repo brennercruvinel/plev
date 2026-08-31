@@ -107,6 +107,45 @@ pub(super) fn emit_glyphs(
             let gh = entry.height as f32 / scale;
 
             let [u0, v0, u1, v1] = glyph_uv_rect(&entry);
+            // AUDIT3: quad muito maior que o corpo da fonte => a entrada do
+            // cache tem bitmap de outro tamanho. Re-rasteriza na hora e
+            // compara: distingue "cache guardou errado" de "raster errou".
+            if std::env::var("TEXT_AUDIT3").is_ok() {
+                let expect = glyph.font_size * scale;
+                if entry.height as f32 > expect * 1.25 {
+                    let fresh = sys
+                        .swash_cache
+                        .get_image_uncached(&mut sys.font_system, cache_key);
+                    let (fw, fh) = fresh
+                        .as_ref()
+                        .map(|i| (i.placement.width, i.placement.height))
+                        .unwrap_or((0, 0));
+                    eprintln!(
+                        "AUDIT3 {:?} key_sz={} bins=({:?},{:?}) cached={}x{} fresh={}x{}",
+                        run.text.get(glyph.start..glyph.end),
+                        f32::from_bits(cache_key.font_size_bits),
+                        cache_key.x_bin,
+                        cache_key.y_bin,
+                        entry.width,
+                        entry.height,
+                        fw,
+                        fh,
+                    );
+                }
+            }
+            if std::env::var("TEXT_AUDIT2").is_ok() && glyph.font_size > 19.0 && glyph.font_size < 21.0 {
+                eprintln!(
+                    "QUAD {:?} sz{} -> quad {}x{} @({:.1},{:.1}) uv[{u0},{v0}..{u1},{v1}] key_sz={} atlas={}",
+                    run.text.get(glyph.start..glyph.end),
+                    glyph.font_size,
+                    entry.width,
+                    entry.height,
+                    (physical.x as f32 + entry.left) / scale,
+                    (physical.y as f32 - entry.top) / scale,
+                    f32::from_bits(cache_key.font_size_bits),
+                    sys.atlas_size,
+                );
+            }
 
             let base = sys.staging_vertices.len() as u32;
             sys.staging_vertices.extend_from_slice(&[
@@ -338,27 +377,25 @@ pub(super) fn rasterize_and_upload(
     Some(entry)
 }
 
-/// Insert into the glyph cache, giving back the atlas rectangle of whatever
-/// the LRU capacity pushed out.
+/// Insert into the glyph cache.
 ///
-/// `LruCache::put` at capacity drops its least-recently-used entry and
-/// *returns* it; ignoring that return leaked the dropped entry's rectangle —
-/// still reserved in the allocator, no longer reachable through the cache,
-/// so no eviction could ever free it. Under sustained churn the orphans
-/// consumed the entire atlas: it grew to `MAX_ATLAS_SIZE`, then real
-/// eviction ran on every frame, and every eviction hands a slot that some
-/// skipped layer still references to a different glyph. On screen that is
-/// rolling corruption — letters swapping into other letters and sizes.
+/// The cache is unbounded (see its field docs): `push` can only return a
+/// same-key replacement here, never a capacity victim. A bounded cache was
+/// the root of both corruption eras — its silent capacity drops either
+/// leaked their atlas rectangle (orphans saturating the atlas) or, once the
+/// rectangle was returned to the allocator, handed a slot still referenced
+/// by this frame's vertices to the next glyph. Only the eviction loop below
+/// may free slots, because only it consults `glyphs_in_use`.
 fn cache_insert(sys: &mut TextSystem, key: GlyphCacheKey, entry: GlyphEntry) {
-    if let Some((dropped_key, dropped)) = sys.glyph_cache.push(key, entry) {
-        // `push` returns the replaced value for the *same* key, or the
-        // capacity-evicted LRU pair for a different key. Either way its
-        // rectangle is now unreachable and must go back to the allocator.
-        if let Some(id) = dropped.alloc_id {
+    if let Some((replaced_key, replaced)) = sys.glyph_cache.push(key, entry) {
+        // Same-key replacement only (an unbounded cache evicts nothing).
+        // It should be unreachable — inserts happen on cache miss — but if
+        // it fires, free the old rectangle rather than leak it.
+        debug_assert_eq!(replaced_key, key, "unbounded cache evicted a different key");
+        if let Some(id) = replaced.alloc_id {
             sys.allocator.deallocate(id);
             sys.atlas_disturbed = true;
         }
-        let _ = dropped_key;
     }
 }
 

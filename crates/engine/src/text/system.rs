@@ -2,7 +2,6 @@ use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, SwashCach
 use etagere::{BucketedAtlasAllocator, size2};
 use lru::LruCache;
 use rustc_hash::{FxHashMap, FxHashSet};
-use std::num::NonZeroUsize;
 
 use crate::compositor::{SceneNode, TextNodeKey};
 
@@ -53,13 +52,7 @@ pub struct TextSystem {
 
 pub(super) const INITIAL_ATLAS_SIZE: u32 = 512;
 pub(super) const MAX_ATLAS_SIZE: u32 = 4096;
-/// Must comfortably exceed the glyph count a full atlas can hold, or the
-/// LRU capacity starts dropping entries while their bitmaps still fit —
-/// churn with no memory win. A 4096x4096 atlas holds roughly 16k average
-/// UI-size slots, and the cache key is per (face, glyph, size, weight,
-/// subpixel bin), so distinct entries multiply fast. Entries are ~64 bytes;
-/// 32k of them is ~2 MB against the atlas's 16 MB.
-const GLYPH_CACHE_CAPACITY: usize = 32768;
+
 
 impl TextSystem {
     pub fn new(device: &wgpu::Device, text_bind_group_layout: &wgpu::BindGroupLayout) -> Self {
@@ -85,7 +78,18 @@ impl TextSystem {
             INITIAL_ATLAS_SIZE as i32,
             INITIAL_ATLAS_SIZE as i32,
         ));
-        let glyph_cache = LruCache::new(NonZeroUsize::new(GLYPH_CACHE_CAPACITY).unwrap());
+        // Unbounded on purpose: the atlas is the budget. Every entry's
+        // bitmap occupies atlas space, and the eviction loop in atlas.rs
+        // removes entries when it frees their slot, so the map can never
+        // outgrow what MAX_ATLAS_SIZE holds (a few MB of entries against the
+        // atlas's 16 MB). A *capacity* here was the bug behind both
+        // corruption eras: at capacity, `push` picks its own victim without
+        // consulting `glyphs_in_use`, dropping glyphs emitted THIS frame.
+        // Leaking the dropped rectangle saturated the atlas with orphans;
+        // deallocating it handed a slot that live vertices still pointed at
+        // to the very next glyph (titles drawn with pieces of other sizes).
+        // Only the eviction loop may free slots: only it checks users.
+        let glyph_cache = LruCache::unbounded();
 
         let (atlas_texture, atlas_view) = create_atlas_texture(device, INITIAL_ATLAS_SIZE);
 
@@ -248,6 +252,24 @@ impl TextSystem {
                 );
                 continue;
             };
+            // TEMP INSTRUMENT: any glyph whose font_size differs from the
+            // node's own says the shaped buffer belongs to another key.
+            if std::env::var("TEXT_AUDIT").is_ok() {
+                let want = f32::from_bits(key.font_size_bits);
+                for run in shaped.buffer.layout_runs() {
+                    for g in run.glyphs.iter() {
+                        if (g.font_size - want).abs() > 0.01 {
+                            eprintln!(
+                                "AUDIT-MISMATCH text={:?} want={}px glyph {:?} has {}px",
+                                key.text.get(..30.min(key.text.len())),
+                                want,
+                                run.text.get(g.start..g.end),
+                                g.font_size
+                            );
+                        }
+                    }
+                }
+            }
             emit_glyphs(
                 self,
                 &atlas::GlyphGpuResources {

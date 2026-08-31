@@ -79,7 +79,7 @@ impl Section {
         Section::Effects,
     ];
 
-    fn title(self) -> &'static str {
+    pub fn title(self) -> &'static str {
         match self {
             Section::Cards => "Cards",
             Section::Buttons => "Buttons",
