@@ -53,13 +53,9 @@ fn renders_ink() {
     );
 }
 
-/// The regression that motivated all of this: with enough distinct glyphs on
-/// screen the atlas doubles partway through the frame. Quads emitted before
-/// the grow must still sample their own glyphs.
-///
-/// This fails loudly against the pre-fix engine, which baked normalized UVs
-/// against the atlas size at emit time: after the grow every earlier quad
-/// sampled the wrong region and the text became fragments of other glyphs.
+/// With enough distinct glyphs on screen the atlas doubles partway through
+/// the frame; quads emitted before the grow must still sample their own
+/// glyphs.
 #[test]
 fn a_string_renders_identically_whether_or_not_the_atlas_grew() {
     let Some(alone) = render_scene(&[]) else {
@@ -142,10 +138,6 @@ fn raster_scale_does_not_leak_between_renders() {
 /// Dragging a window between monitors: the same scene, rendered after the
 /// raster scale has changed, must look like the scene rendered at that scale
 /// from the start.
-///
-/// Pre-fix, a scale change reset the glyph cache and the atlas allocator
-/// while layers whose scene had not changed kept their vertices, so they
-/// went on sampling texels that had been repacked with other glyphs.
 #[test]
 fn a_scale_change_does_not_leave_stale_glyphs_behind() {
     let ramp = engine::theme::TypographyScale::hoff();
@@ -197,15 +189,9 @@ fn ink_counts_glyph_coverage_not_background() {
     );
 }
 
-/// The multi-frame regression: a static layer must survive frames of heavy
-/// atlas churn untouched.
-///
-/// This needs more than one frame, which is why every earlier single-frame
-/// probe missed it. Two defects conspired: `LruCache::put` at capacity
-/// dropped entries without returning their atlas rectangles (orphans
-/// saturated the atlas until real eviction ran on every frame), and
-/// eviction reused slots that skipped layers still referenced. On screen:
-/// a static sidebar whose letters turned into other letters and sizes.
+/// A static layer must survive frames of heavy atlas churn untouched: its
+/// retained vertices reference atlas slots that later frames must not
+/// repack out from under it.
 #[test]
 fn a_static_layer_survives_frames_of_atlas_churn() {
     use engine::text::probe::{Layer, render_frames};

@@ -7,10 +7,8 @@
 //! narrower than that, labels overflow their pills and centred text sits
 //! off-centre.
 //!
-//! Scale matters because it is what changes between monitors — a Retina
-//! laptop panel reports 2.0 and an external display commonly 1.0, with
-//! fractional factors in between. A defect that only shows up at one of
-//! them looks like "it breaks on the big screen".
+//! Scale is what changes between monitors: a Retina panel reports 2.0, an
+//! external display commonly 1.0, with fractional factors in between.
 
 use engine::text::probe::{Specimen, render};
 use engine::text::{TextMeasurer, TextStyle};

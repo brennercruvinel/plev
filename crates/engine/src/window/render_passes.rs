@@ -27,14 +27,9 @@ fn command_scissor(
     }
 }
 
-/// Whether a layer's text must be re-resolved this frame.
-///
-/// Normally only layers whose scene changed need it. A raster-scale change
-/// is the exception: it resets the glyph cache and hands the whole atlas
-/// back to the allocator, so the vertices of an untouched layer point at
-/// texels that the next glyphs will be packed over. Skipping those layers
-/// is what made a window dragged between displays of different DPI come
-/// back with scrambled text.
+/// Whether a layer's text must be re-resolved this frame: its scene
+/// changed, or the atlas was repacked (scale change, eviction, purge) and
+/// every retained vertex buffer points at stale slots.
 pub(crate) fn must_resolve_text(layer_dirty: bool, atlas_disturbed: bool) -> bool {
     layer_dirty || atlas_disturbed
 }

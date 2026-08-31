@@ -52,12 +52,8 @@ pub struct TextSystem {
 
 pub(super) const INITIAL_ATLAS_SIZE: u32 = 512;
 pub(super) const MAX_ATLAS_SIZE: u32 = 4096;
-/// Must comfortably exceed the glyph count a full atlas can hold, or the
-/// LRU capacity starts dropping entries while their bitmaps still fit —
-/// churn with no memory win. A 4096x4096 atlas holds roughly 16k average
-/// UI-size slots, and the cache key is per (face, glyph, size, weight,
-/// subpixel bin), so distinct entries multiply fast. Entries are ~64 bytes;
-/// 32k of them is ~2 MB against the atlas's 16 MB.
+/// Sized to exceed the glyph count a full atlas can hold: entries are per
+/// (face, glyph, size, weight, subpixel bin) and cost ~64 bytes each.
 const GLYPH_CACHE_CAPACITY: usize = 32768;
 
 impl TextSystem {
@@ -138,14 +134,10 @@ impl TextSystem {
     /// cached bitmaps are invalid and the glyph cache is reset (shaping is
     /// scale-independent and survives).
     ///
-    /// Returns `true` when the scale actually changed. **Callers must then
-    /// re-resolve every layer's text, dirty or not.** Resetting the cache
-    /// and the allocator hands the whole atlas back as free space, so the
-    /// next glyphs are packed over slots that layers rendered at the old
-    /// scale are still pointing at; a layer skipped because its scene did
-    /// not change would keep drawing those texels, which now hold different
-    /// glyphs. That is what makes a window dragged from a 2x laptop panel
-    /// to a 1x external display come back scrambled.
+    /// Returns `true` when the scale actually changed. Callers must then
+    /// re-resolve every layer's text, dirty or not: resetting the cache and
+    /// the allocator repacks the atlas, so vertices retained by unchanged
+    /// layers point at slots that will hold different glyphs.
     #[must_use = "a scale change invalidates every layer's text vertices"]
     pub fn set_raster_scale(&mut self, scale: f32) -> bool {
         let scale = scale.max(0.01);
