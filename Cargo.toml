@@ -96,7 +96,7 @@ pollster = "0.4"
 env_logger = "0.11"
 arboard = { version = "3", default-features = false }
 notify = "7"
-notify-debouncer-full = "0.4"
+notify-debouncer-full = "0.7"
 android_logger = "0.14"
 # -- wasm
 wasm-bindgen = "0.2"
