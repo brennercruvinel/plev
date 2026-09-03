@@ -69,7 +69,7 @@ etagere = "0.2"
 # gradients, use/defs, shape-to-path) into a flat tree we tessellate.
 # default-features off drops fontdb/text-to-path (wasm-safe, deterministic);
 # text is skipped like lot skips it. 0.45 is the last release on msrv 1.85.
-usvg = { version = "0.45", default-features = false }
+usvg = { version = "0.48", default-features = false }
 # -- data / util
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
