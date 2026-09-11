@@ -229,7 +229,8 @@ cargo bench -p rope              # one crate
 
 made it simple, but significant.
 
-Brenner Cruvinel.
+this is maintained by brenner cruvinel (brenner@hoffresearch.com). 
+all contributions are welcome.
 (∂μfμν = jν)
 
 MIT.
