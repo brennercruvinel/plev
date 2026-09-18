@@ -45,6 +45,7 @@ const SECTION_HNSW_INDEX: u32 = 0x07;
 const SECTION_BM25_INDEX: u32 = 0x08;
 const SECTION_GRAPH_ADJACENCY: u32 = 0x0C;
 const SECTION_SPACE_TABLE: u32 = 0x15;
+const SECTION_BLOB_DATA: u32 = 0x17;
 
 /// Section encodings (urna_format::layout).
 const ENCODING_RAW: u32 = 0;
@@ -436,6 +437,8 @@ impl UrnaBytes {
                 source_uri: c.lp_str()?,
                 offset_start: c.u64()?,
                 offset_end: c.u64()?,
+                // The web reader has no overlay codec: 0x03 spans only.
+                blob: None,
             });
         }
         Ok(out)
@@ -604,7 +607,10 @@ impl UrnaBytes {
             file_size: self.bytes.len() as u64,
             manifest: self.manifest.clone(),
             sections: self.sections.clone(),
-            blobs: serde_json::Value::Null,
+            // The blob and space tables need their codecs; web v1 lists
+            // neither (the capability chips still show them present).
+            blobs: Vec::new(),
+            spaces: Vec::new(),
             file_hash: self.file_hash.clone(),
             content_hash: self.content_hash.clone(),
             simd_backend: "wasm (scalar)".to_string(),
@@ -623,6 +629,7 @@ impl UrnaBytes {
             has_spaces: self.has_spaces,
             // Space names need the space_table codec; web v1 lists none.
             space_names: Vec::new(),
+            has_blob_data: self.section(SECTION_BLOB_DATA).is_some(),
             graph_nodes: self.graph.as_ref().map(|g| g.n_nodes),
         }
     }

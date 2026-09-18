@@ -8,7 +8,9 @@
 //!   backend's engine, unit-tested natively against the real writer).
 //! - [`bench`]: pure benchmark stats (all targets). Graph geometry moved
 //!   to `engine::graph` in design-system F3.
-//! - [`backend`] + [`worker`] (native): mmap runtime + worker thread.
+//! - [`backend`] + [`worker`] (native): mmap runtime + worker thread;
+//!   [`embed`] (offline query embedders) and [`frames`] (ffmpeg frame
+//!   preview for inlined media) run on that thread.
 //! - [`web`] (wasm): inline worker over `urnaread`.
 //!
 //! The explorer talks to [`Worker`], the platform alias with an identical
@@ -22,6 +24,8 @@ pub mod types;
 pub mod backend;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod embed;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod frames;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod recents;
 #[cfg(not(target_arch = "wasm32"))]

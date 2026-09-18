@@ -1,8 +1,8 @@
-//! OPEN screen: path field + Open button + recents + drag-and-drop hint
-//! on desktop; a file-picker button on the web (browsers get no path
-//! input and no canvas drag-and-drop). The screen owns only widget state;
-//! recents, status and the embedder probe live in `UrnauiView` and flow
-//! in as render context.
+//! OPEN screen: path field + Open button + a Browse… button (native file
+//! dialog) + recents + drag-and-drop hint on desktop; a file-picker button
+//! on the web (browsers get no path input and no canvas drag-and-drop).
+//! The screen owns only widget state; recents, status and the embedder /
+//! ffmpeg probes live in `UrnauiView` and flow in as render context.
 
 use engine::compositor::Compositor;
 use engine::text::TextMeasurer;
@@ -26,6 +26,8 @@ pub struct OpenContext<'a> {
     pub error: &'a str,
     /// Embedder probe result, once the worker answered.
     pub embedder: Option<&'a Result<String, String>>,
+    /// ffmpeg on PATH (frame previews), probed at the first open.
+    pub ffmpeg: Option<bool>,
     pub opening: bool,
     /// A file is hovering over the window (drag-and-drop feedback).
     pub file_hover: bool,
@@ -37,6 +39,10 @@ pub struct OpenScreen {
     #[cfg(not(target_arch = "wasm32"))]
     path: Field,
     open_button: Button,
+    /// Native file dialog (desktop only; the web's picker IS the open
+    /// button).
+    #[cfg(not(target_arch = "wasm32"))]
+    browse_button: Button,
     recents_hover: Option<usize>,
     spinner: Spinner,
     opening: bool,
@@ -56,6 +62,9 @@ impl OpenScreen {
             #[cfg(not(target_arch = "wasm32"))]
             path: Field::new("/path/to/corpus.urna", theme),
             open_button: Button::new(label).icon("folder-open"),
+            #[cfg(not(target_arch = "wasm32"))]
+            browse_button: Button::new("Browse…")
+                .variant(engine::ui::widgets::ButtonVariant::Outline),
             recents_hover: None,
             spinner: Spinner::new().size(SpinnerSize::Sm),
             opening: false,
@@ -65,12 +74,21 @@ impl OpenScreen {
     #[cfg(not(target_arch = "wasm32"))]
     fn field_rect(&self, content: Rect) -> Rect {
         let (bw, bh) = self.open_button.preferred_size();
+        let (xw, _) = self.browse_button.preferred_size();
         Rect::new(
             content.x,
             content.y,
-            (content.w - bw - GAP).max(120.0),
+            (content.w - bw - xw - GAP * 2.0).max(120.0),
             FIELD_H.max(bh),
         )
+    }
+
+    /// Browse… sits between the field and Open.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn browse_rect(&self, content: Rect) -> Rect {
+        let (bw, _) = self.open_button.preferred_size();
+        let (xw, xh) = self.browse_button.preferred_size();
+        Rect::new(content.x + content.w - bw - GAP - xw, content.y, xw, xh)
     }
 
     fn button_rect(&self, content: Rect) -> Rect {
@@ -83,7 +101,7 @@ impl OpenScreen {
     }
 
     fn recent_rects(&self, content: Rect, count: usize) -> (f32, Vec<Rect>) {
-        let y = content.y + FIELD_H + GAP * 3.0 + 40.0 + 28.0;
+        let y = content.y + FIELD_H + GAP * 3.0 + 40.0 + 28.0 + 24.0;
         let rects = (0..count)
             .map(|i| Rect::new(content.x, y + i as f32 * ROW_H, content.w, ROW_H))
             .collect();
@@ -120,9 +138,23 @@ impl OpenScreen {
             #[cfg(target_arch = "wasm32")]
             return (r, Action::PickFile);
         }
+        let mut result = r;
+
+        // Browse…: the native dialog.
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            self.browse_button.disabled = opening;
+            let r = self
+                .browse_button
+                .handle_event(event, self.browse_rect(content));
+            if r.clicked {
+                self.path.unfocus();
+                return (r, Action::PickFile);
+            }
+            result = result.merge(r);
+        }
 
         // Recent rows.
-        let mut result = r;
         let (_, rects) = self.recent_rects(content, recents.len());
         match *event {
             WidgetEvent::MouseMove { x, y } => {
@@ -205,6 +237,9 @@ impl OpenScreen {
             self.open_button.disabled = ctx.opening || self.path.is_empty();
             self.open_button.label = if ctx.opening { "Opening…" } else { "Open" }.to_string();
             self.path.render(c, field, theme);
+            self.browse_button.disabled = ctx.opening;
+            self.browse_button
+                .render(c, self.browse_rect(content), theme);
         }
         #[cfg(target_arch = "wasm32")]
         {
@@ -244,7 +279,7 @@ impl OpenScreen {
             );
         } else {
             #[cfg(not(target_arch = "wasm32"))]
-            let hint = "drop a .urna file anywhere to open it";
+            let hint = "drop a .urna file anywhere to open it (a pre-rename .nest opens too)";
             #[cfg(target_arch = "wasm32")]
             let hint = "pick a .urna file (drag-and-drop is not available on the web canvas)";
             text(
@@ -314,6 +349,35 @@ impl OpenScreen {
                 );
             }
         }
+
+        // Frame preview line (media corpora need ffmpeg).
+        let ffmpeg_y = embedder_y + 24.0;
+        let (ffmpeg_msg, ffmpeg_color) = match ctx.ffmpeg {
+            Some(true) => ("ffmpeg on PATH", theme.colors.success.0),
+            Some(false) => (
+                "ffmpeg not found on PATH (media corpora open, frames do not render)",
+                theme.colors.danger.0,
+            ),
+            None => ("(probe runs after the first open)", theme.colors.text_dim.0),
+        };
+        text(
+            c,
+            "frame preview:",
+            13.0,
+            600,
+            content.x,
+            ffmpeg_y,
+            theme.colors.text_mid.0,
+        );
+        text(
+            c,
+            ffmpeg_msg,
+            13.0,
+            400,
+            content.x + 108.0,
+            ffmpeg_y,
+            ffmpeg_color,
+        );
 
         // Recents.
         if !ctx.recents.is_empty() {

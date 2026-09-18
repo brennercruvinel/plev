@@ -20,15 +20,19 @@ use engine::ui::widgets::{Button, EventResult, Rect, Tabs, ToastManager, WidgetE
 use crate::model::Worker;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::model::recents;
-use crate::model::types::{ChunksData, UrnaCommand, UrnaEvent, OpenedDbView, SearchMode};
+use crate::model::types::{ChunksData, OpenedDbView, SearchMode, UrnaCommand, UrnaEvent};
 
-use super::chunks::ChunksScreen;
+use super::chunks::{ChunksContext, ChunksScreen};
 use super::graph::{GraphContext, GraphScreen};
 use super::open::{OpenContext, OpenScreen};
-use super::overview::OverviewScreen;
+use super::overview::{OverviewContext, OverviewScreen};
 use super::search::{SearchContext, SearchScreen};
 use super::stats::StatsScreen;
-use super::{Action, EditKey, Screen, text};
+use super::{Action, ChunkLookup, EditKey, Screen, text};
+
+/// Longer edge of a decoded frame preview: half the forge's 488x680
+/// canvas, enough for the detail panels and cheap on the image atlas.
+const FRAME_MAX_SIDE: u32 = 340;
 
 const PAD: f32 = 40.0;
 /// Header band: title + tab strip.
@@ -65,6 +69,15 @@ pub struct Explorer {
     chunks_loading: bool,
     /// chunk_id → ordinal, built once when texts arrive (result previews).
     chunk_index: Option<HashMap<String, usize>>,
+    /// Decoded frame previews by chunk ordinal (`Err` = why the decode
+    /// failed), plus the ordinals whose decode is in flight.
+    frames: HashMap<usize, Result<engine::gpu::image::ImageHandle, String>>,
+    frames_pending: std::collections::HashSet<usize>,
+    /// Last `Validate` outcome: `Ok(ms)` or the reader's error.
+    validation: Option<Result<f64, String>>,
+    validating: bool,
+    /// ffmpeg availability, probed once per open (frame previews).
+    ffmpeg: Option<bool>,
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     clipboard: engine::clipboard::SystemClipboard,
     empty_state: engine::ui::widgets::EmptyState,
@@ -109,6 +122,11 @@ impl Explorer {
             chunks: None,
             chunks_loading: false,
             chunk_index: None,
+            frames: HashMap::new(),
+            frames_pending: std::collections::HashSet::new(),
+            validation: None,
+            validating: false,
+            ffmpeg: None,
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             clipboard: engine::clipboard::SystemClipboard::new(),
             empty_state: engine::ui::widgets::EmptyState::new(
@@ -120,7 +138,7 @@ impl Explorer {
             open: OpenScreen::new(theme),
             overview: OverviewScreen::new(),
             search: SearchScreen::new(theme),
-            chunks_screen: ChunksScreen::new(),
+            chunks_screen: ChunksScreen::new(theme),
             graph_screen: GraphScreen::new(),
             stats_screen: StatsScreen::new(),
             layers: None,
@@ -189,20 +207,31 @@ impl Explorer {
                     if let Some(recents_path) = &self.recents_path {
                         self.recents = recents::record(recents_path, &path);
                     }
-                    self.db = Some(view);
-                    self.opening = false;
-                    self.open_error = String::new();
                     // Per-database state resets.
                     self.chunks = None;
-                    self.chunks_loading = false;
+                    // The native worker sends ChunksLoaded right behind
+                    // Opened; the web build asks on first use.
+                    self.chunks_loading = cfg!(not(target_arch = "wasm32"));
                     self.chunk_index = None;
-                    self.search.reset();
+                    self.frames.clear();
+                    self.frames_pending.clear();
+                    self.validation = None;
+                    self.validating = false;
+                    self.search.reset(&view);
                     self.chunks_screen.reset();
                     self.graph_screen.reset();
                     self.stats_screen.reset();
-                    // Probe the embedder for the doctor line / text search.
+                    self.overview.reset(&view);
+                    self.db = Some(view);
+                    self.opening = false;
+                    self.open_error = String::new();
+                    // Probe the embedder for the doctor line / text search,
+                    // and ffmpeg for frame previews.
                     #[cfg(not(target_arch = "wasm32"))]
-                    self.worker.send(UrnaCommand::CheckEmbedder);
+                    {
+                        self.worker.send(UrnaCommand::CheckEmbedder);
+                        self.ffmpeg = Some(crate::model::frames::ffmpeg_available());
+                    }
                     self.screen = Screen::Overview;
                     toasts.push(format!("opened {path}"), Intent::Constructive, theme);
                 }
@@ -242,6 +271,35 @@ impl Explorer {
                 }
                 UrnaEvent::EmbedderStatus(status) => {
                     self.embedder = Some(status);
+                }
+                UrnaEvent::Validated(result) => {
+                    self.validating = false;
+                    match &result {
+                        Ok(ms) => toasts.push(
+                            format!("validate ok: every checksum and hash verified in {ms:.0} ms"),
+                            Intent::Constructive,
+                            theme,
+                        ),
+                        Err(e) => {
+                            toasts.push(format!("validate failed: {e}"), Intent::Destructive, theme)
+                        }
+                    }
+                    self.validation = Some(result);
+                }
+                UrnaEvent::BlobExported(result) => match result {
+                    Ok(path) => toasts.push(
+                        format!("exported {}", path.display()),
+                        Intent::Constructive,
+                        theme,
+                    ),
+                    Err(e) => toasts.push(format!("export failed: {e}"), Intent::Destructive, theme),
+                },
+                UrnaEvent::FrameLoaded { ordinal, result } => {
+                    self.frames_pending.remove(&ordinal);
+                    let handle = result.and_then(|png| {
+                        engine::gpu::image::load_image_bytes(&png).map_err(|e| e.to_string())
+                    });
+                    self.frames.insert(ordinal, handle);
                 }
                 UrnaEvent::GraphLoaded(result) => {
                     if let Err(e) = &result {
@@ -325,14 +383,107 @@ impl Explorer {
                 true
             }
             Action::PickFile => {
-                // Web only: the shell triggers the DOM picker on the next
-                // about_to_wait. On desktop the button isn't shown.
+                // Web: the shell triggers the DOM picker on the next
+                // about_to_wait. Desktop: the native open dialog, modal.
                 #[cfg(target_arch = "wasm32")]
                 {
                     self.pick_requested = true;
                 }
-                cfg!(target_arch = "wasm32")
+                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+                if let Some(path) = rfd::FileDialog::new()
+                    .set_title("Open a .urna corpus")
+                    .add_filter("urna corpus", &["urna", "nest"])
+                    .pick_file()
+                {
+                    self.open_database(path);
+                }
+                true
             }
+            Action::Validate => {
+                if self.db.is_some() && !self.validating {
+                    self.validating = true;
+                    self.worker.send(UrnaCommand::Validate);
+                }
+                true
+            }
+            Action::ExportBlob(index) => self.export_blob(index, toasts, theme),
+            Action::LoadFrame(ordinal) => self.request_frame(ordinal),
+        }
+    }
+
+    /// Ask the worker for chunk `ordinal`'s frame once; repeated requests
+    /// while it decodes (or after it landed) are no-ops.
+    fn request_frame(&mut self, ordinal: usize) -> bool {
+        if self.frames.contains_key(&ordinal) || self.frames_pending.contains(&ordinal) {
+            return false;
+        }
+        if self.ffmpeg == Some(false) {
+            self.frames.insert(
+                ordinal,
+                Err("ffmpeg not found on PATH (frame previews need ffmpeg)".to_string()),
+            );
+            return true;
+        }
+        self.frames_pending.insert(ordinal);
+        self.worker.send(UrnaCommand::LoadFrame {
+            ordinal,
+            max_side: FRAME_MAX_SIDE,
+        });
+        false
+    }
+
+    /// Export blob `index` to a path the user picks (native save dialog),
+    /// named after the blob's own uri.
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    fn export_blob(&mut self, index: usize, toasts: &mut ToastManager, theme: &Theme) -> bool {
+        let Some(db) = &self.db else {
+            return false;
+        };
+        let Some(blob) = db.inspect.blobs.get(index) else {
+            return false;
+        };
+        // media:// uris are relative names by construction; the final
+        // component is the suggested file name.
+        let name = blob
+            .original_uri
+            .trim_start_matches("media://")
+            .rsplit('/')
+            .next()
+            .unwrap_or("blob")
+            .to_string();
+        let Some(dest) = rfd::FileDialog::new()
+            .set_title("Export media blob")
+            .set_file_name(&name)
+            .save_file()
+        else {
+            return true;
+        };
+        toasts.push(
+            format!("exporting {name}… (hash-verified before writing)"),
+            Intent::Informational,
+            theme,
+        );
+        self.worker.send(UrnaCommand::ExportBlob { index, dest });
+        true
+    }
+
+    #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+    fn export_blob(&mut self, _index: usize, toasts: &mut ToastManager, theme: &Theme) -> bool {
+        toasts.push(
+            "blob export needs the desktop app",
+            Intent::Informational,
+            theme,
+        );
+        true
+    }
+
+    /// The lookup every screen resolves chunks through.
+    fn lookup(&self) -> ChunkLookup<'_> {
+        ChunkLookup {
+            ids: self.db.as_ref().map(|db| db.chunk_ids.as_slice()).unwrap_or(&[]),
+            index: self.chunk_index.as_ref(),
+            chunks: self.chunks.as_ref(),
+            frames: &self.frames,
         }
     }
 
@@ -413,6 +564,7 @@ impl Explorer {
         match self.screen {
             Screen::Open => self.open.handle_text(key),
             Screen::Search => self.search.handle_text(key),
+            Screen::Chunks => self.chunks_screen.handle_text(key),
             _ => false,
         }
     }
@@ -428,6 +580,7 @@ impl Explorer {
         let (handled, action) = match self.screen {
             Screen::Open => self.open.handle_edit_key(key),
             Screen::Search => self.search.handle_edit_key(key),
+            Screen::Chunks => (self.chunks_screen.handle_edit_key(key), Action::None),
             _ => (false, Action::None),
         };
         if action != Action::None {
@@ -454,6 +607,9 @@ impl Explorer {
                 self.run_search(query, is_vector, mode, k);
             }
             Action::Goto(screen) => self.switch_screen(screen),
+            Action::LoadFrame(ordinal) => {
+                self.request_frame(ordinal);
+            }
             _ => {}
         }
     }
@@ -498,7 +654,14 @@ impl Explorer {
                     .handle_event(event, content, &recents, self.opening)
             }
             Screen::Overview => match &self.db {
-                Some(db) => self.overview.handle_event(event, content, db),
+                Some(db) => {
+                    let ctx = OverviewContext {
+                        db,
+                        validation: self.validation.as_ref(),
+                        validating: self.validating,
+                    };
+                    self.overview.handle_event(event, content, &ctx)
+                }
                 None => self.handle_empty_cta(event, content),
             },
             Screen::Search => {
@@ -509,22 +672,34 @@ impl Explorer {
                 }
             }
             Screen::Chunks => match &self.db {
-                Some(db) => self
-                    .chunks_screen
-                    .handle_event(event, content, &db.chunk_ids),
+                Some(db) => {
+                    let lookup = ChunkLookup {
+                        ids: &db.chunk_ids,
+                        index: self.chunk_index.as_ref(),
+                        chunks: self.chunks.as_ref(),
+                        frames: &self.frames,
+                    };
+                    let ctx = ChunksContext {
+                        lookup: &lookup,
+                        content_hash: &db.inspect.content_hash,
+                        loading: self.chunks_loading,
+                    };
+                    self.chunks_screen.handle_event(event, content, &ctx)
+                }
                 None => self.handle_empty_cta(event, content),
             },
             Screen::Graph => match &self.db {
                 Some(db) if db.has_graph => {
-                    let chunk_index = &self.chunk_index;
-                    let chunks = &self.chunks;
-                    let text_of = move |id: &str| -> Option<String> {
-                        let idx = *chunk_index.as_ref()?.get(id)?;
-                        chunks
-                            .as_ref()?
-                            .texts
-                            .get(idx)
-                            .and_then(|t| t.lines().next())
+                    let lookup = ChunkLookup {
+                        ids: &db.chunk_ids,
+                        index: self.chunk_index.as_ref(),
+                        chunks: self.chunks.as_ref(),
+                        frames: &self.frames,
+                    };
+                    let text_of = |id: &str| -> Option<String> {
+                        lookup
+                            .ordinal(id)
+                            .and_then(|o| lookup.first_line(o))
                             .map(str::to_string)
                     };
                     self.graph_screen.handle_event(
@@ -542,16 +717,33 @@ impl Explorer {
                 _ => (EventResult::IGNORED, Action::None),
             },
             Screen::Stats => match &self.db {
-                Some(db) => {
-                    let _ = db;
-                    self.stats_screen.handle_event(event, content, true)
-                }
+                Some(_) => self.stats_screen.handle_event(event, content, true),
                 None => self.handle_empty_cta(event, content),
             },
         };
         result = result.merge(r);
         let acted = self.action(action, toasts, theme);
-        result.changed || acted
+        let framed = self.request_wanted_frames();
+        result.changed || acted || framed
+    }
+
+    /// The active screen's selected media chunk wants its frame decoded:
+    /// ask the worker (once). Runs after every event and every drained
+    /// worker batch, so a selection made before the texts landed is
+    /// served when they do.
+    fn request_wanted_frames(&mut self) -> bool {
+        if self.db.is_none() {
+            return false;
+        }
+        let wanted = match self.screen {
+            Screen::Search => self.search.wanted_frame(&self.lookup()),
+            Screen::Chunks => self.chunks_screen.wanted_frame(&self.lookup()),
+            _ => None,
+        };
+        match wanted {
+            Some(ordinal) => self.request_frame(ordinal),
+            None => false,
+        }
     }
 
     /// The empty-state CTA (screens without an open db): the engine
@@ -649,65 +841,69 @@ impl Explorer {
                     recents: &recents,
                     error: &self.open_error,
                     embedder: self.embedder.as_ref(),
+                    ffmpeg: self.ffmpeg,
                     opening: self.opening,
                     file_hover: self.file_hover,
                 };
                 self.open.render(c, content, theme, &ctx);
             }
             Screen::Overview => match &self.db {
-                Some(db) => self.overview.render(c, content, theme, db),
+                Some(db) => {
+                    let ctx = OverviewContext {
+                        db,
+                        validation: self.validation.as_ref(),
+                        validating: self.validating,
+                    };
+                    self.overview.render(c, content, theme, &ctx);
+                }
                 None => self.render_empty(c, content, theme, "no database open yet", true),
             },
-            Screen::Search => {
-                if self.db.is_some() {
-                    let dim = self
-                        .db
-                        .as_ref()
-                        .map(|db| db.inspect.embedding_dim as usize)
-                        .unwrap_or(0);
-                    let chunk_index = &self.chunk_index;
-                    let chunks = &self.chunks;
-                    let text_of = move |id: &str| -> Option<String> {
-                        let idx = *chunk_index.as_ref()?.get(id)?;
-                        chunks
-                            .as_ref()?
-                            .texts
-                            .get(idx)
-                            .and_then(|t| t.lines().next())
-                            .map(str::to_string)
+            Screen::Search => match &self.db {
+                Some(db) => {
+                    let lookup = ChunkLookup {
+                        ids: &db.chunk_ids,
+                        index: self.chunk_index.as_ref(),
+                        chunks: self.chunks.as_ref(),
+                        frames: &self.frames,
                     };
-                    let embedder = self.embedder.as_ref();
-                    self.search.render(c, content, theme, &SearchContext {
-                        dim,
-                        text_of: &text_of,
-                        embedder,
-                    });
-                } else {
-                    self.render_empty(c, content, theme, "no database open yet", true);
+                    let ctx = SearchContext {
+                        dim: db.inspect.embedding_dim as usize,
+                        lookup: &lookup,
+                        embedder: self.embedder.as_ref(),
+                    };
+                    self.search.render(c, content, theme, &ctx);
                 }
-            }
+                None => self.render_empty(c, content, theme, "no database open yet", true),
+            },
             Screen::Chunks => match &self.db {
-                Some(db) => self.chunks_screen.render(
-                    c,
-                    content,
-                    theme,
-                    &db.chunk_ids,
-                    self.chunks.as_ref(),
-                    self.chunks_loading,
-                ),
+                Some(db) => {
+                    let lookup = ChunkLookup {
+                        ids: &db.chunk_ids,
+                        index: self.chunk_index.as_ref(),
+                        chunks: self.chunks.as_ref(),
+                        frames: &self.frames,
+                    };
+                    let ctx = ChunksContext {
+                        lookup: &lookup,
+                        content_hash: &db.inspect.content_hash,
+                        loading: self.chunks_loading,
+                    };
+                    self.chunks_screen.render(c, content, theme, &ctx);
+                }
                 None => self.render_empty(c, content, theme, "no database open yet", true),
             },
             Screen::Graph => match &self.db {
                 Some(db) if db.has_graph => {
-                    let chunk_index = &self.chunk_index;
-                    let chunks = &self.chunks;
-                    let text_of = move |id: &str| -> Option<String> {
-                        let idx = *chunk_index.as_ref()?.get(id)?;
-                        chunks
-                            .as_ref()?
-                            .texts
-                            .get(idx)
-                            .and_then(|t| t.lines().next())
+                    let lookup = ChunkLookup {
+                        ids: &db.chunk_ids,
+                        index: self.chunk_index.as_ref(),
+                        chunks: self.chunks.as_ref(),
+                        frames: &self.frames,
+                    };
+                    let text_of = |id: &str| -> Option<String> {
+                        lookup
+                            .ordinal(id)
+                            .and_then(|o| lookup.first_line(o))
                             .map(str::to_string)
                     };
                     self.graph_screen.render(

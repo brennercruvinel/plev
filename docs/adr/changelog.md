@@ -9,6 +9,12 @@ status: living
 
 ## unreleased
 
+- arc unified (2026-09-18): docs/arc/{arc.yaml, arc.md, arc.mmd} became one
+  file, docs/arc/arc.toml: the machine map as tables, the human reference
+  under [prose], the frame-flow mermaid as a literal string under
+  [diagram]. the sync guard, AGENTS.md, the conventions, the pr template
+  and the README point at it. content unchanged except nest/nestui ->
+  urna/urnaui, which is the rename in flight on this branch.
 - glyph raster hardened (2026-08-31): atlas cache key is cosmic-text's
   CacheKey verbatim; fresh swash context per rasterization; one-texel
   zeroed gutter on all four sides of every slot; quad UVs in texels,

@@ -1,19 +1,32 @@
 //! Native .urna backend: wraps `MmapUrnaFile` and exposes a typed,
 //! UI-ready view of the database (inspect document, chunk ids, canonical
-//! texts, optional CSR graph) plus the vector search entry points.
+//! texts, spans, optional CSR graph, media blobs, multimodal spaces) plus
+//! the search entry points.
 //!
 //! View-model types live in `model::types` (shared with the web backend);
 //! this module is mmap + std::fs based and compiles native-only.
+//!
+//! The file is mapped once more here (`memmap2`) besides the runtime's own
+//! private map: every section the UI decodes itself (spans, overlay, graph
+//! adjacency, blob offset table) is read through a `UrnaView` over that
+//! map, so a multi-GB corpus never gets copied into RAM.
 
 use std::path::{Path, PathBuf};
 
-use urna_format::layout::SECTION_GRAPH_ADJACENCY;
+use memmap2::Mmap;
+use sha2::{Digest, Sha256};
+use urna_format::layout::{
+    SECTION_BLOB_DATA, SECTION_BLOB_SPAN_OVERLAY, SECTION_CHUNKS_ORIGINAL_SPANS,
+    SECTION_GRAPH_ADJACENCY,
+};
 use urna_format::reader::UrnaView;
+use urna_format::{BLOB_REF_NONE, BlobSpanEntry, decode_blob_data_table, decode_blob_span_overlay};
 use urna_runtime::graph::CsrIndex;
 use urna_runtime::{MmapUrnaFile, RuntimeError, SearchResult};
 
 use super::types::{
-    ChunkMeta, ChunksData, InspectView, OpenedDbView, SearchHitView, SearchMode, SearchResultsView,
+    BlobSpan, ChunkMeta, ChunksData, InspectView, OpenedDbView, SearchHitView, SearchMode,
+    SearchResultsView,
 };
 
 /// Errors produced by [`UrnaBackend`] operations.
@@ -22,7 +35,7 @@ pub enum BackendError {
     /// The urna runtime rejected the file or the query.
     #[error(transparent)]
     Runtime(#[from] RuntimeError),
-    /// Reading the file a second time (graph section) failed at the OS level.
+    /// Mapping or writing a file failed at the OS level.
     #[error(transparent)]
     Io(#[from] std::io::Error),
     /// The urna format reader rejected the raw file bytes.
@@ -31,6 +44,10 @@ pub enum BackendError {
     /// `inspect_json()` output did not match the expected document shape.
     #[error("inspect document parse error: {0}")]
     Inspect(#[from] serde_json::Error),
+    /// A media operation the file cannot serve (no inlined bytes, a chunk
+    /// outside every blob, a corrupt blob…).
+    #[error("{0}")]
+    Media(String),
 }
 
 pub type Result<T> = std::result::Result<T, BackendError>;
@@ -69,6 +86,15 @@ impl From<SearchResult> for SearchResultsView {
     }
 }
 
+/// Where one inlined blob's bytes sit in the file: absolute offset + len.
+/// Resolved once at open from the 0x17 offset table so a frame decode can
+/// hand ffmpeg a byte range instead of a copy of the blob.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct BlobRange {
+    pub abs_start: u64,
+    pub len: u64,
+}
+
 // ---------------------------------------------------------------------------
 // UrnaBackend
 // ---------------------------------------------------------------------------
@@ -78,34 +104,72 @@ impl From<SearchResult> for SearchResultsView {
 pub struct UrnaBackend {
     file: MmapUrnaFile,
     path: PathBuf,
+    /// Read-only map for the sections the UI decodes itself.
+    map: Mmap,
     /// CSR adjacency, loaded eagerly when the file declares `graph_present`.
     graph: Option<CsrIndex>,
+    /// The 0x16 overlay (one entry per chunk) when the file has one.
+    overlay: Option<Vec<BlobSpanEntry>>,
+    /// Absolute byte ranges of the inlined blobs (parallel to blob_refs;
+    /// `None` for an out-of-line record), when 0x17 is present.
+    blob_ranges: Option<Vec<Option<BlobRange>>>,
     /// Canonical chunk texts, decoded on first use (the decode re-parses
     /// the whole section table, so it is cached here).
     canonical_texts: Option<Vec<String>>,
 }
 
 impl UrnaBackend {
-    /// Open a .urna file read-only and derive the optional graph index.
+    /// Open a .urna file read-only and derive the optional graph, overlay
+    /// and blob tables.
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let path = path.as_ref().to_path_buf();
         let file = MmapUrnaFile::open(&path)?;
+        // SAFETY: the map is read-only and the file is treated as immutable
+        // for the life of the backend (the runtime holds its own map of the
+        // same bytes under the same assumption).
+        let map = unsafe { Mmap::map(&std::fs::File::open(&path)?)? };
+        let view = UrnaView::from_bytes(&map)?;
         // Mirror `MmapUrnaFile::open`'s graph gate (manifest capability +
-        // section presence), reading raw bytes via UrnaView like the
-        // runtime does — the runtime keeps its CSR private, so the UI
+        // section presence) — the runtime keeps its CSR private, so the UI
         // parses its own copy for graph screens.
         let graph = if file.has_graph() {
-            let bytes = std::fs::read(&path)?;
-            let view = UrnaView::from_bytes(&bytes)?;
             let payload = view.decoded_section(SECTION_GRAPH_ADJACENCY)?;
             Some(CsrIndex::from_bytes(&payload, file.n_embeddings())?)
         } else {
             None
         };
+        let overlay = if file.has_blobs() && view.entry(SECTION_BLOB_SPAN_OVERLAY).is_ok() {
+            Some(decode_blob_span_overlay(
+                &view.decoded_section(SECTION_BLOB_SPAN_OVERLAY)?,
+            )?)
+        } else {
+            None
+        };
+        let blob_ranges = match (file.blob_refs(), view.entry(SECTION_BLOB_DATA)) {
+            (Some(refs), Ok(entry)) => {
+                let table = decode_blob_data_table(view.get_section_data(SECTION_BLOB_DATA)?)?;
+                let data_start = entry.offset + table.data_start as u64;
+                Some(
+                    refs.iter()
+                        .zip(&table.entries)
+                        .map(|(r, &(off, len))| {
+                            r.inlined.then_some(BlobRange {
+                                abs_start: data_start + off,
+                                len,
+                            })
+                        })
+                        .collect(),
+                )
+            }
+            _ => None,
+        };
         Ok(Self {
             file,
             path,
+            map,
             graph,
+            overlay,
+            blob_ranges,
             canonical_texts: None,
         })
     }
@@ -131,8 +195,13 @@ impl UrnaBackend {
                 .iter()
                 .map(|s| s.to_string())
                 .collect(),
+            has_blob_data: self.file.has_blob_data(),
             graph_nodes: self.graph.as_ref().map(CsrIndex::n_nodes),
         })
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
     }
 
     /// Chunk ids in file order (decoded at open time, so cheap).
@@ -151,28 +220,49 @@ impl UrnaBackend {
 
     /// Canonical texts + per-chunk source spans for the Chunks screen.
     ///
-    /// Decision (large files): `canonical_texts` decodes the whole
-    /// chunks_canonical section in one pass and the backend caches it —
-    /// there is no paged decode API in urna-runtime. The worker ships the
-    /// decoded `Vec<String>` to the UI once; the Chunks screen windows the
-    /// *rendering* with `VirtualList`, so even a large corpus only ever
-    /// tessellates the visible rows. Spans are decoded GUI-side via
-    /// `UrnaView` (the runtime keeps its `spans` field private).
+    /// `canonical_texts` decodes the whole chunks_canonical section in one
+    /// pass and the backend caches it — there is no paged decode API in
+    /// urna-runtime. The worker ships the decoded `Vec<String>` to the UI
+    /// once; the Chunks screen windows the *rendering* with `VirtualList`.
+    /// Spans come from the overlay when the chunk lives in a media blob
+    /// (what search hits and `cite` report), else from 0x03.
     pub fn load_chunks(&mut self) -> Result<ChunksData> {
         let texts = self.canonical_texts()?.to_vec();
-        let bytes = std::fs::read(&self.path)?;
-        let view = UrnaView::from_bytes(&bytes)?;
+        let view = UrnaView::from_bytes(&self.map)?;
         let n = self.file.n_embeddings();
         let spans = urna_format::sections::decode_chunks_original_spans(
-            &view.decoded_section(urna_format::layout::SECTION_CHUNKS_ORIGINAL_SPANS)?,
+            &view.decoded_section(SECTION_CHUNKS_ORIGINAL_SPANS)?,
             n,
         )?;
+        let refs = self.file.blob_refs().unwrap_or(&[]);
         let metas = spans
             .iter()
-            .map(|s| ChunkMeta {
-                source_uri: s.source_uri.clone(),
-                offset_start: s.byte_start,
-                offset_end: s.byte_end,
+            .enumerate()
+            .map(|(i, s)| {
+                let blob = self
+                    .overlay
+                    .as_ref()
+                    .and_then(|o| o.get(i))
+                    .filter(|e| e.blob_ref_index != BLOB_REF_NONE)
+                    .map(|e| BlobSpan {
+                        blob_index: e.blob_ref_index,
+                        start: e.byte_start,
+                        end: e.byte_end,
+                    });
+                match blob.and_then(|b| refs.get(b.blob_index as usize).map(|r| (b, r))) {
+                    Some((b, r)) => ChunkMeta {
+                        source_uri: r.original_uri.clone(),
+                        offset_start: b.start,
+                        offset_end: b.end,
+                        blob: Some(b),
+                    },
+                    None => ChunkMeta {
+                        source_uri: s.source_uri.clone(),
+                        offset_start: s.byte_start,
+                        offset_end: s.byte_end,
+                        blob: None,
+                    },
+                }
             })
             .collect();
         Ok(ChunksData { texts, metas })
@@ -192,6 +282,18 @@ impl UrnaBackend {
             inspect.manifest.embedding_dim as usize,
             inspect.manifest.model_hash,
         ))
+    }
+
+    /// One space's identity for the per-space embedder gate: `(dim,
+    /// model_hash)`, from the space_table.
+    pub fn space_identity(&self, name: &str) -> Result<(usize, String)> {
+        let inspect = self.inspect()?;
+        inspect
+            .spaces
+            .iter()
+            .find(|s| s.name == name)
+            .map(|s| (s.dim as usize, s.model_hash.clone()))
+            .ok_or_else(|| RuntimeError::SpaceNotFound(name.to_string()).into())
     }
 
     /// The CSR graph copied into the engine's
@@ -217,8 +319,9 @@ impl UrnaBackend {
         Some(data)
     }
 
-    /// Run a vector search down the requested path. Every mode returns the
-    /// real cosine score (candidate generators rerank exactly).
+    /// Run a search down the requested path. Every mode returns the real
+    /// cosine score (candidate generators rerank exactly); `Space` scores
+    /// the named band and never touches the text slab.
     pub fn search(&self, mode: &SearchMode, query: &[f32], k: i32) -> Result<SearchResult> {
         let result = match mode {
             SearchMode::Exact => self.file.search(query, k)?,
@@ -230,8 +333,57 @@ impl UrnaBackend {
             } => self
                 .file
                 .search_hybrid(query, query_text, k, *candidates_per_path)?,
+            SearchMode::Space { name } => self.file.search_space(name, query, k, None)?,
         };
         Ok(result)
+    }
+
+    /// Re-run every reader-side check (`urna validate`): checksums, hashes,
+    /// embedding values, search contract. Returns the wall time in ms.
+    pub fn validate(&self) -> Result<f64> {
+        let t0 = std::time::Instant::now();
+        self.file.revalidate()?;
+        Ok(t0.elapsed().as_secs_f64() * 1000.0)
+    }
+
+    // -- media ---------------------------------------------------------------
+
+    /// Absolute byte range of blob `index` when its bytes are inlined.
+    pub fn blob_range(&self, index: usize) -> Option<BlobRange> {
+        self.blob_ranges.as_ref()?.get(index).copied().flatten()
+    }
+
+    /// The overlay span of chunk `ordinal`, when it maps into a blob.
+    pub fn blob_span(&self, ordinal: usize) -> Option<BlobSpan> {
+        self.overlay
+            .as_ref()?
+            .get(ordinal)
+            .filter(|e| e.blob_ref_index != BLOB_REF_NONE)
+            .map(|e| BlobSpan {
+                blob_index: e.blob_ref_index,
+                start: e.byte_start,
+                end: e.byte_end,
+            })
+    }
+
+    /// Write blob `index`'s inlined bytes to `dest`, proven against its
+    /// blob_refs content_hash BEFORE writing (the `urna media --export`
+    /// contract: a corrupt section never fans out to disk).
+    pub fn export_blob(&self, index: usize, dest: &Path) -> Result<()> {
+        let record = self
+            .file
+            .blob_refs()
+            .and_then(|r| r.get(index))
+            .ok_or_else(|| BackendError::Media(format!("no blob at index {index}")))?;
+        let bytes = self.file.blob_bytes(index)?;
+        if Sha256::digest(bytes)[..] != record.content_hash {
+            return Err(BackendError::Media(format!(
+                "blob {index} ({}) failed its content_hash check; refusing to export",
+                record.original_uri
+            )));
+        }
+        std::fs::write(dest, bytes)?;
+        Ok(())
     }
 
     /// Latency benchmark, port of `urna benchmark`'s methodology: `n`
@@ -306,10 +458,10 @@ mod tests {
     use super::*;
 
     /// Minimal but shape-faithful inspect document: every required field of
-    /// `InspectView` plus a v1 manifest.
+    /// `InspectView` plus a v1 manifest, a blob and a space.
     fn synthetic_inspect_json() -> String {
         serde_json::json!({
-            "magic": "NEST",
+            "magic": "URNA",
             "version_major": 1,
             "version_minor": 0,
             "format_version": 1,
@@ -359,7 +511,25 @@ mod tests {
                     "checksum": "cd34"
                 }
             ],
-            "blobs": null,
+            "blobs": [
+                {
+                    "content_hash": format!("sha256:{}", "3".repeat(64)),
+                    "original_uri": "media://cards-av1.mp4",
+                    "byte_len": 1234,
+                    "inlined": true
+                }
+            ],
+            "spaces": [
+                {
+                    "name": "clip-vit-b32",
+                    "space_index": 1,
+                    "dim": 512,
+                    "dtype": "int8",
+                    "model_hash": format!("sha256:{}", "4".repeat(64)),
+                    "n_vectors": 3,
+                    "band_bytes": 1536
+                }
+            ],
             "file_hash": format!("sha256:{}", "1".repeat(64)),
             "content_hash": format!("sha256:{}", "2".repeat(64)),
             "simd_backend": "neon"
@@ -370,7 +540,7 @@ mod tests {
     #[test]
     fn inspect_view_parses_synthetic_document() {
         let view: InspectView = serde_json::from_str(&synthetic_inspect_json()).unwrap();
-        assert_eq!(view.magic, "NEST");
+        assert_eq!(view.magic, "URNA");
         assert_eq!(view.embedding_dim, 4);
         assert_eq!(view.n_chunks, 3);
         assert_eq!(view.sections.len(), 2);
@@ -386,12 +556,27 @@ mod tests {
             Some(true)
         );
         assert_eq!(view.simd_backend, "neon");
-        assert!(view.blobs.is_null());
+        assert_eq!(view.blobs.len(), 1);
+        assert_eq!(view.blobs[0].original_uri, "media://cards-av1.mp4");
+        assert!(view.blobs[0].inlined);
+        assert_eq!(view.spaces.len(), 1);
+        assert_eq!(view.spaces[0].name, "clip-vit-b32");
+        assert_eq!(view.spaces[0].dim, 512);
+    }
+
+    #[test]
+    fn inspect_view_accepts_null_blobs_and_spaces() {
+        let doc = synthetic_inspect_json()
+            .replace(r#""blobs":[{"#, r#""blobs":null,"unused":[{"#)
+            .replace(r#""spaces":[{"#, r#""spaces":null,"unused2":[{"#);
+        let view: InspectView = serde_json::from_str(&doc).unwrap();
+        assert!(view.blobs.is_empty());
+        assert!(view.spaces.is_empty());
     }
 
     #[test]
     fn inspect_view_rejects_missing_fields() {
-        let doc = serde_json::json!({ "magic": "NEST" }).to_string();
+        let doc = serde_json::json!({ "magic": "URNA" }).to_string();
         assert!(serde_json::from_str::<InspectView>(&doc).is_err());
     }
 

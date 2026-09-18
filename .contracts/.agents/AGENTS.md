@@ -20,11 +20,11 @@ browser (webgpu/wasm), and android + ios (the showcase runs on both via the
 native shells in android/ and ios/showcase/; see "## running"). linux/windows
 pending. apps: crates/showcase (widget gallery, also runs in the browser),
 crates/ide (real git client). knowledge base: docs/ (adr, arc, how-to,
-mission, refs). architecture: docs/arc/.
+mission, refs). architecture: docs/arc/arc.toml.
 
 ## at task start
 
-1. read docs/arc/arc.yaml and docs/arc/arc.mmd in a short pass to preserve
+1. read docs/arc/arc.toml (tables, then [diagram]) in a short pass to preserve
    structure and naming patterns; skim docs/adr/ for the decisions already
    made and the reasons behind them
 2. read docs/how-to/code-against-the-plev-engine.md before touching ui or
@@ -40,7 +40,7 @@ style). this used to be a luajit graph node; it was migrated to markdown so
 there is no extra lua build step in the app.
 
 follow it, and update that file in the same change whenever a new convention
-is established. keep docs/arc/{arc.md, arc.yaml, arc.mmd} and README.md
+is established. keep docs/arc/arc.toml and README.md
 current after any change that affects structure, contracts, or user-facing
 behavior.
 

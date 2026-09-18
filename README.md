@@ -114,8 +114,8 @@ cargo run -p parser --example transpile  index.tsx module.sass vars.sass
 cargo run -p parser --example preview    index.tsx module.sass vars.sass
 ```
 
-the frame flow, from event to present, is drawn in
-[docs/arc/arc.mmd](docs/arc/arc.mmd).
+the frame flow, from event to present, is the `[diagram]` table of
+[docs/arc/arc.toml](docs/arc/arc.toml).
 
 ## contracts
 
@@ -143,7 +143,7 @@ edits, `monster` codec, `lot` conversion, `parser` transpile.
 
 ## docs
 
-- [docs/arc/arc.md](docs/arc/arc.md): architecture, contracts, frame flow. [arc.yaml](docs/arc/arc.yaml) is the same map for machines.
+- [docs/arc/arc.toml](docs/arc/arc.toml): the architecture in one file. tables for machines, prose for humans, the frame-flow diagram at the end.
 - [docs/adr/](docs/adr/): the decision records.
 - [docs/how-to/code-against-the-plev-engine.md](docs/how-to/code-against-the-plev-engine.md): the operating manual, read before touching ui or rendering code.
 - [.contracts/.agents/AGENTS.md](.contracts/.agents/AGENTS.md): the single instruction source for ai agents and contributors. route every tool here, no per-tool files.

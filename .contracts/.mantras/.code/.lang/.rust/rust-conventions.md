@@ -94,11 +94,11 @@ that turns out wrong gets a correction on top, never a delete.
 
 the source of truth for what exists is Cargo.toml members and the
 `crates/engine/examples/` dir, never a doc. `crates/engine/tests/arc_sync_guard.rs`
-enforces it: every workspace crate must be named in docs/arc/arc.yaml,
-docs/arc/arc.md and README, every example in arc.yaml, or the build fails
-naming the missing one. so drift is a red test, not a silent lie. arc.yaml
-is the canonical machine map, arc.md the human projection, arc.mmd the
-frame-flow view; on a wording divergence arc.yaml wins. keep them small.
+enforces it: every workspace crate must be named in docs/arc/arc.toml and
+README, every example in arc.toml, or the build fails naming the missing
+one. so drift is a red test, not a silent lie. arc.toml is one file: the
+machine map (tables), the human prose ([prose]) and the frame-flow mermaid
+([diagram]); on a wording divergence the tables win. keep it small.
 
 ## doc sync
 

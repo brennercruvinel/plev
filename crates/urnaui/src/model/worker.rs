@@ -80,7 +80,17 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &Sen
                 }
                 Err(e) => Err(e.to_string()),
             };
+            let opened = event.is_ok();
             let _ = tx.send(UrnaEvent::Opened(event));
+            // Texts + spans right behind the snapshot: one decode pass, and
+            // every screen (result previews, chunk list, frame lookup) has
+            // them before the user can ask. Never a second full-file read
+            // (the backend maps the file once).
+            if opened && let Some(db) = backend.as_mut() {
+                let _ = tx.send(UrnaEvent::ChunksLoaded(
+                    db.load_chunks().map_err(|e| e.to_string()),
+                ));
+            }
         }
         UrnaCommand::OpenBytes { .. } => {
             // In-memory open is the web path; on desktop files come from
@@ -149,22 +159,72 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &Sen
                 crate::model::embed::check_embedder(),
             ));
         }
+        UrnaCommand::Validate => {
+            let result = match backend.as_ref() {
+                Some(db) => db.validate().map_err(|e| e.to_string()),
+                None => Err("no database open".to_string()),
+            };
+            let _ = tx.send(UrnaEvent::Validated(result));
+        }
+        UrnaCommand::ExportBlob { index, dest } => {
+            let result = match backend.as_ref() {
+                Some(db) => db
+                    .export_blob(index, &dest)
+                    .map(|()| dest)
+                    .map_err(|e| e.to_string()),
+                None => Err("no database open".to_string()),
+            };
+            let _ = tx.send(UrnaEvent::BlobExported(result));
+        }
+        UrnaCommand::LoadFrame { ordinal, max_side } => {
+            let result = match backend.as_ref() {
+                Some(db) => load_frame(db, ordinal, max_side),
+                None => Err("no database open".to_string()),
+            };
+            let _ = tx.send(UrnaEvent::FrameLoaded { ordinal, result });
+        }
         UrnaCommand::Shutdown => unreachable!("handled by the worker loop"),
     }
 }
 
-/// Embed-then-search: the offline potion bridge produces the query vector
-/// (gated against the manifest identity), then the requested path runs.
-/// Hybrid feeds the raw text to BM25; other modes ignore it.
+/// Resolve chunk `ordinal` through the blob overlay to (blob range, frame)
+/// and decode that frame to PNG bytes.
+fn load_frame(db: &UrnaBackend, ordinal: usize, max_side: u32) -> Result<Vec<u8>, String> {
+    let span = db
+        .blob_span(ordinal)
+        .ok_or_else(|| "this chunk does not map into a media blob".to_string())?;
+    let frame = span
+        .frame()
+        .ok_or_else(|| format!("span {}–{} is not a single frame", span.start, span.end))?;
+    let range = db.blob_range(span.blob_index as usize).ok_or_else(|| {
+        "the media bytes are not inlined in this file (sidecar blob)".to_string()
+    })?;
+    let path = db.path().to_string_lossy().into_owned();
+    crate::model::frames::decode_frame(&path, range, frame, max_side).map_err(|e| e.to_string())
+}
+
+/// Embed-then-search: the offline embedder produces the query vector
+/// (gated against the manifest identity, or the space's for
+/// `SearchMode::Space`), then the requested path runs. Hybrid feeds the
+/// raw text to BM25; other modes ignore it.
 fn search_by_text(
     db: &UrnaBackend,
     query: &str,
     mode: &SearchMode,
     k: i32,
 ) -> Result<SearchResultsView, String> {
-    let (model, dim, model_hash) = db.embed_identity().map_err(|e| e.to_string())?;
-    let vector = crate::model::embed::embed_query(&model, dim, &model_hash, query)
-        .map_err(|e| e.to_string())?;
+    let vector = match mode {
+        SearchMode::Space { name } => {
+            let (dim, model_hash) = db.space_identity(name).map_err(|e| e.to_string())?;
+            crate::model::embed::embed_query_space(name, dim, &model_hash, query)
+                .map_err(|e| e.to_string())?
+        }
+        _ => {
+            let (model, dim, model_hash) = db.embed_identity().map_err(|e| e.to_string())?;
+            crate::model::embed::embed_query(&model, dim, &model_hash, query)
+                .map_err(|e| e.to_string())?
+        }
+    };
     // Hybrid needs the text for its lexical leg regardless of what the
     // caller's mode struct carries.
     let mode = match mode {

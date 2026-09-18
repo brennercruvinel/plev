@@ -98,8 +98,75 @@ pub enum Action {
         n_queries: usize,
         k: i32,
     },
-    /// Open the browser's file picker (web only; desktop opens by path).
+    /// Open the platform file picker (native dialog on desktop, the
+    /// browser's input on the web).
     PickFile,
+    /// Re-run the file's integrity checks (`urna validate`).
+    Validate,
+    /// Export inlined blob `index` to a file the user picks.
+    ExportBlob(usize),
+    /// Decode the frame preview of chunk `ordinal` (media corpora).
+    LoadFrame(usize),
+}
+
+/// Read-only view over the central chunk state every screen resolves
+/// hits and selections through: chunk_id → ordinal, ordinal → text /
+/// span / decoded frame. Everything is optional until the worker has
+/// delivered it, and the screens degrade to ids + offsets meanwhile.
+pub struct ChunkLookup<'a> {
+    pub ids: &'a [String],
+    pub index: Option<&'a std::collections::HashMap<String, usize>>,
+    pub chunks: Option<&'a crate::model::types::ChunksData>,
+    pub frames: &'a std::collections::HashMap<usize, Result<engine::gpu::image::ImageHandle, String>>,
+}
+
+impl ChunkLookup<'_> {
+    pub fn ordinal(&self, chunk_id: &str) -> Option<usize> {
+        self.index?.get(chunk_id).copied()
+    }
+
+    pub fn text(&self, ordinal: usize) -> Option<&str> {
+        self.chunks?.texts.get(ordinal).map(String::as_str)
+    }
+
+    /// First line of the canonical text: the card name in a forge item
+    /// corpus, the opening sentence in a text corpus.
+    pub fn first_line(&self, ordinal: usize) -> Option<&str> {
+        self.text(ordinal).and_then(|t| t.lines().next())
+    }
+
+    pub fn meta(&self, ordinal: usize) -> Option<&crate::model::types::ChunkMeta> {
+        self.chunks?.metas.get(ordinal)
+    }
+
+    /// The decoded frame, `Some(Err)` when the decode failed, `None` while
+    /// nothing was requested or the decode is in flight.
+    pub fn frame(&self, ordinal: usize) -> Option<&Result<engine::gpu::image::ImageHandle, String>> {
+        self.frames.get(&ordinal)
+    }
+
+    /// Whether this chunk lives in a media blob (frame preview possible).
+    pub fn is_media(&self, ordinal: usize) -> bool {
+        self.meta(ordinal).is_some_and(|m| m.blob.is_some())
+    }
+}
+
+/// `source · frame N` for a media span, `source · start–end` otherwise:
+/// the one spelling of a chunk's location every screen uses.
+pub(crate) fn span_label(source_uri: &str, start: u64, end: u64, media: bool) -> String {
+    let source = source_uri.trim_start_matches("media://");
+    if media && end == start + 1 {
+        format!("{source} · frame {start}")
+    } else {
+        format!("{source} · {start}–{end}")
+    }
+}
+
+/// Parse a `urna://<content_hash>/<chunk_id>` citation into its parts.
+pub(crate) fn parse_citation(s: &str) -> Option<(&str, &str)> {
+    let rest = s.trim().strip_prefix("urna://")?;
+    let (content_hash, chunk_id) = rest.split_once('/')?;
+    (!content_hash.is_empty() && !chunk_id.is_empty()).then_some((content_hash, chunk_id))
 }
 
 pub struct UrnauiView {
@@ -332,7 +399,7 @@ pub(crate) mod fixtures {
             ..Default::default()
         };
         let inspect = InspectView {
-            magic: "NEST".into(),
+            magic: "URNA".into(),
             version_major: 1,
             version_minor: 0,
             format_version: 1,
@@ -360,7 +427,8 @@ pub(crate) mod fixtures {
                     checksum: "cd".into(),
                 },
             ],
-            blobs: serde_json::Value::Null,
+            blobs: Vec::new(),
+            spaces: Vec::new(),
             file_hash: format!("sha256:{}", "1".repeat(64)),
             content_hash: format!("sha256:{}", "2".repeat(64)),
             simd_backend: "neon".into(),
@@ -376,8 +444,57 @@ pub(crate) mod fixtures {
             has_graph: false,
             has_spaces: false,
             space_names: vec![],
+            has_blob_data: false,
             graph_nodes: None,
         })
+    }
+
+    /// The fake db as a media corpus: one inlined av1 blob, a vision
+    /// space, and every chunk mapped to one frame of the blob.
+    pub fn fake_media_db() -> Box<OpenedDbView> {
+        use crate::model::types::{BlobInfo, SpaceInfo};
+        let mut db = fake_db();
+        db.inspect.blobs = vec![BlobInfo {
+            content_hash: format!("sha256:{}", "3".repeat(64)),
+            original_uri: "media://cards-av1.mp4".into(),
+            byte_len: 4096,
+            inlined: true,
+        }];
+        db.inspect.spaces = vec![SpaceInfo {
+            name: "clip-vit-b32".into(),
+            space_index: 1,
+            dim: 512,
+            dtype: "int8".into(),
+            model_hash: format!("sha256:{}", "4".repeat(64)),
+            n_vectors: 3,
+            band_bytes: 1536,
+        }];
+        db.inspect.manifest.capabilities_ext = Some(crate::model::types::CapabilitiesExtView {
+            supports_multimodal: Some(true),
+            graph_present: None,
+            blobs_present: Some(true),
+        });
+        db.has_spaces = true;
+        db.space_names = vec!["clip-vit-b32".into()];
+        db.has_blob_data = true;
+        db
+    }
+
+    /// Chunks of [`fake_media_db`]: each text maps to frame `i` of blob 0.
+    pub fn fake_media_chunks() -> ChunksData {
+        use crate::model::types::BlobSpan;
+        let mut data = fake_chunks();
+        for (i, m) in data.metas.iter_mut().enumerate() {
+            m.source_uri = "media://cards-av1.mp4".into();
+            m.offset_start = i as u64;
+            m.offset_end = i as u64 + 1;
+            m.blob = Some(BlobSpan {
+                blob_index: 0,
+                start: i as u64,
+                end: i as u64 + 1,
+            });
+        }
+        data
     }
 
     pub fn fake_chunks() -> ChunksData {
@@ -392,6 +509,7 @@ pub(crate) mod fixtures {
                     source_uri: "corpus.txt".into(),
                     offset_start: i * 8,
                     offset_end: i * 8 + 5,
+                    blob: None,
                 })
                 .collect(),
         }
@@ -446,6 +564,27 @@ mod tests {
             let mut c = Compositor::new();
             view.render(&mut c);
         }
+    }
+
+    #[test]
+    fn span_label_spells_frames_and_byte_ranges() {
+        assert_eq!(
+            span_label("media://cards-av1.mp4", 27, 28, true),
+            "cards-av1.mp4 · frame 27"
+        );
+        assert_eq!(span_label("doc.txt", 0, 120, false), "doc.txt · 0–120");
+        // a multi-frame media span is still a range.
+        assert_eq!(span_label("media://a.mp4", 0, 4096, true), "a.mp4 · 0–4096");
+    }
+
+    #[test]
+    fn parse_citation_splits_hash_and_chunk() {
+        assert_eq!(
+            parse_citation("urna://sha256:abc/sha256:def"),
+            Some(("sha256:abc", "sha256:def"))
+        );
+        assert_eq!(parse_citation("sha256:def"), None);
+        assert_eq!(parse_citation("urna://sha256:abc/"), None);
     }
 
     #[test]

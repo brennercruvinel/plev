@@ -1,13 +1,16 @@
 //! SEARCH screen: query input (free text via the offline embedder, or a
-//! pasted JSON vector), mode select, k slider, virtualized results with
-//! score bars, and the explain panel (route, candidates, recall, the
-//! rerank-source honesty marker).
+//! pasted JSON vector), path select (exact / ann / graph / hybrid, plus
+//! one `space: <name>` entry per multimodal band), k slider, virtualized
+//! results with score bars and text previews, and the explain panel
+//! (route, candidates, recall, the rerank-source honesty marker) with the
+//! selected hit's citation, canonical text and, for media corpora, the
+//! decoded frame.
 //!
 //! The screen owns widget state and the last result; it never talks to
 //! the worker directly — submissions bubble up as [`Action::RunSearch`]
 //! and the shell validates against the open database.
 
-use engine::compositor::{Compositor, LayerId};
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
 use engine::ui::widgets::{
@@ -15,17 +18,22 @@ use engine::ui::widgets::{
     WidgetEvent,
 };
 
-use crate::model::types::{SearchMode, SearchResultsView};
+use crate::model::types::{OpenedDbView, SearchMode, SearchResultsView};
 
 use super::field::{FIELD_H, Field};
-use super::{Action, EditKey, group_label, panel, short_id, text};
+use super::{Action, ChunkLookup, EditKey, group_label, panel, short_id, span_label, text};
 
 const GAP: f32 = 12.0;
 const ROW_H: f32 = 56.0;
 const KIND_W: f32 = 200.0;
 const KIND_H: f32 = 36.0;
-const MODE_W: f32 = 160.0;
+const MODE_W: f32 = 200.0;
 const SLIDER_W: f32 = 200.0;
+/// The four text-slab paths that precede the per-space entries in the
+/// mode select.
+const TEXT_MODES: [&str; 4] = ["exact", "ann", "graph", "hybrid"];
+/// Frame preview box inside the explain panel.
+const FRAME_H: f32 = 200.0;
 
 /// How the query string is interpreted (the "text | vector" toggle).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -38,8 +46,8 @@ pub enum QueryKind {
 pub struct SearchContext<'a> {
     /// Embedding dim of the open db (for the vector hint); 0 when no db.
     pub dim: usize,
-    /// Canonical text lookup for result previews (chunk_id → first line).
-    pub text_of: &'a dyn Fn(&str) -> Option<String>,
+    /// Chunk texts, spans and decoded frames for previews.
+    pub lookup: &'a ChunkLookup<'a>,
     /// Embedder availability (drives the text-mode hint).
     pub embedder: Option<&'a Result<String, String>>,
 }
@@ -48,6 +56,8 @@ pub struct SearchScreen {
     kind_tabs: Tabs,
     query: Field,
     mode: Select,
+    /// Space names behind the text modes in `mode` (same order).
+    spaces: Vec<String>,
     k: Slider,
     search_button: Button,
     results: VirtualList,
@@ -63,7 +73,8 @@ impl SearchScreen {
         Self {
             kind_tabs: Tabs::new(["text", "vector"]),
             query: Field::new("ask the corpus…", theme),
-            mode: Select::new(["exact", "ann", "graph", "hybrid"], 0),
+            mode: Select::new(TEXT_MODES, 0),
+            spaces: Vec::new(),
             k: Slider::new(1.0, 100.0, 10.0).step(1.0),
             search_button: Button::new("Search").icon("search"),
             results: VirtualList::new(ROW_H),
@@ -76,13 +87,20 @@ impl SearchScreen {
         }
     }
 
-    /// Reset per-database state (called when a new db opens).
-    pub fn reset(&mut self) {
+    /// Reset per-database state and rebuild the path select for the new
+    /// db's spaces (called when a new db opens).
+    pub fn reset(&mut self, db: &OpenedDbView) {
         self.result = None;
         self.error = String::new();
         self.pending = false;
         self.results.selected = None;
         self.results.set_item_count(0);
+        self.spaces = db.space_names.clone();
+        let options = TEXT_MODES
+            .iter()
+            .map(|m| m.to_string())
+            .chain(self.spaces.iter().map(|s| format!("space: {s}")));
+        self.mode = Select::new(options, 0);
     }
 
     pub fn query_kind(&self) -> QueryKind {
@@ -102,6 +120,10 @@ impl SearchScreen {
             3 => SearchMode::Hybrid {
                 query_text: String::new(),
                 candidates_per_path: cand,
+            },
+            i if i >= TEXT_MODES.len() => match self.spaces.get(i - TEXT_MODES.len()) {
+                Some(name) => SearchMode::Space { name: name.clone() },
+                None => SearchMode::Exact,
             },
             _ => SearchMode::Exact,
         }
@@ -163,6 +185,12 @@ impl SearchScreen {
         self.error = reason;
     }
 
+    /// The selected hit's chunk ordinal, when texts are indexed.
+    fn selected_ordinal(&self, lookup: &ChunkLookup) -> Option<usize> {
+        let hit = self.result.as_ref()?.hits.get(self.results.selected?)?;
+        lookup.ordinal(&hit.chunk_id)
+    }
+
     fn layout(&self, content: Rect, has_result: bool) -> Layout {
         let kind_tabs = Rect::new(content.x, content.y, KIND_W, KIND_H);
         let query_y = content.y + KIND_H + GAP;
@@ -186,7 +214,7 @@ impl SearchScreen {
         let results_y = status_y + 24.0;
         let results_h = (content.y + content.h - results_y).max(80.0);
         let (results, explain) = if has_result && content.w >= 720.0 {
-            let explain_w = (content.w * 0.34).clamp(260.0, 360.0);
+            let explain_w = (content.w * 0.36).clamp(280.0, 400.0);
             (
                 Rect::new(content.x, results_y, content.w - explain_w - GAP, results_h),
                 Some(Rect::new(
@@ -304,7 +332,15 @@ impl SearchScreen {
 
     fn copy_rect(&self, explain: Rect) -> Rect {
         let (w, h) = self.copy_citation.preferred_size();
-        Rect::new(explain.x + 16.0, explain.y + explain.h - h - 12.0, w, h)
+        Rect::new(explain.x + explain.w - 16.0 - w, explain.y + 8.0, w, h)
+    }
+
+    /// The frame to decode for the selected hit, when it is a media chunk
+    /// whose frame is not loaded yet. Rendering is the moment the panel
+    /// knows what it shows, so the request is raised from there.
+    pub fn wanted_frame(&self, lookup: &ChunkLookup) -> Option<usize> {
+        let ordinal = self.selected_ordinal(lookup)?;
+        (lookup.is_media(ordinal) && lookup.frame(ordinal).is_none()).then_some(ordinal)
     }
 
     pub fn render(
@@ -340,9 +376,9 @@ impl SearchScreen {
         );
 
         // Status line: error (destructive) > pending > mode hint.
+        let status_style = TextStyle::new(13.0);
         if !self.error.is_empty() {
-            let style = TextStyle::new(13.0);
-            let msg = TextMeasurer::truncate_to_width(&self.error, &style, content.w);
+            let msg = TextMeasurer::truncate_to_width(&self.error, &status_style, content.w);
             text(
                 c,
                 &msg,
@@ -353,13 +389,33 @@ impl SearchScreen {
                 theme.colors.danger.0,
             );
         } else if self.pending {
-            let what = match self.query_kind() {
-                QueryKind::Text => "embedding query (offline potion)…",
-                QueryKind::Vector => "searching…",
+            let what = match (self.query_kind(), self.selected_mode()) {
+                (QueryKind::Vector, _) => "searching…".to_string(),
+                (QueryKind::Text, SearchMode::Space { name }) => {
+                    format!("embedding query with the {name} model (offline)…")
+                }
+                (QueryKind::Text, _) => "embedding query (offline)…".to_string(),
             };
             text(
                 c,
-                what,
+                &what,
+                13.0,
+                400,
+                content.x,
+                l.status_y,
+                theme.colors.text_dim.0,
+            );
+        } else if let SearchMode::Space { name } = self.selected_mode() {
+            let hint = match self.query_kind() {
+                QueryKind::Text => format!(
+                    "text-to-{name}: the query goes through that space's model (registry embedder, needs its deps); scores are exact cosine over the band"
+                ),
+                QueryKind::Vector => format!("vector must have the {name} space's dim"),
+            };
+            let hint = TextMeasurer::truncate_to_width(&hint, &status_style, content.w);
+            text(
+                c,
+                &hint,
                 13.0,
                 400,
                 content.x,
@@ -369,8 +425,7 @@ impl SearchScreen {
         } else if self.query_kind() == QueryKind::Text
             && let Some(Err(reason)) = ctx.embedder
         {
-            let style = TextStyle::new(13.0);
-            let msg = TextMeasurer::truncate_to_width(reason, &style, content.w);
+            let msg = TextMeasurer::truncate_to_width(reason, &status_style, content.w);
             text(
                 c,
                 &msg,
@@ -384,7 +439,7 @@ impl SearchScreen {
 
         if let Some(res) = &self.result {
             self.results.set_item_count(res.hits.len());
-            render_results(&mut self.results, c, l.results, theme, res, ctx.text_of);
+            render_results(&mut self.results, c, l.results, theme, res, ctx.lookup);
             if let Some(explain) = l.explain {
                 let selected = self.results.selected;
                 render_explain(
@@ -395,6 +450,7 @@ impl SearchScreen {
                     theme,
                     res,
                     selected,
+                    ctx.lookup,
                 );
             }
         }
@@ -415,16 +471,18 @@ impl SearchScreen {
     }
 }
 
-/// Results list rows: score bar + value, short id, source/preview line.
+/// Results list rows: score bar + value, short id, first text line, and
+/// the span (`frame N` for media chunks).
 fn render_results(
     results: &mut VirtualList,
     c: &mut Compositor,
     bounds: Rect,
     theme: &Theme,
     res: &SearchResultsView,
-    text_of: &dyn Fn(&str) -> Option<String>,
+    lookup: &ChunkLookup,
 ) {
-    let bar_style = TextStyle::new(12.0);
+    let sub_style = TextStyle::new(12.0);
+    let title_style = TextStyle::new(13.0).with_weight(500);
     results.render_with(c, bounds, theme, |c, i, row, _hov, _sel| {
         let Some(hit) = res.hits.get(i) else {
             return;
@@ -447,27 +505,32 @@ fn render_results(
             row.y + 6.0,
             theme.colors.text.0,
         );
-        let id = short_id(&hit.chunk_id);
+        // First line: the chunk's first text line (card name…), falling
+        // back to the short id while texts load.
+        let ordinal = lookup.ordinal(&hit.chunk_id);
+        let title = ordinal
+            .and_then(|o| lookup.first_line(o))
+            .map(str::to_string)
+            .unwrap_or_else(|| short_id(&hit.chunk_id));
+        let title_x = row.x + pad + bar_w + 72.0;
+        let title = TextMeasurer::truncate_to_width(&title, &title_style, row.w - (title_x - row.x) - pad);
         text(
             c,
-            &id,
-            12.0,
-            600,
-            row.x + pad + bar_w + 80.0,
+            &title,
+            13.0,
+            500,
+            title_x,
             row.y + 6.0,
             theme.colors.text_mid.0,
         );
-        // Second line: source uri + text preview.
-        let preview = text_of(&hit.chunk_id).unwrap_or_default();
-        let sub = if preview.is_empty() {
-            format!(
-                "{} · {}–{}",
-                hit.source_uri, hit.offset_start, hit.offset_end
-            )
-        } else {
-            format!("{} · {}", hit.source_uri, preview)
-        };
-        let sub = TextMeasurer::truncate_to_width(&sub, &bar_style, row.w - pad * 2.0);
+        // Second line: short id · span.
+        let media = ordinal.is_some_and(|o| lookup.is_media(o));
+        let sub = format!(
+            "{} · {}",
+            short_id(&hit.chunk_id),
+            span_label(&hit.source_uri, hit.offset_start, hit.offset_end, media)
+        );
+        let sub = TextMeasurer::truncate_to_width(&sub, &sub_style, row.w - pad * 2.0);
         text(
             c,
             &sub,
@@ -481,7 +544,9 @@ fn render_results(
 }
 
 /// The explain panel: route, candidate counts, recall and the
-/// rerank-source honesty line, plus the selected hit's citation.
+/// rerank-source honesty line, plus the selected hit's citation, frame
+/// preview (media corpora) and canonical text.
+#[allow(clippy::too_many_arguments)]
 fn render_explain(
     copy_citation: &IconButton,
     copy_rect: Rect,
@@ -490,6 +555,7 @@ fn render_explain(
     theme: &Theme,
     res: &SearchResultsView,
     selected: Option<usize>,
+    lookup: &ChunkLookup,
 ) {
     panel(c, rect, theme);
     group_label(c, "EXPLAIN", rect.x + 16.0, rect.y + 16.0, theme);
@@ -524,11 +590,12 @@ fn render_explain(
     }
     rows.push(("scores", res.rerank_disclosure.clone()));
 
+    let inner_w = rect.w - 32.0;
     let mut y = rect.y + 16.0 + 24.0;
     for (key, value) in rows {
         text(c, key, 12.0, 600, rect.x + 16.0, y, theme.colors.text_dim.0);
         let style = TextStyle::new(12.0);
-        let v = TextMeasurer::truncate_to_width(&value, &style, rect.w - 32.0 - 128.0);
+        let v = TextMeasurer::truncate_to_width(&value, &style, inner_w - 128.0);
         text(
             c,
             &v,
@@ -541,23 +608,106 @@ fn render_explain(
         y += 22.0;
     }
 
-    // Selected hit: full citation, copyable.
-    if let Some(sel) = selected
-        && let Some(hit) = res.hits.get(sel)
-    {
-        group_label(c, "SELECTED", rect.x + 16.0, y + 12.0, theme);
-        let style = TextStyle::new(12.0);
-        let id = TextMeasurer::truncate_to_width(&hit.citation_id, &style, rect.w - 32.0);
-        text(
-            c,
-            &id,
-            12.0,
-            400,
+    // Selected hit: citation (copyable), frame, canonical text.
+    let Some(hit) = selected.and_then(|sel| res.hits.get(sel)) else {
+        return;
+    };
+    y += 12.0;
+    group_label(c, "SELECTED", rect.x + 16.0, y, theme);
+    copy_citation.render(c, copy_rect, theme);
+    let style = TextStyle::new(12.0);
+    let id = TextMeasurer::truncate_to_width(&hit.citation_id, &style, inner_w);
+    text(
+        c,
+        &id,
+        12.0,
+        400,
+        rect.x + 16.0,
+        y + 20.0,
+        theme.colors.text_mid.0,
+    );
+    y += 20.0 + 24.0;
+
+    let Some(ordinal) = lookup.ordinal(&hit.chunk_id) else {
+        return;
+    };
+    if lookup.is_media(ordinal) {
+        y += render_frame_box(c, Rect::new(rect.x + 16.0, y, inner_w, FRAME_H), theme, lookup, ordinal);
+        y += GAP;
+    }
+    if let Some(full) = lookup.text(ordinal) {
+        let area = Rect::new(
             rect.x + 16.0,
-            y + 12.0 + 20.0,
-            theme.colors.text_mid.0,
+            y,
+            inner_w,
+            (rect.y + rect.h - 16.0 - y).max(0.0),
         );
-        copy_citation.render(c, copy_rect, theme);
+        if area.h > 16.0 {
+            let body = TextStyle::new(13.0).with_line_height(13.0 * 1.5);
+            c.push(SceneNode::PushClip {
+                x: area.x,
+                y: area.y,
+                w: area.w,
+                h: area.h,
+            });
+            c.push(SceneNode::Text {
+                key: TextNodeKey::from_style(full, &body, Some(area.w)),
+                x: area.x,
+                y: area.y,
+                color: theme.colors.text_mid.0,
+            });
+            c.push(SceneNode::PopClip);
+        }
+    }
+}
+
+/// Draw the decoded frame of `ordinal` fitted inside `bounds` (or the
+/// loading / failure note). Returns the height used.
+pub(crate) fn render_frame_box(
+    c: &mut Compositor,
+    bounds: Rect,
+    theme: &Theme,
+    lookup: &ChunkLookup,
+    ordinal: usize,
+) -> f32 {
+    match lookup.frame(ordinal) {
+        Some(Ok(handle)) => {
+            // Fit the atlas image inside the box, keep aspect, centered.
+            let (iw, ih) = (handle.width as f32, handle.height as f32);
+            let scale = (bounds.w / iw).min(bounds.h / ih).min(1.0);
+            let (w, h) = (iw * scale, ih * scale);
+            c.draw_image(
+                bounds.x + (bounds.w - w) / 2.0,
+                bounds.y,
+                w,
+                h,
+                *handle,
+                theme.radius.sm,
+            );
+            h
+        }
+        Some(Err(reason)) => {
+            let style = TextStyle::new(12.0);
+            let msg = TextMeasurer::truncate_to_width(
+                &format!("no frame preview: {reason}"),
+                &style,
+                bounds.w,
+            );
+            text(c, &msg, 12.0, 400, bounds.x, bounds.y, theme.colors.text_dim.0);
+            20.0
+        }
+        None => {
+            text(
+                c,
+                "decoding frame…",
+                12.0,
+                400,
+                bounds.x,
+                bounds.y,
+                theme.colors.text_dim.0,
+            );
+            20.0
+        }
     }
 }
 
@@ -581,6 +731,8 @@ struct Layout {
 mod tests {
     use super::*;
     use crate::model::types::SearchHitView;
+    use crate::view::fixtures;
+    use std::collections::HashMap;
 
     fn harness() -> (SearchScreen, Theme) {
         let theme = Theme::hoff();
@@ -590,7 +742,7 @@ mod tests {
     fn fake_results() -> SearchResultsView {
         SearchResultsView {
             hits: vec![SearchHitView {
-                chunk_id: format!("sha256:{}", "ab".repeat(32)),
+                chunk_id: format!("sha256:{}{}", 0, "0".repeat(63)),
                 score: 0.91,
                 source_uri: "corpus.txt".into(),
                 offset_start: 0,
@@ -678,6 +830,25 @@ mod tests {
     }
 
     #[test]
+    fn spaces_append_to_the_mode_select() {
+        let (mut screen, _) = harness();
+        screen.reset(&fixtures::fake_media_db());
+        assert_eq!(screen.mode.options.len(), TEXT_MODES.len() + 1);
+        assert_eq!(screen.mode.options[4], "space: clip-vit-b32");
+        screen.mode.selected = 4;
+        assert_eq!(
+            screen.selected_mode(),
+            SearchMode::Space {
+                name: "clip-vit-b32".into()
+            }
+        );
+        // A text-only db drops them again.
+        screen.reset(&fixtures::fake_db());
+        assert_eq!(screen.mode.options.len(), TEXT_MODES.len());
+        assert_eq!(screen.mode.selected, 0);
+    }
+
+    #[test]
     fn fold_result_updates_state_and_renders_at_two_widths() {
         let (mut screen, theme) = harness();
         screen.pending = true;
@@ -689,7 +860,24 @@ mod tests {
         assert!(screen.error.is_empty());
         assert_eq!(screen.result.as_ref().unwrap().hits.len(), 1);
 
-        let text_of = |_: &str| Some("preview line".to_string());
+        let db = fixtures::fake_media_db();
+        let chunks = fixtures::fake_media_chunks();
+        let index: HashMap<String, usize> = db
+            .chunk_ids
+            .iter()
+            .enumerate()
+            .map(|(i, id)| (id.clone(), i))
+            .collect();
+        let mut frames = HashMap::new();
+        frames.insert(0usize, Err("no ffmpeg".to_string()));
+        let lookup = ChunkLookup {
+            ids: &db.chunk_ids,
+            index: Some(&index),
+            chunks: Some(&chunks),
+            frames: &frames,
+        };
+        screen.results.selected = Some(0);
+        assert_eq!(screen.wanted_frame(&lookup), None, "a failed decode is not re-requested");
         for (w, h) in [(800.0, 600.0), (1600.0, 1000.0)] {
             let mut c = Compositor::new();
             screen.render(
@@ -698,11 +886,42 @@ mod tests {
                 &theme,
                 &SearchContext {
                     dim: 4,
-                    text_of: &text_of,
+                    lookup: &lookup,
                     embedder: None,
                 },
             );
         }
+    }
+
+    #[test]
+    fn selecting_a_media_hit_wants_its_frame() {
+        let (mut screen, _) = harness();
+        screen.fold_result(Ok(fake_results()));
+        let db = fixtures::fake_media_db();
+        let chunks = fixtures::fake_media_chunks();
+        let index: HashMap<String, usize> = db
+            .chunk_ids
+            .iter()
+            .enumerate()
+            .map(|(i, id)| (id.clone(), i))
+            .collect();
+        let frames = HashMap::new();
+        let lookup = ChunkLookup {
+            ids: &db.chunk_ids,
+            index: Some(&index),
+            chunks: Some(&chunks),
+            frames: &frames,
+        };
+        assert_eq!(screen.wanted_frame(&lookup), None);
+        screen.results.selected = Some(0);
+        assert_eq!(screen.wanted_frame(&lookup), Some(0));
+        // Text-only chunks never ask for a frame.
+        let text_chunks = fixtures::fake_chunks();
+        let lookup = ChunkLookup {
+            chunks: Some(&text_chunks),
+            ..lookup
+        };
+        assert_eq!(screen.wanted_frame(&lookup), None);
     }
 
     #[test]

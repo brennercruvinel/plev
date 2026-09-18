@@ -1,9 +1,16 @@
-//! Offline text embedder bridge: spawn the urna potion embedder
-//! (`python/forge/embed_query_potion.py`) as a subprocess and parse the
-//! query vector back, with the same model gate the urna CLI applies.
+//! Offline text embedder bridge: spawn the urna query embedder as a
+//! subprocess and parse the query vector back, with the same model gate
+//! the urna CLI applies.
 //!
-//! This is a minimal port of `urna-cli`'s `cmd/util.rs::embed_and_search`
-//! and `cmd/pyenv.rs::resolve_interpreter`: interpreter resolution
+//! Three scripts, routed like `urna ask`/`retrieve`: potion corpora take
+//! `python/forge/embed_query_potion.py` (static table, no torch), any
+//! other manifest model takes the sentence-transformers bridge
+//! (`python/embed_query.py`), and a multimodal SPACE (e.g. the clip text
+//! tower for a "clip-vit-b32" band) takes the registry embedder
+//! (`python/forge/embed_query_model.py --preset <space>`).
+//!
+//! This is a minimal port of `urna-cli`'s `cmd/embed_gate.rs` and
+//! `cmd/pyenv.rs::resolve_interpreter`: interpreter resolution
 //! (`URNA_PYTHON` → nearest `.venv` → `python3`), embedder script
 //! discovery (repo layout → XDG data dir → exe share dir), the JSON
 //! contract on stdout, and the blocking name/dim/model_hash gate (the CLI
@@ -12,7 +19,7 @@
 //! Everything here runs on the worker thread: spawning python blocks for
 //! up to [`EMBED_TIMEOUT`].
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
@@ -113,12 +120,30 @@ fn embedder_script_rel(embedding_model: &str) -> PathBuf {
     }
 }
 
+/// The registry embedder: one script for every preset (clip, siglip2,
+/// wemm, jina…), selected with `--preset`. Used for multimodal spaces.
+fn space_embedder_script_rel() -> PathBuf {
+    PathBuf::from("python")
+        .join("forge")
+        .join("embed_query_model.py")
+}
+
 /// Locate the embedder script for `embedding_model`. Resolution order
 /// mirrors the CLI (`default_potion_embedder_path`): the urna repo layout
 /// relative to the cwd, the urna dev checkout sibling of this crate, the
 /// XDG data dir, and `<exe>/../share/urna/`.
 pub fn default_embedder_path(embedding_model: &str) -> Option<PathBuf> {
-    let rel = embedder_script_rel(embedding_model);
+    locate_script(&embedder_script_rel(embedding_model))
+}
+
+
+/// Locate the registry embedder used for multimodal spaces.
+pub fn default_space_embedder_path() -> Option<PathBuf> {
+    locate_script(&space_embedder_script_rel())
+}
+
+/// Resolve a repo-relative script path against every candidate root.
+fn locate_script(rel: &Path) -> Option<PathBuf> {
     // Installed layouts drop the repo's `python/` prefix: the scripts land
     // under `urna/` directly (`urna/forge/embed_query_potion.py`,
     // `urna/embed_query.py`).
@@ -136,16 +161,16 @@ pub fn default_embedder_path(embedding_model: &str) -> Option<PathBuf> {
         .and_then(|e| e.parent().map(|p| p.to_path_buf()))
         .map(|bin| bin.join("..").join("share"));
     let candidates = [
-        std::env::current_dir().ok().map(|p| p.join(&rel)),
+        std::env::current_dir().ok().map(|p| p.join(rel)),
         std::env::current_dir()
             .ok()
-            .map(|p| p.join("..").join(&rel)),
+            .map(|p| p.join("..").join(rel)),
         // Dev convenience: urnaui's workspace sits next to the urna
         // checkout in the standard hoff layout.
         Some(
             PathBuf::from(env!("CARGO_MANIFEST_DIR"))
                 .join("../../../urna")
-                .join(&rel),
+                .join(rel),
         ),
         data_home.map(|d| d.join("urna").join(&installed_rel)),
         exe_share.map(|s| s.join("urna").join(&installed_rel)),
@@ -252,6 +277,55 @@ pub fn embed_query(
     gate(payload, embedding_model, embedding_dim, model_hash)
 }
 
+/// Embed `query` with the model of multimodal space `space` (a registry
+/// preset name such as "clip-vit-b32") and validate dim + model_hash
+/// against the space_table entry. The name gate does not apply: the
+/// space is named after the preset, and the preset chooses the model.
+/// Heavy presets that run remote code are opted into with the same env
+/// vars the CLI honours (`URNA_ALLOW_REMOTE_CODE`, `URNA_ALLOW_HEAVY`).
+pub fn embed_query_space(
+    space: &str,
+    dim: usize,
+    model_hash: &str,
+    query: &str,
+) -> Result<Vec<f32>, EmbedError> {
+    let embedder = default_space_embedder_path().ok_or(EmbedError::EmbedderNotFound)?;
+    let interpreter = resolve_interpreter();
+    let args = vec![
+        embedder.to_string_lossy().into_owned(),
+        "--preset".to_string(),
+        space.to_string(),
+        space.to_string(),
+        query.to_string(),
+    ];
+    let stdout = run_with_timeout(&interpreter, &args)?;
+    let payload: EmbedderOutput =
+        serde_json::from_slice(&stdout).map_err(|e| EmbedError::InvalidOutput(e.to_string()))?;
+    gate_space(payload, dim, model_hash)
+}
+
+/// The space gate: dim and `model_hash` against the space_table entry.
+fn gate_space(
+    payload: EmbedderOutput,
+    dim: usize,
+    model_hash: &str,
+) -> Result<Vec<f32>, EmbedError> {
+    if payload.embedding_dim != dim || payload.vector.len() != dim {
+        return Err(EmbedError::Gate(format!(
+            "dim mismatch: space={dim}, embedder dim={}, vector len={}",
+            payload.embedding_dim,
+            payload.vector.len()
+        )));
+    }
+    if payload.model_hash != model_hash {
+        return Err(EmbedError::Gate(format!(
+            "model_hash mismatch: space was built with {model_hash}, embedder reports {}",
+            payload.model_hash
+        )));
+    }
+    Ok(payload.vector)
+}
+
 /// Cheap capability probe for the Open screen: interpreter resolves and
 /// answers `--version`, and at least one embedder script exists. Returns a
 /// short human-readable status (e.g. "Python 3.13.1 · embedder: …").
@@ -329,6 +403,15 @@ mod tests {
         assert!(gate(output("other", 4, "sha256:abc"), "potion", 4, "sha256:abc").is_err());
         assert!(gate(output("potion", 8, "sha256:abc"), "potion", 4, "sha256:abc").is_err());
         assert!(gate(output("potion", 4, "sha256:xyz"), "potion", 4, "sha256:abc").is_err());
+    }
+
+    #[test]
+    fn space_gate_checks_dim_and_hash_only() {
+        // the name is the preset's, never the manifest's: not gated.
+        let v = gate_space(output("open_clip/ViT-B-32", 4, "sha256:abc"), 4, "sha256:abc").unwrap();
+        assert_eq!(v.len(), 4);
+        assert!(gate_space(output("x", 8, "sha256:abc"), 4, "sha256:abc").is_err());
+        assert!(gate_space(output("x", 4, "sha256:xyz"), 4, "sha256:abc").is_err());
     }
 
     #[test]

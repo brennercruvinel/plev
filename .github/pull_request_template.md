@@ -16,7 +16,7 @@ conventional-commits prefix.
 
 ## contracts
 
-- [ ] new crate or example is named in `docs/arc/arc.yaml`, `docs/arc/arc.md` and `README.md` (the arc sync guard enforces this)
-- [ ] structure changes are reflected in the arc trio (arc.yaml is canonical)
+- [ ] new crate or example is named in `docs/arc/arc.toml` and `README.md` (the arc sync guard enforces this)
+- [ ] structure changes are reflected in `docs/arc/arc.toml` (the tables are canonical)
 - [ ] tests are real (happy + error + one edge), no mocks; visual claims measured by pixel
 - [ ] no new dependency without a one-line justification of what it buys
