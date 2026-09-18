@@ -1,10 +1,12 @@
 mod events;
+mod frame;
 mod hot_reload;
 mod lifecycle;
 mod render;
 mod render_passes;
 pub(crate) mod state;
 
+pub use frame::present_frame;
 pub use render_passes::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 
 #[cfg(target_arch = "wasm32")]

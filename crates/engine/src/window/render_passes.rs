@@ -288,7 +288,15 @@ pub fn encode_layer_passes(
     let clip_scale = gpu.clip_scale();
     let mut draw_calls = 0u32;
     for layer_id in dirty_layer_ids {
-        let layer = compositor.layer(*layer_id).unwrap();
+        // A dirty id can outlive its layer when the scene drops a layer between
+        // the id snapshot and encoding; skip it instead of taking the frame down.
+        let Some(layer) = compositor.layer(*layer_id) else {
+            log::warn!(
+                "encode_layer_passes: dirty layer {} no longer in the compositor",
+                layer_id.0
+            );
+            continue;
+        };
         let Some((view, resolve_target)) = layer.render_attachment() else {
             continue;
         };
@@ -405,15 +413,26 @@ impl super::App {
             .layers()
             .iter()
             .filter(|l| l.visible && l.has_effects())
-            .map(|l| (l.id, l.effects().to_vec(), l.texture_view().map(|_| l.id)))
+            .map(|l| (l.id, l.effects().to_vec()))
             .collect();
 
-        for (layer_id, effects, has_tv) in &effect_layers {
-            if has_tv.is_none() {
+        for (layer_id, effects) in &effect_layers {
+            let Some(layer) = compositor.layer(*layer_id) else {
+                log::warn!(
+                    "apply_layer_effects: layer {} no longer in the compositor",
+                    layer_id.0
+                );
                 continue;
-            }
-            let layer = compositor.layer(*layer_id).unwrap();
-            let source_view = layer.texture_view().unwrap();
+            };
+            // No backing texture yet (never resolved, or resized away this
+            // frame): nothing to read as the effect source.
+            let Some(source_view) = layer.texture_view() else {
+                log::warn!(
+                    "apply_layer_effects: layer {} has effects but no texture view",
+                    layer_id.0
+                );
+                continue;
+            };
             let mut current_view_owner: Option<crate::gpu::texture_pool::TextureHandle> = None;
 
             for effect in effects {
