@@ -165,6 +165,10 @@ edits, `monster` codec, `lot` conversion, `parser` transpile.
 
 MIT, see [docs/LICENSE](docs/LICENSE).
 
-made it simple, but significant (∂μfμν = jν)
+made it simple, but significant.
+
+this is maintained by brenner cruvinel (brenner@hoffresearch.com).
+all contributions are welcome.
+(∂μfμν = jν)
 
 Brenner Cruvinel
