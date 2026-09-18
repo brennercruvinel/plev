@@ -64,8 +64,8 @@ behavior.
   cross-platform guard)
 
 script/gate runs the four in order and stops on the first red. it then
-runs the nestui leg (test, clippy, fmt via --manifest-path
-crates/nestui/Cargo.toml) when a sibling nest checkout exists at ../nest;
+runs the urnaui leg (test, clippy, fmt via --manifest-path
+crates/urnaui/Cargo.toml) when a sibling urna checkout exists at ../urna;
 absent that checkout the leg skips with a warning and CI
 (.github/workflows/ci.yml) is the verification. CI also runs an advisory
 typos job (non-blocking; the repo is bilingual english/portuguese).
@@ -77,11 +77,11 @@ typos job (non-blocking; the repo is bilingual english/portuguese).
   [path]` (git client), `cargo run -p prime` (particle swarm),
   `cargo run -p engine --example <name>` (any
   crates/engine/examples/<name>/main.rs)
-- nestui (.nest explorer): `cargo run --manifest-path
-  crates/nestui/Cargo.toml [file.nest]`. it is excluded from the root
-  workspace (native backend path-depends on ../nest), so `--workspace`
-  and `-p nestui` never reach it; always go through --manifest-path.
-  `script/web-nestui` serves its web target on 8081.
+- urnaui (.urna explorer): `cargo run --manifest-path
+  crates/urnaui/Cargo.toml [file.urna]`. it is excluded from the root
+  workspace (native backend path-depends on ../urna), so `--workspace`
+  and `-p urnaui` never reach it; always go through --manifest-path.
+  `script/web-urnaui` serves its web target on 8081.
 - format pipelines: lot2monsters, svg2monster, monster_player (engine
   examples, foreign format in -> .monster out) and the parser
   (`cargo run -p parser --example transpile index.tsx module.sass

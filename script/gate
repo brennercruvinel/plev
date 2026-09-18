@@ -27,15 +27,15 @@ else
     echo "         is not installed (Homebrew rust). the leg runs in CI." >&2
 fi
 
-# nestui leg. nestui is excluded from the root workspace because its native
-# backend path-depends on the sibling nest workspace; when that checkout is
+# urnaui leg. urnaui is excluded from the root workspace because its native
+# backend path-depends on the sibling urna workspace; when that checkout is
 # absent the leg skips with a warning and CI (.github/workflows/ci.yml) is
 # the verification.
-if [ -f ../nest/crates/nest-format/Cargo.toml ]; then
-    cargo test --manifest-path crates/nestui/Cargo.toml
-    cargo clippy --manifest-path crates/nestui/Cargo.toml --all-targets -- -D warnings
-    cargo fmt --check --manifest-path crates/nestui/Cargo.toml
+if [ -f ../urna/crates/urna-format/Cargo.toml ]; then
+    cargo test --manifest-path crates/urnaui/Cargo.toml
+    cargo clippy --manifest-path crates/urnaui/Cargo.toml --all-targets -- -D warnings
+    cargo fmt --check --manifest-path crates/urnaui/Cargo.toml
 else
-    echo "warning: skipping nestui — sibling nest checkout not found at ../nest." >&2
+    echo "warning: skipping urnaui — sibling urna checkout not found at ../urna." >&2
     echo "         the leg runs in CI (.github/workflows/ci.yml)." >&2
 fi

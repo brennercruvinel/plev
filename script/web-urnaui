@@ -1,0 +1,10 @@
+#!/bin/sh
+# development loop for the urnaui web target: trunk reads
+# web/urnaui/Trunk.toml and web/urnaui/index.html, serves on
+# 127.0.0.1:8081 in watch mode. extra args pass through (e.g.
+# `script/web-urnaui build` for a dist build).
+set -e
+
+cmd="${1:-serve}"
+[ $# -gt 0 ] && shift
+exec trunk --config web/urnaui "$cmd" "$@"
