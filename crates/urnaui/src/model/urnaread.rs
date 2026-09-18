@@ -590,6 +590,24 @@ impl UrnaBytes {
         Ok(format!("sha256:{}", hex(&h.finalize())))
     }
 
+    /// Re-run the per-section checksum pass and the content_hash over the
+    /// resident bytes (`urna validate` on the web). Returns the wall time
+    /// in ms.
+    pub fn revalidate(&self) -> Result<f64> {
+        let t0 = Instant::now();
+        for s in &self.sections {
+            let (offset, size) = (s.offset as usize, s.size as usize);
+            let actual = hex(&sha256(&self.bytes[offset..offset + size])[..8]);
+            if actual != s.checksum {
+                return Err(format!("section 0x{:02X} checksum mismatch", s.section_id));
+            }
+        }
+        if self.compute_content_hash()? != self.content_hash {
+            return Err("content_hash mismatch".to_string());
+        }
+        Ok(t0.elapsed().as_secs_f64() * 1000.0)
+    }
+
     // -- view models ----------------------------------------------------------
 
     /// The inspect document as a view model (same shape the native

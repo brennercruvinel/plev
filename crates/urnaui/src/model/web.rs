@@ -129,6 +129,25 @@ impl WebWorker {
             UrnaCommand::CheckEmbedder => self.push(UrnaEvent::EmbedderStatus(Err(
                 "text search requires the desktop app".to_string(),
             ))),
+            // The portable reader validated hashes at open; a re-run is the
+            // same pass over the same resident bytes.
+            UrnaCommand::Validate => {
+                let result = {
+                    let inner = self.inner.borrow();
+                    match &inner.file {
+                        Some(file) => file.revalidate(),
+                        None => Err("no database open".to_string()),
+                    }
+                };
+                self.push(UrnaEvent::Validated(result));
+            }
+            UrnaCommand::ExportBlob { .. } => self.push(UrnaEvent::BlobExported(Err(
+                "blob export requires the desktop app".to_string(),
+            ))),
+            UrnaCommand::LoadFrame { ordinal, .. } => self.push(UrnaEvent::FrameLoaded {
+                ordinal,
+                result: Err("frame previews require the desktop app (ffmpeg)".to_string()),
+            }),
             UrnaCommand::Shutdown => {}
         }
     }

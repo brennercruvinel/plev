@@ -9,6 +9,26 @@ status: living
 
 ## unreleased
 
+- urnaui, the .urna explorer (2026-09-18): nestui renamed to urnaui end to
+  end (crate, modules, types, web/urnaui, script/web-urnaui, gate, ci)
+  against hoffresearch/urna v0.4.0; the portable reader accepts both
+  magics so pre-rename .nest corpora open. the poc's real bugs fixed
+  against the 38k-card mtg corpus (530 MB): the file was read into ram
+  twice (now one memmap2 map, sections decoded through UrnaView over it),
+  results carried no text (the worker ships ChunksLoaded right behind
+  Opened), results waited for the next mouse move (worker wakes the loop,
+  adr worker-results-wake-the-event-loop), the subprocess bridges hung on
+  a full pipe (shared draining helper), the chunks tab showed 0x03 spans
+  while cite/search report the 0x16 overlay (now one span_label), blobs
+  and spaces were not parsed from inspect. urna pillars surfaced: search
+  over a named multimodal space (`space: <name>` in the select, registry
+  embedder with the space's dim/model_hash gate), explain panel with the
+  selected hit's citation + text + decoded frame, chunk filter by text
+  terms / id / urna:// citation, validate, media card with hash-verified
+  export, frame previews straight out of the inlined av1 via ffmpeg
+  subfile (adr urnaui-media-frames-in-place-via-ffmpeg-subfile), Browse…
+  native dialog (rfd). tests 57 -> 80 incl. a media corpus built with the
+  urna writer (blob + overlay + space); wasm check green.
 - arc unified (2026-09-18): docs/arc/{arc.yaml, arc.md, arc.mmd} became one
   file, docs/arc/arc.toml: the machine map as tables, the human reference
   under [prose], the frame-flow mermaid as a literal string under

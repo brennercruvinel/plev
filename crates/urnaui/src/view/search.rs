@@ -633,9 +633,13 @@ fn render_explain(
         return;
     };
     if lookup.is_media(ordinal) {
+        // Leave room for a few lines of text under the frame: the box
+        // shrinks before the text disappears.
+        let remaining = rect.y + rect.h - 16.0 - y;
+        let frame_h = FRAME_H.min((remaining - 96.0).max(80.0));
         y += render_frame_box(
             c,
-            Rect::new(rect.x + 16.0, y, inner_w, FRAME_H),
+            Rect::new(rect.x + 16.0, y, inner_w, frame_h),
             theme,
             lookup,
             ordinal,

@@ -79,9 +79,16 @@ typos job (non-blocking; the repo is bilingual english/portuguese).
   crates/engine/examples/<name>/main.rs)
 - urnaui (.urna explorer): `cargo run --manifest-path
   crates/urnaui/Cargo.toml [file.urna]`. it is excluded from the root
-  workspace (native backend path-depends on ../urna), so `--workspace`
-  and `-p urnaui` never reach it; always go through --manifest-path.
-  `script/web-urnaui` serves its web target on 8081.
+  workspace (native backend path-depends on ../urna, the hoffresearch/urna
+  checkout at v0.4.0 or later), so `--workspace` and `-p urnaui` never
+  reach it; always go through --manifest-path. pre-rename `.nest` files
+  open too (the reader accepts both magics). text search shells out to
+  the urna offline embedders (`URNA_PYTHON` picks the interpreter; the
+  potion table needs numpy + tokenizers, a multimodal space needs that
+  space's registry deps, e.g. open_clip for clip-vit-b32). frame previews
+  of inlined media need `ffmpeg` on PATH (read in place via its subfile
+  protocol, nothing is copied). `script/web-urnaui` serves its web target
+  on 8081.
 - format pipelines: lot2monsters, svg2monster, monster_player (engine
   examples, foreign format in -> .monster out) and the parser
   (`cargo run -p parser --example transpile index.tsx module.sass

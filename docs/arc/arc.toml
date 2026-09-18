@@ -142,8 +142,9 @@ targets = ["desktop", "web", "android", "ios"]
 
 [crates.urnaui]
 path = "crates/urnaui"
-role = ".urna vector-db explorer app (6 tabs: open/overview/search/chunks/graph/stats). own workspace, excluded from the root one because the native backend path-depends on the sibling urna checkout at ../urna (build with --manifest-path crates/urnaui/Cargo.toml). same lib+cdylib+staticlib shell shape as showcase (run/run_web/android_main/urnaui_ios_main). native backend = urna-format/urna-runtime (path deps into the sibling urna workspace, read-only) + worker thread + offline python embedder bridge; web backend = urnaread (portable in-memory reader, no urna deps) + inline worker, file ingress via a hidden input[type=file]"
+role = ".urna vector-db explorer app (6 tabs: open/overview/search/chunks/graph/stats). own workspace, excluded from the root one because the native backend path-depends on the sibling urna checkout at ../urna, v0.4.0+ (build with --manifest-path crates/urnaui/Cargo.toml). same lib+cdylib+staticlib shell shape as showcase (run/run_web/android_main/urnaui_ios_main). native backend = urna-format/urna-runtime (path deps into the sibling urna workspace, read-only) + one memmap2 map for the sections the ui decodes itself (spans, blob overlay 0x16, blob offset table 0x17, graph csr) + worker thread that wakes the winit loop through an EventLoopProxy after every result + offline python embedder bridge (potion for the text slab, the registry embedder per multimodal space) + ffmpeg frame decode of inlined media read in place via its subfile protocol (model/frames, model/subprocess drains pipes with a timeout); rfd native open/save dialogs. surfaces every urna pillar: exact/ann/graph/hybrid/space search with the explain honesty line, validate, media blob list + hash-verified export, urna:// citation resolve, frame previews. web backend = urnaread (portable in-memory reader, no urna deps, accepts the URNA and pre-rename NEST magics) + inline worker, file ingress via a hidden input[type=file]; no embedder, no export, no frames there"
 depends = ["engine"]
+external-tools = ["ffmpeg (frame previews, optional)", "python3 + urna/python (text search, optional)"]
 targets = ["desktop", "web"]
 
 [crates.prime]
@@ -280,8 +281,11 @@ import-foreign-formats-by-conversion-not-embedding); `svg` the still-image
 importer on the same exit door; `parser` the ui transpiler poc; `rope` the
 text-editing core; `git` git ops; `ide` the git client app; `showcase` the
 design-system gallery; `urnaui` the .urna explorer (desktop via mmap
-urna-runtime + worker thread, web via a portable in-memory reader), its own
-workspace because the native backend path-depends on ../urna; `prime` the
+urna-runtime + worker thread + ffmpeg frame previews of inlined media, web
+via a portable in-memory reader), its own workspace because the native
+backend path-depends on ../urna (adr
+urnaui-media-frames-in-place-via-ffmpeg-subfile, adr
+worker-results-wake-the-event-loop); `prime` the
 prime-coherence particle swarm; `narrate`/`narrate-macro` the experimental
 dsl; `macros` the #[component] proc-macro.
 '''

@@ -109,7 +109,8 @@ impl ChunksScreen {
     /// Rebuild the filtered ordinal list when the filter text changed or
     /// the texts arrived. Three shapes, tried in order: a `urna://`
     /// citation (must match the open file's content_hash), an exact chunk
-    /// id, a case-insensitive substring of the canonical text.
+    /// id, case-insensitive terms that must all occur in the canonical
+    /// text.
     fn sync_filter(&mut self, ctx: &ChunksContext) {
         let key = self.filter.text().trim().to_string();
         let texts_ready = ctx.lookup.chunks.is_some();
@@ -155,12 +156,17 @@ impl ChunksScreen {
             self.filter_note = "loading texts…".into();
             return;
         };
-        let needle = key.to_lowercase();
+        // Every whitespace-separated term must appear (any order), so
+        // "lifelink angel" finds an angel with lifelink.
+        let terms: Vec<String> = key.split_whitespace().map(str::to_lowercase).collect();
         let hits: Vec<usize> = chunks
             .texts
             .iter()
             .enumerate()
-            .filter(|(_, t)| t.to_lowercase().contains(&needle))
+            .filter(|(_, t)| {
+                let lower = t.to_lowercase();
+                terms.iter().all(|term| lower.contains(term.as_str()))
+            })
             .map(|(i, _)| i)
             .collect();
         if hits.is_empty() {
@@ -728,11 +734,19 @@ mod tests {
         let ctx = ctx(&lookup, &fix);
         let (mut screen, _) = harness();
 
-        // substring, case-insensitive
+        // terms, case-insensitive, any order, all required
         screen.filter.input.focused = true;
         screen.filter.insert("BETA");
         screen.sync_filter(&ctx);
         assert_eq!(screen.filtered, Some(vec![1]));
+        screen.filter.input.buffer.set_text("");
+        screen.filter.insert("text chunk");
+        screen.sync_filter(&ctx);
+        assert_eq!(screen.filtered, Some(vec![0, 1, 2]));
+        screen.filter.input.buffer.set_text("");
+        screen.filter.insert("chunk delta");
+        screen.sync_filter(&ctx);
+        assert_eq!(screen.filtered, Some(vec![]));
 
         // exact chunk id
         screen.filter.input.buffer.set_text("");

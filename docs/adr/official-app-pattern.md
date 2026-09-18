@@ -15,7 +15,7 @@ declarative builder (builder/), the view/component traits with the
 said which one an app should use, so each exploration wave left its own
 paradigm looking equally official.
 
-meanwhile every app that ships (showcase, ide, nestui) converged on the
+meanwhile every app that ships (showcase, ide, urnaui) converged on the
 same shape: plain structs own the state, retained widgets handle events
 and report `EventResult`, and every visible mutation invalidates
 (render-on-demand-requires-explicit-invalidation).

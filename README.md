@@ -62,13 +62,26 @@ web, same pixels as desktop (`cargo install trunk` first):
 ```
 
 urnaui, the `.urna` explorer, is its own workspace because its native
-backend path-depends on a sibling checkout of urna at `../urna`. with urna
-cloned next to plev:
+backend path-depends on a sibling checkout of
+[urna](https://github.com/hoffresearch/urna) (v0.4.0 or later) at
+`../urna`. with urna cloned next to plev:
 
 ```
-cargo run --manifest-path crates/urnaui/Cargo.toml [file.urna]   # drop a file to open
+cargo run --manifest-path crates/urnaui/Cargo.toml [file.urna]   # drop a file to open, or Browse…
 ./script/web-urnaui                                              # web target on :8081
 ```
+
+it opens any `.urna` (and the pre-rename `.nest` files) and surfaces the
+whole format: exact / ann / graph / hybrid search and one entry per
+multimodal space, the explain panel with the rerank honesty line, chunk
+filter by text, id or `urna://` citation, validate, media blobs with a
+hash-verified export, and the frame of every card or image straight out of
+the inlined av1 stream. two optional tools: text search shells out to the
+urna offline embedders (`URNA_PYTHON` picks the interpreter; a multimodal
+space needs that model's deps, e.g. `open_clip_torch` for clip), and frame
+previews need `ffmpeg` on PATH (the blob is read in place, never copied).
+the reference corpus is the 38k-card
+[mtg-urna-benchmark](https://huggingface.co/datasets/brennercruvinel/mtg-urna-benchmark).
 
 mobile: the showcase runs natively on iOS and Android from the same
 engine. there is no kotlin or swift ui, every pixel is drawn by plev. iOS

@@ -27,9 +27,9 @@ pub mod embed;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod frames;
 #[cfg(not(target_arch = "wasm32"))]
-pub mod subprocess;
-#[cfg(not(target_arch = "wasm32"))]
 pub mod recents;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod subprocess;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod worker;
 

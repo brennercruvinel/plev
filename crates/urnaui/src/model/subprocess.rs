@@ -34,11 +34,7 @@ fn drain<R: Read + Send + 'static>(pipe: Option<R>) -> std::thread::JoinHandle<V
 
 /// Spawn `program args…` with stdin closed, wait at most `timeout`, and
 /// return stdout on a zero exit. A timeout kills and reaps the child.
-pub fn run(
-    program: &str,
-    args: &[String],
-    timeout: Duration,
-) -> Result<Vec<u8>, RunError> {
+pub fn run(program: &str, args: &[String], timeout: Duration) -> Result<Vec<u8>, RunError> {
     let mut child = Command::new(program)
         .args(args)
         .stdin(Stdio::null())
@@ -64,7 +60,10 @@ pub fn run(
 /// Poll `try_wait` until exit or `timeout`; on timeout kill + reap and
 /// return `None`. The pipes are being drained elsewhere, so the child can
 /// never block on a full pipe while we poll.
-fn wait_timeout(child: &mut Child, timeout: Duration) -> Option<std::io::Result<std::process::ExitStatus>> {
+fn wait_timeout(
+    child: &mut Child,
+    timeout: Duration,
+) -> Option<std::io::Result<std::process::ExitStatus>> {
     let deadline = std::time::Instant::now() + timeout;
     loop {
         match child.try_wait() {

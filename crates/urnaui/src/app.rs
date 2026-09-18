@@ -28,11 +28,16 @@ use winit::keyboard::{Key, NamedKey};
 use winit::window::{Window, WindowAttributes, WindowId};
 
 /// Events from outside the winit loop: the worker thread's wake (native),
-/// and the async GPU / file-picker tasks on wasm.
+/// and the async GPU / file-picker tasks on wasm. `GpuReady` carries the
+/// whole GPU state and is delivered once; boxing it would only add an
+/// indirection for the one wasm handoff.
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum UserEvent {
     /// The backend worker queued a result: drain it and redraw. Sent
-    /// from the worker thread through the event-loop proxy.
+    /// from the worker thread through the event-loop proxy (never on the
+    /// web, where the inline worker answers before `send` returns).
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     WorkerWoke,
     GpuReady {
         gpu: GpuContext,

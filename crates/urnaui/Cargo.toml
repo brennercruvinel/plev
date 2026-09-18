@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 publish = false
-description = "urnaui — desktop (and future web) explorer for .urna vector databases, built on plev"
+description = "urnaui — desktop (and web) explorer for .urna vector databases: search, chunks, media frames, spaces, graph, built on plev"
 
 # urnaui is NOT a member of the root workspace (see the exclude + comment in
 # the root Cargo.toml): the native backend path-depends on the sibling urna
@@ -43,6 +43,7 @@ memmap2 = "0.9"
 # native open / save dialogs (Browse…, blob export); desktop only.
 rfd = "0.15"
 # urna vector database (sibling workspace, read-only): the native backend.
+# needs hoffresearch/urna at v0.4.0 or later (the `urna-*` crate names).
 # urna pins sha2 0.11 while urnaui pins 0.10 — both coexist in the lockfile,
 # no unification needed.
 urna-format = { path = "../../../urna/crates/urna-format" }

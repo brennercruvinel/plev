@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: active
-last-updated: 2026-07-13
+last-updated: 2026-09-18
 domain: index
 ---
 
@@ -109,6 +109,13 @@ status usados: `reference` (conhecimento congelado de uma sessao), `accepted` (d
 | data | adr | status | resumo |
 |------|-----|--------|--------|
 | 2026-08-30 | [official-app-pattern](official-app-pattern.md) | accepted | padrao oficial: estado em structs + widgets retidos + invalidacao explicita (template: showcase); builder para prototipos/demos; view/component/signal/narrate experimentais |
+
+## urnaui, o explorador de .urna (2026)
+
+| data | adr | status | resumo |
+|------|-----|--------|--------|
+| 2026-09-18 | [urnaui-media-frames-in-place-via-ffmpeg-subfile](urnaui-media-frames-in-place-via-ffmpeg-subfile.md) | accepted | frame de midia decodificado no lugar: ffmpeg le o byte range do blob dentro do .urna via protocolo subfile, nada e copiado; export de blob sha256-verificado antes de gravar; ffmpeg opcional, probe por open |
+| 2026-09-18 | [worker-results-wake-the-event-loop](worker-results-wake-the-event-loop.md) | accepted | resultado do worker acorda o loop winit via EventLoopProxy (nao espera o proximo mouse move); um helper de subprocess drena stdout/stderr desde o spawn, com timeout e kill (fim do hang por pipe cheio) |
 
 ## demos (2025)
 
