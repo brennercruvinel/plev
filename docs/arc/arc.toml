@@ -1,0 +1,367 @@
+# plev architecture, one file. the machine map, the human reference and the
+# frame-flow diagram used to be three files (arc.yaml, arc.md, arc.mmd);
+# they live here now, in this order: map, then prose, then the diagram.
+# agents read the map at task start; humans read the prose; the diagram is
+# mermaid inside a literal string, paste it into any mermaid renderer.
+# update this file with any structural change. crates/engine/tests/
+# arc_sync_guard.rs fails the build if a workspace crate or an example is
+# missing here.
+
+[project]
+name = "plev"
+kind = "gpu-first compositing engine"
+language = "rust (edition 2024)"
+stack = ["wgpu 28", "winit 0.30", "cosmic-text 0.18", "taffy 0.9", "lyon"]
+
+[project.targets]
+shipping = ["macos-metal", "web-webgpu"]
+# android + ios both run the showcase (apk via GameActivity; ios on the
+# simulator via a thin objc shell). see [platform-apps].
+in-progress = ["android-vulkan", "ios-metal"]
+pending = ["linux-vulkan", "windows-d3d12"]
+
+[layout]
+# the engine is a crate, crates/engine; the root is a virtual workspace.
+# apps and libraries are sibling crates; demos are the engine's examples
+# (adr workspace-engine-at-root-libs-in-crates-demos-in-examples).
+root = "virtual workspace (Cargo.toml = members + workspace.package/deps/lints/profiles only)"
+engine = "crates/engine"
+knowledge = "docs (adr + arc + how-to + mission + refs; this file lives at docs/arc/arc.toml)"
+web = "web (Trunk.toml + index.html + dist output; script/web is the dev loop; web/urnaui + script/web-urnaui for the urnaui target)"
+scripts = "script (gate = the four-part gate, web = trunk dev loop, web-urnaui = urnaui trunk dev loop on :8081)"
+contracts = ".contracts (.agents/AGENTS.md instruction source; .mantras/.code/.lang/.rust tool configs + conventions)"
+
+# ---------------------------------------------------------------------------
+# the engine's internal layers, under crates/engine/src, bottom up.
+# ---------------------------------------------------------------------------
+
+[modules.gpu]
+path = "crates/engine/src/gpu"
+role = "wgpu device/surface/pipelines; srgb view formats; image atlas; GpuVec buffers (vec); texture_pool; wgsl shaders (gpu/shaders)"
+contracts = ["srgb-view-formats", "surface_render_view-only"]
+
+[modules.compositor]
+path = "crates/engine/src/compositor"
+role = "scene nodes, layers with dirty hashes, resolve to gpu buffers"
+depends = ["gpu"]
+
+[modules.text]
+path = "crates/engine/src/text"
+role = "cosmic-text shaping, gpu glyph atlas (rasterized at the hidpi raster scale, warns once per non-embedded font), TextMeasurer (the only width source)"
+depends = ["gpu"]
+contracts = ["one-textstyle-measure-and-draw", "glyphs-rasterize-at-raster-scale-hidpi", "warn-once-on-non-embedded-font"]
+
+[modules.path]
+path = "crates/engine/src/path"
+role = "lyon tessellation behind PathBuilder"
+contracts = ["auto-finish-open-subpaths"]
+
+[modules.layout]
+path = "crates/engine/src/layout"
+role = "taffy wrapper: flex, percent, text measure functions"
+depends = ["text"]
+
+[modules.input]
+path = "crates/engine/src/input"
+role = "pointer state, hit regions, touch tracker + gesture recognizer, touch-to-pointer synth, scroll, dispatch"
+
+[modules.animation]
+path = "crates/engine/src/animation"
+role = "Tween, FrameClock, easing (dt-based; web_time)"
+
+[modules.perf]
+path = "crates/engine/src/perf"
+role = "PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None)"
+depends = ["animation", "compositor", "text"]
+contracts = ["pure-no-gpu", "hud-implies-continuous-frames"]
+
+[modules.signal]
+path = "crates/engine/src/signal"
+role = "reactive primitives (experimental: no new app code without an adr, see official-app-pattern)"
+
+[modules.window]
+path = "crates/engine/src/window"
+role = "App runner: event loop, render-on-demand, render passes, wasm canvas"
+depends = ["gpu", "compositor", "text", "input"]
+
+[modules.theme]
+path = "crates/engine/src/theme"
+role = "measured hoff tokens, oklch tooling, intents"
+
+[modules.ui]
+path = "crates/engine/src/ui"
+role = "retained widgets (21, incl. chip, empty-state, spinner, split-pane, icon-button) + immediate builder + lucide icons"
+
+[modules.charts]
+path = "crates/engine/src/charts"
+role = "chart model + draw helpers (bars, meter, hbars), promoted from the showcase; same handle_event/render contract as widgets"
+
+[modules.graph]
+path = "crates/engine/src/graph"
+role = "graph model + force layout + GraphView pan/zoom canvas widget"
+
+[modules.clipboard]
+path = "crates/engine/src/clipboard"
+role = "the one clipboard entry point (re-export of editor::SystemClipboard)"
+
+[modules.builder]
+path = "crates/engine/src/builder"
+role = "declarative element tree (div/text/button) -> layout -> emit; supported for prototypes and demos"
+depends = ["layout", "text"]
+
+[modules.component]
+path = "crates/engine/src/component"
+role = "Lifecycle trait (experimental, see official-app-pattern)"
+
+[modules.view]
+path = "crates/engine/src/view"
+role = "View trait + ViewContext (experimental, see official-app-pattern)"
+
+[modules.text_input]
+path = "crates/engine/src/text_input"
+role = "single-line field widget"
+
+[modules.platform]
+path = "crates/engine/src/platform"
+role = "safe areas (mod), ime, app lifecycle"
+
+# ---------------------------------------------------------------------------
+# workspace crates. the source of truth is Cargo.toml members; this table
+# tracks it, not the other way around.
+# ---------------------------------------------------------------------------
+
+[crates.engine]
+path = "crates/engine"
+role = "the gpu-first compositing engine itself (the modules above); a lib (crate-type cdylib+staticlib+rlib) every app and crate builds on; ships the examples/ demos"
+
+[crates.showcase]
+path = "crates/showcase"
+role = "widget gallery app (14 tabs), the template of the official app pattern; a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main"
+depends = ["engine"]
+targets = ["desktop", "web", "android", "ios"]
+
+[crates.urnaui]
+path = "crates/urnaui"
+role = ".urna vector-db explorer app (6 tabs: open/overview/search/chunks/graph/stats). own workspace, excluded from the root one because the native backend path-depends on the sibling urna checkout at ../urna, v0.4.0+ (build with --manifest-path crates/urnaui/Cargo.toml). same lib+cdylib+staticlib shell shape as showcase (run/run_web/android_main/urnaui_ios_main). native backend = urna-format/urna-runtime (path deps into the sibling urna workspace, read-only) + one memmap2 map for the sections the ui decodes itself (spans, blob overlay 0x16, blob offset table 0x17, graph csr) + worker thread that wakes the winit loop through an EventLoopProxy after every result + offline python embedder bridge (potion for the text slab, the registry embedder per multimodal space) + ffmpeg frame decode of inlined media read in place via its subfile protocol (model/frames, model/subprocess drains pipes with a timeout); rfd native open/save dialogs. surfaces every urna pillar: exact/ann/graph/hybrid/space search with the explain honesty line, validate, media blob list + hash-verified export, urna:// citation resolve, frame previews. web backend = urnaread (portable in-memory reader, no urna deps, accepts the URNA and pre-rename NEST magics) + inline worker, file ingress via a hidden input[type=file]; no embedder, no export, no frames there"
+depends = ["engine"]
+external-tools = ["ffmpeg (frame previews, optional)", "python3 + urna/python (text search, optional)"]
+targets = ["desktop", "web"]
+
+[crates.prime]
+path = "crates/prime"
+role = "prime number creatures particle sandbox (codepen port); seeded sim core (rng/primes/coherence/params) + color (hsl->srgb) + windowed clear skeleton; physics/scene/controls land in later milestones"
+depends = ["engine"]
+targets = ["desktop", "web"]
+
+[crates.ide]
+path = "crates/ide"
+role = "plev-native git client app"
+depends = ["git", "engine"]
+
+[crates.rope]
+path = "crates/rope"
+role = "rope/transactions/multi-cursor/history, pure (no ui)"
+
+[crates.git]
+path = "crates/git"
+role = "gix reads + git cli mutations, desktop-only"
+
+[crates.narrate]
+path = ["crates/narrate", "crates/narrate-macro"]
+role = "ui dsl (experimental)"
+depends = ["engine"]
+
+[crates.macros]
+path = "crates/macros"
+role = "proc-macros (the #[component] attribute)"
+
+[crates.lot]
+path = "crates/lot"
+role = "lottie (bodymovin) importer: serde model + keyframe eval + hierarchical render to TessellatedPath (rnd), and the exit door cnv: sample once, dedup payloads, discover deltas, encode .monster; playback then runs on monster only"
+depends = ["engine", "path"]
+emits-to = ["monster"]
+
+[crates.svg]
+path = "crates/svg"
+role = "svg (still image) importer: usvg normalizes the document (groups, transforms, use/defs, shape-to-path), lyon tessellates the flat tree into one keyframe, encode .monster; gradients approximate to a solid, filters/masks/clips/text are skipped visibly"
+depends = ["engine", "monster"]
+emits-to = ["monster"]
+
+[crates.parser]
+path = "crates/parser"
+role = "parse-resolve-emit transpiler poc (react tsx+sass and gpui -> plev builder source via tree-sitter; HOFF token mapping, honest droplist with file:line, golden + compile tests in crates/parser/tests)"
+depends = ["engine", "builder", "theme (emitted code only)"]
+
+[crates.monster]
+path = "crates/monster"
+role = "binary animation codec (ir/validate/write/read) with full delta ops (modify tracks + place/replace/remove), delta discovery from sampled frames (discover/discover_fit: encoder mode b, slot diffing + linear segment fitting + keyframes on discontinuity and cadence), encoder-side optimizer (optimize: idempotent static collapse + rdp keyframe reduction + collinear fusion, tolerances in wire quantization steps) + deterministic player (play/play_eval: tick-driven, windowed eval, segment-local op replay, signals, lowers ir to SceneNode)"
+depends = ["engine", "animation", "signal", "compositor"]
+
+# native host shells that load the showcase as their gpu app. the engine
+# gates its own android_main behind the `android-entry` feature (off) so a
+# downstream cdylib can export its own, mirroring `web-entry`.
+
+[platform-apps.android]
+path = "android"
+role = "GameActivity host (Kotlin/AGP 9 + Gradle 9.4 kts, version catalog, games-activity 3.0.5 matching android-activity 0.6) loading libshowcase.so; build_android.sh = cargo-ndk jniLibs (arm64-v8a, x86_64) + gradle apk"
+
+[platform-apps.ios]
+path = "ios/showcase"
+role = "thin objc shell (Sources/main.m) calling showcase_ios_main, linked against the showcase staticlib; xcodegen project.yml + build_ios.sh/run_ios.sh (simulator)"
+
+[examples]
+# demos of the engine, under crates/engine/examples. cargo auto-discovers
+# examples/<name>/main.rs, no Cargo.toml. run with
+# `cargo run -p engine --example <name>`.
+windowed = ["counter", "editor", "input", "layers", "mobile_input", "sdf_shapes", "text", "text_input", "todo", "visual", "builder", "charts", "scene3d", "snake", "lottie_player", "monster_player"]
+cli = ["lot2monsters", "svg2monster", "text_probe"]
+notes = [
+  "text_probe is headless (offscreen wgpu -> png, no window); it is the tool behind docs/how-to/validate-visuals-by-pixel.md when the OS denies screen capture",
+  "scene3d and snake-game were crates; they are demos and moved here (commit e6f7091). examples moved from the root into crates/engine/examples when the engine became its own crate",
+]
+
+[benches]
+# criterion benches (harness = false) on each crate's hot path. run with
+# `cargo bench -p <crate>`.
+engine = "benches/scene_build.rs (scene build cost)"
+rope = "benches/edit.rs (build + insert/delete roundtrip)"
+monster = "benches/codec.rs (encode/decode/optimize a snapshot scene)"
+lot = "benches/convert.rs (lottie json -> .monster)"
+parser = "benches/transpile.rs (gpui separator transpile end to end)"
+
+[knowledge]
+operating-manual = "docs/how-to/code-against-the-plev-engine.md"
+pixel-validation = "docs/how-to/validate-visuals-by-pixel.md"
+visual-tokens = "crates/engine/src/theme/hoff.rs"
+decisions = "docs/adr/"
+conventions = ".contracts/.mantras/.code/.lang/.rust/rust-conventions.md"
+
+# binding contracts. violations are defects even if the pixels look right.
+[contracts]
+invariants = [
+  "one TextStyle per text run, shared by measurement and drawing",
+  "srgb decode exactly once entering gpu work; encode exactly once at the surface write (surface_render_view; to_linear_array)",
+  "container geometry derives from available space, never from constants",
+  "visible state change implies invalidation (render on demand)",
+  "clip rects are logical; scale by clip_scale for physical scissors",
+  "wasm check must stay green",
+]
+
+# ---------------------------------------------------------------------------
+# prose. the human reference that used to be arc.md.
+# ---------------------------------------------------------------------------
+
+[prose]
+app-pattern = '''
+one pattern ships: state in plain structs + retained widgets + explicit
+invalidation (adr official-app-pattern). the showcase is the template:
+section structs own state, widgets return EventResult, handlers merge
+results and report `changed`, tick advances animations gated by the
+visible section. the declarative builder is supported for prototypes and
+demos. `view`, `component`, `signal` and `narrate` are experimental: no
+new app code without an adr.
+
+apps consume the engine; they never reimplement engine capabilities (adr
+content-driven-layout-not-fixed-constants and the engine manual record why).
+'''
+
+workspace = '''
+three tiers (adr workspace-engine-at-root-libs-in-crates-demos-in-examples):
+the engine is one crate at crates/engine, the root is a virtual workspace,
+libraries and apps are sibling crates under crates/, and the demos are the
+engine's examples. cargo hygiene: workspace.package, workspace.dependencies
+(single version source), workspace.lints, tuned profiles; every crate
+publish = false.
+
+crate roles in one breath: `engine` the compositing engine itself; `monster`
+the binary animation codec (.monster, adr
+binary-animation-format-with-discovered-deltas); `lot` the lottie importer
+that converts to .monster and never embeds a foreign runtime (adr
+import-foreign-formats-by-conversion-not-embedding); `svg` the still-image
+importer on the same exit door; `parser` the ui transpiler poc; `rope` the
+text-editing core; `git` git ops; `ide` the git client app; `showcase` the
+design-system gallery; `urnaui` the .urna explorer (desktop via mmap
+urna-runtime + worker thread + ffmpeg frame previews of inlined media, web
+via a portable in-memory reader), its own workspace because the native
+backend path-depends on ../urna (adr
+urnaui-media-frames-in-place-via-ffmpeg-subfile, adr
+worker-results-wake-the-event-loop); `prime` the
+prime-coherence particle swarm; `narrate`/`narrate-macro` the experimental
+dsl; `macros` the #[component] proc-macro.
+'''
+
+frame-flow = '''
+event -> input state / app state mutation -> invalidate (request_redraw)
+-> build scene (per-frame regeneration, no retained diffing) -> compositor
+resolve (dirty layers only) -> text resolve (atlas) -> encode layer passes
+(quads, sdf, shadows, images, text, backdrop blur, in push order) ->
+composite pass to the srgb surface view -> present. unchanged layers cost
+zero gpu work.
+'''
+
+targets = '''
+macos metal (shipping), browser webgpu via trunk/wasm32 (shipping, same
+pixel as desktop), android vulkan and ios metal (both run the showcase: an
+apk via a GameActivity host, and the ios simulator via a thin objc shell
+that calls `showcase_ios_main`; see android/ and ios/showcase/),
+linux/windows (untested, wgpu primary backends).
+'''
+
+errors-and-versioning = '''
+pre-1.0: no api stability promised. library code must not panic on user
+input paths; tessellation and parsers degrade gracefully (log + empty
+output). binary/format versioning follows the anim-format rules
+implemented in crates/monster (docs/adr/monster-format-v0.md): explicit
+version, frozen golden fixtures, per-section checksums. the full delta op
+set is decodable: modify becomes tracks, place/replace/remove become
+timeline op lists that act inside their keyframe segment. both encoder
+modes exist: mode a lowers an authored timeline (write), mode b discovers
+deltas from a sampled frame sequence (discover): slot diffing emits the
+structural ops, per-prop runs merge into linear segments, snapshots are
+inserted on discontinuity and on the random access cadence. an
+encoder-side optimizer (optimize) runs idempotent passes over any timeline
+before encoding: static track collapse, rdp keyframe reduction and
+collinear segment fusion, tolerances expressed in wire quantization steps
+with lossless-on-the-wire defaults. crates/monster also ships the player:
+AnimationTick-driven, deterministic f32 timeline, windowed segment
+evaluation plus segment-local structural op replay (seek stays O(1) in
+frames), play/pause/scrub via signals, lowering its ir scene to SceneNodes
+that the app pushes per frame.
+'''
+
+# ---------------------------------------------------------------------------
+# the frame-flow diagram (mermaid). literal string: copy the value into a
+# mermaid renderer or a ```mermaid block to draw it.
+# ---------------------------------------------------------------------------
+
+[diagram]
+frame-flow = '''
+sequenceDiagram
+    participant E as event (winit/touch/ime)
+    participant I as input state
+    participant A as app state
+    participant S as scene build (per frame)
+    participant C as compositor (dirty layers)
+    participant T as text system (atlas)
+    participant G as gpu passes
+    participant P as surface (srgb view)
+
+    E->>I: pointer / synthesized touch
+    I->>A: hit regions -> events drained
+    A->>A: mutate state
+    A->>C: invalidate + request_redraw
+    Note over A,C: render on demand: no change, no frame
+    A->>S: build scene nodes
+    %% animation playback: crates/monster MonsterPlayer consumes the tick at A
+    %% and hands S a lowered SceneNode scene (scene_at)
+    S->>C: push to layers (hash per layer)
+    C->>C: resolve only dirty layers
+    C->>T: resolve text runs (one TextStyle measure==draw, atlas raster at hidpi scale)
+    T->>G: glyph atlas quads
+    C->>G: encode layer passes (quads, sdf, shadow, image, text, backdrop)
+    G->>P: composite into srgb view (encode-on-write)
+    P->>P: present (identical pixels on every target)
+    %% perf (opt-in via RenderConfig): AnimationTick + RenderStats feed
+    %% crates/engine/src/perf PerfMonitor after submit; log line every N frames and/or
+    %% PerfHud overlay layer drawn by C (hud on = continuous frames)
+'''

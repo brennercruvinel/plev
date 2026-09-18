@@ -20,11 +20,11 @@ browser (webgpu/wasm), and android + ios (the showcase runs on both via the
 native shells in android/ and ios/showcase/; see "## running"). linux/windows
 pending. apps: crates/showcase (widget gallery, also runs in the browser),
 crates/ide (real git client). knowledge base: docs/ (adr, arc, how-to,
-mission, refs). architecture: docs/arc/.
+mission, refs). architecture: docs/arc/arc.toml.
 
 ## at task start
 
-1. read docs/arc/arc.yaml and docs/arc/arc.mmd in a short pass to preserve
+1. read docs/arc/arc.toml (tables, then [diagram]) in a short pass to preserve
    structure and naming patterns; skim docs/adr/ for the decisions already
    made and the reasons behind them
 2. read docs/how-to/code-against-the-plev-engine.md before touching ui or
@@ -40,7 +40,7 @@ style). this used to be a luajit graph node; it was migrated to markdown so
 there is no extra lua build step in the app.
 
 follow it, and update that file in the same change whenever a new convention
-is established. keep docs/arc/{arc.md, arc.yaml, arc.mmd} and README.md
+is established. keep docs/arc/arc.toml and README.md
 current after any change that affects structure, contracts, or user-facing
 behavior.
 
@@ -64,8 +64,8 @@ behavior.
   cross-platform guard)
 
 script/gate runs the four in order and stops on the first red. it then
-runs the nestui leg (test, clippy, fmt via --manifest-path
-crates/nestui/Cargo.toml) when a sibling nest checkout exists at ../nest;
+runs the urnaui leg (test, clippy, fmt via --manifest-path
+crates/urnaui/Cargo.toml) when a sibling urna checkout exists at ../urna;
 absent that checkout the leg skips with a warning and CI
 (.github/workflows/ci.yml) is the verification. CI also runs an advisory
 typos job (non-blocking; the repo is bilingual english/portuguese).
@@ -77,11 +77,18 @@ typos job (non-blocking; the repo is bilingual english/portuguese).
   [path]` (git client), `cargo run -p prime` (particle swarm),
   `cargo run -p engine --example <name>` (any
   crates/engine/examples/<name>/main.rs)
-- nestui (.nest explorer): `cargo run --manifest-path
-  crates/nestui/Cargo.toml [file.nest]`. it is excluded from the root
-  workspace (native backend path-depends on ../nest), so `--workspace`
-  and `-p nestui` never reach it; always go through --manifest-path.
-  `script/web-nestui` serves its web target on 8081.
+- urnaui (.urna explorer): `cargo run --manifest-path
+  crates/urnaui/Cargo.toml [file.urna]`. it is excluded from the root
+  workspace (native backend path-depends on ../urna, the hoffresearch/urna
+  checkout at v0.4.0 or later), so `--workspace` and `-p urnaui` never
+  reach it; always go through --manifest-path. pre-rename `.nest` files
+  open too (the reader accepts both magics). text search shells out to
+  the urna offline embedders (`URNA_PYTHON` picks the interpreter; the
+  potion table needs numpy + tokenizers, a multimodal space needs that
+  space's registry deps, e.g. open_clip for clip-vit-b32). frame previews
+  of inlined media need `ffmpeg` on PATH (read in place via its subfile
+  protocol, nothing is copied). `script/web-urnaui` serves its web target
+  on 8081.
 - format pipelines: lot2monsters, svg2monster, monster_player (engine
   examples, foreign format in -> .monster out) and the parser
   (`cargo run -p parser --example transpile index.tsx module.sass

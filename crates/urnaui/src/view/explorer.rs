@@ -1,0 +1,1171 @@
+//! Explorer: the heart of the UI — tab navigation, screen routing, the
+//! backend worker handle and all opened-database state. Compiles on every
+//! target: `Worker` is the thread-backed `UrnaWorker` on native and the
+//! inline `WebWorker` on wasm. Native-only pieces (recents file, embedder
+//! probe, system clipboard) are cfg-gated in place.
+//!
+//! Data flows one way: worker events land in `poll_backend`, get folded
+//! into central state (`db`, `chunks`, embedder probe), and screens render
+//! from it. Screens bubble intents up as [`Action`]s; only this module
+//! talks to the worker, the clipboard and the recents file.
+
+use std::collections::HashMap;
+use std::path::PathBuf;
+
+use engine::compositor::{Compositor, LayerId, SceneNode};
+use engine::overlay::OverlayManager;
+use engine::theme::{Intent, Theme};
+use engine::ui::widgets::{Button, EventResult, Rect, Tabs, ToastManager, WidgetEvent};
+
+use crate::model::Worker;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::model::recents;
+use crate::model::types::{ChunksData, OpenedDbView, SearchMode, UrnaCommand, UrnaEvent};
+
+use super::chunks::{ChunksContext, ChunksScreen};
+use super::graph::{GraphContext, GraphScreen};
+use super::open::{OpenContext, OpenScreen};
+use super::overview::{OverviewContext, OverviewScreen};
+use super::search::{SearchContext, SearchScreen};
+use super::stats::StatsScreen;
+use super::{Action, ChunkLookup, EditKey, Screen, text};
+
+/// Longer edge of a decoded frame preview: half the forge's 488x680
+/// canvas, enough for the detail panels and cheap on the image atlas.
+const FRAME_MAX_SIDE: u32 = 340;
+
+const PAD: f32 = 40.0;
+/// Header band: title + tab strip.
+const HEADER_H: f32 = 128.0;
+
+#[derive(Clone, Copy)]
+struct Layers {
+    overlay: LayerId,
+    toast: LayerId,
+}
+
+pub struct Explorer {
+    width: f32,
+    height: f32,
+    tabs: Tabs,
+    screen: Screen,
+    worker: Worker,
+    db: Option<Box<OpenedDbView>>,
+    opening: bool,
+    open_error: String,
+    #[cfg(not(target_arch = "wasm32"))]
+    recents: Vec<String>,
+    #[cfg(not(target_arch = "wasm32"))]
+    recents_path: Option<PathBuf>,
+    /// The Open screen's picker button was clicked (web only).
+    #[cfg(target_arch = "wasm32")]
+    pick_requested: bool,
+    /// Global shortcuts (Cmd/Ctrl+O, Cmd/Ctrl+1..=6), matched as engine
+    /// `Keystroke`s so the view stays winit-free.
+    shortcuts: engine::actions::shortcuts::ShortcutMap,
+    embedder: Option<Result<String, String>>,
+    file_hover: bool,
+    chunks: Option<ChunksData>,
+    chunks_loading: bool,
+    /// chunk_id → ordinal, built once when texts arrive (result previews).
+    chunk_index: Option<HashMap<String, usize>>,
+    /// Decoded frame previews by chunk ordinal (`Err` = why the decode
+    /// failed), plus the ordinals whose decode is in flight.
+    frames: HashMap<usize, Result<engine::gpu::image::ImageHandle, String>>,
+    frames_pending: std::collections::HashSet<usize>,
+    /// Last `Validate` outcome: `Ok(ms)` or the reader's error.
+    validation: Option<Result<f64, String>>,
+    validating: bool,
+    /// ffmpeg availability, probed once per open (frame previews).
+    ffmpeg: Option<bool>,
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    clipboard: engine::clipboard::SystemClipboard,
+    empty_state: engine::ui::widgets::EmptyState,
+    open: OpenScreen,
+    overview: OverviewScreen,
+    search: SearchScreen,
+    chunks_screen: ChunksScreen,
+    graph_screen: GraphScreen,
+    stats_screen: StatsScreen,
+    layers: Option<Layers>,
+}
+
+impl Explorer {
+    pub fn new(theme: &Theme) -> Self {
+        #[cfg(not(target_arch = "wasm32"))]
+        let recents_path = recents::default_path();
+        #[cfg(not(target_arch = "wasm32"))]
+        let recents = recents_path.as_ref().map(recents::load).unwrap_or_default();
+        Self {
+            width: 1200.0,
+            height: 800.0,
+            tabs: Tabs::new(Screen::TABS.iter().map(|s| s.title())),
+            screen: Screen::Open,
+            worker: Worker::spawn(),
+            db: None,
+            opening: false,
+            open_error: String::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            recents,
+            #[cfg(not(target_arch = "wasm32"))]
+            recents_path,
+            #[cfg(target_arch = "wasm32")]
+            pick_requested: false,
+            shortcuts: build_shortcuts(),
+            // On the web there is no python bridge: the text-mode hint
+            // says so up front instead of failing on submission.
+            #[cfg(target_arch = "wasm32")]
+            embedder: Some(Err("text search requires the desktop app".to_string())),
+            #[cfg(not(target_arch = "wasm32"))]
+            embedder: None,
+            file_hover: false,
+            chunks: None,
+            chunks_loading: false,
+            chunk_index: None,
+            frames: HashMap::new(),
+            frames_pending: std::collections::HashSet::new(),
+            validation: None,
+            validating: false,
+            ffmpeg: None,
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            clipboard: engine::clipboard::SystemClipboard::new(),
+            empty_state: engine::ui::widgets::EmptyState::new(
+                "no database open yet",
+                "Open a .urna file from the Open tab to explore it here.",
+            )
+            .icon("folder-open")
+            .cta(Button::new("Open a database").icon("folder-open")),
+            open: OpenScreen::new(theme),
+            overview: OverviewScreen::new(),
+            search: SearchScreen::new(theme),
+            chunks_screen: ChunksScreen::new(theme),
+            graph_screen: GraphScreen::new(),
+            stats_screen: StatsScreen::new(),
+            layers: None,
+        }
+    }
+
+    #[cfg(test)]
+    pub fn screen(&self) -> Screen {
+        self.screen
+    }
+
+    /// Wake callback for the platform event loop, fired by the worker
+    /// after every event it queues.
+    pub fn set_wake(&self, wake: Box<dyn Fn() + Send + 'static>) {
+        self.worker.set_wake(wake);
+    }
+
+    pub fn resize(&mut self, width: f32, height: f32) {
+        self.width = width;
+        self.height = height;
+    }
+
+    /// Ask the worker to open a .urna file.
+    pub fn open_database(&mut self, path: PathBuf) {
+        self.opening = true;
+        self.open_error = String::new();
+        self.worker.send(UrnaCommand::Open(path));
+    }
+
+    /// Open picked bytes (web file picker).
+    #[cfg(target_arch = "wasm32")]
+    pub fn open_bytes(&mut self, name: String, bytes: Vec<u8>) {
+        self.opening = true;
+        self.open_error = String::new();
+        self.worker.send(UrnaCommand::OpenBytes { name, bytes });
+    }
+
+    /// The Open screen's picker button was clicked (web only); `app.rs`
+    /// triggers the DOM input.
+    #[cfg(target_arch = "wasm32")]
+    pub fn take_pick_request(&mut self) -> bool {
+        std::mem::take(&mut self.pick_requested)
+    }
+
+    /// Drag-and-drop hover feedback (native only: no file drag on the web).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn set_file_hover(&mut self, hovering: bool) {
+        self.file_hover = hovering;
+    }
+
+    /// Recents are desktop-only (a JSON file in the data dir); the web
+    /// build always shows an empty list.
+    fn recents_slice(&self) -> &[String] {
+        #[cfg(not(target_arch = "wasm32"))]
+        return &self.recents;
+        #[cfg(target_arch = "wasm32")]
+        &[]
+    }
+
+    // -- Worker events -------------------------------------------------------
+
+    /// Drain pending worker events, folding them into state. Returns
+    /// `true` when anything changed (the shell requests a redraw).
+    pub fn poll_backend(&mut self, toasts: &mut ToastManager, theme: &Theme) -> bool {
+        let mut changed = false;
+        while let Some(event) = self.worker.try_recv() {
+            changed = true;
+            match event {
+                UrnaEvent::Opened(Ok(view)) => {
+                    let path = view.path.display().to_string();
+                    #[cfg(not(target_arch = "wasm32"))]
+                    if let Some(recents_path) = &self.recents_path {
+                        self.recents = recents::record(recents_path, &path);
+                    }
+                    // Per-database state resets.
+                    self.chunks = None;
+                    // The native worker sends ChunksLoaded right behind
+                    // Opened; the web build asks on first use.
+                    self.chunks_loading = cfg!(not(target_arch = "wasm32"));
+                    self.chunk_index = None;
+                    self.frames.clear();
+                    self.frames_pending.clear();
+                    self.validation = None;
+                    self.validating = false;
+                    self.search.reset(&view);
+                    self.chunks_screen.reset();
+                    self.graph_screen.reset();
+                    self.stats_screen.reset();
+                    self.overview.reset(&view);
+                    self.db = Some(view);
+                    self.opening = false;
+                    self.open_error = String::new();
+                    // Probe the embedder for the doctor line / text search,
+                    // and ffmpeg for frame previews.
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        self.worker.send(UrnaCommand::CheckEmbedder);
+                        self.ffmpeg = Some(crate::model::frames::ffmpeg_available());
+                    }
+                    self.screen = Screen::Overview;
+                    toasts.push(format!("opened {path}"), Intent::Constructive, theme);
+                }
+                UrnaEvent::Opened(Err(e)) => {
+                    self.opening = false;
+                    self.open_error = e.clone();
+                    self.screen = Screen::Open;
+                    toasts.push(format!("open failed: {e}"), Intent::Destructive, theme);
+                }
+                UrnaEvent::SearchResults(result) => {
+                    if let Err(e) = &result {
+                        toasts.push(format!("search failed: {e}"), Intent::Destructive, theme);
+                    }
+                    self.search.fold_result(result);
+                }
+                UrnaEvent::ChunksLoaded(Ok(data)) => {
+                    // chunk_id → ordinal for search-result previews.
+                    if let Some(db) = &self.db {
+                        self.chunk_index = Some(
+                            db.chunk_ids
+                                .iter()
+                                .enumerate()
+                                .map(|(i, id)| (id.clone(), i))
+                                .collect(),
+                        );
+                    }
+                    self.chunks = Some(data);
+                    self.chunks_loading = false;
+                }
+                UrnaEvent::ChunksLoaded(Err(e)) => {
+                    self.chunks_loading = false;
+                    toasts.push(
+                        format!("failed to load chunks: {e}"),
+                        Intent::Destructive,
+                        theme,
+                    );
+                }
+                UrnaEvent::EmbedderStatus(status) => {
+                    self.embedder = Some(status);
+                }
+                UrnaEvent::Validated(result) => {
+                    self.validating = false;
+                    match &result {
+                        Ok(ms) => toasts.push(
+                            format!("validate ok: every checksum and hash verified in {ms:.0} ms"),
+                            Intent::Constructive,
+                            theme,
+                        ),
+                        Err(e) => {
+                            toasts.push(format!("validate failed: {e}"), Intent::Destructive, theme)
+                        }
+                    }
+                    self.validation = Some(result);
+                }
+                UrnaEvent::BlobExported(result) => match result {
+                    Ok(path) => toasts.push(
+                        format!("exported {}", path.display()),
+                        Intent::Constructive,
+                        theme,
+                    ),
+                    Err(e) => {
+                        toasts.push(format!("export failed: {e}"), Intent::Destructive, theme)
+                    }
+                },
+                UrnaEvent::FrameLoaded { ordinal, result } => {
+                    self.frames_pending.remove(&ordinal);
+                    let handle = result.and_then(|png| {
+                        engine::gpu::image::load_image_bytes(&png).map_err(|e| e.to_string())
+                    });
+                    self.frames.insert(ordinal, handle);
+                }
+                UrnaEvent::GraphLoaded(result) => {
+                    if let Err(e) = &result {
+                        toasts.push(
+                            format!("graph load failed: {e}"),
+                            Intent::Destructive,
+                            theme,
+                        );
+                    }
+                    self.graph_screen.fold_scene(result);
+                }
+                UrnaEvent::BenchmarkProgress { done, total } => {
+                    self.stats_screen.progress = (done, total);
+                }
+                UrnaEvent::BenchmarkDone(result) => {
+                    if let Err(e) = &result {
+                        toasts.push(format!("benchmark failed: {e}"), Intent::Destructive, theme);
+                    }
+                    self.stats_screen.fold_result(result);
+                }
+            }
+        }
+        changed
+    }
+
+    // -- Input ---------------------------------------------------------------
+
+    fn switch_screen(&mut self, screen: Screen) {
+        self.screen = screen;
+        self.tabs.active = Screen::TABS.iter().position(|s| *s == screen).unwrap_or(0);
+        // Chunks texts load lazily on first entry: `canonical_texts`
+        // decodes the whole section, so opening stays fast.
+        if screen == Screen::Chunks
+            && self.db.is_some()
+            && self.chunks.is_none()
+            && !self.chunks_loading
+        {
+            self.chunks_loading = true;
+            self.worker.send(UrnaCommand::LoadChunks);
+        }
+        // The graph layout (O(n²)) runs on the worker, once per db.
+        if screen == Screen::Graph
+            && let Some(db) = &self.db
+            && db.has_graph
+            && !self.graph_screen.has_scene()
+            && !self.graph_screen.loading
+        {
+            self.graph_screen.loading = true;
+            self.worker.send(UrnaCommand::LoadGraph);
+        }
+    }
+
+    /// Fold a screen action into worker commands / clipboard / navigation.
+    fn action(&mut self, action: Action, toasts: &mut ToastManager, theme: &Theme) -> bool {
+        match action {
+            Action::None => false,
+            Action::OpenPath(path) => {
+                if path.is_empty() {
+                    return false;
+                }
+                self.open_database(PathBuf::from(path));
+                true
+            }
+            Action::RunSearch {
+                query,
+                is_vector,
+                mode,
+                k,
+            } => self.run_search(query, is_vector, mode, k),
+            Action::Copy { text, what } => {
+                self.copy(&text);
+                toasts.push(format!("copied {what}"), Intent::Informational, theme);
+                true
+            }
+            Action::Goto(screen) => {
+                self.switch_screen(screen);
+                true
+            }
+            Action::RunBenchmark { n_queries, k } => {
+                self.worker.send(UrnaCommand::Benchmark { n_queries, k });
+                true
+            }
+            Action::PickFile => {
+                // Web: the shell triggers the DOM picker on the next
+                // about_to_wait. Desktop: the native open dialog, modal.
+                #[cfg(target_arch = "wasm32")]
+                {
+                    self.pick_requested = true;
+                }
+                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+                if let Some(path) = rfd::FileDialog::new()
+                    .set_title("Open a .urna corpus")
+                    .add_filter("urna corpus", &["urna", "nest"])
+                    .pick_file()
+                {
+                    self.open_database(path);
+                }
+                true
+            }
+            Action::Validate => {
+                if self.db.is_some() && !self.validating {
+                    self.validating = true;
+                    self.worker.send(UrnaCommand::Validate);
+                }
+                true
+            }
+            Action::ExportBlob(index) => self.export_blob(index, toasts, theme),
+            Action::LoadFrame(ordinal) => self.request_frame(ordinal),
+        }
+    }
+
+    /// Ask the worker for chunk `ordinal`'s frame once; repeated requests
+    /// while it decodes (or after it landed) are no-ops.
+    fn request_frame(&mut self, ordinal: usize) -> bool {
+        if self.frames.contains_key(&ordinal) || self.frames_pending.contains(&ordinal) {
+            return false;
+        }
+        if self.ffmpeg == Some(false) {
+            self.frames.insert(
+                ordinal,
+                Err("ffmpeg not found on PATH (frame previews need ffmpeg)".to_string()),
+            );
+            return true;
+        }
+        self.frames_pending.insert(ordinal);
+        self.worker.send(UrnaCommand::LoadFrame {
+            ordinal,
+            max_side: FRAME_MAX_SIDE,
+        });
+        false
+    }
+
+    /// Export blob `index` to a path the user picks (native save dialog),
+    /// named after the blob's own uri.
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    fn export_blob(&mut self, index: usize, toasts: &mut ToastManager, theme: &Theme) -> bool {
+        let Some(db) = &self.db else {
+            return false;
+        };
+        let Some(blob) = db.inspect.blobs.get(index) else {
+            return false;
+        };
+        // media:// uris are relative names by construction; the final
+        // component is the suggested file name.
+        let name = blob
+            .original_uri
+            .trim_start_matches("media://")
+            .rsplit('/')
+            .next()
+            .unwrap_or("blob")
+            .to_string();
+        let Some(dest) = rfd::FileDialog::new()
+            .set_title("Export media blob")
+            .set_file_name(&name)
+            .save_file()
+        else {
+            return true;
+        };
+        toasts.push(
+            format!("exporting {name}… (hash-verified before writing)"),
+            Intent::Informational,
+            theme,
+        );
+        self.worker.send(UrnaCommand::ExportBlob { index, dest });
+        true
+    }
+
+    #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+    fn export_blob(&mut self, _index: usize, toasts: &mut ToastManager, theme: &Theme) -> bool {
+        toasts.push(
+            "blob export needs the desktop app",
+            Intent::Informational,
+            theme,
+        );
+        true
+    }
+
+    /// The lookup every screen resolves chunks through.
+    fn lookup(&self) -> ChunkLookup<'_> {
+        ChunkLookup {
+            ids: self
+                .db
+                .as_ref()
+                .map(|db| db.chunk_ids.as_slice())
+                .unwrap_or(&[]),
+            index: self.chunk_index.as_ref(),
+            chunks: self.chunks.as_ref(),
+            frames: &self.frames,
+        }
+    }
+
+    /// Global shortcut dispatch: the shell turns winit keys into engine
+    /// `Keystroke`s; the map resolves them to "open" / "tab:N".
+    pub fn handle_keystroke(&mut self, keystroke: &engine::actions::Keystroke) -> bool {
+        let Some(id) = self.shortcuts.get(keystroke) else {
+            return false;
+        };
+        if id == "open" {
+            self.switch_screen(Screen::Open);
+            return true;
+        }
+        if let Some(idx) = id
+            .strip_prefix("tab:")
+            .and_then(|i| i.parse::<usize>().ok())
+            && idx < Screen::TABS.len()
+        {
+            self.switch_screen(Screen::TABS[idx]);
+            return true;
+        }
+        false
+    }
+
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    fn copy(&mut self, text: &str) {
+        use engine::clipboard::ClipboardProvider;
+        self.clipboard.set_text(text);
+    }
+
+    #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+    fn copy(&mut self, _text: &str) {}
+
+    /// Validate and dispatch a search. Vector queries parse as JSON arrays
+    /// and must match the corpus dim; failures stay on the screen (no
+    /// worker round-trip).
+    fn run_search(&mut self, query: String, is_vector: bool, mode: SearchMode, k: i32) -> bool {
+        let Some(db) = &self.db else {
+            self.search
+                .reject_submission("no database open".to_string());
+            return true;
+        };
+        if is_vector {
+            let vector: Vec<f32> = match serde_json::from_str(&query) {
+                Ok(v) => v,
+                Err(e) => {
+                    self.search
+                        .reject_submission(format!("invalid vector JSON: {e}"));
+                    return true;
+                }
+            };
+            let dim = db.inspect.embedding_dim as usize;
+            if vector.len() != dim {
+                self.search.reject_submission(format!(
+                    "vector dim mismatch: corpus is {dim}, got {}",
+                    vector.len()
+                ));
+                return true;
+            }
+            self.search.error = String::new();
+            self.search.pending = true;
+            self.worker.send(UrnaCommand::SearchByVector {
+                query: vector,
+                mode,
+                k,
+            });
+        } else {
+            self.search.error = String::new();
+            self.search.pending = true;
+            self.worker
+                .send(UrnaCommand::SearchByText { query, mode, k });
+        }
+        true
+    }
+
+    /// Characters go to the focused field of the active screen.
+    pub fn handle_key(&mut self, key: &str) -> bool {
+        match self.screen {
+            Screen::Open => self.open.handle_text(key),
+            Screen::Search => self.search.handle_text(key),
+            Screen::Chunks => self.chunks_screen.handle_text(key),
+            _ => false,
+        }
+    }
+
+    pub fn handle_paste(&mut self, text: &str) -> bool {
+        // Paste is plain character insertion (strip newlines — the fields
+        // are single-line).
+        let flat: String = text.chars().filter(|c| *c != '\n' && *c != '\r').collect();
+        self.handle_key(&flat)
+    }
+
+    pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        let (handled, action) = match self.screen {
+            Screen::Open => self.open.handle_edit_key(key),
+            Screen::Search => self.search.handle_edit_key(key),
+            Screen::Chunks => (self.chunks_screen.handle_edit_key(key), Action::None),
+            _ => (false, Action::None),
+        };
+        if action != Action::None {
+            // Edit-key actions are only Open/Search submissions, which
+            // never toast.
+            self.dispatch_without_toasts(action);
+            return true;
+        }
+        handled
+    }
+
+    /// Edit-key submissions never copy/notify; dispatch them directly.
+    fn dispatch_without_toasts(&mut self, action: Action) {
+        match action {
+            Action::OpenPath(path) if !path.is_empty() => {
+                self.open_database(PathBuf::from(path));
+            }
+            Action::RunSearch {
+                query,
+                is_vector,
+                mode,
+                k,
+            } => {
+                self.run_search(query, is_vector, mode, k);
+            }
+            Action::Goto(screen) => self.switch_screen(screen),
+            Action::LoadFrame(ordinal) => {
+                self.request_frame(ordinal);
+            }
+            _ => {}
+        }
+    }
+
+    /// Escape: close the search mode dropdown first.
+    pub fn close_top_overlay(&mut self) -> bool {
+        if self.screen == Screen::Search && self.search.select_is_open() {
+            self.search.close_select();
+            return true;
+        }
+        false
+    }
+
+    /// Route a pointer event. Returns `true` if a redraw is needed.
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        toasts: &mut ToastManager,
+        theme: &Theme,
+    ) -> bool {
+        // An open select dropdown is exclusive (clicks elsewhere close it).
+        if self.screen == Screen::Search && self.search.select_is_open() {
+            let r =
+                self.search
+                    .route_select(event, self.content_rect(), self.search.result.is_some());
+            return r.changed || r.handled;
+        }
+
+        // Tab strip.
+        let r = self.tabs.handle_event(event, self.tabs_rect());
+        if r.clicked {
+            self.switch_screen(Screen::TABS[self.tabs.active]);
+            return true;
+        }
+        let mut result = r;
+
+        let content = self.content_rect();
+        let (r, action) = match self.screen {
+            Screen::Open => {
+                let recents = self.recents_slice().to_vec();
+                self.open
+                    .handle_event(event, content, &recents, self.opening)
+            }
+            Screen::Overview => match &self.db {
+                Some(db) => {
+                    let ctx = OverviewContext {
+                        db,
+                        validation: self.validation.as_ref(),
+                        validating: self.validating,
+                    };
+                    self.overview.handle_event(event, content, &ctx)
+                }
+                None => self.handle_empty_cta(event, content),
+            },
+            Screen::Search => {
+                if self.db.is_some() {
+                    self.search.handle_event(event, content, true)
+                } else {
+                    self.handle_empty_cta(event, content)
+                }
+            }
+            Screen::Chunks => match &self.db {
+                Some(db) => {
+                    let lookup = ChunkLookup {
+                        ids: &db.chunk_ids,
+                        index: self.chunk_index.as_ref(),
+                        chunks: self.chunks.as_ref(),
+                        frames: &self.frames,
+                    };
+                    let ctx = ChunksContext {
+                        lookup: &lookup,
+                        content_hash: &db.inspect.content_hash,
+                        loading: self.chunks_loading,
+                    };
+                    self.chunks_screen.handle_event(event, content, &ctx)
+                }
+                None => self.handle_empty_cta(event, content),
+            },
+            Screen::Graph => match &self.db {
+                Some(db) if db.has_graph => {
+                    let lookup = ChunkLookup {
+                        ids: &db.chunk_ids,
+                        index: self.chunk_index.as_ref(),
+                        chunks: self.chunks.as_ref(),
+                        frames: &self.frames,
+                    };
+                    let text_of = |id: &str| -> Option<String> {
+                        lookup
+                            .ordinal(id)
+                            .and_then(|o| lookup.first_line(o))
+                            .map(str::to_string)
+                    };
+                    self.graph_screen.handle_event(
+                        event,
+                        content,
+                        &GraphContext {
+                            chunk_ids: &db.chunk_ids,
+                            chunks: self.chunks.as_ref(),
+                            text_of: &text_of,
+                        },
+                    )
+                }
+                // No graph section: inert empty state (the message renders
+                // in `render`); swallow nothing.
+                _ => (EventResult::IGNORED, Action::None),
+            },
+            Screen::Stats => match &self.db {
+                Some(_) => self.stats_screen.handle_event(event, content, true),
+                None => self.handle_empty_cta(event, content),
+            },
+        };
+        result = result.merge(r);
+        let acted = self.action(action, toasts, theme);
+        let framed = self.request_wanted_frames();
+        result.changed || acted || framed
+    }
+
+    /// The active screen's selected media chunk wants its frame decoded:
+    /// ask the worker (once). Runs after every event and every drained
+    /// worker batch, so a selection made before the texts landed is
+    /// served when they do.
+    fn request_wanted_frames(&mut self) -> bool {
+        if self.db.is_none() {
+            return false;
+        }
+        let wanted = match self.screen {
+            Screen::Search => self.search.wanted_frame(&self.lookup()),
+            Screen::Chunks => self.chunks_screen.wanted_frame(&self.lookup()),
+            _ => None,
+        };
+        match wanted {
+            Some(ordinal) => self.request_frame(ordinal),
+            None => false,
+        }
+    }
+
+    /// The empty-state CTA (screens without an open db): the engine
+    /// `EmptyState` centers itself; its CTA jumps to Open.
+    fn handle_empty_cta(&mut self, event: &WidgetEvent, content: Rect) -> (EventResult, Action) {
+        let r = self.empty_state.handle_event(event, content);
+        if r.clicked {
+            return (r, Action::Goto(Screen::Open));
+        }
+        (r, Action::None)
+    }
+
+    // -- Animation -------------------------------------------------------------
+
+    pub fn tick(&mut self, dt: f32) -> bool {
+        let mut animating = self.open.tick(dt);
+        animating |= self.search.tick(dt);
+        animating |= self.chunks_screen.tick(dt);
+        animating |= self.graph_screen.tick(dt);
+        animating |= self.stats_screen.tick(dt);
+        animating
+    }
+
+    // -- Rendering -------------------------------------------------------------
+
+    fn tabs_rect(&self) -> Rect {
+        // Equal-width segments; the strip is sized from the longest label
+        // (real measurement) rather than a hardcoded width.
+        let style = engine::theme::TypographyScale::hoff().base_2sm();
+        let max_label = Screen::TABS
+            .iter()
+            .map(|s| engine::text::TextMeasurer::measure_styled(s.title(), &style, None).0)
+            .fold(0.0, f32::max);
+        let seg_w = max_label + 48.0;
+        let w = (seg_w * Screen::TABS.len() as f32 + 8.0).min(self.width - PAD * 2.0);
+        Rect::new(PAD, 72.0, w, 44.0)
+    }
+
+    /// Content area below the header band.
+    fn content_rect(&self) -> Rect {
+        Rect::new(
+            PAD,
+            HEADER_H,
+            (self.width - PAD * 2.0).max(200.0),
+            (self.height - HEADER_H - PAD).max(120.0),
+        )
+    }
+
+    fn ensure_layers(&mut self, c: &mut Compositor) -> Layers {
+        *self.layers.get_or_insert_with(|| Layers {
+            overlay: c.create_layer(OverlayManager::BASE_Z),
+            toast: c.create_layer(OverlayManager::BASE_Z + 200),
+        })
+    }
+
+    pub fn render(&mut self, c: &mut Compositor, theme: &Theme) {
+        let layers = self.ensure_layers(c);
+
+        // Header: wordmark + tab strip.
+        text(c, "urnaui", 20.0, 600, PAD, 24.0, theme.colors.text.0);
+        let subtitle = match &self.db {
+            Some(db) => db.path.display().to_string(),
+            None => "no database open".to_string(),
+        };
+        let subtitle_style = engine::text::TextStyle::new(12.0);
+        let subtitle = engine::text::TextMeasurer::truncate_to_width(
+            &subtitle,
+            &subtitle_style,
+            (self.width - PAD * 2.0 - 90.0).max(80.0),
+        );
+        text(
+            c,
+            &subtitle,
+            12.0,
+            400,
+            PAD + 76.0,
+            30.0,
+            theme.colors.text_dim.0,
+        );
+        self.tabs.render(c, self.tabs_rect(), theme);
+
+        // Screen content, clipped to the content band (scrolled/longs
+        // pages never bleed into the header).
+        let content = self.content_rect();
+        c.push(SceneNode::PushClip {
+            x: content.x,
+            y: content.y,
+            w: content.w,
+            h: content.h,
+        });
+        match self.screen {
+            Screen::Open => {
+                let recents = self.recents_slice().to_vec();
+                let ctx = OpenContext {
+                    recents: &recents,
+                    error: &self.open_error,
+                    embedder: self.embedder.as_ref(),
+                    ffmpeg: self.ffmpeg,
+                    opening: self.opening,
+                    file_hover: self.file_hover,
+                };
+                self.open.render(c, content, theme, &ctx);
+            }
+            Screen::Overview => match &self.db {
+                Some(db) => {
+                    let ctx = OverviewContext {
+                        db,
+                        validation: self.validation.as_ref(),
+                        validating: self.validating,
+                    };
+                    self.overview.render(c, content, theme, &ctx);
+                }
+                None => self.render_empty(c, content, theme, "no database open yet", true),
+            },
+            Screen::Search => match &self.db {
+                Some(db) => {
+                    let lookup = ChunkLookup {
+                        ids: &db.chunk_ids,
+                        index: self.chunk_index.as_ref(),
+                        chunks: self.chunks.as_ref(),
+                        frames: &self.frames,
+                    };
+                    let ctx = SearchContext {
+                        dim: db.inspect.embedding_dim as usize,
+                        lookup: &lookup,
+                        embedder: self.embedder.as_ref(),
+                    };
+                    self.search.render(c, content, theme, &ctx);
+                }
+                None => self.render_empty(c, content, theme, "no database open yet", true),
+            },
+            Screen::Chunks => match &self.db {
+                Some(db) => {
+                    let lookup = ChunkLookup {
+                        ids: &db.chunk_ids,
+                        index: self.chunk_index.as_ref(),
+                        chunks: self.chunks.as_ref(),
+                        frames: &self.frames,
+                    };
+                    let ctx = ChunksContext {
+                        lookup: &lookup,
+                        content_hash: &db.inspect.content_hash,
+                        loading: self.chunks_loading,
+                    };
+                    self.chunks_screen.render(c, content, theme, &ctx);
+                }
+                None => self.render_empty(c, content, theme, "no database open yet", true),
+            },
+            Screen::Graph => match &self.db {
+                Some(db) if db.has_graph => {
+                    let lookup = ChunkLookup {
+                        ids: &db.chunk_ids,
+                        index: self.chunk_index.as_ref(),
+                        chunks: self.chunks.as_ref(),
+                        frames: &self.frames,
+                    };
+                    let text_of = |id: &str| -> Option<String> {
+                        lookup
+                            .ordinal(id)
+                            .and_then(|o| lookup.first_line(o))
+                            .map(str::to_string)
+                    };
+                    self.graph_screen.render(
+                        c,
+                        content,
+                        theme,
+                        &GraphContext {
+                            chunk_ids: &db.chunk_ids,
+                            chunks: self.chunks.as_ref(),
+                            text_of: &text_of,
+                        },
+                    );
+                }
+                Some(_) => self.render_empty(
+                    c,
+                    content,
+                    theme,
+                    "this file has no graph_adjacency section — rebuild it with graph support (with_graph=True)",
+                    false,
+                ),
+                None => self.render_empty(c, content, theme, "no database open yet", true),
+            },
+            Screen::Stats => match &self.db {
+                Some(db) => self.stats_screen.render(c, content, theme, db),
+                None => self.render_empty(c, content, theme, "no database open yet", true),
+            },
+        }
+        c.push(SceneNode::PopClip);
+
+        // The open select dropdown floats above the clipped content.
+        if self.screen == Screen::Search {
+            self.search
+                .render_dropdown(c, layers.overlay, content, theme);
+        }
+    }
+
+    /// Render toasts on their layer (called by the shell after `render` —
+    /// kept here so the toast layer id stays private).
+    pub fn render_toasts(
+        &mut self,
+        c: &mut Compositor,
+        toasts: &ToastManager,
+        theme: &Theme,
+        vw: f32,
+        vh: f32,
+    ) {
+        let layers = self.ensure_layers(c);
+        toasts.render(c, layers.toast, theme, vw, vh);
+    }
+
+    /// Empty state: the engine `EmptyState` (icon + title + message + CTA
+    /// to Open). `msg` overrides the default message (e.g. the graph-less
+    /// explanation), `show_cta` toggles the button.
+    fn render_empty(
+        &mut self,
+        c: &mut Compositor,
+        content: Rect,
+        theme: &Theme,
+        msg: &str,
+        show_cta: bool,
+    ) {
+        if msg != "no database open yet" {
+            self.empty_state.message = msg.to_string();
+        }
+        if !show_cta {
+            self.empty_state.cta = None;
+        }
+        self.empty_state.render(c, content, theme);
+    }
+}
+
+/// The global shortcut table: Cmd/Ctrl+O jumps to Open, Cmd/Ctrl+1..=6
+/// jump to tabs. Both modifier spellings bind the same id (macOS vs the
+/// rest).
+fn build_shortcuts() -> engine::actions::shortcuts::ShortcutMap {
+    let mut map = engine::actions::shortcuts::ShortcutMap::new()
+        .bind("cmd-o", "open")
+        .bind("ctrl-o", "open");
+    for i in 0..Screen::TABS.len() {
+        map = map
+            .bind(format!("cmd-{}", i + 1).as_str(), format!("tab:{i}"))
+            .bind(format!("ctrl-{}", i + 1).as_str(), format!("tab:{i}"));
+    }
+    map
+}
+
+// ---------------------------------------------------------------------------
+// Headless explorer tests (navigation, empty states, error flow)
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::view::fixtures;
+
+    fn harness() -> (Explorer, ToastManager, Theme) {
+        let theme = Theme::hoff();
+        (Explorer::new(&theme), ToastManager::new(), theme)
+    }
+
+    /// Center of tab `i`'s segment in the strip.
+    fn tab_center(ex: &Explorer, i: usize) -> (f32, f32) {
+        ex.tabs.item_rects(ex.tabs_rect())[i].center()
+    }
+
+    fn click(ex: &mut Explorer, toasts: &mut ToastManager, theme: &Theme, x: f32, y: f32) {
+        ex.handle_event(&WidgetEvent::MouseDown { x, y }, toasts, theme);
+        ex.handle_event(&WidgetEvent::MouseUp { x, y }, toasts, theme);
+    }
+
+    #[test]
+    fn tab_clicks_switch_screens() {
+        let (mut ex, mut toasts, theme) = harness();
+        assert_eq!(ex.screen(), Screen::Open);
+        for (i, expected) in Screen::TABS.iter().enumerate() {
+            let (x, y) = tab_center(&ex, i);
+            click(&mut ex, &mut toasts, &theme, x, y);
+            assert_eq!(ex.screen(), *expected);
+        }
+    }
+
+    #[test]
+    fn shortcuts_jump_to_tabs() {
+        let (mut ex, _, _) = harness();
+        let ks = |s: &str| s.parse::<engine::actions::Keystroke>().unwrap();
+        assert!(ex.handle_keystroke(&ks("cmd-3")));
+        assert_eq!(ex.screen(), Screen::Search);
+        assert!(ex.handle_keystroke(&ks("ctrl-5")));
+        assert_eq!(ex.screen(), Screen::Graph);
+        assert!(ex.handle_keystroke(&ks("cmd-6")));
+        assert_eq!(ex.screen(), Screen::Stats);
+        // Unbound and bare keys do not match.
+        assert!(!ex.handle_keystroke(&ks("cmd-9")));
+        assert!(!ex.handle_keystroke(&ks("3")));
+        assert_eq!(ex.screen(), Screen::Stats);
+        assert!(ex.handle_keystroke(&ks("cmd-o")));
+        assert_eq!(ex.screen(), Screen::Open);
+    }
+
+    #[test]
+    fn entering_graph_with_a_graphed_db_requests_the_layout_once() {
+        let (mut ex, _, _) = harness();
+        ex.db = Some(fixtures::fake_db_with_graph());
+        ex.switch_screen(Screen::Graph);
+        assert!(ex.graph_screen.loading);
+        // A second entry does not re-send while in flight.
+        ex.switch_screen(Screen::Open);
+        ex.switch_screen(Screen::Graph);
+        assert!(ex.graph_screen.loading);
+
+        // The layout arrives and the screen renders it.
+        ex.graph_screen.fold_scene(Ok(fixtures::fake_graph_scene()));
+        assert!(ex.graph_screen.has_scene());
+        let theme = Theme::hoff();
+        let mut c = Compositor::new();
+        ex.resize(1600.0, 1000.0);
+        ex.render(&mut c, &theme);
+    }
+
+    #[test]
+    fn graph_without_a_graph_section_shows_the_explanation() {
+        let (mut ex, _, theme) = harness();
+        ex.db = Some(fixtures::fake_db()); // has_graph = false
+        ex.switch_screen(Screen::Graph);
+        assert!(!ex.graph_screen.loading, "no LoadGraph without a section");
+        let mut c = Compositor::new();
+        ex.render(&mut c, &theme);
+    }
+
+    #[test]
+    fn opening_a_missing_path_shows_the_error_and_returns_to_open() {
+        let (mut ex, mut toasts, theme) = harness();
+        ex.open_database(PathBuf::from("/definitely/not/here.urna"));
+        assert!(ex.opening);
+        for _ in 0..1000 {
+            if ex.poll_backend(&mut toasts, &theme) {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        assert!(!ex.opening);
+        assert!(!ex.open_error.is_empty());
+        assert_eq!(ex.screen(), Screen::Open);
+        assert_eq!(toasts.len(), 1, "the failure also raises a toast");
+    }
+
+    #[test]
+    fn vector_search_validates_json_and_dim_before_sending() {
+        let (mut ex, _, _) = harness();
+        ex.db = Some(fixtures::fake_db()); // dim = 4
+        ex.switch_screen(Screen::Search);
+
+        // Not JSON.
+        assert!(ex.run_search("nope".into(), true, SearchMode::Exact, 5));
+        assert!(ex.search.error.contains("invalid vector JSON"));
+        assert!(!ex.search.pending, "rejected submissions clear pending");
+
+        // Wrong dim.
+        ex.run_search("[1.0, 2.0]".into(), true, SearchMode::Exact, 5);
+        assert!(ex.search.error.contains("dim mismatch"));
+
+        // Right dim: dispatched to the worker (no db there — the async
+        // error is out of scope for this test).
+        ex.run_search("[0.1, 0.2, 0.3, 0.4]".into(), true, SearchMode::Exact, 5);
+        assert!(ex.search.error.is_empty());
+        assert!(ex.search.pending);
+    }
+
+    #[test]
+    fn empty_state_cta_navigates_to_open() {
+        let (mut ex, mut toasts, theme) = harness();
+        ex.switch_screen(Screen::Overview);
+        assert!(ex.db.is_none());
+        let cta = ex.empty_state.cta_rect(ex.content_rect()).unwrap();
+        let (x, y) = cta.center();
+        click(&mut ex, &mut toasts, &theme, x, y);
+        assert_eq!(ex.screen(), Screen::Open);
+    }
+
+    #[test]
+    fn every_screen_renders_at_narrow_and_wide() {
+        let (mut ex, _, theme) = harness();
+        for with_db in [false, true] {
+            if with_db {
+                ex.db = Some(fixtures::fake_db());
+                ex.chunks = Some(fixtures::fake_chunks());
+            }
+            for screen in Screen::TABS {
+                for (w, h) in [(800.0, 600.0), (1600.0, 1000.0)] {
+                    ex.resize(w, h);
+                    ex.switch_screen(screen);
+                    let mut c = Compositor::new();
+                    ex.render(&mut c, &theme);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn entering_chunks_with_a_db_requests_the_texts_once() {
+        let (mut ex, _, _) = harness();
+        ex.db = Some(fixtures::fake_db());
+        ex.switch_screen(Screen::Chunks);
+        assert!(ex.chunks_loading);
+        // Already in flight: switching away and back does not re-send.
+        ex.switch_screen(Screen::Open);
+        ex.switch_screen(Screen::Chunks);
+        // (No second LoadChunks: `chunks_loading` is still true and the
+        // worker got exactly one command; verified by not panicking on a
+        // doubled load in the integration flow.)
+        assert!(ex.chunks_loading);
+    }
+}

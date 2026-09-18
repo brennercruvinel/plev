@@ -1,13 +1,13 @@
 //! Guard: the architecture docs cannot silently omit a crate or example.
 //!
 //! The source of truth for what exists is Cargo.toml `members` and the
-//! examples/ directory, never a doc. Three architecture views are kept by
-//! hand (docs/arc/arc.yaml the canonical machine map, arc.md the human
-//! projection, README.md the home page), so they drift on the first rush.
-//! This test makes drift a failing build instead of a silent lie: every
-//! workspace crate must be named in arc.yaml, arc.md and README, and every
-//! example directory must be named in arc.yaml. add a crate or example and
-//! forget a doc, and this test tells you which doc, by name.
+//! examples/ directory, never a doc. Two architecture views are kept by
+//! hand (docs/arc/arc.toml the map + prose + diagram, README.md the home
+//! page), so they drift on the first rush. This test makes drift a failing
+//! build instead of a silent lie: every workspace crate must be named in
+//! arc.toml and README, and every example directory must be named in
+//! arc.toml. add a crate or example and forget a doc, and this test tells
+//! you which doc, by name.
 
 use std::fs;
 use std::path::PathBuf;
@@ -60,11 +60,10 @@ fn examples() -> Vec<String> {
 }
 
 #[test]
-fn every_crate_is_named_in_arc_yaml_arc_md_and_readme() {
+fn every_crate_is_named_in_arc_toml_and_readme() {
     let crates = workspace_crates();
     for (rel, body) in [
-        ("docs/arc/arc.yaml", read("docs/arc/arc.yaml")),
-        ("docs/arc/arc.md", read("docs/arc/arc.md")),
+        ("docs/arc/arc.toml", read("docs/arc/arc.toml")),
         ("README.md", read("README.md")),
     ] {
         let missing: Vec<&String> = crates
@@ -80,8 +79,8 @@ fn every_crate_is_named_in_arc_yaml_arc_md_and_readme() {
 }
 
 #[test]
-fn every_example_is_named_in_arc_yaml() {
-    let body = read("docs/arc/arc.yaml");
+fn every_example_is_named_in_arc_toml() {
+    let body = read("docs/arc/arc.toml");
     let examples = examples();
     let missing: Vec<&String> = examples
         .iter()
@@ -89,7 +88,7 @@ fn every_example_is_named_in_arc_yaml() {
         .collect();
     assert!(
         missing.is_empty(),
-        "docs/arc/arc.yaml does not list these examples: {missing:?}. \
-         add them under the examples section."
+        "docs/arc/arc.toml does not list these examples: {missing:?}. \
+         add them under the [examples] table."
     );
 }

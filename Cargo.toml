@@ -1,10 +1,10 @@
 [workspace]
 resolver = "2"
 # Every crate in the project is a member (each shows up as an IDE target).
-# nestui is deliberately NOT a member: its native backend path-depends on the
-# sibling nest workspace (../nest), so including it would break this workspace
-# for anyone without a nest checkout (public repo, CI). it lives excluded with
-# its own manifest/workspace — see crates/nestui/Cargo.toml and script/gate.
+# urnaui is deliberately NOT a member: its native backend path-depends on the
+# sibling urna workspace (../urna), so including it would break this workspace
+# for anyone without a urna checkout (public repo, CI). it lives excluded with
+# its own manifest/workspace — see crates/urnaui/Cargo.toml and script/gate.
 members = [
     "crates/engine",
     "crates/macros",
@@ -20,7 +20,7 @@ members = [
     "crates/rope",
     "crates/showcase",
 ]
-exclude = ["crates/nestui"]
+exclude = ["crates/urnaui"]
 
 # Metadata inherited by every crate (`version.workspace = true`;
 # `description` stays per crate). Private: `publish = false` on each one.

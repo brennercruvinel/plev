@@ -23,7 +23,7 @@ extend-exclude = [
     # docs/ is the knowledge base: long-form bilingual prose (mostly
     # portuguese), where an english spell-checker is all false positives and
     # no signal. typos earns its keep on code and the english-facing docs;
-    # docs/arc/ is english-facing (the arc trio), so it stays checked.
+    # docs/arc/ is english-facing (arc.toml), so it stays checked.
     "docs/adr/",
     "docs/how-to/",
     "docs/mission/",
@@ -46,6 +46,15 @@ wgpu = "wgpu"
 winit = "winit"
 gpui = "gpui"
 bodymovin = "bodymovin"
+# urna (the vector database urnaui explores) and its vocabulary.
+urna = "urna"
+urnaui = "urnaui"
+urnaread = "urnaread"
+potion = "potion"
+hnsw = "hnsw"
+mmap = "mmap"
+memmap = "memmap"
+rfd = "rfd"
 # portuguese words the english dictionary mistakes for typos (bilingual repo).
 caracteres = "caracteres"
 classe = "classe"
