@@ -20,15 +20,11 @@
 //! up to [`EMBED_TIMEOUT`].
 
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 /// Hard cap on one embedder run (the potion table load dominates; the CLI
 /// has no timeout, but a wedged python must not wedge the worker forever).
 const EMBED_TIMEOUT: Duration = Duration::from_secs(120);
-
-/// Poll interval while waiting for the embedder to exit.
-const POLL: Duration = Duration::from_millis(50);
 
 /// Errors the embedder bridge reports to the UI (displayed verbatim).
 #[derive(Debug, thiserror::Error)]
@@ -136,7 +132,6 @@ pub fn default_embedder_path(embedding_model: &str) -> Option<PathBuf> {
     locate_script(&embedder_script_rel(embedding_model))
 }
 
-
 /// Locate the registry embedder used for multimodal spaces.
 pub fn default_space_embedder_path() -> Option<PathBuf> {
     locate_script(&space_embedder_script_rel())
@@ -162,9 +157,7 @@ fn locate_script(rel: &Path) -> Option<PathBuf> {
         .map(|bin| bin.join("..").join("share"));
     let candidates = [
         std::env::current_dir().ok().map(|p| p.join(rel)),
-        std::env::current_dir()
-            .ok()
-            .map(|p| p.join("..").join(rel)),
+        std::env::current_dir().ok().map(|p| p.join("..").join(rel)),
         // Dev convenience: urnaui's workspace sits next to the urna
         // checkout in the standard hoff layout.
         Some(
@@ -178,44 +171,19 @@ fn locate_script(rel: &Path) -> Option<PathBuf> {
     candidates.into_iter().flatten().find(|c| c.exists())
 }
 
-/// Run `program args…` with a timeout, returning stdout on success.
+/// Run `program args…` with the embed timeout, returning stdout on
+/// success; the shared subprocess helper drains the pipes so a long JSON
+/// vector can never wedge the child.
 fn run_with_timeout(program: &str, args: &[String]) -> Result<Vec<u8>, EmbedError> {
-    let mut child = Command::new(program)
-        .args(args)
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|source| EmbedError::Spawn {
+    use crate::model::subprocess::RunError;
+    crate::model::subprocess::run(program, args, EMBED_TIMEOUT).map_err(|e| match e {
+        RunError::Spawn(source) => EmbedError::Spawn {
             interpreter: program.to_string(),
             source,
-        })?;
-    let deadline = Instant::now() + EMBED_TIMEOUT;
-    loop {
-        if let Some(status) = child.try_wait().map_err(|source| EmbedError::Spawn {
-            interpreter: program.to_string(),
-            source,
-        })? {
-            let out = child
-                .wait_with_output()
-                .map_err(|source| EmbedError::Spawn {
-                    interpreter: program.to_string(),
-                    source,
-                })?;
-            if !status.success() {
-                return Err(EmbedError::Failed(
-                    String::from_utf8_lossy(&out.stderr).trim().to_string(),
-                ));
-            }
-            return Ok(out.stdout);
-        }
-        if Instant::now() >= deadline {
-            let _ = child.kill();
-            let _ = child.wait();
-            return Err(EmbedError::Timeout);
-        }
-        std::thread::sleep(POLL);
-    }
+        },
+        RunError::Timeout => EmbedError::Timeout,
+        RunError::Failed(stderr) => EmbedError::Failed(stderr),
+    })
 }
 
 /// The CLI's blocking layer 1/2/3 gate: model name, dimension, and
@@ -408,7 +376,12 @@ mod tests {
     #[test]
     fn space_gate_checks_dim_and_hash_only() {
         // the name is the preset's, never the manifest's: not gated.
-        let v = gate_space(output("open_clip/ViT-B-32", 4, "sha256:abc"), 4, "sha256:abc").unwrap();
+        let v = gate_space(
+            output("open_clip/ViT-B-32", 4, "sha256:abc"),
+            4,
+            "sha256:abc",
+        )
+        .unwrap();
         assert_eq!(v.len(), 4);
         assert!(gate_space(output("x", 8, "sha256:abc"), 4, "sha256:abc").is_err());
         assert!(gate_space(output("x", 4, "sha256:xyz"), 4, "sha256:abc").is_err());

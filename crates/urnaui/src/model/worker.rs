@@ -14,8 +14,8 @@ use std::sync::mpsc::{Receiver, Sender, channel};
 use std::thread::JoinHandle;
 
 use super::backend::UrnaBackend;
-pub use super::types::{UrnaCommand, UrnaEvent};
 use super::types::{SearchMode, SearchResultsView};
+pub use super::types::{UrnaCommand, UrnaEvent};
 
 /// Handle to the urna worker thread. Dropping it shuts the worker down.
 pub struct UrnaWorker {
@@ -196,9 +196,9 @@ fn load_frame(db: &UrnaBackend, ordinal: usize, max_side: u32) -> Result<Vec<u8>
     let frame = span
         .frame()
         .ok_or_else(|| format!("span {}–{} is not a single frame", span.start, span.end))?;
-    let range = db.blob_range(span.blob_index as usize).ok_or_else(|| {
-        "the media bytes are not inlined in this file (sidecar blob)".to_string()
-    })?;
+    let range = db
+        .blob_range(span.blob_index as usize)
+        .ok_or_else(|| "the media bytes are not inlined in this file (sidecar blob)".to_string())?;
     let path = db.path().to_string_lossy().into_owned();
     crate::model::frames::decode_frame(&path, range, frame, max_side).map_err(|e| e.to_string())
 }

@@ -292,7 +292,9 @@ impl Explorer {
                         Intent::Constructive,
                         theme,
                     ),
-                    Err(e) => toasts.push(format!("export failed: {e}"), Intent::Destructive, theme),
+                    Err(e) => {
+                        toasts.push(format!("export failed: {e}"), Intent::Destructive, theme)
+                    }
                 },
                 UrnaEvent::FrameLoaded { ordinal, result } => {
                     self.frames_pending.remove(&ordinal);
@@ -480,7 +482,11 @@ impl Explorer {
     /// The lookup every screen resolves chunks through.
     fn lookup(&self) -> ChunkLookup<'_> {
         ChunkLookup {
-            ids: self.db.as_ref().map(|db| db.chunk_ids.as_slice()).unwrap_or(&[]),
+            ids: self
+                .db
+                .as_ref()
+                .map(|db| db.chunk_ids.as_slice())
+                .unwrap_or(&[]),
             index: self.chunk_index.as_ref(),
             chunks: self.chunks.as_ref(),
             frames: &self.frames,

@@ -106,7 +106,11 @@ fn cards(db: &OpenedDbView) -> Vec<Card> {
         row("index_type", m.index_type.clone(), None),
         row("n_chunks", m.n_chunks.to_string(), None),
         row("chunker_version", m.chunker_version.clone(), None),
-        row("model_hash", m.model_hash.clone(), Some(RowButton::CopyModel)),
+        row(
+            "model_hash",
+            m.model_hash.clone(),
+            Some(RowButton::CopyModel),
+        ),
     ];
     if let Some(title) = &m.title {
         manifest_rows.push(row("title", title.clone(), None));
@@ -510,10 +514,7 @@ impl OverviewScreen {
         .to_string();
         self.validate.render(c, l.validate, theme);
         let (status, color) = match ctx.validation {
-            Some(Ok(ms)) => (
-                format!("integrity ok · {ms:.0} ms"),
-                theme.colors.success.0,
-            ),
+            Some(Ok(ms)) => (format!("integrity ok · {ms:.0} ms"), theme.colors.success.0),
             Some(Err(e)) => (format!("failed: {e}"), theme.colors.danger.0),
             None => (
                 "checksums, hashes and contract were verified at open".to_string(),
@@ -528,7 +529,9 @@ impl OverviewScreen {
                 &status,
                 12.0,
                 400,
-                l.validate.x - 12.0 - TextMeasurer::measure_styled(&status, &TextStyle::new(12.0), None).0,
+                l.validate.x
+                    - 12.0
+                    - TextMeasurer::measure_styled(&status, &TextStyle::new(12.0), None).0,
                 l.cards[0].y + CARD_PAD + 1.0,
                 color,
             );

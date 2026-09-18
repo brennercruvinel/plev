@@ -117,7 +117,8 @@ pub struct ChunkLookup<'a> {
     pub ids: &'a [String],
     pub index: Option<&'a std::collections::HashMap<String, usize>>,
     pub chunks: Option<&'a crate::model::types::ChunksData>,
-    pub frames: &'a std::collections::HashMap<usize, Result<engine::gpu::image::ImageHandle, String>>,
+    pub frames:
+        &'a std::collections::HashMap<usize, Result<engine::gpu::image::ImageHandle, String>>,
 }
 
 impl ChunkLookup<'_> {
@@ -141,7 +142,10 @@ impl ChunkLookup<'_> {
 
     /// The decoded frame, `Some(Err)` when the decode failed, `None` while
     /// nothing was requested or the decode is in flight.
-    pub fn frame(&self, ordinal: usize) -> Option<&Result<engine::gpu::image::ImageHandle, String>> {
+    pub fn frame(
+        &self,
+        ordinal: usize,
+    ) -> Option<&Result<engine::gpu::image::ImageHandle, String>> {
         self.frames.get(&ordinal)
     }
 

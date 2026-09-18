@@ -12,8 +12,8 @@
 use std::cell::RefCell;
 use std::collections::VecDeque;
 
-use super::urnaread::UrnaBytes;
 use super::types::{UrnaCommand, UrnaEvent};
+use super::urnaread::UrnaBytes;
 
 struct Inner {
     file: Option<UrnaBytes>,

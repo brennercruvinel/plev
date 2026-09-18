@@ -17,8 +17,8 @@
 //! `spawn`/`send`/`try_recv` surface.
 
 pub mod bench;
-pub mod urnaread;
 pub mod types;
+pub mod urnaread;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod backend;
@@ -26,6 +26,8 @@ pub mod backend;
 pub mod embed;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod frames;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod subprocess;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod recents;
 #[cfg(not(target_arch = "wasm32"))]

@@ -11,13 +11,12 @@
 //! Everything here runs on the worker thread.
 
 use std::process::{Command, Stdio};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use super::backend::BlobRange;
 
 /// Hard cap on one decode: a wedged ffmpeg must not wedge the worker.
 const DECODE_TIMEOUT: Duration = Duration::from_secs(20);
-const POLL: Duration = Duration::from_millis(20);
 
 /// Errors the frame decoder reports to the UI (displayed verbatim).
 #[derive(Debug, thiserror::Error)]
@@ -84,45 +83,17 @@ pub fn decode_frame(
         "png".to_string(),
         "pipe:1".to_string(),
     ];
-    let mut child = Command::new("ffmpeg")
-        .args(&args)
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|e| {
-            if e.kind() == std::io::ErrorKind::NotFound {
-                FrameError::FfmpegMissing
-            } else {
-                FrameError::Failed(e.to_string())
-            }
-        })?;
-    let deadline = Instant::now() + DECODE_TIMEOUT;
-    loop {
-        if let Some(status) = child
-            .try_wait()
-            .map_err(|e| FrameError::Failed(e.to_string()))?
-        {
-            let out = child
-                .wait_with_output()
-                .map_err(|e| FrameError::Failed(e.to_string()))?;
-            if !status.success() {
-                return Err(FrameError::Failed(
-                    String::from_utf8_lossy(&out.stderr).trim().to_string(),
-                ));
-            }
-            if out.stdout.is_empty() {
-                return Err(FrameError::Empty);
-            }
-            return Ok(out.stdout);
-        }
-        if Instant::now() >= deadline {
-            let _ = child.kill();
-            let _ = child.wait();
-            return Err(FrameError::Timeout);
-        }
-        std::thread::sleep(POLL);
+    use super::subprocess::RunError;
+    let out = super::subprocess::run("ffmpeg", &args, DECODE_TIMEOUT).map_err(|e| match e {
+        RunError::Spawn(e) if e.kind() == std::io::ErrorKind::NotFound => FrameError::FfmpegMissing,
+        RunError::Spawn(e) => FrameError::Failed(e.to_string()),
+        RunError::Timeout => FrameError::Timeout,
+        RunError::Failed(stderr) => FrameError::Failed(stderr),
+    })?;
+    if out.is_empty() {
+        return Err(FrameError::Empty);
     }
+    Ok(out)
 }
 
 #[cfg(test)]

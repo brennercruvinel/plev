@@ -316,10 +316,16 @@ pub enum UrnaCommand {
     Validate,
     /// Write blob `index`'s inlined bytes to `dest`, sha256-verified
     /// against its blob_refs record (`urna media --export`).
-    ExportBlob { index: usize, dest: PathBuf },
+    ExportBlob {
+        index: usize,
+        dest: PathBuf,
+    },
     /// Decode the frame chunk `ordinal` maps to (through the blob overlay)
     /// into a PNG for the preview panel; `max_side` bounds the decode.
-    LoadFrame { ordinal: usize, max_side: u32 },
+    LoadFrame {
+        ordinal: usize,
+        max_side: u32,
+    },
     Shutdown,
 }
 

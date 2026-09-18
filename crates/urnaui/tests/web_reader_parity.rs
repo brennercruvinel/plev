@@ -7,8 +7,8 @@
 
 use urna_format::{ChunkInput, Edge, Manifest, UrnaFileBuilder, encode_graph_adjacency};
 use urnaui::model::backend::UrnaBackend;
-use urnaui::model::urnaread::UrnaBytes;
 use urnaui::model::types::SearchMode;
+use urnaui::model::urnaread::UrnaBytes;
 
 fn demo_manifest() -> Manifest {
     Manifest {

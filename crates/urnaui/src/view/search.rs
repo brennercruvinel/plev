@@ -513,7 +513,8 @@ fn render_results(
             .map(str::to_string)
             .unwrap_or_else(|| short_id(&hit.chunk_id));
         let title_x = row.x + pad + bar_w + 72.0;
-        let title = TextMeasurer::truncate_to_width(&title, &title_style, row.w - (title_x - row.x) - pad);
+        let title =
+            TextMeasurer::truncate_to_width(&title, &title_style, row.w - (title_x - row.x) - pad);
         text(
             c,
             &title,
@@ -632,7 +633,13 @@ fn render_explain(
         return;
     };
     if lookup.is_media(ordinal) {
-        y += render_frame_box(c, Rect::new(rect.x + 16.0, y, inner_w, FRAME_H), theme, lookup, ordinal);
+        y += render_frame_box(
+            c,
+            Rect::new(rect.x + 16.0, y, inner_w, FRAME_H),
+            theme,
+            lookup,
+            ordinal,
+        );
         y += GAP;
     }
     if let Some(full) = lookup.text(ordinal) {
@@ -693,7 +700,15 @@ pub(crate) fn render_frame_box(
                 &style,
                 bounds.w,
             );
-            text(c, &msg, 12.0, 400, bounds.x, bounds.y, theme.colors.text_dim.0);
+            text(
+                c,
+                &msg,
+                12.0,
+                400,
+                bounds.x,
+                bounds.y,
+                theme.colors.text_dim.0,
+            );
             20.0
         }
         None => {
@@ -877,7 +892,11 @@ mod tests {
             frames: &frames,
         };
         screen.results.selected = Some(0);
-        assert_eq!(screen.wanted_frame(&lookup), None, "a failed decode is not re-requested");
+        assert_eq!(
+            screen.wanted_frame(&lookup),
+            None,
+            "a failed decode is not re-requested"
+        );
         for (w, h) in [(800.0, 600.0), (1600.0, 1000.0)] {
             let mut c = Compositor::new();
             screen.render(

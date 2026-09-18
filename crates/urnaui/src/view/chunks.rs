@@ -19,7 +19,9 @@ use engine::ui::widgets::{
 
 use super::field::{FIELD_H, Field};
 use super::search::render_frame_box;
-use super::{Action, ChunkLookup, EditKey, group_label, panel, parse_citation, short_id, span_label, text};
+use super::{
+    Action, ChunkLookup, EditKey, group_label, panel, parse_citation, short_id, span_label, text,
+};
 
 const ROW_H: f32 = 48.0;
 const GAP: f32 = 16.0;
@@ -114,7 +116,10 @@ impl ChunksScreen {
         // Rebuild when the key changed, or when a text filter waited for
         // the decode.
         let stale = key != self.filter_key
-            || (self.filtered.is_none() && !key.is_empty() && texts_ready && self.filter_note == "loading texts…");
+            || (self.filtered.is_none()
+                && !key.is_empty()
+                && texts_ready
+                && self.filter_note == "loading texts…");
         if !stale {
             return;
         }
@@ -179,7 +184,11 @@ impl ChunksScreen {
             .ids
             .iter()
             .enumerate()
-            .filter(|(_, full)| full.strip_prefix("sha256:").unwrap_or(full).starts_with(hex))
+            .filter(|(_, full)| {
+                full.strip_prefix("sha256:")
+                    .unwrap_or(full)
+                    .starts_with(hex)
+            })
             .map(|(i, _)| i)
             .collect()
     }
@@ -230,7 +239,8 @@ impl ChunksScreen {
         ctx: &ChunksContext,
     ) -> (EventResult, Action) {
         self.sync_filter(ctx);
-        self.list.set_item_count(self.row_count(ctx.lookup.ids.len()));
+        self.list
+            .set_item_count(self.row_count(ctx.lookup.ids.len()));
         let l = self.layout(content);
 
         // Filter field: click focuses; clicks elsewhere blur.
@@ -247,7 +257,9 @@ impl ChunksScreen {
         // Buttons + scroll inside the detail panel.
         if let (Some(detail), Some(ordinal)) = (l.detail, self.selected_ordinal()) {
             let r = self.copy_id.handle_event(event, self.copy_rect(detail, 0));
-            if r.clicked && let Some(id) = ctx.lookup.ids.get(ordinal) {
+            if r.clicked
+                && let Some(id) = ctx.lookup.ids.get(ordinal)
+            {
                 return (
                     r,
                     Action::Copy {
@@ -256,8 +268,12 @@ impl ChunksScreen {
                     },
                 );
             }
-            let r = self.copy_citation.handle_event(event, self.copy_rect(detail, 1));
-            if r.clicked && let Some(id) = ctx.lookup.ids.get(ordinal) {
+            let r = self
+                .copy_citation
+                .handle_event(event, self.copy_rect(detail, 1));
+            if r.clicked
+                && let Some(id) = ctx.lookup.ids.get(ordinal)
+            {
                 return (
                     r,
                     Action::Copy {
@@ -267,7 +283,9 @@ impl ChunksScreen {
                 );
             }
             if let WidgetEvent::Scroll { x, y, delta } = *event
-                && self.text_area(detail, ctx.lookup.is_media(ordinal)).contains(x, y)
+                && self
+                    .text_area(detail, ctx.lookup.is_media(ordinal))
+                    .contains(x, y)
             {
                 let old = self.detail_scroll.offset();
                 self.detail_scroll.scroll_by(delta);
@@ -328,7 +346,13 @@ impl ChunksScreen {
         self.filter.tick(dt) | self.list.tick(dt) | self.detail_scrollbar.tick(dt) | spinning
     }
 
-    pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme, ctx: &ChunksContext) {
+    pub fn render(
+        &mut self,
+        c: &mut Compositor,
+        content: Rect,
+        theme: &Theme,
+        ctx: &ChunksContext,
+    ) {
         self.sync_filter(ctx);
         let total = ctx.lookup.ids.len();
         self.list.set_item_count(self.row_count(total));
@@ -448,9 +472,15 @@ impl ChunksScreen {
             theme,
         );
         self.copy_id.render(c, self.copy_rect(detail, 0), theme);
-        self.copy_citation.render(c, self.copy_rect(detail, 1), theme);
+        self.copy_citation
+            .render(c, self.copy_rect(detail, 1), theme);
 
-        let id = ctx.lookup.ids.get(ordinal).map(String::as_str).unwrap_or("");
+        let id = ctx
+            .lookup
+            .ids
+            .get(ordinal)
+            .map(String::as_str)
+            .unwrap_or("");
         let line_w = detail.w - DETAIL_PAD * 2.0 - self.copy_rect(detail, 0).w - 8.0;
         let id_style = TextStyle::new(13.0).with_weight(500);
         let meta_style = TextStyle::new(12.0);
@@ -513,7 +543,12 @@ impl ChunksScreen {
         if media {
             render_frame_box(
                 c,
-                Rect::new(detail.x + DETAIL_PAD, y, detail.w - DETAIL_PAD * 2.0, FRAME_H),
+                Rect::new(
+                    detail.x + DETAIL_PAD,
+                    y,
+                    detail.w - DETAIL_PAD * 2.0,
+                    FRAME_H,
+                ),
                 theme,
                 ctx.lookup,
                 ordinal,
@@ -716,7 +751,11 @@ mod tests {
 
         // citation from another build
         screen.filter.input.buffer.set_text("");
-        screen.filter.insert(&format!("urna://sha256:{}/{}", "9".repeat(64), fix.db.chunk_ids[0]));
+        screen.filter.insert(&format!(
+            "urna://sha256:{}/{}",
+            "9".repeat(64),
+            fix.db.chunk_ids[0]
+        ));
         screen.sync_filter(&ctx);
         assert_eq!(screen.filtered, Some(vec![]));
         assert!(screen.filter_note.contains("another build"));
@@ -771,7 +810,12 @@ mod tests {
         let (mut screen, theme) = harness();
         for (w, h) in [(800.0, 600.0), (1600.0, 1000.0)] {
             let mut c = Compositor::new();
-            screen.render(&mut c, Rect::new(40.0, 128.0, w - 80.0, h - 168.0), &theme, &ctx);
+            screen.render(
+                &mut c,
+                Rect::new(40.0, 128.0, w - 80.0, h - 168.0),
+                &theme,
+                &ctx,
+            );
         }
     }
 }
