@@ -195,6 +195,12 @@ impl UrnauiView {
         }
     }
 
+    /// Install the event-loop wake the worker fires after each result
+    /// (see `app.rs`); without it results wait for the next input event.
+    pub fn set_wake(&self, wake: Box<dyn Fn() + Send + 'static>) {
+        self.explorer.set_wake(wake);
+    }
+
     pub fn resize(&mut self, width: f32, height: f32, scale_factor: f32) {
         self.width = width;
         self.height = height;

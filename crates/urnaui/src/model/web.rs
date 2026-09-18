@@ -45,6 +45,10 @@ impl WebWorker {
         self.inner.borrow_mut().queue.pop_front()
     }
 
+    /// Inline execution needs no wake: results are queued before `send`
+    /// returns and the shell polls right after.
+    pub fn set_wake(&self, _wake: Box<dyn Fn() + Send + 'static>) {}
+
     fn push(&self, event: UrnaEvent) {
         self.inner.borrow_mut().queue.push_back(event);
     }

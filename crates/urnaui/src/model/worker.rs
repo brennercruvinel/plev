@@ -11,17 +11,24 @@
 //! web inline worker).
 
 use std::sync::mpsc::{Receiver, Sender, channel};
+use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
 use super::backend::UrnaBackend;
 use super::types::{SearchMode, SearchResultsView};
 pub use super::types::{UrnaCommand, UrnaEvent};
 
+/// Called on the worker thread right after every event is queued, so the
+/// platform shell can wake its event loop (winit sleeps between input
+/// events; without this a result waits for the next mouse move).
+pub type WakeFn = Box<dyn Fn() + Send + 'static>;
+
 /// Handle to the urna worker thread. Dropping it shuts the worker down.
 pub struct UrnaWorker {
     tx: Sender<UrnaCommand>,
     rx: Receiver<UrnaEvent>,
     handle: Option<JoinHandle<()>>,
+    wake: Arc<Mutex<Option<WakeFn>>>,
 }
 
 impl UrnaWorker {
@@ -29,15 +36,27 @@ impl UrnaWorker {
     pub fn spawn() -> Self {
         let (cmd_tx, cmd_rx) = channel::<UrnaCommand>();
         let (event_tx, event_rx) = channel::<UrnaEvent>();
+        let wake: Arc<Mutex<Option<WakeFn>>> = Arc::new(Mutex::new(None));
+        let wake_in_thread = Arc::clone(&wake);
         let handle = std::thread::Builder::new()
             .name("urna-backend".into())
             .spawn(move || {
                 let mut backend: Option<UrnaBackend> = None;
+                // Every send goes through this closure so the wake fires
+                // after the event is queued, never before.
+                let emit = |event: UrnaEvent| {
+                    let _ = event_tx.send(event);
+                    if let Ok(guard) = wake_in_thread.lock()
+                        && let Some(wake) = guard.as_ref()
+                    {
+                        wake();
+                    }
+                };
                 while let Ok(command) = cmd_rx.recv() {
                     if matches!(command, UrnaCommand::Shutdown) {
                         break;
                     }
-                    run_command(&mut backend, command, &event_tx);
+                    run_command(&mut backend, command, &emit);
                 }
             })
             .expect("spawn urna worker thread");
@@ -45,6 +64,14 @@ impl UrnaWorker {
             tx: cmd_tx,
             rx: event_rx,
             handle: Some(handle),
+            wake,
+        }
+    }
+
+    /// Install the event-loop wake callback (the shell's proxy send).
+    pub fn set_wake(&self, wake: WakeFn) {
+        if let Ok(mut guard) = self.wake.lock() {
+            *guard = Some(wake);
         }
     }
 
@@ -69,7 +96,7 @@ impl Drop for UrnaWorker {
     }
 }
 
-fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &Sender<UrnaEvent>) {
+fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &dyn Fn(UrnaEvent)) {
     match command {
         UrnaCommand::Open(path) => {
             let event = match UrnaBackend::open(&path) {
@@ -81,13 +108,13 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &Sen
                 Err(e) => Err(e.to_string()),
             };
             let opened = event.is_ok();
-            let _ = tx.send(UrnaEvent::Opened(event));
+            tx(UrnaEvent::Opened(event));
             // Texts + spans right behind the snapshot: one decode pass, and
             // every screen (result previews, chunk list, frame lookup) has
             // them before the user can ask. Never a second full-file read
             // (the backend maps the file once).
             if opened && let Some(db) = backend.as_mut() {
-                let _ = tx.send(UrnaEvent::ChunksLoaded(
+                tx(UrnaEvent::ChunksLoaded(
                     db.load_chunks().map_err(|e| e.to_string()),
                 ));
             }
@@ -95,7 +122,7 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &Sen
         UrnaCommand::OpenBytes { .. } => {
             // In-memory open is the web path; on desktop files come from
             // the filesystem (dropped/picked paths).
-            let _ = tx.send(UrnaEvent::Opened(Err(
+            tx(UrnaEvent::Opened(Err(
                 "in-memory open is only supported on the web build".to_string(),
             )));
         }
@@ -107,21 +134,21 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &Sen
                     .map_err(|e| e.to_string()),
                 None => Err("no database open".to_string()),
             };
-            let _ = tx.send(UrnaEvent::SearchResults(result));
+            tx(UrnaEvent::SearchResults(result));
         }
         UrnaCommand::SearchByText { query, mode, k } => {
             let result = match backend.as_ref() {
                 Some(db) => search_by_text(db, &query, &mode, k),
                 None => Err("no database open".to_string()),
             };
-            let _ = tx.send(UrnaEvent::SearchResults(result));
+            tx(UrnaEvent::SearchResults(result));
         }
         UrnaCommand::LoadChunks => {
             let result = match backend.as_mut() {
                 Some(db) => db.load_chunks().map_err(|e| e.to_string()),
                 None => Err("no database open".to_string()),
             };
-            let _ = tx.send(UrnaEvent::ChunksLoaded(result));
+            tx(UrnaEvent::ChunksLoaded(result));
         }
         UrnaCommand::LoadGraph => {
             let result = match backend.as_ref() {
@@ -135,7 +162,7 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &Sen
                 },
                 None => Err("no database open".to_string()),
             };
-            let _ = tx.send(UrnaEvent::GraphLoaded(result));
+            tx(UrnaEvent::GraphLoaded(result));
         }
         UrnaCommand::Benchmark { n_queries, k } => {
             let total = n_queries;
@@ -145,17 +172,17 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &Sen
                     // candidate budget convention.
                     let ef = ((k as usize) * 4).max(64);
                     let progress = |done: usize| {
-                        let _ = tx.send(UrnaEvent::BenchmarkProgress { done, total });
+                        tx(UrnaEvent::BenchmarkProgress { done, total });
                     };
                     db.benchmark(n_queries, k, ef, &progress)
                         .map_err(|e| e.to_string())
                 }
                 None => Err("no database open".to_string()),
             };
-            let _ = tx.send(UrnaEvent::BenchmarkDone(result));
+            tx(UrnaEvent::BenchmarkDone(result));
         }
         UrnaCommand::CheckEmbedder => {
-            let _ = tx.send(UrnaEvent::EmbedderStatus(
+            tx(UrnaEvent::EmbedderStatus(
                 crate::model::embed::check_embedder(),
             ));
         }
@@ -164,7 +191,7 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &Sen
                 Some(db) => db.validate().map_err(|e| e.to_string()),
                 None => Err("no database open".to_string()),
             };
-            let _ = tx.send(UrnaEvent::Validated(result));
+            tx(UrnaEvent::Validated(result));
         }
         UrnaCommand::ExportBlob { index, dest } => {
             let result = match backend.as_ref() {
@@ -174,14 +201,14 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &Sen
                     .map_err(|e| e.to_string()),
                 None => Err("no database open".to_string()),
             };
-            let _ = tx.send(UrnaEvent::BlobExported(result));
+            tx(UrnaEvent::BlobExported(result));
         }
         UrnaCommand::LoadFrame { ordinal, max_side } => {
             let result = match backend.as_ref() {
                 Some(db) => load_frame(db, ordinal, max_side),
                 None => Err("no database open".to_string()),
             };
-            let _ = tx.send(UrnaEvent::FrameLoaded { ordinal, result });
+            tx(UrnaEvent::FrameLoaded { ordinal, result });
         }
         UrnaCommand::Shutdown => unreachable!("handled by the worker loop"),
     }

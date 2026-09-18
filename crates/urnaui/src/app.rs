@@ -27,10 +27,13 @@ use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::keyboard::{Key, NamedKey};
 use winit::window::{Window, WindowAttributes, WindowId};
 
-/// Sent by the async tasks on wasm; never constructed natively (desktop
-/// blocks on `GpuContext::new` inside `resumed`, and files open by path).
+/// Events from outside the winit loop: the worker thread's wake (native),
+/// and the async GPU / file-picker tasks on wasm.
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 pub(crate) enum UserEvent {
+    /// The backend worker queued a result: drain it and redraw. Sent
+    /// from the worker thread through the event-loop proxy.
+    WorkerWoke,
     GpuReady {
         gpu: GpuContext,
         text_system: TextSystem,
@@ -186,6 +189,11 @@ impl ApplicationHandler<UserEvent> for App {
 
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: UserEvent) {
         match event {
+            UserEvent::WorkerWoke => {
+                if self.view.poll_backend() {
+                    self.invalidate();
+                }
+            }
             #[cfg(target_arch = "wasm32")]
             UserEvent::FileLoaded { name, bytes } => {
                 self.view.file_picked(name, bytes);
@@ -417,6 +425,10 @@ pub fn run() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
     let event_loop = EventLoop::<UserEvent>::with_user_event().build().unwrap();
     let mut app = App::new();
+    let proxy = event_loop.create_proxy();
+    app.view.set_wake(Box::new(move || {
+        let _ = proxy.send_event(UserEvent::WorkerWoke);
+    }));
     event_loop.run_app(&mut app).unwrap();
 }
 
@@ -456,6 +468,10 @@ pub fn android_main(android_app: winit::platform::android::activity::AndroidApp)
         .build()
         .expect("android event loop");
     let mut app = App::new();
+    let proxy = event_loop.create_proxy();
+    app.view.set_wake(Box::new(move || {
+        let _ = proxy.send_event(UserEvent::WorkerWoke);
+    }));
     if let Err(e) = event_loop.run_app(&mut app) {
         log::error!("event loop error: {e:?}");
     }
@@ -470,5 +486,9 @@ pub extern "C" fn urnaui_ios_main() {
         .build()
         .expect("ios event loop");
     let mut app = App::new();
+    let proxy = event_loop.create_proxy();
+    app.view.set_wake(Box::new(move || {
+        let _ = proxy.send_event(UserEvent::WorkerWoke);
+    }));
     let _ = event_loop.run_app(&mut app);
 }

@@ -150,6 +150,12 @@ impl Explorer {
         self.screen
     }
 
+    /// Wake callback for the platform event loop, fired by the worker
+    /// after every event it queues.
+    pub fn set_wake(&self, wake: Box<dyn Fn() + Send + 'static>) {
+        self.worker.set_wake(wake);
+    }
+
     pub fn resize(&mut self, width: f32, height: f32) {
         self.width = width;
         self.height = height;
