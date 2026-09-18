@@ -63,7 +63,12 @@ behavior.
 - cargo check --target wasm32-unknown-unknown -p showcase (cheapest
   cross-platform guard)
 
-script/gate runs the four in order and stops on the first red.
+script/gate runs the four in order and stops on the first red. it then
+runs the nestui leg (test, clippy, fmt via --manifest-path
+crates/nestui/Cargo.toml) when a sibling nest checkout exists at ../nest;
+absent that checkout the leg skips with a warning and CI
+(.github/workflows/ci.yml) is the verification. CI also runs an advisory
+typos job (non-blocking; the repo is bilingual english/portuguese).
 
 ## running
 
@@ -72,6 +77,15 @@ script/gate runs the four in order and stops on the first red.
   [path]` (git client), `cargo run -p prime` (particle swarm),
   `cargo run -p engine --example <name>` (any
   crates/engine/examples/<name>/main.rs)
+- nestui (.nest explorer): `cargo run --manifest-path
+  crates/nestui/Cargo.toml [file.nest]`. it is excluded from the root
+  workspace (native backend path-depends on ../nest), so `--workspace`
+  and `-p nestui` never reach it; always go through --manifest-path.
+  `script/web-nestui` serves its web target on 8081.
+- format pipelines: lot2monsters, svg2monster, monster_player (engine
+  examples, foreign format in -> .monster out) and the parser
+  (`cargo run -p parser --example transpile index.tsx module.sass
+  vars.sass`, or `--example preview`); full invocations in README.md.
 - one test: `cargo test -p <crate> <name>` (substring match, e.g.
   `cargo test -p rope movement`); a whole crate: `cargo test -p <crate>`
 - nextest (optional, faster):
