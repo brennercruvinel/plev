@@ -10,13 +10,13 @@
 //! edge-lit translucent pill) and all text centering is measured with one
 //! TextStyle per run for measurement and drawing.
 
+use comps::icons;
+use comps::prelude::{
+    EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, rounded_rect, rounded_rect_stroke,
+};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
-use engine::ui::icons;
-use engine::ui::widgets::{
-    EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, rounded_rect, rounded_rect_stroke,
-};
 use showcase::model::dock::{AVATARS, DockModel};
 
 use super::{group_label, panel, text, with_alpha};
@@ -204,7 +204,7 @@ impl DockSection {
         let dock = self.model.dock_rect(stage);
         let radius = dock.h / 2.0;
         // Real glass: deep shadow, frost, edge-lit translucent pill.
-        c.push(menu_shadow(dock, radius));
+        c.push(menu_shadow(dock, radius, theme));
         c.draw_backdrop_blur(
             dock.x,
             dock.y,

@@ -1,8 +1,8 @@
 //! Buttons section: every variant x size x intent x state.
 
+use comps::prelude::{Button, ButtonSize, ButtonVariant, EventResult, Rect, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::{Intent, Theme};
-use engine::ui::widgets::{Button, ButtonSize, ButtonVariant, EventResult, Rect, WidgetEvent};
 
 use super::group_label;
 
@@ -69,7 +69,7 @@ impl ButtonsSection {
     /// Per-button rects, parallel to `groups`. Rows wrap against
     /// `content.w`: a button that would overflow the content rect starts
     /// a new line instead of getting cropped by the window edge.
-    fn layout(&self, content: Rect) -> Vec<Vec<Rect>> {
+    fn layout(&self, content: Rect, theme: &Theme) -> Vec<Vec<Rect>> {
         let right = content.x + content.w;
         let mut all = Vec::with_capacity(self.groups.len());
         let mut y = content.y;
@@ -80,7 +80,7 @@ impl ButtonsSection {
             let mut x = content.x;
             let mut line_h: f32 = 0.0;
             for button in group {
-                let (w, h) = button.preferred_size();
+                let (w, h) = button.preferred_size(theme);
                 if x > content.x && x + w > right {
                     // Wrap: close the current line (centering buttons of
                     // differing heights on its baseline) and start fresh.
@@ -106,8 +106,8 @@ impl ButtonsSection {
     }
 
     /// Natural height of all button rows (page scrolling needs it).
-    pub fn content_height(&self, content: Rect) -> f32 {
-        self.layout(content)
+    pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
+        self.layout(content, theme)
             .iter()
             .flatten()
             .map(|r| r.y + r.h)
@@ -116,8 +116,13 @@ impl ButtonsSection {
             + GAP
     }
 
-    pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
-        let rects = self.layout(content);
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        content: Rect,
+        theme: &Theme,
+    ) -> EventResult {
+        let rects = self.layout(content, theme);
         let mut result = EventResult::IGNORED;
         for (group, row) in self.groups.iter_mut().zip(&rects) {
             for (button, rect) in group.1.iter_mut().zip(row) {
@@ -128,7 +133,7 @@ impl ButtonsSection {
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let rects = self.layout(content);
+        let rects = self.layout(content, theme);
         for ((label, group), row) in self.groups.iter().zip(&rects) {
             // The group label sits one LABEL_H above the first line (the
             // tallest button of a line carries no centering offset, so the
@@ -152,7 +157,7 @@ mod tests {
     fn buttons_wrap_rows_in_narrow_content() {
         let section = ButtonsSection::new();
         let content = Rect::new(288.0, 80.0, 500.0, 900.0);
-        let rects = section.layout(content);
+        let rects = section.layout(content, &Theme::hoff());
 
         let right = content.x + content.w;
         for (row, (label, _)) in rects.iter().zip(&section.groups) {
@@ -180,7 +185,7 @@ mod tests {
     fn buttons_keep_single_lines_in_wide_content() {
         let section = ButtonsSection::new();
         let content = Rect::new(288.0, 80.0, 1272.0, 900.0);
-        let rects = section.layout(content);
+        let rects = section.layout(content, &Theme::hoff());
         for row in &rects {
             assert_eq!(
                 row.iter().filter(|r| r.x == content.x).count(),

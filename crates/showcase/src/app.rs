@@ -14,11 +14,11 @@ use std::sync::Arc;
 
 use crate::view::ShowcaseView;
 use crate::{keys, renderer};
+use comps::prelude::WidgetEvent;
 use engine::animation::FrameClock;
 use engine::compositor::Compositor;
 use engine::gpu::GpuContext;
 use engine::text::TextSystem;
-use engine::ui::widgets::WidgetEvent;
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
 #[cfg(target_arch = "wasm32")]

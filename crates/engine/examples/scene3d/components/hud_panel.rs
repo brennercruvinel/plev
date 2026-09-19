@@ -45,22 +45,22 @@ impl HudPanelBuilder {
         // Header bar: dot + title | subtitle
         let left = div()
             .row()
-            .gap(SPACE_SM)
+            .gap(hud().space_sm)
             .align_items(Align::Center)
-            .child(div().w(6).h(6).bg(WHITE_30).rounded(3.0))
+            .child(div().w(6).h(6).bg(hud().white_30).rounded(3.0))
             .child(
                 text(&self.title)
                     .font_size(FONT_BASE)
                     .uppercase()
                     .tracking(0.2)
-                    .text_color(WHITE_70),
+                    .text_color(hud().white_70),
             );
 
         let mut header = div()
             .row()
             .px(16)
             .py(10)
-            .border_bottom(1.0, SURFACE_3)
+            .border_bottom(1.0, hud().surface_3)
             .align_items(Align::Center)
             .child(left);
 
@@ -72,12 +72,12 @@ impl HudPanelBuilder {
                 .child(
                     text(&self.subtitle)
                         .font_size(FONT_SM)
-                        .text_color(TEXT_MUTED),
+                        .text_color(hud().text_muted),
                 );
         }
 
         // Content area
-        let mut content = div().col().p(content_padding).gap(SPACE_SM).grow(1.0);
+        let mut content = div().col().p(content_padding).gap(hud().space_sm).grow(1.0);
         for child in self.children {
             content = content.child(child);
         }
@@ -85,9 +85,9 @@ impl HudPanelBuilder {
         // Assemble: border box → header → content
         div()
             .col()
-            .bg(SURFACE_1)
+            .bg(hud().surface_1)
             .border(1.0)
-            .border_color(SURFACE_3)
+            .border_color(hud().surface_3)
             .grow(1.0)
             .child(header)
             .child(content)

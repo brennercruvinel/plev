@@ -6,10 +6,10 @@
 //! (advances, wrapped heights) is a live `TextMeasurer` value, never an
 //! eyeballed constant.
 
+use comps::prelude::{EventResult, Rect, WidgetEvent};
 use engine::compositor::{Compositor, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{Theme, TypographyScale};
-use engine::ui::widgets::{EventResult, Rect, WidgetEvent};
 
 use super::{group_label, panel};
 

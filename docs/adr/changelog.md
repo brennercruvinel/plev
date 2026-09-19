@@ -9,6 +9,34 @@ status: living
 
 ## unreleased
 
+- comps, the design system crate (2026-09-18, adr
+  comps-one-design-system-crate): `engine::ui`, `text_input`, `overlay`,
+  `charts`, `GraphView` and the editor view moved out of the engine into
+  crates/comps (git mv), organized by category (core, recipe, icons,
+  action, form, nav, content, feedback, overlay, charts, graph, editor,
+  shell); the legacy `Ui` builder and `UiTheme` are gone. the theme grew
+  the scales the widgets were improvising (shape by role, control sizes,
+  container sizes, durations, breakpoints + sidebar mode, shadow stacks
+  by elevation, `text_active`/`text_default`/`tabs`/wash alphas,
+  `headline`/`mono`/`readout`, `Theme::hoff_light`); every widget reads
+  them, none restates a number; widgets that lay out from tokens take
+  `&Theme` on `handle_event`. new widgets: TextField (glass field over the
+  editing core), Badge, Avatar, Separator, Panel, Stat, CodeBlock,
+  Skeleton, Table (columns by weight, drop by priority), NavLink, Sidebar
+  (full / rail / drawer by breakpoint, pinned footer links), PanelHeader,
+  Breadcrumb (collapses), AppShell (sidebar + header + content rect +
+  menu button + safe area). modal and toast fit a phone width. the ide
+  lost its theme and components copies (2 160 lines) and draws from
+  comps over hoff / hoff light (status.rs is its only token); the
+  showcase is framed by AppShell, gained the Chrome section and its App
+  section's keyboard finally reaches the field (it sat behind an
+  allow(dead_code)); urnaui's Field is a TextField alias; the todo and
+  text_input demos were absorbed by the showcase sections, the editor
+  demo moved to comps, the other demo palettes read Theme::default().
+  `TextMeasurer::elide_path` came from the ide (and now drops several
+  middle segments, the old helper dropped one). matrix test: every widget
+  under 13 themes at phone and desktop widths. inventory and migration
+  record: docs/catalog.md. workspace tests 855 -> 1414.
 - urnaui, the .urna explorer (2026-09-18): nestui renamed to urnaui end to
   end (crate, modules, types, web/urnaui, script/web-urnaui, gate, ci)
   against hoffresearch/urna v0.4.0; the portable reader accepts both

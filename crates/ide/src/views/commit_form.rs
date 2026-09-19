@@ -1,24 +1,21 @@
-//! Inline commit form — HOFF Field recipe: input 52px, radius 12,
-//! bg rgba($n2,.05) with focus border rgba($n2,.25); value in base-2r at
-//! rgba($n2,.76), placeholder at .25. Buttons are the 44px glass pills.
+//! Inline commit form: a design-system [`TextField`] for the message and
+//! two pill buttons (Commit, Cancel) on the column surface.
 
-use crate::components::button::{ButtonKind, ButtonSize, draw as draw_button};
-use crate::theme::Theme;
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-
-const PAD: f32 = 12.0;
-const INPUT_H: f32 = 52.0;
-const BTN_H: f32 = 44.0;
-const FONT_SIZE: f32 = 14.0;
-const LINE_H: f32 = 14.0 * 1.4;
+use comps::action::{Button, ButtonVariant};
+use comps::form::{EditKey, TextField};
+use comps::prelude::{EventResult, Rect, WidgetEvent};
+use engine::compositor::{Compositor, SceneNode};
+use engine::theme::Theme;
 
 /// State for the inline commit form.
 pub struct CommitForm {
-    pub message: String,
     pub visible: bool,
-    commit_btn_rect: (f32, f32, f32, f32),
-    cancel_btn_rect: (f32, f32, f32, f32),
-    input_rect: (f32, f32, f32, f32),
+    field: TextField,
+    commit_btn: Button,
+    cancel_btn: Button,
+    commit_btn_rect: Rect,
+    cancel_btn_rect: Rect,
+    input_rect: Rect,
 }
 
 pub enum CommitFormAction {
@@ -30,21 +27,36 @@ pub enum CommitFormAction {
 impl CommitForm {
     pub fn new() -> Self {
         Self {
-            message: String::new(),
             visible: false,
-            commit_btn_rect: (0.0, 0.0, 0.0, 0.0),
-            cancel_btn_rect: (0.0, 0.0, 0.0, 0.0),
-            input_rect: (0.0, 0.0, 0.0, 0.0),
+            field: TextField::new("Commit message..."),
+            commit_btn: Button::new("Commit"),
+            cancel_btn: Button::new("Cancel").variant(ButtonVariant::Ghost),
+            commit_btn_rect: Rect::default(),
+            cancel_btn_rect: Rect::default(),
+            input_rect: Rect::default(),
         }
+    }
+
+    pub fn message(&self) -> &str {
+        self.field.text()
+    }
+
+    /// The message, leaving the field empty.
+    pub fn take_message(&mut self) -> String {
+        let message = self.field.text().to_string();
+        self.field.set_text("");
+        message
     }
 
     pub fn show(&mut self) {
         self.visible = true;
-        self.message.clear();
+        self.field.set_text("");
+        self.field.focus();
     }
 
     pub fn hide(&mut self) {
         self.visible = false;
+        self.field.unfocus();
     }
 
     /// Hit-test a click. Returns the action.
@@ -52,30 +64,51 @@ impl CommitForm {
         if !self.visible {
             return CommitFormAction::None;
         }
-
-        let (bx, by, bw, bh) = self.commit_btn_rect;
-        if cx >= bx && cx <= bx + bw && cy >= by && cy <= by + bh {
+        if self.commit_btn_rect.contains(cx, cy) && !self.commit_btn.disabled {
             return CommitFormAction::Commit;
         }
-
-        let (bx, by, bw, bh) = self.cancel_btn_rect;
-        if cx >= bx && cx <= bx + bw && cy >= by && cy <= by + bh {
+        if self.cancel_btn_rect.contains(cx, cy) {
             return CommitFormAction::Cancel;
         }
-
         CommitFormAction::None
+    }
+
+    /// Route a pointer event to the field and the buttons (hover, caret).
+    pub fn handle_event(&mut self, event: &WidgetEvent, theme: &Theme) -> EventResult {
+        if !self.visible {
+            return EventResult::IGNORED;
+        }
+        let mut r = self.field.handle_event(event, self.input_rect, theme);
+        r = r.merge(self.commit_btn.handle_event(event, self.commit_btn_rect));
+        r.merge(self.cancel_btn.handle_event(event, self.cancel_btn_rect))
     }
 
     pub fn append_char(&mut self, c: char) {
         if self.visible {
-            self.message.push(c);
+            self.field.focus();
+            self.field.insert(&c.to_string());
         }
     }
 
     pub fn backspace(&mut self) {
         if self.visible {
-            self.message.pop();
+            self.field.focus();
+            self.field.edit(EditKey::Backspace);
         }
+    }
+
+    /// Advance the caret blink; `true` while the form wants frames.
+    pub fn tick(&mut self, dt: f32) -> bool {
+        self.visible && self.field.tick(dt)
+    }
+
+    /// Form height for a theme (0 when hidden).
+    pub fn height(&self, theme: &Theme) -> f32 {
+        if !self.visible {
+            return 0.0;
+        }
+        let pad = theme.spacing.md;
+        pad + TextField::height(theme) + pad + self.commit_btn.size.height(theme) + pad
     }
 
     /// Returns the height consumed by the form (0 if hidden).
@@ -90,8 +123,8 @@ impl CommitForm {
         if !self.visible {
             return 0.0;
         }
-
-        let total_h = PAD + INPUT_H + PAD + BTN_H + PAD;
+        let pad = theme.spacing.md;
+        let total_h = self.height(theme);
 
         // Column surface behind the form (same as the Changes column).
         compositor.push(SceneNode::Rect {
@@ -99,72 +132,28 @@ impl CommitForm {
             y,
             w,
             h: total_h,
-            color: theme.bg_sidebar.to_array(),
+            color: theme.colors.surface.0,
         });
 
-        // Field — 52px, radius 12, bg rgba($n2,.05); the active form shows
-        // the focus border rgba($n2,.25).
-        let input_x = x + PAD;
-        let input_y = y + PAD;
-        let input_w = w - PAD * 2.0;
-        self.input_rect = (input_x, input_y, input_w, INPUT_H);
+        self.input_rect = Rect::new(x + pad, y + pad, w - pad * 2.0, TextField::height(theme));
+        self.field.render(compositor, self.input_rect, theme);
 
-        compositor.push(SceneNode::RoundedRect {
-            x: input_x,
-            y: input_y,
-            w: input_w,
-            h: INPUT_H,
-            color: theme.field_bg.to_array(),
-            corner_radius: theme.radius_nav,
-            border_width: 1.5,
-            border_color: theme.field_focus_border.to_array(),
-        });
+        self.commit_btn.disabled = self.field.is_empty();
+        let btn_y = self.input_rect.y + self.input_rect.h + pad;
+        let (cw, ch) = self.commit_btn.preferred_size(theme);
+        self.commit_btn_rect = Rect::new(x + pad, btn_y, cw, ch);
+        self.commit_btn
+            .render(compositor, self.commit_btn_rect, theme);
 
-        // Message text or placeholder — base-2r .76 / placeholder .25.
-        let display_text = if self.message.is_empty() {
-            "Commit message..."
-        } else {
-            &self.message
-        };
-        let text_color = if self.message.is_empty() {
-            theme.text_placeholder.to_array()
-        } else {
-            theme.text_active.to_array()
-        };
-        compositor.push(SceneNode::Text {
-            key: TextNodeKey::new(display_text, FONT_SIZE, LINE_H, Some(input_w - 36.0))
-                .with_weight(400),
-            x: input_x + 18.0,
-            y: input_y + (INPUT_H - LINE_H) / 2.0,
-            color: text_color,
-        });
-
-        // Buttons row — 44px glass pills.
-        let btn_y = input_y + INPUT_H + PAD;
-        self.commit_btn_rect = draw_button(
-            compositor,
-            theme,
-            input_x,
+        let (xw, xh) = self.cancel_btn.preferred_size(theme);
+        self.cancel_btn_rect = Rect::new(
+            self.commit_btn_rect.right() + theme.spacing.sm,
             btn_y,
-            "Commit",
-            ButtonKind::Glass,
-            ButtonSize::Md,
-            false,
-            self.message.is_empty(),
+            xw,
+            xh,
         );
-
-        let cancel_x = input_x + self.commit_btn_rect.2 + 8.0;
-        self.cancel_btn_rect = draw_button(
-            compositor,
-            theme,
-            cancel_x,
-            btn_y,
-            "Cancel",
-            ButtonKind::Ghost,
-            ButtonSize::Md,
-            false,
-            false,
-        );
+        self.cancel_btn
+            .render(compositor, self.cancel_btn_rect, theme);
 
         total_h
     }

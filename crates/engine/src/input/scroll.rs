@@ -77,7 +77,9 @@ impl ScrollState {
         self.offset / max
     }
 
-    pub(crate) fn max_offset(&self) -> f32 {
+    /// Largest offset the content allows (content minus viewport, never
+    /// negative). The scrollbar widget maps thumb drags through it.
+    pub fn max_offset(&self) -> f32 {
         (self.content_height - self.viewport_height).max(0.0)
     }
 

@@ -1,6 +1,6 @@
 // Rendering: scene construction and GPU submission for the mobile input demo.
 
-use crate::palette::BG;
+use crate::palette::pal;
 use crate::state::{MobileInputApp, State};
 
 impl MobileInputApp {
@@ -142,7 +142,8 @@ impl MobileInputApp {
                     ops: engine::wgpu::Operations {
                         load: engine::wgpu::LoadOp::Clear({
                             let [lr, lg, lb, la] =
-                                engine::color::Color::rgb(BG[0], BG[1], BG[2]).to_linear_array();
+                                engine::color::Color::rgb(pal().bg[0], pal().bg[1], pal().bg[2])
+                                    .to_linear_array();
                             engine::wgpu::Color {
                                 r: lr as f64,
                                 g: lg as f64,

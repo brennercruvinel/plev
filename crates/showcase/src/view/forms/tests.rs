@@ -19,7 +19,7 @@ fn forms_columns_stack_in_narrow_content_without_overflow() {
     let theme = Theme::hoff();
     let section = FormsSection::new(&theme);
     let content = Rect::new(288.0, 80.0, 600.0, 700.0);
-    let layout = section.layout(content);
+    let layout = section.layout(content, &theme);
 
     // Column B starts at the left edge, below column A.
     assert_eq!(layout.sliders[0].x, content.x, "column B must stack left");
@@ -45,7 +45,7 @@ fn forms_columns_spread_in_wide_content() {
     let theme = Theme::hoff();
     let section = FormsSection::new(&theme);
     let content = Rect::new(288.0, 80.0, 1272.0, 700.0);
-    let layout = section.layout(content);
+    let layout = section.layout(content, &theme);
 
     // Two real columns, side by side.
     assert!(
@@ -77,8 +77,8 @@ fn forms_tabs_keep_every_label_folgado() {
     let section = FormsSection::new(&theme);
     // A representative content rect (matches the page layout origin).
     let content = Rect::new(288.0, 80.0, 760.0, 700.0);
-    let layout = section.layout(content);
-    let rects = section.tabs.item_rects(layout.tabs);
+    let layout = section.layout(content, &theme);
+    let rects = section.tabs.item_rects(layout.tabs, &theme);
     let style = TypographyScale::hoff().base_2sm();
 
     assert_eq!(rects.len(), section.tabs.labels.len());
@@ -178,12 +178,12 @@ fn tab_cycles_fields_then_widgets_and_wraps() {
 fn click_focuses_field_and_places_caret() {
     let theme = Theme::hoff();
     let mut s = FormsSection::new(&theme);
-    let layout = s.layout(content());
+    let layout = s.layout(content(), &theme);
     let field = layout.fields[1];
 
     // Click the empty second field: focus + caret at 0.
     let (cx, cy) = field.center();
-    let r = s.handle_event(&WidgetEvent::MouseDown { x: cx, y: cy }, content());
+    let r = s.handle_event(&WidgetEvent::MouseDown { x: cx, y: cy }, content(), &theme);
     assert!(r.changed);
     assert_eq!(s.focus_index(), Some(1));
 
@@ -191,8 +191,9 @@ fn click_focuses_field_and_places_caret() {
     // (8px inner padding before the text).
     assert!(s.handle_text("Brenner"));
     assert_eq!(s.fields.value(1), "Brenner");
-    let x = field.x + 8.0 + TextMeasurer::cursor_x("Brenner", fields::FIELD_FONT, 4);
-    s.handle_event(&WidgetEvent::MouseDown { x, y: cy }, content());
+    let style = comps::form::TextField::text_style(&theme);
+    let x = field.x + theme.spacing.md + TextMeasurer::cursor_x_styled("Brenner", &style, None, 4);
+    s.handle_event(&WidgetEvent::MouseDown { x, y: cy }, content(), &theme);
     assert_eq!(s.fields.cursor(1), 4);
 
     // A click outside every field blurs the section but is not swallowed.
@@ -202,6 +203,7 @@ fn click_focuses_field_and_places_caret() {
             y: content().y + content().h - 1.0,
         },
         content(),
+        &theme,
     );
     assert_eq!(s.focus_index(), None);
     assert!(r.changed);
@@ -271,7 +273,7 @@ fn scene_shows_typed_value_and_live_preview() {
 fn focus_ring_tracks_focus_through_the_scene() {
     let theme = Theme::hoff();
     let mut s = FormsSection::new(&theme);
-    let layout = s.layout(content());
+    let layout = s.layout(content(), &theme);
 
     assert!(
         ring_positions(&scene_nodes(&s, content())).is_empty(),
@@ -298,7 +300,7 @@ fn focus_ring_tracks_focus_through_the_scene() {
 /// blink) and the view-level shortcuts stay out of the buffer's way.
 #[test]
 fn focused_field_animates_and_captures_view_shortcuts() {
-    use super::super::{Section, ShowcaseView};
+    use super::super::ShowcaseView;
 
     let theme = Theme::hoff();
     let mut s = FormsSection::new(&theme);
@@ -307,7 +309,7 @@ fn focused_field_animates_and_captures_view_shortcuts() {
     assert!(s.tick(0.016), "blink needs frames while focused");
 
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    view.section = Section::Forms;
+    view.jump_to_section("forms");
     assert!(view.handle_key("t"), "shortcut consumed (theme toggles)");
     assert_eq!(view.theme_name, "dark");
     view.forms.handle_edit_key(EditKey::Tab);

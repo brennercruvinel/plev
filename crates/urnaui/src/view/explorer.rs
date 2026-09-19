@@ -12,10 +12,10 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use comps::overlay::OverlayManager;
+use comps::prelude::{Button, EventResult, Rect, Tabs, ToastManager, WidgetEvent};
 use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::overlay::OverlayManager;
 use engine::theme::{Intent, Theme};
-use engine::ui::widgets::{Button, EventResult, Rect, Tabs, ToastManager, WidgetEvent};
 
 use crate::model::Worker;
 #[cfg(not(target_arch = "wasm32"))]
@@ -80,7 +80,7 @@ pub struct Explorer {
     ffmpeg: Option<bool>,
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     clipboard: engine::clipboard::SystemClipboard,
-    empty_state: engine::ui::widgets::EmptyState,
+    empty_state: comps::prelude::EmptyState,
     open: OpenScreen,
     overview: OverviewScreen,
     search: SearchScreen,
@@ -91,7 +91,7 @@ pub struct Explorer {
 }
 
 impl Explorer {
-    pub fn new(theme: &Theme) -> Self {
+    pub fn new(_theme: &Theme) -> Self {
         #[cfg(not(target_arch = "wasm32"))]
         let recents_path = recents::default_path();
         #[cfg(not(target_arch = "wasm32"))]
@@ -129,16 +129,16 @@ impl Explorer {
             ffmpeg: None,
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             clipboard: engine::clipboard::SystemClipboard::new(),
-            empty_state: engine::ui::widgets::EmptyState::new(
+            empty_state: comps::prelude::EmptyState::new(
                 "no database open yet",
                 "Open a .urna file from the Open tab to explore it here.",
             )
             .icon("folder-open")
             .cta(Button::new("Open a database").icon("folder-open")),
-            open: OpenScreen::new(theme),
+            open: OpenScreen::new(),
             overview: OverviewScreen::new(),
-            search: SearchScreen::new(theme),
-            chunks_screen: ChunksScreen::new(theme),
+            search: SearchScreen::new(),
+            chunks_screen: ChunksScreen::new(),
             graph_screen: GraphScreen::new(),
             stats_screen: StatsScreen::new(),
             layers: None,
@@ -644,14 +644,17 @@ impl Explorer {
     ) -> bool {
         // An open select dropdown is exclusive (clicks elsewhere close it).
         if self.screen == Screen::Search && self.search.select_is_open() {
-            let r =
-                self.search
-                    .route_select(event, self.content_rect(), self.search.result.is_some());
+            let r = self.search.route_select(
+                event,
+                self.content_rect(),
+                self.search.result.is_some(),
+                theme,
+            );
             return r.changed || r.handled;
         }
 
         // Tab strip.
-        let r = self.tabs.handle_event(event, self.tabs_rect());
+        let r = self.tabs.handle_event(event, self.tabs_rect(), theme);
         if r.clicked {
             self.switch_screen(Screen::TABS[self.tabs.active]);
             return true;
@@ -663,7 +666,7 @@ impl Explorer {
             Screen::Open => {
                 let recents = self.recents_slice().to_vec();
                 self.open
-                    .handle_event(event, content, &recents, self.opening)
+                    .handle_event(event, content, &recents, self.opening, theme)
             }
             Screen::Overview => match &self.db {
                 Some(db) => {
@@ -672,15 +675,15 @@ impl Explorer {
                         validation: self.validation.as_ref(),
                         validating: self.validating,
                     };
-                    self.overview.handle_event(event, content, &ctx)
+                    self.overview.handle_event(event, content, &ctx, theme)
                 }
-                None => self.handle_empty_cta(event, content),
+                None => self.handle_empty_cta(event, content, theme),
             },
             Screen::Search => {
                 if self.db.is_some() {
-                    self.search.handle_event(event, content, true)
+                    self.search.handle_event(event, content, true, theme)
                 } else {
-                    self.handle_empty_cta(event, content)
+                    self.handle_empty_cta(event, content, theme)
                 }
             }
             Screen::Chunks => match &self.db {
@@ -696,9 +699,9 @@ impl Explorer {
                         content_hash: &db.inspect.content_hash,
                         loading: self.chunks_loading,
                     };
-                    self.chunks_screen.handle_event(event, content, &ctx)
+                    self.chunks_screen.handle_event(event, content, &ctx, theme)
                 }
-                None => self.handle_empty_cta(event, content),
+                None => self.handle_empty_cta(event, content, theme),
             },
             Screen::Graph => match &self.db {
                 Some(db) if db.has_graph => {
@@ -722,6 +725,7 @@ impl Explorer {
                             chunks: self.chunks.as_ref(),
                             text_of: &text_of,
                         },
+                        theme,
                     )
                 }
                 // No graph section: inert empty state (the message renders
@@ -729,8 +733,8 @@ impl Explorer {
                 _ => (EventResult::IGNORED, Action::None),
             },
             Screen::Stats => match &self.db {
-                Some(_) => self.stats_screen.handle_event(event, content, true),
-                None => self.handle_empty_cta(event, content),
+                Some(_) => self.stats_screen.handle_event(event, content, true, theme),
+                None => self.handle_empty_cta(event, content, theme),
             },
         };
         result = result.merge(r);
@@ -760,8 +764,13 @@ impl Explorer {
 
     /// The empty-state CTA (screens without an open db): the engine
     /// `EmptyState` centers itself; its CTA jumps to Open.
-    fn handle_empty_cta(&mut self, event: &WidgetEvent, content: Rect) -> (EventResult, Action) {
-        let r = self.empty_state.handle_event(event, content);
+    fn handle_empty_cta(
+        &mut self,
+        event: &WidgetEvent,
+        content: Rect,
+        theme: &Theme,
+    ) -> (EventResult, Action) {
+        let r = self.empty_state.handle_event(event, content, theme);
         if r.clicked {
             return (r, Action::Goto(Screen::Open));
         }
@@ -1018,7 +1027,7 @@ mod tests {
 
     /// Center of tab `i`'s segment in the strip.
     fn tab_center(ex: &Explorer, i: usize) -> (f32, f32) {
-        ex.tabs.item_rects(ex.tabs_rect())[i].center()
+        ex.tabs.item_rects(ex.tabs_rect(), &Theme::hoff())[i].center()
     }
 
     fn click(ex: &mut Explorer, toasts: &mut ToastManager, theme: &Theme, x: f32, y: f32) {
@@ -1129,7 +1138,7 @@ mod tests {
         let (mut ex, mut toasts, theme) = harness();
         ex.switch_screen(Screen::Overview);
         assert!(ex.db.is_none());
-        let cta = ex.empty_state.cta_rect(ex.content_rect()).unwrap();
+        let cta = ex.empty_state.cta_rect(ex.content_rect(), &theme).unwrap();
         let (x, y) = cta.center();
         click(&mut ex, &mut toasts, &theme, x, y);
         assert_eq!(ex.screen(), Screen::Open);

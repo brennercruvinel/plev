@@ -1,5 +1,5 @@
 //! App section: the canonical small-but-complete todo app over the tested
-//! domain model (showcase::model::todo). engine::text_input::TextInput owns
+//! domain model (showcase::model::todo). comps::form::text_input::TextInput owns
 //! editing, focus, blink and cursor byte mapping; rows pair the design
 //! system Checkbox with a strike-through whose width comes from
 //! TextMeasurer (never chars * factor); filters are HOFF glass pills; the
@@ -17,9 +17,10 @@ mod layout;
 #[cfg(test)]
 mod tests;
 
+use comps::form::TextField;
+use comps::prelude::{Checkbox, EventResult, Rect, WidgetEvent};
 use engine::input::scroll::ScrollState;
-use engine::text_input::TextInput;
-use engine::ui::widgets::{Checkbox, EventResult, Rect, WidgetEvent};
+use engine::theme::Theme;
 use showcase::model::todo::{Filter, TodoModel};
 
 use super::EditKey;
@@ -27,7 +28,7 @@ use layout::*;
 
 pub struct AppSection {
     model: TodoModel,
-    input: TextInput,
+    input: TextField,
     scroll: ScrollState,
     /// One retained Checkbox per visible row, in visible order (hover and
     /// press survive frames; `checked` is driven by the model).
@@ -53,15 +54,19 @@ impl AppSection {
         }
         Self {
             model,
-            input: TextInput::new()
-                .with_placeholder("What needs doing? Enter adds it.")
-                .with_font_size(INPUT_FONT),
+            input: TextField::new("What needs doing? Enter adds it."),
             scroll: ScrollState::new(),
             rows: Vec::new(),
             hover_row: None,
             hover_delete: None,
             hover_pill: None,
         }
+    }
+
+    /// The add field's rect for `content` (the chrome tests click it).
+    #[cfg(test)]
+    pub(crate) fn input_rect(&self, content: Rect, theme: &Theme) -> Rect {
+        compute(content, &self.counter_text(), theme).input
     }
 
     /// Natural height: the card fills the viewport; when the viewport is
@@ -96,24 +101,26 @@ impl AppSection {
         self.scroll.set_content(self.rows.len() as f32 * ROW_H);
     }
 
-    pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        content: Rect,
+        theme: &Theme,
+    ) -> EventResult {
         self.sync_rows();
-        let l = compute(content, &self.counter_text());
+        let l = compute(content, &self.counter_text(), theme);
         self.sync_scroll(&l);
         let mut r = EventResult::IGNORED;
 
-        // Field focus: a click inside places the cursor (TextInput maps the
-        // local x to a byte via real shaping); a click anywhere else blurs
-        // without consuming the event.
-        if let WidgetEvent::MouseDown { x, y } = *event {
-            if l.input.contains(x, y) {
-                self.input.handle_click(x - l.input.x - INPUT_PAD);
+        // Field focus: a click inside places the cursor (the field maps
+        // the local x to a byte via real shaping); a click anywhere else
+        // blurs without consuming the event.
+        if let WidgetEvent::MouseDown { .. } = *event {
+            let fr = self.input.handle_event(event, l.input, theme);
+            if fr.clicked {
                 return EventResult::changed();
             }
-            if self.input.focused {
-                self.input.unfocus();
-                r.changed = true;
-            }
+            r.changed |= fr.changed;
         }
 
         // Filter pills.
@@ -204,15 +211,14 @@ impl AppSection {
     /// Printable characters (Key::Character / Space) forwarded by the
     /// chrome before its own hotkeys, mirroring forms::handle_text: while
     /// the add field is focused, "t" types instead of switching themes.
-    #[allow(dead_code)] // chrome wiring is the integration pass; exercised by the tests below
     pub fn handle_text(&mut self, s: &str) -> bool {
-        if !self.input.focused {
+        if !self.input.is_focused() {
             return false;
         }
         let mut chars = s.chars();
         match (chars.next(), chars.next()) {
             (Some(c), None) if !c.is_control() => {
-                self.input.handle_char(c);
+                self.input.insert(&c.to_string());
                 true
             }
             _ => false,
@@ -221,33 +227,28 @@ impl AppSection {
 
     /// Editing keys, same route as forms::handle_edit_key. Tab is left to
     /// the chrome; Enter has its own hook below.
-    #[allow(dead_code)] // chrome wiring is the integration pass; exercised by the tests below
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
-        if !self.input.focused {
+        if !self.input.is_focused() {
             return false;
         }
         match key {
-            EditKey::Backspace => self.input.handle_backspace(),
-            EditKey::Delete => self.input.handle_delete(),
-            EditKey::Left => self.input.handle_left(),
-            EditKey::Right => self.input.handle_right(),
-            EditKey::Home => self.input.handle_home(),
-            EditKey::End => self.input.handle_end(),
             EditKey::Tab => return false,
+            other => {
+                self.input.edit(other.into());
+            }
         }
         true
     }
 
     /// Enter adds the trimmed field text as a todo, clears the field and
     /// reveals the newest row. Consumed (even when empty) while focused.
-    #[allow(dead_code)] // chrome wiring is the integration pass; exercised by the tests below
     pub fn handle_enter(&mut self) -> bool {
-        if !self.input.focused {
+        if !self.input.is_focused() {
             return false;
         }
-        if self.model.add(self.input.buffer.text()).is_some() {
-            self.input.buffer.set_text("");
-            self.input.reset_blink();
+        if self.model.add(self.input.text()).is_some() {
+            self.input.set_text("");
+            self.input.input.reset_blink();
             self.scroll
                 .set_content(self.model.visible_items().len() as f32 * ROW_H);
             self.scroll.scroll_to(f32::MAX);
@@ -257,9 +258,8 @@ impl AppSection {
 
     /// Escape blurs the field; mirrors forms::handle_escape (the chrome
     /// asks the section before popping overlays or quitting).
-    #[allow(dead_code)] // chrome wiring is the integration pass; exercised by the tests below
     pub fn handle_escape(&mut self) -> bool {
-        if self.input.focused {
+        if self.input.is_focused() {
             self.input.unfocus();
             return true;
         }
@@ -268,10 +268,9 @@ impl AppSection {
 
     /// Advance item tweens and the cursor blink. Returns true while frames
     /// are needed (tweens live, or the focused cursor must keep blinking).
-    #[allow(dead_code)] // chrome wiring is the integration pass; exercised by the tests below
     pub fn tick(&mut self, dt: f32) -> bool {
         let animating = self.model.update(dt);
         self.input.tick(dt);
-        animating || self.input.focused
+        animating || self.input.is_focused()
     }
 }

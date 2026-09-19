@@ -5,7 +5,6 @@
 //! The Counter Lifecycle increments a u64 every frame via on_update().
 //! Its render() produces SceneNodes for the counter display card.
 //! The app adds header, info card, and footer around it.
-#![allow(dead_code)]
 
 mod lifecycle;
 mod render;

@@ -1,10 +1,10 @@
 //! Cards section: the HOFF card deck — every `CardVariant` with sample
 //! data, laid out as a content-driven masonry grid.
 
+use comps::prelude::{Card, CardListRow, CardVariant, EventResult, Rect, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::gpu::image::{ImageHandle, load_image_rgba};
 use engine::theme::Theme;
-use engine::ui::widgets::{Card, CardListRow, CardVariant, EventResult, Rect, WidgetEvent};
 
 use super::group_label;
 
@@ -142,7 +142,7 @@ impl CardsSection {
     /// Content-driven masonry: as many columns as `content.w` affords (at
     /// `CARD_MIN_W` each), stretched to fill the row; each card lands in
     /// the currently shorter column.
-    fn layout(&self, content: Rect) -> Vec<Rect> {
+    fn layout(&self, content: Rect, theme: &Theme) -> Vec<Rect> {
         let cols = (((content.w + GAP) / (CARD_MIN_W + GAP)).floor() as usize).max(1);
         let col_w = ((content.w - (cols as f32 - 1.0) * GAP) / cols as f32).min(CARD_MAX_W);
         let mut col_y = vec![content.y; cols];
@@ -152,8 +152,8 @@ impl CardsSection {
                 // Height measured at the stretched width (CTA bodies
                 // re-wrap their text against it).
                 let mut sized = card.clone();
-                sized.width = col_w;
-                let (_, h) = sized.preferred_size();
+                sized.width = Some(col_w);
+                let (_, h) = sized.preferred_size(theme);
                 let col = (0..cols)
                     .min_by(|a, b| col_y[*a].total_cmp(&col_y[*b]))
                     .unwrap_or(0);
@@ -170,8 +170,8 @@ impl CardsSection {
     }
 
     /// Natural height of the laid-out deck (page scrolling needs it).
-    pub fn content_height(&self, content: Rect) -> f32 {
-        self.layout(content)
+    pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
+        self.layout(content, theme)
             .iter()
             .map(|r| r.y + r.h)
             .fold(content.y, f32::max)
@@ -179,8 +179,13 @@ impl CardsSection {
             + GAP
     }
 
-    pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
-        let rects = self.layout(content);
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        content: Rect,
+        theme: &Theme,
+    ) -> EventResult {
+        let rects = self.layout(content, theme);
         let mut result = EventResult::IGNORED;
         for ((_, card), rect) in self.cards.iter_mut().zip(rects) {
             result = result.merge(card.handle_event(event, rect));
@@ -189,7 +194,7 @@ impl CardsSection {
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let rects = self.layout(content);
+        let rects = self.layout(content, theme);
         for ((label, card), rect) in self.cards.iter().zip(rects) {
             group_label(c, label, rect.x, rect.y - LABEL_H + 2.0, theme);
             card.render(c, rect, theme);
@@ -215,7 +220,7 @@ mod tests {
     fn cards_redistribute_into_three_plus_columns_in_wide_content() {
         let section = CardsSection::new();
         let content = Rect::new(288.0, 80.0, 1272.0, 700.0);
-        let rects = section.layout(content);
+        let rects = section.layout(content, &Theme::hoff());
 
         let cols = column_xs(&rects);
         assert!(
@@ -240,7 +245,7 @@ mod tests {
     fn cards_collapse_to_one_stretched_column_in_narrow_content() {
         let section = CardsSection::new();
         let content = Rect::new(288.0, 80.0, 400.0, 700.0);
-        let rects = section.layout(content);
+        let rects = section.layout(content, &Theme::hoff());
 
         assert_eq!(column_xs(&rects).len(), 1);
         assert!(rects.iter().all(|r| r.x == content.x));

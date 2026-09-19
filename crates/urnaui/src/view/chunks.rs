@@ -9,15 +9,15 @@
 //! widget state and the filter's index list only. Nothing here re-reads
 //! the file.
 
+use comps::prelude::{
+    EventResult, IconButton, Rect, Scrollbar, Spinner, SpinnerSize, VirtualList, WidgetEvent,
+};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
-use engine::ui::widgets::{
-    EventResult, IconButton, Rect, Scrollbar, Spinner, SpinnerSize, VirtualList, WidgetEvent,
-};
 
-use super::field::{FIELD_H, Field};
+use super::field::{Field, field_h};
 use super::search::render_frame_box;
 use super::{
     Action, ChunkLookup, EditKey, group_label, panel, parse_citation, short_id, span_label, text,
@@ -58,10 +58,10 @@ pub struct ChunksScreen {
 }
 
 impl ChunksScreen {
-    pub fn new(theme: &Theme) -> Self {
-        let ghost = || IconButton::new("copy").variant(engine::ui::widgets::ButtonVariant::Ghost);
+    pub fn new() -> Self {
+        let ghost = || IconButton::new("copy").variant(comps::prelude::ButtonVariant::Ghost);
         Self {
-            filter: Field::new("filter by text, chunk id or urna:// citation", theme),
+            filter: Field::new("filter by text, chunk id or urna:// citation"),
             filtered: None,
             filter_key: String::new(),
             filter_note: String::new(),
@@ -202,8 +202,8 @@ impl ChunksScreen {
     /// Field rect, list rect + detail rect (when a chunk is selected and
     /// wide enough; below ~720px of content width the detail replaces the
     /// list).
-    fn layout(&self, content: Rect) -> Layout {
-        let field = Rect::new(content.x, content.y, content.w, FIELD_H);
+    fn layout(&self, content: Rect, theme: &Theme) -> Layout {
+        let field = Rect::new(content.x, content.y, content.w, field_h(theme));
         let note_y = field.y + field.h + 6.0;
         let body = Rect::new(
             content.x,
@@ -243,26 +243,26 @@ impl ChunksScreen {
         event: &WidgetEvent,
         content: Rect,
         ctx: &ChunksContext,
+        theme: &Theme,
     ) -> (EventResult, Action) {
         self.sync_filter(ctx);
         self.list
             .set_item_count(self.row_count(ctx.lookup.ids.len()));
-        let l = self.layout(content);
+        let l = self.layout(content, theme);
 
         // Filter field: click focuses; clicks elsewhere blur.
-        if let WidgetEvent::MouseDown { x, y } = *event {
-            if l.field.contains(x, y) {
-                self.filter.click(x - l.field.x);
+        if let WidgetEvent::MouseDown { .. } = *event {
+            let fr = self.filter.handle_event(event, l.field, theme);
+            if fr.clicked {
                 return (EventResult::changed(), Action::None);
-            }
-            if self.filter.input.focused {
-                self.filter.unfocus();
             }
         }
 
         // Buttons + scroll inside the detail panel.
         if let (Some(detail), Some(ordinal)) = (l.detail, self.selected_ordinal()) {
-            let r = self.copy_id.handle_event(event, self.copy_rect(detail, 0));
+            let r = self
+                .copy_id
+                .handle_event(event, self.copy_rect(detail, 0, theme));
             if r.clicked
                 && let Some(id) = ctx.lookup.ids.get(ordinal)
             {
@@ -276,7 +276,7 @@ impl ChunksScreen {
             }
             let r = self
                 .copy_citation
-                .handle_event(event, self.copy_rect(detail, 1));
+                .handle_event(event, self.copy_rect(detail, 1, theme));
             if r.clicked
                 && let Some(id) = ctx.lookup.ids.get(ordinal)
             {
@@ -304,7 +304,7 @@ impl ChunksScreen {
 
         // Selection change resets the detail scroll.
         let before = self.list.selected;
-        let r = self.list.handle_event(event, l.list);
+        let r = self.list.handle_event(event, l.list, theme);
         if self.list.selected != before {
             self.detail_scroll = ScrollState::new();
         }
@@ -321,8 +321,8 @@ impl ChunksScreen {
 
     /// Copy buttons stack at the top right of the detail: `slot` 0 is
     /// the chunk id, 1 the citation.
-    fn copy_rect(&self, detail: Rect, slot: usize) -> Rect {
-        let (w, h) = self.copy_id.preferred_size();
+    fn copy_rect(&self, detail: Rect, slot: usize, theme: &Theme) -> Rect {
+        let (w, h) = self.copy_id.preferred_size(theme);
         Rect::new(
             detail.x + detail.w - DETAIL_PAD - w,
             detail.y + DETAIL_PAD - 4.0 + slot as f32 * 26.0,
@@ -363,7 +363,7 @@ impl ChunksScreen {
         let total = ctx.lookup.ids.len();
         self.list.set_item_count(self.row_count(total));
         self.loading = ctx.loading;
-        let l = self.layout(content);
+        let l = self.layout(content, theme);
 
         self.filter.render(c, l.field, theme);
         let note = if !self.filter_note.is_empty() {
@@ -477,9 +477,10 @@ impl ChunksScreen {
             detail.y + DETAIL_PAD,
             theme,
         );
-        self.copy_id.render(c, self.copy_rect(detail, 0), theme);
+        self.copy_id
+            .render(c, self.copy_rect(detail, 0, theme), theme);
         self.copy_citation
-            .render(c, self.copy_rect(detail, 1), theme);
+            .render(c, self.copy_rect(detail, 1, theme), theme);
 
         let id = ctx
             .lookup
@@ -487,7 +488,7 @@ impl ChunksScreen {
             .get(ordinal)
             .map(String::as_str)
             .unwrap_or("");
-        let line_w = detail.w - DETAIL_PAD * 2.0 - self.copy_rect(detail, 0).w - 8.0;
+        let line_w = detail.w - DETAIL_PAD * 2.0 - self.copy_rect(detail, 0, theme).w - 8.0;
         let id_style = TextStyle::new(13.0).with_weight(500);
         let meta_style = TextStyle::new(12.0);
         let mut y = detail.y + DETAIL_PAD + 24.0;
@@ -660,7 +661,7 @@ mod tests {
 
     fn harness() -> (ChunksScreen, Theme) {
         let theme = Theme::hoff();
-        (ChunksScreen::new(&theme), theme)
+        (ChunksScreen::new(), theme)
     }
 
     #[test]
@@ -672,7 +673,7 @@ mod tests {
         let content = Rect::new(40.0, 128.0, 1200.0, 600.0);
 
         assert_eq!(screen.list.selected, None);
-        let list = screen.layout(content).list;
+        let list = screen.layout(content, &theme).list;
         let (r, _) = screen.handle_event(
             &WidgetEvent::MouseDown {
                 x: list.x + 20.0,
@@ -680,12 +681,13 @@ mod tests {
             },
             content,
             &ctx,
+            &theme,
         );
         assert!(r.clicked);
         assert_eq!(screen.selected_ordinal(), Some(0));
 
         // Wide: list + detail side by side.
-        let l = screen.layout(content);
+        let l = screen.layout(content, &theme);
         assert!(l.list.w > 0.0);
         assert!(l.detail.is_some());
 
@@ -695,10 +697,10 @@ mod tests {
 
     #[test]
     fn narrow_viewports_replace_the_list_with_the_detail() {
-        let (mut screen, _) = harness();
+        let (mut screen, theme) = harness();
         screen.list.selected = Some(1);
         let narrow = Rect::new(40.0, 128.0, 600.0, 400.0);
-        let l = screen.layout(narrow);
+        let l = screen.layout(narrow, &theme);
         assert_eq!(l.list.w, 0.0, "no room for both: the detail wins");
         assert_eq!(l.detail.map(|d| d.w), Some(narrow.w));
     }
@@ -708,14 +710,15 @@ mod tests {
         let fix = Fix::text();
         let lookup = fix.lookup();
         let ctx = ctx(&lookup, &fix);
-        let (mut screen, _) = harness();
+        let (mut screen, theme) = harness();
         screen.list.selected = Some(2);
         let content = Rect::new(40.0, 128.0, 1200.0, 600.0);
-        let detail = screen.layout(content).detail.unwrap();
+        let detail = screen.layout(content, &theme).detail.unwrap();
         for (slot, expect_prefix) in [(0, "sha256:"), (1, "urna://")] {
-            let (x, y) = screen.copy_rect(detail, slot).center();
-            screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, &ctx);
-            let (r, action) = screen.handle_event(&WidgetEvent::MouseUp { x, y }, content, &ctx);
+            let (x, y) = screen.copy_rect(detail, slot, &theme).center();
+            screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, &ctx, &theme);
+            let (r, action) =
+                screen.handle_event(&WidgetEvent::MouseUp { x, y }, content, &ctx, &theme);
             assert!(r.clicked);
             match action {
                 Action::Copy { text, .. } => {
@@ -735,27 +738,27 @@ mod tests {
         let (mut screen, _) = harness();
 
         // terms, case-insensitive, any order, all required
-        screen.filter.input.focused = true;
+        screen.filter.input.focus();
         screen.filter.insert("BETA");
         screen.sync_filter(&ctx);
         assert_eq!(screen.filtered, Some(vec![1]));
-        screen.filter.input.buffer.set_text("");
+        screen.filter.input.set_text("");
         screen.filter.insert("text chunk");
         screen.sync_filter(&ctx);
         assert_eq!(screen.filtered, Some(vec![0, 1, 2]));
-        screen.filter.input.buffer.set_text("");
+        screen.filter.input.set_text("");
         screen.filter.insert("chunk delta");
         screen.sync_filter(&ctx);
         assert_eq!(screen.filtered, Some(vec![]));
 
         // exact chunk id
-        screen.filter.input.buffer.set_text("");
+        screen.filter.input.set_text("");
         screen.filter.insert(&fix.db.chunk_ids[2]);
         screen.sync_filter(&ctx);
         assert_eq!(screen.filtered, Some(vec![2]));
 
         // citation with the file's content_hash
-        screen.filter.input.buffer.set_text("");
+        screen.filter.input.set_text("");
         screen.filter.insert(&format!(
             "urna://{}/{}",
             fix.db.inspect.content_hash, fix.db.chunk_ids[0]
@@ -764,7 +767,7 @@ mod tests {
         assert_eq!(screen.filtered, Some(vec![0]));
 
         // citation from another build
-        screen.filter.input.buffer.set_text("");
+        screen.filter.input.set_text("");
         screen.filter.insert(&format!(
             "urna://sha256:{}/{}",
             "9".repeat(64),
@@ -775,7 +778,7 @@ mod tests {
         assert!(screen.filter_note.contains("another build"));
 
         // cleared: everything again, selection reset
-        screen.filter.input.buffer.set_text("");
+        screen.filter.input.set_text("");
         screen.sync_filter(&ctx);
         assert_eq!(screen.filtered, None);
         assert_eq!(screen.selected_ordinal(), None);
@@ -787,7 +790,7 @@ mod tests {
         let lookup = fix.lookup();
         let ctx = ctx(&lookup, &fix);
         let (mut screen, _) = harness();
-        screen.filter.input.focused = true;
+        screen.filter.input.focus();
         screen.filter.insert("gamma");
         screen.sync_filter(&ctx);
         screen.list.selected = Some(0);

@@ -83,6 +83,28 @@ or testable, or must compile separately (proc-macro). short of that it stays
 a module. edition 2024, rust-version 1.85, both inherited from
 `[workspace.package]`; every crate is `publish = false` with a description.
 
+the ui boundary is fixed: `engine` renders and owns the tokens
+(`engine::theme`), `comps` owns every widget, recipe and the app shell, an
+app owns its screens and domain state. a widget never lands in an app, a
+number never lands in a widget (it becomes a token in
+crates/engine/src/theme/scales.rs with its spec value in tests_scales.rs),
+and a widget that lays out from tokens takes `&Theme` on `handle_event`
+too, so events and pixels share one geometry. no `#![allow(dead_code)]`
+at crate level to park unwired code: wire it or delete it (the showcase
+App section's keys sat behind that allow for a release; nobody could type
+in it).
+
+## tokens
+
+read, in order: `theme.colors` / `theme.glass` for color, `theme.shape` for
+radius by role, `theme.control` for control heights, paddings, icon sizes,
+rims and toggle geometry, `theme.size` for container widths,
+`theme.spacing` for gaps, `theme.duration` for timed transitions,
+`theme.layout` for breakpoints and gutters, `theme.shadows` by
+`Elevation`, `theme.typography` for text styles. the only literals a
+widget keeps are platform timings (blink, tooltip delay) and pure chart
+geometry, each as a named const with the reason in its doc comment.
+
 ## docs
 
 diataxis style. all lowercase except acronyms. no emoji. no em-dash (use a

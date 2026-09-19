@@ -13,7 +13,7 @@ pub fn build_header(comp: &mut engine::compositor::Compositor, w: f32, margin: f
             y: 0.0,
             w,
             h: header_h,
-            color: HEADER_BG,
+            color: pal().header_bg,
         },
     );
     comp.push_to_layer(
@@ -23,7 +23,7 @@ pub fn build_header(comp: &mut engine::compositor::Compositor, w: f32, margin: f
             y: header_h - 1.0,
             w,
             h: 1.0,
-            color: DIVIDER,
+            color: pal().divider,
         },
     );
     comp.push_to_layer(
@@ -36,7 +36,7 @@ pub fn build_header(comp: &mut engine::compositor::Compositor, w: f32, margin: f
             ),
             x: margin,
             y: 16.0,
-            color: TEXT,
+            color: pal().text,
         },
     );
     comp.push_to_layer(
@@ -49,7 +49,7 @@ pub fn build_header(comp: &mut engine::compositor::Compositor, w: f32, margin: f
             ),
             x: margin,
             y: 48.0,
-            color: TEXT_DIM,
+            color: pal().text_dim,
         },
     );
 }
@@ -68,7 +68,7 @@ pub fn build_info_card(comp: &mut engine::compositor::Compositor, _w: f32, margi
             y: card_y,
             w: card_w,
             h: card_h,
-            color: SURFACE,
+            color: pal().surface,
         },
     );
     comp.push_to_layer(
@@ -78,7 +78,7 @@ pub fn build_info_card(comp: &mut engine::compositor::Compositor, _w: f32, margi
             y: card_y,
             w: card_w - 2.0,
             h: 2.0,
-            color: GREEN,
+            color: pal().green,
         },
     );
     comp.push_to_layer(
@@ -91,7 +91,7 @@ pub fn build_info_card(comp: &mut engine::compositor::Compositor, _w: f32, margi
             ),
             x: card_x + 16.0,
             y: card_y + 14.0,
-            color: GREEN,
+            color: pal().green,
         },
     );
     comp.push_to_layer(
@@ -101,7 +101,7 @@ pub fn build_info_card(comp: &mut engine::compositor::Compositor, _w: f32, margi
             y: card_y + 36.0,
             w: card_w - 32.0,
             h: 1.0,
-            color: DIVIDER,
+            color: pal().divider,
         },
     );
 
@@ -110,9 +110,15 @@ pub fn build_info_card(comp: &mut engine::compositor::Compositor, _w: f32, margi
     let mut iy = card_y + 50.0;
 
     let layer_lines: &[(&str, [f32; 4])] = &[
-        ("Layer -1 (bg): static dot grid, z_order=-1", TEXT_MID),
-        ("Layer  0 (default): content + UI, z_order=0", TEXT_MID),
-        ("Layer  1 (fg): animated, z_order=1, opacity=80%", TEXT_MID),
+        ("Layer -1 (bg): static dot grid, z_order=-1", pal().text_mid),
+        (
+            "Layer  0 (default): content + UI, z_order=0",
+            pal().text_mid,
+        ),
+        (
+            "Layer  1 (fg): animated, z_order=1, opacity=80%",
+            pal().text_mid,
+        ),
     ];
 
     for (line, color) in layer_lines {
@@ -123,7 +129,7 @@ pub fn build_info_card(comp: &mut engine::compositor::Compositor, _w: f32, margi
                 y: iy + 4.0,
                 w: 4.0,
                 h: 4.0,
-                color: GREEN,
+                color: pal().green,
             },
         );
         comp.push_to_layer(
@@ -149,7 +155,7 @@ pub fn build_info_card(comp: &mut engine::compositor::Compositor, _w: f32, margi
             y: iy + 4.0,
             w: card_w - 32.0,
             h: 1.0,
-            color: DIVIDER,
+            color: pal().divider,
         },
     );
     comp.push_to_layer(
@@ -162,7 +168,7 @@ pub fn build_info_card(comp: &mut engine::compositor::Compositor, _w: f32, margi
             ),
             x: info_x,
             y: iy + 14.0,
-            color: ACCENT_DIM,
+            color: pal().accent_dim,
         },
     );
 }
@@ -177,7 +183,7 @@ pub fn build_footer(comp: &mut engine::compositor::Compositor, w: f32, h: f32, m
             y: footer_y - 1.0,
             w,
             h: 1.0,
-            color: DIVIDER,
+            color: pal().divider,
         },
     );
     comp.push_to_layer(
@@ -187,7 +193,7 @@ pub fn build_footer(comp: &mut engine::compositor::Compositor, w: f32, h: f32, m
             y: footer_y,
             w,
             h: footer_h,
-            color: FOOTER_BG,
+            color: pal().footer_bg,
         },
     );
     comp.push_to_layer(
@@ -200,7 +206,7 @@ pub fn build_footer(comp: &mut engine::compositor::Compositor, w: f32, h: f32, m
             ),
             x: margin,
             y: footer_y + 9.0,
-            color: TEXT_DIM,
+            color: pal().text_dim,
         },
     );
 }
@@ -230,7 +236,7 @@ pub fn build_foreground(
             y: fy,
             w: fg_card_w,
             h: fg_card_h,
-            color: SURFACE,
+            color: pal().surface,
         },
     );
     comp.push_to_layer(
@@ -240,7 +246,7 @@ pub fn build_foreground(
             y: fy,
             w: fg_card_w - 2.0,
             h: 2.0,
-            color: ACCENT,
+            color: pal().accent,
         },
     );
     comp.push_to_layer(
@@ -253,7 +259,7 @@ pub fn build_foreground(
             ),
             x: fx + 10.0,
             y: fy + 14.0,
-            color: ACCENT,
+            color: pal().accent,
         },
     );
     comp.push_to_layer(
@@ -266,7 +272,7 @@ pub fn build_foreground(
             ),
             x: fx + 10.0,
             y: fy + 40.0,
-            color: TEXT_DIM,
+            color: pal().text_dim,
         },
     );
     comp.push_to_layer(

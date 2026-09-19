@@ -27,6 +27,9 @@
 
 use super::core::Theme;
 use super::intent::MotionPhysics;
+use super::scales::{
+    ControlTokens, DurationScale, LayoutTokens, ShadowTokens, ShapeTokens, SizeTokens,
+};
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
@@ -51,6 +54,20 @@ pub const fn n2(alpha: f32) -> Color {
 /// `$n3` (#282828) at an arbitrary alpha.
 pub const fn n3(alpha: f32) -> Color {
     let g = 40.0 / 255.0;
+    Color::rgba(g, g, g, alpha)
+}
+
+/// Light-mode ink (`#070707`) at an arbitrary alpha: the inversion of
+/// [`n2`], every text and surface alpha of [`Theme::hoff_light`].
+pub const fn ink(alpha: f32) -> Color {
+    let g = 7.0 / 255.0;
+    Color::rgba(g, g, g, alpha)
+}
+
+/// Light-mode glass (`rgb(215,215,215)`) at an arbitrary alpha: the
+/// inversion of [`n3`].
+pub const fn pale(alpha: f32) -> Color {
+    let g = 215.0 / 255.0;
     Color::rgba(g, g, g, alpha)
 }
 
@@ -180,6 +197,7 @@ impl Theme {
                 surface_hover: n2(0.05),
                 surface_active: n2(0.10),
                 button: n3(0.70),
+                tabs: n3(0.60),
                 button_hover: n2(0.10),
                 field: n2(0.05),
                 field_focus_border: n2(0.25),
@@ -193,7 +211,75 @@ impl Theme {
                 text_gradient: [n2(0.90), n2(0.50)],
                 text_faint: n2(0.40),
                 text_placeholder: n2(0.25),
+                text_active: n2(0.76),
+                text_default: n2(0.56),
+                disabled_alpha: 0.5,
+                wash_alpha: 0.14,
+                wash_hover_alpha: 0.22,
             },
+            shape: ShapeTokens::hoff(),
+            control: ControlTokens::hoff(),
+            size: SizeTokens::hoff(),
+            duration: DurationScale::hoff(),
+            layout: LayoutTokens::hoff(),
+            shadows: ShadowTokens::hoff(),
+        }
+    }
+}
+
+impl Theme {
+    /// HOFF light mode: the dark spec inverted, ink alphas over pale
+    /// glass. The opaque backdrops are composed the same way the dark
+    /// ones are (`rgba(215,215,215,a)` over the light body `#BBBBBB`:
+    /// `#CECECE` page, `#D1D1D1` sidebar, `#CCCCCC` tabs), so the page sits
+    /// one notch below the raised sidebar surface, like in dark mode.
+    pub fn hoff_light() -> Self {
+        let dark = Self::hoff();
+        Self {
+            colors: ColorTokens {
+                bg: Color::hex(0xCECECE),
+                surface: Color::hex(0xD1D1D1),
+                bg_panel: Color::hex(0xC4C4C4),
+                bg_hover: ink(0.05),
+                text: ink(0.95),
+                text_mid: ink(0.70),
+                text_dim: ink(0.50),
+                accent: ink(0.95),
+                accent_dim: ink(0.40),
+                success: Color::hex(0x2BB163),
+                danger: RED,
+                warning: ORANGE,
+                info: Color::rgba(43.0 / 255.0, 177.0 / 255.0, 99.0 / 255.0, 0.7),
+                divider: Color::rgba(0.0, 0.0, 0.0, 0.05),
+                border_active: Color::rgba(0.0, 0.0, 0.0, 0.10),
+            },
+            glass: GlassTokens {
+                surface: ink(0.02),
+                surface_hover: ink(0.05),
+                surface_active: ink(0.10),
+                button: pale(0.70),
+                tabs: pale(0.60),
+                button_hover: ink(0.10),
+                field: ink(0.05),
+                field_focus_border: ink(0.25),
+                popover: Color::hex(0xC4C4C4),
+                tooltip: Color::hex(0xD9D9D9),
+                scrim: Color::rgba(220.0 / 255.0, 221.0 / 255.0, 221.0 / 255.0, 0.9),
+                edge: Color::rgba(0.0, 0.0, 0.0, 0.10),
+                edge_soft: Color::rgba(0.0, 0.0, 0.0, 0.05),
+                inset_highlight: Color::rgba(1.0, 1.0, 1.0, 0.35),
+                knob_gradient: [ink(0.90), ink(0.30)],
+                text_gradient: [ink(0.90), ink(0.50)],
+                text_faint: ink(0.40),
+                text_placeholder: ink(0.25),
+                text_active: ink(0.76),
+                text_default: ink(0.56),
+                disabled_alpha: dark.glass.disabled_alpha,
+                wash_alpha: dark.glass.wash_alpha,
+                wash_hover_alpha: dark.glass.wash_hover_alpha,
+            },
+            shadows: ShadowTokens::hoff(),
+            ..dark
         }
     }
 }
