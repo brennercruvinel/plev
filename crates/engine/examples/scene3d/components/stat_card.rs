@@ -28,11 +28,11 @@ impl StatCardBuilder {
     pub fn build(self) -> Element {
         let mut col = div()
             .col()
-            .bg(SURFACE_1)
+            .bg(hud().surface_1)
             .border(1.0)
-            .border_color(SURFACE_3)
+            .border_color(hud().surface_3)
             .p(12)
-            .gap(SPACE_XS)
+            .gap(hud().space_xs)
             .grow(1.0);
 
         // Label
@@ -41,31 +41,35 @@ impl StatCardBuilder {
                 .font_size(FONT_SM)
                 .uppercase()
                 .tracking(0.15)
-                .text_color(TEXT_MUTED),
+                .text_color(hud().text_muted),
         );
 
         // Value + unit row
         let mut value_row = div()
             .row()
-            .gap(SPACE_XS)
+            .gap(hud().space_xs)
             .align_items(engine::builder::Align::End);
 
         value_row = value_row.child(
             text(&self.value)
                 .font_size(FONT_2XL)
                 .bold()
-                .text_color(TEXT_PRIMARY),
+                .text_color(hud().text_primary),
         );
 
         if !self.unit.is_empty() {
-            value_row = value_row.child(text(&self.unit).font_size(FONT_XS).text_color(TEXT_MUTED));
+            value_row = value_row.child(
+                text(&self.unit)
+                    .font_size(FONT_XS)
+                    .text_color(hud().text_muted),
+            );
         }
 
         col = col.child(value_row);
 
         // Subtitle
         if let Some(ref sub) = self.subtitle {
-            col = col.child(text(sub).font_size(FONT_SM).text_color(TEXT_MUTED));
+            col = col.child(text(sub).font_size(FONT_SM).text_color(hud().text_muted));
         }
 
         col

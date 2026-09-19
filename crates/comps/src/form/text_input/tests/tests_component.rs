@@ -1,4 +1,4 @@
-use crate::text_input::*;
+use crate::form::text_input::*;
 
 #[test]
 fn text_input_new() {
@@ -68,8 +68,9 @@ fn text_input_click_positions_cursor() {
     let mut ti = TextInput::new();
     ti.buffer.set_text("hello");
     // Click exactly where the real caret for byte 3 sits.
-    let x = crate::text::TextMeasurer::cursor_x("hello", 16.0, 3);
-    ti.handle_click(x);
+    let style = engine::text::TextStyle::new(16.0);
+    let x = engine::text::TextMeasurer::cursor_x_styled("hello", &style, None, 3);
+    ti.handle_click(x, &style);
     assert!(ti.focused);
     assert_eq!(ti.buffer.cursor(), 3);
 }
@@ -82,8 +83,9 @@ fn text_input_click_proportional_narrow_chars() {
     let text = "iiiiiiiiii";
     ti.buffer.set_text(text);
 
-    let x = crate::text::TextMeasurer::cursor_x(text, 16.0, 7);
-    ti.handle_click(x);
+    let style = engine::text::TextStyle::new(16.0);
+    let x = engine::text::TextMeasurer::cursor_x_styled(text, &style, None, 7);
+    ti.handle_click(x, &style);
     assert_eq!(ti.buffer.cursor(), 7);
 
     // The same x through the old heuristic would have missed.
@@ -98,13 +100,14 @@ fn text_input_click_proportional_narrow_chars() {
 fn text_input_click_middle_of_glyph_rounds_to_nearest_boundary() {
     let mut ti = TextInput::new();
     ti.buffer.set_text("hello");
-    let b2 = crate::text::TextMeasurer::cursor_x("hello", 16.0, 2);
-    let b3 = crate::text::TextMeasurer::cursor_x("hello", 16.0, 3);
+    let style = engine::text::TextStyle::new(16.0);
+    let b2 = engine::text::TextMeasurer::cursor_x_styled("hello", &style, None, 2);
+    let b3 = engine::text::TextMeasurer::cursor_x_styled("hello", &style, None, 3);
     // Click slightly left of the midpoint of the third glyph -> cursor 2.
-    ti.handle_click(b2 + (b3 - b2) * 0.25);
+    ti.handle_click(b2 + (b3 - b2) * 0.25, &style);
     assert_eq!(ti.buffer.cursor(), 2);
     // Click slightly right of the midpoint -> cursor 3.
-    ti.handle_click(b2 + (b3 - b2) * 0.75);
+    ti.handle_click(b2 + (b3 - b2) * 0.75, &style);
     assert_eq!(ti.buffer.cursor(), 3);
 }
 
@@ -115,9 +118,10 @@ fn text_input_cursor_x_round_trip_all_positions() {
     ti.buffer.set_text(text);
     let mut cursors: Vec<usize> = text.char_indices().map(|(i, _)| i).collect();
     cursors.push(text.len());
+    let style = engine::text::TextStyle::new(16.0);
     for cursor in cursors {
-        let x = crate::text::TextMeasurer::cursor_x(text, 16.0, cursor);
-        ti.handle_click(x);
+        let x = engine::text::TextMeasurer::cursor_x_styled(text, &style, None, cursor);
+        ti.handle_click(x, &style);
         assert_eq!(
             ti.buffer.cursor(),
             cursor,
@@ -127,26 +131,58 @@ fn text_input_cursor_x_round_trip_all_positions() {
 }
 
 #[test]
-fn text_input_build_scene_empty_unfocused() {
-    let ti = TextInput::new().with_placeholder("Type here...");
-    let nodes = ti.build_scene(0.0, 0.0, 200.0);
-    // Should have: bg rect + placeholder text
-    assert!(nodes.len() >= 2);
-    assert!(matches!(
-        &nodes[0],
-        crate::compositor::SceneNode::Rect { .. }
-    ));
+fn text_field_empty_unfocused_draws_field_and_placeholder() {
+    use crate::form::TextField;
+    use engine::compositor::{Compositor, LayerId, SceneNode};
+    let theme = engine::theme::Theme::hoff();
+    let field = TextField::new("Type here...");
+    let mut c = Compositor::new();
+    c.begin_frame();
+    field.render(
+        &mut c,
+        crate::core::Rect::new(0.0, 0.0, 200.0, TextField::height(&theme)),
+        &theme,
+    );
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    // Field surface + rim + placeholder text; no caret, no focus ring.
+    assert!(matches!(nodes[0], SceneNode::RoundedRect { .. }));
+    assert_eq!(
+        nodes
+            .iter()
+            .filter(|n| matches!(n, SceneNode::Text { .. }))
+            .count(),
+        1
+    );
+    assert!(!nodes.iter().any(|n| matches!(n, SceneNode::Rect { .. })));
 }
 
 #[test]
-fn text_input_build_scene_focused_with_text() {
-    let mut ti = TextInput::new();
-    ti.focus();
-    ti.handle_char('h');
-    ti.handle_char('i');
-    let nodes = ti.build_scene(0.0, 0.0, 200.0);
-    // bg + 4 borders + text + cursor = 7
-    assert!(nodes.len() >= 5);
+fn text_field_focused_with_text_draws_ring_text_and_caret() {
+    use crate::form::TextField;
+    use engine::compositor::{Compositor, LayerId, SceneNode};
+    let theme = engine::theme::Theme::hoff();
+    let mut field = TextField::new("");
+    field.focus();
+    field.insert("hi");
+    let mut c = Compositor::new();
+    c.begin_frame();
+    field.render(
+        &mut c,
+        crate::core::Rect::new(0.0, 0.0, 200.0, TextField::height(&theme)),
+        &theme,
+    );
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    let rounded = nodes
+        .iter()
+        .filter(|n| matches!(n, SceneNode::RoundedRect { .. }))
+        .count();
+    assert_eq!(rounded, 3, "focus ring + surface + rim");
+    assert!(nodes.iter().any(|n| matches!(n, SceneNode::Text { .. })));
+    let caret = nodes.iter().any(|n| {
+        matches!(n, SceneNode::Rect { color, .. }
+        if *color == theme.colors.accent.0)
+    });
+    assert!(caret, "the caret is the accent");
 }
 
 #[test]
@@ -167,12 +203,51 @@ fn text_input_handle_ime_unfocused() {
 }
 
 #[test]
-fn text_input_build_scene_selection() {
-    let mut ti = TextInput::new();
-    ti.focus();
-    ti.buffer.set_text("hello");
-    ti.buffer.select_all();
-    let nodes = ti.build_scene(0.0, 0.0, 200.0);
-    // Should include selection rect
-    assert!(nodes.len() >= 6);
+fn text_field_selection_draws_the_accent_wash() {
+    use crate::form::{EditKey, TextField};
+    use engine::compositor::{Compositor, LayerId, SceneNode};
+    let theme = engine::theme::Theme::hoff();
+    let mut field = TextField::new("");
+    field.focus();
+    field.insert("hello");
+    assert!(field.edit(EditKey::SelectAll));
+    let mut c = Compositor::new();
+    c.begin_frame();
+    field.render(
+        &mut c,
+        crate::core::Rect::new(0.0, 0.0, 200.0, TextField::height(&theme)),
+        &theme,
+    );
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    let washes = nodes
+        .iter()
+        .filter(|n| {
+            matches!(n, SceneNode::Rect { color, .. }
+            if color[3] == theme.glass.wash_alpha)
+        })
+        .count();
+    assert_eq!(washes, 1, "one selection wash under the text");
+}
+
+#[test]
+fn text_field_click_places_the_caret_on_the_glyph() {
+    use crate::core::{Rect, WidgetEvent};
+    use crate::form::TextField;
+    let theme = engine::theme::Theme::hoff();
+    let mut field = TextField::new("").with_text("hello");
+    let bounds = Rect::new(10.0, 10.0, 200.0, TextField::height(&theme));
+    let style = TextField::text_style(&theme);
+    let caret_3 = engine::text::TextMeasurer::cursor_x_styled("hello", &style, None, 3);
+    let x = bounds.x + theme.spacing.md + caret_3;
+    let r = field.handle_event(&WidgetEvent::MouseDown { x, y: 20.0 }, bounds, &theme);
+    assert!(r.clicked);
+    assert!(field.is_focused());
+    assert_eq!(field.input.buffer.cursor(), 3);
+    // A press outside blurs.
+    let r = field.handle_event(
+        &WidgetEvent::MouseDown { x: 400.0, y: 400.0 },
+        bounds,
+        &theme,
+    );
+    assert!(r.changed && !field.is_focused());
 }

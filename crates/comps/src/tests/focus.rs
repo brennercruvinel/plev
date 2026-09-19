@@ -2,9 +2,11 @@
 //! draws the shared accent focus ring when focused, skips it when not,
 //! and disabled controls refuse focus entirely.
 
-use super::*;
-use crate::compositor::{Compositor, LayerId, SceneNode};
-use crate::theme::Theme;
+use crate::core::*;
+use crate::prelude::*;
+use crate::recipe::*;
+use engine::compositor::{Compositor, LayerId, SceneNode};
+use engine::theme::Theme;
 
 const B: Rect = Rect {
     x: 40.0,
@@ -24,7 +26,9 @@ fn nodes(render: impl FnOnce(&mut Compositor, &Theme)) -> Vec<SceneNode> {
 /// The ring is a border-only rounded rect: transparent fill, 2px border
 /// in the theme accent (`focus_ring`).
 fn ring_of(nodes: &[SceneNode]) -> Option<(f32, f32, f32, f32, f32)> {
-    let accent = Theme::hoff().colors.accent.0;
+    let theme = Theme::hoff();
+    let accent = theme.colors.accent.0;
+    let ring_w = theme.control.focus_ring_width;
     nodes.iter().find_map(|n| match *n {
         SceneNode::RoundedRect {
             x,
@@ -35,7 +39,7 @@ fn ring_of(nodes: &[SceneNode]) -> Option<(f32, f32, f32, f32, f32)> {
             corner_radius,
             border_width,
             border_color,
-        } if color[3] == 0.0 && border_width == FOCUS_RING_WIDTH && border_color == accent => {
+        } if color[3] == 0.0 && border_width == ring_w && border_color == accent => {
             Some((x, y, w, h, corner_radius))
         }
         _ => None,
@@ -61,7 +65,7 @@ fn focus_ring_helper_offsets_2px_outside_the_rect() {
             assert_eq!((x, y), (B.x - 4.0, B.y - 4.0));
             assert_eq!((w, h), (B.w + 8.0, B.h + 8.0));
             assert_eq!(corner_radius, 16.0, "radius follows the shape");
-            assert_eq!(border_width, FOCUS_RING_WIDTH);
+            assert_eq!(border_width, theme.control.focus_ring_width);
             assert_eq!(border_color, theme.colors.accent.0);
             assert_eq!(color[3], 0.0, "ring has no fill");
         }
@@ -153,7 +157,7 @@ fn focus_ring_uses_accent_under_every_builtin_theme() {
         let accent = theme.colors.accent.0;
         let found = c.layer(LayerId::DEFAULT).unwrap().nodes().iter().any(|n| {
             matches!(*n, SceneNode::RoundedRect { border_color, border_width, color, .. }
-                if border_color == accent && border_width == FOCUS_RING_WIDTH && color[3] == 0.0)
+                if border_color == accent && border_width == theme.control.focus_ring_width && color[3] == 0.0)
         });
         assert!(found, "ring must resolve from the theme accent");
     }

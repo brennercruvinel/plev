@@ -1,21 +1,44 @@
-use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::{Intent, Theme, TypographyScale};
-use crate::ui::icons;
+//! HOFF actions dropdown: a solid popover body at the pill radius with
+//! the floating shadow and the inset key-light; `Md`-tall items at the
+//! item radius, base-2sm labels (text-default at rest, text-active on
+//! hover), optional leading icon, separators. Width fits the widest
+//! label and never drops under `size.menu_w`.
 
-use super::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
+use crate::icons;
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::text::{TextMeasurer, TextStyle};
+use engine::theme::{ControlSize, IconSize, Intent, Theme};
 
-/// HOFF actions dropdown: 240px body, radius 32, pad 8, solid #3b3b3b
-/// (measured live); items 44px, radius 16, pad 0 8, base-2sm
-/// rgba($n2,.56) -> .76 hover.
-const ITEM_H: f32 = 44.0;
-const SEP_H: f32 = 9.0;
-const PAD_X: f32 = 8.0;
-const PAD_Y: f32 = 8.0;
-const RADIUS: f32 = 32.0;
-const ITEM_RADIUS: f32 = 16.0;
-const ICON: f32 = 18.0;
-const MIN_W: f32 = 240.0;
+use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
+use crate::recipe::{inset_keylight, menu_shadow, rounded_rect, rounded_rect_stroke};
+
+/// The per-theme geometry the size, the hit test and the render share.
+struct Metrics {
+    item_h: f32,
+    /// A separator row: one hairline with `xs` above and below.
+    sep_h: f32,
+    pad: f32,
+    radius: f32,
+    item_radius: f32,
+    icon: f32,
+    gap: f32,
+    min_w: f32,
+}
+
+impl Metrics {
+    fn of(theme: &Theme) -> Self {
+        Self {
+            item_h: theme.control.height(ControlSize::Md),
+            sep_h: theme.spacing.xs * 2.0 + theme.control.edge_width,
+            pad: theme.control.menu_pad,
+            radius: theme.shape.pill,
+            item_radius: theme.shape.item,
+            icon: theme.control.icon(IconSize::Sm),
+            gap: theme.control.inline_gap,
+            min_w: theme.size.menu_w,
+        }
+    }
+}
 
 /// One row of a [`ContextMenu`].
 #[derive(Clone, Debug)]
@@ -24,7 +47,7 @@ pub enum MenuEntry {
         /// Opaque id reported on click.
         id: u64,
         label: String,
-        /// Optional leading icon ([`crate::ui::icons`] name).
+        /// Optional leading icon ([`crate::icons`] name).
         icon: Option<&'static str>,
         disabled: bool,
         /// Colors the label (Destructive = red row, etc.).
@@ -87,24 +110,27 @@ impl ContextMenu {
     }
 
     /// Item label style: base-2sm, the same for measuring and rendering.
-    fn label_style() -> TextStyle {
-        TypographyScale::hoff().base_2sm()
+    fn label_style(theme: &Theme) -> TextStyle {
+        theme.typography.base_2sm()
     }
 
-    /// Menu size from real text measurement.
-    pub fn size(&self) -> (f32, f32) {
-        let style = Self::label_style();
-        let mut w: f32 = MIN_W;
-        let mut h = PAD_Y * 2.0;
+    /// Menu size from real text measurement: the widest row (icon slot,
+    /// label, item padding on both sides, menu padding on both sides),
+    /// never narrower than the menu width token.
+    pub fn size(&self, theme: &Theme) -> (f32, f32) {
+        let m = Metrics::of(theme);
+        let style = Self::label_style(theme);
+        let mut w: f32 = m.min_w;
+        let mut h = m.pad * 2.0;
         for entry in &self.entries {
             match entry {
                 MenuEntry::Item { label, icon, .. } => {
                     let (tw, _) = TextMeasurer::measure_styled(label, &style, None);
-                    let icon_w = if icon.is_some() { ICON + 8.0 } else { 0.0 };
-                    w = w.max(tw + icon_w + PAD_X * 4.0 + 12.0);
-                    h += ITEM_H;
+                    let icon_w = if icon.is_some() { m.icon + m.gap } else { 0.0 };
+                    w = w.max(tw + icon_w + m.pad * 4.0 + m.gap);
+                    h += m.item_h;
                 }
-                MenuEntry::Separator => h += SEP_H,
+                MenuEntry::Separator => h += m.sep_h,
             }
         }
         (w.ceil(), h)
@@ -112,14 +138,15 @@ impl ContextMenu {
 
     /// Row rects (separators included, in entry order) for a menu whose
     /// top-left is at (x, y).
-    fn entry_rects(&self, x: f32, y: f32) -> Vec<Rect> {
-        let (w, _) = self.size();
+    pub fn entry_rects(&self, x: f32, y: f32, theme: &Theme) -> Vec<Rect> {
+        let m = Metrics::of(theme);
+        let (w, _) = self.size(theme);
         let mut rects = Vec::with_capacity(self.entries.len());
-        let mut cy = y + PAD_Y;
+        let mut cy = y + m.pad;
         for entry in &self.entries {
             let h = match entry {
-                MenuEntry::Item { .. } => ITEM_H,
-                MenuEntry::Separator => SEP_H,
+                MenuEntry::Item { .. } => m.item_h,
+                MenuEntry::Separator => m.sep_h,
             };
             rects.push(Rect::new(x, cy, w, h));
             cy += h;
@@ -127,8 +154,8 @@ impl ContextMenu {
         rects
     }
 
-    fn item_at(&self, px: f32, py: f32, x: f32, y: f32) -> Option<usize> {
-        self.entry_rects(x, y)
+    fn item_at(&self, px: f32, py: f32, x: f32, y: f32, theme: &Theme) -> Option<usize> {
+        self.entry_rects(x, y, theme)
             .iter()
             .enumerate()
             .find(|(i, r)| matches!(self.entries[*i], MenuEntry::Item { .. }) && r.contains(px, py))
@@ -143,18 +170,20 @@ impl ContextMenu {
         }
     }
 
-    /// Handle an event for a menu anchored at `(x, y)`.
-    /// On item activation, `EventResult::clicked` is set and
-    /// [`last_clicked`](ContextMenu::last_clicked) holds the item id.
+    /// Handle an event for a menu anchored at `(x, y)`. On item
+    /// activation, `EventResult::clicked` is set and the item id is
+    /// returned. Rows are laid out from the theme, so the event path
+    /// takes the same `theme` the render path draws with.
     pub fn handle_event(
         &mut self,
         event: &WidgetEvent,
         x: f32,
         y: f32,
+        theme: &Theme,
     ) -> (EventResult, Option<u64>) {
         match *event {
             WidgetEvent::MouseMove { x: px, y: py } => {
-                let hit = self.item_at(px, py, x, y).filter(|&i| {
+                let hit = self.item_at(px, py, x, y, theme).filter(|&i| {
                     !matches!(self.entries[i], MenuEntry::Item { disabled: true, .. })
                 });
                 if hit != self.hovered {
@@ -165,7 +194,7 @@ impl ContextMenu {
                 }
             }
             WidgetEvent::MouseDown { x: px, y: py } => {
-                if let Some(i) = self.item_at(px, py, x, y)
+                if let Some(i) = self.item_at(px, py, x, y, theme)
                     && let MenuEntry::Item { id, disabled, .. } = &self.entries[i]
                 {
                     if *disabled {
@@ -194,48 +223,46 @@ impl ContextMenu {
         x: f32,
         y: f32,
     ) {
-        let (w, h) = self.size();
+        let m = Metrics::of(theme);
+        let (w, h) = self.size(theme);
         let glass = &theme.glass;
-        let text = theme.colors.text;
+        let body = Rect::new(x, y, w, h);
 
-        // Floating shadow, then the solid #3b3b3b surface; row icons pushed
-        // later stack on top (push order is preserved across types).
-        compositor.push_to_layer(layer, super::menu_shadow(Rect::new(x, y, w, h), RADIUS));
+        // Floating shadow, then the solid popover surface; row icons
+        // pushed later stack on top (push order is preserved across
+        // types).
+        compositor.push_to_layer(layer, menu_shadow(body, m.radius, theme));
+        compositor.push_to_layer(layer, rounded_rect(x, y, w, h, m.radius, glass.popover.0));
         compositor.push_to_layer(
             layer,
-            super::rounded_rect(x, y, w, h, RADIUS, glass.popover.0),
-        );
-        compositor.push_to_layer(
-            layer,
-            super::rounded_rect_stroke(x, y, w, h, RADIUS, glass.edge_soft.0, 1.0),
-        );
-        // Inset key-light glint (measured: inset 2px 4px 16px rgba(248,248,248,.06)).
-        compositor.push_to_layer(
-            layer,
-            SceneNode::Shadow {
+            rounded_rect_stroke(
                 x,
                 y,
                 w,
                 h,
-                corner_radius: RADIUS,
-                blur_radius: 16.0,
-                offset: [2.0, 4.0],
-                color: glass.inset_highlight.0,
-                inset: true,
-            },
+                m.radius,
+                glass.edge_soft.0,
+                theme.control.edge_width,
+            ),
         );
+        inset_keylight(compositor, layer, body, m.radius, theme);
 
-        let style = Self::label_style();
-        for (i, (entry, rect)) in self.entries.iter().zip(self.entry_rects(x, y)).enumerate() {
+        let style = Self::label_style(theme);
+        for (i, (entry, rect)) in self
+            .entries
+            .iter()
+            .zip(self.entry_rects(x, y, theme))
+            .enumerate()
+        {
             match entry {
                 MenuEntry::Separator => {
                     compositor.push_to_layer(
                         layer,
                         SceneNode::Rect {
-                            x: rect.x + PAD_X,
-                            y: rect.y + rect.h / 2.0,
-                            w: rect.w - PAD_X * 2.0,
-                            h: 1.0,
+                            x: rect.x + m.pad,
+                            y: rect.y + (rect.h - theme.control.edge_width) / 2.0,
+                            w: rect.w - m.pad * 2.0,
+                            h: theme.control.edge_width,
                             color: glass.surface_active.0,
                         },
                     );
@@ -247,41 +274,44 @@ impl ContextMenu {
                     intent,
                     ..
                 } => {
-                    let alpha = if *disabled { 0.45 } else { 1.0 };
+                    let alpha = if *disabled { glass.disabled_alpha } else { 1.0 };
                     let hovered = self.hovered == Some(i);
                     if hovered {
-                        // Hover: rgba($n2,.1), radius 16.
                         compositor.push_to_layer(
                             layer,
-                            super::rounded_rect(
-                                rect.x + PAD_X,
+                            rounded_rect(
+                                rect.x + m.pad,
                                 rect.y,
-                                rect.w - PAD_X * 2.0,
+                                rect.w - m.pad * 2.0,
                                 rect.h,
-                                ITEM_RADIUS,
+                                m.item_radius,
                                 glass.surface_active.0,
                             ),
                         );
                     }
-                    // base-2sm rgba($n2,.56) -> .76 on hover.
+                    // base-2sm: text-default at rest, text-active on hover.
                     let fg = match intent {
                         Intent::Neutral => {
-                            let a = if hovered { 0.8 } else { 0.59 };
-                            with_alpha(text, text.0[3] * a * alpha)
+                            let c = if hovered {
+                                glass.text_active
+                            } else {
+                                glass.text_default
+                            };
+                            with_alpha(c, c.0[3] * alpha)
                         }
                         other => {
                             let c = intent_fill(theme, *other);
                             [c[0], c[1], c[2], c[3] * alpha]
                         }
                     };
-                    let mut tx = rect.x + PAD_X * 2.0;
+                    let mut tx = rect.x + m.pad * 2.0;
                     if let Some(name) = icon {
                         if let Some(node) =
-                            icons::icon_at(name, ICON, fg, tx, rect.y + (rect.h - ICON) / 2.0)
+                            icons::icon_at(name, m.icon, fg, tx, rect.y + (rect.h - m.icon) / 2.0)
                         {
                             compositor.push_to_layer(layer, node);
                         }
-                        tx += ICON + 8.0;
+                        tx += m.icon + m.gap;
                     }
                     compositor.push_to_layer(
                         layer,

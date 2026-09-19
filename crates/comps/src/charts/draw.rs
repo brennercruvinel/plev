@@ -8,11 +8,12 @@
 use std::f32::consts::TAU;
 
 use crate::charts as geom;
-use crate::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::path::PathBuilder;
-use crate::text::TextMeasurer;
-use crate::theme::Theme;
-use crate::ui::widgets::{Rect, rounded_rect};
+use crate::core::Rect;
+use crate::recipe::rounded_rect;
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::path::PathBuilder;
+use engine::text::TextMeasurer;
+use engine::theme::Theme;
 
 /// RGBA with overridden alpha (the widgets' `with_alpha` takes a `Color`;
 /// chart drawing works in raw RGBA from theme tokens).
@@ -24,30 +25,33 @@ fn with_alpha(c: [f32; 4], a: f32) -> [f32; 4] {
 const DONUT_ALPHAS: [f32; 5] = [0.90, 0.62, 0.40, 0.24, 0.12];
 
 pub fn line(c: &mut Compositor, data: &[f32], rect: Rect, theme: &Theme, r: f32) {
-    let chart = geom::line_chart(data, rect, 3.0, theme.typography.small_sm());
+    let hair = theme.control.edge_width;
+    let dot_r = theme.control.edge_width_strong * 2.0;
+    let chart = geom::line_chart(data, rect, dot_r, theme.typography.small_sm());
     let divider = theme.colors.divider.0;
     let plot = chart.plot;
     for y in &chart.grid_h {
-        line_rect(c, plot.x, *y, plot.w, 1.0, divider);
+        line_rect(c, plot.x, *y, plot.w, hair, divider);
     }
     let v_color = with_alpha(divider, divider[3] * 0.6);
     for x in &chart.grid_v {
-        line_rect(c, *x, plot.y, 1.0, plot.h, v_color);
+        line_rect(c, *x, plot.y, hair, plot.h, v_color);
     }
     for l in &chart.tick_labels {
         label(c, l, theme.glass.text_faint.0);
     }
-    // The reveal sweeps the plot open left to right; the 4px margin keeps
+    // The reveal sweeps the plot open left to right; the margin keeps
     // the dot caps from being shaved at the plot edges.
     let accent = theme.colors.accent.0;
+    let margin = theme.spacing.xs;
     c.push(SceneNode::PushClip {
-        x: plot.x - 4.0,
-        y: plot.y - 4.0,
-        w: (plot.w + 8.0) * r,
-        h: plot.h + 8.0,
+        x: plot.x - margin,
+        y: plot.y - margin,
+        w: (plot.w + margin * 2.0) * r,
+        h: plot.h + margin * 2.0,
     });
     polygon(c, &chart.area, with_alpha(accent, 0.08));
-    polyline(c, &chart.points, accent, 2.0);
+    polyline(c, &chart.points, accent, hair * 2.0);
     for d in &chart.dots {
         c.draw_path(PathBuilder::circle(d.x, d.y, d.r).fill(accent));
     }
@@ -55,9 +59,16 @@ pub fn line(c: &mut Compositor, data: &[f32], rect: Rect, theme: &Theme, r: f32)
 }
 
 pub fn bars(c: &mut Compositor, data: &[f32], rect: Rect, theme: &Theme, r: f32) {
-    let chart = geom::bar_chart(data, rect, 8.0, theme.typography.small_sm());
+    let chart = geom::bar_chart(data, rect, theme.spacing.sm, theme.typography.small_sm());
     let baseline = rect.y + rect.h;
-    line_rect(c, rect.x, baseline, rect.w, 1.0, theme.glass.edge.0);
+    line_rect(
+        c,
+        rect.x,
+        baseline,
+        rect.w,
+        theme.control.edge_width,
+        theme.glass.edge.0,
+    );
     let tallest = (chart.bars.iter().enumerate())
         .max_by(|a, b| a.1.value.total_cmp(&b.1.value))
         .map(|(i, _)| i);
@@ -90,7 +101,14 @@ pub fn area(c: &mut Compositor, a: &[f32], b: &[f32], rect: Rect, theme: &Theme,
     let stack = geom::stacked_area(&[a, b], rect);
     for t in &stack.axis.ticks {
         let y = rect.y + rect.h * (1.0 - stack.axis.normalize(*t));
-        line_rect(c, rect.x, y, rect.w, 1.0, theme.colors.divider.0);
+        line_rect(
+            c,
+            rect.x,
+            y,
+            rect.w,
+            theme.control.edge_width,
+            theme.colors.divider.0,
+        );
     }
     // Bands rise from the baseline: thickness scales with the reveal.
     let baseline = rect.y + rect.h;
@@ -104,7 +122,12 @@ pub fn area(c: &mut Compositor, a: &[f32], b: &[f32], rect: Rect, theme: &Theme,
     let edges = [with_alpha(text_c, 0.55), with_alpha(green, 0.90)];
     for (i, band) in stack.bands.iter().enumerate() {
         polygon(c, &lift(&band.polygon), fills[i % 2]);
-        polyline(c, &lift(&band.top), edges[i % 2], 1.5);
+        polyline(
+            c,
+            &lift(&band.top),
+            edges[i % 2],
+            theme.control.edge_width_strong,
+        );
     }
 }
 
@@ -139,7 +162,14 @@ pub fn donut(c: &mut Compositor, items: &[(&str, f32)], rect: Rect, theme: &Them
     for item in &d.legend {
         let sw = item.swatch;
         let color = with_alpha(text_c, alpha_of(item.index));
-        c.push(rounded_rect(sw.x, sw.y, sw.w, sw.h, 3.0, color));
+        c.push(rounded_rect(
+            sw.x,
+            sw.y,
+            sw.w,
+            sw.h,
+            theme.shape.micro / 2.0,
+            color,
+        ));
         label(c, &item.label, theme.colors.text_mid.0);
     }
 }
@@ -188,12 +218,12 @@ pub fn hbars(
         .iter()
         .map(|(name, _, _)| TextMeasurer::measure_styled(name, &style, None).0)
         .fold(0.0, f32::max)
-        + 8.0;
+        + theme.spacing.sm;
     let value_w = items
         .iter()
         .map(|(_, _, value)| TextMeasurer::measure_styled(value, &style, None).0)
         .fold(0.0, f32::max)
-        + 8.0;
+        + theme.spacing.sm;
     let max = items
         .iter()
         .map(|(_, v, _)| *v)
@@ -213,7 +243,7 @@ pub fn hbars(
         });
         let bar_x = rect.x + name_w;
         let bar_w = (rect.w - name_w - value_w).max(0.0);
-        let bar_h = (row_h * 0.6).min(18.0);
+        let bar_h = (row_h * 0.6).min(theme.control.box_size);
         let bar_y = y + (row_h - bar_h) / 2.0;
         meter(
             c,

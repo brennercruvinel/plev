@@ -3,18 +3,16 @@
 //! active filter/tag; the outline variant is the quiet default. Static by
 //! default; `interactive(true)` opts into the Button press contract
 //! (click fires on release inside).
+//!
+//! Geometry from the theme: height is the caption-sm line box plus the
+//! `xs` spacing above and below, the side padding is `md` spacing.
 
-use crate::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::{Intent, Theme, TypographyScale};
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::text::{TextMeasurer, TextStyle};
+use engine::theme::{Intent, Theme};
 
-use super::{
-    EventResult, Rect, WidgetEvent, intent_fill, rounded_rect, rounded_rect_stroke, with_alpha,
-};
-
-/// Chip height (24px: caption-sm + 2×5px vertical pad).
-pub const CHIP_H: f32 = 24.0;
-const PAD_X: f32 = 12.0;
+use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
+use crate::recipe::{rounded_rect, rounded_rect_stroke};
 
 /// Status/tag pill. See the module docs for the interactivity contract.
 #[derive(Clone, Debug)]
@@ -60,15 +58,21 @@ impl Chip {
         self.hovered
     }
 
-    /// Label style: HOFF caption-sm (12/600), one style for measure+draw.
-    fn style() -> TextStyle {
-        TypographyScale::hoff().caption_sm()
+    /// Label style: HOFF caption-sm, one style for measure+draw.
+    fn style(theme: &Theme) -> TextStyle {
+        theme.typography.caption_sm()
+    }
+
+    /// Chip height for a theme: the caption line box plus `xs` above and
+    /// below (HOFF: 16 + 2 * 4 = 24).
+    pub fn height(theme: &Theme) -> f32 {
+        Self::style(theme).line_height + theme.spacing.xs * 2.0
     }
 
     /// Intrinsic size from real text measurement.
-    pub fn preferred_size(&self) -> (f32, f32) {
-        let (tw, _) = TextMeasurer::measure_styled(&self.label, &Self::style(), None);
-        ((tw + PAD_X * 2.0).ceil(), CHIP_H)
+    pub fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
+        let (tw, _) = TextMeasurer::measure_styled(&self.label, &Self::style(theme), None);
+        ((tw + theme.spacing.md * 2.0).ceil(), Self::height(theme))
     }
 
     pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
@@ -109,16 +113,24 @@ impl Chip {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let style = Self::style();
+        let style = Self::style(theme);
         let accent = intent_fill(theme, self.intent);
         let text = theme.colors.text;
+        let glass = &theme.glass;
 
         // Filled (selected): intent wash + intent label. Outline: glass
         // edge stroke + dim label. Hover brightens both (interactive only).
         let (bg, edge, fg) = if self.selected {
             let hot = self.hovered && self.interactive;
             (
-                with_alpha(theme.colors.accent, if hot { 0.22 } else { 0.14 }),
+                with_alpha(
+                    theme.colors.accent,
+                    if hot {
+                        glass.wash_hover_alpha
+                    } else {
+                        glass.wash_alpha
+                    },
+                ),
                 [0.0; 4],
                 if self.intent == Intent::Neutral {
                     text.0
@@ -158,12 +170,12 @@ impl Chip {
                 bounds.h,
                 bounds.h / 2.0,
                 edge,
-                1.0,
+                theme.control.edge_width,
             ));
         }
         compositor.push(SceneNode::Text {
             key: TextNodeKey::from_style(&self.label, &style, None),
-            x: bounds.x + PAD_X,
+            x: bounds.x + theme.spacing.md,
             y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
             color: fg,
         });

@@ -1,5 +1,9 @@
-//! Clipboard abstraction: the editor talks to a trait so tests (and wasm)
-//! never touch the OS clipboard.
+//! Clipboard: get/set text behind a trait so tests (and wasm) never touch
+//! the OS clipboard. [`SystemClipboard`] wraps arboard on desktop and
+//! degrades to a no-op when the clipboard is unavailable (headless CI);
+//! [`LocalClipboard`] is the in-memory fallback for tests, wasm and
+//! mobile. The editor widget (comps) and any app that wants "copy to
+//! clipboard" both come here.
 
 /// Minimal text clipboard interface used by the editor.
 pub trait ClipboardProvider {
@@ -71,7 +75,7 @@ impl ClipboardProvider for SystemClipboard {
 }
 
 /// The default clipboard for the current platform.
-pub(crate) fn default_clipboard() -> Box<dyn ClipboardProvider> {
+pub fn default_clipboard() -> Box<dyn ClipboardProvider> {
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     {
         Box::new(SystemClipboard::new())

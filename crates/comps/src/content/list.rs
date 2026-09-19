@@ -1,11 +1,11 @@
 use std::ops::Range;
 
-use crate::compositor::{Compositor, LayerId, SceneNode};
-use crate::input::scroll::ScrollState;
-use crate::theme::Theme;
+use engine::compositor::{Compositor, LayerId, SceneNode};
+use engine::input::scroll::ScrollState;
+use engine::theme::Theme;
 
-use super::scrollbar::Scrollbar;
-use super::{EventResult, Rect, WidgetEvent};
+use crate::core::{EventResult, Rect, WidgetEvent};
+use crate::feedback::Scrollbar;
 
 /// Rows tessellated beyond the viewport on each side, so partially
 /// visible rows and small scroll deltas don't pop.
@@ -16,7 +16,8 @@ const OVERSCAN: usize = 2;
 /// selection — the row *content* is the caller's via a render closure.
 ///
 /// ```rust
-/// # use engine::ui::widgets::{VirtualList, Rect};
+/// # use comps::content::VirtualList;
+/// # use comps::core::Rect;
 /// # use engine::compositor::Compositor;
 /// # use engine::theme::Theme;
 /// let mut list = VirtualList::new(24.0);
@@ -115,12 +116,20 @@ impl VirtualList {
     }
 
     /// Handle wheel scrolling, scrollbar interaction, hover and click
-    /// selection. `bounds` must match the rect passed to `render_with`.
-    pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
+    /// selection. `bounds` must match the rect passed to `render_with`;
+    /// the scrollbar's hit band comes from `theme`.
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        bounds: Rect,
+        theme: &Theme,
+    ) -> EventResult {
         self.set_viewport(bounds);
 
         // Scrollbar first: it sits on top of rows.
-        let sb = self.scrollbar.handle_event(event, bounds, &mut self.scroll);
+        let sb = self
+            .scrollbar
+            .handle_event(event, bounds, &mut self.scroll, theme);
         if sb.handled {
             return sb;
         }

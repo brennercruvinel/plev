@@ -1,30 +1,50 @@
-//! HOFF select: a 44px glass pill control (base-2m value + chevron) that
-//! opens a floating radius-20 options panel on an overlay layer, the
-//! active option marked by an 8px dot. Keyboard focus
-//! ([`Select::set_focused`]) rings the closed pill with the accent ring.
+//! HOFF select: a glass pill control (base-2m value + chevron) that
+//! opens a floating options panel on an overlay layer, the active option
+//! marked by a dot. Keyboard focus ([`Select::set_focused`]) rings the
+//! closed pill with the accent ring.
+//!
+//! Geometry from the theme: the control and each option are one `Md`
+//! control tall, the pill is the tabs/select radius, the panel is the
+//! card radius with the menu padding, options are the nav radius, the
+//! panel never grows past `size.dropdown_max_h`.
 
-use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::{Theme, TypographyScale};
-use crate::ui::icons;
+use crate::icons;
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::text::{TextMeasurer, TextStyle};
+use engine::theme::{ControlSize, IconSize, Theme};
 
-use super::{EventResult, Rect, WidgetEvent, focus_ring, glass_pill, menu_shadow, with_alpha};
-
-/// HOFF select: 44px pill control (radius 22, base-2m label), options
-/// panel radius 20 / pad 8, 44px options (radius 12) with an 8px dot
-/// marking the active one.
-const OPTION_H: f32 = 44.0;
+use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
+use crate::recipe::{focus_ring, glass_pill, menu_shadow};
 
 /// Label style for the control and its options: base-2m.
-fn label_style() -> TextStyle {
-    TypographyScale::hoff().base_2m()
+fn label_style(theme: &Theme) -> TextStyle {
+    theme.typography.base_2m()
 }
-const PAD_X: f32 = 16.0;
-const PAD_Y: f32 = 8.0;
-const CHEVRON: f32 = 16.0;
-const DROPDOWN_GAP: f32 = 4.0;
-const MAX_DROPDOWN_H: f32 = 320.0;
-const DOT: f32 = 8.0;
+
+/// The per-theme geometry the control, the hit test and the panel share.
+struct Metrics {
+    option_h: f32,
+    pad_x: f32,
+    pad_y: f32,
+    chevron: f32,
+    gap: f32,
+    max_h: f32,
+    dot: f32,
+}
+
+impl Metrics {
+    fn of(theme: &Theme) -> Self {
+        Self {
+            option_h: theme.control.height(ControlSize::Md),
+            pad_x: theme.spacing.lg,
+            pad_y: theme.control.menu_pad,
+            chevron: theme.control.icon(IconSize::Sm),
+            gap: theme.spacing.xs,
+            max_h: theme.size.dropdown_max_h,
+            dot: theme.spacing.sm,
+        }
+    }
+}
 
 /// Dropdown select. The closed control renders in normal flow; while
 /// open, render the dropdown via [`render_dropdown`](Select::render_dropdown)
@@ -84,17 +104,19 @@ impl Select {
     }
 
     /// Dropdown rect below the control.
-    pub fn dropdown_rect(&self, bounds: Rect) -> Rect {
-        let h = (PAD_Y * 2.0 + self.options.len() as f32 * OPTION_H).min(MAX_DROPDOWN_H);
-        Rect::new(bounds.x, bounds.y + bounds.h + DROPDOWN_GAP, bounds.w, h)
+    pub fn dropdown_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
+        let m = Metrics::of(theme);
+        let h = (m.pad_y * 2.0 + self.options.len() as f32 * m.option_h).min(m.max_h);
+        Rect::new(bounds.x, bounds.y + bounds.h + m.gap, bounds.w, h)
     }
 
-    fn option_at(&self, x: f32, y: f32, bounds: Rect) -> Option<usize> {
-        let dd = self.dropdown_rect(bounds);
+    fn option_at(&self, x: f32, y: f32, bounds: Rect, theme: &Theme) -> Option<usize> {
+        let m = Metrics::of(theme);
+        let dd = self.dropdown_rect(bounds, theme);
         if !dd.contains(x, y) {
             return None;
         }
-        let i = ((y - dd.y - PAD_Y) / OPTION_H).floor();
+        let i = ((y - dd.y - m.pad_y) / m.option_h).floor();
         if i < 0.0 {
             return None;
         }
@@ -102,7 +124,14 @@ impl Select {
         (i < self.options.len()).then_some(i)
     }
 
-    pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
+    /// The options panel is laid out from the theme, so the event path
+    /// takes the same `theme` the render path draws with.
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        bounds: Rect,
+        theme: &Theme,
+    ) -> EventResult {
         if self.disabled {
             if self.hovered || self.open {
                 self.hovered = false;
@@ -120,7 +149,7 @@ impl Select {
                     result = EventResult::changed();
                 }
                 if self.open {
-                    let hit = self.option_at(x, y, bounds);
+                    let hit = self.option_at(x, y, bounds, theme);
                     if hit != self.hovered_option {
                         self.hovered_option = hit;
                         result = result.merge(EventResult::changed());
@@ -130,7 +159,7 @@ impl Select {
             }
             WidgetEvent::MouseDown { x, y } => {
                 if self.open {
-                    if let Some(i) = self.option_at(x, y, bounds) {
+                    if let Some(i) = self.option_at(x, y, bounds, theme) {
                         let changed = i != self.selected;
                         self.selected = i;
                         self.close();
@@ -158,8 +187,13 @@ impl Select {
 
     /// Render the closed control (selected value + chevron).
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let alpha = if self.disabled { 0.5 } else { 1.0 };
         let glass = &theme.glass;
+        let m = Metrics::of(theme);
+        let alpha = if self.disabled {
+            glass.disabled_alpha
+        } else {
+            1.0
+        };
 
         // Glass pill: rgba($n2,.05), hover .10, focus border rgba($n2,.25).
         let bg = if self.hovered || self.open {
@@ -178,26 +212,31 @@ impl Select {
 
         // Glass field; the chevron icon pushed later stacks on top (the
         // compositor preserves push order across primitive types).
-        let radius = theme.radius.xl.min(bounds.h / 2.0);
+        let radius = theme.shape.tabs.min(bounds.h / 2.0);
         if self.focused {
             compositor.push(focus_ring(bounds, radius, theme));
         }
-        compositor.push(super::rounded_rect(
+        compositor.push(crate::recipe::rounded_rect(
             bounds.x, bounds.y, bounds.w, bounds.h, radius, bg,
         ));
-        compositor.push(super::rounded_rect_stroke(
-            bounds.x, bounds.y, bounds.w, bounds.h, radius, edge, 1.5,
+        compositor.push(crate::recipe::rounded_rect_stroke(
+            bounds.x,
+            bounds.y,
+            bounds.w,
+            bounds.h,
+            radius,
+            edge,
+            theme.control.edge_width_strong,
         ));
 
         if let Some(label) = self.selected_label() {
-            let style = label_style();
-            // base-2m at rgba($n2,.76).
-            let text = theme.colors.text;
+            let style = label_style(theme);
+            let text = glass.text_active;
             compositor.push(SceneNode::Text {
                 key: TextNodeKey::from_style(label, &style, None),
-                x: bounds.x + PAD_X,
+                x: bounds.x + m.pad_x,
                 y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
-                color: with_alpha(text, text.0[3] * 0.8 * alpha),
+                color: with_alpha(text, text.0[3] * alpha),
             });
         }
 
@@ -208,10 +247,10 @@ impl Select {
         };
         if let Some(node) = icons::icon_at(
             chevron,
-            CHEVRON,
+            m.chevron,
             with_alpha(glass.text_faint, glass.text_faint.0[3] * alpha),
-            bounds.x + bounds.w - PAD_X - CHEVRON,
-            bounds.y + (bounds.h - CHEVRON) / 2.0,
+            bounds.x + bounds.w - m.pad_x - m.chevron,
+            bounds.y + (bounds.h - m.chevron) / 2.0,
         ) {
             compositor.push(node);
         }
@@ -228,23 +267,29 @@ impl Select {
         if !self.open {
             return;
         }
-        let dd = self.dropdown_rect(bounds);
+        let m = Metrics::of(theme);
+        let dd = self.dropdown_rect(bounds, theme);
         let glass = &theme.glass;
-        let text = theme.colors.text;
 
         // Floating panel: solid popover body, edge-light, deep shadow.
         // No path icons inside (the active marker is an SDF dot), so the
         // whole panel can use the gradient edge-light recipe.
-        let radius = theme.radius.lg;
-        compositor.push_to_layer(layer, menu_shadow(dd, radius));
-        for node in glass_pill(dd, radius, glass.edge_soft.0, 1.5, glass.popover.0) {
+        let radius = theme.shape.card;
+        compositor.push_to_layer(layer, menu_shadow(dd, radius, theme));
+        for node in glass_pill(
+            dd,
+            radius,
+            glass.edge_soft.0,
+            theme.control.edge_width_strong,
+            glass.popover.0,
+        ) {
             compositor.push_to_layer(layer, node);
         }
 
-        let style = label_style();
+        let style = label_style(theme);
         for (i, option) in self.options.iter().enumerate() {
-            let oy = dd.y + PAD_Y + i as f32 * OPTION_H;
-            if oy + OPTION_H > dd.y + dd.h {
+            let oy = dd.y + m.pad_y + i as f32 * m.option_h;
+            if oy + m.option_h > dd.y + dd.h {
                 break;
             }
             let is_selected = i == self.selected;
@@ -255,43 +300,47 @@ impl Select {
                 compositor.push_to_layer(
                     layer,
                     SceneNode::RoundedRect {
-                        x: dd.x + PAD_Y,
+                        x: dd.x + m.pad_y,
                         y: oy,
-                        w: dd.w - PAD_Y * 2.0,
-                        h: OPTION_H,
+                        w: dd.w - m.pad_y * 2.0,
+                        h: m.option_h,
                         color: if is_selected {
                             glass.surface_active.0
                         } else {
                             glass.surface_hover.0
                         },
-                        corner_radius: theme.radius.md.min(OPTION_H / 2.0),
+                        corner_radius: theme.shape.nav.min(m.option_h / 2.0),
                         border_width: 0.0,
                         border_color: [0.0; 4],
                     },
                 );
             }
-            // base-2m: rgba($n2,.56) -> .76 hovered/selected.
-            let label_alpha = if is_hovered || is_selected { 0.8 } else { 0.59 };
+            // base-2m: text-default at rest, text-active hovered/selected.
+            let label = if is_hovered || is_selected {
+                glass.text_active
+            } else {
+                glass.text_default
+            };
             compositor.push_to_layer(
                 layer,
                 SceneNode::Text {
                     key: TextNodeKey::from_style(option, &style, None),
-                    x: dd.x + PAD_X,
-                    y: oy + TextMeasurer::vertical_center(&style, OPTION_H),
-                    color: with_alpha(text, text.0[3] * label_alpha),
+                    x: dd.x + m.pad_x,
+                    y: oy + TextMeasurer::vertical_center(&style, m.option_h),
+                    color: label.0,
                 },
             );
             if is_selected {
-                // 8px dot on the right marks the active option.
+                // A dot on the right marks the active option.
                 compositor.push_to_layer(
                     layer,
                     SceneNode::RoundedRect {
-                        x: dd.x + dd.w - PAD_X - DOT,
-                        y: oy + (OPTION_H - DOT) / 2.0,
-                        w: DOT,
-                        h: DOT,
-                        color: text.0,
-                        corner_radius: DOT / 2.0,
+                        x: dd.x + dd.w - m.pad_x - m.dot,
+                        y: oy + (m.option_h - m.dot) / 2.0,
+                        w: m.dot,
+                        h: m.dot,
+                        color: theme.colors.text.0,
+                        corner_radius: m.dot / 2.0,
                         border_width: 0.0,
                         border_color: [0.0; 4],
                     },

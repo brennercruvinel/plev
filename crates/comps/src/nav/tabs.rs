@@ -1,20 +1,19 @@
-//! HOFF segmented tabs: a radius-22 graphite strip whose equal-width
-//! segments share one base-2sm style for measurement and drawing; the
-//! active segment is a shadowed, edge-lit glass block. Keyboard focus
-//! ([`Tabs::set_focused`]) rings the whole strip with the accent ring.
+//! HOFF segmented tabs: a graphite strip (`glass.tabs`, the tabs radius)
+//! whose equal-width segments share one base-2sm style for measurement
+//! and drawing; the active segment is a raised, edge-lit glass block.
+//! Keyboard focus ([`Tabs::set_focused`]) rings the whole strip with the
+//! accent ring.
 
-use crate::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::text::TextMeasurer;
-use crate::theme::{Theme, TypographyScale};
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::text::TextMeasurer;
+use engine::theme::{ControlSize, Theme};
 
-use super::{EventResult, Rect, WidgetEvent, focus_ring, glass_pill};
-
-/// HOFF tabs: container radius 22 / pad 4 / rgba(40,40,40,.6); the active
-/// segment is an 18-radius glass block with its own edge-light + shadow.
-const PAD: f32 = 4.0;
+use crate::core::{EventResult, Rect, WidgetEvent};
+use crate::recipe::{focus_ring, glass_pill, shadow_node};
 
 /// Segmented tab strip. Tabs share the width equally (CSS `flex: 1`);
-/// give the widget 44px of height for the canonical 36px segments.
+/// give the widget [`Tabs::height`] (one `Md` control) for the canonical
+/// `Xs` segments inside the tabs padding.
 #[derive(Clone, Debug)]
 pub struct Tabs {
     pub labels: Vec<String>,
@@ -47,27 +46,41 @@ impl Tabs {
         self.focused
     }
 
+    /// Canonical strip height: the `Md` control (segments are `Xs` inside
+    /// the tabs padding).
+    pub fn height(theme: &Theme) -> f32 {
+        theme.control.height(ControlSize::Md)
+    }
+
     /// Hit rects for each tab within `bounds`: equal-width segments
-    /// inside the 4px container padding.
-    pub fn item_rects(&self, bounds: Rect) -> Vec<Rect> {
+    /// inside the tabs container padding.
+    pub fn item_rects(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
+        let pad = theme.control.tabs_pad;
         let n = self.labels.len().max(1) as f32;
-        let w = (bounds.w - PAD * 2.0) / n;
-        let h = bounds.h - PAD * 2.0;
+        let w = (bounds.w - pad * 2.0) / n;
+        let h = bounds.h - pad * 2.0;
         (0..self.labels.len())
-            .map(|i| Rect::new(bounds.x + PAD + i as f32 * w, bounds.y + PAD, w, h))
+            .map(|i| Rect::new(bounds.x + pad + i as f32 * w, bounds.y + pad, w, h))
             .collect()
     }
 
-    fn tab_at(&self, x: f32, y: f32, bounds: Rect) -> Option<usize> {
-        self.item_rects(bounds)
+    fn tab_at(&self, x: f32, y: f32, bounds: Rect, theme: &Theme) -> Option<usize> {
+        self.item_rects(bounds, theme)
             .iter()
             .position(|r| r.contains(x, y))
     }
 
-    pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
+    /// Segments are laid out from the theme's tabs padding, so the event
+    /// path takes the same `theme` the render path draws with.
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        bounds: Rect,
+        theme: &Theme,
+    ) -> EventResult {
         match *event {
             WidgetEvent::MouseMove { x, y } => {
-                let hit = self.tab_at(x, y, bounds);
+                let hit = self.tab_at(x, y, bounds, theme);
                 if hit != self.hovered {
                     self.hovered = hit;
                     EventResult::changed()
@@ -76,7 +89,7 @@ impl Tabs {
                 }
             }
             WidgetEvent::MouseDown { x, y } => {
-                if let Some(i) = self.tab_at(x, y, bounds) {
+                if let Some(i) = self.tab_at(x, y, bounds, theme) {
                     if i != self.active {
                         self.active = i;
                         EventResult::clicked()
@@ -97,46 +110,40 @@ impl Tabs {
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
         let glass = &theme.glass;
 
+        let radius = theme.shape.tabs.min(bounds.h / 2.0);
         if self.focused {
-            compositor.push(focus_ring(bounds, bounds.h / 2.0, theme));
+            compositor.push(focus_ring(bounds, radius, theme));
         }
 
-        // Container: rgba(40,40,40,.6), pill radius (22 at 44px height).
-        let container = {
-            let b = glass.button.0;
-            [b[0], b[1], b[2], 0.6]
-        };
         compositor.push(SceneNode::RoundedRect {
             x: bounds.x,
             y: bounds.y,
             w: bounds.w,
             h: bounds.h,
-            color: container,
-            corner_radius: bounds.h / 2.0,
+            color: glass.tabs.0,
+            corner_radius: radius,
             border_width: 0.0,
             border_color: [0.0; 4],
         });
 
         // Labels: base-2sm (Tabs.module.sass), one style for measure+render.
-        let style = TypographyScale::hoff().base_2sm();
-        let rects = self.item_rects(bounds);
+        let style = theme.typography.base_2sm();
+        let rects = self.item_rects(bounds, theme);
 
-        // Active block: shadow + edge-light + rgba($n2,.05) fill.
+        // Active block: raised shadow + edge-light + surface-hover fill at
+        // the block radius.
         if let Some(rect) = rects.get(self.active) {
-            let radius = rect.h / 2.0;
-            compositor.push(SceneNode::Shadow {
-                x: rect.x,
-                y: rect.y,
-                w: rect.w,
-                h: rect.h,
-                corner_radius: radius,
-                // 0 8px 16px -4px rgba(18,18,18,.20).
-                blur_radius: 16.0,
-                offset: [0.0, 8.0],
-                color: [18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.20],
-                inset: false,
-            });
-            for node in glass_pill(*rect, radius, glass.edge.0, 1.5, glass.surface_hover.0) {
+            let block_radius = theme.shape.block.min(rect.h / 2.0);
+            if let Some(shadow) = shadow_node(*rect, block_radius, &theme.shadows.raised) {
+                compositor.push(shadow);
+            }
+            for node in glass_pill(
+                *rect,
+                block_radius,
+                glass.edge.0,
+                theme.control.edge_width_strong,
+                glass.surface_hover.0,
+            ) {
                 compositor.push(node);
             }
         }

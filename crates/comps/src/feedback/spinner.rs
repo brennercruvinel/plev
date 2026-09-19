@@ -6,11 +6,11 @@
 
 use std::f32::consts::TAU;
 
-use crate::compositor::Compositor;
-use crate::path::PathBuilder;
-use crate::theme::Theme;
+use engine::compositor::Compositor;
+use engine::path::PathBuilder;
+use engine::theme::{IconSize, Theme};
 
-use super::Rect;
+use crate::core::Rect;
 
 /// Full turns per second.
 const SPEED: f32 = 0.9;
@@ -19,24 +19,24 @@ const SWEEP: f32 = TAU * 0.75;
 /// Arc segments (smooth enough at the largest size).
 const SEGMENTS: usize = 24;
 
-/// Spinner sizes, on the HOFF icon scale (16 / 24 / 32).
+/// Spinner sizes, on the theme's icon scale.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum SpinnerSize {
-    /// Inline / inside buttons: 16px.
+    /// Inline / inside buttons: the small icon.
     Sm,
-    /// Default: 24px.
+    /// Default: the large icon.
     #[default]
     Md,
-    /// Page-level loading: 32px.
+    /// Page-level loading: the large icon plus the `sm` step.
     Lg,
 }
 
 impl SpinnerSize {
-    pub fn px(self) -> f32 {
+    pub fn px(self, theme: &Theme) -> f32 {
         match self {
-            SpinnerSize::Sm => 16.0,
-            SpinnerSize::Md => 24.0,
-            SpinnerSize::Lg => 32.0,
+            SpinnerSize::Sm => theme.control.icon(IconSize::Sm),
+            SpinnerSize::Md => theme.control.icon(IconSize::Lg),
+            SpinnerSize::Lg => theme.control.icon(IconSize::Lg) + theme.spacing.sm,
         }
     }
 }
@@ -78,12 +78,12 @@ impl Spinner {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let px = self.size.px().min(bounds.w).min(bounds.h);
-        if px < 4.0 {
+        let px = self.size.px(theme).min(bounds.w).min(bounds.h);
+        let stroke = theme.control.spinner_stroke;
+        if px < stroke * 2.0 {
             return;
         }
         let (cx, cy) = bounds.center();
-        let stroke = (px / 8.0).max(1.5);
         let r = (px - stroke) / 2.0;
 
         // Arc polyline from `angle` over SWEEP; round caps read as a

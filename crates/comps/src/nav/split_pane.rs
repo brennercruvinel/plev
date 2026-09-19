@@ -10,15 +10,11 @@
 //! [`SplitPane::is_hovered`]/[`is_dragging`](SplitPane::is_dragging) and
 //! set it themselves.
 
-use crate::compositor::Compositor;
-use crate::theme::Theme;
+use engine::compositor::Compositor;
+use engine::theme::Theme;
 
-use super::{EventResult, Rect, WidgetEvent, rounded_rect};
-
-/// Divider thickness; the hit area extends [`GRAB_MARGIN`] px on each
-/// side so the 2px line isn't a precision game.
-const DIVIDER: f32 = 2.0;
-const GRAB_MARGIN: f32 = 4.0;
+use crate::core::{EventResult, Rect, WidgetEvent};
+use crate::recipe::rounded_rect;
 
 /// Which axis the split runs along.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -41,17 +37,28 @@ pub struct SplitPane {
     /// Minimum pixel size of each pane (clamped at read time).
     pub min_first: f32,
     pub min_second: f32,
+    /// Visible divider thickness (`control.divider_line`).
+    pub divider: f32,
+    /// Extra hit margin on each side of the divider, so the thin line is
+    /// not a precision game (`(control.divider_hit - divider) / 2`).
+    pub grab_margin: f32,
     hovered: bool,
     dragging: bool,
 }
 
 impl SplitPane {
-    pub fn new(direction: SplitDirection, ratio: f32) -> Self {
+    /// Divider geometry and the pane minimums come from the theme at
+    /// construction: the line and hit widths from `control`, the minimum
+    /// pane from the narrowest field.
+    pub fn new(direction: SplitDirection, ratio: f32, theme: &Theme) -> Self {
+        let divider = theme.control.divider_line;
         Self {
             direction,
             ratio: ratio.clamp(0.0, 1.0),
-            min_first: 80.0,
-            min_second: 80.0,
+            min_first: theme.size.field_min_w,
+            min_second: theme.size.field_min_w,
+            divider,
+            grab_margin: ((theme.control.divider_hit - divider) / 2.0).max(0.0),
             hovered: false,
             dragging: false,
         }
@@ -80,7 +87,7 @@ impl SplitPane {
         let total = match self.direction {
             SplitDirection::Horizontal => bounds.w,
             SplitDirection::Vertical => bounds.h,
-        } - DIVIDER;
+        } - self.divider;
         let total = total.max(0.0);
         let (min_a, min_b) = (self.min_first.min(total), self.min_second.min(total));
         let raw = total * self.ratio;
@@ -104,8 +111,12 @@ impl SplitPane {
     pub fn divider_rect(&self, bounds: Rect) -> Rect {
         let first = self.first_size(bounds);
         match self.direction {
-            SplitDirection::Horizontal => Rect::new(bounds.x + first, bounds.y, DIVIDER, bounds.h),
-            SplitDirection::Vertical => Rect::new(bounds.x, bounds.y + first, bounds.w, DIVIDER),
+            SplitDirection::Horizontal => {
+                Rect::new(bounds.x + first, bounds.y, self.divider, bounds.h)
+            }
+            SplitDirection::Vertical => {
+                Rect::new(bounds.x, bounds.y + first, bounds.w, self.divider)
+            }
         }
     }
 
@@ -114,16 +125,16 @@ impl SplitPane {
         let d = self.divider_rect(bounds);
         match self.direction {
             SplitDirection::Horizontal => Rect::new(
-                d.x + DIVIDER,
+                d.x + self.divider,
                 bounds.y,
-                (bounds.x + bounds.w - d.x - DIVIDER).max(0.0),
+                (bounds.x + bounds.w - d.x - self.divider).max(0.0),
                 bounds.h,
             ),
             SplitDirection::Vertical => Rect::new(
                 bounds.x,
-                d.y + DIVIDER,
+                d.y + self.divider,
                 bounds.w,
-                (bounds.y + bounds.h - d.y - DIVIDER).max(0.0),
+                (bounds.y + bounds.h - d.y - self.divider).max(0.0),
             ),
         }
     }
@@ -132,12 +143,18 @@ impl SplitPane {
     fn grab_rect(&self, bounds: Rect) -> Rect {
         let d = self.divider_rect(bounds);
         match self.direction {
-            SplitDirection::Horizontal => {
-                Rect::new(d.x - GRAB_MARGIN, d.y, DIVIDER + GRAB_MARGIN * 2.0, d.h)
-            }
-            SplitDirection::Vertical => {
-                Rect::new(d.x, d.y - GRAB_MARGIN, d.w, DIVIDER + GRAB_MARGIN * 2.0)
-            }
+            SplitDirection::Horizontal => Rect::new(
+                d.x - self.grab_margin,
+                d.y,
+                self.divider + self.grab_margin * 2.0,
+                d.h,
+            ),
+            SplitDirection::Vertical => Rect::new(
+                d.x,
+                d.y - self.grab_margin,
+                d.w,
+                self.divider + self.grab_margin * 2.0,
+            ),
         }
     }
 
@@ -154,7 +171,7 @@ impl SplitPane {
                     let total = match self.direction {
                         SplitDirection::Horizontal => bounds.w,
                         SplitDirection::Vertical => bounds.h,
-                    } - DIVIDER;
+                    } - self.divider;
                     let pos = match self.direction {
                         SplitDirection::Horizontal => x - bounds.x,
                         SplitDirection::Vertical => y - bounds.y,

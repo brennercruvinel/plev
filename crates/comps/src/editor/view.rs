@@ -4,22 +4,13 @@ use std::ops::Range;
 
 use rope::{Document, GoalColumn, Selection};
 
-use crate::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::input::scroll::ScrollState;
-use crate::layout::ComputedBounds;
-use crate::text::TextMeasurer;
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::input::scroll::ScrollState;
+use engine::layout::ComputedBounds;
+use engine::text::TextMeasurer;
 
-use super::clipboard::{ClipboardProvider, default_clipboard};
 use super::config::{EditorConfig, EditorTheme};
-
-/// Horizontal padding inside the gutter, each side of the line numbers.
-const GUTTER_PAD: f32 = 10.0;
-/// Gap between the gutter separator and the first text column.
-const TEXT_PAD_X: f32 = 8.0;
-/// Caret width in logical pixels.
-const CURSOR_W: f32 = 2.0;
-/// Height of the IME preedit underline.
-const PREEDIT_UNDERLINE_H: f32 = 1.0;
+use engine::clipboard::{ClipboardProvider, default_clipboard};
 
 /// Active IME composition, rendered inline at the primary cursor.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -91,7 +82,7 @@ impl EditorView {
     }
 
     /// Replace the clipboard backend (tests inject a [`LocalClipboard`]
-    /// (super::LocalClipboard) so they never touch the OS clipboard).
+    /// (engine::clipboard::LocalClipboard) so they never touch the OS clipboard).
     pub fn with_clipboard(mut self, clipboard: Box<dyn ClipboardProvider>) -> Self {
         self.clipboard = clipboard;
         self
@@ -115,12 +106,12 @@ impl EditorView {
         }
         let digits = self.document.len_lines().max(1).ilog10() + 1;
         let digit_w = TextMeasurer::measure_styled("0", &self.config.text_style(), None).0;
-        digits.max(2) as f32 * digit_w + 2.0 * GUTTER_PAD
+        digits.max(2) as f32 * digit_w + 2.0 * self.config.gutter_pad
     }
 
     /// X of the first text column, in window coordinates.
     pub fn text_origin_x(&self) -> f32 {
-        self.bounds.x + self.gutter_width() + TEXT_PAD_X
+        self.bounds.x + self.gutter_width() + self.config.text_pad_x
     }
 
     /// Range of lines to shape and emit for the current scroll position.
@@ -229,7 +220,7 @@ impl EditorView {
         ComputedBounds {
             x: self.text_origin_x() + self.caret_x(&text, caret_byte),
             y: self.line_top(line),
-            width: CURSOR_W,
+            width: self.config.cursor_w,
             height: self.config.line_height,
         }
     }
@@ -304,7 +295,7 @@ impl EditorView {
                 let num_w = TextMeasurer::measure_styled(&num, &style, None).0;
                 compositor.push(SceneNode::Text {
                     key: self.text_key(&num),
-                    x: bounds.x + gutter_w - GUTTER_PAD - num_w,
+                    x: bounds.x + gutter_w - self.config.gutter_pad - num_w,
                     y,
                     color: theme.gutter_text,
                 });
@@ -352,7 +343,7 @@ impl EditorView {
             compositor.push(SceneNode::Rect {
                 x: text_x + self.caret_x(&text, rel),
                 y: self.line_top(line),
-                w: CURSOR_W,
+                w: self.config.cursor_w,
                 h: lh,
                 color: theme.cursor,
             });
@@ -389,9 +380,9 @@ impl EditorView {
         let x1 = self.caret_x(&composed, span.end);
         compositor.push(SceneNode::Rect {
             x: text_x + x0,
-            y: y + lh - PREEDIT_UNDERLINE_H - 1.0,
+            y: y + lh - self.config.preedit_underline_h - 1.0,
             w: (x1 - x0).max(1.0),
-            h: PREEDIT_UNDERLINE_H,
+            h: self.config.preedit_underline_h,
             color: theme.preedit_underline,
         });
 
@@ -399,7 +390,7 @@ impl EditorView {
         compositor.push(SceneNode::Rect {
             x: text_x + self.caret_x(&composed, caret_byte),
             y,
-            w: CURSOR_W,
+            w: self.config.cursor_w,
             h: lh,
             color: theme.cursor,
         });

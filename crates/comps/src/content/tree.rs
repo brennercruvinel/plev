@@ -1,16 +1,35 @@
-use crate::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::Theme;
-use crate::ui::icons;
+use crate::icons;
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::text::{TextMeasurer, TextStyle};
+use engine::theme::{IconSize, Theme};
 
-use super::{EventResult, Rect, WidgetEvent, with_alpha};
+use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
 
-const FONT: f32 = 13.0;
-const ROW_H: f32 = 26.0;
-const INDENT: f32 = 16.0;
-const ICON: f32 = 14.0;
-const CHEVRON: f32 = 12.0;
-const PAD_X: f32 = 6.0;
+/// The per-theme geometry the hit test and the render share: a dense
+/// base-2r row (line box plus `xs` above and below), one `lg` step of
+/// indent per depth, small icons, `xs` gaps.
+struct Metrics {
+    row_h: f32,
+    indent: f32,
+    icon: f32,
+    pad_x: f32,
+    gap: f32,
+    style: TextStyle,
+}
+
+impl Metrics {
+    fn of(theme: &Theme) -> Self {
+        let style = theme.typography.base_2r();
+        Self {
+            row_h: (style.line_height + theme.spacing.xs * 2.0).round(),
+            indent: theme.spacing.lg,
+            icon: theme.control.icon(IconSize::Sm),
+            pad_x: theme.spacing.sm,
+            gap: theme.spacing.xs,
+            style,
+        }
+    }
+}
 
 /// A node in a [`Tree`].
 #[derive(Clone, Debug)]
@@ -76,7 +95,7 @@ pub struct TreeRow {
 ///
 /// Rows are laid out top-down from `bounds.y`; the caller decides whether
 /// to wrap it in a scrollable region (pair with
-/// [`VirtualList`](super::VirtualList)-style clipping for huge trees).
+/// [`VirtualList`](crate::content::VirtualList)-style clipping for huge trees).
 #[derive(Clone, Debug)]
 pub struct Tree {
     pub roots: Vec<TreeNode>,
@@ -93,8 +112,8 @@ impl Tree {
         }
     }
 
-    pub fn row_height(&self) -> f32 {
-        ROW_H
+    pub fn row_height(&self, theme: &Theme) -> f32 {
+        Metrics::of(theme).row_h
     }
 
     /// Currently visible rows (expanded branches only), top to bottom.
@@ -120,8 +139,8 @@ impl Tree {
     }
 
     /// Total height of the visible rows.
-    pub fn content_height(&self) -> f32 {
-        self.visible_rows().len() as f32 * ROW_H
+    pub fn content_height(&self, theme: &Theme) -> f32 {
+        self.visible_rows().len() as f32 * Metrics::of(theme).row_h
     }
 
     fn node_mut(nodes: &mut [TreeNode], id: u64) -> Option<&mut TreeNode> {
@@ -147,11 +166,11 @@ impl Tree {
         }
     }
 
-    fn row_at(&self, x: f32, y: f32, bounds: Rect) -> Option<usize> {
+    fn row_at(&self, x: f32, y: f32, bounds: Rect, theme: &Theme) -> Option<usize> {
         if !bounds.contains(x, y) {
             return None;
         }
-        let i = ((y - bounds.y) / ROW_H).floor();
+        let i = ((y - bounds.y) / Metrics::of(theme).row_h).floor();
         if i < 0.0 {
             return None;
         }
@@ -161,10 +180,17 @@ impl Tree {
 
     /// Handle events. Clicking a branch toggles it; clicking a leaf
     /// selects it (selection id readable via `self.selected`).
-    pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
+    /// Rows are laid out from the theme, so the event path takes the same
+    /// `theme` the render path draws with.
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        bounds: Rect,
+        theme: &Theme,
+    ) -> EventResult {
         match *event {
             WidgetEvent::MouseMove { x, y } => {
-                let hit = self.row_at(x, y, bounds);
+                let hit = self.row_at(x, y, bounds, theme);
                 if hit != self.hovered_row {
                     self.hovered_row = hit;
                     EventResult::changed()
@@ -173,7 +199,7 @@ impl Tree {
                 }
             }
             WidgetEvent::MouseDown { x, y } => {
-                let Some(i) = self.row_at(x, y, bounds) else {
+                let Some(i) = self.row_at(x, y, bounds, theme) else {
                     return EventResult::IGNORED;
                 };
                 let row = &self.visible_rows()[i];
@@ -191,40 +217,38 @@ impl Tree {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        // IDE rows (no HOFF mixin): 13px, tight 1.3 line box.
-        let style = TextStyle::new(FONT).with_line_height(FONT * 1.3);
+        let m = Metrics::of(theme);
+        let style = &m.style;
         for (i, row) in self.visible_rows().iter().enumerate() {
-            let ry = bounds.y + i as f32 * ROW_H;
-            if ry + ROW_H > bounds.y + bounds.h + ROW_H {
+            let ry = bounds.y + i as f32 * m.row_h;
+            if ry + m.row_h > bounds.y + bounds.h + m.row_h {
                 break;
             }
-            let row_rect = Rect::new(bounds.x, ry, bounds.w, ROW_H);
+            let row_rect = Rect::new(bounds.x, ry, bounds.w, m.row_h);
             let is_selected = self.selected == Some(row.id);
             let is_hovered = self.hovered_row == Some(i);
 
-            // HOFF rows: hover .05 / selected .10 white glass, radius 12.
-            // Row icons pushed later stack on top (push order preserved).
-            if is_selected {
-                compositor.push(super::rounded_rect(
-                    row_rect.x + 2.0,
-                    row_rect.y + 1.0,
-                    row_rect.w - 4.0,
-                    row_rect.h - 2.0,
-                    theme.radius.md.min(row_rect.h / 2.0),
-                    theme.glass.surface_active.0,
-                ));
-            } else if is_hovered {
-                compositor.push(super::rounded_rect(
-                    row_rect.x + 2.0,
-                    row_rect.y + 1.0,
-                    row_rect.w - 4.0,
-                    row_rect.h - 2.0,
-                    theme.radius.md.min(row_rect.h / 2.0),
-                    theme.glass.surface_hover.0,
+            // HOFF rows: hover / selected white glass at the nav radius,
+            // inset a hair so neighbors keep a seam. Row icons pushed
+            // later stack on top (push order preserved).
+            if is_selected || is_hovered {
+                let seam_x = m.gap / 2.0;
+                let seam_y = theme.control.edge_width;
+                compositor.push(crate::recipe::rounded_rect(
+                    row_rect.x + seam_x,
+                    row_rect.y + seam_y,
+                    row_rect.w - seam_x * 2.0,
+                    row_rect.h - seam_y * 2.0,
+                    theme.shape.nav.min(row_rect.h / 2.0),
+                    if is_selected {
+                        theme.glass.surface_active.0
+                    } else {
+                        theme.glass.surface_hover.0
+                    },
                 ));
             }
 
-            let mut cx = bounds.x + PAD_X + row.depth as f32 * INDENT;
+            let mut cx = bounds.x + m.pad_x + row.depth as f32 * m.indent;
 
             if row.is_branch {
                 let chevron = if row.expanded {
@@ -234,15 +258,15 @@ impl Tree {
                 };
                 if let Some(node) = icons::icon_at(
                     chevron,
-                    CHEVRON,
+                    m.icon,
                     with_alpha(theme.colors.text_dim, 1.0),
                     cx,
-                    ry + (ROW_H - CHEVRON) / 2.0,
+                    ry + (m.row_h - m.icon) / 2.0,
                 ) {
                     compositor.push(node);
                 }
             }
-            cx += CHEVRON + 4.0;
+            cx += m.icon + m.gap;
 
             let icon_name = row.icon.unwrap_or(if row.is_branch {
                 if row.expanded {
@@ -255,19 +279,19 @@ impl Tree {
             });
             if let Some(node) = icons::icon_at(
                 icon_name,
-                ICON,
+                m.icon,
                 with_alpha(theme.colors.text_mid, 1.0),
                 cx,
-                ry + (ROW_H - ICON) / 2.0,
+                ry + (m.row_h - m.icon) / 2.0,
             ) {
                 compositor.push(node);
             }
-            cx += ICON + 6.0;
+            cx += m.icon + m.gap * 2.0;
 
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::from_style(&row.label, &style, None),
+                key: TextNodeKey::from_style(&row.label, style, None),
                 x: cx,
-                y: ry + TextMeasurer::vertical_center(&style, ROW_H),
+                y: ry + TextMeasurer::vertical_center(style, m.row_h),
                 color: with_alpha(
                     if is_selected {
                         theme.colors.text

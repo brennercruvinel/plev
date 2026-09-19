@@ -1,13 +1,9 @@
-use crate::animation::Spring;
-use crate::compositor::{Compositor, SceneNode};
-use crate::input::scroll::ScrollState;
-use crate::theme::Theme;
+use engine::animation::Spring;
+use engine::compositor::{Compositor, SceneNode};
+use engine::input::scroll::ScrollState;
+use engine::theme::Theme;
 
-use super::{EventResult, Rect, WidgetEvent, with_alpha};
-
-const WIDTH: f32 = 6.0;
-const WIDTH_HOVER: f32 = 10.0;
-const MIN_THUMB: f32 = 24.0;
+use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// Seconds without scroll activity before the bar fades out.
 const IDLE_HIDE_SECS: f32 = 1.0;
@@ -83,26 +79,42 @@ impl Scrollbar {
     }
 
     /// Track rect: the full-height strip at the right edge of `bounds`.
-    pub fn track_rect(&self, bounds: Rect) -> Rect {
+    pub fn track_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
+        let c = &theme.control;
         let w = if self.hovered || self.dragging {
-            WIDTH_HOVER
+            c.scrollbar_w_hover
         } else {
-            WIDTH
+            c.scrollbar_w
         };
-        Rect::new(bounds.x + bounds.w - w - 2.0, bounds.y, w, bounds.h)
+        Rect::new(
+            bounds.x + bounds.w - w - c.scrollbar_inset,
+            bounds.y,
+            w,
+            bounds.h,
+        )
     }
 
     /// Thumb rect derived from the scroll state (proportional size).
-    pub fn thumb_rect(&self, bounds: Rect, scroll: &ScrollState) -> Rect {
-        let track = self.track_rect(bounds);
-        let thumb_h = (track.h * scroll.thumb_ratio()).max(MIN_THUMB).min(track.h);
+    pub fn thumb_rect(&self, bounds: Rect, scroll: &ScrollState, theme: &Theme) -> Rect {
+        let track = self.track_rect(bounds, theme);
+        let thumb_h = (track.h * scroll.thumb_ratio())
+            .max(theme.control.scrollbar_min_thumb)
+            .min(track.h);
         let y = track.y + (track.h - thumb_h) * scroll.thumb_position();
         Rect::new(track.x, y, track.w, thumb_h)
     }
 
-    fn offset_for_thumb_top(&self, thumb_top: f32, bounds: Rect, scroll: &ScrollState) -> f32 {
-        let track = self.track_rect(bounds);
-        let thumb_h = (track.h * scroll.thumb_ratio()).max(MIN_THUMB).min(track.h);
+    fn offset_for_thumb_top(
+        &self,
+        thumb_top: f32,
+        bounds: Rect,
+        scroll: &ScrollState,
+        theme: &Theme,
+    ) -> f32 {
+        let track = self.track_rect(bounds, theme);
+        let thumb_h = (track.h * scroll.thumb_ratio())
+            .max(theme.control.scrollbar_min_thumb)
+            .min(track.h);
         let usable = (track.h - thumb_h).max(1.0);
         let t = ((thumb_top - track.y) / usable).clamp(0.0, 1.0);
         t * scroll.max_offset()
@@ -115,6 +127,7 @@ impl Scrollbar {
         event: &WidgetEvent,
         bounds: Rect,
         scroll: &mut ScrollState,
+        theme: &Theme,
     ) -> EventResult {
         if !scroll.is_scrollable() {
             return EventResult::IGNORED;
@@ -122,9 +135,16 @@ impl Scrollbar {
         match *event {
             WidgetEvent::MouseMove { x, y } => {
                 let mut result = EventResult::IGNORED;
-                // Generous hover band so the 6px bar is easy to reach.
-                let track = self.track_rect(bounds);
-                let near = Rect::new(track.x - 4.0, track.y, track.w + 6.0, track.h);
+                // Generous hover band so the thin bar is easy to reach:
+                // the hovered width on both sides.
+                let track = self.track_rect(bounds, theme);
+                let reach = theme.control.scrollbar_w_hover - track.w;
+                let near = Rect::new(
+                    track.x - reach,
+                    track.y,
+                    track.w + reach + theme.control.scrollbar_inset,
+                    track.h,
+                );
                 let inside = near.contains(x, y) && self.opacity() > 0.1;
                 if inside != self.hovered {
                     self.hovered = inside;
@@ -136,7 +156,8 @@ impl Scrollbar {
                 }
                 if self.dragging {
                     let old = scroll.offset();
-                    let target = self.offset_for_thumb_top(y - self.drag_grab, bounds, scroll);
+                    let target =
+                        self.offset_for_thumb_top(y - self.drag_grab, bounds, scroll, theme);
                     scroll.scroll_to(target);
                     self.idle = 0.0;
                     if scroll.offset() != old {
@@ -150,19 +171,20 @@ impl Scrollbar {
                 if self.opacity() <= 0.1 {
                     return EventResult::IGNORED;
                 }
-                let thumb = self.thumb_rect(bounds, scroll);
+                let thumb = self.thumb_rect(bounds, scroll, theme);
                 if thumb.contains(x, y) {
                     self.dragging = true;
                     self.drag_grab = y - thumb.y;
                     self.idle = 0.0;
                     return EventResult::changed();
                 }
-                let track = self.track_rect(bounds);
+                let track = self.track_rect(bounds, theme);
                 if track.contains(x, y) {
                     // Jump so the thumb centers on the click, then drag.
                     self.dragging = true;
                     self.drag_grab = thumb.h / 2.0;
-                    let target = self.offset_for_thumb_top(y - self.drag_grab, bounds, scroll);
+                    let target =
+                        self.offset_for_thumb_top(y - self.drag_grab, bounds, scroll, theme);
                     scroll.scroll_to(target);
                     self.idle = 0.0;
                     return EventResult::changed();
@@ -210,20 +232,24 @@ impl Scrollbar {
         if opacity <= 0.01 {
             return;
         }
-        let thumb = self.thumb_rect(bounds, scroll);
-        let strength = if self.dragging {
-            0.65
+        let thumb = self.thumb_rect(bounds, scroll, theme);
+        // Thumb: placeholder alpha at rest, faint on hover, text-default
+        // while dragging (the same three text steps every quiet control
+        // climbs).
+        let g = &theme.glass;
+        let tone = if self.dragging {
+            g.text_default
         } else if self.hovered {
-            0.55
+            g.text_faint
         } else {
-            0.35
+            g.text_placeholder
         };
         out.push(SceneNode::RoundedRect {
             x: thumb.x,
             y: thumb.y,
             w: thumb.w,
             h: thumb.h,
-            color: with_alpha(theme.colors.text_mid, strength * opacity),
+            color: with_alpha(tone, tone.0[3] * opacity),
             corner_radius: thumb.w / 2.0,
             border_width: 0.0,
             border_color: [0.0; 4],

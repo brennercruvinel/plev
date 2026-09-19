@@ -1,21 +1,56 @@
-use crate::animation::Spring;
-use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::{Intent, Theme, TypographyScale};
-use crate::ui::icons;
+//! HOFF notify toast: a surface-active glass slab at the item radius,
+//! intent icon on the left, base-2r message, stacked bottom-right and
+//! sprung in with the intent's motion. `size.toast_w` wide on a desktop;
+//! on a compact viewport it spans the width minus the gutter, so a
+//! phone gets a full-width banner instead of a clipped card.
 
-use super::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
+use crate::icons;
+use engine::animation::Spring;
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::text::{TextMeasurer, TextStyle};
+use engine::theme::{Breakpoint, IconSize, Intent, Theme};
 
-/// HOFF notify toast: radius 16, pad 10 16 10 8, bg rgba($n2,.1),
-/// gutter 10, 12px from the viewport edge.
-const WIDTH: f32 = 320.0;
-const PAD_L: f32 = 8.0;
-const PAD_R: f32 = 16.0;
-const PAD_Y: f32 = 10.0;
-const RADIUS: f32 = 16.0;
-const GAP: f32 = 10.0;
-const MARGIN: f32 = 12.0;
-const ICON: f32 = 18.0;
+use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
+use crate::recipe::{rounded_rect, rounded_rect_stroke};
+
+/// The per-theme geometry the rects, the hit test and the render share.
+struct Metrics {
+    width: f32,
+    pad_l: f32,
+    pad_r: f32,
+    pad_y: f32,
+    radius: f32,
+    gap: f32,
+    margin: f32,
+    icon: f32,
+    icon_gap: f32,
+}
+
+impl Metrics {
+    fn of(theme: &Theme, vw: f32) -> Self {
+        let bp = theme.layout.breakpoint(vw);
+        let margin = theme.layout.gutter(bp).min(theme.spacing.md);
+        let width = match bp {
+            Breakpoint::Compact => (vw - margin * 2.0).max(0.0),
+            _ => theme.size.toast_w.min((vw - margin * 2.0).max(0.0)),
+        };
+        Self {
+            width,
+            pad_l: theme.spacing.sm,
+            pad_r: theme.spacing.lg,
+            pad_y: theme.spacing.sm + theme.spacing.xs / 2.0,
+            radius: theme.shape.item,
+            gap: theme.spacing.sm + theme.spacing.xs / 2.0,
+            margin,
+            icon: theme.control.icon(IconSize::Sm),
+            icon_gap: theme.control.inline_gap,
+        }
+    }
+
+    fn text_w(&self) -> f32 {
+        (self.width - self.pad_l - self.pad_r - self.icon - self.icon_gap).max(0.0)
+    }
+}
 
 /// One queued notification.
 #[derive(Clone, Debug)]
@@ -151,39 +186,45 @@ impl ToastManager {
 
     /// Message style: base-2r, the same for measuring and rendering
     /// (a mismatch here makes multiline toasts overflow their padding).
-    fn text_style() -> TextStyle {
-        TypographyScale::hoff().base_2r()
+    fn text_style(theme: &Theme) -> TextStyle {
+        theme.typography.base_2r()
     }
 
-    fn toast_height(message: &str) -> f32 {
-        let style = Self::text_style();
-        let text_w = WIDTH - PAD_L - PAD_R - ICON - 8.0;
-        let (_, th) = TextMeasurer::measure_styled(message, &style, Some(text_w));
-        th.max(style.line_height) + PAD_Y * 2.0
+    fn toast_height(message: &str, theme: &Theme, m: &Metrics) -> f32 {
+        let style = Self::text_style(theme);
+        let (_, th) = TextMeasurer::measure_styled(message, &style, Some(m.text_w()));
+        th.max(style.line_height) + m.pad_y * 2.0
     }
 
     /// On-screen rects for visible toasts (bottom-right, stacking upward),
     /// with entry/exit progress applied as a slide.
-    pub fn visible_rects(&self, vw: f32, vh: f32) -> Vec<Rect> {
-        let x = vw - WIDTH - MARGIN;
-        let mut y = vh - MARGIN;
+    pub fn visible_rects(&self, theme: &Theme, vw: f32, vh: f32) -> Vec<Rect> {
+        let m = Metrics::of(theme, vw);
+        let x = vw - m.width - m.margin;
+        let mut y = vh - m.margin;
         let mut rects = Vec::with_capacity(self.visible_count());
         for t in self.visible() {
-            let h = Self::toast_height(&t.message);
+            let h = Self::toast_height(&t.message, theme, &m);
             // Slide up while appearing; the gap collapses as it leaves.
             let progress = t.progress();
-            y -= (h + GAP) * progress;
-            rects.push(Rect::new(x, y + GAP * (1.0 - progress), WIDTH, h));
+            y -= (h + m.gap) * progress;
+            rects.push(Rect::new(x, y + m.gap * (1.0 - progress), m.width, h));
         }
         rects
     }
 
     /// Click-to-dismiss. Coordinates in the same space as `render`.
-    pub fn handle_event(&mut self, event: &WidgetEvent, vw: f32, vh: f32) -> EventResult {
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        theme: &Theme,
+        vw: f32,
+        vh: f32,
+    ) -> EventResult {
         let WidgetEvent::MouseDown { x, y } = *event else {
             return EventResult::IGNORED;
         };
-        let rects = self.visible_rects(vw, vh);
+        let rects = self.visible_rects(theme, vw, vh);
         for (i, rect) in rects.iter().enumerate() {
             if rect.contains(x, y) {
                 self.dismiss(i);
@@ -201,8 +242,10 @@ impl ToastManager {
         vw: f32,
         vh: f32,
     ) {
-        let rects = self.visible_rects(vw, vh);
+        let m = Metrics::of(theme, vw);
+        let rects = self.visible_rects(theme, vw, vh);
         let glass = &theme.glass;
+        let style = Self::text_style(theme);
         for (t, rect) in self.visible().zip(rects) {
             let alpha = t.progress();
             if alpha <= 0.01 {
@@ -210,52 +253,48 @@ impl ToastManager {
             }
             let accent = intent_fill(theme, t.intent);
 
-            // Notify surface: rgba($n2,.1) glass; the intent icon pushed
+            // Notify surface: surface-active glass; the intent icon pushed
             // later stays on top (push order is preserved across types).
             compositor.push_to_layer(
                 layer,
-                super::rounded_rect(
+                rounded_rect(
                     rect.x,
                     rect.y,
                     rect.w,
                     rect.h,
-                    RADIUS,
+                    m.radius,
                     with_alpha(glass.surface_active, glass.surface_active.0[3] * alpha),
                 ),
             );
             compositor.push_to_layer(
                 layer,
-                super::rounded_rect_stroke(
+                rounded_rect_stroke(
                     rect.x,
                     rect.y,
                     rect.w,
                     rect.h,
-                    RADIUS,
+                    m.radius,
                     with_alpha(glass.edge_soft, glass.edge_soft.0[3] * alpha),
-                    1.0,
+                    theme.control.edge_width,
                 ),
             );
             if let Some(node) = icons::icon_at(
                 t.icon_name(),
-                ICON,
+                m.icon,
                 [accent[0], accent[1], accent[2], accent[3] * alpha],
-                rect.x + PAD_L,
-                rect.y + PAD_Y,
+                rect.x + m.pad_l,
+                rect.y + m.pad_y,
             ) {
                 compositor.push_to_layer(layer, node);
             }
-            let text = theme.colors.text;
+            let text = glass.text_active;
             compositor.push_to_layer(
                 layer,
                 SceneNode::Text {
-                    key: TextNodeKey::from_style(
-                        &t.message,
-                        &Self::text_style(),
-                        Some(rect.w - PAD_L - PAD_R - ICON - 8.0),
-                    ),
-                    x: rect.x + PAD_L + ICON + 8.0,
-                    y: rect.y + PAD_Y,
-                    color: with_alpha(text, text.0[3] * 0.8 * alpha),
+                    key: TextNodeKey::from_style(&t.message, &style, Some(m.text_w())),
+                    x: rect.x + m.pad_l + m.icon + m.icon_gap,
+                    y: rect.y + m.pad_y,
+                    color: with_alpha(text, text.0[3] * alpha),
                 },
             );
         }

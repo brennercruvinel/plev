@@ -1,68 +1,13 @@
-//! Retained widgets with internal state.
+//! The widget contract: geometry, events, results and the color helpers
+//! every category shares.
 //!
-//! Each widget is a plain struct: callers own it across frames, feed it
-//! [`WidgetEvent`]s with the bounds they decided to give it, and call
-//! `render(compositor, bounds, theme)` to emit scene nodes. Nothing here
-//! touches the GPU — widgets are testable without a window.
-//!
-//! Visual language: HOFF "dark glass" — monochrome white-on-graphite
-//! alphas, pill buttons, top-lit edge borders and translucent surfaces —
-//! resolved entirely from [`Theme`] tokens (see [`Theme::hoff`] and
-//! `theme.glass`), with [`Intent`](crate::theme::Intent) selecting
-//! semantic color + motion physics. Non-HOFF themes derive an equivalent
-//! glass recipe, so every widget renders under every palette.
+//! A widget is a plain struct the app owns across frames. It receives
+//! [`WidgetEvent`]s in absolute logical pixels together with the bounds the
+//! app decided to give it, answers with an [`EventResult`], and renders by
+//! pushing scene nodes. No GPU, no window, no global state.
 
-mod button;
-mod card;
-mod checkbox;
-mod chip;
-mod context_menu;
-mod empty_state;
-mod graph;
-mod icon_button;
-mod list;
-mod modal;
-mod progress;
-mod scrollbar;
-mod select;
-mod slider;
-mod spinner;
-mod split_pane;
-mod switch;
-mod tabs;
-mod toast;
-mod tooltip;
-mod tree;
-
-#[cfg(test)]
-mod tests;
-#[cfg(test)]
-mod tests_focus;
-
-pub use button::{Button, ButtonSize, ButtonVariant};
-pub use card::{Card, CardListRow, CardVariant};
-pub use checkbox::Checkbox;
-pub use chip::{CHIP_H, Chip};
-pub use context_menu::{ContextMenu, MenuEntry};
-pub use empty_state::EmptyState;
-pub use graph::{EdgeTone, GraphView};
-pub use icon_button::IconButton;
-pub use list::VirtualList;
-pub use modal::{Modal, ModalAction};
-pub use progress::ProgressBar;
-pub use scrollbar::Scrollbar;
-pub use select::Select;
-pub use slider::Slider;
-pub use spinner::{Spinner, SpinnerSize};
-pub use split_pane::{SplitDirection, SplitPane};
-pub use switch::Switch;
-pub use tabs::Tabs;
-pub use toast::{Toast, ToastManager};
-pub use tooltip::Tooltip;
-pub use tree::{Tree, TreeNode};
-
-use crate::compositor::SceneNode;
-use crate::theme::{Intent, Theme};
+use engine::color::Color;
+use engine::theme::{Intent, Theme};
 
 // ---------------------------------------------------------------------------
 // Geometry
@@ -89,6 +34,31 @@ impl Rect {
     pub fn center(&self) -> (f32, f32) {
         (self.x + self.w / 2.0, self.y + self.h / 2.0)
     }
+
+    /// Right edge.
+    pub fn right(&self) -> f32 {
+        self.x + self.w
+    }
+
+    /// Bottom edge.
+    pub fn bottom(&self) -> f32 {
+        self.y + self.h
+    }
+
+    /// The rect shrunk by `d` on every side (never negative).
+    pub fn inset(&self, d: f32) -> Self {
+        Self {
+            x: self.x + d,
+            y: self.y + d,
+            w: (self.w - d * 2.0).max(0.0),
+            h: (self.h - d * 2.0).max(0.0),
+        }
+    }
+
+    /// The rect grown by `d` on every side.
+    pub fn outset(&self, d: f32) -> Self {
+        self.inset(-d)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -96,7 +66,8 @@ impl Rect {
 // ---------------------------------------------------------------------------
 
 /// Pointer events widgets understand. Coordinates are absolute logical
-/// pixels — the same space as render bounds.
+/// pixels, the same space as render bounds. Touch arrives as these too
+/// (the engine synthesizes pointer events from touches).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum WidgetEvent {
     MouseMove {
@@ -136,7 +107,7 @@ impl WidgetEvent {
 pub struct EventResult {
     /// Event was consumed; don't offer it to widgets underneath.
     pub handled: bool,
-    /// Visual or logical state changed — caller should request a frame.
+    /// Visual or logical state changed: the caller must request a frame.
     pub changed: bool,
     /// An activation (click/select/toggle) completed on this event.
     pub clicked: bool,
@@ -179,18 +150,18 @@ impl EventResult {
 // ---------------------------------------------------------------------------
 
 /// Theme color as `[f32; 4]` with overridden alpha.
-pub(crate) fn with_alpha(c: crate::color::Color, a: f32) -> [f32; 4] {
+pub fn with_alpha(c: Color, a: f32) -> [f32; 4] {
     [c.0[0], c.0[1], c.0[2], a]
 }
 
 /// WCAG relative luminance approximation (linear-ish weights are enough
 /// for picking a readable foreground).
-pub(crate) fn luminance(c: [f32; 4]) -> f32 {
+pub fn luminance(c: [f32; 4]) -> f32 {
     0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
 }
 
 /// Black or white, whichever reads against `bg` (WCAG AA-driven choice).
-pub(crate) fn contrast_text(bg: [f32; 4]) -> [f32; 4] {
+pub fn contrast_text(bg: [f32; 4]) -> [f32; 4] {
     if luminance(bg) > 0.45 {
         [0.02, 0.02, 0.04, 1.0]
     } else {
@@ -200,7 +171,7 @@ pub(crate) fn contrast_text(bg: [f32; 4]) -> [f32; 4] {
 
 /// Semantic fill color for an intent: Neutral maps to the theme accent
 /// (primary action), others to their semantic color.
-pub(crate) fn intent_fill(theme: &Theme, intent: Intent) -> [f32; 4] {
+pub fn intent_fill(theme: &Theme, intent: Intent) -> [f32; 4] {
     match intent {
         Intent::Neutral => theme.colors.accent.0,
         Intent::Constructive => theme.colors.success.0,
@@ -210,140 +181,11 @@ pub(crate) fn intent_fill(theme: &Theme, intent: Intent) -> [f32; 4] {
 }
 
 /// Linear interpolation between two RGBA colors.
-pub(crate) fn mix(a: [f32; 4], b: [f32; 4], t: f32) -> [f32; 4] {
+pub fn mix(a: [f32; 4], b: [f32; 4], t: f32) -> [f32; 4] {
     [
         a[0] + (b[0] - a[0]) * t,
         a[1] + (b[1] - a[1]) * t,
         a[2] + (b[2] - a[2]) * t,
         a[3] + (b[3] - a[3]) * t,
     ]
-}
-
-// ---------------------------------------------------------------------------
-// HOFF glass recipe (SDF pipeline)
-// ---------------------------------------------------------------------------
-
-/// HOFF edge-light: a border that only exists at the top, fading out
-/// downward (the CSS original is a masked 165–178° border).
-///
-/// Emitted as two SDF nodes: a white→transparent vertical [`GradientRect`]
-/// underlay the size of `rect`, then the surface fill inset by `width`.
-/// The translucent fill lets the underlay shine through, which doubles as
-/// the HOFF inset key-light (`inset 2px 4px 16px rgba(248,248,248,.06)`).
-///
-/// [`GradientRect`]: crate::compositor::SceneNode::GradientRect
-pub fn glass_pill(
-    rect: Rect,
-    radius: f32,
-    edge: [f32; 4],
-    width: f32,
-    fill: [f32; 4],
-) -> [SceneNode; 2] {
-    [
-        SceneNode::GradientRect {
-            x: rect.x,
-            y: rect.y,
-            w: rect.w,
-            h: rect.h,
-            color: edge,
-            color2: [edge[0], edge[1], edge[2], 0.0],
-            // CSS 180deg: first stop (the lit edge) at the top.
-            angle_deg: 180.0,
-            corner_radius: radius,
-            border_width: 0.0,
-            border_color: [0.0; 4],
-        },
-        SceneNode::RoundedRect {
-            x: rect.x + width,
-            y: rect.y + width,
-            w: (rect.w - width * 2.0).max(0.0),
-            h: (rect.h - width * 2.0).max(0.0),
-            color: fill,
-            corner_radius: (radius - width).max(0.0),
-            border_width: 0.0,
-            border_color: [0.0; 4],
-        },
-    ]
-}
-
-/// Keyboard-focus ring: a [`FOCUS_RING_WIDTH`]px stroke in the theme
-/// accent, floating [`FOCUS_RING_OFFSET`]px outside the control's visual
-/// rect and following its corner radius. Every form widget draws this
-/// from `render` when focused, so focus reads identically across the kit.
-pub fn focus_ring(rect: Rect, radius: f32, theme: &Theme) -> SceneNode {
-    let inflate = FOCUS_RING_OFFSET + FOCUS_RING_WIDTH;
-    rounded_rect_stroke(
-        rect.x - inflate,
-        rect.y - inflate,
-        rect.w + inflate * 2.0,
-        rect.h + inflate * 2.0,
-        radius + inflate,
-        theme.colors.accent.0,
-        FOCUS_RING_WIDTH,
-    )
-}
-
-/// Focus ring stroke width (px).
-pub const FOCUS_RING_WIDTH: f32 = 2.0;
-/// Gap between a control's edge and the inner edge of its focus ring (px).
-pub const FOCUS_RING_OFFSET: f32 = 2.0;
-
-/// Floating-menu drop shadow (HOFF: `0 24px 32px -12px rgba(18,18,18,.10)`
-/// over the deep stack). One analytic shadow node approximates the stack.
-pub fn menu_shadow(rect: Rect, radius: f32) -> SceneNode {
-    SceneNode::Shadow {
-        x: rect.x,
-        y: rect.y,
-        w: rect.w,
-        h: rect.h,
-        corner_radius: radius,
-        blur_radius: 32.0,
-        offset: [0.0, 16.0],
-        color: [18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.35],
-        inset: false,
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Rounded-rect node shorthands
-// ---------------------------------------------------------------------------
-
-/// Solid rounded rect ([`SceneNode::RoundedRect`] without border). The
-/// compositor preserves push order across primitive types, so icons
-/// (paths) pushed after this stack on top of it.
-pub fn rounded_rect(x: f32, y: f32, w: f32, h: f32, radius: f32, color: [f32; 4]) -> SceneNode {
-    SceneNode::RoundedRect {
-        x,
-        y,
-        w,
-        h,
-        color,
-        corner_radius: radius,
-        border_width: 0.0,
-        border_color: [0.0; 4],
-    }
-}
-
-/// Border-only rounded rect: transparent fill with an SDF border ring,
-/// which composites OVER whatever is underneath -- exactly like a stroked
-/// path would (the ring sits inside the bounds, like the SDF border).
-pub fn rounded_rect_stroke(
-    x: f32,
-    y: f32,
-    w: f32,
-    h: f32,
-    radius: f32,
-    color: [f32; 4],
-    width: f32,
-) -> SceneNode {
-    SceneNode::RoundedRect {
-        x,
-        y,
-        w,
-        h,
-        color: [0.0; 4],
-        corner_radius: radius,
-        border_width: width,
-        border_color: color,
-    }
 }

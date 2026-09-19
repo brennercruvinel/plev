@@ -1,6 +1,11 @@
-use super::*;
-use crate::compositor::Compositor;
-use crate::theme::{Intent, Theme};
+use crate::core::*;
+use crate::prelude::*;
+use engine::compositor::Compositor;
+use engine::theme::{Intent, Theme};
+
+fn hoff() -> Theme {
+    Theme::hoff()
+}
 
 const B: Rect = Rect {
     x: 10.0,
@@ -71,11 +76,15 @@ fn button_hover_state_tracks_pointer() {
 
 #[test]
 fn button_preferred_size_scales_with_size_variant() {
-    let sm = Button::new("Commit").size(ButtonSize::Sm).preferred_size();
-    let lg = Button::new("Commit").size(ButtonSize::Lg).preferred_size();
+    let sm = Button::new("Commit")
+        .size(ButtonSize::Sm)
+        .preferred_size(&hoff());
+    let lg = Button::new("Commit")
+        .size(ButtonSize::Lg)
+        .preferred_size(&hoff());
     assert!(lg.0 > sm.0);
     assert!(lg.1 > sm.1);
-    assert_eq!(sm.1, ButtonSize::Sm.height());
+    assert_eq!(sm.1, ButtonSize::Sm.height(&hoff()));
 }
 
 #[test]
@@ -170,13 +179,13 @@ fn switch_disabled_ignores_click() {
 fn slider_drag_updates_value() {
     let mut s = Slider::new(0.0, 100.0, 0.0);
     let bounds = Rect::new(0.0, 0.0, 200.0, 20.0);
-    s.handle_event(&down(100.0, 10.0), bounds);
+    s.handle_event(&down(100.0, 10.0), bounds, &hoff());
     assert!(s.is_dragging());
     assert!(s.value() > 25.0 && s.value() < 75.0, "value={}", s.value());
 
-    s.handle_event(&move_to(1000.0, 10.0), bounds);
+    s.handle_event(&move_to(1000.0, 10.0), bounds, &hoff());
     assert_eq!(s.value(), 100.0, "drag clamps at max");
-    s.handle_event(&up(1000.0, 10.0), bounds);
+    s.handle_event(&up(1000.0, 10.0), bounds, &hoff());
     assert!(!s.is_dragging());
 }
 
@@ -191,7 +200,7 @@ fn slider_step_snaps_value() {
 fn slider_disabled_ignores_drag() {
     let mut s = Slider::new(0.0, 100.0, 50.0).disabled(true);
     let bounds = Rect::new(0.0, 0.0, 200.0, 20.0);
-    s.handle_event(&down(180.0, 10.0), bounds);
+    s.handle_event(&down(180.0, 10.0), bounds, &hoff());
     assert_eq!(s.value(), 50.0);
 }
 
@@ -215,16 +224,16 @@ fn progress_clamps_value() {
 fn tabs_click_changes_active() {
     let mut tabs = Tabs::new(["Files", "Branches", "History"]);
     let bounds = Rect::new(0.0, 0.0, 400.0, 32.0);
-    let rects = tabs.item_rects(bounds);
+    let rects = tabs.item_rects(bounds, &hoff());
     assert_eq!(rects.len(), 3);
 
     let (cx, cy) = rects[2].center();
-    let r = tabs.handle_event(&down(cx, cy), bounds);
+    let r = tabs.handle_event(&down(cx, cy), bounds, &hoff());
     assert!(r.clicked);
     assert_eq!(tabs.active, 2);
 
     // Clicking the active tab again is not a change.
-    let r = tabs.handle_event(&down(cx, cy), bounds);
+    let r = tabs.handle_event(&down(cx, cy), bounds, &hoff());
     assert!(!r.clicked);
 }
 
@@ -233,7 +242,7 @@ fn tabs_segments_share_width_equally() {
     // HOFF tabs are flex-1: equal segments inside the 4px container pad.
     let tabs = Tabs::new(["I", "Considerably longer label"]);
     let bounds = Rect::new(0.0, 0.0, 800.0, 44.0);
-    let rects = tabs.item_rects(bounds);
+    let rects = tabs.item_rects(bounds, &hoff());
     assert_eq!(rects[0].w, rects[1].w);
     assert_eq!(rects[0].x, 4.0);
     assert_eq!(rects[0].h, 36.0, "36px segments in a 44px strip");
@@ -273,7 +282,7 @@ fn tooltip_placement_prefers_above_and_flips_below() {
         t.set_hover(true, Rect::new(100.0, 300.0, 50.0, 20.0));
         t
     };
-    let above = t.placement(800.0, 600.0);
+    let above = t.placement(&hoff(), 800.0, 600.0);
     assert!(above.y + above.h <= 300.0, "placed above the anchor");
 
     let t2 = {
@@ -281,7 +290,7 @@ fn tooltip_placement_prefers_above_and_flips_below() {
         t.set_hover(true, Rect::new(100.0, 2.0, 50.0, 20.0));
         t
     };
-    let below = t2.placement(800.0, 600.0);
+    let below = t2.placement(&hoff(), 800.0, 600.0);
     assert!(below.y >= 22.0, "no room above -> flips below");
 }
 
@@ -340,9 +349,9 @@ fn toast_click_dismisses() {
     for _ in 0..120 {
         tm.tick(1.0 / 60.0);
     }
-    let rect = tm.visible_rects(800.0, 600.0)[0];
+    let rect = tm.visible_rects(&theme, 800.0, 600.0)[0];
     let (cx, cy) = rect.center();
-    let r = tm.handle_event(&down(cx, cy), 800.0, 600.0);
+    let r = tm.handle_event(&down(cx, cy), &theme, 800.0, 600.0);
     assert!(r.clicked);
     assert!(tm.visible().next().unwrap().is_closing());
 }
@@ -364,8 +373,8 @@ fn toast_render_emits_nodes() {
 // Scrollbar
 // ---------------------------------------------------------------------------
 
-fn scrolled_state() -> crate::input::scroll::ScrollState {
-    let mut s = crate::input::scroll::ScrollState::new();
+fn scrolled_state() -> engine::input::scroll::ScrollState {
+    let mut s = engine::input::scroll::ScrollState::new();
     s.set_viewport(200.0);
     s.set_content(800.0);
     s
@@ -376,7 +385,7 @@ fn scrollbar_thumb_is_proportional() {
     let sb = Scrollbar::new();
     let bounds = Rect::new(0.0, 0.0, 300.0, 200.0);
     let scroll = scrolled_state();
-    let thumb = sb.thumb_rect(bounds, &scroll);
+    let thumb = sb.thumb_rect(bounds, &scroll, &hoff());
     // viewport/content = 0.25 -> thumb is a quarter of the track.
     assert!((thumb.h - 50.0).abs() < 1.0, "thumb.h={}", thumb.h);
 }
@@ -409,15 +418,15 @@ fn scrollbar_drag_moves_scroll() {
         sb.tick(1.0 / 60.0);
     }
 
-    let thumb = sb.thumb_rect(bounds, &scroll);
+    let thumb = sb.thumb_rect(bounds, &scroll, &hoff());
     let (tx, ty) = thumb.center();
-    sb.handle_event(&down(tx, ty), bounds, &mut scroll);
+    sb.handle_event(&down(tx, ty), bounds, &mut scroll, &hoff());
     assert!(sb.is_dragging());
 
-    sb.handle_event(&move_to(tx, ty + 75.0), bounds, &mut scroll);
+    sb.handle_event(&move_to(tx, ty + 75.0), bounds, &mut scroll, &hoff());
     assert!(scroll.offset() > 200.0, "offset={}", scroll.offset());
 
-    sb.handle_event(&up(tx, ty + 75.0), bounds, &mut scroll);
+    sb.handle_event(&up(tx, ty + 75.0), bounds, &mut scroll, &hoff());
     assert!(!sb.is_dragging());
 }
 
@@ -425,10 +434,10 @@ fn scrollbar_drag_moves_scroll() {
 fn scrollbar_inert_when_content_fits() {
     let mut sb = Scrollbar::new();
     let bounds = Rect::new(0.0, 0.0, 300.0, 200.0);
-    let mut scroll = crate::input::scroll::ScrollState::new();
+    let mut scroll = engine::input::scroll::ScrollState::new();
     scroll.set_viewport(200.0);
     scroll.set_content(100.0);
-    let r = sb.handle_event(&down(295.0, 100.0), bounds, &mut scroll);
+    let r = sb.handle_event(&down(295.0, 100.0), bounds, &mut scroll, &hoff());
     assert_eq!(r, EventResult::IGNORED);
 }
 
@@ -449,10 +458,10 @@ fn menu() -> ContextMenu {
 #[test]
 fn context_menu_click_reports_item_id() {
     let mut m = menu();
-    let (_, h) = m.size();
+    let (_, h) = m.size(&hoff());
     assert!(h > 0.0);
     // First item row center: PAD_Y(8) + ITEM_H(44)/2.
-    let (r, id) = m.handle_event(&down(50.0, 10.0 + 8.0 + 22.0), 10.0, 10.0);
+    let (r, id) = m.handle_event(&down(50.0, 10.0 + 8.0 + 22.0), 10.0, 10.0, &hoff());
     assert!(r.clicked);
     assert_eq!(id, Some(1));
 }
@@ -462,7 +471,7 @@ fn context_menu_disabled_item_swallows_click_without_id() {
     let mut m = menu();
     // Rows: item(44) item(44) sep(9) item(44) item(44); last item center:
     let y = 10.0 + 8.0 + 44.0 + 44.0 + 9.0 + 44.0 + 22.0;
-    let (r, id) = m.handle_event(&down(50.0, y), 10.0, 10.0);
+    let (r, id) = m.handle_event(&down(50.0, y), 10.0, 10.0, &hoff());
     assert!(r.handled);
     assert!(!r.clicked);
     assert_eq!(id, None);
@@ -472,7 +481,7 @@ fn context_menu_disabled_item_swallows_click_without_id() {
 fn context_menu_hover_skips_disabled_and_separators() {
     let mut m = menu();
     let sep_y = 10.0 + 8.0 + 44.0 + 44.0 + 4.0;
-    m.handle_event(&move_to(50.0, sep_y), 10.0, 10.0);
+    m.handle_event(&move_to(50.0, sep_y), 10.0, 10.0, &hoff());
     assert_eq!(m.hovered(), None);
 }
 
@@ -490,11 +499,11 @@ fn modal_confirm_and_cancel_buttons_resolve_actions() {
     )
     .intent(Intent::Destructive);
     let (vw, vh) = (800.0, 600.0);
-    let dialog = m.dialog_rect(vw, vh);
+    let dialog = m.dialog_rect(&hoff(), vw, vh);
     assert!(dialog.w > 0.0 && dialog.h > 0.0);
 
     // Click outside the dialog: cancels.
-    let (action, r) = m.handle_event(&down(1.0, 1.0), vw, vh);
+    let (action, r) = m.handle_event(&down(1.0, 1.0), &hoff(), vw, vh);
     assert_eq!(action, ModalAction::Cancel);
     assert!(r.clicked);
 }
@@ -503,9 +512,9 @@ fn modal_confirm_and_cancel_buttons_resolve_actions() {
 fn modal_swallows_events_inside_dialog() {
     let mut m = Modal::new("T", "B", "Ok", "Cancel");
     let (vw, vh) = (800.0, 600.0);
-    let dialog = m.dialog_rect(vw, vh);
+    let dialog = m.dialog_rect(&hoff(), vw, vh);
     let (cx, cy) = dialog.center();
-    let (action, r) = m.handle_event(&down(cx, cy), vw, vh);
+    let (action, r) = m.handle_event(&down(cx, cy), &hoff(), vw, vh);
     assert_eq!(action, ModalAction::None);
     assert!(r.handled, "modal is blocking");
 }
@@ -528,14 +537,14 @@ fn select_opens_and_picks_option() {
     let mut s = Select::new(["dark", "light", "dracula"], 0);
     let bounds = Rect::new(10.0, 10.0, 160.0, 30.0);
 
-    s.handle_event(&down(50.0, 20.0), bounds);
+    s.handle_event(&down(50.0, 20.0), bounds, &hoff());
     assert!(s.is_open());
 
     // Option 1 ("light"): dropdown starts at bounds bottom + gap;
     // PAD_Y(8) + OPTION_H(44) + 22 centers the second option.
-    let dd = s.dropdown_rect(bounds);
+    let dd = s.dropdown_rect(bounds, &hoff());
     let y = dd.y + 8.0 + 44.0 + 22.0;
-    let r = s.handle_event(&down(50.0, y), bounds);
+    let r = s.handle_event(&down(50.0, y), bounds, &hoff());
     assert!(r.clicked);
     assert!(!s.is_open());
     assert_eq!(s.selected, 1);
@@ -546,9 +555,9 @@ fn select_opens_and_picks_option() {
 fn select_click_outside_closes_without_change() {
     let mut s = Select::new(["a", "b"], 0);
     let bounds = Rect::new(10.0, 10.0, 160.0, 30.0);
-    s.handle_event(&down(50.0, 20.0), bounds);
+    s.handle_event(&down(50.0, 20.0), bounds, &hoff());
     assert!(s.is_open());
-    let r = s.handle_event(&down(700.0, 500.0), bounds);
+    let r = s.handle_event(&down(700.0, 500.0), bounds, &hoff());
     assert!(!s.is_open());
     assert!(!r.clicked);
     assert_eq!(s.selected, 0);
@@ -558,7 +567,7 @@ fn select_click_outside_closes_without_change() {
 fn select_disabled_never_opens() {
     let mut s = Select::new(["a"], 0).disabled(true);
     let bounds = Rect::new(10.0, 10.0, 160.0, 30.0);
-    s.handle_event(&down(50.0, 20.0), bounds);
+    s.handle_event(&down(50.0, 20.0), bounds, &hoff());
     assert!(!s.is_open());
 }
 
@@ -597,14 +606,14 @@ fn tree_click_branch_toggles_expansion() {
     let mut tree = sample_tree();
     let bounds = Rect::new(0.0, 0.0, 300.0, 400.0);
     // Row index 2 is the collapsed "ui" branch.
-    let y = 2.0 * tree.row_height() + tree.row_height() / 2.0;
-    let r = tree.handle_event(&down(50.0, y), bounds);
+    let y = 2.0 * tree.row_height(&hoff()) + tree.row_height(&hoff()) / 2.0;
+    let r = tree.handle_event(&down(50.0, y), bounds, &hoff());
     assert!(r.clicked);
     let ids: Vec<u64> = tree.visible_rows().iter().map(|r| r.id).collect();
     assert_eq!(ids, vec![1, 2, 3, 4, 5], "ui expanded, mod.rs visible");
 
     // Collapse the root: only roots remain.
-    let r = tree.handle_event(&down(50.0, tree.row_height() / 2.0), bounds);
+    let r = tree.handle_event(&down(50.0, tree.row_height(&hoff()) / 2.0), bounds, &hoff());
     assert!(r.clicked);
     let ids: Vec<u64> = tree.visible_rows().iter().map(|r| r.id).collect();
     assert_eq!(ids, vec![1, 5]);
@@ -614,8 +623,8 @@ fn tree_click_branch_toggles_expansion() {
 fn tree_click_leaf_selects() {
     let mut tree = sample_tree();
     let bounds = Rect::new(0.0, 0.0, 300.0, 400.0);
-    let y = 1.0 * tree.row_height() + tree.row_height() / 2.0;
-    let r = tree.handle_event(&down(50.0, y), bounds);
+    let y = 1.0 * tree.row_height(&hoff()) + tree.row_height(&hoff()) / 2.0;
+    let r = tree.handle_event(&down(50.0, y), bounds, &hoff());
     assert!(r.clicked);
     assert_eq!(tree.selected, Some(2));
 }
@@ -690,6 +699,7 @@ fn virtual_list_scroll_event_moves_and_wakes_scrollbar() {
             delta: 48.0,
         },
         bounds,
+        &hoff(),
     );
     assert!(r.changed);
     assert_eq!(list.scroll.offset(), 48.0);
@@ -702,7 +712,7 @@ fn virtual_list_click_selects_item() {
     let mut list = VirtualList::new(24.0);
     list.set_item_count(1_000);
     let bounds = Rect::new(0.0, 0.0, 300.0, 240.0);
-    list.handle_event(&down(100.0, 50.0), bounds);
+    list.handle_event(&down(100.0, 50.0), bounds, &hoff());
     assert_eq!(list.selected, Some(2)); // y=50 / 24 = row 2
 }
 
@@ -717,12 +727,12 @@ fn virtual_list_empty_has_empty_range() {
 // Card
 // ---------------------------------------------------------------------------
 
-use crate::compositor::{LayerId, SceneNode};
+use engine::compositor::{LayerId, SceneNode};
 
 fn card_nodes(card: &Card, theme: &Theme) -> Vec<SceneNode> {
     let mut c = Compositor::new();
     c.begin_frame();
-    let (w, h) = card.preferred_size();
+    let (w, h) = card.preferred_size(&hoff());
     card.render(&mut c, Rect::new(0.0, 0.0, w, h), theme);
     c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec()
 }
@@ -773,8 +783,8 @@ fn sample_cards() -> Vec<Card> {
 #[test]
 fn card_default_width_is_hoff_368() {
     for card in sample_cards() {
-        assert_eq!(card.preferred_size().0, 368.0);
-        assert!(card.preferred_size().1 > 0.0);
+        assert_eq!(card.preferred_size(&hoff()).0, hoff().size.card_w);
+        assert!(card.preferred_size(&hoff()).1 > 0.0);
     }
 }
 
@@ -834,7 +844,7 @@ fn card_deck_shell_is_the_discreet_post_lift() {
 fn card_profile_uses_post_surface_and_hover() {
     let theme = Theme::hoff();
     let mut card = sample_cards().remove(1);
-    let (w, h) = card.preferred_size();
+    let (w, h) = card.preferred_size(&hoff());
     let bounds = Rect::new(0.0, 0.0, w, h);
 
     let nodes = card_nodes(&card, &theme);
@@ -865,26 +875,31 @@ fn card_chart_highlight_is_gradient_with_cap() {
     let theme = Theme::hoff();
     let card = &sample_cards()[4];
     let nodes = card_nodes(card, &theme);
+    let wash = theme.glass.wash_hover_alpha;
 
     let gradients: Vec<_> = nodes
         .iter()
         .filter(|n| {
             matches!(n, SceneNode::GradientRect { angle_deg, color, .. }
-                if *angle_deg == 180.0 && (color[3] - 0.20).abs() < 1e-5)
+                if *angle_deg == 180.0 && (color[3] - wash).abs() < 1e-5)
         })
         .collect();
     assert_eq!(gradients.len(), 1, "exactly one highlighted bar");
 
-    // The floating 2px cap at 50% white.
+    // The floating cap above the highlighted bar: a strong-rim-thick
+    // slab in the tertiary text tone.
+    let cap_h = theme.control.edge_width_strong;
+    let cap_color = theme.colors.text_dim.0;
     assert!(nodes.iter().any(|n| matches!(n,
-        SceneNode::RoundedRect { h, color, .. } if *h == 2.0 && (color[3] - 0.50).abs() < 1e-5)));
+        SceneNode::RoundedRect { h, color, .. } if *h == cap_h && *color == cap_color)));
 
     // 4 groups x 2 bars: 7 plain bars + 1 gradient highlight.
+    let bar_radius = theme.shape.micro;
     let plain_bars = nodes
         .iter()
         .filter(|n| {
             matches!(n, SceneNode::RoundedRect { corner_radius, h, .. }
-                if *corner_radius == 2.0 && *h > 2.0)
+                if *corner_radius == bar_radius && *h > cap_h)
         })
         .count();
     assert_eq!(plain_bars, 7);
@@ -895,33 +910,37 @@ fn card_list_marks_active_row_with_strong_border() {
     let theme = Theme::hoff();
     let card = &sample_cards()[3];
     let nodes = card_nodes(card, &theme);
+    let row_h = theme.control.height(engine::theme::ControlSize::Lg) + theme.spacing.xs * 2.0;
+    let active = theme.colors.border_active.0;
+    let soft = theme.glass.edge_soft.0;
 
     let strong_rows = nodes
         .iter()
         .filter(|n| {
             matches!(n, SceneNode::RoundedRect { h, border_color, .. }
-                if *h == 58.0 && (border_color[3] - 0.40).abs() < 1e-5)
+                if *h == row_h && *border_color == active)
         })
         .count();
     let soft_rows = nodes
         .iter()
         .filter(|n| {
             matches!(n, SceneNode::RoundedRect { h, border_color, .. }
-                if *h == 58.0 && (border_color[3] - 0.05).abs() < 1e-5)
+                if *h == row_h && *border_color == soft)
         })
         .count();
     assert_eq!(strong_rows, 1, "one active row");
     assert_eq!(soft_rows, 2, "two resting rows");
 
-    // The progress row carries the 90deg gradient fill.
+    // The progress row carries the 90deg gradient fill at the fill height.
+    let fill_h = theme.control.progress_fill;
     assert!(nodes.iter().any(|n| matches!(n,
-        SceneNode::GradientRect { angle_deg, h, .. } if *angle_deg == 90.0 && *h == 4.0)));
+        SceneNode::GradientRect { angle_deg, h, .. } if *angle_deg == 90.0 && *h == fill_h)));
 }
 
 #[test]
 fn card_click_reports_activation() {
     let mut card = sample_cards().remove(5);
-    let (w, h) = card.preferred_size();
+    let (w, h) = card.preferred_size(&hoff());
     let bounds = Rect::new(0.0, 0.0, w, h);
     let r = click(|e| card.handle_event(e, bounds));
     assert!(r.clicked);
@@ -1051,11 +1070,11 @@ fn hoff_tooltip_is_solid_262626() {
 #[test]
 fn chip_preferred_size_uses_real_measurement() {
     let chip = Chip::new("ann");
-    let (w, h) = chip.preferred_size();
-    assert_eq!(h, CHIP_H);
-    let (tw, _) = crate::text::TextMeasurer::measure_styled(
+    let (w, h) = chip.preferred_size(&hoff());
+    assert_eq!(h, Chip::height(&hoff()));
+    let (tw, _) = engine::text::TextMeasurer::measure_styled(
         "ann",
-        &crate::theme::TypographyScale::hoff().caption_sm(),
+        &engine::theme::TypographyScale::hoff().caption_sm(),
         None,
     );
     assert!((w - (tw + 24.0)).abs() < 1.0, "width is text + padding");
@@ -1107,19 +1126,19 @@ fn empty_state_centers_its_stack_and_routes_cta_clicks() {
         .cta(Button::new("Open"));
     let bounds = Rect::new(0.0, 0.0, 800.0, 600.0);
     // The CTA is centered horizontally; find it by probing the center.
-    let cta = es.cta.as_ref().unwrap().preferred_size();
+    let cta = es.cta.as_ref().unwrap().preferred_size(&hoff());
     let cx = bounds.x + (bounds.w - cta.0) / 2.0 + 2.0;
     // Probe vertically: scan for the cta's y band.
     let mut fired = false;
     for y in (0..600).step_by(4) {
-        let r = click(|e| es.handle_event(e, bounds));
+        let r = click(|e| es.handle_event(e, bounds, &hoff()));
         let _ = (cx, y);
         if r.clicked {
             fired = true;
             break;
         }
-        let r1 = es.handle_event(&down(cx, y as f32), bounds);
-        let r2 = es.handle_event(&up(cx, y as f32), bounds);
+        let r1 = es.handle_event(&down(cx, y as f32), bounds, &hoff());
+        let r2 = es.handle_event(&up(cx, y as f32), bounds, &hoff());
         if r1.merge(r2).clicked {
             fired = true;
             break;
@@ -1131,7 +1150,7 @@ fn empty_state_centers_its_stack_and_routes_cta_clicks() {
 #[test]
 fn empty_state_without_cta_is_inert() {
     let mut es = EmptyState::new("Title", "Message");
-    let r = click(|e| es.handle_event(e, B));
+    let r = click(|e| es.handle_event(e, B, &hoff()));
     assert_eq!(r, EventResult::IGNORED);
 }
 
@@ -1187,7 +1206,7 @@ fn spinner_renders_every_size_without_gpu() {
 
 #[test]
 fn split_pane_rects_partition_the_bounds() {
-    let sp = SplitPane::new(SplitDirection::Horizontal, 0.25);
+    let sp = SplitPane::new(SplitDirection::Horizontal, 0.25, &hoff());
     let bounds = Rect::new(0.0, 0.0, 1000.0, 600.0);
     let first = sp.first_rect(bounds);
     let second = sp.second_rect(bounds);
@@ -1196,7 +1215,7 @@ fn split_pane_rects_partition_the_bounds() {
     assert!((second.w - 748.5).abs() < 0.01);
     assert!((second.x - (first.x + first.w + 2.0)).abs() < 0.01);
 
-    let v = SplitPane::new(SplitDirection::Vertical, 0.5);
+    let v = SplitPane::new(SplitDirection::Vertical, 0.5, &hoff());
     let first = v.first_rect(bounds);
     let second = v.second_rect(bounds);
     assert!((first.h - 299.0).abs() < 0.01);
@@ -1205,7 +1224,7 @@ fn split_pane_rects_partition_the_bounds() {
 
 #[test]
 fn split_pane_drag_updates_ratio_and_clamps_pane_minimums() {
-    let mut sp = SplitPane::new(SplitDirection::Horizontal, 0.5);
+    let mut sp = SplitPane::new(SplitDirection::Horizontal, 0.5, &hoff());
     let bounds = Rect::new(0.0, 0.0, 1000.0, 600.0);
     // Drag starts on the divider (x ≈ 499).
     let r = sp.handle_event(&down(499.0, 300.0), bounds);
@@ -1231,7 +1250,7 @@ fn split_pane_drag_updates_ratio_and_clamps_pane_minimums() {
 #[test]
 fn split_pane_hover_and_render_without_gpu() {
     let theme = Theme::hoff();
-    let mut sp = SplitPane::new(SplitDirection::Horizontal, 0.5);
+    let mut sp = SplitPane::new(SplitDirection::Horizontal, 0.5, &hoff());
     let bounds = Rect::new(0.0, 0.0, 1000.0, 600.0);
     assert!(sp.handle_event(&move_to(499.0, 300.0), bounds).changed);
     assert!(sp.is_hovered());
@@ -1257,7 +1276,7 @@ fn icon_button_click_contract_matches_button() {
 
 #[test]
 fn icon_button_is_square_and_renders_all_variants() {
-    let (w, h) = IconButton::new("x").preferred_size();
+    let (w, h) = IconButton::new("x").preferred_size(&hoff());
     assert_eq!(w, h);
     let theme = Theme::hoff();
     for variant in [

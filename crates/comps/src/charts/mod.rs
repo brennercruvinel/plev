@@ -32,8 +32,8 @@ pub use bars::{Bar, BarChart, bar_chart};
 pub use donut::{Donut, DonutSlice, LegendItem, donut, slice_polygon};
 pub use line::{Dot, LineChart, line_chart};
 
-use crate::text::{TextMeasurer, TextStyle};
-use crate::ui::widgets::Rect;
+use crate::core::Rect;
+use engine::text::{TextMeasurer, TextStyle};
 
 /// A measured text primitive. The `TextStyle` used for measurement travels
 /// with the label so the draw site provably reuses the same style (one

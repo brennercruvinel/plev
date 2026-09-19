@@ -1,6 +1,7 @@
 //! Editor configuration and color theme.
 
-use crate::text::backend::TextStyle;
+use engine::text::backend::TextStyle;
+use engine::theme::Theme;
 
 /// Visual and behavioral configuration of an [`EditorView`](super::EditorView).
 #[derive(Clone, Debug, PartialEq)]
@@ -21,23 +22,42 @@ pub struct EditorConfig {
     /// Extra lines shaped above/below the viewport so small scrolls do not
     /// pop blank lines in.
     pub overscan_lines: usize,
+    /// Padding on each side of the line numbers in the gutter.
+    pub gutter_pad: f32,
+    /// Gap between the gutter and the first glyph of a line.
+    pub text_pad_x: f32,
+    /// Caret width.
+    pub cursor_w: f32,
+    /// IME preedit underline thickness.
+    pub preedit_underline_h: f32,
 }
 
 impl Default for EditorConfig {
     fn default() -> Self {
-        Self {
-            font_size: 14.0,
-            line_height: 21.0,
-            font_family: Some("Inclusive Sans".to_string()),
-            show_gutter: true,
-            tab_width: 4,
-            cursor_blink_interval: 0.53,
-            overscan_lines: 8,
-        }
+        Self::from_theme(&Theme::default())
     }
 }
 
 impl EditorConfig {
+    /// Configuration from the theme: the mono ramp style sets the font and
+    /// the line height, the caret blinks at the platform half-period.
+    pub fn from_theme(theme: &Theme) -> Self {
+        let style = theme.typography.mono();
+        Self {
+            font_size: style.font_size,
+            line_height: style.line_height,
+            font_family: style.font_family.clone(),
+            show_gutter: true,
+            tab_width: 4,
+            cursor_blink_interval: 0.53,
+            overscan_lines: 8,
+            gutter_pad: theme.spacing.sm + theme.spacing.xs / 2.0,
+            text_pad_x: theme.spacing.sm,
+            cursor_w: theme.control.focus_ring_width,
+            preedit_underline_h: theme.control.edge_width,
+        }
+    }
+
     /// The [`TextStyle`] used for both shaping (render) and measuring
     /// (hit-test/caret), so the two always agree.
     pub fn text_style(&self) -> TextStyle {
@@ -56,7 +76,7 @@ impl EditorConfig {
 
 /// Colors used by [`EditorView::render`](super::EditorView::render).
 /// All colors are premultiplied-friendly linear RGBA arrays, matching
-/// [`SceneNode`](crate::compositor::SceneNode) color fields.
+/// [`SceneNode`](engine::compositor::SceneNode) color fields.
 #[derive(Clone, Debug, PartialEq)]
 pub struct EditorTheme {
     pub background: [f32; 4],
@@ -73,15 +93,30 @@ pub struct EditorTheme {
 
 impl Default for EditorTheme {
     fn default() -> Self {
+        Self::from_theme(&Theme::default())
+    }
+}
+
+impl EditorTheme {
+    /// Editor colors from the theme tokens: the page as the canvas, the
+    /// raised surface as the gutter, the accent for caret and selection
+    /// wash, the placeholder tone for line numbers.
+    pub fn from_theme(theme: &Theme) -> Self {
+        let accent = theme.colors.accent.0;
         Self {
-            background: [0.071, 0.075, 0.094, 1.0],
-            text: [0.871, 0.882, 0.914, 1.0],
-            gutter_background: [0.063, 0.067, 0.082, 1.0],
-            gutter_text: [0.376, 0.396, 0.467, 1.0],
-            gutter_separator: [0.157, 0.165, 0.200, 1.0],
-            selection: [0.263, 0.443, 0.812, 0.30],
-            cursor: [0.388, 0.612, 1.0, 1.0],
-            preedit_underline: [0.871, 0.882, 0.914, 0.85],
+            background: theme.colors.bg.0,
+            text: theme.colors.text.0,
+            gutter_background: theme.colors.surface.0,
+            gutter_text: theme.glass.text_placeholder.0,
+            gutter_separator: theme.colors.divider.0,
+            selection: [
+                accent[0],
+                accent[1],
+                accent[2],
+                theme.glass.wash_hover_alpha,
+            ],
+            cursor: accent,
+            preedit_underline: theme.glass.text_active.0,
         }
     }
 }

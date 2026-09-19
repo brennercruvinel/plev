@@ -3,8 +3,8 @@
 //! selection with incident-edge highlight.
 //!
 //! The app owns the data and the side panels: feed a
-//! [`GraphSpec`](crate::graph::GraphSpec) (or a precomputed
-//! [`GraphScene`](crate::graph::GraphScene) when the layout ran off the UI
+//! [`GraphSpec`](engine::graph::GraphSpec) (or a precomputed
+//! [`GraphScene`](engine::graph::GraphScene) when the layout ran off the UI
 //! thread), then read [`GraphView::hovered`]/[`selected`](GraphView::selected)
 //! to drive your own tooltip/detail — the widget never owns a Tooltip.
 //! Node payloads stay app-side; everything here indexes nodes by ordinal
@@ -17,12 +17,13 @@
 
 use std::collections::HashMap;
 
-use crate::compositor::{Compositor, SceneNode};
-use crate::graph::{GraphData, GraphScene, GraphSpec, ViewTransform, compute_layout};
-use crate::path::PathBuilder;
-use crate::theme::Theme;
+use engine::compositor::{Compositor, SceneNode};
+use engine::graph::{GraphData, GraphScene, GraphSpec, ViewTransform, compute_layout};
+use engine::path::PathBuilder;
+use engine::theme::Theme;
 
-use super::{EventResult, Rect, WidgetEvent, rounded_rect_stroke};
+use crate::core::{EventResult, Rect, WidgetEvent};
+use crate::recipe::rounded_rect_stroke;
 
 /// Fixed world box the layout runs in when the widget computes it.
 const WORLD: f32 = 1000.0;
@@ -245,7 +246,7 @@ impl GraphView {
             return;
         };
         if self.needs_fit {
-            self.transform = ViewTransform::fit(WORLD, WORLD, bounds.w, bounds.h, 24.0);
+            self.transform = ViewTransform::fit(WORLD, WORLD, bounds.w, bounds.h, theme.spacing.xl);
             self.needs_fit = false;
         }
 
@@ -311,7 +312,10 @@ impl GraphView {
             let color = [node_color[0], node_color[1], node_color[2], alpha];
             c.draw_path(PathBuilder::circle(sx, sy, r).fill(color));
             if is_sel || is_hov {
-                c.draw_path(PathBuilder::circle(sx, sy, r + 3.0).stroke(theme.colors.text.0, 1.0));
+                c.draw_path(
+                    PathBuilder::circle(sx, sy, r + theme.spacing.xs)
+                        .stroke(theme.colors.text.0, theme.control.edge_width),
+                );
             }
         }
         c.push(SceneNode::PopClip);
@@ -324,9 +328,9 @@ impl GraphView {
                 bounds.y,
                 bounds.w,
                 bounds.h,
-                theme.radius.md,
+                theme.shape.nav,
                 theme.glass.edge.0,
-                1.0,
+                theme.control.edge_width,
             ));
         }
     }
@@ -345,7 +349,7 @@ impl Default for GraphView {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::GraphEdge;
+    use engine::graph::GraphEdge;
 
     fn bounds() -> Rect {
         Rect::new(0.0, 0.0, 800.0, 600.0)

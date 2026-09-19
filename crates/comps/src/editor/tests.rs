@@ -7,21 +7,27 @@ use rope::{Document, Selection, SelectionSet};
 use winit::event::Ime;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-use crate::compositor::{Compositor, SceneNode};
-use crate::layout::ComputedBounds;
+use engine::compositor::{Compositor, SceneNode};
+use engine::layout::ComputedBounds;
 
 use super::view::visible_line_range;
-use super::{ClipboardProvider, EditorTheme, EditorView, LocalClipboard, MouseEvent};
+use super::{EditorConfig, EditorTheme, EditorView, MouseEvent};
+use engine::clipboard::{ClipboardProvider, LocalClipboard};
 
 const VIEW_W: f32 = 800.0;
-const VIEW_H: f32 = 420.0; // 20 lines at the default 21px line height
+/// Exactly 20 lines at the default line height (the theme's mono ramp).
+const VISIBLE_LINES: usize = 20;
+
+fn view_h() -> f32 {
+    EditorConfig::default().line_height * VISIBLE_LINES as f32
+}
 
 fn bounds() -> ComputedBounds {
     ComputedBounds {
         x: 0.0,
         y: 0.0,
         width: VIEW_W,
-        height: VIEW_H,
+        height: view_h(),
     }
 }
 
@@ -107,7 +113,7 @@ fn render_emits_only_visible_lines_of_100k_doc() {
 
     // 20 visible + 2*8 overscan lines, each emitting content + line number.
     let visible = ed.visible_lines();
-    assert_eq!(visible.len(), 20 + 2 * ed.config.overscan_lines);
+    assert_eq!(visible.len(), VISIBLE_LINES + 2 * ed.config.overscan_lines);
     assert_eq!(texts.len(), 2 * visible.len());
     assert!(texts.contains(&"line 50000"));
     assert!(!texts.contains(&"line 0"));
@@ -447,7 +453,7 @@ fn smart_home_and_end() {
 fn page_down_moves_a_viewport_and_follows_cursor() {
     let text = "x\n".repeat(100);
     let mut ed = editor(&text);
-    let page = (VIEW_H / ed.config.line_height).floor() as usize;
+    let page = (view_h() / ed.config.line_height).floor() as usize;
     press(
         &mut ed,
         Key::Named(NamedKey::PageDown),

@@ -3,18 +3,16 @@
 //! Tick it every frame while animating; keyboard focus
 //! ([`Switch::set_focused`]) rings the track with the accent focus ring.
 
-use crate::animation::Spring;
-use crate::compositor::{Compositor, SceneNode};
-use crate::theme::{MotionPhysics, Theme};
+use engine::animation::Spring;
+use engine::compositor::{Compositor, SceneNode};
+use engine::theme::{MotionPhysics, Theme};
 
-use super::{EventResult, Rect, WidgetEvent, focus_ring, mix};
+use crate::core::{EventResult, Rect, WidgetEvent, mix};
+use crate::recipe::focus_ring;
 
-/// HOFF switch: 44×24 track (radius 12), 16px knob at (4,4) with a 20px
-/// travel. The widget centers the track inside its bounds.
-const TRACK_W: f32 = 44.0;
-const TRACK_H: f32 = 24.0;
-const KNOB: f32 = 16.0;
-const KNOB_PAD: f32 = 4.0;
+// HOFF switch: `control.switch_size` track (pill), `control.switch_knob`
+// knob inset by the derived pad. The widget centers the track inside its
+// bounds.
 
 /// Toggle switch with a spring-animated knob.
 ///
@@ -133,17 +131,24 @@ impl Switch {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let alpha = if self.disabled { 0.5 } else { 1.0 };
-        let tx = bounds.x + (bounds.w - TRACK_W) / 2.0;
-        let ty = bounds.y + (bounds.h - TRACK_H) / 2.0;
-        let t = self.knob_progress();
         let glass = &theme.glass;
+        let alpha = if self.disabled {
+            glass.disabled_alpha
+        } else {
+            1.0
+        };
+        let [track_w, track_h] = theme.control.switch_size;
+        let knob = theme.control.switch_knob;
+        let knob_pad = theme.control.switch_knob_pad();
+        let tx = bounds.x + (bounds.w - track_w) / 2.0;
+        let ty = bounds.y + (bounds.h - track_h) / 2.0;
+        let t = self.knob_progress();
 
         if self.focused {
             // Ring the visible track, not the (larger) hit bounds.
             compositor.push(focus_ring(
-                Rect::new(tx, ty, TRACK_W, TRACK_H),
-                TRACK_H / 2.0,
+                Rect::new(tx, ty, track_w, track_h),
+                track_h / 2.0,
                 theme,
             ));
         }
@@ -160,10 +165,10 @@ impl Switch {
         compositor.push(SceneNode::RoundedRect {
             x: tx,
             y: ty,
-            w: TRACK_W,
-            h: TRACK_H,
+            w: track_w,
+            h: track_h,
             color: track,
-            corner_radius: TRACK_H / 2.0,
+            corner_radius: track_h / 2.0,
             border_width: 0.0,
             border_color: [0.0; 4],
         });
@@ -171,7 +176,7 @@ impl Switch {
         // Knob slides 20px between the padded ends. Off: flat
         // rgba($n2,.3); on: the HOFF white handle gradient (.90 -> .30,
         // top-lit) — blended along the same progress.
-        let kx = tx + KNOB_PAD + (TRACK_W - KNOB - KNOB_PAD * 2.0) * t;
+        let kx = tx + knob_pad + (track_w - knob - knob_pad * 2.0) * t;
         let flat = glass.knob_gradient[1].0;
         let mut top = mix(flat, glass.knob_gradient[0].0, t);
         let mut bottom = flat;
@@ -179,14 +184,14 @@ impl Switch {
         bottom[3] *= alpha;
         compositor.push(SceneNode::GradientRect {
             x: kx,
-            y: ty + KNOB_PAD,
-            w: KNOB,
-            h: KNOB,
+            y: ty + knob_pad,
+            w: knob,
+            h: knob,
             color: top,
             color2: bottom,
             // CSS 180deg: bright stop at the top.
             angle_deg: 180.0,
-            corner_radius: KNOB / 2.0,
+            corner_radius: knob / 2.0,
             border_width: 0.0,
             border_color: [0.0; 4],
         });

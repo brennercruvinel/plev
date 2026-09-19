@@ -1,15 +1,41 @@
-use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::{Theme, TypographyScale};
+//! HOFF tooltip: the solid tooltip body at the tooltip radius with the
+//! hint shadow, caption-r text-secondary, placed above its anchor (or
+//! below when there is no room) and kept inside the viewport by the
+//! `xs` step.
 
-use super::Rect;
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::text::{TextMeasurer, TextStyle};
+use engine::theme::Theme;
 
-/// HOFF tooltip: solid #262626, radius 8, pad 5 12 3, caption-r
-/// $text-secondary, shadow 0 1.5px 2px rgba(24,24,24,.15).
-const PAD_X: f32 = 12.0;
-const PAD_Y: f32 = 4.0;
-const GAP: f32 = 6.0;
-const MAX_W: f32 = 280.0;
+use crate::core::Rect;
+use crate::recipe::shadow_node;
+
+/// The per-theme geometry placement and render share.
+struct Metrics {
+    pad_x: f32,
+    pad_y: f32,
+    /// Gap between the anchor and the tooltip.
+    gap: f32,
+    /// Smallest distance from the viewport edge.
+    margin: f32,
+    max_w: f32,
+}
+
+impl Metrics {
+    fn of(theme: &Theme) -> Self {
+        Self {
+            pad_x: theme.spacing.md,
+            pad_y: theme.spacing.xs,
+            gap: theme.spacing.xs + theme.spacing.xs / 2.0,
+            margin: theme.spacing.xs,
+            max_w: theme.size.tooltip_max_w,
+        }
+    }
+}
+
+/// Seconds of continuous hover before a tooltip shows (the platform
+/// convention on macOS and windows sits between 0.4 and 0.5).
+const DEFAULT_DELAY: f32 = 0.45;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum State {
@@ -39,7 +65,7 @@ impl Tooltip {
     pub fn new(text: impl Into<String>) -> Self {
         Self {
             text: text.into(),
-            delay: 0.45,
+            delay: DEFAULT_DELAY,
             state: State::Hidden,
             anchor: Rect::default(),
         }
@@ -93,26 +119,27 @@ impl Tooltip {
     }
 
     /// Body style: caption-r, the same for measuring and rendering.
-    fn text_style() -> TextStyle {
-        TypographyScale::hoff().caption_r()
+    fn text_style(theme: &Theme) -> TextStyle {
+        theme.typography.caption_r()
     }
 
     /// Tooltip rect: centered above the anchor, flipped below when there
     /// is no room, clamped to the viewport.
-    pub fn placement(&self, vw: f32, vh: f32) -> Rect {
-        let style = Self::text_style();
-        let (tw, th) = TextMeasurer::measure_styled(&self.text, &style, Some(MAX_W));
-        let w = tw + PAD_X * 2.0;
-        let h = th.max(style.line_height) + PAD_Y * 2.0;
+    pub fn placement(&self, theme: &Theme, vw: f32, vh: f32) -> Rect {
+        let m = Metrics::of(theme);
+        let style = Self::text_style(theme);
+        let (tw, th) = TextMeasurer::measure_styled(&self.text, &style, Some(m.max_w));
+        let w = tw + m.pad_x * 2.0;
+        let h = th.max(style.line_height) + m.pad_y * 2.0;
 
         let mut x = self.anchor.x + (self.anchor.w - w) / 2.0;
-        x = x.clamp(4.0, (vw - w - 4.0).max(4.0));
+        x = x.clamp(m.margin, (vw - w - m.margin).max(m.margin));
 
-        let above = self.anchor.y - GAP - h;
-        let y = if above >= 4.0 {
+        let above = self.anchor.y - m.gap - h;
+        let y = if above >= m.margin {
             above
         } else {
-            (self.anchor.y + self.anchor.h + GAP).min((vh - h - 4.0).max(4.0))
+            (self.anchor.y + self.anchor.h + m.gap).min((vh - h - m.margin).max(m.margin))
         };
         Rect::new(x, y, w, h)
     }
@@ -128,23 +155,13 @@ impl Tooltip {
         if self.state != State::Visible {
             return;
         }
-        let rect = self.placement(vw, vh);
+        let m = Metrics::of(theme);
+        let rect = self.placement(theme, vw, vh);
 
-        let radius = theme.radius.sm;
-        compositor.push_to_layer(
-            layer,
-            SceneNode::Shadow {
-                x: rect.x,
-                y: rect.y,
-                w: rect.w,
-                h: rect.h,
-                corner_radius: radius,
-                blur_radius: 2.0,
-                offset: [0.0, 1.5],
-                color: [24.0 / 255.0, 24.0 / 255.0, 24.0 / 255.0, 0.15],
-                inset: false,
-            },
-        );
+        let radius = theme.shape.tooltip;
+        if let Some(shadow) = shadow_node(rect, radius, &theme.shadows.hint) {
+            compositor.push_to_layer(layer, shadow);
+        }
         compositor.push_to_layer(
             layer,
             SceneNode::RoundedRect {
@@ -161,9 +178,9 @@ impl Tooltip {
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::from_style(&self.text, &Self::text_style(), Some(MAX_W)),
-                x: rect.x + PAD_X,
-                y: rect.y + PAD_Y,
+                key: TextNodeKey::from_style(&self.text, &Self::text_style(theme), Some(m.max_w)),
+                x: rect.x + m.pad_x,
+                y: rect.y + m.pad_y,
                 color: theme.colors.text_mid.0,
             },
         );

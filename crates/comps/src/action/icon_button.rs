@@ -1,17 +1,17 @@
 //! HOFF icon button: a square glass control carrying only an icon glyph
-//! (from [`crate::ui::icons`]), same variants/intents as [`Button`] and
+//! (from [`crate::icons`]), same variants/intents as [`Button`] and
 //! the same click contract (fires on release inside). The label-less form
 //! is Tooltip-friendly by design — pair it with one from the owning view;
 //! this widget deliberately does not own a tooltip.
 
-use crate::compositor::Compositor;
-use crate::theme::{Intent, Theme};
-use crate::ui::icons;
+use crate::icons;
+use engine::compositor::Compositor;
+use engine::theme::{Intent, Theme};
 
-use super::{
-    ButtonSize, ButtonVariant, EventResult, Rect, WidgetEvent, focus_ring, glass_pill, intent_fill,
-    with_alpha,
-};
+use crate::action::ButtonSize;
+use crate::action::ButtonVariant;
+use crate::core::{EventResult, Rect, WidgetEvent, intent_fill};
+use crate::recipe::{focus_ring, glass_pill};
 
 /// Square icon-only button. See the module docs for the tooltip note.
 #[derive(Clone, Debug)]
@@ -79,13 +79,9 @@ impl IconButton {
     }
 
     /// Square: side = the control height of the size variant.
-    pub fn preferred_size(&self) -> (f32, f32) {
-        let h = self.size.height();
+    pub fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
+        let h = self.size.height(theme);
         (h, h)
-    }
-
-    fn icon_size(&self) -> f32 {
-        self.size.font_size() + 4.0
     }
 
     pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
@@ -131,15 +127,19 @@ impl IconButton {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let alpha = if self.disabled { 0.5 } else { 1.0 };
         let glass = &theme.glass;
+        let alpha = if self.disabled {
+            glass.disabled_alpha
+        } else {
+            1.0
+        };
         let intent = if self.variant == ButtonVariant::Danger {
             Intent::Destructive
         } else {
             self.intent
         };
         let fg_base = match intent {
-            Intent::Neutral => with_alpha(theme.colors.text, theme.colors.text.0[3] * 0.76),
+            Intent::Neutral => glass.text_active.0,
             other => intent_fill(theme, other),
         };
         let (bg, edge) = match self.variant {
@@ -174,8 +174,9 @@ impl IconButton {
         };
         let fg = [fg_base[0], fg_base[1], fg_base[2], fg_base[3] * alpha];
 
-        // Squircle, not pill: icon buttons read as rounded squares.
-        let radius = theme.radius.md.min(bounds.h / 2.0);
+        // Squircle, not pill: icon buttons read as rounded squares (the
+        // nav radius, like a nav link's icon slot).
+        let radius = theme.shape.nav.min(bounds.h / 2.0);
         if self.focused {
             compositor.push(focus_ring(bounds, radius, theme));
         }
@@ -184,14 +185,14 @@ impl IconButton {
                 bounds,
                 radius,
                 edge,
-                1.5,
+                theme.control.edge_width_strong,
                 [bg[0], bg[1], bg[2], bg[3] * alpha],
             ) {
                 compositor.push(node);
             }
         }
 
-        let icon = self.icon_size();
+        let icon = self.size.icon_size(theme);
         if let Some(node) = icons::icon_at(
             self.icon,
             icon,

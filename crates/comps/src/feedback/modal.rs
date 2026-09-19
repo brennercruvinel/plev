@@ -1,25 +1,25 @@
-use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::{Intent, Theme, TypographyScale};
+//! HOFF confirmation modal: scrim, a raised popover sheet at the pill
+//! radius with the overlay shadow stack, title + wrapped body, and two
+//! pill buttons. The sheet is `size.modal_max_w` wide on a desktop and
+//! shrinks to the viewport minus the breakpoint gutter on a phone, so
+//! the same dialog reads on every device.
 
-use super::button::{Button, ButtonVariant};
-use super::{EventResult, Rect, WidgetEvent, glass_pill};
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::text::{TextMeasurer, TextStyle};
+use engine::theme::{Elevation, Intent, Theme};
 
-/// HOFF modal: max-width 400, radius 32, padding 32, title 20/500,
-/// scrim rgba(35,34,34,.9), rgba(40,40,40,.7) glass body.
-const WIDTH: f32 = 400.0;
-const PAD: f32 = 32.0;
-const BTN_GAP: f32 = 8.0;
-const BTN_H: f32 = 44.0;
+use crate::action::{Button, ButtonVariant};
+use crate::core::{EventResult, Rect, WidgetEvent};
+use crate::recipe::{glass_pill, inset_keylight, shadow_stack};
 
-/// Title: the HOFF `=title` mixin (20/1.2/500).
-fn title_style() -> TextStyle {
-    TypographyScale::hoff().title()
+/// Title: the HOFF `=title` mixin.
+fn title_style(theme: &Theme) -> TextStyle {
+    theme.typography.title()
 }
 
 /// Body: base-2r, the same for measuring and rendering.
-fn body_style() -> TextStyle {
-    TypographyScale::hoff().base_2r()
+fn body_style(theme: &Theme) -> TextStyle {
+    theme.typography.base_2r()
 }
 
 /// What the user decided.
@@ -64,29 +64,48 @@ impl Modal {
         self
     }
 
-    fn body_height(&self) -> f32 {
-        let style = body_style();
-        let (_, h) = TextMeasurer::measure_styled(&self.body, &style, Some(WIDTH - PAD * 2.0));
+    /// Sheet padding: the `xxl` step (HOFF: 32).
+    fn pad(theme: &Theme) -> f32 {
+        theme.spacing.xxl
+    }
+
+    /// Sheet width for a viewport: the modal max, or the viewport minus
+    /// the breakpoint gutter on each side when that is narrower.
+    fn width(theme: &Theme, vw: f32) -> f32 {
+        let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+        theme.size.modal_max_w.min((vw - gutter * 2.0).max(0.0))
+    }
+
+    fn body_height(&self, theme: &Theme, width: f32) -> f32 {
+        let style = body_style(theme);
+        let (_, h) =
+            TextMeasurer::measure_styled(&self.body, &style, Some(width - Self::pad(theme) * 2.0));
         h.max(style.line_height)
     }
 
     /// Centered dialog rect for a viewport.
-    pub fn dialog_rect(&self, vw: f32, vh: f32) -> Rect {
-        let h = PAD + title_style().line_height + 10.0 + self.body_height() + 24.0 + BTN_H + PAD;
-        Rect::new(
-            ((vw - WIDTH) / 2.0).max(0.0),
-            ((vh - h) / 2.0).max(0.0),
-            WIDTH,
-            h,
-        )
+    pub fn dialog_rect(&self, theme: &Theme, vw: f32, vh: f32) -> Rect {
+        let pad = Self::pad(theme);
+        let w = Self::width(theme, vw);
+        let btn_h = self.confirm.size.height(theme);
+        let h = pad
+            + title_style(theme).line_height
+            + theme.spacing.sm
+            + self.body_height(theme, w)
+            + theme.spacing.xl
+            + btn_h
+            + pad;
+        Rect::new(((vw - w) / 2.0).max(0.0), ((vh - h) / 2.0).max(0.0), w, h)
     }
 
-    fn button_rects(&self, dialog: Rect) -> (Rect, Rect) {
-        let (cw, _) = self.confirm.preferred_size();
-        let (xw, _) = self.cancel.preferred_size();
-        let by = dialog.y + dialog.h - PAD - BTN_H;
-        let confirm = Rect::new(dialog.x + dialog.w - PAD - cw, by, cw, BTN_H);
-        let cancel = Rect::new(confirm.x - BTN_GAP - xw, by, xw, BTN_H);
+    /// Confirm and cancel button rects inside `dialog`.
+    pub fn button_rects(&self, theme: &Theme, dialog: Rect) -> (Rect, Rect) {
+        let pad = Self::pad(theme);
+        let (cw, btn_h) = self.confirm.preferred_size(theme);
+        let (xw, _) = self.cancel.preferred_size(theme);
+        let by = dialog.y + dialog.h - pad - btn_h;
+        let confirm = Rect::new(dialog.x + dialog.w - pad - cw, by, cw, btn_h);
+        let cancel = Rect::new(confirm.x - theme.spacing.sm - xw, by, xw, btn_h);
         (confirm, cancel)
     }
 
@@ -95,11 +114,12 @@ impl Modal {
     pub fn handle_event(
         &mut self,
         event: &WidgetEvent,
+        theme: &Theme,
         vw: f32,
         vh: f32,
     ) -> (ModalAction, EventResult) {
-        let dialog = self.dialog_rect(vw, vh);
-        let (confirm_rect, cancel_rect) = self.button_rects(dialog);
+        let dialog = self.dialog_rect(theme, vw, vh);
+        let (confirm_rect, cancel_rect) = self.button_rects(theme, dialog);
 
         let confirm_result = self.confirm.handle_event(event, confirm_rect);
         if confirm_result.clicked {
@@ -135,8 +155,8 @@ impl Modal {
         vh: f32,
     ) {
         let glass = &theme.glass;
+        let pad = Self::pad(theme);
 
-        // Scrim: rgba(35,34,34,.9).
         compositor.push_to_layer(
             layer,
             SceneNode::Rect {
@@ -148,27 +168,11 @@ impl Modal {
             },
         );
 
-        // Glass dialog: deep floating-menu shadow + real frost + edge-light
-        // + the solid #3B3B3B sheet (measured live: dialogs/menus are this
-        // lighter graphite, radius 32) + the inset key-light glint.
-        let dialog = self.dialog_rect(vw, vh);
-        let radius = theme.radius.xl;
-        compositor.push_to_layer(
-            layer,
-            SceneNode::Shadow {
-                x: dialog.x,
-                y: dialog.y,
-                w: dialog.w,
-                h: dialog.h,
-                corner_radius: radius,
-                // 0 24px 32px -12px rgba(18,18,18,..): the measured menu
-                // shadow, deepened for the blocking dialog.
-                blur_radius: 32.0,
-                offset: [0.0, 24.0],
-                color: [18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.45],
-                inset: false,
-            },
-        );
+        // Raised sheet: overlay shadow stack, frost, edge-light, the solid
+        // popover body, and the inset key-light glint.
+        let dialog = self.dialog_rect(theme, vw, vh);
+        let radius = theme.shape.pill;
+        shadow_stack(compositor, layer, dialog, radius, Elevation::Overlay, theme);
         compositor.push_to_layer(
             layer,
             SceneNode::BackdropBlur {
@@ -180,50 +184,39 @@ impl Modal {
                 sigma: theme.effects.blur_sigma,
             },
         );
-        for node in glass_pill(dialog, radius, glass.edge_soft.0, 1.5, glass.popover.0) {
+        for node in glass_pill(
+            dialog,
+            radius,
+            glass.edge_soft.0,
+            theme.control.edge_width_strong,
+            glass.popover.0,
+        ) {
             compositor.push_to_layer(layer, node);
         }
-        // Inset key-light: inset 2px 4px 16px rgba(248,248,248,.06).
-        compositor.push_to_layer(
-            layer,
-            SceneNode::Shadow {
-                x: dialog.x,
-                y: dialog.y,
-                w: dialog.w,
-                h: dialog.h,
-                corner_radius: radius,
-                blur_radius: 16.0,
-                offset: [2.0, 4.0],
-                color: glass.inset_highlight.0,
-                inset: true,
-            },
-        );
+        inset_keylight(compositor, layer, dialog, radius, theme);
 
-        // Title 20/1.2/500 $text-primary; body base-2r $text-secondary.
+        let title = title_style(theme);
+        let text_w = dialog.w - pad * 2.0;
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::from_style(
-                    &self.title,
-                    &title_style(),
-                    Some(dialog.w - PAD * 2.0),
-                ),
-                x: dialog.x + PAD,
-                y: dialog.y + PAD,
+                key: TextNodeKey::from_style(&self.title, &title, Some(text_w)),
+                x: dialog.x + pad,
+                y: dialog.y + pad,
                 color: theme.colors.text.0,
             },
         );
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::from_style(&self.body, &body_style(), Some(dialog.w - PAD * 2.0)),
-                x: dialog.x + PAD,
-                y: dialog.y + PAD + title_style().line_height + 10.0,
+                key: TextNodeKey::from_style(&self.body, &body_style(theme), Some(text_w)),
+                x: dialog.x + pad,
+                y: dialog.y + pad + title.line_height + theme.spacing.sm,
                 color: theme.colors.text_mid.0,
             },
         );
 
-        let (confirm_rect, cancel_rect) = self.button_rects(dialog);
+        let (confirm_rect, cancel_rect) = self.button_rects(theme, dialog);
         self.cancel
             .render_to_layer(compositor, layer, cancel_rect, theme);
         self.confirm

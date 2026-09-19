@@ -3,13 +3,11 @@
 //! the hit area (no 4px precision games); keyboard focus
 //! ([`Slider::set_focused`]) rings those bounds with the accent ring.
 
-use crate::compositor::{Compositor, SceneNode};
-use crate::theme::Theme;
+use engine::compositor::{Compositor, SceneNode};
+use engine::theme::Theme;
 
-use super::{EventResult, Rect, WidgetEvent, focus_ring, with_alpha};
-
-const TRACK_H: f32 = 4.0;
-const KNOB: f32 = 14.0;
+use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
+use crate::recipe::focus_ring;
 
 /// Horizontal slider. Dragging anywhere on the bounds moves the knob —
 /// the full height is the hit area so 4px tracks aren't a precision game.
@@ -91,13 +89,21 @@ impl Slider {
         (self.value - self.min) / (self.max - self.min)
     }
 
-    fn value_at(&self, x: f32, bounds: Rect) -> f32 {
-        let usable = (bounds.w - KNOB).max(1.0);
-        let t = ((x - bounds.x - KNOB / 2.0) / usable).clamp(0.0, 1.0);
+    fn value_at(&self, x: f32, bounds: Rect, theme: &Theme) -> f32 {
+        let knob = theme.control.slider_knob;
+        let usable = (bounds.w - knob).max(1.0);
+        let t = ((x - bounds.x - knob / 2.0) / usable).clamp(0.0, 1.0);
         self.min + t * (self.max - self.min)
     }
 
-    pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
+    /// The knob travel maps through the theme's knob size, so the event
+    /// path takes the same `theme` the render path draws with.
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        bounds: Rect,
+        theme: &Theme,
+    ) -> EventResult {
         if self.disabled {
             if self.hovered || self.dragging {
                 self.hovered = false;
@@ -116,7 +122,7 @@ impl Slider {
                 }
                 if self.dragging {
                     let old = self.value;
-                    self.set_value(self.value_at(x, bounds));
+                    self.set_value(self.value_at(x, bounds, theme));
                     if self.value != old {
                         result = result.merge(EventResult::changed());
                     }
@@ -131,7 +137,7 @@ impl Slider {
             WidgetEvent::MouseDown { x, y } => {
                 if bounds.contains(x, y) {
                     self.dragging = true;
-                    self.set_value(self.value_at(x, bounds));
+                    self.set_value(self.value_at(x, bounds, theme));
                     EventResult::changed()
                 } else {
                     EventResult::IGNORED
@@ -150,12 +156,18 @@ impl Slider {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let alpha = if self.disabled { 0.5 } else { 1.0 };
-        let ty = bounds.y + (bounds.h - TRACK_H) / 2.0;
-        let t = self.ratio();
-        let usable = (bounds.w - KNOB).max(1.0);
-        let knob_x = bounds.x + usable * t;
         let glass = &theme.glass;
+        let alpha = if self.disabled {
+            glass.disabled_alpha
+        } else {
+            1.0
+        };
+        let track_h = theme.control.slider_track;
+        let knob_d = theme.control.slider_knob;
+        let ty = bounds.y + (bounds.h - track_h) / 2.0;
+        let t = self.ratio();
+        let usable = (bounds.w - knob_d).max(1.0);
+        let knob_x = bounds.x + usable * t;
         let text = theme.colors.text;
 
         if self.focused {
@@ -168,27 +180,27 @@ impl Slider {
             x: bounds.x,
             y: ty,
             w: bounds.w,
-            h: TRACK_H,
+            h: track_h,
             color: with_alpha(track, track.0[3] * alpha),
-            corner_radius: TRACK_H / 2.0,
+            corner_radius: track_h / 2.0,
             border_width: 0.0,
             border_color: [0.0; 4],
         });
 
         // Filled portion: the HOFF progress gradient
         // linear-gradient(90deg, rgba(255,255,255,0) -> .40).
-        let fill_w = knob_x + KNOB / 2.0 - bounds.x;
+        let fill_w = knob_x + knob_d / 2.0 - bounds.x;
         if fill_w > 1.0 {
             compositor.push(SceneNode::GradientRect {
                 x: bounds.x,
                 y: ty,
                 w: fill_w,
-                h: TRACK_H,
+                h: track_h,
                 color: [text.0[0], text.0[1], text.0[2], 0.0],
-                color2: [text.0[0], text.0[1], text.0[2], 0.40 * alpha],
+                color2: with_alpha(glass.text_faint, glass.text_faint.0[3] * alpha),
                 // CSS 90deg: transparent stop on the left.
                 angle_deg: 90.0,
-                corner_radius: TRACK_H / 2.0,
+                corner_radius: track_h / 2.0,
                 border_width: 0.0,
                 border_color: [0.0; 4],
             });
@@ -201,7 +213,7 @@ impl Slider {
         } else {
             0.0
         };
-        let k = KNOB + grow * 2.0;
+        let k = knob_d + grow * 2.0;
         let top = glass.knob_gradient[0];
         let bottom = glass.knob_gradient[1];
         compositor.push(SceneNode::GradientRect {

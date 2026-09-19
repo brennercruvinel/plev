@@ -8,17 +8,14 @@ pub mod gpu;
 pub mod path;
 
 // -- Text
-pub mod editor;
 pub mod text;
-pub mod text_input;
 
-// -- Clipboard (first-level; the editor's own sync stays in `editor`)
+// -- Clipboard (trait + system/local providers; the editor widget in
+// -- `comps` and any app that wants "copy to clipboard" both come here)
 pub mod clipboard;
 
-// -- Charts (pure geometry + scene-node emission; see charts/mod.rs)
-pub mod charts;
-
-// -- Graph canvas geometry (CSR layout + pan/zoom transform)
+// -- Graph canvas geometry (CSR layout + pan/zoom transform; the widget
+// -- that pans and zooms it is `comps::graph::GraphView`)
 pub mod graph;
 
 // -- Input & Events
@@ -31,12 +28,10 @@ pub mod component;
 pub mod signal;
 pub mod view;
 
-// -- UI & Overlay
+// -- Tokens & Layout (the widgets themselves live in the `comps` crate)
 pub mod color;
 pub mod layout;
-pub mod overlay;
 pub mod theme;
-pub mod ui;
 
 // -- Animation
 pub mod animation;

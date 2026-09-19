@@ -13,8 +13,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use comps::editor::{EditorTheme, EditorView, MouseEvent};
 use engine::compositor::Compositor;
-use engine::editor::{EditorTheme, EditorView, MouseEvent};
 use engine::gpu::GpuContext;
 use engine::layout::ComputedBounds;
 use engine::text::TextSystem;
@@ -68,7 +68,7 @@ impl App {
             state: GpuState::Uninitialized,
             compositor: Compositor::new(),
             editor: EditorView::new(Document::load(&text)),
-            theme: EditorTheme::default(),
+            theme: EditorTheme::from_theme(&engine::theme::Theme::default()),
             path,
             modifiers: ModifiersState::empty(),
             cursor_pos: (0.0, 0.0),

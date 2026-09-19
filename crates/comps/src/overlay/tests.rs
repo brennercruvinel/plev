@@ -156,8 +156,8 @@ fn ids_are_unique_across_pushes() {
 // Animated overlays (push_animated / pop_animated / tick)
 // ---------------------------------------------------------------------------
 
-fn neutral_motion() -> crate::theme::MotionPhysics {
-    crate::theme::MotionPhysics {
+fn neutral_motion() -> engine::theme::MotionPhysics {
+    engine::theme::MotionPhysics {
         mass: 1.0,
         stiffness: 170.0,
         damping: 26.0,
@@ -261,7 +261,7 @@ fn top_active_skips_closing_overlays() {
 
 #[test]
 fn destructive_intent_exit_is_faster_than_informational() {
-    use crate::theme::{Intent, Theme};
+    use engine::theme::{Intent, Theme};
     let theme = Theme::dark();
 
     let mut fast = OverlayManager::new();

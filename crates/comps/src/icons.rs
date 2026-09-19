@@ -7,7 +7,7 @@
 //! for a cache hit is a vertex copy with offset + tint applied.
 //!
 //! ```rust
-//! use engine::ui::icons;
+//! use comps::icons;
 //! let node = icons::icon_at("folder", 16.0, [1.0, 1.0, 1.0, 1.0], 8.0, 8.0);
 //! assert!(node.is_some());
 //! ```
@@ -18,8 +18,8 @@ use std::hash::{Hash, Hasher};
 
 use rustc_hash::FxHasher;
 
-use crate::compositor::{QuadVertex, SceneNode};
-use crate::path::{PathBuilder, TessellatedPath};
+use engine::compositor::{QuadVertex, SceneNode};
+use engine::path::{PathBuilder, TessellatedPath};
 
 /// Lucide design constants: 24x24 viewBox, stroke-width 2.
 const VIEWBOX: f32 = 24.0;
@@ -142,6 +142,14 @@ static ICONS: &[(&str, &[Shape])] = &[
         &[Path(
             "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z",
         )],
+    ),
+    (
+        "history",
+        &[
+            Path("M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"),
+            Path("M3 3v5h5"),
+            Path("M12 7v5l4 2"),
+        ],
     ),
     (
         "house",

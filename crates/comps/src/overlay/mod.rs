@@ -3,8 +3,8 @@ mod types;
 #[cfg(test)]
 mod tests;
 
-use crate::animation::Spring;
-use crate::theme::MotionPhysics;
+use engine::animation::Spring;
+use engine::theme::MotionPhysics;
 use types::OverlayAnim;
 
 pub use types::{MenuItem, Overlay, OverlayId, OverlayKind};
@@ -226,7 +226,7 @@ impl OverlayManager {
     ///
     /// Use this to decide whether a click should dismiss the overlay stack:
     /// ```rust
-    /// # use engine::overlay::{OverlayManager, OverlayKind, MenuItem};
+    /// # use comps::overlay::{OverlayManager, OverlayKind, MenuItem};
     /// # let mut mgr = OverlayManager::new();
     /// # mgr.push(OverlayKind::ContextMenu { items: vec![] }, 10.0, 10.0, 100.0, 80.0);
     /// if mgr.hit_test_outside(5.0, 5.0) {
