@@ -18,7 +18,10 @@ plev: a gpu-first compositing engine in rust (wgpu 28, winit 0.30,
 cosmic-text 0.18, taffy 0.9). one codebase, identical rendering on macos,
 browser (webgpu/wasm), and android + ios (the showcase runs on both via the
 native shells in android/ and ios/showcase/; see "## running"). linux/windows
-pending. apps: crates/showcase (widget gallery, also runs in the browser),
+pending. the design system is crates/comps (every widget, recipe, icon,
+chart, overlay, the editor and the app shell), reading every visual value
+from engine::theme::Theme; the inventory is docs/catalog.md. apps:
+crates/showcase (design-system gallery, also runs in the browser),
 crates/ide (real git client). knowledge base: docs/ (adr, arc, how-to,
 mission, refs). architecture: docs/arc/arc.toml.
 
@@ -29,8 +32,13 @@ mission, refs). architecture: docs/arc/arc.toml.
    made and the reasons behind them
 2. read docs/how-to/code-against-the-plev-engine.md before touching ui or
    rendering code; it encodes every defect class this repo already paid for
-3. check whether the engine already provides the capability before
-   reimplementing anything in an app
+3. check whether the engine or comps already provides the capability
+   before reimplementing anything in an app; a widget an app needs and
+   comps lacks goes into comps (with its matrix test), never into the app
+4. no visual literal in a widget or an app screen: colors, radii, heights,
+   paddings, shadows, breakpoints are `Theme` tokens (engine/src/theme). a
+   number that is not a token yet becomes one (scales.rs) in the same
+   change
 
 ## conventions
 read -> .contracts/.mantras/.code/.lang/.rust/rust-conventions.md (markdown;
@@ -50,7 +58,9 @@ behavior.
 - colors are srgb; linearize once entering the gpu (to_linear_array for
   clears/uniforms); surface render targets only via gpu.surface_render_view
 - container geometry derives from available space; constants only as
-  min/max/gap; narrow and wide viewport tests for every new screen
+  min/max/gap; narrow and wide viewport tests for every new screen. a
+  screen is framed by comps::shell::AppShell (sidebar by breakpoint,
+  header, content rect, safe area); phone width is a first-class viewport
 - any handler that changes visible state must invalidate (render on demand)
 - accessibility, reduced motion, wcag contrast and cross-density are
   native requirements, not retrofits
@@ -76,7 +86,8 @@ typos job (non-blocking; the repo is bilingual english/portuguese).
   runs `trunk --config web serve` for the browser), `cargo run -p ide
   [path]` (git client), `cargo run -p prime` (particle swarm),
   `cargo run -p engine --example <name>` (any
-  crates/engine/examples/<name>/main.rs)
+  crates/engine/examples/<name>/main.rs), `cargo run -p comps --example
+  editor` (the design-system editor demo)
 - urnaui (.urna explorer): `cargo run --manifest-path
   crates/urnaui/Cargo.toml [file.urna]`. it is excluded from the root
   workspace (native backend path-depends on ../urna, the hoffresearch/urna
@@ -144,6 +155,8 @@ keep them living.
 - avoid `#[allow(...)]` crate-wide; allow per item with a comment
 - avoid unsafe without a `// SAFETY:` comment naming the invariant
 - avoid emojis and em-dashes anywhere in project files
-- avoid building parallel implementations of engine capabilities in apps
+- avoid building parallel implementations of engine or comps capabilities
+  in apps; avoid a second theme or palette anywhere (the ide and four
+  demos each had one; they are gone)
 - create, never copy: clones under refs/ are study material; extract the
   pattern and rebuild it, never port (see ## refs)

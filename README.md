@@ -49,10 +49,11 @@ only work with rustup.
 ```
 cargo build --release --workspace
 
-cargo run -p showcase                  # the design-system gallery, 14 tabs
+cargo run -p showcase                  # the design-system gallery, 15 tabs
 cargo run -p ide [path]                # plev-native git client
 cargo run -p prime                     # prime-coherence particle swarm
 cargo run -p engine --example snake    # any of the windowed demos
+cargo run -p comps --example editor    # the design-system editor demo
 ```
 
 web, same pixels as desktop (`cargo install trunk` first):
@@ -95,14 +96,23 @@ cd android && ./build_android.sh                    # -> app/build/outputs/apk/d
 
 ## workspace
 
-the engine is one crate, the repo root is a virtual workspace, libraries
-and apps are sibling crates, demos are the engine's examples.
+the engine is one crate, the design system is one crate over it, the
+repo root is a virtual workspace, libraries and apps are sibling crates,
+demos are the engine's (and comps') examples.
 
 | tier | where | what |
 |---|---|---|
-| engine | `crates/engine` | gpu, compositor, text, path, layout, input, animation, signal, theme, ui, charts, graph, builder, window, platform |
+| engine | `crates/engine` | gpu, compositor, text, path, layout, input, animation, signal, theme (the tokens), graph, builder, window, platform |
+| comps | `crates/comps` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/catalog.md](docs/catalog.md) |
 | crates | `crates/` | git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rope, showcase, svg, urnaui |
-| examples | `crates/engine/examples/` | 16 windowed demos plus the lot2monsters and svg2monster clis |
+| examples | `crates/engine/examples/`, `crates/comps/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters and svg2monster clis |
+
+`comps` is the crate an app draws with. widgets are plain structs the app
+owns; they take `&Theme` and read every color, radius, height, padding,
+shadow and breakpoint from it, so a theme swap or a phone width changes
+the whole app at once. the showcase and the ide are framed by
+`comps::shell::AppShell`: full sidebar on a desktop, a rail in a narrow
+window, a drawer behind a menu button on a phone.
 
 two of the crates are pipelines: a foreign format in, our format out.
 
