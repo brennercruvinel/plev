@@ -10,17 +10,17 @@
 //! the worker directly — submissions bubble up as [`Action::RunSearch`]
 //! and the shell validates against the open database.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
-use engine::ui::widgets::{
+use comps::prelude::{
     Button, EventResult, IconButton, Rect, Select, Slider, Spinner, SpinnerSize, Tabs, VirtualList,
     WidgetEvent,
 };
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::text::{TextMeasurer, TextStyle};
+use engine::theme::Theme;
 
 use crate::model::types::{OpenedDbView, SearchMode, SearchResultsView};
 
-use super::field::{FIELD_H, Field};
+use super::field::{Field, field_h};
 use super::{Action, ChunkLookup, EditKey, group_label, panel, short_id, span_label, text};
 
 const GAP: f32 = 12.0;
@@ -69,17 +69,16 @@ pub struct SearchScreen {
 }
 
 impl SearchScreen {
-    pub fn new(theme: &Theme) -> Self {
+    pub fn new() -> Self {
         Self {
             kind_tabs: Tabs::new(["text", "vector"]),
-            query: Field::new("ask the corpus…", theme),
+            query: Field::new("ask the corpus…"),
             mode: Select::new(TEXT_MODES, 0),
             spaces: Vec::new(),
             k: Slider::new(1.0, 100.0, 10.0).step(1.0),
             search_button: Button::new("Search").icon("search"),
             results: VirtualList::new(ROW_H),
-            copy_citation: IconButton::new("copy")
-                .variant(engine::ui::widgets::ButtonVariant::Ghost),
+            copy_citation: IconButton::new("copy").variant(comps::prelude::ButtonVariant::Ghost),
             spinner: Spinner::new().size(SpinnerSize::Sm),
             result: None,
             error: String::new(),
@@ -144,9 +143,13 @@ impl SearchScreen {
         event: &WidgetEvent,
         content: Rect,
         has_result: bool,
+        theme: &Theme,
     ) -> EventResult {
-        self.mode
-            .handle_event(event, self.layout(content, has_result).mode_select)
+        self.mode.handle_event(
+            event,
+            self.layout(content, has_result, theme).mode_select,
+            theme,
+        )
     }
 
     pub fn fold_result(&mut self, result: Result<SearchResultsView, String>) {
@@ -191,15 +194,15 @@ impl SearchScreen {
         lookup.ordinal(&hit.chunk_id)
     }
 
-    fn layout(&self, content: Rect, has_result: bool) -> Layout {
+    fn layout(&self, content: Rect, has_result: bool, theme: &Theme) -> Layout {
         let kind_tabs = Rect::new(content.x, content.y, KIND_W, KIND_H);
         let query_y = content.y + KIND_H + GAP;
-        let (bw, bh) = self.search_button.preferred_size();
+        let (bw, bh) = self.search_button.preferred_size(theme);
         let query_field = Rect::new(
             content.x,
             query_y,
             (content.w - bw - GAP).max(120.0),
-            FIELD_H.max(bh),
+            field_h(theme).max(bh),
         );
         let search_button = Rect::new(content.x + content.w - bw, query_y, bw, bh);
         let opts_y = query_y + query_field.h + GAP;
@@ -244,8 +247,9 @@ impl SearchScreen {
         event: &WidgetEvent,
         content: Rect,
         has_db: bool,
+        theme: &Theme,
     ) -> (EventResult, Action) {
-        let l = self.layout(content, self.result.is_some());
+        let l = self.layout(content, self.result.is_some(), theme);
         self.search_button.disabled = !has_db || self.pending || self.query.is_empty();
 
         let mut result = EventResult::IGNORED;
@@ -257,7 +261,7 @@ impl SearchScreen {
         {
             let r = self
                 .copy_citation
-                .handle_event(event, self.copy_rect(explain));
+                .handle_event(event, self.copy_rect(explain, theme));
             if r.clicked
                 && let (Some(res), Some(sel)) = (&self.result, self.results.selected)
                 && let Some(hit) = res.hits.get(sel)
@@ -280,10 +284,10 @@ impl SearchScreen {
         }
         result = result.merge(r);
 
-        let r = self.kind_tabs.handle_event(event, l.kind_tabs);
+        let r = self.kind_tabs.handle_event(event, l.kind_tabs, theme);
         if r.clicked {
             // Retune the placeholder to the new query kind.
-            self.query.input.placeholder = match self.query_kind() {
+            self.query.input.input.placeholder = match self.query_kind() {
                 QueryKind::Text => "ask the corpus…".to_string(),
                 QueryKind::Vector => "[0.012, -0.34, …]".to_string(),
             };
@@ -291,23 +295,19 @@ impl SearchScreen {
         }
         result = result.merge(r);
 
-        result = result.merge(self.mode.handle_event(event, l.mode_select));
-        result = result.merge(self.k.handle_event(event, l.slider));
+        result = result.merge(self.mode.handle_event(event, l.mode_select, theme));
+        result = result.merge(self.k.handle_event(event, l.slider, theme));
 
         // Results list.
         if let Some(res) = &self.result {
             self.results.set_item_count(res.hits.len());
         }
-        result = result.merge(self.results.handle_event(event, l.results));
+        result = result.merge(self.results.handle_event(event, l.results, theme));
 
         // Query field: click focuses; clicks elsewhere blur.
-        if let WidgetEvent::MouseDown { x, y } = *event {
-            if l.query_field.contains(x, y) {
-                self.query.click(x - l.query_field.x);
-                return (EventResult::changed(), Action::None);
-            }
-            if self.query.input.focused {
-                self.query.unfocus();
+        if let WidgetEvent::MouseDown { .. } = *event {
+            let fr = self.query.handle_event(event, l.query_field, theme);
+            if fr.clicked || fr.changed {
                 return (EventResult::changed(), Action::None);
             }
         }
@@ -319,7 +319,7 @@ impl SearchScreen {
     }
 
     pub fn handle_edit_key(&mut self, key: EditKey) -> (bool, Action) {
-        if key == EditKey::Enter && self.query.input.focused && !self.query.is_empty() {
+        if key == EditKey::Enter && self.query.is_focused() && !self.query.is_empty() {
             return (true, self.submit());
         }
         (self.query.edit(key), Action::None)
@@ -330,8 +330,8 @@ impl SearchScreen {
         self.query.tick(dt) | self.results.tick(dt) | spinning
     }
 
-    fn copy_rect(&self, explain: Rect) -> Rect {
-        let (w, h) = self.copy_citation.preferred_size();
+    fn copy_rect(&self, explain: Rect, theme: &Theme) -> Rect {
+        let (w, h) = self.copy_citation.preferred_size(theme);
         Rect::new(explain.x + explain.w - 16.0 - w, explain.y + 8.0, w, h)
     }
 
@@ -351,7 +351,7 @@ impl SearchScreen {
         ctx: &SearchContext,
     ) {
         let has_result = self.result.is_some();
-        let l = self.layout(content, has_result);
+        let l = self.layout(content, has_result, theme);
         self.search_button.disabled = ctx.dim == 0 || self.pending || self.query.is_empty();
         self.search_button.label = if self.pending {
             "Searching…"
@@ -444,7 +444,7 @@ impl SearchScreen {
                 let selected = self.results.selected;
                 render_explain(
                     &self.copy_citation,
-                    self.copy_rect(explain),
+                    self.copy_rect(explain, theme),
                     c,
                     explain,
                     theme,
@@ -465,7 +465,7 @@ impl SearchScreen {
         theme: &Theme,
     ) {
         if self.mode.is_open() {
-            let l = self.layout(content, self.result.is_some());
+            let l = self.layout(content, self.result.is_some(), theme);
             self.mode.render_dropdown(c, layer, l.mode_select, theme);
         }
     }
@@ -490,7 +490,7 @@ fn render_results(
         let pad = 12.0;
         // Score meter (engine charts helper) + numeric value.
         let bar_w = 64.0;
-        engine::charts::draw::meter(
+        comps::charts::draw::meter(
             c,
             hit.score,
             Rect::new(row.x + pad, row.y + 10.0, bar_w, 6.0),
@@ -755,7 +755,7 @@ mod tests {
 
     fn harness() -> (SearchScreen, Theme) {
         let theme = Theme::hoff();
-        (SearchScreen::new(&theme), theme)
+        (SearchScreen::new(), theme)
     }
 
     fn fake_results() -> SearchResultsView {
@@ -788,12 +788,12 @@ mod tests {
 
     #[test]
     fn typing_then_enter_submits_a_text_search() {
-        let (mut screen, _) = harness();
+        let (mut screen, theme) = harness();
         let content = Rect::new(40.0, 128.0, 1200.0, 600.0);
         // Unfocused fields swallow nothing.
         assert!(!screen.handle_text("hello"));
         // Click the query field to focus it.
-        let field = screen.layout(content, false).query_field;
+        let field = screen.layout(content, false, &theme).query_field;
         screen.handle_event(
             &WidgetEvent::MouseDown {
                 x: field.x + 20.0,
@@ -801,6 +801,7 @@ mod tests {
             },
             content,
             true,
+            &theme,
         );
         assert!(screen.handle_text("hello corpus"));
         let (handled, action) = screen.handle_edit_key(EditKey::Enter);
@@ -827,14 +828,15 @@ mod tests {
         let (mut screen, _) = harness();
         let content = Rect::new(40.0, 128.0, 1200.0, 600.0);
         assert_eq!(screen.query_kind(), QueryKind::Text);
-        let tabs = screen.layout(content, false).kind_tabs;
+        let theme = Theme::hoff();
+        let tabs = screen.layout(content, false, &theme).kind_tabs;
         // Second segment ("vector").
-        let rect = screen.kind_tabs.item_rects(tabs)[1];
+        let rect = screen.kind_tabs.item_rects(tabs, &theme)[1];
         let (x, y) = rect.center();
-        let (r, _) = screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, true);
+        let (r, _) = screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, true, &theme);
         assert!(r.clicked);
         assert_eq!(screen.query_kind(), QueryKind::Vector);
-        assert!(screen.query.input.placeholder.starts_with('['));
+        assert!(screen.query.input.input.placeholder.starts_with('['));
     }
 
     #[test]
@@ -949,11 +951,11 @@ mod tests {
 
     #[test]
     fn selecting_a_hit_enables_citation_copy() {
-        let (mut screen, _) = harness();
+        let (mut screen, theme) = harness();
         screen.fold_result(Ok(fake_results()));
         let content = Rect::new(40.0, 128.0, 1200.0, 600.0);
         // Click the first result row.
-        let results = screen.layout(content, true).results;
+        let results = screen.layout(content, true, &theme).results;
         screen.handle_event(
             &WidgetEvent::MouseDown {
                 x: results.x + 20.0,
@@ -961,14 +963,16 @@ mod tests {
             },
             content,
             true,
+            &theme,
         );
         assert_eq!(screen.results.selected, Some(0));
         // Click the copy-citation button in the explain panel.
-        let explain = screen.layout(content, true).explain.unwrap();
-        let rect = screen.copy_rect(explain);
+        let explain = screen.layout(content, true, &theme).explain.unwrap();
+        let rect = screen.copy_rect(explain, &theme);
         let (x, y) = rect.center();
-        screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, true);
-        let (r, action) = screen.handle_event(&WidgetEvent::MouseUp { x, y }, content, true);
+        screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, true, &theme);
+        let (r, action) =
+            screen.handle_event(&WidgetEvent::MouseUp { x, y }, content, true, &theme);
         assert!(r.clicked);
         match action {
             Action::Copy { text, .. } => assert!(text.starts_with("urna://")),

@@ -1,9 +1,9 @@
 //! Lists section: 10,000-row virtualized list + tree view.
 
+use comps::icons;
+use comps::prelude::{EventResult, Rect, Tree, TreeNode, VirtualList, WidgetEvent};
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::theme::Theme;
-use engine::ui::icons;
-use engine::ui::widgets::{EventResult, Rect, Tree, TreeNode, VirtualList, WidgetEvent};
 
 use super::{group_label, panel, text};
 
@@ -75,9 +75,19 @@ impl ListsSection {
         Rect::new(x, list.y, (content.x + content.w - x).max(180.0), list.h)
     }
 
-    pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
-        let mut r = self.list.handle_event(event, self.list_bounds(content));
-        r = r.merge(self.tree.handle_event(event, self.tree_bounds(content)));
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        content: Rect,
+        theme: &Theme,
+    ) -> EventResult {
+        let mut r = self
+            .list
+            .handle_event(event, self.list_bounds(content), theme);
+        r = r.merge(
+            self.tree
+                .handle_event(event, self.tree_bounds(content), theme),
+        );
         r
     }
 

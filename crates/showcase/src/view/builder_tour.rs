@@ -6,12 +6,12 @@
 //! embedded UI family. Named
 //! builder_tour to not collide with the engine's engine::builder.
 
+use comps::prelude::{EventResult, Rect, WidgetEvent};
 use engine::builder::{Element, button, div, text as btext};
 use engine::color::Color;
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
-use engine::ui::widgets::{EventResult, Rect, WidgetEvent};
 use engine::view::ViewContext;
 
 use super::{group_label, panel};

@@ -12,8 +12,8 @@ mod scrolling;
 
 use super::*;
 use crate::views::unassigned_view::{FileEntry, FileStatus};
+use comps::overlay::OverlayKind;
 use engine::compositor::Compositor;
-use engine::overlay::OverlayKind;
 
 fn sample_files() -> Vec<FileEntry> {
     let entry = |path: &str, status, staged| FileEntry {
@@ -28,6 +28,16 @@ fn sample_files() -> Vec<FileEntry> {
         entry("docs/notes.md", FileStatus::Untracked, false),
         entry("old/gone.rs", FileStatus::Deleted, false),
     ]
+}
+
+/// Sidebar rail width for the default theme.
+fn sidebar_w() -> f32 {
+    WorkspaceView::new(100.0, 100.0).sidebar_w()
+}
+
+/// Header height for the default theme.
+fn header_h() -> f32 {
+    WorkspaceView::new(100.0, 100.0).header_h()
 }
 
 fn ws() -> (WorkspaceView, Compositor) {

@@ -8,10 +8,10 @@
 //! (optional manifest fields, spaces and blobs add rows), never from
 //! viewport constants.
 
+use comps::prelude::{Button, EventResult, IconButton, Rect, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
-use engine::ui::widgets::{Button, EventResult, IconButton, Rect, WidgetEvent};
 
 use crate::model::types::OpenedDbView;
 
@@ -66,8 +66,8 @@ struct Layout {
 
 /// A capability chip: present = Constructive, absent = Neutral outline
 /// (engine `Chip`; static — capabilities are not clickable).
-fn chip_for(label: &str, present: bool) -> engine::ui::widgets::Chip {
-    engine::ui::widgets::Chip::new(label).intent(if present {
+fn chip_for(label: &str, present: bool) -> comps::prelude::Chip {
+    comps::prelude::Chip::new(label).intent(if present {
         engine::theme::Intent::Constructive
     } else {
         engine::theme::Intent::Neutral
@@ -211,7 +211,7 @@ fn cards(db: &OpenedDbView) -> Vec<Card> {
 
 /// Pure layout: card rects, row-button rects, section row rects and the
 /// total content height, all derived from `content` and the data.
-fn layout(content: Rect, db: &OpenedDbView) -> Layout {
+fn layout(content: Rect, db: &OpenedDbView, theme: &Theme) -> Layout {
     let card_list = cards(db);
     let card_h = |card: &Card| CARD_PAD * 2.0 + 24.0 + card.rows.len() as f32 * ROW_H;
 
@@ -249,7 +249,7 @@ fn layout(content: Rect, db: &OpenedDbView) -> Layout {
     let mut chip_rects = Vec::with_capacity(chip_list.len());
     let mut row_top = 0.0_f32;
     for &(label, present) in &chip_list {
-        let (w, h) = chip_for(label, present).preferred_size();
+        let (w, h) = chip_for(label, present).preferred_size(theme);
         if cx + w > content.x + content.w && cx > content.x {
             cy_rows += 1;
             row_top += h + CHIP_GAP;
@@ -315,8 +315,8 @@ impl OverviewScreen {
             buttons: Vec::new(),
             validate: Button::new("Validate")
                 .icon("eye")
-                .size(engine::ui::widgets::ButtonSize::Sm)
-                .variant(engine::ui::widgets::ButtonVariant::Outline),
+                .size(comps::prelude::ButtonSize::Sm)
+                .variant(comps::prelude::ButtonVariant::Outline),
             scroll: engine::input::scroll::ScrollState::new(),
         }
     }
@@ -339,7 +339,7 @@ impl OverviewScreen {
                 };
                 (
                     b,
-                    IconButton::new(icon).variant(engine::ui::widgets::ButtonVariant::Ghost),
+                    IconButton::new(icon).variant(comps::prelude::ButtonVariant::Ghost),
                 )
             })
             .collect();
@@ -347,9 +347,9 @@ impl OverviewScreen {
 
     /// Clamp the scroll offset to the current viewport/content (resize can
     /// shrink content; the offset must follow).
-    fn sync_scroll(&mut self, viewport: Rect, db: &OpenedDbView) {
+    fn sync_scroll(&mut self, viewport: Rect, db: &OpenedDbView, theme: &Theme) {
         self.scroll.set_viewport(viewport.h);
-        self.scroll.set_content(layout(viewport, db).total_h);
+        self.scroll.set_content(layout(viewport, db, theme).total_h);
         // A db set without `reset` (tests, or a snapshot swap) still gets
         // its buttons.
         if self.buttons.is_empty() {
@@ -406,10 +406,11 @@ impl OverviewScreen {
         event: &WidgetEvent,
         content: Rect,
         ctx: &OverviewContext,
+        theme: &Theme,
     ) -> (EventResult, Action) {
         let db = ctx.db;
-        self.sync_scroll(content, db);
-        let l = layout(self.scrolled(content), db);
+        self.sync_scroll(content, db, theme);
+        let l = layout(self.scrolled(content), db, theme);
         let mut result = EventResult::IGNORED;
 
         self.validate.disabled = ctx.validating;
@@ -457,9 +458,9 @@ impl OverviewScreen {
         ctx: &OverviewContext,
     ) {
         let db = ctx.db;
-        self.sync_scroll(viewport, db);
+        self.sync_scroll(viewport, db, theme);
         let content = self.scrolled(viewport);
-        let l = layout(content, db);
+        let l = layout(content, db, theme);
         let card_list = cards(db);
         let value_style = TextStyle::new(13.0).with_weight(400);
 
@@ -610,8 +611,9 @@ mod tests {
         rect: Rect,
     ) -> (EventResult, Action) {
         let (x, y) = rect.center();
-        screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, ctx);
-        screen.handle_event(&WidgetEvent::MouseUp { x, y }, content, ctx)
+        let theme = Theme::hoff();
+        screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, ctx, &theme);
+        screen.handle_event(&WidgetEvent::MouseUp { x, y }, content, ctx, &theme)
     }
 
     #[test]
@@ -621,7 +623,7 @@ mod tests {
         for (w, h) in [(800.0, 600.0), (1600.0, 1000.0)] {
             let mut screen = OverviewScreen::new();
             let content = Rect::new(40.0, 128.0, w - 80.0, h - 128.0 - 40.0);
-            let rect = layout(content, &db).buttons[0].1;
+            let rect = layout(content, &db, &Theme::hoff()).buttons[0].1;
             let (r, action) = click(&mut screen, content, &ctx, rect);
             assert!(r.clicked);
             match action {
@@ -636,7 +638,7 @@ mod tests {
         let db = fixtures::fake_db();
         let mut screen = OverviewScreen::new();
         let content = Rect::new(40.0, 128.0, 1200.0, 700.0);
-        let rect = layout(content, &db).validate;
+        let rect = layout(content, &db, &Theme::hoff()).validate;
         let (r, action) = click(&mut screen, content, &ctx(&db), rect);
         assert!(r.clicked);
         assert_eq!(action, Action::Validate);
@@ -656,7 +658,7 @@ mod tests {
         assert_eq!(titles, ["IDENTITY", "MANIFEST", "SPACES", "MEDIA"]);
         let mut screen = OverviewScreen::new();
         let content = Rect::new(40.0, 128.0, 1200.0, 700.0);
-        let l = layout(content, &db);
+        let l = layout(content, &db, &Theme::hoff());
         let export = l
             .buttons
             .iter()
@@ -677,7 +679,7 @@ mod tests {
         let mut sidecar = fixtures::fake_media_db();
         sidecar.has_blob_data = false;
         assert!(
-            layout(content, &sidecar)
+            layout(content, &sidecar, &Theme::hoff())
                 .buttons
                 .iter()
                 .any(|(b, _)| *b == RowButton::CopyBlob(0))
@@ -696,13 +698,13 @@ mod tests {
             y: 200.0,
             delta: 100_000.0,
         };
-        let (r, _) = screen.handle_event(&scroll, content, &ctx);
+        let (r, _) = screen.handle_event(&scroll, content, &ctx, &Theme::hoff());
         assert!(r.changed);
         let offset = screen.scroll.offset();
         assert!(offset > 0.0, "content is taller than the viewport");
         assert!(screen.scroll.is_scrollable());
         // Scrolling again does not move: the offset is at the clamp.
-        let (r2, _) = screen.handle_event(&scroll, content, &ctx);
+        let (r2, _) = screen.handle_event(&scroll, content, &ctx, &Theme::hoff());
         assert!(!r2.changed);
         assert_eq!(screen.scroll.offset(), offset);
     }

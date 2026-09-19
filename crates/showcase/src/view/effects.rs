@@ -5,13 +5,13 @@
 //! `visual` and `sdf_shapes` engine examples; everything is static, so an
 //! idle section settles (render-on-demand contract).
 
+use comps::prelude::{EventResult, Rect, WidgetEvent};
 use engine::compositor::{
     Compositor, GradientRectParams, RoundedRectParams, SceneNode, ShadowParams, TextNodeKey,
 };
 use engine::path::PathBuilder;
 use engine::text::TextStyle;
 use engine::theme::Theme;
-use engine::ui::widgets::{EventResult, Rect, WidgetEvent};
 
 use super::{group_label, panel, text};
 
@@ -268,7 +268,7 @@ impl EffectsSection {
             corner_radius: theme.radius.md,
             sigma: theme.effects.blur_sigma,
         });
-        c.push(engine::ui::widgets::rounded_rect_stroke(
+        c.push(comps::prelude::rounded_rect_stroke(
             frost.x,
             frost.y,
             frost.w,
@@ -299,7 +299,7 @@ impl EffectsSection {
         let offset = 40.0; // static scroll offset: edges cut on both sides
         for row in 0..8 {
             let ry = l.clip_panel.y + 8.0 + row as f32 * 28.0 - offset;
-            c.push(engine::ui::widgets::rounded_rect(
+            c.push(comps::prelude::rounded_rect(
                 l.clip_panel.x + 8.0,
                 ry,
                 l.clip_panel.w + 60.0, // wider than the panel on purpose

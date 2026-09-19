@@ -1,41 +1,43 @@
-//! Top bar — HOFF column head proportions (68px, 12px padding):
-//! app name in the `title` mixin (20/1.2/500) at rgba($n2,.76), a "plev"
-//! glass tag, repo · branch centered in base-2r at rgba($n2,.4), and the
-//! theme toggle as a 36px glass pill on the right.
+//! Top bar: the panel-header proportions (one `Xl` control tall), app
+//! name in the title ramp at the active tone with a glass tag, repo and
+//! branch centered in base-2r at the faint tone, and the theme toggle as
+//! a small glass pill on the right.
 
 use super::workspace::ThemeMode;
-use crate::components::badge::{self, BadgeKind};
-use crate::components::button::{ButtonKind, ButtonSize, draw as draw_button, width_for};
-use crate::components::hoff;
-use crate::theme::Theme;
+use comps::action::{Badge, Button, ButtonSize};
+use comps::prelude::{EventResult, Rect, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::TextStyle;
-
-pub const HEADER_H: f32 = 68.0;
-const PAD_X: f32 = 12.0;
-const TITLE_SIZE: f32 = 20.0;
-const TITLE_LINE_H: f32 = 20.0 * 1.2;
+use engine::text::TextMeasurer;
+use engine::theme::{ControlSize, Theme};
 
 pub struct Header {
-    theme_btn_rect: (f32, f32, f32, f32),
+    theme_btn: Button,
+    theme_btn_rect: Rect,
 }
 
 impl Header {
     pub fn new() -> Self {
         Self {
-            theme_btn_rect: (0.0, 0.0, 0.0, 0.0),
+            theme_btn: Button::new("Light").size(ButtonSize::Sm),
+            theme_btn_rect: Rect::default(),
         }
+    }
+
+    /// Header height: one `Xl` control.
+    pub fn height(theme: &Theme) -> f32 {
+        theme.control.height(ControlSize::Xl)
+    }
+
+    /// Route a pointer event to the theme toggle; `clicked` means toggle.
+    pub fn handle_event(&mut self, event: &WidgetEvent) -> EventResult {
+        self.theme_btn.handle_event(event, self.theme_btn_rect)
     }
 
     /// Hit-test for the theme toggle button.
     pub fn hit_test_theme_btn(&self, cx: f32, cy: f32) -> bool {
-        let (bx, by, bw, bh) = self.theme_btn_rect;
-        cx >= bx && cx <= bx + bw && cy >= by && cy <= by + bh
+        self.theme_btn_rect.contains(cx, cy)
     }
 
-    // One over the limit; a bag struct for two labels + two widths would
-    // just be repacked here (card.rs trade-off).
-    #[allow(clippy::too_many_arguments)]
     pub fn render(
         &mut self,
         compositor: &mut Compositor,
@@ -46,82 +48,70 @@ impl Header {
         repo_label: &str,
         branch_label: &str,
     ) {
+        let h = Self::height(theme);
+        let pad = theme.spacing.md;
         let x = sidebar_w;
         let w = vw - sidebar_w;
 
-        // Bar surface — same glass as the sidebar, with a hairline edge below.
+        // Bar surface, same as the sidebar, with a hairline edge below.
         compositor.push(SceneNode::Rect {
             x: 0.0,
             y: 0.0,
             w: vw,
-            h: HEADER_H,
-            color: theme.bg_sidebar.to_array(),
+            h,
+            color: theme.colors.surface.0,
         });
         compositor.push(SceneNode::Rect {
             x: 0.0,
-            y: HEADER_H - 1.0,
+            y: h - theme.control.edge_width,
             w: vw,
-            h: 1.0,
-            color: theme.edge.to_array(),
+            h: theme.control.edge_width,
+            color: theme.colors.divider.0,
         });
 
-        // App name — title (20/500) at .76. One style measures AND draws,
-        // so the tag placed after the name never overlaps it.
-        let title_style = TextStyle::new(TITLE_SIZE)
-            .with_line_height(TITLE_LINE_H)
-            .with_weight(500);
+        // App name: one style measures and draws, so the tag placed after
+        // it never overlaps.
+        let title = theme.typography.title();
+        let name = "plev ide";
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::from_style("plev ide", &title_style, None),
-            x: x + PAD_X,
-            y: (HEADER_H - TITLE_LINE_H) / 2.0,
-            color: theme.text_active.to_array(),
+            key: TextNodeKey::from_style(name, &title, None),
+            x: x + pad,
+            y: TextMeasurer::vertical_center(&title, h),
+            color: theme.glass.text_active.0,
         });
-
-        // "plev" glass tag next to the name.
-        let name_w = hoff::measure_text("plev ide", &title_style);
-        badge::draw(
+        let (name_w, _) = TextMeasurer::measure_styled(name, &title, None);
+        let tag = Badge::tag("plev");
+        let (_, th) = tag.preferred_size(theme);
+        tag.render(
             compositor,
+            Rect::new(x + pad + name_w + pad, (h - th) / 2.0, 0.0, 0.0),
             theme,
-            x + PAD_X + name_w + 12.0,
-            (HEADER_H - 22.0) / 2.0,
-            "plev",
-            BadgeKind::Tag,
         );
 
-        // Repo name + current branch (center) — base-2r at .4.
+        // Repo name + current branch, centered.
         let center = if branch_label.is_empty() {
             repo_label.to_string()
         } else {
             format!("{repo_label} \u{00B7} {branch_label}")
         };
-        let center_style = TextStyle::new(14.0).with_line_height(14.0 * 1.4);
-        let center_w = hoff::measure_text(&center, &center_style);
+        let center_style = theme.typography.base_2r();
+        let (center_w, _) = TextMeasurer::measure_styled(&center, &center_style, None);
         compositor.push(SceneNode::Text {
             key: TextNodeKey::from_style(&center, &center_style, None),
             x: x + (w - center_w) / 2.0,
-            y: (HEADER_H - 14.0 * 1.4) / 2.0,
-            color: theme.text_muted.to_array(),
+            y: TextMeasurer::vertical_center(&center_style, h),
+            color: theme.glass.text_faint.0,
         });
 
-        // Theme toggle — 36px glass pill on the right.
-        let mode_label = match theme_mode {
+        // Theme toggle on the right.
+        self.theme_btn.label = match theme_mode {
             ThemeMode::Dark => "Light",
             ThemeMode::Light => "Dark",
-        };
-        // Same real measurement draw_button uses (Sm pads 16).
-        let btn_w = width_for(mode_label, ButtonSize::Sm);
-        let btn_x = vw - PAD_X - btn_w;
-        let btn_y = (HEADER_H - 36.0) / 2.0;
-        self.theme_btn_rect = draw_button(
-            compositor,
-            theme,
-            btn_x,
-            btn_y,
-            mode_label,
-            ButtonKind::Glass,
-            ButtonSize::Sm,
-            false,
-            false,
-        );
+        }
+        .to_string();
+        let (bw, bh) = self.theme_btn.preferred_size(theme);
+        self.theme_btn_rect = Rect::new(vw - pad - bw, (h - bh) / 2.0, bw, bh);
+        self.theme_btn
+            .render(compositor, self.theme_btn_rect, theme);
     }
 }

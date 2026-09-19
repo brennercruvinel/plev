@@ -2,13 +2,13 @@
 //! empty state and a live split pane. Every state/intent is shown, like
 //! the other gallery sections.
 
-use engine::compositor::Compositor;
-use engine::graph::{GraphEdge, GraphSpec};
-use engine::theme::{Intent, Theme};
-use engine::ui::widgets::{
+use comps::prelude::{
     Button, ButtonSize, ButtonVariant, Chip, EmptyState, EventResult, GraphView, IconButton, Rect,
     Spinner, SpinnerSize, SplitDirection, SplitPane, WidgetEvent,
 };
+use engine::compositor::Compositor;
+use engine::graph::{GraphEdge, GraphSpec};
+use engine::theme::{Intent, Theme};
 
 use super::{group_label, panel, text};
 
@@ -50,7 +50,7 @@ struct Layout {
 }
 
 impl ExtrasSection {
-    pub fn new() -> Self {
+    pub fn new(theme: &Theme) -> Self {
         let chips = vec![
             Chip::new("exact"),
             Chip::new("ann").selected(true),
@@ -91,7 +91,7 @@ impl ExtrasSection {
             .icon("search")
             .cta(Button::new("Run a search").icon("search")),
             empty_plain: EmptyState::new("Nothing archived", "Items you archive show up here."),
-            split: SplitPane::new(SplitDirection::Horizontal, 0.35),
+            split: SplitPane::new(SplitDirection::Horizontal, 0.35, theme),
             graph: {
                 // A small three-kind demo graph: a next chain plus two
                 // cross links (accent) and one citation (info).
@@ -144,7 +144,7 @@ impl ExtrasSection {
         (rects, line_h)
     }
 
-    fn layout(&self, content: Rect) -> Layout {
+    fn layout(&self, content: Rect, theme: &Theme) -> Layout {
         let mut labels = Vec::new();
         let mut y = content.y;
 
@@ -152,7 +152,7 @@ impl ExtrasSection {
         let (chips, line_h) = Self::flow(
             content,
             y + LABEL_H,
-            self.chips.iter().map(|c| c.preferred_size()),
+            self.chips.iter().map(|c| c.preferred_size(theme)),
         );
         y += LABEL_H + line_h + ROW_GAP;
 
@@ -160,16 +160,16 @@ impl ExtrasSection {
         let (icon_buttons, line_h) = Self::flow(
             content,
             y + LABEL_H,
-            self.icon_buttons.iter().map(|b| b.preferred_size()),
+            self.icon_buttons.iter().map(|b| b.preferred_size(theme)),
         );
         y += LABEL_H + line_h + ROW_GAP;
 
         labels.push(("SPINNERS", y));
         let spinners = std::array::from_fn(|i| {
-            let px = self.spinners[i].size.px();
+            let px = self.spinners[i].size.px(theme);
             Rect::new(content.x + i as f32 * 56.0, y + LABEL_H, 32.0, 32.0).with_square(px)
         });
-        let (tw, th) = self.spin_toggle.preferred_size();
+        let (tw, th) = self.spin_toggle.preferred_size(theme);
         let spin_toggle = Rect::new(
             content.x + 3.0 * 56.0,
             y + LABEL_H - (th - 32.0) / 2.0 - 4.0,
@@ -222,12 +222,17 @@ impl ExtrasSection {
         }
     }
 
-    pub fn content_height(&self, content: Rect) -> f32 {
-        self.layout(content).total_h + GAP
+    pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
+        self.layout(content, theme).total_h + GAP
     }
 
-    pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
-        let l = self.layout(content);
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        content: Rect,
+        theme: &Theme,
+    ) -> EventResult {
+        let l = self.layout(content, theme);
         let mut result = EventResult::IGNORED;
         for (chip, rect) in self.chips.iter_mut().zip(&l.chips) {
             let r = chip.handle_event(event, *rect);
@@ -247,8 +252,8 @@ impl ExtrasSection {
             return EventResult::clicked();
         }
         result = result.merge(r);
-        result = result.merge(self.empty.handle_event(event, l.empty));
-        result = result.merge(self.empty_plain.handle_event(event, l.empty_plain));
+        result = result.merge(self.empty.handle_event(event, l.empty, theme));
+        result = result.merge(self.empty_plain.handle_event(event, l.empty_plain, theme));
         result = result.merge(self.split.handle_event(event, l.split));
         // Selection changes re-render (incident edges light up).
         result.merge(self.graph.handle_event(event, l.graph))
@@ -267,7 +272,7 @@ impl ExtrasSection {
     }
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let l = self.layout(content);
+        let l = self.layout(content, theme);
         for (label, y) in &l.labels {
             group_label(c, label, content.x, *y, theme);
         }
@@ -356,44 +361,46 @@ mod tests {
     #[test]
     fn extras_render_and_layout_at_narrow_and_wide() {
         let theme = Theme::hoff();
-        let mut section = ExtrasSection::new();
+        let mut section = ExtrasSection::new(&theme);
         for w in [500.0, 1272.0] {
             let content = Rect::new(288.0, 80.0, w, 900.0);
             let mut c = Compositor::new();
             section.render(&mut c, content, &theme);
             // Nothing overflows the content's right edge.
-            let l = section.layout(content);
+            let l = section.layout(content, &theme);
             for r in l.chips.iter().chain(l.icon_buttons.iter()) {
                 assert!(r.x + r.w <= content.x + content.w + 0.5);
             }
-            assert!(section.content_height(content) > 0.0);
+            assert!(section.content_height(content, &theme) > 0.0);
         }
     }
 
     #[test]
     fn interactive_chip_toggles_on_click() {
-        let mut section = ExtrasSection::new();
+        let theme = Theme::hoff();
+        let mut section = ExtrasSection::new(&theme);
         let content = Rect::new(288.0, 80.0, 1272.0, 900.0);
-        let l = section.layout(content);
+        let l = section.layout(content, &theme);
         let chip = l.chips[5]; // "click me"
         let (x, y) = (chip.x + 4.0, chip.y + 4.0);
-        let r = section.handle_event(&WidgetEvent::MouseDown { x, y }, content);
+        let r = section.handle_event(&WidgetEvent::MouseDown { x, y }, content, &theme);
         assert!(r.changed);
-        let r = section.handle_event(&WidgetEvent::MouseUp { x, y }, content);
+        let r = section.handle_event(&WidgetEvent::MouseUp { x, y }, content, &theme);
         assert!(r.clicked);
         assert!(section.filter_on, "click toggled the demo filter chip");
     }
 
     #[test]
     fn split_divider_drags() {
-        let mut section = ExtrasSection::new();
+        let theme = Theme::hoff();
+        let mut section = ExtrasSection::new(&theme);
         let content = Rect::new(288.0, 80.0, 1272.0, 900.0);
-        let l = section.layout(content);
+        let l = section.layout(content, &theme);
         let d = section.split.divider_rect(l.split);
         let (x, y) = (d.x + 1.0, d.y + 20.0);
-        section.handle_event(&WidgetEvent::MouseDown { x, y }, content);
+        section.handle_event(&WidgetEvent::MouseDown { x, y }, content, &theme);
         assert!(section.split.is_dragging());
-        section.handle_event(&WidgetEvent::MouseMove { x: x + 100.0, y }, content);
+        section.handle_event(&WidgetEvent::MouseMove { x: x + 100.0, y }, content, &theme);
         assert!(section.split.ratio() > 0.35);
     }
 }

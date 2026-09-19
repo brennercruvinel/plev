@@ -19,9 +19,9 @@ mod overview;
 mod search;
 mod stats;
 
+use comps::prelude::{Rect, ToastManager, WidgetEvent, rounded_rect, rounded_rect_stroke};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::theme::Theme;
-use engine::ui::widgets::{Rect, ToastManager, WidgetEvent, rounded_rect, rounded_rect_stroke};
 
 /// Non-character editing keys bridged from winit by `keys.rs` (the view
 /// stays winit-free). Enter submits; Tab is reserved for focus traversal.
@@ -273,7 +273,7 @@ impl UrnauiView {
         // Toasts float above everything (click-to-dismiss).
         if self
             .toasts
-            .handle_event(event, self.width, self.height)
+            .handle_event(event, &self.theme, self.width, self.height)
             .clicked
         {
             return true;

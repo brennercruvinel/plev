@@ -1,5 +1,6 @@
 use super::super::commit_form::CommitFormAction;
-use super::{HEADER_H, PendingAction, RESIZE_HANDLE_W, SIDEBAR_W, UiRequest, WorkspaceView};
+use super::{PendingAction, UiRequest, WorkspaceView};
+use comps::prelude::WidgetEvent;
 
 impl WorkspaceView {
     /// Handle a left click at (cx, cy). Returns true if state changed.
@@ -8,17 +9,30 @@ impl WorkspaceView {
         if !self.overlay_mgr.is_empty() {
             return self.handle_overlay_click(cx, cy);
         }
-        // Sidebar clicks
-        if cx < SIDEBAR_W {
-            if let Some(tab) = self.sidebar.hit_test(cx, cy) {
-                self.sidebar.active = tab;
-                return true;
-            }
-            return false;
+        let sidebar_w = self.sidebar_w();
+        let header_h = self.header_h();
+        let handle_w = self.handle_w();
+
+        // Sidebar clicks: a press and a release on the same link.
+        if cx < sidebar_w && cy >= header_h {
+            let theme = self.theme().clone();
+            self.sidebar.handle_event(
+                &WidgetEvent::MouseDown { x: cx, y: cy },
+                &theme,
+                self.vw,
+                self.vh,
+            );
+            let (_, tab) = self.sidebar.handle_event(
+                &WidgetEvent::MouseUp { x: cx, y: cy },
+                &theme,
+                self.vw,
+                self.vh,
+            );
+            return tab.is_some();
         }
 
         // Header clicks
-        if cy < HEADER_H {
+        if cy < header_h {
             if self.header.hit_test_theme_btn(cx, cy) {
                 self.toggle_theme();
                 return true;
@@ -38,8 +52,19 @@ impl WorkspaceView {
             CommitFormAction::None => {}
         }
 
+        // The commit field takes focus and caret placement.
+        if self.commit_form.visible {
+            let theme = self.theme().clone();
+            let r = self
+                .commit_form
+                .handle_event(&WidgetEvent::MouseDown { x: cx, y: cy }, &theme);
+            if r.clicked {
+                return true;
+            }
+        }
+
         let (left_x, right_x) = self.panel_bounds();
-        let mid_x = left_x + self.left_w + RESIZE_HANDLE_W;
+        let mid_x = left_x + self.left_w + handle_w;
 
         if cx < left_x + self.left_w {
             // Click in left panel (unassigned files)
@@ -51,8 +76,8 @@ impl WorkspaceView {
                 return changed;
             }
         } else if cx > right_x {
-            // Click in right panel (diff) — no action for now
-        } else if cx > mid_x && cx < right_x - RESIZE_HANDLE_W {
+            // Click in right panel (diff): no action for now
+        } else if cx > mid_x && cx < right_x - handle_w {
             // Click in middle panel (stacks)
             if let Some((si, ci)) = self.stacks.hit_test(cx, cy) {
                 let changed = self.stacks.select(Some((si, ci)));
@@ -68,7 +93,8 @@ impl WorkspaceView {
     /// Handle hover at (cx, cy). Returns true if hover state changed.
     pub fn handle_hover(&mut self, cx: f32, cy: f32) -> bool {
         let (left_x, right_x) = self.panel_bounds();
-        let mid_x = left_x + self.left_w + RESIZE_HANDLE_W;
+        let handle_w = self.handle_w();
+        let mid_x = left_x + self.left_w + handle_w;
 
         let old_file = self.hover_unassigned_row;
         let old_commit = self.hover_stack_commit;
@@ -76,7 +102,7 @@ impl WorkspaceView {
         if cx >= left_x && cx < left_x + self.left_w {
             self.hover_unassigned_row = self.unassigned.hit_test(cx, cy);
             self.hover_stack_commit = None;
-        } else if cx > mid_x && cx < right_x - RESIZE_HANDLE_W {
+        } else if cx > mid_x && cx < right_x - handle_w {
             self.hover_unassigned_row = None;
             self.hover_stack_commit = self.stacks.hit_test(cx, cy);
         } else {
@@ -84,15 +110,30 @@ impl WorkspaceView {
             self.hover_stack_commit = None;
         }
 
-        old_file != self.hover_unassigned_row || old_commit != self.hover_stack_commit
+        // The retained chrome widgets track their own hover.
+        let theme = self.theme().clone();
+        let event = WidgetEvent::MouseMove { x: cx, y: cy };
+        let mut widget_changed = self.header.handle_event(&event).changed;
+        widget_changed |= self.commit_form.handle_event(&event, &theme).changed;
+        widget_changed |= self
+            .sidebar
+            .handle_event(&event, &theme, self.vw, self.vh)
+            .0
+            .changed;
+
+        widget_changed
+            || old_file != self.hover_unassigned_row
+            || old_commit != self.hover_stack_commit
     }
 
     /// Handle a right-click at (cx, cy). Returns true if an overlay was opened.
     pub fn handle_right_click(&mut self, cx: f32, cy: f32) -> bool {
-        use engine::overlay::{MenuItem, OverlayKind};
+        use comps::overlay::MenuItem;
 
         // dismiss any existing overlay first
         self.overlay_mgr.pop_all();
+        self.ctx_menu = None;
+        self.modal = None;
         self.ctx_menu_item_rects.clear();
         self.modal_confirm_rect = None;
         self.modal_cancel_rect = None;
@@ -115,8 +156,8 @@ impl WorkspaceView {
                 MenuItem::new("Ignore file", 2),
             ];
             // Offset slightly so the menu doesn't sit right under the cursor
-            self.overlay_mgr
-                .push(OverlayKind::ContextMenu { items }, cx + 2.0, cy, 0.0, 0.0);
+            let nudge = self.theme().spacing.xs / 2.0;
+            self.open_context_menu(cx + nudge, cy, items);
             self.pending_action = Some(PendingAction::ContextMenu { file_idx: idx });
             // Also select the row
             if self.unassigned.select(Some(idx)) {
@@ -136,6 +177,8 @@ impl WorkspaceView {
         }
         self.overlay_mgr.pop();
         if self.overlay_mgr.is_empty() {
+            self.ctx_menu = None;
+            self.modal = None;
             self.ctx_menu_item_rects.clear();
             self.modal_confirm_rect = None;
             self.modal_cancel_rect = None;
@@ -212,10 +255,10 @@ impl WorkspaceView {
     /// Submits the commit form: queues the real commit and hides the form
     /// (the status/log refresh arrives via git events). No-op while empty.
     pub fn submit_commit(&mut self) -> bool {
-        if !self.commit_form.visible || self.commit_form.message.is_empty() {
+        if !self.commit_form.visible || self.commit_form.message().is_empty() {
             return false;
         }
-        let message = std::mem::take(&mut self.commit_form.message);
+        let message = self.commit_form.take_message();
         self.requests.push(UiRequest::Commit { message });
         self.commit_form.hide();
         true

@@ -1,17 +1,18 @@
-//! Center "Stacks" column — HOFF feed container (rgba(40,40,40,.7)) where
-//! every commit is a hoff list card (Post/Follower recipe): radius 20,
-//! padding 12, 8px gap, bg rgba($n2,.02) -> hover .05 -> selected .10 +
-//! a soft edge-light at rest (stronger when hovered/selected) and the inset
-//! key-light; 44px avatar circle with the author initial, message (the card
-//! headline) in base-2 semibold at rgba($n2,.95), sha + author + time in
-//! caption-r at $text-tertiary (.50) — the white/.76/.50 hierarchy.
-//! Branch headers show the 8px #55F08B dot when the branch is checked out.
+//! Center "Stacks" column: the page surface where every commit is a
+//! list card (the post recipe: card radius, surface wash at rest, hover
+//! and selected washes, edge rim, inset key-light); an [`Avatar`] with
+//! the author initial, the message in base-2sm at the primary tone,
+//! `sha · author · time` in caption-r at the tertiary tone. Branch
+//! headers show the success dot when the branch is checked out.
 
-use crate::components::hoff;
-use crate::theme::Theme;
+use comps::content::{Avatar, AvatarSize};
+use comps::feedback::Scrollbar;
+use comps::nav::PanelHeader;
+use comps::prelude::{Rect, edge_light, inset_keylight, rounded_rect};
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
-use engine::text::TextStyle;
+use engine::text::TextMeasurer;
+use engine::theme::{ControlSize, Theme};
 
 /// A commit in a stack.
 #[derive(Clone, Debug)]
@@ -35,16 +36,10 @@ pub struct MultiStackView {
     pub stacks: Vec<Stack>,
     pub selected_commit: Option<(usize, usize)>, // (stack_idx, commit_idx)
     pub scroll: ScrollState,
+    scrollbar: Scrollbar,
     /// Cached hit rects from last render (stack_idx, commit_idx, x, y, w, h).
     hit_rects: Vec<(usize, usize, f32, f32, f32, f32)>,
 }
-
-const HEADER_H: f32 = 68.0;
-const STACK_HEADER_H: f32 = 36.0;
-const COMMIT_H: f32 = 68.0;
-const CARD_GAP: f32 = 8.0;
-const PAD: f32 = 12.0;
-const AVATAR_SIZE: f32 = 44.0;
 
 impl MultiStackView {
     /// Starts empty; the app injects real data via [`set_stacks`](Self::set_stacks).
@@ -53,6 +48,7 @@ impl MultiStackView {
             stacks: Vec::new(),
             selected_commit: None,
             scroll: ScrollState::new(),
+            scrollbar: Scrollbar::new(),
             hit_rects: Vec::new(),
         }
     }
@@ -96,6 +92,24 @@ impl MultiStackView {
         true
     }
 
+    pub fn notify_scroll(&mut self) {
+        self.scrollbar.notify_scroll();
+    }
+
+    pub fn tick(&mut self, dt: f32) -> bool {
+        self.scrollbar.tick(dt)
+    }
+
+    /// Branch header row: one `Xs` control.
+    fn stack_header_h(theme: &Theme) -> f32 {
+        theme.control.height(ControlSize::Xs)
+    }
+
+    /// Commit card: the avatar plus the card padding above and below.
+    fn commit_h(theme: &Theme) -> f32 {
+        AvatarSize::Md.px(theme) + theme.spacing.md * 2.0
+    }
+
     /// Returns hit rects: Vec<(stack_idx, commit_idx, x, y, w, h)>
     // Panel geometry stays flat like every other render fn (card.rs
     // trade-off); a rect bag would be repacked at the call site.
@@ -110,231 +124,168 @@ impl MultiStackView {
         h: f32,
         hover: Option<(usize, usize)>,
     ) -> Vec<(usize, usize, f32, f32, f32, f32)> {
-        // Compute total content height
+        let header = PanelHeader::new("Stacks");
+        let header_h = header.height(theme);
+        let stack_header_h = Self::stack_header_h(theme);
+        let commit_h = Self::commit_h(theme);
+        let card_gap = theme.spacing.sm;
+        let pad = theme.spacing.md;
+        let glass = &theme.glass;
+
         let total_h: f32 = self
             .stacks
             .iter()
-            .map(|s| STACK_HEADER_H + s.commits.len() as f32 * (COMMIT_H + CARD_GAP) + 8.0)
+            .map(|s| stack_header_h + s.commits.len() as f32 * (commit_h + card_gap) + card_gap)
             .sum::<f32>();
-        self.scroll.set_viewport(h - HEADER_H);
+        self.scroll.set_viewport(h - header_h);
         self.scroll.set_content(total_h);
 
-        // Feed surface — $bg-surface rgba(40,40,40,.7).
+        // Feed surface: the page tone.
         compositor.push(SceneNode::Rect {
             x,
             y,
             w,
             h,
-            color: theme.bg_panel.to_array(),
+            color: theme.colors.bg.0,
         });
+        header.render(compositor, Rect::new(x, y, w, header_h), theme);
 
-        // Head — title (20/500) at .56.
-        compositor.push(SceneNode::Text {
-            key: TextNodeKey::new("Stacks", 20.0, 20.0 * 1.2, None).with_weight(500),
-            x: x + PAD,
-            y: y + (HEADER_H - 20.0 * 1.2) / 2.0,
-            color: theme.text_default.to_array(),
-        });
-
-        let list_y = y + HEADER_H;
-        let row_x = x + PAD;
-        let row_w = w - PAD * 2.0;
+        let list_y = y + header_h;
+        let list = Rect::new(x, list_y, w, h - header_h);
+        let row_x = x + pad;
+        let row_w = w - pad * 2.0;
         let scroll_offset = self.scroll.offset();
         let mut hit_rects = Vec::new();
         let mut cursor_y = list_y - scroll_offset;
-        // Scrolled feed clips to the area below the panel head.
         compositor.push(SceneNode::PushClip {
-            x,
-            y: list_y,
-            w,
-            h: h - HEADER_H,
+            x: list.x,
+            y: list.y,
+            w: list.w,
+            h: list.h,
         });
 
+        let branch_style = theme.typography.base_2sm();
+        let msg_style = theme.typography.base_2sm();
+        let meta_style = theme.typography.caption_r();
+        let dot = theme.spacing.sm;
         for (si, stack) in self.stacks.iter().enumerate() {
-            // Branch header — base-2sm; checked-out branch gets the green dot.
-            if cursor_y + STACK_HEADER_H > list_y && cursor_y < y + h {
-                let mut label_x = row_x + PAD;
+            // Branch header: checked-out branch gets the success dot.
+            if cursor_y + stack_header_h > list_y && cursor_y < y + h {
+                let mut label_x = row_x + pad;
                 if stack.is_active {
-                    let dot = 8.0;
-                    compositor.push(SceneNode::RoundedRect {
-                        x: label_x,
-                        y: cursor_y + STACK_HEADER_H / 2.0 - dot / 2.0,
-                        w: dot,
-                        h: dot,
-                        color: theme.accent_green.to_array(),
-                        corner_radius: dot / 2.0,
-                        border_width: 0.0,
-                        border_color: [0.0; 4],
-                    });
-                    label_x += dot + 8.0;
+                    compositor.push(rounded_rect(
+                        label_x,
+                        cursor_y + (stack_header_h - dot) / 2.0,
+                        dot,
+                        dot,
+                        dot / 2.0,
+                        theme.colors.success.0,
+                    ));
+                    label_x += dot + theme.spacing.sm;
                 }
+                let avail = (row_x + row_w - pad - label_x).max(0.0);
+                let name =
+                    TextMeasurer::truncate_to_width(&stack.branch_name, &branch_style, avail);
                 compositor.push(SceneNode::Text {
-                    key: TextNodeKey::new(
-                        &stack.branch_name,
-                        14.0,
-                        14.0 * 1.4,
-                        Some(row_w - PAD * 2.0),
-                    )
-                    .with_weight(600),
+                    key: TextNodeKey::from_style(&name, &branch_style, None),
                     x: label_x,
-                    y: cursor_y + (STACK_HEADER_H - 14.0 * 1.4) / 2.0,
+                    y: cursor_y + TextMeasurer::vertical_center(&branch_style, stack_header_h),
                     color: if stack.is_active {
-                        theme.text_active
+                        glass.text_active.0
                     } else {
-                        theme.text_default
-                    }
-                    .to_array(),
+                        glass.text_default.0
+                    },
                 });
             }
-            cursor_y += STACK_HEADER_H;
+            cursor_y += stack_header_h;
 
-            // Commit cards.
             for (ci, commit) in stack.commits.iter().enumerate() {
                 let cy = cursor_y;
-                if cy + COMMIT_H > list_y && cy < y + h {
+                if cy + commit_h > list_y && cy < y + h {
                     let is_sel = self.selected_commit == Some((si, ci));
                     let is_hov = hover == Some((si, ci));
                     let card_bg = if is_sel {
-                        theme.surface_active
+                        glass.surface_active
                     } else if is_hov {
-                        theme.surface_hover
+                        glass.surface_hover
                     } else {
-                        theme.surface
+                        glass.surface
                     };
-                    compositor.push(SceneNode::RoundedRect {
-                        x: row_x,
-                        y: cy,
-                        w: row_w,
-                        h: COMMIT_H,
-                        color: card_bg.to_array(),
-                        corner_radius: theme.radius_card,
-                        border_width: 0.0,
-                        border_color: [0.0; 4],
-                    });
-                    // Top-lit edge: every card carries a soft rim like the
-                    // HOFF post card; selected/hovered cards get the stronger
-                    // .10 edge. Plus the inset key-light glint for glass depth.
-                    let edge = if is_sel || is_hov {
-                        theme.edge_strong
-                    } else {
-                        theme.edge
-                    };
-                    hoff::edge_light(
+                    let card = Rect::new(row_x, cy, row_w, commit_h);
+                    compositor.push(rounded_rect(
+                        card.x,
+                        card.y,
+                        card.w,
+                        card.h,
+                        theme.shape.card,
+                        card_bg.0,
+                    ));
+                    edge_light(
                         compositor,
                         LayerId::DEFAULT,
-                        row_x,
-                        cy,
-                        row_w,
-                        COMMIT_H,
-                        theme.radius_card,
-                        1.0,
-                        edge,
+                        card,
+                        theme.shape.card,
+                        theme.control.edge_width,
+                        if is_sel || is_hov {
+                            glass.edge.0
+                        } else {
+                            glass.edge_soft.0
+                        },
                     );
-                    hoff::inset_keylight(
+                    inset_keylight(compositor, LayerId::DEFAULT, card, theme.shape.card, theme);
+
+                    let avatar = Avatar::new(commit.author.clone());
+                    let (av, _) = avatar.preferred_size(theme);
+                    avatar.render(
                         compositor,
-                        LayerId::DEFAULT,
-                        row_x,
-                        cy,
-                        row_w,
-                        COMMIT_H,
-                        theme.radius_card,
+                        Rect::new(row_x + pad, cy + (commit_h - av) / 2.0, av, av),
+                        theme,
                     );
 
-                    // Avatar — 44px circle with the author initial.
-                    let avatar_x = row_x + PAD;
-                    let avatar_y = cy + (COMMIT_H - AVATAR_SIZE) / 2.0;
-                    compositor.push(SceneNode::RoundedRect {
-                        x: avatar_x,
-                        y: avatar_y,
-                        w: AVATAR_SIZE,
-                        h: AVATAR_SIZE,
-                        color: theme.chip.to_array(),
-                        corner_radius: AVATAR_SIZE / 2.0,
-                        border_width: 0.0,
-                        border_color: [0.0; 4],
-                    });
-                    let initial = commit
-                        .author
-                        .chars()
-                        .next()
-                        .map(|c| c.to_uppercase().to_string())
-                        .unwrap_or_default();
-                    // One style measures the initial AND draws it, so it
-                    // sits centered in the 44px disc.
-                    let initial_style =
-                        TextStyle::new(14.0).with_line_height(14.0).with_weight(600);
-                    let initial_w = hoff::measure_text(&initial, &initial_style);
-                    compositor.push(SceneNode::Text {
-                        key: TextNodeKey::from_style(&initial, &initial_style, None),
-                        x: avatar_x + (AVATAR_SIZE - initial_w) / 2.0,
-                        y: avatar_y + (AVATAR_SIZE - 14.0) / 2.0,
-                        color: theme.text_active.to_array(),
-                    });
-
-                    // Text column.
-                    let text_x = avatar_x + AVATAR_SIZE + PAD;
-                    let text_w = row_w - AVATAR_SIZE - PAD * 3.0;
-
-                    // Commit message — the card headline, like the HOFF post
-                    // card's name: base-2 semibold (14/600) at text-primary
-                    // (.95), the brightest line in the white/.76/.50 ramp.
-                    // Truncated to the column width with the SAME style it
-                    // is drawn with and rendered WITHOUT a wrap max (None)
-                    // so a long message never spills onto a second line and
-                    // collides with the meta row below.
-                    let msg_style = TextStyle::new(14.0)
-                        .with_line_height(14.0 * 1.4)
-                        .with_weight(600);
-                    let msg = hoff::truncate_to_width(&commit.message, text_w, &msg_style);
+                    // Text column: the message as the card headline, the
+                    // meta line under it, both truncated with the style
+                    // they are drawn with.
+                    let text_x = row_x + pad + av + pad;
+                    let text_w = row_w - av - pad * 3.0;
+                    let block_h = msg_style.line_height + theme.spacing.xs + meta_style.line_height;
+                    let top = cy + (commit_h - block_h) / 2.0;
+                    let msg = TextMeasurer::truncate_to_width(&commit.message, &msg_style, text_w);
                     compositor.push(SceneNode::Text {
                         key: TextNodeKey::from_style(&msg, &msg_style, None),
                         x: text_x,
-                        y: cy + PAD + 2.0,
-                        color: theme.text_primary.to_array(),
+                        y: top,
+                        color: theme.colors.text.0,
                     });
-
-                    // sha · author · time — caption-r at $text-tertiary.
-                    let meta_style = TextStyle::new(12.0).with_line_height(12.0 * 1.33);
                     let sha_display = commit.sha.get(..7).unwrap_or(&commit.sha);
-                    let meta = hoff::truncate_to_width(
+                    let meta = TextMeasurer::truncate_to_width(
                         &format!(
                             "{} \u{00B7} {} \u{00B7} {}",
                             sha_display, commit.author, commit.time_ago
                         ),
-                        text_w,
                         &meta_style,
+                        text_w,
                     );
                     compositor.push(SceneNode::Text {
                         key: TextNodeKey::from_style(&meta, &meta_style, None),
                         x: text_x,
-                        y: cy + PAD + 2.0 + 14.0 * 1.4 + 4.0,
-                        color: theme.text_tertiary.to_array(),
+                        y: top + msg_style.line_height + theme.spacing.xs,
+                        color: theme.colors.text_dim.0,
                     });
                 }
                 // Hit rect clamped to the visible part of the card: cards
                 // hidden behind the panel head are not hoverable/clickable.
                 let top = cy.max(list_y);
-                let bottom = (cy + COMMIT_H).min(y + h);
+                let bottom = (cy + commit_h).min(y + h);
                 if bottom > top {
                     hit_rects.push((si, ci, row_x, top, row_w, bottom - top));
                 }
-                cursor_y += COMMIT_H + CARD_GAP;
+                cursor_y += commit_h + card_gap;
             }
-            cursor_y += 8.0; // gap between stacks
+            cursor_y += card_gap;
         }
         compositor.push(SceneNode::PopClip);
 
-        // Scrollbar
-        if self.scroll.is_scrollable() {
-            hoff::draw_scrollbar(
-                compositor,
-                theme,
-                x + w - 4.0,
-                list_y,
-                h - HEADER_H,
-                &self.scroll,
-            );
-        }
+        self.scrollbar.render(compositor, list, &self.scroll, theme);
 
         self.hit_rects = hit_rects.clone();
         hit_rects

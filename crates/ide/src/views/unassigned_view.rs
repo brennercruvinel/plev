@@ -1,15 +1,18 @@
-//! Left "Changes" column — HOFF row-sidebar (rgba(40,40,40,.8)) with a
-//! 68px title head and 44px list rows in the Actions-item recipe:
-//! radius 16, bg rgba($n2,.02) -> hover .05 -> selected .10 + edge-light;
-//! filename in base-2sm at rgba($n2,.56) (.76 selected), status letter in
-//! the HOFF accent set, staged marker = 8px #55F08B "new" dot.
+//! Left "Changes" column: the raised surface with a [`PanelHeader`] and
+//! `Md`-tall list rows in the item recipe (item radius, surface wash at
+//! rest, hover and selected washes with the edge rim); filename in
+//! base-2sm (text-default, text-active when selected), status letter in
+//! the theme's intent colors, staged marker as the success dot.
 
-use crate::components::badge::{self, BadgeKind};
-use crate::components::hoff;
-use crate::theme::{StatusColors, Theme};
+use crate::status::StatusColors;
+use comps::action::Badge;
+use comps::feedback::Scrollbar;
+use comps::nav::PanelHeader;
+use comps::prelude::{Rect, edge_light, rounded_rect};
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
-use engine::text::TextStyle;
+use engine::text::TextMeasurer;
+use engine::theme::{ControlSize, Theme};
 
 /// File change status.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -34,11 +37,11 @@ impl FileStatus {
     fn color(self, theme: &Theme) -> [f32; 4] {
         let s = StatusColors::of(theme);
         match self {
-            FileStatus::Modified => s.modified.to_array(),
-            FileStatus::Added => s.added.to_array(),
-            FileStatus::Deleted => s.deleted.to_array(),
-            FileStatus::Renamed => s.renamed.to_array(),
-            FileStatus::Untracked => s.untracked.to_array(),
+            FileStatus::Modified => s.modified.0,
+            FileStatus::Added => s.added.0,
+            FileStatus::Deleted => s.deleted.0,
+            FileStatus::Renamed => s.renamed.0,
+            FileStatus::Untracked => s.untracked.0,
         }
     }
 }
@@ -57,17 +60,10 @@ pub struct UnassignedView {
     pub files: Vec<FileEntry>,
     pub selected_idx: Option<usize>,
     pub scroll: ScrollState,
+    scrollbar: Scrollbar,
     /// Cached hit rects from last render (x, y, w, h) per file row.
     hit_rects: Vec<(f32, f32, f32, f32)>,
 }
-
-const HEADER_H: f32 = 68.0;
-const ITEM_H: f32 = 44.0;
-const ITEM_GAP: f32 = 4.0;
-const PAD: f32 = 12.0;
-const STATUS_W: f32 = 18.0;
-const FONT_SIZE: f32 = 14.0;
-const LINE_H: f32 = 14.0 * 1.4;
 
 impl UnassignedView {
     /// Starts empty; the app injects real data via [`set_files`](Self::set_files).
@@ -76,6 +72,7 @@ impl UnassignedView {
             files: Vec::new(),
             selected_idx: None,
             scroll: ScrollState::new(),
+            scrollbar: Scrollbar::new(),
             hit_rects: Vec::new(),
         }
     }
@@ -133,6 +130,21 @@ impl UnassignedView {
         self.select(new)
     }
 
+    /// Row pitch: one `Md` control plus the `xs` gap.
+    fn row_h(theme: &Theme) -> f32 {
+        theme.control.height(ControlSize::Md)
+    }
+
+    /// Notify the scrollbar of a wheel scroll (it fades in).
+    pub fn notify_scroll(&mut self) {
+        self.scrollbar.notify_scroll();
+    }
+
+    /// Advance the scrollbar fade. `true` while animating.
+    pub fn tick(&mut self, dt: f32) -> bool {
+        self.scrollbar.tick(dt)
+    }
+
     /// Build and render into a compositor layer.
     /// Returns a list of (x, y, w, h) hit rects for each file row (for click detection).
     // Panel geometry stays flat like every other render fn (card.rs
@@ -148,172 +160,133 @@ impl UnassignedView {
         h: f32,
         hover_idx: Option<usize>,
     ) -> Vec<(f32, f32, f32, f32)> {
-        let content_h = self.files.len() as f32 * (ITEM_H + ITEM_GAP);
-        self.scroll.set_viewport(h - HEADER_H);
+        let header = PanelHeader::new("Changes").badge(Badge::tag(self.files.len().to_string()));
+        let header_h = header.height(theme);
+        let row_h = Self::row_h(theme);
+        let gap = theme.spacing.xs;
+        let pad = theme.spacing.md;
+        let content_h = self.files.len() as f32 * (row_h + gap);
+        self.scroll.set_viewport(h - header_h);
         self.scroll.set_content(content_h);
 
-        // Column surface — row-sidebar rgba(40,40,40,.8).
+        // Column surface.
         compositor.push(SceneNode::Rect {
             x,
             y,
             w,
             h,
-            color: theme.bg_sidebar.to_array(),
+            color: theme.colors.surface.0,
         });
+        header.render(compositor, Rect::new(x, y, w, header_h), theme);
 
-        // Head — title (20/500) at .56 + count chip.
-        compositor.push(SceneNode::Text {
-            key: TextNodeKey::new("Changes", 20.0, 20.0 * 1.2, None).with_weight(500),
-            x: x + PAD,
-            y: y + (HEADER_H - 20.0 * 1.2) / 2.0,
-            color: theme.text_default.to_array(),
-        });
-        // Count chip — the Tag badge recipe; `tag_width` is the same real
-        // measurement `badge::draw` uses, so the right-aligned chip always
-        // fits its number.
-        let count_str = self.files.len().to_string();
-        let chip_w = badge::tag_width(&count_str);
-        let chip_h = 22.0;
-        let chip_x = x + w - PAD - chip_w;
-        let chip_y = y + (HEADER_H - chip_h) / 2.0;
-        badge::draw(
-            compositor,
-            theme,
-            chip_x,
-            chip_y,
-            &count_str,
-            BadgeKind::Tag,
-        );
-
-        // File list — card rows inset by the 12px body padding. Rows are
-        // clipped to the list viewport so scrolled rows never paint over
-        // the panel head.
-        let list_y = y + HEADER_H;
-        let row_x = x + PAD;
-        let row_w = w - PAD * 2.0;
+        // File list: card rows inset by the body padding, clipped to the
+        // list viewport so scrolled rows never paint over the panel head.
+        let list_y = y + header_h;
+        let list = Rect::new(x, list_y, w, h - header_h);
+        let row_x = x + pad;
+        let row_w = w - pad * 2.0;
         let scroll_offset = self.scroll.offset();
         let mut hit_rects = Vec::with_capacity(self.files.len());
         compositor.push(SceneNode::PushClip {
-            x,
-            y: list_y,
-            w,
-            h: h - HEADER_H,
+            x: list.x,
+            y: list.y,
+            w: list.w,
+            h: list.h,
         });
 
+        let status_style = theme.typography.caption_sm();
+        let name_style = theme.typography.base_2sm();
+        let status_w = theme.control.box_size;
+        let dot = theme.spacing.sm;
         for (i, file) in self.files.iter().enumerate() {
-            let item_y = list_y + i as f32 * (ITEM_H + ITEM_GAP) - scroll_offset;
+            let item_y = list_y + i as f32 * (row_h + gap) - scroll_offset;
             // Skip items outside the visible area. Their hit rect must be
             // empty too: a row hidden behind the panel head is not
             // clickable (the vec stays index-aligned with `files`).
-            if item_y + ITEM_H < list_y || item_y > y + h {
+            if item_y + row_h < list_y || item_y > y + h {
                 hit_rects.push((row_x, item_y, 0.0, 0.0));
                 continue;
             }
 
             let is_selected = self.selected_idx == Some(i);
             let is_hovered = hover_idx == Some(i);
-
+            let glass = &theme.glass;
             let row_bg = if is_selected {
-                theme.surface_active
+                glass.surface_active
             } else if is_hovered {
-                theme.surface_hover
+                glass.surface_hover
             } else {
-                theme.surface
+                glass.surface
             };
-
-            compositor.push(SceneNode::RoundedRect {
-                x: row_x,
-                y: item_y,
-                w: row_w,
-                h: ITEM_H,
-                color: row_bg.to_array(),
-                corner_radius: theme.radius_item,
-                border_width: 0.0,
-                border_color: [0.0; 4],
-            });
-            // Edge-light rim: soft on hover, the stronger .10 when selected.
+            let row = Rect::new(row_x, item_y, row_w, row_h);
+            compositor.push(rounded_rect(
+                row.x,
+                row.y,
+                row.w,
+                row.h,
+                theme.shape.item,
+                row_bg.0,
+            ));
+            // Edge-light rim: soft on hover, strong when selected.
             if is_selected || is_hovered {
-                hoff::edge_light(
+                edge_light(
                     compositor,
                     LayerId::DEFAULT,
-                    row_x,
-                    item_y,
-                    row_w,
-                    ITEM_H,
-                    theme.radius_item,
-                    1.0,
+                    row,
+                    theme.shape.item,
+                    theme.control.edge_width,
                     if is_selected {
-                        theme.edge_strong
+                        glass.edge.0
                     } else {
-                        theme.edge
+                        glass.edge_soft.0
                     },
                 );
             }
 
-            // Status letter — caption-sm in the HOFF accent for the state.
+            // Status letter in the intent color for the state.
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::new(file.status.label(), 12.0, 12.0 * 1.33, None)
-                    .with_weight(600),
-                x: row_x + PAD,
-                y: item_y + (ITEM_H - 12.0 * 1.33) / 2.0,
+                key: TextNodeKey::from_style(file.status.label(), &status_style, None),
+                x: row_x + pad,
+                y: item_y + TextMeasurer::vertical_center(&status_style, row_h),
                 color: file.status.color(theme),
             });
 
-            // Filename — base-2sm, .56 at rest, .76 selected.
-            // One style for measuring and drawing (the label is elided to
-            // the same width the text node is capped at, in the same face
-            // and weight it is drawn in).
-            let name_w = row_w - STATUS_W - PAD * 3.0;
-            let name_style = TextStyle::new(FONT_SIZE)
-                .with_line_height(LINE_H)
-                .with_weight(600);
-            let display_name = hoff::elide_path(&file.path, name_w, &name_style);
+            // Filename, elided to the column width with the same style it
+            // is drawn with.
+            let name_w = row_w - status_w - pad * 3.0;
+            let display_name = TextMeasurer::elide_path(&file.path, &name_style, name_w);
             compositor.push(SceneNode::Text {
                 key: TextNodeKey::from_style(&display_name, &name_style, Some(name_w)),
-                x: row_x + PAD + STATUS_W,
-                y: item_y + (ITEM_H - LINE_H) / 2.0,
+                x: row_x + pad + status_w,
+                y: item_y + TextMeasurer::vertical_center(&name_style, row_h),
                 color: if is_selected || is_hovered {
-                    theme.text_active
+                    glass.text_active.0
                 } else {
-                    theme.text_default
-                }
-                .to_array(),
+                    glass.text_default.0
+                },
             });
 
-            // Staged marker — the 8px green "new" dot.
+            // Staged marker: the success dot.
             if file.staged {
-                let dot = 8.0;
-                compositor.push(SceneNode::RoundedRect {
-                    x: row_x + row_w - PAD - dot,
-                    y: item_y + (ITEM_H - dot) / 2.0,
-                    w: dot,
-                    h: dot,
-                    color: theme.accent_green.to_array(),
-                    corner_radius: dot / 2.0,
-                    border_width: 0.0,
-                    border_color: [0.0; 4],
-                });
+                compositor.push(rounded_rect(
+                    row_x + row_w - pad - dot,
+                    item_y + (row_h - dot) / 2.0,
+                    dot,
+                    dot,
+                    dot / 2.0,
+                    theme.colors.success.0,
+                ));
             }
 
             // Hit rect clamped to the visible part of the row: a row half
             // hidden under the panel head only responds on its visible half.
             let top = item_y.max(list_y);
-            let bottom = (item_y + ITEM_H).min(y + h);
+            let bottom = (item_y + row_h).min(y + h);
             hit_rects.push((row_x, top, row_w, (bottom - top).max(0.0)));
         }
         compositor.push(SceneNode::PopClip);
 
-        // Scrollbar (if needed)
-        if self.scroll.is_scrollable() {
-            hoff::draw_scrollbar(
-                compositor,
-                theme,
-                x + w - 4.0,
-                list_y,
-                h - HEADER_H,
-                &self.scroll,
-            );
-        }
+        self.scrollbar.render(compositor, list, &self.scroll, theme);
 
         self.hit_rects = hit_rects.clone();
         hit_rects

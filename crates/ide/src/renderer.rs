@@ -25,7 +25,7 @@ pub fn render_frame(
     // Build scene (includes compositor.begin_frame() inside)
     workspace.render(compositor);
 
-    let clear = workspace.theme().bg_body.to_linear_array();
+    let clear = workspace.theme().colors.bg.to_linear_array();
     present_frame(
         compositor,
         gpu,
