@@ -3,6 +3,9 @@
 // ============================================================================
 
 use super::intent::{Intent, MotionPhysics};
+use super::scales::{
+    ControlTokens, DurationScale, LayoutTokens, ShadowTokens, ShapeTokens, SizeTokens,
+};
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
@@ -18,6 +21,18 @@ pub struct Theme {
     pub effects: EffectTokens,
     /// Translucent surface recipe (HOFF dark-glass language).
     pub glass: GlassTokens,
+    /// Corner radius by role (card, pill, nav, tooltip...).
+    pub shape: ShapeTokens,
+    /// Control heights, paddings, icon sizes, rims and focus ring.
+    pub control: ControlTokens,
+    /// Container widths the design fixes (menu, modal max, sidebar...).
+    pub size: SizeTokens,
+    /// Timed transition durations (fades, slides).
+    pub duration: DurationScale,
+    /// Breakpoints, gutters, grid columns, sidebar mode per viewport.
+    pub layout: LayoutTokens,
+    /// Shadow stacks by elevation.
+    pub shadows: ShadowTokens,
 }
 
 /// The default plev theme is HOFF (see [`Theme::hoff`]).
@@ -47,6 +62,16 @@ impl Theme {
             divider: Color::hex(0x222222),
             border_active: Color::hex(0x444444),
         };
+        let radius = RadiusScale {
+            none: 0.0,
+            sm: 2.0,
+            md: 4.0,
+            lg: 8.0,
+            xl: 12.0,
+            full: 9999.0,
+        };
+        let control = ControlTokens::hoff();
+        let shape = ShapeTokens::derive(&radius, control.tabs_pad);
         Self {
             glass: GlassTokens::derive(&colors),
             colors,
@@ -68,14 +93,7 @@ impl Theme {
                 xl: 32.0,
                 xxl: 48.0,
             },
-            radius: RadiusScale {
-                none: 0.0,
-                sm: 2.0,
-                md: 4.0,
-                lg: 8.0,
-                xl: 12.0,
-                full: 9999.0,
-            },
+            radius,
             motion: MotionPhysics {
                 mass: 1.0,
                 stiffness: 170.0,
@@ -86,6 +104,12 @@ impl Theme {
                 shadow_color: Color::rgba(0.0, 0.0, 0.0, 0.5),
                 blur_sigma: 8.0,
             },
+            shape,
+            control,
+            size: SizeTokens::hoff(),
+            duration: DurationScale::hoff(),
+            layout: LayoutTokens::hoff(),
+            shadows: ShadowTokens::derive(Color::rgba(0.0, 0.0, 0.0, 0.5)),
         }
     }
 
@@ -126,6 +150,7 @@ impl Theme {
         };
         let colors = match name {
             "hoff" => return Some(Self::hoff()),
+            "hoff-light" => return Some(Self::hoff_light()),
             "plev" => return Some(Self::dark()),
             "catppuccin" => ColorTokens {
                 bg: Color::hex(0x11111b),

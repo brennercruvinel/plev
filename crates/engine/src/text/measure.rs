@@ -378,6 +378,48 @@ impl TextMeasurer {
         candidate(lo)
     }
 
+    /// Fit a `/`-separated path into `max_width` px by dropping whole
+    /// directory segments from the middle, keeping the leading directory
+    /// and the file name (`crates/…/fonts/Name.ttf`); measured with the
+    /// SAME style the caller draws with. When even `…/name` will not fit,
+    /// the name itself is ellipsized by [`truncate_to_width`]
+    /// (Self::truncate_to_width). A character-count cut lands mid-segment
+    /// (producing directory names that do not exist) and is blind to the
+    /// font; this never does.
+    pub fn elide_path(path: &str, style: &TextStyle, max_width: f32) -> String {
+        let fits = |s: &str| Self::measure_styled(s, style, None).0 <= max_width;
+        if fits(path) {
+            return path.to_string();
+        }
+        let segments: Vec<&str> = path.split('/').collect();
+        let n = segments.len();
+        if n > 2 {
+            // Keep `lead` segments from the front and `tail` from the back
+            // (the file name always among them), dropping the middle. Try
+            // the most segments first; among equal counts, prefer a longer
+            // lead so the path still starts where it starts.
+            for kept in (2..n).rev() {
+                for lead in (1..kept).rev() {
+                    let tail = kept - lead;
+                    let candidate = format!(
+                        "{}/\u{2026}/{}",
+                        segments[..lead].join("/"),
+                        segments[n - tail..].join("/")
+                    );
+                    if fits(&candidate) {
+                        return candidate;
+                    }
+                }
+            }
+            let minimal = format!("\u{2026}/{}", segments[n - 1]);
+            if fits(&minimal) {
+                return minimal;
+            }
+        }
+        let name = segments.last().copied().unwrap_or(path);
+        Self::truncate_to_width(name, style, max_width)
+    }
+
     /// Distinct `(family, weight)` of the faces used to shape `text` with
     /// `style`, in glyph order. Diagnostic API: guards against family
     /// fallback when a requested weight has no matching embedded face
