@@ -8,9 +8,8 @@
 
 mod actions;
 mod adapters;
-mod components;
 mod renderer;
-mod theme;
+mod status;
 mod views;
 mod watcher;
 
@@ -92,6 +91,10 @@ struct App {
     modifiers: ModifiersState,
     matcher: KeymapMatcher,
     registry: ActionRegistry,
+
+    /// Frame clock for the widgets that animate (scrollbar fades, the
+    /// commit field caret). Ticks only while a frame is being drawn.
+    clock: engine::animation::FrameClock,
 }
 
 impl App {
@@ -117,6 +120,7 @@ impl App {
             modifiers: ModifiersState::empty(),
             matcher: KeymapMatcher::new(actions::default_keymap()),
             registry: actions::registry(),
+            clock: engine::animation::FrameClock::new(),
         }
     }
 
@@ -507,6 +511,14 @@ impl ApplicationHandler<AppEvent> for App {
                 else {
                     return;
                 };
+                // Animated widgets keep frames coming while they settle.
+                let tick = self.clock.tick();
+                if self.workspace.tick(tick.dt) {
+                    self.compositor.invalidate();
+                    if let Some(w) = &self.window {
+                        w.request_redraw();
+                    }
+                }
                 renderer::render_frame(
                     gpu,
                     text_system,

@@ -1,6 +1,7 @@
 //! Keyboard bridge for the platform shell: winit named keys map onto the
-//! view's winit-free editing keys (Tab focus cycling and the Forms text
-//! fields). Escape stays in main.rs, which owns close/quit.
+//! view's winit-free editing keys (Tab focus cycling, the Forms text
+//! fields, the App add field and its Enter). Escape stays in app.rs,
+//! which owns close/quit.
 
 use winit::keyboard::NamedKey;
 
@@ -11,6 +12,7 @@ use crate::view::{EditKey, ShowcaseView};
 pub fn handle_named(view: &mut ShowcaseView, named: &NamedKey) -> bool {
     let key = match named {
         NamedKey::Space => return view.handle_key(" "),
+        NamedKey::Enter => return view.handle_enter(),
         NamedKey::Tab => EditKey::Tab,
         NamedKey::Backspace => EditKey::Backspace,
         NamedKey::Delete => EditKey::Delete,

@@ -5,10 +5,10 @@
 //! benchmark runs on the worker; this screen owns the controls, the
 //! progress counter and the last `BenchmarkView`.
 
+use comps::prelude::{Button, EventResult, Rect, Slider, Spinner, SpinnerSize, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
-use engine::ui::widgets::{Button, EventResult, Rect, Slider, Spinner, SpinnerSize, WidgetEvent};
 
 use crate::model::bench::{BenchmarkView, LatencyStats};
 use crate::model::types::OpenedDbView;
@@ -71,7 +71,7 @@ impl StatsScreen {
     }
 
     /// Controls row layout: two sliders with labels + the run button.
-    fn controls(&self, content: Rect) -> (Rect, Rect, Rect) {
+    fn controls(&self, content: Rect, theme: &Theme) -> (Rect, Rect, Rect) {
         let slider_w = ((content.w - CARD_PAD * 2.0 - 160.0) / 2.0).max(120.0);
         let n = Rect::new(
             content.x + CARD_PAD + 64.0,
@@ -80,7 +80,7 @@ impl StatsScreen {
             20.0,
         );
         let k = Rect::new(n.x + n.w + 80.0, n.y, slider_w - 64.0, 20.0);
-        let (bw, bh) = self.run_button.preferred_size();
+        let (bw, bh) = self.run_button.preferred_size(theme);
         let run = Rect::new(content.x + content.w - CARD_PAD - bw, content.y, bw, bh);
         (n, k, run)
     }
@@ -90,11 +90,12 @@ impl StatsScreen {
         event: &WidgetEvent,
         content: Rect,
         has_db: bool,
+        theme: &Theme,
     ) -> (EventResult, Action) {
         self.run_button.disabled = !has_db || self.running;
-        let (n, k, run) = self.controls(content);
-        let mut result = self.n_slider.handle_event(event, n);
-        result = result.merge(self.k_slider.handle_event(event, k));
+        let (n, k, run) = self.controls(content, theme);
+        let mut result = self.n_slider.handle_event(event, n, theme);
+        result = result.merge(self.k_slider.handle_event(event, k, theme));
         let r = self.run_button.handle_event(event, run);
         if r.clicked {
             self.running = true;
@@ -115,7 +116,7 @@ impl StatsScreen {
         self.run_button.disabled = self.running;
 
         // Controls row.
-        let (n, k, run) = self.controls(content);
+        let (n, k, run) = self.controls(content, theme);
         text(
             c,
             "queries",
@@ -277,7 +278,7 @@ impl StatsScreen {
             .iter()
             .map(|s| (s.name.clone(), s.size as f64, fmt_bytes(s.size)))
             .collect();
-        engine::charts::draw::hbars(
+        comps::charts::draw::hbars(
             c,
             &items,
             Rect::new(
@@ -410,10 +411,12 @@ mod tests {
     fn run_button_emits_the_benchmark_action() {
         let mut screen = StatsScreen::new();
         let content = content(1600.0, 1000.0);
-        let (_, _, run) = screen.controls(content);
+        let theme = Theme::hoff();
+        let (_, _, run) = screen.controls(content, &theme);
         let (x, y) = run.center();
-        screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, true);
-        let (r, action) = screen.handle_event(&WidgetEvent::MouseUp { x, y }, content, true);
+        screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, true, &theme);
+        let (r, action) =
+            screen.handle_event(&WidgetEvent::MouseUp { x, y }, content, true, &theme);
         assert!(r.clicked);
         assert_eq!(
             action,

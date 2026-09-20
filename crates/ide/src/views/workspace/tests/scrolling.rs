@@ -10,7 +10,7 @@ fn probe_scroll_left_panel_moves_file_list() {
     let mut c = Compositor::new();
     w.render(&mut c); // sets viewport/content heights
 
-    let cx = SIDEBAR_W + 50.0; // inside the left panel
+    let cx = sidebar_w() + 50.0; // inside the left panel
     w.scroll(cx, 120.0);
     assert!(
         w.unassigned.scroll.offset() > 0.0,
@@ -60,7 +60,7 @@ fn probe_scrolled_left_panel_renders_shifted_rows() {
     w.render(&mut c);
     let y_before = w.unassigned.hit_rects()[10].1;
 
-    w.scroll(SIDEBAR_W + 50.0, 120.0);
+    w.scroll(sidebar_w() + 50.0, 120.0);
     w.render(&mut c);
     let y_after = w.unassigned.hit_rects()[10].1;
     assert!(
@@ -92,13 +92,13 @@ fn rows_hidden_behind_the_panel_head_are_not_hit() {
     w.render(&mut c);
 
     // Scroll the file list so early rows slide under the "Changes" head.
-    let cx = SIDEBAR_W + 50.0;
+    let cx = sidebar_w() + 50.0;
     assert!(w.scroll(cx, 300.0));
     w.render(&mut c);
 
     // Clicking/hovering on the head band must hit nothing — before the fix
     // the hidden rows kept full-size hit rects and swallowed these events.
-    let head_y = HEADER_H + 30.0;
+    let head_y = header_h() + 30.0;
     assert_eq!(w.unassigned.hit_test(cx, head_y), None);
     assert!(
         !w.handle_hover(cx, head_y),
@@ -122,7 +122,7 @@ fn commits_hidden_behind_the_stacks_head_are_not_hit() {
     assert!(w.scroll(cx, 400.0));
     w.render(&mut c);
 
-    let head_y = HEADER_H + 30.0;
+    let head_y = header_h() + 30.0;
     assert_eq!(w.stacks.hit_test(cx, head_y), None);
     assert!(!w.handle_click(cx, head_y));
 }
@@ -133,7 +133,7 @@ fn scrolled_panels_clip_rows_to_the_list_viewport() {
     let mut w = WorkspaceView::new(1280.0, 800.0);
     w.unassigned.set_files(many_files(60));
     let mut c = Compositor::new();
-    w.scroll(SIDEBAR_W + 50.0, 300.0);
+    w.scroll(sidebar_w() + 50.0, 300.0);
     w.render(&mut c);
 
     // The file list emits a PushClip at the list viewport so scrolled rows
@@ -141,7 +141,7 @@ fn scrolled_panels_clip_rows_to_the_list_viewport() {
     let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes();
     let has_list_clip = nodes.iter().any(|n| {
         matches!(n, SceneNode::PushClip { x, y, .. }
-            if *x == SIDEBAR_W && *y > HEADER_H)
+            if *x == sidebar_w() && *y > header_h())
     });
     assert!(has_list_clip, "scrolled rows must be clipped to the panel");
 }

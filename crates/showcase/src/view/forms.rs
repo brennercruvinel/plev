@@ -10,12 +10,12 @@ mod tests;
 
 pub use focus::EditKey;
 
+use comps::prelude::{
+    Checkbox, EventResult, ProgressBar, Rect, Select, Slider, Switch, Tabs, WidgetEvent,
+};
 use engine::compositor::{Compositor, LayerId};
 use engine::text::TextMeasurer;
 use engine::theme::{Intent, Theme, TypographyScale};
-use engine::ui::widgets::{
-    Checkbox, EventResult, ProgressBar, Rect, Select, Slider, Switch, Tabs, WidgetEvent,
-};
 use fields::TextFields;
 
 use super::{group_label, text};
@@ -73,7 +73,7 @@ struct Layout {
 impl FormsSection {
     pub fn new(theme: &Theme) -> Self {
         Self {
-            fields: TextFields::new(theme),
+            fields: TextFields::new(),
             // Three roomy segments: the reference keeps each label folgado
             // inside its pill (GOLDEN_SPEC) — the strip is sized from the
             // measured labels (see `tab_strip_w`) so every one fits.
@@ -117,7 +117,7 @@ impl FormsSection {
     /// Content-driven layout: two columns that stretch with `content.w`
     /// (clamped to `COL_MAX_W` for legibility) and stack into a single
     /// column when the content is too narrow for both.
-    fn layout(&self, content: Rect) -> Layout {
+    fn layout(&self, content: Rect, theme: &Theme) -> Layout {
         let (x, y) = (content.x, content.y);
         let two_cols = content.w >= COL_MIN_W * 2.0 + COL_GAP;
         let col_w = if two_cols {
@@ -128,8 +128,8 @@ impl FormsSection {
 
         // Column A: text fields (opening the column and the tab order),
         // tabs, checkboxes, switches; the preview line trails the fields.
-        let fields = TextFields::rects(x, y + LABEL_H, col_w);
-        let preview_bottom = fields[fields::COUNT - 1].y + fields::FIELD_H + 8.0 + LABEL_H;
+        let fields = TextFields::rects(x, y + LABEL_H, col_w, theme);
+        let preview_bottom = TextFields::bottom(&fields, theme) + LABEL_H;
 
         // HOFF tabs: 44px strip sized from its measured labels so each one
         // stays folgado in its segment. With two columns it may borrow half
@@ -199,8 +199,8 @@ impl FormsSection {
     }
 
     /// Natural height of both form columns (page scrolling needs it).
-    pub fn content_height(&self, content: Rect) -> f32 {
-        let l = self.layout(content);
+    pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
+        let l = self.layout(content, theme);
         let col_a = l.switches[2].y + l.switches[2].h;
         let col_b = l.select.y + l.select.h;
         col_a.max(col_b) - content.y + GROUP_GAP
@@ -215,13 +215,23 @@ impl FormsSection {
     }
 
     /// Route an event to the open select dropdown (priority path).
-    pub fn route_select(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
-        let layout = self.layout(content);
-        self.select.handle_event(event, layout.select)
+    pub fn route_select(
+        &mut self,
+        event: &WidgetEvent,
+        content: Rect,
+        theme: &Theme,
+    ) -> EventResult {
+        let layout = self.layout(content, theme);
+        self.select.handle_event(event, layout.select, theme)
     }
 
-    pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
-        let layout = self.layout(content);
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        content: Rect,
+        theme: &Theme,
+    ) -> EventResult {
+        let layout = self.layout(content, theme);
         let mut r = EventResult::IGNORED;
 
         // A click inside a field focuses it and places the caret; a click
@@ -229,7 +239,7 @@ impl FormsSection {
         if let WidgetEvent::MouseDown { x, y } = *event {
             if let Some(i) = layout.fields.iter().position(|f| f.contains(x, y)) {
                 self.set_focus(Some(i));
-                self.fields.click(i, x - layout.fields[i].x);
+                self.fields.handle_event(i, event, layout.fields[i], theme);
                 return EventResult::changed();
             }
             if self.focus.is_some() {
@@ -238,17 +248,20 @@ impl FormsSection {
             }
         }
 
-        r = r.merge(self.tabs.handle_event(event, layout.tabs));
+        r = r.merge(self.tabs.handle_event(event, layout.tabs, theme));
         r = r.merge(self.autosave.handle_event(event, layout.checkboxes[0]));
         r = r.merge(self.telemetry.handle_event(event, layout.checkboxes[1]));
         r = r.merge(self.locked.handle_event(event, layout.checkboxes[2]));
         r = r.merge(self.focus_mode.handle_event(event, layout.switches[0]));
         r = r.merge(self.wrap_lines.handle_event(event, layout.switches[1]));
         r = r.merge(self.locked_switch.handle_event(event, layout.switches[2]));
-        r = r.merge(self.volume.handle_event(event, layout.sliders[0]));
-        r = r.merge(self.steps.handle_event(event, layout.sliders[1]));
-        r = r.merge(self.disabled_slider.handle_event(event, layout.sliders[2]));
-        r = r.merge(self.select.handle_event(event, layout.select));
+        r = r.merge(self.volume.handle_event(event, layout.sliders[0], theme));
+        r = r.merge(self.steps.handle_event(event, layout.sliders[1], theme));
+        r = r.merge(
+            self.disabled_slider
+                .handle_event(event, layout.sliders[2], theme),
+        );
+        r = r.merge(self.select.handle_event(event, layout.select, theme));
         // The first progress bar mirrors the volume slider live.
         self.progress.set_value(self.volume.value() / 100.0);
         r
@@ -265,7 +278,7 @@ impl FormsSection {
     }
 
     pub fn render(&self, c: &mut Compositor, overlay: LayerId, content: Rect, theme: &Theme) {
-        let layout = self.layout(content);
+        let layout = self.layout(content, theme);
         let dim = theme.colors.text_mid.0;
 
         group_label(c, "TEXT FIELDS", content.x, content.y, theme);

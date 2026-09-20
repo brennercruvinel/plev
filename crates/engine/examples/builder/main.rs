@@ -1,7 +1,6 @@
 //! Builder API demo -- declarative UI with div/text/button builders.
 //!
 //! Run: `cargo run --example builder_demo`
-#![allow(dead_code)]
 
 mod render;
 mod ui;

@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: active
-last-updated: 2026-09-18
+last-updated: 2026-09-19
 domain: index
 ---
 
@@ -109,6 +109,7 @@ status usados: `reference` (conhecimento congelado de uma sessao), `accepted` (d
 | data | adr | status | resumo |
 |------|-----|--------|--------|
 | 2026-08-30 | [official-app-pattern](official-app-pattern.md) | accepted | padrao oficial: estado em structs + widgets retidos + invalidacao explicita (template: showcase); builder para prototipos/demos; view/component/signal/narrate experimentais |
+| 2026-09-18 | [comps-one-design-system-crate](comps-one-design-system-crate.md) | accepted | crates/comps e o design system (widgets, receitas, icones, charts, overlay, editor, shell) sobre o engine; todo valor visual e token do Theme (shape, control, size, duration, layout, shadows); breakpoints e AppShell (sidebar cheia / rail / drawer); ide, showcase e urnaui consomem, tema e componentes locais apagados; matriz tema x viewport testa todo widget; inventario em docs/catalog.md; aprendizados da sessao em docs/mission/steps/checked/sessao-comps-learnings.md |
 
 ## urnaui, o explorador de .urna (2026)
 

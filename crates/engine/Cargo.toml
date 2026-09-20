@@ -49,7 +49,6 @@ lyon_path.workspace = true
 image.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-rope.workspace = true
 unicode-segmentation.workspace = true
 accesskit = { workspace = true, optional = true }
 accesskit_winit = { workspace = true, optional = true }

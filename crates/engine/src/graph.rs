@@ -1,4 +1,4 @@
-//! Pure graph geometry for the [`GraphView`](crate::ui::widgets::GraphView)
+//! Pure graph geometry for the `GraphView` widget (`comps::graph::GraphView`)
 //! widget: a CSR adjacency built from an edge list, a deterministic
 //! force-directed layout, and the pan/zoom [`ViewTransform`]. No GPU, no
 //! widget state — the same code is unit-testable headless and reusable by

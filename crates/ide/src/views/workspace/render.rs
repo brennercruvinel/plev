@@ -1,60 +1,58 @@
-use super::{HEADER_H, RESIZE_HANDLE_W, SIDEBAR_W, ThemeMode, WorkspaceView};
+use super::WorkspaceView;
 use engine::compositor::{Compositor, SceneNode};
 
 impl WorkspaceView {
-    /// Full render — clears and rebuilds everything.
+    /// Full render: clears and rebuilds everything.
     pub fn render(&mut self, compositor: &mut Compositor) {
         self.ensure_overlay_layer(compositor);
 
-        let theme = match self.theme_mode {
-            ThemeMode::Dark => &crate::theme::DARK,
-            ThemeMode::Light => &crate::theme::LIGHT,
-        };
+        let theme = self.theme().clone();
         let vw = self.vw;
         let vh = self.vh;
+        let sidebar_w = self.sidebar_w();
+        let header_h = self.header_h();
+        let handle_w = self.handle_w();
 
         compositor.begin_frame();
 
-        // Page canvas behind the app — composed graphite #303030.
+        // Page canvas behind the app.
         compositor.push(SceneNode::Rect {
             x: 0.0,
             y: 0.0,
             w: vw,
             h: vh,
-            color: theme.bg_body.to_array(),
+            color: theme.colors.bg.0,
         });
 
-        // -- Sidebar --
-        self.sidebar.render(compositor, theme, vh, HEADER_H);
-
-        // -- Header --
+        // The header spans the window; the rail sits under it.
         self.header.render(
             compositor,
-            theme,
+            &theme,
             self.theme_mode,
             vw,
-            SIDEBAR_W,
+            sidebar_w,
             &self.repo_label,
             &self.branch_label,
         );
+        self.sidebar.render(compositor, &theme, vw, vh);
 
-        let content_y = HEADER_H;
-        let content_h = vh - HEADER_H;
+        let content_y = header_h;
+        let content_h = vh - header_h;
 
         // -- Left panel (Unassigned Changes) --
-        let left_x = SIDEBAR_W;
-        let mid_x = left_x + self.left_w + RESIZE_HANDLE_W;
+        let left_x = sidebar_w;
+        let mid_x = left_x + self.left_w + handle_w;
         let right_x = vw - self.right_w;
 
         // Commit form (inline, above file list)
         let commit_form_h =
             self.commit_form
-                .render(compositor, theme, left_x, content_y, self.left_w);
+                .render(compositor, &theme, left_x, content_y, self.left_w);
 
         let hover_row = self.hover_unassigned_row;
         self.unassigned.render(
             compositor,
-            theme,
+            &theme,
             left_x,
             content_y + commit_form_h,
             self.left_w,
@@ -62,17 +60,18 @@ impl WorkspaceView {
             hover_row,
         );
 
-        // Left resize handle — dark seam at rest, rgba($n2,.25) when grabbed.
+        // Left resize handle: page seam at rest, the field focus tone
+        // when grabbed.
         let handle_hov = self.hover_left_handle || self.dragging_left;
         compositor.push(SceneNode::Rect {
             x: left_x + self.left_w,
             y: content_y,
-            w: RESIZE_HANDLE_W,
+            w: handle_w,
             h: content_h,
             color: if handle_hov {
-                theme.field_focus_border.to_array()
+                theme.glass.field_focus_border.0
             } else {
-                theme.bg_body.to_array()
+                theme.colors.bg.0
             },
         });
 
@@ -81,7 +80,7 @@ impl WorkspaceView {
         let hover_commit = self.hover_stack_commit;
         self.stacks.render(
             compositor,
-            theme,
+            &theme,
             mid_x,
             content_y,
             mid_w.max(0.0),
@@ -89,24 +88,24 @@ impl WorkspaceView {
             hover_commit,
         );
 
-        // Right resize handle — dark seam at rest, rgba($n2,.25) when grabbed.
+        // Right resize handle.
         let right_handle_hov = self.hover_right_handle || self.dragging_right;
         compositor.push(SceneNode::Rect {
-            x: right_x - RESIZE_HANDLE_W,
+            x: right_x - handle_w,
             y: content_y,
-            w: RESIZE_HANDLE_W,
+            w: handle_w,
             h: content_h,
             color: if right_handle_hov {
-                theme.field_focus_border.to_array()
+                theme.glass.field_focus_border.0
             } else {
-                theme.bg_body.to_array()
+                theme.colors.bg.0
             },
         });
 
         // -- Right panel (Diff) --
         self.diff.render(
             compositor,
-            theme,
+            &theme,
             right_x,
             content_y,
             self.right_w,
@@ -114,6 +113,6 @@ impl WorkspaceView {
         );
 
         // -- Overlays (always last, highest z_order) --
-        self.render_overlays(compositor, theme);
+        self.render_overlays(compositor, &theme);
     }
 }

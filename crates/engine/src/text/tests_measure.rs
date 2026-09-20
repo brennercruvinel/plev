@@ -524,3 +524,46 @@ fn truncate_returns_the_ellipsis_when_nothing_fits() {
         "\u{2026}"
     );
 }
+
+// -- elide_path (segment-wise path fitting) ----------------------------------
+
+#[test]
+fn elide_path_keeps_a_fitting_path() {
+    let p = "src/main.rs";
+    assert_eq!(TextMeasurer::elide_path(p, &sans(14.0), 500.0), p);
+}
+
+#[test]
+fn elide_path_drops_middle_segments_and_keeps_the_name() {
+    let style = sans(14.0);
+    let p = "crates/engine/src/text/fonts/InclusiveSans-Regular.ttf";
+    let (full_w, _) = TextMeasurer::measure_styled(p, &style, None);
+    let (name_w, _) =
+        TextMeasurer::measure_styled("crates/\u{2026}/InclusiveSans-Regular.ttf", &style, None);
+    // A width between "crates/…/name" and the full path must keep the
+    // leading directory.
+    let mid = (full_w + name_w) / 2.0;
+    let out = TextMeasurer::elide_path(p, &style, mid);
+    assert!(out.contains('\u{2026}'), "{out}");
+    assert!(out.ends_with("InclusiveSans-Regular.ttf"), "{out}");
+    assert!(
+        out.starts_with("crates/"),
+        "the leading directory stays: {out}"
+    );
+    let (w, _) = TextMeasurer::measure_styled(&out, &style, None);
+    assert!(w <= mid);
+    // Tighter: only the name survives behind the ellipsis.
+    let tight = TextMeasurer::elide_path(p, &style, name_w - 1.0);
+    assert!(tight.starts_with('\u{2026}'), "{tight}");
+    assert!(tight.ends_with("InclusiveSans-Regular.ttf"), "{tight}");
+}
+
+#[test]
+fn elide_path_falls_back_to_truncating_the_name() {
+    let style = sans(14.0);
+    let out =
+        TextMeasurer::elide_path("a/b/a-very-long-file-name-that-cannot-fit.rs", &style, 60.0);
+    assert!(out.ends_with('\u{2026}'), "{out}");
+    let (w, _) = TextMeasurer::measure_styled(&out, &style, None);
+    assert!(w <= 60.0);
+}

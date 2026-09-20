@@ -1,9 +1,9 @@
 //! Theme section: the HOFF token strip, palette cards, typography ramp.
 
+use comps::icons;
+use comps::prelude::{EventResult, Rect, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::theme::Theme;
-use engine::ui::icons;
-use engine::ui::widgets::{EventResult, Rect, WidgetEvent};
 
 use super::{group_label, text};
 
@@ -205,7 +205,7 @@ impl ThemeSection {
 
             // Card painted with the *target* theme's own colors; the
             // current-theme check icon pushed later stacks on top.
-            c.push(engine::ui::widgets::rounded_rect(
+            c.push(comps::prelude::rounded_rect(
                 rect.x,
                 rect.y,
                 rect.w,
@@ -213,7 +213,7 @@ impl ThemeSection {
                 theme.radius.lg,
                 t.colors.bg_panel.0,
             ));
-            c.push(engine::ui::widgets::rounded_rect_stroke(
+            c.push(comps::prelude::rounded_rect_stroke(
                 rect.x,
                 rect.y,
                 rect.w,

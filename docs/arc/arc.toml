@@ -86,23 +86,15 @@ depends = ["gpu", "compositor", "text", "input"]
 
 [modules.theme]
 path = "crates/engine/src/theme"
-role = "measured hoff tokens, oklch tooling, intents"
-
-[modules.ui]
-path = "crates/engine/src/ui"
-role = "retained widgets (21, incl. chip, empty-state, spinner, split-pane, icon-button) + immediate builder + lucide icons"
-
-[modules.charts]
-path = "crates/engine/src/charts"
-role = "chart model + draw helpers (bars, meter, hbars), promoted from the showcase; same handle_event/render contract as widgets"
+role = "the design tokens: measured hoff colors + glass recipe, typography ramp, spacing, radius ladder + shape roles, control sizes, container sizes, durations, layout breakpoints/gutters/sidebar mode, shadow stacks by elevation, intents, oklch tooling; hoff dark + hoff light + 11 named palettes. every widget in crates/comps reads from here; no widget restates a number"
 
 [modules.graph]
 path = "crates/engine/src/graph"
-role = "graph model + force layout + GraphView pan/zoom canvas widget"
+role = "graph model + force layout + view transform (the pan/zoom widget is comps::graph::GraphView)"
 
 [modules.clipboard]
 path = "crates/engine/src/clipboard"
-role = "the one clipboard entry point (re-export of editor::SystemClipboard)"
+role = "the one clipboard entry point: ClipboardProvider trait, SystemClipboard (arboard, desktop) and LocalClipboard (tests, wasm, mobile)"
 
 [modules.builder]
 path = "crates/engine/src/builder"
@@ -117,10 +109,6 @@ role = "Lifecycle trait (experimental, see official-app-pattern)"
 path = "crates/engine/src/view"
 role = "View trait + ViewContext (experimental, see official-app-pattern)"
 
-[modules.text_input]
-path = "crates/engine/src/text_input"
-role = "single-line field widget"
-
 [modules.platform]
 path = "crates/engine/src/platform"
 role = "safe areas (mod), ime, app lifecycle"
@@ -132,18 +120,23 @@ role = "safe areas (mod), ime, app lifecycle"
 
 [crates.engine]
 path = "crates/engine"
-role = "the gpu-first compositing engine itself (the modules above); a lib (crate-type cdylib+staticlib+rlib) every app and crate builds on; ships the examples/ demos"
+role = "the gpu-first compositing engine itself (the modules above): rendering, text, layout, input, animation, tokens, platform; a lib (crate-type cdylib+staticlib+rlib) every app and crate builds on; ships the examples/ demos. the widgets live in comps"
+
+[crates.comps]
+path = "crates/comps"
+role = "the plev design system: every widget, recipe, icon, chart, overlay and the editor, one crate over the engine, every visual value read from engine::theme::Theme (docs/catalog.md is the inventory). categories: core (Rect/WidgetEvent/EventResult, color helpers), recipe (glass pill/surface, edge light, inset key-light, shadow stacks, focus ring), icons (lucide set), action (button, icon button, chip, badge), form (text field over the text_input core, checkbox, switch, slider, select), nav (tabs, nav link, sidebar by breakpoint, panel header, breadcrumb, split pane), content (card, avatar, panel, stat, code block, skeleton, table, empty state, virtual list, tree, separator), feedback (modal, context menu, toast, tooltip, progress, spinner, scrollbar), overlay (the overlay stack with spring motion), charts (geometry + draw), graph (GraphView), editor (rope-backed multi-cursor editor view), shell (AppShell: sidebar + header + content rect + safe area). tests: every widget under every theme at phone and desktop widths (src/tests/matrix.rs). ships the editor example"
+depends = ["engine", "rope"]
 
 [crates.showcase]
 path = "crates/showcase"
-role = "widget gallery app (14 tabs), the template of the official app pattern; a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main"
-depends = ["engine"]
+role = "design-system gallery app (15 tabs), the template of the official app pattern, framed by comps::shell::AppShell (full sidebar / rail / drawer by breakpoint); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main"
+depends = ["engine", "comps"]
 targets = ["desktop", "web", "android", "ios"]
 
 [crates.urnaui]
 path = "crates/urnaui"
 role = ".urna vector-db explorer app (6 tabs: open/overview/search/chunks/graph/stats). own workspace, excluded from the root one because the native backend path-depends on the sibling urna checkout at ../urna, v0.4.0+ (build with --manifest-path crates/urnaui/Cargo.toml). same lib+cdylib+staticlib shell shape as showcase (run/run_web/android_main/urnaui_ios_main). native backend = urna-format/urna-runtime (path deps into the sibling urna workspace, read-only) + one memmap2 map for the sections the ui decodes itself (spans, blob overlay 0x16, blob offset table 0x17, graph csr) + worker thread that wakes the winit loop through an EventLoopProxy after every result + offline python embedder bridge (potion for the text slab, the registry embedder per multimodal space) + ffmpeg frame decode of inlined media read in place via its subfile protocol (model/frames, model/subprocess drains pipes with a timeout); rfd native open/save dialogs. surfaces every urna pillar: exact/ann/graph/hybrid/space search with the explain honesty line, validate, media blob list + hash-verified export, urna:// citation resolve, frame previews. web backend = urnaread (portable in-memory reader, no urna deps, accepts the URNA and pre-rename NEST magics) + inline worker, file ingress via a hidden input[type=file]; no embedder, no export, no frames there"
-depends = ["engine"]
+depends = ["engine", "comps"]
 external-tools = ["ffmpeg (frame previews, optional)", "python3 + urna/python (text search, optional)"]
 targets = ["desktop", "web"]
 
@@ -155,8 +148,8 @@ targets = ["desktop", "web"]
 
 [crates.ide]
 path = "crates/ide"
-role = "plev-native git client app"
-depends = ["git", "engine"]
+role = "plev-native git client app: three columns (changes, stacks, diff) built from comps (rail sidebar, panel headers, avatars, badges, text field, buttons, modal, context menu, scrollbars) over engine::theme (hoff dark / hoff light); the only app-owned tokens are the file-status colors (status.rs)"
+depends = ["git", "engine", "comps"]
 
 [crates.rope]
 path = "crates/rope"
@@ -213,11 +206,16 @@ role = "thin objc shell (Sources/main.m) calling showcase_ios_main, linked again
 # demos of the engine, under crates/engine/examples. cargo auto-discovers
 # examples/<name>/main.rs, no Cargo.toml. run with
 # `cargo run -p engine --example <name>`.
-windowed = ["counter", "editor", "input", "layers", "mobile_input", "sdf_shapes", "text", "text_input", "todo", "visual", "builder", "charts", "scene3d", "snake", "lottie_player", "monster_player"]
+windowed = ["counter", "input", "layers", "mobile_input", "sdf_shapes", "text", "visual", "builder", "charts", "scene3d", "snake", "lottie_player", "monster_player"]
+# demos of the design system, under crates/comps/examples
+# (`cargo run -p comps --example editor`).
+comps = ["editor"]
 cli = ["lot2monsters", "svg2monster", "text_probe"]
 notes = [
   "text_probe is headless (offscreen wgpu -> png, no window); it is the tool behind docs/how-to/validate-visuals-by-pixel.md when the OS denies screen capture",
   "scene3d and snake-game were crates; they are demos and moved here (commit e6f7091). examples moved from the root into crates/engine/examples when the engine became its own crate",
+  "editor moved to crates/comps/examples with the editor widget; todo and text_input were absorbed by the showcase App and Forms sections (the demos' palettes were a second color system, the showcase sections read the theme)",
+  "the remaining demo palettes (input, layers, mobile_input, scene3d) are views over Theme::default(), not their own color systems",
 ]
 
 [benches]
@@ -232,7 +230,8 @@ parser = "benches/transpile.rs (gpui separator transpile end to end)"
 [knowledge]
 operating-manual = "docs/how-to/code-against-the-plev-engine.md"
 pixel-validation = "docs/how-to/validate-visuals-by-pixel.md"
-visual-tokens = "crates/engine/src/theme/hoff.rs"
+visual-tokens = "crates/engine/src/theme/hoff.rs (colors + glass) and crates/engine/src/theme/scales.rs (shape, control, size, duration, layout, shadows)"
+component-catalog = "docs/catalog.md"
 decisions = "docs/adr/"
 conventions = ".contracts/.mantras/.code/.lang/.rust/rust-conventions.md"
 
@@ -261,8 +260,18 @@ visible section. the declarative builder is supported for prototypes and
 demos. `view`, `component`, `signal` and `narrate` are experimental: no
 new app code without an adr.
 
-apps consume the engine; they never reimplement engine capabilities (adr
-content-driven-layout-not-fixed-constants and the engine manual record why).
+the widgets are the `comps` crate (adr comps-one-design-system-crate):
+every visual value is a `Theme` token (engine::theme), never a literal in
+a widget; the widgets that lay out from tokens take `&Theme` on
+`handle_event` too, so events and pixels come from one geometry. an app
+frames itself with `comps::shell::AppShell` (sidebar full / rail / drawer
+by breakpoint, header, content rect, safe area) and draws its screens
+from comps; the only tokens an app owns are domain colors (the ide's file
+status), derived from the theme.
+
+apps consume the engine and comps; they never reimplement their
+capabilities (adr content-driven-layout-not-fixed-constants and the engine
+manual record why).
 '''
 
 workspace = '''
@@ -273,7 +282,9 @@ engine's examples. cargo hygiene: workspace.package, workspace.dependencies
 (single version source), workspace.lints, tuned profiles; every crate
 publish = false.
 
-crate roles in one breath: `engine` the compositing engine itself; `monster`
+crate roles in one breath: `engine` the compositing engine itself; `comps`
+the design system (widgets, recipes, icons, charts, overlays, editor,
+shell) over the engine's tokens; `monster`
 the binary animation codec (.monster, adr
 binary-animation-format-with-discovered-deltas); `lot` the lottie importer
 that converts to .monster and never embeds a foreign runtime (adr

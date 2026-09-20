@@ -7,18 +7,18 @@
 //! CITATION=2) and the widget's default tones match the old hand-rolled
 //! canvas: dim neutral / accent / info.
 
+use comps::prelude::{
+    Button, ButtonSize, ButtonVariant, EventResult, GraphView, IconButton, Rect, Spinner,
+    SpinnerSize, WidgetEvent, menu_shadow,
+};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::graph::GraphScene;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
-use engine::ui::widgets::{
-    Button, ButtonSize, ButtonVariant, EventResult, GraphView, IconButton, Rect, Spinner,
-    SpinnerSize, WidgetEvent, menu_shadow,
-};
 
 use crate::model::types::ChunksData;
 
-use super::field::FIELD_H;
+use super::field::field_h;
 use super::{Action, group_label, panel, short_id, text};
 
 const GAP: f32 = 12.0;
@@ -80,12 +80,12 @@ impl GraphScreen {
     }
 
     /// Canvas + detail rects (detail appears with a selection when wide).
-    fn layout(&self, content: Rect) -> (Rect, Option<Rect>) {
+    fn layout(&self, content: Rect, theme: &Theme) -> (Rect, Option<Rect>) {
         let canvas = Rect::new(
             content.x,
-            content.y + FIELD_H + GAP,
+            content.y + field_h(theme) + GAP,
             content.w,
-            content.h - FIELD_H - GAP,
+            content.h - field_h(theme) - GAP,
         );
         if self.view.selected().is_some() && canvas.w >= 760.0 {
             let detail = Rect::new(canvas.x + canvas.w - DETAIL_W, canvas.y, DETAIL_W, canvas.h);
@@ -110,11 +110,14 @@ impl GraphScreen {
         event: &WidgetEvent,
         content: Rect,
         ctx: &GraphContext,
+        theme: &Theme,
     ) -> (EventResult, Action) {
-        let (canvas, detail) = self.layout(content);
+        let (canvas, detail) = self.layout(content, theme);
 
         // Fit button (controls row).
-        let r = self.fit_button.handle_event(event, self.fit_rect(content));
+        let r = self
+            .fit_button
+            .handle_event(event, self.fit_rect(content, theme));
         if r.clicked {
             self.view.fit_view();
             return (r, Action::None);
@@ -143,8 +146,8 @@ impl GraphScreen {
         (result, Action::None)
     }
 
-    fn fit_rect(&self, content: Rect) -> Rect {
-        let (w, h) = self.fit_button.preferred_size();
+    fn fit_rect(&self, content: Rect, theme: &Theme) -> Rect {
+        let (w, h) = self.fit_button.preferred_size(theme);
         Rect::new(content.x + content.w - w, content.y, w, h)
     }
 
@@ -165,7 +168,7 @@ impl GraphScreen {
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme, ctx: &GraphContext) {
         // Controls row: legend + fit button. The legend mirrors the
         // widget's default EdgeTones (0 dim, 1 accent, 2 info).
-        let legend_y = content.y + FIELD_H / 2.0 - 6.0;
+        let legend_y = content.y + field_h(theme) / 2.0 - 6.0;
         let mut lx = content.x;
         let label_style = TextStyle::new(11.0).with_weight(500);
         for (label, color) in [
@@ -173,7 +176,7 @@ impl GraphScreen {
             ("semantic", theme.colors.accent.0),
             ("citation", theme.colors.info.0),
         ] {
-            c.push(engine::ui::widgets::rounded_rect(
+            c.push(comps::prelude::rounded_rect(
                 lx,
                 legend_y + 2.0,
                 10.0,
@@ -192,9 +195,10 @@ impl GraphScreen {
             );
             lx += 16.0 + TextMeasurer::measure_styled(label, &label_style, None).0 + 20.0;
         }
-        self.fit_button.render(c, self.fit_rect(content), theme);
+        self.fit_button
+            .render(c, self.fit_rect(content, theme), theme);
 
-        let (canvas, detail) = self.layout(content);
+        let (canvas, detail) = self.layout(content, theme);
 
         if !self.error.is_empty() {
             let msg = self.error.clone();
@@ -282,8 +286,8 @@ impl GraphScreen {
         let x = (sx + 12.0).min(canvas.x + canvas.w - w - 4.0);
         let y = (sy - h - 10.0).max(canvas.y + 4.0);
         let rect = Rect::new(x, y, w, h);
-        c.push(menu_shadow(rect, theme.radius.md));
-        for node in engine::ui::widgets::glass_pill(
+        c.push(menu_shadow(rect, theme.radius.md, theme));
+        for node in comps::prelude::glass_pill(
             rect,
             theme.radius.md,
             theme.glass.edge_soft.0,
@@ -461,10 +465,25 @@ mod tests {
         let mut c = Compositor::new();
         screen.render(&mut c, content(), &theme, &ctx);
         let (sx, sy) = screen.view.node_screen_pos(0).unwrap();
-        screen.handle_event(&WidgetEvent::MouseMove { x: sx, y: sy }, content(), &ctx);
+        screen.handle_event(
+            &WidgetEvent::MouseMove { x: sx, y: sy },
+            content(),
+            &ctx,
+            &theme,
+        );
         assert_eq!(screen.view.hovered(), Some(0));
-        screen.handle_event(&WidgetEvent::MouseDown { x: sx, y: sy }, content(), &ctx);
-        let (r, _) = screen.handle_event(&WidgetEvent::MouseUp { x: sx, y: sy }, content(), &ctx);
+        screen.handle_event(
+            &WidgetEvent::MouseDown { x: sx, y: sy },
+            content(),
+            &ctx,
+            &theme,
+        );
+        let (r, _) = screen.handle_event(
+            &WidgetEvent::MouseUp { x: sx, y: sy },
+            content(),
+            &ctx,
+            &theme,
+        );
         assert!(r.clicked);
         assert_eq!(screen.view.selected(), Some(0));
         // Detail panel renders alongside.

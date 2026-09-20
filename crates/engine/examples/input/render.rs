@@ -51,7 +51,7 @@ impl InputDemoApp {
         let compositor = &mut self.compositor;
 
         // Header
-        compositor.draw_rect(0.0, 0.0, w, header_h, HEADER_BG);
+        compositor.draw_rect(0.0, 0.0, w, header_h, pal().header_bg);
         compositor.draw_text(
             TextNodeKey::from_style(
                 "INPUT SYSTEM",
@@ -60,7 +60,7 @@ impl InputDemoApp {
             ),
             margin,
             16.0,
-            TEXT,
+            pal().text,
         );
         compositor.draw_text(
             TextNodeKey::from_style(
@@ -70,9 +70,9 @@ impl InputDemoApp {
             ),
             margin,
             48.0,
-            TEXT_DIM,
+            pal().text_dim,
         );
-        compositor.draw_rect(0.0, header_h - 1.0, w, 1.0, DIVIDER);
+        compositor.draw_rect(0.0, header_h - 1.0, w, 1.0, pal().divider);
 
         let btn_x;
         let btn_y;
@@ -109,8 +109,8 @@ impl InputDemoApp {
 
         // Footer
         let footer_y = h - footer_h;
-        compositor.draw_rect(0.0, footer_y - 1.0, w, 1.0, DIVIDER);
-        compositor.draw_rect(0.0, footer_y, w, footer_h, FOOTER_BG);
+        compositor.draw_rect(0.0, footer_y - 1.0, w, 1.0, pal().divider);
+        compositor.draw_rect(0.0, footer_y, w, footer_h, pal().footer_bg);
         compositor.draw_text(
             TextNodeKey::from_style(
                 "InputState  |  ViewId hit testing  |  Gesture recognizer",
@@ -119,7 +119,7 @@ impl InputDemoApp {
             ),
             margin,
             footer_y + 9.0,
-            TEXT_DIM,
+            pal().text_dim,
         );
 
         // Register hit regions
@@ -149,7 +149,7 @@ impl InputDemoApp {
         button_hovered: bool,
         click_count: u32,
     ) {
-        card(compositor, left_x, content_y, left_w, card_h, ACCENT);
+        card(compositor, left_x, content_y, left_w, card_h, pal().accent);
 
         compositor.draw_text(
             TextNodeKey::from_style(
@@ -159,14 +159,20 @@ impl InputDemoApp {
             ),
             left_x + 16.0,
             content_y + 16.0,
-            ACCENT,
+            pal().accent,
         );
-        compositor.draw_rect(left_x + 16.0, content_y + 36.0, left_w - 32.0, 1.0, DIVIDER);
+        compositor.draw_rect(
+            left_x + 16.0,
+            content_y + 36.0,
+            left_w - 32.0,
+            1.0,
+            pal().divider,
+        );
 
         let (btn_bg, btn_label_color) = if button_hovered {
-            (BTN_HOVER, TEXT)
+            (pal().btn_hover, pal().text)
         } else {
-            (BTN_NORMAL, TEXT_MID)
+            (pal().btn_normal, pal().text_mid)
         };
 
         compositor.draw_rect(
@@ -174,7 +180,7 @@ impl InputDemoApp {
             btn_y - 1.0,
             btn_w + 2.0,
             btn_h + 2.0,
-            BTN_BORDER,
+            pal().btn_border,
         );
         compositor.draw_rect(btn_x, btn_y, btn_w, btn_h, btn_bg);
         // Center the label from its measured size: the same style measures
@@ -206,7 +212,7 @@ impl InputDemoApp {
             ),
             counter_x + 12.0,
             counter_y + 8.0,
-            TEXT_DIM,
+            pal().text_dim,
         );
         let count_str = format!("{click_count}");
         compositor.draw_text(
@@ -217,7 +223,7 @@ impl InputDemoApp {
             ),
             counter_x + 12.0,
             counter_y + 24.0,
-            ACCENT,
+            pal().accent,
         );
 
         let hint_text = if button_hovered {
@@ -225,7 +231,11 @@ impl InputDemoApp {
         } else {
             "State: idle"
         };
-        let hint_color = if button_hovered { ACCENT } else { TEXT_DIM };
+        let hint_color = if button_hovered {
+            pal().accent
+        } else {
+            pal().text_dim
+        };
         compositor.draw_text(
             TextNodeKey::from_style(hint_text, &body_style(11.0, 14.0), Some(left_w - 32.0)),
             left_x + 16.0,
@@ -241,7 +251,7 @@ impl InputDemoApp {
         right_w: f32,
         card_h: f32,
     ) {
-        card(compositor, right_x, content_y, right_w, card_h, CYAN);
+        card(compositor, right_x, content_y, right_w, card_h, pal().cyan);
 
         compositor.draw_text(
             TextNodeKey::from_style(
@@ -251,14 +261,14 @@ impl InputDemoApp {
             ),
             right_x + 16.0,
             content_y + 16.0,
-            CYAN,
+            pal().cyan,
         );
         compositor.draw_rect(
             right_x + 16.0,
             content_y + 36.0,
             right_w - 32.0,
             1.0,
-            DIVIDER,
+            pal().divider,
         );
 
         let ev_x = right_x + 16.0;
@@ -273,24 +283,24 @@ impl InputDemoApp {
         ];
 
         for (name, desc) in &events_list {
-            compositor.draw_rect(ev_x, ey + 4.0, 4.0, 4.0, CYAN);
+            compositor.draw_rect(ev_x, ey + 4.0, 4.0, 4.0, pal().cyan);
             compositor.draw_text(
                 TextNodeKey::from_style(name, &label_style(14.0, 20.0), Some(ev_max_w - 16.0)),
                 ev_x + 12.0,
                 ey,
-                TEXT,
+                pal().text,
             );
             ey += 20.0;
             compositor.draw_text(
                 TextNodeKey::from_style(desc, &code_style(11.0, 14.0), Some(ev_max_w - 16.0)),
                 ev_x + 12.0,
                 ey,
-                TEXT_DIM,
+                pal().text_dim,
             );
             ey += 24.0;
         }
 
-        compositor.draw_rect(right_x + 16.0, ey + 8.0, right_w - 32.0, 1.0, DIVIDER);
+        compositor.draw_rect(right_x + 16.0, ey + 8.0, right_w - 32.0, 1.0, pal().divider);
         compositor.draw_text(
             TextNodeKey::from_style(
                 "Hit regions: register_hit_region(id, x, y, w, h)",
@@ -299,7 +309,7 @@ impl InputDemoApp {
             ),
             ev_x,
             ey + 18.0,
-            ACCENT_DIM,
+            pal().accent_dim,
         );
     }
 }

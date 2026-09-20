@@ -1,5 +1,5 @@
 //! Charts section: line with axes/grid/dots, bars, stacked area and donut
-//! with legend, all drawn from `engine::charts` (the pure tested geometry
+//! with legend, all drawn from `comps::charts` (the pure tested geometry
 //! core + scene-node emission, promoted from this app in engine F3). The 2x2 grid is
 //! content-driven and stacks to one column in narrow windows (cards.rs
 //! pattern). A Tween reveal in the style of the old makepad_charts demo
@@ -9,10 +9,10 @@
 #[cfg(test)]
 mod tests;
 
+use comps::prelude::{EventResult, Rect, WidgetEvent};
 use engine::animation::{Easing, Tween};
 use engine::compositor::Compositor;
 use engine::theme::Theme;
-use engine::ui::widgets::{EventResult, Rect, WidgetEvent};
 
 use super::{group_label, panel, text};
 
@@ -136,10 +136,10 @@ impl ChartsSection {
             let (w, h) = ((p.w - PAD * 2.0).max(0.0), (p.h - HEAD_H - PAD).max(0.0));
             Rect::new(p.x + PAD, p.y + HEAD_H, w, h)
         };
-        engine::charts::draw::line(c, &self.line_data, inner(&rects[0]), theme, r);
-        engine::charts::draw::bars(c, &self.bar_data, inner(&rects[1]), theme, r);
-        engine::charts::draw::area(c, &self.area_a, &self.area_b, inner(&rects[2]), theme, r);
-        engine::charts::draw::donut(c, &self.donut_items, inner(&rects[3]), theme, r);
+        comps::charts::draw::line(c, &self.line_data, inner(&rects[0]), theme, r);
+        comps::charts::draw::bars(c, &self.bar_data, inner(&rects[1]), theme, r);
+        comps::charts::draw::area(c, &self.area_a, &self.area_b, inner(&rects[2]), theme, r);
+        comps::charts::draw::donut(c, &self.donut_items, inner(&rects[3]), theme, r);
 
         let bottom = rects.iter().map(|p| p.y + p.h).fold(content.y, f32::max);
         text(

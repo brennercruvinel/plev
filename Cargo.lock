@@ -781,6 +781,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "comps"
+version = "0.1.0"
+dependencies = [
+ "engine",
+ "env_logger",
+ "pollster",
+ "rope",
+ "rustc-hash 2.1.2",
+ "unicode-segmentation",
+ "web-time",
+ "wgpu",
+ "winit",
+]
+
+[[package]]
 name = "concurrent-queue"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1130,7 +1145,6 @@ dependencies = [
  "notify",
  "notify-debouncer-full",
  "pollster",
- "rope",
  "rustc-hash 2.1.2",
  "serde",
  "serde_json",
@@ -2349,6 +2363,7 @@ checksum = "3d3067d79b975e8844ca9eb072e16b31c3c1c36928edf9c6789548c524d0d954"
 name = "ide"
 version = "0.1.0"
 dependencies = [
+ "comps",
  "engine",
  "env_logger",
  "git",
@@ -4146,6 +4161,7 @@ name = "showcase"
 version = "0.1.0"
 dependencies = [
  "android_logger",
+ "comps",
  "console_error_panic_hook",
  "console_log",
  "engine",

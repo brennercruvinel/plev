@@ -6,6 +6,7 @@ mod builder_tour;
 mod buttons;
 mod cards;
 mod charts;
+mod chrome;
 mod dock;
 mod effects;
 mod extras;
@@ -18,26 +19,15 @@ mod typography;
 
 pub use forms::EditKey;
 
+use comps::nav::{NavLink, PanelHeader, Sidebar};
+use comps::overlay::{OverlayId, OverlayKind, OverlayManager};
+use comps::prelude::{
+    AppShell, ContextMenu, EventResult, Modal, ModalAction, Rect, ToastManager, WidgetEvent,
+    rounded_rect, rounded_rect_stroke,
+};
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
-use engine::overlay::{OverlayId, OverlayKind, OverlayManager};
 use engine::theme::{Intent, Theme};
-use engine::ui::icons;
-use engine::ui::widgets::{
-    ContextMenu, EventResult, Modal, ModalAction, Rect, ToastManager, WidgetEvent, rounded_rect,
-    rounded_rect_stroke,
-};
-
-pub const SIDEBAR_W: f32 = 248.0;
-const PAD: f32 = 40.0;
-/// Vertical space used by the section header (title + blurb).
-const HEADER_H: f32 = 78.0;
-/// HOFF nav link height (48px, radius 12).
-const NAV_H: f32 = 48.0;
-/// Sidebar logo block height: the nav links start below it.
-const SIDEBAR_TOP: f32 = 96.0;
-/// Sidebar footer band (two hint lines + margin) at the window bottom.
-const SIDEBAR_FOOTER_H: f32 = 64.0;
 
 // ---------------------------------------------------------------------------
 // Sections
@@ -59,10 +49,11 @@ pub enum Section {
     Extras,
     Typography,
     Effects,
+    Chrome,
 }
 
 impl Section {
-    pub const ALL: [Section; 14] = [
+    pub const ALL: [Section; 15] = [
         Section::Cards,
         Section::Buttons,
         Section::Forms,
@@ -77,6 +68,7 @@ impl Section {
         Section::Extras,
         Section::Typography,
         Section::Effects,
+        Section::Chrome,
     ];
 
     fn title(self) -> &'static str {
@@ -95,6 +87,7 @@ impl Section {
             Section::Extras => "Extras",
             Section::Typography => "Typography",
             Section::Effects => "Effects",
+            Section::Chrome => "Chrome",
         }
     }
 
@@ -114,6 +107,7 @@ impl Section {
             Section::Extras => "plus",
             Section::Typography => "info",
             Section::Effects => "moon",
+            Section::Chrome => "layout-grid",
         }
     }
 
@@ -122,9 +116,7 @@ impl Section {
             Section::Cards => {
                 "The HOFF card deck: one glass shell, six preview families with live data."
             }
-            Section::Buttons => {
-                "Variants, sizes, intents and states of engine::ui::widgets::Button."
-            }
+            Section::Buttons => "Variants, sizes, intents and states of comps::prelude::Button.",
             Section::Forms => "Checkbox, switch, slider, progress, select and tabs.",
             Section::Overlays => {
                 "Modal, context menu, tooltip and toasts — spring physics per intent."
@@ -148,6 +140,9 @@ impl Section {
             }
             Section::Effects => {
                 "Analytic shadows, gradients, backdrop blur, clip stack and tessellated vector shapes."
+            }
+            Section::Chrome => {
+                "The app frame: avatars, badges, panel header, nav links, breadcrumb, stats, code, skeleton, table."
             }
         }
     }
@@ -189,9 +184,9 @@ pub struct ShowcaseView {
     pub theme: Theme,
     pub theme_name: String,
     pub section: Section,
-    sidebar_hover: Option<usize>,
-    /// The rail's own scroll: 14 links x 52px overflow short windows.
-    sidebar_scroll: ScrollState,
+    /// The app chrome: sidebar by breakpoint (full, rail, drawer), the
+    /// section header, and the content rect the section lays out in.
+    pub shell: AppShell,
     /// Page-level vertical scroll, one per section: HOFF pages are taller
     /// than the window (Cards, Theme, …); without this the wheel is dead
     /// everywhere outside the virtualized list.
@@ -217,6 +212,7 @@ pub struct ShowcaseView {
     extras: extras::ExtrasSection,
     typography: typography::TypographySection,
     effects: effects::EffectsSection,
+    chrome: chrome::ChromeSection,
 }
 
 #[derive(Clone, Copy)]
@@ -229,10 +225,27 @@ struct Layers {
 impl ShowcaseView {
     pub fn new(width: f32, height: f32) -> Self {
         let theme = Theme::hoff();
+        let links = Section::ALL
+            .iter()
+            .enumerate()
+            .map(|(i, s)| {
+                NavLink::new(s.title())
+                    .icon(s.icon())
+                    .hint(format!("{}", i + 1))
+            })
+            .collect();
+        let sidebar = Sidebar::new(links)
+            .brand("plev", "HOFF DESIGN SYSTEM")
+            .footer(vec![
+                "T  cycle hoff / dark / light".into(),
+                "Esc  close overlays".into(),
+            ]);
+        let header = PanelHeader::new(Section::Cards.title()).blurb(Section::Cards.blurb());
         Self {
             width,
             height,
             scale_factor: 1.0,
+            shell: AppShell::new(sidebar, header, width, height),
             cards: cards::CardsSection::new(),
             forms: forms::FormsSection::new(&theme),
             buttons: buttons::ButtonsSection::new(),
@@ -244,14 +257,13 @@ impl ShowcaseView {
             dock: dock::DockSection::new(),
             app: app::AppSection::new(),
             builder_tour: builder_tour::BuilderSection::new(),
-            extras: extras::ExtrasSection::new(),
+            extras: extras::ExtrasSection::new(&theme),
             typography: typography::TypographySection::new(),
             effects: effects::EffectsSection::new(),
+            chrome: chrome::ChromeSection::new(&theme),
             theme,
             theme_name: "hoff".to_string(),
             section: Section::Cards,
-            sidebar_hover: None,
-            sidebar_scroll: ScrollState::new(),
             page_scroll: std::array::from_fn(|_| ScrollState::new()),
             overlay_mgr: OverlayManager::new(),
             layers: None,
@@ -264,16 +276,34 @@ impl ShowcaseView {
         self.width = width;
         self.height = height;
         self.scale_factor = scale_factor;
+        self.shell.resize(width, height);
     }
 
-    /// Content area to the right of the sidebar, below the header.
+    /// Switch the active section and keep the chrome in step (sidebar
+    /// link, header title and blurb).
+    fn set_section(&mut self, section: Section) {
+        self.section = section;
+        let idx = self.section_idx();
+        self.shell.sidebar.set_active(idx);
+        self.shell.header = PanelHeader::new(section.title()).blurb(section.blurb());
+    }
+
+    /// Content area the shell hands the section: past the sidebar, under
+    /// the header, inside the gutter, never narrower than a card.
     fn content_rect(&self) -> Rect {
-        Rect::new(
-            SIDEBAR_W + PAD,
-            PAD + HEADER_H,
-            (self.width - SIDEBAR_W - PAD * 2.0).max(200.0),
-            (self.height - PAD * 2.0 - HEADER_H).max(120.0),
-        )
+        let mut r = self.shell.layout(&self.theme).content;
+        r.w = r.w.max(self.theme.size.card_min_w);
+        r.h = r.h.max(self.theme.size.field_min_w);
+        r
+    }
+
+    /// The page column's left edge: the sidebar's right edge (zero when
+    /// the sidebar is a drawer).
+    fn page_x(&self) -> f32 {
+        self.shell
+            .layout(&self.theme)
+            .sidebar
+            .map_or(0.0, |r| r.x + r.w)
     }
 
     fn section_idx(&self) -> usize {
@@ -300,10 +330,10 @@ impl ShowcaseView {
     /// Natural (unclipped) height of the active section's content.
     fn section_content_height(&self, content: Rect) -> f32 {
         match self.section {
-            Section::Cards => self.cards.content_height(content),
-            Section::Buttons => self.buttons.content_height(content),
-            Section::Forms => self.forms.content_height(content),
-            Section::Overlays => self.overlays.content_height(content),
+            Section::Cards => self.cards.content_height(content, &self.theme),
+            Section::Buttons => self.buttons.content_height(content, &self.theme),
+            Section::Forms => self.forms.content_height(content, &self.theme),
+            Section::Overlays => self.overlays.content_height(content, &self.theme),
             // The lists page sizes itself to the viewport; the virtual list
             // and tree scroll internally.
             Section::Lists => content.h,
@@ -313,9 +343,10 @@ impl ShowcaseView {
             Section::Dock => self.dock.content_height(content),
             Section::App => self.app.content_height(content),
             Section::Builder => self.builder_tour.content_height(content),
-            Section::Extras => self.extras.content_height(content),
+            Section::Extras => self.extras.content_height(content, &self.theme),
             Section::Typography => self.typography.content_height(content),
             Section::Effects => self.effects.content_height(content, &self.theme),
+            Section::Chrome => self.chrome.content_height(content, &self.theme),
         }
     }
 
@@ -346,7 +377,7 @@ impl ShowcaseView {
             .iter()
             .find(|s| s.title().eq_ignore_ascii_case(name))
         {
-            self.section = *section;
+            self.set_section(*section);
         }
     }
 
@@ -357,6 +388,9 @@ impl ShowcaseView {
         // A focused text field owns the characters: "t" types, it does
         // not switch the theme.
         if self.section == Section::Forms && self.forms.handle_text(key) {
+            return true;
+        }
+        if self.section == Section::App && self.app.handle_text(key) {
             return true;
         }
         match key {
@@ -371,13 +405,13 @@ impl ShowcaseView {
             }
             d @ ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9") => {
                 let idx = d.as_bytes()[0] - b'1';
-                self.section = Section::ALL[idx as usize];
+                self.set_section(Section::ALL[idx as usize]);
                 true
             }
             // "0" reads as 10 (matching the sidebar numbering); sections
             // past the tenth are reachable via the sidebar.
             "0" if Section::ALL.len() >= 10 => {
-                self.section = Section::ALL[9];
+                self.set_section(Section::ALL[9]);
                 true
             }
             _ => false,
@@ -391,6 +425,9 @@ impl ShowcaseView {
         if self.section == Section::Forms && self.forms.handle_escape() {
             return true;
         }
+        if self.section == Section::App && self.app.handle_escape() {
+            return true;
+        }
         if self.forms.select_is_open() {
             self.forms.close_select();
             return true;
@@ -398,11 +435,20 @@ impl ShowcaseView {
         self.overlay_mgr.pop_animated().is_some()
     }
 
-    /// Non-character editing keys (Tab, Backspace, arrows…) forwarded by
-    /// the platform shell. Only the Forms section consumes them today:
-    /// Tab cycles its widgets, the rest edit the focused text field.
+    /// Non-character editing keys (Tab, Backspace, arrows) forwarded by
+    /// the platform shell. Forms: Tab cycles its widgets, the rest edit
+    /// the focused text field. App: the add field.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
-        self.section == Section::Forms && self.forms.handle_edit_key(key)
+        match self.section {
+            Section::Forms => self.forms.handle_edit_key(key),
+            Section::App => self.app.handle_edit_key(key),
+            _ => false,
+        }
+    }
+
+    /// Enter: the App section adds the field text as a todo.
+    pub fn handle_enter(&mut self) -> bool {
+        self.section == Section::App && self.app.handle_enter()
     }
 
     pub fn handle_right_click(&mut self, x: f32, y: f32) -> bool {
@@ -410,7 +456,7 @@ impl ShowcaseView {
             return false;
         }
         let content = self.page_rect();
-        if !self.overlays.menu_area(content).contains(x, y) {
+        if !self.overlays.menu_area(content, &self.theme).contains(x, y) {
             return false;
         }
         self.open_menu(x, y);
@@ -419,7 +465,7 @@ impl ShowcaseView {
 
     fn open_menu(&mut self, x: f32, y: f32) {
         let widget = overlays::demo_menu();
-        let (w, h) = widget.size();
+        let (w, h) = widget.size(&self.theme);
         // Keep the menu inside the viewport.
         let mx = x.min(self.width - w - 8.0);
         let my = y.min(self.height - h - 8.0);
@@ -464,7 +510,7 @@ impl ShowcaseView {
                 Intent::Neutral,
             )
         };
-        let dialog = widget.dialog_rect(self.width, self.height);
+        let dialog = widget.dialog_rect(&self.theme, self.width, self.height);
         let id = self.overlay_mgr.push_animated(
             OverlayKind::Modal {
                 title: widget.title.clone(),
@@ -489,7 +535,7 @@ impl ShowcaseView {
         let (vw, vh) = (self.width, self.height);
 
         // Toasts float above everything.
-        let toast_result = self.toasts.handle_event(event, vw, vh);
+        let toast_result = self.toasts.handle_event(event, &self.theme, vw, vh);
         if toast_result.clicked {
             return true;
         }
@@ -506,7 +552,7 @@ impl ShowcaseView {
             if !closing {
                 match active {
                     ActiveOverlay::Modal { widget, .. } => {
-                        let (action, r) = widget.handle_event(event, vw, vh);
+                        let (action, r) = widget.handle_event(event, &self.theme, vw, vh);
                         match action {
                             ModalAction::Confirm => {
                                 let destructive = widget.intent == Intent::Destructive;
@@ -531,7 +577,7 @@ impl ShowcaseView {
                         return r.changed || action != ModalAction::None;
                     }
                     ActiveOverlay::Menu { widget, x, y, .. } => {
-                        let (r, clicked) = widget.handle_event(event, *x, *y);
+                        let (r, clicked) = widget.handle_event(event, *x, *y, &self.theme);
                         if let Some(item) = clicked {
                             let label = overlays::menu_label(item);
                             self.overlay_mgr.pop_id_animated(id);
@@ -545,7 +591,7 @@ impl ShowcaseView {
                         if !r.handled
                             && let WidgetEvent::MouseDown { x: px, y: py } = *event
                         {
-                            let (w, h) = widget.size();
+                            let (w, h) = widget.size(&self.theme);
                             if !Rect::new(*x, *y, w, h).contains(px, py) {
                                 self.overlay_mgr.pop_id_animated(id);
                                 return true;
@@ -559,19 +605,32 @@ impl ShowcaseView {
 
         // Open select dropdown gets priority over everything beneath it.
         if self.section == Section::Forms && self.forms.select_is_open() {
-            let r = self.forms.route_select(event, self.page_rect());
+            let r = self
+                .forms
+                .route_select(event, self.page_rect(), &self.theme);
             if r.handled || r.changed {
                 return r.changed;
             }
         }
 
-        result = result.merge(self.handle_sidebar(event));
+        // The chrome first: sidebar navigation (a drawer is exclusive),
+        // the menu button on a phone.
+        let (shell_result, nav) = self.shell.handle_event(event, &self.theme);
+        if let Some(i) = nav {
+            self.set_section(Section::ALL[i]);
+            return true;
+        }
+        result = result.merge(shell_result);
+        if shell_result.handled {
+            return result.changed;
+        }
 
         // Clicks on the header band belong to the chrome: widgets scrolled
         // underneath it must not receive them.
         let viewport = self.content_rect();
+        let page_x = self.page_x();
         if let WidgetEvent::MouseDown { x, y } = *event
-            && x >= SIDEBAR_W
+            && x >= page_x
             && y < viewport.y
         {
             return result.changed;
@@ -579,11 +638,11 @@ impl ShowcaseView {
 
         let content = self.page_rect();
         let section_result = match self.section {
-            Section::Cards => self.cards.handle_event(event, content),
-            Section::Buttons => self.buttons.handle_event(event, content),
-            Section::Forms => self.forms.handle_event(event, content),
+            Section::Cards => self.cards.handle_event(event, content, &self.theme),
+            Section::Buttons => self.buttons.handle_event(event, content, &self.theme),
+            Section::Forms => self.forms.handle_event(event, content, &self.theme),
             Section::Overlays => {
-                let (r, action) = self.overlays.handle_event(event, content);
+                let (r, action) = self.overlays.handle_event(event, content, &self.theme);
                 match action {
                     overlays::OverlayAction::OpenModal { destructive } => {
                         self.open_modal(destructive)
@@ -601,15 +660,16 @@ impl ShowcaseView {
                 }
                 r
             }
-            Section::Lists => self.lists.handle_event(event, content),
+            Section::Lists => self.lists.handle_event(event, content, &self.theme),
             Section::Icons => self.icons_gallery.handle_event(event, content),
             Section::Charts => self.charts.handle_event(event, content),
             Section::Dock => self.dock.handle_event(event, content),
-            Section::App => self.app.handle_event(event, content),
+            Section::App => self.app.handle_event(event, content, &self.theme),
             Section::Builder => self.builder_tour.handle_event(event, content),
-            Section::Extras => self.extras.handle_event(event, content),
+            Section::Extras => self.extras.handle_event(event, content, &self.theme),
             Section::Typography => self.typography.handle_event(event, content),
             Section::Effects => self.effects.handle_event(event, content),
+            Section::Chrome => self.chrome.handle_event(event, content, &self.theme),
             Section::Theme => {
                 let (r, picked) = self.themes.handle_event(event, content);
                 if let Some(name) = picked {
@@ -620,26 +680,12 @@ impl ShowcaseView {
         };
         result = result.merge(section_result);
 
-        // Sidebar scroll: the 14 nav links are taller than a short window,
-        // so the rail scrolls on its own (the page scroll is for content).
-        if let WidgetEvent::Scroll { x, delta, .. } = *event
-            && !result.handled
-            && x < SIDEBAR_W
-        {
-            self.sync_sidebar_scroll();
-            let old = self.sidebar_scroll.offset();
-            self.sidebar_scroll.scroll_by(delta);
-            if self.sidebar_scroll.offset() != old {
-                result = result.merge(EventResult::changed());
-            }
-        }
-
         // Page scroll: when no widget consumed the wheel, scroll the
         // section itself (HOFF pages overflow the window). Clamped by
         // ScrollState; only an actual offset change requests a frame.
         if let WidgetEvent::Scroll { x, delta, .. } = *event
             && !result.handled
-            && x >= SIDEBAR_W
+            && x >= page_x
         {
             self.sync_page_scroll();
             let idx = self.section_idx();
@@ -652,85 +698,6 @@ impl ShowcaseView {
         }
 
         result.changed
-    }
-
-    /// Scrollable band of the sidebar: below the logo block, above the
-    /// footer hints. Derived from the window height, never a constant.
-    fn sidebar_viewport(&self) -> Rect {
-        Rect::new(
-            0.0,
-            SIDEBAR_TOP,
-            SIDEBAR_W,
-            (self.height - SIDEBAR_TOP - SIDEBAR_FOOTER_H).max(NAV_H),
-        )
-    }
-
-    /// Sync the sidebar scroll limits with the window height.
-    fn sync_sidebar_scroll(&mut self) {
-        let viewport = self.sidebar_viewport();
-        self.sidebar_scroll.set_viewport(viewport.h);
-        self.sidebar_scroll
-            .set_content(Section::ALL.len() as f32 * (NAV_H + 4.0));
-    }
-
-    fn handle_sidebar(&mut self, event: &WidgetEvent) -> EventResult {
-        let items = self.sidebar_item_rects();
-        let viewport = self.sidebar_viewport();
-        match *event {
-            WidgetEvent::MouseMove { x, y } => {
-                // Items scrolled outside the band are clipped visually; they
-                // must not hover or hit either.
-                let hit = if viewport.contains(x, y) {
-                    items.iter().position(|r| r.contains(x, y))
-                } else {
-                    None
-                };
-                if hit != self.sidebar_hover {
-                    self.sidebar_hover = hit;
-                    EventResult::changed()
-                } else {
-                    EventResult::IGNORED
-                }
-            }
-            WidgetEvent::MouseDown { x, y } => {
-                let hit = if viewport.contains(x, y) {
-                    items.iter().position(|r| r.contains(x, y))
-                } else {
-                    None
-                };
-                if let Some(i) = hit {
-                    if Section::ALL[i] != self.section {
-                        self.section = Section::ALL[i];
-                        return EventResult::clicked();
-                    }
-                    return EventResult {
-                        handled: true,
-                        ..EventResult::IGNORED
-                    };
-                }
-                EventResult::IGNORED
-            }
-            _ => EventResult::IGNORED,
-        }
-    }
-
-    fn sidebar_item_rects(&self) -> Vec<Rect> {
-        // HOFF sidebar: menu under the logo block, 48px links, 4px gap,
-        // shifted up by the sidebar's own scroll offset (the 14 links are
-        // taller than a short window; the rail scrolls independently).
-        let offset = self.sidebar_scroll.offset();
-        Section::ALL
-            .iter()
-            .enumerate()
-            .map(|(i, _)| {
-                Rect::new(
-                    12.0,
-                    SIDEBAR_TOP + i as f32 * (NAV_H + 4.0) - offset,
-                    SIDEBAR_W - 24.0,
-                    NAV_H,
-                )
-            })
-            .collect()
     }
 
     // -- Animation -------------------------------------------------------------
@@ -756,6 +723,13 @@ impl ShowcaseView {
         // Spinners rotate only while the Extras section is visible.
         if self.section == Section::Extras {
             animating |= self.extras.tick(dt);
+        }
+        if self.section == Section::Chrome {
+            animating |= self.chrome.tick(dt);
+        }
+        // The todo app blinks its caret only while visible.
+        if self.section == Section::App {
+            animating |= self.app.tick(dt);
         }
 
         // Drop overlay widgets whose exit animation finished.
@@ -783,9 +757,10 @@ impl ShowcaseView {
         let layers = self.ensure_layers(c);
         let theme = self.theme.clone();
 
-        self.sync_sidebar_scroll();
-        self.render_sidebar(c, &theme);
-        self.render_header(c, &theme);
+        // The chrome: header on the default layer, the sidebar on the
+        // overlay layer so a drawer sits above the content.
+        self.shell
+            .render(c, LayerId::DEFAULT, layers.overlay, &theme);
 
         // Keep the page scroll clamped to the current viewport/content
         // (resize can shrink content; the offset must follow).
@@ -810,10 +785,11 @@ impl ShowcaseView {
 
         // Scrolled section content clips to the viewport below the header
         // (PushClip rects are logical; the encoder scales them to physical).
+        let page_x = self.page_x();
         c.push(SceneNode::PushClip {
-            x: SIDEBAR_W,
+            x: page_x,
             y: viewport.y,
-            w: self.width - SIDEBAR_W,
+            w: self.width - page_x,
             h: viewport.h,
         });
         match self.section {
@@ -835,6 +811,7 @@ impl ShowcaseView {
             Section::Extras => self.extras.render(c, content, &theme),
             Section::Typography => self.typography.render(c, content, &theme),
             Section::Effects => self.effects.render(c, content, &theme),
+            Section::Chrome => self.chrome.render(c, content, &theme),
         }
         c.push(SceneNode::PopClip);
 
@@ -858,154 +835,6 @@ impl ShowcaseView {
 
         self.toasts
             .render(c, layers.toast, &theme, self.width, self.height);
-    }
-
-    fn render_sidebar(&self, c: &mut Compositor, theme: &Theme) {
-        let glass = &theme.glass;
-        let text_c = theme.colors.text;
-
-        // HOFF sidebar rail: the raised opaque panel tone (#2E2E2E, measured
-        // live) — a touch darker than the #303030 page, same as the real app.
-        c.push(SceneNode::Rect {
-            x: 0.0,
-            y: 0.0,
-            w: SIDEBAR_W,
-            h: self.height,
-            color: theme.colors.surface.0,
-        });
-
-        // Logo block: gradient-text feel (primary name, faint subtitle).
-        text(c, "plev", 20.0, 600, 24.0, 26.0, text_c.0);
-        text(
-            c,
-            "HOFF DESIGN SYSTEM",
-            10.0,
-            600,
-            24.0,
-            54.0,
-            glass.text_placeholder.0,
-        );
-
-        // Nav links live in their own scrollable band (sidebar_scroll),
-        // clipped so scrolled links never paint over the logo or footer.
-        let band = self.sidebar_viewport();
-        c.push(SceneNode::PushClip {
-            x: band.x,
-            y: band.y,
-            w: band.w,
-            h: band.h,
-        });
-        for (i, (section, rect)) in Section::ALL
-            .iter()
-            .zip(self.sidebar_item_rects())
-            .enumerate()
-        {
-            let active = *section == self.section;
-            let hovered = self.sidebar_hover == Some(i);
-            // NavLink: radius 12, hover .05, active .10 + edge stroke.
-            if active || hovered {
-                c.push(rounded_rect(
-                    rect.x,
-                    rect.y,
-                    rect.w,
-                    rect.h,
-                    theme.radius.md,
-                    if active {
-                        glass.surface_active.0
-                    } else {
-                        glass.surface_hover.0
-                    },
-                ));
-            }
-            if active {
-                c.push(rounded_rect_stroke(
-                    rect.x,
-                    rect.y,
-                    rect.w,
-                    rect.h,
-                    theme.radius.md,
-                    glass.edge.0,
-                    1.0,
-                ));
-            }
-            // Label: rgba($n2,.4) -> .56 hover -> .76 active, base-2sm.
-            let fg = if active {
-                with_alpha(text_c.0, text_c.0[3] * 0.8)
-            } else if hovered {
-                with_alpha(text_c.0, text_c.0[3] * 0.59)
-            } else {
-                glass.text_faint.0
-            };
-            // Icon in its 32px slot (pad 6 + centered 18px glyph).
-            if let Some(node) =
-                icons::icon_at(section.icon(), 18.0, fg, rect.x + 13.0, rect.y + 15.0)
-            {
-                c.push(node);
-            }
-            text(
-                c,
-                section.title(),
-                14.0,
-                600,
-                rect.x + 44.0,
-                rect.y + (rect.h - 14.0 * 1.4) / 2.0,
-                fg,
-            );
-            text(
-                c,
-                &format!("{}", i + 1),
-                12.0,
-                400,
-                rect.x + rect.w - 22.0,
-                rect.y + (rect.h - 12.0 * 1.33) / 2.0,
-                glass.text_placeholder.0,
-            );
-        }
-        c.push(SceneNode::PopClip);
-
-        // Footer hints (sidebar foot, timestamps alpha).
-        let hint_y = self.height - 56.0;
-        text(
-            c,
-            "T  cycle hoff / dark / light",
-            11.0,
-            400,
-            24.0,
-            hint_y,
-            glass.text_placeholder.0,
-        );
-        text(
-            c,
-            "Esc  close overlays",
-            11.0,
-            400,
-            24.0,
-            hint_y + 18.0,
-            glass.text_placeholder.0,
-        );
-    }
-
-    fn render_header(&self, c: &mut Compositor, theme: &Theme) {
-        let x = SIDEBAR_W + PAD;
-        // Column header: title 20/1.2/500 (HOFF title mixin).
-        text(
-            c,
-            self.section.title(),
-            20.0,
-            500,
-            x,
-            PAD,
-            theme.colors.text.0,
-        );
-        text(
-            c,
-            self.section.blurb(),
-            14.0,
-            400,
-            x,
-            PAD + 32.0,
-            theme.colors.text_dim.0,
-        );
     }
 }
 
@@ -1082,57 +911,68 @@ mod tests {
         assert_eq!(view.theme.colors.bg.0, engine::theme::hoff::PAGE_BG.0);
     }
 
-    // -- Sidebar responsiveness (14 links x 52px need ~824px of height) ----
+    // -- Sidebar responsiveness (14 links overflow short windows) ----------
+
+    /// The sidebar's link rects at the current viewport.
+    fn link_rects(view: &ShowcaseView) -> Vec<Rect> {
+        let sb = &view.shell.sidebar;
+        let rect = sb.rect(&view.theme, view.width, view.height).unwrap();
+        sb.link_rects(rect, &view.theme, sb.mode(&view.theme, view.width))
+    }
+
+    fn band(view: &ShowcaseView) -> Rect {
+        let sb = &view.shell.sidebar;
+        let rect = sb.rect(&view.theme, view.width, view.height).unwrap();
+        sb.band(rect, &view.theme, sb.mode(&view.theme, view.width))
+    }
 
     #[test]
     fn sidebar_scrolls_in_short_windows_and_stays_put_in_tall_ones() {
         // Short: the links overflow the band, the rail becomes scrollable.
-        let mut view = ShowcaseView::new(1024.0, 600.0);
+        let mut view = ShowcaseView::new(1280.0, 500.0);
         let mut c = Compositor::new();
         view.render(&mut c);
+        let last_before = link_rects(&view).last().unwrap().y;
+        let band_bottom = band(&view).bottom();
         assert!(
-            view.sidebar_scroll.is_scrollable(),
-            "600px window: 14 links must overflow the sidebar band"
-        );
-        let last_before = view.sidebar_item_rects().last().unwrap().y;
-        let band_bottom = view.sidebar_viewport().y + view.sidebar_viewport().h;
-        assert!(
-            last_before + NAV_H > band_bottom,
-            "last link must start below the visible band"
+            last_before + NavLink::height(&view.theme) > band_bottom,
+            "500px window: the last link must start below the visible band"
         );
 
         // Wheel over the rail scrolls the rail, not the page.
+        let (bx, by) = band(&view).center();
         let changed = view.handle_event(&WidgetEvent::Scroll {
-            x: 100.0,
-            y: 400.0,
+            x: bx,
+            y: by,
             delta: 200.0,
         });
         assert!(changed, "sidebar scroll must request a redraw");
-        assert!(view.sidebar_scroll.offset() > 0.0);
         assert_eq!(view.page_offset(), 0.0, "page must not scroll");
-        let last_after = view.sidebar_item_rects().last().unwrap().y;
+        let last_after = link_rects(&view).last().unwrap().y;
         assert!(last_after < last_before, "links must move up");
 
-        // Tall: everything fits, the offset stays clamped at zero.
-        let mut tall = ShowcaseView::new(1200.0, 1000.0);
+        // Tall: everything fits, nothing moves.
+        let mut tall = ShowcaseView::new(1280.0, 1100.0);
         tall.render(&mut c);
-        assert!(!tall.sidebar_scroll.is_scrollable());
+        let (bx, by) = band(&tall).center();
+        let before = link_rects(&tall)[0].y;
         let changed = tall.handle_event(&WidgetEvent::Scroll {
-            x: 100.0,
-            y: 400.0,
+            x: bx,
+            y: by,
             delta: 200.0,
         });
         assert!(!changed, "nothing to scroll: no redraw");
-        assert_eq!(tall.sidebar_scroll.offset(), 0.0);
+        assert_eq!(link_rects(&tall)[0].y, before);
     }
 
     #[test]
     fn sidebar_links_clip_to_their_band_and_do_not_hit_outside_it() {
-        let mut view = ShowcaseView::new(1024.0, 600.0);
+        let mut view = ShowcaseView::new(1280.0, 500.0);
         let mut c = Compositor::new();
         view.render(&mut c);
-        let band = view.sidebar_viewport();
-        let has_band_clip = c.layer(LayerId::DEFAULT).unwrap().nodes().iter().any(|n| {
+        let band = band(&view);
+        let overlay = view.layers.unwrap().overlay;
+        let has_band_clip = c.layer(overlay).unwrap().nodes().iter().any(|n| {
             matches!(n, SceneNode::PushClip { x, y, w, h }
                     if *x == band.x && *y == band.y && *w == band.w && *h == band.h)
         });
@@ -1140,24 +980,31 @@ mod tests {
 
         // A point below the band (footer zone) must not hover a link that
         // scrolled-space-wise would live there.
-        let below = band.y + band.h + 10.0;
+        let below = band.bottom() + 2.0;
         assert!(below < view.height, "test point must be inside the window");
         assert!(
             !view.handle_event(&WidgetEvent::MouseMove { x: 100.0, y: below }),
             "footer zone must not hover a clipped link"
         );
-        assert_eq!(view.sidebar_hover, None);
+        assert!(view.shell.sidebar.links.iter().all(|l| !l.is_hovered()));
     }
 
     #[test]
     fn sidebar_labels_fit_their_slot_in_the_ui_font() {
-        // The label sits between the icon (x+44) and the index number
-        // (right edge - 22): measure every title in the embedded UI font
-        // (Inclusive Sans 14/600, the base-2sm style the rail draws with).
-        let slot = SIDEBAR_W - 24.0 - 44.0 - 22.0 - 8.0;
-        let style = engine::text::TextStyle::new(14.0)
-            .with_line_height(14.0 * 1.4)
-            .with_weight(600);
+        // Every section title fits the full sidebar's link width with the
+        // icon slot, the shortcut hint and the paddings taken out.
+        let view = ShowcaseView::new(1280.0, 800.0);
+        let t = &view.theme;
+        let link_w = link_rects(&view)[0].w;
+        let style = NavLink::label_style(t);
+        let (hint_w, _) =
+            engine::text::TextMeasurer::measure_styled("14", &t.typography.caption_r(), None);
+        let slot = link_w
+            - t.spacing.sm * 2.0
+            - NavLink::icon_slot(t)
+            - t.spacing.xs
+            - hint_w
+            - t.spacing.sm;
         for section in Section::ALL {
             let (w, _) = engine::text::TextMeasurer::measure_styled(section.title(), &style, None);
             assert!(
@@ -1168,12 +1015,52 @@ mod tests {
     }
 
     #[test]
+    fn sidebar_follows_the_breakpoint() {
+        let t = Theme::hoff();
+        // Desktop: the full sidebar takes its token width from the page.
+        let wide = ShowcaseView::new(1400.0, 900.0);
+        assert_eq!(wide.page_x(), t.size.sidebar_w);
+        // Narrow desktop window: the rail.
+        let medium = ShowcaseView::new(800.0, 700.0);
+        assert_eq!(medium.page_x(), t.size.sidebar_rail_w);
+        // Phone: a drawer behind the menu button; the page spans the width.
+        let mut phone = ShowcaseView::new(390.0, 844.0);
+        assert_eq!(phone.page_x(), 0.0);
+        let mb = phone
+            .shell
+            .layout(&t)
+            .menu_button
+            .expect("menu button on a phone");
+        let (x, y) = mb.center();
+        phone.handle_event(&WidgetEvent::MouseDown { x, y });
+        assert!(phone.handle_event(&WidgetEvent::MouseUp { x, y }));
+        assert!(phone.shell.sidebar.drawer_open);
+        // Navigating from the drawer switches the section and closes it.
+        let rects = link_rects(&phone);
+        let (x, y) = rects[4].center();
+        phone.handle_event(&WidgetEvent::MouseDown { x, y });
+        assert!(phone.handle_event(&WidgetEvent::MouseUp { x, y }));
+        assert_eq!(phone.section, Section::Lists);
+        assert!(!phone.shell.sidebar.drawer_open);
+        // Every section renders on the phone.
+        for section in Section::ALL {
+            phone.set_section(section);
+            let mut c = Compositor::new();
+            phone.render(&mut c);
+            assert!(
+                c.layer(LayerId::DEFAULT).unwrap().nodes().len() > 10,
+                "{section:?}"
+            );
+        }
+    }
+
+    #[test]
     fn every_section_renders_in_short_viewports() {
         // Width-only probes missed the sidebar overflow: pin short heights.
         for (w, h) in [(1280.0, 700.0), (1024.0, 600.0)] {
             let mut view = ShowcaseView::new(w, h);
             for section in Section::ALL {
-                view.section = section;
+                view.set_section(section);
                 let mut c = Compositor::new();
                 view.render(&mut c);
                 let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().len();
@@ -1218,18 +1105,39 @@ mod tests {
     }
 
     #[test]
+    fn app_section_add_field_takes_typing_enter_and_escape_through_the_chrome() {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        view.jump_to_section("app");
+        let mut c = Compositor::new();
+        view.render(&mut c);
+        // Click the add field (top of the app card), then type through
+        // the chrome's key routes: "t" must type, not switch the theme.
+        let content = view.page_rect();
+        let (x, y) = view.app.input_rect(content, &view.theme).center();
+        assert!(view.handle_event(&WidgetEvent::MouseDown { x, y }));
+        assert!(view.handle_key("t"));
+        assert_eq!(view.theme_name, "hoff", "typing must not cycle the theme");
+        assert!(view.handle_key("x"));
+        assert!(view.handle_edit_key(EditKey::Backspace));
+        assert!(view.handle_enter(), "Enter adds the todo");
+        assert!(view.tick(1.0 / 60.0), "a focused field keeps frames coming");
+        assert!(view.close_top_overlay(), "Escape blurs the field first");
+        assert!(!view.handle_key("x"), "blurred: characters fall through");
+    }
+
+    #[test]
     fn sidebar_offers_one_nav_link_per_section() {
         let view = ShowcaseView::new(1200.0, 800.0);
-        let rects = view.sidebar_item_rects();
+        let rects = link_rects(&view);
         assert_eq!(rects.len(), Section::ALL.len());
-        assert!(rects.iter().all(|r| r.h == NAV_H));
+        assert!(rects.iter().all(|r| r.h == NavLink::height(&view.theme)));
     }
 
     #[test]
     fn every_section_renders_a_scene() {
         let mut view = ShowcaseView::new(1200.0, 800.0);
         for section in Section::ALL {
-            view.section = section;
+            view.set_section(section);
             let mut c = Compositor::new();
             view.render(&mut c);
             let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().len();
@@ -1253,7 +1161,7 @@ mod tests {
     #[test]
     fn probe_scroll_over_virtual_list_reports_change_and_shifts_rows() {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        view.section = Section::Lists;
+        view.set_section(Section::Lists);
         let mut c = Compositor::new();
         view.render(&mut c);
 
@@ -1282,7 +1190,7 @@ mod tests {
     #[test]
     fn probe_hover_over_sidebar_reports_change() {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        let rect = view.sidebar_item_rects()[2];
+        let rect = link_rects(&view)[2];
         let (cx, cy) = rect.center();
         assert!(
             view.handle_event(&WidgetEvent::MouseMove { x: cx, y: cy }),
@@ -1301,7 +1209,7 @@ mod tests {
     #[test]
     fn probe_hover_over_buttons_reports_change() {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        view.section = Section::Buttons;
+        view.set_section(Section::Buttons);
         let content = view.content_rect();
         // First button row starts after the group label.
         let (cx, cy) = (content.x + 30.0, content.y + 24.0 + 22.0);
@@ -1321,9 +1229,10 @@ mod tests {
     #[test]
     fn probe_click_sidebar_switches_section_and_reports_change() {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        let rect = view.sidebar_item_rects()[4]; // Lists
+        let rect = link_rects(&view)[4]; // Lists
         let (cx, cy) = rect.center();
-        assert!(view.handle_event(&WidgetEvent::MouseDown { x: cx, y: cy }));
+        view.handle_event(&WidgetEvent::MouseDown { x: cx, y: cy });
+        assert!(view.handle_event(&WidgetEvent::MouseUp { x: cx, y: cy }));
         assert_eq!(view.section, Section::Lists);
     }
 
@@ -1331,7 +1240,7 @@ mod tests {
     fn probe_ticks_settle_with_no_input() {
         let mut view = ShowcaseView::new(1200.0, 800.0);
         for section in Section::ALL {
-            view.section = section;
+            view.set_section(section);
             let mut c = Compositor::new();
             view.render(&mut c);
             let mut animating = true;
@@ -1349,7 +1258,7 @@ mod tests {
     fn probe_idle_rerender_is_stable() {
         let mut view = ShowcaseView::new(1200.0, 800.0);
         for section in Section::ALL {
-            view.section = section;
+            view.set_section(section);
             let mut c = Compositor::new();
             view.render(&mut c);
             view.tick(1.0 / 60.0);
@@ -1373,7 +1282,7 @@ mod tests {
     fn wheel_scrolls_overflowing_sections_and_requests_redraw() {
         for section in [Section::Cards, Section::Theme] {
             let mut view = ShowcaseView::new(1200.0, 800.0);
-            view.section = section;
+            view.set_section(section);
             let mut c = Compositor::new();
             view.render(&mut c);
 
@@ -1409,7 +1318,7 @@ mod tests {
     #[test]
     fn page_scroll_shifts_rendered_nodes_and_clips_to_viewport() {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        view.section = Section::Theme;
+        view.set_section(Section::Theme);
         let mut c = Compositor::new();
         view.render(&mut c);
         let y_before =
@@ -1432,19 +1341,20 @@ mod tests {
         // The scrolled content is wrapped in a clip to the content viewport
         // (the sidebar band has its own clip at x=0 — find the content one).
         let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes();
+        let page_x = view.page_x();
         let clip = nodes.iter().find_map(|n| match n {
-            SceneNode::PushClip { x, y, w, h } if *x == SIDEBAR_W => Some((*x, *y, *w, *h)),
+            SceneNode::PushClip { x, y, w, h } if *x == page_x => Some((*x, *y, *w, *h)),
             _ => None,
         });
         let clip = clip.expect("section content must be clipped while scrolled");
-        assert_eq!(clip.0, SIDEBAR_W);
+        assert_eq!(clip.0, page_x);
         assert_eq!(clip.1, content.y);
     }
 
     #[test]
     fn scroll_over_virtual_list_keeps_priority_over_page_scroll() {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        view.section = Section::Lists;
+        view.set_section(Section::Lists);
         let mut c = Compositor::new();
         view.render(&mut c);
 
@@ -1466,7 +1376,7 @@ mod tests {
     #[test]
     fn clicks_on_the_header_band_do_not_reach_scrolled_widgets() {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        view.section = Section::Theme;
+        view.set_section(Section::Theme);
         let mut c = Compositor::new();
         view.render(&mut c);
 
@@ -1487,7 +1397,7 @@ mod tests {
     #[test]
     fn probe_event_change_marks_compositor_needs_render() {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        view.section = Section::Lists;
+        view.set_section(Section::Lists);
         let mut c = Compositor::new();
         view.render(&mut c);
         c.resolve_scene((1200.0, 800.0));

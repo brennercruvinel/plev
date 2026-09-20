@@ -742,6 +742,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "comps"
+version = "0.1.0"
+dependencies = [
+ "engine",
+ "rope",
+ "rustc-hash 2.1.3",
+ "unicode-segmentation",
+ "web-time",
+ "winit",
+]
+
+[[package]]
 name = "concurrent-queue"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1098,7 +1110,6 @@ dependencies = [
  "lyon_tessellation",
  "macros",
  "pollster",
- "rope",
  "rustc-hash 2.1.3",
  "serde",
  "serde_json",
@@ -3679,6 +3690,7 @@ name = "urnaui"
 version = "0.1.0"
 dependencies = [
  "android_logger",
+ "comps",
  "console_error_panic_hook",
  "console_log",
  "engine",

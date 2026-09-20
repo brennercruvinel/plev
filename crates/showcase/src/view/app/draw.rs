@@ -2,11 +2,11 @@
 //! module; everything here only reads it and pushes nodes. Every text run
 //! is measured and drawn through one shared TextStyle.
 
+use comps::icons;
+use comps::prelude::{Rect, glass_pill, rounded_rect};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::TextMeasurer;
 use engine::theme::Theme;
-use engine::ui::icons;
-use engine::ui::widgets::{Rect, glass_pill, rounded_rect, rounded_rect_stroke};
 use showcase::model::todo::Filter;
 
 use super::AppSection;
@@ -16,7 +16,7 @@ use crate::view::{panel, text, with_alpha};
 impl AppSection {
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {
         self.sync_rows();
-        let l = compute(content, &self.counter_text());
+        let l = compute(content, &self.counter_text(), theme);
         self.sync_scroll(&l);
         panel(c, l.panel, theme);
         self.render_input(c, &l, theme);
@@ -24,41 +24,8 @@ impl AppSection {
         self.render_footer(c, &l, theme);
     }
 
-    /// HOFF glass chrome around the engine TextInput: the component owns
-    /// editing, blink, selection and cursor mapping; only its square field
-    /// chrome (background and focus-border rects, the nodes spanning the
-    /// full field width/height) is replaced by the rounded glass below.
     fn render_input(&mut self, c: &mut Compositor, l: &Layout, theme: &Theme) {
-        let g = &theme.glass;
-        let r = l.input;
-        c.push(rounded_rect(r.x, r.y, r.w, r.h, theme.radius.md, g.field.0));
-        let border = if self.input.focused {
-            g.field_focus_border
-        } else {
-            g.edge_soft
-        };
-        c.push(rounded_rect_stroke(
-            r.x,
-            r.y,
-            r.w,
-            r.h,
-            theme.radius.md,
-            border.0,
-            1.0,
-        ));
-        self.input.text_color = theme.colors.text.0;
-        self.input.placeholder_color = g.text_placeholder.0;
-        self.input.cursor_color = theme.colors.accent.0;
-        self.input.selection_color = with_alpha(theme.colors.accent.0, 0.35);
-        for node in self.input.build_scene(r.x, r.y, r.w) {
-            let keep = match node {
-                SceneNode::Rect { w, h, .. } => w < r.w && h < r.h,
-                _ => true,
-            };
-            if keep {
-                c.push(node);
-            }
-        }
+        self.input.render(c, l.input, theme);
     }
 
     fn render_rows(&self, c: &mut Compositor, l: &Layout, theme: &Theme) {

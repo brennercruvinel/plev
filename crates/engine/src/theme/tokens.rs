@@ -141,6 +141,25 @@ impl TypographyScale {
     pub fn hairline(&self) -> TextStyle {
         Self::body_style(self.caption, 1.65, 500)
     }
+
+    /// `=headline`: 32px, line-height 1.25, weight 500. The stat card
+    /// value and page headlines.
+    pub fn headline(&self) -> TextStyle {
+        Self::style(self.title, 1.25, 500)
+    }
+
+    /// Code and readouts: body-sm at line-height 1.4 in the single
+    /// embedded UI family (there is no separate mono face; the family is
+    /// tabular enough for short runs). One definition instead of the
+    /// `code_style` helper each gallery section grew.
+    pub fn mono(&self) -> TextStyle {
+        Self::style(self.body_sm, 1.4, 400)
+    }
+
+    /// Small readout under a specimen or a chart axis: `small` at 1.5.
+    pub fn readout(&self) -> TextStyle {
+        Self::style(self.small, 1.5, 400)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -193,6 +212,8 @@ pub struct GlassTokens {
     pub surface_active: Color,
     /// Default pill-button fill (HOFF: rgba(40,40,40,.70)).
     pub button: Color,
+    /// Tabs strip container (HOFF: rgba(40,40,40,.60)).
+    pub tabs: Color,
     /// Hovered pill-button fill (HOFF: rgba(248,248,248,.10)).
     pub button_hover: Color,
     /// Input/field background (HOFF: rgba(248,248,248,.05)).
@@ -221,6 +242,19 @@ pub struct GlassTokens {
     pub text_faint: Color,
     /// Placeholders, list dates (HOFF: rgba(248,248,248,.25)).
     pub text_placeholder: Color,
+    /// Active / hovered label and icon (HOFF: rgba(248,248,248,.76)).
+    pub text_active: Color,
+    /// Menu item / option label at rest, inactive titles
+    /// (HOFF: rgba(248,248,248,.56)).
+    pub text_default: Color,
+    /// Alpha multiplier applied to a disabled control's fill, rim and
+    /// label.
+    pub disabled_alpha: f32,
+    /// Alpha of an intent-tinted wash behind a selected chip or row at
+    /// rest, and hovered. The hue comes from the intent; only the alphas
+    /// are tokens.
+    pub wash_alpha: f32,
+    pub wash_hover_alpha: f32,
 }
 
 impl GlassTokens {
@@ -234,6 +268,12 @@ impl GlassTokens {
             surface_hover: tint(0.05),
             surface_active: tint(0.10),
             button: colors.bg_panel,
+            tabs: Color([
+                colors.bg_panel.0[0],
+                colors.bg_panel.0[1],
+                colors.bg_panel.0[2],
+                colors.bg_panel.0[3] * 0.85,
+            ]),
             button_hover: tint(0.10),
             field: tint(0.05),
             field_focus_border: tint(0.25),
@@ -247,6 +287,11 @@ impl GlassTokens {
             text_gradient: [tint(0.90), tint(0.50)],
             text_faint: tint(0.40),
             text_placeholder: tint(0.25),
+            text_active: tint(0.76),
+            text_default: tint(0.56),
+            disabled_alpha: 0.5,
+            wash_alpha: 0.14,
+            wash_hover_alpha: 0.22,
         }
     }
 }

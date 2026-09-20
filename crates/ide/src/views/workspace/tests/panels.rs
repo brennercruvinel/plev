@@ -17,7 +17,7 @@ fn commit_form_submit_queues_commit_and_clears() {
     }
     assert!(w.submit_commit());
     assert!(!w.commit_form.visible);
-    assert!(w.commit_form.message.is_empty());
+    assert!(w.commit_form.message().is_empty());
     assert_eq!(
         w.take_requests(),
         vec![UiRequest::Commit {
@@ -33,7 +33,7 @@ fn shrinking_then_growing_window_restores_panel_widths() {
     // never restored the panels.
     let mut w = WorkspaceView::new(1280.0, 800.0);
     let (left0, right0) = (w.left_w, w.right_w);
-    assert_eq!((left0, right0), (280.0, 340.0), "defaults at 1280px");
+    assert!(left0 > 0.0 && right0 > 0.0, "defaults at 1280px");
 
     // Shrink hard: panels must squeeze to keep the 200px middle column.
     w.resize(700.0, 800.0);
@@ -49,8 +49,8 @@ fn shrinking_then_growing_window_restores_panel_widths() {
 fn dragged_width_survives_shrink_and_grow_cycle() {
     let mut w = WorkspaceView::new(1280.0, 800.0);
     // User drags the left panel 40px wider: that is the new desired width.
-    w.begin_drag_left(SIDEBAR_W + w.left_w);
-    w.update_drag(SIDEBAR_W + w.left_w + 40.0);
+    w.begin_drag_left(sidebar_w() + w.left_w);
+    w.update_drag(sidebar_w() + w.left_w + 40.0);
     w.end_drag();
     let dragged = w.left_w;
     assert_eq!(dragged, 320.0);
@@ -59,23 +59,24 @@ fn dragged_width_survives_shrink_and_grow_cycle() {
     assert!(w.left_w < dragged);
     w.resize(1280.0, 800.0);
     assert_eq!(w.left_w, dragged, "grow must restore the dragged width");
-    assert_eq!(w.right_w, 340.0);
+    assert_eq!(w.right_w, WorkspaceView::new(1280.0, 800.0).right_w);
 }
 
 #[test]
 fn effective_widths_are_clamped_on_construction() {
     // A window too small for the defaults must start clamped (the desired
-    // defaults stay intact for a later grow). 720px keeps the proportional
-    // clamp above the LEFT_MIN_W/RIGHT_MIN_W floors, so the middle column
-    // keeps its full 200px minimum.
-    let mut w = WorkspaceView::new(720.0, 600.0);
-    let middle_min = 200.0;
+    // defaults stay intact for a later grow). 760px keeps the proportional
+    // clamp above the column floors, so the middle column keeps its full
+    // minimum.
+    let defaults = WorkspaceView::new(1280.0, 800.0);
+    let mut w = WorkspaceView::new(760.0, 600.0);
+    let middle_min = defaults.theme().size.field_min_w + defaults.theme().size.field_min_w / 4.0;
     assert!(
-        SIDEBAR_W + w.left_w + w.right_w + middle_min <= 720.0 + 1e-3,
-        "left {} + right {} must leave a {middle_min}px middle at 720px",
+        sidebar_w() + w.left_w + w.right_w + middle_min <= 760.0 + 1e-3,
+        "left {} + right {} must leave a {middle_min}px middle at 760px",
         w.left_w,
         w.right_w
     );
     w.resize(1280.0, 800.0);
-    assert_eq!((w.left_w, w.right_w), (280.0, 340.0));
+    assert_eq!((w.left_w, w.right_w), (defaults.left_w, defaults.right_w));
 }

@@ -1,84 +1,76 @@
-#![allow(dead_code)]
+//! Design tokens for the scene3d HUD, read from the engine theme (the
+//! HOFF default) instead of a private grayscale ladder. The HUD is
+//! denser than an app screen (a ramp of small readouts over a 3D scene),
+//! so it keeps its own font ladder below the theme's `small` step; every
+//! color and spacing comes from `Theme`.
+
+use std::sync::LazyLock;
+
 use engine::color::Color;
+use engine::theme::Theme;
+
+pub struct HudTheme {
+    pub surface_1: Color,
+    pub surface_3: Color,
+    pub text_primary: Color,
+    pub text_muted: Color,
+    pub text_accent: Color,
+    pub chip_essencial: Color,
+    pub chip_recomendado: Color,
+    pub chip_opcional: Color,
+    pub chip_presente: Color,
+    pub chip_config: Color,
+    pub chip_basico: Color,
+    pub white_70: Color,
+    pub white_30: Color,
+    pub space_xs: f32,
+    pub space_sm: f32,
+}
+
+impl HudTheme {
+    fn from_theme(t: &Theme) -> Self {
+        let text = t.colors.text;
+        let tint = |a: f32| Color([text.0[0], text.0[1], text.0[2], a]);
+        Self {
+            surface_1: t.colors.surface,
+            surface_3: t.colors.divider,
+            text_primary: t.colors.text,
+            text_muted: t.colors.text_dim,
+            text_accent: t.colors.accent,
+            // Chip variants: the theme's intent colors, the only chromatics.
+            chip_essencial: t.colors.danger,
+            chip_recomendado: t.colors.warning,
+            chip_opcional: t.colors.info,
+            chip_presente: t.colors.success,
+            chip_config: t.colors.accent,
+            chip_basico: t.colors.text_mid,
+            white_70: tint(0.7),
+            white_30: tint(0.3),
+            space_xs: t.spacing.xs,
+            space_sm: t.spacing.sm,
+        }
+    }
+}
+
+static HUD: LazyLock<HudTheme> = LazyLock::new(|| HudTheme::from_theme(&Theme::default()));
+
+/// The HUD tokens, resolved once from the default theme.
+pub fn hud() -> &'static HudTheme {
+    &HUD
+}
 
 // ---------------------------------------------------------------------------
-// Surface palette — grayscale depth layers
-// ---------------------------------------------------------------------------
-
-pub const SURFACE_0: Color = Color::hex(0x030303); // deepest black, app background
-pub const SURFACE_1: Color = Color::hex(0x080808); // panels, main bg
-pub const SURFACE_2: Color = Color::hex(0x0e0e0e); // hover, subtle elevation
-pub const SURFACE_3: Color = Color::hex(0x181818); // borders, dividers
-pub const SURFACE_4: Color = Color::hex(0x222222); // emphasis borders
-pub const SURFACE_5: Color = Color::hex(0x262626); // light accents
-
-// ---------------------------------------------------------------------------
-// Text hierarchy
-// ---------------------------------------------------------------------------
-
-pub const TEXT_PRIMARY: Color = Color::hex(0xe5e5e5); // main text
-pub const TEXT_MUTED: Color = Color::hex(0x555555); // secondary, labels
-pub const TEXT_DIM: Color = Color::hex(0x333333); // disabled, very subtle
-pub const TEXT_ACCENT: Color = Color::hex(0xffffff); // white, emphasis
-
-// ---------------------------------------------------------------------------
-// Border
-// ---------------------------------------------------------------------------
-
-pub const BORDER_DEFAULT: Color = Color::hex(0x181818);
-pub const BORDER_HOVER: Color = Color::hex(0x222222);
-
-// ---------------------------------------------------------------------------
-// Chip variants — only color in entire B&W design
-// ---------------------------------------------------------------------------
-
-pub const CHIP_ESSENCIAL: Color = Color::hex(0xef4444); // red
-pub const CHIP_RECOMENDADO: Color = Color::hex(0xf59e0b); // amber
-pub const CHIP_OPCIONAL: Color = Color::hex(0x3b82f6); // blue
-pub const CHIP_PRESENTE: Color = Color::hex(0x22c55e); // green
-pub const CHIP_CONFIG: Color = Color::hex(0x8b5cf6); // purple
-pub const CHIP_BASICO: Color = Color::hex(0x06b6d4); // cyan
-
-// ---------------------------------------------------------------------------
-// HUD decorative
-// ---------------------------------------------------------------------------
-
-pub const HUD_CORNER_COLOR: Color = Color::hex(0x222222);
-pub const HUD_CORNER_SIZE: f32 = 12.0;
-
-// Alpha helpers
-pub const WHITE_70: Color = Color::rgba(1.0, 1.0, 1.0, 0.7);
-pub const WHITE_30: Color = Color::rgba(1.0, 1.0, 1.0, 0.3);
-pub const WHITE_20: Color = Color::rgba(1.0, 1.0, 1.0, 0.2);
-pub const WHITE_10: Color = Color::rgba(1.0, 1.0, 1.0, 0.1);
-
-// ---------------------------------------------------------------------------
-// Spacing scale (px)
-// ---------------------------------------------------------------------------
-
-pub const SPACE_XS: f32 = 4.0;
-pub const SPACE_SM: f32 = 8.0;
-pub const SPACE_MD: f32 = 16.0;
-pub const SPACE_LG: f32 = 24.0;
-pub const SPACE_XL: f32 = 32.0;
-
-// ---------------------------------------------------------------------------
-// Font sizes (px)
+// HUD font ladder (px): readouts over a 3D scene run smaller than the
+// app ramp; the top steps meet the theme's caption / body / title.
 // ---------------------------------------------------------------------------
 
 pub const FONT_2XS: f32 = 7.0;
 pub const FONT_XS: f32 = 8.0;
 pub const FONT_SM: f32 = 9.0;
 pub const FONT_BASE: f32 = 11.0;
-pub const FONT_LG: f32 = 13.0;
-pub const FONT_XL: f32 = 16.0;
 pub const FONT_2XL: f32 = 22.0;
-pub const FONT_3XL: f32 = 28.0;
 
-// ---------------------------------------------------------------------------
-// Chip color helpers — bg at 20% opacity
-// ---------------------------------------------------------------------------
-
+/// Chip background: the chip color at the wash alpha.
 pub fn chip_bg(color: Color) -> Color {
     Color::rgba(color.0[0], color.0[1], color.0[2], 0.2)
 }

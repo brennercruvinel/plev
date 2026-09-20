@@ -17,18 +17,18 @@ pub enum ChipVariant {
 impl ChipVariant {
     fn color(self) -> Color {
         match self {
-            Self::Essencial => CHIP_ESSENCIAL,
-            Self::Recomendado => CHIP_RECOMENDADO,
-            Self::Opcional => CHIP_OPCIONAL,
-            Self::Presente => CHIP_PRESENTE,
-            Self::Config => CHIP_CONFIG,
-            Self::Basico => CHIP_BASICO,
+            Self::Essencial => hud().chip_essencial,
+            Self::Recomendado => hud().chip_recomendado,
+            Self::Opcional => hud().chip_opcional,
+            Self::Presente => hud().chip_presente,
+            Self::Config => hud().chip_config,
+            Self::Basico => hud().chip_basico,
         }
     }
 
     fn text_color(self) -> Color {
         match self {
-            Self::Opcional | Self::Config => TEXT_ACCENT, // white text on blue/purple
+            Self::Opcional | Self::Config => hud().text_accent, // white text on blue/purple
             _ => self.color(),
         }
     }

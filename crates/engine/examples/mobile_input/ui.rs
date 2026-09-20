@@ -51,21 +51,21 @@ impl MobileInputApp {
         let header_y = sa_top;
         let header_h = 70.0;
         self.compositor
-            .draw_rect(cx, header_y, content_w, header_h, HEADER_BG);
+            .draw_rect(cx, header_y, content_w, header_h, pal().header_bg);
         self.compositor.draw_text(
             TextNodeKey::from_style("MOBILE INPUT", &title_style(24.0, 30.0), None),
             cx + pad,
             header_y + 14.0,
-            TEXT,
+            pal().text,
         );
         self.compositor.draw_text(
             TextNodeKey::from_style("Safe areas, IME, Lifecycle", &body_style(12.0, 16.0), None),
             cx + pad,
             header_y + 46.0,
-            TEXT_DIM,
+            pal().text_dim,
         );
         self.compositor
-            .draw_rect(cx, header_y + header_h - 1.0, content_w, 1.0, DIVIDER);
+            .draw_rect(cx, header_y + header_h - 1.0, content_w, 1.0, pal().divider);
 
         let card_x = cx + pad;
         let card_w = content_w - pad * 2.0;
@@ -87,16 +87,16 @@ impl MobileInputApp {
             ),
             card_x,
             help_y,
-            TEXT_DIM,
+            pal().text_dim,
         );
 
         // Footer
         let footer_h = 32.0;
         let footer_y = h - sa_bottom - footer_h;
         self.compositor
-            .draw_rect(cx, footer_y, content_w, footer_h, FOOTER_BG);
+            .draw_rect(cx, footer_y, content_w, footer_h, pal().footer_bg);
         self.compositor
-            .draw_rect(cx, footer_y, content_w, 1.0, DIVIDER);
+            .draw_rect(cx, footer_y, content_w, 1.0, pal().divider);
         self.compositor.draw_text(
             TextNodeKey::from_style(
                 "Safe area insets  |  IME composing  |  Lifecycle transitions",
@@ -105,22 +105,22 @@ impl MobileInputApp {
             ),
             cx + pad,
             footer_y + 9.0,
-            TEXT_DIM,
+            pal().text_dim,
         );
     }
 
     fn build_status_card(&mut self, card_x: f32, card_w: f32, card1_y: f32) {
         let card1_h = 90.0;
         self.compositor
-            .draw_rect(card_x, card1_y, card_w, card1_h, SURFACE);
+            .draw_rect(card_x, card1_y, card_w, card1_h, pal().surface);
         self.compositor
-            .draw_rect(card_x, card1_y, card_w, 2.0, ACCENT);
+            .draw_rect(card_x, card1_y, card_w, 2.0, pal().accent);
 
         self.compositor.draw_text(
             TextNodeKey::from_style("STATUS", &card_title_style(11.0, 14.0), None),
             card_x + 16.0,
             card1_y + 12.0,
-            ACCENT,
+            pal().accent,
         );
 
         let lifecycle_str = format!("Lifecycle:  {}", self.lifecycle.state());
@@ -128,7 +128,7 @@ impl MobileInputApp {
             TextNodeKey::from_style(&lifecycle_str, &code_style(13.0, 18.0), Some(card_w - 32.0)),
             card_x + 16.0,
             card1_y + 32.0,
-            TEXT,
+            pal().text,
         );
 
         let scale_str = format!("Scale:  {:.1}x", self.scale_factor);
@@ -136,7 +136,7 @@ impl MobileInputApp {
             TextNodeKey::from_style(&scale_str, &code_style(13.0, 18.0), None),
             card_x + 16.0,
             card1_y + 52.0,
-            TEXT,
+            pal().text,
         );
 
         let kb_label = if self.ime_state.keyboard_visible() {
@@ -149,7 +149,7 @@ impl MobileInputApp {
             TextNodeKey::from_style(&kb_str, &code_style(13.0, 18.0), None),
             card_x + card_w * 0.4,
             card1_y + 52.0,
-            TEXT,
+            pal().text,
         );
 
         let sa = &self.safe_area;
@@ -161,22 +161,22 @@ impl MobileInputApp {
             TextNodeKey::from_style(&insets_str, &code_style(13.0, 18.0), None),
             card_x + 16.0,
             card1_y + 72.0,
-            TEXT_DIM,
+            pal().text_dim,
         );
     }
 
     fn build_text_input_card(&mut self, card_x: f32, card_w: f32, card2_y: f32) {
         let card2_h = 110.0;
         self.compositor
-            .draw_rect(card_x, card2_y, card_w, card2_h, SURFACE);
+            .draw_rect(card_x, card2_y, card_w, card2_h, pal().surface);
         self.compositor
-            .draw_rect(card_x, card2_y, card_w, 2.0, CYAN);
+            .draw_rect(card_x, card2_y, card_w, 2.0, pal().cyan);
 
         self.compositor.draw_text(
-            TextNodeKey::from_style("TEXT INPUT", &card_title_style(11.0, 14.0), None),
+            TextNodeKey::from_style("pal().text INPUT", &card_title_style(11.0, 14.0), None),
             card_x + 16.0,
             card2_y + 12.0,
-            CYAN,
+            pal().cyan,
         );
 
         let field_x = card_x + 16.0;
@@ -186,13 +186,23 @@ impl MobileInputApp {
         self.compositor
             .draw_rect(field_x, field_y, field_w, field_h, [0.06, 0.06, 0.10, 1.0]);
         self.compositor
-            .draw_rect(field_x, field_y, field_w, 1.0, DIVIDER);
+            .draw_rect(field_x, field_y, field_w, 1.0, pal().divider);
+        self.compositor.draw_rect(
+            field_x,
+            field_y + field_h - 1.0,
+            field_w,
+            1.0,
+            pal().divider,
+        );
         self.compositor
-            .draw_rect(field_x, field_y + field_h - 1.0, field_w, 1.0, DIVIDER);
-        self.compositor
-            .draw_rect(field_x, field_y, 1.0, field_h, DIVIDER);
-        self.compositor
-            .draw_rect(field_x + field_w - 1.0, field_y, 1.0, field_h, DIVIDER);
+            .draw_rect(field_x, field_y, 1.0, field_h, pal().divider);
+        self.compositor.draw_rect(
+            field_x + field_w - 1.0,
+            field_y,
+            1.0,
+            field_h,
+            pal().divider,
+        );
 
         let display_text = if self.input_text.is_empty() && self.ime_state.preedit_text.is_empty() {
             "Type here (IME input)...".to_string()
@@ -205,9 +215,9 @@ impl MobileInputApp {
         };
 
         let text_color = if self.input_text.is_empty() && self.ime_state.preedit_text.is_empty() {
-            TEXT_DIM
+            pal().text_dim
         } else {
-            TEXT
+            pal().text
         };
 
         self.compositor.draw_text(
@@ -225,7 +235,7 @@ impl MobileInputApp {
             ),
             card_x + 16.0,
             card2_y + 84.0,
-            TEXT_DIM,
+            pal().text_dim,
         );
     }
 }

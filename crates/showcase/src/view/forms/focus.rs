@@ -19,6 +19,22 @@ pub enum EditKey {
     End,
 }
 
+/// The field-level subset. Tab is focus traversal, never an edit, so it
+/// is the one key that panics here: callers match it out first.
+impl From<EditKey> for comps::form::EditKey {
+    fn from(key: EditKey) -> Self {
+        match key {
+            EditKey::Backspace => Self::Backspace,
+            EditKey::Delete => Self::Delete,
+            EditKey::Left => Self::Left,
+            EditKey::Right => Self::Right,
+            EditKey::Home => Self::Home,
+            EditKey::End => Self::End,
+            EditKey::Tab => unreachable!("Tab is focus traversal, handled by the section"),
+        }
+    }
+}
+
 /// Tab order length: the text fields, then tabs, two enabled checkboxes,
 /// two enabled switches, two enabled sliders and the select. Disabled
 /// controls (locked checkbox/switch, disabled slider) are not focusable,
@@ -61,7 +77,7 @@ impl FormsSection {
             self.set_focus(Some(next));
             return true;
         }
-        self.fields.edit(key)
+        self.fields.edit(key.into())
     }
 
     /// Escape blurs whatever is focused. `false` when nothing was.

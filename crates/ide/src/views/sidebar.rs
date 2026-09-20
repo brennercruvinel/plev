@@ -1,15 +1,11 @@
-//! Left rail — the HOFF Sidebar in its collapsed (72px) variant:
-//! surface rgba(40,40,40,.8); NavLink items 48px tall, radius 12, with the
-//! icon centered in a 32x32 slot; icons rgba($n2,.4) at rest, active item
-//! gets bg rgba($n2,.1) + icon .76 + an edge-light 1px rgba(255,255,255,.1)
-//! rim; the settings item sits in the 12px foot.
+//! Left rail: the design system [`Sidebar`] pinned to its rail mode
+//! (icons only, `size.sidebar_rail_w` wide), three tabs in the band and
+//! the settings link pinned in the foot.
 
-use crate::components::hoff;
-use crate::theme::Theme;
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-
-/// Collapsed HOFF sidebar width.
-pub const SIDEBAR_W: f32 = 72.0;
+use comps::nav::{NavLink, Sidebar as Rail};
+use comps::prelude::{EventResult, WidgetEvent};
+use engine::compositor::{Compositor, LayerId};
+use engine::theme::{SidebarMode, Theme};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SidebarTab {
@@ -19,124 +15,67 @@ pub enum SidebarTab {
     Settings,
 }
 
-pub struct Sidebar {
-    pub active: SidebarTab,
-    hit_rects: Vec<(SidebarTab, f32, f32, f32, f32)>,
+impl SidebarTab {
+    const ALL: [SidebarTab; 4] = [
+        SidebarTab::Workspace,
+        SidebarTab::Branches,
+        SidebarTab::History,
+        SidebarTab::Settings,
+    ];
+
+    fn index(self) -> usize {
+        Self::ALL.iter().position(|t| *t == self).unwrap_or(0)
+    }
 }
 
-const PAD: f32 = 12.0;
-const ITEM_H: f32 = 48.0;
-const ITEM_GAP: f32 = 4.0;
-const ICON_SIZE: f32 = 20.0;
+pub struct Sidebar {
+    pub active: SidebarTab,
+    rail: Rail,
+}
 
 impl Sidebar {
     pub fn new() -> Self {
+        let rail = Rail::new(vec![
+            NavLink::new("Workspace").icon("layout-grid"),
+            NavLink::new("Branches").icon("git-branch"),
+            NavLink::new("History").icon("history"),
+        ])
+        .footer_links(vec![NavLink::new("Settings").icon("settings")])
+        .fixed_mode(SidebarMode::Rail);
         Self {
             active: SidebarTab::Workspace,
-            hit_rects: Vec::new(),
+            rail,
         }
     }
 
-    /// Hit-test a click position. Returns the tab if hit.
-    pub fn hit_test(&self, cx: f32, cy: f32) -> Option<SidebarTab> {
-        self.hit_rects.iter().find_map(|(tab, rx, ry, rw, rh)| {
-            if cx >= *rx && cx <= rx + rw && cy >= *ry && cy <= ry + rh {
-                Some(*tab)
-            } else {
-                None
-            }
-        })
+    /// Rail width for a theme.
+    pub fn width(&self, theme: &Theme) -> f32 {
+        self.rail.page_width(theme, 0.0)
     }
 
-    fn draw_item(
+    pub fn set_active(&mut self, tab: SidebarTab) {
+        self.active = tab;
+        self.rail.set_active(tab.index());
+    }
+
+    /// Route a pointer event; returns the tab that was activated.
+    pub fn handle_event(
         &mut self,
-        compositor: &mut Compositor,
+        event: &WidgetEvent,
         theme: &Theme,
-        y: f32,
-        tab: SidebarTab,
-        icon: &str,
-    ) {
-        let item_x = PAD;
-        let item_w = SIDEBAR_W - PAD * 2.0;
-        let is_active = self.active == tab;
-
-        if is_active {
-            // Active NavLink: bg rgba($n2,.1) + edge-light 1px rim.
-            compositor.push(SceneNode::RoundedRect {
-                x: item_x,
-                y,
-                w: item_w,
-                h: ITEM_H,
-                color: theme.surface_active.to_array(),
-                corner_radius: theme.radius_nav,
-                border_width: 0.0,
-                border_color: [0.0; 4],
-            });
-            hoff::edge_light(
-                compositor,
-                engine::compositor::LayerId::DEFAULT,
-                item_x,
-                y,
-                item_w,
-                ITEM_H,
-                theme.radius_nav,
-                1.0,
-                theme.edge_strong,
-            );
+        vw: f32,
+        vh: f32,
+    ) -> (EventResult, Option<SidebarTab>) {
+        let (r, nav) = self.rail.handle_event(event, theme, vw, vh);
+        let tab = nav.and_then(|i| SidebarTab::ALL.get(i).copied());
+        if let Some(tab) = tab {
+            self.set_active(tab);
         }
-
-        // Icon (codicons font) centered in the 32x32 slot.
-        compositor.push(SceneNode::Text {
-            key: TextNodeKey::new(icon, ICON_SIZE, ICON_SIZE, None)
-                .with_weight(400)
-                .with_family("codicon"),
-            x: item_x + (item_w - ICON_SIZE) / 2.0,
-            y: y + (ITEM_H - ICON_SIZE) / 2.0,
-            color: if is_active {
-                theme.text_active
-            } else {
-                theme.text_muted
-            }
-            .to_array(),
-        });
-
-        self.hit_rects.push((tab, item_x, y, item_w, ITEM_H));
+        (r, tab)
     }
 
-    pub fn render(&mut self, compositor: &mut Compositor, theme: &Theme, vh: f32, top_y: f32) {
-        let h = vh - top_y;
-        self.hit_rects.clear();
-
-        // Sidebar surface — rgba(40,40,40,.8).
-        compositor.push(SceneNode::Rect {
-            x: 0.0,
-            y: top_y,
-            w: SIDEBAR_W,
-            h,
-            color: theme.bg_sidebar.to_array(),
-        });
-
-        // Top items: Workspace, Branches, History (menu gap 4px).
-        let top_tabs = [
-            (SidebarTab::Workspace, "\u{EB67}"), // codicon: layout
-            (SidebarTab::Branches, "\u{EA68}"),  // codicon: git-branch
-            (SidebarTab::History, "\u{EA82}"),   // codicon: history
-        ];
-
-        let mut y = top_y + PAD;
-        for (tab, icon) in top_tabs {
-            self.draw_item(compositor, theme, y, tab, icon);
-            y += ITEM_H + ITEM_GAP;
-        }
-
-        // Foot: Settings pinned to the bottom (foot padding 12px).
-        let settings_y = top_y + h - ITEM_H - PAD;
-        self.draw_item(
-            compositor,
-            theme,
-            settings_y,
-            SidebarTab::Settings,
-            "\u{EB52}", // codicon: settings-gear
-        );
+    pub fn render(&mut self, compositor: &mut Compositor, theme: &Theme, vw: f32, vh: f32) {
+        self.rail
+            .render(compositor, LayerId::DEFAULT, theme, vw, vh);
     }
 }

@@ -7,6 +7,7 @@ resolver = "2"
 # its own manifest/workspace — see crates/urnaui/Cargo.toml and script/gate.
 members = [
     "crates/engine",
+    "crates/comps",
     "crates/macros",
     "crates/git",
     "crates/ide",
@@ -45,6 +46,7 @@ uninlined_format_args = "warn"
 [workspace.dependencies]
 # -- internal (path)
 engine = { path = "crates/engine" }
+comps = { path = "crates/comps" }
 git = { path = "crates/git" }
 lot = { path = "crates/lot" }
 macros = { path = "crates/macros" }

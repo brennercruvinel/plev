@@ -55,7 +55,7 @@ pub fn render(app: &mut LayersDemoApp) {
                     y: dy,
                     w: 1.0,
                     h: 1.0,
-                    color: DOT_COLOR,
+                    color: pal().dot,
                 },
             );
         }
@@ -170,7 +170,8 @@ pub fn render(app: &mut LayersDemoApp) {
                 ops: engine::wgpu::Operations {
                     load: engine::wgpu::LoadOp::Clear({
                         let [lr, lg, lb, la] =
-                            engine::color::Color::rgb(BG[0], BG[1], BG[2]).to_linear_array();
+                            engine::color::Color::rgb(pal().bg[0], pal().bg[1], pal().bg[2])
+                                .to_linear_array();
                         engine::wgpu::Color {
                             r: lr as f64,
                             g: lg as f64,

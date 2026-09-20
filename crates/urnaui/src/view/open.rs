@@ -4,16 +4,16 @@
 //! The screen owns only widget state; recents, status and the embedder /
 //! ffmpeg probes live in `UrnauiView` and flow in as render context.
 
+use comps::prelude::{
+    Button, EventResult, Rect, Spinner, SpinnerSize, WidgetEvent, rounded_rect_stroke,
+};
 use engine::compositor::Compositor;
 use engine::text::TextMeasurer;
 use engine::theme::Theme;
-use engine::ui::widgets::{
-    Button, EventResult, Rect, Spinner, SpinnerSize, WidgetEvent, rounded_rect_stroke,
-};
 
-use super::field::FIELD_H;
 #[cfg(not(target_arch = "wasm32"))]
 use super::field::Field;
+use super::field::field_h;
 use super::{Action, group_label, panel, text};
 
 const GAP: f32 = 12.0;
@@ -49,22 +49,17 @@ pub struct OpenScreen {
 }
 
 impl OpenScreen {
-    pub fn new(theme: &Theme) -> Self {
-        // `theme` only feeds the native path Field; on wasm there is no
-        // filesystem path entry.
-        #[cfg(target_arch = "wasm32")]
-        let _ = theme;
+    pub fn new() -> Self {
         #[cfg(not(target_arch = "wasm32"))]
         let label = "Open";
         #[cfg(target_arch = "wasm32")]
         let label = "Choose a .urna file";
         Self {
             #[cfg(not(target_arch = "wasm32"))]
-            path: Field::new("/path/to/corpus.urna", theme),
+            path: Field::new("/path/to/corpus.urna"),
             open_button: Button::new(label).icon("folder-open"),
             #[cfg(not(target_arch = "wasm32"))]
-            browse_button: Button::new("Browse…")
-                .variant(engine::ui::widgets::ButtonVariant::Outline),
+            browse_button: Button::new("Browse…").variant(comps::prelude::ButtonVariant::Outline),
             recents_hover: None,
             spinner: Spinner::new().size(SpinnerSize::Sm),
             opening: false,
@@ -72,27 +67,27 @@ impl OpenScreen {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn field_rect(&self, content: Rect) -> Rect {
-        let (bw, bh) = self.open_button.preferred_size();
-        let (xw, _) = self.browse_button.preferred_size();
+    fn field_rect(&self, content: Rect, theme: &Theme) -> Rect {
+        let (bw, bh) = self.open_button.preferred_size(theme);
+        let (xw, _) = self.browse_button.preferred_size(theme);
         Rect::new(
             content.x,
             content.y,
             (content.w - bw - xw - GAP * 2.0).max(120.0),
-            FIELD_H.max(bh),
+            field_h(theme).max(bh),
         )
     }
 
     /// Browse… sits between the field and Open.
     #[cfg(not(target_arch = "wasm32"))]
-    fn browse_rect(&self, content: Rect) -> Rect {
-        let (bw, _) = self.open_button.preferred_size();
-        let (xw, xh) = self.browse_button.preferred_size();
+    fn browse_rect(&self, content: Rect, theme: &Theme) -> Rect {
+        let (bw, _) = self.open_button.preferred_size(theme);
+        let (xw, xh) = self.browse_button.preferred_size(theme);
         Rect::new(content.x + content.w - bw - GAP - xw, content.y, xw, xh)
     }
 
-    fn button_rect(&self, content: Rect) -> Rect {
-        let (bw, bh) = self.open_button.preferred_size();
+    fn button_rect(&self, content: Rect, theme: &Theme) -> Rect {
+        let (bw, bh) = self.open_button.preferred_size(theme);
         #[cfg(not(target_arch = "wasm32"))]
         return Rect::new(content.x + content.w - bw, content.y, bw, bh);
         // Web: the picker button is the primary control; left-align it.
@@ -100,8 +95,8 @@ impl OpenScreen {
         Rect::new(content.x, content.y, bw, bh)
     }
 
-    fn recent_rects(&self, content: Rect, count: usize) -> (f32, Vec<Rect>) {
-        let y = content.y + FIELD_H + GAP * 3.0 + 40.0 + 28.0 + 24.0;
+    fn recent_rects(&self, content: Rect, count: usize, theme: &Theme) -> (f32, Vec<Rect>) {
+        let y = content.y + field_h(theme) + GAP * 3.0 + 40.0 + 28.0 + 24.0;
         let rects = (0..count)
             .map(|i| Rect::new(content.x, y + i as f32 * ROW_H, content.w, ROW_H))
             .collect();
@@ -114,6 +109,7 @@ impl OpenScreen {
         content: Rect,
         recents: &[String],
         opening: bool,
+        theme: &Theme,
     ) -> (EventResult, Action) {
         self.opening = opening;
         #[cfg(not(target_arch = "wasm32"))]
@@ -128,7 +124,7 @@ impl OpenScreen {
         // The Open button.
         let r = self
             .open_button
-            .handle_event(event, self.button_rect(content));
+            .handle_event(event, self.button_rect(content, theme));
         if r.clicked {
             #[cfg(not(target_arch = "wasm32"))]
             {
@@ -146,7 +142,7 @@ impl OpenScreen {
             self.browse_button.disabled = opening;
             let r = self
                 .browse_button
-                .handle_event(event, self.browse_rect(content));
+                .handle_event(event, self.browse_rect(content, theme));
             if r.clicked {
                 self.path.unfocus();
                 return (r, Action::PickFile);
@@ -155,7 +151,7 @@ impl OpenScreen {
         }
 
         // Recent rows.
-        let (_, rects) = self.recent_rects(content, recents.len());
+        let (_, rects) = self.recent_rects(content, recents.len(), theme);
         match *event {
             WidgetEvent::MouseMove { x, y } => {
                 let hit = rects.iter().position(|r| r.contains(x, y));
@@ -175,14 +171,11 @@ impl OpenScreen {
         // The path field: click focuses, characters flow via
         // `handle_key`/`handle_paste` on the view.
         #[cfg(not(target_arch = "wasm32"))]
-        if let WidgetEvent::MouseDown { x, y } = *event {
-            let field = self.field_rect(content);
-            if field.contains(x, y) {
-                self.path.click(x - field.x);
-                return (EventResult::changed(), Action::None);
-            }
-            if self.path.input.focused {
-                self.path.unfocus();
+        if let WidgetEvent::MouseDown { .. } = *event {
+            let fr = self
+                .path
+                .handle_event(event, self.field_rect(content, theme), theme);
+            if fr.clicked || fr.changed {
                 return (EventResult::changed(), Action::None);
             }
         }
@@ -203,7 +196,7 @@ impl OpenScreen {
 
     pub fn handle_edit_key(&mut self, key: super::EditKey) -> (bool, Action) {
         #[cfg(not(target_arch = "wasm32"))]
-        if key == super::EditKey::Enter && self.path.input.focused && !self.path.is_empty() {
+        if key == super::EditKey::Enter && self.path.is_focused() && !self.path.is_empty() {
             return (true, Action::OpenPath(self.path.text().trim().to_string()));
         }
         #[cfg(not(target_arch = "wasm32"))]
@@ -230,16 +223,16 @@ impl OpenScreen {
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme, ctx: &OpenContext) {
         let style_14 = engine::text::TextStyle::new(14.0).with_weight(400);
-        let button = self.button_rect(content);
+        let button = self.button_rect(content, theme);
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let field = self.field_rect(content);
+            let field = self.field_rect(content, theme);
             self.open_button.disabled = ctx.opening || self.path.is_empty();
             self.open_button.label = if ctx.opening { "Opening…" } else { "Open" }.to_string();
             self.path.render(c, field, theme);
             self.browse_button.disabled = ctx.opening;
             self.browse_button
-                .render(c, self.browse_rect(content), theme);
+                .render(c, self.browse_rect(content, theme), theme);
         }
         #[cfg(target_arch = "wasm32")]
         {
@@ -266,7 +259,7 @@ impl OpenScreen {
         }
 
         // Status line: the last open error (destructive) or the hint.
-        let status_y = content.y + button.h.max(FIELD_H) + GAP;
+        let status_y = content.y + button.h.max(field_h(theme)) + GAP;
         if !ctx.error.is_empty() {
             text(
                 c,
@@ -381,11 +374,11 @@ impl OpenScreen {
 
         // Recents.
         if !ctx.recents.is_empty() {
-            let (y, rects) = self.recent_rects(content, ctx.recents.len());
+            let (y, rects) = self.recent_rects(content, ctx.recents.len(), theme);
             group_label(c, "RECENT FILES", content.x, y - 24.0, theme);
             for (i, (path, rect)) in ctx.recents.iter().zip(&rects).enumerate() {
                 if self.recents_hover == Some(i) {
-                    c.push(engine::ui::widgets::rounded_rect(
+                    c.push(comps::prelude::rounded_rect(
                         rect.x,
                         rect.y,
                         rect.w,
@@ -394,7 +387,7 @@ impl OpenScreen {
                         theme.glass.surface_hover.0,
                     ));
                 }
-                if let Some(node) = engine::ui::icons::icon_at(
+                if let Some(node) = comps::icons::icon_at(
                     "file",
                     16.0,
                     theme.glass.text_faint.0,

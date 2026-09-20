@@ -1,8 +1,10 @@
 use super::{PendingAction, UiRequest, WorkspaceView};
-use crate::components::{context_menu, hoff, modal};
-use crate::theme::{SHADOW_TOOLTIP, Theme};
-use engine::compositor::{Compositor, SceneNode};
-use engine::overlay::OverlayKind;
+use comps::feedback::{ContextMenu, MenuEntry, Modal};
+use comps::overlay::{MenuItem, OverlayKind};
+use comps::prelude::{Rect, WidgetEvent, rounded_rect, shadow_node};
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::text::TextMeasurer;
+use engine::theme::{Intent, Theme};
 
 impl WorkspaceView {
     /// Handle a click when overlays are active. Returns true if consumed.
@@ -61,6 +63,7 @@ impl WorkspaceView {
                     1 => {
                         // Discard -- show confirmation modal
                         self.overlay_mgr.pop_all(); // close context menu first
+                        self.ctx_menu = None;
                         self.ctx_menu_item_rects.clear();
                         self.open_discard_modal(file_idx);
                     }
@@ -87,6 +90,27 @@ impl WorkspaceView {
         true
     }
 
+    /// Opens the file context menu at `(x, y)`: the overlay entry for the
+    /// manager and the design-system widget that draws and hit-tests it.
+    pub(crate) fn open_context_menu(&mut self, x: f32, y: f32, items: Vec<MenuItem>) {
+        let entries = items
+            .iter()
+            .map(|item| {
+                let entry = MenuEntry::item(item.id, item.label.clone());
+                if item.label.starts_with("Discard") {
+                    entry.intent(Intent::Destructive).icon("trash")
+                } else if item.label.starts_with("Ignore") {
+                    entry.icon("eye")
+                } else {
+                    entry.icon("check")
+                }
+            })
+            .collect();
+        self.ctx_menu = Some(ContextMenu::new(entries));
+        self.overlay_mgr
+            .push(OverlayKind::ContextMenu { items }, x, y, 0.0, 0.0);
+    }
+
     /// Opens the discard confirmation modal for file `file_idx` (destructive
     /// operations always confirm). The actual discard happens on confirm.
     pub(crate) fn open_discard_modal(&mut self, file_idx: usize) {
@@ -97,25 +121,31 @@ impl WorkspaceView {
             .get(file_idx)
             .map(|f| f.path.rsplit('/').next().unwrap_or(&f.path).to_string())
             .unwrap_or_default();
-        let (mx, my) = modal::centered_pos(self.vw, self.vh);
-        let (mw, mh) = modal::dimensions();
+        let title = "Discard changes?".to_string();
+        let body = format!("Discard all changes to {file_name}? This cannot be undone.");
+        let modal = Modal::new(title.clone(), body.clone(), "Discard", "Cancel")
+            .intent(Intent::Destructive);
+        let dialog = modal.dialog_rect(self.theme(), self.vw, self.vh);
+        self.modal = Some(modal);
         self.overlay_mgr.push(
             OverlayKind::Modal {
-                title: "Discard changes?".into(),
-                body: format!("Discard all changes to {file_name}? This cannot be undone."),
+                title,
+                body,
                 confirm: "Discard".into(),
                 cancel: "Cancel".into(),
             },
-            mx,
-            my,
-            mw,
-            mh,
+            dialog.x,
+            dialog.y,
+            dialog.w,
+            dialog.h,
         );
     }
 
     /// Closes every overlay and clears the cached interaction state.
     fn dismiss_overlays(&mut self) {
         self.overlay_mgr.pop_all();
+        self.ctx_menu = None;
+        self.modal = None;
         self.ctx_menu_item_rects.clear();
         self.modal_confirm_rect = None;
         self.modal_cancel_rect = None;
@@ -162,16 +192,24 @@ impl WorkspaceView {
         for overlay in &self.overlay_mgr.stack.clone() {
             match &overlay.kind {
                 OverlayKind::ContextMenu { items } => {
-                    let (w, h, item_rects) = context_menu::draw(
-                        compositor,
-                        layer_id,
-                        theme,
-                        overlay.x,
-                        overlay.y,
-                        items,
-                        self.hover_overlay_item,
-                    );
-                    self.ctx_menu_item_rects = item_rects;
+                    let menu = self.ctx_menu.get_or_insert_with(|| {
+                        ContextMenu::new(
+                            items
+                                .iter()
+                                .map(|i| MenuEntry::item(i.id, i.label.clone()))
+                                .collect(),
+                        )
+                    });
+                    let (w, h) = menu.size(theme);
+                    menu.render(compositor, layer_id, theme, overlay.x, overlay.y);
+                    // Item rows only (separators are not targets).
+                    self.ctx_menu_item_rects = menu
+                        .entry_rects(overlay.x, overlay.y, theme)
+                        .into_iter()
+                        .zip(&menu.entries)
+                        .filter(|(_, e)| matches!(e, MenuEntry::Item { .. }))
+                        .map(|(r, _)| (r.x, r.y, r.w, r.h))
+                        .collect();
                     // Update bounds if not yet known
                     if overlay.w == 0.0 {
                         self.overlay_mgr.set_bounds(overlay.id, w, h);
@@ -183,65 +221,57 @@ impl WorkspaceView {
                     confirm,
                     cancel,
                 } => {
-                    let (confirm_rect, cancel_rect) = modal::draw(
-                        compositor,
-                        layer_id,
-                        theme,
-                        self.vw,
-                        self.vh,
-                        overlay.x,
-                        overlay.y,
-                        title,
-                        body,
-                        confirm,
-                        cancel,
-                        self.hover_modal_confirm,
-                        self.hover_modal_cancel,
-                    );
-                    self.modal_confirm_rect = Some(confirm_rect);
-                    self.modal_cancel_rect = Some(cancel_rect);
+                    let modal = self.modal.get_or_insert_with(|| {
+                        Modal::new(title.clone(), body.clone(), confirm.clone(), cancel.clone())
+                            .intent(Intent::Destructive)
+                    });
+                    modal.render(compositor, layer_id, theme, self.vw, self.vh);
+                    let dialog = modal.dialog_rect(theme, self.vw, self.vh);
+                    let (confirm_rect, cancel_rect) = modal.button_rects(theme, dialog);
+                    self.modal_confirm_rect = Some((
+                        confirm_rect.x,
+                        confirm_rect.y,
+                        confirm_rect.w,
+                        confirm_rect.h,
+                    ));
+                    self.modal_cancel_rect =
+                        Some((cancel_rect.x, cancel_rect.y, cancel_rect.w, cancel_rect.h));
                 }
                 OverlayKind::Tooltip { text } => {
-                    // HOFF tooltip: pad 5 12 3, bg #262626, radius 8,
-                    // caption-r at $text-secondary, shadow 0 1.5 2 rgba(24,24,24,.15).
-                    // One caption-r style (12/1.33/400) measures the bubble
-                    // and draws the text, so long tips never leak out.
-                    let line_h = 12.0 * 1.33;
-                    let tip_style = engine::text::TextStyle::new(12.0).with_line_height(line_h);
-                    let tip_w = hoff::measure_text(text, &tip_style) + 24.0;
-                    let tip_h = line_h + 8.0;
-                    hoff::shadow(
-                        compositor,
-                        layer_id,
+                    // Tooltip at the overlay origin: hint shadow, tooltip
+                    // body at the tooltip radius, caption-r text-secondary.
+                    let style = theme.typography.caption_r();
+                    let pad_x = theme.spacing.md;
+                    let pad_y = theme.spacing.xs;
+                    let (tw, _) = TextMeasurer::measure_styled(text, &style, None);
+                    let rect = Rect::new(
                         overlay.x,
                         overlay.y,
-                        tip_w,
-                        tip_h,
-                        theme.radius_tooltip,
-                        &SHADOW_TOOLTIP,
+                        tw + pad_x * 2.0,
+                        style.line_height + pad_y * 2.0,
                     );
+                    let radius = theme.shape.tooltip;
+                    if let Some(shadow) = shadow_node(rect, radius, &theme.shadows.hint) {
+                        compositor.push_to_layer(layer_id, shadow);
+                    }
                     compositor.push_to_layer(
                         layer_id,
-                        SceneNode::RoundedRect {
-                            x: overlay.x,
-                            y: overlay.y,
-                            w: tip_w,
-                            h: tip_h,
-                            color: theme.bg_tooltip.to_array(),
-                            corner_radius: theme.radius_tooltip,
-                            border_width: 0.0,
-                            border_color: [0.0; 4],
-                        },
+                        rounded_rect(
+                            rect.x,
+                            rect.y,
+                            rect.w,
+                            rect.h,
+                            radius,
+                            theme.glass.tooltip.0,
+                        ),
                     );
                     compositor.push_to_layer(
                         layer_id,
                         SceneNode::Text {
-                            key: engine::compositor::TextNodeKey::from_style(
-                                text, &tip_style, None,
-                            ),
-                            x: overlay.x + 12.0,
-                            y: overlay.y + 5.0,
-                            color: theme.text_secondary.to_array(),
+                            key: TextNodeKey::from_style(text, &style, None),
+                            x: rect.x + pad_x,
+                            y: rect.y + pad_y,
+                            color: theme.colors.text_mid.0,
                         },
                     );
                 }
@@ -282,7 +312,31 @@ impl WorkspaceView {
             self.hover_modal_cancel = true;
         }
 
-        old_item != self.hover_overlay_item
+        // The widgets keep their own hover for the rendering.
+        let event = WidgetEvent::MouseMove { x: cx, y: cy };
+        let theme = self.theme().clone();
+        let mut widget_changed = false;
+        if let Some(menu) = &mut self.ctx_menu
+            && let Some(overlay) = self
+                .overlay_mgr
+                .stack
+                .iter()
+                .find(|o| matches!(o.kind, OverlayKind::ContextMenu { .. }))
+        {
+            widget_changed |= menu
+                .handle_event(&event, overlay.x, overlay.y, &theme)
+                .0
+                .changed;
+        }
+        if let Some(modal) = &mut self.modal {
+            widget_changed |= modal
+                .handle_event(&event, &theme, self.vw, self.vh)
+                .1
+                .changed;
+        }
+
+        widget_changed
+            || old_item != self.hover_overlay_item
             || old_confirm != self.hover_modal_confirm
             || old_cancel != self.hover_modal_cancel
     }

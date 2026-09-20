@@ -8,19 +8,23 @@ fn content_at(vw: f32) -> Rect {
 }
 
 fn lay(s: &AppSection, content: Rect) -> Layout {
-    compute(content, &s.counter_text())
+    compute(content, &s.counter_text(), &Theme::hoff())
 }
 
 fn focus(s: &mut AppSection, content: Rect) {
     let (cx, cy) = lay(s, content).input.center();
-    s.handle_event(&WidgetEvent::MouseDown { x: cx, y: cy }, content);
+    s.handle_event(
+        &WidgetEvent::MouseDown { x: cx, y: cy },
+        content,
+        &Theme::hoff(),
+    );
 }
 
 /// Click in the panel margin above the field: blurs, hits nothing else.
 fn blur(s: &mut AppSection, content: Rect) {
     let l = lay(s, content);
     let (x, y) = (l.panel.x + 2.0, l.panel.y + 4.0);
-    s.handle_event(&WidgetEvent::MouseDown { x, y }, content);
+    s.handle_event(&WidgetEvent::MouseDown { x, y }, content, &Theme::hoff());
 }
 
 fn add(s: &mut AppSection, content: Rect, text: &str) {
@@ -32,8 +36,8 @@ fn add(s: &mut AppSection, content: Rect, text: &str) {
 }
 
 fn click(s: &mut AppSection, content: Rect, x: f32, y: f32) -> EventResult {
-    let r = s.handle_event(&WidgetEvent::MouseDown { x, y }, content);
-    r.merge(s.handle_event(&WidgetEvent::MouseUp { x, y }, content))
+    let r = s.handle_event(&WidgetEvent::MouseDown { x, y }, content, &Theme::hoff());
+    r.merge(s.handle_event(&WidgetEvent::MouseUp { x, y }, content, &Theme::hoff()))
 }
 
 fn settle(s: &mut AppSection) {
@@ -72,7 +76,7 @@ fn layout_holds_at_narrow_and_wide_widths() {
         assert_eq!(l.panel.w, content.w.min(MAX_W), "vw {vw}");
         assert!(l.panel.x >= content.x);
         // Field height is TextInput's own font_size * 2 rule.
-        assert_eq!(l.input.h, INPUT_FONT * 2.0);
+        assert_eq!(l.input.h, comps::form::TextField::height(&Theme::hoff()));
         assert!(l.input.x + l.input.w <= l.panel.x + l.panel.w);
         assert!(
             l.list.y + l.list.h <= l.divider_y,
@@ -115,7 +119,7 @@ fn typing_needs_focus_and_enter_adds_trimmed_then_clears() {
 
     let before = s.model.counts().total;
     focus(&mut s, content);
-    assert!(s.input.focused);
+    assert!(s.input.is_focused());
     for ch in [" ", "h", "i", "i", " "] {
         assert!(s.handle_text(ch));
     }
@@ -124,7 +128,7 @@ fn typing_needs_focus_and_enter_adds_trimmed_then_clears() {
     assert!(s.handle_enter());
     assert_eq!(s.model.counts().total, before + 1);
     assert_eq!(s.model.visible_items().last().unwrap().text(), "hi");
-    assert!(s.input.buffer.is_empty(), "enter clears the field");
+    assert!(s.input.is_empty(), "enter clears the field");
     assert!(s.handle_enter(), "empty enter is consumed");
     assert_eq!(s.model.counts().total, before + 1, "but adds nothing");
 
@@ -132,10 +136,10 @@ fn typing_needs_focus_and_enter_adds_trimmed_then_clears() {
     // handle_text before its hotkeys); Tab stays with the chrome and
     // Escape blurs, handing the hotkeys back.
     assert!(s.handle_text("1"));
-    assert_eq!(s.input.buffer.text(), "1");
+    assert_eq!(s.input.text(), "1");
     assert!(!s.handle_edit_key(EditKey::Tab));
     assert!(s.handle_escape());
-    assert!(!s.input.focused);
+    assert!(!s.input.is_focused());
     assert!(!s.handle_text("1"));
     settle(&mut s);
 }
@@ -166,12 +170,20 @@ fn delete_hovers_then_removes() {
     let del = delete_rect(row_rect(lay(&s, content).list, 1, 0.0));
     let (dx, dy) = del.center();
 
-    let r = s.handle_event(&WidgetEvent::MouseMove { x: dx, y: dy }, content);
+    let r = s.handle_event(
+        &WidgetEvent::MouseMove { x: dx, y: dy },
+        content,
+        &Theme::hoff(),
+    );
     assert!(r.changed, "delete hover must request redraw");
     assert_eq!(s.hover_delete, Some(s.model.visible_items()[1].id()));
 
     let total = s.model.counts().total;
-    let r = s.handle_event(&WidgetEvent::MouseDown { x: dx, y: dy }, content);
+    let r = s.handle_event(
+        &WidgetEvent::MouseDown { x: dx, y: dy },
+        content,
+        &Theme::hoff(),
+    );
     assert!(r.clicked);
     assert_eq!(s.model.counts().total, total - 1);
 }
@@ -182,12 +194,20 @@ fn filter_pills_filter_and_only_changes_redraw() {
     let mut s = AppSection::new();
     let (px, py) = lay(&s, content).pills[1].center();
 
-    let r = s.handle_event(&WidgetEvent::MouseDown { x: px, y: py }, content);
+    let r = s.handle_event(
+        &WidgetEvent::MouseDown { x: px, y: py },
+        content,
+        &Theme::hoff(),
+    );
     assert!(r.changed && r.clicked);
     assert_eq!(s.model.filter(), Filter::Active);
     assert!(s.model.visible_items().iter().all(|i| !i.completed()));
 
-    let r = s.handle_event(&WidgetEvent::MouseDown { x: px, y: py }, content);
+    let r = s.handle_event(
+        &WidgetEvent::MouseDown { x: px, y: py },
+        content,
+        &Theme::hoff(),
+    );
     assert!(r.handled && !r.changed, "re-click must not request redraw");
 }
 
@@ -261,6 +281,7 @@ fn list_scrolls_inside_and_footer_stays_pinned() {
             delta: -60.0,
         },
         content,
+        &Theme::hoff(),
     );
     assert!(r.changed && r.handled);
     assert!(s.scroll.offset() < max);
@@ -274,6 +295,7 @@ fn list_scrolls_inside_and_footer_stays_pinned() {
             delta: 30.0,
         },
         content,
+        &Theme::hoff(),
     );
     assert!(!r.handled);
     assert!(l.pills[0].y + PILL_H <= l.panel.y + l.panel.h);

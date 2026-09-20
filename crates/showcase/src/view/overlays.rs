@@ -1,10 +1,10 @@
 //! Overlays section: modal, toasts, tooltip, context menu.
 
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::{Intent, Theme};
-use engine::ui::widgets::{
+use comps::prelude::{
     Button, ButtonVariant, ContextMenu, EventResult, MenuEntry, Rect, Tooltip, WidgetEvent,
 };
+use engine::compositor::{Compositor, LayerId, SceneNode};
+use engine::theme::{Intent, Theme};
 
 use super::{group_label, text};
 
@@ -91,12 +91,12 @@ impl OverlaysSection {
         }
     }
 
-    fn layout(&self, content: Rect) -> Layout {
+    fn layout(&self, content: Rect, theme: &Theme) -> Layout {
         let (x, mut y) = (content.x, content.y);
 
         y += LABEL_H;
-        let (w0, h0) = self.open_modal.preferred_size();
-        let (w1, h1) = self.delete_modal.preferred_size();
+        let (w0, h0) = self.open_modal.preferred_size(theme);
+        let (w1, h1) = self.delete_modal.preferred_size(theme);
         let modal_buttons = [Rect::new(x, y, w0, h0), Rect::new(x + w0 + GAP, y, w1, h1)];
         y += h0.max(h1) + GROUP_GAP;
 
@@ -105,7 +105,7 @@ impl OverlaysSection {
         let mut tx = x;
         let mut row_h: f32 = 0.0;
         for (_, b) in &self.toast_buttons {
-            let (w, h) = b.preferred_size();
+            let (w, h) = b.preferred_size(theme);
             toast_buttons.push(Rect::new(tx, y, w, h));
             tx += w + GAP;
             row_h = row_h.max(h);
@@ -113,7 +113,7 @@ impl OverlaysSection {
         y += row_h + GROUP_GAP;
 
         y += LABEL_H;
-        let (tw, th) = self.tooltip_button.preferred_size();
+        let (tw, th) = self.tooltip_button.preferred_size(theme);
         let tooltip_button = Rect::new(x, y, tw, th);
         y += th + GROUP_GAP;
 
@@ -136,15 +136,15 @@ impl OverlaysSection {
         }
     }
 
-    pub fn menu_area(&self, content: Rect) -> Rect {
-        self.layout(content).menu_area
+    pub fn menu_area(&self, content: Rect, theme: &Theme) -> Rect {
+        self.layout(content, theme).menu_area
     }
 
     /// Natural height of the section (page scrolling needs it). The menu
     /// area normally fills the remaining viewport; on short windows its
     /// minimum height makes the page overflow (and scroll).
-    pub fn content_height(&self, content: Rect) -> f32 {
-        let area = self.layout(content).menu_area;
+    pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
+        let area = self.layout(content, theme).menu_area;
         area.y + area.h - content.y
     }
 
@@ -152,8 +152,9 @@ impl OverlaysSection {
         &mut self,
         event: &WidgetEvent,
         content: Rect,
+        theme: &Theme,
     ) -> (EventResult, OverlayAction) {
-        let layout = self.layout(content);
+        let layout = self.layout(content, theme);
         let mut result = EventResult::IGNORED;
         let mut action = OverlayAction::None;
 
@@ -200,7 +201,7 @@ impl OverlaysSection {
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let layout = self.layout(content);
+        let layout = self.layout(content, theme);
 
         group_label(
             c,
@@ -286,7 +287,7 @@ mod tests {
         let section = OverlaysSection::new();
 
         let wide = Rect::new(288.0, 80.0, 1272.0, 700.0);
-        let area = section.menu_area(wide);
+        let area = section.menu_area(wide, &Theme::hoff());
         assert!(
             area.w > 560.0,
             "wide content must stretch the demo area, got {}",
@@ -295,7 +296,7 @@ mod tests {
         assert!((area.w - wide.w * 0.6).abs() < 0.5);
 
         let narrow = Rect::new(288.0, 80.0, 400.0, 700.0);
-        let area = section.menu_area(narrow);
+        let area = section.menu_area(narrow, &Theme::hoff());
         assert!(area.w <= narrow.w, "narrow content must clamp the area");
     }
 }

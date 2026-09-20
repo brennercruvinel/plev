@@ -2,9 +2,10 @@
 //! the counter are measured with TextMeasurer (one style per run, shared
 //! with drawing); constants exist only as min, max and gap.
 
+use comps::form::TextField;
+use comps::prelude::Rect;
 use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::TypographyScale;
-use engine::ui::widgets::Rect;
+use engine::theme::{Theme, TypographyScale};
 use showcase::model::todo::Filter;
 
 pub(super) const PAD: f32 = 24.0;
@@ -12,10 +13,6 @@ pub(super) const PAD: f32 = 24.0;
 pub(super) const MAX_W: f32 = 640.0;
 /// Below this height the page scroll (view/mod.rs) covers the difference.
 pub(super) const MIN_H: f32 = 280.0;
-/// TextInput field font; the field height is its `font_size * 2` rule.
-pub(super) const INPUT_FONT: f32 = 16.0;
-/// Inner text padding of TextInput (`build_scene`/`handle_click` pair).
-pub(super) const INPUT_PAD: f32 = 8.0;
 pub(super) const ROW_H: f32 = 44.0;
 /// Checkbox box edge (18, see widgets::checkbox) + its 10px label gap.
 pub(super) const LABEL_INSET: f32 = 28.0;
@@ -50,7 +47,7 @@ pub(super) struct Layout {
     pub pills: [Rect; 3],
 }
 
-pub(super) fn compute(content: Rect, counter: &str) -> Layout {
+pub(super) fn compute(content: Rect, counter: &str, theme: &Theme) -> Layout {
     let w = content.w.min(MAX_W);
     let panel = Rect::new(
         (content.x + (content.w - w) / 2.0).floor(),
@@ -62,7 +59,7 @@ pub(super) fn compute(content: Rect, counter: &str) -> Layout {
         panel.x + PAD,
         panel.y + PAD,
         panel.w - PAD * 2.0,
-        INPUT_FONT * 2.0,
+        TextField::height(theme),
     );
 
     let pstyle = pill_style();

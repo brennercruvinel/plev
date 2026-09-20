@@ -8,18 +8,12 @@ use super::commit_form::CommitForm;
 use super::diff_view::DiffView;
 use super::header::Header;
 use super::multi_stack_view::MultiStackView;
-use super::sidebar::SIDEBAR_W;
 use super::sidebar::Sidebar;
 use super::unassigned_view::UnassignedView;
+use comps::feedback::{ContextMenu, Modal};
+use comps::overlay::OverlayManager;
 use engine::compositor::{Compositor, LayerId};
-use engine::overlay::OverlayManager;
-
-pub(crate) const HEADER_H: f32 = super::header::HEADER_H;
-pub(crate) const RESIZE_HANDLE_W: f32 = 4.0;
-const LEFT_MIN_W: f32 = 200.0;
-const LEFT_DEFAULT_W: f32 = 280.0;
-const RIGHT_DEFAULT_W: f32 = 340.0;
-const RIGHT_MIN_W: f32 = 220.0;
+use engine::theme::Theme;
 
 /// Three-panel workspace layout — mirrors plev ide's MainViewport.
 pub struct WorkspaceView {
@@ -35,6 +29,8 @@ pub struct WorkspaceView {
     /// Width the user wants for the right panel (see `left_w_desired`).
     right_w_desired: f32,
     pub theme_mode: ThemeMode,
+    /// The two themes the toggle switches between.
+    themes: [Theme; 2],
 
     // Chrome
     pub sidebar: Sidebar,
@@ -64,6 +60,10 @@ pub struct WorkspaceView {
     // Overlay system
     pub overlay_mgr: OverlayManager,
     pub(crate) overlay_layer: LayerId,
+    /// The design-system widgets behind the open overlays (built when an
+    /// overlay is pushed, dropped when it closes).
+    pub(crate) ctx_menu: Option<ContextMenu>,
+    pub(crate) modal: Option<Modal>,
     // Cached hit rects for overlay interaction
     pub(crate) ctx_menu_item_rects: Vec<(f32, f32, f32, f32)>,
     pub(crate) modal_confirm_rect: Option<(f32, f32, f32, f32)>,
@@ -132,12 +132,14 @@ impl WorkspaceView {
     pub fn new(vw: f32, vh: f32) -> Self {
         // Overlay layer is created lazily on first render via `ensure_overlay_layer`.
         // Use a sentinel LayerId so the default layer is never accidentally used.
+        let (left_default, right_default) = Self::panel_defaults(&Theme::hoff());
         let mut view = Self {
-            left_w: LEFT_DEFAULT_W,
-            right_w: RIGHT_DEFAULT_W,
-            left_w_desired: LEFT_DEFAULT_W,
-            right_w_desired: RIGHT_DEFAULT_W,
+            left_w: left_default,
+            right_w: right_default,
+            left_w_desired: left_default,
+            right_w_desired: right_default,
             theme_mode: ThemeMode::Dark,
+            themes: [Theme::hoff(), Theme::hoff_light()],
             sidebar: Sidebar::new(),
             header: Header::new(),
             unassigned: UnassignedView::new(),
@@ -157,6 +159,8 @@ impl WorkspaceView {
             hover_modal_cancel: false,
             overlay_mgr: OverlayManager::new(),
             overlay_layer: LayerId::DEFAULT, // replaced on first render
+            ctx_menu: None,
+            modal: None,
             ctx_menu_item_rects: Vec::new(),
             modal_confirm_rect: None,
             modal_cancel_rect: None,
@@ -185,11 +189,36 @@ impl WorkspaceView {
         }
     }
 
-    pub fn theme(&self) -> &'static crate::theme::Theme {
+    pub fn theme(&self) -> &Theme {
         match self.theme_mode {
-            ThemeMode::Dark => &crate::theme::DARK,
-            ThemeMode::Light => &crate::theme::LIGHT,
+            ThemeMode::Dark => &self.themes[0],
+            ThemeMode::Light => &self.themes[1],
         }
+    }
+
+    /// Sidebar rail width for the current theme.
+    pub(crate) fn sidebar_w(&self) -> f32 {
+        self.sidebar.width(self.theme())
+    }
+
+    /// Header height for the current theme.
+    pub(crate) fn header_h(&self) -> f32 {
+        Header::height(self.theme())
+    }
+
+    /// Resize handle width: the divider hit width.
+    pub(crate) fn handle_w(&self) -> f32 {
+        self.theme().control.divider_hit
+    }
+
+    /// Advance the widgets that animate (scrollbar fades, the commit
+    /// field caret). `true` while frames are needed.
+    pub fn tick(&mut self, dt: f32) -> bool {
+        let a = self.unassigned.tick(dt);
+        let b = self.stacks.tick(dt);
+        let c = self.diff.tick(dt);
+        let d = self.commit_form.tick(dt);
+        a || b || c || d
     }
 
     pub fn toggle_theme(&mut self) {
@@ -233,10 +262,12 @@ impl WorkspaceView {
     pub fn update_drag(&mut self, cursor_x: f32) {
         let delta = cursor_x - self.drag_start_x;
         if self.dragging_left {
-            self.left_w_desired = (self.drag_start_w + delta).max(LEFT_MIN_W);
+            let (left_min, _, _) = self.panel_minimums();
+            self.left_w_desired = (self.drag_start_w + delta).max(left_min);
             self.apply_panel_widths();
         } else if self.dragging_right {
-            self.right_w_desired = (self.drag_start_w - delta).max(RIGHT_MIN_W);
+            let (_, right_min, _) = self.panel_minimums();
+            self.right_w_desired = (self.drag_start_w - delta).max(right_min);
             self.apply_panel_widths();
         }
     }
@@ -247,8 +278,8 @@ impl WorkspaceView {
     /// shrank `left_w`/`right_w` in place on every window shrink and could
     /// never grow them back (destructive loss of the user's layout).
     fn apply_panel_widths(&mut self) {
-        let middle_min = 200.0;
-        let usable_w = self.vw - SIDEBAR_W;
+        let (left_min, right_min, middle_min) = self.panel_minimums();
+        let usable_w = self.vw - self.sidebar_w();
         let available = usable_w - middle_min;
         let mut left = self.left_w_desired;
         let mut right = self.right_w_desired;
@@ -257,8 +288,28 @@ impl WorkspaceView {
             left *= ratio;
             right *= ratio;
         }
-        self.left_w = left.max(LEFT_MIN_W);
-        self.right_w = right.max(RIGHT_MIN_W);
+        self.left_w = left.max(left_min);
+        self.right_w = right.max(right_min);
+    }
+
+    /// Narrowest each column may get: the changes column and the stacks
+    /// feed fit a card, the diff column fits a code line.
+    fn panel_minimums(&self) -> (f32, f32, f32) {
+        let size = &self.theme().size;
+        (
+            size.field_min_w + size.field_min_w / 4.0,
+            size.card_min_w - size.field_min_w / 4.0,
+            size.field_min_w + size.field_min_w / 4.0,
+        )
+    }
+
+    /// Default column widths: the sidebar width for the changes column,
+    /// the card width for the diff column.
+    fn panel_defaults(theme: &Theme) -> (f32, f32) {
+        (
+            theme.size.sidebar_w + theme.spacing.xxl,
+            theme.size.card_w - theme.spacing.xxl,
+        )
     }
 
     /// Handle mouse scroll for the hovered panel. Returns `true` when an
@@ -266,36 +317,48 @@ impl WorkspaceView {
     /// return value keeps the routing testable).
     pub fn scroll(&mut self, cursor_x: f32, delta: f32) -> bool {
         let (left_x, right_x) = self.panel_bounds();
-        let target = if cursor_x < left_x {
+        if cursor_x < left_x {
             // The sidebar rail does not scroll any panel.
             return false;
-        } else if cursor_x < left_x + self.left_w {
-            &mut self.unassigned.scroll
+        }
+        let (target, moved) = if cursor_x < left_x + self.left_w {
+            let old = self.unassigned.scroll.offset();
+            self.unassigned.scroll.scroll_by(delta);
+            (0, self.unassigned.scroll.offset() != old)
         } else if cursor_x > right_x {
-            &mut self.diff.scroll
+            let old = self.diff.scroll.offset();
+            self.diff.scroll.scroll_by(delta);
+            (2, self.diff.scroll.offset() != old)
         } else {
-            &mut self.stacks.scroll
+            let old = self.stacks.scroll.offset();
+            self.stacks.scroll.scroll_by(delta);
+            (1, self.stacks.scroll.offset() != old)
         };
-        let old = target.offset();
-        target.scroll_by(delta);
-        target.offset() != old
+        // The scrollbar fades in on activity.
+        match target {
+            0 => self.unassigned.notify_scroll(),
+            1 => self.stacks.notify_scroll(),
+            _ => self.diff.notify_scroll(),
+        }
+        moved
     }
 
     /// Returns (left_panel_x, right_panel_x) accounting for sidebar.
     pub(crate) fn panel_bounds(&self) -> (f32, f32) {
-        let left_x = SIDEBAR_W;
+        let left_x = self.sidebar_w();
         let right_x = self.vw - self.right_w;
         (left_x, right_x)
     }
 
     /// Hit-test resize handles. Returns Some(Side) if cursor is on a handle.
     pub fn hit_test_handle(&self, cursor_x: f32) -> Option<Side> {
-        let left_handle_x = SIDEBAR_W + self.left_w;
-        let right_handle_x = self.vw - self.right_w - RESIZE_HANDLE_W / 2.0;
+        let handle_w = self.handle_w();
+        let left_handle_x = self.sidebar_w() + self.left_w;
+        let right_handle_x = self.vw - self.right_w - handle_w / 2.0;
 
-        if (cursor_x - left_handle_x).abs() < RESIZE_HANDLE_W * 2.0 {
+        if (cursor_x - left_handle_x).abs() < handle_w * 2.0 {
             Some(Side::Left)
-        } else if (cursor_x - right_handle_x).abs() < RESIZE_HANDLE_W * 2.0 {
+        } else if (cursor_x - right_handle_x).abs() < handle_w * 2.0 {
             Some(Side::Right)
         } else {
             None
