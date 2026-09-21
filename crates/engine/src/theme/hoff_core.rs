@@ -1,5 +1,5 @@
 //! The hoff core theme: the light kit of the hoff research design system
-//! (tmp/hoff-research-design-sy, next + tailwind), transcribed token by
+//! (the private typescript kit, next + tailwind), transcribed token by
 //! token. Nine shades of gray from paper (#FCFCFC) to ink (#121212), six
 //! accents, Inter tracked -0.02em, radii 8 / 10 / 12 / 16 / 22 and the
 //! measured shadow stacks of its depths page.
