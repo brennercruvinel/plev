@@ -125,7 +125,8 @@ impl WorkspaceView {
         let body = format!("Discard all changes to {file_name}? This cannot be undone.");
         let modal = Modal::new(title.clone(), body.clone(), "Discard", "Cancel")
             .intent(Intent::Destructive);
-        let dialog = modal.dialog_rect(self.theme(), self.vw, self.vh);
+        let (vw, vh) = self.viewport();
+        let dialog = modal.dialog_rect(self.theme(), vw, vh);
         self.modal = Some(modal);
         self.overlay_mgr.push(
             OverlayKind::Modal {
@@ -221,12 +222,13 @@ impl WorkspaceView {
                     confirm,
                     cancel,
                 } => {
+                    let (vw, vh) = self.viewport();
                     let modal = self.modal.get_or_insert_with(|| {
                         Modal::new(title.clone(), body.clone(), confirm.clone(), cancel.clone())
                             .intent(Intent::Destructive)
                     });
-                    modal.render(compositor, layer_id, theme, self.vw, self.vh);
-                    let dialog = modal.dialog_rect(theme, self.vw, self.vh);
+                    modal.render(compositor, layer_id, theme, vw, vh);
+                    let dialog = modal.dialog_rect(theme, vw, vh);
                     let (confirm_rect, cancel_rect) = modal.button_rects(theme, dialog);
                     self.modal_confirm_rect = Some((
                         confirm_rect.x,

@@ -115,3 +115,9 @@ impl Header {
             .render(compositor, self.theme_btn_rect, theme);
     }
 }
+
+impl Default for Header {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -292,3 +292,9 @@ impl UnassignedView {
         hit_rects
     }
 }
+
+impl Default for UnassignedView {
+    fn default() -> Self {
+        Self::new()
+    }
+}

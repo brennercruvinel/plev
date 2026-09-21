@@ -48,6 +48,7 @@ uninlined_format_args = "warn"
 engine = { path = "crates/engine" }
 comps = { path = "crates/comps" }
 git = { path = "crates/git" }
+ide = { path = "crates/ide" }
 lot = { path = "crates/lot" }
 macros = { path = "crates/macros" }
 monster = { path = "crates/monster" }

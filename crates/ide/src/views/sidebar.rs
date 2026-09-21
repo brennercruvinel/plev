@@ -79,3 +79,9 @@ impl Sidebar {
             .render(compositor, LayerId::DEFAULT, theme, vw, vh);
     }
 }
+
+impl Default for Sidebar {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -5,7 +5,7 @@
 
 use winit::keyboard::NamedKey;
 
-use crate::view::{EditKey, ShowcaseView};
+use crate::view::{EditKey, NavKey, ShowcaseView};
 
 /// Route a named key to the view. Mirrors the view handlers' contract:
 /// `true` when the key was consumed and a redraw is needed.
@@ -13,6 +13,8 @@ pub fn handle_named(view: &mut ShowcaseView, named: &NamedKey) -> bool {
     let key = match named {
         NamedKey::Space => return view.handle_key(" "),
         NamedKey::Enter => return view.handle_enter(),
+        NamedKey::ArrowUp => return view.handle_nav(NavKey::Up),
+        NamedKey::ArrowDown => return view.handle_nav(NavKey::Down),
         NamedKey::Tab => EditKey::Tab,
         NamedKey::Backspace => EditKey::Backspace,
         NamedKey::Delete => EditKey::Delete,
