@@ -62,13 +62,19 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     // Fill brush: solid color, or 2-stop linear gradient interpolated by the
     // projection of the point onto the gradient direction across the rect.
-    var fill = in.color;
+    // Every mix happens in premultiplied linear space (sRGB theme color
+    // -> linear, times alpha; the sRGB surface re-encodes on write). In
+    // straight alpha a stop or a fill that is transparent black drags the
+    // mix toward black: the edge-light gradient fading to transparent
+    // went muddy, and a stroke over a transparent fill grew a dark fringe
+    // along its anti-aliased inner edge, on every rounded corner.
+    var fill_pm = premultiply(in.color);
     if (in.gradient.z > 0.0) {
         let dir = in.gradient.xy;
         // Extent of the rect along the gradient axis (from center).
         let extent = max(abs(dir.x) * half_size.x + abs(dir.y) * half_size.y, 1e-4);
         let t = clamp(dot(p, dir) / extent * 0.5 + 0.5, 0.0, 1.0);
-        fill = mix(in.color, in.color2, t);
+        fill_pm = mix(fill_pm, premultiply(in.color2), t);
     }
 
     var color: vec4<f32>;
@@ -76,17 +82,16 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         let inner_r = max(radius - border_w, 0.0);
         let d_inner = sd_rounded_box(p, half_size - vec2(border_w), inner_r);
         let inner_alpha = 1.0 - smoothstep(-0.5, 0.5, d_inner);
-        // Border outside, fill inside
-        color = mix(in.border_color, fill, inner_alpha);
+        // Border outside, fill inside.
+        color = mix(premultiply(in.border_color), fill_pm, inner_alpha);
     } else {
-        color = fill;
+        color = fill_pm;
     }
+    return color * outer_alpha;
+}
 
-    // Linearize (sRGB theme color → linear; the sRGB surface re-encodes on
-    // write), then premultiplied alpha output.
-    let a = color.a * outer_alpha;
-    let rgb = srgb_to_linear(color.rgb);
-    return vec4(rgb * a, a);
+fn premultiply(c: vec4<f32>) -> vec4<f32> {
+    return vec4(srgb_to_linear(c.rgb) * c.a, c.a);
 }
 
 fn srgb_to_linear(c: vec3<f32>) -> vec3<f32> {

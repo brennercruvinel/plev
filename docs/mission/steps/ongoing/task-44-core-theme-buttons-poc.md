@@ -28,6 +28,14 @@ widget antigo e reescrevendo do zero sobre o plev engine.
 - showcase `Buttons` reescrito como a ButtonsPage: Group, RowCards, Card
   com chip de título, um card por estado
 
+## defeito global pego no caminho
+- rect_sdf.wgsl misturava border/fill e os stops do gradiente em alpha
+  reto: fill transparente puxava a borda pro preto na aresta interna
+  anti-aliased, o cinza escuro em toda quina arredondada. agora mistura
+  em premultiplicado linear
+- sombra com blur 0 (os rings `0 0 0 1px`) não tinha AA: `shadow_sigma`
+  tem piso de 0.5px
+
 ## fora deste passo
 - tooltip (feedback), demais páginas (cards, inputs, menu, modal...)
 - remover o HOFF dark glass: só depois de todas as páginas migrarem
