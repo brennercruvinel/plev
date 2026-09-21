@@ -19,8 +19,8 @@ docs/adr/comps-one-design-system-crate.md.
 | `crates/engine/src/theme` | tokens: `colors`, `glass`, `typography`, `spacing`, `radius`, `shape`, `control`, `size`, `duration`, `layout`, `shadows`, `motion`, `effects`. `Theme::hoff()`, `Theme::hoff_light()`, `Theme::named(..)` |
 | `crates/comps/src/core.rs` | `Rect`, `WidgetEvent`, `EventResult`, helpers de cor |
 | `crates/comps/src/recipe.rs` | `glass_pill`, `glass_surface`, `edge_light`, `inset_keylight`, `shadow_node`, `shadow_stack`, `menu_shadow`, `focus_ring`, `rounded_rect(_stroke)` |
-| `crates/comps/src/icons.rs` | 37 ícones lucide |
-| `crates/comps/src/action` | `Button`, `IconButton`, `Chip`, `Badge` |
+| `crates/comps/src/icons.rs` | ícones lucide (a tabela `ICONS`) |
+| `crates/comps/src/action` | `Button`, `IconButton`, `SubmitButton` (receitas de `theme.button`, o kit core), `Chip`, `Badge`; `press.rs` é o modelo de press e o `paint_surface` que os três compartilham |
 | `crates/comps/src/form` | `TextField` (sobre `TextInput`), `Checkbox`, `Switch`, `Slider`, `Select`, `EditKey` |
 | `crates/comps/src/nav` | `Tabs`, `NavLink`, `Sidebar`, `PanelHeader`, `Breadcrumb`, `SplitPane` |
 | `crates/comps/src/content` | `Card`, `Avatar`, `Panel`, `Stat`, `CodeBlock`, `Skeleton`, `Table`, `EmptyState`, `VirtualList`, `Tree`, `Separator` |

@@ -1,12 +1,12 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: ongoing
+status: done
 last-updated: 2026-09-21
 domain: design-system
 ---
 
-# task-44: core theme, buttons poc
+# task-54: core theme, buttons poc, done
 
 ## objetivo
 o tema principal do plev (HOFF dark glass) não bate com o design system
@@ -14,6 +14,9 @@ que o brenner mantém em typescript (tmp/hoff-research-design-sy: next +
 tailwind, tema claro, Inter, shades 1..9, sombras medidas). a série de
 tasks migra o comps pra esse design, um componente por vez, deletando o
 widget antigo e reescrevendo do zero sobre o plev engine.
+
+## resultado
+feito e no showcase (aba Buttons, tema core default). gate verde.
 
 ## este passo (poc)
 - fonte Inter embutida (Regular, Medium, SemiBold), family por tema

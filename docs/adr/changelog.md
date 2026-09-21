@@ -9,6 +9,23 @@ status: living
 
 ## unreleased
 
+- core theme and the buttons poc (2026-09-21, adr
+  core-theme-tailwind-classes-as-recipes): `Theme::hoff_core` is the
+  typescript kit (nine shades, six accents, depths as shadow stacks,
+  Inter -0.02em, radii 8/10/12/16/22) and the showcase default;
+  `theme.button` holds one recipe per button variant and state, the css
+  class lists as tokens; `comps::action` rewritten (Button, IconButton,
+  SubmitButton over a shared press model); the showcase Buttons page is
+  the kit's ButtonsPage. two global fixes: `rect_sdf.wgsl` mixes in
+  premultiplied linear (the dark fringe on every rounded corner is
+  gone) and blur-0 shadows are anti-aliased.
+- editor and git in the showcase (2026-09-21, adr
+  embed-an-app-view-by-frame-origin): two app sections filling the area
+  under the header; the ide is a lib + bin with `GitSession`;
+  `WorkspaceView::set_frame`, `Sidebar.origin`; editor wheel snaps to
+  lines; nav link hover is text-only; the sidebar band fades where it
+  still has links.
+
 - comps, the design system crate (2026-09-18, adr
   comps-one-design-system-crate): `engine::ui`, `text_input`, `overlay`,
   `charts`, `GraphView` and the editor view moved out of the engine into
