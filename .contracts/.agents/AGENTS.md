@@ -20,7 +20,11 @@ browser (webgpu/wasm), and android + ios (the showcase runs on both via the
 native shells in android/ and ios/showcase/; see "## running"). linux/windows
 pending. the design system is crates/comps (every widget, recipe, icon,
 chart, overlay, the editor and the app shell), reading every visual value
-from engine::theme::Theme; the inventory is docs/catalog.md. apps:
+from engine::theme::Theme; the inventory is docs/catalog.md. the design
+source is the private typescript kit (next + tailwind), read locally
+under refs/ and never named or quoted in tracked files; it migrates page
+by page (the buttons are done: `Theme::hoff_core` + `theme.button`), and
+HOFF dark glass stays until the last page moves. apps:
 crates/showcase (design-system gallery, also runs in the browser),
 crates/ide (real git client). knowledge base: docs/ (adr, arc, how-to,
 mission, refs). architecture: docs/arc/arc.toml.
@@ -112,7 +116,7 @@ typos job (non-blocking; the repo is bilingual english/portuguese).
 
 ## running
 
-- apps: `cargo run -p showcase [section] [theme]` (gallery; `script/web`
+- apps: `cargo run -p showcase [section] [theme] [scroll px]` (gallery; `script/web`
   runs `trunk --config web serve` for the browser), `cargo run -p ide
   [path]` (git client), `cargo run -p prime` (particle swarm),
   `cargo run -p engine --example <name>` (any

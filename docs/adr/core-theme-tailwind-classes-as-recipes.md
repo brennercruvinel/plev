@@ -9,9 +9,9 @@ date: 2026-09-21
 
 ## context
 
-the design system the brenner keeps refining lives in typescript
-(tmp/hoff-research-design-sy: next + tailwind, a light kit on nine gray
-shades, Inter, measured shadow stacks). plev's theme was the HOFF dark
+the design system the brenner keeps refining lives in a private
+typescript kit (next + tailwind: a light kit on nine gray shades, Inter,
+measured shadow stacks). plev's theme was the HOFF dark
 glass transcribed from the hoff site, and its buttons did not match: the
 radii disagreed, the rings looked masked, the corners carried a dark
 fringe. the two systems had to converge on the typescript one, one

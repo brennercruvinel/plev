@@ -10,7 +10,7 @@ domain: design-system
 
 ## objetivo
 o tema principal do plev (HOFF dark glass) não bate com o design system
-que o brenner mantém em typescript (tmp/hoff-research-design-sy: next +
+que o brenner mantém em typescript (kit privado: next +
 tailwind, tema claro, Inter, shades 1..9, sombras medidas). a série de
 tasks migra o comps pra esse design, um componente por vez, deletando o
 widget antigo e reescrevendo do zero sobre o plev engine.
@@ -44,8 +44,5 @@ feito e no showcase (aba Buttons, tema core default). gate verde.
 - remover o HOFF dark glass: só depois de todas as páginas migrarem
 
 ## fonte
-- tmp/hoff-research-design-sy/components/Button/index.tsx
-- tmp/hoff-research-design-sy/components/SubmitButton/index.tsx
-- tmp/hoff-research-design-sy/templates/ButtonsPage/index.tsx
-- tmp/hoff-research-design-sy/templates/ColorsPage/content.tsx
-- tmp/hoff-research-design-sy/templates/DepthsPage/index.tsx
+o kit typescript privado (Button, SubmitButton, a página de botões, a
+página de cores e a de depths), lido localmente; nada dele entra no repo.

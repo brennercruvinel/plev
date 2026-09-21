@@ -5,11 +5,10 @@
 //! are the height ladder of the same kit (28 / 36 / 40 / 44 for labeled
 //! buttons, 24 / 36 / 40 for icon-only ones).
 //!
-//! `ButtonTokens::hoff_core` is the measured kit
-//! (tmp/hoff-research-design-sy/components/Button, SubmitButton and the
-//! ButtonsPage). Every other theme derives flat recipes from its palette
-//! through [`ButtonTokens::derive`], so the widgets render under all of
-//! them.
+//! `ButtonTokens::hoff_core` is the measured kit (the private typescript
+//! design system: its Button, SubmitButton and buttons page). Every
+//! other theme derives flat recipes from its palette through
+//! [`ButtonTokens::derive`], so the widgets render under all of them.
 
 use super::scales::ShadowSpec;
 use super::tokens::ColorTokens;
