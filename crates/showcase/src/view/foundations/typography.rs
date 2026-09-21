@@ -50,7 +50,7 @@ enum Line {
 }
 
 /// The HOFF ramp, one entry per mixin of `TypographyScale` (the measured
-/// tokens — docs/adr/measured-design-tokens-over-eyeballed-values).
+/// tokens — docs/ADR/measured-design-tokens-over-eyeballed-values).
 fn ramp() -> [(&'static str, TextStyle, &'static str); 12] {
     let t = TypographyScale::hoff();
     [

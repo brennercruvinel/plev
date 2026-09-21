@@ -10,7 +10,7 @@ date: 2026-09-18
 inventário de tudo que desenhava ui no repositório antes do crate `comps`
 (seções 1 a 4, mantidas como registro do ponto de partida), o destino de
 cada item (seção 5) e o que a migração fez (seção 7). a decisão está em
-docs/adr/comps-one-design-system-crate.md.
+docs/ADR/comps-one-design-system-crate.md.
 
 ## 0. estado atual (depois da migração)
 
@@ -22,7 +22,7 @@ docs/adr/comps-one-design-system-crate.md.
 | `crates/comps/src/icons.rs` | ícones lucide (a tabela `ICONS`) |
 | `crates/comps/src/action` | `Button`, `IconButton`, `SubmitButton` (receitas de `theme.button`, o kit core), `Chip`, `Badge`; `press.rs` é o modelo de press e o `paint_surface` que os três compartilham |
 | `crates/comps/src/form` | `TextField` (sobre `TextInput`), `Checkbox`, `Switch`, `Slider`, `Select`, `EditKey` |
-| `crates/comps/src/nav` | `Tabs`, `NavLink`, `Sidebar`, `PanelHeader`, `Breadcrumb`, `SplitPane` |
+| `crates/comps/src/nav` | `Tabs`, `NavLink`, `Sidebar` (com `NavGroup`), `PanelHeader`, `Breadcrumb`, `SplitPane` |
 | `crates/comps/src/content` | `Card`, `Avatar`, `Panel`, `Stat`, `CodeBlock`, `Skeleton`, `Table`, `EmptyState`, `VirtualList`, `Tree`, `Separator` |
 | `crates/comps/src/feedback` | `Modal`, `ContextMenu`, `Toast`, `Tooltip`, `ProgressBar`, `Spinner`, `Scrollbar` |
 | `crates/comps/src/overlay` | `OverlayManager` |

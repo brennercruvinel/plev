@@ -24,7 +24,9 @@ extend-exclude = [
     # portuguese), where an english spell-checker is all false positives and
     # no signal. typos earns its keep on code and the english-facing docs;
     # docs/arc/ is english-facing (arc.toml), so it stays checked.
-    "docs/adr/",
+    "docs/ADR/",
+    "docs/CHANGELOG.md",
+    "docs/catalog.md",
     "docs/how-to/",
     "docs/mission/",
     "docs/refs/",

@@ -7,6 +7,12 @@ date: 2026-07-13
 
 # one knowledge tree, and a minimal root
 
+correction (2026-09-21): the decisions directory is docs/ADR/ (upper
+case, the acronym), its index is docs/ADR/README.md so github renders it
+on the directory page, and the changelog is docs/CHANGELOG.md at the
+knowledge tree's root. the paths below are as written when the decision
+was taken.
+
 ## context
 
 knowledge lived in three places at once: kdb/ held the decisions, manuals,
@@ -29,7 +35,7 @@ only what tools resolve there.
   and the wider ecosystem render by default: adr/ (decisions), arc/ (the
   architecture trio, moved from doc/arc/), how-to/ (operating manuals),
   mission/ (goals, rules, task history), refs/ (study notes). doc/ is
-  retired; the changelog copy it held was the stale one, docs/adr/
+  retired; the changelog copy it held was the stale one, docs/ADR/
   changelog.md is the living one. the mon working note left the root and
   lives next to its experiment as
   docs/mission/steps/ongoing/mon-experiment-notes.md; a loose notes.md is
@@ -54,14 +60,14 @@ paths updated with the move: crates/engine/tests/arc_sync_guard.rs reads
 docs/arc/, the canonical AGENTS.md and the README point at docs/, the pr
 template names the new paths, typos.toml excludes the bilingual docs
 subtrees one by one so docs/arc/ (english-facing) stays spell-checked, and
-every crate docstring that cited kdb/adr/ now cites docs/adr/.
+every crate docstring that cited kdb/adr/ now cites docs/ADR/.
 
 ## consequences
 
 - a reader learns the repo from two entry points: README for the surface,
   docs/ for the depth. there is no third place.
 - the arc trio sits next to the decisions it summarizes; a structural
-  change touches docs/arc/ and docs/adr/ in one tree, one commit.
+  change touches docs/arc/ and docs/ADR/ in one tree, one commit.
 - the workspace-layout adr
   (workspace-engine-at-root-libs-in-crates-demos-in-examples) keeps its
   three tiers; this adr amends where the docs about them live, not the

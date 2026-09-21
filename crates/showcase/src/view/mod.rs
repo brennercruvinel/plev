@@ -1,16 +1,20 @@
 //! Showcase view: the app chrome (sidebar tree by breakpoint, header)
 //! around one page at a time. This file holds the view's state and
 //! layout; `input.rs` routes events, `render.rs` builds the frame,
-//! `pages.rs` is the page table (the sidebar tree), `draw.rs` has the
-//! helpers the pages share. The pages themselves live in `foundations/`,
-//! `components/` and `apps/`, one module per pane.
+//! `pages.rs` is the page table (the sidebar tree), `panes.rs` holds the
+//! pages' state, `dispatch.rs` routes layout, events, ticks and drawing
+//! to the active pane, `draw.rs` has the helpers the pages share. The
+//! pages themselves live in `foundations/`, `components/` and `apps/`,
+//! one module per pane.
 
 mod apps;
 mod components;
+mod dispatch;
 mod draw;
 mod foundations;
 mod input;
 mod pages;
+mod panes;
 mod render;
 
 #[cfg(test)]
@@ -30,15 +34,6 @@ use comps::prelude::{AppShell, ContextMenu, Modal, Rect, ToastManager};
 use engine::compositor::LayerId;
 use engine::input::scroll::ScrollState;
 use engine::theme::Theme;
-
-use apps::{app, builder, dock, editor, git};
-use components::{
-    avatar, badge, breadcrumb, button, card, chart, checkbox, chip, code_block, context_menu,
-    dialog, empty, graph, icon_button, navigation_menu, panel as panel_page, panel_header,
-    progress, resizable, scroll_area, select, separator, sidebar, skeleton, slider, spinner, stat,
-    switch, table, tabs, toast, tooltip, tree,
-};
-use foundations::{effects, icons, theme as theme_page, typography};
 
 /// Digit hotkeys `1`..`9` and `0` (as ten) reach the first pages of the
 /// table; the rest are reachable from the sidebar.
@@ -98,55 +93,9 @@ pub struct ShowcaseView {
     pub toasts: ToastManager,
     active_overlay: Option<ActiveOverlay>,
 
-    // -- foundations
-    themes: theme_page::ThemePage,
-    typography: typography::TypographyPage,
-    icons: icons::IconsPage,
-    effects: effects::EffectsPage,
-    // -- components
-    avatar: avatar::AvatarPage,
-    badge: badge::BadgePage,
-    breadcrumb: breadcrumb::BreadcrumbPage,
-    button: button::ButtonPage,
-    card: card::CardPage,
-    chart: chart::ChartPage,
-    checkbox: checkbox::CheckboxPage,
-    chip: chip::ChipPage,
-    code_block: code_block::CodeBlockPage,
-    context_menu: context_menu::ContextMenuPage,
-    dialog: dialog::DialogPage,
-    empty: empty::EmptyPage,
-    graph: graph::GraphPage,
-    icon_button: icon_button::IconButtonPage,
-    input: input_page::InputPage,
-    navigation_menu: navigation_menu::NavigationMenuPage,
-    panel: panel_page::PanelPage,
-    panel_header: panel_header::PanelHeaderPage,
-    progress: progress::ProgressPage,
-    resizable: resizable::ResizablePage,
-    scroll_area: scroll_area::ScrollAreaPage,
-    select: select::SelectPage,
-    separator: separator::SeparatorPage,
-    sidebar: sidebar::SidebarPage,
-    skeleton: skeleton::SkeletonPage,
-    slider: slider::SliderPage,
-    spinner: spinner::SpinnerPage,
-    stat: stat::StatPage,
-    switch: switch::SwitchPage,
-    table: table::TablePage,
-    tabs: tabs::TabsPage,
-    toast: toast::ToastPage,
-    tooltip: tooltip::TooltipPage,
-    tree: tree::TreePage,
-    // -- apps demo
-    todo: app::TodoPage,
-    dock: dock::DockPage,
-    editor: editor::EditorPage,
-    git: git::GitPage,
-    builder: builder::BuilderPage,
+    /// One struct per pane, the pages' state.
+    panes: panes::Panes,
 }
-
-use components::input as input_page;
 
 #[derive(Clone, Copy)]
 struct Layers {
@@ -188,49 +137,7 @@ impl ShowcaseView {
             height,
             scale_factor: 1.0,
             shell: AppShell::new(sidebar, header, width, height),
-            themes: theme_page::ThemePage::new(),
-            typography: typography::TypographyPage::new(),
-            icons: icons::IconsPage::new(),
-            effects: effects::EffectsPage::new(),
-            avatar: avatar::AvatarPage::new(),
-            badge: badge::BadgePage::new(),
-            breadcrumb: breadcrumb::BreadcrumbPage::new(),
-            button: button::ButtonPage::new(),
-            card: card::CardPage::new(),
-            chart: chart::ChartPage::new(),
-            checkbox: checkbox::CheckboxPage::new(),
-            chip: chip::ChipPage::new(),
-            code_block: code_block::CodeBlockPage::new(),
-            context_menu: context_menu::ContextMenuPage::new(),
-            dialog: dialog::DialogPage::new(),
-            empty: empty::EmptyPage::new(),
-            graph: graph::GraphPage::new(),
-            icon_button: icon_button::IconButtonPage::new(),
-            input: input_page::InputPage::new(),
-            navigation_menu: navigation_menu::NavigationMenuPage::new(),
-            panel: panel_page::PanelPage::new(),
-            panel_header: panel_header::PanelHeaderPage::new(),
-            progress: progress::ProgressPage::new(),
-            resizable: resizable::ResizablePage::new(&theme),
-            scroll_area: scroll_area::ScrollAreaPage::new(&theme),
-            select: select::SelectPage::new(),
-            separator: separator::SeparatorPage::new(),
-            sidebar: sidebar::SidebarPage::new(),
-            skeleton: skeleton::SkeletonPage::new(),
-            slider: slider::SliderPage::new(),
-            spinner: spinner::SpinnerPage::new(),
-            stat: stat::StatPage::new(),
-            switch: switch::SwitchPage::new(&theme),
-            table: table::TablePage::new(&theme),
-            tabs: tabs::TabsPage::new(),
-            toast: toast::ToastPage::new(),
-            tooltip: tooltip::TooltipPage::new(),
-            tree: tree::TreePage::new(),
-            todo: app::TodoPage::new(),
-            dock: dock::DockPage::new(),
-            editor: editor::EditorPage::new(&theme),
-            git: git::GitPage::new(),
-            builder: builder::BuilderPage::new(),
+            panes: panes::Panes::new(&theme),
             theme,
             theme_name: "core".to_string(),
             page: 0,
@@ -246,25 +153,25 @@ impl ShowcaseView {
     /// Start the Git tab's worker against the cwd repository. `wake` is
     /// how the worker asks the host for a frame.
     pub fn connect_git(&mut self, wake: Wake) {
-        self.git.connect(wake);
+        self.panes.git.connect(wake);
     }
 
     /// Modifier state from the platform shell (alt/shift clicks in the
     /// editor).
     pub fn set_modifiers(&mut self, modifiers: ModifiersState) {
-        self.editor.set_modifiers(modifiers);
+        self.panes.editor.set_modifiers(modifiers);
     }
 
     /// The Editor page takes the raw key first (it wants the winit key
     /// and modifiers). `false` when the editor is not the active page or
     /// did not consume the key.
     pub fn handle_editor_key(&mut self, key: &Key, modifiers: ModifiersState) -> bool {
-        self.pane() == Some(Pane::Editor) && self.editor.handle_key(key, modifiers)
+        self.pane() == Some(Pane::Editor) && self.panes.editor.handle_key(key, modifiers)
     }
 
     /// Arrow up/down: the Git tab's file list.
     pub fn handle_nav(&mut self, key: NavKey) -> bool {
-        self.pane() == Some(Pane::Git) && self.git.handle_nav(key)
+        self.pane() == Some(Pane::Git) && self.panes.git.handle_nav(key)
     }
 
     pub fn resize(&mut self, width: f32, height: f32, scale_factor: f32) {
@@ -362,60 +269,6 @@ impl ShowcaseView {
         rect
     }
 
-    /// Natural (unclipped) height of the active page's content.
-    fn page_content_height(&self, content: Rect) -> f32 {
-        let t = &self.theme;
-        let body = match self.pane() {
-            None => t.size.card_min_w / 2.0,
-            Some(pane) => match pane {
-                Pane::Theme => self.themes.content_height(content, t),
-                Pane::Typography => self.typography.content_height(content),
-                Pane::Icons => self.icons.content_height(content),
-                Pane::Effects => self.effects.content_height(content, t),
-                Pane::Avatar => self.avatar.content_height(content, t),
-                Pane::Badge => self.badge.content_height(content, t),
-                Pane::Breadcrumb => self.breadcrumb.content_height(content, t),
-                Pane::Button => self.button.content_height(content, t),
-                Pane::Card => self.card.content_height(content, t),
-                Pane::Chart => self.chart.content_height(content),
-                Pane::Checkbox => self.checkbox.content_height(content, t),
-                Pane::Chip => self.chip.content_height(content, t),
-                Pane::CodeBlock => self.code_block.content_height(content, t),
-                Pane::ContextMenu => self.context_menu.content_height(content, t),
-                Pane::Dialog => self.dialog.content_height(content, t),
-                Pane::Empty => self.empty.content_height(content, t),
-                Pane::Graph => self.graph.content_height(content, t),
-                Pane::IconButton => self.icon_button.content_height(content, t),
-                Pane::Input => self.input.content_height(content, t),
-                Pane::NavigationMenu => self.navigation_menu.content_height(content, t),
-                Pane::Panel => self.panel.content_height(content, t),
-                Pane::PanelHeader => self.panel_header.content_height(content, t),
-                Pane::Progress => self.progress.content_height(content, t),
-                Pane::Resizable => self.resizable.content_height(content, t),
-                Pane::ScrollArea => self.scroll_area.content_height(content, t),
-                Pane::Select => self.select.content_height(content, t),
-                Pane::Separator => self.separator.content_height(content, t),
-                Pane::Sidebar => self.sidebar.content_height(content, t),
-                Pane::Skeleton => self.skeleton.content_height(content, t),
-                Pane::Slider => self.slider.content_height(content, t),
-                Pane::Spinner => self.spinner.content_height(content, t),
-                Pane::Stat => self.stat.content_height(content, t),
-                Pane::Switch => self.switch.content_height(content, t),
-                Pane::Table => self.table.content_height(content, t),
-                Pane::Tabs => self.tabs.content_height(content, t),
-                Pane::Toast => self.toast.content_height(content, t),
-                Pane::Tooltip => self.tooltip.content_height(content, t),
-                Pane::Tree => self.tree.content_height(content, t),
-                Pane::Todo => self.todo.content_height(content),
-                Pane::Dock => self.dock.content_height(content),
-                Pane::Editor => self.editor.content_height(content),
-                Pane::Git => self.git.content_height(content),
-                Pane::Builder => self.builder.content_height(content),
-            },
-        };
-        body + self.note_h()
-    }
-
     /// Sync the active page's scroll limits with the viewport.
     fn sync_page_scroll(&mut self) {
         let content = self.content_rect();
@@ -426,9 +279,9 @@ impl ShowcaseView {
     }
 
     fn set_theme(&mut self, name: &str) {
-        if let Some(theme) = theme_page::resolve(name) {
-            self.editor.set_theme(&theme);
-            self.git.set_theme(name);
+        if let Some(theme) = foundations::theme::resolve(name) {
+            self.panes.editor.set_theme(&theme);
+            self.panes.git.set_theme(name);
             self.theme = theme;
             self.theme_name = name.to_string();
         }

@@ -22,7 +22,7 @@ visible mutation invalidates (`EventResult::changed` / request redraw).
 the showcase is the template app. the declarative builder
 (`engine::builder`) is supported for prototypes and demos; `view`,
 `component`, `signal` and `narrate` are experimental: do not start app
-code on them (docs/adr/official-app-pattern.md).
+code on them (docs/ADR/official-app-pattern.md).
 
 ## tokens, never literals
 
@@ -61,7 +61,7 @@ five widgets until comps absorbed them (docs/catalog.md records what
 moved where). the single most expensive failure pattern in this project
 was app-layer reimplementation of an existing feature. grep
 crates/engine/src and crates/comps/src first; also look for one screen
-that already does it right (the showcase sections are the in-repo proof
+that already does it right (the showcase pages are the in-repo proof
 of correct responsive layout).
 
 ## text

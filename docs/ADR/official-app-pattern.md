@@ -33,8 +33,8 @@ and report `EventResult`, and every visible mutation invalidates
 
 ## consequences
 
-- new sections and apps copy the showcase wiring (one TextStyle per run,
-  `EventResult` merge, tick gated by the visible section)
+- new pages and apps copy the showcase wiring (one TextStyle per run,
+  `EventResult` merge, tick gated by the visible page)
 - experimental modules stay compiled and tested (nothing is deleted);
   promotion out of experimental requires an adr showing an app-scale use
 

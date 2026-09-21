@@ -121,7 +121,7 @@ keyframes are full snapshots so seek is O(1), between them only discovered
 deltas travel, and a node that does not change costs zero bytes. `lot`
 converts a lottie json into it once, `svg` imports a still through the
 same door, and no foreign runtime is ever embedded. the decision record is
-[docs/adr/monster-format-v0.md](docs/adr/monster-format-v0.md).
+[docs/ADR/monster-format-v0.md](docs/ADR/monster-format-v0.md).
 
 `parser` turns ui source from another framework into plev builder code.
 it maps colors to theme tokens, obeys the engine contracts, and reports
@@ -167,7 +167,7 @@ edits, `monster` codec, `lot` conversion, `parser` transpile.
 ## docs
 
 - [docs/arc/arc.toml](docs/arc/arc.toml): the architecture in one file. tables for machines, prose for humans, the frame-flow diagram at the end.
-- [docs/adr/](docs/adr/): the decision records.
+- [docs/ADR/](docs/ADR/): the decision records.
 - [docs/how-to/code-against-the-plev-engine.md](docs/how-to/code-against-the-plev-engine.md): the operating manual, read before touching ui or rendering code.
 - [.contracts/.agents/AGENTS.md](.contracts/.agents/AGENTS.md): the single instruction source for ai agents and contributors. route every tool here, no per-tool files.
 

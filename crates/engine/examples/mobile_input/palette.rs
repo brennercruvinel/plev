@@ -66,7 +66,7 @@ pub(crate) fn pal() -> &'static Palette {
 }
 
 // One TextStyle per run, shared by measurement and drawing
-// (docs/adr/one-text-style-for-measurement-and-drawing.md). Weights are
+// (docs/ADR/one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 page title, 600 card title, 400 body; numeric status
 // readouts render in the same embedded Inclusive Sans (the only UI family).
 
