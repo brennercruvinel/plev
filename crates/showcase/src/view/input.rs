@@ -1,13 +1,43 @@
 //! Input routing of the gallery: keyboard shortcuts and the text routes
-//! of the sections that take typing, the pointer chain (toasts, the
-//! active overlay, the open select, the chrome, the section, the page
-//! scroll), and the demo overlays the Overlays section opens.
+//! of the pages that take typing, the pointer chain (toasts, the active
+//! overlay, the open select, the chrome, the page, the page scroll), and
+//! the demo overlays the Dialog and Context Menu pages open.
 
 use comps::overlay::OverlayKind;
 use comps::prelude::{EventResult, Modal, ModalAction, Rect, WidgetEvent};
 use engine::theme::Intent;
 
-use super::{ActiveOverlay, EditKey, Section, ShowcaseView, overlays};
+use super::components::{context_menu, toast};
+use super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
+
+/// Non-character editing keys the platform shell forwards (winit-free so
+/// headless tests can drive them).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EditKey {
+    Tab,
+    Backspace,
+    Delete,
+    Left,
+    Right,
+    Home,
+    End,
+}
+
+/// The field-level subset. Tab is focus traversal, never an edit, so it
+/// is the one key that panics here: callers match it out first.
+impl From<EditKey> for comps::form::EditKey {
+    fn from(key: EditKey) -> Self {
+        match key {
+            EditKey::Backspace => Self::Backspace,
+            EditKey::Delete => Self::Delete,
+            EditKey::Left => Self::Left,
+            EditKey::Right => Self::Right,
+            EditKey::Home => Self::Home,
+            EditKey::End => Self::End,
+            EditKey::Tab => unreachable!("Tab is focus traversal, handled by the page"),
+        }
+    }
+}
 
 impl ShowcaseView {
     // -- Input ---------------------------------------------------------------
@@ -16,13 +46,13 @@ impl ShowcaseView {
     pub fn handle_key(&mut self, key: &str) -> bool {
         // A focused text field owns the characters: "t" types, it does
         // not switch the theme.
-        if self.section == Section::Forms && self.forms.handle_text(key) {
-            return true;
-        }
-        if self.section == Section::App && self.app.handle_text(key) {
-            return true;
-        }
-        if self.section == Section::Git && self.git.handle_text(key) {
+        let typed = match self.pane() {
+            Some(Pane::Input) => self.input.handle_text(key),
+            Some(Pane::Todo) => self.todo.handle_text(key),
+            Some(Pane::Git) => self.git.handle_text(key),
+            _ => false,
+        };
+        if typed {
             return true;
         }
         match key {
@@ -37,84 +67,93 @@ impl ShowcaseView {
                 true
             }
             d @ ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9") => {
-                let idx = d.as_bytes()[0] - b'1';
-                self.set_section(Section::ALL[idx as usize]);
+                let idx = (d.as_bytes()[0] - b'1') as usize;
+                self.set_page(idx);
                 true
             }
-            // "0" reads as 10 (matching the sidebar numbering); sections
+            // "0" reads as 10 (matching the sidebar hints); the pages
             // past the tenth are reachable via the sidebar.
-            "0" if Section::ALL.len() >= 10 => {
-                self.set_section(Section::ALL[9]);
+            "0" if PAGES.len() >= HOTKEY_PAGES => {
+                self.set_page(HOTKEY_PAGES - 1);
                 true
             }
             _ => false,
         }
     }
 
-    /// Close the topmost overlay (Escape): forms focus blurs first, then
-    /// the open select, then the overlay stack. Returns `false` when
-    /// there was nothing to close (caller may quit).
+    /// Close the topmost overlay (Escape): the page's focus blurs first
+    /// (an open select closes), then the overlay stack. Returns `false`
+    /// when there was nothing to close (caller may quit).
     pub fn close_top_overlay(&mut self) -> bool {
-        if self.section == Section::Forms && self.forms.handle_escape() {
-            return true;
-        }
-        if self.section == Section::App && self.app.handle_escape() {
-            return true;
-        }
-        if self.section == Section::Git && self.git.handle_escape() {
-            return true;
-        }
-        if self.forms.select_is_open() {
-            self.forms.close_select();
+        let blurred = match self.pane() {
+            Some(Pane::Input) => self.input.handle_escape(),
+            Some(Pane::Checkbox) => self.checkbox.handle_escape(),
+            Some(Pane::Switch) => self.switch.handle_escape(),
+            Some(Pane::Slider) => self.slider.handle_escape(),
+            Some(Pane::Select) => self.select.handle_escape(),
+            Some(Pane::Tabs) => self.tabs.handle_escape(),
+            Some(Pane::Todo) => self.todo.handle_escape(),
+            Some(Pane::Git) => self.git.handle_escape(),
+            _ => false,
+        };
+        if blurred {
             return true;
         }
         self.overlay_mgr.pop_animated().is_some()
     }
 
     /// Non-character editing keys (Tab, Backspace, arrows) forwarded by
-    /// the platform shell. Forms: Tab cycles its widgets, the rest edit
-    /// the focused text field. App: the add field.
+    /// the platform shell: Tab cycles the page's focusable widgets, the
+    /// rest edit its focused text field.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
-        match self.section {
-            Section::Forms => self.forms.handle_edit_key(key),
-            Section::App => self.app.handle_edit_key(key),
-            Section::Git if key == EditKey::Backspace => self.git.handle_backspace(),
+        match self.pane() {
+            Some(Pane::Input) => self.input.handle_edit_key(key),
+            Some(Pane::Checkbox) => self.checkbox.handle_edit_key(key),
+            Some(Pane::Switch) => self.switch.handle_edit_key(key),
+            Some(Pane::Slider) => self.slider.handle_edit_key(key),
+            Some(Pane::Select) => self.select.handle_edit_key(key),
+            Some(Pane::Tabs) => self.tabs.handle_edit_key(key),
+            Some(Pane::Todo) => self.todo.handle_edit_key(key),
+            Some(Pane::Git) if key == EditKey::Backspace => self.git.handle_backspace(),
             _ => false,
         }
     }
 
-    /// Enter: the App section adds the field text as a todo; the Git tab
+    /// Enter: the todo app adds the field text as a todo; the Git tab
     /// submits its commit form.
     pub fn handle_enter(&mut self) -> bool {
-        match self.section {
-            Section::App => self.app.handle_enter(),
-            Section::Git => self.git.handle_enter(),
+        match self.pane() {
+            Some(Pane::Todo) => self.todo.handle_enter(),
+            Some(Pane::Git) => self.git.handle_enter(),
             _ => false,
         }
     }
 
     pub fn handle_right_click(&mut self, x: f32, y: f32) -> bool {
-        if self.section == Section::Git {
-            let content = self.page_rect();
-            return self.git.handle_right_click(x, y, content);
+        match self.pane() {
+            Some(Pane::Git) => {
+                let content = self.page_rect();
+                self.git.handle_right_click(x, y, content)
+            }
+            Some(Pane::ContextMenu) if self.active_overlay.is_none() => {
+                let content = self.page_rect();
+                if !context_menu::ContextMenuPage::area(content, &self.theme).contains(x, y) {
+                    return false;
+                }
+                self.open_menu(x, y);
+                true
+            }
+            _ => false,
         }
-        if self.section != Section::Overlays || self.active_overlay.is_some() {
-            return false;
-        }
-        let content = self.page_rect();
-        if !self.overlays.menu_area(content, &self.theme).contains(x, y) {
-            return false;
-        }
-        self.open_menu(x, y);
-        true
     }
 
     fn open_menu(&mut self, x: f32, y: f32) {
-        let widget = overlays::demo_menu();
+        let widget = context_menu::demo_menu();
         let (w, h) = widget.size(&self.theme);
         // Keep the menu inside the viewport.
-        let mx = x.min(self.width - w - 8.0);
-        let my = y.min(self.height - h - 8.0);
+        let margin = self.theme.spacing.sm;
+        let mx = x.min(self.width - w - margin);
+        let my = y.min(self.height - h - margin);
         let id = self.overlay_mgr.push_animated(
             OverlayKind::ContextMenu { items: vec![] },
             mx,
@@ -225,7 +264,7 @@ impl ShowcaseView {
                     ActiveOverlay::Menu { widget, x, y, .. } => {
                         let (r, clicked) = widget.handle_event(event, *x, *y, &self.theme);
                         if let Some(item) = clicked {
-                            let label = overlays::menu_label(item);
+                            let label = context_menu::menu_label(item);
                             self.overlay_mgr.pop_id_animated(id);
                             self.toasts.push(
                                 format!("Context menu: {label}"),
@@ -249,11 +288,11 @@ impl ShowcaseView {
             }
         }
 
-        // Open select dropdown gets priority over everything beneath it.
-        if self.section == Section::Forms && self.forms.select_is_open() {
+        // An open select dropdown gets priority over everything beneath.
+        if self.pane() == Some(Pane::Select) && self.select.is_open() {
             let r = self
-                .forms
-                .route_select(event, self.page_rect(), &self.theme);
+                .select
+                .handle_event(event, self.page_rect(), &self.theme);
             if r.handled || r.changed {
                 return r.changed;
             }
@@ -263,7 +302,7 @@ impl ShowcaseView {
         // the menu button on a phone.
         let (shell_result, nav) = self.shell.handle_event(event, &self.theme);
         if let Some(i) = nav {
-            self.set_section(Section::ALL[i]);
+            self.set_page(i);
             return true;
         }
         result = result.merge(shell_result);
@@ -283,61 +322,85 @@ impl ShowcaseView {
         }
 
         let content = self.page_rect();
-        let section_result = match self.section {
-            Section::Cards => self.cards.handle_event(event, content, &self.theme),
-            Section::Buttons => self.buttons.handle_event(event, content, &self.theme),
-            Section::Forms => self.forms.handle_event(event, content, &self.theme),
-            Section::Overlays => {
-                let (r, action) = self.overlays.handle_event(event, content, &self.theme);
-                match action {
-                    overlays::OverlayAction::OpenModal { destructive } => {
-                        self.open_modal(destructive)
+        let t = &self.theme;
+        let page_result = match self.pane() {
+            None => EventResult::IGNORED,
+            Some(pane) => match pane {
+                Pane::Theme => {
+                    let (r, picked) = self.themes.handle_event(event, content);
+                    if let Some(name) = picked {
+                        self.set_theme(name);
                     }
-                    overlays::OverlayAction::PushToast(intent) => {
-                        let msg = match intent {
-                            Intent::Neutral => "Neutral toast — plain information.",
-                            Intent::Constructive => "Saved! Everything went fine.",
-                            Intent::Destructive => "Failed to push: remote rejected.",
-                            Intent::Informational => "3 new commits fetched from origin.",
-                        };
-                        self.toasts.push(msg, intent, &self.theme);
+                    r
+                }
+                Pane::Typography => self.typography.handle_event(event, content),
+                Pane::Icons => self.icons.handle_event(event, content),
+                Pane::Effects => self.effects.handle_event(event, content),
+                Pane::Avatar => self.avatar.handle_event(event, content, t),
+                Pane::Badge => self.badge.handle_event(event, content, t),
+                Pane::Breadcrumb => self.breadcrumb.handle_event(event, content, t),
+                Pane::Button => self.button.handle_event(event, content, t),
+                Pane::Card => self.card.handle_event(event, content, t),
+                Pane::Chart => self.chart.handle_event(event, content),
+                Pane::Checkbox => self.checkbox.handle_event(event, content, t),
+                Pane::Chip => self.chip.handle_event(event, content, t),
+                Pane::CodeBlock => self.code_block.handle_event(event, content, t),
+                Pane::ContextMenu => self.context_menu.handle_event(event, content, t),
+                Pane::Dialog => {
+                    let (r, open) = self.dialog.handle_event(event, content, t);
+                    if let Some(destructive) = open {
+                        self.open_modal(destructive);
                     }
-                    overlays::OverlayAction::None => {}
+                    r
                 }
-                r
-            }
-            Section::Lists => self.lists.handle_event(event, content, &self.theme),
-            Section::Icons => self.icons_gallery.handle_event(event, content),
-            Section::Charts => self.charts.handle_event(event, content),
-            Section::Dock => self.dock.handle_event(event, content),
-            Section::App => self.app.handle_event(event, content, &self.theme),
-            Section::Builder => self.builder_tour.handle_event(event, content),
-            Section::Extras => self.extras.handle_event(event, content, &self.theme),
-            Section::Typography => self.typography.handle_event(event, content),
-            Section::Effects => self.effects.handle_event(event, content),
-            Section::Chrome => self.chrome.handle_event(event, content, &self.theme),
-            Section::Editor => self.editor.handle_event(event, content),
-            Section::Git => self.git.handle_event(event, content),
-            Section::Theme => {
-                let (r, picked) = self.themes.handle_event(event, content);
-                if let Some(name) = picked {
-                    self.set_theme(name);
+                Pane::Empty => self.empty.handle_event(event, content, t),
+                Pane::Graph => self.graph.handle_event(event, content, t),
+                Pane::IconButton => self.icon_button.handle_event(event, content, t),
+                Pane::Input => self.input.handle_event(event, content, t),
+                Pane::NavigationMenu => self.navigation_menu.handle_event(event, content, t),
+                Pane::Panel => self.panel.handle_event(event, content, t),
+                Pane::PanelHeader => self.panel_header.handle_event(event, content, t),
+                Pane::Progress => self.progress.handle_event(event, content, t),
+                Pane::Resizable => self.resizable.handle_event(event, content, t),
+                Pane::ScrollArea => self.scroll_area.handle_event(event, content, t),
+                Pane::Select => self.select.handle_event(event, content, t),
+                Pane::Separator => self.separator.handle_event(event, content, t),
+                Pane::Sidebar => self.sidebar.handle_event(event, content, t),
+                Pane::Skeleton => self.skeleton.handle_event(event, content, t),
+                Pane::Slider => self.slider.handle_event(event, content, t),
+                Pane::Spinner => self.spinner.handle_event(event, content, t),
+                Pane::Stat => self.stat.handle_event(event, content, t),
+                Pane::Switch => self.switch.handle_event(event, content, t),
+                Pane::Table => self.table.handle_event(event, content, t),
+                Pane::Tabs => self.tabs.handle_event(event, content, t),
+                Pane::Toast => {
+                    let (r, queued) = self.toast.handle_event(event, content, t);
+                    if let Some(intent) = queued {
+                        self.toasts
+                            .push(toast::ToastPage::message(intent), intent, &self.theme);
+                    }
+                    r
                 }
-                r
-            }
+                Pane::Tooltip => self.tooltip.handle_event(event, content, t),
+                Pane::Tree => self.tree.handle_event(event, content, t),
+                Pane::Todo => self.todo.handle_event(event, content, t),
+                Pane::Dock => self.dock.handle_event(event, content),
+                Pane::Editor => self.editor.handle_event(event, content),
+                Pane::Git => self.git.handle_event(event, content),
+                Pane::Builder => self.builder.handle_event(event, content),
+            },
         };
-        result = result.merge(section_result);
+        result = result.merge(page_result);
 
-        // Page scroll: when no widget consumed the wheel, scroll the
-        // section itself (HOFF pages overflow the window). Clamped by
+        // Page scroll: when no widget consumed the wheel, scroll the page
+        // itself (HOFF pages overflow the window). Clamped by
         // ScrollState; only an actual offset change requests a frame.
         if let WidgetEvent::Scroll { x, delta, .. } = *event
             && !result.handled
             && x >= page_x
         {
             self.sync_page_scroll();
-            let idx = self.section_idx();
-            let scroll = &mut self.page_scroll[idx];
+            let scroll = &mut self.page_scroll[self.page];
             let old = scroll.offset();
             scroll.scroll_by(delta);
             if scroll.offset() != old {

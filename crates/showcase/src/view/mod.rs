@@ -1,48 +1,48 @@
-//! Showcase view: the app chrome (sidebar by breakpoint, header) around
-//! one module per gallery section. This file holds the view's state and
+//! Showcase view: the app chrome (sidebar tree by breakpoint, header)
+//! around one page at a time. This file holds the view's state and
 //! layout; `input.rs` routes events, `render.rs` builds the frame,
-//! `section.rs` names the sections, `draw.rs` has the helpers the
-//! sections share.
+//! `pages.rs` is the page table (the sidebar tree), `draw.rs` has the
+//! helpers the pages share. The pages themselves live in `foundations/`,
+//! `components/` and `apps/`, one module per pane.
 
-mod app;
-mod builder_tour;
-mod buttons;
-mod cards;
-mod charts;
-mod chrome;
-mod dock;
+mod apps;
+mod components;
 mod draw;
-mod editor;
-mod effects;
-mod extras;
-mod forms;
-mod git;
-mod icons_gallery;
+mod foundations;
 mod input;
-mod lists;
-mod overlays;
+mod pages;
 mod render;
-mod section;
-mod theme_gallery;
-mod typography;
 
 #[cfg(test)]
 mod tests;
 
-pub use forms::EditKey;
-pub use git::{NavKey, Wake};
-pub use section::Section;
+pub use apps::git::{NavKey, Wake};
+pub use input::EditKey;
+pub use pages::{Body, Group, PAGES, Page, Pane};
 
 pub(crate) use draw::{group_label, panel, text, with_alpha};
 
 use winit::keyboard::{Key, ModifiersState};
 
-use comps::nav::{NavLink, PanelHeader, Sidebar};
+use comps::nav::{NavGroup, NavLink, PanelHeader, Sidebar};
 use comps::overlay::{OverlayId, OverlayManager};
 use comps::prelude::{AppShell, ContextMenu, Modal, Rect, ToastManager};
 use engine::compositor::LayerId;
 use engine::input::scroll::ScrollState;
 use engine::theme::Theme;
+
+use apps::{app, builder, dock, editor, git};
+use components::{
+    avatar, badge, breadcrumb, button, card, chart, checkbox, chip, code_block, context_menu,
+    dialog, empty, graph, icon_button, navigation_menu, panel as panel_page, panel_header,
+    progress, resizable, scroll_area, select, separator, sidebar, skeleton, slider, spinner, stat,
+    switch, table, tabs, toast, tooltip, tree,
+};
+use foundations::{effects, icons, theme as theme_page, typography};
+
+/// Digit hotkeys `1`..`9` and `0` (as ten) reach the first pages of the
+/// table; the rest are reachable from the sidebar.
+const HOTKEY_PAGES: usize = 10;
 
 // ---------------------------------------------------------------------------
 // Active overlay bookkeeping
@@ -79,14 +79,15 @@ pub struct ShowcaseView {
     pub scale_factor: f32,
     pub theme: Theme,
     pub theme_name: String,
-    pub section: Section,
+    /// Index into [`PAGES`].
+    pub page: usize,
     /// The app chrome: sidebar by breakpoint (full, rail, drawer), the
-    /// section header, and the content rect the section lays out in.
+    /// page header, and the content rect the page lays out in.
     pub shell: AppShell,
-    /// Page-level vertical scroll, one per section: HOFF pages are taller
-    /// than the window (Cards, Theme, …); without this the wheel is dead
+    /// Page-level vertical scroll, one per page: HOFF pages are taller
+    /// than the window (Card, Theme, …); without this the wheel is dead
     /// everywhere outside the virtualized list.
-    page_scroll: [ScrollState; Section::ALL.len()],
+    page_scroll: Vec<ScrollState>,
     /// A page offset requested before the first layout (launch argument
     /// for snapshots); applied once the content height is known.
     pending_scroll: Option<f32>,
@@ -97,24 +98,55 @@ pub struct ShowcaseView {
     pub toasts: ToastManager,
     active_overlay: Option<ActiveOverlay>,
 
-    cards: cards::CardsSection,
-    buttons: buttons::ButtonsSection,
-    forms: forms::FormsSection,
-    overlays: overlays::OverlaysSection,
-    lists: lists::ListsSection,
-    icons_gallery: icons_gallery::IconsSection,
-    themes: theme_gallery::ThemeSection,
-    charts: charts::ChartsSection,
-    dock: dock::DockSection,
-    app: app::AppSection,
-    builder_tour: builder_tour::BuilderSection,
-    extras: extras::ExtrasSection,
-    typography: typography::TypographySection,
-    effects: effects::EffectsSection,
-    chrome: chrome::ChromeSection,
-    editor: editor::EditorSection,
-    git: git::GitSection,
+    // -- foundations
+    themes: theme_page::ThemePage,
+    typography: typography::TypographyPage,
+    icons: icons::IconsPage,
+    effects: effects::EffectsPage,
+    // -- components
+    avatar: avatar::AvatarPage,
+    badge: badge::BadgePage,
+    breadcrumb: breadcrumb::BreadcrumbPage,
+    button: button::ButtonPage,
+    card: card::CardPage,
+    chart: chart::ChartPage,
+    checkbox: checkbox::CheckboxPage,
+    chip: chip::ChipPage,
+    code_block: code_block::CodeBlockPage,
+    context_menu: context_menu::ContextMenuPage,
+    dialog: dialog::DialogPage,
+    empty: empty::EmptyPage,
+    graph: graph::GraphPage,
+    icon_button: icon_button::IconButtonPage,
+    input: input_page::InputPage,
+    navigation_menu: navigation_menu::NavigationMenuPage,
+    panel: panel_page::PanelPage,
+    panel_header: panel_header::PanelHeaderPage,
+    progress: progress::ProgressPage,
+    resizable: resizable::ResizablePage,
+    scroll_area: scroll_area::ScrollAreaPage,
+    select: select::SelectPage,
+    separator: separator::SeparatorPage,
+    sidebar: sidebar::SidebarPage,
+    skeleton: skeleton::SkeletonPage,
+    slider: slider::SliderPage,
+    spinner: spinner::SpinnerPage,
+    stat: stat::StatPage,
+    switch: switch::SwitchPage,
+    table: table::TablePage,
+    tabs: tabs::TabsPage,
+    toast: toast::ToastPage,
+    tooltip: tooltip::TooltipPage,
+    tree: tree::TreePage,
+    // -- apps demo
+    todo: app::TodoPage,
+    dock: dock::DockPage,
+    editor: editor::EditorPage,
+    git: git::GitPage,
+    builder: builder::BuilderPage,
 }
+
+use components::input as input_page;
 
 #[derive(Clone, Copy)]
 struct Layers {
@@ -126,48 +158,83 @@ struct Layers {
 impl ShowcaseView {
     pub fn new(width: f32, height: f32) -> Self {
         let theme = Theme::hoff_core();
-        let links = Section::ALL
+        let links = PAGES
             .iter()
             .enumerate()
-            .map(|(i, s)| {
-                NavLink::new(s.title())
-                    .icon(s.icon())
-                    .hint(format!("{}", i + 1))
+            .map(|(i, p)| {
+                let link = NavLink::new(p.title).icon(p.icon);
+                if i < HOTKEY_PAGES {
+                    link.hint(format!("{}", (i + 1) % 10))
+                } else {
+                    link
+                }
             })
             .collect();
+        let groups = Group::ALL
+            .iter()
+            .map(|g| NavGroup::new(g.label(), g.pages()))
+            .collect();
         let sidebar = Sidebar::new(links)
+            .groups(groups)
             .brand("plev", "HOFF DESIGN SYSTEM")
             .footer(vec![
                 "T  cycle core / hoff / dark / light".into(),
                 "Esc  close overlays".into(),
             ]);
-        let header = PanelHeader::new(Section::Cards.title()).blurb(Section::Cards.blurb());
+        let first = &PAGES[0];
+        let header = PanelHeader::new(first.title).blurb(first.blurb);
         Self {
             width,
             height,
             scale_factor: 1.0,
             shell: AppShell::new(sidebar, header, width, height),
-            cards: cards::CardsSection::new(),
-            forms: forms::FormsSection::new(&theme),
-            buttons: buttons::ButtonsSection::new(),
-            overlays: overlays::OverlaysSection::new(),
-            lists: lists::ListsSection::new(),
-            icons_gallery: icons_gallery::IconsSection::new(),
-            themes: theme_gallery::ThemeSection::new(),
-            charts: charts::ChartsSection::new(),
-            dock: dock::DockSection::new(),
-            app: app::AppSection::new(),
-            builder_tour: builder_tour::BuilderSection::new(),
-            extras: extras::ExtrasSection::new(&theme),
-            typography: typography::TypographySection::new(),
-            effects: effects::EffectsSection::new(),
-            chrome: chrome::ChromeSection::new(&theme),
-            editor: editor::EditorSection::new(&theme),
-            git: git::GitSection::new(),
+            themes: theme_page::ThemePage::new(),
+            typography: typography::TypographyPage::new(),
+            icons: icons::IconsPage::new(),
+            effects: effects::EffectsPage::new(),
+            avatar: avatar::AvatarPage::new(),
+            badge: badge::BadgePage::new(),
+            breadcrumb: breadcrumb::BreadcrumbPage::new(),
+            button: button::ButtonPage::new(),
+            card: card::CardPage::new(),
+            chart: chart::ChartPage::new(),
+            checkbox: checkbox::CheckboxPage::new(),
+            chip: chip::ChipPage::new(),
+            code_block: code_block::CodeBlockPage::new(),
+            context_menu: context_menu::ContextMenuPage::new(),
+            dialog: dialog::DialogPage::new(),
+            empty: empty::EmptyPage::new(),
+            graph: graph::GraphPage::new(),
+            icon_button: icon_button::IconButtonPage::new(),
+            input: input_page::InputPage::new(),
+            navigation_menu: navigation_menu::NavigationMenuPage::new(),
+            panel: panel_page::PanelPage::new(),
+            panel_header: panel_header::PanelHeaderPage::new(),
+            progress: progress::ProgressPage::new(),
+            resizable: resizable::ResizablePage::new(&theme),
+            scroll_area: scroll_area::ScrollAreaPage::new(&theme),
+            select: select::SelectPage::new(),
+            separator: separator::SeparatorPage::new(),
+            sidebar: sidebar::SidebarPage::new(),
+            skeleton: skeleton::SkeletonPage::new(),
+            slider: slider::SliderPage::new(),
+            spinner: spinner::SpinnerPage::new(),
+            stat: stat::StatPage::new(),
+            switch: switch::SwitchPage::new(&theme),
+            table: table::TablePage::new(&theme),
+            tabs: tabs::TabsPage::new(),
+            toast: toast::ToastPage::new(),
+            tooltip: tooltip::TooltipPage::new(),
+            tree: tree::TreePage::new(),
+            todo: app::TodoPage::new(),
+            dock: dock::DockPage::new(),
+            editor: editor::EditorPage::new(&theme),
+            git: git::GitPage::new(),
+            builder: builder::BuilderPage::new(),
             theme,
             theme_name: "core".to_string(),
-            section: Section::Cards,
-            page_scroll: std::array::from_fn(|_| ScrollState::new()),
+            page: 0,
+            page_scroll: (0..PAGES.len()).map(|_| ScrollState::new()).collect(),
             pending_scroll: None,
             overlay_mgr: OverlayManager::new(),
             layers: None,
@@ -188,16 +255,16 @@ impl ShowcaseView {
         self.editor.set_modifiers(modifiers);
     }
 
-    /// The Editor section takes the raw key first (it wants the winit key
-    /// and modifiers). `false` when the editor is not the active section
-    /// or did not consume the key.
+    /// The Editor page takes the raw key first (it wants the winit key
+    /// and modifiers). `false` when the editor is not the active page or
+    /// did not consume the key.
     pub fn handle_editor_key(&mut self, key: &Key, modifiers: ModifiersState) -> bool {
-        self.section == Section::Editor && self.editor.handle_key(key, modifiers)
+        self.pane() == Some(Pane::Editor) && self.editor.handle_key(key, modifiers)
     }
 
     /// Arrow up/down: the Git tab's file list.
     pub fn handle_nav(&mut self, key: NavKey) -> bool {
-        self.section == Section::Git && self.git.handle_nav(key)
+        self.pane() == Some(Pane::Git) && self.git.handle_nav(key)
     }
 
     pub fn resize(&mut self, width: f32, height: f32, scale_factor: f32) {
@@ -207,16 +274,32 @@ impl ShowcaseView {
         self.shell.resize(width, height);
     }
 
-    /// Switch the active section and keep the chrome in step (sidebar
-    /// link, header title and blurb).
-    fn set_section(&mut self, section: Section) {
-        self.section = section;
-        let idx = self.section_idx();
-        self.shell.sidebar.set_active(idx);
-        self.shell.header = PanelHeader::new(section.title()).blurb(section.blurb());
+    /// The active page.
+    pub fn current(&self) -> &'static Page {
+        &PAGES[self.page]
     }
 
-    /// Content area the shell hands the section: past the sidebar, under
+    /// The active page's title (what the launch argument names).
+    pub fn page_title(&self) -> &'static str {
+        self.current().title
+    }
+
+    /// The pane behind the active page (none on a placeholder).
+    fn pane(&self) -> Option<Pane> {
+        self.current().pane()
+    }
+
+    /// Switch the active page and keep the chrome in step (sidebar
+    /// link, header title and blurb).
+    fn set_page(&mut self, index: usize) {
+        let index = index.min(PAGES.len() - 1);
+        self.page = index;
+        let page = &PAGES[index];
+        self.shell.sidebar.set_active(index);
+        self.shell.header = PanelHeader::new(page.title).blurb(page.blurb);
+    }
+
+    /// Content area the shell hands the page: past the sidebar, under
     /// the header, inside the gutter, never narrower than a card.
     fn content_rect(&self) -> Rect {
         let mut r = self.shell.layout(&self.theme).content;
@@ -236,78 +319,114 @@ impl ShowcaseView {
 
     /// The rect an embedded app (Editor, Git) fills: from the sidebar's
     /// edge to the window's, from under the header to the bottom. No
-    /// gutter: these sections are apps, not pages.
+    /// gutter: these pages are apps, not pages.
     fn app_rect(&self) -> Rect {
         let viewport = self.content_rect();
         let x = self.page_x();
         Rect::new(x, viewport.y, self.width - x, self.height - viewport.y)
     }
 
-    /// True for the sections that are apps filling `app_rect`.
+    /// True for the pages that are apps filling `app_rect`.
     fn is_app(&self) -> bool {
-        matches!(self.section, Section::Editor | Section::Git)
+        self.pane().is_some_and(Pane::is_app)
     }
 
-    fn section_idx(&self) -> usize {
-        Section::ALL
-            .iter()
-            .position(|s| *s == self.section)
-            .unwrap_or(0)
+    /// Height of the note an alias page shows above the shared example
+    /// (zero for the other pages).
+    fn note_h(&self) -> f32 {
+        match self.current().body {
+            Body::Alias { .. } => {
+                self.theme.typography.caption_r().line_height + self.theme.spacing.xl
+            }
+            _ => 0.0,
+        }
     }
 
-    /// Current page scroll offset of the active section.
+    /// Current page scroll offset of the active page.
     pub fn page_offset(&self) -> f32 {
-        self.page_scroll[self.section_idx()].offset()
+        self.page_scroll[self.page].offset()
     }
 
-    /// Content rect shifted up by the page scroll offset. Sections lay out,
-    /// hit-test and render against this rect so events and pixels always
-    /// agree; the render clips it back to the content viewport.
+    /// Content rect shifted up by the page scroll offset and down by
+    /// the alias note. Pages lay out, hit-test and render against this
+    /// rect so events and pixels always agree; the render clips it back
+    /// to the content viewport.
     fn page_rect(&self) -> Rect {
         if self.is_app() {
             return self.app_rect();
         }
         let mut rect = self.content_rect();
         rect.y -= self.page_offset();
+        rect.y += self.note_h();
+        rect.h -= self.note_h();
         rect
     }
 
-    /// Natural (unclipped) height of the active section's content.
-    fn section_content_height(&self, content: Rect) -> f32 {
-        match self.section {
-            Section::Cards => self.cards.content_height(content, &self.theme),
-            Section::Buttons => self.buttons.content_height(content, &self.theme),
-            Section::Forms => self.forms.content_height(content, &self.theme),
-            Section::Overlays => self.overlays.content_height(content, &self.theme),
-            // The lists page sizes itself to the viewport; the virtual list
-            // and tree scroll internally.
-            Section::Lists => content.h,
-            Section::Icons => self.icons_gallery.content_height(content),
-            Section::Theme => self.themes.content_height(content, &self.theme),
-            Section::Charts => self.charts.content_height(content),
-            Section::Dock => self.dock.content_height(content),
-            Section::App => self.app.content_height(content),
-            Section::Builder => self.builder_tour.content_height(content),
-            Section::Extras => self.extras.content_height(content, &self.theme),
-            Section::Typography => self.typography.content_height(content),
-            Section::Effects => self.effects.content_height(content, &self.theme),
-            Section::Chrome => self.chrome.content_height(content, &self.theme),
-            Section::Editor => self.editor.content_height(content),
-            Section::Git => self.git.content_height(content),
-        }
+    /// Natural (unclipped) height of the active page's content.
+    fn page_content_height(&self, content: Rect) -> f32 {
+        let t = &self.theme;
+        let body = match self.pane() {
+            None => t.size.card_min_w / 2.0,
+            Some(pane) => match pane {
+                Pane::Theme => self.themes.content_height(content, t),
+                Pane::Typography => self.typography.content_height(content),
+                Pane::Icons => self.icons.content_height(content),
+                Pane::Effects => self.effects.content_height(content, t),
+                Pane::Avatar => self.avatar.content_height(content, t),
+                Pane::Badge => self.badge.content_height(content, t),
+                Pane::Breadcrumb => self.breadcrumb.content_height(content, t),
+                Pane::Button => self.button.content_height(content, t),
+                Pane::Card => self.card.content_height(content, t),
+                Pane::Chart => self.chart.content_height(content),
+                Pane::Checkbox => self.checkbox.content_height(content, t),
+                Pane::Chip => self.chip.content_height(content, t),
+                Pane::CodeBlock => self.code_block.content_height(content, t),
+                Pane::ContextMenu => self.context_menu.content_height(content, t),
+                Pane::Dialog => self.dialog.content_height(content, t),
+                Pane::Empty => self.empty.content_height(content, t),
+                Pane::Graph => self.graph.content_height(content, t),
+                Pane::IconButton => self.icon_button.content_height(content, t),
+                Pane::Input => self.input.content_height(content, t),
+                Pane::NavigationMenu => self.navigation_menu.content_height(content, t),
+                Pane::Panel => self.panel.content_height(content, t),
+                Pane::PanelHeader => self.panel_header.content_height(content, t),
+                Pane::Progress => self.progress.content_height(content, t),
+                Pane::Resizable => self.resizable.content_height(content, t),
+                Pane::ScrollArea => self.scroll_area.content_height(content, t),
+                Pane::Select => self.select.content_height(content, t),
+                Pane::Separator => self.separator.content_height(content, t),
+                Pane::Sidebar => self.sidebar.content_height(content, t),
+                Pane::Skeleton => self.skeleton.content_height(content, t),
+                Pane::Slider => self.slider.content_height(content, t),
+                Pane::Spinner => self.spinner.content_height(content, t),
+                Pane::Stat => self.stat.content_height(content, t),
+                Pane::Switch => self.switch.content_height(content, t),
+                Pane::Table => self.table.content_height(content, t),
+                Pane::Tabs => self.tabs.content_height(content, t),
+                Pane::Toast => self.toast.content_height(content, t),
+                Pane::Tooltip => self.tooltip.content_height(content, t),
+                Pane::Tree => self.tree.content_height(content, t),
+                Pane::Todo => self.todo.content_height(content),
+                Pane::Dock => self.dock.content_height(content),
+                Pane::Editor => self.editor.content_height(content),
+                Pane::Git => self.git.content_height(content),
+                Pane::Builder => self.builder.content_height(content),
+            },
+        };
+        body + self.note_h()
     }
 
-    /// Sync the active section's page scroll limits with the viewport.
+    /// Sync the active page's scroll limits with the viewport.
     fn sync_page_scroll(&mut self) {
         let content = self.content_rect();
-        let height = self.section_content_height(content);
-        let scroll = &mut self.page_scroll[self.section_idx()];
+        let height = self.page_content_height(content);
+        let scroll = &mut self.page_scroll[self.page];
         scroll.set_viewport(content.h);
         scroll.set_content(height);
     }
 
     fn set_theme(&mut self, name: &str) {
-        if let Some(theme) = theme_gallery::resolve(name) {
+        if let Some(theme) = theme_page::resolve(name) {
             self.editor.set_theme(&theme);
             self.git.set_theme(name);
             self.theme = theme;
@@ -326,13 +445,10 @@ impl ShowcaseView {
         self.pending_scroll = Some(offset);
     }
 
-    /// Jump to a section by name (launch argument / snapshot tooling).
-    pub fn jump_to_section(&mut self, name: &str) {
-        if let Some(section) = Section::ALL
-            .iter()
-            .find(|s| s.title().eq_ignore_ascii_case(name))
-        {
-            self.set_section(*section);
+    /// Jump to a page by title (launch argument / snapshot tooling).
+    pub fn jump_to_page(&mut self, name: &str) {
+        if let Some(index) = pages::find(name) {
+            self.set_page(index);
         }
     }
 }

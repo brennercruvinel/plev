@@ -116,7 +116,7 @@ typos job (non-blocking; the repo is bilingual english/portuguese).
 
 ## running
 
-- apps: `cargo run -p showcase [section] [theme] [scroll px]` (gallery; `script/web`
+- apps: `cargo run -p showcase [page] [theme] [scroll px]` (gallery, page = the sidebar title; `script/web`
   runs `trunk --config web serve` for the browser), `cargo run -p ide
   [path]` (git client), `cargo run -p prime` (particle swarm),
   `cargo run -p engine --example <name>` (any
