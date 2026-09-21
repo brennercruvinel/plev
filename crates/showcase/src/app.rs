@@ -74,14 +74,18 @@ pub struct App {
 impl App {
     pub fn new() -> Self {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        // Optional launch state for demos/snapshots: section, then theme.
-        // (Empty iterator on wasm — no process args in the browser.)
+        // Optional launch state for demos/snapshots: section, theme, then
+        // the page scroll offset in px. (Empty iterator on wasm — no
+        // process args in the browser.)
         let mut args = std::env::args().skip(1);
         if let Some(section) = args.next() {
             view.jump_to_section(&section);
         }
         if let Some(theme) = args.next() {
             view.apply_theme(&theme);
+        }
+        if let Some(offset) = args.next().and_then(|a| a.parse::<f32>().ok()) {
+            view.scroll_page_to(offset);
         }
         Self {
             window: None,

@@ -25,6 +25,7 @@
 // screen sits on the graphite container, never on pure black.
 // ============================================================================
 
+use super::button::ButtonTokens;
 use super::core::Theme;
 use super::intent::MotionPhysics;
 use super::scales::{
@@ -128,6 +129,8 @@ impl TypographyScale {
             title: 32.0,
             display: 36.0,
             line_height_ratio: 1.4,
+            family: None,
+            tracking_em: 0.0,
         }
     }
 }
@@ -135,7 +138,8 @@ impl TypographyScale {
 impl Theme {
     /// The HOFF dark-glass theme — plev's default.
     pub fn hoff() -> Self {
-        Self {
+        let mut theme = Self {
+            button: ButtonTokens::derive(&Self::dark().colors),
             colors: ColorTokens {
                 // The composed container tone (#303030), NOT the hidden body
                 // #444444 — every screen sits on this graphite, measured live.
@@ -223,7 +227,9 @@ impl Theme {
             duration: DurationScale::hoff(),
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::hoff(),
-        }
+        };
+        theme.button = ButtonTokens::derive(&theme.colors);
+        theme
     }
 }
 

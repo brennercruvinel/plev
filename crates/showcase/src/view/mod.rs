@@ -129,7 +129,9 @@ impl Section {
             Section::Cards => {
                 "The HOFF card deck: one glass shell, six preview families with live data."
             }
-            Section::Buttons => "Variants, sizes, intents and states of comps::prelude::Button.",
+            Section::Buttons => {
+                "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit; one card per state."
+            }
             Section::Forms => "Checkbox, switch, slider, progress, select and tabs.",
             Section::Overlays => {
                 "Modal, context menu, tooltip and toasts — spring physics per intent."
@@ -210,6 +212,9 @@ pub struct ShowcaseView {
     /// than the window (Cards, Theme, …); without this the wheel is dead
     /// everywhere outside the virtualized list.
     page_scroll: [ScrollState; Section::ALL.len()],
+    /// A page offset requested before the first layout (launch argument
+    /// for snapshots); applied once the content height is known.
+    pending_scroll: Option<f32>,
 
     pub overlay_mgr: OverlayManager,
     layers: Option<Layers>,
@@ -245,7 +250,7 @@ struct Layers {
 
 impl ShowcaseView {
     pub fn new(width: f32, height: f32) -> Self {
-        let theme = Theme::hoff();
+        let theme = Theme::hoff_core();
         let links = Section::ALL
             .iter()
             .enumerate()
@@ -258,7 +263,7 @@ impl ShowcaseView {
         let sidebar = Sidebar::new(links)
             .brand("plev", "HOFF DESIGN SYSTEM")
             .footer(vec![
-                "T  cycle hoff / dark / light".into(),
+                "T  cycle core / hoff / dark / light".into(),
                 "Esc  close overlays".into(),
             ]);
         let header = PanelHeader::new(Section::Cards.title()).blurb(Section::Cards.blurb());
@@ -285,9 +290,10 @@ impl ShowcaseView {
             editor: editor::EditorSection::new(&theme),
             git: git::GitSection::new(),
             theme,
-            theme_name: "hoff".to_string(),
+            theme_name: "core".to_string(),
             section: Section::Cards,
             page_scroll: std::array::from_fn(|_| ScrollState::new()),
+            pending_scroll: None,
             overlay_mgr: OverlayManager::new(),
             layers: None,
             toasts: ToastManager::new(),
@@ -353,6 +359,20 @@ impl ShowcaseView {
             .map_or(0.0, |r| r.x + r.w)
     }
 
+    /// The rect an embedded app (Editor, Git) fills: from the sidebar's
+    /// edge to the window's, from under the header to the bottom. No
+    /// gutter: these sections are apps, not pages.
+    fn app_rect(&self) -> Rect {
+        let viewport = self.content_rect();
+        let x = self.page_x();
+        Rect::new(x, viewport.y, self.width - x, self.height - viewport.y)
+    }
+
+    /// True for the sections that are apps filling `app_rect`.
+    fn is_app(&self) -> bool {
+        matches!(self.section, Section::Editor | Section::Git)
+    }
+
     fn section_idx(&self) -> usize {
         Section::ALL
             .iter()
@@ -369,6 +389,9 @@ impl ShowcaseView {
     /// hit-test and render against this rect so events and pixels always
     /// agree; the render clips it back to the content viewport.
     fn page_rect(&self) -> Rect {
+        if self.is_app() {
+            return self.app_rect();
+        }
         let mut rect = self.content_rect();
         rect.y -= self.page_offset();
         rect
@@ -422,6 +445,12 @@ impl ShowcaseView {
         self.set_theme(name);
     }
 
+    /// Scroll the active page to `offset` px once it has laid out
+    /// (launch argument / snapshot tooling).
+    pub fn scroll_page_to(&mut self, offset: f32) {
+        self.pending_scroll = Some(offset);
+    }
+
     /// Jump to a section by name (launch argument / snapshot tooling).
     pub fn jump_to_section(&mut self, name: &str) {
         if let Some(section) = Section::ALL
@@ -450,9 +479,10 @@ impl ShowcaseView {
         match key {
             "t" | "T" => {
                 let next = match self.theme_name.as_str() {
+                    "core" => "hoff",
                     "hoff" => "dark",
                     "dark" => "light",
-                    _ => "hoff",
+                    _ => "core",
                 };
                 self.set_theme(next);
                 true
@@ -840,6 +870,10 @@ impl ShowcaseView {
         // Keep the page scroll clamped to the current viewport/content
         // (resize can shrink content; the offset must follow).
         self.sync_page_scroll();
+        if let Some(offset) = self.pending_scroll.take() {
+            let idx = self.section_idx();
+            self.page_scroll[idx].scroll_to(offset);
+        }
         let content = self.page_rect();
         let viewport = self.content_rect();
 
@@ -865,7 +899,11 @@ impl ShowcaseView {
             x: page_x,
             y: viewport.y,
             w: self.width - page_x,
-            h: viewport.h,
+            h: if self.is_app() {
+                self.height - viewport.y
+            } else {
+                viewport.h
+            },
         });
         match self.section {
             Section::Cards => self.cards.render(c, content, &theme),
@@ -980,12 +1018,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn starts_on_cards_with_the_hoff_theme() {
+    fn starts_on_cards_with_the_core_theme() {
         let view = ShowcaseView::new(1200.0, 800.0);
         assert_eq!(view.section, Section::Cards);
-        assert_eq!(view.theme_name, "hoff");
-        // Page frame is the HOFF #444444.
-        assert_eq!(view.theme.colors.bg.0, engine::theme::hoff::PAGE_BG.0);
+        assert_eq!(view.theme_name, "core");
+        // The page is the kit's paper, shade 1.
+        assert_eq!(
+            view.theme.colors.bg.0,
+            engine::theme::hoff_core::SHADES[0].0
+        );
     }
 
     // -- Sidebar responsiveness (14 links overflow short windows) ----------
@@ -1174,11 +1215,13 @@ mod tests {
         assert_eq!(view.section, Section::Cards);
 
         assert!(view.handle_key("t"));
+        assert_eq!(view.theme_name, "hoff");
+        assert!(view.handle_key("t"));
         assert_eq!(view.theme_name, "dark");
         assert!(view.handle_key("t"));
         assert_eq!(view.theme_name, "light");
         assert!(view.handle_key("t"));
-        assert_eq!(view.theme_name, "hoff");
+        assert_eq!(view.theme_name, "core");
     }
 
     #[test]
@@ -1193,7 +1236,7 @@ mod tests {
         let (x, y) = view.app.input_rect(content, &view.theme).center();
         assert!(view.handle_event(&WidgetEvent::MouseDown { x, y }));
         assert!(view.handle_key("t"));
-        assert_eq!(view.theme_name, "hoff", "typing must not cycle the theme");
+        assert_eq!(view.theme_name, "core", "typing must not cycle the theme");
         assert!(view.handle_key("x"));
         assert!(view.handle_edit_key(EditKey::Backspace));
         assert!(view.handle_enter(), "Enter adds the todo");
@@ -1288,8 +1331,8 @@ mod tests {
         let mut view = ShowcaseView::new(1200.0, 800.0);
         view.set_section(Section::Buttons);
         let content = view.content_rect();
-        // First button row starts after the group label.
-        let (cx, cy) = (content.x + 30.0, content.y + 24.0 + 22.0);
+        // The first card's widget sits at the card's center.
+        let (cx, cy) = view.buttons.first_widget_center(content, &view.theme);
         assert!(
             view.handle_event(&WidgetEvent::MouseMove { x: cx, y: cy }),
             "hover entering a button must request redraw"

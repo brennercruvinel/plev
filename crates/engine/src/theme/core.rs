@@ -2,6 +2,7 @@
 // Theme -- the root struct (RULE-08)
 // ============================================================================
 
+use super::button::ButtonTokens;
 use super::intent::{Intent, MotionPhysics};
 use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowTokens, ShapeTokens, SizeTokens,
@@ -33,6 +34,8 @@ pub struct Theme {
     pub layout: LayoutTokens,
     /// Shadow stacks by elevation.
     pub shadows: ShadowTokens,
+    /// Button surfaces per variant and the button size ladders.
+    pub button: ButtonTokens,
 }
 
 /// The default plev theme is HOFF (see [`Theme::hoff`]).
@@ -74,6 +77,7 @@ impl Theme {
         let shape = ShapeTokens::derive(&radius, control.tabs_pad);
         Self {
             glass: GlassTokens::derive(&colors),
+            button: ButtonTokens::derive(&colors),
             colors,
             typography: TypographyScale {
                 small: 10.0,
@@ -84,6 +88,8 @@ impl Theme {
                 title: 28.0,
                 display: 36.0,
                 line_height_ratio: 1.3,
+                family: None,
+                tracking_em: 0.0,
             },
             spacing: SpacingScale {
                 xs: 4.0,
@@ -134,6 +140,7 @@ impl Theme {
         };
         Self {
             glass: GlassTokens::derive(&colors),
+            button: ButtonTokens::derive(&colors),
             colors,
             ..Self::dark()
         }
@@ -151,6 +158,7 @@ impl Theme {
         let colors = match name {
             "hoff" => return Some(Self::hoff()),
             "hoff-light" => return Some(Self::hoff_light()),
+            "core" => return Some(Self::hoff_core()),
             "plev" => return Some(Self::dark()),
             "catppuccin" => ColorTokens {
                 bg: Color::hex(0x11111b),
@@ -296,6 +304,7 @@ impl Theme {
         };
         Some(Self {
             glass: GlassTokens::derive(&colors),
+            button: ButtonTokens::derive(&colors),
             colors,
             ..Self::dark()
         })

@@ -8,6 +8,7 @@ use engine::theme::Theme;
 use super::{group_label, text};
 
 pub const THEMES: &[&str] = &[
+    "core",
     "hoff",
     "dark",
     "light",

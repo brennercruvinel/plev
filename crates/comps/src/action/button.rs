@@ -1,99 +1,81 @@
-//! HOFF push button: glass pill in four variants (solid, outline, ghost,
-//! danger) and three control heights, label measured and drawn with one
-//! `TextStyle`. Click fires on release inside the bounds; keyboard focus
-//! (via [`Button::set_focused`]) draws the shared accent focus ring.
+//! The labeled button of the hoff core kit: a label, an optional leading
+//! icon, one of the kit's surface recipes (`theme.button`) and one step
+//! of its height ladder. Click fires on release inside the bounds;
+//! keyboard focus (via [`Button::set_focused`]) draws the shared focus
+//! ring.
 //!
-//! Every dimension comes from the theme: heights and paddings from
-//! `theme.control`, the pill radius from `theme.shape`, the label ramp
-//! from `theme.typography`, fills and rims from `theme.glass`.
+//! Nothing visual lives here: fills, rings, key-lights and shadows come
+//! from the recipe, heights, paddings, radii and the label style from
+//! the size metrics, so the same widget renders the core kit and every
+//! derived theme.
 
-use crate::icons;
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ControlSize, Intent, Theme};
+use engine::theme::{ButtonMetrics, ButtonRecipe, Intent, Theme};
 
-use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
-use crate::recipe::{focus_ring, glass_pill};
+use super::press::{Press, paint_surface};
+use crate::core::{EventResult, Rect, WidgetEvent};
+use crate::icons;
 
-/// Visual variant, HOFF naming.
+/// Which recipe of `theme.button` the surface reads.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ButtonVariant {
-    /// Glass pill: graphite fill + top edge-light (the HOFF default
-    /// button, `glass.button` at rest, `glass.button_hover` hovered).
+    /// The pale raised button (`isPrimary`), the default.
     #[default]
-    Solid,
-    /// Transparent with the edge border always visible.
+    Primary,
+    /// The dark call-to-action (`isSecondary`).
+    Secondary,
+    /// The orange warning button (`isOrange`).
+    Warning,
+    /// Bordered and flat: the like button.
     Outline,
-    /// Transparent until hovered (chip-social hover recipe).
+    /// No border, a wash on hover.
     Ghost,
-    /// Glass pill with the label/icon in the destructive color
-    /// (unfollow-style).
-    Danger,
 }
 
-/// The three button heights of the HOFF kit, mapped onto the control
-/// ladder: chip-social (Sm), button (Md), button-medium (Lg).
+/// The height ladder of the kit.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ButtonSize {
-    /// Social chip: `ControlSize::Sm`, caption-sm label.
+    /// 28: the like-comment chip.
+    Xs,
+    /// 36: `isSmall`.
     Sm,
-    /// Standard pill: `ControlSize::Md`, base-2sm label.
+    /// 40: the default.
     #[default]
     Md,
-    /// Medium pill: `ControlSize::Xl`, base-2sm label.
+    /// 44: the like button.
     Lg,
 }
 
 impl ButtonSize {
-    /// The control ladder step this button size is.
-    pub fn control(self) -> ControlSize {
-        match self {
-            ButtonSize::Sm => ControlSize::Sm,
-            ButtonSize::Md => ControlSize::Md,
-            ButtonSize::Lg => ControlSize::Xl,
-        }
+    pub fn metrics(self, theme: &Theme) -> ButtonMetrics {
+        theme.button.sizes[self as usize]
     }
 
     pub fn height(self, theme: &Theme) -> f32 {
-        theme.control.height(self.control())
+        self.metrics(theme).height
     }
 
-    pub fn pad_x(self, theme: &Theme) -> f32 {
-        theme.control.pad_x(self.control())
-    }
-
-    /// Icon edge that fits this control.
-    pub fn icon_size(self, theme: &Theme) -> f32 {
-        theme.control.icon_for(self.control())
-    }
-
-    /// Label style, HOFF exact: chips are caption-sm, pills are base-2sm.
-    /// One source for measuring AND rendering.
+    /// Label style, one source for measuring and drawing.
     pub fn text_style(self, theme: &Theme) -> TextStyle {
-        match self {
-            ButtonSize::Sm => theme.typography.caption_sm(),
-            ButtonSize::Md | ButtonSize::Lg => theme.typography.base_2sm(),
-        }
+        let m = self.metrics(theme);
+        theme
+            .typography
+            .exact(m.font_size, m.line_height, m.font_weight)
     }
 }
 
-/// Retained push button.
-///
-/// A click is reported (via [`EventResult::clicked`]) on mouse-up inside
-/// the bounds after a mouse-down inside them, the standard "press can be
-/// cancelled by dragging away" behavior.
 #[derive(Clone, Debug)]
 pub struct Button {
     pub label: String,
     pub variant: ButtonVariant,
     pub size: ButtonSize,
-    pub intent: Intent,
     pub disabled: bool,
     /// Optional leading icon (a [`crate::icons`] name).
     pub icon: Option<&'static str>,
-    hovered: bool,
-    pressed: bool,
-    focused: bool,
+    /// Icon color when it should not follow the label (the like heart).
+    pub icon_color: Option<[f32; 4]>,
+    press: Press,
 }
 
 impl Button {
@@ -102,12 +84,10 @@ impl Button {
             label: label.into(),
             variant: ButtonVariant::default(),
             size: ButtonSize::default(),
-            intent: Intent::Neutral,
             disabled: false,
             icon: None,
-            hovered: false,
-            pressed: false,
-            focused: false,
+            icon_color: None,
+            press: Press::default(),
         }
     }
 
@@ -121,8 +101,12 @@ impl Button {
         self
     }
 
+    /// Intent maps onto the kit's recipes: destructive is the warning
+    /// button, everything else keeps the current variant.
     pub fn intent(mut self, intent: Intent) -> Self {
-        self.intent = intent;
+        if intent == Intent::Destructive {
+            self.variant = ButtonVariant::Warning;
+        }
         self
     }
 
@@ -136,28 +120,44 @@ impl Button {
         self
     }
 
+    pub fn icon_color(mut self, color: [f32; 4]) -> Self {
+        self.icon_color = Some(color);
+        self
+    }
+
     pub fn is_hovered(&self) -> bool {
-        self.hovered
+        self.press.hovered
     }
 
     pub fn is_pressed(&self) -> bool {
-        self.pressed
+        self.press.pressed
     }
 
-    /// Keyboard focus, driven by the owning view (plev has no global focus
-    /// chain). Disabled buttons refuse focus.
+    /// Keyboard focus, driven by the owning view (plev has no global
+    /// focus chain). Disabled buttons refuse focus.
     pub fn set_focused(&mut self, focused: bool) {
-        self.focused = focused && !self.disabled;
+        self.press.focused = focused && !self.disabled;
     }
 
     pub fn is_focused(&self) -> bool {
-        self.focused
+        self.press.focused
+    }
+
+    fn recipe<'a>(&self, theme: &'a Theme) -> &'a ButtonRecipe {
+        let b = &theme.button;
+        match self.variant {
+            ButtonVariant::Primary => &b.primary,
+            ButtonVariant::Secondary => &b.secondary,
+            ButtonVariant::Warning => &b.warning,
+            ButtonVariant::Outline => &b.outline,
+            ButtonVariant::Ghost => &b.ghost,
+        }
     }
 
     /// Width the leading icon takes, gap included; zero without an icon.
-    fn icon_slot(&self, theme: &Theme) -> f32 {
+    fn icon_slot(&self, m: &ButtonMetrics) -> f32 {
         if self.icon.is_some() {
-            self.size.icon_size(theme) + theme.control.inline_gap
+            m.icon + m.gap
         } else {
             0.0
         }
@@ -165,126 +165,24 @@ impl Button {
 
     /// Intrinsic size from real text measurement.
     pub fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
+        let m = self.size.metrics(theme);
         let style = self.size.text_style(theme);
         let (text_w, _) = TextMeasurer::measure_styled(&self.label, &style, None);
         (
-            (text_w + self.icon_slot(theme) + self.size.pad_x(theme) * 2.0).ceil(),
-            self.size.height(theme),
+            (text_w + self.icon_slot(&m) + m.pad_x * 2.0).ceil(),
+            m.height,
         )
     }
 
     pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
-        if self.disabled {
-            // A disabled button swallows nothing and never reacts.
-            if self.hovered || self.pressed {
-                self.hovered = false;
-                self.pressed = false;
-                return EventResult::changed();
-            }
-            return EventResult::IGNORED;
-        }
-        match *event {
-            WidgetEvent::MouseMove { x, y } => {
-                let inside = bounds.contains(x, y);
-                if inside != self.hovered {
-                    self.hovered = inside;
-                    EventResult::changed()
-                } else {
-                    EventResult::IGNORED
-                }
-            }
-            WidgetEvent::MouseDown { x, y } => {
-                if bounds.contains(x, y) {
-                    self.pressed = true;
-                    EventResult::changed()
-                } else {
-                    EventResult::IGNORED
-                }
-            }
-            WidgetEvent::MouseUp { x, y } => {
-                if !self.pressed {
-                    return EventResult::IGNORED;
-                }
-                self.pressed = false;
-                if bounds.contains(x, y) {
-                    EventResult::clicked()
-                } else {
-                    EventResult::changed()
-                }
-            }
-            WidgetEvent::Scroll { .. } => EventResult::IGNORED,
-        }
-    }
-
-    /// Background, edge-light color (alpha 0 = none), and label color for
-    /// the current state, resolved from glass tokens.
-    fn colors(&self, theme: &Theme) -> ([f32; 4], [f32; 4], [f32; 4]) {
-        let intent = if self.variant == ButtonVariant::Danger {
-            Intent::Destructive
-        } else {
-            self.intent
-        };
-        let glass = &theme.glass;
-        let alpha = if self.disabled {
-            glass.disabled_alpha
-        } else {
-            1.0
-        };
-
-        // Label: text-secondary at rest, text-active on hover. Intents
-        // recolor the label, never the glass fill.
-        let label_rest = match intent {
-            Intent::Neutral => theme.colors.text_mid.0,
-            other => intent_fill(theme, other),
-        };
-        let label_hot = match intent {
-            Intent::Neutral => glass.text_active.0,
-            other => intent_fill(theme, other),
-        };
-        let fg = if self.hovered { label_hot } else { label_rest };
-
-        let (bg, edge) = match self.variant {
-            ButtonVariant::Solid | ButtonVariant::Danger => (
-                if self.hovered {
-                    glass.button_hover.0
-                } else {
-                    glass.button.0
-                },
-                glass.edge.0,
-            ),
-            ButtonVariant::Outline => (
-                if self.hovered {
-                    glass.surface_hover.0
-                } else {
-                    [0.0; 4]
-                },
-                if self.hovered {
-                    glass.field_focus_border.0
-                } else {
-                    glass.edge.0
-                },
-            ),
-            ButtonVariant::Ghost => (
-                if self.hovered {
-                    glass.surface_hover.0
-                } else {
-                    [0.0; 4]
-                },
-                [0.0; 4],
-            ),
-        };
-        (
-            with_alpha(engine::color::Color(bg), bg[3] * alpha),
-            with_alpha(engine::color::Color(edge), edge[3] * alpha),
-            with_alpha(engine::color::Color(fg), fg[3] * alpha),
-        )
+        self.press.handle(event, bounds, self.disabled)
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
         self.render_to_layer(compositor, LayerId::DEFAULT, bounds, theme);
     }
 
-    /// Render onto a specific layer (modals/overlays embed buttons).
+    /// Render onto a specific layer (modals and overlays embed buttons).
     pub fn render_to_layer(
         &self,
         compositor: &mut Compositor,
@@ -292,41 +190,45 @@ impl Button {
         bounds: Rect,
         theme: &Theme,
     ) {
-        let (bg, edge, fg) = self.colors(theme);
+        let m = self.size.metrics(theme);
+        let recipe = self.recipe(theme);
+        let alpha = if self.disabled {
+            recipe.disabled_alpha
+        } else {
+            1.0
+        };
+        let radius = m.radius.min(bounds.h / 2.0);
+        let fg = paint_surface(
+            compositor,
+            layer,
+            bounds,
+            radius,
+            self.press.surface(recipe),
+            alpha,
+            self.press.focused,
+            theme,
+        );
+
         let style = self.size.text_style(theme);
-        // Pill: the shape radius clamps to half the control height.
-        let radius = theme.shape.pill.min(bounds.h / 2.0);
-
-        if self.focused {
-            compositor.push_to_layer(layer, focus_ring(bounds, radius, theme));
-        }
-
-        if bg[3] > 0.001 || edge[3] > 0.001 {
-            // Edge-light underlay + glass fill (HOFF :before border). Icon
-            // paths pushed later stack on top: the compositor preserves
-            // push order across primitive types.
-            for node in glass_pill(bounds, radius, edge, theme.control.edge_width_strong, bg) {
-                compositor.push_to_layer(layer, node);
-            }
-        }
-
         let (text_w, _) = TextMeasurer::measure_styled(&self.label, &style, None);
-        let icon_size = self.size.icon_size(theme);
-        let icon_slot = self.icon_slot(theme);
-        let content_w = text_w + icon_slot;
+        let content_w = text_w + self.icon_slot(&m);
         let mut cx = bounds.x + (bounds.w - content_w) / 2.0;
 
-        if let Some(name) = self.icon
-            && let Some(node) = icons::icon_at(
+        if let Some(name) = self.icon {
+            let color = match self.icon_color {
+                Some(c) => [c[0], c[1], c[2], c[3] * alpha],
+                None => fg,
+            };
+            if let Some(node) = icons::icon_at(
                 name,
-                icon_size,
-                fg,
+                m.icon,
+                color,
                 cx,
-                bounds.y + (bounds.h - icon_size) / 2.0,
-            )
-        {
-            compositor.push_to_layer(layer, node);
-            cx += icon_slot;
+                bounds.y + (bounds.h - m.icon) / 2.0,
+            ) {
+                compositor.push_to_layer(layer, node);
+            }
+            cx += self.icon_slot(&m);
         }
 
         compositor.push_to_layer(

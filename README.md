@@ -49,7 +49,7 @@ only work with rustup.
 ```
 cargo build --release --workspace
 
-cargo run -p showcase                  # the design-system gallery, 15 tabs
+cargo run -p showcase                  # the design-system gallery, one tab per section
 cargo run -p ide [path]                # plev-native git client
 cargo run -p prime                     # prime-coherence particle swarm
 cargo run -p engine --example snake    # any of the windowed demos

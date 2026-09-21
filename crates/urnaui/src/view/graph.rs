@@ -8,8 +8,8 @@
 //! canvas: dim neutral / accent / info.
 
 use comps::prelude::{
-    Button, ButtonSize, ButtonVariant, EventResult, GraphView, IconButton, Rect, Spinner,
-    SpinnerSize, WidgetEvent, menu_shadow,
+    Button, ButtonSize, ButtonVariant, EventResult, GraphView, IconButton, IconButtonVariant, Rect,
+    Spinner, SpinnerSize, WidgetEvent, menu_shadow,
 };
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::graph::GraphScene;
@@ -48,7 +48,7 @@ impl GraphScreen {
             fit_button: Button::new("Fit view")
                 .size(ButtonSize::Sm)
                 .variant(ButtonVariant::Outline),
-            copy_id: IconButton::new("copy").variant(ButtonVariant::Ghost),
+            copy_id: IconButton::new("copy").variant(IconButtonVariant::Ghost),
             spinner: Spinner::new().size(SpinnerSize::Sm),
             loading: false,
             error: String::new(),

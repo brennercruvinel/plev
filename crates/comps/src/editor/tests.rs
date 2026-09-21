@@ -285,8 +285,10 @@ fn shift_click_extends_from_existing_caret() {
 fn wheel_scrolls_and_clamps() {
     let text = "x\n".repeat(100);
     let mut ed = editor(&text);
-    assert!(ed.handle_mouse(MouseEvent::Wheel { dy: 30.0 }));
-    assert_eq!(ed.scroll.offset(), 30.0);
+    let lh = ed.config.line_height;
+    // The wheel lands on whole lines: 1.5 lines of delta rounds to 2.
+    assert!(ed.handle_mouse(MouseEvent::Wheel { dy: lh * 1.5 }));
+    assert_eq!(ed.scroll.offset(), lh * 2.0);
     // Scrolling above the top is a no-op.
     assert!(ed.handle_mouse(MouseEvent::Wheel { dy: -100.0 }));
     assert!(!ed.handle_mouse(MouseEvent::Wheel { dy: -10.0 }));

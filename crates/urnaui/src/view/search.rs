@@ -78,7 +78,8 @@ impl SearchScreen {
             k: Slider::new(1.0, 100.0, 10.0).step(1.0),
             search_button: Button::new("Search").icon("search"),
             results: VirtualList::new(ROW_H),
-            copy_citation: IconButton::new("copy").variant(comps::prelude::ButtonVariant::Ghost),
+            copy_citation: IconButton::new("copy")
+                .variant(comps::prelude::IconButtonVariant::Ghost),
             spinner: Spinner::new().size(SpinnerSize::Sm),
             result: None,
             error: String::new(),

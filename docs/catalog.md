@@ -31,7 +31,7 @@ docs/adr/comps-one-design-system-crate.md.
 | `crates/comps/src/editor` | `EditorView`, `EditorConfig::from_theme`, `EditorTheme::from_theme` |
 | `crates/comps/src/shell.rs` | `AppShell`, `SafeArea`, `ShellLayout` |
 | `crates/comps/src/tests` | `matrix.rs` (todo widget x todo tema x phone/desktop), `components.rs`, `widgets.rs`, `focus.rs` |
-| consumidores | showcase (15 seções, chrome via `AppShell`), ide (`status.rs` é o único token local), urnaui (`view/field.rs` é um alias de `TextField`) |
+| consumidores | showcase (uma seção por categoria mais editor e git embutidos, a lista é `Section::ALL`; chrome via `AppShell`), ide (`status.rs` é o único token local), urnaui (`view/field.rs` é um alias de `TextField`) |
 
 referência visual: o git client (`crates/ide`, que consome `crates/git`)
 e a galeria (`crates/showcase`). os dois já falam HOFF dark glass; o

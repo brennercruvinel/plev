@@ -59,7 +59,7 @@ pub struct ChunksScreen {
 
 impl ChunksScreen {
     pub fn new() -> Self {
-        let ghost = || IconButton::new("copy").variant(comps::prelude::ButtonVariant::Ghost);
+        let ghost = || IconButton::new("copy").variant(comps::prelude::IconButtonVariant::Ghost);
         Self {
             filter: Field::new("filter by text, chunk id or urna:// citation"),
             filtered: None,

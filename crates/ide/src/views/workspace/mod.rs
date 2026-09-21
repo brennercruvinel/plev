@@ -85,9 +85,9 @@ pub struct WorkspaceView {
     pub vw: f32,
     pub vh: f32,
     pub origin: (f32, f32),
-    /// Embedded in a host that provides its own chrome (the showcase):
-    /// the rail and header are skipped and the three panels fill the
-    /// frame.
+    /// Embedded in a host that provides its own header (the showcase):
+    /// the header is skipped; the rail and the three panels fill the
+    /// frame from `origin`.
     pub embedded: bool,
 }
 
@@ -183,12 +183,13 @@ impl WorkspaceView {
         view
     }
 
-    /// Embed inside a host's content rect: no rail, no header, panels
+    /// Embed inside a host's content rect: no header, rail and panels
     /// laid out from `origin`. Input arrives in window coordinates and
     /// is resolved against the same origin.
     pub fn set_frame(&mut self, x: f32, y: f32, w: f32, h: f32) {
         self.embedded = true;
         self.origin = (x, y);
+        self.sidebar.set_origin(x, y);
         self.resize(w, h);
     }
 
@@ -221,9 +222,6 @@ impl WorkspaceView {
 
     /// Sidebar rail width for the current theme.
     pub(crate) fn sidebar_w(&self) -> f32 {
-        if self.embedded {
-            return 0.0;
-        }
         self.sidebar.width(self.theme())
     }
 

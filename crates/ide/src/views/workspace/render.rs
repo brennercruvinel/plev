@@ -25,8 +25,8 @@ impl WorkspaceView {
             color: theme.colors.bg.0,
         });
 
-        // The header spans the window; the rail sits under it. An
-        // embedding host brings its own.
+        // The header spans the window (an embedding host brings its
+        // own); the rail sits under it, at the frame origin.
         if !self.embedded {
             self.header.render(
                 compositor,
@@ -37,8 +37,8 @@ impl WorkspaceView {
                 &self.repo_label,
                 &self.branch_label,
             );
-            self.sidebar.render(compositor, &theme, vw, vh);
         }
+        self.sidebar.render(compositor, &theme, vw, vh);
 
         let content_y = oy + header_h;
         let content_h = vh - header_h;

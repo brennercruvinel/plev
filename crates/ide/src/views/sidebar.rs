@@ -53,6 +53,11 @@ impl Sidebar {
         self.rail.page_width(theme, 0.0)
     }
 
+    /// Where the rail sits in window coordinates (an embedding host).
+    pub fn set_origin(&mut self, x: f32, y: f32) {
+        self.rail.origin = (x, y);
+    }
+
     pub fn set_active(&mut self, tab: SidebarTab) {
         self.active = tab;
         self.rail.set_active(tab.index());

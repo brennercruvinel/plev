@@ -53,14 +53,19 @@ impl Modal {
             title: title.into(),
             body: body.into(),
             intent: Intent::Neutral,
-            confirm: Button::new(confirm_label).variant(ButtonVariant::Solid),
-            cancel: Button::new(cancel_label).variant(ButtonVariant::Outline),
+            confirm: Button::new(confirm_label).variant(ButtonVariant::Secondary),
+            cancel: Button::new(cancel_label).variant(ButtonVariant::Primary),
         }
     }
 
     pub fn intent(mut self, intent: Intent) -> Self {
         self.intent = intent;
-        self.confirm.intent = intent;
+        // Destructive confirms wear the warning surface.
+        self.confirm.variant = if intent == Intent::Destructive {
+            ButtonVariant::Warning
+        } else {
+            ButtonVariant::Secondary
+        };
         self
     }
 

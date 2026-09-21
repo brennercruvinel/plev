@@ -79,30 +79,70 @@ fn button_preferred_size_scales_with_size_variant() {
     let sm = Button::new("Commit")
         .size(ButtonSize::Sm)
         .preferred_size(&hoff());
-    let lg = Button::new("Commit")
-        .size(ButtonSize::Lg)
+    let md = Button::new("Commit")
+        .size(ButtonSize::Md)
         .preferred_size(&hoff());
-    assert!(lg.0 > sm.0);
-    assert!(lg.1 > sm.1);
+    assert!(md.0 > sm.0);
+    assert!(md.1 > sm.1);
     assert_eq!(sm.1, ButtonSize::Sm.height(&hoff()));
 }
 
 #[test]
 fn button_renders_nodes_for_all_variants() {
-    let theme = Theme::dark();
-    for variant in [
-        ButtonVariant::Solid,
-        ButtonVariant::Outline,
-        ButtonVariant::Ghost,
-        ButtonVariant::Danger,
-    ] {
-        let b = Button::new("Go")
-            .variant(variant)
-            .intent(Intent::Destructive);
-        let mut c = Compositor::new();
-        b.render(&mut c, B, &theme);
-        // Smoke check: render must not panic and must emit something.
+    for theme in [Theme::dark(), Theme::hoff_core()] {
+        for variant in [
+            ButtonVariant::Primary,
+            ButtonVariant::Secondary,
+            ButtonVariant::Warning,
+            ButtonVariant::Outline,
+            ButtonVariant::Ghost,
+        ] {
+            let b = Button::new("Go").variant(variant).icon("link");
+            let mut c = Compositor::new();
+            b.render(&mut c, B, &theme);
+            // Smoke check: render must not panic and must emit something.
+        }
     }
+}
+
+#[test]
+fn button_destructive_intent_is_the_warning_surface() {
+    let b = Button::new("Delete").intent(Intent::Destructive);
+    assert_eq!(b.variant, ButtonVariant::Warning);
+    let b = Button::new("Save").intent(Intent::Constructive);
+    assert_eq!(b.variant, ButtonVariant::Primary);
+}
+
+#[test]
+fn button_sizes_follow_the_kit_ladder() {
+    let t = Theme::hoff_core();
+    assert_eq!(ButtonSize::Xs.height(&t), 28.0);
+    assert_eq!(ButtonSize::Sm.height(&t), 36.0);
+    assert_eq!(ButtonSize::Md.height(&t), 40.0);
+    assert_eq!(ButtonSize::Lg.height(&t), 44.0);
+    // The label style is the kit's, in Inter.
+    let style = ButtonSize::Md.text_style(&t);
+    assert_eq!(style.font_size, 14.0);
+    assert_eq!(style.line_height, 20.0);
+    assert_eq!(style.font_weight, 600);
+    assert_eq!(style.font_family.as_deref(), Some("Inter"));
+}
+
+#[test]
+fn submit_button_turns_dark_on_hover_and_while_active() {
+    let t = Theme::hoff_core();
+    let mut c = Compositor::new();
+    SubmitButton::new().render(&mut c, B, &t);
+    let mut s = SubmitButton::new();
+    assert!(s.handle_event(&move_to(20.0, 20.0), B).changed);
+    assert!(s.is_hovered());
+    let mut c = Compositor::new();
+    s.render(&mut c, B, &t);
+    let mut c = Compositor::new();
+    SubmitButton::new()
+        .active(true)
+        .disabled(true)
+        .render(&mut c, B, &t);
 }
 
 // ---------------------------------------------------------------------------
@@ -960,31 +1000,45 @@ fn card_renders_under_every_builtin_theme() {
 // HOFF widget fixtures
 // ---------------------------------------------------------------------------
 
-fn default_nodes(render: impl FnOnce(&mut Compositor, &Theme)) -> Vec<SceneNode> {
-    let theme = Theme::hoff();
+#[test]
+fn core_primary_button_is_the_kit_recipe() {
+    // The primary surface: the drop shadow first, then the ring (a
+    // spread-1 shadow), the gradient fill, the inset key-light, the label.
+    let theme = Theme::hoff_core();
     let mut c = Compositor::new();
     c.begin_frame();
-    render(&mut c, &theme);
-    c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec()
-}
-
-#[test]
-fn hoff_button_solid_is_graphite_glass_pill() {
-    let b = Button::new("Follow");
-    let nodes = default_nodes(|c, t| b.render(c, Rect::new(0.0, 0.0, 120.0, 44.0), t));
-    // Edge-light underlay first, then the pill surface, then the label.
-    assert!(matches!(nodes[0], SceneNode::GradientRect { angle_deg, .. } if angle_deg == 180.0));
-    match nodes[1] {
-        SceneNode::RoundedRect {
+    let b = Button::new("Button");
+    b.render(&mut c, Rect::new(0.0, 0.0, 120.0, 40.0), &theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    let drops = nodes
+        .iter()
+        .filter(|n| matches!(n, SceneNode::Shadow { inset: false, .. }))
+        .count();
+    let insets = nodes
+        .iter()
+        .filter(|n| matches!(n, SceneNode::Shadow { inset: true, .. }))
+        .count();
+    assert_eq!(drops, 2, "0 3px 4px -1px black/15 and the D4D4D4 ring");
+    assert_eq!(insets, 1, "inset 0 1px 0 white/33");
+    let fill = nodes
+        .iter()
+        .find(|n| matches!(n, SceneNode::GradientRect { .. }))
+        .expect("gradient fill");
+    match fill {
+        SceneNode::GradientRect {
             color,
+            color2,
             corner_radius,
             ..
         } => {
-            assert!((color[0] - 40.0 / 255.0).abs() < 1e-5, "graphite fill");
-            assert!((color[3] - 0.70).abs() < 1e-5, "rgba(40,40,40,.70)");
-            assert_eq!(corner_radius, 20.5, "pill radius (22) minus the border");
+            assert!((color[0] - 0xE5 as f32 / 255.0).abs() < 1e-5, "E5E5E5 top");
+            assert!(
+                (color2[0] - 0xE2 as f32 / 255.0).abs() < 1e-5,
+                "E2E2E2 bottom"
+            );
+            assert_eq!(*corner_radius, 12.0, "rounded-xl");
         }
-        ref other => panic!("expected pill surface, got {other:?}"),
+        other => panic!("expected the gradient fill, got {other:?}"),
     }
     assert!(matches!(nodes.last(), Some(SceneNode::Text { .. })));
 }
@@ -1278,17 +1332,20 @@ fn icon_button_click_contract_matches_button() {
 fn icon_button_is_square_and_renders_all_variants() {
     let (w, h) = IconButton::new("x").preferred_size(&hoff());
     assert_eq!(w, h);
-    let theme = Theme::hoff();
-    for variant in [
-        ButtonVariant::Solid,
-        ButtonVariant::Outline,
-        ButtonVariant::Ghost,
-        ButtonVariant::Danger,
-    ] {
-        let mut c = Compositor::new();
-        IconButton::new("trash")
-            .variant(variant)
-            .intent(Intent::Destructive)
-            .render(&mut c, B, &theme);
+    for theme in [Theme::hoff(), Theme::hoff_core()] {
+        for variant in [
+            IconButtonVariant::Outline,
+            IconButtonVariant::Ghost,
+            IconButtonVariant::Toolbar,
+        ] {
+            for size in [IconButtonSize::Sm, IconButtonSize::Md, IconButtonSize::Lg] {
+                let mut c = Compositor::new();
+                IconButton::new("trash")
+                    .variant(variant)
+                    .size(size)
+                    .active(true)
+                    .render(&mut c, B, &theme);
+            }
+        }
     }
 }

@@ -41,6 +41,13 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<cosmic_text::fon
     db.load_font_data(include_bytes!("../../assets/fonts/InclusiveSans-SemiBold.ttf").to_vec());
     db.load_font_data(include_bytes!("../../assets/fonts/InclusiveSans-Bold.ttf").to_vec());
 
+    // Inter (SIL OFL, assets/fonts/LICENSE-Inter-OFL.txt) — the hoff core
+    // design system's face; themes select it through
+    // `TypographyScale::family`.
+    db.load_font_data(include_bytes!("../../assets/fonts/Inter-Regular.ttf").to_vec());
+    db.load_font_data(include_bytes!("../../assets/fonts/Inter-Medium.ttf").to_vec());
+    db.load_font_data(include_bytes!("../../assets/fonts/Inter-SemiBold.ttf").to_vec());
+
     // Codicons — VS Code icon font (CC BY 4.0; texto em assets/fonts/).
     db.load_font_data(include_bytes!("../../assets/fonts/codicons.ttf").to_vec());
 

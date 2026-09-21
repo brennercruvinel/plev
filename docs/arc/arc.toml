@@ -129,7 +129,7 @@ depends = ["engine", "rope"]
 
 [crates.showcase]
 path = "crates/showcase"
-role = "design-system gallery app (15 tabs), the template of the official app pattern, framed by comps::shell::AppShell (full sidebar / rail / drawer by breakpoint); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main"
+role = "design-system gallery app (one tab per comps category plus the embedded editor and the ide git workspace; the list is view::Section::ALL), the template of the official app pattern, framed by comps::shell::AppShell (full sidebar / rail / drawer by breakpoint); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main"
 depends = ["engine", "comps"]
 targets = ["desktop", "web", "android", "ios"]
 

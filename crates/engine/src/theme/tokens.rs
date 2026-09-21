@@ -34,6 +34,12 @@ pub struct TypographyScale {
     pub title: f32,
     pub display: f32,
     pub line_height_ratio: f32,
+    /// Face every style resolves to; `None` is the engine default
+    /// (Inclusive Sans). The hoff core theme points this at Inter.
+    pub family: Option<&'static str>,
+    /// Tracking applied to every style, in em (css `tracking-[-0.02em]`
+    /// on the core body). Zero for the HOFF ramp.
+    pub tracking_em: f32,
 }
 
 impl TypographyScale {
@@ -43,14 +49,28 @@ impl TypographyScale {
         font_size * self.line_height_ratio
     }
 
-    fn style(size: f32, lh_factor: f32, weight: u16) -> TextStyle {
-        TextStyle::new(size)
-            .with_line_height(size * lh_factor)
-            .with_weight(weight)
+    fn style(&self, size: f32, lh_factor: f32, weight: u16) -> TextStyle {
+        self.exact(size, size * lh_factor, weight)
     }
 
-    fn body_style(size: f32, lh_factor: f32, weight: u16) -> TextStyle {
-        Self::style(size, lh_factor, weight).with_letter_spacing(BODY_LETTER_SPACING_EM * size)
+    /// A style with an explicit line height in px, in this scale's
+    /// family and tracking. The core ramp is written this way (14/20,
+    /// 12/16...).
+    pub fn exact(&self, size: f32, line_height: f32, weight: u16) -> TextStyle {
+        let style = TextStyle::new(size)
+            .with_line_height(line_height)
+            .with_weight(weight)
+            .with_letter_spacing(self.tracking_em * size);
+        match self.family {
+            Some(family) => style.with_family(family),
+            None => style,
+        }
+    }
+
+    fn body_style(&self, size: f32, lh_factor: f32, weight: u16) -> TextStyle {
+        let style = self.style(size, lh_factor, weight);
+        let tracking = (self.tracking_em + BODY_LETTER_SPACING_EM) * size;
+        style.with_letter_spacing(tracking)
     }
 
     // -- The HOFF type ramp (styles/variables.sass:39-127), one method per
@@ -59,93 +79,93 @@ impl TypographyScale {
 
     /// `=h4`: display size, line-height 1, weight 500.
     pub fn h4(&self) -> TextStyle {
-        Self::style(self.display, 1.0, 500)
+        self.style(self.display, 1.0, 500)
     }
 
     /// `=title`: 20px in HOFF, line-height 1.2, weight 500.
     pub fn title(&self) -> TextStyle {
-        Self::style(self.title_sm, 1.2, 500)
+        self.style(self.title_sm, 1.2, 500)
     }
 
     /// `=base-r`: 16px, line-height 1.5.
     pub fn base_r(&self) -> TextStyle {
-        Self::style(self.body, 1.5, 400)
+        self.style(self.body, 1.5, 400)
     }
 
     /// `=base-m`: 16px, line-height 1.5, weight 500.
     pub fn base_m(&self) -> TextStyle {
-        Self::style(self.body, 1.5, 500)
+        self.style(self.body, 1.5, 500)
     }
 
     /// `=base-2r`: 14px, line-height 1.4.
     pub fn base_2r(&self) -> TextStyle {
-        Self::style(self.body_sm, 1.4, 400)
+        self.style(self.body_sm, 1.4, 400)
     }
 
     /// `=base-2m`: 14px, line-height 1.4, weight 500.
     pub fn base_2m(&self) -> TextStyle {
-        Self::style(self.body_sm, 1.4, 500)
+        self.style(self.body_sm, 1.4, 500)
     }
 
     /// `=base-2sm`: 14px, line-height 1.4, weight 600.
     pub fn base_2sm(&self) -> TextStyle {
-        Self::style(self.body_sm, 1.4, 600)
+        self.style(self.body_sm, 1.4, 600)
     }
 
     /// `=base-2b`: 14px, line-height 1.4, weight 700.
     pub fn base_2b(&self) -> TextStyle {
-        Self::style(self.body_sm, 1.4, 700)
+        self.style(self.body_sm, 1.4, 700)
     }
 
     /// `=caption-r`: 12px, line-height 1.33.
     pub fn caption_r(&self) -> TextStyle {
-        Self::style(self.caption, 1.33, 400)
+        self.style(self.caption, 1.33, 400)
     }
 
     /// `=caption-sm`: 12px, line-height 1.33, weight 600.
     pub fn caption_sm(&self) -> TextStyle {
-        Self::style(self.caption, 1.33, 600)
+        self.style(self.caption, 1.33, 600)
     }
 
     /// `=small`: 10px, line-height 1.2.
     pub fn small_r(&self) -> TextStyle {
-        Self::style(self.small, 1.2, 400)
+        self.style(self.small, 1.2, 400)
     }
 
     /// `=small-sm`: 10px, line-height 1.2, weight 600.
     pub fn small_sm(&self) -> TextStyle {
-        Self::style(self.small, 1.2, 600)
+        self.style(self.small, 1.2, 600)
     }
 
     /// `=body`: 16px, line-height 1.5.
     pub fn body(&self) -> TextStyle {
-        Self::body_style(self.body, 1.5, 400)
+        self.body_style(self.body, 1.5, 400)
     }
 
     /// `=body-2r`: 14px, line-height 1.7.
     pub fn body_2r(&self) -> TextStyle {
-        Self::body_style(self.body_sm, 1.7, 400)
+        self.body_style(self.body_sm, 1.7, 400)
     }
 
     /// `=body-2m`: 14px, line-height 1.7, weight 500.
     pub fn body_2m(&self) -> TextStyle {
-        Self::body_style(self.body_sm, 1.7, 500)
+        self.body_style(self.body_sm, 1.7, 500)
     }
 
     /// `=body-2b`: like `=body-2m` (the reference sets weight 500 on both).
     pub fn body_2b(&self) -> TextStyle {
-        Self::body_style(self.body_sm, 1.7, 500)
+        self.body_style(self.body_sm, 1.7, 500)
     }
 
     /// `=hairline`: 12px, line-height 1.65, weight 500.
     pub fn hairline(&self) -> TextStyle {
-        Self::body_style(self.caption, 1.65, 500)
+        self.body_style(self.caption, 1.65, 500)
     }
 
     /// `=headline`: 32px, line-height 1.25, weight 500. The stat card
     /// value and page headlines.
     pub fn headline(&self) -> TextStyle {
-        Self::style(self.title, 1.25, 500)
+        self.style(self.title, 1.25, 500)
     }
 
     /// Code and readouts: body-sm at line-height 1.4 in the single
@@ -153,12 +173,12 @@ impl TypographyScale {
     /// tabular enough for short runs). One definition instead of the
     /// `code_style` helper each gallery section grew.
     pub fn mono(&self) -> TextStyle {
-        Self::style(self.body_sm, 1.4, 400)
+        self.style(self.body_sm, 1.4, 400)
     }
 
     /// Small readout under a specimen or a chart axis: `small` at 1.5.
     pub fn readout(&self) -> TextStyle {
-        Self::style(self.small, 1.5, 400)
+        self.style(self.small, 1.5, 400)
     }
 }
 
