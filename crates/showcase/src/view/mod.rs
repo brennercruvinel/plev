@@ -8,9 +8,11 @@ mod cards;
 mod charts;
 mod chrome;
 mod dock;
+mod editor;
 mod effects;
 mod extras;
 mod forms;
+mod git;
 mod icons_gallery;
 mod lists;
 mod overlays;
@@ -18,6 +20,9 @@ mod theme_gallery;
 mod typography;
 
 pub use forms::EditKey;
+pub use git::{NavKey, Wake};
+
+use winit::keyboard::{Key, ModifiersState};
 
 use comps::nav::{NavLink, PanelHeader, Sidebar};
 use comps::overlay::{OverlayId, OverlayKind, OverlayManager};
@@ -50,10 +55,12 @@ pub enum Section {
     Typography,
     Effects,
     Chrome,
+    Editor,
+    Git,
 }
 
 impl Section {
-    pub const ALL: [Section; 15] = [
+    pub const ALL: [Section; 17] = [
         Section::Cards,
         Section::Buttons,
         Section::Forms,
@@ -69,6 +76,8 @@ impl Section {
         Section::Typography,
         Section::Effects,
         Section::Chrome,
+        Section::Editor,
+        Section::Git,
     ];
 
     fn title(self) -> &'static str {
@@ -88,6 +97,8 @@ impl Section {
             Section::Typography => "Typography",
             Section::Effects => "Effects",
             Section::Chrome => "Chrome",
+            Section::Editor => "Editor",
+            Section::Git => "Git",
         }
     }
 
@@ -108,6 +119,8 @@ impl Section {
             Section::Typography => "info",
             Section::Effects => "moon",
             Section::Chrome => "layout-grid",
+            Section::Editor => "code",
+            Section::Git => "git-commit",
         }
     }
 
@@ -116,7 +129,9 @@ impl Section {
             Section::Cards => {
                 "The HOFF card deck: one glass shell, six preview families with live data."
             }
-            Section::Buttons => "Variants, sizes, intents and states of comps::prelude::Button.",
+            Section::Buttons => {
+                "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit; one card per state."
+            }
             Section::Forms => "Checkbox, switch, slider, progress, select and tabs.",
             Section::Overlays => {
                 "Modal, context menu, tooltip and toasts — spring physics per intent."
@@ -143,6 +158,12 @@ impl Section {
             }
             Section::Chrome => {
                 "The app frame: avatars, badges, panel header, nav links, breadcrumb, stats, code, skeleton, table."
+            }
+            Section::Editor => {
+                "The multi-cursor text editor (comps::editor): alt+click adds cursors, cmd-z undoes."
+            }
+            Section::Git => {
+                "The ide workspace on this repository: changes, stacks and diff. s stages, c commits, right-click for more."
             }
         }
     }
@@ -191,6 +212,9 @@ pub struct ShowcaseView {
     /// than the window (Cards, Theme, …); without this the wheel is dead
     /// everywhere outside the virtualized list.
     page_scroll: [ScrollState; Section::ALL.len()],
+    /// A page offset requested before the first layout (launch argument
+    /// for snapshots); applied once the content height is known.
+    pending_scroll: Option<f32>,
 
     pub overlay_mgr: OverlayManager,
     layers: Option<Layers>,
@@ -213,6 +237,8 @@ pub struct ShowcaseView {
     typography: typography::TypographySection,
     effects: effects::EffectsSection,
     chrome: chrome::ChromeSection,
+    editor: editor::EditorSection,
+    git: git::GitSection,
 }
 
 #[derive(Clone, Copy)]
@@ -224,7 +250,7 @@ struct Layers {
 
 impl ShowcaseView {
     pub fn new(width: f32, height: f32) -> Self {
-        let theme = Theme::hoff();
+        let theme = Theme::hoff_core();
         let links = Section::ALL
             .iter()
             .enumerate()
@@ -237,7 +263,7 @@ impl ShowcaseView {
         let sidebar = Sidebar::new(links)
             .brand("plev", "HOFF DESIGN SYSTEM")
             .footer(vec![
-                "T  cycle hoff / dark / light".into(),
+                "T  cycle core / hoff / dark / light".into(),
                 "Esc  close overlays".into(),
             ]);
         let header = PanelHeader::new(Section::Cards.title()).blurb(Section::Cards.blurb());
@@ -261,15 +287,42 @@ impl ShowcaseView {
             typography: typography::TypographySection::new(),
             effects: effects::EffectsSection::new(),
             chrome: chrome::ChromeSection::new(&theme),
+            editor: editor::EditorSection::new(&theme),
+            git: git::GitSection::new(),
             theme,
-            theme_name: "hoff".to_string(),
+            theme_name: "core".to_string(),
             section: Section::Cards,
             page_scroll: std::array::from_fn(|_| ScrollState::new()),
+            pending_scroll: None,
             overlay_mgr: OverlayManager::new(),
             layers: None,
             toasts: ToastManager::new(),
             active_overlay: None,
         }
+    }
+
+    /// Start the Git tab's worker against the cwd repository. `wake` is
+    /// how the worker asks the host for a frame.
+    pub fn connect_git(&mut self, wake: Wake) {
+        self.git.connect(wake);
+    }
+
+    /// Modifier state from the platform shell (alt/shift clicks in the
+    /// editor).
+    pub fn set_modifiers(&mut self, modifiers: ModifiersState) {
+        self.editor.set_modifiers(modifiers);
+    }
+
+    /// The Editor section takes the raw key first (it wants the winit key
+    /// and modifiers). `false` when the editor is not the active section
+    /// or did not consume the key.
+    pub fn handle_editor_key(&mut self, key: &Key, modifiers: ModifiersState) -> bool {
+        self.section == Section::Editor && self.editor.handle_key(key, modifiers)
+    }
+
+    /// Arrow up/down: the Git tab's file list.
+    pub fn handle_nav(&mut self, key: NavKey) -> bool {
+        self.section == Section::Git && self.git.handle_nav(key)
     }
 
     pub fn resize(&mut self, width: f32, height: f32, scale_factor: f32) {
@@ -306,6 +359,20 @@ impl ShowcaseView {
             .map_or(0.0, |r| r.x + r.w)
     }
 
+    /// The rect an embedded app (Editor, Git) fills: from the sidebar's
+    /// edge to the window's, from under the header to the bottom. No
+    /// gutter: these sections are apps, not pages.
+    fn app_rect(&self) -> Rect {
+        let viewport = self.content_rect();
+        let x = self.page_x();
+        Rect::new(x, viewport.y, self.width - x, self.height - viewport.y)
+    }
+
+    /// True for the sections that are apps filling `app_rect`.
+    fn is_app(&self) -> bool {
+        matches!(self.section, Section::Editor | Section::Git)
+    }
+
     fn section_idx(&self) -> usize {
         Section::ALL
             .iter()
@@ -322,6 +389,9 @@ impl ShowcaseView {
     /// hit-test and render against this rect so events and pixels always
     /// agree; the render clips it back to the content viewport.
     fn page_rect(&self) -> Rect {
+        if self.is_app() {
+            return self.app_rect();
+        }
         let mut rect = self.content_rect();
         rect.y -= self.page_offset();
         rect
@@ -347,6 +417,8 @@ impl ShowcaseView {
             Section::Typography => self.typography.content_height(content),
             Section::Effects => self.effects.content_height(content, &self.theme),
             Section::Chrome => self.chrome.content_height(content, &self.theme),
+            Section::Editor => self.editor.content_height(content),
+            Section::Git => self.git.content_height(content),
         }
     }
 
@@ -361,6 +433,8 @@ impl ShowcaseView {
 
     fn set_theme(&mut self, name: &str) {
         if let Some(theme) = theme_gallery::resolve(name) {
+            self.editor.set_theme(&theme);
+            self.git.set_theme(name);
             self.theme = theme;
             self.theme_name = name.to_string();
         }
@@ -369,6 +443,12 @@ impl ShowcaseView {
     /// Apply a theme by name (launch argument / snapshot tooling).
     pub fn apply_theme(&mut self, name: &str) {
         self.set_theme(name);
+    }
+
+    /// Scroll the active page to `offset` px once it has laid out
+    /// (launch argument / snapshot tooling).
+    pub fn scroll_page_to(&mut self, offset: f32) {
+        self.pending_scroll = Some(offset);
     }
 
     /// Jump to a section by name (launch argument / snapshot tooling).
@@ -393,12 +473,16 @@ impl ShowcaseView {
         if self.section == Section::App && self.app.handle_text(key) {
             return true;
         }
+        if self.section == Section::Git && self.git.handle_text(key) {
+            return true;
+        }
         match key {
             "t" | "T" => {
                 let next = match self.theme_name.as_str() {
+                    "core" => "hoff",
                     "hoff" => "dark",
                     "dark" => "light",
-                    _ => "hoff",
+                    _ => "core",
                 };
                 self.set_theme(next);
                 true
@@ -428,6 +512,9 @@ impl ShowcaseView {
         if self.section == Section::App && self.app.handle_escape() {
             return true;
         }
+        if self.section == Section::Git && self.git.handle_escape() {
+            return true;
+        }
         if self.forms.select_is_open() {
             self.forms.close_select();
             return true;
@@ -442,16 +529,26 @@ impl ShowcaseView {
         match self.section {
             Section::Forms => self.forms.handle_edit_key(key),
             Section::App => self.app.handle_edit_key(key),
+            Section::Git if key == EditKey::Backspace => self.git.handle_backspace(),
             _ => false,
         }
     }
 
-    /// Enter: the App section adds the field text as a todo.
+    /// Enter: the App section adds the field text as a todo; the Git tab
+    /// submits its commit form.
     pub fn handle_enter(&mut self) -> bool {
-        self.section == Section::App && self.app.handle_enter()
+        match self.section {
+            Section::App => self.app.handle_enter(),
+            Section::Git => self.git.handle_enter(),
+            _ => false,
+        }
     }
 
     pub fn handle_right_click(&mut self, x: f32, y: f32) -> bool {
+        if self.section == Section::Git {
+            let content = self.page_rect();
+            return self.git.handle_right_click(x, y, content);
+        }
         if self.section != Section::Overlays || self.active_overlay.is_some() {
             return false;
         }
@@ -670,6 +767,8 @@ impl ShowcaseView {
             Section::Typography => self.typography.handle_event(event, content),
             Section::Effects => self.effects.handle_event(event, content),
             Section::Chrome => self.chrome.handle_event(event, content, &self.theme),
+            Section::Editor => self.editor.handle_event(event, content),
+            Section::Git => self.git.handle_event(event, content),
             Section::Theme => {
                 let (r, picked) = self.themes.handle_event(event, content);
                 if let Some(name) = picked {
@@ -731,6 +830,12 @@ impl ShowcaseView {
         if self.section == Section::App {
             animating |= self.app.tick(dt);
         }
+        if self.section == Section::Editor {
+            animating |= self.editor.tick(dt);
+        }
+        // The git tab always ticks: worker events land there whichever
+        // section is showing, and must not pile up until it is.
+        animating |= self.git.tick(dt) && self.section == Section::Git;
 
         // Drop overlay widgets whose exit animation finished.
         if let Some(active) = &self.active_overlay {
@@ -765,6 +870,10 @@ impl ShowcaseView {
         // Keep the page scroll clamped to the current viewport/content
         // (resize can shrink content; the offset must follow).
         self.sync_page_scroll();
+        if let Some(offset) = self.pending_scroll.take() {
+            let idx = self.section_idx();
+            self.page_scroll[idx].scroll_to(offset);
+        }
         let content = self.page_rect();
         let viewport = self.content_rect();
 
@@ -790,7 +899,11 @@ impl ShowcaseView {
             x: page_x,
             y: viewport.y,
             w: self.width - page_x,
-            h: viewport.h,
+            h: if self.is_app() {
+                self.height - viewport.y
+            } else {
+                viewport.h
+            },
         });
         match self.section {
             Section::Cards => self.cards.render(c, content, &theme),
@@ -812,6 +925,8 @@ impl ShowcaseView {
             Section::Typography => self.typography.render(c, content, &theme),
             Section::Effects => self.effects.render(c, content, &theme),
             Section::Chrome => self.chrome.render(c, content, &theme),
+            Section::Editor => self.editor.render(c, content),
+            Section::Git => self.git.render(c, content, &theme),
         }
         c.push(SceneNode::PopClip);
 
@@ -903,12 +1018,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn starts_on_cards_with_the_hoff_theme() {
+    fn starts_on_cards_with_the_core_theme() {
         let view = ShowcaseView::new(1200.0, 800.0);
         assert_eq!(view.section, Section::Cards);
-        assert_eq!(view.theme_name, "hoff");
-        // Page frame is the HOFF #444444.
-        assert_eq!(view.theme.colors.bg.0, engine::theme::hoff::PAGE_BG.0);
+        assert_eq!(view.theme_name, "core");
+        // The page is the kit's paper, shade 1.
+        assert_eq!(
+            view.theme.colors.bg.0,
+            engine::theme::hoff_core::SHADES[0].0
+        );
     }
 
     // -- Sidebar responsiveness (14 links overflow short windows) ----------
@@ -1097,11 +1215,13 @@ mod tests {
         assert_eq!(view.section, Section::Cards);
 
         assert!(view.handle_key("t"));
+        assert_eq!(view.theme_name, "hoff");
+        assert!(view.handle_key("t"));
         assert_eq!(view.theme_name, "dark");
         assert!(view.handle_key("t"));
         assert_eq!(view.theme_name, "light");
         assert!(view.handle_key("t"));
-        assert_eq!(view.theme_name, "hoff");
+        assert_eq!(view.theme_name, "core");
     }
 
     #[test]
@@ -1116,7 +1236,7 @@ mod tests {
         let (x, y) = view.app.input_rect(content, &view.theme).center();
         assert!(view.handle_event(&WidgetEvent::MouseDown { x, y }));
         assert!(view.handle_key("t"));
-        assert_eq!(view.theme_name, "hoff", "typing must not cycle the theme");
+        assert_eq!(view.theme_name, "core", "typing must not cycle the theme");
         assert!(view.handle_key("x"));
         assert!(view.handle_edit_key(EditKey::Backspace));
         assert!(view.handle_enter(), "Enter adds the todo");
@@ -1211,8 +1331,8 @@ mod tests {
         let mut view = ShowcaseView::new(1200.0, 800.0);
         view.set_section(Section::Buttons);
         let content = view.content_rect();
-        // First button row starts after the group label.
-        let (cx, cy) = (content.x + 30.0, content.y + 24.0 + 22.0);
+        // The first card's widget sits at the card's center.
+        let (cx, cy) = view.buttons.first_widget_center(content, &view.theme);
         assert!(
             view.handle_event(&WidgetEvent::MouseMove { x: cx, y: cy }),
             "hover entering a button must request redraw"

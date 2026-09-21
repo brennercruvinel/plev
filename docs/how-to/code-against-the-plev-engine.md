@@ -119,6 +119,15 @@ of correct responsive layout).
 - surface render targets are created exclusively through
   `gpu.surface_render_view(&output)`. a default `create_view` skips gamma
   on the web target
+- inside a shader, every `mix` between two colors happens in premultiplied
+  linear space (`srgb_to_linear(rgb) * a, a`), never in straight alpha. a
+  stop or a fill that is transparent black drags a straight-alpha mix
+  toward black: this is the dark fringe that sat on every rounded corner
+  of every stroked rect (rect_sdf border over a transparent fill) and the
+  muddy tail of the edge-light gradient, fixed 2026-09-21
+- a shadow with blur 0 is still anti-aliased: `shadow_sigma` floors at
+  `MIN_SHADOW_SIGMA` (0.5px), so the css `0 0 0 1px` rings the core kit
+  draws as shadows get the same 1px feather the sdf rects have
 - validate color work by sampling pixels, never by inspection. desktop
   background must measure 48,48,48 (and so must web)
 

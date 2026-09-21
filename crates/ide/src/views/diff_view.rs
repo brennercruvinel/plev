@@ -223,3 +223,9 @@ fn line_colors(kind: DiffLineKind, theme: &Theme) -> ([f32; 4], [f32; 4], [f32; 
         DiffLineKind::Context => ([0.0; 4], g.text_default.0, g.text_default.0),
     }
 }
+
+impl Default for DiffView {
+    fn default() -> Self {
+        Self::new()
+    }
+}

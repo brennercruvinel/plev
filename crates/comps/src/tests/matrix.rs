@@ -66,7 +66,7 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     b.set_focused(true);
     b.render(&mut c, row(0.0), theme);
     Button::new("Danger")
-        .variant(ButtonVariant::Danger)
+        .variant(ButtonVariant::Warning)
         .disabled(true)
         .render(&mut c, row(1.0), theme);
     IconButton::new("x").render(&mut c, row(2.0), theme);

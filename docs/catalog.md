@@ -19,8 +19,8 @@ docs/adr/comps-one-design-system-crate.md.
 | `crates/engine/src/theme` | tokens: `colors`, `glass`, `typography`, `spacing`, `radius`, `shape`, `control`, `size`, `duration`, `layout`, `shadows`, `motion`, `effects`. `Theme::hoff()`, `Theme::hoff_light()`, `Theme::named(..)` |
 | `crates/comps/src/core.rs` | `Rect`, `WidgetEvent`, `EventResult`, helpers de cor |
 | `crates/comps/src/recipe.rs` | `glass_pill`, `glass_surface`, `edge_light`, `inset_keylight`, `shadow_node`, `shadow_stack`, `menu_shadow`, `focus_ring`, `rounded_rect(_stroke)` |
-| `crates/comps/src/icons.rs` | 37 ícones lucide |
-| `crates/comps/src/action` | `Button`, `IconButton`, `Chip`, `Badge` |
+| `crates/comps/src/icons.rs` | ícones lucide (a tabela `ICONS`) |
+| `crates/comps/src/action` | `Button`, `IconButton`, `SubmitButton` (receitas de `theme.button`, o kit core), `Chip`, `Badge`; `press.rs` é o modelo de press e o `paint_surface` que os três compartilham |
 | `crates/comps/src/form` | `TextField` (sobre `TextInput`), `Checkbox`, `Switch`, `Slider`, `Select`, `EditKey` |
 | `crates/comps/src/nav` | `Tabs`, `NavLink`, `Sidebar`, `PanelHeader`, `Breadcrumb`, `SplitPane` |
 | `crates/comps/src/content` | `Card`, `Avatar`, `Panel`, `Stat`, `CodeBlock`, `Skeleton`, `Table`, `EmptyState`, `VirtualList`, `Tree`, `Separator` |
@@ -31,7 +31,7 @@ docs/adr/comps-one-design-system-crate.md.
 | `crates/comps/src/editor` | `EditorView`, `EditorConfig::from_theme`, `EditorTheme::from_theme` |
 | `crates/comps/src/shell.rs` | `AppShell`, `SafeArea`, `ShellLayout` |
 | `crates/comps/src/tests` | `matrix.rs` (todo widget x todo tema x phone/desktop), `components.rs`, `widgets.rs`, `focus.rs` |
-| consumidores | showcase (15 seções, chrome via `AppShell`), ide (`status.rs` é o único token local), urnaui (`view/field.rs` é um alias de `TextField`) |
+| consumidores | showcase (uma seção por categoria mais editor e git embutidos, a lista é `Section::ALL`; chrome via `AppShell`), ide (`status.rs` é o único token local), urnaui (`view/field.rs` é um alias de `TextField`) |
 
 referência visual: o git client (`crates/ide`, que consome `crates/git`)
 e a galeria (`crates/showcase`). os dois já falam HOFF dark glass; o

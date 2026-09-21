@@ -24,13 +24,19 @@ use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
 #[cfg(target_arch = "wasm32")]
 use winit::event_loop::EventLoopProxy;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
-use winit::keyboard::{Key, NamedKey};
+use winit::keyboard::{Key, ModifiersState, NamedKey};
 use winit::window::{Window, WindowAttributes, WindowId};
 
-/// Sent by the async GPU-init task on wasm; never constructed natively
-/// (desktop blocks on `GpuContext::new` inside `resumed` instead).
-#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+/// Messages from other threads and tasks into the event loop.
+///
+/// `GpuReady` is sent by the async GPU-init task on wasm and never
+/// constructed natively (desktop blocks on `GpuContext::new` inside
+/// `resumed` instead); `Wake` comes from the git worker on desktop only.
+/// One instance is in flight at a time, so the size gap is irrelevant.
+#[allow(dead_code, clippy::large_enum_variant)]
 enum UserEvent {
+    /// The git worker finished a command: drain it on the next frame.
+    Wake,
     GpuReady {
         gpu: GpuContext,
         text_system: TextSystem,
@@ -60,6 +66,7 @@ pub struct App {
     clock: FrameClock,
     cursor: (f32, f32),
     scale_factor: f64,
+    modifiers: ModifiersState,
     #[cfg(target_arch = "wasm32")]
     proxy: Option<EventLoopProxy<UserEvent>>,
 }
@@ -67,14 +74,18 @@ pub struct App {
 impl App {
     pub fn new() -> Self {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        // Optional launch state for demos/snapshots: section, then theme.
-        // (Empty iterator on wasm — no process args in the browser.)
+        // Optional launch state for demos/snapshots: section, theme, then
+        // the page scroll offset in px. (Empty iterator on wasm — no
+        // process args in the browser.)
         let mut args = std::env::args().skip(1);
         if let Some(section) = args.next() {
             view.jump_to_section(&section);
         }
         if let Some(theme) = args.next() {
             view.apply_theme(&theme);
+        }
+        if let Some(offset) = args.next().and_then(|a| a.parse::<f32>().ok()) {
+            view.scroll_page_to(offset);
         }
         Self {
             window: None,
@@ -84,6 +95,7 @@ impl App {
             clock: FrameClock::new(),
             cursor: (0.0, 0.0),
             scale_factor: 1.0,
+            modifiers: ModifiersState::empty(),
             #[cfg(target_arch = "wasm32")]
             proxy: None,
         }
@@ -178,6 +190,7 @@ impl ApplicationHandler<UserEvent> for App {
 
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: UserEvent) {
         match event {
+            UserEvent::Wake => self.invalidate(),
             UserEvent::GpuReady {
                 gpu,
                 text_system,
@@ -202,6 +215,11 @@ impl ApplicationHandler<UserEvent> for App {
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
 
+            WindowEvent::ModifiersChanged(mods) => {
+                self.modifiers = mods.state();
+                self.view.set_modifiers(self.modifiers);
+            }
+
             WindowEvent::KeyboardInput {
                 event: key_event, ..
             } => {
@@ -215,6 +233,10 @@ impl ApplicationHandler<UserEvent> for App {
                         } else {
                             self.invalidate();
                         }
+                    }
+                    // The editor owns the keyboard while it is showing.
+                    key if self.view.handle_editor_key(key, self.modifiers) => {
+                        self.invalidate();
                     }
                     // Space and the editing keys bridge through keys.rs
                     // (the view stays winit-free).
@@ -342,6 +364,10 @@ pub fn run() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
     let event_loop = EventLoop::<UserEvent>::with_user_event().build().unwrap();
     let mut app = App::new();
+    let proxy = event_loop.create_proxy();
+    app.view.connect_git(Box::new(move || {
+        let _ = proxy.send_event(UserEvent::Wake);
+    }));
     event_loop.run_app(&mut app).unwrap();
 }
 

@@ -291,3 +291,9 @@ impl MultiStackView {
         hit_rects
     }
 }
+
+impl Default for MultiStackView {
+    fn default() -> Self {
+        Self::new()
+    }
+}

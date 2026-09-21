@@ -231,9 +231,17 @@ impl BackdropVertex {
     }
 }
 
-/// Gaussian sigma for a CSS-like blur radius (CSS box-shadow convention).
+/// Narrowest Gaussian the shadow shader integrates: a blur of zero is a
+/// hard shape, and a hard shape without anti-aliasing stair-steps at the
+/// corners (the 1px ring of a css `0 0 0 1px` shadow read as a jagged
+/// dark outline). This floor gives every hard shadow the same ~1px edge
+/// the SDF rects get from their smoothstep.
+pub const MIN_SHADOW_SIGMA: f32 = 0.5;
+
+/// Gaussian sigma for a CSS-like blur radius (CSS box-shadow convention),
+/// never under [`MIN_SHADOW_SIGMA`].
 pub fn shadow_sigma(blur_radius: f32) -> f32 {
-    blur_radius / 2.0
+    (blur_radius / 2.0).max(MIN_SHADOW_SIGMA)
 }
 
 /// How far the shadow quad extends past the casting rect on each side:

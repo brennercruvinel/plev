@@ -1,57 +1,86 @@
-//! HOFF icon button: a square glass control carrying only an icon glyph
-//! (from [`crate::icons`]), same variants/intents as [`Button`] and
-//! the same click contract (fires on release inside). The label-less form
-//! is Tooltip-friendly by design — pair it with one from the owning view;
-//! this widget deliberately does not own a tooltip.
+//! Square icon-only button of the hoff core kit: the bordered one
+//! (`outline`), the plain one (`ghost`) and the toolbar item, which has
+//! an `active` state for the selected tool. Three sizes (24 / 36 / 40).
 
+use engine::compositor::{Compositor, LayerId};
+use engine::theme::{ButtonRecipe, IconButtonMetrics, Intent, Theme};
+
+use super::press::{Press, paint_surface};
+use crate::core::{EventResult, Rect, WidgetEvent};
 use crate::icons;
-use engine::compositor::Compositor;
-use engine::theme::{Intent, Theme};
 
-use crate::action::ButtonSize;
-use crate::action::ButtonVariant;
-use crate::core::{EventResult, Rect, WidgetEvent, intent_fill};
-use crate::recipe::{focus_ring, glass_pill};
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum IconButtonVariant {
+    /// Border and paper fill (the ghost icon button of the kit).
+    Outline,
+    /// Nothing at rest, a wash on hover.
+    #[default]
+    Ghost,
+    /// Toolbar item; `active` selects it.
+    Toolbar,
+}
 
-/// Square icon-only button. See the module docs for the tooltip note.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum IconButtonSize {
+    /// 24, radius 8.
+    Sm,
+    /// 36, radius 10.
+    Md,
+    /// 40, radius 12.
+    #[default]
+    Lg,
+}
+
+impl IconButtonSize {
+    pub fn metrics(self, theme: &Theme) -> IconButtonMetrics {
+        theme.button.icon_sizes[self as usize]
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct IconButton {
     pub icon: &'static str,
-    pub variant: ButtonVariant,
-    pub size: ButtonSize,
-    pub intent: Intent,
+    pub variant: IconButtonVariant,
+    pub size: IconButtonSize,
     pub disabled: bool,
-    hovered: bool,
-    pressed: bool,
-    focused: bool,
+    /// Toolbar: the tool is selected.
+    pub active: bool,
+    /// Icon edge override; the size's own by default.
+    pub icon_size: Option<f32>,
+    press: Press,
 }
 
 impl IconButton {
     pub fn new(icon: &'static str) -> Self {
         Self {
             icon,
-            variant: ButtonVariant::default(),
-            size: ButtonSize::default(),
-            intent: Intent::Neutral,
+            variant: IconButtonVariant::default(),
+            size: IconButtonSize::default(),
             disabled: false,
-            hovered: false,
-            pressed: false,
-            focused: false,
+            active: false,
+            icon_size: None,
+            press: Press::default(),
         }
     }
 
-    pub fn variant(mut self, variant: ButtonVariant) -> Self {
+    pub fn variant(mut self, variant: IconButtonVariant) -> Self {
         self.variant = variant;
         self
     }
 
-    pub fn size(mut self, size: ButtonSize) -> Self {
+    pub fn size(mut self, size: IconButtonSize) -> Self {
         self.size = size;
         self
     }
 
-    pub fn intent(mut self, intent: Intent) -> Self {
-        self.intent = intent;
+    pub fn icon_size(mut self, px: f32) -> Self {
+        self.icon_size = Some(px);
+        self
+    }
+
+    /// Intent has no surface in the kit; kept so call sites read alike
+    /// with [`super::Button`].
+    pub fn intent(self, _intent: Intent) -> Self {
         self
     }
 
@@ -60,139 +89,76 @@ impl IconButton {
         self
     }
 
+    pub fn active(mut self, active: bool) -> Self {
+        self.active = active;
+        self
+    }
+
     pub fn is_hovered(&self) -> bool {
-        self.hovered
+        self.press.hovered
     }
 
     pub fn is_pressed(&self) -> bool {
-        self.pressed
+        self.press.pressed
     }
 
-    /// Keyboard focus, driven by the owning view (plev has no global focus
-    /// chain). Disabled buttons refuse focus.
     pub fn set_focused(&mut self, focused: bool) {
-        self.focused = focused && !self.disabled;
+        self.press.focused = focused && !self.disabled;
     }
 
     pub fn is_focused(&self) -> bool {
-        self.focused
+        self.press.focused
     }
 
-    /// Square: side = the control height of the size variant.
+    fn recipe<'a>(&self, theme: &'a Theme) -> &'a ButtonRecipe {
+        let b = &theme.button;
+        match self.variant {
+            IconButtonVariant::Outline => &b.outline,
+            IconButtonVariant::Ghost => &b.ghost,
+            IconButtonVariant::Toolbar if self.active => &b.toolbar_active,
+            IconButtonVariant::Toolbar => &b.toolbar,
+        }
+    }
+
     pub fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
-        let h = self.size.height(theme);
-        (h, h)
+        let m = self.size.metrics(theme);
+        (m.size, m.size)
     }
 
     pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
-        if self.disabled {
-            if self.hovered || self.pressed {
-                self.hovered = false;
-                self.pressed = false;
-                return EventResult::changed();
-            }
-            return EventResult::IGNORED;
-        }
-        match *event {
-            WidgetEvent::MouseMove { x, y } => {
-                let inside = bounds.contains(x, y);
-                if inside != self.hovered {
-                    self.hovered = inside;
-                    EventResult::changed()
-                } else {
-                    EventResult::IGNORED
-                }
-            }
-            WidgetEvent::MouseDown { x, y } => {
-                if bounds.contains(x, y) {
-                    self.pressed = true;
-                    EventResult::changed()
-                } else {
-                    EventResult::IGNORED
-                }
-            }
-            WidgetEvent::MouseUp { x, y } => {
-                if !self.pressed {
-                    return EventResult::IGNORED;
-                }
-                self.pressed = false;
-                if bounds.contains(x, y) {
-                    EventResult::clicked()
-                } else {
-                    EventResult::changed()
-                }
-            }
-            WidgetEvent::Scroll { .. } => EventResult::IGNORED,
-        }
+        self.press.handle(event, bounds, self.disabled)
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let glass = &theme.glass;
+        self.render_to_layer(compositor, LayerId::DEFAULT, bounds, theme);
+    }
+
+    pub fn render_to_layer(
+        &self,
+        compositor: &mut Compositor,
+        layer: LayerId,
+        bounds: Rect,
+        theme: &Theme,
+    ) {
+        let m = self.size.metrics(theme);
+        let recipe = self.recipe(theme);
         let alpha = if self.disabled {
-            glass.disabled_alpha
+            recipe.disabled_alpha
         } else {
             1.0
         };
-        let intent = if self.variant == ButtonVariant::Danger {
-            Intent::Destructive
-        } else {
-            self.intent
-        };
-        let fg_base = match intent {
-            Intent::Neutral => glass.text_active.0,
-            other => intent_fill(theme, other),
-        };
-        let (bg, edge) = match self.variant {
-            ButtonVariant::Solid | ButtonVariant::Danger => (
-                if self.hovered {
-                    glass.button_hover.0
-                } else {
-                    glass.button.0
-                },
-                glass.edge.0,
-            ),
-            ButtonVariant::Outline => (
-                if self.hovered {
-                    glass.surface_hover.0
-                } else {
-                    [0.0; 4]
-                },
-                if self.hovered {
-                    glass.field_focus_border.0
-                } else {
-                    glass.edge.0
-                },
-            ),
-            ButtonVariant::Ghost => (
-                if self.hovered {
-                    glass.surface_hover.0
-                } else {
-                    [0.0; 4]
-                },
-                [0.0; 4],
-            ),
-        };
-        let fg = [fg_base[0], fg_base[1], fg_base[2], fg_base[3] * alpha];
-
-        // Squircle, not pill: icon buttons read as rounded squares (the
-        // nav radius, like a nav link's icon slot).
-        let radius = theme.shape.nav.min(bounds.h / 2.0);
-        if self.focused {
-            compositor.push(focus_ring(bounds, radius, theme));
-        }
-        if bg[3] > 0.001 || edge[3] > 0.001 {
-            for node in glass_pill(
-                bounds,
-                radius,
-                edge,
-                theme.control.edge_width_strong,
-                [bg[0], bg[1], bg[2], bg[3] * alpha],
-            ) {
-                compositor.push(node);
-            }
-        }
-
-        let icon = self.size.icon_size(theme);
+        let radius = m.radius.min(bounds.h / 2.0);
+        let fg = paint_surface(
+            compositor,
+            layer,
+            bounds,
+            radius,
+            self.press.surface(recipe),
+            alpha,
+            self.press.focused,
+            theme,
+        );
+        let icon = self.icon_size.unwrap_or(m.icon);
         if let Some(node) = icons::icon_at(
             self.icon,
             icon,
@@ -200,7 +166,7 @@ impl IconButton {
             bounds.x + (bounds.w - icon) / 2.0,
             bounds.y + (bounds.h - icon) / 2.0,
         ) {
-            compositor.push(node);
+            compositor.push_to_layer(layer, node);
         }
     }
 }

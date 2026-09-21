@@ -272,8 +272,13 @@ impl EditorView {
             // Changed only when a drag was in progress.
             MouseEvent::Up => self.drag.take().is_some(),
             MouseEvent::Wheel { dy } => {
+                // Whole lines only: a fractional offset leaves the top
+                // line cut in half, which reads as a layout bug.
                 let before = self.scroll.offset();
+                let lh = self.config.line_height;
                 self.scroll.scroll_by(dy);
+                let snapped = (self.scroll.offset() / lh).round() * lh;
+                self.scroll.scroll_to(snapped);
                 self.scroll.offset() != before
             }
         }

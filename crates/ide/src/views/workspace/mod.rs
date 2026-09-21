@@ -80,9 +80,15 @@ pub struct WorkspaceView {
     pub repo_label: String,
     pub branch_label: String,
 
-    // Window size
+    // Frame the workspace lays out in: `vw`/`vh` is its size, `origin`
+    // its top-left in window coordinates (zero when it owns the window).
     pub vw: f32,
     pub vh: f32,
+    pub origin: (f32, f32),
+    /// Embedded in a host that provides its own header (the showcase):
+    /// the header is skipped; the rail and the three panels fill the
+    /// frame from `origin`.
+    pub embedded: bool,
 }
 
 /// Overlay-driven interaction state: which file the open context menu or
@@ -170,9 +176,27 @@ impl WorkspaceView {
             branch_label: String::new(),
             vw,
             vh,
+            origin: (0.0, 0.0),
+            embedded: false,
         };
         view.apply_panel_widths();
         view
+    }
+
+    /// Embed inside a host's content rect: no header, rail and panels
+    /// laid out from `origin`. Input arrives in window coordinates and
+    /// is resolved against the same origin.
+    pub fn set_frame(&mut self, x: f32, y: f32, w: f32, h: f32) {
+        self.embedded = true;
+        self.origin = (x, y);
+        self.sidebar.set_origin(x, y);
+        self.resize(w, h);
+    }
+
+    /// Bottom-right corner of the frame in window coordinates: the
+    /// viewport overlays center in and cover (dimming the host too).
+    pub(crate) fn viewport(&self) -> (f32, f32) {
+        (self.origin.0 + self.vw, self.origin.1 + self.vh)
     }
 
     /// Takes the git operations queued by interaction handlers since the
@@ -203,6 +227,9 @@ impl WorkspaceView {
 
     /// Header height for the current theme.
     pub(crate) fn header_h(&self) -> f32 {
+        if self.embedded {
+            return 0.0;
+        }
         Header::height(self.theme())
     }
 
@@ -343,18 +370,20 @@ impl WorkspaceView {
         moved
     }
 
-    /// Returns (left_panel_x, right_panel_x) accounting for sidebar.
+    /// Returns (left_panel_x, right_panel_x) in window coordinates,
+    /// accounting for the sidebar and the frame origin.
     pub(crate) fn panel_bounds(&self) -> (f32, f32) {
-        let left_x = self.sidebar_w();
-        let right_x = self.vw - self.right_w;
+        let left_x = self.origin.0 + self.sidebar_w();
+        let right_x = self.origin.0 + self.vw - self.right_w;
         (left_x, right_x)
     }
 
     /// Hit-test resize handles. Returns Some(Side) if cursor is on a handle.
     pub fn hit_test_handle(&self, cursor_x: f32) -> Option<Side> {
         let handle_w = self.handle_w();
-        let left_handle_x = self.sidebar_w() + self.left_w;
-        let right_handle_x = self.vw - self.right_w - handle_w / 2.0;
+        let (left_x, right_x) = self.panel_bounds();
+        let left_handle_x = left_x + self.left_w;
+        let right_handle_x = right_x - handle_w / 2.0;
 
         if (cursor_x - left_handle_x).abs() < handle_w * 2.0 {
             Some(Side::Left)

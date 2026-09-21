@@ -2,47 +2,50 @@ use super::WorkspaceView;
 use engine::compositor::{Compositor, SceneNode};
 
 impl WorkspaceView {
-    /// Full render: clears and rebuilds everything.
+    /// Full render of the workspace into its frame. The host owns the
+    /// frame boundary (`begin_frame`) so an embedding host can draw its
+    /// chrome around the workspace.
     pub fn render(&mut self, compositor: &mut Compositor) {
         self.ensure_overlay_layer(compositor);
 
         let theme = self.theme().clone();
         let vw = self.vw;
         let vh = self.vh;
+        let (ox, oy) = self.origin;
         let sidebar_w = self.sidebar_w();
         let header_h = self.header_h();
         let handle_w = self.handle_w();
 
-        compositor.begin_frame();
-
         // Page canvas behind the app.
         compositor.push(SceneNode::Rect {
-            x: 0.0,
-            y: 0.0,
+            x: ox,
+            y: oy,
             w: vw,
             h: vh,
             color: theme.colors.bg.0,
         });
 
-        // The header spans the window; the rail sits under it.
-        self.header.render(
-            compositor,
-            &theme,
-            self.theme_mode,
-            vw,
-            sidebar_w,
-            &self.repo_label,
-            &self.branch_label,
-        );
+        // The header spans the window (an embedding host brings its
+        // own); the rail sits under it, at the frame origin.
+        if !self.embedded {
+            self.header.render(
+                compositor,
+                &theme,
+                self.theme_mode,
+                vw,
+                sidebar_w,
+                &self.repo_label,
+                &self.branch_label,
+            );
+        }
         self.sidebar.render(compositor, &theme, vw, vh);
 
-        let content_y = header_h;
+        let content_y = oy + header_h;
         let content_h = vh - header_h;
 
         // -- Left panel (Unassigned Changes) --
-        let left_x = sidebar_w;
+        let (left_x, right_x) = self.panel_bounds();
         let mid_x = left_x + self.left_w + handle_w;
-        let right_x = vw - self.right_w;
 
         // Commit form (inline, above file list)
         let commit_form_h =

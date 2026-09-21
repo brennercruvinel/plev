@@ -339,7 +339,7 @@ impl OverviewScreen {
                 };
                 (
                     b,
-                    IconButton::new(icon).variant(comps::prelude::ButtonVariant::Ghost),
+                    IconButton::new(icon).variant(comps::prelude::IconButtonVariant::Ghost),
                 )
             })
             .collect();

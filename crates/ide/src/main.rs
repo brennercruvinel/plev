@@ -7,10 +7,7 @@
 //! Run: `cargo run -p ide [path-to-repo]` (defaults to the cwd).
 
 mod actions;
-mod adapters;
 mod renderer;
-mod status;
-mod views;
 mod watcher;
 
 use std::path::PathBuf;
@@ -24,16 +21,14 @@ use engine::compositor::Compositor;
 use engine::gpu::GpuContext;
 use engine::gpu::texture_pool::TexturePool;
 use engine::text::TextSystem;
-use git::{GitClient, GitCommand, GitEvent};
-use views::workspace::{Side, UiRequest, WorkspaceView};
+use git::{GitClient, GitEvent};
+use ide::session::GitSession;
+use ide::views::workspace::{Side, WorkspaceView};
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::keyboard::{Key, ModifiersState};
 use winit::window::{CursorIcon, Window, WindowAttributes, WindowId};
-
-/// How many commits the stacks panel loads per refresh.
-const LOG_LIMIT: usize = 100;
 
 /// Events injected into the winit loop from background threads.
 enum AppEvent {
@@ -63,14 +58,6 @@ enum GpuState {
 // App
 // ---------------------------------------------------------------------------
 
-/// What the diff panel is currently waiting for; stale diff events (the
-/// user clicked elsewhere meanwhile) are dropped.
-#[derive(PartialEq)]
-enum DiffTarget {
-    File(String),
-    Commit(String),
-}
-
 struct App {
     window: Option<Arc<Window>>,
     state: GpuState,
@@ -79,13 +66,9 @@ struct App {
     cursor_pos: (f32, f32),
     scale_factor: f64,
 
-    git: GitClient,
+    git: GitSession,
     /// Keeps the OS file watcher alive (`None` when watching failed).
     _fs_watcher: Option<watcher::FsWatcher>,
-    diff_target: Option<DiffTarget>,
-    /// Last log/branches payloads — the stacks panel needs both.
-    log_cache: Vec<git::Commit>,
-    branch_cache: Vec<git::Branch>,
 
     // Keymap dispatch (Zed model): keystroke -> matcher -> name -> registry.
     modifiers: ModifiersState,
@@ -98,13 +81,9 @@ struct App {
 }
 
 impl App {
-    fn new(git: GitClient, fs_watcher: Option<watcher::FsWatcher>) -> Self {
+    fn new(git: GitSession, fs_watcher: Option<watcher::FsWatcher>) -> Self {
         let mut workspace = WorkspaceView::new(1280.0, 800.0);
-        workspace.repo_label = git
-            .workdir()
-            .file_name()
-            .map(|n| n.to_string_lossy().into_owned())
-            .unwrap_or_else(|| git.workdir().display().to_string());
+        workspace.repo_label = git.repo_label();
         Self {
             window: None,
             state: GpuState::Uninitialized,
@@ -114,9 +93,6 @@ impl App {
             scale_factor: 1.0,
             git,
             _fs_watcher: fs_watcher,
-            diff_target: None,
-            log_cache: Vec::new(),
-            branch_cache: Vec::new(),
             modifiers: ModifiersState::empty(),
             matcher: KeymapMatcher::new(actions::default_keymap()),
             registry: actions::registry(),
@@ -138,102 +114,13 @@ impl App {
 
     /// Forwards git operations queued by the views to the worker thread.
     fn flush_requests(&mut self) {
-        for request in self.workspace.take_requests() {
-            let command = match request {
-                UiRequest::FileDiff { path } => {
-                    self.diff_target = Some(DiffTarget::File(path.clone()));
-                    GitCommand::DiffWorkdir { path }
-                }
-                UiRequest::CommitDiff { sha } => {
-                    self.diff_target = Some(DiffTarget::Commit(sha.clone()));
-                    GitCommand::DiffCommit { sha }
-                }
-                UiRequest::Stage { path } => GitCommand::Stage { path },
-                UiRequest::Unstage { path } => GitCommand::Unstage { path },
-                UiRequest::Discard { path } => GitCommand::Discard { path },
-                UiRequest::Ignore { path } => GitCommand::Ignore { path },
-                UiRequest::Commit { message } => GitCommand::Commit { message },
-            };
-            self.git.send(command);
-        }
+        self.git.flush_requests(&mut self.workspace);
     }
 
     /// Applies a result from the git worker to the views.
     fn apply_git_event(&mut self, event: GitEvent) {
-        match event {
-            GitEvent::Status(Ok(status)) => {
-                self.workspace
-                    .unassigned
-                    .set_files(adapters::file_entries(&status));
-            }
-            GitEvent::Log(Ok(log)) => {
-                self.log_cache = log;
-                self.rebuild_stacks();
-            }
-            GitEvent::Branches(Ok(branches)) => {
-                self.branch_cache = branches;
-                self.workspace.branch_label = self
-                    .branch_cache
-                    .iter()
-                    .find(|b| b.is_head)
-                    .map(|b| b.name.clone())
-                    .unwrap_or_default();
-                self.rebuild_stacks();
-            }
-            GitEvent::DiffWorkdir { path, result } => {
-                if self.diff_target == Some(DiffTarget::File(path)) {
-                    match result {
-                        Ok(hunks) => {
-                            self.workspace.diff.set_lines(adapters::diff_lines(&hunks));
-                        }
-                        Err(e) => log::error!("diff failed: {e}"),
-                    }
-                }
-            }
-            GitEvent::DiffCommit { sha, result } => {
-                if self.diff_target == Some(DiffTarget::Commit(sha)) {
-                    match result {
-                        Ok(hunks) => {
-                            self.workspace.diff.set_lines(adapters::diff_lines(&hunks));
-                        }
-                        Err(e) => log::error!("commit diff failed: {e}"),
-                    }
-                }
-            }
-            // Mutations: refresh everything afterwards so the optimistic
-            // view updates reconcile with what git actually did (also on
-            // error, to roll wrong guesses back).
-            GitEvent::Staged { path, result }
-            | GitEvent::Unstaged { path, result }
-            | GitEvent::Discarded { path, result }
-            | GitEvent::Ignored { path, result } => {
-                if let Err(e) = result {
-                    log::error!("git operation on {path} failed: {e}");
-                }
-                self.git.send(GitCommand::Refresh {
-                    log_limit: LOG_LIMIT,
-                });
-            }
-            GitEvent::Committed(result) => {
-                match result {
-                    Ok(sha) => log::info!("committed {sha}"),
-                    Err(e) => log::error!("commit failed: {e}"),
-                }
-                self.git.send(GitCommand::Refresh {
-                    log_limit: LOG_LIMIT,
-                });
-            }
-            GitEvent::Status(Err(e)) => log::error!("status failed: {e}"),
-            GitEvent::Log(Err(e)) => log::error!("log failed: {e}"),
-            GitEvent::Branches(Err(e)) => log::error!("branches failed: {e}"),
-        }
+        self.git.apply(&mut self.workspace, event);
         self.invalidate();
-    }
-
-    fn rebuild_stacks(&mut self) {
-        self.workspace
-            .stacks
-            .set_stacks(adapters::stacks(&self.branch_cache, &self.log_cache));
     }
 
     /// Keyboard handling: text input for the commit form, everything else
@@ -359,9 +246,7 @@ impl ApplicationHandler<AppEvent> for App {
             AppEvent::FsChange => {
                 // Something changed on disk: reload status/log/branches.
                 // The resulting events invalidate the scene when applied.
-                self.git.send(GitCommand::Refresh {
-                    log_limit: LOG_LIMIT,
-                });
+                self.git.refresh();
             }
         }
     }
@@ -564,16 +449,15 @@ fn main() {
             std::process::exit(1);
         }
     };
+    let git = GitSession::new(git);
     // Initial data load (results stream in as user events).
-    git.send(GitCommand::Refresh {
-        log_limit: LOG_LIMIT,
-    });
+    git.refresh();
 
     // Watch worktree + .git so external changes (editor saves, CLI
     // commits) refresh the UI automatically. The app still works if the
     // platform watcher fails — it just won't auto-refresh.
     let fs_proxy = event_loop.create_proxy();
-    let fs_watcher = watcher::spawn(git.workdir(), move || {
+    let fs_watcher = watcher::spawn(git.client().workdir(), move || {
         let _ = fs_proxy.send_event(AppEvent::FsChange);
     })
     .inspect_err(|e| log::warn!("file watcher disabled: {e}"))

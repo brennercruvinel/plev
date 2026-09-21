@@ -153,7 +153,9 @@ impl NavLink {
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
         let glass = &theme.glass;
         let radius = theme.shape.nav.min(bounds.h / 2.0);
-        if self.active || self.hovered {
+        // The wash and the rim are the active mark; a hovered link only
+        // brightens its text, so the two states never read alike.
+        if self.active {
             c.push_to_layer(
                 layer,
                 rounded_rect(
@@ -162,15 +164,9 @@ impl NavLink {
                     bounds.w,
                     bounds.h,
                     radius,
-                    if self.active {
-                        glass.surface_active.0
-                    } else {
-                        glass.surface_hover.0
-                    },
+                    glass.surface_active.0,
                 ),
             );
-        }
-        if self.active {
             c.push_to_layer(
                 layer,
                 rounded_rect_stroke(

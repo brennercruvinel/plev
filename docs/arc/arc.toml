@@ -86,7 +86,7 @@ depends = ["gpu", "compositor", "text", "input"]
 
 [modules.theme]
 path = "crates/engine/src/theme"
-role = "the design tokens: measured hoff colors + glass recipe, typography ramp, spacing, radius ladder + shape roles, control sizes, container sizes, durations, layout breakpoints/gutters/sidebar mode, shadow stacks by elevation, intents, oklch tooling; hoff dark + hoff light + 11 named palettes. every widget in crates/comps reads from here; no widget restates a number"
+role = "the design tokens: measured hoff colors + glass recipe, typography ramp, spacing, radius ladder + shape roles, control sizes, container sizes, durations, layout breakpoints/gutters/sidebar mode, shadow stacks by elevation, intents, oklch tooling; hoff dark + hoff light + hoff core (the typescript kit: nine shades, six accents, depths, Inter, plus theme.button: a recipe per button variant and state, the tailwind class lists as tokens) + 11 named palettes. every widget in crates/comps reads from here; no widget restates a number"
 
 [modules.graph]
 path = "crates/engine/src/graph"
@@ -129,7 +129,7 @@ depends = ["engine", "rope"]
 
 [crates.showcase]
 path = "crates/showcase"
-role = "design-system gallery app (15 tabs), the template of the official app pattern, framed by comps::shell::AppShell (full sidebar / rail / drawer by breakpoint); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main"
+role = "design-system gallery app (one tab per comps category plus the embedded editor and the ide git workspace; the list is view::Section::ALL), the template of the official app pattern, framed by comps::shell::AppShell (full sidebar / rail / drawer by breakpoint); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main"
 depends = ["engine", "comps"]
 targets = ["desktop", "web", "android", "ios"]
 
@@ -148,7 +148,7 @@ targets = ["desktop", "web"]
 
 [crates.ide]
 path = "crates/ide"
-role = "plev-native git client app: three columns (changes, stacks, diff) built from comps (rail sidebar, panel headers, avatars, badges, text field, buttons, modal, context menu, scrollbars) over engine::theme (hoff dark / hoff light); the only app-owned tokens are the file-status colors (status.rs)"
+role = "plev-native git client, a lib + bin: views (three columns: changes, stacks, diff, built from comps over engine::theme), adapters (git types -> view rows), session (GitSession: UiRequest <-> GitCommand/GitEvent, diff target, log/branch caches) and status (the file-status colors, the only app-owned tokens); the workspace takes a frame origin (set_frame) so a host can embed it, which the showcase Git tab does; main.rs is the winit shell"
 depends = ["git", "engine", "comps"]
 
 [crates.rope]

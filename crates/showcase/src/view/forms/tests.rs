@@ -311,10 +311,10 @@ fn focused_field_animates_and_captures_view_shortcuts() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
     view.jump_to_section("forms");
     assert!(view.handle_key("t"), "shortcut consumed (theme toggles)");
-    assert_eq!(view.theme_name, "dark");
+    assert_eq!(view.theme_name, "hoff");
     view.forms.handle_edit_key(EditKey::Tab);
     assert!(view.handle_key("t"), "focused field captures the char");
-    assert_eq!(view.theme_name, "dark", "theme must NOT toggle");
+    assert_eq!(view.theme_name, "hoff", "theme must NOT toggle");
     assert_eq!(view.forms.fields.value(0), "t");
 
     // Escape blurs via the same path the shell uses.

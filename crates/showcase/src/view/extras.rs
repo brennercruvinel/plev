@@ -3,8 +3,9 @@
 //! the other gallery sections.
 
 use comps::prelude::{
-    Button, ButtonSize, ButtonVariant, Chip, EmptyState, EventResult, GraphView, IconButton, Rect,
-    Spinner, SpinnerSize, SplitDirection, SplitPane, WidgetEvent,
+    Button, ButtonSize, ButtonVariant, Chip, EmptyState, EventResult, GraphView, IconButton,
+    IconButtonSize, IconButtonVariant, Rect, Spinner, SpinnerSize, SplitDirection, SplitPane,
+    WidgetEvent,
 };
 use engine::compositor::Compositor;
 use engine::graph::{GraphEdge, GraphSpec};
@@ -61,13 +62,13 @@ impl ExtrasSection {
         ];
         let icon_buttons = vec![
             IconButton::new("copy"),
-            IconButton::new("search").variant(ButtonVariant::Outline),
-            IconButton::new("settings").variant(ButtonVariant::Ghost),
-            IconButton::new("trash").variant(ButtonVariant::Danger),
-            IconButton::new("save").size(ButtonSize::Sm),
-            IconButton::new("play")
-                .intent(Intent::Constructive)
-                .size(ButtonSize::Lg),
+            IconButton::new("search").variant(IconButtonVariant::Outline),
+            IconButton::new("settings").variant(IconButtonVariant::Ghost),
+            IconButton::new("trash")
+                .variant(IconButtonVariant::Toolbar)
+                .active(true),
+            IconButton::new("save").size(IconButtonSize::Sm),
+            IconButton::new("play").size(IconButtonSize::Md),
             IconButton::new("undo").disabled(true),
         ];
         Self {

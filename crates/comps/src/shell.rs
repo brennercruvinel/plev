@@ -8,7 +8,7 @@
 use engine::compositor::{Compositor, LayerId};
 use engine::theme::{Breakpoint, SidebarMode, Theme};
 
-use crate::action::{ButtonVariant, IconButton};
+use crate::action::{IconButton, IconButtonVariant};
 use crate::core::{EventResult, Rect, WidgetEvent};
 use crate::nav::{PanelHeader, Sidebar};
 
@@ -53,7 +53,7 @@ impl AppShell {
             sidebar,
             header,
             safe_area: SafeArea::default(),
-            menu_button: IconButton::new("layout-grid").variant(ButtonVariant::Ghost),
+            menu_button: IconButton::new("layout-grid").variant(IconButtonVariant::Ghost),
             width,
             height,
         }

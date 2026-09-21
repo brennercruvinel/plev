@@ -158,3 +158,9 @@ impl CommitForm {
         total_h
     }
 }
+
+impl Default for CommitForm {
+    fn default() -> Self {
+        Self::new()
+    }
+}

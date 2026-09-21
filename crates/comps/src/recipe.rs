@@ -194,6 +194,21 @@ pub fn glass_surface(
 /// One css-like box-shadow layer as a scene node, with the spec's spread
 /// folded into the casting rect. `None` when spread ate the surface.
 pub fn shadow_node(rect: Rect, radius: f32, spec: &ShadowSpec) -> Option<SceneNode> {
+    if spec.inset {
+        // Inset: the surface itself is the mask; spread only moves the
+        // inner edge by a hair, which the sdf blur absorbs.
+        return Some(SceneNode::Shadow {
+            x: rect.x,
+            y: rect.y,
+            w: rect.w,
+            h: rect.h,
+            corner_radius: radius,
+            blur_radius: spec.blur,
+            offset: spec.offset,
+            color: spec.color.0,
+            inset: true,
+        });
+    }
     let (x, y, w, h) = spec.cast_rect(rect.x, rect.y, rect.w, rect.h)?;
     Some(SceneNode::Shadow {
         x,
@@ -206,6 +221,55 @@ pub fn shadow_node(rect: Rect, radius: f32, spec: &ShadowSpec) -> Option<SceneNo
         color: spec.color.0,
         inset: false,
     })
+}
+
+/// A css `box-shadow` list: every layer, first in the list drawn last
+/// (on top), like the browser does. Inset layers go after the surface;
+/// drop layers before it. Call `shadow_drops` before the fill and
+/// `shadow_insets` after.
+pub fn shadow_drops(
+    c: &mut Compositor,
+    layer: LayerId,
+    rect: Rect,
+    radius: f32,
+    specs: &[ShadowSpec],
+) {
+    for spec in specs.iter().rev().filter(|s| !s.inset) {
+        if let Some(node) = shadow_node(rect, radius, spec) {
+            c.push_to_layer(layer, node);
+        }
+    }
+}
+
+/// The inset layers of a css `box-shadow` list, pushed over the surface.
+pub fn shadow_insets(
+    c: &mut Compositor,
+    layer: LayerId,
+    rect: Rect,
+    radius: f32,
+    specs: &[ShadowSpec],
+) {
+    for spec in specs.iter().rev().filter(|s| s.inset) {
+        if let Some(node) = shadow_node(rect, radius, spec) {
+            c.push_to_layer(layer, node);
+        }
+    }
+}
+
+/// Vertical two-stop gradient fill (css `bg-gradient-to-b`), rounded.
+pub fn gradient_fill(rect: Rect, radius: f32, top: [f32; 4], bottom: [f32; 4]) -> SceneNode {
+    SceneNode::GradientRect {
+        x: rect.x,
+        y: rect.y,
+        w: rect.w,
+        h: rect.h,
+        color: top,
+        color2: bottom,
+        angle_deg: 180.0,
+        corner_radius: radius,
+        border_width: 0.0,
+        border_color: [0.0; 4],
+    }
 }
 
 /// The shadow stack a surface at `elevation` casts, bottom layer first,

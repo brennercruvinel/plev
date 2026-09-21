@@ -31,6 +31,10 @@ pub struct Sidebar {
     /// A mode the app pins regardless of the breakpoint (a tool that is
     /// always a rail). `None` follows `theme.layout`.
     pub fixed_mode: Option<SidebarMode>,
+    /// Top-left of the sidebar in window coordinates. Zero for an app
+    /// that owns the window; a host embedding the app inside its own
+    /// chrome moves it (`vw`/`vh` stay the embedded viewport's size).
+    pub origin: (f32, f32),
     scroll: ScrollState,
 }
 
@@ -45,6 +49,7 @@ impl Sidebar {
             footer: Vec::new(),
             drawer_open: false,
             fixed_mode: None,
+            origin: (0.0, 0.0),
             scroll: ScrollState::new(),
         };
         s.sync_active();
@@ -116,12 +121,13 @@ impl Sidebar {
     /// full-width drawer sheet when open on a phone (`None` when a closed
     /// drawer draws nothing).
     pub fn rect(&self, theme: &Theme, vw: f32, vh: f32) -> Option<Rect> {
+        let (x, y) = self.origin;
         match self.mode(theme, vw) {
             SidebarMode::Drawer => self
                 .drawer_open
-                .then(|| Rect::new(0.0, 0.0, theme.size.sidebar_w.min(vw), vh)),
-            SidebarMode::Rail => Some(Rect::new(0.0, 0.0, theme.size.sidebar_rail_w, vh)),
-            SidebarMode::Full => Some(Rect::new(0.0, 0.0, theme.size.sidebar_w, vh)),
+                .then(|| Rect::new(x, y, theme.size.sidebar_w.min(vw), vh)),
+            SidebarMode::Rail => Some(Rect::new(x, y, theme.size.sidebar_rail_w, vh)),
+            SidebarMode::Full => Some(Rect::new(x, y, theme.size.sidebar_w, vh)),
         }
     }
 
@@ -388,6 +394,32 @@ impl Sidebar {
             link.render_to_layer(c, layer, r, theme);
         }
         c.push_to_layer(layer, SceneNode::PopClip);
+
+        // Links past the band's edge: the edge fades into the surface so
+        // the cut-off row reads as "more below", not as the end.
+        if self.scroll.is_scrollable() {
+            let fade_h = theme.spacing.xxl.min(band.h / 2.0);
+            let surface = theme.colors.surface.0;
+            let clear = [surface[0], surface[1], surface[2], 0.0];
+            let fade = |y: f32, top: [f32; 4], bottom: [f32; 4]| SceneNode::GradientRect {
+                x: band.x,
+                y,
+                w: band.w,
+                h: fade_h,
+                color: top,
+                color2: bottom,
+                angle_deg: 180.0,
+                corner_radius: 0.0,
+                border_width: 0.0,
+                border_color: [0.0; 4],
+            };
+            if self.scroll.offset() > 0.0 {
+                c.push_to_layer(layer, fade(band.y, surface, clear));
+            }
+            if self.scroll.offset() < self.scroll.max_offset() {
+                c.push_to_layer(layer, fade(band.y + band.h - fade_h, clear, surface));
+            }
+        }
 
         // Pinned footer links.
         for (link, r) in self

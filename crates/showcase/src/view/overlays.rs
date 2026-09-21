@@ -65,7 +65,7 @@ impl OverlaysSection {
         Self {
             open_modal: Button::new("Open dialog").variant(ButtonVariant::Outline),
             delete_modal: Button::new("Delete repository…")
-                .variant(ButtonVariant::Danger)
+                .variant(ButtonVariant::Warning)
                 .icon("trash"),
             toast_buttons: vec![
                 (Intent::Neutral, Button::new("Neutral")),

@@ -460,6 +460,9 @@ pub struct ShadowSpec {
     pub blur: f32,
     pub spread: f32,
     pub color: Color,
+    /// CSS `box-shadow: inset`: the shadow falls inside the surface
+    /// (rims, key-lights, pressed-in wells).
+    pub inset: bool,
 }
 
 impl ShadowSpec {
@@ -469,6 +472,18 @@ impl ShadowSpec {
             blur,
             spread,
             color,
+            inset: false,
+        }
+    }
+
+    /// An inset layer (`... inset` in css).
+    pub const fn inset(offset: [f32; 2], blur: f32, spread: f32, color: Color) -> Self {
+        Self {
+            offset,
+            blur,
+            spread,
+            color,
+            inset: true,
         }
     }
 

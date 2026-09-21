@@ -40,6 +40,36 @@ mission, refs). architecture: docs/arc/arc.toml.
    number that is not a token yet becomes one (scales.rs) in the same
    change
 
+## at task end (the close-out)
+
+a task is not done when the code works; it is done when the tree records
+it. the sequence, in order, every time:
+
+1. finish the work and run the gate; then ask the user "ok to commit?"
+   with a one-paragraph summary of what changed. nothing below happens
+   before the yes.
+2. on yes, in the same change set:
+   - commit, thematically, explicit paths (see ## things to avoid)
+   - docs/adr/: a new adr when a decision was made or an existing one
+     was reversed; update docs/adr/index.md
+   - docs/arc/arc.toml: when structure, crates, modules or contracts
+     changed
+   - docs/mission/steps/: move the task's file from pending/ or ongoing/
+     to checked/ as task-NN-done.md (same frontmatter as the others);
+     a task that stays open keeps its file in ongoing/ with the state
+     written in
+   - docs/CHANGELOG.md when the change is user-facing
+   - the rule files when a convention was learned:
+     .contracts/.mantras/.code/.lang/.rust/{rust-conventions.md,
+     clippy.toml, typos.toml, nextest.toml}
+   - .zed/ (settings, tasks, debug) and .github/ (workflows, templates)
+     when a run, test or ci path changed
+3. a new task, feature or bug taken on starts the same way: a file in
+   docs/mission/steps/pending/ (or ongoing/ once started), before code.
+
+"if necessary" means the file's subject moved, not that every task touches
+every file. what did not change is not edited.
+
 ## conventions
 read -> .contracts/.mantras/.code/.lang/.rust/rust-conventions.md (markdown;
 the quick keys are tests, backend_before_ui, naming, file_hygiene, lint,

@@ -12,9 +12,11 @@ impl WorkspaceView {
         let sidebar_w = self.sidebar_w();
         let header_h = self.header_h();
         let handle_w = self.handle_w();
+        // The chrome is laid out from the frame origin.
+        let (lx, ly) = (cx - self.origin.0, cy - self.origin.1);
 
         // Sidebar clicks: a press and a release on the same link.
-        if cx < sidebar_w && cy >= header_h {
+        if lx < sidebar_w && ly >= header_h {
             let theme = self.theme().clone();
             self.sidebar.handle_event(
                 &WidgetEvent::MouseDown { x: cx, y: cy },
@@ -32,7 +34,7 @@ impl WorkspaceView {
         }
 
         // Header clicks
-        if cy < header_h {
+        if ly < header_h {
             if self.header.hit_test_theme_btn(cx, cy) {
                 self.toggle_theme();
                 return true;
