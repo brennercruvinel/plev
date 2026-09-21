@@ -1,15 +1,16 @@
 //! Headless view tests (no GPU: scenes build into a plain compositor):
-//! the chrome, section switching, the reactivity probes and the page
+//! the chrome, page switching, the reactivity probes and the page
 //! scroll regressions.
 
+use super::components::scroll_area::ScrollAreaPage;
 use super::*;
 use comps::prelude::WidgetEvent;
 use engine::compositor::{Compositor, SceneNode};
 
 #[test]
-fn starts_on_cards_with_the_core_theme() {
+fn starts_on_the_first_page_with_the_core_theme() {
     let view = ShowcaseView::new(1200.0, 800.0);
-    assert_eq!(view.section, Section::Cards);
+    assert_eq!(view.page_title(), "Theme");
     assert_eq!(view.theme_name, "core");
     // The page is the kit's paper, shade 1.
     assert_eq!(
@@ -18,7 +19,7 @@ fn starts_on_cards_with_the_core_theme() {
     );
 }
 
-// -- Sidebar responsiveness (14 links overflow short windows) ----------
+// -- Sidebar responsiveness (the tree overflows short windows) ----------
 
 /// The sidebar's link rects at the current viewport.
 fn link_rects(view: &ShowcaseView) -> Vec<Rect> {
@@ -58,9 +59,15 @@ fn sidebar_scrolls_in_short_windows_and_stays_put_in_tall_ones() {
     let last_after = link_rects(&view).last().unwrap().y;
     assert!(last_after < last_before, "links must move up");
 
-    // Tall: everything fits, nothing moves.
+    // Tall, with the Components group folded: everything fits, nothing
+    // moves.
     let mut tall = ShowcaseView::new(1280.0, 1100.0);
     tall.render(&mut c);
+    let sb = &tall.shell.sidebar;
+    let rect = sb.rect(&tall.theme, tall.width, tall.height).unwrap();
+    let caption = sb.group_rects(rect, &tall.theme, sb.mode(&tall.theme, tall.width))[1];
+    let (x, y) = caption.center();
+    assert!(tall.handle_event(&WidgetEvent::MouseDown { x, y }));
     let (bx, by) = band(&tall).center();
     let before = link_rects(&tall)[0].y;
     let changed = tall.handle_event(&WidgetEvent::Scroll {
@@ -98,7 +105,7 @@ fn sidebar_links_clip_to_their_band_and_do_not_hit_outside_it() {
 
 #[test]
 fn sidebar_labels_fit_their_slot_in_the_ui_font() {
-    // Every section title fits the full sidebar's link width with the
+    // Every page title fits the full sidebar's link width with the
     // icon slot, the shortcut hint and the paddings taken out.
     let view = ShowcaseView::new(1280.0, 800.0);
     let t = &view.theme;
@@ -108,11 +115,12 @@ fn sidebar_labels_fit_their_slot_in_the_ui_font() {
         engine::text::TextMeasurer::measure_styled("14", &t.typography.caption_r(), None);
     let slot =
         link_w - t.spacing.sm * 2.0 - NavLink::icon_slot(t) - t.spacing.xs - hint_w - t.spacing.sm;
-    for section in Section::ALL {
-        let (w, _) = engine::text::TextMeasurer::measure_styled(section.title(), &style, None);
+    for page in PAGES {
+        let (w, _) = engine::text::TextMeasurer::measure_styled(page.title, &style, None);
         assert!(
             w <= slot,
-            "{section:?} label measures {w:.1}px, over the {slot:.1}px slot"
+            "{} label measures {w:.1}px, over the {slot:.1}px slot",
+            page.title
         );
     }
 }
@@ -138,36 +146,48 @@ fn sidebar_follows_the_breakpoint() {
     phone.handle_event(&WidgetEvent::MouseDown { x, y });
     assert!(phone.handle_event(&WidgetEvent::MouseUp { x, y }));
     assert!(phone.shell.sidebar.drawer_open);
-    // Navigating from the drawer switches the section and closes it.
+    // Navigating from the drawer switches the page and closes it.
     let rects = link_rects(&phone);
-    let (x, y) = rects[4].center();
+    let (x, y) = rects[2].center();
     phone.handle_event(&WidgetEvent::MouseDown { x, y });
     assert!(phone.handle_event(&WidgetEvent::MouseUp { x, y }));
-    assert_eq!(phone.section, Section::Lists);
+    assert_eq!(phone.page_title(), "Icons");
     assert!(!phone.shell.sidebar.drawer_open);
-    // Every section renders on the phone.
-    for section in Section::ALL {
-        phone.set_section(section);
+    // Every page renders on the phone.
+    for (i, page) in PAGES.iter().enumerate() {
+        phone.set_page(i);
         let mut c = Compositor::new();
         phone.render(&mut c);
-        assert!(
-            c.layer(LayerId::DEFAULT).unwrap().nodes().len() > 10,
-            "{section:?}"
-        );
+        assert!(page_nodes(&phone, &c) > 0, "{}", page.title);
     }
 }
 
+/// Nodes the page itself emitted on the default layer: what sits between
+/// the content clip (the push at the page's left edge) and its pop.
+fn page_nodes(view: &ShowcaseView, c: &Compositor) -> usize {
+    let page_x = view.page_x();
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes();
+    let start = nodes
+        .iter()
+        .position(|n| matches!(n, SceneNode::PushClip { x, .. } if *x == page_x))
+        .expect("page content clip");
+    nodes[start + 1..]
+        .iter()
+        .position(|n| matches!(n, SceneNode::PopClip))
+        .expect("page content clip closes")
+}
+
 #[test]
-fn every_section_renders_in_short_viewports() {
+fn every_page_renders_in_short_viewports() {
     // Width-only probes missed the sidebar overflow: pin short heights.
     for (w, h) in [(1280.0, 700.0), (1024.0, 600.0)] {
         let mut view = ShowcaseView::new(w, h);
-        for section in Section::ALL {
-            view.set_section(section);
+        for (i, page) in PAGES.iter().enumerate() {
+            view.set_page(i);
             let mut c = Compositor::new();
             view.render(&mut c);
-            let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().len();
-            assert!(nodes > 10, "{section:?} at {w}x{h} emitted {nodes} nodes");
+            let nodes = page_nodes(&view, &c);
+            assert!(nodes > 0, "{} at {w}x{h} emitted {nodes} nodes", page.title);
             // Page scroll limits track the real viewport height.
             assert_eq!(view.page_offset(), 0.0);
         }
@@ -175,29 +195,30 @@ fn every_section_renders_in_short_viewports() {
 }
 
 #[test]
-fn jump_to_section_matches_case_insensitively() {
+fn jump_to_page_matches_case_insensitively() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    view.jump_to_section("theme");
-    assert_eq!(view.section, Section::Theme);
-    view.jump_to_section("CARDS");
-    assert_eq!(view.section, Section::Cards);
-    view.jump_to_section("nope");
-    assert_eq!(view.section, Section::Cards, "unknown names are ignored");
+    view.jump_to_page("effects");
+    assert_eq!(view.page_title(), "Effects");
+    view.jump_to_page("CARD");
+    assert_eq!(view.page_title(), "Card");
+    view.jump_to_page("nope");
+    assert_eq!(view.page_title(), "Card", "unknown names are ignored");
+    // A title with a space, as the launch argument passes it.
+    view.jump_to_page("data table");
+    assert_eq!(view.page_title(), "Data Table");
 }
 
 #[test]
-fn digit_keys_select_sections_and_t_cycles_themes() {
+fn digit_keys_select_pages_and_t_cycles_themes() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    assert!(view.handle_key("7"));
-    assert_eq!(view.section, Section::Theme);
-    assert!(view.handle_key("8"));
-    assert_eq!(view.section, Section::Charts);
+    assert!(view.handle_key("2"));
+    assert_eq!(view.page_title(), PAGES[1].title);
     assert!(view.handle_key("9"));
-    assert_eq!(view.section, Section::Dock);
+    assert_eq!(view.page_title(), PAGES[8].title);
     assert!(view.handle_key("0"), "0 reads as 10");
-    assert_eq!(view.section, Section::App);
+    assert_eq!(view.page_title(), PAGES[9].title);
     assert!(view.handle_key("1"));
-    assert_eq!(view.section, Section::Cards);
+    assert_eq!(view.page_title(), PAGES[0].title);
 
     assert!(view.handle_key("t"));
     assert_eq!(view.theme_name, "hoff");
@@ -210,15 +231,15 @@ fn digit_keys_select_sections_and_t_cycles_themes() {
 }
 
 #[test]
-fn app_section_add_field_takes_typing_enter_and_escape_through_the_chrome() {
+fn todo_add_field_takes_typing_enter_and_escape_through_the_chrome() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    view.jump_to_section("app");
+    view.jump_to_page("todo");
     let mut c = Compositor::new();
     view.render(&mut c);
     // Click the add field (top of the app card), then type through
     // the chrome's key routes: "t" must type, not switch the theme.
     let content = view.page_rect();
-    let (x, y) = view.app.input_rect(content, &view.theme).center();
+    let (x, y) = view.todo.input_rect(content, &view.theme).center();
     assert!(view.handle_event(&WidgetEvent::MouseDown { x, y }));
     assert!(view.handle_key("t"));
     assert_eq!(view.theme_name, "core", "typing must not cycle the theme");
@@ -231,23 +252,89 @@ fn app_section_add_field_takes_typing_enter_and_escape_through_the_chrome() {
 }
 
 #[test]
-fn sidebar_offers_one_nav_link_per_section() {
+fn sidebar_offers_one_nav_link_per_page_under_three_captions() {
     let view = ShowcaseView::new(1200.0, 800.0);
     let rects = link_rects(&view);
-    assert_eq!(rects.len(), Section::ALL.len());
+    assert_eq!(rects.len(), PAGES.len());
     assert!(rects.iter().all(|r| r.h == NavLink::height(&view.theme)));
+    let sb = &view.shell.sidebar;
+    assert_eq!(sb.groups.len(), Group::ALL.len());
+    assert_eq!(
+        sb.groups.iter().map(|g| g.len).sum::<usize>(),
+        PAGES.len(),
+        "the groups partition the pages"
+    );
 }
 
 #[test]
-fn every_section_renders_a_scene() {
+fn folding_the_components_group_hides_its_links_and_navigation_unfolds_it() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    for section in Section::ALL {
-        view.set_section(section);
+    let sb = &view.shell.sidebar;
+    let rect = sb.rect(&view.theme, view.width, view.height).unwrap();
+    let captions = sb.group_rects(rect, &view.theme, sb.mode(&view.theme, view.width));
+    let (x, y) = captions[1].center();
+    assert!(view.handle_event(&WidgetEvent::MouseDown { x, y }));
+    let first_component = Group::Foundations.pages();
+    assert_eq!(link_rects(&view)[first_component].h, 0.0, "folded");
+    view.jump_to_page("button");
+    assert!(view.shell.sidebar.groups[1].expanded, "navigating unfolds");
+}
+
+#[test]
+fn every_page_renders_a_scene() {
+    let mut view = ShowcaseView::new(1200.0, 800.0);
+    for (i, page) in PAGES.iter().enumerate() {
+        view.set_page(i);
         let mut c = Compositor::new();
         view.render(&mut c);
-        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().len();
-        assert!(nodes > 10, "{section:?} emitted only {nodes} nodes");
+        let nodes = page_nodes(&view, &c);
+        assert!(nodes > 0, "{} emitted no nodes", page.title);
     }
+}
+
+#[test]
+fn alias_pages_show_the_note_and_placeholders_name_their_slot() {
+    let mut view = ShowcaseView::new(1200.0, 800.0);
+    view.jump_to_page("field");
+    let mut c = Compositor::new();
+    view.render(&mut c);
+    let texts: Vec<String> = c
+        .layer(LayerId::DEFAULT)
+        .unwrap()
+        .nodes()
+        .iter()
+        .filter_map(|n| match n {
+            SceneNode::Text { key, .. } => Some(key.text.clone()),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        texts
+            .iter()
+            .any(|t| t.starts_with("shares the Input example"))
+    );
+    assert!(
+        texts.iter().any(|t| t == "Full name"),
+        "the shared example draws"
+    );
+
+    view.jump_to_page("calendar");
+    let mut c = Compositor::new();
+    view.render(&mut c);
+    let texts: Vec<String> = c
+        .layer(LayerId::DEFAULT)
+        .unwrap()
+        .nodes()
+        .iter()
+        .filter_map(|n| match n {
+            SceneNode::Text { key, .. } => Some(key.text.clone()),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        texts.iter().filter(|t| *t == "Calendar").count() >= 2,
+        "header and slot"
+    );
 }
 
 // -- Reactivity regression probes (event chain must report changes) ----
@@ -266,11 +353,11 @@ fn text_node_y(c: &Compositor, layer: LayerId, needle: &str) -> Option<f32> {
 #[test]
 fn probe_scroll_over_virtual_list_reports_change_and_shifts_rows() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    view.set_section(Section::Lists);
+    view.jump_to_page("scroll area");
     let mut c = Compositor::new();
     view.render(&mut c);
 
-    let bounds = view.lists.list_bounds(view.content_rect());
+    let bounds = ScrollAreaPage::bounds(view.content_rect(), &view.theme);
     let (cx, cy) = bounds.center();
     let y_before = text_node_y(&c, view.layers.unwrap().list, "Item 0")
         .expect("Item 0 rendered before scroll");
@@ -281,7 +368,10 @@ fn probe_scroll_over_virtual_list_reports_change_and_shifts_rows() {
         delta: 48.0,
     });
     assert!(changed, "scroll over the virtual list must request redraw");
-    assert!(view.lists.list.scroll.offset() > 0.0, "offset must move");
+    assert!(
+        view.scroll_area.list.scroll.offset() > 0.0,
+        "offset must move"
+    );
 
     view.render(&mut c);
     let y_after = text_node_y(&c, view.layers.unwrap().list, "Item 0")
@@ -314,10 +404,10 @@ fn probe_hover_over_sidebar_reports_change() {
 #[test]
 fn probe_hover_over_buttons_reports_change() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    view.set_section(Section::Buttons);
+    view.jump_to_page("button");
     let content = view.content_rect();
     // The first card's widget sits at the card's center.
-    let (cx, cy) = view.buttons.first_widget_center(content, &view.theme);
+    let (cx, cy) = view.button.first_widget_center(content, &view.theme);
     assert!(
         view.handle_event(&WidgetEvent::MouseMove { x: cx, y: cy }),
         "hover entering a button must request redraw"
@@ -332,20 +422,20 @@ fn probe_hover_over_buttons_reports_change() {
 }
 
 #[test]
-fn probe_click_sidebar_switches_section_and_reports_change() {
+fn probe_click_sidebar_switches_page_and_reports_change() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    let rect = link_rects(&view)[4]; // Lists
+    let rect = link_rects(&view)[3];
     let (cx, cy) = rect.center();
     view.handle_event(&WidgetEvent::MouseDown { x: cx, y: cy });
     assert!(view.handle_event(&WidgetEvent::MouseUp { x: cx, y: cy }));
-    assert_eq!(view.section, Section::Lists);
+    assert_eq!(view.page_title(), PAGES[3].title);
 }
 
 #[test]
 fn probe_ticks_settle_with_no_input() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    for section in Section::ALL {
-        view.set_section(section);
+    for (i, page) in PAGES.iter().enumerate() {
+        view.set_page(i);
         let mut c = Compositor::new();
         view.render(&mut c);
         let mut animating = true;
@@ -355,15 +445,15 @@ fn probe_ticks_settle_with_no_input() {
                 break;
             }
         }
-        assert!(!animating, "{section:?}: tick never settles (busy loop)");
+        assert!(!animating, "{}: tick never settles (busy loop)", page.title);
     }
 }
 
 #[test]
 fn probe_idle_rerender_is_stable() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    for section in Section::ALL {
-        view.set_section(section);
+    for (i, page) in PAGES.iter().enumerate() {
+        view.set_page(i);
         let mut c = Compositor::new();
         view.render(&mut c);
         view.tick(1.0 / 60.0);
@@ -376,7 +466,8 @@ fn probe_idle_rerender_is_stable() {
         view.render(&mut c);
         assert!(
             !c.needs_render(),
-            "{section:?}: idle re-render produced a different scene"
+            "{}: idle re-render produced a different scene",
+            page.title
         );
     }
 }
@@ -384,17 +475,17 @@ fn probe_idle_rerender_is_stable() {
 // -- Page scroll regressions (HOFF pages overflow the 800px window) ----
 
 #[test]
-fn wheel_scrolls_overflowing_sections_and_requests_redraw() {
-    for section in [Section::Cards, Section::Theme] {
+fn wheel_scrolls_overflowing_pages_and_requests_redraw() {
+    for title in ["Card", "Theme"] {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        view.set_section(section);
+        view.jump_to_page(title);
         let mut c = Compositor::new();
         view.render(&mut c);
 
         let content = view.content_rect();
         assert!(
-            view.section_content_height(content) > content.h,
-            "{section:?} fits in 800px now; pick a taller section for this test"
+            view.page_content_height(content) > content.h,
+            "{title} fits in 800px now; pick a taller page for this test"
         );
 
         let (cx, cy) = content.center();
@@ -403,11 +494,8 @@ fn wheel_scrolls_overflowing_sections_and_requests_redraw() {
             y: cy,
             delta: 120.0,
         });
-        assert!(changed, "{section:?}: page scroll must request a redraw");
-        assert!(
-            view.page_offset() > 0.0,
-            "{section:?}: page offset must move"
-        );
+        assert!(changed, "{title}: page scroll must request a redraw");
+        assert!(view.page_offset() > 0.0, "{title}: page offset must move");
 
         // Scrolling back past the top clamps at zero and still redraws.
         let changed = view.handle_event(&WidgetEvent::Scroll {
@@ -423,7 +511,7 @@ fn wheel_scrolls_overflowing_sections_and_requests_redraw() {
 #[test]
 fn page_scroll_shifts_rendered_nodes_and_clips_to_viewport() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    view.set_section(Section::Theme);
+    view.jump_to_page("theme");
     let mut c = Compositor::new();
     view.render(&mut c);
     let y_before = text_node_y(&c, LayerId::DEFAULT, "PALETTES").expect("palettes label rendered");
@@ -443,14 +531,14 @@ fn page_scroll_shifts_rendered_nodes_and_clips_to_viewport() {
     );
 
     // The scrolled content is wrapped in a clip to the content viewport
-    // (the sidebar band has its own clip at x=0 — find the content one).
+    // (the sidebar band has its own clip at x=0: find the content one).
     let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes();
     let page_x = view.page_x();
     let clip = nodes.iter().find_map(|n| match n {
         SceneNode::PushClip { x, y, w, h } if *x == page_x => Some((*x, *y, *w, *h)),
         _ => None,
     });
-    let clip = clip.expect("section content must be clipped while scrolled");
+    let clip = clip.expect("page content must be clipped while scrolled");
     assert_eq!(clip.0, page_x);
     assert_eq!(clip.1, content.y);
 }
@@ -458,29 +546,29 @@ fn page_scroll_shifts_rendered_nodes_and_clips_to_viewport() {
 #[test]
 fn scroll_over_virtual_list_keeps_priority_over_page_scroll() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    view.set_section(Section::Lists);
+    view.jump_to_page("scroll area");
     let mut c = Compositor::new();
     view.render(&mut c);
 
-    let bounds = view.lists.list_bounds(view.content_rect());
+    let bounds = ScrollAreaPage::bounds(view.content_rect(), &view.theme);
     let (cx, cy) = bounds.center();
     assert!(view.handle_event(&WidgetEvent::Scroll {
         x: cx,
         y: cy,
         delta: 48.0,
     }));
-    assert!(view.lists.list.scroll.offset() > 0.0);
+    assert!(view.scroll_area.list.scroll.offset() > 0.0);
     assert_eq!(
         view.page_offset(),
         0.0,
-        "the lists page itself fits the viewport and must not scroll"
+        "the scroll area page itself fits the viewport and must not scroll"
     );
 }
 
 #[test]
 fn clicks_on_the_header_band_do_not_reach_scrolled_widgets() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    view.set_section(Section::Theme);
+    view.jump_to_page("theme");
     let mut c = Compositor::new();
     view.render(&mut c);
 
@@ -493,7 +581,7 @@ fn clicks_on_the_header_band_do_not_reach_scrolled_widgets() {
         delta: 160.0,
     });
     let before = view.theme_name.clone();
-    // Click in the header band — must not pick a (hidden) theme card.
+    // Click in the header band: must not pick a (hidden) theme card.
     view.handle_event(&WidgetEvent::MouseDown { x: cx, y: 60.0 });
     assert_eq!(view.theme_name, before, "header clicks must hit nothing");
 }
@@ -501,7 +589,7 @@ fn clicks_on_the_header_band_do_not_reach_scrolled_widgets() {
 #[test]
 fn probe_event_change_marks_compositor_needs_render() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    view.set_section(Section::Lists);
+    view.jump_to_page("scroll area");
     let mut c = Compositor::new();
     view.render(&mut c);
     c.resolve_scene((1200.0, 800.0));
@@ -510,7 +598,7 @@ fn probe_event_change_marks_compositor_needs_render() {
     }
     assert!(!c.needs_render(), "clean after render+resolve");
 
-    let bounds = view.lists.list_bounds(view.content_rect());
+    let bounds = ScrollAreaPage::bounds(view.content_rect(), &view.theme);
     let (cx, cy) = bounds.center();
     let changed = view.handle_event(&WidgetEvent::Scroll {
         x: cx,

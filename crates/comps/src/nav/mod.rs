@@ -10,6 +10,6 @@ mod tabs;
 pub use breadcrumb::Breadcrumb;
 pub use nav_link::NavLink;
 pub use panel_header::PanelHeader;
-pub use sidebar::Sidebar;
+pub use sidebar::{NavGroup, Sidebar};
 pub use split_pane::{SplitDirection, SplitPane};
 pub use tabs::Tabs;

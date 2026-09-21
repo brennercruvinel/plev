@@ -4,7 +4,9 @@
 //! labels at `size.sidebar_w`, Rail with icons only at
 //! `size.sidebar_rail_w`, or a Drawer that slides over the content on a
 //! phone and closes on navigation. Everything scrolls in its band, so a
-//! short window never paints links over the brand or the footer.
+//! short window never paints links over the brand or the footer. Links
+//! can be partitioned into [`NavGroup`]s: a caption row per group that
+//! expands and collapses its links on click (a tree of one level).
 
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
@@ -12,11 +14,39 @@ use engine::text::TextMeasurer;
 use engine::theme::{SidebarMode, Theme};
 
 use crate::core::{EventResult, Rect, WidgetEvent};
+use crate::icons;
 use crate::nav::NavLink;
+
+/// A run of `len` consecutive links under one caption. The groups of a
+/// sidebar partition its links in order; the active index space is
+/// unchanged (collapsed links keep their index, they just take no room).
+#[derive(Clone, Debug)]
+pub struct NavGroup {
+    pub label: String,
+    pub len: usize,
+    pub expanded: bool,
+}
+
+impl NavGroup {
+    pub fn new(label: impl Into<String>, len: usize) -> Self {
+        Self {
+            label: label.into(),
+            len,
+            expanded: true,
+        }
+    }
+
+    pub fn collapsed(mut self) -> Self {
+        self.expanded = false;
+        self
+    }
+}
 
 #[derive(Debug)]
 pub struct Sidebar {
     pub links: Vec<NavLink>,
+    /// Captions partitioning `links` in order (empty: one flat band).
+    pub groups: Vec<NavGroup>,
     /// Index into `links`.
     pub active: usize,
     /// Links pinned at the bottom (settings, account). They take part in
@@ -42,6 +72,7 @@ impl Sidebar {
     pub fn new(links: Vec<NavLink>) -> Self {
         let mut s = Self {
             links,
+            groups: Vec::new(),
             active: 0,
             footer_links: Vec::new(),
             brand: String::new(),
@@ -67,6 +98,38 @@ impl Sidebar {
         self
     }
 
+    /// Partition the links into captioned groups. The lengths must add
+    /// up to the link count; the extra links, if any, form a trailing
+    /// uncaptioned run.
+    pub fn groups(mut self, groups: Vec<NavGroup>) -> Self {
+        debug_assert!(
+            groups.iter().map(|g| g.len).sum::<usize>() <= self.links.len(),
+            "sidebar groups cover more links than there are"
+        );
+        self.groups = groups;
+        self.sync_active();
+        self
+    }
+
+    /// The group a link index falls in, if the sidebar is grouped.
+    fn group_of(&self, index: usize) -> Option<usize> {
+        let mut start = 0;
+        for (g, group) in self.groups.iter().enumerate() {
+            if index < start + group.len {
+                return Some(g);
+            }
+            start += group.len;
+        }
+        None
+    }
+
+    /// Toggle a group open or closed.
+    pub fn toggle_group(&mut self, g: usize) {
+        if let Some(group) = self.groups.get_mut(g) {
+            group.expanded = !group.expanded;
+        }
+    }
+
     /// All links, band then footer, in active-index order.
     fn all_links_mut(&mut self) -> impl Iterator<Item = &mut NavLink> {
         self.links.iter_mut().chain(self.footer_links.iter_mut())
@@ -86,7 +149,64 @@ impl Sidebar {
     pub fn set_active(&mut self, index: usize) {
         let n = self.links.len() + self.footer_links.len();
         self.active = index.min(n.saturating_sub(1));
+        if let Some(g) = self.group_of(self.active) {
+            self.groups[g].expanded = true;
+        }
         self.sync_active();
+    }
+
+    /// Height of a group caption row.
+    pub fn group_h(theme: &Theme) -> f32 {
+        theme.typography.caption_sm().line_height + theme.spacing.md
+    }
+
+    /// The band's rows in scrolled space: one rect per group caption and
+    /// one per link, top to bottom. A collapsed group's links get a
+    /// zero-height rect at the caption's edge: nothing draws or hits
+    /// them, and their index stays put.
+    fn rows(&self, band: Rect, theme: &Theme) -> (Vec<Rect>, Vec<Rect>) {
+        let pad = theme.spacing.md;
+        let h = NavLink::height(theme);
+        let gap = theme.spacing.xs;
+        let x = band.x + pad;
+        let w = band.w - pad * 2.0;
+        let mut y = band.y - self.scroll.offset();
+        let mut links = Vec::with_capacity(self.links.len());
+        let mut groups = Vec::with_capacity(self.groups.len());
+        let mut i = 0;
+        for group in &self.groups {
+            let group_h = Self::group_h(theme);
+            groups.push(Rect::new(x, y, w, group_h));
+            y += group_h;
+            for _ in 0..group.len.min(self.links.len() - i) {
+                if group.expanded {
+                    links.push(Rect::new(x, y, w, h));
+                    y += h + gap;
+                } else {
+                    links.push(Rect::new(x, y, w, 0.0));
+                }
+                i += 1;
+            }
+            if group.expanded {
+                y += gap;
+            }
+        }
+        for _ in i..self.links.len() {
+            links.push(Rect::new(x, y, w, h));
+            y += h + gap;
+        }
+        (groups, links)
+    }
+
+    /// Total scrolled height of the band's rows.
+    fn rows_h(&self, theme: &Theme) -> f32 {
+        let band = Rect::new(0.0, self.scroll.offset(), 0.0, 0.0);
+        let (groups, links) = self.rows(band, theme);
+        groups
+            .iter()
+            .chain(links.iter())
+            .map(|r| r.y + r.h)
+            .fold(0.0, f32::max)
     }
 
     fn sync_active(&mut self) {
@@ -191,33 +311,21 @@ impl Sidebar {
         )
     }
 
-    /// Link rects in the band, scrolled.
+    /// Link rects in the band, scrolled (zero height under a collapsed
+    /// group).
     pub fn link_rects(&self, rect: Rect, theme: &Theme, mode: SidebarMode) -> Vec<Rect> {
-        let band = self.band(rect, theme, mode);
-        let pad = theme.spacing.md;
-        let h = NavLink::height(theme);
-        let gap = theme.spacing.xs;
-        let offset = self.scroll.offset();
-        (0..self.links.len())
-            .map(|i| {
-                Rect::new(
-                    band.x + pad,
-                    band.y + i as f32 * (h + gap) - offset,
-                    band.w - pad * 2.0,
-                    h,
-                )
-            })
-            .collect()
+        self.rows(self.band(rect, theme, mode), theme).1
+    }
+
+    /// Group caption rects in the band, scrolled.
+    pub fn group_rects(&self, rect: Rect, theme: &Theme, mode: SidebarMode) -> Vec<Rect> {
+        self.rows(self.band(rect, theme, mode), theme).0
     }
 
     fn sync_scroll(&mut self, rect: Rect, theme: &Theme, mode: SidebarMode) {
         let band = self.band(rect, theme, mode);
-        let h = NavLink::height(theme);
-        let gap = theme.spacing.xs;
-        let n = self.links.len() as f32;
         self.scroll.set_viewport(band.h);
-        self.scroll
-            .set_content((n * h + (n - 1.0).max(0.0) * gap).max(0.0));
+        self.scroll.set_content(self.rows_h(theme));
     }
 
     /// Route an event. Returns the result and the index of the link that
@@ -275,13 +383,26 @@ impl Sidebar {
             };
         }
 
+        // A press on a group caption folds or unfolds it.
+        if let WidgetEvent::MouseDown { x, y } = *event
+            && band.contains(x, y)
+            && let Some(g) = self
+                .group_rects(rect, theme, mode)
+                .iter()
+                .position(|r| r.contains(x, y))
+        {
+            self.toggle_group(g);
+            return (EventResult::changed(), None);
+        }
+
         let rects = self.link_rects(rect, theme, mode);
         let mut result = footer_result;
         let mut clicked = None;
         for (i, (link, r)) in self.links.iter_mut().zip(&rects).enumerate() {
-            // Links outside the band are clipped away: they cannot be hit.
+            // Links outside the band, or folded away, are clipped: they
+            // cannot be hit.
             let (px, py) = event.pos();
-            if !band.contains(px, py) && !link.is_hovered() {
+            if r.h == 0.0 || (!band.contains(px, py) && !link.is_hovered()) {
                 continue;
             }
             let lr = link.handle_event(event, *r);
@@ -387,8 +508,15 @@ impl Sidebar {
                 h: band.h,
             },
         );
-        for (link, r) in self.links.iter().zip(self.link_rects(rect, theme, mode)) {
+        let (group_rects, link_rects) = self.rows(band, theme);
+        for (group, r) in self.groups.iter().zip(group_rects) {
             if r.y + r.h < band.y || r.y > band.y + band.h {
+                continue;
+            }
+            self.render_group(c, layer, group, r, theme, mode);
+        }
+        for (link, r) in self.links.iter().zip(link_rects) {
+            if r.h == 0.0 || r.y + r.h < band.y || r.y > band.y + band.h {
                 continue;
             }
             link.render_to_layer(c, layer, r, theme);
@@ -449,6 +577,50 @@ impl Sidebar {
                 y += style.line_height;
             }
         }
+    }
+
+    /// A group caption: the fold chevron and, outside the rail, the
+    /// label in the placeholder tone.
+    fn render_group(
+        &self,
+        c: &mut Compositor,
+        layer: LayerId,
+        group: &NavGroup,
+        r: Rect,
+        theme: &Theme,
+        mode: SidebarMode,
+    ) {
+        let style = theme.typography.caption_sm();
+        let color = theme.glass.text_placeholder.0;
+        let icon = if group.expanded {
+            "chevron-down"
+        } else {
+            "chevron-right"
+        };
+        let size = theme.control.icon(engine::theme::IconSize::Sm);
+        let icon_y = r.y + (r.h - size) / 2.0;
+        let icon_x = if mode == SidebarMode::Rail {
+            r.x + (r.w - size) / 2.0
+        } else {
+            r.x + theme.spacing.sm
+        };
+        if let Some(node) = icons::icon_at(icon, size, color, icon_x, icon_y) {
+            c.push_to_layer(layer, node);
+        }
+        if mode == SidebarMode::Rail {
+            return;
+        }
+        let x = icon_x + size + theme.spacing.xs;
+        let shown = TextMeasurer::truncate_to_width(&group.label, &style, r.right() - x);
+        c.push_to_layer(
+            layer,
+            SceneNode::Text {
+                key: TextNodeKey::from_style(&shown, &style, None),
+                x,
+                y: r.y + (r.h - style.line_height) / 2.0,
+                color,
+            },
+        );
     }
 
     /// Whether the sidebar is a drawer at this viewport (the app shows a

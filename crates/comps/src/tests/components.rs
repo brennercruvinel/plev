@@ -399,6 +399,58 @@ fn sidebar_rail_draws_no_brand_or_footer_text() {
     assert!(texts(&n).contains(&"plev".to_string()));
 }
 
+#[test]
+fn sidebar_groups_fold_their_links_and_unfold_for_the_active_one() {
+    let t = hoff();
+    let links: Vec<NavLink> = (0..6).map(|i| NavLink::new(format!("Item {i}"))).collect();
+    let mut sb = Sidebar::new(links).groups(vec![
+        NavGroup::new("Foundations", 2),
+        NavGroup::new("Components", 4),
+    ]);
+    let (vw, vh) = (1400.0, 900.0);
+    let rect = sb.rect(&t, vw, vh).unwrap();
+    let captions = sb.group_rects(rect, &t, SidebarMode::Full);
+    assert_eq!(captions.len(), 2);
+    let open = sb.link_rects(rect, &t, SidebarMode::Full);
+    assert!(open.iter().all(|r| r.h == NavLink::height(&t)));
+    // Links sit under their caption, captions sit under the group above.
+    assert!(open[0].y >= captions[0].bottom());
+    assert!(captions[1].y >= open[1].bottom());
+
+    // A press on the second caption folds its four links away.
+    let (x, y) = captions[1].center();
+    let (r, nav) = sb.handle_event(&down(x, y), &t, vw, vh);
+    assert!(r.changed && nav.is_none());
+    let folded = sb.link_rects(rect, &t, SidebarMode::Full);
+    assert!(
+        folded[2..].iter().all(|r| r.h == 0.0),
+        "folded links take no room"
+    );
+    assert_eq!(folded[..2], open[..2], "the group above is untouched");
+    // A folded link cannot be hit.
+    let (x, y) = open[3].center();
+    sb.handle_event(&down(x, y), &t, vw, vh);
+    let (_, nav) = sb.handle_event(&up(x, y), &t, vw, vh);
+    assert_eq!(nav, None);
+    // Activating a link inside the folded group unfolds it.
+    sb.set_active(4);
+    assert!(sb.groups[1].expanded);
+    assert!(sb.links[4].active);
+
+    // Captions draw their label in the full sidebar, only the chevron
+    // in the rail.
+    let mut c = Compositor::new();
+    c.begin_frame();
+    sb.render(&mut c, LayerId::DEFAULT, &t, vw, vh);
+    let n = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    assert!(texts(&n).contains(&"Components".to_string()));
+    let mut c = Compositor::new();
+    c.begin_frame();
+    sb.render(&mut c, LayerId::DEFAULT, &t, 800.0, vh);
+    let n = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    assert!(texts(&n).is_empty(), "rail: no caption text");
+}
+
 // ---------------------------------------------------------------------------
 // Panel header
 // ---------------------------------------------------------------------------
