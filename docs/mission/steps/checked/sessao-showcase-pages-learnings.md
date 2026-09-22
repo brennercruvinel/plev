@@ -33,7 +33,7 @@ fazer a próxima reorganização grande, humano ou agente.
    mesmo exemplo, não uma cópia. custa zero e mantém a ordem de migração
    visível na sidebar.
 4. **split por verbo, não por widget, quando o arquivo é o roteador.**
-   `view/mod.rs` passou de 369 linhas por causa dos 45 campos e do match
+   `view/mod.rs` crescia sem parar por causa dos 45 campos e do match
    de altura. `panes.rs` (o estado) e `dispatch.rs` (os quatro matches)
    resolveram; `input.rs` e `render.rs` ficaram com o que é deles. o
    mesmo molde serviu pro `Sidebar` do comps (mod / input / render).
@@ -81,8 +81,5 @@ fazer a próxima reorganização grande, humano ou agente.
 - as páginas parciais em ordem: Field (label + helper + erro), Button
   Group, Table estática, Toggle e Toggle Group, Dialog x Alert Dialog,
   Popover e Hover Card, Combobox, Item, Kbd, Label no comps
-- `foundations/effects.rs` (412 linhas de produção) e `showcase/src/
-  app.rs` (427) passam do limite e não foram tocados; dividir quando
-  forem
 - `view/pages/table.rs` é dado (492 linhas): se crescer, um arquivo por
   grupo

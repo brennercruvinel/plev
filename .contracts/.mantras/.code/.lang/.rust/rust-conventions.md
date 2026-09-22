@@ -45,11 +45,12 @@ commands: fix every touched import, run the suite.
 
 ## file hygiene
 
-hard limit 369 lines per source file, target ~220 for new files. split
-oversize production code by single responsibility. exempt from the count:
-`#[cfg(test)]` blocks (in-file unit tests are idiomatic rust and must never
-force a split; a test block pushing a file to 380 is not a single-
-responsibility signal), generated files, lockfiles. the limit is a tax on
+hard limit 639 lines per source file. split oversize production code by
+single responsibility. exempt from the count: `#[cfg(test)]` blocks
+(in-file unit tests are idiomatic rust and must never force a split; a
+test block pushing a file over the line is not a single-responsibility
+signal), generated files, lockfiles, and data files (tables, fixtures,
+lockfiles, toml/yaml/json/ron). the limit is a tax on
 big production units, never a tax on testing well.
 
 ## lint
