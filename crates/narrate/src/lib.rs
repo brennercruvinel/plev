@@ -1,7 +1,7 @@
 //! narrate: an experimental verbal UI dsl for plev. **Not the official app
 //! pattern** -- state in structs + retained widgets + explicit invalidation
 //! is (the showcase is the template). Do not build new app code on this
-//! crate without an ADR (docs/adr/official-app-pattern.md).
+//! crate without an ADR (docs/ADR/official-app-pattern.md).
 
 pub use narrate_macro::plev_narrate;
 

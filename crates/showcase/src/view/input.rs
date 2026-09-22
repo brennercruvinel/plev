@@ -7,7 +7,7 @@ use comps::overlay::OverlayKind;
 use comps::prelude::{EventResult, Modal, ModalAction, Rect, WidgetEvent};
 use engine::theme::Intent;
 
-use super::components::{context_menu, toast};
+use super::components::context_menu;
 use super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
 
 /// Non-character editing keys the platform shell forwards (winit-free so
@@ -47,9 +47,9 @@ impl ShowcaseView {
         // A focused text field owns the characters: "t" types, it does
         // not switch the theme.
         let typed = match self.pane() {
-            Some(Pane::Input) => self.input.handle_text(key),
-            Some(Pane::Todo) => self.todo.handle_text(key),
-            Some(Pane::Git) => self.git.handle_text(key),
+            Some(Pane::Input) => self.panes.input.handle_text(key),
+            Some(Pane::Todo) => self.panes.todo.handle_text(key),
+            Some(Pane::Git) => self.panes.git.handle_text(key),
             _ => false,
         };
         if typed {
@@ -86,14 +86,14 @@ impl ShowcaseView {
     /// when there was nothing to close (caller may quit).
     pub fn close_top_overlay(&mut self) -> bool {
         let blurred = match self.pane() {
-            Some(Pane::Input) => self.input.handle_escape(),
-            Some(Pane::Checkbox) => self.checkbox.handle_escape(),
-            Some(Pane::Switch) => self.switch.handle_escape(),
-            Some(Pane::Slider) => self.slider.handle_escape(),
-            Some(Pane::Select) => self.select.handle_escape(),
-            Some(Pane::Tabs) => self.tabs.handle_escape(),
-            Some(Pane::Todo) => self.todo.handle_escape(),
-            Some(Pane::Git) => self.git.handle_escape(),
+            Some(Pane::Input) => self.panes.input.handle_escape(),
+            Some(Pane::Checkbox) => self.panes.checkbox.handle_escape(),
+            Some(Pane::Switch) => self.panes.switch.handle_escape(),
+            Some(Pane::Slider) => self.panes.slider.handle_escape(),
+            Some(Pane::Select) => self.panes.select.handle_escape(),
+            Some(Pane::Tabs) => self.panes.tabs.handle_escape(),
+            Some(Pane::Todo) => self.panes.todo.handle_escape(),
+            Some(Pane::Git) => self.panes.git.handle_escape(),
             _ => false,
         };
         if blurred {
@@ -107,14 +107,14 @@ impl ShowcaseView {
     /// rest edit its focused text field.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
         match self.pane() {
-            Some(Pane::Input) => self.input.handle_edit_key(key),
-            Some(Pane::Checkbox) => self.checkbox.handle_edit_key(key),
-            Some(Pane::Switch) => self.switch.handle_edit_key(key),
-            Some(Pane::Slider) => self.slider.handle_edit_key(key),
-            Some(Pane::Select) => self.select.handle_edit_key(key),
-            Some(Pane::Tabs) => self.tabs.handle_edit_key(key),
-            Some(Pane::Todo) => self.todo.handle_edit_key(key),
-            Some(Pane::Git) if key == EditKey::Backspace => self.git.handle_backspace(),
+            Some(Pane::Input) => self.panes.input.handle_edit_key(key),
+            Some(Pane::Checkbox) => self.panes.checkbox.handle_edit_key(key),
+            Some(Pane::Switch) => self.panes.switch.handle_edit_key(key),
+            Some(Pane::Slider) => self.panes.slider.handle_edit_key(key),
+            Some(Pane::Select) => self.panes.select.handle_edit_key(key),
+            Some(Pane::Tabs) => self.panes.tabs.handle_edit_key(key),
+            Some(Pane::Todo) => self.panes.todo.handle_edit_key(key),
+            Some(Pane::Git) if key == EditKey::Backspace => self.panes.git.handle_backspace(),
             _ => false,
         }
     }
@@ -123,8 +123,8 @@ impl ShowcaseView {
     /// submits its commit form.
     pub fn handle_enter(&mut self) -> bool {
         match self.pane() {
-            Some(Pane::Todo) => self.todo.handle_enter(),
-            Some(Pane::Git) => self.git.handle_enter(),
+            Some(Pane::Todo) => self.panes.todo.handle_enter(),
+            Some(Pane::Git) => self.panes.git.handle_enter(),
             _ => false,
         }
     }
@@ -133,7 +133,7 @@ impl ShowcaseView {
         match self.pane() {
             Some(Pane::Git) => {
                 let content = self.page_rect();
-                self.git.handle_right_click(x, y, content)
+                self.panes.git.handle_right_click(x, y, content)
             }
             Some(Pane::ContextMenu) if self.active_overlay.is_none() => {
                 let content = self.page_rect();
@@ -170,7 +170,7 @@ impl ShowcaseView {
         });
     }
 
-    fn open_modal(&mut self, destructive: bool) {
+    pub(super) fn open_modal(&mut self, destructive: bool) {
         let (widget, intent) = if destructive {
             (
                 Modal::new(
@@ -289,10 +289,9 @@ impl ShowcaseView {
         }
 
         // An open select dropdown gets priority over everything beneath.
-        if self.pane() == Some(Pane::Select) && self.select.is_open() {
-            let r = self
-                .select
-                .handle_event(event, self.page_rect(), &self.theme);
+        if self.pane() == Some(Pane::Select) && self.panes.select.is_open() {
+            let content = self.page_rect();
+            let r = self.panes.select.handle_event(event, content, &self.theme);
             if r.handled || r.changed {
                 return r.changed;
             }
@@ -321,75 +320,7 @@ impl ShowcaseView {
             return result.changed;
         }
 
-        let content = self.page_rect();
-        let t = &self.theme;
-        let page_result = match self.pane() {
-            None => EventResult::IGNORED,
-            Some(pane) => match pane {
-                Pane::Theme => {
-                    let (r, picked) = self.themes.handle_event(event, content);
-                    if let Some(name) = picked {
-                        self.set_theme(name);
-                    }
-                    r
-                }
-                Pane::Typography => self.typography.handle_event(event, content),
-                Pane::Icons => self.icons.handle_event(event, content),
-                Pane::Effects => self.effects.handle_event(event, content),
-                Pane::Avatar => self.avatar.handle_event(event, content, t),
-                Pane::Badge => self.badge.handle_event(event, content, t),
-                Pane::Breadcrumb => self.breadcrumb.handle_event(event, content, t),
-                Pane::Button => self.button.handle_event(event, content, t),
-                Pane::Card => self.card.handle_event(event, content, t),
-                Pane::Chart => self.chart.handle_event(event, content),
-                Pane::Checkbox => self.checkbox.handle_event(event, content, t),
-                Pane::Chip => self.chip.handle_event(event, content, t),
-                Pane::CodeBlock => self.code_block.handle_event(event, content, t),
-                Pane::ContextMenu => self.context_menu.handle_event(event, content, t),
-                Pane::Dialog => {
-                    let (r, open) = self.dialog.handle_event(event, content, t);
-                    if let Some(destructive) = open {
-                        self.open_modal(destructive);
-                    }
-                    r
-                }
-                Pane::Empty => self.empty.handle_event(event, content, t),
-                Pane::Graph => self.graph.handle_event(event, content, t),
-                Pane::IconButton => self.icon_button.handle_event(event, content, t),
-                Pane::Input => self.input.handle_event(event, content, t),
-                Pane::NavigationMenu => self.navigation_menu.handle_event(event, content, t),
-                Pane::Panel => self.panel.handle_event(event, content, t),
-                Pane::PanelHeader => self.panel_header.handle_event(event, content, t),
-                Pane::Progress => self.progress.handle_event(event, content, t),
-                Pane::Resizable => self.resizable.handle_event(event, content, t),
-                Pane::ScrollArea => self.scroll_area.handle_event(event, content, t),
-                Pane::Select => self.select.handle_event(event, content, t),
-                Pane::Separator => self.separator.handle_event(event, content, t),
-                Pane::Sidebar => self.sidebar.handle_event(event, content, t),
-                Pane::Skeleton => self.skeleton.handle_event(event, content, t),
-                Pane::Slider => self.slider.handle_event(event, content, t),
-                Pane::Spinner => self.spinner.handle_event(event, content, t),
-                Pane::Stat => self.stat.handle_event(event, content, t),
-                Pane::Switch => self.switch.handle_event(event, content, t),
-                Pane::Table => self.table.handle_event(event, content, t),
-                Pane::Tabs => self.tabs.handle_event(event, content, t),
-                Pane::Toast => {
-                    let (r, queued) = self.toast.handle_event(event, content, t);
-                    if let Some(intent) = queued {
-                        self.toasts
-                            .push(toast::ToastPage::message(intent), intent, &self.theme);
-                    }
-                    r
-                }
-                Pane::Tooltip => self.tooltip.handle_event(event, content, t),
-                Pane::Tree => self.tree.handle_event(event, content, t),
-                Pane::Todo => self.todo.handle_event(event, content, t),
-                Pane::Dock => self.dock.handle_event(event, content),
-                Pane::Editor => self.editor.handle_event(event, content),
-                Pane::Git => self.git.handle_event(event, content),
-                Pane::Builder => self.builder.handle_event(event, content),
-            },
-        };
+        let page_result = self.page_event(event);
         result = result.merge(page_result);
 
         // Page scroll: when no widget consumed the wheel, scroll the page

@@ -12,7 +12,7 @@
 # u64::is_multiple_of), so clippy's incompatible_msrv lint has nothing to
 # flag and manual_is_multiple_of stays inactive below 1.87.
 
-# the file-hygiene convention targets ~220 and hard-caps 369 lines; clippy's
+# the file-hygiene convention hard-caps 639 lines per source file; clippy's
 # own type-complexity and argument thresholds stay at sane defaults. raise
 # here only with a one-line reason, never to silence a real smell.
 too-many-arguments-threshold = 8

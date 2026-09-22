@@ -3,7 +3,7 @@ type: reference
 audience: [agents, contributors]
 status: living
 domain: process
-date: 2026-06-24
+date: 2026-09-21
 tags: [conventions, rust, contract, tests, naming, lint, errors, docs]
 ---
 
@@ -45,11 +45,12 @@ commands: fix every touched import, run the suite.
 
 ## file hygiene
 
-hard limit 369 lines per source file, target ~220 for new files. split
-oversize production code by single responsibility. exempt from the count:
-`#[cfg(test)]` blocks (in-file unit tests are idiomatic rust and must never
-force a split; a test block pushing a file to 380 is not a single-
-responsibility signal), generated files, lockfiles. the limit is a tax on
+hard limit 639 lines per source file. split oversize production code by
+single responsibility. exempt from the count: `#[cfg(test)]` blocks
+(in-file unit tests are idiomatic rust and must never force a split; a
+test block pushing a file over the line is not a single-responsibility
+signal), generated files, lockfiles, and data files (tables, fixtures,
+lockfiles, toml/yaml/json/ron). the limit is a tax on
 big production units, never a tax on testing well.
 
 ## lint
@@ -91,8 +92,17 @@ crates/engine/src/theme/scales.rs with its spec value in tests_scales.rs),
 and a widget that lays out from tokens takes `&Theme` on `handle_event`
 too, so events and pixels share one geometry. no `#![allow(dead_code)]`
 at crate level to park unwired code: wire it or delete it (the showcase
-App section's keys sat behind that allow for a release; nobody could type
+todo page's keys sat behind that allow for a release; nobody could type
 in it).
+
+the showcase is one page per comps widget (`crates/showcase/src/view/
+pages/table.rs`, three groups: Foundations, Components, Apps Demo). a
+new widget ships its page in the same change; a widget the design
+system needs but comps does not have yet keeps a placeholder slot in
+the table, and a page that shows a neighbour's example says what its
+own still lacks (`Body::Alias`). only `view/dispatch.rs` matches on
+`Pane`; a page module exposes `content_height`, `handle_event`,
+`render` and, if it animates, `tick`, and owns its own Tab cycle.
 
 ## tokens
 
@@ -107,8 +117,11 @@ geometry, each as a named const with the reason in its doc comment.
 
 ## docs
 
-diataxis style. all lowercase except acronyms. no emoji. no em-dash (use a
-comma, semicolon, period or hyphen). no decorative markdown. every doc opens
+decisions in docs/ADR/ (index docs/ADR/README.md), the changelog in
+docs/CHANGELOG.md, manuals in docs/how-to/, session learnings in
+docs/mission/steps/checked/sessao-<topic>-learnings.md. diataxis style.
+all lowercase except acronyms. no emoji. no em-dash (use a comma,
+semicolon, period or hyphen). no decorative markdown. every doc opens
 with yaml frontmatter (type, tags, date, commit or status). a design note
 that turns out wrong gets a correction on top, never a delete.
 

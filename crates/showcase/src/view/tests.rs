@@ -239,7 +239,7 @@ fn todo_add_field_takes_typing_enter_and_escape_through_the_chrome() {
     // Click the add field (top of the app card), then type through
     // the chrome's key routes: "t" must type, not switch the theme.
     let content = view.page_rect();
-    let (x, y) = view.todo.input_rect(content, &view.theme).center();
+    let (x, y) = view.panes.todo.input_rect(content, &view.theme).center();
     assert!(view.handle_event(&WidgetEvent::MouseDown { x, y }));
     assert!(view.handle_key("t"));
     assert_eq!(view.theme_name, "core", "typing must not cycle the theme");
@@ -369,7 +369,7 @@ fn probe_scroll_over_virtual_list_reports_change_and_shifts_rows() {
     });
     assert!(changed, "scroll over the virtual list must request redraw");
     assert!(
-        view.scroll_area.list.scroll.offset() > 0.0,
+        view.panes.scroll_area.list.scroll.offset() > 0.0,
         "offset must move"
     );
 
@@ -407,7 +407,7 @@ fn probe_hover_over_buttons_reports_change() {
     view.jump_to_page("button");
     let content = view.content_rect();
     // The first card's widget sits at the card's center.
-    let (cx, cy) = view.button.first_widget_center(content, &view.theme);
+    let (cx, cy) = view.panes.button.first_widget_center(content, &view.theme);
     assert!(
         view.handle_event(&WidgetEvent::MouseMove { x: cx, y: cy }),
         "hover entering a button must request redraw"
@@ -557,7 +557,7 @@ fn scroll_over_virtual_list_keeps_priority_over_page_scroll() {
         y: cy,
         delta: 48.0,
     }));
-    assert!(view.scroll_area.list.scroll.offset() > 0.0);
+    assert!(view.panes.scroll_area.list.scroll.offset() > 0.0);
     assert_eq!(
         view.page_offset(),
         0.0,

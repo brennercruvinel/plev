@@ -111,6 +111,7 @@ status usados: `reference` (conhecimento congelado de uma sessao), `accepted` (d
 | 2026-08-30 | [official-app-pattern](official-app-pattern.md) | accepted | padrao oficial: estado em structs + widgets retidos + invalidacao explicita (template: showcase); builder para prototipos/demos; view/component/signal/narrate experimentais |
 | 2026-09-21 | [core-theme-tailwind-classes-as-recipes](core-theme-tailwind-classes-as-recipes.md) | accepted | Theme::hoff_core (o kit typescript: shades, accents, sombras, Inter, raios) e theme.button: cada class list de botao virou receita (fill, shadow list com ring e inset, overlay, texto) por estado; Button / IconButton / SubmitButton reescritos; showcase Buttons e a ButtonsPage; dois defeitos globais: mix em alpha reto no rect_sdf (franja escura em toda quina) e sombra blur 0 sem AA; aprendizados em docs/mission/steps/checked/sessao-core-buttons-learnings.md |
 | 2026-09-21 | [embed-an-app-view-by-frame-origin](embed-an-app-view-by-frame-origin.md) | accepted | view de app ganha origem de frame (WorkspaceView::set_frame, Sidebar.origin); begin_frame e do host; ide vira lib + bin com GitSession; showcase embute Editor e Git como app sections sem gutter |
+| 2026-09-21 | [showcase-one-page-per-component](showcase-one-page-per-component.md) | accepted | o showcase vira uma pagina por widget do comps: tabela `view::pages::PAGES` em tres grupos (Foundations, Components alfabetico, Apps Demo), pagina propria, alias (mostra o exemplo vizinho com a nota do que falta) ou placeholder (widget que o comps ainda nao tem); `comps::nav::Sidebar` ganha `NavGroup` (grupos que dobram); foco de teclado por pagina; aprendizados em docs/mission/steps/checked/sessao-showcase-pages-learnings.md |
 | 2026-09-18 | [comps-one-design-system-crate](comps-one-design-system-crate.md) | accepted | crates/comps e o design system (widgets, receitas, icones, charts, overlay, editor, shell) sobre o engine; todo valor visual e token do Theme (shape, control, size, duration, layout, shadows); breakpoints e AppShell (sidebar cheia / rail / drawer); ide, showcase e urnaui consomem, tema e componentes locais apagados; matriz tema x viewport testa todo widget; inventario em docs/catalog.md; aprendizados da sessao em docs/mission/steps/checked/sessao-comps-learnings.md |
 
 ## urnaui, o explorador de .urna (2026)
@@ -130,7 +131,7 @@ status usados: `reference` (conhecimento congelado de uma sessao), `accepted` (d
 
 | arquivo | status | resumo |
 |---------|--------|--------|
-| [changelog](changelog.md) | living | log de versoes commit a commit: prime creatures, workspace tiers, kdb consolidado, qa pass, ponte monster |
+| [changelog](../CHANGELOG.md) | living | log de versoes commit a commit: prime creatures, workspace tiers, kdb consolidado, qa pass, ponte monster |
 
 ## notas
 

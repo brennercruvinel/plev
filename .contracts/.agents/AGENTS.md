@@ -32,7 +32,7 @@ mission, refs). architecture: docs/arc/arc.toml.
 ## at task start
 
 1. read docs/arc/arc.toml (tables, then [diagram]) in a short pass to preserve
-   structure and naming patterns; skim docs/adr/ for the decisions already
+   structure and naming patterns; skim docs/ADR/ for the decisions already
    made and the reasons behind them
 2. read docs/how-to/code-against-the-plev-engine.md before touching ui or
    rendering code; it encodes every defect class this repo already paid for
@@ -54,8 +54,8 @@ it. the sequence, in order, every time:
    before the yes.
 2. on yes, in the same change set:
    - commit, thematically, explicit paths (see ## things to avoid)
-   - docs/adr/: a new adr when a decision was made or an existing one
-     was reversed; update docs/adr/index.md
+   - docs/ADR/: a new adr when a decision was made or an existing one
+     was reversed; update docs/ADR/README.md
    - docs/arc/arc.toml: when structure, crates, modules or contracts
      changed
    - docs/mission/steps/: move the task's file from pending/ or ongoing/

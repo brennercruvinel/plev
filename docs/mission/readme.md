@@ -20,7 +20,7 @@ compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, io
 > empty-state, spinner, split-pane, icon-button), charts promovidos a
 > engine, engine::graph + GraphView. showcase com 14 tabs e sidebar com
 > scroll. ci matrix macos+ubuntu+wasm. padrao oficial de app registrado
-> em docs/adr/official-app-pattern.md. o mapa de tasks abaixo reflete
+> em docs/ADR/official-app-pattern.md. o mapa de tasks abaixo reflete
 > 2026-06-29 e nao foi reescrito.
 
 nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do primeiro push em plevdev). a linha do tempo real do projeto vive na documentacao datada (adr/, este mapa) e no codigo, nao no git.

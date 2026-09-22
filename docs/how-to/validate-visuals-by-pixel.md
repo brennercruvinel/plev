@@ -45,7 +45,7 @@ PROBE_FILL=1 cargo run -p engine --example text_probe -- out.png 2.0
 
 `PROBE_FILL=1` pushes enough distinct glyph/size/weight combinations through
 the atlas that it has to **grow partway through the frame** — the atlas
-lifecycle (docs/adr/glyph-raster-identity-and-atlas-isolation.md) only
+lifecycle (docs/ADR/glyph-raster-identity-and-atlas-isolation.md) only
 exercises under that pressure. A probe that cannot reach the failing state
 proves nothing.
 

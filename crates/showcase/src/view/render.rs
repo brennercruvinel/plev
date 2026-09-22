@@ -3,11 +3,11 @@
 //! overlay, the toasts).
 
 use comps::overlay::OverlayManager;
-use comps::prelude::{EmptyState, Rect};
+use comps::prelude::Rect;
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 
 use super::components::scroll_area::ScrollAreaPage;
-use super::{ActiveOverlay, Body, Layers, PAGES, Pane, ShowcaseView, pages, panel};
+use super::{ActiveOverlay, Body, Layers, PAGES, Pane, ShowcaseView, pages};
 
 impl ShowcaseView {
     // -- Animation -------------------------------------------------------------
@@ -20,27 +20,15 @@ impl ShowcaseView {
         // Widgets that settle on their own tick whichever page shows
         // (a focused field, a knob spring, a scrollbar fade, a tooltip
         // delay): they must not freeze mid-motion when the page changes.
-        animating |= self.input.tick(dt);
-        animating |= self.switch.tick(dt);
-        animating |= self.scroll_area.tick(dt);
-        animating |= self.tooltip.tick(dt);
-        animating |= self.table.tick(dt);
-        // Motion that would run forever ticks only while visible: the
-        // dock's caret, the chart reveal, spinners, breathing skeletons,
-        // the todo caret, the editor.
-        let visible = match self.pane() {
-            Some(Pane::Dock) => self.dock.tick(dt),
-            Some(Pane::Chart) => self.chart.tick(dt),
-            Some(Pane::Spinner) => self.spinner.tick(dt),
-            Some(Pane::Skeleton) => self.skeleton.tick(dt),
-            Some(Pane::Todo) => self.todo.tick(dt),
-            Some(Pane::Editor) => self.editor.tick(dt),
-            _ => false,
-        };
-        animating |= visible;
+        animating |= self.panes.input.tick(dt);
+        animating |= self.panes.switch.tick(dt);
+        animating |= self.panes.scroll_area.tick(dt);
+        animating |= self.panes.tooltip.tick(dt);
+        animating |= self.panes.table.tick(dt);
+        animating |= self.page_tick(dt);
         // The git tab always ticks: worker events land there whichever
         // page is showing, and must not pile up until it is.
-        animating |= self.git.tick(dt) && self.pane() == Some(Pane::Git);
+        animating |= self.panes.git.tick(dt) && self.pane() == Some(Pane::Git);
 
         // Drop overlay widgets whose exit animation finished.
         if let Some(active) = &self.active_overlay {
@@ -110,58 +98,7 @@ impl ShowcaseView {
             },
         });
         self.render_note(c, content, &theme);
-        match self.pane() {
-            None => self.render_placeholder(c, content, &theme),
-            Some(pane) => match pane {
-                Pane::Theme => self.themes.render(c, content, &theme, &self.theme_name),
-                Pane::Typography => self.typography.render(c, content, &theme),
-                Pane::Icons => self.icons.render(c, content, &theme),
-                Pane::Effects => self.effects.render(c, content, &theme),
-                Pane::Avatar => self.avatar.render(c, content, &theme),
-                Pane::Badge => self.badge.render(c, content, &theme),
-                Pane::Breadcrumb => self.breadcrumb.render(c, content, &theme),
-                Pane::Button => self.button.render(c, content, &theme),
-                Pane::Card => self.card.render(c, content, &theme),
-                Pane::Chart => self.chart.render(c, content, &theme),
-                Pane::Checkbox => self.checkbox.render(c, content, &theme),
-                Pane::Chip => self.chip.render(c, content, &theme),
-                Pane::CodeBlock => self.code_block.render(c, content, &theme),
-                Pane::ContextMenu => self.context_menu.render(c, content, &theme),
-                Pane::Dialog => self.dialog.render(c, content, &theme),
-                Pane::Empty => self.empty.render(c, content, &theme),
-                Pane::Graph => self.graph.render(c, content, &theme),
-                Pane::IconButton => self.icon_button.render(c, content, &theme),
-                Pane::Input => self.input.render(c, content, &theme),
-                Pane::NavigationMenu => self.navigation_menu.render(c, content, &theme),
-                Pane::Panel => self.panel.render(c, content, &theme),
-                Pane::PanelHeader => self.panel_header.render(c, content, &theme),
-                Pane::Progress => self.progress.render(c, content, &theme),
-                Pane::Resizable => self.resizable.render(c, content, &theme),
-                Pane::ScrollArea => self.scroll_area.render(c, layers.list, content, &theme),
-                Pane::Select => self.select.render(c, layers.overlay, content, &theme),
-                Pane::Separator => self.separator.render(c, content, &theme),
-                Pane::Sidebar => self.sidebar.render(c, content, &theme),
-                Pane::Skeleton => self.skeleton.render(c, content, &theme),
-                Pane::Slider => self.slider.render(c, content, &theme),
-                Pane::Spinner => self.spinner.render(c, content, &theme),
-                Pane::Stat => self.stat.render(c, content, &theme),
-                Pane::Switch => self.switch.render(c, content, &theme),
-                Pane::Table => self.table.render(c, content, &theme),
-                Pane::Tabs => self.tabs.render(c, content, &theme),
-                Pane::Toast => self.toast.render(c, content, &theme),
-                Pane::Tooltip => {
-                    self.tooltip.render(c, content, &theme);
-                    self.tooltip
-                        .render_tooltip(c, layers.toast, &theme, self.width, self.height);
-                }
-                Pane::Tree => self.tree.render(c, content, &theme),
-                Pane::Todo => self.todo.render(c, content, &theme),
-                Pane::Dock => self.dock.render(c, content, &theme),
-                Pane::Editor => self.editor.render(c, content),
-                Pane::Git => self.git.render(c, content, &theme),
-                Pane::Builder => self.builder.render(c, content, &theme),
-            },
-        }
+        self.page_render(c, layers, content, &theme);
         c.push(SceneNode::PopClip);
 
         // Active overlay: fade via layer opacity driven by the manager.
@@ -201,21 +138,5 @@ impl ShowcaseView {
             y: content.y - self.note_h(),
             color: theme.glass.text_placeholder.0,
         });
-    }
-
-    /// A placeholder page: an empty state on a panel, naming the slot.
-    fn render_placeholder(&self, c: &mut Compositor, content: Rect, theme: &engine::theme::Theme) {
-        let rect = Rect::new(
-            content.x,
-            content.y,
-            content.w.min(theme.size.readable_max_w),
-            theme.size.card_min_w / 2.0,
-        );
-        panel(c, rect, theme);
-        EmptyState::new(
-            self.current().title,
-            "Not in comps yet. The slot is here so the tree reads complete.",
-        )
-        .render(c, rect, theme);
     }
 }

@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- showcase, one page per component (2026-09-21, adr
+  showcase-one-page-per-component): the sidebar is a folding tree of
+  three groups (Foundations, Components alphabetical, Apps Demo) over
+  the page table `view::pages::PAGES`; a page is its own pane, an alias
+  of a neighbour's example with a "still missing" note, or a placeholder
+  slot for a widget comps does not have yet; Forms, Chrome, Extras,
+  Overlays and Lists split into one module per widget; `comps::nav::
+  Sidebar` gains `NavGroup`; the launch argument is the page title.
+  docs/adr/ became docs/ADR/ with README.md as its index, the changelog
+  moved to docs/CHANGELOG.md.
 - core theme and the buttons poc (2026-09-21, adr
   core-theme-tailwind-classes-as-recipes): `Theme::hoff_core` is the
   typescript kit (nine shades, six accents, depths as shadow stacks,
@@ -89,7 +99,7 @@ status: living
   set_raster_scale is #[must_use]; LRU capacity drops return their
   rectangles; empty glyphs carry alloc_id None; headless pixel validation
   via engine::text::probe (incl. multi-frame render_frames). see
-  docs/adr/glyph-raster-identity-and-atlas-isolation.md
+  docs/ADR/glyph-raster-identity-and-atlas-isolation.md
 - jetbrains mono removed (2026-08-31): inclusive sans is the single
   embedded family; ~550kb less embedded font data, monospace pinned to it
   as well since no mono face ships.
