@@ -48,9 +48,9 @@ pub mod window;
 pub mod accessibility;
 
 // -- Hot Reload
-#[cfg(feature = "hot-reload")]
+#[cfg(hot_reload)]
 pub mod hot_reload;
-#[cfg(feature = "hot-reload")]
+#[cfg(hot_reload)]
 pub mod narrate_runtime;
 
 pub use macros::component;
@@ -62,7 +62,7 @@ pub use winit;
 ///
 /// Called by proc-macro generated code. When `hot-reload` is off, this inlines
 /// to a direct call of `compiled()` with zero overhead.
-#[cfg(feature = "hot-reload")]
+#[cfg(hot_reload)]
 #[inline(always)]
 pub fn narrate_resolve<F: FnOnce() -> builder::Element>(
     file: &str,
@@ -76,7 +76,7 @@ pub fn narrate_resolve<F: FnOnce() -> builder::Element>(
     }
 }
 
-#[cfg(not(feature = "hot-reload"))]
+#[cfg(not(hot_reload))]
 #[inline(always)]
 pub fn narrate_resolve<F: FnOnce() -> builder::Element>(
     _file: &str,

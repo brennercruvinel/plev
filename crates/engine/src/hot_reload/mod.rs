@@ -1,16 +1,20 @@
-//! Hot reload for development.
+//! Hot reload for development (desktop debug builds only, see build.rs).
 //!
-//! Watches `src/gpu/shaders/*.wgsl` for shader changes and `src/`/`examples/` for
-//! plev_narrate! DSL changes. Feature-gated behind `hot-reload`.
-//!
-//! - Tier 1 (Shader): file watcher + pipeline recreation
-//! - Tier 2 (DSL): file watcher + runtime parse + override map
+//! - Tier 1 (shader): `GpuContext` owns a watcher on `src/gpu/shaders/`; a
+//!   saved `.wgsl` recreates its pipeline on the next frame and wakes the
+//!   event loop so that frame happens now. Every app gets it through
+//!   `present_frame`, nothing to wire.
+//! - Literals: a saved `.rs` whose only change is in strings or hex colors
+//!   is applied to the open window, state intact (`literals`). A code
+//!   change rebuilds the bin and re-execs it (`source`), so
+//!   `cargo run -p showcase` alone is the dev loop.
+//! - Tier 2 (narrate DSL): file watcher + runtime parse + override map,
+//!   polled by the engine's own `window::App` (experimental, no app uses it).
 
-#[cfg(target_arch = "wasm32")]
-compile_error!("hot-reload feature is not supported on WASM (no filesystem, no threads)");
-
+pub mod literals;
 mod narrate;
 mod shader;
+mod source;
 #[cfg(test)]
 mod tests;
 
@@ -22,10 +26,11 @@ pub use narrate::{
     NarrateWatcher, narrate_override, process_narrate_file, project_root, update_narrate_overrides,
 };
 pub use shader::ShaderWatcher;
+pub use source::{SourceWatcher, source_dirs};
 
 /// Directory containing `.wgsl` shader source files.
 pub fn shader_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("shaders")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/gpu/shaders")
 }
 
 /// Read a shader source file from disk (hot-reload path).
@@ -58,7 +63,7 @@ pub(crate) fn fallback_shader(filename: &str) -> &'static str {
         "blur.wgsl" => include_str!("../gpu/shaders/blur.wgsl"),
         "shadow.wgsl" => include_str!("../gpu/shaders/shadow.wgsl"),
         _ => {
-            log::error!("Unknown shader for fallback: {}", filename);
+            log::error!("Unknown shader for fallback: {filename}");
             ""
         }
     }

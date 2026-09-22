@@ -121,10 +121,19 @@ pub struct TextNodeKey {
     pub font_family: Option<String>,
 }
 
+/// The string as the source has it now (literal hot reload), else as given.
+fn live_text(text: &str) -> String {
+    #[cfg(hot_reload)]
+    if let Some(now) = crate::hot_reload::literals::text(text) {
+        return now;
+    }
+    text.to_string()
+}
+
 impl TextNodeKey {
     pub fn new(text: &str, font_size: f32, line_height: f32, max_width: Option<f32>) -> Self {
         Self {
-            text: text.to_string(),
+            text: live_text(text),
             font_size_bits: font_size.to_bits(),
             line_height_bits: line_height.to_bits(),
             max_width_bits: max_width.map(|w| w.to_bits()),
@@ -139,7 +148,7 @@ impl TextNodeKey {
     /// letter spacing, family).
     pub fn from_style(text: &str, style: &crate::text::TextStyle, max_width: Option<f32>) -> Self {
         Self {
-            text: text.to_string(),
+            text: live_text(text),
             font_size_bits: style.font_size.to_bits(),
             line_height_bits: style.line_height.to_bits(),
             max_width_bits: max_width.map(|w| w.to_bits()),

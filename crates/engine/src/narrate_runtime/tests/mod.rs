@@ -193,7 +193,10 @@ fn parse_skips_on_block() {
     )
     .unwrap();
     let nodes = render(&el);
-    assert!(nodes.len() >= 1, "button bg should produce at least 1 node");
+    assert!(
+        !nodes.is_empty(),
+        "button bg should produce at least 1 node"
+    );
 }
 
 #[test]
@@ -208,7 +211,10 @@ fn parse_skips_on_with_params() {
     )
     .unwrap();
     let nodes = render(&el);
-    assert!(nodes.len() >= 1, "button bg should produce at least 1 node");
+    assert!(
+        !nodes.is_empty(),
+        "button bg should produce at least 1 node"
+    );
 }
 
 #[test]

@@ -76,9 +76,7 @@ pub struct App {
     a11y_state: crate::accessibility::AccessibilityState,
     #[cfg(feature = "accessibility")]
     a11y_adapter: Option<accesskit_winit::Adapter>,
-    #[cfg(feature = "hot-reload")]
-    shader_watcher: Option<crate::hot_reload::ShaderWatcher>,
-    #[cfg(feature = "hot-reload")]
+    #[cfg(hot_reload)]
     narrate_watcher: Option<crate::hot_reload::NarrateWatcher>,
 }
 
@@ -121,36 +119,17 @@ impl App {
             a11y_state: crate::accessibility::AccessibilityState::new(),
             #[cfg(feature = "accessibility")]
             a11y_adapter: None,
-            #[cfg(feature = "hot-reload")]
-            shader_watcher: {
-                let dir = crate::hot_reload::shader_dir();
-                match crate::hot_reload::ShaderWatcher::new(&dir) {
-                    Ok(w) => {
-                        log::info!("Shader hot reload enabled -- watching {}", dir.display());
-                        Some(w)
-                    }
-                    Err(e) => {
-                        log::error!("Failed to start shader watcher: {}", e);
-                        None
-                    }
-                }
-            },
-            #[cfg(feature = "hot-reload")]
+            #[cfg(hot_reload)]
             narrate_watcher: {
-                let root = crate::hot_reload::project_root();
-                let src = root.join("src");
-                let examples = root.join("examples");
-                let dirs: Vec<&std::path::Path> = [src.as_path(), examples.as_path()]
-                    .into_iter()
-                    .filter(|d| d.exists())
-                    .collect();
+                let dirs = crate::hot_reload::source_dirs();
+                let dirs: Vec<&std::path::Path> = dirs.iter().map(|d| d.as_path()).collect();
                 match crate::hot_reload::NarrateWatcher::new(&dirs) {
                     Ok(w) => {
-                        log::info!("Narrate hot reload enabled -- watching src/ + examples/");
+                        log::info!("narrate hot reload on: crates/*/src");
                         Some(w)
                     }
                     Err(e) => {
-                        log::error!("Failed to start narrate watcher: {}", e);
+                        log::error!("Failed to start narrate watcher: {e}");
                         None
                     }
                 }

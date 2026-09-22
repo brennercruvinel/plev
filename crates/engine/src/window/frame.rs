@@ -30,11 +30,18 @@ pub fn present_frame(
     compositor: &mut Compositor,
     gpu: &mut GpuContext,
     text_system: &mut TextSystem,
-    effects: &EffectProcessor,
+    effects: &mut EffectProcessor,
     texture_pool: &mut TexturePool,
     clear_linear: [f32; 4],
     label: &str,
 ) -> Option<u32> {
+    // A shader saved on disk since the last frame: swap its pipeline and
+    // redraw every layer, clean ones still hold the old shader's output.
+    #[cfg(hot_reload)]
+    if gpu.poll_shader_reload(effects) {
+        compositor.mark_all_dirty();
+    }
+
     let surface = gpu.surface.as_ref()?;
     let output = match surface.get_current_texture() {
         Ok(t) => t,
@@ -84,6 +91,8 @@ pub fn present_frame(
         .map(|l| l.id)
         .collect();
 
+    #[cfg(hot_reload)]
+    let clear_linear = crate::hot_reload::literals::linear(clear_linear);
     let [r, g, b, a] = clear_linear;
     let clear_color = wgpu::Color {
         r: r as f64,
