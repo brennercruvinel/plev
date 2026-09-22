@@ -1,82 +1,55 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
-last-updated: 2024-01-25
-domain: task-tracking
+status: done
+last-updated: 2026-09-22
+domain: hot-reload
 ---
 
-# gap-1: hot reload system
+# task-56 (gap-1): hot reload, done
 
-data: 2024-01-25
-status: em andamento
-branch: task/gap-1-hot-reload
+opened 2024-01-25 as gap-1 with three tiers (shader, narrate DSL,
+subsecond). closed 2026-09-22 with what an authorial engine can own:
+shader and literal reload in place, code by rebuild. adr:
+docs/ADR/hot-reload-on-by-default-in-gpu-context.md.
 
-## objetivo
+## what was there in the morning
 
-implementar hot reload para o plev em 3 tiers:
-- tier 1: shader hot reload (vello pattern), prioridade
-- tier 2: DSL hot reload (makepad pattern, plev_narrate!), complexo
-- tier 3: rust code hot reload (subsecond), pesquisa
+- tier 1 and tier 2 written and unit-tested in 2024, never reached a
+  running app: the feature was off by default and no crate enabled it;
+  the watcher lived in `window::App`, which showcase, ide and urnaui do
+  not use; `shader_dir()` pointed at a directory that did not exist; the
+  reloaded pipelines used the raw surface format instead of the srgb
+  view format; the poll sat in `about_to_wait`, which sleeps under
+  `ControlFlow::Wait`; a reload only forced a frame, clean layers kept
+  the old shader; the narrate root did not match `file!()`.
 
-## design
+## checklist
 
-ver `mission/knowledge/hot-reload-design.md` para pesquisa completa (7 implementacoes estudadas).
+- [x] shader watcher in `GpuContext`, wake by `request_redraw`, poll in
+      `present_frame`, `mark_all_dirty` on a swap; every app for free
+- [x] on by default in desktop debug builds (`cfg(hot_reload)` from
+      build.rs); release, wasm, mobile unchanged
+- [x] `shader_dir`, srgb view format, workspace root fixed
+- [x] literal reload: snapshot + skeleton hash + delta per file
+      (proc-macro2), applied at `TextNodeKey`, `TextMeasurer`,
+      `push_to_layer` (rects, text, borders, gradients, path vertices)
+      and the window clear; revert removes the override
+- [x] code changes: `cargo build -p $CARGO_PKG_NAME --bin <name>` and
+      exec, same pid, same terminal
+- [x] tests: 7 unit tests on the diff and apply; live captures by
+      window id on the showcase (shader pixel, page subtitle, retained
+      sidebar string, theme shade, all with the pid unchanged)
+- [x] gate green
+- [ ] tier 3 (subsecond): no-go. it needs dioxus' cli and linker in the
+      build loop; the engine is authorial. the rebuild path covers code.
+- [ ] narrate DSL: left as it was (root fixed, `crates/*/src` watched),
+      experimental, no app uses it
 
-## checklist, tier 1 (shader hot reload)
+## limits (by construction, see the adr)
 
-- [x] adicionar notify + notify-debouncer-full ao cargo.toml (feature-gated)
-- [x] criar src/hot_reload.rs com shaderwatcher
-- [x] implementar shader_source() dual-mode (disco vs include_str!)
-- [x] extrair pipeline recreation functions em gpu.rs e effects.rs
-- [x] integrar watcher no event loop (about_to_wait)
-- [x] graceful degradation: WGSL invalido = log::error, nao crash
-- [x] guard: nao compilar watcher em WASM (single-threaded)
-- [x] testes unitarios (watcher, debounce, error handling)
-- [x] teste manual (editar shader, ver mudanca sem restart)
-- [x] documentar em rules.md, knowledge/, claude.md
-
-## checklist, tier 2 (DSL hot reload)
-
-- [x] runtime parser: src/narrate_runtime.rs (tokenizer + recursive descent parser -> element)
-- [x] overridemap: hashmap<(file, line), DSL text> com re-parse on access
-- [x] narratewatcher: file watcher para src/ e examples/ (.rs files)
-- [x] extract_narrate_blocks(): extrai plev_narrate! blocks de source text
-- [x] narrate_resolve(): proc-macro wraps output com override check
-- [x] codegen modificado: ::plev::narrate_resolve(file!(), line!(), || { ... })
-- [x] corrigido plev_narrate -> plev_narrate em codegen e error messages
-- [x] integrar narrate watcher no event loop (about_to_wait)
-- [x] 27 testes unitarios (tokenizer, parser, block extraction, overrides)
-- [x] 343 testes totais passando (312 core + 4 shader + 27 narrate)
-- [x] compila sem hot-reload feature (zero overhead path)
-- [ ] preservar estado do componente across reload (deferred, requer component id system)
-- [ ] teste manual end-to-end (editar .rs com plev_narrate!, ver mudanca)
-
-## checklist, tier 3 (subsecond)
-
-- [ ] research: compatibilidade com wgpu/winit event loop
-- [ ] research: bevy PR #19309 analise
-- [ ] decisao: go / no-go / defer
-
-## dependencias
-
-| crate | versao | feature | tier |
-|-------|--------|---------|------|
-| notify | 7 | hot-reload | 1, 2 |
-| notify-debouncer-full | 0.4 | hot-reload | 1, 2 |
-
-## arquivos criados/modificados
-
-### tier 1
-- src/hot_reload.rs (shaderwatcher, shader_source)
-- src/gpu.rs (pipeline recreation methods)
-- src/effects.rs (pipeline recreation methods)
-- cargo.toml (dependencias)
-
-### tier 2
-- src/narrate_runtime.rs (novo, ~600 LOC: tokenizer + parser + extract + tests)
-- src/hot_reload.rs (narratewatcher, narrateoverrides, narrate_override, process_narrate_file)
-- src/lib.rs (narrate_runtime mod + narrate_resolve fn)
-- src/window.rs (narrate_watcher field + check_narrate_reload)
-- crates/narrate-macro/src/codegen.rs (wrap com narrate_resolve, paths atualizados para plev)
-- crates/narrate-macro/src/parse/block_item.rs (paths atualizados para plev)
+value-keyed substitution at the sink: a literal that appears twice on
+screen changes twice; formatted strings, derived colors, numbers and
+strings used as keys need the compiler. a position-keyed variant (an
+engine macro recording file/line/column, the rsx pattern) would lift
+the first three at the cost of marking the code; not taken.

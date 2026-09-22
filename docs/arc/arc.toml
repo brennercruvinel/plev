@@ -81,8 +81,14 @@ role = "reactive primitives (experimental: no new app code without an adr, see o
 
 [modules.window]
 path = "crates/engine/src/window"
-role = "App runner: event loop, render-on-demand, render passes, wasm canvas"
+role = "App runner: event loop, render-on-demand, render passes, wasm canvas; present_frame is the shared present path every app (showcase, ide, urnaui) goes through"
 depends = ["gpu", "compositor", "text", "input"]
+
+[modules.hot_reload]
+path = "crates/engine/src/hot_reload"
+role = "desktop debug builds only (cfg(hot_reload) from build.rs, feature on by default): shader watcher owned by GpuContext (a saved .wgsl swaps its pipeline, wakes the loop via request_redraw, every layer redraws); literal reload (a saved .rs whose only change is strings or hex colors is applied in place at TextNodeKey, TextMeasurer, push_to_layer and the clear color, state intact; baseline = the sources at process start, skeleton hash + literal list per file via proc-macro2); code changes rebuild (cargo build -p $CARGO_PKG_NAME) and exec the fresh binary; narrate DSL override map (experimental, polled by window::App only)"
+depends = ["gpu", "compositor", "text", "effects"]
+contracts = ["never-in-release-wasm-mobile", "state-preserved-on-literal-reload"]
 
 [modules.theme]
 path = "crates/engine/src/theme"
