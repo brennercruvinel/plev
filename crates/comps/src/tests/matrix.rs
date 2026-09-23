@@ -597,6 +597,56 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
     );
 }
 
+/// task-81: a select with more options than `size.dropdown_max_h` fits
+/// reaches its last option under every theme at both widths. Scrolled to
+/// the end by the wheel, the first option is no longer bound, the last one
+/// is bound inside the panel, `hit` at its center answers it, and a click
+/// there picks it.
+#[test]
+fn a_long_select_reaches_its_last_option_under_every_theme_at_phone_and_desktop_widths() {
+    let long = SemId::parse("m.long").unwrap();
+    let last = long.key("19");
+    for (t, theme) in themes().into_iter().enumerate() {
+        for (vw, _) in VIEWPORTS {
+            let what = format!("theme {t} at {vw}");
+            let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+            let control = Rect::new(gutter, gutter, vw - gutter * 2.0, 44.0);
+            let mut select =
+                Select::new((0..20).map(|i| format!("option {i}")), 0).sem(long.clone());
+            let (x, y) = control.center();
+            select.handle_event(&WidgetEvent::MouseDown { x, y }, control, &theme);
+            let panel = select.dropdown_rect(control, &theme);
+            let (x, y) = panel.center();
+            let end = WidgetEvent::Scroll {
+                x,
+                y,
+                delta: 100_000.0,
+            };
+            assert!(select.handle_event(&end, control, &theme).changed, "{what}");
+
+            let mut c = Compositor::new();
+            let overlay = c.create_layer(100);
+            c.begin_frame();
+            select.render(&mut c, control, &theme);
+            select.render_dropdown(&mut c, overlay, control, &theme);
+            assert_eq!(c.binding(&long.key("0")), None, "{what}: scrolled out");
+            let [bx, by, bw, bh] = c
+                .binding(&last)
+                .unwrap_or_else(|| panic!("{what}: the last option is not bound"))
+                .rect;
+            assert!(
+                by >= panel.y && by + bh <= panel.y + panel.h,
+                "{what}: the last row inside the panel"
+            );
+            let (x, y) = (bx + bw / 2.0, by + bh / 2.0);
+            assert_eq!(c.hit(x, y), Some(&last), "{what}");
+            let pick = select.handle_event(&WidgetEvent::MouseDown { x, y }, control, &theme);
+            assert!(pick.clicked, "{what}");
+            assert_eq!(select.selected, 19, "{what}");
+        }
+    }
+}
+
 #[test]
 fn modal_and_toast_fit_a_phone_width() {
     let theme = Theme::hoff();
