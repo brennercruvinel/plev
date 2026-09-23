@@ -435,3 +435,133 @@ resultado. o agente do laboratório nunca é o agente do experimento.
 - proibido: `crates/sem`, `crates/rec` (consumir só; o que faltar é
   parada e reporte), `crates/engine`, `crates/comps`, `crates/git`,
   `crates/showcase`.
+
+## como rodar a fase c
+
+o laboratório é o binário `ide-lab` (`crates/ide/src/bin/lab/`, unix
+only; em outro alvo imprime e sai com 3). ele monta o repositório do
+experimento num diretório temporário, sobe o `Workbench` sem janela com
+o worker de git de verdade, abre o `AgentPort`, liga o `Recorder` no
+relógio do workbench (`Workbench::now`), roda o humano roteirizado e, no
+fim, reabre a sessão gravada e confere com o git real.
+
+ambiente, em todo comando:
+
+```sh
+export CARGO_TARGET_DIR=<um target dir por agente>
+export CARGO_INCREMENTAL=0
+```
+
+o repositório é sempre o mesmo, em `$TMPDIR`: um commit inicial e seis
+alterações, três da tarefa (`src/login.rs` no index, `src/session.rs`
+fora, `tests/login_test.rs` novo e fora) e três que não são
+(`README.md` no index, `notes.txt` novo, `Cargo.toml` modificado). a
+tarefa: "commit only the login fix: src/login.rs, src/session.rs,
+tests/login_test.rs, message: fix login session timeout". nos braços
+`plev` e `scripted` o caminho do repositório nunca é impresso; no braço
+`git` ele é impresso, porque o agente precisa dele.
+
+### braço A0, o agente roteirizado (controle, sem token)
+
+```sh
+cargo run -p ide --bin ide-lab -- --arm scripted \
+    --human unstage-after-observe:src/session.rs --out <dir>
+cargo run -p ide --bin ide-lab -- --arm scripted --human none --out <dir>
+```
+
+é o mesmo que `crates/ide/tests/lab.rs` roda no gate. mede o protocolo
+puro: bytes, idas e voltas, custo do contrato e da gravação, sem o ruído
+do llm.
+
+### braço A, o agente llm pelo contrato
+
+o laboratório sobe e espera; o agente é outro processo.
+
+```sh
+cargo run -p ide --bin ide-lab -- --arm plev \
+    --human unstage-after-observe:src/session.rs --out <dir> --app ide
+```
+
+ele imprime a tarefa, o nome do app e o caminho do socket, e fica no
+loop até o primeiro `commit.submit` concluído (mais `--grace`, 1 s por
+padrão) ou até `--timeout` (600 s por padrão). o agente recebe só a
+tarefa e dois comandos, com o binário já compilado:
+
+```sh
+cargo build -p wire --bin plev
+plev observe --app ide [--scope <id>] [--keys <k,k>] [--since <rev>]
+plev act <target> <action> --from-revision <rev> [--param <json>]
+```
+
+a regra do braço A: agir sempre com `--from-revision` da observação em
+que a decisão se apoiou. sem ela o `plev act` observa o alvo antes e age
+sobre o estado de agora, o que nunca fica stale e anula a medição
+daquela corrida; o relatório marca isso em `agent.stale_measurement_valid`
+e diz por quê. proibido ao agente: `git`, ler arquivo, screenshot,
+qualquer comando fora do `plev`.
+
+para a corrida de controle, o mesmo comando com `--human none`.
+
+### braço B, o git na linha de comando
+
+```sh
+cargo run -p ide --bin ide-lab -- --arm git \
+    --human unstage-after-observe:src/session.rs --out <dir>
+```
+
+imprime o caminho do repositório e a linha `export PATH=<dir>/bin:$PATH`
+que o orquestrador dá ao agente, instala o shim de `git` e, com
+`--human`, o hook `pre-commit` que uma vez só roda
+`git reset -q HEAD -- <path>` no instante do commit. o agente usa o git
+normalmente (`status --porcelain`, `add`, `reset`, `commit`, `log`,
+`show`); o laboratório observa o `.git` até um HEAD novo e então fecha.
+sem `--human`, o commit bate com a tarefa e o exit é 0; com o hook, o
+commit gravado é menor do que a tarefa, o git não avisa ninguém, e o
+laboratório sai 1 dizendo isso. este braço não tem workbench, porta nem
+gravação: o relatório diz "receipts: none; session: none".
+
+### braço C, o volume de um screenshot
+
+```sh
+cargo run -p ide --bin ide-lab -- --arm screenshot --out <dir>
+```
+
+desenha o ide em 1280x800 na escala 1 e na 2 (um renderer, redimensionado
+entre as duas), escreve `frame@1.png` e `frame@2.png` e imprime os bytes
+do PNG e do RGBA cru de cada um ao lado dos bytes de uma observação
+inteira e de uma com `--scope changes`, serializadas como o servidor
+escreve. é comparação de volume de dados, não de capacidade, e a tabela
+diz isso. sem GPU na máquina, ele avisa e segue sem os frames.
+
+### o que fica em `out/`
+
+| arquivo | conteúdo |
+| --- | --- |
+| `report.json` | o relatório inteiro: `traffic`, `agent` (observações, atos, forma de cada ato, recusas, recuperação, `stale_measurement_valid`), `intervention`, `stale` (com o HEAD no instante de cada recusa), `cost.contract`, `cost.recording`, `session`, `truth`, `notes`, `exit` |
+| `session.monster` | a sessão gravada (magic `MONS`), reaberta pelo próprio laboratório com `Session::open`; `monster_player` recusa com a mensagem de sessão, sem panic |
+| `frame@1.png`, `frame@2.png` | só no braço `screenshot` |
+| `bin/git`, `git-log.jsonl`, `hooks/pre-commit`, `hook-fired` | só no braço `git`: o shim, uma linha json por invocação (hora, argumentos, bytes de stdout, exit), o hook e o marcador que o faz disparar uma vez só |
+
+### exit codes
+
+| code | significado |
+| --- | --- |
+| 0 | o commit existe, é exatamente o conjunto da tarefa e, quando há sessão, o receipt concluído bate com `git rev-parse HEAD` e `git show --name-only` (MATCH) |
+| 1 | um commit existe e difere: conjunto errado, ou a sessão discorda do git (MISMATCH) |
+| 2 | não houve commit |
+| 3 | erro do laboratório (argumento, repositório, porta, gravação) |
+
+### o que ler no relatório antes de concluir qualquer coisa
+
+- `agent.stale_measurement_valid`: falso quer dizer que a recusa por
+  estado velho não foi exercida naquela corrida, mesmo que o humano
+  tenha agido. o texto em `agent.stale_measurement` diz o motivo.
+- `agent.acts[].form`: `from_revision` quando o ato se apoia numa
+  revisão que esta porta serviu, `observed` quando não.
+- `cost.recording.gpu`: falso quer dizer que a máquina não tem adapter e
+  a trilha visual está vazia; a semântica continua completa.
+- `notes`: projeção que não validou, frame não gravado, agente
+  roteirizado que parou no meio.
+
+os números medidos aqui são de build debug. release muda o custo do
+contrato e da gravação, não os bytes.
