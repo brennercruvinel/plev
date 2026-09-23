@@ -281,6 +281,11 @@ one binding table, one accessibility projection. never a local copy.
 - any handler that changes visible state invalidates (return true or
   request redraw). under render on demand a missed invalidation is a
   frozen app.
+- motion on a clock (a caret) asks for the instant it next changes, not
+  for every frame: a tick answers `comps::Wake` (a frame now, the next
+  deadline), the owner merges its children's asks, and the shell sleeps
+  until the earliest one (task-82). a `tick -> bool` that is true while
+  focused is the defect, not the pattern.
 - clip rects are logical; scale by `gpu.clip_scale()` for physical
   scissors (HiDPI).
 - after `gpu.resize`, reapply the logical projection (`set_projection`);
