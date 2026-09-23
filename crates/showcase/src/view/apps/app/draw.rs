@@ -1,6 +1,11 @@
 //! Scene building for the App tab. State and events live in the parent
 //! module; everything here only reads it and pushes nodes. Every text run
 //! is measured and drawn through one shared TextStyle.
+//!
+//! What the page draws for a capability it also binds, beside the scene,
+//! with the rect it hit-tests with: the card as `todo`, each visible row
+//! as its `todo.item[<id>]`, each pill as its `todo.filter[..]`; the field
+//! binds itself as `todo.input`.
 
 use comps::icons;
 use comps::prelude::{Rect, glass_pill, rounded_rect};
@@ -11,6 +16,7 @@ use showcase::model::todo::Filter;
 
 use super::TodoPage;
 use super::layout::*;
+use super::semantics::bounds;
 use crate::view::{panel, text, with_alpha};
 
 impl TodoPage {
@@ -19,6 +25,9 @@ impl TodoPage {
         let l = compute(content, &self.counter_text(), theme);
         self.sync_scroll(&l);
         panel(c, l.panel, theme);
+        if let Some(ids) = &self.ids {
+            c.bind(&ids.todo, bounds(l.panel));
+        }
         self.render_input(c, &l, theme);
         self.render_rows(c, &l, theme);
         self.render_footer(c, &l, theme);
@@ -59,6 +68,9 @@ impl TodoPage {
             let row = row_rect(l.list, i, offset);
             if row.y + ROW_H < l.list.y || row.y > l.list.y + l.list.h {
                 continue;
+            }
+            if let Some(ids) = &self.ids {
+                c.bind(&ids.item(item.id()), bounds(row));
             }
             let hovered = self.hover_row == Some(item.id());
             if hovered {
@@ -155,6 +167,9 @@ impl TodoPage {
         });
         let pstyle = pill_style();
         for (i, (f, pr)) in Filter::ALL.iter().zip(l.pills).enumerate() {
+            if let Some(ids) = &self.ids {
+                c.bind(ids.tab(*f), bounds(pr));
+            }
             let active = self.model.filter() == *f;
             let hovered = self.hover_pill == Some(i);
             let fill = if active {

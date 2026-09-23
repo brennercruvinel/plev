@@ -5,6 +5,14 @@
 //! TextMeasurer (never chars * factor); filters are HOFF glass pills; the
 //! list scrolls internally (ScrollState) so the footer never overflows.
 //!
+//! The page is a capability (`semantics.rs`): it projects what it means,
+//! runs what it offers in `execute`, and owns the `sem::Dispatcher` every
+//! actor goes through. A click on a checkbox, a delete button or a filter
+//! pill, and the Enter key, become requests over the page as it is at
+//! that instant; nothing here calls the model directly. Typing, caret
+//! moves and focus stay with the field: they are editing, not a
+//! capability.
+//!
 //! Wiring contract for the chrome (view/mod.rs + main.rs), mirroring the
 //! Forms section: route Key::Character/Space through `handle_text` before
 //! the digit/theme hotkeys, view::EditKey through `handle_edit_key`,
@@ -14,6 +22,7 @@
 
 mod draw;
 mod layout;
+mod semantics;
 #[cfg(test)]
 mod tests;
 
@@ -21,10 +30,12 @@ use comps::form::TextField;
 use comps::prelude::{Checkbox, EventResult, Rect, WidgetEvent};
 use engine::input::scroll::ScrollState;
 use engine::theme::Theme;
+use sem::Dispatcher;
 use showcase::model::todo::{Filter, TodoModel};
 
 use super::EditKey;
 use layout::*;
+use semantics::{Ids, Target};
 
 pub struct TodoPage {
     model: TodoModel,
@@ -36,6 +47,15 @@ pub struct TodoPage {
     hover_row: Option<u64>,
     hover_delete: Option<u64>,
     hover_pill: Option<usize>,
+    /// The ids the page projects and binds; `None` only if the constant
+    /// ids failed to parse (a test proves they do not), which leaves the
+    /// page without semantics: every request is then refused.
+    ids: Option<Ids>,
+    /// The one path from a request to `execute`, for every actor.
+    dispatcher: Dispatcher,
+    /// The monotonic clock receipts are stamped with (`sem` never reads
+    /// one).
+    clock: web_time::Instant,
 }
 
 impl TodoPage {
@@ -52,14 +72,24 @@ impl TodoPage {
                 break;
             }
         }
+        let ids = Ids::new()
+            .inspect_err(|e| log::error!("todo: the page ids do not parse: {e}"))
+            .ok();
+        let mut input = TextField::new("What needs doing? Enter adds it.");
+        if let Some(ids) = &ids {
+            input = input.sem(ids.input.clone());
+        }
         Self {
             model,
-            input: TextField::new("What needs doing? Enter adds it."),
+            input,
             scroll: ScrollState::new(),
             rows: Vec::new(),
             hover_row: None,
             hover_delete: None,
             hover_pill: None,
+            ids,
+            dispatcher: Dispatcher::new(),
+            clock: web_time::Instant::now(),
         }
     }
 
@@ -133,10 +163,15 @@ impl TodoPage {
                 }
             }
             WidgetEvent::MouseDown { x, y } => {
-                if let Some(i) = l.pills.iter().position(|p| p.contains(x, y)) {
-                    if self.model.set_filter(Filter::ALL[i]) {
-                        self.scroll.scroll_to(0.0);
-                        return r.merge(EventResult::clicked());
+                let hit = l
+                    .pills
+                    .iter()
+                    .zip(Filter::ALL)
+                    .find(|(p, _)| p.contains(x, y));
+                if let Some((_, filter)) = hit {
+                    let res = self.ask(Target::Tab(filter), "select", None);
+                    if res.changed {
+                        return r.merge(res);
                     }
                     r.handled = true;
                 }
@@ -186,12 +221,10 @@ impl TodoPage {
             r.changed = true;
         }
         if let Some(id) = toggle {
-            self.model.toggle(id);
-            r = r.merge(EventResult::clicked());
+            r = r.merge(self.ask(Target::Item(id), "toggle", None));
         }
         if let Some(id) = delete {
-            self.model.delete(id);
-            r = r.merge(EventResult::clicked());
+            r = r.merge(self.ask(Target::Item(id), "remove", None));
         }
 
         // Wheel over the list: internal scroll first; at the clamps the
@@ -240,19 +273,14 @@ impl TodoPage {
         true
     }
 
-    /// Enter adds the trimmed field text as a todo, clears the field and
-    /// reveals the newest row. Consumed (even when empty) while focused.
+    /// Enter asks `todo.input` to `submit`: `execute` adds the trimmed
+    /// field text as a todo, clears the field and reveals the newest row.
+    /// Consumed (even when blank, which `submit` refuses) while focused.
     pub fn handle_enter(&mut self) -> bool {
         if !self.input.is_focused() {
             return false;
         }
-        if self.model.add(self.input.text()).is_some() {
-            self.input.set_text("");
-            self.input.input.reset_blink();
-            self.scroll
-                .set_content(self.model.visible_items().len() as f32 * ROW_H);
-            self.scroll.scroll_to(f32::MAX);
-        }
+        self.ask(Target::Input, "submit", None);
         true
     }
 

@@ -4185,6 +4185,7 @@ dependencies = [
  "log",
  "pollster",
  "rope",
+ "sem",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-time",

@@ -3,6 +3,9 @@ use engine::compositor::{Compositor, LayerId, SceneNode};
 use engine::text::TextMeasurer;
 use engine::theme::Theme;
 
+/// The page as a capability: projection, the one path, bindings, inert.
+mod semantics;
+
 fn content_at(vw: f32) -> Rect {
     Rect::new(288.0, 118.0, (vw - 328.0).max(200.0), 682.0)
 }

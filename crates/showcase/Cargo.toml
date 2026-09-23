@@ -24,6 +24,8 @@ wgpu.workspace = true
 winit.workspace = true
 log.workspace = true
 web-time.workspace = true
+# the todo page runs every click through the semantic dispatcher.
+sem.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger.workspace = true
