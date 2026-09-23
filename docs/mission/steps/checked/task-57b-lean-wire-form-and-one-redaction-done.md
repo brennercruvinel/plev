@@ -1,12 +1,13 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-57b
 depends: [task-61, task-63]
 branch: task/57b-lean-wire
+integrated: a7a6735
 ---
 
 # task-57b: forma JSON enxuta e uma redação só
@@ -48,6 +49,29 @@ que mede quanto dado e quanto token o agente recebe:
 observação completa do todo abaixo de 3 KB com 3 itens; nenhuma
 redação fora do `sem` (grep); os testes de segredo do `rec` e do `wire`
 verdes sem mudança de comportamento; forma antiga lendo; gate verde.
+
+## fechamento (2026-09-23)
+
+integrada na `main` em `a7a6735` (seis commits, rebaseados sobre
+`1debd01` sem conflito), validada pelo orquestrador: diff inteiro lido
+commit a commit, `./script/gate` verde no diretório de build da task
+(1941 passed, 0 failed, 6 ignored; a `main` tinha 1930), e o grep do
+aceite achando a regra de redação só em `crates/sem/src/redact.rs`. o
+aceite de 3 KB passou com 2039 bytes (2939 com `source` pedido). ADR:
+`docs/ADR/lean-semantic-form-and-one-redaction.md`; o ADR da task-61
+aponta para ele nas duas consequências que esta task fecha.
+
+aceitos: a união do `holds` (diverge da cópia do rec só num caso que o
+`check` não produz, escrito no ADR); `SnapshotReply.focused` do proto
+continua `null` (15 bytes, fora do contrato do sem, candidato a um v2); a
+fixture da forma antiga do rec é uma linha construída no teste, porque
+não existe `.monster` gravado antes no repositório. a `main` andou só em
+docs entre o briefing e a integração, então o gate da branch rebaseada
+é o gate do merge; o gate da `main` roda de novo no diretório dela por
+regra.
+
+o que segue: a task-62 fase c mede quanto token esta forma custa a um
+agente de verdade; um v2 do protocolo pode tirar o `focused` nulo.
 
 ## revisão do orquestrador (2026-09-23, antes do briefing)
 

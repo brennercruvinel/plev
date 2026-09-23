@@ -305,4 +305,4 @@ atualizado em cada integração.
 | task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
 | task-58b | integrada | `dc6fde2` | recusa de confirmação no `sem` e no ide |
 | task-81 | integrada | `7b3e48f` | painel do `Select` rola; um `Window` para desenho, ligação e clique |
-| task-57b | em andamento | | forma JSON enxuta (padrões omitidos, `source` opt-in no `wire`) e a redação de segredo uma vez só em `sem::redact`; pré-requisito da 62 fase c |
+| task-57b | integrada | `a7a6735` | forma serde enxuta (todo com 3 itens: 6419 para 2039 B; 103 itens: 87 para 26 KB), `source` opt-in no wire (`plev observe --source`), redação de segredo uma vez só em `sem::redact`; ADR lean-semantic-form-and-one-redaction |

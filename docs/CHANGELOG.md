@@ -9,6 +9,15 @@ status: living
 
 ## unreleased
 
+- what an agent receives is lean (2026-09-23, task-57b, adr
+  lean-semantic-form-and-one-redaction): the sem serde form leaves a field
+  at its default out and reads it back when absent, so a whole
+  observation of the showcase's todo went from 6419 to 2039 bytes with
+  three items (26 KB instead of 87 with 103). where a node was projected
+  (`source`) now travels only when asked, `plev observe --source`; a
+  recording keeps it as before. the rule that keeps a secret inside the
+  process lives once, in `sem::redact`, for the port and the recorder
+  alike.
 - an agent operates a plev app from outside (2026-09-23, task-61, adr
   agents-act-through-the-semantic-contract): the new `wire` crate speaks a
   small json-lines protocol over a local socket, and `plev observe` /

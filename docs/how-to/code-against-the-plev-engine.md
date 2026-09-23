@@ -161,7 +161,14 @@ as the tasks land, these rules become binding (each line names its task):
   same rect it draws and hit-tests with; bindings never touch layer hashes
   (task-59).
 - a field marked `secret` never leaves the process: not in snapshots, not
-  in recordings, not to agents (task-57).
+  in recordings, not to agents (task-57). whatever carries a request or a
+  stage out of the process reduces what aims at a secret node with
+  `sem::redact`, the one rule; never write a second one (task-57b).
+- the sem serde form is lean: a field at its default is not written and
+  reads back when absent; `source` travels only when the node has one and
+  leaves an agent's observation unless asked (`plev observe --source`).
+  pin a form in a test by its lean text, and let an old text read
+  (task-57b).
 - replay never executes: nothing that reads a session creates a request
   (task-63).
 

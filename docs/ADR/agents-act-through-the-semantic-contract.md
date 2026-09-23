@@ -154,8 +154,8 @@ over-long line got the end without its last replies).
 
 ### the `plev` binary
 
-`plev observe [--scope <id>] [--keys <k,k>] [--since <rev>] [--bounds]`
-and `plev act <target> <action> [--from-revision <rev>] [--param <json>]`,
+`plev observe [--scope <id>] [--keys <k,k>] [--since <rev>] [--bounds]
+[--source]` and `plev act <target> <action> [--from-revision <rev>] [--param <json>]`,
 with `--app <name or socket path>` (without it, the one live app in
 `$TMPDIR/plev`; a socket nobody answers on does not count), `--name`,
 `--timeout`, `--pretty`. every message the app answers is printed as it
@@ -241,13 +241,14 @@ source, not its state.
 - a host with more than one dispatcher gets one sink; the showcase has
   one today (the todo page). request ids are per dispatcher, so a host
   must route the port to one.
-- the serde form is verbose for a node at rest: `source` is about 28
-  percent of a whole observation and fields at their default about 40
-  more. a leaner form (defaults skipped, `source` on request) is a v2 of
-  the protocol and a change of the sem serde contract, with its own ADR.
-- the redaction rule of a secret now lives in `rec` and in `wire`, written
-  twice; a shared helper in `sem` (a secret value's length, a redacted
-  request and stage) would keep one.
+- the serde form was verbose for a node at rest (`source` about 28
+  percent of a whole observation, fields at their default about 40 more).
+  task-57b made the sem form lean and `source` opt-in on the port
+  (`observe {"source": true}`, `plev observe --source`), still protocol
+  v1: `docs/ADR/lean-semantic-form-and-one-redaction.md`.
+- the redaction rule of a secret was written twice, in `rec` and in
+  `wire`, and had diverged; it lives once now, in `sem::redact` (same
+  ADR).
 - a process killed by a signal leaves its socket file behind. `plev`
   ignores a socket nobody answers on, and the next process with that pid
   replaces it; nothing else sweeps them.
