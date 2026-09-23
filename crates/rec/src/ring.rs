@@ -15,6 +15,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use sem::redact::Secrets;
 use sem::{Actor, Change, Millis, Receipt, Request, RequestId, Revision, SemId, Snapshot, Stage};
 
 use engine::compositor::SceneNode;
@@ -22,7 +23,6 @@ use engine::compositor::SceneNode;
 use crate::error::FrameError;
 use crate::event::{Event, InputKind, Kind};
 use crate::limits::{Limits, Stats};
-use crate::redact;
 use crate::screen::Screen;
 use crate::session::Session;
 use crate::track::Track;
@@ -226,21 +226,23 @@ impl Inner {
     }
 
     /// records one stage a dispatcher reports. the request is redacted
-    /// against the state now and shared by every stage of its receipt.
+    /// against the state now (`sem::redact`, the rule the agent port
+    /// applies too; no state, or a node the state does not hold, counts as
+    /// secret) and shared by every stage of its receipt.
     pub(crate) fn stage(&mut self, origin: u16, receipt: &Receipt, stage: &Stage) {
         let at = receipt.stages.last().map_or(0, |(_, t)| *t);
         let t = self.clock(at);
         let key = (origin, receipt.id);
-        let state = self.state.as_deref();
+        let secrets = Secrets::of(&receipt.request, self.state.as_deref());
         let request = match self.open.get(&key) {
             Some(request) => request.clone(),
             None => {
-                let request = Arc::new(redact::request(&receipt.request, state));
+                let request = Arc::new(secrets.request(&receipt.request));
                 self.open.insert(key, request.clone());
                 request
             }
         };
-        let stage = redact::stage(stage, &receipt.request.target, state);
+        let stage = secrets.stage(&receipt.request.target, stage);
         if stage.is_terminal() {
             self.open.remove(&key);
         }

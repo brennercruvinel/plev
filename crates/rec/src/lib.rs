@@ -18,7 +18,8 @@
 //! time is the caller's), and a secret never lands in it: the snapshot
 //! already keeps only the length of a `secret` field, and the recorder
 //! reduces to a length every parameter, observed value, delta, outcome
-//! or error aimed at one.
+//! or error aimed at one, with `sem::redact`, the rule the agent port
+//! applies too.
 //!
 //! the read side is `Session`: events by time, the semantic state at any
 //! instant, the receipts that touch a control, the frame on screen at any
@@ -89,7 +90,6 @@ mod limits;
 mod payload;
 mod persist;
 mod recorder;
-mod redact;
 mod ring;
 mod screen;
 mod session;

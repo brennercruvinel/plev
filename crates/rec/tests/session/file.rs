@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use engine::compositor::{SceneNode, TextNodeKey};
 use engine::gpu::ImageHandle;
 use engine::path::PathBuilder;
-use rec::{Build, FileError, FileKind, InputKind, Kind, Limits, Recorder, Session, probe};
+use rec::{Build, Event, FileError, FileKind, InputKind, Kind, Limits, Recorder, Session, probe};
 use sem::{Actor, Dispatcher, Millis, Request, Role, Semantics, SnapshotBuilder, Value};
 
 use crate::apps::{Git, agent, id, look};
@@ -144,6 +144,86 @@ fn the_thesis_session_persists_and_reads_back_the_same() -> Fallible {
         "the projected sources travel"
     );
     assert!(file.scene_at(1_600)?.is_some_and(|s| !s.is_empty()));
+    Ok(())
+}
+
+/// the S section of a file written before task-57b spells every default
+/// out and writes `source: null`; the reader takes such a line to the same
+/// state, with the same revision, and writes it back leaner.
+#[test]
+fn an_event_line_of_the_form_before_the_lean_one_still_reads() -> Fallible {
+    struct Rows;
+
+    impl Semantics for Rows {
+        fn project(&self, b: &mut SnapshotBuilder) {
+            b.node("changes", Role::List, "changes").state(
+                "staged",
+                Value::Set(["A".to_owned(), "B".to_owned()].into()),
+            );
+            b.node("commit.submit", Role::Button, "commit")
+                .action("submit")
+                .reads("changes:staged");
+        }
+    }
+
+    const CONSTRAINTS: &str = r#"{"editable":false,"required":false,"range":null,"step":null,"max_len":null,"options":null,"secret":false}"#;
+    const POLICY: &str = r#"{"actors":{"human":true,"agent":true,"assistive":true,"test":true},"confirm":"never","destructive":false}"#;
+    let old = format!(
+        concat!(
+            r#"{{"t":1000,"kind":{{"snapshot":{{"snapshot":{{"nodes":["#,
+            r#"{{"id":"changes","role":"list","label":"changes","description":null,"parent":null,"#,
+            r#""state":{{"staged":{{"kind":"set","value":["A","B"]}}}},"actions":[],"#,
+            r#""constraints":{c},"enabled":true,"inert":false,"focusable":false,"source":null}},"#,
+            r#"{{"id":"commit.submit","role":"button","label":"commit","description":null,"parent":null,"#,
+            r#""state":{{}},"actions":[{{"name":"submit","label":null,"enabled":true,"#,
+            r#""reads":["changes:staged"],"param":null,"policy":{p}}}],"#,
+            r#""constraints":{c},"enabled":true,"inert":false,"focusable":true,"#,
+            r#""source":{{"file":"crates/rec/tests/session/file.rs","line":7,"column":5}}}}"#,
+            r#"],"focused":null}},"changes":[]}}}}}}"#
+        ),
+        c = CONSTRAINTS,
+        p = POLICY
+    );
+    let event: Event = serde_json::from_str(&old)?;
+    assert_eq!(event.t, 1_000);
+    let Kind::Snapshot { snapshot, changes } = &event.kind else {
+        return Err(format!("not a snapshot: {event:?}").into());
+    };
+    assert!(changes.is_empty());
+    let now = look(&Rows);
+    assert_eq!(**snapshot, now);
+    assert_eq!(snapshot.revision(), now.revision());
+    let sources: Vec<Option<(String, u32, u32)>> = snapshot
+        .nodes()
+        .values()
+        .map(|n| {
+            n.source
+                .as_ref()
+                .map(|s| (s.file.to_string(), s.line, s.column))
+        })
+        .collect();
+    assert_eq!(
+        sources,
+        [
+            None,
+            Some(("crates/rec/tests/session/file.rs".to_owned(), 7, 5))
+        ],
+        "the recorded source travels as recorded"
+    );
+
+    // written today the same event is leaner and reads back equal.
+    let lean = serde_json::to_string(&event)?;
+    assert!(
+        lean.len() < old.len() / 2,
+        "{} of {}",
+        lean.len(),
+        old.len()
+    );
+    for key in ["description", "inert", "constraints", "policy", "param"] {
+        assert!(!lean.contains(key), "{key} in {lean}");
+    }
+    assert!(lean.contains(r#""source":{"file""#), "{lean}");
+    assert_eq!(serde_json::from_str::<Event>(&lean)?, event);
     Ok(())
 }
 
