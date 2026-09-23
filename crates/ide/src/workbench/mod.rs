@@ -140,6 +140,21 @@ impl Workbench {
         Ok(())
     }
 
+    /// A person (`Actor::Human` at the screen, `Actor::Assistive`)
+    /// declines request `id`, which waits for it: the receipt ends
+    /// rejected (`Rejection::Declined`) and nothing runs. An agent or a
+    /// test cannot. The modal asking for it closes, a toast says it was
+    /// declined, and the next request waiting for a person is asked.
+    pub fn decline(&mut self, id: RequestId, by: Actor) -> Result<(), SemError> {
+        let now = self.now();
+        self.dispatcher.decline(id, by, now)?;
+        self.awaiting.retain(|r| *r != id);
+        self.workspace.close_confirm_modal(id);
+        self.report(id);
+        self.ask_next_confirmation();
+        Ok(())
+    }
+
     /// The receipt of `id`, open or among the finished ones kept.
     pub fn receipt(&self, id: RequestId) -> Option<&Receipt> {
         self.dispatcher.receipt(id)

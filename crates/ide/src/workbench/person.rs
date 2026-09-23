@@ -2,15 +2,16 @@
 //! toast when the dispatcher or the index refused a request or git failed
 //! it, and the confirmation modal for a request another actor made that
 //! waits for a person (`Confirm::ForAgents`). Confirming goes through
-//! `Dispatcher::confirm` as `Actor::Human`; nothing here runs an action.
+//! `Dispatcher::confirm` as `Actor::Human`, and closing the modal any other
+//! way declines through `Dispatcher::decline`; nothing here runs an action.
 
 use sem::{Actor, RequestId, Stage};
 
 use super::Workbench;
 
 impl Workbench {
-    /// Shows the person what request `id` came to: a toast for a refusal
-    /// or a failure, the confirmation modal (now, or once the modal on
+    /// Shows the person what request `id` came to: a toast for a refusal,
+    /// a decline or a failure, the confirmation modal (now, or once the modal on
     /// screen closes) for a request that waits for a person.
     pub(super) fn report(&mut self, id: RequestId) {
         let Some(receipt) = self.dispatcher.receipt(id) else {
@@ -45,7 +46,7 @@ impl Workbench {
                     self.workspace.open_confirm_modal(id, title, body, confirm);
                     return;
                 }
-                // Confirmed some other way meanwhile: nothing to ask.
+                // Answered some other way meanwhile: nothing to ask.
                 None => {
                     self.awaiting.pop_front();
                 }
@@ -60,16 +61,11 @@ impl Workbench {
         }
     }
 
-    /// The person closed the modal of request `id` without confirming.
-    /// `sem` has no way to decline yet, so the receipt stays awaiting
-    /// confirmation; the workbench stops asking and says so.
+    /// The person closed the modal of request `id` without confirming
+    /// (Cancel, Escape, a click outside it): they declined it.
     pub(super) fn declined_by_person(&mut self, id: RequestId) {
-        self.awaiting.retain(|r| *r != id);
-        if let Some(receipt) = self.dispatcher.receipt(id) {
-            let message = self.unconfirmed(&receipt.request);
-            self.workspace
-                .notify(message, engine::theme::Intent::Informational);
+        if let Err(e) = self.decline(id, Actor::Human) {
+            log::warn!("ide: declining request {id}: {e}");
         }
-        self.ask_next_confirmation();
     }
 }

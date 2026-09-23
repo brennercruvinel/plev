@@ -439,7 +439,7 @@ fn a_stale_agent_request_says_what_changed_and_a_click_dismisses_it() {
 }
 
 #[test]
-fn an_agent_discard_opens_the_modal_and_cancel_leaves_the_file() {
+fn an_agent_discard_opens_the_modal_and_cancel_declines_it() {
     let mut bench = bench();
     let seen = bench.snapshot().expect("snapshot");
     let agent = Actor::Agent {
@@ -462,22 +462,113 @@ fn an_agent_discard_opens_the_modal_and_cancel_leaves_the_file() {
         notices(&bench),
         [(
             Role::Status,
-            "Not confirmed: discard of b.txt by test-agent did not run".to_owned()
+            "Declined: discard of b.txt by test-agent did not run".to_owned()
         )]
     );
-    // `sem` cannot decline yet: the receipt stays waiting, nothing ran.
+    assert_eq!(
+        bench.receipt(id).and_then(Receipt::stage),
+        Some(&Stage::Rejected(Rejection::Declined { by: Actor::Human }))
+    );
+    assert!(listed(&bench, "b.txt"), "nothing ran");
+}
+
+/// Whether `path` is still a row of the changes list.
+fn listed(bench: &Workbench, path: &str) -> bool {
+    bench
+        .workspace()
+        .unassigned
+        .files
+        .iter()
+        .any(|f| f.path == path)
+}
+
+/// The agent asks to discard each file in turn; the ids, oldest first.
+fn agent_discards(bench: &mut Workbench, files: &[&str]) -> Vec<RequestId> {
+    let agent = Actor::Agent {
+        name: "test-agent".into(),
+    };
+    files
+        .iter()
+        .map(|file| {
+            let seen = bench.snapshot().expect("snapshot");
+            let target = format!("changes.file[{file}]");
+            let req = Request::observe(&seen, agent.clone(), target.as_str(), "discard", None)
+                .expect("observe");
+            bench.dispatch(req)
+        })
+        .collect()
+}
+
+fn declined_by(bench: &Workbench, id: RequestId) -> Option<Actor> {
+    match bench.receipt(id).and_then(Receipt::stage) {
+        Some(Stage::Rejected(Rejection::Declined { by })) => Some(by.clone()),
+        _ => None,
+    }
+}
+
+#[test]
+fn escape_and_a_click_outside_the_modal_decline_and_the_next_is_asked() {
+    let mut bench = bench();
+    let ids = agent_discards(&mut bench, &["a.txt", "b.txt"]);
+    assert!(bench.workspace().modal_open());
+
+    // Escape declines the first; the second is asked right away.
+    assert!(bench.close_top_overlay());
+    assert_eq!(declined_by(&bench, ids[0]), Some(Actor::Human));
+    assert_eq!(
+        bench.receipt(ids[1]).and_then(Receipt::stage),
+        Some(&Stage::AwaitingConfirmation)
+    );
+    assert!(bench.workspace().modal_open(), "the second is asked now");
+
+    // A click outside the dialog (clear of the toasts) declines it.
+    let _ = frame(&mut bench);
+    assert!(bench.click(4.0, 4.0));
+    assert_eq!(declined_by(&bench, ids[1]), Some(Actor::Human));
+    assert!(!bench.workspace().modal_open());
+
+    let said: Vec<String> = notices(&bench).into_iter().map(|(_, m)| m).collect();
+    assert_eq!(
+        said,
+        [
+            "Declined: discard of a.txt by test-agent did not run",
+            "Declined: discard of b.txt by test-agent did not run",
+        ]
+    );
+    assert!(listed(&bench, "a.txt") && listed(&bench, "b.txt"));
+}
+
+#[test]
+fn a_screen_reader_declines_through_the_workbench_and_a_test_cannot() {
+    let mut bench = bench();
+    let ids = agent_discards(&mut bench, &["b.txt"]);
+    let id = ids[0];
+    assert!(bench.workspace().modal_open());
+
+    assert!(
+        matches!(
+            bench.decline(id, tester()),
+            Err(SemError::ConfirmByMachine { .. })
+        ),
+        "a test is no person"
+    );
+    assert!(bench.workspace().modal_open(), "still asked");
     assert_eq!(
         bench.receipt(id).and_then(Receipt::stage),
         Some(&Stage::AwaitingConfirmation)
     );
-    assert!(
-        bench
-            .workspace()
-            .unassigned
-            .files
-            .iter()
-            .any(|f| f.path == "b.txt")
-    );
+
+    bench
+        .decline(id, Actor::Assistive)
+        .expect("a person declines through assistive technology");
+    assert_eq!(declined_by(&bench, id), Some(Actor::Assistive));
+    assert!(!bench.workspace().modal_open(), "its modal closed");
+    assert_eq!(notices(&bench).len(), 1);
+    assert!(listed(&bench, "b.txt"));
+    assert!(matches!(
+        bench.decline(id, Actor::Human),
+        Err(SemError::IllegalTransition { .. })
+    ));
 }
 
 #[test]

@@ -1,6 +1,7 @@
 //! What a person reads about a request: why the dispatcher (or the index)
-//! refused it, what git said when it failed, and what another actor asks
-//! them to confirm. Made from the receipt, in the words of the ui.
+//! refused it, what git said when it failed, what another actor asks them
+//! to confirm, and that what they declined did not run. Made from the
+//! receipt, in the words of the ui.
 
 use engine::theme::Intent;
 use sem::{Actor, Change, Receipt, Rejection, Request, SemId, Stage};
@@ -18,7 +19,8 @@ fn who(actor: &Actor) -> &str {
 
 impl Workbench {
     /// The toast receipt `receipt` deserves: a refusal says what changed
-    /// or why the action is not available, a failure what went wrong.
+    /// or why the action is not available, a decline that nothing ran, a
+    /// failure what went wrong.
     pub(super) fn notice(&self, receipt: &Receipt) -> Option<(String, Intent)> {
         let req = &receipt.request;
         match receipt.stage()? {
@@ -64,10 +66,10 @@ impl Workbench {
         }
     }
 
-    /// The toast when a person closes that modal without confirming.
-    pub(super) fn unconfirmed(&self, req: &Request) -> String {
+    /// The toast when a person declined `req`, which waited for them.
+    fn declined(&self, req: &Request) -> String {
         format!(
-            "Not confirmed: {} of {} by {} did not run",
+            "Declined: {} of {} by {} did not run",
             req.action,
             self.name(&req.target),
             who(&req.actor)
@@ -78,7 +80,7 @@ impl Workbench {
         let quiet = Intent::Informational;
         let (reason, intent) = match why {
             // A person's own answer, not a refusal of the workspace.
-            Rejection::Declined { .. } => return (self.unconfirmed(req), quiet),
+            Rejection::Declined { .. } => return (self.declined(req), quiet),
             Rejection::Stale { changes } => {
                 let moved: Vec<String> = changes.iter().map(|c| self.moved(c)).collect();
                 (moved.join("; "), Intent::Destructive)
