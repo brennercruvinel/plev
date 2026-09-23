@@ -1,7 +1,9 @@
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
-use engine::compositor::{Compositor, TextNodeKey};
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::layout::{LayoutEngine, LayoutItem, LayoutStyle};
 use engine::path::PathBuilder;
 use engine::signal::create_signal;
+use engine::text::{TextMeasurer, TextStyle};
 
 // ---------------------------------------------------------------------------
 // Group 1: Scene construction (push_rects)
@@ -183,6 +185,115 @@ fn bench_text_hashing(c: &mut Criterion) {
     group.finish();
 }
 
+// ---------------------------------------------------------------------------
+// Group 7: The paths the stage probes sit on (task-73), with stages off
+// ---------------------------------------------------------------------------
+//
+// Only APIs that predate the probes, so the same file runs on the commit
+// before them: the difference between the two runs is what an idle probe
+// costs.
+
+/// Two layers, 200 rects and 20 text runs, 20 ids bound, the frame a small
+/// page builds.
+fn probed_scene(comp: &mut Compositor, second: LayerId, ids: &[sem::SemId], shade: f32) {
+    comp.begin_frame();
+    for i in 0..200 {
+        let f = i as f32;
+        comp.draw_rect(f, f, 100.0, 20.0, [shade, 0.5, 0.5, 1.0]);
+    }
+    for (i, id) in ids.iter().enumerate() {
+        let f = i as f32 * 24.0;
+        comp.push_to_layer(
+            second,
+            SceneNode::Text {
+                key: TextNodeKey::new(&format!("row {i}"), 14.0, 20.0, None),
+                x: 0.0,
+                y: f,
+                color: [1.0, 1.0, 1.0, 1.0],
+            },
+        );
+        comp.bind_to_layer(second, id, [0.0, f, 200.0, 24.0]);
+    }
+}
+
+fn bench_probed_paths(c: &mut Criterion) {
+    let mut group = c.benchmark_group("probed_paths");
+    let ids: Vec<sem::SemId> = (0..20)
+        .filter_map(|i| sem::SemId::parse(&format!("bench.row{i}")).ok())
+        .collect();
+
+    // build, bind, hit ten times, resolve: hashes both layers, rebuilds none
+    group.bench_function("frame_static_220_nodes", |b| {
+        let mut comp = Compositor::new();
+        let second = comp.create_layer(1);
+        probed_scene(&mut comp, second, &ids, 0.5);
+        comp.resolve_scene((1200.0, 800.0));
+        comp.mark_layer_clean(LayerId::DEFAULT);
+        comp.mark_layer_clean(second);
+        b.iter(|| {
+            probed_scene(&mut comp, second, &ids, 0.5);
+            for i in 0..10 {
+                black_box(comp.hit(50.0, i as f32 * 24.0 + 4.0));
+            }
+            comp.resolve_scene((1200.0, 800.0));
+            black_box(&comp);
+        });
+    });
+
+    // the same with the default layer changed every frame: one rebuild
+    group.bench_function("frame_dirty_220_nodes", |b| {
+        let mut comp = Compositor::new();
+        let second = comp.create_layer(1);
+        let mut shade = 0.0;
+        b.iter(|| {
+            shade = if shade > 0.5 { 0.0 } else { 1.0 };
+            probed_scene(&mut comp, second, &ids, shade);
+            comp.resolve_scene((1200.0, 800.0));
+            comp.mark_layer_clean(LayerId::DEFAULT);
+            comp.mark_layer_clean(second);
+            black_box(&comp);
+        });
+    });
+
+    // a page's labels, measured every frame: all cache hits
+    group.bench_function("measure_100_cached", |b| {
+        let style = TextStyle::new(14.0);
+        let labels: Vec<String> = (0..100).map(|i| format!("label {i}")).collect();
+        for l in &labels {
+            TextMeasurer::measure_styled(l, &style, None);
+        }
+        b.iter(|| {
+            for l in &labels {
+                black_box(TextMeasurer::measure_styled(l, &style, None));
+            }
+        });
+    });
+
+    // one flex column of 50 fixed rows
+    group.bench_function("layout_50_items", |b| {
+        let mut items = vec![LayoutItem {
+            style: LayoutStyle {
+                width: Some(400.0),
+                ..Default::default()
+            },
+            children: (1..=50).collect(),
+            text: None,
+        }];
+        items.extend((0..50).map(|_| LayoutItem {
+            style: LayoutStyle {
+                height: Some(20.0),
+                ..Default::default()
+            },
+            children: vec![],
+            text: None,
+        }));
+        let mut engine = LayoutEngine::new();
+        b.iter(|| black_box(engine.compute(&items, 1200.0, 800.0)));
+    });
+
+    group.finish();
+}
+
 criterion_group!(
     benches,
     bench_push_rects,
@@ -191,5 +302,6 @@ criterion_group!(
     bench_tessellation,
     bench_signals,
     bench_text_hashing,
+    bench_probed_paths,
 );
 criterion_main!(benches);
