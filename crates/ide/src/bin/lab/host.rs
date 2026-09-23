@@ -75,6 +75,13 @@ impl Person {
         }
     }
 
+    /// true while this person may still act: a scenario that acts, which
+    /// has not acted yet. asked before the workbench is projected, so a
+    /// run with no person pays nothing for having one.
+    fn waiting(&self) -> bool {
+        matches!(self.scenario, Human::UnstageAfterObserve(_)) && self.fired.is_none()
+    }
+
     /// true when the observation just served shows the task ready: the
     /// path to take out is staged, every file of the task is staged, and
     /// the message is written.
@@ -183,6 +190,9 @@ impl LabHost<'_> {
     /// `unstage` on the path, as `Actor::Human`, through the same
     /// dispatcher, recorded as an input on the file's control.
     fn intervene(&mut self, revision_served: Revision) {
+        if !self.person.waiting() {
+            return;
+        }
         let Some(live) = self.snapshot() else {
             return;
         };
