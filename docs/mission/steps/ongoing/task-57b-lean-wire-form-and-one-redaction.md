@@ -106,3 +106,28 @@ decisões do orquestrador:
 4. medição de bytes só (a task-62 fase c mede token): observação completa,
    por escopo e delta, no todo com 3 e com 103 itens, forma antiga e
    nova, na tabela deste arquivo.
+
+## medição (2026-09-23)
+
+bytes da linha JSON que o servidor escreve (`encode_server` da `Reply`,
+envelope incluído), medidos pelo harness `agent_port_cost` de
+`crates/showcase/src/view/dispatch.rs`: a página todo do showcase servida
+por uma porta real em diretório temporário, sem janela, build de debug
+(bytes não dependem do perfil). a forma antiga é a `main` em `22f885e`, a
+nova é esta branch. token é da task-62 fase c.
+
+| o que | 3 itens, antiga | 3 itens, nova | 103 itens, antiga | 103 itens, nova |
+| --- | --- | --- | --- | --- |
+| observação completa (`observe` sem campo) | 6419 B | 2039 B | 87417 B | 26237 B |
+| a mesma com `source: true` | (o padrão antigo) | 2939 B | (o padrão antigo) | 36137 B |
+| uma linha (`--scope todo.item[1]`) | 929 B | 361 B | 929 B | 361 B |
+| completa, `keys` = `completed` | 6281 B | 1868 B | 87277 B | 26064 B |
+| delta de um toggle (`since`) | 624 B | 624 B | 632 B | 632 B |
+
+o aceite (observação completa do todo com 3 itens abaixo de 3 KB) passa
+com folga: 2039 B, e ainda 2939 B quando o agente pede o `source`. a
+estimativa da task-61 (2532 B, um filtro grosseiro sobre o JSON) errava
+para cima porque não tirava o `constraints` inteiro nem o `focused`
+nulo. o delta não muda porque um `Change` carrega ids e valores, nenhum
+dos campos que saíram da forma. a linha da forma nova é 68 % menor no
+todo com 3 itens, 70 % menor com 103, 61 % menor por escopo de um item.

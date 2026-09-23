@@ -656,64 +656,11 @@ mod agent {
             .len()
         }
 
-        /// What the same reply would weigh without each node's `source`,
-        /// then also without the fields at their default (null, false,
-        /// empty, the default policy): the size of a leaner form, for the
-        /// ADR. Not a form the protocol has.
-        fn lean(reply: &Reply) -> (usize, usize) {
-            use serde_json::Value as Json;
-            fn strip(v: &mut Json) {
-                match v {
-                    Json::Object(map) => {
-                        map.retain(|_, v| {
-                            !matches!(v, Json::Null | Json::Bool(false))
-                                && !matches!(v, Json::Array(a) if a.is_empty())
-                                && !matches!(v, Json::Object(o) if o.is_empty())
-                        });
-                        map.values_mut().for_each(strip);
-                        map.retain(|_, v| !matches!(v, Json::Object(o) if o.is_empty()));
-                    }
-                    Json::Array(items) => items.iter_mut().for_each(strip),
-                    _ => {}
-                }
-            }
-            let msg = ServerMsg {
-                id: Some("1".into()),
-                reply: reply.clone(),
-            };
-            let Ok(mut json) = serde_json::from_str::<Json>(&encode_server(&msg)) else {
-                return (0, 0);
-            };
-            if let Some(nodes) = json.get_mut("nodes").and_then(Json::as_array_mut) {
-                for node in nodes {
-                    if let Some(node) = node.as_object_mut() {
-                        node.remove("source");
-                        // the default policy: every actor, no confirm.
-                        if let Some(actions) = node.get_mut("actions").and_then(Json::as_array_mut)
-                        {
-                            for a in actions.iter_mut().filter_map(Json::as_object_mut) {
-                                let default = serde_json::json!({
-                                    "actors": {"human": true, "agent": true, "assistive": true, "test": true},
-                                    "confirm": "never",
-                                    "destructive": false
-                                });
-                                if a.get("policy") == Some(&default) {
-                                    a.remove("policy");
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            let unsourced = json.to_string().len();
-            strip(&mut json);
-            (unsourced, json.to_string().len())
-        }
-
         /// What an observation and an act cost on the todo page, measured
-        /// over the socket: the bytes of a whole, a scoped and an
-        /// incremental observation, and the round trip of one act. Run in
-        /// release, by hand:
+        /// over the socket: the bytes of a whole observation (as served,
+        /// and with each node's `source` asked for), a scoped and an
+        /// incremental one, and the round trip of one act. Bytes are the
+        /// same in debug; the round trip wants release. Run by hand:
         /// `cargo test -p showcase --release agent_port_cost -- --ignored --nocapture`.
         #[test]
         #[ignore = "a measurement, not a check"]
@@ -726,6 +673,12 @@ mod agent {
                     poke(&pokes, Poke::AddItems(extra));
                     let whole = c.observe(Observe::default()).unwrap();
                     let r = snapshot(whole.clone()).revision;
+                    let sourced = c
+                        .observe(Observe {
+                            source: true,
+                            ..Observe::default()
+                        })
+                        .unwrap();
                     let scoped = c
                         .observe(Observe {
                             scope: Some(sid("todo.item[1]")),
@@ -762,12 +715,12 @@ mod agent {
                         )
                         .revision;
                     }
-                    let (unsourced, lean) = lean(&whole);
                     lines.push(format!(
-                        "{label}: whole {} B (without source {unsourced} B, without \
-                         defaults too {lean} B), one row {} B, keyed to completed {} B, \
-                         delta after one toggle {delta} B, act round trip best {} us",
+                        "{label}: whole {} B (with source {} B), one row {} B, keyed to \
+                         completed {} B, delta after one toggle {delta} B, act round trip \
+                         best {} us",
                         bytes(whole),
+                        bytes(sourced),
                         bytes(scoped),
                         bytes(keyed),
                         best.as_micros()
