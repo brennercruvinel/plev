@@ -146,6 +146,10 @@ impl Select {
         if !self.panel(bounds, m).contains(x, y) {
             return EventResult::IGNORED;
         }
+        if !delta.is_finite() {
+            // The clamp keeps a NaN offset, so the rows would never come back.
+            return CONSUMED;
+        }
         let before = (self.scroll.offset(), self.highlighted);
         self.scroll.scroll_by(delta);
         self.highlighted = self.option_at(x, y, bounds, m);

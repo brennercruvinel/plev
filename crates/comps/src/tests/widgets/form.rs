@@ -162,6 +162,10 @@ fn select_wheel_belongs_to_the_open_panel_only_where_the_panel_is() {
     assert!(s.handle_event(&wheel(px, py, 10_000.0), B, &theme).changed);
     let end = s.handle_event(&wheel(px, py, 40.0), B, &theme);
     assert!(end.handled && !end.changed);
+    // A broken delta moves nothing and leaves the rows scrollable.
+    let broken = s.handle_event(&wheel(px, py, f32::NAN), B, &theme);
+    assert!(broken.handled && !broken.changed);
+    assert!(s.handle_event(&wheel(px, py, -40.0), B, &theme).changed);
 
     // A panel whose options all fit does not scroll (the pointer rests
     // there first, so the highlight under it is already set).
