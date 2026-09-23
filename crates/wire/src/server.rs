@@ -19,8 +19,8 @@ use std::rc::Rc;
 
 use sem::redact::Secrets;
 use sem::{
-    Actor, Millis, Receipt, ReceiptSink, Rejection, Request, RequestId, Revision, SemId, Snapshot,
-    Stage,
+    Actor, Change, Millis, Node, Receipt, ReceiptSink, Rejection, Request, RequestId, Revision,
+    SemId, Snapshot, Stage, StateKey,
 };
 
 use crate::proto::{
@@ -320,7 +320,6 @@ impl Server {
                 .filter(|b| now.get(&b.id).is_some())
                 .collect()
         });
-        let keep = |key: &sem::StateKey| o.keys.as_ref().is_none_or(|keys| keys.contains(key));
         match base {
             Some(_) => self.traffic.observes_delta += 1,
             None => self.traffic.observes_snapshot += 1,
@@ -331,9 +330,13 @@ impl Server {
                 revision,
                 changes: Snapshot::diff(&seen, &now)
                     .into_iter()
-                    .filter(|c| match c {
-                        sem::Change::StateChanged { at, .. } => keep(&at.key),
-                        _ => true,
+                    .filter_map(|c| match c {
+                        Change::StateChanged { ref at, .. } if !keeps(o, &at.key) => None,
+                        Change::NodeAdded(mut node) => {
+                            serve(&mut node, o);
+                            Some(Change::NodeAdded(node))
+                        }
+                        other => Some(other),
                     })
                     .collect(),
                 bounds,
@@ -345,10 +348,7 @@ impl Server {
                     .values()
                     .map(|node| {
                         let mut node = node.clone();
-                        node.state.retain(|key, _| keep(key));
-                        if !o.source {
-                            node.source = None;
-                        }
+                        serve(&mut node, o);
                         node
                     })
                     .collect(),
@@ -436,6 +436,22 @@ impl Server {
         );
         Ok(())
     }
+}
+
+/// a node as an observation serves it, whether a snapshot holds it or a
+/// delta adds it: its state cut to the keys asked for, and without
+/// `source` unless asked.
+fn serve(node: &mut Node, o: &Observe) {
+    node.state.retain(|key, _| keeps(o, key));
+    if !o.source {
+        node.source = None;
+    }
+}
+
+/// true when the observation keeps state under `key`: every key when it
+/// names none.
+fn keeps(o: &Observe, key: &StateKey) -> bool {
+    o.keys.as_ref().is_none_or(|keys| keys.contains(key))
 }
 
 /// `scope` and its descendants, or the whole snapshot.

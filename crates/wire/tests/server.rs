@@ -7,8 +7,8 @@ mod toy;
 use proptest::prelude::*;
 use sem::redact::REDACTED;
 use sem::{
-    Actor, Change, ReceiptSink, Rejection, Request, RequestId, Revision, SemId, Snapshot, Stage,
-    StateRef, Value,
+    Actor, Change, Node, ReceiptSink, Rejection, Request, RequestId, Revision, SemId, Snapshot,
+    Stage, StateRef, Value,
 };
 use toy::ToyHost;
 use wire::{
@@ -315,6 +315,75 @@ fn since_a_served_revision_only_the_delta_comes_back() {
 
 fn since(r: Revision) -> String {
     format!(r#","since":"{r}""#)
+}
+
+/// the node a delta's `node_added` carries.
+fn added<'a>(d: &'a DeltaReply, id: &str) -> &'a Node {
+    d.changes
+        .iter()
+        .find_map(|c| match c {
+            Change::NodeAdded(node) if node.id == sid(id) => Some(&**node),
+            _ => None,
+        })
+        .unwrap_or_else(|| panic!("{id} added in {d:?}"))
+}
+
+/// a node that came travels whole in the delta and is served as a
+/// snapshot serves it: no `source` unless asked, the state cut to `keys`.
+#[test]
+fn a_node_added_in_a_delta_is_served_as_a_snapshot_serves_it() {
+    let (mut server, mut host) = setup();
+    let base = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    host.app.text = "water plants".into();
+    host.click("todo.input", "submit");
+    let live = host.snapshot();
+    let projected = live.get(&sid("todo.item[4]")).unwrap();
+    assert!(projected.source.is_some(), "the toy projects with a source");
+
+    let d = delta(observe(&mut server, &mut host, A, &since(base)));
+    let node = added(&d, "todo.item[4]");
+    assert_eq!(node, projected, "the node as the app projects it");
+    assert_eq!(node.label, "water plants");
+    assert_eq!(node.state.get("completed"), Some(&Value::Bool(false)));
+    assert_eq!(node.source, None, "no source unless asked");
+    let line = serde_json::to_string(&d.changes).unwrap();
+    assert!(!line.contains("source"), "{line}");
+    // the same bytes a snapshot of that node serves.
+    let row = snapshot(observe(
+        &mut server,
+        &mut host,
+        A,
+        r#","scope":"todo.item[4]""#,
+    ));
+    assert_eq!(
+        serde_json::to_string(&row.nodes[0]).unwrap(),
+        serde_json::to_string(node).unwrap()
+    );
+
+    let keyed = |keys: &str, source: bool| {
+        let source = if source { r#","source":true"# } else { "" };
+        format!(r#","keys":[{keys}]{source}{}"#, since(base))
+    };
+    let d = delta(observe(
+        &mut server,
+        &mut host,
+        A,
+        &keyed(r#""done""#, false),
+    ));
+    let node = added(&d, "todo.item[4]");
+    assert!(node.state.is_empty(), "completed is not asked: {node:?}");
+    assert_eq!(node.actions, projected.actions, "the other fields stay");
+    assert_eq!(node.source, None);
+
+    let d = delta(observe(
+        &mut server,
+        &mut host,
+        A,
+        &keyed(r#""completed""#, true),
+    ));
+    let node = added(&d, "todo.item[4]");
+    assert_eq!(node.state.get("completed"), Some(&Value::Bool(false)));
+    assert!(node.source.is_some() && node.source == projected.source);
 }
 
 #[test]
