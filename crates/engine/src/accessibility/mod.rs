@@ -12,6 +12,7 @@ pub mod tree;
 mod tests;
 
 pub use action::{Assist, Unmapped, primary, translate};
+pub use focus::Direction;
 pub use focus::{FocusDirection, FocusGraph};
 pub use ids::{NodeIds, ROOT};
 pub use state::AccessibilityState;
