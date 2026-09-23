@@ -141,7 +141,7 @@ fn rejection(r: &Rejection) -> usize {
         Rejection::UnknownAction { target, action } | Rejection::Disabled { target, action } => {
             id(target) + action.as_str().len()
         }
-        Rejection::NotAuthorized { actor: a } => actor(a),
+        Rejection::NotAuthorized { actor: a } | Rejection::Declined { by: a } => actor(a),
         Rejection::Stale { changes } => list(changes, change),
         Rejection::InvalidParam { reason } => reason.len(),
         Rejection::InvalidProjection { errors } => errors_weight(errors),
