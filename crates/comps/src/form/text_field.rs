@@ -69,10 +69,12 @@ impl TextField {
     /// Declares this field as `id` in a projection: a `Role::TextInput`
     /// named `label`, its `text` state, editable, enabled unless disabled,
     /// and a `set_value` action that takes a text checked against the
-    /// node's constraints. It only reads the widget; the app owns it and
-    /// runs `set_value`. Pass the id given to [`TextField::sem`] so the
-    /// node and the binding name the same control. Returns the node for
-    /// the app to add to (a `submit`, a `max_len`).
+    /// node's constraints and reads the `text` it replaces, so a value
+    /// decided on a text another actor changed goes stale. It only reads
+    /// the widget; the app owns it and runs `set_value`. Pass the id given
+    /// to [`TextField::sem`] so the node and the binding name the same
+    /// control. Returns the node for the app to add to (a `submit`, a
+    /// `max_len`).
     #[track_caller]
     pub fn project<'b>(
         &self,
@@ -91,10 +93,12 @@ impl TextField {
                 ..Constraints::default()
             })
             .enabled(!self.disabled);
-        node.action("set_value").param(ParamSpec {
-            kind: ValueKind::Text,
-            constrained: true,
-        });
+        node.action("set_value")
+            .param(ParamSpec {
+                kind: ValueKind::Text,
+                constrained: true,
+            })
+            .reads(format!("{id}:text"));
         node
     }
 

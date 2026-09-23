@@ -205,6 +205,7 @@ fn text_field_projects_editable_text_input_with_set_value() {
             constrained: true
         })
     );
+    assert_eq!(reads(&s, &name, "set_value"), ["form.name:text"]);
 
     let ok = Request::observe(&s, test_actor(), &name, "set_value", Some("ann".into())).unwrap();
     assert_eq!(check(&ok, &s), Verdict::Accepted);
@@ -240,6 +241,34 @@ fn text_field_projection_leaves_the_app_room_for_its_own_actions() {
         .map(|a| a.name.as_str())
         .collect();
     assert_eq!(actions, ["set_value", "submit"]);
+}
+
+#[test]
+fn text_field_set_value_goes_stale_when_the_text_changed_and_not_when_the_caret_moved() {
+    let name = id("name");
+    let mut field = TextField::new("name").with_text("ann");
+    let seen = snap(|b| {
+        field.project(b, &name, "name", None);
+    });
+    let req =
+        Request::observe(&seen, test_actor(), &name, "set_value", Some("bob".into())).unwrap();
+
+    // Focus and the caret are editing, not state the value reads.
+    field.focus();
+    assert!(field.edit(EditKey::Home));
+    let now = snap(|b| {
+        field.project(b, &name, "name", None);
+    });
+    assert_visual_only(&req, &seen, &now);
+
+    // The person types after the actor looked: its value would overwrite
+    // what they typed, so it goes stale.
+    assert!(field.insert("x"));
+    assert_eq!(field.text(), "xann");
+    let now = snap(|b| {
+        field.project(b, &name, "name", None);
+    });
+    assert_stale(&req, &now, Value::from("ann"), Value::from("xann"));
 }
 
 #[test]
