@@ -69,10 +69,10 @@ pub enum SemError {
         from: String,
         to: String,
     },
-    /// a confirmation by an actor that is not a human: only a person
-    /// confirms.
-    #[error("request {id} waits for a human; {by} cannot confirm it")]
-    ConfirmByNonHuman { id: RequestId, by: Actor },
+    /// a confirmation by a machine, an agent or a test: only a person
+    /// confirms, at the screen or through assistive technology.
+    #[error("request {id} waits for a person; {by} cannot confirm it")]
+    ConfirmByMachine { id: RequestId, by: Actor },
 }
 
 /// the builder accepts typed values too, whose conversion cannot fail.

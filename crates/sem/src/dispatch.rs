@@ -15,7 +15,7 @@ use crate::request::{Actor, Request};
 ///
 /// the app owns its state and the execution. the dispatcher calls
 /// `execute` only for a request that was accepted, or confirmed by a
-/// human, against a snapshot projected from the live state at that
+/// person, against a snapshot projected from the live state at that
 /// instant.
 pub trait Operable: Semantics {
     /// runs the request. when the truth lives outside the app (the git
@@ -139,16 +139,19 @@ impl Dispatcher {
         id
     }
 
-    /// a human confirms a request that awaits confirmation. the request is
-    /// checked again against the live state first: if it went stale (or
-    /// anything else now refuses it) while it waited, the receipt ends
-    /// rejected with that reason and nothing runs; otherwise it is
-    /// confirmed and executed.
+    /// a person confirms a request that awaits confirmation: at the
+    /// screen (`Actor::Human`) or through assistive technology
+    /// (`Actor::Assistive`), since a person using a screen reader is a
+    /// person. an agent or a test never confirms. the request is checked
+    /// again against the live state first: if it went stale (or anything
+    /// else now refuses it) while it waited, the receipt ends rejected with
+    /// that reason and nothing runs; otherwise it is confirmed and
+    /// executed.
     ///
     /// errors, with the receipt unchanged: `UnknownRequest` for an id the
     /// dispatcher does not hold, `IllegalTransition` when the request is
-    /// not awaiting confirmation, `ConfirmByNonHuman` when `by` is not
-    /// `Actor::Human`.
+    /// not awaiting confirmation, `ConfirmByMachine` when `by` is an agent
+    /// or a test.
     pub fn confirm<A: Operable>(
         &mut self,
         app: &mut A,
@@ -157,8 +160,12 @@ impl Dispatcher {
         now: Millis,
     ) -> Result<(), SemError> {
         self.require(id, &Stage::AwaitingConfirmation, "confirmed")?;
-        if by != Actor::Human {
-            return Err(SemError::ConfirmByNonHuman { id, by });
+        let person = match by {
+            Actor::Human | Actor::Assistive => true,
+            Actor::Agent { .. } | Actor::Test { .. } => false,
+        };
+        if !person {
+            return Err(SemError::ConfirmByMachine { id, by });
         }
         let mut receipt = self.open.remove(&id).ok_or(SemError::UnknownRequest(id))?;
         match validate(app, &mut receipt) {

@@ -49,10 +49,14 @@ in `crates/sem`, next to the contract:
 - one `Dispatcher` serves every actor. `dispatch` projects the app
   (`Operable: Semantics`) at that instant and checks against that
   snapshot, never against a frame drawn earlier. it calls `execute` only
-  after accepted, or after a human confirmed and a second check against
+  after accepted, or after a person confirmed and a second check against
   the live state passed. `Confirm::ForAgents` asks agents only,
-  `Confirm::Always` asks everyone, and only `Actor::Human` confirms.
-  `destructive` is information for the ui; it asks nothing by itself.
+  `Confirm::Always` asks everyone. a person confirms, at the screen
+  (`Actor::Human`) or through assistive technology (`Actor::Assistive`):
+  someone using a screen reader is a person, and refusing their
+  confirmation would break the accessibility contract (thesis, section
+  21). an agent or a test never confirms. `destructive` is information for
+  the ui; it asks nothing by itself.
 - a `Receipt` holds the request, the revision of the last validation and
   every `Stage` with the time the caller passed (`Millis`; `sem` never
   reads a clock). the legal transitions are requested to accepted,
@@ -60,7 +64,7 @@ in `crates/sem`, next to the contract:
   rejected; accepted or confirmed to executing; executing to completed,
   failed or rejected. a refused action is a `Verdict`; a wrong use of the
   api is a `SemError` (`UnknownRequest`, `IllegalTransition`,
-  `ConfirmByNonHuman`).
+  `ConfirmByMachine`).
 - execution ends now (`Execution::Done`, `Failed`, `Rejected`) or later
   (`Started`, then `complete`, `fail` or `reject_at_truth` with the id
   `dispatch` returned).
@@ -121,7 +125,7 @@ in `crates/sem`, next to the contract:
   redacts a parameter aimed at a secret field.
 - the actor policy is coarse: four kinds. finer agent identity and scopes
   are future work.
-- a request awaiting confirmation stays open until a human confirms it;
+- a request awaiting confirmation stays open until a person confirms it;
   declining or expiring it needs an api this decision does not define (the
   confirmation ui is task-62 and task-69).
 - `Constraints::editable` defaults to false, so a constrained parameter on

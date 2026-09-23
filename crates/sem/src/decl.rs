@@ -94,7 +94,9 @@ impl Default for Actors {
     }
 }
 
-/// when an action asks for confirmation before it runs.
+/// when an action asks for confirmation before it runs: `ForAgents` asks
+/// it of an agent's requests, `Always` of every actor's. a person confirms,
+/// at the screen or through assistive technology.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]

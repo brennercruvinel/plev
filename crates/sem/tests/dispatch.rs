@@ -368,33 +368,22 @@ fn a_rejected_request_never_reaches_execute() {
     assert_eq!(git.message, "fix login");
 }
 
+/// an agent's discard, waiting for a person.
+fn awaiting_discard(git: &mut Git, d: &mut Dispatcher) -> RequestId {
+    let req = Request::observe(&git.snapshot(), agent(), "changes", "discard", None).unwrap();
+    let id = d.dispatch(git, req, 1);
+    assert_eq!(
+        stages(receipt(d, id)),
+        ["requested", "awaiting_confirmation"]
+    );
+    id
+}
+
 #[test]
-fn an_agent_discard_waits_for_a_human_to_confirm() {
+fn an_agent_discard_waits_for_a_person_to_confirm() {
     let mut git = Git::new(&["A", "B"], "wip");
     let mut d = Dispatcher::new();
-    let req = Request::observe(&git.snapshot(), agent(), "changes", "discard", None).unwrap();
-    let id = d.dispatch(&mut git, req, 1);
-    assert_eq!(
-        stages(receipt(&d, id)),
-        ["requested", "awaiting_confirmation"]
-    );
-    assert!(git.executed.is_empty());
-
-    assert_eq!(
-        d.confirm(&mut git, id, agent(), 2),
-        Err(SemError::ConfirmByNonHuman { id, by: agent() })
-    );
-    assert_eq!(
-        d.confirm(&mut git, id, Actor::Assistive, 2),
-        Err(SemError::ConfirmByNonHuman {
-            id,
-            by: Actor::Assistive
-        })
-    );
-    assert_eq!(
-        stages(receipt(&d, id)),
-        ["requested", "awaiting_confirmation"]
-    );
+    let id = awaiting_discard(&mut git, &mut d);
     assert!(git.executed.is_empty());
 
     d.confirm(&mut git, id, Actor::Human, 3).unwrap();
@@ -412,6 +401,60 @@ fn an_agent_discard_waits_for_a_human_to_confirm() {
     assert_eq!(r.stages[2], (Stage::Confirmed { by: Actor::Human }, 3));
     assert_eq!(git.executed, ["discard"]);
     assert!(git.staged.is_empty());
+}
+
+#[test]
+fn a_person_confirming_through_a_screen_reader_confirms() {
+    let mut git = Git::new(&["A", "B"], "wip");
+    let mut d = Dispatcher::new();
+    let id = awaiting_discard(&mut git, &mut d);
+    d.confirm(&mut git, id, Actor::Assistive, 4).unwrap();
+    let r = receipt(&d, id);
+    assert_eq!(
+        stages(r),
+        [
+            "requested",
+            "awaiting_confirmation",
+            "confirmed",
+            "executing",
+            "completed"
+        ]
+    );
+    assert_eq!(
+        r.stages[2],
+        (
+            Stage::Confirmed {
+                by: Actor::Assistive
+            },
+            4
+        )
+    );
+    assert_eq!(git.executed, ["discard"]);
+}
+
+#[test]
+fn an_agent_or_a_test_cannot_confirm_and_the_receipt_keeps_waiting() {
+    let mut git = Git::new(&["A", "B"], "wip");
+    let mut d = Dispatcher::new();
+    let id = awaiting_discard(&mut git, &mut d);
+    let tester = Actor::Test {
+        name: "dispatch".into(),
+    };
+    for machine in [agent(), tester] {
+        assert_eq!(
+            d.confirm(&mut git, id, machine.clone(), 2),
+            Err(SemError::ConfirmByMachine { id, by: machine })
+        );
+    }
+    assert_eq!(
+        stages(receipt(&d, id)),
+        ["requested", "awaiting_confirmation"]
+    );
+    assert!(git.executed.is_empty());
+    assert_eq!(
+        SemError::ConfirmByMachine { id, by: agent() }.to_string(),
+        format!("request {id} waits for a person; agent:reviewer cannot confirm it")
+    );
 }
 
 #[test]

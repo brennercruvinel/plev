@@ -17,8 +17,9 @@ use crate::value::{StateRef, Value};
 pub enum Verdict {
     /// every precondition holds: the action may run.
     Accepted,
-    /// every precondition holds, and the policy asks a human to confirm
-    /// before the action runs.
+    /// every precondition holds, and the policy asks a person to confirm
+    /// before the action runs (at the screen or through assistive
+    /// technology; see `Dispatcher::confirm`).
     NeedsConfirmation,
     Rejected(Rejection),
 }
@@ -144,6 +145,9 @@ fn allows(actors: &Actors, actor: &Actor) -> bool {
     }
 }
 
+/// whose requests wait for a confirmation: nobody's, an agent's only, or
+/// every actor's, a person's included. who may confirm is the
+/// dispatcher's rule: a person, never an agent or a test.
 fn needs_confirmation(confirm: Confirm, actor: &Actor) -> bool {
     match confirm {
         Confirm::Never => false,
