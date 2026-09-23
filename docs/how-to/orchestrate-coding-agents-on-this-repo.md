@@ -79,13 +79,23 @@ guidelines win and this file gets fixed.
 - never move or delete user files outside the project tree without asking
 - sweep background app instances after automated runs (orphans, not
   leaks, caused a six gigabyte scare)
-- one shared build directory for every agent: each worktree compiling
-  into its own `target/` took 10 to 17 GB, and three agents plus `main`
-  filled the disk in wave 4 (2026-09-23, `ENOSPC` in the middle of a
-  gate). agents build with `CARGO_TARGET_DIR` pointing at the main
-  checkout's `target/`; cargo's lock serializes concurrent builds, which
-  is slower and bounded. the orchestrator `cargo clean`s a finished
-  agent's worktree target before removing the worktree.
+- one build directory per agent, never one shared by all. correction on
+  top of the first version of this rule (2026-09-23): a single
+  `CARGO_TARGET_DIR` shared by every worktree was tried to save disk and
+  is unsafe. cargo hashes a workspace crate the same in every worktree
+  and judges freshness only by mtime, so a build silently reused an
+  artifact compiled from another agent's sources (task-60 caught it with
+  a compile error against a variant only task-62 had). the rule: every
+  agent runs every cargo command and `./script/gate` with
+  `CARGO_TARGET_DIR=<repo>/target/agents/<task-id> CARGO_INCREMENTAL=0
+  CARGO_PROFILE_DEV_DEBUG=line-tables-only
+  CARGO_PROFILE_TEST_DEBUG=line-tables-only`; incremental off and reduced
+  debuginfo keep each directory small. `target/debug` belongs to `main`
+  only. the orchestrator validates a branch in its own directory too
+  (`target/agents/validate-<task-id>`) and deletes it after integration.
+  why it matters: the disk filled in wave 4 (ENOSPC mid-gate) with three
+  agents each compiling 10 to 17 GB; check `df -h /` before dispatching
+  in parallel.
 - kill a process by its exact pid, never by pattern. with parallel agents
   every worktree runs the same `script/gate` and the same tools, so
   `pkill -f "script/gate"` kills a neighbour's work too; it happened in
