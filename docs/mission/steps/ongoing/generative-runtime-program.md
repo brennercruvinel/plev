@@ -106,10 +106,11 @@ o que a tese precisa e o que existe hoje:
 | task-58 | ação com precondição, dispatch e receipts | 2 | 57 |
 | task-59 | ligação semântica com o render e um caminho operacional | 3 | 57, 58 |
 | task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
-| task-61 | superfície do agente (socket local, observe, act) | 4 | 57, 58, 59 |
+| task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
 | task-62 | fases a e b integradas; fase c espera 61 e 63 | `8978602` | `Workbench` no ide, commit conferido no dispatcher e no index real; recusa de confirmação virou a task-58b |
 | task-58b | integrada | `dc6fde2` | recusa de confirmação no `sem` e no ide |
-| task-61 | em andamento | | onda 4; entrou quando a 60 liberou o shell do showcase |
+| task-81 | integrada | `7b3e48f` | painel do `Select` rola; um `Window` para desenho, ligação e clique |
+| task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
 | task-63 | fases a, b e c integradas; fase d na fila | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d = retenção de pixels opt-in e ligação no shell do showcase, depois da 61 |
 | task-64 | inspector de sessão, bug report e sessão para teste | 5 | 63, 66 (link de código: 65) |
 | task-65 | pixel para código e inspector de desenvolvimento | 5 | 57, 59 |

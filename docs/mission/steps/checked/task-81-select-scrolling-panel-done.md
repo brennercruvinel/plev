@@ -1,15 +1,29 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: comps
 task: task-81
 depends: [task-59]
 branch: task/81-select-scroll
+integrated: 7b3e48f
 ---
 
 # task-81: painel do `Select` com rolagem
+
+## fechamento (2026-09-23)
+
+integrada na `main` em `7b3e48f`, rebaseada sobre a 61, gate verde (1930
+testes). o painel rola por `ScrollState` dentro de um clip; um `Window` só
+é lido pelo desenho, pela ligação e pelo clique (varredura de 1 px no
+painel rolado conferindo `hit` contra o clique); abrir mostra a opção
+selecionada; roda sobre o painel é consumida ali; teclado como métodos
+(`highlight_next`, `highlight_prev`, `pick_highlighted`), porque o
+`WidgetEvent` não tem tecla. sem barra de rolagem, de propósito: ela
+criaria um segundo dono na borda do painel e quebraria "desenhado =
+clicado = ligado". fica como follow-up pequeno ligar setas e Enter na
+página Select do showcase e dar a ela um select longo.
 
 ## objetivo
 

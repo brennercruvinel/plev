@@ -104,6 +104,13 @@ what exists (updated at each task close-out):
   `Actor::Assistive` for the same dispatcher. a shell attaches
   `accessibility::Bridge` before its window is visible. a page with no
   projection has no tree: projecting it is the fix, never a fallback.
+- agents from outside (task-61, adr agents-act-through-the-semantic-contract):
+  `wire::AgentPort` opens a local socket (off unless `PLEV_AGENT=1` in a
+  debug build or an explicit `open`); the shell drains it on the ui
+  thread through a small `Host` (project the page, dispatch a request,
+  register a sink). try it: `PLEV_AGENT=1 cargo run -p showcase -- Todo`,
+  then `cargo run -p wire --bin plev -- observe --scope todo` and
+  `plev act todo.item[1] toggle`.
 
 how to project (from the crate docs):
 

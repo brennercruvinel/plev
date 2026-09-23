@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- an agent operates a plev app from outside (2026-09-23, task-61, adr
+  agents-act-through-the-semantic-contract): the new `wire` crate speaks a
+  small json-lines protocol over a local socket, and `plev observe` /
+  `plev act` use it. an agent sees the semantic snapshot (scoped, or as a
+  delta since a revision it holds) and acts on what it saw; if the state
+  moved, the action comes back refused with the delta. it goes through the
+  same dispatcher as a click, never touches the backend, and the port is
+  off unless `PLEV_AGENT=1` in a debug build.
+- the Select panel scrolls (2026-09-23, task-81): a long list is reachable
+  by wheel and by keyboard methods, and drawing, clicking and binding read
+  one window of rows.
 - the GPU's own time per frame (2026-09-23, task-73 phase 1b):
   `RenderConfig::gpu_timestamps` turns on timestamp queries around the
   layer and composite passes when measuring, and the measure example

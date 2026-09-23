@@ -1,13 +1,14 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-61
 wave: 4
 depends: [task-57, task-58, task-59]
 branch: task/61-agent-surface
+integrated: 0ec72f9
 ---
 
 # task-61: superfície do agente (socket local, observe, act)
@@ -36,6 +37,39 @@ semântica independente da animação.
   com `EventLoopProxy`, ADR `worker-results-wake-the-event-loop`).
 - depois das tasks 57, 58 e 59: `Snapshot`, `Revision`, `Change`,
   `subtree`, `Request`, `Receipt`, `Dispatcher`, bindings com bounds.
+
+## fechamento (2026-09-23)
+
+integrada na `main` em `0ec72f9` (doze commits), validada: gate verde
+(1920 testes), testes de socket sem falha em 15 execuções seguidas do
+orquestrador. crate `wire`: protocolo v1 em JSON lines (observe, act,
+confirm, decline; erros tipados), anel de revisões servidas, `AgentPort`
+(socket unix 0600 num diretório 0700, desligado por padrão, `PLEV_AGENT=1`
+em debug), `plev observe` e `plev act`, e o showcase servindo o todo pelo
+mesmo gancho da accessibility, renomeado para `act`. validado pelo agente
+contra o showcase em janela: observe, act concluído e o `submit` de uma
+revisão velha recusado com o delta. ADR:
+`docs/ADR/agents-act-through-the-semantic-contract.md`.
+
+a entrega voltou uma vez. o gate do orquestrador pegou um teste instável
+(`find_names_the_one_live_socket`): no macOS o std marca o socket como
+`FD_CLOEXEC` depois de criá-lo, e um teste paralelo que lança processo
+herdava o listener "morto". a correção isolou os testes que lançam
+processo num binário próprio e, no caminho, achou um defeito real em
+`port.rs`: ao terminar a leitura, a conexão era cortada antes do escritor
+mandar o que estava na fila, e um cliente que manda e fecha o lado dele
+perdia a resposta. corrigido na origem (a conexão é esquecida e o
+escritor a encerra depois da última linha; `WRITE_STALL` de 10 s para quem
+não lê).
+
+aceitos: dois arquivos fora da lista (`TodoPage::add_sink`, porque o
+dispatcher do todo é privado ao módulo, e o rename nos testes
+assistivos). limitações que seguem: o nome do ator é declarado, não
+autenticado (qualquer processo do mesmo usuário conecta com qualquer
+nome); um processo morto por sinal deixa o arquivo do socket; e o
+mecanismo de herança de descritor existe em produção, de forma benigna
+(documentado no ADR). a forma JSON verbosa e a redação duplicada viraram
+a task-57b.
 
 ## revisão do orquestrador (2026-09-23, antes do briefing)
 
