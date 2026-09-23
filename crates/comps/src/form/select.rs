@@ -217,6 +217,21 @@ impl Select {
         Rect::new(bounds.x, bounds.y + bounds.h + m.gap, bounds.w, h)
     }
 
+    /// The top of option row `i` in the panel `dd`.
+    fn row_y(dd: Rect, m: &Metrics, i: usize) -> f32 {
+        dd.y + m.pad_y + i as f32 * m.option_h
+    }
+
+    /// How many option rows the panel `dd` draws: those that fit whole
+    /// under `size.dropdown_max_h`, from the first. The draw and the hit
+    /// test both read this, so a click never picks a row that is not
+    /// drawn.
+    fn drawn_rows(&self, dd: Rect, m: &Metrics) -> usize {
+        (0..self.options.len())
+            .take_while(|&i| Self::row_y(dd, m, i) + m.option_h <= dd.y + dd.h)
+            .count()
+    }
+
     fn option_at(&self, x: f32, y: f32, bounds: Rect, theme: &Theme) -> Option<usize> {
         let m = Metrics::of(theme);
         let dd = self.dropdown_rect(bounds, theme);
@@ -228,7 +243,7 @@ impl Select {
             return None;
         }
         let i = i as usize;
-        (i < self.options.len()).then_some(i)
+        (i < self.drawn_rows(dd, &m)).then_some(i)
     }
 
     /// The options panel is laid out from the theme, so the event path
@@ -397,11 +412,9 @@ impl Select {
         }
 
         let style = label_style(theme);
-        for (i, option) in self.options.iter().enumerate() {
-            let oy = dd.y + m.pad_y + i as f32 * m.option_h;
-            if oy + m.option_h > dd.y + dd.h {
-                break;
-            }
+        let drawn = self.drawn_rows(dd, &m);
+        for (i, option) in self.options.iter().enumerate().take(drawn) {
+            let oy = Self::row_y(dd, &m, i);
             let is_selected = i == self.selected;
             let is_hovered = self.hovered_option == Some(i);
             if let Some(id) = &self.sem {

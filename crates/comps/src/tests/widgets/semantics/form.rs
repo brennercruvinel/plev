@@ -335,3 +335,50 @@ fn select_hover_and_focus_are_visual_only() {
     });
     assert_visual_only(&req, &seen, &now);
 }
+
+/// Regression: with more options than `dropdown_max_h` fits, the first
+/// option the panel does not draw kept a hit band at the foot of the
+/// panel (4px in hoff), so a click there picked an option nobody could
+/// see. A click (the widget's `option_at`) and `hit` now agree at every
+/// drawn row and in that band, where both find nothing.
+#[test]
+fn a_click_at_the_foot_of_a_full_select_panel_picks_no_hidden_option() {
+    let theme = hoff();
+    let size = id("size");
+    // Nine options, the last selected: it is never drawn, so any option a
+    // click picks changes the selection and shows up.
+    let options: Vec<String> = (0..9).map(|i| format!("option {i}")).collect();
+    let mut open = Select::new(options, 8).sem(size.clone());
+    open.open();
+    let mut c = Compositor::new();
+    let overlay = c.create_layer(100);
+    c.begin_frame();
+    open.render(&mut c, B, &theme);
+    open.render_dropdown(&mut c, overlay, B, &theme);
+
+    let panel = open.dropdown_rect(B, &theme);
+    let pad = theme.control.menu_pad;
+    let row_h = theme.control.height(engine::theme::ControlSize::Md);
+    let drawn = ((panel.h - pad) / row_h).floor() as usize;
+    assert_eq!(drawn, 7, "hoff draws seven rows under dropdown_max_h");
+    let foot = panel.y + pad + drawn as f32 * row_h;
+    let bottom = panel.y + panel.h;
+    assert!(bottom - foot > 0.0, "a band is left at the foot");
+
+    // The option a click at (x, y) picks, if any.
+    let pick = |x: f32, y: f32| {
+        let mut s = open.clone();
+        let r = s.handle_event(&down(x, y), B, &theme);
+        r.clicked.then_some(s.selected)
+    };
+    let x = panel.x + panel.w / 2.0;
+    for i in 0..drawn {
+        let y = panel.y + pad + (i as f32 + 0.5) * row_h;
+        assert_eq!(c.hit(x, y), Some(&size.key(i.to_string())), "row {i}");
+        assert_eq!(pick(x, y), Some(i), "row {i}");
+    }
+    let band = (foot + bottom) / 2.0;
+    assert_eq!(c.hit(x, band), None, "nothing is drawn in the band");
+    assert_eq!(pick(x, band), None, "and a click there picks nothing");
+    assert_eq!(c.binding(&size.key(drawn.to_string())), None);
+}
