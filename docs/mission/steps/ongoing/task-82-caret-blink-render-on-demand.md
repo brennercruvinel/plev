@@ -148,8 +148,15 @@ testes (gate final, `cargo test --workspace`): comps 349 + 3 antes,
 `EditorView`, todos com dt injetado); showcase 124 (122 passam, 2
 ignorados) + 7 antes e depois (um teste do Input page reescrito,
 contagem igual); engine 755 antes, 757 depois (os dois do
-`since_last`); monster 119, rec 5, ide 45 iguais. gate verde duas vezes
-(69 `test result: ok`, 0 falhas; a perna do urnaui pulou sem `../urna`).
+`since_last`); monster 119, rec 5, ide 45 iguais. gate verde quatro
+vezes: duas sobre a base `19aeef7` (69 `test result: ok`), uma depois
+do rebase sobre a `main` em `3d6bdf3` (a 62c) e a última sobre a `main`
+em `26d7e3d` (a 66b; 72 `test result: ok`, 0 falhas, engine 771 e
+showcase 129 pelos testes que a 66b trouxe; a perna do urnaui pulou sem
+`../urna`). os dois rebases foram mecânicos: a 62c não toca arquivo meu
+e só chama o `tick` interno do ide; a 66b tirou o módulo `headless` do
+fim de `showcase/src/app.rs` (meu diff é o loop, no meio) e escreveu
+noutra seção do how-to.
 
 ### a decisão do FrameClock (tomada: opção 1)
 
