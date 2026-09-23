@@ -19,7 +19,7 @@
 //! ```
 //! use std::collections::BTreeSet;
 //!
-//! use sem::{Role, SemId, Semantics, SnapshotBuilder, Value};
+//! use sem::{Role, SemId, Semantics, SnapshotBuilder, StateRef, Value};
 //!
 //! struct GitState {
 //!     staged: BTreeSet<String>,
@@ -48,19 +48,29 @@
 //! git.project(&mut b);
 //! let snap = b.finish()?;
 //!
-//! let changes = snap.get(&SemId::parse("changes")?).ok_or("not projected")?;
-//! assert_eq!(changes.state.get("staged"), Some(&Value::Set(git.staged.clone())));
+//! let staged = StateRef::parse("changes:staged")?;
+//! let message = StateRef::parse("commit.message:text")?;
+//! assert_eq!(snap.value(&staged), Some(&Value::Set(git.staged.clone())));
 //! let submit = snap.get(&SemId::parse("commit.submit")?).ok_or("not projected")?;
 //! assert_eq!(submit.actions[0].name.as_str(), "submit");
-//! assert_eq!(submit.actions[0].reads.len(), 2);
+//! assert_eq!(submit.actions[0].reads, [staged, message]);
+//!
+//! let mut again = SnapshotBuilder::new();
+//! git.project(&mut again);
+//! assert_eq!(again.finish()?.revision(), snap.revision());
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
+//!
+//! a projection of the same state gives the same `Revision` on every run
+//! and every target, so a revision can travel to an agent or a recording
+//! and still mean the same thing.
 //!
 //! the crate is pure data: no gpu, no window, no text stack.
 
 mod builder;
 mod decl;
 mod error;
+mod hash;
 mod id;
 mod name;
 mod node;
@@ -73,6 +83,7 @@ mod value;
 pub use builder::{ActionBuilder, NodeBuilder, Semantics, SnapshotBuilder};
 pub use decl::{ActionDecl, Actors, Confirm, Constraints, ParamSpec, Policy};
 pub use error::{SemError, SemErrors};
+pub use hash::Revision;
 pub use id::SemId;
 pub use name::{ActionName, StateKey};
 pub use node::{Node, Source};
