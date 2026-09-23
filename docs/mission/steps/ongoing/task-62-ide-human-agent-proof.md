@@ -263,3 +263,175 @@ página Git do showcase continua funcionando; `./script/gate` verde.
 - o `WorkspaceView` não conseguir ser `Operable` sem reestruturar o ide
   além do escopo;
 - a mudança no `crates/git` afetar outro consumidor.
+
+## fase c: desenho do experimento (revisão do orquestrador, 2026-09-23)
+
+a fase c é o checkpoint a do programa. o desenho abaixo é escrito antes
+de rodar, com as hipóteses e o que as derruba, para que o resultado possa
+ser negativo. a tese que ele testa: um agente de fora opera o ide só pelo
+contrato, uma ação sobre estado que envelheceu é recusada com o delta, o
+agente se recupera, e a sessão gravada explica e confere com o git real.
+
+### o que já existe e o que falta
+
+- existe, na `main`: o `Workbench` (`crates/ide/src/workbench/mod.rs`)
+  com `snapshot()`, `dispatch(req)`, `add_sink`, `apply(GitEvent)`,
+  `render(compositor)`; o commit conferido em dois pontos
+  (`truth.rs`, `GitCommand::CommitIf`); o rig de repositório real
+  (`crates/ide/tests/support/mod.rs`: `Rig::new(files, staged)`, `until`,
+  `git(args)`, `head`, `head_files`); o `AgentPort` com `open_with(Config,
+  wake)` e `drain(&mut dyn Host)` (`crates/wire/src/port.rs`), o `Host`
+  com `project`, `bounds`, `dispatch`, `add_sink`
+  (`crates/wire/src/server.rs:33`); o `plev observe`/`plev act` (que sem
+  `--from-revision` observa o alvo antes e age sobre o estado de agora);
+  o `Recorder` com `sink()`, `observed(t, actor, scope, rev)`,
+  `snapshot(t, &snap)`, `input(t, kind, at, target)`, `frame(t,
+  &compositor)`, `persist(path)`, `stats()` e a leitura `Session::open`,
+  `state_at`, `receipts_for`; o `headless::Renderer::draw(&mut
+  compositor, clear)` pelo mesmo caminho de frame da janela.
+- falta: o ide não depende de `wire` nem de `rec` (`crates/ide/Cargo.toml`);
+  ninguém chama `Recorder::observed` fora dos testes do `rec`; o `Host`
+  não avisa o app de uma observação servida; o `AgentPort` não conta
+  bytes nem mensagens; o relógio do `Workbench` (`now()`, `mod.rs:315`) é
+  privado, e os eventos do `rec` precisam do mesmo relógio dos receipts.
+
+### o laboratório: `ide-lab`
+
+um binário headless no crate do ide (`crates/ide/src/bin/lab.rs`), sem
+janela, que é o app sob experimento e o experimentador ao mesmo tempo:
+
+1. constrói um repositório real num diretório temporário (o padrão do
+   rig): um commit inicial e seis arquivos alterados, parte deles já no
+   index, misturando os que pertencem à tarefa e os que não pertencem. o
+   caminho do repositório não é mostrado ao agente.
+2. sobe o `Workbench`, conecta o `GitClient`, bombeia os eventos até o
+   status, o log e as branches chegarem.
+3. abre o `AgentPort` como `ide` no diretório padrão de sockets
+   (`open_with`, opt-in explícito do laboratório), para o `plev --app ide`
+   achar.
+4. liga o `Recorder`: `add_sink` no dispatcher, `snapshot` a cada mudança
+   (evento do git, ato, intervenção), `observed` a cada observação
+   servida, `input` na ação do humano roteirizado, e a trilha visual com
+   frames reais do ide pelo `headless::Renderer` (1280 por 800, escala 1),
+   um frame por mudança, como o render on demand manda. no fim, `persist`
+   em `<out>/session.monster`, e o próprio laboratório reabre o arquivo
+   com `Session::open` e lê de volta os receipts.
+5. o humano roteirizado (`--human <cenário>`), determinístico e com hora
+   registrada:
+   - `none`: sem intervenção (a corrida de controle);
+   - `unstage-after-observe:<path>`: quando o agente já deixou no index
+     todos os arquivos da tarefa e a mensagem está escrita (a precondição
+     do `submit` passaria), na observação seguinte que o laboratório
+     serve ao agente, logo depois de servi-la, o humano tira `<path>` do
+     index pelo dispatcher (`Actor::Human`, `unstage`). a observação do
+     agente está velha antes de ele agir. dispara uma vez só.
+6. métricas, impressas como JSON e como tabela no fim: conexões,
+   mensagens e bytes em cada sentido (contadores aditivos no
+   `AgentPort`/`Server`), observações (snapshot e delta), atos, estágios
+   enviados, recusas por `stale`, erros; tempo do primeiro `hello` ao
+   estágio terminal do `submit` concluído; custo do contrato do lado do
+   servidor (tempo dentro de `drain`: projeção, `check`, serialização,
+   por mensagem, e como fração do tempo total); custo da gravação (tempo
+   dentro de `snapshot`/`frame`/`sink`, por evento e por frame);
+   `Stats` do recorder, bytes da trilha semântica e da visual, tamanho do
+   `.monster`; e a verdade: `git rev-parse HEAD`, `git show --name-only
+   --format= HEAD`, `git log --oneline` no fim, comparados com o
+   `commit` e `files` do receipt lido da sessão. sai com 0 quando sessão
+   e git conferem.
+7. termina em `--until commit` (primeiro `submit` concluído, mais um
+   segundo para os estágios saírem) ou em `--timeout <s>` (600 por
+   padrão). sempre escreve a sessão e o relatório.
+
+condição de validade: um ato do agente sem `--from-revision` age sobre
+uma observação nova (o `plev act` observa o alvo antes) e anula a medição
+de stale daquela corrida. o laboratório registra a forma de cada ato (o
+`asked` do primeiro estágio) e o relatório diz quando isso aconteceu, em
+vez de esconder.
+
+### os braços
+
+- **A0, agente roteirizado pelo socket, sem LLM.** uma thread com o
+  `wire::Client` faz o ciclo canônico: observa, põe os arquivos certos no
+  index, escreve a mensagem, observa de novo, sofre a intervenção, tenta
+  `submit` com `from_revision`, recebe `stale`, observa com `since`,
+  tenta de novo, conclui, observa `stacks`. é o teste do laboratório e da
+  intervenção antes de gastar token, roda no gate
+  (`crates/ide/tests/lab.rs`), e mede o custo puro do protocolo (latência
+  por ida e volta, bytes) sem o ruído do LLM.
+- **A, agente LLM pelo contrato.** um agente novo, sem contexto do repo,
+  recebe a tarefa e só dois comandos: `plev observe` e `plev act`, com o
+  binário já compilado, `--app ide`, `--name` próprio, e a regra de agir
+  com `--from-revision` da observação em que se baseou. proibido: `git`,
+  ler arquivo, screenshot, qualquer outro comando. a transcrição dele é a
+  auditoria: cada comando fora do `plev` conta, e os tokens saem dos
+  campos de uso de cada turno (entrada, cache lido, cache criado,
+  saída). corridas: A1 controle (`none`), A2 intervenção, A3 intervenção
+  repetida se o custo permitir (variância).
+- **B, alternativa estruturada convencional: o `git` na linha de
+  comando.** o mesmo modelo, agente novo, a mesma tarefa, com `git`
+  (`status --porcelain`, `add`, `reset`, `commit`, `log`, `show`) num
+  repositório idêntico cujo caminho ele recebe. a intervenção equivalente
+  é um hook `pre-commit` instalado pelo laboratório (`--arm git`) que,
+  uma vez só, tira `<path>` do index no momento do commit: o git então
+  commita o conjunto que sobrou, sem avisar. um shim de `git` no PATH do
+  agente registra cada comando, os bytes de saída e a hora (o volume de
+  dados e as idas e voltas do braço B). o que se mede: o commit criado
+  bate com a tarefa? o agente percebeu? quantos bytes, comandos, tokens e
+  segundos? e o que sobrou para explicar depois (nada equivalente a um
+  receipt ou a uma sessão). a assimetria fica escrita: no B a
+  intervenção dispara no instante do commit, no A logo depois da
+  observação; as duas simulam "um humano mexeu no index entre a leitura e
+  a escrita do agente".
+- **C, volume de dados de um screenshot, sem LLM.** o laboratório escreve
+  um PNG do frame do ide em escala 1 e 2 e informa os bytes (PNG e RGBA
+  cru), ao lado dos bytes de uma observação completa e de uma por escopo.
+  é comparação de volume, não de capacidade, e o relatório diz isso.
+
+### hipóteses (escritas antes de rodar) e o que as derruba
+
+- **H1, suficiência do contrato.** um agente LLM novo, com a tarefa e os
+  dois comandos, conclui o commit com exatamente o conjunto de arquivos
+  pedido, sem nenhum comando fora do `plev`. derruba: não concluir,
+  conjunto errado, ou qualquer comando fora do `plev` na transcrição.
+- **H2, stale-state rejection.** na corrida com intervenção, o `submit`
+  do agente apoiado na revisão anterior à intervenção volta `rejected`
+  `stale` com o delta nomeando exatamente o arquivo retirado (em
+  `changes:staged`), o HEAD não muda; o agente observa de novo, repõe o
+  arquivo e conclui; o receipt final tem sha e arquivos iguais aos do
+  git. derruba: um commit criado pelo `submit` velho; um delta que não
+  nomeia o arquivo; o agente não se recuperar; receipt diferente do git.
+- **H3, gravação.** o `.monster` guarda as observações, a recusa com o
+  delta, o receipt concluído e o estado em cada instante: `state_at`
+  antes e depois da intervenção mostra o arquivo saindo de
+  `changes:staged`, e `receipts_for("commit.submit")` lido do arquivo é
+  igual ao git. tamanho da sessão e custo da gravação medidos. derruba:
+  estado ou receipt ausente ou diferente; arquivo que não abre.
+- **H4, comparação, sem resultado favorito.** sob a intervenção
+  equivalente, o braço B commita um conjunto diferente da tarefa sem ser
+  avisado, a não ser que o agente confira de novo antes ou depois; bytes
+  e tokens por braço lado a lado. o plev pode perder em bytes para um
+  `git status --porcelain`, e isso é escrito como está.
+- **H5, validade.** um ato sem `--from-revision` anula a medição de stale
+  da corrida; o relatório diz.
+
+### quem faz o quê
+
+um agente constrói o laboratório, o braço A0 (teste no gate), o
+construtor do braço B (repo, hook, shim) e o braço C, e escreve neste
+arquivo como rodar cada braço; o orquestrador roda os braços A e B com
+agentes novos, extrai tokens e comandos das transcrições, e escreve o
+resultado. o agente do laboratório nunca é o agente do experimento.
+
+### superfície da fase c
+
+- `crates/ide/**` (o bin `lab.rs`, `Cargo.toml` com `wire` e `rec`,
+  `tests/lab.rs`, `Workbench::now` público se preciso).
+- `crates/wire/src/{server.rs,port.rs,lib.rs}`, só aditivo: um método
+  `Host::observed(&mut self, actor: &Actor, scope: Option<&SemId>,
+  revision: Revision)` com implementação padrão vazia, chamado pelo
+  servidor depois de servir uma observação; contadores de tráfego
+  (`Traffic`) lidos pelo app. os testes do `wire` continuam verdes.
+- este arquivo (protocolo e como rodar).
+- proibido: `crates/sem`, `crates/rec` (consumir só; o que faltar é
+  parada e reporte), `crates/engine`, `crates/comps`, `crates/git`,
+  `crates/showcase`.

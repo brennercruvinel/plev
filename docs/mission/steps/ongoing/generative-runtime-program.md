@@ -105,13 +105,10 @@ o que a tese precisa e o que existe hoje:
 | task-57 | contrato semântico (crate `sem`) | 1 | nenhuma |
 | task-58 | ação com precondição, dispatch e receipts | 2 | 57 |
 | task-59 | ligação semântica com o render e um caminho operacional | 3 | 57, 58 |
-| task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
-| task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
-| task-62 | fases a e b integradas; fase c espera 61 e 63 | `8978602` | `Workbench` no ide, commit conferido no dispatcher e no index real; recusa de confirmação virou a task-58b |
-| task-58b | integrada | `dc6fde2` | recusa de confirmação no `sem` e no ide |
-| task-81 | integrada | `7b3e48f` | painel do `Select` rola; um `Window` para desenho, ligação e clique |
-| task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
-| task-63 | fases a, b e c integradas; fase d na fila | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d = retenção de pixels opt-in e ligação no shell do showcase, depois da 61 |
+| task-60 | accessibility como projeção do contrato | 4 | 57, 58, 59 |
+| task-61 | superfície do agente (socket local, observe, act) | 4 | 57, 58, 59 |
+| task-62 | prova no ide: stale-state rejection e handoff | 4 | 57, 58, 59 (fase c: 61, 63) |
+| task-63 | flight recorder de sessão | 4 | 57, 58 |
 | task-64 | inspector de sessão, bug report e sessão para teste | 5 | 63, 66 (link de código: 65) |
 | task-65 | pixel para código e inspector de desenvolvimento | 5 | 57, 59 |
 | task-66 | headless como primeira classe | 3 | nenhuma (saída semântica: 57) |
@@ -302,7 +299,10 @@ atualizado em cada integração.
 | task-59 | integrada | `f71dc20`, `f5b7cee` | ligação no compositor e todo pelo dispatcher (fase a); os 16 widgets restantes com `SemId` e projeção, regra "toda ação lê o que muda", defeito do `Select` corrigido (fase b); rolagem do `Select` virou a task-81 |
 | task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (pendente) |
 | task-73 | fases 1 e 1b integradas; fase 2 (ADR de desenho) espera decisão do brenner | `ed814da`, `91fdb33` | limitado pela GPU mesmo sem a latência de envio (4 a 12 vezes a CPU); pass de layer segue os pixels; composite em todo frame; o caret a 60 fps é a task-82 |
-| task-62 | fases a e b em andamento | | onda 4; fase c espera 61 e 63 |
+| task-62 | fases a e b integradas; fase c (checkpoint a) desenhada, briefing depois da 57b | `8978602` | `Workbench` no ide, commit conferido no dispatcher e no index real; recusa de confirmação virou a task-58b; o desenho do experimento está no arquivo da task |
 | task-63 | fases a, b e c integradas; fase d na fila | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d = retenção de pixels opt-in e ligação no shell do showcase, depois da 61 |
 | task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
+| task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
+| task-58b | integrada | `dc6fde2` | recusa de confirmação no `sem` e no ide |
+| task-81 | integrada | `7b3e48f` | painel do `Select` rola; um `Window` para desenho, ligação e clique |
 | task-57b | em andamento | | forma JSON enxuta (padrões omitidos, `source` opt-in no `wire`) e a redação de segredo uma vez só em `sem::redact`; pré-requisito da 62 fase c |
