@@ -306,3 +306,5 @@ atualizado em cada integração.
 | task-58b | integrada | `dc6fde2` | recusa de confirmação no `sem` e no ide |
 | task-81 | integrada | `7b3e48f` | painel do `Select` rola; um `Window` para desenho, ligação e clique |
 | task-57b | integrada | `a7a6735` | forma serde enxuta (todo com 3 itens: 6419 para 2039 B; 103 itens: 87 para 26 KB), `source` opt-in no wire (`plev observe --source`), redação de segredo uma vez só em `sem::redact`; ADR lean-semantic-form-and-one-redaction |
+| task-82 | em andamento | | caret como prazo (`WaitUntil`), sem 60 fps num campo parado; comps e showcase agora, ide depois da 62c |
+| task-66b | em andamento | | SVG do frame headless com relatório de aproximação; `showcase --render --semantics` |

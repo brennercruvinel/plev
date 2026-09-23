@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: in-progress
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-66b
@@ -50,3 +50,19 @@ SVG de três páginas do showcase abre num navegador com o mesmo layout do
 png; o relatório lista cada aproximação; o texto do SVG tem os mesmos
 glifos do png (comparar a largura medida de três runs); `--semantics` do
 todo igual à projeção em processo; gate verde.
+
+## revisão do orquestrador (2026-09-23, antes do briefing)
+
+- estado: `showcase --render` existe (`crates/showcase/src/main.rs`, módulo
+  `headless` em `crates/showcase/src/app.rs:498-600`, `render_page`);
+  `--semantics` é recusado com "not available yet" (`main.rs:99-103`),
+  embora a projeção do todo exista desde a task-59 e o `wire` já sirva a
+  forma serde enxuta (task-57b). o `--semantics` sai como a mesma forma
+  serde do `Snapshot` (JSON), sem `source` por padrão, com `--source` para
+  incluí-lo, igual ao `plev observe`.
+- ownership: a task-62 fase c (ide, wire) e a task-82 (comps form/editor,
+  shell do showcase em `app.rs:380-420`) rodam em paralelo. esta task fica
+  em `crates/engine/src/headless/**`, `crates/engine/src/text/system.rs` (o
+  ponto de shaping), `crates/showcase/src/main.rs` e o módulo `headless`
+  de `crates/showcase/src/app.rs`. não toca o loop de eventos do showcase,
+  o ide, o comps nem o wire.
