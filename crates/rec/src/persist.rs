@@ -8,6 +8,7 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use engine::gpu::image::MAX_IMAGE_ATLAS_SIZE;
 use monster::{LoweredAsset, NodeKind};
 use sem::Millis;
 
@@ -198,7 +199,11 @@ fn read_assets(payload: &[u8]) -> Result<Vec<Asset>, FileError> {
         out.push(match read_asset(&mut c, at)? {
             Read::Ready(asset) => Asset::Live(asset),
             Read::Image(image) => {
-                let handle = image.pixels.as_ref().and_then(|p| {
+                // the store checks its pixel count in u32 and its atlas
+                // side limit itself; an image past either is kept with
+                // its size and draws nothing.
+                let fits = image.width.max(image.height) <= MAX_IMAGE_ATLAS_SIZE;
+                let handle = image.pixels.as_ref().filter(|_| fits).and_then(|p| {
                     engine::gpu::load_image_rgba(image.width, image.height, p.to_vec()).ok()
                 });
                 Asset::Image {
@@ -439,5 +444,31 @@ mod tests {
         let mut short = bytes.clone();
         short.truncate(short.len() - 1);
         assert!(Session::from_bytes(&short).is_err());
+    }
+
+    #[test]
+    fn an_image_past_the_atlas_limit_keeps_its_size_and_is_not_loaded() {
+        let side = super::MAX_IMAGE_ATLAS_SIZE + 1;
+        let pixels: Arc<[u8]> = Arc::from(vec![0u8; side as usize * 4]);
+        let screen = Screen {
+            chunks: Vec::new(),
+            assets: vec![Asset::Image {
+                width: side,
+                height: 1,
+                pixels: Some(pixels),
+                handle: None,
+            }],
+        };
+        let session = Session::from_parts(Vec::new(), screen);
+        let Ok((bytes, _)) = session.to_bytes() else {
+            panic!("the window does not write");
+        };
+        let Ok(file) = Session::from_bytes(&bytes) else {
+            panic!("the file does not read");
+        };
+        assert!(matches!(
+            file.screen().assets.as_slice(),
+            [Asset::Image { width, handle: None, pixels: Some(_), .. }] if *width == side
+        ));
     }
 }
