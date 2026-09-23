@@ -334,6 +334,269 @@ fn widgets_with_a_sem_id_project_and_bind_under_every_theme_at_phone_and_desktop
     );
 }
 
+/// What the phase b matrix checks for one id: its node (role and a
+/// non-empty label), its binding too, or also that `hit` at the center of
+/// that binding answers it.
+#[derive(Clone, Copy, PartialEq)]
+enum Probe {
+    Node,
+    Bound,
+    Hit,
+}
+
+/// One widget's frame and the ids to probe in it.
+type Frame = (Compositor, Vec<(SemId, Role, Probe)>);
+
+/// Phase b of task-59: every other interactive widget, with a SemId,
+/// projects its role and a label and binds the rects it hit-tests with,
+/// under every theme at both widths, and the whole projection validates.
+/// Each widget draws into a frame of its own, so an overlay (the modal,
+/// the open select) never covers another widget's hit. A container is
+/// checked for its binding; its children answer the hit.
+#[test]
+fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_desktop_widths() {
+    let id = |text: &str| SemId::parse(text).unwrap();
+    let frame = |overlay: bool| {
+        let mut c = Compositor::new();
+        let layer = if overlay {
+            c.create_layer(100)
+        } else {
+            LayerId::DEFAULT
+        };
+        c.begin_frame();
+        (c, layer)
+    };
+    let mut tab_rects = Vec::new();
+    for (t, theme) in themes().into_iter().enumerate() {
+        for (vw, vh) in VIEWPORTS {
+            let what = format!("theme {t} at {vw}x{vh}");
+            let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+            let row = |i: f32| Rect::new(gutter, gutter + i * 60.0, vw - gutter * 2.0, 44.0);
+            let block = |i: f32| Rect::new(gutter, gutter + i * 60.0, vw - gutter * 2.0, 200.0);
+            let label = |i: usize| format!("row {i}");
+            let mut b = SnapshotBuilder::new();
+            let mut frames: Vec<Frame> = Vec::new();
+
+            let chip = Chip::new("tag").selectable(true).sem(id("m.chip"));
+            let (mut c, _) = frame(false);
+            chip.render(&mut c, row(0.0), &theme);
+            chip.project(&mut b, &id("m.chip"), None);
+            frames.push((c, vec![(id("m.chip"), Role::Toggle, Probe::Hit)]));
+
+            let icon = IconButton::new("x").sem(id("m.icon"));
+            let (mut c, _) = frame(false);
+            icon.render(&mut c, row(1.0), &theme);
+            icon.project(&mut b, &id("m.icon"), "close", None);
+            frames.push((c, vec![(id("m.icon"), Role::Button, Probe::Hit)]));
+
+            let submit = SubmitButton::new().active(true).sem(id("m.submit"));
+            let (mut c, _) = frame(false);
+            submit.render(&mut c, row(2.0), &theme);
+            submit.project(&mut b, &id("m.submit"), "send", None);
+            frames.push((c, vec![(id("m.submit"), Role::Button, Probe::Hit)]));
+
+            let switch = Switch::new(true).sem(id("m.switch"));
+            let (mut c, _) = frame(false);
+            switch.render(&mut c, row(3.0), &theme);
+            switch.project(&mut b, &id("m.switch"), "wifi", None);
+            frames.push((c, vec![(id("m.switch"), Role::Toggle, Probe::Hit)]));
+
+            let slider = Slider::new(0.0, 100.0, 40.0).step(5.0).sem(id("m.slider"));
+            let (mut c, _) = frame(false);
+            slider.render(&mut c, row(4.0), &theme);
+            slider.project(&mut b, &id("m.slider"), "volume", None);
+            frames.push((c, vec![(id("m.slider"), Role::Slider, Probe::Hit)]));
+
+            let mut select = Select::new(["a", "b", "c"], 1).sem(id("m.select"));
+            select.open();
+            let (mut c, overlay) = frame(true);
+            select.render(&mut c, row(5.0), &theme);
+            select.render_dropdown(&mut c, overlay, row(5.0), &theme);
+            select.project(&mut b, &id("m.select"), "size", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.select"), Role::Select, Probe::Hit),
+                    (id("m.select[0]"), Role::Option, Probe::Hit),
+                    (id("m.select[2]"), Role::Option, Probe::Hit),
+                ],
+            ));
+
+            let tabs = Tabs::new(["one", "two", "three"]).sem(id("m.tabs"));
+            let (mut c, _) = frame(false);
+            tabs.render(&mut c, row(6.0), &theme);
+            tabs.project(&mut b, &id("m.tabs"), "view", None);
+            tab_rects.push(c.binding(&id("m.tabs[1]")).map(|b| b.rect));
+            frames.push((
+                c,
+                vec![
+                    (id("m.tabs"), Role::TabList, Probe::Bound),
+                    (id("m.tabs[1]"), Role::Tab, Probe::Hit),
+                ],
+            ));
+
+            let link = NavLink::new("Cards")
+                .icon("clipboard")
+                .badge(Badge::count("3"))
+                .active(true)
+                .sem(id("m.link"));
+            let (mut c, _) = frame(false);
+            link.render(&mut c, row(7.0), &theme);
+            link.project(&mut b, &id("m.link"), None);
+            frames.push((c, vec![(id("m.link"), Role::Link, Probe::Hit)]));
+
+            let path = Breadcrumb::new(["a", "b", "c", "d"]).sem(id("m.path"));
+            let (mut c, _) = frame(false);
+            path.render(&mut c, row(8.0), &theme);
+            path.project(&mut b, &id("m.path"), "path", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.path"), Role::Group, Probe::Bound),
+                    (id("m.path[0]"), Role::Link, Probe::Hit),
+                    (id("m.path[3]"), Role::Label, Probe::Hit),
+                ],
+            ));
+
+            let split = SplitPane::new(SplitDirection::Horizontal, 0.5, &theme).sem(id("m.split"));
+            let (mut c, _) = frame(false);
+            split.render(&mut c, row(9.0), &theme);
+            split.project(&mut b, &id("m.split"), "panes", None);
+            frames.push((c, vec![(id("m.split"), Role::Group, Probe::Hit)]));
+
+            let mut list = VirtualList::new(24.0).sem(id("m.list"));
+            list.set_item_count(100);
+            let (mut c, _) = frame(false);
+            list.render_with(&mut c, block(10.0), &theme, |_, _, _, _, _| {});
+            list.project(&mut b, &id("m.list"), "files", None, label);
+            frames.push((
+                c,
+                vec![
+                    (id("m.list"), Role::List, Probe::Bound),
+                    (id("m.list[0]"), Role::ListItem, Probe::Hit),
+                ],
+            ));
+
+            let mut table = Table::new(
+                vec![
+                    Column::new("a", &theme),
+                    Column::new("b", &theme).priority(0),
+                ],
+                &theme,
+            )
+            .sem(id("m.table"));
+            table.set_row_count(50);
+            let (mut c, _) = frame(false);
+            table.render_with(&mut c, block(14.0), &theme, |_, _, _, _| {});
+            table.project(&mut b, &id("m.table"), "grid", None, label);
+            frames.push((
+                c,
+                vec![
+                    (id("m.table"), Role::Table, Probe::Bound),
+                    (id("m.table[0]"), Role::Row, Probe::Hit),
+                ],
+            ));
+
+            let tree = Tree::new(vec![
+                TreeNode::branch(1, "root", vec![TreeNode::leaf(2, "leaf")]).expanded(true),
+            ])
+            .sem(id("m.tree"));
+            let (mut c, _) = frame(false);
+            tree.render(&mut c, block(18.0), &theme);
+            tree.project(&mut b, &id("m.tree"), "fs", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.tree"), Role::Tree, Probe::Bound),
+                    (id("m.tree[1]"), Role::TreeItem, Probe::Hit),
+                    (id("m.tree[2]"), Role::TreeItem, Probe::Hit),
+                ],
+            ));
+
+            let menu = ContextMenu::new(vec![
+                MenuEntry::item(1, "Open").icon("folder"),
+                MenuEntry::Separator,
+                MenuEntry::item(2, "Delete").intent(Intent::Destructive),
+            ])
+            .sem(id("m.menu"));
+            let (mut c, overlay) = frame(true);
+            menu.render(&mut c, overlay, &theme, gutter, gutter);
+            menu.project(&mut b, &id("m.menu"), "actions", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.menu"), Role::Menu, Probe::Bound),
+                    (id("m.menu[1]"), Role::MenuItem, Probe::Hit),
+                    (id("m.menu[2]"), Role::MenuItem, Probe::Hit),
+                ],
+            ));
+
+            let modal = Modal::new("Title", "Body body body", "OK", "Cancel")
+                .intent(Intent::Destructive)
+                .sem(id("m.modal"));
+            let (mut c, overlay) = frame(true);
+            modal.render(&mut c, overlay, &theme, vw, vh);
+            modal.project(&mut b, &id("m.modal"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.modal"), Role::Dialog, Probe::Bound),
+                    (id("m.modal[confirm]"), Role::Button, Probe::Hit),
+                    (id("m.modal[cancel]"), Role::Button, Probe::Hit),
+                ],
+            ));
+
+            let mut toasts = ToastManager::new().sem(id("m.toasts"));
+            toasts.push("hello", Intent::Informational, &theme);
+            for _ in 0..60 {
+                toasts.tick(1.0 / 60.0);
+            }
+            let (mut c, overlay) = frame(true);
+            toasts.render(&mut c, overlay, &theme, vw, vh);
+            toasts.project(&mut b, &id("m.toasts"), "notifications", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.toasts"), Role::Region, Probe::Node),
+                    (id("m.toasts[0]"), Role::Status, Probe::Hit),
+                ],
+            ));
+
+            let snap = b
+                .finish()
+                .unwrap_or_else(|e| panic!("{what}: the projection does not validate: {e:?}"));
+            for (c, probes) in &frames {
+                for (who, role, probe) in probes {
+                    let node = snap
+                        .get(who)
+                        .unwrap_or_else(|| panic!("{what}: {who} is not projected"));
+                    assert_eq!(node.role, *role, "{what}: {who}");
+                    assert!(!node.label.trim().is_empty(), "{what}: {who} has no label");
+                    if *probe == Probe::Node {
+                        continue;
+                    }
+                    let bound = c
+                        .binding(who)
+                        .unwrap_or_else(|| panic!("{what}: {who} is not bound"));
+                    let [x, y, w, h] = bound.rect;
+                    assert!(
+                        bound.rect.iter().all(|v| v.is_finite()) && w > 0.0 && h > 0.0,
+                        "{what}: {who} bound to {:?}",
+                        bound.rect
+                    );
+                    if *probe == Probe::Hit {
+                        assert_eq!(c.hit(x + w / 2.0, y + h / 2.0), Some(who), "{what}");
+                    }
+                }
+            }
+        }
+    }
+    assert!(
+        tab_rects.windows(2).any(|w| w[0] != w[1]),
+        "the phone and the desktop lay the tabs out differently"
+    );
+}
+
 #[test]
 fn modal_and_toast_fit_a_phone_width() {
     let theme = Theme::hoff();
