@@ -21,6 +21,7 @@ use sem::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, Val
 use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
 use crate::form::text_input::TextInput;
 use crate::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
+use crate::wake::Wake;
 
 /// Non-character editing keys a field understands. Apps map their key
 /// events onto these; Enter and Tab stay with the screen (submit and
@@ -200,15 +201,20 @@ impl TextField {
         self.input.handle_ime(committed, preedit);
     }
 
-    /// Advance the caret blink. `true` while focused (the blink needs
-    /// frames under render-on-demand).
+    /// Advance the caret blink by `dt` seconds. Focused, the ask is the
+    /// caret's: a frame when it flipped (`now`) and the time to the next
+    /// flip (`next`); blurred, nothing. The owner merges it with its
+    /// other motion and the shell sleeps until the earliest deadline.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        self.input.wake(dt)
+    }
+
+    /// [`TextField::wake`] for a shell without deadlines
+    /// (`ControlFlow::Wait` and a `bool`): `true` while anything is
+    /// pending, which is every frame while focused. The ide reads this
+    /// until it adopts `Wake` (task-82 phase b); new code reads `wake`.
     pub fn tick(&mut self, dt: f32) -> bool {
-        if self.input.focused {
-            self.input.tick(dt);
-            true
-        } else {
-            false
-        }
+        self.wake(dt).pending()
     }
 
     /// Hover tracks the bounds; a press inside focuses and places the

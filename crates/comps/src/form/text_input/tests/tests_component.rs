@@ -1,4 +1,5 @@
 use crate::form::text_input::*;
+use crate::wake::Wake;
 
 #[test]
 fn text_input_new() {
@@ -46,21 +47,73 @@ fn text_input_backspace() {
 fn text_input_blink() {
     let mut ti = TextInput::new();
     ti.focus();
-    assert!(ti.cursor_visible);
-    ti.tick(0.54);
-    assert!(!ti.cursor_visible);
-    ti.tick(0.54);
-    assert!(ti.cursor_visible);
+    assert!(ti.cursor_visible());
+    ti.wake(0.54);
+    assert!(!ti.cursor_visible());
+    ti.wake(0.54);
+    assert!(ti.cursor_visible());
+}
+
+/// The blink is a deadline: with a 60 Hz `dt` the caret flips at the
+/// half-period (0.53 s), and between flips the input asks for the time
+/// left, never for a frame.
+#[test]
+fn text_input_blink_flips_on_time_and_asks_only_for_the_next_flip() {
+    let mut ti = TextInput::new();
+    ti.focus();
+    let dt = 1.0 / 60.0;
+    let mut flips = Vec::new();
+    for turn in 1..=120 {
+        let w = ti.wake(dt);
+        let elapsed = turn as f32 * dt;
+        let next = w
+            .next
+            .expect("focused: the next flip is pending")
+            .as_secs_f32();
+        assert!(
+            !w.is_continuous(),
+            "turn {turn}: a caret never asks for every frame"
+        );
+        if w.now {
+            flips.push(turn);
+        } else {
+            // the time left is the half-period minus the phase, within a turn
+            let phase = elapsed % CURSOR_BLINK_INTERVAL;
+            assert!(
+                (next - (CURSOR_BLINK_INTERVAL - phase)).abs() < dt,
+                "turn {turn}: next {next} for phase {phase}"
+            );
+        }
+    }
+    // 2 s at 60 Hz: the flips at 0.53 s, 1.06 s and 1.59 s, on the turn
+    // that crosses each (32, 64, 96)
+    assert_eq!(flips, vec![32, 64, 96]);
+    assert!(!ti.cursor_visible(), "three flips: hidden");
+}
+
+#[test]
+fn text_input_unfocused_has_no_caret_and_nothing_pending() {
+    let mut ti = TextInput::new();
+    assert_eq!(ti.wake(0.54), Wake::idle());
+    ti.focus();
+    ti.wake(0.54);
+    ti.unfocus();
+    assert_eq!(ti.wake(0.54), Wake::idle());
+    assert!(!ti.cursor_visible());
 }
 
 #[test]
 fn text_input_reset_blink_on_type() {
     let mut ti = TextInput::new();
     ti.focus();
-    ti.tick(0.54); // blink off
-    assert!(!ti.cursor_visible);
+    ti.wake(0.54); // blink off
+    assert!(!ti.cursor_visible());
     ti.handle_char('a'); // resets blink
-    assert!(ti.cursor_visible);
+    assert!(ti.cursor_visible());
+    // and the half-period restarts from the keystroke
+    let w = ti.wake(0.0);
+    assert!(!w.now);
+    assert!((w.next.unwrap().as_secs_f32() - CURSOR_BLINK_INTERVAL).abs() < 1e-6);
 }
 
 #[test]

@@ -10,6 +10,7 @@ use engine::layout::ComputedBounds;
 use engine::text::TextMeasurer;
 
 use super::config::{EditorConfig, EditorTheme};
+use crate::wake::{Blink, Wake};
 use engine::clipboard::{ClipboardProvider, default_clipboard};
 
 /// Active IME composition, rendered inline at the primary cursor.
@@ -48,8 +49,7 @@ pub struct EditorView {
     /// Bounds from the last `render`/`set_bounds`; mouse and IME geometry
     /// are resolved against these.
     pub(super) bounds: ComputedBounds,
-    pub(super) cursor_visible: bool,
-    pub(super) blink_timer: f32,
+    pub(super) blink: Blink,
     /// One goal column per selection, kept across consecutive vertical
     /// moves and cleared by any horizontal movement or edit.
     pub(super) goal: Vec<GoalColumn>,
@@ -66,8 +66,7 @@ impl EditorView {
             scroll: ScrollState::new(),
             config: EditorConfig::default(),
             bounds: ComputedBounds::default(),
-            cursor_visible: true,
-            blink_timer: 0.0,
+            blink: Blink::new(),
             goal: Vec::new(),
             preedit: None,
             clipboard: default_clipboard(),
@@ -177,23 +176,31 @@ impl EditorView {
 
     // -- cursor blink ------------------------------------------------------
 
-    /// Advance the blink clock. Returns true when cursor visibility toggled
-    /// (the caller should request a redraw).
+    /// Advance the blink clock by `dt` seconds
+    /// (`EditorConfig::cursor_blink_interval` is the half-period). `now`
+    /// when the cursor visibility toggled, `next` the time to the next
+    /// toggle: between toggles the editor asks for a deadline, not a
+    /// frame.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        self.blink.advance(dt, self.config.cursor_blink_interval)
+    }
+
+    /// [`EditorView::wake`] for a shell that redraws on a toggle and
+    /// keeps its own blink timer (`comps --example editor`): `true` when
+    /// the cursor visibility toggled.
     pub fn tick(&mut self, dt: f32) -> bool {
-        self.blink_timer += dt;
-        if self.blink_timer >= self.config.cursor_blink_interval {
-            self.blink_timer %= self.config.cursor_blink_interval;
-            self.cursor_visible = !self.cursor_visible;
-            return true;
-        }
-        false
+        self.wake(dt).now
+    }
+
+    /// The primary cursor is on the visible half of its blink.
+    pub fn cursor_visible(&self) -> bool {
+        self.blink.visible()
     }
 
     /// Make the cursor solid and restart the blink interval (called on any
     /// input so the caret never blinks away mid-typing).
     pub fn reset_blink(&mut self) {
-        self.cursor_visible = true;
-        self.blink_timer = 0.0;
+        self.blink.reset();
     }
 
     // -- IME geometry ------------------------------------------------------
@@ -335,7 +342,7 @@ impl EditorView {
             if !range.contains(&line) || Some(line) == preedit_line {
                 continue;
             }
-            if i == selections.primary_index() && !self.cursor_visible {
+            if i == selections.primary_index() && !self.blink.visible() {
                 continue;
             }
             let text = self.line_text(line);

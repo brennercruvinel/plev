@@ -707,13 +707,32 @@ fn cursor_blinks_at_configured_interval() {
     ed.config.cursor_blink_interval = 0.5;
     assert!(!ed.tick(0.3));
     assert!(ed.tick(0.3)); // 0.6s elapsed: toggled off
-    assert!(!ed.cursor_visible);
+    assert!(!ed.cursor_visible());
     assert!(ed.tick(0.5));
-    assert!(ed.cursor_visible);
+    assert!(ed.cursor_visible());
 
     ed.tick(0.6);
     ed.reset_blink();
-    assert!(ed.cursor_visible);
+    assert!(ed.cursor_visible());
+}
+
+/// The blink is a deadline: between toggles the editor asks for the
+/// time left to the next one, and on the toggle for a frame.
+#[test]
+fn cursor_blink_asks_for_the_next_toggle_not_for_every_frame() {
+    let mut ed = editor("x");
+    ed.config.cursor_blink_interval = 0.5;
+    let w = ed.wake(0.3);
+    assert!(!w.now);
+    assert!((w.next.unwrap().as_secs_f32() - 0.2).abs() < 1e-6, "{w:?}");
+    let w = ed.wake(0.3);
+    assert!(w.now, "0.6 s: toggled off");
+    assert!((w.next.unwrap().as_secs_f32() - 0.4).abs() < 1e-6, "{w:?}");
+    assert!(!w.is_continuous());
+    ed.reset_blink();
+    let w = ed.wake(0.0);
+    assert!(!w.now);
+    assert!((w.next.unwrap().as_secs_f32() - 0.5).abs() < 1e-6, "{w:?}");
 }
 
 #[test]
