@@ -19,6 +19,7 @@ members = [
     "crates/parser",
     "crates/prime",
     "crates/rope",
+    "crates/sem",
     "crates/showcase",
 ]
 exclude = ["crates/urnaui"]
@@ -55,6 +56,7 @@ monster = { path = "crates/monster" }
 narrate = { path = "crates/narrate" }
 narrate-macro = { path = "crates/narrate-macro" }
 rope = { path = "crates/rope" }
+sem = { path = "crates/sem" }
 svg = { path = "crates/svg" }
 # -- gpu / window
 wgpu = "28"

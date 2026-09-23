@@ -161,6 +161,10 @@ depends = ["git", "engine", "comps"]
 path = "crates/rope"
 role = "rope/transactions/multi-cursor/history, pure (no ui)"
 
+[crates.sem]
+path = "crates/sem"
+role = "semantic contract (task-57, in progress): SemId, the persistent logical identity of a control, with its canonical text form; pure (no gpu, no window, no text stack)"
+
 [crates.git]
 path = "crates/git"
 role = "gix reads + git cli mutations, desktop-only"
