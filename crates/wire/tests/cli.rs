@@ -123,6 +123,12 @@ fn observe_and_act_by_app_name_with_their_exit_codes() {
         ["requested", "accepted", "executing", "completed"]
     );
     assert_eq!(host.app.done(2), Some(true));
+    assert!(
+        done.out
+            .iter()
+            .all(|m| m.id == done.out[0].id && m.id.is_some()),
+        "every stage under the act's id"
+    );
     let Reply::Stage(first) = &done.out[0].reply else {
         panic!("a stage");
     };

@@ -30,8 +30,8 @@ mod cli {
     use serde::de::IntoDeserializer;
     use serde::de::value::{Error as DeError, StrDeserializer};
     use wire::{
-        Act, Client, Observe, Reply, ServerMsg, StageReply, WireError, encode_server, find,
-        socket_dir,
+        Act, Ask, Client, Observe, ProtoError, Reply, ServerMsg, StageReply, WireError,
+        encode_server, find, socket_dir,
     };
 
     pub const USAGE: &str = "\
@@ -237,11 +237,24 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
     }
 
     fn observe_once(s: &mut Session, observe: Observe) -> Result<i32, WireError> {
-        let reply = s.client.observe(observe)?;
-        print(&ServerMsg { id: None, reply }, s.pretty);
-        Ok(DONE)
+        let id = s.client.send(Ask::Observe(observe))?;
+        let reply = s.client.recv_for(&id)?;
+        let code = match &reply {
+            Reply::Snapshot(_) | Reply::Delta(_) => DONE,
+            Reply::Error(e) => refused(e),
+            other => return Err(WireError::BadReply(format!("{other:?}"))),
+        };
+        print(
+            &ServerMsg {
+                id: Some(id),
+                reply,
+            },
+            s.pretty,
+        );
+        Ok(code)
     }
 
+    /// every stage of the act as it arrives, until a terminal one.
     fn act_once(s: &mut Session, mut act: Act, from: Option<Revision>) -> Result<i32, WireError> {
         if from.is_none() {
             let now = s.client.observe(Observe {
@@ -254,17 +267,29 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 _ => return Err(WireError::BadReply("no revision to act on".to_owned())),
             });
         }
-        let pretty = s.pretty;
-        let stages = s.client.act(act, |stage| {
-            print(
-                &ServerMsg {
-                    id: None,
-                    reply: Reply::Stage(stage.clone()),
-                },
-                pretty,
-            );
-        })?;
-        Ok(stages.last().map_or(ERROR, exit_of))
+        let id = s.client.send(Ask::Act(act))?;
+        loop {
+            let reply = s.client.recv_for(&id)?;
+            let code = match &reply {
+                Reply::Stage(stage) if stage.is_terminal() => Some(exit_of(stage)),
+                Reply::Stage(_) => None,
+                Reply::Error(e) => Some(refused(e)),
+                other => return Err(WireError::BadReply(format!("{other:?}"))),
+            };
+            let msg = ServerMsg {
+                id: Some(id.clone()),
+                reply,
+            };
+            print(&msg, s.pretty);
+            if let Some(code) = code {
+                return Ok(code);
+            }
+        }
+    }
+
+    fn refused(e: &ProtoError) -> i32 {
+        eprintln!("plev: {e}");
+        ERROR
     }
 
     pub fn exit_of(stage: &StageReply) -> i32 {
