@@ -1,6 +1,7 @@
 use crate::compositor::{
     ClipRect, DrawCommand, DrawKind, LayerEffect, clip_to_scissor, intersect_scissors,
 };
+use crate::perf::gpu_time::FrameStamps;
 
 /// Scissor for one draw command: the command's clip (intersection of the
 /// PushClip stack, in scene coordinates scaled to physical pixels by
@@ -128,12 +129,14 @@ fn bind_draw_kind(
     true
 }
 
-/// Begin (or resume) the render pass targeting a layer's attachment.
+/// Begin (or resume) the render pass targeting a layer's attachment,
+/// with the frame's timestamp writes for it when it is timed.
 fn begin_layer_pass<'e>(
     encoder: &'e mut wgpu::CommandEncoder,
     view: &wgpu::TextureView,
     resolve_target: Option<&wgpu::TextureView>,
     load: wgpu::LoadOp<wgpu::Color>,
+    timestamp_writes: Option<wgpu::RenderPassTimestampWrites<'_>>,
 ) -> wgpu::RenderPass<'e> {
     encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
         label: Some("layer_pass"),
@@ -147,7 +150,7 @@ fn begin_layer_pass<'e>(
             depth_slice: None,
         })],
         depth_stencil_attachment: None,
-        timestamp_writes: None,
+        timestamp_writes,
         occlusion_query_set: None,
         multiview_mask: None,
     })
@@ -283,6 +286,34 @@ pub fn encode_layer_passes(
     dirty_layer_ids: &[crate::compositor::LayerId],
     encoder: &mut wgpu::CommandEncoder,
 ) -> u32 {
+    encode_layer_passes_timed(
+        compositor,
+        gpu,
+        text_system,
+        effects,
+        texture_pool,
+        background,
+        dirty_layer_ids,
+        encoder,
+        None,
+    )
+}
+
+/// [`encode_layer_passes`] with the frame's timestamps: every layer pass
+/// (a pass resumed after a backdrop is one more) writes a timestamp at
+/// its start and end while `stamps` has room.
+#[allow(clippy::too_many_arguments)] // the public one's, plus the stamps
+pub(crate) fn encode_layer_passes_timed(
+    compositor: &crate::compositor::Compositor,
+    gpu: &crate::gpu::GpuContext,
+    text_system: &crate::text::TextSystem,
+    effects: &crate::effects::EffectProcessor,
+    texture_pool: &mut crate::gpu::texture_pool::TexturePool,
+    background: wgpu::Color,
+    dirty_layer_ids: &[crate::compositor::LayerId],
+    encoder: &mut wgpu::CommandEncoder,
+    mut stamps: Option<&mut FrameStamps<'_>>,
+) -> u32 {
     let vw = gpu.surface_config.width;
     let vh = gpu.surface_config.height;
     let clip_scale = gpu.clip_scale();
@@ -311,6 +342,7 @@ pub fn encode_layer_passes(
                 b: 0.0,
                 a: 0.0,
             }),
+            stamps.as_deref_mut().and_then(FrameStamps::layer_pass),
         );
 
         let base_scissor = layer
@@ -380,7 +412,13 @@ pub fn encode_layer_passes(
 
                     // Resume on top of the existing content and draw the
                     // frosted rounded rect.
-                    pass = begin_layer_pass(encoder, view, resolve_target, wgpu::LoadOp::Load);
+                    pass = begin_layer_pass(
+                        encoder,
+                        view,
+                        resolve_target,
+                        wgpu::LoadOp::Load,
+                        stamps.as_deref_mut().and_then(FrameStamps::layer_pass),
+                    );
                     pass.set_pipeline(&gpu.backdrop_pipeline);
                     pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
                     pass.set_bind_group(1, &backdrop_bg, &[]);
@@ -509,6 +547,28 @@ pub fn encode_composite_pass(
     effect_results: &[(crate::compositor::LayerId, wgpu::BindGroup)],
     encoder: &mut wgpu::CommandEncoder,
 ) -> u32 {
+    encode_composite_pass_timed(
+        compositor,
+        clear_color,
+        gpu,
+        surface_view,
+        effect_results,
+        encoder,
+        None,
+    )
+}
+
+/// [`encode_composite_pass`] with the frame's timestamps: the pass writes
+/// one at its start and end when `stamps` is given.
+pub(crate) fn encode_composite_pass_timed(
+    compositor: &crate::compositor::Compositor,
+    clear_color: wgpu::Color,
+    gpu: &crate::gpu::GpuContext,
+    surface_view: &wgpu::TextureView,
+    effect_results: &[(crate::compositor::LayerId, wgpu::BindGroup)],
+    encoder: &mut wgpu::CommandEncoder,
+    stamps: Option<&FrameStamps<'_>>,
+) -> u32 {
     let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
         label: Some("composite_pass"),
         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -521,7 +581,7 @@ pub fn encode_composite_pass(
             depth_slice: None,
         })],
         depth_stencil_attachment: None,
-        timestamp_writes: None,
+        timestamp_writes: stamps.map(FrameStamps::composite_pass),
         occlusion_query_set: None,
         multiview_mask: None,
     });

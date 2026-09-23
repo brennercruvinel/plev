@@ -86,11 +86,23 @@ pub enum Stage {
     /// [`set_gpu_sync`]: the GPU time of the frame plus the latency of
     /// seeing it done, an upper bound.
     GpuWait,
+    /// The GPU's own clock over a frame, from timestamp queries: the first
+    /// timed pass's start to the last one's end, so the gaps between
+    /// passes and the passes not timed (a backdrop blur) are in it. Only
+    /// with `RenderConfig::gpu_timestamps` on an adapter that has them;
+    /// recorded in the frame that reads the timestamps back, the same
+    /// frame with [`set_gpu_sync`], a later one without (see `gpu_time`).
+    GpuSpan,
+    /// The GPU's time in the layer passes, from their timestamps, summed
+    /// over the passes timed; items: layer passes timed.
+    GpuLayers,
+    /// The GPU's time in the composite pass, from its timestamps.
+    GpuComposite,
 }
 
 impl Stage {
     /// How many stages there are.
-    pub const COUNT: usize = 19;
+    pub const COUNT: usize = 22;
 
     /// Every stage, in frame order (`ALL[s as usize] == s`).
     pub const ALL: [Stage; Stage::COUNT] = [
@@ -113,6 +125,9 @@ impl Stage {
         Stage::Upload,
         Stage::Encode,
         Stage::GpuWait,
+        Stage::GpuSpan,
+        Stage::GpuLayers,
+        Stage::GpuComposite,
     ];
 
     /// Short name for a table row.
@@ -137,6 +152,9 @@ impl Stage {
             Stage::Upload => "gpu buffer upload",
             Stage::Encode => "encode and submit",
             Stage::GpuWait => "gpu wait",
+            Stage::GpuSpan => "gpu span (timestamps)",
+            Stage::GpuLayers => "gpu layer passes",
+            Stage::GpuComposite => "gpu composite pass",
         }
     }
 
@@ -150,6 +168,7 @@ impl Stage {
             Stage::HitTest => Some("bindings"),
             Stage::TextResolve => Some("glyphs"),
             Stage::Encode => Some("draw calls"),
+            Stage::GpuLayers => Some("passes"),
             _ => None,
         }
     }
@@ -203,6 +222,15 @@ impl StageFrame {
     /// Nothing was recorded.
     pub fn is_empty(&self) -> bool {
         self.costs.iter().all(|c| c.calls == 0)
+    }
+
+    /// The GPU time the frame's timestamps read ([`Stage::GpuSpan`]; the
+    /// mean when more than one reading landed in it), in whole
+    /// microseconds, or `None` when no timestamp was read this frame. It
+    /// is what a frame loop feeds `PerfMonitor::record_gpu_micros`.
+    pub fn gpu_micros(&self) -> Option<u64> {
+        let span = self.get(Stage::GpuSpan);
+        (span.calls > 0).then(|| (span.nanos / span.calls + 500) / 1_000)
     }
 
     fn add(&mut self, stage: Stage, items: u64, nanos: u64) {
@@ -261,6 +289,15 @@ pub fn take() -> StageFrame {
 pub fn count(stage: Stage, items: u64) {
     if is_enabled() {
         record(stage, items, 0);
+    }
+}
+
+/// One run of `stage` that handled `items` and took `nanos` measured by
+/// another clock (the GPU's timestamps), recorded only while stages are
+/// on.
+pub(crate) fn add(stage: Stage, items: u64, nanos: u64) {
+    if is_enabled() {
+        record(stage, items, nanos);
     }
 }
 
@@ -494,6 +531,37 @@ mod tests {
         enable(false);
         enable(true);
         gpu_wait(|| panic!("turning stages off drops the sync"));
+    }
+
+    #[test]
+    fn a_gpu_time_is_recorded_only_while_on_and_reads_as_micros() {
+        enable(false);
+        add(Stage::GpuSpan, 0, 5_000);
+        assert!(take().is_empty());
+        assert_eq!(StageFrame::default().gpu_micros(), None);
+
+        let _on = On::new();
+        add(Stage::GpuSpan, 0, 1_499);
+        let one = take();
+        assert_eq!(
+            one.get(Stage::GpuSpan),
+            StageCost {
+                calls: 1,
+                items: 0,
+                nanos: 1_499
+            }
+        );
+        assert_eq!(one.gpu_micros(), Some(1), "rounded to the nearest us");
+        add(Stage::GpuSpan, 0, 1_000);
+        add(Stage::GpuSpan, 0, 3_000);
+        assert_eq!(take().gpu_micros(), Some(2), "the mean of two readings");
+        add(Stage::GpuLayers, 3, 700);
+        add(Stage::GpuComposite, 0, 300);
+        assert_eq!(
+            take().gpu_micros(),
+            None,
+            "the frame's gpu time is the span"
+        );
     }
 
     #[test]

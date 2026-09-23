@@ -282,4 +282,222 @@ mod frame_tail {
         };
         assert!(plain.rgba == measured.rgba, "the probes changed a pixel");
     }
+
+    /// A renderer whose context has GPU timestamps, or `None` (skip) when
+    /// there is no adapter or it lacks `TIMESTAMP_QUERY`.
+    fn timed_renderer(viewport: Viewport) -> Option<Renderer> {
+        let config = RenderConfig {
+            gpu_timestamps: true,
+            ..RenderConfig::default()
+        };
+        let probe = pollster::block_on(crate::gpu::GpuContext::new_headless(1, 1, config.clone()));
+        if !probe.is_some_and(|gpu| gpu.timestamps.is_some()) {
+            eprintln!("no GPU adapter with timestamp queries; skipping");
+            return None;
+        }
+        match Renderer::new(viewport, config) {
+            Ok(r) => Some(r),
+            Err(e) => panic!("headless renderer: {e}"),
+        }
+    }
+
+    const GPU_STAGES: [Stage; 3] = [Stage::GpuSpan, Stage::GpuLayers, Stage::GpuComposite];
+
+    #[test]
+    fn without_timestamps_asked_no_gpu_stage_is_recorded() {
+        let Some(mut r) = renderer() else {
+            return;
+        };
+        let _on = On::new();
+        stages::set_gpu_sync(true);
+        let mut c = Compositor::new();
+        let frame = draw(&mut r, &mut c);
+        assert_eq!(frame.get(Stage::GpuWait).calls, 1);
+        for stage in GPU_STAGES {
+            assert_eq!(frame.get(stage), Default::default(), "{stage:?}");
+        }
+        assert_eq!(frame.gpu_micros(), None);
+    }
+
+    #[test]
+    fn timestamps_read_back_one_frame_later_and_feed_the_monitor() {
+        let Some(mut r) = timed_renderer(Viewport::new(800.0, 600.0, 2.0)) else {
+            return;
+        };
+        let _on = On::new();
+        stages::set_gpu_sync(true);
+        let mut c = Compositor::new();
+
+        // the first frame writes its timestamps; nothing finished before it
+        let first = draw(&mut r, &mut c);
+        for stage in GPU_STAGES {
+            assert_eq!(first.get(stage).calls, 0, "{stage:?}");
+        }
+
+        // the next frame resolves the first, finished, and reads it back
+        let second = draw(&mut r, &mut c);
+        let (span, layers, composite) = (
+            second.get(Stage::GpuSpan),
+            second.get(Stage::GpuLayers),
+            second.get(Stage::GpuComposite),
+        );
+        assert_eq!(
+            (span.calls, layers.calls, composite.calls),
+            (1, 1, 1),
+            "{second:?}"
+        );
+        assert_eq!(
+            layers.items, 1,
+            "the first frame: one dirty layer, one pass"
+        );
+        assert!(layers.nanos > 0 && composite.nanos > 0, "{second:?}");
+        assert!(
+            span.nanos >= layers.nanos.max(composite.nanos),
+            "{second:?}"
+        );
+        assert!(span.nanos < 1_000_000_000, "a plausible frame: {span:?}");
+
+        let mut perf = crate::perf::PerfMonitor::new();
+        let Some(micros) = second.gpu_micros() else {
+            panic!("a timed frame reads a gpu time: {second:?}");
+        };
+        perf.record_gpu_micros(micros);
+        assert!(
+            perf.snapshot().gpu_micros.is_some_and(|us| us > 0),
+            "a 1600x1200 msaa layer and its composite take a microsecond or more"
+        );
+
+        // the second frame changed nothing: no layer pass, the composite alone
+        let third = draw(&mut r, &mut c);
+        assert_eq!(third.get(Stage::GpuLayers).items, 0);
+        assert_eq!(third.get(Stage::GpuComposite).calls, 1);
+        assert!(third.get(Stage::GpuComposite).nanos > 0);
+    }
+
+    #[test]
+    fn timestamps_are_written_only_by_frames_drawn_with_stages_on() {
+        let Some(mut r) = timed_renderer(Viewport::new(160.0, 120.0, 1.0)) else {
+            return;
+        };
+        stages::enable(false);
+        let mut c = Compositor::new();
+        for _ in 0..3 {
+            scene(&mut c);
+            r.draw(&mut c, [0.0, 0.0, 0.0, 1.0]);
+        }
+        let _on = On::new();
+        stages::set_gpu_sync(true);
+        let first_on = draw(&mut r, &mut c);
+        assert_eq!(
+            first_on.get(Stage::GpuSpan).calls,
+            0,
+            "the frames drawn with stages off wrote nothing to read: {first_on:?}"
+        );
+        assert_eq!(draw(&mut r, &mut c).get(Stage::GpuSpan).calls, 1);
+    }
+
+    #[test]
+    fn timestamps_draw_the_same_pixels_as_a_plain_context() {
+        let Some(mut plain) = renderer() else {
+            return;
+        };
+        let Some(mut timed) = timed_renderer(Viewport::new(160.0, 120.0, 1.0)) else {
+            return;
+        };
+        stages::enable(false);
+        let mut c = Compositor::new();
+        scene(&mut c);
+        let before = match plain.render(&mut c, [0.0, 0.0, 0.0, 1.0]) {
+            Ok(f) => f,
+            Err(e) => panic!("{e}"),
+        };
+        let _on = On::new();
+        stages::set_gpu_sync(true);
+        let mut c = Compositor::new();
+        let mut frames = Vec::new();
+        for _ in 0..2 {
+            scene(&mut c);
+            match timed.render(&mut c, [0.0, 0.0, 0.0, 1.0]) {
+                Ok(f) => frames.push(f),
+                Err(e) => panic!("{e}"),
+            }
+        }
+        assert_eq!(stages::take().get(Stage::GpuSpan).calls, 1, "timed");
+        for measured in frames {
+            assert!(
+                before.rgba == measured.rgba,
+                "the timestamps changed a pixel"
+            );
+        }
+    }
+
+    #[test]
+    fn without_the_sync_readings_arrive_later_and_nothing_waits() {
+        let Some(mut r) = timed_renderer(Viewport::new(160.0, 120.0, 1.0)) else {
+            return;
+        };
+        let _on = On::new();
+        let mut c = Compositor::new();
+        let mut readings = 0;
+        for _ in 0..20 {
+            readings += draw(&mut r, &mut c).get(Stage::GpuSpan).calls;
+        }
+        // two synced frames: the first sees every frame in flight done,
+        // the second reads them back
+        stages::set_gpu_sync(true);
+        for _ in 0..2 {
+            readings += draw(&mut r, &mut c).get(Stage::GpuSpan).calls;
+        }
+        assert!((1..=21).contains(&readings), "{readings}");
+    }
+
+    #[test]
+    fn a_frame_with_more_layer_passes_than_a_set_holds_times_the_first_ones() {
+        let Some(mut r) = timed_renderer(Viewport::new(160.0, 120.0, 1.0)) else {
+            return;
+        };
+        let _on = On::new();
+        stages::set_gpu_sync(true);
+        let mut c = Compositor::new();
+        let layers: Vec<_> = (1..=70).map(|z| c.create_layer(z)).collect();
+        c.begin_frame();
+        // the default layer draws too: an empty pass reads no end on Metal
+        c.draw_rect(0.0, 20.0, 10.0, 10.0, [0.6, 0.4, 0.2, 1.0]);
+        for (i, layer) in layers.iter().enumerate() {
+            c.push_to_layer(
+                *layer,
+                SceneNode::Rect {
+                    x: i as f32,
+                    y: 0.0,
+                    w: 10.0,
+                    h: 10.0,
+                    color: [0.2, 0.4, 0.6, 1.0],
+                },
+            );
+        }
+        r.draw(&mut c, [0.0, 0.0, 0.0, 1.0]);
+        let next = draw(&mut r, &mut c);
+        assert_eq!(next.get(Stage::GpuLayers).items, 63, "{next:?}");
+        assert_eq!(next.get(Stage::GpuComposite).calls, 1);
+    }
+
+    #[test]
+    fn an_empty_layer_pass_does_not_break_the_reading() {
+        let Some(mut r) = timed_renderer(Viewport::new(160.0, 120.0, 1.0)) else {
+            return;
+        };
+        let _on = On::new();
+        stages::set_gpu_sync(true);
+        let mut c = Compositor::new();
+        let _empty = c.create_layer(1);
+        draw(&mut r, &mut c);
+        let next = draw(&mut r, &mut c);
+        let layers = next.get(Stage::GpuLayers);
+        // two dirty layers, two passes; Metal samples no end for the one
+        // that only clears
+        assert!((1..=2).contains(&layers.items), "{next:?}");
+        assert!(layers.nanos > 0);
+        assert_eq!(next.get(Stage::GpuSpan).calls, 1);
+        assert_eq!(next.get(Stage::GpuComposite).calls, 1);
+    }
 }

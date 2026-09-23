@@ -14,10 +14,13 @@ use crate::compositor::Compositor;
 use crate::effects::EffectProcessor;
 use crate::gpu::GpuContext;
 use crate::gpu::texture_pool::TexturePool;
+use crate::perf::gpu_time::FrameStamps;
 use crate::perf::stages::{self, Stage};
 use crate::text::TextSystem;
 
-use super::render_passes::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+use super::render_passes::{
+    encode_composite_pass_timed, encode_layer_passes_timed, resolve_layer_text,
+};
 
 /// Present one frame of an already-built scene.
 ///
@@ -94,6 +97,11 @@ pub fn present_frame(
 /// and format from the context, not from the view. `clear_linear` and
 /// `label` are as in [`present_frame`].
 ///
+/// With `perf::stages` on it records each stage it runs; on a context
+/// built with `RenderConfig::gpu_timestamps` the layer and composite
+/// passes also write GPU timestamps, read back by a later frame without
+/// waiting (see `perf::gpu_time`). Neither changes a pixel.
+///
 /// Returns the number of draw calls issued.
 #[allow(clippy::too_many_arguments)] // the frame's resources, one each
 pub fn draw_frame(
@@ -151,7 +159,16 @@ pub fn draw_frame(
         a: a as f64,
     };
 
-    let layer_draws = encode_layer_passes(
+    // GPU timestamps, only on a context built with
+    // `RenderConfig::gpu_timestamps` (see `perf::gpu_time`): the finished
+    // frames' queries are resolved first, then this frame's passes write
+    // theirs while stages are on.
+    if let Some(timestamps) = &gpu.timestamps {
+        timestamps.resolve_finished(&mut encoder);
+    }
+    let mut stamps = FrameStamps::begin(gpu.timestamps.as_ref());
+
+    let layer_draws = encode_layer_passes_timed(
         compositor,
         gpu,
         text_system,
@@ -160,18 +177,32 @@ pub fn draw_frame(
         clear_color,
         &dirty_layer_ids,
         &mut encoder,
+        stamps.as_mut(),
     );
     for id in &dirty_layer_ids {
         compositor.mark_layer_clean(*id);
     }
 
-    let composite_draws =
-        encode_composite_pass(compositor, clear_color, gpu, target, &[], &mut encoder);
+    let composite_draws = encode_composite_pass_timed(
+        compositor,
+        clear_color,
+        gpu,
+        target,
+        &[],
+        &mut encoder,
+        stamps.as_ref(),
+    );
 
     gpu.queue.submit(std::iter::once(encoder.finish()));
+    if let Some(stamps) = stamps {
+        stamps.submitted(&gpu.queue);
+    }
     encode.end(|| u64::from(layer_draws + composite_draws));
     drop(draw);
     stages::wait_for_gpu(&gpu.device);
+    if let Some(timestamps) = &gpu.timestamps {
+        timestamps.collect();
+    }
 
     layer_draws + composite_draws
 }

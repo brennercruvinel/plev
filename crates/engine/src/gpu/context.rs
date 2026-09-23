@@ -57,6 +57,10 @@ pub struct GpuContext {
     ///
     /// [`set_projection`]: GpuContext::set_projection
     pub(crate) logical_size: Option<(f32, f32)>,
+    /// Timestamp queries around the passes of `window::draw_frame`, only
+    /// with `RenderConfig::gpu_timestamps` on a device that has
+    /// `TIMESTAMP_QUERY`; `None` otherwise (see `perf::gpu_time`).
+    pub(crate) timestamps: Option<crate::perf::gpu_time::GpuTimestamps>,
     /// Desktop debug builds: watches `src/gpu/shaders/`, see `hot_reload`.
     #[cfg(hot_reload)]
     pub(crate) shader_watcher: Option<crate::hot_reload::ShaderWatcher>,
@@ -99,7 +103,7 @@ impl GpuContext {
         log::info!("GPU: requesting device...");
 
         let (device, queue) = adapter
-            .request_device(&Self::device_descriptor())
+            .request_device(&Self::device_descriptor(&adapter, &config))
             .await
             .expect("Failed to create device");
         log::info!(
@@ -192,7 +196,8 @@ impl GpuContext {
             }
         };
         log::info!("GPU adapter (headless): {}", adapter.get_info().name);
-        let (device, queue) = match adapter.request_device(&Self::device_descriptor()).await {
+        let descriptor = Self::device_descriptor(&adapter, &config);
+        let (device, queue) = match adapter.request_device(&descriptor).await {
             Ok(pair) => pair,
             Err(e) => {
                 log::warn!("headless: device request failed ({e})");
@@ -235,10 +240,18 @@ impl GpuContext {
         })
     }
 
-    fn device_descriptor() -> wgpu::DeviceDescriptor<'static> {
+    /// No feature, unless `config` asks for GPU timestamps and the adapter
+    /// has them.
+    fn device_descriptor(
+        adapter: &wgpu::Adapter,
+        config: &RenderConfig,
+    ) -> wgpu::DeviceDescriptor<'static> {
         wgpu::DeviceDescriptor {
             label: Some("plev_device"),
-            required_features: wgpu::Features::empty(),
+            required_features: crate::perf::gpu_time::device_features(
+                adapter.features(),
+                config.gpu_timestamps,
+            ),
             #[cfg(not(target_arch = "wasm32"))]
             required_limits: wgpu::Limits::default(),
             #[cfg(target_arch = "wasm32")]
@@ -371,6 +384,12 @@ impl GpuContext {
             ..Default::default()
         });
 
+        let timestamps = if config.gpu_timestamps {
+            crate::perf::gpu_time::GpuTimestamps::new(&device, &queue)
+        } else {
+            None
+        };
+
         Self {
             device,
             queue,
@@ -398,6 +417,7 @@ impl GpuContext {
             opacity_bind_group_layout,
             composite_sampler,
             logical_size: None,
+            timestamps,
         }
     }
 
