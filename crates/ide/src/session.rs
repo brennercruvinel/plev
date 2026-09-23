@@ -3,6 +3,8 @@
 //! Shared by the ide binary and by hosts that embed the workspace (the
 //! showcase's Git tab), so neither carries its own copy of the mapping.
 
+use std::collections::BTreeSet;
+
 use git::{Branch, Commit, GitClient, GitCommand, GitEvent};
 
 use crate::adapters;
@@ -58,7 +60,16 @@ impl GitSession {
     }
 
     /// Forwards git operations queued by the views to the worker thread.
+    /// A commit carries the staged set the view shows, and the worker
+    /// commits only if the index still stages exactly that.
     pub fn flush_requests(&mut self, workspace: &mut WorkspaceView) {
+        let staged: BTreeSet<String> = workspace
+            .unassigned
+            .changes()
+            .into_iter()
+            .filter(|c| c.staged)
+            .map(|c| c.path)
+            .collect();
         for request in workspace.take_requests() {
             let command = match request {
                 UiRequest::FileDiff { path } => {
@@ -73,7 +84,10 @@ impl GitSession {
                 UiRequest::Unstage { path } => GitCommand::Unstage { path },
                 UiRequest::Discard { path } => GitCommand::Discard { path },
                 UiRequest::Ignore { path } => GitCommand::Ignore { path },
-                UiRequest::Commit { message } => GitCommand::Commit { message },
+                UiRequest::Commit { message } => GitCommand::CommitIf {
+                    message,
+                    expect_staged: staged.clone(),
+                },
             };
             self.git.send(command);
         }
@@ -131,9 +145,14 @@ impl GitSession {
             }
             GitEvent::Committed(result) => {
                 match result {
-                    Ok(sha) => log::info!("committed {sha}"),
+                    Ok(commit) => log::info!("committed {} {:?}", commit.sha, commit.files),
                     Err(e) => log::error!("commit failed: {e}"),
                 }
+                self.refresh();
+            }
+            // The index moved under the view: reload it.
+            GitEvent::CommitRejected { added, removed } => {
+                log::warn!("commit refused: the index staged {added:?} and not {removed:?}");
                 self.refresh();
             }
             GitEvent::Status(Err(e)) => log::error!("status failed: {e}"),
