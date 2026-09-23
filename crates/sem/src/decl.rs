@@ -1,6 +1,12 @@
 //! what bounds a node (`Constraints`) and what it accepts (`ActionDecl`
 //! with its `Policy`). all of it is data: applying a policy or checking a
 //! precondition belongs to `check` and the `Dispatcher`.
+//!
+//! the serde form is lean: a field at its default is not written, and a
+//! field left out reads as its default, so a JSON that spells every
+//! default out (the form before task-57b) reads the same. the helpers at
+//! the end say what "default" is for each field; `enabled` is the one
+//! flag that is on unless said otherwise.
 
 use crate::name::ActionName;
 use crate::value::{StateRef, ValueKind};
@@ -15,15 +21,34 @@ use crate::value::{StateRef, ValueKind};
 #[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Constraints {
+    #[cfg_attr(feature = "serde", serde(default, skip_serializing_if = "is_false"))]
     pub editable: bool,
+    #[cfg_attr(feature = "serde", serde(default, skip_serializing_if = "is_false"))]
     pub required: bool,
     /// inclusive `(low, high)`, both finite, `low <= high`.
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub range: Option<(f64, f64)>,
     /// finite and above zero.
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub step: Option<f64>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub max_len: Option<usize>,
     /// the accepted choices, without repeats.
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub options: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(default, skip_serializing_if = "is_false"))]
     pub secret: bool,
 }
 
@@ -119,11 +144,17 @@ impl Confirm {
 }
 
 /// who may request an action and under which care. data only here.
+///
+/// in the serde form `actors` is written whole when any actor is left out,
+/// and not at all when everyone may ask.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Policy {
+    #[cfg_attr(feature = "serde", serde(default, skip_serializing_if = "is_default"))]
     pub actors: Actors,
+    #[cfg_attr(feature = "serde", serde(default, skip_serializing_if = "is_default"))]
     pub confirm: Confirm,
+    #[cfg_attr(feature = "serde", serde(default, skip_serializing_if = "is_false"))]
     pub destructive: bool,
 }
 
@@ -145,10 +176,27 @@ pub struct ParamSpec {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ActionDecl {
     pub name: ActionName,
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub label: Option<String>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(default = "yes", skip_serializing_if = "is_true")
+    )]
     pub enabled: bool,
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Vec::is_empty")
+    )]
     pub reads: Vec<StateRef>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub param: Option<ParamSpec>,
+    #[cfg_attr(feature = "serde", serde(default, skip_serializing_if = "is_default"))]
     pub policy: Policy,
 }
 
@@ -165,4 +213,26 @@ impl ActionDecl {
             policy: Policy::default(),
         }
     }
+}
+
+/// true when `v` is its type's default: the serde form leaves it out.
+#[cfg(feature = "serde")]
+pub(crate) fn is_default<T: Default + PartialEq>(v: &T) -> bool {
+    *v == T::default()
+}
+
+#[cfg(feature = "serde")]
+pub(crate) fn is_false(b: &bool) -> bool {
+    !*b
+}
+
+#[cfg(feature = "serde")]
+pub(crate) fn is_true(b: &bool) -> bool {
+    *b
+}
+
+/// the default of a flag that is on unless said otherwise (`enabled`).
+#[cfg(feature = "serde")]
+pub(crate) fn yes() -> bool {
+    true
 }

@@ -187,11 +187,13 @@ impl fmt::Debug for Snapshot {
     }
 }
 
-/// the serde form: nodes as a list in projection order, and the focus.
+/// the serde form: nodes as a list in projection order, and the focus
+/// when there is one.
 #[cfg(feature = "serde")]
 #[derive(serde::Serialize, serde::Deserialize)]
 struct SnapshotWire {
     nodes: Vec<Node>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     focused: Option<SemId>,
 }
 

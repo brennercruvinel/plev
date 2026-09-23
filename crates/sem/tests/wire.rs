@@ -8,8 +8,8 @@ use std::collections::BTreeSet;
 
 use indexmap::IndexMap;
 use sem::{
-    Actor, Outcome, Receipt, Rejection, Request, RequestId, Role, Snapshot, SnapshotBuilder, Stage,
-    Value, Verdict, check,
+    ActionDecl, Actor, Actors, Confirm, Constraints, Outcome, Policy, Receipt, Rejection, Request,
+    RequestId, Role, Snapshot, SnapshotBuilder, Stage, Value, Verdict, check,
 };
 
 fn set(items: &[&str]) -> Value {
@@ -45,7 +45,6 @@ const REQUEST: &str = r#"{
   },
   "target": "commit.submit",
   "action": "submit",
-  "param": null,
   "observed": {
     "revision": "3ba694e7d3941ec0",
     "values": [
@@ -121,7 +120,6 @@ const RECEIPT: &str = r#"{
     },
     "target": "commit.submit",
     "action": "submit",
-    "param": null,
     "observed": {
       "revision": "3ba694e7d3941ec0",
       "values": [
@@ -226,7 +224,6 @@ const DECLINED: &str = r#"{
     },
     "target": "commit.submit",
     "action": "submit",
-    "param": null,
     "observed": {
       "revision": "3ba694e7d3941ec0",
       "values": [
@@ -322,7 +319,9 @@ fn a_completed_receipt_roundtrips_with_its_outcome() {
     assert_eq!(serde_json::from_str::<Receipt>(&text).unwrap(), receipt);
 }
 
-const SNAPSHOT: &str = r#"{
+/// the form before task-57b: every default spelled out, `source: null`.
+/// it is not written any more, and it still reads.
+const OLD_SNAPSHOT: &str = r#"{
   "nodes": [
     {
       "id": "changes",
@@ -429,8 +428,57 @@ const SNAPSHOT: &str = r#"{
   "focused": null
 }"#;
 
+/// the lean form: `id`, `role` and `label` always; every other field only
+/// when it is not at its default; `focused` only when there is one.
+const SNAPSHOT: &str = r#"{
+  "nodes": [
+    {
+      "id": "changes",
+      "role": "list",
+      "label": "changes",
+      "state": {
+        "staged": {
+          "kind": "set",
+          "value": [
+            "A",
+            "B",
+            "C"
+          ]
+        }
+      }
+    },
+    {
+      "id": "commit.message",
+      "role": "text_input",
+      "label": "commit message",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "fix login"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "commit.submit",
+      "role": "button",
+      "label": "commit",
+      "actions": [
+        {
+          "name": "submit",
+          "reads": [
+            "changes:staged",
+            "commit.message:text"
+          ]
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}"#;
+
 /// the snapshot the agent saw. `source` names a line of this file, which
-/// is metadata and not contract, so the pinned text has it blanked; the
+/// is metadata and not contract, so the pinned text has it removed; the
 /// fields keep the order serde writes them in.
 #[test]
 fn a_snapshot_has_a_pinned_json_form_and_roundtrips() {
@@ -443,9 +491,126 @@ fn a_snapshot_has_a_pinned_json_form_and_roundtrips() {
     let mut wire = serde_json::to_value(&seen).unwrap();
     for node in wire["nodes"].as_array_mut().unwrap() {
         assert!(node["source"]["line"].is_u64());
-        node["source"] = serde_json::Value::Null;
+        node.as_object_mut().unwrap().remove("source");
     }
     let unsourced: Snapshot = serde_json::from_value(wire).unwrap();
     assert_eq!(unsourced, seen);
     assert_eq!(serde_json::to_string_pretty(&unsourced).unwrap(), SNAPSHOT);
+    for key in [
+        "description",
+        "parent",
+        "constraints",
+        "enabled",
+        "inert",
+        "source",
+    ] {
+        assert!(
+            !SNAPSHOT.contains(key),
+            "{key} is at its default everywhere"
+        );
+    }
+}
+
+/// a snapshot written before task-57b reads as the same snapshot, with
+/// the same revision as the one projected now.
+#[test]
+fn the_form_before_the_lean_one_still_reads() {
+    let seen = git(&["A", "B", "C"], "fix login");
+    let old: Snapshot = serde_json::from_str(OLD_SNAPSHOT).unwrap();
+    assert_eq!(old, seen);
+    assert_eq!(old.revision(), seen.revision());
+    let lean: Snapshot = serde_json::from_str(SNAPSHOT).unwrap();
+    assert_eq!(lean, old);
+    assert_eq!(lean.revision(), seen.revision());
+    assert_eq!(serde_json::to_string_pretty(&old).unwrap(), SNAPSHOT);
+
+    // a request with `"param": null`, as it was written, reads too.
+    let with_null = REQUEST.replacen("\"observed\"", "\"param\": null,\n  \"observed\"", 1);
+    assert_ne!(with_null, REQUEST);
+    let back: Request = serde_json::from_str(&with_null).unwrap();
+    assert_eq!(back, thesis_request());
+}
+
+/// what is left out reads as its default, field by field.
+#[test]
+fn a_field_left_out_reads_at_its_default() {
+    let bare: Snapshot =
+        serde_json::from_str(r#"{"nodes":[{"id":"x","role":"button","label":"x"}]}"#).unwrap();
+    assert_eq!(bare.focused(), None);
+    let node = bare.get(&"x".parse().unwrap()).unwrap();
+    assert_eq!(node.description, None);
+    assert_eq!(node.parent, None);
+    assert!(node.state.is_empty() && node.actions.is_empty());
+    assert_eq!(node.constraints, Constraints::default());
+    assert!(node.enabled && !node.inert && !node.focusable);
+    assert_eq!(node.source, None);
+
+    let partial = r#"{"nodes":[{"id":"x","role":"slider","label":"x",
+        "constraints":{"step":0.5},
+        "actions":[
+            {"name":"go"},
+            {"name":"drop","enabled":false,"policy":{"destructive":true}},
+            {"name":"ask","policy":{"confirm":"for_agents","actors":{"human":true,"agent":true,"assistive":false,"test":true}}}
+        ]}],"focused":"x"}"#;
+    let snap: Snapshot = serde_json::from_str(partial).unwrap();
+    assert_eq!(snap.focused().map(|f| f.as_str()), Some("x"));
+    let node = snap.get(&"x".parse().unwrap()).unwrap();
+    assert_eq!(
+        node.constraints,
+        Constraints {
+            step: Some(0.5),
+            ..Constraints::default()
+        }
+    );
+    assert_eq!(node.actions[0], ActionDecl::new("go".parse().unwrap()));
+    assert_eq!(
+        node.actions[1],
+        ActionDecl {
+            enabled: false,
+            policy: Policy {
+                destructive: true,
+                ..Policy::default()
+            },
+            ..ActionDecl::new("drop".parse().unwrap())
+        }
+    );
+    assert_eq!(
+        node.actions[2].policy,
+        Policy {
+            actors: Actors {
+                assistive: false,
+                ..Actors::default()
+            },
+            confirm: Confirm::ForAgents,
+            destructive: false,
+        }
+    );
+    // and written back, only what is not at its default appears.
+    let text = serde_json::to_string(&snap).unwrap();
+    assert!(text.contains(r#"{"name":"go"}"#), "{text}");
+    assert!(
+        text.contains(r#"{"name":"drop","enabled":false,"policy":{"destructive":true}}"#),
+        "{text}"
+    );
+    assert!(
+        text.contains(r#""actors":{"human":true,"agent":true,"assistive":false,"test":true}"#),
+        "a policy that leaves an actor out writes them all: {text}"
+    );
+    assert!(text.ends_with(r#""focused":"x"}"#), "{text}");
+}
+
+/// `source` is not contract, but it is kept when the node has one: the
+/// recorder needs it to go from a replay back to the code.
+#[test]
+fn a_node_with_a_source_keeps_it_through_the_wire() {
+    let seen = git(&["A"], "fix login");
+    let text = serde_json::to_string(&seen).unwrap();
+    assert!(text.contains(r#""source":{"file":"#), "{text}");
+    let back: Snapshot = serde_json::from_str(&text).unwrap();
+    for (id, node) in seen.nodes() {
+        let kept = back.get(id).and_then(|n| n.source.clone());
+        assert!(kept.is_some(), "{id}");
+        assert_eq!(kept, node.source, "{id}");
+    }
+    assert_eq!(back.revision(), seen.revision());
 }

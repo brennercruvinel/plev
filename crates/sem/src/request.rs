@@ -55,13 +55,18 @@ pub struct Observation {
 }
 
 /// an actor asks `target` to run `action`, with an optional parameter,
-/// having seen `observed`.
+/// having seen `observed`. the serde form carries `param` only when there
+/// is one.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Request {
     pub actor: Actor,
     pub target: SemId,
     pub action: ActionName,
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub param: Option<Value>,
     pub observed: Observation,
 }
