@@ -2,10 +2,15 @@
 //! (graphite track fading to the white handle gradient as it travels).
 //! Tick it every frame while animating; keyboard focus
 //! ([`Switch::set_focused`]) rings the track with the accent focus ring.
+//!
+//! With a [`SemId`] ([`Switch::sem`]) the render binds the bounds it
+//! draws and hit-tests with, and [`Switch::project`] declares the switch
+//! in a semantic projection; the app still owns `on`.
 
 use engine::animation::Spring;
 use engine::compositor::{Compositor, SceneNode};
 use engine::theme::{MotionPhysics, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent, mix};
 use crate::recipe::focus_ring;
@@ -27,6 +32,7 @@ pub struct Switch {
     focused: bool,
     /// Knob position progress: 0.0 = off, 1.0 = on.
     knob: Spring<f32>,
+    sem: Option<SemId>,
 }
 
 impl Switch {
@@ -38,7 +44,43 @@ impl Switch {
             pressed: false,
             focused: false,
             knob: Spring::new(if on { 1.0 } else { 0.0 }),
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds its bounds to
+    /// (`Compositor::bind`).
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this switch as `id` in a projection: a `Role::Toggle`
+    /// named `label`, its `on` state, enabled unless disabled, and a
+    /// `toggle` action that reads its own `on`. The knob's travel is
+    /// animation and is never projected. It only reads the widget; the
+    /// app owns it and runs `toggle` ([`Switch::toggle`]). Pass the id
+    /// given to [`Switch::sem`] so the node and the binding name the same
+    /// control. Returns the node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let mut node = b.node(id, Role::Toggle, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("on", self.on).enabled(!self.disabled);
+        node.action("toggle").reads(format!("{id}:on"));
+        node
     }
 
     /// Use theme motion physics for the knob spring (call once at setup):
@@ -131,6 +173,9 @@ impl Switch {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
+        if let Some(id) = &self.sem {
+            compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let glass = &theme.glass;
         let alpha = if self.disabled {
             glass.disabled_alpha

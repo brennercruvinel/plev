@@ -7,11 +7,17 @@
 //! control tall, the pill is the tabs/select radius, the panel is the
 //! card radius with the menu padding, options are the nav radius, the
 //! panel never grows past `size.dropdown_max_h`.
+//!
+//! With a [`SemId`] ([`Select::sem`]) the render binds the closed control
+//! and, while open, each option row it draws to the rects they are
+//! hit-tested with, and [`Select::project`] declares the select in a
+//! semantic projection; the app still owns the selection.
 
 use crate::icons;
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ControlSize, IconSize, Theme};
+use sem::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
 use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
 use crate::recipe::{focus_ring, glass_pill, menu_shadow};
@@ -58,6 +64,7 @@ pub struct Select {
     hovered: bool,
     hovered_option: Option<usize>,
     focused: bool,
+    sem: Option<SemId>,
 }
 
 impl Select {
@@ -72,6 +79,106 @@ impl Select {
             hovered: false,
             hovered_option: None,
             focused: false,
+            sem: None,
+        }
+    }
+
+    /// The logical identity the render binds the control to
+    /// (`Compositor::bind`); the open options bind as `<id>[<index>]`.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this select as `id` in a projection: a `Role::Select`
+    /// named `label`, its `selected` option label (empty when it has no
+    /// option), whether its panel is `expanded`, editable with the option
+    /// labels as the accepted choices, enabled unless disabled, and the
+    /// actions `select` (a text, one of the options), `open` and `close`.
+    /// While open, each option is a `Role::Option` child `<id>[<index>]`
+    /// with a `select` of its own, the rows a click picks from. Each
+    /// action reads the state it changes (`selected` or `expanded`). The
+    /// hovered option is never projected. It only reads the widget; the
+    /// app owns it and runs the actions ([`Select::select_label`],
+    /// [`Select::select_index`], [`Select::open`], [`Select::close`]).
+    /// Pass the id given to [`Select::sem`] so the nodes and the bindings
+    /// name the same controls. Returns the select's node for the app to
+    /// add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let selected = format!("{id}:selected");
+        let expanded = format!("{id}:expanded");
+        if self.open {
+            for (i, option) in self.options.iter().enumerate() {
+                let mut row = b.node(id.key(i.to_string()), Role::Option, option.as_str());
+                row.parent(id).enabled(!self.disabled);
+                row.action("select").reads(selected.as_str());
+            }
+        }
+        let mut choices: Vec<String> = Vec::with_capacity(self.options.len());
+        for option in &self.options {
+            if !choices.contains(option) {
+                choices.push(option.clone());
+            }
+        }
+        let mut node = b.node(id, Role::Select, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("selected", self.selected_label().unwrap_or_default())
+            .state("expanded", self.open)
+            .constraints(Constraints {
+                editable: true,
+                options: Some(choices),
+                ..Constraints::default()
+            })
+            .enabled(!self.disabled);
+        node.action("select")
+            .param(ParamSpec {
+                kind: ValueKind::Text,
+                constrained: true,
+            })
+            .reads(selected.as_str());
+        node.action("open").reads(expanded.as_str());
+        node.action("close").reads(expanded.as_str());
+        node
+    }
+
+    /// Opens the options panel, like a click on the control. A disabled
+    /// select stays closed.
+    pub fn open(&mut self) {
+        if !self.disabled {
+            self.open = true;
+        }
+    }
+
+    /// Selects the option at `index` and closes the panel, like a click on
+    /// that option. `false` when there is no such option.
+    pub fn select_index(&mut self, index: usize) -> bool {
+        if index >= self.options.len() {
+            return false;
+        }
+        self.selected = index;
+        self.close();
+        true
+    }
+
+    /// Selects the first option labeled `label` and closes the panel.
+    /// `false` when no option has that label.
+    pub fn select_label(&mut self, label: &str) -> bool {
+        match self.options.iter().position(|o| o == label) {
+            Some(index) => self.select_index(index),
+            None => false,
         }
     }
 
@@ -187,6 +294,9 @@ impl Select {
 
     /// Render the closed control (selected value + chevron).
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
+        if let Some(id) = &self.sem {
+            compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let glass = &theme.glass;
         let m = Metrics::of(theme);
         let alpha = if self.disabled {
@@ -294,6 +404,15 @@ impl Select {
             }
             let is_selected = i == self.selected;
             let is_hovered = self.hovered_option == Some(i);
+            if let Some(id) = &self.sem {
+                // The row a click picks this option in (`option_at`):
+                // the panel's full width, one option tall.
+                compositor.bind_to_layer(
+                    layer,
+                    &id.key(i.to_string()),
+                    [dd.x, oy, dd.w, m.option_h],
+                );
+            }
 
             if is_hovered || is_selected {
                 // Option: radius 12, active bg rgba($n2,.10).
