@@ -3,7 +3,8 @@
 //! event changed something or the last tick was still moving (render on
 //! demand), the scene built by the surface and drawn by
 //! `engine::headless::Renderer`, which runs the window's frame tail.
-//! Every turn is one stage frame (`engine::perf::stages`).
+//! Every turn is one stage frame (`engine::perf::stages`); the GPU time a
+//! turn's timestamps read feeds a `PerfMonitor`, as a window's loop would.
 
 use comps::editor::{EditorTheme, EditorView, MouseEvent};
 use comps::prelude::WidgetEvent;
@@ -11,6 +12,7 @@ use engine::compositor::{Compositor, SceneNode};
 use engine::headless::Renderer;
 use engine::layout::ComputedBounds;
 use engine::perf::stages::{self, Stage, StageFrame};
+use engine::perf::{PerfMonitor, PerfSnapshot};
 use engine::theme::Theme;
 use showcase::view::ShowcaseView;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
@@ -197,6 +199,9 @@ pub struct Harness<S: Surface> {
     /// A frame is asked for: an event changed something, or the last tick
     /// was still moving.
     pending: bool,
+    /// Fed as a window's loop would feed it: the GPU time each turn's
+    /// timestamps read.
+    perf: PerfMonitor,
 }
 
 impl<S: Surface> Harness<S> {
@@ -206,11 +211,16 @@ impl<S: Surface> Harness<S> {
             compositor: Compositor::new(),
             surface,
             pending: true,
+            perf: PerfMonitor::new(),
         }
     }
 
     pub fn compositor(&self) -> &Compositor {
         &self.compositor
+    }
+
+    pub fn perf(&self) -> PerfSnapshot {
+        self.perf.snapshot()
     }
 
     /// One turn: deliver `inputs`, then draw if a frame is asked for.
@@ -258,10 +268,11 @@ impl<S: Surface> Harness<S> {
             self.pending = animating;
         }
         drop(frame);
-        Sample {
-            stages: stages::take(),
-            drawn,
+        let stages = stages::take();
+        if let Some(micros) = stages.gpu_micros() {
+            self.perf.record_gpu_micros(micros);
         }
+        Sample { stages, drawn }
     }
 }
 

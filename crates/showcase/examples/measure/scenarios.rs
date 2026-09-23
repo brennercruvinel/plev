@@ -42,6 +42,9 @@ pub struct Config {
     pub theme: String,
     /// The frame tail waits for the GPU after submit (`GpuWait`).
     pub gpu_sync: bool,
+    /// The renderer asks for GPU timestamp queries
+    /// (`RenderConfig::gpu_timestamps`): the GPU stages.
+    pub gpu_timestamps: bool,
 }
 
 /// One scenario's samples and what the reader needs to read them.
@@ -54,6 +57,9 @@ pub struct Run {
     /// The scene the last turn left.
     pub scene: String,
     pub notes: Vec<String>,
+    /// What the loop's perf monitor held after the last turn: the last
+    /// GPU time the timestamps fed it (`PerfSnapshot::gpu_micros`).
+    pub monitor_gpu_micros: Option<u64>,
 }
 
 /// Every scenario, in the order of the report: key and title.
@@ -95,7 +101,11 @@ pub fn run(key: &str, cfg: &Config) -> Result<Run, String> {
 }
 
 fn renderer(cfg: &Config) -> Result<Renderer, String> {
-    Renderer::new(cfg.viewport, RenderConfig::default()).map_err(|e| e.to_string())
+    let config = RenderConfig {
+        gpu_timestamps: cfg.gpu_timestamps,
+        ..RenderConfig::default()
+    };
+    Renderer::new(cfg.viewport, config).map_err(|e| e.to_string())
 }
 
 /// A gallery page as the window opens it (`showcase <page> <theme>`),
@@ -138,6 +148,7 @@ fn finish<S: Surface>(h: &Harness<S>, setup: String, samples: Vec<Sample>) -> Ru
         samples,
         scene: scene_line(h.compositor()),
         notes: Vec::new(),
+        monitor_gpu_micros: h.perf().gpu_micros,
     }
 }
 

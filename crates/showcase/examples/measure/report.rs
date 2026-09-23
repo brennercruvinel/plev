@@ -46,14 +46,35 @@ fn us(v: f64) -> String {
     }
 }
 
+/// A signed time: the precision of [`us`] by magnitude.
+fn signed_us(v: f64) -> String {
+    if v < 0.0 {
+        format!("-{}", us(-v))
+    } else {
+        us(v)
+    }
+}
+
+/// A turn read a frame's GPU timestamps.
+fn read_gpu(s: &Sample) -> bool {
+    s.stages.get(Stage::GpuSpan).calls > 0
+}
+
 pub fn markdown(cfg: &Config, runs: &[Run], build: &str) -> String {
     let v = cfg.viewport;
+    let read_any = runs.iter().flat_map(|r| &r.samples).any(read_gpu);
+    let timestamps = match (cfg.gpu_timestamps, read_any) {
+        (false, _) => "gpu timestamps off",
+        (true, true) => "gpu timestamps on",
+        (true, false) => "gpu timestamps asked for and unavailable (none read)",
+    };
     let mut md = String::new();
     let _ = writeln!(
         md,
         "{} measured turns per scenario after {} warm-up turns, fixed tick of {:.2} ms, \
          viewport {}x{} logical at scale {} ({}x{} physical), theme {}, {build} build, \
-         stages {}. time is microseconds; p50 and p95 are nearest-rank over the turns.\n",
+         stages {}, {timestamps}. time is microseconds; p50 and p95 are nearest-rank over \
+         the turns.\n",
         cfg.frames,
         WARM_UP,
         DT * 1000.0,
@@ -70,10 +91,64 @@ pub fn markdown(cfg: &Config, runs: &[Run], build: &str) -> String {
         }
     );
     summary(&mut md, runs);
+    if cfg.gpu_timestamps {
+        gpu_summary(&mut md, runs, read_any);
+    }
     for run in runs {
         scenario(&mut md, run);
     }
     md
+}
+
+/// What the GPU spent per scenario, over the drawn turns: the wait next
+/// to the timestamps, and the latency the wait holds beyond them.
+fn gpu_summary(md: &mut String, runs: &[Run], read_any: bool) {
+    let _ = writeln!(
+        md,
+        "gpu time per scenario, p50 over the drawn turns. the timestamps of a frame are \
+         read one drawn frame later (engine::perf::gpu_time), so a turn's gpu stages are \
+         the frame drawn before it. the span runs from the first pass's start to the \
+         composite's end; the layer passes from the first one's start to the last one's \
+         end; the composite from the end of the layer passes (or its own start) to its \
+         end. submit latency is the wait's p50 minus the span's p50.\n"
+    );
+    let _ = writeln!(
+        md,
+        "| scenario | turns read | gpu wait p50 | gpu span p50 | submit latency | layer passes \
+         p50 | gpu layer passes p50 | gpu composite p50 | gpu span p95 |"
+    );
+    let _ = writeln!(md, "|{}", " --- |".repeat(9));
+    for run in runs {
+        let drawn: Vec<&Sample> = run.samples.iter().filter(|s| s.drawn).collect();
+        let read: Vec<&Sample> = drawn.iter().copied().filter(|s| read_gpu(s)).collect();
+        if !read_any || read.is_empty() {
+            let _ = writeln!(
+                md,
+                "| {} | 0 of {} |{}",
+                run.key,
+                drawn.len(),
+                " unavailable |".repeat(7)
+            );
+            continue;
+        }
+        let wait = stat(&drawn, Stage::GpuWait, 50.0, micros);
+        let span = stat(&read, Stage::GpuSpan, 50.0, micros);
+        let _ = writeln!(
+            md,
+            "| {} | {} of {} | {} | {} | {} | {} | {} | {} | {} |",
+            run.key,
+            read.len(),
+            drawn.len(),
+            us(wait),
+            us(span),
+            signed_us(wait - span),
+            stat(&read, Stage::GpuLayers, 50.0, items),
+            us(stat(&read, Stage::GpuLayers, 50.0, micros)),
+            us(stat(&read, Stage::GpuComposite, 50.0, micros)),
+            us(stat(&read, Stage::GpuSpan, 95.0, micros)),
+        );
+    }
+    md.push('\n');
 }
 
 fn summary(md: &mut String, runs: &[Run]) {
@@ -132,6 +207,13 @@ fn scenario(md: &mut String, run: &Run) {
         probes(50.0),
         probes(95.0)
     );
+    if let Some(gpu) = run.monitor_gpu_micros {
+        let _ = writeln!(
+            md,
+            "the loop's perf monitor after the last turn: gpu {gpu} us \
+             (`PerfSnapshot::gpu_micros`, the last reading fed).\n"
+        );
+    }
     for note in &run.notes {
         let _ = writeln!(md, "{note}\n");
     }

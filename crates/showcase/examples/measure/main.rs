@@ -3,11 +3,14 @@
 //! hovering a list, a modal mid-opening, typing in a large document, an
 //! idle redraw, a focused field at rest, and the floor of an empty frame.
 //! `--probe-cost` prints what one probe costs with stages off and on.
+//! With GPU timestamps (on unless `--no-gpu-timestamps`, phase 1b) the
+//! report adds what the GPU itself spent on each frame next to the wait.
 //!
 //! ```text
 //! cargo run --release -p showcase --example measure -- --out measurements.md
 //!     [--frames 120] [--scenario <key>]... [--theme core]
 //!     [--width 1200 --height 800 --scale 2] [--no-gpu-sync]
+//!     [--no-gpu-timestamps]
 //! cargo run --release -p showcase --example measure -- --probe-cost
 //! ```
 //!
@@ -64,10 +67,11 @@ mod cli {
     pub const USAGE: &str = "\
 usage: measure [--out <file.md>] [--frames <n>] [--scenario <key>]...
                [--theme <name>] [--width <px>] [--height <px>] [--scale <s>]
-               [--no-gpu-sync]
+               [--no-gpu-sync] [--no-gpu-timestamps]
        measure --probe-cost
 defaults: every scenario, 120 frames, theme core, 1200x800 at scale 2
-(the window's launch size on a retina display), the gpu wait on.
+(the window's launch size on a retina display), the gpu wait on, gpu
+timestamp queries on where the adapter has them.
 scenarios: type toggle hover overlay editor editor-page idle caret floor";
 
     pub struct Request {
@@ -84,6 +88,7 @@ scenarios: type toggle hover overlay editor editor-page idle caret floor";
         let mut theme = "core".to_string();
         let (mut width, mut height, mut scale) = (1200.0, 800.0, 2.0);
         let mut gpu_sync = true;
+        let mut gpu_timestamps = true;
         let mut it = args.iter();
         while let Some(flag) = it.next() {
             let mut value = || {
@@ -107,6 +112,7 @@ scenarios: type toggle hover overlay editor editor-page idle caret floor";
                 "--height" => height = positive(flag, &value()?)?,
                 "--scale" => scale = positive(flag, &value()?)?,
                 "--no-gpu-sync" => gpu_sync = false,
+                "--no-gpu-timestamps" => gpu_timestamps = false,
                 other => return Err(format!("unknown argument '{other}'")),
             }
         }
@@ -126,6 +132,7 @@ scenarios: type toggle hover overlay editor editor-page idle caret floor";
                 frames,
                 theme,
                 gpu_sync,
+                gpu_timestamps,
             },
         }))
     }
