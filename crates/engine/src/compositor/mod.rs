@@ -1,3 +1,4 @@
+mod binding;
 mod clip;
 pub(crate) mod drawing;
 mod layer;
@@ -11,6 +12,7 @@ mod vertex;
 #[cfg(test)]
 mod tests;
 
+pub use binding::Binding;
 pub use clip::{
     ClipRect, DrawRange, clip_to_scissor, intersect_rects, intersect_scissors, merge_text_groups,
 };
@@ -44,6 +46,9 @@ pub struct Compositor {
     sorted: bool,
     invalidated: bool,
     stats: RenderStats,
+    /// Where each bound `SemId` sits this frame, beside the scene (see
+    /// `binding`): never part of a layer hash.
+    bind_table: binding::BindTable,
 }
 
 impl Default for Compositor {
@@ -60,6 +65,7 @@ impl Compositor {
             sorted: true,
             invalidated: false,
             stats: RenderStats::default(),
+            bind_table: binding::BindTable::default(),
         };
         comp.layers.push(Layer::new(LayerId::DEFAULT, 0));
         comp
@@ -69,6 +75,7 @@ impl Compositor {
         for layer in &mut self.layers {
             layer.begin_frame();
         }
+        self.bind_table.begin_frame();
     }
 
     /// Request a render regardless of scene changes. Called on input, resize,
