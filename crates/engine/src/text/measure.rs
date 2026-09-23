@@ -17,6 +17,7 @@ use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight};
 use lru::LruCache;
 
 use crate::layout::ComputedBounds;
+use crate::perf::stages::{self, Stage};
 
 use super::backend::TextStyle;
 
@@ -98,6 +99,7 @@ impl MeasureContext {
 
     /// Shape `text` into the scratch buffer with the given style and wrap width.
     fn prepare(&mut self, text: &str, style: &TextStyle, max_width: Option<f32>) {
+        let _probe = stages::span(Stage::Shape).items(text.len() as u64);
         let fs = &mut self.font_system;
         self.scratch
             .set_metrics(fs, Metrics::new(style.font_size, style.line_height));
@@ -287,8 +289,10 @@ impl TextMeasurer {
         MEASURE_CTX.with(|ctx| {
             let ctx = &mut *ctx.borrow_mut();
             if let Some(&size) = ctx.cache.get(&key) {
+                stages::count(Stage::MeasureHit, 0);
                 return size;
             }
+            let _probe = stages::span(Stage::MeasureMiss);
             ctx.prepare(text, style, max_width);
             let size = measure_runs(&ctx.scratch);
             ctx.cache.put(key, size);
@@ -503,6 +507,7 @@ impl TextMeasurer {
 
     /// Shape `text` into an owned, queryable `ShapedText` (for `TextBackend`).
     pub fn shape(text: &str, style: &TextStyle, max_width: Option<f32>) -> ShapedText {
+        let _probe = stages::span(Stage::Shape).items(text.len() as u64);
         MEASURE_CTX.with(|ctx| {
             let ctx = &mut *ctx.borrow_mut();
             let fs = &mut ctx.font_system;

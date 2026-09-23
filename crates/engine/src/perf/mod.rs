@@ -17,6 +17,8 @@ mod window;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_stages;
 
 pub use hud::PerfHud;
 pub use memory::{MemoryStats, process_rss_bytes};

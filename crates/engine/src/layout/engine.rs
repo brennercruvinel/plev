@@ -1,5 +1,6 @@
 use taffy::prelude::*;
 
+use crate::perf::stages::{self, Stage};
 use crate::text::TextMeasurer;
 
 use super::types::{
@@ -36,6 +37,7 @@ impl LayoutEngine {
         viewport_w: f32,
         viewport_h: f32,
     ) -> Vec<ComputedBounds> {
+        let _probe = stages::span(Stage::Layout).items(items.len() as u64);
         self.tree.clear();
 
         if items.is_empty() {

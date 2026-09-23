@@ -20,6 +20,7 @@ use sem::SemId;
 use super::clip::{ClipRect, ClipStack};
 use super::{Compositor, LayerId, SceneNode};
 use crate::input::ViewId;
+use crate::perf::stages::{self, Stage};
 
 /// Where one logical identity sits in the current frame.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -148,6 +149,7 @@ impl Compositor {
                 view: None,
             },
         );
+        stages::count(Stage::Bind, 0);
     }
 
     /// Records the `ViewId` under which the widget bound as `id`
@@ -180,6 +182,7 @@ impl Compositor {
     /// layer, the later bind is on top. Only bound ids take part, so an
     /// unbound draw on top does not hide what is bound beneath it.
     pub fn hit(&self, x: f32, y: f32) -> Option<&SemId> {
+        let _probe = stages::span(Stage::HitTest).items(self.bind_table.table.len() as u64);
         let mut top: Option<((i32, usize, u32), &SemId)> = None;
         for (id, b) in &self.bind_table.table {
             if !contains(b.rect, x, y) || b.clip.is_some_and(|c| !contains(c, x, y)) {

@@ -14,6 +14,7 @@ use crate::compositor::Compositor;
 use crate::effects::EffectProcessor;
 use crate::gpu::GpuContext;
 use crate::gpu::texture_pool::TexturePool;
+use crate::perf::stages::{self, Stage};
 use crate::text::TextSystem;
 
 use super::render_passes::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
@@ -105,6 +106,7 @@ pub fn draw_frame(
     clear_linear: [f32; 4],
     label: &str,
 ) -> u32 {
+    let draw = stages::span(Stage::Draw);
     compositor.resolve(&crate::compositor::ResolveResources {
         device: &gpu.device,
         queue: &gpu.queue,
@@ -118,13 +120,16 @@ pub fn draw_frame(
     });
 
     // Resolve text for each dirty layer (clip-group aware).
+    let text = stages::span(Stage::TextResolve);
     text_system.begin_frame();
     resolve_layer_text(compositor, gpu, text_system);
     text_system.finish_frame();
+    text.end(|| dirty_glyphs(compositor));
 
     // Upload any images loaded while building the scene.
     gpu.prepare_images();
 
+    let encode = stages::span(Stage::Encode);
     let mut encoder = gpu
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some(label) });
@@ -164,6 +169,24 @@ pub fn draw_frame(
         encode_composite_pass(compositor, clear_color, gpu, target, &[], &mut encoder);
 
     gpu.queue.submit(std::iter::once(encoder.finish()));
+    encode.end(|| u64::from(layer_draws + composite_draws));
+    drop(draw);
+    stages::gpu_wait(|| {
+        if let Err(e) = gpu.device.poll(wgpu::PollType::wait_indefinitely()) {
+            log::warn!("{label}: gpu wait for the stage timings: {e}");
+        }
+    });
 
     layer_draws + composite_draws
+}
+
+/// Glyphs in the layers whose text was resolved this frame (the dirty
+/// ones), for the text stage's items.
+fn dirty_glyphs(compositor: &Compositor) -> u64 {
+    compositor
+        .layers()
+        .iter()
+        .filter(|l| l.is_dirty())
+        .map(|l| u64::from(l.glyph_count()))
+        .sum()
 }
