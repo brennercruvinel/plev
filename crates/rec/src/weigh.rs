@@ -2,7 +2,9 @@
 //! value plus the text and the collections it owns, from their lengths.
 //! allocator overhead and spare capacity are not counted. a shared text
 //! (`SemId`, `ActionName` and `StateKey` are `Arc<str>`) is counted at
-//! every holder, so the estimate bounds what the ring holds from above.
+//! every holder, so the estimate bounds what the ring holds from above;
+//! the one exception, a snapshot a re-key shares with the segment before
+//! it, is counted once by the track (see `track`).
 
 use std::mem::size_of;
 

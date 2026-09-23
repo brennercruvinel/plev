@@ -34,7 +34,10 @@ fn kinds(session: &Session) -> Vec<&'static str> {
 
 #[test]
 fn a_snapshot_is_stored_whole_as_changes_or_not_at_all() -> Fallible {
-    let rec = Recorder::new(Limits { full_every: 1_000 });
+    let rec = Recorder::new(Limits {
+        full_every: 1_000,
+        ..Limits::default()
+    });
     let mut todo = Todo {
         title: "home".to_owned(),
         items: vec!["milk"],
@@ -96,7 +99,10 @@ fn todo_at(title: &str, items: &[&'static str]) -> Todo {
 
 #[test]
 fn an_event_after_the_cadence_rekeys_the_unchanged_state() -> Fallible {
-    let rec = Recorder::new(Limits { full_every: 100 });
+    let rec = Recorder::new(Limits {
+        full_every: 100,
+        ..Limits::default()
+    });
     let todo = todo_at("home", &["milk"]);
     rec.snapshot(0, &look(&todo));
     rec.input(50, InputKind::Key, None, None);

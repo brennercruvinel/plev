@@ -2,6 +2,14 @@
 //! state the app gave (for the next diff and to know what is secret), the
 //! requests still open, and the counters. every entry point takes the
 //! caller's time; the recorder never reads a clock.
+//!
+//! the ring: after every event the oldest segments go while the limits
+//! ask for it, whole, so what stays opens at a full snapshot. by time, a
+//! segment goes once the one after it opened at or before `now -
+//! max_age`, which keeps at least the last `max_age`. by bytes, the
+//! oldest segment goes while the ring is over `max_bytes`; when only the
+//! newest is left and still over, the next event re-keys the track so
+//! the ring can cut there.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -24,6 +32,8 @@ pub(crate) struct Inner {
     /// the request of every receipt still open, shared by its stages.
     open: HashMap<(u16, RequestId), Arc<Request>>,
     origins: u16,
+    /// a limit could not cut: the next event re-keys the track.
+    rekey: bool,
     stats: Stats,
 }
 
@@ -69,11 +79,14 @@ impl Inner {
         }
     }
 
-    /// true when the last segment opened `full_every` ago or more.
+    /// true when the last segment opened `full_every` ago or more, or a
+    /// limit waits for a keyframe to cut at.
     fn due(&self, t: Millis) -> bool {
-        self.track
-            .last_start()
-            .is_none_or(|start| t.saturating_sub(start) >= self.limits.full_every)
+        self.rekey
+            || self
+                .track
+                .last_start()
+                .is_none_or(|start| t.saturating_sub(start) >= self.limits.full_every)
     }
 
     /// opens a segment at a full snapshot; `snapshot` is the state now.
@@ -83,6 +96,7 @@ impl Inner {
             t,
             kind: Kind::Snapshot { snapshot, changes },
         });
+        self.rekey = false;
         self.stats.events += 1;
     }
 
@@ -97,6 +111,39 @@ impl Inner {
         }
         self.track.push(Event { t, kind });
         self.stats.events += 1;
+        self.evict();
+    }
+
+    /// the estimated bytes the ring holds.
+    fn bytes(&self) -> usize {
+        self.track.bytes()
+    }
+
+    /// drops what the limits no longer keep, whole segments only.
+    fn evict(&mut self) {
+        let Some(now) = self.last_t else {
+            return;
+        };
+        let cut = now.saturating_sub(self.limits.max_age);
+        while self.track.second_start().is_some_and(|start| start <= cut) {
+            self.track.pop_front();
+            self.stats.evicted_segments += 1;
+        }
+        while self.track.first_t().is_some_and(|t| t < cut) && self.track.trim_unkeyed() {
+            self.stats.evicted_unkeyed += 1;
+        }
+        while self.bytes() > self.limits.max_bytes {
+            if self.track.segments().len() > 1 {
+                self.track.pop_front();
+                self.stats.evicted_segments += 1;
+            } else if self.track.trim_unkeyed() {
+                self.stats.evicted_unkeyed += 1;
+            } else {
+                self.rekey = true;
+                self.stats.over_budget += 1;
+                break;
+            }
+        }
     }
 
     pub(crate) fn observed(
@@ -145,6 +192,7 @@ impl Inner {
             self.stats.events += 1;
             self.stats.snapshots_changed += 1;
         }
+        self.evict();
     }
 
     /// records one stage a dispatcher reports. the request is redacted
@@ -193,6 +241,7 @@ impl Inner {
         Stats {
             segments: self.track.segments().len(),
             semantic_bytes: self.track.bytes(),
+            bytes: self.bytes(),
             ..self.stats
         }
     }
