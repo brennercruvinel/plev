@@ -132,7 +132,14 @@ impl GpuContext {
     /// (possibly non-sRGB) format and silently skips gamma encoding — always
     /// go through here for surface render targets.
     pub fn surface_render_view(&self, output: &wgpu::SurfaceTexture) -> wgpu::TextureView {
-        output.texture.create_view(&wgpu::TextureViewDescriptor {
+        self.texture_render_view(&output.texture)
+    }
+
+    /// The same sRGB render view for a texture that is not a surface
+    /// texture: the offscreen target of a headless context, created in
+    /// `surface_format()`.
+    pub fn texture_render_view(&self, texture: &wgpu::Texture) -> wgpu::TextureView {
+        texture.create_view(&wgpu::TextureViewDescriptor {
             format: Some(self.surface_format()),
             ..Default::default()
         })

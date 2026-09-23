@@ -5,6 +5,10 @@
 //! Building the scene is the app's business (it owns the view type); what
 //! follows is identical everywhere, so it lives here instead of being
 //! copied into each app's `renderer.rs`.
+//!
+//! Drawing ([`draw_frame`]) is separate from presenting ([`present_frame`]):
+//! a window draws into its surface texture, `engine::headless` draws into
+//! an offscreen texture, and both run the same function.
 
 use crate::compositor::Compositor;
 use crate::effects::EffectProcessor;
@@ -59,7 +63,48 @@ pub fn present_frame(
         }
     };
     let surface_view = gpu.surface_render_view(&output);
+    let draws = draw_frame(
+        compositor,
+        gpu,
+        text_system,
+        effects,
+        texture_pool,
+        &surface_view,
+        clear_linear,
+        label,
+    );
+    output.present();
 
+    Some(draws)
+}
+
+/// Draw one frame of an already-built scene into `target` and submit it.
+///
+/// This is the whole frame after the scene is built: compositor resolve,
+/// text resolve, image upload, the layer passes, the composite pass into
+/// `target`, submit. [`present_frame`] calls it with the surface view and
+/// then presents; `engine::headless` calls it with an offscreen view and
+/// then reads the pixels back.
+///
+/// `target` must be a view of a texture sized like `gpu.surface_config`
+/// (width x height) in `gpu.surface_format()`, created through the sRGB
+/// view path (`gpu.surface_render_view` or `gpu.texture_render_view`):
+/// layer textures, scissors and the backdrop resolve all take their size
+/// and format from the context, not from the view. `clear_linear` and
+/// `label` are as in [`present_frame`].
+///
+/// Returns the number of draw calls issued.
+#[allow(clippy::too_many_arguments)] // the frame's resources, one each
+pub fn draw_frame(
+    compositor: &mut Compositor,
+    gpu: &mut GpuContext,
+    text_system: &mut TextSystem,
+    effects: &mut EffectProcessor,
+    texture_pool: &mut TexturePool,
+    target: &wgpu::TextureView,
+    clear_linear: [f32; 4],
+    label: &str,
+) -> u32 {
     compositor.resolve(&crate::compositor::ResolveResources {
         device: &gpu.device,
         queue: &gpu.queue,
@@ -115,17 +160,10 @@ pub fn present_frame(
         compositor.mark_layer_clean(*id);
     }
 
-    let composite_draws = encode_composite_pass(
-        compositor,
-        clear_color,
-        gpu,
-        &surface_view,
-        &[],
-        &mut encoder,
-    );
+    let composite_draws =
+        encode_composite_pass(compositor, clear_color, gpu, target, &[], &mut encoder);
 
     gpu.queue.submit(std::iter::once(encoder.finish()));
-    output.present();
 
-    Some(layer_draws + composite_draws)
+    layer_draws + composite_draws
 }
