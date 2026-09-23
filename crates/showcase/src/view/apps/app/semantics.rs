@@ -258,6 +258,12 @@ impl TodoPage {
         self.dispatcher.receipt(id)
     }
 
+    /// A sink on the page's dispatcher: it sees every stage of every
+    /// receipt from now on (the agent port hears its requests there).
+    pub(crate) fn add_sink(&mut self, sink: Box<dyn sem::ReceiptSink>) {
+        self.dispatcher.add_sink(sink);
+    }
+
     /// Keyboard focus asked from outside the page's pointer handling: a
     /// screen reader's focus, or a Tab resolved in the semantic order.
     /// Focus is editing, not a capability, so it does not go through the

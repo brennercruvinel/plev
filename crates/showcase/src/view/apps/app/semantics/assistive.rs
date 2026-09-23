@@ -168,7 +168,7 @@ fn a_screen_reader_click_toggles_a_row_as_a_person_does() {
     let req = request(ask(&shown, "todo.item[1]", Action::Click, None));
     assert_eq!(req.actor, Actor::Assistive);
     assert_eq!(req.action.as_str(), "toggle");
-    let Some(receipt) = reader.assist(req) else {
+    let Some(receipt) = reader.act(req) else {
         panic!("the todo page takes the request");
     };
     assert_eq!(receipt.request.actor, Actor::Assistive);
@@ -198,7 +198,7 @@ fn with_a_modal_open_the_same_request_comes_back_inert() {
 
     for seen in [&before, &now] {
         let req = request(ask(seen, "todo.item[1]", Action::Click, None));
-        let Some(receipt) = view.assist(req) else {
+        let Some(receipt) = view.act(req) else {
             panic!("the todo page takes the request");
         };
         assert_eq!(
@@ -236,7 +236,7 @@ fn focus_type_and_press_the_field_to_add_a_todo() {
     let req = request(ask(&shown, "todo.input", Action::Click, None));
     assert_eq!(req.action.as_str(), "submit");
     let total = view.panes.todo.model.counts().total;
-    let Some(receipt) = view.assist(req) else {
+    let Some(receipt) = view.act(req) else {
         panic!("the todo page takes the request");
     };
     assert!(matches!(receipt.stage(), Some(Stage::Completed(_))));
@@ -246,7 +246,7 @@ fn focus_type_and_press_the_field_to_add_a_todo() {
     let (_, shown) = show(&view, &c);
     let text = Some(ActionData::Value("call mom".into()));
     let req = request(ask(&shown, "todo.input", Action::SetValue, text));
-    let Some(receipt) = view.assist(req) else {
+    let Some(receipt) = view.act(req) else {
         panic!("the todo page takes the request");
     };
     assert!(matches!(receipt.stage(), Some(Stage::Completed(_))));
@@ -289,7 +289,7 @@ fn a_page_without_a_projection_has_no_tree_yet() {
     else {
         panic!("a request over the todo page");
     };
-    assert!(view.assist(req).is_none(), "no page takes it");
+    assert!(view.act(req).is_none(), "no page takes it");
     assert!(!view.assist_focus(&sid("todo.input")));
 }
 

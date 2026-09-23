@@ -36,14 +36,15 @@ const TITLE: &str = "plev, design system showcase";
 /// `GpuReady` is sent by the async GPU-init task on wasm and never
 /// constructed natively (desktop blocks on `GpuContext::new` inside
 /// `resumed` instead); `Wake` comes from the git worker and `Access` from
-/// the accessibility adapter's threads, both on desktop only. One
-/// instance is in flight at a time, so the size gap is irrelevant.
+/// the accessibility adapter's and the agent port's threads, all on
+/// desktop only. One instance is in flight at a time, so the size gap is
+/// irrelevant.
 #[allow(dead_code, clippy::large_enum_variant)]
 enum UserEvent {
     /// The git worker finished a command: drain it on the next frame.
     Wake,
-    /// A screen reader started listening or asked for something: carry
-    /// out what it asked and draw, which sends it the tree.
+    /// A screen reader or an agent asked for something (or a reader
+    /// started listening): carry it out and draw, which sends the tree.
     Access,
     GpuReady {
         gpu: GpuContext,
@@ -77,19 +78,22 @@ pub struct App {
     modifiers: ModifiersState,
     #[cfg(target_arch = "wasm32")]
     proxy: Option<EventLoopProxy<UserEvent>>,
-    /// The window's accessibility: the tree projected from the active
-    /// page's meaning, and the screen reader's requests into its
-    /// dispatcher (desktop; AccessKit has no web adapter, mobile is next).
+    /// The window's outside actors: a screen reader (the tree projected
+    /// from the active page's meaning) and agents (the port), whose
+    /// requests go into its dispatcher (desktop; mobile is next).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     access: Access,
 }
 
-/// The accessibility bridge of the window and how its handlers wake the
-/// event loop.
+/// The actors that reach the window from outside it (a screen reader
+/// through the accessibility bridge, an agent through the agent port) and
+/// how their threads wake the event loop.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 #[derive(Default)]
 struct Access {
     bridge: Option<engine::accessibility::Bridge>,
+    /// Open only with `PLEV_AGENT=1` in a debug build.
+    agent: Option<wire::AgentPort>,
     proxy: Option<winit::event_loop::EventLoopProxy<UserEvent>>,
 }
 
@@ -234,7 +238,7 @@ impl ApplicationHandler<UserEvent> for App {
                     target_os = "android",
                     target_os = "ios"
                 )))]
-                self.access.carry_out(&mut self.view);
+                self.access.carry_out(&mut self.view, &self.compositor);
                 self.invalidate();
             }
             UserEvent::GpuReady {
@@ -425,6 +429,10 @@ pub fn run() {
     let mut app = App::new();
     let proxy = event_loop.create_proxy();
     app.access.proxy = Some(proxy.clone());
+    let agent = proxy.clone();
+    app.access.agent = ShowcaseView::agent_port(move || {
+        let _ = agent.send_event(UserEvent::Access);
+    });
     app.view.connect_git(Box::new(move || {
         let _ = proxy.send_event(UserEvent::Wake);
     }));
@@ -448,10 +456,14 @@ impl Access {
         }
     }
 
-    /// What the screen reader asked, on the main thread: a request goes
-    /// through the active page's dispatcher as `Actor::Assistive`, a focus
-    /// move to the page's focus.
-    fn carry_out(&mut self, view: &mut ShowcaseView) {
+    /// What the screen reader and the agents asked, on the main thread: a
+    /// request goes through the active page's dispatcher as
+    /// `Actor::Assistive` or `Actor::Agent`, a reader's focus move to the
+    /// page's focus.
+    fn carry_out(&mut self, view: &mut ShowcaseView, compositor: &Compositor) {
+        if let Some(port) = self.agent.as_mut() {
+            view.serve_agent(port, compositor);
+        }
         let Some(bridge) = self.bridge.as_mut() else {
             return;
         };
@@ -459,7 +471,7 @@ impl Access {
             match assist {
                 engine::accessibility::Assist::Request(req) => {
                     let asked = format!("{} {}", req.target, req.action);
-                    match view.assist(req) {
+                    match view.act(req) {
                         Some(receipt) => {
                             log::debug!("accessibility: {asked}: {:?}", receipt.stage());
                         }

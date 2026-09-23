@@ -4205,11 +4205,13 @@ dependencies = [
  "pollster",
  "rope",
  "sem",
+ "serde_json",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-time",
  "wgpu",
  "winit",
+ "wire",
 ]
 
 [[package]]
