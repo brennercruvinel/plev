@@ -129,11 +129,11 @@ new.
 the showcase todo page at 1280x800 driven by a scripted person (typing,
 enter, hover, toggle, filters, delete; 848 frames over 50 s simulated):
 
-- per frame, record 14 us mean, 5 us median, 12 to 15 us p95, 1.1 to 1.2
-  ms max (the chunk close: discover and encode, once per chunk); scene
-  build 10 to 21 us mean, headless draw (cpu side) 120 to 130 us mean.
-  recording is 9 to 11 percent of build plus draw and under 0.1 percent of
-  a 60 fps frame. a first cold run measured about 2.5 times these values.
+- per frame, record 12 us mean, 4 us median, 7 to 9 us p95, under 1 ms
+  max (the chunk close: discover and encode, once per chunk); scene build
+  8 to 17 us mean, headless draw (cpu side) 99 to 109 us mean. recording
+  is 9 to 11 percent of build plus draw and under 0.1 percent of a 60 fps
+  frame. a first cold run measured about 3 times these values.
 - 582 of 848 frames were identical to the one before (the caret blink
   redraws) and were not stored.
 - the window held 20.6 s: 48 KB of encoded chunks (2.3 KB/s), 42 KB of
@@ -142,8 +142,9 @@ enter, hover, toggle, filters, delete; 848 frames over 50 s simulated):
 - the todo page drew 2004 clip pushes and pops the IR v0 does not carry,
   no blur and no shadow, in the core and hoff themes.
 - the semantic track under stress (a toy app projected 60 times a second,
-  its text changing every 100 ms, one commit a second): `snapshot()` 0.9
-  us mean; 20 KB/s estimated, 17 KB/s as json.
+  its text changing every 100 ms, one commit a second): `snapshot()` 0.7
+  us mean (the diff of an unchanged projection included); 20 KB/s
+  estimated, 17 KB/s as json.
 
 the cost does not ask for a change in the frame architecture. the chunk
 close is the one spike; moving it off the frame path is a phase c option.
