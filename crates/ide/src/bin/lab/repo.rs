@@ -106,8 +106,12 @@ impl Repo {
         self.git(&["log", "--oneline"])
     }
 
+    /// `git status --porcelain`, listing every untracked file rather
+    /// than the directory that holds them, which is what the ide's own
+    /// status reads (`--untracked-files=all`) and what `CHANGES`
+    /// declares.
     pub fn status(&self) -> Result<String, String> {
-        self.git(&["status", "--porcelain"])
+        self.git(&["status", "--porcelain", "--untracked-files=all"])
     }
 }
 
