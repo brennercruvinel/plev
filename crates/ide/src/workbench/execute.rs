@@ -9,6 +9,7 @@ use git::GitCommand;
 use sem::{Execution, Operable, Outcome, Request, RequestId, Value};
 
 use super::Workbench;
+use super::truth::Inflight;
 
 const NO_REPOSITORY: &str = "no repository is open";
 
@@ -76,11 +77,20 @@ impl Workbench {
 
     /// Sends a mutation and, once it left, shows its effect before git
     /// answers (the status refresh after the answer reconciles the view).
-    fn mutate(&mut self, command: GitCommand, show: impl FnOnce(&mut Self)) -> Execution {
+    /// Request `id` stays executing until the worker answers, which ends
+    /// its receipt (`truth.rs`).
+    fn mutate(
+        &mut self,
+        id: RequestId,
+        command: GitCommand,
+        waits: Inflight,
+        show: impl FnOnce(&mut Self),
+    ) -> Execution {
         match self.send(command) {
             Ok(()) => {
+                self.inflight.push_back((id, waits));
                 show(self);
-                Execution::Done(Outcome::default())
+                Execution::Started
             }
             Err(why) => Execution::Failed(why),
         }
@@ -127,22 +137,25 @@ impl Workbench {
         Execution::Done(Outcome::default())
     }
 
-    fn submit(&mut self, expect_staged: BTreeSet<String>) -> Execution {
+    /// Sends the commit with the staged set the actor observed: the worker
+    /// checks it against the real index right before `git commit`. The
+    /// form keeps its message until the commit exists, so a commit
+    /// refused at the index can be asked for again as it is.
+    fn submit(&mut self, id: RequestId, expect: BTreeSet<String>) -> Execution {
         let message = self.workspace.commit_form.message().to_owned();
         let command = GitCommand::CommitIf {
-            message,
-            expect_staged,
+            message: message.clone(),
+            expect_staged: expect.clone(),
         };
-        self.mutate(command, |bench| {
-            let form = &mut bench.workspace.commit_form;
-            form.take_message();
-            form.hide();
-        })
+        self.mutate(id, command, Inflight::Commit { message, expect }, |_| {})
     }
 }
 
 impl Operable for Workbench {
-    fn execute(&mut self, _id: RequestId, req: &Request) -> Execution {
+    /// Runs request `id`. Everything that reaches the repository leaves
+    /// for the git worker (`Execution::Started`) and ends when the worker
+    /// answers; the rest ends here.
+    fn execute(&mut self, id: RequestId, req: &Request) -> Execution {
         let Some(op) = self.op(req) else {
             return Execution::Failed(format!(
                 "the workspace has no {} on {}",
@@ -167,19 +180,31 @@ impl Operable for Workbench {
             }
             Op::ShowFileDiff(path) => self.show_file_diff(&path),
             Op::ShowCommitDiff(sha) => self.show_commit_diff(&sha),
-            Op::Stage(path) => self.mutate(GitCommand::Stage { path: path.clone() }, |b| {
-                b.workspace.unassigned.set_staged(&path, true);
-            }),
-            Op::Unstage(path) => self.mutate(GitCommand::Unstage { path: path.clone() }, |b| {
-                b.workspace.unassigned.set_staged(&path, false);
-            }),
-            Op::Discard(path) => self.mutate(GitCommand::Discard { path: path.clone() }, |b| {
-                b.drop_path(&path);
-            }),
-            Op::Ignore(path) => self.mutate(GitCommand::Ignore { path: path.clone() }, |b| {
-                b.drop_path(&path);
-            }),
-            Op::Submit(expect) => self.submit(expect),
+            Op::Stage(path) => {
+                let command = GitCommand::Stage { path: path.clone() };
+                self.mutate(id, command, Inflight::Stage(path.clone()), |b| {
+                    b.workspace.unassigned.set_staged(&path, true);
+                })
+            }
+            Op::Unstage(path) => {
+                let command = GitCommand::Unstage { path: path.clone() };
+                self.mutate(id, command, Inflight::Unstage(path.clone()), |b| {
+                    b.workspace.unassigned.set_staged(&path, false);
+                })
+            }
+            Op::Discard(path) => {
+                let command = GitCommand::Discard { path: path.clone() };
+                self.mutate(id, command, Inflight::Discard(path.clone()), |b| {
+                    b.drop_path(&path);
+                })
+            }
+            Op::Ignore(path) => {
+                let command = GitCommand::Ignore { path: path.clone() };
+                self.mutate(id, command, Inflight::Ignore(path.clone()), |b| {
+                    b.drop_path(&path);
+                })
+            }
+            Op::Submit(expect) => self.submit(id, expect),
         }
     }
 }

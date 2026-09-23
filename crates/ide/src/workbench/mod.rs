@@ -16,7 +16,9 @@ mod execute;
 mod project;
 #[cfg(test)]
 mod tests;
+mod truth;
 
+use std::collections::VecDeque;
 use std::path::Path;
 use std::time::Instant;
 
@@ -29,6 +31,7 @@ use sem::{
 
 use crate::session::GitSession;
 use crate::views::workspace::{UiRequest, WorkspaceView};
+use truth::Inflight;
 
 pub use project::DIFF_LINES;
 
@@ -39,6 +42,9 @@ pub struct Workbench {
     git: Option<GitSession>,
     /// The one path from a request to `execute`, for every actor.
     dispatcher: Dispatcher,
+    /// The requests whose execution left for the git worker, oldest
+    /// first, with what each waits for; the worker's answer ends them.
+    inflight: VecDeque<(RequestId, Inflight)>,
     /// The monotonic clock receipts are stamped with (`sem` never reads
     /// one).
     clock: Instant,
@@ -51,6 +57,7 @@ impl Workbench {
             workspace: WorkspaceView::new(vw, vh),
             git: None,
             dispatcher: Dispatcher::new(),
+            inflight: VecDeque::new(),
             clock: Instant::now(),
         }
     }
@@ -128,8 +135,12 @@ impl Workbench {
         self.dispatcher.add_sink(sink);
     }
 
-    /// Applies a result of the git worker.
+    /// Applies a result of the git worker: it ends the receipt of the
+    /// request it answers (a commit completes with its sha and files, or
+    /// is rejected with the delta the index showed), then updates the
+    /// views.
     pub fn apply(&mut self, event: GitEvent) {
+        self.settle(&event);
         if let Some(git) = &mut self.git {
             git.apply(&mut self.workspace, event);
         }

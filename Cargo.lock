@@ -2374,6 +2374,7 @@ dependencies = [
  "notify",
  "pollster",
  "sem",
+ "tempfile",
  "wgpu",
  "winit",
 ]

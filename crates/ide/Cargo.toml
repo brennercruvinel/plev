@@ -25,5 +25,9 @@ pollster.workspace = true
 # Same major as plev's optional hot-reload dep (shared build cache).
 notify.workspace = true
 
+[dev-dependencies]
+# real repositories in temp dirs, like crates/git/tests/real_repo.rs.
+tempfile.workspace = true
+
 [lints]
 workspace = true
