@@ -8,8 +8,8 @@ use std::collections::BTreeSet;
 
 use indexmap::IndexMap;
 use sem::{
-    ActionDecl, Actor, Actors, Change, Confirm, Constraints, Outcome, Policy, Receipt, Rejection,
-    Request, RequestId, Role, Snapshot, SnapshotBuilder, Stage, Value, Verdict, check,
+    Acted, ActionDecl, Actor, Actors, Change, Confirm, Constraints, Outcome, Policy, Receipt,
+    Rejection, Request, RequestId, Role, Snapshot, SnapshotBuilder, Stage, Value, Verdict, check,
 };
 
 fn set(items: &[&str]) -> Value {
@@ -674,4 +674,76 @@ fn a_node_added_has_a_pinned_json_form_and_roundtrips() {
     // the form before, a bare id, no longer reads; what that costs is in
     // docs/ADR/a-delta-carries-the-node-a-refusal-names-who-acted.md.
     assert!(serde_json::from_str::<Change>(r#"{"node_added":"commit.submit"}"#).is_err());
+}
+
+/// the thesis refusal naming who acted: the person's unstage, request 3.
+/// ids, an actor, a target and an action name; no value.
+const STALE_ACTED: &str = r#"{
+  "stale": {
+    "changes": [
+      {
+        "state_changed": {
+          "at": "changes:staged",
+          "before": {
+            "kind": "set",
+            "value": [
+              "A",
+              "B",
+              "C"
+            ]
+          },
+          "after": {
+            "kind": "set",
+            "value": [
+              "A",
+              "C"
+            ]
+          },
+          "added": [],
+          "removed": [
+            "B"
+          ]
+        }
+      }
+    ],
+    "acted": [
+      {
+        "id": "3",
+        "actor": "human",
+        "target": "changes",
+        "action": "unstage"
+      }
+    ]
+  }
+}"#;
+
+/// `acted` is written only when someone is named, and reads back either
+/// way; a refusal written before task-83 (no `acted`) reads as one that
+/// names nobody.
+#[test]
+fn a_stale_refusal_roundtrips_with_and_without_who_acted() {
+    let Verdict::Rejected(bare) = check(&thesis_request(), &git(&["A", "C"], "fix login")) else {
+        panic!("the thesis request must be rejected");
+    };
+    let Rejection::Stale { changes, acted } = &bare else {
+        panic!("stale: {bare:?}");
+    };
+    assert!(acted.is_empty(), "check names nobody");
+    assert_eq!(bare, Rejection::stale(changes.clone()));
+    let text = serde_json::to_string(&bare).unwrap();
+    assert!(!text.contains("acted"), "{text}");
+    assert_eq!(serde_json::from_str::<Rejection>(&text).unwrap(), bare);
+
+    let named = Rejection::Stale {
+        changes: changes.clone(),
+        acted: vec![Acted {
+            id: RequestId::parse("3").unwrap(),
+            actor: Actor::Human,
+            target: "changes".parse().unwrap(),
+            action: "unstage".parse().unwrap(),
+        }],
+    };
+    let text = serde_json::to_string_pretty(&named).unwrap();
+    assert_eq!(text, STALE_ACTED);
+    assert_eq!(serde_json::from_str::<Rejection>(&text).unwrap(), named);
 }

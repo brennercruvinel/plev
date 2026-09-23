@@ -81,7 +81,7 @@ impl Workbench {
         let (reason, intent) = match why {
             // A person's own answer, not a refusal of the workspace.
             Rejection::Declined { .. } => return (self.declined(req), quiet),
-            Rejection::Stale { changes } => {
+            Rejection::Stale { changes, .. } => {
                 let moved: Vec<String> = changes.iter().map(|c| self.moved(c)).collect();
                 (moved.join("; "), Intent::Destructive)
             }

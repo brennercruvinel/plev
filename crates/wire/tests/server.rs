@@ -463,7 +463,7 @@ fn a_person_moved_the_state_so_the_act_comes_back_stale_with_the_delta() {
         "s",
     );
     assert_eq!(names(&out), ["requested", "rejected"]);
-    let Stage::Rejected(Rejection::Stale { changes }) = &out[1].stage else {
+    let Stage::Rejected(Rejection::Stale { changes, .. }) = &out[1].stage else {
         panic!("stale: {:?}", out[1].stage);
     };
     assert_eq!(
@@ -494,6 +494,47 @@ fn a_person_moved_the_state_so_the_act_comes_back_stale_with_the_delta() {
     );
     assert_eq!(names(&out).last(), Some(&"completed"));
     assert_eq!(host.app.items.len(), 4);
+}
+
+/// who acted crosses the port as the dispatcher names it: the person's
+/// toggle, checked against the revision the agent acts from; the agent's
+/// own earlier act on that row is not named.
+#[test]
+fn a_stale_refusal_names_the_person_who_acted_on_what_the_agent_saw() {
+    let (mut server, mut host) = setup();
+    let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    host.click("todo.item[1]", "toggle");
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "t",
+            "todo.item[1]",
+            "toggle",
+            &from(r),
+        ),
+        "t",
+    );
+    assert_eq!(names(&out), ["requested", "rejected"]);
+    let Stage::Rejected(Rejection::Stale { changes, acted }) = &out[1].stage else {
+        panic!("stale: {:?}", out[1].stage);
+    };
+    assert_eq!(changes.len(), 1);
+    let [who] = &acted[..] else {
+        panic!("one actor named: {acted:?}");
+    };
+    assert_eq!(who.actor, Actor::Human);
+    assert_eq!(who.target, sid("todo.item[1]"));
+    assert_eq!(who.action.as_str(), "toggle");
+    assert_eq!(
+        host.dispatcher
+            .receipt(who.id)
+            .map(|r| r.request.actor.clone()),
+        Some(Actor::Human)
+    );
+    let line = serde_json::to_string(&out[1].stage).unwrap();
+    assert!(line.contains(r#""acted":[{"id":"#), "{line}");
 }
 
 #[test]

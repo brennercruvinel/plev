@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
 
 use crate::builder::{Semantics, SnapshotBuilder};
-use crate::check::{Rejection, Verdict, check};
+use crate::check::{Acted, Rejection, Verdict, check};
 use crate::error::SemError;
 use crate::receipt::{Millis, Outcome, Receipt, RequestId, Stage};
 use crate::request::{Actor, Request};
@@ -62,6 +62,12 @@ pub const DEFAULT_RETENTION: usize = 256;
 /// stays readable through `receipt` among the last `retention` finished
 /// ones, and is dropped after that: nothing grows without bound but the
 /// requests still open.
+///
+/// every stale refusal it records (at dispatch, at a confirmation's second
+/// check, from the point of truth through `execute` or `reject_at_truth`)
+/// names in `Rejection::Stale::acted` the actions of other actors that ran
+/// on the state the refused request observed, read from those same
+/// receipts (see `Acted`); whatever the refusal held there is replaced.
 pub struct Dispatcher {
     last: u64,
     open: BTreeMap<RequestId, Receipt>,
@@ -295,14 +301,40 @@ impl Dispatcher {
     }
 
     /// appends a stage the caller already knows is legal and tells every
-    /// sink.
-    fn push(&mut self, receipt: &mut Receipt, stage: Stage, now: Millis) {
+    /// sink. a stale refusal gets its `acted` here, the one place every
+    /// stage goes through.
+    fn push(&mut self, receipt: &mut Receipt, mut stage: Stage, now: Millis) {
+        if let Stage::Rejected(Rejection::Stale { acted, .. }) = &mut stage {
+            *acted = self.acted(&receipt.request);
+        }
         receipt.push(stage, now);
         if let Some((stage, _)) = receipt.stages.last() {
             for sink in &mut self.sinks {
                 sink.on_stage(receipt, stage);
             }
         }
+    }
+
+    /// the actions of other actors that were checked against the state
+    /// `req`'s actor saw and ran, in id order (see `Acted`). only the
+    /// receipts held here count: the open ones and the finished ones
+    /// retention keeps.
+    fn acted(&self, req: &Request) -> Vec<Acted> {
+        let seen = Some(req.observed.revision);
+        let mut out: Vec<Acted> = self
+            .open
+            .values()
+            .chain(&self.finished)
+            .filter(|r| r.request.actor != req.actor && r.validated_against == seen && ran(r))
+            .map(|r| Acted {
+                id: r.id,
+                actor: r.request.actor.clone(),
+                target: r.request.target.clone(),
+                action: r.request.action.clone(),
+            })
+            .collect();
+        out.sort_by_key(|a| a.id);
+        out
     }
 
     /// files a receipt: open ones by id, finished ones in the bounded
@@ -317,6 +349,16 @@ impl Dispatcher {
             self.open.insert(receipt.id, receipt);
         }
     }
+}
+
+/// true when the request reached execution: it is executing, or it
+/// completed or failed after. a refusal (at the check or at the point of
+/// truth), a decline and a wait for confirmation never ran.
+fn ran(r: &Receipt) -> bool {
+    matches!(
+        r.stage(),
+        Some(Stage::Executing | Stage::Completed(_) | Stage::Failed { .. })
+    )
 }
 
 /// projects the app now and checks the receipt's request against it,

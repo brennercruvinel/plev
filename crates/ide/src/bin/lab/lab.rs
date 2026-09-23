@@ -311,7 +311,7 @@ impl Lab {
                 continue;
             };
             match stage {
-                Stage::Rejected(Rejection::Stale { changes }) => {
+                Stage::Rejected(Rejection::Stale { changes, .. }) => {
                     if !self.stale.iter().any(|s| s.request == r.id) {
                         self.stale.push(StaleSeen {
                             t: *t,

@@ -22,7 +22,7 @@ fn tester() -> Actor {
 /// The one change of a stale rejection.
 fn stale(receipt: Receipt) -> Change {
     match receipt.stage() {
-        Some(Stage::Rejected(Rejection::Stale { changes })) if changes.len() == 1 => {
+        Some(Stage::Rejected(Rejection::Stale { changes, .. })) if changes.len() == 1 => {
             changes[0].clone()
         }
         other => panic!("expected one stale change, got {other:?}"),

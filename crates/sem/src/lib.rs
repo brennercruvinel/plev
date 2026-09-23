@@ -82,7 +82,9 @@
 //! carries the values its actor observed for the state the action reads
 //! (`Request::observe`); `check` decides it against the current snapshot
 //! in a fixed order and answers a `Verdict`, with a `Rejection::Stale`
-//! that holds the delta when the observed state moved. the `Dispatcher` is
+//! that holds the delta when the observed state moved and, once the
+//! dispatcher records it, the actions of other actors that ran on the
+//! state the actor saw (`Acted`). the `Dispatcher` is
 //! the one path for a person, an agent, assistive technology and a test:
 //! it projects the app's live state (`Operable`), checks, executes, and
 //! keeps a `Receipt` whose `Stage`s walk only legal transitions, with the
@@ -115,7 +117,7 @@ mod validate;
 mod value;
 
 pub use builder::{ActionBuilder, NodeBuilder, Semantics, SnapshotBuilder};
-pub use check::{Rejection, Verdict, check};
+pub use check::{Acted, Rejection, Verdict, check};
 pub use decl::{ActionDecl, Actors, Confirm, Constraints, ParamSpec, Policy};
 pub use diff::Change;
 pub use dispatch::{DEFAULT_RETENTION, Dispatcher, Execution, Operable, ReceiptSink};

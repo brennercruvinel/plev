@@ -187,7 +187,8 @@ fn a_test_submit_goes_stale_when_the_text_moves_and_not_when_the_caret_or_hover_
     assert!(s.handle_text("b"));
     assert_eq!(s.input.text(), "ab");
     let id = s.dispatch(stale);
-    let Some(Stage::Rejected(Rejection::Stale { changes })) = s.receipt(id).unwrap().stage() else {
+    let Some(Stage::Rejected(Rejection::Stale { changes, .. })) = s.receipt(id).unwrap().stage()
+    else {
         panic!("the submit must go stale");
     };
     assert!(matches!(
@@ -231,7 +232,8 @@ fn a_test_tab_select_goes_stale_when_the_filter_moves() {
     assert!(click(&mut s, content, px, py).clicked);
     assert_eq!(s.model.filter(), Filter::Active);
     let id = s.dispatch(stale);
-    let Some(Stage::Rejected(Rejection::Stale { changes })) = s.receipt(id).unwrap().stage() else {
+    let Some(Stage::Rejected(Rejection::Stale { changes, .. })) = s.receipt(id).unwrap().stage()
+    else {
         panic!("the switch must go stale");
     };
     let selected = StateRef::parse("todo.filter:selected").unwrap();

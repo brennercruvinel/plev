@@ -122,7 +122,7 @@ impl Agent {
                     ));
                     return Ok(());
                 }
-                Some(Stage::Rejected(Rejection::Stale { changes })) => {
+                Some(Stage::Rejected(Rejection::Stale { changes, .. })) => {
                     out.stale.push(changes.clone());
                     out.steps
                         .push(format!("submit {attempt} refused as stale: {changes:?}"));

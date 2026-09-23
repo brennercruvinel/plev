@@ -580,7 +580,7 @@ mod agent {
             );
 
             assert_eq!(names(&stale), ["requested", "rejected"]);
-            let Stage::Rejected(Rejection::Stale { changes }) = &stale[1] else {
+            let Stage::Rejected(Rejection::Stale { changes, .. }) = &stale[1] else {
                 panic!("stale: {stale:?}");
             };
             assert_eq!(

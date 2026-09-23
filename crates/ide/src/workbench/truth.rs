@@ -143,7 +143,7 @@ impl Workbench {
                 }]
             })
             .unwrap_or_default();
-        Some((id, End::Refused(Rejection::Stale { changes })))
+        Some((id, End::Refused(Rejection::stale(changes))))
     }
 
     /// `changes:staged`, the read a commit is checked on.
