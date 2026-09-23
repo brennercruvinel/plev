@@ -163,7 +163,7 @@ role = "rope/transactions/multi-cursor/history, pure (no ui)"
 
 [crates.sem]
 path = "crates/sem"
-role = "semantic contract (task-57, in progress): SemId, the persistent logical identity of a control, with its canonical text form; pure (no gpu, no window, no text stack)"
+role = "the semantic contract (task-57, adr semantic-contract-as-pure-projection): SemId, the persistent logical identity of a control (canonical text, chosen by the app or the IR, never positional), Role, Value under StateKey, StateRef <semid>:<key>, Constraints (secret keeps only a length), ActionDecl with its reads and Policy, Node with inherited inert and a track_caller Source; the app implements Semantics::project, called on demand from live state, and SnapshotBuilder::finish reports every violation at once; Snapshot (projection order, children, roots, value, subtree) has a stable Revision (FNV-1a 64 over a documented encoding, tree order, source excluded) and Snapshot::diff -> Change, empty exactly when two snapshots are equal; pure (no gpu, no window, no text stack), serde behind a default feature"
 
 [crates.git]
 path = "crates/git"

@@ -119,6 +119,10 @@ the whole app at once. the showcase and the ide are framed by
 `comps::shell::AppShell`: full sidebar on a desktop, a rail in a narrow
 window, a drawer behind a menu button on a phone.
 
+`sem` is the semantic contract: each control's persistent id, role,
+state, actions and constraints as pure data, projected from app state on
+demand ([docs/ADR/semantic-contract-as-pure-projection.md](docs/ADR/semantic-contract-as-pure-projection.md)).
+
 two of the crates are pipelines: a foreign format in, our format out.
 
 `monster` is a binary animation format, magic `MON0`, frozen at v1.
