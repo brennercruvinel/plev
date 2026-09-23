@@ -72,7 +72,7 @@ impl Workbench {
     /// Takes the repository behind `client` and starts loading it (the
     /// results come back as the client's events, for [`Workbench::apply`]).
     pub fn connect(&mut self, client: GitClient) {
-        let git = GitSession::new(client);
+        let mut git = GitSession::new(client);
         self.workspace.repo_label = git.repo_label();
         git.refresh();
         self.git = Some(git);
@@ -84,8 +84,10 @@ impl Workbench {
     }
 
     /// Reloads status, log and branches (results stream back as events).
-    pub fn refresh(&self) {
-        if let Some(git) = &self.git {
+    /// What was read before a mutation that leaves after this call is not
+    /// applied; the refresh that mutation's answer sends is.
+    pub fn refresh(&mut self) {
+        if let Some(git) = &mut self.git {
             git.refresh();
         }
     }

@@ -67,8 +67,8 @@ impl Workbench {
     }
 
     /// Queues `command` on the worker, or says why it cannot.
-    fn send(&self, command: GitCommand) -> Result<(), String> {
-        let Some(git) = &self.git else {
+    fn send(&mut self, command: GitCommand) -> Result<(), String> {
+        let Some(git) = &mut self.git else {
             return Err(NO_REPOSITORY.to_owned());
         };
         if git.send(command) {

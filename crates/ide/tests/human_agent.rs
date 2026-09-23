@@ -474,7 +474,6 @@ fn a_click_on_commit_and_a_test_request_commit_the_same() {
 // kind at a time and looks at the projection in between.
 
 #[test]
-#[ignore = "task-84: fails until a status read before a mutation stops landing over it"]
 fn a_status_read_before_a_stage_never_takes_the_file_back_out() {
     let mut rig = Rig::new(&["A", "B"], &[]);
     let a = rig.ask(agent(), "changes.file[A]", "stage", None);
@@ -501,7 +500,6 @@ fn a_status_read_before_a_stage_never_takes_the_file_back_out() {
 }
 
 #[test]
-#[ignore = "task-84: fails until a status read before a mutation stops landing over it"]
 fn a_status_read_before_an_unstage_never_puts_the_file_back() {
     let mut rig = Rig::new(&["A", "B", "C"], &["A", "B", "C"]);
     rig.agent_writes("only C");
@@ -538,7 +536,6 @@ fn a_status_read_before_an_unstage_never_puts_the_file_back() {
 }
 
 #[test]
-#[ignore = "task-84: fails until a status read before a mutation stops landing over it"]
 fn a_status_read_before_a_discard_never_brings_the_file_back() {
     let mut rig = Rig::new(&["A", "B"], &[]);
     let a = rig.ask(agent(), "changes.file[A]", "stage", None);
@@ -564,7 +561,6 @@ fn a_status_read_before_a_discard_never_brings_the_file_back() {
 }
 
 #[test]
-#[ignore = "task-84: fails until a status read before a mutation stops landing over it"]
 fn a_change_from_outside_lands_with_the_refresh_after_the_last_mutation() {
     let mut rig = Rig::new(&["A", "B", "C"], &[]);
 
