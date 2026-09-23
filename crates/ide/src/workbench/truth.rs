@@ -64,8 +64,9 @@ impl Workbench {
             End::Failed(error) => self.dispatcher.fail(id, error, now),
             End::Refused(why) => self.dispatcher.reject_at_truth(id, why, now),
         };
-        if let Err(e) = ended {
-            log::error!("ide: request {id} cannot end: {e}");
+        match ended {
+            Ok(()) => self.report(id),
+            Err(e) => log::error!("ide: request {id} cannot end: {e}"),
         }
     }
 

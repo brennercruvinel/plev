@@ -19,6 +19,9 @@
 //!   moved cursor or a new diff never makes a commit stale.
 //! - `stacks` (list): `branch`; `stacks.commit[<sha>]` (list item):
 //!   `summary`, `author`; `show_diff` reads `diff:target`.
+//! - `notices` (region): one `notices[<id>]` per toast on screen (status,
+//!   or alert for a refusal that names a change), named by its message,
+//!   with `dismiss` (the comps toast helper).
 
 use std::collections::{BTreeSet, HashSet};
 
@@ -43,6 +46,7 @@ impl Semantics for Workbench {
         diff(ws, ids, b);
         commit(ws, ids, b);
         stacks(ws, ids, b);
+        ws.toasts.project(b, &ids.notices, "notices", None);
         if ws.commit_form.visible && ws.commit_form.field().is_focused() {
             b.focus(&ids.message);
         }

@@ -121,7 +121,8 @@ impl WorkspaceView {
             content_h,
         );
 
-        // -- Overlays (always last, highest z_order) --
+        // -- Overlays (always last, highest z_order), the toasts on top --
         self.render_overlays(compositor, &theme);
+        self.render_toasts(compositor, &theme);
     }
 }

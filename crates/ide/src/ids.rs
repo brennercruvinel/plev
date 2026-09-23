@@ -23,6 +23,8 @@ pub(crate) struct Ids {
     pub stacks: SemId,
     /// `stacks.commit`, keyed by sha.
     pub commit: SemId,
+    /// `notices`: the toasts, keyed by toast id.
+    pub notices: SemId,
 }
 
 impl Ids {
@@ -37,9 +39,15 @@ impl Ids {
             message: commit.child("message")?,
             submit: commit.child("submit")?,
             commit: stacks.child("commit")?,
+            notices: SemId::name("notices")?,
             changes,
             stacks,
         })
+    }
+
+    /// The toast behind a `notices[<id>]`.
+    pub(crate) fn notice_of(&self, id: &SemId) -> Option<u64> {
+        key_under(&self.notices, id)?.parse().ok()
     }
 
     /// `changes.file[<path>]`.
@@ -108,6 +116,8 @@ mod tests {
             assert_eq!(ids.path_of(&ids.file(path)).as_deref(), Some(path));
         }
         assert_eq!(ids.sha_of(&ids.commit("f00d")).as_deref(), Some("f00d"));
+        assert_eq!(ids.notice_of(&ids.notices.key("7")), Some(7));
+        assert_eq!(ids.notice_of(&ids.notices.key("x")), None);
     }
 
     #[test]

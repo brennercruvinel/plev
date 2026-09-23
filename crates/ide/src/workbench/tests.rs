@@ -367,6 +367,151 @@ fn a_click_on_a_disabled_commit_is_refused_as_disabled() {
         ),
         "{receipt:?}"
     );
+    assert_eq!(
+        notices(&bench),
+        [(
+            Role::Status,
+            "Refused: the commit message is empty".to_owned()
+        )]
+    );
+}
+
+/// The toasts on screen, as projected: role and message.
+fn notices(bench: &Workbench) -> Vec<(Role, String)> {
+    let snap = bench.snapshot().expect("snapshot");
+    snap.children(&sid("notices"))
+        .map(|n| (n.role, n.label.clone()))
+        .collect()
+}
+
+/// Lets the toasts spring in (they are drawn and clickable once shown).
+fn settle_toasts(bench: &mut Workbench) {
+    for _ in 0..60 {
+        bench.tick(1.0 / 60.0);
+    }
+}
+
+#[test]
+fn a_stale_agent_request_says_what_changed_and_a_click_dismisses_it() {
+    let mut bench = bench();
+    let seen = bench.snapshot().expect("snapshot");
+    let agent = Actor::Agent {
+        name: "test-agent".into(),
+    };
+    let req = Request::observe(&seen, agent, "commit.submit", "submit", None).expect("observe");
+    for ch in " flow".chars() {
+        bench.workspace_mut().commit_form.append_char(ch);
+    }
+    let id = bench.dispatch(req);
+    assert!(matches!(
+        bench.receipt(id).and_then(Receipt::stage),
+        Some(Stage::Rejected(Rejection::Stale { .. }))
+    ));
+    assert_eq!(
+        notices(&bench),
+        [(
+            Role::Alert,
+            "Refused test-agent's submit: the commit message changed".to_owned()
+        )]
+    );
+
+    // The person clicks the toast away, through the dispatcher.
+    settle_toasts(&mut bench);
+    let log = Log::default();
+    bench.add_sink(Box::new(log.clone()));
+    let c = frame(&mut bench);
+    let (x, y) = center(&c, "notices[0]");
+    assert_eq!(c.hit(x, y), Some(&sid("notices[0]")));
+    assert!(bench.click(x, y));
+    let receipt = log.last();
+    assert_eq!(receipt.request.actor, Actor::Human);
+    assert_eq!(receipt.request.action.as_str(), "dismiss");
+    assert!(matches!(receipt.stage(), Some(Stage::Completed(_))));
+    assert!(
+        notices(&bench).is_empty(),
+        "a leaving toast is not projected"
+    );
+    assert_eq!(
+        bench.workspace().commit_form.message(),
+        "fix login flow",
+        "the click on the toast reached nothing under it"
+    );
+}
+
+#[test]
+fn an_agent_discard_opens_the_modal_and_cancel_leaves_the_file() {
+    let mut bench = bench();
+    let seen = bench.snapshot().expect("snapshot");
+    let agent = Actor::Agent {
+        name: "test-agent".into(),
+    };
+    let req =
+        Request::observe(&seen, agent, "changes.file[b.txt]", "discard", None).expect("observe");
+    let id = bench.dispatch(req);
+    assert!(bench.workspace().modal_open(), "a person is asked");
+
+    let c = frame(&mut bench);
+    // The modal holds the screen: no file menu under it.
+    let (fx, fy) = center(&c, "changes.file[a.txt]");
+    assert!(!bench.right_click(fx, fy));
+    let (_, cancel) = bench.workspace().modal_buttons().expect("drawn");
+    assert!(bench.click(cancel[0] + cancel[2] / 2.0, cancel[1] + cancel[3] / 2.0));
+
+    assert!(!bench.workspace().modal_open());
+    assert_eq!(
+        notices(&bench),
+        [(
+            Role::Status,
+            "Not confirmed: discard of b.txt by test-agent did not run".to_owned()
+        )]
+    );
+    // `sem` cannot decline yet: the receipt stays waiting, nothing ran.
+    assert_eq!(
+        bench.receipt(id).and_then(Receipt::stage),
+        Some(&Stage::AwaitingConfirmation)
+    );
+    assert!(
+        bench
+            .workspace()
+            .unassigned
+            .files
+            .iter()
+            .any(|f| f.path == "b.txt")
+    );
+}
+
+#[test]
+fn requests_waiting_for_a_person_are_asked_one_at_a_time() {
+    let mut bench = bench();
+    let agent = Actor::Agent {
+        name: "test-agent".into(),
+    };
+    let mut ids = Vec::new();
+    for file in ["changes.file[a.txt]", "changes.file[b.txt]"] {
+        let seen = bench.snapshot().expect("snapshot");
+        let req = Request::observe(&seen, agent.clone(), file, "discard", None).expect("observe");
+        ids.push(bench.dispatch(req));
+    }
+    assert!(bench.workspace().modal_open());
+
+    // Confirmed through the api: its modal closes and the next one opens.
+    bench
+        .confirm(ids[0], Actor::Human)
+        .expect("a person confirms");
+    assert!(matches!(
+        bench.receipt(ids[0]).and_then(Receipt::stage),
+        Some(Stage::Failed { .. })
+    ));
+    assert!(bench.workspace().modal_open(), "the second is asked now");
+    let _ = frame(&mut bench);
+    let (confirm, _) = bench.workspace().modal_buttons().expect("drawn");
+    assert!(bench.click(confirm[0] + 2.0, confirm[1] + 2.0));
+    assert!(!bench.workspace().modal_open());
+    let second = bench.receipt(ids[1]).expect("kept");
+    assert!(
+        matches!(&second.stages[2].0, Stage::Confirmed { by: Actor::Human }),
+        "{second:?}"
+    );
 }
 
 #[test]
@@ -380,7 +525,24 @@ fn without_a_repository_git_capabilities_fail_and_change_nothing() {
     );
     let receipt = ask(&mut bench, "commit.submit", "submit", None);
     assert!(matches!(receipt.stage(), Some(Stage::Failed { .. })));
-    assert_eq!(bench.snapshot().expect("snapshot"), before);
+    // Nothing moved but the two toasts saying so.
+    let after = bench.snapshot().expect("snapshot");
+    for (id, node) in before.nodes() {
+        assert_eq!(after.get(id), Some(node), "{id}");
+    }
+    assert_eq!(
+        notices(&bench),
+        [
+            (
+                Role::Alert,
+                "stage b.txt failed: no repository is open".to_owned()
+            ),
+            (
+                Role::Alert,
+                "submit failed: no repository is open".to_owned()
+            ),
+        ]
+    );
 }
 
 #[test]

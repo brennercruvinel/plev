@@ -11,7 +11,12 @@ use comps::prelude::WidgetEvent;
 impl WorkspaceView {
     /// Handle a left click at (cx, cy). Returns true if state changed.
     pub(crate) fn handle_click(&mut self, cx: f32, cy: f32) -> bool {
-        // Overlays intercept clicks first
+        // The toasts sit over everything: a click dismisses one.
+        if let Some(id) = self.toast_at(cx, cy) {
+            self.requests.push(UiRequest::DismissNotice { id });
+            return true;
+        }
+        // Overlays intercept clicks next
         if !self.overlay_mgr.is_empty() {
             return self.handle_overlay_click(cx, cy);
         }
@@ -133,13 +138,12 @@ impl WorkspaceView {
     pub(crate) fn handle_right_click(&mut self, cx: f32, cy: f32) -> bool {
         use comps::overlay::MenuItem;
 
+        // A modal asks the person something: it holds the screen.
+        if self.modal_open() {
+            return false;
+        }
         // dismiss any existing overlay first
-        self.overlay_mgr.pop_all();
-        self.ctx_menu = None;
-        self.modal = None;
-        self.ctx_menu_item_rects.clear();
-        self.modal_confirm_rect = None;
-        self.modal_cancel_rect = None;
+        self.dismiss_overlays();
 
         let (left_x, _) = self.panel_bounds();
 
@@ -174,19 +178,15 @@ impl WorkspaceView {
 
     // -- keys and commands (the keymap, the host's key routing, tests) -------
 
-    /// Closes the topmost overlay. Returns true if one was open.
+    /// Closes the topmost overlay. Returns true if one was open. Closing
+    /// the last one declines a request that waited for the person.
     pub(crate) fn close_top_overlay(&mut self) -> bool {
         if self.overlay_mgr.is_empty() {
             return false;
         }
         self.overlay_mgr.pop();
         if self.overlay_mgr.is_empty() {
-            self.ctx_menu = None;
-            self.modal = None;
-            self.ctx_menu_item_rects.clear();
-            self.modal_confirm_rect = None;
-            self.modal_cancel_rect = None;
-            self.pending_action = None;
+            self.dismiss_overlays();
         }
         true
     }

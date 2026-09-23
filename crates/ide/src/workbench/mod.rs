@@ -10,9 +10,12 @@
 //! workspace at that instant and asks the dispatcher as `Actor::Human`.
 //! An agent or a test builds its own `Request` from a snapshot it took
 //! and calls [`Workbench::dispatch`]. Either way the effect happens once,
-//! in `execute`.
+//! in `execute`. What the dispatcher refuses shows as a toast, and a
+//! request that waits for a person opens a modal (`person.rs`).
 
 mod execute;
+mod notice;
+mod person;
 mod project;
 #[cfg(test)]
 mod tests;
@@ -45,6 +48,9 @@ pub struct Workbench {
     /// The requests whose execution left for the git worker, oldest
     /// first, with what each waits for; the worker's answer ends them.
     inflight: VecDeque<(RequestId, Inflight)>,
+    /// Requests waiting for a person to confirm them, oldest first; the
+    /// first one is asked in the modal.
+    awaiting: VecDeque<RequestId>,
     /// The monotonic clock receipts are stamped with (`sem` never reads
     /// one).
     clock: Instant,
@@ -58,6 +64,7 @@ impl Workbench {
             git: None,
             dispatcher: Dispatcher::new(),
             inflight: VecDeque::new(),
+            awaiting: VecDeque::new(),
             clock: Instant::now(),
         }
     }
@@ -102,7 +109,8 @@ impl Workbench {
 
     /// Takes `req` through the dispatcher now: checked against the
     /// workspace as it is at this instant, executed if accepted. The
-    /// receipt tells the rest.
+    /// receipt tells the rest; the person sees a refusal as a toast, and
+    /// a request that waits for a person as a modal.
     pub fn dispatch(&mut self, req: Request) -> RequestId {
         let now = self.now();
         // `execute` needs the workbench itself, so the dispatcher is lent
@@ -111,18 +119,25 @@ impl Workbench {
         let mut dispatcher = std::mem::take(&mut self.dispatcher);
         let id = dispatcher.dispatch(self, req, now);
         self.dispatcher = dispatcher;
+        self.report(id);
         id
     }
 
     /// A person (`Actor::Human` at the screen, `Actor::Assistive`)
     /// confirms request `id`, which waits for it; checked again against
-    /// the workspace now before it runs. An agent or a test cannot.
+    /// the workspace now before it runs. An agent or a test cannot. The
+    /// modal asking for it closes.
     pub fn confirm(&mut self, id: RequestId, by: Actor) -> Result<(), SemError> {
         let now = self.now();
         let mut dispatcher = std::mem::take(&mut self.dispatcher);
         let result = dispatcher.confirm(self, id, by, now);
         self.dispatcher = dispatcher;
-        result
+        result?;
+        self.awaiting.retain(|r| *r != id);
+        self.workspace.close_confirm_modal(id);
+        self.report(id);
+        self.ask_next_confirmation();
+        Ok(())
     }
 
     /// The receipt of `id`, open or among the finished ones kept.
@@ -219,13 +234,27 @@ impl Workbench {
         for ask in self.workspace.take_requests() {
             asked |= self.ask(ask);
         }
+        // A modal that closed leaves room for a request still waiting.
+        self.ask_next_confirmation();
         changed || asked
     }
 
-    /// One thing a person asked for, as a request through the dispatcher.
-    /// `false` when it could not be observed (its target left the
-    /// workspace, or the projection does not validate).
+    /// One thing a person asked for, as a request through the dispatcher
+    /// (or, from the confirmation modal, an answer to one). `false` when
+    /// it could not be observed (its target left the workspace, or the
+    /// projection does not validate).
     fn ask(&mut self, ask: UiRequest) -> bool {
+        match ask {
+            UiRequest::Confirm { request } => {
+                self.confirmed_by_person(request);
+                return true;
+            }
+            UiRequest::Decline { request } => {
+                self.declined_by_person(request);
+                return true;
+            }
+            _ => {}
+        }
         let Some((target, action)) = self.aim(ask) else {
             return false;
         };
@@ -262,6 +291,8 @@ impl Workbench {
             UiRequest::OpenForm => (ids.form.clone(), "open"),
             UiRequest::CancelForm => (ids.form.clone(), "cancel"),
             UiRequest::Submit => (ids.submit.clone(), "submit"),
+            UiRequest::DismissNotice { id } => (ids.notices.key(id.to_string()), "dismiss"),
+            UiRequest::Confirm { .. } | UiRequest::Decline { .. } => return None,
         })
     }
 

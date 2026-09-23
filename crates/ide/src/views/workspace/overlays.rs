@@ -5,6 +5,7 @@ use comps::prelude::{Rect, WidgetEvent, rounded_rect, shadow_node};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::TextMeasurer;
 use engine::theme::{Intent, Theme};
+use sem::RequestId;
 
 impl WorkspaceView {
     /// Handle a click when overlays are active. Returns true if consumed.
@@ -22,9 +23,16 @@ impl WorkspaceView {
         if let Some(confirm_rect) = self.modal_confirm_rect {
             let (rx, ry, rw, rh) = confirm_rect;
             if cx >= rx && cx <= rx + rw && cy >= ry && cy <= ry + rh {
-                // Confirmed -> ask to discard the file
-                if let Some(PendingAction::ConfirmDiscard { path }) = self.pending_action.take() {
-                    self.requests.push(UiRequest::Discard { path });
+                // Confirmed: ask to discard the file, or confirm the
+                // request that waits for a person.
+                match self.pending_action.take() {
+                    Some(PendingAction::ConfirmDiscard { path }) => {
+                        self.requests.push(UiRequest::Discard { path });
+                    }
+                    Some(PendingAction::ConfirmRequest { request }) => {
+                        self.requests.push(UiRequest::Confirm { request });
+                    }
+                    _ => {}
                 }
                 self.dismiss_overlays();
                 return true;
@@ -112,11 +120,67 @@ impl WorkspaceView {
     /// confirm.
     pub(crate) fn open_discard_modal(&mut self, path: String) {
         let file_name = path.rsplit('/').next().unwrap_or(&path).to_string();
-        self.pending_action = Some(PendingAction::ConfirmDiscard { path });
-        let title = "Discard changes?".to_string();
         let body = format!("Discard all changes to {file_name}? This cannot be undone.");
-        let modal = Modal::new(title.clone(), body.clone(), "Discard", "Cancel")
-            .intent(Intent::Destructive);
+        self.open_modal(
+            PendingAction::ConfirmDiscard { path },
+            "Discard changes?".into(),
+            body,
+            "Discard",
+        );
+    }
+
+    /// Opens the modal that asks the person to confirm `request`, which
+    /// another actor made and the dispatcher holds until a person answers.
+    /// Any menu open closes first. Confirm answers through the dispatcher
+    /// (`UiRequest::Confirm`); closing the modal any other way declines.
+    pub(crate) fn open_confirm_modal(
+        &mut self,
+        request: RequestId,
+        title: String,
+        body: String,
+        confirm: &str,
+    ) {
+        self.overlay_mgr.pop_all();
+        self.ctx_menu = None;
+        self.ctx_menu_item_rects.clear();
+        self.pending_action = None;
+        self.open_modal(
+            PendingAction::ConfirmRequest { request },
+            title,
+            body,
+            confirm,
+        );
+    }
+
+    /// Closes the modal that asks about `request`, if it is the one open:
+    /// the request was confirmed (the answer is not a decline).
+    pub(crate) fn close_confirm_modal(&mut self, request: RequestId) {
+        if self.pending_action == Some(PendingAction::ConfirmRequest { request }) {
+            self.pending_action = None;
+            self.dismiss_overlays();
+        }
+    }
+
+    /// Whether a modal holds the screen (a confirmation is asked).
+    pub fn modal_open(&self) -> bool {
+        self.modal.is_some()
+    }
+
+    /// The open modal's confirm and cancel buttons as last drawn
+    /// (`[x, y, w, h]` in window coordinates), for a host or a test that
+    /// points at them.
+    pub fn modal_buttons(&self) -> Option<([f32; 4], [f32; 4])> {
+        let rect = |(x, y, w, h): (f32, f32, f32, f32)| [x, y, w, h];
+        Some((
+            rect(self.modal_confirm_rect?),
+            rect(self.modal_cancel_rect?),
+        ))
+    }
+
+    fn open_modal(&mut self, pending: PendingAction, title: String, body: String, confirm: &str) {
+        self.pending_action = Some(pending);
+        let modal =
+            Modal::new(title.clone(), body.clone(), confirm, "Cancel").intent(Intent::Destructive);
         let (vw, vh) = self.viewport();
         let dialog = modal.dialog_rect(self.theme(), vw, vh);
         self.modal = Some(modal);
@@ -124,7 +188,7 @@ impl WorkspaceView {
             OverlayKind::Modal {
                 title,
                 body,
-                confirm: "Discard".into(),
+                confirm: confirm.into(),
                 cancel: "Cancel".into(),
             },
             dialog.x,
@@ -134,15 +198,37 @@ impl WorkspaceView {
         );
     }
 
-    /// Closes every overlay and clears the cached interaction state.
-    fn dismiss_overlays(&mut self) {
+    /// Closes every overlay and clears the cached interaction state. A
+    /// request that waited for the person's confirmation is declined.
+    pub(super) fn dismiss_overlays(&mut self) {
+        if let Some(PendingAction::ConfirmRequest { request }) = self.pending_action.take() {
+            self.requests.push(UiRequest::Decline { request });
+        }
         self.overlay_mgr.pop_all();
         self.ctx_menu = None;
         self.modal = None;
         self.ctx_menu_item_rects.clear();
         self.modal_confirm_rect = None;
         self.modal_cancel_rect = None;
-        self.pending_action = None;
+    }
+
+    /// Draws the toasts over everything, at the bottom-right of the frame,
+    /// and binds each one as `notices[<id>]`.
+    pub(crate) fn render_toasts(&self, compositor: &mut Compositor, theme: &Theme) {
+        let (vw, vh) = self.viewport();
+        self.toasts
+            .render(compositor, self.overlay_layer, theme, vw, vh);
+    }
+
+    /// The toast under `(x, y)` that is not already leaving.
+    pub(crate) fn toast_at(&self, x: f32, y: f32) -> Option<u64> {
+        let (vw, vh) = self.viewport();
+        let rects = self.toasts.visible_rects(self.theme(), vw, vh);
+        self.toasts
+            .visible()
+            .zip(rects)
+            .find(|(t, r)| !t.is_closing() && r.contains(x, y))
+            .map(|(t, _)| t.id())
     }
 
     /// Draw active overlays onto the overlay layer. Must be called after the

@@ -158,6 +158,15 @@ impl Rig {
             .collect()
     }
 
+    /// The toasts on screen, as projected: their messages.
+    pub fn notices(&self) -> Vec<String> {
+        let notices = sem::SemId::parse("notices").expect("id");
+        self.look()
+            .children(&notices)
+            .map(|n| n.label.clone())
+            .collect()
+    }
+
     /// A value of the workbench's projection now.
     pub fn value(&self, at: &str) -> Value {
         self.look()

@@ -11,10 +11,11 @@ use super::multi_stack_view::MultiStackView;
 use super::sidebar::Sidebar;
 use super::unassigned_view::UnassignedView;
 use crate::ids::Ids;
-use comps::feedback::{ContextMenu, Modal};
+use comps::feedback::{ContextMenu, Modal, ToastManager};
 use comps::overlay::OverlayManager;
 use engine::compositor::{Compositor, LayerId};
-use engine::theme::Theme;
+use engine::theme::{Intent, Theme};
+use sem::RequestId;
 
 /// Three-panel workspace layout — mirrors plev ide's MainViewport.
 pub struct WorkspaceView {
@@ -72,6 +73,9 @@ pub struct WorkspaceView {
     /// What the open overlay refers to (context menu target / discard
     /// confirmation). `None` when no overlay-driven action is in flight.
     pub(crate) pending_action: Option<PendingAction>,
+    /// What the dispatcher refused and why, as toasts over the frame
+    /// (`notices[<id>]`).
+    pub(crate) toasts: ToastManager,
 
     /// What the person asked for since the last drain; the workbench
     /// turns each into a request through its dispatcher (views never
@@ -111,6 +115,10 @@ pub(crate) enum PendingAction {
     ConfirmDiscard {
         path: String,
     },
+    /// Another actor's request that waits for a person to confirm it.
+    ConfirmRequest {
+        request: RequestId,
+    },
 }
 
 /// What a person asked for through the workspace (a click, a key, a menu
@@ -119,15 +127,39 @@ pub(crate) enum PendingAction {
 /// so the effect happens once, in `execute`, whoever asked.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum UiRequest {
-    ShowFileDiff { path: String },
-    ShowCommitDiff { sha: String },
-    Stage { path: String },
-    Unstage { path: String },
-    Discard { path: String },
-    Ignore { path: String },
+    ShowFileDiff {
+        path: String,
+    },
+    ShowCommitDiff {
+        sha: String,
+    },
+    Stage {
+        path: String,
+    },
+    Unstage {
+        path: String,
+    },
+    Discard {
+        path: String,
+    },
+    Ignore {
+        path: String,
+    },
     OpenForm,
     CancelForm,
     Submit,
+    /// A click on a toast.
+    DismissNotice {
+        id: u64,
+    },
+    /// The person confirmed a request waiting for it (the modal's confirm).
+    Confirm {
+        request: RequestId,
+    },
+    /// The person closed that modal without confirming.
+    Decline {
+        request: RequestId,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -179,6 +211,7 @@ impl WorkspaceView {
             modal_confirm_rect: None,
             modal_cancel_rect: None,
             pending_action: None,
+            toasts: ToastManager::new(),
             requests: Vec::new(),
             repo_label: String::new(),
             branch_label: String::new(),
@@ -197,6 +230,7 @@ impl WorkspaceView {
                 .set_sem(ids.form.clone(), ids.message.clone(), ids.submit.clone());
             view.diff.set_sem(ids.diff.clone());
             view.stacks.set_sem(ids.stacks.clone(), ids.commit.clone());
+            view.toasts = ToastManager::new().sem(ids.notices.clone());
         }
         view.apply_panel_widths();
         view
@@ -265,14 +299,23 @@ impl WorkspaceView {
         self.theme().control.divider_hit
     }
 
+    /// Shows `message` as a toast at the bottom-right of the frame (what
+    /// the dispatcher refused, a confirmation left unanswered).
+    pub(crate) fn notify(&mut self, message: impl Into<String>, intent: Intent) {
+        let theme = self.theme().clone();
+        self.toasts.push(message, intent, &theme);
+    }
+
     /// Advance the widgets that animate (scrollbar fades, the commit
-    /// field caret). `true` while frames are needed.
+    /// field caret, the toasts). `true` while frames are needed; a toast
+    /// on screen keeps them coming until it dismisses itself.
     pub fn tick(&mut self, dt: f32) -> bool {
         let a = self.unassigned.tick(dt);
         let b = self.stacks.tick(dt);
         let c = self.diff.tick(dt);
         let d = self.commit_form.tick(dt);
-        a || b || c || d
+        let e = self.toasts.tick(dt) || !self.toasts.is_empty();
+        a || b || c || d || e
     }
 
     pub fn toggle_theme(&mut self) {

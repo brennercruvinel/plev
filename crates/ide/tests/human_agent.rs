@@ -127,6 +127,11 @@ fn a_person_unstaging_b_makes_the_agent_commit_stale() {
     assert!(added.is_empty());
     assert_eq!(before.as_ref(), Some(&set(&["A", "B", "C"])));
     assert_eq!(after.as_ref(), Some(&set(&["A", "C"])));
+    // The person sees why.
+    assert_eq!(
+        rig.notices(),
+        ["Refused test-agent's submit: B left the staged files"]
+    );
 
     rig.settle(unstage);
     assert!(completed(&rig.receipt(unstage)).is_some());
@@ -203,6 +208,7 @@ fn an_index_moved_outside_is_refused_at_the_point_of_truth() {
     assert!(removed.is_empty());
     assert_eq!(before.as_ref(), Some(&set(&["A", "B"])));
     assert_eq!(after.as_ref(), Some(&set(&["A", "B", "C"])));
+    assert_eq!(rig.notices(), ["Refused test-agent's submit: C was staged"]);
 
     assert_eq!(rig.head(), head, "no commit");
     // The form kept the message for another try; the refresh shows C.
@@ -309,9 +315,13 @@ fn an_agent_discard_waits_for_a_person_who_confirms_it() {
         "an agent never confirms"
     );
 
-    rig.bench
-        .confirm(id, Actor::Human)
-        .expect("a person confirms");
+    // The person reads the modal and clicks Discard.
+    assert!(rig.bench.workspace().modal_open());
+    let _ = frame(&mut rig);
+    let (confirm, _) = rig.bench.workspace().modal_buttons().expect("drawn");
+    let (x, y) = (confirm[0] + confirm[2] / 2.0, confirm[1] + confirm[3] / 2.0);
+    assert!(rig.bench.click(x, y));
+    assert!(!rig.bench.workspace().modal_open());
     rig.settle(id);
     assert_eq!(
         rig.stages(id),

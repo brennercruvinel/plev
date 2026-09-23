@@ -27,6 +27,8 @@ enum Op {
     /// Commit, expecting the index to stage exactly this set: the one the
     /// actor observed, which the dispatcher found still projected.
     Submit(BTreeSet<String>),
+    /// Dismiss a toast.
+    Dismiss(u64),
 }
 
 impl Workbench {
@@ -59,6 +61,7 @@ impl Workbench {
             "unstage" => path().map(Op::Unstage),
             "discard" => path().map(Op::Discard),
             "ignore" => path().map(Op::Ignore),
+            "dismiss" => ids.notice_of(target).map(Op::Dismiss),
             _ => None,
         }
     }
@@ -205,6 +208,13 @@ impl Operable for Workbench {
                 })
             }
             Op::Submit(expect) => self.submit(id, expect),
+            Op::Dismiss(notice) => {
+                if self.workspace.toasts.dismiss_id(notice) {
+                    done()
+                } else {
+                    Execution::Failed(format!("notice {notice} is not on screen"))
+                }
+            }
         }
     }
 }
