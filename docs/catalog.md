@@ -37,6 +37,14 @@ referência visual: o git client (`crates/ide`, que consome `crates/git`)
 e a galeria (`crates/showcase`). os dois já falam HOFF dark glass; o
 problema é que falam em dialetos diferentes.
 
+semântica (task-59, 2026-09-23): todo widget interativo do comps
+(`Button`, `IconButton`, `SubmitButton`, `Chip`, `TextField`, `Checkbox`,
+`Switch`, `Slider`, `Select`, `Tabs`, `NavLink`, `Breadcrumb`, `SplitPane`,
+`VirtualList`, `Table`, `Tree`, `ContextMenu`, `Modal`, `Toast`) aceita
+`.sem(id)`, liga o rect que desenha e onde testa o hit, e tem um helper
+`project` que declara role, estado e ações; a matriz cobre todos. adr
+semantic-binding-beside-the-scene.
+
 ## 1. onde a ui vive hoje
 
 | origem | linhas | o que é | estado |

@@ -9,6 +9,15 @@ status: living
 
 ## unreleased
 
+- every interactive comps widget speaks the semantic contract (2026-09-23,
+  task-59 phase b): chip, icon button, submit button, switch, slider,
+  select, tabs, nav link, breadcrumb, split pane, virtual list, table,
+  tree, context menu, modal and toast take `.sem(id)`, bind the rect they
+  draw and hit-test with, and project their role, state and actions
+  (children as keys under their id). every action reads the state it
+  changes, so an actor never overwrites a value it did not see. fixed on
+  the way: a full `Select` panel picked an invisible option from a 4px
+  band at its foot.
 - headless is first class (2026-09-23, task-66, adr
   headless-render-shares-the-frame-path): any frame renders without a
   window through the window's own path. `GpuContext::new_headless` builds

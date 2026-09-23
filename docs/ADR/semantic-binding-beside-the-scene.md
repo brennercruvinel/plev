@@ -7,6 +7,20 @@ date: 2026-09-23
 
 # semantic binding beside the scene, and the click as a request
 
+## addendum (2026-09-23, task-59 phase b)
+
+every interactive comps widget now carries an optional `SemId`, binds the
+rect it draws and hit-tests with, and projects itself through a
+`project` helper (16 widgets beyond the three of phase a; the matrix
+covers them all). one rule was settled on the way: every action reads the
+state it changes, absolute setters included (`select`, `set_value`,
+`set_ratio`, `open`, `close`, a tab's `select`). an actor that decided on
+a value another actor has since changed gets `Stale` with the delta
+instead of silently overwriting it; a person clicking pays nothing, since
+the click observes the page at that instant. phase b also fixed a
+pre-existing mismatch in `Select`: the hit test picked a row the panel did
+not draw, which is the one-geometry rule this record exists for.
+
 ## context
 
 task-57 gave every control a logical identity and a projected meaning

@@ -1,13 +1,14 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-59
 wave: 3
 depends: [task-57, task-58]
-branch: task/59-sem-binding
+branch: task/59-sem-binding (fase a), task/59b-widget-semantics (fase b)
+integrated: f71dc20 (fase a), f5b7cee (fase b)
 ---
 
 # task-59: ligação semântica com o render e um caminho operacional
@@ -47,6 +48,44 @@ paralelas para a mesma coisa.
   `crates/showcase/src/model`.
 - modal e overlay vivem em `crates/comps/src/feedback` e
   `crates/comps/src/overlay` (`OverlayManager`).
+
+## fase b fechada (2026-09-23)
+
+integrada na `main` em `f5b7cee` (nove commits), validada: diff lido,
+escopo só em `crates/comps/src` na primeira rodada, gate verde (1730
+testes). os 16 widgets interativos restantes do comps têm `.sem(id)`,
+ligação do rect que desenham e onde testam o hit, e um helper `project`:
+`Chip`, `IconButton`, `SubmitButton`, `Switch`, `Slider`, `Select`, `Tabs`,
+`NavLink`, `Breadcrumb`, `SplitPane`, `VirtualList`, `Table`, `Tree`,
+`ContextMenu`, `Modal`, `Toast`. a matriz cobre os 16 em 13 temas, phone e
+desktop, com `hit` no centro devolvendo o id.
+
+a entrega voltou uma vez, com duas decisões do orquestrador:
+
+- regra das reads: toda ação lê o estado que ela muda, setters absolutos
+  inclusive (`select`, `set_value`, `set_ratio`, `open`, `close`). protege
+  contra update perdido entre atores; a pessoa não paga nada, porque o
+  clique observa o estado no instante. aplicada também ao código da fase
+  a: `TextField::set_value` lê `text`, e cada aba do todo lê
+  `todo.filter:selected`. registrada no ADR semantic-binding-beside-the-scene
+  e no manual do engine.
+- defeito anterior do `Select`: com o painel limitado por
+  `dropdown_max_h`, uma faixa de 4px no pé do painel selecionava a opção
+  que não era desenhada. corrigido com um cálculo só (`drawn_rows`) que o
+  desenho e o hit test leem, com teste que falha antes. a rolagem do
+  painel virou a task-81.
+
+decisões aceitas: `selected` de um contêiner é a key do filho como texto
+(`""` sem seleção); `Chip` ganhou `selectable` e a tag estática é `Label`;
+slider contínuo não declara `increment`/`decrement`; `Select` projeta as
+opções como filhos enquanto o painel está aberto; list, table e tree só
+projetam a janela que o widget mantém, com `count` no contêiner; modal
+declara `confirm`/`cancel` no dialog e `activate` nos botões.
+
+limitações que seguem: keys por índice são posicionais (inserir acima
+desloca identidades); agentes só alcançam as linhas visíveis (não há ação
+de scroll nem select por índice); scrollbar e scrim do modal não são
+ligados; não há helper para voltar de um id de filho para o índice.
 
 ## fase a fechada (2026-09-23)
 

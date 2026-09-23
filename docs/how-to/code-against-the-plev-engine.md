@@ -70,8 +70,10 @@ what exists (updated at each task close-out):
   the layer it draws into) with the rect it draws and hit-tests with;
   the table sits beside the scene, never in a layer hash, and
   `Compositor::hit(x, y)` answers which capability is under a point.
-  `TextField`, `Checkbox` and `Button` take `.sem(id)` and have a
-  `project` helper; the other widgets follow (task-59 phase b).
+  every interactive comps widget takes `.sem(id)` and has a `project`
+  helper that declares its role, state and actions (children as keys
+  under its id); an app gives a widget an id, calls its helper in
+  `Semantics::project`, and the render binds it.
 - the first app on the one path is the showcase todo page
   (`crates/showcase/src/view/apps/app/semantics.rs`): `Semantics +
   Operable`, owner of a `Dispatcher`; every click, the Enter key and the
@@ -126,7 +128,9 @@ as the tasks land, these rules become binding (each line names its task):
   invalidate an action (task-57, task-58).
 - every action declares the state it reads; a request carries the values
   its actor observed; the dispatcher checks them against the current
-  state and rejects stale requests with the delta (task-58).
+  state and rejects stale requests with the delta (task-58). every action
+  reads at least the state it changes, absolute setters included, so no
+  actor overwrites a value it never saw (task-59).
 - one path: a click, a keystroke, a screen reader action, an agent and a
   test all become a `sem::Request` and go through the same `Dispatcher`
   into the same `Operable::execute`. a click handler that calls app logic
