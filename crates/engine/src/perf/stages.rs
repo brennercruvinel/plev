@@ -89,14 +89,17 @@ pub enum Stage {
     /// The GPU's own clock over a frame, from timestamp queries: the first
     /// timed pass's start to the last one's end, so the gaps between
     /// passes and the passes not timed (a backdrop blur) are in it. Only
-    /// with `RenderConfig::gpu_timestamps` on an adapter that has them;
-    /// recorded in the frame that reads the timestamps back, the same
-    /// frame with [`set_gpu_sync`], a later one without (see `gpu_time`).
+    /// with `RenderConfig::gpu_timestamps` on an adapter that has them,
+    /// and recorded by the frame that reads the timestamps back: the next
+    /// drawn frame with [`set_gpu_sync`], a later one without (see
+    /// `gpu_time`).
     GpuSpan,
-    /// The GPU's time in the layer passes, from their timestamps, summed
-    /// over the passes timed; items: layer passes timed.
+    /// The GPU's time in the layer passes: the first one's start to the
+    /// last one's end; items: layer passes with both timestamps.
     GpuLayers,
-    /// The GPU's time in the composite pass, from its timestamps.
+    /// The GPU's time in the composite pass once the layer passes are
+    /// done (its end minus the later of its start and their end): its
+    /// vertex stage runs alongside them and its fragments wait for them.
     GpuComposite,
 }
 

@@ -245,17 +245,23 @@ impl<'a> FrameStamps<'a> {
     }
 }
 
-/// What one frame's timestamps say, in nanoseconds.
+/// What one frame's timestamps say, in nanoseconds, cut along the GPU's
+/// timeline rather than per pass: a tile-based GPU runs the composite's
+/// vertex stage alongside the layer passes and holds its fragments until
+/// their textures are done, so the composite's own start-to-end would
+/// count the layers' time twice.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(crate) struct GpuReading {
     /// The earliest start written to the latest end written; `None` when
     /// none was.
     pub span: Option<u64>,
-    /// The layer passes with both timestamps, summed.
-    pub layers: u64,
+    /// The first layer pass's start to the last one's end; `None` without
+    /// a layer pass.
+    pub layers: Option<u64>,
     /// Layer passes with both timestamps.
     pub layer_passes: u64,
-    /// The composite pass, when it has both timestamps.
+    /// The composite's end minus the later of its start and the last
+    /// layer pass's end: its time once the layers are done.
     pub composite: Option<u64>,
     /// Passes without a usable pair: a timestamp never written (zero, or
     /// all ones), or an end before its start. On Metal a pass that draws
@@ -264,39 +270,73 @@ pub(crate) struct GpuReading {
     pub incomplete: u64,
 }
 
+/// The earliest start and the latest end seen.
+#[derive(Clone, Copy)]
+struct Bounds {
+    first: u64,
+    last: u64,
+}
+
+impl Bounds {
+    const NONE: Bounds = Bounds {
+        first: u64::MAX,
+        last: 0,
+    };
+
+    fn add(&mut self, start: Option<u64>, end: Option<u64>) {
+        if let Some(t) = start {
+            self.first = self.first.min(t);
+        }
+        if let Some(t) = end {
+            self.last = self.last.max(t);
+        }
+    }
+
+    fn end(self) -> Option<u64> {
+        (self.last > 0).then_some(self.last)
+    }
+
+    fn ticks(self) -> Option<u64> {
+        (self.first <= self.last).then(|| self.last - self.first)
+    }
+}
+
 impl GpuReading {
     /// `ticks` are the composite's pair, then one pair per layer pass;
     /// `period` is nanoseconds per tick.
     pub(crate) fn from_ticks(ticks: &[u64], period: f32) -> Self {
         let nanos = |t: u64| (t as f64 * f64::from(period)).round() as u64;
-        let written = |t: u64| t != 0 && t != u64::MAX;
+        let written = |t: u64| (t != 0 && t != u64::MAX).then_some(t);
         let mut reading = Self::default();
-        let (mut first, mut last) = (u64::MAX, 0);
+        let (mut all, mut layers) = (Bounds::NONE, Bounds::NONE);
+        let mut composite = (None, None);
         for (i, pair) in ticks.chunks_exact(2).enumerate() {
             let &[begin, end] = pair else {
                 continue;
             };
-            match (written(begin), written(end)) {
-                (true, true) if end >= begin => {
-                    first = first.min(begin);
-                    last = last.max(end);
-                    let time = nanos(end - begin);
-                    if i == 0 {
-                        reading.composite = Some(time);
-                    } else {
-                        reading.layers += time;
-                        reading.layer_passes += 1;
-                    }
-                    continue;
-                }
-                // one side written: it still bounds the span
-                (true, false) => first = first.min(begin),
-                (false, true) => last = last.max(end),
-                _ => {}
+            // a backwards pair bounds nothing; one side written still does
+            let (start, stop) = match (written(begin), written(end)) {
+                (Some(b), Some(e)) if e < b => (None, None),
+                sides => sides,
+            };
+            let full = start.is_some() && stop.is_some();
+            reading.incomplete += u64::from(!full);
+            all.add(start, stop);
+            if i == 0 {
+                composite = (start, stop);
+            } else {
+                layers.add(start, stop);
+                reading.layer_passes += u64::from(full);
             }
-            reading.incomplete += 1;
         }
-        reading.span = (first <= last).then(|| nanos(last - first));
+        reading.span = all.ticks().map(nanos);
+        reading.layers = layers.ticks().map(nanos);
+        reading.composite = match composite {
+            (start, Some(stop)) => start
+                .max(layers.end())
+                .map(|from| nanos(stop.saturating_sub(from))),
+            _ => None,
+        };
         reading
     }
 
@@ -313,7 +353,11 @@ impl GpuReading {
             return;
         };
         stages::add(Stage::GpuSpan, 0, span);
-        stages::add(Stage::GpuLayers, self.layer_passes, self.layers);
+        stages::add(
+            Stage::GpuLayers,
+            self.layer_passes,
+            self.layers.unwrap_or(0),
+        );
         if let Some(composite) = self.composite {
             stages::add(Stage::GpuComposite, 0, composite);
         }
@@ -340,14 +384,14 @@ mod tests {
     }
 
     #[test]
-    fn a_reading_splits_composite_and_layers_and_spans_them() {
+    fn a_reading_cuts_the_timeline_into_layers_and_composite() {
         // composite 900..1000, layers 100..400 and 450..800
         let reading = GpuReading::from_ticks(&[900, 1000, 100, 400, 450, 800], 1.0);
         assert_eq!(
             reading,
             GpuReading {
                 span: Some(900),
-                layers: 650,
+                layers: Some(700),
                 layer_passes: 2,
                 composite: Some(100),
                 incomplete: 0,
@@ -356,41 +400,57 @@ mod tests {
     }
 
     #[test]
+    fn a_composite_started_alongside_the_layers_counts_from_their_end() {
+        // the composite's vertex stage starts at 150, its fragments wait
+        // for the layer pass that ends at 600
+        let reading = GpuReading::from_ticks(&[150, 1000, 100, 600], 1.0);
+        assert_eq!(reading.layers, Some(500));
+        assert_eq!(reading.composite, Some(400));
+        assert_eq!(reading.span, Some(900));
+    }
+
+    #[test]
+    fn a_composite_alone_is_its_own_time() {
+        let reading = GpuReading::from_ticks(&[300, 700], 1.0);
+        assert_eq!(reading.layers, None);
+        assert_eq!(reading.layer_passes, 0);
+        assert_eq!(reading.composite, Some(400));
+        assert_eq!(reading.span, Some(400));
+    }
+
+    #[test]
     fn ticks_convert_by_the_period() {
         let reading = GpuReading::from_ticks(&[10, 22, 1, 4], 83.333);
         assert_eq!(reading.composite, Some(1000), "12 ticks of 83.333 ns");
-        assert_eq!(reading.layers, 250);
+        assert_eq!(reading.layers, Some(250));
         assert_eq!(reading.span, Some(1750), "ticks 1 to 22");
     }
 
     #[test]
-    fn a_pass_without_both_timestamps_is_left_out_of_the_pass_times() {
+    fn a_pass_without_both_timestamps_counts_as_incomplete() {
         // composite never written, one full layer pass, one backwards
         let reading = GpuReading::from_ticks(&[0, 0, 100, 200, 500, 400], 1.0);
         assert_eq!(reading.composite, None, "zero is a timestamp never written");
-        assert_eq!((reading.layer_passes, reading.layers), (1, 100));
+        assert_eq!((reading.layer_passes, reading.layers), (1, Some(100)));
         assert_eq!(reading.incomplete, 2);
         assert_eq!(reading.span, Some(100), "a backwards pair bounds nothing");
     }
 
     #[test]
-    fn a_pass_that_sampled_one_side_still_bounds_the_span() {
-        // an empty layer pass (start only), a full one, a composite with
-        // its end only (all ones at its start)
+    fn a_pass_that_sampled_one_side_still_bounds_the_timeline() {
+        // a composite with its end only (all ones at its start), an empty
+        // layer pass (start only), a full one
         let ticks = [u64::MAX, 900, 50, 0, 100, 200];
         let reading = GpuReading::from_ticks(&ticks, 1.0);
-        assert_eq!((reading.layer_passes, reading.layers), (1, 100));
-        assert_eq!(reading.composite, None);
+        assert_eq!(reading.layer_passes, 1);
+        assert_eq!(reading.layers, Some(150), "from the empty pass's start");
+        assert_eq!(reading.composite, Some(700), "from the last layer end");
         assert_eq!(reading.incomplete, 2);
-        assert_eq!(
-            reading.span,
-            Some(850),
-            "from the empty pass's start to 900"
-        );
+        assert_eq!(reading.span, Some(850));
     }
 
     #[test]
-    fn no_valid_pair_reads_as_no_span_and_records_nothing() {
+    fn no_timestamp_written_reads_as_no_span_and_records_nothing() {
         for ticks in [&[][..], &[0, 0][..], &[7][..]] {
             let reading = GpuReading::from_ticks(ticks, 1.0);
             assert_eq!(reading.span, None, "{ticks:?}");
