@@ -2,11 +2,19 @@
 project: plev
 audience: [ai-agents, contributors]
 status: active
-last-updated: 2026-06-29
+last-updated: 2026-09-23
 domain: project-status
 ---
 
 # plev, estado do projeto
+
+> update 2026-09-23: a direção mudou. o plev vai de GPU UI engine para
+> generative interaction runtime. o programa (goal, grafo, ownership,
+> contratos entre tasks) está em
+> `steps/ongoing/generative-runtime-program.md`, a tese em
+> `steps/ongoing/generative-runtime-thesis.md` e as regras obrigatórias em
+> `steps/ongoing/generative-runtime-guidelines.md`. as tasks são a task-57
+> até a task-80, em `steps/pending/`. o mapa abaixo é histórico.
 
 ## o que e
 compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, ios/metal, linux/vulkan, android/vulkan, windows/dx12, browser/webgpu). nao e framework de widgets. e a camada que transforma scene graphs em draw calls na GPU de forma identica em todos os targets.
