@@ -20,7 +20,13 @@ use crate::value::{StateRef, Value};
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum Change {
-    NodeAdded(SemId),
+    /// a node `after` holds and `before` does not, as `after` holds it:
+    /// every field, its state (a `secret` field already its length) and
+    /// its `source`. whoever sends it out of the process treats it as a
+    /// node of a snapshot (the agent port drops `source` unless asked and
+    /// keeps the state keys asked for). where it sits among its siblings
+    /// is not said: only its `parent` is.
+    NodeAdded(Box<Node>),
     NodeRemoved(SemId),
     /// a state value appeared, changed or went away. for `List` and `Set`
     /// (a missing value counts as empty) `added` and `removed` hold the
@@ -87,7 +93,7 @@ impl Snapshot {
     /// order: removed nodes (in `before` order), then per node of `after`
     /// either `NodeAdded` or its field changes (role, label, description,
     /// parent, state, actions, constraints, flags), then reorders, then
-    /// focus. `source` is never compared.
+    /// focus. `source` is never compared (a node added carries its own).
     pub fn diff(before: &Snapshot, after: &Snapshot) -> Vec<Change> {
         let mut out = Vec::new();
         for id in before.nodes().keys() {
@@ -97,7 +103,7 @@ impl Snapshot {
         }
         for (id, new) in after.nodes() {
             match before.get(id) {
-                None => out.push(Change::NodeAdded(id.clone())),
+                None => out.push(Change::NodeAdded(Box::new(new.clone()))),
                 Some(old) => node_changes(old, new, &mut out),
             }
         }

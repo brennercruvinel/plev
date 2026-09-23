@@ -44,8 +44,10 @@ pub(crate) struct Inner {
     stats: Stats,
 }
 
-/// true for a change a `Kind::Changes` cannot carry: it needs the new
-/// node or the new order, which a `Change` does not hold.
+/// true for a change a `Kind::Changes` cannot carry: it needs the place
+/// of a node among its siblings (a node added, a parent changed) or the
+/// new order, which a `Change` does not hold. a `node_added` carries the
+/// node, not where it goes in the projection order.
 fn structural(c: &Change) -> bool {
     matches!(
         c,

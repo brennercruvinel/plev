@@ -136,7 +136,7 @@ fn every_reply() -> Vec<Reply> {
             base: revision("00000000000000ff"),
             revision: seen.revision(),
             changes: vec![
-                Change::NodeAdded(sid("todo.item[2]")),
+                Change::NodeAdded(Box::new(seen.get(&sid("todo.item[1]")).unwrap().clone())),
                 stale.clone(),
                 Change::FocusChanged {
                     before: None,

@@ -141,12 +141,60 @@ fn nodes_added_and_removed_are_named() {
     b.node("keep", Role::Group, "keep");
     b.node("new", Role::Button, "new");
     let after = b.finish().unwrap();
+    let new = after.get(&id("new")).unwrap().clone();
     assert_eq!(
         Snapshot::diff(&before, &after),
         [
             Change::NodeRemoved(id("gone")),
-            Change::NodeAdded(id("new"))
+            Change::NodeAdded(Box::new(new))
         ]
+    );
+}
+
+/// a node that came carries every field as `after` holds it, its source
+/// included, and a secret field as its length: the delta holds what a
+/// snapshot would, so nobody needs a second observation to know it.
+#[test]
+fn a_node_added_is_the_node_as_after_holds_it() {
+    let project = |with_pin: bool| {
+        let mut b = SnapshotBuilder::new();
+        b.node("form", Role::Group, "login");
+        if with_pin {
+            b.node("form.pin", Role::TextInput, "pin")
+                .parent("form")
+                .description("four digits")
+                .state("text", "1234")
+                .state("tries", 2i64)
+                .constraints(Constraints {
+                    secret: true,
+                    editable: true,
+                    ..Constraints::default()
+                })
+                .focusable(true)
+                .action("set")
+                .reads("form.pin:tries");
+        }
+        b.finish().unwrap()
+    };
+    let (before, after) = (project(false), project(true));
+    let pin = after.get(&id("form.pin")).unwrap();
+    let delta = Snapshot::diff(&before, &after);
+    let [Change::NodeAdded(node)] = &delta[..] else {
+        panic!("one node added: {delta:?}");
+    };
+    assert_eq!(**node, *pin);
+    assert_eq!(node.parent, Some(id("form")));
+    assert_eq!(node.description.as_deref(), Some("four digits"));
+    assert_eq!(node.state.get("text"), Some(&Value::Int(4)), "a length");
+    assert_eq!(node.state.get("tries"), Some(&Value::Int(2)));
+    assert_eq!(node.actions, pin.actions);
+    assert!(node.constraints.secret && node.focusable);
+    assert!(node.source.is_some() && node.source == pin.source);
+    assert!(!format!("{delta:?}").contains("1234"));
+    // and the other way it is only named.
+    assert_eq!(
+        Snapshot::diff(&after, &before),
+        [Change::NodeRemoved(id("form.pin"))]
     );
 }
 
@@ -283,9 +331,11 @@ fn sibling_order_is_a_reorder_and_an_insertion_is_not() {
             parent: Some(id("list"))
         }]
     );
+    let inserted = project(&["a", "c", "b"], false);
+    let c = inserted.get(&id("list[c]")).unwrap().clone();
     assert_eq!(
-        Snapshot::diff(&base, &project(&["a", "c", "b"], false)),
-        [Change::NodeAdded(id("list[c]"))]
+        Snapshot::diff(&base, &inserted),
+        [Change::NodeAdded(Box::new(c))]
     );
     assert_eq!(
         Snapshot::diff(&base, &project(&["a", "b"], true)),

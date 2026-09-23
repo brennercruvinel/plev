@@ -295,7 +295,12 @@ fn since_a_served_revision_only_the_delta_comes_back() {
     host.click("todo.input", "submit");
     let base = d.revision;
     let d = delta(observe(&mut server, &mut host, A, &since(base)));
-    assert!(d.changes.contains(&Change::NodeAdded(sid("todo.item[4]"))));
+    assert!(
+        d.changes
+            .iter()
+            .any(|c| matches!(c, Change::NodeAdded(n) if n.id == sid("todo.item[4]"))),
+        "{d:?}"
+    );
 
     // a revision the port does not hold gets the whole snapshot.
     let unknown = "0123456789abcdef";

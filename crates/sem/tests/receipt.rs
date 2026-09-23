@@ -13,7 +13,7 @@ fn one_of_each() -> Vec<Stage> {
         Stage::AwaitingConfirmation,
         Stage::Confirmed { by: Actor::Human },
         Stage::Rejected(Rejection::Stale {
-            changes: vec![Change::NodeAdded(SemId::parse("x").unwrap())],
+            changes: vec![Change::NodeRemoved(SemId::parse("x").unwrap())],
         }),
         Stage::Executing,
         Stage::Completed(Outcome::default()),

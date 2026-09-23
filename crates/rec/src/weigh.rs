@@ -159,7 +159,8 @@ fn errors_weight(errors: &SemErrors) -> usize {
 pub(crate) fn change(c: &Change) -> usize {
     size_of::<Change>()
         + match c {
-            Change::NodeAdded(n) | Change::NodeRemoved(n) => id(n),
+            Change::NodeAdded(n) => node(n),
+            Change::NodeRemoved(n) => id(n),
             Change::StateChanged {
                 at: a,
                 before,
