@@ -17,8 +17,8 @@
 //! Forms section: route Key::Character/Space through `handle_text` before
 //! the digit/theme hotkeys, view::EditKey through `handle_edit_key`,
 //! Escape through `handle_escape` (before popping overlays), map
-//! NamedKey::Enter to `handle_enter`, and add `tick` to the view tick so
-//! item tweens and the cursor blink advance.
+//! NamedKey::Enter to `handle_enter`, and merge `wake` into the view's
+//! wake so item tweens and the cursor blink advance.
 
 mod draw;
 mod layout;
@@ -27,7 +27,7 @@ mod semantics;
 mod tests;
 
 use comps::form::TextField;
-use comps::prelude::{Checkbox, EventResult, Rect, WidgetEvent};
+use comps::prelude::{Checkbox, EventResult, Rect, Wake, WidgetEvent};
 use engine::input::scroll::ScrollState;
 use engine::theme::Theme;
 use sem::Dispatcher;
@@ -306,11 +306,9 @@ impl TodoPage {
         false
     }
 
-    /// Advance item tweens and the cursor blink. Returns true while frames
-    /// are needed (tweens live, or the focused cursor must keep blinking).
-    pub fn tick(&mut self, dt: f32) -> bool {
-        let animating = self.model.update(dt);
-        self.input.tick(dt);
-        animating || self.input.is_focused()
+    /// Advance item tweens and the cursor blink: frames while a tween
+    /// runs, and for the focused caret only the next flip.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        Wake::moving(self.model.update(dt)).merge(self.input.wake(dt))
     }
 }

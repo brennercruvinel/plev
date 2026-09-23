@@ -2,7 +2,7 @@
 //! event, its visible-only tick and its drawing. One match per verb over
 //! `pages::Pane`, so the rest of the view never names a pane's field.
 
-use comps::prelude::{EmptyState, EventResult, Rect, WidgetEvent};
+use comps::prelude::{EmptyState, EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::Theme;
 use sem::{Receipt, ReceiptSink, Request, SemId, Snapshot};
@@ -145,16 +145,17 @@ impl ShowcaseView {
 
     /// Motion that would run forever ticks only while visible: the
     /// dock's caret, the chart reveal, spinners, breathing skeletons,
-    /// the todo caret, the editor.
-    pub(super) fn page_tick(&mut self, dt: f32) -> bool {
+    /// the todo caret, the editor. Continuous motion asks for every
+    /// frame; a caret asks for its next flip.
+    pub(super) fn page_wake(&mut self, dt: f32) -> Wake {
         match self.pane() {
-            Some(Pane::Dock) => self.panes.dock.tick(dt),
-            Some(Pane::Chart) => self.panes.chart.tick(dt),
-            Some(Pane::Spinner) => self.panes.spinner.tick(dt),
-            Some(Pane::Skeleton) => self.panes.skeleton.tick(dt),
-            Some(Pane::Todo) => self.panes.todo.tick(dt),
-            Some(Pane::Editor) => self.panes.editor.tick(dt),
-            _ => false,
+            Some(Pane::Dock) => Wake::moving(self.panes.dock.tick(dt)),
+            Some(Pane::Chart) => Wake::moving(self.panes.chart.tick(dt)),
+            Some(Pane::Spinner) => Wake::moving(self.panes.spinner.tick(dt)),
+            Some(Pane::Skeleton) => Wake::moving(self.panes.skeleton.tick(dt)),
+            Some(Pane::Todo) => self.panes.todo.wake(dt),
+            Some(Pane::Editor) => self.panes.editor.wake(dt),
+            _ => Wake::idle(),
         }
     }
 

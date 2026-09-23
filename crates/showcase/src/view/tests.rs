@@ -246,7 +246,19 @@ fn todo_add_field_takes_typing_enter_and_escape_through_the_chrome() {
     assert!(view.handle_key("x"));
     assert!(view.handle_edit_key(EditKey::Backspace));
     assert!(view.handle_enter(), "Enter adds the todo");
-    assert!(view.tick(1.0 / 60.0), "a focused field keeps frames coming");
+    // The new row's enter tween runs its course; what is left pending is
+    // the focused caret, which asks for its next flip, not for every frame.
+    let mut wake = view.wake(1.0 / 60.0);
+    for _ in 0..600 {
+        if !wake.is_continuous() {
+            break;
+        }
+        wake = view.wake(1.0 / 60.0);
+    }
+    assert!(
+        wake.next.is_some() && !wake.is_continuous(),
+        "a focused field asks for its next flip, not for every frame: {wake:?}"
+    );
     assert!(view.close_top_overlay(), "Escape blurs the field first");
     assert!(!view.handle_key("x"), "blurred: characters fall through");
 }

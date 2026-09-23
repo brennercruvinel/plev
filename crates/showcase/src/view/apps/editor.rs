@@ -5,7 +5,7 @@
 //! modifiers) via `ShowcaseView::handle_editor_key`.
 
 use comps::editor::{EditorTheme, EditorView, MouseEvent};
-use comps::prelude::{EventResult, Rect, WidgetEvent};
+use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::layout::ComputedBounds;
 use engine::theme::Theme;
@@ -91,9 +91,9 @@ impl EditorPage {
         self.editor.handle_key(key, modifiers)
     }
 
-    /// Caret blink; `true` while a frame is needed.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        self.editor.tick(dt)
+    /// Caret blink: a frame on a toggle, the next toggle as the deadline.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        self.editor.wake(dt)
     }
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect) {

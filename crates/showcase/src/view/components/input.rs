@@ -4,7 +4,7 @@
 //! characters and editing keys the shell forwards go to the focused one.
 
 use comps::form::TextField;
-use comps::prelude::{EventResult, Rect, WidgetEvent};
+use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::Theme;
 
@@ -120,12 +120,12 @@ impl InputPage {
         }
     }
 
-    /// Advance the cursor blink. `true` while a field is focused (the
-    /// blink needs frames under render-on-demand).
-    pub fn tick(&mut self, dt: f32) -> bool {
+    /// Advance the cursor blink of the focused field: a frame on a flip,
+    /// the next flip as the deadline; nothing while no field is focused.
+    pub fn wake(&mut self, dt: f32) -> Wake {
         match self.focused() {
-            Some(i) => self.fields[i].tick(dt),
-            None => false,
+            Some(i) => self.fields[i].wake(dt),
+            None => Wake::idle(),
         }
     }
 
@@ -317,13 +317,15 @@ mod tests {
         assert_eq!(rings(&p), vec![(f.x - 4.0, f.y - 4.0)]);
     }
 
-    /// While a field is focused the page keeps requesting frames (cursor
-    /// blink); idle it settles.
+    /// While a field is focused the page asks for the caret's next flip,
+    /// not for a frame every tick; idle it asks for nothing.
     #[test]
-    fn focused_field_animates() {
+    fn focused_field_asks_for_the_next_flip() {
         let mut p = InputPage::new();
-        assert!(!p.tick(0.016), "idle page requests no frames");
+        assert_eq!(p.wake(0.016), Wake::idle(), "idle page requests no frames");
         p.handle_edit_key(EditKey::Tab);
-        assert!(p.tick(0.016), "blink needs frames while focused");
+        let w = p.wake(0.016);
+        assert!(!w.now && !w.is_continuous(), "no flip yet, no frame: {w:?}");
+        assert!(w.next.is_some(), "the next flip is pending");
     }
 }

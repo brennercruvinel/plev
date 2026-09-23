@@ -71,7 +71,8 @@ pub fn markdown(cfg: &Config, runs: &[Run], build: &str) -> String {
     let mut md = String::new();
     let _ = writeln!(
         md,
-        "{} measured turns per scenario after {} warm-up turns, fixed tick of {:.2} ms, \
+        "{} measured turns per scenario after {} warm-up turns, one turn every {:.2} ms \
+         (a drawn turn's tick gets the time since the last drawn turn), \
          viewport {}x{} logical at scale {} ({}x{} physical), theme {}, {build} build, \
          stages {}, {timestamps}. time is microseconds; p50 and p95 are nearest-rank over \
          the turns.\n",

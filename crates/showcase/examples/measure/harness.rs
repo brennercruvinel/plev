@@ -1,13 +1,16 @@
 //! The window's loop without the window: input routed the way the
 //! showcase shell routes it (`showcase::app`), a frame drawn only when an
-//! event changed something or the last tick was still moving (render on
-//! demand), the scene built by the surface and drawn by
-//! `engine::headless::Renderer`, which runs the window's frame tail.
-//! Every turn is one stage frame (`engine::perf::stages`); the GPU time a
-//! turn's timestamps read feeds a `PerfMonitor`, as a window's loop would.
+//! event changed something, the last tick was still moving, or a deadline
+//! the last tick asked for came due (render on demand), the scene built
+//! by the surface and drawn by `engine::headless::Renderer`, which runs
+//! the window's frame tail. Time is a fixed `DT` per turn: the tick of a
+//! drawn turn gets the time since the last drawn turn, the way a shell
+//! that slept until a deadline would hand it. Every turn is one stage
+//! frame (`engine::perf::stages`); the GPU time a turn's timestamps read
+//! feeds a `PerfMonitor`, as a window's loop would.
 
 use comps::editor::{EditorTheme, EditorView, MouseEvent};
-use comps::prelude::WidgetEvent;
+use comps::prelude::{Wake, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode};
 use engine::headless::Renderer;
 use engine::layout::ComputedBounds;
@@ -42,8 +45,9 @@ impl Input {
 pub trait Surface {
     /// Route one input; `true` asks for a frame.
     fn input(&mut self, input: &Input) -> bool;
-    /// Advance animations; `true` while something still moves.
-    fn tick(&mut self, dt: f32) -> bool;
+    /// Advance animations by the time since the last tick: a frame now,
+    /// the next deadline, or nothing.
+    fn wake(&mut self, dt: f32) -> Wake;
     /// Build the scene (its `begin_frame` included).
     fn render(&mut self, c: &mut Compositor);
     /// The background in linear space.
@@ -71,8 +75,8 @@ impl Surface for ShowcaseView {
         }
     }
 
-    fn tick(&mut self, dt: f32) -> bool {
-        ShowcaseView::tick(self, dt)
+    fn wake(&mut self, dt: f32) -> Wake {
+        ShowcaseView::wake(self, dt)
     }
 
     fn render(&mut self, c: &mut Compositor) {
@@ -147,8 +151,8 @@ impl Surface for EditorSurface {
         }
     }
 
-    fn tick(&mut self, dt: f32) -> bool {
-        self.editor.tick(dt)
+    fn wake(&mut self, dt: f32) -> Wake {
+        self.editor.wake(dt)
     }
 
     fn render(&mut self, c: &mut Compositor) {
@@ -171,8 +175,8 @@ impl Surface for EmptySurface {
         false
     }
 
-    fn tick(&mut self, _dt: f32) -> bool {
-        false
+    fn wake(&mut self, _dt: f32) -> Wake {
+        Wake::idle()
     }
 
     fn render(&mut self, c: &mut Compositor) {
@@ -196,9 +200,14 @@ pub struct Harness<S: Surface> {
     renderer: Renderer,
     compositor: Compositor,
     pub surface: S,
-    /// A frame is asked for: an event changed something, or the last tick
-    /// was still moving.
+    /// A frame is asked for: an event changed something, the last tick
+    /// was still moving, or its deadline came due.
     pending: bool,
+    /// Seconds until the deadline the last tick asked for (a caret's
+    /// next flip); the turn it runs out on draws.
+    due: Option<f32>,
+    /// Seconds since the last tick: what the next tick is handed.
+    since_tick: f32,
     /// Fed as a window's loop would feed it: the GPU time each turn's
     /// timestamps read.
     perf: PerfMonitor,
@@ -211,6 +220,8 @@ impl<S: Surface> Harness<S> {
             compositor: Compositor::new(),
             surface,
             pending: true,
+            due: None,
+            since_tick: 0.0,
             perf: PerfMonitor::new(),
         }
     }
@@ -234,8 +245,9 @@ impl<S: Surface> Harness<S> {
         self.turn(&[], true)
     }
 
-    /// Turns with no input until nothing asks for a frame; the count of
-    /// turns taken, at most `max`.
+    /// Turns with no input until nothing asks for a frame now (a deadline
+    /// ahead is not a frame asked for); the count of turns taken, at most
+    /// `max`.
     pub fn settle(&mut self, max: usize) -> usize {
         for turn in 0..max {
             if !self.pending {
@@ -250,22 +262,35 @@ impl<S: Surface> Harness<S> {
         // what setup recorded between turns is not this frame's
         let _ = stages::take();
         let frame = stages::span(Stage::Frame);
+        // one display refresh passes; a deadline that runs out is a frame
+        self.since_tick += DT;
+        if let Some(left) = self.due.map(|d| d - DT) {
+            if left <= 0.0 {
+                self.due = None;
+                self.pending = true;
+            } else {
+                self.due = Some(left);
+            }
+        }
         for input in inputs {
             let _input = stages::span(Stage::Input).items(1);
             self.pending |= self.surface.input(input);
         }
         let drawn = self.pending || forced;
         if drawn {
-            let animating = {
+            let wake = {
                 let _tick = stages::span(Stage::Tick);
-                self.surface.tick(DT)
+                self.surface.wake(self.since_tick)
             };
+            self.since_tick = 0.0;
             let build = stages::span(Stage::SceneBuild);
             self.surface.render(&mut self.compositor);
             build.end(|| scene_nodes(&self.compositor));
             let clear = self.surface.clear();
             self.renderer.draw(&mut self.compositor, clear);
-            self.pending = animating;
+            // continuous motion draws the next turn; a deadline waits
+            self.pending = wake.is_continuous();
+            self.due = wake.next.filter(|d| !d.is_zero()).map(|d| d.as_secs_f32());
         }
         drop(frame);
         let stages = stages::take();
