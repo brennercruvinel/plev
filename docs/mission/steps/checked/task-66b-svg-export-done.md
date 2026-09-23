@@ -1,13 +1,14 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-66b
 wave: trilha
 depends: [task-66, task-59]
 branch: task/66b-svg-export
+integrated: efc87b6
 ---
 
 # task-66b: exportação SVG e `--semantics` no headless
@@ -50,6 +51,26 @@ SVG de três páginas do showcase abre num navegador com o mesmo layout do
 png; o relatório lista cada aproximação; o texto do SVG tem os mesmos
 glifos do png (comparar a largura medida de três runs); `--semantics` do
 todo igual à projeção em processo; gate verde.
+
+## fechamento (2026-09-23)
+
+integrada na `main` em `efc87b6` (sete commits, rebaseados sobre a
+`main` com o laboratório da 62c sem conflito), validada pelo orquestrador:
+diff inteiro lido (o ponto de shaping é uma extração pura do que
+`resolve_for_layer` já fazia, mais um leitor; o export só lê a cena), gate
+verde no diretório da task (1969 passed, 0 failed, 6 ignored; a `main`
+tinha 1949), e a comparação visual lado a lado do Todo e da Effects (png
+do engine e raster do svg) conferida pelo orquestrador. ADR:
+`docs/ADR/svg-export-reads-the-scene.md`.
+
+aceitos: `export` com o quarto parâmetro `background` (sem ele a página
+sai transparente); `stage_page` recebendo `Viewport` (a projeção não abre
+GPU); `serde`, `serde_json` e `svg` (dev) no manifest do showcase; o
+módulo `headless` do showcase movido para `app/headless.rs` por limite de
+linhas; imagem não embutida até a retenção de pixels da task-63 fase d;
+efeitos de layer reportados como deixados de fora, como o caminho de frame
+compartilhado já faz. dívida anotada para a task-67: `Approximation.node`
+tipado em vez de texto.
 
 ## revisão do orquestrador (2026-09-23, antes do briefing)
 

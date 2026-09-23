@@ -86,7 +86,7 @@ depends = ["gpu", "compositor", "text", "input"]
 
 [modules.headless]
 path = "crates/engine/src/headless"
-role = "native only: Renderer over GpuContext::new_headless (no surface, Rgba8UnormSrgb, same from_device pipelines as a window) drawing through window::draw_frame into an offscreen texture; read_texture with 256-byte row padding; Frame -> png through the image crate; typed HeadlessError; None when there is no adapter so tests skip. showcase --render and monster_player --frame use it; text::probe renders through it (task-66)"
+role = "native only: svg::export writes the scene as SVG (one element per node in composite and push order, text as the outlines of the glyphs the frame shaped through TextSystem::shaped_glyphs, every approximation reported per node, task-66b, adr svg-export-reads-the-scene); Renderer over GpuContext::new_headless (no surface, Rgba8UnormSrgb, same from_device pipelines as a window) drawing through window::draw_frame into an offscreen texture; read_texture with 256-byte row padding; Frame -> png through the image crate; typed HeadlessError; None when there is no adapter so tests skip. showcase --render and monster_player --frame use it; text::probe renders through it (task-66)"
 depends = ["gpu", "compositor", "text", "window"]
 
 [modules.hot_reload]

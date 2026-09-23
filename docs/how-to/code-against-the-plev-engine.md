@@ -90,7 +90,10 @@ what exists (updated at each task close-out):
   lives outside the ui is checked again there (`GitCommand::CommitIf`).
 - headless (task-66, adr headless-render-shares-the-frame-path):
   `GpuContext::new_headless` and `window::draw_frame` draw any frame into
-  a texture through the window's path; `showcase --render` and
+  a texture through the window's path; `Renderer::svg` writes the same
+  scene as svg with every approximation reported, and text in it is the
+  outline of the glyphs `TextSystem::shaped_glyphs` returns from the one
+  shaping path, never a second shaping (task-66b); `showcase --render` and
   `monster_player --frame` use it.
 - the only identity the engine itself has is still `ViewId`, a per-frame
   counter reset in `InputState::begin_frame`

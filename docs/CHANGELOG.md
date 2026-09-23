@@ -9,6 +9,14 @@ status: living
 
 ## unreleased
 
+- a frame as svg, and a page's meaning as json (2026-09-23, task-66b, adr
+  svg-export-reads-the-scene): `showcase --render <page> --svg f.svg`
+  writes the same frame the png shows as vectors, text as glyph outlines
+  from the one shaping path, with every approximation (gradients,
+  shadows, clips, images and backdrop blur left out) listed on stderr and
+  to `--svg-report`; `--semantics f.json` writes the page's semantic
+  projection in the lean form `plev observe` serves, `--source` keeping
+  each node's source. `--out` is no longer required; one output is.
 - what an agent receives is lean (2026-09-23, task-57b, adr
   lean-semantic-form-and-one-redaction): the sem serde form leaves a field
   at its default out and reads it back when absent, so a whole
