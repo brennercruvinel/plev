@@ -194,7 +194,9 @@ fn node_changes(old: &Node, new: &Node, out: &mut Vec<Change>) {
     }
 }
 
-fn state_change(
+/// the `StateChanged` for one piece of state, with `added` and `removed`
+/// filled for collections. shared with the stale delta of `check`.
+pub(crate) fn state_change(
     node: &SemId,
     key: &StateKey,
     before: Option<&Value>,

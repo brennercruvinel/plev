@@ -81,6 +81,7 @@
 //! the crate is pure data: no gpu, no window, no text stack.
 
 mod builder;
+mod check;
 mod decl;
 mod diff;
 mod error;
@@ -96,6 +97,7 @@ mod validate;
 mod value;
 
 pub use builder::{ActionBuilder, NodeBuilder, Semantics, SnapshotBuilder};
+pub use check::{Rejection, Verdict, check};
 pub use decl::{ActionDecl, Actors, Confirm, Constraints, ParamSpec, Policy};
 pub use diff::Change;
 pub use error::{SemError, SemErrors};
