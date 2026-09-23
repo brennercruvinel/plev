@@ -1,7 +1,7 @@
 ---
 type: adr
-status: proposed
-tags: [rec, recorder, session, replay, monster, sem, receipts, generative-runtime]
+status: accepted
+tags: [rec, recorder, session, replay, monster, sem, receipts, file-format, generative-runtime]
 date: 2026-09-23
 ---
 
@@ -30,10 +30,10 @@ way from a frame back to the IR.
 
 ## decision
 
-a new crate, `crates/rec` (deps: `sem`, `monster`, `engine`; serde behind
-a default feature). `sem` stays pure; `monster` gains only `raise`, the
-mirror of `lower`. this round keeps everything in memory; the file format
-is pending (below).
+a new crate, `crates/rec` (deps: `sem`, `monster`, `engine`, serde and
+serde_json, sha2). `sem` stays pure; `monster` gains only `raise`, the
+mirror of `lower`. the recorder keeps the session in memory, and writes
+it, whole or in part, as a session file (below).
 
 ### the semantic track
 
@@ -122,6 +122,62 @@ whole recorded session back, and a cold one rebuilt from its events alone,
 and proves nothing ran, no request was created and the sink saw nothing
 new.
 
+### the session file
+
+a session is a `.monster`, like an animation; the magic tells them apart:
+`MON0` is an animation, `MONS` a session. tools dispatch on the magic
+(`rec::probe`): `monster::decode` refuses a session as a bad magic, the
+session reader refuses an animation by name, and `monster_player` exits
+on a session with a message that points at the session inspector
+(task-64). the monster container, its golden fixtures and its player are
+untouched.
+
+```text
+header := magic "MONS", version u16 0, flags u16 0, start u64 (ms on the
+          recorder's clock), crate version (u8 len, utf8), git sha (u8 len,
+          utf8, "unknown" without git), sec_count u16,
+          (tag u8, offset u64, len u64, sha256)*
+S := one rec::Event per json line (its serde form), in time order
+I := chunk_count u32, (start u64, frame_count u32, time u32*,
+     ref_count u32, asset u32*, offset u64, len u64)*
+C := the chunks, each the exact bytes monster::encode wrote
+A := asset_count u32, (kind u8, len u32, payload)*
+```
+
+- the build identity comes from `crates/rec/build.rs` (`git rev-parse
+  --short HEAD`, never failing the build) and `CARGO_PKG_VERSION`; task-65
+  follows it back to the code.
+- every chunk is copied as it is and decodes with `monster::decode`
+  unchanged, so the u16 counts of the monster container only ever see one
+  chunk; the session's own counts are u32 and u64.
+- the semantic section is json lines, so it reads, and an export cuts it,
+  without decoding a chunk. an event whose json does not read back (a
+  `Num` that is not finite) is left out with the changes that depended on
+  it, and counted (`Persisted::dropped`).
+- the asset table carries text styles with a payload of rec's own (every
+  `TextNodeKey` field, bit for bit; monster's kind-0 layout stays
+  undefined), paths through `monster::asset_path` (on the twips grid, in
+  pieces so any size fits), and images as their size plus, when known,
+  their RGBA8 pixels. the engine drops an image's pixels once they reach
+  the GPU, so today images are written with their size only and draw
+  nothing when read back.
+- `Recorder::persist(path)` writes the window; `Recorder::export(t0, t1,
+  path)` writes the part from the keyframe of each track that governs
+  `t0` to `t1`, chunks copied verbatim, only the assets they reference.
+  both copy the window under the lock and write after it, through a
+  `.part` file renamed in place.
+- `Session::open` and `Session::from_bytes` are strict: a truncated file,
+  a bad sha256, an unknown or repeated section, the wrong magic, an
+  animation, a bad version or flags, a start that disagrees with the
+  content, events out of order, a chunk that does not decode or names an
+  asset of another kind are typed `FileError`s, never a panic.
+- `rec::install_panic_hook(recorder, dir)` writes the window to
+  `dir/session-<unix ms>-<pid>-<n>.monster` on a panic and then runs the
+  hook installed before. it never panics (a panic in a panic hook
+  aborts), and it only tries the recorder's lock, since the panic may
+  have come from inside the recorder on the same thread. no app installs
+  it yet.
+
 ## measured cost
 
 `cargo test -p rec --release --test session measure -- --ignored
@@ -143,11 +199,19 @@ enter, hover, toggle, filters, delete; 848 frames over 50 s simulated):
   no blur and no shadow, in the core and hoff themes.
 - the semantic track under stress (a toy app projected 60 times a second,
   its text changing every 100 ms, one commit a second): `snapshot()` 0.7
-  us mean (the diff of an unchanged projection included); 20 KB/s
+  to 1.2 us mean (the diff of an unchanged projection included); 20 KB/s
   estimated, 17 KB/s as json.
+- persisted: the todo window (20.6 s) is a 76 KB file (3.7 KB/s),
+  written in 1.0 to 1.5 ms and read back, strictly, in 0.5 ms (S 7.5 KB,
+  I 3.5 to 4.4 KB, C 48 KB, A 16 to 17 KB); the file is smaller than the
+  ring (180 KB) because the open chunk is encoded on the way out and
+  paths and texts pack tighter. the stressed semantic window (21.3 s, 338
+  events) is 362 KB (17 KB/s), written in 1.9 ms (the json round trip of
+  every event included) and read in 1.1 ms.
 
 the cost does not ask for a change in the frame architecture. the chunk
-close is the one spike; moving it off the frame path is a phase c option.
+close is the one spike; moving it off the frame path is left for when a
+scene needs it.
 
 ## reason
 
@@ -178,30 +242,27 @@ close is the one spike; moving it off the frame path is a phase c option.
   belongs to `sem` and was not added here.
 - replay draws without clips, blurs and shadows until the IR has nodes for
   them (a monster IR v1 candidate, reported, not decided here).
-- image pixels are not in a `SceneNode`, only an atlas handle; persisting
-  a session with images needs the engine's image store to give the bytes
-  of a handle.
-- text styles have no payload layout in monster v0 (asset kind 0 is
-  declared, its bytes are not); persistence has to define one.
+- image pixels are not in a `SceneNode`, only an atlas handle, and the
+  engine's image store keeps them only until the GPU upload drains them.
+  a persisted image draws once the store can give a handle's pixels
+  (keeping them, or reading the atlas back); the format already carries
+  them.
 - a session holds file paths, messages and anything else the app
   projects. recording is opt-in and local; persistence and export must
   never leave the machine without a person's action.
+- the showcase wiring (a debug shortcut that persists, the panic hook)
+  waits for task-60, which edits the showcase shell.
 
-## pending: the file format (phase c)
+## the format decision
 
-where a persisted session lives is the orchestrator's decision, proposed
-in the handoff of this round:
-
-- a) a session profile inside the monster container, with new sections
-  and a new container version;
-- b) a sibling format with its own magic that stores the semantic track
-  on its own and the visual chunks as unchanged monster v0 files.
-
-the recommendation of this round is (b): the golden fixtures and the
+two places were weighed for the file: a session profile inside the monster
+container (new sections, a new container version) or a sibling container
+with its own magic. the sibling was chosen: the golden fixtures and the
 animation player stay untouched by construction, the u16 counts of the
-container only ever see one chunk, the semantic track is read without
-touching the codec, and the build identity task-65 needs gets its own
-header. persistence, export and the panic hook wait for that decision.
+monster container only ever see one chunk, the semantic track reads
+without touching the codec, and the build identity has a header of its
+own. the extension stays `.monster`, the thesis's word for a session, and
+the magic carries the difference.
 
 ## avoid
 

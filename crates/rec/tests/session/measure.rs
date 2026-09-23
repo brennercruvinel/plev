@@ -268,6 +268,35 @@ fn visual(theme: &str) -> Result<(), Box<dyn std::error::Error>> {
         stats.visual_bytes as f64 / held_s,
         chunk_bytes as f64 / held_s
     );
+    persisted(&w.rec, &format!("rec-measure-todo-{theme}.monster"))
+}
+
+/// persists a recorder's window next to the other temporary files, times
+/// it, reads it back, and prints what the file holds.
+fn persisted(rec: &Recorder, name: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let path = std::env::temp_dir().join(name);
+    let at = Instant::now();
+    let written = rec.persist(&path)?;
+    let wrote = at.elapsed();
+    let at = Instant::now();
+    let back = rec::Session::open(&path)?;
+    let read = at.elapsed();
+    assert_eq!(back.events().len(), written.events);
+    println!(
+        "  persisted {} B in {:.1} ms (S {} B, I {} B, C {} B, A {} B; {} events, {} chunks, {} assets, {} dropped), read back in {:.1} ms: {}",
+        written.bytes,
+        micros(&wrote) / 1_000.0,
+        written.events_bytes,
+        written.index_bytes,
+        written.chunks_bytes,
+        written.assets_bytes,
+        written.events,
+        written.chunks,
+        written.assets,
+        written.dropped,
+        micros(&read) / 1_000.0,
+        path.display()
+    );
     Ok(())
 }
 
@@ -327,5 +356,5 @@ fn measure_the_cost_of_recording() -> Result<(), Box<dyn std::error::Error>> {
         std::mem::size_of::<sem::Node>(),
         std::mem::size_of::<Request>()
     );
-    Ok(())
+    persisted(&rec, "rec-measure-semantic.monster")
 }
