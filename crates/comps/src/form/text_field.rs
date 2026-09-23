@@ -8,10 +8,15 @@
 //! One `TextStyle` (`theme.typography.body()`) measures the caret, hit
 //! tests clicks and draws the text, so the caret always lands on the
 //! glyph that was clicked.
+//!
+//! With a [`SemId`] ([`TextField::sem`]) the render binds the bounds it
+//! draws and hit-tests with, and [`TextField::project`] declares the
+//! field in a semantic projection; the app still owns the field.
 
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ControlSize, Theme};
+use sem::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
 use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
 use crate::form::text_input::TextInput;
@@ -37,6 +42,7 @@ pub struct TextField {
     pub input: TextInput,
     pub disabled: bool,
     hovered: bool,
+    sem: Option<SemId>,
 }
 
 impl TextField {
@@ -45,7 +51,51 @@ impl TextField {
             input: TextInput::new().with_placeholder(placeholder.as_ref()),
             disabled: false,
             hovered: false,
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds its bounds to
+    /// (`Compositor::bind_to_layer`).
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this field as `id` in a projection: a `Role::TextInput`
+    /// named `label`, its `text` state, editable, enabled unless disabled,
+    /// and a `set_value` action that takes a text checked against the
+    /// node's constraints. It only reads the widget; the app owns it and
+    /// runs `set_value`. Pass the id given to [`TextField::sem`] so the
+    /// node and the binding name the same control. Returns the node for
+    /// the app to add to (a `submit`, a `max_len`).
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let mut node = b.node(id, Role::TextInput, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("text", self.text())
+            .constraints(Constraints {
+                editable: true,
+                ..Constraints::default()
+            })
+            .enabled(!self.disabled);
+        node.action("set_value").param(ParamSpec {
+            kind: ValueKind::Text,
+            constrained: true,
+        });
+        node
     }
 
     pub fn with_text(mut self, text: &str) -> Self {
@@ -206,6 +256,9 @@ impl TextField {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        if let Some(id) = &self.sem {
+            c.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let glass = &theme.glass;
         let alpha = if self.disabled {
             glass.disabled_alpha

@@ -5,6 +5,7 @@
 
 use engine::compositor::{Compositor, LayerId, SceneNode};
 use engine::theme::{Intent, Theme};
+use sem::{Role, SemId, SnapshotBuilder};
 
 use crate::core::Rect;
 use crate::prelude::*;
@@ -274,6 +275,63 @@ fn every_widget_renders_under_every_theme_at_phone_and_desktop_widths() {
             assert_finite(&nodes, &format!("{vw}x{vh}"));
         }
     }
+}
+
+/// The widgets with a SemId (phase a of task-59: text field, checkbox,
+/// button) project their role and label, and bind the rect they draw
+/// with, under every theme at both widths. The rect follows the layout
+/// of each viewport; the id never changes.
+#[test]
+fn widgets_with_a_sem_id_project_and_bind_under_every_theme_at_phone_and_desktop_widths() {
+    let id = |text: &str| SemId::parse(text).unwrap();
+    let (name, agree, submit) = (id("form.name"), id("form.agree"), id("form.submit"));
+    let mut rects = Vec::new();
+    for (t, theme) in themes().into_iter().enumerate() {
+        for (vw, vh) in VIEWPORTS {
+            let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+            let row = |i: f32| Rect::new(gutter, gutter + i * 60.0, vw - gutter * 2.0, 44.0);
+            let field = TextField::new("name")
+                .with_text("brenner")
+                .sem(name.clone());
+            let check = Checkbox::new(true).label("on").sem(agree.clone());
+            let button = Button::new("Commit").icon("check").sem(submit.clone());
+
+            let mut c = Compositor::new();
+            c.begin_frame();
+            field.render(&mut c, row(0.0), &theme);
+            check.render(&mut c, row(1.0), &theme);
+            button.render(&mut c, row(2.0), &theme);
+
+            let mut b = SnapshotBuilder::new();
+            field.project(&mut b, &name, "name", None);
+            check.project(&mut b, &agree, "agree", None);
+            button.project(&mut b, &submit, None);
+            let snap = b.finish().unwrap();
+
+            let what = format!("theme {t} at {vw}x{vh}");
+            for (at, (who, role, label)) in [
+                (&name, Role::TextInput, "name"),
+                (&agree, Role::Checkbox, "agree"),
+                (&submit, Role::Button, "Commit"),
+            ]
+            .into_iter()
+            .enumerate()
+            {
+                let node = snap.get(who).unwrap();
+                assert_eq!((node.role, node.label.as_str()), (role, label), "{what}");
+                let r = row(at as f32);
+                let bound = c.binding(who).unwrap();
+                assert_eq!(bound.rect, [r.x, r.y, r.w, r.h], "{what}: {who}");
+                let (x, y) = r.center();
+                assert_eq!(c.hit(x, y), Some(who), "{what}: {who}");
+            }
+            rects.push(c.binding(&name).unwrap().rect);
+        }
+    }
+    assert!(
+        rects.windows(2).any(|w| w[0] != w[1]),
+        "the phone and the desktop lay the field out differently"
+    );
 }
 
 #[test]

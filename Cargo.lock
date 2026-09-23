@@ -789,6 +789,7 @@ dependencies = [
  "pollster",
  "rope",
  "rustc-hash 2.1.2",
+ "sem",
  "unicode-segmentation",
  "web-time",
  "wgpu",

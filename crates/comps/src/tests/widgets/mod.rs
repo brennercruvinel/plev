@@ -7,6 +7,7 @@ mod feedback;
 mod fixtures;
 mod form;
 mod nav;
+mod semantics;
 
 use crate::core::*;
 use crate::prelude::*;

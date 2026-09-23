@@ -8,10 +8,15 @@
 //! from the recipe, heights, paddings, radii and the label style from
 //! the size metrics, so the same widget renders the core kit and every
 //! derived theme.
+//!
+//! With a [`SemId`] ([`Button::sem`]) the render binds the bounds it
+//! draws and hit-tests with, and [`Button::project`] declares the button
+//! in a semantic projection.
 
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ButtonMetrics, ButtonRecipe, Intent, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::press::{Press, paint_surface};
 use crate::core::{EventResult, Rect, WidgetEvent};
@@ -76,6 +81,7 @@ pub struct Button {
     /// Icon color when it should not follow the label (the like heart).
     pub icon_color: Option<[f32; 4]>,
     press: Press,
+    sem: Option<SemId>,
 }
 
 impl Button {
@@ -88,7 +94,41 @@ impl Button {
             icon: None,
             icon_color: None,
             press: Press::default(),
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds its bounds to
+    /// (`Compositor::bind_to_layer`).
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this button as `id` in a projection: a `Role::Button`
+    /// named by its label, enabled unless disabled, with an `activate`
+    /// action. What `activate` does is the app's; this only reads the
+    /// widget. Pass the id given to [`Button::sem`] so the node and the
+    /// binding name the same control. Returns the node for the app to add
+    /// to (the state `activate` reads, its policy).
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let mut node = b.node(id, Role::Button, self.label.as_str());
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.enabled(!self.disabled);
+        node.action("activate");
+        node
     }
 
     pub fn variant(mut self, variant: ButtonVariant) -> Self {
@@ -190,6 +230,9 @@ impl Button {
         bounds: Rect,
         theme: &Theme,
     ) {
+        if let Some(id) = &self.sem {
+            compositor.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let m = self.size.metrics(theme);
         let recipe = self.recipe(theme);
         let alpha = if self.disabled {

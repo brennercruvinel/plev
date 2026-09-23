@@ -2,11 +2,16 @@
 //! on, `rgba($n2,.05)` glass with a `.25` border when off, plus an
 //! optional base-2r trailing label. The whole bounds are the hit area;
 //! keyboard focus ([`Checkbox::set_focused`]) rings the box itself.
+//!
+//! With a [`SemId`] ([`Checkbox::sem`]) the render binds the bounds it
+//! draws and hit-tests with, and [`Checkbox::project`] declares the
+//! checkbox in a semantic projection; the app still owns `checked`.
 
 use crate::icons;
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::TextMeasurer;
 use engine::theme::{IconSize, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent, contrast_text, with_alpha};
 use crate::recipe::focus_ring;
@@ -21,6 +26,7 @@ pub struct Checkbox {
     hovered: bool,
     pressed: bool,
     focused: bool,
+    sem: Option<SemId>,
 }
 
 impl Checkbox {
@@ -32,7 +38,42 @@ impl Checkbox {
             hovered: false,
             pressed: false,
             focused: false,
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds its bounds to
+    /// (`Compositor::bind`).
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this checkbox as `id` in a projection: a
+    /// `Role::Checkbox` named `label`, its `checked` state, enabled unless
+    /// disabled, and a `toggle` action that reads its own `checked`. It
+    /// only reads the widget; the app owns it and runs `toggle`. Pass the
+    /// id given to [`Checkbox::sem`] so the node and the binding name the
+    /// same control. Returns the node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let mut node = b.node(id, Role::Checkbox, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("checked", self.checked).enabled(!self.disabled);
+        node.action("toggle").reads(format!("{id}:checked"));
+        node
     }
 
     pub fn label(mut self, label: impl Into<String>) -> Self {
@@ -103,6 +144,9 @@ impl Checkbox {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
+        if let Some(id) = &self.sem {
+            compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let glass = &theme.glass;
         let alpha = if self.disabled {
             glass.disabled_alpha
