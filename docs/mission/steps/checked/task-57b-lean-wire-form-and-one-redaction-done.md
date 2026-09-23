@@ -67,8 +67,10 @@ continua `null` (15 bytes, fora do contrato do sem, candidato a um v2); a
 fixture da forma antiga do rec é uma linha construída no teste, porque
 não existe `.monster` gravado antes no repositório. a `main` andou só em
 docs entre o briefing e a integração, então o gate da branch rebaseada
-é o gate do merge; o gate da `main` roda de novo no diretório dela por
-regra.
+é o gate do merge. o gate repetido no diretório da `main` foi
+interrompido pelo orquestrador com o disco em 1,5 GB livres (o build
+dela cresceu 10 GB); o código gateado e o integrado são o mesmo, e a
+próxima validação em código roda em diretório isolado.
 
 o que segue: a task-62 fase c mede quanto token esta forma custa a um
 agente de verdade; um v2 do protocolo pode tirar o `focused` nulo.
