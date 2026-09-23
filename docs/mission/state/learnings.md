@@ -48,6 +48,16 @@ c"; saídas em `target/agents/exp/`.
 
 ### 2026-09-23
 
+- **o gate local divergia do CI:** a 66b deixou `ShapedGlyph` e
+  `shaped_glyphs` como código morto no wasm32 (o único leitor, o export
+  svg, é só nativo). o CI (`RUSTFLAGS=-D warnings`) reprovou os jobs wasm e
+  urnaui do PR #45; o gate local passou porque a perna wasm rodava sem `-D
+  warnings` e nunca checava o urnaui no wasm32. a classe: uma perna do
+  gate mais frouxa que a do CI deixa passar o que o CI reprova. o gate
+  agora roda as duas pernas wasm como o CI (`c07a7f0`); a falha reproduziu
+  localmente antes da correção e sumiu depois. regra: toda perna do CI tem
+  a mesma perna, com as mesmas flags, em `script/gate`.
+
 - **graça do laboratório:** o laboratório fechava 1 s depois do commit e
   derrubou a verificação final de dois agentes (A2, B2). a classe: um
   harness que encerra no primeiro sinal de sucesso mede o sucesso e apaga a

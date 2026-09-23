@@ -14,6 +14,13 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 1: CI do PR #45 pegou um defeito que o gate deixou passar
+
+- o PR #45 (os 28 commits que não estavam no GitHub) falhou nos jobs wasm
+  e urnaui: código morto no wasm32 vindo da 66b. corrigido na `main`
+  (`c07a7f0`) junto com o gate, que agora roda as pernas wasm como o CI.
+  detalhe em `learnings.md`, processo.
+
 ### ciclo 1 aberto
 
 - **disparados:** task-83 (delta com o nó, recusa com autor, regra de stale
