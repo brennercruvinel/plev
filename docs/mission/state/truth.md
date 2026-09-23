@@ -476,3 +476,16 @@ superfícies com mais de um pretendente:
 - `crates/rec`: 63 fase d, 64, `node_added`.
 - `crates/engine/src/window/frame.rs` (o caminho único de frame): 73, 76, 77.
 - `crates/sem`: dono é o orquestrador; 68 e dois itens do checkpoint a.
+
+## 8. não confirmado
+
+- quando o `accesskit_winit` considera o leitor ativo no macOS (a task-60 diz que ele nunca informa desativação e a árvore passa a ser montada a cada frame): o plev pede `update_if_active` todo frame (`crates/engine/src/accessibility/bridge.rs:119-143`); a decisão é da biblioteca, que não foi lida.
+- VoiceOver: `docs/mission/steps/pending/task-75-platform-accessibility.md:33` diz "verificado com VoiceOver no macOS"; `docs/mission/steps/checked/task-60-accessibility-projection-done.md:84-85` diz que não rodou. o código não guarda evidência de nenhum dos dois.
+- urnaui: não compila sem `../urna`. foi lido, não executado.
+- números medidos nos arquivos de task e nos ADRs (bytes, microssegundos, tokens, frames por segundo): não refeitos, porque nada foi rodado.
+- a frequência da corrida da seção 4a no uso humano do binário `ide`: o mecanismo está no código; quanto ela aparece depende do tempo entre dois cliques e a resposta do worker, e não foi medido.
+- duas mutações do mesmo tipo e do mesmo caminho em voo ao mesmo tempo: o código casa a resposta com a mais antiga (`crates/ide/src/workbench/truth.rs:73-77`); nenhum teste cobre esse caso, e o efeito de a primeira falhar não foi conferido.
+- as duas conexões por comando `plev` por nome (seção 4f): saem da leitura de `find` e `connect`; não foram observadas num `Traffic` real.
+- "v1" do container monster no README e no programa: o código só tem a versão 0 (`crates/monster/src/container.rs:51`); se o texto nomeia a spec, isso não está escrito em lugar nenhum do código.
+- contagens de teste da seção 6: contadas por `#[test]` no texto; proptests entram, doc tests e o gate não foram contados.
+- itens do relatório de aproximação do svg que dependem de quem desenha o svg (costura de stroke, `linearRGB` no Chrome): comportamento de renderizador externo.
