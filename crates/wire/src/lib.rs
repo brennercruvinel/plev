@@ -12,12 +12,12 @@
 //! -> {"v":1,"id":"1","type":"hello","name":"claude"}
 //! <- {"v":1,"id":"1","type":"welcome","app":"showcase","actor":{"agent":{"name":"claude"}}}
 //! -> {"v":1,"id":"2","type":"observe","scope":"todo"}
-//! <- {"v":1,"id":"2","type":"snapshot","revision":"…","nodes":[…],"focused":null}
-//! -> {"v":1,"id":"3","type":"act","target":"todo.item[1]","action":"toggle","from_revision":"…"}
-//! <- {"v":1,"id":"3","type":"stage","request":"4","stage":"requested","at":…,"asked":{…}}
-//! <- {"v":1,"id":"3","type":"stage","request":"4","stage":"accepted","at":…}
-//! <- {"v":1,"id":"3","type":"stage","request":"4","stage":"executing","at":…}
-//! <- {"v":1,"id":"3","type":"stage","request":"4","stage":{"completed":{"result":{}}},"at":…}
+//! <- {"v":1,"id":"2","type":"snapshot","revision":"cfc1185078f7c825","nodes":[...],"focused":null}
+//! -> {"v":1,"id":"3","type":"act","target":"todo.item[1]","action":"toggle","from_revision":"cfc1185078f7c825"}
+//! <- {"v":1,"id":"3","type":"stage","request":"1","stage":"requested","at":745,"asked":{...}}
+//! <- {"v":1,"id":"3","type":"stage","request":"1","stage":"accepted","at":745}
+//! <- {"v":1,"id":"3","type":"stage","request":"1","stage":"executing","at":745}
+//! <- {"v":1,"id":"3","type":"stage","request":"1","stage":{"completed":{"result":{}}},"at":745}
 //! ```
 //!
 //! the messages (`proto`), their codec (`codec`), the ring of served
