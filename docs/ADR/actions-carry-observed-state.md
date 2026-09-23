@@ -65,6 +65,17 @@ in `crates/sem`, next to the contract:
   failed or rejected. a refused action is a `Verdict`; a wrong use of the
   api is a `SemError` (`UnknownRequest`, `IllegalTransition`,
   `ConfirmByMachine`).
+- a person may also decline (task-58b). `Dispatcher::decline(id, by,
+  now)` keeps `confirm`'s guards in `confirm`'s order: `UnknownRequest`,
+  `IllegalTransition` when the request is not awaiting confirmation,
+  `ConfirmByMachine` for an agent or a test, the receipt unchanged on
+  every error. the receipt goes from awaiting confirmation to rejected with
+  `Rejection::Declined { by }`, a transition the table already had.
+  nothing runs, so the live state is not checked again and
+  `validated_against` stays the one of the dispatch. its JSON,
+  `{"rejected":{"declined":{"by":"human"}}}`, is pinned by a test. the ide
+  declines as `Actor::Human` when the confirmation modal closes without a
+  confirm (cancel, escape, a click outside it).
 - execution ends now (`Execution::Done`, `Failed`, `Rejected`) or later
   (`Started`, then `complete`, `fail` or `reject_at_truth`).
   `execute(id, req)` receives the request id, and an execution that ends
@@ -124,9 +135,10 @@ in `crates/sem`, next to the contract:
   redacts a parameter aimed at a secret field.
 - the actor policy is coarse: four kinds. finer agent identity and scopes
   are future work.
-- a request awaiting confirmation stays open until a person confirms it;
-  declining or expiring it needs an api this decision does not define (the
-  confirmation ui is task-62 and task-69).
+- a request awaiting confirmation stays open until a person confirms or
+  declines it (`Dispatcher::decline`, task-58b); expiring it needs an api
+  this decision does not define (the confirmation ui is task-62 and
+  task-69).
 - `Constraints::editable` defaults to false, so a constrained parameter on
   a node that does not declare itself editable is refused. `step` is not
   checked.
