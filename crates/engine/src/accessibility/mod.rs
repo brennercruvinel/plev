@@ -11,7 +11,8 @@ pub mod tree;
 #[cfg(test)]
 mod tests;
 
+pub use action::{Assist, Unmapped, primary, translate};
 pub use focus::{FocusDirection, FocusGraph};
 pub use ids::{NodeIds, ROOT};
 pub use state::AccessibilityState;
-pub use tree::{Chrome, build};
+pub use tree::{Chrome, Shown, build};
