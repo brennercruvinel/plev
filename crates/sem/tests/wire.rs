@@ -1,6 +1,6 @@
-//! the JSON form of `Request` and `Receipt`, pinned: it is a contract with
-//! the agent protocol (task-61) and the recorder (task-63). a change here
-//! needs an ADR.
+//! the JSON form of `Request`, `Receipt` and `Snapshot`, pinned: it is a
+//! contract with the agent protocol (task-61) and the recorder (task-63).
+//! a change here needs an ADR.
 
 #![cfg(feature = "serde")]
 
@@ -229,4 +229,132 @@ fn a_completed_receipt_roundtrips_with_its_outcome() {
         "{text}"
     );
     assert_eq!(serde_json::from_str::<Receipt>(&text).unwrap(), receipt);
+}
+
+const SNAPSHOT: &str = r#"{
+  "nodes": [
+    {
+      "id": "changes",
+      "role": "list",
+      "label": "changes",
+      "description": null,
+      "parent": null,
+      "state": {
+        "staged": {
+          "kind": "set",
+          "value": [
+            "A",
+            "B",
+            "C"
+          ]
+        }
+      },
+      "actions": [],
+      "constraints": {
+        "editable": false,
+        "required": false,
+        "range": null,
+        "step": null,
+        "max_len": null,
+        "options": null,
+        "secret": false
+      },
+      "enabled": true,
+      "inert": false,
+      "focusable": false,
+      "source": null
+    },
+    {
+      "id": "commit.message",
+      "role": "text_input",
+      "label": "commit message",
+      "description": null,
+      "parent": null,
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "fix login"
+        }
+      },
+      "actions": [],
+      "constraints": {
+        "editable": false,
+        "required": false,
+        "range": null,
+        "step": null,
+        "max_len": null,
+        "options": null,
+        "secret": false
+      },
+      "enabled": true,
+      "inert": false,
+      "focusable": true,
+      "source": null
+    },
+    {
+      "id": "commit.submit",
+      "role": "button",
+      "label": "commit",
+      "description": null,
+      "parent": null,
+      "state": {},
+      "actions": [
+        {
+          "name": "submit",
+          "label": null,
+          "enabled": true,
+          "reads": [
+            "changes:staged",
+            "commit.message:text"
+          ],
+          "param": null,
+          "policy": {
+            "actors": {
+              "human": true,
+              "agent": true,
+              "assistive": true,
+              "test": true
+            },
+            "confirm": "never",
+            "destructive": false
+          }
+        }
+      ],
+      "constraints": {
+        "editable": false,
+        "required": false,
+        "range": null,
+        "step": null,
+        "max_len": null,
+        "options": null,
+        "secret": false
+      },
+      "enabled": true,
+      "inert": false,
+      "focusable": true,
+      "source": null
+    }
+  ],
+  "focused": null
+}"#;
+
+/// the snapshot the agent saw. `source` names a line of this file, which
+/// is metadata and not contract, so the pinned text has it blanked; the
+/// fields keep the order serde writes them in.
+#[test]
+fn a_snapshot_has_a_pinned_json_form_and_roundtrips() {
+    let seen = git(&["A", "B", "C"], "fix login");
+    let text = serde_json::to_string(&seen).unwrap();
+    let back: Snapshot = serde_json::from_str(&text).unwrap();
+    assert_eq!(back, seen);
+    assert_eq!(back.revision(), seen.revision());
+
+    let mut wire = serde_json::to_value(&seen).unwrap();
+    for node in wire["nodes"].as_array_mut().unwrap() {
+        assert!(node["source"]["line"].is_u64());
+        node["source"] = serde_json::Value::Null;
+    }
+    let unsourced: Snapshot = serde_json::from_value(wire).unwrap();
+    assert_eq!(unsourced, seen);
+    assert_eq!(serde_json::to_string_pretty(&unsourced).unwrap(), SNAPSHOT);
 }
