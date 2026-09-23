@@ -28,6 +28,9 @@
 //!   reactive play/pause/scrub surface via plev signals
 //! - [`lower`]: IR scene -> `SceneNode` mapping plus the
 //!   `LoweredAsset` bank for asset-backed nodes
+//! - [`raise`]: the mirror of lower, `SceneNode` -> IR for the kinds
+//!   the IR carries, the others reported; feeds a recorder's frames to
+//!   discover
 //! - [`asset_path`]: the payload layout behind `AssetKind::Path`
 //!   (uniform color, twips vertices, u16 indices; deterministic chunk
 //!   split under the u16 asset limit), so importers pack and players
@@ -47,6 +50,7 @@ pub mod optimize;
 pub mod play;
 mod play_eval;
 pub mod quant;
+pub mod raise;
 pub mod read;
 mod read_sec;
 mod validate;
@@ -63,6 +67,9 @@ pub use ir::{
 pub use lower::LoweredAsset;
 pub use optimize::{OptimizeCfg, optimize};
 pub use play::MonsterPlayer;
+pub use raise::{
+    AssetBank, MAX_RAISED, RaiseError, Raised, Skipped, Unsupported, raise_node, raise_scene,
+};
 pub use read::{Document, ReadError, decode};
 pub use write::{WriteError, encode};
 

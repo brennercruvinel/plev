@@ -207,7 +207,7 @@ depends = ["engine", "builder", "theme (emitted code only)"]
 
 [crates.monster]
 path = "crates/monster"
-role = "binary animation codec (ir/validate/write/read) with full delta ops (modify tracks + place/replace/remove), delta discovery from sampled frames (discover/discover_fit: encoder mode b, slot diffing + linear segment fitting + keyframes on discontinuity and cadence), encoder-side optimizer (optimize: idempotent static collapse + rdp keyframe reduction + collinear fusion, tolerances in wire quantization steps) + deterministic player (play/play_eval: tick-driven, windowed eval, segment-local op replay, signals, lowers ir to SceneNode)"
+role = "binary animation codec (ir/validate/write/read) with full delta ops (modify tracks + place/replace/remove), delta discovery from sampled frames (discover/discover_fit: encoder mode b, slot diffing + linear segment fitting + keyframes on discontinuity and cadence), encoder-side optimizer (optimize: idempotent static collapse + rdp keyframe reduction + collinear fusion, tolerances in wire quantization steps) + deterministic player (play/play_eval: tick-driven, windowed eval, segment-local op replay, signals, lowers ir to SceneNode) + raise (the mirror of lower: SceneNode -> ir for every kind the ir carries, push order as depth and id, assets into a bank once per content; clip, backdrop blur and shadow reported, never dropped silently; feeds a recorder's frames to discover)"
 depends = ["engine", "animation", "signal", "compositor"]
 
 # native host shells that load the showcase as their gpu app. the engine
