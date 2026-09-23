@@ -1,4 +1,6 @@
-//! The desktop git section: the ide workspace over a real `GitClient`.
+//! The desktop git section: the ide workbench over a real `GitClient`.
+//! Every click and key that acts on the repository or the commit form goes
+//! through the workbench's dispatcher, the same path as in the ide.
 
 use comps::prelude::{EventResult, Rect, WidgetEvent};
 use engine::compositor::Compositor;
@@ -9,17 +11,16 @@ use super::{NavKey, Wake};
 use std::sync::mpsc::{Receiver, Sender, channel};
 
 use git::{GitClient, GitEvent};
-use ide::session::GitSession;
-use ide::views::workspace::{Side, ThemeMode, WorkspaceView};
+use ide::views::workspace::{Side, ThemeMode};
+use ide::workbench::Workbench;
 
 pub struct GitPage {
-    workspace: WorkspaceView,
-    session: Option<GitSession>,
+    bench: Workbench,
     /// Worker events parked until the next tick (the worker runs on its
     /// own thread; the view is single-threaded).
     events: Receiver<GitEvent>,
     sender: Sender<GitEvent>,
-    /// Why there is no session (no repository at the cwd).
+    /// Why there is no repository (none at the cwd).
     error: Option<String>,
 }
 
@@ -27,8 +28,7 @@ impl GitPage {
     pub fn new() -> Self {
         let (sender, events) = channel();
         Self {
-            workspace: WorkspaceView::new(1.0, 1.0),
-            session: None,
+            bench: Workbench::new(1.0, 1.0),
             events,
             sender,
             error: None,
@@ -52,12 +52,7 @@ impl GitPage {
             let _ = sender.send(event);
             wake();
         }) {
-            Ok(client) => {
-                let session = GitSession::new(client);
-                self.workspace.repo_label = session.repo_label();
-                session.refresh();
-                self.session = Some(session);
-            }
+            Ok(client) => self.bench.connect(client),
             Err(e) => {
                 self.error = Some(format!("no git repository at {}: {e}", cwd.display()));
             }
@@ -65,7 +60,7 @@ impl GitPage {
     }
 
     pub fn set_theme(&mut self, name: &str) {
-        self.workspace.theme_mode = if name == "light" {
+        self.bench.workspace_mut().theme_mode = if name == "light" {
             ThemeMode::Light
         } else {
             ThemeMode::Dark
@@ -78,22 +73,16 @@ impl GitPage {
     }
 
     fn frame(&mut self, content: Rect) {
-        self.workspace
+        self.bench
+            .workspace_mut()
             .set_frame(content.x, content.y, content.w, content.h);
-    }
-
-    /// Hand the views' queued git operations to the worker.
-    fn flush(&mut self) {
-        if let Some(session) = &mut self.session {
-            session.flush_requests(&mut self.workspace);
-        }
     }
 
     pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
         self.frame(content);
-        let ws = &mut self.workspace;
         let changed = match *event {
             WidgetEvent::MouseDown { x, y } if content.contains(x, y) => {
+                let ws = self.bench.workspace_mut();
                 match ws.hit_test_handle(x) {
                     Some(Side::Left) => {
                         ws.begin_drag_left(x);
@@ -103,14 +92,18 @@ impl GitPage {
                         ws.begin_drag_right(x);
                         true
                     }
-                    None => ws.handle_click(x, y),
+                    None => self.bench.click(x, y),
                 }
             }
-            WidgetEvent::MouseUp { .. } if ws.dragging_left || ws.dragging_right => {
-                ws.end_drag();
+            WidgetEvent::MouseUp { .. }
+                if self.bench.workspace().dragging_left
+                    || self.bench.workspace().dragging_right =>
+            {
+                self.bench.workspace_mut().end_drag();
                 true
             }
             WidgetEvent::MouseMove { x, y } => {
+                let ws = self.bench.workspace_mut();
                 let mut changed = false;
                 if ws.dragging_left || ws.dragging_right {
                     ws.update_drag(x);
@@ -130,14 +123,12 @@ impl GitPage {
                 changed
             }
             WidgetEvent::Scroll { x, y, delta } if content.contains(x, y) => {
-                ws.scroll(x, delta);
+                self.bench.workspace_mut().scroll(x, delta);
                 // Consumed either way: the page must not scroll under it.
-                self.flush();
                 return EventResult::changed();
             }
             _ => false,
         };
-        self.flush();
         if changed {
             EventResult::changed()
         } else {
@@ -150,71 +141,61 @@ impl GitPage {
             return false;
         }
         self.frame(content);
-        let opened = self.workspace.handle_right_click(x, y);
-        self.flush();
-        opened
+        self.bench.right_click(x, y)
     }
 
     /// Plain characters: the visible commit form takes them as text;
     /// otherwise `s` stages, `d` discards, `c` opens the commit form.
     pub fn handle_text(&mut self, key: &str) -> bool {
-        let ws = &mut self.workspace;
-        let changed = if ws.commit_form.visible {
+        let form = &mut self.bench.workspace_mut().commit_form;
+        if form.visible {
             for ch in key.chars() {
-                ws.commit_form.append_char(ch);
+                form.append_char(ch);
             }
-            true
-        } else {
-            match key {
-                "s" => ws.stage_selected(),
-                "d" => ws.discard_selected(),
-                "c" => ws.toggle_commit_form(),
-                _ => false,
-            }
-        };
-        self.flush();
-        changed
+            return true;
+        }
+        match key {
+            "s" => self.bench.stage_selected(),
+            "d" => self.bench.discard_selected(),
+            "c" => self.bench.toggle_commit_form(),
+            _ => false,
+        }
     }
 
     pub fn handle_nav(&mut self, key: NavKey) -> bool {
-        let changed = match key {
-            NavKey::Up => self.workspace.nav_up(),
-            NavKey::Down => self.workspace.nav_down(),
-        };
-        self.flush();
-        changed
+        match key {
+            NavKey::Up => self.bench.nav_up(),
+            NavKey::Down => self.bench.nav_down(),
+        }
     }
 
     pub fn handle_backspace(&mut self) -> bool {
-        if !self.workspace.commit_form.visible {
+        let form = &mut self.bench.workspace_mut().commit_form;
+        if !form.visible {
             return false;
         }
-        self.workspace.commit_form.backspace();
+        form.backspace();
         true
     }
 
     /// Enter submits the commit form when it is open, otherwise refreshes
     /// the diff of the selected file.
     pub fn handle_enter(&mut self) -> bool {
-        let ws = &mut self.workspace;
-        let changed = if ws.commit_form.visible {
-            ws.submit_commit()
+        if self.bench.workspace().commit_form.visible {
+            self.bench.submit_commit()
         } else {
-            ws.show_selected_diff()
-        };
-        self.flush();
-        changed
+            self.bench.show_selected_diff()
+        }
     }
 
     /// Escape: the overlay first, then the commit form. `false` when
     /// there was nothing to close.
     pub fn handle_escape(&mut self) -> bool {
-        if self.workspace.close_top_overlay() {
+        if self.bench.close_top_overlay() {
             return true;
         }
-        if self.workspace.commit_form.visible {
-            self.workspace.commit_form.hide();
-            return true;
+        if self.bench.workspace().commit_form.visible {
+            return self.bench.cancel_commit_form();
         }
         false
     }
@@ -224,13 +205,10 @@ impl GitPage {
     pub fn tick(&mut self, dt: f32) -> bool {
         let mut changed = false;
         while let Ok(event) = self.events.try_recv() {
-            if let Some(session) = &mut self.session {
-                session.apply(&mut self.workspace, event);
-                changed = true;
-            }
+            self.bench.apply(event);
+            changed = true;
         }
-        self.flush();
-        changed | self.workspace.tick(dt)
+        changed | self.bench.tick(dt)
     }
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {
@@ -247,6 +225,6 @@ impl GitPage {
             return;
         }
         self.frame(content);
-        self.workspace.render(c);
+        self.bench.render(c);
     }
 }

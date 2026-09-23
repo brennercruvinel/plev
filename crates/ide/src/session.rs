@@ -1,14 +1,13 @@
-//! The git side of a workspace: forwards the views' `UiRequest`s to the
-//! worker thread and applies the worker's `GitEvent`s back onto the views.
-//! Shared by the ide binary and by hosts that embed the workspace (the
-//! showcase's Git tab), so neither carries its own copy of the mapping.
-
-use std::collections::BTreeSet;
+//! The git side of a workspace: sends the commands the workbench's
+//! `execute` decides on to the worker thread and applies the worker's
+//! `GitEvent`s back onto the views. The workbench owns it, so the ide
+//! binary and the hosts that embed the workspace (the showcase's Git tab)
+//! share one copy of the mapping.
 
 use git::{Branch, Commit, GitClient, GitCommand, GitEvent};
 
 use crate::adapters;
-use crate::views::workspace::{UiRequest, WorkspaceView};
+use crate::views::workspace::WorkspaceView;
 
 /// How many commits the stacks panel loads per refresh.
 pub const LOG_LIMIT: usize = 100;
@@ -59,38 +58,31 @@ impl GitSession {
         });
     }
 
-    /// Forwards git operations queued by the views to the worker thread.
-    /// A commit carries the staged set the view shows, and the worker
-    /// commits only if the index still stages exactly that.
-    pub fn flush_requests(&mut self, workspace: &mut WorkspaceView) {
-        let staged: BTreeSet<String> = workspace
-            .unassigned
-            .changes()
-            .into_iter()
-            .filter(|c| c.staged)
-            .map(|c| c.path)
-            .collect();
-        for request in workspace.take_requests() {
-            let command = match request {
-                UiRequest::FileDiff { path } => {
-                    self.diff_target = Some(DiffTarget::File(path.clone()));
-                    GitCommand::DiffWorkdir { path }
-                }
-                UiRequest::CommitDiff { sha } => {
-                    self.diff_target = Some(DiffTarget::Commit(sha.clone()));
-                    GitCommand::DiffCommit { sha }
-                }
-                UiRequest::Stage { path } => GitCommand::Stage { path },
-                UiRequest::Unstage { path } => GitCommand::Unstage { path },
-                UiRequest::Discard { path } => GitCommand::Discard { path },
-                UiRequest::Ignore { path } => GitCommand::Ignore { path },
-                UiRequest::Commit { message } => GitCommand::CommitIf {
-                    message,
-                    expect_staged: staged.clone(),
-                },
-            };
-            self.git.send(command);
-        }
+    /// Queues `command` on the worker. `false` when the worker is gone.
+    pub fn send(&self, command: GitCommand) -> bool {
+        self.git.send(command)
+    }
+
+    /// Fetches the diff of `path`; the panel takes only that answer.
+    pub fn diff_file(&mut self, path: &str) -> bool {
+        self.diff_target = Some(DiffTarget::File(path.to_owned()));
+        self.send(GitCommand::DiffWorkdir {
+            path: path.to_owned(),
+        })
+    }
+
+    /// Fetches the diff of commit `sha`; the panel takes only that answer.
+    pub fn diff_commit(&mut self, sha: &str) -> bool {
+        self.diff_target = Some(DiffTarget::Commit(sha.to_owned()));
+        self.send(GitCommand::DiffCommit {
+            sha: sha.to_owned(),
+        })
+    }
+
+    /// The panel shows nothing any more: a diff still on its way is
+    /// dropped when it arrives.
+    pub fn forget_diff(&mut self) {
+        self.diff_target = None;
     }
 
     /// Applies a result from the git worker to the views.

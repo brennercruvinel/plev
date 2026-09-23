@@ -4,26 +4,34 @@
 use super::*;
 
 #[test]
-fn commit_form_submit_queues_commit_and_clears() {
-    let (mut w, _c) = ws();
-    assert!(!w.submit_commit(), "hidden form must not submit");
+fn commit_form_keys_and_buttons_ask_without_acting() {
+    let (mut w, mut c) = ws();
+    assert!(w.toggle_commit_form());
+    assert!(!w.commit_form.visible, "opening is the dispatcher's call");
+    assert_eq!(w.take_requests(), vec![UiRequest::OpenForm]);
 
-    w.toggle_commit_form();
-    assert!(w.commit_form.visible);
-    assert!(!w.submit_commit(), "empty message must not submit");
-
+    w.commit_form.show();
     for ch in "fix: real commit".chars() {
         w.commit_form.append_char(ch);
     }
     assert!(w.submit_commit());
-    assert!(!w.commit_form.visible);
-    assert!(w.commit_form.message().is_empty());
+    assert!(w.toggle_commit_form());
     assert_eq!(
         w.take_requests(),
-        vec![UiRequest::Commit {
-            message: "fix: real commit".into()
-        }]
+        vec![UiRequest::Submit, UiRequest::CancelForm]
     );
+    assert_eq!(w.commit_form.message(), "fix: real commit");
+
+    // The buttons: Commit asks to submit even while drawn disabled (the
+    // dispatcher says why), Cancel asks to cancel.
+    c.begin_frame();
+    w.render(&mut c);
+    let submit = c
+        .binding(&sem::SemId::parse("commit.submit").unwrap())
+        .unwrap()
+        .rect;
+    assert!(w.handle_click(submit[0] + 2.0, submit[1] + 2.0));
+    assert_eq!(w.take_requests(), vec![UiRequest::Submit]);
 }
 
 #[test]

@@ -147,16 +147,49 @@ impl UnassignedView {
             .map(|f| f.path.as_str())
     }
 
+    /// Shows every change of `path` as staged or not, in one row, before
+    /// git answers (the status refresh afterwards reconciles). `false`
+    /// when the path is not listed.
+    pub(crate) fn set_staged(&mut self, path: &str, staged: bool) -> bool {
+        let Some(first) = self.files.iter().position(|f| f.path == path) else {
+            return false;
+        };
+        let selected = self.selected_path().map(str::to_owned);
+        let mut at = 0;
+        self.files.retain(|f| {
+            let keep = f.path != path || at == first;
+            at += 1;
+            keep
+        });
+        if let Some(file) = self.files.get_mut(first) {
+            file.staged = staged;
+        }
+        self.reselect(selected);
+        true
+    }
+
+    /// Drops every row of `path` before git answers (a discard or an
+    /// ignore). `false` when the path is not listed.
+    pub(crate) fn remove_path(&mut self, path: &str) -> bool {
+        let before = self.files.len();
+        let selected = self.selected_path().map(str::to_owned);
+        self.files.retain(|f| f.path != path);
+        self.reselect(selected);
+        self.files.len() != before
+    }
+
+    /// Puts the cursor back on `path`'s first row, or clears it when the
+    /// path is gone.
+    fn reselect(&mut self, path: Option<String>) {
+        self.selected_idx = path.and_then(|p| self.files.iter().position(|f| f.path == p));
+    }
+
     /// Replaces the file list (e.g. from a fresh `git status`), keeping the
     /// selection on the same path when it still exists.
     pub fn set_files(&mut self, files: Vec<FileEntry>) {
-        let selected_path = self
-            .selected_idx
-            .and_then(|i| self.files.get(i))
-            .map(|f| f.path.clone());
+        let selected = self.selected_path().map(str::to_owned);
         self.files = files;
-        self.selected_idx =
-            selected_path.and_then(|path| self.files.iter().position(|f| f.path == path));
+        self.reselect(selected);
     }
 
     /// Row hit rects from the last render (test-only accessor; interaction

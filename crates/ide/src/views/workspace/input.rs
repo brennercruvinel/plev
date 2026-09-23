@@ -1,10 +1,16 @@
+//! Pointer and key handling of the workspace. What only moves the person
+//! around (hover, the list cursor, the context menu, the overlays, focus
+//! and the caret) happens here; what acts on a capability (a diff, stage,
+//! discard, the commit form, a commit) is queued as a [`UiRequest`] for
+//! the workbench to ask through its dispatcher.
+
 use super::super::commit_form::CommitFormAction;
 use super::{PendingAction, UiRequest, WorkspaceView};
 use comps::prelude::WidgetEvent;
 
 impl WorkspaceView {
     /// Handle a left click at (cx, cy). Returns true if state changed.
-    pub fn handle_click(&mut self, cx: f32, cy: f32) -> bool {
+    pub(crate) fn handle_click(&mut self, cx: f32, cy: f32) -> bool {
         // Overlays intercept clicks first
         if !self.overlay_mgr.is_empty() {
             return self.handle_overlay_click(cx, cy);
@@ -44,13 +50,8 @@ impl WorkspaceView {
 
         // Commit form clicks
         match self.commit_form.hit_test_click(cx, cy) {
-            CommitFormAction::Commit => {
-                return self.submit_commit();
-            }
-            CommitFormAction::Cancel => {
-                self.commit_form.hide();
-                return true;
-            }
+            CommitFormAction::Commit => return self.submit_commit(),
+            CommitFormAction::Cancel => return self.cancel_commit_form(),
             CommitFormAction::None => {}
         }
 
@@ -129,7 +130,7 @@ impl WorkspaceView {
     }
 
     /// Handle a right-click at (cx, cy). Returns true if an overlay was opened.
-    pub fn handle_right_click(&mut self, cx: f32, cy: f32) -> bool {
+    pub(crate) fn handle_right_click(&mut self, cx: f32, cy: f32) -> bool {
         use comps::overlay::MenuItem;
 
         // dismiss any existing overlay first
@@ -146,8 +147,9 @@ impl WorkspaceView {
         if cx >= left_x
             && cx < left_x + self.left_w
             && let Some(idx) = self.unassigned.hit_test(cx, cy)
+            && let Some(file) = self.unassigned.files.get(idx)
         {
-            let staged = self.unassigned.files[idx].staged;
+            let (path, staged) = (file.path.clone(), file.staged);
             let items = vec![
                 if staged {
                     MenuItem::new("Unstage file", 0)
@@ -160,7 +162,7 @@ impl WorkspaceView {
             // Offset slightly so the menu doesn't sit right under the cursor
             let nudge = self.theme().spacing.xs / 2.0;
             self.open_context_menu(cx + nudge, cy, items);
-            self.pending_action = Some(PendingAction::ContextMenu { file_idx: idx });
+            self.pending_action = Some(PendingAction::ContextMenu { path, staged });
             // Also select the row
             if self.unassigned.select(Some(idx)) {
                 self.open_file_diff(idx);
@@ -170,10 +172,10 @@ impl WorkspaceView {
         false
     }
 
-    // -- semantic actions (invoked by the keymap dispatcher and tests) -------
+    // -- keys and commands (the keymap, the host's key routing, tests) -------
 
     /// Closes the topmost overlay. Returns true if one was open.
-    pub fn close_top_overlay(&mut self) -> bool {
+    pub(crate) fn close_top_overlay(&mut self) -> bool {
         if self.overlay_mgr.is_empty() {
             return false;
         }
@@ -189,8 +191,8 @@ impl WorkspaceView {
         true
     }
 
-    /// Moves the file selection up and refreshes the diff panel.
-    pub fn nav_up(&mut self) -> bool {
+    /// Moves the file cursor up and asks for that file's diff.
+    pub(crate) fn nav_up(&mut self) -> bool {
         let changed = self.unassigned.select_prev();
         if changed {
             self.show_selected_diff();
@@ -198,8 +200,8 @@ impl WorkspaceView {
         changed
     }
 
-    /// Moves the file selection down and refreshes the diff panel.
-    pub fn nav_down(&mut self) -> bool {
+    /// Moves the file cursor down and asks for that file's diff.
+    pub(crate) fn nav_down(&mut self) -> bool {
         let changed = self.unassigned.select_next();
         if changed {
             self.show_selected_diff();
@@ -207,8 +209,8 @@ impl WorkspaceView {
         changed
     }
 
-    /// Requests the diff of the currently selected file.
-    pub fn show_selected_diff(&mut self) -> bool {
+    /// Asks for the diff of the file under the cursor.
+    pub(crate) fn show_selected_diff(&mut self) -> bool {
         if let Some(idx) = self.unassigned.selected_idx {
             self.open_file_diff(idx);
             true
@@ -217,72 +219,64 @@ impl WorkspaceView {
         }
     }
 
-    /// Stages the selected file (no-op when already staged).
-    pub fn stage_selected(&mut self) -> bool {
-        let Some(idx) = self.unassigned.selected_idx else {
+    /// Asks to stage the file under the cursor.
+    pub(crate) fn stage_selected(&mut self) -> bool {
+        let Some(path) = self.unassigned.selected_path() else {
             return false;
         };
-        let Some(file) = self.unassigned.files.get_mut(idx) else {
+        let path = path.to_owned();
+        self.requests.push(UiRequest::Stage { path });
+        true
+    }
+
+    /// Asks the person to confirm before discarding the file under the
+    /// cursor.
+    pub(crate) fn discard_selected(&mut self) -> bool {
+        let Some(path) = self.unassigned.selected_path() else {
             return false;
         };
-        if file.staged {
-            return false;
-        }
-        file.staged = true;
-        self.requests.push(UiRequest::Stage {
-            path: file.path.clone(),
+        let path = path.to_owned();
+        self.open_discard_modal(path);
+        true
+    }
+
+    /// Asks to open the commit form, or to cancel it when open.
+    pub(crate) fn toggle_commit_form(&mut self) -> bool {
+        self.requests.push(if self.commit_form.visible {
+            UiRequest::CancelForm
+        } else {
+            UiRequest::OpenForm
         });
         true
     }
 
-    /// Asks for confirmation before discarding the selected file.
-    pub fn discard_selected(&mut self) -> bool {
-        let Some(idx) = self.unassigned.selected_idx else {
-            return false;
-        };
-        self.open_discard_modal(idx);
+    /// Asks to cancel the commit form (clearing its message).
+    pub(crate) fn cancel_commit_form(&mut self) -> bool {
+        self.requests.push(UiRequest::CancelForm);
         true
     }
 
-    /// Shows/hides the commit form.
-    pub fn toggle_commit_form(&mut self) -> bool {
-        if self.commit_form.visible {
-            self.commit_form.hide();
-        } else {
-            self.commit_form.show();
-        }
+    /// Asks for a commit of the staged files with the form's message. The
+    /// dispatcher decides: a closed form, a blank message or an empty
+    /// index refuse it.
+    pub(crate) fn submit_commit(&mut self) -> bool {
+        self.requests.push(UiRequest::Submit);
         true
     }
 
-    /// Submits the commit form: queues the real commit and hides the form
-    /// (the status/log refresh arrives via git events). No-op while empty.
-    pub fn submit_commit(&mut self) -> bool {
-        if !self.commit_form.visible || self.commit_form.message().is_empty() {
-            return false;
-        }
-        let message = self.commit_form.take_message();
-        self.requests.push(UiRequest::Commit { message });
-        self.commit_form.hide();
-        true
-    }
-
-    /// Points the diff panel at file `idx` and queues the real diff fetch.
+    /// Asks for the diff of file row `idx`.
     pub(crate) fn open_file_diff(&mut self, idx: usize) {
         if let Some(file) = self.unassigned.files.get(idx) {
-            let target = self.ids.as_ref().map(|ids| ids.file(&file.path));
-            self.diff.show_file(&file.path, target);
-            self.requests.push(UiRequest::FileDiff {
+            self.requests.push(UiRequest::ShowFileDiff {
                 path: file.path.clone(),
             });
         }
     }
 
-    /// Points the diff panel at a commit and queues the real diff fetch.
+    /// Asks for the diff of commit `ci` of stack `si`.
     pub(crate) fn open_commit_diff(&mut self, si: usize, ci: usize) {
         if let Some(commit) = self.stacks.stacks.get(si).and_then(|s| s.commits.get(ci)) {
-            let target = self.ids.as_ref().map(|ids| ids.commit(&commit.sha));
-            self.diff.show_commit(&commit.message, &commit.sha, target);
-            self.requests.push(UiRequest::CommitDiff {
+            self.requests.push(UiRequest::ShowCommitDiff {
                 sha: commit.sha.clone(),
             });
         }

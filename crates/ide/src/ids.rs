@@ -51,6 +51,42 @@ impl Ids {
     pub(crate) fn commit(&self, sha: &str) -> SemId {
         self.commit.key(sha)
     }
+
+    /// The path behind a `changes.file[<path>]`.
+    pub(crate) fn path_of(&self, id: &SemId) -> Option<String> {
+        key_under(&self.file, id)
+    }
+
+    /// The sha behind a `stacks.commit[<sha>]`.
+    pub(crate) fn sha_of(&self, id: &SemId) -> Option<String> {
+        key_under(&self.commit, id)
+    }
+}
+
+/// The key of `id` when it is `base[<key>]` and nothing more, with the
+/// escapes of the canonical text (`\]`, `\\`) undone.
+fn key_under(base: &SemId, id: &SemId) -> Option<String> {
+    let inner = id
+        .as_str()
+        .strip_prefix(base.as_str())?
+        .strip_prefix('[')?
+        .strip_suffix(']')?;
+    let mut key = String::with_capacity(inner.len());
+    let mut escaped = false;
+    for c in inner.chars() {
+        if escaped {
+            key.push(c);
+            escaped = false;
+        } else if c == '\\' {
+            escaped = true;
+        } else if c == ']' {
+            // An unescaped `]` closes the key early: a segment follows.
+            return None;
+        } else {
+            key.push(c);
+        }
+    }
+    (!escaped).then_some(key)
 }
 
 #[cfg(test)]
@@ -63,5 +99,24 @@ mod tests {
         assert_eq!(ids.form.as_str(), "commit.form");
         assert_eq!(ids.file("src/lib.rs").as_str(), "changes.file[src/lib.rs]");
         assert_eq!(ids.commit("abc").as_str(), "stacks.commit[abc]");
+    }
+
+    #[test]
+    fn a_key_comes_back_from_its_id_escapes_included() {
+        let ids = Ids::new().expect("constant ids");
+        for path in ["a.txt", "dir/b c.rs", "odd]name", "back\\slash", "[x]"] {
+            assert_eq!(ids.path_of(&ids.file(path)).as_deref(), Some(path));
+        }
+        assert_eq!(ids.sha_of(&ids.commit("f00d")).as_deref(), Some("f00d"));
+    }
+
+    #[test]
+    fn an_id_that_is_not_one_key_under_the_base_has_none() {
+        let ids = Ids::new().expect("constant ids");
+        let longer = ids.file("a").child("x").expect("name segment");
+        assert_eq!(ids.path_of(&longer), None);
+        assert_eq!(ids.path_of(&ids.file("a").key("b")), None);
+        assert_eq!(ids.path_of(&ids.changes), None);
+        assert_eq!(ids.path_of(&ids.commit("a")), None);
     }
 }

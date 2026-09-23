@@ -10,7 +10,7 @@ use engine::gpu::GpuContext;
 use engine::gpu::texture_pool::TexturePool;
 use engine::text::TextSystem;
 use engine::window::present_frame;
-use ide::views::workspace::WorkspaceView;
+use ide::workbench::Workbench;
 
 /// Render a single frame: build the scene, resolve layers, encode GPU passes,
 /// and present. Called once per `RedrawRequested`.
@@ -20,13 +20,13 @@ pub fn render_frame(
     effects: &mut EffectProcessor,
     texture_pool: &mut TexturePool,
     compositor: &mut Compositor,
-    workspace: &mut WorkspaceView,
+    bench: &mut Workbench,
 ) {
     // Build the scene: the workspace owns the whole window.
     compositor.begin_frame();
-    workspace.render(compositor);
+    bench.render(compositor);
 
-    let clear = workspace.theme().colors.bg.to_linear_array();
+    let clear = bench.workspace().theme().colors.bg.to_linear_array();
     present_frame(
         compositor,
         gpu,

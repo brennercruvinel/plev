@@ -73,9 +73,10 @@ pub struct WorkspaceView {
     /// confirmation). `None` when no overlay-driven action is in flight.
     pub(crate) pending_action: Option<PendingAction>,
 
-    /// Git operations requested by user interaction; the app drains these
-    /// and forwards them to the git worker (views never call git).
-    pub requests: Vec<UiRequest>,
+    /// What the person asked for since the last drain; the workbench
+    /// turns each into a request through its dispatcher (views never
+    /// change git state or the projected state themselves).
+    pub(crate) requests: Vec<UiRequest>,
 
     /// Repo name + branch shown in the header (injected by the app).
     pub repo_label: String,
@@ -98,34 +99,35 @@ pub struct WorkspaceView {
 }
 
 /// Overlay-driven interaction state: which file the open context menu or
-/// discard-confirmation modal is about.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) enum PendingAction {
-    ContextMenu { file_idx: usize },
-    ConfirmDiscard { file_idx: usize },
-}
-
-impl PendingAction {
-    pub(crate) fn file_idx(self) -> usize {
-        match self {
-            PendingAction::ContextMenu { file_idx } => file_idx,
-            PendingAction::ConfirmDiscard { file_idx } => file_idx,
-        }
-    }
-}
-
-/// A git operation the UI wants performed. Emitted by interaction handlers
-/// (optimistic view updates happen immediately); the app maps each request
-/// to a `git::GitCommand` on the worker thread.
+/// discard-confirmation modal is about, by path (a refresh may reorder
+/// the rows while the overlay is open).
 #[derive(Clone, Debug, PartialEq)]
-pub enum UiRequest {
-    FileDiff { path: String },
-    CommitDiff { sha: String },
+pub(crate) enum PendingAction {
+    /// The menu of a row: its path and whether the row is the staged one.
+    ContextMenu {
+        path: String,
+        staged: bool,
+    },
+    ConfirmDiscard {
+        path: String,
+    },
+}
+
+/// What a person asked for through the workspace (a click, a key, a menu
+/// item), named without ids. The views queue it; the workbench observes
+/// the workspace at that instant and asks its dispatcher as the person,
+/// so the effect happens once, in `execute`, whoever asked.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum UiRequest {
+    ShowFileDiff { path: String },
+    ShowCommitDiff { sha: String },
     Stage { path: String },
     Unstage { path: String },
     Discard { path: String },
     Ignore { path: String },
-    Commit { message: String },
+    OpenForm,
+    CancelForm,
+    Submit,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -225,9 +227,8 @@ impl WorkspaceView {
         (self.origin.0 + self.vw, self.origin.1 + self.vh)
     }
 
-    /// Takes the git operations queued by interaction handlers since the
-    /// last drain.
-    pub fn take_requests(&mut self) -> Vec<UiRequest> {
+    /// Takes what the person asked for since the last drain.
+    pub(crate) fn take_requests(&mut self) -> Vec<UiRequest> {
         std::mem::take(&mut self.requests)
     }
 

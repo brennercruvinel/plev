@@ -68,6 +68,11 @@ impl CommitForm {
         self.field.text()
     }
 
+    /// Replaces the message (`commit.message`'s `set_value`).
+    pub(crate) fn set_message(&mut self, text: &str) {
+        self.field.set_text(text);
+    }
+
     /// The message, leaving the field empty.
     pub fn take_message(&mut self) -> String {
         let message = self.field.text().to_string();
@@ -86,12 +91,14 @@ impl CommitForm {
         self.field.unfocus();
     }
 
-    /// Hit-test a click. Returns the action.
+    /// Hit-test a click. Returns the action. A click on a Commit button
+    /// drawn disabled is still a commit asked for: the dispatcher refuses
+    /// it and says why.
     pub fn hit_test_click(&self, cx: f32, cy: f32) -> CommitFormAction {
         if !self.visible {
             return CommitFormAction::None;
         }
-        if self.commit_btn_rect.contains(cx, cy) && !self.commit_btn.disabled {
+        if self.commit_btn_rect.contains(cx, cy) {
             return CommitFormAction::Commit;
         }
         if self.cancel_btn_rect.contains(cx, cy) {

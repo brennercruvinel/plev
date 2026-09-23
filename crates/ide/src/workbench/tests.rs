@@ -2,8 +2,14 @@
 //! binds, and which state a commit depends on. The flows against a real
 //! repository live in `crates/ide/tests`.
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use engine::compositor::Compositor;
-use sem::{Actor, Confirm, Request, Role, SemId, Snapshot, Value, Verdict, check};
+use sem::{
+    Actor, Confirm, Receipt, ReceiptSink, Rejection, Request, Role, SemId, Snapshot, Stage, Value,
+    Verdict, check,
+};
 
 use super::*;
 use crate::views::multi_stack_view::{CommitEntry, Stack};
@@ -11,6 +17,39 @@ use crate::views::unassigned_view::{FileEntry, FileStatus};
 
 fn sid(text: &str) -> SemId {
     SemId::parse(text).expect("id")
+}
+
+/// Every receipt as it stood at its last stage, in the order they ended
+/// or last moved.
+#[derive(Clone, Default)]
+struct Log(Rc<RefCell<Vec<Receipt>>>);
+
+impl ReceiptSink for Log {
+    fn on_stage(&mut self, receipt: &Receipt, _stage: &Stage) {
+        let mut all = self.0.borrow_mut();
+        all.retain(|r| r.id != receipt.id);
+        all.push(receipt.clone());
+    }
+}
+
+impl Log {
+    fn last(&self) -> Receipt {
+        self.0.borrow().last().cloned().expect("a receipt")
+    }
+}
+
+fn tester() -> Actor {
+    Actor::Test {
+        name: "workbench".into(),
+    }
+}
+
+/// An `Actor::Test` request over the workbench as it is now; its receipt.
+fn ask(bench: &mut Workbench, target: &str, action: &str, param: Option<Value>) -> Receipt {
+    let seen = bench.snapshot().expect("snapshot");
+    let req = Request::observe(&seen, tester(), target, action, param).expect("observe");
+    let id = bench.dispatch(req);
+    bench.receipt(id).cloned().expect("receipt kept")
 }
 
 fn entry(path: &str, status: FileStatus, staged: bool) -> FileEntry {
@@ -229,4 +268,143 @@ fn the_render_binds_the_ids_the_projection_declares() {
     let submit = c.binding(&sid("commit.submit")).expect("bound").rect;
     let (x, y) = (submit[0] + submit[2] / 2.0, submit[1] + submit[3] / 2.0);
     assert_eq!(c.hit(x, y), Some(&sid("commit.submit")));
+}
+
+/// The center of `id` in the frame just drawn.
+fn center(c: &Compositor, id: &str) -> (f32, f32) {
+    let r = c.binding(&sid(id)).expect("bound").rect;
+    (r[0] + r[2] / 2.0, r[1] + r[3] / 2.0)
+}
+
+fn frame(bench: &mut Workbench) -> Compositor {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    bench.render(&mut c);
+    c
+}
+
+#[test]
+fn keys_typing_and_test_requests_reach_the_same_form() {
+    let empty = |bench: &mut Workbench| {
+        bench
+            .workspace_mut()
+            .unassigned
+            .set_files(vec![entry("a.txt", FileStatus::Added, true)]);
+    };
+    // A person: the `c` key, then typing into the field.
+    let mut person = Workbench::new(1280.0, 800.0);
+    empty(&mut person);
+    assert!(person.toggle_commit_form());
+    for ch in "fix login".chars() {
+        person.workspace_mut().commit_form.append_char(ch);
+    }
+    let typed = person.snapshot().expect("snapshot");
+
+    // A test: the same capabilities by request.
+    let mut test = Workbench::new(1280.0, 800.0);
+    empty(&mut test);
+    let done = |r: Receipt| assert!(matches!(r.stage(), Some(Stage::Completed(_))), "{r:?}");
+    done(ask(&mut test, "commit.form", "open", None));
+    done(ask(
+        &mut test,
+        "commit.message",
+        "set_value",
+        Some("fix login".into()),
+    ));
+    let asked = test.snapshot().expect("snapshot");
+    assert_eq!(asked, typed, "same form, same meaning");
+    assert_eq!(asked.revision(), typed.revision());
+
+    // Cancel clears the message it reads, by key and by request alike.
+    assert!(person.cancel_commit_form());
+    done(ask(&mut test, "commit.form", "cancel", None));
+    assert!(!person.workspace().commit_form.visible);
+    assert_eq!(person.workspace().commit_form.message(), "");
+    assert_eq!(
+        person.snapshot().expect("snapshot"),
+        test.snapshot().expect("snapshot")
+    );
+}
+
+#[test]
+fn a_click_on_a_row_asks_its_diff_as_the_person() {
+    let mut bench = bench();
+    let log = Log::default();
+    bench.add_sink(Box::new(log.clone()));
+    let c = frame(&mut bench);
+
+    let (x, y) = center(&c, "changes.file[b.txt]");
+    assert!(bench.click(x, y));
+    let receipt = log.last();
+    assert_eq!(receipt.request.actor, Actor::Human);
+    assert_eq!(receipt.request.target, sid("changes.file[b.txt]"));
+    assert_eq!(receipt.request.action.as_str(), "show_diff");
+    assert!(matches!(receipt.stage(), Some(Stage::Completed(_))));
+    let snap = bench.snapshot().expect("snapshot");
+    assert_eq!(
+        value(&snap, "diff:target"),
+        Value::from("changes.file[b.txt]")
+    );
+    assert_eq!(value(&snap, "changes:selected"), Value::from("b.txt"));
+}
+
+#[test]
+fn a_click_on_a_disabled_commit_is_refused_as_disabled() {
+    let mut bench = bench();
+    bench.workspace_mut().commit_form.take_message();
+    let log = Log::default();
+    bench.add_sink(Box::new(log.clone()));
+    let c = frame(&mut bench);
+
+    let (x, y) = center(&c, "commit.submit");
+    assert!(bench.click(x, y));
+    let receipt = log.last();
+    assert_eq!(receipt.request.actor, Actor::Human);
+    assert!(
+        matches!(
+            receipt.stage(),
+            Some(Stage::Rejected(Rejection::Disabled { target, .. })) if *target == sid("commit.submit")
+        ),
+        "{receipt:?}"
+    );
+}
+
+#[test]
+fn without_a_repository_git_capabilities_fail_and_change_nothing() {
+    let mut bench = bench();
+    let before = bench.snapshot().expect("snapshot");
+    let receipt = ask(&mut bench, "changes.file[b.txt]", "stage", None);
+    assert!(
+        matches!(receipt.stage(), Some(Stage::Failed { error }) if error == "no repository is open"),
+        "{receipt:?}"
+    );
+    let receipt = ask(&mut bench, "commit.submit", "submit", None);
+    assert!(matches!(receipt.stage(), Some(Stage::Failed { .. })));
+    assert_eq!(bench.snapshot().expect("snapshot"), before);
+}
+
+#[test]
+fn an_agent_discard_waits_and_a_test_cannot_confirm_it() {
+    let mut bench = bench();
+    let seen = bench.snapshot().expect("snapshot");
+    let agent = Actor::Agent {
+        name: "test-agent".into(),
+    };
+    let req =
+        Request::observe(&seen, agent, "changes.file[b.txt]", "discard", None).expect("observe");
+    let id = bench.dispatch(req);
+    assert_eq!(
+        bench.receipt(id).and_then(Receipt::stage),
+        Some(&Stage::AwaitingConfirmation)
+    );
+    assert!(bench.confirm(id, tester()).is_err(), "a test is no person");
+    assert!(
+        bench
+            .workspace()
+            .unassigned
+            .files
+            .iter()
+            .any(|f| f.path == "b.txt"),
+        "nothing ran"
+    );
 }
