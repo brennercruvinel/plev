@@ -19,7 +19,7 @@
 //! ```
 //! use std::collections::BTreeSet;
 //!
-//! use sem::{Role, SemId, Semantics, SnapshotBuilder, StateRef, Value};
+//! use sem::{Change, Role, SemId, Semantics, Snapshot, SnapshotBuilder, StateRef, Value};
 //!
 //! struct GitState {
 //!     staged: BTreeSet<String>,
@@ -53,22 +53,36 @@
 //! assert_eq!(snap.value(&staged), Some(&Value::Set(git.staged.clone())));
 //! let submit = snap.get(&SemId::parse("commit.submit")?).ok_or("not projected")?;
 //! assert_eq!(submit.actions[0].name.as_str(), "submit");
-//! assert_eq!(submit.actions[0].reads, [staged, message]);
+//! assert_eq!(submit.actions[0].reads, [staged.clone(), message]);
 //!
 //! let mut again = SnapshotBuilder::new();
 //! git.project(&mut again);
 //! assert_eq!(again.finish()?.revision(), snap.revision());
+//!
+//! let mut git = git;
+//! git.staged.remove("lexer.rs");
+//! let mut b = SnapshotBuilder::new();
+//! git.project(&mut b);
+//! let now = b.finish()?;
+//! let delta = Snapshot::diff(&snap, &now);
+//! assert!(matches!(
+//!     &delta[..],
+//!     [Change::StateChanged { at, removed, .. }] if *at == staged && removed == &["lexer.rs"]
+//! ));
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!
 //! a projection of the same state gives the same `Revision` on every run
 //! and every target, so a revision can travel to an agent or a recording
-//! and still mean the same thing.
+//! and still mean the same thing. when the state moves under an agent that
+//! observed it (a file unstaged while it was deciding to commit),
+//! `Snapshot::diff` names what changed: `removed: ["lexer.rs"]`.
 //!
 //! the crate is pure data: no gpu, no window, no text stack.
 
 mod builder;
 mod decl;
+mod diff;
 mod error;
 mod hash;
 mod id;
@@ -82,6 +96,7 @@ mod value;
 
 pub use builder::{ActionBuilder, NodeBuilder, Semantics, SnapshotBuilder};
 pub use decl::{ActionDecl, Actors, Confirm, Constraints, ParamSpec, Policy};
+pub use diff::Change;
 pub use error::{SemError, SemErrors};
 pub use hash::Revision;
 pub use id::SemId;
