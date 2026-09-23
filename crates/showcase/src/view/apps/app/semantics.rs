@@ -16,6 +16,7 @@
 //! `todo.counter` (status: `active`, `done`).
 
 use comps::prelude::{EventResult, Rect};
+use engine::perf::stages::{self, Stage};
 use sem::{
     Actor, Execution, Operable, Outcome, Policy, Request, RequestId, Role, SemError, SemErrors,
     SemId, Semantics, Snapshot, SnapshotBuilder, Value,
@@ -233,6 +234,7 @@ impl Operable for TodoPage {
 impl TodoPage {
     /// The page projected now.
     pub(crate) fn snapshot(&self) -> Result<Snapshot, SemErrors> {
+        let _probe = stages::span(Stage::Projection);
         let mut b = SnapshotBuilder::new();
         self.project(&mut b);
         b.finish()
