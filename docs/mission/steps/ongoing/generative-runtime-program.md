@@ -305,3 +305,4 @@ atualizado em cada integração.
 | task-62 | fases a e b em andamento | | onda 4; fase c espera 61 e 63 |
 | task-63 | fases a, b e c integradas; fase d na fila | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d = retenção de pixels opt-in e ligação no shell do showcase, depois da 61 |
 | task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
+| task-57b | em andamento | | forma JSON enxuta (padrões omitidos, `source` opt-in no `wire`) e a redação de segredo uma vez só em `sem::redact`; pré-requisito da 62 fase c |
