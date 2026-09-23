@@ -5,6 +5,7 @@
 use comps::prelude::{EmptyState, EventResult, Rect, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::Theme;
+use sem::{Receipt, Request, SemId, Snapshot};
 
 use super::components::toast;
 use super::{Layers, Pane, ShowcaseView, panel};
@@ -231,6 +232,49 @@ impl ShowcaseView {
                 Pane::Git => self.panes.git.render(c, content, theme),
                 Pane::Builder => self.panes.builder.render(c, content, theme),
             },
+        }
+    }
+
+    /// What the active page means, when it projects it (the todo page,
+    /// today): the snapshot assistive technology is shown. A page without
+    /// a projection has no tree yet.
+    pub fn semantics(&self) -> Option<Snapshot> {
+        match self.pane() {
+            Some(Pane::Todo) => self
+                .panes
+                .todo
+                .snapshot()
+                .inspect_err(|e| log::warn!("todo: the projection does not validate: {e}"))
+                .ok(),
+            _ => None,
+        }
+    }
+
+    /// A request from assistive technology, through the active page's
+    /// dispatcher (an open overlay leaves the page inert, as for a
+    /// click); the receipt it came to. `None` when the page takes none.
+    pub fn assist(&mut self, req: Request) -> Option<Receipt> {
+        match self.pane() {
+            Some(Pane::Todo) => {
+                let inert = self.overlay_holds_pointer();
+                self.panes.todo.set_inert(inert);
+                let id = self.panes.todo.dispatch(req);
+                self.panes.todo.receipt(id).cloned()
+            }
+            _ => None,
+        }
+    }
+
+    /// Keyboard focus from assistive technology to a node of the active
+    /// page; `false` when the page does not take it.
+    pub fn assist_focus(&mut self, id: &SemId) -> bool {
+        match self.pane() {
+            Some(Pane::Todo) => {
+                let inert = self.overlay_holds_pointer();
+                self.panes.todo.set_inert(inert);
+                self.panes.todo.focus(id)
+            }
+            _ => false,
         }
     }
 

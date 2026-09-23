@@ -252,9 +252,39 @@ impl TodoPage {
         id
     }
 
-    #[cfg(test)]
+    /// The receipt the page's dispatcher keeps for `id` (the shell logs
+    /// what a screen reader's request came to).
     pub(crate) fn receipt(&self, id: RequestId) -> Option<&sem::Receipt> {
         self.dispatcher.receipt(id)
+    }
+
+    /// Keyboard focus asked from outside the page's pointer handling: a
+    /// screen reader's focus, or a Tab resolved in the semantic order.
+    /// Focus is editing, not a capability, so it does not go through the
+    /// dispatcher, the same as a click into the field. The field takes it;
+    /// another node of the page takes it from the field (the pills and
+    /// the rows hold no focus of their own). `false` for an id the page
+    /// does not project, and while inert.
+    pub(crate) fn focus(&mut self, id: &SemId) -> bool {
+        let Some(ids) = &self.ids else {
+            return false;
+        };
+        if self.inert {
+            return false;
+        }
+        if *id == ids.input {
+            self.input.focus();
+            return true;
+        }
+        let ours = *id == ids.todo
+            || *id == ids.filter
+            || *id == ids.counter
+            || ids.tabs.contains(id)
+            || ids.item_of(id).is_some();
+        if ours {
+            self.input.unfocus();
+        }
+        ours
     }
 
     /// A person's click or key as a request: observe the page as it is
@@ -299,3 +329,8 @@ impl TodoPage {
         }
     }
 }
+
+/// The page through a screen reader (task-60): the tree the showcase
+/// shows, and AccessKit requests reaching the page's one dispatcher.
+#[cfg(test)]
+mod assistive;

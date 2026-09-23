@@ -27,16 +27,24 @@ use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 use winit::window::{Window, WindowAttributes, WindowId};
 
+/// The window's title, which also names the root of its accessibility
+/// tree.
+const TITLE: &str = "plev, design system showcase";
+
 /// Messages from other threads and tasks into the event loop.
 ///
 /// `GpuReady` is sent by the async GPU-init task on wasm and never
 /// constructed natively (desktop blocks on `GpuContext::new` inside
-/// `resumed` instead); `Wake` comes from the git worker on desktop only.
-/// One instance is in flight at a time, so the size gap is irrelevant.
+/// `resumed` instead); `Wake` comes from the git worker and `Access` from
+/// the accessibility adapter's threads, both on desktop only. One
+/// instance is in flight at a time, so the size gap is irrelevant.
 #[allow(dead_code, clippy::large_enum_variant)]
 enum UserEvent {
     /// The git worker finished a command: drain it on the next frame.
     Wake,
+    /// A screen reader started listening or asked for something: carry
+    /// out what it asked and draw, which sends it the tree.
+    Access,
     GpuReady {
         gpu: GpuContext,
         text_system: TextSystem,
@@ -69,6 +77,20 @@ pub struct App {
     modifiers: ModifiersState,
     #[cfg(target_arch = "wasm32")]
     proxy: Option<EventLoopProxy<UserEvent>>,
+    /// The window's accessibility: the tree projected from the active
+    /// page's meaning, and the screen reader's requests into its
+    /// dispatcher (desktop; AccessKit has no web adapter, mobile is next).
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    access: Access,
+}
+
+/// The accessibility bridge of the window and how its handlers wake the
+/// event loop.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+#[derive(Default)]
+struct Access {
+    bridge: Option<engine::accessibility::Bridge>,
+    proxy: Option<winit::event_loop::EventLoopProxy<UserEvent>>,
 }
 
 impl App {
@@ -99,6 +121,8 @@ impl App {
             modifiers: ModifiersState::empty(),
             #[cfg(target_arch = "wasm32")]
             proxy: None,
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            access: Access::default(),
         }
     }
 
@@ -111,7 +135,7 @@ impl App {
 
     /// Sync surface, projection, and view layout to the window's current
     /// inner size. Called once GPU state becomes `Ready` (and harmless to
-    /// call again — `gpu.resize` clamps to at least 1x1).
+    /// call again: `gpu.resize` clamps to at least 1x1).
     fn configure_viewport(&mut self) {
         let Some(window) = self.window.clone() else {
             return;
@@ -135,7 +159,13 @@ impl ApplicationHandler<UserEvent> for App {
         }
 
         #[allow(unused_mut)] // mut needed for cfg(not(wasm)) inner_size
-        let mut attrs = WindowAttributes::default().with_title("plev — design system showcase");
+        let mut attrs = WindowAttributes::default().with_title(TITLE);
+
+        // AccessKit attaches before the window is first shown.
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        {
+            attrs = attrs.with_visible(false);
+        }
 
         // Desktop gets a fixed initial size. On the web the canvas size is
         // owned by CSS (100vw/100vh in index.html): setting an inner size
@@ -147,6 +177,12 @@ impl ApplicationHandler<UserEvent> for App {
         }
 
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
+
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        {
+            self.access.attach(event_loop, &window);
+            window.set_visible(true);
+        }
 
         #[cfg(target_arch = "wasm32")]
         if let Err(e) = engine::window::setup_wasm_canvas(&window) {
@@ -192,6 +228,15 @@ impl ApplicationHandler<UserEvent> for App {
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: UserEvent) {
         match event {
             UserEvent::Wake => self.invalidate(),
+            UserEvent::Access => {
+                #[cfg(not(any(
+                    target_arch = "wasm32",
+                    target_os = "android",
+                    target_os = "ios"
+                )))]
+                self.access.carry_out(&mut self.view);
+                self.invalidate();
+            }
             UserEvent::GpuReady {
                 gpu,
                 text_system,
@@ -213,6 +258,10 @@ impl ApplicationHandler<UserEvent> for App {
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        if let (Some(bridge), Some(window)) = (self.access.bridge.as_mut(), self.window.as_ref()) {
+            bridge.process_event(window, &event);
+        }
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
 
@@ -337,6 +386,15 @@ impl ApplicationHandler<UserEvent> for App {
                     &mut self.compositor,
                     &mut self.view,
                 );
+                // The tree of this frame, placed by the bindings it just
+                // drew; the page is projected only while a reader listens.
+                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+                if let (Some(bridge), Some(window)) =
+                    (self.access.bridge.as_mut(), self.window.as_ref())
+                {
+                    let view = &self.view;
+                    bridge.update(window, &self.compositor, || view.semantics());
+                }
                 if animating {
                     // Springs still moving: keep the frames coming.
                     self.compositor.invalidate();
@@ -366,10 +424,56 @@ pub fn run() {
     let event_loop = EventLoop::<UserEvent>::with_user_event().build().unwrap();
     let mut app = App::new();
     let proxy = event_loop.create_proxy();
+    app.access.proxy = Some(proxy.clone());
     app.view.connect_git(Box::new(move || {
         let _ = proxy.send_event(UserEvent::Wake);
     }));
     event_loop.run_app(&mut app).unwrap();
+}
+
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+impl Access {
+    /// Creates the bridge for `window`, which is still hidden. Without a
+    /// bridge the window still opens, and the reason is logged.
+    fn attach(&mut self, event_loop: &ActiveEventLoop, window: &Window) {
+        let proxy = self.proxy.clone();
+        let wake = move || {
+            if let Some(proxy) = &proxy {
+                let _ = proxy.send_event(UserEvent::Access);
+            }
+        };
+        match engine::accessibility::Bridge::new(event_loop, window, TITLE, wake) {
+            Ok(bridge) => self.bridge = Some(bridge),
+            Err(e) => log::error!("accessibility: {e}"),
+        }
+    }
+
+    /// What the screen reader asked, on the main thread: a request goes
+    /// through the active page's dispatcher as `Actor::Assistive`, a focus
+    /// move to the page's focus.
+    fn carry_out(&mut self, view: &mut ShowcaseView) {
+        let Some(bridge) = self.bridge.as_mut() else {
+            return;
+        };
+        for assist in bridge.take() {
+            match assist {
+                engine::accessibility::Assist::Request(req) => {
+                    let asked = format!("{} {}", req.target, req.action);
+                    match view.assist(req) {
+                        Some(receipt) => {
+                            log::debug!("accessibility: {asked}: {:?}", receipt.stage());
+                        }
+                        None => log::debug!("accessibility: no page takes {asked}"),
+                    }
+                }
+                engine::accessibility::Assist::Focus(id) => {
+                    if !view.assist_focus(&id) {
+                        log::debug!("accessibility: no page takes focus on {id}");
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// `showcase --render`: one frame of a page without a window.
