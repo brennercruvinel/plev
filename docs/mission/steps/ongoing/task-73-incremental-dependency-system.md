@@ -14,6 +14,48 @@ branch: task/73-incremental
 
 # task-73: sistema de dependências incremental
 
+## fase 1 fechada (2026-09-23)
+
+integrada na `main` em `ed814da` (sete commits), rebaseada pelo
+orquestrador sobre a task-59 fase b sem conflito. validada: diff lido (as
+sondas são uma linha cada; desligadas custam uma leitura atômica relaxada e
+um branch, a closure de itens nem roda), gate verde (1748 testes), e
+identidade de pixel conferida pelo orquestrador: Todo (hoff) e Editor
+(core) renderizados headless na `main` e na branch com o mesmo sha256. as
+tabelas completas estão em `task-73-measurements.md`, ao lado deste
+arquivo; `cargo run --release -p showcase --example measure` reproduz.
+
+o achado que muda o plano: neste M4 o frame não é limitado pela CPU. a
+espera da GPU é de 450 a 2200 µs por frame, 4 a 15 vezes a CPU do mesmo
+frame (30 a 400 µs), e cresce com pixels re-renderizados (uma layer MSAA
+4x inteira a cada tecla) e com layers compostas (todas as visíveis,
+vazias inclusive), não com o tamanho da mudança. as etapas de CPU em que a
+fase 2 foi pensada são pequenas: projeção de 9 a 14 µs por clique,
+`LayoutEngine` com zero chamadas, construção de cena de 12 a 60 µs.
+
+decisão do orquestrador:
+
+- a fase 2 estende a cadeia de dependência até a GPU: além das chaves de
+  estado, semântica, layout, cena e hit test, o desenho inclui região
+  danificada por layer, nada de composite para layer vazia ou sem
+  mudança, e vértices de texto mantidos por linha ou por run. o ADR de
+  desenho trata os dois lados juntos.
+- antes do ADR entra uma fase 1b pequena: timestamp queries da GPU (o
+  `gpu_micros` do `PerfMonitor`, hoje `None`) para separar latência de
+  submit de trabalho real, e a medição refeita com elas.
+- o caret que pede 60 frames por segundo enquanto o campo está focado é
+  defeito de render on demand, não otimização: virou a task-82.
+
+candidatos da fase 2 levantados pela medição (nenhum implementado): compor
+só layers com conteúdo e pular as que não mudaram; redesenhar só a região
+danificada de uma layer suja; manter vértices de texto por linha (hoje uma
+tecla no editor reemite 1551 glifos e sobe 236 KB); shape de uma run
+alterada uma vez só (`cursor_x_styled` reshapeia a run inteira a cada
+frame em que o caret aparece); animação só de opacidade reconstrói a cena
+inteira; `measure_styled` copia a chave para uma `String` nova mesmo no
+acerto de cache; todo resolve escreve o uniform de opacidade de cada
+layer, suja ou não.
+
 ## objetivo
 
 > criar um sistema de dependências incremental independente da

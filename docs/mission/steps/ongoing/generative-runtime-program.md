@@ -298,7 +298,7 @@ atualizado em cada integração.
 | task-58 | integrada | `20c601e` | dispatcher, receipts, check; devolvida uma vez (confirmação por tecnologia assistiva, id no `execute`); detalhes em `checked/task-58-actions-preconditions-receipts-done.md` |
 | task-59 | integrada | `f71dc20`, `f5b7cee` | ligação no compositor e todo pelo dispatcher (fase a); os 16 widgets restantes com `SemId` e projeção, regra "toda ação lê o que muda", defeito do `Select` corrigido (fase b); rolagem do `Select` virou a task-81 |
 | task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (pendente) |
-| task-73 | fase 1 (medição) em andamento | | a fase 1 (medição) saiu da onda 3: a instrumentação por estágio mexe em `window/frame.rs` e no compositor, que a 66 e a 59 são donas nesta onda; roda logo depois das duas, já medindo projeção semântica e usando o headless |
+| task-73 | fase 1 integrada; fase 1b (timestamp queries da GPU) na fila | `ed814da` | o frame é limitado pela GPU, não pela CPU: a fase 2 estende a cadeia de invalidação até a GPU (decisão do orquestrador no arquivo da task); o caret a 60 fps virou a task-82 |
 | task-62 | fases a e b em andamento | | onda 4; fase c espera 61 e 63 |
 | task-63 | fases a e b em andamento | | onda 4; crate `rec`; formato do arquivo decidido depois |
-| task-60 | aguardando a 73 | | onda 4; divide `crates/showcase/src/app.rs` com a 73, entra quando ela integrar; a 61 entra depois da 60 pelo mesmo motivo |
+| task-60 | em andamento | | onda 4; entrou quando a 73 liberou o shell do showcase; a 61 entra depois dela |

@@ -71,7 +71,7 @@ role = "Tween, FrameClock, easing (dt-based; web_time)"
 
 [modules.perf]
 path = "crates/engine/src/perf"
-role = "PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None)"
+role = "PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None). perf::stages (task-73 phase 1): per-frame, per-thread cost by stage (projection, scene build, measure hit/miss, shaping, bind, hit test, layer hash, geometry, text resolve, upload bytes, encode, gpu wait), off by default and one relaxed load when off; crates/showcase/examples/measure drives nine interactions through the frame path and prints the tables (docs/mission/steps/ongoing/task-73-measurements.md)"
 depends = ["animation", "compositor", "text"]
 contracts = ["pure-no-gpu", "hud-implies-continuous-frames"]
 

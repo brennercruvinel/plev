@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- the frame measures itself (2026-09-23, task-73 phase 1): `engine::perf::stages`
+  counts and times each stage of a frame (semantic projection, scene
+  build, text measure hits and misses, shaping, binds, hit tests, layer
+  hashing, geometry, text resolve, upload bytes, encode, gpu wait), off by
+  default at the cost of one relaxed load per probe;
+  `cargo run --release -p showcase --example measure` runs nine real
+  interactions through the window's frame path and prints the tables. the
+  first finding: on an M4 the frame is bound by the GPU (0.45 to 2.2 ms of
+  wait against 30 to 400 us of CPU), which reshapes the incremental work
+  ahead (docs/mission/steps/ongoing/task-73-measurements.md).
 - every interactive comps widget speaks the semantic contract (2026-09-23,
   task-59 phase b): chip, icon button, submit button, switch, slider,
   select, tabs, nav link, breadcrumb, split pane, virtual list, table,
