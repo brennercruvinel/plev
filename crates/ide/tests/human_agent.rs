@@ -344,6 +344,62 @@ fn an_agent_discard_waits_for_a_person_who_confirms_it() {
     );
 }
 
+#[test]
+fn a_person_who_closes_the_modal_declines_and_the_next_request_is_asked() {
+    let mut rig = Rig::new(&["README", "new.txt"], &[]);
+    let readme = rig.dir.path().join("README");
+    let first = rig.ask(agent(), "changes.file[README]", "discard", None);
+    let second = rig.ask(agent(), "changes.file[new.txt]", "discard", None);
+    for id in [first, second] {
+        assert_eq!(rig.stages(id), ["requested", "awaiting_confirmation"]);
+    }
+    let declined = Some(Stage::Rejected(Rejection::Declined { by: Actor::Human }));
+
+    // The person reads the first modal and clicks Cancel.
+    assert!(rig.bench.workspace().modal_open());
+    let _ = frame(&mut rig);
+    let (_, cancel) = rig.bench.workspace().modal_buttons().expect("drawn");
+    let (x, y) = (cancel[0] + cancel[2] / 2.0, cancel[1] + cancel[3] / 2.0);
+    assert!(rig.bench.click(x, y));
+    assert_eq!(
+        rig.stages(first),
+        ["requested", "awaiting_confirmation", "rejected"]
+    );
+    assert_eq!(rig.receipt(first).stage().cloned(), declined);
+    assert_eq!(
+        std::fs::read_to_string(&readme).unwrap(),
+        "README\n",
+        "the file is not discarded"
+    );
+
+    // The second is asked next; Escape declines it too.
+    assert!(rig.bench.workspace().modal_open(), "the second is asked");
+    assert_eq!(rig.stages(second), ["requested", "awaiting_confirmation"]);
+    assert!(rig.bench.close_top_overlay());
+    assert_eq!(rig.receipt(second).stage().cloned(), declined);
+    assert!(!rig.bench.workspace().modal_open());
+    assert_eq!(
+        rig.notices(),
+        [
+            "Declined: discard of README by test-agent did not run",
+            "Declined: discard of new.txt by test-agent did not run",
+        ]
+    );
+
+    // Git agrees nothing ran: a fresh status still lists both changes.
+    rig.bench.refresh();
+    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    assert_eq!(
+        rig.value("changes:files"),
+        Value::List(vec!["README".into(), "new.txt".into()])
+    );
+    assert_eq!(std::fs::read_to_string(&readme).unwrap(), "README\n");
+    assert_eq!(
+        std::fs::read_to_string(rig.dir.path().join("new.txt")).unwrap(),
+        "new.txt\n"
+    );
+}
+
 /// The frame a person would see: the workbench drawn and bound.
 fn frame(rig: &mut Rig) -> Compositor {
     let mut c = Compositor::new();
