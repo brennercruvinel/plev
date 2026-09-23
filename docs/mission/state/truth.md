@@ -182,3 +182,107 @@ a tabela da seção 3 do programa (`docs/mission/steps/ongoing/generative-runtim
 | 22 | render on demand de algo que muda sozinho | `comps::Wake` e `Blink` (`crates/comps/src/wake.rs:22-175`), `AnimationTick::since_last` (`crates/engine/src/animation/mod.rs:20-23`), `pace` (`crates/showcase/src/app.rs:152-167`) | fechada em parte (82 fase a). ide e urnaui ainda em `tick -> bool`; dívidas na seção 4g |
 | 23 | segredo nunca sai do processo | regra única `sem::redact` (`crates/sem/src/redact.rs:26-137`), usada pelo wire (`crates/wire/src/server.rs:403-404`, `:250`) e pelo rec (`crates/rec/src/ring.rs:236`) | fechada (57, 57b). o recibo em memória guarda o parâmetro cru (`crates/sem/src/receipt.rs:147-152`): quem lê o dispatcher no processo vê o valor |
 | 24 | medição por estágio | `perf::stages` e `gpu_timestamps` (linha 16); tabelas em `docs/mission/steps/ongoing/task-73-measurements.md` | existe (73 fases 1 e 1b) |
+
+## 4. defeitos e limites conhecidos, conferidos no código
+
+### 4a. a corrida do `Refresh` no ide
+
+confirmada no código. sem correção e sem teste que a exercite.
+
+o mecanismo, com dois arquivos A e B:
+
+1. um ator pede `stage` de A. `execute` põe `GitCommand::Stage { A }` na fila do worker e já marca A como staged na view (`crates/ide/src/workbench/execute.rs:186-191`, via `mutate` em `:85-100`; `crates/ide/src/views/unassigned_view.rs:153-169`).
+2. o worker roda o stage e responde `Staged { A }` (`crates/git/src/client.rs:174-177`).
+3. na thread da UI, `Workbench::apply` fecha o recibo (`crates/ide/src/workbench/truth.rs:39-71`) e `GitSession::apply` manda `GitCommand::Refresh` para o worker (`crates/ide/src/session.rs:129-137`, que chama `:55-59`). chamo esse refresh de R1.
+4. o `stage` de B chega ao dispatcher depois disso. `execute` põe `Stage { B }` na fila atrás de R1 e marca B como staged na view. no `ide-lab` essa ordem é a regra dentro de uma volta do loop: primeiro aplica os eventos do git (`crates/ide/src/bin/lab/lab.rs:178-191`), depois drena a porta do agente (`:193`).
+5. o worker é um thread com um canal, FIFO (`crates/git/src/client.rs:121-131`). ele roda R1 antes de `Stage { B }`, e R1 lê `repo.status()` nesse instante (`crates/git/src/client.rs:200-201`): A staged, B não.
+6. o worker roda `Stage { B }`. o index real agora tem A e B.
+7. a UI aplica o `Status` de R1: `set_files` troca a lista inteira (`crates/ide/src/session.rs:91-95`, `crates/ide/src/views/unassigned_view.rs:189-193`). não há número de geração nem conferência com mutação pendente. B volta a não staged na view e sai de `changes:staged` (`crates/ide/src/workbench/project.rs:59-67`), embora já esteja no index.
+8. a UI aplica `Staged { B }` e manda R2 (`crates/ide/src/session.rs:129-137`). o `Status` de R2 devolve B. entre os passos 7 e 8 a projeção diz que B não está staged.
+
+o que isso produz no intervalo:
+
+- um agente que observou A e B staged antes do passo 7 e pede `submit` depois dele recebe `Stale` do dispatcher, com "B left the staged files", sem ninguém ter tirado B (`crates/sem/src/check.rs:116-119`; texto em `crates/ide/src/workbench/notice.rs:121-129`).
+- um agente que observa no intervalo vê só A. se pedir `submit`, o worker recusa com `CommitRejected { added: [B] }`, porque o index tem A e B (`crates/git/src/repo.rs:205-212`).
+- o mesmo vale ao contrário: um `unstage` seguido de um refresh velho devolve o arquivo à lista staged.
+
+outras fontes do mesmo refresh velho: `Committed` e `CommitRejected` também mandam `Refresh` (`crates/ide/src/session.rs:138-149`); no binário `ide`, o watcher de arquivos manda outro `Refresh` depois de 300 ms de silêncio no disco, `.git` incluído (`crates/ide/src/watcher.rs:16`, `:45-58`; `crates/ide/src/main.rs:245-249`).
+
+quem desvia dela hoje: o rig dos testes espera o recibo e o `Branches` do refresh antes do passo seguinte (`crates/ide/tests/support/mod.rs:79-88`); o agente roteirizado observa depois de cada ato (`crates/ide/src/bin/lab/scripted.rs:90-92`) e espera a projeção repetir a mesma revisão com o conjunto da tarefa (`:95-100`, `:184-199`; até 200 tentativas a cada 20 ms, `:25-27`).
+
+### 4b. `Change::NodeAdded` carrega só o id
+
+confirmado. `Change::NodeAdded(SemId)` (`crates/sem/src/diff.rs:23`), produzido em `crates/sem/src/diff.rs:98-101`. o delta do wire é o `Snapshot::diff` do escopo (`crates/wire/src/server.rs:329-340`): o agente recebe o id e precisa de outro `observe` para ver o nó. `ParentChanged` e `Reordered` também não carregam o que mudou de lugar (`crates/sem/src/diff.rs:54-58`, `:76-78`). o rec contorna do lado dele: projeção com nó novo, parent mudado ou reordenação vira snapshot inteiro (`crates/rec/src/event.rs:39-43`).
+
+### 4c. o nó `stacks.commit[sha]` não expõe os arquivos
+
+confirmado. o nó projeta só `summary` e `author` (`crates/ide/src/workbench/project.rs:170-173`). o log não traz arquivos: `Commit { sha, short_sha, message, author, time }` (`crates/git/src/types.rs:28-39`). a lista existe em dois lugares que o nó não usa: o `Outcome` do recibo do `submit` (`crates/ide/src/workbench/truth.rs:114-121`) e `GitRepo::commit_files` (`crates/git/src/repo.rs:229-236`). hoje um agente chega aos arquivos por `show_diff` e pelos cabeçalhos `path:` das linhas do diff (`crates/git/src/types.rs:61-67`), limitados às primeiras 200 linhas projetadas (`crates/ide/src/workbench/project.rs:37`, `:104-107`).
+
+### 4d. a recusa stale não diz qual ator causou a mudança
+
+confirmado. `Rejection::Stale { changes }` (`crates/sem/src/check.rs:46`) e `Change::StateChanged` (`crates/sem/src/diff.rs:29-35`) não têm campo de ator. `check` é pura sobre o request e o snapshot (`crates/sem/src/check.rs:99`) e não vê recibos. a recusa no ponto de verdade monta o mesmo `Stale` sem ator (`crates/ide/src/workbench/truth.rs:127-147`). no ide, o toast diz quem foi recusado (`crates/ide/src/workbench/notice.rs:103-106`) e o que mudou (`:111-144`), nunca quem mudou. o dado existe, sem ligação com a recusa: o recibo do request que mudou o estado fica no dispatcher (`crates/sem/src/dispatch.rs:65-71`) e, quando há gravação, na trilha do rec. uma mudança feita fora da UI (um terminal) não tem ator nenhum.
+
+### 4e. a regra "stale é por `reads`"
+
+no código: `stale` compara um `StateChanged` por `read` da ação, como o snapshot atual declara (`crates/sem/src/check.rs:166-181`), chamada em `:116-119`, documentada em `:82-87`; a revisão é só rastreio (`crates/sem/src/request.rs:42-49`).
+
+quem escreve a regra: `docs/ADR/actions-carry-observed-state.md:42-48` e `:148`; `docs/ADR/agents-act-through-the-semantic-contract.md:86-88` e `:292-293`; `docs/ADR/commit-checks-the-index-it-observed.md:142`; `docs/how-to/code-against-the-plev-engine.md:61-63` e `:151-153`.
+
+quem não escreve: as superfícies que um agente de fora lê. o `USAGE` do `plev` (`crates/wire/src/bin/plev.rs:37-53`) e a doc do protocolo (`crates/wire/src/lib.rs:1-28`, `crates/wire/src/proto.rs:77-80`) não dizem. o que o agente vê é a lista `reads` de cada ação na observação (`crates/sem/src/decl.rs:189-193`), omitida quando vazia. é coerente com o experimento: a regra foi deduzida, não lida (`docs/mission/steps/ongoing/task-62-ide-human-agent-proof.md:669-670`).
+
+### 4f. cada comando `plev` abre uma conexão nova
+
+confirmado. `run` chama `report`, que chama `connect` (`crates/wire/src/bin/plev.rs:76-89`, `:192-199`, `:225-240`): um `Client::connect` e um `hello` por processo, e nada guarda conexão entre invocações. o `Client` aceita várias mensagens numa conexão (`crates/wire/src/client.rs:50-150`); só o cli não usa.
+
+a mais: com `--app <nome>`, ou sem `--app`, `find` abre e fecha uma conexão com cada socket candidato para saber se está vivo (`crates/wire/src/place.rs:84-111`, `:100`), e a porta aceita e conta essa conexão (`crates/wire/src/port.rs:373-374`). cada `plev` por nome gera duas conexões na porta. `plev act` sem `--from-revision` manda também um `observe` antes do `act` (`crates/wire/src/bin/plev.rs:262-272`).
+
+### 4g. dívidas da task-82
+
+- `EditorView` pisca sem foco: confirmado. `wake` não olha foco (`crates/comps/src/editor/view.rs:184-186`), e a página Editor entra no `page_wake` enquanto visível (`crates/showcase/src/view/dispatch.rs:157`).
+- caret do dock contínuo: confirmado. o modelo acumula `blink_t` (`crates/showcase/src/model/dock.rs:130-133`) e mantém `update` verdadeiro enquanto o campo aparece (`:245`); a página eleva isso a movimento contínuo (`crates/showcase/src/view/dispatch.rs:152`).
+- frames avulsos do worker do git e da ponte de accessibility: confirmado. `UserEvent::Wake` invalida e desenha sempre, mesmo com outra página visível (`crates/showcase/src/app.rs:285`, callback em `:492-494`); `UserEvent::Access` idem (`:286-294`); a ativação do leitor também acorda (`crates/engine/src/accessibility/bridge.rs:190-194`).
+- o ide segue em 60 fps com o campo de commit focado: `TextField::tick` é `pending()` (`crates/comps/src/form/text_field.rs:216-218`), `CommitForm::tick` repassa (`crates/ide/src/views/commit_form.rs:135-136`) e o shell pede frame enquanto for verdadeiro (`crates/ide/src/main.rs:398-405`). é a fase b.
+- achado a mais, fora da lista da task-82: um toast na tela do ide pede frame contínuo até sair (`crates/ide/src/views/workspace/mod.rs:317`). e a página Git do showcase eleva o `bool` do `Workbench::tick` a `Wake::moving` (`crates/showcase/src/view/apps/git/desktop.rs:205-211`, `crates/showcase/src/view/render.rs:32-33`): com a página Git visível e o campo de commit focado, ou um toast do ide na tela, o showcase volta a desenhar todo frame.
+- urnaui: oito `tick -> bool` em `crates/urnaui/src/view/`, o campo via `TextField::tick` (`crates/urnaui/src/view/field.rs:72-74`). não compila sem `../urna`; lido, não executado.
+
+### 4h. `TODO`, `FIXME`, `unimplemented!`, `todo!` em código de produção
+
+busca em `crates/sem`, `crates/wire`, `crates/rec`, `crates/ide`, `crates/git`, `crates/engine/src`, `crates/comps/src`, `crates/showcase/src`, fora de teste:
+
+- `TODO`, `FIXME`, `XXX`, `HACK`: nenhum, em maiúscula ou em comentário minúsculo.
+- `unimplemented!`, `todo!`: nenhum.
+- da mesma família de panic, `unreachable!`: `crates/git/src/client.rs:205` (`GitCommand::Shutdown`, que o laço já trata em `:126-128`) e `crates/showcase/src/view/input.rs:37` (`EditKey::Tab`).
+
+### 4i. outros limites que os arquivos citam como abertos
+
+| limite | citado em | no código | estado |
+|---|---|---|---|
+| id duplicado: o segundo nó sai e suas checagens não rodam | `docs/mission/steps/checked/task-57-semantic-contract-done.md:53` | `crates/sem/src/validate.rs:22-28` | confirmado |
+| foco em nó não focável ou inerte não é recusado | task-57 done `:52` | `crates/sem/src/validate.rs:33-37` confere só existência | confirmado |
+| `Value::Num` NaN ou infinito não trafega em JSON | task-57 done `:51` | o wire escreve `null` e o leitor recusa (`crates/wire/src/codec.rs:58-62`); o rec descarta o evento e os `Changes` que dependem dele (`crates/rec/src/persist.rs:43-72`) | confirmado |
+| forma JSON sem golden | task-57 done `:49-50` | `crates/sem/tests/wire.rs` | resolvido (58, 57b) |
+| recibos abertos sem limite; confirmação não expira | `docs/mission/steps/checked/task-58-actions-preconditions-receipts-done.md:54-55` | `crates/sem/src/dispatch.rs:60-64`; nenhuma API de expiração | confirmado. recusar uma confirmação existe (`crates/sem/src/dispatch.rs:188-198`, 58b) |
+| parâmetro cru no request | task-58 done `:56-57` | redigido ao sair do processo (`crates/wire/src/server.rs:403-404`, `crates/rec/src/ring.rs:236`); cru no recibo em memória (`crates/sem/src/receipt.rs:147-152`) | resolvido para quem leva para fora |
+| range de `Int` comparado como f64; `step` não validado | task-58 done `:47-48`, `:58` | `crates/sem/src/check.rs:239-240`, `:97-98` | confirmado |
+| `Dispatcher` não é `Send` | task-58 done `:59` | `crates/sem/src/dispatch.rs:70` | confirmado; toda porta drena no thread da UI (`crates/wire/src/port.rs:261-267`) |
+| chaves por índice; agente só alcança linhas visíveis | `docs/mission/steps/checked/task-59-semantic-binding-and-one-path-done.md:85-87` | `crates/comps/src/content/list.rs:113-117`, `crates/comps/src/content/table.rs:134-138` | confirmado |
+| scrollbar e scrim do modal sem ligação | task-59 done `:87` | `crates/comps/src/feedback/scrollbar.rs` sem `.sem`; o modal liga só a folha (`crates/comps/src/feedback/modal.rs:239`), o scrim é desenhado em `:231` | confirmado |
+| sem helper de volta do id de um filho para o índice | task-59 done `:88` | nenhuma função assim no comps (`rg`) | confirmado |
+| `hit` não lê o `clip_rect` físico da layer; `Binding.view` `None` | task-59 done `:106-108` | `crates/engine/src/compositor/binding.rs:184-208`, `:158-166` | confirmado |
+| contador e `todo.filter` sem rect ligado | task-59 done `:108-109` | o todo liga `todo`, itens e abas (`crates/showcase/src/view/apps/app/draw.rs:29`, `:73`, `:171`) | confirmado |
+| só o todo projeta; chrome não; Tab sem `focus::next`; só ação primária pelo clique | `docs/mission/steps/checked/task-60-accessibility-projection-done.md:97-99` | `crates/showcase/src/view/dispatch.rs:242-252`; `crates/engine/src/accessibility/focus.rs:48` só em teste; `crates/engine/src/accessibility/action.rs:36` | confirmado |
+| no macOS a árvore é montada a cada frame depois da primeira consulta | task-60 done `:99-101` | `crates/engine/src/accessibility/bridge.rs:119-143` pede `update_if_active` todo frame | não confirmado: quem decide "ativo" é o `accesskit_winit` (seção 8) |
+| nome do ator declarado, não autenticado | `docs/mission/steps/checked/task-61-agent-surface-done.md:67-69` | `crates/wire/src/server.rs:277-295` | confirmado |
+| processo morto deixa o arquivo do socket | task-61 done `:69` | `crates/wire/src/place.rs:69-80` limpa só o socket do mesmo pid; `find` ignora socket sem resposta (`:100`) | confirmado |
+| descritor da porta herdado por processo filho | task-61 done `:69-71`, `docs/ADR/agents-act-through-the-semantic-contract.md:255-276` | `crates/wire/src/port.rs:198-199` não trata `FD_CLOEXEC` | confirmado que o código não trata; o efeito é do std no macOS |
+| `SnapshotReply.focused` escrito como `null` | `docs/mission/steps/checked/task-57b-lean-wire-form-and-one-redaction-done.md:65-66` | `crates/wire/src/proto.rs:160` | confirmado |
+| resposta do worker casada pela ordem | `docs/mission/steps/ongoing/task-62-ide-human-agent-proof.md:76-78` | `crates/ide/src/workbench/truth.rs:14-18`, `:73-77` | confirmado |
+| modal de confirmação não projetado | task-62 `:81-82` | `crates/ide/src/workbench/project.rs:39-54` não projeta modal | confirmado; o ide não tem ponte de accessibility |
+| corrida entre a leitura do index e o `git commit` | task-62 `:83-85`; `docs/ADR/commit-checks-the-index-it-observed.md:115-121` | `crates/git/src/repo.rs:206` e `:213` | confirmado |
+| fechar o modal deixa o recibo aguardando | task-62 `:79-80`; ADR commit-checks `:125-127` | `crates/ide/src/workbench/person.rs:64-70` chama `decline` | resolvido (58b) |
+| `set_value` conclui sem eco do valor | task-62 `:670-671` | todo: `Outcome` vazio (`crates/showcase/src/view/apps/app/semantics.rs:199`, `:230`); ide: `crates/ide/src/workbench/execute.rs:180-183` | confirmado |
+| nenhum app grava; ligações não gravadas; imagens sem pixels | `docs/mission/steps/ongoing/task-63-flight-recorder.md:64-71`; `docs/ADR/session-recording-replay-not-reexecution.md:158-163`, `:236-238` | `crates/rec/src/recorder.rs:99-113`; `crates/rec/src/persist.rs:39-40` | confirmado |
+| cauda própria do `engine::window::App::render` | `docs/mission/steps/checked/task-66-headless-first-class-done.md:53-55` | `crates/engine/src/window/render.rs:5-10` | confirmado |
+| `Approximation.node` texto; imagem, backdrop blur e efeitos de layer fora do svg | `docs/mission/steps/checked/task-66b-svg-export-done.md:251-265` | `crates/engine/src/headless/svg/mod.rs:41-45`; `crates/engine/src/window/frame.rs:191` | confirmado para o tipo e para os efeitos de layer; os outros itens são do relatório, não conferidos linha a linha |
+| o pass de layer grava o attachment multisample | `docs/mission/steps/ongoing/task-73-incremental-dependency-system.md:41-42` | `crates/engine/src/window/render_passes.rs:137-148` (`StoreOp::Store` com `resolve_target`) | mecanismo confirmado; custo não medido |
+| `Select` sem barra de rolagem; teclado como métodos, não ligado na página | `docs/mission/steps/checked/task-81-select-scrolling-panel-done.md:22-26` | nenhum chamador de `highlight_next` no showcase (`rg`) | confirmado |
