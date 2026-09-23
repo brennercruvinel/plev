@@ -130,6 +130,18 @@ impl Recorder {
         self.snapshot_window().write(path)
     }
 
+    /// writes the part of the window from `t0` to `t1` to `path`: from the
+    /// keyframe of each track that governs `t0`, chunks copied as they
+    /// are, only the assets they reference (see `Session::excerpt`).
+    pub fn export(
+        &self,
+        t0: Millis,
+        t1: Millis,
+        path: impl AsRef<Path>,
+    ) -> Result<Persisted, FileError> {
+        self.snapshot_window().excerpt(t0, t1).write(path)
+    }
+
     pub fn stats(&self) -> Stats {
         lock(&self.inner).stats()
     }

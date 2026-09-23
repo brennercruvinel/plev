@@ -95,6 +95,18 @@ impl Session {
             .unwrap_or(0)
     }
 
+    /// the window from `t0` to `t1` as its own session, ready to export:
+    /// the semantic track from the full snapshot that governs `t0` (the
+    /// first event when none does), the visual track from the chunk on
+    /// screen at `t0`, each chunk's bytes as they are with its frames cut
+    /// at `t1`, and only the assets those chunks reference.
+    pub fn excerpt(&self, t0: Millis, t1: Millis) -> Session {
+        let from = self.key_at(t0).unwrap_or(0);
+        let to = self.upto(t1).max(from);
+        let events = self.events.get(from..to).unwrap_or_default().to_vec();
+        Session::from_file(events, self.screen.excerpt(t0, t1), self.build.clone())
+    }
+
     /// what was on screen at `t`: the frame taken last at or before `t`,
     /// played back from the visual track and lowered to compositor nodes
     /// (the kinds the monster IR v0 carries; see `Stats::skipped`).

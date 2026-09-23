@@ -203,4 +203,49 @@ impl Screen {
             .map(|c| (c.bytes.len(), c.refs.len()))
             .collect()
     }
+
+    /// the chunks from the one on screen at `t0` (or the first, when `t0`
+    /// comes before every frame) to the last one starting at or before
+    /// `t1`, their bytes as they are, their frame times cut at `t1`, and
+    /// only the assets they reference.
+    pub(crate) fn excerpt(&self, t0: Millis, t1: Millis) -> Screen {
+        let from = self
+            .chunks
+            .partition_point(|c| c.start <= t0)
+            .saturating_sub(1);
+        let to = self.chunks.partition_point(|c| c.start <= t1);
+        let mut out = Screen::default();
+        let mut remap: HashMap<u32, u32> = HashMap::new();
+        for c in self.chunks.get(from..to).into_iter().flatten() {
+            let keep = c
+                .times
+                .iter()
+                .take_while(|&&at| c.start.saturating_add(Millis::from(at)) <= t1)
+                .count()
+                .max(1);
+            let refs = c
+                .refs
+                .iter()
+                .map(|&r| {
+                    let next = u32::try_from(out.assets.len()).unwrap_or(u32::MAX);
+                    *remap.entry(r).or_insert_with(|| {
+                        let asset = usize::try_from(r)
+                            .ok()
+                            .and_then(|r| self.assets.get(r))
+                            .cloned()
+                            .unwrap_or_else(|| Asset::Live(lost()));
+                        out.assets.push(asset);
+                        next
+                    })
+                })
+                .collect();
+            out.chunks.push(Shown {
+                start: c.start,
+                times: c.times.iter().take(keep).copied().collect(),
+                bytes: c.bytes.clone(),
+                refs,
+            });
+        }
+        out
+    }
 }

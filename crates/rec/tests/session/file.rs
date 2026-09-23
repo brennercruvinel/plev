@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use engine::compositor::{SceneNode, TextNodeKey};
 use engine::gpu::ImageHandle;
 use engine::path::PathBuilder;
-use rec::{Build, FileError, FileKind, InputKind, Limits, Recorder, Session, probe};
+use rec::{Build, FileError, FileKind, InputKind, Kind, Limits, Recorder, Session, probe};
 use sem::{Actor, Dispatcher, Millis, Request, Role, Semantics, SnapshotBuilder, Value};
 
 use crate::apps::{Git, agent, id, look};
@@ -144,6 +144,81 @@ fn the_thesis_session_persists_and_reads_back_the_same() -> Fallible {
         "the projected sources travel"
     );
     assert!(file.scene_at(1_600)?.is_some_and(|s| !s.is_empty()));
+    Ok(())
+}
+
+/// a toy list whose items change every step, projected and drawn.
+struct Ticker {
+    n: i64,
+}
+
+impl Semantics for Ticker {
+    fn project(&self, b: &mut SnapshotBuilder) {
+        b.node("ticker", Role::Group, "ticker").state("n", self.n);
+        b.node("ticker.label", Role::Label, "label")
+            .parent("ticker")
+            .state("text", format!("tick {}", self.n / 10));
+    }
+}
+
+fn ticker_scene(n: i64) -> Vec<SceneNode> {
+    vec![
+        SceneNode::Rect {
+            x: (n % 50) as f32,
+            y: 0.0,
+            w: 10.0,
+            h: 10.0,
+            color: [1.0, 0.5, 0.0, 1.0],
+        },
+        SceneNode::Text {
+            key: TextNodeKey::new(&format!("tick {}", n / 10), 12.0, 16.0, None),
+            x: 0.0,
+            y: 20.0,
+            color: [1.0; 4],
+        },
+    ]
+}
+
+#[test]
+fn an_export_of_a_middle_window_opens_at_a_full_snapshot() -> Fallible {
+    let rec = Recorder::new(Limits {
+        full_every: 500,
+        chunk_every: 400,
+        ..Limits::default()
+    });
+    let mut ticker = Ticker { n: 0 };
+    for t in (0..10_000u64).step_by(50) {
+        ticker.n += 1;
+        rec.snapshot(t, &look(&ticker));
+        rec.frame_scene(t, &ticker_scene(ticker.n))?;
+    }
+    let memory = rec.snapshot_window();
+    let (t0, t1) = (4_020, 6_010);
+    let tmp = dir()?;
+    let path = tmp.path().join("excerpt.monster");
+    let whole = memory.to_bytes()?.1;
+    let part = rec.export(t0, t1, &path)?;
+    assert!(
+        part.chunks < whole.chunks && part.assets < whole.assets,
+        "{part:?} of {whole:?}"
+    );
+
+    let file = Session::open(&path)?;
+    let first = file.events().first().ok_or("an empty export")?;
+    assert!(
+        matches!(first.kind, Kind::Snapshot { .. }),
+        "it opens keyed"
+    );
+    assert!(first.t <= t0 && t0 - first.t < 500);
+    let (key, _) = file.frames_span().ok_or("no frames")?;
+    assert_eq!(file.frame_keys().first(), Some(&key));
+    assert!(key <= t0 && t0 - key < 400);
+    assert!(file.events().iter().all(|e| e.t <= t1));
+    assert!(file.frame_times().iter().all(|&t| t <= t1));
+    for t in (t0..=t1).step_by(10) {
+        assert_eq!(file.state_at(t)?, memory.state_at(t)?, "state at {t}");
+        assert_eq!(file.scene_at(t)?, memory.scene_at(t)?, "scene at {t}");
+    }
     Ok(())
 }
 
