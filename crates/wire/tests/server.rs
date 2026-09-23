@@ -214,6 +214,39 @@ fn scope_and_keys_narrow_an_observation() {
     assert!(s.nodes.is_empty() && s.focused.is_none());
 }
 
+/// where a node was projected is not part of its meaning: an observation
+/// carries no `source` unless asked, and then every node's.
+#[test]
+fn source_travels_only_when_asked() {
+    let (mut server, mut host) = setup();
+    let live = host.snapshot();
+    assert!(
+        live.nodes().values().all(|n| n.source.is_some()),
+        "the toy projects with a source"
+    );
+    let plain = snapshot(observe(&mut server, &mut host, A, ""));
+    assert_eq!(plain.nodes.len(), live.len());
+    assert!(plain.nodes.iter().all(|n| n.source.is_none()), "{plain:?}");
+    let scoped = snapshot(observe(
+        &mut server,
+        &mut host,
+        A,
+        r#","scope":"todo.item[1]","keys":["completed"]"#,
+    ));
+    assert!(scoped.nodes.iter().all(|n| n.source.is_none()));
+
+    let sourced = snapshot(observe(&mut server, &mut host, A, r#","source":true"#));
+    assert_eq!(sourced.nodes.len(), live.len());
+    for node in &sourced.nodes {
+        let projected = live.get(&node.id).and_then(|n| n.source.clone());
+        assert!(projected.is_some() && node.source == projected, "{node:?}");
+    }
+    // the same snapshot either way: source is not in the revision.
+    assert_eq!(plain.revision, sourced.revision);
+    let line = serde_json::to_string(&plain.nodes).unwrap();
+    assert!(!line.contains("source"), "{line}");
+}
+
 /// the acceptance: observe with `since` returns only what changed.
 #[test]
 fn since_a_served_revision_only_the_delta_comes_back() {

@@ -1,7 +1,7 @@
 //! `plev`: an agent's command line over an app's agent port.
 //!
 //! ```text
-//! plev observe [--scope <id>] [--keys <k,k>] [--since <rev>] [--bounds]
+//! plev observe [--scope <id>] [--keys <k,k>] [--since <rev>] [--bounds] [--source]
 //! plev act <target> <action> [--from-revision <rev>] [--param <json>]
 //! common: [--app <name or socket path>] [--name <agent>] [--timeout <ms>] [--pretty]
 //! ```
@@ -36,7 +36,7 @@ mod cli {
 
     pub const USAGE: &str = "\
 usage:
-  plev observe [--scope <id>] [--keys <k,k>] [--since <rev>] [--bounds]
+  plev observe [--scope <id>] [--keys <k,k>] [--since <rev>] [--bounds] [--source]
   plev act <target> <action> [--from-revision <rev>] [--param <json>]
 common options:
   --app <name|path>  the app's name (its socket in $TMPDIR/plev) or a socket
@@ -45,7 +45,9 @@ common options:
   --timeout <ms>     how long to wait for the app (default 30000)
   --pretty           indented JSON
 act without --from-revision observes the target first and acts on that
-revision: the state as it is now. --param takes a sem value
+revision: the state as it is now. --source keeps each node's source (the
+file, line and column that projected it), which an agent acting by id does
+not need. --param takes a sem value
 ({\"kind\":\"text\",\"value\":\"x\"}) or a plain JSON string, bool, number or
 list of strings.
 exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
@@ -122,6 +124,7 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 }
                 "--since" => observe.since = Some(text(&value()?)?),
                 "--bounds" => observe.bounds = true,
+                "--source" => observe.source = true,
                 "--from-revision" => from = Some(text(&value()?)?),
                 "--param" => param = Some(value_of(&value()?)?),
                 flag if flag.starts_with("--") => return Err(format!("unknown option {flag}")),
@@ -327,7 +330,7 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
         fn observe_takes_its_options() {
             let Ok(Command::Observe(common, o)) = parse(&args(
                 "observe --scope todo --keys text,completed --since 3ba694e7d3941ec0 --bounds \
-                 --app showcase --name claude --timeout 500 --pretty",
+                 --source --app showcase --name claude --timeout 500 --pretty",
             )) else {
                 panic!("an observe");
             };
@@ -337,7 +340,11 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 o.since.map(|r| r.to_string()),
                 Some("3ba694e7d3941ec0".into())
             );
-            assert!(o.bounds);
+            assert!(o.bounds && o.source);
+            let Ok(Command::Observe(_, plain)) = parse(&args("observe")) else {
+                panic!("a plain observe");
+            };
+            assert!(!plain.bounds && !plain.source, "both off unless asked");
             assert_eq!(common.app.as_deref(), Some("showcase"));
             assert_eq!(common.name.as_deref(), Some("claude"));
             assert_eq!(common.timeout, 500);

@@ -276,6 +276,9 @@ impl Server {
                     .map(|node| {
                         let mut node = node.clone();
                         node.state.retain(|key, _| keep(key));
+                        if !o.source {
+                            node.source = None;
+                        }
                         node
                     })
                     .collect(),

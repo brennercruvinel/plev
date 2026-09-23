@@ -109,6 +109,28 @@ fn observe_and_act_by_app_name_with_their_exit_codes() {
     assert_eq!(seen.out.len(), 1);
     let r = revision(&seen);
     let r = r.to_string();
+    let Reply::Snapshot(plain) = &seen.out[0].reply else {
+        panic!("a snapshot");
+    };
+    assert!(
+        plain.nodes.iter().all(|n| n.source.is_none()),
+        "no source unless asked: {plain:?}"
+    );
+
+    // --source keeps where each node was projected.
+    let sourced = plev(
+        &mut port,
+        &woke,
+        &mut host,
+        t,
+        &["observe", "--scope", "todo", "--source", "--app", "toy"],
+    );
+    assert_eq!(sourced.code, 0, "{}", sourced.err);
+    let Some(Reply::Snapshot(sourced)) = sourced.out.first().map(|m| &m.reply) else {
+        panic!("a snapshot: {:?}", sourced.out);
+    };
+    assert_eq!(sourced.nodes.len(), plain.nodes.len());
+    assert!(sourced.nodes.iter().all(|n| n.source.is_some()));
 
     let done = plev(
         &mut port,

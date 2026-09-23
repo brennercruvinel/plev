@@ -67,6 +67,7 @@ fn every_ask() -> Vec<Ask> {
             keys: Some(vec![StateKey::parse("completed").unwrap()]),
             since: Some(seen.revision()),
             bounds: true,
+            source: true,
         }),
         Ask::Act(Act::from_revision(
             sid("todo.item[1]"),
@@ -244,7 +245,7 @@ fn the_forms_an_agent_writes_are_pinned() {
     };
     assert_eq!(o.scope, Some(sid("todo")));
     assert_eq!(o.keys.map(|k| k.len()), Some(2));
-    assert!(!o.bounds && o.since.is_none());
+    assert!(!o.bounds && !o.source && o.since.is_none());
 
     let param = r#"{"v":1,"id":"p","type":"act","target":"todo.input","action":"set_value","param":{"kind":"text","value":"x"},"observed":{"revision":"0000000000000001","values":[["todo.input:text",{"kind":"text","value":""}]]}}"#;
     let Ok(ClientMsg {
