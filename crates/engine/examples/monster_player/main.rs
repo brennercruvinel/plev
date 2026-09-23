@@ -5,15 +5,27 @@
 //! Run: `cargo run --release --example monster_player -- file.monster`
 //! Space pauses, left/right arrows scrub by half a second; the
 //! animation loops.
+//!
+//! Without a window: `monster_player file.monster --frame <t> --out f.png`
+//! draws the frame at `t` seconds through `engine::headless` (the window's
+//! frame path into an offscreen texture) at 640x640 and exits.
+//!
+//! `monster_player file.monster --frame <t> --capture f.png` is the check
+//! that the two are one path: it opens the window at 640x640 physical
+//! pixels, draws the frame at `t` into the surface with the same
+//! `draw_frame`, reads the surface texture back before presenting, writes
+//! it and exits. Both PNGs hash the same.
 
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use engine::animation::FrameClock;
 use engine::compositor::{Compositor, QuadVertex};
 use engine::gpu::{GpuContext, RenderConfig};
+use engine::headless::{Renderer, Viewport, read_texture};
 use engine::path::TessellatedPath;
 use engine::text::TextSystem;
-use engine::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+use engine::window::{draw_frame, present_frame};
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::{ElementState, WindowEvent};
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};
@@ -24,8 +36,11 @@ use monster::{AssetKind, LoweredAsset, MonsterPlayer};
 
 // Linear clear values (sRGB graphite #171A1F linearized): the sRGB
 // surface re-encodes on write, raw sRGB here would render ~2.5x light.
-const BG: [f64; 3] = [0.0090, 0.0105, 0.0137];
+const BG: [f32; 4] = [0.0090, 0.0105, 0.0137, 1.0];
 const WINDOW: f32 = 640.0;
+
+const USAGE: &str = "usage: monster_player <file.monster> \
+                     [--frame <seconds> (--out <file.png> | --capture <file.png>)]";
 
 #[allow(clippy::large_enum_variant)]
 enum AppState {
@@ -38,6 +53,21 @@ enum AppState {
     },
 }
 
+/// What the binary was asked to do.
+enum Mode {
+    Play,
+    /// Draw the frame at `t` without a window.
+    Frame {
+        t: f32,
+        out: PathBuf,
+    },
+    /// Draw the frame at `t` into the window's surface and read it back.
+    Capture {
+        t: f32,
+        out: PathBuf,
+    },
+}
+
 struct MonsterApp {
     window: Option<Arc<Window>>,
     state: AppState,
@@ -45,6 +75,9 @@ struct MonsterApp {
     clock: FrameClock,
     player: MonsterPlayer,
     title: String,
+    /// `--capture`: the frame time and the PNG to write, then exit.
+    capture: Option<(f32, PathBuf)>,
+    captured: bool,
 }
 
 impl MonsterApp {
@@ -66,82 +99,59 @@ impl MonsterApp {
         let AppState::Ready {
             ref mut gpu,
             ref mut text_system,
-            ref effects,
+            ref mut effects,
             ref mut texture_pool,
         } = self.state
         else {
             return;
         };
-        let Some(surface) = gpu.surface.as_ref() else {
-            return;
-        };
-        let output = match surface.get_current_texture() {
-            Ok(t) => t,
-            Err(_) => {
-                gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
-                return;
-            }
-        };
-        let surface_view = gpu.surface_render_view(&output);
-
-        text_system.begin_frame();
-        self.compositor
-            .resolve(&engine::compositor::ResolveResources {
-                device: &gpu.device,
-                queue: &gpu.queue,
-                format: gpu.surface_format(),
-                width: gpu.surface_config.width,
-                height: gpu.surface_config.height,
-                msaa_samples: gpu.config.msaa_samples,
-                composite_bgl: &gpu.composite_bind_group_layout,
-                opacity_bgl: &gpu.opacity_bind_group_layout,
-                sampler: &gpu.composite_sampler,
-            });
-        resolve_layer_text(&mut self.compositor, gpu, text_system);
-        text_system.finish_frame();
-        gpu.prepare_images();
-
-        let mut encoder =
-            gpu.device
-                .create_command_encoder(&engine::wgpu::CommandEncoderDescriptor {
-                    label: Some("monster_player_encoder"),
-                });
-        let dirty_ids: Vec<_> = self
-            .compositor
-            .layers()
-            .iter()
-            .filter(|l| l.visible && l.is_dirty())
-            .map(|l| l.id)
-            .collect();
-        let clear_color = engine::wgpu::Color {
-            r: BG[0],
-            g: BG[1],
-            b: BG[2],
-            a: 1.0,
-        };
-        encode_layer_passes(
-            &self.compositor,
+        present_frame(
+            &mut self.compositor,
             gpu,
             text_system,
             effects,
             texture_pool,
-            clear_color,
-            &dirty_ids,
-            &mut encoder,
+            BG,
+            "monster_player",
         );
-        for id in &dirty_ids {
-            self.compositor.mark_layer_clean(*id);
+    }
+
+    /// `--capture`: the frame at `t`, drawn into the surface texture by
+    /// the same `draw_frame` the headless renderer runs, read back before
+    /// the present.
+    fn capture(&mut self, t: f32, out: &Path) -> Result<(u32, u32), String> {
+        let AppState::Ready {
+            ref mut gpu,
+            ref mut text_system,
+            ref mut effects,
+            ref mut texture_pool,
+        } = self.state
+        else {
+            return Err("the GPU is not ready".into());
+        };
+        self.compositor.begin_frame();
+        for node in self.player.scene_at(t) {
+            self.compositor.push(node);
         }
-        encode_composite_pass(
-            &self.compositor,
-            clear_color,
+        let surface = gpu.surface.as_ref().ok_or("the window has no surface")?;
+        let output = surface
+            .get_current_texture()
+            .map_err(|e| format!("surface texture: {e}"))?;
+        let view = gpu.surface_render_view(&output);
+        draw_frame(
+            &mut self.compositor,
             gpu,
-            &surface_view,
-            &[],
-            &mut encoder,
+            text_system,
+            effects,
+            texture_pool,
+            &view,
+            BG,
+            "monster_capture",
         );
-        gpu.queue.submit(std::iter::once(encoder.finish()));
+        let frame = read_texture(gpu, &output.texture).map_err(|e| e.to_string())?;
         output.present();
+        frame.write_png(out).map_err(|e| e.to_string())?;
+        Ok((frame.width, frame.height))
     }
 }
 
@@ -150,12 +160,35 @@ impl ApplicationHandler for MonsterApp {
         if self.window.is_some() {
             return;
         }
-        let attrs = WindowAttributes::default()
-            .with_title(self.title.clone())
-            .with_inner_size(engine::winit::dpi::LogicalSize::new(WINDOW, WINDOW));
-        let window = Arc::new(event_loop.create_window(attrs).unwrap());
+        let attrs = WindowAttributes::default().with_title(self.title.clone());
+        // A capture compares against a 640x640 headless frame, so it asks
+        // for physical pixels whatever the display scale.
+        let attrs = if self.capture.is_some() {
+            attrs
+                .with_inner_size(engine::winit::dpi::PhysicalSize::new(WINDOW, WINDOW))
+                .with_resizable(false)
+        } else {
+            attrs.with_inner_size(engine::winit::dpi::LogicalSize::new(WINDOW, WINDOW))
+        };
+        let window = match event_loop.create_window(attrs) {
+            Ok(w) => Arc::new(w),
+            Err(e) => {
+                eprintln!("cannot open a window: {e}");
+                event_loop.exit();
+                return;
+            }
+        };
         self.window = Some(window.clone());
-        let gpu = pollster::block_on(GpuContext::new_with_config(window, RenderConfig::default()));
+        let mut gpu =
+            pollster::block_on(GpuContext::new_with_config(window, RenderConfig::default()));
+        if self.capture.is_some()
+            && let Some(surface) = gpu.surface.as_ref()
+        {
+            // the surface texture is read back once, so it must be a copy
+            // source; the drawing is unchanged
+            gpu.surface_config.usage |= engine::wgpu::TextureUsages::COPY_SRC;
+            surface.configure(&gpu.device, &gpu.surface_config);
+        }
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
         let effects = engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = AppState::Ready {
@@ -179,6 +212,20 @@ impl ApplicationHandler for MonsterApp {
                 }
             }
             WindowEvent::RedrawRequested => {
+                if let Some((t, out)) = self.capture.clone() {
+                    // redraws can arrive before the loop exits; one capture
+                    if !self.captured {
+                        self.captured = true;
+                        match self.capture(t, &out) {
+                            Ok((w, h)) => {
+                                println!("wrote {} ({w}x{h}, window surface)", out.display())
+                            }
+                            Err(e) => eprintln!("capture failed: {e}"),
+                        }
+                        event_loop.exit();
+                    }
+                    return;
+                }
                 self.render();
                 if let Some(ref w) = self.window {
                     w.request_redraw();
@@ -227,11 +274,66 @@ fn fit(path: TessellatedPath, scale: f32, dx: f32, dy: f32) -> TessellatedPath {
     }
 }
 
+/// `<file> [--frame <t> (--out <png> | --capture <png>)]`.
+fn parse(args: &[String]) -> Result<(String, Mode), String> {
+    let mut it = args.iter();
+    let path = it.next().ok_or("missing <file.monster>")?.clone();
+    let (mut t, mut out, mut capture) = (None, None, None);
+    while let Some(flag) = it.next() {
+        let value = it.next().ok_or_else(|| format!("{flag} needs a value"))?;
+        match flag.as_str() {
+            "--frame" => match value.parse::<f32>() {
+                Ok(v) if v.is_finite() && v >= 0.0 => t = Some(v),
+                _ => return Err(format!("--frame takes seconds >= 0, got '{value}'")),
+            },
+            "--out" => out = Some(PathBuf::from(value)),
+            "--capture" => capture = Some(PathBuf::from(value)),
+            other => return Err(format!("unknown argument {other}")),
+        }
+    }
+    let mode = match (t, out, capture) {
+        (None, None, None) => Mode::Play,
+        (Some(t), Some(out), None) => Mode::Frame { t, out },
+        (Some(t), None, Some(out)) => Mode::Capture { t, out },
+        (Some(_), None, None) => return Err("--frame needs --out or --capture".into()),
+        (None, _, _) => return Err("--out and --capture need --frame <t>".into()),
+        (Some(_), Some(_), Some(_)) => return Err("--out and --capture exclude each other".into()),
+    };
+    Ok((path, mode))
+}
+
+/// `--frame --out`: the frame at `t`, no window.
+fn render_headless(player: &mut MonsterPlayer, t: f32, out: &Path) -> Result<(), String> {
+    let viewport = Viewport::new(WINDOW, WINDOW, 1.0);
+    let mut renderer =
+        Renderer::new(viewport, RenderConfig::default()).map_err(|e| e.to_string())?;
+    let mut compositor = Compositor::new();
+    compositor.begin_frame();
+    for node in player.scene_at(t) {
+        compositor.push(node);
+    }
+    let frame = renderer
+        .render(&mut compositor, BG)
+        .map_err(|e| e.to_string())?;
+    frame.write_png(out).map_err(|e| e.to_string())?;
+    println!(
+        "wrote {} ({}x{}, t = {t}s, headless)",
+        out.display(),
+        frame.width,
+        frame.height
+    );
+    Ok(())
+}
+
 fn main() {
     env_logger::init();
-    let Some(path) = std::env::args().nth(1) else {
-        eprintln!("usage: monster_player <file.monster>");
-        std::process::exit(2);
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let (path, mode) = match parse(&args) {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("{e}\n{USAGE}");
+            std::process::exit(2);
+        }
     };
     let bytes = match std::fs::read(&path) {
         Ok(b) => b,
@@ -271,6 +373,18 @@ fn main() {
     };
     player.set_assets(assets);
 
+    let capture = match mode {
+        Mode::Frame { t, out } => {
+            if let Err(e) = render_headless(&mut player, t, &out) {
+                eprintln!("cannot render {path} at {t}s: {e}");
+                std::process::exit(1);
+            }
+            return;
+        }
+        Mode::Capture { t, out } => Some((t, out)),
+        Mode::Play => None,
+    };
+
     let kb = bytes.len() as f64 / 1024.0;
     let file = std::path::Path::new(&path)
         .file_name()
@@ -282,7 +396,13 @@ fn main() {
         player.timeline().keyframes.len()
     );
     log::info!("{title}");
-    let event_loop = EventLoop::new().unwrap();
+    let event_loop = match EventLoop::new() {
+        Ok(l) => l,
+        Err(e) => {
+            eprintln!("cannot start the event loop: {e}");
+            std::process::exit(1);
+        }
+    };
     let mut app = MonsterApp {
         window: None,
         state: AppState::Uninitialized,
@@ -290,6 +410,11 @@ fn main() {
         clock: FrameClock::new(),
         player,
         title,
+        capture,
+        captured: false,
     };
-    event_loop.run_app(&mut app).unwrap();
+    if let Err(e) = event_loop.run_app(&mut app) {
+        eprintln!("event loop: {e}");
+        std::process::exit(1);
+    }
 }
