@@ -1,4 +1,6 @@
-use cosmic_text::{Attrs, Buffer, CacheKey, Family, FontSystem, Metrics, Shaping, Weight};
+#[cfg(not(target_arch = "wasm32"))]
+use cosmic_text::CacheKey;
+use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight};
 use etagere::{BucketedAtlasAllocator, size2};
 use lru::LruCache;
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -15,6 +17,8 @@ use super::vertex::TextVertex;
 /// the glyph's own size, no subpixel bin), where its origin sits on the
 /// baseline in logical pixels relative to the text node's `(x, y)`, and
 /// how far the pen advances after it.
+/// Native only, like its one reader, the headless svg export.
+#[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct ShapedGlyph {
     pub(crate) key: CacheKey,
@@ -285,6 +289,7 @@ impl TextSystem {
     /// draws from, so a run drawn this frame comes back exactly as drawn,
     /// and a run not drawn yet comes back as it will be. The headless svg
     /// export asks here for the glyphs whose outlines it writes.
+    #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn shaped_glyphs(&mut self, key: &TextNodeKey) -> Vec<ShapedGlyph> {
         self.ensure_shaped(key);
         let Some(shaped) = self.shaping_cache.get(key) else {
