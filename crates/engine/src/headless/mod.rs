@@ -16,6 +16,7 @@
 
 mod readback;
 
+pub(crate) use readback::write_png;
 pub use readback::{Frame, read_texture};
 
 use std::fmt;

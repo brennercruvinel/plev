@@ -33,32 +33,41 @@ impl Frame {
     /// The frame as PNG bytes (8-bit RGBA, no color profile chunk: the
     /// values are sRGB, which is what an untagged PNG means).
     pub fn encode_png(&self) -> Result<Vec<u8>, HeadlessError> {
-        // the encoder asserts the length; a hand-built frame must get an
-        // error, not a panic
-        let expected = self.width as usize * self.height as usize * TEXEL as usize;
-        if self.rgba.len() != expected {
-            return Err(HeadlessError::Png(image::ImageError::Parameter(
-                image::error::ParameterError::from_kind(
-                    image::error::ParameterErrorKind::DimensionMismatch,
-                ),
-            )));
-        }
-        let mut out = Vec::new();
-        image::codecs::png::PngEncoder::new(&mut out)
-            .write_image(
-                &self.rgba,
-                self.width,
-                self.height,
-                image::ExtendedColorType::Rgba8,
-            )
-            .map_err(HeadlessError::Png)?;
-        Ok(out)
+        encode_png(self.width, self.height, &self.rgba)
     }
 
     pub fn write_png(&self, path: impl AsRef<Path>) -> Result<(), HeadlessError> {
-        std::fs::write(path, self.encode_png()?)?;
-        Ok(())
+        write_png(path.as_ref(), self.width, self.height, &self.rgba)
     }
+}
+
+/// RGBA8 rows as PNG bytes; shared by [`Frame`] and the text probe.
+pub(crate) fn encode_png(width: u32, height: u32, rgba: &[u8]) -> Result<Vec<u8>, HeadlessError> {
+    // the encoder asserts the length; a hand-built frame must get an
+    // error, not a panic
+    let expected = width as usize * height as usize * TEXEL as usize;
+    if rgba.len() != expected {
+        return Err(HeadlessError::Png(image::ImageError::Parameter(
+            image::error::ParameterError::from_kind(
+                image::error::ParameterErrorKind::DimensionMismatch,
+            ),
+        )));
+    }
+    let mut out = Vec::new();
+    image::codecs::png::PngEncoder::new(&mut out)
+        .write_image(rgba, width, height, image::ExtendedColorType::Rgba8)
+        .map_err(HeadlessError::Png)?;
+    Ok(out)
+}
+
+pub(crate) fn write_png(
+    path: &Path,
+    width: u32,
+    height: u32,
+    rgba: &[u8],
+) -> Result<(), HeadlessError> {
+    std::fs::write(path, encode_png(width, height, rgba)?)?;
+    Ok(())
 }
 
 /// Copy `texture` back to the CPU as RGBA8.
