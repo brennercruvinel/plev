@@ -342,6 +342,16 @@ fn main() {
             std::process::exit(1);
         }
     };
+    // a session .monster (magic MONS) is a recording of an app, not an
+    // animation; its viewer is the session inspector.
+    if bytes.starts_with(b"MONS") {
+        eprintln!(
+            "{path} is a recorded session (magic MONS), not an animation (MON0); \
+             monster_player plays animations only. sessions open in the session \
+             inspector (task-64), or read them with rec::Session::open"
+        );
+        std::process::exit(1);
+    }
     let doc = match monster::decode(&bytes) {
         Ok(d) => d,
         Err(e) => {
