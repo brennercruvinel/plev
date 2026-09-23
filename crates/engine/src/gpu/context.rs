@@ -79,7 +79,9 @@ impl GpuContext {
             .prepare(&self.device, &self.queue, &self.image_bind_group_layout);
     }
 
-    pub async fn new_with_config(window: Arc<Window>, config: RenderConfig) -> Self {
+    pub async fn new_with_config(window: Arc<Window>, mut config: RenderConfig) -> Self {
+        Self::apply_config(&mut config);
+
         let size = window.inner_size();
         let instance = Self::instance();
 
@@ -171,7 +173,9 @@ impl GpuContext {
     /// `None` when the machine has no GPU adapter (or the device request
     /// fails), so tests and tools can skip instead of failing.
     #[cfg(not(target_arch = "wasm32"))]
-    pub async fn new_headless(width: u32, height: u32, config: RenderConfig) -> Option<Self> {
+    pub async fn new_headless(width: u32, height: u32, mut config: RenderConfig) -> Option<Self> {
+        Self::apply_config(&mut config);
+
         let instance = Self::instance();
         let adapter = match instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -214,6 +218,13 @@ impl GpuContext {
         ))
     }
 
+    /// Clamp the sample count and install the path tolerance, first thing
+    /// in either constructor (before any await).
+    fn apply_config(config: &mut RenderConfig) {
+        config.msaa_samples = config.effective_msaa_samples();
+        crate::path::set_default_tolerance(config.path_tolerance);
+    }
+
     fn instance() -> wgpu::Instance {
         wgpu::Instance::new(&wgpu::InstanceDescriptor {
             #[cfg(not(target_arch = "wasm32"))]
@@ -248,11 +259,8 @@ impl GpuContext {
         queue: wgpu::Queue,
         surface: Option<wgpu::Surface<'static>>,
         surface_config: wgpu::SurfaceConfiguration,
-        mut config: RenderConfig,
+        config: RenderConfig,
     ) -> Self {
-        config.msaa_samples = config.effective_msaa_samples();
-        crate::path::set_default_tolerance(config.path_tolerance);
-
         let render_format = surface_config
             .view_formats
             .first()
