@@ -129,7 +129,11 @@ impl ShowcaseView {
                 }
                 Pane::Tooltip => self.panes.tooltip.handle_event(event, content, t),
                 Pane::Tree => self.panes.tree.handle_event(event, content, t),
-                Pane::Todo => self.panes.todo.handle_event(event, content, t),
+                Pane::Todo => {
+                    let inert = self.overlay_holds_pointer();
+                    self.panes.todo.set_inert(inert);
+                    self.panes.todo.handle_event(event, content, t)
+                }
                 Pane::Dock => self.panes.dock.handle_event(event, content),
                 Pane::Editor => self.panes.editor.handle_event(event, content),
                 Pane::Git => self.panes.git.handle_event(event, content),
@@ -217,7 +221,11 @@ impl ShowcaseView {
                     );
                 }
                 Pane::Tree => self.panes.tree.render(c, content, theme),
-                Pane::Todo => self.panes.todo.render(c, content, theme),
+                Pane::Todo => {
+                    let inert = self.overlay_holds_pointer();
+                    self.panes.todo.set_inert(inert);
+                    self.panes.todo.render(c, content, theme);
+                }
                 Pane::Dock => self.panes.dock.render(c, content, theme),
                 Pane::Editor => self.panes.editor.render(c, content),
                 Pane::Git => self.panes.git.render(c, content, theme),

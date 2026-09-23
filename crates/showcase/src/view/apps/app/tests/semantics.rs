@@ -1,10 +1,12 @@
 //! The todo page as a capability (task-59): what it projects, clicks and
 //! test requests reaching the same state through the one dispatcher, the
-//! stale case and the bindings beside the scene.
+//! stale case, the bindings beside the scene, and the inert background.
 
 use super::*;
 use crate::view::apps::app::semantics::bounds;
-use sem::{Actor, Change, Rejection, Request, Role, SemId, Snapshot, Stage, StateRef, Value};
+use sem::{
+    Actor, Change, Rejection, Request, Role, SemId, Snapshot, Stage, StateRef, Value, Verdict,
+};
 
 fn tester() -> Actor {
     Actor::Test {
@@ -273,6 +275,78 @@ fn rows_scrolled_out_of_the_list_are_not_bound_but_stay_projected() {
         "still projected"
     );
     assert!(c.binding(&sid("todo.item[17]")).is_some());
+}
+
+#[test]
+fn an_inert_page_refuses_every_request_and_takes_no_input() {
+    let content = content_at(1500.0);
+    let mut s = TodoPage::new();
+    focus(&mut s, content);
+    s.set_inert(true);
+    let snap = s.snapshot().unwrap();
+    assert!(snap.get(&sid("todo.item[1]")).unwrap().inert, "inherited");
+
+    let stage = ask_as_test(&mut s, "todo.item[1]", "toggle", None);
+    assert_eq!(
+        stage,
+        Stage::Rejected(Rejection::Inert {
+            target: sid("todo.item[1]")
+        })
+    );
+    assert!(!s.model.visible_items()[0].completed());
+    assert!(!s.handle_text("x"), "keys fall through to the chrome");
+    assert!(!s.handle_escape(), "Escape is the overlay's");
+
+    // The request a click would build is refused the same way.
+    let seen = s.snapshot().unwrap();
+    let req = Request::observe(&seen, Actor::Human, "todo.item[2]", "remove", None).unwrap();
+    assert!(matches!(
+        sem::check(&req, &seen),
+        Verdict::Rejected(Rejection::Inert { .. })
+    ));
+
+    s.set_inert(false);
+    let stage = ask_as_test(&mut s, "todo.item[1]", "toggle", None);
+    assert!(matches!(stage, Stage::Completed(_)));
+}
+
+#[test]
+fn an_open_modal_leaves_the_todo_page_inert() {
+    use crate::view::ShowcaseView;
+
+    let mut view = ShowcaseView::new(1200.0, 800.0);
+    view.jump_to_page("todo");
+    let mut c = Compositor::new();
+    view.render(&mut c);
+    let (x, y) = view
+        .panes
+        .todo
+        .input_rect(view.page_rect(), &view.theme)
+        .center();
+    assert!(view.handle_event(&WidgetEvent::MouseDown { x, y }));
+    assert!(view.handle_key("n"));
+    let total = view.panes.todo.model.counts().total;
+
+    view.open_modal(false);
+    view.render(&mut c);
+    let stage = ask_as_test(&mut view.panes.todo, "todo.item[1]", "toggle", None);
+    assert!(
+        matches!(stage, Stage::Rejected(Rejection::Inert { .. })),
+        "{stage:?}"
+    );
+    assert!(view.handle_enter(), "Enter is consumed");
+    assert_eq!(view.panes.todo.model.counts().total, total, "and refused");
+
+    // The modal goes away: the page takes requests again.
+    assert!(view.close_top_overlay());
+    for _ in 0..600 {
+        if !view.tick(1.0 / 60.0) {
+            break;
+        }
+    }
+    view.render(&mut c);
+    assert!(view.handle_enter());
+    assert_eq!(view.panes.todo.model.counts().total, total + 1);
 }
 
 /// The cost of the semantic layer on this page, per frame: one

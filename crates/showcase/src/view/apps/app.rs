@@ -56,6 +56,9 @@ pub struct TodoPage {
     /// The monotonic clock receipts are stamped with (`sem` never reads
     /// one).
     clock: web_time::Instant,
+    /// Set by the view while an overlay holds the pointer (a modal, a
+    /// menu): the page projects itself inert and takes no input.
+    inert: bool,
 }
 
 impl TodoPage {
@@ -90,7 +93,15 @@ impl TodoPage {
             ids,
             dispatcher: Dispatcher::new(),
             clock: web_time::Instant::now(),
+            inert: false,
         }
+    }
+
+    /// The view says whether an overlay holds the pointer. While it does,
+    /// `todo` is projected inert, so any request comes back `Inert` (the
+    /// click already cannot pass), and keys fall through to the chrome.
+    pub fn set_inert(&mut self, inert: bool) {
+        self.inert = inert;
     }
 
     /// The add field's rect for `content` (the chrome tests click it).
@@ -245,7 +256,7 @@ impl TodoPage {
     /// chrome before its own hotkeys, mirroring forms::handle_text: while
     /// the add field is focused, "t" types instead of switching themes.
     pub fn handle_text(&mut self, s: &str) -> bool {
-        if !self.input.is_focused() {
+        if self.inert || !self.input.is_focused() {
             return false;
         }
         let mut chars = s.chars();
@@ -261,7 +272,7 @@ impl TodoPage {
     /// Editing keys, same route as forms::handle_edit_key. Tab is left to
     /// the chrome; Enter has its own hook below.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
-        if !self.input.is_focused() {
+        if self.inert || !self.input.is_focused() {
             return false;
         }
         match key {
@@ -285,9 +296,10 @@ impl TodoPage {
     }
 
     /// Escape blurs the field; mirrors forms::handle_escape (the chrome
-    /// asks the section before popping overlays or quitting).
+    /// asks the section before popping overlays or quitting). An inert
+    /// page leaves it to the overlay.
     pub fn handle_escape(&mut self) -> bool {
-        if self.input.is_focused() {
+        if !self.inert && self.input.is_focused() {
             self.input.unfocus();
             return true;
         }

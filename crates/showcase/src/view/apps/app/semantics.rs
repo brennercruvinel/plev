@@ -7,12 +7,12 @@
 //! `execute`. The page binds the rects it draws and hit-tests with to the
 //! same ids (`draw.rs`), beside the scene.
 //!
-//! The semantic model: `todo` (region), `todo.input` (text input:
-//! `text`, `set_value`, `submit` reading `todo.input:text`),
-//! `todo.filter` (tab list: `selected`) with one tab per filter
-//! (`select`), `todo.item[<id>]` for each visible item (list item:
-//! `completed`, `toggle` reading it, `remove`) and `todo.counter`
-//! (status: `active`, `done`).
+//! The semantic model: `todo` (region, inert while the view holds an
+//! overlay up), `todo.input` (text input: `text`, `set_value`, `submit`
+//! reading `todo.input:text`), `todo.filter` (tab list: `selected`) with
+//! one tab per filter (`select`), `todo.item[<id>]` for each visible item
+//! (list item: `completed`, `toggle` reading it, `remove`) and
+//! `todo.counter` (status: `active`, `done`).
 
 use comps::prelude::{EventResult, Rect};
 use sem::{
@@ -146,7 +146,7 @@ impl Semantics for TodoPage {
         let Some(ids) = &self.ids else {
             return;
         };
-        b.node(&ids.todo, Role::Region, "todo");
+        b.node(&ids.todo, Role::Region, "todo").inert(self.inert);
         self.input
             .project(b, &ids.input, "new todo", Some(&ids.todo))
             .action("submit")
