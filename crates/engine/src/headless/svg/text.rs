@@ -7,6 +7,7 @@
 //! with the fill and one `<path>` per glyph, so the text stays readable to
 //! a tool that reads the label and looks right to one that draws.
 
+use std::collections::HashMap;
 use std::fmt::Write as _;
 
 use cosmic_text::{CacheKey, Command, FontSystem, SwashCache};
@@ -16,16 +17,20 @@ use crate::text::TextSystem;
 
 use super::write::{Svg, escape, fill, num};
 
-/// Outline paths by glyph key, kept for the whole export: a glyph drawn
-/// many times is scaled once.
+/// Outline commands by glyph key, kept for the whole export: a glyph drawn
+/// many times is scaled once. Each miss scales through a fresh
+/// `SwashCache`, for the reason `text::atlas::rasterize_and_upload` gives:
+/// a shared swash `ScaleContext` keeps per-font state across calls, and
+/// interleaving sizes of one face hands back a stale outline (the
+/// sidebar of the Card page came out in the wrong glyphs before this).
 pub(super) struct Outlines {
-    cache: SwashCache,
+    cache: HashMap<CacheKey, Option<Box<[Command]>>>,
 }
 
 impl Outlines {
     pub(super) fn new() -> Self {
         Self {
-            cache: SwashCache::new(),
+            cache: HashMap::new(),
         }
     }
 
@@ -33,7 +38,11 @@ impl Outlines {
     /// `Some("")` for a glyph with no contour (a space), `None` when the
     /// face or the glyph is missing.
     fn path(&mut self, fonts: &mut FontSystem, key: CacheKey, ox: f32, oy: f32) -> Option<String> {
-        let commands = self.cache.get_outline_commands(fonts, key)?;
+        let commands = self
+            .cache
+            .entry(key)
+            .or_insert_with(|| SwashCache::new().get_outline_commands_uncached(fonts, key))
+            .as_deref()?;
         let mut d = String::new();
         // Outlines are y-up around the origin; the scene is y-down.
         let x = |v: f32| num(ox + v);
