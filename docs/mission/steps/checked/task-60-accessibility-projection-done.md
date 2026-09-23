@@ -1,13 +1,14 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-60
 wave: 4
 depends: [task-57, task-58, task-59]
 branch: task/60-a11y-projection
+integrated: 3ba5b04
 ---
 
 # task-60: accessibility como projeção do contrato
@@ -49,6 +50,56 @@ disabled, foco, modais e regras da interface).
 - feature `accessibility` ligada por padrão
   (`crates/engine/Cargo.toml:21-22`), deps `accesskit` 0.24 e
   `accesskit_winit` 0.32.
+
+## fechamento (2026-09-23)
+
+integrada na `main` em `3ba5b04` (oito commits), rebaseada pelo
+orquestrador sobre a 62, gate verde num diretório de build isolado (1834
+testes). a árvore AccessKit sai do mesmo `Snapshot` e das mesmas ligações
+que agente e teste usam (`engine::accessibility::tree::build`); NodeId
+estável derivado do `SemId` (FNV-1a, colisão resolvida de forma
+determinística); ação do leitor de tela vira `Request` com
+`Actor::Assistive` (Click para a ação primária, SetValue, Increment,
+Decrement); ordem de foco semântica; `Bridge` cria o adapter antes da
+janela ficar visível. o caminho antigo, derivado de hit region, saiu por
+inteiro (o grep confirma). o showcase liga a ponte e o todo é a primeira
+página com árvore. ADR: `docs/ADR/accessibility-projects-the-semantic-snapshot.md`.
+
+decisões do orquestrador sobre as duas perguntas do agente:
+
+- `Focus` do leitor de tela não é capacidade: vira `Assist::Focus`,
+  tratado pelo mesmo gancho de foco que o Tab usa. foco é navegação, como
+  hover e cursor, e não entra no contrato.
+- `Role::Media` mapeia para `EmbeddedObject` até alguma app usar mídia;
+  dividir em `Audio`/`Video` fica para quando houver uso.
+
+aceitos: requests do leitor são observados sobre o snapshot que ele
+mostrou, então estado que mudou volta `Stale`; nós sem ligação ficam na
+árvore sem bounds (o AccessKit 0.24 não tem offscreen); nós inertes ficam
+escondidos; `App::render` do engine continua fora do `draw_frame` porque
+compõe efeitos por layer que o `draw_frame` não compõe (anotado para a
+fase 2 da task-73). o `Theme::intent_role`, sem chamador depois desta
+task, foi apagado pelo orquestrador no fechamento.
+
+pendente com o brenner (teste manual que só ele pode fazer): o VoiceOver
+não rodou, a máquina estava na tela de login. roteiro:
+
+1. `cargo run -p showcase -- Todo`, depois Cmd-F5.
+2. VO-Direita pela janela. esperado: janela "plev, design system
+   showcase"; todo; campo "new todo"; grupo de abas com "All"
+   selecionada; três linhas com a terceira marcada; "2 active · 1 done".
+3. com o cursor do VoiceOver no campo, digitar "buy milk" e VO-Espaço.
+   esperado: linha nova e "3 active · 1 done".
+4. VO-Espaço em "Absorb the plev demos…". esperado: a linha fica marcada
+   e "2 active · 2 done".
+5. o Accessibility Inspector do Xcode mostra a mesma árvore sem VoiceOver.
+
+limitações que seguem: só o todo projeta; o chrome do showcase (sidebar,
+header, overlays) não; o Tab do showcase não usa `focus::next` ainda; só a
+ação primária é alcançável (sem custom actions para `remove`); no macOS o
+adapter nunca informa desativação, então a árvore é montada a cada frame
+depois da primeira consulta (22 a 26 µs com 103 itens). ide e urnaui
+entram depois.
 
 ## notas do orquestrador (2026-09-23)
 

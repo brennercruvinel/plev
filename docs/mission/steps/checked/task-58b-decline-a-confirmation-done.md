@@ -1,15 +1,28 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-58b
 depends: [task-58]
 branch: task/58b-sem-decline
+integrated: dc6fde2
 ---
 
 # task-58b: recusar uma confirmação
+
+## fechamento (2026-09-23)
+
+integrada na `main` em `dc6fde2`, rebaseada sobre a 60, gate verde num
+diretório isolado (1842 testes). `Rejection::Declined { by }` e
+`Dispatcher::decline` com as mesmas guardas de `confirm` (pessoa na tela
+ou por tecnologia assistiva; agente e teste recusados); o ide chama
+`decline` quando a pessoa fecha o modal sem confirmar (Cancel, Escape ou
+clique fora) e mostra o toast. o agente parou corretamente num `match`
+exaustivo de `Rejection` dentro do `rec` (arquivo da task-63); o
+orquestrador adicionou o braço no fechamento, em commit próprio. expirar
+uma confirmação continua indefinido.
 
 ## objetivo
 

@@ -9,6 +9,23 @@ status: living
 
 ## unreleased
 
+- a session saves to a `.monster` file (2026-09-23, task-63 phase c, adr
+  session-recording-replay-not-reexecution): `Recorder::persist` and
+  `export` write a session file (magic `MONS`, next to the `MON0`
+  animations) whose semantic track is JSON lines and whose frames are
+  monster chunks byte for byte; `Session::open` reads it back strictly; a
+  panic hook can save the last window. a 20 s window of the showcase todo
+  is 76 KB. `monster_player` refuses a session with a clear message.
+- a person can decline a confirmation (2026-09-23, task-58b): closing the
+  confirmation modal in the ide now ends the agent's request as declined
+  instead of leaving it waiting.
+- accessibility is a projection of the contract (2026-09-23, task-60, adr
+  accessibility-projects-the-semantic-snapshot): the screen reader tree is
+  built from the same semantic snapshot agents and tests read, with stable
+  node ids; a screen reader's click, value or step goes through the app's
+  dispatcher like any other actor. the showcase attaches the bridge and
+  its todo page is the first with a tree. the old tree, guessed from hit
+  regions without labels, is gone.
 - the git client proves the thesis (2026-09-23, task-62 phases a and b,
   adr commit-checks-the-index-it-observed): a person and an agent use the
   ide at the same time. an agent's commit decided on a staged set that

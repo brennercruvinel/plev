@@ -105,10 +105,12 @@ o que a tese precisa e o que existe hoje:
 | task-57 | contrato semântico (crate `sem`) | 1 | nenhuma |
 | task-58 | ação com precondição, dispatch e receipts | 2 | 57 |
 | task-59 | ligação semântica com o render e um caminho operacional | 3 | 57, 58 |
-| task-60 | accessibility como projeção do contrato | 4 | 57, 58, 59 |
+| task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
 | task-61 | superfície do agente (socket local, observe, act) | 4 | 57, 58, 59 |
 | task-62 | fases a e b integradas; fase c espera 61 e 63 | `8978602` | `Workbench` no ide, commit conferido no dispatcher e no index real; recusa de confirmação virou a task-58b |
-| task-63 | fases a e b integradas; fase c em andamento | `7e63db3` | crate `rec` em memória; formato irmão `.monster` com magic `MONS` decidido; ligação no shell do showcase depois da 60 |
+| task-58b | integrada | `dc6fde2` | recusa de confirmação no `sem` e no ide |
+| task-61 | em andamento | | onda 4; entrou quando a 60 liberou o shell do showcase |
+| task-63 | fases a, b e c integradas; fase d na fila | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d = retenção de pixels opt-in e ligação no shell do showcase, depois da 61 |
 | task-64 | inspector de sessão, bug report e sessão para teste | 5 | 63, 66 (link de código: 65) |
 | task-65 | pixel para código e inspector de desenvolvimento | 5 | 57, 59 |
 | task-66 | headless como primeira classe | 3 | nenhuma (saída semântica: 57) |
@@ -300,5 +302,5 @@ atualizado em cada integração.
 | task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (pendente) |
 | task-73 | fase 1 integrada; fase 1b (timestamp queries da GPU) na fila | `ed814da` | o frame é limitado pela GPU, não pela CPU: a fase 2 estende a cadeia de invalidação até a GPU (decisão do orquestrador no arquivo da task); o caret a 60 fps virou a task-82 |
 | task-62 | fases a e b em andamento | | onda 4; fase c espera 61 e 63 |
-| task-63 | fases a e b em andamento | | onda 4; crate `rec`; formato do arquivo decidido depois |
-| task-60 | em andamento | | onda 4; entrou quando a 73 liberou o shell do showcase; a 61 entra depois dela |
+| task-63 | fases a, b e c integradas; fase d na fila | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d = retenção de pixels opt-in e ligação no shell do showcase, depois da 61 |
+| task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |

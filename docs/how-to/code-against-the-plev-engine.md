@@ -97,8 +97,13 @@ what exists (updated at each task close-out):
   (crates/engine/src/input/mod.rs). it is a temporary render identity,
   never a control's identity. do not persist it, do not send it to an
   agent, do not record it.
-- the accessibility tree is still derived from hit regions without labels
-  (crates/engine/src/window/render.rs); task-60 replaces it.
+- accessibility (task-60, adr accessibility-projects-the-semantic-snapshot):
+  the AccessKit tree is built from the page's `Snapshot` and the
+  compositor's bindings (`engine::accessibility::tree::build`), and a
+  screen reader's action comes back as a `Request` with
+  `Actor::Assistive` for the same dispatcher. a shell attaches
+  `accessibility::Bridge` before its window is visible. a page with no
+  projection has no tree: projecting it is the fix, never a fallback.
 
 how to project (from the crate docs):
 

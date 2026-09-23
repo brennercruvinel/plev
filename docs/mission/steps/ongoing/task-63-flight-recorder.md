@@ -48,6 +48,28 @@ característica de engine leve.
 - depois de 57 e 58: `Snapshot`, `Revision`, `Snapshot::diff`,
   `Receipt`, `ReceiptSink`.
 
+## fase c fechada (2026-09-23)
+
+integrada na `main` em `c62a05d` (seis commits), rebaseada sobre a 60 e a
+58b, gate verde num diretório isolado (1855 testes). arquivo de sessão
+`.monster` com magic `MONS`: cabeçalho com identidade de build e seções
+`S` (JSON lines), `I`, `C` (os bytes do `monster::encode`, verbatim) e `A`,
+sha256 por seção; `Recorder::persist` e `export` (trecho a partir do
+keyframe que governa `t0`); `Session::open` estrito (erro tipado em todo
+arquivo malformado, 2000 danos aleatórios sem panic; animação recusada
+pelo nome); `install_panic_hook`; `monster_player` recusa sessão com
+mensagem. medido: a janela de 20,6 s do todo dá um arquivo de 76 KB
+(3,7 KB/s), escrito em 1 a 1,5 ms e lido em 0,5 ms.
+
+o agente corrigiu uma premissa do orquestrador: o acervo de imagens não
+guarda pixels depois do primeiro frame (o `pixels` de `image.rs:65` é do
+upload pendente, drenado pela GPU). decisão do orquestrador: retenção de
+pixels opt-in, ligada pelo gravador, compartilhando o mesmo `Arc` com o
+upload (sem cópia dupla; o perfil de memória não muda quando não se
+grava). isso e a ligação no shell do showcase (atalho de debug e panic
+hook) são a fase d, que entra depois da task-61 porque as duas mexem no
+shell.
+
 ## fases a e b fechadas (2026-09-23)
 
 integradas na `main` em `7e63db3` (sete commits), rebaseadas pelo
