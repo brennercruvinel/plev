@@ -9,11 +9,13 @@
 //! projects, dispatches and answers there, through `Host`.
 //!
 //! what a client cannot do to the app: block it (the app never waits on a
-//! socket: a client that does not read its replies is cut off, a flood
-//! waits in a bounded queue and is served some messages per turn), crash
-//! it (every line is decoded on the reader's thread and a bad one answers
-//! an error), or grow it without bound (a line holds at most `MAX_LINE`
-//! bytes, a port at most `MAX_CONNS` connections).
+//! socket: a client that does not read its replies is cut off, when its
+//! queue is full or one write waits `WRITE_STALL`, and a flood waits in a
+//! bounded queue and is served some messages per turn), crash it (every
+//! line is decoded on the reader's thread and a bad one answers an error),
+//! or grow it without bound (a line holds at most `MAX_LINE` bytes, a port
+//! at most `MAX_CONNS` connections). a client that stops sending still
+//! gets every reply queued for it before its connection ends.
 
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -53,6 +55,11 @@ const OUTBOX: usize = 1024;
 
 /// messages one `drain` serves before it lets the loop turn.
 const PER_DRAIN: usize = 64;
+
+/// how long one write to a client may wait before the client counts as
+/// not reading and its connection ends, so a writer thread never outlives
+/// a client that stopped reading.
+const WRITE_STALL: Duration = Duration::from_secs(10);
 
 /// what the shell passes to wake its loop.
 pub type Wake = Box<dyn Fn() + Send>;
@@ -239,7 +246,7 @@ impl AgentPort {
                     let out = self.server.handle(conn, msg, host);
                     self.send(out);
                 }
-                Event::Closed { conn } => self.cut(conn),
+                Event::Closed { conn } => self.forget(conn),
             }
         }
         if served == PER_DRAIN {
@@ -267,10 +274,21 @@ impl AgentPort {
         }
     }
 
+    /// ends a connection now, whatever is still queued for it.
     fn cut(&mut self, conn: ConnId) {
         if let Some(c) = self.conns.remove(&conn) {
             let _ = c.stream.shutdown(Shutdown::Both);
         }
+        self.server.close(conn);
+    }
+
+    /// a connection whose reader ended (the client stopped sending, or
+    /// broke the line limit): the replies already queued for it, its
+    /// refusal among them, still go out, and its writer ends it after the
+    /// last one. shutting it down here would race the writer and drop
+    /// them.
+    fn forget(&mut self, conn: ConnId) {
+        self.conns.remove(&conn);
         self.server.close(conn);
     }
 }
@@ -345,6 +363,7 @@ fn start(
     else {
         return Ok(());
     };
+    let _ = writing.set_write_timeout(Some(WRITE_STALL));
     let (outbox, lines) = mpsc::sync_channel::<String>(OUTBOX);
     events
         .send(Event::Open {

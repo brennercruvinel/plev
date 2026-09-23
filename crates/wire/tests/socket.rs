@@ -250,6 +250,49 @@ fn a_line_past_the_limit_ends_the_connection() {
     assert!(rest.is_empty(), "then the connection ends");
 }
 
+/// a client that sends its messages and closes its side at once (`nc -U`
+/// with a file on stdin) still gets every reply, then the end. the app's
+/// thread drains only once the client closed, so the replies and the end
+/// of the connection reach the port in the same drain: the end must not
+/// overtake the replies.
+#[test]
+fn a_client_that_stops_sending_still_gets_its_replies() {
+    let tmp = tempfile::tempdir().unwrap();
+    let (mut port, woke) = open(tmp.path());
+    let mut host = ToyHost::new();
+    let path = port.path().to_owned();
+    let (sent_tx, sent) = mpsc::channel();
+    let agent = thread::spawn(move || {
+        let mut raw = UnixStream::connect(&path).unwrap();
+        raw.set_read_timeout(Some(Duration::from_secs(10))).unwrap();
+        raw.write_all(b"{\"v\":1,\"id\":\"h\",\"type\":\"hello\",\"name\":\"nc\"}\n")
+            .unwrap();
+        raw.write_all(b"{\"v\":1,\"id\":\"o\",\"type\":\"observe\",\"scope\":\"todo.item[1]\"}\n")
+            .unwrap();
+        raw.shutdown(std::net::Shutdown::Write).unwrap();
+        sent_tx.send(()).unwrap();
+        let mut out = String::new();
+        let _ = BufReader::new(raw).read_to_string(&mut out);
+        out
+    });
+    sent.recv_timeout(Duration::from_secs(10)).unwrap();
+    // time for the reader to queue both messages and the end, so they
+    // reach the port in one drain.
+    thread::sleep(Duration::from_millis(50));
+    let deadline = Instant::now() + Duration::from_secs(20);
+    while !agent.is_finished() {
+        assert!(Instant::now() < deadline, "the client got no end");
+        let _ = woke.recv_timeout(Duration::from_millis(5));
+        port.drain(&mut host);
+    }
+    let out = agent.join().unwrap();
+    let ids: Vec<Option<String>> = out
+        .lines()
+        .map(|l| wire::decode_server(l).unwrap().id)
+        .collect();
+    assert_eq!(ids, [Some("h".into()), Some("o".into())], "{out}");
+}
+
 #[test]
 fn two_agents_at_once_each_under_its_own_name() {
     let tmp = tempfile::tempdir().unwrap();

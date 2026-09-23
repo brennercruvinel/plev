@@ -112,11 +112,16 @@ and the thread wakes the loop through the closure the shell passed (its
 the next drain. `drain` runs on the app's thread and does every
 projection and every dispatch there (the ide's `Workbench` is not
 `Send`). the app never waits on a socket: a client that does not read its
-replies is cut off, one drain serves at most 64 messages and wakes the
-loop again for the rest, a line holds at most 1 MiB (past it the
-connection ends), a port holds at most 16 connections. a line that does
-not decode answers its error from the reader's thread and the connection
-goes on.
+replies is cut off (its queue of 1024 lines is full, or one write waits
+10 s), one drain serves at most 64 messages and wakes the loop again for
+the rest, a line holds at most 1 MiB (past it the connection ends, after
+its error), a port holds at most 16 connections. a line that does not
+decode answers its error from the reader's thread and the connection
+goes on. when a client stops sending, or breaks the line limit, the
+replies already queued for it still go out and its writer ends the
+connection after the last one; the app's thread never shuts it down
+under the writer, which dropped them now and then (a closed client or an
+over-long line got the end without its last replies).
 
 ### security posture
 
