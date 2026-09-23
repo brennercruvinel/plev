@@ -748,6 +748,7 @@ dependencies = [
  "engine",
  "rope",
  "rustc-hash 2.1.3",
+ "sem",
  "unicode-segmentation",
  "web-time",
  "winit",
@@ -1114,6 +1115,7 @@ dependencies = [
  "pollster",
  "proc-macro2",
  "rustc-hash 2.1.3",
+ "sem",
  "serde",
  "serde_json",
  "slotmap",
@@ -1782,6 +1784,8 @@ checksum = "07aa2048142242915a31d35844fb311e0e53fcca590c3a0a40dcf1b841fa09eb"
 dependencies = [
  "equivalent",
  "hashbrown 0.17.1",
+ "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -3221,6 +3225,15 @@ name = "self_cell"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2ab42ca02749e120097e328d91d415325bdf43b1c72c4c8badf37375fe40a813"
+
+[[package]]
+name = "sem"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "serde",
+ "thiserror 2.0.20",
+]
 
 [[package]]
 name = "semver"

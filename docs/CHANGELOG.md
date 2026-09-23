@@ -9,6 +9,13 @@ status: living
 
 ## unreleased
 
+- the GPU's own time per frame (2026-09-23, task-73 phase 1b):
+  `RenderConfig::gpu_timestamps` turns on timestamp queries around the
+  layer and composite passes when measuring, and the measure example
+  reports GPU work next to submit latency. on an M4 a frame's GPU work is
+  0.2 to 1.2 ms, still 4 to 12 times its CPU; a dirty layer's pass costs
+  the same with 3 draws or 22, and the composite runs on every drawn
+  frame. off by default, the device asks for no feature.
 - a session saves to a `.monster` file (2026-09-23, task-63 phase c, adr
   session-recording-replay-not-reexecution): `Recorder::persist` and
   `export` write a session file (magic `MONS`, next to the `MON0`

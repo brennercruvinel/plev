@@ -14,6 +14,33 @@ branch: task/73-incremental
 
 # task-73: sistema de dependências incremental
 
+## fase 1b fechada (2026-09-23)
+
+integrada na `main` em `91fdb33` (quatro commits), validada: gate verde,
+identidade de pixel conferida pelo orquestrador (Todo hoff com o mesmo
+sha256 da `main`). `RenderConfig::gpu_timestamps` (desligado por padrão;
+desligado, o device não pede feature nenhuma) e os estágios `GpuSpan`,
+`GpuLayers` e `GpuComposite`, lidos com um frame de atraso para não
+travar a GPU. as tabelas estão na seção "fase 1b" de
+`task-73-measurements.md`.
+
+o que os números mostram, em µs no M4 a escala 2:
+
+- o trabalho da própria GPU é de 215 a cerca de 1200 por frame; a espera
+  medida na fase 1 carregava de 280 a 400 de latência de envio por cima,
+  em todo cenário, qualquer que seja o conteúdo.
+- mesmo sem a latência, a GPU é de 4 a 12 vezes a CPU do mesmo frame.
+- o pass de uma layer suja custa de 470 a 690 com 3 ou com 22 draws: segue
+  os pixels, não a quantidade de coisa.
+- o composite de quatro layers custa de 420 a 575 em todo frame
+  desenhado; uma tecla divide o custo mais ou menos ao meio entre pass de
+  layer e composite, e um frame que não reconstrói layer é só composite.
+
+com isso a fase 2 tem os números. o desenho (ADR) compara as opções da
+seção "fase 2" deste arquivo e a decisão é do brenner com o orquestrador.
+uma hipótese nova ficou registrada e não testada: o pass de layer grava o
+attachment multisample (`StoreOp::Store`) além do resolve.
+
 ## fase 1 fechada (2026-09-23)
 
 integrada na `main` em `ed814da` (sete commits), rebaseada pelo
