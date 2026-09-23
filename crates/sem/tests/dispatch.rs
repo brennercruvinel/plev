@@ -244,6 +244,20 @@ fn receipt(d: &Dispatcher, id: RequestId) -> &Receipt {
     d.receipt(id).expect("the dispatcher keeps the receipt")
 }
 
+fn illegal(id: RequestId, from: &str, to: &str) -> SemError {
+    SemError::IllegalTransition {
+        id,
+        from: from.into(),
+        to: to.into(),
+    }
+}
+
+fn tester() -> Actor {
+    Actor::Test {
+        name: "dispatch".into(),
+    }
+}
+
 fn unstage(d: &mut Dispatcher, git: &mut Git, file: &str, now: u64) -> RequestId {
     let seen = git.snapshot();
     let req =
@@ -438,10 +452,7 @@ fn an_agent_or_a_test_cannot_confirm_and_the_receipt_keeps_waiting() {
     let mut git = Git::new(&["A", "B"], "wip");
     let mut d = Dispatcher::new();
     let id = awaiting_discard(&mut git, &mut d);
-    let tester = Actor::Test {
-        name: "dispatch".into(),
-    };
-    for machine in [agent(), tester] {
+    for machine in [agent(), tester()] {
         assert_eq!(
             d.confirm(&mut git, id, machine.clone(), 2),
             Err(SemError::ConfirmByMachine { id, by: machine })
@@ -454,8 +465,101 @@ fn an_agent_or_a_test_cannot_confirm_and_the_receipt_keeps_waiting() {
     assert!(git.executed.is_empty());
     assert_eq!(
         SemError::ConfirmByMachine { id, by: agent() }.to_string(),
-        format!("request {id} waits for a person; agent:reviewer cannot confirm it")
+        format!("request {id} waits for a person; agent:reviewer cannot confirm or decline it")
     );
+}
+
+#[test]
+fn a_person_declines_at_the_screen_or_through_a_screen_reader() {
+    for by in [Actor::Human, Actor::Assistive] {
+        let mut git = Git::new(&["A", "B"], "wip");
+        let mut d = Dispatcher::new();
+        let id = awaiting_discard(&mut git, &mut d);
+        let validated = receipt(&d, id).validated_against;
+
+        d.decline(id, by.clone(), 5).unwrap();
+        let r = receipt(&d, id);
+        assert_eq!(
+            stages(r),
+            ["requested", "awaiting_confirmation", "rejected"]
+        );
+        assert_eq!(
+            r.stages[2],
+            (Stage::Rejected(Rejection::Declined { by: by.clone() }), 5)
+        );
+        assert!(r.is_finished());
+        assert_eq!(
+            r.validated_against, validated,
+            "a decline does not validate"
+        );
+        assert!(git.executed.is_empty(), "nothing ran");
+        assert_eq!(git.staged, set(&["A", "B"]));
+
+        // the answer is final: no second one.
+        assert_eq!(
+            d.confirm(&mut git, id, Actor::Human, 6),
+            Err(illegal(id, "rejected", "confirmed"))
+        );
+        assert_eq!(
+            d.decline(id, by, 6),
+            Err(illegal(id, "rejected", "rejected"))
+        );
+        assert!(git.executed.is_empty());
+    }
+}
+
+#[test]
+fn an_agent_or_a_test_cannot_decline_and_the_receipt_keeps_waiting() {
+    let mut git = Git::new(&["A", "B"], "wip");
+    let mut d = Dispatcher::new();
+    let id = awaiting_discard(&mut git, &mut d);
+    let before = receipt(&d, id).clone();
+    for machine in [agent(), tester()] {
+        assert_eq!(
+            d.decline(id, machine.clone(), 2),
+            Err(SemError::ConfirmByMachine { id, by: machine })
+        );
+        assert_eq!(receipt(&d, id), &before);
+    }
+    assert!(git.executed.is_empty());
+
+    // still waiting: a person can still confirm it.
+    d.confirm(&mut git, id, Actor::Human, 3).unwrap();
+    assert!(matches!(receipt(&d, id).stage(), Some(Stage::Completed(_))));
+    assert_eq!(git.executed, ["discard"]);
+}
+
+#[test]
+fn declining_what_does_not_wait_is_an_error_found_before_the_actor() {
+    let mut git = Git::new(&["A"], "wip");
+    git.background = true;
+    let mut d = Dispatcher::new();
+    let submit =
+        Request::observe(&git.snapshot(), agent(), "commit.submit", "submit", None).unwrap();
+    let running = d.dispatch(&mut git, submit, 1);
+    let before = receipt(&d, running).clone();
+    for by in [Actor::Human, agent()] {
+        assert_eq!(
+            d.decline(running, by, 2),
+            Err(illegal(running, "executing", "rejected"))
+        );
+    }
+    assert_eq!(receipt(&d, running), &before);
+
+    d.complete(running, Outcome::default(), 3).unwrap();
+    assert_eq!(
+        d.decline(running, Actor::Assistive, 4),
+        Err(illegal(running, "completed", "rejected"))
+    );
+
+    let ghost = RequestId::parse("999").unwrap();
+    for by in [Actor::Human, tester()] {
+        assert_eq!(
+            d.decline(ghost, by, 5),
+            Err(SemError::UnknownRequest(ghost))
+        );
+    }
+    assert!(d.receipt(ghost).is_none());
 }
 
 #[test]
@@ -590,11 +694,6 @@ fn an_async_point_of_truth_rejects_through_reject_at_truth() {
 fn illegal_transitions_are_errors_and_leave_the_receipt_as_it_was() {
     let mut git = Git::new(&["A"], "wip");
     let mut d = Dispatcher::new();
-    let illegal = |id: RequestId, from: &str, to: &str| SemError::IllegalTransition {
-        id,
-        from: from.into(),
-        to: to.into(),
-    };
 
     let discard = Request::observe(&git.snapshot(), agent(), "changes", "discard", None).unwrap();
     let waiting = d.dispatch(&mut git, discard, 1);
@@ -717,6 +816,26 @@ fn a_sink_sees_every_stage_in_order() {
             (a, "rejected"),
         ]
     );
+}
+
+#[test]
+fn a_sink_sees_a_decline_as_the_last_stage() {
+    let mut git = Git::new(&["A"], "wip");
+    let mut d = Dispatcher::with_retention(0);
+    let log = Log::default();
+    d.add_sink(Box::new(log.clone()));
+    let id = awaiting_discard(&mut git, &mut d);
+    d.decline(id, Actor::Assistive, 8).unwrap();
+
+    let declined = Stage::Rejected(Rejection::Declined {
+        by: Actor::Assistive,
+    });
+    let seen = log.0.borrow();
+    let names: Vec<&str> = seen.iter().map(|(_, s, ..)| s.name()).collect();
+    assert_eq!(names, ["requested", "awaiting_confirmation", "rejected"]);
+    assert_eq!(seen.last(), Some(&(id, declined, 8, 3)));
+    // finished, it left the dispatcher (no retention): only the sink saw it.
+    assert!(d.receipt(id).is_none());
 }
 
 #[test]

@@ -76,7 +76,7 @@ pub struct Outcome {
 ///
 /// ```text
 /// Requested -> Accepted | Rejected | AwaitingConfirmation
-/// AwaitingConfirmation -> Confirmed | Rejected
+/// AwaitingConfirmation -> Confirmed | Rejected   (declined, or stale when confirmed)
 /// Accepted | Confirmed -> Executing
 /// Executing -> Completed | Failed | Rejected   (rejected at the point of truth)
 /// terminal: Rejected, Completed, Failed
@@ -139,8 +139,9 @@ impl Stage {
 /// caller gave for it.
 ///
 /// `validated_against` is the revision of the snapshot of the last
-/// validation (at dispatch, and again at confirmation); `None` until a
-/// validation ran, and when the app's projection did not validate.
+/// validation (at dispatch, and again at confirmation; a decline does not
+/// validate); `None` until a validation ran, and when the app's projection
+/// did not validate.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Receipt {

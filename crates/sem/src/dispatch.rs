@@ -116,8 +116,8 @@ impl Dispatcher {
     /// takes a request at `now`. it projects the app's live state, checks
     /// the request against that snapshot (never against a frame drawn
     /// earlier) and, when it is accepted, executes it. a request that
-    /// needs confirmation waits for `confirm`. the verdict and the result
-    /// are in the receipt; the id names it.
+    /// needs confirmation waits for a person's `confirm` or `decline`. the
+    /// verdict and the result are in the receipt; the id names it.
     ///
     /// when the app's projection does not validate, nothing can be
     /// checked: the request is rejected with `Rejection::InvalidProjection`
@@ -161,14 +161,7 @@ impl Dispatcher {
         by: Actor,
         now: Millis,
     ) -> Result<(), SemError> {
-        self.require(id, &Stage::AwaitingConfirmation, "confirmed")?;
-        let person = match by {
-            Actor::Human | Actor::Assistive => true,
-            Actor::Agent { .. } | Actor::Test { .. } => false,
-        };
-        if !person {
-            return Err(SemError::ConfirmByMachine { id, by });
-        }
+        self.require_person(id, &by, "confirmed")?;
         let mut receipt = self.open.remove(&id).ok_or(SemError::UnknownRequest(id))?;
         match validate(app, &mut receipt) {
             Verdict::Accepted | Verdict::NeedsConfirmation => {
@@ -177,6 +170,29 @@ impl Dispatcher {
             }
             Verdict::Rejected(why) => self.push(&mut receipt, Stage::Rejected(why), now),
         }
+        self.store(receipt);
+        Ok(())
+    }
+
+    /// a person declines a request that awaits confirmation, with the
+    /// same rules as `confirm`: at the screen (`Actor::Human`) or through
+    /// assistive technology (`Actor::Assistive`), never an agent or a
+    /// test. the receipt ends rejected with `Rejection::Declined { by }`
+    /// and nothing runs, so the live state is not checked again and
+    /// `validated_against` stays the one of the dispatch.
+    ///
+    /// errors, with the receipt unchanged: `UnknownRequest` for an id the
+    /// dispatcher does not hold, `IllegalTransition` when the request is
+    /// not awaiting confirmation, `ConfirmByMachine` when `by` is an agent
+    /// or a test.
+    pub fn decline(&mut self, id: RequestId, by: Actor, now: Millis) -> Result<(), SemError> {
+        self.require_person(id, &by, "rejected")?;
+        let mut receipt = self.open.remove(&id).ok_or(SemError::UnknownRequest(id))?;
+        self.push(
+            &mut receipt,
+            Stage::Rejected(Rejection::Declined { by }),
+            now,
+        );
         self.store(receipt);
         Ok(())
     }
@@ -250,6 +266,20 @@ impl Dispatcher {
                 to: to.to_owned(),
             },
         })
+    }
+
+    /// the guards a person's answer to a confirmation passes, in this
+    /// order: `id` awaits confirmation (see `require`, going `to` the
+    /// answer's stage), and `by` is a person (`ConfirmByMachine`
+    /// otherwise).
+    fn require_person(&self, id: RequestId, by: &Actor, to: &str) -> Result<(), SemError> {
+        self.require(id, &Stage::AwaitingConfirmation, to)?;
+        match by {
+            Actor::Human | Actor::Assistive => Ok(()),
+            Actor::Agent { .. } | Actor::Test { .. } => {
+                Err(SemError::ConfirmByMachine { id, by: by.clone() })
+            }
+        }
     }
 
     /// executes an accepted or confirmed request and records what came

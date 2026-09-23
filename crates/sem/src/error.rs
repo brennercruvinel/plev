@@ -69,9 +69,10 @@ pub enum SemError {
         from: String,
         to: String,
     },
-    /// a confirmation by a machine, an agent or a test: only a person
-    /// confirms, at the screen or through assistive technology.
-    #[error("request {id} waits for a person; {by} cannot confirm it")]
+    /// a confirmation or a decline by a machine, an agent or a test: only
+    /// a person answers a request that waits for one, at the screen or
+    /// through assistive technology.
+    #[error("request {id} waits for a person; {by} cannot confirm or decline it")]
     ConfirmByMachine { id: RequestId, by: Actor },
 }
 

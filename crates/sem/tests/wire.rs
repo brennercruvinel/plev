@@ -8,8 +8,8 @@ use std::collections::BTreeSet;
 
 use indexmap::IndexMap;
 use sem::{
-    Actor, Outcome, Receipt, Request, RequestId, Role, Snapshot, SnapshotBuilder, Stage, Value,
-    Verdict, check,
+    Actor, Outcome, Receipt, Rejection, Request, RequestId, Role, Snapshot, SnapshotBuilder, Stage,
+    Value, Verdict, check,
 };
 
 fn set(items: &[&str]) -> Value {
@@ -197,6 +197,97 @@ fn a_receipt_has_a_pinned_json_form_and_roundtrips() {
     assert_eq!(text, RECEIPT);
     let back: Receipt = serde_json::from_str(&text).unwrap();
     assert_eq!(back, receipt);
+}
+
+/// the thesis request waited for a person, who declined it.
+fn declined_receipt() -> Receipt {
+    Receipt {
+        id: RequestId::parse("3").unwrap(),
+        request: thesis_request(),
+        validated_against: Some(git(&["A", "B", "C"], "fix login").revision()),
+        stages: vec![
+            (Stage::Requested, 1200),
+            (Stage::AwaitingConfirmation, 1200),
+            (
+                Stage::Rejected(Rejection::Declined { by: Actor::Human }),
+                1500,
+            ),
+        ],
+    }
+}
+
+const DECLINED: &str = r#"{
+  "id": "3",
+  "request": {
+    "actor": {
+      "agent": {
+        "name": "reviewer"
+      }
+    },
+    "target": "commit.submit",
+    "action": "submit",
+    "param": null,
+    "observed": {
+      "revision": "3ba694e7d3941ec0",
+      "values": [
+        [
+          "changes:staged",
+          {
+            "kind": "set",
+            "value": [
+              "A",
+              "B",
+              "C"
+            ]
+          }
+        ],
+        [
+          "commit.message:text",
+          {
+            "kind": "text",
+            "value": "fix login"
+          }
+        ]
+      ]
+    }
+  },
+  "validated_against": "3ba694e7d3941ec0",
+  "stages": [
+    [
+      "requested",
+      1200
+    ],
+    [
+      "awaiting_confirmation",
+      1200
+    ],
+    [
+      {
+        "rejected": {
+          "declined": {
+            "by": "human"
+          }
+        }
+      },
+      1500
+    ]
+  ]
+}"#;
+
+#[test]
+fn a_declined_receipt_has_a_pinned_json_form_and_roundtrips() {
+    let receipt = declined_receipt();
+    let text = serde_json::to_string_pretty(&receipt).unwrap();
+    assert_eq!(text, DECLINED);
+    let back: Receipt = serde_json::from_str(&text).unwrap();
+    assert_eq!(back, receipt);
+
+    let assistive = Rejection::Declined {
+        by: Actor::Assistive,
+    };
+    let json = r#"{"declined":{"by":"assistive"}}"#;
+    assert_eq!(serde_json::to_string(&assistive).unwrap(), json);
+    assert_eq!(serde_json::from_str::<Rejection>(json).unwrap(), assistive);
 }
 
 #[test]

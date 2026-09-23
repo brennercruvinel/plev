@@ -77,6 +77,8 @@ impl Workbench {
     fn refusal(&self, req: &Request, why: &Rejection) -> (String, Intent) {
         let quiet = Intent::Informational;
         let (reason, intent) = match why {
+            // A person's own answer, not a refusal of the workspace.
+            Rejection::Declined { .. } => return (self.unconfirmed(req), quiet),
             Rejection::Stale { changes } => {
                 let moved: Vec<String> = changes.iter().map(|c| self.moved(c)).collect();
                 (moved.join("; "), Intent::Destructive)

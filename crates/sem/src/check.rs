@@ -19,13 +19,15 @@ pub enum Verdict {
     Accepted,
     /// every precondition holds, and the policy asks a person to confirm
     /// before the action runs (at the screen or through assistive
-    /// technology; see `Dispatcher::confirm`).
+    /// technology; see `Dispatcher::confirm`), or to decline it
+    /// (`Dispatcher::decline`).
     NeedsConfirmation,
     Rejected(Rejection),
 }
 
 /// why a request was refused. `check` returns the first of these that
-/// holds, in the order the variants are listed here (see `check`).
+/// holds, in the order the variants are listed here (see `check`); the
+/// last two come from the dispatcher.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
@@ -52,6 +54,11 @@ pub enum Rejection {
     /// state to check against. only the dispatcher answers this, before
     /// the order above; `check` itself always has a snapshot.
     InvalidProjection { errors: SemErrors },
+    /// a person refused the confirmation the request waited for, at the
+    /// screen (`Actor::Human`) or through assistive technology
+    /// (`Actor::Assistive`), with `Dispatcher::decline`; nothing ran.
+    /// only the dispatcher answers this, never `check`.
+    Declined { by: Actor },
 }
 
 /// decides `req` against `now`, the current state. pure: the same request
