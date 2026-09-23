@@ -463,3 +463,153 @@ fn a_click_on_commit_and_a_test_request_commit_the_same() {
         assert_eq!(person.value(at), test.value(at), "{at}");
     }
 }
+
+// -- a refresh read before a mutation the view already shows (task-84) --
+//
+// The worker runs commands one at a time, in the order they were sent, and
+// every mutation's answer sends a `Refresh`. A refresh queued before a
+// later mutation reads the status before that mutation runs; its answer
+// lands after the view already shows the mutation. The order is fixed by
+// the worker's queue, not by timing: each test applies the events one
+// kind at a time and looks at the projection in between.
+
+#[test]
+#[ignore = "task-84: fails until a status read before a mutation stops landing over it"]
+fn a_status_read_before_a_stage_never_takes_the_file_back_out() {
+    let mut rig = Rig::new(&["A", "B"], &[]);
+    let a = rig.ask(agent(), "changes.file[A]", "stage", None);
+    // The answer to stage A sends a refresh, which waits at the worker.
+    rig.until(|e| matches!(e, git::GitEvent::Staged { .. }));
+    assert!(completed(&rig.receipt(a)).is_some(), "{:?}", rig.receipt(a));
+
+    // Stage B leaves behind that refresh: its status is read before
+    // `git add B` runs.
+    let b = rig.ask(agent(), "changes.file[B]", "stage", None);
+    assert_eq!(rig.value("changes:staged"), set(&["A", "B"]));
+
+    rig.until(|e| matches!(e, git::GitEvent::Status(_)));
+    assert_eq!(
+        rig.value("changes:staged"),
+        set(&["A", "B"]),
+        "a status read before stage B does not take B out"
+    );
+
+    rig.settle(b);
+    assert!(completed(&rig.receipt(b)).is_some(), "{:?}", rig.receipt(b));
+    assert_eq!(rig.value("changes:staged"), set(&["A", "B"]));
+    assert_eq!(rig.git(&["diff", "--cached", "--name-only"]), "A\nB\n");
+}
+
+#[test]
+#[ignore = "task-84: fails until a status read before a mutation stops landing over it"]
+fn a_status_read_before_an_unstage_never_puts_the_file_back() {
+    let mut rig = Rig::new(&["A", "B", "C"], &["A", "B", "C"]);
+    rig.agent_writes("only C");
+    let a = rig.ask(agent(), "changes.file[A]", "unstage", None);
+    rig.until(|e| matches!(e, git::GitEvent::Unstaged { .. }));
+
+    // The person takes B out while the refresh for A waits at the worker.
+    let b = rig.ask(Actor::Human, "changes.file[B]", "unstage", None);
+    assert_eq!(rig.value("changes:staged"), set(&["C"]));
+    rig.until(|e| matches!(e, git::GitEvent::Status(_)));
+    assert_eq!(
+        rig.value("changes:staged"),
+        set(&["C"]),
+        "a status read before the person's unstage does not put B back"
+    );
+
+    // An agent deciding right now decides on what the index will hold
+    // when its commit runs, so the commit is not refused for nothing.
+    let commit = rig.ask(agent(), "commit.submit", "submit", None);
+    rig.settle(commit);
+    assert!(
+        completed(&rig.receipt(commit)).is_some(),
+        "{:?}",
+        rig.receipt(commit)
+    );
+    assert_eq!(rig.head_files(), ["C"]);
+    for id in [a, b] {
+        assert!(
+            completed(&rig.receipt(id)).is_some(),
+            "{:?}",
+            rig.receipt(id)
+        );
+    }
+}
+
+#[test]
+#[ignore = "task-84: fails until a status read before a mutation stops landing over it"]
+fn a_status_read_before_a_discard_never_brings_the_file_back() {
+    let mut rig = Rig::new(&["A", "B"], &[]);
+    let a = rig.ask(agent(), "changes.file[A]", "stage", None);
+    rig.until(|e| matches!(e, git::GitEvent::Staged { .. }));
+
+    // The person discards B (a new file: discard deletes it) behind the
+    // refresh for A.
+    let b = rig.ask(Actor::Human, "changes.file[B]", "discard", None);
+    assert_eq!(rig.stages(b), ["requested", "accepted", "executing"]);
+    assert_eq!(rig.value("changes:files"), Value::List(vec!["A".into()]));
+    rig.until(|e| matches!(e, git::GitEvent::Status(_)));
+    assert_eq!(
+        rig.value("changes:files"),
+        Value::List(vec!["A".into()]),
+        "a status read before the discard does not bring B back"
+    );
+
+    rig.settle(b);
+    assert!(completed(&rig.receipt(a)).is_some(), "{:?}", rig.receipt(a));
+    assert!(completed(&rig.receipt(b)).is_some(), "{:?}", rig.receipt(b));
+    assert_eq!(rig.value("changes:files"), Value::List(vec!["A".into()]));
+    assert!(!rig.dir.path().join("B").exists());
+}
+
+#[test]
+#[ignore = "task-84: fails until a status read before a mutation stops landing over it"]
+fn a_change_from_outside_lands_with_the_refresh_after_the_last_mutation() {
+    let mut rig = Rig::new(&["A", "B", "C"], &[]);
+
+    // Nothing pending: a terminal stages C and the watcher's refresh
+    // shows it.
+    rig.git(&["add", "C"]);
+    rig.bench.refresh();
+    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    assert_eq!(rig.value("changes:staged"), set(&["C"]));
+
+    // A terminal stages B and the watcher asks for a refresh; stage A
+    // leaves behind it.
+    rig.git(&["add", "B"]);
+    rig.bench.refresh();
+    let a = rig.ask(agent(), "changes.file[A]", "stage", None);
+    rig.until(|e| matches!(e, git::GitEvent::Status(_)));
+    assert_eq!(
+        rig.value("changes:staged"),
+        set(&["A", "C"]),
+        "the watcher's status, read before stage A, does not take A out"
+    );
+
+    rig.settle(a);
+    assert_eq!(
+        rig.value("changes:staged"),
+        set(&["A", "B", "C"]),
+        "the terminal's B arrives with the refresh stage A sent"
+    );
+}
+
+#[test]
+fn a_stage_git_refuses_is_rolled_back_by_its_refresh() {
+    let mut rig = Rig::new(&["A", "B"], &[]);
+    // A leaves the disk behind the view's back: the view still lists it,
+    // and `git add A` will fail.
+    std::fs::remove_file(rig.dir.path().join("A")).expect("remove A");
+    let a = rig.ask(agent(), "changes.file[A]", "stage", None);
+    assert_eq!(rig.value("changes:staged"), set(&["A"]), "the view guessed");
+
+    rig.settle(a);
+    assert!(
+        matches!(rig.receipt(a).stage(), Some(Stage::Failed { .. })),
+        "{:?}",
+        rig.receipt(a)
+    );
+    assert_eq!(rig.value("changes:staged"), set(&[]));
+    assert_eq!(rig.value("changes:files"), Value::List(vec!["B".into()]));
+}
