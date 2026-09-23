@@ -37,7 +37,10 @@ impl Run {
         let mut node = &self.report;
         for key in path.split('.') {
             node = node.get(key).unwrap_or_else(|| {
-                panic!("the report has no {path} (stopped at {key}): {}", self.report)
+                panic!(
+                    "the report has no {path} (stopped at {key}): {}",
+                    self.report
+                )
             });
         }
         node
