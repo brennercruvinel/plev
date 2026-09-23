@@ -17,6 +17,7 @@
 //! the frame's pixel size. Colors are the scene's sRGB values, written as
 //! `#rrggbb` plus `fill-opacity`; the SVG is sRGB, nothing is linearized.
 
+mod shape;
 mod text;
 mod write;
 
@@ -30,6 +31,7 @@ use crate::compositor::{Compositor, Layer, LayerEffect, SceneNode};
 use crate::text::TextSystem;
 
 use super::{HeadlessError, Viewport};
+use shape::{Bounds, rounded_rect};
 use text::Outlines;
 use write::{Svg, fill, num};
 
@@ -235,11 +237,124 @@ fn write_layer(
             SceneNode::Text { key, x, y, color } => {
                 text::run(svg, text, outlines, key, *x, *y, *color, &at("text"));
             }
-            SceneNode::GradientRect { .. } => svg.note(&at("gradient rect"), "not written yet"),
-            SceneNode::Path { .. } => svg.note(&at("path"), "not written yet"),
-            SceneNode::Image { .. } => svg.note(&at("image"), "not written yet"),
-            SceneNode::BackdropBlur { .. } => svg.note(&at("backdrop blur"), "not written yet"),
-            SceneNode::Shadow { .. } => svg.note(&at("shadow"), "not written yet"),
+            SceneNode::GradientRect {
+                x,
+                y,
+                w,
+                h,
+                color,
+                color2,
+                angle_deg,
+                corner_radius,
+                border_width,
+                border_color,
+            } => {
+                if outside(viewport, *x, *y, *w, *h) {
+                    continue;
+                }
+                let bounds = Bounds {
+                    x: *x,
+                    y: *y,
+                    w: *w,
+                    h: *h,
+                    radius: *corner_radius,
+                };
+                shape::gradient_rect(
+                    svg,
+                    bounds,
+                    *color,
+                    *color2,
+                    *angle_deg,
+                    *border_width,
+                    *border_color,
+                    &at("gradient rect"),
+                );
+            }
+            SceneNode::Shadow {
+                x,
+                y,
+                w,
+                h,
+                corner_radius,
+                blur_radius,
+                offset,
+                color,
+                inset,
+            } => {
+                let bounds = Bounds {
+                    x: *x,
+                    y: *y,
+                    w: *w,
+                    h: *h,
+                    radius: *corner_radius,
+                };
+                shape::shadow(
+                    svg,
+                    bounds,
+                    *blur_radius,
+                    *offset,
+                    *color,
+                    *inset,
+                    viewport,
+                    &at("shadow"),
+                );
+            }
+            SceneNode::Path { data } => shape::path(svg, data, &at("path")),
+            SceneNode::Image {
+                x,
+                y,
+                w,
+                h,
+                image,
+                corner_radius,
+            } => {
+                if outside(viewport, *x, *y, *w, *h) {
+                    continue;
+                }
+                // The store keeps no pixels once they are on the GPU, so
+                // there is nothing to embed; the place is marked.
+                svg.element(&format!(
+                    "<!-- image {}x{} at {} {} ({}x{}, radius {}): not embedded -->",
+                    image.width,
+                    image.height,
+                    num(*x),
+                    num(*y),
+                    num(*w),
+                    num(*h),
+                    num(*corner_radius)
+                ));
+                svg.note(
+                    &at("image"),
+                    &format!(
+                        "image {}x{} left out: the image store keeps no pixels after the \
+                         upload, so there is nothing to embed",
+                        image.width, image.height
+                    ),
+                );
+            }
+            SceneNode::BackdropBlur {
+                x, y, w, h, sigma, ..
+            } => {
+                if outside(viewport, *x, *y, *w, *h) {
+                    continue;
+                }
+                svg.element(&format!(
+                    "<!-- backdrop blur at {} {} ({}x{}, sigma {}): left out -->",
+                    num(*x),
+                    num(*y),
+                    num(*w),
+                    num(*h),
+                    num(*sigma)
+                ));
+                svg.note(
+                    &at("backdrop blur"),
+                    &format!(
+                        "backdrop blur (sigma {}) left out: what lies below stays sharp \
+                         under the glass",
+                        num(*sigma)
+                    ),
+                );
+            }
         }
     }
     // A push without its pop ends with the layer, as the scissor does.
@@ -247,64 +362,4 @@ fn write_layer(
         svg.close("</g>");
     }
     svg.close("</g>");
-}
-
-/// A rounded rect's box and corner radius.
-#[derive(Clone, Copy)]
-struct Bounds {
-    x: f32,
-    y: f32,
-    w: f32,
-    h: f32,
-    radius: f32,
-}
-
-/// A rounded rect as the SDF shader draws it: with a border, the ring of
-/// `border_width` inside the outer edge holds the border color and only
-/// the inset box holds the fill; without one, the fill reaches the edge.
-/// `fill_attrs` is the fill (a color, or a gradient reference).
-fn rounded_rect(svg: &mut Svg, b: Bounds, fill_attrs: &str, border_width: f32, border: [f32; 4]) {
-    let rect = |x: f32, y: f32, w: f32, h: f32, radius: f32, paint: &str| {
-        format!(
-            "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" rx=\"{}\"{paint}/>",
-            num(x),
-            num(y),
-            num(w),
-            num(h),
-            num(radius.max(0.0))
-        )
-    };
-    if border_width <= 0.0 {
-        svg.element(&rect(b.x, b.y, b.w, b.h, b.radius, fill_attrs));
-        return;
-    }
-    let bw = border_width;
-    if b.w > 2.0 * bw && b.h > 2.0 * bw {
-        svg.element(&rect(
-            b.x + bw,
-            b.y + bw,
-            b.w - 2.0 * bw,
-            b.h - 2.0 * bw,
-            b.radius - bw,
-            fill_attrs,
-        ));
-    }
-    if border[3] > 0.0 && b.w > bw && b.h > bw {
-        // A stroke centered half a border inside the edge covers exactly
-        // the ring between the outer edge and the inset box.
-        let stroke = format!(
-            " fill=\"none\" stroke=\"{}\"{} stroke-width=\"{}\"",
-            write::hex(border),
-            write::opacity("stroke-opacity", border[3]),
-            num(bw)
-        );
-        svg.element(&rect(
-            b.x + bw / 2.0,
-            b.y + bw / 2.0,
-            b.w - bw,
-            b.h - bw,
-            b.radius - bw / 2.0,
-            &stroke,
-        ));
-    }
 }

@@ -6,8 +6,11 @@
 use super::super::{HeadlessError, Renderer, Viewport};
 use super::write::{escape, hex, num, opacity};
 use super::*;
-use crate::compositor::{Compositor, RoundedRectParams, SceneNode, TextNodeKey};
+use crate::compositor::{
+    Compositor, GradientRectParams, RoundedRectParams, SceneNode, TextNodeKey,
+};
 use crate::gpu::RenderConfig;
+use crate::path::PathBuilder;
 use crate::text::{TextMeasurer, TextStyle};
 use crate::theme::hoff::PAGE_BG;
 
@@ -309,4 +312,263 @@ fn layers_are_written_in_composite_order_and_hidden_ones_are_not() {
     assert!(at("#0000ff") < at("#00ff00"), "z 10 before z 20");
     assert!(!svg.contains("#ff00ff"), "the hidden layer drew");
     assert!(svg.contains("<g id=\"layer-3\" opacity=\"0.5\">"));
+}
+
+/// A scene of everything the SVG approximates: a drop and an inset
+/// shadow, a gradient, a backdrop blur, a clip, an image. Each one is on
+/// the report, once, and the file still parses.
+fn approximate_scene(c: &mut Compositor) {
+    c.begin_frame();
+    c.push_clip(0.0, 0.0, 200.0, 120.0);
+    c.push(SceneNode::Shadow {
+        x: 20.0,
+        y: 20.0,
+        w: 100.0,
+        h: 50.0,
+        corner_radius: 8.0,
+        blur_radius: 12.0,
+        offset: [0.0, 4.0],
+        color: [0.0, 0.0, 0.0, 0.5],
+        inset: false,
+    });
+    c.draw_gradient_rect(GradientRectParams {
+        x: 20.0,
+        y: 20.0,
+        w: 100.0,
+        h: 50.0,
+        color: [1.0, 0.0, 0.0, 1.0],
+        color2: [0.0, 0.0, 1.0, 1.0],
+        angle_deg: 90.0,
+        corner_radius: 8.0,
+        border_width: 0.0,
+        border_color: [0.0; 4],
+    });
+    c.push(SceneNode::Shadow {
+        x: 20.0,
+        y: 20.0,
+        w: 100.0,
+        h: 50.0,
+        corner_radius: 8.0,
+        blur_radius: 16.0,
+        offset: [2.0, 4.0],
+        color: [1.0, 1.0, 1.0, 0.1],
+        inset: true,
+    });
+    c.draw_backdrop_blur(130.0, 20.0, 60.0, 60.0, 6.0, 10.0);
+    c.draw_image(
+        130.0,
+        90.0,
+        20.0,
+        20.0,
+        crate::gpu::image::ImageHandle {
+            id: 7,
+            atlas_x: 1,
+            atlas_y: 1,
+            width: 32,
+            height: 32,
+        },
+        4.0,
+    );
+    c.pop_clip();
+}
+
+#[test]
+fn every_approximation_is_on_the_report_once_and_the_file_still_parses() {
+    let Some(mut r) = renderer(Viewport::new(200.0, 120.0, 1.0)) else {
+        return;
+    };
+    let mut c = Compositor::new();
+    approximate_scene(&mut c);
+    let export = match r.svg(&c, Some([1.0, 1.0, 1.0, 1.0])) {
+        Ok(e) => e,
+        Err(e) => panic!("{e}"),
+    };
+    let svg = &export.svg;
+    let kinds: Vec<&str> = export
+        .report
+        .iter()
+        .map(|a| {
+            a.node
+                .rsplit('(')
+                .next()
+                .unwrap_or("")
+                .trim_end_matches(')')
+        })
+        .collect();
+    assert_eq!(
+        kinds,
+        [
+            "clip",
+            "shadow",
+            "gradient rect",
+            "shadow",
+            "backdrop blur",
+            "image"
+        ],
+        "{}",
+        export.report_text()
+    );
+    assert!(export.report[1].what.starts_with("drop shadow"));
+    assert!(export.report[3].what.starts_with("inset shadow"));
+    assert_eq!(export.report[1].node, "layer 0, node 1 (shadow)");
+    assert_eq!(count(&export.report_text(), "\n"), 6);
+    assert_eq!(
+        count(svg, "<clipPath "),
+        2,
+        "the clip and the inset's bounds"
+    );
+    assert_eq!(count(svg, "<filter "), 2);
+    assert_eq!(count(svg, "<linearGradient "), 1);
+    assert!(svg.contains("color-interpolation=\"linearRGB\""));
+    // the gradient runs left to right across the box at 90 degrees
+    assert!(
+        svg.contains("x1=\"20\" y1=\"45\" x2=\"120\" y2=\"45\""),
+        "{svg}"
+    );
+    assert!(svg.contains("fill=\"url(#gradient"));
+    assert!(svg.contains("<!-- image 32x32 at 130 90"));
+    assert!(svg.contains("<!-- backdrop blur at 130 20"));
+    assert_eq!(count(svg, "<g"), count(svg, "</g>"));
+    if let Err(e) = ::svg::convert(svg, "approximate") {
+        panic!("the importer refused the export: {e}\n{svg}");
+    }
+}
+
+/// A shadow entirely off the viewport is culled as the frame culls it;
+/// a pop without a push is reported; a push without a pop still closes
+/// its group.
+#[test]
+fn culled_and_unbalanced_nodes_follow_the_frame() {
+    let Some(mut r) = renderer(Viewport::new(100.0, 100.0, 1.0)) else {
+        return;
+    };
+    let mut c = Compositor::new();
+    c.begin_frame();
+    c.pop_clip();
+    c.push(SceneNode::Shadow {
+        x: 500.0,
+        y: 500.0,
+        w: 10.0,
+        h: 10.0,
+        corner_radius: 0.0,
+        blur_radius: 4.0,
+        offset: [0.0; 2],
+        color: [0.0, 0.0, 0.0, 1.0],
+        inset: false,
+    });
+    c.draw_rect(500.0, 0.0, 10.0, 10.0, [1.0, 0.0, 0.0, 1.0]);
+    c.push_clip(10.0, 10.0, 50.0, 50.0);
+    c.push_clip(40.0, 40.0, 50.0, 50.0);
+    c.draw_rect(0.0, 0.0, 100.0, 100.0, [0.0, 1.0, 0.0, 1.0]);
+    let export = match r.svg(&c, None) {
+        Ok(e) => e,
+        Err(e) => panic!("{e}"),
+    };
+    let svg = &export.svg;
+    assert!(
+        !svg.contains("<filter"),
+        "the off-screen shadow was written"
+    );
+    assert!(!svg.contains("#ff0000"), "the off-screen rect was written");
+    assert!(svg.contains("#00ff00"));
+    // the second clip is the intersection of both
+    assert!(svg.contains("<rect x=\"40\" y=\"40\" width=\"20\" height=\"20\"/></clipPath>"));
+    assert_eq!(count(svg, "<g"), count(svg, "</g>"));
+    assert_eq!(export.report.len(), 3, "{}", export.report_text());
+    assert!(export.report[0].what.contains("PopClip without"));
+}
+
+/// A tessellated shape comes back as the polygon bounding its triangles:
+/// a filled rect is one four-corner loop, a frame with a hole is two
+/// loops, and both draw without a report.
+#[test]
+fn a_tessellated_path_is_the_outline_of_its_triangles() {
+    let Some(mut r) = renderer(Viewport::new(100.0, 100.0, 1.0)) else {
+        return;
+    };
+    let mut c = Compositor::new();
+    c.begin_frame();
+    c.draw_path(
+        PathBuilder::new()
+            .move_to(10.0, 10.0)
+            .line_to(50.0, 10.0)
+            .line_to(50.0, 30.0)
+            .line_to(10.0, 30.0)
+            .close()
+            .fill([0.0, 0.0, 1.0, 1.0]),
+    );
+    // a square frame: outer square, inner square the other way round
+    c.draw_path(
+        PathBuilder::new()
+            .move_to(60.0, 10.0)
+            .line_to(90.0, 10.0)
+            .line_to(90.0, 40.0)
+            .line_to(60.0, 40.0)
+            .close()
+            .move_to(70.0, 20.0)
+            .line_to(70.0, 30.0)
+            .line_to(80.0, 30.0)
+            .line_to(80.0, 20.0)
+            .close()
+            .fill([0.0, 1.0, 0.0, 0.5]),
+    );
+    let export = match r.svg(&c, None) {
+        Ok(e) => e,
+        Err(e) => panic!("{e}"),
+    };
+    let svg = &export.svg;
+    assert!(export.report.is_empty(), "{}", export.report_text());
+    let paths: Vec<&str> = svg
+        .lines()
+        .filter(|l| l.trim_start().starts_with("<path "))
+        .collect();
+    assert_eq!(paths.len(), 2, "{svg}");
+    let rect = paths[0];
+    assert!(rect.contains("fill=\"#0000ff\""));
+    assert_eq!(count(rect, "M"), 1, "{rect}");
+    assert_eq!(count(rect, "L"), 3, "{rect}");
+    for corner in ["10 10", "50 10", "50 30", "10 30"] {
+        assert!(rect.contains(corner), "{rect} lacks {corner}");
+    }
+    let frame = paths[1];
+    assert!(frame.contains("fill=\"#00ff00\" fill-opacity=\"0.5\""));
+    assert_eq!(count(frame, "M"), 2, "{frame}");
+    assert_eq!(count(frame, "Z"), 2, "{frame}");
+    if let Err(e) = ::svg::convert(svg, "paths") {
+        panic!("the importer refused the export: {e}\n{svg}");
+    }
+}
+
+/// A mesh that is not a clean partition (two triangles walking one edge
+/// the same way) falls back to one subpath per triangle, reported.
+#[test]
+fn a_mesh_that_is_not_a_partition_falls_back_to_triangles() {
+    let Some(mut r) = renderer(Viewport::new(100.0, 100.0, 1.0)) else {
+        return;
+    };
+    let v = |x: f32, y: f32| crate::compositor::QuadVertex {
+        position: [x, y],
+        color: [1.0, 0.0, 0.0, 1.0],
+    };
+    let data = crate::path::TessellatedPath {
+        vertices: vec![v(0.0, 0.0), v(10.0, 0.0), v(0.0, 10.0), v(10.0, 10.0)],
+        indices: vec![0, 1, 2, 0, 1, 3],
+        hash: 1,
+    };
+    let mut c = Compositor::new();
+    c.begin_frame();
+    c.draw_path(data);
+    let export = match r.svg(&c, None) {
+        Ok(e) => e,
+        Err(e) => panic!("{e}"),
+    };
+    assert_eq!(export.report.len(), 1);
+    assert!(
+        export.report[0].what.contains("seams"),
+        "{}",
+        export.report[0]
+    );
+    let svg = &export.svg;
+    assert_eq!(count(svg, "M"), 2, "{svg}");
+    assert_eq!(count(svg, "Z"), 2, "{svg}");
 }

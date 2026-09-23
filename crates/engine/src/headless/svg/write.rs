@@ -71,6 +71,65 @@ impl Svg {
         id
     }
 
+    /// A `<clipPath>` of arbitrary path data in `<defs>`; its id.
+    pub(super) fn clip_path_d(&mut self, d: &str) -> String {
+        let id = self.id("clip");
+        let _ = writeln!(
+            self.defs,
+            "    <clipPath id=\"{id}\"><path d=\"{d}\"/></clipPath>"
+        );
+        id
+    }
+
+    /// A two-stop `<linearGradient>` between two points of the scene, in
+    /// `<defs>`; its id, for `fill="url(#id)"`.
+    pub(super) fn linear_gradient(
+        &mut self,
+        from: [f32; 2],
+        to: [f32; 2],
+        color: [f32; 4],
+        color2: [f32; 4],
+    ) -> String {
+        let id = self.id("gradient");
+        let stop = |offset: &str, c: [f32; 4]| {
+            format!(
+                "<stop offset=\"{offset}\" stop-color=\"{}\"{}/>",
+                hex(c),
+                opacity("stop-opacity", c[3])
+            )
+        };
+        let _ = writeln!(
+            self.defs,
+            "    <linearGradient id=\"{id}\" gradientUnits=\"userSpaceOnUse\" \
+             color-interpolation=\"linearRGB\" x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\">{}{}\
+             </linearGradient>",
+            num(from[0]),
+            num(from[1]),
+            num(to[0]),
+            num(to[1]),
+            stop("0", color),
+            stop("1", color2)
+        );
+        id
+    }
+
+    /// A Gaussian blur `<filter>` over `region` (scene coordinates) in
+    /// `<defs>`; its id, for `filter="url(#id)"`.
+    pub(super) fn blur_filter(&mut self, [x, y, w, h]: [f32; 4], sigma: f32) -> String {
+        let id = self.id("blur");
+        let _ = writeln!(
+            self.defs,
+            "    <filter id=\"{id}\" filterUnits=\"userSpaceOnUse\" x=\"{}\" y=\"{}\" \
+             width=\"{}\" height=\"{}\"><feGaussianBlur stdDeviation=\"{}\"/></filter>",
+            num(x),
+            num(y),
+            num(w.max(0.0)),
+            num(h.max(0.0)),
+            num(sigma)
+        );
+        id
+    }
+
     /// Something the SVG does not hold exactly.
     pub(super) fn note(&mut self, node: &str, what: &str) {
         self.report.push(Approximation {
