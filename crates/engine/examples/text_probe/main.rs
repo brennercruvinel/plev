@@ -6,7 +6,7 @@
 //! into an offscreen texture, so the PNG is what a window would show.
 //!
 //! Set `PROBE_FILL=1` to push enough distinct glyphs through the atlas that
-//! it has to grow mid-frame — the state in which the defects described in
+//! it has to grow mid-frame, the state in which the defects described in
 //! `docs/ADR/glyph-raster-identity-and-atlas-isolation.md` become visible.
 //! A probe that draws a single line never reaches it.
 
