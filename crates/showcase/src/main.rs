@@ -5,7 +5,10 @@
 //!
 //! On desktop the binary also draws a page without a window:
 //! `showcase --render <page> ... --out file.png` renders one frame through
-//! the window's frame path (`showcase::app::render_page`) and exits.
+//! the window's frame path (`showcase::app::stage_page`), `--svg file.svg`
+//! writes the same frame as SVG with every approximation reported, and
+//! `--semantics file.json` writes the page's semantic projection in the
+//! form `plev observe` serves; then it exits.
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 fn main() {
@@ -46,12 +49,18 @@ mod cli {
     pub const USAGE: &str = "\
 usage:
   showcase [page] [theme] [scroll]      open the gallery window
-  showcase --render <page> --out <file.png>
+  showcase --render <page> [--out <file.png>] [--svg <file.svg>] [--semantics <file.json>]
+           [--svg-report <file.txt>] [--source]
            [--theme <name>] [--width <px>] [--height <px>] [--scale <s>] [--scroll <px>]
-                                        draw one frame of a page, no window
+                                        one frame of a page, no window: as png, as svg (every
+                                        approximation reported on stderr, and to --svg-report
+                                        when given), and the page's semantic projection as json
+                                        (the sem form `plev observe` serves; --source keeps each
+                                        node's source). at least one of --out, --svg, --semantics.
 defaults: --theme core --width 1200 --height 800 --scale 1 (the window's
 launch size); width and height are logical pixels, the PNG is width*scale
-by height*scale. page titles are the sidebar's (\"Data Table\").";
+by height*scale and the SVG's viewBox is the logical size. page titles are
+the sidebar's (\"Data Table\").";
 
     /// The window's launch size and theme, the defaults of `--render`.
     const DEFAULT_THEME: &str = "core";
@@ -74,7 +83,11 @@ by height*scale. page titles are the sidebar's (\"Data Table\").";
         pub height: f32,
         pub scale: f32,
         pub scroll: Option<f32>,
-        pub out: PathBuf,
+        pub out: Option<PathBuf>,
+        pub svg: Option<PathBuf>,
+        pub svg_report: Option<PathBuf>,
+        pub semantics: Option<PathBuf>,
+        pub source: bool,
     }
 
     pub fn parse(args: &[String]) -> Result<Mode, String> {
@@ -82,7 +95,8 @@ by height*scale. page titles are the sidebar's (\"Data Table\").";
             return Ok(Mode::Window);
         }
         let mut page = None;
-        let mut out = None;
+        let (mut out, mut svg, mut svg_report, mut semantics) = (None, None, None, None);
+        let mut source = false;
         let mut theme = DEFAULT_THEME.to_string();
         let (mut width, mut height, mut scale) = (DEFAULT_WIDTH, DEFAULT_HEIGHT, 1.0);
         let mut scroll = None;
@@ -96,13 +110,12 @@ by height*scale. page titles are the sidebar's (\"Data Table\").";
             };
             match flag.as_str() {
                 "-h" | "--help" => return Ok(Mode::Help),
-                "--semantics" => {
-                    return Err("--semantics is not available yet: the semantic \
-                                projection of a page arrives with task-59"
-                        .to_string());
-                }
                 "--render" => page = Some(value()?),
                 "--out" => out = Some(PathBuf::from(value()?)),
+                "--svg" => svg = Some(PathBuf::from(value()?)),
+                "--svg-report" => svg_report = Some(PathBuf::from(value()?)),
+                "--semantics" => semantics = Some(PathBuf::from(value()?)),
+                "--source" => source = true,
                 "--theme" => theme = value()?,
                 "--width" => width = positive(flag, &value()?)?,
                 "--height" => height = positive(flag, &value()?)?,
@@ -118,7 +131,19 @@ by height*scale. page titles are the sidebar's (\"Data Table\").";
             }
         }
         let page = page.ok_or("--render <page> is required")?;
-        let out = out.ok_or("--out <file.png> is required")?;
+        if out.is_none() && svg.is_none() && semantics.is_none() {
+            return Err(
+                "--render needs an output: --out <file.png>, --svg <file.svg> \
+                        or --semantics <file.json>"
+                    .to_string(),
+            );
+        }
+        if svg_report.is_some() && svg.is_none() {
+            return Err("--svg-report needs --svg <file.svg>".to_string());
+        }
+        if source && semantics.is_none() {
+            return Err("--source needs --semantics <file.json>".to_string());
+        }
         Ok(Mode::Render(Request {
             page,
             theme,
@@ -127,6 +152,10 @@ by height*scale. page titles are the sidebar's (\"Data Table\").";
             scale,
             scroll,
             out,
+            svg,
+            svg_report,
+            semantics,
+            source,
         }))
     }
 
@@ -144,22 +173,56 @@ by height*scale. page titles are the sidebar's (\"Data Table\").";
         }
     }
 
+    /// One staged frame, then each output asked for. The GPU is opened
+    /// only when pixels or glyph outlines are wanted; the projection alone
+    /// needs none.
     pub fn render(r: &Request) -> Result<(), Box<dyn std::error::Error>> {
         let viewport = Viewport::new(r.width, r.height, r.scale);
-        let mut renderer = Renderer::new(viewport, RenderConfig::default())?;
-        let frame = showcase::app::render_page(&mut renderer, &r.page, &r.theme, r.scroll)?;
-        frame.write_png(&r.out)?;
-        println!(
-            "wrote {} ({}x{}, {} / {} at {}x{} scale {})",
-            r.out.display(),
-            frame.width,
-            frame.height,
-            r.page,
+        let mut staged = showcase::app::stage_page(viewport, &r.page, &r.theme, r.scroll)?;
+        let where_ = format!(
+            "{} / {} at {}x{} scale {}",
+            staged.title(),
             r.theme,
             r.width,
             r.height,
             r.scale
         );
+        if r.out.is_some() || r.svg.is_some() {
+            let mut renderer = Renderer::new(viewport, RenderConfig::default())?;
+            let frame = staged.render(&mut renderer)?;
+            if let Some(out) = &r.out {
+                frame.write_png(out)?;
+                println!(
+                    "wrote {} ({}x{}, {where_})",
+                    out.display(),
+                    frame.width,
+                    frame.height
+                );
+            }
+            if let Some(path) = &r.svg {
+                let export = staged.svg(&mut renderer)?;
+                export.write(path)?;
+                eprint!("{}", export.report_text());
+                if let Some(report) = &r.svg_report {
+                    std::fs::write(report, export.report_text())?;
+                }
+                println!(
+                    "wrote {} ({} approximations reported, {where_})",
+                    path.display(),
+                    export.report.len()
+                );
+            }
+        }
+        if let Some(path) = &r.semantics {
+            let snapshot = staged.semantics()?;
+            std::fs::write(path, showcase::app::semantics_json(&snapshot, r.source)?)?;
+            println!(
+                "wrote {} ({} nodes, revision {}, {where_})",
+                path.display(),
+                snapshot.len(),
+                snapshot.revision()
+            );
+        }
         Ok(())
     }
 
@@ -194,7 +257,27 @@ by height*scale. page titles are the sidebar's (\"Data Table\").";
             assert_eq!(r.theme, "hoff");
             assert_eq!((r.width, r.height, r.scale), (390.0, 844.0, 3.0));
             assert_eq!(r.scroll, Some(120.0));
-            assert_eq!(r.out, PathBuf::from("a.png"));
+            assert_eq!(r.out, Some(PathBuf::from("a.png")));
+            assert_eq!((r.svg, r.svg_report, r.semantics), (None, None, None));
+            assert!(!r.source);
+        }
+
+        #[test]
+        fn svg_and_semantics_are_outputs_of_the_same_frame() {
+            let r = request(
+                "--render Todo --out a.png --svg a.svg --svg-report a.txt \
+                 --semantics a.json --source",
+            );
+            assert_eq!(r.out, Some(PathBuf::from("a.png")));
+            assert_eq!(r.svg, Some(PathBuf::from("a.svg")));
+            assert_eq!(r.svg_report, Some(PathBuf::from("a.txt")));
+            assert_eq!(r.semantics, Some(PathBuf::from("a.json")));
+            assert!(r.source);
+            // each output stands alone
+            assert!(request("--render Todo --svg a.svg").out.is_none());
+            let only = request("--render Todo --semantics a.json");
+            assert!(only.out.is_none() && only.svg.is_none());
+            assert!(!only.source);
         }
 
         #[test]
@@ -222,8 +305,21 @@ by height*scale. page titles are the sidebar's (\"Data Table\").";
         #[test]
         fn malformed_requests_are_errors_with_the_reason() {
             for (line, needle) in [
-                ("--render Button", "--out"),
+                (
+                    "--render Button",
+                    "--out <file.png>, --svg <file.svg> or --semantics",
+                ),
                 ("--out a.png", "--render"),
+                ("--semantics out.json", "--render"),
+                (
+                    "--render Button --out a.png --svg-report r.txt",
+                    "--svg-report needs --svg",
+                ),
+                (
+                    "--render Button --out a.png --source",
+                    "--source needs --semantics",
+                ),
+                ("--render Button --svg", "needs a value"),
                 ("--render", "needs a value"),
                 ("--render Button --out a.png --width wide", "--width"),
                 ("--render Button --out a.png --scale 0", "--scale"),
@@ -231,7 +327,6 @@ by height*scale. page titles are the sidebar's (\"Data Table\").";
                 ("--render Button --out a.png --scroll -1", "--scroll"),
                 ("--render Button --out a.png --fast", "unknown flag"),
                 ("--render Button --out a.png extra", "unexpected"),
-                ("--semantics out.json", "not available yet"),
             ] {
                 match parse(&args(line)) {
                     Err(e) => assert!(e.contains(needle), "{line}: '{e}' lacks '{needle}'"),

@@ -1,10 +1,14 @@
 //! `showcase --render`: one frame of a gallery page without a window,
 //! through `engine::headless` (the window's own frame path into an
-//! offscreen texture). Desktop only, like the binary that calls it.
+//! offscreen texture), the same frame as SVG with every approximation
+//! reported (`engine::headless::svg`), and the page's semantic projection
+//! in the form `plev observe` serves. Desktop only, like the binary that
+//! calls it.
 
 use crate::view::ShowcaseView;
 use engine::compositor::Compositor;
-use engine::headless::{Frame, HeadlessError, Renderer};
+use engine::headless::{Frame, HeadlessError, Renderer, SvgExport, Viewport};
+use sem::Snapshot;
 
 /// Animation steps a headless frame may take before it is drawn: the
 /// window keeps drawing while anything moves, so the frame it settles
@@ -15,14 +19,17 @@ const SETTLE_STEPS: usize = 120;
 /// One animation step of a headless frame: a 60 Hz display.
 const SETTLE_DT: f32 = 1.0 / 60.0;
 
-/// Why [`render_page`] drew nothing.
+/// Why a page could not be staged, drawn, exported or projected.
 #[derive(Debug)]
 pub enum RenderError {
     /// No page has this title (titles as the sidebar shows them).
     UnknownPage(String),
     /// No built-in theme has this name.
     UnknownTheme(String),
+    /// The page projects no semantics yet (today only the todo page does).
+    NoSemantics(String),
     Headless(HeadlessError),
+    Json(serde_json::Error),
 }
 
 impl std::fmt::Display for RenderError {
@@ -30,7 +37,12 @@ impl std::fmt::Display for RenderError {
         match self {
             Self::UnknownPage(p) => write!(f, "no page titled '{p}'"),
             Self::UnknownTheme(t) => write!(f, "no theme named '{t}'"),
+            Self::NoSemantics(p) => write!(
+                f,
+                "the page '{p}' has no semantic projection yet (the todo page has one)"
+            ),
             Self::Headless(e) => write!(f, "{e}"),
+            Self::Json(e) => write!(f, "semantics as json: {e}"),
         }
     }
 }
@@ -43,18 +55,30 @@ impl From<HeadlessError> for RenderError {
     }
 }
 
-/// Draw one frame of a gallery page without a window: the launch state
-/// the window takes from `[page] [theme] [scroll]`, laid out at the
-/// renderer's viewport, animated until it settles, then drawn by the
-/// window's own frame path into the renderer's target and read back.
-pub fn render_page(
-    renderer: &mut Renderer,
+impl From<serde_json::Error> for RenderError {
+    fn from(e: serde_json::Error) -> Self {
+        Self::Json(e)
+    }
+}
+
+/// A gallery page staged for one headless frame: the launch state the
+/// window takes from `[page] [theme] [scroll]`, laid out at a viewport
+/// and animated until it settles, its scene built. The png, the svg and
+/// the semantics asked of one staged page are of that one frame.
+pub struct StagedPage {
+    view: ShowcaseView,
+    compositor: Compositor,
+}
+
+/// Stage `page` under `theme` at `viewport`, scrolled to `scroll` when
+/// given. Needs no GPU: the scene is built into a plain compositor.
+pub fn stage_page(
+    viewport: Viewport,
     page: &str,
     theme: &str,
     scroll: Option<f32>,
-) -> Result<Frame, RenderError> {
-    let v = renderer.viewport();
-    let mut view = ShowcaseView::new(v.width, v.height);
+) -> Result<StagedPage, RenderError> {
+    let mut view = ShowcaseView::new(viewport.width, viewport.height);
     view.jump_to_page(page);
     if !view.page_title().eq_ignore_ascii_case(page) {
         return Err(RenderError::UnknownPage(page.to_string()));
@@ -66,7 +90,7 @@ pub fn render_page(
     if let Some(offset) = scroll {
         view.scroll_page_to(offset);
     }
-    view.resize(v.width, v.height, v.scale);
+    view.resize(viewport.width, viewport.height, viewport.scale);
 
     let mut compositor = Compositor::new();
     for step in 0..SETTLE_STEPS {
@@ -76,8 +100,81 @@ pub fn render_page(
             break;
         }
     }
-    let clear = view.theme.colors.bg.to_linear_array();
-    Ok(renderer.render(&mut compositor, clear)?)
+    Ok(StagedPage { view, compositor })
+}
+
+impl StagedPage {
+    /// The page's title as the sidebar shows it.
+    pub fn title(&self) -> &'static str {
+        self.view.page_title()
+    }
+
+    /// Draw the frame by the window's own frame path into the renderer's
+    /// target and read it back.
+    pub fn render(&mut self, renderer: &mut Renderer) -> Result<Frame, RenderError> {
+        let clear = self.view.theme.colors.bg.to_linear_array();
+        Ok(renderer.render(&mut self.compositor, clear)?)
+    }
+
+    /// The frame as SVG, every approximation on the report. The glyphs
+    /// are the renderer's shaping, the same [`render`](Self::render)
+    /// draws from, so the svg of a drawn frame holds the glyphs the png
+    /// shows.
+    pub fn svg(&self, renderer: &mut Renderer) -> Result<SvgExport, RenderError> {
+        let background = self.view.theme.colors.bg.to_array();
+        Ok(renderer.svg(&self.compositor, Some(background))?)
+    }
+
+    /// What the page means, projected as it stands in this frame; an
+    /// error for a page without a projection.
+    pub fn semantics(&self) -> Result<Snapshot, RenderError> {
+        self.view
+            .semantics()
+            .ok_or_else(|| RenderError::NoSemantics(self.title().to_string()))
+    }
+}
+
+/// The lean serde form of `sem` (docs/ADR/lean-semantic-form-and-one-redaction.md):
+/// the nodes in projection order, and the focus when there is one.
+#[derive(serde::Serialize)]
+struct SnapshotJson<'a> {
+    nodes: Vec<sem::Node>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    focused: Option<&'a sem::SemId>,
+}
+
+/// `snapshot` as pretty JSON in the serde form of `sem`, the form an agent
+/// receives from `plev observe`: each node's `source` (the code that
+/// projected it) leaves unless `source` asks for it, as the agent port
+/// does. With `source` the text is the snapshot's own serialization.
+pub fn semantics_json(snapshot: &Snapshot, source: bool) -> Result<String, serde_json::Error> {
+    if source {
+        return serde_json::to_string_pretty(snapshot);
+    }
+    let nodes = snapshot
+        .nodes()
+        .values()
+        .map(|node| {
+            let mut node = node.clone();
+            node.source = None;
+            node
+        })
+        .collect();
+    serde_json::to_string_pretty(&SnapshotJson {
+        nodes,
+        focused: snapshot.focused(),
+    })
+}
+
+/// Draw one frame of a gallery page without a window: [`stage_page`] at
+/// the renderer's viewport, then [`StagedPage::render`].
+pub fn render_page(
+    renderer: &mut Renderer,
+    page: &str,
+    theme: &str,
+    scroll: Option<f32>,
+) -> Result<Frame, RenderError> {
+    stage_page(renderer.viewport(), page, theme, scroll)?.render(renderer)
 }
 
 /// Every page through the window's frame path, no window. The GPU
@@ -232,5 +329,179 @@ mod tests {
         let upper = page(&mut r, "DATA TABLE", "core");
         let exact = page(&mut r, "Data Table", "core");
         assert!(upper.rgba == exact.rgba);
+    }
+
+    fn staged(title: &str, theme: &str, viewport: Viewport) -> StagedPage {
+        match stage_page(viewport, title, theme, None) {
+            Ok(staged) => staged,
+            Err(e) => panic!("{title} / {theme}: {e}"),
+        }
+    }
+
+    /// Three pages as SVG, from the same frame as their png: the file is
+    /// the viewport's size, holds text as labelled glyph groups, and the
+    /// svg importer reads it back as drawable content.
+    #[test]
+    fn three_pages_export_svg_the_importer_reads_back() {
+        let Some(mut r) = renderer(DESKTOP) else {
+            return;
+        };
+        for (title, theme) in [("Todo", "hoff"), ("Button", "core"), ("Card", "hoff")] {
+            let mut staged = staged(title, theme, DESKTOP);
+            let before = match staged.svg(&mut r) {
+                Ok(e) => e,
+                Err(e) => panic!("{title}: {e}"),
+            };
+            let frame = match staged.render(&mut r) {
+                Ok(f) => f,
+                Err(e) => panic!("{title}: {e}"),
+            };
+            assert_eq!((frame.width, frame.height), DESKTOP.physical());
+            let export = match staged.svg(&mut r) {
+                Ok(e) => e,
+                Err(e) => panic!("{title}: {e}"),
+            };
+            assert_eq!(before, export, "{title}: the svg changed with the draw");
+            let svg = &export.svg;
+            assert!(
+                svg.contains(" width=\"1280\" height=\"800\" viewBox=\"0 0 1280 800\">"),
+                "{title}: viewBox"
+            );
+            let labels = svg.matches("<g aria-label=\"").count();
+            assert!(labels > 3, "{title}: {labels} text runs");
+            assert!(
+                svg.contains(&format!("aria-label=\"{title}\"")),
+                "{title}: header"
+            );
+            assert!(svg.matches("<rect ").count() > 3, "{title}: rects");
+            assert_eq!(
+                svg.matches("<g").count(),
+                svg.matches("</g>").count(),
+                "{title}"
+            );
+            match ::svg::convert(svg, title) {
+                Ok((_, stats)) => {
+                    assert_eq!((stats.width, stats.height), (1280.0, 800.0), "{title}");
+                    assert!(stats.paths > labels, "{title}: {stats:?}");
+                }
+                Err(e) => panic!("{title}: the importer refused the export: {e}"),
+            }
+        }
+    }
+
+    /// The effects page shows shadows, gradients and a backdrop blur; each
+    /// one is on the report, and a report line names its node.
+    #[test]
+    fn the_effects_page_reports_its_shadows_gradients_and_blur() {
+        let Some(mut r) = renderer(DESKTOP) else {
+            return;
+        };
+        let export = match staged("Effects", "hoff", DESKTOP).svg(&mut r) {
+            Ok(e) => e,
+            Err(e) => panic!("{e}"),
+        };
+        let text = export.report_text();
+        for needle in ["drop shadow", "inset shadow", "gradient", "backdrop blur"] {
+            assert!(text.contains(needle), "the report lacks {needle}:\n{text}");
+        }
+        assert!(text.lines().all(|l| l.starts_with("layer ")), "{text}");
+        assert_eq!(text.lines().count(), export.report.len());
+    }
+
+    /// `--semantics` of the todo is its projection in process: with
+    /// `--source` the snapshot's own serialization, byte for byte; without,
+    /// the same nodes and the same revision, no `source` on any node.
+    #[test]
+    fn the_todo_semantics_json_is_the_projection_in_process() {
+        let staged = staged("Todo", "core", DESKTOP);
+        let snapshot = match staged.semantics() {
+            Ok(s) => s,
+            Err(e) => panic!("{e}"),
+        };
+        assert!(!snapshot.is_empty());
+        let full = match serde_json::to_string_pretty(&snapshot) {
+            Ok(s) => s,
+            Err(e) => panic!("{e}"),
+        };
+        assert_eq!(semantics_json(&snapshot, true).ok(), Some(full.clone()));
+        assert!(
+            full.contains("\"source\""),
+            "the projection records no source"
+        );
+
+        let lean = match semantics_json(&snapshot, false) {
+            Ok(s) => s,
+            Err(e) => panic!("{e}"),
+        };
+        assert!(!lean.contains("\"source\""), "{lean}");
+        assert!(lean.len() < full.len());
+        let back: Snapshot = match serde_json::from_str(&lean) {
+            Ok(s) => s,
+            Err(e) => panic!("{e}\n{lean}"),
+        };
+        assert_eq!(back.revision(), snapshot.revision());
+        assert_eq!(back.len(), snapshot.len());
+        assert!(
+            back.nodes()
+                .keys()
+                .zip(snapshot.nodes().keys())
+                .all(|(a, b)| a == b),
+            "the node order changed"
+        );
+        assert_eq!(back.focused(), snapshot.focused());
+        // the same page staged again projects the same revision
+        let again = staged.semantics().map(|s| s.revision()).ok();
+        assert_eq!(again, Some(snapshot.revision()));
+    }
+
+    /// The sidebar is the same widget on every page, so its labels export
+    /// the same glyph outlines on every page. A shared swash scale context
+    /// once handed the Card page's sidebar the wrong glyphs (stale per-font
+    /// state across sizes); this pins the fix.
+    #[test]
+    fn the_same_text_run_exports_the_same_outlines_on_every_page() {
+        let Some(mut r) = renderer(DESKTOP) else {
+            return;
+        };
+        let group = |svg: &str, label: &str| -> String {
+            let start = svg
+                .find(&format!("<g aria-label=\"{label}\""))
+                .unwrap_or_else(|| panic!("no run labelled {label}"));
+            let end = svg[start..].find("</g>").map_or(svg.len(), |i| start + i);
+            svg[start..end].to_string()
+        };
+        let mut runs: Vec<(String, String)> = Vec::new();
+        for title in ["Card", "Effects", "Typography"] {
+            let export = match staged(title, "hoff", DESKTOP).svg(&mut r) {
+                Ok(e) => e,
+                Err(e) => panic!("{title}: {e}"),
+            };
+            runs.push((
+                group(&export.svg, "Foundations"),
+                group(&export.svg, "Accordion"),
+            ));
+        }
+        for (label, at) in [("Foundations", 0usize), ("Accordion", 1)] {
+            let first = if at == 0 { &runs[0].0 } else { &runs[0].1 };
+            assert!(first.matches("<path d=").count() >= 9, "{label}: {first}");
+            for (title, run) in ["Effects", "Typography"].iter().zip(&runs[1..]) {
+                let other = if at == 0 { &run.0 } else { &run.1 };
+                assert_eq!(first, other, "{label} differs between Card and {title}");
+            }
+        }
+    }
+
+    #[test]
+    fn a_page_without_a_projection_is_an_error_not_an_empty_file() {
+        let staged = staged("Button", "core", DESKTOP);
+        match staged.semantics() {
+            Err(RenderError::NoSemantics(page)) => assert_eq!(page, "Button"),
+            other => panic!("expected NoSemantics, got {:?}", other.map(|s| s.len())),
+        }
+        assert!(
+            RenderError::NoSemantics("Button".to_string())
+                .to_string()
+                .contains("no semantic projection")
+        );
     }
 }
