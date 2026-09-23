@@ -27,6 +27,33 @@ pub struct Constraints {
     pub secret: bool,
 }
 
+impl Constraints {
+    /// every reason these constraints are invalid, in field order.
+    pub(crate) fn faults(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if let Some((low, high)) = self.range {
+            if !(low.is_finite() && high.is_finite()) {
+                out.push(format!("range ({low}, {high}) is not finite"));
+            } else if low > high {
+                out.push(format!("range low {low} is above high {high}"));
+            }
+        }
+        if let Some(step) = self.step {
+            if !(step.is_finite() && step > 0.0) {
+                out.push(format!("step {step} is not finite and above zero"));
+            }
+        }
+        if let Some(options) = &self.options {
+            for (at, option) in options.iter().enumerate() {
+                if options.iter().take(at).any(|seen| seen == option) {
+                    out.push(format!("option {option:?} appears more than once"));
+                }
+            }
+        }
+        out
+    }
+}
+
 fn bits(pair: Option<(f64, f64)>) -> Option<(u64, u64)> {
     pair.map(|(a, b)| (a.to_bits(), b.to_bits()))
 }
