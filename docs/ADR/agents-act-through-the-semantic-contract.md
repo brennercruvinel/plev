@@ -251,6 +251,28 @@ source, not its state.
 - a process killed by a signal leaves its socket file behind. `plev`
   ignores a socket nobody answers on, and the next process with that pid
   replaces it; nothing else sweeps them.
+- an app that spawns children can leak the port's descriptors into
+  them. on macOS std sets `FD_CLOEXEC` on a socket after creating it
+  (there is no `SOCK_CLOEXEC`), so a child spawned from another thread in
+  between (the ide and the showcase's Git page run `git` on their worker)
+  inherits the listener, or a connection the port just accepted, for as
+  long as it lives. while the app lives nothing shows: the child never
+  accepts, and the app's accepting thread takes every connection. when
+  the port drops, the socket file goes and nobody can reach the leaked
+  listener. but when the app ends without dropping the port (a signal, an
+  abort) while such a child lives, the file stays and the child's copy
+  still listens: a connect succeeds, so `find` counts the socket as live
+  (it returns it alone, or reports `Ambiguous` next to another instance
+  of the app), the client's hello is queued and never answered, and
+  `Client` returns `Timeout` (`plev` exits 3 after its 30 s default). a
+  leaked connection keeps that client from seeing the end of the
+  connection until the child exits; it waits the same way. once the child
+  exits the socket is dead again: a connect is refused and `find` ignores
+  it. not fixed here: a `find` that asks for a hello answered within a
+  short timeout would tell such a socket from a live app, and spawning
+  children with every other descriptor closed would stop the leak. the
+  wire tests that spawn processes live in their own binaries, since the
+  same leak made a dropped listener answer in a test.
 - `confirm` and `decline` never reach the dispatcher from a socket: the
   refusal is decided by the connection's actor, which is always an agent.
   a person who wants to answer from outside the window is future work,
