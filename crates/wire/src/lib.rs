@@ -52,4 +52,4 @@ pub use proto::{
     StageReply, VERSION,
 };
 pub use ring::{DEFAULT_RING, Ring};
-pub use server::{ConnId, Host, MAX_NAME, Outgoing, Server};
+pub use server::{ConnId, Host, MAX_NAME, Outgoing, Server, Traffic};

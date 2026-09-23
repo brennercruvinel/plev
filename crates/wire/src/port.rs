@@ -25,7 +25,7 @@ use std::net::Shutdown;
 use std::os::unix::fs::PermissionsExt;
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::mpsc::{self, Receiver, SyncSender, TrySendError};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -36,7 +36,7 @@ use crate::error::WireError;
 use crate::place::{check_app, clear_stale, io, private_dir, socket_dir, socket_path};
 use crate::proto::{Ask, ClientMsg, ProtoError};
 use crate::ring::DEFAULT_RING;
-use crate::server::{ConnId, Host, Outgoing, Server};
+use crate::server::{ConnId, Host, Outgoing, Server, Traffic};
 
 /// the variable that opens the port in a debug build: `PLEV_AGENT=1`.
 pub const ENV: &str = "PLEV_AGENT";
@@ -135,6 +135,15 @@ struct Shared {
     pending: AtomicBool,
     live: AtomicUsize,
     wake: Mutex<Wake>,
+    /// the transport's side of `Traffic`, counted on the socket threads.
+    conns: AtomicU64,
+    msgs_in: AtomicU64,
+    msgs_out: AtomicU64,
+    bytes_in: AtomicU64,
+    bytes_out: AtomicU64,
+    /// lines refused before the app (not utf-8, not JSON, another
+    /// version, over the limit).
+    refused: AtomicU64,
 }
 
 impl Shared {
@@ -144,6 +153,15 @@ impl Shared {
                 wake();
             }
         }
+    }
+
+    /// one line went out to a client, as written on the socket.
+    fn wrote(&self, line: &str) {
+        self.msgs_out.fetch_add(1, Ordering::Relaxed);
+        self.bytes_out.fetch_add(
+            u64::try_from(line.len()).unwrap_or(u64::MAX),
+            Ordering::Relaxed,
+        );
     }
 }
 
@@ -187,6 +205,12 @@ impl AgentPort {
             pending: AtomicBool::new(false),
             live: AtomicUsize::new(0),
             wake: Mutex::new(Box::new(wake)),
+            conns: AtomicU64::new(0),
+            msgs_in: AtomicU64::new(0),
+            msgs_out: AtomicU64::new(0),
+            bytes_in: AtomicU64::new(0),
+            bytes_out: AtomicU64::new(0),
+            refused: AtomicU64::new(0),
         });
         let accepting = Arc::clone(&shared);
         let started = opened.and_then(|()| {
@@ -216,6 +240,22 @@ impl AgentPort {
     /// the protocol state (the served revisions among it).
     pub fn server(&self) -> &Server {
         &self.server
+    }
+
+    /// what went through this port since it opened: connections,
+    /// messages and bytes counted on the socket threads as the lines come
+    /// and go (a line with its `\n`), and what the server answered.
+    /// `errors` is the server's errors plus the lines refused before it.
+    pub fn traffic(&self) -> Traffic {
+        let s = &self.shared;
+        let mut t = self.server.traffic();
+        t.conns = s.conns.load(Ordering::Relaxed);
+        t.msgs_in = s.msgs_in.load(Ordering::Relaxed);
+        t.msgs_out = s.msgs_out.load(Ordering::Relaxed);
+        t.bytes_in = s.bytes_in.load(Ordering::Relaxed);
+        t.bytes_out = s.bytes_out.load(Ordering::Relaxed);
+        t.errors += s.refused.load(Ordering::Relaxed);
+        t
     }
 
     /// serves what the connections asked since the last drain, on the
@@ -326,10 +366,12 @@ fn accept(listener: &UnixListener, events: &SyncSender<Event>, shared: &Arc<Shar
             refuse(
                 stream,
                 "this app already holds as many agent connections as it takes",
+                shared,
             );
             continue;
         }
         next += 1;
+        shared.conns.fetch_add(1, Ordering::Relaxed);
         if start(next, stream, events, shared).is_err() {
             return;
         }
@@ -337,7 +379,7 @@ fn accept(listener: &UnixListener, events: &SyncSender<Event>, shared: &Arc<Shar
 }
 
 /// answers a connection that is not taken and closes it.
-fn refuse(mut stream: UnixStream, reason: &str) {
+fn refuse(mut stream: UnixStream, reason: &str, shared: &Shared) {
     let refusal = Refusal {
         id: None,
         error: ProtoError::NotEnabled {
@@ -347,7 +389,10 @@ fn refuse(mut stream: UnixStream, reason: &str) {
     let mut line = encode_server(&refusal.reply());
     line.push('\n');
     let _ = stream.set_write_timeout(Some(Duration::from_millis(200)));
-    let _ = stream.write_all(line.as_bytes());
+    if stream.write_all(line.as_bytes()).is_ok() {
+        shared.wrote(&line);
+        shared.refused.fetch_add(1, Ordering::Relaxed);
+    }
     let _ = stream.shutdown(Shutdown::Both);
 }
 
@@ -373,9 +418,10 @@ fn start(
         })
         .map_err(|_| ())?;
     shared.live.fetch_add(1, Ordering::SeqCst);
+    let shared_w = Arc::clone(shared);
     let writer = thread::Builder::new()
         .name(format!("plev-agent-write-{conn}"))
-        .spawn(move || write(writing, &lines));
+        .spawn(move || write(writing, &lines, &shared_w));
     let events = events.clone();
     let shared_r = Arc::clone(shared);
     let reader = thread::Builder::new()
@@ -388,11 +434,12 @@ fn start(
     Ok(())
 }
 
-fn write(mut stream: UnixStream, lines: &Receiver<String>) {
+fn write(mut stream: UnixStream, lines: &Receiver<String>, shared: &Shared) {
     while let Ok(line) = lines.recv() {
         if stream.write_all(line.as_bytes()).is_err() {
             break;
         }
+        shared.wrote(&line);
     }
     let _ = stream.shutdown(Shutdown::Both);
 }
@@ -418,7 +465,13 @@ fn read(
             Ok(0) | Err(_) => break,
             Ok(_) => {}
         }
+        shared.bytes_in.fetch_add(
+            u64::try_from(buf.len()).unwrap_or(u64::MAX),
+            Ordering::Relaxed,
+        );
         if buf.last() != Some(&b'\n') && buf.len() > MAX_LINE {
+            shared.msgs_in.fetch_add(1, Ordering::Relaxed);
+            shared.refused.fetch_add(1, Ordering::Relaxed);
             let reason = format!("a line holds at most {MAX_LINE} bytes; the connection ends");
             let _ = outbox.send(refusal_line(None, reason));
             break;
@@ -427,6 +480,8 @@ fn read(
         let text = match std::str::from_utf8(line) {
             Ok(text) => text,
             Err(e) => {
+                shared.msgs_in.fetch_add(1, Ordering::Relaxed);
+                shared.refused.fetch_add(1, Ordering::Relaxed);
                 if outbox
                     .send(refusal_line(None, format!("not utf-8: {e}")))
                     .is_err()
@@ -439,6 +494,7 @@ fn read(
         if text.trim().is_empty() {
             continue;
         }
+        shared.msgs_in.fetch_add(1, Ordering::Relaxed);
         match decode_client(text) {
             Ok(msg) => {
                 if events.send(Event::Msg { conn, msg }).is_err() {
@@ -447,6 +503,7 @@ fn read(
                 shared.wake();
             }
             Err(refusal) => {
+                shared.refused.fetch_add(1, Ordering::Relaxed);
                 let mut line = encode_server(&refusal.reply());
                 line.push('\n');
                 if outbox.send(line).is_err() {
