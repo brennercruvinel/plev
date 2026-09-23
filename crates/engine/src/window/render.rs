@@ -2,6 +2,12 @@ use super::state::GpuState;
 use crate::compositor::Layer;
 
 impl super::App {
+    /// The engine `App`'s frame. It keeps its own tail instead of calling
+    /// `window::draw_frame`: it composites the per-layer effects (blur and
+    /// shadow, `apply_layer_effects`) between the layer passes and the
+    /// composite pass, and `draw_frame` composites with none. Going
+    /// through `draw_frame` needs the effects inside it, a change to the
+    /// frame path every app and the headless renderer share.
     pub(crate) fn render(&mut self) {
         // Tick frame clock
         self.animation_tick = self.frame_clock.tick();
@@ -95,33 +101,14 @@ impl super::App {
 
         text_system.finish_frame();
 
-        // Update accessibility tree if active
-        #[cfg(feature = "accessibility")]
-        if self.a11y_state.is_active() {
-            self.a11y_state.begin_frame();
-            // Push accessible nodes from hit regions
-            for region in self.input_state.hit_regions() {
-                let role = if region.focusable {
-                    accesskit::Role::Button
-                } else {
-                    accesskit::Role::GenericContainer
-                };
-                self.a11y_state.push_node(
-                    region.view_id,
-                    role,
-                    None,
-                    [region.x, region.y, region.w, region.h],
-                    region.focusable,
-                    None,
-                );
-            }
-            self.a11y_state
-                .update_focus_graph(self.input_state.hit_regions());
-            let update = self
-                .a11y_state
-                .build_tree_update(self.input_state.focused_view());
-            if let Some(ref mut adapter) = self.a11y_adapter {
-                adapter.update_if_active(|| update);
+        // The accessibility tree of this frame, while a screen reader
+        // listens. This `App` projects no meaning (no `sem::Snapshot`), so
+        // the tree is the window alone and nothing the reader asks maps.
+        #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
+        if let (Some(bridge), Some(window)) = (self.a11y.as_mut(), self.window.as_ref()) {
+            bridge.update(window, &self.compositor, || None);
+            for assist in bridge.take() {
+                log::debug!("accessibility: nothing handles {assist:?}");
             }
         }
 

@@ -85,11 +85,11 @@ impl super::App {
         event: WindowEvent,
     ) {
         // Forward events to accessibility adapter
-        #[cfg(feature = "accessibility")]
-        if let Some(ref mut adapter) = self.a11y_adapter
+        #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
+        if let Some(ref mut bridge) = self.a11y
             && let Some(ref window) = self.window
         {
-            adapter.process_event(window, &event);
+            bridge.process_event(window, &event);
         }
 
         match event {

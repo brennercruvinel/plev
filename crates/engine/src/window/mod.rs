@@ -72,10 +72,11 @@ pub struct App {
     pub(crate) event_buffer: Vec<BufferedEvent>,
     #[cfg(any(target_arch = "wasm32", target_os = "android"))]
     pub(crate) event_loop_proxy: Option<EventLoopProxy<AppEvent>>,
-    #[cfg(feature = "accessibility")]
-    a11y_state: crate::accessibility::AccessibilityState,
-    #[cfg(feature = "accessibility")]
-    a11y_adapter: Option<accesskit_winit::Adapter>,
+    /// The window's accessibility. This `App` projects no meaning, so
+    /// its tree is the window alone; an app shell with a `sem::Snapshot`
+    /// projects it through the same `Bridge`.
+    #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
+    a11y: Option<crate::accessibility::Bridge>,
     #[cfg(hot_reload)]
     narrate_watcher: Option<crate::hot_reload::NarrateWatcher>,
 }
@@ -115,10 +116,8 @@ impl App {
             perf: PerfMonitor::new(),
             perf_hud: PerfHud::new(),
             event_buffer: Vec::with_capacity(64),
-            #[cfg(feature = "accessibility")]
-            a11y_state: crate::accessibility::AccessibilityState::new(),
-            #[cfg(feature = "accessibility")]
-            a11y_adapter: None,
+            #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
+            a11y: None,
             #[cfg(hot_reload)]
             narrate_watcher: {
                 let dirs = crate::hot_reload::source_dirs();
@@ -186,50 +185,9 @@ impl App {
             perf_hud: PerfHud::new(),
             event_buffer: Vec::with_capacity(64),
             event_loop_proxy: Some(proxy),
-            #[cfg(feature = "accessibility")]
-            a11y_state: crate::accessibility::AccessibilityState::new(),
-            #[cfg(feature = "accessibility")]
-            a11y_adapter: None,
+            #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
+            a11y: None,
         }
-    }
-}
-
-// -- Accessibility helpers (cfg-gated) ------------------------------------
-
-#[cfg(feature = "accessibility")]
-pub(crate) struct PlevActivationHandler;
-
-#[cfg(feature = "accessibility")]
-impl accesskit::ActivationHandler for PlevActivationHandler {
-    fn request_initial_tree(&mut self) -> Option<accesskit::TreeUpdate> {
-        let mut root = accesskit::Node::new(accesskit::Role::Window);
-        root.set_label("plev Showcase");
-        Some(accesskit::TreeUpdate {
-            nodes: vec![(accesskit::NodeId(u64::MAX), root)],
-            tree: Some(accesskit::Tree::new(accesskit::NodeId(u64::MAX))),
-            tree_id: accesskit::TreeId::ROOT,
-            focus: accesskit::NodeId(u64::MAX),
-        })
-    }
-}
-
-#[cfg(feature = "accessibility")]
-pub(crate) struct PlevActionHandler;
-
-#[cfg(feature = "accessibility")]
-impl accesskit::ActionHandler for PlevActionHandler {
-    fn do_action(&mut self, _request: accesskit::ActionRequest) {
-        log::debug!("AccessKit action: {_request:?}");
-    }
-}
-
-#[cfg(feature = "accessibility")]
-pub(crate) struct PlevDeactivationHandler;
-
-#[cfg(feature = "accessibility")]
-impl accesskit::DeactivationHandler for PlevDeactivationHandler {
-    fn deactivate_accessibility(&mut self) {
-        log::info!("AccessKit: screen reader disconnected");
     }
 }
 
