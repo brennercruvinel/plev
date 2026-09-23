@@ -435,3 +435,44 @@ contagem de `#[test]` por arquivo, lida no código (não rodada). "ignorado" é 
 - a porta servindo o binário `ide` ou a página Git do showcase: não existe, não há o que testar.
 - sondas de `find` contadas em `Traffic.conns`: sem teste.
 - urnaui: fora do workspace; entra só na perna do gate que exige `../urna`.
+
+## 7. ownership agora
+
+o que cada task pendente tocaria, pelo arquivo da task e pelo código de hoje. "pelo código" é o que o arquivo da task não lista e o código obriga, porque é onde o mecanismo mora ou quem consome a interface que muda.
+
+| task | pelo arquivo da task | pelo código de hoje | colide com |
+|---|---|---|---|
+| 82 fase b | `crates/ide/src/views/commit_form.rs`, `crates/ide/src/main.rs`, `crates/urnaui/src/view/field.rs`, `crates/urnaui/src/app.rs` (`docs/mission/steps/ongoing/task-82-caret-blink-render-on-demand.md:231-236`) | o `bool` sobe por `crates/ide/src/views/workspace/mod.rs:312-318` (toast incluído) e `crates/ide/src/workbench/mod.rs:180-182`; `Workbench::tick` é lido também pela página Git do showcase (`crates/showcase/src/view/apps/git/desktop.rs:205-211`, `crates/showcase/src/view/apps/git/stub.rs:54`, `crates/showcase/src/view/render.rs:32-33`); a ponte `TextField::tick` mora no comps (`crates/comps/src/form/text_field.rs:216-218`); o urnaui tem oito `tick -> bool` em `crates/urnaui/src/view/` | 75 (shell do ide e do urnaui), 76 (`crates/urnaui/src/app.rs`), 74 (comps `form` e `editor`, se a ponte `bool` sair), 69 (view do showcase) |
+| 63 fase d | retenção de pixels opt-in em `crates/engine/src/gpu/image.rs`; atalho de debug e panic hook no shell do showcase (`docs/mission/steps/ongoing/task-63-flight-recorder.md:64-71`, `:97-102`) | o shell é `crates/showcase/src/app.rs` (`Access` em `:98-104`, `run` em `:482-496`); o showcase não depende de `rec` (`crates/showcase/Cargo.toml:19-45`); `crates/rec/src/payload.rs` passa a gravar pixels; o outro consumidor da retenção é o svg (`crates/engine/src/headless/svg`) | 65 e 75 (`crates/showcase/src/app.rs`), 64 (`crates/rec`), 67 (svg) |
+| 64 | crate ou página do inspector, harness de sessão, ADR (`docs/mission/steps/pending/task-64-session-inspector-and-tests.md:88-92`) | desenhar as ligações sobre o frame exige gravar ligações, que o rec não grava (`crates/rec/src/recorder.rs:99-113`): toca `crates/rec`; o harness que reaplica requests precisa de fixture de cada app (`Workbench`, `TodoPage`); crate novo passa por `Cargo.toml`, `docs/arc/arc.toml`, `README.md` | 63 fase d (`crates/rec`), 65 (link para o código), 67 (sessão como teste contra regressão estrutural) |
+| 65 | `crates/engine/src/hot_reload/**`, `crates/engine/Cargo.toml`, atalho no shell do showcase, `crates/engine/src/theme` depois da fase d (`docs/mission/steps/pending/task-65-pixel-to-source.md:94-98`) | `span-locations` é feature do `proc-macro2` do workspace (`Cargo.toml:98`); a fase a é o primeiro uso de produção de `Compositor::hit` (`crates/engine/src/compositor/binding.rs:184-208`) e só acha nós da página Todo (`crates/showcase/src/view/dispatch.rs:242-252`) | 63 fase d e 75 (`crates/showcase/src/app.rs`); `Cargo.toml` da raiz (orquestrador) |
+| 67 | exemplo de regressão no showcase, fixtures, `.github/workflows`, ADR (`docs/mission/steps/pending/task-67-structural-regression.md:69-74`) | o hash de layer é `pub(crate)` (`crates/engine/src/compositor/layer/mod.rs:44`, `:426-432`): expor ou criar um hash estável toca o compositor; `Approximation.node` tipado toca `crates/engine/src/headless/svg/mod.rs:41-45`; `--semantics` só existe para o Todo (`crates/showcase/src/app/headless.rs:133`) | 73 fase 3 e 79 (compositor), 63 fase d (svg), 64 |
+| 68 | crate novo; `Cargo.toml`, `docs/arc/arc.toml`, `README.md` (`docs/mission/steps/pending/task-68-plev-ir-and-verifier.md:149-152`) | depende de `sem`; mudança em `sem` é do orquestrador (`docs/mission/steps/ongoing/generative-runtime-program.md:210`) | pouca; `sem` se o registro de capabilities pedir tipo novo |
+| 69 | host de superfícies, página nova em `crates/showcase/src/view/apps/`, proponente, `refs/` (`docs/mission/steps/pending/task-69-ephemeral-generative-surfaces.md:121-127`) | página nova entra no despacho por página (`crates/showcase/src/view/dispatch.rs`, um `match` por verbo) e em `crates/showcase/src/view/pages`; `semantics`, `act` e `add_sink` só conhecem o Todo (`crates/showcase/src/view/dispatch.rs:242-276`) | 74 e 75 (comps), 73 (layout), 82 fase b (view do showcase) |
+| 73 fase 2 | ADR de desenho (`docs/mission/steps/ongoing/task-73-incremental-dependency-system.md:165-171`); fases seguintes em `layout`, `compositor`, `text/measure` e, desde a fase 1, a GPU (`:65-69`) | composite de toda layer visível (`crates/engine/src/window/render_passes.rs:592-609`), `StoreOp::Store` no attachment (`:137-148`), `draw_frame` compartilhado por janela e headless (`crates/engine/src/window/frame.rs:107-208`) | 74 (text), 67 e 79 (compositor), 76 e 77 (frame e pixels) |
+| 74 | `crates/engine/src/text/**`, `crates/engine/src/platform/ime.rs`, `crates/rope/**`, `crates/comps/src/editor/**`, `crates/comps/src/form/text_input*`, fontes (`docs/mission/steps/pending/task-74-text-and-editing.md:83-88`) | `EditorView::wake` e `TextInput::wake` moram aí (`crates/comps/src/editor/view.rs:184-193`, `crates/comps/src/form/text_input/component.rs:64-69`); o svg depende de `ensure_shaped` e `shaped_glyphs` (`crates/engine/src/text/system.rs:247`, `:288`) | 82 fase b, 75 (comps), 77 (fontes), 73 (`text/measure`) |
+| 75 | `crates/engine/src/accessibility/**`, shells dos apps na parte da ponte, comps em teclado e foco, testes de contraste (`docs/mission/steps/pending/task-75-platform-accessibility.md:70-74`) | shells: `crates/showcase/src/app.rs:499-540`, `crates/ide/src/main.rs` (sem ponte hoje), `crates/urnaui/src/app.rs`; Tab por `focus::next` exige ligar o Tab de cada página (`crates/showcase/src/keys.rs:18`) | 63 fase d e 65 (shell do showcase), 82 fase b (shell do ide e do urnaui), 74 (comps), 76 (window) |
+| 76 | `crates/engine/src/platform/**`, `crates/engine/src/window` (várias janelas, device lost), urnaui, clipboard (`docs/mission/steps/pending/task-76-platform-integration.md:83-87`) | device lost passa por `present_frame` (`crates/engine/src/window/frame.rs:53-68`), no mesmo arquivo que o headless usa | 82 fase b e 78 (urnaui), 75 (window e shells), 73 (frame) |
+| 77 | harness de captura, `script/`, shaders com aprovação (`docs/mission/steps/pending/task-77-visual-determinism.md:73-77`); cita `crates/engine/src/text/fonts.rs` | a base é o headless (`crates/engine/src/headless/mod.rs:129-222`) | 74 (fontes), 73 (passes) |
+| 78 | app de referência, módulo de inferência, urnaui se escolhido (`docs/mission/steps/pending/task-78-ai-native-apps.md:70-73`) | | 76 e 82 fase b, se for o urnaui |
+| 79 | canal de cena no protocolo (com aprovação), visualizador, serde de `SceneNode` (`docs/mission/steps/pending/task-79-scene-over-socket.md:62-66`) | protocolo v1 em `crates/wire/src/proto.rs:21`, `:40-46`; `SceneNode` sem serde (`crates/engine/src/compositor/scene.rs`) | 73 e 67 (compositor), o delta do wire (seção 4b) |
+
+itens do checkpoint a sem número de task, pelo código:
+
+| item | onde mora | colide com |
+|---|---|---|
+| nó inteiro em `node_added` | `crates/sem/src/diff.rs:23` (dono: orquestrador); consumidores do `Change` em `crates/wire/src/server.rs:329-340` e `crates/rec/src/event.rs:39-43` | 79 (wire), 64 e 63 fase d (rec) |
+| arquivos no nó `stacks.commit[sha]` | `crates/ide/src/workbench/project.rs:154-176`, `crates/git/src/types.rs:28-39`, `crates/git/src/repo.rs:229-236` | 82 fase b (`crates/ide`) |
+| ator na recusa stale | `crates/sem/src/check.rs:46` ou `crates/ide/src/workbench/notice.rs:79-108` | dono do `sem`; 82 fase b se for no ide |
+| corrida do `Refresh` | `crates/ide/src/session.rs:89-149`, `crates/ide/src/workbench/execute.rs:85-100`, `crates/git/src/client.rs:121-131` | 82 fase b (`crates/ide`) |
+
+superfícies com mais de um pretendente:
+
+- `crates/showcase/src/app.rs` (o shell): 63 fase d, 65, 75. já foi tocado por 60, 61, 66b e 82; a seção 8 do programa não tem linha para ele.
+- `crates/ide/src/main.rs` e as views do ide: 82 fase b, 75 e os quatro itens do checkpoint a.
+- `crates/urnaui/src/app.rs`: 82 fase b, 75, 76, 78.
+- `crates/comps/src/form/text_input*`, `crates/comps/src/form/text_field.rs`, `crates/comps/src/editor/**`: 74, 75, 82 fase b.
+- `crates/engine/src/compositor`: 67, 73, 79.
+- `crates/rec`: 63 fase d, 64, `node_added`.
+- `crates/engine/src/window/frame.rs` (o caminho único de frame): 73, 76, 77.
+- `crates/sem`: dono é o orquestrador; 68 e dois itens do checkpoint a.
