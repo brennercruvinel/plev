@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: in-progress
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-63
@@ -47,6 +47,22 @@ característica de engine leve.
   é asset `text_style`; imagem é asset.
 - depois de 57 e 58: `Snapshot`, `Revision`, `Snapshot::diff`,
   `Receipt`, `ReceiptSink`.
+
+## revisão do orquestrador (2026-09-23, antes do briefing)
+
+- o gravador mora num crate novo, `crates/rec` (depende de `sem`,
+  `monster` e `engine`). o `monster` continua sendo o codec de animação e
+  ganha só o `raise` (`SceneNode` para o IR), o espelho do `lower` que ele
+  já tem, em `crates/monster/src/raise.rs`.
+- esta rodada faz as fases a e b em memória (trilha semântica como
+  `ReceiptSink`, anel limitado, raise e trilha visual pelo discover) e
+  termina apresentando as duas opções de formato de arquivo com custo e
+  impacto, sem implementar a fase c. a decisão do formato é do
+  orquestrador, e a fase c vem num segundo briefing.
+- quem grava hoje: nenhum app. o `Recorder` precisa servir o dispatcher
+  de qualquer app (`Dispatcher::add_sink`) e receber observações e
+  snapshots por chamada explícita; os testes usam o app de brinquedo do
+  `sem` e o todo do showcase projetado headless.
 
 ## decisão de arquitetura (a tomar nesta task, com ADR, antes da fase b)
 

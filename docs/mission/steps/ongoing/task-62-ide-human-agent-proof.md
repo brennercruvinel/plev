@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: in-progress
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-62
@@ -52,6 +52,25 @@ seções 8 (o exemplo do git client), 9 (receipts), 10 (handoff), 11 e 12
   (`crates/showcase/src/view/apps/git*`).
 - existe teste de repositório real com tempfile em
   `crates/git/tests/real_repo.rs`.
+
+## revisão do orquestrador (2026-09-23, antes do briefing)
+
+- o que já existe na `main` e muda esta task: o `sem` completo (contrato,
+  dispatcher, `Operable::execute(id, req)`, `reject_at_truth`), a ligação
+  no compositor, e todo widget do comps com `.sem(id)` e `project`
+  (`crates/comps`, adr semantic-binding-beside-the-scene). a regra "toda
+  ação lê o estado que ela muda" vale: `stage`, `unstage` e `discard` leem
+  o `staged` do arquivo; `set_value` da mensagem lê `text`.
+- onde mora o `Operable`: um tipo só no lib do ide (nome sugerido
+  `Workbench`) que junta `WorkspaceView`, `GitSession` e um `Dispatcher`.
+  o binário do ide (`crates/ide/src/main.rs`, hoje `App { workspace, git,
+  .. }`) e a página Git do showcase (`crates/showcase/src/view/apps/git/desktop.rs`)
+  passam a segurar esse tipo, sem duplicar a ligação. a execução
+  assíncrona guarda o `RequestId` que `execute` recebeu, e o
+  `GitSession::apply` fecha o receipt (`complete` ou `reject_at_truth`)
+  quando o `GitEvent` volta.
+- esta rodada faz as fases a e b. a fase c (o experimento com agente
+  externo e recorder) espera as tasks 61 e 63.
 
 ## modelo semântico do ide (proposta; o agente refina e o orquestrador aprova)
 
