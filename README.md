@@ -51,6 +51,7 @@ cargo build --release --workspace
 
 cargo run -p showcase [page] [theme] [scroll]      # the design-system gallery, one page per component (title as the sidebar shows it, "Data Table")
 cargo run -p showcase -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png   # any page to png, no window
+cargo run -p showcase -- --render Todo --svg todo.svg --semantics todo.json   # the same frame as svg (each approximation reported on stderr) and the page's semantic projection as the json `plev observe` serves
 cargo run -p ide [path]                # plev-native git client
 cargo run -p prime                     # prime-coherence particle swarm
 cargo run -p engine --example snake    # any of the windowed demos

@@ -66,3 +66,200 @@ todo igual à projeção em processo; gate verde.
   ponto de shaping), `crates/showcase/src/main.rs` e o módulo `headless`
   de `crates/showcase/src/app.rs`. não toca o loop de eventos do showcase,
   o ide, o comps nem o wire.
+
+## estado (agente, 2026-09-23, branch `task/66b-svg-export`)
+
+implementado, sete commits pequenos na branch, cada um compilando e
+passando clippy e fmt:
+
+1. `1efda0e` o `TextSystem` entrega os glifos que shapeou
+   (`shaped_glyphs`, `pub(crate)`) e `engine::headless::svg` escreve rect,
+   rounded rect (borda como stroke inset) e texto como contorno de glifo
+   dentro de `<g aria-label>`; clip vira `clipPath` e entra no relatório.
+2. `31708df` sombra (drop e inset) como `feGaussianBlur` da silhueta,
+   gradiente como `<linearGradient>` entre os dois pontos que o shader
+   projeta, path tessellado como o polígono que delimita os triângulos
+   (fallback para triângulos, reportado), imagem e backdrop blur
+   deixados de fora com comentário no lugar; tudo no relatório, um item
+   por nó, em ordem de push.
+3. `24dede0` o módulo `headless` do showcase vai para
+   `crates/showcase/src/app/headless.rs`, sem mudança (o `app.rs` ia
+   estourar o limite de 639 linhas).
+4. `1603133` um `ScaleContext` do swash novo por contorno de glifo, como o
+   raster já faz: com um só contexto compartilhado a sidebar da página
+   Card saía com os glifos errados. kill test feito: o teste de regressão
+   falha com o contexto compartilhado e passa com o fix.
+5. `9a9b573` `showcase --render <page> [--out f.png] [--svg f.svg]
+   [--svg-report f.txt] [--semantics f.json] [--source]`, um frame só
+   para todas as saídas; `--semantics` sem GPU.
+6. README (a linha do `--render`) e este arquivo.
+
+### handoff
+
+Goal: task-66b, exportação SVG e `--semantics` no headless.
+Status: implementado; gate verde no worktree (ver validação).
+
+Implementado:
+- `engine::headless::svg::export(compositor, text, viewport, background)
+  -> Result<SvgExport, HeadlessError>`, `SvgExport { svg, report }`,
+  `Approximation { node, what }` com `Display` ("layer 0, node 12
+  (shadow): ..."), `SvgExport::write` e `report_text`.
+  `Renderer::svg(&mut self, compositor, background)` chama o export com o
+  text system que desenhou o frame.
+- `TextSystem::shaped_glyphs(&mut self, key) -> Vec<ShapedGlyph>`
+  (`pub(crate)`): glifo (`CacheKey` no tamanho do glifo, sem bin de
+  subpixel), origem na baseline em px lógicos relativa ao nó, advance,
+  linha. shaping pelo mesmo `ensure_shaped` que `resolve_for_layer` usa;
+  uma chave desenhada volta como desenhada, uma não desenhada shapeia
+  como vai ser.
+- `showcase::app::{stage_page, StagedPage, semantics_json}`;
+  `render_page` continua como stage + render. `--semantics` escreve o
+  `Snapshot` na forma serde enxuta, pretty, sem `source` por padrão,
+  `--source` inclui (igual ao `plev observe`). página sem projeção dá
+  `RenderError::NoSemantics` com o nome da página.
+- CLI: `--out` deixa de ser obrigatório; pelo menos uma saída é.
+  `--svg-report` exige `--svg`; `--source` exige `--semantics`. o
+  relatório vai para stderr, uma linha por item.
+
+Arquivos principais:
+- `crates/engine/src/headless/svg/{mod,write,shape,text,tests}.rs` (novos)
+- `crates/engine/src/headless/mod.rs` (`pub mod svg`, `Renderer::svg`)
+- `crates/engine/src/text/system.rs` (`ensure_shaped`, `ShapedGlyph`,
+  `shaped_glyphs`)
+- `crates/showcase/src/app/headless.rs` (movido de `app.rs`, depois
+  `stage_page`, `StagedPage`, `semantics_json`, testes)
+- `crates/showcase/src/app.rs` (só o `pub use` e o `mod headless;`)
+- `crates/showcase/src/main.rs` (o CLI)
+- `crates/showcase/Cargo.toml`, `Cargo.lock`, `README.md`
+
+Interfaces adicionadas/alteradas:
+- `export` ganhou um quarto parâmetro, `background: Option<[f32; 4]>` em
+  sRGB (o `Color::to_array` do bg do tema), fora do contrato do briefing:
+  o frame começa do clear e sem ele a página do SVG sai transparente e o
+  layout não bate com o png. `None` deixa transparente.
+- `stage_page` recebe `Viewport`, não `&Renderer`, para a projeção sair
+  sem abrir GPU.
+- `RenderError` ganhou `NoSemantics(String)` e `Json(serde_json::Error)`.
+- `crates/showcase/Cargo.toml`: `serde` e `serde_json` nas deps de
+  desktop (o json do `--semantics`), `svg` em dev-dependencies (o
+  importador lê os exports de volta nos testes). fora da lista de
+  arquivos permitidos, necessário para o item 3 e o teste (a).
+
+Invariantes introduzidas:
+- um caminho de shaping: `resolve_for_layer` e `shaped_glyphs` passam
+  por `ensure_shaped`; o svg nunca shapeia por conta própria.
+- ordem do svg = ordem do composite (layers por z-order, sort estável) e
+  ordem de push dentro da layer; cull igual ao do frame (nó fora do
+  viewport ou sob clip vazio não sai).
+- cor no svg é o sRGB da cena, sem linearizar.
+- toda aproximação é um item do relatório; um nó exato não gera item.
+- o svg é determinístico: dois exports da mesma cena são idênticos
+  (os cantos dos polígonos são visitados em ordem de coordenada).
+
+Testes (antes -> depois):
+- `cargo test -p engine headless`: 13 -> 27 (14 novos em
+  `headless::svg::tests`)
+- `cargo test -p engine --lib`: 755 -> 769
+- `cargo test -p showcase`: 122 + 2 ignorados (lib) + 7 (bin) ->
+  127 + 2 ignorados (lib) + 8 (bin); 6 novos no headless, 1 novo no cli
+- do contrato: (a) Todo, Button e Card exportam SVG que o importador
+  `crates/svg` lê de volta, viewBox igual ao viewport, `<g aria-label>` e
+  `<rect>` contados, `<g>` balanceado; (b) a soma dos advances de três
+  runs (Inclusive Sans 16, Inter 600 14, tracking 1.0 700 20) é a largura
+  do `TextMeasurer::measure_styled` (diferença < 0,01 px), e o pen termina
+  nela; (c) `--source` é byte a byte
+  `serde_json::to_string_pretty(&snapshot)`; sem `--source` nenhum nó tem
+  `source`, o json lê de volta um `Snapshot` com a mesma revision, os
+  mesmos ids na mesma ordem e o mesmo focus; (d) o relatório da Effects
+  lista drop shadow, inset shadow, gradient e backdrop blur; uma cena só
+  de rects e texto tem relatório vazio; (e) todo teste com GPU pula com
+  "no GPU adapter; skipping".
+- regressão: o mesmo run de texto (a sidebar) exporta o mesmo contorno em
+  Card, Effects e Typography; falha com o `SwashCache` compartilhado.
+
+Validação executada (com `CARGO_TARGET_DIR=target/agents/task-66b`):
+- `cargo test -p engine headless && cargo test -p showcase`
+- `cargo run -p showcase -- --render Todo --out target/agents/t66b-todo.png
+  --svg target/agents/t66b-todo.svg --svg-report target/agents/t66b-todo-report.txt
+  --semantics target/agents/t66b-todo.json`; o mesmo para Button (core),
+  Card (hoff) e Effects (hoff) em `target/agents/t66b-{button,card,effects}.*`
+- `./script/gate`
+- comparação manual: cada svg rasterizado com `rsvg-convert` e medido
+  contra o png do engine (1200x800, `magick compare -fuzz 8%`): Todo
+  0,13% dos pixels diferem, Button 0,2%, Effects 0,56%, Card 1,07% (as
+  duas imagens descartadas). o png e o raster do svg lado a lado em
+  `target/agents/t66b-{todo,effects,card}-side.png`.
+
+Relatório de aproximações por página (a saída do `--svg-report`):
+- Todo / core, 8 itens: 3 clip, 4 gradient rect, 1 path (fallback para
+  triângulos, um ícone com stroke)
+- Button / core, 23 itens: 2 clip, 5 gradient rect, 4 path, 12 shadow
+- Card / hoff, 24 itens: 2 clip, 13 gradient rect, 2 image (88x88 e
+  352x248, deixadas de fora), 7 shadow
+- Effects / hoff, 27 itens: 1 backdrop blur, 4 clip, 16 gradient rect,
+  6 shadow
+
+Decisões:
+- texto como contorno: `cosmic_text::Command` (reexport de
+  `swash::zeno::Command`) evita dependência nova; o contorno sai no
+  tamanho do glifo, y para cima, e é virado ao escrever. a origem é a
+  que `atlas::emit_glyphs` deriva antes de arredondar para o pixel físico
+  (o raster arredonda em y e agrupa x em bins de subpixel; o svg guarda a
+  posição exata, o que não conta como aproximação).
+- `shaped_glyphs` shapeia numa falta em vez de devolver vazio, pelo mesmo
+  `ensure_shaped`: o resultado é o mesmo do frame e o svg de uma cena
+  ainda não desenhada é o svg do frame que ela vai ser.
+- path tessellado: o `TessellatedPath` só guarda triângulos e o hash, não
+  os comandos; o polígono de borda (arestas que só um triângulo percorre,
+  encadeadas) reconstrói o contorno sem costura para fills. malha que não
+  é partição limpa (alguns strokes do lyon) cai para triângulos e diz.
+- imagem: `gpu/image.rs` não tem acessor de pixel (a `ImageStore` drena
+  os pixels no upload) e o arquivo era só leitura; a imagem fica de fora,
+  reportada, com um comentário `<!-- image WxH at x y -->` no lugar.
+- efeitos de layer (`LayerEffect::Blur`/`Shadow`) entram no relatório
+  como deixados de fora, com a razão: o `draw_frame` compartilhado passa
+  `&[]` de effect_results, só o `window::App` do engine aplica; nenhum
+  app usa. registrado, não corrigido (fora do escopo).
+- clip: reportado por `PushClip` (o scissor do frame é em pixel físico
+  inteiro, o clipPath é lógico exato). gera 2 a 4 linhas por página; se o
+  orquestrador preferir tratar clip como exato, é remover um `note`.
+- `semantics_json`: `SnapshotWire` é privado no `sem` e o crate é
+  proibido; o showcase espelha a forma com uma struct de dois campos e o
+  teste pina que, com `--source`, o texto é o do próprio `Snapshot`.
+
+Limitações e dívida:
+- imagem não embutida (precisa de um acessor CPU em `gpu/image.rs` ou de
+  ler o atlas de volta com `read_texture`, que exige expor a textura).
+- strokes tessellados que não são partição limpa saem como triângulos;
+  costura fina possível no viewer. guardar os comandos do path no
+  `TessellatedPath` resolveria.
+- `color-interpolation="linearRGB"` não é honrado pelo Chrome: gradiente
+  com stop translúcido difere um pouco do frame.
+- backdrop blur descartado: o que está sob o vidro fica nítido.
+- `--semantics` só para a Todo (única projeção hoje).
+- a comparação por raster (`rsvg-convert`) foi manual; não há
+  rasterizador de svg nas deps, então o teste automático é o estrutural
+  mais o round trip pelo importador.
+- `Approximation.node` é texto formatado; um tipo `(LayerId, índice,
+  kind)` serviria melhor ao harness da task-67.
+
+Dependências pendentes: nenhuma.
+
+Riscos de integração: baixo. `app.rs` do showcase mudou só o `pub use`
+e o `mod headless;` (o loop de eventos é da task-82, intocado);
+`text/system.rs` só ganhou métodos; `Cargo.lock` mudou pelas deps do
+showcase.
+
+Proposta de parágrafo para o ADR (o orquestrador escreve):
+
+> a exportação vetorial lê a cena, não os pixels: `engine::headless::svg`
+> percorre as layers na ordem do composite e os nós na ordem de push e
+> escreve um elemento por nó, com o texto como contorno dos glifos que o
+> `TextSystem` shapeou para o frame (um caminho de shaping, o mesmo do
+> raster) dentro de um grupo com a string em `aria-label`. o que não tem
+> equivalente exato (sombra analítica, gradiente em linear, backdrop
+> blur, imagem, o scissor em pixel inteiro) é aproximado ou deixado de
+> fora e entra num relatório por nó, como o importador de svg reporta no
+> sentido contrário; um svg sem relatório é o frame. a projeção
+> semântica de uma página sai pelo mesmo comando que a desenha, na forma
+> serde enxuta que o agente recebe, sem `source` a menos que peçam.
