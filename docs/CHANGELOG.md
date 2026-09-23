@@ -9,6 +9,15 @@ status: living
 
 ## unreleased
 
+- the git client proves the thesis (2026-09-23, task-62 phases a and b,
+  adr commit-checks-the-index-it-observed): a person and an agent use the
+  ide at the same time. an agent's commit decided on a staged set that
+  changed is refused with the delta ("B left the staged files"), at the
+  dispatcher and again at the real index right before `git commit`; a
+  valid one ends with the real sha and file list. every click, key and
+  menu entry goes through one dispatcher; refusals show as toasts; an
+  agent's discard waits for a person to confirm. tested in real
+  repositories against the real git worker.
 - a session records itself, in memory (2026-09-23, task-63 phases a and
   b): the new `rec` crate keeps a bounded ring of what happened, as data:
   who observed what, the semantic state (whole or as a diff), every stage

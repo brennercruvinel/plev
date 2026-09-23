@@ -81,6 +81,13 @@ what exists (updated at each task close-out):
   changes only inside `execute`; while an overlay holds the pointer the
   view calls `set_inert(true)` and every request comes back `Inert`. copy
   this shape.
+- the second app on the one path is the git client (task-62):
+  `ide::workbench::Workbench` owns the view, the git session and the
+  dispatcher, for the ide binary and the showcase Git page alike. it shows
+  the asynchronous shape: `execute` sends the command to the worker and
+  returns `Execution::Started`, and the worker's answer ends the receipt
+  (`complete`, `fail`, `reject_at_truth`). a precondition whose truth
+  lives outside the ui is checked again there (`GitCommand::CommitIf`).
 - headless (task-66, adr headless-render-shares-the-frame-path):
   `GpuContext::new_headless` and `window::draw_frame` draw any frame into
   a texture through the window's path; `showcase --render` and

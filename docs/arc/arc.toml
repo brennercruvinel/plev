@@ -159,8 +159,8 @@ targets = ["desktop", "web"]
 
 [crates.ide]
 path = "crates/ide"
-role = "plev-native git client, a lib + bin: views (three columns: changes, stacks, diff, built from comps over engine::theme), adapters (git types -> view rows), session (GitSession: UiRequest <-> GitCommand/GitEvent, diff target, log/branch caches) and status (the file-status colors, the only app-owned tokens); the workspace takes a frame origin (set_frame) so a host can embed it, which the showcase Git tab does; main.rs is the winit shell"
-depends = ["git", "engine", "comps"]
+role = "plev-native git client, a lib + bin: views (three columns: changes, stacks, diff, built from comps over engine::theme), adapters (git types -> view rows), session (GitSession: UiRequest <-> GitCommand/GitEvent, diff target, log/branch caches) and status (the file-status colors, the only app-owned tokens); the workspace takes a frame origin (set_frame) so a host can embed it, which the showcase Git tab does; main.rs is the winit shell. workbench (task-62, adr commit-checks-the-index-it-observed): one Workbench owns the WorkspaceView, the GitSession and a sem Dispatcher, projects the workspace (changes, changes.file[<path>], diff, commit.form, commit.message, commit.submit, stacks, notices) and runs every capability through the dispatcher for every actor; mutations leave for the git worker as Execution::Started and their receipts end at the point of truth (CommitIf checks the real index before git commit); refusals show as toasts, an agent's discard waits for a person in a modal; the ide binary and the showcase Git page hold the same Workbench"
+depends = ["git", "engine", "comps", "sem"]
 
 [crates.rope]
 path = "crates/rope"

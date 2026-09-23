@@ -79,6 +79,13 @@ guidelines win and this file gets fixed.
 - never move or delete user files outside the project tree without asking
 - sweep background app instances after automated runs (orphans, not
   leaks, caused a six gigabyte scare)
+- one shared build directory for every agent: each worktree compiling
+  into its own `target/` took 10 to 17 GB, and three agents plus `main`
+  filled the disk in wave 4 (2026-09-23, `ENOSPC` in the middle of a
+  gate). agents build with `CARGO_TARGET_DIR` pointing at the main
+  checkout's `target/`; cargo's lock serializes concurrent builds, which
+  is slower and bounded. the orchestrator `cargo clean`s a finished
+  agent's worktree target before removing the worktree.
 - kill a process by its exact pid, never by pattern. with parallel agents
   every worktree runs the same `script/gate` and the same tools, so
   `pkill -f "script/gate"` kills a neighbour's work too; it happened in

@@ -107,7 +107,7 @@ o que a tese precisa e o que existe hoje:
 | task-59 | ligação semântica com o render e um caminho operacional | 3 | 57, 58 |
 | task-60 | accessibility como projeção do contrato | 4 | 57, 58, 59 |
 | task-61 | superfície do agente (socket local, observe, act) | 4 | 57, 58, 59 |
-| task-62 | prova no ide: stale-state rejection e handoff | 4 | 57, 58, 59 (fase c: 61, 63) |
+| task-62 | fases a e b integradas; fase c espera 61 e 63 | `8978602` | `Workbench` no ide, commit conferido no dispatcher e no index real; recusa de confirmação virou a task-58b |
 | task-63 | fases a e b integradas; fase c em andamento | `7e63db3` | crate `rec` em memória; formato irmão `.monster` com magic `MONS` decidido; ligação no shell do showcase depois da 60 |
 | task-64 | inspector de sessão, bug report e sessão para teste | 5 | 63, 66 (link de código: 65) |
 | task-65 | pixel para código e inspector de desenvolvimento | 5 | 57, 59 |
