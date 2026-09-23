@@ -409,14 +409,20 @@ fn find_names_the_one_live_socket() {
 
 /// the acceptance: with `PLEV_AGENT` unset (or not `1`) no socket is
 /// created. the variable is read by `from_env` in a child process of this
-/// test binary, so no test changes the environment of another.
+/// test binary, so no test changes the environment of another. `1` opens
+/// the port only in a build with debug assertions.
 #[test]
 fn without_the_env_var_no_socket_is_created() {
     if std::env::var_os("WIRE_T61_CHILD").is_some() {
         return;
     }
     let exe = std::env::current_exe().unwrap();
-    for (value, expect) in [(None, "none"), (Some("0"), "none"), (Some("1"), "open")] {
+    let one = if cfg!(debug_assertions) {
+        "open"
+    } else {
+        "none"
+    };
+    for (value, expect) in [(None, "none"), (Some("0"), "none"), (Some("1"), one)] {
         let tmp = tempfile::tempdir().unwrap();
         let mut cmd = Command::new(&exe);
         cmd.args([
