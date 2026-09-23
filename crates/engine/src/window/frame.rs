@@ -171,11 +171,7 @@ pub fn draw_frame(
     gpu.queue.submit(std::iter::once(encoder.finish()));
     encode.end(|| u64::from(layer_draws + composite_draws));
     drop(draw);
-    stages::gpu_wait(|| {
-        if let Err(e) = gpu.device.poll(wgpu::PollType::wait_indefinitely()) {
-            log::warn!("{label}: gpu wait for the stage timings: {e}");
-        }
-    });
+    stages::wait_for_gpu(&gpu.device);
 
     layer_draws + composite_draws
 }

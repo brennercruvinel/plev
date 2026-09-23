@@ -82,8 +82,9 @@ pub enum Stage {
     Upload,
     /// Layer passes, composite pass and submit; items: draw calls.
     Encode,
-    /// Waiting for the GPU after submit, only with [`set_gpu_sync`]: an
-    /// upper bound of the GPU time of the frame.
+    /// Waiting for the GPU to run what the frame submitted, only with
+    /// [`set_gpu_sync`]: the GPU time of the frame plus the latency of
+    /// seeing it done, an upper bound.
     GpuWait,
 }
 
@@ -237,8 +238,9 @@ pub fn enable(on: bool) {
 }
 
 /// With stages on, make the frame tail wait for the GPU after submit and
-/// record the wait as [`Stage::GpuWait`]. It serializes the CPU and the
-/// GPU, so it is for measuring only; it never changes a pixel.
+/// record the wait as [`Stage::GpuWait`] (see [`wait_for_gpu`]). It
+/// serializes the CPU and the GPU and spins a core while it waits, so it
+/// is for measuring only; it never changes a pixel.
 pub fn set_gpu_sync(on: bool) {
     GPU_SYNC.with(|sync| sync.set(on));
 }
@@ -285,6 +287,43 @@ pub fn gpu_wait(wait: impl FnOnce()) {
         wait();
     }
 }
+
+/// With the GPU sync on, wait until `device` has run everything submitted
+/// and record the wait as [`Stage::GpuWait`]. The wait spins on
+/// `PollType::Poll`: wgpu's blocking wait sleeps a millisecond between
+/// checks on metal, which would round every reading up to that step.
+#[inline]
+pub fn wait_for_gpu(device: &wgpu::Device) {
+    gpu_wait(|| spin_until_idle(device));
+}
+
+/// How long the GPU wait spins before it gives up on a queue that does not
+/// drain (a lost device).
+#[cfg(not(target_arch = "wasm32"))]
+const GPU_WAIT_LIMIT: std::time::Duration = std::time::Duration::from_secs(2);
+
+#[cfg(not(target_arch = "wasm32"))]
+fn spin_until_idle(device: &wgpu::Device) {
+    let start = Instant::now();
+    loop {
+        match device.poll(wgpu::PollType::Poll) {
+            Ok(status) if status.is_queue_empty() => return,
+            Ok(_) if start.elapsed() < GPU_WAIT_LIMIT => std::hint::spin_loop(),
+            Ok(_) => {
+                log::warn!("gpu wait: the queue did not drain in {GPU_WAIT_LIMIT:?}");
+                return;
+            }
+            Err(e) => {
+                log::warn!("gpu wait: {e}");
+                return;
+            }
+        }
+    }
+}
+
+/// WebGPU runs its callbacks from the browser's loop: nothing to wait on.
+#[cfg(target_arch = "wasm32")]
+fn spin_until_idle(_device: &wgpu::Device) {}
 
 fn record(stage: Stage, items: u64, nanos: u64) {
     FRAME.with(|frame| {
