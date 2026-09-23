@@ -108,7 +108,7 @@ o que a tese precisa e o que existe hoje:
 | task-60 | accessibility como projeção do contrato | 4 | 57, 58, 59 |
 | task-61 | superfície do agente (socket local, observe, act) | 4 | 57, 58, 59 |
 | task-62 | prova no ide: stale-state rejection e handoff | 4 | 57, 58, 59 (fase c: 61, 63) |
-| task-63 | flight recorder de sessão | 4 | 57, 58 |
+| task-63 | fases a e b integradas; fase c em andamento | `7e63db3` | crate `rec` em memória; formato irmão `.monster` com magic `MONS` decidido; ligação no shell do showcase depois da 60 |
 | task-64 | inspector de sessão, bug report e sessão para teste | 5 | 63, 66 (link de código: 65) |
 | task-65 | pixel para código e inspector de desenvolvimento | 5 | 57, 59 |
 | task-66 | headless como primeira classe | 3 | nenhuma (saída semântica: 57) |

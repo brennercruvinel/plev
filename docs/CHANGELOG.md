@@ -9,6 +9,15 @@ status: living
 
 ## unreleased
 
+- a session records itself, in memory (2026-09-23, task-63 phases a and
+  b): the new `rec` crate keeps a bounded ring of what happened, as data:
+  who observed what, the semantic state (whole or as a diff), every stage
+  of every receipt with its request, input without the typed characters,
+  and the frames on screen raised into the monster IR and chunked through
+  discover. reading a session never creates a request; secrets fail
+  closed. recording costs about 12 us a frame on the showcase todo.
+  `monster::raise` is the mirror of `lower`. persisting to a `.monster`
+  session file is the next step.
 - the frame measures itself (2026-09-23, task-73 phase 1): `engine::perf::stages`
   counts and times each stage of a frame (semantic projection, scene
   build, text measure hits and misses, shaping, binds, hit tests, layer
