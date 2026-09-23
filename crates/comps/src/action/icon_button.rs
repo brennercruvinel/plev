@@ -1,9 +1,15 @@
 //! Square icon-only button of the hoff core kit: the bordered one
 //! (`outline`), the plain one (`ghost`) and the toolbar item, which has
 //! an `active` state for the selected tool. Three sizes (24 / 36 / 40).
+//!
+//! With a [`SemId`] ([`IconButton::sem`]) the render binds the bounds it
+//! draws and hit-tests with, and [`IconButton::project`] declares the
+//! button in a semantic projection. An icon names nothing, so the
+//! projection takes its accessible label from the app.
 
 use engine::compositor::{Compositor, LayerId};
 use engine::theme::{ButtonRecipe, IconButtonMetrics, Intent, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::press::{Press, paint_surface};
 use crate::core::{EventResult, Rect, WidgetEvent};
@@ -48,6 +54,7 @@ pub struct IconButton {
     /// Icon edge override; the size's own by default.
     pub icon_size: Option<f32>,
     press: Press,
+    sem: Option<SemId>,
 }
 
 impl IconButton {
@@ -60,7 +67,49 @@ impl IconButton {
             active: false,
             icon_size: None,
             press: Press::default(),
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds its bounds to
+    /// (`Compositor::bind_to_layer`).
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this button as `id` in a projection: a `Role::Button`
+    /// named `label` (the icon names nothing, so the app gives the
+    /// accessible label), enabled unless disabled, with an `activate`
+    /// action. A toolbar item also carries its `active` state (the
+    /// selected tool), which `activate` reads. What `activate` does is the
+    /// app's; this only reads the widget. Pass the id given to
+    /// [`IconButton::sem`] so the node and the binding name the same
+    /// control. Returns the node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let mut node = b.node(id, Role::Button, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.enabled(!self.disabled);
+        if self.variant == IconButtonVariant::Toolbar {
+            node.state("active", self.active);
+            node.action("activate").reads(format!("{id}:active"));
+        } else {
+            node.action("activate");
+        }
+        node
     }
 
     pub fn variant(mut self, variant: IconButtonVariant) -> Self {
@@ -140,6 +189,9 @@ impl IconButton {
         bounds: Rect,
         theme: &Theme,
     ) {
+        if let Some(id) = &self.sem {
+            compositor.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let m = self.size.metrics(theme);
         let recipe = self.recipe(theme);
         let alpha = if self.disabled {

@@ -86,3 +86,4 @@ refs/winit/
 .env.*.local
 .kimi-code/
 refs/
+TMP/

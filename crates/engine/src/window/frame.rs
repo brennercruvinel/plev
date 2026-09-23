@@ -5,14 +5,22 @@
 //! Building the scene is the app's business (it owns the view type); what
 //! follows is identical everywhere, so it lives here instead of being
 //! copied into each app's `renderer.rs`.
+//!
+//! Drawing ([`draw_frame`]) is separate from presenting ([`present_frame`]):
+//! a window draws into its surface texture, `engine::headless` draws into
+//! an offscreen texture, and both run the same function.
 
 use crate::compositor::Compositor;
 use crate::effects::EffectProcessor;
 use crate::gpu::GpuContext;
 use crate::gpu::texture_pool::TexturePool;
+use crate::perf::gpu_time::FrameStamps;
+use crate::perf::stages::{self, Stage};
 use crate::text::TextSystem;
 
-use super::render_passes::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+use super::render_passes::{
+    encode_composite_pass_timed, encode_layer_passes_timed, resolve_layer_text,
+};
 
 /// Present one frame of an already-built scene.
 ///
@@ -59,7 +67,54 @@ pub fn present_frame(
         }
     };
     let surface_view = gpu.surface_render_view(&output);
+    let draws = draw_frame(
+        compositor,
+        gpu,
+        text_system,
+        effects,
+        texture_pool,
+        &surface_view,
+        clear_linear,
+        label,
+    );
+    output.present();
 
+    Some(draws)
+}
+
+/// Draw one frame of an already-built scene into `target` and submit it.
+///
+/// This is the whole frame after the scene is built: compositor resolve,
+/// text resolve, image upload, the layer passes, the composite pass into
+/// `target`, submit. [`present_frame`] calls it with the surface view and
+/// then presents; `engine::headless` calls it with an offscreen view and
+/// then reads the pixels back.
+///
+/// `target` must be a view of a texture sized like `gpu.surface_config`
+/// (width x height) in `gpu.surface_format()`, created through the sRGB
+/// view path (`gpu.surface_render_view` or `gpu.texture_render_view`):
+/// layer textures, scissors and the backdrop resolve all take their size
+/// and format from the context, not from the view. `clear_linear` and
+/// `label` are as in [`present_frame`].
+///
+/// With `perf::stages` on it records each stage it runs; on a context
+/// built with `RenderConfig::gpu_timestamps` the layer and composite
+/// passes also write GPU timestamps, read back by a later frame without
+/// waiting (see `perf::gpu_time`). Neither changes a pixel.
+///
+/// Returns the number of draw calls issued.
+#[allow(clippy::too_many_arguments)] // the frame's resources, one each
+pub fn draw_frame(
+    compositor: &mut Compositor,
+    gpu: &mut GpuContext,
+    text_system: &mut TextSystem,
+    effects: &mut EffectProcessor,
+    texture_pool: &mut TexturePool,
+    target: &wgpu::TextureView,
+    clear_linear: [f32; 4],
+    label: &str,
+) -> u32 {
+    let draw = stages::span(Stage::Draw);
     compositor.resolve(&crate::compositor::ResolveResources {
         device: &gpu.device,
         queue: &gpu.queue,
@@ -73,13 +128,16 @@ pub fn present_frame(
     });
 
     // Resolve text for each dirty layer (clip-group aware).
+    let text = stages::span(Stage::TextResolve);
     text_system.begin_frame();
     resolve_layer_text(compositor, gpu, text_system);
     text_system.finish_frame();
+    text.end(|| dirty_glyphs(compositor));
 
     // Upload any images loaded while building the scene.
     gpu.prepare_images();
 
+    let encode = stages::span(Stage::Encode);
     let mut encoder = gpu
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some(label) });
@@ -101,7 +159,16 @@ pub fn present_frame(
         a: a as f64,
     };
 
-    let layer_draws = encode_layer_passes(
+    // GPU timestamps, only on a context built with
+    // `RenderConfig::gpu_timestamps` (see `perf::gpu_time`): the finished
+    // frames' queries are resolved first, then this frame's passes write
+    // theirs while stages are on.
+    if let Some(timestamps) = &gpu.timestamps {
+        timestamps.resolve_finished(&mut encoder);
+    }
+    let mut stamps = FrameStamps::begin(gpu.timestamps.as_ref());
+
+    let layer_draws = encode_layer_passes_timed(
         compositor,
         gpu,
         text_system,
@@ -110,22 +177,43 @@ pub fn present_frame(
         clear_color,
         &dirty_layer_ids,
         &mut encoder,
+        stamps.as_mut(),
     );
     for id in &dirty_layer_ids {
         compositor.mark_layer_clean(*id);
     }
 
-    let composite_draws = encode_composite_pass(
+    let composite_draws = encode_composite_pass_timed(
         compositor,
         clear_color,
         gpu,
-        &surface_view,
+        target,
         &[],
         &mut encoder,
+        stamps.as_ref(),
     );
 
     gpu.queue.submit(std::iter::once(encoder.finish()));
-    output.present();
+    if let Some(stamps) = stamps {
+        stamps.submitted(&gpu.queue);
+    }
+    encode.end(|| u64::from(layer_draws + composite_draws));
+    drop(draw);
+    stages::wait_for_gpu(&gpu.device);
+    if let Some(timestamps) = &gpu.timestamps {
+        timestamps.collect();
+    }
 
-    Some(layer_draws + composite_draws)
+    layer_draws + composite_draws
+}
+
+/// Glyphs in the layers whose text was resolved this frame (the dirty
+/// ones), for the text stage's items.
+fn dirty_glyphs(compositor: &Compositor) -> u64 {
+    compositor
+        .layers()
+        .iter()
+        .filter(|l| l.is_dirty())
+        .map(|l| u64::from(l.glyph_count()))
+        .sum()
 }

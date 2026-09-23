@@ -4,10 +4,15 @@
 //! or count badge. Faint at rest, text-default hovered, text-active plus
 //! the surface-active wash and the edge rim when active. In a rail (no
 //! room for labels) only the icon slot draws, centered.
+//!
+//! With a [`SemId`] ([`NavLink::sem`]) the render binds the bounds it
+//! draws and hit-tests with (the rail form too), and
+//! [`NavLink::project`] declares the link in a semantic projection.
 
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ControlSize, IconSize, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::action::Badge;
 use crate::core::{EventResult, Rect, WidgetEvent};
@@ -25,6 +30,7 @@ pub struct NavLink {
     pub active: bool,
     hovered: bool,
     pressed: bool,
+    sem: Option<SemId>,
 }
 
 impl NavLink {
@@ -37,7 +43,42 @@ impl NavLink {
             active: false,
             hovered: false,
             pressed: false,
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds its bounds to
+    /// (`Compositor::bind_to_layer`).
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this link as `id` in a projection: a `Role::Link` named by
+    /// its label (also in the rail form, where the label is not drawn),
+    /// its `active` state (the place on screen) and an `activate` action
+    /// that reads it. What `activate` does (navigate) is the app's; this
+    /// only reads the widget. Pass the id given to [`NavLink::sem`] so the
+    /// node and the binding name the same control. Returns the node for
+    /// the app to add to (a description with the hint or the badge).
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let mut node = b.node(id, Role::Link, self.label.as_str());
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("active", self.active);
+        node.action("activate").reads(format!("{id}:active"));
+        node
     }
 
     pub fn icon(mut self, icon: &'static str) -> Self {
@@ -151,6 +192,9 @@ impl NavLink {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        if let Some(id) = &self.sem {
+            c.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let glass = &theme.glass;
         let radius = theme.shape.nav.min(bounds.h / 2.0);
         // The wash and the rim are the active mark; a hovered link only

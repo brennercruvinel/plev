@@ -27,16 +27,26 @@ use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 use winit::window::{Window, WindowAttributes, WindowId};
 
+/// The window's title, which also names the root of its accessibility
+/// tree.
+const TITLE: &str = "plev, design system showcase";
+
 /// Messages from other threads and tasks into the event loop.
 ///
 /// `GpuReady` is sent by the async GPU-init task on wasm and never
 /// constructed natively (desktop blocks on `GpuContext::new` inside
-/// `resumed` instead); `Wake` comes from the git worker on desktop only.
+/// `resumed` instead); `Wake`, `Access` and `Agent` come from the git
+/// worker, the accessibility adapter and the agent port, desktop only.
 /// One instance is in flight at a time, so the size gap is irrelevant.
 #[allow(dead_code, clippy::large_enum_variant)]
 enum UserEvent {
     /// The git worker finished a command: drain it on the next frame.
     Wake,
+    /// A screen reader started listening or asked for something: carry
+    /// out what it asked and draw, which sends it the tree.
+    Access,
+    /// An agent asked through the port: serve it, draw if an act ran.
+    Agent,
     GpuReady {
         gpu: GpuContext,
         text_system: TextSystem,
@@ -69,6 +79,21 @@ pub struct App {
     modifiers: ModifiersState,
     #[cfg(target_arch = "wasm32")]
     proxy: Option<EventLoopProxy<UserEvent>>,
+    /// The window's outside actors: a screen reader (the tree projected
+    /// from the active page's meaning) and agents (the port), whose
+    /// requests go into its dispatcher (desktop; mobile is next).
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    access: Access,
+}
+
+/// The window's outside actors (a screen reader, agents through the port)
+/// and how their threads wake the event loop.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+#[derive(Default)]
+struct Access {
+    bridge: Option<engine::accessibility::Bridge>,
+    agent: Option<wire::AgentPort>,
+    proxy: Option<winit::event_loop::EventLoopProxy<UserEvent>>,
 }
 
 impl App {
@@ -99,6 +124,8 @@ impl App {
             modifiers: ModifiersState::empty(),
             #[cfg(target_arch = "wasm32")]
             proxy: None,
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            access: Access::default(),
         }
     }
 
@@ -111,7 +138,7 @@ impl App {
 
     /// Sync surface, projection, and view layout to the window's current
     /// inner size. Called once GPU state becomes `Ready` (and harmless to
-    /// call again — `gpu.resize` clamps to at least 1x1).
+    /// call again: `gpu.resize` clamps to at least 1x1).
     fn configure_viewport(&mut self) {
         let Some(window) = self.window.clone() else {
             return;
@@ -126,6 +153,17 @@ impl App {
         self.view.resize(lw, lh, sf);
         self.invalidate();
     }
+
+    /// What agents asked through the port, served on this thread; a frame
+    /// only when an act ran, since an observation changes nothing.
+    fn serve_agent(&mut self) {
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        if let Some(port) = self.access.agent.as_mut() {
+            if self.view.serve_agent(port, &self.compositor) {
+                self.invalidate();
+            }
+        }
+    }
 }
 
 impl ApplicationHandler<UserEvent> for App {
@@ -135,7 +173,13 @@ impl ApplicationHandler<UserEvent> for App {
         }
 
         #[allow(unused_mut)] // mut needed for cfg(not(wasm)) inner_size
-        let mut attrs = WindowAttributes::default().with_title("plev — design system showcase");
+        let mut attrs = WindowAttributes::default().with_title(TITLE);
+
+        // AccessKit attaches before the window is first shown.
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        {
+            attrs = attrs.with_visible(false);
+        }
 
         // Desktop gets a fixed initial size. On the web the canvas size is
         // owned by CSS (100vw/100vh in index.html): setting an inner size
@@ -147,6 +191,12 @@ impl ApplicationHandler<UserEvent> for App {
         }
 
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
+
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        {
+            self.access.attach(event_loop, &window);
+            window.set_visible(true);
+        }
 
         #[cfg(target_arch = "wasm32")]
         if let Err(e) = engine::window::setup_wasm_canvas(&window) {
@@ -192,6 +242,16 @@ impl ApplicationHandler<UserEvent> for App {
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: UserEvent) {
         match event {
             UserEvent::Wake => self.invalidate(),
+            UserEvent::Access => {
+                #[cfg(not(any(
+                    target_arch = "wasm32",
+                    target_os = "android",
+                    target_os = "ios"
+                )))]
+                self.access.carry_out(&mut self.view);
+                self.invalidate();
+            }
+            UserEvent::Agent => self.serve_agent(),
             UserEvent::GpuReady {
                 gpu,
                 text_system,
@@ -213,6 +273,10 @@ impl ApplicationHandler<UserEvent> for App {
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        if let (Some(bridge), Some(window)) = (self.access.bridge.as_mut(), self.window.as_ref()) {
+            bridge.process_event(window, &event);
+        }
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
 
@@ -337,6 +401,15 @@ impl ApplicationHandler<UserEvent> for App {
                     &mut self.compositor,
                     &mut self.view,
                 );
+                // The tree of this frame, placed by the bindings it just
+                // drew; the page is projected only while a reader listens.
+                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+                if let (Some(bridge), Some(window)) =
+                    (self.access.bridge.as_mut(), self.window.as_ref())
+                {
+                    let view = &self.view;
+                    bridge.update(window, &self.compositor, || view.semantics());
+                }
                 if animating {
                     // Springs still moving: keep the frames coming.
                     self.compositor.invalidate();
@@ -366,10 +439,300 @@ pub fn run() {
     let event_loop = EventLoop::<UserEvent>::with_user_event().build().unwrap();
     let mut app = App::new();
     let proxy = event_loop.create_proxy();
+    app.access.proxy = Some(proxy.clone());
+    let agent = proxy.clone();
+    app.access.agent = ShowcaseView::agent_port(move || {
+        let _ = agent.send_event(UserEvent::Agent);
+    });
     app.view.connect_git(Box::new(move || {
         let _ = proxy.send_event(UserEvent::Wake);
     }));
     event_loop.run_app(&mut app).unwrap();
+}
+
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+impl Access {
+    /// Creates the bridge for `window`, which is still hidden. Without a
+    /// bridge the window still opens, and the reason is logged.
+    fn attach(&mut self, event_loop: &ActiveEventLoop, window: &Window) {
+        let proxy = self.proxy.clone();
+        let wake = move || {
+            if let Some(proxy) = &proxy {
+                let _ = proxy.send_event(UserEvent::Access);
+            }
+        };
+        match engine::accessibility::Bridge::new(event_loop, window, TITLE, wake) {
+            Ok(bridge) => self.bridge = Some(bridge),
+            Err(e) => log::error!("accessibility: {e}"),
+        }
+    }
+
+    /// What the screen reader asked, on the main thread: a request goes
+    /// through the active page's dispatcher as `Actor::Assistive`, a focus
+    /// move to the page's focus.
+    fn carry_out(&mut self, view: &mut ShowcaseView) {
+        let Some(bridge) = self.bridge.as_mut() else {
+            return;
+        };
+        for assist in bridge.take() {
+            match assist {
+                engine::accessibility::Assist::Request(req) => {
+                    let asked = format!("{} {}", req.target, req.action);
+                    match view.act(req) {
+                        Some(receipt) => {
+                            log::debug!("accessibility: {asked}: {:?}", receipt.stage());
+                        }
+                        None => log::debug!("accessibility: no page takes {asked}"),
+                    }
+                }
+                engine::accessibility::Assist::Focus(id) => {
+                    if !view.assist_focus(&id) {
+                        log::debug!("accessibility: no page takes focus on {id}");
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// `showcase --render`: one frame of a page without a window.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+pub use headless::{RenderError, render_page};
+
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod headless {
+    use crate::view::ShowcaseView;
+    use engine::compositor::Compositor;
+    use engine::headless::{Frame, HeadlessError, Renderer};
+
+    /// Animation steps a headless frame may take before it is drawn: the
+    /// window keeps drawing while anything moves, so the frame it settles
+    /// on is the one to show. A page that never settles (a spinner, a
+    /// blinking caret) is drawn after this many steps, deterministically.
+    const SETTLE_STEPS: usize = 120;
+
+    /// One animation step of a headless frame: a 60 Hz display.
+    const SETTLE_DT: f32 = 1.0 / 60.0;
+
+    /// Why [`render_page`] drew nothing.
+    #[derive(Debug)]
+    pub enum RenderError {
+        /// No page has this title (titles as the sidebar shows them).
+        UnknownPage(String),
+        /// No built-in theme has this name.
+        UnknownTheme(String),
+        Headless(HeadlessError),
+    }
+
+    impl std::fmt::Display for RenderError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::UnknownPage(p) => write!(f, "no page titled '{p}'"),
+                Self::UnknownTheme(t) => write!(f, "no theme named '{t}'"),
+                Self::Headless(e) => write!(f, "{e}"),
+            }
+        }
+    }
+
+    impl std::error::Error for RenderError {}
+
+    impl From<HeadlessError> for RenderError {
+        fn from(e: HeadlessError) -> Self {
+            Self::Headless(e)
+        }
+    }
+
+    /// Draw one frame of a gallery page without a window: the launch state
+    /// the window takes from `[page] [theme] [scroll]`, laid out at the
+    /// renderer's viewport, animated until it settles, then drawn by the
+    /// window's own frame path into the renderer's target and read back.
+    pub fn render_page(
+        renderer: &mut Renderer,
+        page: &str,
+        theme: &str,
+        scroll: Option<f32>,
+    ) -> Result<Frame, RenderError> {
+        let v = renderer.viewport();
+        let mut view = ShowcaseView::new(v.width, v.height);
+        view.jump_to_page(page);
+        if !view.page_title().eq_ignore_ascii_case(page) {
+            return Err(RenderError::UnknownPage(page.to_string()));
+        }
+        view.apply_theme(theme);
+        if view.theme_name != theme {
+            return Err(RenderError::UnknownTheme(theme.to_string()));
+        }
+        if let Some(offset) = scroll {
+            view.scroll_page_to(offset);
+        }
+        view.resize(v.width, v.height, v.scale);
+
+        let mut compositor = Compositor::new();
+        for step in 0..SETTLE_STEPS {
+            let moving = view.tick(if step == 0 { 0.0 } else { SETTLE_DT });
+            view.render(&mut compositor);
+            if !moving {
+                break;
+            }
+        }
+        let clear = view.theme.colors.bg.to_linear_array();
+        Ok(renderer.render(&mut compositor, clear)?)
+    }
+
+    /// Every page through the window's frame path, no window. The GPU
+    /// tests return early when the machine has no adapter.
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::view::PAGES;
+        use engine::gpu::RenderConfig;
+        use engine::headless::Viewport;
+
+        /// The launch theme and the dark glass theme whose page background
+        /// is the documented 48,48,48.
+        const THEMES: [&str; 2] = ["core", "hoff"];
+
+        const PHONE: Viewport = Viewport {
+            width: 390.0,
+            height: 844.0,
+            scale: 2.0,
+        };
+        const DESKTOP: Viewport = Viewport {
+            width: 1280.0,
+            height: 800.0,
+            scale: 1.0,
+        };
+
+        fn renderer(viewport: Viewport) -> Option<Renderer> {
+            match Renderer::new(viewport, RenderConfig::default()) {
+                Ok(r) => Some(r),
+                Err(HeadlessError::NoAdapter) => {
+                    eprintln!("no GPU adapter; skipping");
+                    None
+                }
+                Err(e) => panic!("{e}"),
+            }
+        }
+
+        fn page(r: &mut Renderer, title: &str, theme: &str) -> Frame {
+            match render_page(r, title, theme, None) {
+                Ok(frame) => frame,
+                Err(e) => panic!("{title} / {theme}: {e}"),
+            }
+        }
+
+        /// The theme background as the 8-bit sRGB a frame holds.
+        fn background(theme: &str) -> [u8; 3] {
+            let Some(t) = engine::theme::Theme::named(theme) else {
+                panic!("no theme {theme}");
+            };
+            let [r, g, b, _] = t.colors.bg.to_array();
+            [r, g, b].map(|c| (c * 255.0).round() as u8)
+        }
+
+        #[test]
+        fn every_page_renders_in_both_main_themes_at_phone_and_desktop_width() {
+            for viewport in [PHONE, DESKTOP] {
+                let Some(mut r) = renderer(viewport) else {
+                    return;
+                };
+                for theme in THEMES {
+                    let bg = background(theme);
+                    for p in PAGES {
+                        let frame = page(&mut r, p.title, theme);
+                        assert_eq!((frame.width, frame.height), viewport.physical());
+                        // the chrome alone (the page header, the sidebar or
+                        // its menu button) covers more than a quarter of a
+                        // percent of the frame; the sparsest page, a
+                        // breadcrumb on a light phone, is at 0.9
+                        // every fourth pixel: a debug build counts slowly
+                        let drawn = frame
+                            .rgba
+                            .chunks_exact(4)
+                            .step_by(4)
+                            .filter(|px| (0..3).any(|i| px[i].abs_diff(bg[i]) > 2))
+                            .count();
+                        let total = (frame.width * frame.height) as usize / 4;
+                        assert!(
+                            drawn * 400 > total,
+                            "{} / {theme} at {}px: only {drawn} of {total} pixels \
+                             differ from the background",
+                            p.title,
+                            viewport.width
+                        );
+                    }
+                }
+            }
+        }
+
+        /// The documented sample: the hoff page background reads 48,48,48,
+        /// in the page column at desktop width.
+        #[test]
+        fn the_hoff_page_background_measures_48() {
+            let desktop = Viewport::new(1280.0, 800.0, 2.0);
+            let Some(mut r) = renderer(desktop) else {
+                return;
+            };
+            let frame = page(&mut r, "Card", "hoff");
+            for (x, y) in [(2559, 0), (2559, 1599), (1280, 5)] {
+                assert_eq!(frame.pixel(x, y), Some([48, 48, 48, 255]), "({x}, {y})");
+            }
+        }
+
+        /// Glass cards, backdrop blur and text: two fresh renderers give the
+        /// same bytes, and a renderer that drew other pages first draws
+        /// this one identically too.
+        #[test]
+        fn a_page_renders_to_the_same_bytes_every_time() {
+            let Some(mut a) = renderer(DESKTOP) else {
+                return;
+            };
+            let Some(mut b) = renderer(DESKTOP) else {
+                return;
+            };
+            let first = page(&mut a, "Card", "hoff");
+            let second = page(&mut b, "Card", "hoff");
+            assert!(first.rgba == second.rgba, "two fresh renders differ");
+            match (first.encode_png(), second.encode_png()) {
+                (Ok(x), Ok(y)) => assert!(x == y, "the PNG bytes differ"),
+                (Err(e), _) | (_, Err(e)) => panic!("{e}"),
+            }
+            page(&mut a, "Typography", "core");
+            page(&mut a, "Effects", "hoff");
+            let again = page(&mut a, "Card", "hoff");
+            assert!(
+                first.rgba == again.rgba,
+                "a renderer that drew other pages first drew Card differently"
+            );
+        }
+
+        #[test]
+        fn an_unknown_page_or_theme_is_an_error() {
+            let Some(mut r) = renderer(Viewport::new(320.0, 240.0, 1.0)) else {
+                return;
+            };
+            assert!(matches!(
+                render_page(&mut r, "No Such Page", "core", None),
+                Err(RenderError::UnknownPage(_))
+            ));
+            assert!(matches!(
+                render_page(&mut r, "Button", "neon", None),
+                Err(RenderError::UnknownTheme(_))
+            ));
+        }
+
+        /// Titles match as the window's launch argument does, whatever
+        /// the case.
+        #[test]
+        fn a_page_title_matches_case_insensitively() {
+            let Some(mut r) = renderer(Viewport::new(320.0, 240.0, 1.0)) else {
+                return;
+            };
+            let upper = page(&mut r, "DATA TABLE", "core");
+            let exact = page(&mut r, "Data Table", "core");
+            assert!(upper.rgba == exact.rgba);
+        }
+    }
 }
 
 /// Browser entry: GPU init is async, so hand the proxy to the app and let

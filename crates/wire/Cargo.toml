@@ -1,0 +1,35 @@
+# wire: the agent surface (task-61,
+# docs/ADR/agents-act-through-the-semantic-contract.md). an agent outside
+# the process observes and operates a plev app through the semantic
+# contract only: protocol v1 as json lines, the pure part (messages, codec,
+# the ring of served revisions, the server core) compiles everywhere,
+# wasm included; the unix socket (AgentPort), the client and the `plev`
+# binary are unix only.
+[package]
+name = "wire"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Agent surface of plev: observe and act over the semantic contract through a local unix socket, json lines, and the plev cli"
+
+# the agent's command line: plev observe, plev act (unix only; elsewhere it
+# says so and exits).
+[[bin]]
+name = "plev"
+path = "src/bin/plev.rs"
+
+[dependencies]
+# with its serde form: the protocol carries snapshots, changes, requests
+# and stages exactly as sem writes them.
+sem = { workspace = true, features = ["serde"] }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+tempfile.workspace = true
+
+[lints]
+workspace = true

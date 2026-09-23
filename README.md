@@ -50,10 +50,13 @@ only work with rustup.
 cargo build --release --workspace
 
 cargo run -p showcase [page] [theme] [scroll]      # the design-system gallery, one page per component (title as the sidebar shows it, "Data Table")
+cargo run -p showcase -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png   # any page to png, no window
 cargo run -p ide [path]                # plev-native git client
 cargo run -p prime                     # prime-coherence particle swarm
 cargo run -p engine --example snake    # any of the windowed demos
 cargo run -p comps --example editor    # the design-system editor demo
+cargo run -p wire --bin plev -- observe --scope todo --app showcase   # an app opened with PLEV_AGENT=1 (debug), as an agent sees it
+cargo run -p wire --bin plev -- act todo.item[1] toggle --from-revision <rev>   # act on what that observation saw; exit 0 done, 1 rejected, 2 failed, 3 error
 ```
 
 every debug build is its own dev loop: save a `.wgsl`, a string or a hex
@@ -109,7 +112,7 @@ demos are the engine's (and comps') examples.
 |---|---|---|
 | engine | `crates/engine` | gpu, compositor, text, path, layout, input, animation, signal, theme (the tokens), graph, builder, window, platform |
 | comps | `crates/comps` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/catalog.md](docs/catalog.md) |
-| crates | `crates/` | git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rope, showcase, svg, urnaui |
+| crates | `crates/` | git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rec, rope, sem, showcase, svg, urnaui, wire |
 | examples | `crates/engine/examples/`, `crates/comps/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters and svg2monster clis |
 
 `comps` is the crate an app draws with. widgets are plain structs the app
@@ -118,6 +121,17 @@ shadow and breakpoint from it, so a theme swap or a phone width changes
 the whole app at once. the showcase and the ide are framed by
 `comps::shell::AppShell`: full sidebar on a desktop, a rail in a narrow
 window, a drawer behind a menu button on a phone.
+
+`sem` is the semantic contract: each control's persistent id, role,
+state, actions and constraints as pure data, projected from app state on
+demand ([docs/ADR/semantic-contract-as-pure-projection.md](docs/ADR/semantic-contract-as-pure-projection.md)).
+`rec` records a session as data in a bounded ring (who observed what, the
+state, every receipt, the frames on screen) and reads it back; replay
+never creates a request.
+`wire` lets an agent outside the process observe and operate an app
+through that contract only, over a local socket in json lines: scoped and
+incremental observations, and actions that go through the same dispatcher
+as a click.
 
 two of the crates are pipelines: a foreign format in, our format out.
 
@@ -137,6 +151,7 @@ a construct silently.
 cargo run -p engine --example lot2monsters in.json out.monster
 cargo run -p engine --example svg2monster  in.svg  out.monster
 cargo run -p engine --example monster_player out.monster
+cargo run -p engine --example monster_player out.monster --frame 0.5 --out f.png   # one frame, no window
 
 cargo run -p parser --example transpile  index.tsx module.sass vars.sass
 cargo run -p parser --example preview    index.tsx module.sass vars.sass
@@ -173,7 +188,8 @@ edits, `monster` codec, `lot` conversion, `parser` transpile.
 
 - [docs/arc/arc.toml](docs/arc/arc.toml): the architecture in one file. tables for machines, prose for humans, the frame-flow diagram at the end.
 - [docs/ADR/](docs/ADR/): the decision records.
-- [docs/how-to/code-against-the-plev-engine.md](docs/how-to/code-against-the-plev-engine.md): the operating manual, read before touching ui or rendering code.
+- [docs/how-to/code-against-the-plev-engine.md](docs/how-to/code-against-the-plev-engine.md): the operating manual, read before touching ui or rendering code. its siblings in [docs/how-to/](docs/how-to/): pixel validation, the web target, orchestrating agents.
+- [docs/mission/steps/ongoing/generative-runtime-program.md](docs/mission/steps/ongoing/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime. the thesis, the task graph (task-57 to task-80) and the rules every agent follows sit next to it.
 - [.contracts/.agents/AGENTS.md](.contracts/.agents/AGENTS.md): the single instruction source for ai agents and contributors. route every tool here, no per-tool files.
 
 ## license

@@ -43,17 +43,31 @@ mission, refs). architecture: docs/arc/arc.toml.
    paddings, shadows, breakpoints are `Theme` tokens (engine/src/theme). a
    number that is not a token yet becomes one (scales.rs) in the same
    change
+5. a task of the generative runtime program (task-57 onward) also reads,
+   before any code: docs/mission/steps/ongoing/generative-runtime-guidelines.md
+   (binding rules for the orchestrator and for agents),
+   docs/mission/steps/ongoing/generative-runtime-program.md (goal, graph,
+   ownership, contracts between tasks) and its own task file. the thesis
+   behind it is docs/mission/steps/ongoing/generative-runtime-thesis.md;
+   the short operating version is
+   docs/how-to/orchestrate-coding-agents-on-this-repo.md
 
 ## at task end (the close-out)
 
 a task is not done when the code works; it is done when the tree records
 it. the sequence, in order, every time:
 
-1. finish the work and run the gate; then ask the user "ok to commit?"
-   with a one-paragraph summary of what changed. nothing below happens
-   before the yes.
-2. on yes, in the same change set:
-   - commit, thematically, explicit paths (see ## things to avoid)
+1. finish the work and run the gate. an agent commits as it goes, small
+   progressive commits on its own task branch (`task/<nn>-<slug>`), each
+   one compiling, messages starting with the task id; it never commits to
+   `main` and never pushes. the orchestrator validates the branch (whole
+   diff, gate, the consumers' tests) and integrates it into `main` with
+   the user's go-ahead, given per task or as a standing go-ahead for a
+   continuous cycle. work outside a task branch still asks the user "ok
+   to commit?" with a one-paragraph summary first.
+2. on integration, in the same change set:
+   - rebase on `main`, fast-forward, gate again after the merge; explicit
+     paths when committing (see ## things to avoid)
    - docs/ADR/: a new adr when a decision was made or an existing one
      was reversed; update docs/ADR/README.md
    - docs/arc/arc.toml: when structure, crates, modules or contracts
@@ -116,6 +130,10 @@ typos job (non-blocking; the repo is bilingual english/portuguese).
 
 ## running
 
+- headless: `cargo run -p showcase -- --render <page> --out f.png [--theme
+  --width --height --scale --scroll]` draws any page without a window
+  through the same frame path; `monster_player <file> --frame <t> --out
+  f.png` does one monster frame. prefer it to window captures
 - apps: `cargo run -p showcase [page] [theme] [scroll px]` (gallery, page = the sidebar title; `script/web`
   runs `trunk --config web serve` for the browser), `cargo run -p ide
   [path]` (git client), `cargo run -p prime` (particle swarm),
@@ -184,8 +202,9 @@ keep them living.
   without surfacing them to the user first
 - avoid force-push to main, ever
 - avoid `git add -A` when the tree may carry untracked secrets; prefer
-  explicit paths. agents do not commit at all unless explicitly told;
-  the orchestrator commits thematically
+  explicit paths
+- avoid committing to `main` from an agent; agents commit only on their
+  own task branch, and the orchestrator integrates into `main`
 - avoid `#[allow(...)]` crate-wide; allow per item with a comment
 - avoid unsafe without a `// SAFETY:` comment naming the invariant
 - avoid emojis and em-dashes anywhere in project files

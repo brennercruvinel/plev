@@ -1,0 +1,28 @@
+# sem: the semantic contract (task-57, docs/ADR/semantic-contract-as-pure-projection.md).
+# pure on purpose: no gpu, no window, no text stack, so an agent, the
+# recorder, a headless tool or a cli can link it without the render stack.
+[package]
+name = "sem"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Semantic contract of plev: persistent logical identity, meaning, state, actions and constraints of every control, as pure data"
+
+[features]
+default = ["serde"]
+# the serde form is a contract with the agent protocol and the recorder;
+# ids and refs travel as their canonical text.
+serde = ["dep:serde", "indexmap/serde"]
+
+[dependencies]
+indexmap.workspace = true
+serde = { workspace = true, optional = true }
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

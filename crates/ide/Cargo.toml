@@ -14,6 +14,9 @@ path = "src/main.rs"
 engine.workspace = true
 comps.workspace = true
 git.workspace = true
+# the workbench: the workspace as a capability every actor reaches
+# through one dispatcher.
+sem.workspace = true
 wgpu.workspace = true
 winit.workspace = true
 log.workspace = true
@@ -21,6 +24,10 @@ env_logger.workspace = true
 pollster.workspace = true
 # Same major as plev's optional hot-reload dep (shared build cache).
 notify.workspace = true
+
+[dev-dependencies]
+# real repositories in temp dirs, like crates/git/tests/real_repo.rs.
+tempfile.workspace = true
 
 [lints]
 workspace = true

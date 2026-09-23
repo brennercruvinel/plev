@@ -48,9 +48,15 @@ impl WorkspaceView {
         let mid_x = left_x + self.left_w + handle_w;
 
         // Commit form (inline, above file list)
-        let commit_form_h =
-            self.commit_form
-                .render(compositor, &theme, left_x, content_y, self.left_w);
+        let can_submit = self.can_submit();
+        let commit_form_h = self.commit_form.render(
+            compositor,
+            &theme,
+            left_x,
+            content_y,
+            self.left_w,
+            can_submit,
+        );
 
         let hover_row = self.hover_unassigned_row;
         self.unassigned.render(
@@ -115,7 +121,8 @@ impl WorkspaceView {
             content_h,
         );
 
-        // -- Overlays (always last, highest z_order) --
+        // -- Overlays (always last, highest z_order), the toasts on top --
         self.render_overlays(compositor, &theme);
+        self.render_toasts(compositor, &theme);
     }
 }

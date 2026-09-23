@@ -3,10 +3,16 @@
 //! pill buttons. The sheet is `size.modal_max_w` wide on a desktop and
 //! shrinks to the viewport minus the breakpoint gutter on a phone, so
 //! the same dialog reads on every device.
+//!
+//! With a [`SemId`] ([`Modal::sem`]) the render binds the sheet and its
+//! two buttons (`<id>[confirm]`, `<id>[cancel]`) to the rects it draws
+//! and hit-tests them with, and [`Modal::project`] declares the dialog in
+//! a semantic projection.
 
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{Elevation, Intent, Theme};
+use sem::{NodeBuilder, Policy, Role, SemId, SnapshotBuilder};
 
 use crate::action::{Button, ButtonVariant};
 use crate::core::{EventResult, Rect, WidgetEvent};
@@ -40,6 +46,7 @@ pub struct Modal {
     pub intent: Intent,
     confirm: Button,
     cancel: Button,
+    sem: Option<SemId>,
 }
 
 impl Modal {
@@ -55,7 +62,59 @@ impl Modal {
             intent: Intent::Neutral,
             confirm: Button::new(confirm_label).variant(ButtonVariant::Secondary),
             cancel: Button::new(cancel_label).variant(ButtonVariant::Primary),
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds the sheet to
+    /// (`Compositor::bind_to_layer`); the buttons bind as `<id>[confirm]`
+    /// and `<id>[cancel]`.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.confirm = self.confirm.sem(id.key("confirm"));
+        self.cancel = self.cancel.sem(id.key("cancel"));
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this modal as `id` in a projection: a `Role::Dialog`
+    /// named by its title, described by its body, with the actions
+    /// `confirm` and `cancel`, and its two buttons as `Role::Button`
+    /// children `<id>[confirm]` and `<id>[cancel]`, each named by its
+    /// label with an `activate`. The confirm (the dialog's and its
+    /// button's) carries the policy the intent implies: destructive for a
+    /// destructive modal. It only reads the widget; the app owns it and
+    /// runs the actions (a button's `activate` is its dialog action). Pass
+    /// the id given to [`Modal::sem`] so the nodes and the bindings name
+    /// the same controls. Returns the dialog's node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let confirm = Policy {
+            destructive: self.intent == Intent::Destructive,
+            ..Policy::default()
+        };
+        let mut button = b.node(id.key("confirm"), Role::Button, self.confirm.label.as_str());
+        button.parent(id);
+        button.action("activate").policy(confirm);
+        let mut button = b.node(id.key("cancel"), Role::Button, self.cancel.label.as_str());
+        button.parent(id);
+        button.action("activate");
+        let mut node = b.node(id, Role::Dialog, self.title.as_str());
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.description(self.body.as_str());
+        node.action("confirm").policy(confirm);
+        node.action("cancel");
+        node
     }
 
     pub fn intent(mut self, intent: Intent) -> Self {
@@ -176,6 +235,9 @@ impl Modal {
         // Raised sheet: overlay shadow stack, frost, edge-light, the solid
         // popover body, and the inset key-light glint.
         let dialog = self.dialog_rect(theme, vw, vh);
+        if let Some(id) = &self.sem {
+            compositor.bind_to_layer(layer, id, [dialog.x, dialog.y, dialog.w, dialog.h]);
+        }
         let radius = theme.shape.pill;
         shadow_stack(compositor, layer, dialog, radius, Elevation::Overlay, theme);
         compositor.push_to_layer(

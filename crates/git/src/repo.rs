@@ -12,13 +12,14 @@
 //! Every method is synchronous; the UI talks to [`GitClient`](crate::GitClient)
 //! instead, which runs a `GitRepo` on a worker thread.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::diff::parse_unified;
 use crate::error::{GitError, Result, repo_err};
 use crate::status::parse_porcelain_v2;
-use crate::types::{Branch, Commit, FileStatus, Hunk};
+use crate::types::{Branch, Commit, CommitCheck, FileStatus, Hunk, NewCommit};
 
 pub struct GitRepo {
     repo: gix::Repository,
@@ -183,11 +184,55 @@ impl GitRepo {
         Ok(())
     }
 
-    /// Commits the index with `message`; returns the new commit sha.
-    pub fn commit(&self, message: &str) -> Result<String> {
+    /// Commits the index with `message`; returns the new commit's sha and
+    /// the paths it recorded.
+    pub fn commit(&self, message: &str) -> Result<NewCommit> {
         self.git(&["commit", "--message", message])?;
-        let sha = self.git(&["rev-parse", "HEAD"])?;
-        Ok(sha.trim().to_string())
+        let sha = self.git(&["rev-parse", "HEAD"])?.trim().to_string();
+        let files = self.commit_files(&sha)?;
+        Ok(NewCommit { sha, files })
+    }
+
+    /// Commits the index with `message` only when the paths it stages are
+    /// exactly `expect`, the staged set the caller decided on. The index
+    /// is read (through `status`, the same source the staged set shown to
+    /// a person comes from) right before `git commit`; when it differs,
+    /// nothing is committed and the answer is the delta.
+    ///
+    /// Between this read and `git commit` another process can still move
+    /// the index: git holds `index.lock` only inside its own process. That
+    /// window is outside this check.
+    pub fn commit_if(&self, message: &str, expect: &BTreeSet<String>) -> Result<CommitCheck> {
+        let staged = self.staged_paths()?;
+        if &staged != expect {
+            return Ok(CommitCheck::Stale {
+                added: staged.difference(expect).cloned().collect(),
+                removed: expect.difference(&staged).cloned().collect(),
+            });
+        }
+        self.commit(message).map(CommitCheck::Committed)
+    }
+
+    /// The paths the index holds changes for: the staged rows of
+    /// [`status`](Self::status).
+    pub fn staged_paths(&self) -> Result<BTreeSet<String>> {
+        Ok(self
+            .status()?
+            .into_iter()
+            .filter(|s| s.staged)
+            .map(|s| s.path)
+            .collect())
+    }
+
+    /// The paths commit `sha` recorded (`git show --name-only`), in git's
+    /// order.
+    pub fn commit_files(&self, sha: &str) -> Result<Vec<String>> {
+        let raw = self.git(&["show", "--name-only", "--format=", "-z", sha])?;
+        Ok(raw
+            .split('\0')
+            .filter(|p| !p.is_empty())
+            .map(str::to_string)
+            .collect())
     }
 
     // -- helpers ---------------------------------------------------------------

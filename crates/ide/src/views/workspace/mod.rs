@@ -10,10 +10,12 @@ use super::header::Header;
 use super::multi_stack_view::MultiStackView;
 use super::sidebar::Sidebar;
 use super::unassigned_view::UnassignedView;
-use comps::feedback::{ContextMenu, Modal};
+use crate::ids::Ids;
+use comps::feedback::{ContextMenu, Modal, ToastManager};
 use comps::overlay::OverlayManager;
 use engine::compositor::{Compositor, LayerId};
-use engine::theme::Theme;
+use engine::theme::{Intent, Theme};
+use sem::RequestId;
 
 /// Three-panel workspace layout — mirrors plev ide's MainViewport.
 pub struct WorkspaceView {
@@ -71,10 +73,14 @@ pub struct WorkspaceView {
     /// What the open overlay refers to (context menu target / discard
     /// confirmation). `None` when no overlay-driven action is in flight.
     pub(crate) pending_action: Option<PendingAction>,
+    /// What the dispatcher refused and why, as toasts over the frame
+    /// (`notices[<id>]`).
+    pub(crate) toasts: ToastManager,
 
-    /// Git operations requested by user interaction; the app drains these
-    /// and forwards them to the git worker (views never call git).
-    pub requests: Vec<UiRequest>,
+    /// What the person asked for since the last drain; the workbench
+    /// turns each into a request through its dispatcher (views never
+    /// change git state or the projected state themselves).
+    pub(crate) requests: Vec<UiRequest>,
 
     /// Repo name + branch shown in the header (injected by the app).
     pub repo_label: String,
@@ -89,37 +95,71 @@ pub struct WorkspaceView {
     /// the header is skipped; the rail and the three panels fill the
     /// frame from `origin`.
     pub embedded: bool,
+
+    /// The logical identities the views bind and the workbench projects;
+    /// `None` only if the constant ids failed to parse (a test proves they
+    /// do not), which leaves the workspace without semantics.
+    pub(crate) ids: Option<Ids>,
 }
 
 /// Overlay-driven interaction state: which file the open context menu or
-/// discard-confirmation modal is about.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) enum PendingAction {
-    ContextMenu { file_idx: usize },
-    ConfirmDiscard { file_idx: usize },
-}
-
-impl PendingAction {
-    pub(crate) fn file_idx(self) -> usize {
-        match self {
-            PendingAction::ContextMenu { file_idx } => file_idx,
-            PendingAction::ConfirmDiscard { file_idx } => file_idx,
-        }
-    }
-}
-
-/// A git operation the UI wants performed. Emitted by interaction handlers
-/// (optimistic view updates happen immediately); the app maps each request
-/// to a `git::GitCommand` on the worker thread.
+/// discard-confirmation modal is about, by path (a refresh may reorder
+/// the rows while the overlay is open).
 #[derive(Clone, Debug, PartialEq)]
-pub enum UiRequest {
-    FileDiff { path: String },
-    CommitDiff { sha: String },
-    Stage { path: String },
-    Unstage { path: String },
-    Discard { path: String },
-    Ignore { path: String },
-    Commit { message: String },
+pub(crate) enum PendingAction {
+    /// The menu of a row: its path and whether the row is the staged one.
+    ContextMenu {
+        path: String,
+        staged: bool,
+    },
+    ConfirmDiscard {
+        path: String,
+    },
+    /// Another actor's request that waits for a person to confirm it.
+    ConfirmRequest {
+        request: RequestId,
+    },
+}
+
+/// What a person asked for through the workspace (a click, a key, a menu
+/// item), named without ids. The views queue it; the workbench observes
+/// the workspace at that instant and asks its dispatcher as the person,
+/// so the effect happens once, in `execute`, whoever asked.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum UiRequest {
+    ShowFileDiff {
+        path: String,
+    },
+    ShowCommitDiff {
+        sha: String,
+    },
+    Stage {
+        path: String,
+    },
+    Unstage {
+        path: String,
+    },
+    Discard {
+        path: String,
+    },
+    Ignore {
+        path: String,
+    },
+    OpenForm,
+    CancelForm,
+    Submit,
+    /// A click on a toast.
+    DismissNotice {
+        id: u64,
+    },
+    /// The person confirmed a request waiting for it (the modal's confirm).
+    Confirm {
+        request: RequestId,
+    },
+    /// The person closed that modal without confirming.
+    Decline {
+        request: RequestId,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -171,6 +211,7 @@ impl WorkspaceView {
             modal_confirm_rect: None,
             modal_cancel_rect: None,
             pending_action: None,
+            toasts: ToastManager::new(),
             requests: Vec::new(),
             repo_label: String::new(),
             branch_label: String::new(),
@@ -178,9 +219,30 @@ impl WorkspaceView {
             vh,
             origin: (0.0, 0.0),
             embedded: false,
+            ids: Ids::new()
+                .inspect_err(|e| log::error!("ide: the workspace ids do not parse: {e}"))
+                .ok(),
         };
+        if let Some(ids) = &view.ids {
+            view.unassigned
+                .set_sem(ids.changes.clone(), ids.file.clone());
+            view.commit_form
+                .set_sem(ids.form.clone(), ids.message.clone(), ids.submit.clone());
+            view.diff.set_sem(ids.diff.clone());
+            view.stacks.set_sem(ids.stacks.clone(), ids.commit.clone());
+            view.toasts = ToastManager::new().sem(ids.notices.clone());
+        }
         view.apply_panel_widths();
         view
+    }
+
+    /// Whether a commit can be asked for now: the form is open, the
+    /// message is not blank and something is staged. The Commit button
+    /// draws from this and `commit.submit` projects it.
+    pub fn can_submit(&self) -> bool {
+        self.commit_form.visible
+            && !self.commit_form.message().trim().is_empty()
+            && self.unassigned.files.iter().any(|f| f.staged)
     }
 
     /// Embed inside a host's content rect: no header, rail and panels
@@ -199,9 +261,8 @@ impl WorkspaceView {
         (self.origin.0 + self.vw, self.origin.1 + self.vh)
     }
 
-    /// Takes the git operations queued by interaction handlers since the
-    /// last drain.
-    pub fn take_requests(&mut self) -> Vec<UiRequest> {
+    /// Takes what the person asked for since the last drain.
+    pub(crate) fn take_requests(&mut self) -> Vec<UiRequest> {
         std::mem::take(&mut self.requests)
     }
 
@@ -238,14 +299,23 @@ impl WorkspaceView {
         self.theme().control.divider_hit
     }
 
+    /// Shows `message` as a toast at the bottom-right of the frame (what
+    /// the dispatcher refused, a confirmation left unanswered).
+    pub(crate) fn notify(&mut self, message: impl Into<String>, intent: Intent) {
+        let theme = self.theme().clone();
+        self.toasts.push(message, intent, &theme);
+    }
+
     /// Advance the widgets that animate (scrollbar fades, the commit
-    /// field caret). `true` while frames are needed.
+    /// field caret, the toasts). `true` while frames are needed; a toast
+    /// on screen keeps them coming until it dismisses itself.
     pub fn tick(&mut self, dt: f32) -> bool {
         let a = self.unassigned.tick(dt);
         let b = self.stacks.tick(dt);
         let c = self.diff.tick(dt);
         let d = self.commit_form.tick(dt);
-        a || b || c || d
+        let e = self.toasts.tick(dt) || !self.toasts.is_empty();
+        a || b || c || d || e
     }
 
     pub fn toggle_theme(&mut self) {

@@ -20,6 +20,11 @@ macro_rules! shader_src {
     }};
 }
 
+/// Target format of a headless context. The sRGB variant, so a render
+/// target encodes linear to sRGB on write exactly like the windowed sRGB
+/// view, and RGBA order, so a readback is PNG row data as it lands.
+pub const HEADLESS_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
+
 pub struct GpuContext {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
@@ -52,6 +57,10 @@ pub struct GpuContext {
     ///
     /// [`set_projection`]: GpuContext::set_projection
     pub(crate) logical_size: Option<(f32, f32)>,
+    /// Timestamp queries around the passes of `window::draw_frame`, only
+    /// with `RenderConfig::gpu_timestamps` on a device that has
+    /// `TIMESTAMP_QUERY`; `None` otherwise (see `perf::gpu_time`).
+    pub(crate) timestamps: Option<crate::perf::gpu_time::GpuTimestamps>,
     /// Desktop debug builds: watches `src/gpu/shaders/`, see `hot_reload`.
     #[cfg(hot_reload)]
     pub(crate) shader_watcher: Option<crate::hot_reload::ShaderWatcher>,
@@ -75,17 +84,10 @@ impl GpuContext {
     }
 
     pub async fn new_with_config(window: Arc<Window>, mut config: RenderConfig) -> Self {
-        config.msaa_samples = config.effective_msaa_samples();
-        crate::path::set_default_tolerance(config.path_tolerance);
+        Self::apply_config(&mut config);
 
         let size = window.inner_size();
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
-            #[cfg(not(target_arch = "wasm32"))]
-            backends: wgpu::Backends::PRIMARY,
-            #[cfg(target_arch = "wasm32")]
-            backends: wgpu::Backends::BROWSER_WEBGPU,
-            ..Default::default()
-        });
+        let instance = Self::instance();
 
         let surface = instance.create_surface(window.clone()).unwrap();
         let adapter = instance
@@ -101,17 +103,7 @@ impl GpuContext {
         log::info!("GPU: requesting device...");
 
         let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor {
-                label: Some("plev_device"),
-                required_features: wgpu::Features::empty(),
-                #[cfg(not(target_arch = "wasm32"))]
-                required_limits: wgpu::Limits::default(),
-                #[cfg(target_arch = "wasm32")]
-                required_limits: wgpu::Limits::default(),
-                memory_hints: wgpu::MemoryHints::Performance,
-                trace: Default::default(),
-                experimental_features: Default::default(),
-            })
+            .request_device(&Self::device_descriptor(&adapter, &config))
             .await
             .expect("Failed to create device");
         log::info!(
@@ -169,6 +161,125 @@ impl GpuContext {
             desired_maximum_frame_latency: 2,
         };
         surface.configure(&device, &surface_config);
+
+        let gpu = Self::from_device(device, queue, Some(surface), surface_config, config);
+        #[cfg(hot_reload)]
+        let gpu = gpu.with_source_watchers(&window);
+        gpu
+    }
+
+    /// A context with no window and no surface: frames are drawn into an
+    /// offscreen texture of `width x height` physical pixels (see
+    /// `engine::headless`). `surface_config` holds that size and the
+    /// target format, [`HEADLESS_FORMAT`]; every pipeline is built by the
+    /// same code as the windowed context, in that format.
+    ///
+    /// `None` when the machine has no GPU adapter (or the device request
+    /// fails), so tests and tools can skip instead of failing.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn new_headless(width: u32, height: u32, mut config: RenderConfig) -> Option<Self> {
+        Self::apply_config(&mut config);
+
+        let instance = Self::instance();
+        let adapter = match instance
+            .request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::HighPerformance,
+                compatible_surface: None,
+                force_fallback_adapter: false,
+            })
+            .await
+        {
+            Ok(adapter) => adapter,
+            Err(e) => {
+                log::warn!("headless: no GPU adapter ({e})");
+                return None;
+            }
+        };
+        log::info!("GPU adapter (headless): {}", adapter.get_info().name);
+        let descriptor = Self::device_descriptor(&adapter, &config);
+        let (device, queue) = match adapter.request_device(&descriptor).await {
+            Ok(pair) => pair,
+            Err(e) => {
+                log::warn!("headless: device request failed ({e})");
+                return None;
+            }
+        };
+        let surface_config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            format: HEADLESS_FORMAT,
+            width: width.max(1),
+            height: height.max(1),
+            present_mode: config.present_mode,
+            alpha_mode: wgpu::CompositeAlphaMode::Opaque,
+            view_formats: vec![],
+            desired_maximum_frame_latency: 2,
+        };
+        Some(Self::from_device(
+            device,
+            queue,
+            None,
+            surface_config,
+            config,
+        ))
+    }
+
+    /// Clamp the sample count and install the path tolerance, first thing
+    /// in either constructor (before any await).
+    fn apply_config(config: &mut RenderConfig) {
+        config.msaa_samples = config.effective_msaa_samples();
+        crate::path::set_default_tolerance(config.path_tolerance);
+    }
+
+    fn instance() -> wgpu::Instance {
+        wgpu::Instance::new(&wgpu::InstanceDescriptor {
+            #[cfg(not(target_arch = "wasm32"))]
+            backends: wgpu::Backends::PRIMARY,
+            #[cfg(target_arch = "wasm32")]
+            backends: wgpu::Backends::BROWSER_WEBGPU,
+            ..Default::default()
+        })
+    }
+
+    /// No feature, unless `config` asks for GPU timestamps and the adapter
+    /// has them.
+    fn device_descriptor(
+        adapter: &wgpu::Adapter,
+        config: &RenderConfig,
+    ) -> wgpu::DeviceDescriptor<'static> {
+        wgpu::DeviceDescriptor {
+            label: Some("plev_device"),
+            required_features: crate::perf::gpu_time::device_features(
+                adapter.features(),
+                config.gpu_timestamps,
+            ),
+            #[cfg(not(target_arch = "wasm32"))]
+            required_limits: wgpu::Limits::default(),
+            #[cfg(target_arch = "wasm32")]
+            required_limits: wgpu::Limits::default(),
+            memory_hints: wgpu::MemoryHints::Performance,
+            trace: Default::default(),
+            experimental_features: Default::default(),
+        }
+    }
+
+    /// Everything a context builds once it has a device, whatever it draws
+    /// into: the projection, the bind group layouts, every pipeline in the
+    /// render format (the sRGB view format, `surface_format()`), the
+    /// composite sampler. The windowed and the headless constructors both
+    /// end here, so a frame is drawn by the same pipelines either way.
+    fn from_device(
+        device: wgpu::Device,
+        queue: wgpu::Queue,
+        surface: Option<wgpu::Surface<'static>>,
+        surface_config: wgpu::SurfaceConfiguration,
+        config: RenderConfig,
+    ) -> Self {
+        let render_format = surface_config
+            .view_formats
+            .first()
+            .copied()
+            .unwrap_or(surface_config.format);
+        let (width, height) = (surface_config.width, surface_config.height);
 
         // Projection uniform buffer
         let projection_data = ortho_projection(width as f32, height as f32);
@@ -273,10 +384,16 @@ impl GpuContext {
             ..Default::default()
         });
 
+        let timestamps = if config.gpu_timestamps {
+            crate::perf::gpu_time::GpuTimestamps::new(&device, &queue)
+        } else {
+            None
+        };
+
         Self {
             device,
             queue,
-            surface: Some(surface),
+            surface,
             surface_config,
             config,
             projection_buffer,
@@ -293,41 +410,52 @@ impl GpuContext {
             backdrop_pipeline,
             composite_pipeline,
             #[cfg(hot_reload)]
-            shader_watcher: {
-                let dir = crate::hot_reload::shader_dir();
-                let wake = window.clone();
-                match crate::hot_reload::ShaderWatcher::new(&dir, move || wake.request_redraw()) {
-                    Ok(w) => {
-                        log::info!("shader hot reload on: {}", dir.display());
-                        Some(w)
-                    }
-                    Err(e) => {
-                        log::error!("shader hot reload off: {e}");
-                        None
-                    }
-                }
-            },
+            shader_watcher: None,
             #[cfg(hot_reload)]
-            _source_watcher: {
-                let wake = window.clone();
-                match crate::hot_reload::SourceWatcher::new(
-                    &crate::hot_reload::source_dirs(),
-                    move || wake.request_redraw(),
-                ) {
-                    Ok(w) => {
-                        log::info!("source hot reload on: crates/*/src");
-                        Some(w)
-                    }
-                    Err(e) => {
-                        log::error!("source hot reload off: {e}");
-                        None
-                    }
-                }
-            },
+            _source_watcher: None,
             composite_bind_group_layout,
             opacity_bind_group_layout,
             composite_sampler,
             logical_size: None,
+            timestamps,
         }
+    }
+
+    /// Desktop debug builds: start the shader and source watchers, each
+    /// waking `window` when something changed on disk. Only a windowed
+    /// context has someone to wake.
+    #[cfg(hot_reload)]
+    fn with_source_watchers(mut self, window: &Arc<Window>) -> Self {
+        self.shader_watcher = {
+            let dir = crate::hot_reload::shader_dir();
+            let wake = window.clone();
+            match crate::hot_reload::ShaderWatcher::new(&dir, move || wake.request_redraw()) {
+                Ok(w) => {
+                    log::info!("shader hot reload on: {}", dir.display());
+                    Some(w)
+                }
+                Err(e) => {
+                    log::error!("shader hot reload off: {e}");
+                    None
+                }
+            }
+        };
+        self._source_watcher = {
+            let wake = window.clone();
+            match crate::hot_reload::SourceWatcher::new(
+                &crate::hot_reload::source_dirs(),
+                move || wake.request_redraw(),
+            ) {
+                Ok(w) => {
+                    log::info!("source hot reload on: crates/*/src");
+                    Some(w)
+                }
+                Err(e) => {
+                    log::error!("source hot reload off: {e}");
+                    None
+                }
+            }
+        };
+        self
     }
 }

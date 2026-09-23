@@ -4,6 +4,10 @@
 //! showing a real repository: status, log, branches and diffs come from
 //! `git` running on a worker thread; the UI thread never blocks.
 //!
+//! The window holds one `Workbench`: every click and key that acts on the
+//! repository or the commit form becomes a request through its
+//! dispatcher, the same path an agent or a test takes.
+//!
 //! Run: `cargo run -p ide [path-to-repo]` (defaults to the cwd).
 
 mod actions;
@@ -22,8 +26,8 @@ use engine::gpu::GpuContext;
 use engine::gpu::texture_pool::TexturePool;
 use engine::text::TextSystem;
 use git::{GitClient, GitEvent};
-use ide::session::GitSession;
-use ide::views::workspace::{Side, WorkspaceView};
+use ide::views::workspace::Side;
+use ide::workbench::Workbench;
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop};
@@ -62,11 +66,11 @@ struct App {
     window: Option<Arc<Window>>,
     state: GpuState,
     compositor: Compositor,
-    workspace: WorkspaceView,
+    /// The workspace, the git session and the dispatcher.
+    bench: Workbench,
     cursor_pos: (f32, f32),
     scale_factor: f64,
 
-    git: GitSession,
     /// Keeps the OS file watcher alive (`None` when watching failed).
     _fs_watcher: Option<watcher::FsWatcher>,
 
@@ -81,17 +85,14 @@ struct App {
 }
 
 impl App {
-    fn new(git: GitSession, fs_watcher: Option<watcher::FsWatcher>) -> Self {
-        let mut workspace = WorkspaceView::new(1280.0, 800.0);
-        workspace.repo_label = git.repo_label();
+    fn new(bench: Workbench, fs_watcher: Option<watcher::FsWatcher>) -> Self {
         Self {
             window: None,
             state: GpuState::Uninitialized,
             compositor: Compositor::new(),
-            workspace,
+            bench,
             cursor_pos: (0.0, 0.0),
             scale_factor: 1.0,
-            git,
             _fs_watcher: fs_watcher,
             modifiers: ModifiersState::empty(),
             matcher: KeymapMatcher::new(actions::default_keymap()),
@@ -102,24 +103,17 @@ impl App {
 
     /// Mark the scene as changed and schedule a frame. Frames are rendered
     /// on demand only: without input the event loop stays idle (no
-    /// unconditional `request_redraw`). State changes are also the only
-    /// source of git work, so the request queue is flushed here too.
+    /// unconditional `request_redraw`).
     fn invalidate(&mut self) {
-        self.flush_requests();
         self.compositor.invalidate();
         if let Some(w) = &self.window {
             w.request_redraw();
         }
     }
 
-    /// Forwards git operations queued by the views to the worker thread.
-    fn flush_requests(&mut self) {
-        self.git.flush_requests(&mut self.workspace);
-    }
-
-    /// Applies a result from the git worker to the views.
+    /// Applies a result from the git worker to the workbench.
     fn apply_git_event(&mut self, event: GitEvent) {
-        self.git.apply(&mut self.workspace, event);
+        self.bench.apply(event);
         self.invalidate();
     }
 
@@ -127,16 +121,18 @@ impl App {
     /// through the keymap. Returns true if state changed.
     fn handle_key_event(&mut self, key_event: &KeyEvent, event_loop: &ActiveEventLoop) -> bool {
         // The visible commit form captures plain characters as text before
-        // the keymap sees them (named keys — Enter/Escape/Backspace — still
-        // dispatch through the CommitForm context bindings).
-        if self.workspace.commit_form.visible
+        // the keymap sees them (named keys, Enter/Escape/Backspace, still
+        // dispatch through the CommitForm context bindings). Typing is
+        // editing, not a capability: it stays with the field.
+        let form = &mut self.bench.workspace_mut().commit_form;
+        if form.visible
             && !self.modifiers.control_key()
             && !self.modifiers.super_key()
             && !self.modifiers.alt_key()
             && let Key::Character(text) = &key_event.logical_key
         {
             for ch in text.chars() {
-                self.workspace.commit_form.append_char(ch);
+                form.append_char(ch);
             }
             return true;
         }
@@ -160,48 +156,51 @@ impl App {
     /// Key contexts from outermost to innermost; deeper entries win binding
     /// conflicts (e.g. Escape closes an overlay before quitting the app).
     fn context_stack(&self) -> ContextStack {
+        let ws = self.bench.workspace();
         let mut stack = ContextStack::new();
         stack.push(KeyContext::new("Workspace"));
-        if self.workspace.commit_form.visible {
+        if ws.commit_form.visible {
             stack.push(KeyContext::new("CommitForm"));
         }
-        if !self.workspace.overlay_mgr.is_empty() {
+        if !ws.overlay_mgr.is_empty() {
             stack.push(KeyContext::new("Overlay"));
         }
         stack
     }
 
-    /// Executes a resolved action. Returns true if state changed.
+    /// Executes a resolved action. Returns true if state changed. The
+    /// keymap names input actions; the ones that act on a capability
+    /// (`commit::Submit`, `file::Stage`, ...) go through the workbench,
+    /// which asks the dispatcher as the person.
     fn dispatch(&mut self, action: &dyn Action, event_loop: &ActiveEventLoop) -> bool {
-        let ws = &mut self.workspace;
+        let bench = &mut self.bench;
         if action.is::<actions::Quit>() {
             event_loop.exit();
             false
         } else if action.is::<actions::Toggle>() {
-            ws.toggle_theme();
+            bench.workspace_mut().toggle_theme();
             true
         } else if action.is::<actions::Up>() {
-            ws.nav_up()
+            bench.nav_up()
         } else if action.is::<actions::Down>() {
-            ws.nav_down()
+            bench.nav_down()
         } else if action.is::<actions::ShowDiff>() {
-            ws.show_selected_diff()
+            bench.show_selected_diff()
         } else if action.is::<actions::Stage>() {
-            ws.stage_selected()
+            bench.stage_selected()
         } else if action.is::<actions::Discard>() {
-            ws.discard_selected()
+            bench.discard_selected()
         } else if action.is::<actions::OpenForm>() {
-            ws.toggle_commit_form()
+            bench.toggle_commit_form()
         } else if action.is::<actions::Submit>() {
-            ws.submit_commit()
+            bench.submit_commit()
         } else if action.is::<actions::Cancel>() {
-            ws.commit_form.hide();
-            true
+            bench.cancel_commit_form()
         } else if action.is::<actions::Backspace>() {
-            ws.commit_form.backspace();
+            bench.workspace_mut().commit_form.backspace();
             true
         } else if action.is::<actions::Close>() {
-            ws.close_top_overlay()
+            bench.close_top_overlay()
         } else {
             log::warn!("no handler for action {}", action.name());
             false
@@ -211,7 +210,7 @@ impl App {
 
 impl ApplicationHandler<AppEvent> for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let title = format!("plev ide - {}", self.workspace.repo_label);
+        let title = format!("plev ide - {}", self.bench.workspace().repo_label);
         let attrs = WindowAttributes::default()
             .with_title(title)
             .with_inner_size(winit::dpi::LogicalSize::new(1280u32, 800u32));
@@ -233,7 +232,7 @@ impl ApplicationHandler<AppEvent> for App {
         let sf = self.scale_factor as f32;
         let lw = size.width as f32 / sf;
         let lh = size.height as f32 / sf;
-        self.workspace.resize(lw, lh);
+        self.bench.workspace_mut().resize(lw, lh);
         if let GpuState::Ready { gpu, .. } = &mut self.state {
             gpu.set_projection(lw, lh);
         }
@@ -246,7 +245,7 @@ impl ApplicationHandler<AppEvent> for App {
             AppEvent::FsChange => {
                 // Something changed on disk: reload status/log/branches.
                 // The resulting events invalidate the scene when applied.
-                self.git.refresh();
+                self.bench.refresh();
             }
         }
     }
@@ -277,7 +276,7 @@ impl ApplicationHandler<AppEvent> for App {
                     gpu.resize(size.width, size.height);
                     gpu.set_projection(lw, lh);
                 }
-                self.workspace.resize(lw, lh);
+                self.bench.workspace_mut().resize(lw, lh);
                 self.invalidate();
             }
 
@@ -293,33 +292,41 @@ impl ApplicationHandler<AppEvent> for App {
                 let cx = position.x as f32 / sf;
                 let cy = position.y as f32 / sf;
                 self.cursor_pos = (cx, cy);
+                let ws = self.bench.workspace_mut();
 
-                if self.workspace.dragging_left || self.workspace.dragging_right {
-                    self.workspace.update_drag(cx);
-                    self.invalidate();
+                let dragged = ws.dragging_left || ws.dragging_right;
+                if dragged {
+                    ws.update_drag(cx);
                 }
 
-                let old_lh = self.workspace.hover_left_handle;
-                let old_rh = self.workspace.hover_right_handle;
-                match self.workspace.hit_test_handle(cx) {
+                let old_lh = ws.hover_left_handle;
+                let old_rh = ws.hover_right_handle;
+                match ws.hit_test_handle(cx) {
                     Some(Side::Left) => {
-                        self.workspace.hover_left_handle = true;
-                        self.workspace.hover_right_handle = false;
+                        ws.hover_left_handle = true;
+                        ws.hover_right_handle = false;
                     }
                     Some(Side::Right) => {
-                        self.workspace.hover_right_handle = true;
-                        self.workspace.hover_left_handle = false;
+                        ws.hover_right_handle = true;
+                        ws.hover_left_handle = false;
                     }
                     None => {
-                        self.workspace.hover_left_handle = false;
-                        self.workspace.hover_right_handle = false;
+                        ws.hover_left_handle = false;
+                        ws.hover_right_handle = false;
                     }
                 }
 
-                let on_handle = self.workspace.hover_left_handle
-                    || self.workspace.hover_right_handle
-                    || self.workspace.dragging_left
-                    || self.workspace.dragging_right;
+                let on_handle = ws.hover_left_handle
+                    || ws.hover_right_handle
+                    || ws.dragging_left
+                    || ws.dragging_right;
+                let handle_changed =
+                    old_lh != ws.hover_left_handle || old_rh != ws.hover_right_handle;
+                let hover_changed = if !ws.overlay_mgr.is_empty() {
+                    ws.handle_overlay_hover(cx, cy)
+                } else {
+                    ws.handle_hover(cx, cy)
+                };
                 if let Some(w) = &self.window {
                     w.set_cursor(if on_handle {
                         CursorIcon::EwResize
@@ -327,15 +334,7 @@ impl ApplicationHandler<AppEvent> for App {
                         CursorIcon::Default
                     });
                 }
-
-                let handle_changed = old_lh != self.workspace.hover_left_handle
-                    || old_rh != self.workspace.hover_right_handle;
-                let hover_changed = if !self.workspace.overlay_mgr.is_empty() {
-                    self.workspace.handle_overlay_hover(cx, cy)
-                } else {
-                    self.workspace.handle_hover(cx, cy)
-                };
-                if handle_changed || hover_changed {
+                if dragged || handle_changed || hover_changed {
                     self.invalidate();
                 }
             }
@@ -347,17 +346,17 @@ impl ApplicationHandler<AppEvent> for App {
             } => {
                 let (cx, cy) = self.cursor_pos;
                 match state {
-                    ElementState::Pressed => match self.workspace.hit_test_handle(cx) {
-                        Some(Side::Left) => self.workspace.begin_drag_left(cx),
-                        Some(Side::Right) => self.workspace.begin_drag_right(cx),
+                    ElementState::Pressed => match self.bench.workspace().hit_test_handle(cx) {
+                        Some(Side::Left) => self.bench.workspace_mut().begin_drag_left(cx),
+                        Some(Side::Right) => self.bench.workspace_mut().begin_drag_right(cx),
                         None => {
-                            if self.workspace.handle_click(cx, cy) {
+                            if self.bench.click(cx, cy) {
                                 self.invalidate();
                             }
                         }
                     },
                     ElementState::Released => {
-                        self.workspace.end_drag();
+                        self.bench.workspace_mut().end_drag();
                         self.invalidate();
                     }
                 }
@@ -369,7 +368,7 @@ impl ApplicationHandler<AppEvent> for App {
                 ..
             } => {
                 let (cx, cy) = self.cursor_pos;
-                if self.workspace.handle_right_click(cx, cy) {
+                if self.bench.right_click(cx, cy) {
                     self.invalidate();
                 }
             }
@@ -382,7 +381,7 @@ impl ApplicationHandler<AppEvent> for App {
                 };
                 // Scroll invalidates unconditionally: ScrollState clamps, so
                 // a no-op wheel costs one cheap identical-hash frame at most.
-                self.workspace.scroll(cx, scroll_delta);
+                self.bench.workspace_mut().scroll(cx, scroll_delta);
                 self.invalidate();
             }
 
@@ -398,7 +397,7 @@ impl ApplicationHandler<AppEvent> for App {
                 };
                 // Animated widgets keep frames coming while they settle.
                 let tick = self.clock.tick();
-                if self.workspace.tick(tick.dt) {
+                if self.bench.tick(tick.dt) {
                     self.compositor.invalidate();
                     if let Some(w) = &self.window {
                         w.request_redraw();
@@ -410,7 +409,7 @@ impl ApplicationHandler<AppEvent> for App {
                     effects,
                     texture_pool,
                     &mut self.compositor,
-                    &mut self.workspace,
+                    &mut self.bench,
                 );
             }
 
@@ -449,20 +448,21 @@ fn main() {
             std::process::exit(1);
         }
     };
-    let git = GitSession::new(git);
+    let workdir = git.workdir().to_path_buf();
+    let mut bench = Workbench::new(1280.0, 800.0);
     // Initial data load (results stream in as user events).
-    git.refresh();
+    bench.connect(git);
 
     // Watch worktree + .git so external changes (editor saves, CLI
     // commits) refresh the UI automatically. The app still works if the
-    // platform watcher fails — it just won't auto-refresh.
+    // platform watcher fails; it just won't auto-refresh.
     let fs_proxy = event_loop.create_proxy();
-    let fs_watcher = watcher::spawn(git.client().workdir(), move || {
+    let fs_watcher = watcher::spawn(&workdir, move || {
         let _ = fs_proxy.send_event(AppEvent::FsChange);
     })
     .inspect_err(|e| log::warn!("file watcher disabled: {e}"))
     .ok();
 
-    let mut app = App::new(git, fs_watcher);
+    let mut app = App::new(bench, fs_watcher);
     event_loop.run_app(&mut app).unwrap();
 }

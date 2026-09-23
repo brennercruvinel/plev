@@ -324,15 +324,4 @@ impl Theme {
     pub fn intent_motion(&self, intent: Intent) -> MotionPhysics {
         self.motion.for_intent(intent)
     }
-
-    /// Resolve intent to an AccessKit role hint.
-    #[cfg(feature = "accessibility")]
-    pub fn intent_role(&self, intent: Intent) -> accesskit::Role {
-        match intent {
-            Intent::Neutral => accesskit::Role::GenericContainer,
-            Intent::Constructive => accesskit::Role::Button,
-            Intent::Destructive => accesskit::Role::Button,
-            Intent::Informational => accesskit::Role::Label,
-        }
-    }
 }

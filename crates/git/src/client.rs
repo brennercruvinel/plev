@@ -5,13 +5,14 @@
 //! callback typically forwards into a `winit::EventLoopProxy` (or any other
 //! wake-up mechanism) — this crate stays UI-agnostic on purpose.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Sender, channel};
 use std::thread::JoinHandle;
 
 use crate::error::Result;
 use crate::repo::GitRepo;
-use crate::types::{Branch, Commit, FileStatus, Hunk};
+use crate::types::{Branch, Commit, CommitCheck, FileStatus, Hunk, NewCommit};
 
 /// Requests the worker thread understands.
 #[derive(Clone, Debug)]
@@ -39,8 +40,14 @@ pub enum GitCommand {
     Ignore {
         path: String,
     },
-    Commit {
+    /// Commits the index with `message` only if it stages exactly
+    /// `expect_staged`, the set the requester decided on: the worker reads
+    /// the real index right before `git commit` and answers
+    /// `GitEvent::Committed` or, when the index moved, `CommitRejected`
+    /// with the delta and no commit.
+    CommitIf {
         message: String,
+        expect_staged: BTreeSet<String>,
     },
     /// Convenience: emits `Status`, `Log` and `Branches` events in one go
     /// (used after mutations and by file watchers).
@@ -81,7 +88,16 @@ pub enum GitEvent {
         path: String,
         result: Result<()>,
     },
-    Committed(Result<String>),
+    /// A `CommitIf` whose index matched: the new commit's sha and files,
+    /// or why git failed.
+    Committed(Result<NewCommit>),
+    /// A `CommitIf` whose index did not match: nothing was committed.
+    /// `added` are staged and were not expected, `removed` were expected
+    /// and are not staged (both sorted).
+    CommitRejected {
+        added: Vec<String>,
+        removed: Vec<String>,
+    },
 }
 
 /// Handle to the git worker thread. Dropping it shuts the worker down.
@@ -94,7 +110,8 @@ pub struct GitClient {
 impl GitClient {
     /// Opens the repository containing `path` and spawns the worker.
     /// `on_event` is called from the worker thread for every finished
-    /// command.
+    /// command. Fails when there is no repository at `path` or the OS
+    /// refuses the thread.
     pub fn spawn(
         path: impl AsRef<Path>,
         on_event: impl Fn(GitEvent) + Send + 'static,
@@ -111,8 +128,7 @@ impl GitClient {
                     }
                     run_command(&repo, command, &on_event);
                 }
-            })
-            .expect("spawn git worker thread");
+            })?;
         Ok(Self {
             tx,
             handle: Some(handle),
@@ -171,9 +187,16 @@ fn run_command(repo: &GitRepo, command: GitCommand, on_event: &impl Fn(GitEvent)
             let result = repo.ignore(&path);
             on_event(GitEvent::Ignored { path, result });
         }
-        GitCommand::Commit { message } => {
-            on_event(GitEvent::Committed(repo.commit(&message)));
-        }
+        GitCommand::CommitIf {
+            message,
+            expect_staged,
+        } => on_event(match repo.commit_if(&message, &expect_staged) {
+            Ok(CommitCheck::Committed(commit)) => GitEvent::Committed(Ok(commit)),
+            Ok(CommitCheck::Stale { added, removed }) => {
+                GitEvent::CommitRejected { added, removed }
+            }
+            Err(e) => GitEvent::Committed(Err(e)),
+        }),
         GitCommand::Refresh { log_limit } => {
             on_event(GitEvent::Status(repo.status()));
             on_event(GitEvent::Log(repo.log(log_limit)));

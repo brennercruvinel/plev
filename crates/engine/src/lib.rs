@@ -43,6 +43,11 @@ pub mod perf;
 pub mod platform;
 pub mod window;
 
+// -- Headless (the window's frame path into an offscreen texture; native
+// -- only: its constructor blocks on the adapter)
+#[cfg(not(target_arch = "wasm32"))]
+pub mod headless;
+
 // -- Accessibility
 #[cfg(feature = "accessibility")]
 pub mod accessibility;

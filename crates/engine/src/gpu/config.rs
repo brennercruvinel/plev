@@ -27,6 +27,13 @@ pub struct RenderConfig {
     /// That idle cost is the price of measuring; toggle off to return to
     /// render-on-demand.
     pub perf_hud: bool,
+    /// Ask the device for GPU timestamp queries (`TIMESTAMP_QUERY`) when
+    /// the adapter has them, so a frame drawn by `window::draw_frame`
+    /// while `perf::stages` is on records what its layer and composite
+    /// passes cost on the GPU. For measuring only; off by default, and
+    /// off the device asks for no feature. An adapter without them
+    /// behaves as off, and the GPU stages stay empty.
+    pub gpu_timestamps: bool,
 }
 
 impl Default for RenderConfig {
@@ -38,6 +45,7 @@ impl Default for RenderConfig {
             perf_log: false,
             perf_log_interval: 120,
             perf_hud: false,
+            gpu_timestamps: false,
         }
     }
 }
@@ -70,6 +78,8 @@ mod tests {
         assert!(!config.perf_log);
         assert_eq!(config.perf_log_interval, 120);
         assert!(!config.perf_hud);
+        // No device feature unless measuring asks for it.
+        assert!(!config.gpu_timestamps);
     }
 
     #[test]

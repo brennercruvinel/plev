@@ -2,12 +2,14 @@
 //!
 //! `cargo run -p engine --example text_probe -- out.png [raster_scale]`
 //!
+//! The scene goes through `engine::headless`, the window's own frame path
+//! into an offscreen texture, so the PNG is what a window would show.
+//!
 //! Set `PROBE_FILL=1` to push enough distinct glyphs through the atlas that
-//! it has to grow mid-frame — the state in which the defects described in
+//! it has to grow mid-frame, the state in which the defects described in
 //! `docs/ADR/glyph-raster-identity-and-atlas-isolation.md` become visible.
 //! A probe that draws a single line never reaches it.
 
-use engine::text::TextStyle;
 use engine::text::probe::{Specimen, render};
 
 fn main() {
@@ -46,17 +48,18 @@ fn main() {
         .collect();
 
     let height = 40 * scene.len() as u32 + 40;
-    match render(&scene, 900, height, scale) {
-        Some(img) => {
-            img.write_png(&out);
-            println!(
-                "wrote {out} ({}x{}, raster_scale {scale}, {} inked px)",
-                img.width,
-                img.height,
-                img.ink()
-            );
-        }
-        None => eprintln!("no GPU adapter available"),
+    let Some(img) = render(&scene, 900, height, scale) else {
+        eprintln!("no GPU adapter available");
+        std::process::exit(1);
+    };
+    if let Err(e) = img.write_png(&out) {
+        eprintln!("cannot write {out}: {e}");
+        std::process::exit(1);
     }
-    let _ = TextStyle::new(16.0);
+    println!(
+        "wrote {out} ({}x{}, raster_scale {scale}, {} inked px)",
+        img.width,
+        img.height,
+        img.ink()
+    );
 }

@@ -1,3 +1,5 @@
+use crate::perf::stages::{self, Stage};
+
 // ---------------------------------------------------------------------------
 // Persistent GPU buffer — grows, never shrinks, partial writes
 // ---------------------------------------------------------------------------
@@ -52,6 +54,7 @@ impl GpuVec {
         data: &[T],
     ) {
         let bytes = bytemuck::cast_slice(data);
+        let _probe = stages::span(Stage::Upload).items(bytes.len() as u64);
         self.ensure_capacity(device, bytes.len() as u64);
         queue.write_buffer(&self.buffer, 0, bytes);
     }

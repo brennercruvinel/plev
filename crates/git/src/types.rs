@@ -68,6 +68,30 @@ pub struct Hunk {
     pub lines: Vec<DiffLine>,
 }
 
+/// A commit just created: its full sha and the paths it recorded, as
+/// `git show --name-only` lists them.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NewCommit {
+    pub sha: String,
+    pub files: Vec<String>,
+}
+
+/// What a conditional commit ([`GitRepo::commit_if`](crate::GitRepo::commit_if))
+/// found in the index.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CommitCheck {
+    /// The index staged exactly the expected paths, and this commit holds
+    /// them.
+    Committed(NewCommit),
+    /// The index staged something else, and nothing was committed.
+    /// `added` are staged and were not expected; `removed` were expected
+    /// and are not staged. Both sorted.
+    Stale {
+        added: Vec<String>,
+        removed: Vec<String>,
+    },
+}
+
 /// A local branch.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Branch {

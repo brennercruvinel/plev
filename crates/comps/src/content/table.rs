@@ -7,10 +7,15 @@
 //!
 //! Narrow tables drop their lowest-priority columns first, so a phone
 //! sees the two columns that matter instead of six unreadable slivers.
+//!
+//! With a [`SemId`] ([`Table::sem`]) the render binds the table and each
+//! row it holds to the rects it draws and hit-tests them with, and
+//! [`Table::project`] declares the table in a semantic projection.
 
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ControlSize, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::content::VirtualList;
 use crate::core::{EventResult, Rect, WidgetEvent};
@@ -82,6 +87,7 @@ pub struct ColumnLayout {
 pub struct Table {
     pub columns: Vec<Column>,
     pub rows: VirtualList,
+    sem: Option<SemId>,
 }
 
 impl Table {
@@ -90,7 +96,56 @@ impl Table {
         Self {
             columns,
             rows: VirtualList::new(Self::row_h(theme)),
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds the table to
+    /// (`Compositor::bind_to_layer`); each row it holds binds as
+    /// `<id>[<index>]`.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this table as `id` in a projection: a `Role::Table` named
+    /// `label` with its row `count` and the key of its `selected_row` (the
+    /// index, empty when none; every row is selectable by a click), and
+    /// one `Role::Row` child `<id>[<index>]` per row it holds, never the
+    /// whole dataset, each named by `row_label` (the cells are the app's,
+    /// so is the row's text) and with a `select` that reads the table's
+    /// `selected_row`. The table has no sort, so it declares none. Scroll
+    /// and hover are never projected. It only reads the widget; the app
+    /// owns it and runs `select`. Pass the id given to [`Table::sem`] so
+    /// the nodes and the bindings name the same controls. Returns the
+    /// table's node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+        mut row_label: impl FnMut(usize) -> String,
+    ) -> NodeBuilder<'b> {
+        let selected = format!("{id}:selected_row");
+        for index in self.rows.visible_range() {
+            let mut row = b.node(id.key(index.to_string()), Role::Row, row_label(index));
+            row.parent(id);
+            row.action("select").reads(selected.as_str());
+        }
+        let mut node = b.node(id, Role::Table, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        let rows = i64::try_from(self.row_count()).unwrap_or(i64::MAX);
+        let chosen = self.selected().map(|i| i.to_string()).unwrap_or_default();
+        node.state("count", rows).state("selected_row", chosen);
+        node
     }
 
     pub fn row_h(theme: &Theme) -> f32 {
@@ -260,6 +315,11 @@ impl Table {
     ) {
         let layout = self.column_layout(bounds.w, theme);
         let glass = &theme.glass;
+        if let Some(id) = &self.sem {
+            c.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+            self.rows.set_viewport(Self::rows_rect(bounds, theme));
+            self.rows.bind_rows(c, layer, id);
+        }
 
         // Header band: tabs-tone strip, caption-sm titles, a hairline
         // under it.

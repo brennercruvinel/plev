@@ -350,7 +350,7 @@ impl GpuContext {
 
     #[cfg(hot_reload)]
     pub fn reload_shader(&mut self, filename: &str, source: &str) -> bool {
-        // same format the pipelines were built with in `new_with_config`
+        // same format the pipelines were built with in `from_device`
         // (the srgb view format, not the raw surface format).
         let surface_format = self.surface_format();
         let msaa_samples = self.config.msaa_samples;

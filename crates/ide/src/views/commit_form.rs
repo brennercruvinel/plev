@@ -1,11 +1,17 @@
 //! Inline commit form: a design-system [`TextField`] for the message and
 //! two pill buttons (Commit, Cancel) on the column surface.
+//!
+//! With its ids set ([`CommitForm::set_sem`]) the render binds the form
+//! surface as `commit.form`, the field as `commit.message` and the Commit
+//! button as `commit.submit`. Cancel is the form's own `cancel`, so it
+//! sits inside the form's binding instead of carrying a second id.
 
 use comps::action::{Button, ButtonVariant};
 use comps::form::{EditKey, TextField};
 use comps::prelude::{EventResult, Rect, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode};
 use engine::theme::Theme;
+use sem::SemId;
 
 /// State for the inline commit form.
 pub struct CommitForm {
@@ -16,6 +22,8 @@ pub struct CommitForm {
     commit_btn_rect: Rect,
     cancel_btn_rect: Rect,
     input_rect: Rect,
+    /// `commit.form`, when the form binds.
+    sem: Option<SemId>,
 }
 
 pub enum CommitFormAction {
@@ -34,11 +42,35 @@ impl CommitForm {
             commit_btn_rect: Rect::default(),
             cancel_btn_rect: Rect::default(),
             input_rect: Rect::default(),
+            sem: None,
         }
+    }
+
+    /// The ids the render binds: the form surface, the message field and
+    /// the Commit button.
+    pub(crate) fn set_sem(&mut self, form: SemId, message: SemId, submit: SemId) {
+        self.field = self.field.clone().sem(message);
+        self.commit_btn = self.commit_btn.clone().sem(submit);
+        self.sem = Some(form);
+    }
+
+    /// The message field (its projection helper reads it).
+    pub fn field(&self) -> &TextField {
+        &self.field
+    }
+
+    /// The Commit button's label.
+    pub fn submit_label(&self) -> &str {
+        &self.commit_btn.label
     }
 
     pub fn message(&self) -> &str {
         self.field.text()
+    }
+
+    /// Replaces the message (`commit.message`'s `set_value`).
+    pub(crate) fn set_message(&mut self, text: &str) {
+        self.field.set_text(text);
     }
 
     /// The message, leaving the field empty.
@@ -59,12 +91,14 @@ impl CommitForm {
         self.field.unfocus();
     }
 
-    /// Hit-test a click. Returns the action.
+    /// Hit-test a click. Returns the action. A click on a Commit button
+    /// drawn disabled is still a commit asked for: the dispatcher refuses
+    /// it and says why.
     pub fn hit_test_click(&self, cx: f32, cy: f32) -> CommitFormAction {
         if !self.visible {
             return CommitFormAction::None;
         }
-        if self.commit_btn_rect.contains(cx, cy) && !self.commit_btn.disabled {
+        if self.commit_btn_rect.contains(cx, cy) {
             return CommitFormAction::Commit;
         }
         if self.cancel_btn_rect.contains(cx, cy) {
@@ -111,7 +145,9 @@ impl CommitForm {
         pad + TextField::height(theme) + pad + self.commit_btn.size.height(theme) + pad
     }
 
-    /// Returns the height consumed by the form (0 if hidden).
+    /// Returns the height consumed by the form (0 if hidden). The Commit
+    /// button draws enabled when `can_submit`, the same answer the
+    /// projection gives for `commit.submit`.
     pub fn render(
         &mut self,
         compositor: &mut Compositor,
@@ -119,6 +155,7 @@ impl CommitForm {
         x: f32,
         y: f32,
         w: f32,
+        can_submit: bool,
     ) -> f32 {
         if !self.visible {
             return 0.0;
@@ -127,6 +164,9 @@ impl CommitForm {
         let total_h = self.height(theme);
 
         // Column surface behind the form (same as the Changes column).
+        if let Some(id) = &self.sem {
+            compositor.bind(id, [x, y, w, total_h]);
+        }
         compositor.push(SceneNode::Rect {
             x,
             y,
@@ -138,7 +178,7 @@ impl CommitForm {
         self.input_rect = Rect::new(x + pad, y + pad, w - pad * 2.0, TextField::height(theme));
         self.field.render(compositor, self.input_rect, theme);
 
-        self.commit_btn.disabled = self.field.is_empty();
+        self.commit_btn.disabled = !can_submit;
         let btn_y = self.input_rect.y + self.input_rect.h + pad;
         let (cw, ch) = self.commit_btn.preferred_size(theme);
         self.commit_btn_rect = Rect::new(x + pad, btn_y, cw, ch);

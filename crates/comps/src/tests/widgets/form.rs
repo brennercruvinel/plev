@@ -135,3 +135,84 @@ fn select_disabled_never_opens() {
     s.handle_event(&down(50.0, 20.0), bounds, &hoff());
     assert!(!s.is_open());
 }
+
+fn twenty() -> Select {
+    Select::new((0..20).map(|i| format!("option {i}")), 0)
+}
+
+#[test]
+fn select_wheel_belongs_to_the_open_panel_only_where_the_panel_is() {
+    let theme = hoff();
+    let mut s = twenty();
+    let (x, y) = B.center();
+    assert_eq!(
+        s.handle_event(&wheel(x, y, 40.0), B, &theme),
+        EventResult::IGNORED,
+        "a closed select does not scroll"
+    );
+    s.open();
+    assert_eq!(
+        s.handle_event(&wheel(700.0, 500.0, 40.0), B, &theme),
+        EventResult::IGNORED,
+        "outside the panel the wheel is the page's"
+    );
+    let (px, py) = s.dropdown_rect(B, &theme).center();
+    assert!(s.handle_event(&wheel(px, py, 40.0), B, &theme).changed);
+    // Past the end nothing moves, and the wheel still stops at the panel.
+    assert!(s.handle_event(&wheel(px, py, 10_000.0), B, &theme).changed);
+    let end = s.handle_event(&wheel(px, py, 40.0), B, &theme);
+    assert!(end.handled && !end.changed);
+    // A broken delta moves nothing and leaves the rows scrollable.
+    let broken = s.handle_event(&wheel(px, py, f32::NAN), B, &theme);
+    assert!(broken.handled && !broken.changed);
+    assert!(s.handle_event(&wheel(px, py, -40.0), B, &theme).changed);
+
+    // A panel whose options all fit does not scroll (the pointer rests
+    // there first, so the highlight under it is already set).
+    let mut short = Select::new(["a", "b", "c"], 0);
+    short.open();
+    let (px, py) = short.dropdown_rect(B, &theme).center();
+    short.handle_event(&move_to(px, py), B, &theme);
+    let r = short.handle_event(&wheel(px, py, 40.0), B, &theme);
+    assert!(r.handled && !r.changed);
+}
+
+#[test]
+fn select_highlight_follows_the_row_under_a_still_pointer_as_the_wheel_scrolls() {
+    let theme = hoff();
+    let mut s = twenty();
+    s.open();
+    let panel = s.dropdown_rect(B, &theme);
+    let row_h = theme.control.height(engine::theme::ControlSize::Md);
+    let (x, y) = (
+        panel.x + panel.w / 2.0,
+        panel.y + theme.control.menu_pad + row_h / 2.0,
+    );
+    assert!(s.handle_event(&move_to(x, y), B, &theme).changed);
+    assert_eq!(s.highlighted(), Some(0));
+    assert!(s.handle_event(&wheel(x, y, row_h), B, &theme).changed);
+    assert_eq!(s.highlighted(), Some(1), "the rows moved under the pointer");
+}
+
+#[test]
+fn select_with_no_options_opens_an_empty_panel_the_keys_leave_alone() {
+    let theme = hoff();
+    let mut s = Select::new(Vec::<String>::new(), 0);
+    s.open();
+    assert_eq!(s.highlight_next(&theme), EventResult::IGNORED);
+    assert_eq!(s.highlight_prev(&theme), EventResult::IGNORED);
+    let mut c = Compositor::new();
+    c.begin_frame();
+    s.render_dropdown(&mut c, LayerId::DEFAULT, B, &theme);
+    let texts = c
+        .layer(LayerId::DEFAULT)
+        .unwrap()
+        .nodes()
+        .iter()
+        .filter(|n| matches!(n, SceneNode::Text { .. }))
+        .count();
+    assert_eq!(texts, 0, "no option row is drawn");
+    let (px, py) = s.dropdown_rect(B, &theme).center();
+    assert!(!s.handle_event(&down(px, py), B, &theme).clicked);
+    assert!(!s.is_open(), "a click in the empty panel only closes it");
+}

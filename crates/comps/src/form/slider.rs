@@ -2,9 +2,14 @@
 //! and a top-lit 14px knob that grows on hover/drag. The full bounds are
 //! the hit area (no 4px precision games); keyboard focus
 //! ([`Slider::set_focused`]) rings those bounds with the accent ring.
+//!
+//! With a [`SemId`] ([`Slider::sem`]) the render binds the bounds it
+//! draws and hit-tests with, and [`Slider::project`] declares the slider
+//! in a semantic projection; the app still owns the value.
 
 use engine::compositor::{Compositor, SceneNode};
 use engine::theme::Theme;
+use sem::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
 use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
 use crate::recipe::focus_ring;
@@ -22,6 +27,7 @@ pub struct Slider {
     hovered: bool,
     dragging: bool,
     focused: bool,
+    sem: Option<SemId>,
 }
 
 impl Slider {
@@ -35,9 +41,88 @@ impl Slider {
             hovered: false,
             dragging: false,
             focused: false,
+            sem: None,
         };
         s.set_value(value);
         s
+    }
+
+    /// The logical identity the render binds its bounds to
+    /// (`Compositor::bind`).
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this slider as `id` in a projection: a `Role::Slider`
+    /// named `label`, its `value` as a number, editable within its
+    /// `min..=max` range and its step, enabled unless disabled, with a
+    /// `set_value` action that takes a number checked against that range.
+    /// A stepped slider also declares `increment` and `decrement` (one
+    /// step, [`Slider::increment`]); a continuous one has no step to move
+    /// by, so it declares neither. Every action reads the `value`, so a
+    /// request decided on a value another actor moved goes stale. The
+    /// knob's hover and drag are never projected. It only reads the
+    /// widget; the app owns it and runs the actions. Pass the id given to
+    /// [`Slider::sem`] so the node and the binding name the same control.
+    /// Returns the node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let mut node = b.node(id, Role::Slider, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        let value = format!("{id}:value");
+        node.state("value", f64::from(self.value))
+            .constraints(Constraints {
+                editable: true,
+                range: Some((f64::from(self.min), f64::from(self.max))),
+                step: self.step.map(f64::from),
+                ..Constraints::default()
+            })
+            .enabled(!self.disabled);
+        node.action("set_value")
+            .param(ParamSpec {
+                kind: ValueKind::Num,
+                constrained: true,
+            })
+            .reads(value.as_str());
+        if self.step.is_some() {
+            node.action("increment").reads(value.as_str());
+            node.action("decrement").reads(value.as_str());
+        }
+        node
+    }
+
+    /// Moves the value one step up, clamped to `max`. `false` when it did
+    /// not move: continuous (no step) or already at the top.
+    pub fn increment(&mut self) -> bool {
+        self.nudge(1.0)
+    }
+
+    /// Moves the value one step down, clamped to `min`. `false` when it
+    /// did not move: continuous (no step) or already at the bottom.
+    pub fn decrement(&mut self) -> bool {
+        self.nudge(-1.0)
+    }
+
+    fn nudge(&mut self, direction: f32) -> bool {
+        let Some(step) = self.step else {
+            return false;
+        };
+        let old = self.value;
+        self.set_value(old + direction * step);
+        self.value != old
     }
 
     pub fn step(mut self, step: f32) -> Self {
@@ -156,6 +241,9 @@ impl Slider {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
+        if let Some(id) = &self.sem {
+            compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let glass = &theme.glass;
         let alpha = if self.disabled {
             glass.disabled_alpha

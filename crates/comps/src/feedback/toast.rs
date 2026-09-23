@@ -3,12 +3,18 @@
 //! sprung in with the intent's motion. `size.toast_w` wide on a desktop;
 //! on a compact viewport it spans the width minus the gutter, so a
 //! phone gets a full-width banner instead of a clipped card.
+//!
+//! With a [`SemId`] ([`ToastManager::sem`]) the render binds each toast
+//! on screen as `<id>[<toast id>]` to the rect it draws and hit-tests it
+//! with, and [`ToastManager::project`] declares the toasts in a semantic
+//! projection.
 
 use crate::icons;
 use engine::animation::Spring;
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{Breakpoint, IconSize, Intent, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 use crate::recipe::{rounded_rect, rounded_rect_stroke};
@@ -55,6 +61,9 @@ impl Metrics {
 /// One queued notification.
 #[derive(Clone, Debug)]
 pub struct Toast {
+    /// Given by the manager at `push`, unique while it lives: the toast's
+    /// identity, whatever its place in the stack.
+    id: u64,
     pub message: String,
     pub intent: Intent,
     /// Seconds shown so far (only advances while visible).
@@ -65,6 +74,10 @@ pub struct Toast {
 }
 
 impl Toast {
+    pub fn id(&self) -> u64 {
+        self.id
+    }
+
     fn icon_name(&self) -> &'static str {
         match self.intent {
             Intent::Neutral | Intent::Informational => "info",
@@ -94,6 +107,8 @@ pub struct ToastManager {
     pub max_visible: usize,
     /// Auto-dismiss time in seconds.
     pub duration: f32,
+    next_id: u64,
+    sem: Option<SemId>,
 }
 
 impl Default for ToastManager {
@@ -108,14 +123,76 @@ impl ToastManager {
             toasts: Vec::new(),
             max_visible: 4,
             duration: 4.0,
+            next_id: 0,
+            sem: None,
         }
+    }
+
+    /// The logical identity the toasts are keys under: the render binds
+    /// each toast on screen as `<id>[<toast id>]`
+    /// (`Compositor::bind_to_layer`).
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares the toasts as `id` in a projection: a `Role::Region` named
+    /// `label` with one child `<id>[<toast id>]` per toast on screen that
+    /// is not already leaving, a `Role::Alert` for a destructive toast and
+    /// a `Role::Status` otherwise, named by its message, with the
+    /// `dismiss` a click performs. Queued toasts are not on screen yet and
+    /// the entry and exit slides are animation, so neither is projected.
+    /// It only reads the widget; the app owns it and runs `dismiss`
+    /// ([`ToastManager::dismiss_id`]). Pass the id given to
+    /// [`ToastManager::sem`] so the nodes and the bindings name the same
+    /// toasts. Returns the region's node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        for t in self.visible().filter(|t| !t.closing) {
+            let role = if t.intent == Intent::Destructive {
+                Role::Alert
+            } else {
+                Role::Status
+            };
+            let mut node = b.node(id.key(t.id.to_string()), role, t.message.as_str());
+            node.parent(id);
+            node.action("dismiss");
+        }
+        let mut node = b.node(id, Role::Region, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node
+    }
+
+    /// Begin dismissing the toast `id` if it is on screen, like a click on
+    /// it. `false` when it is not on screen or already leaving.
+    pub fn dismiss_id(&mut self, id: u64) -> bool {
+        let Some(index) = self.visible().position(|t| t.id == id && !t.closing) else {
+            return false;
+        };
+        self.dismiss(index);
+        true
     }
 
     /// Enqueue a toast. Spring physics follow the toast's intent.
     pub fn push(&mut self, message: impl Into<String>, intent: Intent, theme: &Theme) {
         let mut anim = Spring::new(0.0_f32).with_motion(&theme.intent_motion(intent));
         anim.set_target(1.0);
+        let id = self.next_id;
+        self.next_id = self.next_id.wrapping_add(1);
         self.toasts.push(Toast {
+            id,
             message: message.into(),
             intent,
             age: 0.0,
@@ -250,6 +327,17 @@ impl ToastManager {
             let alpha = t.progress();
             if alpha <= 0.01 {
                 continue;
+            }
+            // A toast binds while it is drawn and a click still dismisses
+            // it; a leaving one is already dismissed.
+            if let Some(id) = &self.sem
+                && !t.closing
+            {
+                compositor.bind_to_layer(
+                    layer,
+                    &id.key(t.id.to_string()),
+                    [rect.x, rect.y, rect.w, rect.h],
+                );
             }
             let accent = intent_fill(theme, t.intent);
 

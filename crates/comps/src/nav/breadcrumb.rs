@@ -4,10 +4,15 @@
 //! inside, like a button). When the trail is wider than its bounds the
 //! leading crumbs collapse into an ellipsis crumb, so the current place
 //! always shows.
+//!
+//! With a [`SemId`] ([`Breadcrumb::sem`]) the render binds the trail and
+//! each crumb it draws to the rects it draws and hit-tests them with, and
+//! [`Breadcrumb::project`] declares the trail in a semantic projection.
 
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{IconSize, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent};
 use crate::icons;
@@ -19,6 +24,7 @@ pub struct Breadcrumb {
     pub crumbs: Vec<String>,
     hovered: Option<usize>,
     pressed: Option<usize>,
+    sem: Option<SemId>,
 }
 
 impl Breadcrumb {
@@ -27,7 +33,53 @@ impl Breadcrumb {
             crumbs: crumbs.into_iter().map(Into::into).collect(),
             hovered: None,
             pressed: None,
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds the trail to
+    /// (`Compositor::bind_to_layer`); each drawn crumb binds as
+    /// `<id>[<index>]`.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this trail as `id` in a projection: a `Role::Group` named
+    /// `label` with one child `<id>[<index>]` per crumb, collapsed ones
+    /// included (they are still places to go, only not drawn). Every crumb
+    /// but the last is a `Role::Link` with `activate`; the last is where
+    /// the user is, not a target, so it is a `Role::Label`. It only reads
+    /// the widget; the app owns it and runs `activate` (navigates). Pass
+    /// the id given to [`Breadcrumb::sem`] so the nodes and the bindings
+    /// name the same controls. Returns the group's node for the app to add
+    /// to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let last = self.crumbs.len().saturating_sub(1);
+        for (i, crumb) in self.crumbs.iter().enumerate() {
+            let role = if i == last { Role::Label } else { Role::Link };
+            let mut node = b.node(id.key(i.to_string()), role, crumb.as_str());
+            node.parent(id);
+            if i != last {
+                node.action("activate");
+            }
+        }
+        let mut node = b.node(id, Role::Group, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node
     }
 
     pub fn hovered(&self) -> Option<usize> {
@@ -167,6 +219,15 @@ impl Breadcrumb {
         let chevron = Self::chevron(theme);
         let gap = Self::gap(theme);
         let rects = self.crumb_rects(bounds, theme);
+        if let Some(id) = &self.sem {
+            c.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+            // The ellipsis stands for no crumb and binds nothing.
+            for (i, r) in &rects {
+                if let Some(i) = i {
+                    c.bind_to_layer(layer, &id.key(i.to_string()), [r.x, r.y, r.w, r.h]);
+                }
+            }
+        }
         for (k, (i, r)) in rects.iter().enumerate() {
             let (text, color) = match i {
                 Some(i) if *i == last => (self.crumbs[*i].as_str(), theme.colors.text.0),

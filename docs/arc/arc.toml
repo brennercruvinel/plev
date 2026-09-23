@@ -42,8 +42,8 @@ contracts = ["srgb-view-formats", "surface_render_view-only"]
 
 [modules.compositor]
 path = "crates/engine/src/compositor"
-role = "scene nodes, layers with dirty hashes, resolve to gpu buffers"
-depends = ["gpu"]
+role = "scene nodes, layers with dirty hashes, resolve to gpu buffers; the semantic binding table beside the scene (task-59, adr semantic-binding-beside-the-scene): bind/bind_to_layer record SemId -> Binding { rect, layer, clip read from the layer's own clip nodes, order, view } per frame, never part of a layer hash; hit(x, y) returns the topmost bound id"
+depends = ["gpu", "sem"]
 
 [modules.text]
 path = "crates/engine/src/text"
@@ -71,7 +71,7 @@ role = "Tween, FrameClock, easing (dt-based; web_time)"
 
 [modules.perf]
 path = "crates/engine/src/perf"
-role = "PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None)"
+role = "PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None). perf::stages (task-73 phase 1): per-frame, per-thread cost by stage (projection, scene build, measure hit/miss, shaping, bind, hit test, layer hash, geometry, text resolve, upload bytes, encode, gpu wait), off by default and one relaxed load when off; crates/showcase/examples/measure drives nine interactions through the frame path and prints the tables (docs/mission/steps/ongoing/task-73-measurements.md); RenderConfig::gpu_timestamps (off by default, no device feature when off) adds timestamp queries around the layer and composite passes of draw_frame, read a frame late, as the GpuSpan/GpuLayers/GpuComposite stages and PerfMonitor::record_gpu_micros (task-73 phase 1b)"
 depends = ["animation", "compositor", "text"]
 contracts = ["pure-no-gpu", "hud-implies-continuous-frames"]
 
@@ -81,8 +81,13 @@ role = "reactive primitives (experimental: no new app code without an adr, see o
 
 [modules.window]
 path = "crates/engine/src/window"
-role = "App runner: event loop, render-on-demand, render passes, wasm canvas; present_frame is the shared present path every app (showcase, ide, urnaui) goes through"
+role = "App runner: event loop, render-on-demand, render passes, wasm canvas; draw_frame draws a built scene into any srgb view (resolve, text, images, layer passes, composite, submit) and present_frame is acquire + draw_frame + present, the shared path every app (showcase, ide, urnaui) goes through (adr headless-render-shares-the-frame-path)"
 depends = ["gpu", "compositor", "text", "input"]
+
+[modules.headless]
+path = "crates/engine/src/headless"
+role = "native only: Renderer over GpuContext::new_headless (no surface, Rgba8UnormSrgb, same from_device pipelines as a window) drawing through window::draw_frame into an offscreen texture; read_texture with 256-byte row padding; Frame -> png through the image crate; typed HeadlessError; None when there is no adapter so tests skip. showcase --render and monster_player --frame use it; text::probe renders through it (task-66)"
+depends = ["gpu", "compositor", "text", "window"]
 
 [modules.hot_reload]
 path = "crates/engine/src/hot_reload"
@@ -131,12 +136,12 @@ role = "the gpu-first compositing engine itself (the modules above): rendering, 
 [crates.comps]
 path = "crates/comps"
 role = "the plev design system: every widget, recipe, icon, chart, overlay and the editor, one crate over the engine, every visual value read from engine::theme::Theme (docs/catalog.md is the inventory). categories: core (Rect/WidgetEvent/EventResult, color helpers), recipe (glass pill/surface, edge light, inset key-light, shadow stacks, focus ring), icons (lucide set), action (button, icon button, chip, badge), form (text field over the text_input core, checkbox, switch, slider, select), nav (tabs, nav link, sidebar by breakpoint, panel header, breadcrumb, split pane), content (card, avatar, panel, stat, code block, skeleton, table, empty state, virtual list, tree, separator), feedback (modal, context menu, toast, tooltip, progress, spinner, scrollbar), overlay (the overlay stack with spring motion), charts (geometry + draw), graph (GraphView), editor (rope-backed multi-cursor editor view), shell (AppShell: sidebar + header + content rect + safe area). tests: every widget under every theme at phone and desktop widths (src/tests/matrix.rs). ships the editor example"
-depends = ["engine", "rope"]
+depends = ["engine", "rope", "sem"]
 
 [crates.showcase]
 path = "crates/showcase"
 role = "design-system gallery app: a sidebar tree of three groups (Foundations: theme, typography, icons, effects; Components: one page per comps widget, alphabetical, with placeholder slots for the widgets comps does not have yet and alias pages that share a neighbour's example while noting what their own still lacks; Apps Demo: the todo app, the message dock, the embedded editor, the ide git workspace, the builder tour); the table is view::pages::PAGES, one module per page under view/{foundations,components,apps}; the template of the official app pattern, framed by comps::shell::AppShell (full sidebar / rail / drawer by breakpoint, captioned groups that fold); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main"
-depends = ["engine", "comps"]
+depends = ["engine", "comps", "sem"]
 targets = ["desktop", "web", "android", "ios"]
 
 [crates.urnaui]
@@ -154,12 +159,26 @@ targets = ["desktop", "web"]
 
 [crates.ide]
 path = "crates/ide"
-role = "plev-native git client, a lib + bin: views (three columns: changes, stacks, diff, built from comps over engine::theme), adapters (git types -> view rows), session (GitSession: UiRequest <-> GitCommand/GitEvent, diff target, log/branch caches) and status (the file-status colors, the only app-owned tokens); the workspace takes a frame origin (set_frame) so a host can embed it, which the showcase Git tab does; main.rs is the winit shell"
-depends = ["git", "engine", "comps"]
+role = "plev-native git client, a lib + bin: views (three columns: changes, stacks, diff, built from comps over engine::theme), adapters (git types -> view rows), session (GitSession: UiRequest <-> GitCommand/GitEvent, diff target, log/branch caches) and status (the file-status colors, the only app-owned tokens); the workspace takes a frame origin (set_frame) so a host can embed it, which the showcase Git tab does; main.rs is the winit shell. workbench (task-62, adr commit-checks-the-index-it-observed): one Workbench owns the WorkspaceView, the GitSession and a sem Dispatcher, projects the workspace (changes, changes.file[<path>], diff, commit.form, commit.message, commit.submit, stacks, notices) and runs every capability through the dispatcher for every actor; mutations leave for the git worker as Execution::Started and their receipts end at the point of truth (CommitIf checks the real index before git commit); refusals show as toasts, an agent's discard waits for a person in a modal; the ide binary and the showcase Git page hold the same Workbench"
+depends = ["git", "engine", "comps", "sem"]
 
 [crates.rope]
 path = "crates/rope"
 role = "rope/transactions/multi-cursor/history, pure (no ui)"
+
+[crates.sem]
+path = "crates/sem"
+role = "the semantic contract (task-57, adr semantic-contract-as-pure-projection): SemId, the persistent logical identity of a control (canonical text, chosen by the app or the IR, never positional), Role, Value under StateKey, StateRef <semid>:<key>, Constraints (secret keeps only a length; redact is the one rule that reduces a request, a stage or a stale delta aimed at a secret node to lengths, shared by wire and rec, task-57b), ActionDecl with its reads and Policy, Node with inherited inert and a track_caller Source; the app implements Semantics::project, called on demand from live state, and SnapshotBuilder::finish reports every violation at once; Snapshot (projection order, children, roots, value, subtree) has a stable Revision (FNV-1a 64 over a documented encoding, tree order, source excluded) and Snapshot::diff -> Change, empty exactly when two snapshots are equal; pure (no gpu, no window, no text stack), serde behind a default feature. actions (task-58, adr actions-carry-observed-state): Request::observe carries the values the actor saw for the action's reads; check (pure) decides in a fixed order (not found, unknown action, not authorized, stale, inert, disabled, invalid param, needs confirmation, accepted), stale compares only the reads and returns one StateChanged per read that moved; one Dispatcher for human, agent, assistive and test projects the Operable app at dispatch, executes only after accepted or a person confirmed (at the screen or through assistive technology), passing the RequestId to execute, and keeps a Receipt whose Stages walk the legal transitions with caller-passed Millis (async complete/fail, reject_at_truth for the second check at the point of truth), ReceiptSinks see every stage, finished receipts bounded by retention; examples/commit.rs runs the thesis scenario"
+
+[crates.rec]
+path = "crates/rec"
+role = "the session flight recorder (task-63, adr session-recording-replay-not-reexecution): Recorder records a session as data, never as video; a Sink per dispatcher (sem::ReceiptSink) records every stage of every receipt with its request (shared by its stages, redacted through sem::redact: a param, observed value, stale delta, outcome or error aimed at a secret field keeps only its length, and an unknown target counts as secret), explicit calls record observations (actor, scope, revision), the app's snapshots (whole on the cadence and when nodes are added, moved or reordered, sem Changes in between, unchanged ones not stored) and a person's input (kind and bound SemId, never the content); every time is the caller's, never a clock; the visual track takes one frame per rendered frame (Recorder::frame reads the visible compositor layers in composite order), raises it with monster::raise into the open chunk, and a chunk closes on its cadence into monster::discover + encode (a v0 file with an empty asset table, chunk-local u16 asset ids, frame times kept), its assets held once per content and dropped with the last chunk using them; one ring over both tracks, bounded by max_age and max_bytes, cuts only at keyframes (a full snapshot, a chunk start); Session is the read side (events by time, State at t with the projected source kept, receipts touching a SemId up to t, the frame on screen at t played back with MonsterPlayer, the semantic track read without decoding a frame) and holds no dispatcher and no app, so replay never creates a request; the session file is a .monster with magic MONS (an animation keeps MON0; probe dispatches on the magic): a header with the build identity (crate version, git sha from build.rs) and the start, a section index with u64 offsets and a sha256 each, S (json lines of rec::Event), I (chunk index), C (chunks as the exact bytes monster::encode wrote), A (assets: rec's own text payload, paths through monster::asset_path, images as size plus pixels when known); Recorder::persist and export (from the governing keyframe of each track, chunks verbatim, only referenced assets), Session::open and from_bytes strict with typed FileError, install_panic_hook persists the window on a panic and chains the previous hook"
+depends = ["sem", "monster", "engine"]
+
+[crates.wire]
+path = "crates/wire"
+role = "the agent surface (task-61, adr agents-act-through-the-semantic-contract): protocol v1 as json lines, every message with v 1, an id the client picks and a type; hello names the connection's actor (sem Actor::Agent), observe {scope, keys, since, bounds, source} answers a snapshot (the nodes in sem's lean serde form, without each node's source unless asked, the whole snapshot's revision) or a delta (sem Changes since a served revision), act {target, action, param, observed or from_revision} answers one stage message per receipt stage, confirm and decline are refused for agents, typed errors (bad_version, bad_message, unknown_revision, not_enabled); the messages, the codec, the Ring of the last N served whole snapshots (since rebuilds a delta, from_revision rebuilds the observed values with Request::observe, out of the ring is unknown_revision) and Server (the protocol against an app with no transport, reaching it only through Host: project, bounds, dispatch through its one dispatcher, add_sink; stages forwarded only to the connection that asked, later ones included; a value aimed at a secret node leaves as its length, an unknown node counts as secret) are pure and compile for wasm. unix only: AgentPort (off unless PLEV_AGENT=1 in a debug build, or the app calls open; $TMPDIR/plev/<app>-<pid>.sock, dir 0700, socket 0600, removed on drop; an accepting thread and a reader and a writer per connection only decode and queue, and wake the loop through the shell's closure; drain(host) serves on the app's thread; bounded queues, lines of at most 1 MiB, 16 connections, a client that does not read is cut off) and Client; the plev binary (plev observe [--scope --keys --since --bounds], plev act <target> <action> [--from-revision --param], --app by name or socket path, json lines out, exit 0 observed or completed, 1 rejected, 2 failed, 3 error). the showcase opens the port in its desktop shell beside the accessibility bridge, wakes on UserEvent::Agent and draws only when an act ran, and serves the active page through the hooks assistive technology uses (ShowcaseView::semantics, act, add_sink), bounds from the frame's bindings"
+depends = ["sem"]
 
 [crates.git]
 path = "crates/git"
@@ -193,7 +212,7 @@ depends = ["engine", "builder", "theme (emitted code only)"]
 
 [crates.monster]
 path = "crates/monster"
-role = "binary animation codec (ir/validate/write/read) with full delta ops (modify tracks + place/replace/remove), delta discovery from sampled frames (discover/discover_fit: encoder mode b, slot diffing + linear segment fitting + keyframes on discontinuity and cadence), encoder-side optimizer (optimize: idempotent static collapse + rdp keyframe reduction + collinear fusion, tolerances in wire quantization steps) + deterministic player (play/play_eval: tick-driven, windowed eval, segment-local op replay, signals, lowers ir to SceneNode)"
+role = "binary animation codec (ir/validate/write/read) with full delta ops (modify tracks + place/replace/remove), delta discovery from sampled frames (discover/discover_fit: encoder mode b, slot diffing + linear segment fitting + keyframes on discontinuity and cadence), encoder-side optimizer (optimize: idempotent static collapse + rdp keyframe reduction + collinear fusion, tolerances in wire quantization steps) + deterministic player (play/play_eval: tick-driven, windowed eval, segment-local op replay, signals, lowers ir to SceneNode) + raise (the mirror of lower: SceneNode -> ir for every kind the ir carries, push order as depth and id, assets into a bank once per content; clip, backdrop blur and shadow reported, never dropped silently; feeds a recorder's frames to discover)"
 depends = ["engine", "animation", "signal", "compositor"]
 
 # native host shells that load the showcase as their gpu app. the engine
@@ -217,8 +236,10 @@ windowed = ["counter", "input", "layers", "mobile_input", "sdf_shapes", "text", 
 # (`cargo run -p comps --example editor`).
 comps = ["editor"]
 cli = ["lot2monsters", "svg2monster", "text_probe"]
+# examples of the other crates (`cargo run -p <crate> --example <name>`).
+sem = ["commit"]
 notes = [
-  "text_probe is headless (offscreen wgpu -> png, no window); it is the tool behind docs/how-to/validate-visuals-by-pixel.md when the OS denies screen capture",
+  "text_probe is headless through engine::headless (the window's own frame path into a texture, no second pipeline); with showcase --render and monster_player --frame it is the tool behind docs/how-to/validate-visuals-by-pixel.md",
   "scene3d and snake-game were crates; they are demos and moved here (commit e6f7091). examples moved from the root into crates/engine/examples when the engine became its own crate",
   "editor moved to crates/comps/examples with the editor widget; todo and text_input were absorbed by the showcase Todo and Input pages (the demos' palettes were a second color system, the showcase pages read the theme)",
   "the remaining demo palettes (input, layers, mobile_input, scene3d) are views over Theme::default(), not their own color systems",
@@ -240,6 +261,9 @@ visual-tokens = "crates/engine/src/theme/hoff.rs (colors + glass) and crates/eng
 component-catalog = "docs/catalog.md"
 decisions = "docs/ADR/"
 conventions = ".contracts/.mantras/.code/.lang/.rust/rust-conventions.md"
+web-target = "docs/how-to/build-and-serve-the-web-target.md"
+agent-orchestration = "docs/how-to/orchestrate-coding-agents-on-this-repo.md"
+program = "docs/mission/steps/ongoing/generative-runtime-program.md (goal, task graph, ownership; thesis and guidelines beside it)"
 
 # binding contracts. violations are defects even if the pixels look right.
 [contracts]

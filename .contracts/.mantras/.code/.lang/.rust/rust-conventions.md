@@ -160,8 +160,11 @@ items in wrong folders; fix or report. run tests after.
 ## style
 
 commit messages: plain english or portuguese, no conventional-commits
-prefix; the body explains the why, the diff shows the what. agents do not
-commit; the orchestrator commits thematically. code comments state
+prefix; the body explains the why, the diff shows the what. an agent
+commits on its own task branch with the task id first (`task-57: SemId
+with its canonical form`; an identifier, not a conventional-commits
+prefix), small and progressive, each commit compiling; the orchestrator
+integrates task branches into `main` one at a time. code comments state
 constraints the code cannot show (and `// SAFETY:` for unsafe), nothing else.
 
 ## learnings

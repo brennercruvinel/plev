@@ -6,15 +6,30 @@
 //! Geometry from the theme: the control and each option are one `Md`
 //! control tall, the pill is the tabs/select radius, the panel is the
 //! card radius with the menu padding, options are the nav radius, the
-//! panel never grows past `size.dropdown_max_h`.
+//! panel never grows past `size.dropdown_max_h`. With more options than
+//! fit, the rows scroll inside the panel (`select/panel.rs`): the wheel
+//! over the panel scrolls it, the arrow keys ([`Select::highlight_next`],
+//! [`Select::highlight_prev`]) move the highlight and keep it in view,
+//! Enter picks it ([`Select::pick_highlighted`]), and opening the panel
+//! scrolls the selected option into view.
+//!
+//! With a [`SemId`] ([`Select::sem`]) the render binds the closed control
+//! and, while open, each option row it draws (the window the scroll
+//! shows) to the rects they are hit-tested with, and [`Select::project`]
+//! declares the select in a semantic projection; the app still owns the
+//! selection.
+
+mod panel;
 
 use crate::icons;
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::input::scroll::ScrollState;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ControlSize, IconSize, Theme};
+use sem::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
 use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
-use crate::recipe::{focus_ring, glass_pill, menu_shadow};
+use crate::recipe::focus_ring;
 
 /// Label style for the control and its options: base-2m.
 fn label_style(theme: &Theme) -> TextStyle {
@@ -56,8 +71,15 @@ pub struct Select {
     pub disabled: bool,
     open: bool,
     hovered: bool,
-    hovered_option: Option<usize>,
+    /// The option the pointer is over or the arrow keys moved to.
+    highlighted: Option<usize>,
     focused: bool,
+    /// How far the option rows are scrolled inside the panel.
+    scroll: ScrollState,
+    /// The panel opened and has not been laid out since: the selected
+    /// option is scrolled into view the first time the geometry is read.
+    reveal: bool,
+    sem: Option<SemId>,
 }
 
 impl Select {
@@ -70,8 +92,112 @@ impl Select {
             disabled: false,
             open: false,
             hovered: false,
-            hovered_option: None,
+            highlighted: None,
             focused: false,
+            scroll: ScrollState::new(),
+            reveal: false,
+            sem: None,
+        }
+    }
+
+    /// The logical identity the render binds the control to
+    /// (`Compositor::bind`); the open options bind as `<id>[<index>]`.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this select as `id` in a projection: a `Role::Select`
+    /// named `label`, its `selected` option label (empty when it has no
+    /// option), whether its panel is `expanded`, editable with the option
+    /// labels as the accepted choices, enabled unless disabled, and the
+    /// actions `select` (a text, one of the options), `open` and `close`.
+    /// While open, every option is a `Role::Option` child `<id>[<index>]`
+    /// with a `select` of its own, the rows scrolled out of the panel
+    /// included; the render binds only the rows it draws. Each action
+    /// reads the state it changes (`selected` or `expanded`). The
+    /// highlighted option and the scroll are never projected. It only
+    /// reads the widget; the app owns it and runs the actions
+    /// ([`Select::select_label`], [`Select::select_index`],
+    /// [`Select::open`], [`Select::close`]). Pass the id given to
+    /// [`Select::sem`] so the nodes and the bindings name the same
+    /// controls. Returns the select's node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let selected = format!("{id}:selected");
+        let expanded = format!("{id}:expanded");
+        if self.open {
+            for (i, option) in self.options.iter().enumerate() {
+                let mut row = b.node(id.key(i.to_string()), Role::Option, option.as_str());
+                row.parent(id).enabled(!self.disabled);
+                row.action("select").reads(selected.as_str());
+            }
+        }
+        let mut choices: Vec<String> = Vec::with_capacity(self.options.len());
+        for option in &self.options {
+            if !choices.contains(option) {
+                choices.push(option.clone());
+            }
+        }
+        let mut node = b.node(id, Role::Select, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("selected", self.selected_label().unwrap_or_default())
+            .state("expanded", self.open)
+            .constraints(Constraints {
+                editable: true,
+                options: Some(choices),
+                ..Constraints::default()
+            })
+            .enabled(!self.disabled);
+        node.action("select")
+            .param(ParamSpec {
+                kind: ValueKind::Text,
+                constrained: true,
+            })
+            .reads(selected.as_str());
+        node.action("open").reads(expanded.as_str());
+        node.action("close").reads(expanded.as_str());
+        node
+    }
+
+    /// Opens the options panel, like a click on the control, scrolled so
+    /// the selected option shows. A disabled select stays closed.
+    pub fn open(&mut self) {
+        if !self.disabled {
+            self.open = true;
+            self.reveal = true;
+        }
+    }
+
+    /// Selects the option at `index` and closes the panel, like a click on
+    /// that option. `false` when there is no such option.
+    pub fn select_index(&mut self, index: usize) -> bool {
+        if index >= self.options.len() {
+            return false;
+        }
+        self.selected = index;
+        self.close();
+        true
+    }
+
+    /// Selects the first option labeled `label` and closes the panel.
+    /// `false` when no option has that label.
+    pub fn select_label(&mut self, label: &str) -> bool {
+        match self.options.iter().position(|o| o == label) {
+            Some(index) => self.select_index(index),
+            None => false,
         }
     }
 
@@ -96,36 +222,23 @@ impl Select {
 
     pub fn close(&mut self) {
         self.open = false;
-        self.hovered_option = None;
+        self.highlighted = None;
     }
 
     pub fn selected_label(&self) -> Option<&str> {
         self.options.get(self.selected).map(String::as_str)
     }
 
-    /// Dropdown rect below the control.
-    pub fn dropdown_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
-        let m = Metrics::of(theme);
-        let h = (m.pad_y * 2.0 + self.options.len() as f32 * m.option_h).min(m.max_h);
-        Rect::new(bounds.x, bounds.y + bounds.h + m.gap, bounds.w, h)
-    }
-
-    fn option_at(&self, x: f32, y: f32, bounds: Rect, theme: &Theme) -> Option<usize> {
-        let m = Metrics::of(theme);
-        let dd = self.dropdown_rect(bounds, theme);
-        if !dd.contains(x, y) {
-            return None;
-        }
-        let i = ((y - dd.y - m.pad_y) / m.option_h).floor();
-        if i < 0.0 {
-            return None;
-        }
-        let i = i as usize;
-        (i < self.options.len()).then_some(i)
+    /// The option the pointer is over or the arrow keys moved to, while
+    /// the panel is open.
+    pub fn highlighted(&self) -> Option<usize> {
+        self.highlighted
     }
 
     /// The options panel is laid out from the theme, so the event path
-    /// takes the same `theme` the render path draws with.
+    /// takes the same `theme` the render path draws with. The wheel over
+    /// the open panel scrolls its rows and is consumed there, even when
+    /// they are already at the end.
     pub fn handle_event(
         &mut self,
         event: &WidgetEvent,
@@ -140,6 +253,10 @@ impl Select {
             }
             return EventResult::IGNORED;
         }
+        let m = Metrics::of(theme);
+        if self.open {
+            self.settle(&m);
+        }
         match *event {
             WidgetEvent::MouseMove { x, y } => {
                 let mut result = EventResult::IGNORED;
@@ -149,9 +266,9 @@ impl Select {
                     result = EventResult::changed();
                 }
                 if self.open {
-                    let hit = self.option_at(x, y, bounds, theme);
-                    if hit != self.hovered_option {
-                        self.hovered_option = hit;
+                    let hit = self.option_at(x, y, bounds, &m);
+                    if hit != self.highlighted {
+                        self.highlighted = hit;
                         result = result.merge(EventResult::changed());
                     }
                 }
@@ -159,7 +276,7 @@ impl Select {
             }
             WidgetEvent::MouseDown { x, y } => {
                 if self.open {
-                    if let Some(i) = self.option_at(x, y, bounds, theme) {
+                    if let Some(i) = self.option_at(x, y, bounds, &m) {
                         let changed = i != self.selected;
                         self.selected = i;
                         self.close();
@@ -175,11 +292,15 @@ impl Select {
                     return EventResult::changed();
                 }
                 if bounds.contains(x, y) {
-                    self.open = true;
+                    self.open();
+                    self.settle(&m);
                     EventResult::changed()
                 } else {
                     EventResult::IGNORED
                 }
+            }
+            WidgetEvent::Scroll { x, y, delta } if self.open => {
+                self.scroll_panel(x, y, delta, bounds, &m)
             }
             _ => EventResult::IGNORED,
         }
@@ -187,6 +308,9 @@ impl Select {
 
     /// Render the closed control (selected value + chevron).
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
+        if let Some(id) = &self.sem {
+            compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let glass = &theme.glass;
         let m = Metrics::of(theme);
         let alpha = if self.disabled {
@@ -253,99 +377,6 @@ impl Select {
             bounds.y + (bounds.h - m.chevron) / 2.0,
         ) {
             compositor.push(node);
-        }
-    }
-
-    /// Render the open dropdown list (call only when [`is_open`](Select::is_open)).
-    pub fn render_dropdown(
-        &self,
-        compositor: &mut Compositor,
-        layer: LayerId,
-        bounds: Rect,
-        theme: &Theme,
-    ) {
-        if !self.open {
-            return;
-        }
-        let m = Metrics::of(theme);
-        let dd = self.dropdown_rect(bounds, theme);
-        let glass = &theme.glass;
-
-        // Floating panel: solid popover body, edge-light, deep shadow.
-        // No path icons inside (the active marker is an SDF dot), so the
-        // whole panel can use the gradient edge-light recipe.
-        let radius = theme.shape.card;
-        compositor.push_to_layer(layer, menu_shadow(dd, radius, theme));
-        for node in glass_pill(
-            dd,
-            radius,
-            glass.edge_soft.0,
-            theme.control.edge_width_strong,
-            glass.popover.0,
-        ) {
-            compositor.push_to_layer(layer, node);
-        }
-
-        let style = label_style(theme);
-        for (i, option) in self.options.iter().enumerate() {
-            let oy = dd.y + m.pad_y + i as f32 * m.option_h;
-            if oy + m.option_h > dd.y + dd.h {
-                break;
-            }
-            let is_selected = i == self.selected;
-            let is_hovered = self.hovered_option == Some(i);
-
-            if is_hovered || is_selected {
-                // Option: radius 12, active bg rgba($n2,.10).
-                compositor.push_to_layer(
-                    layer,
-                    SceneNode::RoundedRect {
-                        x: dd.x + m.pad_y,
-                        y: oy,
-                        w: dd.w - m.pad_y * 2.0,
-                        h: m.option_h,
-                        color: if is_selected {
-                            glass.surface_active.0
-                        } else {
-                            glass.surface_hover.0
-                        },
-                        corner_radius: theme.shape.nav.min(m.option_h / 2.0),
-                        border_width: 0.0,
-                        border_color: [0.0; 4],
-                    },
-                );
-            }
-            // base-2m: text-default at rest, text-active hovered/selected.
-            let label = if is_hovered || is_selected {
-                glass.text_active
-            } else {
-                glass.text_default
-            };
-            compositor.push_to_layer(
-                layer,
-                SceneNode::Text {
-                    key: TextNodeKey::from_style(option, &style, None),
-                    x: dd.x + m.pad_x,
-                    y: oy + TextMeasurer::vertical_center(&style, m.option_h),
-                    color: label.0,
-                },
-            );
-            if is_selected {
-                // A dot on the right marks the active option.
-                compositor.push_to_layer(
-                    layer,
-                    SceneNode::RoundedRect {
-                        x: dd.x + dd.w - m.pad_x - m.dot,
-                        y: oy + (m.option_h - m.dot) / 2.0,
-                        w: m.dot,
-                        h: m.dot,
-                        color: theme.colors.text.0,
-                        corner_radius: m.dot / 2.0,
-                        border_width: 0.0,
-                        border_color: [0.0; 4],
-                    },
-                );
-            }
         }
     }
 }

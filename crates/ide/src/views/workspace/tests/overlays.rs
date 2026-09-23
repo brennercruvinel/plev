@@ -66,14 +66,20 @@ fn click_outside_dismisses_overlay() {
 }
 
 #[test]
-fn stage_via_context_menu_marks_file_and_queues_request() {
+fn stage_via_context_menu_asks_to_stage_and_leaves_the_row() {
     let (mut w, mut c) = ws();
     let initial_count = w.unassigned.files.len();
     let (cx, cy) = first_file_center(&w);
 
     w.handle_right_click(cx, cy);
     w.render(&mut c); // populate ctx_menu_item_rects
-    w.take_requests(); // drop the FileDiff request from row selection
+    assert_eq!(
+        w.take_requests(),
+        vec![UiRequest::ShowFileDiff {
+            path: "src/compositor.rs".into()
+        }],
+        "the right click moved the cursor and asked for the diff"
+    );
 
     // click the first item (Stage)
     assert!(!w.ctx_menu_item_rects.is_empty());
@@ -82,10 +88,10 @@ fn stage_via_context_menu_marks_file_and_queues_request() {
 
     assert!(changed);
     assert!(w.overlay_mgr.is_empty());
-    // The file moves to staged (dot marker) instead of vanishing; the
-    // status refresh after the real `git add` reconciles the list.
+    // The view only asks: the row changes in `execute`, after the
+    // dispatcher accepted the request.
     assert_eq!(w.unassigned.files.len(), initial_count);
-    assert!(w.unassigned.files[0].staged);
+    assert!(!w.unassigned.files[0].staged);
     assert_eq!(
         w.take_requests(),
         vec![UiRequest::Stage {
@@ -108,11 +114,34 @@ fn unstage_via_context_menu_on_staged_file() {
     let (ix, iy, iw, ih) = w.ctx_menu_item_rects[0];
     w.handle_click(ix + iw / 2.0, iy + ih / 2.0);
 
-    assert!(!w.unassigned.files[2].staged);
+    assert!(w.unassigned.files[2].staged, "the view does not flip it");
     assert_eq!(
         w.take_requests(),
         vec![UiRequest::Unstage {
             path: "src/scroll.rs".into()
+        }]
+    );
+}
+
+#[test]
+fn a_refresh_while_the_menu_is_open_keeps_its_file() {
+    let (mut w, mut c) = ws();
+    let (cx, cy) = first_file_center(&w);
+    w.handle_right_click(cx, cy);
+    w.render(&mut c);
+    w.take_requests();
+
+    // A status refresh lands with another file first: the menu still
+    // acts on the file it was opened for.
+    let mut files = sample_files();
+    files.rotate_left(1);
+    w.unassigned.set_files(files);
+    let (ix, iy, iw, ih) = w.ctx_menu_item_rects[2];
+    w.handle_click(ix + iw / 2.0, iy + ih / 2.0);
+    assert_eq!(
+        w.take_requests(),
+        vec![UiRequest::Ignore {
+            path: "src/compositor.rs".into()
         }]
     );
 }
@@ -138,7 +167,7 @@ fn discard_opens_modal() {
 }
 
 #[test]
-fn modal_confirm_removes_file_and_queues_discard() {
+fn modal_confirm_asks_to_discard() {
     let (mut w, mut c) = ws();
     let initial_count = w.unassigned.files.len();
     let (cx, cy) = first_file_center(&w);
@@ -159,7 +188,8 @@ fn modal_confirm_removes_file_and_queues_discard() {
 
     assert!(changed);
     assert!(w.overlay_mgr.is_empty());
-    assert_eq!(w.unassigned.files.len(), initial_count - 1);
+    // The row goes in `execute`, once the dispatcher accepted the discard.
+    assert_eq!(w.unassigned.files.len(), initial_count);
     assert_eq!(
         w.take_requests(),
         vec![UiRequest::Discard {

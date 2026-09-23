@@ -484,24 +484,4 @@ mod tests {
             assert!(t.glass.edge.0[3] > 0.0, "{name}: edge derived");
         }
     }
-
-    // -- Accessibility --
-
-    #[cfg(feature = "accessibility")]
-    #[test]
-    fn intent_role_mapping() {
-        let theme = Theme::dark();
-        assert_eq!(
-            theme.intent_role(Intent::Destructive),
-            accesskit::Role::Button
-        );
-        assert_eq!(
-            theme.intent_role(Intent::Informational),
-            accesskit::Role::Label
-        );
-        assert_eq!(
-            theme.intent_role(Intent::Neutral),
-            accesskit::Role::GenericContainer
-        );
-    }
 }

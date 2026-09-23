@@ -3,6 +3,7 @@ use std::ops::Range;
 use engine::compositor::{Compositor, LayerId, SceneNode};
 use engine::input::scroll::ScrollState;
 use engine::theme::Theme;
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent};
 use crate::feedback::Scrollbar;
@@ -14,6 +15,10 @@ const OVERSCAN: usize = 2;
 /// Generic virtualized list: only visible rows are rendered, whatever the
 /// item count. Owns scroll state, a fading [`Scrollbar`], hover and
 /// selection — the row *content* is the caller's via a render closure.
+///
+/// With a [`SemId`] ([`VirtualList::sem`]) the render binds the list and
+/// each row it holds to the rects it hit-tests them with, and
+/// [`VirtualList::project`] declares the list in a semantic projection.
 ///
 /// ```rust
 /// # use comps::content::VirtualList;
@@ -38,6 +43,25 @@ pub struct VirtualList {
     item_count: usize,
     hovered: Option<usize>,
     viewport: Rect,
+    sem: Option<SemId>,
+}
+
+/// The part of a full-width `row` inside `bounds`, the part a pointer
+/// reaches (rows overscan past the bounds, the hit test does not); `None`
+/// when none of it is inside.
+pub(super) fn reachable(row: Rect, bounds: Rect) -> Option<Rect> {
+    let top = row.y.max(bounds.y);
+    let bottom = (row.y + row.h).min(bounds.y + bounds.h);
+    (bottom >= top).then(|| Rect::new(row.x, top, row.w, bottom - top))
+}
+
+/// The key a list names its selected row by: its index, or empty.
+fn selected_key(selected: Option<usize>) -> String {
+    selected.map(|i| i.to_string()).unwrap_or_default()
+}
+
+fn count(n: usize) -> i64 {
+    i64::try_from(n).unwrap_or(i64::MAX)
 }
 
 impl VirtualList {
@@ -50,6 +74,65 @@ impl VirtualList {
             item_count: 0,
             hovered: None,
             viewport: Rect::default(),
+            sem: None,
+        }
+    }
+
+    /// The logical identity the render binds the list to
+    /// (`Compositor::bind_to_layer`); each row it holds binds as
+    /// `<id>[<index>]`.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this list as `id` in a projection: a `Role::List` named
+    /// `label` with its item `count` and the key of its `selected` row
+    /// (the index, empty when none), and one `Role::ListItem` child
+    /// `<id>[<index>]` per row it holds ([`VirtualList::visible_range`]),
+    /// never the whole dataset, each named by `row_label` (the rows are
+    /// the app's, so is their text) and with a `select` that reads the
+    /// list's `selected`. Scroll and hover are never projected; which rows
+    /// the list holds follows the scroll. It only reads the widget; the
+    /// app owns it and runs `select` (sets `selected`). Pass the id given
+    /// to [`VirtualList::sem`] so the nodes and the bindings name the same
+    /// controls. Returns the list's node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+        mut row_label: impl FnMut(usize) -> String,
+    ) -> NodeBuilder<'b> {
+        let selected = format!("{id}:selected");
+        for index in self.visible_range() {
+            let mut row = b.node(id.key(index.to_string()), Role::ListItem, row_label(index));
+            row.parent(id);
+            row.action("select").reads(selected.as_str());
+        }
+        let mut node = b.node(id, Role::List, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("count", count(self.item_count))
+            .state("selected", selected_key(self.selected));
+        node
+    }
+
+    /// Binds each row the list holds as `<id>[<index>]` on `layer`, to the
+    /// part of it inside the viewport, which is where the hit test finds
+    /// it. Rows wholly outside (the overscan) bind nothing.
+    pub(crate) fn bind_rows(&self, c: &mut Compositor, layer: LayerId, id: &SemId) {
+        for index in self.visible_range() {
+            if let Some(r) = reachable(self.item_rect(index), self.viewport) {
+                c.bind_to_layer(layer, &id.key(index.to_string()), [r.x, r.y, r.w, r.h]);
+            }
         }
     }
 
@@ -200,6 +283,10 @@ impl VirtualList {
         mut row_fn: impl FnMut(&mut Compositor, usize, Rect, bool, bool),
     ) {
         self.set_viewport(bounds);
+        if let Some(id) = &self.sem {
+            compositor.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+            self.bind_rows(compositor, layer, id);
+        }
 
         for index in self.visible_range() {
             let rect = self.item_rect(index);

@@ -11,6 +11,7 @@ use crate::compositor::vertex::{
     BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex,
 };
 use crate::gpu::vec::GpuVec;
+use crate::perf::stages::{self, Stage};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct LayerId(pub u32);
@@ -423,6 +424,7 @@ impl Layer {
     }
 
     pub(crate) fn compute_hash(&self) -> u64 {
+        let _probe = stages::span(Stage::LayerHash).items(self.nodes.len() as u64);
         let mut scene_hasher = FxHasher::default();
         for node in &self.nodes {
             node.hash_u64().hash(&mut scene_hasher);

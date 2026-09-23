@@ -6,13 +6,22 @@
 //! optionally [`PerfMonitor::record_memory`]); consumers read an immutable
 //! [`PerfSnapshot`] for logging ([`PerfSnapshot::log_line`]) or the visual
 //! overlay ([`PerfHud`]).
+//!
+//! [`stages`] is the other half: what each stage of a frame costs (calls,
+//! items, time), off unless a thread turns it on. `gpu_time` adds the
+//! GPU's own clock to it, from timestamp queries, when the context asked
+//! for them (`RenderConfig::gpu_timestamps`).
 
+pub(crate) mod gpu_time;
 mod hud;
 mod memory;
+pub mod stages;
 mod window;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_stages;
 
 pub use hud::PerfHud;
 pub use memory::{MemoryStats, process_rss_bytes};
@@ -80,15 +89,13 @@ impl PerfMonitor {
 
     /// Feed a measured GPU frame time in microseconds.
     ///
-    /// Known gap: wgpu 28 timestamp queries (`Features::TIMESTAMP_QUERY`)
-    /// are not wired into the render loop yet. Pass-level
-    /// `timestamp_writes` would thread a `QuerySet` through the public
-    /// `encode_layer_passes`/`encode_composite_pass` signatures plus an
-    /// async map-readback ring, and encoder-level `write_timestamp`
-    /// requires `TIMESTAMP_QUERY_INSIDE_ENCODERS` (native-only; webgpu
-    /// adapters deny it). Until that integration lands, callers with their
-    /// own timing can feed this; `PerfSnapshot::gpu_micros` stays `None`
-    /// otherwise.
+    /// The measured source is the frame's timestamp queries: with
+    /// `RenderConfig::gpu_timestamps` on an adapter that has them and
+    /// stages on, `window::draw_frame` records the GPU's time as
+    /// [`stages::Stage::GpuSpan`], and the frame loop feeds
+    /// [`stages::StageFrame::gpu_micros`] here. A loop that does not
+    /// (the engine `App`'s own tail, `window/render.rs`, has no timestamps)
+    /// leaves `PerfSnapshot::gpu_micros` at `None`.
     pub fn record_gpu_micros(&mut self, micros: u64) {
         self.gpu_micros = Some(micros);
     }
@@ -140,9 +147,9 @@ pub struct PerfSnapshot {
     pub encode_avg_micros: u64,
     /// Mean `Compositor::resolve` time over the window.
     pub resolve_avg_micros: u64,
-    /// GPU frame time when fed externally (see
-    /// [`PerfMonitor::record_gpu_micros`]); `None` until timestamp
-    /// queries are integrated.
+    /// GPU frame time, the last one fed (see
+    /// [`PerfMonitor::record_gpu_micros`]); `None` until a frame loop
+    /// feeds one.
     pub gpu_micros: Option<u64>,
     /// Draw calls of the last frame.
     pub draw_calls: u32,

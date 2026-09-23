@@ -7,15 +7,20 @@ use super::AppEvent;
 use super::state::GpuState;
 use crate::platform::lifecycle::AppState;
 
+/// The window's title, which also names the root of its accessibility
+/// tree.
+const TITLE: &str = "plev, showcase";
+
 impl super::App {
     pub(crate) fn handle_resumed(&mut self, event_loop: &ActiveEventLoop) {
         match &self.state {
             GpuState::Uninitialized => {
                 #[allow(unused_mut)]
                 // mut needed for cfg(feature=accessibility), cfg(desktop), cfg(ios)
-                let mut attrs = WindowAttributes::default().with_title("plev \u{2014} Showcase");
+                let mut attrs = WindowAttributes::default().with_title(TITLE);
 
-                #[cfg(feature = "accessibility")]
+                // AccessKit attaches before the window is first shown.
+                #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
                 {
                     attrs = attrs.with_visible(false);
                 }
@@ -46,16 +51,14 @@ impl super::App {
 
                 self.window = Some(window.clone());
 
-                #[cfg(feature = "accessibility")]
+                // No meaning to project and nothing to act on, so the
+                // bridge needs no wake: the next frame sends the tree.
+                #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
                 {
-                    self.a11y_adapter = Some(accesskit_winit::Adapter::with_direct_handlers(
-                        event_loop,
-                        &window,
-                        super::PlevActivationHandler,
-                        super::PlevActionHandler,
-                        super::PlevDeactivationHandler,
-                    ));
-                    self.a11y_state.activate();
+                    match crate::accessibility::Bridge::new(event_loop, &window, TITLE, || {}) {
+                        Ok(bridge) => self.a11y = Some(bridge),
+                        Err(e) => log::warn!("accessibility: {e}"),
+                    }
                     window.set_visible(true);
                 }
 
@@ -65,7 +68,7 @@ impl super::App {
             }
             GpuState::Suspended { .. } => {
                 #[allow(unused_mut)] // mut needed for cfg(desktop), cfg(ios)
-                let mut attrs = WindowAttributes::default().with_title("plev \u{2014} Showcase");
+                let mut attrs = WindowAttributes::default().with_title(TITLE);
 
                 #[cfg(not(any(target_os = "android", target_os = "ios", target_arch = "wasm32")))]
                 {
@@ -131,6 +134,11 @@ impl super::App {
                 texture_pool,
             };
             log::info!("App suspended \u{2014} surface dropped");
+        }
+        // The adapter belongs to the window being dropped.
+        #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
+        {
+            self.a11y = None;
         }
         self.window = None;
     }

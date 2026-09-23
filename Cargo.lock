@@ -789,6 +789,7 @@ dependencies = [
  "pollster",
  "rope",
  "rustc-hash 2.1.2",
+ "sem",
  "unicode-segmentation",
  "web-time",
  "wgpu",
@@ -1147,6 +1148,7 @@ dependencies = [
  "pollster",
  "proc-macro2",
  "rustc-hash 2.1.2",
+ "sem",
  "serde",
  "serde_json",
  "slotmap",
@@ -2371,6 +2373,8 @@ dependencies = [
  "log",
  "notify",
  "pollster",
+ "sem",
+ "tempfile",
  "wgpu",
  "winit",
 ]
@@ -3851,6 +3855,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "rec"
+version = "0.1.0"
+dependencies = [
+ "comps",
+ "engine",
+ "indexmap",
+ "monster",
+ "sem",
+ "serde",
+ "serde_json",
+ "sha2",
+ "showcase",
+ "tempfile",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4044,6 +4065,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b12e76d157a900eb52e81bc6e9f3069344290341720e9178cde2407113ac8d89"
 
 [[package]]
+name = "sem"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4172,11 +4204,14 @@ dependencies = [
  "log",
  "pollster",
  "rope",
+ "sem",
+ "serde_json",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-time",
  "wgpu",
  "winit",
+ "wire",
 ]
 
 [[package]]
@@ -5571,6 +5606,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0592e1c9d151f854e6fd382574c3a0855250e1d9b2f99d9281c6e6391af352f1"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "wire"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "sem",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

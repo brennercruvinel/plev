@@ -19,4 +19,6 @@ mod types;
 pub use client::{GitClient, GitCommand, GitEvent};
 pub use error::{GitError, Result};
 pub use repo::GitRepo;
-pub use types::{Branch, Commit, DiffLine, DiffLineKind, FileStatus, Hunk, StatusKind};
+pub use types::{
+    Branch, Commit, CommitCheck, DiffLine, DiffLineKind, FileStatus, Hunk, NewCommit, StatusKind,
+};

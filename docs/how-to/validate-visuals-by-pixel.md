@@ -1,106 +1,125 @@
 ---
 type: how-to
-tags: [validation, screenshots, pixels, macos, headless, playwright, qa]
-date: 2026-06-10
-commit: bb34a1c
+tags: [validation, screenshots, pixels, semantics, macos, headless, playwright, qa]
+date: 2026-09-23
+status: living
 ---
 
 # how to validate visuals by pixel
 
 "looks the same" approved two broken color systems in this project before
-numeric validation was adopted. the working protocol follows.
+numeric validation was adopted. the protocol below is how a visual claim
+is settled. the orchestrator applies it to every delivery itself; there is
+no separate verifier agent (docs/mission/steps/ongoing/generative-runtime-guidelines.md).
 
 ## principle
 
 every visual claim is settled by sampling pixels and stating the delta
-against the token. a verifier (human or agent) that cannot produce numbers
-has not verified.
+against the token. whoever cannot produce numbers has not verified.
 
-## desktop windows (macOS)
+meaning comes before pixels. once the semantic contract exists (task-57
+onward), a claim about a control has two halves: its projected state
+(role, label, state, actions, from the snapshot) and its pixels. a change
+that should only restyle a control shows "semantic unchanged, visual
+changed"; a label change shows up in the snapshot before any pixel is
+sampled. task-67 turns this into the regression harness; until then,
+check the snapshot by hand when the page has one.
 
-- plev windows may open on a secondary monitor (observed at y around
-  1130). full-screen `screencapture` grabs whatever browser or editor sits
-  on the primary display; this produced multiple false audit results
-- correct method: resolve the window id first (a small swift helper using
-  `CGWindowListCopyWindowInfo` filtered by owner name), then capture that
-  id directly with `screencapture -l<windowid> out.png`. this is robust to
-  monitor layout and focus
-- sample pixels from the capture with python PIL
-  (`Image.open(p).getpixel((x, y))`) at documented coordinates: page
-  background, sidebar, one card. compare to the token table in
-  src/theme/hoff.rs
+## headless first
 
-## headless, when screen capture is unavailable
-
-`screencapture` needs the Screen Recording permission and `osascript` needs
-Accessibility; a terminal that has neither returns "could not create image
-from display" and there is no window route at all. That is also the state of
-CI. Do not stop there and do not fall back to reasoning about the code — the
-engine renders offscreen:
+the engine renders offscreen, so a missing window or a missing screen
+permission is never a reason to reason about the code instead of
+measuring:
 
 ```
 cargo run -p engine --example text_probe -- out.png 2.0      # 2.0 = raster scale
 PROBE_FILL=1 cargo run -p engine --example text_probe -- out.png 2.0
 ```
 
-`PROBE_FILL=1` pushes enough distinct glyph/size/weight combinations through
-the atlas that it has to **grow partway through the frame** — the atlas
-lifecycle (docs/ADR/glyph-raster-identity-and-atlas-isolation.md) only
-exercises under that pressure. A probe that cannot reach the failing state
-proves nothing.
+`PROBE_FILL=1` pushes enough distinct glyph, size and weight combinations
+through the atlas that it has to grow partway through the frame, the
+state the atlas lifecycle defects only show under
+(docs/ADR/glyph-raster-identity-and-atlas-isolation.md). a probe that
+cannot reach the failing state proves nothing.
 
-The renderer behind it is `engine::text::probe` (offscreen texture, real
-`TextSystem`, real shader, readback to RGBA8). `crates/engine/tests/
-text_raster_pixels.rs` uses the same entry point for assertions instead of
-eyeballing, notably "a string renders identically whether or not the atlas
-grew". Tests skip when no GPU adapter is present rather than failing.
+the renderer behind it is `engine::text::probe` (offscreen texture, real
+`TextSystem`, real shader, readback to RGBA8).
+`crates/engine/tests/text_raster_pixels.rs` asserts through the same
+entry point. tests skip when no GPU adapter is present rather than
+failing.
+
+since task-66 the probe renders through `engine::headless`, which draws
+with the window's own frame path (`window::draw_frame`) into an
+offscreen texture: same pipelines, same srgb view, no second renderer.
+any showcase page and any `.monster` frame go to png the same way:
+
+```
+cargo run -p showcase -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png
+cargo run -p engine --example monster_player f.monster --frame 0.5 --out f.png
+```
+
+two runs on one machine are byte-identical, the hoff background measures
+(48,48,48), and a monster frame matches the windowed player's by sha256
+(Metal). prefer this to a window capture for anything that does not need
+a live window; an adapter-less machine skips the GPU tests.
+
+## desktop windows (macOS)
+
+- plev windows may open on a secondary monitor. full-screen
+  `screencapture` grabs whatever sits on the primary display and produced
+  false audit results
+- resolve the window id first (`CGWindowListCopyWindowInfo` filtered by
+  owner name), then `screencapture -l<windowid> out.png`
+- sample with python PIL (`Image.open(p).getpixel((x, y))`) at documented
+  coordinates (page background, sidebar, one card) and compare to the
+  tokens in `crates/engine/src/theme/hoff.rs` and `scales.rs`
+- `screencapture` needs Screen Recording permission; a terminal without it
+  gets "could not create image from display". go headless instead
+
+## color profiles in captures
+
+screencapture saves in the monitor's ICC profile, not srgb. on a wide or
+calibrated display a true #303030 background measures (42,42,42) raw and
+produces a false fail. convert the capture to srgb before sampling (PIL
+ImageCms `profileToProfile` with the embedded profile); the same pixel
+then measures (48,48,48). never sample raw bytes from an ICC-tagged png.
 
 ## web target
 
-- chrome's `--headless=new --screenshot` mode hangs on winit/wgpu apps:
-  the page never reaches load-idle because of the requestAnimationFrame
-  loop, and neither `--timeout` nor `--virtual-time-budget` reliably fires.
-  two runs were lost to this; do not retry that route
-- working route: playwright-core (npm, installs in under a second) driving
-  an existing chromium binary with explicit waits. launch args for WebGPU:
-  `--enable-unsafe-webgpu --enable-features=WebGPU --use-angle=metal`.
-  navigate, wait a fixed seven seconds for wasm and GPU init, screenshot,
-  resize the viewport, wait, screenshot again
-- a machine without google chrome may still carry usable binaries: check
-  `~/Library/Caches/ms-playwright` and the chrome-for-testing bundle under
-  VS code extension storage before downloading anything
-- capture the browser console in the script (`page.on('console')`);
-  "GPU context ready (async)" is the engine's own readiness signal
+- chrome `--headless=new --screenshot` hangs on winit and wgpu apps (the
+  page never reaches load-idle under the requestAnimationFrame loop); do
+  not retry that route
+- working route: playwright-core driving an existing chromium with
+  `--enable-unsafe-webgpu --enable-features=WebGPU --use-angle=metal`;
+  navigate, wait for the engine's readiness line in the console ("GPU
+  context ready (async)", captured with `page.on('console')`), screenshot,
+  resize, wait, screenshot again
+- look for existing binaries (`~/Library/Caches/ms-playwright`, the
+  chrome-for-testing bundle) before downloading anything
+
+## across targets
+
+pixel identity between desktop, web and mobile is task-77. until its
+harness exists, compare targets by sampling the same documented
+coordinates on each and record every difference as either asked for by
+the product (safe area, scale factor) or unexplained.
 
 ## kill tests (causality)
 
-when a root cause is claimed, prove it by reverting the fix in a scratch
-tree and watching the named regression tests fail with the production
-symptom. a fix whose removal changes nothing was not the cause. this
-protocol caught one false root-cause claim during the typography work.
+when a root cause is claimed, revert the fix in a scratch tree and watch
+the named regression tests fail with the production symptom. a fix whose
+removal changes nothing was not the cause.
 
-## memory and process hygiene during automated runs
+## process hygiene during automated runs
 
-parallel capture sessions leak orphan app instances when kills race;
-six gigabytes of apparent "leak" in this project was orphan processes,
-while the app itself measured a stable 115 MB. measure RSS of the live
-process before diagnosing a leak, and sweep orphans (`pgrep -fl <app>`)
-after every automated capture batch.
+parallel capture sessions leak orphan app instances when kills race; a
+six gigabyte "leak" was once only orphans while the app measured a stable
+115 MB. measure the RSS of the live process before diagnosing a leak and
+sweep orphans (`pgrep -fl <app>`) after every capture batch.
 
-## color profiles in captures (learned 2026-06-11)
+## machine in use
 
-screencapture saves in the MONITOR's ICC profile, not sRGB. on a wide or
-calibrated display the raw pixel of a true #303030 background measures
-(42,42,42) and produces a false FAIL of delta 6. always convert the
-capture to sRGB before sampling (PIL ImageCms profileToProfile with the
-embedded profile), after which the same pixel measures (48,48,48) exact.
-the capture pipeline must treat the embedded profile as part of the
-measurement, never sample raw bytes from an ICC-tagged png.
-
-## machine-in-use etiquette
-
-launching apps for capture steals focus; if the user is typing, their
-keystrokes leak into the app under test and corrupt captures (observed:
-sections switched, a todo deleted). restore the user's frontmost app
-immediately after each capture and re-verify the app state before
-measuring.
+launching apps for capture steals focus; if the user is typing, keystrokes
+leak into the app under test and corrupt the capture. restore the user's
+frontmost app right after each capture and re-verify the app state before
+measuring. prefer headless whenever the user is at the machine.

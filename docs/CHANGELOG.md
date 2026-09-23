@@ -9,6 +9,131 @@ status: living
 
 ## unreleased
 
+- what an agent receives is lean (2026-09-23, task-57b, adr
+  lean-semantic-form-and-one-redaction): the sem serde form leaves a field
+  at its default out and reads it back when absent, so a whole
+  observation of the showcase's todo went from 6419 to 2039 bytes with
+  three items (26 KB instead of 87 with 103). where a node was projected
+  (`source`) now travels only when asked, `plev observe --source`; a
+  recording keeps it as before. the rule that keeps a secret inside the
+  process lives once, in `sem::redact`, for the port and the recorder
+  alike.
+- an agent operates a plev app from outside (2026-09-23, task-61, adr
+  agents-act-through-the-semantic-contract): the new `wire` crate speaks a
+  small json-lines protocol over a local socket, and `plev observe` /
+  `plev act` use it. an agent sees the semantic snapshot (scoped, or as a
+  delta since a revision it holds) and acts on what it saw; if the state
+  moved, the action comes back refused with the delta. it goes through the
+  same dispatcher as a click, never touches the backend, and the port is
+  off unless `PLEV_AGENT=1` in a debug build.
+- the Select panel scrolls (2026-09-23, task-81): a long list is reachable
+  by wheel and by keyboard methods, and drawing, clicking and binding read
+  one window of rows.
+- the GPU's own time per frame (2026-09-23, task-73 phase 1b):
+  `RenderConfig::gpu_timestamps` turns on timestamp queries around the
+  layer and composite passes when measuring, and the measure example
+  reports GPU work next to submit latency. on an M4 a frame's GPU work is
+  0.2 to 1.2 ms, still 4 to 12 times its CPU; a dirty layer's pass costs
+  the same with 3 draws or 22, and the composite runs on every drawn
+  frame. off by default, the device asks for no feature.
+- a session saves to a `.monster` file (2026-09-23, task-63 phase c, adr
+  session-recording-replay-not-reexecution): `Recorder::persist` and
+  `export` write a session file (magic `MONS`, next to the `MON0`
+  animations) whose semantic track is JSON lines and whose frames are
+  monster chunks byte for byte; `Session::open` reads it back strictly; a
+  panic hook can save the last window. a 20 s window of the showcase todo
+  is 76 KB. `monster_player` refuses a session with a clear message.
+- a person can decline a confirmation (2026-09-23, task-58b): closing the
+  confirmation modal in the ide now ends the agent's request as declined
+  instead of leaving it waiting.
+- accessibility is a projection of the contract (2026-09-23, task-60, adr
+  accessibility-projects-the-semantic-snapshot): the screen reader tree is
+  built from the same semantic snapshot agents and tests read, with stable
+  node ids; a screen reader's click, value or step goes through the app's
+  dispatcher like any other actor. the showcase attaches the bridge and
+  its todo page is the first with a tree. the old tree, guessed from hit
+  regions without labels, is gone.
+- the git client proves the thesis (2026-09-23, task-62 phases a and b,
+  adr commit-checks-the-index-it-observed): a person and an agent use the
+  ide at the same time. an agent's commit decided on a staged set that
+  changed is refused with the delta ("B left the staged files"), at the
+  dispatcher and again at the real index right before `git commit`; a
+  valid one ends with the real sha and file list. every click, key and
+  menu entry goes through one dispatcher; refusals show as toasts; an
+  agent's discard waits for a person to confirm. tested in real
+  repositories against the real git worker.
+- a session records itself, in memory (2026-09-23, task-63 phases a and
+  b): the new `rec` crate keeps a bounded ring of what happened, as data:
+  who observed what, the semantic state (whole or as a diff), every stage
+  of every receipt with its request, input without the typed characters,
+  and the frames on screen raised into the monster IR and chunked through
+  discover. reading a session never creates a request; secrets fail
+  closed. recording costs about 12 us a frame on the showcase todo.
+  `monster::raise` is the mirror of `lower`. persisting to a `.monster`
+  session file is the next step.
+- the frame measures itself (2026-09-23, task-73 phase 1): `engine::perf::stages`
+  counts and times each stage of a frame (semantic projection, scene
+  build, text measure hits and misses, shaping, binds, hit tests, layer
+  hashing, geometry, text resolve, upload bytes, encode, gpu wait), off by
+  default at the cost of one relaxed load per probe;
+  `cargo run --release -p showcase --example measure` runs nine real
+  interactions through the window's frame path and prints the tables. the
+  first finding: on an M4 the frame is bound by the GPU (0.45 to 2.2 ms of
+  wait against 30 to 400 us of CPU), which reshapes the incremental work
+  ahead (docs/mission/steps/ongoing/task-73-measurements.md).
+- every interactive comps widget speaks the semantic contract (2026-09-23,
+  task-59 phase b): chip, icon button, submit button, switch, slider,
+  select, tabs, nav link, breadcrumb, split pane, virtual list, table,
+  tree, context menu, modal and toast take `.sem(id)`, bind the rect they
+  draw and hit-test with, and project their role, state and actions
+  (children as keys under their id). every action reads the state it
+  changes, so an actor never overwrites a value it did not see. fixed on
+  the way: a full `Select` panel picked an invisible option from a 4px
+  band at its foot.
+- headless is first class (2026-09-23, task-66, adr
+  headless-render-shares-the-frame-path): any frame renders without a
+  window through the window's own path. `GpuContext::new_headless` builds
+  every pipeline with the same code as the windowed constructor,
+  `window::draw_frame` draws into any srgb view (`present_frame` is now
+  acquire, draw, present, unchanged for every app), and `engine::headless`
+  reads the texture back to png. `cargo run -p showcase -- --render <page>
+  --out f.png` and `monster_player <file> --frame <t> --out f.png` use it;
+  the text probe's private offscreen pipeline is gone. 78 pages, two
+  themes, two viewports: byte-identical across runs.
+- the showcase todo runs on the semantic contract (2026-09-23, task-59
+  phase a, adr semantic-binding-beside-the-scene): the compositor keeps a
+  per-frame table of which capability sits where (`bind`, `hit`), beside
+  the scene and outside every layer hash; `TextField`, `Checkbox` and
+  `Button` take a `SemId` and project their role, state and actions; the
+  todo page projects itself, owns a dispatcher, and every click, the Enter
+  key and the filters reach the model only through it, as `Actor::Human`
+  requests. a test drives the same page by clicks and by test requests
+  and gets the same state; an open modal makes the page inert.
+- actions carry the state their actor observed (2026-09-23, task-58, adr
+  actions-carry-observed-state): `sem` gains `Request::observe`, a pure
+  `check` with a fixed order (not found, unknown action, not authorized,
+  stale, inert, disabled, invalid param, needs confirmation, accepted) and
+  one `Dispatcher` for every actor. a request goes stale only when a value
+  its action reads moved, and the rejection names the delta ("removed:
+  B"); a hover or a cursor never invalidates it. execution runs only after
+  acceptance or a person's confirmation (at the screen or through a screen
+  reader), may end later with the id it received, and can be refused again
+  at the point of truth. every step lands in a `Receipt` that sinks see as
+  it happens. `cargo run -p sem --example commit` plays the thesis
+  scenario.
+- the semantic contract, crate `sem` (2026-09-23, task-57, adr
+  semantic-contract-as-pure-projection): every control can now be
+  described as data independent of its pixels: a persistent `SemId`
+  chosen by the app (`commit.submit`, `changes.file[src/lib.rs]`), a
+  `Role`, a label, state under keys, the actions it accepts with the state
+  each one reads and who may request it, and its constraints. the app
+  projects it on demand from live state (`Semantics::project`), the
+  builder reports every violation at once, a `Snapshot` has a stable
+  `Revision` that means the same across processes, and `Snapshot::diff`
+  names what changed ("removed: lexer.rs"). secret fields keep only a
+  length. pure: no gpu, no window, compiles for wasm. nothing in the
+  engine or the apps uses it yet; task-58 adds preconditions and the
+  dispatcher on top.
 - hot reload on by default (2026-09-22, adr
   hot-reload-on-by-default-in-gpu-context): the shader watcher moved from
   the engine's `window::App` into `GpuContext`, wakes the loop with

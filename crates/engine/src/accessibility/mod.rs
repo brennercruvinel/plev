@@ -1,11 +1,28 @@
-//! Accessibility integration via AccessKit.
+//! Accessibility as a projection of the semantic contract
+//! (docs/ADR/accessibility-projects-the-semantic-snapshot.md).
+//!
+//! The tree assistive technology reads is built from the same
+//! `sem::Snapshot` agents and tests read (`tree`), placed by the
+//! compositor's binding table, with node ids that follow each node's
+//! `SemId` across frames (`ids`). What a screen reader asks comes back as
+//! a `sem::Request` with `Actor::Assistive`, for the app's one dispatcher
+//! (`action`). Keyboard focus walks the same snapshot (`focus`). An app
+//! shell wires all of it through one `Bridge` (native only).
 
+pub mod action;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod bridge;
 pub mod focus;
-pub(crate) mod id_map;
-pub mod state;
+pub mod ids;
+pub mod role;
+pub mod tree;
 
-#[cfg(test)]
-mod tests;
-
-pub use focus::{FocusDirection, FocusGraph};
-pub use state::AccessibilityState;
+/// The AccessKit types a shell or a test names (an `ActionRequest`, a
+/// `TreeUpdate`), so an app does not pin its own copy of the crate.
+pub use accesskit;
+pub use action::{Assist, Unmapped, primary, translate};
+#[cfg(not(target_arch = "wasm32"))]
+pub use bridge::{Bridge, BridgeError, Wake};
+pub use focus::Direction;
+pub use ids::{NodeIds, ROOT};
+pub use tree::{Chrome, Shown, build};

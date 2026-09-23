@@ -123,7 +123,11 @@ impl ShowcaseView {
     /// submits its commit form.
     pub fn handle_enter(&mut self) -> bool {
         match self.pane() {
-            Some(Pane::Todo) => self.panes.todo.handle_enter(),
+            Some(Pane::Todo) => {
+                let inert = self.overlay_holds_pointer();
+                self.panes.todo.set_inert(inert);
+                self.panes.todo.handle_enter()
+            }
             Some(Pane::Git) => self.panes.git.handle_enter(),
             _ => false,
         }
@@ -215,6 +219,19 @@ impl ShowcaseView {
         });
     }
 
+    /// True while the active overlay takes every pointer event: a modal
+    /// or a menu that is not fading out. The page beneath is then inert
+    /// (the todo page projects itself so, see `TodoPage::set_inert`).
+    pub(super) fn overlay_holds_pointer(&self) -> bool {
+        self.active_overlay.as_ref().is_some_and(|active| {
+            let id = active.id();
+            self.overlay_mgr
+                .stack
+                .iter()
+                .any(|o| o.id == id && !o.is_closing())
+        })
+    }
+
     /// Route a pointer event. Returns `true` if a redraw is needed.
     pub fn handle_event(&mut self, event: &WidgetEvent) -> bool {
         let (vw, vh) = (self.width, self.height);
@@ -227,14 +244,10 @@ impl ShowcaseView {
         let mut result = toast_result;
 
         // Active overlay is exclusive while it is not fading out.
+        let held = self.overlay_holds_pointer();
         if let Some(active) = &mut self.active_overlay {
             let id = active.id();
-            let closing = !self
-                .overlay_mgr
-                .stack
-                .iter()
-                .any(|o| o.id == id && !o.is_closing());
-            if !closing {
+            if held {
                 match active {
                     ActiveOverlay::Modal { widget, .. } => {
                         let (action, r) = widget.handle_event(event, &self.theme, vw, vh);

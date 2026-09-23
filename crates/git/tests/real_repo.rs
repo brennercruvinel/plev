@@ -2,12 +2,13 @@
 //! CLI, like the fixtures gix itself uses). Each test gets an isolated
 //! `TempDir`, so they can run in parallel.
 
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::process::Command;
 use std::sync::mpsc::channel;
 use std::time::Duration;
 
-use git::{DiffLineKind, GitClient, GitCommand, GitEvent, GitRepo, StatusKind};
+use git::{CommitCheck, DiffLineKind, GitClient, GitCommand, GitEvent, GitRepo, StatusKind};
 use tempfile::TempDir;
 
 /// Creates a repo with a deterministic identity and one initial commit
@@ -109,7 +110,9 @@ fn commit_creates_sha_and_clears_status() {
     write(dir.path(), "new.txt", "hello\n");
     repo.stage("new.txt").unwrap();
 
-    let sha = repo.commit("add new.txt").unwrap();
+    let commit = repo.commit("add new.txt").unwrap();
+    assert_eq!(commit.files, ["new.txt"]);
+    let sha = commit.sha;
     assert_eq!(sha.len(), 40, "full hex sha expected, got `{sha}`");
     assert!(sha.chars().all(|c| c.is_ascii_hexdigit()));
     assert!(repo.status().unwrap().is_empty());
@@ -140,6 +143,92 @@ fn log_respects_limit_and_handles_empty_repo() {
         repo.log(10).unwrap().is_empty(),
         "unborn HEAD yields no log"
     );
+}
+
+// -- conditional commit -----------------------------------------------------------
+
+fn set(paths: &[&str]) -> BTreeSet<String> {
+    paths.iter().map(|p| p.to_string()).collect()
+}
+
+fn head(dir: &Path) -> String {
+    let out = Command::new("git")
+        .arg("-C")
+        .arg(dir)
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .unwrap();
+    String::from_utf8(out.stdout).unwrap().trim().to_string()
+}
+
+#[test]
+fn commit_if_commits_when_the_index_stages_what_was_expected() {
+    let (dir, repo) = repo_with_commit();
+    write(dir.path(), "a.txt", "changed\n");
+    write(dir.path(), "dir/b c.txt", "spaced\n");
+    write(dir.path(), "left.txt", "not staged\n");
+    git(dir.path(), &["add", "a.txt", "dir/b c.txt"]);
+    assert_eq!(repo.staged_paths().unwrap(), set(&["a.txt", "dir/b c.txt"]));
+
+    let check = repo
+        .commit_if("two files", &set(&["a.txt", "dir/b c.txt"]))
+        .unwrap();
+    let CommitCheck::Committed(commit) = check else {
+        panic!("expected a commit, got {check:?}");
+    };
+    assert_eq!(commit.sha, head(dir.path()));
+    assert_eq!(commit.files, ["a.txt", "dir/b c.txt"]);
+    assert_eq!(repo.commit_files(&commit.sha).unwrap(), commit.files);
+    assert_eq!(repo.log(1).unwrap()[0].message, "two files");
+    // The unstaged file stays out of the commit and in the worktree.
+    let status = repo.status().unwrap();
+    assert_eq!(status.len(), 1);
+    assert_eq!(status[0].path, "left.txt");
+}
+
+#[test]
+fn commit_if_refuses_with_the_delta_when_the_index_moved() {
+    let (dir, repo) = repo_with_commit();
+    write(dir.path(), "A", "a\n");
+    write(dir.path(), "B", "b\n");
+    write(dir.path(), "C", "c\n");
+    git(dir.path(), &["add", "A", "C"]);
+    let before = head(dir.path());
+
+    // Decided on {A, B}; the index holds {A, C}.
+    let check = repo.commit_if("fix login", &set(&["A", "B"])).unwrap();
+    assert_eq!(
+        check,
+        CommitCheck::Stale {
+            added: vec!["C".into()],
+            removed: vec!["B".into()],
+        }
+    );
+    assert_eq!(head(dir.path()), before, "nothing was committed");
+    assert_eq!(repo.staged_paths().unwrap(), set(&["A", "C"]));
+
+    // An empty expectation against a staged index is stale too.
+    let check = repo.commit_if("nothing", &BTreeSet::new()).unwrap();
+    assert!(matches!(check, CommitCheck::Stale { removed, .. } if removed.is_empty()));
+    assert_eq!(head(dir.path()), before);
+}
+
+#[test]
+fn commit_if_on_an_unborn_head_lists_the_root_commit_files() {
+    let dir = TempDir::new().unwrap();
+    git(dir.path(), &["init", "--initial-branch=main"]);
+    git(dir.path(), &["config", "user.name", "Test Author"]);
+    git(dir.path(), &["config", "user.email", "test@example.com"]);
+    write(dir.path(), "first.txt", "1\n");
+    git(dir.path(), &["add", "first.txt"]);
+    let repo = GitRepo::open(dir.path()).unwrap();
+
+    let check = repo.commit_if("root", &set(&["first.txt"])).unwrap();
+    let CommitCheck::Committed(commit) = check else {
+        panic!("expected a commit, got {check:?}");
+    };
+    assert_eq!(commit.files, ["first.txt"]);
+    assert_eq!(commit.sha, head(dir.path()));
 }
 
 // -- branches ---------------------------------------------------------------------
@@ -338,14 +427,30 @@ fn git_client_round_trips_commands_off_thread() {
     let event = rx.recv_timeout(Duration::from_secs(10)).unwrap();
     assert!(matches!(event, GitEvent::Staged { result: Ok(()), .. }));
 
-    client.send(GitCommand::Commit {
+    // Decided on a set the index does not hold: refused with the delta.
+    client.send(GitCommand::CommitIf {
         message: "via client".into(),
+        expect_staged: set(&["other.txt"]),
     });
     let event = rx.recv_timeout(Duration::from_secs(10)).unwrap();
-    let GitEvent::Committed(Ok(sha)) = event else {
+    let GitEvent::CommitRejected { added, removed } = event else {
+        panic!("expected CommitRejected event, got {event:?}");
+    };
+    assert_eq!(
+        (added, removed),
+        (vec!["new.txt".into()], vec!["other.txt".into()])
+    );
+
+    client.send(GitCommand::CommitIf {
+        message: "via client".into(),
+        expect_staged: set(&["new.txt"]),
+    });
+    let event = rx.recv_timeout(Duration::from_secs(10)).unwrap();
+    let GitEvent::Committed(Ok(commit)) = event else {
         panic!("expected Committed event, got {event:?}");
     };
-    assert_eq!(sha.len(), 40);
+    assert_eq!(commit.sha.len(), 40);
+    assert_eq!(commit.files, ["new.txt"]);
 
     // Refresh fans out three events.
     client.send(GitCommand::Refresh { log_limit: 5 });
