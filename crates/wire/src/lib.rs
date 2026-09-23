@@ -36,7 +36,6 @@ mod place;
 #[cfg(unix)]
 mod port;
 mod proto;
-mod redact;
 mod ring;
 mod server;
 
@@ -52,6 +51,5 @@ pub use proto::{
     Act, Ask, Bound, ClientMsg, DeltaReply, Observe, ProtoError, Reply, ServerMsg, SnapshotReply,
     StageReply, VERSION,
 };
-pub use redact::REDACTED;
 pub use ring::{DEFAULT_RING, Ring};
 pub use server::{ConnId, Host, MAX_NAME, Outgoing, Server};

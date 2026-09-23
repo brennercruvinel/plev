@@ -89,6 +89,10 @@
 //! time the caller passed; `ReceiptSink`s see every stage as it happens.
 //! `examples/commit.rs` runs the thesis scenario and prints the receipts.
 //!
+//! a `secret` field leaves the snapshot as its length. whoever carries a
+//! request or a stage out of the process (the agent port, the recorder)
+//! reduces what is aimed at a secret node with the one rule in `redact`.
+//!
 //! the crate is pure data: no gpu, no window, no text stack.
 
 mod builder;
@@ -102,6 +106,7 @@ mod id;
 mod name;
 mod node;
 mod receipt;
+pub mod redact;
 mod request;
 mod role;
 mod snapshot;

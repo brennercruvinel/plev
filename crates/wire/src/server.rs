@@ -7,18 +7,23 @@
 //! runs app code, reads a file or calls a backend; an act becomes a
 //! `sem::Request` with `Actor::Agent` and goes through the dispatcher a
 //! click goes through, and its stages come back through the sink.
+//!
+//! a secret never leaves through the port. the request as dispatched and
+//! every stage of it are reduced by `sem::redact`, the one rule the
+//! recorder applies too, with the secret nodes read from the live snapshot
+//! at dispatch (a node it does not hold counts as secret).
 
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::rc::Rc;
 
+use sem::redact::Secrets;
 use sem::{Actor, Millis, Receipt, ReceiptSink, Request, RequestId, SemId, Snapshot, Stage};
 
 use crate::proto::{
     Act, Ask, Bound, ClientMsg, DeltaReply, Observe, ProtoError, Reply, ServerMsg, SnapshotReply,
     StageReply,
 };
-use crate::redact::Secrets;
 use crate::ring::Ring;
 
 /// a connection, numbered by the transport.

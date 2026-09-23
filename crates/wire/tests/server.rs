@@ -5,13 +5,14 @@
 mod toy;
 
 use proptest::prelude::*;
+use sem::redact::REDACTED;
 use sem::{
     Actor, Change, ReceiptSink, Rejection, Request, RequestId, Revision, SemId, Snapshot, Stage,
     StateRef, Value,
 };
 use toy::ToyHost;
 use wire::{
-    Bound, ClientMsg, ConnId, DeltaReply, Host, ProtoError, REDACTED, Reply, Server, ServerMsg,
+    Bound, ClientMsg, ConnId, DeltaReply, Host, ProtoError, Reply, Server, ServerMsg,
     SnapshotReply, StageReply, decode_client, encode_client,
 };
 
