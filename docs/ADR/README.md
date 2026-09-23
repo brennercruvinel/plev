@@ -115,6 +115,14 @@ status usados: `reference` (conhecimento congelado de uma sessao), `accepted` (d
 | 2026-09-21 | [showcase-one-page-per-component](showcase-one-page-per-component.md) | accepted | o showcase vira uma pagina por widget do comps: tabela `view::pages::PAGES` em tres grupos (Foundations, Components alfabetico, Apps Demo), pagina propria, alias (mostra o exemplo vizinho com a nota do que falta) ou placeholder (widget que o comps ainda nao tem); `comps::nav::Sidebar` ganha `NavGroup` (grupos que dobram); foco de teclado por pagina; aprendizados em docs/mission/steps/checked/sessao-showcase-pages-learnings.md |
 | 2026-09-18 | [comps-one-design-system-crate](comps-one-design-system-crate.md) | accepted | crates/comps e o design system (widgets, receitas, icones, charts, overlay, editor, shell) sobre o engine; todo valor visual e token do Theme (shape, control, size, duration, layout, shadows); breakpoints e AppShell (sidebar cheia / rail / drawer); ide, showcase e urnaui consomem, tema e componentes locais apagados; matriz tema x viewport testa todo widget; inventario em docs/catalog.md; aprendizados da sessao em docs/mission/steps/checked/sessao-comps-learnings.md |
 
+## runtime de interação generativa (2026)
+
+o programa em docs/mission/steps/ongoing/generative-runtime-program.md; uma linha por decisão das tasks 57 a 80.
+
+| data | adr | status | resumo |
+|------|-----|--------|--------|
+| 2026-09-23 | [semantic-contract-as-pure-projection](semantic-contract-as-pure-projection.md) | accepted | crate `sem`, puro: todo controle tem `SemId` persistente escolhido pelo app (nunca contador nem posição), role, estado, ações com as `reads` de que dependem, policy e constraints; o app implementa `Semantics::project` sob demanda a partir do estado vivo; `finish` reporta todas as violações juntas; `Revision` estável (FNV-1a 64, ordem de árvore, sem `source`) e `diff` vazio exatamente quando os snapshots são iguais; `secret` guarda só tamanho (task-57) |
+
 ## urnaui, o explorador de .urna (2026)
 
 | data | adr | status | resumo |

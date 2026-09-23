@@ -9,6 +9,19 @@ status: living
 
 ## unreleased
 
+- the semantic contract, crate `sem` (2026-09-23, task-57, adr
+  semantic-contract-as-pure-projection): every control can now be
+  described as data independent of its pixels: a persistent `SemId`
+  chosen by the app (`commit.submit`, `changes.file[src/lib.rs]`), a
+  `Role`, a label, state under keys, the actions it accepts with the state
+  each one reads and who may request it, and its constraints. the app
+  projects it on demand from live state (`Semantics::project`), the
+  builder reports every violation at once, a `Snapshot` has a stable
+  `Revision` that means the same across processes, and `Snapshot::diff`
+  names what changed ("removed: lexer.rs"). secret fields keep only a
+  length. pure: no gpu, no window, compiles for wasm. nothing in the
+  engine or the apps uses it yet; task-58 adds preconditions and the
+  dispatcher on top.
 - hot reload on by default (2026-09-22, adr
   hot-reload-on-by-default-in-gpu-context): the shader watcher moved from
   the engine's `window::App` into `GpuContext`, wakes the loop with

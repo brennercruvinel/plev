@@ -47,14 +47,44 @@ what the thesis calls "the contract that matters": who am i, what do i
 mean, what is my state, which actions do i accept, which conditions make
 them valid, who may run them, what happened when they ran.
 
-today (2026-09-23) none of it exists in code:
+what exists (updated at each task close-out):
 
-- the only identity is `ViewId`, a per-frame counter reset in
-  `InputState::begin_frame` (crates/engine/src/input/mod.rs). it is a
-  temporary render identity, never a control's identity. do not persist
-  it, do not send it to an agent, do not record it.
-- the accessibility tree is derived from hit regions without labels
+- `crates/sem` (task-57, adr semantic-contract-as-pure-projection): the
+  contract as pure data. `SemId`, `Role`, `Value`, `StateRef`,
+  `Constraints`, `ActionDecl` with its `reads` and `Policy`, `Node`, the
+  `Semantics` trait, `SnapshotBuilder` (text or typed ids, every
+  violation reported by `finish`), `Snapshot` with a stable `Revision`
+  and `Snapshot::diff`. nothing in the engine, comps or the apps uses it
+  yet.
+- the only identity the engine itself has is still `ViewId`, a per-frame
+  counter reset in `InputState::begin_frame`
+  (crates/engine/src/input/mod.rs). it is a temporary render identity,
+  never a control's identity. do not persist it, do not send it to an
+  agent, do not record it.
+- the accessibility tree is still derived from hit regions without labels
   (crates/engine/src/window/render.rs); task-60 replaces it.
+
+how to project (from the crate docs):
+
+```rust
+impl sem::Semantics for GitState {
+    fn project(&self, b: &mut sem::SnapshotBuilder) {
+        b.node("changes", sem::Role::List, "changes")
+            .state("staged", self.staged.clone());
+        b.node("commit.message", sem::Role::TextInput, "commit message")
+            .state("text", self.message.as_str());
+        b.node("commit.submit", sem::Role::Button, "commit")
+            .enabled(!self.staged.is_empty())
+            .action("submit")
+            .reads("changes:staged")
+            .reads("commit.message:text");
+    }
+}
+```
+
+project what is operable and meaningful, not the whole content: a big
+document is one node with its size, selection and cursor, not a node per
+line.
 
 as the tasks land, these rules become binding (each line names its task):
 

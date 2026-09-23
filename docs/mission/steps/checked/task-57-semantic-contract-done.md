@@ -1,16 +1,57 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-57
 wave: 1
 depends: []
 branch: task/57-sem-contract
+integrated: 860b029
 ---
 
 # task-57: contrato semântico (crate `sem`)
+
+## fechamento (2026-09-23)
+
+integrada na `main` em `860b029` (oito commits, de `35f6b10` a `860b029`),
+validada pelo orquestrador: diff inteiro lido, `./script/gate` verde na
+branch (a perna do urnaui pula no worktree), 78 testes do `sem` com serde
+e 72 sem, 7 proptests, contagem do workspace de 1467 para 1545 (exatamente
+os testes novos). ADR: `docs/ADR/semantic-contract-as-pure-projection.md`.
+
+o que ficou diferente da spec abaixo, aceito como contrato:
+
+- o builder aceita id, chave, nome de ação e ref tipados ou como texto
+  (`impl TryInto<T, Error: Into<SemError>>`); texto inválido vira erro
+  agregado em `finish`, nunca panic. `node(id: SemId, ...)` continua
+  compilando.
+- `NodeBuilder::action(name)` devolve um `ActionBuilder` (`label`,
+  `enabled`, `reads`, `param`, `policy`) e encerra a cadeia do nó.
+- revisão e igualdade seguem a árvore: raízes na ordem de projeção, depois
+  cada subárvore em profundidade; estado ordenado por chave. a ordem entre
+  irmãos muda a revisão; a intercalação de subárvores sem relação e a
+  ordem de declaração das chaves, não. a codificação é `sem.revision.v1`,
+  documentada em `crates/sem/src/hash.rs`.
+- `Change` tem doze variantes: as sete da spec mais `RoleChanged`,
+  `DescriptionChanged`, `ConstraintsChanged`, `Reordered { parent }` e
+  `FocusChanged`, de modo que `diff` é vazio exatamente quando os dois
+  snapshots são iguais (proptest).
+- `Revision` imprime e trafega como 16 dígitos hex minúsculos.
+- `secret` guarda só tamanho: `Text` vira `Int(chars)`, `List` e `Set`
+  viram `Int(itens)`; `Bool`, `Int` e `Num` ficam.
+- defaults de nó: habilitado, não inerte, `focusable` igual a
+  `role.is_interactive()`.
+
+limitações declaradas no handoff, que seguem para as próximas tasks:
+
+- a forma JSON não tem golden (sem `serde_json` nos dev-deps); a task-58
+  pode adicionar `serde_json` como dev-dependency do `sem`.
+- `Value::Num` com NaN ou infinito não trafega em JSON.
+- foco em nó não focável ou inerte não é rejeitado.
+- id duplicado: o segundo nó sai e as checagens dele não rodam.
+- o custo de projetar sob demanda não foi medido (tasks 59 e 73).
 
 ## objetivo
 

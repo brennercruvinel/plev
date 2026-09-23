@@ -189,8 +189,8 @@ interna. mudança em qualquer um deles passa pelo orquestrador.
 
 | contrato | produtor | consumidores | onde fica |
 |---|---|---|---|
-| `SemId`, `Role`, `Value`, `Node`, `ActionDecl`, `Policy`, `Constraints`, `Snapshot`, `Revision`, `SnapshotBuilder`, `Semantics` | 57 | 58 a 71, 73 | `crates/sem` |
-| `Actor`, `Request`, `Observation`, `Verdict`, `Rejection`, `Change`, `Receipt`, `Stage`, `Outcome`, `check`, `Operable`, `Dispatcher` | 58 | 59, 60, 61, 62, 63, 68, 69, 70 | `crates/sem` |
+| `SemId`, `Role`, `Value`, `StateRef`, `Node`, `ActionDecl`, `Policy`, `Constraints`, `Snapshot`, `Revision`, `SnapshotBuilder`, `Semantics`, `Change` (diff) | 57 | 58 a 71, 73 | `crates/sem` |
+| `Actor`, `Request`, `Observation`, `Verdict`, `Rejection`, `Receipt`, `Stage`, `Outcome`, `check`, `Operable`, `Dispatcher` | 58 | 59, 60, 61, 62, 63, 68, 69, 70 | `crates/sem` |
 | ligação por frame `SemId -> (ViewId, bounds, layer, clip)` e o caminho único de dispatch em comps e apps | 59 | 60, 61, 62, 65, 67, 69 | `crates/engine` (compositor e input), `crates/comps` |
 | projeção AccessKit a partir de `Snapshot` + ligação | 60 | 75, 74 | `crates/engine/src/accessibility` |
 | protocolo de observação e ação (versionado) | 61 | 62, 79, 80 | crate novo (nome na task) |
@@ -277,8 +277,18 @@ abertas:
 5. task-39 (memoização, pendente desde 2023) é absorvida pela task-73.
    recomendação: mover a task-39 para `checked/` como superseded quando a
    73 abrir.
-6. nome dos crates novos (`sem`, protocolo do agente, IR). recomendação na
-   própria task; o orquestrador fecha antes do briefing.
+6. nome dos crates novos: `sem` fechado na task-57; protocolo do agente e
+   IR fechados pelo orquestrador antes do briefing da task.
 7. provedor do proponente LLM (task-69): local ou API. decidir na task-69,
    com o proponente atrás de um trait e um proponente determinístico para
    os testes.
+
+## 12. estado
+
+atualizado em cada integração.
+
+| task | estado | na `main` | notas |
+|---|---|---|---|
+| onda 0 | integrada | `1d384d4` | how-to reconstruído, regra de commit, docs do programa |
+| task-57 | integrada | `860b029` | crate `sem`; `Change` ficou na 57 com doze variantes; detalhes em `checked/task-57-semantic-contract-done.md` |
+| task-58 | em andamento | | |
