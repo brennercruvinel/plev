@@ -87,6 +87,7 @@
 //! it projects the app's live state (`Operable`), checks, executes, and
 //! keeps a `Receipt` whose `Stage`s walk only legal transitions, with the
 //! time the caller passed; `ReceiptSink`s see every stage as it happens.
+//! `examples/commit.rs` runs the thesis scenario and prints the receipts.
 //!
 //! the crate is pure data: no gpu, no window, no text stack.
 
