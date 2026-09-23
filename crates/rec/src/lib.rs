@@ -8,7 +8,11 @@
 //! reorder, `Kind::Changes` in between), who asked for which action on
 //! which state and how it went, stage by stage (`Kind::Stage`, from a
 //! `sem::ReceiptSink`), and a person's input with the control under it
-//! (`Kind::Input`).
+//! (`Kind::Input`). beside that semantic track, the visual track keeps
+//! what was on screen: every rendered frame, raised to the monster IR
+//! and compressed by monster's delta discovery in chunks
+//! (`Recorder::frame`). one ring holds both, bounded by time and by
+//! bytes (`Limits`), and cuts only at a keyframe of each track.
 //!
 //! it only reads. nothing it is given is changed, no clock is read (every
 //! time is the caller's), and a secret never lands in it: the snapshot
@@ -17,9 +21,10 @@
 //! or error aimed at one.
 //!
 //! the read side is `Session`: events by time, the semantic state at any
-//! instant, the receipts that touch a control. replay is the promise,
-//! re-execution is not: a session holds no dispatcher and no app, so
-//! reading it can never create a request or run an action.
+//! instant, the receipts that touch a control, the frame on screen at any
+//! instant (the semantic track reads without decoding a frame). replay
+//! is the promise, re-execution is not: a session holds no dispatcher and
+//! no app, so reading it can never create a request or run an action.
 //!
 //! ```
 //! use std::collections::BTreeSet;
@@ -82,12 +87,14 @@ mod limits;
 mod recorder;
 mod redact;
 mod ring;
+mod screen;
 mod session;
 mod state;
 mod track;
+mod visual;
 mod weigh;
 
-pub use error::ReadError;
+pub use error::{FrameError, ReadError};
 pub use event::{Event, InputKind, Kind};
 pub use limits::{Limits, Stats};
 pub use recorder::{Recorder, Sink};

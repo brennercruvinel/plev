@@ -3,24 +3,30 @@
 //! requests still open, and the counters. every entry point takes the
 //! caller's time; the recorder never reads a clock.
 //!
-//! the ring: after every event the oldest segments go while the limits
-//! ask for it, whole, so what stays opens at a full snapshot. by time, a
-//! segment goes once the one after it opened at or before `now -
-//! max_age`, which keeps at least the last `max_age`. by bytes, the
-//! oldest segment goes while the ring is over `max_bytes`; when only the
-//! newest is left and still over, the next event re-keys the track so
-//! the ring can cut there.
+//! the ring: after every event and frame the oldest segments and chunks
+//! go while the limits ask for it, whole, so what stays opens at a full
+//! snapshot and at a visual keyframe. by time, a segment or a chunk goes
+//! once the one after it opened at or before `now - max_age`, which keeps
+//! at least the last `max_age`. by bytes, the older of the two oldest
+//! goes while the ring is over `max_bytes`; when only the newest of each
+//! is left and still over, the next event re-keys and the next frame
+//! opens a chunk, so the ring can cut there.
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use sem::{Actor, Change, Millis, Receipt, Request, RequestId, Revision, SemId, Snapshot, Stage};
 
+use engine::compositor::SceneNode;
+
+use crate::error::FrameError;
 use crate::event::{Event, InputKind, Kind};
 use crate::limits::{Limits, Stats};
 use crate::redact;
+use crate::screen::Screen;
 use crate::session::Session;
 use crate::track::Track;
+use crate::visual::{Cadence, Visual};
 
 #[derive(Debug, Default)]
 pub(crate) struct Inner {
@@ -34,6 +40,7 @@ pub(crate) struct Inner {
     origins: u16,
     /// a limit could not cut: the next event re-keys the track.
     rekey: bool,
+    visual: Visual,
     stats: Stats,
 }
 
@@ -116,10 +123,11 @@ impl Inner {
 
     /// the estimated bytes the ring holds.
     fn bytes(&self) -> usize {
-        self.track.bytes()
+        self.track.bytes() + self.visual.bytes()
     }
 
-    /// drops what the limits no longer keep, whole segments only.
+    /// drops what the limits no longer keep: whole segments and whole
+    /// chunks, oldest first.
     fn evict(&mut self) {
         let Some(now) = self.last_t else {
             return;
@@ -132,18 +140,40 @@ impl Inner {
         while self.track.first_t().is_some_and(|t| t < cut) && self.track.trim_unkeyed() {
             self.stats.evicted_unkeyed += 1;
         }
+        while self.visual.second_start().is_some_and(|start| start <= cut) {
+            self.visual.pop_front();
+            self.stats.evicted_chunks += 1;
+        }
         while self.bytes() > self.limits.max_bytes {
-            if self.track.segments().len() > 1 {
-                self.track.pop_front();
-                self.stats.evicted_segments += 1;
-            } else if self.track.trim_unkeyed() {
-                self.stats.evicted_unkeyed += 1;
-            } else {
-                self.rekey = true;
-                self.stats.over_budget += 1;
-                break;
+            // the older of the two fronts that can go.
+            let segment = (self.track.segments().len() > 1)
+                .then(|| self.track.first_t())
+                .flatten();
+            let chunk = self
+                .visual
+                .second_start()
+                .and_then(|_| self.visual.first_start());
+            match (segment, chunk) {
+                (Some(s), Some(c)) if c < s => self.drop_chunk(),
+                (Some(_), _) => {
+                    self.track.pop_front();
+                    self.stats.evicted_segments += 1;
+                }
+                (None, Some(_)) => self.drop_chunk(),
+                (None, None) if self.track.trim_unkeyed() => self.stats.evicted_unkeyed += 1,
+                (None, None) => {
+                    self.rekey = true;
+                    self.visual.close_soon();
+                    self.stats.over_budget += 1;
+                    break;
+                }
             }
         }
+    }
+
+    fn drop_chunk(&mut self) {
+        self.visual.pop_front();
+        self.stats.evicted_chunks += 1;
     }
 
     pub(crate) fn observed(
@@ -237,10 +267,38 @@ impl Inner {
         self.push(t, Kind::Input { kind, at, target });
     }
 
+    /// takes the frame on screen at `t`, flattened in composite order;
+    /// `approximated` counts the layers whose look the IR does not carry.
+    pub(crate) fn frame<'a>(
+        &mut self,
+        t: Millis,
+        scene: impl Iterator<Item = &'a SceneNode> + Clone,
+        approximated: u64,
+    ) -> Result<(), FrameError> {
+        let t = self.clock(t);
+        let cadence = Cadence {
+            every: self.limits.chunk_every,
+            frames: self.limits.chunk_frames,
+        };
+        let taken = self.visual.frame(t, scene, cadence);
+        self.stats.layers_approximated += approximated;
+        self.evict();
+        taken
+    }
+
     pub(crate) fn stats(&self) -> Stats {
+        let counts = self.visual.counts;
         Stats {
+            frames: counts.frames,
+            frames_unchanged: counts.unchanged,
+            frame_errors: counts.errors,
+            skipped: counts.skipped,
+            chunks_closed: counts.closed,
             segments: self.track.segments().len(),
+            chunks: self.visual.chunk_count(),
             semantic_bytes: self.track.bytes(),
+            visual_bytes: self.visual.bytes(),
+            asset_bytes: self.visual.asset_bytes(),
             bytes: self.bytes(),
             ..self.stats
         }
@@ -248,6 +306,9 @@ impl Inner {
 
     /// a copy of what the ring holds now, to read.
     pub(crate) fn window(&self) -> Session {
-        Session::from_events(self.track.events().cloned().collect())
+        Session::from_parts(
+            self.track.events().cloned().collect(),
+            Screen::of(&self.visual),
+        )
     }
 }

@@ -5,15 +5,18 @@
 
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
+use engine::compositor::{Compositor, Layer, SceneNode};
 use sem::{Actor, Millis, Receipt, ReceiptSink, Revision, SemId, Snapshot, Stage};
 
+use crate::error::FrameError;
 use crate::event::InputKind;
 use crate::limits::{Limits, Stats};
 use crate::ring::Inner;
 use crate::session::Session;
 
 /// records one app session as data: what each actor observed, the state
-/// the app projected, every stage of every receipt, a person's input.
+/// the app projected, every stage of every receipt, a person's input, and
+/// the frames on screen.
 ///
 /// it only reads: nothing it is given is changed, no request is created,
 /// nothing is executed. times are the caller's (`sem` never reads a clock
@@ -83,6 +86,34 @@ impl Recorder {
     /// (`Compositor::hit`).
     pub fn input(&self, t: Millis, kind: InputKind, at: Option<[f32; 2]>, target: Option<SemId>) {
         lock(&self.inner).input(t, kind, at, target);
+    }
+
+    /// the frame on screen at `t`, as the compositor holds it after the
+    /// app built it: the visible layers in composite order (z order, then
+    /// creation), their nodes flattened in push order. call it once per
+    /// rendered frame. a layer's opacity, effects and clip rect are not in
+    /// the monster IR v0: its nodes are recorded as drawn inside it and
+    /// `Stats::layers_approximated` counts the layer.
+    pub fn frame(&self, t: Millis, compositor: &Compositor) -> Result<(), FrameError> {
+        let mut layers: Vec<&Layer> = compositor
+            .layers()
+            .iter()
+            .filter(|l| l.visible && l.opacity > 0.0)
+            .collect();
+        layers.sort_by_key(|l| l.z_order);
+        let approximated = layers
+            .iter()
+            .filter(|l| l.opacity < 1.0 || l.has_effects() || l.clip_rect.is_some())
+            .count();
+        let scene = layers.iter().flat_map(|l| l.nodes().iter());
+        let approximated = u64::try_from(approximated).unwrap_or(u64::MAX);
+        lock(&self.inner).frame(t, scene, approximated)
+    }
+
+    /// a frame given as its nodes in draw order, for a scene that does
+    /// not live in a compositor.
+    pub fn frame_scene(&self, t: Millis, scene: &[SceneNode]) -> Result<(), FrameError> {
+        lock(&self.inner).frame(t, scene.iter(), 0)
     }
 
     /// a copy of what the ring holds now, to read back.

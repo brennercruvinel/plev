@@ -25,6 +25,10 @@ serde = { workspace = true, features = ["rc"], optional = true }
 thiserror.workspace = true
 
 [dev-dependencies]
+# the showcase todo page is the real scene the recording cost is measured
+# on (tests/session/measure.rs); the showcase is only read.
+showcase = { path = "../showcase" }
+comps.workspace = true
 indexmap.workspace = true
 serde_json.workspace = true
 

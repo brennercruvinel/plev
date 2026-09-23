@@ -6,18 +6,23 @@
 
 use std::collections::HashMap;
 
+use engine::compositor::SceneNode;
 use sem::{Millis, Receipt, RequestId, SemId, Stage};
 
 use crate::error::ReadError;
 use crate::event::{Event, Kind};
+use crate::screen::Screen;
 use crate::state::State;
 
-/// a recorded window, read by time.
+/// a recorded window, read by time: the semantic track (events) and the
+/// visual track (frames). the semantic track reads without decoding a
+/// single frame.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Session {
     events: Vec<Event>,
     /// indices of the full snapshots, the semantic keyframes, in order.
     keys: Vec<usize>,
+    screen: Screen,
 }
 
 /// one receipt as the window holds it at some time: the stages recorded
@@ -33,15 +38,59 @@ pub struct ReceiptAt {
 }
 
 impl Session {
-    /// a session over recorded events, in the order they were recorded.
+    /// a session over recorded events, in the order they were recorded,
+    /// without frames.
     pub fn from_events(events: Vec<Event>) -> Session {
+        Session::from_parts(events, Screen::default())
+    }
+
+    pub(crate) fn from_parts(events: Vec<Event>, screen: Screen) -> Session {
         let keys = events
             .iter()
             .enumerate()
             .filter(|(_, e)| matches!(e.kind, Kind::Snapshot { .. }))
             .map(|(at, _)| at)
             .collect();
-        Session { events, keys }
+        Session {
+            events,
+            keys,
+            screen,
+        }
+    }
+
+    /// what was on screen at `t`: the frame taken last at or before `t`,
+    /// played back from the visual track and lowered to compositor nodes
+    /// (the kinds the monster IR v0 carries; see `Stats::skipped`).
+    /// `None` before the first frame the window holds.
+    pub fn scene_at(&self, t: Millis) -> Result<Option<Vec<SceneNode>>, ReadError> {
+        self.screen.scene_at(t)
+    }
+
+    /// the time of the frame on screen at `t`.
+    pub fn frame_at(&self, t: Millis) -> Option<Millis> {
+        self.screen.frame_at(t)
+    }
+
+    /// every frame time the window holds, in order.
+    pub fn frame_times(&self) -> Vec<Millis> {
+        self.screen.times()
+    }
+
+    /// the first and the last frame time the window holds.
+    pub fn frames_span(&self) -> Option<(Millis, Millis)> {
+        self.screen.span()
+    }
+
+    /// the visual keyframes: where each chunk of frames starts. a time
+    /// reads from the chunk that starts last at or before it.
+    pub fn frame_keys(&self) -> Vec<Millis> {
+        self.screen.keys()
+    }
+
+    /// the encoded size of each chunk of frames and how many assets it
+    /// references.
+    pub fn chunk_sizes(&self) -> Vec<(usize, usize)> {
+        self.screen.sizes()
     }
 
     /// every event, in order.

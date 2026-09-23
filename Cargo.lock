@@ -3856,12 +3856,14 @@ dependencies = [
 name = "rec"
 version = "0.1.0"
 dependencies = [
+ "comps",
  "engine",
  "indexmap",
  "monster",
  "sem",
  "serde",
  "serde_json",
+ "showcase",
  "thiserror 2.0.18",
 ]
 

@@ -43,6 +43,7 @@ fn the_ring_keeps_the_last_max_age_and_opens_at_a_full_snapshot() -> Fallible {
         max_age: 5_000,
         max_bytes: usize::MAX,
         full_every: 1_000,
+        ..Limits::default()
     };
     let rec = Recorder::new(limits);
     let mut counter = Counter { n: 0 };
@@ -82,6 +83,7 @@ fn the_ring_stays_under_its_byte_budget() -> Fallible {
         max_age: u64::MAX,
         max_bytes: 12_000,
         full_every: 500,
+        ..Limits::default()
     };
     let rec = Recorder::new(limits);
     let mut counter = Counter { n: 0 };

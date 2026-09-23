@@ -3,8 +3,10 @@
 //! creating a request, the ring within its limits.
 
 mod apps;
+mod measure;
 mod replay;
 mod ring;
 mod secret;
 mod semantic;
 mod thesis;
+mod visual;
