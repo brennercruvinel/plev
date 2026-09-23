@@ -54,6 +54,9 @@ image.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 unicode-segmentation.workspace = true
+# the semantic contract (docs/ADR/semantic-binding-beside-the-scene.md):
+# the compositor binds each `SemId` to its rect beside the scene.
+sem.workspace = true
 accesskit = { workspace = true, optional = true }
 accesskit_winit = { workspace = true, optional = true }
 
