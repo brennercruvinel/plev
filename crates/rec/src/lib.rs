@@ -84,6 +84,7 @@
 mod error;
 mod event;
 mod format;
+mod hook;
 mod limits;
 mod payload;
 mod persist;
@@ -100,6 +101,7 @@ mod weigh;
 pub use error::{FileError, FrameError, ReadError};
 pub use event::{Event, InputKind, Kind};
 pub use format::{ANIMATION_MAGIC, Build, FileKind, MAGIC, VERSION, probe};
+pub use hook::install_panic_hook;
 pub use limits::{Limits, Stats};
 pub use persist::Persisted;
 pub use recorder::{Recorder, Sink};

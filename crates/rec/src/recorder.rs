@@ -4,7 +4,7 @@
 //! across the app's code, so no call can find it taken by the same thread.
 
 use std::path::Path;
-use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError, TryLockError};
 
 use engine::compositor::{Compositor, Layer, SceneNode};
 use sem::{Actor, Millis, Receipt, ReceiptSink, Revision, SemId, Snapshot, Stage};
@@ -121,6 +121,16 @@ impl Recorder {
     /// a copy of what the ring holds now, to read back.
     pub fn snapshot_window(&self) -> Session {
         lock(&self.inner).window()
+    }
+
+    /// the window, when the lock is free now (the panic hook never waits
+    /// on a lock its own thread may hold).
+    pub(crate) fn try_window(&self) -> Option<Session> {
+        match self.inner.try_lock() {
+            Ok(inner) => Some(inner.window()),
+            Err(TryLockError::Poisoned(poisoned)) => Some(poisoned.into_inner().window()),
+            Err(TryLockError::WouldBlock) => None,
+        }
     }
 
     /// writes the retained window to `path` as a session `.monster` file
