@@ -2,7 +2,7 @@
 type: reference
 status: living
 date: 2026-09-23
-tags: [task-73, perf, stages, measurement, render-on-demand, incremental, generative-runtime]
+tags: [task-73, perf, stages, measurement, gpu-timestamps, render-on-demand, incremental, generative-runtime]
 ---
 
 # task-73 phase 1: what each stage of a frame costs
@@ -558,3 +558,243 @@ frames drawn: 120 of 120. the last turn's scene: 1 layers (z 0 0 nodes), 0 ids b
 | gpu buffer upload | bytes | 0 | 0 | 0 | 0 | 0 | 0 |
 | encode and submit | draw calls | 1 | 1 | 1 | 1 | 22.1 | 32.5 |
 | gpu wait | - | 1 | 1 | - | - | 602.8 | 817.3 |
+
+## fase 1b: what the gpu itself spends
+
+phase 1 read the gpu side as a wait: the time from submit to seeing the
+queue empty, an upper bound that holds the latency of a submit as well as
+the work. phase 1b adds gpu timestamp queries, so the gpu reports its own
+clock around each pass, and runs the nine scenarios again. nothing here is
+an optimization or a design decision, and phase 1 above stays as it was
+measured.
+
+### how to reproduce
+
+- machine: the same apple m4 (10-core gpu, metal 4), 16 GB, macOS 26.6.2,
+  metal through wgpu 28, rustc 1.98.1.
+- build: the workspace release profile.
+- the tables: `cargo run --release -p showcase --example measure -- --out
+  <file.md>`. timestamps are on by default now (the runner asks the
+  renderer for `RenderConfig::gpu_timestamps`); `--no-gpu-timestamps`
+  runs without them. the other flags are as in phase 1.
+- the runs: ten with timestamps and five without (the last nine
+  interleaved on and off), 120 turns each after 10 warm-up turns, 1200x800
+  logical at scale 2, theme core; two more with timestamps at `--scale 1`.
+  the machine was shared with other agents (load average 4 to 12 during
+  the runs), and so was its gpu.
+- the engine side: `cargo test -p engine perf::`; the timestamp tests skip
+  where no adapter has `TIMESTAMP_QUERY`.
+
+### what is measured
+
+- `RenderConfig::gpu_timestamps` (off by default) makes the device ask for
+  `TIMESTAMP_QUERY`, and only when the adapter has it. off, or on an
+  adapter without it, the device asks for no feature and the frame is what
+  it was. this m4 has it. it does not have `TIMESTAMP_QUERY_INSIDE_PASSES`
+  (wgpu offers that on metal for amd and intel gpus only), so the
+  timestamps are per pass: each layer pass and the composite pass write
+  one where they start and one where they end
+  (`RenderPassDescriptor::timestamp_writes`). a frame writes them only
+  while `perf::stages` is on.
+- a frame's queries are resolved once the gpu has finished that frame, by
+  the next frame's encoder, and read back from a buffer mapped on submit;
+  nothing waits for them (`engine::perf::gpu_time`). the first version
+  resolved in the same command buffer and read the composite's end as zero
+  in some frames: metal writes an end-of-pass sample when the pass's
+  fragment work completes, and nothing orders the resolve's blit after it.
+  so with the gpu sync on, the gpu stages a turn records belong to the
+  frame drawn before it (without the sync, a few frames before). in every
+  scenario here consecutive drawn frames do the same work, so the
+  per-scenario percentiles hold; one turn's gpu row does not describe that
+  turn.
+- three stages sit next to the gpu wait: `gpu span (timestamps)`, the
+  first pass's start to the composite's end; `gpu layer passes`, the first
+  layer pass's start to the last one's end (items: passes with both
+  timestamps); `gpu composite pass`, from the later of its own start and
+  the layer passes' end, to its end. the cut follows the gpu's timeline
+  rather than each pass's own start and end: in the first runs a
+  keystroke's composite read 3033 us start to end against a layer pass of
+  1908 and a span of 3150, because on this tile-based gpu the composite's
+  vertex stage starts alongside the layer pass and its fragments wait for
+  the layer's texture. with the cut, layers and composite add up to the
+  span.
+- submit latency is the gpu wait's p50 minus the span's p50: what the
+  wait holds beyond the gpu's own work (scheduling the command buffer,
+  seeing it complete through the poll and, with timestamps on, the resolve
+  of the previous frame's queries).
+- `StageFrame::gpu_micros` (the span) is what a frame loop feeds
+  `PerfMonitor::record_gpu_micros`. the runner feeds its monitor every
+  turn and prints what it holds after the last one
+  (`PerfSnapshot::gpu_micros`: 220 us on the floor to 1156 us in the
+  editor in the run below).
+
+### timestamps change no pixel and cost little
+
+- same pixels: `showcase --render` at 9522ee5 and at the head of this
+  branch give the same sha256 for Todo (hoff 2x, core 1x) and Editor (core
+  1x, hoff 2x). the engine test
+  `timestamps_draw_the_same_pixels_as_a_plain_context` draws one scene on
+  a plain context and on one with timestamps and stages on, and compares
+  the bytes.
+- off, the frame path runs two `Option` checks more: no feature, no query
+  set, no timestamp write. only `window::draw_frame` writes timestamps; the
+  public `encode_layer_passes` and `encode_composite_pass` keep their
+  signatures and write none.
+- on, the gpu wait's median over the ten runs is 0 to 153 us longer than
+  over the five runs without (a resolve blit and the pass samples per
+  frame), and the cpu 5 to 17 us longer (the resolve encoded, the readback
+  read). runs of the same kind spread as much.
+
+### summary
+
+1200x800 logical at scale 2 (2400x1600 physical), theme core, times in
+microseconds, p50 over the drawn turns of each run. each cell is the
+median over the ten runs with timestamps, the lowest and highest run in
+parentheses. cpu is the frame's p50 minus the gpu wait's p50, as in phase
+1.
+
+| scenario | frame | cpu | gpu wait | gpu span | submit latency | gpu layer passes | gpu composite |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| a. type in the todo input | 1618 (1550 to 3215) | 149 (133 to 234) | 1467 (1414 to 2980) | 1108 (1032 to 2084) | 392 (332 to 896) | 658 (615 to 1280) | 446 (417 to 686) |
+| b. toggle a todo item | 1509 (1281 to 3636) | 131 (124 to 838) | 1379 (1157 to 2798) | 1017 (816 to 1704) | 386 (336 to 1094) | 597 (472 to 1019) | 420 (344 to 684) |
+| c. hover a list (16 drawn turns) | 1401 (1224 to 4312) | 130 (122 to 810) | 1277 (1091 to 3502) | 892 (724 to 2700) | 388 (351 to 802) | 469 (370 to 1461) | 422 (354 to 1239) |
+| d. modal mid-opening | 784 (764 to 1215) | 47 (44 to 184) | 733 (719 to 1031) | 440 (439 to 499) | 293 (279 to 532) | no pass | 440 (439 to 499) |
+| e. type in a 100k-line document | 1444 (1164 to 4059) | 210 (194 to 1131) | 1217 (952 to 2928) | 862 (606 to 1888) | 373 (323 to 1040) | 688 (484 to 1510) | 174 (122 to 378) |
+| e'. type in the Editor page | 1781 (1694 to 4727) | 190 (182 to 1226) | 1586 (1505 to 3501) | 1181 (1174 to 2728) | 395 (331 to 773) | 634 (633 to 1489) | 542 (540 to 1238) |
+| f. idle redraw | 983 (856 to 2590) | 48 (45 to 471) | 931 (811 to 2119) | 574 (496 to 1326) | 337 (283 to 792) | no pass | 574 (496 to 1326) |
+| g. focused field, no typing | 987 (924 to 2476) | 50 (46 to 423) | 937 (868 to 2053) | 576 (572 to 1326) | 345 (295 to 727) | no pass | 575 (572 to 1325) |
+| h. empty frame | 524 (458 to 1145) | 31 (27 to 258) | 492 (426 to 888) | 215 (170 to 394) | 283 (252 to 494) | no pass | 215 (170 to 394) |
+
+without timestamps (five runs), the medians of the gpu wait: a 1466, b
+1231, c 1124, d 681, e 1084, e' 1487, f 848, g 847, h 420; of the cpu: a
+141, b 123, c 121, d 42, e 193, e' 178, f 41, g 41, h 22.
+
+### what the numbers show
+
+these are readings for phase 2, not decisions.
+
+1. the gpu's own work per frame is 215 us (the empty frame: a composite
+   of one empty layer) to about 1.2 ms (a keystroke in the Editor page),
+   medians. the wait of phase 1 held about 280 to 400 us more in every
+   scenario, whatever the content: that is submit latency, not work.
+   taken against the waits without timestamps it reads 205 to 360 us.
+2. with the latency out, the frame is still bound by the gpu: the span is
+   4 to 12 times the cpu of the same frame (the editor 862 against 210,
+   the idle redraw 574 against 48, a todo keystroke 1108 against 149).
+   phase 1 read 4 to 15 times with the wait.
+3. a dirty layer's pass costs 470 to 690 us whatever it holds: 35 nodes
+   and 22 draws for the todo keystroke (658), 118 nodes and 3 draws in
+   the 100,000-line editor (688), 91 nodes in the Editor page (634). it
+   follows pixels: every layer's texture is the whole surface, and its
+   pass clears, draws into and stores the msaa 4x texture and resolves
+   it. the list's rows sit on a layer clipped to the list, and its pass
+   still reads 469.
+4. the composite runs on every drawn frame and costs about what a layer
+   pass does: 420 to 575 us for the four layers of a gallery page (two of
+   them empty), 174 to 215 us for one layer. a frame that rebuilds no
+   layer (the idle redraw, the focused caret, the modal mid-opening)
+   spends its whole gpu time there: 440 to 576 us.
+5. a keystroke splits into a layer pass and a composite of about the same
+   size (todo 658 and 446, Editor page 634 and 542); in the editor alone,
+   whose scene is one layer, the composite is a fifth of the span (688
+   and 174).
+6. the gpu runs at clock levels that move between runs: the editor's
+   layer pass read 484, 550 or 825 us depending on the run and its
+   composite 122, 140 or 209 in the same runs, the same ratios (1.14 and
+   1.7). within a run the p50 is steady; the medians above sit between the
+   levels. at scale 1 (a quarter of the pixels) the levels spread further:
+   two runs read the empty frame at 57 and 72 us and the todo keystroke's
+   layer pass at 186 and 507, and one run read the same four-layer
+   composite at 127 us in one scenario and 348 in another. at that size
+   the times do not follow the pixel count alone.
+
+### limits of this measurement
+
+- a turn's gpu stages are the previous drawn frame's: the resolve waits
+  for the gpu to finish. a scenario whose drawn frames differ from one to
+  the next would need its readings attributed back.
+- a pass is the finest grain: the draws inside a layer pass are not split.
+  a backdrop blur's compose and blur passes and the layer effects are not
+  timed (they would fall inside the span); none of these scenarios has
+  one (one pass per dirty layer in every row).
+- on metal a pass that draws nothing (a dirty layer with no node, only
+  its clear) samples its start and never its end, so its time is in the
+  span and not in `gpu layer passes`. none of these scenarios has one.
+- the gpu was shared with other processes, and a timestamp pair holds
+  whatever else the gpu ran between its two samples. the clock levels
+  (reading 6) move the absolute numbers by up to 1.7 times between runs.
+- the loop runs turns back to back with the gpu sync; a window at 60 Hz
+  leaves the gpu idle between frames, where it may clock lower still.
+- timestamps are written by `window::draw_frame` only (the frame of every
+  app that presents through it, and the headless renderer). the engine
+  `App`'s own tail (`window/render.rs`) writes none and feeds no gpu time
+  to its monitor; that file is outside this task's list.
+- webgpu offers `TIMESTAMP_QUERY` too; the code builds for wasm but was
+  not run in a browser.
+
+### candidates for phase 2 (not implemented)
+
+added to phase 1's list, with the numbers above:
+
+- the composite is close to half the gpu work of a keystroke and all of
+  it in a frame that rebuilds no layer: composing only the layers with
+  content, and nothing when no layer and no opacity changed, is where 420
+  to 575 us per frame go.
+- a layer pass costs the same for 3 draws as for 22: redrawing the
+  damaged region of a dirty layer rather than its whole surface is where
+  its 470 to 690 us go. a hypothesis to test there, not measured: the pass
+  stores its multisampled attachment (`StoreOp::Store`, which the backdrop
+  resume needs) as well as the resolve; a pass with no backdrop could
+  discard the samples.
+- the 200 to 400 us of submit latency is not work. in a window the cpu
+  does not wait for it, so it adds to the time until a frame is seen, not
+  to the frame budget; the span is the gpu's share of the budget.
+
+### the tables
+
+one run with timestamps (the eighth, a quiet one), the summary and gpu
+tables as `measure --out` wrote them:
+
+120 measured turns per scenario after 10 warm-up turns, fixed tick of 16.67 ms, viewport 1200x800 logical at scale 2 (2400x1600 physical), theme core, release build, stages on with the gpu wait, gpu timestamps on. time is microseconds; p50 and p95 are nearest-rank over the turns.
+
+| scenario | frames drawn | frame p50 | frame p95 | input p50 | scene build p50 | draw p50 | gpu wait p50 | layers rebuilt p50 | nodes rebuilt p50 | upload bytes p50 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| type | 120 of 120 | 1577.3 | 2277.8 | 0.08 | 26.5 | 116.0 | 1436.3 | 1 | 35 | 45504 |
+| toggle | 120 of 120 | 1439.8 | 1646.2 | 23.5 | 8.42 | 97.3 | 1310.8 | 1 | 34 | 40080 |
+| hover | 16 of 120 | 0.38 | 1404.3 | 0.33 | 0 | 0 | 0 | 0 | 0 | 0 |
+| overlay | 120 of 120 | 775.0 | 906.9 | 0 | 8.17 | 37.4 | 728.4 | 0 | 0 | 0 |
+| editor | 120 of 120 | 1604.7 | 2677.0 | 0.96 | 32.8 | 169.2 | 1406.0 | 1 | 118 | 236232 |
+| editor-page | 120 of 120 | 1752.8 | 2535.0 | 0.83 | 30.0 | 149.8 | 1571.2 | 1 | 91 | 166312 |
+| idle | 120 of 120 | 855.8 | 1025.7 | 0 | 8.25 | 37.1 | 810.8 | 0 | 0 | 0 |
+| caret | 120 of 120 | 986.3 | 1846.1 | 0 | 8.29 | 38.0 | 937.5 | 0 | 0 | 0 |
+| floor | 120 of 120 | 511.6 | 779.0 | 0 | 0 | 28.8 | 481.3 | 0 | 0 | 0 |
+
+gpu time per scenario, p50 over the drawn turns. the timestamps of a frame are read one drawn frame later (engine::perf::gpu_time), so a turn's gpu stages are the frame drawn before it. the span runs from the first pass's start to the composite's end; the layer passes from the first one's start to the last one's end; the composite from the end of the layer passes (or its own start) to its end. submit latency is the wait's p50 minus the span's p50.
+
+| scenario | turns read | gpu wait p50 | gpu span p50 | submit latency | layer passes p50 | gpu layer passes p50 | gpu composite p50 | gpu span p95 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| type | 120 of 120 | 1436.3 | 1033.6 | 402.7 | 1 | 615.1 | 418.8 | 1731.8 |
+| toggle | 120 of 120 | 1310.8 | 924.7 | 386.1 | 1 | 539.4 | 384.9 | 988.4 |
+| hover | 16 of 16 | 1278.5 | 889.2 | 389.3 | 1 | 468.2 | 419.8 | 1631.7 |
+| overlay | 120 of 120 | 728.4 | 439.6 | 288.8 | 0 | 0 | 439.6 | 495.6 |
+| editor | 120 of 120 | 1406.0 | 1034.0 | 371.9 | 1 | 825.2 | 208.8 | 1889.3 |
+| editor-page | 120 of 120 | 1571.2 | 1175.6 | 395.6 | 1 | 633.4 | 541.5 | 1929.3 |
+| idle | 120 of 120 | 810.8 | 495.6 | 315.2 | 0 | 0 | 495.6 | 573.6 |
+| caret | 120 of 120 | 937.5 | 572.6 | 364.9 | 0 | 0 | 572.2 | 1351.5 |
+| floor | 120 of 120 | 481.3 | 219.1 | 262.2 | 0 | 0 | 219.1 | 392.4 |
+
+the gpu rows of each scenario's stage table in the same run (the drawn
+turns only for hover; `encode and submit` is the cpu that encoded the same
+passes, for scale):
+
+| scenario | gpu wait p50 | gpu wait p95 | gpu span p50 | gpu span p95 | layer passes p50 | gpu layer passes p50 | gpu layer passes p95 | gpu composite p50 | gpu composite p95 | encode and submit p50 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| type | 1436.3 | 2102.6 | 1033.6 | 1731.8 | 1 | 615.1 | 1008.9 | 418.8 | 609.5 | 37.0 |
+| toggle | 1310.8 | 1516.0 | 924.7 | 988.4 | 1 | 539.4 | 588.8 | 384.9 | 415.6 | 36.3 |
+| hover | 1278.5 | 2094.0 | 889.2 | 1631.7 | 1 | 468.2 | 1205.7 | 419.8 | 468.2 | 42.2 |
+| overlay | 728.4 | 856.3 | 439.6 | 495.6 | 0 | 0 | 0 | 439.6 | 495.6 | 18.4 |
+| editor | 1406.0 | 2498.3 | 1034.0 | 1889.3 | 1 | 825.2 | 1390.1 | 208.8 | 376.2 | 29.5 |
+| editor-page | 1571.2 | 2360.1 | 1175.6 | 1929.3 | 1 | 633.4 | 1298.8 | 541.5 | 687.4 | 30.9 |
+| idle | 810.8 | 979.9 | 495.6 | 573.6 | 0 | 0 | 0 | 495.6 | 573.6 | 17.8 |
+| caret | 937.5 | 1707.1 | 572.6 | 1351.5 | 0 | 0 | 0 | 572.2 | 730.5 | 18.3 |
+| floor | 481.3 | 750.9 | 219.1 | 392.4 | 0 | 0 | 0 | 219.1 | 392.4 | 16.6 |
