@@ -131,3 +131,114 @@ para cima porque não tirava o `constraints` inteiro nem o `focused`
 nulo. o delta não muda porque um `Change` carrega ids e valores, nenhum
 dos campos que saíram da forma. a linha da forma nova é 68 % menor no
 todo com 3 itens, 70 % menor com 103, 61 % menor por escopo de um item.
+
+## estado (2026-09-23, entrega do agente)
+
+branch `task/57b-lean-wire`, base `main @ 22f885e`. a `main` andou um
+commit de docs depois do briefing (`1debd01`, desenho da task-62 fase c;
+tabelas do programa e o arquivo da task-62), sem tocar em código; o
+rebase é do orquestrador na integração.
+
+commits, cada um compilando; gate verde no último:
+
+1. `7d2cbcb` sem: padrões omitidos na forma serde e `default` na leitura
+   (`crates/sem/src/{decl,node,snapshot,request}.rs`), fixture da forma
+   antiga (`OLD_SNAPSHOT`) e golden novo em `crates/sem/tests/wire.rs`.
+2. `df44464` wire: `Observe.source` (padrão `false`), o servidor zera
+   `node.source` na resposta `snapshot` a não ser que pedido, `plev
+   observe --source` (`crates/wire/src/{proto,server}.rs`,
+   `crates/wire/src/bin/plev.rs`, `crates/wire/tests/{codec,server,cli}.rs`).
+3. `e95253a` `sem::redact` (novo, `crates/sem/src/redact.rs`, `pub mod` em
+   `lib.rs`), o wire sobre ele (`crates/wire/src/{lib,server}.rs`), a
+   cópia `crates/wire/src/redact.rs` apagada, `wire::REDACTED` removido
+   (único consumidor: `crates/wire/tests/server.rs`, que lê
+   `sem::redact::REDACTED`).
+4. `1c72d96` rec sobre `sem::redact` (`crates/rec/src/{lib,ring}.rs`), a
+   cópia `crates/rec/src/redact.rs` apagada, teste da linha de `Event` da
+   forma antiga em `crates/rec/tests/session/file.rs`.
+5. `b10cd36` medição: harness do showcase mede a forma servida e a mesma
+   com `source: true` (`crates/showcase/src/view/dispatch.rs`, só o módulo
+   de testes do `agent`); a tabela acima.
+6. este: estado e handoff.
+
+testes (`cargo test --workspace`, linhas de resumo somadas): `main`
+1930 passed, 0 failed, 6 ignored, 69 linhas; branch 1941 passed, 0
+failed, 6 ignored, 69 linhas. os 11 a mais: 3 em `sem/tests/wire.rs`
+(forma antiga lê, campo ausente lê no padrão, `source` roundtrip), 6
+unitários em `sem::redact`, 1 em `wire/tests/server.rs` (`source` só
+quando pedido), 1 em `rec/tests/session/file.rs` (linha antiga do
+`Event`). o teste de parse do `plev` e o roundtrip do codec ganharam o
+campo sem contar a mais.
+
+validação executada, com `CARGO_TARGET_DIR=target/agents/task-57b`,
+`CARGO_INCREMENTAL=0` e debug `line-tables-only`: `cargo test -p sem`,
+`-p wire`, `-p rec`, `-p showcase`, `cargo check -p sem
+--no-default-features`, `./script/gate` (test, clippy `-D warnings`,
+fmt, wasm check do showcase; a perna urnaui pulou por falta de `../urna`),
+`cargo test -p showcase agent_port_cost -- --ignored --nocapture` antes e
+depois. `grep -rn 'REDACTED\|fn length\|fn is_secret\|struct Secrets'
+crates --include='*.rs'` acha a regra só em `crates/sem/src/redact.rs`; a
+outra ocorrência é o teste do wire lendo `sem::redact::REDACTED`.
+
+decisões locais:
+
+- os predicados da forma enxuta (`is_default<T: Default + PartialEq>`,
+  `is_false`, `is_true` e `yes()` para o padrão `true` de `enabled`) são
+  `pub(crate)` em `crates/sem/src/decl.rs`, sob a feature `serde`; o
+  `node.rs` os importa. `Constraints` sai inteira quando é o padrão e,
+  quando não é, cada campo dela no padrão sai também. `Actors` é escrito
+  inteiro quando algum ator está de fora.
+- o `skip` de `source` em `None` entrou no commit 1 com os demais campos
+  do `Node` (é um atributo); o commit 2 ficou só com o wire.
+- no rec o `Secrets::of` é construído a cada estágio contra o último
+  snapshot dele, como a cópia fazia; no wire é capturado uma vez no
+  dispatch, como a cópia fazia. o comportamento dos dois não mudou.
+- as duas cópias não tinham teste unitário; os seis de `sem::redact` são
+  novos e os de comportamento (`rec/tests/session/secret.rs`,
+  `wire/tests/server.rs`) ficaram com as mesmas asserções.
+- `SnapshotReply.focused` (proto do wire, não `SnapshotWire` do sem)
+  continua escrito como `null`: não estava no contrato; são 15 bytes.
+- a função `lean()` do harness (estimativa por filtro de JSON) saiu: a
+  forma servida é a enxuta.
+
+ambiguidades e dívidas, para o orquestrador:
+
+- `Secrets::holds` é a união decidida. ela diverge da cópia do rec num
+  caso só: um `Change` stale sobre um nó que não é do request, não é
+  secreto no snapshot do rec e o rec não conhece; o rec reduzia o valor à
+  length e a união não. o caso é inalcançável hoje: `check::stale`
+  compara os `reads` da ação como `now` os declara, o `before` de um nó
+  fora do `observed` é `None` e o `after` vem do snapshot do dispatcher,
+  onde um secreto já é length. o valor cru de um segredo só entra por
+  `observed.values` de um request, e esses nós estão no request.
+- a forma antiga no rec é uma linha construída no teste (padrões
+  explícitos, `source: null`, um nó com `source`), lida pelo mesmo
+  desserializador de `Event` que `read_events` usa. um arquivo `.monster`
+  gravado antes da mudança não existe no repositório para servir de
+  fixture.
+- docs fora do escopo que citam o usage antigo ou a cópia dupla:
+  `docs/ADR/agents-act-through-the-semantic-contract.md` (linha 157, o
+  usage sem `--source`; linhas 244 a 250, as duas consequências que esta
+  task fecha), `docs/CHANGELOG.md` se a mudança for user-facing (o
+  `--source` é). o how-to de orquestração não cita o usage.
+- risco de integração: nenhum golden fora de sem, wire e rec pinava a
+  forma antiga em bytes (grep em showcase, ide, engine, comps: só nomes
+  de campo em código). o `ide` constrói `Policy` e `Constraints` por
+  literal, o que não muda com atributos serde.
+
+proposta de texto para o ADR (um parágrafo):
+
+a forma serde de `sem` é enxuta: um campo no valor padrão não é escrito
+e, ausente, lê como o padrão, então uma observação e uma linha de sessão
+carregam só o que diz algo (2039 bytes o todo do showcase com 3 itens,
+contra 6419). `source` fica na forma quando existe, porque o gravador
+precisa dele para ir do replay ao código (task-65), mas sai da resposta
+do agent port a não ser que o agente peça (`observe {source: true}`,
+`plev observe --source`): um agente age por id, e o lugar do código que
+projetou um controle não é parte do significado dele. a regra que impede
+um segredo de sair do processo mora num lugar só, `sem::redact`, porque
+`sem` é o dono do que `secret` significa e é o único crate que o wire e o
+rec compartilham; uma regra de segurança escrita duas vezes tinha
+divergido, e o `Secrets` capturado de um request e um snapshot num
+instante é a união das duas regras (os nós do request secretos ou
+desconhecidos, mais todo nó marcado `secret`), fechado por padrão.
