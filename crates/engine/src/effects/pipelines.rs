@@ -99,7 +99,7 @@ impl EffectProcessor {
 // Hot reload
 // ---------------------------------------------------------------------------
 
-#[cfg(feature = "hot-reload")]
+#[cfg(hot_reload)]
 impl EffectProcessor {
     pub fn reload_shader(&mut self, device: &wgpu::Device, filename: &str, source: &str) -> bool {
         let sf = self.surface_format;
@@ -114,7 +114,7 @@ impl EffectProcessor {
                     sf,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
-                    log::error!("Shader reload failed for blur.wgsl: {}", err);
+                    log::error!("Shader reload failed for blur.wgsl: {err}");
                     return false;
                 }
                 self.blur_pipeline = pipeline;
@@ -131,7 +131,7 @@ impl EffectProcessor {
                     sf,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
-                    log::error!("Shader reload failed for shadow.wgsl: {}", err);
+                    log::error!("Shader reload failed for shadow.wgsl: {err}");
                     return false;
                 }
                 self.shadow_pipeline = pipeline;
@@ -148,10 +148,7 @@ impl EffectProcessor {
                     sf,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
-                    log::error!(
-                        "Shader reload failed for composite.wgsl (EffectProcessor): {}",
-                        err
-                    );
+                    log::error!("Shader reload failed for composite.wgsl (EffectProcessor): {err}");
                     return false;
                 }
                 self.composite_pipeline = pipeline;

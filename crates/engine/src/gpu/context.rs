@@ -9,11 +9,11 @@ use super::utils::{ortho_projection, texture_sampler_bgl, uniform_bgl};
 /// embedded at compile time otherwise.
 macro_rules! shader_src {
     ($name:literal) => {{
-        #[cfg(feature = "hot-reload")]
+        #[cfg(hot_reload)]
         {
             crate::hot_reload::shader_source($name)
         }
-        #[cfg(not(feature = "hot-reload"))]
+        #[cfg(not(hot_reload))]
         {
             std::borrow::Cow::<'static, str>::from(include_str!(concat!("shaders/", $name)))
         }
@@ -52,6 +52,14 @@ pub struct GpuContext {
     ///
     /// [`set_projection`]: GpuContext::set_projection
     pub(crate) logical_size: Option<(f32, f32)>,
+    /// Desktop debug builds: watches `src/gpu/shaders/`, see `hot_reload`.
+    #[cfg(hot_reload)]
+    pub(crate) shader_watcher: Option<crate::hot_reload::ShaderWatcher>,
+    /// Desktop debug builds: literal changes applied in place, code changes
+    /// rebuild and relaunch. It lives here only because this is the one
+    /// constructor every app calls.
+    #[cfg(hot_reload)]
+    _source_watcher: Option<crate::hot_reload::SourceWatcher>,
 }
 
 impl GpuContext {
@@ -79,7 +87,7 @@ impl GpuContext {
             ..Default::default()
         });
 
-        let surface = instance.create_surface(window).unwrap();
+        let surface = instance.create_surface(window.clone()).unwrap();
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
@@ -284,6 +292,38 @@ impl GpuContext {
             image_atlas: super::image::ImageAtlasGpu::new(),
             backdrop_pipeline,
             composite_pipeline,
+            #[cfg(hot_reload)]
+            shader_watcher: {
+                let dir = crate::hot_reload::shader_dir();
+                let wake = window.clone();
+                match crate::hot_reload::ShaderWatcher::new(&dir, move || wake.request_redraw()) {
+                    Ok(w) => {
+                        log::info!("shader hot reload on: {}", dir.display());
+                        Some(w)
+                    }
+                    Err(e) => {
+                        log::error!("shader hot reload off: {e}");
+                        None
+                    }
+                }
+            },
+            #[cfg(hot_reload)]
+            _source_watcher: {
+                let wake = window.clone();
+                match crate::hot_reload::SourceWatcher::new(
+                    &crate::hot_reload::source_dirs(),
+                    move || wake.request_redraw(),
+                ) {
+                    Ok(w) => {
+                        log::info!("source hot reload on: crates/*/src");
+                        Some(w)
+                    }
+                    Err(e) => {
+                        log::error!("source hot reload off: {e}");
+                        None
+                    }
+                }
+            },
             composite_bind_group_layout,
             opacity_bind_group_layout,
             composite_sampler,

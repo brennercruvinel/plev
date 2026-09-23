@@ -9,6 +9,22 @@ status: living
 
 ## unreleased
 
+- hot reload on by default (2026-09-22, adr
+  hot-reload-on-by-default-in-gpu-context): the shader watcher moved from
+  the engine's `window::App` into `GpuContext`, wakes the loop with
+  `request_redraw`, is polled by `present_frame` (`effects` is now `&mut`
+  there) and marks every layer dirty on a swap; every debug desktop build
+  of every app has it. fixes on the way: `shader_dir` pointed at a
+  directory that did not exist, `reload_shader` used the raw surface
+  format instead of the srgb view format, the narrate root did not match
+  `file!()`. `cfg(hot_reload)` from build.rs replaces the feature cfg;
+  release, wasm and mobile are unchanged. literal hot reload
+  (`hot_reload/literals.rs`, the rsx-hotreload idea without the macro):
+  a saved `.rs` whose only change is strings or hex colors is applied to
+  the open window, state intact, at `TextNodeKey`, `TextMeasurer`,
+  `push_to_layer` and the clear color; a code change rebuilds
+  (`cargo build -p $CARGO_PKG_NAME --bin`) and re-execs the running
+  binary. `cargo run -p showcase` alone is the dev loop.
 - showcase, one page per component (2026-09-21, adr
   showcase-one-page-per-component): the sidebar is a folding tree of
   three groups (Foundations, Components alphabetical, Apps Demo) over

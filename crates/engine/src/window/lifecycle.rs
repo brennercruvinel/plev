@@ -173,11 +173,9 @@ impl super::App {
     }
 
     pub(crate) fn handle_about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        #[cfg(feature = "hot-reload")]
-        {
-            if self.check_shader_reload() || self.check_narrate_reload() {
-                self.compositor.invalidate();
-            }
+        #[cfg(hot_reload)]
+        if self.check_narrate_reload() {
+            self.compositor.invalidate();
         }
 
         // Render on demand: schedule a frame only when something changed or

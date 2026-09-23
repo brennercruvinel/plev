@@ -142,14 +142,11 @@ impl Parser {
             "image" => builder::image(),
             "spacer" => builder::spacer(),
             _ if name.starts_with(|c: char| c.is_ascii_uppercase()) => {
-                log::warn!(
-                    "Hot reload: custom component '{}' rendered as placeholder",
-                    name
-                );
+                log::warn!("Hot reload: custom component '{name}' rendered as placeholder");
                 builder::div()
             }
             _ => {
-                log::warn!("Hot reload: unknown element '{}'", name);
+                log::warn!("Hot reload: unknown element '{name}'");
                 return None;
             }
         };

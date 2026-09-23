@@ -95,6 +95,15 @@ at crate level to park unwired code: wire it or delete it (the showcase
 todo page's keys sat behind that allow for a release; nobody could type
 in it).
 
+dev-only code (watchers, the read-from-disk shader path, literal
+overrides) is gated on `#[cfg(hot_reload)]`, never on
+`#[cfg(feature = "hot-reload")]`: the feature is on by default and
+crates/engine/build.rs turns the cfg on only for a desktop debug build,
+so release, wasm and mobile never see it. a chokepoint that applies a
+dev override (`TextNodeKey::new`, `Compositor::push_to_layer`) keeps the
+`#[cfg(hot_reload)]` on the one line that calls into `hot_reload`, so
+the production path reads without it.
+
 the showcase is one page per comps widget (`crates/showcase/src/view/
 pages/table.rs`, three groups: Foundations, Components, Apps Demo). a
 new widget ships its page in the same change; a widget the design

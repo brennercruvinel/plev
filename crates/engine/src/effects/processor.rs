@@ -85,9 +85,9 @@ impl EffectProcessor {
 
         // -- Effect pipelines (extracted for hot-reload support) --
 
-        #[cfg(feature = "hot-reload")]
+        #[cfg(hot_reload)]
         let blur_src = crate::hot_reload::shader_source("blur.wgsl");
-        #[cfg(not(feature = "hot-reload"))]
+        #[cfg(not(hot_reload))]
         let blur_src: std::borrow::Cow<'_, str> = include_str!("../gpu/shaders/blur.wgsl").into();
         let blur_pipeline = Self::create_blur_pipeline(
             device,
@@ -97,9 +97,9 @@ impl EffectProcessor {
             surface_format,
         );
 
-        #[cfg(feature = "hot-reload")]
+        #[cfg(hot_reload)]
         let shadow_src = crate::hot_reload::shader_source("shadow.wgsl");
-        #[cfg(not(feature = "hot-reload"))]
+        #[cfg(not(hot_reload))]
         let shadow_src: std::borrow::Cow<'_, str> =
             include_str!("../gpu/shaders/shadow.wgsl").into();
         let shadow_pipeline = Self::create_shadow_pipeline(
@@ -110,9 +110,9 @@ impl EffectProcessor {
             surface_format,
         );
 
-        #[cfg(feature = "hot-reload")]
+        #[cfg(hot_reload)]
         let comp_src = crate::hot_reload::shader_source("composite.wgsl");
-        #[cfg(not(feature = "hot-reload"))]
+        #[cfg(not(hot_reload))]
         let comp_src: std::borrow::Cow<'_, str> =
             include_str!("../gpu/shaders/composite.wgsl").into();
         let composite_pipeline = Self::create_effect_composite_pipeline(

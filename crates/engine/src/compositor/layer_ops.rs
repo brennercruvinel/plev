@@ -71,6 +71,14 @@ impl Compositor {
         self.layers.iter().find(|l| l.id == id)
     }
 
+    /// Redraw every layer on the next frame even if its scene is unchanged
+    /// (a shader reload: the cached textures were drawn with the old one).
+    pub fn mark_all_dirty(&mut self) {
+        for layer in &mut self.layers {
+            layer.dirty = true;
+        }
+    }
+
     pub fn mark_layer_clean(&mut self, id: LayerId) {
         if let Some(layer) = self.layers.iter_mut().find(|l| l.id == id) {
             layer.dirty = false;

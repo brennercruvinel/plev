@@ -55,8 +55,9 @@ status usados: `reference` (conhecimento congelado de uma sessao), `accepted` (d
 | data | adr | status | resumo |
 |------|-----|--------|--------|
 | 2024-01-22 | [hot-reload-design](hot-reload-design.md) | reference | 7 implementacoes estudadas, 3 tiers: shader (vello), DSL (makepad), rust (subsecond). dylib descartado (typeid UB) |
-| 2024-02-06 | [shader-hot-reload-adr](shader-hot-reload-adr.md) | reference | shader reload via notify watcher + pipeline recreation, errorscopeguard, channel polling |
+| 2024-02-06 | [shader-hot-reload-adr](shader-hot-reload-adr.md) | reference, adr-3 reversed | shader reload via notify watcher + pipeline recreation, errorscopeguard; channel polling in about_to_wait replaced by request_redraw (2026-09-22) |
 | 2024-02-18 | [narrate-hot-reload-adr](narrate-hot-reload-adr.md) | reference | narrate DSL reload via runtime parser + override map, re-parse on access |
+| 2026-09-22 | [hot-reload-on-by-default-in-gpu-context](hot-reload-on-by-default-in-gpu-context.md) | accepted | hot reload on em todo debug build desktop: shader e literal (string, cor hex) trocam na janela aberta, estado intacto, sem macro; código rebuilda e re-exec. ideia do rsx-hotreload do dioxus, sem dioxus; aprendizados em docs/mission/steps/checked/sessao-hot-reload-learnings.md |
 
 ## lint e modularizacao (2024)
 

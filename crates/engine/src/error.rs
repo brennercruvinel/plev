@@ -14,7 +14,7 @@ pub enum PlevError {
     Wasm(&'static str),
 
     /// File watcher error (hot-reload only).
-    #[cfg(feature = "hot-reload")]
+    #[cfg(hot_reload)]
     Watcher(notify::Error),
 }
 
@@ -25,7 +25,7 @@ impl fmt::Display for PlevError {
             Self::Gpu(msg) => write!(f, "gpu: {msg}"),
             #[cfg(target_arch = "wasm32")]
             Self::Wasm(msg) => write!(f, "wasm: {msg}"),
-            #[cfg(feature = "hot-reload")]
+            #[cfg(hot_reload)]
             Self::Watcher(e) => write!(f, "file watcher: {e}"),
         }
     }
@@ -35,7 +35,7 @@ impl std::error::Error for PlevError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Window(e) => Some(e),
-            #[cfg(feature = "hot-reload")]
+            #[cfg(hot_reload)]
             Self::Watcher(e) => Some(e),
             _ => None,
         }
@@ -48,7 +48,7 @@ impl From<winit::error::OsError> for PlevError {
     }
 }
 
-#[cfg(feature = "hot-reload")]
+#[cfg(hot_reload)]
 impl From<notify::Error> for PlevError {
     fn from(e: notify::Error) -> Self {
         Self::Watcher(e)

@@ -17,7 +17,7 @@ use ide::views::workspace::WorkspaceView;
 pub fn render_frame(
     gpu: &mut GpuContext,
     text_system: &mut TextSystem,
-    effects: &EffectProcessor,
+    effects: &mut EffectProcessor,
     texture_pool: &mut TexturePool,
     compositor: &mut Compositor,
     workspace: &mut WorkspaceView,

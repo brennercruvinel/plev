@@ -9,6 +9,8 @@ commit: 3a53399
 
 # adotamos shader hot reload via notify file watcher sobre dylib reloading
 
+> 2026-09-22: adr-3 (channel polling in about_to_wait) is reversed: the watcher now wakes the loop with `Window::request_redraw` and the poll sits in `present_frame`, and the watcher moved from `window::App` (which no app uses) into `GpuContext`. see [hot-reload-on-by-default-in-gpu-context](hot-reload-on-by-default-in-gpu-context.md).
+
 brenner@plev.engineer
 
 ## contexto

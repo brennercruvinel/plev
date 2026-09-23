@@ -275,6 +275,11 @@ impl TextMeasurer {
     /// Measure `text` with an explicit style. Results are cached by
     /// (text, style, width bucket).
     pub fn measure_styled(text: &str, style: &TextStyle, max_width: Option<f32>) -> (f32, f32) {
+        // literal hot reload: measure what the window will show
+        #[cfg(hot_reload)]
+        if let Some(now) = crate::hot_reload::literals::text(text) {
+            return Self::measure_styled(&now, style, max_width);
+        }
         if text.is_empty() {
             return (0.0, 0.0);
         }

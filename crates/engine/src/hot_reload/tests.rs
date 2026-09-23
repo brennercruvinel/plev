@@ -5,7 +5,7 @@ use super::*;
 #[test]
 fn test_shader_dir_exists() {
     let dir = shader_dir();
-    assert!(dir.exists(), "shaders/ directory should exist at {:?}", dir);
+    assert!(dir.exists(), "shader dir should exist at {dir:?}");
     assert!(dir.is_dir());
 }
 
@@ -21,18 +21,17 @@ fn test_shader_source_loads_all() {
     ];
     for name in &shaders {
         let src = shader_source(name);
-        assert!(!src.is_empty(), "Shader {} should not be empty", name);
+        assert!(!src.is_empty(), "Shader {name} should not be empty");
         assert!(
             src.contains("fn"),
-            "Shader {} should contain at least one fn",
-            name
+            "Shader {name} should contain at least one fn"
         );
     }
 }
 
 #[test]
 fn test_poll_changes_empty_initially() {
-    let watcher = ShaderWatcher::new(&shader_dir()).expect("watcher should start");
+    let watcher = ShaderWatcher::new(&shader_dir(), || {}).expect("watcher should start");
     assert!(
         watcher.poll_changes().is_none(),
         "No changes should be pending initially"
@@ -77,10 +76,12 @@ fn test_override_replaces_on_update() {
 }
 
 #[test]
-fn test_src_and_examples_dirs_exist() {
-    let root = project_root();
-    assert!(root.join("src").exists());
-    assert!(root.join("examples").exists());
+fn test_file_macro_is_relative_to_project_root() {
+    // the watcher strips project_root() off absolute paths to get the key
+    // narrate_resolve looks up with file!(); this only works if file!() is
+    // relative to that same root (cargo: the workspace root).
+    let here = project_root().join(file!());
+    assert!(here.is_file(), "{} should exist", here.display());
 }
 
 #[test]

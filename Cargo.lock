@@ -1145,6 +1145,7 @@ dependencies = [
  "notify",
  "notify-debouncer-full",
  "pollster",
+ "proc-macro2",
  "rustc-hash 2.1.2",
  "serde",
  "serde_json",

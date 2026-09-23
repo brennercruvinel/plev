@@ -22,9 +22,16 @@ use crate::narrate_runtime;
 static NARRATE_OVERRIDES: LazyLock<Mutex<HashMap<(String, u32), String>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
-/// Project root for converting absolute paths to relative.
+/// Workspace root: `file!()` in a workspace member is relative to it, and the
+/// watcher reports absolute paths, so this is the prefix that makes the two
+/// match.
 pub fn project_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+    let engine = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    engine
+        .parent()
+        .and_then(|p| p.parent())
+        .map(PathBuf::from)
+        .unwrap_or(engine)
 }
 
 /// Check if an override exists for a narrate block at the given source location.
@@ -85,24 +92,18 @@ impl NarrateWatcher {
                         .into_iter()
                         .filter(|ev| matches!(ev.kind, EventKind::Create(_) | EventKind::Modify(_)))
                         .flat_map(|ev| ev.event.paths)
-                        .filter(|p| {
-                            p.extension()
-                                .and_then(|e| e.to_str())
-                                .map_or(false, |e| e == "rs")
-                        })
+                        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("rs"))
                         .collect();
-                    if !paths.is_empty() {
-                        if tx.send(paths).is_err() {
-                            log::warn!(
-                                "Narrate hot-reload channel closed \
+                    if !paths.is_empty() && tx.send(paths).is_err() {
+                        log::warn!(
+                            "Narrate hot-reload channel closed \
                                  — changes will not be applied"
-                            );
-                        }
+                        );
                     }
                 }
                 Err(errors) => {
                     for e in errors {
-                        log::error!("Narrate watcher error: {:?}", e);
+                        log::error!("Narrate watcher error: {e:?}");
                     }
                 }
             },

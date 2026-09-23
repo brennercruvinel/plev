@@ -145,13 +145,11 @@ fn build() {
         .collect();
     assert!(
         text_nodes.contains(&"Dashboard"),
-        "Dashboard text must survive: got {:?}",
-        text_nodes
+        "Dashboard text must survive: got {text_nodes:?}"
     );
     assert!(
         text_nodes.contains(&"Footer"),
-        "Footer text must survive across 3 skipped dynamic blocks: got {:?}",
-        text_nodes
+        "Footer text must survive across 3 skipped dynamic blocks: got {text_nodes:?}"
     );
 
     // Clean up
@@ -214,12 +212,10 @@ fn parse_skip_mixed_on_when_each_preserves_static_content() {
         .collect();
     assert!(
         text_nodes.contains(&"Header"),
-        "Header text must survive: got {:?}",
-        text_nodes
+        "Header text must survive: got {text_nodes:?}"
     );
     assert!(
         text_nodes.contains(&"Footer"),
-        "Footer text must survive across 3 skipped blocks: got {:?}",
-        text_nodes
+        "Footer text must survive across 3 skipped blocks: got {text_nodes:?}"
     );
 }

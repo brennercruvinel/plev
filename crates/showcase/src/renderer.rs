@@ -14,7 +14,7 @@ use engine::window::present_frame;
 pub fn render_frame(
     gpu: &mut GpuContext,
     text_system: &mut TextSystem,
-    effects: &EffectProcessor,
+    effects: &mut EffectProcessor,
     texture_pool: &mut TexturePool,
     compositor: &mut Compositor,
     view: &mut ShowcaseView,

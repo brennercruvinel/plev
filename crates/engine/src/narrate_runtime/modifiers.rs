@@ -131,7 +131,7 @@ impl Parser {
             }
 
             _ => {
-                log::warn!("Hot reload: unknown modifier '{}'", name);
+                log::warn!("Hot reload: unknown modifier '{name}'");
                 self.try_consume_value();
                 element
             }

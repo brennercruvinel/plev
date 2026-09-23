@@ -18,7 +18,7 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 workspace = true
 
 [features]
-default = ["accessibility"]
+default = ["accessibility", "hot-reload"]
 accessibility = ["dep:accesskit", "dep:accesskit_winit"]
 # Exports the engine's own `#[wasm_bindgen(start)]` entry point on wasm32.
 # Off by default so downstream apps (showcase, ide, ...) can define
@@ -28,7 +28,11 @@ android-game-activity = ["winit/android-game-activity"]
 # Exports the engine's own `android_main` entry on android. Off by default so
 # downstream apps can ship their own GameActivity entry without symbol clash.
 android-entry = []
-hot-reload = ["dep:notify", "dep:notify-debouncer-full"]
+# Shader hot reload (and the experimental narrate DSL override map). On by
+# default, but build.rs only turns the `hot_reload` cfg on for desktop debug
+# builds: release, wasm and mobile compile the embedded `include_str!` path
+# and never start a watcher. Opt out entirely with `--no-default-features`.
+hot-reload = ["dep:notify", "dep:notify-debouncer-full", "dep:proc-macro2"]
 
 [dependencies]
 wgpu.workspace = true
@@ -52,8 +56,6 @@ serde_json.workspace = true
 unicode-segmentation.workspace = true
 accesskit = { workspace = true, optional = true }
 accesskit_winit = { workspace = true, optional = true }
-notify = { workspace = true, optional = true }
-notify-debouncer-full = { workspace = true, optional = true }
 
 [dev-dependencies]
 narrate.workspace = true
@@ -73,6 +75,13 @@ arboard.workspace = true
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger.workspace = true
+
+# file watchers for hot reload: desktop only (the cfg in build.rs matches).
+[target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))'.dependencies]
+notify = { workspace = true, optional = true }
+notify-debouncer-full = { workspace = true, optional = true }
+# tokenizes source files for the literal hot reload (no syn, no parser).
+proc-macro2 = { workspace = true, optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true

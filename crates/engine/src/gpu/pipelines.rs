@@ -348,9 +348,11 @@ impl GpuContext {
 
     // -- Hot reload --
 
-    #[cfg(feature = "hot-reload")]
+    #[cfg(hot_reload)]
     pub fn reload_shader(&mut self, filename: &str, source: &str) -> bool {
-        let surface_format = self.surface_config.format;
+        // same format the pipelines were built with in `new_with_config`
+        // (the srgb view format, not the raw surface format).
+        let surface_format = self.surface_format();
         let msaa_samples = self.config.msaa_samples;
         match filename {
             "quad.wgsl" => {
@@ -363,7 +365,7 @@ impl GpuContext {
                     msaa_samples,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
-                    log::error!("Shader reload failed for quad.wgsl: {}", err);
+                    log::error!("Shader reload failed for quad.wgsl: {err}");
                     return false;
                 }
                 self.quad_pipeline = pipeline;
@@ -380,7 +382,7 @@ impl GpuContext {
                     msaa_samples,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
-                    log::error!("Shader reload failed for rect_sdf.wgsl: {}", err);
+                    log::error!("Shader reload failed for rect_sdf.wgsl: {err}");
                     return false;
                 }
                 self.rect_sdf_pipeline = pipeline;
@@ -397,7 +399,7 @@ impl GpuContext {
                     msaa_samples,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
-                    log::error!("Shader reload failed for shadow_analytic.wgsl: {}", err);
+                    log::error!("Shader reload failed for shadow_analytic.wgsl: {err}");
                     return false;
                 }
                 self.shadow_analytic_pipeline = pipeline;
@@ -415,7 +417,7 @@ impl GpuContext {
                     msaa_samples,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
-                    log::error!("Shader reload failed for text.wgsl: {}", err);
+                    log::error!("Shader reload failed for text.wgsl: {err}");
                     return false;
                 }
                 self.text_pipeline = pipeline;
@@ -433,7 +435,7 @@ impl GpuContext {
                     msaa_samples,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
-                    log::error!("Shader reload failed for image.wgsl: {}", err);
+                    log::error!("Shader reload failed for image.wgsl: {err}");
                     return false;
                 }
                 self.image_pipeline = pipeline;
@@ -451,7 +453,7 @@ impl GpuContext {
                     msaa_samples,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
-                    log::error!("Shader reload failed for backdrop.wgsl: {}", err);
+                    log::error!("Shader reload failed for backdrop.wgsl: {err}");
                     return false;
                 }
                 self.backdrop_pipeline = pipeline;
@@ -468,10 +470,7 @@ impl GpuContext {
                     surface_format,
                 );
                 if let Some(err) = pollster::block_on(guard.pop()) {
-                    log::error!(
-                        "Shader reload failed for composite.wgsl (GpuContext): {}",
-                        err
-                    );
+                    log::error!("Shader reload failed for composite.wgsl (GpuContext): {err}");
                     return false;
                 }
                 self.composite_pipeline = pipeline;

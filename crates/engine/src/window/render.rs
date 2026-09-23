@@ -22,12 +22,17 @@ impl super::App {
         let GpuState::Ready {
             ref mut gpu,
             ref mut text_system,
-            ref effect_processor,
+            ref mut effect_processor,
             ref mut texture_pool,
         } = self.state
         else {
             return;
         };
+
+        #[cfg(hot_reload)]
+        if gpu.poll_shader_reload(effect_processor) {
+            self.compositor.mark_all_dirty();
+        }
 
         let surface = match gpu.surface.as_ref() {
             Some(s) => s,
@@ -147,6 +152,8 @@ impl super::App {
             // write. Linearize the sRGB theme color so the bg shows its true
             // tone instead of a washed-out ~2.5× lighter gray.
             let bg = self.theme.colors.bg.to_linear_array();
+            #[cfg(hot_reload)]
+            let bg = crate::hot_reload::literals::linear(bg);
             wgpu::Color {
                 r: bg[0] as f64,
                 g: bg[1] as f64,

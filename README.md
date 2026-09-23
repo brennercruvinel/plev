@@ -56,6 +56,11 @@ cargo run -p engine --example snake    # any of the windowed demos
 cargo run -p comps --example editor    # the design-system editor demo
 ```
 
+every debug build is its own dev loop: save a `.wgsl`, a string or a hex
+color anywhere in the sources and the open window shows it, state intact;
+save code and the bin rebuilds and relaunches (same pid, same terminal).
+no flag, no macro, no watcher tool; release builds do none of it.
+
 web, same pixels as desktop (`cargo install trunk` first):
 
 ```

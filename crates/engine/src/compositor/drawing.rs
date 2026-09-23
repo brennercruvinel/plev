@@ -51,6 +51,8 @@ impl Compositor {
     }
 
     pub fn push_to_layer(&mut self, layer_id: LayerId, node: SceneNode) {
+        #[cfg(hot_reload)]
+        let node = crate::hot_reload::literals::recolor(node);
         if let Some(layer) = self.layers.iter_mut().find(|l| l.id == layer_id) {
             layer.nodes.push(node);
         } else {
