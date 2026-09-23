@@ -3,10 +3,16 @@
 //! and drawing; the active segment is a raised, edge-lit glass block.
 //! Keyboard focus ([`Tabs::set_focused`]) rings the whole strip with the
 //! accent ring.
+//!
+//! With a [`SemId`] ([`Tabs::sem`]) the render binds the strip and each
+//! segment to the rects it draws and hit-tests them with, and
+//! [`Tabs::project`] declares the strip in a semantic projection; the app
+//! still owns `active`.
 
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::TextMeasurer;
 use engine::theme::{ControlSize, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent};
 use crate::recipe::{focus_ring, glass_pill, shadow_node};
@@ -20,6 +26,7 @@ pub struct Tabs {
     pub active: usize,
     hovered: Option<usize>,
     focused: bool,
+    sem: Option<SemId>,
 }
 
 impl Tabs {
@@ -29,7 +36,55 @@ impl Tabs {
             active: 0,
             hovered: None,
             focused: false,
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds the strip to
+    /// (`Compositor::bind`); each segment binds as `<id>[<index>]`.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this strip as `id` in a projection: a `Role::TabList`
+    /// named `label` whose `selected` state is the key of the active tab
+    /// (its index; empty without tabs), and one `Role::Tab` child
+    /// `<id>[<index>]` per label with a `select` action that reads the
+    /// list's `selected`, so a switch decided on a tab another actor left
+    /// goes stale. The hovered segment is never projected. It only reads
+    /// the widget; the app owns it and runs `select` (sets `active`). Pass
+    /// the id given to [`Tabs::sem`] so the nodes and the bindings name the
+    /// same controls. Returns the list's node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let selected = format!("{id}:selected");
+        for (i, tab) in self.labels.iter().enumerate() {
+            let mut node = b.node(id.key(i.to_string()), Role::Tab, tab.as_str());
+            node.parent(id);
+            node.action("select").reads(selected.as_str());
+        }
+        let active = if self.active < self.labels.len() {
+            self.active.to_string()
+        } else {
+            String::new()
+        };
+        let mut node = b.node(id, Role::TabList, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("selected", active);
+        node
     }
 
     pub fn hovered(&self) -> Option<usize> {
@@ -109,6 +164,13 @@ impl Tabs {
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
         let glass = &theme.glass;
+        let rects = self.item_rects(bounds, theme);
+        if let Some(id) = &self.sem {
+            compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+            for (i, r) in rects.iter().enumerate() {
+                compositor.bind(&id.key(i.to_string()), [r.x, r.y, r.w, r.h]);
+            }
+        }
 
         let radius = theme.shape.tabs.min(bounds.h / 2.0);
         if self.focused {
@@ -128,7 +190,6 @@ impl Tabs {
 
         // Labels: base-2sm (Tabs.module.sass), one style for measure+render.
         let style = theme.typography.base_2sm();
-        let rects = self.item_rects(bounds, theme);
 
         // Active block: raised shadow + edge-light + surface-hover fill at
         // the block radius.

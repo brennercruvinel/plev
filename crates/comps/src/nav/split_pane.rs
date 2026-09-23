@@ -9,9 +9,15 @@
 //! to the app shell). Owners that want the resize cursor should read
 //! [`SplitPane::is_hovered`]/[`is_dragging`](SplitPane::is_dragging) and
 //! set it themselves.
+//!
+//! With a [`SemId`] ([`SplitPane::sem`]) the render binds the divider's
+//! grab area, the rect it hit-tests with (the drawn line and the hit
+//! margin around it), and [`SplitPane::project`] declares the split in a
+//! semantic projection; the app still owns the ratio.
 
 use engine::compositor::Compositor;
 use engine::theme::Theme;
+use sem::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
 use crate::core::{EventResult, Rect, WidgetEvent};
 use crate::recipe::rounded_rect;
@@ -44,6 +50,7 @@ pub struct SplitPane {
     pub grab_margin: f32,
     hovered: bool,
     dragging: bool,
+    sem: Option<SemId>,
 }
 
 impl SplitPane {
@@ -61,7 +68,55 @@ impl SplitPane {
             grab_margin: ((theme.control.divider_hit - divider) / 2.0).max(0.0),
             hovered: false,
             dragging: false,
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds the divider's grab area to
+    /// (`Compositor::bind`).
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this split as `id` in a projection: a `Role::Group` named
+    /// `label` with its desired `ratio` (the first pane's share, a number
+    /// in `0..=1`), editable in that range, and a `set_ratio` action that
+    /// takes a number checked against it and reads the `ratio`. The pixel
+    /// minimums clamp at layout, like a drag, and are not projected;
+    /// hover and drag are never projected. It only reads the widget; the
+    /// app owns it and runs `set_ratio` ([`SplitPane::set_ratio`]). Pass
+    /// the id given to [`SplitPane::sem`] so the node and the binding name
+    /// the same control. Returns the node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let mut node = b.node(id, Role::Group, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("ratio", f64::from(self.ratio))
+            .constraints(Constraints {
+                editable: true,
+                range: Some((0.0, 1.0)),
+                ..Constraints::default()
+            });
+        node.action("set_ratio")
+            .param(ParamSpec {
+                kind: ValueKind::Num,
+                constrained: true,
+            })
+            .reads(format!("{id}:ratio"));
+        node
     }
 
     pub fn ratio(&self) -> f32 {
@@ -139,8 +194,9 @@ impl SplitPane {
         }
     }
 
-    /// The grab area around the divider (hit target).
-    fn grab_rect(&self, bounds: Rect) -> Rect {
+    /// The grab area around the divider (hit target): the visible line
+    /// plus `grab_margin` on each side.
+    pub fn grab_rect(&self, bounds: Rect) -> Rect {
         let d = self.divider_rect(bounds);
         match self.direction {
             SplitDirection::Horizontal => Rect::new(
@@ -209,6 +265,10 @@ impl SplitPane {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
+        if let Some(id) = &self.sem {
+            let g = self.grab_rect(bounds);
+            compositor.bind(id, [g.x, g.y, g.w, g.h]);
+        }
         let d = self.divider_rect(bounds);
         // Rest: the soft glass edge. Hover/drag: the active surface token,
         // slightly widened — the HOFF way to say "grab me" without color.

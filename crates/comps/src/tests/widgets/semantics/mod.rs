@@ -5,6 +5,7 @@
 
 mod action;
 mod form;
+mod nav;
 
 use super::*;
 use sem::{
