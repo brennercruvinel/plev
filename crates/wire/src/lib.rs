@@ -20,13 +20,17 @@
 //! <- {"v":1,"id":"3","type":"stage","request":"4","stage":{"completed":{"result":{}}},"at":…}
 //! ```
 //!
-//! the messages (`proto`) and their codec (`codec`) are pure and compile
-//! everywhere, wasm included. so does the decoding of a snapshot or a
-//! stage a client reads.
+//! the messages (`proto`), their codec (`codec`), the ring of served
+//! revisions (`Ring`) and the protocol against an app (`Server`, which
+//! reaches the app only through `Host`) are pure and compile everywhere,
+//! wasm included.
 
 mod codec;
 mod error;
 mod proto;
+mod redact;
+mod ring;
+mod server;
 
 pub use codec::{Refusal, decode_client, decode_server, encode_client, encode_server};
 pub use error::WireError;
@@ -34,3 +38,6 @@ pub use proto::{
     Act, Ask, Bound, ClientMsg, DeltaReply, Observe, ProtoError, Reply, ServerMsg, SnapshotReply,
     StageReply, VERSION,
 };
+pub use redact::REDACTED;
+pub use ring::{DEFAULT_RING, Ring};
+pub use server::{ConnId, Host, MAX_NAME, Outgoing, Server};
