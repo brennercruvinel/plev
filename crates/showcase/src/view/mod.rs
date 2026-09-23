@@ -20,7 +20,7 @@ mod render;
 #[cfg(test)]
 mod tests;
 
-pub use apps::git::{NavKey, Wake};
+pub use apps::git::{GitWake, NavKey};
 pub use input::EditKey;
 pub use pages::{Body, Group, PAGES, Page, Pane};
 
@@ -152,7 +152,7 @@ impl ShowcaseView {
 
     /// Start the Git tab's worker against the cwd repository. `wake` is
     /// how the worker asks the host for a frame.
-    pub fn connect_git(&mut self, wake: Wake) {
+    pub fn connect_git(&mut self, wake: GitWake) {
         self.panes.git.connect(wake);
     }
 

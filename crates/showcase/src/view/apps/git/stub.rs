@@ -6,7 +6,7 @@ use engine::compositor::Compositor;
 use engine::theme::Theme;
 
 use super::super::text;
-use super::{NavKey, Wake};
+use super::{GitWake, NavKey};
 
 pub struct GitPage;
 
@@ -15,7 +15,7 @@ impl GitPage {
         Self
     }
 
-    pub fn connect(&mut self, _wake: Wake) {}
+    pub fn connect(&mut self, _wake: GitWake) {}
 
     pub fn set_theme(&mut self, _name: &str) {}
 

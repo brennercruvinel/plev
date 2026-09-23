@@ -7,7 +7,7 @@ use engine::compositor::Compositor;
 use engine::theme::Theme;
 
 use super::super::text;
-use super::{NavKey, Wake};
+use super::{GitWake, NavKey};
 use std::sync::mpsc::{Receiver, Sender, channel};
 
 use git::{GitClient, GitEvent};
@@ -37,7 +37,7 @@ impl GitPage {
 
     /// Open the repository containing the cwd and start loading it. The
     /// host passes the callback that wakes its event loop.
-    pub fn connect(&mut self, wake: Wake) {
+    pub fn connect(&mut self, wake: GitWake) {
         let cwd = match std::env::current_dir() {
             Ok(p) => p,
             Err(e) => {

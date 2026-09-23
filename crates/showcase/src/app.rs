@@ -5,7 +5,13 @@
 //! that touches the event loop.
 //!
 //! Frames render on demand; animations (springs, fades) keep requesting
-//! frames only while something is actually moving. On wasm GPU init is
+//! frames only while something is actually moving, and a caret at rest
+//! asks for its next flip: the view's tick answers a [`comps::Wake`], and
+//! the loop sleeps until the earliest deadline (`ControlFlow::WaitUntil`),
+//! or for good when nothing is pending. Input, the git worker, the screen
+//! reader and the agent port wake it as before: a wait ends on any event
+//! (winit: "suspend the thread until either another event arrives or the
+//! given time is reached"). On wasm GPU init is
 //! async: `resumed` spawns `GpuContext::new` and the result comes back
 //! through a `UserEvent::GpuReady` on the event loop proxy. On desktop and
 //! mobile GPU init blocks inside `resumed` instead.
@@ -14,16 +20,17 @@ use std::sync::Arc;
 
 use crate::view::ShowcaseView;
 use crate::{keys, renderer};
-use comps::prelude::WidgetEvent;
+use comps::prelude::{Wake, WidgetEvent};
 use engine::animation::FrameClock;
 use engine::compositor::Compositor;
 use engine::gpu::GpuContext;
 use engine::text::TextSystem;
+use web_time::Instant;
 use winit::application::ApplicationHandler;
-use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
+use winit::event::{ElementState, MouseButton, MouseScrollDelta, StartCause, WindowEvent};
 #[cfg(target_arch = "wasm32")]
 use winit::event_loop::EventLoopProxy;
-use winit::event_loop::{ActiveEventLoop, EventLoop};
+use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 use winit::window::{Window, WindowAttributes, WindowId};
 
@@ -136,6 +143,29 @@ impl App {
         }
     }
 
+    /// What the frame's [`Wake`] asks of the loop, after the frame that
+    /// carries its `now` was drawn: continuous motion draws the next
+    /// frame; a deadline sets the wait to that instant; nothing pending
+    /// sleeps until input. The wait ends early on any event, so the git
+    /// worker, the screen reader and the agent port still get their frame
+    /// through `invalidate` whenever they ask.
+    fn pace(&mut self, event_loop: &ActiveEventLoop, wake: Wake) {
+        match wake.next {
+            Some(next) if next.is_zero() => {
+                // Springs still moving: keep the frames coming.
+                self.compositor.invalidate();
+                if let Some(w) = &self.window {
+                    w.request_redraw();
+                }
+                event_loop.set_control_flow(ControlFlow::Wait);
+            }
+            Some(next) => {
+                event_loop.set_control_flow(ControlFlow::WaitUntil(Instant::now() + next))
+            }
+            None => event_loop.set_control_flow(ControlFlow::Wait),
+        }
+    }
+
     /// Sync surface, projection, and view layout to the window's current
     /// inner size. Called once GPU state becomes `Ready` (and harmless to
     /// call again: `gpu.resize` clamps to at least 1x1).
@@ -167,6 +197,17 @@ impl App {
 }
 
 impl ApplicationHandler<UserEvent> for App {
+    /// The deadline a tick asked for came due: the frame whose tick flips
+    /// the caret. The wait goes back to `Wait` first, since a `WaitUntil`
+    /// in the past would fire on every iteration if the redraw does not
+    /// come (an occluded window); the redraw's own wake sets the next.
+    fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: StartCause) {
+        if let StartCause::ResumeTimeReached { .. } = cause {
+            event_loop.set_control_flow(ControlFlow::Wait);
+            self.invalidate();
+        }
+    }
+
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.window.is_some() {
             return;
@@ -392,7 +433,15 @@ impl ApplicationHandler<UserEvent> for App {
                     return;
                 };
                 let tick = self.clock.tick();
-                let animating = self.view.tick(tick.dt);
+                // The real time since the last frame: a deadline the loop
+                // slept through arrives whole (`dt` is clamped for motion).
+                let wake = self.view.wake(tick.since_last);
+                log::debug!(
+                    "frame: {:.3} s since the last, wake now {} next {:?}",
+                    tick.since_last,
+                    wake.now,
+                    wake.next
+                );
                 renderer::render_frame(
                     gpu,
                     text_system,
@@ -410,13 +459,9 @@ impl ApplicationHandler<UserEvent> for App {
                     let view = &self.view;
                     bridge.update(window, &self.compositor, || view.semantics());
                 }
-                if animating {
-                    // Springs still moving: keep the frames coming.
-                    self.compositor.invalidate();
-                    if let Some(w) = &self.window {
-                        w.request_redraw();
-                    }
-                }
+                // `wake.now` is carried by this frame: the scene was built
+                // after the tick, so a flipped caret is already in it.
+                self.pace(event_loop, wake);
             }
 
             _ => {}
