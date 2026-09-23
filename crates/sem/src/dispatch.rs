@@ -156,7 +156,7 @@ impl Dispatcher {
         by: Actor,
         now: Millis,
     ) -> Result<(), SemError> {
-        self.expect(id, &Stage::AwaitingConfirmation, "confirmed")?;
+        self.require(id, &Stage::AwaitingConfirmation, "confirmed")?;
         if by != Actor::Human {
             return Err(SemError::ConfirmByNonHuman { id, by });
         }
@@ -219,7 +219,7 @@ impl Dispatcher {
 
     /// ends an executing request with a terminal stage.
     fn end(&mut self, id: RequestId, stage: Stage, now: Millis) -> Result<(), SemError> {
-        self.expect(id, &Stage::Executing, stage.name())?;
+        self.require(id, &Stage::Executing, stage.name())?;
         let mut receipt = self.open.remove(&id).ok_or(SemError::UnknownRequest(id))?;
         self.push(&mut receipt, stage, now);
         self.store(receipt);
@@ -229,7 +229,7 @@ impl Dispatcher {
     /// `Ok` when `id` is open and at stage `at`; otherwise why it cannot
     /// go `to` the next stage: it is not held (`UnknownRequest`), or it is
     /// at another stage (`IllegalTransition`).
-    fn expect(&self, id: RequestId, at: &Stage, to: &str) -> Result<(), SemError> {
+    fn require(&self, id: RequestId, at: &Stage, to: &str) -> Result<(), SemError> {
         if self.open.get(&id).and_then(Receipt::stage) == Some(at) {
             return Ok(());
         }
