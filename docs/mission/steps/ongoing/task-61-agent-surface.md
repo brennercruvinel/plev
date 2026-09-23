@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: in-progress
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-61
@@ -36,6 +36,26 @@ semântica independente da animação.
   com `EventLoopProxy`, ADR `worker-results-wake-the-event-loop`).
 - depois das tasks 57, 58 e 59: `Snapshot`, `Revision`, `Change`,
   `subtree`, `Request`, `Receipt`, `Dispatcher`, bindings com bounds.
+
+## revisão do orquestrador (2026-09-23, antes do briefing)
+
+- nome do crate: `wire`. os tipos do protocolo são puros (compilam em
+  wasm); o servidor (`AgentPort`) e o cliente ficam atrás de `cfg(unix)`;
+  o binário `plev` é um bin do mesmo crate (`cargo run -p wire --bin
+  plev`).
+- o shell do showcase já tem, da task-60, os ganchos da página ativa:
+  `ShowcaseView::semantics()` (projeta) e `assist(req)` (despacha um
+  `Request` no dispatcher da página). o agente usa os mesmos ganchos, com
+  `Actor::Agent`; o gancho ganha um nome neutro (serve qualquer ator), sem
+  segundo caminho.
+- estágios que terminam depois (execução assíncrona, como o commit do
+  ide) chegam à conexão por um `ReceiptSink` que a porta registra no
+  dispatcher; a porta encaminha só os estágios dos requests que ela mesma
+  emitiu. o `Workbench` do ide não é `Send`: tudo que toca dispatcher
+  roda na thread da UI, no `drain`.
+- o ide abre a porta na task-62 fase c, não aqui.
+- a gravação (`rec`) ainda não está ligada no showcase; a fase d da 63
+  entra depois desta task.
 
 ## decisão de arquitetura (recomendada; vira ADR)
 
