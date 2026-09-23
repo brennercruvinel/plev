@@ -11,8 +11,8 @@ use super::Workbench;
 
 impl Workbench {
     /// Shows the person what request `id` came to: a toast for a refusal,
-    /// a decline or a failure, the confirmation modal (now, or once the modal on
-    /// screen closes) for a request that waits for a person.
+    /// a decline or a failure, the confirmation modal (now, or once the
+    /// modal on screen closes) for a request that waits for a person.
     pub(super) fn report(&mut self, id: RequestId) {
         let Some(receipt) = self.dispatcher.receipt(id) else {
             return;

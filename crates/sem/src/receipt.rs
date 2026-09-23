@@ -76,7 +76,7 @@ pub struct Outcome {
 ///
 /// ```text
 /// Requested -> Accepted | Rejected | AwaitingConfirmation
-/// AwaitingConfirmation -> Confirmed | Rejected   (declined, or stale when confirmed)
+/// AwaitingConfirmation -> Confirmed | Rejected   (declined, or refused by confirm's re-check)
 /// Accepted | Confirmed -> Executing
 /// Executing -> Completed | Failed | Rejected   (rejected at the point of truth)
 /// terminal: Rejected, Completed, Failed
