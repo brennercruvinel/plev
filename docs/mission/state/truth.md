@@ -341,3 +341,97 @@ cada item: onde o doc diz, onde o código faz, o que diz e o que faz. vale o có
 ### 5.6 o `ide-lab`
 
 o que é e onde: binário `ide-lab` do crate `ide` (`crates/ide/Cargo.toml:13-19`), fonte em `crates/ide/src/bin/lab/` (onze arquivos: `main.rs`, `args.rs`, `bench.rs`, `gitarm.rs`, `host.rs`, `lab.rs`, `repo.rs`, `report.rs`, `screenshot.rs`, `scripted.rs`, `story.rs`), só unix. é o app sob experimento e o experimentador: repositório real em diretório temporário, `Workbench` sem janela, `AgentPort` aberto como `ide`, `Recorder` no relógio do workbench, humano roteirizado, braços `plev`, `scripted`, `git` e `screenshot`, relatório em JSON e sessão `.monster` conferida com o git. roda no gate por `crates/ide/tests/lab.rs`. não aparece em `docs/arc/arc.toml` nem no `README.md`; está descrito só no arquivo da task-62 (`:439-567`).
+
+## 6. testes
+
+contagem de `#[test]` por arquivo, lida no código (não rodada). "ignorado" é `#[ignore]`: fora do gate.
+
+### 6.1 `sem`
+
+| arquivo | testes | cobre |
+|---|---|---|
+| `crates/sem/tests/id.rs` | 16 | forma canônica do `SemId`, roundtrip, recusas, escapes |
+| `crates/sem/tests/value.rs` | 13 | `Value`, `StateKey`, `ActionName`, `StateRef`, `Constraints`, `Policy`, `ActionDecl` |
+| `crates/sem/tests/builder.rs` | 20 | cada `SemError`, agregação, padrões, `inert` herdado, `secret`, `source` |
+| `crates/sem/tests/snapshot.rs` | 11 | consultas, `subtree`, `Revision` estável |
+| `crates/sem/tests/diff.rs` | 12 | `Snapshot::diff` e as variantes de `Change` |
+| `crates/sem/tests/request.rs` | 8 | `Request::observe` e `Actor` |
+| `crates/sem/tests/check.rs` | 25 | ordem de validação, delta stale, invalidação só pelas `reads`, parâmetro, confirmação |
+| `crates/sem/tests/receipt.rs` | 5 | `Stage`, transições legais, `RequestId` |
+| `crates/sem/tests/dispatch.rs` | 24 | dispatcher com um git de memória: cenário da tese, confirmação, execução assíncrona, rejeição no ponto de verdade, transições ilegais, sinks, retenção |
+| `crates/sem/tests/wire.rs` | 9 | JSON fixado de `Request`, `Receipt`, `Snapshot`; forma antiga lendo |
+| `crates/sem/src/redact.rs` | 6 | a regra de redação |
+| `crates/sem/src/snapshot.rs` | 2 | a forma serde refaz o snapshot; um laço de parent continua total |
+
+### 6.2 `wire`
+
+| arquivo | testes | cobre |
+|---|---|---|
+| `crates/wire/tests/codec.rs` | 8 | roundtrip de cada mensagem, envelope, versão errada, linha quebrada, nenhuma linha faz panic |
+| `crates/wire/tests/ring.rs` | 3 | acerto, evicção, reposição no anel |
+| `crates/wire/tests/server.rs` | 17 | protocolo contra o app de brinquedo, sem socket: hello, escopo e keys, `source`, `since`, act por revisão, stale com delta, `observed` explícito, act malformado, act antes do hello, revisão fora do anel, confirm e decline recusados, estágio tardio, estágio só para quem pediu, segredo, nada projetado |
+| `crates/wire/tests/socket.rs` | 10 | socket real em diretório temporário: permissões e remoção, observe, act e stale, linha quebrada, linha acima do limite, cliente que para de mandar, dois agentes, estágio tardio, diretório ruim, `find`, linhas aleatórias |
+| `crates/wire/tests/traffic.rs` | 3 | `Host::observed`, contadores do servidor, linhas e bytes da porta |
+| `crates/wire/tests/cli.rs` | 2 | o binário `plev` contra o brinquedo: saída e código de saída |
+| `crates/wire/tests/env.rs` | 2 | `PLEV_AGENT` lido de verdade num processo filho |
+| `crates/wire/src/port.rs`, `crates/wire/src/bin/plev.rs` | 2, 4 | leitura da variável; parse da linha de comando |
+
+### 6.3 `rec`
+
+| arquivo | testes | cobre |
+|---|---|---|
+| `crates/rec/tests/session/thesis.rs` | 3 | a sessão da tese gravada e lida em ordem |
+| `crates/rec/tests/session/semantic.rs` | 5 | o que vira snapshot inteiro, diff ou nada; cadência; tempo ordenado; origens; lista de changes malformada |
+| `crates/rec/tests/session/ring.rs` | 5 | limites de tempo e de bytes com o relógio do teste; corte em snapshot inteiro |
+| `crates/rec/tests/session/secret.rs` | 2 | segredo nunca gravado |
+| `crates/rec/tests/session/replay.rs` | 1 | ler a sessão não cria request nem executa |
+| `crates/rec/tests/session/visual.rs` | 8 | trilha visual: frame no tempo, tela entre frames, o que o IR não carrega, assets |
+| `crates/rec/tests/session/file.rs` | 10 | arquivo `MONS`: persistido igual à memória, export abre em snapshot inteiro, leitor estrito contra truncado, corrompido, estranho e animação, linha antiga de `Event` |
+| `crates/rec/tests/session/measure.rs` | 2 (1 ignorado) | custo de gravação sobre o todo do showcase |
+| `crates/rec/tests/panic.rs` | 1 | o panic hook persiste e encadeia o anterior |
+
+### 6.4 `ide` e `git`
+
+| arquivo | testes | cobre |
+|---|---|---|
+| `crates/ide/tests/human_agent.rs` | 9 | repositório real e worker real: commit com sha e arquivos iguais ao git; unstage de B deixa o submit do agente stale; cursor não invalida; index mexido por fora recusado no worker; mesma observação duas vezes commita uma; handoff com recibos; discard de agente confirmado; modal fechado recusa; clique e `Actor::Test` iguais |
+| `crates/ide/tests/lab.rs` | 2 | o binário `ide-lab` com o agente roteirizado: com intervenção (stale e recuperação) e sem |
+| `crates/ide/src/workbench/tests.rs` | 14 | modelo projetado; `submit` desabilitado; cursor move a revisão sem stale; ligações iguais à projeção; tecla, digitação e teste chegam ao mesmo form; clique pede diff; clique em commit desabilitado; recusa vira toast; modal de discard; escape e clique fora recusam; leitor de tela recusa, teste não; um pedido de confirmação por vez; sem repositório nada muda |
+| `crates/ide/src/views/workspace/tests/` | 24 | view: overlays (11), painéis (4), rolagem (9) |
+| `crates/ide/src/ids.rs`, `watcher.rs`, `bin/lab/args.rs`, `bin/lab/repo.rs` | 3, 1, 2, 2 | ids e escapes; debounce; argumentos e repositório do laboratório |
+| `crates/git/tests/real_repo.rs` | 17 | repositórios reais: status, stage, unstage, commit, log, `commit_if` aceito, recusado com delta e em HEAD sem pai, branches, diffs, discard, ignore, cliente fora da thread (`Refresh` emite três eventos) |
+
+### 6.5 engine, comps, showcase
+
+| arquivo | testes | cobre |
+|---|---|---|
+| `crates/engine/src/compositor/binding.rs` | 9 | tabela por frame, clip da própria layer, segundo bind ignorado, layer que não existe, `set_binding_view`, bind não suja layer |
+| `crates/engine/src/accessibility/tree/tests.rs` | 8 | toda role com label, estados, foco e inerte, ordem, bounds físicos dentro do clip, `NodeId` estável entre layouts, árvore vazia sem projeção |
+| `crates/engine/src/accessibility/action/tests.rs`, `ids.rs`, `focus.rs`, `role.rs`, `bridge.rs` | 8, 6, 5, 2, 2 | tradução de ação, colisão de `NodeId`, ordem de foco, mapa de roles, handlers fora da thread |
+| `crates/engine/src/headless/tests.rs`, `headless/svg/tests.rs` | 12, 14 | viewport, limite de textura, fundo 48, posição por escala, byte a byte igual, resize, png; svg por tipo de nó, relatório, contorno de glifo |
+| `crates/engine/src/animation/tests_clock.rs` | 2 | `since_last` real e `dt` travado |
+| `crates/engine/src/perf/tests_stages.rs` | 15 | sondas por estágio desligadas e ligadas |
+| `crates/engine/tests/arc_sync_guard.rs` | 2 | todo crate do workspace citado em `arc.toml` e no README; todo exemplo do engine em `arc.toml` |
+| `crates/comps/src/tests/matrix.rs` | 5 | todo widget em todo tema em phone e desktop; os 19 projetam e ligam (`:357`); `Select` longo |
+| `crates/comps/src/tests/wake.rs` | 11 | composição de `Wake` e viradas do `Blink` com dt injetado |
+| `crates/comps/src/tests/focus.rs`, `components.rs`, `widgets/*.rs` | 7, 30, 78 | foco dos formulários; componentes; comportamento por widget |
+| `crates/showcase/src/view/apps/app/tests/semantics.rs` | 10 | modelo do todo; clique e teste iguais; stale pelo texto e não pelo caret; stale da aba; viewport move ligação e mantém id; linha fora da tela projetada e não ligada; página inerte; modal deixa inerte; custo |
+| `crates/showcase/src/view/apps/app/semantics/assistive.rs` | 7 (1 ignorado) | árvore do todo; clique do leitor igual ao da pessoa; inerte com modal; foco e digitação; ordem de teclado pelo snapshot; página sem projeção; custo |
+| `crates/showcase/src/view/dispatch.rs` | 3 (1 ignorado) | o todo por uma porta real sem janela; custo em bytes (`agent_port_cost`, ignorado) |
+| `crates/showcase/src/app/headless.rs`, `crates/showcase/src/main.rs` | 10, 8 | `--render`, `--svg`, `--semantics`, `--source`; parse do cli |
+
+### 6.6 comportamentos do contrato sem teste
+
+- a corrida do `Refresh` (seção 4a): nenhum teste intercala uma mutação com um refresh pendente. o rig espera o refresh de cada passo (`crates/ide/tests/support/mod.rs:79-88`) e o roteirizado espera o index parar (`crates/ide/src/bin/lab/scripted.rs:95-100`), justamente para não cair nela.
+- a janela entre `staged_paths()` e `git commit` (`crates/git/src/repo.rs:206`, `:213`): sem teste.
+- ponto de verdade com os mesmos caminhos staged e conteúdo diferente: sem teste (a comparação é só de caminhos, `crates/git/src/repo.rs:207`).
+- o binário `ide` (`crates/ide/src/main.rs`): sem teste; keymap, digitação direta no form e o pedido de frame contínuo não são exercitados.
+- `pace` e `new_events` do shell do showcase (`crates/showcase/src/app.rs:152-167`, `:204-209`): sem teste automático (`app.rs` não tem `#[test]`); a task-82 conferiu por log numa janela real e o exemplo `measure` modela o shell.
+- `Compositor::hit` e `focus::next`: só testes de unidade; como nenhum caminho de produção os chama, não há teste de ponta a ponta.
+- a ponte AccessKit contra um adapter e um leitor reais: sem teste (os testes chamam os handlers direto, `crates/engine/src/accessibility/bridge.rs:233-313`); o roteiro de VoiceOver da task-60 não rodou.
+- frames sem mudança visível (worker do git, ponte, toast do ide, página Git com campo focado): sem teste.
+- recibos abertos sem limite no dispatcher: sem teste de crescimento; confirmação que expira: não existe API.
+- `install_panic_hook` instalado num app: só o teste isolado (`crates/rec/tests/panic.rs`).
+- a porta servindo o binário `ide` ou a página Git do showcase: não existe, não há o que testar.
+- sondas de `find` contadas em `Traffic.conns`: sem teste.
+- urnaui: fora do workspace; entra só na perna do gate que exige `../urna`.
