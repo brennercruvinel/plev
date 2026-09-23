@@ -49,6 +49,10 @@ pub enum SemError {
     /// focus on a node that is not in the projection.
     #[error("focus names {0}, which is not projected")]
     UnknownFocus(SemId),
+    /// a request for an action the observed snapshot does not offer: the
+    /// node is not there, or it does not declare the action.
+    #[error("{node} does not offer action {action} in the observed snapshot")]
+    UnknownAction { node: SemId, action: ActionName },
 }
 
 /// the builder accepts typed values too, whose conversion cannot fail.

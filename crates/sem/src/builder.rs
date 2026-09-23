@@ -41,7 +41,7 @@ pub struct SnapshotBuilder {
     errors: Vec<SemError>,
 }
 
-fn resolve<T>(input: impl TryInto<T, Error: Into<SemError>>) -> Result<T, SemError> {
+pub(crate) fn resolve<T>(input: impl TryInto<T, Error: Into<SemError>>) -> Result<T, SemError> {
     input.try_into().map_err(Into::into)
 }
 
