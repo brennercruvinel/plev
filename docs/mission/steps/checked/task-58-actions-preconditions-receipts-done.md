@@ -1,16 +1,64 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-58
 wave: 2
 depends: [task-57]
 branch: task/58-sem-dispatch
+integrated: 20c601e
 ---
 
 # task-58: ação com precondição, dispatch e receipts
+
+## fechamento (2026-09-23)
+
+integrada na `main` em `20c601e` (dez commits, de `83562b9` a `20c601e`),
+validada pelo orquestrador: diff inteiro lido, `./script/gate` verde na
+branch (54 suítes, 1608 testes no workspace, 63 a mais que a task-57), 141
+testes do `sem` com serde e 128 sem, os testes 1 a 10 da spec, goldens
+JSON de `Request`, `Receipt` e `Snapshot`. `cargo run -p sem --example
+commit` roda o cenário da tese. ADR: `docs/ADR/actions-carry-observed-state.md`.
+
+a entrega voltou uma vez ao agente, com duas correções de contrato feitas
+antes de haver consumidor:
+
+- uma pessoa confirma pela tela ou por tecnologia assistiva:
+  `Dispatcher::confirm` aceita `Actor::Human` e `Actor::Assistive` e recusa
+  agente e teste (`SemError::ConfirmByMachine`). a regra antiga ("só
+  `Actor::Human`") era um erro da spec do orquestrador e quebrava o
+  contrato de accessibility.
+- `Operable::execute(&mut self, id: RequestId, req: &Request)`: a execução
+  assíncrona sabe o próprio id, sem canal paralelo (a task-62 usa isso no
+  worker do git).
+
+o que ficou diferente da spec, aceito como contrato:
+
+- `Receipt.validated_against` é `Option<Revision>`.
+- `Rejection::InvalidProjection { errors }`, só do dispatcher, quando a
+  projeção do app não valida.
+- `SemError` ganhou `UnknownAction`, `UnknownRequest`, `IllegalTransition`
+  e `ConfirmByMachine`.
+- `confirm` checa de novo contra o estado vivo antes de executar.
+- regras de parâmetro: sem `ParamSpec` não aceita parâmetro; com spec, o
+  parâmetro é obrigatório e do tipo declarado; com `constrained`, aplica
+  editable, required, range, max_len e options, nessa ordem; `step` não é
+  validado.
+- `RequestId` trafega como texto decimal; `stages` como pares
+  `[estágio, millis]`.
+
+limitações que seguem:
+
+- não há recusa nem expiração de confirmação; receipts abertos não têm
+  limite.
+- o parâmetro trafega cru no request e no receipt: quem manda receipt para
+  fora do processo (61, 63) redige parâmetro de campo secreto.
+- o range de um `Int` é comparado como f64 (acima de 2^53 arredonda).
+- o `Dispatcher` não é `Send` (sinks são `Box<dyn ReceiptSink>`).
+- `Constraints.editable` é `false` por padrão: um nó com parâmetro
+  `constrained` declara `editable: true`.
 
 ## objetivo
 

@@ -164,9 +164,13 @@ quando as superfícies (seção 8) são disjuntas.
   por branch de task; registrar estes documentos.
 - onda 1: task-57, sozinha. é o contrato de que tudo depende.
 - onda 2: task-58, sozinha. estende o mesmo crate.
-- onda 3: task-59, em paralelo com task-66 e com a fase de medição da
-  task-73 (superfícies disjuntas: engine/input + compositor + comps;
-  engine/text/probe + examples; benches e perf).
+- onda 3: task-59 (fase a) em paralelo com task-66 (superfícies
+  disjuntas: tabela de ligação no compositor + três widgets do comps + o
+  todo do showcase; construtor headless do `GpuContext` + `window/frame.rs`
+  + módulo headless + probe + exemplos + CLI do showcase). a fase de
+  medição da task-73 roda logo depois das duas, porque a instrumentação
+  toca os arquivos que elas possuem nesta onda (decisão do orquestrador,
+  2026-09-23). a fase b da 59 roda depois da validação da fase a.
 - onda 4: task-62 (fases a e b), task-60, task-61 e task-63 em paralelo,
   com as superfícies da seção 8. task-60 liga a accessibility primeiro no
   showcase; o ide entra depois da integração da 62.
@@ -291,4 +295,7 @@ atualizado em cada integração.
 |---|---|---|---|
 | onda 0 | integrada | `1d384d4` | how-to reconstruído, regra de commit, docs do programa |
 | task-57 | integrada | `860b029` | crate `sem`; `Change` ficou na 57 com doze variantes; detalhes em `checked/task-57-semantic-contract-done.md` |
-| task-58 | em andamento | | |
+| task-58 | integrada | `20c601e` | dispatcher, receipts, check; devolvida uma vez (confirmação por tecnologia assistiva, id no `execute`); detalhes em `checked/task-58-actions-preconditions-receipts-done.md` |
+| task-59 | em andamento (fase a) | | onda 3 |
+| task-66 | em andamento | | onda 3 |
+| task-73 | aguardando | | a fase 1 (medição) saiu da onda 3: a instrumentação por estágio mexe em `window/frame.rs` e no compositor, que a 66 e a 59 são donas nesta onda; roda logo depois das duas, já medindo projeção semântica e usando o headless |

@@ -56,6 +56,15 @@ what exists (updated at each task close-out):
   violation reported by `finish`), `Snapshot` with a stable `Revision`
   and `Snapshot::diff`. nothing in the engine, comps or the apps uses it
   yet.
+- the dispatcher, also in `crates/sem` (task-58, adr
+  actions-carry-observed-state): `Request::observe` records the values the
+  actor saw for the action's `reads`; `check` decides in a fixed order and
+  goes `Stale` only when one of those values moved, with the delta; one
+  `Dispatcher` for every actor projects the app at dispatch, runs
+  `Operable::execute(id, req)` only after acceptance or a person's
+  confirmation (`Actor::Human` or `Actor::Assistive`), and keeps a
+  `Receipt` whose stages sinks see as they happen. `cargo run -p sem
+  --example commit` is the thesis scenario in thirty lines of app.
 - the only identity the engine itself has is still `ViewId`, a per-frame
   counter reset in `InputState::begin_frame`
   (crates/engine/src/input/mod.rs). it is a temporary render identity,

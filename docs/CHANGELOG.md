@@ -9,6 +9,18 @@ status: living
 
 ## unreleased
 
+- actions carry the state their actor observed (2026-09-23, task-58, adr
+  actions-carry-observed-state): `sem` gains `Request::observe`, a pure
+  `check` with a fixed order (not found, unknown action, not authorized,
+  stale, inert, disabled, invalid param, needs confirmation, accepted) and
+  one `Dispatcher` for every actor. a request goes stale only when a value
+  its action reads moved, and the rejection names the delta ("removed:
+  B"); a hover or a cursor never invalidates it. execution runs only after
+  acceptance or a person's confirmation (at the screen or through a screen
+  reader), may end later with the id it received, and can be refused again
+  at the point of truth. every step lands in a `Receipt` that sinks see as
+  it happens. `cargo run -p sem --example commit` plays the thesis
+  scenario.
 - the semantic contract, crate `sem` (2026-09-23, task-57, adr
   semantic-contract-as-pure-projection): every control can now be
   described as data independent of its pixels: a persistent `SemId`

@@ -122,6 +122,7 @@ o programa em docs/mission/steps/ongoing/generative-runtime-program.md; uma linh
 | data | adr | status | resumo |
 |------|-----|--------|--------|
 | 2026-09-23 | [semantic-contract-as-pure-projection](semantic-contract-as-pure-projection.md) | accepted | crate `sem`, puro: todo controle tem `SemId` persistente escolhido pelo app (nunca contador nem posição), role, estado, ações com as `reads` de que dependem, policy e constraints; o app implementa `Semantics::project` sob demanda a partir do estado vivo; `finish` reporta todas as violações juntas; `Revision` estável (FNV-1a 64, ordem de árvore, sem `source`) e `diff` vazio exatamente quando os snapshots são iguais; `secret` guarda só tamanho (task-57) |
+| 2026-09-23 | [actions-carry-observed-state](actions-carry-observed-state.md) | accepted | toda ação carrega o estado que o ator observou (`Request::observe`) e passa por um `Dispatcher` único para humano, agente, tecnologia assistiva e teste; `check` puro decide em ordem fixa e `Stale` compara só as `reads` da ação, devolvendo o delta; execução só depois de aceita ou confirmada por uma pessoa; `Receipt` com estágios e transições legais, tempo passado por quem chama; validação em dois pontos quando a verdade mora fora da UI; replay nunca cria request (task-58) |
 
 ## urnaui, o explorador de .urna (2026)
 
