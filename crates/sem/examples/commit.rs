@@ -45,7 +45,9 @@ impl Semantics for Git {
 }
 
 impl Operable for Git {
-    fn execute(&mut self, req: &Request) -> Execution {
+    /// everything here ends now, so the id is not kept; an app whose
+    /// execution ends later keeps it to report the end.
+    fn execute(&mut self, _id: RequestId, req: &Request) -> Execution {
         match (req.action.as_str(), &req.param) {
             ("unstage", Some(Value::Text(file))) => {
                 self.staged.remove(file);

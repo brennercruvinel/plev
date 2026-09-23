@@ -66,8 +66,9 @@ in `crates/sem`, next to the contract:
   api is a `SemError` (`UnknownRequest`, `IllegalTransition`,
   `ConfirmByMachine`).
 - execution ends now (`Execution::Done`, `Failed`, `Rejected`) or later
-  (`Started`, then `complete`, `fail` or `reject_at_truth` with the id
-  `dispatch` returned).
+  (`Started`, then `complete`, `fail` or `reject_at_truth`).
+  `execute(id, req)` receives the request id, and an execution that ends
+  later reports its end with that id, with no side channel.
 - validation happens at two points when the truth lives outside the ui
   process (the git index, a server). the dispatcher's check is the first.
   `execute` carries the request to the point of truth, which checks the
@@ -106,9 +107,7 @@ in `crates/sem`, next to the contract:
 - task-62 routes the ide commit through the dispatcher: the click becomes
   `Request::observe` plus `dispatch`, and the git worker runs the second
   check against the real index before `git commit`, answering
-  `reject_at_truth` with the delta. `execute` does not receive the request
-  id; the caller keeps the id `dispatch` returned and uses it when the
-  worker answers.
+  `reject_at_truth` with the delta, using the id `execute` received.
 - task-60 turns accessibility actions into requests with
   `Actor::Assistive`; task-61 carries requests and receipts over the
   socket in the pinned form; task-63 records receipts from a sink.

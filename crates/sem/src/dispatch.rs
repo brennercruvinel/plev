@@ -18,12 +18,13 @@ use crate::request::{Actor, Request};
 /// person, against a snapshot projected from the live state at that
 /// instant.
 pub trait Operable: Semantics {
-    /// runs the request. when the truth lives outside the app (the git
-    /// index, a server), the request goes there with its observed values
-    /// and the point of truth checks them again before the effect, with
-    /// `check` against its own state; if they disagree it answers
-    /// `Execution::Rejected` with the delta it saw.
-    fn execute(&mut self, req: &Request) -> Execution;
+    /// runs the request `id` names. when the truth lives outside the app
+    /// (the git index, a server), the request goes there with its observed
+    /// values and the point of truth checks them again before the effect,
+    /// with `check` against its own state; if they disagree it answers
+    /// `Execution::Rejected` with the delta it saw. an execution that ends
+    /// later keeps `id` to report how it ended (`Execution::Started`).
+    fn execute(&mut self, id: RequestId, req: &Request) -> Execution;
 }
 
 /// what `execute` did.
@@ -33,8 +34,9 @@ pub trait Operable: Semantics {
 pub enum Execution {
     /// finished now, with this outcome.
     Done(Outcome),
-    /// started; the app calls `Dispatcher::complete`, `fail` or
-    /// `reject_at_truth` with the id `dispatch` returned when it ends.
+    /// started. the app holds the id `execute` received and, when the
+    /// work ends, calls `Dispatcher::complete`, `fail` or `reject_at_truth`
+    /// with it; no other channel is needed to know which request ended.
     Started,
     /// could not run.
     Failed(String),
@@ -254,7 +256,7 @@ impl Dispatcher {
     /// back.
     fn run<A: Operable>(&mut self, app: &mut A, receipt: &mut Receipt, now: Millis) {
         self.push(receipt, Stage::Executing, now);
-        match app.execute(&receipt.request) {
+        match app.execute(receipt.id, &receipt.request) {
             Execution::Done(outcome) => self.push(receipt, Stage::Completed(outcome), now),
             Execution::Started => {}
             Execution::Failed(error) => self.push(receipt, Stage::Failed { error }, now),

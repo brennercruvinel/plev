@@ -50,7 +50,7 @@ struct Git {
     /// `submit` starts the commit on a worker and returns `Started`.
     background: bool,
     /// requests the worker has not run yet.
-    queue: Vec<Request>,
+    queue: Vec<(RequestId, Request)>,
     /// the worker fails with this error.
     worker_error: Option<String>,
     /// every action `execute` ran, in order.
@@ -108,19 +108,18 @@ impl Git {
     }
 
     /// the worker runs the oldest queued commit: the point of truth checks
-    /// the request against the index, then commits.
-    fn work(&mut self) -> Execution {
-        if self.queue.is_empty() {
-            return Execution::Failed("nothing queued".into());
-        }
-        let req = self.queue.remove(0);
+    /// the request against the index, then commits. it answers with the id
+    /// `execute` received, the one the dispatcher is waiting on.
+    fn work(&mut self) -> (RequestId, Execution) {
+        let (id, req) = self.queue.remove(0);
         if let Some(error) = self.worker_error.clone() {
-            return Execution::Failed(error);
+            return (id, Execution::Failed(error));
         }
-        match check(&req, &self.truth()) {
+        let done = match check(&req, &self.truth()) {
             Verdict::Rejected(why) => Execution::Rejected(why),
             _ => Execution::Done(self.commit()),
-        }
+        };
+        (id, done)
     }
 }
 
@@ -176,7 +175,7 @@ impl Semantics for Git {
 }
 
 impl Operable for Git {
-    fn execute(&mut self, req: &Request) -> Execution {
+    fn execute(&mut self, id: RequestId, req: &Request) -> Execution {
         self.executed.push(req.action.to_string());
         let files = |git: &Git| Outcome {
             result: IndexMap::from([("staged".to_owned(), Value::Set(git.staged.clone()))]),
@@ -213,7 +212,7 @@ impl Operable for Git {
                 Execution::Done(Outcome::default())
             }
             "submit" if self.background => {
-                self.queue.push(req.clone());
+                self.queue.push((id, req.clone()));
                 Execution::Started
             }
             "submit" => match check(req, &self.truth()) {
@@ -225,8 +224,10 @@ impl Operable for Git {
     }
 }
 
-/// ends a started execution the way the app's event loop would.
-fn settle(d: &mut Dispatcher, id: RequestId, done: Execution, now: u64) -> Result<(), SemError> {
+/// ends a started execution the way the app's event loop would, with the
+/// id the worker got from `execute`.
+fn settle(d: &mut Dispatcher, answer: (RequestId, Execution), now: u64) -> Result<(), SemError> {
+    let (id, done) = answer;
     match done {
         Execution::Done(outcome) => d.complete(id, outcome, now),
         Execution::Failed(error) => d.fail(id, error, now),
@@ -509,8 +510,9 @@ fn an_async_commit_is_executing_until_the_app_completes_it() {
     assert!(!r.is_finished());
     assert!(git.commits.is_empty());
 
-    let done = git.work();
-    settle(&mut d, id, done, 50).unwrap();
+    let answer = git.work();
+    assert_eq!(answer.0, id, "execute received the id dispatch returned");
+    settle(&mut d, answer, 50).unwrap();
     let r = receipt(&d, id);
     assert_eq!(
         stages(r),
@@ -528,8 +530,9 @@ fn an_async_commit_can_fail() {
     let mut d = Dispatcher::new();
     let req = Request::observe(&git.snapshot(), agent(), "commit.submit", "submit", None).unwrap();
     let id = d.dispatch(&mut git, req, 1);
-    let done = git.work();
-    settle(&mut d, id, done, 9).unwrap();
+    let answer = git.work();
+    assert_eq!(answer.0, id);
+    settle(&mut d, answer, 9).unwrap();
     assert_eq!(
         receipt(&d, id).stage(),
         Some(&Stage::Failed {
@@ -569,9 +572,13 @@ fn an_async_point_of_truth_rejects_through_reject_at_truth() {
     let req = Request::observe(&git.snapshot(), agent(), "commit.submit", "submit", None).unwrap();
     let id = d.dispatch(&mut git, req, 1);
     git.index.insert("Z".into());
-    let done = git.work();
-    assert!(matches!(done, Execution::Rejected(Rejection::Stale { .. })));
-    settle(&mut d, id, done, 2).unwrap();
+    let answer = git.work();
+    assert_eq!(answer.0, id);
+    assert!(matches!(
+        answer.1,
+        Execution::Rejected(Rejection::Stale { .. })
+    ));
+    settle(&mut d, answer, 2).unwrap();
     assert_eq!(
         stages(receipt(&d, id)),
         ["requested", "accepted", "executing", "rejected"]
@@ -675,8 +682,9 @@ fn a_sink_sees_every_stage_in_order() {
     let a = d.dispatch(&mut git, submit, 1);
     let b = d.dispatch(&mut git, discard, 2);
     d.confirm(&mut git, b, Actor::Human, 3).unwrap();
-    let done = git.work();
-    settle(&mut d, a, done, 4).unwrap();
+    let answer = git.work();
+    assert_eq!(answer.0, a);
+    settle(&mut d, answer, 4).unwrap();
 
     let seen = log.0.borrow();
     for id in [a, b] {
