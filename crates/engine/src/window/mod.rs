@@ -107,6 +107,7 @@ impl App {
             animation_tick: AnimationTick {
                 dt: 0.0,
                 elapsed: 0.0,
+                since_last: 0.0,
             },
             lifecycle: LifecycleManager::new(),
             ime_state: ImeState::new(),
@@ -175,6 +176,7 @@ impl App {
             animation_tick: AnimationTick {
                 dt: 0.0,
                 elapsed: 0.0,
+                since_last: 0.0,
             },
             lifecycle: LifecycleManager::new(),
             ime_state: ImeState::new(),

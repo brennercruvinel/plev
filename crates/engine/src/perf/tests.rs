@@ -6,7 +6,11 @@ use crate::animation::AnimationTick;
 use crate::compositor::{Compositor, LayerId, RenderStats, SceneNode};
 
 fn tick(dt: f32) -> AnimationTick {
-    AnimationTick { dt, elapsed: 0.0 }
+    AnimationTick {
+        dt,
+        elapsed: 0.0,
+        since_last: dt,
+    }
 }
 
 fn stats(draw_calls: u32, glyphs: u32, encode: u64, resolve: u64) -> RenderStats {

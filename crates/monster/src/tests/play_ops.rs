@@ -129,6 +129,7 @@ fn playback_with_ops_is_deterministic_and_scrub_consistent() {
         played.tick(&AnimationTick {
             dt: 0.083,
             elapsed: 999.0,
+            since_last: 0.083,
         });
         let mut scrubbed = MonsterPlayer::new(ops_timeline()).unwrap();
         scrubbed.scrub(played.current_time());
