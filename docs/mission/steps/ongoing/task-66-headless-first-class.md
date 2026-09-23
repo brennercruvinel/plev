@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: in-progress
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-66
@@ -39,6 +39,40 @@ cena é renderizável sem janela).
   (`cargo run -p showcase`), com janela.
 - o frame inteiro passa por `engine::window::present_frame`, que escreve na
   surface da janela.
+
+## diagnóstico do orquestrador (2026-09-23)
+
+- `GpuContext::new_with_config(window, config)`
+  (`crates/engine/src/gpu/context.rs:77`) exige uma janela: cria a surface
+  a partir dela, tira largura e altura de `window.inner_size()`, escolhe o
+  formato na capacidade da surface e cria todos os pipelines nesse
+  `render_format` (a variante srgb). o campo `surface` já é
+  `Option<wgpu::Surface>` (`context.rs:26`), então o resto do contexto não
+  depende de ter uma surface.
+- `present_frame` (`crates/engine/src/window/frame.rs:29`) mistura duas
+  coisas: pegar a textura da surface (`get_current_texture`, tratamento de
+  `Lost`/`Outdated`/`Timeout`, `surface_render_view`) e desenhar o frame
+  (resolve do compositor, texto, imagens, passes de layer, composite na
+  view, submit), e no fim `output.present()`.
+- `engine::text::probe` (`crates/engine/src/text/probe.rs`) é um segundo
+  caminho offscreen: cria device, textura, pipeline de texto próprios e
+  desenha só texto. é o que esta task substitui.
+
+o corte, portanto:
+
+1. um construtor headless: `GpuContext::new_headless(width, height,
+   config) -> Option<Self>` (async com o mesmo padrão do `new`; `None`
+   quando não há adapter, para teste pular em vez de falhar), com
+   `surface: None`, formato `Rgba8UnormSrgb`, `surface_config` com o
+   tamanho pedido, e a mesma construção de pipelines (extrair o corpo
+   comum de `new_with_config` em uma função que recebe device, queue,
+   formato e tamanho; nenhuma cópia).
+2. extrair de `present_frame` uma função que desenha o frame numa
+   `wgpu::TextureView` qualquer; `present_frame` passa a pegar a textura
+   da surface, chamar essa função e dar `present`. comportamento com
+   janela idêntico (mesmo número de draws, mesma ordem).
+3. o headless cria a textura alvo, chama a mesma função e faz readback
+   com o alinhamento de linha de 256 bytes.
 
 ## escopo
 

@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: in-progress
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-59
@@ -47,6 +47,40 @@ paralelas para a mesma coisa.
   `crates/showcase/src/model`.
 - modal e overlay vivem em `crates/comps/src/feedback` e
   `crates/comps/src/overlay` (`OverlayManager`).
+
+## revisão do orquestrador depois das tasks 57 e 58 (2026-09-23)
+
+esta seção vale sobre o resto do arquivo onde os dois divergirem.
+
+- o `sem` está na `main` com o contrato (57) e o dispatcher (58). leia
+  `docs/mission/steps/checked/task-57-semantic-contract-done.md`,
+  `docs/mission/steps/checked/task-58-actions-preconditions-receipts-done.md`
+  e os dois ADRs antes de começar. `Operable::execute` recebe o
+  `RequestId`; `Actor::Assistive` confirma como uma pessoa.
+- a task roda em duas fases, cada uma um briefing e uma validação:
+  - fase a (primeira): a tabela de ligação no compositor, o `engine`
+    dependendo de `sem`, o `SemId` opcional e o helper de projeção só nos
+    widgets que o todo usa (`TextField`, `Checkbox`), mais `Button` (o ide
+    usa na 62), o todo do showcase de ponta a ponta pelo dispatcher, e o
+    fundo inerte com modal aberto.
+  - fase b (depois da validação da fase a): os outros widgets interativos
+    do comps com `SemId` e helper, cada um na matriz.
+- o todo não tem botão de adicionar: o Enter adiciona. o modelo semântico
+  do todo fica assim: `todo` (Region), `todo.input` (TextInput, state
+  `text`, ações `set_value` com parâmetro texto e `submit` com reads
+  `todo.input:text`), `todo.filter` (TabList, state `selected`) com
+  `todo.filter[all]`, `todo.filter[active]`, `todo.filter[completed]`
+  (Tab, ação `select`), `todo.item[<id>]` (ListItem, label = texto, state
+  `completed`, ações `toggle` com reads `todo.item[<id>]:completed` e
+  `remove`), `todo.counter` (Status, state `active` e `done`). as pílulas
+  de filtro são desenhadas pela página, não por um widget: a página liga
+  os rects delas com `Compositor::bind` diretamente.
+- o dispatcher mora na página (`TodoPage` é `Semantics + Operable` e dona
+  de um `Dispatcher`); o clique projeta a página naquele instante, monta o
+  `Request::observe` com `Actor::Human` e despacha. tempo: `Millis` vindo
+  do relógio que o showcase já usa para o tick.
+- `Constraints.editable` é `false` por padrão; o `todo.input` declara
+  `editable: true`, senão `set_value` com `constrained` é recusado.
 
 ## decisão de arquitetura (recomendada; vira ADR)
 
