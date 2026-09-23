@@ -1,7 +1,9 @@
 //! the semantic side of the interactive widgets: the optional SemId binds
 //! the rect the widget draws and hit-tests with, and each projection
 //! helper declares role, label, state and actions from the widget the app
-//! owns.
+//! owns. one file per comps category; the helpers below are shared.
+
+mod action;
 
 use super::*;
 use sem::{
@@ -29,6 +31,72 @@ fn rect_of(r: Rect) -> [f32; 4] {
     [r.x, r.y, r.w, r.h]
 }
 
+/// `who` is bound to `rect` on `layer`, and `hit` at the center of `rect`
+/// answers `who`.
+#[track_caller]
+fn assert_bound(c: &Compositor, who: &SemId, rect: Rect, layer: LayerId) {
+    let bound = c
+        .binding(who)
+        .unwrap_or_else(|| panic!("{who} is not bound"));
+    assert_eq!((bound.rect, bound.layer), (rect_of(rect), layer), "{who}");
+    let (x, y) = rect.center();
+    assert_eq!(c.hit(x, y), Some(who), "hit at the center of {who}");
+}
+
+/// The names of `who`'s actions, in declaration order.
+fn actions(s: &Snapshot, who: &SemId) -> Vec<String> {
+    s.get(who)
+        .map(|n| {
+            n.actions
+                .iter()
+                .map(|a| a.name.as_str().to_owned())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// The reads of `who`'s `action`, as text.
+fn reads(s: &Snapshot, who: &SemId, action: &str) -> Vec<String> {
+    s.get(who)
+        .and_then(|n| n.actions.iter().find(|a| a.name.as_str() == action))
+        .map(|a| a.reads.iter().map(ToString::to_string).collect())
+        .unwrap_or_default()
+}
+
+/// `req` comes back stale against `now` with one change, from `before`
+/// to `after`.
+#[track_caller]
+fn assert_stale(req: &Request, now: &Snapshot, before: Value, after: Value) {
+    let Verdict::Rejected(Rejection::Stale { changes }) = check(req, now) else {
+        panic!("expected stale, got {:?}", check(req, now));
+    };
+    match &changes[..] {
+        [
+            Change::StateChanged {
+                before: b,
+                after: a,
+                ..
+            },
+        ] => {
+            assert_eq!((b.as_ref(), a.as_ref()), (Some(&before), Some(&after)));
+        }
+        other => panic!("expected one state change, got {other:?}"),
+    }
+}
+
+/// Nothing projected moved between `seen` and `now` (hover, press, focus,
+/// animation), so `req`, made on `seen`, still holds on `now`.
+#[track_caller]
+fn assert_visual_only(req: &Request, seen: &Snapshot, now: &Snapshot) {
+    assert_eq!(
+        now.revision(),
+        seen.revision(),
+        "{:?}",
+        Snapshot::diff(seen, now)
+    );
+    assert_eq!(check(req, now), Verdict::Accepted);
+}
+
 // Checkbox
 
 #[test]
@@ -52,7 +120,11 @@ fn checkbox_projects_checkbox_role_checked_state_and_toggle() {
     assert_eq!(toggle.reads[0].to_string(), "form.agree:checked");
     // The source is the app's projection site, not the helper.
     let source = node.source.as_ref().unwrap();
-    assert!(source.file.ends_with("semantics.rs"), "{}", source.file);
+    assert!(
+        source.file.ends_with("mod.rs") && source.file.contains("semantics"),
+        "{}",
+        source.file
+    );
 }
 
 #[test]

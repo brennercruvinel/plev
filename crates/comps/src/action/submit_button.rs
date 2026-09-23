@@ -2,9 +2,14 @@
 //! into the dark secondary one on hover, and stays dark while `active`
 //! (a request in flight). The arrow icon follows: ink on paper, paper on
 //! ink.
+//!
+//! With a [`SemId`] ([`SubmitButton::sem`]) the render binds the bounds
+//! it draws and hit-tests with, and [`SubmitButton::project`] declares
+//! the button in a semantic projection, `active` as its `busy` state.
 
 use engine::compositor::{Compositor, LayerId};
 use engine::theme::{ButtonRecipe, ButtonSurface, IconButtonMetrics, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::IconButtonSize;
 use super::press::{Press, paint_surface};
@@ -18,6 +23,7 @@ pub struct SubmitButton {
     pub disabled: bool,
     pub active: bool,
     press: Press,
+    sem: Option<SemId>,
 }
 
 impl SubmitButton {
@@ -28,7 +34,45 @@ impl SubmitButton {
             disabled: false,
             active: false,
             press: Press::default(),
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds its bounds to
+    /// (`Compositor::bind_to_layer`).
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this button as `id` in a projection: a `Role::Button`
+    /// named `label` (the arrow names nothing, so the app gives the
+    /// accessible label), enabled unless disabled, its `busy` state (a
+    /// request in flight, the widget's `active`) and an `activate` action
+    /// that reads `busy`, so a submit decided on an idle button goes stale
+    /// once another one is in flight. What `activate` does is the app's;
+    /// this only reads the widget. Pass the id given to
+    /// [`SubmitButton::sem`] so the node and the binding name the same
+    /// control. Returns the node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let mut node = b.node(id, Role::Button, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("busy", self.active).enabled(!self.disabled);
+        node.action("activate").reads(format!("{id}:busy"));
+        node
     }
 
     pub fn size(mut self, size: IconButtonSize) -> Self {
@@ -98,6 +142,9 @@ impl SubmitButton {
         bounds: Rect,
         theme: &Theme,
     ) {
+        if let Some(id) = &self.sem {
+            compositor.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let m = self.metrics(theme);
         let alpha = if self.disabled {
             theme.button.primary.disabled_alpha

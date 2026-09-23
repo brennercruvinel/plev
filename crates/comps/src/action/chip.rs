@@ -6,10 +6,16 @@
 //!
 //! Geometry from the theme: height is the caption-sm line box plus the
 //! `xs` spacing above and below, the side padding is `md` spacing.
+//!
+//! `selectable(true)` makes it a filter chip: a click toggles `selected`,
+//! like a checkbox. With a [`SemId`] ([`Chip::sem`]) the render binds the
+//! bounds it draws and hit-tests with, and [`Chip::project`] declares the
+//! chip in a semantic projection.
 
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{Intent, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 use crate::recipe::{rounded_rect, rounded_rect_stroke};
@@ -23,8 +29,12 @@ pub struct Chip {
     pub selected: bool,
     /// Opt into pointer interaction (hover/press/click).
     pub interactive: bool,
+    /// A filter chip: a click toggles `selected`. Implies the pointer
+    /// interaction of `interactive`.
+    pub selectable: bool,
     hovered: bool,
     pressed: bool,
+    sem: Option<SemId>,
 }
 
 impl Chip {
@@ -34,9 +44,57 @@ impl Chip {
             intent: Intent::Neutral,
             selected: false,
             interactive: false,
+            selectable: false,
             hovered: false,
             pressed: false,
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds its bounds to
+    /// (`Compositor::bind`).
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this chip as `id` in a projection, named by its label. A
+    /// selectable chip is a `Role::Toggle` with its `selected` state and a
+    /// `toggle` action that reads it; an interactive one is a
+    /// `Role::Button` with `activate`; a static tag is a `Role::Label`
+    /// with no action, since nothing runs when it is clicked. It only
+    /// reads the widget; the app owns it and runs the action. Pass the id
+    /// given to [`Chip::sem`] so the node and the binding name the same
+    /// control. Returns the node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let role = if self.selectable {
+            Role::Toggle
+        } else if self.interactive {
+            Role::Button
+        } else {
+            Role::Label
+        };
+        let mut node = b.node(id, role, self.label.as_str());
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        if self.selectable {
+            node.state("selected", self.selected);
+            node.action("toggle").reads(format!("{id}:selected"));
+        } else if self.interactive {
+            node.action("activate");
+        }
+        node
     }
 
     pub fn intent(mut self, intent: Intent) -> Self {
@@ -54,8 +112,18 @@ impl Chip {
         self
     }
 
+    pub fn selectable(mut self, selectable: bool) -> Self {
+        self.selectable = selectable;
+        self
+    }
+
     pub fn is_hovered(&self) -> bool {
         self.hovered
+    }
+
+    /// Whether the pointer reaches the chip at all.
+    fn pressable(&self) -> bool {
+        self.interactive || self.selectable
     }
 
     /// Label style: HOFF caption-sm, one style for measure+draw.
@@ -76,7 +144,7 @@ impl Chip {
     }
 
     pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
-        if !self.interactive {
+        if !self.pressable() {
             return EventResult::IGNORED;
         }
         match *event {
@@ -103,6 +171,9 @@ impl Chip {
                 }
                 self.pressed = false;
                 if bounds.contains(x, y) {
+                    if self.selectable {
+                        self.selected = !self.selected;
+                    }
                     EventResult::clicked()
                 } else {
                     EventResult::changed()
@@ -113,6 +184,9 @@ impl Chip {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
+        if let Some(id) = &self.sem {
+            compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let style = Self::style(theme);
         let accent = intent_fill(theme, self.intent);
         let text = theme.colors.text;
@@ -121,7 +195,7 @@ impl Chip {
         // Filled (selected): intent wash + intent label. Outline: glass
         // edge stroke + dim label. Hover brightens both (interactive only).
         let (bg, edge, fg) = if self.selected {
-            let hot = self.hovered && self.interactive;
+            let hot = self.hovered && self.pressable();
             (
                 with_alpha(
                     theme.colors.accent,
@@ -139,7 +213,7 @@ impl Chip {
                 },
             )
         } else {
-            let bg = if self.hovered && self.interactive {
+            let bg = if self.hovered && self.pressable() {
                 theme.glass.surface_hover.0
             } else {
                 [0.0; 4]
