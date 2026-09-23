@@ -23,17 +23,31 @@
 //! the messages (`proto`), their codec (`codec`), the ring of served
 //! revisions (`Ring`) and the protocol against an app (`Server`, which
 //! reaches the app only through `Host`) are pure and compile everywhere,
-//! wasm included.
+//! wasm included. the socket is unix only: `AgentPort` (the app's side,
+//! off unless `PLEV_AGENT=1` in a debug build or the app opts in) and
+//! `Client` (the agent's side, which the `plev` binary uses).
 
+#[cfg(unix)]
+mod client;
 mod codec;
 mod error;
+#[cfg(unix)]
+mod place;
+#[cfg(unix)]
+mod port;
 mod proto;
 mod redact;
 mod ring;
 mod server;
 
+#[cfg(unix)]
+pub use client::Client;
 pub use codec::{Refusal, decode_client, decode_server, encode_client, encode_server};
 pub use error::WireError;
+#[cfg(unix)]
+pub use place::{MAX_APP, check_app, find, socket_dir, socket_path};
+#[cfg(unix)]
+pub use port::{AgentPort, Config, ENV, MAX_CONNS, MAX_LINE, Wake, enabled};
 pub use proto::{
     Act, Ask, Bound, ClientMsg, DeltaReply, Observe, ProtoError, Reply, ServerMsg, SnapshotReply,
     StageReply, VERSION,
