@@ -111,12 +111,26 @@ fn scenario(md: &mut String, run: &Run) {
     let drawn: Vec<&Sample> = all.iter().copied().filter(|s| s.drawn).collect();
     let _ = writeln!(md, "### {}\n", run.title);
     let _ = writeln!(md, "{}\n", run.setup);
+    let probes = |p| {
+        pct(
+            all.iter().map(|s| {
+                Stage::ALL
+                    .iter()
+                    .map(|&st| s.stages.get(st).calls)
+                    .sum::<u64>() as f64
+            }),
+            p,
+        )
+    };
     let _ = writeln!(
         md,
-        "frames drawn: {} of {}. the last turn's scene: {}.\n",
+        "frames drawn: {} of {}. the last turn's scene: {}. probe calls per turn: \
+         p50 {}, p95 {}.\n",
         drawn.len(),
         all.len(),
-        run.scene
+        run.scene,
+        probes(50.0),
+        probes(95.0)
     );
     for note in &run.notes {
         let _ = writeln!(md, "{note}\n");

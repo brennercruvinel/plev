@@ -1,12 +1,14 @@
 //! What each stage of a frame costs for a few real interactions of the
 //! gallery (task-73 phase 1): typing in the todo input, toggling an item,
 //! hovering a list, a modal mid-opening, typing in a large document, an
-//! idle redraw, a focused field at rest.
+//! idle redraw, a focused field at rest, and the floor of an empty frame.
+//! `--probe-cost` prints what one probe costs with stages off and on.
 //!
 //! ```text
 //! cargo run --release -p showcase --example measure -- --out measurements.md
 //!     [--frames 120] [--scenario <key>]... [--theme core]
 //!     [--width 1200 --height 800 --scale 2] [--no-gpu-sync]
+//! cargo run --release -p showcase --example measure -- --probe-cost
 //! ```
 //!
 //! Each scenario opens a page (or the editor) headless, drives it with the
@@ -18,6 +20,8 @@
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod harness;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod probe_cost;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod report;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod scenarios;
@@ -25,6 +29,10 @@ mod scenarios;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.iter().any(|a| a == "--probe-cost") {
+        print!("{}", probe_cost::markdown());
+        return;
+    }
     match cli::parse(&args) {
         Ok(None) => println!("{}", cli::USAGE),
         Ok(Some(request)) => {
@@ -57,6 +65,7 @@ mod cli {
 usage: measure [--out <file.md>] [--frames <n>] [--scenario <key>]...
                [--theme <name>] [--width <px>] [--height <px>] [--scale <s>]
                [--no-gpu-sync]
+       measure --probe-cost
 defaults: every scenario, 120 frames, theme core, 1200x800 at scale 2
 (the window's launch size on a retina display), the gpu wait on.
 scenarios: type toggle hover overlay editor editor-page idle caret floor";
