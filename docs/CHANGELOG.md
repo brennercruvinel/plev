@@ -9,6 +9,13 @@ status: living
 
 ## unreleased
 
+- a caret at rest costs two frames a second, not sixty (2026-09-23,
+  task-82, adr a-tick-asks-for-a-deadline): text widgets answer their tick
+  with a `Wake` (a frame now, and when the next is due) instead of "keep
+  drawing", the engine's `AnimationTick` carries the real time since the
+  last tick beside the clamped one, and the showcase shell sleeps until
+  the caret's next flip. a focused, untouched field went from 120 of 120
+  measured turns drawn to 4. the ide adopts it in a second phase.
 - a frame as svg, and a page's meaning as json (2026-09-23, task-66b, adr
   svg-export-reads-the-scene): `showcase --render <page> --svg f.svg`
   writes the same frame the png shows as vectors, text as glyph outlines

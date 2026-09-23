@@ -7,6 +7,7 @@ domain: engine
 task: task-82
 depends: [task-62]
 branch: task/82-caret-wake
+integrated-phase-a: d97a375
 ---
 
 # task-82: o caret não pode pedir 60 frames por segundo
@@ -49,6 +50,29 @@ cenário g da `showcase --example measure` cai para 2 ou 3 frames por
 segundo desenhados com o campo focado e parado; digitar continua
 desenhando cada tecla; o caret continua piscando (teste com relógio
 injetado conferindo as viradas); gate verde.
+
+## fase a integrada (2026-09-23)
+
+integrada na `main` em `d97a375` (oito commits, rebaseados pelo agente
+sobre a 62c e a 66b e pelo orquestrador sobre um commit de docs, sem
+conflito), validada pelo orquestrador: diff inteiro lido (o `Wake` e o
+`Blink` no comps, `since_last` aditivo no engine, o shell do showcase em
+`WaitUntil` com o retorno a `Wait` em `ResumeTimeReached`), gate verde no
+diretório da task sobre a base `26d7e3d` (1985 passed, 0 failed, 6
+ignored; a `main` tinha 1969); o rebase final só cruzou docs. ADR:
+`docs/ADR/a-tick-asks-for-a-deadline.md`.
+
+decisão do orquestrador registrada: opção 1 do agente (`since_last` no
+`AnimationTick`, `dt` travado mantido); os dois literais em
+`engine/src/window/mod.rs` e os testes do perf e do monster ganharam o
+campo. aceitos: `Wake::after` no lugar de `in_`; `tick -> bool` preso onde
+o ide, o exemplo do comps, o rec e o headless ainda leem.
+
+a task fica em `ongoing/` pela fase b: o ide (`commit_form.rs`, `main.rs`)
+e o urnaui adotam o `Wake` e o shell deles passa `since_last`, agora que
+a 62c saiu da superfície do ide. dívidas herdadas: `EditorView` sem foco
+pisca enquanto visível; caret do dock contínuo com o painel aberto; o
+worker do git e a bridge de accessibility pedem frames avulsos.
 
 ## revisão do orquestrador (2026-09-23, antes do briefing)
 
