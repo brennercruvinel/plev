@@ -34,6 +34,9 @@ fn down(x: f32, y: f32) -> WidgetEvent {
 fn up(x: f32, y: f32) -> WidgetEvent {
     WidgetEvent::MouseUp { x, y }
 }
+fn wheel(x: f32, y: f32, delta: f32) -> WidgetEvent {
+    WidgetEvent::Scroll { x, y, delta }
+}
 
 fn click(mut result: impl FnMut(&WidgetEvent) -> EventResult) -> EventResult {
     let r1 = result(&down(20.0, 20.0));

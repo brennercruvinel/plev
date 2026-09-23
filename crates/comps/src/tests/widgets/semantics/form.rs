@@ -352,13 +352,8 @@ fn a_click_at_the_foot_of_a_full_select_panel_picks_no_hidden_option() {
     let options: Vec<String> = (0..9).map(|i| format!("option {i}")).collect();
     let mut open = Select::new(options, 8).sem(size.clone());
     open.open();
-    let top = open.dropdown_rect(B, &theme).center();
-    let back = WidgetEvent::Scroll {
-        x: top.0,
-        y: top.1,
-        delta: -1000.0,
-    };
-    assert!(open.handle_event(&back, B, &theme).changed);
+    let (x, y) = open.dropdown_rect(B, &theme).center();
+    assert!(open.handle_event(&wheel(x, y, -1000.0), B, &theme).changed);
     let mut c = Compositor::new();
     let overlay = c.create_layer(100);
     c.begin_frame();
@@ -390,4 +385,253 @@ fn a_click_at_the_foot_of_a_full_select_panel_picks_no_hidden_option() {
     assert_eq!(c.hit(x, band), None, "nothing is drawn in the band");
     assert_eq!(pick(x, band), None, "and a click there picks nothing");
     assert_eq!(c.binding(&size.key(drawn.to_string())), None);
+}
+
+// Select: the scrolling panel (task-81)
+
+/// Twenty options, far more than `dropdown_max_h` fits in any theme.
+fn long_select(selected: usize) -> Select {
+    Select::new((0..20).map(|i| format!("option {i}")), selected)
+}
+
+/// One frame of `select`: the control on the default layer, the open
+/// panel on an overlay.
+fn panel_frame(select: &Select, theme: &Theme) -> (Compositor, LayerId) {
+    let mut c = Compositor::new();
+    let overlay = c.create_layer(100);
+    c.begin_frame();
+    select.render(&mut c, B, theme);
+    select.render_dropdown(&mut c, overlay, B, theme);
+    (c, overlay)
+}
+
+/// The strip of the panel the rows scroll in: inside the menu padding.
+fn strip(select: &Select, theme: &Theme) -> Rect {
+    let panel = select.dropdown_rect(B, theme);
+    let pad = theme.control.menu_pad;
+    Rect::new(panel.x, panel.y + pad, panel.w, panel.h - pad * 2.0)
+}
+
+fn row_h(theme: &Theme) -> f32 {
+    theme.control.height(engine::theme::ControlSize::Md)
+}
+
+/// `who` is drawn whole inside `strip`, and `hit` at its center answers
+/// it. Returns the center.
+#[track_caller]
+fn assert_shows_whole(c: &Compositor, who: &SemId, strip: Rect) -> (f32, f32) {
+    let [x, y, w, h] = c
+        .binding(who)
+        .unwrap_or_else(|| panic!("{who} is not bound"))
+        .rect;
+    assert!(
+        y >= strip.y && y + h <= strip.y + strip.h,
+        "{who} at {:?} is cut by the strip {strip:?}",
+        [x, y, w, h]
+    );
+    let center = (x + w / 2.0, y + h / 2.0);
+    assert_eq!(c.hit(center.0, center.1), Some(who));
+    center
+}
+
+#[test]
+fn a_long_select_scrolls_to_its_last_option_and_a_click_there_picks_it() {
+    let theme = hoff();
+    let size = id("size");
+    let mut select = long_select(0).sem(size.clone());
+    let (x, y) = B.center();
+    assert!(select.handle_event(&down(x, y), B, &theme).changed);
+    let (c, _) = panel_frame(&select, &theme);
+    assert_eq!(
+        c.binding(&size.key("19")),
+        None,
+        "out of the window at first"
+    );
+
+    // The wheel over the panel, far past the end: the rows stop at the last.
+    let (px, py) = select.dropdown_rect(B, &theme).center();
+    assert!(
+        select
+            .handle_event(&wheel(px, py, 10_000.0), B, &theme)
+            .changed
+    );
+    let (c, overlay) = panel_frame(&select, &theme);
+    let s = strip(&select, &theme);
+    let last = Rect::new(s.x, s.y + s.h - row_h(&theme), s.w, row_h(&theme));
+    assert_bound(&c, &size.key("19"), last, overlay);
+    assert_eq!(
+        c.binding(&size.key("0")),
+        None,
+        "the first row scrolled out"
+    );
+
+    let (x, y) = last.center();
+    assert!(select.handle_event(&down(x, y), B, &theme).clicked);
+    assert_eq!(select.selected_label(), Some("option 19"));
+    assert!(!select.is_open());
+}
+
+/// After a scroll that cuts a row at the top of the strip and another at
+/// its foot, `hit` and a click agree at every pixel line of the panel, on
+/// its left edge, its middle and its right edge: the same row, or nothing
+/// in the padding above and in the band at the foot.
+#[test]
+fn hit_and_a_click_agree_at_every_point_of_a_scrolled_select_panel() {
+    let theme = hoff();
+    let size = id("size");
+    let mut select = long_select(0).sem(size.clone());
+    select.open();
+    let panel = select.dropdown_rect(B, &theme);
+    let (px, py) = panel.center();
+    let scroll = wheel(px, py, row_h(&theme) * 3.5);
+    assert!(select.handle_event(&scroll, B, &theme).changed);
+    let (c, _) = panel_frame(&select, &theme);
+
+    // Rows 3 (cut at the top) to 10 (cut at the foot) are drawn and bound.
+    let bound: Vec<&str> = c
+        .bindings()
+        .map(|(who, _)| who.as_str())
+        .filter(|who| *who != "size")
+        .collect();
+    let window: Vec<String> = (3..11).map(|i| format!("size[{i}]")).collect();
+    assert_eq!(bound, window);
+
+    // What a click at (x, y) picks. Option 0 is selected and out of the
+    // window, so every pick changes the selection.
+    let pick = |x: f32, y: f32| {
+        let mut s = select.clone();
+        let r = s.handle_event(&down(x, y), B, &theme);
+        r.clicked.then(|| size.key(s.selected.to_string()))
+    };
+    let mut reached = std::collections::BTreeSet::new();
+    for x in [panel.x, panel.x + panel.w / 2.0, panel.x + panel.w] {
+        let mut y = panel.y;
+        while y <= panel.y + panel.h {
+            let hit = c.hit(x, y).cloned();
+            assert_eq!(hit, pick(x, y), "at ({x}, {y})");
+            reached.extend(hit);
+            y += 1.0;
+        }
+    }
+    assert_eq!(reached.len(), window.len(), "every drawn row is reached");
+    let pad = theme.control.menu_pad;
+    let x = panel.x + panel.w / 2.0;
+    for y in [panel.y + pad / 2.0, panel.y + panel.h - pad / 2.0] {
+        assert_eq!((c.hit(x, y), pick(x, y)), (None, None), "the padding");
+    }
+}
+
+#[test]
+fn the_arrow_keys_move_the_highlight_past_the_window_and_scroll_it_into_view() {
+    let theme = hoff();
+    let size = id("size");
+    let mut select = long_select(0).sem(size.clone());
+    assert_eq!(select.highlight_next(&theme), EventResult::IGNORED);
+    assert_eq!(select.pick_highlighted(), EventResult::IGNORED);
+    select.open();
+    let s = strip(&select, &theme);
+
+    for i in 1..20 {
+        assert!(select.highlight_next(&theme).changed, "down to {i}");
+        assert_eq!(select.highlighted(), Some(i));
+        let (c, _) = panel_frame(&select, &theme);
+        assert_shows_whole(&c, &size.key(i.to_string()), s);
+    }
+    let (c, _) = panel_frame(&select, &theme);
+    assert_eq!(c.binding(&size.key("0")), None, "the window moved down");
+    let end = select.highlight_next(&theme);
+    assert!(end.handled && !end.changed, "the last option stays");
+
+    for i in (0..19).rev() {
+        assert!(select.highlight_prev(&theme).changed, "up to {i}");
+        assert_eq!(select.highlighted(), Some(i));
+        let (c, _) = panel_frame(&select, &theme);
+        assert_shows_whole(&c, &size.key(i.to_string()), s);
+    }
+    let (c, _) = panel_frame(&select, &theme);
+    assert_eq!(c.binding(&size.key("19")), None, "the window moved up");
+    assert!(
+        !select.highlight_prev(&theme).changed,
+        "the first option stays"
+    );
+
+    // Enter picks the highlighted option, like a click on its row.
+    select.highlight_next(&theme);
+    assert!(select.pick_highlighted().clicked);
+    assert_eq!((select.selected, select.is_open()), (1, false));
+    // Nothing highlighted: Enter just closes.
+    select.open();
+    let r = select.pick_highlighted();
+    assert!(r.changed && !r.clicked);
+    assert_eq!((select.selected, select.is_open()), (1, false));
+}
+
+#[test]
+fn opening_a_long_select_scrolls_the_selected_option_into_view() {
+    let theme = hoff();
+    let size = id("size");
+    // The 18th option, opened by a click on the control and by the action.
+    let mut clicked = long_select(17).sem(size.clone());
+    let (x, y) = B.center();
+    clicked.handle_event(&down(x, y), B, &theme);
+    let mut opened = long_select(17).sem(size.clone());
+    opened.open();
+    for select in [clicked, opened] {
+        assert!(select.is_open());
+        let (c, _) = panel_frame(&select, &theme);
+        let (x, y) = assert_shows_whole(&c, &size.key("17"), strip(&select, &theme));
+        // A click there keeps it, and closes the panel.
+        let mut s = select.clone();
+        let r = s.handle_event(&down(x, y), B, &theme);
+        assert!(r.changed && !r.clicked);
+        assert_eq!((s.selected, s.is_open()), (17, false));
+    }
+
+    // One in the middle opens as the first row of the window.
+    let mut mid = long_select(8).sem(size.clone());
+    mid.open();
+    let (c, _) = panel_frame(&mid, &theme);
+    let s = strip(&mid, &theme);
+    assert_shows_whole(&c, &size.key("8"), s);
+    assert_eq!(c.binding(&size.key("8")).unwrap().rect[1], s.y);
+    assert_eq!(c.binding(&size.key("7")), None);
+}
+
+#[test]
+fn an_open_long_select_projects_every_option_and_binds_only_the_rows_it_draws() {
+    let theme = hoff();
+    let size = id("size");
+    let mut select = long_select(0).sem(size.clone());
+    select.open();
+    let s = snap(|b| {
+        select.project(b, &size, "size", None);
+    });
+    assert_eq!(s.children(&size).count(), 20, "every option is a child");
+    let (c, _) = panel_frame(&select, &theme);
+    let bound: Vec<&str> = c
+        .bindings()
+        .map(|(who, _)| who.as_str())
+        .filter(|who| *who != "size")
+        .collect();
+    let window: Vec<String> = (0..7).map(|i| format!("size[{i}]")).collect();
+    assert_eq!(bound, window, "only the rows the panel draws");
+}
+
+#[test]
+fn select_scroll_and_the_keyboard_highlight_are_visual_only() {
+    let theme = hoff();
+    let size = id("size");
+    let mut select = long_select(0);
+    select.open();
+    let seen = snap(|b| {
+        select.project(b, &size, "size", None);
+    });
+    let req = Request::observe(&seen, test_actor(), &size, "close", None).unwrap();
+    let (x, y) = select.dropdown_rect(B, &theme).center();
+    assert!(select.handle_event(&wheel(x, y, 200.0), B, &theme).changed);
+    assert!(select.highlight_next(&theme).changed);
+    let now = snap(|b| {
+        select.project(b, &size, "size", None);
+    });
+    assert_visual_only(&req, &seen, &now);
 }
