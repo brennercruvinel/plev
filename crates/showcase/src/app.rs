@@ -35,17 +35,18 @@ const TITLE: &str = "plev, design system showcase";
 ///
 /// `GpuReady` is sent by the async GPU-init task on wasm and never
 /// constructed natively (desktop blocks on `GpuContext::new` inside
-/// `resumed` instead); `Wake` comes from the git worker and `Access` from
-/// the accessibility adapter's and the agent port's threads, all on
-/// desktop only. One instance is in flight at a time, so the size gap is
-/// irrelevant.
+/// `resumed` instead); `Wake`, `Access` and `Agent` come from the git
+/// worker, the accessibility adapter and the agent port, desktop only.
+/// One instance is in flight at a time, so the size gap is irrelevant.
 #[allow(dead_code, clippy::large_enum_variant)]
 enum UserEvent {
     /// The git worker finished a command: drain it on the next frame.
     Wake,
-    /// A screen reader or an agent asked for something (or a reader
-    /// started listening): carry it out and draw, which sends the tree.
+    /// A screen reader started listening or asked for something: carry
+    /// out what it asked and draw, which sends it the tree.
     Access,
+    /// An agent asked through the port: serve it, draw if an act ran.
+    Agent,
     GpuReady {
         gpu: GpuContext,
         text_system: TextSystem,
@@ -85,14 +86,12 @@ pub struct App {
     access: Access,
 }
 
-/// The actors that reach the window from outside it (a screen reader
-/// through the accessibility bridge, an agent through the agent port) and
-/// how their threads wake the event loop.
+/// The window's outside actors (a screen reader, agents through the port)
+/// and how their threads wake the event loop.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 #[derive(Default)]
 struct Access {
     bridge: Option<engine::accessibility::Bridge>,
-    /// Open only with `PLEV_AGENT=1` in a debug build.
     agent: Option<wire::AgentPort>,
     proxy: Option<winit::event_loop::EventLoopProxy<UserEvent>>,
 }
@@ -153,6 +152,17 @@ impl App {
         }
         self.view.resize(lw, lh, sf);
         self.invalidate();
+    }
+
+    /// What agents asked through the port, served on this thread; a frame
+    /// only when an act ran, since an observation changes nothing.
+    fn serve_agent(&mut self) {
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        if let Some(port) = self.access.agent.as_mut() {
+            if self.view.serve_agent(port, &self.compositor) {
+                self.invalidate();
+            }
+        }
     }
 }
 
@@ -238,9 +248,10 @@ impl ApplicationHandler<UserEvent> for App {
                     target_os = "android",
                     target_os = "ios"
                 )))]
-                self.access.carry_out(&mut self.view, &self.compositor);
+                self.access.carry_out(&mut self.view);
                 self.invalidate();
             }
+            UserEvent::Agent => self.serve_agent(),
             UserEvent::GpuReady {
                 gpu,
                 text_system,
@@ -431,7 +442,7 @@ pub fn run() {
     app.access.proxy = Some(proxy.clone());
     let agent = proxy.clone();
     app.access.agent = ShowcaseView::agent_port(move || {
-        let _ = agent.send_event(UserEvent::Access);
+        let _ = agent.send_event(UserEvent::Agent);
     });
     app.view.connect_git(Box::new(move || {
         let _ = proxy.send_event(UserEvent::Wake);
@@ -456,14 +467,10 @@ impl Access {
         }
     }
 
-    /// What the screen reader and the agents asked, on the main thread: a
-    /// request goes through the active page's dispatcher as
-    /// `Actor::Assistive` or `Actor::Agent`, a reader's focus move to the
-    /// page's focus.
-    fn carry_out(&mut self, view: &mut ShowcaseView, compositor: &Compositor) {
-        if let Some(port) = self.agent.as_mut() {
-            view.serve_agent(port, compositor);
-        }
+    /// What the screen reader asked, on the main thread: a request goes
+    /// through the active page's dispatcher as `Actor::Assistive`, a focus
+    /// move to the page's focus.
+    fn carry_out(&mut self, view: &mut ShowcaseView) {
         let Some(bridge) = self.bridge.as_mut() else {
             return;
         };
