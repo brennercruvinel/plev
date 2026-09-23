@@ -6,9 +6,13 @@
 //! optionally [`PerfMonitor::record_memory`]); consumers read an immutable
 //! [`PerfSnapshot`] for logging ([`PerfSnapshot::log_line`]) or the visual
 //! overlay ([`PerfHud`]).
+//!
+//! [`stages`] is the other half: what each stage of a frame costs (calls,
+//! items, time), off unless a thread turns it on.
 
 mod hud;
 mod memory;
+pub mod stages;
 mod window;
 
 #[cfg(test)]
