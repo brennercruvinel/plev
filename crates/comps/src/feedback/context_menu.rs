@@ -3,11 +3,16 @@
 //! item radius, base-2sm labels (text-default at rest, text-active on
 //! hover), optional leading icon, separators. Width fits the widest
 //! label and never drops under `size.menu_w`.
+//!
+//! With a [`SemId`] ([`ContextMenu::sem`]) the render binds the menu and
+//! each item to the rects it draws and hit-tests them with, and
+//! [`ContextMenu::project`] declares the menu in a semantic projection.
 
 use crate::icons;
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ControlSize, IconSize, Intent, Theme};
+use sem::{NodeBuilder, Policy, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 use crate::recipe::{inset_keylight, menu_shadow, rounded_rect, rounded_rect_stroke};
@@ -95,6 +100,7 @@ impl MenuEntry {
 pub struct ContextMenu {
     pub entries: Vec<MenuEntry>,
     hovered: Option<usize>,
+    sem: Option<SemId>,
 }
 
 impl ContextMenu {
@@ -102,7 +108,61 @@ impl ContextMenu {
         Self {
             entries,
             hovered: None,
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds the menu to
+    /// (`Compositor::bind_to_layer`); each item binds as `<id>[<item id>]`.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this menu as `id` in a projection: a `Role::Menu` named
+    /// `label` with a `close` action, and one `Role::MenuItem` child
+    /// `<id>[<item id>]` per item (separators are not items), named by its
+    /// label, enabled unless disabled, with an `activate` whose policy is
+    /// destructive for a destructive item. The hovered row is never
+    /// projected. It only reads the widget; the app owns it and runs the
+    /// actions (what an item does, and closing the menu). Pass the id
+    /// given to [`ContextMenu::sem`] so the nodes and the bindings name the
+    /// same controls. Returns the menu's node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        for entry in &self.entries {
+            if let MenuEntry::Item {
+                id: item,
+                label,
+                disabled,
+                intent,
+                ..
+            } = entry
+            {
+                let mut node = b.node(id.key(item.to_string()), Role::MenuItem, label.as_str());
+                node.parent(id).enabled(!disabled);
+                node.action("activate").policy(Policy {
+                    destructive: *intent == Intent::Destructive,
+                    ..Policy::default()
+                });
+            }
+        }
+        let mut node = b.node(id, Role::Menu, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.action("close");
+        node
     }
 
     pub fn hovered(&self) -> Option<usize> {
@@ -227,6 +287,19 @@ impl ContextMenu {
         let (w, h) = self.size(theme);
         let glass = &theme.glass;
         let body = Rect::new(x, y, w, h);
+        let rows = self.entry_rects(x, y, theme);
+        if let Some(id) = &self.sem {
+            compositor.bind_to_layer(layer, id, [x, y, w, h]);
+            for (entry, r) in self.entries.iter().zip(&rows) {
+                if let MenuEntry::Item { id: item, .. } = entry {
+                    compositor.bind_to_layer(
+                        layer,
+                        &id.key(item.to_string()),
+                        [r.x, r.y, r.w, r.h],
+                    );
+                }
+            }
+        }
 
         // Floating shadow, then the solid popover surface; row icons
         // pushed later stack on top (push order is preserved across
@@ -248,12 +321,7 @@ impl ContextMenu {
         inset_keylight(compositor, layer, body, m.radius, theme);
 
         let style = Self::label_style(theme);
-        for (i, (entry, rect)) in self
-            .entries
-            .iter()
-            .zip(self.entry_rects(x, y, theme))
-            .enumerate()
-        {
+        for (i, (entry, rect)) in self.entries.iter().zip(rows).enumerate() {
             match entry {
                 MenuEntry::Separator => {
                     compositor.push_to_layer(
