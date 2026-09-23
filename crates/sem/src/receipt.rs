@@ -29,6 +29,10 @@ pub type Millis = u64;
 pub struct RequestId(u64);
 
 impl RequestId {
+    pub(crate) fn new(n: u64) -> Self {
+        RequestId(n)
+    }
+
     pub fn as_u64(self) -> u64 {
         self.0
     }
@@ -147,6 +151,30 @@ pub struct Receipt {
 }
 
 impl Receipt {
+    /// a receipt with no stage yet, not validated.
+    pub(crate) fn new(id: RequestId, request: Request) -> Self {
+        Receipt {
+            id,
+            request,
+            validated_against: None,
+            stages: Vec::new(),
+        }
+    }
+
+    /// appends a stage the dispatcher already knows is legal: the first is
+    /// `Requested`, each next one follows `can_advance_to`.
+    pub(crate) fn push(&mut self, stage: Stage, at: Millis) {
+        debug_assert!(
+            match self.stage() {
+                None => stage == Stage::Requested,
+                Some(now) => now.can_advance_to(&stage),
+            },
+            "illegal transition to {}",
+            stage.name()
+        );
+        self.stages.push((stage, at));
+    }
+
     /// the current stage: the last one.
     pub fn stage(&self) -> Option<&Stage> {
         self.stages.last().map(|(stage, _)| stage)

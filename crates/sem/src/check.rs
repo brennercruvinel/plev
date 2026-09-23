@@ -3,6 +3,7 @@
 
 use crate::decl::{ActionDecl, Actors, Confirm, Constraints};
 use crate::diff::{Change, state_change};
+use crate::error::SemErrors;
 use crate::id::SemId;
 use crate::name::ActionName;
 use crate::request::{Actor, Request};
@@ -23,7 +24,7 @@ pub enum Verdict {
 }
 
 /// why a request was refused. `check` returns the first of these that
-/// holds, in the order the variants are listed here.
+/// holds, in the order the variants are listed here (see `check`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
@@ -46,6 +47,10 @@ pub enum Rejection {
     Disabled { target: SemId, action: ActionName },
     /// the parameter does not fit the action.
     InvalidParam { reason: String },
+    /// the app's projection did not validate, so there was no current
+    /// state to check against. only the dispatcher answers this, before
+    /// the order above; `check` itself always has a snapshot.
+    InvalidProjection { errors: SemErrors },
 }
 
 /// decides `req` against `now`, the current state. pure: the same request

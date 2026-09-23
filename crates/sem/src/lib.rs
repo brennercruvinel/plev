@@ -78,12 +78,23 @@
 //! observed it (a file unstaged while it was deciding to commit),
 //! `Snapshot::diff` names what changed: `removed: ["lexer.rs"]`.
 //!
+//! acting on a capability goes through the same contract. a `Request`
+//! carries the values its actor observed for the state the action reads
+//! (`Request::observe`); `check` decides it against the current snapshot
+//! in a fixed order and answers a `Verdict`, with a `Rejection::Stale`
+//! that holds the delta when the observed state moved. the `Dispatcher` is
+//! the one path for a person, an agent, assistive technology and a test:
+//! it projects the app's live state (`Operable`), checks, executes, and
+//! keeps a `Receipt` whose `Stage`s walk only legal transitions, with the
+//! time the caller passed; `ReceiptSink`s see every stage as it happens.
+//!
 //! the crate is pure data: no gpu, no window, no text stack.
 
 mod builder;
 mod check;
 mod decl;
 mod diff;
+mod dispatch;
 mod error;
 mod hash;
 mod id;
@@ -101,6 +112,7 @@ pub use builder::{ActionBuilder, NodeBuilder, Semantics, SnapshotBuilder};
 pub use check::{Rejection, Verdict, check};
 pub use decl::{ActionDecl, Actors, Confirm, Constraints, ParamSpec, Policy};
 pub use diff::Change;
+pub use dispatch::{DEFAULT_RETENTION, Dispatcher, Execution, Operable, ReceiptSink};
 pub use error::{SemError, SemErrors};
 pub use hash::Revision;
 pub use id::SemId;

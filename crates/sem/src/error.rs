@@ -1,10 +1,14 @@
 //! the error model: `SemError` for one violation, returned by the parse
-//! functions; `SemErrors` for every violation of a projection at once.
+//! functions and for a wrong use of the request api (an unknown request,
+//! an illegal transition); `SemErrors` for every violation of a projection
+//! at once. a refused action is not an error: it is a `Verdict`.
 
 use std::convert::Infallible;
 
 use crate::id::SemId;
 use crate::name::ActionName;
+use crate::receipt::RequestId;
+use crate::request::Actor;
 use crate::value::StateRef;
 
 /// one violation of the contract.
@@ -53,6 +57,22 @@ pub enum SemError {
     /// node is not there, or it does not declare the action.
     #[error("{node} does not offer action {action} in the observed snapshot")]
     UnknownAction { node: SemId, action: ActionName },
+    /// a request id the dispatcher does not hold: never issued, or finished
+    /// and dropped by retention.
+    #[error("request {0} is not held by the dispatcher")]
+    UnknownRequest(RequestId),
+    /// a stage that cannot follow the receipt's current one, named by
+    /// their stable names (`Stage::name`).
+    #[error("request {id} cannot go from {from} to {to}")]
+    IllegalTransition {
+        id: RequestId,
+        from: String,
+        to: String,
+    },
+    /// a confirmation by an actor that is not a human: only a person
+    /// confirms.
+    #[error("request {id} waits for a human; {by} cannot confirm it")]
+    ConfirmByNonHuman { id: RequestId, by: Actor },
 }
 
 /// the builder accepts typed values too, whose conversion cannot fail.

@@ -1,6 +1,6 @@
 //! what bounds a node (`Constraints`) and what it accepts (`ActionDecl`
 //! with its `Policy`). all of it is data: applying a policy or checking a
-//! precondition belongs to the dispatcher, not to this crate.
+//! precondition belongs to `check` and the `Dispatcher`.
 
 use crate::name::ActionName;
 use crate::value::{StateRef, ValueKind};
