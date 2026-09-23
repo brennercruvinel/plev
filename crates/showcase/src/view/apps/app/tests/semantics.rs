@@ -49,7 +49,10 @@ fn the_page_projects_the_todo_model() {
     assert!(input.constraints.editable);
     let actions: Vec<&str> = input.actions.iter().map(|a| a.name.as_str()).collect();
     assert_eq!(actions, ["set_value", "submit"]);
-    assert_eq!(input.actions[1].reads[0].to_string(), "todo.input:text");
+    for action in &input.actions {
+        let reads: Vec<String> = action.reads.iter().map(ToString::to_string).collect();
+        assert_eq!(reads, ["todo.input:text"], "{}", action.name);
+    }
     assert!(!input.actions[1].enabled, "a blank field cannot submit");
 
     assert_eq!(node("todo.filter").role, Role::TabList);
@@ -62,6 +65,7 @@ fn the_page_projects_the_todo_model() {
         assert_eq!(t.role, Role::Tab);
         assert_eq!(t.parent, Some(sid("todo.filter")));
         assert_eq!(t.actions[0].name.as_str(), "select");
+        assert_eq!(t.actions[0].reads[0].to_string(), "todo.filter:selected");
     }
 
     // The seed: three items, the third completed.
@@ -212,6 +216,40 @@ fn a_test_submit_goes_stale_when_the_text_moves_and_not_when_the_caret_or_hover_
         Some(Stage::Completed(_))
     ));
     assert_eq!(s.model.visible_items().last().unwrap().text(), "ab");
+}
+
+#[test]
+fn a_test_tab_select_goes_stale_when_the_filter_moves() {
+    let content = content_at(1500.0);
+    let mut s = TodoPage::new();
+    let seen = s.snapshot().unwrap();
+    let stale =
+        Request::observe(&seen, tester(), "todo.filter[completed]", "select", None).unwrap();
+
+    // The person clicks the Active pill after the test looked.
+    let (px, py) = lay(&s, content).pills[1].center();
+    assert!(click(&mut s, content, px, py).clicked);
+    assert_eq!(s.model.filter(), Filter::Active);
+    let id = s.dispatch(stale);
+    let Some(Stage::Rejected(Rejection::Stale { changes })) = s.receipt(id).unwrap().stage() else {
+        panic!("the switch must go stale");
+    };
+    let selected = StateRef::parse("todo.filter:selected").unwrap();
+    assert!(matches!(
+        &changes[..],
+        [Change::StateChanged { at, before: Some(Value::Text(b)), after: Some(Value::Text(a)), .. }]
+            if *at == selected && b == "all" && a == "active"
+    ));
+    assert_eq!(
+        s.model.filter(),
+        Filter::Active,
+        "the person's choice holds"
+    );
+
+    // Observed again, the switch goes through.
+    let stage = ask_as_test(&mut s, "todo.filter[completed]", "select", None);
+    assert!(matches!(stage, Stage::Completed(_)), "{stage:?}");
+    assert_eq!(s.model.filter(), Filter::Completed);
 }
 
 #[test]

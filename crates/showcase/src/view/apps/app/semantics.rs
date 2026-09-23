@@ -8,9 +8,10 @@
 //! same ids (`draw.rs`), beside the scene.
 //!
 //! The semantic model: `todo` (region, inert while the view holds an
-//! overlay up), `todo.input` (text input: `text`, `set_value`, `submit`
+//! overlay up), `todo.input` (text input: `text`, `set_value` and `submit`
 //! reading `todo.input:text`), `todo.filter` (tab list: `selected`) with
-//! one tab per filter (`select`), `todo.item[<id>]` for each visible item
+//! one tab per filter (`select` reading `todo.filter:selected`),
+//! `todo.item[<id>]` for each visible item
 //! (list item: `completed`, `toggle` reading it, `remove`) and
 //! `todo.counter` (status: `active`, `done`).
 
@@ -155,10 +156,12 @@ impl Semantics for TodoPage {
         b.node(&ids.filter, Role::TabList, "filter")
             .parent(&ids.todo)
             .state("selected", filter_key(self.model.filter()));
+        let selected = format!("{}:selected", ids.filter);
         for (tab, f) in ids.tabs.iter().zip(Filter::ALL) {
             b.node(tab, Role::Tab, f.label())
                 .parent(&ids.filter)
-                .action("select");
+                .action("select")
+                .reads(selected.as_str());
         }
         for item in self.model.visible_items() {
             let id = ids.item(item.id());
