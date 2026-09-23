@@ -296,6 +296,6 @@ atualizado em cada integração.
 | onda 0 | integrada | `1d384d4` | how-to reconstruído, regra de commit, docs do programa |
 | task-57 | integrada | `860b029` | crate `sem`; `Change` ficou na 57 com doze variantes; detalhes em `checked/task-57-semantic-contract-done.md` |
 | task-58 | integrada | `20c601e` | dispatcher, receipts, check; devolvida uma vez (confirmação por tecnologia assistiva, id no `execute`); detalhes em `checked/task-58-actions-preconditions-receipts-done.md` |
-| task-59 | em andamento (fase a) | | onda 3 |
-| task-66 | em andamento | | onda 3 |
-| task-73 | aguardando | | a fase 1 (medição) saiu da onda 3: a instrumentação por estágio mexe em `window/frame.rs` e no compositor, que a 66 e a 59 são donas nesta onda; roda logo depois das duas, já medindo projeção semântica e usando o headless |
+| task-59 | fase a integrada, fase b em andamento | `f71dc20` | ligação no compositor, três widgets, todo pelo dispatcher; fase b = os outros widgets |
+| task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (pendente) |
+| task-73 | fase 1 (medição) em andamento | | a fase 1 (medição) saiu da onda 3: a instrumentação por estágio mexe em `window/frame.rs` e no compositor, que a 66 e a 59 são donas nesta onda; roda logo depois das duas, já medindo projeção semântica e usando o headless |

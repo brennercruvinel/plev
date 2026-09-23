@@ -48,6 +48,30 @@ paralelas para a mesma coisa.
 - modal e overlay vivem em `crates/comps/src/feedback` e
   `crates/comps/src/overlay` (`OverlayManager`).
 
+## fase a fechada (2026-09-23)
+
+integrada na `main` em `f71dc20` (seis commits), validada: diff lido, gate
+verde (1636 testes), o modelo do todo só muda dentro de `execute`
+(conferido no código), a view mudou só onde a spec permitia
+(`overlay_holds_pointer`, reuso da condição de modal que já existia). ADR:
+`docs/ADR/semantic-binding-beside-the-scene.md`.
+
+decisões aceitas: a layer da ligação é explícita (`bind` na default,
+`bind_to_layer` na dada), porque inferir pela última escrita erra quando o
+widget liga antes de desenhar; o clip é lido dos nós da própria layer;
+inerte por setter chamado pela view; a linha inteira é
+`todo.item[<id>]` e o checkbox da linha fica sem id para não duplicar;
+só itens visíveis pelo filtro são projetados. custo medido: 50 a 60 ns por
+ligação, projeção do todo com 103 itens em cerca de 50 µs (M4, release).
+
+limitações que seguem: `hit` só enxerga ids ligados (quem recusa página
+coberta é o inert); `hit` não lê o `clip_rect` físico da layer;
+`Binding.view` fica `None` nos widgets do comps; contador e
+`todo.filter` sem rect ligado.
+
+falta a fase b: os outros widgets interativos do comps com `SemId`, helper
+de projeção e matriz.
+
 ## revisão do orquestrador depois das tasks 57 e 58 (2026-09-23)
 
 esta seção vale sobre o resto do arquivo onde os dois divergirem.

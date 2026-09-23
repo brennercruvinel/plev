@@ -50,6 +50,7 @@ only work with rustup.
 cargo build --release --workspace
 
 cargo run -p showcase [page] [theme] [scroll]      # the design-system gallery, one page per component (title as the sidebar shows it, "Data Table")
+cargo run -p showcase -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png   # any page to png, no window
 cargo run -p ide [path]                # plev-native git client
 cargo run -p prime                     # prime-coherence particle swarm
 cargo run -p engine --example snake    # any of the windowed demos
@@ -141,6 +142,7 @@ a construct silently.
 cargo run -p engine --example lot2monsters in.json out.monster
 cargo run -p engine --example svg2monster  in.svg  out.monster
 cargo run -p engine --example monster_player out.monster
+cargo run -p engine --example monster_player out.monster --frame 0.5 --out f.png   # one frame, no window
 
 cargo run -p parser --example transpile  index.tsx module.sass vars.sass
 cargo run -p parser --example preview    index.tsx module.sass vars.sass

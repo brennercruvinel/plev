@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-66
@@ -9,9 +9,57 @@ wave: 3
 depends: []
 depends-optional: [task-57]
 branch: task/66-headless
+integrated: c6738be
 ---
 
 # task-66: headless como primeira classe
+
+## fechamento (2026-09-23)
+
+integrada na `main` em `c6738be` (nove commits), rebaseada pelo
+orquestrador sobre a task-59 fase a sem conflito. validada: diff lido, gate
+verde no estado combinado (1660 testes, 24 novos desta task), e conferida
+por pixel: `showcase --render Todo --theme hoff` duas vezes com o mesmo
+sha256 e o fundo medido em (48, 48, 48). o agente rodou a matriz inteira
+(78 páginas, dois temas, dois viewports, duas execuções, 624 renders, zero
+diferença) e comparou frames de monster com janela contra headless por
+sha256 no Metal: iguais. ADR: `docs/ADR/headless-render-shares-the-frame-path.md`.
+
+o que entrou: `GpuContext::new_headless` e o construtor da janela terminam
+no mesmo `from_device`; `window::draw_frame`; `GpuContext::texture_render_view`;
+`engine::headless` (`Renderer`, `Frame`, `read_texture`, `HeadlessError`);
+o probe de texto por cima dele, sem o pipeline privado; `showcase --render`;
+`monster_player --frame` e `--capture` (a comparação reproduzível).
+
+o que ficou de fora e por quê:
+
+- o item 7, exportação SVG, parou na regra de arquivo fora da lista, com
+  razão: texto vetorial honesto precisa do shaping do `TextSystem`, que é
+  privado, e copiar o shaping para o headless seria um segundo caminho de
+  medição, o defeito que o ADR one-text-style fechou. decisão do
+  orquestrador: opção A (glifos como contorno via `SwashCache`, com a
+  string no `aria-label` do grupo), em follow-up próprio com os arquivos
+  `text/system.rs`, `text/fonts.rs` e `gpu/image.rs` liberados:
+  `docs/mission/steps/pending/task-66b-svg-export.md`.
+- `--semantics` do showcase: só a mensagem de "ainda não"; entra agora que
+  a 59 fase a está na `main` (fica no follow-up da 66b, que é pequeno).
+
+limitações declaradas:
+
+- um teste do probe mudou de sentido (`a_static_layer_survives_frames_of_atlas_churn`):
+  o caminho real nunca redesenha layer limpa, então o teste agora afirma
+  que os pixels da layer estática sobrevivem ao churn do atlas no loop
+  real. registrado no ADR.
+- `engine::window::App::render` (`window/render.rs`) ainda tem o próprio
+  fim de frame, com effects e o HUD de perf; nenhum app usa. anotado na
+  task-60, que mexe em `window/`.
+- só verificado no Metal; outro adapter é a task-77.
+
+incidente de processo: ao parar o próprio gate, o agente rodou
+`pkill -f "script/gate"`, que matou um comando do agente da 59 no worktree
+vizinho. o estado final da 59 foi validado pelo gate do orquestrador e
+estava íntegro. a regra "processo se mata por pid exato, nunca por
+padrão" entrou em `docs/how-to/orchestrate-coding-agents-on-this-repo.md`.
 
 ## objetivo
 

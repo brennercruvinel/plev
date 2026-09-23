@@ -65,6 +65,24 @@ what exists (updated at each task close-out):
   confirmation (`Actor::Human` or `Actor::Assistive`), and keeps a
   `Receipt` whose stages sinks see as they happen. `cargo run -p sem
   --example commit` is the thesis scenario in thirty lines of app.
+- the binding table (task-59, adr semantic-binding-beside-the-scene): a
+  widget with a `SemId` calls `Compositor::bind` (or `bind_to_layer` on
+  the layer it draws into) with the rect it draws and hit-tests with;
+  the table sits beside the scene, never in a layer hash, and
+  `Compositor::hit(x, y)` answers which capability is under a point.
+  `TextField`, `Checkbox` and `Button` take `.sem(id)` and have a
+  `project` helper; the other widgets follow (task-59 phase b).
+- the first app on the one path is the showcase todo page
+  (`crates/showcase/src/view/apps/app/semantics.rs`): `Semantics +
+  Operable`, owner of a `Dispatcher`; every click, the Enter key and the
+  filter pills become `Request::observe(.., Actor::Human, ..)`; the model
+  changes only inside `execute`; while an overlay holds the pointer the
+  view calls `set_inert(true)` and every request comes back `Inert`. copy
+  this shape.
+- headless (task-66, adr headless-render-shares-the-frame-path):
+  `GpuContext::new_headless` and `window::draw_frame` draw any frame into
+  a texture through the window's path; `showcase --render` and
+  `monster_player --frame` use it.
 - the only identity the engine itself has is still `ViewId`, a per-frame
   counter reset in `InputState::begin_frame`
   (crates/engine/src/input/mod.rs). it is a temporary render identity,

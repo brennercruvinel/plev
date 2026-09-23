@@ -9,6 +9,25 @@ status: living
 
 ## unreleased
 
+- headless is first class (2026-09-23, task-66, adr
+  headless-render-shares-the-frame-path): any frame renders without a
+  window through the window's own path. `GpuContext::new_headless` builds
+  every pipeline with the same code as the windowed constructor,
+  `window::draw_frame` draws into any srgb view (`present_frame` is now
+  acquire, draw, present, unchanged for every app), and `engine::headless`
+  reads the texture back to png. `cargo run -p showcase -- --render <page>
+  --out f.png` and `monster_player <file> --frame <t> --out f.png` use it;
+  the text probe's private offscreen pipeline is gone. 78 pages, two
+  themes, two viewports: byte-identical across runs.
+- the showcase todo runs on the semantic contract (2026-09-23, task-59
+  phase a, adr semantic-binding-beside-the-scene): the compositor keeps a
+  per-frame table of which capability sits where (`bind`, `hit`), beside
+  the scene and outside every layer hash; `TextField`, `Checkbox` and
+  `Button` take a `SemId` and project their role, state and actions; the
+  todo page projects itself, owns a dispatcher, and every click, the Enter
+  key and the filters reach the model only through it, as `Actor::Human`
+  requests. a test drives the same page by clicks and by test requests
+  and gets the same state; an open modal makes the page inert.
 - actions carry the state their actor observed (2026-09-23, task-58, adr
   actions-carry-observed-state): `sem` gains `Request::observe`, a pure
   `check` with a fixed order (not found, unknown action, not authorized,

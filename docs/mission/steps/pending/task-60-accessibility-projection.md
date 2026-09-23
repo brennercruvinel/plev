@@ -50,6 +50,20 @@ disabled, foco, modais e regras da interface).
   (`crates/engine/Cargo.toml:21-22`), deps `accesskit` 0.24 e
   `accesskit_winit` 0.32.
 
+## notas do orquestrador (2026-09-23)
+
+- a task-59 fase a está na `main`: `Compositor::bindings()` e `hit()`
+  existem, e só `TextField`, `Checkbox` e `Button` (mais o todo do
+  showcase) ligam ids; a fase b liga os outros widgets. a árvore desta
+  task sai do snapshot mais as ligações, então páginas sem projeção
+  continuam sem árvore até serem ligadas: isso é esperado, não um
+  fallback a construir.
+- `engine::window::App::render` (`window/render.rs`) ainda tem um fim de
+  frame próprio, fora do `window::draw_frame` da task-66; é o mesmo
+  arquivo onde mora o caminho de accessibility que esta task substitui.
+  ao remover o caminho antigo, fazer esse `render` passar por
+  `draw_frame` ou registrar por que não.
+
 ## escopo
 
 1. construtor puro `Snapshot + bindings -> accesskit::TreeUpdate`:

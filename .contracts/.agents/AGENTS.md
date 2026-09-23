@@ -130,6 +130,10 @@ typos job (non-blocking; the repo is bilingual english/portuguese).
 
 ## running
 
+- headless: `cargo run -p showcase -- --render <page> --out f.png [--theme
+  --width --height --scale --scroll]` draws any page without a window
+  through the same frame path; `monster_player <file> --frame <t> --out
+  f.png` does one monster frame. prefer it to window captures
 - apps: `cargo run -p showcase [page] [theme] [scroll px]` (gallery, page = the sidebar title; `script/web`
   runs `trunk --config web serve` for the browser), `cargo run -p ide
   [path]` (git client), `cargo run -p prime` (particle swarm),

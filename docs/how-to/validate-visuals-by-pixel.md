@@ -48,10 +48,20 @@ the renderer behind it is `engine::text::probe` (offscreen texture, real
 entry point. tests skip when no GPU adapter is present rather than
 failing.
 
-task-66 generalizes this to any showcase page, theme, viewport and scale,
-and to any `.monster` frame (`showcase --render ...`,
-`monster_player --frame ...`); when it lands, prefer it over window
-captures for anything that does not need a live window.
+since task-66 the probe renders through `engine::headless`, which draws
+with the window's own frame path (`window::draw_frame`) into an
+offscreen texture: same pipelines, same srgb view, no second renderer.
+any showcase page and any `.monster` frame go to png the same way:
+
+```
+cargo run -p showcase -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png
+cargo run -p engine --example monster_player f.monster --frame 0.5 --out f.png
+```
+
+two runs on one machine are byte-identical, the hoff background measures
+(48,48,48), and a monster frame matches the windowed player's by sha256
+(Metal). prefer this to a window capture for anything that does not need
+a live window; an adapter-less machine skips the GPU tests.
 
 ## desktop windows (macOS)
 
