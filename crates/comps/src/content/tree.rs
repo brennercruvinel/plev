@@ -2,7 +2,9 @@ use crate::icons;
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{IconSize, Theme};
+use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
+use super::list::reachable;
 use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// The per-theme geometry the hit test and the render share: a dense
@@ -96,11 +98,16 @@ pub struct TreeRow {
 /// Rows are laid out top-down from `bounds.y`; the caller decides whether
 /// to wrap it in a scrollable region (pair with
 /// [`VirtualList`](crate::content::VirtualList)-style clipping for huge trees).
+///
+/// With a [`SemId`] ([`Tree::sem`]) the render binds the tree and each row
+/// it draws to the rects it hit-tests them with, and [`Tree::project`]
+/// declares the tree in a semantic projection.
 #[derive(Clone, Debug)]
 pub struct Tree {
     pub roots: Vec<TreeNode>,
     pub selected: Option<u64>,
     hovered_row: Option<usize>,
+    sem: Option<SemId>,
 }
 
 impl Tree {
@@ -109,7 +116,65 @@ impl Tree {
             roots,
             selected: None,
             hovered_row: None,
+            sem: None,
         }
+    }
+
+    /// The logical identity the render binds the tree to
+    /// (`Compositor::bind`); each drawn row binds as `<id>[<node id>]`.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Declares this tree as `id` in a projection: a `Role::Tree` named
+    /// `label` and one `Role::TreeItem` `<id>[<node id>]` per visible row
+    /// (the children of collapsed branches are not rows until expanded),
+    /// nested as the tree nests them: a root's parent is the tree, a
+    /// child's parent is its branch's item. Each item carries `selected`
+    /// and a `select` that reads it; a branch also carries `expanded` and
+    /// a `toggle_expanded` that reads it. Hover is never projected. It only
+    /// reads the widget; the app owns it and runs the actions
+    /// ([`Tree::toggle`], `selected`). Pass the id given to [`Tree::sem`]
+    /// so the nodes and the bindings name the same controls. Returns the
+    /// tree's node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        // Depth first, siblings in order: the order the rows draw in.
+        let mut stack: Vec<(&TreeNode, SemId)> =
+            self.roots.iter().rev().map(|n| (n, id.clone())).collect();
+        while let Some((node, owner)) = stack.pop() {
+            let item = id.key(node.id.to_string());
+            let mut row = b.node(&item, Role::TreeItem, node.label.as_str());
+            row.parent(&owner)
+                .state("selected", self.selected == Some(node.id));
+            if node.is_branch() {
+                row.state("expanded", node.expanded);
+            }
+            row.action("select").reads(format!("{item}:selected"));
+            if node.is_branch() {
+                row.action("toggle_expanded")
+                    .reads(format!("{item}:expanded"));
+                if node.expanded {
+                    stack.extend(node.children.iter().rev().map(|c| (c, item.clone())));
+                }
+            }
+        }
+        let mut node = b.node(id, Role::Tree, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node
     }
 
     pub fn row_height(&self, theme: &Theme) -> f32 {
@@ -219,12 +284,21 @@ impl Tree {
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
         let m = Metrics::of(theme);
         let style = &m.style;
+        if let Some(id) = &self.sem {
+            compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         for (i, row) in self.visible_rows().iter().enumerate() {
             let ry = bounds.y + i as f32 * m.row_h;
             if ry + m.row_h > bounds.y + bounds.h + m.row_h {
                 break;
             }
             let row_rect = Rect::new(bounds.x, ry, bounds.w, m.row_h);
+            // The row binds where the hit test finds it: inside the bounds.
+            if let Some(id) = &self.sem
+                && let Some(r) = reachable(row_rect, bounds)
+            {
+                compositor.bind(&id.key(row.id.to_string()), [r.x, r.y, r.w, r.h]);
+            }
             let is_selected = self.selected == Some(row.id);
             let is_hovered = self.hovered_row == Some(i);
 

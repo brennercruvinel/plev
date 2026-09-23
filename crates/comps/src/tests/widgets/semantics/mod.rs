@@ -4,6 +4,7 @@
 //! owns. one file per comps category; the helpers below are shared.
 
 mod action;
+mod content;
 mod form;
 mod nav;
 
