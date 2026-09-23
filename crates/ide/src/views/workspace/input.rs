@@ -269,7 +269,8 @@ impl WorkspaceView {
     /// Points the diff panel at file `idx` and queues the real diff fetch.
     pub(crate) fn open_file_diff(&mut self, idx: usize) {
         if let Some(file) = self.unassigned.files.get(idx) {
-            self.diff.show_file(&file.path);
+            let target = self.ids.as_ref().map(|ids| ids.file(&file.path));
+            self.diff.show_file(&file.path, target);
             self.requests.push(UiRequest::FileDiff {
                 path: file.path.clone(),
             });
@@ -279,7 +280,8 @@ impl WorkspaceView {
     /// Points the diff panel at a commit and queues the real diff fetch.
     pub(crate) fn open_commit_diff(&mut self, si: usize, ci: usize) {
         if let Some(commit) = self.stacks.stacks.get(si).and_then(|s| s.commits.get(ci)) {
-            self.diff.show_commit(&commit.message, &commit.sha);
+            let target = self.ids.as_ref().map(|ids| ids.commit(&commit.sha));
+            self.diff.show_commit(&commit.message, &commit.sha, target);
             self.requests.push(UiRequest::CommitDiff {
                 sha: commit.sha.clone(),
             });

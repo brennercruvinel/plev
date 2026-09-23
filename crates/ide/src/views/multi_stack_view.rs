@@ -13,6 +13,7 @@ use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
 use engine::text::TextMeasurer;
 use engine::theme::{ControlSize, Theme};
+use sem::SemId;
 
 /// A commit in a stack.
 #[derive(Clone, Debug)]
@@ -32,6 +33,10 @@ pub struct Stack {
 }
 
 /// State for the center "Stacks" panel.
+///
+/// With its ids set ([`MultiStackView::set_sem`]) the render binds the
+/// column as `stacks` and each drawn commit card as
+/// `stacks.commit[<sha>]`.
 pub struct MultiStackView {
     pub stacks: Vec<Stack>,
     pub selected_commit: Option<(usize, usize)>, // (stack_idx, commit_idx)
@@ -39,6 +44,8 @@ pub struct MultiStackView {
     scrollbar: Scrollbar,
     /// Cached hit rects from last render (stack_idx, commit_idx, x, y, w, h).
     hit_rects: Vec<(usize, usize, f32, f32, f32, f32)>,
+    /// `stacks` and `stacks.commit` (keyed by sha), when the view binds.
+    sem: Option<(SemId, SemId)>,
 }
 
 impl MultiStackView {
@@ -50,7 +57,14 @@ impl MultiStackView {
             scroll: ScrollState::new(),
             scrollbar: Scrollbar::new(),
             hit_rects: Vec::new(),
+            sem: None,
         }
+    }
+
+    /// The ids the render binds: `list` for the column, `commit` keyed by
+    /// sha for each drawn card.
+    pub(crate) fn set_sem(&mut self, list: SemId, commit: SemId) {
+        self.sem = Some((list, commit));
     }
 
     /// Replaces the stacks (e.g. from fresh `git log`/`branches` data),
@@ -141,6 +155,9 @@ impl MultiStackView {
         self.scroll.set_content(total_h);
 
         // Feed surface: the page tone.
+        if let Some((list, _)) = &self.sem {
+            compositor.bind(list, [x, y, w, h]);
+        }
         compositor.push(SceneNode::Rect {
             x,
             y,
@@ -212,6 +229,10 @@ impl MultiStackView {
                         glass.surface
                     };
                     let card = Rect::new(row_x, cy, row_w, commit_h);
+                    if let Some((_, base)) = &self.sem {
+                        let id = base.key(commit.sha.as_str());
+                        compositor.bind(&id, [card.x, card.y, card.w, card.h]);
+                    }
                     compositor.push(rounded_rect(
                         card.x,
                         card.y,

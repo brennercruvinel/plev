@@ -10,6 +10,7 @@ use super::header::Header;
 use super::multi_stack_view::MultiStackView;
 use super::sidebar::Sidebar;
 use super::unassigned_view::UnassignedView;
+use crate::ids::Ids;
 use comps::feedback::{ContextMenu, Modal};
 use comps::overlay::OverlayManager;
 use engine::compositor::{Compositor, LayerId};
@@ -89,6 +90,11 @@ pub struct WorkspaceView {
     /// the header is skipped; the rail and the three panels fill the
     /// frame from `origin`.
     pub embedded: bool,
+
+    /// The logical identities the views bind and the workbench projects;
+    /// `None` only if the constant ids failed to parse (a test proves they
+    /// do not), which leaves the workspace without semantics.
+    pub(crate) ids: Option<Ids>,
 }
 
 /// Overlay-driven interaction state: which file the open context menu or
@@ -178,9 +184,29 @@ impl WorkspaceView {
             vh,
             origin: (0.0, 0.0),
             embedded: false,
+            ids: Ids::new()
+                .inspect_err(|e| log::error!("ide: the workspace ids do not parse: {e}"))
+                .ok(),
         };
+        if let Some(ids) = &view.ids {
+            view.unassigned
+                .set_sem(ids.changes.clone(), ids.file.clone());
+            view.commit_form
+                .set_sem(ids.form.clone(), ids.message.clone(), ids.submit.clone());
+            view.diff.set_sem(ids.diff.clone());
+            view.stacks.set_sem(ids.stacks.clone(), ids.commit.clone());
+        }
         view.apply_panel_widths();
         view
+    }
+
+    /// Whether a commit can be asked for now: the form is open, the
+    /// message is not blank and something is staged. The Commit button
+    /// draws from this and `commit.submit` projects it.
+    pub fn can_submit(&self) -> bool {
+        self.commit_form.visible
+            && !self.commit_form.message().trim().is_empty()
+            && self.unassigned.files.iter().any(|f| f.staged)
     }
 
     /// Embed inside a host's content rect: no header, rail and panels

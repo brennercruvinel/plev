@@ -10,6 +10,7 @@ use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
+use sem::SemId;
 
 /// A single line in a diff.
 #[derive(Clone, Debug)]
@@ -29,11 +30,19 @@ pub enum DiffLineKind {
 }
 
 /// State for the right "Diff" panel.
+///
+/// With its id set ([`DiffView::set_sem`]) the render binds the column as
+/// `diff`.
 pub struct DiffView {
     pub filename: String,
     pub lines: Vec<DiffLine>,
     pub scroll: ScrollState,
     scrollbar: Scrollbar,
+    /// The capability whose diff the panel shows (`changes.file[..]` or
+    /// `stacks.commit[..]`); `None` when it shows nothing.
+    pub target: Option<SemId>,
+    /// `diff`, when the view binds.
+    sem: Option<SemId>,
 }
 
 impl DiffView {
@@ -44,7 +53,14 @@ impl DiffView {
             lines: Vec::new(),
             scroll: ScrollState::new(),
             scrollbar: Scrollbar::new(),
+            target: None,
+            sem: None,
         }
+    }
+
+    /// The id the render binds the column to.
+    pub(crate) fn set_sem(&mut self, id: SemId) {
+        self.sem = Some(id);
     }
 
     /// Clear the diff view (no file selected).
@@ -52,18 +68,20 @@ impl DiffView {
         self.filename = String::new();
         self.lines = Vec::new();
         self.scroll = ScrollState::new();
+        self.target = None;
     }
 
     /// Point the view at a file whose diff is being fetched. The header
     /// updates immediately; lines arrive later via [`set_lines`](Self::set_lines).
-    pub fn show_file(&mut self, path: &str) {
+    pub fn show_file(&mut self, path: &str, target: Option<SemId>) {
         self.filename = path.to_string();
         self.lines = Vec::new();
         self.scroll = ScrollState::new();
+        self.target = target;
     }
 
     /// Point the view at a commit whose diff is being fetched.
-    pub fn show_commit(&mut self, message: &str, sha: &str) {
+    pub fn show_commit(&mut self, message: &str, sha: &str, target: Option<SemId>) {
         self.filename = format!(
             "{} ({})",
             message.get(..40).unwrap_or(message),
@@ -71,6 +89,7 @@ impl DiffView {
         );
         self.lines = Vec::new();
         self.scroll = ScrollState::new();
+        self.target = target;
     }
 
     /// Replaces the diff content (adapter output of real hunks).
@@ -111,6 +130,9 @@ impl DiffView {
         self.scroll.set_viewport(h - header_h);
         self.scroll.set_content(content_h);
 
+        if let Some(id) = &self.sem {
+            compositor.bind(id, [x, y, w, h]);
+        }
         compositor.push(SceneNode::Rect {
             x,
             y,

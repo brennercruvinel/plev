@@ -3,6 +3,12 @@
 //! rest, hover and selected washes with the edge rim); filename in
 //! base-2sm (text-default, text-active when selected), status letter in
 //! the theme's intent colors, staged marker as the success dot.
+//!
+//! With its ids set ([`UnassignedView::set_sem`]) the render binds the
+//! column as `changes` and each drawn path as `changes.file[<path>]`, to
+//! the rects it draws and hit-tests with.
+
+use std::collections::HashSet;
 
 use crate::status::StatusColors;
 use comps::action::Badge;
@@ -13,6 +19,7 @@ use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
 use engine::text::TextMeasurer;
 use engine::theme::{ControlSize, Theme};
+use sem::SemId;
 
 /// File change status.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -34,6 +41,18 @@ impl FileStatus {
             FileStatus::Untracked => "?",
         }
     }
+
+    /// The status as the semantic projection names it.
+    pub fn name(self) -> &'static str {
+        match self {
+            FileStatus::Modified => "modified",
+            FileStatus::Added => "added",
+            FileStatus::Deleted => "deleted",
+            FileStatus::Renamed => "renamed",
+            FileStatus::Untracked => "untracked",
+        }
+    }
+
     fn color(self, theme: &Theme) -> [f32; 4] {
         let s = StatusColors::of(theme);
         match self {
@@ -55,14 +74,31 @@ pub struct FileEntry {
     pub staged: bool,
 }
 
+/// One changed path, its rows folded together: git reports a path with
+/// changes both in the index and in the worktree as two rows.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PathChange {
+    pub path: String,
+    /// The status of the path's first row.
+    pub status: FileStatus,
+    /// Some change of the path is in the index.
+    pub staged: bool,
+    /// Some change of the path is only in the worktree.
+    pub unstaged: bool,
+}
+
 /// State for the left "Unassigned Changes" panel.
 pub struct UnassignedView {
     pub files: Vec<FileEntry>,
+    /// The highlighted row: where the person is in the list. Navigation,
+    /// like a caret; no capability reads it.
     pub selected_idx: Option<usize>,
     pub scroll: ScrollState,
     scrollbar: Scrollbar,
     /// Cached hit rects from last render (x, y, w, h) per file row.
     hit_rects: Vec<(f32, f32, f32, f32)>,
+    /// `changes` and `changes.file` (keyed by path), when the view binds.
+    sem: Option<(SemId, SemId)>,
 }
 
 impl UnassignedView {
@@ -74,7 +110,41 @@ impl UnassignedView {
             scroll: ScrollState::new(),
             scrollbar: Scrollbar::new(),
             hit_rects: Vec::new(),
+            sem: None,
         }
+    }
+
+    /// The ids the render binds: `list` for the column, `file` keyed by
+    /// path for each drawn row (the first row of a path).
+    pub(crate) fn set_sem(&mut self, list: SemId, file: SemId) {
+        self.sem = Some((list, file));
+    }
+
+    /// Every changed path once, in list order.
+    pub fn changes(&self) -> Vec<PathChange> {
+        let mut out: Vec<PathChange> = Vec::with_capacity(self.files.len());
+        for file in &self.files {
+            match out.iter_mut().find(|c| c.path == file.path) {
+                Some(change) => {
+                    change.staged |= file.staged;
+                    change.unstaged |= !file.staged;
+                }
+                None => out.push(PathChange {
+                    path: file.path.clone(),
+                    status: file.status,
+                    staged: file.staged,
+                    unstaged: !file.staged,
+                }),
+            }
+        }
+        out
+    }
+
+    /// The path of the highlighted row.
+    pub fn selected_path(&self) -> Option<&str> {
+        self.selected_idx
+            .and_then(|i| self.files.get(i))
+            .map(|f| f.path.as_str())
     }
 
     /// Replaces the file list (e.g. from a fresh `git status`), keeping the
@@ -170,6 +240,9 @@ impl UnassignedView {
         self.scroll.set_content(content_h);
 
         // Column surface.
+        if let Some((list, _)) = &self.sem {
+            compositor.bind(list, [x, y, w, h]);
+        }
         compositor.push(SceneNode::Rect {
             x,
             y,
@@ -198,6 +271,8 @@ impl UnassignedView {
         let name_style = theme.typography.base_2sm();
         let status_w = theme.control.box_size;
         let dot = theme.spacing.sm;
+        // A path with two rows binds its first drawn one.
+        let mut bound: HashSet<&str> = HashSet::new();
         for (i, file) in self.files.iter().enumerate() {
             let item_y = list_y + i as f32 * (row_h + gap) - scroll_offset;
             // Skip items outside the visible area. Their hit rect must be
@@ -219,6 +294,11 @@ impl UnassignedView {
                 glass.surface
             };
             let row = Rect::new(row_x, item_y, row_w, row_h);
+            if let Some((_, base)) = &self.sem
+                && bound.insert(file.path.as_str())
+            {
+                compositor.bind(&base.key(file.path.as_str()), [row.x, row.y, row.w, row.h]);
+            }
             compositor.push(rounded_rect(
                 row.x,
                 row.y,
