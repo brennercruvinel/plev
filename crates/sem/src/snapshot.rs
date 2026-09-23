@@ -14,8 +14,9 @@ use crate::value::{StateRef, Value};
 ///
 /// nodes keep projection order, which is deterministic: the same builder
 /// calls give the same snapshot and the same `revision` on every run and
-/// target. equality follows the revision: same nodes in the same order
-/// (ignoring `source`) and the same focus.
+/// target. equality follows the revision: the same nodes (ignoring
+/// `source`), the same tree with the same sibling order, the same focus.
+/// how unrelated subtrees interleave in the projection is not meaning.
 ///
 /// a snapshot from `finish` holds every invariant of the contract. a
 /// `subtree` is a scope of one: its root keeps its parent and its actions
@@ -94,9 +95,38 @@ impl Snapshot {
     }
 
     /// the stable hash of the semantic content (see the `hash` module for
-    /// the encoding). ignores `source`.
+    /// the encoding). ignores `source`, the order state keys were declared
+    /// in and how unrelated subtrees interleave; sibling order counts.
     pub fn revision(&self) -> Revision {
-        hash::revision(&self.nodes, self.focused.as_ref())
+        let order = self.tree_order();
+        let nodes = order.iter().filter_map(|&at| self.node_at(at));
+        hash::revision(order.len(), nodes, self.focused.as_ref())
+    }
+
+    /// node indices in tree order: each root in projection order, then its
+    /// descendants depth first, children in projection order. nodes no root
+    /// reaches (only in a deserialized snapshot with a parent loop) follow
+    /// in projection order, so every node appears once.
+    fn tree_order(&self) -> Vec<usize> {
+        let mut out = Vec::with_capacity(self.nodes.len());
+        let mut seen = vec![false; self.nodes.len()];
+        let mut stack: Vec<usize> = self.roots.iter().rev().copied().collect();
+        loop {
+            while let Some(at) = stack.pop() {
+                match seen.get_mut(at) {
+                    Some(s) if !*s => *s = true,
+                    _ => continue,
+                }
+                out.push(at);
+                if let Some(list) = self.kids.get(at) {
+                    stack.extend(list.iter().rev().copied());
+                }
+            }
+            match seen.iter().position(|s| !*s) {
+                Some(at) => stack.push(at),
+                None => return out,
+            }
+        }
     }
 
     /// `id` and its descendants, in projection order, for an observation
@@ -135,9 +165,14 @@ impl Snapshot {
 
 impl PartialEq for Snapshot {
     fn eq(&self, other: &Self) -> bool {
+        let ours = self.tree_order();
+        let theirs = other.tree_order();
         self.focused == other.focused
-            && self.nodes.len() == other.nodes.len()
-            && self.nodes.values().eq(other.nodes.values())
+            && ours.len() == theirs.len()
+            && ours
+                .iter()
+                .filter_map(|&at| self.node_at(at))
+                .eq(theirs.iter().filter_map(|&at| other.node_at(at)))
     }
 }
 

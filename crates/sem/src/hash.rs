@@ -17,8 +17,9 @@
 //! opt(x)   1 byte 0, or 1 byte 1 then x
 //!
 //! snapshot     str("sem.revision.v1") len(nodes) node... opt(str focused)
+//!              (nodes in tree order, see below)
 //! node         str(id) str(role) str(label) opt(str description)
-//!              opt(str parent) len(state) (str(key) value)...
+//!              opt(str parent) len(state) (str(key) value)... (by key)
 //!              len(actions) action... constraints
 //!              bool(enabled) bool(inert) bool(focusable)
 //! value        str(kind) then: bool | i64 | f64 | str | len(items) str(item)...
@@ -31,14 +32,16 @@
 //!              bool(secret)
 //! ```
 //!
-//! nodes go in projection order and state in declaration order; a `Set`
-//! goes in its sorted order. role, kind and confirm are their stable names
-//! (`Role::as_str`, `ValueKind::as_str`, `Confirm::as_str`); ids and refs
-//! are their canonical text.
+//! nodes go in tree order: each root in projection order, then its
+//! descendants depth first, children in projection order. sibling order is
+//! meaning (the order of a list); how unrelated subtrees interleave in the
+//! projection is not. state goes sorted by key, since the order keys were
+//! declared in is not meaning either; a `Set` goes in its sorted order.
+//! role, kind and confirm are their stable names (`Role::as_str`,
+//! `ValueKind::as_str`, `Confirm::as_str`); ids and refs are their
+//! canonical text.
 
 use std::fmt;
-
-use indexmap::IndexMap;
 
 use crate::decl::{ActionDecl, Constraints, Policy};
 use crate::id::SemId;
@@ -148,12 +151,16 @@ impl Fnv {
     }
 }
 
-/// the revision of a node sequence and its focus.
-pub(crate) fn revision(nodes: &IndexMap<SemId, Node>, focused: Option<&SemId>) -> Revision {
+/// the revision of `count` nodes given in tree order, and the focus.
+pub(crate) fn revision<'a>(
+    count: usize,
+    tree_order: impl Iterator<Item = &'a Node>,
+    focused: Option<&SemId>,
+) -> Revision {
     let mut h = Fnv::new();
     h.str(VERSION);
-    h.len(nodes.len());
-    for node in nodes.values() {
+    h.len(count);
+    for node in tree_order {
         encode_node(&mut h, node);
     }
     h.opt(focused, |h, id| h.str(id.as_str()));
@@ -166,8 +173,10 @@ fn encode_node(h: &mut Fnv, node: &Node) {
     h.str(&node.label);
     h.opt(node.description.as_deref(), Fnv::str);
     h.opt(node.parent.as_ref(), |h, p| h.str(p.as_str()));
-    h.len(node.state.len());
-    for (key, value) in &node.state {
+    let mut state: Vec<_> = node.state.iter().collect();
+    state.sort_unstable_by(|a, b| a.0.cmp(b.0));
+    h.len(state.len());
+    for (key, value) in state {
         h.str(key.as_str());
         encode_value(h, value);
     }

@@ -18,8 +18,9 @@ use crate::value::Value;
 /// effective value: a node is inert when it or any ancestor is (an open
 /// modal leaves the background inert). `state` keeps projection order.
 ///
-/// equality ignores `source`: two nodes that mean the same are equal
-/// wherever they were projected from.
+/// equality ignores `source` and the order state keys were declared in:
+/// two nodes that mean the same are equal wherever and however they were
+/// projected.
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Node {
@@ -44,8 +45,7 @@ impl PartialEq for Node {
             && self.label == other.label
             && self.description == other.description
             && self.parent == other.parent
-            && self.state.len() == other.state.len()
-            && self.state.iter().eq(other.state.iter())
+            && self.state == other.state
             && self.actions == other.actions
             && self.constraints == other.constraints
             && self.enabled == other.enabled

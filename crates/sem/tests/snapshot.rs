@@ -244,6 +244,64 @@ fn the_revision_changes_with_every_semantic_field() {
 }
 
 #[test]
+fn sibling_order_is_meaning_and_interleaving_is_not() {
+    let project = |order: &[&str]| {
+        let mut b = SnapshotBuilder::new();
+        for &name in order {
+            match name {
+                "list" => {
+                    b.node("list", Role::List, "files");
+                }
+                "bar" => {
+                    b.node("bar", Role::Toolbar, "tools");
+                }
+                item => {
+                    b.node(item, Role::ListItem, item).parent("list");
+                }
+            }
+        }
+        b.finish().unwrap()
+    };
+    let base = project(&["list", "list.a", "list.b", "bar"]);
+    let interleaved = project(&["list", "bar", "list.a", "list.b"]);
+    let children_first = project(&["list.a", "list.b", "list", "bar"]);
+    let swapped = project(&["list", "list.b", "list.a", "bar"]);
+    let roots_swapped = project(&["bar", "list", "list.a", "list.b"]);
+    for same in [&interleaved, &children_first] {
+        assert_eq!(same, &base);
+        assert_eq!(same.revision(), base.revision());
+    }
+    for other in [&swapped, &roots_swapped] {
+        assert_ne!(other, &base);
+        assert_ne!(other.revision(), base.revision());
+    }
+}
+
+#[test]
+fn state_declaration_order_is_not_meaning() {
+    let project = |first: &str, second: &str| {
+        let mut b = SnapshotBuilder::new();
+        let mut n = b.node("a", Role::Group, "a");
+        for key in [first, second] {
+            n.state(key, key == "x");
+        }
+        b.finish().unwrap()
+    };
+    let xy = project("x", "y");
+    let yx = project("y", "x");
+    let keys: Vec<&str> = yx
+        .get(&id("a"))
+        .unwrap()
+        .state
+        .keys()
+        .map(|k| k.as_str())
+        .collect();
+    assert_eq!(keys, ["y", "x"]);
+    assert_eq!(xy, yx);
+    assert_eq!(xy.revision(), yx.revision());
+}
+
+#[test]
 fn the_revision_changes_with_flags() {
     let project = |inert: bool, focusable: bool, enabled: bool| {
         let mut b = SnapshotBuilder::new();
@@ -287,8 +345,8 @@ fn the_revision_ignores_where_the_nodes_were_projected() {
 #[test]
 fn a_known_snapshot_has_a_pinned_revision() {
     let snap = Git::base().snapshot();
-    assert_eq!(snap.revision().as_u64(), 0x5a07_da96_9eea_1e0a);
-    assert_eq!(snap.revision().to_string(), "5a07da969eea1e0a");
+    assert_eq!(snap.revision().as_u64(), 0xa9f3_c8c5_7b29_7e42);
+    assert_eq!(snap.revision().to_string(), "a9f3c8c57b297e42");
     assert_eq!(
         SnapshotBuilder::new().finish().unwrap().revision().as_u64(),
         0xe9d5_b61f_09ad_8a21
