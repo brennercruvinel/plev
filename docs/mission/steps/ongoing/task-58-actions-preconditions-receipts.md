@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: in-progress
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-58
@@ -43,6 +43,40 @@ condições tornam as ações válidas, quem está autorizado, o que aconteceu).
 - depois desta task nada disso muda ainda: a ligação com o ide é da
   task-62 e a com a accessibility é da task-60. esta task entrega o
   contrato e o dispatcher, provados com um app de brinquedo nos testes.
+
+## o que a task-57 entregou e muda aqui (revisão do orquestrador, 2026-09-23)
+
+a task-57 está na `main` (`860b029`); o fechamento está em
+`docs/mission/steps/checked/task-57-semantic-contract-done.md`. leia antes
+de começar. o que isso muda nesta task:
+
+- `Change` já existe no `sem` (doze variantes, `Snapshot::diff`). o delta
+  de `Rejection::Stale` é feito de `Change::StateChanged`, um por `read`
+  cujo valor observado difere do atual, com `before` = o observado,
+  `after` = o atual, e `added`/`removed` calculados como o `diff` já
+  calcula (reuse a função interna do módulo `diff`; não escreva uma
+  segunda).
+- `Policy.actors` é `Actors { human, agent, assistive, test }`. o
+  mapeamento de `Actor` é direto: `Human` -> `human`, `Agent { .. }` ->
+  `agent`, `Assistive` -> `assistive`, `Test { .. }` -> `test`.
+- `Confirm::ForAgents` pede confirmação só para `Actor::Agent`;
+  `Confirm::Always` pede para qualquer ator. só `Actor::Human` confirma.
+- `Disabled` vale quando o nó (`Node.enabled`) ou a ação
+  (`ActionDecl.enabled`) está desabilitado.
+- a revisão (`Observation.revision`) é registrada no request e no receipt
+  para rastreio; ela nunca decide `Stale`. a revisão muda com qualquer
+  estado projetado (outro item da lista), e só as `reads` da ação contam.
+- `Request::observe` aceita alvo e nome de ação tipados ou como texto, do
+  mesmo jeito que o builder (`impl TryInto<SemId, Error: Into<SemError>>`),
+  e devolve `Err` se a ação não existe no snapshot visto ou se uma `read`
+  não tem valor lá.
+- campo `secret`: o snapshot guarda só o tamanho, então uma ação que lê um
+  campo secreto só detecta mudança de tamanho. é a escolha certa para
+  privacidade (nenhum hash de senha sai do processo); fica escrito no ADR
+  e no doc da função.
+- `serde_json` (já em `[workspace.dependencies]`) pode entrar como
+  dev-dependency do `sem`, para um golden da forma JSON de `Request`,
+  `Receipt` e `Snapshot`. é a única dependência nova permitida.
 
 ## escopo
 
