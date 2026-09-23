@@ -74,7 +74,7 @@ injetado conferindo as viradas); gate verde.
 
 ## estado (2026-09-23, agente, branch `task/82-caret-wake`)
 
-feito, em três commits que compilam sozinhos:
+feito, em seis commits que compilam sozinhos:
 
 - `comps::Wake` (`crates/comps/src/wake.rs`, exportado na raiz e no
   prelude): `now: bool` (este tick mudou algo visível) e
@@ -109,6 +109,30 @@ feito, em três commits que compilam sozinhos:
   desconta um `DT` fixo por turno e desenha no turno em que vence; o
   tick de um turno desenhado recebe o tempo desde o último turno
   desenhado. o cabeçalho do relatório diz isso no lugar de "fixed tick".
+- engine: `AnimationTick::since_last`, os segundos reais desde o tick
+  anterior, sem clamp (0,0 no primeiro tick); `dt` continua travado em
+  0,1 s para quem anima. os literais `AnimationTick { .. }` que pararam
+  de compilar ganharam o campo: `engine/src/perf/tests.rs`,
+  `monster/src/tests/{play.rs, play_ops.rs}` e os dois ticks zerados de
+  `engine/src/window/mod.rs` (fora da lista autorizada, mas era isso ou
+  o engine não compilava; duas linhas). teste em
+  `engine/src/animation/tests_clock.rs`: dois ticks com 120 ms de sleep
+  entre eles dão `since_last` acima do sleep e `dt` no máximo 0,1.
+- o shell do showcase (`crates/showcase/src/app.rs`): `RedrawRequested`
+  chama `view.wake(tick.since_last)`, desenha, e `pace` traduz o `Wake`:
+  `Some(ZERO)` invalida e pede o próximo frame (como antes para
+  animação), `Some(d)` põe `ControlFlow::WaitUntil(Instant::now() + d)`,
+  `None` põe `Wait`. `now` não pede nada a mais nesse ponto: a cena é
+  construída depois do tick, então o frame em curso já carrega a virada
+  (confirmado na janela: um frame por virada, abaixo).
+  `new_events(StartCause::ResumeTimeReached)` volta o flow para `Wait`
+  (um `WaitUntil` no passado dispara a cada iteração se o redraw não
+  vier, janela ocluída) e chama `invalidate()`, que pede o frame cujo
+  tick vira o caret. uma linha `log::debug!` por frame registra o
+  intervalo e o `Wake`, para contar frames numa janela real.
+- `showcase::view::Wake`, o callback do worker do git, virou `GitWake`
+  (`apps/git.rs`, `git/{stub,desktop}.rs`, `view/mod.rs`); `comps::Wake`
+  é o único `Wake` no view.
 
 medição (release, uma vez, 120 turnos a 60 Hz = 2 s, viewport 1200x800
 a escala 2, theme core):
@@ -119,92 +143,76 @@ a escala 2, theme core):
 | a. digitar no campo | 120 de 120 | 120 de 120 (cada tecla desenha) |
 | f. página parada, deixada em paz | 0 frames | 0 frames |
 
-testes: comps 349 + 3 antes, 363 + 3 depois (11 do `Wake`/`Blink`, 2 do
-`TextInput`, 1 do `EditorView`, todos com dt injetado); showcase 124
-(122 passam, 2 ignorados) + 7 antes e depois (um teste do Input page
-reescrito, contagem igual).
+testes (gate final, `cargo test --workspace`): comps 349 + 3 antes,
+363 + 3 depois (11 do `Wake`/`Blink`, 2 do `TextInput`, 1 do
+`EditorView`, todos com dt injetado); showcase 124 (122 passam, 2
+ignorados) + 7 antes e depois (um teste do Input page reescrito,
+contagem igual); engine 755 antes, 757 depois (os dois do
+`since_last`); monster 119, rec 5, ide 45 iguais. gate verde duas vezes
+(69 `test result: ok`, 0 falhas; a perna do urnaui pulou sem `../urna`).
 
-### parado antes do shell: o `FrameClock` trava o dt em 0,1 s
+### a decisão do FrameClock (tomada: opção 1)
 
-problema. `FrameClock::tick` (`crates/engine/src/animation/mod.rs`)
-devolve `dt.min(0.1)`. o shell do showcase alimenta `view.tick(tick.dt)`
-com isso. se o shell dormir em `ControlFlow::WaitUntil(agora + 0,53 s)`
-e acordar, o tick recebe 0,1 s, não 0,53: o `Blink` avança 0,1, devolve
-`next = 0,43`, o shell dorme de novo, recebe 0,1 de novo. o caret vira
-depois de seis acordadas (período de 1,7 s em vez de 0,53) e desenha
-seis frames por virada. o mecanismo do comps está certo; o que chega
-nele é que mente sobre o tempo. o clamp não protege estabilidade: a
-`Spring` é analítica (exp, cos, sen; estável para qualquer dt) e o
-`Tween` satura no fim. ele só encurta o tempo que os timers veem depois
-de um stall.
+problema: `FrameClock::tick` devolve `dt.min(0.1)`. com o loop dormindo
+em `WaitUntil(agora + 0,53 s)`, o tick acordaria com 0,1 s, o `Blink`
+pediria 0,43, e o caret viraria só depois de seis acordadas (período de
+1,7 s, seis frames por virada). o clamp não protege estabilidade (a
+`Spring` é analítica, o `Tween` satura); ele só encurta o tempo que os
+timers veem depois de um stall.
 
-opções.
+opções consideradas: (1) o engine expõe o tempo real num campo novo,
+`dt` travado mantido; (2) o shell guarda o próprio `Instant` (relógio
+paralelo num app, que ide e urnaui copiariam); (3) dt real por
+diferença de `tick.elapsed` (f32; depois de 8 h o ulp é 3 ms).
 
-1. o engine expõe o tempo real: `AnimationTick` ganha um campo (por
-   exemplo `since_last: f32`, sem clamp) ou `FrameClock::tick` deixa de
-   travar. o shell passa o tempo real para `wake`. impacto: um arquivo
-   do engine; adicionar campo quebra os literais `AnimationTick { .. }`
-   em `crates/engine/src/perf/tests.rs` e `crates/monster/src/tests/`
-   (dono do engine ajusta); tirar o clamp muda o que ide, urnaui e os
-   exemplos do engine veem depois de um stall (as animações saltam para
-   o fim em vez de tocar 0,1 s por frame; com a spring analítica é o
-   destino certo, e é cosmético).
-2. o shell do showcase guarda o próprio `Instant` e calcula o dt sem
-   clamp (o `comps --example editor` já faz isso). impacto: nenhum no
-   engine, mas um relógio paralelo num app, que o ide e o urnaui
-   copiariam na fase b. contra o "avoid building parallel
-   implementations of engine capabilities in apps" do AGENTS.md.
-3. o shell deriva o dt real de `tick.elapsed` (diferença entre frames).
-   impacto: `elapsed` é f32 desde o início; depois de 8 h o ulp é 3 ms
-   e o dt de 16 ms fica quantizado. não serve como mecanismo.
+decisão do orquestrador (2026-09-23): opção 1, campo `since_last`. o
+shell passa `since_last` para `wake`.
 
-recomendação: a opção 1, na forma de um campo novo (`since_last`), com
-o `dt` travado mantido para quem já lê. o shell do showcase passa
-`since_last` para `wake`. a tradução no shell, pronta para entrar num
-commit pequeno depois da decisão (`crates/showcase/src/app.rs`, o
-`RedrawRequested` e dois handlers):
+### na janela real
 
-- `RedrawRequested`: `let wake = self.view.wake(dt_real)`; render;
-  depois `match wake.next`: `Some(ZERO)` -> `compositor.invalidate()` +
-  `request_redraw()` e `ControlFlow::Wait` (como hoje para animação);
-  `Some(d)` -> `set_control_flow(WaitUntil(Instant::now() + d))`;
-  `None` -> `ControlFlow::Wait`. `wake.now` não pede nada a mais nesse
-  ponto: o frame em curso já carrega a virada.
-- `new_events(StartCause::ResumeTimeReached { .. })`: `set_control_flow
-  (Wait)` (um `WaitUntil` no passado dispara a cada iteração) e
-  `self.invalidate()`, que pede o frame cujo tick vira o caret.
-- entrada do usuário e `UserEvent` continuam chamando `invalidate()`;
-  um `WaitUntil` pendente sobrevive a eles e o próximo redraw o refaz.
-  o `PerfHud` não existe no shell do showcase (o contrato
-  `hud-implies-continuous-frames` é do `engine::window`, intocado).
+`cargo run -p showcase Todo` com `RUST_LOG=showcase=debug`, campo
+focado por um clique real (CGEvent) no centro do campo achado pela
+árvore de acessibilidade, depois 6 s sem tocar em nada:
 
-decisão necessária: qual opção, e quem edita `animation/mod.rs`.
+- antes do clique, com a página parada, os frames que apareceram tinham
+  todos `wake now false next None`: pedidos de fora (o worker do git via
+  `UserEvent::Wake`, a bridge de acessibilidade via `UserEvent::Access`
+  quando a árvore é consultada), nenhum do tick. é o comportamento
+  anterior a esta task e fica como está.
+- depois do clique, 11 frames em 6 s, todos `now true`, com `since_last`
+  entre 0,529 e 0,531 s e `next` em torno de 528 ms: um frame por
+  virada, 1,9 por segundo. nenhum frame extra entre viradas. antes desta
+  task o mesmo estado desenhava 60 por segundo.
 
-### estado da branch enquanto o shell espera
-
-o shell do showcase ainda chama `self.view.tick(tick.dt)` e pede frame
-quando ele devolve verdadeiro. com o `tick` do view agora querendo
-dizer "em movimento", na janela o caret do Todo desenha na virada e o
-loop dorme até a próxima entrada: o caret fica parado entre teclas (o
-Editor page já era assim). é o estado de espera, não o de aceite; o
-commit do shell fecha.
+o `WaitUntil` não segura os outros acordadores. winit 0.30
+(`event_loop.rs`, `ControlFlow::WaitUntil`): "When the current loop
+iteration finishes, suspend the thread until either another event
+arrives or the given time is reached." um `request_redraw` do worker do
+git, da bridge de acessibilidade ou do agent port chega como evento e
+encerra a espera; o `RedrawRequested` seguinte refaz o prazo a partir
+do `Wake` daquele frame. o shell do showcase não tem hot reload próprio
+(o `check_narrate_reload` é do `engine::window`, intocado); o `PerfHud`
+também é só do `engine::window`, então o contrato
+`hud-implies-continuous-frames` não muda.
 
 ### dívidas e pendências
 
 - ide (`crates/ide/src/views/commit_form.rs`, `crates/ide/src/main.rs`):
   fase b, depois da 62c. `TextField::tick` e o `bool` de
-  `CommitForm::tick` somem nessa fase.
+  `CommitForm::tick` somem nessa fase; o shell do ide passa
+  `since_last` e traduz o `Wake` como o showcase.
 - urnaui (`crates/urnaui/src/view/field.rs` e o `app.rs`): não compila
   sem `../urna`; adota o `Wake` na mesma fase b, sem verificação local.
 - o `EditorView` não tem foco: o blink dele está sempre pendente, então
-  o Editor page vai pedir uma virada a cada 0,53 s enquanto estiver
-  visível, mesmo sem ninguém editando. um estado de foco no editor
-  (blur -> `Wake::idle()`) é task própria.
+  o Editor page pede uma virada a cada 0,53 s enquanto está visível,
+  mesmo sem ninguém editando (era 60 por segundo só enquanto alguém
+  digitava, e parado entre teclas). um estado de foco no editor (blur
+  -> `Wake::idle()`) é task própria.
 - o caret do dock (`crates/showcase/src/model/dock.rs`, `blink_t`) é
   do modelo da demo e continua pedindo frame contínuo enquanto o painel
   está aberto. fora do escopo desta task.
-- `showcase::view::Wake` (o callback do worker do git,
-  `apps/git.rs`) tem o mesmo nome que `comps::Wake`. os módulos que
-  usam o do comps importam direto e não colidem, mas dois `Wake` no
-  mesmo crate confundem; um rename do alias do git (`Waker`) é
-  cosmético e ficou de fora.
+- com a página parada e sem foco, o worker do git e a bridge de
+  acessibilidade ainda pedem frames avulsos (`next None`); não são do
+  tick e não eram desta task, mas são frames sem mudança visível.
+- a linha `log::debug!` por frame no shell fica: só aparece com
+  `RUST_LOG=showcase=debug` e é o contador que a verificação usou.
