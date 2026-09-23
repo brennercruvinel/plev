@@ -3,6 +3,7 @@
 //! creating a request, the ring within its limits.
 
 mod apps;
+mod file;
 mod measure;
 mod replay;
 mod ring;

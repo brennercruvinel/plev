@@ -11,17 +11,15 @@ use sem::{Actor, Change, Millis, Request, RequestId, Revision, SemId, Snapshot, 
 /// times never go back: a time earlier than the last recorded one is
 /// recorded as the last one, so the stream stays ordered (see
 /// `Stats::clamped`).
-#[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Event {
     pub t: Millis,
     pub kind: Kind,
 }
 
 /// what happened at `Event::t`.
-#[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Kind {
     /// an actor observed the app: the whole snapshot (`scope` none) or
     /// the subtree under `scope`, at `revision`.
@@ -80,9 +78,8 @@ impl Kind {
 /// the kind of a person's input, and nothing of its content: a key's
 /// character or a typed text is never recorded, since it could be a
 /// password.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum InputKind {
     PointerDown,
     PointerUp,

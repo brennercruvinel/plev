@@ -3865,7 +3865,9 @@ dependencies = [
  "sem",
  "serde",
  "serde_json",
+ "sha2",
  "showcase",
+ "tempfile",
  "thiserror 2.0.18",
 ]
 

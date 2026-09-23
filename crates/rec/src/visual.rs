@@ -41,7 +41,7 @@ pub(crate) enum AssetKey {
 }
 
 impl AssetKey {
-    fn of(asset: &LoweredAsset) -> AssetKey {
+    pub(crate) fn of(asset: &LoweredAsset) -> AssetKey {
         match asset {
             LoweredAsset::TextStyle(key) => AssetKey::Text(key.clone()),
             LoweredAsset::Image(handle) => AssetKey::Image(*handle),

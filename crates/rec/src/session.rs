@@ -11,18 +11,26 @@ use sem::{Millis, Receipt, RequestId, SemId, Stage};
 
 use crate::error::ReadError;
 use crate::event::{Event, Kind};
+use crate::format::Build;
 use crate::screen::Screen;
 use crate::state::State;
 
 /// a recorded window, read by time: the semantic track (events) and the
 /// visual track (frames). the semantic track reads without decoding a
 /// single frame.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Session {
     events: Vec<Event>,
     /// indices of the full snapshots, the semantic keyframes, in order.
     keys: Vec<usize>,
     screen: Screen,
+    build: Build,
+}
+
+impl Default for Session {
+    fn default() -> Self {
+        Session::from_events(Vec::new())
+    }
 }
 
 /// one receipt as the window holds it at some time: the stages recorded
@@ -44,7 +52,13 @@ impl Session {
         Session::from_parts(events, Screen::default())
     }
 
+    /// a window of this build of the recorder.
     pub(crate) fn from_parts(events: Vec<Event>, screen: Screen) -> Session {
+        Session::from_file(events, screen, Build::current())
+    }
+
+    /// a window some build wrote.
+    pub(crate) fn from_file(events: Vec<Event>, screen: Screen, build: Build) -> Session {
         let keys = events
             .iter()
             .enumerate()
@@ -55,7 +69,30 @@ impl Session {
             events,
             keys,
             screen,
+            build,
         }
+    }
+
+    pub(crate) fn screen(&self) -> &Screen {
+        &self.screen
+    }
+
+    /// the build of the recorder that recorded the window: its crate
+    /// version and the git commit it was built from (for a window read
+    /// from a file, the one in its header).
+    pub fn build(&self) -> &Build {
+        &self.build
+    }
+
+    /// the first time the window holds, events and frames together, on
+    /// the recorder's clock; 0 for an empty window. a session file carries
+    /// it in its header.
+    pub fn start(&self) -> Millis {
+        [self.span().map(|s| s.0), self.frames_span().map(|s| s.0)]
+            .into_iter()
+            .flatten()
+            .min()
+            .unwrap_or(0)
     }
 
     /// what was on screen at `t`: the frame taken last at or before `t`,

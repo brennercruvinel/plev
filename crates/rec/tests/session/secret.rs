@@ -14,10 +14,12 @@ const SECRET: &str = "hunter2";
 /// every rendering of the recording a secret could hide in.
 fn dumps(rec: &Recorder) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let session = rec.snapshot_window();
+    let file = session.to_bytes()?.0;
     Ok(vec![
         format!("{rec:?}"),
         format!("{session:?}"),
         serde_json::to_string(session.events())?,
+        String::from_utf8_lossy(&file).into_owned(),
     ])
 }
 

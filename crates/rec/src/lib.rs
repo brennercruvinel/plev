@@ -83,7 +83,10 @@
 
 mod error;
 mod event;
+mod format;
 mod limits;
+mod payload;
+mod persist;
 mod recorder;
 mod redact;
 mod ring;
@@ -94,9 +97,11 @@ mod track;
 mod visual;
 mod weigh;
 
-pub use error::{FrameError, ReadError};
+pub use error::{FileError, FrameError, ReadError};
 pub use event::{Event, InputKind, Kind};
+pub use format::{ANIMATION_MAGIC, Build, FileKind, MAGIC, VERSION, probe};
 pub use limits::{Limits, Stats};
+pub use persist::Persisted;
 pub use recorder::{Recorder, Sink};
 pub use session::{ReceiptAt, Session};
 pub use state::State;

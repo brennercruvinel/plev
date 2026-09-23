@@ -3,14 +3,16 @@
 //! ring behind a lock that is held only inside a recorder call, never
 //! across the app's code, so no call can find it taken by the same thread.
 
+use std::path::Path;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use engine::compositor::{Compositor, Layer, SceneNode};
 use sem::{Actor, Millis, Receipt, ReceiptSink, Revision, SemId, Snapshot, Stage};
 
-use crate::error::FrameError;
+use crate::error::{FileError, FrameError};
 use crate::event::InputKind;
 use crate::limits::{Limits, Stats};
+use crate::persist::Persisted;
 use crate::ring::Inner;
 use crate::session::Session;
 
@@ -119,6 +121,13 @@ impl Recorder {
     /// a copy of what the ring holds now, to read back.
     pub fn snapshot_window(&self) -> Session {
         lock(&self.inner).window()
+    }
+
+    /// writes the retained window to `path` as a session `.monster` file
+    /// (magic `MONS`). the window is copied under the lock and written
+    /// after it, so recording goes on while the file is written.
+    pub fn persist(&self, path: impl AsRef<Path>) -> Result<Persisted, FileError> {
+        self.snapshot_window().write(path)
     }
 
     pub fn stats(&self) -> Stats {
