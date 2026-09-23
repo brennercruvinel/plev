@@ -240,7 +240,7 @@ impl Visual {
             .into_iter()
             .map(|asset| self.hold(asset))
             .collect();
-        let pieces = encode(&open.frames);
+        let pieces = encode(open.frames);
         if pieces.is_empty() {
             self.counts.errors += 1;
         }
@@ -380,7 +380,7 @@ impl Visual {
         let Some(open) = &self.open else {
             return Vec::new();
         };
-        encode(&open.frames)
+        encode(open.frames.clone())
             .into_iter()
             .map(|(start, times, bytes)| {
                 let chunk = Chunk {
@@ -406,28 +406,38 @@ fn config() -> DiscoverConfig {
     }
 }
 
+/// one encoded piece of a chunk: its start, its frame times from the
+/// start, the monster v0 bytes.
+type Piece = (Millis, Vec<u32>, Vec<u8>);
+
 /// encodes frames as one chunk, or, when the codec refuses them (a u16
-/// count over), as two halves, each encoded the same way. every piece
-/// comes back with its start and its frame times.
-fn encode(frames: &[(Millis, Vec<Node>)]) -> Vec<(Millis, Vec<u32>, Vec<u8>)> {
-    let Some((start, _)) = frames.first() else {
+/// count over), as two halves, each encoded the same way.
+fn encode(frames: Vec<(Millis, Vec<Node>)>) -> Vec<Piece> {
+    let Some(&(start, _)) = frames.first() else {
         return Vec::new();
     };
-    let start = *start;
     let rel = |t: Millis| u32::try_from(t.saturating_sub(start)).unwrap_or(u32::MAX);
+    let times: Vec<u32> = frames.iter().map(|(t, _)| rel(*t)).collect();
     let samples: Vec<(f32, Vec<Node>)> = frames
-        .iter()
-        .map(|(t, nodes)| (seconds(rel(*t)), nodes.clone()))
+        .into_iter()
+        .map(|(t, nodes)| (seconds(rel(t)), nodes))
         .collect();
     let encoded = monster::discover(&samples, &config())
         .ok()
         .and_then(|timeline| monster::encode(&timeline, &[], &[]).ok());
     match encoded {
-        Some(bytes) => vec![(start, frames.iter().map(|(t, _)| rel(*t)).collect(), bytes)],
-        None if frames.len() > 1 => {
-            let (a, b) = frames.split_at(frames.len() / 2);
-            let mut out = encode(a);
-            out.extend(encode(b));
+        Some(bytes) => vec![(start, times, bytes)],
+        None if samples.len() > 1 => {
+            let mid = samples.len() / 2;
+            let whole: Vec<(Millis, Vec<Node>)> = times
+                .into_iter()
+                .zip(samples)
+                .map(|(at, (_, nodes))| (start + Millis::from(at), nodes))
+                .collect();
+            let mut first = whole;
+            let second = first.split_off(mid);
+            let mut out = encode(first);
+            out.extend(encode(second));
             out
         }
         None => Vec::new(),

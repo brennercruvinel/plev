@@ -290,6 +290,63 @@ fn a_frame_from_a_compositor_records_its_visible_layers_in_order() -> Fallible {
 }
 
 #[test]
+fn a_chunk_the_codec_refuses_is_split_and_still_reads_back() -> Fallible {
+    // 600 nodes that change kind on every frame: 600 replace ops per
+    // frame, past the u16 op count of one delta block over 120 frames.
+    let flip = |i: u64| -> Vec<SceneNode> {
+        (0..600)
+            .map(|n| {
+                let (x, y) = ((n % 30) as f32 * 10.0, (n / 30) as f32 * 10.0);
+                if (i + n) % 2 == 0 {
+                    SceneNode::Rect {
+                        x,
+                        y,
+                        w: 8.0,
+                        h: 8.0,
+                        color: [1.0, 0.0, 0.0, 1.0],
+                    }
+                } else {
+                    SceneNode::RoundedRect {
+                        x,
+                        y,
+                        w: 8.0,
+                        h: 8.0,
+                        color: [0.0, 0.0, 1.0, 1.0],
+                        corner_radius: 2.0,
+                        border_width: 0.0,
+                        border_color: [0.0; 4],
+                    }
+                }
+            })
+            .collect()
+    };
+    let rec = Recorder::new(Limits {
+        chunk_every: 100_000,
+        chunk_frames: 120,
+        ..Limits::default()
+    });
+    for i in 0..121u64 {
+        rec.frame_scene(i * 10, &flip(i))?;
+    }
+    let stats = rec.stats();
+    assert_eq!(stats.chunks_closed, 2, "the 120 frames went as two halves");
+    assert_eq!(stats.frame_errors, 0);
+    let session = rec.snapshot_window();
+    assert_eq!(session.frame_keys(), [0, 600, 1_200]);
+    assert_eq!(session.frame_times().len(), 121);
+    let mut bank = AssetBank::new();
+    for i in [0u64, 59, 60, 119, 120] {
+        let shown = session.scene_at(i * 10)?.ok_or("no frame")?;
+        assert_eq!(
+            on_grid(&shown, &mut bank),
+            on_grid(&flip(i), &mut bank),
+            "frame {i}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn a_frame_over_the_ir_limits_is_refused_and_counted() -> Fallible {
     let rec = Recorder::default();
     let rect = SceneNode::Rect {
