@@ -345,11 +345,20 @@ fn select_hover_and_focus_are_visual_only() {
 fn a_click_at_the_foot_of_a_full_select_panel_picks_no_hidden_option() {
     let theme = hoff();
     let size = id("size");
-    // Nine options, the last selected: it is never drawn, so any option a
-    // click picks changes the selection and shows up.
+    // Nine options, the last selected. Opening scrolls it into view, so
+    // the panel is scrolled back to the top: the last option is not drawn
+    // there, and any option a click picks changes the selection and shows
+    // up.
     let options: Vec<String> = (0..9).map(|i| format!("option {i}")).collect();
     let mut open = Select::new(options, 8).sem(size.clone());
     open.open();
+    let top = open.dropdown_rect(B, &theme).center();
+    let back = WidgetEvent::Scroll {
+        x: top.0,
+        y: top.1,
+        delta: -1000.0,
+    };
+    assert!(open.handle_event(&back, B, &theme).changed);
     let mut c = Compositor::new();
     let overlay = c.create_layer(100);
     c.begin_frame();
