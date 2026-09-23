@@ -1,0 +1,32 @@
+# rec: the session flight recorder (task-63,
+# docs/ADR/session-recording-replay-not-reexecution.md). it records what an
+# app did as data (observations, snapshots, receipts, input, frames) in a
+# bounded ring, and reads it back. it never creates a request.
+[package]
+name = "rec"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Session flight recorder of plev: semantic events, receipts and sampled frames as data in a bounded ring; replay, never re-execution"
+
+[features]
+default = ["serde"]
+# the serde form of the recorded events, for the file format of phase c.
+# snapshots and requests are shared between events behind an Arc, so serde
+# needs its rc feature.
+serde = ["dep:serde"]
+
+[dependencies]
+engine.workspace = true
+monster.workspace = true
+sem.workspace = true
+serde = { workspace = true, features = ["rc"], optional = true }
+thiserror.workspace = true
+
+[dev-dependencies]
+indexmap.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

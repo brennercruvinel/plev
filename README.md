@@ -110,7 +110,7 @@ demos are the engine's (and comps') examples.
 |---|---|---|
 | engine | `crates/engine` | gpu, compositor, text, path, layout, input, animation, signal, theme (the tokens), graph, builder, window, platform |
 | comps | `crates/comps` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/catalog.md](docs/catalog.md) |
-| crates | `crates/` | git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rope, sem, showcase, svg, urnaui |
+| crates | `crates/` | git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rec, rope, sem, showcase, svg, urnaui |
 | examples | `crates/engine/examples/`, `crates/comps/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters and svg2monster clis |
 
 `comps` is the crate an app draws with. widgets are plain structs the app
@@ -123,6 +123,9 @@ window, a drawer behind a menu button on a phone.
 `sem` is the semantic contract: each control's persistent id, role,
 state, actions and constraints as pure data, projected from app state on
 demand ([docs/ADR/semantic-contract-as-pure-projection.md](docs/ADR/semantic-contract-as-pure-projection.md)).
+`rec` records a session as data in a bounded ring (who observed what, the
+state, every receipt, the frames on screen) and reads it back; replay
+never creates a request.
 
 two of the crates are pipelines: a foreign format in, our format out.
 
