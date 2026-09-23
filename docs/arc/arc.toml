@@ -240,6 +240,9 @@ visual-tokens = "crates/engine/src/theme/hoff.rs (colors + glass) and crates/eng
 component-catalog = "docs/catalog.md"
 decisions = "docs/ADR/"
 conventions = ".contracts/.mantras/.code/.lang/.rust/rust-conventions.md"
+web-target = "docs/how-to/build-and-serve-the-web-target.md"
+agent-orchestration = "docs/how-to/orchestrate-coding-agents-on-this-repo.md"
+program = "docs/mission/steps/ongoing/generative-runtime-program.md (goal, task graph, ownership; thesis and guidelines beside it)"
 
 # binding contracts. violations are defects even if the pixels look right.
 [contracts]
