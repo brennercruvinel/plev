@@ -13,6 +13,12 @@ rust-version.workspace = true
 publish = false
 description = "Agent surface of plev: observe and act over the semantic contract through a local unix socket, json lines, and the plev cli"
 
+# the agent's command line: plev observe, plev act (unix only; elsewhere it
+# says so and exits).
+[[bin]]
+name = "plev"
+path = "src/bin/plev.rs"
+
 [dependencies]
 # with its serde form: the protocol carries snapshots, changes, requests
 # and stages exactly as sem writes them.

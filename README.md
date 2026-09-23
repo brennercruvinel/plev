@@ -55,6 +55,8 @@ cargo run -p ide [path]                # plev-native git client
 cargo run -p prime                     # prime-coherence particle swarm
 cargo run -p engine --example snake    # any of the windowed demos
 cargo run -p comps --example editor    # the design-system editor demo
+cargo run -p wire --bin plev -- observe --scope todo --app showcase   # an app opened with PLEV_AGENT=1 (debug), as an agent sees it
+cargo run -p wire --bin plev -- act todo.item[1] toggle --from-revision <rev>   # act on what that observation saw; exit 0 done, 1 rejected, 2 failed, 3 error
 ```
 
 every debug build is its own dev loop: save a `.wgsl`, a string or a hex
