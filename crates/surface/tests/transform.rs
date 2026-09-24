@@ -16,8 +16,8 @@ use engine::compositor::Compositor;
 use engine::theme::Theme;
 use sem::{Role, SemId, Snapshot, StateRef, Value};
 use support::{
-    App, COLUMNS, MIXER_LEFT, MIXER_RIGHT, SHOWCASE, TODO, id, mixer, page, snapshot, verified,
-    verified_local,
+    App, COLUMNS, MIXER_LEFT, MIXER_RIGHT, SHOWCASE, TODO, id, mixer, page, settle, snapshot,
+    verified, verified_local,
 };
 use surface::{Surface, SurfaceError, SurfaceHost};
 use uir::{Capabilities, GenerationPolicy, verify_json};
@@ -92,7 +92,7 @@ fn closing_and_reopening_makes_every_widget_new() {
     assert_eq!(text(&app), typed("buy mXilk"));
     assert_eq!(surface.focused(), Some(&field));
 
-    assert!(host.close(&panel).is_some());
+    assert!(host.close(&panel));
     let now = app.snapshot();
     host.open(verified_local(COLUMNS, &now), &now)
         .expect("the other form opens");
@@ -146,7 +146,7 @@ fn transforming_keeps_the_widget_and_the_state_of_every_id_that_stays() {
     assert_eq!(surface.focused(), Some(&field));
     assert!(surface.handle_text("X", &mut app));
     assert_eq!(text(&app), typed("buy mXilk"));
-    let c = frame(surface, &theme);
+    let (c, _) = settle(surface, AREA, &theme);
     assert_ne!(bound(&c, &field), compact, "the field is elsewhere");
     // the page projects the new form at once: what was born, and not
     // what left
@@ -161,7 +161,7 @@ fn transforming_keeps_the_widget_and_the_state_of_every_id_that_stays() {
     let surface = host.transform(verified(TODO, &now), &now).expect("back");
     assert!(surface.handle_text("Y", &mut app));
     assert_eq!(text(&app), typed("buy mXYilk"));
-    let c = frame(surface, &theme);
+    let (c, _) = settle(surface, AREA, &theme);
     assert_eq!(bound(&c, &field), compact, "the compact form again");
 }
 
@@ -270,7 +270,8 @@ fn volume(app: &App) -> f64 {
 
 /// A slider in a drag stays in the drag when the surface changes form
 /// and it changes panel: the pointer that moves on sets the value by the
-/// slider's new rect, and the release ends the drag.
+/// rect the slider is drawn at, sliding from the old panel and then in
+/// the new one, and the release ends the drag.
 #[test]
 fn a_drag_goes_on_after_the_slider_changes_panel() {
     let theme = Theme::hoff_core();
@@ -302,7 +303,15 @@ fn a_drag_goes_on_after_the_slider_changes_panel() {
 
     let now = app.snapshot();
     surface.transform(verified_local(MIXER_RIGHT, &now), &now);
+    // the first frame of the new form draws it where it was, about to
+    // slide: the pointer moves by what the person sees
     let c = frame(&mut surface, &theme);
+    assert_eq!(bound(&c, &slider), left);
+    let x = along(left, 0.75, &theme);
+    surface.handle_event(&WidgetEvent::MouseMove { x, y }, &theme, &mut app);
+    assert!((volume(&app) - 0.75).abs() < 1e-3, "{}", volume(&app));
+    let (c, frames) = settle(&mut surface, AREA, &theme);
+    assert!(frames > 1, "it slid over {frames} frames");
     let right = bound(&c, &slider);
     assert!(inside(right, bound(&c, &id("mix_panel.right"))));
     assert_ne!(left, right);

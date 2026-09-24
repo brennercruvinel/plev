@@ -19,7 +19,15 @@
 //! - **events** as `sem::Request`s for the capability the IR bound, with
 //!   the actor who acted and the state the surface showed as the
 //!   observation, handed to the app's own dispatcher (`Dispatch`). the
-//!   surface never runs anything.
+//!   surface never runs anything;
+//! - **transformation** by another `VerifiedIr` (`SurfaceHost::transform`),
+//!   reconciled by `SemId`: a node that stays under the same widget keeps
+//!   it (focus, caret, a drag in flight), a node born is a capability at
+//!   once and fades in, a node gone is none at once and its picture fades
+//!   out where it was, a node that moved slides, on the theme's motion and
+//!   durations, instant with reduced motion; a dismissal (`close`) fades
+//!   the surface out and then lets it go. render on demand: frames are
+//!   asked for only while something moves (`wake`).
 //!
 //! only a `VerifiedIr` materializes; no function here takes an `Ir`:
 //!
@@ -40,6 +48,7 @@ mod draw;
 mod expand;
 mod host;
 mod layout;
+mod motion;
 mod project;
 mod surface;
 mod token;

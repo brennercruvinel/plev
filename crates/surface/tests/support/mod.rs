@@ -5,6 +5,9 @@
 
 use std::path::PathBuf;
 
+use comps::Rect;
+use engine::compositor::Compositor;
+use engine::theme::Theme;
 use indexmap::IndexMap;
 use sem::{
     Constraints, Dispatcher, Execution, Node, Operable, Outcome, ParamSpec, Receipt, Request,
@@ -58,6 +61,30 @@ pub fn mixer() -> Snapshot {
 
 /// Each IR fixture and the projection it is written against.
 pub const CASES: [(&str, &str); 3] = [(COMMIT_FORM, IDE), (REVIEW, IDE), (TODO, SHOWCASE)];
+
+/// One turn of a 60 Hz display.
+pub const TURN: f32 = 1.0 / 60.0;
+
+/// Draws `surface` in `area` and then, a turn apart, every frame it asks
+/// for while its transitions run, as a shell under render on demand
+/// would: the last frame, and how many were drawn after the first.
+pub fn settle(surface: &mut Surface, area: Rect, theme: &Theme) -> (Compositor, usize) {
+    let mut c = Compositor::new();
+    surface.render(&mut c, area, theme);
+    let mut frames = 0;
+    loop {
+        let wake = surface.wake(TURN);
+        if wake.now {
+            c = Compositor::new();
+            surface.render(&mut c, area, theme);
+            frames += 1;
+        }
+        if !wake.is_continuous() {
+            return (c, frames);
+        }
+        assert!(frames < 600, "the transitions never settle");
+    }
+}
 
 pub fn fixture(name: &str) -> String {
     let at = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

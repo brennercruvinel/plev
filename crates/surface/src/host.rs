@@ -3,10 +3,14 @@
 
 use std::collections::BTreeSet;
 
+use comps::Wake;
+use engine::compositor::Compositor;
+use engine::theme::Theme;
 use sem::{Receipt, Request, SemId, Snapshot, SnapshotBuilder};
 use uir::VerifiedIr;
 
 use crate::expand::expand;
+use crate::motion::{Ghost, tick_ghosts};
 use crate::surface::Surface;
 
 /// the app, as a surface reaches it: its one dispatcher and its
@@ -43,6 +47,10 @@ pub enum SurfaceError {
 #[derive(Debug, Default)]
 pub struct SurfaceHost {
     surfaces: Vec<Surface>,
+    /// the pictures of the surfaces dismissed, fading out where they
+    /// were: drawn, never projected, routed to or hit.
+    closing: Vec<Ghost>,
+    reduced: bool,
 }
 
 impl SurfaceHost {
@@ -54,7 +62,8 @@ impl SurfaceHost {
     /// surface with its id is open, or when one of its nodes would take
     /// the id of a node another open surface holds.
     pub fn open(&mut self, ir: VerifiedIr, app: &Snapshot) -> Result<&mut Surface, SurfaceError> {
-        let surface = Surface::materialize(ir, app);
+        let mut surface = Surface::materialize(ir, app);
+        surface.set_reduced_motion(self.reduced);
         if self.get(surface.id()).is_some() {
             return Err(SurfaceError::AlreadyOpen(surface.id().clone()));
         }
@@ -112,11 +121,48 @@ impl SurfaceHost {
         self.surfaces.iter_mut().find(|s| s.id() == id)
     }
 
-    /// takes the surface `id` out: it is no longer drawn, projected or
-    /// routed to.
-    pub fn close(&mut self, id: &SemId) -> Option<Surface> {
-        let at = self.surfaces.iter().position(|s| s.id() == id)?;
-        Some(self.surfaces.remove(at))
+    /// dismisses the surface `id`: at once it is no longer projected,
+    /// routed to or hit, and an act on one of its nodes is refused as on
+    /// any node that does not exist; its picture fades out where it was
+    /// drawn (`draw_closing`) and then everything it held is let go. true
+    /// when it was open.
+    pub fn close(&mut self, id: &SemId) -> bool {
+        let Some(at) = self.surfaces.iter().position(|s| s.id() == id) else {
+            return false;
+        };
+        let surface = self.surfaces.remove(at);
+        self.closing.extend(surface.dismiss());
+        true
+    }
+
+    /// draws what is left of the surfaces dismissed, fading out where
+    /// they were; nothing once they are gone.
+    pub fn draw_closing(&mut self, c: &mut Compositor, theme: &Theme) {
+        for ghost in &mut self.closing {
+            ghost.draw(c, theme);
+        }
+    }
+
+    /// the person's preference for reduced motion, for every surface open
+    /// and to open: a change of form and a dismissal show at once.
+    pub fn set_reduced_motion(&mut self, reduced: bool) {
+        self.reduced = reduced;
+        for surface in &mut self.surfaces {
+            surface.set_reduced_motion(reduced);
+        }
+        if reduced {
+            self.closing.clear();
+        }
+    }
+
+    /// what the surfaces ask of the loop (`Surface::wake`), and the
+    /// dismissed ones while they fade.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        let open = self
+            .surfaces
+            .iter_mut()
+            .fold(Wake::idle(), |w, s| w.merge(s.wake(dt)));
+        open.merge(tick_ghosts(&mut self.closing, dt))
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &Surface> {

@@ -2,6 +2,7 @@
 //! app state it shows, and the retained widget of every node by `SemId`.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use comps::form::EditKey;
 use comps::{EventResult, Rect, Wake, WidgetEvent};
@@ -14,6 +15,7 @@ use crate::draw::{self, closed};
 use crate::expand::{Node, expand};
 use crate::host::Dispatch;
 use crate::layout::{self, axis_of};
+use crate::motion::{self, Ghost, Motion};
 use crate::project;
 use crate::widget::{Kind, Widget};
 
@@ -25,6 +27,11 @@ use crate::widget::{Kind, Widget};
 /// `sem::Request` for the capability the IR bound, observed on that
 /// snapshot, by the person (`Actor::Human`), handed to the app's
 /// dispatcher; the surface itself never runs anything.
+///
+/// a new form (`transform`) or a tree the app's state moved (`sync`)
+/// changes what the surface is at once, and what the frames show over a
+/// few: a node born fades in, a node that moved slides, a node that left
+/// fades out where it was, no longer a capability (the `motion` module).
 #[derive(Debug)]
 pub struct Surface {
     ir: VerifiedIr,
@@ -37,6 +44,10 @@ pub struct Surface {
     /// (not yet, or inside a closed dialog) has none; a node that left the
     /// tree loses its own at once.
     drawn: BTreeMap<SemId, Rect>,
+    /// a frame has been drawn: before one, a change has nothing to move
+    /// from and shows at once.
+    framed: bool,
+    motion: Motion,
     inert: bool,
     last: Option<Receipt>,
 }
@@ -52,6 +63,8 @@ impl Surface {
             shown: Snapshot::default(),
             revision: Snapshot::default().revision(),
             drawn: BTreeMap::new(),
+            framed: false,
+            motion: Motion::default(),
             inert: false,
             last: None,
         };
@@ -95,6 +108,14 @@ impl Surface {
         self.inert = inert;
     }
 
+    /// the person's preference for reduced motion: every change of form
+    /// shows at once, the transitions in flight included. the engine does
+    /// not know the system's preference yet (task-75), so whoever does
+    /// passes it here.
+    pub fn set_reduced_motion(&mut self, reduced: bool) {
+        self.motion.set_reduced(reduced);
+    }
+
     /// reads the app's state again when its revision moved; true when it
     /// did. repeats unroll over the new values, a node that is new gets
     /// its widget, a node that stays keeps its own (hover, focus, caret),
@@ -124,22 +145,72 @@ impl Surface {
 
     fn read(&mut self, app: &Snapshot) {
         let tree = expand(&self.ir.ir().surface.root, app);
+        let changed = tree != self.tree;
         let mut widgets = BTreeMap::new();
+        let mut born = Vec::new();
+        let mut gone = Vec::new();
         for node in &tree {
+            let kind = Kind::of(node);
             let mut widget = match self.widgets.remove(&node.id) {
-                Some(kept) if kept.kind() == Kind::of(node) => kept,
-                _ => Widget::new(node),
+                Some(kept) if kept.kind() == kind => kept,
+                old => {
+                    // the id stays under another widget: the old one's
+                    // picture leaves as the new one enters
+                    gone.extend(old.map(|w| (node.id.clone(), w)));
+                    match self.motion.reclaim(&node.id, kind) {
+                        // back before its picture was gone: the same
+                        // instance, from where it showed
+                        Some((w, opacity, rect)) => {
+                            self.drawn.insert(node.id.clone(), rect);
+                            born.push((node.id.clone(), opacity));
+                            w
+                        }
+                        None => {
+                            born.push((node.id.clone(), 0.0));
+                            Widget::new(node)
+                        }
+                    }
+                }
             };
             widget.sync(node, app);
             widgets.insert(node.id.clone(), widget);
         }
+        gone.extend(std::mem::take(&mut self.widgets));
+        self.leave(gone);
         // a node that left is no longer where it was drawn; one that stays
         // is, until the next frame draws it again.
         self.drawn.retain(|id, _| widgets.contains_key(id));
+        if changed && self.framed {
+            self.motion.changed(born);
+        }
         self.widgets = widgets;
         self.tree = tree;
         self.shown = app.clone();
         self.revision = app.revision();
+    }
+
+    /// the widgets of the nodes that left (or changed widget), each with
+    /// its node in the tree they left: the ones drawn in the last frame
+    /// fade out where they were, over the state they showed.
+    fn leave(&mut self, gone: Vec<(SemId, Widget)>) {
+        let mut shown: Option<Arc<Snapshot>> = None;
+        for (id, widget) in gone {
+            let node = self.tree.iter().find(|n| n.id == id);
+            let (Some(node), Some(&rect)) = (node, self.drawn.get(&id)) else {
+                continue;
+            };
+            let shown = shown.get_or_insert_with(|| Arc::new(self.shown.clone()));
+            self.motion.leave(node.clone(), widget, rect, shown);
+        }
+    }
+
+    /// the surface dismissed: the picture of every node it drew leaves
+    /// where it was (none with reduced motion, or before a first frame).
+    /// the surface is no capability any more.
+    pub(crate) fn dismiss(mut self) -> Vec<Ghost> {
+        let gone = std::mem::take(&mut self.widgets).into_iter().collect();
+        self.leave(gone);
+        self.motion.take_leaving()
     }
 
     /// the rect of every node laid out in `rect`, the tokens read from
@@ -167,8 +238,11 @@ impl Surface {
 
     /// draws the surface at the top of `rect`, as wide as it and as tall
     /// as its content: every node on its widget, every projected node
-    /// bound to the rect it is drawn and hit-tested with, an open
-    /// dropdown on top.
+    /// bound to the rect it is drawn and hit-tested with, the pictures of
+    /// the nodes that left over them (bound to nothing), an open dropdown
+    /// on top. the first frame after a change of form starts its
+    /// transitions: each node born fades in from here, each node drawn
+    /// elsewhere before slides from there.
     pub fn render(&mut self, c: &mut Compositor, rect: Rect, theme: &Theme) {
         for node in &self.tree {
             if let Some(w) = self.widgets.get_mut(&node.id) {
@@ -176,7 +250,8 @@ impl Surface {
             }
         }
         let rects = self.lay_out(rect, theme);
-        self.drawn.clear();
+        let change = self.motion.take_change();
+        let was = std::mem::take(&mut self.drawn);
         let mut open = Vec::new();
         let mut hidden = vec![false; self.tree.len()];
         for (at, node) in self.tree.iter().enumerate() {
@@ -189,23 +264,43 @@ impl Surface {
                 }
                 continue;
             }
-            let (Some(r), Some(w)) = (rects.get(at).copied(), self.widgets.get_mut(&node.id))
+            let (Some(to), Some(w)) = (rects.get(at).copied(), self.widgets.get_mut(&node.id))
             else {
                 continue;
             };
-            draw::draw(c, node, w, r, &self.shown, theme);
+            if let Some(born) = &change {
+                if let Some(&from) = born.get(&node.id) {
+                    self.motion.enter(&node.id, from, theme);
+                }
+                if let Some(&from) = was.get(&node.id) {
+                    self.motion.slide(&node.id, from, to, theme);
+                }
+            }
+            let r = self.motion.rect(&node.id, to);
+            let alpha = self.motion.opacity(&node.id);
+            if alpha < 1.0 {
+                let shown = &self.shown;
+                motion::draw_faded(c, alpha, true, |own| {
+                    draw::draw(own, node, w, r, shown, theme);
+                });
+            } else {
+                draw::draw(c, node, w, r, &self.shown, theme);
+            }
             if w.is_open() {
-                open.push(at);
+                open.push((at, r));
             }
             self.drawn.insert(node.id.clone(), r);
         }
-        for at in open {
+        for ghost in self.motion.leaving_mut() {
+            ghost.draw(c, theme);
+        }
+        for (at, r) in open {
             let node = self.tree.get(at);
-            let r = rects.get(at).copied().unwrap_or_default();
             if let Some(Widget::Select(s)) = node.and_then(|n| self.widgets.get(&n.id)) {
                 s.render_dropdown(c, LayerId::DEFAULT, r, theme);
             }
         }
+        self.framed = true;
     }
 
     /// a pointer event over the last frame drawn. each widget sees it
@@ -377,11 +472,16 @@ impl Surface {
         true
     }
 
-    /// the motion the widgets run on their own (a caret, a knob).
+    /// the motion the widgets run on their own (a caret, a knob), and the
+    /// surface's transitions: a frame when a change of form waits to be
+    /// drawn, every frame while a node fades or slides, and nothing once
+    /// they settle.
     pub fn wake(&mut self, dt: f32) -> Wake {
-        self.widgets
+        let widgets = self
+            .widgets
             .values_mut()
-            .fold(Wake::idle(), |wake, w| wake.merge(w.wake(dt)))
+            .fold(Wake::idle(), |wake, w| wake.merge(w.wake(dt)));
+        widgets.merge(self.motion.wake(dt))
     }
 
     /// projects the surface into `b`, which holds the app's own
