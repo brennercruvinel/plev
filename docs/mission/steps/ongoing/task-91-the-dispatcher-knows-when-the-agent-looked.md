@@ -1,11 +1,12 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
-last-updated: 2026-09-23
+status: ongoing
+last-updated: 2026-09-24
 domain: semantic-contract
 task: task-91
 depends: [task-89, task-90]
+branch: task/91-the-look
 origin: a sonda da task-90 (a seleção por clique muda a revisão fora do dispatcher)
 ---
 
