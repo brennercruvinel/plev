@@ -14,6 +14,19 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #82 (task-76 item 8); disparado o item 5
+
+- **publicado:** PR #82, merge commit, gate local verde na `main` (2625,
+  +20), regressão 161 sem mudança.
+- **disparado:** task-76 item 5, tray e notificações do sistema como
+  capacidades fora da janela: o tray com o menu lido da projeção (o
+  mesmo `MenuModel` do item 4), a notificação com uma ação nomeada por
+  capacidade, o clique de volta como `Request` de pessoa; `tray-icon` e
+  `objc2-user-notifications` sem features, do cache offline (aprovados
+  pelo orquestrador, não estruturais); a notificação real no macOS pode
+  exigir bundle, e a sonda decide sem disparar nada nesta máquina. um
+  agente só, no worktree fixo.
+
 ### ciclo 3: diálogos nativos (task-76 item 8)
 
 - **integrada:** item 8 (merge da `task/76e-alerts`). o alerta e a
