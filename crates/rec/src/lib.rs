@@ -93,6 +93,7 @@ mod payload;
 mod persist;
 mod recorder;
 mod ring;
+pub mod scene;
 mod screen;
 mod session;
 mod state;

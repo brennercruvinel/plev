@@ -9,6 +9,15 @@ status: living
 
 ## unreleased
 
+- the scene travels as data (2026-09-24, task-79 phase 1): a window's
+  scene can be watched over the agent's local socket, layer by dirty
+  layer, and the `mirror` example draws it in another process with the
+  same pixels and the control bindings on top. a hover costs about 300
+  bytes and an unchanged frame costs nothing. the channel exists only
+  when the person launches the app with `PLEV_MIRROR=1`; a live image
+  such as the camera never crosses it, and every watcher is logged.
+  the engine's image store gained read-only access to an image's pixels.
+
 - the blur follows the scale (2026-09-24, task-77 phase 1b): the glass
   blur, the layer blur and the layer shadow now reach as far in logical
   pixels at every display scale, so the same glass looks the same on a

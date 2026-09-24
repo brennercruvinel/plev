@@ -317,6 +317,8 @@ impl App {
             {
                 self.windows.invalidate_all();
             }
+            // a watch that just came gets the frames on screen (task-79)
+            self.offer_scenes();
         }
     }
 
@@ -578,6 +580,10 @@ mod background;
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod access;
+/// The windows' scenes over the agent port, and the viewer's side of a
+/// watch (task-79), desktop only.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+pub mod mirror;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use access::Access;
 

@@ -19,6 +19,12 @@
 //! or grow it without bound (a line holds at most `MAX_LINE` bytes, a port
 //! at most `MAX_CONNS` connections). a client that stops sending still
 //! gets every reply queued for it before its connection ends.
+//!
+//! a watch of a window's scene (task-79) is served the same way: the app
+//! offers each frame it draws (`offer_scene`), on its thread, and the
+//! lines go to the writers' queues, never waited on. a watcher that does
+//! not read its frames is cut off when the lines waiting for it pass
+//! `SCENE_QUEUE` bytes, so a camera's frames cannot pile up in the app.
 
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -37,15 +43,13 @@ use std::time::Duration;
 use crate::codec::{Refusal, decode_client, encode_server};
 use crate::error::WireError;
 use crate::place::{check_app, clear_stale, io, private_dir, socket_dir, socket_path};
-use crate::proto::{Ask, ClientMsg, ProtoError};
+use crate::proto::{Ask, ClientMsg, ProtoError, Reply};
 use crate::ring::DEFAULT_RING;
+use crate::scene::{MAX_LINE, Offer, SceneWatch};
 use crate::server::{ConnId, Host, Outgoing, Server, Traffic};
 
 /// the variable that opens the port in a debug build: `PLEV_AGENT=1`.
 pub const ENV: &str = "PLEV_AGENT";
-
-/// the longest line a client may send, in bytes.
-pub const MAX_LINE: usize = 1 << 20;
 
 /// how many connections a port holds at once.
 pub const MAX_CONNS: usize = 16;
@@ -55,6 +59,11 @@ const QUEUE: usize = 256;
 
 /// lines waiting to be written to one client.
 const OUTBOX: usize = 1024;
+
+/// the bytes one connection may have waiting to be written when the app
+/// queues a line of a scene: past it, the watcher is not reading and its
+/// connection ends (16 MiB: some thirteen camera frames of 640x360).
+pub const SCENE_QUEUE: usize = 16 << 20;
 
 /// messages one `drain` serves before it lets the loop turn.
 const PER_DRAIN: usize = 64;
@@ -113,6 +122,9 @@ pub struct AgentPort {
 struct Conn {
     outbox: SyncSender<String>,
     stream: UnixStream,
+    /// bytes queued and not yet written, counted where a line is queued
+    /// and where the writer wrote it.
+    queued: Arc<AtomicUsize>,
 }
 
 /// what the socket threads tell the app's thread.
@@ -121,6 +133,7 @@ enum Event {
         conn: ConnId,
         outbox: SyncSender<String>,
         stream: UnixStream,
+        queued: Arc<AtomicUsize>,
     },
     Msg {
         conn: ConnId,
@@ -170,7 +183,8 @@ impl Shared {
 
 impl AgentPort {
     /// opens the port of `app` in `$TMPDIR/plev` when `enabled()`;
-    /// `Ok(None)` otherwise, and then nothing is created.
+    /// `Ok(None)` otherwise, and then nothing is created. its scenes are
+    /// shared when `PLEV_MIRROR=1` too (`scene::mirror_enabled`).
     pub fn from_env(
         app: &str,
         wake: impl Fn() + Send + 'static,
@@ -178,7 +192,9 @@ impl AgentPort {
         if !enabled() {
             return Ok(None);
         }
-        AgentPort::open(app, wake).map(Some)
+        let mut port = AgentPort::open(app, wake)?;
+        port.share_scenes(crate::scene::mirror_enabled());
+        Ok(Some(port))
     }
 
     /// opens the port of `app` in `$TMPDIR/plev`, whatever the build: the
@@ -286,8 +302,16 @@ impl AgentPort {
                     conn,
                     outbox,
                     stream,
+                    queued,
                 } => {
-                    self.conns.insert(conn, Conn { outbox, stream });
+                    self.conns.insert(
+                        conn,
+                        Conn {
+                            outbox,
+                            stream,
+                            queued,
+                        },
+                    );
                 }
                 Event::Msg { conn, msg } => {
                     served += 1;
@@ -307,13 +331,48 @@ impl AgentPort {
         acted
     }
 
+    /// whether a connection watches the scene of `window` (task-79): the
+    /// app writes that window's frames only then.
+    pub fn watching(&self, window: &str) -> bool {
+        self.server.watching(window)
+    }
+
+    /// whether the scenes are shared (`Server::share_scenes`): `from_env`
+    /// sets it from `PLEV_MIRROR`; an app that opens the port itself says.
+    pub fn share_scenes(&mut self, on: bool) {
+        self.server.share_scenes(on);
+    }
+
+    /// the watches that began or ended since the last call
+    /// (`Server::take_scene_watches`), a cut one among them.
+    pub fn take_scene_watches(&mut self) -> Vec<SceneWatch> {
+        self.server.take_scene_watches()
+    }
+
+    /// `offer`, the frame the app just drew in `window` (or the one it
+    /// holds, for a watch that just came), to every watch of that window:
+    /// to each, only what changed since what it was sent. on the calling
+    /// thread (the app's); never waits on a socket.
+    pub fn offer_scene(&mut self, window: &str, offer: &Offer) {
+        let out = self.server.offer_scene(window, offer);
+        self.send(out);
+    }
+
     fn send(&mut self, out: Vec<Outgoing>) {
         for Outgoing { conn, msg } in out {
             let Some(c) = self.conns.get(&conn) else {
                 continue;
             };
+            let scene = matches!(msg.reply, Reply::Scene(_) | Reply::SceneBlob(_));
             let mut line = encode_server(&msg);
             line.push('\n');
+            let len = line.len();
+            if scene && c.queued.load(Ordering::SeqCst).saturating_add(len) > SCENE_QUEUE {
+                // a watcher that does not read its frames is cut off
+                self.cut(conn);
+                continue;
+            }
+            c.queued.fetch_add(len, Ordering::SeqCst);
             match c.outbox.try_send(line) {
                 Ok(()) => {}
                 // a client that does not read its replies is cut off;
@@ -419,23 +478,27 @@ fn start(
     };
     let _ = writing.set_write_timeout(Some(WRITE_STALL));
     let (outbox, lines) = mpsc::sync_channel::<String>(OUTBOX);
+    let queued = Arc::new(AtomicUsize::new(0));
     events
         .send(Event::Open {
             conn,
             outbox: outbox.clone(),
             stream: held,
+            queued: Arc::clone(&queued),
         })
         .map_err(|_| ())?;
     shared.live.fetch_add(1, Ordering::SeqCst);
     let shared_w = Arc::clone(shared);
+    let written = Arc::clone(&queued);
     let writer = thread::Builder::new()
         .name(format!("plev-agent-write-{conn}"))
-        .spawn(move || write(writing, &lines, &shared_w));
+        .spawn(move || write(writing, &lines, &shared_w, &written));
     let events = events.clone();
     let shared_r = Arc::clone(shared);
+    let out = Out { outbox, queued };
     let reader = thread::Builder::new()
         .name(format!("plev-agent-read-{conn}"))
-        .spawn(move || read(conn, reading, &events, &outbox, &shared_r));
+        .spawn(move || read(conn, reading, &events, &out, &shared_r));
     if writer.is_err() || reader.is_err() {
         shared.live.fetch_sub(1, Ordering::SeqCst);
         let _ = stream.shutdown(Shutdown::Both);
@@ -443,14 +506,29 @@ fn start(
     Ok(())
 }
 
-fn write(mut stream: UnixStream, lines: &Receiver<String>, shared: &Shared) {
+fn write(mut stream: UnixStream, lines: &Receiver<String>, shared: &Shared, queued: &AtomicUsize) {
     while let Ok(line) = lines.recv() {
         if stream.write_all(line.as_bytes()).is_err() {
             break;
         }
+        queued.fetch_sub(line.len(), Ordering::SeqCst);
         shared.wrote(&line);
     }
     let _ = stream.shutdown(Shutdown::Both);
+}
+
+/// a connection's queue as its reader thread writes refusals into it,
+/// counted like the app's lines.
+struct Out {
+    outbox: SyncSender<String>,
+    queued: Arc<AtomicUsize>,
+}
+
+impl Out {
+    fn send(&self, line: String) -> Result<(), ()> {
+        self.queued.fetch_add(line.len(), Ordering::SeqCst);
+        self.outbox.send(line).map_err(|_| ())
+    }
 }
 
 /// reads lines until the client leaves or breaks the line limit. a line
@@ -460,7 +538,7 @@ fn read(
     conn: ConnId,
     stream: UnixStream,
     events: &SyncSender<Event>,
-    outbox: &SyncSender<String>,
+    outbox: &Out,
     shared: &Shared,
 ) {
     let mut reader = BufReader::new(stream);

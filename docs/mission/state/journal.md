@@ -14,6 +14,59 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: cena por socket (task-79 fase 1)
+
+- **integrada:** fase 1 (merge da `task/79a-scene-socket`), depois da
+  devolução por privacidade. o canal cabe na v1 do protocolo; o espelho
+  tem hash de frame igual entre dois processos na Card (imagens), no
+  Todo, nos Effects (vidro) e na Capture com a câmera desligada; com a
+  câmera ligada difere só na caixa. um hover custa 318 bytes, um frame
+  sem mudança custa zero.
+- **aceito na revisão:** o `image_is_stream`, só de leitura, além do
+  acessor autorizado, para o primeiro frame da câmera também não sair.
+
+### ciclo 3: task-79 devolvida por privacidade
+
+- **entregue pelo agente:** o espelho funciona entre dois processos com
+  hash de frame igual (Card com imagens, Todo, Effects com vidro,
+  Capture), um hover custa 318 bytes e um frame sem mudança custa zero.
+- **devolvida na revisão (P1):** todo mundo que conecta no port é agente,
+  e o canal de cena mandava os frames da câmera a quem assistisse,
+  contra o ADR do item 10 (pixels da câmera nunca vão para agente). o
+  canal também passa por cima da redação do `sem`.
+- **correção pedida:** o canal só existe com `PLEV_MIRROR=1` dado pela
+  pessoa ao lançar; sem ele a recusa diz como ligar. imagem de fluxo
+  nunca cruza, nem com o opt-in: o espelho desenha uma caixa no lugar.
+  quem assiste fica no log e na gravação.
+
+### ciclo 3: task-79 parou na sonda; decisão do orquestrador
+
+- **sonda:** o canal de cena cabe na versão 1 do protocolo como pedido
+  novo (um servidor de hoje recusa com `bad_message` e mantém a conexão).
+  o codec do monster não serve para pixels iguais (não tem clip, blur nem
+  sombra); o próprio, por layer suja no `rec`, custa 0,02 a 0,11 ms por
+  frame e manda 195 bytes num hover do Todo.
+- **parada correta:** os pixels de uma imagem não podem ser lidos fora do
+  engine (o store é `static` privado). sem isso a Card e a câmera viram
+  buraco no espelho.
+- **decidido (técnico, dentro da task):** um acessor só de leitura no
+  store (`image_pixels`), liberando `gpu/image.rs`; a prova de que os
+  pixels viajam é entre dois processos, porque em processo o store é o
+  mesmo. o mesmo acessor fecha depois a lacuna do gravador.
+
+### ciclo 3: publicado #89 (task-77 fase 1b); disparada a task-79 fase 1
+
+- **publicado:** PR #89, merge commit, gate local verde na `main` (2781,
+  +9), regressão 163 sem mudança.
+- **disparado:** task-79 fase 1, cena por socket: a cena de uma janela
+  viaja pelo transporte da task-61 num canal próprio, por layer suja, e
+  um visualizador desenha os mesmos pixels com as ligações por cima. a
+  sonda decide se o canal cabe na versão 1 do protocolo (senão para) e
+  mede o codec do monster contra um próprio. socket unix, nada sai da
+  máquina. no Opus, um agente só.
+- **task-77:** a fase 2 (web, iOS, android) espera o brenner instalar as
+  ferramentas; o arquivo fica em `ongoing/`.
+
 ### ciclo 3: o blur segue a escala (task-77 fase 1b)
 
 - **integrada:** fase 1b (merge da `task/77b-blur-scale`). o vidro, o

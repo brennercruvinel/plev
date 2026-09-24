@@ -355,6 +355,33 @@ impl ImageStore {
     pub fn image_count(&self) -> usize {
         self.by_hash.len() + self.streams.len()
     }
+
+    /// The pixels of `handle`'s slot as the store holds them now: tightly
+    /// packed RGBA8, `width * height * 4` bytes. A stream image's are its
+    /// latest frame, whichever of its handles is given. `None` when no
+    /// slot sits at the handle's placement, or the slot there is of
+    /// another size. Only reads: the pixels are the ones the log already
+    /// keeps (task-79, a scene that travels carries them).
+    pub fn pixels(&self, handle: &ImageHandle) -> Option<&[u8]> {
+        let at = |u: &PendingUpload| u.atlas_x == handle.atlas_x && u.atlas_y == handle.atlas_y;
+        let entry = match self.streams.get(&(handle.atlas_x, handle.atlas_y)) {
+            Some(&i) => self.uploads.get(i),
+            None => self.uploads.iter().find(|u| at(u)),
+        }?;
+        ((entry.width, entry.height) == (handle.width, handle.height))
+            .then_some(entry.pixels.as_slice())
+    }
+
+    /// Whether `handle` is a stream image's (a slot `stream` made, whose
+    /// pixels a `replace` changes: a camera's frames), through any of its
+    /// handles; `false` for a fixed image and for a handle no slot holds.
+    /// Only reads (task-79: a stream's pixels never leave the process).
+    pub fn is_stream(&self, handle: &ImageHandle) -> bool {
+        self.streams
+            .get(&(handle.atlas_x, handle.atlas_y))
+            .and_then(|&i| self.uploads.get(i))
+            .is_some_and(|e| (e.width, e.height) == (handle.width, handle.height))
+    }
 }
 
 fn hash_bytes(parts: &[&[u8]]) -> u64 {
@@ -391,6 +418,23 @@ pub fn stream_image_rgba(width: u32, height: u32) -> Result<ImageHandle, ImageEr
 /// (`ImageStore::replace`): the same slot under a new `id`.
 pub fn replace_image_rgba(handle: &ImageHandle, pixels: &[u8]) -> Result<ImageHandle, ImageError> {
     IMAGE_STORE.lock().unwrap().replace(handle, pixels)
+}
+
+/// The pixels of `handle`'s slot in the global image store, copied out
+/// under the lock (`ImageStore::pixels`): a stream image's latest frame,
+/// `None` for a slot that is not there or is of another size.
+pub fn image_pixels(handle: &ImageHandle) -> Option<Vec<u8>> {
+    IMAGE_STORE
+        .lock()
+        .unwrap()
+        .pixels(handle)
+        .map(<[u8]>::to_vec)
+}
+
+/// Whether `handle` is a stream image's in the global image store
+/// (`ImageStore::is_stream`).
+pub fn image_is_stream(handle: &ImageHandle) -> bool {
+    IMAGE_STORE.lock().unwrap().is_stream(handle)
 }
 
 // ---------------------------------------------------------------------------
@@ -894,5 +938,114 @@ mod tests {
         );
         assert_eq!(store.image_count(), 3);
         assert_eq!(store.upload_count(), 3);
+    }
+
+    /// A fixed image reads back the pixels it was loaded with, through
+    /// its handle, and the store is what it was: reading counts nothing
+    /// and adds nothing.
+    #[test]
+    fn a_fixed_image_reads_back_its_pixels() {
+        let mut store = ImageStore::new();
+        let red = store
+            .load_rgba(3, 2, solid_rgba(3, 2, [255, 0, 0, 255]))
+            .unwrap();
+        let green = store
+            .load_rgba(2, 2, solid_rgba(2, 2, [0, 255, 0, 255]))
+            .unwrap();
+        let (uploads, images, size) = (
+            store.upload_count(),
+            store.image_count(),
+            store.atlas_size(),
+        );
+        assert_eq!(
+            store.pixels(&red),
+            Some(&solid_rgba(3, 2, [255, 0, 0, 255])[..])
+        );
+        assert_eq!(
+            store.pixels(&green),
+            Some(&solid_rgba(2, 2, [0, 255, 0, 255])[..])
+        );
+        assert_eq!(
+            (
+                store.upload_count(),
+                store.image_count(),
+                store.atlas_size()
+            ),
+            (uploads, images, size)
+        );
+    }
+
+    /// A stream reads back its latest frame, through any of its handles:
+    /// transparent before the first `replace`, the last one after.
+    #[test]
+    fn a_stream_reads_back_its_latest_frame() {
+        let mut store = ImageStore::new();
+        let slot = store.stream(2, 1).unwrap();
+        assert_eq!(store.pixels(&slot), Some(&[0u8; 8][..]));
+        let first = store.replace(&slot, &[1, 1, 1, 255, 2, 2, 2, 255]).unwrap();
+        let second = store
+            .replace(&first, &[7, 7, 7, 255, 8, 8, 8, 255])
+            .unwrap();
+        for handle in [slot, first, second] {
+            assert_eq!(
+                store.pixels(&handle),
+                Some(&[7u8, 7, 7, 255, 8, 8, 8, 255][..]),
+                "{handle:?}"
+            );
+        }
+    }
+
+    /// A handle of another size, or of a placement no slot sits at, reads
+    /// nothing; so does any handle of an empty store.
+    #[test]
+    fn a_handle_the_store_does_not_hold_reads_nothing() {
+        let mut store = ImageStore::new();
+        let stranger = ImageHandle {
+            id: 0,
+            atlas_x: 1,
+            atlas_y: 1,
+            width: 2,
+            height: 2,
+        };
+        assert_eq!(store.pixels(&stranger), None, "an empty store");
+        let fixed = store
+            .load_rgba(2, 2, solid_rgba(2, 2, [5, 5, 5, 255]))
+            .unwrap();
+        let stream = store.stream(4, 1).unwrap();
+        for wrong in [
+            ImageHandle { width: 3, ..fixed },
+            ImageHandle { height: 1, ..fixed },
+            ImageHandle { width: 2, ..stream },
+            ImageHandle {
+                atlas_x: fixed.atlas_x + 1,
+                ..fixed
+            },
+            ImageHandle {
+                atlas_y: stream.atlas_y + 500,
+                ..stream
+            },
+        ] {
+            assert_eq!(store.pixels(&wrong), None, "{wrong:?}");
+        }
+    }
+
+    /// A stream is a stream through every handle it gave; a fixed image,
+    /// a handle of another size and a placement no slot sits at are not.
+    #[test]
+    fn a_stream_is_told_from_a_fixed_image() {
+        let mut store = ImageStore::new();
+        let fixed = store
+            .load_rgba(2, 2, solid_rgba(2, 2, [5, 5, 5, 255]))
+            .unwrap();
+        let slot = store.stream(2, 1).unwrap();
+        let next = store.replace(&slot, &[1, 1, 1, 255, 2, 2, 2, 255]).unwrap();
+        assert!(store.is_stream(&slot) && store.is_stream(&next));
+        assert!(!store.is_stream(&fixed));
+        assert!(!store.is_stream(&ImageHandle { width: 3, ..slot }));
+        assert!(!store.is_stream(&ImageHandle {
+            atlas_y: slot.atlas_y + 400,
+            ..slot
+        }));
+        assert_eq!(store.upload_count(), 2, "reading adds nothing");
     }
 }

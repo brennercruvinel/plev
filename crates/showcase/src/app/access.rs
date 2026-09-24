@@ -15,6 +15,8 @@ pub(super) struct Access {
     pub(super) bridge: Option<engine::accessibility::Bridge>,
     pub(super) agent: Option<wire::AgentPort>,
     pub(super) proxy: Option<EventLoopProxy<UserEvent>>,
+    /// The windows' scenes, written for the port's watches (`mirror`).
+    pub(super) scenes: super::mirror::Scenes,
 }
 
 impl Access {
