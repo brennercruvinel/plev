@@ -120,6 +120,15 @@ o da base até ser reescrito.
   ativação proibida e janela sempre por baixo. o showcase continua sem
   gravar; imagens continuam sem pixels.
 
+- `96c20a0` (task-88): o `ide-lab` mede a checagem de stale pelo valor:
+  válida quando um `submit` depois do request da pessoa carrega o
+  `changes:staged` de antes dela e o app tem outro no dispatch
+  (`crates/ide/src/bin/lab/story.rs`, `stale_measurement`). a pessoa tem
+  dois gatilhos (`unstage-after-observe` em `Host::observed`,
+  `unstage-before-submit` em `LabHost::dispatch`). o roteirizado tem
+  `--scripted observe|chain`. `refused.rs` conta as recusas do protocolo;
+  `finish.rs` fecha a corrida. `lab.rs` saiu da lista congelada.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

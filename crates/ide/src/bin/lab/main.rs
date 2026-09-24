@@ -3,14 +3,17 @@
 //! the ide's `Workbench` without a window, on a real repository built for
 //! the task, served to an agent outside through the agent port, recorded
 //! by the flight recorder on the workbench's clock, with a scripted person
-//! who may move the index right after the agent observed; at the end the
+//! who may move the index right after the agent observed or right before
+//! its submit reaches the dispatcher; at the end the
 //! session file is reopened and checked against the real git, and the
 //! costs are measured. the laboratory prints what happened, including
 //! what breaks the hypothesis.
 //!
 //! ```text
-//! ide-lab --arm plev|scripted|git|screenshot [--human none|unstage-after-observe:<path>]
+//! ide-lab --arm plev|scripted|git|screenshot
+//!         [--human none|unstage-after-observe:<path>|unstage-before-submit:<path>]
 //!         [--out <dir>] [--until commit|timeout] [--timeout <s>] [--grace <s>] [--app <name>]
+//!         [--scripted observe|chain]
 //! ```
 //!
 //! unix only: the port is a unix socket.
@@ -20,11 +23,15 @@ mod args;
 #[cfg(unix)]
 mod bench;
 #[cfg(unix)]
+mod finish;
+#[cfg(unix)]
 mod gitarm;
 #[cfg(unix)]
 mod host;
 #[cfg(unix)]
 mod lab;
+#[cfg(unix)]
+mod refused;
 #[cfg(unix)]
 mod repo;
 #[cfg(unix)]

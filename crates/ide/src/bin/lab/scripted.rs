@@ -17,11 +17,16 @@
 //! each act's step says the revision its last stage carried.
 
 use std::collections::BTreeSet;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::thread::JoinHandle;
 
 use sem::{ActionName, Change, Node, Outcome, Rejection, Revision, SemId, Stage, StateKey, Value};
-use wire::{Act, Client, Observe, Reply, ServerMsg, SnapshotReply, StageReply, encode_server};
+use wire::{
+    Act, Client, Observe, Reply, ServerMsg, SnapshotReply, StageReply, WireError, encode_server,
+};
 
+use crate::args::Script;
+use crate::refused::Refused;
 use crate::repo::{TASK_FILES, TASK_MESSAGE};
 
 /// how long the agent waits for one reply.
@@ -40,13 +45,22 @@ pub struct Scripted {
     pub stale: Vec<Vec<Change>>,
     /// the outcome of the completed submit.
     pub completed: Option<Outcome>,
+    /// every act the port refused before the dispatcher, as met here.
+    pub refused: Vec<Refused>,
     /// what stopped the script early.
     pub error: Option<String>,
 }
 
-pub fn run(path: &Path, name: &str) -> Result<Scripted, String> {
+/// the agent on its own thread, as `scripted`, on the port at `path`;
+/// the laboratory's output says which mode it runs.
+pub fn spawn(path: PathBuf, script: Script) -> JoinHandle<Result<Scripted, String>> {
+    println!("scripted agent: {}", script.name());
+    std::thread::spawn(move || run(&path, "scripted", script))
+}
+
+pub fn run(path: &Path, name: &str, script: Script) -> Result<Scripted, String> {
     let mut out = Scripted::default();
-    let mut agent = Agent::connect(path, name, &mut out)?;
+    let mut agent = Agent::connect(path, name, script, &mut out)?;
     match agent.cycle(&mut out) {
         Ok(()) => {}
         Err(e) => out.error = Some(e),
@@ -56,17 +70,23 @@ pub fn run(path: &Path, name: &str) -> Result<Scripted, String> {
 
 struct Agent {
     client: Client,
+    script: Script,
 }
 
 impl Agent {
-    fn connect(path: &Path, name: &str, out: &mut Scripted) -> Result<Agent, String> {
+    fn connect(
+        path: &Path,
+        name: &str,
+        script: Script,
+        out: &mut Scripted,
+    ) -> Result<Agent, String> {
         let mut client = Client::connect(path).map_err(|e| e.to_string())?;
         client
             .set_timeout(Some(TIMEOUT_MS))
             .map_err(|e| e.to_string())?;
         let actor = client.hello(name).map_err(|e| e.to_string())?;
         out.steps.push(format!("hello: {actor}"));
-        Ok(Agent { client })
+        Ok(Agent { client, script })
     }
 
     fn cycle(&mut self, out: &mut Scripted) -> Result<(), String> {
@@ -109,21 +129,30 @@ impl Agent {
             let stages = self.act(out, "commit.form", "open", None, revision)?;
             revision = self.landed(out, &stages)?;
         }
-        self.act(
+        let stages = self.act(
             out,
             "commit.message",
             "set_value",
             Some(Value::Text(TASK_MESSAGE.to_owned())),
             revision,
         )?;
+        let mut chained = match self.script {
+            Script::Chain => Some(self.landed(out, &stages)?),
+            Script::Observe => None,
+        };
 
         // the decision: one observation, then the submit on exactly that
         // observation. anything that moves the staged set between the two
         // (the person of the script does, right after this observation is
-        // served) makes the submit stale, with the delta.
+        // served) makes the submit stale, with the delta. in the chain
+        // mode the first submit rests on the revision the message's last
+        // stage carried instead, with no observation before it.
         for attempt in 1..=ATTEMPTS {
-            let decided = self.observe(out)?;
-            let stages = self.act(out, "commit.submit", "submit", None, decided.revision)?;
+            let decided = match chained.take() {
+                Some(revision) => revision,
+                None => self.observe(out)?.revision,
+            };
+            let stages = self.act(out, "commit.submit", "submit", None, decided)?;
             match terminal(&stages) {
                 Some(Stage::Completed(outcome)) => {
                     out.completed = Some(outcome.clone());
@@ -135,7 +164,7 @@ impl Agent {
                         "submit {attempt} refused as stale: {changes:?}; acted: {}",
                         crate::story::acted_text(acted)
                     ));
-                    self.repair(out, decided.revision)?;
+                    self.repair(out, decided)?;
                 }
                 other => return Err(format!("submit {attempt} ended {other:?}")),
             }
@@ -279,7 +308,18 @@ impl Agent {
         if let Some(param) = param {
             act = act.with_param(param);
         }
-        let stages = self.client.act(act, |_| {}).map_err(|e| e.to_string())?;
+        let stages = match self.client.act(act, |_| {}) {
+            Ok(stages) => stages,
+            Err(WireError::Refused(e)) => {
+                out.steps.push(format!(
+                    "act {target} {action} from {revision}: refused, {e}"
+                ));
+                out.refused
+                    .push(Refused::of(target.as_str(), action.as_str(), &e));
+                return Err(format!("{target} {action} was refused: {e}"));
+            }
+            Err(e) => return Err(e.to_string()),
+        };
         let names: Vec<&str> = stages.iter().map(|s| s.stage.name()).collect();
         let landed = stages
             .last()

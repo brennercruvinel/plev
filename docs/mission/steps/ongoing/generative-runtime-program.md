@@ -189,7 +189,7 @@ quando as superfícies (seção 8) são disjuntas.
   - [x] uma sessão real do `ide` com pessoa e agente, gravada pelo próprio
     ide e lida pelo inspector (task-63 fase d);
   - [ ] do pixel à capacidade e ao código num controle (task-65 fase a);
-  - [ ] P1: o laboratório mede pelo valor visto e pelo valor vivo (task-88);
+  - [x] P1: o laboratório mede pelo valor visto e pelo valor vivo (task-88);
   - [ ] P1: a conclusão do checkpoint a revista sob a regra da task-89. o
     inspector mostrou que o acerto do A2 da primeira rodada dependeu da
     ordem dos eventos; uma rodada curta com agentes LLM no cenário
@@ -376,6 +376,6 @@ atualizado em cada integração.
 | task-91 | na fila (P2) | | o dispatcher sabe quando o agente olhou: quem serve a observação avisa; o `acted` ancora no olhar; depois da 89 (`wire`) |
 | task-89 | integrada | `79b8c93` | um ato com `from_revision` se apoia só no que foi mostrado ao ator (o nome do `hello`, em qualquer conexão): o valor de cada `read` vem da última observação que o mostrou; nunca mostrado dá `not_observed` (aditivo no v1, `plev` sai 3); reproduzido no laboratório: o submit depois de olhar só o formulário é recusado stale; adr an-act-rests-on-what-its-actor-was-shown |
 | task-65 | fases a e b em andamento | | pixel para código: cmd+clique (dev) num controle abre o site que o projetou (`Node.source`), num texto sem id abre o literal (hot reload com linha e coluna); c (gravar) e d (quem leu o token) depois |
-| task-88 | em andamento (P1) | | o laboratório mede no que o agente se apoiou pelo valor que o request carrega (não pela revisão); a pessoa age também depois de um estágio terminal; o relatório conta `not_observed`; `lab.rs` dividido; antes do próximo experimento com LLM |
+| task-88 | integrada (P1) | `96c20a0` | o laboratório mede pelo valor visto e pelo valor vivo, não pela revisão (hash de conteúdo colide); cenário `unstage-before-submit` (a pessoa entre a decisão e o submit) além do antigo; `--scripted chain`; recusas do protocolo no relatório; `lab.rs` dividido |
 | task-67 | integrada | `49e2822` | `regress check|bless`: significado, hash estável por layer e ligações, pixel só na região que mudou, nomeando o controle; 157 baselines em 0,6 s sem GPU; job de CI no macOS; adr regression-by-meaning-before-pixels |
 | auditoria de verdade | integrada | `7621403` | `docs/mission/state/truth.md`: contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |

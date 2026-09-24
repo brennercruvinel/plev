@@ -1,7 +1,13 @@
 //! the laboratory of the experiment, run as the orchestrator runs it
 //! (task-62 phase c): the `ide-lab` binary against a real repository, a
 //! real agent port and the real git worker, driven by its own scripted
-//! agent, with and without the person of the script.
+//! agent, with and without the person of the script. the agent comes to
+//! its submit in two ways (it observes right before it, or it chains it on
+//! the revision the last stage carried, `--scripted chain`), and the person
+//! acts right after an observation or right before a submit reaches the
+//! dispatcher: every combination commits the task, and the stale
+//! measurement says, by the value the submit carried and the value the app
+//! held, whether the person made the check work.
 //!
 //! what it holds the laboratory to: the refusal names exactly the file
 //! the person took out of the index, HEAD does not move while it is
@@ -87,9 +93,19 @@ impl Run {
 /// runs `ide-lab --arm scripted` with `human`, in its own output
 /// directory and under its own app name.
 fn scripted(app: &str, human: &str) -> Run {
+    lab(app, human, &[])
+}
+
+/// the same, with the scripted agent that chains its first submit.
+fn chained(app: &str, human: &str) -> Run {
+    lab(app, human, &["--scripted", "chain"])
+}
+
+fn lab(app: &str, human: &str, more: &[&str]) -> Run {
     let out = tempfile::tempdir().expect("a temp dir for the run");
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_ide-lab"));
     cmd.args(["--arm", "scripted", "--human", human]);
+    cmd.args(more);
     cmd.args(["--app", app, "--timeout", TIMEOUT_S]);
     cmd.arg("--out").arg(out.path());
     let output = cmd.output().expect("ide-lab runs");
@@ -323,4 +339,199 @@ fn without_the_person_the_agent_commits_the_task_with_no_refusal() {
         done[0].receipt.stage().map(sem::Stage::name),
         Some("completed")
     );
+}
+
+/// every run ends the same way: exit 0, the commit is the task's, the
+/// session says what git says, the agent confirmed it by the node, and no
+/// act was refused before the dispatcher.
+fn commits_the_task(run: &Run) {
+    assert_eq!(run.code, 0, "the report: {}", run.report);
+    assert_eq!(run.str("truth.verdict"), "MATCH");
+    assert_eq!(run.strings("truth.head_files"), task_files());
+    assert!(run.bool("truth.files_are_the_task"));
+    assert_eq!(run.str("truth.session_commit"), run.str("truth.head_after"));
+    confirmed_by_the_node(run);
+    assert_eq!(run.u64("agent.protocol_refusals.before_dispatch"), 0);
+    assert_eq!(run.u64("agent.protocol_refusals.not_observed"), 0);
+    assert_eq!(run.u64("agent.protocol_refusals.unknown_revision"), 0);
+}
+
+/// the states each stale refusal names, in order.
+fn stale_on(run: &Run, index: usize) -> Vec<String> {
+    run.list("stale")[index]["changes"]
+        .as_array()
+        .expect("the changes")
+        .iter()
+        .map(|c| {
+            c["state_changed"]["at"]
+                .as_str()
+                .unwrap_or_default()
+                .to_owned()
+        })
+        .collect()
+}
+
+/// the actors a stale refusal names, as `actor action target`.
+fn acted_on(run: &Run, index: usize) -> Vec<String> {
+    run.list("stale")[index]["acted"]
+        .as_array()
+        .expect("who acted")
+        .iter()
+        .map(|a| {
+            format!(
+                "{} {} {}",
+                a["actor"].as_str().unwrap_or_default(),
+                a["action"].as_str().unwrap_or_default(),
+                a["target"].as_str().unwrap_or_default()
+            )
+        })
+        .collect()
+}
+
+/// the request ids of the agent's submits, in the order they reached the
+/// dispatcher.
+fn submits(run: &Run) -> Vec<u64> {
+    run.list("agent.acts")
+        .iter()
+        .filter(|a| a["action"] == "submit")
+        .map(|a| {
+            a["request"]
+                .as_str()
+                .and_then(|r| r.parse().ok())
+                .expect("a request id")
+        })
+        .collect()
+}
+
+/// the stale check was measured by value: the submit that came after the
+/// person carried the three files while the app held two.
+fn measured_on_the_old_world(run: &Run) {
+    assert!(
+        run.bool("agent.stale_measurement_valid"),
+        "{}",
+        run.str("agent.stale_measurement")
+    );
+    assert_eq!(run.strings("agent.stale_measured.seen"), task_files());
+    assert_eq!(
+        run.strings("agent.stale_measured.live"),
+        ["src/login.rs", "tests/login_test.rs"]
+    );
+    assert_eq!(
+        run.str("agent.stale_measured.request"),
+        run.list("stale")[0]["request"].as_str().unwrap_or_default(),
+        "the measured submit is the refused one"
+    );
+}
+
+#[test]
+fn the_person_before_the_submit_makes_the_observed_submit_stale() {
+    let run = scripted("ide-lab-before", "unstage-before-submit:src/session.rs");
+    commits_the_task(&run);
+
+    assert_eq!(run.str("intervention.trigger"), "submit arriving");
+    assert_eq!(run.str("intervention.path"), "src/session.rs");
+    assert_eq!(run.strings("intervention.staged_before"), task_files());
+    assert_eq!(
+        run.strings("intervention.staged_after"),
+        ["src/login.rs", "tests/login_test.rs"]
+    );
+    // the submit that brought the person is the next request, and it is
+    // refused on the staged set she moved, naming her.
+    let person: u64 = run.str("intervention.request").parse().expect("an id");
+    assert_eq!(submits(&run).first(), Some(&(person + 1)));
+    assert_eq!(run.list("stale").len(), 1);
+    assert_eq!(stale_on(&run, 0), ["changes:staged"]);
+    assert_eq!(
+        acted_on(&run, 0),
+        ["human unstage changes.file[src/session.rs]"]
+    );
+    assert_eq!(
+        run.list("stale")[0]["head"].as_str(),
+        Some(run.str("truth.head_before"))
+    );
+    measured_on_the_old_world(&run);
+    assert!(run.bool("agent.recovered"));
+}
+
+#[test]
+fn the_chained_submit_is_refused_by_the_agents_own_write() {
+    // a terminal stage shows no state (task-89): the first submit rests on
+    // the message the agent was last shown, empty, and the agent wrote it
+    // since. nobody else acted, so the refusal names nobody.
+    let run = chained("ide-lab-chain", "none");
+    commits_the_task(&run);
+
+    assert!(run.at("intervention").is_null());
+    assert_eq!(run.list("stale").len(), 1);
+    assert_eq!(stale_on(&run, 0), ["commit.message:text"]);
+    assert!(acted_on(&run, 0).is_empty(), "{:?}", acted_on(&run, 0));
+    assert!(run.bool("agent.recovered"));
+    assert!(!run.bool("agent.stale_measurement_valid"));
+    assert!(
+        run.str("agent.stale_measurement")
+            .starts_with("no intervention")
+    );
+    assert_eq!(submits(&run).len(), 2);
+}
+
+#[test]
+fn after_the_look_the_person_comes_too_late_for_the_chained_submit() {
+    // the expected result, not a failure: the agent never looks between
+    // writing the message and its first submit, so the person, who acts
+    // right after a look, acts on the look of its recovery. the agent then
+    // sees the file out, puts it back and commits: the check was not
+    // exercised by the person, and the measurement says why.
+    let run = chained("ide-lab-chain-late", "unstage-after-observe:src/session.rs");
+    commits_the_task(&run);
+
+    assert_eq!(run.str("intervention.trigger"), "observation served");
+    let person: u64 = run.str("intervention.request").parse().expect("an id");
+    let submits = submits(&run);
+    assert!(
+        submits[0] < person && submits[1..].iter().all(|s| *s > person),
+        "the person came between the first submit and the next: {submits:?}, person {person}"
+    );
+    assert_eq!(run.list("stale").len(), 1);
+    assert_eq!(stale_on(&run, 0), ["commit.message:text"]);
+    assert!(acted_on(&run, 0).is_empty());
+
+    assert!(!run.bool("agent.stale_measurement_valid"));
+    let text = run.str("agent.stale_measurement");
+    assert!(
+        text.contains("the world was put back") && text.contains("too late"),
+        "{text}"
+    );
+    // what the submit after her carried is what the app held again.
+    assert_eq!(run.strings("agent.stale_measured.seen"), task_files());
+    assert_eq!(run.strings("agent.stale_measured.live"), task_files());
+}
+
+#[test]
+fn before_the_submit_the_person_makes_the_chained_submit_stale() {
+    let run = chained(
+        "ide-lab-chain-before",
+        "unstage-before-submit:src/session.rs",
+    );
+    commits_the_task(&run);
+
+    assert_eq!(run.str("intervention.trigger"), "submit arriving");
+    assert_eq!(run.list("stale").len(), 1);
+    // the person's unstage and the agent's own write, in one refusal that
+    // names the person.
+    assert_eq!(stale_on(&run, 0), ["changes:staged", "commit.message:text"]);
+    assert_eq!(
+        acted_on(&run, 0),
+        ["human unstage changes.file[src/session.rs]"]
+    );
+    measured_on_the_old_world(&run);
+    // measured whatever revision it named: the refused submit rested on a
+    // revision a terminal stage carried, which no observation served.
+    let refused = run.list("stale")[0]["request"].as_str().unwrap_or_default();
+    let act = run
+        .list("agent.acts")
+        .iter()
+        .find(|a| a["request"].as_str() == Some(refused))
+        .expect("the refused submit");
+    assert!(act["revision_served_index"].is_null(), "{act}");
+    assert!(run.bool("agent.recovered"));
 }
