@@ -2,9 +2,11 @@
 //! already shows takes the id (and the label) it has there, so a change
 //! of form reconciles by `SemId` and the widget, its focus and its caret
 //! go on; a container takes the id of the current container that holds
-//! most of the same capabilities; everything else gets an id of its own,
-//! named after the app node it shows and never one the current surface
-//! uses for something else.
+//! most of the same capabilities; a repeated item's template takes the id
+//! of the current template over the same list, so every instance keeps
+//! its id; everything else gets an id of its own, named after the app
+//! node it shows and never one the current surface uses for something
+//! else.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -61,6 +63,8 @@ pub(crate) struct Namer {
     surface: SemId,
     root: Option<(SemId, Option<String>)>,
     bound: BTreeMap<Anchor, (SemId, Option<String>)>,
+    /// the template root of each list the current surface repeats over.
+    templates: BTreeMap<StateRef, SemId>,
     containers: Vec<Held>,
     /// every id the current surface uses, and every id given so far.
     taken: BTreeSet<SemId>,
@@ -75,6 +79,7 @@ impl Namer {
             surface: fresh_surface(app),
             root: None,
             bound: BTreeMap::new(),
+            templates: BTreeMap::new(),
             containers: Vec::new(),
             taken: BTreeSet::new(),
             given: BTreeSet::new(),
@@ -106,10 +111,15 @@ impl Namer {
                 }
                 None => {}
             }
-            // a repeat's template names its instances, not one node: its
-            // ids are never kept, only kept away from
+            // a template's ids carry the item: only a template can keep
+            // them, and a proposal's template over the same list does
             if let Some(repeat) = &n.repeat {
-                namer.taken.insert(repeat.item.sem.clone());
+                let each = repeat.each.clone();
+                namer
+                    .templates
+                    .entry(each)
+                    .or_insert(repeat.item.sem.clone());
+                stack.push(&repeat.item);
             }
             stack.extend(n.children.iter());
         }
@@ -177,6 +187,22 @@ impl Namer {
             }
             None => (self.derive(name), label),
         }
+    }
+
+    /// the id of the template root of a list over `each` holding `held`:
+    /// the current surface's template over the same list, or a current
+    /// template container that held at least half of it, or one named
+    /// `name` (which carries the item). a template root is named by its
+    /// item, so no label comes back.
+    pub fn template(&mut self, each: &StateRef, held: &BTreeSet<Anchor>, name: &str) -> SemId {
+        if let Some(id) = self.templates.get(each) {
+            if !self.given.contains(id) {
+                let id = id.clone();
+                self.given.insert(id.clone());
+                return id;
+            }
+        }
+        self.container(held, name, None).0
     }
 
     /// `<surface>.<name>`, or with a number after it when that id is

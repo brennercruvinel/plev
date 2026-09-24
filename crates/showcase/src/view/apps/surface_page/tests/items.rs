@@ -231,3 +231,34 @@ fn a_change_of_form_keeps_each_items_instance() {
     assert_ne!(before, after, "the same checkbox, elsewhere");
     assert_eq!(checked(&page, &todo, 1), Some(Value::Bool(true)));
 }
+
+/// A proposal that asks for the items: the rules repeat over the same
+/// list with the ids the page's form gave its template, so the surface
+/// transforms in place with every item's instance, and a check on the
+/// proposed surface is the todo's `toggle`, by the person.
+#[test]
+fn a_proposal_for_the_items_shows_them_and_checks_them() {
+    let (mut todo, mut page, theme) = setup();
+    let content = wide();
+    frame(&mut page, &mut todo, content, &theme);
+    let ids = instances(&page, &todo);
+    page.proposing
+        .intent
+        .set_text("the items and the add field");
+    assert!(page.propose(&mut todo).is_some());
+    assert!(page.proposing.shown, "{:?}", page.proposing.said);
+    assert_eq!(instances(&page, &todo), ids, "the same instances");
+    assert!(value(&page, &todo, "todo_panel.done:value").is_none());
+
+    let (c, _) = settle(&mut page, &mut todo, content, &theme);
+    let at = center(&c, "todo_panel.item[2].done");
+    click(&mut page, &mut todo, content, &theme, at);
+    assert_eq!(completed(&page, &todo, 2), Some(Value::Bool(true)));
+    let receipt = page
+        .host
+        .get(&sid("todo_panel"))
+        .and_then(|s| s.last_receipt())
+        .expect("the check asked");
+    assert_eq!(receipt.request.actor, Actor::Human);
+    assert_eq!(receipt.request.target, sid("todo.item[2]"));
+}

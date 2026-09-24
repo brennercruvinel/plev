@@ -16,12 +16,14 @@
 //! two proposers:
 //!
 //! - `Rules`, deterministic, with no model: a small grammar of intents
-//!   (add, filter, counts, compact, two columns, everything, in english
-//!   and portuguese) turned into bindings by rules over the registry's
-//!   structure (roles, value kinds, parameters, parents), never over an
-//!   app's names; the other words of an intent choose among the app's
-//!   own words. it keeps the id of every node whose capability stays on
-//!   the surface, so a change of form reconciles by `SemId`.
+//!   (add, filter, counts, items, compact, two columns, everything, in
+//!   english and portuguese) turned into bindings by rules over the
+//!   registry's structure (roles, value kinds, parameters, parents, a
+//!   list whose values key its node's children), never over an app's
+//!   names; the other words of an intent choose among the app's own
+//!   words. it keeps the id of every node whose capability stays on the
+//!   surface, a repeated item's template included, so a change of form
+//!   reconciles by `SemId`.
 //! - `Llm`, a language model behind the `Model` trait: the prompt carries
 //!   the IR's schema, the components, the verifier's rules, the registry
 //!   and the current surface with the ids to keep; the reply is decoded
@@ -32,6 +34,7 @@
 
 mod error;
 mod ids;
+mod list;
 mod llm;
 mod parts;
 mod prompt;

@@ -2,15 +2,17 @@
 //! grammar gives an IR the verifier accepts; the nodes whose capability
 //! stays keep the current surface's ids; the words that choose are the
 //! app's; an intent it does not understand is a clear error, never an
-//! empty surface; and the same rules read an app they were not written
-//! for (the ide's workbench).
+//! empty surface; the same rules read an app they were not written for
+//! (the ide's workbench); and "items" repeats over a list found by
+//! structure, in the todo and in the ide, keeping the template's ids
+//! (task-95).
 
 mod support;
 
 use propose::{Ask, Part, ProposeError, Proposer, Rules, propose_verified};
 use sem::{Actor, Actors, Policy, Role, SnapshotBuilder};
 use support::{Asking, bindings, columns, compact, ide, ids, todo, verified};
-use uir::{Capabilities, GenerationPolicy, Ir, Layout, VerifiedIr, verify};
+use uir::{Capabilities, GenerationPolicy, Ir, IrNode, Layout, VerifiedIr, verify};
 
 fn propose(asking: &Asking, intent: &str) -> VerifiedIr {
     propose_verified(&mut Rules, &asking.ask(intent))
@@ -338,4 +340,177 @@ fn propose_verified_never_returns_what_the_verifier_refuses() {
     tight.policy.max_nodes = 3;
     let e = propose_verified(&mut Rules, &tight.ask("everything")).unwrap_err();
     assert!(matches!(e, ProposeError::Refused(_)), "{e:?}");
+}
+
+/// The repeat of a proposal's first list: what it repeats over and its
+/// template.
+fn repeat(ir: &VerifiedIr) -> Option<(String, IrNode)> {
+    support::nodes(&ir.ir().surface.root)
+        .into_iter()
+        .find_map(|n| n.repeat.as_deref())
+        .map(|r| (r.each.to_string(), r.item.clone()))
+}
+
+/// "items" over the todo: a list that repeats over `todo:items`, found by
+/// structure (a List whose values key its node's children), each item
+/// its text and a checkbox bound to `completed` and its `toggle` (the
+/// action that reads only it); never the destructive `remove`, and
+/// nothing of the other parts. In both languages, and in both forms.
+#[test]
+fn the_items_are_a_repeat_over_the_todos_list() {
+    let fresh = Asking::new(todo());
+    for intent in [
+        "items",
+        "itens",
+        "the list",
+        "a lista",
+        "os itens em duas colunas",
+    ] {
+        let ir = propose(&fresh, intent);
+        let (each, item) = repeat(&ir).unwrap_or_else(|| panic!("\"{intent}\" repeats"));
+        assert_eq!(each, "todo:items", "\"{intent}\"");
+        assert!(item.sem.as_str().ends_with("[{item}]"), "{}", item.sem);
+        assert_eq!(item.label, None, "an instance is named by its item");
+        let b: Vec<String> = bindings(&item).into_iter().flat_map(|(_, b)| b).collect();
+        assert_eq!(
+            b,
+            [
+                "text=todo.item[{item}]:text",
+                "checked=todo.item[{item}]:completed",
+                "toggle=todo.item[{item}] toggle",
+            ],
+            "\"{intent}\""
+        );
+        for other in [ADD, ALL, N_ACTIVE] {
+            assert!(!binds(&ir, other), "\"{intent}\" binds {other}");
+        }
+    }
+    let everything = propose(&fresh, "everything");
+    assert!(repeat(&everything).is_some(), "everything holds the list");
+    assert!(binds(&everything, ADD) && binds(&everything, N_DONE));
+}
+
+/// The same rules over the ide's workbench: the list is `changes:files`
+/// (the `changes:staged` set holds only some of the files: a selection,
+/// not the list), each file its status as text and a button per action
+/// of no parameter; `stage` reads two states, so no checkbox, and the
+/// destructive `discard` is left out. The app's own word for its items
+/// ("files") chooses the list too.
+#[test]
+fn the_same_rules_list_the_ides_files() {
+    let asking = Asking::new(ide());
+    for intent in ["items", "the files"] {
+        let ir = propose(&asking, intent);
+        let (each, item) = repeat(&ir).unwrap_or_else(|| panic!("\"{intent}\" repeats"));
+        assert_eq!(each, "changes:files", "\"{intent}\"");
+        let b: Vec<String> = bindings(&item).into_iter().flat_map(|(_, b)| b).collect();
+        assert_eq!(
+            b,
+            [
+                "text=changes.file[{item}]:status",
+                "activate=changes.file[{item}] stage",
+                "activate=changes.file[{item}] unstage",
+                "activate=changes.file[{item}] ignore",
+                "activate=changes.file[{item}] show_diff",
+            ],
+            "\"{intent}\""
+        );
+        let labels: Vec<Option<&str>> = item.children.iter().map(|n| n.label.as_deref()).collect();
+        assert_eq!(
+            labels,
+            [
+                None,
+                Some("stage"),
+                Some("unstage"),
+                Some("ignore"),
+                Some("show diff")
+            ]
+        );
+    }
+    assert!(!binds(&propose(&asking, "counts"), "toggle"));
+}
+
+/// Over the page's surface, which shows the items, a proposal that keeps
+/// them keeps the ids of the list and of its template, so every instance
+/// (`todo_panel.item[<id>]` and its checkbox) goes on through the change,
+/// and the checkbox keeps its label. An intent without the items shows
+/// none (the phase 3a tests pin that the rest is as it was).
+#[test]
+fn a_proposal_keeps_the_ids_of_the_list_and_its_template() {
+    for current in [compact(), columns()] {
+        let over = Asking::new(todo()).over(verified(&current, &todo()));
+        for intent in ["items", "two columns", "compact", "everything"] {
+            let ir = propose(&over, intent);
+            let root = &ir.ir().surface.root;
+            let list = support::nodes(root)
+                .into_iter()
+                .find(|n| n.repeat.is_some())
+                .unwrap_or_else(|| panic!("\"{intent}\" keeps the list"));
+            assert_eq!(list.sem.as_str(), "todo_panel.items", "\"{intent}\"");
+            let (_, item) = repeat(&ir).expect("a template");
+            assert_eq!(item.sem.as_str(), "todo_panel.item[{item}]");
+            let ids: Vec<(String, Option<String>)> = item
+                .children
+                .iter()
+                .map(|n| (n.sem.to_string(), n.label.clone()))
+                .collect();
+            assert_eq!(
+                ids,
+                [
+                    ("todo_panel.item[{item}].text".to_owned(), None),
+                    (
+                        "todo_panel.item[{item}].done".to_owned(),
+                        Some("done".to_owned())
+                    ),
+                ],
+                "\"{intent}\""
+            );
+        }
+        let narrow = propose(&over, "only what is active and the add field");
+        assert!(repeat(&narrow).is_none(), "no items asked, none shown");
+    }
+}
+
+/// A list found by structure only: its values must be the keys of its
+/// node's children, all of them. An empty list proves nothing (and a
+/// template over it would not verify); a list whose values name no
+/// child, or only some, is no list of items.
+#[test]
+fn a_list_is_found_by_structure_and_an_empty_one_is_nothing() {
+    let app = |items: &[&str], children: &[&str]| {
+        let mut b = SnapshotBuilder::new();
+        let list: Vec<String> = items.iter().map(|s| (*s).to_owned()).collect();
+        b.node("shelf", Role::List, "shelf")
+            .state("books", sem::Value::List(list));
+        for c in children {
+            let id = format!("shelf.book[{c}]");
+            let mut n = b.node(id.as_str(), Role::ListItem, *c);
+            n.parent("shelf").state("read", false);
+            n.action("flip").reads(format!("{id}:read"));
+        }
+        b.finish().unwrap()
+    };
+    let found = Asking::new(app(&["a", "b"], &["a", "b"]));
+    let ir = propose(&found, "the books");
+    let (each, item) = repeat(&ir).expect("the shelf's books");
+    assert_eq!(each, "shelf:books");
+    let b: Vec<String> = bindings(&item).into_iter().flat_map(|(_, b)| b).collect();
+    assert_eq!(
+        b,
+        [
+            "checked=shelf.book[{item}]:read",
+            "toggle=shelf.book[{item}] flip"
+        ]
+    );
+    for (items, children) in [
+        (&[][..], &["a"][..]),
+        (&["a", "b"][..], &["a"][..]),
+        (&["a"][..], &["a", "b"][..]),
+    ] {
+        let asking = Asking::new(app(items, children));
+        match propose_verified(&mut Rules, &asking.ask("items")) {
+            Err(ProposeError::Nothing { part, .. }) => assert_eq!(part, Part::List),
+            other => panic!("{items:?} over {children:?}: {other:?}"),
+        }
+    }
 }
