@@ -3866,3 +3866,192 @@ cargo run --offline -p showcase -- --render Capture --out capture.png   (a pági
 - P3: no tema core o interruptor da câmera e do microfone quase não
   aparece (baseline `capture@core`).
 
+## handoff do item 6: deep links
+
+branch `task/76j-links`, base `bcf6be8e` (main após o item 10). worktree
+`.claude/worktrees/agent`, target `target/agents/one`.
+
+a rodada parou depois da sonda, em duas condições do briefing ao mesmo
+tempo (a seção "a parada", abaixo): o winit 0.30.13 registra o delegado
+de aplicação dele no macOS e depende dele, e escrever qualquer classe
+objc no engine pede dependência direta que muda o lock. nada foi
+implementado. nenhum esquema registrado, nenhum `open`, nenhum `.app`,
+nenhuma janela.
+
+### a sonda
+
+(a) o macOS, por leitura da fonte e por `cargo tree --offline`:
+
+- o engine não tem `objc2`, `objc2-foundation` nem `objc2-app-kit` como
+  dependência direta: `crates/engine/Cargo.toml` só os cita no comentário
+  do item 5 (o caminho do UserNotifications ficou para o bundle), e a
+  entrada `engine` do `Cargo.lock` não os lista. eles estão no lock pelos
+  outros: `objc2 0.6.4` (arboard, block2, dispatch2, muda, rfd, tray-icon
+  e as crates `objc2-*`), `objc2-foundation 0.3.2` e `objc2-app-kit 0.3.2`
+  (arboard, muda, rfd, tray-icon); o winit 0.30.13 usa os seus, `objc2
+  0.5.2` e `objc2-app-kit 0.2.2`.
+- as features ligadas hoje, pela unificação (`cargo tree --offline -p
+  engine -e features -i <crate>`): `objc2` std, alloc, default;
+  `objc2-foundation 0.3.2` NSArray, NSString, NSURL, NSNotification,
+  NSBundle, NSData, NSDictionary, NSError, NSThread e outras, sem
+  NSAppleEventManager e sem NSAppleEventDescriptor; `objc2-app-kit 0.3.2`
+  NSApplication, NSResponder, NSRunningApplication, NSEvent, NSMenu,
+  NSMenuItem, NSWindow, NSView, NSStatusBar e outras. então
+  `define_class!` (`objc2-0.6.4/src/macros/define_class.rs`),
+  `NSApplicationDelegate` com `application:openURLs:`
+  (`objc2-app-kit-0.3.2/src/generated/NSApplication.rs:1128`, feature
+  NSApplication), `NSApplication::setDelegate`, `NSURL` e `NSArray`
+  compilariam com as features que já estão ligadas; falta ao engine poder
+  nomear as crates.
+- o lock, medido numa cópia do workspace no scratchpad, nunca neste
+  worktree: com `objc2 = "0.6"`, `objc2-foundation` e `objc2-app-kit` em
+  `cfg(target_os = "macos")` no manifesto do engine, `cargo metadata
+  --offline` resolve sem baixar nada, e o `Cargo.lock` muda em três
+  linhas, todas na lista de dependências da entrada `engine`
+  (`"objc2 0.6.4"`, `"objc2-app-kit 0.3.2"`, `"objc2-foundation 0.3.2"`).
+  nenhum pacote novo. é dependência nova do engine e muda o lock.
+- quem registra delegado: o `muda` 0.20.0 só põe delegado num `NSMenu`
+  (`platform_impl/macos/mod.rs:94`, `ns_menu.setDelegate`), nunca no
+  `NSApp`; `tray-icon` 0.25.1, `rfd` 0.15.4, `arboard` 3.6.1 e
+  `accesskit_macos` 0.26 não chamam `setDelegate` no app e não registram
+  handler de Apple Event (`NSAppleEventManager` não aparece em nenhum). o
+  winit 0.30.13 registra: `platform_impl/macos/event_loop.rs:240`, dentro
+  de `EventLoop::new`, põe o `WinitApplicationDelegate` no app
+  (`app_state.rs:47-72`, um `declare_class!` com
+  `applicationDidFinishLaunching:` e `applicationWillTerminate:`, que
+  guarda o estado todo do laço). e lê de volta a cada volta:
+  `ApplicationDelegate::get` (`app_state.rs:173-184`) pega
+  `NSApp.delegate()` e entra em pânico com "tried to get a delegate that
+  was not the one Winit has registered" quando não é o dele, e é chamado
+  pelo observador do run loop em todo `kCFRunLoopAfterWaiting` e
+  `kCFRunLoopBeforeWaiting` (`observer.rs:62` e `:84`) e em todo
+  `sendEvent:` (o swizzle de `app.rs:45`).
+- o texto de `winit-0.30.13/src/platform/macos.rs:20-80` ("Winit
+  guarantees that it will not register an application delegate", com o
+  exemplo do `application:openURLs:`) não vale para a 0.30.13, que é a do
+  lock: o changelog da 0.30 só tira o delegado do iOS. o briefing leu esse
+  texto. um delegado nosso substituiria o do winit, e o laço entraria em
+  pânico no primeiro evento ou na primeira volta depois do `setDelegate`.
+  não rodei isso (nenhum laço nem janela); é leitura da fonte, linha por
+  linha.
+- o que entrega a URL sem trocar o delegado: o evento Apple de URL
+  (classe `kInternetEventClass`, id `kAEGetURL`, os dois `'GURL'`), por
+  `NSAppleEventManager::sharedAppleEventManager()` e
+  `setEventHandler_andSelector_forEventClass_andEventID`
+  (`objc2-foundation-0.3.2/src/generated/NSAppleEventManager.rs:61` e
+  `:71`, feature NSAppleEventManager), com a URL em
+  `paramDescriptorForKeyword(keyDirectObject).stringValue()`
+  (`NSAppleEventDescriptor.rs:338` e `:288`). é o que chama o
+  `application:openURLs:` por baixo: o AppKit instala o handler dele para
+  `GURL` ao lançar e repassa ao delegado. um handler nosso instalado no
+  `NSApplicationWillFinishLaunchingNotification` (observado pelo
+  `NSNotificationCenter`, sem delegado) toma o lugar do do AppKit e deixa
+  o do winit em paz. também pede `objc2` e `objc2-foundation` diretos (o
+  lock muda nas mesmas três linhas, com o `objc2-app-kit` para o nome da
+  notificação), mais as features NSAppleEventManager e
+  NSAppleEventDescriptor, que ninguém liga hoje (feature não muda o
+  lock). um handler de Apple Event é do processo: não registra esquema no
+  sistema.
+- no macOS o link nunca chega como argumento: o Launch Services lança o
+  app (só um `.app` com `CFBundleURLTypes` no `Info.plist`) e entrega a
+  URL como evento `GURL` logo depois do lançamento; com o app aberto, o
+  mesmo evento vai para a instância viva, sem processo novo. o handler
+  precisa existir antes do fim do `finishLaunching` para pegar o link que
+  lançou o app; o `resumed` do showcase vem depois, tarde para esse link.
+
+(b) windows e linux, por leitura (nada registrado):
+
+- windows: o esquema é uma chave `HKEY_CURRENT_USER\Software\Classes\<esquema>`
+  com o valor `URL Protocol` e `shell\open\command` igual a `"<exe>"
+  "%1"`. abrir o link cria sempre um processo novo com a URL em
+  `argv[1]`, com o app aberto ou não.
+- linux: um `.desktop` com `MimeType=x-scheme-handler/<esquema>;` e
+  `Exec=<exe> %u`, escolhido por `xdg-mime default <app>.desktop
+  x-scheme-handler/<esquema>`; o `xdg-open` do link cria um processo novo
+  com a URL no lugar do `%u`.
+- a segunda instância: nos dois, um link com o app aberto abre outro
+  processo, com outra janela e estado novo, e a instância que já roda não
+  fica sabendo. encaminhar (mutex nomeado e pipe no windows, D-Bus ou
+  socket no linux, e o processo novo sai) é do bring-up. no macOS não
+  existe segunda instância: o evento vai para a viva.
+- o showcase hoje: `App::new` toma o primeiro argumento como título de
+  página (`jump_to_page`), que não acha `plev-showcase://...` e ignora
+  sem dizer nada; o segundo seria o tema.
+
+(c) as capacidades do showcase hoje, na projeção da galeria (o shell e a
+página ativa; dos goldens da todo, das silences e da files, e das
+semânticas da capture e da surface):
+
+- shell: `shell.page` `select` e `shell.theme` `select` (texto dentro das
+  opções, qualquer ator); `shell.detach` `toggle` (abre janela),
+  `shell.show` `activate` (traz a janela), `shell.print` `activate`
+  (impressora) e `shell.save_session` `activate` (só gravando, escreve
+  arquivo), os quatro `PERSON_ONLY`.
+- todo: `todo.input` `set_value` (texto) e `submit`, `todo.filter[..]`
+  `select`, `todo.item[n]` `toggle` e `remove` (destrutivo), qualquer
+  ator.
+- silences: `set_value`, `increment` e `decrement` dos dois sliders,
+  `detect_silence` (roda o ffmpeg), `preview_segment`, `apply_cut`,
+  `reject_cut`, `apply_all`, qualquer ator.
+- files: `files.drop` `drop_files` (lista, qualquer ator); `files.open`
+  `open_file` e `files.warn` `warn` (human, assistive e test: diálogo).
+- capture: `capture.camera` e `capture.microphone` `toggle`
+  (`PERSON_ONLY`: dispositivo).
+- surface: `propose` (o claude por filho) e o cancelar.
+- a proposta do briefing se sustenta: abertos a link, só `shell.page`
+  `select` e `shell.theme` `select`. navegar e trocar o tema não escrevem,
+  não apagam, não abrem dispositivo, diálogo, arquivo, janela nem
+  impressora, e não rodam processo. o resto que um agente pode (o todo,
+  as silences, o drop) fica fechado a link pela lista, mesmo aceito pela
+  policy: um link vem de qualquer página web, e a lista é do app.
+
+### a parada
+
+problema: o caminho do macOS que o briefing descreve (um delegado nosso
+com `application:openURLs:`) não existe com este winit, e qualquer
+caminho objc no engine pede dependência direta que muda o lock.
+
+1. o delegado do winit: um delegado nosso substitui o
+   `WinitApplicationDelegate`, e o winit entra em pânico na volta
+   seguinte do laço (sonda (a)).
+2. o lock: `objc2`, `objc2-foundation` (e `objc2-app-kit`) como
+   dependência direta do engine mudam três linhas do `Cargo.lock`, sem
+   pacote novo.
+
+opções e impacto:
+
+1. o handler do evento Apple `GURL`, sem delegado, com `objc2`,
+   `objc2-foundation` e `objc2-app-kit` diretos no engine em macOS, as
+   features NSAppleEventManager e NSAppleEventDescriptor a mais. o lock
+   muda três linhas na entrada `engine`, resolve offline; uma classe com
+   `define_class!` que observa o `WillFinishLaunching`, instala o handler,
+   empurra a URL no canal e chama o wake. o teste chama o método do
+   handler pelo objc com um descritor montado por ele, sem esquema e sem
+   janela. na tela, só recebe algo depois do bring-up do bundle, como o
+   `NativeTray` compilado e não rodado.
+2. o mesmo handler contra o runtime objc por `extern "C"` (libobjc:
+   `objc_allocateClassPair`, `class_addMethod`, `sel_registerName`,
+   `objc_msgSend` transmutado), sem crate. o lock fica intacto; entram
+   umas 120 linhas de `unsafe` com `// SAFETY:` e transmutes, contra o
+   "unsafe proibido por padrão", com custo de revisão alto.
+3. um método `application:openURLs:` posto em runtime na classe do
+   delegado do winit. depende do nome privado de uma classe de outra
+   crate, quebra calado numa atualização, e ainda pede o objc2 ou o
+   runtime cru. não recomendo.
+4. no macOS, só a fonte do argumento de lançamento até o bring-up; o
+   handler `GURL` entra com o bundle, como a notificação do item 5. o
+   manifesto e o lock ficam intactos; tudo o mais do briefing entra (o
+   parse, as fontes, o falso, o showcase, o ator, a lista, a gravação, os
+   testes, o ADR), e o ADR descreve o handler como o caminho do bring-up.
+   `cargo run -p showcase -- 'plev-showcase://shell.page/select?value=Files'`
+   exercita o caminho inteiro no macOS sem registrar nada.
+
+recomendação: a opção 1, se as três linhas do lock forem aceitas: é o
+caminho de verdade do macOS, pequeno, sem pacote novo, e testável pelo
+objc sem esquema. sem o aceite, a opção 4. as opções 2 e 3 não.
+
+decisão necessária: aceitar as três linhas do `Cargo.lock` e as três
+dependências diretas do engine em macOS (opção 1), ou seguir sem
+caminho do sistema no macOS até o bring-up (opção 4). o resto do item
+(commits 2, 4, 5 e 6 do briefing) não depende da escolha; só o commit 3.
+
