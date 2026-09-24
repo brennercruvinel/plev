@@ -27,6 +27,11 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use sem::{ActionName, Actor, Request, Role, SemError, SemId, Snapshot, StateKey, Value};
 
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod native;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+pub use native::MudaMenu;
+
 /// A keyboard shortcut shown beside a menu item and installed as its key
 /// equivalent. `primary` is cmd on macOS and ctrl elsewhere. A shortcut
 /// always has a modifier: a bare letter as a key equivalent would take the
@@ -587,9 +592,15 @@ pub fn locked<M>(shared: &Mutex<M>) -> MutexGuard<'_, M> {
 /// proxy and polls on the loop): native on the desktop, none on wasm and
 /// mobile.
 pub fn default_menu(wake: impl Fn() + Send + Sync + 'static) -> Box<dyn NativeMenu> {
-    // the desktop backend comes with the next commit
-    let _ = wake;
-    Box::new(NoMenu)
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    {
+        Box::new(MudaMenu::new(wake))
+    }
+    #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+    {
+        let _ = wake;
+        Box::new(NoMenu)
+    }
 }
 
 #[cfg(test)]
