@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [platform-integration, capture, camera, microphone, ffmpeg, image-atlas, semantic-contract, background, privacy, showcase]
 date: 2026-09-24
 ---
@@ -172,3 +172,16 @@ the strings of libavdevice.
 - a camera frame loaded as a fixed image: it fills the atlas.
 - a frame replaced while a frame is built, or while the app sleeps.
 - a device that runs while nobody can see the page.
+
+## integração (2026-09-24, orquestrador)
+
+aceito sem mudança de código. a revisão conferiu: a imagem de fluxo
+reescreve a entrada no lugar e cada atlas a reenvia uma vez pela
+revisão; o atlas cresce copiando a textura antiga no mesmo lugar, então
+o cursor continua valendo; nenhum teste chega a um dispositivo (o
+`fake-ffmpeg` sai com erro se sobrar uma entrada de dispositivo); a
+página começa com `NoCapture` e só o shell de janela real instala o
+`default_capture()`; o estado `Starting` conta como vivo e pede prazo
+ao laço. P3 registrado: no tema core o interruptor da câmera e do
+microfone quase não aparece.
+

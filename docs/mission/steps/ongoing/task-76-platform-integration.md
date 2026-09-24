@@ -3855,3 +3855,14 @@ cargo test --offline -p engine -p showcase
 cargo run --offline -p showcase --example regress -- check              (163 iguais)
 cargo run --offline -p showcase -- --render Capture --out capture.png   (a página em repouso, sem dispositivo)
 ```
+
+### integração do item 10 (orquestrador, 2026-09-24)
+
+- merge da `task/76i-capture` na `main` sem commit a mais. a revisão
+  conferiu a imagem de fluxo (o crescimento do atlas copia no mesmo
+  lugar, o cursor vale), a privacidade (nenhum teste chega a dispositivo,
+  a página começa com `NoCapture`) e o prazo do laço (o `Starting` conta
+  como vivo).
+- P3: no tema core o interruptor da câmera e do microfone quase não
+  aparece (baseline `capture@core`).
+

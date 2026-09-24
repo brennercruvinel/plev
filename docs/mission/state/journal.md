@@ -14,6 +14,23 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: câmera e microfone (task-76 item 10)
+
+- **integrada:** item 10 (merge da `task/76i-capture`). a página Capture
+  mostra a câmera e um medidor do microfone. só pessoa liga; o agente lê
+  o estado e é recusado. coberta, dormindo ou fora da página, o
+  dispositivo é solto na hora. o engine ganhou a imagem de fluxo, que
+  troca os pixels no lugar. nenhum dispositivo real foi aberto: os
+  testes usam o `testsrc` e o `sine` do ffmpeg por um falso que recusa
+  entrada de dispositivo. 163 baselines (161 iguais e 2 novos da página).
+- **revisão:** sem defeito que bloqueie. P3: no tema core o interruptor
+  da câmera quase não aparece. avisos: a página tem 607 linhas de
+  produção (quem mexer move o `render` para um `draw.rs`); a gravação de
+  sessão guarda o tamanho do frame e não os pixels.
+- **o texto de permissão negada é palpite:** o ffmpeg não pede nem
+  confere permissão, e a recusa real do macOS nunca foi vista aqui. a
+  prova real (roteiro no fim do arquivo da task) é do brenner.
+
 ### intervenção do brenner: terminar todas, no Opus
 
 - **pedido:** "precisamos terminar todas, com maestria, usando o modelo

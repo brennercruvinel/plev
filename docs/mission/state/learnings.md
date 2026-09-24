@@ -12,6 +12,18 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-76 item 10
+
+- **um frame por imagem enchia o atlas em 16 segundos:** o depósito de
+  imagens do engine só crescia e guardava os pixels de cada envio, o que
+  serve a ícones e fotos e quebra com vídeo. a imagem de fluxo (um lugar
+  fixo, os pixels trocados no lugar, reenviados uma vez por atlas) é o
+  caminho de qualquer fonte ao vivo: câmera, vídeo, canvas de terceiros.
+- **o ffmpeg não sabe de permissão:** quem decide é o macOS, pelo
+  processo que lançou (o terminal ou o `.app`). a recusa chega como texto
+  de erro genérico do AVFoundation, então a classificação em "permissão
+  negada" só se confirma na máquina de uma pessoa.
+
 ### 2026-09-24, task-76 item 9
 
 - **a página vai para o papel pelo mesmo caminho da tela:** o render sem
@@ -453,6 +465,13 @@ c"; saídas em `target/agents/exp/`.
   token do contrato era forma, não conteúdo.
 
 ## processo
+
+### 2026-09-24, a lição do item 9 chegou ao item 10
+
+- **o briefing citou o `print_wake`, e o agente aplicou:** o estado
+  "começando" da câmera conta como vivo e pede prazo ao laço, e o frame
+  entra só no wake visível. escrever o achado da revisão anterior no
+  briefing seguinte evitou o mesmo defeito.
 
 ### 2026-09-24, trabalho de fundo precisa acordar o laço
 
