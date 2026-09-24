@@ -26,6 +26,11 @@
 //! change counts its time from the change, not from the last frame. Keys
 //! go through the keymap (`keys.rs`).
 //!
+//! With `PLEV_BACKGROUND=1` on macOS the window comes up behind the app in
+//! front and does not take the focus (the app does not activate over
+//! another, the window is ordered front without becoming key), so it can
+//! open beside someone at work; nothing changes without it, or elsewhere.
+//!
 //! Run: `cargo run -p ide [path-to-repo]` (defaults to the cwd).
 
 mod actions;
@@ -111,6 +116,10 @@ struct App {
     /// The agent port, when `PLEV_AGENT=1` in a debug build.
     #[cfg(unix)]
     port: Option<wire::AgentPort>,
+
+    /// The window comes up without taking the focus (`PLEV_BACKGROUND=1`
+    /// on macOS).
+    background: bool,
 }
 
 impl App {
@@ -130,6 +139,7 @@ impl App {
             caught_up: false,
             #[cfg(unix)]
             port: None,
+            background: false,
         }
     }
 
@@ -181,7 +191,8 @@ impl ApplicationHandler<AppEvent> for App {
         let title = format!("plev ide - {}", self.bench.workspace().repo_label);
         let attrs = WindowAttributes::default()
             .with_title(title)
-            .with_inner_size(winit::dpi::LogicalSize::new(1280u32, 800u32));
+            .with_inner_size(winit::dpi::LogicalSize::new(1280u32, 800u32))
+            .with_active(!self.background);
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
         self.window = Some(window.clone());
 
@@ -406,6 +417,13 @@ impl ApplicationHandler<AppEvent> for App {
 // Entry point
 // ---------------------------------------------------------------------------
 
+/// `PLEV_BACKGROUND=1` on macOS: the window comes up without taking the
+/// focus. Off by default and on every other platform.
+fn background() -> bool {
+    cfg!(target_os = "macos")
+        && std::env::var_os("PLEV_BACKGROUND").is_some_and(|v| v == std::ffi::OsStr::new("1"))
+}
+
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 
@@ -415,7 +433,14 @@ fn main() {
         .map(PathBuf::from)
         .unwrap_or_else(|| std::env::current_dir().expect("cwd is accessible"));
 
-    let event_loop = EventLoop::<AppEvent>::with_user_event().build().unwrap();
+    let background = background();
+    let mut builder = EventLoop::<AppEvent>::with_user_event();
+    #[cfg(target_os = "macos")]
+    if background {
+        use winit::platform::macos::EventLoopBuilderExtMacOS;
+        builder.with_activate_ignoring_other_apps(false);
+    }
+    let event_loop = builder.build().unwrap();
     let proxy = event_loop.create_proxy();
     let git = match GitClient::spawn(&repo_path, move |event| {
         // Wake the UI thread; send_event only fails after loop shutdown.
@@ -446,6 +471,7 @@ fn main() {
     .ok();
 
     let mut app = App::new(bench, fs_watcher);
+    app.background = background;
     // Off unless `PLEV_AGENT=1` in a debug build; nothing is created then.
     #[cfg(unix)]
     {
