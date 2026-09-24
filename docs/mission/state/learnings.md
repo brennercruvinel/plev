@@ -12,6 +12,16 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-91
+
+- **a âncora certa de "quem agiu" é o instante do olhar, não uma
+  revisão.** revisão é hash de conteúdo e muda sem receipt (uma seleção,
+  um refresh do git). o dispatcher numera os requests na ordem, e o port
+  marca cada observação nessa ordem. com isso a cena comum do ide nomeia
+  quem tirou o arquivo, o que duas regras por revisão (83 e 90) não
+  conseguiam. e o agente recusado pela própria escrita agora lê que foi
+  ele.
+
 ### 2026-09-24, checkpoint a, terceira rodada (a regra da task-89)
 
 - **a segurança se sustentou com a regra nova:** quatro corridas com

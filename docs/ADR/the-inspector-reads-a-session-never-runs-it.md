@@ -25,6 +25,9 @@ anywhere says which receipt moved a value. updated on 2026-09-23
 (task-90): `acted` names the chain from the first receipt that ran on the
 revision the author saw, so an act checked on a later revision is named
 when a chain started there; a change no receipt made still names nobody.
+updated on 2026-09-24 (task-91): for an act of the port, `acted` names
+every request taken after the look it rested on, the agent's own
+included; the recording does not keep the look yet.
 
 task-64 phase a asks for the inspector's model without a ui, and a command
 line over it.

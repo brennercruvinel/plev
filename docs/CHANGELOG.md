@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- a stale refusal names who acted since the agent looked (2026-09-24,
+  task-91): the port marks each observation it serves in the dispatcher's
+  order (`sem::Mark`, through its receipt sink), and a refused act of the
+  port names every request taken after the oldest observation its reads
+  come from, the agent's own included. the ide's ordinary scene (a person
+  clicks a row, then unstages the file) now names the unstage, and an
+  agent refused by its own write reads "claude itself edited the commit
+  message". the laboratory tells each act's form from the port's count
+  (`Traffic.acts_from_revision`), not from its revision.
+
 - a pixel leads to the code that made it (2026-09-24, task-65 phases a
   and b, adr view-source-for-pixels): in a desktop debug build, cmd+click
   on a control of the showcase opens the line that projected that

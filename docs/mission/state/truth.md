@@ -138,6 +138,15 @@ o da base até ser reescrito.
   desktop), `Access` em `app/access.rs` e a janela em segundo plano em
   `app/background.rs`. `Compositor::hit` tem o primeiro uso de produção.
 
+- `29373d4` (task-91): `sem::Mark`, `Dispatcher::mark`,
+  `ReceiptSink::attached` e `looked` (padrões vazios); `Dispatcher::acted`
+  com marca nomeia todo request tomado depois do olhar (o autor
+  incluído), sem marca a regra da 90 (seção 2.2). o `wire` guarda o olhar
+  de cada ato do port (`crates/wire/src/shown.rs`, `Looks`) e adiciona o
+  sink na primeira observação. `Traffic.acts_from_revision` e
+  `acts_observed` (seção 2.3). o toast do ide nomeia o próprio agente na
+  terceira pessoa. o `rec` ainda não grava o olhar.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

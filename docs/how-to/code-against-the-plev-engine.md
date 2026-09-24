@@ -61,10 +61,12 @@ what exists (updated at each task close-out):
   actions-carry-observed-state): `Request::observe` records the values the
   actor saw for the action's `reads`; `check` decides in a fixed order and
   goes `Stale` only when one of those values moved, with the delta and,
-  once the dispatcher records the refusal, `acted`: the actions of other
-  actors that ran since the state the refused actor saw, from the first
-  request that ran on it (task-83, task-90; a change no request made
-  names nobody); one
+  once the dispatcher records the refusal, `acted`: what ran since the
+  refused actor looked: with the look the agent port knows (task-91),
+  every request taken after it, the actor's own included; without one,
+  the actions of other actors from the first request that ran on the
+  state it saw (task-83, task-90; a change no request made names
+  nobody); one
   `Dispatcher` for every actor projects the app at dispatch, runs
   `Operable::execute(id, req)` only after acceptance or a person's
   confirmation (`Actor::Human` or `Actor::Assistive`), and keeps a

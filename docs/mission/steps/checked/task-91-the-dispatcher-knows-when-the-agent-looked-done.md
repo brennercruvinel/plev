@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: ongoing
+status: done
 last-updated: 2026-09-24
 domain: semantic-contract
 task: task-91
@@ -322,3 +322,35 @@ Commits:
 - 473133d task-91: tests of the look, the fallback and what the look never does
 - o commit deste texto: os ADRs e o handoff
 ```
+
+## fechamento (orquestrador, 2026-09-24)
+
+integrada na `main` em `29373d4` (sete commits, rebaseados sobre
+`804e57d` sem conflito). severidade: P2, com um P1 dentro (a forma dos
+atos no relatório do laboratório).
+
+validação do orquestrador:
+- diff lido: `Mark` no `sem` e o `ReceiptSink` com `attached` e `looked`
+  (padrões vazios); `Looks` no `wire`, que segue a ordem do dispatcher
+  pelo sink do port e guarda o olhar de cada ato; `acted` com e sem
+  marca; `Traffic.acts_from_revision` e `acts_observed`; o toast na
+  terceira pessoa para o próprio agente;
+- gate verde no diretório da task: 2277 passaram, 0 falharam, 12
+  ignorados, com a perna urnaui;
+- reprodução no laboratório (`--arm plev`, a pessoa depois de uma
+  observação), com o `plev` da branch. o agente observa `changes` (três
+  arquivos), a pessoa tira um, o agente olha só o formulário e submete.
+  recusa stale com `acted` = `human unstage changes.file[src/session.rs]`.
+  na regra da task-90 essa cena saía com `acted` vazio.
+
+decisão do agente aceita: a marca chega ao dispatcher pelo sink do port,
+não por métodos novos no `Host`. nenhum host mudou, e o showcase também
+ganhou o olhar. o custo é o `ReceiptSink` com dois papéis, escrito no
+doc do trait.
+
+aplicado no fechamento: os textos da regra no `plev --help`, no how-to
+do engine, no ADR do inspector e no texto do inspect para um `acted`
+vazio. o "(its own)" do inspect ficou para depois (P3).
+
+o que fica (P2): o gravador não sabe em qual olhar cada ato se apoiou
+(proposta no handoff, um evento aditivo por ato do port).
