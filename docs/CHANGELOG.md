@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- an agent chains its acts without observing only to learn the revision
+  (2026-09-23, task-87, adr a-terminal-stage-carries-the-revision): a
+  terminal stage (`completed`, `rejected`, `failed`) carries `revision`,
+  the revision the app is at when it goes out, held in the port's ring
+  so `--since` and `--from-revision` take it. in the ide laboratory the
+  scripted agent went from 24 to 17 messages and from 91.5 to 45.9 KB
+  with a person's intervention (16 to 12 messages, 54.5 to 28.8 KB
+  without); the projection costs about 0.16 ms per terminal stage in
+  debug. `plev --help` also says that `--keys` cuts state only.
+
 - the commit a receipt announces is already on screen (2026-09-23,
   task-85): when the ide's commit receipt completes, the next observation
   shows the commit on top of `stacks` and its files out of the staged

@@ -129,6 +129,36 @@ fn task_files() -> Vec<&'static str> {
     vec!["src/login.rs", "src/session.rs", "tests/login_test.rs"]
 }
 
+/// every act of the agent rests on a revision this port served: one an
+/// observation served, or one the last stage of an earlier act carried
+/// (task-87; the script writes it after each act, "the app at <rev>").
+/// the report's `form` tells only the first kind, since the laboratory
+/// hears observations and not stages. returns how many acts rest on a
+/// revision no observation served.
+fn every_act_rests_on_a_served_revision(run: &Run) -> usize {
+    let observed: BTreeSet<&str> = run
+        .list("agent.observations")
+        .iter()
+        .filter_map(|o| o["revision"].as_str())
+        .collect();
+    let carried: BTreeSet<&str> = run
+        .strings("agent.script")
+        .into_iter()
+        .filter_map(|step| step.rsplit_once(", the app at ").map(|(_, r)| r))
+        .collect();
+    let mut chained = 0;
+    for act in run.list("agent.acts") {
+        let revision = act["revision"].as_str().unwrap_or_default();
+        let seen = observed.contains(revision);
+        assert!(
+            seen || carried.contains(revision),
+            "an act rests on a revision the port served: {act}"
+        );
+        chained += usize::from(!seen);
+    }
+    chained
+}
+
 /// the scripted agent confirmed its commit on the observation right after
 /// the receipt: the node of the sha git says holds the task's files.
 fn confirmed_by_the_node(run: &Run) {
@@ -204,6 +234,7 @@ fn the_person_makes_the_agents_submit_stale_and_the_agent_recovers() {
 
     // the agent observed again, put the file back and committed the task.
     assert!(run.bool("agent.recovered"), "the agent recovered");
+    assert!(every_act_rests_on_a_served_revision(&run) > 0);
     assert!(
         run.bool("agent.stale_measurement_valid"),
         "the submit rested on a revision served before the intervention: {}",
@@ -275,14 +306,14 @@ fn without_the_person_the_agent_commits_the_task_with_no_refusal() {
     assert!(run.bool("truth.files_are_the_task"));
     confirmed_by_the_node(&run);
 
-    // every act of the agent rests on a revision this port served.
-    for act in run.list("agent.acts") {
-        assert_eq!(
-            act["form"].as_str(),
-            Some("from_revision"),
-            "an act rests on what it observed: {act}"
-        );
-    }
+    // every act of the agent rests on a revision this port served, and
+    // the ones with nothing to decide before them rest on the revision the
+    // act before carried, with no observation only to learn it.
+    assert!(
+        every_act_rests_on_a_served_revision(&run) > 0,
+        "the agent chained acts on the revision a last stage carried: {:?}",
+        run.strings("agent.script")
+    );
     let session = run.session();
     let submit = SemId::parse("commit.submit").expect("an id");
     let end = session.span().expect("a span").1;

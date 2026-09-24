@@ -47,9 +47,15 @@ common options:
 act without --from-revision observes the target first and acts on that
 revision: the state as it is now. --source keeps each node's source (the
 file, line and column that projected it), which an agent acting by id does
-not need. --param takes a sem value
+not need. --keys cuts only state: the values and the changes of the other
+state keys; a node added or removed, a label, actions, flags, a parent, the
+order and the focus always pass. --param takes a sem value
 ({\"kind\":\"text\",\"value\":\"x\"}) or a plain JSON string, bool, number or
 list of strings.
+revision: the last stage of an act (completed, rejected, failed) carries
+the revision the app is at when that stage goes out. it includes what other
+actors changed until then, and --since and --from-revision take it, so the
+next act needs no observe only to learn it.
 stale: an act is refused as stale when a state it reads (the action's reads,
 as observe shows them) changed since the observation it rests on; the
 revision only names what was seen, never decides. the refusal's changes say
@@ -431,6 +437,24 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 "its acted says who",
             ] {
                 assert!(USAGE.contains(words), "{words:?} in {USAGE}");
+            }
+        }
+
+        /// what the revision of a terminal stage is for, and what --keys
+        /// leaves in, are in `plev --help` too.
+        #[test]
+        fn the_help_says_what_a_last_stage_carries_and_what_keys_cut() {
+            let one_line = USAGE.split_whitespace().collect::<Vec<_>>().join(" ");
+            for words in [
+                "the last stage of an act (completed, rejected, failed) carries the revision \
+                 the app is at when that stage goes out",
+                "it includes what other actors changed until then",
+                "--since and --from-revision take it",
+                "--keys cuts only state",
+                "a node added or removed, a label, actions, flags, a parent, the order and \
+                 the focus always pass",
+            ] {
+                assert!(one_line.contains(words), "{words:?} in {USAGE}");
             }
         }
     }

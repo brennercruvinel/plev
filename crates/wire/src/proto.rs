@@ -145,9 +145,10 @@ pub struct ServerMsg {
 ///
 /// `hello` gets `welcome`; `observe` gets one `snapshot` or one `delta`;
 /// `act` gets one `stage` per stage of its receipt, in order, until a
-/// terminal one (rejected, completed, failed), some of them later than
-/// others when the execution ends after the dispatch; anything refused
-/// gets one `error`.
+/// terminal one (rejected, completed, failed), which carries the revision
+/// the app is at (see `StageReply`), some of them later than others when
+/// the execution ends after the dispatch; anything refused gets one
+/// `error`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Reply {
@@ -193,6 +194,16 @@ pub struct DeltaReply {
 /// request as the dispatcher took it (`asked`), with the observed values
 /// the app rebuilt from `from_revision`. a value aimed at a secret node
 /// travels as its length.
+///
+/// a terminal one (`completed`, `rejected`, `failed`) also carries
+/// `revision`: the revision the app is at when the terminal stage goes
+/// out. it includes what other actors changed until then, and it serves
+/// `since` and `from_revision` as the revision of an observation does (the
+/// app holds the whole snapshot under it), so the next act needs no
+/// observation only to learn it. it is absent from the other stages, and
+/// when the app projects nothing at that instant. it decides nothing: an
+/// act resting on it is checked on its reads like any other. it is a hash
+/// of the projection, and carries no value.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct StageReply {
     pub request: RequestId,
@@ -200,6 +211,8 @@ pub struct StageReply {
     pub at: Millis,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub asked: Option<Request>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub revision: Option<Revision>,
 }
 
 impl StageReply {

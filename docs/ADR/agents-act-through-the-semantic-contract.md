@@ -266,6 +266,14 @@ one toggle still 624 B; the new numbers are in
   something on the state the agent saw, and the stale rule is in `plev
   --help` and the doc of `Act`:
   `docs/ADR/a-delta-carries-the-node-a-refusal-names-who-acted.md`.
+- task-87, still protocol v1: a terminal stage (`completed`, `rejected`,
+  `failed`) carries `revision`, the revision the app is at when that
+  stage goes out. it includes what other actors changed until then, and
+  it serves `since` and `from_revision` (`--since`, `--from-revision`),
+  so the next act needs no observation only to learn it. `forward`
+  projects through the `Host` and serves it into the ring as `observe`
+  does, once per call; it decides nothing and is not an observation:
+  `docs/ADR/a-terminal-stage-carries-the-revision.md`.
 - a process killed by a signal leaves its socket file behind. `plev`
   ignores a socket nobody answers on, and the next process with that pid
   replaces it; nothing else sweeps them.

@@ -109,6 +109,7 @@ fn every_reply() -> Vec<Reply> {
         stage,
         at: 1200,
         asked: None,
+        revision: None,
     };
     vec![
         Reply::Welcome {
@@ -158,6 +159,14 @@ fn every_reply() -> Vec<Reply> {
                 .into_iter()
                 .collect(),
         }))),
+        Reply::Stage(StageReply {
+            revision: Some(seen.revision()),
+            ..stage(Stage::Completed(Outcome::default()))
+        }),
+        Reply::Stage(StageReply {
+            revision: Some(revision("00000000000000ff")),
+            ..stage(Stage::Rejected(Rejection::stale(Vec::new())))
+        }),
         Reply::Stage(stage(Stage::Failed { error: "no".into() })),
         Reply::Error(ProtoError::BadVersion { got: "2".into() }),
         Reply::Error(ProtoError::BadMessage {
@@ -266,8 +275,42 @@ fn the_forms_an_agent_writes_are_pinned() {
             stage: Stage::Accepted,
             at: 1200,
             asked: None,
+            revision: None,
         }))
     );
+    // a terminal stage carries the revision the app is at, last; a stage
+    // written without it (any stage before task-87) reads as one with none,
+    // and a stage with none writes no field.
+    let completed = r#"{"v":1,"id":"3","type":"stage","request":"4","stage":{"completed":{"result":{}}},"at":1200,"revision":"3ba694e7d3941ec0"}"#;
+    let ended = ServerMsg {
+        id: Some("3".into()),
+        reply: Reply::Stage(StageReply {
+            request: request_id("4"),
+            stage: Stage::Completed(Outcome::default()),
+            at: 1200,
+            asked: None,
+            revision: Some(revision("3ba694e7d3941ec0")),
+        }),
+    };
+    assert_eq!(decode_server(completed), Ok(ended.clone()));
+    assert_eq!(encode_server(&ended), completed);
+    let old = r#"{"v":1,"id":"3","type":"stage","request":"4","stage":{"completed":{"result":{}}},"at":1200}"#;
+    let Ok(ServerMsg {
+        reply: Reply::Stage(before),
+        ..
+    }) = decode_server(old)
+    else {
+        panic!("a stage from before the field reads");
+    };
+    assert!(before.is_terminal() && before.revision.is_none());
+    let none = ServerMsg {
+        id: Some("3".into()),
+        reply: Reply::Stage(before),
+    };
+    assert_eq!(encode_server(&none), old);
+    let bad = r#"{"v":1,"id":"3","type":"stage","request":"4","stage":"accepted","at":1200,"revision":"nope"}"#;
+    assert!(decode_server(bad).is_err(), "a revision is 16 hex digits");
+
     let error = r#"{"v":1,"id":"9","type":"error","error":"unknown_revision","revision":"3ba694e7d3941ec0"}"#;
     let back = ServerMsg {
         id: Some("9".into()),

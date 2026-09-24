@@ -14,6 +14,34 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 2: task-87 integrada
+
+- **integrada:** task-87 (`365d8fd`): um estágio terminal traz a revisão
+  em que o app ficou. gate verde (2102), laboratório reproduzido pelo
+  orquestrador (12 mensagens e 28,8 KB sem intervenção; 17 e 45,9 KB com,
+  recusa válida, MATCH).
+- **aberta na fila:** task-88, o laboratório: o relatório não reconhece
+  ato apoiado em revisão de estágio, e a pessoa do roteiro só age depois
+  de uma observação, então um agente que encadeia sem observar invalida
+  a medição de stale. precisa estar pronta antes do próximo experimento
+  com LLM.
+
+### ciclo 2: task-82b devolvida com dois achados dela mesma
+
+- a fase b da task-82 voltou: com o campo de commit focado, o ide caiu de
+  1431 para 11 frames em 6 s, e o showcase na página Git de 1423 para
+  11; o urnaui parado desenha 0.
+- **bug achado pelo agente (invariante quebrada):** num repositório
+  comum o ide parado nunca para de desenhar: `git status` cria o
+  `.git/index.lock`, o watcher vê, pede refresh, e roda `git status` de
+  novo, uns 6 frames e três processos `git` por segundo, para sempre.
+  devolvida ao mesmo agente: `GIT_OPTIONAL_LOCKS=0` no helper da CLI e o
+  watcher ignorando o lock, com medição sem a variável.
+- **devolvida também:** molas que começam num evento pulam o intervalo
+  antes dele; o agente resolveu no toast e no caret com uma flag por
+  widget. pedido o mecanismo geral no shell (tick de alcance antes de
+  aplicar qualquer mudança de fora do frame), sem duplicar.
+
 ### ciclo 2: checkpoint a de novo, e a onda 5 abre
 
 - **experimento:** a segunda rodada da fase c (A1', A2'a, A2'b) com o app
