@@ -14,6 +14,21 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 1: replanejamento pela verdade
+
+- **disparados:** agente de docs (`task/docs-follow-code`, sem build:
+  corrige as divergências 1 a 25, 31 e 32 do `truth.md`) e task-82 fase b
+  (`task/82b-wake-everywhere`).
+- **decisão autônoma:** a fase b da task-82 sobe na fila. motivo: a
+  auditoria mostrou que a promessa "no change, no frame" do README está
+  quebrada no ide, o app da prova da tese (60 fps com o campo focado ou
+  com toast), e na página Git do showcase; é invariante quebrada, a
+  primeira na ordem do ciclo.
+- **próximo, já escolhido:** o experimento do checkpoint a de novo quando
+  83 e 85 entrarem; depois, o binário `ide` abrindo a porta do agente
+  (opt-in, como o showcase), para o cenário da tese rodar num app que
+  alguém usa.
+
 ### ciclo 1: task-84 integrada, verdade reconstruída
 
 - **integrada:** task-84 (`4896451`), a corrida do `Refresh`. gate verde
