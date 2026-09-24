@@ -1,6 +1,7 @@
 //! the assets a frame references, written and read: an image with its
-//! pixels, a path with its geometry, each under its key. the layout is
-//! in the module doc of `scene`.
+//! pixels, a path with its geometry, each under its key. a stream image
+//! (a camera's frames) travels as its size and place only, never its
+//! pixels. the layout is in the module doc of `scene`.
 
 use std::sync::Arc;
 
@@ -11,10 +12,17 @@ use engine::path::TessellatedPath;
 use super::SceneError;
 use super::bytes::{Put, Take, fnv};
 
-/// the key an image travels under: its handle, which the store gives one
-/// content (a load) or one frame of a stream (a `replace`).
-pub(crate) fn image_key(h: &ImageHandle) -> u64 {
+/// the key an image travels under: a fixed image's handle, one per
+/// content; a stream's place and size, the same for all its frames, so a
+/// new frame of a camera moves nothing that travels.
+pub(crate) fn image_key(h: &ImageHandle, live: bool) -> u64 {
     let mut b = Put::default();
+    if live {
+        for v in [h.atlas_x, h.atlas_y, h.width, h.height] {
+            b.u32(v);
+        }
+        return fnv(&[b"live", &b.0]);
+    }
     for v in [h.id, h.atlas_x, h.atlas_y, h.width, h.height] {
         b.u32(v);
     }
@@ -34,20 +42,37 @@ pub(crate) fn path_key(p: &TessellatedPath) -> u64 {
 const IMAGE: u8 = 1;
 const PATH: u8 = 2;
 
-/// an image asset: where the sender's store holds it and its pixels
-/// (none when the store had none for the handle).
-pub(crate) fn image_asset(h: &ImageHandle, pixels: Option<&[u8]>) -> Arc<[u8]> {
+/// what an image asset carries of the pixels.
+pub(crate) enum Pixels<'a> {
+    /// a fixed image's, as its slot holds them.
+    Here(&'a [u8]),
+    /// none: the store had none for the handle.
+    Missing,
+    /// none, ever: a stream image (a camera), whose frames are never
+    /// shown to whoever watches. its id is not written either.
+    Live,
+}
+
+/// an image asset: where the sender's store holds it and what it carries
+/// of its pixels (flag 1, then them; 0 none; 2 a stream's, never).
+pub(crate) fn image_asset(h: &ImageHandle, pixels: Pixels<'_>) -> Arc<[u8]> {
     let mut b = Put::default();
     b.u8(IMAGE);
-    for v in [h.id, h.atlas_x, h.atlas_y, h.width, h.height] {
+    let id = if matches!(pixels, Pixels::Live) {
+        0
+    } else {
+        h.id
+    };
+    for v in [id, h.atlas_x, h.atlas_y, h.width, h.height] {
         b.u32(v);
     }
     match pixels {
-        Some(p) => {
+        Pixels::Here(p) => {
             b.u8(1);
             b.0.extend_from_slice(p);
         }
-        None => b.u8(0),
+        Pixels::Missing => b.u8(0),
+        Pixels::Live => b.u8(2),
     }
     b.0.into()
 }
@@ -73,6 +98,8 @@ pub(crate) enum Asset {
     Image {
         handle: ImageHandle,
         pixels: Option<Vec<u8>>,
+        /// a stream's: it has no pixels here, ever.
+        live: bool,
     },
     Path(TessellatedPath),
 }
@@ -86,14 +113,17 @@ pub(crate) fn read_asset(bytes: &[u8]) -> Result<Asset, SceneError> {
                 *x = t.u32("an image")?;
             }
             let [id, atlas_x, atlas_y, width, height] = v;
-            let pixels = if t.bool("an image's pixel flag")? {
-                let n = (width as usize)
-                    .checked_mul(height as usize)
-                    .and_then(|n| n.checked_mul(4))
-                    .ok_or(SceneError::Invalid("an image's size"))?;
-                Some(t.take(n, "an image's pixels")?.to_vec())
-            } else {
-                None
+            let flag = t.u8("an image's pixel flag")?;
+            let pixels = match flag {
+                0 | 2 => None,
+                1 => {
+                    let n = (width as usize)
+                        .checked_mul(height as usize)
+                        .and_then(|n| n.checked_mul(4))
+                        .ok_or(SceneError::Invalid("an image's size"))?;
+                    Some(t.take(n, "an image's pixels")?.to_vec())
+                }
+                _ => return Err(SceneError::Invalid("an image's pixel flag")),
             };
             Asset::Image {
                 handle: ImageHandle {
@@ -104,6 +134,7 @@ pub(crate) fn read_asset(bytes: &[u8]) -> Result<Asset, SceneError> {
                     height,
                 },
                 pixels,
+                live: flag == 2,
             }
         }
         PATH => {

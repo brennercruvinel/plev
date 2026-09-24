@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use engine::compositor::{Compositor, Layer, SceneNode};
 
-use super::asset;
+use super::asset::{self, Pixels};
 use super::bytes::fnv;
 use super::node::{self, Drawn, Head, Props};
 
@@ -54,10 +54,11 @@ impl Sender {
     /// the frame `compositor` holds (the one on screen between two
     /// frames), laid out and cleared as `head` says.
     ///
-    /// an image travels with the pixels its slot holds when the frame is
-    /// written (`engine::gpu::image_pixels`): a stream replaced after the
-    /// frame was drawn and before it is written travels with the newer
-    /// pixels, which its next frame draws anyway.
+    /// a fixed image travels with the pixels its slot holds
+    /// (`engine::gpu::image_pixels`), once while frames reference it; a
+    /// stream image (`engine::gpu::image_is_stream`: a camera's frames)
+    /// travels as its size and place only, never its pixels, under a key
+    /// its frames share, so a new frame of it moves nothing.
     pub fn frame(&mut self, compositor: &Compositor, head: Head) -> Frame {
         let mut assets: Vec<(u64, Arc<[u8]>)> = Vec::new();
         let mut kept: HashMap<u64, Arc<[u8]>> = HashMap::new();
@@ -110,8 +111,15 @@ impl Sender {
         assets: &mut Vec<(u64, Arc<[u8]>)>,
     ) -> Drawn {
         let (key, build): (u64, &dyn Fn() -> Arc<[u8]>) = match node {
-            SceneNode::Image { image, .. } => (asset::image_key(image), &|| {
-                asset::image_asset(image, engine::gpu::image_pixels(image).as_deref())
+            SceneNode::Image { image, .. } if engine::gpu::image_is_stream(image) => {
+                (asset::image_key(image, true), &|| {
+                    asset::image_asset(image, Pixels::Live)
+                })
+            }
+            SceneNode::Image { image, .. } => (asset::image_key(image, false), &|| {
+                let pixels = engine::gpu::image_pixels(image);
+                let pixels = pixels.as_deref().map_or(Pixels::Missing, Pixels::Here);
+                asset::image_asset(image, pixels)
             }),
             SceneNode::Path { data } => (asset::path_key(data), &|| asset::path_asset(data)),
             other => return Drawn::Node(other.clone()),

@@ -31,14 +31,20 @@
 //! key    := text str, font_size u32, line_height u32, max_width opt u32,
 //!           weight u16, letter_spacing u32, family opt str
 //! asset  := 1 image: id u32, atlas_x u32, atlas_y u32, width u32,
-//!           height u32, has_pixels u8, then width * height * 4 of RGBA8
+//!           height u32, pixels u8 (0 none, 1 then width * height * 4 of
+//!           RGBA8, 2 a stream's: never, and its id written 0)
 //!         | 2 path: engine hash u64, count u32, (position 2 f32, color
 //!           4 f32)*, count u32, index u32*
 //! ```
 //!
-//! a layer's hash is FNV-1a 64 of its body; an image's asset key is its
-//! handle (one per content, or per frame of a stream), a path's its
-//! engine hash and sizes. a text travels as its key, the string and the
+//! a layer's hash is FNV-1a 64 of its body; a fixed image's asset key is
+//! its handle (one per content), a stream image's its place and size (the
+//! same for all its frames), a path's its engine hash and sizes.
+//!
+//! a stream image (`engine::gpu::image_is_stream`: a camera's frames)
+//! never travels with its pixels, whoever watches: the capture ADR keeps
+//! a camera's frames from every agent, and a watcher is an agent. the
+//! receiver draws a box in its place that says so ([`LIVE_LABEL`]). a text travels as its key, the string and the
 //! typography: the receiver shapes and rasterizes it with the same
 //! embedded fonts.
 //!
@@ -53,7 +59,7 @@ mod mirror;
 mod node;
 mod send;
 
-pub use mirror::{Brought, ImageCounts, Incoming, Mirror};
+pub use mirror::{Brought, ImageCounts, Incoming, LIVE_LABEL, Mirror};
 pub use node::{Drawn, Head, Props};
 pub use send::{Frame, LayerOut, Sender};
 

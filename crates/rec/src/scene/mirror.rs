@@ -1,17 +1,16 @@
 //! the viewer's side: the layers and the assets a receiver holds, a frame
 //! applied to them, and the scene drawn into a compositor of its own.
 //!
-//! an image enters this process's store as the app's did: a fixed one by
-//! `load_image_rgba`, once per content (the store's dedupe answers the
-//! same handle when it comes again); a stream (a second content at a
-//! placement the app's store gave before) gets one stream slot here,
-//! `stream_image_rgba` once, then `replace_image_rgba` per frame, so a
-//! camera never fills this atlas, which is grow-only like the app's.
+//! a fixed image enters this process's store by `load_image_rgba`, once
+//! per content (the store's dedupe answers the same handle when it comes
+//! again). a stream image (a camera) never comes with its pixels: in its
+//! place the receiver draws a box that says the live image is not
+//! mirrored.
 
 use std::collections::{HashMap, HashSet};
 
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::gpu::{ImageHandle, load_image_rgba, replace_image_rgba, stream_image_rgba};
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::gpu::{ImageHandle, load_image_rgba};
 use engine::path::TessellatedPath;
 
 use super::SceneError;
@@ -43,12 +42,11 @@ pub struct Incoming<'a> {
 pub struct ImageCounts {
     /// fixed images loaded (`load_image_rgba`), one per asset received.
     pub loads: u64,
-    /// stream slots made here (`stream_image_rgba`).
-    pub streams: u64,
-    /// frames of a stream written into its slot (`replace_image_rgba`).
-    pub replaces: u64,
-    /// images that came without pixels, or that this store refused:
-    /// their nodes draw nothing.
+    /// stream images received, as their size and place: each draws the
+    /// box that says it is not mirrored.
+    pub live: u64,
+    /// fixed images that came without pixels, or that this store
+    /// refused: their nodes draw nothing.
     pub missing: u64,
 }
 
@@ -60,13 +58,13 @@ struct Held {
     nodes: Vec<Drawn>,
 }
 
-/// an image placement of the app's store, as it is here.
-#[derive(Debug)]
-struct Place {
-    /// the app's handle id last received there.
-    id: u32,
-    /// the stream slot here, once a second content came.
-    stream: Option<ImageHandle>,
+/// an image as the receiver holds it.
+#[derive(Clone, Copy, Debug)]
+enum Shown {
+    /// a fixed image, in this process's store.
+    Here(ImageHandle),
+    /// a stream image, never mirrored.
+    Live,
 }
 
 /// the scene a receiver holds.
@@ -74,9 +72,8 @@ struct Place {
 pub struct Mirror {
     head: Option<Head>,
     layers: Vec<Held>,
-    images: HashMap<u64, ImageHandle>,
+    images: HashMap<u64, Shown>,
     paths: HashMap<u64, TessellatedPath>,
-    places: HashMap<(u32, u32), Place>,
     /// the app's layer ids and the compositor layers they draw into.
     ids: HashMap<u32, LayerId>,
     counts: ImageCounts,
@@ -115,59 +112,26 @@ impl Mirror {
             Asset::Path(path) => {
                 self.paths.insert(key, path);
             }
-            Asset::Image { handle, pixels } => {
-                let Some(pixels) = pixels else {
-                    self.counts.missing += 1;
-                    return Ok(());
-                };
-                let here = self.image(handle, &pixels);
-                match here {
-                    Some(h) => {
-                        self.images.insert(key, h);
+            Asset::Image { live: true, .. } => {
+                self.counts.live += 1;
+                self.images.insert(key, Shown::Live);
+            }
+            Asset::Image {
+                handle,
+                pixels: Some(pixels),
+                ..
+            } => {
+                self.counts.loads += 1;
+                match load_image_rgba(handle.width, handle.height, pixels) {
+                    Ok(here) => {
+                        self.images.insert(key, Shown::Here(here));
                     }
-                    None => self.counts.missing += 1,
+                    Err(_) => self.counts.missing += 1,
                 }
             }
+            Asset::Image { pixels: None, .. } => self.counts.missing += 1,
         }
         Ok(())
-    }
-
-    /// the app's image `app` with `pixels`, as a handle of this store.
-    fn image(&mut self, app: ImageHandle, pixels: &[u8]) -> Option<ImageHandle> {
-        let (w, h) = (app.width, app.height);
-        let fixed = |counts: &mut ImageCounts| {
-            counts.loads += 1;
-            load_image_rgba(w, h, pixels.to_vec()).ok()
-        };
-        let place = match self.places.get_mut(&(app.atlas_x, app.atlas_y)) {
-            None => {
-                self.places.insert(
-                    (app.atlas_x, app.atlas_y),
-                    Place {
-                        id: app.id,
-                        stream: None,
-                    },
-                );
-                return fixed(&mut self.counts);
-            }
-            Some(place) => place,
-        };
-        if place.id == app.id && place.stream.is_none() {
-            // the same content again (it was let go and came back)
-            return fixed(&mut self.counts);
-        }
-        place.id = app.id;
-        let slot = match place.stream {
-            Some(slot) => slot,
-            None => {
-                self.counts.streams += 1;
-                stream_image_rgba(w, h).ok()?
-            }
-        };
-        let now = replace_image_rgba(&slot, pixels).ok()?;
-        self.counts.replaces += 1;
-        place.stream = Some(now);
-        Some(now)
     }
 
     /// applies one frame: `head` when it changed, every layer in
@@ -261,7 +225,7 @@ impl Mirror {
                         corner_radius,
                         key,
                     } => match self.images.get(key) {
-                        Some(image) => SceneNode::Image {
+                        Some(Shown::Here(image)) => SceneNode::Image {
                             x: *x,
                             y: *y,
                             w: *w,
@@ -269,6 +233,12 @@ impl Mirror {
                             image: *image,
                             corner_radius: *corner_radius,
                         },
+                        Some(Shown::Live) => {
+                            for node in live_box([*x, *y, *w, *h], *corner_radius) {
+                                c.push_to_layer(id, node);
+                            }
+                            continue;
+                        }
                         None => continue,
                     },
                     Drawn::Path { key } => match self.paths.get(key) {
@@ -374,4 +344,40 @@ fn drop_layer(c: &mut Compositor, id: LayerId) {
     } else {
         c.remove_layer(id);
     }
+}
+
+/// what a receiver says of a live image in its place.
+pub const LIVE_LABEL: &str = "live image, not mirrored";
+
+/// the box drawn where a stream image (a camera) is: a dark rounded rect
+/// with its edge, and [`LIVE_LABEL`] inside it.
+fn live_box([x, y, w, h]: [f32; 4], corner_radius: f32) -> [SceneNode; 4] {
+    [
+        SceneNode::RoundedRect {
+            x,
+            y,
+            w,
+            h,
+            color: [0.06, 0.06, 0.07, 1.0],
+            corner_radius,
+            border_width: 1.0,
+            border_color: [0.42, 0.42, 0.46, 1.0],
+        },
+        SceneNode::PushClip { x, y, w, h },
+        SceneNode::Text {
+            key: TextNodeKey {
+                text: LIVE_LABEL.to_owned(),
+                font_size_bits: 13.0f32.to_bits(),
+                line_height_bits: 18.0f32.to_bits(),
+                max_width_bits: Some((w - 24.0).max(1.0).to_bits()),
+                font_weight: 500,
+                letter_spacing_bits: 0.0f32.to_bits(),
+                font_family: None,
+            },
+            x: x + 12.0,
+            y: y + 12.0,
+            color: [0.78, 0.78, 0.8, 1.0],
+        },
+        SceneNode::PopClip,
+    ]
 }

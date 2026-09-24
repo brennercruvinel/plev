@@ -291,7 +291,7 @@ pub(crate) fn put_node(b: &mut Put, node: &Drawn) {
                 w: *w,
                 h: *h,
                 corner_radius: *corner_radius,
-                key: image_key(image),
+                key: image_key(image, false),
             },
         ),
         SceneNode::Path { data } => put_node(

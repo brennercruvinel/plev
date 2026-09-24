@@ -309,6 +309,7 @@ fn app_child() {
         }
     });
     println!("{SAID}socket {}", port.path().display());
+    let mut last = host.read().expect("the app reads").rgba;
     loop {
         if woke.recv_timeout(Duration::from_millis(2)).is_ok() {
             view.serve_agent(&mut port, host.compositor());
@@ -344,10 +345,17 @@ fn app_child() {
             "wake" => {
                 view.wake(TURN);
             }
+            // the last frame drawn, its RGBA8 into a file
+            "save" => {
+                std::fs::write(rest, &last).expect("the frame is written");
+                println!("{SAID}saved");
+                continue;
+            }
             "redraw" => {}
             other => panic!("unknown command {other}"),
         }
         let drawn = draw(&mut view, &mut host);
+        last = host.read().expect("the app reads").rgba;
         println!("{SAID}drawn {drawn:016x}");
         let clear = view.theme.colors.bg.to_linear_array();
         let at = Instant::now();
@@ -452,6 +460,12 @@ impl App {
         )
     }
 
+    /// The app's last frame, its RGBA8, into `path`.
+    fn save(&mut self, path: &std::path::Path) {
+        writeln!(self.stdin, "save {}", path.display()).expect("the app listens");
+        self.said("saved").expect("the app saves");
+    }
+
     fn quit(&mut self) {
         let _ = writeln!(self.stdin, "quit");
         let deadline = Instant::now() + Duration::from_secs(20);
@@ -485,6 +499,10 @@ struct Watch {
     c: Client,
     viewer: Viewer,
     host: WindowHost,
+    /// every line that came, as the app wrote it, and every binary part
+    /// in them decoded: the whole output of the watch.
+    wire: Vec<String>,
+    parts: Vec<Vec<u8>>,
 }
 
 /// One frame as it came: its number, the bytes of its lines (as the
@@ -506,14 +524,25 @@ impl Watch {
                 Ok(msg) => msg,
                 Err(e) => panic!("the watch: {e}"),
             };
-            bytes += encode_server(&msg).len() + 1;
+            let line = encode_server(&msg);
+            bytes += line.len() + 1;
             lines += 1;
-            if let Reply::Scene(f) = &msg.reply {
-                sent = f
-                    .layers
-                    .iter()
-                    .filter(|l| l.body.is_some() || l.patch.is_some())
-                    .count();
+            self.wire.push(line);
+            match &msg.reply {
+                Reply::Scene(f) => {
+                    sent = f
+                        .layers
+                        .iter()
+                        .filter(|l| l.body.is_some() || l.patch.is_some())
+                        .count();
+                    self.parts.extend(f.head.clone());
+                    for l in &f.layers {
+                        self.parts.extend(l.body.clone());
+                        self.parts.extend(l.patch.clone());
+                    }
+                }
+                Reply::SceneBlob(b) => self.parts.push(b.bytes.clone()),
+                _ => {}
             }
             if let Some(seq) = self.viewer.take(msg.reply).expect("the frame reads") {
                 return Came {
@@ -537,11 +566,31 @@ impl Watch {
     fn hash(&mut self) -> u64 {
         hash(&mirrored(&mut self.viewer, &mut self.host).rgba)
     }
+
+    /// Whether `pixel`, repeated, is anywhere in what came: in a binary
+    /// part decoded, or in a line as base64 (at any of the four phases a
+    /// run of 4-byte pixels takes in base64's 3-byte groups).
+    fn carried(&self, pixel: [u8; 4]) -> bool {
+        let run = pixel.repeat(16);
+        let in_parts = self
+            .parts
+            .iter()
+            .any(|p| p.windows(run.len()).any(|w| w == run));
+        let long = pixel.repeat(64);
+        let texts: Vec<String> = (0..4)
+            .map(|shift| wire::encode_base64(&long[shift..])[8..72].to_owned())
+            .collect();
+        let in_lines = self
+            .wire
+            .iter()
+            .any(|line| texts.iter().any(|t| line.contains(t.as_str())));
+        in_parts || in_lines
+    }
 }
 
 /// The acceptance: the app in another process, the viewer here, over
 /// the socket; every frame drawn here has the hash of the one the app
-/// drew, and the image pixels crossed.
+/// drew, and a fixed image's pixels crossed; a camera's never do.
 #[test]
 fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
     let Some(view_host) = host() else {
@@ -563,6 +612,8 @@ fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
         c,
         viewer: Viewer::new(),
         host: view_host,
+        wire: Vec::new(),
+        parts: Vec::new(),
     };
     let first = w.next();
     assert_eq!(first.seq, 1, "the frame the app holds, at once");
@@ -624,30 +675,71 @@ fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
         came.bytes, came.lines, came.sent
     ));
 
-    // Capture with the fake camera on: frames of a stream image
+    // Capture with the fake camera on: a stream image. none of its
+    // pixels crosses: the viewer draws a box in its place, and a new
+    // frame of the camera moves nothing that travels
     let (drawn, _) = app.tell("page Capture|core");
     w.next();
     assert_eq!(w.hash(), drawn);
-    let before = w.viewer.mirror().image_counts();
-    let (drawn, _) = app.tell("camera");
-    w.next();
-    assert_eq!(w.hash(), drawn, "the camera turned on");
+    let (drawn, took) = app.tell("camera");
+    let came = w.next();
+    band.push(format!(
+        "Capture / core, the camera turns on: {} bytes in {} lines, {} layer sent; \
+         offered in {took} us",
+        came.bytes, came.lines, came.sent
+    ));
+    let mut shown = vec![drawn];
     for n in 0..4 {
         let (drawn, took) = app.tell("wake");
-        let came = w.next();
-        assert_eq!(w.hash(), drawn, "camera frame {n}");
+        shown.push(drawn);
+        assert!(w.quiet(300), "camera frame {n} sent something");
         band.push(format!(
-            "Capture / core, camera frame {n}: {} bytes in {} lines, {} layer sent; \
-             offered in {took} us",
-            came.bytes, came.lines, came.sent
+            "Capture / core, camera frame {n}: 0 bytes; offered in {took} us"
         ));
     }
-    let after = w.viewer.mirror().image_counts();
+    let frames: std::collections::HashSet<u64> = shown.iter().copied().collect();
     assert!(
-        after.streams - before.streams <= 1,
-        "one stream slot: {before:?} then {after:?}"
+        frames.len() >= 3,
+        "the app drew the camera's frames: {shown:x?}"
     );
-    assert!(after.replaces - before.replaces >= 3, "{after:?}");
+    for n in 0..16 {
+        assert!(
+            !w.carried(FakeCapture::pixel(n)),
+            "the bytes of camera frame {n} went out on the watch"
+        );
+    }
+    // the mirror is the app's frame but for the camera's box
+    let tmp_frame = tmp.path().join("app.rgba");
+    app.save(&tmp_frame);
+    let app_frame = std::fs::read(&tmp_frame).expect("the app's frame");
+    let mirror = mirrored(&mut w.viewer, &mut w.host);
+    let [bx, by, bw, bh] = w
+        .viewer
+        .bounds()
+        .iter()
+        .find(|b| b.id.as_str() == "capture.frame")
+        .expect("the camera's box is bound")
+        .rect;
+    let mut inside = 0;
+    for (i, (a, b)) in app_frame.chunks(4).zip(mirror.rgba.chunks(4)).enumerate() {
+        if a != b {
+            let (x, y) = ((i as u32 % WIDTH) as f32, (i as u32 / WIDTH) as f32);
+            assert!(
+                x >= bx - 1.0 && x <= bx + bw + 1.0 && y >= by - 1.0 && y <= by + bh + 1.0,
+                "the mirror differs from the app at ({x}, {y}), out of the camera's box"
+            );
+            inside += 1;
+        }
+    }
+    assert!(
+        inside > 1000,
+        "the box drawn in the camera's place: {inside} pixels"
+    );
+    let counts = w.viewer.mirror().image_counts();
+    assert_eq!(
+        counts.live, 1,
+        "the camera came once, as its size and place"
+    );
     app.quit();
     println!("\nthe band, 1280x800 @1, over the socket:");
     for line in band {

@@ -258,7 +258,7 @@ fn a_whole_frame_comes_back_node_for_node() {
     // the same image content is the same handle in one store: the load
     // on the receiver's side was answered by the dedupe
     assert_eq!(m.image_counts().loads, 1);
-    assert_eq!(m.image_counts().streams, 0);
+    assert_eq!(m.image_counts().live, 0);
 }
 
 #[test]
@@ -456,56 +456,72 @@ fn a_cut_or_broken_body_is_an_error_never_a_panic() {
 }
 
 /// a camera's frames: one stream slot in the app's store, a new handle
-/// per frame. the receiver loads the first content, makes one stream
-/// slot of its own at the second and writes every frame after into it,
-/// so its atlas does not grow with the frames; the handle it draws holds
-/// the frame the app drew.
+/// per frame. none of their pixels travels: the stream goes once, as its
+/// size and place, under a key its frames share, so a new frame moves no
+/// layer; the receiver draws the box that says it is not mirrored, and
+/// loads nothing.
 #[test]
-fn a_stream_becomes_one_stream_slot_on_the_receiver() {
-    use engine::gpu::{image_pixels, replace_image_rgba, stream_image_rgba};
-    let slot = stream_image_rgba(4, 2).expect("a slot");
+fn a_stream_travels_without_its_pixels() {
+    use engine::gpu::{replace_image_rgba, stream_image_rgba};
+    let slot = stream_image_rgba(64, 32).expect("a slot");
     let mut shown = slot;
     let mut sender = Sender::new();
     let mut m = Mirror::new();
-    let mut drawn = Vec::new();
+    let mut hashes = Vec::new();
+    let mut sent: Vec<u8> = Vec::new();
     for n in 0..5u8 {
-        let pixels = [n * 40, 255 - n * 40, n, 255].repeat(8);
-        shown = replace_image_rgba(&shown, &pixels).expect("the frame replaces");
+        // a frame no other bytes of the scene look like
+        let pixel = [0xa0 + n, 0x0b, 0xc0 + n, 0xfe];
+        shown = replace_image_rgba(&shown, &pixel.repeat(64 * 32)).expect("the frame replaces");
         let mut c = Compositor::new();
         c.begin_frame();
         c.push(SceneNode::Image {
-            x: 0.0,
-            y: 0.0,
-            w: 40.0,
-            h: 20.0,
+            x: 10.0,
+            y: 20.0,
+            w: 320.0,
+            h: 160.0,
             image: shown,
-            corner_radius: 0.0,
+            corner_radius: 6.0,
         });
         let f = sender.frame(&c, HEAD);
-        assert_eq!(f.assets.len(), 1, "frame {n}: one image, a new key");
+        for (_, bytes) in &f.assets {
+            sent.extend_from_slice(bytes);
+        }
+        for l in &f.layers {
+            sent.extend_from_slice(&l.body);
+        }
+        hashes.push(f.layers[0].hash);
         whole(&mut m, &f).unwrap();
-        let mut b = Compositor::new();
-        m.draw(&mut b);
-        let here = match b.layer(LayerId::DEFAULT).unwrap().nodes() {
-            [SceneNode::Image { image, .. }] => *image,
-            other => panic!("{other:?}"),
-        };
-        assert_eq!(image_pixels(&here), Some(pixels), "frame {n}");
-        drawn.push(here);
+        let run = pixel.repeat(4);
+        assert!(
+            !sent.windows(run.len()).any(|w| w == run),
+            "frame {n}: the camera's pixels travel"
+        );
     }
-    let counts = m.image_counts();
-    assert_eq!(
-        (
-            counts.loads,
-            counts.streams,
-            counts.replaces,
-            counts.missing
-        ),
-        (1, 1, 4, 0)
+    assert!(
+        hashes.windows(2).all(|w| w[0] == w[1]),
+        "no frame moved the layer"
     );
-    // one placement for every frame after the first: the stream slot
-    let places: std::collections::HashSet<(u32, u32)> =
-        drawn[1..].iter().map(|h| (h.atlas_x, h.atlas_y)).collect();
-    assert_eq!(places.len(), 1);
-    assert_eq!(m.assets(), (1, 0), "only the frame shown is held");
+    let mut b = Compositor::new();
+    m.draw(&mut b);
+    let nodes = b.layer(LayerId::DEFAULT).unwrap().nodes();
+    assert!(matches!(
+        nodes[0],
+        SceneNode::RoundedRect {
+            x: 10.0,
+            y: 20.0,
+            w: 320.0,
+            h: 160.0,
+            ..
+        }
+    ));
+    assert!(
+        nodes
+            .iter()
+            .any(|n| matches!(n, SceneNode::Text { key, .. } if key.text == LIVE_LABEL))
+    );
+    assert!(!nodes.iter().any(|n| matches!(n, SceneNode::Image { .. })));
+    let counts = m.image_counts();
+    assert_eq!((counts.loads, counts.live, counts.missing), (0, 5, 0));
+    assert_eq!(m.assets(), (1, 0), "held as long as it is drawn");
 }
