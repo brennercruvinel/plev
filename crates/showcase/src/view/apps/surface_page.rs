@@ -22,18 +22,32 @@
 //! and acts on it like on any page; an act on one of its nodes is routed
 //! to the capability the IR bound (`SurfaceHost::route`).
 //!
+//! Above the surface, an intent field and a propose button (phase 3a,
+//! `proposing`): the deterministic proposer turns what was asked into a
+//! verified IR over the todo's registry, and the surface opens or takes
+//! the new form in place, keeping the ids of what stays; an intent the
+//! rules do not understand leaves the surface as it was, and the page
+//! says why. The field and the button are capabilities of the page, run
+//! by the todo's one dispatcher like everything else here, so an agent
+//! proposes through the port as a person does with a click.
+//!
 //! Wide, the two halves sit side by side; narrow, the todo is on top.
+
+mod proposing;
 
 use comps::prelude::{EmptyState, EventResult, Rect, Tabs, Wake, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
-use sem::{Receipt, Request, SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder};
+use sem::{
+    Actor, Receipt, Request, RequestId, SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder,
+};
 use surface::{Dispatch, SurfaceHost};
 use uir::{Capabilities, GenerationPolicy, verify_json};
 
 use super::EditKey;
 use super::app::TodoPage;
+use proposing::{Page, Proposing, Row};
 
 /// One form of the generated surface: what the control calls it, the
 /// caption naming its IR, the IR.
@@ -60,6 +74,9 @@ const FORMS: [Form; 2] = [
 
 const FIXED: &str = "the todo page, written by hand";
 
+/// The caption of the surface when the rules proposed it.
+const PROPOSED: &str = "the same capabilities, proposed by the rules for the intent above";
+
 pub struct SurfacePage {
     host: SurfaceHost,
     /// The surface that opened (the IR's id), when it did.
@@ -70,6 +87,8 @@ pub struct SurfacePage {
     form: usize,
     /// The control that switches the form.
     forms: Tabs,
+    /// The intent field and the propose button.
+    proposing: Proposing,
 }
 
 /// The todo page as the surface reaches it: its one dispatcher and its
@@ -88,12 +107,14 @@ impl Dispatch for Todo<'_> {
 }
 
 /// Where each half goes in `content`: the fixed todo and the surface,
-/// each under its caption (the rect a caption wraps in), and the control
-/// of the surface's form between its caption and the surface.
+/// each under its caption (the rect a caption wraps in), and between the
+/// surface's caption and the surface the proposing row and the control of
+/// the surface's form.
 struct Halves {
     todo: Rect,
     surface: Rect,
     captions: [Rect; 2],
+    row: Row,
     forms: Rect,
 }
 
@@ -107,25 +128,22 @@ fn caption_h(text: &str, width: f32, theme: &Theme) -> f32 {
     h + theme.spacing.sm
 }
 
-/// The band the surface's caption takes at `width`: the taller of the
-/// forms' captions, so that switching the form moves nothing but the
-/// surface.
+/// The band the surface's caption takes at `width`: the tallest of the
+/// forms' captions and the proposal's, so that switching the form moves
+/// nothing but the surface.
 fn generated_h(width: f32, theme: &Theme) -> f32 {
     FORMS
         .iter()
-        .map(|f| caption_h(f.caption, width, theme))
+        .map(|f| f.caption)
+        .chain([PROPOSED])
+        .map(|text| caption_h(text, width, theme))
         .fold(0.0, f32::max)
 }
 
-/// The form control at the top of `band`: as wide as the narrowest card
-/// at most, one tab strip tall.
-fn forms_rect(band: Rect, theme: &Theme) -> Rect {
-    Rect::new(
-        band.x,
-        band.y,
-        band.w.min(theme.size.card_min_w),
-        Tabs::height(theme),
-    )
+/// The form control at `(x, y)`: as wide as the narrowest card at most,
+/// one tab strip tall.
+fn forms_rect(x: f32, y: f32, w: f32, theme: &Theme) -> Rect {
+    Rect::new(x, y, w.min(theme.size.card_min_w), Tabs::height(theme))
 }
 
 /// The band the form control takes above the surface.
@@ -143,6 +161,7 @@ impl SurfacePage {
             refused: None,
             form: 0,
             forms: Tabs::new(FORMS.iter().map(|f| f.label)),
+            proposing: Proposing::new(),
         };
         let Ok(app) = todo.snapshot() else {
             page.refused = Some("the todo page does not project".to_owned());
@@ -171,15 +190,18 @@ impl SurfacePage {
             let top = content.y + cap;
             let h = (content.h - cap).max(0.0);
             let right = content.x + w + gap;
-            let band = Rect::new(right, top, w, h);
+            let row = self.proposing.row(right, top, w, theme);
+            let forms = forms_rect(right, row.band.y + row.band.h, w, theme);
+            let below = forms.y + control;
             return Halves {
                 todo: Rect::new(content.x, top, w, h),
-                surface: Rect::new(right, top + control, w, (h - control).max(0.0)),
+                surface: Rect::new(right, below, w, (top + h - below).max(0.0)),
                 captions: [
                     Rect::new(content.x, content.y, w, cap),
                     Rect::new(right, content.y, w, cap),
                 ],
-                forms: forms_rect(band, theme),
+                row,
+                forms,
             };
         }
         // narrow: the todo at its smallest height, the surface under it
@@ -188,15 +210,17 @@ impl SurfacePage {
         let generated = generated_h(w, theme);
         let todo_h = todo.content_height(Rect::new(x, content.y, w, 0.0));
         let below = content.y + fixed + todo_h + gap;
-        let band = Rect::new(x, below + generated, w, content.h);
+        let row = self.proposing.row(x, below + generated, w, theme);
+        let forms = forms_rect(x, row.band.y + row.band.h, w, theme);
         Halves {
             todo: Rect::new(x, content.y + fixed, w, todo_h),
-            surface: Rect::new(x, band.y + control, w, content.h),
+            surface: Rect::new(x, forms.y + control, w, content.h),
             captions: [
                 Rect::new(x, content.y, w, fixed),
                 Rect::new(x, below, w, generated),
             ],
-            forms: forms_rect(band, theme),
+            row,
+            forms,
         }
     }
 
@@ -208,7 +232,10 @@ impl SurfacePage {
     fn switch(&mut self, to: usize, todo: &TodoPage) -> bool {
         let changed = self.transform(to, todo);
         match &changed {
-            Ok(()) => self.form = to,
+            Ok(()) => {
+                self.form = to;
+                self.proposing.shown = false;
+            }
             Err(e) => log::warn!("the surface keeps its form: {e}"),
         }
         self.forms.active = self.form;
@@ -248,6 +275,7 @@ impl SurfacePage {
     /// project inert and take no input.
     fn set_inert(&mut self, inert: bool, todo: &mut TodoPage) {
         todo.set_inert(inert);
+        self.proposing.set_inert(inert);
         for s in self.host.iter_mut() {
             s.set_inert(inert);
         }
@@ -271,6 +299,11 @@ impl SurfacePage {
         self.set_inert(inert, todo);
         let h = self.halves(content, theme, todo);
         let mut r = todo.handle_event(event, h.todo, theme);
+        let (row, asked) = self.proposing.handle_event(event, &h.row, theme);
+        r = r.merge(row);
+        if asked {
+            self.propose(todo);
+        }
         if !inert && self.id.is_some() {
             let asked = self.forms.handle_event(event, h.forms, theme);
             if asked.clicked {
@@ -284,9 +317,12 @@ impl SurfacePage {
         r
     }
 
-    /// A printable key: the surface's field when it has the keyboard, the
-    /// todo's otherwise.
+    /// A printable key: the intent field or the surface's field when it
+    /// has the keyboard, the todo's otherwise.
     pub fn handle_text(&mut self, key: &str, todo: &mut TodoPage) -> bool {
+        if self.proposing.intent.insert(key) {
+            return true;
+        }
         for s in self.host.iter_mut() {
             if s.handle_text(key, &mut Todo(todo)) {
                 return true;
@@ -297,6 +333,9 @@ impl SurfacePage {
 
     pub fn handle_edit_key(&mut self, key: EditKey, todo: &mut TodoPage) -> bool {
         if key != EditKey::Tab {
+            if self.proposing.intent.edit(key.into()) {
+                return true;
+            }
             for s in self.host.iter_mut() {
                 if s.handle_edit_key(key.into(), &mut Todo(todo)) {
                     return true;
@@ -306,8 +345,14 @@ impl SurfacePage {
         todo.handle_edit_key(key)
     }
 
+    /// Enter: in the intent field, the person proposes; in a field of the
+    /// surface or the todo's, what that field submits.
     pub fn handle_enter(&mut self, todo: &mut TodoPage, inert: bool) -> bool {
         self.set_inert(inert, todo);
+        if self.proposing.intent.is_focused() {
+            self.propose(todo);
+            return true;
+        }
         for s in self.host.iter_mut() {
             if s.handle_enter(&mut Todo(todo)) {
                 return true;
@@ -317,14 +362,19 @@ impl SurfacePage {
     }
 
     pub fn handle_escape(&mut self, todo: &mut TodoPage) -> bool {
+        if self.proposing.intent.is_focused() {
+            self.proposing.intent.unfocus();
+            return true;
+        }
         let surface = self.host.iter_mut().any(|s| s.handle_escape());
         surface || todo.handle_escape()
     }
 
-    /// The caret of either field, and the surface's change of form while
+    /// The caret of every field, and the surface's change of form while
     /// it runs.
     pub fn wake(&mut self, dt: f32, todo: &mut TodoPage) -> Wake {
-        todo.wake(dt).merge(self.host.wake(dt))
+        let fields = todo.wake(dt).merge(self.proposing.wake(dt));
+        fields.merge(self.host.wake(dt))
     }
 
     pub fn render(
@@ -339,7 +389,11 @@ impl SurfacePage {
         self.sync(todo);
         let h = self.halves(content, theme, todo);
         let style = caption_style(theme);
-        let generated = FORMS[self.form].caption;
+        let generated = if self.proposing.shown {
+            PROPOSED
+        } else {
+            FORMS[self.form].caption
+        };
         for (at, text) in h.captions.into_iter().zip([FIXED, generated]) {
             c.push(SceneNode::Text {
                 key: TextNodeKey::from_style(text, &style, Some(at.w)),
@@ -349,6 +403,7 @@ impl SurfacePage {
             });
         }
         todo.render(c, h.todo, theme);
+        self.proposing.render(c, &h.row, theme);
         let id = self.id.clone();
         if id.is_some() {
             self.forms.render(c, h.forms, theme);
@@ -369,13 +424,42 @@ impl SurfacePage {
         }
     }
 
-    /// The page as the contract sees it: the todo and the surface, one
-    /// snapshot.
+    /// The page as the contract sees it: the todo, the surface and the
+    /// proposing row, one snapshot (the one `Page` projects for the
+    /// dispatcher).
     pub(crate) fn snapshot(&self, todo: &TodoPage) -> Result<Snapshot, SemErrors> {
         let mut b = SnapshotBuilder::new();
         todo.project(&mut b);
         self.host.project(&mut b);
+        self.proposing.project(&mut b);
         b.finish()
+    }
+
+    /// The whole page, as the todo's dispatcher runs a request over it.
+    fn page<'a>(&'a mut self, todo: &'a mut TodoPage) -> Page<'a> {
+        Page {
+            todo,
+            host: &mut self.host,
+            id: &mut self.id,
+            refused: &mut self.refused,
+            proposing: &mut self.proposing,
+        }
+    }
+
+    /// A person proposes: `propose` observed on the page as it is now, by
+    /// the person, through the todo's dispatcher.
+    fn propose(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
+        let target = self.proposing.ids.as_ref()?.propose.clone();
+        let seen = self
+            .snapshot(todo)
+            .inspect_err(|e| log::warn!("surface page: the projection does not validate: {e}"))
+            .ok()?;
+        let req = Request::observe(&seen, Actor::Human, &target, "propose", None)
+            .inspect_err(|e| log::warn!("surface page: {e}"))
+            .ok()?;
+        let id = self.page(todo).dispatch(req);
+        self.sync(todo);
+        Some(id)
     }
 
     /// A request from an actor outside the page's own input (an agent, a
@@ -389,15 +473,36 @@ impl SurfacePage {
         inert: bool,
     ) -> Option<Receipt> {
         self.set_inert(inert, todo);
-        let id = todo.dispatch(self.host.route(req));
+        let id = if self.proposing.holds(&req.target) {
+            self.page(todo).dispatch(req)
+        } else {
+            todo.dispatch(self.host.route(req))
+        };
         self.sync(todo);
         todo.receipt(id).cloned()
     }
 
-    /// Keyboard focus from outside: a node of the surface takes it (its
-    /// field, or away from the fields), or the todo does.
+    /// Keyboard focus from outside: the intent field, a node of the
+    /// surface (its field, or away from the fields), or the todo.
     pub(crate) fn focus(&mut self, id: &SemId, todo: &mut TodoPage, inert: bool) -> bool {
         self.set_inert(inert, todo);
+        if self.proposing.holds(id) {
+            if inert {
+                return false;
+            }
+            let intent = self.proposing.ids.as_ref().map(|ids| &ids.intent);
+            if intent == Some(id) {
+                self.proposing.intent.focus();
+            } else {
+                self.proposing.intent.unfocus();
+            }
+            todo.handle_escape();
+            for s in self.host.iter_mut() {
+                s.handle_escape();
+            }
+            return true;
+        }
+        self.proposing.intent.unfocus();
         if self.host.iter_mut().any(|s| s.focus(id)) {
             todo.handle_escape();
             return true;

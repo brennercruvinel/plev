@@ -121,7 +121,7 @@ demos are the engine's (and comps') examples.
 |---|---|---|
 | engine | `crates/engine` | gpu, compositor, effects, text, path, layout, input, actions, animation, signal, theme (the tokens), graph, builder, window, headless, accessibility, perf, hot_reload, platform |
 | comps | `crates/comps` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/catalog.md](docs/catalog.md) |
-| crates | `crates/` | git, ide, inspect, lot, macros, monster, narrate, narrate-macro, parser, prime, rec, rope, sem, showcase, surface, svg, uir, urnaui, wire |
+| crates | `crates/` | git, ide, inspect, lot, macros, monster, narrate, narrate-macro, parser, prime, propose, rec, rope, sem, showcase, surface, svg, uir, urnaui, wire |
 | examples | `crates/engine/examples/`, `crates/comps/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters and svg2monster clis |
 
 `comps` is the crate an app draws with. widgets are plain structs the app
@@ -145,6 +145,9 @@ that contract, and only what its verifier accepts reaches the runtime.
 `surface` materializes a verified IR into a live surface over an app:
 laid out by the engine, drawn by the comps widgets, projected from the IR,
 and every event a request through the app's own dispatcher.
+`propose` turns an intent into a proposed IR, by rules over the app's
+registry or by a language model behind a trait, and only a verified IR
+comes out of it.
 
 two of the crates are pipelines: a foreign format in, our format out.
 

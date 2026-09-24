@@ -1,0 +1,27 @@
+# propose: proposers of plev IR (task-69 phase 3a,
+# docs/ADR/proposers-propose-the-runtime-verifies.md). an intent in text,
+# the app's capability registry, its snapshot and the surface it shows
+# become a proposed uir::Ir; propose_verified is the way out and returns
+# only a VerifiedIr. a deterministic proposer by rules, and a proposer that
+# asks a language model behind the Model trait, looping on the verifier's
+# errors. pure, like uir: no engine, no comps, no network; a provider for
+# the model is phase 3b.
+[package]
+name = "propose"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "proposers of plev IR: an intent, the capability registry, the snapshot and the current surface in, a proposed IR out, and only a VerifiedIr past propose_verified; rules without a model, and a language model behind a trait with the verifier's errors sent back a bounded number of times"
+
+[dependencies]
+# the IR, the registry, the verifier, the schema the prompt carries.
+uir.workspace = true
+# the snapshot (roles, parents, values) and the actors of the policy.
+sem.workspace = true
+# the prompt carries the schema and the current surface as JSON.
+serde_json.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

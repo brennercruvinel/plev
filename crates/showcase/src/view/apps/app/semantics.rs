@@ -252,6 +252,23 @@ impl TodoPage {
         id
     }
 
+    /// Lends the page's one dispatcher to `f`, with the page and the page
+    /// clock's now, for an `Operable` that holds this page and answers
+    /// for more than it (the Surface page's intent field and its propose
+    /// button): the request is numbered, kept and heard by the sinks as
+    /// every other request of the page, and what is the todo's still runs
+    /// in the todo's `execute`.
+    pub(crate) fn with_dispatcher<R>(
+        &mut self,
+        f: impl FnOnce(&mut sem::Dispatcher, &mut TodoPage, sem::Millis) -> R,
+    ) -> R {
+        let now = u64::try_from(self.clock.elapsed().as_millis()).unwrap_or(u64::MAX);
+        let mut dispatcher = std::mem::take(&mut self.dispatcher);
+        let out = f(&mut dispatcher, self, now);
+        self.dispatcher = dispatcher;
+        out
+    }
+
     /// The receipt the page's dispatcher keeps for `id` (the shell logs
     /// what a screen reader's request came to).
     pub(crate) fn receipt(&self, id: RequestId) -> Option<&sem::Receipt> {

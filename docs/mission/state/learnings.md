@@ -12,6 +12,33 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-69 fase 3a
+
+- **gerar sem template funcionou pela estrutura do registro:** o
+  proponente por regras monta a superfície a partir de roles, tipos de
+  valor, parâmetros e parents, e as palavras da intenção só escolhem
+  entre as do app. as mesmas regras, sem mudança, leem o todo do
+  showcase e o workbench do ide. o limite apareceu onde o registro é
+  pobre: "os itens ativos" não sai dele porque o todo não projeta os
+  itens como lista (P2). o que falta a um proponente é informação no
+  contrato, não regra no proponente.
+- **o autor da proposta é quem pediu:** a página verifica a proposta sob
+  a policy de quem pediu, então um agente só gera superfície com o que
+  agentes podem pedir. a verificação usa o mesmo contrato que já decide
+  cada ato.
+
+### 2026-09-24, checkpoint a, quinta rodada
+
+- **o contrato ensina uma capacidade quando a mostra na hora em que ela
+  serve:** com o mesmo briefing da quarta rodada, e o `plev` apontando
+  para o `--ask` só na recusa que nomeia uma pessoa (task-94), os dois
+  agentes perguntaram, e a resposta da pessoa decidiu (commit com
+  `allow`, parada com `decline`). a documentação (`--help`) não tinha
+  bastado: nenhum agente a abriu. vale para o resto do contrato: o que
+  um agente precisa decidir deve vir junto do estado ou da recusa que
+  pede a decisão. fonte: `task-62-ide-human-agent-proof.md`, "resultado
+  da quinta rodada".
+
 ### 2026-09-24, checkpoint a, quarta rodada (o handoff)
 
 - **o agente usa o que o contrato mostra na hora da decisão:** com a
@@ -353,6 +380,15 @@ c"; saídas em `target/agents/exp/`.
   token do contrato era forma, não conteúdo.
 
 ## processo
+
+### 2026-09-24, o auditor de transcrição
+
+- **o auditor contava errado um `;` entre aspas:** os dois `--ask` da
+  quinta rodada tinham `;` no texto, e o auditor partia a linha ali e
+  contava uma palavra da pergunta como programa. o erro só soma (nunca
+  esconde um programa), então as contagens de zero das rodadas
+  anteriores valem. o partidor agora respeita aspas, e um `--ask` com
+  `;` e `|` virou caso de teste dele.
 
 ### 2026-09-24
 
