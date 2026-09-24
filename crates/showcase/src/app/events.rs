@@ -179,6 +179,11 @@ impl App {
 
             WindowEvent::RedrawRequested => self.redraw(event_loop, id),
 
+            // The platform says the window is covered (minimized, or
+            // fully behind others), or shows again: its host stops asking
+            // for frames, or asks for one new one (`sleep.rs`).
+            WindowEvent::Occluded(covered) => self.covered(id, covered),
+
             // A window of ours took or lost the focus: while none has it,
             // what lands is told to the person by notification (desktop).
             WindowEvent::Focused(on) => {

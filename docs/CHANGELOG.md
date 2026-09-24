@@ -9,6 +9,15 @@ status: living
 
 ## unreleased
 
+- a covered window does not draw, and wakes new (2026-09-24, task-76 item
+  7): a minimized or fully covered window, or a sleeping app, asks for no
+  frame and keeps no deadline; when it shows or wakes, the first frame is
+  the state now, byte for byte, never the frame from before. background
+  work knows the app sleeps: a proposal asked of the Claude while asleep
+  is held and starts on the first poll awake, results wait in their
+  channel, and nothing is lost. the clocks jump on wake. the system's
+  own sleep notification is left for the platform bring-up.
+
 - tray and notifications are capabilities out of the window (2026-09-24,
   task-76 item 5): the engine puts a tray icon with a menu read from the
   projection, and a system notification with at most one action a person

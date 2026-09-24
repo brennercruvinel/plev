@@ -338,8 +338,11 @@ impl ApplicationHandler<UserEvent> for App {
         }
     }
 
+    /// The first time, the main window; afterwards (the platform brought
+    /// the app back) the wake: new frames, the answers that arrived asleep.
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.main.is_some() {
+            self.wake();
             return;
         }
 
@@ -469,6 +472,13 @@ impl ApplicationHandler<UserEvent> for App {
         self.handle_window_event(event_loop, id, event);
     }
 
+    /// The platform put the app in the background (mobile, web; never the
+    /// desktop): asleep until `resumed`. The surfaces stay: dropping them
+    /// is the mobile bring-up's.
+    fn suspended(&mut self, _event_loop: &ActiveEventLoop) {
+        self.sleep();
+    }
+
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {}
 
     /// The loop ends (the window closed, or Escape quit): the recording's
@@ -526,6 +536,8 @@ mod headless;
 
 mod events;
 mod pace;
+/// Asleep, covered, awake again (task-76 item 7).
+mod sleep;
 
 /// The page in a window of its own (task-76 item 2), desktop only.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]

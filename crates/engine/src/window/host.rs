@@ -24,7 +24,10 @@
 //! Render on demand is per host: a frame is drawn only for the window
 //! whose `request_redraw` was called, and [`needs_redraw`](WindowHost::needs_redraw)
 //! says whether this one has a reason (a change, an animation, a pending
-//! request); a host at rest costs nothing while another animates.
+//! request); a host at rest costs nothing while another animates. A host
+//! that is covered, or whose app sleeps, asks for nothing and has no
+//! deadline until it shows again, and then its first frame is new
+//! (`sleep.rs`).
 
 use std::sync::Arc;
 
@@ -94,10 +97,15 @@ pub struct WindowHost {
     animating: bool,
     /// A frame was asked for and not drawn yet. A host with a window asks
     /// the platform too; one without keeps the flag for its caller.
-    redraw_asked: bool,
+    pub(crate) redraw_asked: bool,
     /// When this window next needs a frame with nothing else happening (a
     /// caret's flip); the loop sleeps until the earliest of all hosts.
     deadline: Option<Instant>,
+    /// The platform says the window is not visible at all (minimized, or
+    /// fully covered): `WindowEvent::Occluded(true)`.
+    pub(crate) occluded: bool,
+    /// The app sleeps (`Windows::sleep`, or suspended): every host of it.
+    pub(crate) sleeping: bool,
     /// Frames drawn so far.
     pub(crate) frames: u64,
     #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
@@ -140,6 +148,8 @@ impl WindowHost {
             animating: false,
             redraw_asked: false,
             deadline: None,
+            occluded: false,
+            sleeping: false,
             frames: 0,
             #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
             a11y: None,
@@ -323,8 +333,13 @@ impl WindowHost {
     }
 
     /// Ask the platform for a frame of this window. A host without a
-    /// window keeps the request for whoever drives it.
+    /// window keeps the request for whoever drives it. A host that is not
+    /// [`awake`](Self::awake) asks for nothing: the frame it needs is the
+    /// one asked as it shows again.
     pub fn request_redraw(&mut self) {
+        if !self.awake() {
+            return;
+        }
         self.redraw_asked = true;
         if let Some(window) = &self.window {
             window.request_redraw();
@@ -338,12 +353,14 @@ impl WindowHost {
 
     /// Whether this window has a reason to draw: something changed in its
     /// scene, a frame was asked for, it animates, or its perf HUD is on
-    /// (the overlay's text changes every frame).
+    /// (the overlay's text changes every frame). Never while covered or
+    /// asleep: the reasons wait for the window to show.
     pub fn needs_redraw(&self) -> bool {
-        self.animating
-            || self.redraw_asked
-            || self.compositor.needs_render()
-            || self.perf_overlay_active()
+        self.awake()
+            && (self.animating
+                || self.redraw_asked
+                || self.compositor.needs_render()
+                || self.perf_overlay_active())
     }
 
     /// Keep drawing this window every frame while `on`; off by default,
@@ -370,8 +387,11 @@ impl WindowHost {
         self.deadline = at;
     }
 
+    /// `None` while the window is covered or the app sleeps: it needs no
+    /// frame of its own until it shows, and the frame it shows with sets
+    /// the next.
     pub fn deadline(&self) -> Option<Instant> {
-        self.deadline
+        if self.awake() { self.deadline } else { None }
     }
 
     /// The start of a frame: the clock ticks, the pending request is
