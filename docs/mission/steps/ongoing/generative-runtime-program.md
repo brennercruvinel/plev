@@ -186,7 +186,7 @@ quando as superfícies (seção 8) são disjuntas.
   - [x] regressão por significado antes de pixel (task-67);
   - [x] uma sessão gravada responde "por que" sobre qualquer request
     (task-64 fase a);
-  - [ ] uma sessão real do `ide` com pessoa e agente, gravada pelo próprio
+  - [x] uma sessão real do `ide` com pessoa e agente, gravada pelo próprio
     ide e lida pelo inspector (task-63 fase d);
   - [ ] do pixel à capacidade e ao código num controle (task-65 fase a);
   - [ ] P1: o laboratório mede pelo valor visto e pelo valor vivo (task-88);
@@ -358,7 +358,7 @@ atualizado em cada integração.
 | task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (integrada, linha abaixo) |
 | task-73 | fases 1 e 1b integradas; fase 2 (ADR de desenho) espera decisão do brenner | `ed814da`, `91fdb33` | limitado pela GPU mesmo sem a latência de envio (4 a 12 vezes a CPU); pass de layer segue os pixels; composite em todo frame; o caret a 60 fps é a task-82 |
 | task-62 | fase c rodada duas vezes; checkpoint a decidido (decisões 8 e 10) | `8978602`, `d26c9b1` | experimento completo: H1, H2, H3 e H5 sustentadas, H4 diz onde o plev ganha (recusa antes do efeito, com o delta; receipt e sessão) e onde não (bytes e idas e voltas contra o `git`); resultado e decisão pedida no arquivo da task |
-| task-63 | fases a, b e c integradas; fase d em andamento | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d re-escopada (decisão do orquestrador): o `ide` grava a sessão (opt-in, debug) com as ligações por frame, para o inspector ler uma sessão real de pessoa e agente e a fase b da 64 desenhar as ligações; retenção de pixels e o shell do showcase ficam para depois |
+| task-63 | fases a a d integradas | `c62a05d`, `8e6e814` | arquivo `.monster` de sessão (magic `MONS`); fase d re-escopada: o `ide` grava a própria sessão (`PLEV_RECORD=1`, debug; salva por atalho, ao fechar e no panic) e cada frame leva as ligações visíveis (seção B, versão 1); `PLEV_BACKGROUND=1` abre a janela sem tomar o foco; retenção de pixels e o shell do showcase ficam sem task (P2) |
 | task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
 | task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
 | task-58b | integrada | `dc6fde2` | recusa de confirmação no `sem` e no ide |

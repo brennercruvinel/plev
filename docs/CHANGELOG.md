@@ -9,6 +9,19 @@ status: living
 
 ## unreleased
 
+- the ide records its own session, and a frame says where each control
+  shows (2026-09-23, task-63 phase d): with `PLEV_RECORD=1` in a debug
+  build the ide keeps a flight recorder on the workbench's clock (every
+  stage of every receipt, who observed what through the port, the state
+  after each change, every frame, a person's clicks and keys by kind and
+  control, never the characters) and saves it to
+  `$TMPDIR/plev/sessions/ide-<pid>-<n>.monster` on cmd-shift-s, on close
+  and on a panic; `plev-inspect` reads it. `rec` records, per frame, the
+  visible rect of each bound control (section B, session version 1;
+  version 0 files still read), so a replay can say which control sat
+  under a point. `PLEV_BACKGROUND=1` on macOS opens the ide's window
+  without taking the focus, for runs someone watches.
+
 - a stale refusal names the chain since the state the agent saw
   (2026-09-23, task-90): `acted` named only the other actors' actions
   checked on the exact revision the agent saw; a person who unstaged two

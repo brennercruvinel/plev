@@ -12,6 +12,22 @@ brenner, integração, decisão autônoma, bug relevante, agente disparado ou
 devolvido, publicação. o mais novo em cima. o detalhe fica no arquivo da
 task; aqui fica o que aconteceu e onde ler.
 
+## 2026-09-24
+
+### ciclo 2: o ide grava a própria sessão (task-63 fase d)
+
+- **integrada:** task-63 fase d (`8e6e814`). gate verde (2231). o
+  inspector lê a sessão da janela real e as antigas. critério essencial
+  da onda 5 satisfeito: sessão real do ide, gravada por ele, lida pelo
+  inspector.
+- **incidente:** na primeira rodada da prova, o ide tomou o foco do
+  brenner por uns 6 s e gravou dois cliques dele num repositório de
+  rascunho. corrigido no mesmo trabalho (`PLEV_BACKGROUND=1` com a
+  ativação proibida e a janela por baixo); seis rodadas depois sem
+  roubar o foco.
+- severidade: P3 o custo do frame que fecha um chunk; P2 tamanho e escala
+  da janela na gravação.
+
 ## 2026-09-23
 
 ### intervenção do brenner: severidade

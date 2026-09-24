@@ -262,6 +262,14 @@ c"; saídas em `target/agents/exp/`.
 
 ### 2026-09-23
 
+- **não roubar o foco dá mais trabalho do que parece no macOS:** só
+  não ativar o app não segurou o foco quando o app da frente era o que
+  lançou o processo (o Zed). o macOS 14 deixa esse app ceder a ativação
+  por cooperação. o que segurou foi a política de ativação proibida com
+  a janela sempre por baixo (`PLEV_BACKGROUND=1`). a prova em janela real
+  com o brenner na máquina usa isso, e a janela sobe sem que ninguém
+  possa usá-la.
+
 - **a sonda antes do briefing pagou na primeira vez:** o briefing da
   88 marcou o diagnóstico como hipótese e pediu a sonda primeiro. ela
   mostrou que o gatilho proposto para a pessoa quebraria o teste do gate

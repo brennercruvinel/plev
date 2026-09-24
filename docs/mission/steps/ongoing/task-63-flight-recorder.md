@@ -781,3 +781,39 @@ Commits:
 - 1ec952b task-63d: the ide records its session for the inspector
 - o commit deste texto: a prova na janela e o handoff
 ```
+
+## fechamento da fase d (orquestrador, 2026-09-24)
+
+integrada na `main` em `8e6e814` (seis commits, rebaseados sobre
+`6dd1f95` sem conflito).
+
+validação do orquestrador:
+- diff lido commit a commit: `rec::bound`, a seção B com versão 1 só
+  quando há ligações, o `Recording` do ide na lib, `serve_recorded` e o
+  `Host::observed` do `Served`, os ganchos do shell, a janela em segundo
+  plano só sob `PLEV_BACKGROUND=1` e só no macOS;
+- gate verde no diretório da task: 2231 passaram, 0 falharam, 12
+  ignorados, com a perna urnaui;
+- o `plev-inspect` desta branch lê a sessão da janela real (o agente
+  `claude` com três observações e quatro requests, o commit com
+  `todo.txt`) e as três sessões da segunda rodada do checkpoint a.
+
+decisões do agente aceitas:
+- o `plev-inspect` antigo recusa a versão 1 com erro claro. um leitor
+  estrito não pula seção desconhecida, e o leitor novo lê as duas
+  versões;
+- a política de ativação `Prohibited` com a janela sempre por baixo em
+  `PLEV_BACKGROUND=1`, porque só não ativar não segurou o foco com o Zed
+  na frente.
+
+severidade do que ficou:
+- P3: o frame que fecha um chunk custa de 2 a 8 ms em debug (o discover
+  do monster, anterior a esta fase);
+- P2 para a fase b da 64: o tamanho da janela e a escala não são
+  gravados.
+
+incidente: na primeira rodada, antes da correção, o ide tomou o foco
+por uns 6 s e gravou dois cliques do brenner num repositório de
+rascunho. nada mudou fora dele. retenção de pixels de imagem e o shell do
+showcase continuam fora, sem task (P2 quando a 64 fase b precisar de
+imagem).
