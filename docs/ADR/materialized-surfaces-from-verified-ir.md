@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [surface, uir, plev-ir, materialization, layout, theme, comps, sem, dispatcher, generative-runtime]
 date: 2026-09-24
 ---

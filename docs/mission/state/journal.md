@@ -14,6 +14,14 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a primeira superfície materializada (task-69 fase 1)
+
+- **integrada:** task-69 fase 1 (`22d59fb`), o crate `surface` e a página
+  Surface. gate verde (2379). render headless conferido: o todo à mão ao
+  lado do materializado de `showcase-todo.ir.json`, sobre o mesmo estado.
+- o `dispatch.rs` do showcase saiu da lista congelada (775 para 311
+  linhas).
+
 ### ciclo 3: a sonda da task-92 achou um P0
 
 - **bug de contrato (P0):** um estágio produzido fora de um drain do

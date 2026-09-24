@@ -154,8 +154,8 @@ depends = ["engine", "rope", "sem"]
 
 [crates.showcase]
 path = "crates/showcase"
-role = "design-system gallery app: a sidebar tree of three groups (Foundations: theme, typography, icons, effects; Components: one page per comps widget, alphabetical, with placeholder slots for the widgets comps does not have yet and alias pages that share a neighbour's example while noting what their own still lacks; Apps Demo: the todo app, the message dock, the embedded editor, the ide git workspace, the builder tour); the table is view::pages::PAGES, one module per page under view/{foundations,components,apps}; the template of the official app pattern, framed by comps::shell::AppShell (full sidebar / rail / drawer by breakpoint, captioned groups that fold); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main"
-depends = ["engine", "comps", "rope", "sem", "ide (desktop)", "git (desktop)", "wire (desktop)"]
+role = "design-system gallery app: a sidebar tree of three groups (Foundations: theme, typography, icons, effects; Components: one page per comps widget, alphabetical, with placeholder slots for the widgets comps does not have yet and alias pages that share a neighbour's example while noting what their own still lacks; Apps Demo: the todo app, the Surface page (task-69: the todo as a surface materialized from verified plev IR beside the fixed one, both on the todo's dispatcher), the message dock, the embedded editor, the ide git workspace, the builder tour); the table is view::pages::PAGES, one module per page under view/{foundations,components,apps}; the template of the official app pattern, framed by comps::shell::AppShell (full sidebar / rail / drawer by breakpoint, captioned groups that fold); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main"
+depends = ["engine", "comps", "rope", "sem", "uir", "surface", "ide (desktop)", "git (desktop)", "wire (desktop)"]
 targets = ["desktop", "web", "android", "ios"]
 
 [crates.urnaui]

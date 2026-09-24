@@ -26,7 +26,7 @@ pub enum RenderError {
     UnknownPage(String),
     /// No built-in theme has this name.
     UnknownTheme(String),
-    /// The page projects no semantics yet (today only the todo page does).
+    /// The page projects no semantics yet (the todo and the surface pages do).
     NoSemantics(String),
     Headless(HeadlessError),
     Json(serde_json::Error),

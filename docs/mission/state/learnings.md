@@ -12,6 +12,19 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-69 fase 1
+
+- **uma interface que nunca foi escrita como tela funciona pelo mesmo
+  contrato:** a superfície do todo, materializada de um JSON verificado,
+  opera o mesmo estado que o todo escrito à mão, pelo mesmo dispatcher, e
+  um agente a observa e age nela pela porta como em qualquer página. do
+  IR verificado à cena do primeiro frame leva menos de um milissegundo em
+  debug; o que pesa é o texto e a GPU, como em qualquer frame.
+- **o IR prometia mais que o widget cumpre:** dois props passam no
+  verifier e o widget ignora. o verifier deve recusar o que a
+  materialização não honra, senão o "só o verificado existe" vira "o
+  verificado existe, em parte".
+
 ### 2026-09-24, task-64 fase c
 
 - **uma sessão real virou teste que pega regressão:** a sessão de um

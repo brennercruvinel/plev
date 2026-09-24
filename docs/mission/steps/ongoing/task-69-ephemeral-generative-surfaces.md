@@ -753,3 +753,33 @@ para uma superfície repetir sobre os itens do todo:
 - lembrar do limite da task-68: um molde só verifica enquanto o app
   projeta pelo menos um nó que casa; com um filtro que esconde todos, o
   IR não verifica.
+
+## fechamento da fase 1 (orquestrador, 2026-09-24)
+
+integrada na `main` em `22d59fb` (seis commits sobre `86f8b4f`). o ADR
+materialized-surfaces-from-verified-ir foi aceito.
+
+validação do orquestrador:
+- diff lido; o módulo `agent` do showcase conferido como movimento puro
+  (as linhas removidas e as adicionadas diferem só na quebra de uma
+  linha pelo rustfmt e no `mod agent;`);
+- gate verde no diretório da task: 2379 passaram, 0 falharam, 13
+  ignorados (a medição nova ignorada), com a perna urnaui;
+- render headless da página Surface: o todo à mão à esquerda, a
+  superfície materializada à direita, com as contagens ligadas ao estado
+  vivo (2 active, 1 done).
+
+aplicado no fechamento: o comentário de `app/headless.rs`, a entrada do
+showcase no `arc.toml` (a página e as dependências), o índice de ADR, o
+CHANGELOG.
+
+severidade do que ficou:
+- P2: o todo projetar os itens como lista (a superfície não repete sobre
+  eles); o verifier aceita props que o widget ignora (tipografia num
+  `text_field`, cor em controles). decisão: o verifier deve recusar o que
+  a materialização não honra, e isso vai para a fase 2 ou uma task
+  pequena;
+- P3: a lista não virtualiza; o dialog não é modal; não há Tab dentro da
+  superfície; `icon_button` com um ícone só; `image` desenha só a casca.
+
+próximo: fase 2 (transformar por `SemId`, com o que o handoff lista).
