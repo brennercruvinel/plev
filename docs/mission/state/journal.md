@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicados #71 e #72; disparada a fase 3b-ii
+
+- **publicados:** PR #71 (task-95) e PR #72 (fase 3b-i), merge commit,
+  gate local verde na `main` (2478), regressão 157 sem mudança. CI segue
+  fora por cobrança.
+- **disparada:** task-69 fase 3b-ii, a página Surface pede a tela ao
+  Claude (fora da thread do app, espera visível, cancelar, o prompt
+  pedindo `repeat` sobre listas). um agente só; no máximo 6 chamadas
+  reais ao Claude na task. build dir da task-95 reaproveitado; o da 69d
+  limpo (8,2 GB); 23 GB livres.
+
 ### ciclo 3: o Claude gera a tela (task-69 fase 3b-i)
 
 - **integrada:** fase 3b-i (`4573c81`), o crate `claude-model`. o Claude
