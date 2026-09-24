@@ -3573,3 +3573,111 @@ filho só depois de `detect_silence`/`preview_segment`, `Started` ->
 - cortar de verdade (um `export` com o ffmpeg tirando os trechos
   aplicados) não existe; se o checkpoint pedir, é uma capacidade nova
   com o mesmo trabalhador.
+
+## fase 4b: a tela gerada dos silêncios
+
+branch `task/69g-silences-surface`, worktree próprio, sobre a `main` @
+4a7a8abf (o fechamento da 4a). a pessoa diz "corta os silêncios desse
+vídeo e depois quero revisar os cortes" e a tela de revisão nasce sobre
+o app dos silêncios, com frames de verdade; diz "quero comparar o
+original com os cortes" e a mesma tela vira comparação, mantendo a
+identidade do que continua; terminou, some. esta fase deixa as duas
+telas (a fixa da 4a e a gerada) prontas para o checkpoint b, que é
+decisão do brenner.
+
+### sonda da fase 4b (antes do primeiro tipo, 2026-09-24)
+
+um teste descartável do showcase (`tests/probe69g.rs`, rodado com
+`--nocapture` e jogado fora, nunca commitado) fez as três partes sobre o
+golden `crates/uir/fixtures/showcase-silences.snapshot.json` e sobre a
+página real montada sem janela (`stage_page`). nenhuma janela, nenhum
+ffmpeg, nenhum `claude`.
+
+(a) o IR de revisão escrito à mão: um `card` com um `image` ligado ao
+vídeo, quatro `stat` das contagens (`silences.counts:total`, `applied`,
+`rejected`, `cut_secs`), uma linha com o `slider` do limiar
+(`silences.threshold:value`, `set_value`), o botão de detectar
+(`detect_silence`) e o de aplicar todos (`apply_all`), e uma `list` com
+`repeat` sobre `silences:cuts` cujo item tem um `image` do corte, três
+`text` (`start`, `end`, `duration`), um `badge` da `decision` e os botões
+`apply_cut` e `reject_cut` sobre `silences.cut[{item}]`. três variantes
+pelo `verify`:
+
+- com `source` ligado a `silences.video:frame` e a
+  `silences.cut[{item}]:frame` (o que a superfície precisa): recusado, 2
+  erros, os dois da regra 4 (state): `the app declares no state
+  silences.video:frame` e `no state of the app fits
+  silences.cut[{item}]:frame`. só isso: nenhuma regra nova, falta o
+  estado;
+- com o que a projeção tem hoje (`silences.video:file` no vídeo e, como
+  tapa-buraco, `silences.cut[{item}]:decision` no corte, os dois texto):
+  ok; a ordem de foco é `review.threshold`, `review.detect`,
+  `review.apply_all`, `review.cut[{item}].apply`,
+  `review.cut[{item}].reject`;
+- com um número (`silences.video:shown`, `silences.cut[{item}]:start`):
+  recusado pela regra 4, `is num; a image's source takes text`.
+
+o que o `image` de hoje liga: `source`, um estado de texto qualquer do
+app (a regra 4 confere só o tipo). o que falta para um frame de um
+instante: o instante. nada no vocabulário nem no verifier impede; o que
+não existe é um estado de texto que nomeie o vídeo e o instante, e um
+caminho do host até o cache de frames da página.
+
+(b) o IR verificado (a variante que passa) materializado sobre a página
+real, sem janela, desenhado em 900 px: 28 nós, `SceneNode::Image` no
+frame: zero. o `image` do vídeo desenha o que desenha hoje: o retângulo
+arredondado (`glass.surface`) com o label "the video" centrado, ligado
+em `[308, 138, 860, 140]` (140 é `card_min_w / 2`, a altura de bloco da
+fase 1). o `draw::image` de `crates/surface/src/draw.rs` é onde o host
+precisaria perguntar o frame ao app antes de desenhar o label. e um
+achado que a sonda não esperava: os itens saíram como
+`review.cut[silences.cut[1\]]`, e os `text` do corte vazios. a projeção
+da 4a põe em `silences:cuts` os ids inteiros (`"silences.cut[1]"`), não
+as chaves (`"1"`), e o `repeat` põe o item onde está o `[{item}]`: as
+ligações viraram `silences.cut[silences.cut[1\]]:start`, que não existe.
+o todo projeta `todo:items` como `["1", "2", "3"]` (task-95), e a regra
+das listas do proponente pede o mesmo ("os valores são as chaves dos
+filhos do nó"). o app dos silêncios é que está fora da convenção, não o
+`repeat` nem o verifier: a projeção passa a dar as chaves, o golden é
+regravado, e o ADR da 4a (`the-silences-app-is-the-fixed-screen.md`, que
+esta fase não pode editar) fica com "the ids in order" onde é "the keys
+in order": uma linha para o orquestrador.
+
+(c) as regras (`Rules`) sobre o golden, sem superfície atual:
+
+- "the cuts as a list with the video and the counts": `"video" is not a
+  word of the app; its words are applied, cut, duration, end, pending,
+  rejected, sec, shown, start, total, value`. as regras não têm parte de
+  vídeo, então "video" não é palavra de nada;
+- "the cuts as a list with the counts" e "the cuts as a list": `a list
+  (items) asked for, and the app declares no list of items`: a mesma
+  causa de (b), os ids em vez das chaves;
+- "the counts": verifica, com quinze `stat`: `duration` e `shown` do
+  vídeo, o `value` dos dois sliders (os dois com o label "value"),
+  `start`, `end` e `duration` de cada corte, e os cinco de
+  `silences.counts`. a regra das contagens é "cada int ou num vira um
+  stat"; sobre o todo isso eram dois. fica como está (fora do escopo), e
+  a observação vai para o handoff;
+- "everything": o mesmo que "the counts" (nenhuma outra parte);
+- "compare the original with the cuts": `"compare" is not a word of the
+  app` (e "original" também não seria).
+
+o que falta nas regras: uma parte de vídeo/imagem achada pela estrutura,
+as palavras da gramática para ela ("video", "compare") e, na lista, o
+estado de frame de cada item virando `image` em vez de `text`.
+
+decisão da forma do frame, pela sonda: a forma (i), aditiva na projeção.
+o app projeta um estado de texto por frame que quer mostrar, com a chave
+do frame no valor: o id do nó de mídia e o instante em segundos,
+`"silences.video@4.017052"`. no vídeo, `original` (o frame do original
+no instante mostrado) e `result` (o frame do resultado no mesmo instante:
+dentro de um trecho aplicado, o fim do trecho; fora, o mesmo instante);
+em cada corte, `frame` (o meio do trecho). o `image` liga `source` a um
+deles; o host pergunta o frame ao app por um trait (`surface::Frames`,
+`fn frame(&self, source: &str) -> Option<ImageHandle>`) passado por quem
+desenha a superfície; sem frame, desenha o que desenha hoje, e a página
+pede a decodificação no `wake` (um job por vez, em cache). a forma (ii)
+(um componente `media` com `at`) mudaria o vocabulário, o schema, o
+verifier e o prompt para dizer o que um estado de texto já diz, e a
+regra do proponente achá-lo-ia pelo mesmo caminho: o valor nomeia um nó
+de mídia do app e um instante, que é estrutura, não nome de app.
