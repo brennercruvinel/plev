@@ -167,6 +167,12 @@ fn count(n: usize) -> Value {
     Value::Int(i64::try_from(n).unwrap_or(i64::MAX))
 }
 
+/// Seconds at ffmpeg's six decimals: a difference or a sum of the values
+/// it printed carries no binary noise into the projection.
+fn micros(secs: f64) -> f64 {
+    (secs * 1e6).round() / 1e6
+}
+
 /// `m:ss.d`, the way the screen writes an instant.
 pub(super) fn clock(t: f64) -> String {
     let t = if t.is_finite() { t.max(0.0) } else { 0.0 };
@@ -235,7 +241,7 @@ impl Semantics for SilencesPage {
             node.parent(&ids.region)
                 .state("start", seg.start)
                 .state("end", seg.end)
-                .state("duration", seg.duration())
+                .state("duration", micros(seg.duration()))
                 .state("decision", decision.name());
             node.action("preview_segment").reads(shown.as_str());
             let reads = format!("{id}:decision");
@@ -253,7 +259,7 @@ impl Semantics for SilencesPage {
             .state("applied", count(counts.applied))
             .state("rejected", count(counts.rejected))
             .state("pending", count(counts.pending))
-            .state("cut_secs", counts.cut_secs);
+            .state("cut_secs", micros(counts.cut_secs));
         let some = counts.pending > 0;
         let mut apply_all = b.node(&ids.apply_all, Role::Button, "apply all");
         apply_all.parent(&ids.region).enabled(some);
