@@ -12,6 +12,20 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, task-86: o cenário da tese numa janela de verdade
+
+- **a tese saiu do laboratório:** no `ide` com janela, um agente pelo
+  `plev` e uma pessoa com cliques reais operaram o mesmo workbench; a
+  recusa stale nomeou a pessoa e o texto do toast é o nó que o agente
+  lê. antes isso só existia no `ide-lab`, sem janela e com a pessoa
+  roteirizada.
+- **o limite escrito do `acted` cai no uso normal:** a regra da task-83
+  (nomear quem agiu na revisão exata que o autor viu) foi aceita como
+  limite documentado. na janela, a ordem natural de uma pessoa (clicar
+  na linha, depois tirar do index) faz a recusa nomear a seleção e
+  esconder o unstage. limite aceito por ser raro virou limite comum
+  quando uma pessoa de verdade entrou: task-90.
+
 ### 2026-09-23, task-64 fase a e o buraco que ela achou
 
 - **a inspeção pagou na primeira leitura:** lendo a sessão do A2 da
@@ -205,6 +219,22 @@ c"; saídas em `target/agents/exp/`.
 ## processo
 
 ### 2026-09-23
+
+- **prova em janela real na máquina do brenner:** a primeira tentativa
+  da prova da task-86 postou um clique sintético que caiu no navegador
+  dele, que estava na frente; na reprodução do orquestrador, a janela
+  nova do ide tomou o foco e recebeu o que ele fazia. regra: o harness
+  confere a janela no ponto antes de cada clique (a 86 passou a fazer);
+  com o brenner na máquina, a reprodução do orquestrador usa o teste de
+  porta sem janela e deixa a janela para a prova do agente; um processo
+  morto pelo pid deixa o socket, que sai com `trash`.
+
+- **premissa do briefing conferida no código, de novo:** o briefing da
+  86 dizia que `AgentPort::open` respeita `PLEV_AGENT=1` e debug; quem
+  respeita é `from_env`. o agente seguiu o contrato ("release fechado")
+  e apontou a divergência. é o segundo briefing do ciclo com premissa
+  errada (a primeira foi a da 83); ao citar o comportamento de uma
+  função no briefing, ler o doc dela antes.
 
 - **regra sem gate não vale:** o limite de 639 linhas de produção por
   arquivo estava na convenção e nenhum gate conferia; três entregas do

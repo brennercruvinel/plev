@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: agent-surface
 task: task-86
@@ -453,3 +453,36 @@ Commits (depois do rebase sobre af8302f; a prova na janela rodou em
 - 8e383b3 task-86: the test's agent looks again before it recovers
 - o commit deste texto: a prova na janela e o handoff
 ```
+
+## fechamento (orquestrador, 2026-09-23)
+
+integrada na `main` em `7f866e8` (seis commits, rebaseados sobre
+`eea529b` sem conflito). validação do orquestrador: diff inteiro lido
+commit a commit; a divisão do `main.rs` conferida linha a linha como
+movimento puro (as linhas removidas e as adicionadas diferem só em
+imports, visibilidade `pub(crate)` e doc de módulo). gate verde no
+diretório da task depois do rebase: 2202 passaram, 0 falharam, 12
+ignorados, com a perna urnaui.
+
+reprodução do orquestrador numa janela real: o ide subiu com a porta
+(`ide-<pid>.sock` no log) e o `plev observe --scope changes --keys
+files,staged` respondeu com os dois arquivos e as ações com `reads`.
+a contagem de frames parados não deu para repetir: a janela nova tomou o
+foco com o brenner na máquina, e o log mostra `show_diff` da pessoa e
+movimento de mouse durante a janela de 6 s. fechei o ide pelo pid e
+removi o socket que o kill deixou. a contagem de 0 frames fica com a
+prova do agente (7,4 s depois da subida e 13,9 s no fim) e com o código:
+o shell só invalida quando o `serve` diz que um ato rodou, e o teste da
+lib confere que só o drain com ato devolve verdadeiro.
+
+o que saiu daqui:
+- a limitação do `acted` que o handoff aponta vira a task-90: na
+  sequência mais comum de uma pessoa (clicar na linha, depois tirar do
+  index), a seleção é validada na revisão que o agente viu e o unstage
+  na seguinte, então a recusa nomeia a seleção e não o unstage.
+- o briefing dizia que `AgentPort::open` respeita `PLEV_AGENT=1` e
+  debug; quem respeita é `from_env`. o agente seguiu o contrato e não
+  o briefing (learnings, processo).
+- incidente: na primeira tentativa da prova, um clique sintético caiu no
+  navegador do brenner, que estava na frente. o harness passou a
+  conferir a janela no ponto antes de clicar (learnings, processo).

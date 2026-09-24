@@ -82,6 +82,15 @@ o da base até ser reescrito.
   se apoiou (seção 2.3: o `from_revision` monta o observado do snapshot
   inteiro; task-89 em andamento).
 
+- `7f866e8` (task-86): o binário `ide` abre a porta (seção 2.7 e 3,
+  linha 21): `crates/ide/src/agent.rs` (`Served`, `serve`, `port`, só
+  unix), o shell serve no `AppEvent::Agent` e depois de cada
+  `AppEvent::Git`; `main.rs` dividido em `pace.rs` e `keys.rs`;
+  `Binding::visible_rect` e `Compositor::visible_bindings` no engine
+  (seção 2.5), lidos pelo `bounds` do showcase e do ide. o `acted` da
+  seção 2.2 nomeia só o que foi validado na revisão exata do autor; na
+  janela isso esconde o unstage atrás de uma seleção (task-90).
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse
