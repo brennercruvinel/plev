@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- a surface changes form without losing what it is (2026-09-24, task-69
+  phase 2): an open surface takes a new verified IR and reconciles by
+  identity. a control that keeps its `SemId` and widget keeps its focus,
+  caret, selection and a drag in progress; a new one is born, a gone one
+  leaves the projection at once and fades out, a moved one glides, with
+  the theme's durations and the overlay's spring, and reduced motion
+  makes it instant. a change of form draws 37 frames and then none. the
+  Surface page switches the generated todo between a compact and a
+  two-column form, and what was typed and the filter stay.
+
 - the laboratory's person answers the agent (2026-09-24, task-93):
   `ide-lab --answer allow|decline|none --answer-after <ms>` has the scripted
   person answer, in the modal, every confirmation an agent asks for, and

@@ -14,6 +14,19 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a superfície se transforma (task-69 fase 2) e a quarta rodada
+
+- **integrada:** task-69 fase 2 (`4593a4c`). gate verde (2429).
+- **integrada:** task-93 (`7d9c569`), a pessoa do laboratório responde.
+  publicados PR #66 (task-92) e PR #67 (task-93).
+- **experimento em curso, quarta rodada (o handoff):** nas quatro corridas
+  sem dica, nenhum agente usou o `--ask`. dois pararam, dizendo que não
+  havia canal para perguntar, e dois passaram por cima da pessoa. a
+  segurança se sustentou nas quatro. rodando agora o par com uma frase
+  sobre o `--ask` (A4c), como registrado antes de rodar.
+- **a fase 3 da 69 para no provedor do LLM:** é decisão do brenner
+  (arquivo da task). antes dela dá para fazer o proponente determinístico.
+
 ### ciclo 3: o P0 fechado e o agente pergunta (task-92)
 
 - **integrada:** task-92 (`f101359`). gate verde (2401). o orquestrador

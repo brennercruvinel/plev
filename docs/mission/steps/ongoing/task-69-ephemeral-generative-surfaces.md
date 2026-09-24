@@ -1225,3 +1225,27 @@ para o orquestrador (o `docs/ADR/README.md` é proibido aqui):
 - continua aberta a pergunta da fase 1: o verifier aceita props que o
   widget ignora, e um modelo que escreve `typography` num `text_field` não
   aprende com o erro.
+
+## fechamento da fase 2 (orquestrador, 2026-09-24)
+
+integrada na `main` em `4593a4c` (sete commits, rebaseados sem
+conflito). o adendo do ADR foi aceito.
+
+validação do orquestrador:
+- diff lido (geometria por `SemId`, `transform`, `motion.rs`, a página);
+- gate verde no diretório da task: 2429 passaram, 0 falharam, 13
+  ignorados, com a perna urnaui;
+- o PNG da forma em duas colunas, conferido: o mesmo todo reorganizado
+  (os filtros e as contagens à esquerda, o campo e o add à direita), o
+  controle "compact | two columns" em cima.
+
+severidade do que ficou:
+- P2: o engine não expõe a preferência de reduced motion do sistema (a
+  superfície recebe a flag de fora; a fonte do sistema vem com a
+  task-75); um `button` que vira `SubmitButton` perde hover e press (o
+  `Press` é privado no comps); o controle de forma da página não é
+  capacidade projetada, então um agente não troca a forma pela porta;
+- P3: fade por primitiva, não por grupo; a imagem que sai é desenhada por
+  cima dos nós vivos; `open` sem entrada animada.
+
+próximo: fase 3 (proponentes). o provedor do LLM é decisão do brenner.

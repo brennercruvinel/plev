@@ -12,6 +12,15 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-69 fase 2
+
+- **o mantra funciona numa superfície gerada:** a mesma capacidade
+  mantém a instância e o estado (foco, caret, arraste) enquanto a
+  representação muda de forma. identidade por `SemId` foi o que
+  bastou: nada no comps ou no engine precisou mudar. a continuidade
+  depende de o proponente (fase 3) manter os ids das capacidades que
+  continuam.
+
 ### 2026-09-24, task-92
 
 - **o handoff ganhou a peça que faltava:** um agente que encontra a
