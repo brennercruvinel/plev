@@ -24,6 +24,8 @@ mod answer;
 #[cfg(unix)]
 mod args;
 #[cfg(unix)]
+mod asked;
+#[cfg(unix)]
 mod bench;
 #[cfg(unix)]
 mod finish;
