@@ -21,6 +21,9 @@ task; aqui fica o que aconteceu e onde ler.
   lado do materializado de `showcase-todo.ir.json`, sobre o mesmo estado.
 - o `dispatch.rs` do showcase saiu da lista congelada (775 para 311
   linhas).
+- **disparada:** task-69 fase 2 (transformar por `SemId`: a mesma
+  capacidade mantém a instância e o estado enquanto a representação muda;
+  é o mantra literal). publicado PR #65 (fase 1), CI rodando.
 
 ### ciclo 3: a sonda da task-92 achou um P0
 
