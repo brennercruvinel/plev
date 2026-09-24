@@ -3053,3 +3053,119 @@ o que a sonda decide para o desenho:
 - um frame por instante, em png de até 480 px de largura (o vídeo de
   teste fica em 320x180), carregado no atlas na thread do trabalhador;
   o `ImageHandle` cruza o canal.
+
+### commits até a parada
+
+- 4e3595ae task-69f: a sonda da fase 4a no arquivo da task
+- ae7f113d task-69f: the silences model and the silencedetect parser,
+  tested first (`crates/showcase/src/model/silences.rs`, `silences/parse.rs`,
+  `silences/probe.stderr` como fixture e semente, `silences/tests.rs`,
+  11 testes; a linha `pub mod silences;` em `model/mod.rs`)
+
+### parada: registrar a página passa pelo `dispatch.rs`
+
+problema: a página do item 3 não se registra só com os arquivos da
+lista. uma página do showcase é uma linha de `PAGES` (`table.rs`, na
+lista) com um `Pane` (`view/pages/mod.rs`), o estado dela em `Panes`
+(`view/panes.rs`) e as rotas de `view/dispatch.rs`, que casa `Pane` de
+forma exaustiva em sete lugares: `page_content_height`, `page_event`,
+`page_wake`, `page_render`, `semantics`, `act` e `assist_focus`. um
+`Pane` novo não compila sem um braço em cada um. o briefing diz para
+parar antes de mexer no `dispatch.rs` "que está congelado no tamanho";
+o estado da árvore: o `dispatch.rs` saiu do `FROZEN` na fase 1 (o
+guard `crates/engine/tests/file_hygiene_guard.rs` não o lista mais) e
+tem 338 linhas para o teto 639; os sete braços somam umas 30. o
+trabalhador do ffmpeg e a página, escritos sem o registro, seriam código
+morto para o clippy (`-D warnings`), então os commits 3 e 4 esperam a
+decisão.
+
+opções:
+
+1. um `Pane::Silences` novo, como o `Pane::Surface` da fase 1 (a
+   resolução daquela parada liberou os mesmos arquivos). fora da lista:
+   `view/pages/mod.rs` (a variante), `view/panes.rs` (o campo e a
+   construção), `view/dispatch.rs` (os sete braços; de 338 para umas
+   370 linhas) e `view/input.rs` (dois braços, `handle_edit_key` para o
+   Tab entre os sliders e os botões e `close_top_overlay` para o Escape
+   tirar o foco; opcionais, sem eles a página fica sem ciclo de Tab
+   próprio). impacto: quatro arquivos fora da lista, nenhum congelado; a
+   página se projeta para o agent port, o leitor de tela e o `--render
+   --semantics` pelas mesmas rotas das outras, e o `regress` a abençoa.
+2. nenhuma página nesta fase: o modelo (feito), o trabalhador e o
+   `SilencesPage` com a projeção e o `execute` provados por testes de
+   unidade sobre a struct (sem passar pela `ShowcaseView`), e o PNG
+   saindo do renderer headless num teste `#[ignore]`. impacto: nenhum
+   arquivo fora da lista; sem `--render Silences`, sem baseline do
+   `regress`, sem a prova pela porta real, e a página só aparece quando
+   a rota for autorizada. o checkpoint b compara contra uma tela que
+   ninguém abre no showcase.
+
+recomendação: 1. é a página que o briefing descreve, com o contrato das
+outras, e o motivo da parada (o arquivo congelado) não vale mais.
+
+decisão necessária: qual opção; na 1, a autorização para os quatro
+arquivos.
+
+### decisões de desenho fixadas até aqui (para objeção cedo)
+
+- a página abre com a semente da sonda (`SilencesModel::seeded`: o vídeo
+  de teste com 12 s e os dois trechos, tudo pendente, o instante 0
+  mostrado), como o todo abre com três itens. razão: o golden, a
+  baseline do `regress` e o `--render` ficam iguais em toda máquina, com
+  ou sem ffmpeg, e `apply_cut`, `reject_cut` e `apply_all` funcionam
+  também no wasm. a detecção real substitui a semente com ids novos.
+- o ffmpeg só roda depois de um pedido de um ator (`detect_silence` ou
+  `preview_segment`), nunca ao abrir a página. o briefing diz "gerado
+  quando a página abre"; o headless (`stage_page`) abre a página do
+  mesmo jeito que a janela, e um processo começado ali deixaria o frame
+  da baseline dependente do tempo do filho (120 passos de settle contra
+  80 ms de geração) e escreveria em `/tmp` num render. o gancho que
+  distingue a janela é o shell (`connect_git` em `app.rs`, proibido
+  nesta fase); um `connect_silences` ali, noutra fase, faz a geração ao
+  abrir. o vídeo é gerado pelo primeiro job que precisa dele, em
+  `std::env::temp_dir()/plev-silences/silences-test.mp4`, e fica lá (só
+  o sistema limpa); existindo, é reutilizado.
+- o trabalhador roda um job por vez (gerar se preciso, detectar,
+  decodificar um frame), cada um um processo filho numa thread com
+  prazo e morte pelo pid (a forma do `run.rs` do `claude-model`, sem
+  depender dele); o resultado volta por canal e o `wake` da página
+  recolhe (`Wake::after(100 ms)` enquanto há job). `detect_silence` e um
+  `preview_segment` cujo frame ainda não existe devolvem
+  `Execution::Started` e terminam por `complete`/`fail` no `wake`, pelo
+  `with_dispatcher` da página; os frames dos trechos (o meio de cada
+  um) são pedidos pela própria página depois de uma detecção, um por
+  vez, e ficam em cache por instante (`ImageHandle`, carregado no atlas
+  na thread do trabalhador). nos testes do crate o ffmpeg nunca é
+  procurado (`cfg(test)`, como `Claude::find`); o teste que quer o
+  falso o aponta, e o `#[ignore]` aponta o real.
+- os sliders são do widget: o arraste da pessoa muda o valor no `Slider`
+  sem request, como a tecla no campo de intenção e o clique no select
+  da 3b-ii; `set_value` de um agente passa pelo dispatcher. o modelo
+  guarda as configurações com que os trechos foram detectados
+  (`detected_with`), não as dos sliders; quando os sliders se afastam
+  delas o status diz "detect again".
+- os ids: `silences` (região; `cuts`, a lista dos ids na ordem),
+  `silences.video` (`Role::Media`; `file`, `duration`, `shown`),
+  `silences.threshold` e `silences.min_duration` (`Slider::project`:
+  `value`, `set_value`, `increment`, `decrement`), `silences.detect`
+  (botão; `detect_silence` lê `silences:cuts`, os dois `value`),
+  `silences.cut[<id>]` (item de lista; `start`, `end`, `duration`,
+  `decision`; `preview_segment` lê `silences.video:shown`, `apply_cut` e
+  `reject_cut` leem `:decision`, cada um desabilitado quando já é a
+  decisão), `silences.counts` (status; `total`, `applied`, `rejected`,
+  `pending`, `cut_secs`), `silences.apply_all` (botão; `apply_all` lê
+  `silences.counts:pending`, habilitado com pendentes) e
+  `silences.status` (`message`, `busy`). os botões aplicar e rejeitar de
+  cada linha são o afforance do item, não nós próprios (como o x do
+  todo), para que a superfície da 4b ligue um botão a
+  `silences.cut[i] apply_cut`.
+- `apply_all` aplica só o que está pendente: o que alguém rejeitou fica
+  rejeitado.
+- a tela: dois cards em cima (o vídeo com a linha do tempo por baixo, os
+  trechos marcados pela decisão e a agulha no instante mostrado; ao
+  lado, a detecção com os dois sliders e seus valores, o botão detectar
+  e o status) e, embaixo, o card dos trechos (as contagens em `Stat` na
+  cabeça com o aplicar todos à direita; uma linha por trecho com o frame
+  do meio, o intervalo, a duração, a decisão e os dois botões). estreito,
+  os cards empilham. sem scroll interno: a página cresce e o scroll do
+  gallery cobre.
