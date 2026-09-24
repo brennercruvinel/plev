@@ -14,6 +14,23 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a demo gravada (task-69 fase 4c); a task-69 espera só o checkpoint b
+
+- **integrada:** fase 4c (merge da `task/69h-recorded-demo`). o showcase
+  grava a própria sessão como o ide; a demo do editor de vídeo, dirigida
+  pela porta sem janela, ficou gravada em duas fixtures (regras e Claude)
+  que um teste e o `plev-inspect` leem. gate na `main` em andamento no
+  registro; o agente reportou 2533 (+7) e 159 baselines iguais. 2
+  chamadas reais ao Claude (0,19 USD).
+- **task-69 completa no que é do orquestrador.** falta o checkpoint b, do
+  brenner: comparar a tela gerada com a fixa (as duas na página Silences)
+  e escrever o resultado. três achados da gravação ficam registrados no
+  ADR para ele.
+- **próximo:** a onda 7 (70, 71) espera o checkpoint b. enquanto isso,
+  uma trilha do programa cuja dependência está integrada: a task-74
+  (texto e edição), fase 1, a auditoria de cobertura por escrita com
+  render headless.
+
 ### ciclo 3: publicado #75; disparada a fase 4c
 
 - **publicado:** PR #75 (fase 4b), merge commit, gate local verde na

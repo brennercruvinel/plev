@@ -9,6 +9,18 @@ status: living
 
 ## unreleased
 
+- the showcase records its session, and the video editor demo is recorded
+  (2026-09-24, task-69 phase 4c): with `PLEV_RECORD=1` in a debug build
+  the gallery records what the ide records (every stage of every receipt,
+  what the port showed each agent, the projected state, every frame with
+  where each control shows, clicks and keys by kind, never a character)
+  and saves on cmd-shift-s, on close and on a panic. `cargo run -p
+  showcase --example demo` drives the video editor's script through the
+  agent port without a window: detect, the intent, the generated review,
+  a cut applied on it, the comparison, close. two recorded demos ship as
+  fixtures (by the rules, and by the Claude), read by a test and by
+  `plev-inspect`.
+
 - the generated silences screen, with real frames (2026-09-24, task-69
   phase 4b): a surface's `image` bound to a frame ref the app projects
   (`silences.video@4.0`) draws the frame the app decoded, through the new
