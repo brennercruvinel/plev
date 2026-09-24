@@ -1,9 +1,10 @@
 //! What the person at the screen sees of the requests and answers: a
 //! toast when the dispatcher or the index refused a request or git failed
 //! it, and the confirmation modal for a request another actor made that
-//! waits for a person (`Confirm::ForAgents`). Confirming goes through
-//! `Dispatcher::confirm` as `Actor::Human`, and closing the modal any other
-//! way declines through `Dispatcher::decline`; nothing here runs an action.
+//! waits for a person (`Confirm::ForAgents`, or an agent's question,
+//! `Request::ask`). Confirming goes through `Dispatcher::confirm` as
+//! `Actor::Human`, and closing the modal any other way declines through
+//! `Dispatcher::decline`; nothing here runs an action.
 
 use sem::{Actor, RequestId, Stage};
 

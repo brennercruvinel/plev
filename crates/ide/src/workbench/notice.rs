@@ -1,7 +1,8 @@
 //! What a person reads about a request: why the dispatcher (or the index)
 //! refused it, what git said when it failed, what another actor asks them
-//! to confirm, and that what they declined did not run. Made from the
-//! receipt, in the words of the ui.
+//! to confirm (with an agent's question, when it asks one), and that what
+//! they declined did not run. Made from the receipt, in the words of the
+//! ui.
 
 use engine::theme::Intent;
 use sem::{Acted, Actor, Change, Receipt, Rejection, Request, SemId, Stage};
@@ -68,21 +69,31 @@ impl Workbench {
     }
 
     /// The modal asking a person to confirm `req`: title, body and the
-    /// confirm button's label.
+    /// confirm button's label. When the agent asks the person something
+    /// (`Request::ask`, task-92), the modal says so and quotes it, in the
+    /// third person like every notice: "the person", never "you".
     pub(super) fn confirmation(&self, req: &Request) -> (String, String, &'static str) {
         let asker = who(&req.actor);
         let name = self.name(&req.target);
-        match req.action.as_str() {
+        let (title, what, confirm) = match req.action.as_str() {
             "discard" => (
                 "Discard changes?".to_owned(),
-                format!("{asker} asks to discard all changes to {name}. This cannot be undone."),
+                format!("discard all changes to {name}. This cannot be undone."),
                 "Discard",
             ),
             action => (
                 format!("Allow {action}?"),
-                format!("{asker} asks to {action} {name}."),
+                format!("{action} {name}."),
                 "Allow",
             ),
+        };
+        match &req.ask {
+            Some(question) => (
+                format!("Question from {asker}"),
+                format!("{asker} asks the person: \"{question}\" If allowed, it will {what}"),
+                confirm,
+            ),
+            None => (title, format!("{asker} asks to {what}"), confirm),
         }
     }
 
