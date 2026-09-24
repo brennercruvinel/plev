@@ -9,6 +9,15 @@ status: living
 
 ## unreleased
 
+- printing is the frame on paper (2026-09-24, task-76 item 9): a person
+  prints the page with cmd-p or the menu. the document is the same frame
+  the window draws, rendered without a window at 300 dpi, so the text is
+  sharp and not a scaled bitmap. the engine talks to the system's print
+  queue through `lp` and `lpstat` as child processes with a deadline,
+  behind a trait with a fake for tests. the job runs beside the loop,
+  and an agent reads its state but cannot print. this machine has no
+  printer, so nothing was printed for real.
+
 - a covered window does not draw, and wakes new (2026-09-24, task-76 item
   7): a minimized or fully covered window, or a sleeping app, asks for no
   frame and keeps no deadline; when it shows or wakes, the first frame is

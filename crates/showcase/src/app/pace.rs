@@ -112,6 +112,13 @@ impl App {
         {
             self.invalidate_in(id);
         }
+        // A print job that answered, or one held for the wake: the shell
+        // projects it and the bar follows the next frame (task-76 item 9).
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        if self.view.settle_print() {
+            self.caught_up = true;
+            self.invalidate();
+        }
         #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
         self.notify_pending();
     }
@@ -119,9 +126,9 @@ impl App {
     /// The frame's tick: what animates, advanced by the time since the
     /// last tick (a catch-up or a frame), and what that asks of the loop.
     /// `now` also carries a visible change a catch-up made since the last
-    /// frame.
+    /// frame; a print thread that is out asks for a look at its channel.
     pub(super) fn frame_wake(&mut self, since_last: f32) -> Wake {
-        let mut wake = self.view.wake(since_last);
+        let mut wake = self.view.wake(since_last).merge(self.view.print_wake());
         wake.now |= std::mem::take(&mut self.caught_up);
         wake
     }

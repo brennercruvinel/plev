@@ -1,0 +1,7 @@
+#!/bin/sh
+# a stand-in for `lpstat` on a machine with no destination added: what
+# this machine answered `lpstat -p -d` on 2026-09-24, word for word.
+
+echo "lpstat: No destinations added." >&2
+echo "no system default destination"
+exit 1

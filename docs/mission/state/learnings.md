@@ -12,6 +12,15 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-76 item 9
+
+- **a página vai para o papel pelo mesmo caminho da tela:** o render sem
+  janela a 300 dpi mantém o layout e rasteriza o texto na escala física
+  (a tinta de um texto cresce na mesma razão da escala), então imprimir
+  não precisa de um segundo renderer. o svg do mesmo frame já tem a
+  geometria de um PDF vetorial; falta só o escritor. fonte:
+  `task-76-platform-integration.md`, handoff do item 9.
+
 ### 2026-09-24, task-76 item 7
 
 - **a janela coberta desenhava para ninguém:** o `request_redraw` do
@@ -444,6 +453,17 @@ c"; saídas em `target/agents/exp/`.
   token do contrato era forma, não conteúdo.
 
 ## processo
+
+### 2026-09-24, trabalho de fundo precisa acordar o laço
+
+- **o teste chamava o `settle` direto e não via o laço dormindo:** no
+  item 9, os testes do job de impressão liam a resposta chamando
+  `settle_print` num loop, então passavam. na janela real, com render on
+  demand e nada animando, ninguém chamava o `settle` até o próximo
+  input. a revisão do diff achou pela ausência de um `Wake::after` onde
+  a Surface e a Silences têm um. regra para briefing e revisão: todo
+  trabalho que responde por canal ao lado do laço pede um prazo no
+  `Wake` enquanto está fora, e o teste prova o prazo, não só a resposta.
 
 ### 2026-09-24, um milissegundo que derruba o gate
 
