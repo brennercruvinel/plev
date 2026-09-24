@@ -109,6 +109,7 @@ fn every_reply() -> Vec<Reply> {
         stage,
         at: 1200,
         asked: None,
+        revision: None,
     };
     vec![
         Reply::Welcome {
@@ -266,6 +267,7 @@ fn the_forms_an_agent_writes_are_pinned() {
             stage: Stage::Accepted,
             at: 1200,
             asked: None,
+            revision: None,
         }))
     );
     let error = r#"{"v":1,"id":"9","type":"error","error":"unknown_revision","revision":"3ba694e7d3941ec0"}"#;

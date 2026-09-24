@@ -17,8 +17,12 @@
 //! <- {"v":1,"id":"3","type":"stage","request":"1","stage":"requested","at":745,"asked":{...}}
 //! <- {"v":1,"id":"3","type":"stage","request":"1","stage":"accepted","at":745}
 //! <- {"v":1,"id":"3","type":"stage","request":"1","stage":"executing","at":745}
-//! <- {"v":1,"id":"3","type":"stage","request":"1","stage":{"completed":{"result":{}}},"at":745}
+//! <- {"v":1,"id":"3","type":"stage","request":"1","stage":{"completed":{"result":{}}},"at":745,"revision":"7a51c0e9d2b8f364"}
 //! ```
+//!
+//! the terminal stage carries the revision the app is at when it goes
+//! out, which the next `act` can rest on (`from_revision`) and `observe`
+//! can start from (`since`) with no observation in between.
 //!
 //! the messages (`proto`), their codec (`codec`), the ring of served
 //! revisions (`Ring`) and the protocol against an app (`Server`, which

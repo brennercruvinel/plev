@@ -228,7 +228,7 @@ fn the_server_counts_what_it_answered() {
     );
     assert_eq!(server.traffic().stages_out, 7);
     host.finish_sync();
-    assert_eq!(server.forward().len(), 1, "the completed stage");
+    assert_eq!(server.forward(&mut host).len(), 1, "the completed stage");
     assert_eq!(server.traffic().stages_out, 8);
 
     // an act on a field a person changed since: requested, rejected stale.

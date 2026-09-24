@@ -65,6 +65,9 @@ pub trait Host {
     /// built, on the app's thread, only for a connection that said hello
     /// (before it there is no actor). an app records it
     /// (`rec::Recorder::observed`) or reacts to it; nothing by default.
+    /// the revision a terminal stage carries is not an observation (the
+    /// agent is given its name, not what it holds) and is not reported
+    /// here.
     fn observed(&mut self, actor: &Actor, scope: Option<&SemId>, revision: Revision) {
         let _ = (actor, scope, revision);
     }
@@ -216,17 +219,33 @@ impl Server {
                 });
             }
         }
-        out.extend(self.forward());
+        out.extend(self.forward(host));
         out
     }
 
     /// the stages the sink heard for requests this port issued, in the
     /// order they happened, each to the connection that asked. a request
     /// is forgotten after its terminal stage.
-    pub fn forward(&mut self) -> Vec<Outgoing> {
+    ///
+    /// a terminal stage carries the revision the app is at now, projected
+    /// through `host` and held in the ring as an observation's revision
+    /// is. the app is projected once per call, and only when a terminal
+    /// stage goes out: nothing runs on this thread between two stages of
+    /// one call, so they all leave it at the same revision. it is not an
+    /// observation: the traffic's observations and `Host::observed` do not
+    /// count it.
+    pub fn forward(&mut self, host: &mut dyn Host) -> Vec<Outgoing> {
         let heard: Vec<Heard> = match self.heard.try_borrow_mut() {
             Ok(mut q) => q.drain(..).collect(),
             Err(_) => return Vec::new(),
+        };
+        let ends = heard
+            .iter()
+            .any(|h| h.stage.is_terminal() && self.issued.contains_key(&h.id));
+        let now = if ends {
+            host.project().map(|live| self.ring.serve(live))
+        } else {
+            None
         };
         let mut out = Vec::new();
         for h in heard {
@@ -237,6 +256,7 @@ impl Server {
                 Stage::Requested => issued.asked.take(),
                 _ => None,
             };
+            let revision = if h.stage.is_terminal() { now } else { None };
             self.traffic.stages_out += 1;
             if matches!(h.stage, Stage::Rejected(Rejection::Stale { .. })) {
                 self.traffic.rejected_stale += 1;
@@ -250,6 +270,7 @@ impl Server {
                         stage: issued.secrets.stage(&issued.target, &h.stage),
                         at: h.at,
                         asked,
+                        revision,
                     }),
                 },
             });

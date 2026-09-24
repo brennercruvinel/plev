@@ -691,12 +691,15 @@ fn confirm_and_decline_are_refused_and_a_person_answers() {
     host.dispatcher
         .confirm(&mut host.app, id, Actor::Human, host.clock)
         .unwrap();
-    let later = server.forward();
+    let later = server.forward(&mut host);
     assert!(later.iter().all(|o| o.conn == A));
     let later = stages(later.into_iter().map(|o| o.msg).collect(), "rm");
     assert_eq!(names(&later), ["confirmed", "executing", "completed"]);
     assert_eq!(host.app.items.len(), 2);
-    assert!(server.forward().is_empty(), "forgotten after the end");
+    assert!(
+        server.forward(&mut host).is_empty(),
+        "forgotten after the end"
+    );
 }
 
 #[test]
@@ -716,9 +719,13 @@ fn an_execution_that_ends_later_reaches_the_agent_on_the_next_forward() {
         "sy",
     );
     assert_eq!(names(&out), ["requested", "accepted", "executing"]);
-    assert!(server.forward().is_empty());
+    assert!(server.forward(&mut host).is_empty());
     host.finish_sync();
-    let later: Vec<ServerMsg> = server.forward().into_iter().map(|o| o.msg).collect();
+    let later: Vec<ServerMsg> = server
+        .forward(&mut host)
+        .into_iter()
+        .map(|o| o.msg)
+        .collect();
     let later = stages(later, "sy");
     assert_eq!(names(&later), ["completed"]);
     assert_eq!(later[0].at, host.clock);
@@ -748,9 +755,9 @@ fn stages_reach_only_the_connection_that_asked() {
     assert!(out.iter().all(|o| o.conn == A));
     // a person's click is never forwarded to an agent.
     host.click("todo.item[1]", "toggle");
-    assert!(server.forward().is_empty());
+    assert!(server.forward(&mut host).is_empty());
     host.finish_sync();
-    let later = server.forward();
+    let later = server.forward(&mut host);
     assert_eq!(later.len(), 1);
     assert_eq!(later[0].conn, A);
     // a connection that ended is forgotten with what it waited on.
@@ -766,7 +773,7 @@ fn stages_reach_only_the_connection_that_asked() {
     assert_eq!(stages(out, "b").len(), 3);
     server.close(B);
     host.finish_sync();
-    assert!(server.forward().is_empty());
+    assert!(server.forward(&mut host).is_empty());
     assert_eq!(server.actor(B), None);
 }
 
@@ -898,6 +905,6 @@ proptest! {
             line = line.replace("0000000000000001", &r.to_string());
             let _ = say(&mut server, &mut host, A, &line);
         }
-        let _ = server.forward();
+        let _ = server.forward(&mut host);
     }
 }

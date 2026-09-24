@@ -293,7 +293,7 @@ impl AgentPort {
             // more may wait: let the loop draw, then come back.
             self.shared.wake();
         }
-        let out = self.server.forward();
+        let out = self.server.forward(host);
         self.send(out);
         acted
     }
