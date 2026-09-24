@@ -4,7 +4,8 @@
 //! the task, served to an agent outside through the agent port, recorded
 //! by the flight recorder on the workbench's clock, with a scripted person
 //! who may move the index right after the agent observed or right before
-//! its submit reaches the dispatcher; at the end the
+//! its submit reaches the dispatcher, and who may answer, in the modal,
+//! what an agent asks her; at the end the
 //! session file is reopened and checked against the real git, and the
 //! costs are measured. the laboratory prints what happened, including
 //! what breaks the hypothesis.
@@ -13,13 +14,17 @@
 //! ide-lab --arm plev|scripted|git|screenshot
 //!         [--human none|unstage-after-observe:<path>|unstage-before-submit:<path>]
 //!         [--out <dir>] [--until commit|timeout] [--timeout <s>] [--grace <s>] [--app <name>]
-//!         [--scripted observe|chain]
+//!         [--scripted observe|chain|ask] [--answer none|allow|decline] [--answer-after <ms>]
 //! ```
 //!
 //! unix only: the port is a unix socket.
 
 #[cfg(unix)]
+mod answer;
+#[cfg(unix)]
 mod args;
+#[cfg(unix)]
+mod asked;
 #[cfg(unix)]
 mod bench;
 #[cfg(unix)]

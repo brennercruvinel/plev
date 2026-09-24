@@ -177,6 +177,12 @@ o da base até ser reescrito.
   `Act.ask` e `plev act --ask` (limite 280, `plev` espera 300 s); o modal
   do ide com a pergunta; `redact` cobre a pergunta; o `why` mostra.
 
+- `654d740` (task-93): o `ide-lab` tem `--answer allow|decline|none` e
+  `--answer-after <ms>` (a pessoa responde no modal pelo clique, como
+  `Actor::Human`; `crates/ide/src/bin/lab/answer.rs`), `--scripted ask`, e o
+  relatório conta perguntas e respostas (`asked.rs`: `questions_asked`,
+  `questions`, `over_the_person`, `run.no_commit_because`).
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

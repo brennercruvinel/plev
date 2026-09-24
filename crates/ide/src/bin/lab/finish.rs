@@ -1,11 +1,13 @@
 //! the end of a plev or scripted run: the session reopened from its file
 //! and checked against the real git, the story of the agent told against
-//! the person, the costs, and the report written as json and printed.
+//! the person, what the agent asked her and what she answered, the costs,
+//! and the report written as json and printed.
 
 use rec::Session;
 use sem::{SemId, Stage, Value};
 use serde_json::{Value as Json, json};
 
+use crate::asked;
 use crate::host::{Intervention, Trigger};
 use crate::lab::Lab;
 use crate::refused;
@@ -86,6 +88,18 @@ impl Lab {
             dispatched: acts.len(),
         };
         let acts = story::acts(&receipts, &acts, &served);
+        let questions = asked::questions(&receipts, &person.answers.waited, &acts);
+        let over = asked::over_the_person(&receipts);
+        let no_commit_because = (!truth.committed()).then(|| {
+            asked::no_commit_because(&questions)
+                .unwrap_or_else(|| "no submit of an agent completed".to_owned())
+        });
+        let answered = |allowed: bool| {
+            questions
+                .iter()
+                .filter(|q| q.answer == Some(if allowed { "allowed" } else { "declined" }))
+                .count()
+        };
         let intervention = person.fired.as_ref();
         let measured = story::stale_measurement(&acts, intervention);
         let recovered = story::recovered(&acts);
@@ -121,6 +135,16 @@ impl Lab {
         if let Some((_, Some(e), _)) = &script {
             notes.push(format!("the scripted agent: {e}"));
         }
+        if let Some(why) = &no_commit_because {
+            notes.push(format!("no commit: {why}"));
+        }
+        for q in questions.iter().filter(|q| q.missed.is_some()) {
+            notes.push(format!(
+                "the person did not answer request {}: {}",
+                q.request,
+                q.missed.as_deref().unwrap_or_default()
+            ));
+        }
         notes.push(
             "stale measurement: by value. valid when a submit that reached the dispatcher after \
              the person's act carried the changes:staged of before it (seen) while the app held \
@@ -133,6 +157,14 @@ impl Lab {
              named, against the observations served, as information. a revision is a hash of \
              what the app projects, so a world put back as it was has the revision it had then, \
              and a revision a terminal stage carried is served by no observation"
+                .to_owned(),
+        );
+        notes.push(
+            "questions: every request of an agent that waited for a person, question null when \
+             the action's policy asked her; answer_ms from awaiting_confirmation to the stage \
+             that followed; then: the agent's next act after the answer. over_the_person: the \
+             acts of an agent, with no question, that ran on a control a person acted on, \
+             reading a state her act read, after a stale refusal of that agent named her act"
                 .to_owned(),
         );
         let contract = json!({
@@ -184,6 +216,14 @@ impl Lab {
                 "messages_served": timing.messages,
                 "timeout_s": args.timeout.as_secs_f64(),
                 "grace_s": args.grace.as_secs_f64(),
+                "no_commit_because": no_commit_because,
+            },
+            "person_answers": {
+                "scenario": args.answer.name(),
+                "after_ms": u64::try_from(args.answer_after.as_millis()).unwrap_or(u64::MAX),
+                "allowed": answered(true),
+                "declined": answered(false),
+                "unanswered": questions.iter().filter(|q| q.answer.is_none()).count(),
             },
             "traffic": report::traffic_json(&traffic),
             "agent": {
@@ -202,6 +242,9 @@ impl Lab {
                 "stale_measured": measured.json(),
                 "script": script.as_ref().map(|(steps, _, _)| steps.clone()),
                 "protocol_refusals": refusals.json(),
+                "questions_asked": questions.iter().filter(|q| q.text.is_some()).count(),
+                "questions": asked::json(&questions),
+                "over_the_person": asked::over_json(&over),
             },
             "intervention": intervention.map(intervention_json),
             "intervention_recorded_at": intervention_recorded_at,
@@ -248,6 +291,10 @@ impl Lab {
                     "first served message to commit",
                     &hello_to_commit.map_or("none".to_owned(), |ms| format!("{ms} ms")),
                 ),
+                row(
+                    "no commit because",
+                    no_commit_because.as_deref().unwrap_or("(a commit exists)"),
+                ),
             ],
         );
         report::print_table("traffic", &report::traffic_rows(&traffic));
@@ -288,6 +335,8 @@ impl Lab {
         }
         report::print_table("agent", &agent);
         report::print_table("refusals of the protocol", &refusals.rows());
+        report::print_table("the person's answers", &person.answers.rows());
+        report::print_table("what the agent asked", &asked::rows(&questions, &over));
         match intervention {
             Some(i) => report::print_table("intervention", &intervention_rows(i)),
             None => report::print_table("intervention", &[row("fired", "false")]),

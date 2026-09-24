@@ -8,7 +8,7 @@ usage:
   ide-lab --arm plev|scripted|git|screenshot
           [--human none|unstage-after-observe:<path>|unstage-before-submit:<path>]
           [--out <dir>] [--until commit|timeout] [--timeout <s>] [--grace <s>] [--app <name>]
-          [--scripted observe|chain]
+          [--scripted observe|chain|ask] [--answer none|allow|decline] [--answer-after <ms>]
 arms:
   plev        the workbench on the agent port, for an agent outside (plev observe / plev act)
   scripted    the same, driven by the laboratory's own agent over the wire (the control run)
@@ -23,6 +23,13 @@ the task in the index and a message written:
   unstage-before-submit:<path>      takes <path> out of the index right before the agent's submit
                                     reaches the dispatcher: the person between the agent's decision
                                     and its submit, as the hook of the git arm fires at the commit
+the same person answers every request of an agent that waits for a person (an agent's question,
+plev act --ask, or an action that asks a person, as discard), --answer-after milliseconds after
+the dispatcher left it waiting, with a click on the modal's button, as a person at the screen:
+through the dispatcher as Actor::Human, recorded as her input (plev and scripted arms):
+  none                              she never answers, and the request waits (default)
+  allow                             she allows it: Allow in the modal (Discard for a discard)
+  decline                           she declines it: Cancel in the modal
 the scripted agent (--arm scripted):
   observe   observes the workspace right before each submit and submits on it (default)
   chain     submits the first time on the revision the last stage carried, with no
@@ -30,7 +37,12 @@ the scripted agent (--arm scripted):
             stage shows no state (task-89): that submit rests on the message the agent was last
             shown, empty, and is refused stale by the agent's own write, as an LLM agent that
             chains after writing will be
+  ask       observes as `observe` does; when a submit comes back stale and the refusal names a
+            person who acted, it asks the person before it puts a file of the task back in the
+            index (`Act::ask`, as `plev act --ask`), and waits for the answer: allowed, it stages
+            the file and commits; declined, it stops with no commit
 defaults: --out ./ide-lab-out --until commit --timeout 600 --grace 1 --app ide --scripted observe
+          --answer none --answer-after 0
 --until commit ends --grace seconds after the first commit completes (or at --timeout);
 --until timeout runs the whole --timeout.
 exit: 0 the commit matches the task (and the session matches git); 1 a commit exists and
@@ -93,6 +105,10 @@ pub enum Script {
     /// observation before it (task-87); after a refusal it observes and
     /// decides again, as `Observe` does.
     Chain,
+    /// observes as `Observe` does; after a stale refusal that names a
+    /// person, asks the person before it puts a file of the task back
+    /// (`Act::ask`, task-92), and stops with no commit when declined.
+    Ask,
 }
 
 impl Script {
@@ -100,6 +116,29 @@ impl Script {
         match self {
             Script::Observe => "observe",
             Script::Chain => "chain",
+            Script::Ask => "ask",
+        }
+    }
+}
+
+/// how the scripted person answers a request of an agent that waits for
+/// a person (`awaiting_confirmation`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Answer {
+    /// she never answers: the request waits, as before this scenario.
+    None,
+    /// she allows it in the modal.
+    Allow,
+    /// she declines it in the modal.
+    Decline,
+}
+
+impl Answer {
+    pub fn name(self) -> &'static str {
+        match self {
+            Answer::None => "none",
+            Answer::Allow => "allow",
+            Answer::Decline => "decline",
         }
     }
 }
@@ -122,6 +161,10 @@ pub struct Args {
     pub grace: Duration,
     pub app: String,
     pub script: Script,
+    /// how the person answers what an agent asks her.
+    pub answer: Answer,
+    /// how long after the dispatcher left a request waiting she answers.
+    pub answer_after: Duration,
 }
 
 pub fn parse(args: &[String]) -> Result<Args, String> {
@@ -133,6 +176,8 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
     let mut grace = Duration::from_secs(1);
     let mut app = "ide".to_owned();
     let mut script = Script::Observe;
+    let mut answer = Answer::None;
+    let mut answer_after = Duration::ZERO;
     let mut it = args.iter();
     while let Some(flag) = it.next() {
         let mut value = || {
@@ -181,15 +226,44 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
                 script = match value()?.as_str() {
                     "observe" => Script::Observe,
                     "chain" => Script::Chain,
+                    "ask" => Script::Ask,
                     other => {
-                        return Err(format!("--scripted takes observe or chain, got {other:?}"));
+                        return Err(format!(
+                            "--scripted takes observe, chain or ask, got {other:?}"
+                        ));
                     }
                 };
+            }
+            "--answer" => {
+                answer = match value()?.as_str() {
+                    "none" => Answer::None,
+                    "allow" => Answer::Allow,
+                    "decline" => Answer::Decline,
+                    other => {
+                        return Err(format!(
+                            "--answer takes none, allow or decline, got {other:?}"
+                        ));
+                    }
+                };
+            }
+            "--answer-after" => {
+                let raw = value()?;
+                let ms = raw
+                    .parse::<u64>()
+                    .map_err(|_| format!("--answer-after takes milliseconds, got {raw:?}"))?;
+                answer_after = Duration::from_millis(ms);
             }
             other => return Err(format!("unknown option {other}")),
         }
     }
     let arm = arm.ok_or("--arm is required")?;
+    if answer != Answer::None && matches!(arm, Arm::Git | Arm::Screenshot) {
+        return Err(format!(
+            "--answer {}: the {} arm has no modal to answer; it takes the plev or scripted arm",
+            answer.name(),
+            arm.name()
+        ));
+    }
     Ok(Args {
         arm,
         human,
@@ -199,6 +273,8 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
         grace,
         app,
         script,
+        answer,
+        answer_after,
     })
 }
 
@@ -278,5 +354,62 @@ mod tests {
             }
         }
         assert!(parse(&args("--help")).unwrap_err().starts_with("usage"));
+    }
+
+    #[test]
+    fn the_person_who_answers_and_the_script_that_asks_parse() {
+        let a = parse(&args(
+            "--arm scripted --scripted ask --human unstage-before-submit:src/session.rs \
+             --answer allow --answer-after 250",
+        ))
+        .unwrap();
+        assert_eq!(a.script, Script::Ask);
+        assert_eq!(a.script.name(), "ask");
+        assert_eq!(a.answer, Answer::Allow);
+        assert_eq!(a.answer_after, Duration::from_millis(250));
+        assert_eq!(a.human, Human::UnstageBeforeSubmit("src/session.rs".into()));
+
+        let d = parse(&args("--arm plev --answer decline")).unwrap();
+        assert_eq!((d.answer, d.answer.name()), (Answer::Decline, "decline"));
+        assert_eq!(d.answer_after, Duration::ZERO);
+        let quiet = parse(&args("--arm scripted")).unwrap();
+        assert_eq!(
+            (quiet.answer, quiet.answer_after),
+            (Answer::None, Duration::ZERO)
+        );
+        assert_eq!(
+            parse(&args("--arm git --answer none")).unwrap().answer,
+            Answer::None,
+            "nobody answers on any arm"
+        );
+
+        for (line, needle) in [
+            (
+                "--arm plev --answer maybe",
+                "--answer takes none, allow or decline",
+            ),
+            (
+                "--arm plev --answer-after soon",
+                "--answer-after takes milliseconds",
+            ),
+            (
+                "--arm plev --answer-after -5",
+                "--answer-after takes milliseconds",
+            ),
+            (
+                "--arm plev --answer-after 1.5",
+                "--answer-after takes milliseconds",
+            ),
+            ("--arm git --answer allow", "the git arm has no modal"),
+            (
+                "--arm screenshot --answer decline",
+                "the screenshot arm has no modal",
+            ),
+        ] {
+            match parse(&args(line)) {
+                Err(e) => assert!(e.contains(needle), "{line}: {e:?} lacks {needle:?}"),
+                Ok(a) => panic!("{line}: {a:?}"),
+            }
+        }
     }
 }

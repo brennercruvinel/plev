@@ -9,6 +9,14 @@ status: living
 
 ## unreleased
 
+- the laboratory's person answers the agent (2026-09-24, task-93):
+  `ide-lab --answer allow|decline|none --answer-after <ms>` has the scripted
+  person answer, in the modal, every confirmation an agent asks for, and
+  the report tells each question, the answer, how long it took and what
+  the agent did next, and counts the acts that went over the person
+  without asking. `--scripted ask` is an agent that asks before putting
+  back what the person took out.
+
 - the agent asks the person, and every stage reaches the agent
   (2026-09-24, task-92). a bug first (P0): a stage of an agent's request
   that ended outside a drain of the port (a person declining in the ide's
