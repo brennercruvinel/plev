@@ -20,7 +20,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use engine::headless::Viewport;
+use engine::headless::{Frame, Viewport};
 use sem::Snapshot;
 use serde::{Deserialize, Serialize};
 
@@ -189,6 +189,25 @@ impl Baseline {
             .map(Some)
             .map_err(|e| format!("{}: {e}", path.display()))
     }
+
+    pub fn has_image(&self) -> bool {
+        self.dir.join(IMAGE).is_file()
+    }
+
+    /// `frame.png` decoded to RGBA, `None` when the baseline keeps none.
+    pub fn image(&self) -> Result<Option<Frame>, String> {
+        let path = self.dir.join(IMAGE);
+        if !path.is_file() {
+            return Ok(None);
+        }
+        let img = image::open(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+        let rgba = img.to_rgba8();
+        Ok(Some(Frame {
+            width: rgba.width(),
+            height: rgba.height(),
+            rgba: rgba.into_raw(),
+        }))
+    }
 }
 
 /// Every baseline directory under `root` (one holding `scene.json`), in
@@ -205,7 +224,9 @@ pub fn list(root: &Path) -> Result<Vec<PathBuf>, String> {
 }
 
 /// What a write does with `frame.png`.
-pub enum Image {
+pub enum Image<'a> {
+    /// Write this frame.
+    Write(&'a Frame),
     /// Remove the file if there is one.
     Drop,
 }
@@ -217,7 +238,7 @@ pub fn write(
     root: &Path,
     meta: &Meta,
     semantics: Option<&str>,
-    image: Image,
+    image: Image<'_>,
 ) -> Result<PathBuf, String> {
     let dir = root.join(meta.key().label());
     fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
@@ -234,6 +255,9 @@ pub fn write(
     }
     let png = dir.join(IMAGE);
     match image {
+        Image::Write(frame) => frame
+            .write_png(&png)
+            .map_err(|e| format!("{}: {e}", png.display()))?,
         Image::Drop if png.is_file() => fs::remove_file(&png).map_err(|e| io(&png, e))?,
         Image::Drop => {}
     }
@@ -294,7 +318,7 @@ mod tests {
     }
 
     #[test]
-    fn a_written_baseline_reads_back() {
+    fn a_written_baseline_reads_back_and_the_image_follows_the_request() {
         let root = match tempfile::tempdir() {
             Ok(d) => d,
             Err(e) => panic!("{e}"),
@@ -312,7 +336,21 @@ mod tests {
         assert_eq!(back.meta, meta);
         assert!(matches!(back.semantics(), Ok(None)));
         assert_eq!(list(root.path()).ok(), Some(vec![dir.clone()]));
-        assert!(!dir.join(SEMANTICS).exists() && !dir.join(IMAGE).exists());
+        assert!(!dir.join(SEMANTICS).exists() && !back.has_image());
+        assert!(matches!(back.image(), Ok(None)));
+        let frame = Frame {
+            width: 2,
+            height: 1,
+            rgba: vec![1, 2, 3, 255, 4, 5, 6, 255],
+        };
+        if let Err(e) = write(root.path(), &meta, None, Image::Write(&frame)) {
+            panic!("{e}");
+        }
+        assert_eq!(back.image().ok().flatten(), Some(frame));
+        if let Err(e) = write(root.path(), &meta, None, Image::Drop) {
+            panic!("{e}");
+        }
+        assert!(!back.has_image());
     }
 
     #[test]

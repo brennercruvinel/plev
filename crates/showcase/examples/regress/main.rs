@@ -6,7 +6,8 @@
 //! cargo run -p showcase --example regress -- check [--page <title>]...
 //!     [--theme core] [--width 1280 --height 800 --scale 1] [--dir <dir>]
 //! cargo run -p showcase --example regress -- bless --page Todo [--theme core]
-//!     [--width 1280 --height 800 --scale 1] [--all] [--dir <dir>]
+//!     [--width 1280 --height 800 --scale 1] [--all] [--png | --no-png]
+//!     [--dir <dir>]
 //! ```
 //!
 //! A baseline is one (page, theme, viewport) under
@@ -16,7 +17,11 @@
 //! (`showcase::app::stage_page`, a fixed clock) and writes what it holds;
 //! `check` stages it again and compares (`compare`): the projection by
 //! `Snapshot::diff`, the layers by hash, the bindings by rect. When
-//! nothing moved it ends there, without drawing a frame.
+//! nothing moved it ends there, without drawing a frame. When a layer's
+//! hash moved and the baseline keeps its image (`bless --png`), it draws
+//! the frame through `engine::headless` and compares pixels only inside
+//! the regions of the layers that moved (`pixels`), then crosses the
+//! changed pixels with the bindings to name the controls they fall in.
 //!
 //! Exit status: 0 every baseline held, 1 something moved, 2 a malformed
 //! request, 3 an error (a page or a baseline that cannot be read).
@@ -25,6 +30,8 @@
 mod baseline;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod compare;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod pixels;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod report;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
@@ -68,14 +75,19 @@ mod cli {
 usage: regress check [--page <title>]... [--theme <name>]
                      [--width <px>] [--height <px>] [--scale <s>] [--dir <dir>]
        regress bless [--page <title>]... [--all] [--theme <name>]
-                     [--width <px>] [--height <px>] [--scale <s>] [--dir <dir>]
+                     [--width <px>] [--height <px>] [--scale <s>]
+                     [--png | --no-png] [--dir <dir>]
 check stages every baseline in the directory (narrowed by the flags) and
 compares meaning, then layers and bindings; nothing moved, no frame is
-drawn. exit 0 when every baseline held, 1 when something moved.
+drawn. a layer moved and the baseline keeps an image: the frame is drawn
+and compared inside the regions that moved. exit 0 when every baseline
+held, 1 when something moved.
 bless stages each page and writes its baseline (semantics, layers,
 bindings): the pages named with --page, every page of the gallery with
 --all, else every baseline already in the directory. new baselines take
---theme core --width 1280 --height 800 --scale 1 unless given.
+--theme core --width 1280 --height 800 --scale 1 unless given. --png
+keeps the frame's image too (needs a GPU), --no-png drops it; without
+either a baseline keeps what it had.
 --dir defaults to crates/showcase/fixtures/regress.";
 
     /// The baselines of the repository, wherever the example runs from.
@@ -104,6 +116,8 @@ bindings): the pages named with --page, every page of the gallery with
         pub width: Option<f32>,
         pub height: Option<f32>,
         pub scale: Option<f32>,
+        /// `bless --png` / `--no-png`; `None` keeps what the baseline had.
+        pub png: Option<bool>,
     }
 
     /// `Ok(None)` asks for the usage.
@@ -124,6 +138,7 @@ bindings): the pages named with --page, every page of the gallery with
             width: None,
             height: None,
             scale: None,
+            png: None,
         };
         while let Some(flag) = it.next() {
             let mut value = || {
@@ -140,6 +155,8 @@ bindings): the pages named with --page, every page of the gallery with
                 "--width" => r.width = Some(positive(flag, &value()?)?),
                 "--height" => r.height = Some(positive(flag, &value()?)?),
                 "--scale" => r.scale = Some(positive(flag, &value()?)?),
+                "--png" => r.png = Some(true),
+                "--no-png" => r.png = Some(false),
                 other => return Err(format!("unknown argument '{other}'")),
             }
         }
@@ -148,6 +165,9 @@ bindings): the pages named with --page, every page of the gallery with
         }
         if r.all && r.command == Command::Check {
             return Err("--all is for bless; check reads every baseline already".to_string());
+        }
+        if r.png.is_some() && r.command == Command::Check {
+            return Err("--png and --no-png are for bless".to_string());
         }
         Ok(Some(r))
     }
@@ -184,6 +204,13 @@ bindings): the pages named with --page, every page of the gallery with
             );
             assert_eq!(r.dir, PathBuf::from(FIXTURES));
             assert!(!r.all);
+            assert_eq!(r.png, None);
+            let png = |line: &str| match parse(&args(line)) {
+                Ok(Some(r)) => r.png,
+                other => panic!("{other:?}"),
+            };
+            assert_eq!(png("bless --png"), Some(true));
+            assert_eq!(png("bless --png --no-png"), Some(false));
         }
 
         #[test]
@@ -195,6 +222,7 @@ bindings): the pages named with --page, every page of the gallery with
                 ("bless --fast", "unknown argument"),
                 ("bless --all --page Todo", "exclude"),
                 ("check --all", "for bless"),
+                ("check --png", "for bless"),
             ] {
                 match parse(&args(line)) {
                     Err(e) => assert!(e.contains(needle), "{line}: '{e}' lacks '{needle}'"),

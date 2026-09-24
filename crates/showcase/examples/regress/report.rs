@@ -2,7 +2,10 @@
 
 use sem::{Change, Value};
 
-use crate::compare::{Delta, Status};
+use crate::compare::{Delta, LayerDelta, Status};
+use crate::pixels::Pixels;
+use crate::run::Outcome;
+use crate::scene::{self, BindRecord, Scene};
 
 /// The node a semantic change is about (`None`: the page, for the focus
 /// and the order of the roots), and the change in a few words.
@@ -153,6 +156,87 @@ pub fn lines(delta: &Delta) -> Vec<String> {
         ));
     }
     out
+}
+
+/// The pixel part of a check whose layers moved: how many changed, in
+/// each layer's region, and in each bound control.
+pub fn pixel_lines(o: &Outcome, base: &Scene) -> Vec<String> {
+    let c = match &o.pixels {
+        Pixels::NotNeeded => return Vec::new(),
+        Pixels::NoBaselineImage => {
+            return vec![
+                "visual changed, no baseline image to diff (bless --png keeps one)".to_string(),
+            ];
+        }
+        Pixels::NoAdapter => {
+            return vec![
+                "visual changed, no GPU adapter here to draw the frame; pixels not compared"
+                    .to_string(),
+            ];
+        }
+        Pixels::Diffed(c) => c,
+    };
+    let total = c.total();
+    let mut out = vec![format!(
+        "pixels: {} changed of {} compared{}",
+        total.pixels,
+        c.compared,
+        at(total.region)
+    )];
+    for layer in o.delta.changed_layers() {
+        if let Some(r) = layer_region(layer) {
+            let h = c.within(r);
+            out.push(format!(
+                "layer {}: {} px{}",
+                layer.name,
+                h.pixels,
+                at(h.region)
+            ));
+        }
+    }
+    for (b, drawn) in drawn(&o.now.bindings, &base.bindings) {
+        let h = c.within(drawn);
+        if h.pixels > 0 {
+            out.push(format!(
+                "{}: {} px{} (layer {})",
+                b.id,
+                h.pixels,
+                at(h.region),
+                b.layer
+            ));
+        }
+    }
+    out
+}
+
+/// Where a layer that moved drew, on either side.
+pub fn layer_region(layer: &LayerDelta) -> Option<[f32; 4]> {
+    let before = layer.before.as_ref().and_then(|l| l.bounds);
+    let after = layer.after.as_ref().and_then(|l| l.bounds);
+    match (before, after) {
+        (Some(a), Some(b)) => Some(scene::union(a, b)),
+        (a, b) => a.or(b),
+    }
+}
+
+/// Every bound control of the page, then the ones only the baseline
+/// bound, each with the part of its rect its clip lets through.
+pub fn drawn<'a>(now: &'a [BindRecord], base: &'a [BindRecord]) -> Vec<(&'a BindRecord, [f32; 4])> {
+    let gone = base.iter().filter(|b| !now.iter().any(|n| n.id == b.id));
+    now.iter()
+        .chain(gone)
+        .filter_map(|b| {
+            let r = match b.clip {
+                Some(c) => scene::intersect(b.rect, c)?,
+                None => b.rect,
+            };
+            Some((b, r))
+        })
+        .collect()
+}
+
+fn at(r: Option<[f32; 4]>) -> String {
+    r.map_or(String::new(), |r| format!(" at {}", region(r)))
 }
 
 /// A logical rect as `x,y wxh`.

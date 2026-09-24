@@ -87,7 +87,8 @@ pub struct Scene {
 }
 
 /// The scene of `c`. Bounds are measured only `with_bounds` (text is
-/// measured to get them).
+/// measured to get them); a check measures only the layers that changed
+/// ([`bounds_of`]).
 pub fn capture(c: &Compositor, viewport: Viewport, with_bounds: bool) -> Scene {
     let named = names(c);
     let layers = named
@@ -120,6 +121,13 @@ pub fn capture(c: &Compositor, viewport: Viewport, with_bounds: bool) -> Scene {
         })
         .collect();
     Scene { layers, bindings }
+}
+
+/// The bounds of the layer named `name` in `c`, as [`capture`] measures
+/// them.
+pub fn bounds_of(c: &Compositor, viewport: Viewport, name: &str) -> Option<[f32; 4]> {
+    let (id, _) = names(c).into_iter().find(|(_, n)| n == name)?;
+    bounds(c.layer(id)?, viewport)
 }
 
 /// Every layer of `c` with its name, in composite order: z-order, then

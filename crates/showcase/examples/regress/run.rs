@@ -5,14 +5,16 @@
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-use engine::headless::Viewport;
+use engine::gpu::RenderConfig;
+use engine::headless::{Frame, HeadlessError, Renderer, Viewport};
 use sem::Snapshot;
 use showcase::app::{RenderError, StagedPage, semantics_json, stage_page};
 use showcase::view::PAGES;
 
 use crate::baseline::{self, Baseline, Image, Key, Meta, Settle};
 use crate::cli::{self, Command, Request};
-use crate::compare;
+use crate::compare::{self, Status};
+use crate::pixels::{self, Pixels};
 use crate::report;
 use crate::scene::{self, Scene};
 
@@ -113,34 +115,159 @@ fn named(r: &Request) -> Vec<Key> {
         .collect()
 }
 
+/// The headless renderer, opened on the first frame asked of it and
+/// kept for the next (a renderer that drew other pages draws a page the
+/// same, `showcase::app` tests it). It counts what it draws.
+#[derive(Default)]
+pub struct Gpu {
+    renderer: Option<Renderer>,
+    absent: bool,
+    /// Frames drawn.
+    pub frames: usize,
+    /// What opening the renderer took, once it was opened.
+    pub open: Option<Duration>,
+}
+
+impl Gpu {
+    /// Whether a renderer was ever opened.
+    pub fn opened(&self) -> bool {
+        self.renderer.is_some() || self.absent
+    }
+
+    /// The frame of `page` through the window's frame path and what
+    /// drawing and reading it back took (opening the renderer apart),
+    /// `None` on a machine without an adapter.
+    pub fn frame(
+        &mut self,
+        page: &mut StagedPage,
+        viewport: Viewport,
+    ) -> Result<Option<(Frame, Duration)>, String> {
+        if self.absent {
+            return Ok(None);
+        }
+        let start = Instant::now();
+        let renderer = match self.renderer.take() {
+            Some(mut r) => {
+                if r.viewport() != viewport {
+                    r.resize(viewport).map_err(|e| e.to_string())?;
+                }
+                r
+            }
+            None => match Renderer::new(viewport, RenderConfig::default()) {
+                Ok(r) => {
+                    self.open = Some(start.elapsed());
+                    r
+                }
+                Err(HeadlessError::NoAdapter) => {
+                    self.absent = true;
+                    return Ok(None);
+                }
+                Err(e) => return Err(e.to_string()),
+            },
+        };
+        let renderer = self.renderer.insert(renderer);
+        let start = Instant::now();
+        let frame = page.render(renderer).map_err(|e| e.to_string())?;
+        self.frames += 1;
+        Ok(Some((frame, start.elapsed())))
+    }
+}
+
 /// What checking one baseline found.
 pub struct Outcome {
     pub label: String,
     pub delta: compare::Delta,
+    /// The page's scene; a layer that moved carries its bounds.
+    pub now: Scene,
+    pub pixels: Pixels,
     /// Staging, projecting and capturing the scene.
     pub staged: Duration,
     /// Comparing it with the baseline.
     pub compared: Duration,
+    /// Drawing the frame and reading it back, when pixels were asked
+    /// (opening the renderer apart, `Gpu::open`).
+    pub rendered: Option<Duration>,
+    /// Decoding the baseline image.
+    pub decoded: Option<Duration>,
+    /// Comparing the pixels inside the regions that moved.
+    pub diffed: Option<Duration>,
 }
 
 /// Stage the page of `b` and compare it with `b`: the meaning, then the
-/// layers and bindings.
-pub fn check_one(b: &Baseline) -> Result<Outcome, String> {
-    let staged = stage(&b.key(), false)?;
+/// layers and bindings, and, only when a layer's hash moved and the
+/// baseline keeps an image, the pixels inside the regions of the layers
+/// that moved.
+pub fn check_one(b: &Baseline, gpu: &mut Gpu) -> Result<Outcome, String> {
+    let key = b.key();
+    let mut staged = stage(&key, false)?;
     let start = Instant::now();
-    let delta = compare::delta(
+    let mut delta = compare::delta(
         &b.meta.scene,
         b.revision(),
         || b.semantics(),
         &staged.scene,
         staged.semantics.as_ref(),
     )?;
-    Ok(Outcome {
-        label: b.key().label(),
+    let compared = start.elapsed();
+    let mut regions = Vec::new();
+    for layer in delta
+        .layers
+        .iter_mut()
+        .filter(|l| l.status != Status::Unchanged)
+    {
+        let now = scene::bounds_of(staged.page.compositor(), key.viewport, &layer.name);
+        if let Some(after) = layer.after.as_mut() {
+            after.bounds = now;
+        }
+        if let Some(l) = staged
+            .scene
+            .layers
+            .iter_mut()
+            .find(|l| l.name == layer.name)
+        {
+            l.bounds = now;
+        }
+        let before = layer.before.as_ref().and_then(|l| l.bounds);
+        match (before, now) {
+            (Some(a), Some(b)) => regions.push(scene::union(a, b)),
+            (Some(r), None) | (None, Some(r)) => regions.push(r),
+            (None, None) => {}
+        }
+    }
+    let mut out = Outcome {
+        label: key.label(),
         delta,
+        now: staged.scene.clone(),
+        pixels: Pixels::NotNeeded,
         staged: staged.took,
-        compared: start.elapsed(),
-    })
+        compared,
+        rendered: None,
+        decoded: None,
+        diffed: None,
+    };
+    if !out.delta.drawn_changed() {
+        return Ok(out);
+    }
+    if !b.has_image() {
+        out.pixels = Pixels::NoBaselineImage;
+        return Ok(out);
+    }
+    let Some((frame, drawn)) = gpu.frame(&mut staged.page, key.viewport)? else {
+        out.pixels = Pixels::NoAdapter;
+        return Ok(out);
+    };
+    out.rendered = Some(drawn);
+    let start = Instant::now();
+    let Some(base) = b.image()? else {
+        out.pixels = Pixels::NoBaselineImage;
+        return Ok(out);
+    };
+    out.decoded = Some(start.elapsed());
+    let start = Instant::now();
+    let changed = pixels::diff(&base, &frame, &regions, key.viewport.scale)?;
+    out.diffed = Some(start.elapsed());
+    out.pixels = Pixels::Diffed(changed);
+    Ok(out)
 }
 
 /// Check every baseline the request selects. A baseline where nothing
@@ -151,10 +278,20 @@ fn check(r: &Request) -> Result<bool, String> {
         return Err(format!("no baseline under {} to check", r.dir.display()));
     }
     let start = Instant::now();
+    let mut gpu = Gpu::default();
     let mut changed = 0;
     for b in &baselines {
-        let o = check_one(b)?;
-        let times = format!("stage {}, compare {}", ms(o.staged), ms(o.compared));
+        let o = check_one(b, &mut gpu)?;
+        let mut times = format!("stage {}, compare {}", ms(o.staged), ms(o.compared));
+        for (what, d) in [
+            ("render", o.rendered),
+            ("decode", o.decoded),
+            ("diff", o.diffed),
+        ] {
+            if let Some(d) = d {
+                times.push_str(&format!(", {what} {}", ms(d)));
+            }
+        }
         if o.delta.unchanged() {
             println!("ok       {} ({times})", o.label);
             continue;
@@ -164,9 +301,19 @@ fn check(r: &Request) -> Result<bool, String> {
         for line in report::lines(&o.delta) {
             println!("  {line}");
         }
+        for line in report::pixel_lines(&o, &b.meta.scene) {
+            println!("  {line}");
+        }
     }
+    let gpu_line = if let Some(open) = gpu.open {
+        format!("{} frames drawn, GPU opened in {}", gpu.frames, ms(open))
+    } else if gpu.opened() {
+        "no GPU adapter here, no frame drawn".to_string()
+    } else {
+        "no frame drawn, no GPU opened".to_string()
+    };
     println!(
-        "checked {} baselines in {}: {} unchanged, {changed} changed",
+        "checked {} baselines in {}: {} unchanged, {changed} changed; {gpu_line}",
         baselines.len(),
         ms(start.elapsed()),
         baselines.len() - changed,
@@ -191,16 +338,40 @@ fn bless(r: &Request) -> Result<(), String> {
             r.dir.display()
         ));
     }
+    let mut gpu = Gpu::default();
     for key in &keys {
-        let staged = stage(key, true)?;
-        let dir = accept(&r.dir, &staged)?;
-        println!("{}", summary(&staged, &dir));
+        let mut staged = stage(key, true)?;
+        let before = Baseline::read(&r.dir.join(staged.key.label())).ok();
+        // an image stays an image: a baseline that keeps one gets a new
+        // one unless --no-png drops it
+        let png = r
+            .png
+            .unwrap_or_else(|| before.as_ref().is_some_and(Baseline::has_image));
+        let frame = if png {
+            let Some((frame, _)) = gpu.frame(&mut staged.page, key.viewport)? else {
+                return Err(format!(
+                    "{}: the baseline keeps an image and this machine has no GPU \
+                     adapter to draw it; --no-png drops the image",
+                    staged.key.label()
+                ));
+            };
+            Some(frame)
+        } else {
+            None
+        };
+        let dir = accept(&r.dir, &staged, frame.as_ref())?;
+        println!("{}", summary(&staged, &dir, frame.is_some()));
     }
     Ok(())
 }
 
-/// Write the baseline of `staged` under `root`.
-pub fn accept(root: &Path, staged: &Staged) -> Result<std::path::PathBuf, String> {
+/// Write the baseline of `staged` under `root`, with `image` as its
+/// `frame.png` or none.
+pub fn accept(
+    root: &Path,
+    staged: &Staged,
+    image: Option<&Frame>,
+) -> Result<std::path::PathBuf, String> {
     let meta = Meta::new(
         &staged.key,
         staged.settle(),
@@ -211,11 +382,15 @@ pub fn accept(root: &Path, staged: &Staged) -> Result<std::path::PathBuf, String
         Some(s) => Some(semantics_json(s, false).map_err(|e| e.to_string())?),
         None => None,
     };
-    baseline::write(root, &meta, json.as_deref(), Image::Drop)
+    let image = match image {
+        Some(frame) => Image::Write(frame),
+        None => Image::Drop,
+    };
+    baseline::write(root, &meta, json.as_deref(), image)
 }
 
 /// One line on what a baseline holds.
-fn summary(staged: &Staged, dir: &Path) -> String {
+fn summary(staged: &Staged, dir: &Path, image: bool) -> String {
     let layers: Vec<String> = staged
         .scene
         .layers
@@ -231,8 +406,9 @@ fn summary(staged: &Staged, dir: &Path) -> String {
     } else {
         format!("still moving, frozen at step {}", staged.page.steps())
     };
+    let image = if image { ", with its image" } else { "" };
     format!(
-        "wrote {}: {} layers ({}), {} bound controls, {semantics}, {settle}",
+        "wrote {}: {} layers ({}), {} bound controls, {semantics}, {settle}{image}",
         dir.display(),
         layers.len(),
         layers.join(", "),
