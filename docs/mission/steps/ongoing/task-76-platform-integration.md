@@ -1722,3 +1722,108 @@ cargo run --offline -p showcase --example regress -- check
 PLEV_BACKGROUND=1 RUST_LOG=showcase=info cargo run --offline -p showcase -- Todo   (a barra instala; sem clique aqui)
 cargo run --offline -p showcase -- Todo   (a barra plev / view / Todo; do orquestrador)
 ```
+
+## handoff do item 8: diálogos nativos de alerta e confirmação
+
+branch `task/76e-alerts`, base `0e49f828` (main após o item 4). worktree
+`.claude/worktrees/agent`, target `target/agents/one`.
+
+### a sonda
+
+(a) o caminho de hoje no ide, por teste sem janela
+(`cargo test --offline -p ide --lib -- workbench::tests`, 22 verdes, 0,19 s):
+
+- um request que exige confirmação chega ao dispatcher e fica em
+  `AwaitingConfirmation`: o `discard` de um agente (a policy do nó é
+  `Confirm::ForAgents`, `an_agent_discard_waits_and_a_test_cannot_confirm_it`)
+  e o `stage` com `--ask` (`Request::ask`, task-92, mesmo sem policy:
+  `an_agents_question_is_asked_in_the_modal_and_never_projected`).
+- `Workbench::dispatch` chama `report(id)` (`workbench/person.rs`): o
+  receipt em `AwaitingConfirmation` entra na fila `awaiting` e
+  `ask_next_confirmation` pega o mais velho, monta título, corpo e botão
+  em `confirmation(&request)` (`notice.rs`: "Discard changes?",
+  "test-agent asks to discard all changes to b.txt. This cannot be
+  undone.", "Discard"; para o `--ask`: "Question from test-agent",
+  "test-agent asks the person: \"...\" If allowed, it will stage b.txt.",
+  "Allow") e chama `workspace.open_confirm_modal(id, title, body,
+  confirm)` (`views/workspace/overlays.rs:136`), que empilha um
+  `OverlayKind::Modal` com `PendingAction::ConfirmRequest { request }`.
+  um modal por vez: o segundo espera o primeiro fechar
+  (`requests_waiting_for_a_person_are_asked_one_at_a_time`).
+- a pessoa responde pela view: o clique no botão de confirmar vira
+  `UiRequest::Confirm { request }` e o cancelar, o Escape e o clique fora
+  viram `UiRequest::Decline` (`dismiss_overlays`); o workbench traduz em
+  `confirmed_by_person` -> `Workbench::confirm(id, Actor::Human)` ->
+  `Dispatcher::confirm` (segunda checagem de stale, `Stage::Confirmed {
+  by: human }`, `Executing`) e `declined_by_person` ->
+  `Dispatcher::decline` -> `Stage::Rejected(Declined { by: human })`,
+  nada roda. `Workbench::confirm` e `decline` fecham o modal
+  (`close_confirm_modal`), avisam por toast e chamam
+  `ask_next_confirmation` de novo. um agente ou um teste que tenta
+  confirmar recebe `SemError::ConfirmByMachine` e o modal continua
+  (`a_screen_reader_declines_through_the_workbench_and_a_test_cannot`).
+- o que a gravação registra (`crates/ide/tests/record.rs`, o sink do
+  `rec` no dispatcher): cada estágio do receipt, inclusive
+  `awaiting_confirmation`, `confirmed { by: human }` ou `rejected {
+  declined { by: human } }`; o `plev-inspect` mostra o estágio com
+  `stage_detail` ("by human", `inspect/src/describe.rs:148`). o clique no
+  modal entra pelo shell como `Kind::Input { PointerDown, at: Some([x,
+  y]), target }` (`main.rs`, `record_input`) com `target =
+  compositor.hit(x, y)`: o modal não liga nenhum id, então o alvo gravado
+  é o controle ligado que estiver por baixo do diálogo, ou nenhum. quem
+  respondeu está no estágio, não no input.
+
+(b) o `rfd` 0.15.4 (`~/.cargo/registry/src/*/rfd-0.15.4/src/`):
+
+- `MessageDialog::show` (`message_dialog.rs:82`) é síncrono e bloqueante:
+  no macOS (`backend/macos/message_dialog.rs`) roda em `run_on_main`
+  (exige a thread principal; fora dela, `dispatch2::run_on_main` se o
+  `NSApp` está rodando, senão pânico) e chama `NSAlert::runModal()`, um
+  laço modal aninhado do AppKit; o laço do winit fica parado até a
+  resposta. com `set_parent` o alerta abre como sheet da janela
+  (`beginSheetModalForWindow_completionHandler` e o mesmo `runModal`);
+  sem pai, `sync_pop_dialog` abre um painel solto. `MessageLevel` vira
+  `NSAlertStyle` (Informational, Warning, Critical); `MessageButtons`
+  vira `addButtonWithTitle` na ordem, e o resultado mapeia pelo índice do
+  botão: com `OkCancelCustom(a, b)` a resposta é `Custom(a)` ou
+  `Custom(b)`, e qualquer outra coisa (Escape) é `Cancel`.
+- `set_parent<W: HasWindowHandle + HasDisplayHandle>(&W)`
+  (`message_dialog.rs:70`) guarda `RawWindowHandle` e `RawDisplayHandle`.
+  `W` é `Sized`: um `&dyn Trait` não entra direto, então o engine passa um
+  wrapper de uma linha (`ParentRef(&dyn Parent)`) que delega os dois
+  métodos. a `Arc<Window>` do host serve: o `raw-window-handle` 0.6.2
+  (único no lock, o do winit 0.30.13 e o do rfd) implementa
+  `HasWindowHandle` e `HasDisplayHandle` para `Arc<H>` (`borrowed.rs:68,
+  196`) e o `winit::window::Window` implementa os dois. o winit
+  reexporta o crate (`winit::raw_window_handle`), então o engine não
+  ganha dependência.
+- alvos: macOS (`NSAlert`), windows (`win_cid`, botões custom só com
+  `common-controls-v6`), linux gtk3 e portal xdg (o portal não tem
+  diálogo de mensagem: `xdg_desktop_portal.rs:273` cai no `zenity` por
+  processo). wasm tem `window.alert` e `window.confirm`
+  (`backend/wasm.rs:329`), síncronos, mas o `rfd` só entra no engine na
+  seção de desktop não móvel (`crates/engine/Cargo.toml:89`), então wasm
+  e mobile ficam com `NoAlerts`. android e ios: nenhum backend.
+  `AsyncMessageDialog` existe (mesma builder, `show` devolve um future);
+  fica fora deste item.
+
+(c) onde os apps mostram aviso e erro hoje, por conta própria:
+
+- ide: o toast (`WorkspaceView::notify(message, intent)`,
+  `views/workspace/mod.rs:305`), chamado só por `Workbench::report`
+  (`person.rs:29`) com o texto de `notice.rs` (recusa, decline, falha do
+  git; `Intent::Destructive` para stale e falha). os toasts são
+  projetados como nós `notices.*` (`Role::Alert` para falha,
+  `Role::Status` para decline) e o agente lê a mesma frase pela porta,
+  em terceira pessoa.
+- showcase: a página Files diz no `files.status` (`Role::Status`,
+  `message`) o que o último request deu, com cor `Destructive` quando o
+  alvo não tem diálogo (`files.rs:368`); as silences e a todo têm
+  `Role::Status` para contagens; a página Toast é demonstração do
+  widget. nada disso abre painel nativo.
+- comps: `Toast`, `Alert` e `Modal` são widgets desenhados. o alerta
+  nativo entra como uma capacidade a mais (um botão que pede
+  `Alerts::alert` pelo dispatcher, só pessoa), com o texto do último
+  alerta projetado como estado: o toast e o `status` continuam sendo a
+  verdade do app; o painel nativo é outra representação, nunca uma
+  segunda fonte.
