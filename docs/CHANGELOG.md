@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- the Claude proposes surfaces (2026-09-24, task-69 phase 3b-i): the new
+  `claude-model` crate puts the Claude behind `propose::Model` by running
+  the `claude -p` of Claude Code as a child process, with no tools, no
+  saved session, no MCP, no user settings, a budget cap and a timeout that
+  kills the child. the network is the child's; the crate holds no key.
+  `cargo run -p claude-model --example propose -- --app todo "<intent>"`
+  turns an intent into a verified IR over the todo's or the ide's
+  projection. four real intents verified on the first attempt, in 4.5 s to
+  89 s. the Surface page does not use it yet (phase 3b-ii).
+
 - the generated todo shows its items (2026-09-24, task-95): the todo
   projects `todo:items`, the ids of the visible items in the order shown,
   and each item's `text`. both forms of the Surface page repeat over that

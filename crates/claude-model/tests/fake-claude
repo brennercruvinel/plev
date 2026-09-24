@@ -1,0 +1,49 @@
+#!/bin/sh
+# a stand-in for `claude -p` in the tests of claude-model. it never reaches
+# the network. it runs in the directory ClaudeCli gives it (`dir`) and
+# answers from the files the test wrote there:
+#
+#   mode    ok, repair, slow, orphan, fail or budget
+#   good    an answer, a claude json result (ok, orphan, and repair once
+#           refused)
+#   bad     an answer the verifier refuses (repair, first)
+#   over    the result of an exceeded budget (budget)
+#
+# and leaves there what it was given: `args` (each argument, one per
+# line), `env` (its environment), `prompt.N` (the prompt of call N, read
+# from stdin) and `pid` (slow: itself, orphan: the grandchild; the
+# process that sleeps).
+
+printf '%s\n' "$@" > args
+env > env
+n=1
+while [ -e "prompt.$n" ]; do n=$((n + 1)); done
+cat > "prompt.$n"
+
+case "$(cat mode)" in
+ok)
+    cat good
+    ;;
+repair)
+    if grep -q 'was refused' "prompt.$n"; then cat good; else cat bad; fi
+    ;;
+slow)
+    # the process ClaudeCli started is the one that sleeps.
+    echo $$ > pid
+    exec sleep 30
+    ;;
+orphan)
+    # answers and exits, and a grandchild keeps stdout and stderr open.
+    sleep 5 &
+    echo $! > pid
+    cat good
+    ;;
+fail)
+    echo 'Not logged in. Please run /login' >&2
+    exit 1
+    ;;
+budget)
+    cat over
+    exit 1
+    ;;
+esac

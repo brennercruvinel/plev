@@ -1,0 +1,30 @@
+# claude-model: the Claude as the model of a proposer (task-69 phase 3b-i,
+# decision 13 of the generative runtime program). propose::Model over the
+# `claude -p` of Claude Code, run as a child process: the prompt on its
+# stdin, the reply on its stdout, a time limit, no tools, no saved
+# session, no MCP, no user settings. the network is the child's; this
+# crate opens no socket and holds no key. propose stays pure.
+[package]
+name = "claude-model"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "propose::Model over the claude -p of Claude Code as a child process: the prompt on stdin, the reply read from its json result, a timeout that kills the child, no tools, no saved session, no MCP, no user settings"
+
+[dependencies]
+# the Model trait and ModelError the child is put behind.
+propose.workspace = true
+# `claude -p --output-format json` answers one object: the reply, or the
+# error, with the cost and the turns.
+serde_json.workspace = true
+
+[dev-dependencies]
+# the tests and the example read the goldens of task-68 and verify.
+uir.workspace = true
+sem.workspace = true
+# the fake claude answers from files in a directory of its own.
+tempfile.workspace = true
+
+[lints]
+workspace = true
