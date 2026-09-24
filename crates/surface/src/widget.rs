@@ -1,12 +1,17 @@
 //! the retained comps widget behind each node, indexed by its `SemId`:
 //! built once, kept across frames (hover, focus, caret, a knob in flight),
-//! and fed the state the app holds.
+//! fed the state the app holds, and asked what a pointer event means.
+//!
+//! a widget never runs anything. what an event means comes back as a
+//! `Fire`: the name of the event the component sends (`activate`,
+//! `toggle`, `set_value`, `select`, `confirm`, `cancel`) and its value;
+//! the surface turns it into a request for the capability the IR bound.
 
 use comps::action::{Button, ButtonVariant, Chip, IconButton, SubmitButton};
 use comps::content::{Column, Table};
 use comps::form::{Checkbox, Select, Slider, Switch, TextField};
 use comps::nav::Tabs;
-use comps::{Rect, Wake};
+use comps::{EventResult, Rect, Wake, WidgetEvent};
 use engine::theme::Theme;
 use sem::{Snapshot, Value};
 use uir::{CapabilityRef, Component};
@@ -18,6 +23,20 @@ use crate::token;
 /// icon table is the comps's), so every icon button shows this one and is
 /// named by its label.
 pub(crate) const ICON: &str = "circle";
+
+/// what an event on a widget asks for: the event the component sends and
+/// the value it carries.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Fire {
+    pub event: &'static str,
+    pub param: Option<Value>,
+}
+
+impl Fire {
+    fn of(event: &'static str) -> Fire {
+        Fire { event, param: None }
+    }
+}
 
 /// a dialog's two buttons, which send its `cancel` and `confirm`.
 #[derive(Clone, Debug)]
@@ -249,6 +268,86 @@ impl Widget {
                 *table = Some(Box::new(t));
             }
             _ => {}
+        }
+    }
+
+    /// a pointer event over the widget drawn at `rect`, and what it asks
+    /// for when it completes one.
+    pub fn handle(
+        &mut self,
+        node: &Node,
+        event: &WidgetEvent,
+        rect: Rect,
+        theme: &Theme,
+    ) -> (EventResult, Option<Fire>) {
+        let clicked = |r: EventResult, fire: &'static str| (r, r.clicked.then(|| Fire::of(fire)));
+        match self {
+            Widget::Static => (EventResult::IGNORED, None),
+            Widget::Button(b) => clicked(b.handle_event(event, rect), "activate"),
+            Widget::Submit(b) => clicked(b.handle_event(event, rect), "activate"),
+            Widget::IconButton(b) => clicked(b.handle_event(event, rect), "activate"),
+            Widget::TextField(f) => (f.handle_event(event, rect, theme), None),
+            Widget::Checkbox(c) => clicked(c.handle_event(event, rect), "toggle"),
+            Widget::Switch(s) => clicked(s.handle_event(event, rect), "toggle"),
+            Widget::Chip(c) => {
+                let fire = if node.bind.actions.contains_key("toggle") {
+                    "toggle"
+                } else {
+                    "activate"
+                };
+                clicked(c.handle_event(event, rect), fire)
+            }
+            Widget::Slider(s) => {
+                let old = s.value();
+                let r = s.handle_event(event, rect, theme);
+                let moved = s.value() != old;
+                let fire = moved.then(|| Fire {
+                    event: "set_value",
+                    param: Some(Value::Num(f64::from(s.value()))),
+                });
+                (r, fire)
+            }
+            Widget::Select(s) => {
+                let r = s.handle_event(event, rect, theme);
+                let chosen = s.selected_label().map(str::to_owned);
+                let fire = r.clicked.then_some(()).and(chosen).map(|c| Fire {
+                    event: "select",
+                    param: Some(Value::Text(c)),
+                });
+                (r, fire)
+            }
+            Widget::Tabs(t) => {
+                let r = t.handle_event(event, rect, theme);
+                let chosen = t.labels.get(t.active).cloned();
+                let fire = r.clicked.then_some(()).and(chosen).map(|c| Fire {
+                    event: "select",
+                    param: Some(Value::Text(c)),
+                });
+                (r, fire)
+            }
+            Widget::Table(Some(t)) if matches!(event, WidgetEvent::Scroll { .. }) => {
+                (t.handle_event(event, rect, theme), None)
+            }
+            Widget::Table(_) => (EventResult::IGNORED, None),
+            Widget::Dialog(d) => {
+                let (cancel, confirm) = dialog_buttons(d, rect, theme);
+                let a = d.cancel.handle_event(event, cancel);
+                let b = d.confirm.handle_event(event, confirm);
+                let fire = if b.clicked {
+                    Some(Fire::of("confirm"))
+                } else {
+                    a.clicked.then(|| Fire::of("cancel"))
+                };
+                (a.merge(b), fire)
+            }
+        }
+    }
+
+    /// the focused text field, if this is one.
+    pub fn field(&mut self) -> Option<&mut TextField> {
+        match self {
+            Widget::TextField(f) => Some(f),
+            _ => None,
         }
     }
 

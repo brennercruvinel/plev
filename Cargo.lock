@@ -4411,6 +4411,7 @@ version = "0.1.0"
 dependencies = [
  "comps",
  "engine",
+ "indexmap",
  "log",
  "sem",
  "serde_json",

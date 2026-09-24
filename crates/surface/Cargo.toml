@@ -30,6 +30,8 @@ thiserror.workspace = true
 # the fixtures of task-68 are JSON, and so are the snapshots they are
 # written against.
 serde_json.workspace = true
+# the test app keeps the fixture's nodes as the snapshot does.
+indexmap.workspace = true
 
 [lints]
 workspace = true

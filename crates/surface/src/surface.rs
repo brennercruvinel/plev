@@ -3,22 +3,28 @@
 
 use std::collections::BTreeMap;
 
-use comps::{Rect, Wake};
+use comps::form::EditKey;
+use comps::{EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::{Compositor, LayerId};
 use engine::theme::Theme;
-use sem::{Revision, SemId, Snapshot};
-use uir::{Axis, VerifiedIr};
+use sem::{Actor, Receipt, Request, Revision, SemId, Snapshot, SnapshotBuilder, Value};
+use uir::{Axis, CapabilityRef, VerifiedIr};
 
 use crate::draw::{self, closed};
 use crate::expand::{Node, expand};
+use crate::host::Dispatch;
 use crate::layout::{self, axis_of};
+use crate::project;
 use crate::widget::Widget;
 
 /// a surface materialized from a verified IR over an app's state.
 ///
 /// what it shows is read from the app's `Snapshot`: `sync` reads the
 /// bindings again when the app's revision moved, and keeps that snapshot
-/// as the one shown.
+/// as the one shown. an event on one of its widgets becomes a
+/// `sem::Request` for the capability the IR bound, observed on that
+/// snapshot, by the person (`Actor::Human`), handed to the app's
+/// dispatcher; the surface itself never runs anything.
 #[derive(Debug)]
 pub struct Surface {
     ir: VerifiedIr,
@@ -33,6 +39,8 @@ pub struct Surface {
     /// the nodes drawn in the last frame (a closed dialog's subtree is
     /// not).
     drawn: Vec<bool>,
+    inert: bool,
+    last: Option<Receipt>,
 }
 
 impl Surface {
@@ -47,6 +55,8 @@ impl Surface {
             revision: Snapshot::default().revision(),
             rects: Vec::new(),
             drawn: Vec::new(),
+            inert: false,
+            last: None,
         };
         surface.read(app);
         surface
@@ -66,6 +76,11 @@ impl Surface {
         &self.shown
     }
 
+    /// the receipt of the last request the surface's own widgets made.
+    pub fn last_receipt(&self) -> Option<&Receipt> {
+        self.last.as_ref()
+    }
+
     /// the ids of the nodes the surface holds now, repeats unrolled, in
     /// tree order.
     pub fn nodes(&self) -> impl Iterator<Item = &SemId> {
@@ -75,6 +90,12 @@ impl Surface {
     /// true when `id` is one of the surface's nodes (or the surface).
     pub fn holds(&self, id: &SemId) -> bool {
         id == self.id() || self.tree.iter().any(|n| n.id == *id)
+    }
+
+    /// while an overlay holds the page: the surface projects inert and
+    /// takes no input.
+    pub fn set_inert(&mut self, inert: bool) {
+        self.inert = inert;
     }
 
     /// reads the app's state again when its revision moved; true when it
@@ -180,10 +201,229 @@ impl Surface {
         }
     }
 
+    /// a pointer event over the last frame drawn. each widget sees it
+    /// with its own rect (an open dropdown sees it alone); an activation
+    /// completed on one becomes a request through `app`.
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        theme: &Theme,
+        app: &mut dyn Dispatch,
+    ) -> EventResult {
+        if self.inert {
+            return EventResult::IGNORED;
+        }
+        let open = self
+            .tree
+            .iter()
+            .position(|n| self.widgets.get(&n.id).is_some_and(Widget::is_open));
+        let mut result = EventResult::IGNORED;
+        let mut asks = Vec::new();
+        for (at, node) in self.tree.iter().enumerate() {
+            let visible = self.drawn.get(at).copied().unwrap_or(false);
+            if !visible || open.is_some_and(|o| o != at) {
+                continue;
+            }
+            let (Some(rect), Some(w)) =
+                (self.rects.get(at).copied(), self.widgets.get_mut(&node.id))
+            else {
+                continue;
+            };
+            let (r, fire) = w.handle(node, event, rect, theme);
+            result = result.merge(r);
+            if let Some(fire) = fire
+                && let Some(cap) = node.bind.actions.get(fire.event)
+            {
+                asks.push((cap.clone(), fire.param));
+            }
+        }
+        for (cap, param) in asks {
+            self.ask(&cap, param, app);
+            result = result.merge(EventResult::changed());
+        }
+        result
+    }
+
+    /// the person asks `cap` with `param`: observed on the snapshot the
+    /// surface shows, through the app's dispatcher; then the surface
+    /// shows the state that came out.
+    fn ask(
+        &mut self,
+        cap: &CapabilityRef,
+        param: Option<Value>,
+        app: &mut dyn Dispatch,
+    ) -> Option<Receipt> {
+        let req = Request::observe(&self.shown, Actor::Human, &cap.target, &cap.action, param);
+        let req = match req {
+            Ok(req) => req,
+            Err(e) => {
+                log::warn!("surface {}: {e}", self.id());
+                return None;
+            }
+        };
+        let receipt = app.dispatch(req);
+        if let Some(now) = app.project() {
+            self.sync(&now);
+        }
+        self.last.clone_from(&receipt);
+        receipt
+    }
+
+    /// the text field that has the keyboard, by its place in the tree.
+    fn focused_at(&self) -> Option<usize> {
+        self.tree.iter().position(
+            |n| matches!(self.widgets.get(&n.id), Some(Widget::TextField(f)) if f.is_focused()),
+        )
+    }
+
+    /// the node that has the keyboard.
+    pub fn focused(&self) -> Option<&SemId> {
+        self.focused_at()
+            .and_then(|at| self.tree.get(at))
+            .map(|n| &n.id)
+    }
+
+    /// edits the focused field with `edit`; a text that moved is the
+    /// field's `set_value`, with the new text. false when no field of the
+    /// surface has the keyboard.
+    fn edit(&mut self, app: &mut dyn Dispatch, edit: impl FnOnce(&mut Widget) -> bool) -> bool {
+        if self.inert {
+            return false;
+        }
+        let Some(node) = self.focused_at().and_then(|at| self.tree.get(at)) else {
+            return false;
+        };
+        let (id, cap) = (node.id.clone(), node.bind.actions.get("set_value").cloned());
+        let Some(w) = self.widgets.get_mut(&id) else {
+            return false;
+        };
+        let before = w.field().map(|f| f.text().to_owned());
+        if !edit(w) {
+            return false;
+        }
+        let after = w.field().map(|f| f.text().to_owned());
+        if let (Some(cap), Some(text)) = (cap, after)
+            && before.as_ref() != Some(&text)
+        {
+            self.ask(&cap, Some(Value::Text(text)), app);
+        }
+        true
+    }
+
+    /// a printable character typed while a field of the surface has the
+    /// keyboard.
+    pub fn handle_text(&mut self, s: &str, app: &mut dyn Dispatch) -> bool {
+        let mut chars = s.chars();
+        let (Some(c), None) = (chars.next(), chars.next()) else {
+            return false;
+        };
+        if c.is_control() {
+            return false;
+        }
+        self.edit(app, |w| w.field().is_some_and(|f| f.insert(&c.to_string())))
+    }
+
+    /// an editing key (backspace, arrows, home, end, select all).
+    pub fn handle_edit_key(&mut self, key: EditKey, app: &mut dyn Dispatch) -> bool {
+        self.edit(app, |w| w.field().is_some_and(|f| f.edit(key)))
+    }
+
+    /// Enter in a focused field is its `submit`, when the IR bound one;
+    /// consumed while a field of the surface has the keyboard.
+    pub fn handle_enter(&mut self, app: &mut dyn Dispatch) -> bool {
+        if self.inert {
+            return false;
+        }
+        let Some(node) = self.focused_at().and_then(|at| self.tree.get(at)) else {
+            return false;
+        };
+        if let Some(cap) = node.bind.actions.get("submit").cloned() {
+            self.ask(&cap, None, app);
+        }
+        true
+    }
+
+    /// Escape blurs the focused field.
+    pub fn handle_escape(&mut self) -> bool {
+        let Some(id) = self.focused().cloned() else {
+            return false;
+        };
+        if let Some(f) = self.widgets.get_mut(&id).and_then(Widget::field) {
+            f.unfocus();
+        }
+        true
+    }
+
+    /// keyboard focus from outside (a screen reader, a Tab in semantic
+    /// order): a field of the surface takes it, another node of the
+    /// surface takes it from the fields. false for an id the surface does
+    /// not hold, and while inert.
+    pub fn focus(&mut self, id: &SemId) -> bool {
+        if self.inert || !self.holds(id) {
+            return false;
+        }
+        for (node_id, w) in &mut self.widgets {
+            if let Some(f) = w.field() {
+                f.set_focused(node_id == id);
+            }
+        }
+        true
+    }
+
     /// the motion the widgets run on their own (a caret, a knob).
     pub fn wake(&mut self, dt: f32) -> Wake {
         self.widgets
             .values_mut()
             .fold(Wake::idle(), |wake, w| wake.merge(w.wake(dt)))
+    }
+
+    /// projects the surface into `b`, which holds the app's own
+    /// projection too (the actions read the app's state).
+    pub fn project(&self, b: &mut SnapshotBuilder) {
+        let surface = &self.ir.ir().surface;
+        project::project(
+            b,
+            (&surface.id, surface.title.as_str()),
+            &self.tree,
+            &self.shown,
+            self.inert,
+            self.focused(),
+        );
+    }
+
+    /// an actor's request aimed at the surface: an action of one of its
+    /// nodes is the capability the IR bound it to, asked by the same
+    /// actor with the same parameter. its observation is the same values,
+    /// each named again by the app's state the surface showed it for
+    /// (the action reads `todo_panel.input:text` where the capability
+    /// reads `todo.input:text`). any other request, and a node of the
+    /// app's own, goes as it is.
+    pub fn route(&self, req: Request) -> Request {
+        let Some(node) = self.tree.iter().find(|n| n.id == req.target) else {
+            return req;
+        };
+        if self.shown.get(&node.id).is_some() {
+            return req;
+        }
+        let Some(cap) = node.bind.actions.get(req.action.as_str()) else {
+            return req;
+        };
+        let mut observed = req.observed;
+        for (at, _) in &mut observed.values {
+            let app = self
+                .tree
+                .iter()
+                .find(|n| n.id == at.node && self.shown.get(&n.id).is_none())
+                .and_then(|n| n.bind.state.get(at.key.as_str()));
+            if let Some(app) = app {
+                *at = app.clone();
+            }
+        }
+        Request {
+            target: cap.target.clone(),
+            action: cap.action.clone(),
+            observed,
+            ..req
+        }
     }
 }

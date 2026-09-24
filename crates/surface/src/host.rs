@@ -1,11 +1,24 @@
-//! the host of the active surfaces.
+//! the host of the active surfaces, and the way a surface reaches the
+//! app's dispatcher.
 
 use std::collections::BTreeSet;
 
-use sem::{SemId, Snapshot};
+use sem::{Receipt, Request, SemId, Snapshot, SnapshotBuilder};
 use uir::VerifiedIr;
 
 use crate::surface::Surface;
+
+/// the app, as a surface reaches it: its one dispatcher and its
+/// projection. the surface builds the request; the app runs it, the way
+/// it runs a click of its own, an agent's act or a screen reader's.
+pub trait Dispatch {
+    /// runs `req` through the app's dispatcher; the receipt as it stands
+    /// after. `None` when the app took no request.
+    fn dispatch(&mut self, req: Request) -> Option<Receipt>;
+
+    /// the app projected now, what the surface shows after its request.
+    fn project(&self) -> Option<Snapshot>;
+}
 
 /// a surface that cannot open next to the ones already open.
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
@@ -92,5 +105,21 @@ impl SurfaceHost {
             moved |= surface.sync(app);
         }
         moved
+    }
+
+    /// every surface projected into `b`, after the app's own projection.
+    pub fn project(&self, b: &mut SnapshotBuilder) {
+        for surface in &self.surfaces {
+            surface.project(b);
+        }
+    }
+
+    /// `req` as the capability it asks for when it aims at a node of an
+    /// open surface; as it is otherwise.
+    pub fn route(&self, req: Request) -> Request {
+        match self.surfaces.iter().find(|s| s.holds(&req.target)) {
+            Some(surface) => surface.route(req),
+            None => req,
+        }
     }
 }
