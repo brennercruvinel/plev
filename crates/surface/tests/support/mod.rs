@@ -18,6 +18,9 @@ pub const REVIEW: &str = "ide-review-commit.ir.json";
 pub const TODO: &str = "showcase-todo.ir.json";
 pub const IDE: &str = "ide-workbench.snapshot.json";
 pub const SHOWCASE: &str = "showcase-todo.snapshot.json";
+/// The todo surface in two columns (a local fixture): the same ids as
+/// `TODO`, the counts in a column of their own.
+pub const COLUMNS: &str = "showcase-todo-columns.ir.json";
 
 /// Each IR fixture and the projection it is written against.
 pub const CASES: [(&str, &str); 3] = [(COMMIT_FORM, IDE), (REVIEW, IDE), (TODO, SHOWCASE)];
@@ -27,6 +30,26 @@ pub fn fixture(name: &str) -> String {
         .join("../uir/fixtures")
         .join(name);
     std::fs::read_to_string(&at).unwrap_or_else(|e| panic!("{}: {e}", at.display()))
+}
+
+/// A fixture of this crate's own tests (`tests/fixtures`): the other
+/// forms a surface transforms into.
+pub fn local(name: &str) -> String {
+    let at = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(name);
+    std::fs::read_to_string(&at).unwrap_or_else(|e| panic!("{}: {e}", at.display()))
+}
+
+/// The local fixture `ir_name` verified against the registry of `app`.
+pub fn verified_local(ir_name: &str, app: &Snapshot) -> VerifiedIr {
+    let ir = parse(&local(ir_name)).unwrap_or_else(|errors| panic!("{ir_name}: {errors:#?}"));
+    verify(
+        &ir,
+        &Capabilities::from_snapshot(app),
+        &GenerationPolicy::default(),
+    )
+    .unwrap_or_else(|errors| panic!("{ir_name}: {errors:#?}"))
 }
 
 pub fn snapshot(name: &str) -> Snapshot {

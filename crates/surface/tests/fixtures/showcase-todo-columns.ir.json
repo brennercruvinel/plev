@@ -1,0 +1,173 @@
+{
+  "plev_ir": 1,
+  "surface": {
+    "id": "todo_panel",
+    "title": "quick todo",
+    "root": {
+      "sem": "todo_panel.card",
+      "component": "card",
+      "label": "todo",
+      "props": {
+        "padding": "lg",
+        "elevation": "raised"
+      },
+      "layout": {
+        "stack": {
+          "axis": "horizontal",
+          "gap": "lg"
+        }
+      },
+      "children": [
+        {
+          "sem": "todo_panel.side",
+          "label": "filter and counts",
+          "size": {
+            "flex": 2
+          },
+          "layout": {
+            "stack": {
+              "axis": "vertical",
+              "gap": "md"
+            }
+          },
+          "children": [
+            {
+              "sem": "todo_panel.filter",
+              "label": "filter",
+              "layout": {
+                "stack": {
+                  "axis": "horizontal",
+                  "gap": "xs"
+                }
+              },
+              "children": [
+                {
+                  "sem": "todo_panel.filter.all",
+                  "component": "chip",
+                  "label": "All",
+                  "bind": {
+                    "actions": {
+                      "activate": {
+                        "target": "todo.filter[all]",
+                        "action": "select"
+                      }
+                    }
+                  }
+                },
+                {
+                  "sem": "todo_panel.filter.active",
+                  "component": "chip",
+                  "label": "Active",
+                  "bind": {
+                    "actions": {
+                      "activate": {
+                        "target": "todo.filter[active]",
+                        "action": "select"
+                      }
+                    }
+                  }
+                },
+                {
+                  "sem": "todo_panel.filter.completed",
+                  "component": "chip",
+                  "label": "Completed",
+                  "bind": {
+                    "actions": {
+                      "activate": {
+                        "target": "todo.filter[completed]",
+                        "action": "select"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "sem": "todo_panel.active",
+              "component": "stat",
+              "label": "active",
+              "bind": {
+                "state": {
+                  "value": "todo.counter:active"
+                }
+              }
+            },
+            {
+              "sem": "todo_panel.done",
+              "component": "stat",
+              "label": "done",
+              "bind": {
+                "state": {
+                  "value": "todo.counter:done"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "sem": "todo_panel.main",
+          "label": "entry",
+          "size": {
+            "flex": 3
+          },
+          "layout": {
+            "stack": {
+              "axis": "vertical",
+              "gap": "md"
+            }
+          },
+          "children": [
+            {
+              "sem": "todo_panel.entry",
+              "layout": {
+                "stack": {
+                  "axis": "horizontal",
+                  "gap": "sm",
+                  "align": "center"
+                }
+              },
+              "children": [
+                {
+                  "sem": "todo_panel.input",
+                  "component": "text_field",
+                  "label": "new todo",
+                  "size": {
+                    "flex": 1
+                  },
+                  "bind": {
+                    "state": {
+                      "text": "todo.input:text"
+                    },
+                    "actions": {
+                      "set_value": {
+                        "target": "todo.input",
+                        "action": "set_value"
+                      },
+                      "submit": {
+                        "target": "todo.input",
+                        "action": "submit"
+                      }
+                    }
+                  }
+                },
+                {
+                  "sem": "todo_panel.add",
+                  "component": "button",
+                  "label": "add",
+                  "bind": {
+                    "actions": {
+                      "activate": {
+                        "target": "todo.input",
+                        "action": "submit"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

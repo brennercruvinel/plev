@@ -783,3 +783,87 @@ severidade do que ficou:
   superfície; `icon_button` com um ícone só; `image` desenha só a casca.
 
 próximo: fase 2 (transformar por `SemId`, com o que o handoff lista).
+
+## fase 2: a superfície se transforma sem perder identidade
+
+branch `task/69b-transform`, worktree próprio, sobre a `main` @ 69b65ed.
+
+### sonda da fase 2 (antes do primeiro tipo, 2026-09-24)
+
+na base não existe transformação: `SurfaceHost::open` recusa um id
+aberto, então o único caminho de uma forma verificada para outra é
+fechar a superfície e abrir a outra. o teste
+`closing_and_reopening_makes_every_widget_new`
+(`crates/surface/tests/transform.rs`) faz isso sobre o app de teste com o
+golden do todo (`crates/uir/fixtures/showcase-todo.snapshot.json`):
+
+- a forma compacta é a fixture da task-68 (`showcase-todo.ir.json`). a
+  outra é nova, `crates/surface/tests/fixtures/showcase-todo-columns.ir.json`,
+  verificada contra o mesmo golden: duas colunas, à esquerda o filtro e
+  as contagens (`todo_panel.side`), à direita a entrada
+  (`todo_panel.main`). os ids dos controles são os mesmos; o grid
+  `todo_panel.counts` sai, `todo_panel.side` e `todo_panel.main` entram;
+- uma pessoa clica no campo, digita "buy milk", volta o caret três
+  posições e digita "X": o app tem "buy mXilk" (a tecla caiu onde o caret
+  estava, e o caret mora no widget);
+- `close`, depois `open` da forma de duas colunas, verificada contra o
+  app como ele está agora. numa área de 900 de largura, o campo estava
+  em x 60, 779 de largura; agora está em x 430, 409 de largura: o mesmo
+  `SemId` em outro lugar.
+
+o que volta e o que se perde:
+
+- o texto volta. ele é do app (`todo.input:text`), e o widget novo o lê
+  pela ligação no `sync` da materialização;
+- o foco se perde: `focused()` é `None`, e a tecla seguinte não vai a
+  campo nenhum;
+- o caret se perde: focado de novo de fora (`Surface::focus`), a tecla cai
+  no fim, "buy mXilkY", e não três posições para trás;
+- a instância é outra: `close` soltou a `Surface` inteira, e `open`
+  criou um widget novo para cada nó. hover, press e o arraste em curso
+  iriam junto, pelo mesmo motivo.
+
+onde o estado mora hoje, componente a componente do vocabulário. o que é
+do app é relido pela ligação no `sync`. o que é do widget vive no
+`Surface.widgets: BTreeMap<SemId, Widget>`. a geometria vive em
+`Surface.rects: Vec<Rect>` e `Surface.drawn: Vec<bool>`, pela posição na
+árvore, zerados quando a árvore muda.
+
+| componente | do app (ligação) | do widget (retido por `SemId`) | o comps expõe |
+|---|---|---|---|
+| `text_field` | `text`, o `enabled` do `set_value` | foco, caret, seleção, piscar, hover | `TextField::input` é pub: `focused` e `placeholder` pub, `buffer.cursor()` e `selection()` só para ler; o piscar e o hover são privados |
+| `slider` | `value`, faixa e passo do nó alvo, `enabled` | arraste, hover, foco | `is_dragging()`, `is_hovered()`, `is_focused()`, só para ler |
+| `switch` | `on`, `enabled` | a mola do knob, hover, press, foco | `on` pub; o resto privado |
+| `checkbox` | `checked`, `enabled` | hover, press, foco | `label` pub; o resto privado |
+| `button`, `icon_button`, `chip` | label, `enabled`, `active`, `selected` | hover, press, foco (o `Press` de cada um) | `Press` privado |
+| `button` que liga `busy` | `busy`, `enabled` | o `Press` do `SubmitButton` | privado |
+| `select` | `options`, `selected`, `enabled` | aberto, opção destacada, scroll do painel, foco | `is_open()`; o resto privado |
+| `tabs` | `options`, `selected` | hover, foco | `labels`, `active` pub |
+| `table` | `rows` | o scroll das linhas | `columns` e `rows` pub |
+| `dialog` | `open`, os labels e o `enabled` das ações | hover e press dos dois botões | privado |
+| container, `card`, `list`, `text`, `stat`, `badge`, `separator`, `empty_state`, `progress`, `chart`, `image` | tudo | nada (`Widget::Static`) | não se aplica |
+
+a condição de parada não disparou. um nó que continua com o mesmo `SemId`
+e o mesmo widget não precisa passar estado de uma instância para outra:
+a transformação mantém a instância, e o estado vai junto, exposto ou não.
+os props que a forma nova pode mudar num widget mantido (o placeholder do
+campo, o label do checkbox, o título da coluna da tabela, o label do
+botão e do chip) são campos pub.
+
+o estado só teria de atravessar instâncias quando o widget muda sob o
+mesmo id. isso acontece com a troca de componente, que o briefing me
+deixa decidir, e num caso dentro do mesmo componente: um `button` que
+passa a ligar `busy` (ou deixa de ligar) é outro widget do comps,
+`SubmitButton` em vez de `Button`. o `Press` dos dois (hover e press em
+curso) é privado e não passa. registro como achado, sem parar. o que se
+perde é transitório: o hover volta no movimento seguinte do ponteiro, e
+um press em curso no instante da troca não completa. nenhum estado do app
+e nenhum estado semântico se perde. se isso tiver de passar, é mudança no
+comps (expor o `Press` dos dois) e pede aprovação.
+
+outro achado, fora do comps: o engine não expõe reduced motion. não há
+símbolo de preferência de movimento em `crates/engine` nem em
+`crates/comps`, e só a task-75 (pendente) traz a preferência do sistema.
+a fase 2 não pede mudança no engine para isso: a superfície recebe a
+preferência de quem a tiver (`SurfaceHost::set_reduced_motion`), e hoje
+ninguém a tem. a task-75 liga a fonte.
