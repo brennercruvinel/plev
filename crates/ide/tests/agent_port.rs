@@ -66,6 +66,8 @@ enum Poke {
     /// A person unstages a file, as the file menu's "Unstage file" asks
     /// it: through the dispatcher, as `Actor::Human`.
     Unstage(&'static str),
+    /// A person stages a file, through the dispatcher, as `Actor::Human`.
+    Stage(&'static str),
     /// The person reads the confirmation modal on screen and clicks its
     /// confirm button (`confirm`) or its cancel button: the answer goes
     /// through the dispatcher as `Actor::Human`. What the modal said goes
@@ -215,6 +217,12 @@ impl Shell<'_> {
             Poke::Unstage(path) => {
                 let target = format!("changes.file[{path}]");
                 self.rig.ask(Actor::Human, &target, "unstage", None);
+                self.record();
+                self.frame = frame(&mut self.rig.bench);
+            }
+            Poke::Stage(path) => {
+                let target = format!("changes.file[{path}]");
+                self.rig.ask(Actor::Human, &target, "stage", None);
                 self.record();
                 self.frame = frame(&mut self.rig.bench);
             }
@@ -894,4 +902,79 @@ fn the_agent_asks_the_person_who_declines_and_it_stops() {
         "{:?}",
         rig.notices()
     );
+}
+
+/// task-92, what the P0 covers besides a decline, with a shell that
+/// serves the port only after its wake: a question confirmed on an action
+/// that ends at once, with no git behind it (`open`), and one the second
+/// check refuses at the confirmation, since the person staged the file
+/// meanwhile. Both endings reach the agent with no message from it.
+#[test]
+fn what_ends_at_once_or_at_the_second_check_reaches_the_agent() {
+    let mut rig = Rig::new(&["A"], &[]);
+    let ((open, stale), drains) = shell_on_wake(&mut rig, |path, pokes| {
+        let mut c = client(&path);
+        c.hello("test-agent").expect("welcome");
+        let seen = snapshot(c.observe(Observe::default()).expect("an observation"));
+        let (said, _heard) = mpsc::channel();
+        let ask = act_on("commit.form", "open", seen.revision).with_ask("open the commit form?");
+        let open = c
+            .act(ask, |s| {
+                if s.stage == Stage::AwaitingConfirmation {
+                    let said = said.clone();
+                    poke(
+                        &pokes,
+                        Poke::Answer {
+                            confirm: true,
+                            said,
+                        },
+                    );
+                }
+            })
+            .expect("the open's stages");
+        let now = snapshot(c.observe(Observe::default()).expect("a new look"));
+        let ask = act_on("changes.file[A]", "stage", now.revision).with_ask("stage A?");
+        let stale = c
+            .act(ask, |s| {
+                if s.stage == Stage::AwaitingConfirmation {
+                    poke(&pokes, Poke::Stage("A"));
+                    let said = said.clone();
+                    poke(
+                        &pokes,
+                        Poke::Answer {
+                            confirm: true,
+                            said,
+                        },
+                    );
+                }
+            })
+            .expect("the stage's stages");
+        (open, stale)
+    });
+
+    assert_eq!(
+        names(&open),
+        [
+            "requested",
+            "awaiting_confirmation",
+            "confirmed",
+            "executing",
+            "completed"
+        ]
+    );
+    assert_eq!(
+        names(&stale),
+        ["requested", "awaiting_confirmation", "rejected"]
+    );
+    let Stage::Rejected(Rejection::Stale { acted, .. }) = &stale[2].stage else {
+        panic!("refused at the second check: {stale:?}");
+    };
+    assert!(
+        acted
+            .iter()
+            .any(|a| a.actor == Actor::Human && a.action.as_str() == "stage"),
+        "{acted:?}"
+    );
+    assert!(drains.iter().all(|d| d.cause == Cause::Port), "{drains:?}");
+    assert_eq!(rig.value("commit.form:open"), Value::Bool(true));
 }
