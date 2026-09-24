@@ -12,6 +12,17 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-68
+
+- **o IR é pequeno porque a projeção já declara tudo:** o registro de
+  capacidades sai do `Snapshot` que o app já projeta para agentes e
+  leitor de tela. o IR só pode referenciar o que existe, sem uma segunda
+  declaração que envelheça. o contrato semântico virou o espaço formal
+  da geração, como a tese pedia.
+- **o vocabulário do comps não é todo semântico:** 9 dos 21 componentes
+  não têm `project`. para a interface gerada ser operável pelo mesmo
+  contrato, a materialização (69) precisa que cada componente se projete.
+
 ### 2026-09-24, task-91
 
 - **a âncora certa de "quem agiu" é o instante do olhar, não uma

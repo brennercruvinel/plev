@@ -147,6 +147,15 @@ o da base até ser reescrito.
   `acts_observed` (seção 2.3). o toast do ide nomeia o próprio agente na
   terceira pessoa. o `rec` ainda não grava o olhar.
 
+- `871f0dd` (task-68): crate `crates/uir` (depende só de `sem` e serde):
+  `Ir`, `IrNode`, `Component` (vocabulário v1, `vocab.rs`), `Props` e
+  `Layout` por token (`token.rs`), `Capabilities::from_snapshot`
+  (`caps.rs`), `decode`/`parse` (leitor único com JSON pointer),
+  `verify`/`VerifiedIr` (`verify/`), `GenerationPolicy`, `schema()` (o
+  arquivo em `crates/uir/schema/plev-ir-1.json`). fixtures em
+  `crates/uir/fixtures/`, regeneradas pelos testes `uir_fixture` do ide e
+  do showcase. nada materializa ainda (task-69).
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

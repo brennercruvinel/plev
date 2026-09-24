@@ -14,6 +14,14 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: o plev IR existe (task-68)
+
+- **integrada:** task-68 (`871f0dd`), o crate `uir`. gate verde (2338).
+  a sonda do orquestrador conferiu as recusas do verifier (cor crua,
+  pixel, ação não declarada, destrutiva num botão, dois erros juntos).
+- **publicado:** PR #62 (task-91), merge `ecf51ba`.
+- próximo na onda 6: task-69 (materializar um `VerifiedIr`).
+
 ### ciclo 3: task-91 integrada
 
 - **integrada:** task-91 (`29373d4`). gate verde (2277). reproduzido no

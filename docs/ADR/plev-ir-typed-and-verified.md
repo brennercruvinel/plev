@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [uir, plev-ir, verifier, capabilities, sem, comps, theme, schema, generative-runtime]
 date: 2026-09-24
 ---

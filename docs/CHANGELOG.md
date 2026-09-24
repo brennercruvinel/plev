@@ -9,6 +9,20 @@ status: living
 
 ## unreleased
 
+- the plev IR and its verifier (2026-09-24, task-68, adr
+  plev-ir-typed-and-verified): a new pure crate, `uir`, describes an
+  interface surface by meaning, as JSON a person, an LLM or a tool can
+  write: identity, a component from a closed vocabulary that mirrors the
+  widgets, props only as theme tokens, layout by primitives, and state
+  and actions bound to what the app already declares (the registry comes
+  from the app's projection). `verify` is the only way to a `VerifiedIr`,
+  and it answers every error at once with its JSON pointer and rule: a raw
+  color, a pixel size, an action the app does not declare, a destructive
+  action on a plain button, a control with no label. a JSON schema for
+  constrained decoding is generated from the same tables. three surfaces
+  verify against real projections: the ide's commit form, a generated
+  "review what goes into the commit", and the todo.
+
 - a stale refusal names who acted since the agent looked (2026-09-24,
   task-91): the port marks each observation it serves in the dispatcher's
   order (`sem::Mark`, through its receipt sink), and a refused act of the

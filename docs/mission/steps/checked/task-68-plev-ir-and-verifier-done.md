@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-68
@@ -655,3 +655,35 @@ de `[crates.narrate]`). antes desta mudança o `uir` era o único que só
 aparecia dentro de outra palavra. o guard continua testando substring,
 então um crate novo cujo nome caiba dentro de uma palavra dos dois
 arquivos passaria sem entrada; não mexi nisso.
+
+## fechamento (orquestrador, 2026-09-24)
+
+integrada na `main` em `871f0dd` (onze commits sobre `39a76cf`). o ADR
+plev-ir-typed-and-verified foi aceito.
+
+o agente parou uma vez, e o erro foi do briefing: ele proibia o
+`README.md` e o `arc.toml`, que o `arc_sync_guard` exige de todo crate
+novo. o agente acrescentou as duas entradas, e a do `arc.toml` agora é
+uma entrada de verdade, não um acerto por acaso na palavra "acquire".
+
+validação do orquestrador:
+- diff lido: a raiz do crate, o verifier, as regras e o suporte de teste;
+- gate verde no diretório da task: 2338 passaram, 0 falharam, 12
+  ignorados, com a perna urnaui;
+- uma sonda à parte, num teste descartável sobre o IR de base dos testes
+  de regra, sem entrar na branch. o verifier recusou uma cor crua (`#ff0000`,
+  regra 3, com a lista dos papéis de cor), um tamanho em pixel (regra 3),
+  uma ação que o app não declara (`force_push`, regra 5), um `discard`
+  destrutivo ligado a um botão (regra 6) e dois erros no mesmo documento
+  (regras 4 e 7), cada um com o JSON pointer.
+
+severidade do que ficou:
+- P2 para a task-69: 9 dos 21 componentes do vocabulário não têm
+  `project` no comps (card, stat, chart, separator, empty_state,
+  progress, badge, text, image), e o role deles vem da tabela do `uir`;
+  o todo não projeta a lista dos itens, então não há repetição sobre
+  eles;
+- P3: a mensagem da regra 6 diz "the app asks no one to confirm it" quando
+  o app pede confirmação só a agentes (`Confirm::ForAgents`); o sentido
+  certo é "o app não pede a todo ator". o `arc_sync_guard` compara
+  substring.
