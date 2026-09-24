@@ -14,6 +14,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #73; disparada a fase 4a
+
+- **publicado:** PR #73 (fase 3b-ii), merge commit, gate local verde
+  (2486), regressão 157 sem mudança.
+- **disparada:** task-69 fase 4a, o app dos silêncios com capacidades
+  reais (ffmpeg `silencedetect` fora da thread) e a tela fixa bem
+  desenhada, referência do checkpoint b. um agente só. a 4b (a tela
+  gerada dos silêncios, o componente de imagem no IR, a comparação) vem
+  depois; a 4c é o vídeo.
+
 ### ciclo 3: a tela nasce do que a pessoa escreve (task-69 fase 3b-ii)
 
 - **integrada:** fase 3b-ii (merge da `task/69e-page-asks-claude`). na
