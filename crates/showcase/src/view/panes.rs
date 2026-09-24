@@ -71,9 +71,11 @@ pub struct Panes {
     /// window of its own (task-76 item 2, `dispatch::Detached`). `None`,
     /// the usual: in the main window.
     pub detached: Option<super::dispatch::Detached>,
-    /// `D` was pressed outside a text field: the shell, which owns the
-    /// windows, takes it and opens or closes the page's own window.
-    pub detach_asked: bool,
+    /// The shell's capabilities (task-76 item 4, `dispatch::Shell`): the
+    /// page, the theme, the page in a window of its own, the recording's
+    /// save, projected and run through the gallery's dispatcher; what was
+    /// asked of the windows and the recording waits here for the shell.
+    pub shell: super::dispatch::Shell,
 }
 
 impl Panes {
@@ -128,7 +130,7 @@ impl Panes {
             git: git::GitPage::new(),
             builder: builder::BuilderPage::new(),
             detached: None,
-            detach_asked: false,
+            shell: super::dispatch::Shell::new(),
         }
     }
 }

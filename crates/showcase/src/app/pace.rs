@@ -53,6 +53,9 @@ impl App {
             // and the state it was drawn from.
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             self.record_frame();
+            // The bar follows what this frame was drawn from.
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            self.sync_menu();
         } else if self.is_page_window(id) {
             let Some(host) = self.windows.get_mut(id) else {
                 return;

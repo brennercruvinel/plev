@@ -65,6 +65,9 @@ enum UserEvent {
     Access,
     /// An agent asked through the port: serve it, draw if an act ran.
     Agent,
+    /// A native menu item was clicked (the engine's menu woke the loop):
+    /// poll the clicks and dispatch them, desktop only.
+    Menu,
     /// The main window's device, requested off the loop (wasm).
     GpuReady { gpu: GpuContext },
 }
@@ -97,6 +100,11 @@ pub struct App {
     /// (`record`; desktop, where the port is).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     recording: Option<record::Recording>,
+    /// The native menu bar, built from what the gallery projects (`menu`;
+    /// desktop; `None` where the platform has none, or before the main
+    /// window is up).
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    menu: Option<menu::Menu>,
     /// A cmd+click is taking the button until it is released (`source`).
     #[cfg(all(
         debug_assertions,
@@ -143,6 +151,8 @@ impl App {
             access: Access::default(),
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             recording: None,
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            menu: None,
             #[cfg(all(
                 debug_assertions,
                 any(target_os = "macos", target_os = "linux", target_os = "windows")
@@ -368,9 +378,15 @@ impl ApplicationHandler<UserEvent> for App {
         }
 
         self.viewport_changed(id);
+
+        // The bar, from what the gallery projects (desktop; the platform
+        // replaces winit's default bar). Once the window is up: the main
+        // thread, the app running.
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        self.install_menu();
     }
 
-    fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: UserEvent) {
+    fn user_event(&mut self, event_loop: &ActiveEventLoop, event: UserEvent) {
         match event {
             UserEvent::Wake => {
                 // The embedded workspace takes the events whichever page
@@ -381,16 +397,30 @@ impl ApplicationHandler<UserEvent> for App {
                     self.changed();
                 }
             }
+            // A screen reader's person may ask the shell for the page's
+            // own window or the recording's save, as the keys do.
             UserEvent::Access => {
-                #[cfg(not(any(
-                    target_arch = "wasm32",
-                    target_os = "android",
-                    target_os = "ios"
-                )))]
-                self.access.carry_out(&mut self.view);
+                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+                {
+                    self.access.carry_out(&mut self.view);
+                    self.save_requested();
+                }
                 self.changed();
+                self.detach_requested(event_loop);
             }
             UserEvent::Agent => self.serve_agent(),
+            // The clicks on the bar, dispatched as the person's requests;
+            // what the shell owns is taken right after.
+            UserEvent::Menu => {
+                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+                {
+                    if self.menu_clicks() {
+                        self.changed();
+                    }
+                    self.save_requested();
+                }
+                self.detach_requested(event_loop);
+            }
             UserEvent::GpuReady { gpu } => {
                 log::info!("GPU context ready (async)");
                 if let Some(id) = self.main {
@@ -468,6 +498,10 @@ mod pace;
 /// The page in a window of its own (task-76 item 2), desktop only.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod detached;
+
+/// The native menu bar (task-76 item 4), desktop only.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod menu;
 
 /// `PLEV_BACKGROUND=1`: the window comes up without taking the focus.
 #[cfg(target_os = "macos")]
