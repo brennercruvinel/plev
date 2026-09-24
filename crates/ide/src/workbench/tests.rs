@@ -7,8 +7,8 @@ use std::rc::Rc;
 
 use engine::compositor::Compositor;
 use sem::{
-    Actor, Confirm, Receipt, ReceiptSink, Rejection, Request, Role, SemId, Snapshot, Stage, Value,
-    Verdict, check,
+    Actor, Confirm, Mark, Receipt, ReceiptSink, Rejection, Request, Role, SemId, Snapshot, Stage,
+    Value, Verdict, check,
 };
 
 use super::*;
@@ -587,6 +587,75 @@ fn a_stale_refusal_toast_names_each_actors_run_in_order() {
             "Refused test-agent's submit: the commit message changed \
              (the person edited the commit message and opened the diff of b.txt; \
              reviewer opened the diff of a.txt)"
+                .to_owned()
+        )]
+    );
+}
+
+/// Knows when `actor` looked: at the mark it was added at, as the agent
+/// port tells the dispatcher for the requests it dispatches (task-91).
+struct LookedWhenAdded {
+    actor: Actor,
+    at: Option<Mark>,
+}
+
+impl ReceiptSink for LookedWhenAdded {
+    fn on_stage(&mut self, _receipt: &Receipt, _stage: &Stage) {}
+
+    fn attached(&mut self, mark: Mark) {
+        self.at = Some(mark);
+    }
+
+    fn looked(&self, receipt: &Receipt) -> Option<Mark> {
+        self.at.filter(|_| receipt.request.actor == self.actor)
+    }
+}
+
+/// With the look, the agent's own act after it is named with the others,
+/// as the agent itself, never "you" (task-91): the agent looks, the
+/// person opens a diff, the agent rewrites the message, and its submit on
+/// the look is refused by its own write.
+#[test]
+fn a_stale_refusal_toast_names_the_agents_own_act_as_itself() {
+    let mut bench = bench();
+    let agent = Actor::Agent {
+        name: "test-agent".into(),
+    };
+    let seen = bench.snapshot().expect("snapshot");
+    bench.add_sink(Box::new(LookedWhenAdded {
+        actor: agent.clone(),
+        at: None,
+    }));
+    let req =
+        Request::observe(&seen, agent.clone(), "commit.submit", "submit", None).expect("observe");
+    let show = Request::observe(
+        &seen,
+        Actor::Human,
+        "changes.file[b.txt]",
+        "show_diff",
+        None,
+    )
+    .expect("observe");
+    bench.dispatch(show);
+    let now = bench.snapshot().expect("snapshot");
+    let text = Some(Value::Text("fix login flow".into()));
+    let write =
+        Request::observe(&now, agent, "commit.message", "set_value", text).expect("observe");
+    bench.dispatch(write);
+    let id = bench.dispatch(req);
+    let Some(Stage::Rejected(Rejection::Stale { acted, .. })) =
+        bench.receipt(id).and_then(Receipt::stage)
+    else {
+        panic!("stale: {:?}", bench.receipt(id));
+    };
+    assert_eq!(acted.len(), 2);
+    assert_eq!(
+        notices(&bench),
+        [(
+            Role::Alert,
+            "Refused test-agent's submit: the commit message changed \
+             (the person opened the diff of b.txt; \
+             test-agent itself edited the commit message)"
                 .to_owned()
         )]
     );

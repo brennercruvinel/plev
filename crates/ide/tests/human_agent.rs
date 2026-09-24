@@ -1198,7 +1198,8 @@ mod through_the_port {
     /// last stage carried, which shows no state: the submit rests on the
     /// `staged` of the earlier observation and is refused stale. Named are
     /// the acts that ran since the oldest look the submit rests on: the
-    /// person's unstage and the agent's own write.
+    /// person's unstage and the agent's own write, which the toast says
+    /// in the third person.
     #[test]
     fn a_submit_on_a_stage_revision_names_who_acted_since_the_look_it_rests_on() {
         let mut rig = Rig::new(&["A", "B"], &["A", "B"]);
@@ -1228,6 +1229,11 @@ mod through_the_port {
                     )
                 ),
             ]
+        );
+        assert_eq!(
+            rig.notices(),
+            ["Refused test-agent's submit: B left the staged files \
+                 (the person unstaged B; test-agent itself edited the commit message)"]
         );
         rig.settle(unstage);
     }
