@@ -15,6 +15,7 @@ use std::path::PathBuf;
 use comps::overlay::OverlayManager;
 use comps::prelude::{Button, EventResult, Rect, Tabs, ToastManager, Wake, WidgetEvent};
 use engine::compositor::{Compositor, LayerId, SceneNode};
+use engine::platform::files::{DialogRequest, FileDialogs};
 use engine::theme::{Intent, Theme};
 
 use crate::model::Worker;
@@ -80,6 +81,9 @@ pub struct Explorer {
     ffmpeg: Option<bool>,
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     clipboard: engine::clipboard::SystemClipboard,
+    /// The platform's file dialogs (Browse…, blob export): native on the
+    /// desktop, none on wasm and mobile, the fake in tests.
+    dialogs: Box<dyn FileDialogs>,
     empty_state: comps::prelude::EmptyState,
     open: OpenScreen,
     overview: OverviewScreen,
@@ -129,6 +133,7 @@ impl Explorer {
             ffmpeg: None,
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             clipboard: engine::clipboard::SystemClipboard::new(),
+            dialogs: engine::platform::files::default_dialogs(),
             empty_state: comps::prelude::EmptyState::new(
                 "no database open yet",
                 "Open a .urna file from the Open tab to explore it here.",
@@ -148,6 +153,22 @@ impl Explorer {
     #[cfg(test)]
     pub fn screen(&self) -> Screen {
         self.screen
+    }
+
+    /// Other dialogs (the fake) for a test.
+    #[cfg(test)]
+    pub(crate) fn set_dialogs(&mut self, dialogs: Box<dyn FileDialogs>) {
+        self.dialogs = dialogs;
+    }
+
+    #[cfg(test)]
+    pub(crate) fn opening(&self) -> bool {
+        self.opening
+    }
+
+    #[cfg(test)]
+    pub(crate) fn file_hover(&self) -> bool {
+        self.file_hover
     }
 
     /// Wake callback for the platform event loop, fired by the worker
@@ -183,8 +204,8 @@ impl Explorer {
         std::mem::take(&mut self.pick_requested)
     }
 
-    /// Drag-and-drop hover feedback (native only: no file drag on the web).
-    #[cfg(not(target_arch = "wasm32"))]
+    /// Drag-and-drop hover feedback on the Open screen (the web never
+    /// sends a file drag; the flag simply stays off there).
     pub fn set_file_hover(&mut self, hovering: bool) {
         self.file_hover = hovering;
     }
@@ -392,19 +413,14 @@ impl Explorer {
             }
             Action::PickFile => {
                 // Web: the shell triggers the DOM picker on the next
-                // about_to_wait. Desktop: the native open dialog, modal.
+                // about_to_wait. Elsewhere: the platform's open dialog,
+                // modal (mobile has none, and the toast says so).
                 #[cfg(target_arch = "wasm32")]
                 {
                     self.pick_requested = true;
                 }
-                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-                if let Some(path) = rfd::FileDialog::new()
-                    .set_title("Open a .urna corpus")
-                    .add_filter("urna corpus", &["urna", "nest"])
-                    .pick_file()
-                {
-                    self.open_database(path);
-                }
+                #[cfg(not(target_arch = "wasm32"))]
+                self.pick_file(toasts, theme);
                 true
             }
             Action::Validate => {
@@ -440,9 +456,31 @@ impl Explorer {
         false
     }
 
-    /// Export blob `index` to a path the user picks (native save dialog),
-    /// named after the blob's own uri.
-    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    /// The Browse… button: the platform's open dialog, filtered to the
+    /// corpus extensions; what it picks opens, a cancel does nothing, and
+    /// a target without dialogs (mobile) says so.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn pick_file(&mut self, toasts: &mut ToastManager, theme: &Theme) {
+        let req = DialogRequest::new()
+            .title("Open a .urna corpus")
+            .filter("urna corpus", &["urna", "nest"]);
+        match self.dialogs.pick_file(&req) {
+            Ok(Some(path)) => self.open_database(path),
+            Ok(None) => {}
+            Err(e) => {
+                log::info!("file picker: {e}");
+                toasts.push(
+                    "the file picker needs the desktop app",
+                    Intent::Informational,
+                    theme,
+                );
+            }
+        }
+    }
+
+    /// Export blob `index` to a path the user picks (the platform's save
+    /// dialog), named after the blob's own uri. Where there is no dialog
+    /// (wasm, mobile) the toast says the export needs the desktop app.
     fn export_blob(&mut self, index: usize, toasts: &mut ToastManager, theme: &Theme) -> bool {
         let Some(db) = &self.db else {
             return false;
@@ -459,12 +497,21 @@ impl Explorer {
             .next()
             .unwrap_or("blob")
             .to_string();
-        let Some(dest) = rfd::FileDialog::new()
-            .set_title("Export media blob")
-            .set_file_name(&name)
-            .save_file()
-        else {
-            return true;
+        let req = DialogRequest::new()
+            .title("Export media blob")
+            .file_name(&name);
+        let dest = match self.dialogs.save_file(&req) {
+            Ok(Some(dest)) => dest,
+            Ok(None) => return true,
+            Err(e) => {
+                log::info!("blob export: {e}");
+                toasts.push(
+                    "blob export needs the desktop app",
+                    Intent::Informational,
+                    theme,
+                );
+                return true;
+            }
         };
         toasts.push(
             format!("exporting {name}… (hash-verified before writing)"),
@@ -472,16 +519,6 @@ impl Explorer {
             theme,
         );
         self.worker.send(UrnaCommand::ExportBlob { index, dest });
-        true
-    }
-
-    #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
-    fn export_blob(&mut self, _index: usize, toasts: &mut ToastManager, theme: &Theme) -> bool {
-        toasts.push(
-            "blob export needs the desktop app",
-            Intent::Informational,
-            theme,
-        );
         true
     }
 
@@ -1094,6 +1131,109 @@ mod tests {
         assert!(!ex.graph_screen.loading, "no LoadGraph without a section");
         let mut c = Compositor::new();
         ex.render(&mut c, &theme);
+    }
+
+    /// The Browse… button through the engine's dialogs: the fake stands
+    /// in for the native one (nothing opens on the machine), a cancel
+    /// opens nothing, a pick opens the path as a typed one would, and
+    /// the dialog is asked with the corpus title and extensions.
+    #[test]
+    fn browse_opens_what_the_dialog_picked_and_nothing_when_cancelled() {
+        use engine::platform::files::{DialogKind, FakeDialogs};
+        use std::sync::{Arc, Mutex};
+
+        let (mut ex, mut toasts, theme) = harness();
+        let fake = Arc::new(Mutex::new(
+            FakeDialogs::new()
+                .will_cancel()
+                .will_pick("/definitely/not/here.urna"),
+        ));
+        ex.set_dialogs(Box::new(fake.clone()));
+
+        assert!(ex.action(Action::PickFile, &mut toasts, &theme));
+        assert!(!ex.opening, "cancelled: nothing opens");
+        assert!(ex.action(Action::PickFile, &mut toasts, &theme));
+        assert!(ex.opening, "the picked path opens");
+
+        let asked = fake.lock().unwrap().take_asked();
+        assert_eq!(asked.len(), 2);
+        for ask in &asked {
+            assert_eq!(ask.kind, DialogKind::PickFile);
+            assert_eq!(ask.request.title.as_deref(), Some("Open a .urna corpus"));
+            assert_eq!(ask.request.filters.len(), 1);
+            assert_eq!(ask.request.filters[0].name, "urna corpus");
+            assert_eq!(ask.request.filters[0].extensions, ["urna", "nest"]);
+            assert_eq!(ask.request.directory, None);
+        }
+
+        // the picked path is missing: the open fails as a typed one does
+        for _ in 0..1000 {
+            if ex.poll_backend(&mut toasts, &theme) {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        assert!(!ex.opening);
+        assert!(!ex.open_error.is_empty());
+        assert_eq!(ex.screen(), Screen::Open);
+
+        // a target without dialogs: the toast says so, nothing opens
+        ex.set_dialogs(Box::new(engine::platform::files::NoDialogs));
+        let before = toasts.len();
+        assert!(ex.action(Action::PickFile, &mut toasts, &theme));
+        assert!(!ex.opening);
+        assert_eq!(toasts.len(), before + 1);
+    }
+
+    /// The blob export through the engine's save dialog: asked with the
+    /// export title and the blob's file name; a cancel exports nothing; a
+    /// pick sends the export to the worker (which, with no file open,
+    /// answers the failure); a target without dialogs says so.
+    #[test]
+    fn export_asks_a_save_dialog_named_after_the_blob() {
+        use engine::platform::files::{DialogKind, FakeDialogs};
+        use std::sync::{Arc, Mutex};
+
+        let (mut ex, mut toasts, theme) = harness();
+        ex.db = Some(fixtures::fake_media_db());
+        let fake = Arc::new(Mutex::new(
+            FakeDialogs::new()
+                .will_cancel()
+                .will_pick("/tmp/plev-urnaui-export.mp4")
+                .will_refuse(),
+        ));
+        ex.set_dialogs(Box::new(fake.clone()));
+
+        assert!(ex.export_blob(0, &mut toasts, &theme));
+        assert_eq!(toasts.len(), 0, "cancelled: no export, no toast");
+
+        assert!(ex.export_blob(0, &mut toasts, &theme));
+        assert_eq!(toasts.len(), 1, "exporting");
+        for _ in 0..1000 {
+            if ex.poll_backend(&mut toasts, &theme) {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        assert_eq!(toasts.len(), 2, "the worker answered the export");
+
+        assert!(ex.export_blob(0, &mut toasts, &theme));
+        assert_eq!(
+            toasts.len(),
+            3,
+            "no dialog on this target: the toast says so"
+        );
+
+        let asked = fake.lock().unwrap().take_asked();
+        assert_eq!(asked.len(), 3);
+        for ask in &asked {
+            assert_eq!(ask.kind, DialogKind::SaveFile);
+            assert_eq!(ask.request.title.as_deref(), Some("Export media blob"));
+            assert_eq!(ask.request.file_name.as_deref(), Some("cards-av1.mp4"));
+        }
+
+        assert!(!ex.export_blob(7, &mut toasts, &theme), "no such blob");
+        assert_eq!(fake.lock().unwrap().asked().len(), 0, "not even asked");
     }
 
     #[test]

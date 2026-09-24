@@ -14,6 +14,7 @@
 use std::collections::VecDeque;
 use std::fmt;
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 /// A named set of extensions a dialog offers as one filter
 /// ("urna corpus": `urna`, `nest`). Extensions without the dot.
@@ -252,6 +253,32 @@ impl FileDialogs for NoDialogs {
     }
 }
 
+/// Dialogs shared by handle: a test keeps one `Arc` and gives the page
+/// the other as its `Box<dyn FileDialogs>`, then reads what the page
+/// asked ([`FakeDialogs::asked`]). A poisoned lock still answers: the
+/// dialogs hold no invariant a panic elsewhere could break.
+impl<D: FileDialogs> FileDialogs for Arc<Mutex<D>> {
+    fn pick_file(&mut self, req: &DialogRequest) -> Picked<PathBuf> {
+        locked(self).pick_file(req)
+    }
+
+    fn pick_files(&mut self, req: &DialogRequest) -> Picked<Vec<PathBuf>> {
+        locked(self).pick_files(req)
+    }
+
+    fn save_file(&mut self, req: &DialogRequest) -> Picked<PathBuf> {
+        locked(self).save_file(req)
+    }
+
+    fn pick_folder(&mut self, req: &DialogRequest) -> Picked<PathBuf> {
+        locked(self).pick_folder(req)
+    }
+}
+
+fn locked<D>(shared: &Mutex<D>) -> MutexGuard<'_, D> {
+    shared.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
 // -- the native one ----------------------------------------------------------
 
 /// The platform's dialogs through `rfd`: an `NSOpenPanel` or
@@ -404,6 +431,21 @@ mod tests {
             err.to_string(),
             "save_file: no native file dialog on this target"
         );
+    }
+
+    #[test]
+    fn a_shared_fake_answers_through_one_handle_and_reports_through_the_other() {
+        let fake = Arc::new(Mutex::new(FakeDialogs::new().will_pick("/picked")));
+        let mut page: Box<dyn FileDialogs> = Box::new(fake.clone());
+        assert_eq!(
+            page.pick_file(&open_urna()).unwrap(),
+            Some(PathBuf::from("/picked"))
+        );
+        assert_eq!(page.save_file(&DialogRequest::new()).unwrap(), None);
+        let asked = locked(&fake).take_asked();
+        assert_eq!(asked.len(), 2);
+        assert_eq!(asked[0].kind, DialogKind::PickFile);
+        assert_eq!(asked[1].kind, DialogKind::SaveFile);
     }
 
     #[test]
