@@ -71,8 +71,15 @@ message, expect_staged }`. the worker reads the real index through
 `status` (the same source the list shows), compares its staged set with
 `expect_staged`, and only then runs `git commit`; when they differ it
 answers `GitEvent::CommitRejected { added, removed }` and commits
-nothing. `GitEvent::Committed` carries `NewCommit { sha, files }`, the
-files as `git show --name-only` lists them. `expect_staged` is the
+nothing. `GitEvent::Committed` carries `NewCommit { sha, files }`: the
+paths the commit changes against its first parent (a root commit against
+the empty tree), a rename at both paths, read in process by the same
+function the log uses (`git diff-tree -r --no-renames --root
+--diff-merges=first-parent` by the CLI; task-85, which replaced `git show
+--name-only`). the workbench shows the commit (its files out of the
+staged rows, the commit on top of the stack) in the step that completes
+the receipt, before it; `stacks.commit[<sha>]` carries `files` on the ten
+newest commits and on the last one the workbench made. `expect_staged` is the
 `changes:staged` value the actor observed, which the dispatcher found
 still projected.
 

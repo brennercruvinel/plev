@@ -1,12 +1,13 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: ide
 task: task-85
 depends: [task-84]
 branch: task/85-commit-projected
+integrated: 476bbb4
 origin: checkpoint a (agentes LLM) e validação da task-84
 ---
 
@@ -411,3 +412,18 @@ commits:
   repository
 - o commit desta seção: mecanismo, medições, laboratório e handoff
   revistos
+
+## fechamento (orquestrador, 2026-09-23)
+
+integrada na `main` em `476bbb4`. validação do orquestrador: diff inteiro
+lido nas duas rodadas; devolvida uma vez com duas correções (uma
+definição só dos arquivos de um commit, porque receipt e nó discordavam
+depois do refresh numa renomeação; e `files` só nos commits mais
+recentes, porque em todos os 100 a observação inteira deste repositório
+triplicava). gate verde no diretório da task: 2096 passaram, 0 falharam,
+12 ignorados (três medições novas ignoradas), com a perna urnaui.
+laboratório reproduzido pelo orquestrador: MATCH sem e com a intervenção,
+o roteirizado confirmando pelo `files` do nó (exigido por
+`crates/ide/tests/lab.rs`). fechamento: ADR commit-checks (a definição e
+o palpite do commit), textos da task-62 que citavam `git show
+--name-only`, changelog, programa, truth, learnings.

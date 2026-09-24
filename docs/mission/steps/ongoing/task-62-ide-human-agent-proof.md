@@ -226,7 +226,7 @@ testes em repositório git real num tempdir:
    pelo dispatcher; o submit do agente volta `Rejected(Stale)` com
    `removed: [B]`; `git log` não muda.
 2. sem mudança no meio: aceito; o receipt termina com o sha igual a
-   `git rev-parse HEAD` e `files` igual a `git show --name-only HEAD`.
+   `git rev-parse HEAD` e `files` igual aos arquivos do commit (desde a task-85, `git diff-tree -r --no-renames --root --diff-merges=first-parent HEAD`; antes, `git show --name-only HEAD`).
 3. mover o cursor da lista entre observe e submit: aceito.
 4. o index muda por fora (o teste roda `git add` direto) entre a validação
    no dispatcher e a execução no worker: rejeitado no ponto de verdade,
@@ -550,7 +550,7 @@ diz isso. sem GPU na máquina, ele avisa e segue sem os frames.
 
 | code | significado |
 | --- | --- |
-| 0 | o commit existe, é exatamente o conjunto da tarefa e, quando há sessão, o receipt concluído bate com `git rev-parse HEAD` e `git show --name-only` (MATCH) |
+| 0 | o commit existe, é exatamente o conjunto da tarefa e, quando há sessão, o receipt concluído bate com `git rev-parse HEAD` e com os arquivos do commit pela cli (`git diff-tree --no-renames` desde a task-85; `git show --name-only` antes) (MATCH) |
 | 1 | um commit existe e difere: conjunto errado, ou a sessão discorda do git (MISMATCH) |
 | 2 | não houve commit |
 | 3 | erro do laboratório (argumento, repositório, porta, gravação) |
