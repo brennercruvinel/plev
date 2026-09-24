@@ -3,9 +3,11 @@
 //! ```text
 //! plev-inspect <session.monster> [--timeline] [--why <request id> [--origin <n>]]
 //!              [--control <id> [--at <ms>]] [--json]
+//! plev-inspect <session.monster> --export <t0> <t1> <excerpt.monster>
 //! ```
 //!
-//! with the file alone it prints a summary. the exit code says how it
+//! with the file alone it prints a summary; `--export` writes a stretch of
+//! it as a session of its own, the bug report. the exit code says how it
 //! ended. reading never runs anything: the session holds no app.
 
 fn main() {
@@ -14,7 +16,7 @@ fn main() {
 }
 
 mod cli {
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
 
     use inspect::{Control, Inspector, Summary, Timeline, Why, text};
     use rec::{ReadError, Session};
@@ -24,6 +26,7 @@ mod cli {
 usage:
   plev-inspect <session.monster> [--timeline] [--why <request id> [--origin <n>]]
                [--control <id> [--at <ms>]] [--json]
+  plev-inspect <session.monster> --export <t0> <t1> <excerpt.monster>
 with the file alone: a summary: the build that recorded the session, its span,
 the actors, every request with how it ended, and every refusal with a short why.
   --timeline      every event, one line each, after the tallies by kind and actor
@@ -39,17 +42,33 @@ the actors, every request with how it ended, and every refusal with a short why.
   --at <ms>       the instant for --control, in ms from the start of the session,
                   as every view prints times (default: the end)
   --json          the same answers as json, under summary, timeline, why, control
+  --export <t0> <t1> <out>
+                  writes the stretch from t0 to t1 (ms from the start of the
+                  session, as --at) to out as a session of its own, the bug
+                  report: from the full snapshot and the chunk of frames that
+                  govern t0, up to t1, only the assets its frames use. it goes
+                  alone, and never over the file it reads
 who moved a value is a correlation in time, not a declared write: the receipts
 that ran (executing, completed or failed) between the recorded state before the
 change and the change; none is a change from outside the app, two or more are
 ambiguous and all shown. reading a session never runs anything.
 exit: 0 answered, 1 the request is not in the session, 2 bad invocation,
-3 the file does not read as a session.";
+3 the file does not read as a session, 4 the export could not be written.";
 
     pub const DONE: i32 = 0;
     pub const NOT_FOUND: i32 = 1;
     pub const USAGE_ERROR: i32 = 2;
     pub const READ_ERROR: i32 = 3;
+    pub const WRITE_ERROR: i32 = 4;
+
+    /// a stretch of the session to write as its own: from `from` to `to`,
+    /// in ms from the start of the session.
+    #[derive(Debug, PartialEq)]
+    pub struct Export {
+        pub from: Millis,
+        pub to: Millis,
+        pub out: PathBuf,
+    }
 
     #[derive(Debug, Default, PartialEq)]
     pub struct Ask {
@@ -60,6 +79,7 @@ exit: 0 answered, 1 the request is not in the session, 2 bad invocation,
         pub control: Option<SemId>,
         pub at: Option<Millis>,
         pub json: bool,
+        pub export: Option<Export>,
     }
 
     #[derive(Debug, PartialEq)]
@@ -115,6 +135,19 @@ exit: 0 answered, 1 the request is not in the session, 2 bad invocation,
                     let v = value()?;
                     ask.at = Some(v.parse().map_err(|_| format!("--at takes ms, got {v:?}"))?);
                 }
+                "--export" => {
+                    let mut ms = || -> Result<Millis, String> {
+                        let v = value()?;
+                        v.parse()
+                            .map_err(|_| format!("--export takes <t0> <t1> in ms, got {v:?}"))
+                    };
+                    let (from, to) = (ms()?, ms()?);
+                    let out = PathBuf::from(value()?);
+                    if to < from {
+                        return Err(format!("--export: {to} comes before {from}"));
+                    }
+                    ask.export = Some(Export { from, to, out });
+                }
                 flag if flag.starts_with("--") => return Err(format!("unknown option {flag}")),
                 other if path.is_none() => path = Some(PathBuf::from(other)),
                 other => return Err(format!("one session at a time, got {other:?} too")),
@@ -125,6 +158,10 @@ exit: 0 answered, 1 the request is not in the session, 2 bad invocation,
         }
         if ask.at.is_some() && ask.control.is_none() {
             return Err("--at goes with --control".to_owned());
+        }
+        let asked = ask.timeline || ask.why.is_some() || ask.control.is_some() || ask.json;
+        if ask.export.is_some() && asked {
+            return Err("--export goes alone".to_owned());
         }
         match path {
             Some(path) => Ok(Command::Inspect(Ask { path, ..ask })),
@@ -171,6 +208,9 @@ exit: 0 answered, 1 the request is not in the session, 2 bad invocation,
                 return READ_ERROR;
             }
         };
+        if let Some(stretch) = &ask.export {
+            return export(&session, &ask.path, stretch);
+        }
         let (answer, code) = match answer(&session, ask) {
             Ok(answered) => answered,
             Err(Failure::Read(e)) => {
@@ -194,6 +234,69 @@ exit: 0 answered, 1 the request is not in the session, 2 bad invocation,
             print!("{}", answer.text());
         }
         code
+    }
+
+    /// true when `out` names the file `input` does.
+    fn same_file(input: &Path, out: &Path) -> bool {
+        match (input.canonicalize(), out.canonicalize()) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
+
+    /// `+s.mmms`, the way every view prints a time from the start.
+    fn stamp(ms: Millis) -> String {
+        format!("+{}.{:03}s", ms / 1_000, ms % 1_000)
+    }
+
+    /// writes the stretch of `session` that `stretch` names to its own
+    /// file, and says what went in it.
+    fn export(session: &Session, input: &Path, stretch: &Export) -> i32 {
+        let out = &stretch.out;
+        if same_file(input, out) {
+            eprintln!(
+                "plev-inspect: --export would write over {}, the session it reads",
+                input.display()
+            );
+            return USAGE_ERROR;
+        }
+        let start = session.start();
+        let excerpt = session.excerpt(
+            start.saturating_add(stretch.from),
+            start.saturating_add(stretch.to),
+        );
+        let written = match excerpt.write(out) {
+            Ok(written) => written,
+            Err(e) => {
+                eprintln!("plev-inspect: {}: {e}", out.display());
+                return WRITE_ERROR;
+            }
+        };
+        let opens = excerpt.start().saturating_sub(start);
+        println!(
+            "exported {} to {} of {} to {}",
+            stamp(stretch.from),
+            stamp(stretch.to),
+            input.display(),
+            out.display()
+        );
+        println!(
+            "  opens at  {}, where the state and the frames that govern {} start",
+            stamp(opens),
+            stamp(stretch.from)
+        );
+        println!(
+            "  events    {} ({} left out: no json form)",
+            written.events, written.dropped
+        );
+        println!(
+            "  frames    {} in {} chunks, {} assets",
+            excerpt.frame_times().len(),
+            written.chunks,
+            written.assets
+        );
+        println!("  size      {} bytes", written.bytes);
+        DONE
     }
 
     enum Failure {
@@ -279,6 +382,18 @@ exit: 0 answered, 1 the request is not in the session, 2 bad invocation,
                 Some("commit.submit".into())
             );
             assert_eq!(all.at, Some(1_500));
+            let Ok(Command::Inspect(cut)) = parse(&args("s.monster --export 100 2500 out.monster"))
+            else {
+                panic!("an export");
+            };
+            assert_eq!(
+                cut.export,
+                Some(Export {
+                    from: 100,
+                    to: 2_500,
+                    out: PathBuf::from("out.monster")
+                })
+            );
         }
 
         #[test]
@@ -294,6 +409,11 @@ exit: 0 answered, 1 the request is not in the session, 2 bad invocation,
                 ("s.monster --fast", "unknown option"),
                 ("a.monster b.monster", "one session"),
                 ("--timeline", "missing"),
+                ("s.monster --export 1 2", "needs a value"),
+                ("s.monster --export 1 soon x.monster", "--export takes"),
+                ("s.monster --export 9 2 x.monster", "comes before"),
+                ("s.monster --export 1 2 x.monster --timeline", "goes alone"),
+                ("s.monster --json --export 1 2 x.monster", "goes alone"),
             ] {
                 match parse(&args(line)) {
                     Err(e) => assert!(e.contains(needle), "{line}: {e:?} lacks {needle:?}"),
@@ -311,7 +431,7 @@ exit: 0 answered, 1 the request is not in the session, 2 bad invocation,
                 "who moved a value is a correlation in time, not a declared write",
                 "reading a session never runs anything",
                 "exit: 0 answered, 1 the request is not in the session, 2 bad invocation, 3 \
-                 the file does not read as a session",
+                 the file does not read as a session, 4 the export could not be written",
             ] {
                 assert!(one_line.contains(words), "{words:?} in {USAGE}");
             }

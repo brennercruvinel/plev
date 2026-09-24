@@ -12,6 +12,15 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-64 fase c
+
+- **uma sessão real virou teste que pega regressão:** a sessão de um
+  agente LLM com a pessoa agindo antes do submit, reaplicada num
+  repositório novo, deu os mesmos vereditos. com a precondição do commit
+  quebrada, o teste nomeou o request que mudou de veredito. o contrato
+  torna a reexecução determinística onde importa: o request carrega o
+  que o ator viu, e o veredito depende só disso e do estado.
+
 ### 2026-09-24, task-68
 
 - **o IR é pequeno porque a projeção já declara tudo:** o registro de

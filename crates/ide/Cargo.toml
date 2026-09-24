@@ -40,9 +40,10 @@ notify.workspace = true
 wire.workspace = true
 # the flight recorder: the lib records the ide's session with it
 # (src/record.rs, PLEV_RECORD=1 in a debug build), and the laboratory
-# (src/bin/lab) around its workbench. the laboratory's report as json and
-# its real repository in a temp dir: the lib uses neither; cargo has no
-# per-binary dependencies.
+# (src/bin/lab) around its workbench. the laboratory's report as json: the
+# lib does not use it; cargo has no per-binary dependencies. its real
+# repository in a temp dir lives in the lib (src/lab_repo.rs), so the
+# tests that rerun a recorded session build the same one.
 rec.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true

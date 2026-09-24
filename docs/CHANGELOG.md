@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- a recorded session becomes a regression test (2026-09-24, task-64
+  phase c, adr sessions-become-regression-tests): a stretch of a session
+  (`plev-inspect <session> --export <t0> <t1> <out>`) and a small text
+  file of marked values become a test. a harness reruns every recorded
+  request, as recorded, against a fixture of the app in a temp dir, and
+  compares each verdict and terminal stage and the marked values. the
+  first one is the third round's a2ppa session (an LLM agent, a person
+  unstaging a file right before its submit): with the commit's
+  precondition broken on purpose it fails, naming request 7, recorded
+  as stale and now accepted. the inspector itself still runs nothing.
+
 - the plev IR and its verifier (2026-09-24, task-68, adr
   plev-ir-typed-and-verified): a new pure crate, `uir`, describes an
   interface surface by meaning, as JSON a person, an LLM or a tool can

@@ -14,13 +14,36 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: uma sessão vira teste (task-64 fase c)
+
+- **integrada:** task-64 fase c (`d611fa4`). gate verde (2349). o teste
+  gerado rodou dez vezes seguidas, e o orquestrador repetiu a prova de
+  regressão quebrando a precondição do commit.
+
+### ciclo 3: a task-69 parou na página
+
+- a sonda da fase 1 passou: os widgets, o layout e os tokens mapeiam sem
+  motor novo e sem mudar o comps. a parada foi na página. uma página nova
+  do showcase exige mexer no `dispatch.rs` congelado (775 de 776).
+- **decisão autônoma:** opção 1. o módulo `agent` sai do `dispatch.rs`
+  sem mudar código, o arquivo cai abaixo do limite e sai da lista
+  congelada, e a página ganha um `Pane::Surface`. a fixture do todo fica
+  como está (adicionar e filtrar pela superfície). o todo projetar os
+  itens como lista vira trabalho separado (P2): hoje uma superfície não
+  consegue repetir sobre os itens do todo.
+- **publicado:** PR #63 (task-68), merge `c60b9f6`.
+
 ### ciclo 3: o plev IR existe (task-68)
 
 - **integrada:** task-68 (`871f0dd`), o crate `uir`. gate verde (2338).
   a sonda do orquestrador conferiu as recusas do verifier (cor crua,
   pixel, ação não declarada, destrutiva num botão, dois erros juntos).
 - **publicado:** PR #62 (task-91), merge `ecf51ba`.
-- próximo na onda 6: task-69 (materializar um `VerifiedIr`).
+- **disparada:** task-69 fase 1 (materializar um `VerifiedIr`), no crate
+  novo `surface`. decisões no arquivo da task: a fase 0 não roda, a
+  projeção sai do IR, a demo do vídeo fica na fase 4 como o plano diz, e o
+  provedor de LLM (fase 3) é pergunta para o brenner.
+- **publicado:** PR #63 (task-68), CI rodando.
 
 ### ciclo 3: task-91 integrada
 

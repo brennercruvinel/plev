@@ -114,7 +114,7 @@ o que a tese precisa e o que existe hoje:
 | task-61 | superfície do agente (socket local, observe, act) | 4 | 57, 58, 59 |
 | task-62 | prova no ide: stale-state rejection e handoff | 4 | 57, 58, 59 (fase c: 61, 63) |
 | task-63 | flight recorder de sessão | 4 | 57, 58 |
-| task-64 | fase a integrada; fase c em andamento (P2); b depois | `e6560a2` | crate `inspect`, CLI `plev-inspect`; fase c: export de trecho como bug report e uma sessão gravada que vira teste de regressão num harness isolado (reexecução controlada, o que o inspector nunca faz); a fase b (UI) já tem as ligações por frame (63d) |
+| task-64 | fases a e c integradas; b depois (P2) | `e6560a2`, `d611fa4` | crate `inspect`, CLI `plev-inspect` (com `--export`); uma sessão gravada vira teste de regressão (`crates/ide/tests/rerun`, fixture do app, veredito e marcas), o primeiro é a sessão a2ppa da terceira rodada; adr sessions-become-regression-tests |
 | task-65 | pixel para código e inspector de desenvolvimento | 5 | 57, 59 |
 | task-66 | headless como primeira classe | 3 | nenhuma (saída semântica: 57) |
 | task-67 | regressão estrutural antes de pixel | 5 | 59, 66 |
@@ -199,7 +199,9 @@ quando as superfícies (seção 8) são disjuntas.
   (terceira rodada, 2026-09-24: sustentada; uma corrida parou para não
   passar por cima da pessoa, `task-62-ide-human-agent-proof.md`.)
   não bloqueiam a onda 6 (P2, seguem quando couber): um canal para o
-  agente perguntar à pessoa (handoff, achado da terceira rodada); task-64 fases b
+  agente perguntar à pessoa (handoff, achado da terceira rodada); o todo
+  projetar os itens como lista (a superfície gerada repete sobre eles,
+  achado da task-69); task-64 fases b
   (interface) e c (sessão para teste), task-65 fases b a d, task-91 (a
   âncora do `acted` no olhar), estado projetado fora do dispatcher no ide
   (seleção, digitação), cobertura semântica além do Todo e do ide. P3 no
@@ -385,6 +387,7 @@ atualizado em cada integração.
 | task-86 | integrada | `7f866e8` | o binário `ide` abre a porta do agente (`PLEV_AGENT=1`, debug) por `ide::agent`; prova numa janela real com cliques de uma pessoa e um agente ao mesmo tempo: recusa stale nomeando a pessoa, o mesmo texto na tela e no nó que o agente lê; `Binding::visible_rect` no engine |
 | task-90 | integrada | `d02b4d1` | o `acted` nomeia a cadeia de ações de outros atores desde a primeira que rodou na revisão que o autor viu; o toast em uma frase por ator; a cena do clique na janela continua sem âncora (a seleção muda a revisão fora do dispatcher), teste escreve o limite |
 | task-68 | integrada | `871f0dd` | crate `uir`: IR em JSON (vocabulário fechado, props por token, ligação a capacidades declaradas, repetição mínima), registro de capacidades do `Snapshot`, `verify` com oito regras e erros por JSON pointer como único caminho a `VerifiedIr`, schema gerado; adr plev-ir-typed-and-verified |
+| task-69 | fase 1 em andamento | | superfícies materializadas de `VerifiedIr`: crate `surface`, layout pelo `LayoutEngine`, tokens pelo `Theme`, widgets do comps com `SemId`, projeção vinda do IR, eventos viram `Request` pelo dispatcher do app; fases 2 a 4 e o checkpoint b depois |
 | task-91 | integrada (P2, com um P1 dentro) | `29373d4` | o `acted` ancora no olhar que o port conhece (`sem::Mark` pelo sink do port) e nomeia o que foi tomado depois, o do próprio agente incluído; sem olhar, a regra da 90; o laboratório conta a forma dos atos pelo `Traffic` |
 | task-89 | integrada | `79b8c93` | um ato com `from_revision` se apoia só no que foi mostrado ao ator (o nome do `hello`, em qualquer conexão): o valor de cada `read` vem da última observação que o mostrou; nunca mostrado dá `not_observed` (aditivo no v1, `plev` sai 3); reproduzido no laboratório: o submit depois de olhar só o formulário é recusado stale; adr an-act-rests-on-what-its-actor-was-shown |
 | task-65 | fases a e b integradas; c e d depois (P2) | `042d34e` | cmd+clique (debug desktop) no showcase: controle para o site de projeção (`Node.source`), texto para o literal (linha e coluna no baseline do hot reload); adr view-source-for-pixels |

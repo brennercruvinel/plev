@@ -35,6 +35,9 @@ serde_json.workspace = true
 # them, and a file test writes one to a temporary directory.
 indexmap.workspace = true
 tempfile.workspace = true
+# the export test records frames with their bindings from a compositor, so
+# the stretch it cuts has both tracks (rec already builds on the engine).
+engine.workspace = true
 
 [lints]
 workspace = true
