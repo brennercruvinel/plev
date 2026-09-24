@@ -570,6 +570,44 @@ diz isso. sem GPU na máquina, ele avisa e segue sem os frames.
 os números medidos aqui são de build debug. release muda o custo do
 contrato e da gravação, não os bytes.
 
+nota (2026-09-23, task-88): o protocolo de medição mudou em três pontos,
+depois das tasks 87 e 89.
+
+- a pessoa tem dois cenários. `unstage-after-observe:<path>` é o de
+  sempre, o das rodadas 1 e 2: ela age logo depois de uma observação
+  servida, quando a tarefa está pronta, o que modela a pessoa que mexe
+  logo depois de o agente olhar. `unstage-before-submit:<path>` é novo:
+  ela age logo antes de o `submit` do agente chegar ao dispatcher,
+  também quando a tarefa está pronta, o que modela a pessoa entre a
+  decisão do agente e o `submit`, como o hook do braço `git` no instante
+  do commit. esse exerce a checagem apoie-se o agente numa observação ou
+  numa revisão que um estágio terminal carregou.
+- `agent.stale_measurement_valid` é pelo valor: válida quando um
+  `submit` que chegou ao dispatcher depois da pessoa carrega em
+  `observed` o `changes:staged` de antes dela (o valor visto) e o app
+  tinha outro naquele dispatch (o valor vivo). `agent.stale_measured`
+  traz os dois, e o texto diz por que é válida ou não. a medição por
+  revisão saiu do veredito: um ato encadeado num estágio terminal se
+  apoia numa revisão que nenhuma observação serviu, e a revisão é hash
+  do que o app projeta, então o mundo que o agente repõe tem a revisão
+  que tinha quando a pessoa agiu. `form`, `revision_served_index`,
+  `observations_between` e `fresh_before` ficam como informação. um ato
+  sem `--from-revision` também é medido pelo que carregou, em vez de
+  anular a corrida.
+- `agent.protocol_refusals` conta os atos recusados antes do dispatcher
+  (`before_dispatch`, em todo braço). o tipo de cada um
+  (`not_observed` com as reads, `unknown_revision`) só o lado do agente
+  vê: o roteirizado guarda cada um; no braço `plev`, o tipo está na
+  transcrição do agente.
+
+`--arm scripted --scripted chain` é o roteirizado que encadeia o
+primeiro `submit` na revisão do estágio do `set_value`, sem observar.
+com a regra da task-89 esse `submit` é recusado stale pela própria
+escrita da mensagem, com `acted` vazio: um estágio terminal não mostra
+estado. com `unstage-after-observe` a pessoa chega tarde para ele (age
+na observação da recuperação) e a medição sai inválida, dizendo isso;
+com `unstage-before-submit` ela sai válida.
+
 ## resultado da fase c (checkpoint a, 2026-09-23)
 
 rodado pelo orquestrador com o `ide-lab` da `main` em `d26c9b1`, build de
