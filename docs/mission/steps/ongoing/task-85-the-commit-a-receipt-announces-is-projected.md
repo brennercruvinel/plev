@@ -52,48 +52,57 @@ pai), teste do ide para a invariante sem nenhum refresh aplicado entre o
 receipt e a observação, custo do log medido antes e depois, laboratório
 roteirizado confirmando o commit pelo `files` do nó, gate verde.
 
-## mecanismo (2026-09-23)
+## mecanismo (2026-09-23, revisto depois da primeira validação)
 
-### os arquivos de cada commit, lidos pelo log
+### uma definição dos arquivos de um commit
 
 contexto: `git::Commit` não tinha arquivos, e `GitRepo::log` percorria o
-histórico com gix sem abrir árvore nenhuma. o receipt já trazia os
-arquivos do commit, lidos por `git show --name-only` logo depois do `git
-commit`.
+histórico com gix sem abrir árvore nenhuma. o receipt trazia os arquivos
+do commit novo, lidos por `git show --name-only`: renomeação só no caminho
+novo, merge em diff combinado. a primeira entrega desta task leu os do log
+por diff de árvores, com renomeação nos dois caminhos, e o nó e o receipt
+discordavam depois do refresh num commit com renomeação. o orquestrador
+decidiu por uma definição só, a do diff de árvores.
 
 decisão:
 
-- `Commit.files: Vec<String>` (`crates/git/src/types.rs`): os caminhos
-  cujo entry muda entre a árvore do primeiro pai e a do commit; commit
-  raiz contra a árvore vazia; merge contra o primeiro pai. entrada de
-  árvore fica de fora; symlink e submódulo entram. a ordem é a de byte do
-  caminho inteiro, que é a ordem em que o git lista (a regra da barra
-  final das árvores dá o mesmo resultado).
-- a leitura é o diff de árvores do gix (`gix::diff::tree` com o
-  `Recorder`, `TreeDiff` em `crates/git/src/repo.rs`), sem feature nova e
-  sem processo `git`.
-- cache por sha dentro do `GitRepo` (`FilesCache`, num `RefCell`, então
-  `log` continua `&self`): commit é imutável, a entrada nunca envelhece.
-  cada consulta carimba a entrada, e no fim de cada `log` o cache fica
-  com os commits pedidos por último, quatro vezes o `limit`. um log que
-  andou um commit faz um diff de árvore.
-- renomeação conta os dois caminhos: o antigo, que sai da árvore, e o
-  novo, que entra. por quê: é o que as duas árvores dizem, sem heurística
-  de similaridade e sem depender de `diff.renames`. a detecção de
-  renomeação do gix mora atrás da feature `blob-diff` (puxa attributes,
-  filter, pathspec, worktree, imara-diff), e ligá-la muda um
-  `Cargo.toml`, fora dos arquivos desta task. parear só a renomeação
-  exata (o mesmo blob dos dois lados) não resolve: aqui a renomeação vem
-  quase sempre com edição. no maior dos dez commits com renomeação entre
-  os últimos 100, sem renomeação são 177 caminhos, com `-M100%` 122 e com
-  o `-M` padrão 116.
+- os arquivos de um commit são os caminhos cujo entry muda entre a árvore
+  do primeiro pai e a do commit. o commit raiz é comparado com a árvore
+  vazia, o merge com o primeiro pai, e a renomeação conta os dois caminhos
+  (o antigo sai, o novo entra), sem heurística de similaridade e sem
+  depender de `diff.renames`. entrada de árvore fica de fora; symlink e
+  submódulo entram. a ordem é a de byte do caminho inteiro, que é a ordem
+  em que o git lista. pela cli, é o que lista
+  `git diff-tree --no-commit-id --name-only -r --no-renames --root --diff-merges=first-parent <sha>`.
+- uma função só em `crates/git/src/repo.rs`: `GitRepo::files_of` (privada),
+  sobre o `TreeDiff` (`gix::diff::tree` com o `Recorder`, sem feature nova
+  do gix e sem processo `git`). `commit_files(sha)` (qualquer revisão que
+  nomeie um commit), `commit` e `commit_if` (o `NewCommit` do receipt) e
+  `log` passam por ela. o `git show --name-only` saiu.
+- cache por sha dentro do `GitRepo` (`CommitFiles`, cache e buffers num
+  `RefCell`, então tudo continua `&self`): commit é imutável, a entrada
+  nunca envelhece. cada consulta carimba a entrada, e no fim de cada `log`
+  o cache fica com os commits pedidos por último, quatro vezes o `limit`.
+  o commit que o ide faz entra no cache pelo receipt, e o refresh seguinte
+  não relê a árvore dele.
+- as testemunhas independentes leem pela cli, com aquele `git diff-tree`:
+  `Repo::head_files` do laboratório (o lado git da comparação sessão x
+  git, mudança autorizada pelo orquestrador; só essa função mudou nos
+  arquivos do laboratório além do `scripted.rs`) e `Rig::head_files` dos
+  testes do ide.
 
-conferido neste repositório, nos 415 commits do HEAD da branch: os
-`files` do gix são iguais a `git diff-tree -r --no-renames` contra o
-primeiro pai em todos, 44 merges incluídos. contra `git show --name-only`,
-de onde vem o receipt, 83 divergem; dos últimos 100, 12: 10 por
-renomeação e 2 merges, em que o `git show` usa o diff combinado e não
-lista nada.
+conferido neste repositório (`crates/git/tests/log_cost.rs`, ignorado): nos
+440 commits do HEAD, 47 merges, o `files` do log e o `commit_files` lido
+sozinho, como o receipt lê, são iguais ao `git diff-tree` acima.
+
+o que muda para quem lê o receipt: numa renomeação, o receipt traz os dois
+caminhos (antes, só o novo); num merge feito pelo ide, os caminhos que ele
+traz para o primeiro pai (antes, o diff combinado, em geral vazio). o
+`status`, e com ele `changes:staged` e o `expect_staged` que o `CommitIf`
+confere, continua vendo uma renomeação no index pelo caminho novo (adr
+commit-checks-the-index-it-observed). então, num commit com renomeação, o
+`files` do receipt tem um caminho a mais que o staged set que o agente
+mandou: o antigo. a dupla checagem não mudou.
 
 ### o palpite do commit
 
@@ -117,8 +126,9 @@ como o palpite decide cada arquivo do receipt:
 | linha staged e linha unstaged (mudou de novo no worktree depois do add) | a linha staged sai; a unstaged fica, com o status dela |
 | nenhuma linha staged (a pessoa tirou do index depois que o commit saiu, ou o caminho não está na lista) | fica como estava; o refresh decide |
 
-numa renomeação o `status` e o receipt usam o caminho novo, então sai a
-linha staged do caminho novo; o antigo não aparece na lista.
+numa renomeação o receipt traz os dois caminhos: sai a linha staged do
+caminho novo, e o antigo não está na lista (o `status` já o juntou na
+renomeação).
 
 o commit entra no topo do log de onde as stacks saem (`log_cache`,
 reconstruído com as branches que já estavam lá): o `sha` do receipt, a
@@ -141,136 +151,206 @@ o log palpitado pelo que o git leu. `Reads`, `Owed`, `GitEvent` e
 consequências:
 
 - a observação seguinte ao receipt concluído não contradiz o receipt:
-  nenhum arquivo commitado em `changes:staged` e `stacks.commit[<sha>]`
-  no topo, com os `files` do receipt (até o refresh; ver o item
-  seguinte).
-- depois do refresh, `files` é o que o log lê. num commit sem
-  renomeação é igual ao receipt. com renomeação, ganha o caminho antigo.
-  num commit de merge feito pelo ide (concluir um merge), o receipt é o
-  diff combinado do `git show` e o log é o diff contra o primeiro pai.
+  nenhum arquivo commitado em `changes:staged`, e `stacks.commit[<sha>]`
+  no topo, com os `files` do receipt. depois do refresh, o mesmo, agora
+  lido do git, também com renomeação e em merge (uma definição só).
 - o painel de diff não é tocado: se mostrava um arquivo que o commit
   levou, segue com as linhas de antes, como já acontecia depois do
   refresh (task-84, "o diff mostrado não é relido").
 
-## medição: `GitRepo::log(100)` neste repositório
+### o que a projeção carrega
+
+decisão: `files` vai só nos `FILES_PROJECTED` (10) commits mais recentes
+do stack ativo (`crates/ide/src/workbench/project.rs`) e no último commit
+que o workbench fez (`GitSession::made`, gravado por `show_commit`), onde
+quer que ele esteja no stack. os outros commits mantêm `summary`, `author`
+e `show_diff`, sem `files`. os stacks das outras branches não têm commits
+projetados (o log segue só o HEAD).
+
+razão: com `files` em todo commit, uma observação inteira do ide sobre
+este repositório tinha três vezes o tamanho da base (tabela abaixo). um
+agente que confere o próprio commit precisa de um; dez dão o que entrou
+logo antes por uns 1,6 KB a mais (3,8%) numa observação inteira daqui; 20
+custariam uns 3,6 KB (8%); todos os 100, uns 88 KB (203%). o peso é o
+tamanho dos commits que caem na janela, não o N: cada caminho custa uns
+40 bytes, então um commit de 259 caminhos (o maior dos últimos 100 daqui)
+pesaria sozinho uns 10 KB se estivesse entre os dez.
+
+## medições
+
+### `GitRepo::log(100)` neste repositório
 
 `crates/git/tests/log_cost.rs`, ignorado por padrão, build de debug (as
 dependências com `opt-level = 2`):
-`cargo test -p git --test log_cost -- --ignored --nocapture`. frio é um
-`GitRepo` novo a cada corrida, com o cache vazio (o cache de página do
-sistema já está quente); com cache é a segunda chamada no mesmo
+`cargo test -p git --test log_cost -- --ignored --nocapture --test-threads=1`.
+frio é um `GitRepo` novo a cada corrida, com o cache vazio (o cache de
+página do sistema já está quente); com cache é a segunda chamada no mesmo
 `GitRepo`, o que todo refresh depois do primeiro paga. mediana de 21
-corridas, três rodadas alternando antes e depois, 415 commits no HEAD.
+corridas, três rodadas alternando antes e depois.
 
-| | frio | com cache |
+| sessão | | frio | com cache |
+| --- | --- | --- | --- |
+| primeira entrega (415 commits no HEAD) | antes (`cf0abd3`, sem arquivos) | 1,25 a 1,49 ms | 1,22 a 1,37 ms |
+| | depois | 12,8 a 13,3 ms | 1,16 a 1,27 ms |
+| depois da correção (a main com a task-83, máquina mais carregada) | antes (main, sem arquivos) | 2,67 a 5,70 ms | 2,55 a 5,36 ms |
+| | depois (uma definição, `files_of`) | 22,3 a 23,7 ms | 2,89 a 3,11 ms |
+
+o frio sobe de 11 a 20 ms (o teto do briefing era 250 ms); com cache fica
+no ruído da base (teto de 5 ms a mais). na segunda sessão a própria base
+dobrou (outros agentes compilando), e `files_of` lê de novo o objeto do
+commit que o log já tinha lido, porque recebe só o id; as duas coisas
+entram no aumento, e a medição não separa quanto cada uma pesa. os 100
+commits do log carregam 1756 caminhos, uns 65 KB, que ficam no processo:
+a projeção leva só os de dez.
+
+### o que uma observação pesa
+
+a mesma forma do braço screenshot do laboratório: a linha que o servidor
+escreve para uma observação (`Reply::Snapshot` pelo codec do wire, sem
+`source`, id de um caractere, mais o fim de linha).
+
+neste repositório, `crates/ide/tests/observe_cost.rs` (ignorado; um clone
+limpo do HEAD, para o que está sem commit no worktree não pesar; 100
+commits no stack, 107 nós):
+
+| | observação inteira | `--scope stacks` |
 | --- | --- | --- |
-| antes (`cf0abd3`, sem arquivos) | 1,25 a 1,49 ms | 1,22 a 1,37 ms |
-| depois (task-85, com arquivos) | 12,8 a 13,3 ms | 1,16 a 1,27 ms |
+| base (main, sem `files`), HEAD `02f789e` | 43.388 B | 42.253 B |
+| `FILES_PROJECTED = 10`, HEAD `02f789e` | 45.020 B | 43.885 B |
 
-o frio sobe uns 11,5 ms (o teto do briefing era 250 ms); com cache fica
-igual, dentro do ruído (teto de 5 ms). os 100 commits carregam 2127
-caminhos, uns 81 KB de texto, que agora vão no snapshot de quem observa
-o workspace inteiro.
+o mesmo teste com outros N, sobre o HEAD anterior (`bf648fc`), inteira:
+N = 1, 43.507 B; 3, 43.773 B; 5, 43.935 B; 10, 44.864 B; 20, 46.944 B; 100
+(`files` em todo commit, a primeira entrega), 131.893 B.
+
+no repositório do laboratório, os passos do agente roteirizado (cada
+observação diz o que pesa; corridas abaixo):
+
+| | base (main) | depois |
+| --- | --- | --- |
+| inteira, antes do submit (1 commit) | 6.390 B sem a pessoa, 6.579 B com | 6.481 B, 6.670 B |
+| `--scope stacks`, logo depois do commit | 506 B: só o commit inicial, o novo não está lá | 998 B: os dois, com `files` |
+| inteira, logo depois do commit | 6.386 B, 6.575 B: os três arquivos ainda staged, sem o commit | 4.385 B, 4.574 B: os arquivos saíram de `changes`, o commit entrou |
+
+no laboratório o stack tem no máximo dois commits, então o N não muda
+nada ali; o que muda é que a observação logo depois do commit ficou menor
+e diz o que o receipt diz.
 
 ## laboratório
 
 `ide-lab --arm scripted`, build de debug, cinco corridas por cenário,
-sobre `f12fd30`:
+sobre a branch depois da correção (antes do commit desta seção):
 
 | cenário | corrida | exit | recusas stale | delta | verdade | mensagens | confirmação pelo nó |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `--human none` | 1 a 5 | 0, 0, 0, 0, 0 | 0 | | MATCH | 14 | 5 de 5: `stacks.commit[<sha do receipt>]` com os três arquivos do receipt, 2 commits projetados |
-| `--human unstage-after-observe:src/session.rs` | 1 a 5 | 0, 0, 0, 0, 0 | 1 | `removed: [src/session.rs]` | MATCH, recuperou | 22 | 5 de 5, idem |
+| `--human none` | 1 a 5 | 0, 0, 0, 0, 0 | 0 | | MATCH | 15 | 5 de 5: `stacks.commit[<sha do receipt>]` com os três arquivos do receipt, 2 commits projetados |
+| `--human unstage-after-observe:src/session.rs` | 1 a 5 | 0, 0, 0, 0, 0 | 1 | `removed: [src/session.rs]` | MATCH, recuperou | 23 | 5 de 5, idem |
 
-o mesmo agente com o palpite desligado (a chamada de `show_commit`
-trocada só para o build, depois restaurada), dez corridas: todas com exit
-0 e MATCH, porque o exit olha só sessão x git, e nenhuma confirma. o
-relatório diz "observed stacks: 2 nodes" (só o commit inicial) e a nota
-"stacks.commit[...] does not hold the receipt's files [...]: None".
+`truth.head_files` agora vem do `git diff-tree` da definição; nas dez
+corridas é `[src/login.rs, src/session.rs, tests/login_test.rs]`, igual aos
+`files` do receipt. uma mensagem a mais que na primeira entrega: a
+observação inteira depois da confirmação.
 
-## handoff (2026-09-23)
+com a biblioteca da main (sem arquivos no log e sem palpite) e este
+laboratório, uma corrida por cenário: exit 0 e MATCH, porque o exit olha
+só sessão x git, e nenhuma confirma ("stacks.commit[...] does not hold
+the receipt's files [...]: None"). na primeira entrega, as mesmas dez
+corridas com o palpite desligado deram 0 de 10.
+
+## handoff (2026-09-23, depois da correção)
 
 goal: task-85, o commit que o receipt anuncia já está na projeção, com os
 arquivos.
 
 status: pronto para a validação do orquestrador, na branch
-`task/85-commit-projected`, base `cf0abd3`.
+`task/85-commit-projected`, rebaseada sobre a main `558b061`.
 
 implementado:
 
-- `git::Commit.files`, lido por gix no `log`, com cache por sha no
-  `GitRepo` (seção mecanismo).
-- o estado `files` em todo `stacks.commit[<sha>]`, via
-  `CommitEntry.files`; a tabela da projeção da task-62 ganhou a linha.
+- uma definição dos arquivos de um commit (diff de árvores contra o
+  primeiro pai, renomeação nos dois caminhos, raiz contra a árvore vazia),
+  numa função só do `crates/git`, para o receipt (`commit`, `commit_if`,
+  `commit_files`) e para o log, com cache por sha; as testemunhas do
+  laboratório e dos testes leem a mesma definição pelo `git diff-tree`.
+- o estado `files` nos `FILES_PROJECTED` (10) commits mais recentes do
+  stack ativo e no último commit que o ide fez; a tabela da projeção da
+  task-62 diz isso.
 - o palpite do commit no mesmo passo em que o receipt conclui, antes
   dele (`GitSession::show_commit`, chamado de `truth.rs`).
 - o agente roteirizado confirma o próprio commit pelo `files` do nó
   `stacks.commit[<sha do receipt>]`, na observação logo depois do
-  receipt, sem esperar; os dois testes do laboratório exigem essa
-  confirmação.
+  receipt, sem esperar, e diz quanto pesa cada observação; os dois testes
+  do laboratório exigem a confirmação.
 
 arquivos principais: `crates/git/src/{repo.rs,types.rs}`,
 `crates/git/tests/{real_repo.rs,log_cost.rs}`,
 `crates/ide/src/{session.rs,adapters.rs}`,
 `crates/ide/src/workbench/{truth.rs,project.rs,mod.rs,tests.rs}`,
-`crates/ide/src/views/multi_stack_view.rs` (o modelo:
-`CommitEntry.files`), `crates/ide/src/views/workspace/tests.rs` (o
-construtor), `crates/ide/src/bin/lab/scripted.rs`,
-`crates/ide/tests/{human_agent.rs,lab.rs}`.
+`crates/ide/src/views/multi_stack_view.rs` (`CommitEntry.files`),
+`crates/ide/src/views/workspace/tests.rs` (o construtor),
+`crates/ide/src/bin/lab/{scripted.rs,repo.rs}` (`repo.rs`: só
+`head_files`),
+`crates/ide/tests/{human_agent.rs,lab.rs,observe_cost.rs,support/mod.rs}`.
 
-interfaces: `git::Commit` ganhou `files: Vec<String>` (campo público;
-quem constrói `Commit` passa `files`); `CommitEntry` ganhou `files`;
-`GitSession::show_commit` (`pub(crate)`) é nova; `adapters::unix_now`
-passou a `pub(crate)`. `GitEvent`, `GitCommand`, `CommitIf`, `NewCommit`,
-a regra de leituras velhas e os ids, roles, ações e reads da projeção não
-mudaram; só entrou o estado `files`.
+interfaces:
+
+- `git::Commit` ganhou `files: Vec<String>` (quem constrói `Commit` passa
+  `files`).
+- `GitRepo::commit_files(sha)`: mesma assinatura, outra definição (a de
+  `Commit::files`), lida por gix, aceita qualquer revisão que nomeie um
+  commit. o `NewCommit.files` do receipt segue a mesma definição.
+- `CommitEntry` ganhou `files`; `ide::workbench::FILES_PROJECTED` é
+  pública; `GitSession::show_commit` e `GitSession::made` são
+  `pub(crate)`; `adapters::unix_now` passou a `pub(crate)`.
+- não mudaram: `GitEvent`, `GitCommand`, `CommitIf` e a dupla checagem,
+  a regra de leituras velhas, e os ids, roles, ações e reads da projeção.
 
 testes:
 
 - git: `log_lists_the_files_each_commit_changes_in_gits_order` (normal e
-  raiz, iguais a `git diff-tree`),
+  raiz, iguais ao `git diff-tree` e ao `commit_files`),
   `the_files_of_a_merge_are_what_it_brings_to_its_first_parent`,
-  `a_moved_file_counts_at_both_paths` (e o receipt com só o caminho
-  novo), `a_second_log_reads_no_tree` (as árvores somem do banco de
-  objetos depois do primeiro log: um `GitRepo` novo falha, o mesmo
-  devolve o log igual), e o limite do cache (teste de unidade em
-  `repo.rs`).
-- ide: `every_commit_in_the_stacks_exposes_the_files_it_changes`,
-  `the_commit_a_receipt_announces_is_projected_before_any_refresh` (aplica
-  só o `Committed` e olha: o nó existe no topo com os `files` do receipt,
-  nada dele em `changes:staged`, o caminho com mudança no worktree fica
-  unstaged; depois do refresh, o mesmo vindo do git),
-  `no_answer_after_the_commit_takes_it_back` (um refresh do watcher
-  pedido antes do submit e outro depois; a invariante vale depois de cada
-  resposta), `a_path_unstaged_after_the_commit_left_is_left_for_the_refresh`.
-- sem o palpite, os três últimos falham em `Rig::value` ("projected"): o
-  nó `stacks.commit[<sha>]` não existe depois do `Committed`. os cinco
-  testes de repositório e os três de unidade da task-84 seguem verdes sem
-  mudança.
+  `a_moved_file_counts_at_both_paths_in_the_commit_and_in_the_log` (um
+  `git mv`, que o index vê como uma renomeação no caminho novo, commitado
+  pelo `commit_if`: os dois caminhos no `NewCommit` e no log),
+  `a_second_log_reads_no_tree` (as árvores somem do banco de objetos
+  depois do primeiro log: um `GitRepo` novo falha, o mesmo devolve o log
+  igual), o limite do cache (unidade, em `repo.rs`). ignorados: o custo
+  do log e a checagem dos commits deste repositório.
+- ide: `only_the_newest_commits_of_the_checked_out_stack_carry_their_files`
+  (unidade), `every_commit_in_the_stacks_exposes_the_files_it_changes`,
+  `the_commit_a_receipt_announces_is_projected_before_any_refresh`,
+  `no_answer_after_the_commit_takes_it_back`,
+  `a_path_unstaged_after_the_commit_left_is_left_for_the_refresh`,
+  `a_commit_with_a_rename_holds_both_paths_in_the_receipt_and_the_node`
+  (o agente põe no index um README apagado e o mesmo arquivo em docs/,
+  que o index junta numa renomeação; receipt, nó antes do refresh, nó
+  depois e `git diff-tree` têm os dois caminhos),
+  `the_last_commit_the_ide_made_keeps_its_files_past_the_newest` (falha
+  sem o `made`). ignorado: o peso de uma observação deste repositório.
+- sem o palpite, os quatro testes do palpite falham em `Rig::value`
+  ("projected"). os testes da task-84 seguem verdes sem mudança.
 
 validação executada (target `target/agents/task-85`, o ambiente do
-briefing):
+briefing), sobre a main `558b061`:
 
-- `cargo test -p git`: 33 passed, 1 ignored (antes 28).
-- `cargo test -p ide`: 76 passed (antes 72: 48 lib, 5 bin, 3 lab bin, 18
-  human_agent, 2 lab).
-- `cargo test -p showcase`: 135 passed, 2 ignored (igual).
-- `./script/gate`: verde. `cargo test --workspace` 2002 passed, 0 failed,
-  7 ignored (a base tinha 1993, 0, 6; mais nove testes e a medição
-  ignorada). a perna urnaui rodou (o symlink `../urna` do worktree): 80
-  passed, 1 ignored, clippy, fmt e wasm verdes; o urnaui não depende de
-  `git` nem de `ide`, então a contagem dele não muda com esta task.
+- `cargo test -p git`: 33 passed, 2 ignored (a main: 28, 0).
+- `cargo test -p ide`: 80 passed, 1 ignored (a main: 73, 0; 50 lib, 5
+  bin, 3 lab bin, 20 human_agent, 2 lab).
+- `cargo test -p showcase`: 135 passed, 3 ignored (igual à main).
+- `./script/gate`: verde. `cargo test --workspace` 2016 passed, 0
+  failed, 11 ignored (a main `558b061`: 2004, 0, 8; mais doze testes e as
+  três medições ignoradas). a perna urnaui rodou, no subdiretório próprio
+  do target (a correção `1bf6606`): 80 passed, 1 ignored, clippy, fmt e
+  wasm verdes.
 
 limitações:
 
-- renomeação e merge: depois do refresh, `files` de um commit com
-  renomeação traz o caminho antigo, que o receipt não traz; num merge
-  feito pelo ide o receipt é o diff combinado. a invariante vale na
-  observação seguinte ao receipt quando o refresh ainda não chegou, e
-  depois dele só em commit sem renomeação e sem merge.
-- `files` não tem limite na projeção: neste repositório são uns 81 KB a
-  mais no snapshot inteiro do ide. `diff:lines` tem limite e `count`;
-  `files` não, como o briefing pediu.
+- numa renomeação o receipt traz um caminho a mais que o staged set que o
+  agente mandou (o antigo); um agente que compare os dois precisa saber a
+  definição. o adr commit-checks-the-index-it-observed ainda diz que o
+  receipt lista os arquivos como o `git show --name-only`.
+- a janela de dez não tem teto em bytes: um commit enorme entre os dez
+  pesa em toda observação inteira enquanto estiver lá.
 - o limite do cache é por chamada (quatro vezes o `limit` do `log` em
   curso): um `GitCommand::Log` com `limit` pequeno encolhe o cache. o ide
   só pede `LOG_LIMIT`.
@@ -279,33 +359,55 @@ limitações:
 
 o que ficou de fora:
 
-- detectar renomeação no log como o `git show`: ligar a feature
-  `blob-diff` do gix em `crates/git/Cargo.toml` (ou no `Cargo.toml` da
-  raiz) e usar `Tree::changes` com o rastreio de renomeação da
-  configuração. o custo não foi medido. a outra saída, o receipt ler os
-  arquivos pelo mesmo diff de árvores, muda o receipt e o laboratório,
-  que compara com `git show --name-only`.
-- o adr commit-checks-the-index-it-observed lista `stacks.commit[<sha>]`
-  com `summary`, `author`, `show_diff`: falta `files`, e uma linha sobre
-  o palpite do commit (`docs/ADR/**` é proibido nesta task).
 - o diff mostrado depois de um commit (achado da task-84).
+- os textos da task-62 que ainda citam o `git show --name-only` como a
+  verdade do laboratório (a tabela de exit code, a descrição da verdade na
+  fase c): este arquivo só podia mexer na tabela da projeção de lá.
+
+linha proposta para o adr commit-checks-the-index-it-observed (seção "the
+second check, at the index", no lugar de "the files as `git show
+--name-only` lists them"; e no modelo, `stacks.commit[<sha>]`):
+
+```text
+`GitEvent::Committed` carries `NewCommit { sha, files }`: the paths the
+commit changes against its first parent (a root commit against the empty
+tree), a rename at both paths, read in process by the same function the
+log uses (`git diff-tree -r --no-renames --root
+--diff-merges=first-parent` by the CLI). The workbench shows the commit
+(its files out of the staged rows, the commit on top of the stack) in
+the step that completes the receipt, before it; `stacks.commit[<sha>]`
+carries `files` on the ten newest commits and on the last one the
+workbench made.
+```
 
 dependências pendentes: nenhuma.
 
 riscos de integração: quem constrói `git::Commit` ou `CommitEntry` numa
-branch paralela precisa passar `files`. no laboratório só o
-`scripted.rs` mudou: a contagem de commits do `stacks` virou a função
-`confirm`; nenhum match tocado. os testes novos do ide estão no fim de
-`human_agent.rs`.
+branch paralela precisa passar `files`. quem compara o `files` de um
+receipt com `git show --name-only` vê diferença em renomeação e merge.
+no laboratório mudaram só o `scripted.rs` (confirmação, peso de cada
+observação, uma observação inteira depois do commit) e o `head_files` do
+`repo.rs`.
 
 commits:
 
-- `834738a` task-85: the log carries the files of each commit, read once
+- `90f7a12` task-85: the log carries the files of each commit, read once
   per commit
-- `c948482` task-85: every commit in the stacks projects its files
-- `563db5e` task-85: the commit a receipt announces is shown before the
+- `f5486a1` task-85: every commit in the stacks projects its files
+- `cc9a4fa` task-85: the commit a receipt announces is shown before the
   receipt ends
-- `f12fd30` task-85: the scripted agent confirms its commit by the node's
+- `3aafd4a` task-85: the scripted agent confirms its commit by the node's
   files
-- `421583d` task-85: the log measurement also weighs the files it carries
-- o commit desta seção: mecanismo, medição, laboratório e handoff
+- `e811f39` task-85: the log measurement also weighs the files it carries
+- `40ec683` task-85: the task file gets the mechanism, the measurement and
+  the handoff
+- `9faeae0` task-85: one definition of a commit's files, for the receipt
+  and the log
+- `b809f96` task-85: the witnesses read a commit's files as git diff-tree
+  lists them
+- `da6b251` task-85: only the newest commits carry their files in the
+  projection
+- `05a67cd` task-85: what an observation weighs, in the lab and on this
+  repository
+- o commit desta seção: mecanismo, medições, laboratório e handoff
+  revistos
