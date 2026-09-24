@@ -21,6 +21,11 @@ task; aqui fica o que aconteceu e onde ler.
   #60 afrouxou voltou ao exato (dez corridas seguidas no agente).
 - **publicado:** PR #61 (task-65, a terceira rodada, a onda 6), merge
   `804e57d`.
+- **disparada:** task-64 fase c (P2, sessão vira teste; "verificável" da
+  tese), em paralelo com a 68: superfícies disjuntas (`inspect`, testes do
+  ide; a 68 é o crate `uir`). a fase b (UI) e o canal para o agente
+  perguntar à pessoa ficam na fila, P2.
+- **disco:** o diretório ocioso da 91 foi limpo (19,7 GiB); 31 GiB livres.
 
 ### ciclo 3: a onda 5 fecha, a onda 6 abre
 
