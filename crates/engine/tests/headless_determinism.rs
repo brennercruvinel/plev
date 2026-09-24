@@ -9,6 +9,11 @@
 //! fractional scale their edges fall inside pixels, where the SDF
 //! feather, the MSAA resolve and the blend decide the bytes.
 //!
+//! One test is ignored: it pins the divergence the probe found across
+//! scales (a blur's sigma in physical texels) and turns green with the
+//! engine's fix (`cargo test -p engine --test headless_determinism --
+//! --ignored`).
+//!
 //! Needs a GPU adapter; without one every test skips.
 
 use engine::compositor::{
@@ -229,6 +234,65 @@ fn a_renderer_resized_across_scales_draws_what_a_fresh_one_draws() {
         assert!(
             n == 0,
             "{scale}x: {n} pixels differ after resizes, delta max {max}"
+        );
+    }
+}
+
+/// How far a backdrop blur of sigma 4 spreads a white-to-black edge, in
+/// logical px: the columns of the middle row between 10% and 90% of the
+/// ramp, divided by the scale.
+fn blur_reach(scale: f32) -> Option<f32> {
+    let mut r = match Renderer::new(Viewport::new(100.0, 40.0, scale), RenderConfig::default()) {
+        Ok(r) => r,
+        Err(HeadlessError::NoAdapter) => return None,
+        Err(e) => panic!("headless renderer: {e}"),
+    };
+    let mut c = Compositor::new();
+    let glass = c.create_layer(10);
+    c.begin_frame();
+    c.draw_rect(0.0, 0.0, 50.0, 40.0, [1.0, 1.0, 1.0, 1.0]);
+    c.push_to_layer(
+        glass,
+        SceneNode::BackdropBlur {
+            x: 0.0,
+            y: 0.0,
+            w: 100.0,
+            h: 40.0,
+            corner_radius: 0.0,
+            sigma: 4.0,
+        },
+    );
+    let f = match r.render(&mut c, [0.0, 0.0, 0.0, 1.0]) {
+        Ok(f) => f,
+        Err(e) => panic!("render: {e}"),
+    };
+    let y = f.height / 2;
+    let ramp = (0..f.width)
+        .filter_map(|x| f.pixel(x, y))
+        .filter(|p| (26..=229).contains(&p[0]))
+        .count();
+    Some(ramp as f32 / scale)
+}
+
+/// The divergence the probe found (task-77): the backdrop blur, and the
+/// layer blur and shadow effects, take their sigma in physical texels
+/// (`effects/apply.rs`, `apply_blur`), so the same glass spreads 9
+/// logical px at 1x, 6 at 1.5x and 4.5 at 2x. The fix is the engine's
+/// and waits for approval; this is the test it has to turn green.
+#[test]
+#[ignore = "task-77: blur sigma in physical texels; the engine fix awaits approval"]
+fn a_backdrop_blur_reaches_as_far_in_logical_px_at_every_scale() {
+    let Some(one) = blur_reach(1.0) else {
+        eprintln!("no GPU adapter; skipping");
+        return;
+    };
+    for scale in [1.5, 2.0] {
+        let Some(reach) = blur_reach(scale) else {
+            return;
+        };
+        assert!(
+            (reach - one).abs() <= 1.0,
+            "{scale}x: the blur spreads {reach} logical px, {one} at 1x"
         );
     }
 }

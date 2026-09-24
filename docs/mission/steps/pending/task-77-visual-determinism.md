@@ -286,3 +286,51 @@ medido neste M4 (build de debug do exemplo, dependências em opt-level 2):
 
 zero pedidas, zero caladas, zero de tamanho diferente. os 1312 pngs
 ocupam 183 MB.
+
+## fase 1: as divergências que esta máquina reproduz
+
+o desktop contra ele mesmo não diverge (1312 de 1312 iguais em bit, dois
+contextos e dois processos). o que a sonda achou, com causa ou aberto:
+
+1. o blur não segue a escala (causa achada; correção proibida nesta fase).
+   `SceneNode::BackdropBlur.sigma` e os efeitos de layer `Blur` e `Shadow`
+   chegam a `EffectProcessor::apply_blur` sem a escala
+   (`compositor/layer/geometry.rs`, `DrawCommand::BackdropBlur`;
+   `window/render_passes.rs:228-238` e `482-504`), e `apply_blur` aplica o
+   kernel em texels físicos (`effects/apply.rs:71-73`: `texel_size = 1 /
+   largura física`, `gaussian_weights(sigma)`). medido: a rampa de 10% a
+   90% de uma borda branca e preta sob um backdrop blur de sigma 4 tem 9 px
+   físicos em toda escala, 9 px lógicos a 1x, 6 a 1.5x, 4,5 a 2x. o mesmo
+   vidro fica duas vezes mais nítido a 2x do que a 1x, três vezes no
+   iPhone. a sombra analítica e o feather do SDF seguem a escala (estão em
+   px lógicos no shader). reproduz com
+   `cargo test -p engine --test headless_determinism -- --ignored`: o teste
+   `a_backdrop_blur_reaches_as_far_in_logical_px_at_every_scale` falha hoje
+   ("1.5x: the blur spreads 6 logical px, 9 at 1x") e é o que a correção
+   tem que deixar verde. a correção é multiplicar o sigma pela escala do
+   contexto (`clip_scale`) antes de `gaussian_weights`, e o kernel de 13
+   taps corta em 6 texels, então a 2x um sigma acima de uns 3 lógicos
+   pede mais taps ou um downsample: mexe no engine e no `blur.wgsl`, fora
+   desta fase. vai no relatório de parada.
+2. o espaço de cor da layer metal (aberto). o wgpu 28 e o winit 0.30.13
+   nunca definem `colorspace` na `CAMetalLayer` (nil, medido), e a web
+   deixa o canvas no default. os bytes não mudam com isso; o que muda é o
+   que o window server mostra num display P3. falta para achar: uma
+   captura de janela (`screencapture -l<id>`) das primárias sRGB puras no
+   built-in e no DELL, convertida pelo perfil embutido, ou o `colorspace`
+   lido da layer viva. pede janela, fase 2. se a resposta for "nil é
+   tratado como o espaço do display", a correção é definir sRGB na layer:
+   engine e contrato de cor, com aprovação.
+3. a janela contra o headless nas páginas da galeria (aberto, esperado
+   igual). a evidência é do monster player (sha256 igual) e da mesma
+   função `draw_frame`; as páginas não foram capturadas por janela nesta
+   fase (nenhuma janela real). falta: `monster_player --capture` tem o
+   caminho (ler a textura da surface antes do present); o showcase não
+   tem. fase 2.
+4. entre GPUs e drivers (aberto, não reproduzível aqui: uma GPU só).
+   candidatos pela leitura dos shaders, sem derivada em nenhum: precisão
+   de `pow`, `exp`, `sqrt` e da `erf` polinomial; encode sRGB e blend em
+   alvo de 8 bits; resolve do MSAA em formato sRGB; pesos do bilinear. a
+   web no Dawn sobre o mesmo M4 (flag `--use-angle=metal`) e o simulador
+   de iOS (metal do host) são as primeiras comparações; o SwiftShader do
+   chromium sem a flag é o primeiro adapter de software.
