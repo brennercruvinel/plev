@@ -4,11 +4,14 @@
 //! (asked again, did it without asking, committed, acted otherwise, or
 //! stopped). and the acts of an agent that went over a person without
 //! asking her: after a stale refusal that named her act, an act on the
-//! control she acted on, with no question, that ran.
+//! control she acted on, deciding on what her act read, with no question,
+//! that ran.
+
+use std::collections::BTreeSet;
 
 use serde_json::{Value as Json, json};
 
-use sem::{Actor, Millis, Receipt, Rejection, RequestId, Stage};
+use sem::{Actor, Millis, Receipt, Rejection, RequestId, Stage, StateRef};
 
 use crate::answer::Waited;
 use crate::report::row;
@@ -176,7 +179,10 @@ fn ended(stage: Option<&Stage>) -> String {
 }
 
 /// an act of an agent that ran, with no question, on a control a person
-/// had acted on, after a stale refusal of that agent named her act.
+/// had acted on, reading a state her act read (the action's `reads`, as
+/// each request carries them in `observed`), after a stale refusal of
+/// that agent named her act. a look at the control that decides on
+/// something else (a `show_diff`) does not go over her.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Over {
     pub request: RequestId,
@@ -202,11 +208,18 @@ pub fn over_the_person(receipts: &[Receipt]) -> Vec<Over> {
             .iter()
             .filter(|a| matches!(a.actor, Actor::Human | Actor::Assistive));
         for person in by_a_person {
+            // what her act read; when her receipt is gone, the control is
+            // all there is to go by.
+            let hers = receipts.iter().find(|r| r.id == person.id).map(reads);
             for r in receipts {
                 let ran = r.stages.iter().any(|(s, _)| matches!(s, Stage::Executing));
+                let on_what_she_moved = hers
+                    .as_ref()
+                    .is_none_or(|hers| !hers.is_disjoint(&reads(r)));
                 if r.id > refused.id
                     && r.request.actor == *agent
                     && r.request.target == person.target
+                    && on_what_she_moved
                     && r.request.ask.is_none()
                     && ran
                     && !out.iter().any(|o| o.request == r.id)
@@ -224,6 +237,11 @@ pub fn over_the_person(receipts: &[Receipt]) -> Vec<Over> {
     }
     out.sort_by_key(|o| o.request);
     out
+}
+
+/// the states a request's action reads, as it carries them.
+fn reads(r: &Receipt) -> BTreeSet<&StateRef> {
+    r.request.observed.values.iter().map(|(at, _)| at).collect()
 }
 
 /// why no commit exists, from the questions: the person declined and the
@@ -369,7 +387,14 @@ mod tests {
         serde_json::from_str("\"00000000000000aa\"").expect("a revision")
     }
 
+    /// a request that reads `<target>:staged`, as the file's `stage` and
+    /// `unstage` do (and `diff:target` for a `show_diff`).
     fn request(actor: Actor, target: &str, action: &str, ask: Option<&str>) -> Request {
+        let read = if action == "show_diff" {
+            "diff:target".to_owned()
+        } else {
+            format!("{target}:staged")
+        };
         let mut req = Request {
             actor,
             target: SemId::parse(target).expect("an id"),
@@ -377,7 +402,7 @@ mod tests {
             param: None,
             observed: Observation {
                 revision: revision(),
-                values: Vec::new(),
+                values: vec![(StateRef::parse(&read).expect("a state ref"), None)],
             },
             ask: None,
         };
@@ -527,16 +552,17 @@ mod tests {
     #[test]
     fn after_a_decline_the_same_act_with_no_question_goes_over_her() {
         let declined = Stage::Rejected(Rejection::Declined { by: Actor::Human });
-        let again = receipt(
-            9,
-            request(agent(), FILE, "stage", None),
+        let ran = || {
             vec![
                 (Stage::Requested, 400),
                 (Stage::Executing, 400),
                 (completed(), 410),
-            ],
-        );
-        let all = story(declined, vec![again]);
+            ]
+        };
+        let again = receipt(9, request(agent(), FILE, "stage", None), ran());
+        // a look at the file's diff decides on nothing she moved.
+        let look = receipt(10, request(agent(), FILE, "show_diff", None), ran());
+        let all = story(declined, vec![again, look]);
         let q = told(&all, Some(false));
         assert_eq!(q.then, then::WITHOUT_ASKING);
         let over = over_the_person(&all);

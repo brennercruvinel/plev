@@ -163,8 +163,8 @@ impl Lab {
             "questions: every request of an agent that waited for a person, question null when \
              the action's policy asked her; answer_ms from awaiting_confirmation to the stage \
              that followed; then: the agent's next act after the answer. over_the_person: the \
-             acts of an agent, with no question, that ran on a control a person acted on, after \
-             a stale refusal of that agent named her act"
+             acts of an agent, with no question, that ran on a control a person acted on, \
+             reading a state her act read, after a stale refusal of that agent named her act"
                 .to_owned(),
         );
         let contract = json!({
