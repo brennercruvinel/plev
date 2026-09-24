@@ -8,9 +8,14 @@
 //!   resolve bytes to handles anywhere (results are memoized by content
 //!   hash, so per-frame calls are cheap).
 //! - [`ImageAtlasGpu`] (GPU, owned by `GpuContext`): atlas texture + bind
-//!   group; `prepare` drains staged uploads each frame and grows the
-//!   texture when the layout outgrew it. Grow-only: no eviction, and
-//!   allocations never move, so handles stay valid for the app lifetime.
+//!   group; `prepare` writes, each frame, the uploads of the store's log
+//!   it has not written yet, and grows the texture when the layout
+//!   outgrew it. Grow-only: no eviction, and allocations never move, so
+//!   handles stay valid for the app lifetime.
+//!
+//! The store keeps the pixels of every upload (the same budget the
+//! grow-only atlas holds), so an atlas that starts from nothing, a second
+//! context's or a lost device's replacement, fills itself from the log.
 
 use std::sync::{LazyLock, Mutex};
 
@@ -72,7 +77,9 @@ pub struct ImageStore {
     by_hash: FxHashMap<u64, ImageHandle>,
     failed: FxHashSet<u64>,
     next_id: u32,
-    pending: Vec<PendingUpload>,
+    /// Every upload, in order, pixels included; append-only. An atlas
+    /// texture remembers how far into it it has written.
+    uploads: Vec<PendingUpload>,
 }
 
 impl Default for ImageStore {
@@ -92,7 +99,7 @@ impl ImageStore {
             by_hash: FxHashMap::default(),
             failed: FxHashSet::default(),
             next_id: 0,
-            pending: Vec::new(),
+            uploads: Vec::new(),
         }
     }
 
@@ -189,7 +196,7 @@ impl ImageStore {
         };
         self.next_id += 1;
         self.by_hash.insert(hash, handle);
-        self.pending.push(PendingUpload {
+        self.uploads.push(PendingUpload {
             atlas_x,
             atlas_y,
             width,
@@ -204,8 +211,9 @@ impl ImageStore {
         self.atlas_size
     }
 
-    pub fn has_pending(&self) -> bool {
-        !self.pending.is_empty()
+    /// Uploads in the log, every image ever packed (one per handle).
+    pub fn upload_count(&self) -> usize {
+        self.uploads.len()
     }
 
     pub fn image_count(&self) -> usize {
@@ -248,6 +256,11 @@ pub struct ImageAtlasGpu {
     bind_group: Option<wgpu::BindGroup>,
     sampler: Option<wgpu::Sampler>,
     size: u32,
+    /// How far into the store's upload log this texture has written. A
+    /// new atlas (a new context, a recovered device) starts at zero and
+    /// writes the whole log; it never drains the store, so two atlases
+    /// over one store each get every image.
+    uploaded: usize,
 }
 
 impl Default for ImageAtlasGpu {
@@ -263,6 +276,7 @@ impl ImageAtlasGpu {
             bind_group: None,
             sampler: None,
             size: 0,
+            uploaded: 0,
         }
     }
 
@@ -274,14 +288,15 @@ impl ImageAtlasGpu {
 
     /// Sync the GPU texture with the global store: grow the texture if the
     /// layout outgrew it (copying existing contents -- allocations never
-    /// move) and write staged pixels. Cheap no-op when nothing changed.
+    /// move) and write the uploads not written yet. Cheap no-op when
+    /// nothing changed.
     pub fn prepare(
         &mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         layout: &wgpu::BindGroupLayout,
     ) {
-        let mut store = IMAGE_STORE.lock().unwrap();
+        let store = IMAGE_STORE.lock().unwrap();
         if store.by_hash.is_empty() {
             return;
         }
@@ -346,7 +361,7 @@ impl ImageAtlasGpu {
         }
 
         let texture = self.texture.as_ref().unwrap();
-        for upload in store.pending.drain(..) {
+        for upload in &store.uploads[self.uploaded.min(store.uploads.len())..] {
             queue.write_texture(
                 wgpu::TexelCopyTextureInfo {
                     texture,
@@ -371,6 +386,7 @@ impl ImageAtlasGpu {
                 },
             );
         }
+        self.uploaded = store.uploads.len();
     }
 }
 
@@ -411,7 +427,7 @@ mod tests {
         assert_eq!(handle.height, 2);
         // 1px padding keeps content off the atlas border
         assert!(handle.atlas_x >= 1 && handle.atlas_y >= 1);
-        assert!(store.has_pending());
+        assert_eq!(store.upload_count(), 1);
         assert_eq!(store.image_count(), 1);
     }
 
@@ -487,6 +503,33 @@ mod tests {
         let b = store.load_bytes(&bytes).unwrap();
         assert_eq!(a, b);
         assert_eq!(store.image_count(), 1);
+    }
+
+    /// The upload log is append-only and keeps the pixels: an atlas that
+    /// starts from nothing (a second context, a lost device's replacement)
+    /// finds every image in it, at the place its handle names, and a
+    /// repeated load adds nothing.
+    #[test]
+    fn the_upload_log_keeps_every_image_for_a_new_atlas() {
+        let mut store = ImageStore::new();
+        let pixels = solid_rgba(2, 2, [1, 2, 3, 255]);
+        let a = store.load_rgba(2, 2, pixels.clone()).unwrap();
+        let b = store
+            .load_rgba(3, 1, solid_rgba(3, 1, [9, 8, 7, 255]))
+            .unwrap();
+        assert_eq!(store.load_rgba(2, 2, pixels.clone()).unwrap(), a);
+        assert_eq!(store.upload_count(), 2);
+
+        // what a first atlas writes, and what a second one writes: all of it
+        for (up, handle) in store.uploads.iter().zip([a, b]) {
+            assert_eq!(
+                (up.atlas_x, up.atlas_y, up.width, up.height),
+                (handle.atlas_x, handle.atlas_y, handle.width, handle.height)
+            );
+        }
+        assert_eq!(store.uploads[0].pixels, pixels);
+        // a cursor past the end (a store reset under an old atlas) is empty
+        assert!(store.uploads[store.upload_count().min(5)..].is_empty());
     }
 
     #[test]

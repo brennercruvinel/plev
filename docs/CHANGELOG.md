@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- a lost GPU device recovers in place (2026-09-24, task-76 phase 1): every
+  device, windowed or headless, installs wgpu's device-lost callback;
+  before a frame the engine polls it and, when the device is gone,
+  recreates the adapter, device, queue, surface configuration, pipelines,
+  projection, the glyph atlas, the effect processor, the texture pool and
+  the compositor's GPU resources, then draws the same frame. images live
+  in an append-only log with a cursor per atlas, so nothing is re-sent.
+  without an adapter the frame is skipped with one error in the log and
+  the app stays alive. proven headless by forcing the loss: the frame
+  after it is byte for byte the frame before.
+
 - the text coverage audit (2026-09-24, task-74 phase 1): a corpus with one
   phrase per script (latin with diacritics, ligatures and kerning,
   combining marks, arabic, hebrew, devanagari, chinese, japanese, korean,

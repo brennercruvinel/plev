@@ -14,6 +14,18 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #77 (task-74 fase 1); disparada a task-76 fase 1
+
+- **publicado:** PR #77, merge commit, gate local verde na `main` (2536,
+  +3). a task-74 para na fase 2, a decisão de fontes, que é do brenner:
+  o relatório com a estimativa de tamanho está no arquivo da task.
+- **disparada:** task-76 (integração de plataforma), fase 1, a perda de
+  device de GPU: o callback do wgpu 28, a recriação do que mora no
+  device (pipelines, atlases, pool) e um teste headless que força a
+  perda e compara os pixels. escolhida pela ordem do arquivo da task
+  ("robustez primeiro"), sem dependência nova nem decisão pendente. um
+  agente só.
+
 ### ciclo 3: publicado #76; a task-69 espera só o brenner; disparada a task-74 fase 1
 
 - **publicado:** PR #76 (fase 4c e o flake do laboratório), merge

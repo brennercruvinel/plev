@@ -33,7 +33,14 @@ use super::render_passes::{
 ///
 /// Returns the number of draw calls issued, or `None` when the frame was
 /// skipped because no surface was available (not yet created, lost, or the
-/// swapchain needed a reconfigure -- all recoverable on the next redraw).
+/// swapchain needed a reconfigure -- all recoverable on the next redraw),
+/// or because the GPU device was lost and no adapter answers yet (logged
+/// once; the next requested frame tries again).
+///
+/// A lost device (a driver reset, a GPU gone, a sleep the driver did not
+/// survive) is recovered here, in place, before the surface is acquired:
+/// everything on the old device is rebuilt on a new one and this frame is
+/// drawn on it (`gpu::recover`).
 pub fn present_frame(
     compositor: &mut Compositor,
     gpu: &mut GpuContext,
@@ -50,11 +57,27 @@ pub fn present_frame(
         compositor.mark_all_dirty();
     }
 
+    // The device may be gone since the last frame; the poll also delivers
+    // a loss wgpu only reports on a poll. Recover and draw on the new
+    // device, or skip the frame.
+    if gpu.poll_device_loss()
+        && !crate::gpu::recover_or_skip(compositor, gpu, text_system, effects, texture_pool, label)
+    {
+        return None;
+    }
+
     let surface = gpu.surface.as_ref()?;
     let output = match surface.get_current_texture() {
         Ok(t) => t,
         Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
-            gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
+            // A lost device loses its surface too: ask for another frame,
+            // which recovers before acquiring. A lost swapchain alone is
+            // reconfigured.
+            if gpu.poll_device_loss() {
+                compositor.invalidate();
+            } else {
+                gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
+            }
             return None;
         }
         Err(wgpu::SurfaceError::Timeout) => {
