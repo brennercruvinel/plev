@@ -148,12 +148,25 @@ impl Rig {
             .expect("a count")
     }
 
-    /// The paths the last commit recorded, as `git show --name-only`
-    /// lists them.
+    /// The paths the last commit changes, as git lists them against its
+    /// first parent (a root commit against the empty tree), a renamed
+    /// file at both paths: the definition of a commit's files, by the
+    /// CLI, apart from the workbench.
     pub fn head_files(&self) -> Vec<String> {
-        self.git(&["show", "--name-only", "--format=", "HEAD"])
-            .lines()
-            .filter(|l| !l.is_empty())
+        let args = [
+            "diff-tree",
+            "--no-commit-id",
+            "--name-only",
+            "-r",
+            "-z",
+            "--no-renames",
+            "--root",
+            "--diff-merges=first-parent",
+            "HEAD",
+        ];
+        self.git(&args)
+            .split('\0')
+            .filter(|p| !p.is_empty())
             .map(str::to_owned)
             .collect()
     }

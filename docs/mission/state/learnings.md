@@ -12,6 +12,25 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, task-85
+
+- **o receipt e a projeção podem se contradizer sem ninguém mentir:** o
+  receipt dizia "commitado" e a projeção dizia "ainda staged, sem commit"
+  até o refresh. cada um estava certo no seu tempo; o agente que
+  confere logo depois via um mundo que contradizia o receipt que acabou
+  de receber. regra que ficou: o app mostra o efeito no passo em que o
+  receipt conclui.
+- **duas fontes para o mesmo fato divergem:** os arquivos do commit
+  vinham de `git show --name-only` no receipt e do diff de árvores no
+  log; concordavam até o refresh e discordavam depois, numa renomeação.
+  uma definição só, lida por uma função só.
+- **o custo de uma observação inteira do ide é o log:** neste repositório
+  a observação inteira tem uns 43 KB, 97% dela o `stacks` com 100 commits.
+  pôr `files` em todos triplicaria. um agente que observa por escopo não
+  paga isso; o limite (`files` nos 10 mais recentes) mantém o aumento em
+  3,8%. quantos commits a projeção carrega é uma pergunta que ainda não
+  foi feita.
+
 ### 2026-09-23, task-83
 
 - **confirmado no laboratório:** a regra exata do `acted` (ações de

@@ -86,13 +86,16 @@ impl Repo {
             .map(|s| s.trim().to_owned())
     }
 
-    /// the paths the last commit recorded, as `git show --name-only`
-    /// lists them.
+    /// the paths the last commit changes, as git lists them against its
+    /// first parent (a root commit against the empty tree), a renamed
+    /// file at both paths: the definition of a commit's files in the
+    /// receipt and in the stacks (`git::Commit::files`), read here by the
+    /// cli, apart from the workbench.
     pub fn head_files(&self) -> Result<Vec<String>, String> {
         Ok(self
-            .git(&["show", "--name-only", "--format=", "HEAD"])?
-            .lines()
-            .filter(|l| !l.is_empty())
+            .git(&HEAD_FILES)?
+            .split('\0')
+            .filter(|p| !p.is_empty())
             .map(str::to_owned)
             .collect())
     }
@@ -164,6 +167,21 @@ fn write(dir: &Path, rel: &str, content: &str) -> Result<(), String> {
     }
     std::fs::write(&path, content).map_err(|e| format!("{}: {e}", path.display()))
 }
+
+/// `git diff-tree` for HEAD's files: `--root` lists a root commit against
+/// the empty tree, `--diff-merges=first-parent` a merge against its first
+/// parent, `--no-renames` a rename at both paths.
+const HEAD_FILES: [&str; 9] = [
+    "diff-tree",
+    "--no-commit-id",
+    "--name-only",
+    "-r",
+    "-z",
+    "--no-renames",
+    "--root",
+    "--diff-merges=first-parent",
+    "HEAD",
+];
 
 /// the tree at the initial commit.
 const BEFORE: [(&str, &str); 4] = [

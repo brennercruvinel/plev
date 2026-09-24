@@ -18,7 +18,10 @@
 //!   `changes:staged` and `commit.message:text`, and nothing else, so a
 //!   moved cursor or a new diff never makes a commit stale.
 //! - `stacks` (list): `branch`; `stacks.commit[<sha>]` (list item):
-//!   `summary`, `author`; `show_diff` reads `diff:target`.
+//!   `summary`, `author`; `show_diff` reads `diff:target`. The
+//!   [`FILES_PROJECTED`] newest commits of the checked-out stack, and the
+//!   last commit this workbench made wherever it is, also carry `files`
+//!   (the paths the commit changes, in git's order); older ones do not.
 //! - `notices` (region): one `notices[<id>]` per toast on screen (status,
 //!   or alert for a refusal that names a change), named by its message,
 //!   with `dismiss` (the comps toast helper).
@@ -36,6 +39,12 @@ use crate::views::workspace::WorkspaceView;
 /// diff, `count` says how many there are.
 pub const DIFF_LINES: usize = 200;
 
+/// How many of the newest commits of the checked-out stack carry their
+/// `files`: enough for an agent to confirm what it just committed and
+/// see what landed right before, without every observation paying for
+/// the whole log's paths.
+pub const FILES_PROJECTED: usize = 10;
+
 impl Semantics for Workbench {
     fn project(&self, b: &mut SnapshotBuilder) {
         let ws = &self.workspace;
@@ -45,7 +54,8 @@ impl Semantics for Workbench {
         changes(ws, ids, b);
         diff(ws, ids, b);
         commit(ws, ids, b);
-        stacks(ws, ids, b);
+        let made = self.git.as_ref().and_then(|git| git.made());
+        stacks(ws, ids, made, b);
         ws.toasts.project(b, &ids.notices, "notices", None);
         if ws.commit_form.visible && ws.commit_form.field().is_focused() {
             b.focus(&ids.message);
@@ -151,12 +161,21 @@ fn commit(ws: &WorkspaceView, ids: &Ids, b: &mut SnapshotBuilder) {
         .reads(text.as_str());
 }
 
-fn stacks(ws: &WorkspaceView, ids: &Ids, b: &mut SnapshotBuilder) {
+/// `made` is the last commit this workbench made, which keeps its
+/// `files` however many commits landed after it.
+fn stacks(ws: &WorkspaceView, ids: &Ids, made: Option<&str>, b: &mut SnapshotBuilder) {
     b.node(&ids.stacks, Role::List, "stacks")
         .state("branch", ws.branch_label.as_str());
     let target = format!("{}:target", ids.diff);
     let mut seen = HashSet::new();
-    for commit in ws.stacks.stacks.iter().flat_map(|s| &s.commits) {
+    let commits = ws.stacks.stacks.iter().flat_map(|stack| {
+        stack
+            .commits
+            .iter()
+            .enumerate()
+            .map(move |(at, commit)| (stack.is_active && at < FILES_PROJECTED, commit))
+    });
+    for (recent, commit) in commits {
         if !seen.insert(commit.sha.as_str()) {
             continue;
         }
@@ -171,6 +190,9 @@ fn stacks(ws: &WorkspaceView, ids: &Ids, b: &mut SnapshotBuilder) {
         node.parent(&ids.stacks)
             .state("summary", commit.message.as_str())
             .state("author", commit.author.as_str());
+        if recent || made == Some(commit.sha.as_str()) {
+            node.state("files", commit.files.clone());
+        }
         node.action("show_diff").reads(target.as_str());
     }
 }

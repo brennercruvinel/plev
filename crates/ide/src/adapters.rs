@@ -70,6 +70,7 @@ fn commit_entry(commit: &git::Commit, now: i64) -> CommitEntry {
         message: commit.message.clone(),
         author: commit.author.clone(),
         time_ago: time_ago(now, commit.time),
+        files: commit.files.clone(),
     }
 }
 
@@ -100,7 +101,7 @@ pub fn diff_lines(hunks: &[git::Hunk]) -> Vec<DiffLine> {
     lines
 }
 
-fn unix_now() -> i64 {
+pub(crate) fn unix_now() -> i64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs() as i64)
@@ -157,6 +158,7 @@ mod tests {
             message: "subject".into(),
             author: "Author".into(),
             time: 0,
+            files: vec!["src/lib.rs".into()],
         }];
         let stacks = stacks(&branches, &log);
         assert_eq!(stacks.len(), 2);
@@ -164,6 +166,7 @@ mod tests {
         assert!(stacks[0].is_active);
         assert_eq!(stacks[0].commits.len(), 1);
         assert_eq!(stacks[0].commits[0].message, "subject");
+        assert_eq!(stacks[0].commits[0].files, ["src/lib.rs"]);
         assert!(stacks[1].commits.is_empty());
     }
 

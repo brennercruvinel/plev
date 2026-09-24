@@ -145,6 +145,149 @@ fn log_respects_limit_and_handles_empty_repo() {
     );
 }
 
+// -- the files of each commit in the log --------------------------------------------
+
+/// Runs `git <args>` in `dir`; its stdout.
+fn stdout(dir: &Path, args: &[&str]) -> String {
+    let out = Command::new("git")
+        .arg("-C")
+        .arg(dir)
+        .args(args)
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "git {args:?} failed");
+    String::from_utf8(out.stdout).unwrap()
+}
+
+/// The paths git itself says commit `sha` changes: against its first
+/// parent (a root commit against the empty tree), renames not detected.
+/// The definition of `Commit::files`, by the CLI.
+fn changed(dir: &Path, sha: &str) -> Vec<String> {
+    let args = [
+        "diff-tree",
+        "--no-commit-id",
+        "--name-only",
+        "-r",
+        "-z",
+        "--no-renames",
+        "--root",
+        "--diff-merges=first-parent",
+        sha,
+    ];
+    stdout(dir, &args)
+        .split('\0')
+        .filter(|p| !p.is_empty())
+        .map(str::to_string)
+        .collect()
+}
+
+#[test]
+fn log_lists_the_files_each_commit_changes_in_gits_order() {
+    let (dir, repo) = repo_with_commit();
+    // A modification, a file in a new directory whose name sorts after a
+    // file of the same stem, a path with a space, a deletion.
+    write(dir.path(), "a.txt", "changed\n");
+    write(dir.path(), "a/inner.txt", "inner\n");
+    write(dir.path(), "b c.txt", "spaced\n");
+    git(dir.path(), &["rm", "--quiet", "src/lib.rs"]);
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-m", "second"]);
+
+    let log = repo.log(10).unwrap();
+    assert_eq!(log.len(), 2);
+    assert_eq!(
+        log[0].files,
+        ["a.txt", "a/inner.txt", "b c.txt", "src/lib.rs"]
+    );
+    assert_eq!(log[0].files, changed(dir.path(), &log[0].sha));
+    // The root commit, against the empty tree.
+    assert_eq!(log[1].files, ["a.txt", "src/lib.rs"]);
+    assert_eq!(log[1].files, changed(dir.path(), &log[1].sha));
+    for commit in &log {
+        assert_eq!(repo.commit_files(&commit.sha).unwrap(), commit.files);
+    }
+}
+
+#[test]
+fn the_files_of_a_merge_are_what_it_brings_to_its_first_parent() {
+    let (dir, repo) = repo_with_commit();
+    git(dir.path(), &["checkout", "--quiet", "-b", "feature"]);
+    write(dir.path(), "f.txt", "feature\n");
+    git(dir.path(), &["add", "f.txt"]);
+    git(dir.path(), &["commit", "-m", "on feature"]);
+    git(dir.path(), &["checkout", "--quiet", "main"]);
+    write(dir.path(), "a.txt", "on main\n");
+    git(dir.path(), &["commit", "--quiet", "-am", "on main"]);
+    git(
+        dir.path(),
+        &["merge", "--quiet", "--no-ff", "--no-edit", "feature"],
+    );
+
+    let log = repo.log(10).unwrap();
+    let merge = &log[0];
+    assert_eq!(merge.sha, head(dir.path()));
+    assert_eq!(merge.files, ["f.txt"], "what the branch brought to main");
+    assert_eq!(merge.files, changed(dir.path(), &merge.sha));
+    assert_eq!(repo.commit_files("HEAD").unwrap(), merge.files);
+}
+
+#[test]
+fn a_moved_file_counts_at_both_paths_in_the_commit_and_in_the_log() {
+    let (dir, repo) = repo_with_commit();
+    git(dir.path(), &["config", "diff.renames", "true"]);
+    git(dir.path(), &["mv", "a.txt", "moved.txt"]);
+    // The index shows the move as one rename, at its new path.
+    assert_eq!(repo.staged_paths().unwrap(), set(&["moved.txt"]));
+
+    let check = repo.commit_if("move", &set(&["moved.txt"])).unwrap();
+    let CommitCheck::Committed(commit) = check else {
+        panic!("expected a commit, got {check:?}");
+    };
+    assert_eq!(commit.files, ["a.txt", "moved.txt"]);
+    assert_eq!(commit.files, changed(dir.path(), &commit.sha));
+    assert_eq!(repo.log(1).unwrap()[0].files, commit.files);
+}
+
+#[test]
+fn a_second_log_reads_no_tree() {
+    let (dir, repo) = repo_with_commit();
+    write(dir.path(), "b.txt", "b\n");
+    git(dir.path(), &["add", "b.txt"]);
+    git(dir.path(), &["commit", "-m", "second"]);
+    let first = repo.log(10).unwrap();
+    assert_eq!(first[0].files, ["b.txt"]);
+
+    // Every tree leaves the object database: a log that reads one fails.
+    let objects = stdout(
+        dir.path(),
+        &["cat-file", "--batch-check", "--batch-all-objects"],
+    );
+    let trees: Vec<&str> = objects
+        .lines()
+        .filter_map(|line| {
+            let mut fields = line.split(' ');
+            let id = fields.next()?;
+            (fields.next() == Some("tree")).then_some(id)
+        })
+        .collect();
+    assert!(trees.len() >= 2, "the two commits' trees: {objects}");
+    for tree in trees {
+        let (fan, rest) = tree.split_at(2);
+        std::fs::remove_file(dir.path().join(".git/objects").join(fan).join(rest)).unwrap();
+    }
+    let fresh = GitRepo::open(dir.path()).unwrap();
+    assert!(
+        fresh.log(10).is_err(),
+        "without the trees a first log fails"
+    );
+
+    assert_eq!(
+        repo.log(10).unwrap(),
+        first,
+        "the files came from the cache"
+    );
+}
+
 // -- conditional commit -----------------------------------------------------------
 
 fn set(paths: &[&str]) -> BTreeSet<String> {

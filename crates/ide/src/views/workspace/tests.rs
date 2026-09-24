@@ -74,6 +74,7 @@ fn sample_stacks(commits: usize) -> Vec<crate::views::multi_stack_view::Stack> {
                 message: format!("commit {i}"),
                 author: "Hoff".into(),
                 time_ago: "now".into(),
+                files: Vec::new(),
             })
             .collect(),
     }]

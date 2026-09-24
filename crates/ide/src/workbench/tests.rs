@@ -79,6 +79,7 @@ fn bench() -> Workbench {
             message: "initial".into(),
             author: "Test".into(),
             time_ago: "now".into(),
+            files: vec!["README".into(), "src/main.rs".into()],
         }],
     }]);
     ws.branch_label = "main".into();
@@ -184,7 +185,64 @@ fn the_workbench_projects_the_workspace_model() {
     let commit = node(&format!("stacks.commit[{sha}]"));
     assert_eq!(commit.parent, Some(sid("stacks")));
     assert_eq!(commit.state.get("summary"), Some(&Value::from("initial")));
+    assert_eq!(
+        commit.state.get("files"),
+        Some(&Value::List(vec!["README".into(), "src/main.rs".into()])),
+        "the paths the commit changes, as a list in git's order"
+    );
+    assert_eq!(
+        reads(&snap, &format!("stacks.commit[{sha}]"), "show_diff"),
+        ["diff:target"]
+    );
     assert_eq!(value(&snap, "stacks:branch"), Value::from("main"));
+}
+
+#[test]
+fn only_the_newest_commits_of_the_checked_out_stack_carry_their_files() {
+    let mut bench = bench();
+    let commit = |n: usize| CommitEntry {
+        sha: format!("{n:040x}"),
+        message: format!("commit {n}"),
+        author: "Test".into(),
+        time_ago: "now".into(),
+        files: vec![format!("f{n}")],
+    };
+    let total = FILES_PROJECTED + 2;
+    bench.workspace_mut().stacks.set_stacks(vec![
+        Stack {
+            branch_name: "main".into(),
+            is_active: true,
+            commits: (0..total).map(commit).collect(),
+        },
+        Stack {
+            branch_name: "feature/x".into(),
+            is_active: false,
+            commits: vec![commit(total)],
+        },
+    ]);
+    let snap = bench.snapshot().expect("the projection validates");
+    for n in 0..=total {
+        let node = snap
+            .get(&sid(&format!("stacks.commit[{n:040x}]")))
+            .expect("every commit is projected");
+        let files = node.state.get("files");
+        if n < FILES_PROJECTED {
+            assert_eq!(
+                files,
+                Some(&Value::List(vec![format!("f{n}")])),
+                "commit {n}"
+            );
+        } else {
+            assert_eq!(
+                files, None,
+                "commit {n} is past the newest {FILES_PROJECTED}"
+            );
+        }
+        assert!(
+            node.state.get("summary").is_some(),
+            "commit {n} keeps its summary"
+        );
+    }
 }
 
 #[test]

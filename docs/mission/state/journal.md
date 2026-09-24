@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 1: task-85 integrada; as correções do checkpoint a completas
+
+- **integrada:** task-85 (`476bbb4`): o commit aparece na projeção no
+  passo em que o receipt conclui, com `files` numa definição só; `files`
+  nos 10 commits mais recentes. gate verde (2096), laboratório
+  reproduzido (MATCH nos dois cenários).
+- as três correções que o brenner pediu no checkpoint a (83, 84, 85)
+  estão integradas. próximo: o experimento do checkpoint a de novo, com o
+  mesmo briefing e o mesmo modelo (`claude-fable-5-1`) das corridas
+  anteriores, hipóteses escritas antes.
+
 ### ciclo 1: task-83 integrada
 
 - **integrada:** task-83 (`78f463c`): delta com o nó, `acted` na recusa,

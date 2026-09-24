@@ -401,6 +401,18 @@ fn a_person_who_closes_the_modal_declines_and_the_next_request_is_asked() {
     );
 }
 
+#[test]
+fn every_commit_in_the_stacks_exposes_the_files_it_changes() {
+    let rig = Rig::new(&["A"], &[]);
+    let head = rig.head();
+    assert_eq!(
+        rig.value(&format!("stacks.commit[{head}]:files")),
+        Value::List(rig.head_files()),
+        "the log's files, as git lists them"
+    );
+    assert_eq!(rig.head_files(), ["README"]);
+}
+
 /// The frame a person would see: the workbench drawn and bound.
 fn frame(rig: &mut Rig) -> Compositor {
     let mut c = Compositor::new();
@@ -609,4 +621,233 @@ fn a_stage_git_refuses_is_rolled_back_by_its_refresh() {
     );
     assert_eq!(rig.value("changes:staged"), set(&[]));
     assert_eq!(rig.value("changes:files"), Value::List(vec!["B".into()]));
+}
+
+// -- the commit a receipt announces is in the next observation (task-85) --
+//
+// The worker's `Committed` ends the submit's receipt; the refresh it sends
+// comes after. Each test applies the answer to the commit alone, looks at
+// the projection an agent would observe next, then applies what follows.
+
+/// The list value `[a, b]`.
+fn list(paths: &[&str]) -> Value {
+    Value::List(paths.iter().map(|p| p.to_string()).collect())
+}
+
+/// The sha and the files a completed commit receipt holds.
+fn committed(receipt: &Receipt) -> (String, Vec<String>) {
+    let outcome = completed(receipt).unwrap_or_else(|| panic!("completed: {receipt:?}"));
+    match (outcome.result.get("commit"), outcome.result.get("files")) {
+        (Some(Value::Text(sha)), Some(Value::List(files))) => (sha.clone(), files.clone()),
+        other => panic!("a commit and its files: {other:?}"),
+    }
+}
+
+/// The projection does not contradict the receipt: the commit tops the
+/// stack with the receipt's files, and none of them is staged.
+fn shows_commit(rig: &Rig, sha: &str, files: &[String]) {
+    let node = format!("stacks.commit[{sha}]");
+    assert_eq!(
+        rig.value(&format!("{node}:files")),
+        Value::List(files.to_vec())
+    );
+    let seen = rig.look();
+    let stacks = SemId::parse("stacks").expect("id");
+    let top = seen
+        .children(&stacks)
+        .next()
+        .expect("a commit in the stacks");
+    assert_eq!(top.id.as_str(), node, "the commit tops the stack");
+    let Value::Set(staged) = rig.value("changes:staged") else {
+        panic!("changes:staged is a set");
+    };
+    for file in files {
+        assert!(!staged.contains(file), "{file} is committed, not staged");
+    }
+}
+
+#[test]
+fn the_commit_a_receipt_announces_is_projected_before_any_refresh() {
+    let mut rig = Rig::new(&["A", "B", "C"], &["A", "B"]);
+    // B changes again in the worktree: a staged row and an unstaged one.
+    std::fs::write(rig.dir.path().join("B"), "B again\n").expect("write B");
+    rig.bench.refresh();
+    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    assert_eq!(rig.value("changes:staged"), set(&["A", "B"]));
+    assert_eq!(rig.value("changes.file[B]:unstaged"), Value::Bool(true));
+    rig.agent_writes("fix login");
+
+    let id = rig.ask(agent(), "commit.submit", "submit", None);
+    // The answer to the commit, and not one event more.
+    rig.until(|e| matches!(e, git::GitEvent::Committed(_)));
+    let (sha, files) = committed(&rig.receipt(id));
+    assert_eq!(files, ["A", "B"]);
+
+    shows_commit(&rig, &sha, &files);
+    let node = format!("stacks.commit[{sha}]");
+    assert_eq!(
+        rig.value(&format!("{node}:summary")),
+        Value::from("fix login")
+    );
+    assert_eq!(
+        rig.value(&format!("{node}:author")),
+        Value::from("Test Author")
+    );
+    // A had only its staged row and leaves; B keeps its worktree change.
+    assert_eq!(rig.value("changes:files"), list(&["B", "C"]));
+    assert_eq!(rig.value("changes:staged"), set(&[]));
+    assert_eq!(rig.value("changes.file[B]:unstaged"), Value::Bool(true));
+
+    // The refresh the answer sent: the same, now read from git.
+    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    shows_commit(&rig, &sha, &files);
+    assert_eq!(rig.head(), sha);
+    assert_eq!(rig.head_files(), files);
+    assert_eq!(
+        rig.value(&format!("{node}:summary")),
+        Value::from("fix login")
+    );
+    assert_eq!(
+        rig.value(&format!("{node}:author")),
+        Value::from("Test Author")
+    );
+    assert_eq!(rig.value("changes:files"), list(&["B", "C"]));
+    assert_eq!(rig.value("changes.file[B]:status"), Value::from("modified"));
+}
+
+#[test]
+fn no_answer_after_the_commit_takes_it_back() {
+    let mut rig = Rig::new(&["A", "B"], &["A"]);
+    rig.agent_writes("add A");
+    // The watcher asks for a refresh before the commit leaves (read before
+    // it) and another after (read after it).
+    rig.bench.refresh();
+    let id = rig.ask(agent(), "commit.submit", "submit", None);
+    rig.bench.refresh();
+    rig.until(|e| matches!(e, git::GitEvent::Committed(_)));
+    let (sha, files) = committed(&rig.receipt(id));
+    shows_commit(&rig, &sha, &files);
+
+    // The watcher's second refresh, then the one the commit's answer sent:
+    // after every answer, the commit is still there.
+    for _ in 0..6 {
+        rig.until(|_| true);
+        shows_commit(&rig, &sha, &files);
+    }
+    assert_eq!(rig.value("changes:files"), list(&["B"]));
+    assert_eq!(rig.head_files(), files);
+}
+
+#[test]
+fn a_path_unstaged_after_the_commit_left_is_left_for_the_refresh() {
+    let mut rig = Rig::new(&["A", "B"], &["A", "B"]);
+    rig.agent_writes("both");
+    let id = rig.ask(agent(), "commit.submit", "submit", None);
+    // The person takes B out once the commit left: the view shows B
+    // unstaged, and the worker commits B before it unstages it.
+    let unstage = rig.ask(Actor::Human, "changes.file[B]", "unstage", None);
+    assert_eq!(rig.value("changes:staged"), set(&["A"]));
+
+    rig.until(|e| matches!(e, git::GitEvent::Committed(_)));
+    let (sha, files) = committed(&rig.receipt(id));
+    assert_eq!(files, ["A", "B"]);
+    shows_commit(&rig, &sha, &files);
+    // The view does not show B staged, so the guess cannot tell what the
+    // commit left of it: B stays as it was.
+    assert_eq!(rig.value("changes:files"), list(&["B"]));
+
+    // Git: B is in the commit, and unstaging it from there changes nothing.
+    rig.settle(unstage);
+    assert!(completed(&rig.receipt(unstage)).is_some());
+    shows_commit(&rig, &sha, &files);
+    assert_eq!(rig.value("changes:files"), list(&[]));
+}
+
+#[test]
+fn a_commit_with_a_rename_holds_both_paths_in_the_receipt_and_the_node() {
+    let mut rig = Rig::new(&[], &[]);
+    // README moves to docs/README, unchanged: the index will pair the two
+    // into one rename, at the new path.
+    std::fs::create_dir_all(rig.dir.path().join("docs")).expect("docs");
+    std::fs::rename(
+        rig.dir.path().join("README"),
+        rig.dir.path().join("docs/README"),
+    )
+    .expect("move README");
+    rig.bench.refresh();
+    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    for path in ["README", "docs/README"] {
+        let id = rig.ask(agent(), &format!("changes.file[{path}]"), "stage", None);
+        rig.settle(id);
+        assert!(
+            completed(&rig.receipt(id)).is_some(),
+            "{:?}",
+            rig.receipt(id)
+        );
+    }
+    assert_eq!(rig.value("changes:staged"), set(&["docs/README"]));
+    assert_eq!(
+        rig.value("changes.file[docs/README]:status"),
+        Value::from("renamed")
+    );
+    rig.agent_writes("move the readme");
+
+    let id = rig.ask(agent(), "commit.submit", "submit", None);
+    rig.until(|e| matches!(e, git::GitEvent::Committed(_)));
+    let (sha, files) = committed(&rig.receipt(id));
+    assert_eq!(
+        files,
+        ["README", "docs/README"],
+        "both paths the commit changes"
+    );
+    shows_commit(&rig, &sha, &files);
+    assert_eq!(rig.value("changes:files"), list(&[]));
+
+    // After the refresh the node comes from the log: the same paths.
+    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    shows_commit(&rig, &sha, &files);
+    assert_eq!(rig.head(), sha);
+    assert_eq!(
+        rig.head_files(),
+        files,
+        "what git diff-tree --no-renames lists"
+    );
+}
+
+#[test]
+fn the_last_commit_the_ide_made_keeps_its_files_past_the_newest() {
+    let mut rig = Rig::new(&["A"], &["A"]);
+    rig.agent_writes("add A");
+    let id = rig.ask(agent(), "commit.submit", "submit", None);
+    rig.settle(id);
+    let (sha, files) = committed(&rig.receipt(id));
+
+    // Enough commits land from a terminal to push it past the newest.
+    let newest = ide::workbench::FILES_PROJECTED;
+    for n in 0..newest {
+        rig.git(&[
+            "commit",
+            "--quiet",
+            "--allow-empty",
+            "-m",
+            &format!("outside {n}"),
+        ]);
+    }
+    rig.bench.refresh();
+    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+
+    let seen = rig.look();
+    let stacks = SemId::parse("stacks").expect("id");
+    let order: Vec<String> = seen.children(&stacks).map(|n| n.id.to_string()).collect();
+    let node = format!("stacks.commit[{sha}]");
+    assert_eq!(
+        order.get(newest),
+        Some(&node),
+        "the ide's commit is past the newest"
+    );
+    assert_eq!(rig.value(&format!("{node}:files")), Value::List(files));
+    // The initial commit, older still, carries none.
+    let initial = order.last().expect("the initial commit");
+    let key = format!("{initial}:files").parse().expect("a state ref");
+    assert_eq!(seen.value(&key), None, "{initial} carries no files");
 }

@@ -43,6 +43,16 @@ o da base até ser reescrito.
   `$CARGO_TARGET_DIR/urnaui` quando o diretório é compartilhado
   (`1bf6606`).
 
+- `476bbb4` (task-85): `git::Commit.files` e `NewCommit.files` com uma
+  definição (caminhos contra o primeiro pai, raiz contra a árvore vazia,
+  renomeação nos dois caminhos), por `GitRepo::files_of` (gix, cache por
+  sha); `git show --name-only` saiu (seção 2.7 e 4c). o workbench mostra
+  o commit no passo que conclui o receipt (`GitSession::show_commit`,
+  chamado de `truth.rs` antes do `complete`). `stacks.commit[<sha>]` tem
+  `files` nos `FILES_PROJECTED` (10) mais recentes e no último commit que
+  o ide fez. testemunha do laboratório e dos testes: `git diff-tree
+  --no-renames`.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

@@ -9,6 +9,15 @@ status: living
 
 ## unreleased
 
+- the commit a receipt announces is already on screen (2026-09-23,
+  task-85): when the ide's commit receipt completes, the next observation
+  shows the commit on top of `stacks` and its files out of the staged
+  list, before the refresh reads git; `stacks.commit[<sha>]` carries
+  `files` on the ten newest commits and on the last one the ide made. a
+  commit's files have one definition everywhere (paths changed against
+  the first parent, a rename at both paths), read in process with gix
+  and cached by sha: `log(100)` went from about 3 to 23 ms cold and stays
+  about 3 ms warm; a whole ide observation of this repository grew 3.8%.
 - a delta says what was born, and a refusal says who acted (2026-09-23,
   task-83, adr a-delta-carries-the-node-a-refusal-names-who-acted): a
   `node_added` carries the whole node, served by the agent port as a

@@ -14,8 +14,17 @@
 //! mutation leaves, marks every read still owed as read before it
 //! ([`Reads`]). Those answers are dropped; the refresh the mutation's own
 //! answer sends is read after it, and after any change made outside.
+//!
+//! A commit is shown when the worker says it exists, in the same step
+//! that ends its receipt ([`GitSession::show_commit`]): its files leave
+//! the staged rows and it tops the log the stacks are built from. Every
+//! read owed when the commit left was marked old by it and is dropped,
+//! and every read asked after it is read after it, so no answer takes the
+//! commit back; the refresh its answer sends replaces the guess with git.
 
-use git::{Branch, Commit, GitClient, GitCommand, GitEvent};
+use std::collections::HashSet;
+
+use git::{Branch, Commit, GitClient, GitCommand, GitEvent, NewCommit};
 
 use crate::adapters;
 use crate::views::workspace::WorkspaceView;
@@ -127,6 +136,8 @@ pub struct GitSession {
     branch_cache: Vec<Branch>,
     /// The reads still owed, and which of them are older than the view.
     reads: Reads,
+    /// The last commit this session made (`show_commit`).
+    made: Option<String>,
 }
 
 impl GitSession {
@@ -137,6 +148,7 @@ impl GitSession {
             log_cache: Vec::new(),
             branch_cache: Vec::new(),
             reads: Reads::default(),
+            made: None,
         }
     }
 
@@ -190,6 +202,61 @@ impl GitSession {
     /// dropped when it arrives.
     pub fn forget_diff(&mut self) {
         self.diff_target = None;
+    }
+
+    /// Shows `commit`, which the worker just made with `message`, before
+    /// the refresh its answer sends reads it back.
+    ///
+    /// Each committed path loses its staged row: a path with only that row
+    /// leaves the list, a path also changed outside the index keeps its
+    /// unstaged row. A path the view does not show as staged (moved since
+    /// the commit left) is left as it is, for the refresh to settle. The
+    /// commit tops the log: the message's first line as its summary, the
+    /// author of the commit HEAD was until now (none on a first commit),
+    /// `files` as the worker listed them.
+    pub(crate) fn show_commit(
+        &mut self,
+        workspace: &mut WorkspaceView,
+        commit: &NewCommit,
+        message: &str,
+    ) {
+        self.made = Some(commit.sha.clone());
+        let committed: HashSet<&str> = commit.files.iter().map(String::as_str).collect();
+        let rows = workspace
+            .unassigned
+            .files
+            .iter()
+            .filter(|row| !(row.staged && committed.contains(row.path.as_str())))
+            .cloned()
+            .collect();
+        workspace.unassigned.set_files(rows);
+
+        if !self.log_cache.iter().any(|c| c.sha == commit.sha) {
+            let author = self
+                .log_cache
+                .first()
+                .map(|head| head.author.clone())
+                .unwrap_or_default();
+            let summary = message.trim().lines().next().unwrap_or_default().trim();
+            self.log_cache.insert(
+                0,
+                Commit {
+                    sha: commit.sha.clone(),
+                    short_sha: commit.sha.chars().take(7).collect(),
+                    message: summary.to_owned(),
+                    author,
+                    time: adapters::unix_now(),
+                    files: commit.files.clone(),
+                },
+            );
+            self.log_cache.truncate(LOG_LIMIT);
+        }
+        self.rebuild_stacks(workspace);
+    }
+
+    /// The sha of the last commit this session made, if any.
+    pub(crate) fn made(&self) -> Option<&str> {
+        self.made.as_deref()
     }
 
     /// Applies a result from the git worker to the views. A status, log
@@ -248,6 +315,8 @@ impl GitSession {
                 }
                 self.refresh();
             }
+            // The commit is already shown (`show_commit`, when the receipt
+            // ended); the refresh reads it back from git.
             GitEvent::Committed(result) => {
                 match result {
                     Ok(commit) => log::info!("committed {} {:?}", commit.sha, commit.files),
