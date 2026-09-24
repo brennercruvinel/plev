@@ -73,6 +73,10 @@ pub struct ImageStore {
     failed: FxHashSet<u64>,
     next_id: u32,
     pending: Vec<PendingUpload>,
+    /// The pixels of every upload already on the GPU. The atlas never
+    /// evicts, so this is the budget the texture holds anyway, and it is
+    /// what a new device gets again ([`Self::restage_uploaded`]).
+    resident: Vec<PendingUpload>,
 }
 
 impl Default for ImageStore {
@@ -93,6 +97,7 @@ impl ImageStore {
             failed: FxHashSet::default(),
             next_id: 0,
             pending: Vec::new(),
+            resident: Vec::new(),
         }
     }
 
@@ -211,6 +216,28 @@ impl ImageStore {
     pub fn image_count(&self) -> usize {
         self.by_hash.len()
     }
+
+    /// Images uploaded and kept on the CPU for a new device.
+    pub fn resident_count(&self) -> usize {
+        self.resident.len()
+    }
+
+    /// The staged uploads, leaving none. `ImageAtlasGpu::prepare` writes
+    /// them and hands them back through [`Self::keep_uploaded`].
+    fn take_pending(&mut self) -> Vec<PendingUpload> {
+        std::mem::take(&mut self.pending)
+    }
+
+    fn keep_uploaded(&mut self, uploads: Vec<PendingUpload>) {
+        self.resident.extend(uploads);
+    }
+
+    /// Stage every uploaded image again, at the place it already has: a
+    /// new atlas texture on a new device starts empty.
+    pub fn restage_uploaded(&mut self) {
+        let resident = std::mem::take(&mut self.resident);
+        self.pending.splice(0..0, resident);
+    }
 }
 
 fn hash_bytes(parts: &[&[u8]]) -> u64 {
@@ -235,6 +262,13 @@ pub fn load_image_rgba(
     pixels: Vec<u8>,
 ) -> Result<ImageHandle, ImageError> {
     IMAGE_STORE.lock().unwrap().load_rgba(width, height, pixels)
+}
+
+/// Stage every uploaded image of the global store again: what a context
+/// asks after its device was lost, so its next `prepare` fills the new
+/// atlas texture (`gpu::recover`).
+pub(crate) fn restage_resident() {
+    IMAGE_STORE.lock().unwrap().restage_uploaded();
 }
 
 // ---------------------------------------------------------------------------
@@ -346,7 +380,8 @@ impl ImageAtlasGpu {
         }
 
         let texture = self.texture.as_ref().unwrap();
-        for upload in store.pending.drain(..) {
+        let uploads = store.take_pending();
+        for upload in &uploads {
             queue.write_texture(
                 wgpu::TexelCopyTextureInfo {
                     texture,
@@ -371,6 +406,7 @@ impl ImageAtlasGpu {
                 },
             );
         }
+        store.keep_uploaded(uploads);
     }
 }
 
@@ -487,6 +523,35 @@ mod tests {
         let b = store.load_bytes(&bytes).unwrap();
         assert_eq!(a, b);
         assert_eq!(store.image_count(), 1);
+    }
+
+    /// A lost device takes the atlas texture with it; the store keeps the
+    /// pixels of every upload and stages them again, at the same place.
+    #[test]
+    fn uploaded_pixels_are_kept_and_restaged_for_a_new_device() {
+        let mut store = ImageStore::new();
+        let pixels = solid_rgba(2, 2, [1, 2, 3, 255]);
+        let a = store.load_rgba(2, 2, pixels.clone()).unwrap();
+        let uploads = store.take_pending();
+        assert_eq!(uploads.len(), 1);
+        assert!(!store.has_pending());
+        store.keep_uploaded(uploads);
+        assert_eq!(store.resident_count(), 1);
+        // loading it again is the same handle and nothing to upload
+        assert_eq!(store.load_rgba(2, 2, pixels).unwrap(), a);
+        assert!(!store.has_pending());
+
+        store.restage_uploaded();
+        assert!(store.has_pending());
+        assert_eq!(store.resident_count(), 0);
+        let again = store.take_pending();
+        assert_eq!(again.len(), 1);
+        let up = &again[0];
+        assert_eq!(
+            (up.atlas_x, up.atlas_y, up.width, up.height),
+            (a.atlas_x, a.atlas_y, a.width, a.height)
+        );
+        assert_eq!(up.pixels, solid_rgba(2, 2, [1, 2, 3, 255]));
     }
 
     #[test]

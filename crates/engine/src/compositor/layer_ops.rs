@@ -79,6 +79,17 @@ impl Compositor {
         }
     }
 
+    /// Forget every layer's GPU resources and redraw everything on the
+    /// next frame (a lost device: `gpu::recover`). `mark_all_dirty` is not
+    /// enough there, since a layer's texture is rebuilt only on a size
+    /// change and its buffers only on a capacity change; both would be
+    /// written on the dead device.
+    pub fn drop_gpu_resources(&mut self) {
+        for layer in &mut self.layers {
+            layer.drop_gpu_resources();
+        }
+    }
+
     pub fn mark_layer_clean(&mut self, id: LayerId) {
         if let Some(layer) = self.layers.iter_mut().find(|l| l.id == id) {
             layer.dirty = false;

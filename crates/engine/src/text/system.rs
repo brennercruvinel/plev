@@ -8,7 +8,9 @@ use std::num::NonZeroUsize;
 
 use crate::compositor::{SceneNode, TextNodeKey};
 
-use super::atlas::{self, create_atlas_texture, emit_glyphs};
+use super::atlas::{
+    self, create_atlas_bind_group, create_atlas_sampler, create_atlas_texture, emit_glyphs,
+};
 use super::cache::{GlyphCacheKey, GlyphEntry, ShapedEntry};
 use super::vertex::TextVertex;
 
@@ -101,30 +103,9 @@ impl TextSystem {
         let glyph_cache = LruCache::new(NonZeroUsize::new(GLYPH_CACHE_CAPACITY).unwrap());
 
         let (atlas_texture, atlas_view) = create_atlas_texture(device, INITIAL_ATLAS_SIZE);
-
-        let atlas_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
-            label: Some("atlas_sampler"),
-            address_mode_u: wgpu::AddressMode::ClampToEdge,
-            address_mode_v: wgpu::AddressMode::ClampToEdge,
-            mag_filter: wgpu::FilterMode::Linear,
-            min_filter: wgpu::FilterMode::Linear,
-            ..Default::default()
-        });
-
-        let atlas_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("atlas_bg"),
-            layout: text_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&atlas_view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&atlas_sampler),
-                },
-            ],
-        });
+        let atlas_sampler = create_atlas_sampler(device);
+        let atlas_bind_group =
+            create_atlas_bind_group(device, text_bind_group_layout, &atlas_view, &atlas_sampler);
 
         Self {
             font_system,
@@ -170,6 +151,39 @@ impl TextSystem {
             BucketedAtlasAllocator::new(size2(self.atlas_size as i32, self.atlas_size as i32));
         self.atlas_disturbed = true;
         true
+    }
+
+    /// A new, empty atlas on `device` after the old device was lost: the
+    /// same size (no growth churn on the next frame), a new sampler and
+    /// bind group. Every cached glyph pointed into the dead texture, so
+    /// the cache and the allocator reset and `atlas_disturbed` makes every
+    /// layer re-resolve; the glyphs come back on the next frame through
+    /// the raster path (a cache miss), keys, gutter and all. The shaping
+    /// cache and the raster scale are CPU state and stay.
+    pub fn recreate_atlas(
+        &mut self,
+        device: &wgpu::Device,
+        text_bind_group_layout: &wgpu::BindGroupLayout,
+    ) {
+        let (texture, view) = create_atlas_texture(device, self.atlas_size);
+        self.atlas_texture = texture;
+        self.atlas_view = view;
+        self.atlas_sampler = create_atlas_sampler(device);
+        self.atlas_bind_group = create_atlas_bind_group(
+            device,
+            text_bind_group_layout,
+            &self.atlas_view,
+            &self.atlas_sampler,
+        );
+        self.glyph_cache.clear();
+        self.allocator =
+            BucketedAtlasAllocator::new(size2(self.atlas_size as i32, self.atlas_size as i32));
+        self.atlas_disturbed = true;
+        log::info!(
+            "glyph atlas recreated at {}x{} after a lost device",
+            self.atlas_size,
+            self.atlas_size
+        );
     }
 
     /// Whether the atlas was repacked since the last check, clearing the

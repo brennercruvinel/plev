@@ -35,6 +35,42 @@ pub(super) fn create_atlas_texture(
     (texture, view)
 }
 
+/// The atlas sampler: linear, clamped. Made once per device (the text
+/// system's constructor, and again after a lost device).
+pub(super) fn create_atlas_sampler(device: &wgpu::Device) -> wgpu::Sampler {
+    device.create_sampler(&wgpu::SamplerDescriptor {
+        label: Some("atlas_sampler"),
+        address_mode_u: wgpu::AddressMode::ClampToEdge,
+        address_mode_v: wgpu::AddressMode::ClampToEdge,
+        mag_filter: wgpu::FilterMode::Linear,
+        min_filter: wgpu::FilterMode::Linear,
+        ..Default::default()
+    })
+}
+
+/// Group 1 of the text pipeline: the atlas view and its sampler.
+pub(super) fn create_atlas_bind_group(
+    device: &wgpu::Device,
+    layout: &wgpu::BindGroupLayout,
+    view: &wgpu::TextureView,
+    sampler: &wgpu::Sampler,
+) -> wgpu::BindGroup {
+    device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("atlas_bg"),
+        layout,
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(view),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: wgpu::BindingResource::Sampler(sampler),
+            },
+        ],
+    })
+}
+
 /// GPU resources needed during glyph emission.
 pub(super) struct GlyphGpuResources<'a> {
     pub device: &'a wgpu::Device,
@@ -382,18 +418,10 @@ pub(super) fn grow_atlas(
     sys.atlas_view = new_view;
     sys.atlas_size = new_size;
 
-    sys.atlas_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-        label: Some("atlas_bg"),
-        layout: text_bind_group_layout,
-        entries: &[
-            wgpu::BindGroupEntry {
-                binding: 0,
-                resource: wgpu::BindingResource::TextureView(&sys.atlas_view),
-            },
-            wgpu::BindGroupEntry {
-                binding: 1,
-                resource: wgpu::BindingResource::Sampler(&sys.atlas_sampler),
-            },
-        ],
-    });
+    sys.atlas_bind_group = create_atlas_bind_group(
+        device,
+        text_bind_group_layout,
+        &sys.atlas_view,
+        &sys.atlas_sampler,
+    );
 }

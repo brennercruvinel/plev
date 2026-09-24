@@ -97,4 +97,37 @@ impl Layer {
         self.tex_height = height;
         self.dirty = true;
     }
+
+    /// Forget every resource of this layer that lived on a lost device:
+    /// the textures and their views, the composite and opacity bind
+    /// groups, the opacity buffer, every vertex and index buffer. The
+    /// scene, the geometry and the draw sequence are CPU data and stay.
+    /// The size goes to zero so the next `ensure_texture` builds on the
+    /// current device, and the layer is dirty so the buffers are uploaded
+    /// again (`GpuVec` keys on capacity and would write into the dead
+    /// buffer otherwise).
+    pub(crate) fn drop_gpu_resources(&mut self) {
+        self.msaa_texture = None;
+        self.msaa_view = None;
+        self.texture = None;
+        self.texture_view = None;
+        self.composite_bind_group = None;
+        self.opacity_buffer = None;
+        self.opacity_bind_group = None;
+        self.quad_vb = None;
+        self.quad_ib = None;
+        self.sdf_vb = None;
+        self.sdf_ib = None;
+        self.shadow_vb = None;
+        self.shadow_ib = None;
+        self.image_vb = None;
+        self.image_ib = None;
+        self.backdrop_vb = None;
+        self.backdrop_ib = None;
+        self.text_vb = None;
+        self.text_ib = None;
+        self.tex_width = 0;
+        self.tex_height = 0;
+        self.dirty = true;
+    }
 }

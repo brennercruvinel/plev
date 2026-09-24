@@ -117,6 +117,13 @@ impl TexturePool {
         }
     }
 
+    /// Forget every texture: after a lost device they are all invalid,
+    /// and a handle still out is dead with them. The pool starts over on
+    /// the next `acquire`.
+    pub fn clear(&mut self) {
+        self.entries.clear();
+    }
+
     /// Estimated resident bytes of all pooled textures (in use or not:
     /// the pool is grow-only). Feeds the perf monitor's memory stats.
     pub fn memory_bytes(&self) -> u64 {
@@ -195,6 +202,30 @@ mod tests {
         let pool = TexturePool::new();
         assert!(pool.entries.is_empty());
         assert_eq!(pool.memory_bytes(), 0);
+    }
+
+    /// `clear` on a pool that holds textures: needs a device, skips
+    /// without an adapter.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn clear_forgets_every_texture() {
+        use crate::gpu::{GpuContext, RenderConfig};
+        let Some(gpu) = pollster::block_on(GpuContext::new_headless(8, 8, RenderConfig::default()))
+        else {
+            eprintln!("no GPU adapter; skipping");
+            return;
+        };
+        let mut pool = TexturePool::new();
+        let handle = pool.acquire(&gpu.device, 8, 8, wgpu::TextureFormat::Rgba8UnormSrgb);
+        pool.release(handle);
+        let _kept = pool.acquire(&gpu.device, 4, 4, wgpu::TextureFormat::Rgba8UnormSrgb);
+        assert_eq!(pool.memory_bytes(), (8 * 8 + 4 * 4) * 4);
+        pool.clear();
+        assert_eq!(pool.memory_bytes(), 0);
+        assert!(pool.entries.is_empty());
+        // usable again
+        let _ = pool.acquire(&gpu.device, 8, 8, wgpu::TextureFormat::Rgba8UnormSrgb);
+        assert_eq!(pool.memory_bytes(), 8 * 8 * 4);
     }
 
     #[test]
