@@ -24,7 +24,8 @@ use engine::headless::{Frame, Viewport};
 use sem::Snapshot;
 use serde::{Deserialize, Serialize};
 
-use crate::scene::{HASH_VERSION, Scene};
+use crate::hash::HASH_VERSION;
+use crate::scene::Scene;
 
 /// The version of the baseline layout. Another layout is refused with
 /// the advice to bless again.

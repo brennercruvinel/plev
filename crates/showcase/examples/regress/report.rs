@@ -2,9 +2,18 @@
 //! projects or binds, whether its meaning changed, whether what it draws
 //! changed, in which layer, and, when pixels were compared, how many
 //! changed and where. Then the layers, and what fell outside every
-//! control. As text for a person, as JSON for a tool.
+//! control. As text for a person (`text`), as JSON for a tool (`json`);
+//! a semantic change in a few words comes from `describe`.
 
-use sem::{Change, Snapshot, Value};
+mod describe;
+mod json;
+mod text;
+
+pub use describe::describe;
+pub use json::write_json;
+pub use text::{body, text};
+
+use sem::{Change, Snapshot};
 use serde::Serialize;
 
 use crate::compare::{LayerDelta, Status};
@@ -270,112 +279,6 @@ fn lean(change: &Change) -> Change {
     }
 }
 
-/// The report as text: the baseline and its timings, then [`body`].
-pub fn text(r: &Report) -> String {
-    let t = &r.timings_ms;
-    let mut times = format!(
-        "stage {:.1} ms, hash {:.1} ms, compare {:.1} ms",
-        t.stage, t.capture, t.compare
-    );
-    for (what, v) in [("render", t.render), ("decode", t.decode), ("diff", t.diff)] {
-        if let Some(v) = v {
-            times.push_str(&format!(", {what} {v:.1} ms"));
-        }
-    }
-    let head = if r.changed { "CHANGED " } else { "ok      " };
-    format!("{head} {} ({times})\n{}", r.baseline, body(r))
-}
-
-/// Each control that changed, the layers that moved and what their
-/// pixels say; empty when nothing moved.
-pub fn body(r: &Report) -> String {
-    let mut out = String::new();
-    if !r.changed {
-        return out;
-    }
-    for line in &r.page {
-        out.push_str(&format!("  (page): {line}\n"));
-    }
-    let listed = r.controls.iter().filter(|c| c.changed());
-    let width = listed.clone().map(|c| c.id.len()).max().unwrap_or(0);
-    for c in listed {
-        let meaning = if c.semantics.is_empty() {
-            "semantics unchanged".to_string()
-        } else {
-            format!("semantics changed: {}", c.semantics.join("; "))
-        };
-        out.push_str(&format!("  {:width$}  {meaning}; {}\n", c.id, visual(c)));
-    }
-    let quiet = r.controls.iter().filter(|c| !c.changed()).count();
-    if quiet > 0 {
-        out.push_str(&format!("  {quiet} other controls unchanged\n"));
-    }
-    for l in r.layers.iter().filter(|l| l.status != Status::Unchanged) {
-        let status = match l.status {
-            Status::Changed => "changed",
-            Status::Added => "added",
-            Status::Removed => "removed",
-            Status::Unchanged => "unchanged",
-        };
-        let hash = match (&l.was, &l.hash) {
-            (Some(was), Some(now)) => format!(" ({was} -> {now})"),
-            _ => String::new(),
-        };
-        let mut line = format!("  layer {}: {status}{hash}", l.name);
-        if let Some(px) = l.pixels {
-            line.push_str(&format!(", {px} px{}", at(l.region)));
-        }
-        if let Some(px) = l.unbound_pixels.filter(|px| *px > 0) {
-            line.push_str(&format!(
-                "; {px} px outside any bound control{}",
-                at(l.unbound_region)
-            ));
-        }
-        out.push_str(&line);
-        out.push('\n');
-    }
-    match r.pixels.status {
-        "diffed" => out.push_str(&format!(
-            "  pixels: {} changed of {} compared{}\n",
-            r.pixels.changed.unwrap_or(0),
-            r.pixels.compared.unwrap_or(0),
-            at(r.pixels.region)
-        )),
-        "no_baseline_image" => out.push_str(
-            "  pixels: visual changed, no baseline image to diff (bless --png keeps one)\n",
-        ),
-        "no_adapter" => out.push_str(
-            "  pixels: visual changed, no GPU adapter here to draw the frame; not compared\n",
-        ),
-        _ => {}
-    }
-    out
-}
-
-fn visual(c: &ControlReport) -> String {
-    let layer = c
-        .layer
-        .as_deref()
-        .map_or(String::new(), |l| format!(", layer {l}"));
-    let moved = match c.moved {
-        Some([None, Some(now)]) => format!(", newly bound at {}", region(now)),
-        Some([Some(was), None]) => format!(", no longer bound (was {})", region(was)),
-        Some([Some(was), Some(now)]) => format!(", bound {} -> {}", region(was), region(now)),
-        _ => String::new(),
-    };
-    match c.visual {
-        Visual::Unchanged => format!("visual unchanged{layer}"),
-        Visual::Unbound => "visual not bound".to_string(),
-        Visual::LayerChanged => {
-            format!("visual changed{layer} (the layer moved; its pixels were not compared){moved}")
-        }
-        Visual::Changed => match c.pixels {
-            Some(px) if px > 0 => format!("visual changed{layer}, {px} px{}{moved}", at(c.region)),
-            _ => format!("visual changed{layer}{moved}"),
-        },
-    }
-}
-
 /// Where a layer that moved drew, on either side.
 pub fn layer_region(layer: &LayerDelta) -> Option<[f32; 4]> {
     let before = layer.before.as_ref().and_then(|l| l.bounds);
@@ -402,118 +305,6 @@ pub fn drawn<'a>(now: &'a [BindRecord], base: &'a [BindRecord]) -> Vec<(&'a Bind
         .collect()
 }
 
-fn at(r: Option<[f32; 4]>) -> String {
-    r.map_or(String::new(), |r| format!(" at {}", region(r)))
-}
-
-/// A logical rect as `x,y wxh`.
-pub fn region(r: [f32; 4]) -> String {
-    format!("{},{} {}x{}", r[0], r[1], r[2], r[3])
-}
-
-/// The node a semantic change is about (`None`: the page, for the focus
-/// and the order of the roots), and the change in a few words.
-pub fn describe(change: &Change) -> (Option<String>, String) {
-    let id = |id: &sem::SemId| Some(id.to_string());
-    match change {
-        Change::NodeAdded(node) => (
-            id(&node.id),
-            format!("added ({} \"{}\")", node.role.as_str(), node.label),
-        ),
-        Change::NodeRemoved(node) => (id(node), "removed".to_string()),
-        Change::StateChanged {
-            at, before, after, ..
-        } => (
-            id(&at.node),
-            format!(
-                "{} {} -> {}",
-                at.key,
-                value(before.as_ref()),
-                value(after.as_ref())
-            ),
-        ),
-        Change::LabelChanged {
-            node,
-            before,
-            after,
-        } => (id(node), format!("label \"{before}\" -> \"{after}\"")),
-        Change::ActionsChanged {
-            node,
-            before,
-            after,
-        } => {
-            let names = |a: &[sem::ActionDecl]| {
-                a.iter()
-                    .map(|d| d.name.to_string())
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            };
-            (
-                id(node),
-                format!("actions [{}] -> [{}]", names(before), names(after)),
-            )
-        }
-        Change::FlagsChanged {
-            node,
-            enabled,
-            inert,
-            focusable,
-        } => {
-            let flags: Vec<String> = [
-                ("enabled", enabled),
-                ("inert", inert),
-                ("focusable", focusable),
-            ]
-            .iter()
-            .filter_map(|(name, v)| v.map(|v| format!("{name} -> {v}")))
-            .collect();
-            (id(node), flags.join(", "))
-        }
-        Change::ParentChanged {
-            node,
-            before,
-            after,
-        } => (
-            id(node),
-            format!("parent {} -> {}", opt(before), opt(after)),
-        ),
-        Change::RoleChanged {
-            node,
-            before,
-            after,
-        } => (
-            id(node),
-            format!("role {} -> {}", before.as_str(), after.as_str()),
-        ),
-        Change::DescriptionChanged { node, .. } => (id(node), "description changed".to_string()),
-        Change::ConstraintsChanged { node, .. } => (id(node), "constraints changed".to_string()),
-        Change::Reordered { parent: Some(p) } => (id(p), "children reordered".to_string()),
-        Change::Reordered { parent: None } => (None, "roots reordered".to_string()),
-        Change::FocusChanged { before, after } => {
-            (None, format!("focus {} -> {}", opt(before), opt(after)))
-        }
-    }
-}
-
-fn opt(id: &Option<sem::SemId>) -> String {
-    id.as_ref().map_or("none".to_string(), ToString::to_string)
-}
-
-/// A state value as its JSON (`true`, `3`, `"text"`), `none` when absent.
-fn value(v: Option<&Value>) -> String {
-    let Some(v) = v else {
-        return "none".to_string();
-    };
-    match v {
-        Value::Bool(b) => b.to_string(),
-        Value::Int(i) => i.to_string(),
-        Value::Num(n) => n.to_string(),
-        Value::Text(t) => format!("{t:?}"),
-        Value::List(items) => format!("{items:?}"),
-        Value::Set(items) => format!("{items:?}"),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -521,7 +312,7 @@ mod tests {
     use crate::pixels;
     use crate::scene::LayerRecord;
     use engine::headless::Frame;
-    use sem::{Role, SemId, SnapshotBuilder, StateRef};
+    use sem::{Role, SemId, SnapshotBuilder};
     use std::time::Duration;
 
     fn id(text: &str) -> SemId {
@@ -529,42 +320,6 @@ mod tests {
             Ok(id) => id,
             Err(e) => panic!("{e}"),
         }
-    }
-
-    #[test]
-    fn a_change_is_told_by_the_node_it_is_about() {
-        let label = Change::LabelChanged {
-            node: id("todo.item[2]"),
-            before: "Walk the dog".to_string(),
-            after: "Walk the cat".to_string(),
-        };
-        assert_eq!(
-            describe(&label),
-            (
-                Some("todo.item[2]".to_string()),
-                "label \"Walk the dog\" -> \"Walk the cat\"".to_string()
-            )
-        );
-        let at: StateRef = match "todo.item[2]:completed".parse() {
-            Ok(at) => at,
-            Err(e) => panic!("{e}"),
-        };
-        let state = Change::StateChanged {
-            at,
-            before: Some(Value::Bool(false)),
-            after: Some(Value::Bool(true)),
-            added: vec![],
-            removed: vec![],
-        };
-        assert_eq!(describe(&state).1, "completed false -> true");
-        let focus = Change::FocusChanged {
-            before: None,
-            after: Some(id("todo.input")),
-        };
-        assert_eq!(
-            describe(&focus),
-            (None, "focus none -> todo.input".to_string())
-        );
     }
 
     fn bind(id: &str, y: f32) -> BindRecord {

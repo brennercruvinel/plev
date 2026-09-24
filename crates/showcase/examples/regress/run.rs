@@ -282,18 +282,6 @@ pub fn check_one(b: &Baseline, gpu: &mut Gpu) -> Result<Outcome, String> {
     Ok(out)
 }
 
-/// The JSON `check --json` writes.
-#[derive(serde::Serialize)]
-struct Checked<'a> {
-    checked: usize,
-    unchanged: usize,
-    changed: usize,
-    frames_drawn: usize,
-    gpu_open_ms: Option<f64>,
-    total_ms: f64,
-    baselines: &'a [report::Report],
-}
-
 /// Check every baseline the request selects. A baseline where nothing
 /// moved ends at the comparison, with no frame drawn.
 fn check(r: &Request) -> Result<bool, String> {
@@ -326,17 +314,7 @@ fn check(r: &Request) -> Result<bool, String> {
         reports.len() - changed,
     );
     if let Some(path) = &r.json {
-        let checked = Checked {
-            checked: reports.len(),
-            unchanged: reports.len() - changed,
-            changed,
-            frames_drawn: gpu.frames,
-            gpu_open_ms: gpu.open.map(|d| d.as_secs_f64() * 1000.0),
-            total_ms: total.as_secs_f64() * 1000.0,
-            baselines: &reports,
-        };
-        let json = serde_json::to_string_pretty(&checked).map_err(|e| e.to_string())?;
-        std::fs::write(path, json + "\n").map_err(|e| format!("{}: {e}", path.display()))?;
+        report::write_json(path, &reports, gpu.frames, gpu.open, total)?;
     }
     Ok(changed == 0)
 }

@@ -35,6 +35,8 @@ mod baseline;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod compare;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod hash;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod pixels;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod report;
