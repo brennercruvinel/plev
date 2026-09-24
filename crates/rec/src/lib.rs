@@ -23,7 +23,8 @@
 //!
 //! the read side is `Session`: events by time, the semantic state at any
 //! instant, the receipts that touch a control, the frame on screen at any
-//! instant (the semantic track reads without decoding a frame). replay
+//! instant and where each bound control showed in it (the semantic track
+//! reads without decoding a frame). replay
 //! is the promise, re-execution is not: a session holds no dispatcher and
 //! no app, so reading it can never create a request or run an action.
 //!
@@ -82,6 +83,7 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
+mod bound;
 mod error;
 mod event;
 mod format;
@@ -98,9 +100,10 @@ mod track;
 mod visual;
 mod weigh;
 
+pub use bound::Bound;
 pub use error::{FileError, FrameError, ReadError};
 pub use event::{Event, InputKind, Kind};
-pub use format::{ANIMATION_MAGIC, Build, FileKind, MAGIC, VERSION, probe};
+pub use format::{ANIMATION_MAGIC, Build, FileKind, MAGIC, VERSION, VERSION_BINDINGS, probe};
 pub use hook::install_panic_hook;
 pub use limits::{Limits, Stats};
 pub use persist::Persisted;

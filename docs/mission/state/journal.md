@@ -12,7 +12,59 @@ brenner, integração, decisão autônoma, bug relevante, agente disparado ou
 devolvido, publicação. o mais novo em cima. o detalhe fica no arquivo da
 task; aqui fica o que aconteceu e onde ler.
 
+## 2026-09-24
+
+### ciclo 2: o ide grava a própria sessão (task-63 fase d)
+
+- **integrada:** task-63 fase d (`8e6e814`). gate verde (2231). o
+  inspector lê a sessão da janela real e as antigas. critério essencial
+  da onda 5 satisfeito: sessão real do ide, gravada por ele, lida pelo
+  inspector.
+- **incidente:** na primeira rodada da prova, o ide tomou o foco do
+  brenner por uns 6 s e gravou dois cliques dele num repositório de
+  rascunho. corrigido no mesmo trabalho (`PLEV_BACKGROUND=1` com a
+  ativação proibida e a janela por baixo); seis rodadas depois sem
+  roubar o foco.
+- severidade: P3 o custo do frame que fecha um chunk; P2 tamanho e escala
+  da janela na gravação.
+
 ## 2026-09-23
+
+### intervenção do brenner: severidade
+
+- aprovou o fluxo recursivo e pediu para continuar como está.
+- regra nova: toda descoberta recebe P0 a P3 antes de virar task
+  (`docs/mission/autonomy.md`, "severidade antes de priorizar"); só P0 e
+  P1 bloqueiam. ownership: a próxima task que disputa uma superfície em
+  uso dá lugar a trabalho independente da onda. a onda seguinte espera os
+  critérios essenciais da atual, sem perfeição local. ciclo: observar →
+  sondar → implementar → validar → aprender → replanejar; truth, programa
+  e learnings separados.
+- **aplicação imediata:** critérios essenciais da onda 5 escritos no
+  programa (seção 6). classificação do que está aberto:
+  - P1: task-88 (medição do laboratório com falso válido) e a revisão da
+    conclusão do checkpoint a sob a regra da 89 (uma rodada curta com
+    LLM, depois da 88);
+  - P2: task-91, as fases b e c da 64, as fases b a d da 65, estado
+    projetado fora do dispatcher, cobertura semântica;
+  - P3: dívidas da task-82 e o exemplo `measure`.
+  - nenhum P0 aberto.
+- **publicado:** PR #57 (task-90), merge `5f57fe7`.
+
+### ciclo 2: a sonda da task-88 mudou o gatilho da pessoa
+
+- a 88 parou na sonda. três achados:
+  - com a regra da 89, o agente que encadeia é recusado pela própria
+    escrita antes de a pessoa contar;
+  - a medição por revisão dá falso válido quando o estado volta ao
+    mesmo hash;
+  - o gatilho proposto (a pessoa depois de um estágio terminal) quebraria
+    o cenário padrão do gate.
+- **decisão autônoma:** cenário novo `unstage-before-submit:<path>` (a
+  pessoa entre a decisão do agente e o submit chegar, como o hook do
+  braço `git`); o cenário antigo fica, comparável às rodadas 1 e 2; a
+  medição passa a ser pelo valor visto e pelo valor vivo. o próximo
+  experimento com LLM roda o cenário novo.
 
 ### ciclo 2: task-90 integrada
 
@@ -21,8 +73,14 @@ task; aqui fica o que aconteceu e onde ler.
   faz os quatro testes novos falharem. os textos do `wire`, do how-to e do
   ADR do inspector aplicados no fechamento.
 - **publicado:** PR #56 (task-89), merge `c433751`.
-- próximo no `sem`/`wire`: task-91 (a âncora no olhar), agora
-  desbloqueada.
+- **replan:** a task-91 (a âncora no olhar) mexe no `sem`, no `wire` e
+  nos três `Host`, e dois deles estão com agentes agora (`ide::agent`
+  com a 63d, o `LabHost` com a 88). ela entra quando as duas voltarem.
+  enquanto isso, a task-65 (rodadas a e b, do pixel ao código, só
+  leitura, no showcase) roda no lugar da 90: é da onda 5, que precisa
+  fechar antes da onda 6, e as superfícies dela não cruzam as da 63d e
+  da 88.
+- **publicado:** PR #57 (task-90), com a CI rodando.
 
 ### ciclo 2: task-89 integrada, o buraco do inspector fechado
 

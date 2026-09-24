@@ -20,6 +20,7 @@ use sem::{Actor, Change, Millis, Receipt, Request, RequestId, Revision, SemId, S
 
 use engine::compositor::SceneNode;
 
+use crate::bound::Bound;
 use crate::error::FrameError;
 use crate::event::{Event, InputKind, Kind};
 use crate::limits::{Limits, Stats};
@@ -271,12 +272,15 @@ impl Inner {
         self.push(t, Kind::Input { kind, at, target });
     }
 
-    /// takes the frame on screen at `t`, flattened in composite order;
-    /// `approximated` counts the layers whose look the IR does not carry.
+    /// takes the frame on screen at `t`, flattened in composite order,
+    /// and where each bound control shows in it (`bound`, in stacking
+    /// order); `approximated` counts the layers whose look the IR does not
+    /// carry.
     pub(crate) fn frame<'a>(
         &mut self,
         t: Millis,
         scene: impl Iterator<Item = &'a SceneNode> + Clone,
+        bound: &[Bound],
         approximated: u64,
     ) -> Result<(), FrameError> {
         let t = self.clock(t);
@@ -284,7 +288,7 @@ impl Inner {
             every: self.limits.chunk_every,
             frames: self.limits.chunk_frames,
         };
-        let taken = self.visual.frame(t, scene, cadence);
+        let taken = self.visual.frame(t, scene, bound, cadence);
         self.stats.layers_approximated += approximated;
         self.evict();
         taken
@@ -298,6 +302,8 @@ impl Inner {
             frame_errors: counts.errors,
             skipped: counts.skipped,
             chunks_closed: counts.closed,
+            bindings_whole: counts.bound_whole,
+            bindings_moved: counts.bound_moved,
             segments: self.track.segments().len(),
             chunks: self.visual.chunk_count(),
             semantic_bytes: self.track.bytes(),

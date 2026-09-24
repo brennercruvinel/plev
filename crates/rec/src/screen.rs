@@ -7,7 +7,7 @@
 //!
 //! the shape is the file's: chunks with their frame times and asset refs
 //! (section I), their encoded bytes (section C), one asset table
-//! (section A).
+//! (section A), and where each bound control showed (section B).
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -18,6 +18,7 @@ use engine::path::TessellatedPath;
 use monster::{LoweredAsset, MonsterPlayer};
 use sem::Millis;
 
+use crate::bound::{self, Bound, Step};
 use crate::error::ReadError;
 use crate::visual::{AssetKey, Visual, seconds};
 
@@ -52,13 +53,15 @@ impl Asset {
 }
 
 /// one chunk: where it starts, the frames it took (ms from the start),
-/// its monster bytes, and the asset behind each of its asset ids.
+/// its monster bytes, the asset behind each of its asset ids, and where
+/// each bound control showed, a step when that changed.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Shown {
     pub(crate) start: Millis,
     pub(crate) times: Vec<u32>,
     pub(crate) bytes: Vec<u8>,
     pub(crate) refs: Vec<u32>,
+    pub(crate) bound: Vec<Step>,
 }
 
 /// the visual track of a window.
@@ -113,6 +116,7 @@ impl Screen {
                 times: c.times.clone(),
                 bytes: c.bytes.clone(),
                 refs,
+                bound: c.bound.clone(),
             });
         }
         for (c, assets) in visual.open_encoded() {
@@ -125,6 +129,7 @@ impl Screen {
                 times: c.times,
                 bytes: c.bytes,
                 refs,
+                bound: c.bound,
             });
         }
         Screen {
@@ -141,6 +146,16 @@ impl Screen {
         let k = chunk.times.partition_point(|&at| at <= rel);
         let at = *chunk.times.get(k.checked_sub(1)?)?;
         Some((chunk, at))
+    }
+
+    /// where each bound control showed at `t`, in stacking order: the
+    /// bindings of the chunk that started last at or before `t`, as its
+    /// steps stood then. `None` before the first chunk.
+    pub(crate) fn bindings_at(&self, t: Millis) -> Option<Vec<Bound>> {
+        let n = self.chunks.partition_point(|c| c.start <= t);
+        let chunk = self.chunks.get(n.checked_sub(1)?)?;
+        let at = u32::try_from(t.saturating_sub(chunk.start)).unwrap_or(u32::MAX);
+        Some(bound::replay(&chunk.bound, at))
     }
 
     /// the time of the frame on screen at `t`.
@@ -239,11 +254,18 @@ impl Screen {
                     })
                 })
                 .collect();
+            let bound = c
+                .bound
+                .iter()
+                .take_while(|s| c.start.saturating_add(Millis::from(s.at)) <= t1)
+                .cloned()
+                .collect();
             out.chunks.push(Shown {
                 start: c.start,
                 times: c.times.iter().take(keep).copied().collect(),
                 bytes: c.bytes.clone(),
                 refs,
+                bound,
             });
         }
         out

@@ -94,6 +94,21 @@ it, whole or in part, as a session file (below).
   (`monster::Skipped`) and counted (`Stats::skipped`), as are layers whose
   opacity, effects or clip rect the IR does not carry. the replay draws
   without them.
+- where each bound control shows rides with the frame (added on
+  2026-09-23, task-63 phase d): `Recorder::frame` takes the frame's
+  bindings that show (`Compositor::visible_bindings`, the part of each
+  rect inside its clip) on a layer the frame draws, in stacking order,
+  the one on top last, as `Compositor::hit` ranks them; a scene given as
+  nodes (`frame_scene`) binds nothing. a chunk keeps them beside its
+  frames only when they differ from the frame before: it opens with the
+  whole list (so a cut at a chunk loses nothing), then a step is the whole
+  list again (an id came or went, or the order changed) or the rects that
+  moved (the same ids in the same order: a toast springing in, a scroll).
+  `Stats::bindings_whole` and `bindings_moved` count them. the read side
+  answers `Session::bindings_at(t)`, `binding_at(id, t)` and `hit_at(t,
+  x, y)`, the frame on screen at `t` as the compositor hit-tested it
+  then; the recorder's signatures did not change, so every caller of
+  `Recorder::frame` (the laboratory among them) records them.
 
 ### the ring
 
@@ -137,16 +152,37 @@ on a session with a message that points at the session inspector
 untouched.
 
 ```text
-header := magic "MONS", version u16 0, flags u16 0, start u64 (ms on the
-          recorder's clock), crate version (u8 len, utf8), git sha (u8 len,
-          utf8, "unknown" without git), sec_count u16,
-          (tag u8, offset u64, len u64, sha256)*
+header := magic "MONS", version u16 (0, or 1 with section B), flags u16 0,
+          start u64 (ms on the recorder's clock), crate version (u8 len,
+          utf8), git sha (u8 len, utf8, "unknown" without git), sec_count
+          u16, (tag u8, offset u64, len u64, sha256)*
 S := one rec::Event per json line (its serde form), in time order
 I := chunk_count u32, (start u64, frame_count u32, time u32*,
      ref_count u32, asset u32*, offset u64, len u64)*
 C := the chunks, each the exact bytes monster::encode wrote
 A := asset_count u32, (kind u8, len u32, payload)*
+B := id_count u32, (len u16, utf8)*, chunk_count u32 (the index's),
+     per chunk: step_count u32, (at u32, kind u8, count u32,
+     (id u32 | position u32, x f32, y f32, w f32, h f32)*)*
+     (version 1 only; kind 0 the whole list by id, kind 1 the moved
+     rects by position in the list)
 ```
+
+- the version says which sections a file has (added on 2026-09-23, task-63
+  phase d): version 0 is S, I, C and A, the layout before bindings were
+  recorded, and a window without bindings is still written in it, byte
+  for byte; version 1 adds B and nothing else. the reader stays strict
+  for both: B in a version 0 file is an unknown section, a version 1 file
+  without it misses one, and a step out of order, an id that does not
+  parse or shows twice in one list, a move before a whole list or past
+  it, a rect that is not finite or has no area, and a step at or after
+  the next chunk's start are typed errors (`FileError::Bindings`,
+  `FileError::BoundId`). every file of version 0 reads as before, with no
+  bindings (the nine checkpoint sessions of task-62 read by `plev-inspect`
+  built on `rec` before and after the change give the same summary and
+  timeline, byte for byte). a reader built before version 1 refuses a
+  version 1 file by its version (`unsupported session version 1`), since
+  a strict reader cannot skip a section it does not know.
 
 - the build identity comes from `crates/rec/build.rs` (`git rev-parse
   --short HEAD`, never failing the build) and `CARGO_PKG_VERSION`; task-65
@@ -180,7 +216,8 @@ A := asset_count u32, (kind u8, len u32, payload)*
   hook installed before. it never panics (a panic in a panic hook
   aborts), and it only tries the recorder's lock, since the panic may
   have come from inside the recorder on the same thread. no app installs
-  it yet.
+  it yet. (updated on 2026-09-23: the ide installs it when it records,
+  task-63 phase d, see the consequences.)
 
 ## measured cost
 
@@ -213,6 +250,34 @@ enter, hover, toggle, filters, delete; 848 frames over 50 s simulated):
   events) is 362 KB (17 KB/s), written in 1.9 ms (the json round trip of
   every event included) and read in 1.1 ms.
 
+- the bindings (added on 2026-09-23, task-63 phase d; the same measure
+  in a debug build, and the `ide-lab` scripted arm with the person):
+  the todo page binds its controls in every frame, and its bindings were
+  kept whole in 34 of 368 frames (every chunk opens with them, and the
+  list changes as rows come and go), never as moved rects, unchanged in
+  the other 334; section B is 3.4 KB of a 79 KB file (75.5 KB without
+  it), 160 B/s over the 21.1 s window, 4.5 percent. the laboratory's run
+  (0.2 s, 9 frames, 3 chunks, 14 ids) writes 1.2 KB of B in a 68.5 KB
+  file (67.2 KB without it, 1.8 percent). a point of the replayed todo
+  frame, on a 10 px grid, is the control `Compositor::hit` named live.
+- the ide's window recording itself (added on 2026-09-23, task-63 phase
+  d; a debug build on apple m4, the window under `PLEV_BACKGROUND`; an
+  agent through `plev` observes, stages a file, opens the form, writes
+  the message and commits; `Instant` around the frame's build and present
+  and around `Recording::frame` in each redraw, logged per frame, the same
+  scene run with and without `PLEV_RECORD`): recording costs 1.1 ms per
+  frame on average, 0.5 ms median (the state projected and diffed, the
+  frame raised, the bindings), and the frame that closes a chunk
+  (discovery and encoding, once every 2 s while frames come) 2.0 to 8.2
+  ms; drawing took 2.1 ms mean with it and 2.4 ms without, the same within
+  noise. the window's session is 76 KB over 28.9 s (2.6 KB/s), 2.3 KB of
+  it section B (3 percent). with nothing changing on screen nothing is
+  recorded (ten idle seconds: no frame, no event); with the commit form
+  open and its caret blinking, each 2-second chunk is 4 frames in 4.5 KB
+  (2.2 KB/s), plus its whole binding list (about 0.2 KB). in a debug build
+  the chunk close is the spike to move off the frame path first, when a
+  scene needs it.
+
 the cost does not ask for a change in the frame architecture. the chunk
 close is the one spike; moving it off the frame path is left for when a
 scene needs it.
@@ -239,7 +304,9 @@ scene needs it.
   control, see its state, the receipts that touch it and their actor.
   `Compositor::bindings` is not recorded yet; the inspector needs it to
   map a point on a replayed frame to a control (input events already carry
-  the control under the pointer).
+  the control under the pointer). (updated on 2026-09-23: task-63 phase d
+  records them, see the visual track and the session file; the inspector
+  reads them through `Session::bindings_at` and `hit_at`.)
 - `State` duplicates the reads of `Snapshot` it needs (`get`, `value`,
   `focused`, `revision`). a `sem` constructor that keeps `source` (a
   `Snapshot::from_nodes`) would let the reader return a `Snapshot`; it
@@ -259,7 +326,26 @@ scene needs it.
   integrated and the showcase still does not depend on `rec`
   (`crates/showcase/Cargo.toml`): the wiring is task-63 phase d now.
   outside tests, the one caller of `Recorder` today is the `ide-lab`
-  binary (task-62 phase c).
+  binary (task-62 phase c). (updated on 2026-09-23: the orchestrator
+  took the showcase wiring and the image pixel retention out of phase d,
+  and phase d wired the ide instead, below.)
+- the ide records itself (added on 2026-09-23, task-63 phase d). with
+  `PLEV_RECORD=1` in a debug build, the window's shell keeps a `Recorder`
+  on the workbench's clock through `ide::record::Recording`: a sink on
+  the workbench's dispatcher for every stage, the agent port's
+  observations through `Host::observed` of `ide::agent::Served`
+  (`ide::agent::serve_recorded`), the state after an agent's act, after a
+  git result, after a person's click or key that changed something and
+  before each frame, every frame drawn with its bindings, and a person's
+  clicks and keys (kind, position, the control under the pointer, never
+  a character). it saves the window on `session::Save` (cmd-shift-s or
+  ctrl-shift-s, bound only while recording), when the loop exits (the
+  window closed, or Escape), and on a panic, to `$TMPDIR/plev/sessions/`
+  (made private to the user): `ide-<pid>-<n>.monster` for a save, the
+  panic hook's own name for a panic, each path in the log. without the
+  variable nothing is created, and the shell pays an `Option` check per
+  frame and per input. the laboratory keeps its own recording
+  (task-88).
 
 ## the format decision
 

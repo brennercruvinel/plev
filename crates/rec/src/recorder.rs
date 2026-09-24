@@ -9,6 +9,7 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError, TryLockError};
 use engine::compositor::{Compositor, Layer, SceneNode};
 use sem::{Actor, Millis, Receipt, ReceiptSink, Revision, SemId, Snapshot, Stage};
 
+use crate::bound;
 use crate::error::{FileError, FrameError};
 use crate::event::InputKind;
 use crate::limits::{Limits, Stats};
@@ -96,6 +97,11 @@ impl Recorder {
     /// rendered frame. a layer's opacity, effects and clip rect are not in
     /// the monster IR v0: its nodes are recorded as drawn inside it and
     /// `Stats::layers_approximated` counts the layer.
+    ///
+    /// the frame's bindings that show on those layers are recorded with
+    /// it (`Compositor::visible_bindings`, in stacking order), only when
+    /// they differ from the frame before; `Session::bindings_at` reads
+    /// them back.
     pub fn frame(&self, t: Millis, compositor: &Compositor) -> Result<(), FrameError> {
         let mut layers: Vec<&Layer> = compositor
             .layers()
@@ -107,15 +113,16 @@ impl Recorder {
             .iter()
             .filter(|l| l.opacity < 1.0 || l.has_effects() || l.clip_rect.is_some())
             .count();
+        let bound = bound::stacked(compositor, &layers);
         let scene = layers.iter().flat_map(|l| l.nodes().iter());
         let approximated = u64::try_from(approximated).unwrap_or(u64::MAX);
-        lock(&self.inner).frame(t, scene, approximated)
+        lock(&self.inner).frame(t, scene, &bound, approximated)
     }
 
     /// a frame given as its nodes in draw order, for a scene that does
-    /// not live in a compositor.
+    /// not live in a compositor: it binds nothing.
     pub fn frame_scene(&self, t: Millis, scene: &[SceneNode]) -> Result<(), FrameError> {
-        lock(&self.inner).frame(t, scene.iter(), 0)
+        lock(&self.inner).frame(t, scene.iter(), &[], 0)
     }
 
     /// a copy of what the ring holds now, to read back.

@@ -366,8 +366,14 @@ fn a_foreign_header_is_refused_by_name() -> Fallible {
         Err(FileError::BadMagic)
     ));
     assert!(matches!(
+        Session::from_bytes(&with(4, &2u16.to_le_bytes())),
+        Err(FileError::UnsupportedVersion(2))
+    ));
+    // version 1 is version 0 with section B, so a version 0 layout that
+    // says 1 misses it.
+    assert!(matches!(
         Session::from_bytes(&with(4, &1u16.to_le_bytes())),
-        Err(FileError::UnsupportedVersion(1))
+        Err(FileError::MissingSection('B'))
     ));
     assert!(matches!(
         Session::from_bytes(&with(6, &1u16.to_le_bytes())),

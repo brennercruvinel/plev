@@ -86,6 +86,13 @@ pub struct Stats {
     pub layers_approximated: u64,
     /// visual chunks closed.
     pub chunks_closed: u64,
+    /// frames whose bindings were recorded whole: the first of a chunk
+    /// that binds anything, and any whose ids or their order changed.
+    pub bindings_whole: u64,
+    /// frames whose bindings were recorded as the rects that moved (the
+    /// same ids in the same order); a frame that binds as the one before
+    /// records nothing.
+    pub bindings_moved: u64,
     /// visual chunks the ring dropped, by time or by bytes.
     pub evicted_chunks: u64,
     /// segments of the semantic track now held.

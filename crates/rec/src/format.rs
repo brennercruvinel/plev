@@ -6,17 +6,20 @@
 //! file := header section_payload*
 //! header :=
 //!   magic        4   "MONS"
-//!   version      u16 0
+//!   version      u16 0, or 1 when the file carries section B
 //!   flags        u16 0
 //!   start_ms     u64 the first time the file holds, on the recorder's clock
 //!   crate        u8 len, utf8   the rec version that wrote it
 //!   git          u8 len, utf8   the commit it was built from, or "unknown"
 //!   sec_count    u16
-//!   sec_entry*   49  tag u8 ('S'|'I'|'C'|'A'), offset u64, len u64,
-//!                    sha256 of the payload (32 bytes)
+//!   sec_entry*   49  tag u8 ('S'|'I'|'C'|'A', and 'B' in version 1),
+//!                    offset u64, len u64, sha256 of the payload (32 bytes)
 //!
 //! the payloads follow the index in index order and tile the rest of the
-//! file; each tag appears exactly once.
+//! file; each tag of the version appears exactly once. version 0 is the
+//! layout before bindings were recorded, and a window without bindings is
+//! still written in it, byte for byte; version 1 adds section B and
+//! nothing else, so a reader of version 0 refuses it by its version.
 //!
 //! S := one `rec::Event` per line, the serde json form, in time order
 //! I := chunk_count u32, chunk*; chunk := start u64, frame_count u32,
@@ -25,6 +28,7 @@
 //!      offset u64, len u64 (inside C; the chunks tile C in index order)
 //! C := the chunks, each the exact bytes `monster::encode` writes
 //! A := asset_count u32, (kind u8, len u32, payload)*; see `payload`
+//! B := where each bound control shows in each frame; see `bound`
 
 use sha2::{Digest, Sha256};
 
@@ -33,13 +37,19 @@ use crate::error::FileError;
 pub const MAGIC: [u8; 4] = *b"MONS";
 /// the magic of a monster animation, which a session reader refuses.
 pub const ANIMATION_MAGIC: [u8; 4] = *b"MON0";
+/// the version of a session without bindings: sections S, I, C and A.
 pub const VERSION: u16 = 0;
+/// the version of a session with bindings (task-63 phase d): the sections
+/// of version 0 and B.
+pub const VERSION_BINDINGS: u16 = 1;
 
 pub(crate) const SEC_EVENTS: u8 = b'S';
 pub(crate) const SEC_INDEX: u8 = b'I';
 pub(crate) const SEC_CHUNKS: u8 = b'C';
 pub(crate) const SEC_ASSETS: u8 = b'A';
-/// the sections of a session, in the order the writer lays them out.
+pub(crate) const SEC_BINDINGS: u8 = b'B';
+/// the sections of every session, in the order the writer lays them out;
+/// version 1 adds `SEC_BINDINGS` after them.
 pub(crate) const SECTIONS: [u8; 4] = [SEC_EVENTS, SEC_INDEX, SEC_CHUNKS, SEC_ASSETS];
 const SEC_ENTRY_LEN: usize = 1 + 8 + 8 + 32;
 
@@ -80,11 +90,12 @@ impl Build {
 }
 
 /// a header read back: when the file starts, who wrote it, and each
-/// section's payload.
+/// section's payload; `bindings` is section B, in a version 1 file.
 pub(crate) struct Parsed<'a> {
     pub(crate) start: u64,
     pub(crate) build: Build,
     pub(crate) sections: [&'a [u8]; 4],
+    pub(crate) bindings: Option<&'a [u8]>,
 }
 
 pub(crate) fn put_u16(buf: &mut Vec<u8>, v: u16) {
@@ -116,22 +127,36 @@ fn put_short_text(buf: &mut Vec<u8>, text: &str) {
 }
 
 /// the whole file: header, index with sha256 per section, payloads.
-/// `sections` are the payloads of `SECTIONS`, in that order.
-pub(crate) fn assemble(start: u64, build: &Build, sections: [&[u8]; 4]) -> Vec<u8> {
+/// `sections` are the payloads of `SECTIONS`, in that order; `bindings`,
+/// when there is one, is section B, and makes the file version 1.
+pub(crate) fn assemble(
+    start: u64,
+    build: &Build,
+    sections: [&[u8]; 4],
+    bindings: Option<&[u8]>,
+) -> Vec<u8> {
+    let mut tagged: Vec<(u8, &[u8])> = SECTIONS.iter().copied().zip(sections).collect();
+    let version = match bindings {
+        Some(payload) => {
+            tagged.push((SEC_BINDINGS, payload));
+            VERSION_BINDINGS
+        }
+        None => VERSION,
+    };
     let mut head = Vec::new();
     head.extend_from_slice(&MAGIC);
-    put_u16(&mut head, VERSION);
+    put_u16(&mut head, version);
     put_u16(&mut head, 0);
     put_u64(&mut head, start);
     put_short_text(&mut head, &build.version);
     put_short_text(&mut head, &build.git);
-    put_u16(&mut head, SECTIONS.len() as u16);
-    let body: usize = sections.iter().map(|s| s.len()).sum();
-    let header_len = head.len() + SEC_ENTRY_LEN * SECTIONS.len();
+    put_u16(&mut head, tagged.len() as u16);
+    let body: usize = tagged.iter().map(|(_, s)| s.len()).sum();
+    let header_len = head.len() + SEC_ENTRY_LEN * tagged.len();
     let mut out = Vec::with_capacity(header_len + body);
     out.extend_from_slice(&head);
     let mut offset = header_len as u64;
-    for (tag, payload) in SECTIONS.iter().zip(sections) {
+    for (tag, payload) in &tagged {
         out.push(*tag);
         put_u64(&mut out, offset);
         put_u64(&mut out, payload.len() as u64);
@@ -139,7 +164,7 @@ pub(crate) fn assemble(start: u64, build: &Build, sections: [&[u8]; 4]) -> Vec<u
         out.extend_from_slice(&digest);
         offset += payload.len() as u64;
     }
-    for payload in sections {
+    for (_, payload) in tagged {
         out.extend_from_slice(payload);
     }
     out
@@ -243,7 +268,7 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Parsed<'_>, FileError> {
         return Err(FileError::BadMagic);
     }
     let version = c.u16("version")?;
-    if version != VERSION {
+    if version != VERSION && version != VERSION_BINDINGS {
         return Err(FileError::UnsupportedVersion(version));
     }
     let flags = c.u16("flags")?;
@@ -264,10 +289,15 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Parsed<'_>, FileError> {
         let digest: [u8; 32] = c.arr("section sha256")?;
         entries.push((tag, offset, len, digest));
     }
-    let mut sections: [Option<&[u8]>; 4] = [None; 4];
+    // the tags this version has: section B only in version 1.
+    let mut tags = SECTIONS.to_vec();
+    if version == VERSION_BINDINGS {
+        tags.push(SEC_BINDINGS);
+    }
+    let mut sections: Vec<Option<&[u8]>> = vec![None; tags.len()];
     let mut next = c.at() as u64;
     for (tag, offset, len, digest) in entries {
-        let Some(slot) = SECTIONS.iter().position(|t| *t == tag) else {
+        let Some(slot) = tags.iter().position(|t| *t == tag) else {
             return Err(FileError::UnknownSection(tag));
         };
         if sections[slot].is_some() {
@@ -294,12 +324,20 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Parsed<'_>, FileError> {
         return Err(FileError::SectionLayout("bytes past the last section"));
     }
     let mut out: [&[u8]; 4] = [&[]; 4];
-    for (slot, tag) in SECTIONS.iter().enumerate() {
-        out[slot] = sections[slot].ok_or(FileError::MissingSection(char::from(*tag)))?;
+    for (slot, tag) in tags.iter().enumerate() {
+        let payload = sections[slot].ok_or(FileError::MissingSection(char::from(*tag)))?;
+        if let Some(at) = out.get_mut(slot) {
+            *at = payload;
+        }
     }
+    let bindings = match version {
+        VERSION_BINDINGS => sections.get(SECTIONS.len()).copied().flatten(),
+        _ => None,
+    };
     Ok(Parsed {
         start,
         build,
         sections: out,
+        bindings,
     })
 }

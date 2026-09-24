@@ -180,7 +180,29 @@ quando as superfícies (seção 8) são disjuntas.
   com as superfícies da seção 8. task-60 liga a accessibility primeiro no
   showcase; o ide entra depois da integração da 62.
 - checkpoint a (seção 9) depois da fase c da task-62.
-- onda 5: task-64, task-65, task-67.
+- onda 5: task-64, task-65, task-67. critérios essenciais para abrir a
+  onda 6 (fixados em 2026-09-23, regra de severidade de
+  `docs/mission/autonomy.md`):
+  - [x] regressão por significado antes de pixel (task-67);
+  - [x] uma sessão gravada responde "por que" sobre qualquer request
+    (task-64 fase a);
+  - [x] uma sessão real do `ide` com pessoa e agente, gravada pelo próprio
+    ide e lida pelo inspector (task-63 fase d);
+  - [ ] do pixel à capacidade e ao código num controle (task-65 fase a);
+  - [ ] P1: o laboratório mede pelo valor visto e pelo valor vivo (task-88);
+  - [ ] P1: a conclusão do checkpoint a revista sob a regra da task-89. o
+    inspector mostrou que o acerto do A2 da primeira rodada dependeu da
+    ordem dos eventos; uma rodada curta com agentes LLM no cenário
+    `unstage-before-submit` confirma que H1 se sustenta e que agentes se
+    recuperam de `not_observed` e de escrever e encadear.
+
+  não bloqueiam a onda 6 (P2, seguem quando couber): task-64 fases b
+  (interface) e c (sessão para teste), task-65 fases b a d, task-91 (a
+  âncora do `acted` no olhar), estado projetado fora do dispatcher no ide
+  (seleção, digitação), cobertura semântica além do Todo e do ide. P3 no
+  backlog: dívidas da task-82 (`EditorView` sem foco, caret do dock,
+  frames da ponte de acessibilidade, mola do toast), o exemplo `measure`
+  desatualizado.
 - onda 6: task-68, depois task-69. a fase 0 da task-69 (spike descartável
   em `refs/`) pode rodar a partir da onda 4, porque não integra nada.
 - checkpoint b depois da task-69.
@@ -305,6 +327,13 @@ decididas em 2026-09-23:
     (feito) e a revisão no `completed` (task-87). resultado em
     `task-62-ide-human-agent-proof.md`, "resultado da segunda rodada".
 
+11. regra de severidade (2026-09-23, intervenção do brenner): toda
+    descoberta recebe P0 a P3 antes de virar task
+    (`docs/mission/autonomy.md`); só P0 e P1 bloqueiam; próxima task
+    disputando superfície em uso dá lugar a trabalho independente da onda;
+    a onda seguinte espera só os critérios essenciais da atual (seção 6),
+    sem perfeição local.
+
 abertas:
 
 5. task-39 (memoização, pendente desde 2023) é absorvida pela task-73.
@@ -329,7 +358,7 @@ atualizado em cada integração.
 | task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (integrada, linha abaixo) |
 | task-73 | fases 1 e 1b integradas; fase 2 (ADR de desenho) espera decisão do brenner | `ed814da`, `91fdb33` | limitado pela GPU mesmo sem a latência de envio (4 a 12 vezes a CPU); pass de layer segue os pixels; composite em todo frame; o caret a 60 fps é a task-82 |
 | task-62 | fase c rodada duas vezes; checkpoint a decidido (decisões 8 e 10) | `8978602`, `d26c9b1` | experimento completo: H1, H2, H3 e H5 sustentadas, H4 diz onde o plev ganha (recusa antes do efeito, com o delta; receipt e sessão) e onde não (bytes e idas e voltas contra o `git`); resultado e decisão pedida no arquivo da task |
-| task-63 | fases a, b e c integradas; fase d em andamento | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d re-escopada (decisão do orquestrador): o `ide` grava a sessão (opt-in, debug) com as ligações por frame, para o inspector ler uma sessão real de pessoa e agente e a fase b da 64 desenhar as ligações; retenção de pixels e o shell do showcase ficam para depois |
+| task-63 | fases a a d integradas | `c62a05d`, `8e6e814` | arquivo `.monster` de sessão (magic `MONS`); fase d re-escopada: o `ide` grava a própria sessão (`PLEV_RECORD=1`, debug; salva por atalho, ao fechar e no panic) e cada frame leva as ligações visíveis (seção B, versão 1); `PLEV_BACKGROUND=1` abre a janela sem tomar o foco; retenção de pixels e o shell do showcase ficam sem task (P2) |
 | task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
 | task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
 | task-58b | integrada | `dc6fde2` | recusa de confirmação no `sem` e no ide |
@@ -344,8 +373,9 @@ atualizado em cada integração.
 | task-64 | fase a integrada; b e c na fila | `e6560a2` | crate `inspect`, CLI `plev-inspect`: a cadeia causal de cada request pela gravação; achou o buraco da task-89; a fase b (UI) precisa gravar as ligações por frame no `rec` |
 | task-86 | integrada | `7f866e8` | o binário `ide` abre a porta do agente (`PLEV_AGENT=1`, debug) por `ide::agent`; prova numa janela real com cliques de uma pessoa e um agente ao mesmo tempo: recusa stale nomeando a pessoa, o mesmo texto na tela e no nó que o agente lê; `Binding::visible_rect` no engine |
 | task-90 | integrada | `d02b4d1` | o `acted` nomeia a cadeia de ações de outros atores desde a primeira que rodou na revisão que o autor viu; o toast em uma frase por ator; a cena do clique na janela continua sem âncora (a seleção muda a revisão fora do dispatcher), teste escreve o limite |
-| task-91 | na fila | | o dispatcher sabe quando o agente olhou: quem serve a observação avisa; o `acted` ancora no olhar; depois da 89 (`wire`) |
+| task-91 | na fila (P2) | | o dispatcher sabe quando o agente olhou: quem serve a observação avisa; o `acted` ancora no olhar; depois da 89 (`wire`) |
 | task-89 | integrada | `79b8c93` | um ato com `from_revision` se apoia só no que foi mostrado ao ator (o nome do `hello`, em qualquer conexão): o valor de cada `read` vem da última observação que o mostrou; nunca mostrado dá `not_observed` (aditivo no v1, `plev` sai 3); reproduzido no laboratório: o submit depois de olhar só o formulário é recusado stale; adr an-act-rests-on-what-its-actor-was-shown |
-| task-88 | em andamento | | o laboratório mede no que o agente se apoiou pelo valor que o request carrega (não pela revisão); a pessoa age também depois de um estágio terminal; o relatório conta `not_observed`; `lab.rs` dividido; antes do próximo experimento com LLM |
+| task-65 | fases a e b em andamento | | pixel para código: cmd+clique (dev) num controle abre o site que o projetou (`Node.source`), num texto sem id abre o literal (hot reload com linha e coluna); c (gravar) e d (quem leu o token) depois |
+| task-88 | em andamento (P1) | | o laboratório mede no que o agente se apoiou pelo valor que o request carrega (não pela revisão); a pessoa age também depois de um estágio terminal; o relatório conta `not_observed`; `lab.rs` dividido; antes do próximo experimento com LLM |
 | task-67 | integrada | `49e2822` | `regress check|bless`: significado, hash estável por layer e ligações, pixel só na região que mudou, nomeando o controle; 157 baselines em 0,6 s sem GPU; job de CI no macOS; adr regression-by-meaning-before-pixels |
 | auditoria de verdade | integrada | `7621403` | `docs/mission/state/truth.md`: contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |

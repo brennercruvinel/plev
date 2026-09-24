@@ -13,11 +13,18 @@
 //! (`Workbench::apply`). The shell serves the port after the port's wake
 //! and again after every worker event it applies, or those stages wait
 //! for the next message an agent sends.
+//!
+//! When the shell records the session (`crate::record`), it serves through
+//! `serve_recorded`: every observation served is recorded with its actor,
+//! scope and revision, on the workbench's clock, and the state an act left
+//! right after the drain that ran it.
 
 use engine::compositor::Compositor;
-use sem::{ReceiptSink, Request, RequestId, Snapshot};
+use rec::Recorder;
+use sem::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
 use wire::{AgentPort, Bound, Host};
 
+use crate::record::Recording;
 use crate::workbench::Workbench;
 
 /// The name the ide's port opens under: its socket is
@@ -40,7 +47,27 @@ pub fn port(wake: impl Fn() + Send + 'static) -> Option<AgentPort> {
 /// dispatched, so the workbench may have changed and the shell draws;
 /// an observation changes nothing.
 pub fn serve(port: &mut AgentPort, bench: &mut Workbench, compositor: &Compositor) -> bool {
-    port.drain(&mut Served { bench, compositor })
+    serve_recorded(port, bench, compositor, None)
+}
+
+/// [`serve`], with `recording` (when there is one) keeping who observed
+/// what and, when an act ran, the state it left.
+pub fn serve_recorded(
+    port: &mut AgentPort,
+    bench: &mut Workbench,
+    compositor: &Compositor,
+    recording: Option<&Recording>,
+) -> bool {
+    let recorder = recording.map(Recording::recorder);
+    let acted = port.drain(&mut Served {
+        bench,
+        compositor,
+        recorder,
+    });
+    if let Some(recording) = recording.filter(|_| acted) {
+        recording.state(bench);
+    }
+    acted
 }
 
 /// The workbench as the port serves it for one drain.
@@ -48,6 +75,8 @@ pub struct Served<'a> {
     pub bench: &'a mut Workbench,
     /// The frame on screen: where each bound id sits.
     pub compositor: &'a Compositor,
+    /// Records every observation served, when the session is recorded.
+    pub recorder: Option<&'a Recorder>,
 }
 
 impl Host for Served<'_> {
@@ -75,5 +104,12 @@ impl Host for Served<'_> {
 
     fn add_sink(&mut self, sink: Box<dyn ReceiptSink>) {
         self.bench.add_sink(sink);
+    }
+
+    /// An observation was served: recorded at the workbench's clock.
+    fn observed(&mut self, actor: &Actor, scope: Option<&SemId>, revision: Revision) {
+        if let Some(rec) = self.recorder {
+            rec.observed(self.bench.now(), actor.clone(), scope.cloned(), revision);
+        }
     }
 }

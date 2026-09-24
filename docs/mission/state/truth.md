@@ -110,6 +110,16 @@ o da base até ser reescrito.
   o foco, o toast saindo e as linhas do diff mudam a revisão sem receipt
   e não ancoram (task-91).
 
+- `8e6e814` (task-63 fase d): `rec` grava por frame as ligações visíveis
+  (`crates/rec/src/bound.rs`, seção B, versão 1 do arquivo só quando há
+  ligações; `Session::bindings_at`, `binding_at`, `hit_at`) (seção 2.4:
+  "ligações não gravadas" deixa de valer). o `ide` grava a própria
+  sessão com `PLEV_RECORD=1` em debug (`crates/ide/src/record.rs`,
+  `recording.rs`; `agent::serve_recorded`; `Served::observed`), salva em
+  `$TMPDIR/plev/sessions/`. `PLEV_BACKGROUND=1` no macOS: política de
+  ativação proibida e janela sempre por baixo. o showcase continua sem
+  gravar; imagens continuam sem pixels.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

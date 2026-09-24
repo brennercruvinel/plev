@@ -18,7 +18,13 @@ aprendizado e reorganização do programa.
 
 ## o ciclo
 
-`observe → choose → brief → implement → validate → learn → update → replan → repeat`
+`observar → sondar → implementar → validar → aprender → replanejar`
+
+em detalhe: `observe → choose → brief → implement → validate → learn →
+update → replan → repeat`. a sonda (reproduzir por teste ou comando o
+cenário que motiva o trabalho) vem antes de implementar: o orquestrador
+faz antes do briefing ou o briefing marca o cenário como hipótese e manda
+o agente sondar primeiro, parando se o resultado for outro.
 
 1. **observe.** antes de escolher trabalho novo, reconstruir o estado real da
    `main`: contratos, tasks integradas e pendentes, bugs, limites, métricas,
@@ -61,6 +67,32 @@ aprendizado e reorganização do programa.
    que o permitiu (teste ou gate para a classe, contrato ou briefing menos
    ambíguo, regra de ownership, automação, revisão obrigatória antes do
    briefing). registrado em `state/learnings.md`, seção "processo".
+
+## severidade antes de priorizar
+
+toda descoberta nova (de validação, sonda, experimento, handoff ou
+leitura de código) recebe uma severidade antes de virar task ou mudar
+prioridade. só evidência concreta de P0 ou P1 gera trabalho bloqueante.
+
+| nível | o que é | o que fazer |
+|---|---|---|
+| P0 | quebra uma invariante ou um contrato central | bloqueia o avanço: corrigir e provar com teste |
+| P1 | invalida um experimento, benchmark, medição ou conclusão em uso | corrigir antes de repetir ou usar esse resultado |
+| P2 | melhora explicabilidade, ergonomia ou completude sem invalidar comportamento | registrar; executar quando couber na onda, sem bloquear |
+| P3 | otimização, cosmética, melhoria oportunista | backlog; não interrompe a missão |
+
+a severidade fica escrita onde a descoberta é registrada (arquivo da task,
+journal, programa). na dúvida entre dois níveis, a evidência decide: sem
+cenário reproduzido que quebra a invariante ou invalida o resultado, não é
+P0 nem P1.
+
+ownership: se a próxima task lógica disputa uma superfície já em uso por
+outro agente, escolher trabalho independente que avance a onda, em vez de
+esperar ou dividir a superfície.
+
+ondas: a seguinte não abre enquanto os critérios essenciais da atual não
+estiverem satisfeitos (listados no programa, seção 6), e fechar uma onda
+não exige perfeição local: o que sobra como P2 e P3 segue no backlog.
 
 ## autonomia
 
