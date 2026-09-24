@@ -168,9 +168,9 @@ impl Workbench {
     }
 
     /// Applies a result of the git worker: it ends the receipt of the
-    /// request it answers (a commit completes with its sha and files, or
-    /// is rejected with the delta the index showed), then updates the
-    /// views.
+    /// request it answers (a commit is shown in the views, then completes
+    /// with its sha and files; or it is rejected with the delta the index
+    /// showed), then updates the views.
     pub fn apply(&mut self, event: GitEvent) {
         self.settle(&event);
         if let Some(git) = &mut self.git {

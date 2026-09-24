@@ -2,7 +2,8 @@
 //! point of truth: a commit is checked again there against the real index
 //! (`GitCommand::CommitIf`), and its answer closes the receipt the request
 //! opened: completed with the sha and the files, failed, or rejected with
-//! the delta the index showed.
+//! the delta the index showed. A commit is shown in the view before its
+//! receipt completes, so no observation after the receipt contradicts it.
 
 use std::collections::BTreeSet;
 
@@ -97,15 +98,20 @@ impl Workbench {
         Some((id, end))
     }
 
-    /// The index matched and git committed (or failed to): the receipt
-    /// ends with the commit's sha and files, and the form clears unless
-    /// its message moved since the commit left.
+    /// The index matched and git committed (or failed to): the view shows
+    /// the commit (its files out of the staged rows, the commit on top of
+    /// the stack), the form clears unless its message moved since the
+    /// commit left, and then the receipt ends with the commit's sha and
+    /// files.
     fn committed(&mut self, result: &git::Result<NewCommit>) -> Option<(RequestId, End)> {
         let (id, message, _) = self.take_commit()?;
         let commit = match result {
             Ok(commit) => commit,
             Err(e) => return Some((id, End::Failed(e.to_string()))),
         };
+        if let Some(git) = &mut self.git {
+            git.show_commit(&mut self.workspace, commit, &message);
+        }
         let form = &mut self.workspace.commit_form;
         if form.message() == message {
             form.take_message();
