@@ -110,3 +110,132 @@ unstage, onde F é `from_revision`): `story::acts` só conhece as
 observações servidas. o teste do laboratório deixou de ler o `form` e
 confere que cada ato se apoia numa revisão servida, por observação ou
 por estágio (o script escreve "the app at <rev>" depois de cada ato).
+
+## handoff
+
+```text
+Goal: task-87, um estágio terminal traz a revisão em que o app ficou.
+Status: pronto para integrar; gate verde na branch task/87-stage-revision.
+
+Implementado:
+- StageReply.revision (Option<Revision>, default + skip_serializing_if):
+  presente só num estágio terminal (completed, rejected, failed), ausente
+  nos outros e quando o app não projeta nada naquele instante.
+- Server::forward(&mut self, host: &mut dyn Host): projeta pelo host e
+  serve no anel pelo caminho do observe (host.project(), ring.serve),
+  uma vez por chamada e só quando sai um terminal de um pedido desta
+  porta. os dois pontos de chamada passam o host que já tinham (fim do
+  handle, fim do AgentPort::drain).
+- o significado no doc do StageReply, no plev --help (e plev act --help)
+  e no ADR: a revisão em que o app ficou quando o estágio terminal saiu;
+  inclui o que outros atores mudaram até ali; serve para --since e
+  --from-revision. não decide nada (a checagem continua pelos reads).
+- plev --help, na parte do observe: --keys corta só estado (valores e
+  mudanças das outras chaves); nó novo ou removido, label, ações, flags,
+  parent, ordem e foco passam sempre.
+- o agente roteirizado encadeia na revisão do terminal onde observava só
+  para saber a revisão; mantém as observações que decidem.
+
+Arquivos principais:
+- crates/wire/src/{proto.rs,server.rs,port.rs,lib.rs,bin/plev.rs}
+- crates/wire/tests/{server.rs,codec.rs,traffic.rs,cli.rs}
+- crates/ide/src/bin/lab/scripted.rs, crates/ide/tests/lab.rs
+- docs/ADR/a-terminal-stage-carries-the-revision.md (novo),
+  docs/ADR/agents-act-through-the-semantic-contract.md (consequências)
+
+Interfaces adicionadas/alteradas:
+- wire::StageReply ganha o campo pub revision (quem monta a struct à mão
+  precisa dele; no repositório, só os testes do wire montavam).
+- wire::Server::forward passa a receber &mut dyn Host. AgentPort::drain
+  não mudou, então o showcase e o ide-lab não mudaram na chamada.
+- Host não mudou de forma; o doc de Host::observed diz que a revisão de
+  um estágio não é reportada ali.
+- protocolo v1, aditivo: cliente antigo ignora o campo; estágio antigo
+  (sem o campo) lê como sem revisão.
+
+Testes:
+- server.rs: completed traz a revisão (igual à projeção depois do ato,
+  guardada no anel); --since com ela dá delta; --from-revision com ela é
+  aceito, duas vezes em cadeia; o rejected stale traz a revisão com a
+  mudança da pessoa, e um ato nela roda; requested, accepted, executing
+  e awaiting_confirmation não trazem; o completed tardio de um sync traz
+  o app como está quando sai; uma projeção serve todos os terminais de
+  um forward, e nenhuma quando não sai terminal; app sem projeção: campo
+  ausente; o anel continua limitado e as revisões de estágio empurram a
+  observada para fora; o pin secreto continua comprimento (a revisão não
+  muda com os quatro dígitos).
+- codec.rs: a forma com e sem o campo, um StageReply antigo lê, revisão
+  inválida é recusada. traffic.rs: observes_* e Host::observed não contam
+  a revisão de um estágio. cli.rs: plev imprime, plev observe --since e
+  plev act --from-revision aceitam. plev.rs: as frases do --help.
+- lab.rs: cada ato se apoia numa revisão servida (por observação ou por
+  estágio) e o agente encadeou pelo menos um ato, nos dois cenários.
+
+Validação executada:
+- ./script/gate verde (test, clippy -D warnings, fmt, wasm -D warnings,
+  perna urnaui no subdiretório do target dir): 2102 passados, 0
+  falhas, 12 ignorados. a main tinha 2096 no gate da task-85; +6 testes
+  novos (cinco em wire/tests/server.rs, um em plev.rs).
+- cargo test -p wire, -p ide e -p showcase verdes (dentro do gate).
+- ide-lab --arm scripted, cinco vezes em none e cinco em
+  unstage-after-observe:src/session.rs, antes (main @ f741246) e depois:
+  todas exit 0 e MATCH; a tabela está na seção "medição" acima.
+
+Decisões:
+- Traffic: a revisão de um estágio não é observação que o agente pediu;
+  observes_snapshot e observes_delta não mudam e não há contador novo
+  (stages_out já conta o estágio).
+- Host::observed não é chamado para ela, pela mesma razão: o agente
+  recebe o nome de um estado, não o estado; o gravador (rec::Kind::
+  Observed, "an actor observed the app") continua gravando só
+  observações.
+- ADR curto novo em vez de só uma entrada nas consequências: a decisão
+  tem onde, como, o que não é, o anel e o caso do app que ainda assenta.
+- o agente roteirizado mantém a observação de decisão antes de cada
+  submit: é onde ele decide, e é nela que a pessoa do roteiro age.
+
+Limitações:
+- o relatório do ide-lab (story::acts, crates/ide/src/bin/lab/story.rs,
+  fora dos arquivos permitidos) só conhece as observações servidas: o
+  form de um ato que se apoia na revisão de um estágio sai "observed", e
+  served_index, observations_between e fresh_before não o veem. o teste
+  deixou de ler o form.
+- a pessoa do cenário unstage-after-observe só age depois de uma
+  observação servida (host.rs, Host::observed). um agente que encadeia
+  tudo na revisão dos estágios e não observa antes do submit nunca a faz
+  agir, e a medição do stale sai inválida.
+- a revisão é o que uma observação no mesmo instante serviria. no ide, o
+  show_diff termina antes das linhas chegarem, e um stage que falha no
+  git deixa o palpite da view até o refresh (ver o ADR).
+
+Dependências pendentes:
+- nenhuma para integrar. para a onda 5 com agentes LLM, as duas
+  limitações do laboratório acima (story e pessoa) precisam de decisão.
+
+Riscos de integração:
+- o anel é da porta, dividido entre as conexões, com 16 revisões por
+  padrão: agora cada ato que termina ocupa um lugar (ou renova um que já
+  está lá). um agente que guarda uma revisão observada enquanto 16 outras
+  são servidas recebe unknown_revision e observa de novo.
+- a task 82b mexe no shell do showcase e no ide. esta branch não mudou
+  o showcase, e no ide mudou só o laboratório (bin/lab/scripted.rs e
+  tests/lab.rs).
+- recomendação ao orquestrador: numa task do laboratório, fazer o ide-lab
+  ouvir os estágios que carregam revisão (um gancho no Host, ou o lab
+  lendo o Traffic por estágio) para o story contar a revisão de um
+  estágio como servida, e decidir se a pessoa também age quando um
+  estágio serve o estado pronto.
+
+Commits:
+- 22d32e9 task-87: a terminal stage carries the revision the app is at
+- aa9a0e8 task-87: the wire tests of the revision a terminal stage carries
+- 43f25eb task-87: plev --help and the ADR say what the revision of a last stage is
+- 55a3fdd task-87: the scripted agent chains its acts on the revision a last stage carries
+- (este) task-87: handoff
+```
+
+linha proposta para `docs/ADR/README.md`, depois da do task-83:
+
+```text
+| 2026-09-23 | [a-terminal-stage-carries-the-revision](a-terminal-stage-carries-the-revision.md) | accepted | um estágio terminal (`completed`, `rejected`, `failed`) traz `revision`, a revisão em que o app ficou quando ele saiu, com o que outros atores mudaram até ali, servida no anel como a do `observe` e aceita por `since` e `from_revision`; uma projeção por `forward`, só quando sai um terminal (mediana de 160 us no laboratório, em debug); não é observação (`Traffic` e `Host::observed` não contam) e não decide nada; protocolo continua v1; `plev --help` diz também o que `--keys` corta; o agente roteirizado foi de 16 para 12 mensagens sem intervenção e de 24 para 17 com a pessoa, com metade dos bytes (task-87) |
+```
