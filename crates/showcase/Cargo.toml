@@ -34,6 +34,10 @@ log.workspace = true
 web-time.workspace = true
 # the todo page runs every click through the semantic dispatcher.
 sem.workspace = true
+# the Surface page verifies the todo's IR fixture against the todo's
+# projection (uir) and materializes it over the todo's state (surface).
+surface.workspace = true
+uir.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger.workspace = true

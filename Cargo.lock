@@ -4225,8 +4225,10 @@ dependencies = [
  "sem",
  "serde",
  "serde_json",
+ "surface",
  "svg",
  "tempfile",
+ "uir",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-time",
@@ -4403,6 +4405,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6637bab7722d379c8b41ba849228d680cc12d0a45ba1fa2b48f2a30577a06731"
 dependencies = [
  "float-cmp",
+]
+
+[[package]]
+name = "surface"
+version = "0.1.0"
+dependencies = [
+ "comps",
+ "engine",
+ "indexmap",
+ "log",
+ "sem",
+ "serde_json",
+ "thiserror 2.0.18",
+ "uir",
 ]
 
 [[package]]

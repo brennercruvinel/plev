@@ -3,7 +3,7 @@
 
 use engine::theme::Theme;
 
-use super::apps::{app, builder, dock, editor, git};
+use super::apps::{app, builder, dock, editor, git, surface_page};
 use super::components::{
     avatar, badge, breadcrumb, button, card, chart, checkbox, chip, code_block, context_menu,
     dialog, empty, graph, icon_button, input, navigation_menu, panel, panel_header, progress,
@@ -55,6 +55,8 @@ pub struct Panes {
     pub tree: tree::TreePage,
     // -- apps demo
     pub todo: app::TodoPage,
+    /// Materialized over the todo's capabilities: it operates `todo`.
+    pub surface: surface_page::SurfacePage,
     pub dock: dock::DockPage,
     pub editor: editor::EditorPage,
     pub git: git::GitPage,
@@ -63,6 +65,8 @@ pub struct Panes {
 
 impl Panes {
     pub fn new(theme: &Theme) -> Self {
+        let todo = app::TodoPage::new();
+        let surface = surface_page::SurfacePage::new(&todo);
         Self {
             themes: theme::ThemePage::new(),
             typography: typography::TypographyPage::new(),
@@ -102,7 +106,8 @@ impl Panes {
             toast: toast::ToastPage::new(),
             tooltip: tooltip::TooltipPage::new(),
             tree: tree::TreePage::new(),
-            todo: app::TodoPage::new(),
+            todo,
+            surface,
             dock: dock::DockPage::new(),
             editor: editor::EditorPage::new(theme),
             git: git::GitPage::new(),

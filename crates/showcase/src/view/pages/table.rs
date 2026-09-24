@@ -463,6 +463,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         A,
+        "Surface",
+        "layers",
+        "The todo as a surface materialized from verified plev IR, beside the fixed one.",
+        Pane::Surface,
+    ),
+    page(
+        A,
         "Dock",
         "terminal",
         "Floating message dock: glass blur, hover lift, width morph on click.",

@@ -162,6 +162,14 @@ o da base até ser reescrito.
   `crates/ide/src/lab_repo.rs` (o repositório do laboratório, antes
   `src/bin/lab/repo.rs`, agora público na lib); `plev-inspect --export`.
 
+- `22d59fb` (task-69 fase 1): crate `crates/surface` (`Surface::materialize`
+  só com `VerifiedIr`; `expand`, `layout`, `token`, `widget`, `draw`,
+  `project`, `host`); a página Surface do showcase
+  (`crates/showcase/src/view/apps/surface_page.rs`, `Pane::Surface`); o
+  módulo `agent` do showcase em `crates/showcase/src/view/dispatch/agent.rs`
+  (o `dispatch.rs` com 311 linhas, fora do `FROZEN`).
+  `official-app-pattern` tem o segundo padrão.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

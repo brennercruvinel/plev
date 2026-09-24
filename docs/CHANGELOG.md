@@ -9,6 +9,21 @@ status: living
 
 ## unreleased
 
+- a surface materialized from verified IR (2026-09-24, task-69 phase 1,
+  adr materialized-surfaces-from-verified-ir): a new crate, `surface`,
+  turns a `VerifiedIr` into a live interface: the comps widgets, laid out
+  by the engine's layout, styled by the theme's tokens, semantic by
+  construction (the projection comes from the IR), and every click or key
+  becomes a request through the dispatcher of the app that declares the
+  capability. nothing else materializes: a raw `Ir` does not compile
+  there. the showcase's new Surface page shows the todo written by hand
+  beside the same capabilities materialized from `showcase-todo.ir.json`;
+  adding an item or switching the filter on either changes both, and an
+  agent operates the surface through the port like any page. from
+  verified IR to the first frame's scene: under a millisecond (debug).
+  the showcase's agent module left `dispatch.rs`, which is no longer
+  frozen.
+
 - a recorded session becomes a regression test (2026-09-24, task-64
   phase c, adr sessions-become-regression-tests): a stretch of a session
   (`plev-inspect <session> --export <t0> <t1> <out>`) and a small text

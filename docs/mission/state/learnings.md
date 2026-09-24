@@ -12,6 +12,19 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-69 fase 1
+
+- **uma interface que nunca foi escrita como tela funciona pelo mesmo
+  contrato:** a superfície do todo, materializada de um JSON verificado,
+  opera o mesmo estado que o todo escrito à mão, pelo mesmo dispatcher, e
+  um agente a observa e age nela pela porta como em qualquer página. do
+  IR verificado à cena do primeiro frame leva menos de um milissegundo em
+  debug; o que pesa é o texto e a GPU, como em qualquer frame.
+- **o IR prometia mais que o widget cumpre:** dois props passam no
+  verifier e o widget ignora. o verifier deve recusar o que a
+  materialização não honra, senão o "só o verificado existe" vira "o
+  verificado existe, em parte".
+
 ### 2026-09-24, task-64 fase c
 
 - **uma sessão real virou teste que pega regressão:** a sessão de um
@@ -311,6 +324,13 @@ c"; saídas em `target/agents/exp/`.
 ## processo
 
 ### 2026-09-23
+
+- **teste do caminho inteiro pega o que teste de peça não pega:** a
+  recusa de confirmação (58b) foi testada no `sem` e no ide, e o porto foi
+  testado com atos que terminam pelo git. ninguém testou a recusa pela
+  porta real com o shell servindo só no wake. a sonda da 92, que
+  atravessou tudo, achou o estágio parado. um contrato que atravessa
+  crates pede um teste pelo caminho inteiro, porta real e host real.
 
 - **briefing que proíbe o que o gate exige:** o briefing da 68 proibiu
   `README.md` e `docs/arc/arc.toml`, e o `arc_sync_guard` exige de todo
