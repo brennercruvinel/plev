@@ -14,13 +14,27 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 2: task-90 integrada
+
+- **integrada:** task-90 (`d02b4d1`), a recusa nomeia a cadeia desde o
+  estado que o agente viu. gate verde (2225). a regra antiga recolocada
+  faz os quatro testes novos falharem. os textos do `wire`, do how-to e do
+  ADR do inspector aplicados no fechamento.
+- **publicado:** PR #56 (task-89), merge `c433751`.
+- próximo no `sem`/`wire`: task-91 (a âncora no olhar), agora
+  desbloqueada.
+
 ### ciclo 2: task-89 integrada, o buraco do inspector fechado
 
 - **integrada:** task-89 (`79b8c93`). gate verde (2218). reproduzido no
   laboratório com o `plev`: nome que nunca olhou sai `not_observed`; o
   cenário do A2 é recusado stale, com o arquivo que a pessoa tirou; o
   roteirizado deu MATCH com e sem a pessoa.
-- a 88 (laboratório) pode começar: a 89 não mexeu no roteirizado.
+- **disparada:** task-88 (o laboratório mede pelo valor que o request
+  carrega; a pessoa age também depois de um estágio; o relatório conta
+  `not_observed`; `lab.rs` dividido). o briefing pede a sonda antes de
+  implementar, pela regra nova. três agentes: 63d, 88 e 90.
+- **publicado:** PR #56 (task-89), com a CI rodando.
 
 ### ciclo 2: a task-90 parou com uma premissa errada do briefing
 

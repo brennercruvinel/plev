@@ -292,10 +292,11 @@ fn verdict(out: &mut String, w: &Why) {
         if acted.is_empty() {
             field(out, "acted", "the refusal names nobody");
             for line in [
-                "(acted names only other actors' receipts checked on the exact revision the",
-                "author saw; a change from outside the app never shows there, nor does anyone",
-                "in a refusal recorded before acted existed. before says what the recording",
-                "shows)",
+                "(acted names other actors' receipts from the first one, of any actor, that",
+                "ran on the exact revision the author saw: none did, or only the author ran",
+                "since. a change no receipt made (outside the app, or state the app moved",
+                "outside the dispatcher) starts nothing, and a refusal recorded before acted",
+                "existed names nobody. before says what the recording shows)",
             ] {
                 cont(out, line);
             }

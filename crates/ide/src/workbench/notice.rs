@@ -19,6 +19,15 @@ fn who(actor: &Actor) -> &str {
     }
 }
 
+/// `a`, `a and b`, `a, b and c`.
+fn series(items: &[String]) -> String {
+    match items {
+        [] => String::new(),
+        [one] => one.clone(),
+        [init @ .., last] => format!("{} and {last}", init.join(", ")),
+    }
+}
+
 impl Workbench {
     /// The toast receipt `receipt` deserves: a refusal says what changed
     /// or why the action is not available, a decline that nothing ran, a
@@ -114,15 +123,26 @@ impl Workbench {
         (format!("{head}: {reason}"), intent)
     }
 
-    /// Who ran something on the state a stale request rested on, in
-    /// words: `the person unstaged src/session.rs`. `None` when nobody the app
-    /// knows did (a change from outside it has no request).
+    /// Who ran something since the state a stale request rested on, in
+    /// words and in the order it ran: `the person unstaged src/session.rs`,
+    /// `the person unstaged B, opened the diff of C and unstaged C`. One
+    /// clause per actor's run of actions; another actor starts the next,
+    /// after a semicolon. `None` when nobody the app knows did (a change
+    /// from outside it has no request).
     fn acted(&self, acted: &[Acted]) -> Option<String> {
-        let each: Vec<String> = acted
+        let mut runs: Vec<(&Actor, Vec<String>)> = Vec::new();
+        for a in acted {
+            let did = self.did(a);
+            match runs.last_mut() {
+                Some((actor, dids)) if **actor == a.actor => dids.push(did),
+                _ => runs.push((&a.actor, vec![did])),
+            }
+        }
+        let clauses: Vec<String> = runs
             .iter()
-            .map(|a| format!("{} {}", who(&a.actor), self.did(a)))
+            .map(|(actor, dids)| format!("{} {}", who(actor), series(dids)))
             .collect();
-        (!each.is_empty()).then(|| each.join(", "))
+        (!clauses.is_empty()).then(|| clauses.join("; "))
     }
 
     /// What an action did, in the past tense of the ui.
@@ -137,6 +157,8 @@ impl Workbench {
             "set_value" => "edited the commit message".to_owned(),
             "open" => "opened the commit form".to_owned(),
             "cancel" => "closed the commit form".to_owned(),
+            "show_diff" => format!("opened the diff of {name}"),
+            "dismiss" => "dismissed a notice".to_owned(),
             action => format!("ran {action} on {name}"),
         }
     }

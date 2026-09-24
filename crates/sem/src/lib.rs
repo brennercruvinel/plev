@@ -83,7 +83,7 @@
 //! (`Request::observe`); `check` decides it against the current snapshot
 //! in a fixed order and answers a `Verdict`, with a `Rejection::Stale`
 //! that holds the delta when the observed state moved and, once the
-//! dispatcher records it, the actions of other actors that ran on the
+//! dispatcher records it, the actions of other actors that ran since the
 //! state the actor saw (`Acted`). the `Dispatcher` is
 //! the one path for a person, an agent, assistive technology and a test:
 //! it projects the app's live state (`Operable`), checks, executes, and

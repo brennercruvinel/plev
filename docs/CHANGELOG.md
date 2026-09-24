@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- a stale refusal names the chain since the state the agent saw
+  (2026-09-23, task-90): `acted` named only the other actors' actions
+  checked on the exact revision the agent saw; a person who unstaged two
+  files in a row was named for the first only. now it names every action
+  of other actors that ran from the first request that ran on that state
+  on, in order, and the ide's toast says it in one sentence per actor
+  ("the person unstaged B, opened the diff of C and unstaged C"). a
+  change no request made still names nobody: from outside the app, and in
+  the ide a selection, typing or a toast leaving, which move the state
+  outside the dispatcher (task-91 anchors on the agent's look instead).
+
 - an act rests only on what its agent was shown (2026-09-23, task-89,
   adr an-act-rests-on-what-its-actor-was-shown): the session inspector
   found that `act --from-revision` built the values an agent "saw" from

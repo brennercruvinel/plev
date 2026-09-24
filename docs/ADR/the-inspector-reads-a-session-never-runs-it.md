@@ -21,7 +21,10 @@ receipts of other actors checked on the exact revision the author saw. a
 change from outside the app, an act checked on a later revision, and every
 refusal recorded before task-83 name nobody there. and the contract
 declares what an action reads (`reads`), never what it writes: no field
-anywhere says which receipt moved a value.
+anywhere says which receipt moved a value. updated on 2026-09-23
+(task-90): `acted` names the chain from the first receipt that ran on the
+revision the author saw, so an act checked on a later revision is named
+when a chain started there; a change no receipt made still names nobody.
 
 task-64 phase a asks for the inspector's model without a ui, and a command
 line over it.

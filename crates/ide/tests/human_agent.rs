@@ -9,6 +9,7 @@ mod support;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use comps::feedback::{ContextMenu, MenuEntry};
 use engine::compositor::Compositor;
 use sem::{Actor, Change, Receipt, ReceiptSink, Rejection, SemId, Stage, Value};
 use support::{Rig, agent, completed, set};
@@ -850,4 +851,184 @@ fn the_last_commit_the_ide_made_keeps_its_files_past_the_newest() {
     let initial = order.last().expect("the initial commit");
     let key = format!("{initial}:files").parse().expect("a state ref");
     assert_eq!(seen.value(&key), None, "{initial} carries no files");
+}
+
+// -- who acted since the agent looked (task-90) --
+//
+// Both scenes run through the pointer, as the window does: a left click on
+// a row, a right click that opens the file menu, a click on its first item.
+
+/// The receipt the person's last click or menu item asked for.
+fn last(log: &Log) -> Receipt {
+    log.0.borrow().last().cloned().expect("a receipt")
+}
+
+/// The person right-clicks the row of `path` and clicks the menu's first
+/// item ("Unstage file" on a staged row). The menu is laid out by the
+/// design-system widget the view draws, at the point the view opens it
+/// (half an `xs` right of the pointer); its first item's row is the same
+/// with or without the view's icons, which only widen it.
+fn unstage_from_the_menu(rig: &mut Rig, path: &str) {
+    let c = frame(rig);
+    let (x, y) = center(&c, &format!("changes.file[{path}]"));
+    assert!(rig.bench.right_click(x, y));
+    let _ = frame(rig);
+    let theme = rig.bench.workspace().theme().clone();
+    let menu = ContextMenu::new(vec![
+        MenuEntry::item(0, "Unstage file"),
+        MenuEntry::item(1, "Discard changes"),
+        MenuEntry::item(2, "Ignore file"),
+    ]);
+    let first = menu.entry_rects(x + theme.spacing.xs / 2.0, y, &theme)[0];
+    assert!(
+        rig.bench
+            .click(first.x + first.w / 2.0, first.y + first.h / 2.0)
+    );
+}
+
+/// `(actor, target, action)` of a receipt.
+fn asked(receipt: &Receipt) -> (String, String, String) {
+    let req = &receipt.request;
+    (
+        req.actor.to_string(),
+        req.target.to_string(),
+        req.action.to_string(),
+    )
+}
+
+fn human(target: &str, action: &str) -> (String, String, String) {
+    ("human".into(), target.into(), action.into())
+}
+
+/// A chain that starts on the state the agent saw. The person had clicked
+/// B before the agent decided (selected, its diff shown). After the
+/// decision the person unstages B from the menu of that row: opening the
+/// menu moves nothing projected, so the unstage is checked on the state
+/// the agent saw. Then the person right-clicks C (the row is selected and
+/// its diff asked for) and unstages C from its menu. The agent's commit,
+/// refused stale, names the three in id order, and the toast, which is
+/// the `notices` node the agent reads, says it in one clause.
+#[test]
+fn a_chain_the_person_starts_on_what_the_agent_saw_is_named_whole() {
+    let mut rig = Rig::new(&["A", "B", "C"], &["A", "B", "C"]);
+    let log = Log::default();
+    rig.bench.add_sink(Box::new(log.clone()));
+    rig.agent_writes("fix login");
+    let c = frame(&mut rig);
+    let (x, y) = center(&c, "changes.file[B]");
+    assert!(rig.bench.click(x, y));
+    rig.until(|e| matches!(e, git::GitEvent::DiffWorkdir { .. }));
+
+    let seen = rig.look();
+    assert_eq!(rig.value("changes:selected"), Value::from("B"));
+    let commit = rig.observe(agent(), "commit.submit", "submit", None);
+
+    unstage_from_the_menu(&mut rig, "B");
+    let unstage_b = last(&log);
+    assert_eq!(asked(&unstage_b), human("changes.file[B]", "unstage"));
+    assert_eq!(unstage_b.validated_against, Some(seen.revision()));
+    unstage_from_the_menu(&mut rig, "C");
+    let (show_c, unstage_c) = match log.0.borrow().as_slice() {
+        [.., show, unstage] => (show.clone(), unstage.clone()),
+        all => panic!("receipts: {all:?}"),
+    };
+    assert_eq!(asked(&show_c), human("changes.file[C]", "show_diff"));
+    assert_eq!(asked(&unstage_c), human("changes.file[C]", "unstage"));
+
+    let id = rig.bench.dispatch(commit);
+    assert_eq!(rig.stages(id), ["requested", "rejected"]);
+    let receipt = rig.receipt(id);
+    let Some(Stage::Rejected(Rejection::Stale { changes, acted })) = receipt.stage() else {
+        panic!("stale: {:?}", receipt.stage());
+    };
+    assert!(matches!(
+        changes.as_slice(),
+        [Change::StateChanged { removed, .. }] if removed == &["B", "C"]
+    ));
+    let named: Vec<_> = acted
+        .iter()
+        .map(|a| {
+            let who = (
+                a.actor.to_string(),
+                a.target.to_string(),
+                a.action.to_string(),
+            );
+            (a.id, who)
+        })
+        .collect();
+    assert_eq!(
+        named,
+        [
+            (unstage_b.id, asked(&unstage_b)),
+            (show_c.id, asked(&show_c)),
+            (unstage_c.id, asked(&unstage_c)),
+        ]
+    );
+    assert_eq!(
+        rig.notices(),
+        [
+            "Refused test-agent's submit: B left the staged files, C left the staged files \
+             (the person unstaged B, opened the diff of C and unstaged C)"
+        ]
+    );
+
+    rig.settle(unstage_b.id);
+    rig.settle(unstage_c.id);
+    assert_eq!(rig.git(&["diff", "--cached", "--name-only"]), "A\n");
+    assert_eq!(rig.commits(), 1);
+}
+
+/// The window scene of task-86 through the pointer, and a known limit of
+/// `acted`. The agent decides with no row selected. The person clicks B:
+/// the view moves the selection itself, outside the dispatcher, and the
+/// projected `changes:selected` with it, so the revision leaves the one
+/// the agent saw before any request; only then is the diff asked for.
+/// The person unstages B from its menu. The agent's commit is refused
+/// stale with the right delta and names nobody: no request ran on the
+/// state the agent saw, so the chain has nowhere to start. task-91
+/// anchors on the agent's look instead, and this test changes there.
+#[test]
+fn a_click_on_a_new_row_moves_the_state_outside_the_dispatcher_and_nobody_is_named() {
+    let mut rig = Rig::new(&["A", "B"], &["A", "B"]);
+    let log = Log::default();
+    rig.bench.add_sink(Box::new(log.clone()));
+    rig.agent_writes("login and session");
+    let seen = rig.look();
+    assert_eq!(rig.value("changes:selected"), Value::from(""));
+    let commit = rig.observe(agent(), "commit.submit", "submit", None);
+
+    let c = frame(&mut rig);
+    let (x, y) = center(&c, "changes.file[B]");
+    assert!(rig.bench.click(x, y));
+    let show = last(&log);
+    assert_eq!(asked(&show), human("changes.file[B]", "show_diff"));
+    assert!(show.validated_against.is_some());
+    assert_ne!(
+        show.validated_against,
+        Some(seen.revision()),
+        "the selection moved the revision before the diff was asked for"
+    );
+    rig.until(|e| matches!(e, git::GitEvent::DiffWorkdir { .. }));
+    unstage_from_the_menu(&mut rig, "B");
+    let unstage = last(&log);
+    assert_eq!(asked(&unstage), human("changes.file[B]", "unstage"));
+    assert_ne!(unstage.validated_against, Some(seen.revision()));
+
+    let id = rig.bench.dispatch(commit);
+    assert_eq!(rig.stages(id), ["requested", "rejected"]);
+    let receipt = rig.receipt(id);
+    let Some(Stage::Rejected(Rejection::Stale { changes, acted })) = receipt.stage() else {
+        panic!("stale: {:?}", receipt.stage());
+    };
+    assert!(matches!(
+        changes.as_slice(),
+        [Change::StateChanged { removed, .. }] if removed == &["B"]
+    ));
+    assert!(acted.is_empty(), "known limit (task-91): {acted:?}");
+    assert_eq!(
+        rig.notices(),
+        ["Refused test-agent's submit: B left the staged files"]
+    );
+    rig.settle(unstage.id);
+    assert_eq!(rig.git(&["diff", "--cached", "--name-only"]), "A\n");
 }
