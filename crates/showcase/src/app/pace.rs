@@ -58,6 +58,9 @@ impl App {
             // and the state it was drawn from.
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             self.record_frame();
+            // The frame to whoever watches this window's scene (task-79).
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            self.offer_scene(id);
             // The bar and the tray follow what this frame was drawn from.
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             {
@@ -71,6 +74,8 @@ impl App {
             host.begin_frame();
             self.view.render_detached(host.compositor_mut());
             host.present(clear, "showcase_page_window");
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            self.offer_scene(id);
         }
         // `wake.now` is carried by this frame: the scene was built after
         // the tick, so a flipped caret is already in it.
