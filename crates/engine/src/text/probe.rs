@@ -13,7 +13,17 @@
 //! behavior only shows under accumulated state: grown atlas, evictions,
 //! layers retained across frames.
 //!
+//! [`shape_report`] is the shaping side of the same audit: which glyphs a
+//! text shapes into, from which faces, against the embedded set alone or
+//! against this machine's system fonts too. The text audit
+//! (`tests/text_audit.rs`) reads it per script.
+//!
 //! [`TextSystem`]: crate::text::TextSystem
+
+use std::cell::RefCell;
+
+use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight, fontdb};
+use rustc_hash::FxHashSet;
 
 use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::gpu::RenderConfig;
@@ -250,4 +260,165 @@ pub fn render(
         logical_h,
         raster_scale,
     )
+}
+
+/// The faces a run is shaped against.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Faces {
+    /// The embedded faces alone: what wasm, android and ios shape with.
+    Embedded,
+    /// The embedded faces over this machine's system fonts: what the
+    /// desktop `TextSystem` and `TextMeasurer` shape with. The result
+    /// depends on the fonts installed here.
+    Desktop,
+}
+
+/// One glyph of a shaped run, as the layout places it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GlyphReport {
+    /// Byte range of the glyph's cluster in the paragraph.
+    pub start: usize,
+    pub end: usize,
+    /// Glyph index in `family`; 0 is the face's `.notdef`, the tofu.
+    pub glyph_id: u16,
+    /// First family name of the face the glyph came from.
+    pub family: String,
+    /// Whether that face is one the engine embeds.
+    pub embedded: bool,
+    /// Pen advance in logical px.
+    pub advance: f32,
+    /// The laid-out line the glyph sits on; wrapped text has several.
+    pub line: usize,
+    /// Bidi embedding level; odd is right-to-left.
+    pub level: u8,
+}
+
+impl GlyphReport {
+    pub fn is_notdef(&self) -> bool {
+        self.glyph_id == 0
+    }
+}
+
+/// What shaping made of one text: the glyphs in visual order, line by
+/// line, and the size the measurer would report for them.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ShapeReport {
+    pub glyphs: Vec<GlyphReport>,
+    pub width: f32,
+    pub height: f32,
+    pub lines: usize,
+}
+
+impl ShapeReport {
+    /// Glyphs that shaped into a `.notdef`.
+    pub fn notdef(&self) -> usize {
+        self.glyphs.iter().filter(|g| g.is_notdef()).count()
+    }
+
+    /// Distinct families the glyphs came from, in visual order.
+    pub fn families(&self) -> Vec<String> {
+        let mut out: Vec<String> = Vec::new();
+        for g in &self.glyphs {
+            if !out.contains(&g.family) {
+                out.push(g.family.clone());
+            }
+        }
+        out
+    }
+}
+
+struct AuditFonts {
+    system: FontSystem,
+    embedded: FxHashSet<fontdb::ID>,
+}
+
+impl AuditFonts {
+    fn new(faces: Faces) -> Self {
+        let mut system = match faces {
+            Faces::Embedded => {
+                FontSystem::new_with_locale_and_db("en-US".to_string(), fontdb::Database::new())
+            }
+            Faces::Desktop => FontSystem::new(),
+        };
+        let embedded = super::fonts::register_embedded_fonts(system.db_mut())
+            .into_iter()
+            .collect();
+        Self { system, embedded }
+    }
+}
+
+thread_local! {
+    /// One font system per face set, built on first use: loading the
+    /// system fonts costs a visible fraction of a second.
+    static AUDIT_FONTS: RefCell<Vec<(Faces, AuditFonts)>> = const { RefCell::new(Vec::new()) };
+}
+
+fn with_fonts<R>(faces: Faces, f: impl FnOnce(&mut AuditFonts) -> R) -> R {
+    AUDIT_FONTS.with(|cell| {
+        let mut all = cell.borrow_mut();
+        let at = match all.iter().position(|(k, _)| *k == faces) {
+            Some(at) => at,
+            None => {
+                all.push((faces, AuditFonts::new(faces)));
+                all.len() - 1
+            }
+        };
+        f(&mut all[at].1)
+    })
+}
+
+/// Shape `text` the way the frame and the measurer do (same attrs, same
+/// wrap) and report every glyph. `max_width` wraps as `TextMeasurer`
+/// would; `None` keeps one line.
+pub fn shape_report(
+    text: &str,
+    style: &TextStyle,
+    max_width: Option<f32>,
+    faces: Faces,
+) -> ShapeReport {
+    with_fonts(faces, |fonts| {
+        let fs = &mut fonts.system;
+        let mut attrs = Attrs::new().weight(Weight(style.font_weight));
+        if style.letter_spacing != 0.0 && style.font_size > 0.0 {
+            // cosmic-text tracking is in EM; the engine API is px.
+            attrs = attrs.letter_spacing(style.letter_spacing / style.font_size);
+        }
+        if let Some(ref family) = style.font_family {
+            attrs = attrs.family(Family::Name(family));
+        }
+        let mut buffer = Buffer::new(fs, Metrics::new(style.font_size, style.line_height));
+        buffer.set_size(fs, max_width, None);
+        buffer.set_text(fs, text, &attrs, Shaping::Advanced, None);
+        buffer.shape_until_scroll(fs, false);
+
+        let mut report = ShapeReport {
+            glyphs: Vec::new(),
+            width: 0.0,
+            height: 0.0,
+            lines: 0,
+        };
+        for (line, run) in buffer.layout_runs().enumerate() {
+            report.lines = line + 1;
+            report.width = report.width.max(run.line_w);
+            report.height = run.line_top + run.line_height;
+            for glyph in run.glyphs {
+                let family = fs
+                    .db()
+                    .face(glyph.font_id)
+                    .and_then(|f| f.families.first().map(|(name, _)| name.clone()))
+                    .unwrap_or_else(|| "?".to_string());
+                report.glyphs.push(GlyphReport {
+                    start: glyph.start,
+                    end: glyph.end,
+                    glyph_id: glyph.glyph_id,
+                    family,
+                    embedded: fonts.embedded.contains(&glyph.font_id),
+                    advance: glyph.w,
+                    line,
+                    level: glyph.level.number(),
+                });
+            }
+        }
+        report
+    })
 }
