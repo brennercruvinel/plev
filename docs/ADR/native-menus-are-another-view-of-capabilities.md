@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [platform-integration, menus, muda, semantic-contract, dispatcher, agents, showcase, winit]
 date: 2026-09-24
 ---

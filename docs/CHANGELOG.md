@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- native menus are another view of capabilities (2026-09-24, task-76 item
+  4): the engine reads a menu model from an app's projection (every item
+  is a `SemId` and an action it already declares, with its shortcut),
+  `muda` mounts it on the desktop, and a click becomes a request through
+  the app's dispatcher as a person, with the same checks as the button.
+  the showcase shell is projected now (`shell.page`, `shell.theme`,
+  `shell.detach`, `shell.save_session`), its keys go through the
+  dispatcher, and its menu bar carries the theme, the pages, detach, save
+  and the active page's plain actions. no menu on wasm or mobile.
+
 - windows are hosts, the app owns the state (2026-09-24, task-76 item 2):
   the engine groups what belongs to a window (the window, its GPU
   context, compositor, input, IME, scale, clocks) in a `WindowHost` and
