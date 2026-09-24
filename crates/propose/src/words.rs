@@ -1,7 +1,8 @@
 //! the intent as the rules read it.
 //!
 //! every word is folded (lowercase, no accent, no plural `s`) and is one
-//! of three things: a word of the grammar (a part, a form, "everything"),
+//! of three things: a word of the grammar (a part, a form, "everything",
+//! "compare"),
 //! a filler the grammar skips (articles, "only", "field"), or a word left
 //! for the app, which must be one of the app's own words. the grammar is
 //! the proposer's, so it reads english and portuguese; the app's words
@@ -26,10 +27,20 @@ pub enum Part {
     /// its node's children): the list repeated, each item with what it
     /// shows and accepts.
     List,
+    /// a view of the app's media (a media or image node with a frame ref
+    /// state, a text naming a media node and an instant): one image per
+    /// view shown.
+    Media,
 }
 
 impl Part {
-    pub const ALL: [Part; 4] = [Part::Entry, Part::Choice, Part::Count, Part::List];
+    pub const ALL: [Part; 5] = [
+        Part::Entry,
+        Part::Choice,
+        Part::Count,
+        Part::List,
+        Part::Media,
+    ];
 }
 
 impl fmt::Display for Part {
@@ -39,6 +50,7 @@ impl fmt::Display for Part {
             Part::Choice => "a choice (filter)",
             Part::Count => "counts",
             Part::List => "a list (items)",
+            Part::Media => "a view of the media (video)",
         })
     }
 }
@@ -55,9 +67,10 @@ pub enum Form {
 }
 
 /// the words of the grammar, as a person reads them.
-pub const GRAMMAR: &str = "add, filter, counts (or stats), items (or list), compact, two columns \
-                           and everything (adicionar, filtro, contagem, itens, compacto, duas \
-                           colunas, tudo)";
+pub const GRAMMAR: &str = "add, filter, counts (or stats), items (or list), video (or image, \
+                           frame), compare, compact, two columns and everything (adicionar, \
+                           filtro, contagem, itens, vídeo, comparar, compacto, duas colunas, \
+                           tudo)";
 
 const ADD: &[&str] = &[
     "add",
@@ -86,6 +99,21 @@ const COUNT: &[&str] = &[
     "total",
 ];
 const LIST: &[&str] = &["item", "items", "itens", "list", "lista", "listar"];
+const MEDIA: &[&str] = &[
+    "video", "videos", "image", "imagem", "imagens", "frame", "frames", "quadro", "media", "midia",
+    "picture", "preview", "previa",
+];
+/// "compare": every view of the media, side by side.
+const COMPARE: &[&str] = &[
+    "compare",
+    "comparar",
+    "compara",
+    "comparison",
+    "comparacao",
+    "versus",
+    "vs",
+    "diff",
+];
 const COMPACT: &[&str] = &["compact", "compacto", "compacta", "single"];
 const COLUMNS: &[&str] = &["column", "coluna"];
 /// "one column" and "uma coluna" are the compact form.
@@ -144,6 +172,9 @@ pub(crate) struct Reading {
     pub parts: BTreeSet<Part>,
     /// "everything": every part the app has.
     pub everything: bool,
+    /// "compare": every view of each media node, side by side (it names
+    /// the media part too).
+    pub compare: bool,
     pub form: Option<Form>,
     /// the word that asked for the entry, as written: the label of a
     /// button no other name is found for.
@@ -155,7 +186,11 @@ pub(crate) struct Reading {
 impl Reading {
     /// the intent says nothing the rules read.
     pub fn is_empty(&self) -> bool {
-        self.parts.is_empty() && !self.everything && self.form.is_none() && self.words.is_empty()
+        self.parts.is_empty()
+            && !self.everything
+            && !self.compare
+            && self.form.is_none()
+            && self.words.is_empty()
     }
 }
 
@@ -174,6 +209,11 @@ pub(crate) fn read(intent: &str) -> Reading {
             r.parts.insert(Part::Count);
         } else if is(&word, LIST) {
             r.parts.insert(Part::List);
+        } else if is(&word, MEDIA) {
+            r.parts.insert(Part::Media);
+        } else if is(&word, COMPARE) {
+            r.parts.insert(Part::Media);
+            r.compare = true;
         } else if is(&word, COLUMNS) {
             let one = is(&before, ONE);
             r.form = Some(if one { Form::Compact } else { Form::Columns });
@@ -224,5 +264,20 @@ mod tests {
         assert!(read("tudo").everything);
         assert!(read("  ,  ").is_empty());
         assert!(read("the only field").is_empty());
+        for media in ["the video", "o vídeo", "a frame", "the images"] {
+            assert_eq!(read(media).parts, BTreeSet::from([Part::Media]), "{media}");
+            assert!(!read(media).compare);
+        }
+        let compare = read("compare the original with the cuts");
+        assert!(compare.compare);
+        assert_eq!(compare.parts, BTreeSet::from([Part::Media]));
+        assert_eq!(
+            compare.words,
+            [
+                ("original".to_owned(), "original".to_owned()),
+                ("cuts".to_owned(), "cut".to_owned())
+            ]
+        );
+        assert!(read("comparar").compare);
     }
 }

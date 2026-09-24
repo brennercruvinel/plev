@@ -5,11 +5,32 @@
 
 use std::collections::BTreeSet;
 
-use sem::{ActionDecl, Actor, Actors, Node, Role, SemId, Snapshot, StateRef, ValueKind};
+use sem::{ActionDecl, Actor, Actors, Node, Role, SemId, Snapshot, StateRef, Value, ValueKind};
 use uir::{Capabilities, CapabilityRef};
 
 use crate::list::{List, lists};
 use crate::words::{fold, folded, split};
+
+/// true when `value` is a frame ref: a text naming a media or image node
+/// of `app` and an instant, `<id>@<seconds>`, the form an app projects a
+/// frame it can decode in (the silences: `silences.video@4.017052`). an
+/// `image` bound to it shows that frame. the node named is looked up by
+/// its role, never by its name.
+pub(crate) fn is_frame_ref(app: &Snapshot, value: &Value) -> bool {
+    let Value::Text(text) = value else {
+        return false;
+    };
+    let Some((node, at)) = text.rsplit_once('@') else {
+        return false;
+    };
+    let Ok(id) = SemId::parse(node) else {
+        return false;
+    };
+    at.parse::<f64>().is_ok_and(f64::is_finite)
+        && app
+            .get(&id)
+            .is_some_and(|n| matches!(n.role, Role::Media | Role::Image))
+}
 
 /// a text input of the app.
 #[derive(Clone, Debug)]
@@ -44,13 +65,25 @@ pub(crate) struct Choice {
     pub options: Vec<Opt>,
 }
 
-/// a number the app shows.
+/// a number the app shows (an item of a list shows its own in the list).
 #[derive(Clone, Debug)]
 pub(crate) struct Count {
     pub at: StateRef,
     /// its key: the node's label may carry the value itself.
     pub label: String,
     pub words: BTreeSet<String>,
+}
+
+/// a media or image node of the app with the frames it offers.
+#[derive(Clone, Debug)]
+pub(crate) struct Media {
+    pub node: SemId,
+    pub label: String,
+    /// the node's words and the keys of its views.
+    pub words: BTreeSet<String>,
+    /// each frame ref state, with its key: the views of the media
+    /// (`original`, `result`), in projection order.
+    pub views: Vec<(StateRef, String)>,
 }
 
 /// everything the app offers a surface, in projection order.
@@ -60,6 +93,7 @@ pub(crate) struct Parts {
     pub choices: Vec<Choice>,
     pub counts: Vec<Count>,
     pub lists: Vec<List>,
+    pub media: Vec<Media>,
 }
 
 /// true when `actors` lets `actor` ask, as the dispatcher reads it.
@@ -119,7 +153,13 @@ impl Parts {
             target: node.id.clone(),
             action: decl.name.clone(),
         };
-        let mut parts = Parts::default();
+        let frame = |v: &Value| is_frame_ref(app, v);
+        let mut parts = Parts {
+            lists: lists(caps, app, &usable, &frame),
+            ..Parts::default()
+        };
+        // an item of a list shows its numbers in the list, not as counts
+        let listed: BTreeSet<SemId> = parts.lists.iter().flat_map(|l| l.members(app)).collect();
         let mut groups: Vec<SemId> = Vec::new();
         for node in app.nodes().values() {
             let bare: Vec<&ActionDecl> = node
@@ -180,7 +220,7 @@ impl Parts {
             for (key, value) in &node.state {
                 let at = StateRef::new(node.id.clone(), key.clone());
                 let number = matches!(value.kind(), ValueKind::Int | ValueKind::Num);
-                if number && caps.datum(&at).is_some() {
+                if number && !listed.contains(&node.id) && caps.datum(&at).is_some() {
                     parts.counts.push(Count {
                         label: key.as_str().to_owned(),
                         words: split(key.as_str()).map(fold).collect(),
@@ -188,8 +228,28 @@ impl Parts {
                     });
                 }
             }
+            if matches!(node.role, Role::Media | Role::Image) {
+                let views: Vec<(StateRef, String)> = node
+                    .state
+                    .iter()
+                    .filter(|(_, v)| is_frame_ref(app, v))
+                    .map(|(key, _)| (StateRef::new(node.id.clone(), key.clone()), key.to_string()))
+                    .filter(|(at, _)| caps.datum(at).is_some())
+                    .collect();
+                if !views.is_empty() {
+                    let mut words = node_words(node);
+                    for (_, key) in &views {
+                        words.extend(split(key).map(fold));
+                    }
+                    parts.media.push(Media {
+                        node: node.id.clone(),
+                        label: node.label.clone(),
+                        words,
+                        views,
+                    });
+                }
+            }
         }
-        parts.lists = lists(caps, app, &usable);
         parts
     }
 
@@ -211,6 +271,9 @@ impl Parts {
         for l in &self.lists {
             all.extend(l.words.iter().cloned());
         }
+        for m in &self.media {
+            all.extend(m.words.iter().cloned());
+        }
         all.into_iter().collect()
     }
 
@@ -222,6 +285,7 @@ impl Parts {
             Part::Choice => !self.choices.is_empty(),
             Part::Count => !self.counts.is_empty(),
             Part::List => !self.lists.is_empty(),
+            Part::Media => !self.media.is_empty(),
         }
     }
 }
