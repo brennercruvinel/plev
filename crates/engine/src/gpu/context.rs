@@ -3,6 +3,7 @@ use wgpu::util::DeviceExt;
 use winit::window::Window;
 
 use super::config::RenderConfig;
+use super::loss::DeviceLoss;
 use super::utils::{ortho_projection, texture_sampler_bgl, uniform_bgl};
 
 /// Per-pipeline WGSL source: read from disk when `hot-reload` is enabled,
@@ -28,6 +29,8 @@ pub const HEADLESS_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8Unorm
 pub struct GpuContext {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
+    /// The lost flag of `device`, raised by wgpu's callback (`gpu::loss`).
+    pub(crate) loss: DeviceLoss,
     pub surface: Option<wgpu::Surface<'static>>,
     pub surface_config: wgpu::SurfaceConfiguration,
     pub config: RenderConfig,
@@ -266,8 +269,9 @@ impl GpuContext {
     /// into: the projection, the bind group layouts, every pipeline in the
     /// render format (the sRGB view format, `surface_format()`), the
     /// composite sampler. The windowed and the headless constructors both
-    /// end here, so a frame is drawn by the same pipelines either way.
-    fn from_device(
+    /// end here, so a frame is drawn by the same pipelines either way, and
+    /// so does a recovery after the device was lost (`gpu::recover`).
+    pub(super) fn from_device(
         device: wgpu::Device,
         queue: wgpu::Queue,
         surface: Option<wgpu::Surface<'static>>,
@@ -390,9 +394,12 @@ impl GpuContext {
             None
         };
 
+        let loss = DeviceLoss::install(&device);
+
         Self {
             device,
             queue,
+            loss,
             surface,
             surface_config,
             config,

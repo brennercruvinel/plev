@@ -1,6 +1,7 @@
 mod config;
 mod context;
 pub mod image;
+mod loss;
 mod pipelines;
 mod surface;
 pub mod texture_pool;
@@ -13,3 +14,4 @@ mod tests;
 pub use config::RenderConfig;
 pub use context::*;
 pub use image::{ImageError, ImageHandle, load_image_bytes, load_image_rgba};
+pub use loss::LostDevice;

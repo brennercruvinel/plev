@@ -86,12 +86,22 @@ fn probe_destroy_then_draw() {
     let mut c = Compositor::new();
     scene(&mut c, image);
     let a = r.render(&mut c, clear()).expect("frame A");
-    let ink = a.rgba.chunks_exact(4).filter(|p| p[..3] != [48, 48, 48]).count();
-    eprintln!("frame A: {}x{}, {ink} non-background pixels", a.width, a.height);
+    let ink = a
+        .rgba
+        .chunks_exact(4)
+        .filter(|p| p[..3] != [48, 48, 48])
+        .count();
+    eprintln!(
+        "frame A: {}x{}, {ink} non-background pixels",
+        a.width, a.height
+    );
     eprintln!("frame A image pixel (400,60) = {:?}", a.pixel(400, 60));
 
     r.gpu().device.destroy();
-    eprintln!("after destroy, before any poll: callback = {:?}", seen.lock().unwrap());
+    eprintln!(
+        "after destroy, before any poll: callback = {:?}",
+        seen.lock().unwrap()
+    );
     let p1 = r.gpu().device.poll(wgpu::PollType::Poll);
     eprintln!("poll(Poll) = {p1:?}; callback = {:?}", seen.lock().unwrap());
     let p2 = r.gpu().device.poll(wgpu::PollType::wait_indefinitely());
@@ -120,7 +130,9 @@ fn probe_destroy_then_draw() {
         .expect("a fresh renderer");
     let mut c2 = Compositor::new();
     scene(&mut c2, image);
-    let b = fresh.render(&mut c2, clear()).expect("frame on a fresh device");
+    let b = fresh
+        .render(&mut c2, clear())
+        .expect("frame on a fresh device");
     eprintln!(
         "fresh renderer, same scene: equal to A: {}, image pixel = {:?}",
         b.rgba == a.rgba,
