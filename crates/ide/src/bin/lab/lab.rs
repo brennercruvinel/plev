@@ -1,7 +1,8 @@
 //! the plev and scripted arms: the workbench served through the agent
 //! port, recorded by the flight recorder on the workbench's clock, with
-//! the scripted person on the port's side. `finish` tells the run at the
-//! end (`crate::finish`).
+//! the scripted person on the port's side, who may also answer what an
+//! agent asks her (`crate::answer`). `finish` tells the run at the end
+//! (`crate::finish`).
 
 use std::cell::RefCell;
 use std::sync::mpsc::RecvTimeoutError;
@@ -12,6 +13,7 @@ use rec::{Limits, Recorder};
 use sem::{Millis, Rejection, SemId, Stage};
 use wire::{AgentPort, Config};
 
+use crate::answer::Answers;
 use crate::args::{Args, Arm, Until};
 use crate::bench::{Bench, Wake};
 use crate::host::{ActSeen, Costs, LabHost, Log, Person, Served};
@@ -115,7 +117,10 @@ impl Lab {
             let _ = wake.send(Wake::Port);
         })
         .map_err(|e| format!("the agent port: {e}"))?;
-        let person = Person::new(args.human.clone());
+        let person = Person::new(
+            args.human.clone(),
+            Answers::new(args.answer, args.answer_after),
+        );
         Ok(Lab {
             args,
             app,
@@ -147,6 +152,11 @@ impl Lab {
         );
         println!("task: {TASK}");
         println!("person: {}", self.args.human.describe());
+        println!(
+            "the person answers: {}, {} ms after a request waits for her",
+            self.args.answer.name(),
+            self.args.answer_after.as_millis()
+        );
         println!("agent port: {}", self.port.path().display());
         println!(
             "until: {}, timeout {} s, grace {} s",
@@ -167,13 +177,19 @@ impl Lab {
     }
 
     /// the loop: wait for a wake, apply the git events, drain the port,
-    /// record what changed, watch the receipts, until the end.
+    /// record what changed, let the person answer what waits for her,
+    /// watch the receipts, until the end.
     fn serve(&mut self) -> &'static str {
         let deadline = self.started + self.args.timeout;
         let mut ending: Option<(Instant, &'static str)> = None;
         loop {
             let now = Instant::now();
             let wait = TICK.min(deadline.saturating_duration_since(now));
+            let wait = self
+                .person
+                .answers
+                .next_due()
+                .map_or(wait, |due| wait.min(due.saturating_duration_since(now)));
             let mut changed = false;
             match self.app.rx.recv_timeout(wait) {
                 Ok(Wake::Git(event)) => {
@@ -198,6 +214,7 @@ impl Lab {
                     self.intervention_recorded_at = Some(self.app.bench.now());
                 }
             }
+            self.answer();
             self.settle();
             if ending.is_none() {
                 if self.args.until == Until::Commit && self.submit_completed.is_some() {
@@ -266,7 +283,7 @@ impl Lab {
 
     /// the state as projected now and the frame as drawn now, both
     /// recorded at the workbench's clock.
-    fn record(&mut self) {
+    pub fn record(&mut self) {
         let now = self.app.bench.now();
         let at = Instant::now();
         let snap = self.app.bench.snapshot();

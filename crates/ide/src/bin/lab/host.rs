@@ -1,8 +1,9 @@
 //! the workbench as the port serves it, with the laboratory listening:
 //! every observation served is recorded, the scripted person acts right
 //! after one or right before an agent's submit reaches the dispatcher (by
-//! the scenario), every projection and dispatch is timed, and a sink keeps
-//! every receipt as it stands.
+//! the scenario), a request of an agent that waits for a person is handed
+//! to her to answer (`crate::answer`), every projection and dispatch is
+//! timed, and a sink keeps every receipt as it stands.
 
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeSet;
@@ -17,6 +18,7 @@ use sem::{
 };
 use wire::Host;
 
+use crate::answer::Answers;
 use crate::args::Human;
 use crate::repo::{Repo, TASK_FILES};
 
@@ -88,17 +90,20 @@ pub struct Intervention {
     pub staged_after: BTreeSet<String>,
 }
 
-/// the scripted person: waits for the condition, acts once.
+/// the scripted person: waits for the condition, acts once; and answers
+/// what agents ask her (`answers`).
 pub struct Person {
     pub scenario: Human,
     pub fired: Option<Intervention>,
+    pub answers: Answers,
 }
 
 impl Person {
-    pub fn new(scenario: Human) -> Self {
+    pub fn new(scenario: Human, answers: Answers) -> Self {
         Person {
             scenario,
             fired: None,
+            answers,
         }
     }
 
@@ -296,6 +301,15 @@ impl Host for LabHost<'_> {
         };
         let bench = &mut *self.bench;
         let request = self.costs.dispatch(|| bench.dispatch(req));
+        // an agent's question, or an action that asks a person: the
+        // dispatcher holds it for her, and the modal asks it.
+        let waits = bench.receipt(request).is_some_and(|r| {
+            r.stage() == Some(&Stage::AwaitingConfirmation)
+                && matches!(r.request.actor, Actor::Agent { .. })
+        });
+        if waits {
+            self.person.answers.waits(request, bench.now());
+        }
         self.acts.push(ActSeen {
             request,
             served_before: self.served.len(),

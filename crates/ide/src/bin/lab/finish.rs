@@ -288,6 +288,7 @@ impl Lab {
         }
         report::print_table("agent", &agent);
         report::print_table("refusals of the protocol", &refusals.rows());
+        report::print_table("the person's answers", &person.answers.rows());
         match intervention {
             Some(i) => report::print_table("intervention", &intervention_rows(i)),
             None => report::print_table("intervention", &[row("fired", "false")]),
