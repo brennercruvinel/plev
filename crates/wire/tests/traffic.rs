@@ -165,6 +165,22 @@ fn an_observation_served_to_a_named_actor_reaches_the_host() {
     assert!(matches!(one(unknown), Reply::Snapshot(_)));
     assert_eq!(ear.heard.len(), 4);
     assert_eq!(ear.heard[3], (claude(), None, r2));
+
+    // the revision a terminal stage carries is not an observation: the
+    // agent is given its name, not what it holds, and nothing is reported.
+    let stages = say(
+        &mut server,
+        &mut ear,
+        A,
+        &format!(
+            r#"{{"v":1,"id":"5","type":"act","target":"todo.item[1]","action":"toggle","from_revision":"{r2}"}}"#
+        ),
+    );
+    let Some(Reply::Stage(end)) = stages.last().map(|m| &m.reply) else {
+        panic!("{stages:?}");
+    };
+    assert!(end.is_terminal() && end.revision.is_some(), "{end:?}");
+    assert_eq!(ear.heard.len(), 4, "{:?}", ear.heard);
 }
 
 #[test]
@@ -211,6 +227,12 @@ fn the_server_counts_what_it_answered() {
     assert_eq!(host.app.done(1), Some(true));
     let t = server.traffic();
     assert_eq!((t.acts, t.stages_out, t.rejected_stale), (1, 4, 0));
+    // its `completed` carries a revision, which is not an observation.
+    assert!(matches!(
+        toggled.last().map(|m| &m.reply),
+        Some(Reply::Stage(s)) if s.revision.is_some()
+    ));
+    assert_eq!((t.observes_snapshot, t.observes_delta), (1, 1));
 
     // a stage that ends later is counted when it goes out, not before.
     let started = say(

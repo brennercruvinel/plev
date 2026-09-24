@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 
 use sem::Revision;
 use toy::ToyHost;
-use wire::{AgentPort, Config, ProtoError, Reply, ServerMsg, decode_server};
+use wire::{AgentPort, Config, Host, ProtoError, Reply, ServerMsg, decode_server};
 
 struct Run {
     code: i32,
@@ -156,6 +156,37 @@ fn observe_and_act_by_app_name_with_their_exit_codes() {
     };
     let asked = first.asked.as_ref().unwrap();
     assert_eq!(asked.actor, sem::Actor::Agent { name: "cli".into() });
+
+    // the completed line carries the revision the app is at, and the next
+    // command takes it: a delta since it, an act resting on it.
+    let Some(Reply::Stage(end)) = done.out.last().map(|m| &m.reply) else {
+        panic!("a stage: {:?}", done.out);
+    };
+    let landed = end.revision.expect("the completed carries a revision");
+    assert_eq!(Some(landed), host.project().map(|s| s.revision()));
+    let landed = landed.to_string();
+    let since = plev(
+        &mut port,
+        &woke,
+        &mut host,
+        t,
+        &["observe", "--since", &landed],
+    );
+    assert_eq!(since.code, 0, "{}", since.err);
+    assert!(
+        matches!(&since.out[0].reply, Reply::Delta(d) if d.changes.is_empty()),
+        "{:?}",
+        since.out
+    );
+    let chained = plev(
+        &mut port,
+        &woke,
+        &mut host,
+        t,
+        &["act", "todo.item[3]", "toggle", "--from-revision", &landed],
+    );
+    assert_eq!(chained.code, 0, "{}", chained.err);
+    assert_eq!(host.app.done(3), Some(false));
 
     // a person toggles item 1 after the observation: the act on the
     // revision the agent saw is stale.

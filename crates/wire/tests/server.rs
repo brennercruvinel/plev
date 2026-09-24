@@ -537,6 +537,308 @@ fn a_stale_refusal_names_the_person_who_acted_on_what_the_agent_saw() {
     assert!(line.contains(r#""acted":[{"id":"#), "{line}");
 }
 
+/// the revision the terminal stage of `stages` carries; the stages
+/// before it carry none.
+fn landed(stages: &[StageReply]) -> Revision {
+    let Some((last, before)) = stages.split_last() else {
+        panic!("no stage");
+    };
+    assert!(last.is_terminal(), "{last:?}");
+    assert!(
+        before.iter().all(|s| s.revision.is_none()),
+        "only the terminal stage carries a revision: {stages:?}"
+    );
+    last.revision
+        .unwrap_or_else(|| panic!("the terminal stage carries a revision: {last:?}"))
+}
+
+/// the acceptance: the `completed` of an act carries the revision the app
+/// is at, `since` it is a delta, and the next act rests on it with no
+/// observation in between.
+#[test]
+fn a_completed_act_carries_the_revision_the_next_one_rests_on() {
+    let (mut server, mut host) = setup();
+    let seen = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "t1",
+            "todo.item[1]",
+            "toggle",
+            &from(seen),
+        ),
+        "t1",
+    );
+    assert_eq!(
+        names(&out),
+        ["requested", "accepted", "executing", "completed"]
+    );
+    let first = landed(&out);
+    assert_eq!(
+        first,
+        host.snapshot().revision(),
+        "the app as the act left it"
+    );
+    assert_ne!(first, seen);
+    assert!(server.ring().get(first).is_some(), "held, as a served one");
+
+    // `since` it: a delta, empty while nothing moves.
+    let d = delta(observe(&mut server, &mut host, A, &since(first)));
+    assert_eq!((d.base, d.revision), (first, first));
+    assert!(d.changes.is_empty(), "{d:?}");
+
+    // `from_revision` it: the next act is taken and runs, and so is the
+    // one after it, each on the revision the one before left.
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "t2",
+            "todo.item[2]",
+            "toggle",
+            &from(first),
+        ),
+        "t2",
+    );
+    assert_eq!(names(&out).last(), Some(&"completed"));
+    assert_eq!(
+        out[0].asked.as_ref().map(|a| a.observed.revision),
+        Some(first)
+    );
+    let second = landed(&out);
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "t3",
+            "todo.item[1]",
+            "toggle",
+            &from(second),
+        ),
+        "t3",
+    );
+    assert_eq!(names(&out).last(), Some(&"completed"));
+    assert_eq!(
+        (host.app.done(1), host.app.done(2)),
+        (Some(false), Some(true))
+    );
+
+    // what the two acts did, since the first one's end.
+    let d = delta(observe(&mut server, &mut host, A, &since(first)));
+    assert_eq!(d.base, first);
+    assert_eq!(d.revision, landed(&out));
+    let moved: Vec<String> = d
+        .changes
+        .iter()
+        .map(|c| match c {
+            Change::StateChanged { at, .. } => at.to_string(),
+            other => panic!("only state moved: {other:?}"),
+        })
+        .collect();
+    assert_eq!(
+        moved,
+        [
+            "todo.item[1]:completed",
+            "todo.item[2]:completed",
+            "todo.counter:done"
+        ]
+    );
+}
+
+/// a stale refusal ends too: it carries the app as it is, the change that
+/// made it stale in, and an act on that revision goes through.
+#[test]
+fn a_stale_refusal_carries_the_revision_the_app_moved_to() {
+    let (mut server, mut host) = setup();
+    host.app.text = "buy bread".into();
+    let seen = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    host.app.text = "buy bread and eggs".into();
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "s",
+            "todo.input",
+            "submit",
+            &from(seen),
+        ),
+        "s",
+    );
+    assert_eq!(names(&out), ["requested", "rejected"]);
+    let now = landed(&out);
+    assert_eq!(now, host.snapshot().revision(), "the person's edit in");
+    let d = delta(observe(&mut server, &mut host, A, &since(seen)));
+    assert_eq!(d.revision, now);
+    assert!(
+        matches!(&d.changes[..], [Change::StateChanged { at, .. }] if at.to_string() == "todo.input:text"),
+        "{d:?}"
+    );
+    // the revision decides nothing: the act on it is checked on its reads,
+    // which it holds as they are now, so it runs.
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "s2",
+            "todo.input",
+            "submit",
+            &from(now),
+        ),
+        "s2",
+    );
+    assert_eq!(names(&out).last(), Some(&"completed"));
+    assert_eq!(
+        host.app.items.last().map(|(_, text, _)| text.as_str()),
+        Some("buy bread and eggs")
+    );
+}
+
+/// the toy as a shell holds it, counting its projections, and dark when
+/// it projects nothing.
+struct Counted {
+    host: ToyHost,
+    projections: std::cell::Cell<usize>,
+    dark: bool,
+}
+
+impl Counted {
+    fn new() -> Self {
+        Counted {
+            host: ToyHost::new(),
+            projections: std::cell::Cell::new(0),
+            dark: false,
+        }
+    }
+}
+
+impl Host for Counted {
+    fn project(&self) -> Option<Snapshot> {
+        self.projections.set(self.projections.get() + 1);
+        if self.dark { None } else { self.host.project() }
+    }
+    fn dispatch(&mut self, req: Request) -> Option<RequestId> {
+        self.host.dispatch(req)
+    }
+    fn add_sink(&mut self, sink: Box<dyn ReceiptSink>) {
+        self.host.add_sink(sink);
+    }
+}
+
+/// the app is projected once for every terminal stage a forward sends,
+/// and not at all when none goes out.
+#[test]
+fn one_projection_serves_every_terminal_stage_of_a_forward() {
+    let mut server = Server::new("toy", 4);
+    let mut host = Counted::new();
+    hello(&mut server, &mut host, A, "claude");
+    let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    for id in ["s1", "s2"] {
+        let before = host.projections.get();
+        let out = stages(
+            act(&mut server, &mut host, A, id, "todo.sync", "sync", &from(r)),
+            id,
+        );
+        assert_eq!(names(&out), ["requested", "accepted", "executing"]);
+        assert_eq!(
+            host.projections.get() - before,
+            1,
+            "the act reads which nodes are secret; no stage ended, so no more"
+        );
+    }
+    host.host.click("todo.item[2]", "toggle");
+    host.host.finish_sync();
+    host.host.finish_sync();
+    let before = host.projections.get();
+    let later = server.forward(&mut host);
+    assert_eq!(host.projections.get() - before, 1, "one for both");
+    let ends: Vec<(String, Option<Revision>)> = later
+        .into_iter()
+        .map(|o| match o.msg.reply {
+            Reply::Stage(s) => (o.msg.id.unwrap_or_default(), s.revision),
+            other => panic!("{other:?}"),
+        })
+        .collect();
+    let now = Some(host.host.snapshot().revision());
+    assert_eq!(ends, [("s1".to_owned(), now), ("s2".to_owned(), now)]);
+    let before = host.projections.get();
+    assert!(server.forward(&mut host).is_empty());
+    assert_eq!(host.projections.get(), before, "nothing went out");
+}
+
+/// an app that projects nothing when the stage goes out leaves the field
+/// out; the act itself is not refused for it.
+#[test]
+fn no_projection_no_revision() {
+    let mut server = Server::new("toy", 4);
+    let mut host = Counted::new();
+    hello(&mut server, &mut host, A, "claude");
+    let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    host.dark = true;
+    let out = act(
+        &mut server,
+        &mut host,
+        A,
+        "d",
+        "todo.item[1]",
+        "toggle",
+        &from(r),
+    );
+    let line = wire::encode_server(&out[out.len() - 1]);
+    let out = stages(out, "d");
+    assert_eq!(names(&out).last(), Some(&"completed"));
+    assert!(out.iter().all(|s| s.revision.is_none()), "{out:?}");
+    assert!(!line.contains("revision"), "{line}");
+    assert_eq!(host.host.app.done(1), Some(true));
+}
+
+/// the revisions stages carry take places in the bounded ring as served
+/// ones: enough acts push out a revision an agent observed.
+#[test]
+fn the_ring_stays_bounded_with_the_revisions_stages_carry() {
+    let (mut server, mut host) = setup();
+    let seen = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    let mut at = seen;
+    for n in 0..4 {
+        let id = format!("v{n}");
+        let rest = format!(
+            r#","param":{{"kind":"text","value":"draft {n}"}}{}"#,
+            from(at)
+        );
+        let out = stages(
+            act(
+                &mut server,
+                &mut host,
+                A,
+                &id,
+                "todo.input",
+                "set_value",
+                &rest,
+            ),
+            &id,
+        );
+        at = landed(&out);
+        assert!(server.ring().len() <= server.ring().cap());
+    }
+    assert!(server.ring().get(at).is_some());
+    assert!(server.ring().get(seen).is_none(), "four ends pushed it out");
+    let e = error(one(act(
+        &mut server,
+        &mut host,
+        A,
+        "u",
+        "todo.item[1]",
+        "toggle",
+        &from(seen),
+    )));
+    assert_eq!(e, ProtoError::UnknownRevision { revision: seen });
+}
+
 #[test]
 fn an_act_with_explicit_observed_values_is_checked_the_same_way() {
     let (mut server, mut host) = setup();
@@ -676,6 +978,10 @@ fn confirm_and_decline_are_refused_and_a_person_answers() {
         "rm",
     );
     assert_eq!(names(&out), ["requested", "awaiting_confirmation"]);
+    assert!(
+        out.iter().all(|s| s.revision.is_none()),
+        "waiting is not an end: {out:?}"
+    );
     let id = out[0].request;
     for verb in ["confirm", "decline"] {
         let line = format!(r#"{{"v":1,"id":"c","type":"{verb}","request":"{id}"}}"#);
@@ -696,6 +1002,7 @@ fn confirm_and_decline_are_refused_and_a_person_answers() {
     let later = stages(later.into_iter().map(|o| o.msg).collect(), "rm");
     assert_eq!(names(&later), ["confirmed", "executing", "completed"]);
     assert_eq!(host.app.items.len(), 2);
+    assert_eq!(landed(&later), host.snapshot().revision(), "the item gone");
     assert!(
         server.forward(&mut host).is_empty(),
         "forgotten after the end"
@@ -719,7 +1026,11 @@ fn an_execution_that_ends_later_reaches_the_agent_on_the_next_forward() {
         "sy",
     );
     assert_eq!(names(&out), ["requested", "accepted", "executing"]);
+    assert!(out.iter().all(|s| s.revision.is_none()), "{out:?}");
     assert!(server.forward(&mut host).is_empty());
+    // a person moves the app while the sync runs; the stage that ends it
+    // carries the app as it is when it goes out, the person's toggle in.
+    host.click("todo.item[1]", "toggle");
     host.finish_sync();
     let later: Vec<ServerMsg> = server
         .forward(&mut host)
@@ -729,6 +1040,8 @@ fn an_execution_that_ends_later_reaches_the_agent_on_the_next_forward() {
     let later = stages(later, "sy");
     assert_eq!(names(&later), ["completed"]);
     assert_eq!(later[0].at, host.clock);
+    assert_eq!(landed(&later), host.snapshot().revision());
+    assert_ne!(landed(&later), r, "item 1 moved since");
     let Stage::Completed(outcome) = &later[0].stage else {
         panic!("completed");
     };
@@ -803,6 +1116,13 @@ fn a_secret_never_leaves_through_a_stage() {
         panic!("completed");
     };
     assert_eq!(outcome.result.get("pin"), Some(&Value::Int(4)));
+    // the revision is a hash of the projection, where the pin is only its
+    // length: the same whatever four digits it holds.
+    let pinned = landed(&out);
+    assert_eq!(pinned, host.snapshot().revision());
+    host.app.pin = "0000".into();
+    assert_eq!(host.snapshot().revision(), pinned);
+    host.app.pin = "9876".into();
 
     let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
     let param = r#","param":{"kind":"text","value":"secret-12345"}"#;
@@ -823,6 +1143,11 @@ fn a_secret_never_leaves_through_a_stage() {
         Some(&Stage::Failed {
             error: REDACTED.to_owned()
         })
+    );
+    assert_eq!(
+        landed(&out),
+        pinned,
+        "a failure ends with the app as it was"
     );
     let line = serde_json::to_string(&out).unwrap();
     assert!(!line.contains("12345") && !line.contains("9876"), "{line}");
