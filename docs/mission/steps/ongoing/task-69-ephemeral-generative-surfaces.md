@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: in-progress
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-69
@@ -12,6 +12,28 @@ branch: task/69-surfaces
 ---
 
 # task-69: superfícies efêmeras e geradas
+
+## decisões do orquestrador (2026-09-24)
+
+- **ordem das fases:** 1 (materializar) agora, depois 2 (ciclo de vida e
+  transformação), 3 (proponentes) e 4 (a demo do vídeo). a fase 0 (spike
+  em `refs/`) não roda. a pergunta de UX dela é respondida de verdade no
+  checkpoint b, com a superfície gerada de verdade.
+- **o host mora num crate novo, `surface`.** ele depende de `uir`, `sem`,
+  `engine` e `comps`. o `comps` continua biblioteca de widgets e não
+  depende do IR.
+- **a projeção sai do IR, não do `project` dos widgets.** 9 dos 21
+  componentes do vocabulário não têm `project` no comps (achado da
+  task-68). a superfície é semântica por construção: role por
+  `uir::role_of`, label, estado lido das ligações no snapshot vivo do app,
+  e as ações que o IR ligou.
+- **a fase 1 prova com as fixtures da task-68**, em testes sem janela e
+  numa página do showcase. a demo do vídeo continua na fase 4, como o
+  plano diz. o urnaui já usa ffmpeg em subprocesso, então o domínio do
+  vídeo tem base no código. a fixture da revisão de silêncios nasce na
+  fase 4, com as capacidades de verdade.
+- **o provedor do LLM (fase 3) é decisão do brenner**, como o arquivo
+  diz. a fase 3 para ali e pergunta.
 
 ## objetivo
 

@@ -20,7 +20,11 @@ task; aqui fica o que aconteceu e onde ler.
   a sonda do orquestrador conferiu as recusas do verifier (cor crua,
   pixel, ação não declarada, destrutiva num botão, dois erros juntos).
 - **publicado:** PR #62 (task-91), merge `ecf51ba`.
-- próximo na onda 6: task-69 (materializar um `VerifiedIr`).
+- **disparada:** task-69 fase 1 (materializar um `VerifiedIr`), no crate
+  novo `surface`. decisões no arquivo da task: a fase 0 não roda, a
+  projeção sai do IR, a demo do vídeo fica na fase 4 como o plano diz, e o
+  provedor de LLM (fase 3) é pergunta para o brenner.
+- **publicado:** PR #63 (task-68), CI rodando.
 
 ### ciclo 3: task-91 integrada
 
