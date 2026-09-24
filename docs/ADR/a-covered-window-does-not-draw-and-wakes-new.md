@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [engine, window, render-on-demand, sleep, wake, occlusion, background, platform-integration, winit]
 date: 2026-09-24
 ---

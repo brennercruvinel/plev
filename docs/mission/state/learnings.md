@@ -12,6 +12,17 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-76 item 7
+
+- **a janela coberta desenhava para ninguém:** o `request_redraw` do
+  winit entrega `RedrawRequested` mesmo com a janela minimizada ou
+  coberta, e `Occluded` não era lido por nenhum shell; uma página que
+  anima gastava GPU sem tela, e a textura guardava o frame velho
+  enquanto o estado andava. agora um host não acordado retém o pedido e
+  acorda com o estado de agora. o sleep do sistema não vem pelo winit
+  (é `NSWorkspace`, atrás de feature que ninguém liga): fica para o
+  bring-up. fonte: `task-76-platform-integration.md`, handoff do item 7.
+
 ### 2026-09-24, task-76 itens 4, 5 e 8
 
 - **fora da janela, o macOS cobra o bundle:** menu de barra, diálogo e

@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: sleep e wake (task-76 item 7)
+
+- **integrada:** item 7 (merge da `task/76g-sleep-wake`). coberto ou
+  dormindo não pede frame; ao acordar o primeiro frame é o estado de
+  agora, byte a byte; o trabalho do Claude pedido dormindo fica retido;
+  nada se perde. gate na `main` em andamento no registro; o agente
+  reportou 2577 (+12) e 161 baselines iguais. nenhuma janela real, a
+  máquina não dormiu.
+- **avisos registrados no programa:** `showcase/src/app.rs` a seis
+  linhas do limite; `Background` thread-local até virar trait.
+
 ### ciclo 3: publicado #83 (task-76 item 5); disparado o item 7
 
 - **publicado:** PR #83, merge commit, gate local verde na `main` (2650,
