@@ -54,8 +54,9 @@ what exists (updated at each task close-out):
   `Constraints`, `ActionDecl` with its `reads` and `Policy`, `Node`, the
   `Semantics` trait, `SnapshotBuilder` (text or typed ids, every
   violation reported by `finish`), `Snapshot` with a stable `Revision`
-  and `Snapshot::diff`. nothing in the engine, comps or the apps uses it
-  yet.
+  and `Snapshot::diff`. the engine (the binding table, accessibility),
+  comps (the widgets' `.sem` and `project`), the showcase and the ide
+  depend on it, and so do `wire` and `rec`.
 - the dispatcher, also in `crates/sem` (task-58, adr
   actions-carry-observed-state): `Request::observe` records the values the
   actor saw for the action's `reads`; `check` decides in a fixed order and
@@ -70,10 +71,12 @@ what exists (updated at each task close-out):
   the layer it draws into) with the rect it draws and hit-tests with;
   the table sits beside the scene, never in a layer hash, and
   `Compositor::hit(x, y)` answers which capability is under a point.
-  every interactive comps widget takes `.sem(id)` and has a `project`
+  19 interactive comps widgets take `.sem(id)` and have a `project`
   helper that declares its role, state and actions (children as keys
   under its id); an app gives a widget an id, calls its helper in
-  `Semantics::project`, and the render binds it.
+  `Semantics::project`, and the render binds it. seven widgets that
+  handle events have neither yet: `Scrollbar`, `Card`, `GraphView`,
+  `AppShell`, `EmptyState`, `Sidebar` and `EditorView`.
 - the first app on the one path is the showcase todo page
   (`crates/showcase/src/view/apps/app/semantics.rs`): `Semantics +
   Operable`, owner of a `Dispatcher`; every click, the Enter key and the
@@ -95,11 +98,13 @@ what exists (updated at each task close-out):
   outline of the glyphs `TextSystem::shaped_glyphs` returns from the one
   shaping path, never a second shaping (task-66b); `showcase --render` and
   `monster_player --frame` use it.
-- the only identity the engine itself has is still `ViewId`, a per-frame
-  counter reset in `InputState::begin_frame`
-  (crates/engine/src/input/mod.rs). it is a temporary render identity,
-  never a control's identity. do not persist it, do not send it to an
-  agent, do not record it.
+- the engine keys its binding table and its accessibility node ids by
+  the `SemId` the app chose (crates/engine/src/compositor/binding.rs,
+  crates/engine/src/accessibility/ids.rs); the only identity it mints
+  itself is still `ViewId`, a per-frame counter reset in
+  `InputState::begin_frame` (crates/engine/src/input/mod.rs). it is a
+  temporary render identity, never a control's identity. do not persist
+  it, do not send it to an agent, do not record it.
 - accessibility (task-60, adr accessibility-projects-the-semantic-snapshot):
   the AccessKit tree is built from the page's `Snapshot` and the
   compositor's bindings (`engine::accessibility::tree::build`), and a
@@ -153,10 +158,16 @@ as the tasks land, these rules become binding (each line names its task):
   state and rejects stale requests with the delta (task-58). every action
   reads at least the state it changes, absolute setters included, so no
   actor overwrites a value it never saw (task-59).
-- one path: a click, a keystroke, a screen reader action, an agent and a
-  test all become a `sem::Request` and go through the same `Dispatcher`
-  into the same `Operable::execute`. a click handler that calls app logic
-  directly is a second path and a defect once task-59 lands (task-59).
+- one path: a click, a key that acts on a capability, a screen reader
+  action, an agent and a test all become a `sem::Request` and go through
+  the same `Dispatcher` into the same `Operable::execute`. a click handler
+  that calls app logic directly is a second path and a defect once
+  task-59 lands (task-59). typing is not a capability: a keystroke in a
+  field changes the projected text (`todo.input:text`,
+  `commit.message:text`) with no request, as
+  docs/ADR/semantic-binding-beside-the-scene.md exempts it, so it leaves
+  no receipt and names no author; an actor with no keyboard sets the text
+  with `set_value`, which does go through the dispatcher.
 - when the truth lives outside the ui process (the git index, a server),
   the precondition travels there and is checked again right before the
   effect (task-58, task-62).
