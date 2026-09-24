@@ -81,6 +81,9 @@ person reads the question: a confirmation runs it (confirmed, then checked
 again against the state now, so it can still be refused as stale), a
 decline ends it (rejected, declined, exit 1). an agent never answers.
 nobody answering keeps it waiting, in the app and in plev, up to --timeout.
+when an act without --ask is refused as stale and its acted names a person
+(human or assistive), plev writes one line on stderr after the stage that
+names the person's request and points at --ask; none after a decline.
 exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
 
     /// how long `act --ask` waits for the app when `--timeout` is not given:
@@ -569,6 +572,8 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 "[--ask <question>]",
                 &format!("at most {} characters", wire::MAX_ASK),
                 "a decline ends it (rejected, declined, exit 1). an agent never answers.",
+                "its acted names a person (human or assistive), plev writes one line on stderr",
+                "points at --ask; none after a decline.",
             ] {
                 assert!(one_line.contains(words), "{words:?} in {USAGE}");
             }
