@@ -14,6 +14,27 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### intervenção do brenner: severidade
+
+- aprovou o fluxo recursivo e pediu para continuar como está.
+- regra nova: toda descoberta recebe P0 a P3 antes de virar task
+  (`docs/mission/autonomy.md`, "severidade antes de priorizar"); só P0 e
+  P1 bloqueiam. ownership: a próxima task que disputa uma superfície em
+  uso dá lugar a trabalho independente da onda. a onda seguinte espera os
+  critérios essenciais da atual, sem perfeição local. ciclo: observar →
+  sondar → implementar → validar → aprender → replanejar; truth, programa
+  e learnings separados.
+- **aplicação imediata:** critérios essenciais da onda 5 escritos no
+  programa (seção 6). classificação do que está aberto:
+  - P1: task-88 (medição do laboratório com falso válido) e a revisão da
+    conclusão do checkpoint a sob a regra da 89 (uma rodada curta com
+    LLM, depois da 88);
+  - P2: task-91, as fases b e c da 64, as fases b a d da 65, estado
+    projetado fora do dispatcher, cobertura semântica;
+  - P3: dívidas da task-82 e o exemplo `measure`.
+  - nenhum P0 aberto.
+- **publicado:** PR #57 (task-90), merge `5f57fe7`.
+
 ### ciclo 2: a sonda da task-88 mudou o gatilho da pessoa
 
 - a 88 parou na sonda. três achados:
