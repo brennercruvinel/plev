@@ -10,6 +10,9 @@
 //!   `cargo run -p showcase` alone is the dev loop.
 //! - Tier 2 (narrate DSL): file watcher + runtime parse + override map,
 //!   polled by the engine's own `window::App` (experimental, no app uses it).
+//! - View source (`view_source`): a point in the window leads to the code
+//!   that made it, a control to its projection site and a text to the
+//!   literals that hold it; the shell opens the editor there.
 
 pub mod literals;
 mod narrate;
@@ -17,6 +20,7 @@ mod shader;
 mod source;
 #[cfg(test)]
 mod tests;
+pub mod view_source;
 
 use std::borrow::Cow;
 use std::path::PathBuf;
