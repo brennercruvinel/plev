@@ -24,7 +24,7 @@ confirmation of task-58 to be offerable in the system's dialog, as an
 option of the app, without touching the contract.
 
 the probe (the handoff of item 8 in
-docs/mission/steps/ongoing/task-76-platform-integration.md) measured:
+docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
 
 - `rfd::MessageDialog::show` is synchronous and modal: on macOS it runs
   `NSAlert::runModal()` on the main thread, a nested modal loop, so the

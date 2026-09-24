@@ -17,7 +17,7 @@ projection already has, and that a click on either come back through the
 app's one dispatcher as `Actor::Human`, as the bar's items do since item 4.
 
 the probe (the handoff of item 5 in
-docs/mission/steps/ongoing/task-76-platform-integration.md) measured:
+docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
 
 - `tray-icon` 0.25.1 with its default features off resolves offline into
   the root lock as itself alone: every dependency (`muda`, `objc2` and the

@@ -18,7 +18,7 @@ sleep had no hook, and the work that runs beside the frames (the `claude
 worker of the ide) did not know the app slept.
 
 the probe (task-76 item 7, the handoff in
-docs/mission/steps/ongoing/task-76-platform-integration.md) read winit
+docs/mission/steps/checked/task-76-platform-integration-done.md) read winit
 0.30.13 and measured the engine headless:
 
 - on macOS the window delegate's `windowDidChangeOcclusionState:` sends

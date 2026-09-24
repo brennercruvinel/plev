@@ -19,7 +19,7 @@ desktop machines the showcase already runs it on (the Silences page),
 with an input device per platform.
 
 the probe (the handoff of item 10 in
-docs/mission/steps/ongoing/task-76-platform-integration.md) opened no
+docs/mission/steps/checked/task-76-platform-integration-done.md) opened no
 device, ever: ffmpeg read `-f lavfi` sources only, paced by `-re` as a
 device paces itself, and the rest was read from `ffmpeg-devices(1)` and
 the strings of libavdevice.

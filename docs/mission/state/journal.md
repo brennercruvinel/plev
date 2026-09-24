@@ -14,6 +14,24 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: deep links (task-76 item 6); a task-76 fecha
+
+- **integrada:** item 6 (merge da `task/76j-links`). o showcase segue
+  links `plev-showcase://` lidos por gramática estrita; todo link pede
+  como o agente `link`, só em `shell.page` e `shell.theme`, e cada
+  recusa aparece na tela. no macOS o link chega pelo argumento de
+  lançamento até o bundle. nada registrado no sistema, nenhum `open`.
+- **revisão:** sem defeito. conferido que o aviso na tela não carrega
+  texto de fora sem checagem (o caractere recusado sai escapado).
+- **task-76 concluída:** os dez itens na `main`; o arquivo foi para
+  `checked/` e as referências dos ADRs, do `truth.md`, dos learnings e do
+  manifesto do engine foram atualizadas. o que resta é bring-up de
+  plataforma (bundle do macOS, linux, windows) e as provas em tela real
+  do brenner.
+- **próximo:** task-77 fase 1 (determinismo visual): o comparador com
+  classificação, a captura do desktop e as divergências que esta máquina
+  reproduz. a web e o iOS esperam ferramentas que precisam de rede.
+
 ### ciclo 3: item 6 parou na sonda; decisão do orquestrador
 
 - **parada correta, premissa errada do briefing:** a documentação do

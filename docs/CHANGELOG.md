@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- a link is not a person (2026-09-24, task-76 item 6): the showcase
+  follows `plev-showcase://<capability>/<action>?value=<text>` links read
+  by a strict grammar. a link always acts as an outside agent named
+  `link`, never as the person, and only on the capabilities the app
+  opens to links (switching the page and the theme). anything else,
+  such as the camera, the file dialog or printing, is refused, and the
+  refusal shows on screen. for now a link arrives as a launch argument
+  on every desktop; receiving it from the system on macOS waits for the
+  app bundle. this closes task-76, platform integration.
+
 - capture is a job the person turns on (2026-09-24, task-76 item 10):
   a new Capture page shows the camera and a microphone level meter.
   only a person can turn either on; an agent reads the state and is

@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [platform-integration, deep-links, url-scheme, semantic-contract, dispatcher, agents, policy, security, showcase, macos, bring-up]
 date: 2026-09-24
 ---
@@ -19,7 +19,7 @@ person: any web page, mail or other app can open one, with no one at the
 screen having chosen it.
 
 the probe (the handoff of item 6 in
-docs/mission/steps/ongoing/task-76-platform-integration.md) found:
+docs/mission/steps/checked/task-76-platform-integration-done.md) found:
 
 - windows (a registry key with `URL Protocol` and `"<exe>" "%1"`) and
   linux (a `.desktop` with `x-scheme-handler/<scheme>` and `%u`) start a
@@ -200,3 +200,14 @@ docs/mission/steps/ongoing/task-76-platform-integration.md) found:
 - a link applied while the app sleeps.
 - registering the scheme, or opening a link of it, on the machine that
   builds: every test injects its links.
+
+## integração (2026-09-24, orquestrador)
+
+aceito sem mudança de código, com a opção 4 decidida na parada da sonda:
+no macOS o link chega pelo argumento de lançamento até o bring-up do
+bundle. a revisão conferiu: todo pedido sai como `Actor::Agent` de nome
+`link`; fora da lista aberta nenhum request é feito; o caractere
+recusado aparece escapado na mensagem (`escape_default`), e o texto
+decodificado com controle ou marca de direção é recusado sem eco, então
+o aviso na tela não carrega texto de fora sem checagem.
+

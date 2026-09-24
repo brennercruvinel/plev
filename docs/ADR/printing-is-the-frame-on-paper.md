@@ -18,7 +18,7 @@ approximation reported (task-66b). nothing reached the system's printing
 queue, and no app offered "print this page" as a capability.
 
 the probe (the handoff of item 9 in
-docs/mission/steps/ongoing/task-76-platform-integration.md) measured:
+docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
 
 - this machine has no destination: `lpstat -p -d` says "No destinations
   added." (exit 1, 0.14 s), `lp <file>` says "No default destination.",
