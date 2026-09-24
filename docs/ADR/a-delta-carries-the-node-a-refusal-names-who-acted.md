@@ -63,21 +63,45 @@ ActionName }`: no parameter and no value, nothing of the state. `acted`
 is not written when empty, and reads as empty when absent, so a refusal
 written before this change reads as one that names nobody.
 
-what it means, exactly: the actions of other actors that ran since the
-state the author of the refused action saw. the rule, among the receipts
-the dispatcher holds (the open ones and the finished ones retention
-keeps), where a receipt ran when its stage is executing, completed or
-failed (a refusal at the check or at the point of truth, a decline and a
-wait for confirmation ran nothing): the start is the lowest id of a
-receipt that ran and whose `validated_against` is
-`Some(request.observed.revision)`, by any actor, the author included;
-named are the receipts that ran, with an id from the start on, whose
-actor is not the refused request's, in id order. with no start, nobody is
-named. the dispatcher numbers requests in dispatch order, and the start
-ran on the state the author saw, so it and every later one ran after the
-author looked. the author's own receipts are never named (the author
-knows what it did) and do not cut the chain; a receipt that ran nothing
-starts nothing.
+what it means, exactly: the actions that ran since the author of the
+refused action looked. among the receipts the dispatcher holds (the open
+ones and the finished ones retention keeps), where a receipt ran when its
+stage is executing, completed or failed (a refusal at the check or at the
+point of truth, a decline and a wait for confirmation ran nothing), in id
+order:
+
+- with the look (task-91). a `sem::Mark` is a point in the order of the
+  requests a dispatcher takes: the id of the last one taken
+  (`Dispatcher::mark`). when a sink on the dispatcher knows when the
+  author looked at what the refused request rests on
+  (`ReceiptSink::looked`, the mark at that instant), named are the
+  receipts that ran and were taken after it, whoever asked, the author
+  included. the agent port knows it for the acts it dispatches: its sink
+  is told the mark it was added at (`ReceiptSink::attached`, the port
+  adds it at the first observation it serves an actor, or the first
+  act), follows it as requests are taken, and records the mark with each
+  revision it gives an actor (`Shown`); an act on `from_revision` rests
+  on the oldest of the observations its reads come from, an act with
+  `observed` given on the last time its actor was given the revision it
+  names. right before the dispatch the port tells its sink that look, the
+  sink files it under the request's id when the dispatcher takes it, and
+  hands it back while the request is open (at most 256 open requests). a
+  change no receipt made moves nothing in that order, so what came after
+  it is named all the same.
+- without a look (task-90), the rule inside the process: the start is
+  the lowest id of a receipt that ran and whose `validated_against` is
+  `Some(request.observed.revision)`, by any actor, the author included;
+  named are the receipts that ran, with an id from the start on, whose
+  actor is not the refused request's. with no start, nobody is named. the
+  dispatcher numbers requests in dispatch order, and the start ran on the
+  state the author saw, so it and every later one ran after the author
+  looked. the author's own receipts are not named and do not cut the
+  chain; a receipt that ran nothing starts nothing. this is what a request
+  built in the process (`Request::observe`) gets, what a person's request
+  gets (nothing marks the frame a person clicked on), and what an act of
+  the port gets when its look has no mark (an explicit claim on a
+  revision its actor was never given, or one the port forgot past the
+  per-actor cap).
 
 updated on 2026-09-23 (task-90): the rule of task-83 named only the
 receipts checked on exactly that revision, so of a person's chain only
@@ -88,6 +112,22 @@ outside the dispatcher before any request, so nothing runs on the state
 the agent saw and the refusal names nobody, under either rule. the rule
 above is the one inside the process, and the fallback for an anchor on
 the author's look (task-91), which covers that scene.
+
+updated on 2026-09-24 (task-91): the look is the anchor when the port
+knows it, and with it the author's own acts are named. the probe ran the
+window's scene with the agent's look and act through the port (the
+ide's own host): the click on a new row, then the unstage, came back
+with `acted` empty; and an agent that observed `changes`, took a stage's
+revision and submitted with the `staged` of the earlier observation
+(the reproduction of task-89) came back empty too, the person's unstage
+having gone through the dispatcher. with the look both name the person.
+the author was never named because it knows what it did; the third
+round of phase c (task-62) showed an LLM agent that did not: refused
+stale by its own write of the message, with `acted` empty, it concluded
+the revision it got back did not hold the effect of its act. naming its
+own acts since the look says what moved the state it rests on, and it is
+the same fact for every actor. without a look, the rule of task-90 keeps
+the author out, as before.
 
 the dispatcher fills it in one place, `push`, the function every stage
 goes through, so the refusal at dispatch, at a confirmation's second
@@ -113,7 +153,9 @@ and the action in the past tense of the ui: "Refused claude's submit:
 src/session.rs left the staged files (the person unstaged
 src/session.rs)". a chain is one clause per actor's run of actions, in
 the order they ran, another actor after a semicolon (task-90): "(the
-person unstaged B, opened the diff of C and unstaged C)". with `acted`
+person unstaged B, opened the diff of C and unstaged C)". the author's
+own run reads in the third person, never "you" (task-91): "(the person
+unstaged B; claude itself edited the commit message)". with `acted`
 empty the text is the one it was.
 
 ### the rule, where an agent reads it
@@ -123,8 +165,9 @@ empty the text is the one it was.
 stale when a state it reads (the action's `reads`, as an observation
 shows them) changed since the observation it rests on; the revision only
 names what was seen and never decides; `changes` says what moved, and
-`acted` says who, among the app's actors, ran something since that
-state.
+`acted` says who, among the app's actors, ran something since the agent
+looked (task-91: the doc of `Act` says the look; `plev --help` still
+says "since that state").
 
 ### compatibility
 
@@ -184,32 +227,37 @@ commit's node in place and their `commit.submit` receipts as recorded
 
   574 bytes in two round trips became 427 in one.
 - known limits of `acted`, written in the doc of `Acted`:
-  - a projected change no receipt made starts nothing: a change from
+  - a projected change no receipt made is never named: a change from
     outside the app (a `git` in a terminal), and state an app moves
-    outside the dispatcher. in the ide that is the selection by click or
-    keys, typing in the commit message, focus, a toast leaving on its
-    timer and the diff lines landing from the worker. when one of them
-    comes first after the look, the next receipt is checked on another
-    revision and nobody is named: the window's scene of a click on a new
-    row, then an unstage, is this case, pinned in
-    `crates/ide/tests/human_agent.rs`. the change still shows in
-    `changes`. task-91 anchors on the look instead.
-  - a state that comes back to exactly the revision the author saw can
-    start the chain before the look: what ran from the first time the
-    state was there is named.
-  - the start is read from the revision the act names
-    (`Observation::revision`). an act over the port whose read rests on
-    an earlier observation (task-89) does not name what ran between that
-    observation and the revision; task-91 anchors on the oldest look.
+    outside the dispatcher (in the ide the selection by click or keys,
+    typing in the commit message, focus, a toast leaving on its timer,
+    the diff lines landing from the worker). the change still shows in
+    `changes`. with the look it hides nobody after it: the window's
+    scene of a click on a new row, then an unstage, names the diff and
+    the unstage (`crates/ide/tests/human_agent.rs`, through the port).
+    without a look, when one of them comes first after the look, the
+    next receipt is checked on another revision and nobody is named:
+    the same scene with the agent in the process is pinned there too.
+  - with the look, a request taken before the look whose effect lands
+    after it (an execution the worker ends later) is not named, and the
+    look is the oldest observation the act rests on, so what the agent
+    saw again in a later one is named as well.
+  - without a look, a state that comes back to exactly the revision the
+    author saw can start the chain before the look: what ran from the
+    first time the state was there is named.
+  - the look is the port's: a person's request, a request built in the
+    process and the acts of a host whose sink never reaches the
+    dispatcher have none. the showcase's host adds the sink to its todo
+    page's dispatcher, so it has the look too.
   - it says who ran something since that state, not that their action
     moved what the refused one reads: a person who only moved a list
     cursor or opened a diff is named beside the one who unstaged the
     file. `changes` says what moved.
   - a receipt dropped past the retention (256 finished ones by default)
-    is not named, and a start dropped past it takes the chain with it
-    (unless another receipt held ran on that revision); a failed action
-    is named, since it ran and may have moved something before it
-    failed.
+    is not named, and without a look a start dropped past it takes the
+    chain with it (unless another receipt held ran on that revision); a
+    failed action is named, since it ran and may have moved something
+    before it failed.
 - a recorded snapshot event that adds nodes repeats them in its `changes`.
   in the laboratory run above the semantic section went from 53732 to
   54066 bytes, 51 events each.
@@ -221,8 +269,10 @@ commit's node in place and their `commit.submit` receipts as recorded
 ## avoid
 
 - deciding stale by the revision; `acted` reads revisions only to name.
+- deciding anything by the look: a `Mark` only names.
 - a stale refusal that names who acted outside the dispatcher, or a
   second place in the dispatcher that fills `acted`.
+- a mark in a message, a request or a receipt: it stays in the process.
 - a value, a parameter or anything of the state in `Acted`.
 - a delta whose node carries `source` or state keys the observation did
   not ask for.
