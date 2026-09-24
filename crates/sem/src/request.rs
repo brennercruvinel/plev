@@ -55,8 +55,21 @@ pub struct Observation {
 }
 
 /// an actor asks `target` to run `action`, with an optional parameter,
-/// having seen `observed`. the serde form carries `param` only when there
-/// is one.
+/// having seen `observed`. the serde form carries `param` and `ask` only
+/// when there is one.
+///
+/// `ask` is an agent's question to a person (task-92): a short text
+/// saying why it wants a person to confirm before the action runs ("the
+/// person took src/session.rs out; the task needs the three files: put it
+/// back?"). an agent's request that asks waits for a person's
+/// confirmation (`Verdict::NeedsConfirmation`) even when the action's
+/// policy does not ask for one, and is answered like any request that
+/// waits: `Dispatcher::confirm`, with the second check, or
+/// `Dispatcher::decline`. a person does not ask a person: a question on
+/// a person's request, or a test's, asks nothing, as `Confirm::ForAgents`
+/// asks nothing of them. whoever takes the text from outside the process
+/// bounds it (the agent port does, to a short line), and whoever carries
+/// it out redacts it when the target is secret (`redact`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Request {
@@ -69,6 +82,11 @@ pub struct Request {
     )]
     pub param: Option<Value>,
     pub observed: Observation,
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
+    pub ask: Option<String>,
 }
 
 impl Request {
@@ -127,6 +145,20 @@ impl Request {
                 revision: seen.revision(),
                 values,
             },
+            ask: None,
         })
+    }
+
+    /// the same request, asking a person `question` before it runs (see
+    /// `Request::ask`).
+    pub fn asking(mut self, question: impl Into<String>) -> Request {
+        self.ask = Some(question.into());
+        self
+    }
+
+    /// true when this request waits for a person because its actor asks
+    /// one: an agent's request that carries a question.
+    pub fn asks_a_person(&self) -> bool {
+        self.ask.is_some() && matches!(self.actor, Actor::Agent { .. })
     }
 }

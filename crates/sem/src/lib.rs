@@ -90,6 +90,9 @@
 //! checks, executes, and keeps a `Receipt` whose `Stage`s walk only legal
 //! transitions, with the time the caller passed; `ReceiptSink`s see every
 //! stage as it happens.
+//! an agent may also ask a person before its action runs (`Request::ask`,
+//! task-92): its request then waits for a person's `confirm` or
+//! `decline`, as a request whose policy asks for a confirmation does.
 //! `examples/commit.rs` runs the thesis scenario and prints the receipts.
 //!
 //! a `secret` field leaves the snapshot as its length. whoever carries a

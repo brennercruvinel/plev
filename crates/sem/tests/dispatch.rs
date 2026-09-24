@@ -1515,3 +1515,194 @@ fn every_actor_goes_through_the_same_dispatch() {
         assert!(matches!(r.stage(), Some(Stage::Completed(_))), "{actor}");
     }
 }
+
+/// what the agent asks a person before it stages `file` (task-92).
+const QUESTION: &str = "the person took C out; the task needs the three: put it back?";
+
+/// `actor` observes the client now and asks to stage `file`, asking a
+/// person first.
+fn asked_stage(git: &Git, actor: Actor, file: &str) -> Request {
+    Request::observe(
+        &git.snapshot(),
+        actor,
+        "changes",
+        "stage",
+        Some(file.into()),
+    )
+    .unwrap()
+    .asking(QUESTION)
+}
+
+#[test]
+fn an_agent_that_asks_waits_for_a_person_even_when_the_policy_asks_nothing() {
+    let mut git = Git::new(&["A", "B"], "wip");
+    let mut d = Dispatcher::new();
+    let req = asked_stage(&git, agent(), "C");
+    assert!(req.asks_a_person());
+    let id = d.dispatch(&mut git, req, 1);
+    let r = receipt(&d, id);
+    assert_eq!(stages(r), ["requested", "awaiting_confirmation"]);
+    assert_eq!(r.request.ask.as_deref(), Some(QUESTION));
+    assert!(git.executed.is_empty(), "nothing runs while it waits");
+
+    // nobody answers: it keeps waiting, whatever else runs.
+    unstage(&mut d, &mut git, "A", 2);
+    assert_eq!(
+        stages(receipt(&d, id)),
+        ["requested", "awaiting_confirmation"]
+    );
+
+    // the same request without the question runs at once: the policy of
+    // `stage` asks nothing.
+    let plain = Request::observe(
+        &git.snapshot(),
+        agent(),
+        "changes",
+        "stage",
+        Some("C".into()),
+    )
+    .unwrap();
+    let plain = d.dispatch(&mut git, plain, 3);
+    assert_eq!(
+        stages(receipt(&d, plain)),
+        ["requested", "accepted", "executing", "completed"]
+    );
+}
+
+#[test]
+fn a_question_confirmed_runs_after_the_second_check() {
+    let mut git = Git::new(&["A", "B"], "wip");
+    let mut d = Dispatcher::new();
+    let req = asked_stage(&git, agent(), "C");
+    let id = d.dispatch(&mut git, req, 1);
+    d.confirm(&mut git, id, Actor::Human, 2).unwrap();
+    let r = receipt(&d, id);
+    assert_eq!(
+        stages(r),
+        [
+            "requested",
+            "awaiting_confirmation",
+            "confirmed",
+            "executing",
+            "completed"
+        ]
+    );
+    assert_eq!(r.stages[2], (Stage::Confirmed { by: Actor::Human }, 2));
+    assert_eq!(git.staged, set(&["A", "B", "C"]));
+
+    // the second check: a person moves what the stage reads while the
+    // question waits, then confirms. the request is stale; nothing runs.
+    let req = asked_stage(&git, agent(), "D");
+    let id = d.dispatch(&mut git, req, 3);
+    unstage(&mut d, &mut git, "B", 4);
+    d.confirm(&mut git, id, Actor::Human, 5).unwrap();
+    let r = receipt(&d, id);
+    assert_eq!(
+        stages(r),
+        ["requested", "awaiting_confirmation", "rejected"]
+    );
+    assert!(matches!(
+        r.stage(),
+        Some(Stage::Rejected(Rejection::Stale { changes, .. }))
+            if matches!(&changes[..], [Change::StateChanged { removed, .. }] if *removed == strings(&["B"]))
+    ));
+    assert_eq!(
+        git.executed,
+        ["stage", "unstage"],
+        "the refused one never ran"
+    );
+}
+
+#[test]
+fn a_question_declined_never_runs() {
+    let mut git = Git::new(&["A", "B"], "wip");
+    let mut d = Dispatcher::new();
+    let req = asked_stage(&git, agent(), "C");
+    let id = d.dispatch(&mut git, req, 1);
+    assert_eq!(
+        d.decline(id, agent(), 2),
+        Err(SemError::ConfirmByMachine { id, by: agent() }),
+        "the agent that asked never answers itself"
+    );
+    d.decline(id, Actor::Human, 3).unwrap();
+    let r = receipt(&d, id);
+    assert_eq!(
+        stages(r),
+        ["requested", "awaiting_confirmation", "rejected"]
+    );
+    assert_eq!(
+        r.stage(),
+        Some(&Stage::Rejected(Rejection::Declined { by: Actor::Human }))
+    );
+    assert!(git.executed.is_empty());
+    assert_eq!(git.staged, set(&["A", "B"]));
+}
+
+#[test]
+fn a_question_on_a_request_that_already_waits_changes_nothing() {
+    let mut git = Git::new(&["A", "B"], "wip");
+    let mut d = Dispatcher::new();
+    let discard = Request::observe(&git.snapshot(), agent(), "changes", "discard", None).unwrap();
+    let plain = d.dispatch(&mut git, discard.clone(), 1);
+    let asked = d.dispatch(&mut git, discard.asking(QUESTION), 2);
+    for id in [plain, asked] {
+        assert_eq!(
+            stages(receipt(&d, id)),
+            ["requested", "awaiting_confirmation"]
+        );
+    }
+    d.confirm(&mut git, asked, Actor::Human, 3).unwrap();
+    assert_eq!(
+        receipt(&d, asked).stage().map(Stage::name),
+        Some("completed")
+    );
+    assert_eq!(git.executed, ["discard"]);
+}
+
+/// a person does not ask a person: the question of a person's request, or
+/// a test's, asks nothing, as `Confirm::ForAgents` asks nothing of them.
+#[test]
+fn a_person_or_a_test_asks_nobody() {
+    let mut git = Git::new(&["A"], "wip");
+    let mut d = Dispatcher::new();
+    for (actor, file) in [
+        (Actor::Human, "B"),
+        (Actor::Assistive, "C"),
+        (tester(), "D"),
+    ] {
+        let req = asked_stage(&git, actor.clone(), file);
+        assert!(!req.asks_a_person(), "{actor}");
+        let id = d.dispatch(&mut git, req, 1);
+        assert_eq!(
+            stages(receipt(&d, id)),
+            ["requested", "accepted", "executing", "completed"],
+            "{actor}"
+        );
+    }
+    assert_eq!(git.staged, set(&["A", "B", "C", "D"]));
+}
+
+/// a question is asked last: a request the state refuses is refused as it
+/// would be without it, and no person is asked.
+#[test]
+fn a_question_never_passes_a_refusal() {
+    let mut git = Git::new(&["A", "B"], "wip");
+    let mut d = Dispatcher::new();
+    let late = asked_stage(&git, agent(), "C");
+    unstage(&mut d, &mut git, "B", 1);
+    let id = d.dispatch(&mut git, late, 2);
+    assert!(matches!(
+        receipt(&d, id).stage(),
+        Some(Stage::Rejected(Rejection::Stale { .. }))
+    ));
+
+    let mut empty = Git::new(&[], "wip");
+    let submit = Request::observe(&empty.snapshot(), agent(), "commit.submit", "submit", None)
+        .unwrap()
+        .asking(QUESTION);
+    let id = d.dispatch(&mut empty, submit, 3);
+    assert!(matches!(
+        receipt(&d, id).stage(),
+        Some(Stage::Rejected(Rejection::Disabled { .. }))
+    ));
+}

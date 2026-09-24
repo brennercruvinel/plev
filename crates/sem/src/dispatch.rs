@@ -152,8 +152,10 @@ impl Dispatcher {
     /// takes a request at `now`. it projects the app's live state, checks
     /// the request against that snapshot (never against a frame drawn
     /// earlier) and, when it is accepted, executes it. a request that
-    /// needs confirmation waits for a person's `confirm` or `decline`. the
-    /// verdict and the result are in the receipt; the id names it.
+    /// needs confirmation (its policy asks for one, or its agent asks a
+    /// person, `Request::ask`) waits for a person's `confirm` or
+    /// `decline`, for as long as nobody answers. the verdict and the
+    /// result are in the receipt; the id names it.
     ///
     /// when the app's projection does not validate, nothing can be
     /// checked: the request is rejected with `Rejection::InvalidProjection`

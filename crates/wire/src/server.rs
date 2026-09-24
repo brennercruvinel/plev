@@ -482,6 +482,7 @@ impl Server {
                     action: a.action,
                     param: a.param,
                     observed,
+                    ask: None,
                 };
                 (req, look)
             }
