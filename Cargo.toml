@@ -19,6 +19,7 @@ members = [
     "crates/narrate-macro",
     "crates/parser",
     "crates/prime",
+    "crates/propose",
     "crates/rec",
     "crates/rope",
     "crates/sem",
@@ -60,6 +61,7 @@ macros = { path = "crates/macros" }
 monster = { path = "crates/monster" }
 narrate = { path = "crates/narrate" }
 narrate-macro = { path = "crates/narrate-macro" }
+propose = { path = "crates/propose" }
 rec = { path = "crates/rec" }
 rope = { path = "crates/rope" }
 sem = { path = "crates/sem" }

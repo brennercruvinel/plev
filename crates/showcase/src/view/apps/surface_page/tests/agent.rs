@@ -194,3 +194,137 @@ fn an_agent_observes_the_surface_and_operates_the_todo_through_it() {
     assert_eq!(receipt.request.target, sid("todo.input"));
     assert_eq!(receipt.request.action.as_str(), "submit");
 }
+
+fn names(reply: &wire::SnapshotReply) -> Vec<String> {
+    reply.nodes.iter().map(|n| n.id.to_string()).collect()
+}
+
+/// The acceptance of phase 3a through the port, no window: the agent
+/// writes a todo's text in the surface's field, writes an intent in the
+/// page's intent field, and proposes. The surface takes the proposed
+/// form in place (the same id, only the active filter and count, the
+/// entry), and the text the agent typed goes on in the field that stayed.
+/// An intent the rules do not understand fails with the reason, which the
+/// page's status shows. Every act is the agent's, in the todo's
+/// dispatcher, and the proposal's author is the agent.
+#[test]
+fn an_agent_proposes_through_the_port_and_what_was_typed_goes_on() {
+    let dir = Dir(std::env::temp_dir().join(format!("plev-t69c-{}-propose", std::process::id())));
+    let (seen, view) = gallery(&dir.0, |path| {
+        let mut c = Client::connect(&path).unwrap();
+        c.set_timeout(Some(20_000)).unwrap();
+        c.hello("claude").unwrap();
+
+        let page = snapshot(c.observe(Observe::default()).unwrap());
+        let typed = act(
+            &mut c,
+            "todo_panel.input",
+            "set_value",
+            page.revision,
+            Some(Value::Text("milk".into())),
+        );
+        let page = snapshot(c.observe(Observe::default()).unwrap());
+        let wrote = act(
+            &mut c,
+            "surface_page.intent",
+            "set_value",
+            page.revision,
+            Some(Value::Text("only what is active and the add field".into())),
+        );
+        // the propose reads the intent: it rests on the text observed
+        let page = snapshot(c.observe(Observe::default()).unwrap());
+        let proposed = act(
+            &mut c,
+            "surface_page.propose",
+            "propose",
+            page.revision,
+            None,
+        );
+        let after = snapshot(c.observe(Observe::default()).unwrap());
+
+        let wrong = act(
+            &mut c,
+            "surface_page.intent",
+            "set_value",
+            after.revision,
+            Some(Value::Text("make it purple".into())),
+        );
+        let page = snapshot(c.observe(Observe::default()).unwrap());
+        let refused = act(
+            &mut c,
+            "surface_page.propose",
+            "propose",
+            page.revision,
+            None,
+        );
+        let last = snapshot(c.observe(Observe::default()).unwrap());
+        (page, typed, wrote, proposed, after, wrong, refused, last)
+    });
+    let (before, typed, wrote, proposed, after, wrong, refused, last) = seen;
+    let done = ["requested", "accepted", "executing", "completed"];
+    assert_eq!(typed.unwrap(), done);
+    assert_eq!(wrote.unwrap(), done);
+    assert_eq!(proposed.unwrap(), done);
+    assert_eq!(wrong.unwrap(), done);
+    assert_eq!(
+        refused.unwrap(),
+        ["requested", "accepted", "executing", "failed"]
+    );
+
+    // the page's own nodes, observed like any other
+    let ids = names(&before);
+    for id in [
+        "surface_page",
+        "surface_page.intent",
+        "surface_page.propose",
+    ] {
+        assert!(ids.contains(&id.to_owned()), "{id} in {ids:?}");
+    }
+    // the proposed form, in place
+    let ids = names(&after);
+    for (id, kept) in [
+        ("todo_panel", true),
+        ("todo_panel.input", true),
+        ("todo_panel.add", true),
+        ("todo_panel.filter.active", true),
+        ("todo_panel.active", true),
+        ("todo_panel.filter.all", false),
+        ("todo_panel.done", false),
+    ] {
+        assert_eq!(ids.contains(&id.to_owned()), kept, "{id} in {ids:?}");
+    }
+    let field = after
+        .nodes
+        .iter()
+        .find(|n| n.id == sid("todo_panel.input"))
+        .expect("the field");
+    let key = sem::StateKey::parse("text").unwrap();
+    assert_eq!(field.state.get(&key), Some(&Value::Text("milk".into())));
+    // the refusal leaves the form and says why
+    assert_eq!(names(&last), ids);
+    let status = last
+        .nodes
+        .iter()
+        .find(|n| n.id == sid("surface_page.status"))
+        .expect("the status");
+    let message = sem::StateKey::parse("message").unwrap();
+    let Some(Value::Text(why)) = status.state.get(&message) else {
+        panic!("a message: {status:?}");
+    };
+    assert!(why.contains("\"purple\" is not a word of the app"), "{why}");
+
+    // the todo's dispatcher kept the proposal as the agent's
+    let agent = Actor::Agent {
+        name: "claude".into(),
+    };
+    let receipt = view.panes.todo.receipt(sem::RequestId::parse("3").unwrap());
+    let receipt = receipt.expect("the proposal");
+    assert_eq!(receipt.request.actor, agent);
+    assert_eq!(receipt.request.target, sid("surface_page.propose"));
+    assert_eq!(receipt.request.action.as_str(), "propose");
+    let snap = view.semantics().expect("the page projects");
+    assert_eq!(
+        snap.value(&StateRef::parse("todo.input:text").unwrap()),
+        Some(&Value::Text("milk".into()))
+    );
+}

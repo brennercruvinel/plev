@@ -38,6 +38,9 @@ sem.workspace = true
 # projection (uir) and materializes it over the todo's state (surface).
 surface.workspace = true
 uir.workspace = true
+# the Surface page's intent field proposes a surface by the rules (task-69
+# phase 3a), through the todo's dispatcher.
+propose.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger.workspace = true
