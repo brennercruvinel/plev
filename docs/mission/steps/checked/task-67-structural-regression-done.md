@@ -8,6 +8,7 @@ task: task-67
 wave: 5
 depends: [task-59, task-66]
 branch: task/67-structural-regression
+integrated: 49e2822
 ---
 
 # task-67: regressão estrutural antes de pixel
@@ -466,3 +467,17 @@ linha do índice de ADRs (`docs/ADR/README.md`):
 ```text
 | 2026-09-23 | [regression-by-meaning-before-pixels](regression-by-meaning-before-pixels.md) | proposed | regressão pergunta na ordem: o significado mudou (revision, `Snapshot::diff`), o desenho mudou (hash estável por layer, FNV-1a 64 sobre codificação documentada, `f32` pelos bits; nome de layer pelas raízes dos `SemId` ligados, ou pelo z-order), e só então os pixels, só na região das layers que mudaram, cruzados com as ligações para nomear o controle; nada mudou, nenhuma GPU aberta; pixel explica e não decide o veredito; imagem só no baseline do todo; `regress check|bless` no showcase e job de CI no macOS (task-67) |
 ```
+
+## fechamento (orquestrador, 2026-09-23)
+
+integrada na `main` em `49e2822` (onze commits). validação: diff inteiro
+lido nas duas rodadas; devolvida uma vez (rebase sobre a 82b com check,
+arquivos grandes, as imagens do Todo, os docs); a divisão de arquivos não
+era obrigatória pela regra exata (o orquestrador tinha contado o arquivo
+inteiro, não a produção), e não fez mal. gate verde no diretório da task:
+2160 passaram, 0 falharam, 12 ignorados. `regress check` sobre a árvore
+final: 157 baselines iguais, nenhum frame, nenhuma GPU. reproduzido pelo
+orquestrador numa cópia de trabalho: trocar a label de um item do Todo
+dá `todo.item[2] semantics changed: label ...; visual changed, 727 px at
+600,277 111x10`. o ADR passou de proposto a aceito. o primeiro job de CI
+no macOS do GitHub confirma se os hashes batem fora desta máquina.

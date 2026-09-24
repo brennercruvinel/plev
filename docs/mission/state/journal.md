@@ -14,6 +14,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 2: task-67 integrada; o guard do limite de linhas no gate
+
+- **integrada:** task-67 (`49e2822`), a regressão por significado antes
+  de pixel. gate verde (2160), check verde sem GPU, e o orquestrador
+  reproduziu a troca de uma label sendo nomeada pelo controle.
+- **processo:** `crates/engine/tests/file_hygiene_guard.rs` (`7528309`)
+  conta o limite de 639 linhas de produção no gate; seis arquivos já
+  passavam e ficaram congelados.
+- **publicado:** PR #52 (task-82 fase b).
+
 ### ciclo 2: task-67 devolvida com correções pequenas
 
 - a task-67 voltou: `regress check` sobre 157 baselines em 0,6 s sem abrir

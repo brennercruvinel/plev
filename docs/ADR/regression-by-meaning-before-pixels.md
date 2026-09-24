@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [regression, headless, semantics, binding, layer-hash, pixels, ci, showcase, generative-runtime]
 date: 2026-09-23
 ---

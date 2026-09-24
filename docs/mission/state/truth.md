@@ -67,6 +67,14 @@ o da base até ser reescrito.
   ignora `.git/index.lock`. fica da 4g: o `EditorView` sem foco, o caret
   do dock, a ponte de acessibilidade.
 
+- `49e2822` (task-67): `crates/showcase/examples/regress` (check e bless)
+  com baselines em `crates/showcase/fixtures/regress/` (157, imagem só no
+  Todo em core e hoff); `StagedPage::compositor`, `steps`, `settled` em
+  `crates/showcase/src/app/headless.rs`; job `regress` no CI (seção 3,
+  linha 15: a regressão estrutural existe). `crates/engine/tests/
+  file_hygiene_guard.rs` (`7528309`) conta o limite de 639 linhas de
+  produção por arquivo no gate.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse
