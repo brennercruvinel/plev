@@ -1904,3 +1904,137 @@ aqui):
   ao modelo como erro brando (continuidade não é regra do verifier);
 - qual proponente a página usa: as regras primeiro e o modelo quando
   elas não entendem, ou só o modelo.
+
+## fase 3b-i: o Claude como modelo do proponente
+
+branch `task/69d-claude-model`, worktree próprio, sobre a `main` @ ce9acee.
+a decisão é a 13 do programa: o modelo é o Claude, pelo `claude -p` do
+Claude Code desta máquina (`/Users/nn/.local/bin/claude`, 2.1.281, logado
+na conta do brenner), atrás de `propose::Model`, num crate próprio.
+
+### sonda da fase 3b-i (antes do primeiro tipo, 2026-09-24)
+
+um exemplo descartável (`crates/claude-model/examples/probe.rs`, rodado e
+jogado fora, nunca commitado) monta o `propose::prompt` para a intenção
+"only what is active and the add field" sobre o golden do todo
+(`crates/uir/fixtures/showcase-todo.snapshot.json`), com a superfície
+compacta da página como a atual (`showcase-todo.ir.json`, id
+`todo_panel`), e escreve o prompt num arquivo: 17.704 bytes. o mesmo
+exemplo, com `check <arquivo>`, passa uma resposta por
+`propose_verified(Llm::with_attempts(<a resposta>, 1), ask)`.
+
+três chamadas reais, todas de um diretório vazio (`probe-cwd`, no
+scratchpad), sem as variáveis que a sessão do Claude Code que rodava a
+sonda põe no ambiente dos processos dela (`CLAUDECODE`,
+`CLAUDE_CODE_ENTRYPOINT`, `CLAUDE_CODE_SESSION_ID`,
+`CLAUDE_CODE_CHILD_SESSION`, `CLAUDE_CODE_SESSION_ATTENDED`,
+`CLAUDE_CODE_MESSAGING_SOCKET`, `CLAUDE_CODE_MESSAGING_TOKEN`,
+`CLAUDE_CODE_EXECPATH`, `CLAUDE_PID`, `CLAUDE_EFFORT`, `AI_AGENT`). elas
+são da sessão, não do app, e uma delas, `CLAUDE_EFFORT=xhigh`, mudaria o
+esforço do filho. o `env -u ...` abaixo é abreviado; tira as onze.
+
+a primeira, com o system prompt padrão do Claude Code e a saída em
+stream-json para ver o `init` (ferramentas, MCP, skills) e cada evento:
+
+```sh
+env -u CLAUDECODE -u ... -u AI_AGENT \
+  claude -p --model sonnet --output-format stream-json --verbose \
+    --tools "" --no-session-persistence --setting-sources "" \
+    --strict-mcp-config --disable-slash-commands --permission-prompts none \
+    --max-budget-usd 0.50 --debug-file probe-1.debug \
+  < probe-prompt.txt > probe-1.out
+```
+
+a segunda, com as flags que o crate usa (a saída em json, um objeto só, e
+um system prompt curto no lugar do do Claude Code):
+
+```sh
+env -u CLAUDECODE -u ... -u AI_AGENT \
+  claude -p --model sonnet --output-format json \
+    --tools "" --no-session-persistence --setting-sources "" \
+    --strict-mcp-config --disable-slash-commands --permission-prompts none \
+    --max-budget-usd 0.50 \
+    --system-prompt "you are called by a program, not by a person. its message is the whole task: answer exactly what it asks for, in the form it asks for, with nothing before or after it." \
+    --debug-file probe-2.debug \
+  < probe-prompt.txt > probe-2.out
+```
+
+| | 1 (system prompt do Claude Code) | 2 (as flags do crate) |
+| --- | --- | --- |
+| tempo de parede | 40,1 s (API 39,3 s, primeiro byte em 2,0 s) | 24,5 s (API 23,9 s) |
+| saída do processo | 25.470 bytes de eventos | 3.145 bytes, um objeto json |
+| a resposta (`result`) | 1.324 caracteres | 1.322 caracteres |
+| tokens de entrada | 11.150 | 6.983 |
+| tokens de saída (de pensamento) | 3.667 (3.063) | 2.628 (2.026) |
+| custo que o `claude` mostra | 0,069 USD | 0,054 USD |
+| exit code, stderr | 0, vazio | 0, vazio |
+| `propose_verified` de primeira | passa | passa |
+
+o custo é o de lista que o `claude` calcula (`costBasis: list`); a conta
+é de assinatura (`apiKeySource: none`, login OAuth do keychain), então é
+uma medida de tamanho, não uma cobrança. a diferença de tempo entre as
+duas é mais pensamento do que prompt (mil tokens de pensamento a menos na
+segunda); com uma chamada de cada não dá para separar. o system prompt
+próprio tira uns 4.200 tokens de entrada (o prompt do Claude Code, que
+fala de ferramentas que o filho não tem, e do diretório e do git dele).
+
+nenhuma pediu interação, login ou permissão. o que o `claude` usou:
+
+- `init` da primeira: `tools: []`, `mcp_servers: []`, `skills: []`,
+  `slash_commands: []`, `permissionMode: default`, modelo
+  `claude-sonnet-5`. as duas: `num_turns: 1`, `permission_denials: []`,
+  `stop_reason: end_turn`. nenhuma ferramenta, nenhuma tentativa;
+- o log de debug: "project memory is off" (nenhum CLAUDE.md), 0 hooks, 0
+  skills, só o plugin embutido `agents-md` carregado (sem hooks
+  registrados). o `claude` escreveu o próprio `~/.claude.json` (três
+  escritas atômicas, o estado dele, como em qualquer uso) e buscou a
+  lista de conectores do claude.ai (1 servidor), que não conectou
+  (`mcp_servers: []`). nenhum arquivo do repositório: o diretório era
+  vazio e não há ferramenta de leitura.
+
+a resposta da segunda, um objeto json puro, sem prosa e sem cerca (a
+primeira é igual, fora `gap: sm` e os ids `item_1`, `item_2`):
+
+```text
+surface todo_panel "quick todo"
+todo_panel.card (card, "todo")
+  todo_panel.entry (container)
+    todo_panel.input (text_field, "new todo"): text <- todo.input:text, set_value -> todo.input set_value, submit -> todo.input submit
+    todo_panel.add (button, "add"): activate -> todo.input submit
+  todo_panel.active_list (list, "active")
+    todo_panel.active_list.item1 (checkbox, "Absorb the plev demos into the showcase"): checked <- todo.item[1]:completed, toggle -> todo.item[1] toggle
+    todo_panel.active_list.item2 (checkbox, "Measure text, never estimate it"): checked <- todo.item[2]:completed, toggle -> todo.item[2] toggle
+```
+
+o Claude leu "o que está ativo" como os itens não concluídos agora
+(`todo.item[1]` e `[2]` têm `completed: false`, o `[3]` tem `true`), e
+não como o chip "Active" que as regras escolhem. os ids da entrada
+(`todo_panel.input`, `todo_panel.add`) são os da superfície atual; os
+chips e os números saíram. é uma leitura dos valores de agora, não um
+filtro: um item concluído depois continua na lista, marcado, e um item
+novo não entra. a lista que se repete sobre os itens é a task-95.
+
+a terceira mediu o que acontece quando o orçamento estoura: o mesmo
+comando da segunda com `--max-budget-usd 0.0001` e um prompt de uma linha
+(`answer with the JSON object {"ok": true} and nothing else.`). 2,8 s,
+exit 1, stderr vazio, e na stdout o objeto com `is_error: true`,
+`subtype: error_max_budget_usd`, `errors: ["Reached maximum budget
+($0.0001)"]`, sem `result`, custo 0,0013 USD. o limite é conferido
+depois do turno: ele não corta uma chamada no meio. com um turno só e
+sem ferramentas, quem limita uma chamada é o tempo máximo do crate e o
+tamanho do prompt; o `--max-budget-usd` fica como teto.
+
+o que a sonda decide:
+
+- o `propose::prompt` não muda: as duas respostas vieram só com o json,
+  a instrução do fim do primeiro parágrafo ("answer with the IR only: one
+  JSON object, no prose") bastou, e o `read` do `Llm` já tira cerca e
+  prosa se vierem;
+- as flags do crate são as da segunda chamada, com o motivo de cada uma
+  no handoff; a saída em json porque ela separa resposta de erro
+  (`is_error`, `subtype`, `errors`) e diz o custo e os turnos; um erro
+  vem com exit 1 e a explicação na stdout, não no stderr;
+- o crate tira do ambiente do filho as variáveis da sessão do Claude
+  Code acima e roda o filho num diretório dele;
+- a condição de parada não disparou: sem interação, sem login, sem
+  permissão, as duas chamadas longe dos 5 minutos, custo pequeno.
