@@ -538,6 +538,60 @@ fn a_stale_agent_request_names_the_person_who_acted() {
     );
 }
 
+/// Several actions since the agent looked, by two actors: the toast
+/// names them in the order they ran, one clause per actor's run, the
+/// actions of a run in one series.
+#[test]
+fn a_stale_refusal_toast_names_each_actors_run_in_order() {
+    let mut bench = bench();
+    let seen = bench.snapshot().expect("snapshot");
+    let agent = Actor::Agent {
+        name: "test-agent".into(),
+    };
+    let req = Request::observe(&seen, agent, "commit.submit", "submit", None).expect("observe");
+    let edit = Request::observe(
+        &seen,
+        Actor::Human,
+        "commit.message",
+        "set_value",
+        Some(Value::Text("fix login flow".into())),
+    )
+    .expect("observe");
+    bench.dispatch(edit);
+    let person = Actor::Human;
+    let other = Actor::Agent {
+        name: "reviewer".into(),
+    };
+    for (actor, file) in [(person, "b.txt"), (other, "a.txt")] {
+        let now = bench.snapshot().expect("snapshot");
+        let target = format!("changes.file[{file}]");
+        let show =
+            Request::observe(&now, actor, target.as_str(), "show_diff", None).expect("observe");
+        let id = bench.dispatch(show);
+        assert!(matches!(
+            bench.receipt(id).and_then(Receipt::stage),
+            Some(Stage::Completed(_))
+        ));
+    }
+    let id = bench.dispatch(req);
+    let Some(Stage::Rejected(Rejection::Stale { acted, .. })) =
+        bench.receipt(id).and_then(Receipt::stage)
+    else {
+        panic!("stale: {:?}", bench.receipt(id));
+    };
+    assert_eq!(acted.len(), 3);
+    assert_eq!(
+        notices(&bench),
+        [(
+            Role::Alert,
+            "Refused test-agent's submit: the commit message changed \
+             (the person edited the commit message and opened the diff of b.txt; \
+             reviewer opened the diff of a.txt)"
+                .to_owned()
+        )]
+    );
+}
+
 #[test]
 fn an_agent_discard_opens_the_modal_and_cancel_declines_it() {
     let mut bench = bench();
