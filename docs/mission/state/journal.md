@@ -21,8 +21,14 @@ task; aqui fica o que aconteceu e onde ler.
   faz os quatro testes novos falharem. os textos do `wire`, do how-to e do
   ADR do inspector aplicados no fechamento.
 - **publicado:** PR #56 (task-89), merge `c433751`.
-- próximo no `sem`/`wire`: task-91 (a âncora no olhar), agora
-  desbloqueada.
+- **replan:** a task-91 (a âncora no olhar) mexe no `sem`, no `wire` e
+  nos três `Host`, e dois deles estão com agentes agora (`ide::agent`
+  com a 63d, o `LabHost` com a 88). ela entra quando as duas voltarem.
+  enquanto isso, a task-65 (rodadas a e b, do pixel ao código, só
+  leitura, no showcase) roda no lugar da 90: é da onda 5, que precisa
+  fechar antes da onda 6, e as superfícies dela não cruzam as da 63d e
+  da 88.
+- **publicado:** PR #57 (task-90), com a CI rodando.
 
 ### ciclo 2: task-89 integrada, o buraco do inspector fechado
 
