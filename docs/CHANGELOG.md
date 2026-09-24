@@ -9,6 +9,14 @@ status: living
 
 ## unreleased
 
+- the blur follows the scale (2026-09-24, task-77 phase 1b): the glass
+  blur, the layer blur and the layer shadow now reach as far in logical
+  pixels at every display scale, so the same glass looks the same on a
+  retina screen. scale 1 is unchanged byte for byte: it keeps the same
+  shader entry and weights. other scales lay the 1x kernel over the
+  physical texels. on a page with glass, a 2x frame costs about 1.55
+  times what it did.
+
 - what identical means (2026-09-24, task-77 phase 1): the regression
   tool gains `regress compare`, which says whether two frames are equal,
   different only where a product decision says so, or different with

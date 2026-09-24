@@ -61,3 +61,39 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     return color;
 }
+
+// The blur at a scale other than 1: the 1x kernel laid over the physical
+// texels (`effects::scaled_weights`), `taps.x` taps per side. Scale 1
+// keeps `fs_main` above, untouched.
+struct ScaledBlur {
+    direction: vec2<f32>,
+    texel_size: vec2<f32>,
+    taps: vec4<f32>,
+    weights: array<vec4<f32>, 16>,
+}
+
+@group(1) @binding(0)
+var<uniform> scaled: ScaledBlur;
+
+fn scaled_weight(i: i32) -> f32 {
+    let v = scaled.weights[i / 4];
+    let c = i % 4;
+    if c == 0 { return v.x; }
+    if c == 1 { return v.y; }
+    if c == 2 { return v.z; }
+    return v.w;
+}
+
+@fragment
+fn fs_scaled(in: VertexOutput) -> @location(0) vec4<f32> {
+    let step = scaled.direction * scaled.texel_size;
+    var color = textureSample(source_texture, source_sampler, in.uv) * scaled_weight(0);
+    let taps = i32(scaled.taps.x);
+    for (var i: i32 = 1; i <= taps; i = i + 1) {
+        let offset = step * f32(i);
+        let w = scaled_weight(i);
+        color += textureSample(source_texture, source_sampler, in.uv + offset) * w;
+        color += textureSample(source_texture, source_sampler, in.uv - offset) * w;
+    }
+    return color;
+}
