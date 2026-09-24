@@ -357,7 +357,7 @@ phase 1's. the time per frame of a transition was not measured.
   must survive a change of representation is the app's, and it is read
   again through the binding.
 
-## addendum, 2026-09-24: the todo's surface shows its items (task-95, proposed)
+## addendum, 2026-09-24: the todo's surface shows its items (task-95, accepted)
 
 - the showcase todo projects `todo:items` (the visible ids, in the order
   shown) and each item's `text`. both forms of the Surface page repeat
@@ -382,7 +382,7 @@ phase 1's. the time per frame of a transition was not measured.
   not bound, and a closed dialog stays projected with its `confirm`
   (phase 1): both matter to any surface that binds a removal later.
 
-## addendum, 2026-09-24: an image draws the frame the app holds (task-69 phase 4b, proposed)
+## addendum, 2026-09-24: an image draws the frame the app holds (task-69 phase 4b, accepted)
 
 ### context
 

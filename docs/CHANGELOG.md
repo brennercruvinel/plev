@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- the generated silences screen, with real frames (2026-09-24, task-69
+  phase 4b): a surface's `image` bound to a frame ref the app projects
+  (`silences.video@4.0`) draws the frame the app decoded, through the new
+  `surface::Frames` trait; the Silences page has the intent row of the
+  Surface page, a generated review beside the fixed screen (the video, a
+  thumbnail per cut, apply and reject, the counts, detect and apply all)
+  on the same dispatcher, and a close. the rules find the media by
+  structure and "compare the original with the cuts" turns the review into
+  a side-by-side comparison keeping every continuing id. the Claude
+  produced both screens from a sentence (138 s and 40 s).
+
 - the silences app, the fixed screen of the video editor (2026-09-24,
   task-69 phase 4a): a new Silences page in the showcase reviews the
   silences of a video with real capabilities: detect them with ffmpeg's

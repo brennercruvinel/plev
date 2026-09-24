@@ -454,7 +454,7 @@ second, and at each attempt).
 - a test of the gate that finds or runs the real `claude`.
 - the page waiting for a child it cannot cancel.
 
-## addendum, 2026-09-24: the rules show the media by structure (task-69 phase 4b, proposed)
+## addendum, 2026-09-24: the rules show the media by structure (task-69 phase 4b, accepted)
 
 ### context
 

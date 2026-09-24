@@ -107,7 +107,7 @@ receipts live; the page owns its model, its widgets and its worker.
 
 ### the projection
 
-`silences` (region; `cuts`, the ids in order), `silences.video` (media:
+`silences` (region; `cuts`, the keys of the cuts in order, since phase 4b; `range`), `silences.video` (media:
 `file`, `duration`, `shown`), `silences.threshold` and
 `silences.min_duration` (`Slider::project`: `value`, `set_value`,
 `increment`, `decrement`), `silences.detect` (button: `detect_silence`,
@@ -189,3 +189,16 @@ gallery scrolls it.
 - a second bind for a row's buttons: the row is the node, the buttons are
   its affordance.
 - reusing a cut's id across detections.
+
+## addendum, 2026-09-24: what phase 4b added to the projection (accepted)
+
+phase 4b lists `silences:cuts` by the cuts' keys (`"1"`, `"2"`), as
+`todo:items` does, so a `repeat` names its instances by the key and the
+rules find the list by structure. the app also projects a frame ref per
+frame it can decode: `silences.video:original` (the instant shown) and
+`silences.video:result` (the end of an applied cut holding it), and
+`silences.cut[<id>]:frame` (the middle of the cut), each a text like
+`silences.video@4.017052`; an `image` of a generated surface binds its
+`source` to one of them and the page decodes the frame through
+`surface::Frames`. `silences.video:range` carries the span shown.
+
