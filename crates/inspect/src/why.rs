@@ -39,6 +39,11 @@ pub struct Asked {
     pub target: SemId,
     pub action: ActionName,
     pub param: Option<Value>,
+    /// the question the actor asked a person before the action ran
+    /// (`Request::ask`, task-92), as recorded: `REDACTED` when the target
+    /// is secret. not written when it asked none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ask: Option<String>,
     /// the target as the recorded state held it right before the request;
     /// `None` when it did not hold it.
     pub control: Option<Node>,
@@ -301,6 +306,7 @@ impl Inspector<'_> {
                 target: request.target.clone(),
                 action: request.action.clone(),
                 param: request.param.clone(),
+                ask: request.ask.clone(),
                 control: before
                     .as_ref()
                     .and_then(|s| s.get(&request.target))
