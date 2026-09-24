@@ -29,7 +29,6 @@ const FROZEN: &[(&str, usize)] = &[
     ("crates/comps/src/content/card.rs", 1343),
     ("crates/urnaui/src/view/explorer.rs", 1019),
     ("crates/urnaui/src/model/urnaread.rs", 794),
-    ("crates/showcase/src/view/dispatch.rs", 776),
     ("crates/urnaui/src/view/search.rs", 752),
 ];
 
