@@ -13,7 +13,7 @@
 
 use sem::{
     ActionName, Actor, Change, Millis, Node, Observation, Request, RequestId, Revision, SemId,
-    Stage, StateKey, Value,
+    Stage, StateKey, StateRef, Value,
 };
 use serde::{Deserialize, Serialize};
 
@@ -249,11 +249,23 @@ pub enum ProtoError {
     /// served): observe again.
     #[error("revision {revision} is not held; observe again")]
     UnknownRevision { revision: Revision },
+    /// an act on `from_revision` reads state its actor was never shown in
+    /// an observation up to that revision (out of every scope it observed,
+    /// cut by `keys`, or shown only by an observation whose revision the
+    /// app no longer holds): `reads` names it, in the action's order. the
+    /// act is refused before the dispatcher; observe it and decide again.
+    #[error("not observed: this agent was never shown {}; observe it and decide again", refs(.reads))]
+    NotObserved { reads: Vec<StateRef> },
     /// the app does not take this here and now: a confirmation or a
     /// decline by an agent, an act before `hello`, nothing projected or no
     /// dispatcher right now.
     #[error("not enabled: {reason}")]
     NotEnabled { reason: String },
+}
+
+fn refs(reads: &[StateRef]) -> String {
+    let names: Vec<String> = reads.iter().map(ToString::to_string).collect();
+    names.join(", ")
 }
 
 fn is_false(b: &bool) -> bool {
