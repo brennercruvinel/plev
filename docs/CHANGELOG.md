@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- the Surface page asks the Claude for the screen (2026-09-24, task-69
+  phase 3b-ii): a person, or an agent through the port, writes an intent,
+  picks the proposer (`rules` or `claude`; `claude` only where the program
+  exists, and only on desktop) and presses propose. the Claude is asked
+  off the app's thread: the request stays open (`Execution::Started`), the
+  page keeps answering, the status line shows the attempt, the seconds
+  and the cost, and a cancel button kills the child. the verified surface
+  is born or changes form in place when the answer arrives. a real intent
+  through the port ("the items as a list with the add field on top") took
+  9.3 s and 0.04 USD.
+
 - the Claude proposes surfaces (2026-09-24, task-69 phase 3b-i): the new
   `claude-model` crate puts the Claude behind `propose::Model` by running
   the `claude -p` of Claude Code as a child process, with no tools, no

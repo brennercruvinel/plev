@@ -14,6 +14,32 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a tela nasce do que a pessoa escreve (task-69 fase 3b-ii)
+
+- **integrada:** fase 3b-ii (merge da `task/69e-page-asks-claude`). na
+  página Surface, a pessoa (ou um agente pela porta) escreve a intenção,
+  escolhe `claude` e a tela verificada nasce em segundos, sem travar o
+  app, com a espera e o custo na tela e um cancelar que mata o filho. a
+  prova real pela porta: 9,3 s, 0,04 USD, 14 nós, transformou no lugar.
+  3 chamadas reais na task (0,18 USD). gate verde na `main` (2486),
+  regressão 157 sem mudança.
+- **é o marco que o brenner pediu para ver rodando:** você escreve, a
+  tela aparece funcionando, com os dados vivos do app. mostrar antes de
+  qualquer outra coisa.
+- **próximo, na ordem do programa:** fase 4, o editor de vídeo (a revisão
+  de silêncios com ffmpeg), depois o checkpoint b com o brenner.
+
+### ciclo 3: publicados #71 e #72; disparada a fase 3b-ii
+
+- **publicados:** PR #71 (task-95) e PR #72 (fase 3b-i), merge commit,
+  gate local verde na `main` (2478), regressão 157 sem mudança. CI segue
+  fora por cobrança.
+- **disparada:** task-69 fase 3b-ii, a página Surface pede a tela ao
+  Claude (fora da thread do app, espera visível, cancelar, o prompt
+  pedindo `repeat` sobre listas). um agente só; no máximo 6 chamadas
+  reais ao Claude na task. build dir da task-95 reaproveitado; o da 69d
+  limpo (8,2 GB); 23 GB livres.
+
 ### ciclo 3: o Claude gera a tela (task-69 fase 3b-i)
 
 - **integrada:** fase 3b-i (`4573c81`), o crate `claude-model`. o Claude

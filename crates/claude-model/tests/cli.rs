@@ -2,15 +2,16 @@
 //! never the real one: no test here reaches the network. over the todo's
 //! golden projection, through `propose::Llm` and `propose_verified`: a
 //! good answer is a verified surface, a refused one is repaired by the
-//! second call, a child past the timeout is killed, a grandchild that
-//! holds the pipes does not hold the call, a program that fails or runs
-//! out of budget is the error at once, and a program that is not there
-//! is an error too.
+//! second call, a child past the timeout is killed, a call cancelled from
+//! another thread kills the child too, a grandchild that holds the pipes
+//! does not hold the call, a program that fails or runs out of budget is
+//! the error at once, and a program that is not there is an error too.
 
 #![cfg(unix)]
 
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::thread;
 use std::time::{Duration, Instant};
 
 use claude_model::{ClaudeCli, SESSION_VARS};
@@ -202,6 +203,65 @@ fn a_child_past_the_timeout_is_killed() {
         "a model that fails is not asked again"
     );
     assert!(cli.calls()[0].reply.is_err());
+}
+
+/// a call cancelled from another thread while the child sleeps (the
+/// page's cancel button): the child is killed by its pid, the proposal
+/// stops with that error long before the deadline, the signal stays
+/// raised so the next call does not even start, and a fresh signal
+/// lets a new call run.
+#[test]
+fn a_call_cancelled_from_another_thread_kills_the_child() {
+    let todo = Todo::new();
+    let (dir, mut cli) = fake("slow");
+    cli.timeout = Duration::from_secs(30);
+    let cancel = cli.cancel.clone();
+    let started = Instant::now();
+    let worker = thread::spawn(move || {
+        let todo = Todo::new();
+        let e = propose_verified(&mut Llm::new(&mut cli), &todo.ask()).unwrap_err();
+        (e, cli)
+    });
+    let pid = loop {
+        let pid = left(&dir, "pid").trim().to_owned();
+        if !pid.is_empty() {
+            break pid;
+        }
+        assert!(
+            started.elapsed() < Duration::from_secs(10),
+            "the child started"
+        );
+        thread::sleep(Duration::from_millis(10));
+    };
+    assert!(alive(&pid), "the child {pid} sleeps");
+    cancel.cancel();
+    let (e, mut cli) = worker.join().unwrap();
+    let took = started.elapsed();
+    let text = model_error(e);
+    assert!(
+        text.ends_with(&format!("was cancelled: killed (pid {pid})")),
+        "{text}"
+    );
+    assert!(!alive(&pid), "the child {pid} is dead");
+    assert!(took < Duration::from_secs(10), "{took:?}");
+    assert_eq!(cli.calls().len(), 1);
+    assert!(cli.calls()[0].reply.is_err());
+
+    // raised, the signal stops the next call before it starts
+    let e = propose_verified(&mut Llm::new(&mut cli), &todo.ask()).unwrap_err();
+    assert!(
+        model_error(e).ends_with("was cancelled before it started"),
+        "not started"
+    );
+    assert!(!dir.path().join("prompt.2").exists());
+    assert_eq!(cli.calls().len(), 2);
+
+    // a new signal, a new call
+    cli.cancel = claude_model::Cancel::new();
+    std::fs::write(dir.path().join("mode"), "ok").unwrap();
+    let ir = propose_verified(&mut Llm::new(&mut cli), &todo.ask()).expect("verifies");
+    assert_eq!(ir.ir().surface.id.as_str(), "todo_panel");
+    assert!(dir.path().join("prompt.2").exists());
 }
 
 /// a child that answers and exits while a grandchild keeps its stdout and

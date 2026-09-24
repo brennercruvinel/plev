@@ -1,5 +1,6 @@
 //! one run of the child: the prompt written to its stdin, its stdout and
-//! stderr read to the end, and a deadline past which it is killed.
+//! stderr read to the end, a deadline past which it is killed, and a
+//! signal from another thread that kills it before that.
 
 use std::io::{ErrorKind, Read, Write};
 use std::path::Path;
@@ -11,7 +12,10 @@ use std::time::{Duration, Instant};
 
 use propose::ModelError;
 
-/// how often the child is asked whether it has exited.
+use crate::Cancel;
+
+/// how often the child is asked whether it has exited, and the cancel
+/// signal is read.
 const POLL: Duration = Duration::from_millis(10);
 /// how long the end of its output is waited for once it has exited: a
 /// grandchild that keeps a pipe open holds the call this long at most,
@@ -76,14 +80,21 @@ fn kill(child: &mut Child) {
 }
 
 /// runs `command` with `input` on its stdin and waits for it at most
-/// `timeout`: past it, the child is killed and the error says so.
+/// `timeout`: past it, or once `cancel` is raised, the child is killed
+/// and the error says which.
 pub(crate) fn run(
     mut command: Command,
     program: &Path,
     input: &str,
     timeout: Duration,
+    cancel: &Cancel,
 ) -> Result<Exit, ModelError> {
     let name = program.display();
+    if cancel.is_cancelled() {
+        return Err(ModelError(format!(
+            "{name} was cancelled before it started"
+        )));
+    }
     let mut child = command
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -106,6 +117,12 @@ pub(crate) fn run(
     let status = loop {
         match child.try_wait() {
             Ok(Some(status)) => break status,
+            Ok(None) if cancel.is_cancelled() => {
+                kill(&mut child);
+                return Err(ModelError(format!(
+                    "{name} was cancelled: killed (pid {pid})"
+                )));
+            }
             Ok(None) if Instant::now() >= deadline => {
                 kill(&mut child);
                 return Err(ModelError(format!(

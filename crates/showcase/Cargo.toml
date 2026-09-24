@@ -58,6 +58,10 @@ wire.workspace = true
 # form, the json an agent receives from `plev observe`.
 serde.workspace = true
 serde_json.workspace = true
+# the Surface page asks the Claude for a surface through `claude -p`
+# (task-69 phase 3b-ii): a child process run on a thread of its own.
+# desktop only; where it is absent the page proposes by the rules.
+claude-model.workspace = true
 
 [dev-dependencies]
 # the agent port's cost test weighs a leaner JSON form of a snapshot.
