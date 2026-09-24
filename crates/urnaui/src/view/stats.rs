@@ -5,7 +5,7 @@
 //! benchmark runs on the worker; this screen owns the controls, the
 //! progress counter and the last `BenchmarkView`.
 
-use comps::prelude::{Button, EventResult, Rect, Slider, Spinner, SpinnerSize, WidgetEvent};
+use comps::prelude::{Button, EventResult, Rect, Slider, Spinner, SpinnerSize, Wake, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
@@ -55,8 +55,8 @@ impl StatsScreen {
     }
 
     /// The spinner animates only while the benchmark runs.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        self.running && self.spinner.tick(dt)
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        Wake::moving(self.running && self.spinner.tick(dt))
     }
 
     pub fn fold_result(&mut self, result: Result<BenchmarkView, String>) {

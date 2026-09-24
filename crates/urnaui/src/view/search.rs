@@ -12,7 +12,7 @@
 
 use comps::prelude::{
     Button, EventResult, IconButton, Rect, Select, Slider, Spinner, SpinnerSize, Tabs, VirtualList,
-    WidgetEvent,
+    Wake, WidgetEvent,
 };
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
@@ -326,9 +326,12 @@ impl SearchScreen {
         (self.query.edit(key), Action::None)
     }
 
-    pub fn tick(&mut self, dt: f32) -> bool {
+    /// The query caret at its flips; the results' scrollbar fade and the
+    /// spinner (while a search is pending) every turn while they move.
+    pub fn wake(&mut self, dt: f32) -> Wake {
         let spinning = self.pending && self.spinner.tick(dt);
-        self.query.tick(dt) | self.results.tick(dt) | spinning
+        let moving = self.results.tick(dt) | spinning;
+        self.query.wake(dt).merge(Wake::moving(moving))
     }
 
     fn copy_rect(&self, explain: Rect, theme: &Theme) -> Rect {
@@ -785,6 +788,32 @@ mod tests {
             rerank_disclosure: "real cosine".into(),
             recall_estimate: f32::NAN,
         }
+    }
+
+    /// A focused query field asks the loop for a frame at each caret flip
+    /// and nothing between, the way the shell paces it: the click's frame
+    /// reports the idle before it, then a frame only when a deadline is
+    /// due, with the real time since the last frame.
+    #[test]
+    fn a_focused_query_asks_for_a_frame_only_at_each_flip() {
+        const TURN: f32 = 1.0 / 60.0;
+        let (mut screen, theme) = harness();
+        let content = Rect::new(40.0, 128.0, 1200.0, 600.0);
+        let field = screen.layout(content, false, &theme).query_field;
+        let (x, y) = field.center();
+        screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, true, &theme);
+        let mut last = (0, screen.wake(5.0));
+        let mut flips = 0;
+        for turn in 1..360 {
+            let since = (turn - last.0) as f32 * TURN;
+            if last.1.next.is_some_and(|d| since >= d.as_secs_f32()) {
+                let ask = screen.wake(since);
+                assert!(ask.now && !ask.is_continuous(), "turn {turn}: {ask:?}");
+                flips += 1;
+                last = (turn, ask);
+            }
+        }
+        assert_eq!(flips, 11, "one frame per flip in six seconds");
     }
 
     #[test]

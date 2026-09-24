@@ -10,7 +10,7 @@
 //! the file.
 
 use comps::prelude::{
-    EventResult, IconButton, Rect, Scrollbar, Spinner, SpinnerSize, VirtualList, WidgetEvent,
+    EventResult, IconButton, Rect, Scrollbar, Spinner, SpinnerSize, VirtualList, Wake, WidgetEvent,
 };
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
@@ -347,9 +347,12 @@ impl ChunksScreen {
         )
     }
 
-    pub fn tick(&mut self, dt: f32) -> bool {
+    /// The filter caret at its flips; the scrollbar fades and the spinner
+    /// (while a page loads) every turn while they move.
+    pub fn wake(&mut self, dt: f32) -> Wake {
         let spinning = self.loading && self.spinner.tick(dt);
-        self.filter.tick(dt) | self.list.tick(dt) | self.detail_scrollbar.tick(dt) | spinning
+        let moving = self.list.tick(dt) | self.detail_scrollbar.tick(dt) | spinning;
+        self.filter.wake(dt).merge(Wake::moving(moving))
     }
 
     pub fn render(
