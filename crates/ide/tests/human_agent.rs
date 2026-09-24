@@ -813,3 +813,41 @@ fn a_commit_with_a_rename_holds_both_paths_in_the_receipt_and_the_node() {
         "what git diff-tree --no-renames lists"
     );
 }
+
+#[test]
+fn the_last_commit_the_ide_made_keeps_its_files_past_the_newest() {
+    let mut rig = Rig::new(&["A"], &["A"]);
+    rig.agent_writes("add A");
+    let id = rig.ask(agent(), "commit.submit", "submit", None);
+    rig.settle(id);
+    let (sha, files) = committed(&rig.receipt(id));
+
+    // Enough commits land from a terminal to push it past the newest.
+    let newest = ide::workbench::FILES_PROJECTED;
+    for n in 0..newest {
+        rig.git(&[
+            "commit",
+            "--quiet",
+            "--allow-empty",
+            "-m",
+            &format!("outside {n}"),
+        ]);
+    }
+    rig.bench.refresh();
+    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+
+    let seen = rig.look();
+    let stacks = SemId::parse("stacks").expect("id");
+    let order: Vec<String> = seen.children(&stacks).map(|n| n.id.to_string()).collect();
+    let node = format!("stacks.commit[{sha}]");
+    assert_eq!(
+        order.get(newest),
+        Some(&node),
+        "the ide's commit is past the newest"
+    );
+    assert_eq!(rig.value(&format!("{node}:files")), Value::List(files));
+    // The initial commit, older still, carries none.
+    let initial = order.last().expect("the initial commit");
+    let key = format!("{initial}:files").parse().expect("a state ref");
+    assert_eq!(seen.value(&key), None, "{initial} carries no files");
+}

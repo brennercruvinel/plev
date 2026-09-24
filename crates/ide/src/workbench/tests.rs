@@ -198,6 +198,54 @@ fn the_workbench_projects_the_workspace_model() {
 }
 
 #[test]
+fn only_the_newest_commits_of_the_checked_out_stack_carry_their_files() {
+    let mut bench = bench();
+    let commit = |n: usize| CommitEntry {
+        sha: format!("{n:040x}"),
+        message: format!("commit {n}"),
+        author: "Test".into(),
+        time_ago: "now".into(),
+        files: vec![format!("f{n}")],
+    };
+    let total = FILES_PROJECTED + 2;
+    bench.workspace_mut().stacks.set_stacks(vec![
+        Stack {
+            branch_name: "main".into(),
+            is_active: true,
+            commits: (0..total).map(commit).collect(),
+        },
+        Stack {
+            branch_name: "feature/x".into(),
+            is_active: false,
+            commits: vec![commit(total)],
+        },
+    ]);
+    let snap = bench.snapshot().expect("the projection validates");
+    for n in 0..=total {
+        let node = snap
+            .get(&sid(&format!("stacks.commit[{n:040x}]")))
+            .expect("every commit is projected");
+        let files = node.state.get("files");
+        if n < FILES_PROJECTED {
+            assert_eq!(
+                files,
+                Some(&Value::List(vec![format!("f{n}")])),
+                "commit {n}"
+            );
+        } else {
+            assert_eq!(
+                files, None,
+                "commit {n} is past the newest {FILES_PROJECTED}"
+            );
+        }
+        assert!(
+            node.state.get("summary").is_some(),
+            "commit {n} keeps its summary"
+        );
+    }
+}
+
+#[test]
 fn submit_is_disabled_until_form_message_and_index_allow_it() {
     let mut bench = bench();
     let enabled = |b: &Workbench| {

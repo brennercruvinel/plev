@@ -136,6 +136,8 @@ pub struct GitSession {
     branch_cache: Vec<Branch>,
     /// The reads still owed, and which of them are older than the view.
     reads: Reads,
+    /// The last commit this session made (`show_commit`).
+    made: Option<String>,
 }
 
 impl GitSession {
@@ -146,6 +148,7 @@ impl GitSession {
             log_cache: Vec::new(),
             branch_cache: Vec::new(),
             reads: Reads::default(),
+            made: None,
         }
     }
 
@@ -217,6 +220,7 @@ impl GitSession {
         commit: &NewCommit,
         message: &str,
     ) {
+        self.made = Some(commit.sha.clone());
         let committed: HashSet<&str> = commit.files.iter().map(String::as_str).collect();
         let rows = workspace
             .unassigned
@@ -248,6 +252,11 @@ impl GitSession {
             self.log_cache.truncate(LOG_LIMIT);
         }
         self.rebuild_stacks(workspace);
+    }
+
+    /// The sha of the last commit this session made, if any.
+    pub(crate) fn made(&self) -> Option<&str> {
+        self.made.as_deref()
     }
 
     /// Applies a result from the git worker to the views. A status, log

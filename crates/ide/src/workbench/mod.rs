@@ -36,7 +36,7 @@ use crate::session::GitSession;
 use crate::views::workspace::{UiRequest, WorkspaceView};
 use truth::Inflight;
 
-pub use project::DIFF_LINES;
+pub use project::{DIFF_LINES, FILES_PROJECTED};
 
 pub struct Workbench {
     workspace: WorkspaceView,
