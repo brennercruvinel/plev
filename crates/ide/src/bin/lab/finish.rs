@@ -77,7 +77,7 @@ impl Lab {
         let receipts = log.receipts();
         let acts = story::acts(&receipts, &acts, &served);
         let intervention = person.fired.as_ref();
-        let (stale_valid, stale_text) = story::stale_measurement(&acts, intervention);
+        let measured = story::stale_measurement(&acts, intervention);
         let recovered = story::recovered(&acts);
         let stats = rec.stats();
         let t = timing;
@@ -106,8 +106,16 @@ impl Lab {
             notes.push(format!("the scripted agent: {e}"));
         }
         notes.push(
-            "form: from_revision when the revision the act rests on was served by this port, \
-             observed otherwise"
+            "stale measurement: by value. valid when a submit that reached the dispatcher after \
+             the person's act carried the changes:staged of before it (seen) while the app held \
+             another (live), whatever revision it named"
+                .to_owned(),
+        );
+        notes.push(
+            "form, revision_served_index, observations_between, fresh_before: the revision an act \
+             named, against the observations served, as information. a revision is a hash of \
+             what the app projects, so a world put back as it was has the revision it had then, \
+             and a revision a terminal stage carried is served by no observation (form observed)"
                 .to_owned(),
         );
         let contract = json!({
@@ -121,6 +129,8 @@ impl Lab {
             "project_per_call_us": per_call_us(costs.project.get(), costs.project_calls.get()),
             "dispatch_calls": costs.dispatch_calls.get(),
             "dispatch_per_call_us": per_call_us(costs.dispatch.get(), costs.dispatch_calls.get()),
+            "lab_look_calls": costs.look_calls.get(),
+            "lab_look_per_call_us": per_call_us(costs.look.get(), costs.look_calls.get()),
             "loop_snapshot_calls": t.snapshots,
             "loop_snapshot_per_call_us": per_call_us(t.snapshot, t.snapshots),
         });
@@ -165,8 +175,9 @@ impl Lab {
                 "round_trips": traffic.msgs_in,
                 "stale_rejections": stale.len(),
                 "recovered": recovered,
-                "stale_measurement_valid": stale_valid,
-                "stale_measurement": stale_text,
+                "stale_measurement_valid": measured.valid,
+                "stale_measurement": measured.text,
+                "stale_measured": measured.json(),
                 "script": script.as_ref().map(|(steps, _)| steps.clone()),
             },
             "intervention": intervention.map(intervention_json),
@@ -223,16 +234,27 @@ impl Lab {
             row("round trips (messages in)", &traffic.msgs_in.to_string()),
             row("stale rejections", &stale.len().to_string()),
             row("recovered after stale", &recovered.to_string()),
-            row("stale_measurement_valid", &stale_valid.to_string()),
-            row("stale measurement", &stale_text),
+            row("stale_measurement_valid", &measured.valid.to_string()),
+            row("stale measurement", &measured.text),
         ];
         for a in &acts {
+            let values = match (&a.seen_staged, a.action == "submit") {
+                (Some(seen), true) => format!(
+                    ", staged seen {seen:?}, live {}",
+                    a.live_staged
+                        .as_ref()
+                        .map_or("unknown".to_owned(), |l| format!("{l:?}"))
+                ),
+                _ => String::new(),
+            };
             agent.push(row(
                 &format!("act {} {}", a.target, a.action),
                 &format!(
-                    "{} at {} ms, revision {} ({}, {} observation(s) between, fresh_before {})",
+                    "{} at {} ms, request {}, revision {} ({}, {} observation(s) between, \
+                     fresh_before {}){values}",
                     a.terminal,
                     a.t,
+                    a.request,
                     a.revision,
                     if a.served_index.is_some() {
                         "from_revision"
@@ -298,6 +320,10 @@ impl Lab {
                 row(
                     "bench.dispatch() for the port",
                     &per(costs.dispatch.get(), costs.dispatch_calls.get()),
+                ),
+                row(
+                    "the lab's look at each submit (out of drain)",
+                    &per(costs.look.get(), costs.look_calls.get()),
                 ),
             ],
         );

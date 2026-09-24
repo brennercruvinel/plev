@@ -28,12 +28,15 @@ pub struct Served {
     pub revision: Revision,
 }
 
-/// an agent's act as the port dispatched it: which request, and how many
-/// observations had been served by then (the order of the story).
-#[derive(Clone, Copy, Debug)]
+/// an agent's act as the port dispatched it: which request, how many
+/// observations had been served by then (the order of the story), and,
+/// for a `submit`, the `changes:staged` the app held right before the
+/// dispatcher took it, with the revision of that projection.
+#[derive(Clone, Debug)]
 pub struct ActSeen {
     pub request: RequestId,
     pub served_before: usize,
+    pub live: Option<(Revision, BTreeSet<String>)>,
 }
 
 /// the scripted person's one act, once it happened.
@@ -118,6 +121,11 @@ pub struct Costs {
     /// time inside `bench.dispatch()` when the port asked.
     pub dispatch: Cell<Duration>,
     pub dispatch_calls: Cell<u64>,
+    /// time inside the laboratory's own look at the live state when a
+    /// `submit` arrives, for the stale measurement: not the port's work,
+    /// so the loop leaves it out of the time inside `drain`.
+    pub look: Cell<Duration>,
+    pub look_calls: Cell<u64>,
 }
 
 impl Costs {
@@ -135,6 +143,10 @@ impl Costs {
 
     pub fn dispatch<T>(&self, f: impl FnOnce() -> T) -> T {
         Costs::timed(&self.dispatch, &self.dispatch_calls, f)
+    }
+
+    pub fn look<T>(&self, f: impl FnOnce() -> T) -> T {
+        Costs::timed(&self.look, &self.look_calls, f)
     }
 }
 
@@ -235,11 +247,23 @@ impl Host for LabHost<'_> {
     }
 
     fn dispatch(&mut self, req: Request) -> Option<RequestId> {
+        // the value the submit will be checked against: the dispatcher
+        // projects the app again to validate it, and nothing runs on this
+        // thread in between, so the revisions agree (the story checks).
+        let live = if is_submit(&req) {
+            match self.costs.look(|| self.bench.snapshot()) {
+                Ok(snap) => Some((snap.revision(), staged_of(&snap))),
+                Err(_) => None,
+            }
+        } else {
+            None
+        };
         let bench = &mut *self.bench;
         let request = self.costs.dispatch(|| bench.dispatch(req));
         self.acts.push(ActSeen {
             request,
             served_before: self.served.len(),
+            live,
         });
         Some(request)
     }
@@ -260,6 +284,11 @@ impl Host for LabHost<'_> {
         });
         self.intervene(revision);
     }
+}
+
+/// an agent's `submit` of the commit.
+fn is_submit(req: &Request) -> bool {
+    req.target.as_str() == "commit.submit" && req.action.as_str() == "submit"
 }
 
 /// the staged set a snapshot projects, for the report.

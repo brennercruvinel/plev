@@ -222,6 +222,7 @@ impl Lab {
     /// one drain of the port through the workbench, timed.
     fn drain(&mut self) -> bool {
         let before = served_messages(&self.port.traffic());
+        let looked = self.costs.look.get();
         let Lab {
             port,
             app,
@@ -245,7 +246,10 @@ impl Lab {
         };
         let at = Instant::now();
         let acted = port.drain(&mut host);
-        let took = at.elapsed();
+        // the laboratory's look at a submit is not the port's work.
+        let took = at
+            .elapsed()
+            .saturating_sub(self.costs.look.get().saturating_sub(looked));
         self.timing.drain += took;
         self.timing.drains += 1;
         let served = served_messages(&self.port.traffic());
