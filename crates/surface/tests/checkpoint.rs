@@ -1,6 +1,7 @@
 //! What the checkpoint b of task-69 found in every generated surface,
 //! pinned: a slider shows its label and its value, as the fixed screens'
-//! sliders do.
+//! sliders do; a number shows with two decimals at most, on the screen
+//! and in what the surface projects.
 
 // shared with the other surface tests: this binary uses the fixtures.
 #[allow(dead_code)]
@@ -9,8 +10,10 @@ mod support;
 use comps::Rect;
 use engine::compositor::{Compositor, LayerId, SceneNode};
 use engine::theme::Theme;
-use support::{App, MIXER_LEFT, id, mixer, verified_local};
+use sem::StateRef;
+use support::{App, MIXER_LEFT, SILENCES, id, mixer, page, snapshot, verified_local};
 use surface::Surface;
+use uir::{Capabilities, GenerationPolicy, verify_json};
 
 const AREA: Rect = Rect {
     x: 16.0,
@@ -87,4 +90,61 @@ fn a_slider_draws_its_label_and_its_value_above_its_track() {
         "{:?}",
         texts(&c)
     );
+}
+
+/// The numbers of a cut over the silences app, as the checkpoint saw
+/// them raw: the duration in a stat ("1.996916") and the start in a text
+/// ("3.018594") show "2" and "3.02", drawn and projected; the app's state
+/// keeps every decimal.
+#[test]
+fn a_number_shows_two_decimals_at_most_on_screen_and_in_the_projection() {
+    let theme = Theme::hoff_core();
+    let app = snapshot(SILENCES);
+    let json = r#"{
+      "plev_ir": 1,
+      "surface": {
+        "id": "numbers",
+        "title": "numbers",
+        "root": {
+          "sem": "numbers.card",
+          "component": "card",
+          "label": "the first cut",
+          "layout": {"stack": {"axis": "vertical", "gap": "sm"}},
+          "children": [
+            {
+              "sem": "numbers.duration",
+              "component": "stat",
+              "label": "duration (s)",
+              "bind": {"state": {"value": "silences.cut[1]:duration"}}
+            },
+            {
+              "sem": "numbers.start",
+              "component": "text",
+              "bind": {"state": {"text": "silences.cut[1]:start"}}
+            }
+          ]
+        }
+      }
+    }"#;
+    let ir = verify_json(
+        json,
+        &Capabilities::from_snapshot(&app),
+        &GenerationPolicy::default(),
+    )
+    .unwrap_or_else(|e| panic!("{e:#?}"));
+    let mut surface = Surface::materialize(ir, &app);
+    let mut c = Compositor::new();
+    surface.render(&mut c, AREA, &theme);
+    let drawn: Vec<String> = texts(&c).into_iter().map(|(t, _, _)| t).collect();
+    for shown in ["2", "3.02"] {
+        assert!(drawn.iter().any(|t| t == shown), "{shown}: {drawn:?}");
+    }
+    for raw in ["1.996916", "3.018594"] {
+        assert!(!drawn.iter().any(|t| t.contains(raw)), "{raw}: {drawn:?}");
+    }
+    let projected = page(&app, &surface);
+    let start = projected.get(&id("numbers.start")).expect("projected");
+    assert_eq!(start.label, "3.02", "a text is named by what it shows");
+    let kept = StateRef::parse("silences.cut[1]:start").unwrap();
+    assert_eq!(app.value(&kept), Some(&sem::Value::Num(3.018594)));
 }

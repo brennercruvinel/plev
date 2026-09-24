@@ -86,15 +86,33 @@ pub(crate) fn enabled(node: &Node, event: &str, shown: &Snapshot) -> bool {
     }
 }
 
-/// the text of a value the way a widget shows it.
+/// the text of a value the way a widget shows it; a number by
+/// `number_text`.
 pub(crate) fn text_of(value: &Value) -> String {
     match value {
         Value::Bool(b) => b.to_string(),
         Value::Int(i) => i.to_string(),
-        Value::Num(n) => n.to_string(),
+        Value::Num(n) => number_text(*n),
         Value::Text(t) => t.clone(),
         Value::List(items) => items.join(", "),
         Value::Set(items) => items.iter().cloned().collect::<Vec<_>>().join(", "),
+    }
+}
+
+/// a number the way a surface shows it: at most two decimals and no zero
+/// at the right (1.996916 is "2", 3.018594 is "3.02", 0.5 stays "0.5",
+/// -30 stays "-30"). the IR carries no unit and no format: the unit goes
+/// in the label, as the app's own labels have it ("threshold (dB)"). a
+/// number that is not finite reads as Rust writes it.
+pub(crate) fn number_text(n: f64) -> String {
+    if !n.is_finite() {
+        return n.to_string();
+    }
+    let fixed = format!("{n:.2}");
+    let short = fixed.trim_end_matches('0').trim_end_matches('.');
+    match short {
+        "-0" => "0".to_owned(),
+        s => s.to_owned(),
     }
 }
 
@@ -516,6 +534,32 @@ mod tests {
             parent: None,
             children: Vec::new(),
         }
+    }
+
+    /// A number shows with at most two decimals and no zero at the right,
+    /// whatever the app holds (the checkpoint b saw "1.996916").
+    #[test]
+    fn a_number_shows_two_decimals_at_most() {
+        for (n, shown) in [
+            (1.996916, "2"),
+            (3.018594, "3.02"),
+            (5.01551, "5.02"),
+            (10.0078, "10.01"),
+            (0.5, "0.5"),
+            (-30.0, "-30"),
+            (12.0, "12"),
+            (0.0, "0"),
+            (-0.001, "0"),
+            (f64::from(0.1f32), "0.1"),
+            (1_000_000.0, "1000000"),
+            (-2.345, "-2.35"),
+        ] {
+            assert_eq!(number_text(n), shown, "{n}");
+            assert_eq!(text_of(&Value::Num(n)), shown, "{n}");
+        }
+        assert_eq!(number_text(f64::NAN), "NaN");
+        assert_eq!(number_text(f64::INFINITY), "inf");
+        assert_eq!(text_of(&Value::Int(1_000)), "1000", "an int as it is");
     }
 
     /// A button that starts or stops binding `busy` is drawn by another
