@@ -561,3 +561,230 @@ fn before_the_submit_the_person_makes_the_chained_submit_stale() {
     assert!(act["revision_served_index"].is_null(), "{act}");
     assert!(run.bool("agent.recovered"));
 }
+
+// the person who answers (task-93): the scripted agent that asks her
+// before it puts back the file she took out (`--scripted ask`), and she
+// answers in the modal (`--answer`), after a delay.
+
+/// how long the person reads before she answers, in ms.
+const READS_MS: u64 = 50;
+
+/// the question the scripted agent asks before it stages the file again.
+const QUESTION: &str =
+    "you took src/session.rs out of the index, and the task commits it: stage it again?";
+
+/// the scripted agent that asks, with the person right before its submit,
+/// who answers `answer` after `READS_MS`.
+fn asking(app: &str, answer: &str) -> Run {
+    let after = READS_MS.to_string();
+    lab(
+        app,
+        "unstage-before-submit:src/session.rs",
+        &[
+            "--scripted",
+            "ask",
+            "--answer",
+            answer,
+            "--answer-after",
+            &after,
+        ],
+    )
+}
+
+/// the one question of the run: the agent asked to stage the file the
+/// person took out, with its text, and she answered `answer` (by the
+/// `scenario` of `--answer`) no sooner than she was told to, in the modal
+/// that showed the question. returns the question as the report tells it.
+fn asked_once(run: &Run, scenario: &str, answer: &str) -> Json {
+    assert_eq!(run.u64("agent.questions_asked"), 1);
+    let questions = run.list("agent.questions");
+    assert_eq!(questions.len(), 1, "{questions:?}");
+    let q = questions[0].clone();
+    assert_eq!(q["actor"], "agent:scripted");
+    assert_eq!(q["target"], "changes.file[src/session.rs]");
+    assert_eq!(q["action"], "stage");
+    assert_eq!(q["question"], QUESTION);
+    assert_eq!(q["answer"], answer);
+    let (asked, answered) = (
+        q["asked_at"].as_u64().expect("asked_at"),
+        q["answered_at"].as_u64().expect("answered_at"),
+    );
+    assert_eq!(q["answer_ms"].as_u64(), Some(answered - asked));
+    assert!(answered - asked >= READS_MS, "she read first: {q}");
+    assert_eq!(q["modal"]["title"], "Question from scripted");
+    assert!(
+        q["modal"]["body"]
+            .as_str()
+            .is_some_and(|b| b.contains(QUESTION)),
+        "the modal showed the question: {q}"
+    );
+    assert_eq!(run.str("person_answers.scenario"), scenario);
+    assert_eq!(run.u64("person_answers.after_ms"), READS_MS);
+    assert_eq!(run.u64("person_answers.unanswered"), 0);
+    // she was named in the refusal the agent asked about, and the agent
+    // went over her in nothing.
+    assert_eq!(run.list("stale").len(), 1);
+    names_the_person(run, 0, &[]);
+    measured_on_the_old_world(run);
+    assert_eq!(run.u64("agent.over_the_person.count"), 0);
+    q
+}
+
+/// her answer is recorded in the session: a click at the modal's button,
+/// with no target, at the instant the stage that followed the wait was
+/// recorded, and that stage says her answer (`confirmed` by her, or
+/// `rejected` as declined by her).
+fn answered_in_the_session(run: &Run, q: &Json) {
+    let session = run.session();
+    let answered = q["answered_at"].as_u64().expect("answered_at");
+    assert!(
+        session.events().iter().any(|e| e.t == answered
+            && matches!(
+                &e.kind,
+                rec::Kind::Input {
+                    kind: rec::InputKind::PointerDown,
+                    at: Some(_),
+                    target: None,
+                }
+            )),
+        "the person's click at {answered} ms is in the session"
+    );
+    let file = SemId::parse("changes.file[src/session.rs]").expect("an id");
+    let end = session.span().expect("a span").1;
+    let asked: Vec<_> = session
+        .receipts_for(&file, end)
+        .into_iter()
+        .filter(|r| r.receipt.request.ask.is_some())
+        .collect();
+    assert_eq!(asked.len(), 1);
+    let after_wait = asked[0]
+        .receipt
+        .stages
+        .iter()
+        .skip_while(|(s, _)| *s != sem::Stage::AwaitingConfirmation)
+        .nth(1)
+        .cloned()
+        .expect("a stage after the wait");
+    let expected = if q["answer"] == "allowed" {
+        sem::Stage::Confirmed {
+            by: sem::Actor::Human,
+        }
+    } else {
+        sem::Stage::Rejected(sem::Rejection::Declined {
+            by: sem::Actor::Human,
+        })
+    };
+    assert_eq!(after_wait, (expected, answered));
+}
+
+#[test]
+fn the_agent_asks_the_person_who_allows_and_the_three_files_are_committed() {
+    let run = asking("ide-lab-ask-allow", "allow");
+    commits_the_task(&run);
+    let q = asked_once(&run, "allow", "allowed");
+    assert_eq!(
+        q["stages"],
+        serde_json::json!([
+            "requested",
+            "awaiting_confirmation",
+            "confirmed",
+            "executing",
+            "completed"
+        ])
+    );
+    assert_eq!(q["ended"], "completed");
+    assert_eq!(q["then"], "committed");
+    assert_eq!(q["next_act"]["action"], "submit");
+    assert_eq!(q["next_act"]["terminal"], "completed");
+    assert_eq!(run.u64("person_answers.allowed"), 1);
+    assert!(run.bool("agent.recovered"));
+    assert!(run.at("run.no_commit_because").is_null());
+    answered_in_the_session(&run, &q);
+}
+
+#[test]
+fn the_agent_asks_the_person_who_declines_and_it_stops() {
+    let run = asking("ide-lab-ask-decline", "decline");
+    // no commit, with the exit of a run with no commit.
+    assert_eq!(run.code, 2, "the report: {}", run.report);
+    assert!(!run.bool("truth.committed"));
+    assert_eq!(run.str("truth.head_after"), run.str("truth.head_before"));
+    assert_eq!(run.str("truth.verdict"), "NO_COMMIT");
+    // the file stays where she put it: out of the index.
+    assert!(
+        run.strings("truth.status").contains(&" M src/session.rs"),
+        "{:?}",
+        run.strings("truth.status")
+    );
+
+    let q = asked_once(&run, "decline", "declined");
+    assert_eq!(q["ended"], "rejected: declined by human");
+    assert_eq!(q["then"], "stopped");
+    assert!(q["next_act"].is_null());
+    assert_eq!(run.u64("person_answers.declined"), 1);
+    assert!(!run.bool("agent.recovered"));
+
+    // the report says it was her decision, and the agent stopped clean.
+    let why = run.str("run.no_commit_because");
+    assert!(
+        why.starts_with(&format!(
+            "the person declined request {}",
+            q["request"].as_str().unwrap_or_default()
+        )),
+        "{why}"
+    );
+    let notes = run.strings("notes");
+    assert!(
+        notes.contains(&format!("no commit: {why}").as_str()),
+        "{notes:?}"
+    );
+    assert!(
+        !notes.iter().any(|n| n.starts_with("the scripted agent")),
+        "the scripted agent ended clean: {notes:?}"
+    );
+    let script = run.strings("agent.script");
+    assert_eq!(
+        script.last().copied(),
+        Some("human declined changes.file[src/session.rs] stage: the agent stops, with no commit")
+    );
+    assert_eq!(run.u64("agent.protocol_refusals.before_dispatch"), 0);
+    answered_in_the_session(&run, &q);
+}
+
+#[test]
+fn when_nobody_answers_the_question_waits_to_the_end() {
+    // the default person answers nothing, as before task-93: the request
+    // waits for her until the run ends, and the report says so.
+    let out = tempfile::tempdir().expect("a temp dir for the run");
+    let output = Command::new(env!("CARGO_BIN_EXE_ide-lab"))
+        .args(["--arm", "scripted", "--scripted", "ask", "--human"])
+        .args([
+            "unstage-before-submit:src/session.rs",
+            "--app",
+            "ide-lab-ask-quiet",
+        ])
+        .args(["--timeout", "5"])
+        .arg("--out")
+        .arg(out.path())
+        .output()
+        .expect("ide-lab runs");
+    let report = read_report(out.path(), &output.stdout, &output.stderr);
+    let run = Run {
+        code: output.status.code().unwrap_or(-1),
+        report,
+        out,
+    };
+    assert_eq!(run.code, 2, "the report: {}", run.report);
+    assert_eq!(run.str("run.ended_by"), "timeout");
+    assert_eq!(run.str("person_answers.scenario"), "none");
+    assert_eq!(run.u64("person_answers.unanswered"), 1);
+    let q = &run.list("agent.questions")[0];
+    assert_eq!(q["question"], QUESTION);
+    assert!(q["answer"].is_null() && q["answered_at"].is_null());
+    assert_eq!(q["ended"], "awaiting_confirmation");
+    assert_eq!(q["then"], "waited to the end");
+    assert!(
+        run.str("run.no_commit_because")
+            .contains("still waited for a person at the end")
+    );
+}
