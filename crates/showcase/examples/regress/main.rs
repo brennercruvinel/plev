@@ -3,6 +3,8 @@
 //! pixels.
 //!
 //! ```text
+//! cargo run -p showcase --example regress -- check [--page <title>]...
+//!     [--theme core] [--width 1280 --height 800 --scale 1] [--dir <dir>]
 //! cargo run -p showcase --example regress -- bless --page Todo [--theme core]
 //!     [--width 1280 --height 800 --scale 1] [--all] [--dir <dir>]
 //! ```
@@ -11,14 +13,29 @@
 //! `crates/showcase/fixtures/regress` (`baseline`): the page's projection,
 //! every layer under a stable name with a stable content hash (`scene`),
 //! the bound controls. `bless` stages each page without a window
-//! (`showcase::app::stage_page`, a fixed clock) and writes what it holds.
+//! (`showcase::app::stage_page`, a fixed clock) and writes what it holds;
+//! `check` stages it again and compares (`compare`): the projection by
+//! `Snapshot::diff`, the layers by hash, the bindings by rect. When
+//! nothing moved it ends there, without drawing a frame.
+//!
+//! Exit status: 0 every baseline held, 1 something moved, 2 a malformed
+//! request, 3 an error (a page or a baseline that cannot be read).
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod baseline;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod compare;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod report;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod run;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod scene;
+#[cfg(all(
+    test,
+    not(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))
+))]
+mod tests;
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 fn main() {
@@ -26,7 +43,8 @@ fn main() {
     match cli::parse(&args) {
         Ok(None) => println!("{}", cli::USAGE),
         Ok(Some(request)) => match run::run(&request) {
-            Ok(()) => {}
+            Ok(true) => {}
+            Ok(false) => std::process::exit(1),
             Err(e) => {
                 eprintln!("regress: {e}");
                 std::process::exit(3);
@@ -47,8 +65,13 @@ mod cli {
     use std::path::PathBuf;
 
     pub const USAGE: &str = "\
-usage: regress bless [--page <title>]... [--all] [--theme <name>]
+usage: regress check [--page <title>]... [--theme <name>]
                      [--width <px>] [--height <px>] [--scale <s>] [--dir <dir>]
+       regress bless [--page <title>]... [--all] [--theme <name>]
+                     [--width <px>] [--height <px>] [--scale <s>] [--dir <dir>]
+check stages every baseline in the directory (narrowed by the flags) and
+compares meaning, then layers and bindings; nothing moved, no frame is
+drawn. exit 0 when every baseline held, 1 when something moved.
 bless stages each page and writes its baseline (semantics, layers,
 bindings): the pages named with --page, every page of the gallery with
 --all, else every baseline already in the directory. new baselines take
@@ -64,6 +87,7 @@ bindings): the pages named with --page, every page of the gallery with
 
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub enum Command {
+        Check,
         Bless,
     }
 
@@ -87,6 +111,7 @@ bindings): the pages named with --page, every page of the gallery with
         let mut it = args.iter();
         let command = match it.next().map(String::as_str) {
             None | Some("-h" | "--help") => return Ok(None),
+            Some("check") => Command::Check,
             Some("bless") => Command::Bless,
             Some(other) => return Err(format!("unknown command '{other}'")),
         };
@@ -120,6 +145,9 @@ bindings): the pages named with --page, every page of the gallery with
         }
         if r.all && !r.pages.is_empty() {
             return Err("--all and --page exclude each other".to_string());
+        }
+        if r.all && r.command == Command::Check {
+            return Err("--all is for bless; check reads every baseline already".to_string());
         }
         Ok(Some(r))
     }
@@ -166,6 +194,7 @@ bindings): the pages named with --page, every page of the gallery with
                 ("bless --width 0", "--width"),
                 ("bless --fast", "unknown argument"),
                 ("bless --all --page Todo", "exclude"),
+                ("check --all", "for bless"),
             ] {
                 match parse(&args(line)) {
                     Err(e) => assert!(e.contains(needle), "{line}: '{e}' lacks '{needle}'"),
@@ -173,6 +202,16 @@ bindings): the pages named with --page, every page of the gallery with
                 }
             }
             assert_eq!(parse(&args("")), Ok(None));
+            match parse(&args("check --page Todo --dir d")) {
+                Ok(Some(r)) => {
+                    assert_eq!(r.command, Command::Check);
+                    assert_eq!(
+                        (r.pages, r.dir),
+                        (vec!["Todo".to_string()], PathBuf::from("d"))
+                    );
+                }
+                other => panic!("{other:?}"),
+            }
             assert_eq!(parse(&args("bless --help")), Ok(None));
         }
     }

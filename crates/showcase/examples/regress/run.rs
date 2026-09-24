@@ -1,7 +1,9 @@
 //! The commands over a set of baselines: which (page, theme, viewport)
-//! a request names, staging each one, and writing what `bless` accepts.
+//! a request names, staging each one, comparing it with its baseline,
+//! and writing what `bless` accepts.
 
 use std::path::Path;
+use std::time::{Duration, Instant};
 
 use engine::headless::Viewport;
 use sem::Snapshot;
@@ -10,11 +12,15 @@ use showcase::view::PAGES;
 
 use crate::baseline::{self, Baseline, Image, Key, Meta, Settle};
 use crate::cli::{self, Command, Request};
+use crate::compare;
+use crate::report;
 use crate::scene::{self, Scene};
 
-pub fn run(r: &Request) -> Result<(), String> {
+/// `Ok(true)` when every baseline held (a bless always holds).
+pub fn run(r: &Request) -> Result<bool, String> {
     match r.command {
-        Command::Bless => bless(r),
+        Command::Check => check(r),
+        Command::Bless => bless(r).map(|()| true),
     }
 }
 
@@ -24,6 +30,8 @@ pub struct Staged {
     pub page: StagedPage,
     pub semantics: Option<Snapshot>,
     pub scene: Scene,
+    /// Staging, projecting and capturing the scene.
+    pub took: Duration,
 }
 
 impl Staged {
@@ -38,6 +46,7 @@ impl Staged {
 /// Stage `key` and read what it means and draws. `with_bounds` measures
 /// every layer's extent (a bless; a check measures only what changed).
 pub fn stage(key: &Key, with_bounds: bool) -> Result<Staged, String> {
+    let start = Instant::now();
     let page = stage_page(key.viewport, &key.page, &key.theme, None).map_err(|e| e.to_string())?;
     let semantics = match page.semantics() {
         Ok(s) => Some(s),
@@ -54,6 +63,7 @@ pub fn stage(key: &Key, with_bounds: bool) -> Result<Staged, String> {
         page,
         semantics,
         scene,
+        took: start.elapsed(),
     })
 }
 
@@ -103,6 +113,72 @@ fn named(r: &Request) -> Vec<Key> {
         .collect()
 }
 
+/// What checking one baseline found.
+pub struct Outcome {
+    pub label: String,
+    pub delta: compare::Delta,
+    /// Staging, projecting and capturing the scene.
+    pub staged: Duration,
+    /// Comparing it with the baseline.
+    pub compared: Duration,
+}
+
+/// Stage the page of `b` and compare it with `b`: the meaning, then the
+/// layers and bindings.
+pub fn check_one(b: &Baseline) -> Result<Outcome, String> {
+    let staged = stage(&b.key(), false)?;
+    let start = Instant::now();
+    let delta = compare::delta(
+        &b.meta.scene,
+        b.revision(),
+        || b.semantics(),
+        &staged.scene,
+        staged.semantics.as_ref(),
+    )?;
+    Ok(Outcome {
+        label: b.key().label(),
+        delta,
+        staged: staged.took,
+        compared: start.elapsed(),
+    })
+}
+
+/// Check every baseline the request selects. A baseline where nothing
+/// moved ends at the comparison, with no frame drawn.
+fn check(r: &Request) -> Result<bool, String> {
+    let baselines = existing(r)?;
+    if baselines.is_empty() {
+        return Err(format!("no baseline under {} to check", r.dir.display()));
+    }
+    let start = Instant::now();
+    let mut changed = 0;
+    for b in &baselines {
+        let o = check_one(b)?;
+        let times = format!("stage {}, compare {}", ms(o.staged), ms(o.compared));
+        if o.delta.unchanged() {
+            println!("ok       {} ({times})", o.label);
+            continue;
+        }
+        changed += 1;
+        println!("CHANGED  {} ({times})", o.label);
+        for line in report::lines(&o.delta) {
+            println!("  {line}");
+        }
+    }
+    println!(
+        "checked {} baselines in {}: {} unchanged, {changed} changed",
+        baselines.len(),
+        ms(start.elapsed()),
+        baselines.len() - changed,
+    );
+    Ok(changed == 0)
+}
+
+/// A duration in milliseconds with one decimal.
+pub fn ms(d: Duration) -> String {
+    format!("{:.1} ms", d.as_secs_f64() * 1000.0)
+}
+
 fn bless(r: &Request) -> Result<(), String> {
     let keys: Vec<Key> = if r.all || !r.pages.is_empty() {
         named(r)
@@ -124,7 +200,7 @@ fn bless(r: &Request) -> Result<(), String> {
 }
 
 /// Write the baseline of `staged` under `root`.
-fn accept(root: &Path, staged: &Staged) -> Result<std::path::PathBuf, String> {
+pub fn accept(root: &Path, staged: &Staged) -> Result<std::path::PathBuf, String> {
     let meta = Meta::new(
         &staged.key,
         staged.settle(),

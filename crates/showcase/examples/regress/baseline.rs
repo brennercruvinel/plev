@@ -141,6 +141,7 @@ impl Meta {
 /// A baseline on disk.
 #[derive(Debug)]
 pub struct Baseline {
+    pub dir: PathBuf,
     pub meta: Meta,
 }
 
@@ -161,11 +162,32 @@ impl Baseline {
                 meta.hash
             ));
         }
-        Ok(Self { meta })
+        Ok(Self {
+            dir: dir.to_path_buf(),
+            meta,
+        })
     }
 
     pub fn key(&self) -> Key {
         self.meta.key()
+    }
+
+    /// The projection's revision as accepted, `None` for a page that
+    /// projected nothing.
+    pub fn revision(&self) -> Option<&str> {
+        self.meta.semantics.as_ref().map(|p| p.revision.as_str())
+    }
+
+    /// The projection the baseline accepted, read from `semantics.json`.
+    pub fn semantics(&self) -> Result<Option<Snapshot>, String> {
+        if self.meta.semantics.is_none() {
+            return Ok(None);
+        }
+        let path = self.dir.join(SEMANTICS);
+        let text = fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+        serde_json::from_str(&text)
+            .map(Some)
+            .map_err(|e| format!("{}: {e}", path.display()))
     }
 }
 
@@ -288,6 +310,7 @@ mod tests {
             Err(e) => panic!("{e}"),
         };
         assert_eq!(back.meta, meta);
+        assert!(matches!(back.semantics(), Ok(None)));
         assert_eq!(list(root.path()).ok(), Some(vec![dir.clone()]));
         assert!(!dir.join(SEMANTICS).exists() && !dir.join(IMAGE).exists());
     }
