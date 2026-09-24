@@ -422,3 +422,29 @@ Commits:
 - 41d65d4 task-65: handoff of round 1, stopped before the gate (disk under 8 GB)
 - (este) task-65: handoff, the gate green with the urnaui leg (2246 tests)
 ```
+
+## fechamento da rodada 1 (orquestrador, 2026-09-24)
+
+integrada na `main` em `042d34e` (onze commits, rebaseados sem
+conflito). o ADR view-source-for-pixels foi aceito.
+
+validação do orquestrador:
+- diff lido: `view_source.rs`, `literals.rs` com linha e coluna e o
+  lexer liberado a cada snapshot, o atalho em `app/source.rs`, `Access`
+  em `app/access.rs`, a janela em segundo plano;
+- gate verde no diretório da task: 2261 passaram, 0 falharam, 12
+  ignorados, com a perna urnaui;
+- `cargo test -p showcase --test view_source` verde;
+- `cargo check --release -p showcase` verde.
+
+o que ficou provado e o que não ficou: o clique postado não chega a uma
+janela que fica por baixo para não roubar o foco do brenner. por isso a
+prova foi pela função que o atalho chama, com o abridor real e um script
+que grava os argumentos (o campo do todo em `semantics.rs:153:14`, o
+título em `table.rs:459:9`).
+
+severidade do que ficou:
+- P3: o módulo do showcase usa `debug_assertions` em vez do cfg
+  `hot_reload` do engine, e quebraria com `--no-default-features`;
+  módulo de teste fora de linha com outro nome ainda entra na busca;
+- P2: fases c (gravar no `.rs`) e d (quem leu este token).

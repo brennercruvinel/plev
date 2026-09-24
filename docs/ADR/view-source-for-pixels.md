@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [hot-reload, view-source, sem, compositor, showcase, dev-loop, generative-runtime]
 date: 2026-09-24
 ---
