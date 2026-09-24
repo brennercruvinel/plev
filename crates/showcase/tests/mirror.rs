@@ -329,7 +329,9 @@ fn app_child() {
         let drawn = draw(&mut view, &mut host);
         println!("{SAID}drawn {drawn:016x}");
         let clear = view.theme.colors.bg.to_linear_array();
+        let at = Instant::now();
         scenes.offer(&mut port, MAIN, host.compositor(), head(clear));
+        println!("{SAID}offered {}", at.elapsed().as_micros());
     }
 }
 
@@ -416,10 +418,17 @@ impl App {
         }
     }
 
-    fn tell(&mut self, cmd: &str) -> u64 {
+    /// Runs `cmd` in the app: the hash of the frame it drew, and how
+    /// long offering it took on its thread (writing the frame, choosing
+    /// what each watch needs, the lines as JSON), in microseconds.
+    fn tell(&mut self, cmd: &str) -> (u64, u64) {
         writeln!(self.stdin, "{cmd}").expect("the app listens");
         let drawn = self.said("drawn").expect("the app draws");
-        u64::from_str_radix(&drawn, 16).expect("a hash")
+        let took = self.said("offered").expect("the app offers");
+        (
+            u64::from_str_radix(&drawn, 16).expect("a hash"),
+            took.parse().expect("microseconds"),
+        )
     }
 
     fn quit(&mut self) {
@@ -549,7 +558,7 @@ fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
         ("Effects", "hoff"),
         ("Capture", "core"),
     ] {
-        let drawn = app.tell(&format!("page {title}|{theme}"));
+        let (drawn, took) = app.tell(&format!("page {title}|{theme}"));
         let came = w.next();
         assert_eq!(
             w.hash(),
@@ -557,21 +566,24 @@ fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
             "{title} / {theme}: the mirror's pixels differ"
         );
         band.push(format!(
-            "{title} / {theme}, the page arrives: {} bytes in {} lines, {} layers sent",
+            "{title} / {theme}, the page arrives: {} bytes in {} lines, {} layers sent; \
+             offered in {took} us",
             came.bytes, came.lines, came.sent
         ));
         // drawn again with nothing changed: nothing travels
-        let again = app.tell("redraw");
+        let (again, took) = app.tell("redraw");
         assert_eq!(again, drawn);
         assert!(w.quiet(300), "{title}: an unchanged frame sent something");
-        band.push(format!("{title} / {theme}, drawn again unchanged: 0 bytes"));
+        band.push(format!(
+            "{title} / {theme}, drawn again unchanged: 0 bytes; offered in {took} us"
+        ));
     }
     let counts = w.viewer.mirror().image_counts();
     assert!(counts.loads >= 2, "Card's images crossed: {counts:?}");
     assert_eq!(counts.missing, 0);
 
     // Todo: a hover over one control, one layer's patch
-    let drawn = app.tell("page Todo|core");
+    let (drawn, _) = app.tell("page Todo|core");
     w.next();
     assert_eq!(w.hash(), drawn);
     let [x, y, bw, bh] = w
@@ -581,29 +593,30 @@ fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
         .find(|b| b.id.as_str() == "todo.filter[completed]")
         .expect("the filter")
         .rect;
-    let drawn = app.tell(&format!("hover {} {}", x + bw / 2.0, y + bh / 2.0));
+    let (drawn, took) = app.tell(&format!("hover {} {}", x + bw / 2.0, y + bh / 2.0));
     let came = w.next();
     assert_eq!(w.hash(), drawn, "the hover's frame");
     assert_eq!(came.sent, 1, "one layer moved");
     band.push(format!(
-        "Todo / core, a hover: {} bytes in {} lines, {} layer sent",
+        "Todo / core, a hover: {} bytes in {} lines, {} layer sent; offered in {took} us",
         came.bytes, came.lines, came.sent
     ));
 
     // Capture with the fake camera on: frames of a stream image
-    let drawn = app.tell("page Capture|core");
+    let (drawn, _) = app.tell("page Capture|core");
     w.next();
     assert_eq!(w.hash(), drawn);
     let before = w.viewer.mirror().image_counts();
-    let drawn = app.tell("camera");
+    let (drawn, _) = app.tell("camera");
     w.next();
     assert_eq!(w.hash(), drawn, "the camera turned on");
     for n in 0..4 {
-        let drawn = app.tell("wake");
+        let (drawn, took) = app.tell("wake");
         let came = w.next();
         assert_eq!(w.hash(), drawn, "camera frame {n}");
         band.push(format!(
-            "Capture / core, camera frame {n}: {} bytes in {} lines, {} layer sent",
+            "Capture / core, camera frame {n}: {} bytes in {} lines, {} layer sent; \
+             offered in {took} us",
             came.bytes, came.lines, came.sent
         ));
     }

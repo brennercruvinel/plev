@@ -9,37 +9,44 @@ use serde::{Deserialize, Deserializer, Serializer};
 
 const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-/// `bytes` as base64.
+/// `bytes` as base64. Written a quad at a time into a buffer of its
+/// final size: the port encodes a camera's frame on the app's thread, in
+/// a debug build too.
 pub fn encode(bytes: &[u8]) -> String {
-    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
-    for chunk in bytes.chunks(3) {
-        let b = [
-            chunk[0],
-            chunk.get(1).copied().unwrap_or(0),
-            chunk.get(2).copied().unwrap_or(0),
-        ];
-        let n = (u32::from(b[0]) << 16) | (u32::from(b[1]) << 8) | u32::from(b[2]);
-        for i in 0..4 {
-            if i <= chunk.len() {
-                out.push(char::from(ALPHABET[((n >> (18 - 6 * i)) & 63) as usize]));
-            } else {
-                out.push('=');
-            }
+    let mut out = vec![b'='; bytes.len().div_ceil(3) * 4];
+    let whole = bytes.chunks_exact(3);
+    let rest = whole.remainder();
+    for (src, dst) in whole.zip(out.chunks_exact_mut(4)) {
+        let n = (u32::from(src[0]) << 16) | (u32::from(src[1]) << 8) | u32::from(src[2]);
+        dst[0] = ALPHABET[(n >> 18) as usize & 63];
+        dst[1] = ALPHABET[(n >> 12) as usize & 63];
+        dst[2] = ALPHABET[(n >> 6) as usize & 63];
+        dst[3] = ALPHABET[n as usize & 63];
+    }
+    if !rest.is_empty() {
+        let b1 = rest.get(1).copied().unwrap_or(0);
+        let n = (u32::from(rest[0]) << 16) | (u32::from(b1) << 8);
+        let at = out.len() - 4;
+        out[at] = ALPHABET[(n >> 18) as usize & 63];
+        out[at + 1] = ALPHABET[(n >> 12) as usize & 63];
+        if rest.len() == 2 {
+            out[at + 2] = ALPHABET[(n >> 6) as usize & 63];
         }
     }
-    out
+    // only ASCII of the alphabet and '=' were written
+    String::from_utf8(out).unwrap_or_default()
 }
 
-fn value(c: u8) -> Option<u32> {
-    Some(u32::from(match c {
-        b'A'..=b'Z' => c - b'A',
-        b'a'..=b'z' => c - b'a' + 26,
-        b'0'..=b'9' => c - b'0' + 52,
-        b'+' => 62,
-        b'/' => 63,
-        _ => return None,
-    }))
-}
+/// The value of each byte of the alphabet; 64 for any other byte.
+const VALUES: [u8; 256] = {
+    let mut v = [64u8; 256];
+    let mut i = 0;
+    while i < 64 {
+        v[ALPHABET[i] as usize] = i as u8;
+        i += 1;
+    }
+    v
+};
 
 /// base64 back to bytes; `None` for anything `encode` would not write.
 pub fn decode(text: &str) -> Option<Vec<u8>> {
@@ -47,26 +54,30 @@ pub fn decode(text: &str) -> Option<Vec<u8>> {
     if text.len() % 4 != 0 {
         return None;
     }
-    let mut out = Vec::with_capacity(text.len() / 4 * 3);
-    let quads = text.chunks(4);
+    let pad = text.iter().rev().take_while(|c| **c == b'=').count();
+    if pad > 2 {
+        return None;
+    }
+    let mut out = vec![0u8; text.len() / 4 * 3 - pad];
     let last = text.len() / 4;
-    for (n, quad) in quads.enumerate() {
-        let pad = quad.iter().rev().take_while(|c| **c == b'=').count();
-        if pad > 2 || (pad > 0 && n + 1 != last) {
-            return None;
-        }
+    for (n, (quad, dst)) in text.chunks_exact(4).zip(out.chunks_mut(3)).enumerate() {
+        let tail = if n + 1 == last { pad } else { 0 };
         let mut v = 0u32;
-        for &c in &quad[..4 - pad] {
-            v = (v << 6) | value(c)?;
+        for &c in &quad[..4 - tail] {
+            let x = VALUES[c as usize];
+            if x == 64 {
+                return None;
+            }
+            v = (v << 6) | u32::from(x);
         }
-        v <<= 6 * pad as u32;
-        let bytes = [(v >> 16) as u8, (v >> 8) as u8, v as u8];
+        v <<= 6 * tail as u32;
+        let three = [(v >> 16) as u8, (v >> 8) as u8, v as u8];
         // the bits a padded quad leaves unused must be zero, as `encode`
         // writes them: one text per content
-        if pad > 0 && bytes[3 - pad..].iter().any(|b| *b != 0) {
+        if three[3 - tail..].iter().any(|b| *b != 0) {
             return None;
         }
-        out.extend_from_slice(&bytes[..3 - pad]);
+        dst.copy_from_slice(&three[..dst.len()]);
     }
     Some(out)
 }
