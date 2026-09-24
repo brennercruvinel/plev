@@ -14,6 +14,14 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### intervenção do brenner: o provedor do LLM é o Claude
+
+- "usa você mesmo por enquanto, eu não tenho outro LLM". decisão 13 do
+  programa: o `claude -p` desta máquina atrás de `propose::Model`. a fase
+  3b destrava: 3b-i (o provedor) agora, 3b-ii (a página) depois da
+  task-95. o brenner também disse que se perdeu no volume de tarefas; o
+  status passa a abrir pelo objetivo dele, em poucas linhas.
+
 ### intervenção do brenner: o que depende dele fica parado por enquanto
 
 - o brenner disse que o que depende dele não se resolve agora: o
