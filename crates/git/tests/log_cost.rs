@@ -23,20 +23,22 @@ fn log_of_this_repository_cold_and_warm() {
 
     let mut cold = Vec::with_capacity(RUNS);
     let mut warm = Vec::with_capacity(RUNS);
-    let mut commits = 0;
+    let mut log = Vec::new();
     for _ in 0..RUNS {
         let repo = GitRepo::open(here).expect("this repository opens");
         let at = Instant::now();
-        let log = repo.log(LIMIT).expect("the log reads");
+        log = repo.log(LIMIT).expect("the log reads");
         cold.push(at.elapsed());
-        commits = log.len();
 
         let at = Instant::now();
         let again = repo.log(LIMIT).expect("the log reads again");
         warm.push(at.elapsed());
         assert_eq!(again, log, "the same log twice");
     }
-    println!("log({LIMIT}) over {commits} commits, {RUNS} runs each");
+    let paths: Vec<&String> = log.iter().flat_map(|c| &c.files).collect();
+    let bytes: usize = paths.iter().map(|p| p.len()).sum();
+    println!("log({LIMIT}) over {} commits, {RUNS} runs each", log.len());
+    println!("files: {} paths, {bytes} bytes of path", paths.len());
     println!("cold (a new GitRepo): {}", spread(&mut cold));
     println!(
         "warm (the same GitRepo, called again): {}",
