@@ -4157,3 +4157,28 @@ visual mudou, e pela linha de intenção em 191aa93e, com a imagem).
   mostrado dentro do trecho que o contém), ids próprios no template do
   Claude, e a linha de intenção sem o botão de fechar quando nada está
   aberto.
+
+## fase 4c: o showcase grava a sessão e a demo fica gravada
+
+branch `task/69h-recorded-demo`, sobre a `main` em `a9edcbaa`.
+
+### sonda da fase 4c (antes do primeiro tipo, 2026-09-24)
+
+(a) o showcase não grava. por leitura: `grep -rn "rec::\|Recorder\|Recording\|PLEV_RECORD"` em `crates/showcase/{src,Cargo.toml,examples}` não acha nada (o ide tem os três em `record.rs`, `recording.rs` e `lib.rs`); `crates/showcase/Cargo.toml` não depende de `rec` (chega a ele só por `ide`). por binário: `strings target/debug/showcase | grep -c PLEV_RECORD` dá 0 (o `ide`, 1) e "plev/sessions" não aparece. por um teste descartável: `PLEV_RECORD=1 showcase --render Silences --semantics probe-a.json` escreveu o json (17 nós, revisão `d3c64aa094fd9c52`) e `$TMPDIR/plev/sessions/` ficou sem nenhum `showcase-*` antes e depois.
+
+os cinco pontos do shell do ide, por linha, e o ponto equivalente no shell do showcase (linhas da base):
+
+| o que | onde o ide grava | onde o showcase tinha o ponto e não gravava |
+| --- | --- | --- |
+| sink no dispatcher único | `crates/ide/src/main.rs:530` `recording::start` -> `recording.rs:16` `attach` -> `record.rs:129` `bench.add_sink(rec.sink())` | `crates/showcase/src/view/dispatch.rs:316` `add_sink` (o dispatcher do todo, emprestado à Surface e aos silêncios); só a porta chamava (`dispatch/agent.rs:56`) |
+| a porta: quem observou o quê, e o estado depois de um ato | `main.rs:188` `ide::agent::serve_recorded(port, bench, compositor, recording)` -> `agent.rs:57` (`Served.recorder`, `Host::observed` em 112, o estado em 69) | `app.rs:179` `serve_agent` -> `view.serve_agent(port, compositor)` -> `dispatch/agent.rs:21` (`Served { view, compositor }`, sem `observed`, nada gravado) |
+| o estado depois de clique ou tecla que mudou algo, depois de um resultado do git, antes do frame | `main.rs:258` (git), `371` e `390` (`changed()` depois do clique), `keys.rs` (tecla), `record.rs:143` (antes do frame) | `app.rs:285` (git: só `invalidate`), `410` e `421` (cliques: só `invalidate`), `341` a `363` (teclas: só `invalidate`) |
+| cada frame com as ligações | `main.rs:441` `recording.frame(&bench, &compositor)` depois do `render_frame` | `app.rs:460` `render_frame` e a árvore da acessibilidade em `470`; nada gravado |
+| os inputs sem caractere | `main.rs:369` (esquerdo), `388` (direito), `keys.rs:36` (`text`), `keys.rs:50` (`key`) | `app.rs:393` (esquerdo), `415` (direito), `334` (teclado): nada gravado |
+| salvar: atalho, fechar, pânico | `keys.rs:82` (`cmd-shift-s`), `main.rs:463` (`exiting`), `recording.rs:17` (`catch_panics`) | `app.rs:327` `CloseRequested => event_loop.exit()` sem `exiting`; sem atalho; sem hook |
+
+o relógio: o ide grava em `bench.now()`, o relógio dos receipts. no showcase os receipts levam o relógio do dispatcher do todo (`apps/app/semantics.rs:259` e `279`, `clock.elapsed()`), lido só dentro de `with_dispatcher` (`pub(crate)`, `&mut self`); a `ShowcaseView` não tinha `now()`.
+
+(b) o showcase tem um modo servido sem janela: `ShowcaseView::serve_agent(&mut AgentPort, &Compositor)` sobre um `AgentPort::open_with` num diretório, a forma dos testes de `view/dispatch/agent.rs` e de `silences/tests/agent.rs` (este thread é o shell: serve, dá o tick, desenha num `Compositor` sem GPU; um thread é o agente pelo `wire::Client`). o roteiro rodou assim, por `crates/showcase/examples/demo.rs`, sem janela nenhuma e sem `PLEV_BACKGROUND`: 3,3 s, 17 observações, 10 requests, 101 frames desenhados. três coisas apareceram na corrida: as regras recusam a frase da tese ("then" e "review" não são palavras do app, o que a 4b já tinha dito), então pelas regras a revisão é "the list with the video and the counts" e a frase da tese fica para o Claude; em 1200 por 800 uma linha da revisão das regras (thumbnail, dois textos, dois botões) é mais larga que a metade e o botão de rejeitar fica em x = 1232..1341, fora da janela, onde um clique não chega (pelo id o agente chega), então a demo desenha em 1600 por 1000 (`--width`, `--height`); e a rolagem da página não resolve isso (é horizontal), o exemplo diz o retângulo no erro. com janela de verdade não foi preciso; se um dia for, `PLEV_BACKGROUND=1 PLEV_AGENT=1 PLEV_RECORD=1 cargo run -p showcase -- Silences` abre a janela por baixo e o mesmo roteiro cabe em `plev observe`/`act` contra `--app showcase`.
+
+(c) o tamanho: a sessão da demo (3 s, 100 frames, 73 eventos) tem 186.837 bytes: eventos 81.078 (4 keyframes de até 51 nós, 10 passos de mudança, 40 estágios, 17 observações, 2 inputs), índice 6.812, chunks 67.984 (100 frames em 12 chunks, uns 680 B por frame), assets 21.085 (134: estilos de texto e glifos; 3 imagens só com o tamanho), ligações 9.600. o `rec` guarda de imagem `Asset::Live(LoweredAsset::Image(handle))`, o handle do atlas, e persiste só largura e altura (`Persisted::images_without_pixels = 3`): os pixels de um frame do vídeo nunca entram no arquivo, por construção (a retenção de pixels ficou fora da task-63 fase d, sem task). então 30 s custam o que os frames desenhados e os eventos custam, não o tempo: render on demand, a página parada não desenha; mil frames seriam uns 700 KB. a fixture cabe no repositório (187 KB, limite de 2 MB) e fica sem os pixels dos frames: leva a cena de cada frame (retângulos, textos, as imagens com tamanho) e as ligações; `Session::scene_at` lê a cena sem nó de imagem, `to_bytes` conta as três imagens sem pixels.
