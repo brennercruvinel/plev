@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use comps::overlay::OverlayManager;
-use comps::prelude::{Button, EventResult, Rect, Tabs, ToastManager, WidgetEvent};
+use comps::prelude::{Button, EventResult, Rect, Tabs, ToastManager, Wake, WidgetEvent};
 use engine::compositor::{Compositor, LayerId, SceneNode};
 use engine::theme::{Intent, Theme};
 
@@ -779,13 +779,15 @@ impl Explorer {
 
     // -- Animation -------------------------------------------------------------
 
-    pub fn tick(&mut self, dt: f32) -> bool {
-        let mut animating = self.open.tick(dt);
-        animating |= self.search.tick(dt);
-        animating |= self.chunks_screen.tick(dt);
-        animating |= self.graph_screen.tick(dt);
-        animating |= self.stats_screen.tick(dt);
-        animating
+    /// Every screen ticks whichever tab shows (a spinner must not freeze
+    /// mid-turn); what they ask of the loop, merged.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        self.open
+            .wake(dt)
+            .merge(self.search.wake(dt))
+            .merge(self.chunks_screen.wake(dt))
+            .merge(self.graph_screen.wake(dt))
+            .merge(self.stats_screen.wake(dt))
     }
 
     // -- Rendering -------------------------------------------------------------

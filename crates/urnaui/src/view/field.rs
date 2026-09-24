@@ -4,7 +4,7 @@
 //! the Open, Search and Chunks screens share.
 
 use comps::form::TextField;
-use comps::prelude::{EventResult, Rect, WidgetEvent};
+use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::Theme;
 
@@ -67,10 +67,10 @@ impl Field {
         self.input.edit(key)
     }
 
-    /// Advance the cursor blink. `true` while focused (the blink needs
-    /// frames under render-on-demand).
-    pub fn tick(&mut self, dt: f32) -> bool {
-        self.input.tick(dt)
+    /// Advance the cursor blink: while focused, a frame at each flip and
+    /// the time to the next one; blurred, nothing.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        self.input.wake(dt)
     }
 
     pub fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {

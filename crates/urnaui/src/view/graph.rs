@@ -9,7 +9,7 @@
 
 use comps::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, GraphView, IconButton, IconButtonVariant, Rect,
-    Spinner, SpinnerSize, WidgetEvent, menu_shadow,
+    Spinner, SpinnerSize, Wake, WidgetEvent, menu_shadow,
 };
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::graph::GraphScene;
@@ -161,8 +161,8 @@ impl GraphScreen {
     }
 
     /// The spinner animates only while a layout is in flight.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        self.loading && self.spinner.tick(dt)
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        Wake::moving(self.loading && self.spinner.tick(dt))
     }
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme, ctx: &GraphContext) {
@@ -503,12 +503,15 @@ mod tests {
         let theme = Theme::hoff();
         let mut screen = GraphScreen::new();
         screen.loading = true;
-        assert!(screen.tick(0.016), "spinner runs while loading");
+        assert!(
+            screen.wake(0.016).is_continuous(),
+            "spinner runs while loading"
+        );
         let mut c = Compositor::new();
         screen.render(&mut c, content(), &theme, &ctx);
         screen.fold_scene(Err("no graph section in this file".to_string()));
         assert!(!screen.loading);
-        assert!(!screen.tick(0.016), "idle after the error");
+        assert_eq!(screen.wake(0.016), Wake::idle(), "idle after the error");
         let mut c = Compositor::new();
         screen.render(&mut c, content(), &theme, &ctx);
     }

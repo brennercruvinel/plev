@@ -2,6 +2,7 @@
 //! - [`overlays`]: context menu / modal flow (stage, unstage, discard).
 //! - [`scrolling`]: per-panel scroll, hit clamping and hover probes.
 //! - [`panels`]: commit form and the non-destructive panel width clamp.
+//! - [`wake`]: what the workspace asks of the loop, with an injected clock.
 //!
 //! Shared fixtures live here — tests never touch a real repo; the app feeds
 //! the same structs from `git status` via `adapters`.
@@ -9,6 +10,7 @@
 mod overlays;
 mod panels;
 mod scrolling;
+mod wake;
 
 use super::*;
 use crate::views::unassigned_view::{FileEntry, FileStatus};

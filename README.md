@@ -9,11 +9,12 @@ that changed, and everything lands on an srgb surface. glass, backdrop
 blur, analytic shadows, content-driven layout, real text shaping, HiDPI
 rasterization at native scale. render on demand: no change, no frame, and
 an unchanged layer is not redrawn, though every frame drawn still
-composites every visible layer (task-73). today the ide, alone or in the
-showcase Git page, still draws every frame while its commit field is
-focused or a toast is up, and the showcase draws one on each wake of its
-git worker or accessibility bridge (task-82 phase b and its debts). the
-apps consume the engine and nothing bypasses it.
+composites every visible layer (task-73). a caret or a toast at rest
+asks for a deadline, not for frames (task-82): a focused, untouched field
+draws two frames a second, an idle app none. what still draws with
+nothing visible changed is recorded as debt (the accessibility bridge's
+wakes, a toast's spring settling below a pixel). the apps consume the
+engine and nothing bypasses it.
 
 ## why this exists
 

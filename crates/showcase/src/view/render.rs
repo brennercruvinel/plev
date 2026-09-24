@@ -17,7 +17,7 @@ impl ShowcaseView {
     /// focused caret's next flip) when nothing does.
     pub fn wake(&mut self, dt: f32) -> Wake {
         let mut wake = Wake::moving(self.overlay_mgr.tick(dt));
-        wake = wake.merge(Wake::moving(self.toasts.tick(dt)));
+        wake = wake.merge(self.toasts.wake(dt));
         // Widgets that settle on their own tick whichever page shows
         // (a focused field, a knob spring, a scrollbar fade, a tooltip
         // delay): they must not freeze mid-motion when the page changes.
@@ -27,10 +27,13 @@ impl ShowcaseView {
         wake = wake.merge(Wake::moving(self.panes.tooltip.tick(dt)));
         wake = wake.merge(Wake::moving(self.panes.table.tick(dt)));
         wake = wake.merge(self.page_wake(dt));
-        // The git tab always ticks: worker events land there whichever
-        // page is showing, and must not pile up until it is.
-        let git = self.panes.git.tick(dt) && self.pane() == Some(Pane::Git);
-        wake = wake.merge(Wake::moving(git));
+        // The git tab always ticks (its caret and toasts keep time
+        // whichever page shows); only the page on screen asks the loop
+        // for frames. Worker events land through `apply_git`.
+        let git = self.panes.git.wake(dt);
+        if self.pane() == Some(Pane::Git) {
+            wake = wake.merge(git);
+        }
 
         // Drop overlay widgets whose exit animation finished.
         if let Some(active) = &self.active_overlay {
@@ -40,6 +43,15 @@ impl ShowcaseView {
             }
         }
         wake
+    }
+
+    /// What the git worker sent, applied to the embedded workspace
+    /// whichever page shows (it must not fall behind while hidden).
+    /// `true` when that changed something on screen: the Git page is
+    /// showing and there were events.
+    pub fn apply_git(&mut self) -> bool {
+        let changed = self.panes.git.apply_events();
+        changed && self.pane() == Some(Pane::Git)
     }
 
     /// [`ShowcaseView::wake`] as the `bool` the settle loops read (the
@@ -149,5 +161,68 @@ impl ShowcaseView {
             y: content.y - self.note_h(),
             color: theme.glass.text_placeholder.0,
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use comps::prelude::{Wake, WidgetEvent};
+    use engine::compositor::Compositor;
+
+    use super::ShowcaseView;
+
+    /// One turn of a 60 Hz display.
+    const TURN: f32 = 1.0 / 60.0;
+
+    /// The Switch page, laid out and at rest; returns a point on its
+    /// first switch.
+    fn switch_page() -> (ShowcaseView, (f32, f32)) {
+        let mut view = ShowcaseView::new(1200.0, 800.0);
+        view.jump_to_page("Switch");
+        view.render(&mut Compositor::new());
+        for _ in 0..600 {
+            if !view.wake(TURN).is_continuous() {
+                break;
+            }
+        }
+        let content = view.page_rect();
+        (view, (content.x + 4.0, content.y + 4.0))
+    }
+
+    fn click(view: &mut ShowcaseView, (x, y): (f32, f32)) {
+        view.handle_event(&WidgetEvent::MouseDown { x, y });
+        view.handle_event(&WidgetEvent::MouseUp { x, y });
+    }
+
+    /// The frames the knob draws after the click, one turn apart.
+    fn knob_frames(view: &mut ShowcaseView, first: f32) -> usize {
+        let mut wake = view.wake(first);
+        let mut frames = 0;
+        while wake.is_continuous() && frames < 600 {
+            frames += 1;
+            wake = view.wake(TURN);
+        }
+        frames
+    }
+
+    /// The shell catches up as the loop wakes (`App::advance` with the
+    /// three idle seconds), then applies the click: the knob animates
+    /// from where it was, for as long as its spring takes.
+    #[test]
+    fn a_switch_flipped_after_three_idle_seconds_animates_from_the_start() {
+        let (mut view, at) = switch_page();
+        assert_eq!(view.wake(3.0), Wake::idle(), "the catch-up: nothing moves");
+        click(&mut view, at);
+        let frames = knob_frames(&mut view, 0.004);
+        assert!(frames > 10, "the knob animated for {frames} frames");
+    }
+
+    /// Without the catch-up the click's frame would carry the idle
+    /// seconds, and the spring would land at its end in one tick.
+    #[test]
+    fn without_the_catch_up_the_idle_gap_jumps_the_knob() {
+        let (mut view, at) = switch_page();
+        click(&mut view, at);
+        assert_eq!(knob_frames(&mut view, 3.0), 0, "jumped to the end");
     }
 }

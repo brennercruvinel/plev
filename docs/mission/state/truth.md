@@ -58,6 +58,15 @@ o da base até ser reescrito.
   recebe o `Host`; `plev --help` diz que `--keys` corta só estado. o
   anel continua com 16 revisões, e cada ato concluído ocupa uma.
 
+- `a6fec8d` (task-82 fase b): `Wake` em toda a cadeia do ide, na página
+  Git e no urnaui; os três shells em `WaitUntil` e com tick de alcance em
+  `new_events` (seção 4g: o ide não desenha mais em frame contínuo; a
+  página Git não eleva mais o `bool`; o worker do git não desenha mais
+  com outra página na tela); `TextField::tick` e `ToastManager::tick`
+  saíram; `GitRepo` roda todo `git` com `GIT_OPTIONAL_LOCKS=0` e o watcher
+  ignora `.git/index.lock`. fica da 4g: o `EditorView` sem foco, o caret
+  do dock, a ponte de acessibilidade.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

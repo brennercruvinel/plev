@@ -2,7 +2,7 @@
 //! Every click and key that acts on the repository or the commit form goes
 //! through the workbench's dispatcher, the same path as in the ide.
 
-use comps::prelude::{EventResult, Rect, WidgetEvent};
+use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::Theme;
 
@@ -16,8 +16,9 @@ use ide::workbench::Workbench;
 
 pub struct GitPage {
     bench: Workbench,
-    /// Worker events parked until the next tick (the worker runs on its
-    /// own thread; the view is single-threaded).
+    /// Worker events parked until the host applies them (the worker runs
+    /// on its own thread; the view is single-threaded; every event is
+    /// followed by a call to the host's wake).
     events: Receiver<GitEvent>,
     sender: Sender<GitEvent>,
     /// Why there is no repository (none at the cwd).
@@ -200,15 +201,25 @@ impl GitPage {
         false
     }
 
-    /// Apply parked worker events and advance the widgets that animate.
-    /// `true` while a frame is needed.
-    pub fn tick(&mut self, dt: f32) -> bool {
+    /// Apply the parked worker events. `true` when there were any: the
+    /// workspace changed, whether or not the page is on screen.
+    pub fn apply_events(&mut self) -> bool {
         let mut changed = false;
         while let Ok(event) = self.events.try_recv() {
             self.bench.apply(event);
             changed = true;
         }
-        changed | self.bench.tick(dt)
+        changed
+    }
+
+    /// Advance the widgets that animate: the workbench's ask (motion
+    /// every turn, a caret flip or a toast leaving as a deadline). Worker
+    /// events are not applied here but by [`GitPage::apply_events`], when
+    /// the worker wakes the host, after the host caught up to that
+    /// instant: a toast an event pushes then counts its time from the
+    /// event.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        self.bench.wake(dt)
     }
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {
@@ -228,3 +239,6 @@ impl GitPage {
         self.bench.render(c);
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -14,6 +14,15 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 2: task-82 fechada
+
+- **integrada:** task-82 fase b (`a6fec8d`): o ide, a página Git e o
+  urnaui só desenham quando algo muda; o laço do `index.lock` fechado; o
+  tick de alcance nos shells. gate verde (2128), e o orquestrador
+  reproduziu o ide parado num repositório novo sem a variável: 0 frames e
+  0 processos git depois da subida.
+- **publicado:** PR #51 (task-87).
+
 ### ciclo 2: task-87 integrada
 
 - **integrada:** task-87 (`365d8fd`): um estágio terminal traz a revisão

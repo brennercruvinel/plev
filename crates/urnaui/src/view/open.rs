@@ -5,7 +5,7 @@
 //! ffmpeg probes live in `UrnauiView` and flow in as render context.
 
 use comps::prelude::{
-    Button, EventResult, Rect, Spinner, SpinnerSize, WidgetEvent, rounded_rect_stroke,
+    Button, EventResult, Rect, Spinner, SpinnerSize, Wake, WidgetEvent, rounded_rect_stroke,
 };
 use engine::compositor::Compositor;
 use engine::text::TextMeasurer;
@@ -209,11 +209,13 @@ impl OpenScreen {
         out
     }
 
-    pub fn tick(&mut self, dt: f32) -> bool {
-        // The spinner animates only while an open is in flight.
-        let spinning = self.opening && self.spinner.tick(dt);
+    /// The spinner every turn while an open is in flight; the path
+    /// field's caret at its flips (native only: the web opens through the
+    /// browser's picker).
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        let spinning = Wake::moving(self.opening && self.spinner.tick(dt));
         #[cfg(not(target_arch = "wasm32"))]
-        return self.path.tick(dt) | spinning;
+        return spinning.merge(self.path.wake(dt));
         #[cfg(target_arch = "wasm32")]
         {
             let _ = dt;

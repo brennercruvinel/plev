@@ -8,7 +8,7 @@
 use comps::content::{Avatar, AvatarSize};
 use comps::feedback::Scrollbar;
 use comps::nav::PanelHeader;
-use comps::prelude::{Rect, edge_light, inset_keylight, rounded_rect};
+use comps::prelude::{Rect, Wake, edge_light, inset_keylight, rounded_rect};
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
 use engine::text::TextMeasurer;
@@ -112,8 +112,9 @@ impl MultiStackView {
         self.scrollbar.notify_scroll();
     }
 
-    pub fn tick(&mut self, dt: f32) -> bool {
-        self.scrollbar.tick(dt)
+    /// Advance the scrollbar fade: a frame on every turn while it moves.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        Wake::moving(self.scrollbar.tick(dt))
     }
 
     /// Branch header row: one `Xs` control.

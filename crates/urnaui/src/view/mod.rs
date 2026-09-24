@@ -19,7 +19,7 @@ mod overview;
 mod search;
 mod stats;
 
-use comps::prelude::{Rect, ToastManager, WidgetEvent, rounded_rect, rounded_rect_stroke};
+use comps::prelude::{Rect, ToastManager, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::theme::Theme;
 
@@ -282,12 +282,12 @@ impl UrnauiView {
         self.explorer.handle_event(event, &mut self.toasts, &theme)
     }
 
-    /// Advance animations. Returns `true` while anything is moving
-    /// (toasts, cursor blink, scrollbar fades) so frames keep coming.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        let mut animating = self.toasts.tick(dt);
-        animating |= self.explorer.tick(dt);
-        animating
+    /// Advance animations and say what they ask of the loop: a frame on
+    /// every turn while something moves (a spinner, a scrollbar fade, a
+    /// toast springing), otherwise the earliest deadline (a caret's next
+    /// flip, a toast leaving), nothing when all rest.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        self.toasts.wake(dt).merge(self.explorer.wake(dt))
     }
 
     pub fn render(&mut self, c: &mut Compositor) {
@@ -574,6 +574,53 @@ mod tests {
             let mut c = Compositor::new();
             view.render(&mut c);
         }
+    }
+
+    /// A toast asks for frames while it springs and for the instant it
+    /// leaves, nothing while it rests, and the view at rest asks nothing.
+    #[test]
+    fn a_toast_draws_while_it_moves_and_at_the_instant_it_leaves() {
+        const TURN: f32 = 1.0 / 60.0;
+        let mut view = UrnauiView::new(1200.0, 800.0);
+        let theme = view.theme.clone();
+        for _ in 0..600 {
+            if !view.wake(TURN).pending() {
+                break;
+            }
+        }
+        assert_eq!(view.wake(TURN), Wake::idle(), "nothing moves at rest");
+        // time catches up to the push (five idle seconds) before it lands
+        view.wake(5.0);
+        view.toasts.push(
+            "opening dropped file",
+            engine::theme::Intent::Informational,
+            &theme,
+        );
+        let mut drawn = vec![(0, view.wake(0.004))];
+        for turn in 1..360 {
+            let (last, ask) = *drawn.last().expect("drawn");
+            let since = (turn - last) as f32 * TURN;
+            if ask.next.is_some_and(|d| since >= d.as_secs_f32()) {
+                drawn.push((turn, view.wake(since)));
+            }
+        }
+        assert!(view.toasts.is_empty(), "gone within six seconds");
+        assert_eq!(drawn.last().map(|(_, ask)| ask.next), Some(None));
+        let rest = drawn
+            .iter()
+            .position(|(_, ask)| !ask.is_continuous())
+            .expect("the entry settles");
+        let (rest_turn, rest_ask) = drawn[rest];
+        let due = rest_turn as f32 * TURN + rest_ask.next.expect("deadline").as_secs_f32();
+        assert!(
+            (due - view.toasts.duration).abs() < TURN,
+            "leaves at {due} s"
+        );
+        let (leave_turn, _) = drawn[rest + 1];
+        assert!(
+            (leave_turn - rest_turn - 1) as f32 * TURN > 2.0,
+            "{drawn:?}"
+        );
     }
 
     #[test]

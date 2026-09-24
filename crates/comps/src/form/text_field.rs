@@ -209,14 +209,6 @@ impl TextField {
         self.input.wake(dt)
     }
 
-    /// [`TextField::wake`] for a shell without deadlines
-    /// (`ControlFlow::Wait` and a `bool`): `true` while anything is
-    /// pending, which is every frame while focused. The ide reads this
-    /// until it adopts `Wake` (task-82 phase b); new code reads `wake`.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        self.wake(dt).pending()
-    }
-
     /// Hover tracks the bounds; a press inside focuses and places the
     /// caret on the clicked glyph. A press outside blurs, so a screen
     /// with several fields needs no extra bookkeeping.

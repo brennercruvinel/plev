@@ -356,9 +356,11 @@ resolve (dirty layers only) -> text resolve (atlas) -> encode layer passes
 (quads, sdf, shadows, images, text, backdrop blur, in push order) ->
 composite pass to the srgb surface view -> present. an unchanged layer is
 not redrawn, but every frame drawn composites every visible layer
-(task-73), and today some frames are drawn with nothing changed: the ide
-with its commit field focused or a toast up, the showcase on each wake of
-its git worker or accessibility bridge (task-82 phase b and its debts).
+(task-73). a caret or a toast at rest asks for a deadline, not for frames
+(comps::Wake, task-82): the shells sleep with ControlFlow::WaitUntil and
+catch time up as the loop wakes; what still draws with nothing visible
+changed is debt (the accessibility bridge's wakes, a toast's spring
+settling below a pixel).
 '''
 
 targets = '''
@@ -415,9 +417,9 @@ sequenceDiagram
     A->>A: mutate state
     A->>C: invalidate + request_redraw
     Note over A,C: render on demand: no change, no frame
-    %% exceptions today: the ide with its commit field focused or a toast up,
-    %% the showcase on each git worker or accessibility bridge wake (task-82
-    %% phase b and its debts), and every visible layer composited (task-73)
+    %% exceptions today: the accessibility bridge's wakes and a toast's
+    %% spring settling below a pixel (task-82 debts), and every visible
+    %% layer composited (task-73)
     A->>S: build scene nodes
     %% animation playback: crates/monster MonsterPlayer consumes the tick at A
     %% and hands S a lowered SceneNode scene (scene_at)

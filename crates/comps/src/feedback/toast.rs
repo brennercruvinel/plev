@@ -8,6 +8,12 @@
 //! on screen as `<id>[<toast id>]` to the rect it draws and hit-tests it
 //! with, and [`ToastManager::project`] declares the toasts in a semantic
 //! projection.
+//!
+//! A toast at rest is a deadline, not motion: [`ToastManager::wake`] asks
+//! for frames while one springs in or out and, between, for the instant
+//! the next one dismisses itself.
+
+use std::time::Duration;
 
 use crate::icons;
 use engine::animation::Spring;
@@ -18,6 +24,7 @@ use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 use crate::recipe::{rounded_rect, rounded_rect_stroke};
+use crate::wake::Wake;
 
 /// The per-theme geometry the rects, the hit test and the render share.
 struct Metrics {
@@ -230,16 +237,19 @@ impl ToastManager {
         }
     }
 
-    /// Advance animations and lifetimes. Returns `true` while any toast is
-    /// animating (callers keep requesting frames). Auto-dismiss only ages
-    /// *visible* toasts, so queued ones get their full time on screen.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        let max_visible = self.max_visible;
+    /// Advance animations and lifetimes by `dt` seconds and say what the
+    /// toasts ask of the loop: a frame now and on the next while one
+    /// springs in or out; while all rest, the time until the first on
+    /// screen dismisses itself; nothing without toasts. Auto-dismiss only
+    /// ages *visible* toasts, so queued ones get their full time on
+    /// screen. A `dt` that is not time (negative, NaN, infinite) counts as
+    /// none. The tick counts all the time it is given: a shell advances
+    /// the toasts to the instant of an event before a push or a dismiss,
+    /// so the gap before it is not counted as time on screen.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        let dt = if dt.is_finite() && dt > 0.0 { dt } else { 0.0 };
         let duration = self.duration;
-        for (i, t) in self.toasts.iter_mut().enumerate() {
-            if i >= max_visible {
-                break;
-            }
+        for t in self.toasts.iter_mut().take(self.max_visible) {
             t.anim.tick(dt);
             if !t.closing {
                 t.age += dt;
@@ -249,9 +259,26 @@ impl ToastManager {
                 }
             }
         }
-        // Drop a toast once its close animation has finished.
+        // Drop a toast once its close animation has finished; the frame
+        // that no longer draws it is a visible change.
+        let count = self.toasts.len();
         self.toasts.retain(|t| !t.closing || t.anim.is_animating());
-        self.is_animating()
+        let mut wake = if self.toasts.len() < count {
+            Wake::now()
+        } else {
+            Wake::idle()
+        };
+        for t in self.visible() {
+            if t.anim.is_animating() {
+                wake = wake.merge(Wake::continuous());
+            } else if !t.closing
+                && let Ok(left) = Duration::try_from_secs_f32(duration - t.age)
+            {
+                // an infinite or NaN duration never dismisses: no deadline
+                wake = wake.merge(Wake::after(left));
+            }
+        }
+        wake
     }
 
     pub fn is_animating(&self) -> bool {

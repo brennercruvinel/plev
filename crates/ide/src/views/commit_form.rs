@@ -8,7 +8,7 @@
 
 use comps::action::{Button, ButtonVariant};
 use comps::form::{EditKey, TextField};
-use comps::prelude::{EventResult, Rect, WidgetEvent};
+use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode};
 use engine::theme::Theme;
 use sem::SemId;
@@ -131,9 +131,15 @@ impl CommitForm {
         }
     }
 
-    /// Advance the caret blink; `true` while the form wants frames.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        self.visible && self.field.tick(dt)
+    /// Advance the caret blink: while the form shows, the field's ask (a
+    /// frame when the caret flipped, the time to the next flip while it
+    /// is focused); hidden, nothing.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        if self.visible {
+            self.field.wake(dt)
+        } else {
+            Wake::idle()
+        }
     }
 
     /// Form height for a theme (0 when hidden).

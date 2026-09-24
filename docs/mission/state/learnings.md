@@ -12,6 +12,21 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, task-82 fase b
+
+- **a promessa do README era falsa num lugar que ninguém mediu:** o ide
+  parado num repositório comum desenhava para sempre, porque o `git
+  status` criava o lock opcional do index, o watcher via, e o refresh
+  rodava `git status` de novo. só apareceu quando alguém contou frames e
+  processos numa janela de verdade com o app parado. dois cortes
+  independentes fecharam: leitura sem lock opcional, e o watcher ignora o
+  lock (outro `git` na máquina ainda cria).
+- **render on demand pede que o tempo alcance o evento:** com o shell
+  dormindo até o prazo, o primeiro tick depois de um evento recebia o
+  intervalo inteiro de ócio, e toda mola iniciada por um evento pulava
+  para o fim. um tick de alcance quando o loop acorda resolve para todos
+  os widgets de uma vez; a correção por widget era um sintoma.
+
 ### 2026-09-23, task-87
 
 - **o custo de idas e voltas era o protocolo, não o contrato:** com a

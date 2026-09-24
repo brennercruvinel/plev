@@ -4,7 +4,14 @@
 //! `urnaui_ios_main`). The view stays winit-free; this is the only module
 //! that touches the event loop.
 //!
-//! Frames render on demand. On wasm GPU init is async: `resumed` spawns
+//! Frames render on demand, paced as the showcase paces them: the view's
+//! tick answers a [`Wake`], motion (a spinner, a scrollbar fade, a toast
+//! springing) draws every turn, and a caret or a toast at rest sleeps the
+//! loop until its deadline (`ControlFlow::WaitUntil`), or for good when
+//! nothing is pending. Each loop iteration first advances what animates
+//! to the instant it woke, so what the events and the worker's results
+//! then change counts its time from the change, not from the last frame.
+//! On wasm GPU init is async: `resumed` spawns
 //! `GpuContext::new` and the result comes back through a
 //! `UserEvent::GpuReady` on the event loop proxy. On desktop and mobile
 //! GPU init blocks inside `resumed` instead. Backend results arrive over
@@ -14,16 +21,17 @@ use std::sync::Arc;
 
 use crate::view::UrnauiView;
 use crate::{keys, renderer};
-use comps::prelude::WidgetEvent;
+use comps::prelude::{Wake, WidgetEvent};
 use engine::animation::FrameClock;
 use engine::compositor::Compositor;
 use engine::gpu::GpuContext;
 use engine::text::TextSystem;
+use web_time::Instant;
 use winit::application::ApplicationHandler;
-use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
+use winit::event::{ElementState, MouseButton, MouseScrollDelta, StartCause, WindowEvent};
 #[cfg(target_arch = "wasm32")]
 use winit::event_loop::EventLoopProxy;
-use winit::event_loop::{ActiveEventLoop, EventLoop};
+use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::{Key, NamedKey};
 use winit::window::{Window, WindowAttributes, WindowId};
 
@@ -69,6 +77,9 @@ pub struct App {
     compositor: Compositor,
     view: UrnauiView,
     clock: FrameClock,
+    /// A catch-up tick since the last frame changed something visible
+    /// (a deadline came due as the loop woke): the next frame shows it.
+    caught_up: bool,
     cursor: (f32, f32),
     scale_factor: f64,
     /// Modifier state, tracked for Cmd/Ctrl-V paste into text fields.
@@ -98,6 +109,7 @@ impl App {
             compositor: Compositor::new(),
             view,
             clock: FrameClock::new(),
+            caught_up: false,
             cursor: (0.0, 0.0),
             scale_factor: 1.0,
             modifiers: winit::keyboard::ModifiersState::default(),
@@ -110,6 +122,40 @@ impl App {
         self.compositor.invalidate();
         if let Some(w) = &self.window {
             w.request_redraw();
+        }
+    }
+
+    /// Advances what animates to now, before anything from outside the
+    /// frame lands (input, a worker result, a picked file). The tick gets
+    /// the real time since the last one, so a change applied between two
+    /// frames would otherwise take the whole gap on the next: a toast
+    /// pushed after ten idle seconds would start ten seconds old, a caret
+    /// focused then would start in any phase. This tick draws nothing; if
+    /// it changed something visible, it asks for the frame.
+    fn catch_up(&mut self) {
+        let since_last = self.clock.tick().since_last;
+        if self.view.wake(since_last).now {
+            self.caught_up = true;
+            self.invalidate();
+        }
+    }
+
+    /// What the frame's [`Wake`] asks of the loop, after the frame that
+    /// carries its `now` was drawn: continuous motion draws the next
+    /// frame; a deadline sets the wait to that instant; nothing pending
+    /// sleeps until an event. Any event (input, the worker's wake) ends a
+    /// wait early.
+    fn pace(&mut self, event_loop: &ActiveEventLoop, wake: Wake) {
+        match wake.next {
+            Some(next) if next.is_zero() => {
+                // Something still moves: keep the frames coming.
+                self.invalidate();
+                event_loop.set_control_flow(ControlFlow::Wait);
+            }
+            Some(next) => {
+                event_loop.set_control_flow(ControlFlow::WaitUntil(Instant::now() + next))
+            }
+            None => event_loop.set_control_flow(ControlFlow::Wait),
         }
     }
 
@@ -133,6 +179,21 @@ impl App {
 }
 
 impl ApplicationHandler<UserEvent> for App {
+    /// The loop woke: time catches up first, so whatever woke it (input,
+    /// the worker's results drained in `about_to_wait`) lands at this
+    /// instant. When a deadline a tick asked for came due (a caret flips,
+    /// a toast leaves), the wait goes back to `Wait` and the frame is
+    /// asked for, since a `WaitUntil` in the past would fire on every
+    /// iteration if the redraw does not come (an occluded window); the
+    /// redraw's own wake sets the next.
+    fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: StartCause) {
+        self.catch_up();
+        if let StartCause::ResumeTimeReached { .. } = cause {
+            event_loop.set_control_flow(ControlFlow::Wait);
+            self.invalidate();
+        }
+    }
+
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.window.is_some() {
             return;
@@ -369,6 +430,22 @@ impl ApplicationHandler<UserEvent> for App {
             }
 
             WindowEvent::RedrawRequested => {
+                if !matches!(self.state, GpuState::Ready { .. }) {
+                    return;
+                }
+                // The real time since the last tick: a deadline the loop
+                // slept through arrives whole (`dt` is clamped for motion).
+                // `now` also carries what a catch-up changed since the
+                // last frame.
+                let since_last = self.clock.tick().since_last;
+                let mut wake = self.view.wake(since_last);
+                wake.now |= std::mem::take(&mut self.caught_up);
+                log::debug!(
+                    "frame: {:.3} s since the last tick, wake now {} next {:?}",
+                    since_last,
+                    wake.now,
+                    wake.next
+                );
                 let GpuState::Ready {
                     gpu,
                     text_system,
@@ -378,8 +455,6 @@ impl ApplicationHandler<UserEvent> for App {
                 else {
                     return;
                 };
-                let tick = self.clock.tick();
-                let animating = self.view.tick(tick.dt);
                 renderer::render_frame(
                     gpu,
                     text_system,
@@ -388,13 +463,9 @@ impl ApplicationHandler<UserEvent> for App {
                     &mut self.compositor,
                     &mut self.view,
                 );
-                if animating {
-                    // Animations still moving: keep the frames coming.
-                    self.compositor.invalidate();
-                    if let Some(w) = &self.window {
-                        w.request_redraw();
-                    }
-                }
+                // `wake.now` is carried by this frame: the scene was built
+                // after the tick, so a flipped caret is already in it.
+                self.pace(event_loop, wake);
             }
 
             _ => {}

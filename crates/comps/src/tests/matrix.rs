@@ -236,7 +236,7 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     let mut toasts = ToastManager::new();
     toasts.push("hello", Intent::Informational, theme);
     for _ in 0..60 {
-        toasts.tick(1.0 / 60.0);
+        toasts.wake(1.0 / 60.0);
     }
     toasts.render(&mut c, LayerId::DEFAULT, theme, vw, vh);
     let mut tip = Tooltip::new("tip");
@@ -549,7 +549,7 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
             let mut toasts = ToastManager::new().sem(id("m.toasts"));
             toasts.push("hello", Intent::Informational, &theme);
             for _ in 0..60 {
-                toasts.tick(1.0 / 60.0);
+                toasts.wake(1.0 / 60.0);
             }
             let (mut c, overlay) = frame(true);
             toasts.render(&mut c, overlay, &theme, vw, vh);
@@ -658,7 +658,7 @@ fn modal_and_toast_fit_a_phone_width() {
     let mut toasts = ToastManager::new();
     toasts.push("hi", Intent::Neutral, &theme);
     for _ in 0..120 {
-        toasts.tick(1.0 / 60.0);
+        toasts.wake(1.0 / 60.0);
     }
     let r = toasts.visible_rects(&theme, vw, vh)[0];
     assert!(
