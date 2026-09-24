@@ -16,6 +16,10 @@
         "alert": {
           "kind": "text",
           "value": ""
+        },
+        "notice": {
+          "kind": "text",
+          "value": ""
         }
       }
     },

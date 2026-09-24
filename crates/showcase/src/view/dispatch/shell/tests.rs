@@ -53,10 +53,24 @@ fn the_shell_projects_its_capabilities_and_who_may_ask() {
     let mut view = view("Todo");
     let shell = view.shell_semantics().expect("the shell projects");
     let ids: Vec<&str> = shell.nodes().keys().map(SemId::as_str).collect();
-    assert_eq!(ids, ["shell", "shell.page", "shell.theme", "shell.detach"]);
+    assert_eq!(
+        ids,
+        [
+            "shell",
+            "shell.page",
+            "shell.theme",
+            "shell.detach",
+            "shell.show"
+        ]
+    );
 
     let root = shell.get(&sid("shell")).unwrap();
     assert_eq!((root.role, root.label.as_str()), (Role::Region, "plev"));
+    assert_eq!(
+        root.state["notice"],
+        Value::from(""),
+        "nothing told by notification yet"
+    );
 
     let page = shell.get(&sid("shell.page")).unwrap();
     assert_eq!(page.role, Role::Select);
@@ -90,6 +104,30 @@ fn the_shell_projects_its_capabilities_and_who_may_ask() {
     assert_eq!(toggle.reads, ["shell.detach:on".parse().unwrap()]);
     assert_eq!(toggle.policy.actors, PERSON_ONLY);
     assert!(!toggle.policy.actors.agent);
+
+    // the window forward (the tray icon's click, a notification's button):
+    // a person's, on the desktop
+    let show = shell.get(&sid("shell.show")).unwrap();
+    assert_eq!(show.role, Role::Button);
+    assert_eq!(show.label, "show plev");
+    assert!(show.enabled, "the desktop has windows to bring forward");
+    assert!(!show.focusable);
+    let activate = &show.actions[0];
+    assert_eq!(activate.name.as_str(), "activate");
+    assert_eq!(activate.param, None);
+    assert_eq!(activate.policy.actors, PERSON_ONLY);
+
+    // what the shell told by notification is projected for an agent
+    view.set_notice("2 silences found");
+    assert_eq!(
+        view.shell_semantics()
+            .unwrap()
+            .get(&sid("shell"))
+            .unwrap()
+            .state["notice"],
+        Value::from("2 silences found")
+    );
+    view.set_notice("");
 
     // the save shows while the session is recorded, for a person only
     view.set_recording(true);
@@ -162,6 +200,22 @@ fn the_keys_ask_through_the_dispatcher_and_leave_receipts() {
     let fourth = receipt(&view, 4);
     assert_eq!(fourth.request.target, sid("shell.save_session"));
     assert!(matches!(fourth.stage(), Some(Stage::Completed(_))));
+
+    // the window forward: asked as the tray and a notification ask it,
+    // taken by the shell once
+    assert!(!view.take_show_request(), "nothing asked yet");
+    let show = Clicked {
+        sem: sid("shell.show"),
+        action: "activate".parse().unwrap(),
+        param: None,
+    };
+    assert!(!view.menu_click(&show), "showing moves no projection");
+    let fifth = receipt(&view, 5);
+    assert_eq!(fifth.request.actor, Actor::Human);
+    assert_eq!(fifth.request.target, sid("shell.show"));
+    assert!(matches!(fifth.stage(), Some(Stage::Completed(_))));
+    assert!(view.take_show_request());
+    assert!(!view.take_show_request());
 }
 
 #[test]
@@ -248,7 +302,7 @@ fn an_agent_switches_the_theme_and_the_page_and_is_refused_the_window() {
     );
     assert_eq!(view.page_title(), "Card");
 
-    // the window is a person's
+    // the window is a person's, forward or in a window of its own
     let req = Request::observe(&gallery, agent(), "shell.detach", "toggle", None).unwrap();
     let receipt = view.act(req).unwrap();
     assert_eq!(
@@ -258,6 +312,13 @@ fn an_agent_switches_the_theme_and_the_page_and_is_refused_the_window() {
         }))
     );
     assert!(!view.take_detach_request());
+    let req = Request::observe(&gallery, agent(), "shell.show", "activate", None).unwrap();
+    let receipt = view.act(req).unwrap();
+    assert!(matches!(
+        receipt.stage(),
+        Some(Stage::Rejected(Rejection::NotAuthorized { .. }))
+    ));
+    assert!(!view.take_show_request());
 
     // a screen reader's person and a test may
     let req = Request::observe(&gallery, Actor::Assistive, "shell.detach", "toggle", None).unwrap();
@@ -303,7 +364,7 @@ fn the_gallery_carries_the_shell_and_the_page_and_the_page_projection_stays_alon
         "the page's projection is the page's"
     );
     let gallery = view.gallery_semantics().unwrap();
-    assert_eq!(gallery.len(), page.len() + 4);
+    assert_eq!(gallery.len(), page.len() + 5);
     for (id, node) in page.nodes() {
         assert_eq!(
             gallery.get(id),
@@ -321,7 +382,16 @@ fn the_gallery_carries_the_shell_and_the_page_and_the_page_projection_stays_alon
     assert!(view.semantics().is_none());
     let gallery = view.gallery_semantics().unwrap();
     let ids: Vec<&str> = gallery.nodes().keys().map(SemId::as_str).collect();
-    assert_eq!(ids, ["shell", "shell.page", "shell.theme", "shell.detach"]);
+    assert_eq!(
+        ids,
+        [
+            "shell",
+            "shell.page",
+            "shell.theme",
+            "shell.detach",
+            "shell.show"
+        ]
+    );
 }
 
 #[test]

@@ -53,9 +53,12 @@ impl App {
             // and the state it was drawn from.
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             self.record_frame();
-            // The bar follows what this frame was drawn from.
+            // The bar and the tray follow what this frame was drawn from.
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-            self.sync_menu();
+            {
+                self.sync_menu();
+                self.sync_tray();
+            }
         } else if self.is_page_window(id) {
             let Some(host) = self.windows.get_mut(id) else {
                 return;
@@ -83,7 +86,9 @@ impl App {
         self.advance(since_last);
     }
 
-    /// [`App::catch_up`] with the elapsed time given.
+    /// [`App::catch_up`] with the elapsed time given. What the tick
+    /// settled (a job that ended) and what the pages asked to tell the
+    /// person are notified right after, when no window has the focus.
     pub(super) fn advance(&mut self, since_last: f32) {
         if self.view.wake(since_last).now {
             self.caught_up = true;
@@ -94,6 +99,8 @@ impl App {
         {
             self.invalidate_in(id);
         }
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        self.notify_pending();
     }
 
     /// The frame's tick: what animates, advanced by the time since the

@@ -52,7 +52,7 @@ impl App {
             if let Ok(proxy) = proxy.lock()
                 && let Some(proxy) = proxy.as_ref()
             {
-                let _ = proxy.send_event(UserEvent::Menu);
+                let _ = proxy.send_event(UserEvent::Clicked);
             }
         });
         let model = model(&self.view);
@@ -145,8 +145,9 @@ fn app_menu() -> Submenu {
 
 /// The shell's capabilities: the theme and the page as submenus of
 /// options, the page in a window of its own as a check item, the
-/// recording's save with its keys while the session is recorded.
-fn view_menu(gallery: &Snapshot) -> Submenu {
+/// recording's save with its keys while the session is recorded. The
+/// tray's menu carries the same entries (`tray.rs`).
+pub(super) fn view_menu(gallery: &Snapshot) -> Submenu {
     let mut menu = Submenu::new("view");
     if let Ok(theme) = SemId::parse(THEME) {
         let options = MenuItem::options(gallery, &theme, "select");

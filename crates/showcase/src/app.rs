@@ -65,9 +65,10 @@ enum UserEvent {
     Access,
     /// An agent asked through the port: serve it, draw if an act ran.
     Agent,
-    /// A native menu item was clicked (the engine's menu woke the loop):
-    /// poll the clicks and dispatch them, desktop only.
-    Menu,
+    /// A click outside the window (an item of the bar or of the tray, the
+    /// tray icon, a notification): the engine woke the loop from the
+    /// platform's thread; poll them all and dispatch them, desktop only.
+    Clicked,
     /// The main window's device, requested off the loop (wasm).
     GpuReady { gpu: GpuContext },
 }
@@ -105,6 +106,18 @@ pub struct App {
     /// window is up).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     menu: Option<menu::Menu>,
+    /// The tray icon with the shell's menu (`tray`; desktop; `None` where
+    /// the platform has none, or before the main window is up).
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    tray: Option<tray::TrayIcon>,
+    /// The platform's notifications and what the background jobs came
+    /// to (`notify`; desktop).
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    notices: Option<notify::Notices>,
+    /// The window of ours that has the focus, if any: with none, what
+    /// lands is told to the person by notification (`notify`).
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    focus: Option<WindowId>,
     /// A cmd+click is taking the button until it is released (`source`).
     #[cfg(all(
         debug_assertions,
@@ -153,6 +166,12 @@ impl App {
             recording: None,
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             menu: None,
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            tray: None,
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            notices: None,
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            focus: None,
             #[cfg(all(
                 debug_assertions,
                 any(target_os = "macos", target_os = "linux", target_os = "windows")
@@ -379,11 +398,19 @@ impl ApplicationHandler<UserEvent> for App {
 
         self.viewport_changed(id);
 
-        // The bar, from what the gallery projects (desktop; the platform
-        // replaces winit's default bar). Once the window is up: the main
-        // thread, the app running.
+        // The bar, the tray and the notifications, from what the gallery
+        // projects (desktop; the platform replaces winit's default bar).
+        // Once the window is up: the main thread, the app running. No
+        // window of ours has the focus until the platform says so (with
+        // `PLEV_BACKGROUND=1` none ever does): what lands meanwhile is
+        // told by notification.
         #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-        self.install_menu();
+        {
+            self.install_menu();
+            self.install_tray();
+            self.install_notices();
+            self.view.set_window_focused(false);
+        }
     }
 
     fn user_event(&mut self, event_loop: &ActiveEventLoop, event: UserEvent) {
@@ -409,14 +436,19 @@ impl ApplicationHandler<UserEvent> for App {
                 self.detach_requested(event_loop);
             }
             UserEvent::Agent => self.serve_agent(),
-            // The clicks on the bar, dispatched as the person's requests;
-            // what the shell owns is taken right after.
-            UserEvent::Menu => {
+            // The clicks on the bar, the tray and the notifications,
+            // dispatched as the person's requests; what the shell owns
+            // (the windows, the recording) is taken right after.
+            UserEvent::Clicked => {
                 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
                 {
-                    if self.menu_clicks() {
+                    let menu = self.menu_clicks();
+                    let tray = self.tray_clicks();
+                    let notice = self.notice_clicks();
+                    if menu || tray || notice {
                         self.changed();
                     }
+                    self.show_requested();
                     self.save_requested();
                 }
                 self.detach_requested(event_loop);
@@ -502,6 +534,15 @@ mod detached;
 /// The native menu bar (task-76 item 4), desktop only.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod menu;
+
+/// The tray icon with the shell's menu (task-76 item 5), desktop only.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod tray;
+
+/// The system notifications, and the focus that decides them (task-76
+/// item 5), desktop only.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod notify;
 
 /// `PLEV_BACKGROUND=1`: the window comes up without taking the focus.
 #[cfg(target_os = "macos")]
