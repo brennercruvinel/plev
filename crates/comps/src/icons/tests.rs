@@ -123,3 +123,78 @@ fn arc_parser_handles_compact_flags() {
 fn parser_rejects_garbage() {
     assert!(parse_svg_path("M0 0 ? 3 4", 1.0).is_none());
 }
+
+/// What the icon set costs to tessellate today (task-72 phase 1, the
+/// probe behind the inventory in
+/// docs/mission/steps/pending/task-72-ui-asset-compiler.md): every icon at
+/// every size the tokens name (`theme.control.icons`), the fastest of a
+/// few runs of `tessellate_icon` each, the geometry it leaves in the
+/// cache, and what a baked table of the same geometry would weigh in the
+/// binary (positions as two `f32`, the tint applied per request as now,
+/// indices as `u16` when they fit). The debug profile's numbers.
+#[test]
+#[ignore = "a measurement: cargo test -p comps --lib icons::tests::the_tessellation_cost -- --ignored --nocapture"]
+fn the_tessellation_cost() {
+    use std::time::{Duration, Instant};
+
+    const ROUNDS: usize = 20;
+    let sizes = engine::theme::Theme::hoff_core().control.icons;
+    let vertex = std::mem::size_of::<QuadVertex>();
+    println!(
+        "| size | icons | tessellate, sum (us) | median (us) | max (us) | vertices | indices | cache (bytes) | baked (bytes) |"
+    );
+    println!("| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |");
+    let (mut all_time, mut all_cache, mut all_baked) = (Duration::ZERO, 0, 0);
+    for size in sizes {
+        let mut times = Vec::new();
+        let (mut vertices, mut indices, mut widest) = (0, 0, 0u32);
+        for (_, shapes) in ICONS {
+            let mut best = Duration::MAX;
+            let mut icon = None;
+            for _ in 0..ROUNDS {
+                let start = Instant::now();
+                let tessellated = tessellate_icon(shapes, size);
+                best = best.min(start.elapsed());
+                icon = Some(tessellated);
+            }
+            let icon = icon.expect("ROUNDS > 0");
+            times.push(best);
+            vertices += icon.vertices.len();
+            indices += icon.indices.len();
+            widest = widest.max(icon.indices.iter().copied().max().unwrap_or(0));
+        }
+        times.sort();
+        let sum: Duration = times.iter().sum();
+        let index_bytes = if widest <= u32::from(u16::MAX) { 2 } else { 4 };
+        let cache = vertices * vertex + indices * 4;
+        let baked = vertices * 8 + indices * index_bytes;
+        println!(
+            "| {size} | {} | {:.0} | {:.1} | {:.1} | {vertices} | {indices} | {cache} | {baked} |",
+            times.len(),
+            sum.as_secs_f64() * 1e6,
+            times[times.len() / 2].as_secs_f64() * 1e6,
+            times[times.len() - 1].as_secs_f64() * 1e6,
+        );
+        all_time += sum;
+        all_cache += cache;
+        all_baked += baked;
+    }
+    println!(
+        "| all | {} | {:.0} | | | | | {all_cache} | {all_baked} |",
+        ICONS.len() * sizes.len(),
+        all_time.as_secs_f64() * 1e6
+    );
+
+    // A cache hit: the copy with offset and tint every request pays,
+    // baked or not.
+    let _ = icon_path("settings", 20.0, WHITE, 0.0, 0.0);
+    let start = Instant::now();
+    for i in 0..1000 {
+        std::hint::black_box(icon_path("settings", 20.0, WHITE, i as f32, 0.0));
+    }
+    println!(
+        "\na cache hit (`settings` at 20, {} vertices): {:.2} us",
+        icon_path("settings", 20.0, WHITE, 0.0, 0.0).map_or(0, |p| p.vertices.len()),
+        start.elapsed().as_secs_f64() * 1e6 / 1000.0
+    );
+}
