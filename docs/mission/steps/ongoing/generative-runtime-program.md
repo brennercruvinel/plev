@@ -125,6 +125,7 @@ o que a tese precisa e o que existe hoje:
 | task-72 | UI asset compiler | trilha | monster (existente); espera 63 liberar o container |
 | task-73 | sistema de dependências incremental | trilha (medição na onda 3) | medição: nenhuma; desenho: 57, 59 |
 | task-74 | texto e edição | trilha | independente; accessibility de texto: 60 |
+| task-76 | fase 1 em andamento (trilha, "robustez primeiro"): perda de device de GPU com callback, recriação no lugar e teste que força a perda no headless | | os itens 2 a 10 vêm depois, na ordem do arquivo da task |
 | task-75 | accessibility de plataforma production-ready | trilha | 60 |
 | task-76 | integração de plataforma | trilha | independente; itens como capability: 58 |
 | task-77 | determinismo visual | trilha | 66 |
