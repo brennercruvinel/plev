@@ -14,6 +14,21 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: task-79 parou na sonda; decisão do orquestrador
+
+- **sonda:** o canal de cena cabe na versão 1 do protocolo como pedido
+  novo (um servidor de hoje recusa com `bad_message` e mantém a conexão).
+  o codec do monster não serve para pixels iguais (não tem clip, blur nem
+  sombra); o próprio, por layer suja no `rec`, custa 0,02 a 0,11 ms por
+  frame e manda 195 bytes num hover do Todo.
+- **parada correta:** os pixels de uma imagem não podem ser lidos fora do
+  engine (o store é `static` privado). sem isso a Card e a câmera viram
+  buraco no espelho.
+- **decidido (técnico, dentro da task):** um acessor só de leitura no
+  store (`image_pixels`), liberando `gpu/image.rs`; a prova de que os
+  pixels viajam é entre dois processos, porque em processo o store é o
+  mesmo. o mesmo acessor fecha depois a lacuna do gravador.
+
 ### ciclo 3: publicado #89 (task-77 fase 1b); disparada a task-79 fase 1
 
 - **publicado:** PR #89, merge commit, gate local verde na `main` (2781,
