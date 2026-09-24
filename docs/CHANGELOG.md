@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- native dialogs answer the same contract (2026-09-24, task-76 item 8):
+  `engine::platform::alerts` puts the system's alert and confirmation
+  behind a trait, with a fake for tests and none on wasm and mobile. in
+  the ide, `PLEV_NATIVE_CONFIRM=1` asks the contract's human confirmation
+  in the system's dialog instead of the drawn modal, with the same words,
+  answered through the same confirm and decline of a person and recorded
+  the same way; without support it falls back to the modal. the Files
+  page shows an alert as a capability only a person may ask. no
+  dependency was added.
+
 - native menus are another view of capabilities (2026-09-24, task-76 item
   4): the engine reads a menu model from an app's projection (every item
   is a `SemId` and an action it already declares, with its shortcut),

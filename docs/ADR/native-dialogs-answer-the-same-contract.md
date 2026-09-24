@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [platform-integration, dialogs, alerts, confirmation, rfd, semantic-contract, dispatcher, agents, ide, showcase]
 date: 2026-09-24
 ---

@@ -14,6 +14,19 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: diálogos nativos (task-76 item 8)
+
+- **integrada:** item 8 (merge da `task/76e-alerts`). o alerta e a
+  confirmação do sistema atrás de trait com falso; no ide a confirmação
+  humana do contrato pode ir pelo diálogo nativo por opção, respondendo
+  pelo mesmo caminho; na Files o alerta como capacidade só de pessoa.
+  gate na `main` em andamento no registro; o agente reportou 2540 (+20)
+  e 161 baselines iguais (2 da Files abençoadas). nenhum diálogo abriu
+  nesta máquina: o clique real fica para o brenner
+  (`PLEV_NATIVE_CONFIRM=1 PLEV_AGENT=1 PLEV_RECORD=1 cargo run -p ide`).
+- **limite registrado:** o diálogo nativo bloqueia o laço; por isso o
+  modal desenhado continua o padrão.
+
 ### ciclo 3: publicado #81 (task-76 item 4); disparado o item 8
 
 - **publicado:** PR #81, merge commit, gate local verde na `main` (2605,
