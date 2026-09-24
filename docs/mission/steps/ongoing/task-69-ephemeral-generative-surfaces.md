@@ -1249,3 +1249,17 @@ severidade do que ficou:
   cima dos nós vivos; `open` sem entrada animada.
 
 próximo: fase 3 (proponentes). o provedor do LLM é decisão do brenner.
+
+## fase 3a (orquestrador, 2026-09-24)
+
+a fase 3 se divide. a 3a faz tudo o que não depende do provedor do LLM:
+- o trait `Proposer`;
+- o proponente determinístico por regras sobre o registro de
+  capacidades;
+- o proponente LLM atrás de um trait de modelo, com o prompt (o registro,
+  o schema, a superfície atual e os ids que devem continuar) e o laço de
+  verificação com tentativas limitadas, provado com um modelo falso;
+- a página Surface com um campo de intenção que leva a uma superfície
+  proposta, verificada e aberta ou transformada.
+
+a 3b liga um provedor real e espera a decisão do brenner (local ou API).
