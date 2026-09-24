@@ -1,0 +1,35 @@
+# surface: the host of surfaces materialized from verified plev IR
+# (task-69, docs/ADR/materialized-surfaces-from-verified-ir.md). a
+# `uir::VerifiedIr` becomes a live surface: laid out by the engine's
+# LayoutEngine, every token read from the Theme, drawn by the comps
+# widgets, projected from the IR itself, and every event a sem::Request
+# the app's own dispatcher runs. it never executes anything. comps stays a
+# widget library that knows nothing of the IR; this crate is the bridge.
+[package]
+name = "surface"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "plev surfaces materialized from verified IR: layout by the engine, tokens by the Theme, widgets by comps, semantics from the IR, events as requests through the app's dispatcher"
+
+[dependencies]
+# the IR and its verifier: only a VerifiedIr materializes.
+uir.workspace = true
+# the contract a surface projects into and asks through (Request,
+# Snapshot, SnapshotBuilder).
+sem.workspace = true
+# LayoutEngine, Theme, Compositor.
+engine.workspace = true
+# the widgets every component is drawn by.
+comps.workspace = true
+log.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+# the fixtures of task-68 are JSON, and so are the snapshots they are
+# written against.
+serde_json.workspace = true
+
+[lints]
+workspace = true

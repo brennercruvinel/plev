@@ -23,6 +23,7 @@ members = [
     "crates/rope",
     "crates/sem",
     "crates/showcase",
+    "crates/surface",
     "crates/uir",
     "crates/wire",
 ]
@@ -62,7 +63,9 @@ narrate-macro = { path = "crates/narrate-macro" }
 rec = { path = "crates/rec" }
 rope = { path = "crates/rope" }
 sem = { path = "crates/sem" }
+surface = { path = "crates/surface" }
 svg = { path = "crates/svg" }
+uir = { path = "crates/uir" }
 wire = { path = "crates/wire" }
 # -- gpu / window
 wgpu = "28"

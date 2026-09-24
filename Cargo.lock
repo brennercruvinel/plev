@@ -4406,6 +4406,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "surface"
+version = "0.1.0"
+dependencies = [
+ "comps",
+ "engine",
+ "log",
+ "sem",
+ "serde_json",
+ "thiserror 2.0.18",
+ "uir",
+]
+
+[[package]]
 name = "svg"
 version = "0.1.0"
 dependencies = [
