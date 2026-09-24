@@ -14,6 +14,20 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #79 (task-76 item 3); disparado o item 2
+
+- **publicado:** PR #79, merge commit, gate local verde na `main` (2570,
+  +23), regressão 161 sem mudança.
+- **disparado:** task-76 item 2, múltiplas janelas no engine: o que é da
+  janela agrupado num host, um `Windows` por `WindowId`, render on
+  demand por janela, os exemplos com uma janela sem mudança, um exemplo
+  com duas, e o showcase destacando a página atual numa segunda janela
+  sobre o mesmo estado e o mesmo dispatcher. um agente só.
+- **disco:** o build dir dos agentes tinha 29 GB (cada worktree novo
+  recompilava o workspace com outro caminho). limpo; daqui em diante um
+  worktree fixo (`.claude/worktrees/agent`) e um build dir fixo
+  (`target/agents/one`) para o agente único, para o incremental valer.
+
 ### ciclo 3: diálogos de arquivo e drop no engine (task-76 item 3)
 
 - **integrada:** item 3 (merge da `task/76b-file-dialogs`). o diálogo
