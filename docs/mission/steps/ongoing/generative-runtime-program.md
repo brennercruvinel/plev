@@ -199,7 +199,7 @@ interna. mudança em qualquer um deles passa pelo orquestrador.
 | contrato | produtor | consumidores | onde fica |
 |---|---|---|---|
 | `SemId`, `Role`, `Value`, `StateRef`, `Node`, `ActionDecl`, `Policy`, `Constraints`, `Snapshot`, `Revision`, `SnapshotBuilder`, `Semantics`, `Change` (diff) | 57 | 58 a 71, 73 | `crates/sem` |
-| `Actor`, `Request`, `Observation`, `Verdict`, `Rejection`, `Receipt`, `Stage`, `Outcome`, `check`, `Operable`, `Dispatcher` | 58 | 59, 60, 61, 62, 63, 68, 69, 70 | `crates/sem` |
+| `Actor`, `Request`, `Observation`, `Verdict`, `Rejection` (com `acted` desde a 83), `Acted`, `Receipt`, `Stage`, `Outcome`, `check`, `Operable`, `Dispatcher` | 58, 83 | 59, 60, 61, 62, 63, 68, 69, 70 | `crates/sem` |
 | ligação por frame `SemId -> Binding { rect, layer, clip, order, view }` (`view` ainda sempre `None`) e o caminho único de dispatch em comps e apps | 59 | 60, 61, 62, 65, 67, 69 | `crates/engine/src/compositor/binding.rs`, `crates/comps` |
 | projeção AccessKit a partir de `Snapshot` + ligação | 60 | 75, 74 | `crates/engine/src/accessibility` |
 | protocolo de observação e ação (v1) | 61, 57b, 83 | 62, 79, 80 | `crates/wire` (`proto.rs`, `server.rs`, binário `plev`) |
@@ -328,7 +328,7 @@ atualizado em cada integração.
 | task-57b | integrada | `a7a6735` | forma serde enxuta (todo com 3 itens: 6419 para 2039 B; 103 itens: 87 para 26 KB), `source` opt-in no wire (`plev observe --source`), redação de segredo uma vez só em `sem::redact`; ADR lean-semantic-form-and-one-redaction |
 | task-82 | fase a integrada; fase b (ide, urnaui) pendente | `d97a375` | `comps::Wake` e `Blink`, `AnimationTick::since_last`, shell do showcase em `WaitUntil`: campo focado e parado de 120 para 4 turnos desenhados em 120; ADR a-tick-asks-for-a-deadline |
 | task-66b | integrada | `efc87b6` | `engine::headless::svg` com relatório de aproximação por nó, `TextSystem::shaped_glyphs` (um shaping só), `showcase --render --svg/--svg-report/--semantics/--source`; imagens ficam para depois da retenção de pixels (63d); ADR svg-export-reads-the-scene |
-| task-83 | em andamento | | delta com o nó (`Change::NodeAdded` com o nó), recusa stale com as ações de outros atores (`acted`), regra de stale escrita no `plev`; origem: checkpoint a |
+| task-83 | integrada | `78f463c` | `Change::NodeAdded` carrega o nó (o commit nascendo em `stacks`: 427 B numa ida, antes 172 B mais 402 B); `Rejection::Stale.acted` nomeia as ações de outros atores sobre o estado que o autor viu; regra de stale no `plev --help`; sessões antigas continuam abrindo; adr a-delta-carries-the-node-a-refusal-names-who-acted |
 | task-84 | integrada | `4896451` | a sessão do ide descarta leitura do git feita antes de uma mutação que a view já mostra; teste que falhava 10 de 10 na base; o roteirizado não espera mais o index parar (sem essa espera, na base, as dez corridas com intervenção davam errado) |
 | task-85 | em andamento | | o commit que o receipt anuncia já está na projeção quando o receipt conclui, e todo `stacks.commit[sha]` tem `files` |
 | auditoria de verdade | integrada | `7621403` | `docs/mission/state/truth.md`: contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |

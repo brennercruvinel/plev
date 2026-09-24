@@ -45,7 +45,10 @@ agent port's `snapshot` reply unless the agent asks: `observe {"source":
 true}` on the protocol, `plev observe --source` on the command line. an
 agent acts by id, and the place in the code that projected a control is
 not part of what the control means. a `delta` never carried `source`: a
-`Change` names ids and values only.
+`Change` names ids and values only. (updated on 2026-09-23: since
+task-83 a `node_added` carries the whole node, and the port serves it as
+a snapshot serves a node, `source` only when asked; adr
+a-delta-carries-the-node-a-refusal-names-who-acted.)
 
 the redaction rule lives once, in `sem::redact`, because `sem` owns what
 `secret` means and is the one crate the port and the recorder share.

@@ -31,6 +31,18 @@ o da base até ser reescrito.
   programa pelo orquestrador. o `ide` ganhou `default-run = "ide"`: com
   o `ide-lab`, `cargo run -p ide` não sabia qual binário rodar.
 
+- `78f463c` (task-83): `Change::NodeAdded(Box<Node>)` (seção 2.1 e 4b:
+  o delta traz o nó; o recorder continua gravando snapshot inteiro para
+  nó adicionado, pela posição entre irmãos); `Rejection::Stale { changes,
+  acted }` e `Acted` (seção 2.2 e 4d: o dispatcher preenche, em
+  `Dispatcher::push`); o wire serve o nó de um delta pela mesma função
+  do snapshot (`serve`, seção 2.3); a regra de stale está no `plev act
+  --help` e no doc do `Act` (seção 4e); o leitor de sessão converte o
+  `node_added` antigo (`crates/rec/src/persist.rs`, `read_event`); o toast
+  do ide diz quem agiu. `script/gate`: a perna urnaui usa
+  `$CARGO_TARGET_DIR/urnaui` quando o diretório é compartilhado
+  (`1bf6606`).
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

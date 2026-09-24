@@ -46,8 +46,12 @@ it, whole or in part, as a session file (below).
   recorded as the last one and counted.
 - a snapshot is stored whole (`Kind::Snapshot`, the keyframe) when it is
   the first, when the cadence (`full_every`) is due, when asked, and when
-  it adds, moves or reorders nodes, because a `Change` carries neither the
-  new node nor the new order. otherwise it is stored as its
+  it adds, moves or reorders nodes, because a `Change` does not say
+  where a node goes among its siblings nor the new order (updated on
+  2026-09-23: since task-83 a `node_added` carries the node itself, not
+  its place; the reader converts a `node_added` written by id alone, the
+  form before, into the node the event's own snapshot holds, adr
+  a-delta-carries-the-node-a-refusal-names-who-acted). otherwise it is stored as its
   `Snapshot::diff` (`Kind::Changes`), applied in place on read. an
   unchanged snapshot is not stored. any other event arriving when the
   cadence is due re-keys the track first with the state as it stands; an

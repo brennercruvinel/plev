@@ -1,12 +1,13 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: semantic-contract
 task: task-83
 depends: [task-57b, task-61, task-62]
 branch: task/83-delta-and-refusal
+integrated: 78f463c
 origin: checkpoint a (task-62 fase c), decisão do brenner "correções primeiro"
 ---
 
@@ -324,3 +325,32 @@ linha proposta para `docs/ADR/README.md`:
 ```text
 | 2026-09-23 | [a-delta-carries-the-node-a-refusal-names-who-acted](a-delta-carries-the-node-a-refusal-names-who-acted.md) | accepted | `Change::NodeAdded` carrega o nó como o snapshot `after` o tem, e o agent port o serve com o mesmo filtro de `keys` e `source` do snapshot (o delta que mostra o commit nascendo em `stacks`: 172 B mais uma observação de 402 B viram 427 B numa ida só); `Rejection::Stale` ganha `acted`, as ações de outros atores checadas na revisão que o autor viu e que rodaram, preenchido só pelo dispatcher; a regra de stale fica no `plev --help` e no doc do `Act`; protocolo continua v1, e a sessão gravada antes continua abrindo: o leitor põe no lugar do id o nó que o snapshot do próprio evento tem, sem perda (task-83) |
 ```
+
+## fechamento (orquestrador, 2026-09-23)
+
+integrada na `main` em `78f463c` (onze commits, rebaseados sobre a `main`
+sem conflito). validação do orquestrador:
+
+- diff inteiro lido, commit por commit, nas duas rodadas. `acted` é
+  preenchido num lugar só (`Dispatcher::push`), para toda recusa stale
+  que o dispatcher registra; o receipt recusado nunca entra na própria
+  lista (no dispatch ele ainda não foi guardado, no `reject_at_truth` ele
+  sai de `open` antes do `push`). o wire serve o nó de um `node_added` e
+  o de um snapshot pela mesma função (`serve`). a redação mantém `acted`
+  como está, que só tem ids, ator e nome de ação.
+- devolvida uma vez: a forma nova do `node_added` fazia as sessões
+  gravadas antes não abrirem (a premissa errada estava no briefing do
+  orquestrador). decisão: o leitor converte a forma antiga (opção B).
+  aceite: as seis sessões em disco, as do checkpoint a inclusive, abrem.
+- gate verde no diretório da task sobre a base rebaseada, com a perna
+  urnaui no subdiretório próprio: 2084 passaram, 0 falharam, 9 ignorados.
+- reproduzido pelo orquestrador: `ide-lab --arm scripted --human
+  unstage-after-observe:src/session.rs` saiu 0, MATCH, e a recusa traz
+  `acted = [human, unstage, changes.file[src/session.rs], request 6]`,
+  ninguém mais.
+- fechamento: linha no índice de ADRs, notas datadas nos ADRs
+  session-recording e lean-semantic, manual do engine, changelog.
+
+dívida registrada: `crates/ide/src/bin/lab/lab.rs` passou de 728 para 733
+linhas, acima do limite de tamanho de arquivo; dividir o laboratório fica
+para a próxima task que mexer nele.
