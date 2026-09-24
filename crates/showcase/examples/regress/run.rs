@@ -177,6 +177,8 @@ impl Gpu {
 pub struct Outcome {
     pub label: String,
     pub delta: compare::Delta,
+    /// The page's projection now.
+    pub semantics: Option<Snapshot>,
     /// The page's scene; a layer that moved carries its bounds.
     pub now: Scene,
     pub pixels: Pixels,
@@ -237,6 +239,7 @@ pub fn check_one(b: &Baseline, gpu: &mut Gpu) -> Result<Outcome, String> {
     let mut out = Outcome {
         label: key.label(),
         delta,
+        semantics: staged.semantics.clone(),
         now: staged.scene.clone(),
         pixels: Pixels::NotNeeded,
         staged: staged.took,
@@ -270,6 +273,18 @@ pub fn check_one(b: &Baseline, gpu: &mut Gpu) -> Result<Outcome, String> {
     Ok(out)
 }
 
+/// The JSON `check --json` writes.
+#[derive(serde::Serialize)]
+struct Checked<'a> {
+    checked: usize,
+    unchanged: usize,
+    changed: usize,
+    frames_drawn: usize,
+    gpu_open_ms: Option<f64>,
+    total_ms: f64,
+    baselines: &'a [report::Report],
+}
+
 /// Check every baseline the request selects. A baseline where nothing
 /// moved ends at the comparison, with no frame drawn.
 fn check(r: &Request) -> Result<bool, String> {
@@ -279,32 +294,15 @@ fn check(r: &Request) -> Result<bool, String> {
     }
     let start = Instant::now();
     let mut gpu = Gpu::default();
-    let mut changed = 0;
+    let mut reports = Vec::new();
     for b in &baselines {
         let o = check_one(b, &mut gpu)?;
-        let mut times = format!("stage {}, compare {}", ms(o.staged), ms(o.compared));
-        for (what, d) in [
-            ("render", o.rendered),
-            ("decode", o.decoded),
-            ("diff", o.diffed),
-        ] {
-            if let Some(d) = d {
-                times.push_str(&format!(", {what} {}", ms(d)));
-            }
-        }
-        if o.delta.unchanged() {
-            println!("ok       {} ({times})", o.label);
-            continue;
-        }
-        changed += 1;
-        println!("CHANGED  {} ({times})", o.label);
-        for line in report::lines(&o.delta) {
-            println!("  {line}");
-        }
-        for line in report::pixel_lines(&o, &b.meta.scene) {
-            println!("  {line}");
-        }
+        let report = report::build(&o, &b.meta.scene);
+        print!("{}", report::text(&report));
+        reports.push(report);
     }
+    let total = start.elapsed();
+    let changed = reports.iter().filter(|r| r.changed).count();
     let gpu_line = if let Some(open) = gpu.open {
         format!("{} frames drawn, GPU opened in {}", gpu.frames, ms(open))
     } else if gpu.opened() {
@@ -314,10 +312,23 @@ fn check(r: &Request) -> Result<bool, String> {
     };
     println!(
         "checked {} baselines in {}: {} unchanged, {changed} changed; {gpu_line}",
-        baselines.len(),
-        ms(start.elapsed()),
-        baselines.len() - changed,
+        reports.len(),
+        ms(total),
+        reports.len() - changed,
     );
+    if let Some(path) = &r.json {
+        let checked = Checked {
+            checked: reports.len(),
+            unchanged: reports.len() - changed,
+            changed,
+            frames_drawn: gpu.frames,
+            gpu_open_ms: gpu.open.map(|d| d.as_secs_f64() * 1000.0),
+            total_ms: total.as_secs_f64() * 1000.0,
+            baselines: &reports,
+        };
+        let json = serde_json::to_string_pretty(&checked).map_err(|e| e.to_string())?;
+        std::fs::write(path, json + "\n").map_err(|e| format!("{}: {e}", path.display()))?;
+    }
     Ok(changed == 0)
 }
 
@@ -340,8 +351,21 @@ fn bless(r: &Request) -> Result<(), String> {
     }
     let mut gpu = Gpu::default();
     for key in &keys {
+        // what is being accepted: the check of the baseline it replaces
+        let before = Baseline::read(&r.dir.join(key.label())).ok();
+        match &before {
+            Some(b) => {
+                let o = check_one(b, &mut gpu)?;
+                let report = report::build(&o, &b.meta.scene);
+                if report.changed {
+                    print!("accept   {}\n{}", report.baseline, report::body(&report));
+                } else {
+                    println!("same     {}", report.baseline);
+                }
+            }
+            None => println!("new      {}", key.label()),
+        }
         let mut staged = stage(key, true)?;
-        let before = Baseline::read(&r.dir.join(staged.key.label())).ok();
         // an image stays an image: a baseline that keeps one gets a new
         // one unless --no-png drops it
         let png = r

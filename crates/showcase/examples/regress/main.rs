@@ -5,6 +5,7 @@
 //! ```text
 //! cargo run -p showcase --example regress -- check [--page <title>]...
 //!     [--theme core] [--width 1280 --height 800 --scale 1] [--dir <dir>]
+//!     [--json <file>]
 //! cargo run -p showcase --example regress -- bless --page Todo [--theme core]
 //!     [--width 1280 --height 800 --scale 1] [--all] [--png | --no-png]
 //!     [--dir <dir>]
@@ -22,6 +23,9 @@
 //! the frame through `engine::headless` and compares pixels only inside
 //! the regions of the layers that moved (`pixels`), then crosses the
 //! changed pixels with the bindings to name the controls they fall in.
+//! The report (`report`) goes by `SemId`: meaning changed or not, visual
+//! changed or not, layer, pixels, region; `bless` prints the same report
+//! for what it accepts.
 //!
 //! Exit status: 0 every baseline held, 1 something moved, 2 a malformed
 //! request, 3 an error (a page or a baseline that cannot be read).
@@ -74,17 +78,21 @@ mod cli {
     pub const USAGE: &str = "\
 usage: regress check [--page <title>]... [--theme <name>]
                      [--width <px>] [--height <px>] [--scale <s>] [--dir <dir>]
+                     [--json <file>]
        regress bless [--page <title>]... [--all] [--theme <name>]
                      [--width <px>] [--height <px>] [--scale <s>]
                      [--png | --no-png] [--dir <dir>]
 check stages every baseline in the directory (narrowed by the flags) and
 compares meaning, then layers and bindings; nothing moved, no frame is
 drawn. a layer moved and the baseline keeps an image: the frame is drawn
-and compared inside the regions that moved. exit 0 when every baseline
+and compared inside the regions that moved. the report goes by control
+(semantics changed or not, visual changed or not, layer, pixels, region),
+then by layer; --json writes it for a tool. exit 0 when every baseline
 held, 1 when something moved.
 bless stages each page and writes its baseline (semantics, layers,
-bindings): the pages named with --page, every page of the gallery with
---all, else every baseline already in the directory. new baselines take
+bindings), printing what it accepts: the pages named with --page, every
+page of the gallery with --all, else every baseline already in the
+directory. new baselines take
 --theme core --width 1280 --height 800 --scale 1 unless given. --png
 keeps the frame's image too (needs a GPU), --no-png drops it; without
 either a baseline keeps what it had.
@@ -118,6 +126,8 @@ either a baseline keeps what it had.
         pub scale: Option<f32>,
         /// `bless --png` / `--no-png`; `None` keeps what the baseline had.
         pub png: Option<bool>,
+        /// `check --json <file>`: every report as JSON.
+        pub json: Option<PathBuf>,
     }
 
     /// `Ok(None)` asks for the usage.
@@ -139,6 +149,7 @@ either a baseline keeps what it had.
             height: None,
             scale: None,
             png: None,
+            json: None,
         };
         while let Some(flag) = it.next() {
             let mut value = || {
@@ -157,6 +168,7 @@ either a baseline keeps what it had.
                 "--scale" => r.scale = Some(positive(flag, &value()?)?),
                 "--png" => r.png = Some(true),
                 "--no-png" => r.png = Some(false),
+                "--json" => r.json = Some(PathBuf::from(value()?)),
                 other => return Err(format!("unknown argument '{other}'")),
             }
         }
@@ -168,6 +180,9 @@ either a baseline keeps what it had.
         }
         if r.png.is_some() && r.command == Command::Check {
             return Err("--png and --no-png are for bless".to_string());
+        }
+        if r.json.is_some() && r.command == Command::Bless {
+            return Err("--json is for check".to_string());
         }
         Ok(Some(r))
     }
@@ -223,6 +238,7 @@ either a baseline keeps what it had.
                 ("bless --all --page Todo", "exclude"),
                 ("check --all", "for bless"),
                 ("check --png", "for bless"),
+                ("bless --json r.json", "for check"),
             ] {
                 match parse(&args(line)) {
                     Err(e) => assert!(e.contains(needle), "{line}: '{e}' lacks '{needle}'"),

@@ -11,6 +11,7 @@ use sem::{Change, Snapshot};
 use crate::baseline::{Baseline, SCENE, SEMANTICS};
 use crate::compare::Status;
 use crate::pixels::Pixels;
+use crate::report::Visual;
 use crate::run::{self, Gpu, check_one};
 
 const DESKTOP: Viewport = Viewport {
@@ -192,11 +193,19 @@ fn a_layer_that_moved_without_a_baseline_image_says_so_and_draws_nothing() {
     assert!(o.delta.semantics.changes.is_empty() && o.delta.drawn_changed());
     assert!(matches!(o.pixels, Pixels::NoBaselineImage));
     assert!(!gpu.opened());
-    let lines = crate::report::pixel_lines(&o, &b.meta.scene);
-    assert_eq!(
-        lines,
-        ["visual changed, no baseline image to diff (bless --png keeps one)"]
-    );
+    let r = crate::report::build(&o, &b.meta.scene);
+    assert_eq!(r.pixels.status, "no_baseline_image");
+    // every control bound in the layer that moved: changed as far as can
+    // be told, the meaning unchanged
+    for c in &r.controls {
+        assert!(c.semantics.is_empty(), "{}", c.id);
+        match c.layer.as_deref() {
+            Some("todo") => assert_eq!(c.visual, Visual::LayerChanged, "{}", c.id),
+            _ => assert_eq!(c.visual, Visual::Unbound, "{}", c.id),
+        }
+    }
+    let text = crate::report::text(&r);
+    assert!(text.contains("no baseline image to diff"), "{text}");
 }
 
 /// The whole path on a GPU: the baseline keeps its image, a block over
@@ -258,12 +267,21 @@ fn changed_pixels_are_named_by_the_control_they_fall_in() {
     assert_eq!(changed.total().region, block);
     // the frame is 1280x800; only the todo layer's region was compared
     assert!(changed.compared < 1280 * 800, "{}", changed.compared);
-    let lines = crate::report::pixel_lines(&o, &b.meta.scene);
-    let named: Vec<&str> = lines
+    let r = crate::report::build(&o, &b.meta.scene);
+    let text = crate::report::text(&r);
+    let named: Vec<&str> = r
+        .controls
         .iter()
-        .filter_map(|l| l.split(':').next())
-        .filter(|id| id.starts_with("todo"))
+        .filter(|c| c.visual == Visual::Changed)
+        .map(|c| c.id.as_str())
         .collect();
-    assert_eq!(named, ["todo", "todo.item[2]"], "{lines:#?}");
+    assert_eq!(named, ["todo", "todo.item[2]"], "{text}");
+    for c in r.controls.iter().filter(|c| c.visual == Visual::Changed) {
+        assert_eq!((c.pixels, c.region), (Some(360), block), "{text}");
+        assert_eq!(c.layer.as_deref(), Some("todo"));
+    }
+    assert!(r.controls.iter().all(|c| c.semantics.is_empty()));
+    let todo = r.layers.iter().find(|l| l.name == "todo");
+    assert_eq!(todo.and_then(|l| l.unbound_pixels), Some(0));
     assert_eq!(gpu.frames, 2, "the bless and the check each drew once");
 }

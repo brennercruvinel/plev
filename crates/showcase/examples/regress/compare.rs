@@ -66,10 +66,6 @@ impl Delta {
     pub fn drawn_changed(&self) -> bool {
         self.layers.iter().any(|l| l.status != Status::Unchanged)
     }
-
-    pub fn changed_layers(&self) -> impl Iterator<Item = &LayerDelta> {
-        self.layers.iter().filter(|l| l.status != Status::Unchanged)
-    }
 }
 
 /// The projection's delta. Equal revisions are equal snapshots
@@ -258,7 +254,12 @@ mod tests {
         let (d, read) = check((&base, Some(&p)), (&now, Some(&p)));
         assert!(!d.unchanged() && d.drawn_changed());
         assert!(d.semantics.changes.is_empty() && !read);
-        let changed: Vec<&str> = d.changed_layers().map(|l| l.name.as_str()).collect();
+        let changed: Vec<&str> = d
+            .layers
+            .iter()
+            .filter(|l| l.status != Status::Unchanged)
+            .map(|l| l.name.as_str())
+            .collect();
         assert_eq!(changed, ["todo"]);
     }
 
