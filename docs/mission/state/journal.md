@@ -14,6 +14,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### intervenção do brenner: voltar ao que ele mandou
+
+- o brenner apontou a deriva: as tasks 81 a 94, do orquestrador, poliram
+  a colaboração segura (objetivo 5) muito além do que o programa pedia,
+  enquanto o centro da tese (intenção vira interface, objetivos 1, 7, 8,
+  9 e 10) andou pouco. correção: o ciclo segue só as tasks do programa
+  dele, na ordem das ondas (69 até o fim e o checkpoint b, depois 70, 71,
+  as trilhas e a 80). task nova do orquestrador só para P0. sem rodada
+  nova de experimento de handoff. relatórios curtos, em palavras simples.
+
 ### intervenção do brenner: o provedor do LLM é o Claude
 
 - "usa você mesmo por enquanto, eu não tenho outro LLM". decisão 13 do
