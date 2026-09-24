@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use engine::compositor::SceneNode;
 use sem::{Millis, Receipt, RequestId, SemId, Stage};
 
+use crate::bound::{self, Bound};
 use crate::error::ReadError;
 use crate::event::{Event, Kind};
 use crate::format::Build;
@@ -118,6 +119,33 @@ impl Session {
     /// the time of the frame on screen at `t`.
     pub fn frame_at(&self, t: Millis) -> Option<Millis> {
         self.screen.frame_at(t)
+    }
+
+    /// where each bound control showed at `t`: the bindings of the frame
+    /// taken last at or before `t` that showed on a layer it drew, each
+    /// with the part of its rect inside its clip, in stacking order (the
+    /// one on top last). empty for a frame that bound nothing, and for a
+    /// file written before bindings were recorded (version 0); `None`
+    /// before the first frame the window holds.
+    pub fn bindings_at(&self, t: Millis) -> Option<Vec<Bound>> {
+        self.screen.bindings_at(t)
+    }
+
+    /// where `id` showed at `t` (see `bindings_at`), `(x, y, w, h)` in
+    /// logical window pixels.
+    pub fn binding_at(&self, id: &SemId, t: Millis) -> Option<[f32; 4]> {
+        self.bindings_at(t)?
+            .into_iter()
+            .find(|b| b.id == *id)
+            .map(|b| b.rect)
+    }
+
+    /// the control on top at `(x, y)`, in logical window pixels, in the
+    /// frame on screen at `t`: the one `Compositor::hit` answered then,
+    /// the last in stacking order whose visible rect holds the point.
+    pub fn hit_at(&self, t: Millis, x: f32, y: f32) -> Option<SemId> {
+        let list = self.bindings_at(t)?;
+        bound::hit(&list, x, y).cloned()
     }
 
     /// every frame time the window holds, in order.

@@ -44,7 +44,7 @@ pub enum FileError {
          monster_player or monster::MonsterPlayer"
     )]
     Animation,
-    #[error("unsupported session version {0}; this reader reads 0")]
+    #[error("unsupported session version {0}; this reader reads 0 and 1")]
     UnsupportedVersion(u16),
     #[error("unsupported flags {0:#06x}; version 0 defines none")]
     UnsupportedFlags(u16),
@@ -72,6 +72,12 @@ pub enum FileError {
     Asset { asset: usize, reason: &'static str },
     #[error("chunk {chunk} does not decode as a monster file: {reason}")]
     Chunk { chunk: usize, reason: String },
+    /// an id of section B's table does not parse, or is there twice.
+    #[error("bound id {at} is invalid: {reason}")]
+    BoundId { at: usize, reason: String },
+    /// the bindings of a chunk (section B) are not what the writer writes.
+    #[error("the bindings of chunk {chunk} are invalid: {reason}")]
+    Bindings { chunk: usize, reason: &'static str },
     #[error("the header says the session starts at {header} ms, its content at {content} ms")]
     StartMismatch { header: u64, content: u64 },
     #[error("{0} does not fit its u32 field")]

@@ -4,6 +4,10 @@
 //! (through `monster::decode`) and every asset reference is checked, and
 //! anything the writer would not have written is a typed `FileError`.
 //!
+//! a window with bindings is written with section B, as version 1; one
+//! without is written as version 0, the layout before bindings were
+//! recorded, and a version 0 file reads with no bindings (see `bound`).
+//!
 //! one form the writer no longer writes still reads: a snapshot event
 //! from before task-83 names each node its step added by id only
 //! (`{"node_added": "<id>"}`). that node is the one the event's own
@@ -19,6 +23,7 @@ use monster::{LoweredAsset, NodeKind};
 use sem::Millis;
 use serde_json::Value as Json;
 
+use crate::bound::{self, Step};
 use crate::error::FileError;
 use crate::event::{Event, Kind};
 use crate::format::{self, Cur, len32, put_u32, put_u64};
@@ -35,6 +40,9 @@ pub struct Persisted {
     pub index_bytes: usize,
     pub chunks_bytes: usize,
     pub assets_bytes: usize,
+    /// section B, where each bound control showed; 0 when the window has
+    /// no bindings and the file is version 0.
+    pub bindings_bytes: usize,
     /// events written.
     pub events: usize,
     /// events left out because their json does not read back (a `Num`
@@ -118,12 +126,16 @@ impl Session {
             };
             out.images_without_pixels += usize::from(bare);
         }
+        let steps: Vec<&[Step]> = screen.chunks.iter().map(|c| c.bound.as_slice()).collect();
+        let bindings = bound::section(&steps)?;
         let bytes = format::assemble(
             self.start(),
             self.build(),
             [&events, &index, &chunks, &assets],
+            bindings.as_deref(),
         );
         out.bytes = bytes.len();
+        out.bindings_bytes = bindings.as_ref().map_or(0, Vec::len);
         out.events_bytes = events.len();
         out.index_bytes = index.len();
         out.chunks_bytes = chunks.len();
@@ -162,7 +174,14 @@ impl Session {
         let parsed = format::parse(bytes)?;
         let [events, index, chunks, assets] = parsed.sections;
         let assets = read_assets(assets)?;
-        let chunks = read_chunks(index, chunks, &assets)?;
+        let mut chunks = read_chunks(index, chunks, &assets)?;
+        if let Some(payload) = parsed.bindings {
+            let starts: Vec<Millis> = chunks.iter().map(|c| c.start).collect();
+            let steps = bound::read_section(payload, &starts)?;
+            for (chunk, bound) in chunks.iter_mut().zip(steps) {
+                chunk.bound = bound;
+            }
+        }
         let events = read_events(events)?;
         let session = Session::from_file(events, Screen { chunks, assets }, parsed.build);
         if session.start() != parsed.start {
@@ -332,6 +351,7 @@ fn read_chunks(index: &[u8], body: &[u8], assets: &[Asset]) -> Result<Vec<Shown>
             times,
             bytes,
             refs,
+            bound: Vec::new(),
         });
     }
     c.done("the chunk index")?;

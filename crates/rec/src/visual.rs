@@ -18,6 +18,10 @@
 //! handle, a path hash), counted by the chunks that reference them and
 //! dropped with the last one: the ring holds only the assets the window
 //! it keeps references.
+//!
+//! each chunk also keeps where each bound control showed in its frames,
+//! a step only when that changed from the frame before (see `bound`),
+//! opening with the whole list, so a chunk stays a keyframe for them too.
 
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, VecDeque};
@@ -30,6 +34,7 @@ use engine::path::TessellatedPath;
 use monster::{AssetBank, DiscoverConfig, LoweredAsset, Node, RaiseError, Unsupported};
 use sem::Millis;
 
+use crate::bound::{self, Bound, Step, Steps, Taken};
 use crate::error::FrameError;
 
 /// what an asset is, by content.
@@ -82,6 +87,10 @@ pub(crate) struct Chunk {
     pub(crate) bytes: Vec<u8>,
     /// the asset behind each id the chunk's nodes use.
     pub(crate) assets: Vec<Arc<AssetKey>>,
+    /// where each bound control showed, when that changed.
+    pub(crate) bound: Vec<Step>,
+    /// the estimated bytes of `bound`.
+    bound_bytes: usize,
 }
 
 impl Chunk {
@@ -90,6 +99,7 @@ impl Chunk {
             + self.bytes.len()
             + self.times.len() * size_of::<u32>()
             + self.assets.len() * size_of::<Arc<AssetKey>>()
+            + self.bound_bytes
     }
 }
 
@@ -100,6 +110,7 @@ struct Open {
     frames: Vec<(Millis, Vec<Node>)>,
     bank: AssetBank,
     bytes: usize,
+    bound: Steps,
 }
 
 impl Open {
@@ -109,6 +120,7 @@ impl Open {
             frames: Vec::new(),
             bank: AssetBank::new(),
             bytes: size_of::<Open>(),
+            bound: Steps::default(),
         }
     }
 }
@@ -135,6 +147,9 @@ pub(crate) struct Counts {
     pub(crate) closed: u64,
     pub(crate) skipped: [u64; 4],
     pub(crate) errors: u64,
+    /// binding steps taken: the whole list, or the rects that moved.
+    pub(crate) bound_whole: u64,
+    pub(crate) bound_moved: u64,
 }
 
 #[derive(Debug, Default)]
@@ -150,11 +165,14 @@ pub(crate) struct Visual {
 }
 
 impl Visual {
-    /// takes one frame at `t` (already ordered by the recorder's clock).
+    /// takes one frame at `t` (already ordered by the recorder's clock)
+    /// and where each bound control shows in it, `bound`, in stacking
+    /// order.
     pub(crate) fn frame<'a>(
         &mut self,
         t: Millis,
         scene: impl Iterator<Item = &'a SceneNode> + Clone,
+        bound: &[Bound],
         cadence: Cadence,
     ) -> Result<(), FrameError> {
         let due = self.open.as_ref().is_some_and(|open| {
@@ -206,6 +224,14 @@ impl Visual {
                 open.frames.push((t, nodes));
             }
         }
+        // an unchanged frame may still bind differently: the bindings are
+        // taken whether or not its nodes were stored.
+        let at = u32::try_from(t.saturating_sub(open.start)).unwrap_or(u32::MAX);
+        match open.bound.take(at, bound) {
+            Taken::Same => {}
+            Taken::Whole => self.counts.bound_whole += 1,
+            Taken::Moved => self.counts.bound_moved += 1,
+        }
         Ok(())
     }
 
@@ -244,12 +270,16 @@ impl Visual {
         if pieces.is_empty() {
             self.counts.errors += 1;
         }
-        for (start, times, bytes) in pieces {
+        let steps = split(open.start, open.bound.steps, &pieces);
+        for ((start, times, bytes), bound) in pieces.into_iter().zip(steps) {
+            let bound_bytes = bound.iter().map(Step::weight).sum();
             let chunk = Chunk {
                 start,
                 times,
                 bytes,
                 assets: assets.clone(),
+                bound,
+                bound_bytes,
             };
             for key in &chunk.assets {
                 self.retain(key);
@@ -363,7 +393,7 @@ impl Visual {
     }
 
     pub(crate) fn bytes(&self) -> usize {
-        self.bytes + self.open.as_ref().map_or(0, |o| o.bytes)
+        self.bytes + self.open.as_ref().map_or(0, |o| o.bytes + o.bound.bytes)
     }
 
     pub(crate) fn asset_bytes(&self) -> usize {
@@ -380,14 +410,19 @@ impl Visual {
         let Some(open) = &self.open else {
             return Vec::new();
         };
-        encode(open.frames.clone())
+        let pieces = encode(open.frames.clone());
+        let steps = split(open.start, open.bound.steps.clone(), &pieces);
+        pieces
             .into_iter()
-            .map(|(start, times, bytes)| {
+            .zip(steps)
+            .map(|((start, times, bytes), bound)| {
                 let chunk = Chunk {
                     start,
                     times,
                     bytes,
                     assets: Vec::new(),
+                    bound,
+                    bound_bytes: 0,
                 };
                 (chunk, open.bank.assets().to_vec())
             })
@@ -442,6 +477,23 @@ fn encode(frames: Vec<(Millis, Vec<Node>)>) -> Vec<Piece> {
         }
         None => Vec::new(),
     }
+}
+
+/// the steps of a chunk that opened at `start`, for each piece its frames
+/// were encoded in: each piece opens with the whole list at its start.
+fn split(start: Millis, steps: Vec<Step>, pieces: &[Piece]) -> Vec<Vec<Step>> {
+    if pieces.len() <= 1 {
+        return vec![steps];
+    }
+    let rel = |t: Millis| u32::try_from(t.saturating_sub(start)).unwrap_or(u32::MAX);
+    pieces
+        .iter()
+        .enumerate()
+        .map(|(n, (at, _, _))| {
+            let to = pieces.get(n + 1).map(|(next, _, _)| rel(*next));
+            bound::part(&steps, rel(*at), to)
+        })
+        .collect()
 }
 
 /// a chunk-relative time in the seconds the codec works in; the reader

@@ -94,6 +94,21 @@ it, whole or in part, as a session file (below).
   (`monster::Skipped`) and counted (`Stats::skipped`), as are layers whose
   opacity, effects or clip rect the IR does not carry. the replay draws
   without them.
+- where each bound control shows rides with the frame (added on
+  2026-09-23, task-63 phase d): `Recorder::frame` takes the frame's
+  bindings that show (`Compositor::visible_bindings`, the part of each
+  rect inside its clip) on a layer the frame draws, in stacking order,
+  the one on top last, as `Compositor::hit` ranks them; a scene given as
+  nodes (`frame_scene`) binds nothing. a chunk keeps them beside its
+  frames only when they differ from the frame before: it opens with the
+  whole list (so a cut at a chunk loses nothing), then a step is the whole
+  list again (an id came or went, or the order changed) or the rects that
+  moved (the same ids in the same order: a toast springing in, a scroll).
+  `Stats::bindings_whole` and `bindings_moved` count them. the read side
+  answers `Session::bindings_at(t)`, `binding_at(id, t)` and `hit_at(t,
+  x, y)`, the frame on screen at `t` as the compositor hit-tested it
+  then; the recorder's signatures did not change, so every caller of
+  `Recorder::frame` (the laboratory among them) records them.
 
 ### the ring
 
@@ -137,16 +152,37 @@ on a session with a message that points at the session inspector
 untouched.
 
 ```text
-header := magic "MONS", version u16 0, flags u16 0, start u64 (ms on the
-          recorder's clock), crate version (u8 len, utf8), git sha (u8 len,
-          utf8, "unknown" without git), sec_count u16,
-          (tag u8, offset u64, len u64, sha256)*
+header := magic "MONS", version u16 (0, or 1 with section B), flags u16 0,
+          start u64 (ms on the recorder's clock), crate version (u8 len,
+          utf8), git sha (u8 len, utf8, "unknown" without git), sec_count
+          u16, (tag u8, offset u64, len u64, sha256)*
 S := one rec::Event per json line (its serde form), in time order
 I := chunk_count u32, (start u64, frame_count u32, time u32*,
      ref_count u32, asset u32*, offset u64, len u64)*
 C := the chunks, each the exact bytes monster::encode wrote
 A := asset_count u32, (kind u8, len u32, payload)*
+B := id_count u32, (len u16, utf8)*, chunk_count u32 (the index's),
+     per chunk: step_count u32, (at u32, kind u8, count u32,
+     (id u32 | position u32, x f32, y f32, w f32, h f32)*)*
+     (version 1 only; kind 0 the whole list by id, kind 1 the moved
+     rects by position in the list)
 ```
+
+- the version says which sections a file has (added on 2026-09-23, task-63
+  phase d): version 0 is S, I, C and A, the layout before bindings were
+  recorded, and a window without bindings is still written in it, byte
+  for byte; version 1 adds B and nothing else. the reader stays strict
+  for both: B in a version 0 file is an unknown section, a version 1 file
+  without it misses one, and a step out of order, an id that does not
+  parse or shows twice in one list, a move before a whole list or past
+  it, a rect that is not finite or has no area, and a step at or after
+  the next chunk's start are typed errors (`FileError::Bindings`,
+  `FileError::BoundId`). every file of version 0 reads as before, with no
+  bindings (the nine checkpoint sessions of task-62 read by `plev-inspect`
+  built on `rec` before and after the change give the same summary and
+  timeline, byte for byte). a reader built before version 1 refuses a
+  version 1 file by its version (`unsupported session version 1`), since
+  a strict reader cannot skip a section it does not know.
 
 - the build identity comes from `crates/rec/build.rs` (`git rev-parse
   --short HEAD`, never failing the build) and `CARGO_PKG_VERSION`; task-65
@@ -213,6 +249,17 @@ enter, hover, toggle, filters, delete; 848 frames over 50 s simulated):
   events) is 362 KB (17 KB/s), written in 1.9 ms (the json round trip of
   every event included) and read in 1.1 ms.
 
+- the bindings (added on 2026-09-23, task-63 phase d; the same measure
+  in a debug build, and the `ide-lab` scripted arm with the person):
+  the todo page binds its controls in every frame, and its bindings were
+  kept whole in 34 of 368 frames (every chunk opens with them, and the
+  list changes as rows come and go), never as moved rects, unchanged in
+  the other 334; section B is 3.4 KB of a 79 KB file (75.5 KB without
+  it), 160 B/s over the 21.1 s window, 4.5 percent. the laboratory's run
+  (0.2 s, 9 frames, 3 chunks, 14 ids) writes 1.2 KB of B in a 68.5 KB
+  file (67.2 KB without it, 1.8 percent). a point of the replayed todo
+  frame, on a 10 px grid, is the control `Compositor::hit` named live.
+
 the cost does not ask for a change in the frame architecture. the chunk
 close is the one spike; moving it off the frame path is left for when a
 scene needs it.
@@ -239,7 +286,9 @@ scene needs it.
   control, see its state, the receipts that touch it and their actor.
   `Compositor::bindings` is not recorded yet; the inspector needs it to
   map a point on a replayed frame to a control (input events already carry
-  the control under the pointer).
+  the control under the pointer). (updated on 2026-09-23: task-63 phase d
+  records them, see the visual track and the session file; the inspector
+  reads them through `Session::bindings_at` and `hit_at`.)
 - `State` duplicates the reads of `Snapshot` it needs (`get`, `value`,
   `focused`, `revision`). a `sem` constructor that keeps `source` (a
   `Snapshot::from_nodes`) would let the reader return a `Snapshot`; it

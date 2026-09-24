@@ -226,6 +226,22 @@ fn the_todo_page_records_through_its_compositor() -> Result<(), Box<dyn std::err
         })
         .count();
     assert!(inputs > 0, "the pointer landed on bound controls");
+    // the page binds its controls: every frame read back says where.
+    let shown = session.bindings_at(end).ok_or("no frame")?;
+    assert!(!shown.is_empty(), "the todo page binds its controls");
+    assert!(stats.bindings_whole > 0, "{stats:?}");
+    // and a point of the replayed frame is the control the compositor's
+    // hit test named in that frame.
+    let mut hits = 0;
+    for x in (0..1280).step_by(10) {
+        for y in (0..800).step_by(10) {
+            let (x, y) = (x as f32 + 0.5, y as f32 + 0.5);
+            let live = w.c.hit(x, y).cloned();
+            hits += usize::from(live.is_some());
+            assert_eq!(session.hit_at(end, x, y), live, "at ({x}, {y})");
+        }
+    }
+    assert!(hits > 100, "the grid lands on bound controls: {hits}");
     Ok(())
 }
 
@@ -246,6 +262,12 @@ fn visual(theme: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "  not carried by the IR (clip push, clip pop, blur, shadow): {:?}; layers approximated {}",
         stats.skipped, stats.layers_approximated
+    );
+    println!(
+        "  bindings recorded whole in {} frames, as moved rects in {}, unchanged in the other {}",
+        stats.bindings_whole,
+        stats.bindings_moved,
+        stats.frames - stats.bindings_whole - stats.bindings_moved
     );
     report("build (tick+scene)", &w.build);
     if w.draw.is_empty() {
@@ -283,13 +305,14 @@ fn persisted(rec: &Recorder, name: &str) -> Result<(), Box<dyn std::error::Error
     let read = at.elapsed();
     assert_eq!(back.events().len(), written.events);
     println!(
-        "  persisted {} B in {:.1} ms (S {} B, I {} B, C {} B, A {} B; {} events, {} chunks, {} assets, {} dropped), read back in {:.1} ms: {}",
+        "  persisted {} B in {:.1} ms (S {} B, I {} B, C {} B, A {} B, B {} B; {} events, {} chunks, {} assets, {} dropped), read back in {:.1} ms: {}",
         written.bytes,
         micros(&wrote) / 1_000.0,
         written.events_bytes,
         written.index_bytes,
         written.chunks_bytes,
         written.assets_bytes,
+        written.bindings_bytes,
         written.events,
         written.chunks,
         written.assets,
