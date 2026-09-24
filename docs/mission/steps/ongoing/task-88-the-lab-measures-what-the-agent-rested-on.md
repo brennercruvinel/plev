@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: in-progress
-last-updated: 2026-09-23
+last-updated: 2026-09-24
 domain: experiment
 task: task-88
 depends: [task-87, task-89]
@@ -201,3 +201,223 @@ instante do commit.
 - decisão necessária: qual gatilho a pessoa usa (1, 2 ou 3); se a
   medição pelo valor inclui o valor vivo; na opção 2, o nome do cenário
   e se o antigo fica.
+
+## decisão do orquestrador (2026-09-23)
+
+a opção 2. um cenário novo, `unstage-before-submit:<path>`, com a
+pessoa dentro de `LabHost::dispatch`, e `unstage-after-observe` como
+está e padrão. a medição pelo valor visto e pelo valor vivo, e a
+medição por revisão fora do veredito. o item 2 do briefing (a pessoa
+depois de um estágio terminal) não entra. os itens 3 e 5 como no
+briefing. o `--scripted chain` fica, com a nota no help.
+
+## handoff (agente, 2026-09-24)
+
+feito sobre a main em `0c1f629` (rebase antes da implementação, porque a
+task-90 mudou a regra de `acted` no `sem`). nada no `wire`, no `sem` ou
+no `rec` mudou.
+
+### a medição como ficou
+
+`agent.stale_measurement_valid` é verdadeira quando um `submit` que
+chegou ao dispatcher depois do request da pessoa (id maior) carrega em
+`observed` o `changes:staged` de antes dela (`staged_before`) e o app
+tinha outro `changes:staged` naquele dispatch, qualquer que seja a
+revisão que o `submit` nomeou.
+
+- o valor visto sai do próprio request. o valor vivo é uma projeção que
+  o `LabHost::dispatch` faz logo antes de cada `submit`. ela só vale
+  quando a revisão dela é a do `validated_against` do receipt, a
+  projeção que o dispatcher conferiu; senão fica desconhecida e a
+  medição diz isso. o tempo dela fica fora do tempo dentro do `drain` e
+  fora de `project_calls` (`cost.contract.lab_look_calls`,
+  `lab_look_per_call_us`, de 130 a 445 us em debug).
+- o texto diz os dois valores e o motivo. válida: "submit 7 reached the
+  dispatcher after the person's request 6 carrying changes:staged
+  {...}, the value before it, while the app held {...}". inválida, um
+  de: ninguém interveio; nenhum `submit` depois da pessoa; o primeiro
+  depois dela carregou o mundo novo (o agente viu a mudança); carregou o
+  mundo de antes mas o app tinha o mesmo de novo (o agente repôs); o
+  valor vivo é desconhecido. quando a pessoa agiu depois do primeiro
+  `submit`, o texto soma "too late for it".
+- `agent.stale_measured` traz `valid`, `request`, `seen` e `live`.
+  cada ato em `agent.acts` ganha `request`, `seen_staged` e
+  `live_staged`.
+- a medição por revisão saiu do veredito. `form`,
+  `revision_served_index`, `revision_served_at`,
+  `observations_between` e `fresh_before` ficam como informação, com uma
+  nota em `notes` sobre por que não decidem: a revisão de um estágio
+  terminal não é de observação, e a revisão é hash do que o app projeta.
+
+### onde a pessoa age
+
+- `unstage-after-observe:<path>` (padrão, como antes): dentro de
+  `Host::observed`, logo depois de servir uma observação, quando a
+  tarefa está pronta.
+- `unstage-before-submit:<path>` (novo): dentro de `LabHost::dispatch`,
+  quando chega um `submit` de agente e a tarefa está pronta, antes de o
+  `submit` ir para o dispatcher. uma vez, pelo dispatcher, como
+  `Actor::Human`, gravada como input no controle do arquivo.
+- `intervention.trigger` diz qual (`observation served` ou
+  `submit arriving`). no cenário novo, `revision_served` é a revisão que
+  o `submit` nomeou e `served_index` é o da última observação servida,
+  como informação.
+
+### o que o relatório conta
+
+- as recusas stale, como antes (`stale`, com `changes`, `acted` e o
+  HEAD). `acted` vazio num `submit` é o agente recusado pela própria
+  escrita; `acted` com a pessoa é a checagem exercida.
+- `agent.protocol_refusals`: `before_dispatch` (os atos que a porta
+  tomou e não entregou ao app: `traffic.acts` menos os dispatches do
+  host) em todo braço. `not_observed`, `unknown_revision`, `other` e
+  `each` (alvo, ação, erro, reads, texto) só no roteirizado, que vê a
+  recusa na conexão. no braço `plev` esses ficam `null` e `seen_by` diz
+  "the port's counts": o tipo de cada recusa está na transcrição do
+  agente.
+- o roteirizado guarda a recusa do protocolo e para (a tarefa do
+  laboratório nunca a produz). o teste unitário tira as duas de um
+  `wire::Server` real e conta.
+
+### as rodadas
+
+`ide-lab --arm scripted`, build debug, cinco corridas por combinação com
+pessoa, e uma sem pessoa por modo como referência. as 22 saíram exit 0.
+
+| agente | pessoa | corridas | exit | verdict | medição | msgs in / out | bytes out | stale nomeando a pessoa | stale pela própria escrita | not_observed | unknown_revision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| observe | after-observe | 5 | 0 | MATCH | válida 5/5 | 17 / 39 | 45.875 a 45.878 | 1 | 0 | 0 | 0 |
+| observe | before-submit | 5 | 0 | MATCH | válida 5/5 | 17 / 39 | 45.875 a 45.878 | 1 | 0 | 0 | 0 |
+| chain | after-observe | 5 | 0 | MATCH | inválida 5/5, a pessoa chega tarde | 16 / 38 | 37.803 a 37.806 | 0 | 1 | 0 | 0 |
+| chain | before-submit | 5 | 0 | MATCH | válida 5/5 | 16 / 38 | 39.646 a 39.649 | 1, com a escrita | 0 | 0 | 0 |
+| observe | nenhuma | 1 | 0 | MATCH | inválida, sem intervenção | 12 / 30 | 28.787 | 0 | 0 | 0 | 0 |
+| chain | nenhuma | 1 | 0 | MATCH | inválida, sem intervenção | 15 / 34 | 37.171 | 0 | 1 | 0 | 0 |
+
+- o padrão tem os números da task-87 e da task-89: 12 in e 28,8 KB sem
+  pessoa, 17 in e 45,9 KB com ela. o cenário novo deixa o padrão igual.
+- `chain` com `after-observe` é o resultado esperado, não falha: o
+  primeiro `submit` é recusado pela própria escrita da mensagem; a
+  pessoa age na observação da recuperação; o agente repõe o arquivo e
+  commita. a medição diz "the world was put back before the submit ...
+  the person acted after the agent's first submit (6), too late for
+  it".
+- `chain` com `before-submit` dá uma recusa só, que nomeia
+  `changes:staged` (a pessoa) e `commit.message:text` (a escrita do
+  agente), e o `acted` nomeia a pessoa. o `submit` recusado se apoiou
+  numa revisão de estágio: `revision_served_index` nulo, e a medição
+  pelo valor válida.
+
+### testes
+
+- `crates/ide/tests/lab.rs`: os dois que existiam, sem mudança
+  (`the_person_makes_the_agents_submit_stale_and_the_agent_recovers`,
+  `without_the_person_the_agent_commits_the_task_with_no_refusal`), e
+  quatro novos, um por combinação que faltava:
+  `the_person_before_the_submit_makes_the_observed_submit_stale`,
+  `the_chained_submit_is_refused_by_the_agents_own_write`,
+  `after_the_look_the_person_comes_too_late_for_the_chained_submit`,
+  `before_the_submit_the_person_makes_the_chained_submit_stale`. todos
+  exigem MATCH, o commit confirmado pelo nó e nenhuma recusa do
+  protocolo. o arquivo inteiro passou cinco vezes seguidas.
+- unitários no bin: quatro da medição em `story.rs` (o mundo velho
+  válido, o mundo reposto, o mundo novo, e sem pessoa, sem `submit`
+  depois ou sem valor vivo), um em `refused.rs` com `not_observed` e
+  `unknown_revision` vindos de um `wire::Server` real, e o parse do
+  cenário novo e do `--scripted` nos testes de `args.rs`.
+
+### validação
+
+- `df -h /`: 15 GB livres antes do gate.
+- `cargo test -p ide` e `cargo test -p wire` verdes (`wire`: 76).
+- `./script/gate` verde depois do rebase na main (`0c1f629`), com a perna
+  urnaui. depois: 2234 passed, 12 ignored (workspace 2152 e 11, urnaui 82
+  e 1). a main em `0c1f629`: 2225, contada como o total de depois menos
+  os 9 `#[test]` que a branch adiciona (`git diff 0c1f629`, nenhum
+  removido, nenhum `#[ignore]` novo). os 2218 do briefing eram a main em
+  `4163983`, antes da task-90.
+- `crates/engine/tests/file_hygiene_guard.rs` verde sem o `lab.rs` em
+  `FROZEN`. o maior arquivo do laboratório agora é o `finish.rs`, com 463
+  linhas.
+
+### decisões
+
+- o valor vivo vem de uma projeção do próprio laboratório logo antes do
+  dispatch de cada `submit`, e não da ordem interna do `wire` (que
+  projeta antes do dispatch para os segredos). é uma projeção a mais por
+  `submit`, duas por corrida, fora do custo do contrato.
+- "depois da intervenção" é pela ordem do dispatcher, pelo id do
+  request, não pelo relógio.
+- o `lab.rs` virou `lab.rs` (a corrida: laço, drain, gravação, receipts,
+  336 linhas) e `finish.rs` (o fim: a sessão reaberta, git, o relatório
+  em json e em tabela), com `Lab::finish` no mesmo nome.
+- as recusas do protocolo ficaram num módulo próprio (`refused.rs`), com
+  o nome do erro lido da forma serde do `ProtoError` (a tag `error`),
+  para um erro novo do protocolo aparecer sem mudar o laboratório.
+- o `--scripted chain` se recupera como o padrão: observa e decide de
+  novo depois da recusa.
+
+### limitações e riscos
+
+- no braço `plev` o laboratório só conta as recusas do protocolo, sem o
+  tipo. com a gravação de ligações (task-63d) isso poderia vir da
+  sessão; hoje vem da transcrição.
+- `before_dispatch` conta como entregue um ato que o `wire` recusou
+  depois do dispatch ("the app's dispatcher reports no stage"). isso não
+  acontece com o `Workbench`.
+- o roteirizado não se recupera de `not_observed` nem de
+  `unknown_revision`: ele guarda a recusa e para. a tarefa do
+  laboratório não produz nenhuma das duas.
+- o formato do json só cresceu: `agent.stale_measured`,
+  `agent.protocol_refusals`, `agent.acts[].request`, `seen_staged`,
+  `live_staged`, `intervention.trigger`,
+  `cost.contract.lab_look_calls` e `lab_look_per_call_us`. nenhum campo
+  saiu. o que mudou foi o sentido de `agent.stale_measurement_valid` e
+  o texto de `agent.stale_measurement`, e a nota `form: ...` em `notes`,
+  que virou duas notas.
+- o `README.md` não mudou: a linha do `ide-lab` não cita flags.
+
+### protocolo para o próximo experimento com LLM
+
+- cenário: nas corridas com intervenção,
+  `--human unstage-before-submit:src/session.rs`; no controle,
+  `--human none`. ele exerce a checagem se o agente observar antes do
+  `submit` e também se encadear, e é o mesmo instante do hook do braço
+  `git`. `unstage-after-observe` só para comparar com as rodadas 1 e 2:
+  num agente que encadeia depois de escrever, a pessoa chega tarde.
+- medição: `agent.stale_measurement_valid`, lida com
+  `agent.stale_measured` (`seen`, `live`, `request`) e o texto. os
+  campos por revisão não decidem nada.
+- recusas: em `stale`, `acted` com a pessoa é a checagem exercida, e
+  `acted` vazio num `submit` é o agente recusado pela própria escrita.
+  `agent.protocol_refusals.before_dispatch` conta os atos recusados
+  antes do dispatcher. o tipo vem da transcrição: `plev act` sai 3 com
+  "not observed: this agent was never shown <reads>; observe it and
+  decide again" ou com "revision <r> is not held; observe again". o
+  auditor de transcrição conta esses exits 3 por mensagem.
+- o briefing dos agentes LLM:
+  - o mesmo texto das rodadas 1 e 2, para comparar;
+  - um `--name` próprio, o mesmo em todo comando: o que um agente viu é
+    guardado pelo nome (task-89), e dois agentes sob o nome padrão
+    `plev` se apoiam no que o outro viu;
+  - o exit 3 do `plev act` é recusa do protocolo antes do app
+    (`not_observed`, `unknown_revision`), e o remédio está na própria
+    mensagem: observar e decidir de novo;
+  - sobre encadear depois de escrever, recomendo não ensinar. o
+    `plev act --help` já diz a regra, e a recusa se explica: `changes`
+    mostra a mensagem indo de "" para o texto do próprio agente, com
+    `acted` vazio. ensinar mede obediência, e calar mede o que o
+    experimento quer, se o agente se recupera. se quiser as duas coisas,
+    uma corrida a mais com a frase "um estágio terminal não mostra
+    estado: depois de escrever, observe antes de agir sobre o que
+    escreveu".
+
+### commits
+
+- `9a788f0` a sonda: o roteirizado que encadeia o primeiro `submit`
+- `c094390` a sonda e a parada, no arquivo da task
+- `743824f` o `lab.rs` dividido (corrida e fim), fora do `FROZEN`
+- `13203d8` a medição pelo valor visto e pelo valor vivo
+- `1a55c48` a pessoa logo antes de o `submit` chegar ao dispatcher
+- `5742826` as recusas do protocolo no relatório
+- `ce6bc15` os testes das combinações e a nota na task-62
+- este: o handoff
