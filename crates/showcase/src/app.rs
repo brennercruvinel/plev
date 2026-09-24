@@ -21,8 +21,8 @@
 
 use std::sync::Arc;
 
+use crate::keys;
 use crate::view::ShowcaseView;
-use crate::{keys, renderer};
 use comps::prelude::WidgetEvent;
 use engine::animation::FrameClock;
 use engine::compositor::Compositor;
@@ -97,6 +97,10 @@ pub struct App {
     /// requests go into its dispatcher (desktop; mobile is next).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     access: Access,
+    /// The session's recording, when `PLEV_RECORD=1` in a debug build
+    /// (`record`; desktop, where the port is).
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    recording: Option<record::Recording>,
     /// A cmd+click is taking the button until it is released (`source`).
     #[cfg(all(
         debug_assertions,
@@ -141,6 +145,8 @@ impl App {
             proxy: None,
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             access: Access::default(),
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            recording: None,
             #[cfg(all(
                 debug_assertions,
                 any(target_os = "macos", target_os = "linux", target_os = "windows")
@@ -154,6 +160,15 @@ impl App {
         if let Some(w) = &self.window {
             w.request_redraw();
         }
+    }
+
+    /// A person's input, or an outside actor's request, changed
+    /// something: the state as it left it, when the session is recorded,
+    /// and a frame.
+    fn changed(&mut self) {
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        self.record_state();
+        self.invalidate();
     }
 
     /// Sync surface, projection, and view layout to the window's current
@@ -175,11 +190,16 @@ impl App {
     }
 
     /// What agents asked through the port, served on this thread; a frame
-    /// only when an act ran, since an observation changes nothing.
+    /// only when an act ran, since an observation changes nothing. The
+    /// recording keeps who observed what, and the state an act left.
     fn serve_agent(&mut self) {
         #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
         if let Some(port) = self.access.agent.as_mut() {
-            if self.view.serve_agent(port, &self.compositor) {
+            let recorder = self.recording.as_ref().map(record::Recording::recorder);
+            if self
+                .view
+                .serve_agent_recorded(port, &self.compositor, recorder)
+            {
                 self.invalidate();
             }
         }
@@ -285,7 +305,7 @@ impl ApplicationHandler<UserEvent> for App {
                 let shown = self.view.apply_git();
                 log::debug!("git worker woke: frame {shown}");
                 if shown {
-                    self.invalidate();
+                    self.changed();
                 }
             }
             UserEvent::Access => {
@@ -295,7 +315,7 @@ impl ApplicationHandler<UserEvent> for App {
                     target_os = "ios"
                 )))]
                 self.access.carry_out(&mut self.view);
-                self.invalidate();
+                self.changed();
             }
             UserEvent::Agent => self.serve_agent(),
             UserEvent::GpuReady {
@@ -337,27 +357,32 @@ impl ApplicationHandler<UserEvent> for App {
                 if key_event.state != ElementState::Pressed {
                     return;
                 }
+                // The save keys of the recording, when it records.
+                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+                if self.record_key(&key_event.logical_key) {
+                    return;
+                }
                 match &key_event.logical_key {
                     Key::Named(NamedKey::Escape) => {
                         if !self.view.close_top_overlay() {
                             event_loop.exit();
                         } else {
-                            self.invalidate();
+                            self.changed();
                         }
                     }
                     // The editor owns the keyboard while it is showing.
                     key if self.view.handle_editor_key(key, self.modifiers) => {
-                        self.invalidate();
+                        self.changed();
                     }
                     // Space and the editing keys bridge through keys.rs
                     // (the view stays winit-free).
                     Key::Named(named) => {
                         if keys::handle_named(&mut self.view, named) {
-                            self.invalidate();
+                            self.changed();
                         }
                     }
                     Key::Character(c) if self.view.handle_key(c.as_str()) => {
-                        self.invalidate();
+                        self.changed();
                     }
                     _ => {}
                 }
@@ -403,12 +428,18 @@ impl ApplicationHandler<UserEvent> for App {
                     return;
                 }
                 let (x, y) = self.cursor;
+                #[cfg(not(any(
+                    target_arch = "wasm32",
+                    target_os = "android",
+                    target_os = "ios"
+                )))]
+                self.record_pointer(state, x, y);
                 let ev = match state {
                     ElementState::Pressed => WidgetEvent::MouseDown { x, y },
                     ElementState::Released => WidgetEvent::MouseUp { x, y },
                 };
                 if self.view.handle_event(&ev) {
-                    self.invalidate();
+                    self.changed();
                 }
             }
 
@@ -418,8 +449,14 @@ impl ApplicationHandler<UserEvent> for App {
                 ..
             } => {
                 let (x, y) = self.cursor;
+                #[cfg(not(any(
+                    target_arch = "wasm32",
+                    target_os = "android",
+                    target_os = "ios"
+                )))]
+                self.record_pointer(ElementState::Pressed, x, y);
                 if self.view.handle_right_click(x, y) {
-                    self.invalidate();
+                    self.changed();
                 }
             }
 
@@ -434,56 +471,20 @@ impl ApplicationHandler<UserEvent> for App {
                 }
             }
 
-            WindowEvent::RedrawRequested => {
-                if !matches!(self.state, GpuState::Ready { .. }) {
-                    return;
-                }
-                // The real time since the last tick: a deadline the loop
-                // slept through arrives whole (`dt` is clamped for motion).
-                let since_last = self.clock.tick().since_last;
-                let wake = self.frame_wake(since_last);
-                log::debug!(
-                    "frame: {:.3} s since the last tick, wake now {} next {:?}",
-                    since_last,
-                    wake.now,
-                    wake.next
-                );
-                let GpuState::Ready {
-                    gpu,
-                    text_system,
-                    effects,
-                    texture_pool,
-                } = &mut self.state
-                else {
-                    return;
-                };
-                renderer::render_frame(
-                    gpu,
-                    text_system,
-                    effects,
-                    texture_pool,
-                    &mut self.compositor,
-                    &mut self.view,
-                );
-                // The tree of this frame, placed by the bindings it just
-                // drew; the page is projected only while a reader listens.
-                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-                if let (Some(bridge), Some(window)) =
-                    (self.access.bridge.as_mut(), self.window.as_ref())
-                {
-                    let view = &self.view;
-                    bridge.update(window, &self.compositor, || view.semantics());
-                }
-                // `wake.now` is carried by this frame: the scene was built
-                // after the tick, so a flipped caret is already in it.
-                self.pace(event_loop, wake);
-            }
+            WindowEvent::RedrawRequested => self.redraw(event_loop),
 
             _ => {}
         }
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {}
+
+    /// The loop ends (the window closed, or Escape quit): the recording's
+    /// window is saved.
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
+        self.save_session("close");
+    }
 }
 
 impl Default for App {
@@ -495,12 +496,22 @@ impl Default for App {
 /// Desktop entry: build the winit event loop and run the showcase.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub fn run() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
+    // A recording says where its files go: the gallery's own info lines
+    // show by default when it records. Off unless `PLEV_RECORD=1` in a
+    // debug build; nothing is created then.
+    let recording = record::Recording::from_env();
+    let filter = if recording.is_some() {
+        "warn,showcase=info"
+    } else {
+        "warn"
+    };
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(filter)).init();
     let mut builder = EventLoop::<UserEvent>::with_user_event();
     #[cfg(target_os = "macos")]
     background::event_loop(&mut builder);
     let event_loop = builder.build().unwrap();
     let mut app = App::new();
+    app.record(recording);
     let proxy = event_loop.create_proxy();
     app.access.proxy = Some(proxy.clone());
     let agent = proxy.clone();
@@ -531,6 +542,11 @@ mod background;
 mod access;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use access::Access;
+
+/// `PLEV_RECORD=1` in a debug build: the session recorded for the
+/// inspector, as the ide records its own.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+pub mod record;
 
 /// cmd+click to the code: desktop debug builds, the terms on which the
 /// engine compiles `hot_reload` (its build.rs), so nothing of it exists in

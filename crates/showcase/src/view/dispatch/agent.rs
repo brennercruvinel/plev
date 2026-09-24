@@ -1,5 +1,6 @@
 use engine::compositor::Compositor;
-use sem::{ReceiptSink, Request, RequestId, Snapshot};
+use rec::Recorder;
+use sem::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
 use wire::{AgentPort, Bound, Host};
 
 use super::ShowcaseView;
@@ -19,10 +20,31 @@ impl ShowcaseView {
     /// through the active page's hooks, `compositor` holding the frame
     /// on screen. True when an act was dispatched.
     pub fn serve_agent(&mut self, port: &mut AgentPort, compositor: &Compositor) -> bool {
-        port.drain(&mut Served {
+        self.serve_agent_recorded(port, compositor, None)
+    }
+
+    /// [`serve_agent`](Self::serve_agent), with `recorder` (when the
+    /// session is recorded, `crate::app::record`) keeping every
+    /// observation served, with its actor, scope and revision, on the
+    /// gallery's clock, and the state an act left right after the drain
+    /// that ran it.
+    pub fn serve_agent_recorded(
+        &mut self,
+        port: &mut AgentPort,
+        compositor: &Compositor,
+        recorder: Option<&Recorder>,
+    ) -> bool {
+        let acted = port.drain(&mut Served {
             view: self,
             compositor,
-        })
+            recorder,
+        });
+        if let Some(rec) = recorder.filter(|_| acted)
+            && let Some(snapshot) = self.semantics()
+        {
+            rec.snapshot(self.now(), &snapshot);
+        }
+        acted
     }
 }
 
@@ -31,6 +53,8 @@ impl ShowcaseView {
 struct Served<'a> {
     view: &'a mut ShowcaseView,
     compositor: &'a Compositor,
+    /// Records every observation served, when the session is recorded.
+    recorder: Option<&'a Recorder>,
 }
 
 impl Host for Served<'_> {
@@ -55,6 +79,13 @@ impl Host for Served<'_> {
 
     fn add_sink(&mut self, sink: Box<dyn ReceiptSink>) {
         self.view.add_sink(sink);
+    }
+
+    /// An observation was served: recorded at the gallery's clock.
+    fn observed(&mut self, actor: &Actor, scope: Option<&SemId>, revision: Revision) {
+        if let Some(rec) = self.recorder {
+            rec.observed(self.view.now(), actor.clone(), scope.cloned(), revision);
+        }
     }
 }
 
