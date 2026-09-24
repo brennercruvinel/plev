@@ -365,3 +365,162 @@ mudança.
   provado pelo segundo teste. se o driver entregar a perda como
   `SurfaceError::Lost` sem callback, o caminho do `Lost` já pede o frame
   que recupera.
+
+## handoff do item 3: diálogos de arquivo e drag and drop
+
+branch `task/76b-file-dialogs`, base `e3dc7e1f` (main). commits, em ordem:
+
+- (este) task-76: the file dialog and drop probe
+
+### a sonda
+
+(a) o que o urnaui faz hoje com `rfd` e com os eventos de drop, por
+linha:
+
+- `crates/urnaui/Cargo.toml:45`: `rfd = "0.15"`, features padrão
+  (`xdg-portal` e `async-std`), na seção
+  `[target.'cfg(not(target_arch = "wasm32"))']`. o `rfd` 0.15.4 só tem
+  backend para linux/bsd, macos, windows e wasm (`backend.rs:7-45`): em
+  android e ios `FileDialog::pick_file` não compila (nenhum
+  `FilePickerDialogImpl`). o urnaui só chama `rfd` sob
+  `not(any(wasm32, android, ios))`, mas declara a dependência para todo
+  não-wasm; no engine ela entra na seção do `arboard`, que já exclui
+  android e ios.
+- `crates/urnaui/src/view/explorer.rs:400-407`, `Action::PickFile` no
+  desktop: `rfd::FileDialog::new().set_title("Open a .urna corpus")
+  .add_filter("urna corpus", &["urna", "nest"]).pick_file()`; `Some(path)`
+  vira `open_database(path)`, `None` (cancelado) não faz nada. síncrono,
+  modal, sem parent, sem diretório inicial.
+- `crates/urnaui/src/view/explorer.rs:445-476`, `export_blob` no desktop:
+  `rfd::FileDialog::new().set_title("Export media blob")
+  .set_file_name(&name).save_file()`; `Some(dest)` vira
+  `UrnaCommand::ExportBlob { index, dest }` e um toast; `None` devolve
+  `true` (tratado, nada a fazer). `explorer.rs:478-486`: em wasm, android e
+  ios a exportação só toasta "blob export needs the desktop app".
+- `crates/urnaui/src/view/explorer.rs:393-399` e `app.rs:482-488`: em
+  wasm `PickFile` marca `pick_requested`; o shell dispara
+  `web_picker::trigger` no `about_to_wait`, e o `<input type=file>`
+  devolve `UserEvent::FileLoaded { name, bytes }` (bytes, nunca caminho),
+  que vira `view.file_picked`. é a entrada de arquivo do alvo web e não
+  passa por `rfd`.
+- `crates/urnaui/src/app.rs:362-377` (só não-wasm):
+  `WindowEvent::DroppedFile(path)` vira `view.file_dropped(path)` mais
+  invalidate; `HoveredFile(_)` vira `view.set_file_hover(true)`, o caminho
+  do arquivo pairando é descartado; `HoveredFileCancelled` vira
+  `set_file_hover(false)`.
+- `crates/urnaui/src/view/mod.rs:217-233`: `file_dropped(path)` desliga o
+  hover, chama `explorer.open_database(path)` e toasta "opening dropped
+  file…"; `set_file_hover(bool)` repassa ao explorer.
+- `crates/urnaui/src/view/explorer.rs:67,121,186-190,869` e
+  `open.rs:32-33,414-435`: `file_hover: bool` chega à tela Open como
+  `OpenContext.file_hover` e desenha um contorno de acento em volta do
+  conteúdo com a dica "release to open". `open.rs:276-279`: a dica de
+  status muda por alvo ("drop a .urna file anywhere" no desktop, "pick a
+  .urna file (drag-and-drop is not available on the web canvas)" na web).
+- o que a view recebe: só o `PathBuf`, um por evento. posição, nenhuma.
+  um drop de vários arquivos chega como N `DroppedFile`, e o urnaui
+  chama `open_database` N vezes (o último ganha).
+
+(b) o que compila no wasm no `rfd` 0.15.4
+(`~/.cargo/registry/src/*/rfd-0.15.4/src/`):
+
+- `lib.rs:114-119`: `FileDialog` (síncrono) é
+  `#[cfg(not(target_arch = "wasm32"))]`; `AsyncFileDialog` existe em todo
+  alvo.
+- `backend.rs:29-30` e `backend/wasm.rs`: no wasm `AsyncFileDialog::
+  pick_file` e `pick_files` abrem um overlay DOM próprio (`rfd-overlay`,
+  com o `style.css` do crate) com um `<input type=file>` e devolvem um
+  `FileHandle` que embrulha `web_sys::File`: `file_name()` e `read()`
+  assíncrono em bytes, sem caminho. filtros viram o atributo `accept`.
+  `set_directory` não existe no wasm.
+- `backend/wasm/file_dialog.rs`: `save_file` resolve na hora com um
+  handle "writable"; `FileHandle::write(bytes)` mostra um link de
+  download. `file_dialog.rs:258-271`: `pick_folder` e `pick_folders` são
+  `not(wasm32)`, "does not exist in WASM32".
+- dependências do `rfd` no wasm (`Cargo.toml` dele): `js-sys`,
+  `wasm-bindgen`, `wasm-bindgen-futures` e `web-sys` com doze features
+  (Document, Element, HtmlInputElement, HtmlButtonElement,
+  HtmlAnchorElement, Window, File, FileList, FileReader, Blob,
+  BlobPropertyBag, Url). o engine já tem os quatro crates na seção wasm
+  (`crates/engine/Cargo.toml:97-102`), então o `rfd` compilaria para wasm
+  fora da seção de desktop, ao custo das features extras no `web-sys` e
+  de um overlay DOM que não é do engine.
+- conclusão: o trait do engine é síncrono e devolve caminho, porque as
+  duas chamadas do urnaui querem um `PathBuf` (abrir por caminho, exportar
+  para um caminho). no wasm o `rfd` só dá bytes e só assíncrono, então a
+  resposta do engine no wasm é `Unsupported`, e o `web_picker.rs` do
+  urnaui continua sendo a entrada de bytes da web (é outra capacidade,
+  fora dos arquivos permitidos aqui). o `rfd` fica na seção de desktop:
+  `[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android"),
+  not(target_os = "ios")))']`, a mesma do `arboard`.
+
+(c) o molde do `clipboard.rs` (`crates/engine/src/clipboard.rs`):
+
+- `ClipboardProvider` (linhas 9-14): o trait, compilado em todo alvo.
+- `LocalClipboard` (16-36): a implementação em memória, compilada em todo
+  alvo; é o falso dos testes e o fallback de wasm e mobile.
+- `SystemClipboard` (40-75): `arboard`, sob
+  `#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]`;
+  `new()` degrada para `None` quando o `arboard` falha (CI headless) e as
+  operações viram no-op com um `log::warn!`.
+- `default_clipboard() -> Box<dyn ClipboardProvider>` (78-89): o `cfg`
+  escolhe `SystemClipboard` no desktop e `LocalClipboard` no resto.
+- `crates/engine/Cargo.toml:82-85`: `arboard` só na seção
+  `cfg(all(not(wasm32), not(android), not(ios)))`.
+- por teste: quem consome guarda `Box<dyn ClipboardProvider>` ou o tipo
+  concreto; teste usa `LocalClipboard`. o urnaui constrói
+  `SystemClipboard::new()` direto (`explorer.rs:80,124`, `app.rs:333`).
+- o módulo de diálogos segue o mesmo desenho: `FileDialogs` (trait),
+  `FakeDialogs` (em todo alvo; responde o que o teste carregou e registra
+  o que foi pedido), `NativeDialogs` (`rfd`, sob o cfg do `arboard`),
+  `NoDialogs` (wasm e mobile: `Unsupported`), `default_dialogs()`.
+
+o que entra de dependência (e o motivo da parada): o `Cargo.lock` da raiz
+não tem `rfd`. o urnaui é workspace próprio (`crates/urnaui/Cargo.lock`
+tem `rfd 0.15.4`); a raiz não. entrando no engine, o lock da raiz ganha:
+
+- `rfd 0.15.4` e `block2 0.6.2` (a raiz só tem `block2 0.5.1`; o 0.6.2
+  está no cache local do registry). `dispatch2 0.3.1`, `objc2 0.6.4`,
+  `objc2-app-kit 0.3.2`, `objc2-core-foundation 0.3.2`,
+  `objc2-foundation 0.3.2`, `raw-window-handle 0.6.2`, `log` já estão;
+  `objc2-app-kit` ganha features (NSOpenPanel, NSSavePanel, NSAlert,
+  NSPanel e outras). é tudo que compila no macOS.
+- com as features padrão do `rfd` (`xdg-portal`, `async-std`), o lock
+  ganha também `ashpd 0.11`, `urlencoding 2.1` e a árvore do `ashpd`
+  (zbus 5 e o que vem com ele: async-fs, async-net, enumflags2,
+  serde_repr, wayland-backend, wayland-client, wayland-protocols, rand,
+  url e as dezenas de crates abaixo), como entradas só de linux e bsd,
+  nunca compiladas aqui. o `.crate` do `ashpd` não está no cache local
+  (o macOS nunca precisou baixar), só o índice.
+- com `default-features = false`, entram só `rfd` e `block2 0.6.2`. no
+  linux o `rfd` fica sem backend até o bring-up escolher `xdg-portal`
+  (daemon de portal em runtime) ou `gtk3` (headers C), o que é decisão
+  daquele bring-up, hoje fora de escopo.
+- no wasm, o lock registra as dependências wasm do `rfd` de qualquer
+  forma (todas já presentes); elas só compilam se o `rfd` estiver na
+  seção wasm, e não estará.
+
+o que o winit 0.30.13 entrega no drop
+(`~/.cargo/registry/src/*/winit-0.30.13/src/platform_impl/macos/window_delegate.rs:367-430`):
+
+- `draggingEntered:` enfileira um `HoveredFile(path)` por arquivo do
+  pasteboard; `performDragOperation:` um `DroppedFile(path)` por arquivo;
+  `draggingExited:` um `HoveredFileCancelled`. nenhum traz posição, e o
+  `draggingUpdated:` não está implementado, então não há `CursorMoved`
+  enquanto um arquivo é arrastado (o mouse pertence à sessão de drag, não
+  à janela). o `event.rs:180-192` documenta o mesmo para todo backend
+  (x11 e windows são os outros dois com drop). a posição lógica pedida
+  pelo briefing não existe no winit 0.30: o evento do engine a carrega
+  como `Option`, `None` até o winit expor a `draggingLocation`.
+- os N `DroppedFile` de um drop múltiplo são enfileirados juntos, antes
+  de qualquer redraw: o `App` do engine, que bufferiza eventos até o
+  `RedrawRequested`, pode juntá-los num `Dropped` só; um shell que
+  entrega evento a evento à view (urnaui, showcase) recebe um por
+  arquivo, como hoje.
+
+o shell do showcase: `crates/showcase/src/app.rs:341-478` não trata
+`DroppedFile`, `HoveredFile` nem `HoveredFileCancelled`, e o arquivo é
+proibido nesta task. a página Files recebe o drop pelos testes, pelo
+headless e pelo dispatcher; para o drop chegar numa janela de verdade o
+shell precisa de um braço a mais no `match`, que repassa o evento do
+engine a `ShowcaseView::handle_file_drop`.
