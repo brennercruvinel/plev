@@ -629,3 +629,22 @@ anterior; gravar a revisão servida com o estágio terminal resolveria.
 - `c7c715f` task-64: control, a control at an instant
 - `e1d7338` task-64: plev-inspect, the inspector's command line
 - este: task-64: the inspector ADR and the phase a handoff
+
+## fase a integrada (orquestrador, 2026-09-23)
+
+integrada na `main` em `e6560a2` (cinco commits). validação: diff lido
+(o modelo só empresta a `Session`; nenhum app, nada que despacha; o
+critério de correlação escrito como correlação); gate verde no diretório
+da task: 2199 passaram, 0 falharam, 12 ignorados, com o guard das 639
+linhas. reproduzido pelo orquestrador: `plev-inspect` na sessão do A2'a
+(`--why 7`) mostra a observação, as `reads`, a mudança da pessoa no
+intervalo (request 6), a recusa e o `acted`; na sessão do A2 da primeira
+rodada, o resumo e o `--why 7` com a leitura fora do escopo observado.
+
+o que a fase a achou: o submit do A2 da primeira rodada se apoiou numa
+observação só de `commit.form`, e o servidor montou o `changes:staged`
+observado a partir do snapshot inteiro. isso revelou que um `act
+--from-revision` pode dizer ter visto estado que nunca foi mostrado à
+conexão: virou a task-89 (invariante quebrada). fases b (UI) e c (export,
+sessão para teste) continuam na fila; o que a b precisa do `rec` está no
+handoff acima.

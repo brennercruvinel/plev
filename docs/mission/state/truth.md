@@ -75,6 +75,13 @@ o da base até ser reescrito.
   file_hygiene_guard.rs` (`7528309`) conta o limite de 639 linhas de
   produção por arquivo no gate.
 
+- `e6560a2` (task-64 fase a): crate `crates/inspect` (lib e bin
+  `plev-inspect`): `Inspector` sobre uma `Session`, `timeline`, `why`
+  (a cadeia causal de um request), `control`, `summary`; só lê. mostra
+  quando uma `read` estava fora do escopo da observação em que o request
+  se apoiou (seção 2.3: o `from_revision` monta o observado do snapshot
+  inteiro; task-89 em andamento).
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse
