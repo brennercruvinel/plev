@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #87 (task-76 item 6, task-76 concluída); disparada a task-77 fase 1
+
+- **publicado:** PR #87, merge commit, gate local verde na `main` (2757,
+  +31), regressão 163 sem mudança.
+- **disparado:** task-77 fase 1, determinismo visual: o `regress` ganha
+  um comparador que mede e classifica (igual, pedido, calado), a captura
+  do desktop cobre todas as páginas em quatro temas e três escalas, e o
+  que esta máquina reproduz das divergências é investigado com causa. a
+  web e o iOS ficam com scripts prontos: faltam `trunk`, `wasm-bindgen` e
+  o alvo `aarch64-apple-ios-sim`, que pedem rede. no Opus, um agente só.
+
 ### ciclo 3: deep links (task-76 item 6); a task-76 fecha
 
 - **integrada:** item 6 (merge da `task/76j-links`). o showcase segue
