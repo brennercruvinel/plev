@@ -204,7 +204,10 @@ quando as superfícies (seção 8) são disjuntas.
   achado da task-69); task-64 fases b
   (interface) e c (sessão para teste), task-65 fases b a d, task-91 (a
   âncora do `acted` no olhar), estado projetado fora do dispatcher no ide
-  (seleção, digitação), cobertura semântica além do Todo e do ide. P3 no
+  (seleção, digitação) (a ADR semantic-binding-beside-the-scene decidiu que
+  digitar é editar, não request; nomear quem editou pede desenho, uma
+  nota de edição com ator no dispatcher, sem check nem estágio; sem ela
+  a linha da task-94 não sai quando a pessoa digitou na mensagem), cobertura semântica além do Todo e do ide. P3 no
   backlog: dívidas da task-82 (`EditorView` sem foco, caret do dock,
   frames da ponte de acessibilidade, mola do toast), o exemplo `measure`
   desatualizado.
