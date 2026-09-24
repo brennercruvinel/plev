@@ -12,6 +12,12 @@
 //! from it; `UIR_BLESS=1 cargo test -p showcase --test uir_fixture` writes
 //! it again, and the uir tests then say whether the IR fixture still
 //! verifies. Desktop only, like the headless staging it uses.
+//!
+//! The Silences page (task-69 phase 4a) has its golden the same way,
+//! `crates/uir/fixtures/showcase-silences.snapshot.json`: the page as it
+//! opens, seeded with the probe's detection (no ffmpeg runs), so the
+//! registry the generated surface of phase 4b verifies against is the
+//! page's own projection.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
 use std::path::PathBuf;
@@ -21,6 +27,7 @@ use sem::Snapshot;
 use showcase::app::{semantics_json, stage_page};
 
 const FIXTURE: &str = "../uir/fixtures/showcase-todo.snapshot.json";
+const SILENCES: &str = "../uir/fixtures/showcase-silences.snapshot.json";
 
 #[test]
 fn the_todo_projection_is_the_uir_fixture() {
@@ -30,7 +37,19 @@ fn the_todo_projection_is_the_uir_fixture() {
     print!("{}", capabilities(&snap));
     let mut text = semantics_json(&snap, false).expect("json prints");
     text.push('\n');
-    golden(&text);
+    golden(FIXTURE, &text);
+}
+
+#[test]
+fn the_silences_projection_is_the_uir_fixture() {
+    let page = stage_page(Viewport::new(1200.0, 800.0, 1.0), "Silences", "core", None)
+        .expect("the silences page stages");
+    assert!(page.settled(), "at rest the page asks for nothing");
+    let snap = page.semantics().expect("the silences page projects");
+    print!("{}", capabilities(&snap));
+    let mut text = semantics_json(&snap, false).expect("json prints");
+    text.push('\n');
+    golden(SILENCES, &text);
 }
 
 /// What the probe of task-68 reads: every state with its kind and every
@@ -55,9 +74,10 @@ fn capabilities(snap: &Snapshot) -> String {
     out
 }
 
-/// Compares `text` with the fixture, or writes it with `UIR_BLESS=1`.
-fn golden(text: &str) {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(FIXTURE);
+/// Compares `text` with the fixture at `rel`, or writes it with
+/// `UIR_BLESS=1`.
+fn golden(rel: &str, text: &str) {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(rel);
     if std::env::var_os("UIR_BLESS").is_some() {
         std::fs::write(&path, text).expect("the fixture writes");
         return;
@@ -65,7 +85,7 @@ fn golden(text: &str) {
     let kept = std::fs::read_to_string(&path).unwrap_or_default();
     assert!(
         kept == text,
-        "the todo projection moved away from {FIXTURE}; regenerate it with \
+        "the projection moved away from {rel}; regenerate it with \
          UIR_BLESS=1 cargo test -p showcase --test uir_fixture, then run cargo test -p uir"
     );
 }

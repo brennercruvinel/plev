@@ -1,0 +1,292 @@
+{
+  "nodes": [
+    {
+      "id": "silences",
+      "role": "region",
+      "label": "silences",
+      "state": {
+        "cuts": {
+          "kind": "list",
+          "value": [
+            "silences.cut[1]",
+            "silences.cut[2]"
+          ]
+        }
+      }
+    },
+    {
+      "id": "silences.video",
+      "role": "media",
+      "label": "silences-test.mp4",
+      "parent": "silences",
+      "state": {
+        "file": {
+          "kind": "text",
+          "value": "silences-test.mp4"
+        },
+        "duration": {
+          "kind": "num",
+          "value": 12.0
+        },
+        "shown": {
+          "kind": "num",
+          "value": 0.0
+        }
+      }
+    },
+    {
+      "id": "silences.threshold",
+      "role": "slider",
+      "label": "threshold (dB)",
+      "parent": "silences",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": -30.0
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "silences.threshold:value"
+          ],
+          "param": {
+            "kind": "num",
+            "constrained": true
+          }
+        },
+        {
+          "name": "increment",
+          "reads": [
+            "silences.threshold:value"
+          ]
+        },
+        {
+          "name": "decrement",
+          "reads": [
+            "silences.threshold:value"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "range": [
+          -60.0,
+          0.0
+        ],
+        "step": 1.0
+      },
+      "focusable": true
+    },
+    {
+      "id": "silences.min_duration",
+      "role": "slider",
+      "label": "minimum silence (s)",
+      "parent": "silences",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.5
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "silences.min_duration:value"
+          ],
+          "param": {
+            "kind": "num",
+            "constrained": true
+          }
+        },
+        {
+          "name": "increment",
+          "reads": [
+            "silences.min_duration:value"
+          ]
+        },
+        {
+          "name": "decrement",
+          "reads": [
+            "silences.min_duration:value"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "range": [
+          0.10000000149011612,
+          3.0
+        ],
+        "step": 0.10000000149011612
+      },
+      "focusable": true
+    },
+    {
+      "id": "silences.detect",
+      "role": "button",
+      "label": "detect silences",
+      "parent": "silences",
+      "actions": [
+        {
+          "name": "detect_silence",
+          "reads": [
+            "silences:cuts",
+            "silences.threshold:value",
+            "silences.min_duration:value"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "silences.cut[1]",
+      "role": "list_item",
+      "label": "0:03.0 to 0:05.0",
+      "parent": "silences",
+      "state": {
+        "start": {
+          "kind": "num",
+          "value": 3.018594
+        },
+        "end": {
+          "kind": "num",
+          "value": 5.01551
+        },
+        "duration": {
+          "kind": "num",
+          "value": 1.9969159999999997
+        },
+        "decision": {
+          "kind": "text",
+          "value": "pending"
+        }
+      },
+      "actions": [
+        {
+          "name": "preview_segment",
+          "reads": [
+            "silences.video:shown"
+          ]
+        },
+        {
+          "name": "apply_cut",
+          "reads": [
+            "silences.cut[1]:decision"
+          ]
+        },
+        {
+          "name": "reject_cut",
+          "reads": [
+            "silences.cut[1]:decision"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "silences.cut[2]",
+      "role": "list_item",
+      "label": "0:08.0 to 0:10.0",
+      "parent": "silences",
+      "state": {
+        "start": {
+          "kind": "num",
+          "value": 8.010884
+        },
+        "end": {
+          "kind": "num",
+          "value": 10.0078
+        },
+        "duration": {
+          "kind": "num",
+          "value": 1.9969159999999988
+        },
+        "decision": {
+          "kind": "text",
+          "value": "pending"
+        }
+      },
+      "actions": [
+        {
+          "name": "preview_segment",
+          "reads": [
+            "silences.video:shown"
+          ]
+        },
+        {
+          "name": "apply_cut",
+          "reads": [
+            "silences.cut[2]:decision"
+          ]
+        },
+        {
+          "name": "reject_cut",
+          "reads": [
+            "silences.cut[2]:decision"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "silences.counts",
+      "role": "status",
+      "label": "2 silences, 0 applied, 0 rejected, 0.0 s cut",
+      "parent": "silences",
+      "state": {
+        "total": {
+          "kind": "int",
+          "value": 2
+        },
+        "applied": {
+          "kind": "int",
+          "value": 0
+        },
+        "rejected": {
+          "kind": "int",
+          "value": 0
+        },
+        "pending": {
+          "kind": "int",
+          "value": 2
+        },
+        "cut_secs": {
+          "kind": "num",
+          "value": 0.0
+        }
+      }
+    },
+    {
+      "id": "silences.apply_all",
+      "role": "button",
+      "label": "apply all",
+      "parent": "silences",
+      "actions": [
+        {
+          "name": "apply_all",
+          "reads": [
+            "silences.counts:pending"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "silences.status",
+      "role": "status",
+      "label": "status",
+      "parent": "silences",
+      "state": {
+        "message": {
+          "kind": "text",
+          "value": "2 silences from the recorded run at -30 dB, 0.5 s minimum: detect runs ffmpeg here"
+        },
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    }
+  ]
+}
