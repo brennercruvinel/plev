@@ -3681,3 +3681,479 @@ pede a decodificação no `wake` (um job por vez, em cache). a forma (ii)
 verifier e o prompt para dizer o que um estado de texto já diz, e a
 regra do proponente achá-lo-ia pelo mesmo caminho: o valor nomeia um nó
 de mídia do app e um instante, que é estrutura, não nome de app.
+
+### handoff da fase 4b (2026-09-24)
+
+goal: task-69 fase 4b, a tela gerada dos silêncios: uma superfície
+materializada sobre o app da 4a mostra frames de verdade (o do instante
+mostrado e um por corte), nasce de uma frase pelas regras e pelo Claude,
+opera os cortes pelo dispatcher do app, vira uma comparação lado a lado
+mantendo a identidade do que continua, e se desfaz quando a pessoa
+termina. as duas telas (a fixa da 4a, a gerada) ficam prontas para o
+checkpoint b, que é decisão do brenner.
+
+status: implementado. `cargo test -p surface -p showcase -p propose -p
+uir` verde, `./script/gate` verde com a perna urnaui e a perna wasm,
+`regress check` verde (as duas baselines dos silêncios abençoadas, dito
+abaixo), sobre a `main` @ 4a7a8abf (a contagem abaixo). duas chamadas
+reais ao Claude, as duas verificadas.
+
+#### commits
+
+branch `task/69g-silences-surface`:
+
+- 3fb83d34 task-69g: a sonda da fase 4b no arquivo da task
+- 50a815e9 task-69g: the silences page projects the cuts by their keys, a
+  frame ref per instant and the range (a projeção; o golden e as duas
+  baselines regravados, nada visual mudou)
+- af79fd3b task-69g: the frames trait and the image drawn from the app's
+  frame (`crates/surface`; as duas fixtures; `tests/frames.rs`)
+- 191aa93e task-69g: the generated surface beside the fixed screen, on
+  the same dispatcher (a página; o bloco compartilhado da Surface;
+  `dispatch.rs` e `input.rs`; as baselines com a linha de intenção)
+- b30a5b81 task-69g: the rules find the media by structure and show a
+  frame per item (`crates/propose`; o prompt; o exemplo com `--app
+  silences` e `--shown`)
+- e o commit dos adendos de ADR e deste handoff
+
+o briefing pedia (2) o trait e (3) as fixtures com a página; a mudança da
+projeção (as chaves em `silences:cuts`, os frame refs, o `range`) que a
+sonda pediu veio antes, num commit só dela, para o golden ser o de
+verdade quando o trait e as fixtures chegaram. as fixtures vieram com o
+trait (o teste dele precisa de um IR sobre o golden).
+
+#### a sonda
+
+acima ("sonda da fase 4b"). em uma linha: o verifier não precisa de
+nada (o `image` liga qualquer texto; faltava um texto que nomeie o
+frame), o `image` de hoje desenha o retângulo com o label, as regras não
+tinham parte de vídeo, e a projeção da 4a listava os cortes pelos ids
+inteiros em vez das chaves, o que quebrava o `repeat` e a parte de lista.
+nenhuma condição de parada disparou.
+
+#### a forma do frame: (i), aditiva na projeção
+
+o app projeta um estado de texto por frame que oferece, com o id do nó
+de mídia e o instante em segundos no valor (`jobs::frame_ref`):
+`silences.video:original` (o frame do original no instante mostrado),
+`silences.video:result` (o frame do resultado no mesmo instante: dentro
+de um trecho aplicado, o fim do trecho, o primeiro frame que fica; fora,
+o mesmo instante) e `silences.cut[<id>]:frame` (o meio do trecho). um
+`image` liga `source` a um deles. nada muda no vocabulário, no schema ou
+no verifier; o prompt ganhou uma frase dizendo o que o `source` de um
+`image` liga. a forma (ii) (um `media` com `at`) mudaria os quatro para
+dizer o que um texto já diz, e as regras achariam o frame pelo mesmo
+caminho (o valor nomeia um nó de mídia do app, achado pelo role).
+
+junto, dois estados a mais que a sonda pediu: `silences:cuts` passa a
+dar as chaves (`["1", "2"]`, como `todo:items`), e cada corte ganha
+`range` (o texto do label, `0:03.0 to 0:05.0`), para a superfície mostrar
+o intervalo sem formatar número. o golden e as baselines foram
+regravados (commit 50a815e9); a projeção em repouso tem os mesmos dez
+nós.
+
+#### o trait
+
+`surface::Frames`, `fn frame(&self, source: &str) -> Option<ImageHandle>`
+(`crates/surface/src/host.rs`, ao lado do `Dispatch`), e `NoFrames`.
+`Surface::render_with(c, rect, theme, &dyn Frames)` e
+`SurfaceHost::draw_closing_with` perguntam o frame de cada `image` pelo
+texto ligado no `source` quando desenham (`draw::picture`); `render` e
+`draw_closing` são os mesmos com `NoFrames`, então a página Surface e os
+testes de antes não mudam. um ghost de `image` pergunta o mesmo, e a
+imagem some com o resto. `Surface::sources` (e o do host) lista os frame
+refs que as imagens mostram: é o que o app decodifica. a superfície nunca
+guarda bytes, nunca decodifica, nunca pede decodificação.
+
+o desenho (`draw.rs`): a casca de antes e, dentro, a imagem ajustada e
+centrada, nunca ampliada; sem imagem, a casca com o label. o tamanho é o
+bloco (`card_min_w / 2`) ou, com `control_size`, a altura desse controle
+em 16:9 (thumbnail numa linha; `FRAME_ASPECT`, geometria do conteúdo,
+não token). o layout é o mesmo com e sem imagem, então um frame que
+chega não move nada.
+
+o app: `jobs::PageFrames` (o cache da página por instante, o ref
+parseado em `instant_of`) implementa o trait; a página pede ao
+trabalhador, no `wake` e nunca num frame, os refs que a superfície mostra
+e ela não tem (`want_sources`), um job por vez, a falha em cache para
+não pedir em laço. quando um frame chega, `settle` diz que moveu, a
+página pede um frame, a superfície desenha.
+
+#### as fixtures
+
+`crates/surface/tests/fixtures/showcase-silences-review.ir.json` (id
+`review`, "review the cuts"): o card com o `image` do vídeo
+(`silences.video:original`), quatro `stat` das contagens, a linha da
+detecção (o slider do limiar com `set_value`, detectar, aplicar todos), e
+a `list` com `repeat` sobre `silences:cuts` cujo item é uma linha:
+`image` do corte (`control_size` xl, `silences.cut[{item}]:frame`), uma
+coluna (`review.cut[{item}].text`, flex 1) com o `text` do `range` e o
+`badge` da `decision`, e os botões `apply_cut` e `reject_cut`.
+
+`showcase-silences-compare.ir.json` (o mesmo id, "compare the original
+with the cuts"): um `grid` sobre `field_min_w` com duas colunas, "the
+original" com `review.video` (o mesmo id, `silences.video:original`) e
+"with the cuts" com `review.result.video` (`silences.video:result`); os
+`stat` de aplicados e segundos cortados (os mesmos ids); e a mesma lista
+(`review.cuts`, o mesmo template) como as marcas da linha do tempo, cada
+corte com o frame, o intervalo, a decisão e os dois botões. a linha da
+detecção sai. as duas verificam sobre o golden real.
+
+a primeira versão das fixtures punha o intervalo, a duração, o badge e os
+botões numa linha só: a metade da página tem uns 430 px dentro do card, a
+linha não cabia e os textos quebravam letra a letra. a coluna de textos
+entre o thumbnail e os botões resolve; a duração por corte (`1.996916`,
+sem formatação) saiu da revisão.
+
+#### a página
+
+`crates/showcase/src/view/apps/silences/generated.rs` (o bloco: o
+`SurfaceHost`, a superfície aberta, a linha de intenção da Surface, o
+botão de fechar, as metades) e `generated/page.rs` (o `Operable` sobre a
+página inteira, o padrão do `page.rs` da Surface sobre este app:
+propor pelas regras dentro do `execute`, pelo Claude fora da thread com
+`Started` e o `settle` no `wake`, cancelar, e `close`). o resto em
+`silences.rs` (os eventos, as teclas, o `wake`, `with_host`), `draw.rs`
+(a linha, a tela fixa, a superfície com os frames), `semantics.rs`
+(`projection`, `act`, `focus`) e `jobs.rs`.
+
+a linha de intenção é a da página Surface, compartilhada: `proposing.rs`
+e `asking.rs` viraram `pub(crate)` e a linha toma o nome da região como
+único parâmetro (`surface_page` lá, `silences_surface` aqui); a Surface
+passa `REGION` e não muda de resto. o `Operable` (`page.rs` da Surface)
+não foi compartilhado: ele fala com o todo pelo `with_dispatcher` com o
+todo dentro; o dos silêncios copia o padrão (~250 linhas) sobre este
+app. dito e a favor de uma generalização depois, se um terceiro app
+precisar.
+
+o dispatcher: o mesmo caminho da 4a, o do todo emprestado por
+`with_dispatcher`. a superfície chega ao app por `App { page, todo }`
+(`surface::Dispatch`: `page.dispatch(req, todo)` e `page.snapshot()`, a
+projeção da tela fixa); como o host mora dentro da página, `with_host`
+o empresta para os eventos de uma superfície como o todo empresta o
+dispatcher. o `dispatch.rs` mudou uma linha (`semantics` projeta a
+página inteira, `projection()`) e o `input.rs` duas (digitar e Enter
+chegam à página), ditos no commit. nada no `sem`, nada no `app/**`.
+
+a projeção em dois níveis: `snapshot()` é o app (a tela fixa, o registro
+que a superfície verifica e lê; o golden), `projection()` é a página
+(o app, a superfície, a linha e o botão de fechar: o que o chrome e a
+porta veem). o golden por isso mudou de teste: de
+`crates/showcase/tests/uir_fixture.rs` (que só chega à página inteira)
+para `silences::tests::the_app_projection_is_the_uir_golden`
+(`UIR_BLESS=1` regrava).
+
+onde as coisas ficam (`Generated::halves`): a linha em cima, o botão de
+fechar à direita dela; sem superfície, a tela fixa na largura toda; com
+uma, larga, a fixa na metade esquerda e a superfície na direita; estreita,
+a superfície embaixo da fixa na altura natural. fechada, a fixa toma a
+largura de volta.
+
+`close`: `silences_surface.close`, botão com a ação `close`, habilitado
+só com superfície aberta, pela tela (o clique) e pela porta (um `act`);
+`SurfaceHost::close`, a transição de saída da fase 2 (os frames somem
+com o resto), a linha volta a dizer nada.
+
+#### as regras
+
+`crates/propose`: uma quinta parte, mídia, achada pela estrutura: um nó
+com role `media` ou `image` cujos estados de texto são frame refs (o
+valor nomeia um nó do app com esse role, e um instante); cada estado é
+uma vista (`original`, `result`); as palavras da parte são as do nó e as
+chaves das vistas. palavras da gramática: `video`, `image`, `frame`
+(`vídeo`, `imagem`, `quadro`, `media`, `preview`) para a parte;
+`compare`, `comparar`, `comparison`, `versus`, `diff` para todas as
+vistas lado a lado (um `grid` sobre `field_min_w`), e `compare` nomeia a
+parte. sem `compare`, a primeira vista, ou as que uma palavra nomeia
+pela chave ("the original", "the result"). na lista, o frame ref de um
+item vira `image` (thumbnail, `control_size` xl) antes dos textos, nunca
+`text`. a mídia vai no topo, antes das entradas e das listas.
+
+uma mudança a mais, forçada: os números de um item de uma lista achada
+não viram `stat` (são da lista). sobre os silêncios, "everything" fazia
+um `stat` de `silences.cut[1]:start` com o id que o template faz para o
+item 1, e o verifier recusava tudo (regra 2). o todo e o ide não têm
+número em item: os 12 testes das regras e os 4 do llm passam sem
+mudança. e uma observação que fica: `cut` é palavra da lista (o nome dos
+itens) e de uma contagem (`cut_secs`), então "the cuts as a list with the
+video and the counts" mostra a lista e só a contagem `cut_secs`, pela
+regra da 3a ("a parte nomeada fica com o que a palavra nomeia"); "the
+list with the video and the counts" mostra as cinco. e "the counts" sobre
+os silêncios traz também `duration` e `shown` do vídeo e o `value` dos
+dois sliders (os dois com label "value"): a regra "cada int ou num é um
+stat" lê o valor de um slider como número que o app mostra. estreitar
+isso (um número que uma ação do próprio nó recebe é do controle) é regra
+de outra fase.
+
+`crates/propose/tests/media.rs` (5 testes): a revisão (a vista do vídeo
+em cima, `cut_secs`, a lista com `image` do frame, `range`, `decision` e
+os dois botões, nenhum `text` de frame ref, nenhum `stat` de corte), a
+comparação (as duas vistas lado a lado, `original`/`result` sozinhas), a
+comparação sobre a revisão mantendo os ids da vista, da lista e do
+template (e de volta, os mesmos ids), "everything" com a mídia em cima
+e as contagens certas, e o todo e o ide recusando as palavras de mídia
+com `Nothing` e sem `image` nas listas.
+
+#### as chamadas reais ao Claude
+
+pelo `cargo run -p claude-model --example propose -- --app silences`,
+sonnet, prompt de 16.958 bytes (a comparação, com a revisão como atual
+pelo `--shown`, 22.032 bytes). duas chamadas, as duas verificadas; as
+duas de reserva não foram usadas.
+
+| chamada | intenção | superfície atual | tentativas | tempo | custo | o que veio |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 (07:20:40) | "cut the silences of this video, then I want to review the cuts" | nenhuma | 2: a primeira recusada com um erro só (o root com o id da superfície, `cuts_review`, regra 2); a segunda verificada | 123,0 s + 14,6 s = 137,6 s | 0,155 + 0,055 = 0,210 USD | a revisão (abaixo), 6.169 bytes |
+| 2 (07:23:33) | "compare the original with the cuts" | a da chamada 1 | 1, verificada | 40,4 s | 0,076 USD | a comparação (abaixo), 3.748 bytes |
+
+a revisão da chamada 1, resumida: `cuts_review` "cut silences, then
+review", um `stack` vertical com um `text` de título, um `image` "video
+preview" ligado a `silences.video:result`, um `card` "detection settings"
+com os dois `slider` (`set_value`) e o botão de detectar (com `busy`
+ligado a `silences.status:busy`, um `SubmitButton`), um `text` do status,
+cinco `stat` das contagens, o botão de aplicar todos, e uma `list` com
+`repeat` sobre `silences:cuts` cujo item é um `card` com o `text` do
+`range`, o `text` da `decision`, um `image` "cut preview frame" ligado a
+`silences.cut[{item}]:frame`, e três botões (`preview_segment`,
+`apply_cut`, `reject_cut`). o template tomou os ids do app
+(`silences.cut[{item}]`, o mesmo que a 3b-ii viu no ide): o verifier
+aceita e o host trata a raiz da instância como nó do app; os filhos são
+da superfície. a frase nova do prompt bastou para ele ligar o frame de
+cada corte ao ref, sem instrução de `repeat`. sem as regras: "then" e
+"review" não são palavras do app.
+
+a comparação da chamada 2: o mesmo id `cuts_review`, o título trocado, e
+em cima um `split` horizontal 50/50 com `cuts_review.original` (novo,
+`silences.video:original`) e `cuts_review.preview` (o id da chamada 1,
+mantido, `silences.video:result`); o card da detecção, o status, as
+contagens, o aplicar todos e a lista inteira com os mesmos ids. os ids do
+que continua foram mantidos: sim, todos, a superfície inclusa. as regras
+dão 17 nós para a mesma frase.
+
+os dois IRs inteiros ficaram em
+`/private/tmp/claude-501/-Users-nn-Dev-hoff-plevdev/ffe9cd40-0b24-414e-be8c-32dec2cf8b3d/scratchpad/claude-1.txt`
+e `claude-2.txt` (a saída do exemplo), e o da chamada 1 em
+`claude-1-review.ir.json`; nada foi commitado.
+
+#### PNG e projeção
+
+`SILENCES_OUT=<dir> cargo test -p showcase --lib
+silences::tests::generated::the_real -- --ignored --nocapture` (o ffmpeg
+real) escreveu `silences-review-real.png` e `silences-compare-real.png`
+com os `.json`, em 0,68 s, em
+`/private/tmp/claude-501/-Users-nn-Dev-hoff-plevdev/ffe9cd40-0b24-414e-be8c-32dec2cf8b3d/scratchpad/out/`;
+o teste do gate (`the_page_draws_headless_with_the_review_and_the_comparison`,
+o falso, com GPU) escreve `silences-review.png` e `silences-compare.png`
+no mesmo `SILENCES_OUT`.
+
+a revisão (1200x800 core): a linha de intenção em cima (o campo, o
+select `rules`, propor desabilitado sem intenção, fechar; cancelar na
+linha do status), a tela fixa na metade esquerda (os cards empilhados,
+a caixa do vídeo com o frame do `testsrc` aos 0,0 s, a banda com as duas
+marcas), e na direita o card gerado: o frame do vídeo em cima (320x180
+ajustado em 140 de altura), `2 silences / 0 applied / 0 rejected / 0.0
+seconds cut`, o slider do limiar com "detect silences" e "apply all", e
+as duas linhas de corte, cada uma com o thumbnail do meio do trecho
+(78x44), "0:03.0 to 0:05.0" sobre o badge "pending", "apply" e "reject":
+6 `SceneNode::Image` no frame, 3 da fixa e 3 da gerada.
+
+a comparação, depois de `preview_segment` e `apply_cut` no primeiro
+corte: "the original" com o frame aos 4,0 s (o dígito 4 do `testsrc`)
+ao lado de "with the cuts" com o frame aos 5,0 s (o fim do trecho
+aplicado, o dígito 5), `1 applied / 1.996916 seconds cut`, e as duas
+linhas com o primeiro corte em "apply" (o botão aplicar desabilitado): 7
+imagens no frame (a quarta da gerada é o frame de 5,016 s). a tela fixa
+ao lado mostra a agulha dentro da primeira marca, vermelha.
+
+a projeção das duas (a página inteira, 44 nós cada; os ids dos cortes
+são 3 e 4 porque a detecção real cunhou ids novos): o app (os dez de
+sempre, com `original`, `result`, `range` e `frame`), a superfície
+(`review`, o card, o `image` do vídeo, os `stat`, a linha da detecção
+com `set_value`/`activate`, a lista com `review.cut[3]` e `review.cut[4]`
+nomeados pelo item, cada um com o `image`, a coluna, o `range`, o badge
+e os dois botões) e a linha (`silences_surface` com `intent`,
+`proposer`, `propose`, `cancel`, `status`, `close`). na comparação,
+`review.video` continua com o mesmo id e `review.result.video` nasce; a
+lista é a mesma; `review.cut[3].apply` lê desabilitado. os `.json` estão
+no diretório acima.
+
+#### contagem do gate e o regress
+
+| | workspace | perna urnaui | total |
+| --- | --- | --- | --- |
+| antes, `main` @ 4a7a8abf (o handoff da 4a sobre a mesma árvore) | 2428 passam, 0 falhas, 15 ignorados (109 suítes) | 82 passam, 1 ignorado (6 suítes) | 2510 |
+| depois, esta branch @ b30a5b81 (`./script/gate`, saída 0) | 2444 passam, 0 falhas, 16 ignorados (111 suítes) | 82 passam, 0 falhas, 1 ignorados (6 suítes) | 2526 |
+
+16 testes novos passando (3 em `surface/tests/frames.rs`, 7 em
+`silences/tests/generated.rs`, 5 em `propose/tests/media.rs`, 1 em
+`jobs.rs`, e o golden dos silêncios que saiu de `uir_fixture.rs` e entrou
+em `silences/tests.rs`) e 1 ignorado a mais (o ffmpeg real das duas
+formas). a contagem não cai. clippy `-D warnings`, `cargo fmt --check`
+e o check wasm do showcase com `-D warnings` verdes, dentro do gate, com
+a perna urnaui (nenhuma perna pulada; `../urna` resolve deste worktree).
+`df -h /` antes do gate e depois: 16 GB livres, os dois. o gate rodou uma
+vez nesta branch, inteiro verde, em 2 min 13 s (07:24:51 a 07:27:04).
+`cargo run -p showcase --example regress -- check`: 159 baselines
+conferidas, 159 iguais, nenhum frame desenhado (as duas dos silêncios
+abençoadas duas vezes nesta branch: pela projeção em 50a815e9, nada
+visual mudou, e pela linha de intenção em 191aa93e, com a imagem).
+`view/dispatch.rs`: 363 linhas antes, 363 depois (uma linha trocada);
+`view/input.rs`: duas linhas de rota a mais.
+
+#### testes
+
+- `crates/surface/tests/frames.rs` (3): a revisão sobre o golden com
+  `sources` iguais aos três refs, zero imagem sem frames, três com o
+  provedor falso (uma imagem 32x18 por ref, gerada em memória com
+  `load_image_rgba`), cada uma dentro do rect do seu nó e nunca ampliada,
+  o layout igual com e sem, o label do vídeo de volta quando só os
+  cortes têm frame, a projeção (`image`, a instância nomeada pelo item,
+  o `range`); a transformação em comparação mantendo a instância dos
+  cortes (um press começado no botão de um corte completa depois e
+  aplica o corte pelo dispatcher do app de teste), o `image` do vídeo
+  deslizando, a linha da detecção saindo, quatro imagens, e o `close`
+  desenhando os ghosts com as imagens até sumir; o todo sem `source`;
+- `silences/tests/generated.rs` (8, um `#[ignore]`): a linha projetada
+  com o app e fora do registro (o `close` desabilitado recusado como
+  `Disabled`, o select só com `rules`); a revisão aberta ao lado (a
+  fixa na esquerda, a superfície na direita; embaixo em estreito), os
+  frames pedidos no `wake` (o worker ocupado, `POLL`) e desenhados
+  quando chegam (6 imagens); aplicar pela gerada mudando a fixa (o
+  receipt do `Human` em `silences.cut[1] apply_cut`, o botão da linha
+  escuro, o badge e a contagem da gerada), rejeitar pela fixa mudando
+  a gerada, e um `act` de `Assistive` num botão da gerada roteado para o
+  app; a comparação mantendo a intenção digitada e a instância de um
+  corte (o press em flight completa), o vídeo movendo de coluna, e o
+  `close` por clique (fora da projeção, a fixa na largura toda, a saída
+  em vários frames, o receipt `Completed`) e por request depois
+  (`Disabled`); a galeria roteando a linha, as teclas, uma proposta pelas
+  regras por Enter ("the counts"), Escape e o `close` por `act`; o
+  Claude falso respondendo a revisão fora da thread (`Started`, o poll,
+  `Completed` com `cost_usd`, a superfície aberta); a página sem janela
+  com as duas formas sobre o falso (6 e 7 imagens, PNG com GPU); e o
+  ignorado com o ffmpeg real;
+- `silences/tests.rs` (+1, 2 mexidos): o golden do app; os dois de
+  layout medindo a tela fixa no rect que as metades dão;
+- `crates/propose/tests/media.rs` (5, acima); `words.rs` (+1 caso);
+  `jobs.rs` (1: o frame ref e o instante);
+- os testes de antes: os 6 da Surface page (`surface_page::tests`, 29),
+  os 12 das regras e os 4 do llm, os do `surface` (todos), e o golden do
+  todo, sem mudança.
+
+#### validação executada
+
+- `cargo test -p surface -p showcase -p propose -p uir` (e
+  `claude-model` pelo gate);
+- `cargo clippy --all-targets -- -D warnings`, `cargo fmt`, o check wasm
+  do showcase com `-D warnings`, dentro do gate, com a perna urnaui;
+- `cargo run -p showcase --example regress -- check`;
+- o ignorado do ffmpeg real (`the_real_ffmpeg_draws_the_review_and_the_comparison`),
+  o headless do falso com `SILENCES_OUT`, o exemplo do `claude-model`
+  duas vezes (a tabela). nenhuma janela foi aberta; nenhum teste do gate
+  chama o `claude` nem exige o ffmpeg.
+
+#### seções de ADR
+
+- `docs/ADR/materialized-surfaces-from-verified-ir.md`, adendo datado
+  "an image draws the frame the app holds (task-69 phase 4b, proposed)":
+  o frame ref como forma do app, o trait `Frames`, `sources`, a imagem
+  ajustada, a página, as consequências (as fixtures, as chaves na lista,
+  o tamanho do frame falso, a largura da metade) e o que evitar;
+- `docs/ADR/proposers-propose-the-runtime-verifies.md`, adendo datado
+  "the rules show the media by structure (task-69 phase 4b, proposed)":
+  a quinta parte, as vistas e o `compare`, o frame de item como imagem,
+  os números de item fora das contagens, a mídia no topo, o prompt, o
+  exemplo, e as consequências (o que cada frase dá, `cut` em duas
+  partes, as contagens dos sliders);
+- `plev-ir-typed-and-verified.md` e o schema não mudaram (forma (i)).
+- para o orquestrador (fora do que esta fase pode editar): no índice
+  `docs/ADR/README.md` os dois adendos; em
+  `docs/ADR/the-silences-app-is-the-fixed-screen.md` a projeção diz "the
+  ids in order" onde agora é "the keys in order", e os estados
+  `original`, `result`, `range` e `frame` entram na lista da seção "the
+  projection"; o `docs/CHANGELOG.md` (a superfície gerada na página
+  Silences); no `docs/arc/arc.toml` os módulos `view::apps::silences::{jobs,
+  generated, generated::page}` e o `tests/frames.rs` do `surface`.
+
+#### decisões
+
+- a forma (i) do frame, pela sonda (acima);
+- `Frames::frame(&self, ..)` só consulta: a decodificação é pedida pela
+  página no `wake` a partir de `sources`, nunca num frame (a regra da 4a
+  de não rodar ffmpeg num frame vale para a gerada também), e nunca pela
+  superfície;
+- o tamanho de um `image` não depende do frame (o layout não pula quando
+  o frame chega); `control_size` é a única alavanca do IR para um
+  thumbnail;
+- a linha de intenção compartilhada por nome de região, o `Operable`
+  copiado (acima);
+- a tela fixa fica na largura toda em repouso e cede a metade quando a
+  gerada nasce (as baselines dos silêncios mudam pela linha em cima,
+  nada mais);
+- o golden é o app, a semântica da página é a página inteira;
+- `result` como o fim do trecho aplicado que contém o instante mostrado:
+  o único "resultado" que existe sem cortar o vídeo de verdade; fora de
+  um trecho aplicado é o mesmo frame do original;
+- os números de um item de lista saem das contagens (forçada pelo
+  verifier, acima).
+
+#### limitações
+
+- o frame falso das provas é 32x18 e nunca é ampliado: no PNG do falso
+  cada imagem é uma pílula pequena no meio da casca; o real é 320x180 e
+  enche a altura;
+- a metade gerada tem uns 430 px dentro do card em 1200 de largura: os
+  textos de uma linha de corte quebram em duas linhas ("0:03.0 to" /
+  "0:05.0"), e um IR do Claude com mais coisa numa linha quebra pior. o
+  motor de layout dá a um `text` o que sobra e o texto quebra letra a
+  letra em vez de o container transbordar: comportamento do engine, fora
+  desta fase;
+- a revisão do Claude nomeou o template com o id do app
+  (`silences.cut[{item}]`), como a 3b-ii já tinha visto no ide: o host
+  aceita e a raiz da instância fica sendo o nó do app; pedir ids
+  próprios é mudança de prompt de outra fase;
+- o `Operable` da página é uma cópia adaptada do da Surface (~250
+  linhas); dois apps, duas cópias;
+- "the cuts as a list with the video and the counts" pelas regras dá só
+  `cut_secs` como contagem (a palavra `cut` nomeia essa contagem); e "the
+  counts" traz os valores dos sliders como stats;
+- as contagens de uma detecção real cunham ids novos (3 e 4), então os
+  `.json` da projeção real não são o golden;
+- o `close` não confirma: uma superfície com texto digitado num campo
+  some com ele (nenhuma fixture tem campo);
+- o clippy com `-D warnings` recusou um `mod support` sem `allow` no
+  teste novo do `propose` (os outros binários usam tudo dele); ficou o
+  `#[allow(dead_code)]` com o comentário, como nos testes do `surface`.
+
+#### dependências pendentes e riscos de integração
+
+- para o orquestrador: as linhas de ADR e o CHANGELOG acima; o
+  `arc.toml`;
+- `Cargo.toml` e `Cargo.lock` não mudaram: nenhuma dependência nova;
+- a Surface page depende de `Proposing::new(REGION)` (uma linha
+  mudada); quem mover o dispatcher para a `ShowcaseView` troca duas
+  linhas aqui (`App::dispatch` e `Page::dispatch`);
+- a projeção dos silêncios mudou (as chaves, quatro estados): um agente
+  que lia `silences:cuts` como ids lê chaves agora;
+- as duas baselines dos silêncios mudaram duas vezes nesta branch (a
+  projeção, depois a linha em cima); `regress check` verde.
+
+#### o que a 4c (o vídeo da demo) e o checkpoint b precisam
+
+- as duas telas estão prontas e lado a lado na página Silences: a fixa
+  (a 4a) e a gerada, pela mesma frase da tese no campo de intenção com
+  `claude` escolhido (137 s na chamada 1; a página mostra a espera e
+  cancela), ou pelas regras em menos de um milissegundo com "the list
+  with the video and the counts" e "compare the original with the cuts";
+  o `close` desfaz. o roteiro: abrir a página, "detect silences" (o
+  ffmpeg gera o vídeo e detecta), a frase, a revisão nasce ao lado com os
+  frames chegando, aplicar um corte em qualquer das duas telas, "compare
+  the original with the cuts", a comparação com o resultado diferente
+  onde há corte aplicado, fechar;
+- para gravar (task-63, se integrada): a janela real só com
+  `PLEV_BACKGROUND=1`; sem janela, os PNGs do teste ignorado e do falso;
+- o que o checkpoint pode pedir e não existe: o corte real (`export`),
+  um `result` que reflita mais de um trecho aplicado (hoje é o instante
+  mostrado dentro do trecho que o contém), ids próprios no template do
+  Claude, e a linha de intenção sem o botão de fechar quando nada está
+  aberto.
