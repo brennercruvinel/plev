@@ -70,8 +70,9 @@ distinct agents pass --name or $PLEV_AGENT_NAME.
 stale: an act is refused as stale when a state it reads (the action's reads,
 as observe shows them) changed since the observation it rests on; the
 revision only names what was seen, never decides. the refusal's changes say
-what moved, and its acted says who, among the app's actors, ran something on
-that same state (a change from outside the app names nobody).
+what moved, and its acted says who, among the app's actors, ran something
+since that state, from the first request that ran on it (a change no
+request made, as from outside the app, starts nothing and names nobody).
 exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
 
     /// how an invocation ended.

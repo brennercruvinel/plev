@@ -14,6 +14,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 2: task-90 integrada
+
+- **integrada:** task-90 (`d02b4d1`), a recusa nomeia a cadeia desde o
+  estado que o agente viu. gate verde (2225). a regra antiga recolocada
+  faz os quatro testes novos falharem. os textos do `wire`, do how-to e do
+  ADR do inspector aplicados no fechamento.
+- **publicado:** PR #56 (task-89), merge `c433751`.
+- próximo no `sem`/`wire`: task-91 (a âncora no olhar), agora
+  desbloqueada.
+
 ### ciclo 2: task-89 integrada, o buraco do inspector fechado
 
 - **integrada:** task-89 (`79b8c93`). gate verde (2218). reproduzido no

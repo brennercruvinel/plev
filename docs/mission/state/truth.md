@@ -102,6 +102,14 @@ o da base até ser reescrito.
   a identidade que liga os comandos. o `Observation::revision` de um ato
   continua `r`, e o `acted` ancora nele (task-91).
 
+- `d02b4d1` (task-90): `Dispatcher::acted` (seção 2.2) parte do menor id
+  que rodou validado na revisão do autor, de qualquer ator, e nomeia os
+  outros atores que rodaram dali em diante; doc em `crates/sem/src/
+  check.rs` (`Acted`). o toast do ide agrupa por ator
+  (`crates/ide/src/workbench/notice.rs`). no ide, a seleção, a digitação,
+  o foco, o toast saindo e as linhas do diff mudam a revisão sem receipt
+  e não ancoram (task-91).
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

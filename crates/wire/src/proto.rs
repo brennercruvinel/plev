@@ -106,9 +106,10 @@ pub struct Observe {
 /// `reads`, as an observation shows them) changed since what it rests on;
 /// the revision only names what was seen and never decides. the refusal
 /// (`rejected`, `stale`) carries `changes`, what moved, and `acted`, who
-/// among the app's actors ran something on that same state (the dispatcher
-/// knows the requests it took, so a change from outside the app, a `git`
-/// in a terminal, names nobody).
+/// among the app's actors ran something since that state, from the first
+/// request that ran on it (the dispatcher knows the requests it took, so
+/// a change no request made, a `git` in a terminal, starts nothing and
+/// names nobody).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Act {
     pub target: SemId,

@@ -280,3 +280,25 @@ Commits:
 - f0de28a task-90: the inspector says what an empty acted means under the new rule
 - o commit deste texto: o ADR e o handoff
 ```
+
+## fechamento (orquestrador, 2026-09-23)
+
+integrada na `main` em `d02b4d1` (cinco commits sobre `62026fb`).
+
+o agente parou uma vez, antes de implementar: a premissa do briefing
+estava errada. a seleção por clique muda a revisão fora do dispatcher, e
+na cena da janela o `acted` saía vazio, não com a seleção. decisão do
+orquestrador: opção A agora (a cadeia dentro do processo); a âncora no
+olhar vira a task-91.
+
+validação do orquestrador:
+- diff inteiro lido;
+- gate verde no diretório da task: 2225 passaram, 0 falharam, 12
+  ignorados, com a perna urnaui;
+- a regra antiga do `acted` recolocada no `dispatch.rs`: os quatro testes
+  novos do `sem` falham com ela e passam com a nova;
+- os dois testes do ide pelo ponteiro verdes.
+
+os textos que o agente propôs para arquivos fora do escopo dele (o doc
+do `Act`, o `plev --help`, o how-to e uma linha datada no ADR do
+inspector) foram aplicados no fechamento.
