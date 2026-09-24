@@ -380,6 +380,61 @@ fn the_control_switches_the_form_and_the_typed_text_and_the_filter_go_on() {
     assert_eq!(value(&page, &todo, "todo_panel.input:text"), text("buXy"));
 }
 
+/// The proposer sits beside the intent field where the field keeps a
+/// card's minimum width, and under it where it does not (the page's
+/// halves at 1200 wide, a phone); the cancel ends the message line
+/// either way, and nothing leaves the width.
+#[test]
+fn the_proposer_sits_beside_the_field_when_wide_and_under_it_when_not() {
+    let (mut todo, mut page, theme) = setup();
+    for (content, beside) in [
+        (Rect::new(40.0, 118.0, 1500.0, 682.0), true),
+        (wide(), false),
+        (narrow(), false),
+    ] {
+        let c = frame(&mut page, &mut todo, content, &theme);
+        let rect = |id: &str| c.binding(&sid(id)).unwrap_or_else(|| panic!("{id}")).rect;
+        let field = rect("surface_page.intent");
+        let proposer = rect("surface_page.proposer");
+        let propose = rect("surface_page.propose");
+        let cancel = rect("surface_page.cancel");
+        let status = rect("surface_page.status");
+        if beside {
+            assert_eq!(proposer[1], field[1], "{content:?}: one line");
+            assert!(proposer[0] >= field[0] + field[2], "{content:?}: beside");
+            assert!(
+                field[2] >= theme.size.card_min_w,
+                "{content:?}: a wide field"
+            );
+        } else {
+            assert!(proposer[1] >= field[1] + field[3], "{content:?}: under");
+            assert_eq!(proposer[0], field[0], "{content:?}: at the left");
+        }
+        assert!(
+            propose[0] >= proposer[0] + proposer[2],
+            "{content:?}: the button after"
+        );
+        assert!(
+            cancel[1] >= propose[1] + propose[3] - 0.5,
+            "{content:?}: cancel below"
+        );
+        assert!(
+            status[1] >= propose[1],
+            "{content:?}: the message below the button"
+        );
+        for (id, r) in [
+            ("proposer", proposer),
+            ("propose", propose),
+            ("cancel", cancel),
+        ] {
+            assert!(
+                r[0] >= field[0] - 0.5 && r[0] + r[2] <= field[0] + content.w + 0.5,
+                "{content:?}: {id} inside"
+            );
+        }
+    }
+}
+
 /// An agent through the real port, no window: it observes the page and
 /// operates the surface by the same contract as the todo.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]

@@ -424,10 +424,10 @@ impl Proposing {
     }
 
     /// The row at `(x, y)`, `w` wide: the field, the proposer and the
-    /// button on one line while the field keeps its minimum width, the
-    /// two under the field otherwise; then the message (one line at
-    /// least, so that a message arriving moves nothing below) with the
-    /// cancel button at its end.
+    /// button on one line while the field keeps a card's minimum width
+    /// (an intent is a sentence), the two under the field otherwise;
+    /// then the message (one line at least, so that a message arriving
+    /// moves nothing below) with the cancel button at its end.
     pub fn row(&self, x: f32, y: f32, w: f32, theme: &Theme) -> Row {
         let gap = theme.spacing.sm;
         let h = TextField::height(theme);
@@ -435,7 +435,7 @@ impl Proposing {
         let (cw, ch) = self.cancel.preferred_size(theme);
         let sw = self.proposer_w(theme).min(w);
         let controls = sw + gap + bw + gap;
-        let (intent, left, line) = if w - controls >= theme.size.field_min_w {
+        let (intent, left, line) = if w - controls >= theme.size.card_min_w {
             let field_w = w - controls;
             (Rect::new(x, y, field_w, h), x + field_w + gap, y)
         } else {
