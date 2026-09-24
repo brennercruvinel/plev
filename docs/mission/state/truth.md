@@ -636,7 +636,7 @@ o que cada task pendente tocaria, pelo arquivo da task e pelo código de hoje. "
 | 76 | `crates/engine/src/platform/**`, `crates/engine/src/window` (várias janelas, device lost), urnaui, clipboard (`docs/mission/steps/pending/task-76-platform-integration-done.md:83-87`) | device lost passa por `present_frame` (`crates/engine/src/window/frame.rs:53-68`), no mesmo arquivo que o headless usa | 82 fase b e 78 (urnaui), 75 (window e shells), 73 (frame) |
 | 77 | harness de captura, `script/`, shaders com aprovação (`docs/mission/steps/ongoing/task-77-visual-determinism.md:73-77`); cita `crates/engine/src/text/fonts.rs` | a base é o headless (`crates/engine/src/headless/mod.rs:129-222`) | 74 (fontes), 73 (passes) |
 | 78 | app de referência, módulo de inferência, urnaui se escolhido (`docs/mission/steps/pending/task-78-ai-native-apps.md:70-73`) | | 76 e 82 fase b, se for o urnaui |
-| 79 | canal de cena no protocolo (com aprovação), visualizador, serde de `SceneNode` (`docs/mission/steps/pending/task-79-scene-over-socket.md:62-66`) | protocolo v1 em `crates/wire/src/proto.rs:21`, `:40-46`; `SceneNode` sem serde (`crates/engine/src/compositor/scene.rs`) | 73 e 67 (compositor), o delta do wire (seção 4b) |
+| 79 | canal de cena no protocolo (com aprovação), visualizador, serde de `SceneNode` (`docs/mission/steps/ongoing/task-79-scene-over-socket.md:62-66`) | protocolo v1 em `crates/wire/src/proto.rs:21`, `:40-46`; `SceneNode` sem serde (`crates/engine/src/compositor/scene.rs`) | 73 e 67 (compositor), o delta do wire (seção 4b) |
 
 itens do checkpoint a sem número de task, pelo código:
 

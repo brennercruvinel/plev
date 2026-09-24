@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: cena por socket (task-79 fase 1)
+
+- **integrada:** fase 1 (merge da `task/79a-scene-socket`), depois da
+  devolução por privacidade. o canal cabe na v1 do protocolo; o espelho
+  tem hash de frame igual entre dois processos na Card (imagens), no
+  Todo, nos Effects (vidro) e na Capture com a câmera desligada; com a
+  câmera ligada difere só na caixa. um hover custa 318 bytes, um frame
+  sem mudança custa zero.
+- **aceito na revisão:** o `image_is_stream`, só de leitura, além do
+  acessor autorizado, para o primeiro frame da câmera também não sair.
+
 ### ciclo 3: task-79 devolvida por privacidade
 
 - **entregue pelo agente:** o espelho funciona entre dois processos com

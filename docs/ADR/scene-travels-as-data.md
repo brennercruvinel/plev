@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [wire, scene, compositor, codec, rec, socket, mirror, images, security, showcase, generative-runtime]
 date: 2026-09-24
 ---
@@ -278,3 +278,15 @@ machine, comes with it.
 - a stream image's pixels on the wire, or a scene without the person's
   `PLEV_MIRROR=1`: the port is an agent's door, and the contract decides
   what an agent sees.
+
+## integração (2026-09-24, orquestrador)
+
+aceito depois de uma devolução. a primeira entrega mandava os frames da
+câmera a quem assistisse, e todo cliente do port é agente: contra o ADR
+`capture-is-a-job-the-person-turns-on`. a correção entrou na mesma
+branch: o canal só existe com `PLEV_MIRROR=1` dado pela pessoa (recusa
+`scene_not_shared` sem ele), a imagem de fluxo viaja sem pixels nem id
+e o espelho desenha uma caixa no lugar, e quem assiste fica no log e na
+gravação. o `image_is_stream`, só de leitura, entrou no store para o
+primeiro frame da câmera também não sair; aceito pelo orquestrador.
+
