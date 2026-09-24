@@ -13,13 +13,19 @@
 //! (button: `open_file`, reading `files:received`; a person at the
 //! screen, assistive technology and a test may ask, an agent may not: a
 //! native dialog is opened only by a person, and the dispatcher refuses
-//! the agent before `execute` runs) and `files.status` (`message`).
-//! Both actions read the list because both change it.
+//! the agent before `execute` runs), `files.warn` (button: `warn`, the
+//! platform's warning panel saying how many files were received and
+//! that nothing was written; the same person-only policy, reading
+//! `files:received` since the text counts it; the body shown is the
+//! region's `alert`, empty until one was shown, so an agent reads what
+//! the person saw) and `files.status` (`message`). The first two actions
+//! read the list because both change it.
 
 use std::path::PathBuf;
 
 use comps::prelude::{EventResult, Rect};
 use engine::perf::stages::{self, Stage};
+use engine::platform::alerts::Alert;
 use engine::platform::files::DialogRequest;
 use sem::{
     Actor, Actors, Execution, Operable, Outcome, ParamSpec, Policy, Receipt, Request, RequestId,
@@ -29,8 +35,9 @@ use sem::{
 use super::{FilesPage, Said};
 use crate::view::apps::app::TodoPage;
 
-/// Who may ask for the native dialog: a person at the screen or through
-/// assistive technology, and a test (over the fake); never an agent.
+/// Who may ask for a native panel (the file dialog, the alert): a person
+/// at the screen or through assistive technology, and a test (over the
+/// fake); never an agent.
 pub(super) const OPEN_FILE_ACTORS: Actors = Actors {
     human: true,
     agent: false,
@@ -43,6 +50,7 @@ pub(super) struct Ids {
     pub region: SemId,
     pub drop: SemId,
     pub open: SemId,
+    pub warn: SemId,
     pub status: SemId,
 }
 
@@ -52,6 +60,7 @@ impl Ids {
         Ok(Self {
             drop: region.child("drop")?,
             open: region.child("open")?,
+            warn: region.child("warn")?,
             status: region.child("status")?,
             region,
         })
@@ -59,13 +68,29 @@ impl Ids {
 
     /// True for every id the page projects.
     pub(super) fn holds(&self, id: &SemId) -> bool {
-        *id == self.region || *id == self.drop || *id == self.open || *id == self.status
+        *id == self.region
+            || *id == self.drop
+            || *id == self.open
+            || *id == self.warn
+            || *id == self.status
     }
 
     fn target(&self, target: Target) -> SemId {
         match target {
             Target::Open => self.open.clone(),
             Target::Drop => self.drop.clone(),
+            Target::Warn => self.warn.clone(),
+        }
+    }
+
+    /// The button `id` names, if it is one of the page's two.
+    fn button(&self, id: &SemId) -> Option<Target> {
+        if *id == self.open {
+            Some(Target::Open)
+        } else if *id == self.warn {
+            Some(Target::Warn)
+        } else {
+            None
         }
     }
 
@@ -73,6 +98,7 @@ impl Ids {
     fn op(&self, req: &Request) -> Option<Op> {
         match (req.action.as_str(), &req.param) {
             ("open_file", _) if req.target == self.open => Some(Op::Open),
+            ("warn", _) if req.target == self.warn => Some(Op::Warn),
             ("drop_files", Some(Value::List(paths))) if req.target == self.drop => {
                 Some(Op::Drop(paths.iter().map(PathBuf::from).collect()))
             }
@@ -86,12 +112,14 @@ impl Ids {
 pub(super) enum Target {
     Open,
     Drop,
+    Warn,
 }
 
 /// The one handler of each capability.
 enum Op {
     Open,
     Drop(Vec<PathBuf>),
+    Warn,
 }
 
 /// `(x, y, w, h)`, the form `Compositor::bind` takes.
@@ -116,7 +144,8 @@ impl Semantics for FilesPage {
         b.node(&ids.region, Role::Region, "files")
             .inert(self.inert)
             .state("received", Value::List(received))
-            .state("count", count(self.received.len()));
+            .state("count", count(self.received.len()))
+            .state("alert", self.alerted.as_str());
         let reads = format!("{}:received", ids.region);
         let mut zone = b.node(&ids.drop, Role::Region, "drop files here");
         zone.parent(&ids.region);
@@ -134,19 +163,40 @@ impl Semantics for FilesPage {
                 actors: OPEN_FILE_ACTORS,
                 ..Policy::default()
             });
+        let mut warn = b.node(&ids.warn, Role::Button, "warn");
+        warn.parent(&ids.region).focusable(true);
+        warn.action("warn").reads(reads.as_str()).policy(Policy {
+            actors: OPEN_FILE_ACTORS,
+            ..Policy::default()
+        });
         let message = self.status_text();
         b.node(&ids.status, Role::Status, message.as_str())
             .parent(&ids.region)
             .state("message", message.as_str());
-        if self.focused {
-            b.focus(&ids.open);
+        if let Some(focused) = self.focused {
+            b.focus(ids.target(focused));
         }
     }
 }
 
+impl FilesPage {
+    /// The warning the page shows: how many files it holds, and that
+    /// nothing was written anywhere.
+    fn warning(&self) -> Alert {
+        let files = match self.received.len() {
+            1 => "1 file".to_owned(),
+            n => format!("{n} files"),
+        };
+        Alert::warning(
+            "Files",
+            format!("{files} received; nothing was written to disk."),
+        )
+    }
+}
+
 impl Operable for FilesPage {
-    /// Everything here ends now: the dialog blocks until the person
-    /// answers, so the request id is not kept.
+    /// Everything here ends now: the dialog and the panel block until the
+    /// person answers, so the request id is not kept.
     fn execute(&mut self, _id: RequestId, req: &Request) -> Execution {
         let Some(op) = self.ids.as_ref().and_then(|ids| ids.op(req)) else {
             return Execution::Failed(format!(
@@ -188,6 +238,20 @@ impl Operable for FilesPage {
                 self.said = Said::Received(paths.len());
                 self.received.extend(paths);
             }
+            Op::Warn => {
+                let alert = self.warning();
+                // The page knows no window: the panel opens on its own,
+                // not as a sheet (the shell owns the windows).
+                if let Err(e) = self.alerts.alert(&alert, None) {
+                    self.said = Said::NoAlert;
+                    return Execution::Failed(e.to_string());
+                }
+                outcome
+                    .result
+                    .insert("alert".to_owned(), Value::Text(alert.body.clone()));
+                self.alerted = alert.body;
+                self.said = Said::Warned;
+            }
         }
         outcome
             .result
@@ -225,9 +289,9 @@ impl FilesPage {
         todo.receipt(id).cloned()
     }
 
-    /// Keyboard focus asked from outside the page's pointer handling: the
+    /// Keyboard focus asked from outside the page's pointer handling: a
     /// button takes it; another node of the page takes it from the
-    /// button. `false` for an id the page does not project, and while
+    /// buttons. `false` for an id the page does not project, and while
     /// inert.
     pub(crate) fn focus(&mut self, id: &SemId) -> bool {
         if self.inert {
@@ -239,7 +303,7 @@ impl FilesPage {
         if !ids.holds(id) {
             return false;
         }
-        let on = *id == ids.open;
+        let on = ids.button(id);
         self.set_focus(on);
         true
     }

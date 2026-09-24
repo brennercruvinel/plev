@@ -1,12 +1,14 @@
-//! The Files page as a capability (task-76, item 3): what it projects
-//! (the dialog for a person, the drop for anyone, the files received), a
-//! drop through the engine's event becoming a request by the person, the
-//! button asking the fake dialog and showing what it picked, an agent
-//! refused the dialog and allowed the drop (in process, and through the
-//! real port), two viewports, the chrome's routes, and the golden of the
-//! projection. No test opens a native dialog: every page here is over
-//! the fake, and the gallery's page is over the fake in the crate's
-//! tests by construction (`FilesPage::new`).
+//! The Files page as a capability (task-76, items 3 and 8): what it
+//! projects (the dialog and the alert for a person, the drop for anyone,
+//! the files received, the last alert shown), a drop through the engine's
+//! event becoming a request by the person, the button asking the fake
+//! dialog and showing what it picked, the warn button showing the fake
+//! alert and projecting its text, an agent refused the dialog and the
+//! alert and allowed the drop (in process, and through the real port),
+//! two viewports, the chrome's routes, and the golden of the projection.
+//! No test opens a native panel: every page here is over the fakes, and
+//! the gallery's page is over the fakes in the crate's tests by
+//! construction (`FilesPage::new`).
 
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, Sender};
@@ -17,6 +19,7 @@ use std::time::{Duration, Instant};
 use comps::prelude::{Rect, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::input::FileDrop;
+use engine::platform::alerts::{Dialog, FakeAlerts, Level, NoAlerts};
 use engine::platform::files::{DialogKind, FakeDialogs, NoDialogs};
 use engine::theme::Theme;
 use sem::{
@@ -50,12 +53,29 @@ fn narrow() -> Rect {
 }
 
 type Shared = Arc<Mutex<FakeDialogs>>;
+type SharedAlerts = Arc<Mutex<FakeAlerts>>;
 
-/// The page over a shared fake: the test keeps the other handle.
+/// The page over a shared fake dialog: the test keeps the other handle.
 fn setup(fake: FakeDialogs) -> (TodoPage, FilesPage, Theme, Shared) {
     let shared = Arc::new(Mutex::new(fake));
-    let page = FilesPage::with(Box::new(shared.clone()));
+    let page = FilesPage::with(Box::new(shared.clone()), Box::new(FakeAlerts::new()));
     (TodoPage::new(), page, Theme::hoff_core(), shared)
+}
+
+/// The page over a shared fake alert: the test keeps the other handle.
+fn with_alerts(fake: FakeAlerts) -> (TodoPage, FilesPage, Theme, SharedAlerts) {
+    let shared = Arc::new(Mutex::new(fake));
+    let page = FilesPage::with(Box::new(FakeDialogs::new()), Box::new(shared.clone()));
+    (TodoPage::new(), page, Theme::hoff_core(), shared)
+}
+
+/// `files:alert` as projected now.
+fn alerted(page: &FilesPage) -> String {
+    let snap = page.snapshot().unwrap();
+    match snap.value(&StateRef::parse("files:alert").unwrap()) {
+        Some(Value::Text(text)) => text.clone(),
+        other => panic!("a text: {other:?}"),
+    }
 }
 
 fn frame(page: &mut FilesPage, content: Rect, theme: &Theme) -> Compositor {
@@ -131,6 +151,11 @@ fn the_page_projects_the_dialog_for_a_person_and_the_drop_for_anyone() {
     assert_eq!(files.role, Role::Region);
     assert_eq!(files.state.get("received"), Some(&Value::List(vec![])));
     assert_eq!(files.state.get("count"), Some(&Value::Int(0)));
+    assert_eq!(
+        files.state.get("alert"),
+        Some(&Value::from("")),
+        "no alert shown yet"
+    );
     assert!(!files.inert);
 
     let zone = node("files.drop");
@@ -157,6 +182,20 @@ fn the_page_projects_the_dialog_for_a_person_and_the_drop_for_anyone() {
     assert!(!action.policy.actors.agent, "a native dialog is a person's");
     assert!(action.policy.actors.human && action.policy.actors.assistive);
     assert!(action.policy.actors.test, "the test drives the fake");
+
+    let warn = node("files.warn");
+    assert_eq!(warn.role, Role::Button);
+    assert_eq!(warn.label, "warn");
+    assert!(warn.focusable);
+    assert_eq!(warn.actions.len(), 1);
+    let action = &warn.actions[0];
+    assert_eq!(action.name.as_str(), "warn");
+    assert_eq!(action.param, None);
+    assert_eq!(action.reads, [StateRef::parse("files:received").unwrap()]);
+    assert_eq!(
+        action.policy.actors, OPEN_FILE_ACTORS,
+        "a native panel is a person's, the alert like the dialog"
+    );
 
     let status = node("files.status");
     assert_eq!(status.role, Role::Status);
@@ -339,6 +378,133 @@ fn the_button_asks_the_dialog_and_shows_what_it_picked() {
     assert_eq!(received(&page).len(), 1);
 }
 
+/// The warn button asks the platform's warning (the fake here) through
+/// `warn` by the person: the panel says how many files the page holds,
+/// the text shown becomes `files:alert` (what an agent reads), the status
+/// says it was shown; a target without panels fails the request and the
+/// status says so. Tab walks both buttons: open, warn, none; Enter on
+/// the warn button presses it.
+#[test]
+fn the_warn_button_shows_the_platforms_warning_and_the_text_shown_is_state() {
+    let (mut todo, mut page, theme, fake) = with_alerts(FakeAlerts::new());
+    let content = wide();
+    let c = frame(&mut page, content, &theme);
+    let warn = center(&c, "files.warn");
+    assert_eq!(alerted(&page), "");
+
+    click(&mut page, &mut todo, content, &theme, warn);
+    assert_eq!(
+        alerted(&page),
+        "0 files received; nothing was written to disk."
+    );
+    assert_eq!(message(&page), "the warning was shown");
+    let receipt = todo.receipt(RequestId::parse("1").unwrap()).unwrap();
+    assert_eq!(receipt.request.actor, Actor::Human);
+    assert_eq!(receipt.request.target, sid("files.warn"));
+    assert_eq!(receipt.request.action.as_str(), "warn");
+    let Stage::Completed(outcome) = stage(&todo, 1) else {
+        panic!("{:?}", stage(&todo, 1));
+    };
+    assert_eq!(
+        outcome.result.get("alert"),
+        Some(&Value::from(
+            "0 files received; nothing was written to disk."
+        ))
+    );
+
+    // the text follows the files: one received, then warned again by key
+    page.handle_file_drop(&dropped(&["/a"], None), content, &theme, &mut todo, false);
+    assert!(page.handle_edit_key(EditKey::Tab), "open");
+    assert!(page.handle_edit_key(EditKey::Tab), "warn");
+    assert_eq!(page.snapshot().unwrap().focused(), Some(&sid("files.warn")));
+    assert!(page.handle_enter(&mut todo, false));
+    assert_eq!(
+        alerted(&page),
+        "1 file received; nothing was written to disk."
+    );
+    assert!(page.handle_edit_key(EditKey::Tab), "none");
+    assert_eq!(page.snapshot().unwrap().focused(), None);
+    assert!(!page.handle_enter(&mut todo, false), "no focus, no press");
+
+    let shown = fake.lock().unwrap().take_asked();
+    assert_eq!(shown.len(), 2);
+    for ask in &shown {
+        assert!(!ask.with_parent, "the page knows no window");
+    }
+    let Dialog::Alert(first) = &shown[0].dialog else {
+        panic!("an alert: {:?}", shown[0]);
+    };
+    assert_eq!(first.level, Level::Warning);
+    assert_eq!(first.title, "Files");
+    assert_eq!(first.body, "0 files received; nothing was written to disk.");
+    assert_eq!(
+        shown[1].dialog,
+        Dialog::Alert(engine::platform::alerts::Alert::warning(
+            "Files",
+            "1 file received; nothing was written to disk."
+        ))
+    );
+
+    // a target without any panel (wasm, mobile): the request fails, the
+    // status says so, the last alert shown stays
+    page.set_alerts(Box::new(NoAlerts));
+    click(&mut page, &mut todo, content, &theme, warn);
+    assert!(matches!(
+        stage(&todo, 4),
+        Stage::Failed { error } if error == "alert: no native dialog on this target"
+    ));
+    assert_eq!(message(&page), "no native alert on this target");
+    assert_eq!(
+        alerted(&page),
+        "1 file received; nothing was written to disk."
+    );
+}
+
+/// An agent is refused the alert before anything opens (the fake is
+/// never asked), reads the text the person saw as state, and a test
+/// actor may ask (over the fake).
+#[test]
+fn an_agent_is_refused_the_alert_and_reads_what_the_person_saw() {
+    let (mut todo, mut page, _theme, fake) = with_alerts(FakeAlerts::new());
+    let agent = Actor::Agent {
+        name: "claude".to_owned(),
+    };
+    let seen = page.snapshot().unwrap();
+    let req = Request::observe(&seen, agent.clone(), "files.warn", "warn", None).unwrap();
+    let receipt = page.act(req, &mut todo, false).expect("a receipt");
+    assert!(
+        matches!(receipt.stage(), Some(Stage::Rejected(Rejection::NotAuthorized { actor })) if *actor == agent),
+        "{:?}",
+        receipt.stage()
+    );
+    assert!(fake.lock().unwrap().asked().is_empty(), "never asked");
+    assert_eq!(alerted(&page), "");
+
+    let seen = page.snapshot().unwrap();
+    let tester = Actor::Test {
+        name: "files".to_owned(),
+    };
+    let req = Request::observe(&seen, tester, "files.warn", "warn", None).unwrap();
+    let receipt = page.act(req, &mut todo, false).unwrap();
+    assert!(matches!(receipt.stage(), Some(Stage::Completed(_))));
+    assert_eq!(fake.lock().unwrap().asked().len(), 1);
+
+    // the agent reads what was shown
+    let seen = page.snapshot().unwrap();
+    assert_eq!(
+        seen.value(&StateRef::parse("files:alert").unwrap()),
+        Some(&Value::from(
+            "0 files received; nothing was written to disk."
+        ))
+    );
+    let req = Request::observe(&seen, Actor::Assistive, "files.warn", "warn", None).unwrap();
+    let receipt = page.act(req, &mut todo, false).unwrap();
+    assert!(
+        matches!(receipt.stage(), Some(Stage::Completed(_))),
+        "assistive technology is a person"
+    );
+}
+
 /// An agent may drop files (the same capability as the person's drop)
 /// and is refused the dialog before anything runs: the fake is never
 /// asked. A test actor is allowed (over the fake).
@@ -415,13 +581,23 @@ fn two_viewports_render_and_bind_the_page() {
             Rect::new(x, y, w, h)
         };
         let card = rect("files");
-        let (zone, open, status) = (rect("files.drop"), rect("files.open"), rect("files.status"));
+        let (zone, open, warn, status) = (
+            rect("files.drop"),
+            rect("files.open"),
+            rect("files.warn"),
+            rect("files.status"),
+        );
         assert!(
             card.w <= content.w && card.x >= content.x,
             "{card:?} in {content:?}"
         );
         assert_eq!(card.h, empty_h, "the height is the card's");
-        for (name, r) in [("zone", zone), ("open", open), ("status", status)] {
+        for (name, r) in [
+            ("zone", zone),
+            ("open", open),
+            ("warn", warn),
+            ("status", status),
+        ] {
             assert!(
                 r.x >= card.x && r.right() <= card.right() + 0.5,
                 "{name} {r:?} in {card:?}"
@@ -431,8 +607,9 @@ fn two_viewports_render_and_bind_the_page() {
                 "{name} {r:?} in {card:?}"
             );
         }
-        assert!(zone.bottom() <= open.y, "the button is under the zone");
-        assert!(status.x >= open.right(), "the status is beside the button");
+        assert!(zone.bottom() <= open.y, "the buttons are under the zone");
+        assert!(warn.x >= open.right(), "warn is beside open");
+        assert!(status.x >= warn.right(), "the status is beside the buttons");
 
         page.handle_file_drop(
             &dropped(&["/one", "/two", "/three"], None),
@@ -501,14 +678,27 @@ fn the_gallery_routes_the_page() {
         view.semantics().unwrap().focused(),
         Some(&sid("files.open"))
     );
+    assert!(view.handle_edit_key(EditKey::Tab), "tab moves on to warn");
+    assert_eq!(
+        view.semantics().unwrap().focused(),
+        Some(&sid("files.warn"))
+    );
     assert!(view.handle_edit_key(EditKey::Tab), "tab lets the focus go");
     assert_eq!(view.semantics().unwrap().focused(), None);
-    assert!(view.handle_edit_key(EditKey::Tab));
+    assert!(
+        view.assist_focus(&sid("files.warn")),
+        "a reader aims at warn"
+    );
+    assert_eq!(
+        view.semantics().unwrap().focused(),
+        Some(&sid("files.warn"))
+    );
     assert!(view.close_top_overlay(), "escape lets the focus go");
     assert!(!view.handle_edit_key(EditKey::Backspace), "nothing to edit");
 
-    // the gallery's page is over the fake in the crate's tests: enter on
-    // the focused button asks it, and it cancels
+    // the gallery's page is over the fakes in the crate's tests: enter on
+    // the focused open button asks the dialog, and it cancels; on the
+    // warn button it shows the alert, and the text is projected
     assert!(view.handle_edit_key(EditKey::Tab));
     assert!(view.handle_enter());
     assert_eq!(
@@ -517,10 +707,26 @@ fn the_gallery_routes_the_page() {
             .value(&StateRef::parse("files.status:message").unwrap()),
         Some(&Value::from("the dialog was cancelled"))
     );
+    assert!(view.handle_edit_key(EditKey::Tab));
+    assert!(view.handle_enter());
+    assert_eq!(
+        view.semantics()
+            .unwrap()
+            .value(&StateRef::parse("files:alert").unwrap()),
+        Some(&Value::from(
+            "3 files received; nothing was written to disk."
+        ))
+    );
 
     let mut c = Compositor::new();
     view.render(&mut c);
-    for id in ["files", "files.drop", "files.open", "files.status"] {
+    for id in [
+        "files",
+        "files.drop",
+        "files.open",
+        "files.warn",
+        "files.status",
+    ] {
         assert!(c.binding(&sid(id)).is_some(), "{id} is bound");
     }
     assert!(!view.tick(TURN), "at rest the page asks for nothing");
@@ -628,9 +834,9 @@ fn state<'a>(reply: &'a wire::SnapshotReply, id: &str, key: &str) -> Option<&'a 
 }
 
 /// The acceptance through the port: the agent observes the files (the
-/// list, the zone and the button with where they sit), is refused the
-/// dialog (a receipt, rejected, not an error), drops files from what it
-/// saw, and the page shows them as the agent's act.
+/// list, the zone and the buttons with where they sit), is refused the
+/// dialog and the alert (a receipt each, rejected, not an error), drops
+/// files from what it saw, and the page shows them as the agent's act.
 #[test]
 fn an_agent_through_the_port_reads_the_files_and_is_refused_the_dialog() {
     let dir = Dir(std::env::temp_dir().join(format!("plev-t76-{}-files", std::process::id())));
@@ -661,6 +867,19 @@ fn an_agent_through_the_port_reads_the_files_and_is_refused_the_dialog() {
                     .map(|s| s.stage.name())
                     .collect::<Vec<_>>()
             });
+        let no_alert = c
+            .act(
+                Act::from_revision(
+                    sid("files.warn"),
+                    ActionName::parse("warn").unwrap(),
+                    first.revision,
+                ),
+                |_| {},
+            )
+            .unwrap()
+            .into_iter()
+            .map(|s| s.stage.name())
+            .collect::<Vec<_>>();
         let dropped = c
             .act(
                 Act::from_revision(
@@ -676,14 +895,26 @@ fn an_agent_through_the_port_reads_the_files_and_is_refused_the_dialog() {
             .map(|s| s.stage.name())
             .collect::<Vec<_>>();
         let after = snapshot(c.observe(Observe::default()).unwrap());
-        (first, refused, dropped, after)
+        (first, refused, no_alert, dropped, after)
     });
-    let (first, refused, dropped, after) = seen;
+    let (first, refused, no_alert, dropped, after) = seen;
 
     let ids: Vec<&str> = first.nodes.iter().map(|n| n.id.as_str()).collect();
-    for id in ["files", "files.drop", "files.open", "files.status"] {
+    for id in [
+        "files",
+        "files.drop",
+        "files.open",
+        "files.warn",
+        "files.status",
+    ] {
         assert!(ids.contains(&id), "{id} in {ids:?}");
     }
+    assert_eq!(state(&first, "files", "alert"), Some(&Value::from("")));
+    assert_eq!(
+        no_alert,
+        ["requested", "rejected"],
+        "the alert is a person's too"
+    );
     assert_eq!(state(&first, "files", "count"), Some(&Value::Int(0)));
     let bounds = first.bounds.expect("bounds");
     assert!(
@@ -717,7 +948,7 @@ fn an_agent_through_the_port_reads_the_files_and_is_refused_the_dialog() {
     let drop = view
         .panes
         .todo
-        .receipt(RequestId::parse("2").unwrap())
+        .receipt(RequestId::parse("3").unwrap())
         .expect("the drop");
     assert_eq!(
         drop.request.actor,
