@@ -65,3 +65,42 @@ does not change.
   its panel open; the git worker and the accessibility bridge still ask
   for stray frames with nothing visible changed. all three are recorded
   in the task file as debts, not hidden.
+- phase b (branch `task/82b-wake-everywhere`) supersedes the two
+  bullets above for the ide, the showcase's Git page, urnaui and the git
+  worker: all of them use the same mechanism. the ide's chain
+  (`Workbench` -> `WorkspaceView` -> panels, commit form, toasts) and
+  urnaui's eight view ticks answer `wake(dt) -> Wake`; both shells pace
+  the loop as the showcase does (`since_last`, `WaitUntil`, `Wait`,
+  `ResumeTimeReached`). the Git page merges `GitPage::wake` only while it
+  shows, and the git worker's `UserEvent::Wake` applies its events
+  whichever page shows but draws only with the Git page on screen.
+  measured in a real window: a focused ide commit field draws 11 frames
+  in 6 s where it drew 1431; the same on the Git page, 11 where 1423;
+  three worker results with another page showing draw 0 frames where
+  they drew 3.
+- a toast at rest is a deadline too: `ToastManager::wake` asks for every
+  frame while a toast springs in or out and, between, for the instant
+  the first one on screen dismisses itself. the ide's
+  `|| !toasts.is_empty()` is gone.
+- `since_last` covers the time before an event as well: a change made
+  between two frames (a toast pushed, a field focused, a key typed)
+  would receive the whole gap on the next tick. `Toast` and `TextInput`
+  mark such a change and count no time for it on that tick, so a
+  refusal toast lives its full duration and the caret's half-period
+  starts at the key. other widgets (the `EditorView` blink, the
+  `Scrollbar` after a wheel, springs started by a click) still take the
+  gap; a catch-up tick in each shell before input is applied is the
+  general form, recorded as open in the task file.
+- `tick -> bool` stays only where a reader outside the shells needs it:
+  `ShowcaseView::tick` and `Workbench::tick` mean "in motion" for the
+  settle loops (headless `render_page`, the session recorder, the
+  workbench tests), and `EditorView::tick` means "flipped" for the comps
+  editor example, which keeps its own timer. `TextField::tick` and
+  `ToastManager::tick` are gone.
+- still open, recorded in the task file as debts: an `EditorView`
+  without a focus notion keeps a blink pending while visible; the dock
+  caret stays continuous with its panel open; the accessibility bridge
+  still asks for a frame with nothing visible changed; and the ide's
+  file watcher refreshes forever in an ordinary repository (`git status`
+  takes the optional index lock inside `.git`, which the watcher sees),
+  two frames every third of a second while idle.
