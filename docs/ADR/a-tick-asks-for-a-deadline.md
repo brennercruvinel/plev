@@ -75,32 +75,39 @@ does not change.
   shows, and the git worker's `UserEvent::Wake` applies its events
   whichever page shows but draws only with the Git page on screen.
   measured in a real window: a focused ide commit field draws 11 frames
-  in 6 s where it drew 1431; the same on the Git page, 11 where 1423;
-  three worker results with another page showing draw 0 frames where
-  they drew 3.
+  in 6 s where it drew every frame (720 at 120 Hz); the same on the Git
+  page; three worker results with another page showing draw 0 frames
+  where they drew 2 or 3.
 - a toast at rest is a deadline too: `ToastManager::wake` asks for every
   frame while a toast springs in or out and, between, for the instant
   the first one on screen dismisses itself. the ide's
   `|| !toasts.is_empty()` is gone.
 - `since_last` covers the time before an event as well: a change made
-  between two frames (a toast pushed, a field focused, a key typed)
-  would receive the whole gap on the next tick. `Toast` and `TextInput`
-  mark such a change and count no time for it on that tick, so a
-  refusal toast lives its full duration and the caret's half-period
-  starts at the key. other widgets (the `EditorView` blink, the
-  `Scrollbar` after a wheel, springs started by a click) still take the
-  gap; a catch-up tick in each shell before input is applied is the
-  general form, recorded as open in the task file.
+  between two frames (a switch flipped, a toast pushed, a field
+  focused) would take the whole gap on the next tick, and a switch
+  flipped after three idle seconds jumped to its end. so each shell
+  catches up as the loop wakes: `new_events` ticks what animates with
+  the real elapsed time before anything of that iteration lands (input,
+  a worker result, a screen reader's or an agent's request). the
+  catch-up draws nothing unless it changed something visible, and the
+  next frame counts only the time after the event. a tick counts all the
+  time it is given; code that drives widgets without a shell (tests,
+  headless, settle loops) catches up itself before a change.
 - `tick -> bool` stays only where a reader outside the shells needs it:
   `ShowcaseView::tick` and `Workbench::tick` mean "in motion" for the
   settle loops (headless `render_page`, the session recorder, the
   workbench tests), and `EditorView::tick` means "flipped" for the comps
   editor example, which keeps its own timer. `TextField::tick` and
   `ToastManager::tick` are gone.
+- the idle ide drew two frames every third of a second in an ordinary
+  repository: `git status` took the optional index lock inside `.git`,
+  the file watcher saw it and refreshed, which ran `git status` again.
+  `GitRepo` now runs every git process with `GIT_OPTIONAL_LOCKS=0`, and
+  the watcher ignores an event on `.git/index.lock` alone; idle, 0
+  frames and 0 git processes in 6 s where there were 34 and 17.
 - still open, recorded in the task file as debts: an `EditorView`
   without a focus notion keeps a blink pending while visible; the dock
   caret stays continuous with its panel open; the accessibility bridge
-  still asks for a frame with nothing visible changed; and the ide's
-  file watcher refreshes forever in an ordinary repository (`git status`
-  takes the optional index lock inside `.git`, which the watcher sees),
-  two frames every third of a second while idle.
+  still asks for a frame with nothing visible changed; a toast's springs
+  take ~1.7 s each to reach the engine spring's rest threshold, most of
+  it below a pixel.

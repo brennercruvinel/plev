@@ -251,10 +251,9 @@ o que a fase a deixou e o que aconteceu com cada item:
 - o `EditorView` não tem foco: o blink dele está sempre pendente, então
   o Editor page pede uma virada a cada 0,53 s enquanto está visível,
   mesmo sem ninguém editando. um estado de foco no editor (blur ->
-  `Wake::idle()`) é task própria. fica, e ganhou um irmão: o
-  `EditorView` também não tem a regra do "fresh" descrita abaixo, então
-  a primeira virada depois de uma edição conta o intervalo desde o
-  último frame (`crates/comps/src/editor/**`, fora desta fase).
+  `Wake::idle()`) é task própria. fica. (a primeira virada depois de
+  uma edição já conta a partir da tecla: os shells alcançam o tempo
+  antes de aplicar a tecla, descrito abaixo.)
 - o caret do dock (`crates/showcase/src/model/dock.rs`, `blink_t`) é
   do modelo da demo e continua pedindo frame contínuo enquanto o painel
   está aberto. fica.
@@ -273,42 +272,37 @@ achados da auditoria que entraram na fase b e fecharam:
   `Wake::moving`: agora pega `GitPage::wake` e o gallery só junta o pedido
   com a página na tela.
 
-achados novos da fase b, fora dos arquivos desta fase (registrados, não
-corrigidos):
+achados novos da fase b. os dois primeiros o orquestrador trouxe para
+dentro da fase (e fecharam); o terceiro fica:
 
-- o ide parado nunca para de desenhar num repositório comum: o
+- o ide parado nunca parava de desenhar num repositório comum: o
   `git status` do worker pega o `.git/index.lock` opcional, o watcher
-  (`crates/ide/src/watcher.rs`) vê a escrita dentro do `.git`, dispara
-  `Refresh`, que roda `git status` de novo. são dois frames a cada
-  ~0,34 s (36 e 37 frames em 6 s, antes e depois desta fase) e três
-  processos git a cada volta, para sempre. com `GIT_OPTIONAL_LOCKS=0` o
-  loop some (conferido com kqueue no `.git`); a correção mora no crate
-  `git` (`--no-optional-locks` no status) ou no watcher (ignorar o
-  `index.lock`), nenhum dos dois é arquivo desta fase.
-- o `Scrollbar` (`crates/comps/src/feedback/scrollbar.rs`): o primeiro
-  wheel depois de um tempo parado recebe o intervalo inteiro no
-  `since_last`, o timer de 1 s que esconde a barra já nasce vencido e a
-  barra não aparece (conferido no widget: `notify_scroll` e um tick de
-  5 s deixam a opacidade em 0). o segundo evento do mesmo gesto já
-  chega com o intervalo curto e mostra a barra. o conserto é a regra do
-  "fresh" no `notify_scroll`, num arquivo fora desta fase. (o fade de
-  entrada é lento o bastante para seguir pedindo frame até passar do
-  timer, então a barra some sozinha: 2,08 s de frames depois de um
-  scroll, conferido.)
-- molas que começam num evento absorvem o intervalo antes dele: o shell
-  passa `since_last`, o tempo real desde o último frame, e um evento que
-  muda o alvo de uma mola entre dois frames tem a mola avançada por esse
-  intervalo inteiro no frame seguinte (conferido no widget: um `Switch`
-  virado e avançado 3 s de uma vez chega ao fim no primeiro frame, sem
-  animação). o toast e o `TextInput` ganharam a regra do
-  "fresh" nesta fase; o resto do comps não. a forma geral é um tick de
-  alcance no shell antes de aplicar cada entrada, nos três shells; o
-  `window_event` do showcase está fora desta fase.
+  (`crates/ide/src/watcher.rs`) via a escrita dentro do `.git`, disparava
+  `Refresh`, que rodava `git status` de novo. eram dois frames a cada
+  ~0,34 s e um processo `git status` por volta (34 frames e 17 processos
+  em 6 s, medidos com um `git` de contagem no PATH; log e branches vêm
+  do gix, sem processo), para sempre. fechou: o crate `git` roda todo
+  processo com `GIT_OPTIONAL_LOCKS=0` num lugar só (`GitRepo::command`),
+  e o watcher ignora evento cujo único caminho é `.git/index.lock`
+  (defesa contra outro git na máquina). parado: 0 frames e 0 processos
+  em 6 s.
+- molas que começam num evento absorviam o intervalo antes dele: o shell
+  passa `since_last`, e uma mudança aplicada entre dois frames recebia o
+  intervalo inteiro no frame seguinte (um `Switch` virado depois de 3 s
+  parado chegava ao fim no primeiro frame; o `Scrollbar` não aparecia no
+  primeiro wheel depois de um tempo parado; um toast de recusa depois de
+  10 s nascia vencido). fechou: os três shells alcançam o tempo no
+  começo de cada volta do loop (`new_events`), antes de qualquer
+  entrada, resultado do worker ou pedido do agente e da bridge; o tick de
+  alcance não desenha, só pede o frame se mudou algo visível. a regra do
+  "fresh" que o `Toast` e o `TextInput` tinham ganhado saiu (redundante,
+  abaixo).
 - as molas do toast levam ~1,7 s cada para chegar ao `rest_threshold`
   de 0,001 do `Spring` do engine: da vida de ~5,7 s de um toast, ~3,4 s
   ainda desenham todo frame, a maior parte com movimento abaixo de um
   pixel: é quase todo o custo dos 381 frames da medição b. é do engine
   (o limiar de repouso) ou da task-73 (frame só com mudança visível).
+  fica.
 
 ## fase b aberta (orquestrador, 2026-09-23)
 
@@ -324,27 +318,19 @@ showcase; medição antes e depois numa janela real. fora: o blink sem foco
 do `EditorView` e o caret do dock (demo), que ficam na lista de dívidas.
 branch `task/82b-wake-everywhere`.
 
+
 ## fase b (2026-09-23, agente, branch `task/82b-wake-everywhere`)
 
-feito, em seis commits de código que compilam sozinhos, sobre a `main`
-em `4d81cf4`:
+feito, em dez commits de código que compilam sozinhos, sobre a `main`
+em `64e10a1`:
 
 - comps: `ToastManager::wake(dt) -> Wake` no lugar do `tick -> bool`.
   enquanto uma mola de entrada ou saída anda, `Wake::continuous()`; com
   todos parados, `Wake::after` do tempo até o primeiro toast visível
   sumir (`duration - age`); sem toast, `idle`. o frame que deixa de
   desenhar um toast é `now`. uma duração infinita ou NaN não dá prazo,
-  e um `dt` que não é tempo conta como zero.
-- comps: a regra do "fresh". o shell passa `since_last`, o tempo real
-  desde o último frame, e uma mudança feita num evento entre dois frames
-  recebia esse intervalo inteiro no frame seguinte: um toast empurrado
-  depois de 10 s parado nascia com 10 s de idade e sumia no primeiro
-  frame; o caret focado depois de um tempo parado nascia numa fase
-  qualquer; uma tecla no fim de um meio-período deixava o caret sólido
-  só pelo resto dele. o `Toast` e o `TextInput` marcam a mudança (push,
-  dismiss, focus, edição) e o tick seguinte conta zero para ela. o
-  `Blink` não mudou; os testes da fase a que focavam e avançavam agora
-  desenham o frame do foco antes.
+  e um `dt` que não é tempo conta como zero. o tick conta todo o tempo
+  que recebe: quem aplica uma mudança alcança o tempo antes.
 - ide: `CommitForm::wake`, `wake` nos três painéis (o fade do scrollbar
   por `Wake::moving`), `WorkspaceView::wake` junta painéis, formulário e
   toasts, `Workbench::wake` repassa. o shell (`crates/ide/src/main.rs`)
@@ -353,18 +339,41 @@ em `4d81cf4`:
   `Workbench::tick -> bool` fica, com o sentido "ainda em movimento",
   porque o settle dos testes do workbench (`workbench/tests.rs`, fora
   desta fase) lê.
-- showcase: `GitPage::wake` aplica os eventos parados (um frame agora se
-  havia algum) e junta o pedido do workbench; `GitPage::apply_events` é
-  o mesmo dreno sem tick. `ShowcaseView::wake` ticka a página Git em
-  qualquer página e só junta o pedido dela com a página na tela;
-  `ShowcaseView::apply_git` aplica os eventos e diz se a mudança está na
-  tela. `UserEvent::Wake` usa isso. os toasts do próprio gallery também
-  respondem com o `Wake` deles.
+- showcase: `GitPage::wake` é o pedido do workbench; os eventos do
+  worker entram por `GitPage::apply_events`, que o host chama.
+  `ShowcaseView::wake` ticka a página Git em qualquer página e só junta
+  o pedido dela com a página na tela; `ShowcaseView::apply_git` aplica
+  os eventos e diz se a mudança está na tela, e `UserEvent::Wake` usa
+  isso. os toasts do próprio gallery também respondem com o `Wake`
+  deles.
 - urnaui: `Field::wake` e o `wake` das telas Open, Search, Chunks, Graph
   e Stats, do `Explorer` e do `UrnauiView`; o shell com o mesmo `pace` e
   `new_events` (`web_time::Instant`, o build wasm passa).
 - `TextField::tick` e `ToastManager::tick` saíram quando o último
   chamador saiu. nenhum `tick -> bool` novo.
+- git: todo processo `git` do `GitRepo` nasce num helper só
+  (`GitRepo::command`), com `GIT_OPTIONAL_LOCKS=0` no ambiente: leitura
+  não escreve nada no `.git`, mutação continua com os locks dela.
+- ide: o watcher não dispara refresh para evento cujo único caminho é
+  `.git/index.lock` (`is_change`), com o motivo no doc.
+- os três shells alcançam o tempo no começo de cada volta do loop:
+  `new_events` chama `catch_up`, que ticka a view com o `since_last`
+  real antes de qualquer evento daquela volta (entrada, resultado do
+  worker, pedido da bridge ou do agente, e o dreno do urnaui no
+  `about_to_wait`). o tick de alcance não desenha; se mudou algo visível
+  (um prazo que venceu na hora), pede o frame, e o `now` dele vai junto
+  no `wake` do frame (`caught_up`), para a linha de debug marcar a
+  virada. no showcase o `pace`, o `catch_up` e o `frame_wake` foram para
+  `app/pace.rs` (o `app.rs` passou das 639 linhas), e `App::with_view`
+  monta o shell sem os argumentos de lançamento, para os testes.
+- a regra do "fresh" (o `Toast` e o `TextInput` contavam zero no tick
+  depois de uma mudança) entrou nesta fase e saiu nesta fase: o alcance
+  nos shells cobre todo widget, e nenhum caso ficou só com ela (nada
+  empurra toast nem reinicia caret dentro de um tick; a página Git
+  aplicava eventos do worker dentro do tick e deixou de aplicar). o
+  `TextInput` voltou ao código e aos testes da fase a. quem dirige
+  widgets sem shell (testes, headless, o settle do rec, o exemplo
+  `measure`) alcança o tempo por conta própria antes de uma mudança.
 
 ### fase b: medição
 
@@ -373,60 +382,84 @@ real. "antes" é a base `83967a0` com uma linha de debug por frame
 posta no `main.rs` do ide (ele não tinha) e uma linha `git worker woke`
 no `user_event` do showcase, compilada no mesmo target dir e copiada;
 "depois" é esta branch. o app abre num repositório de rascunho (um
-commit, um arquivo modificado, um não rastreado) com
-`GIT_OPTIONAL_LOCKS=0`, para tirar da conta o loop do watcher descrito
-nas dívidas. as teclas são CGEvent postados no pid do app depois de
-ativá-lo; os frames são as linhas de log por frame, carimbadas na
-chegada pelo harness. o harness espera 4 s sem entrada de hardware antes
-de abrir e marca a rodada se alguém mexer no mouse ou teclado durante a
-janela (`CGEventSource.secondsSinceLastEventType`): as três rodadas
-"antes" com o campo ou o toast foram marcadas (havia gente na máquina),
-mas já desenhavam todo frame, e entrada não soma frame a isso; as
-rodadas "depois" saíram limpas. a taxa de display variou entre rodadas
-(120 ou 240 por segundo), então os números "antes" são a taxa do
-display, não do app. em (d) um `git` de mentira no PATH dorme 2 s e
-chama o git de verdade, para os resultados chegarem com a janela
-parada.
+commit, um arquivo modificado, um não rastreado). as teclas são
+CGEvent postados no pid do app depois de ativá-lo; os frames são as
+linhas de log por frame, carimbadas na chegada pelo harness; os
+processos git, as linhas que um `git` de contagem no PATH escreve antes
+de chamar o git de verdade. o harness espera 4 s sem entrada de hardware
+antes de abrir e marca a rodada se alguém mexer no mouse ou teclado
+durante a janela (`CGEventSource.secondsSinceLastEventType`). em (d) um
+`git` de mentira no PATH dorme 2 s e chama o git de verdade, para os
+resultados chegarem com a janela parada. a taxa de display variou entre
+rodadas (120 ou 240 por segundo), então os números "antes" contínuos são
+a taxa do display, não do app.
+
+rodada 2, o código final, sem `GIT_OPTIONAL_LOCKS` no ambiente, todas as
+rodadas limpas:
 
 | cenário | antes | depois |
 | --- | --- | --- |
-| a. ide, campo de commit focado (tecla `c`), 6 s parado | 1431 frames, todo frame | 11 frames, um por virada (`since_last` entre 0,528 e 0,534 s) |
-| b. ide, toast de recusa (`c`, Enter vazio, Esc), 6 s a partir do Esc | 653 frames, todo frame até o toast sair | 381 frames: a mola de entrada (~1,7 s), nada nos ~2,3 s de repouso, o frame do prazo, a mola de saída (~1,7 s), depois nada |
-| c. showcase na página Git, campo focado (`c`), 6 s parado | 1423 frames, todo frame | 11 frames, um por virada |
-| d. showcase na página Button, worker do git acordando 3 vezes, 8 s desde a abertura | 3 frames sem mudança (`now false next None`), 5 com os 2 da abertura | 0 frames pelas 3 acordadas, 2 no total (os da abertura) |
+| ide parado e sem foco, 6 s | 34 frames, 17 processos `git status` | 0 frames, 0 processos |
+| a. ide, campo de commit focado (tecla `c`), 6 s parado | 720 frames, todo frame; 18 processos | 11 frames, um por virada; 0 processos |
+| b. ide, toast de recusa (`c`, Enter vazio, Esc), 6 s a partir do Esc | 653 frames, todo frame até o toast sair; 17 processos | 381 frames: a mola de entrada (~1,7 s), nada nos ~2,3 s de repouso, o frame do prazo, a mola de saída (~1,7 s), depois nada; 0 processos |
+| c. showcase na página Git, campo focado (`c`), 6 s parado | 720 frames, todo frame | 11 frames, um por virada |
+| d. showcase na página Button, worker do git acordando 3 vezes, 8 s desde a abertura | 2 frames sem mudança pelas 3 acordadas, 4 com os 2 da abertura | 0 frames pelas acordadas, 2 no total (os da abertura) |
 
-conferências a mais, só "depois": com a página Git na tela as mesmas 3
-acordadas desenham 2 frames (a mudança está na tela, e a segunda
-acordada já encontra os eventos aplicados); no ide, cinco teclas depois
-do `c` desenham um frame cada, e cada frame de tecla pede a próxima
-virada em 0,53 s (o meio-período recomeça na tecla); o urnaui parado
-desenha 0 frames em 6 s depois dos dois da abertura; o ide parado sem
-`GIT_OPTIONAL_LOCKS=0` desenha 36 frames em 6 s antes e 37 depois (o
-loop do watcher, que esta fase não toca).
+rodada 1, antes do alcance e do conserto do lock, com
+`GIT_OPTIONAL_LOCKS=0` para isolar o caret e o toast do loop do watcher
+(as rodadas "antes" com o campo ou o toast foram marcadas por entrada
+de hardware, e já desenhavam todo frame): a 1431 -> 11, b 653 -> 381,
+c 1423 -> 11, d 3 frames sem mudança -> 0. o ide parado sem a variável
+desenhava 36 frames em 6 s antes e 37 depois (o loop, que a rodada 1
+não tocava).
 
-testes com relógio injetado, todos pelo mesmo modelo do shell (o frame
-do evento chega com 5 s de `since_last`, depois um turno de 60 Hz só é
-desenhado se o pedido anterior era contínuo ou o prazo venceu, e recebe
-o tempo desde o último turno desenhado):
+conferências a mais, com o código final: no ide, cinco teclas depois do
+`c` desenham um frame cada, e cada frame de tecla pede a próxima virada
+em ~0,529 s (o meio-período recomeça na tecla, menos os milissegundos
+até o frame); as viradas do campo focado saem com `now true` e
+`since_last` 0,000 (o alcance fez a virada e o frame a mostra); o urnaui
+parado desenha 0 frames em 6 s depois dos dois da abertura; com a página
+Git na tela, 3 acordadas do worker desenham 2 frames.
 
+testes com relógio injetado, todos na ordem do shell (alcança o tempo
+parado, aplica o evento, desenha o frame alguns milissegundos depois;
+depois um turno de 60 Hz só é desenhado se o pedido anterior era
+contínuo ou o prazo venceu, e recebe o tempo desde o último turno
+desenhado):
+
+- git (`crates/git/tests/real_repo.rs`): com o stat do index velho, o
+  `status` deixa o `.git/index` como achou (tempo e bytes), e um
+  `git status` puro, o controle, reescreve. sem a variável o teste
+  falha.
+- ide, watcher (`crates/ide/src/watcher.rs`): o predicado em eventos
+  montados, e o watcher de verdade num diretório temporário, onde mexer
+  no lock não dispara e escrever na worktree dispara. sem o filtro o
+  segundo falha.
+- ide, shell (`crates/ide/src/main.rs`): a recusa depois de 10 s parado
+  vive os 4 s inteiros; o caret focado depois de 10 s parado começa
+  sólido e vira 0,53 s depois da tecla, 11 viradas em 6 s.
+- showcase, shell (`crates/showcase/src/app/pace/tests.rs`): o toast
+  empurrado depois de 10 s parado vive a duração inteira e entra do
+  começo; o caret focado na página Git depois de 10 s parado começa
+  sólido, 11 viradas, a primeira no turno 32; um alcance que não muda
+  nada não pede frame.
+- showcase, `Switch` (`crates/showcase/src/view/render.rs`): virado
+  depois de 3 s parado, o knob anima (mais de 10 frames) com o alcance,
+  e sem o alcance chega ao fim no primeiro frame.
+- showcase, página Git (`crates/showcase/src/view/apps/git/desktop/tests.rs`):
+  o campo focado pede 11 frames, todos viradas; o toast de recusa anda,
+  descansa e sai no prazo; eventos do worker esperam o host aplicar; o
+  gallery pede o caret do git só com a página na tela; eventos do worker
+  são aplicados com a página escondida e só pedem frame com ela na tela.
+- ide, workspace (`crates/ide/src/views/workspace/tests/wake.rs`): o
+  campo focado pede 11 frames em 6 s, todos viradas; o formulário
+  escondido não pede nada; o toast pede o instante em que sai e nada
+  depois; toast e campo juntos pedem o menor prazo.
 - comps (`crates/comps/src/tests/wake.rs`): o toast anda, descansa num
-  prazo e sai (todo turno fora do repouso é desenhado, nenhum durante os
-  mais de 2 s do repouso, o prazo cai em 4 s); um toast empurrado depois
-  de 10 s parado nasce com a vida inteira; um clique depois do repouso
-  anima a saída a partir do frame seguinte; sem toast ou com duração
-  infinita, `idle`. `TextInput` (`form/text_input/tests`): o foco depois
-  de 10 s parado começa o meio-período no foco; uma tecla tardia
-  recomeça o meio-período nela.
-- ide (`crates/ide/src/views/workspace/tests/wake.rs`): o campo focado
-  pede 11 frames em 6 s, todos viradas, a primeira em 0,53 s; o
-  formulário escondido não pede nada; o toast pede o instante em que
-  sai e nada depois; toast e campo juntos pedem o menor prazo.
-- showcase (`crates/showcase/src/view/apps/git/desktop/tests.rs`): o
-  campo focado na página Git pede 11 frames, todos viradas; o toast de
-  recusa (Enter vazio) anda, descansa e sai no prazo; evento do worker é
-  `now`; o gallery pede o caret do git só com a página na tela; eventos
-  do worker são aplicados com a página escondida e só pedem frame com
-  ela na tela.
+  prazo e sai; o tick conta todo o tempo que recebe (um push avançado
+  10 s de uma vez já está saindo, alcançado antes vive a duração
+  inteira); o clique anima a saída; sem toast ou com duração infinita,
+  `idle`.
 - urnaui: a busca focada pede 11 frames, todos viradas; o toast do view
   anda, descansa e sai no prazo.
 
@@ -438,66 +471,73 @@ Goal: task-82 fase b, o ide, a página Git do showcase e o urnaui só
 Status: pronto para validação do orquestrador
 
 Implementado:
-- comps: ToastManager::wake (toast como prazo), a regra do "fresh" no
-  Toast e no TextInput, as pontes TextField::tick e ToastManager::tick
-  removidas
+- comps: ToastManager::wake (toast como prazo); as pontes
+  TextField::tick e ToastManager::tick removidas
 - ide: CommitForm, painéis, WorkspaceView e Workbench com wake; shell
-  com since_last, WaitUntil/Wait e ResumeTimeReached
+  com since_last, WaitUntil/Wait, ResumeTimeReached e o alcance
 - showcase: GitPage::wake e apply_events, ShowcaseView::apply_git,
-  UserEvent::Wake só desenha com a página Git na tela
-- urnaui: os oito tick -> bool viraram wake -> Wake; shell com WaitUntil
+  UserEvent::Wake só desenha com a página Git na tela; o alcance
+- urnaui: os oito tick -> bool viraram wake -> Wake; shell com
+  WaitUntil e o alcance
+- git: GIT_OPTIONAL_LOCKS=0 em todo processo, num helper só
+- ide: o watcher ignora .git/index.lock sozinho
 
 Arquivos principais:
-- crates/comps/src/feedback/toast.rs, crates/comps/src/form/text_input/component.rs,
-  crates/comps/src/form/text_field.rs
-- crates/ide/src/main.rs, crates/ide/src/views/{commit_form,diff_view,
-  multi_stack_view,unassigned_view}.rs, crates/ide/src/views/workspace/mod.rs,
+- crates/comps/src/feedback/toast.rs, crates/comps/src/form/text_field.rs
+- crates/git/src/repo.rs, crates/git/tests/real_repo.rs
+- crates/ide/src/main.rs, crates/ide/src/watcher.rs,
+  crates/ide/src/views/{commit_form,diff_view,multi_stack_view,
+  unassigned_view}.rs, crates/ide/src/views/workspace/mod.rs,
   crates/ide/src/workbench/mod.rs (só tick/wake)
-- crates/showcase/src/app.rs (user_event e o doc da variante Wake),
-  crates/showcase/src/view/render.rs, crates/showcase/src/view/apps/git/{desktop,stub}.rs
-- crates/urnaui/src/app.rs, crates/urnaui/src/view/{mod,field,open,search,
-  chunks,graph,stats,explorer}.rs
+- crates/showcase/src/app.rs, crates/showcase/src/app/pace.rs (novo),
+  crates/showcase/src/view/render.rs,
+  crates/showcase/src/view/apps/git/{desktop,stub}.rs e o doc de
+  crates/showcase/src/view/apps/git.rs
+- crates/urnaui/src/app.rs, crates/urnaui/src/view/{mod,field,open,
+  search,chunks,graph,stats,explorer}.rs
 
 Interfaces adicionadas/alteradas:
 - adicionadas: ToastManager::wake, CommitForm::wake, {Unassigned,
   MultiStack,Diff}View::wake, WorkspaceView::wake, Workbench::wake,
-  GitPage::{wake, apply_events}, ShowcaseView::apply_git, e o wake das
-  views do urnaui
+  GitPage::{wake, apply_events}, ShowcaseView::apply_git, o wake das
+  views do urnaui; nos shells, catch_up (e no ide e no showcase advance
+  e frame_wake, que os testes chamam)
 - removidas: ToastManager::tick, TextField::tick, CommitForm::tick,
   WorkspaceView::tick, o tick dos três painéis, GitPage::tick e os oito
   tick do urnaui
 - mudou de sentido: Workbench::tick agora é "ainda em movimento" (now ou
-  contínuo), não "frames necessários"; TextInput::wake conta zero no
-  primeiro tick depois de foco ou edição
-- Wake e Blink: sem mudança
+  contínuo); GitPage::wake não aplica mais os eventos do worker
+- Wake, Blink e TextInput: sem mudança no fim da fase
 
 Testes:
-- 17 novos com relógio injetado (6 comps, 4 ide, 5 showcase, 2 urnaui);
-  3 testes da fase a do TextInput ganharam o frame do foco antes de
-  avançar
+- 26 novos (comps 4, ide 8, showcase 11, git 1, urnaui 2), com relógio
+  injetado onde há tempo; os de git e do watcher falham sem o conserto
 
 Validação executada:
-- ./script/gate verde sobre a main em 5be83c5, com a perna urnaui
-  rodando (../urna presente); a 4d81cf4 depois dela só trouxe docs
-- contagem: base (main 8942f0d; a 5be83c5 só trocou o texto de dois
-  testes) workspace 2016 passed, 0 failed, 11 ignored (74 "test
-  result"); urnaui 80 passed, 1 ignored. branch:
-  workspace 2031 passed, 0 failed, 11 ignored (74); urnaui 82 passed,
-  1 ignored. por crate: comps 366 -> 372, ide 80 -> 84, showcase
-  135 -> 140 (3 ignorados nos dois), urnaui 80 -> 82
-- medição em janela real antes e depois para a, b, c e d (tabela acima)
+- cargo test -p git, -p comps, -p ide, -p showcase verdes
+- ./script/gate verde sobre a main em 64e10a1, com a perna urnaui
+  rodando (../urna presente)
+- contagem: base (main 64e10a1) workspace 2022 passed, 0 failed, 11
+  ignored (74 "test result"); urnaui 80 passed, 1 ignored. branch:
+  workspace 2046 passed, 0 failed, 11 ignored (74); urnaui 82 passed,
+  1 ignored. por crate: comps 366 -> 370, ide 80 -> 88, showcase
+  135 -> 146 (3 ignorados nos dois), git 33 -> 34 (2 ignorados),
+  urnaui 80 -> 82
+- medição em janela real antes e depois, rodada 2 sem
+  GIT_OPTIONAL_LOCKS (tabela acima)
 
 Decisões:
-- a regra do "fresh" (contexto: since_last cobre o intervalo antes de um
-  evento; decisão: toast e TextInput contam zero no tick depois da
-  mudança; razão: um toast de recusa sumia no primeiro frame depois de
-  um tempo parado e o caret piscava fora de fase; consequência: o
-  EditorView, o Scrollbar e as molas dos outros widgets ainda têm o
-  problema, registrado nas dívidas)
-- Workbench::tick fica como ponte bool porque workbench/tests.rs, fora
-  desta fase, lê
-- a medição roda com GIT_OPTIONAL_LOCKS=0 para isolar o caret e o toast
-  do loop do watcher
+- o alcance mora no new_events de cada shell, um gancho só em vez de
+  espalhado por window_event, user_event e about_to_wait: toda volta do
+  loop começa com o tempo em dia, e tudo que chega naquela volta cai
+  depois dele
+- a regra do "fresh" saiu: dois mecanismos para um problema; o alcance
+  cobre todo widget
+- a página Git não aplica eventos no tick: o host aplica depois do
+  alcance
+- o pacing do showcase foi para app/pace.rs pelo limite de 639 linhas
+- o doc de crates/showcase/src/view/apps/git.rs dizia que os eventos
+  eram drenados no próximo tick; mudei as três linhas
 
 Limitações:
 - a mola do toast leva ~1,7 s em cada sentido para repousar: a medição b
@@ -509,24 +549,29 @@ Dependências pendentes:
 - nenhuma para integrar
 
 Riscos de integração:
-- crates/ide/src/workbench/mod.rs: só tick/wake mudaram; a task-85
-  mexeu no mesmo arquivo e o rebase foi limpo
-- crates/showcase/src/app.rs: além do user_event, mudou o doc da
-  variante UserEvent::Wake (o texto antigo dizia "drain it on the next
-  frame", que deixou de ser verdade)
-- o loop do watcher no ide (achado novo): sem GIT_OPTIONAL_LOCKS=0 o ide
-  parado continua desenhando ~6 frames por segundo e rodando git; a
-  promessa do README só vale no ide depois de consertar isso
-- as molas que começam num evento pulam o intervalo antes dele em
-  qualquer shell (achado novo): a forma geral é um tick de alcance no
-  shell antes de cada entrada, que toca o window_event do showcase
+- o teste do watcher de verdade depende do tempo do FSEvents (drena os
+  eventos repetidos da criação do diretório e espera 1,2 s de silêncio);
+  passou em seis rodadas seguidas e no gate, mas é o único teste com
+  tempo de sistema de arquivos que entrou
+- o exemplo crates/showcase/examples/measure modela o shell sem o
+  alcance; os números dele não mudam (são da fase a, antes do "fresh"),
+  mas o modelo não repete mais o shell à risca (arquivo fora desta fase)
+- o alcance roda em new_events também no wasm e no mobile: compilado
+  (check wasm com -D warnings), não rodado num browser nem num aparelho
+- crates/ide/src/workbench/mod.rs: só tick/wake mudaram; o rebase sobre
+  a task-85 e a task-87 foi limpo
 
 Commits:
-- 3809b30 task-82b: comps: the toasts answer with a Wake
-- 69df11e task-82b: comps: the caret's half-period restarts at the key, not at the last frame
-- 1d957dc task-82b: ide: the workbench answers with a Wake and the shell sleeps until it is due
-- ca2ffa6 task-82b: showcase: the Git page asks with the workbench's Wake, and the git worker draws only on it
-- 2c0c2bc task-82b: urnaui: the eight ticks answer with a Wake and the shell sleeps until it is due
-- 5b0ba88 task-82b: comps: the bool bridges go, no caller is left
-- o commit deste texto: medição, dívidas, ADR e handoff
+- 890f454 task-82b: comps: the toasts answer with a Wake (o "fresh" do toast saiu em 8a61778)
+- 1e85275 task-82b: comps: the caret's half-period restarts at the key, not at the last frame (revertido em 8a61778)
+- 0d59815 task-82b: ide: the workbench answers with a Wake and the shell sleeps until it is due
+- fccb310 task-82b: showcase: the Git page asks with the workbench's Wake, and the git worker draws only on it
+- 5647f57 task-82b: urnaui: the eight ticks answer with a Wake and the shell sleeps until it is due
+- 026f9ea task-82b: comps: the bool bridges go, no caller is left
+- 473c3de task-82b: measurement, debts and handoff (rodada 1)
+- a11a1c0 task-82b: git: every git process runs without optional locks
+- d3201ef task-82b: ide: the file watcher does not refresh for .git/index.lock alone
+- 31bf7b4 task-82b: the shells catch time up before anything from outside the frame lands
+- 8a61778 task-82b: comps: the toast and the text input lose their fresh flag, the shells' catch-up covers them
+- o commit deste texto: rodada 2, dívidas, ADR e handoff
 ```
