@@ -19,9 +19,9 @@ pub enum Verdict {
     /// every precondition holds: the action may run.
     Accepted,
     /// every precondition holds, and the policy asks a person to confirm
-    /// before the action runs (at the screen or through assistive
-    /// technology; see `Dispatcher::confirm`), or to decline it
-    /// (`Dispatcher::decline`).
+    /// before the action runs, or an agent asks one (`Request::ask`): at
+    /// the screen or through assistive technology (see
+    /// `Dispatcher::confirm`), or to decline it (`Dispatcher::decline`).
     NeedsConfirmation,
     Rejected(Rejection),
 }
@@ -148,7 +148,10 @@ pub struct Acted {
 /// 6. `Disabled`: the target or the action is disabled.
 /// 7. `InvalidParam`: the parameter does not fit (see below).
 /// 8. `NeedsConfirmation`: `Confirm::Always`, or `Confirm::ForAgents` and
-///    an agent asks.
+///    an agent asks for the action, or an agent's request carries a
+///    question for a person (`Request::ask`, task-92). a question never
+///    passes an earlier step: a stale, inert or disabled request is
+///    refused as it would be without it.
 /// 9. `Accepted`.
 ///
 /// only the action's `reads`, as `now` declares them, are compared. state
@@ -203,7 +206,7 @@ pub fn check(req: &Request, now: &Snapshot) -> Verdict {
     if let Err(reason) = param(decl, &node.constraints, req.param.as_ref()) {
         return reject(Rejection::InvalidParam { reason });
     }
-    if needs_confirmation(decl.policy.confirm, &req.actor) {
+    if needs_confirmation(decl.policy.confirm, &req.actor) || req.asks_a_person() {
         return Verdict::NeedsConfirmation;
     }
     Verdict::Accepted

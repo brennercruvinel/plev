@@ -884,3 +884,76 @@ fn an_agent_discard_waits_and_a_test_cannot_confirm_it() {
         "nothing ran"
     );
 }
+
+/// The modal's title, body and confirm label on screen.
+fn modal_text(bench: &Workbench) -> Option<(String, String, String)> {
+    bench
+        .workspace()
+        .overlay_mgr
+        .stack
+        .iter()
+        .rev()
+        .find_map(|overlay| match &overlay.kind {
+            comps::overlay::OverlayKind::Modal {
+                title,
+                body,
+                confirm,
+                ..
+            } => Some((title.clone(), body.clone(), confirm.clone())),
+            _ => None,
+        })
+}
+
+/// task-92: an agent's question to the person opens the modal, which
+/// says the agent asks and quotes it, in the third person; the question
+/// never enters the projection. A request that already waited (a
+/// discard) keeps its warning and its button.
+#[test]
+fn an_agents_question_is_asked_in_the_modal_and_never_projected() {
+    let mut bench = bench();
+    let agent = Actor::Agent {
+        name: "test-agent".into(),
+    };
+    let seen = bench.snapshot().expect("snapshot");
+    let question = "the person took b.txt out; the task needs it: put it back?";
+    let req = Request::observe(&seen, agent.clone(), "changes.file[b.txt]", "stage", None)
+        .expect("observe")
+        .asking(question);
+    let id = bench.dispatch(req);
+    assert_eq!(
+        bench.receipt(id).and_then(Receipt::stage),
+        Some(&Stage::AwaitingConfirmation),
+        "a stage asks nothing by its policy; the question makes it wait"
+    );
+    assert_eq!(
+        modal_text(&bench),
+        Some((
+            "Question from test-agent".to_owned(),
+            format!("test-agent asks the person: \"{question}\" If allowed, it will stage b.txt."),
+            "Allow".to_owned(),
+        ))
+    );
+    let projected = format!("{:?}", bench.snapshot().expect("snapshot"));
+    assert!(!projected.contains("put it back"), "not in the projection");
+    assert!(bench.confirm(id, agent.clone()).is_err(), "never the agent");
+    bench
+        .decline(id, Actor::Human)
+        .expect("the person declines");
+    assert!(!bench.workspace().modal_open());
+
+    let seen = bench.snapshot().expect("snapshot");
+    let req = Request::observe(&seen, agent, "changes.file[a.txt]", "discard", None)
+        .expect("observe")
+        .asking("a.txt is not part of the task: throw it away?");
+    bench.dispatch(req);
+    assert_eq!(
+        modal_text(&bench),
+        Some((
+            "Question from test-agent".to_owned(),
+            "test-agent asks the person: \"a.txt is not part of the task: throw it away?\" \
+             If allowed, it will discard all changes to a.txt. This cannot be undone."
+                .to_owned(),
+            "Discard".to_owned(),
+        ))
+    );
+}

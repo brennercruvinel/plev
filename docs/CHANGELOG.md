@@ -9,6 +9,20 @@ status: living
 
 ## unreleased
 
+- the agent asks the person, and every stage reaches the agent
+  (2026-09-24, task-92). a bug first (P0): a stage of an agent's request
+  that ended outside a drain of the port (a person declining in the ide's
+  confirmation modal, a second check refusing) never reached the agent
+  until it sent another message, and was lost when `plev act` gave up.
+  the port's sink now wakes the port when it hears one. then the handoff:
+  an agent can ask a person to confirm an act first, with a short reason
+  (`plev act ... --ask "the person took src/session.rs out; put it
+  back?"`). the ide shows "Question from claude" with Allow and Cancel;
+  allowed, the act runs after the second check; declined, the agent gets
+  `declined`. only an agent's question waits; the text is bounded,
+  redacted on a secret target, and the inspector's why shows the
+  question and who answered.
+
 - a surface materialized from verified IR (2026-09-24, task-69 phase 1,
   adr materialized-surfaces-from-verified-ir): a new crate, `surface`,
   turns a `VerifiedIr` into a live interface: the comps widgets, laid out

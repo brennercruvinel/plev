@@ -7,7 +7,8 @@
 //! recorder) reduces everything aimed at a secret node here, with the
 //! snapshot's own rule: `Text` becomes `Int(chars)`, `List` and `Set`
 //! become `Int(items)`, `Bool`, `Int` and `Num` stay; a free text about a
-//! secret target (an error, a refusal reason) is replaced by `REDACTED`.
+//! secret target (an error, a refusal reason, an agent's question) is
+//! replaced by `REDACTED`.
 //!
 //! which node is secret is read from a snapshot at one instant, the one
 //! the caller holds as the state now. a node that snapshot does not hold,
@@ -77,11 +78,14 @@ impl Secrets {
     }
 
     /// the request with its parameter (when the target is secret) and
-    /// every observed value of a secret node as their length.
+    /// every observed value of a secret node as their length; an agent's
+    /// question about a secret target (`Request::ask`) is a free text that
+    /// could quote it, and becomes `REDACTED`.
     pub fn request(&self, req: &Request) -> Request {
         let mut out = req.clone();
         if self.holds(&req.target) {
             out.param = out.param.as_ref().map(length);
+            out.ask = out.ask.as_ref().map(|_| REDACTED.to_owned());
         }
         for (at, seen) in &mut out.observed.values {
             if self.holds(&at.node) {
@@ -275,6 +279,40 @@ mod tests {
         let clear = set(&snap, "login.user", "bob");
         let out = Secrets::of(&clear, Some(&snap)).request(&clear);
         assert_eq!(out, clear, "nothing secret: the same request");
+    }
+
+    /// an agent's question to a person (task-92) is a free text: about a
+    /// secret target it could quote the secret, so it goes as `REDACTED`;
+    /// about a clear target it goes as it was asked.
+    #[test]
+    fn a_question_about_a_secret_target_is_redacted() {
+        let snap = login("hunter2");
+        let agent = Actor::Agent {
+            name: "claude".into(),
+        };
+        let secret = Request::observe(
+            &snap,
+            agent.clone(),
+            "login.password",
+            "set",
+            Some("hunter2".into()),
+        )
+        .unwrap()
+        .asking("set the password to hunter2?");
+        let out = Secrets::of(&secret, Some(&snap)).request(&secret);
+        assert_eq!(out.ask.as_deref(), Some(REDACTED));
+        assert_eq!(out.param, Some(Value::Int(7)));
+        assert!(!format!("{out:?}").contains("hunter2"));
+
+        let clear = Request::observe(&snap, agent, "login.user", "set", Some("bob".into()))
+            .unwrap()
+            .asking("rename ana to bob?");
+        let out = Secrets::of(&clear, Some(&snap)).request(&clear);
+        assert_eq!(out, clear, "a clear target keeps its question");
+
+        // no state: every node counts as secret, the question too.
+        let out = Secrets::of(&clear, None).request(&clear);
+        assert_eq!(out.ask.as_deref(), Some(REDACTED));
     }
 
     #[test]

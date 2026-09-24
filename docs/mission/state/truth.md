@@ -170,6 +170,13 @@ o da base até ser reescrito.
   (o `dispatch.rs` com 311 linhas, fora do `FROZEN`).
   `official-app-pattern` tem o segundo padrão.
 
+- `f101359` (task-92): `crates/wire/src/sink.rs` (o sink do porto, com
+  `Waits`) e o wake do porto quando o sink ouve um estágio de um request
+  que ele espera (seção 2.3); `sem::Request.ask` opcional, `asks_a_person`,
+  o `check` pede confirmação quando um agente pergunta (seção 2.2);
+  `Act.ask` e `plev act --ask` (limite 280, `plev` espera 300 s); o modal
+  do ide com a pergunta; `redact` cobre a pergunta; o `why` mostra.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

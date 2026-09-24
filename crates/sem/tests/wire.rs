@@ -748,3 +748,24 @@ fn a_stale_refusal_roundtrips_with_and_without_who_acted() {
     assert_eq!(text, STALE_ACTED);
     assert_eq!(serde_json::from_str::<Rejection>(&text).unwrap(), named);
 }
+
+/// an agent's question to a person (task-92) is written after the
+/// observation, and only when there is one: the request without it keeps
+/// the form pinned above, and a request written before the field existed
+/// reads with no question.
+#[test]
+fn a_question_travels_only_when_there_is_one() {
+    let req = thesis_request().asking("B left the index; commit A and C?");
+    let text = serde_json::to_string(&req).unwrap();
+    assert!(
+        text.ends_with(r#"]]},"ask":"B left the index; commit A and C?"}"#),
+        "{text}"
+    );
+    let back: Request = serde_json::from_str(&text).unwrap();
+    assert_eq!(back, req);
+
+    let old: Request = serde_json::from_str(REQUEST).unwrap();
+    assert_eq!(old.ask, None);
+    assert_eq!(old, thesis_request());
+    assert!(!serde_json::to_string(&old).unwrap().contains("ask"));
+}

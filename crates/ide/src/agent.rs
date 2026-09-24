@@ -11,8 +11,10 @@
 //! A stage, an unstage or a commit ends on the git worker, so its last
 //! stage exists only once the worker's answer is applied
 //! (`Workbench::apply`). The shell serves the port after the port's wake
-//! and again after every worker event it applies, or those stages wait
-//! for the next message an agent sends.
+//! and again after every worker event it applies. A stage that ends
+//! outside a drain (a person's answer in the modal, a worker's answer)
+//! also wakes the port itself (task-92), so it never waits for the
+//! agent's next message.
 //!
 //! When the shell records the session (`crate::record`), it serves through
 //! `serve_recorded`: every observation served is recorded with its actor,

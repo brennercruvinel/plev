@@ -33,8 +33,8 @@ use std::rc::Rc;
 
 use sem::redact::Secrets;
 use sem::{
-    Actor, Change, Mark, Millis, Node, Receipt, ReceiptSink, Rejection, Request, RequestId,
-    Revision, SemId, Snapshot, Stage, StateRef,
+    Actor, Change, Mark, Node, ReceiptSink, Rejection, Request, RequestId, Revision, SemId,
+    Snapshot, Stage, StateRef,
 };
 
 use crate::proto::{
@@ -43,6 +43,7 @@ use crate::proto::{
 };
 use crate::ring::Ring;
 use crate::shown::{Looks, Part, Shown, keeps};
+use crate::sink::{Heard, PortSink, Waits};
 
 /// a connection, numbered by the transport.
 pub type ConnId = u64;
@@ -74,7 +75,8 @@ pub trait Host {
     /// every receipt, now or later, must reach it. through it the port
     /// also follows the dispatcher's order, so a stale refusal of its acts
     /// names what ran since the agent looked; a sink that is dropped leaves
-    /// that to the rule without a look.
+    /// that to the rule without a look. a stage it hears of an agent's
+    /// request that ends later wakes the port (`Server::wake_with`).
     fn add_sink(&mut self, sink: Box<dyn ReceiptSink>);
 
     /// `actor` was just served an observation: the whole snapshot (`scope`
@@ -133,6 +135,7 @@ pub struct Server {
     issued: HashMap<RequestId, Issued>,
     heard: Rc<RefCell<VecDeque<Heard>>>,
     looks: Rc<RefCell<Looks>>,
+    waits: Rc<Waits>,
     listening: bool,
     /// what this server answered; the transport fills the rest.
     traffic: Traffic,
@@ -148,50 +151,6 @@ struct Issued {
     secrets: Secrets,
 }
 
-/// a stage the sink heard.
-struct Heard {
-    id: RequestId,
-    stage: Stage,
-    at: Millis,
-}
-
-/// the port's ear on the dispatcher: every stage of an agent's request,
-/// kept until the port forwards the ones it issued, and the dispatcher's
-/// order with the look each of its acts rests on (`Looks`).
-struct PortSink {
-    heard: Rc<RefCell<VecDeque<Heard>>>,
-    looks: Rc<RefCell<Looks>>,
-}
-
-impl ReceiptSink for PortSink {
-    fn on_stage(&mut self, receipt: &Receipt, stage: &Stage) {
-        if let Ok(mut looks) = self.looks.try_borrow_mut() {
-            looks.heard(receipt, stage);
-        }
-        if !matches!(receipt.request.actor, Actor::Agent { .. }) {
-            return;
-        }
-        let at = receipt.stages.last().map_or(0, |(_, at)| *at);
-        if let Ok(mut heard) = self.heard.try_borrow_mut() {
-            heard.push_back(Heard {
-                id: receipt.id,
-                stage: stage.clone(),
-                at,
-            });
-        }
-    }
-
-    fn attached(&mut self, mark: Mark) {
-        if let Ok(mut looks) = self.looks.try_borrow_mut() {
-            looks.attached(mark);
-        }
-    }
-
-    fn looked(&self, receipt: &Receipt) -> Option<Mark> {
-        self.looks.try_borrow().ok()?.of(receipt.id)
-    }
-}
-
 impl Server {
     /// a server for `app` keeping the last `ring` revisions it serves,
     /// and the last `ring` revisions it gave each actor.
@@ -205,6 +164,7 @@ impl Server {
             issued: HashMap::new(),
             heard: Rc::new(RefCell::new(VecDeque::new())),
             looks: Rc::new(RefCell::new(Looks::default())),
+            waits: Rc::new(Waits::default()),
             listening: false,
             traffic: Traffic::default(),
         }
@@ -332,6 +292,7 @@ impl Server {
                 self.issued.remove(&h.id);
             }
         }
+        self.waiting();
         out
     }
 
@@ -341,6 +302,27 @@ impl Server {
     pub fn close(&mut self, conn: ConnId) {
         self.names.remove(&conn);
         self.issued.retain(|_, issued| issued.conn != conn);
+        self.waiting();
+    }
+
+    /// the wake of the app's loop, the one the port's reader threads call
+    /// (task-92). from then on a stage of a request this server issued,
+    /// heard after the act that dispatched it, calls it, so a stage that
+    /// ends outside a drain (a person's answer to a confirmation, a
+    /// worker's answer) goes out in the drain that follows. a server
+    /// without one leaves the stages queued until `forward` is called.
+    pub fn wake_with(&mut self, wake: impl Fn() + 'static) {
+        if let Ok(mut slot) = self.waits.wake.try_borrow_mut() {
+            *slot = Some(Box::new(wake));
+        }
+    }
+
+    /// the sink's copy of the requests this server forwards, after they
+    /// changed.
+    fn waiting(&self) {
+        if let Ok(mut ids) = self.waits.ids.try_borrow_mut() {
+            *ids = self.issued.keys().copied().collect();
+        }
     }
 
     /// adds the port's sink to the app's dispatcher, once.
@@ -349,6 +331,7 @@ impl Server {
             host.add_sink(Box::new(PortSink {
                 heard: Rc::clone(&self.heard),
                 looks: Rc::clone(&self.looks),
+                waits: Rc::clone(&self.waits),
             }));
             self.listening = true;
         }
@@ -489,6 +472,9 @@ impl Server {
                 reason: "say hello first: an agent acts under the name it declares".to_owned(),
             });
         };
+        if let Some(fault) = a.ask_fault() {
+            return Err(bad(fault));
+        }
         let (req, look) = match (a.observed.take(), a.from_revision) {
             (Some(observed), None) => {
                 let name = self.names.get(&conn).map_or("", String::as_str);
@@ -499,6 +485,7 @@ impl Server {
                     action: a.action,
                     param: a.param,
                     observed,
+                    ask: a.ask,
                 };
                 (req, look)
             }
@@ -548,6 +535,7 @@ impl Server {
                 secrets,
             },
         );
+        self.waiting();
         Ok(())
     }
 
@@ -575,6 +563,7 @@ impl Server {
         };
         let mut req = Request::observe(seen, actor, a.target, a.action, a.param)
             .map_err(|e| bad(format!("in revision {revision}: {e}")))?;
+        req.ask = a.ask;
         let reads: Vec<StateRef> = req.observed.values.drain(..).map(|(r, _)| r).collect();
         let rested = self
             .shown

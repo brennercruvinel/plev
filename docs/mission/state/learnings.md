@@ -12,6 +12,14 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-92
+
+- **o handoff ganhou a peça que faltava:** um agente que encontra a
+  tarefa em conflito com o que a pessoa fez pode perguntar a ela, pelo
+  mesmo modal que o `discard` já usava. a pessoa responde, e o agente
+  recebe a resposta como estágio. ainda sem experimento: o laboratório
+  precisa de uma pessoa roteirizada que responda.
+
 ### 2026-09-24, task-69 fase 1
 
 - **uma interface que nunca foi escrita como tela funciona pelo mesmo

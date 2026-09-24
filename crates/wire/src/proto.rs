@@ -114,6 +114,18 @@ pub struct Observe {
 /// in a terminal) names nobody and hides nobody after it. with no such
 /// observation, `acted` names the other actors from the first request that
 /// ran on the revision the act names.
+///
+/// `ask` asks a person before the act runs (task-92): a short text saying
+/// why, one line of at most `MAX_ASK` characters, not blank (a longer one,
+/// a blank one or one with a control character is `bad_message`). the
+/// request waits (`awaiting_confirmation`) even when the action asks no
+/// confirmation, and is shown to the person with the text; the person
+/// confirms it (`confirmed`, then it runs, checked again against the state
+/// now, so it can still end `rejected` as stale) or declines it
+/// (`rejected`, `declined`). the agent never answers. nobody answering
+/// keeps it waiting; the port sends the stage whenever the person answers.
+/// the text travels back in `asked`, redacted when the target is secret,
+/// and never in an observation. an act without it is the act of before.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Act {
     pub target: SemId,
@@ -124,7 +136,13 @@ pub struct Act {
     pub observed: Option<Observation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub from_revision: Option<Revision>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ask: Option<String>,
 }
+
+/// the longest question an act may ask a person (`Act::ask`), in
+/// characters.
+pub const MAX_ASK: usize = 280;
 
 impl Act {
     /// an act resting on a revision the app served.
@@ -135,6 +153,7 @@ impl Act {
             param: None,
             observed: None,
             from_revision: Some(revision),
+            ask: None,
         }
     }
 
@@ -146,6 +165,7 @@ impl Act {
             param: None,
             observed: Some(observed),
             from_revision: None,
+            ask: None,
         }
     }
 
@@ -153,6 +173,29 @@ impl Act {
     pub fn with_param(mut self, param: Value) -> Self {
         self.param = Some(param);
         self
+    }
+
+    /// the same act, asking a person `question` before it runs.
+    pub fn with_ask(mut self, question: impl Into<String>) -> Self {
+        self.ask = Some(question.into());
+        self
+    }
+
+    /// why its question cannot go to a person, when it cannot: blank,
+    /// longer than `MAX_ASK` characters, or not one line (a control
+    /// character). `None` without a question.
+    pub fn ask_fault(&self) -> Option<String> {
+        let question = self.ask.as_deref()?;
+        let chars = question.chars().count();
+        let fits = !question.trim().is_empty()
+            && chars <= MAX_ASK
+            && !question.chars().any(char::is_control);
+        (!fits).then(|| {
+            format!(
+                "a question to a person is one line of 1 to {MAX_ASK} characters, not blank; \
+                 got {chars} characters"
+            )
+        })
     }
 }
 
@@ -266,7 +309,8 @@ pub enum ProtoError {
     /// unknown type, or a field does not parse (an id, a key, a value); or
     /// the message makes no sense (an act with both or neither of
     /// `observed` and `from_revision`, an action the served revision does
-    /// not offer).
+    /// not offer, a question to a person that is blank, too long or not one
+    /// line).
     #[error("bad message: {reason}")]
     BadMessage { reason: String },
     /// `from_revision` names a revision the app no longer holds (or never

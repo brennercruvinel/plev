@@ -27,6 +27,11 @@
 //! shows no state, so what the act reads comes from the agent's last
 //! observations of it, or the act is refused as `not_observed`.
 //!
+//! an act may also ask a person first (`"ask"`, task-92): it waits
+//! (`awaiting_confirmation`) until a person confirms or declines it at the
+//! app, and the port sends that stage when it comes, with no message from
+//! the agent.
+//!
 //! the messages (`proto`), their codec (`codec`), the ring of served
 //! revisions (`Ring`) and the protocol against an app (`Server`, which
 //! reaches the app only through `Host`) are pure and compile everywhere,
@@ -46,6 +51,7 @@ mod proto;
 mod ring;
 mod server;
 mod shown;
+mod sink;
 
 #[cfg(unix)]
 pub use client::Client;
@@ -56,8 +62,8 @@ pub use place::{MAX_APP, check_app, find, socket_dir, socket_path};
 #[cfg(unix)]
 pub use port::{AgentPort, Config, ENV, MAX_CONNS, MAX_LINE, Wake, enabled};
 pub use proto::{
-    Act, Ask, Bound, ClientMsg, DeltaReply, Observe, ProtoError, Reply, ServerMsg, SnapshotReply,
-    StageReply, VERSION,
+    Act, Ask, Bound, ClientMsg, DeltaReply, MAX_ASK, Observe, ProtoError, Reply, ServerMsg,
+    SnapshotReply, StageReply, VERSION,
 };
 pub use ring::{DEFAULT_RING, Ring};
 pub use server::{ConnId, Host, MAX_NAME, Outgoing, Server, Traffic};

@@ -1,7 +1,8 @@
 //! the causal chain of one request as text: one labelled line per
 //! question of the thesis (which control, its state, who initiated it,
-//! which action, what was observed, the precondition, what came before,
-//! the stages, the verdict, what changed, the result).
+//! which action, what it asked a person and who answered, what was
+//! observed, the precondition, what came before, the stages, the verdict,
+//! what changed, the result).
 
 use std::fmt::Write as _;
 
@@ -45,6 +46,14 @@ pub fn why(w: &Why) -> String {
         None => format!("{}, no parameter", asked.action),
     };
     field(&mut out, "action", &action);
+    if let Some(question) = &asked.ask {
+        field(
+            &mut out,
+            "asked",
+            &format!("{} asked a person first: \"{question}\"", asked.actor),
+        );
+        field(&mut out, "answered", &answered(w));
+    }
     basis(&mut out, w);
     field(
         &mut out,
@@ -85,6 +94,33 @@ pub fn why(w: &Why) -> String {
         );
     }
     out
+}
+
+/// who answered the question a request asked a person (task-92), and
+/// how: from its stages.
+fn answered(w: &Why) -> String {
+    for s in &w.stages {
+        match &s.stage {
+            Stage::Confirmed { by } => return format!("{by} confirmed it, at {}", stamp(s.at)),
+            Stage::Rejected(Rejection::Declined { by }) => {
+                return format!("{by} declined it, at {}", stamp(s.at));
+            }
+            _ => {}
+        }
+    }
+    match w.stages.last().map(|s| &s.stage) {
+        Some(Stage::AwaitingConfirmation) => {
+            "nobody yet: it still waits for a person when the window ends".to_owned()
+        }
+        _ if w
+            .stages
+            .iter()
+            .any(|s| s.stage == Stage::AwaitingConfirmation) =>
+        {
+            "not recorded in this window".to_owned()
+        }
+        _ => "nobody: it was refused before a person was asked".to_owned(),
+    }
 }
 
 fn basis(out: &mut String, w: &Why) {
