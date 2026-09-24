@@ -8,7 +8,7 @@ use std::fmt;
 use crate::builder::{Semantics, SnapshotBuilder};
 use crate::check::{Acted, Rejection, Verdict, check};
 use crate::error::SemError;
-use crate::receipt::{Millis, Outcome, Receipt, RequestId, Stage};
+use crate::receipt::{Mark, Millis, Outcome, Receipt, RequestId, Stage};
 use crate::request::{Actor, Request};
 
 /// an app whose actions run through the dispatcher.
@@ -47,8 +47,29 @@ pub enum Execution {
 /// sees every stage of every receipt, in order, as it happens: `receipt`
 /// already holds `stage` as its last entry. a recorder, a log, the agent
 /// protocol.
+///
+/// a sink that serves observations (the agent port) also knows when an
+/// actor looked, and tells the dispatcher through `looked`; the other two
+/// methods do nothing by default.
 pub trait ReceiptSink {
     fn on_stage(&mut self, receipt: &Receipt, stage: &Stage);
+
+    /// the dispatcher took this sink at `mark` (`Dispatcher::add_sink`):
+    /// every request it takes from now on comes after it, and reaches
+    /// `on_stage` first as `Stage::Requested`.
+    fn attached(&mut self, mark: Mark) {
+        let _ = mark;
+    }
+
+    /// when the actor of `receipt` looked at what its request rests on,
+    /// if this sink knows: the dispatcher's mark at that instant (the agent
+    /// port knows it for the requests it dispatched, since it served the
+    /// observations). the dispatcher reads it only to name who acted
+    /// (`Acted`), for a stale refusal of that receipt, and never to decide.
+    fn looked(&self, receipt: &Receipt) -> Option<Mark> {
+        let _ = receipt;
+        None
+    }
 }
 
 /// how many finished receipts `Dispatcher::new` keeps.
@@ -65,9 +86,11 @@ pub const DEFAULT_RETENTION: usize = 256;
 ///
 /// every stale refusal it records (at dispatch, at a confirmation's second
 /// check, from the point of truth through `execute` or `reject_at_truth`)
-/// names in `Rejection::Stale::acted` the actions of other actors that ran
-/// since the state the refused request observed, read from those same
-/// receipts (see `Acted`); whatever the refusal held there is replaced.
+/// names in `Rejection::Stale::acted` the actions that ran since the
+/// refused request's actor looked, when a sink knows the look
+/// (`ReceiptSink::looked`), or those of other actors since the state it
+/// observed, read from those same receipts (see `Acted`); whatever the
+/// refusal held there is replaced.
 pub struct Dispatcher {
     last: u64,
     open: BTreeMap<RequestId, Receipt>,
@@ -114,9 +137,16 @@ impl Dispatcher {
         }
     }
 
-    /// adds a sink; it sees the stages that happen from now on.
-    pub fn add_sink(&mut self, sink: Box<dyn ReceiptSink>) {
+    /// adds a sink; it sees the stages that happen from now on, and is
+    /// told the mark it came at (`ReceiptSink::attached`).
+    pub fn add_sink(&mut self, mut sink: Box<dyn ReceiptSink>) {
+        sink.attached(self.mark());
         self.sinks.push(sink);
+    }
+
+    /// the mark of now: every request taken from here on comes after it.
+    pub fn mark(&self) -> Mark {
+        Mark::new(self.last)
     }
 
     /// takes a request at `now`. it projects the app's live state, checks
@@ -305,7 +335,7 @@ impl Dispatcher {
     /// stage goes through.
     fn push(&mut self, receipt: &mut Receipt, mut stage: Stage, now: Millis) {
         if let Stage::Rejected(Rejection::Stale { acted, .. }) = &mut stage {
-            *acted = self.acted(&receipt.request);
+            *acted = self.acted(receipt);
         }
         receipt.push(stage, now);
         if let Some((stage, _)) = receipt.stages.last() {
@@ -315,24 +345,41 @@ impl Dispatcher {
         }
     }
 
-    /// the actions of other actors that ran since the state `req`'s actor
-    /// saw, in id order (see `Acted`): from the first request, of any
-    /// actor, that ran after being checked against that state. ids grow in
-    /// dispatch order, so that one and every later one ran after the actor
-    /// looked. only the receipts held here count: the open ones and the
-    /// finished ones retention keeps.
-    fn acted(&self, req: &Request) -> Vec<Acted> {
-        let seen = Some(req.observed.revision);
-        let held = || self.open.values().chain(&self.finished);
-        let Some(start) = held()
-            .filter(|r| r.validated_against == seen && ran(r))
-            .map(|r| r.id)
-            .min()
-        else {
-            return Vec::new();
+    /// who acted since the refused `receipt`'s actor looked, in id order
+    /// (see `Acted`). with the look a sink knows (`ReceiptSink::looked`):
+    /// every request that ran and was taken after it, the author's own
+    /// included. without one: the actions of other actors from the first
+    /// request, of any actor, that ran after being checked against the
+    /// state the author observed; ids grow in dispatch order, so that one
+    /// and every later one ran after the actor looked. only the receipts
+    /// held here count: the open ones and the finished ones retention
+    /// keeps.
+    fn acted(&self, receipt: &Receipt) -> Vec<Acted> {
+        let req = &receipt.request;
+        let held = || {
+            self.open
+                .values()
+                .chain(&self.finished)
+                .filter(|r| r.id != receipt.id && ran(r))
         };
-        let mut out: Vec<Acted> = held()
-            .filter(|r| r.id >= start && r.request.actor != req.actor && ran(r))
+        let named: Vec<&Receipt> = match self.sinks.iter().find_map(|s| s.looked(receipt)) {
+            Some(look) => held().filter(|r| look.precedes(r.id)).collect(),
+            None => {
+                let seen = Some(req.observed.revision);
+                let Some(start) = held()
+                    .filter(|r| r.validated_against == seen)
+                    .map(|r| r.id)
+                    .min()
+                else {
+                    return Vec::new();
+                };
+                held()
+                    .filter(|r| r.id >= start && r.request.actor != req.actor)
+                    .collect()
+            }
+        };
+        let mut out: Vec<Acted> = named
+            .into_iter()
             .map(|r| Acted {
                 id: r.id,
                 actor: r.request.actor.clone(),

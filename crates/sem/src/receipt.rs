@@ -65,6 +65,35 @@ impl FromStr for RequestId {
 
 text_serde!(RequestId);
 
+/// a point in the order of the requests a dispatcher takes: how many it
+/// had taken at that instant, the id of the last one (0 before the
+/// first). ids grow in the order requests arrive, so a request was taken
+/// after a mark exactly when its id is greater (`precedes`).
+///
+/// it marks when an actor looked: an agent port marks each observation it
+/// serves with the dispatcher's mark at that instant (`Dispatcher::mark`),
+/// and a stale refusal names what ran after the look its request rests on
+/// (`Acted`). it only names, never decides, and never travels: it is not
+/// in a request, a receipt or a message.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Mark(u64);
+
+impl Mark {
+    pub(crate) fn new(taken: u64) -> Self {
+        Mark(taken)
+    }
+
+    /// the mark right after `id` was taken.
+    pub fn after(id: RequestId) -> Mark {
+        Mark(id.0)
+    }
+
+    /// true when `id` was taken after this mark.
+    pub fn precedes(self, id: RequestId) -> bool {
+        id.0 > self.0
+    }
+}
+
 /// what an action produced, by name: `commit`, `files`.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
