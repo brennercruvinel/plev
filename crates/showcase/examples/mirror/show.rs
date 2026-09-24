@@ -94,6 +94,13 @@ impl ApplicationHandler<Came> for Show {
                 return;
             }
         };
+        if let wire::Reply::Error(e) = &msg.reply {
+            // a refusal: the app's person did not share its scenes
+            // (`scene_not_shared`), or the watch was refused otherwise
+            eprintln!("mirror: {e}");
+            event_loop.exit();
+            return;
+        }
         let seq = match self.viewer.take(msg.reply) {
             Ok(Some(seq)) => seq,
             Ok(None) => return,
