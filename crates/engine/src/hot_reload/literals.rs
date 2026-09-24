@@ -17,6 +17,11 @@
 //! is formatted before display never matches; numbers are ambiguous and
 //! are treated as code. The baseline is the source at process start, which
 //! is the compiled binary when the app was run after the last edit.
+//!
+//! Each literal also keeps where it sits (line and column, `proc-macro2`'s
+//! `span-locations`), so a text in the window leads back to the literal
+//! that holds it ([`sites_of`]). A file saved with only literals, comments
+//! or whitespace changed keeps its positions as they are on disk now.
 
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -28,6 +33,7 @@ use std::sync::{LazyLock, Mutex, RwLock};
 use proc_macro2::{TokenStream, TokenTree};
 use rustc_hash::FxHasher;
 
+use super::Site;
 use crate::color::Color;
 use crate::compositor::SceneNode;
 
@@ -45,6 +51,18 @@ pub(crate) enum Lit {
 pub(crate) struct Snapshot {
     skeleton: u64,
     lits: Vec<Lit>,
+    /// Where each of `lits` sits, in the same order.
+    at: Vec<At>,
+}
+
+/// Where a literal starts in its file: line and column from 1, the column
+/// counted in chars, as `std::panic::Location` counts them. `doc` marks the
+/// text of a doc comment, which the window never draws.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct At {
+    line: u32,
+    column: u32,
+    doc: bool,
 }
 
 /// What a saved file turned out to be.
@@ -63,6 +81,10 @@ type Deltas = HashMap<PathBuf, Vec<(Lit, Lit)>>;
 static BASELINE: LazyLock<Mutex<HashMap<PathBuf, Snapshot>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 static DELTAS: LazyLock<Mutex<Deltas>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+/// The files a save left with the baseline's skeleton, as they are on disk
+/// now: their literals and positions are the ones a click finds.
+static EDITED: LazyLock<Mutex<HashMap<PathBuf, Snapshot>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[derive(Default)]
 struct Overrides {
@@ -80,30 +102,53 @@ static ACTIVE: AtomicBool = AtomicBool::new(false);
 // ── snapshot + diff ──
 
 pub(crate) fn snapshot(src: &str) -> Option<Snapshot> {
-    let stream = TokenStream::from_str(src).ok()?;
-    let mut hasher = FxHasher::default();
-    let mut lits = Vec::new();
-    walk(stream, &mut hasher, &mut lits);
-    Some(Snapshot {
-        skeleton: hasher.finish(),
-        lits,
-    })
+    let lexed = TokenStream::from_str(src).ok().map(|stream| {
+        let mut hasher = FxHasher::default();
+        let (mut lits, mut at) = (Vec::new(), Vec::new());
+        walk(stream, &mut hasher, &mut lits, &mut at);
+        Snapshot {
+            skeleton: hasher.finish(),
+            lits,
+            at,
+        }
+    });
+    // With `span-locations` the lexer keeps a copy of every text it reads,
+    // failed or not, in a map of this thread for span lookups, and never
+    // frees it. The positions are read by now: let it go, or every save
+    // would grow the watcher thread by a copy of the file.
+    proc_macro2::extra::invalidate_current_thread_spans();
+    lexed
 }
 
-fn walk(stream: TokenStream, hasher: &mut FxHasher, lits: &mut Vec<Lit>) {
+fn walk(stream: TokenStream, hasher: &mut FxHasher, lits: &mut Vec<Lit>, at: &mut Vec<At>) {
+    // 1 after `doc`, 2 after `doc =`: a literal then is a doc comment's text
+    // (`/// x` lexes as `#[doc = " x"]`).
+    let mut after_doc = 0u8;
     for tt in stream {
+        let next = match &tt {
+            TokenTree::Ident(i) if i == "doc" => 1,
+            TokenTree::Punct(p) if p.as_char() == '=' && after_doc == 1 => 2,
+            _ => 0,
+        };
         match tt {
             TokenTree::Ident(i) => i.to_string().hash(hasher),
             TokenTree::Punct(p) => p.as_char().hash(hasher),
             TokenTree::Group(g) => {
                 (g.delimiter() as u8).hash(hasher);
-                walk(g.stream(), hasher, lits);
+                walk(g.stream(), hasher, lits, at);
             }
             TokenTree::Literal(l) => {
                 0xB1u8.hash(hasher);
                 lits.push(classify(&l.to_string()));
+                let start = l.span().start();
+                at.push(At {
+                    line: u32::try_from(start.line).unwrap_or(u32::MAX),
+                    column: u32::try_from(start.column + 1).unwrap_or(u32::MAX),
+                    doc: after_doc == 2,
+                });
             }
         }
+        after_doc = next;
     }
 }
 
@@ -249,10 +294,48 @@ pub fn apply_change(path: &Path) -> Change {
         deltas.insert(path.to_path_buf(), delta);
     }
     rebuild_overrides(&deltas);
+    EDITED
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .insert(path.to_path_buf(), now);
     if n == 0 && was == 0 {
         Change::None
     } else {
         Change::Literals(n)
+    }
+}
+
+/// Every string literal whose value is `text`, ordered by file, line and
+/// column: the sources as the baseline read them, or as the last save that
+/// kept a file's skeleton left it. Doc comments are left out. Empty when no
+/// literal holds the text (formatted before display) or before the
+/// baseline is taken.
+pub fn sites_of(text: &str) -> Vec<Site> {
+    let base = BASELINE.lock().unwrap_or_else(|e| e.into_inner());
+    let edited = EDITED.lock().unwrap_or_else(|e| e.into_inner());
+    let mut sites = Vec::new();
+    for (path, snap) in base.iter() {
+        edited
+            .get(path)
+            .unwrap_or(snap)
+            .find(path, text, &mut sites);
+    }
+    sites.sort_by(|a, b| (&a.file, a.line, a.column).cmp(&(&b.file, b.line, b.column)));
+    sites
+}
+
+impl Snapshot {
+    /// The string literals of this file whose value is `text`.
+    fn find(&self, path: &Path, text: &str, out: &mut Vec<Site>) {
+        for (lit, at) in self.lits.iter().zip(&self.at) {
+            if !at.doc && matches!(lit, Lit::Str(s) if s == text) {
+                out.push(Site {
+                    file: path.to_path_buf(),
+                    line: at.line,
+                    column: at.column,
+                });
+            }
+        }
     }
 }
 
@@ -442,6 +525,88 @@ mod tests {
         assert_eq!(unquote(r#""a\"b\n\u{e9}""#).unwrap(), "a\"b\né");
         assert_eq!(unquote(r##"r#"raw "x""#"##).unwrap(), r#"raw "x""#);
         assert_eq!(unquote("'c'"), None);
+    }
+
+    /// Line and column from 1, in chars, of the first `needle` in `src`.
+    fn position(src: &str, needle: &str) -> (u32, u32) {
+        let (i, line) = src
+            .lines()
+            .enumerate()
+            .find(|(_, l)| l.contains(needle))
+            .unwrap();
+        let byte = line.find(needle).unwrap();
+        let column = line[..byte].chars().count() + 1;
+        (i as u32 + 1, column as u32)
+    }
+
+    #[test]
+    fn each_literal_keeps_its_line_and_column() {
+        let snap = snapshot(OLD).unwrap();
+        assert_eq!(snap.at.len(), snap.lits.len());
+        let (line, column) = position(OLD, "\"Theme\"");
+        assert_eq!((snap.at[1].line, snap.at[1].column), (line, column));
+        let (line, column) = position(OLD, "0xf8f8f8");
+        assert_eq!((snap.at[4].line, snap.at[4].column), (line, column));
+        assert!(snap.at[0].doc, "the doc comment is marked");
+        assert!(!snap.at[1].doc && !snap.at[4].doc);
+    }
+
+    #[test]
+    fn the_column_counts_chars_and_a_second_file_starts_over() {
+        snapshot(OLD).unwrap();
+        let src = "fn f() { let a = \"é→\"; let b = \"x\"; }";
+        let snap = snapshot(src).unwrap();
+        assert_eq!(snap.lits[1], Lit::Str("x".into()));
+        assert_eq!(
+            (snap.at[1].line, snap.at[1].column),
+            (1, 32),
+            "chars, not bytes (é and → are 5 bytes, 2 chars)"
+        );
+    }
+
+    #[test]
+    fn a_text_finds_its_literals_and_follows_a_save() {
+        let dir = std::env::temp_dir().join("plev-literals-sites-test");
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("page.rs");
+        let old = "/// sites-probe-title\n\
+                   const A: &str = \"sites-probe-title\"; const B: &str = \"sites-probe-b\";\n\
+                   const C: &str = \"sites-probe-title\";\n";
+        std::fs::write(&file, old).unwrap();
+        take_baseline(std::slice::from_ref(&dir));
+
+        let found = sites_of("sites-probe-title");
+        assert_eq!(
+            found.iter().map(|s| (s.line, s.column)).collect::<Vec<_>>(),
+            vec![(2, 17), (3, 17)],
+            "both literals, in order; the doc comment with the same text is left out"
+        );
+        assert!(found.iter().all(|s| s.file == file));
+        let b = |src: &str| position(src, "\"sites-probe-b\"").1;
+        assert_eq!(sites_of("sites-probe-b")[0].column, b(old));
+        assert!(sites_of("sites-probe-nowhere").is_empty());
+
+        // a longer literal on the same line moves the one after it
+        let new = old.replacen(
+            "= \"sites-probe-title\";",
+            "= \"sites-probe-title, longer\";",
+            1,
+        );
+        std::fs::write(&file, &new).unwrap();
+        assert_eq!(apply_change(&file), Change::Literals(1));
+        assert_eq!(sites_of("sites-probe-b")[0].column, b(old) + 8);
+        assert_eq!(sites_of("sites-probe-b")[0].column, b(&new));
+        let now = sites_of("sites-probe-title, longer");
+        assert_eq!((now.len(), now[0].line, now[0].column), (1, 2, 17));
+        assert_eq!(
+            sites_of("sites-probe-title").len(),
+            1,
+            "only the third line"
+        );
+
+        std::fs::write(&file, old).unwrap();
+        assert_eq!(apply_change(&file), Change::Literals(0));
+        assert_eq!(sites_of("sites-probe-b")[0].column, b(old));
     }
 
     #[test]

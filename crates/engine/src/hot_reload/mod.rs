@@ -28,6 +28,22 @@ pub use narrate::{
 pub use shader::ShaderWatcher;
 pub use source::{SourceWatcher, source_dirs};
 
+/// A place in the workspace sources: the file (absolute), and the line and
+/// column from 1 of its first character, the column counted in chars. It
+/// prints as `file:line:column`, the form editors open.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Site {
+    pub file: PathBuf,
+    pub line: u32,
+    pub column: u32,
+}
+
+impl std::fmt::Display for Site {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}:{}:{}", self.file.display(), self.line, self.column)
+    }
+}
+
 /// Directory containing `.wgsl` shader source files.
 pub fn shader_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/gpu/shaders")

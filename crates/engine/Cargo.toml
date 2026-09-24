@@ -32,7 +32,15 @@ android-entry = []
 # default, but build.rs only turns the `hot_reload` cfg on for desktop debug
 # builds: release, wasm and mobile compile the embedded `include_str!` path
 # and never start a watcher. Opt out entirely with `--no-default-features`.
-hot-reload = ["dep:notify", "dep:notify-debouncer-full", "dep:proc-macro2"]
+# `span-locations` gives each literal its line and column (view source for
+# pixels); it reaches only this crate's proc-macro2, never the one the proc
+# macros build with (resolver 2 keeps host features apart).
+hot-reload = [
+    "dep:notify",
+    "dep:notify-debouncer-full",
+    "dep:proc-macro2",
+    "proc-macro2/span-locations",
+]
 
 [dependencies]
 wgpu.workspace = true
