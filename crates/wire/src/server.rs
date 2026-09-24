@@ -42,6 +42,7 @@ use crate::proto::{
     StageReply,
 };
 use crate::ring::Ring;
+use crate::scene::{Offer, Watches};
 use crate::shown::{Looks, Part, Shown, keeps};
 use crate::sink::{Heard, PortSink, Waits};
 
@@ -139,6 +140,8 @@ pub struct Server {
     listening: bool,
     /// what this server answered; the transport fills the rest.
     traffic: Traffic,
+    /// the connections that watch a window's scene (task-79).
+    scenes: Watches,
 }
 
 /// a request an agent of this port issued, until its terminal stage.
@@ -167,6 +170,7 @@ impl Server {
             waits: Rc::new(Waits::default()),
             listening: false,
             traffic: Traffic::default(),
+            scenes: Watches::default(),
         }
     }
 
@@ -207,6 +211,7 @@ impl Server {
                         .map_or_else(|| "an agent".to_owned(), |a| a.to_string())
                 ),
             }),
+            Ask::Scene(s) => self.scenes.watch(conn, &id, s).map(|()| None),
         };
         let mut out = Vec::new();
         match reply {
@@ -301,8 +306,21 @@ impl Server {
     /// stays: another connection under the same name is the same actor.
     pub fn close(&mut self, conn: ConnId) {
         self.names.remove(&conn);
+        self.scenes.close(conn);
         self.issued.retain(|_, issued| issued.conn != conn);
         self.waiting();
+    }
+
+    /// whether a connection watches the scene of `window`: an app writes
+    /// that window's frames only then (task-79).
+    pub fn watching(&self, window: &str) -> bool {
+        self.scenes.watching(window)
+    }
+
+    /// the lines each watch of `window` needs of `offer`, the frame the
+    /// app drew there: none for a watch it shows nothing new.
+    pub fn offer_scene(&mut self, window: &str, offer: &Offer) -> Vec<Outgoing> {
+        self.scenes.offer(window, offer)
     }
 
     /// the wake of the app's loop, the one the port's reader threads call

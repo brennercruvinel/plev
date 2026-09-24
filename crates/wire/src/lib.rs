@@ -38,7 +38,14 @@
 //! wasm included. the socket is unix only: `AgentPort` (the app's side,
 //! off unless `PLEV_AGENT=1` in a debug build or the app opts in) and
 //! `Client` (the agent's side, which the `plev` binary uses).
+//!
+//! the same connection also carries a window's scene (task-79,
+//! `scene`): a `scene` request watches it, and its frames come back as
+//! replies, only the layers that changed, binary parts as base64. the
+//! app offers each frame it draws (`AgentPort::offer_scene`); a viewer
+//! puts the lines back together (`SceneReader`).
 
+mod b64;
 #[cfg(unix)]
 mod client;
 mod codec;
@@ -49,10 +56,13 @@ mod place;
 mod port;
 mod proto;
 mod ring;
+mod scene;
+mod scene_read;
 mod server;
 mod shown;
 mod sink;
 
+pub use b64::{decode as decode_base64, encode as encode_base64};
 #[cfg(unix)]
 pub use client::Client;
 pub use codec::{Refusal, decode_client, decode_server, encode_client, encode_server};
@@ -60,11 +70,16 @@ pub use error::WireError;
 #[cfg(unix)]
 pub use place::{MAX_APP, check_app, find, socket_dir, socket_path};
 #[cfg(unix)]
-pub use port::{AgentPort, Config, ENV, MAX_CONNS, MAX_LINE, Wake, enabled};
+pub use port::{AgentPort, Config, ENV, MAX_CONNS, SCENE_QUEUE, Wake, enabled};
 pub use proto::{
     Act, Ask, Bound, ClientMsg, DeltaReply, MAX_ASK, Observe, ProtoError, Reply, ServerMsg,
     SnapshotReply, StageReply, VERSION,
 };
 pub use ring::{DEFAULT_RING, Ring};
+pub use scene::{
+    BlobReply, MAIN_WINDOW, MAX_LINE, MAX_WINDOW, Offer, OfferLayer, SCENE_PART, SceneAsk,
+    SceneLayer, SceneReply,
+};
+pub use scene_read::{LayerBody, MAX_BLOB, SceneFrame, SceneLayerIn, SceneReader};
 pub use server::{ConnId, Host, MAX_NAME, Outgoing, Server, Traffic};
 pub use shown::MAX_ACTORS;

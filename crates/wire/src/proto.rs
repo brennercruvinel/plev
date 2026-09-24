@@ -17,6 +17,8 @@ use sem::{
 };
 use serde::{Deserialize, Serialize};
 
+use crate::scene::{BlobReply, SceneAsk, SceneReply};
+
 /// the protocol version every message carries as `"v"`.
 pub const VERSION: u64 = 1;
 
@@ -34,7 +36,9 @@ pub struct ClientMsg {
 /// `decline` exist so the protocol is complete, and are always refused on
 /// a socket: only a person answers a confirmation, at the screen or
 /// through assistive technology, and an agent never confirms its own
-/// action.
+/// action. `scene` watches a window's scene (task-79, `crate::scene`):
+/// frames come as replies to it for as long as the connection lasts; an
+/// app of before refuses it as `bad_message`, an unknown type.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Ask {
@@ -43,6 +47,7 @@ pub enum Ask {
     Act(Act),
     Confirm { request: RequestId },
     Decline { request: RequestId },
+    Scene(SceneAsk),
 }
 
 /// an observation. with no field it is the whole snapshot of what the app
@@ -213,8 +218,9 @@ pub struct ServerMsg {
 /// `act` gets one `stage` per stage of its receipt, in order, until a
 /// terminal one (rejected, completed, failed), which carries the revision
 /// the app is at (see `StageReply`), some of them later than others when
-/// the execution ends after the dispatch; anything refused gets one
-/// `error`.
+/// the execution ends after the dispatch; `scene` gets a `scene` per frame
+/// of its window, each after the `scene_blob`s it needs; anything refused
+/// gets one `error`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Reply {
@@ -223,6 +229,8 @@ pub enum Reply {
     Delta(DeltaReply),
     Stage(StageReply),
     Error(ProtoError),
+    Scene(SceneReply),
+    SceneBlob(BlobReply),
 }
 
 /// the nodes an observation sees, in projection order, with the focus

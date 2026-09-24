@@ -88,6 +88,9 @@ fn every_ask() -> Vec<Ask> {
         Ask::Decline {
             request: request_id("7"),
         },
+        Ask::Scene(wire::SceneAsk {
+            window: "main".into(),
+        }),
     ]
 }
 
@@ -184,6 +187,26 @@ fn every_reply() -> Vec<Reply> {
         }),
         Reply::Error(ProtoError::NotEnabled {
             reason: "why".into(),
+        }),
+        Reply::Scene(wire::SceneReply {
+            seq: 1,
+            head: Some(vec![0, 1, 2, 255]),
+            layers: vec![wire::SceneLayer {
+                key: 3,
+                hash: 0x3ba6_94e7_d394_1ec0,
+                body: Some(vec![9; 7]),
+                patch: None,
+            }],
+            bounds: Some(vec![Bound {
+                id: sid("todo"),
+                rect: [1.0, 2.5, 300.0, 40.0],
+            }]),
+        }),
+        Reply::SceneBlob(wire::BlobReply {
+            key: 7,
+            at: 0,
+            total: 2,
+            bytes: vec![0xff, 0],
         }),
     ]
 }
