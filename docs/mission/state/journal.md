@@ -14,6 +14,19 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: item 6 parou na sonda; decisão do orquestrador
+
+- **parada correta, premissa errada do briefing:** a documentação do
+  winit diz que ele não registra delegado de aplicação no macOS; a fonte
+  da 0.30.13, a do lock, registra e entra em pânico se o delegado for
+  trocado. e o engine não tem `objc2` como dependência direta, ao
+  contrário do que o handoff do item 5 dava a entender: usar o objc
+  mudaria o lock em 3 linhas.
+- **decidido (técnico, dentro do item):** opção 4. no macOS o link chega
+  pelo argumento de lançamento até o bring-up; o handler do evento
+  `GURL` fica desenhado no ADR e entra com o bundle, porque sem esquema
+  registrado o evento não chega. manifesto e lock intactos.
+
 ### ciclo 3: publicado #86 (task-76 item 10); disparado o item 6
 
 - **publicado:** PR #86, merge commit, gate local verde na `main` (2726,

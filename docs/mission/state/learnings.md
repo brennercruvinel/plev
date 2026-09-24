@@ -466,6 +466,16 @@ c"; saídas em `target/agents/exp/`.
 
 ## processo
 
+### 2026-09-24, documentação de biblioteca não é fonte
+
+- **o briefing do item 6 citou a doc do winit como fato:** a doc dizia
+  que o winit não registra delegado de aplicação no macOS; a fonte da
+  versão travada no lock registra, e trocar o delegado derruba o laço. o
+  agente leu a fonte na sonda e parou. regra para o briefing: afirmação
+  sobre biblioteca vem da fonte da versão do lock, com arquivo e linha,
+  não da doc; e uma frase de handoff anterior ("o engine já tem X")
+  se confere no manifesto antes de virar premissa.
+
 ### 2026-09-24, a lição do item 9 chegou ao item 10
 
 - **o briefing citou o `print_wake`, e o agente aplicou:** o estado
