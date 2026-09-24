@@ -11,8 +11,11 @@
 //! person changed is refused as stale, naming the person, to the agent
 //! and on screen in the same words. An agent's request that waits for a
 //! person opens the modal, and the person's answer goes through the
-//! dispatcher; a decline reaches the agent only at the next drain, since
-//! nothing is served after a person's input (the probe of task-92).
+//! dispatcher; a decline reaches the agent at once, since the port's sink
+//! hears the stage outside a drain and wakes the port (the P0 of task-92;
+//! before it, a decline waited for the agent's next message).
+//! The last tests run the `plev` binary itself as the agent, as an agent
+//! in a shell runs it, and read what it printed (task-94).
 
 #![cfg(unix)]
 
@@ -20,7 +23,9 @@
 #[allow(dead_code)]
 mod support;
 
+use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
+use std::process::{Command, Output, Stdio};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -32,7 +37,10 @@ use ide::record::Recording;
 use ide::workbench::Workbench;
 use sem::{Acted, ActionName, Actor, Change, Rejection, Revision, SemId, Stage, StateRef, Value};
 use support::{Rig, set};
-use wire::{Act, AgentPort, Ask, Client, Config, Observe, Reply, SnapshotReply, StageReply};
+use wire::{
+    Act, AgentPort, Ask, Client, Config, Observe, Reply, ServerMsg, SnapshotReply, StageReply,
+    decode_server, encode_server,
+};
 
 fn sid(text: &str) -> SemId {
     SemId::parse(text).expect("an id")
@@ -977,4 +985,307 @@ fn what_ends_at_once_or_at_the_second_check_reaches_the_agent() {
     );
     assert!(drains.iter().all(|d| d.cause == Cause::Port), "{drains:?}");
     assert_eq!(rig.value("commit.form:open"), Value::Bool(true));
+}
+
+/// The `plev` binary of the wire package, in the directory above this
+/// test binary's (`target/<profile>/plev`, the test in `deps`): cargo
+/// names a binary only to the tests of its own package. `cargo test -p
+/// wire -p ide`, or the workspace, builds it; one older than its source
+/// would answer for another `plev`, so it is refused.
+fn plev_bin() -> PathBuf {
+    let exe = std::env::current_exe().expect("this test's path");
+    let bin = exe
+        .parent()
+        .and_then(Path::parent)
+        .expect("target/<profile>/deps")
+        .join("plev");
+    let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../wire/src/bin/plev.rs");
+    let modified = |p: &Path| std::fs::metadata(p).and_then(|m| m.modified()).ok();
+    assert!(
+        modified(&bin) >= modified(&source),
+        "no plev at {}, or one older than its source: build it with the wire package \
+         (cargo test -p wire -p ide)",
+        bin.display()
+    );
+    bin
+}
+
+/// What one `plev` run gave the agent: its exit code, and its stdout and
+/// stderr as they came.
+struct Printed {
+    code: Option<i32>,
+    out: String,
+    err: String,
+}
+
+impl Printed {
+    /// The messages on stdout, one JSON line each.
+    fn messages(&self) -> Vec<ServerMsg> {
+        self.out
+            .lines()
+            .map(|l| decode_server(l).unwrap_or_else(|e| panic!("{l}: {e:?}")))
+            .collect()
+    }
+
+    /// The stages on stdout.
+    fn stages(&self) -> Vec<StageReply> {
+        self.messages()
+            .into_iter()
+            .map(|m| match m.reply {
+                Reply::Stage(stage) => stage,
+                other => panic!("a stage: {other:?}"),
+            })
+            .collect()
+    }
+
+    /// The revision of an observation, or of the last stage of an act
+    /// that completed, as the next command takes it.
+    fn revision(&self) -> String {
+        assert_eq!(self.code, Some(0), "{}{}", self.out, self.err);
+        let revision = match self.messages().pop().map(|m| m.reply) {
+            Some(Reply::Snapshot(s)) => Some(s.revision),
+            Some(Reply::Stage(s)) => s.revision,
+            other => panic!("an observation or a stage: {other:?}"),
+        };
+        revision.expect("a revision").to_string()
+    }
+}
+
+/// `plev <args>` on the port at `path`, as the test's agent runs it
+/// from a shell: the same name for every run, so they are one agent.
+fn plev_command(path: &Path, args: &[&str]) -> Command {
+    let mut cmd = Command::new(plev_bin());
+    cmd.args(args)
+        .arg("--app")
+        .arg(path)
+        .args(["--name", "test-agent"]);
+    cmd
+}
+
+/// What a finished `plev` printed, as text.
+fn printed(output: Output) -> Printed {
+    Printed {
+        code: output.status.code(),
+        out: String::from_utf8(output.stdout).expect("utf-8 on stdout"),
+        err: String::from_utf8(output.stderr).expect("utf-8 on stderr"),
+    }
+}
+
+/// Runs `plev <args>` on the port at `path` (`plev_command`).
+fn plev(path: &Path, args: &[&str]) -> Printed {
+    printed(plev_command(path, args).output().expect("plev runs"))
+}
+
+/// Runs `plev <args>` for an act that asks the person: when its
+/// `awaiting_confirmation` comes out, the person answers in the modal
+/// (`confirm`), while `plev` waits.
+fn plev_asking(path: &Path, args: &[&str], pokes: &Pokes, confirm: bool) -> Printed {
+    let mut child = plev_command(path, args)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("plev runs");
+    let stdout = child.stdout.take().expect("piped");
+    let mut out = Vec::new();
+    for line in BufReader::new(stdout).lines() {
+        let line = line.expect("a line of stdout");
+        let asks = matches!(
+            decode_server(&line).map(|m| m.reply),
+            Ok(Reply::Stage(StageReply {
+                stage: Stage::AwaitingConfirmation,
+                ..
+            }))
+        );
+        out.extend([line.as_bytes(), b"\n"].concat());
+        if asks {
+            let (said, _) = mpsc::channel();
+            poke(pokes, Poke::Answer { confirm, said });
+        }
+    }
+    let mut output = child.wait_with_output().expect("plev ends");
+    output.stdout = out;
+    printed(output)
+}
+
+/// The repository of the fourth round (task-62): the three files of the
+/// task, `src/login.rs` already in the index, and three that are not the
+/// task's, `README.md` in the index.
+const ROUND: [&str; 6] = [
+    "src/login.rs",
+    "src/session.rs",
+    "tests/login_test.rs",
+    "README.md",
+    "notes.txt",
+    "Cargo.toml",
+];
+
+/// The message of the fourth round's task, as `--param` takes it.
+const MESSAGE: &str = r#""fix login session timeout""#;
+
+/// What the agent a `plev` binary got in the fourth round (`fourth_round`).
+struct Round {
+    /// Its submit, refused as stale after the person took a file out.
+    submit: Printed,
+    /// Its stage of that file again, asking the person first.
+    asked: Printed,
+}
+
+/// The fourth round of task-62 through the real port, the agent a `plev`
+/// binary run as an agent runs it: it observes, stages the two files of
+/// the task left out, unstages `README.md`, opens the form and writes the
+/// message, every act resting on the revision the one before it landed
+/// on; it observes to decide, the person takes `src/session.rs` out
+/// (`unstage-before-submit`), and `plev act commit.submit submit
+/// --from-revision` names the revision of that decision. Then it does
+/// what the fifth round measures: it looks again and stages the file with
+/// a question, and the person answers in the modal, allowing it when
+/// `confirm`, declining it otherwise.
+fn fourth_round(rig: &mut Rig, confirm: bool) -> Round {
+    let (round, _) = shell(rig, move |path, pokes| {
+        let mut at = plev(&path, &["observe"]).revision();
+        let steps = [
+            ("changes.file[src/session.rs]", "stage", None),
+            ("changes.file[tests/login_test.rs]", "stage", None),
+            ("changes.file[README.md]", "unstage", None),
+            ("commit.form", "open", None),
+            ("commit.message", "set_value", Some(MESSAGE)),
+        ];
+        for (target, action, param) in steps {
+            let mut args = vec!["act", target, action, "--from-revision", &at];
+            if let Some(param) = param {
+                args.extend(["--param", param]);
+            }
+            at = plev(&path, &args).revision();
+        }
+        poke(&pokes, Poke::Settle(3));
+        let decided = plev(&path, &["observe"]).revision();
+        poke(&pokes, Poke::Unstage("src/session.rs"));
+        let submit = ["act", "commit.submit", "submit", "--from-revision"];
+        let submit = plev(&path, &[&submit[..], &[&decided]].concat());
+
+        let now = plev(&path, &["observe"]).revision();
+        let stage = ["act", "changes.file[src/session.rs]", "stage"];
+        let ask = ["--from-revision", &now, "--ask", ASKED];
+        let asked = plev_asking(&path, &[&stage[..], &ask].concat(), &pokes, confirm);
+        Round { submit, asked }
+    });
+    round
+}
+
+/// What the agent of `fourth_round` asks the person.
+const ASKED: &str = "the person took src/session.rs out; the task needs it: stage it again?";
+
+/// The probe of task-94, and what it asked for: what an agent that runs
+/// `plev` gets when its submit is refused as stale after the person took
+/// a file out. stdout is what it was before task-94: the two stages, one
+/// canonical JSON line each and nothing else, the refusal's `acted`
+/// naming the person's unstage (request 6, as in the fourth round); the
+/// exit is 1. stderr, empty before, is one line that names the person's
+/// act and points at `--ask`. The agent asks as the line says; the person
+/// declines, and after the decline nothing points at asking again.
+/// `--nocapture` prints both streams of both acts.
+#[test]
+fn a_plev_submit_refused_after_the_person_unstaged_points_at_the_question() {
+    let mut rig = Rig::new(&ROUND, &["src/login.rs", "README.md"]);
+    let Round { submit, asked } = fourth_round(&mut rig, false);
+    for run in [&submit, &asked] {
+        println!("stdout:\n{}stderr:\n{}", run.out, run.err);
+    }
+
+    assert_eq!(submit.code, Some(1), "rejected");
+    let messages = submit.messages();
+    let canonical: String = messages
+        .iter()
+        .map(|m| format!("{}\n", encode_server(m)))
+        .collect();
+    assert_eq!(submit.out, canonical, "the stages and nothing else");
+    let stages = submit.stages();
+    assert_eq!(names(&stages), ["requested", "rejected"]);
+    let Stage::Rejected(Rejection::Stale { changes, acted }) = &stages[1].stage else {
+        panic!("stale: {stages:?}");
+    };
+    assert_eq!(
+        changes
+            .iter()
+            .map(|c| match c {
+                Change::StateChanged { at, removed, .. } => (at.to_string(), removed.clone()),
+                other => panic!("a state change: {other:?}"),
+            })
+            .collect::<Vec<_>>(),
+        [("changes:staged".to_owned(), vec!["src/session.rs".into()])]
+    );
+    let named: Vec<(String, &Actor, String, &str)> = acted
+        .iter()
+        .map(|a| {
+            let id = a.id.to_string();
+            (id, &a.actor, a.target.to_string(), a.action.as_str())
+        })
+        .collect();
+    assert_eq!(
+        named,
+        [(
+            "6".to_owned(),
+            &Actor::Human,
+            "changes.file[src/session.rs]".to_owned(),
+            "unstage"
+        )]
+    );
+    assert_eq!(
+        submit.err,
+        "plev: a person acted since this agent looked (request 6, human: unstage \
+         changes.file[src/session.rs]); to act over that, ask the person first: add --ask \
+         \"<why>\" to the act (one line, at most 280 characters)\n"
+    );
+
+    // the agent asks; the person declines; nothing more on stderr.
+    assert_eq!(asked.code, Some(1), "declined");
+    let stages = asked.stages();
+    assert_eq!(
+        names(&stages),
+        ["requested", "awaiting_confirmation", "rejected"]
+    );
+    assert_eq!(
+        stages[0].asked.as_ref().and_then(|a| a.ask.as_deref()),
+        Some(ASKED)
+    );
+    assert_eq!(
+        stages[2].stage,
+        Stage::Rejected(Rejection::Declined { by: Actor::Human })
+    );
+    assert_eq!(asked.err, "", "the person answered");
+    assert_eq!(rig.commits(), 1, "nothing committed");
+    assert_eq!(
+        rig.git(&["diff", "--cached", "--name-only"]).trim(),
+        "src/login.rs\ntests/login_test.rs",
+        "src/session.rs stays out, as the person left it"
+    );
+}
+
+/// The same round, the person allows: the stage runs, and after a stage
+/// that completed nothing points at asking.
+#[test]
+fn a_question_the_person_allows_runs_and_prints_no_line() {
+    let mut rig = Rig::new(&ROUND, &["src/login.rs", "README.md"]);
+    let Round { submit, asked } = fourth_round(&mut rig, true);
+    assert!(
+        submit.err.contains("ask the person first"),
+        "{}",
+        submit.err
+    );
+    assert_eq!(asked.code, Some(0), "{}", asked.err);
+    assert_eq!(
+        names(&asked.stages()),
+        [
+            "requested",
+            "awaiting_confirmation",
+            "confirmed",
+            "executing",
+            "completed"
+        ]
+    );
+    assert_eq!(asked.err, "", "it asked, and it ran");
+    assert_eq!(
+        rig.value("changes.file[src/session.rs]:staged"),
+        Value::Bool(true)
+    );
 }

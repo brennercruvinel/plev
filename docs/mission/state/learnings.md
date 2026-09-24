@@ -12,6 +12,20 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, checkpoint a, quarta rodada (o handoff)
+
+- **o agente usa o que o contrato mostra na hora da decisão:** com a
+  pessoa tirando um arquivo antes do submit, nenhum dos quatro agentes
+  sem dica perguntou. dois pararam dizendo que não havia canal, dois
+  passaram por cima dela. nenhum abriu o `plev act --help`, onde o
+  `--ask` estava. com uma frase no briefing, os dois perguntaram na
+  primeira recusa, e a resposta da pessoa decidiu (commit com `allow`,
+  parada com `decline`). a segurança não dependeu disso: nas seis, a
+  recusa veio antes do efeito e nomeou a pessoa. o que muda no programa:
+  a task-94 põe a pergunta na recusa que nomeia uma pessoa, e uma quinta
+  rodada curta mede se basta. fonte: `task-62-ide-human-agent-proof.md`,
+  "resultado da quarta rodada".
+
 ### 2026-09-24, task-69 fase 2
 
 - **o mantra funciona numa superfície gerada:** a mesma capacidade
@@ -339,6 +353,18 @@ c"; saídas em `target/agents/exp/`.
   token do contrato era forma, não conteúdo.
 
 ## processo
+
+### 2026-09-24
+
+- **o CI parou por cobrança, e o merge espera:** às 06:22 UTC todo job
+  do PR #68 e o da `main` depois do #67 falharam em segundos, sem
+  runner. a anotação do github diz que os jobs não começaram porque um
+  pagamento da conta falhou ou o limite de gasto precisa subir. é
+  serviço pago (condição de parada da autonomia): o orquestrador não
+  mergeia sem o CI, continua integrando na `main` local com o gate, e a
+  publicação espera o brenner (ele decidiu: mergear com o gate local
+  verde enquanto o CI estiver fora, journal). uma falha de todos os jobs em segundos
+  se lê pelas anotações antes de se ler como código quebrado.
 
 ### 2026-09-23
 

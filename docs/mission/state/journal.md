@@ -14,6 +14,53 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a recusa ensina a pergunta (task-94)
+
+- **integrada:** task-94 (`37c5e0c`). gate verde (2433, +4). o
+  orquestrador leu o diff inteiro e conferiu o stdout igual byte a byte
+  pelos testes. no fechamento, corrigiu o topo de
+  `crates/ide/tests/agent_port.rs` (um decline já chega na hora, desde o
+  P0 da 92).
+- **registrado:** `plev.rs` a uma linha do limite; a próxima task nele
+  começa movendo os testes (programa, seção 8).
+- **próximo:** a quinta rodada da task-62 (A5a allow, A5b decline, sem a
+  frase), com os binários desta integração.
+
+### intervenção do brenner: merge com o CI fora
+
+- com o CI parado por cobrança, o brenner mandou mergear ("já dê
+  merge") e mergeou o PR #68 (task-69 fase 2) pelo github, merge
+  `0071764`, às 06:38 UTC. o gate local daquele head estava verde (2429).
+- regra enquanto o CI estiver fora: o orquestrador mergeia com o gate
+  local verde no head do PR, com merge commit, e comenta no PR que o CI
+  não rodou e qual gate valeu. quando o CI voltar, a regra antiga volta.
+
+### ciclo 3: a quarta rodada fecha, e o CI parou por cobrança
+
+- **decisão autônoma, task-69 fase 3a:** a sonda passou (o IR da
+  intenção verifica sobre o registro real, sem nome do todo nas regras).
+  o agente parou porque a página precisa emprestar o dispatcher único do
+  todo a um `Operable` maior, e o arquivo (`view/apps/app/semantics.rs`)
+  estava fora da lista. o orquestrador conferiu as duas premissas
+  (dispatcher privado, a sink em `server.rs:516`) e autorizou a opção 1,
+  um método, sem mudar a projeção nem o golden. a palavra de escolha casa
+  só com as palavras do app; traduzir fica para o proponente LLM.
+- **disparada:** task-94 (P2), a recusa que nomeia uma pessoa aponta
+  para o `--ask`; build dir da task-93 reaproveitado.
+- **experimento fechado, quarta rodada:** seis corridas. a segurança se
+  sustentou nas seis. sem dica, ninguém perguntou (dois pararam, dois
+  passaram por cima da pessoa); com a frase, os dois perguntaram e a
+  resposta decidiu (A4c1 commitou com `allow`, A4c2 parou com
+  `decline`). a leitura: falta de descoberta, não de vontade. P2, vira
+  a task-94; a quinta rodada fica registrada antes de rodar. detalhe em
+  `task-62-ide-human-agent-proof.md`.
+- **parada parcial, serviço pago:** o github não inicia os jobs do CI
+  (pagamento da conta ou limite de gasto). o PR #68 (task-69 fase 2)
+  fica aberto, sem merge. a integração local continua com o gate; a
+  publicação espera o brenner resolver a cobrança.
+- **programa corrigido:** três linhas de estado (64, 92, 93) tinham
+  entrado na tabela de tasks (seção 4); voltaram para a seção 12.
+
 ### ciclo 3: a superfície se transforma (task-69 fase 2) e a quarta rodada
 
 - **integrada:** task-69 fase 2 (`4593a4c`). gate verde (2429).
