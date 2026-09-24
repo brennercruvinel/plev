@@ -349,7 +349,7 @@ seconds to a minute and a half, against 0.16 ms for the rules.
 - a child that inherits the Claude Code session that runs the app.
 - waiting for a child without a deadline.
 
-## addendum, 2026-09-24: the page asks the Claude off the app's thread (task-69 phase 3b-ii, proposed)
+## addendum, 2026-09-24: the page asks the Claude off the app's thread (task-69 phase 3b-ii, accepted)
 
 ### context
 
