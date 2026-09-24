@@ -7,7 +7,10 @@
 //!   capabilities, "review what goes into the commit": the changed files
 //!   repeated over `changes:files`, stage and unstage per file, the
 //!   message and the commit;
-//! - `showcase-todo.ir.json`, a surface over the showcase's todo.
+//! - `showcase-todo.ir.json`, a surface over the showcase's todo: the
+//!   field and the add button, the items repeated over `todo:items` (each
+//!   one's text and a checkbox for its `toggle`), the filter as chips and
+//!   the counters.
 //!
 //! The registries come from `ide-workbench.snapshot.json` and
 //! `showcase-todo.snapshot.json`, which the projection tests of the ide and
@@ -74,6 +77,7 @@ fn cases() -> [(&'static str, &'static str, &'static [&'static str]); 3] {
             &[
                 "todo_panel.input",
                 "todo_panel.add",
+                "todo_panel.item[{item}].done",
                 "todo_panel.filter.all",
                 "todo_panel.filter.active",
                 "todo_panel.filter.completed",

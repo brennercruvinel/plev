@@ -5,10 +5,14 @@
 //! the todo projects (`uir::Capabilities::from_snapshot`) and materialized
 //! by the `surface` crate: compact, the fixture of task-68
 //! (`crates/uir/fixtures/showcase-todo.ir.json`: the field, the add
-//! button, the filter as chips, the counters as stats, one under the
-//! other), and two columns (`crates/surface/tests/fixtures/showcase-todo-columns.ir.json`:
-//! a grid, the filter and the counters in one column and the entry in the
-//! other, one column where the width does not hold two). A
+//! button, the items, the filter as chips, the counters as stats, one
+//! under the other), and two columns (`crates/surface/tests/fixtures/showcase-todo-columns.ir.json`:
+//! a grid, the filter and the counters in one column and the entry over
+//! the items in the other, one column where the width does not hold two).
+//! The items repeat over `todo:items` (task-95), the ids of the items the
+//! todo shows: one instance per item, named by its id, with the item's
+//! text and a checkbox for its `toggle`; removing stays on the fixed todo
+//! (a destructive action binds only to a dialog's confirm). A
 //! segmented control above the surface switches the form: the surface
 //! transforms in place (`SurfaceHost::transform`), reconciled by `SemId`,
 //! so what was typed in its field, the caret and the focus go on, and the
@@ -16,8 +20,8 @@
 //! the born ones fade in and the gone ones fade out.
 //!
 //! Both halves operate one state through one dispatcher, the todo page's:
-//! adding a todo or changing the filter on the generated surface shows on
-//! the fixed todo, and back. The page projects the todo and the surface
+//! adding a todo, checking one or changing the filter on the generated
+//! surface shows on the fixed todo, and back. The page projects the todo and the surface
 //! as one snapshot, so an agent or a screen reader observes the surface
 //! and acts on it like on any page; an act on one of its nodes is routed
 //! to the capability the IR bound (`SurfaceHost::route`).

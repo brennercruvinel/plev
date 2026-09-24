@@ -12,22 +12,27 @@ use sem::{SemId, Snapshot, StateRef};
 use uir::{CapabilityRef, Ir, IrNode};
 
 /// what a bound node is there for: the capability it operates, or the
-/// state it shows when it operates none.
+/// state it shows when it operates none, or the list it repeats over.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Anchor {
     Action(CapabilityRef),
     State(StateRef),
+    Each(StateRef),
 }
 
 /// the anchor of `node`: its `set_value` (a field is there to be
-/// written), else its first action, else its first state; none for a
-/// node that binds nothing.
+/// written), else its first action, else its first state, else the list
+/// it repeats over; none for a node that binds and repeats nothing.
 pub(crate) fn anchor(node: &IrNode) -> Option<Anchor> {
     let actions = &node.bind.actions;
     if let Some(cap) = actions.get("set_value").or_else(|| actions.values().next()) {
         return Some(Anchor::Action(cap.clone()));
     }
-    node.bind.state.values().next().cloned().map(Anchor::State)
+    if let Some(at) = node.bind.state.values().next() {
+        return Some(Anchor::State(at.clone()));
+    }
+    let each = node.repeat.as_ref().map(|r| r.each.clone());
+    each.map(Anchor::Each)
 }
 
 /// the anchors of every bound node under `node`, `node` included.
