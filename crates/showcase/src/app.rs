@@ -105,16 +105,6 @@ pub struct App {
     source_click: bool,
 }
 
-/// The window's outside actors (a screen reader, agents through the port)
-/// and how their threads wake the event loop.
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-#[derive(Default)]
-struct Access {
-    bridge: Option<engine::accessibility::Bridge>,
-    agent: Option<wire::AgentPort>,
-    proxy: Option<winit::event_loop::EventLoopProxy<UserEvent>>,
-}
-
 impl App {
     pub fn new() -> Self {
         let mut view = ShowcaseView::new(1200.0, 800.0);
@@ -516,51 +506,6 @@ pub fn run() {
     event_loop.run_app(&mut app).unwrap();
 }
 
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-impl Access {
-    /// Creates the bridge for `window`, which is still hidden. Without a
-    /// bridge the window still opens, and the reason is logged.
-    fn attach(&mut self, event_loop: &ActiveEventLoop, window: &Window) {
-        let proxy = self.proxy.clone();
-        let wake = move || {
-            if let Some(proxy) = &proxy {
-                let _ = proxy.send_event(UserEvent::Access);
-            }
-        };
-        match engine::accessibility::Bridge::new(event_loop, window, TITLE, wake) {
-            Ok(bridge) => self.bridge = Some(bridge),
-            Err(e) => log::error!("accessibility: {e}"),
-        }
-    }
-
-    /// What the screen reader asked, on the main thread: a request goes
-    /// through the active page's dispatcher as `Actor::Assistive`, a focus
-    /// move to the page's focus.
-    fn carry_out(&mut self, view: &mut ShowcaseView) {
-        let Some(bridge) = self.bridge.as_mut() else {
-            return;
-        };
-        for assist in bridge.take() {
-            match assist {
-                engine::accessibility::Assist::Request(req) => {
-                    let asked = format!("{} {}", req.target, req.action);
-                    match view.act(req) {
-                        Some(receipt) => {
-                            log::debug!("accessibility: {asked}: {:?}", receipt.stage());
-                        }
-                        None => log::debug!("accessibility: no page takes {asked}"),
-                    }
-                }
-                engine::accessibility::Assist::Focus(id) => {
-                    if !view.assist_focus(&id) {
-                        log::debug!("accessibility: no page takes focus on {id}");
-                    }
-                }
-            }
-        }
-    }
-}
-
 /// `showcase --render`: one frame of a page without a window, as png, as
 /// svg with its report, and as the page's semantic projection.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
@@ -570,6 +515,11 @@ pub use headless::{RenderError, StagedPage, render_page, semantics_json, stage_p
 mod headless;
 
 mod pace;
+
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod access;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+use access::Access;
 
 /// cmd+click to the code: desktop debug builds, the terms on which the
 /// engine compiles `hot_reload` (its build.rs), so nothing of it exists in
