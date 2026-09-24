@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #75; disparada a fase 4c
+
+- **publicado:** PR #75 (fase 4b), merge commit, gate local verde na
+  `main` (2526, +16), regressão 159 sem mudança.
+- **disparada:** task-69 fase 4c, o showcase grava a própria sessão como
+  o ide (`PLEV_RECORD=1`) e a demo do editor de vídeo fica gravada num
+  `.monster` que o `plev-inspect` lê (critério de aceitação da task-69:
+  "demo gravada e roteiro no handoff"). um agente só; no máximo 2
+  chamadas reais ao Claude. depois dela, a task-69 só espera o
+  checkpoint b, do brenner.
+
 ### ciclo 3: a tela gerada do editor de vídeo (task-69 fase 4b)
 
 - **integrada:** fase 4b (merge da `task/69g-silences-surface`). na
