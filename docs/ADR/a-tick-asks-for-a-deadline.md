@@ -54,7 +54,12 @@ does not change.
   ide's commit form, the comps editor example, the settle loops of rec
   and headless), meaning "pending" or "in motion" as each doc comment
   says; the ide and urnaui adopt `Wake` in phase b, after task-62's lab
-  left the ide surface.
+  left the ide surface. it stays in the showcase's Git page too: the
+  page lifts the `bool` of `Workbench::tick` to `Wake::moving`
+  (`crates/showcase/src/view/apps/git/desktop.rs`,
+  `crates/showcase/src/view/render.rs`), so with that page visible and
+  the commit field focused, or an ide toast up, the showcase draws every
+  frame again.
 - an `EditorView` without a focus notion keeps a blink pending while
   visible (one flip every 0.53 s); the dock caret stays continuous with
   its panel open; the git worker and the accessibility bridge still ask

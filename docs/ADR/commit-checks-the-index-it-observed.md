@@ -129,9 +129,11 @@ naming who asks for what; its confirm calls `Dispatcher::confirm` as
   status read before a stage landed over the stage and the projection
   showed, for a moment, a state that was neither git's nor the one the
   ide had accepted.
-- `sem` has no way to decline or expire a request awaiting confirmation:
-  when the person closes the modal without confirming, the receipt stays
-  awaiting and the workbench stops asking and says so.
+- when this was decided, `sem` had no way to decline or expire a request
+  awaiting confirmation: when the person closed the modal without
+  confirming, the receipt stayed awaiting and the workbench stopped asking
+  and said so. task-58b added the decline (see the update at the end of
+  this section).
 - the confirmation modal and the context menu are drawn with comps
   widgets and not projected: the menu's items are the file's
   capabilities, and confirming is the dispatcher's `confirm`, not a
@@ -142,6 +144,13 @@ naming who asks for what; its confirm calls `Dispatcher::confirm` as
   menu or a modal, and the checks keep it safe.
 - task-61 carries the same requests and receipts over the agent socket;
   the phase c experiment drives this workbench from outside the process.
+- updated on 2026-09-23: `Dispatcher::decline` exists since task-58b
+  (`crates/sem/src/dispatch.rs`). closing the modal without confirming
+  (cancel, escape, a click outside it) declines as `Actor::Human`
+  (`crates/ide/src/workbench/person.rs`): the receipt ends rejected with
+  `Rejection::Declined`, nothing runs, and the next request waiting for a
+  person is asked. expiring a request awaiting confirmation still has no
+  api.
 
 ## avoid
 
@@ -149,3 +158,13 @@ naming who asks for what; its confirm calls `Dispatcher::confirm` as
 - deciding stale by the revision, or reading the cursor in `submit`.
 - a view that changes git state or projected state outside `execute`.
 - clearing the commit form before the commit exists.
+- updated on 2026-09-23: projected state does change outside `execute`
+  today, and the rule above stands for what a view decides on its own.
+  the git worker's answers land when they arrive: the refresh's status
+  replaces `changes:staged` with what the index holds (`GitSession::apply`,
+  `crates/ide/src/session.rs`), which is how a change made outside the ui
+  reaches the projection, and since task-84 a status read before a
+  mutation the view shows is dropped. typing changes `commit.message:text`
+  (`crates/ide/src/main.rs`), editing that
+  docs/ADR/semantic-binding-beside-the-scene.md exempts. navigation moves
+  `changes:selected`, accepted under "one workbench" above.

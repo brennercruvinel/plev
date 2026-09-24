@@ -153,7 +153,10 @@ sessão gravada (63).
 2. confirmação humana para `discard` pedido por agente (UI mínima com
    `Modal` de comps).
 3. o shell do ide abre o `AgentPort` da task-61 quando ela estiver
-   integrada.
+   integrada. (2026-09-23: não abre. o binário `ide` não usa `wire`
+   (`crates/ide/src/main.rs`); quem serve o `Workbench` pela porta é o
+   `ide-lab` da fase c (`crates/ide/src/bin/lab/lab.rs`). a porta no
+   shell de janela do ide continua por fazer.)
 
 ### fase c: o experimento do plev (depende de 61 e 63)
 
@@ -297,8 +300,9 @@ agente se recupera, e a sessão gravada explica e confere com o git real.
 
 ### o laboratório: `ide-lab`
 
-um binário headless no crate do ide (`crates/ide/src/bin/lab.rs`), sem
-janela, que é o app sob experimento e o experimentador ao mesmo tempo:
+um binário headless no crate do ide (`crates/ide/src/bin/lab/`, entrada
+em `main.rs`), sem janela, que é o app sob experimento e o experimentador
+ao mesmo tempo:
 
 1. constrói um repositório real num diretório temporário (o padrão do
    rig): um commit inicial e seis arquivos alterados, parte deles já no
@@ -424,8 +428,8 @@ resultado. o agente do laboratório nunca é o agente do experimento.
 
 ### superfície da fase c
 
-- `crates/ide/**` (o bin `lab.rs`, `Cargo.toml` com `wire` e `rec`,
-  `tests/lab.rs`, `Workbench::now` público se preciso).
+- `crates/ide/**` (o bin em `src/bin/lab/`, `Cargo.toml` com `wire` e
+  `rec`, `tests/lab.rs`, `Workbench::now` público se preciso).
 - `crates/wire/src/{server.rs,port.rs,lib.rs}`, só aditivo: um método
   `Host::observed(&mut self, actor: &Actor, scope: Option<&SemId>,
   revision: Revision)` com implementação padrão vazia, chamado pelo

@@ -9,10 +9,12 @@ date: 2026-09-23
 
 ## addendum (2026-09-23, task-59 phase b)
 
-every interactive comps widget now carries an optional `SemId`, binds the
-rect it draws and hit-tests with, and projects itself through a
+19 interactive comps widgets now carry an optional `SemId`, bind the
+rect they draw and hit-test with, and project themselves through a
 `project` helper (16 widgets beyond the three of phase a; the matrix
-covers them all). one rule was settled on the way: every action reads the
+covers them all). seven widgets that handle events carry none:
+`Scrollbar`, `Card`, `GraphView`, `AppShell`, `EmptyState`, `Sidebar`
+and `EditorView`. one rule was settled on the way: every action reads the
 state it changes, absolute setters included (`select`, `set_value`,
 `set_ratio`, `open`, `close`, a tab's `select`). an actor that decided on
 a value another actor has since changed gets `Stale` with the delta

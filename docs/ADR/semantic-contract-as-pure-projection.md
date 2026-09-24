@@ -102,9 +102,17 @@ agent observes is a question of scope, and scope belongs to task-61.
   how unrelated subtrees interleave in the projection. sibling order
   counts, because it is the order of a list.
 - `engine::actions` stays a key binding registry. `ActionName` is the
-  capability a binding can target.
+  capability a binding can target; no binding targets one yet (see the
+  update below).
 - the cost of projecting on demand is not measured yet (task-59 and
   task-73 measure it).
+- updated on 2026-09-23: task-59 did not bridge `engine::actions` to
+  `sem`. the keymap (`crates/engine/src/actions/`) still knows nothing of
+  `sem` and no binding names a capability; the ide sends the keys that act
+  on one through its `Workbench`, which asks the dispatcher as the person,
+  and left a keymap entry naming a capability out on purpose
+  (docs/ADR/commit-checks-the-index-it-observed.md, "the person asks,
+  execute acts").
 
 ## avoid
 

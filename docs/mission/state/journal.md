@@ -14,6 +14,43 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 1: docs voltam a dizer o que o código faz
+
+- **integrado:** as correções de docs (`2d4aa4b`, 8 commits: README,
+  arc.toml, manual, nove ADRs, task-62). as afirmações falsas saíram; as
+  promessas de design que o código ainda não cumpre ficaram, com a
+  exceção de hoje e a task que a fecha. `arc_sync_guard` verde.
+- **bug achado pelo agente de docs:** `cargo run -p ide` não rodava desde
+  a fase c da task-62 (dois binários, sem `default-run`). corrigido no
+  manifesto.
+
+### ciclo 1: task-83 devolvida com uma correção
+
+- a task-83 voltou pronta (delta com o nó, `acted` na recusa, regra no
+  `plev --help`, gate verde com 1995 no workspace) e com uma decisão: a
+  forma nova do `node_added` fazia as sessões gravadas antes (as do
+  checkpoint a) não abrirem.
+- **decisão autônoma:** ler a forma antiga convertendo (o nó adicionado de
+  um evento de snapshot é o nó do próprio snapshot: sem perda), sem subir
+  a versão do `MONS`. motivo: é a resposta conservadora e mantém a
+  evidência do experimento legível para a task-64. devolvida ao mesmo
+  agente com a correção específica.
+
+### ciclo 1: replanejamento pela verdade
+
+- **disparados:** agente de docs (`task/docs-follow-code`, sem build:
+  corrige as divergências 1 a 25, 31 e 32 do `truth.md`) e task-82 fase b
+  (`task/82b-wake-everywhere`).
+- **decisão autônoma:** a fase b da task-82 sobe na fila. motivo: a
+  auditoria mostrou que a promessa "no change, no frame" do README está
+  quebrada no ide, o app da prova da tese (60 fps com o campo focado ou
+  com toast), e na página Git do showcase; é invariante quebrada, a
+  primeira na ordem do ciclo.
+- **próximo, já escolhido:** o experimento do checkpoint a de novo quando
+  83 e 85 entrarem; depois, o binário `ide` abrindo a porta do agente
+  (opt-in, como o showcase), para o cenário da tese rodar num app que
+  alguém usa.
+
 ### ciclo 1: task-84 integrada, verdade reconstruída
 
 - **integrada:** task-84 (`4896451`), a corrida do `Refresh`. gate verde

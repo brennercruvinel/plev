@@ -90,8 +90,17 @@ ovrlap = "ovrlap"
 iy = "iy"
 buton = "buton"
 clik = "clik"
+# `lits` is the hot reload's list of literals (`crates/engine/src/hot_reload/
+# literals.rs`); `ba` is the list `["b", "a"]` next to `ab` in the sem value
+# tests.
+lits = "lits"
+ba = "ba"
 
 [default]
 # the project writes docs and comments in english and portuguese; let the
 # locale-agnostic dictionary run and lean on extend-words for domain terms.
 locale = "en"
+# a semantic revision is 16 lowercase hex digits (`sem.revision.v1`); split
+# into words it reads as typos ("3ba694e7..." gives "ba"). "PNGs" splits into
+# "PN" + "Gs".
+extend-ignore-re = ["\\b[0-9a-f]{16}\\b", "PNGs"]

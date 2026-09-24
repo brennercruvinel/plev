@@ -85,6 +85,15 @@ c"; saídas em `target/agents/exp/`.
 
 ### 2026-09-23
 
+- **premissa de compatibilidade errada no briefing:** o briefing da
+  task-83 afirmou que nenhum arquivo gravado continha `node_added`,
+  conferido só no `Kind::Changes` do recorder. o `Kind::Snapshot` guarda o
+  diff do passo, com `node_added`, e as sessões do checkpoint a deixariam
+  de abrir. o agente achou abrindo as sessões de verdade. regra: toda
+  afirmação de compatibilidade num briefing se confere contra os
+  artefatos gravados de verdade (abrir os arquivos), não só lendo o
+  código do escritor.
+
 - **contorno de harness escondeu defeito de produto:** o agente
   roteirizado esperava o index "parar" (até 200 observações), e isso
   escondia a corrida do `Refresh`. regra: um harness ou agente que

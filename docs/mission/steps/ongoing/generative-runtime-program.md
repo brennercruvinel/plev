@@ -317,7 +317,7 @@ atualizado em cada integração.
 | task-57 | integrada | `860b029` | crate `sem`; `Change` ficou na 57 com doze variantes; detalhes em `checked/task-57-semantic-contract-done.md` |
 | task-58 | integrada | `20c601e` | dispatcher, receipts, check; devolvida uma vez (confirmação por tecnologia assistiva, id no `execute`); detalhes em `checked/task-58-actions-preconditions-receipts-done.md` |
 | task-59 | integrada | `f71dc20`, `f5b7cee` | ligação no compositor e todo pelo dispatcher (fase a); os 16 widgets restantes com `SemId` e projeção, regra "toda ação lê o que muda", defeito do `Select` corrigido (fase b); rolagem do `Select` virou a task-81 |
-| task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (pendente) |
+| task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (integrada, linha abaixo) |
 | task-73 | fases 1 e 1b integradas; fase 2 (ADR de desenho) espera decisão do brenner | `ed814da`, `91fdb33` | limitado pela GPU mesmo sem a latência de envio (4 a 12 vezes a CPU); pass de layer segue os pixels; composite em todo frame; o caret a 60 fps é a task-82 |
 | task-62 | fase c rodada; checkpoint a decidido (correções primeiro, decisão 8) | `8978602`, `d26c9b1` | experimento completo: H1, H2, H3 e H5 sustentadas, H4 diz onde o plev ganha (recusa antes do efeito, com o delta; receipt e sessão) e onde não (bytes e idas e voltas contra o `git`); resultado e decisão pedida no arquivo da task |
 | task-63 | fases a, b e c integradas; fase d na fila | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d = retenção de pixels opt-in e ligação no shell do showcase, depois da 61 |
