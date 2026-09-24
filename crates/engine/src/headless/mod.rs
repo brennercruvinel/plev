@@ -175,6 +175,12 @@ impl Renderer {
         self.viewport
     }
 
+    /// The context the frames are drawn with. A test reaches the device
+    /// through it, to force a loss with `Device::destroy`.
+    pub fn gpu(&self) -> &GpuContext {
+        &self.gpu
+    }
+
     /// Draw the scene already pushed into `compositor` (after its
     /// `begin_frame`) into the target. `clear_linear` is the background
     /// in linear space, as for `present_frame`. Returns the draw calls.
