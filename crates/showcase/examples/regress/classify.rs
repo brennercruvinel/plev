@@ -118,6 +118,19 @@ impl Verdict {
         matches!(self, Self::Equal | Self::Requested { .. })
     }
 
+    /// The verdict in a few words, for a table cell.
+    pub fn short(&self) -> String {
+        match self {
+            Self::Equal => "equal".to_string(),
+            Self::Requested { reasons } => {
+                let names: Vec<&str> = reasons.iter().map(|r| r.name.as_str()).collect();
+                format!("requested ({})", names.join(", "))
+            }
+            Self::Silent(s) => format!("silent {} px, max {}", s.pixels, s.max_delta),
+            Self::Resized { .. } => "resized".to_string(),
+        }
+    }
+
     /// The verdict in a line: every number it has.
     pub fn line(&self) -> String {
         match self {
@@ -326,6 +339,7 @@ mod tests {
             }
         );
         assert!(v.held());
+        assert_eq!(v.short(), "requested (status-bar)");
     }
 
     #[test]

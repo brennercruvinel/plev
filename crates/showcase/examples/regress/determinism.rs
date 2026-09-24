@@ -1,19 +1,25 @@
 //! The determinism commands (task-77): two frames classified by the
 //! comparator (`classify`) under a target's rows of the table of
-//! requested differences (`requested`).
+//! requested differences (`requested`), and the desktop captured against
+//! itself (`capture`).
 //!
 //! ```text
 //! cargo run -p showcase --example regress -- compare <base.png> <other.png>
 //!     [--scale <s>] [--target <desktop|web|ios|android>] [--table <file>]
+//! cargo run -p showcase --example regress -- capture [--page <title>]...
+//!     [--theme <name>]... [--scale <s>]... [--width <px>] [--height <px>]
+//!     [--out <dir>] [--against <dir>] [--reverse] [--no-png]
 //! ```
 //!
 //! Exit status as the other commands: 0 equal, or different only as
-//! asked; 1 a silent difference or two sizes; 2 a malformed request; 3
-//! an error (a png that cannot be read).
+//! asked (every frame, for a capture); 1 a silent difference or two
+//! sizes; 2 a malformed request; 3 an error (a png that cannot be read,
+//! no GPU adapter to capture with).
 
 use std::path::PathBuf;
 
 use crate::baseline::read_png;
+use crate::capture;
 use crate::classify::{Verdict, classify};
 use crate::requested::{TABLE, Table};
 
@@ -52,8 +58,10 @@ pub enum Command {
 /// The exit status of `args` (the command first) when they name a
 /// determinism command, `None` for any other.
 pub fn main(args: &[String]) -> Option<i32> {
-    if args.first().map(String::as_str) != Some("compare") {
-        return None;
+    match args.first().map(String::as_str) {
+        Some("compare") => {}
+        Some("capture") => return Some(capture(&args[1..])),
+        _ => return None,
     }
     let code = match parse(args) {
         Ok(Command::Help) => {
@@ -74,6 +82,28 @@ pub fn main(args: &[String]) -> Option<i32> {
         }
     };
     Some(code)
+}
+
+/// `regress capture` and its exit status.
+fn capture(args: &[String]) -> i32 {
+    match capture::parse(args) {
+        Ok(None) => {
+            println!("{}", capture::USAGE);
+            0
+        }
+        Ok(Some(o)) => match capture::run(&o) {
+            Ok(true) => 0,
+            Ok(false) => 1,
+            Err(e) => {
+                eprintln!("regress: {e}");
+                3
+            }
+        },
+        Err(e) => {
+            eprintln!("regress: {e}\n\n{}", capture::USAGE);
+            2
+        }
+    }
 }
 
 /// `args` with the command first.

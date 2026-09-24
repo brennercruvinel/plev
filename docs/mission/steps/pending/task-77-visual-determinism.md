@@ -160,8 +160,12 @@ M4:
 - um renderer redimensionado por 2, 1.5, 1.25, 1, 1.5, 2 dá, em cada
   escala, os bytes de um renderer novo.
 
-dois processos e todas as páginas da galeria ficam com a captura
-(`regress capture --against`), relatório na seção da captura abaixo.
+dois processos e todas as páginas da galeria: `regress capture`
+(seção seguinte). as 82 páginas nos quatro temas nas quatro escalas, 1312
+frames, deram 1312 iguais em bit entre dois contextos, nos dois processos,
+e 1312 iguais em bit entre os dois processos, o segundo desenhando na
+ordem inversa (outro histórico de atlas e de resize). o desktop é
+determinístico consigo mesmo nesta máquina: não houve parada.
 
 ### (c) a janela contra o headless
 
@@ -259,3 +263,26 @@ dois processos e todas as páginas da galeria ficam com a captura
   mais ainda no iPhone a 3x. a sombra analítica não tem isso (o sigma e a
   posição estão em px lógicos no shader). a correção é no engine, fora
   desta fase: vai no relatório de parada no fim.
+
+## fase 1: a captura do desktop
+
+`cargo run -p showcase --example regress -- capture` desenha cada página
+da galeria nos quatro temas que a tecla T percorre (core, hoff, dark,
+light) nas escalas 1, 2, 1.25 e 1.5, a 1280x800 lógico, duas vezes, por
+dois contextos de GPU do mesmo processo, e classifica o segundo frame
+contra o primeiro com as linhas do desktop da tabela de diferenças
+pedidas. `--against <dir>` classifica também contra o png do mesmo frame
+escrito por outro processo; `--reverse` desenha na ordem inversa. os pngs,
+`report.txt` (uma linha por página e tema, uma coluna por escala) e
+`report.json` vão para `target/determinism/desktop`, fora do git. nenhum
+baseline novo.
+
+medido neste M4 (build de debug do exemplo, dependências em opt-level 2):
+
+| execução | frames | contextos | processos | tempo |
+|---|---|---|---|---|
+| `capture` (escreve os pngs) | 1312 | 1312 iguais | não pedido | 68,5 s |
+| `capture --out target/determinism/desktop-b --against target/determinism/desktop --reverse --no-png` | 1312 | 1312 iguais | 1312 iguais | 43,2 s |
+
+zero pedidas, zero caladas, zero de tamanho diferente. os 1312 pngs
+ocupam 183 MB.
