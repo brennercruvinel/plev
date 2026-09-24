@@ -260,6 +260,23 @@ enter, hover, toggle, filters, delete; 848 frames over 50 s simulated):
   (0.2 s, 9 frames, 3 chunks, 14 ids) writes 1.2 KB of B in a 68.5 KB
   file (67.2 KB without it, 1.8 percent). a point of the replayed todo
   frame, on a 10 px grid, is the control `Compositor::hit` named live.
+- the ide's window recording itself (added on 2026-09-23, task-63 phase
+  d; a debug build on apple m4, the window under `PLEV_BACKGROUND`; an
+  agent through `plev` observes, stages a file, opens the form, writes
+  the message and commits; `Instant` around the frame's build and present
+  and around `Recording::frame` in each redraw, logged per frame, the same
+  scene run with and without `PLEV_RECORD`): recording costs 1.1 ms per
+  frame on average, 0.5 ms median (the state projected and diffed, the
+  frame raised, the bindings), and the frame that closes a chunk
+  (discovery and encoding, once every 2 s while frames come) 2.0 to 8.2
+  ms; drawing took 2.1 ms mean with it and 2.4 ms without, the same within
+  noise. the window's session is 76 KB over 28.9 s (2.6 KB/s), 2.3 KB of
+  it section B (3 percent). with nothing changing on screen nothing is
+  recorded (ten idle seconds: no frame, no event); with the commit form
+  open and its caret blinking, each 2-second chunk is 4 frames in 4.5 KB
+  (2.2 KB/s), plus its whole binding list (about 0.2 KB). in a debug build
+  the chunk close is the spike to move off the frame path first, when a
+  scene needs it.
 
 the cost does not ask for a change in the frame architecture. the chunk
 close is the one spike; moving it off the frame path is left for when a
