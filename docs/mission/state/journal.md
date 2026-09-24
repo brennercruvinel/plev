@@ -14,6 +14,62 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: câmera e microfone (task-76 item 10)
+
+- **integrada:** item 10 (merge da `task/76i-capture`). a página Capture
+  mostra a câmera e um medidor do microfone. só pessoa liga; o agente lê
+  o estado e é recusado. coberta, dormindo ou fora da página, o
+  dispositivo é solto na hora. o engine ganhou a imagem de fluxo, que
+  troca os pixels no lugar. nenhum dispositivo real foi aberto: os
+  testes usam o `testsrc` e o `sine` do ffmpeg por um falso que recusa
+  entrada de dispositivo. 163 baselines (161 iguais e 2 novos da página).
+- **revisão:** sem defeito que bloqueie. P3: no tema core o interruptor
+  da câmera quase não aparece. avisos: a página tem 607 linhas de
+  produção (quem mexer move o `render` para um `draw.rs`); a gravação de
+  sessão guarda o tamanho do frame e não os pixels.
+- **o texto de permissão negada é palpite:** o ffmpeg não pede nem
+  confere permissão, e a recusa real do macOS nunca foi vista aqui. a
+  prova real (roteiro no fim do arquivo da task) é do brenner.
+
+### intervenção do brenner: terminar todas, no Opus
+
+- **pedido:** "precisamos terminar todas, com maestria, usando o modelo
+  opus, não fable". decisão 14 do programa: todo agente roda no Opus,
+  pedido no disparo. o agente da câmera já roda no Opus 5.5 (conferido
+  no transcript).
+- **plano:** câmera, deep links, 77, 79, 72, 78 e 75, um agente por vez.
+  o checkpoint b trava 70, 71 e 80: o orquestrador prepara a comparação
+  da tela gerada com a fixa para o brenner decidir rápido.
+
+### ciclo 3: item 10 parou na sonda; decisão do orquestrador
+
+- **parada correta:** para mostrar a câmera, os pixels de uma imagem
+  precisam mudar 15 vezes por segundo. o depósito de imagens do engine
+  só cresce, deduplica pelo conteúdo e guarda cada envio: frame novo
+  vira imagem nova, e em 16 s o atlas enche e recusa imagens do app
+  inteiro. o briefing mandava parar se fosse preciso abrir `gpu/**`.
+- **decidido (técnico, dentro do item):** uma imagem de fluxo, com um
+  lugar fixo no atlas e os pixels trocados no lugar
+  (`stream_image_rgba`, `replace_image_rgba`), liberando `gpu/image.rs`.
+  condições: cada atlas de janela reenvia a troca uma vez, um device
+  recuperado recebe o último frame, a memória fica em um frame por
+  fluxo, e o dedupe das outras imagens não muda.
+- **sonda:** a página nova no Apps Demo não muda nenhum dos 161
+  baselines, porque o grupo fica fora da tela. o ffmpeg não pede
+  permissão: quem decide é o macOS, pelo terminal ou `.app` que lança.
+
+### ciclo 3: publicado #85 (task-76 item 9); disparado o item 10
+
+- **publicado:** PR #85, merge commit, gate local verde na `main` (2689,
+  +27), regressão 161 sem mudança.
+- **disparado:** task-76 item 10, câmera e microfone: o ffmpeg como
+  processo filho lê a câmera e o microfone (sem dependência nova, o cache
+  não tem crate de AVFoundation nem de áudio), o frame vira imagem na
+  tela e o áudio vira um medidor de nível. ligar é só de pessoa; coberto
+  ou dormindo solta o dispositivo. o agente nunca abre a câmera nem o
+  microfone desta máquina: os testes usam o `testsrc` e o `sine` do
+  ffmpeg. a prova real é do brenner. um agente só, no worktree fixo.
+
 ### ciclo 3: impressão (task-76 item 9)
 
 - **integrada:** item 9 (merge da `task/76h-print`). cmd-p ou o menu

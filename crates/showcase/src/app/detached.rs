@@ -87,6 +87,7 @@ impl App {
         };
         self.view.attach();
         self.windows.close(page.id);
+        self.capture_follows();
         log::info!(
             "the {} page shows in the main window alone",
             self.view.page_title()

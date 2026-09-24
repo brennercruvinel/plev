@@ -5,6 +5,7 @@
 use comps::prelude::{EmptyState, EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::input::FileDrop;
+use engine::platform::capture::Capture;
 use engine::theme::Theme;
 use sem::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot, Value};
 
@@ -68,6 +69,7 @@ impl ShowcaseView {
                     .content_height(content, t, &self.panes.todo),
                 Pane::Silences => self.panes.silences.content_height(content, t),
                 Pane::Files => self.panes.files.content_height(content, t),
+                Pane::Capture => self.panes.capture.content_height(content, t),
                 Pane::Dock => self.panes.dock.content_height(content),
                 Pane::Editor => self.panes.editor.content_height(content),
                 Pane::Git => self.panes.git.content_height(content),
@@ -179,6 +181,13 @@ impl ShowcaseView {
                         .files
                         .handle_event(event, content, t, todo, inert)
                 }
+                Pane::Capture => {
+                    let inert = self.overlay_holds_pointer();
+                    let todo = &mut self.panes.todo;
+                    self.panes
+                        .capture
+                        .handle_event(event, content, t, todo, inert)
+                }
                 Pane::Dock => self.panes.dock.handle_event(event, content),
                 Pane::Editor => self.panes.editor.handle_event(event, content),
                 Pane::Git => self.panes.git.handle_event(event, content),
@@ -211,7 +220,14 @@ impl ShowcaseView {
     /// frame; a caret asks for its next flip. While the page shows in a
     /// window of its own too, its ask goes to that window as well
     /// (`detached_wake`): both windows draw its motion, each its own frame.
+    ///
+    /// The capture page is told on every wake whether it is the active
+    /// one, shown or not: a device it runs stops as the page is left.
     pub(super) fn page_wake(&mut self, dt: f32) -> Wake {
+        let capture = self
+            .panes
+            .capture
+            .wake(dt, self.pane() == Some(Pane::Capture));
         let wake = match self.pane() {
             Some(Pane::Dock) => Wake::moving(self.panes.dock.tick(dt)),
             Some(Pane::Chart) => Wake::moving(self.panes.chart.tick(dt)),
@@ -220,6 +236,7 @@ impl ShowcaseView {
             Some(Pane::Todo) => self.panes.todo.wake(dt),
             Some(Pane::Surface) => self.panes.surface.wake(dt, &mut self.panes.todo),
             Some(Pane::Silences) => self.panes.silences.wake(dt, &mut self.panes.todo),
+            Some(Pane::Capture) => capture,
             Some(Pane::Editor) => self.panes.editor.wake(dt),
             _ => Wake::idle(),
         };
@@ -319,6 +336,11 @@ impl ShowcaseView {
                     self.panes.files.set_inert(inert);
                     self.panes.files.render(c, content, theme);
                 }
+                Pane::Capture => {
+                    let inert = self.overlay_holds_pointer();
+                    self.panes.capture.set_inert(inert);
+                    self.panes.capture.render(c, content, theme);
+                }
                 Pane::Dock => self.panes.dock.render(c, content, theme),
                 Pane::Editor => self.panes.editor.render(c, content),
                 Pane::Git => self.panes.git.render(c, content, theme),
@@ -328,7 +350,7 @@ impl ShowcaseView {
     }
 
     /// What the active page means, when it projects it (the todo page,
-    /// the surface over it, the silences, the files): the snapshot
+    /// the surface over it, the silences, the files, the capture): the snapshot
     /// assistive technology is shown. A page without a projection has no
     /// tree yet. While the page shows in a window of its own too, the
     /// projection carries that window (`with_window`); with one window it
@@ -339,6 +361,7 @@ impl ShowcaseView {
             Some(Pane::Surface) => self.panes.surface.snapshot(&self.panes.todo),
             Some(Pane::Silences) => self.panes.silences.projection(),
             Some(Pane::Files) => self.panes.files.snapshot(),
+            Some(Pane::Capture) => self.panes.capture.snapshot(),
             _ => return None,
         };
         let snapshot = snapshot
@@ -385,6 +408,11 @@ impl ShowcaseView {
                 let todo = &mut self.panes.todo;
                 self.panes.files.act(req, todo, inert)
             }
+            Some(Pane::Capture) => {
+                let inert = self.overlay_holds_pointer();
+                let todo = &mut self.panes.todo;
+                self.panes.capture.act(req, todo, inert)
+            }
             _ => None,
         }
     }
@@ -429,8 +457,29 @@ impl ShowcaseView {
                 self.panes.files.set_inert(inert);
                 self.panes.files.focus(id)
             }
+            Some(Pane::Capture) => {
+                let inert = self.overlay_holds_pointer();
+                self.panes.capture.set_inert(inert);
+                self.panes.capture.focus(id)
+            }
             _ => false,
         }
+    }
+
+    /// The platform's camera and microphone for the Capture page (the
+    /// shell's, once its window is up; a fake in a test). Until then the
+    /// page has none, so a gallery built headless never reaches a device.
+    pub fn set_capture(&mut self, capture: Box<dyn Capture>) {
+        self.panes.capture.set_capture(capture);
+    }
+
+    /// The shell's word on whether a window that shows the page is awake
+    /// (not covered, the app not asleep): the Capture page stops its
+    /// devices the moment it is not, and starts what the person had
+    /// turned on as it is again. `true` when that moved what the page
+    /// shows.
+    pub fn set_capture_shown(&mut self, shown: bool) -> bool {
+        self.panes.capture.set_shown(shown) && self.pane() == Some(Pane::Capture)
     }
 
     /// A placeholder page: an empty state on a panel, naming the slot.
@@ -464,4 +513,5 @@ pub use detached::Detached;
 /// page in a window of its own and the recording's save, projected and
 /// run through the gallery's dispatcher.
 mod shell;
+pub(crate) use shell::PERSON_ONLY;
 pub use shell::{Shell, ShellTarget};

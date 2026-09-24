@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- capture is a job the person turns on (2026-09-24, task-76 item 10):
+  a new Capture page shows the camera and a microphone level meter.
+  only a person can turn either on; an agent reads the state and is
+  refused. capture runs ffmpeg as a child process, with no new
+  dependency. when the window is covered, the app sleeps or the page
+  is not shown, the device is released at once and comes back only if
+  the person had it on. the engine gained a stream image, one slot
+  whose pixels change in place, so frames do not fill the image atlas.
+  no camera or microphone was opened on this machine.
+
 - printing is the frame on paper (2026-09-24, task-76 item 9): a person
   prints the page with cmd-p or the menu. the document is the same frame
   the window draws, rendered without a window at 300 dpi, so the text is

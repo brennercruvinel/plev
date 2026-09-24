@@ -122,6 +122,7 @@ impl ShowcaseView {
             Some(Pane::Surface) => self.panes.surface.handle_escape(&mut self.panes.todo),
             Some(Pane::Silences) => self.panes.silences.handle_escape(),
             Some(Pane::Files) => self.panes.files.handle_escape(),
+            Some(Pane::Capture) => self.panes.capture.handle_escape(),
             Some(Pane::Git) => self.panes.git.handle_escape(),
             _ => false,
         };
@@ -159,6 +160,7 @@ impl ShowcaseView {
                 .silences
                 .handle_edit_key(key, &mut self.panes.todo),
             Some(Pane::Files) => self.panes.files.handle_edit_key(key),
+            Some(Pane::Capture) => self.panes.capture.handle_edit_key(key),
             Some(Pane::Git) if key == EditKey::Backspace => self.panes.git.handle_backspace(),
             _ => false,
         }
@@ -187,6 +189,10 @@ impl ShowcaseView {
             Some(Pane::Files) => {
                 let inert = self.overlay_holds_pointer();
                 self.panes.files.handle_enter(&mut self.panes.todo, inert)
+            }
+            Some(Pane::Capture) => {
+                let inert = self.overlay_holds_pointer();
+                self.panes.capture.handle_enter(&mut self.panes.todo, inert)
             }
             Some(Pane::Git) => self.panes.git.handle_enter(),
             _ => false,

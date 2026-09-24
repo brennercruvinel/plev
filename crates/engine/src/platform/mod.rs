@@ -1,4 +1,5 @@
 pub mod alerts;
+pub mod capture;
 pub mod files;
 pub mod ime;
 pub mod lifecycle;
