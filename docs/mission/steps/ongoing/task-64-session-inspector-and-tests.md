@@ -648,3 +648,92 @@ observado a partir do snapshot inteiro. isso revelou que um `act
 conexão: virou a task-89 (invariante quebrada). fases b (UI) e c (export,
 sessão para teste) continuam na fila; o que a b precisa do `rec` está no
 handoff acima.
+
+## fase c: sonda (2026-09-24)
+
+antes de implementar, a pergunta da sonda: os requests de uma sessão real,
+reaplicados na ordem gravada contra uma fixture nova do mesmo repositório,
+dão os mesmos vereditos?
+
+### os requests gravados
+
+sessão `target/agents/exp3/a2ppa/session.monster` (terceira rodada, o
+`ide-lab` do build `96c20a0`, agente LLM `claude-a2ppa`, pessoa
+`unstage-before-submit:src/session.rs`), lida com o `plev-inspect` do
+target da task (`--timeline` e `--why` de cada request). origem 0, um
+dispatcher só:
+
+```text
+n  +t        ator                alvo                               ação       observed (os reads, como o ator viu)                           veredito terminal
+1  +41.011s  agent:claude-a2ppa  changes.file[README.md]            unstage    staged=true, unstaged=false                                    accepted, completed
+2  +42.343s  agent:claude-a2ppa  changes.file[src/session.rs]       stage      staged=false, unstaged=true                                    accepted, completed
+3  +43.703s  agent:claude-a2ppa  changes.file[tests/login_test.rs]  stage      staged=false, unstaged=true                                    accepted, completed
+4  +56.210s  agent:claude-a2ppa  commit.form                        open       commit.form:open=false                                         accepted, completed
+5  +62.426s  agent:claude-a2ppa  commit.message                     set_value  commit.message:text=""  (param "fix login session timeout")    accepted, completed
+6  +70.679s  human               changes.file[src/session.rs]       unstage    staged=true, unstaged=false                                    accepted, completed (+70.693s)
+7  +70.679s  agent:claude-a2ppa  commit.submit                      submit     changes:staged={src/login.rs, src/session.rs,                  rejected: stale, changes:staged
+                                                                               tests/login_test.rs}, commit.message:text="fix login           removed src/session.rs
+                                                                               session timeout"
+8  +95.083s  agent:claude-a2ppa  changes.file[src/session.rs]       stage      staged=false, unstaged=true                                    accepted, completed
+9  +110.643s agent:claude-a2ppa  commit.submit                      submit     changes:staged={src/login.rs, src/session.rs,                  accepted, completed: commit bf680c84,
+                                                                               tests/login_test.rs}, commit.message:text="fix login           files [src/login.rs, src/session.rs,
+                                                                               session timeout"                                               tests/login_test.rs]
+```
+
+o request 6 é a pessoa roteirizada: o laboratório o despacha logo antes do
+submit 7 chegar ao dispatcher, e o 6 ainda estava `executing` quando o 7 foi
+recusado (o worker respondeu 14 ms depois).
+
+### a fixture e como ela alcança o repositório
+
+`Repo::build` morava no bin do laboratório (`src/bin/lab/repo.rs`), fora do
+alcance de um teste. a fixture o alcança sem duplicar: o arquivo foi movido
+com `git mv` para a lib, `crates/ide/src/lab_repo.rs` (`pub mod lab_repo`,
+conteúdo igual), e o bin do laboratório passou a importá-lo com `use
+ide::lab_repo as repo;`, então todo `crate::repo::...` do laboratório
+continua como estava. a fixture é a mesma montagem do `Bench::open` do
+laboratório e do `Rig` dos testes: `Repo::build()` num tempdir, um
+`git::GitClient` nele, `Workbench::new(1280.0, 800.0)`, `connect`, e os
+eventos do worker aplicados até o primeiro `Branches`.
+
+### o rerun
+
+cada request gravado, inteiro (ator, alvo, ação, parâmetro, `observed`),
+passou por `Workbench::dispatch` na ordem gravada, e o worker foi drenado
+entre um e outro: os eventos aplicados até o receipt terminar, depois um
+`Workbench::refresh()` como barreira e os eventos aplicados até chegar cada
+`Branches` devido (um por resposta de mutação, mais o da barreira; o worker
+responde na ordem em que recebe). um teste descartável, fora do commit.
+
+resultado: os nove vereditos iguais, e o caminho inteiro de estágios igual
+em cada request (`requested, accepted, executing, completed` em 1 a 6, 8 e
+9; `requested, rejected` em 7). a recusa do 7 com o mesmo `read` mudado e os
+mesmos itens (`changes:staged`, removido `src/session.rs`); o commit do 9
+com os mesmos três arquivos. a mesma sonda nas outras sessões da terceira
+rodada: `a1pp` (7 requests, o submit 6 recusado stale em
+`commit.message:text`), `a2ppc` (8) e `a2ppb` (7, o submit 7 recusado stale
+em `changes:staged`), todos os vereditos iguais.
+
+### o que difere sem mexer em veredito
+
+- a revisão. o único nó diferente no estado de partida é
+  `stacks.commit[<sha>]` do commit inicial (`0d3be3cc...` gravado,
+  `a17675e2...` no rerun): o `git commit` do `Repo::build` carimba a hora do
+  relógio, e o sha muda a cada montagem. por isso toda revisão difere
+  (`0e3579d7ca054a45` gravada no início, `8790fa32701b4f56` no rerun). o
+  `check` nunca compara revisão, só os `reads`.
+- o `acted` da recusa do 7. gravado: a pessoa, request 6 (a porta sabia do
+  olhar do agente). no rerun: ninguém, porque nenhum sink sabe do olhar e,
+  sem ele, a regra parte de um receipt validado na revisão observada, que o
+  rerun nunca tem. o harness não compara o `acted`; compara os `reads`
+  mudados, como o briefing pede.
+- a sobreposição do 6 com o 7. na gravação o 6 ainda executava quando o 7
+  chegou; na sonda o worker foi drenado entre eles, e o 6 já tinha
+  terminado. o veredito é o mesmo porque a view mostra o unstage assim que
+  ele sai para o worker.
+- os tempos: o workbench carimba os receipts no próprio relógio (`Instant`),
+  e o sha do commit do 9 (`85f2f632...` no rerun) carrega a hora do git.
+  nenhum dos dois é comparado.
+
+nenhum veredito divergiu, e reaplicar não tocou nada fora do tempdir nem a
+rede: o worker roda `git` no repositório temporário. a implementação segue.
