@@ -6,7 +6,13 @@
 //! (`rec::scene::Sender`) after each frame it draws there, and after each
 //! drain of the port, so a watch that just came gets the frame on screen
 //! without waiting for the next one; the port sends each watch only what
-//! changed. With nobody watching, nothing is written.
+//! changed. With nobody watching, nothing is written. The port takes a
+//! watch only when the person launched the app with `PLEV_MIRROR=1`
+//! beside `PLEV_AGENT=1`, and only after `hello`; the shell logs who
+//! begins and who ends watching which window ("scene: claude watches
+//! main"), and a recording keeps a watch that begins as an observation
+//! of its agent (the port tells the host, `Host::observed`). A camera's
+//! frames never travel: the codec sends a stream image's size and place.
 //!
 //! The viewer's side, [`Viewer`]: a watch's replies put back together
 //! (`wire::SceneReader`), applied to a `rec::scene::Mirror`, and drawn
@@ -18,8 +24,9 @@ use std::collections::HashMap;
 
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use rec::scene::{Brought, Frame, Head, Incoming, Mirror, Sender};
+use sem::Actor;
 use winit::window::WindowId;
-use wire::{AgentPort, Bound, LayerBody, Offer, OfferLayer, Reply, SceneReader};
+use wire::{AgentPort, Bound, LayerBody, Offer, OfferLayer, Reply, SceneReader, SceneWatch};
 
 use super::App;
 
@@ -47,6 +54,7 @@ impl Scenes {
         compositor: &Compositor,
         head: Head,
     ) -> bool {
+        tell_watches(port);
         if !port.watching(window) {
             self.senders.remove(window);
             return false;
@@ -54,8 +62,33 @@ impl Scenes {
         let sender = self.senders.entry(window.to_owned()).or_default();
         let frame = sender.frame(compositor, head);
         port.offer_scene(window, &offer(frame, compositor));
+        // a watcher cut off by this offer
+        tell_watches(port);
         true
     }
+}
+
+/// Logs who began and who ended watching which window since the last
+/// look, as the port saw it.
+fn tell_watches(port: &mut AgentPort) {
+    for w in port.take_scene_watches() {
+        log::info!("{}", watch_line(&w));
+    }
+}
+
+/// What the app says of a watch: "scene: claude watches main" when it
+/// begins, "scene: claude no longer watches main" when it ends.
+pub fn watch_line(w: &SceneWatch) -> String {
+    let who = match &w.actor {
+        Actor::Agent { name } | Actor::Test { name } => name.clone(),
+        other => other.to_string(),
+    };
+    let verb = if w.began {
+        "watches"
+    } else {
+        "no longer watches"
+    };
+    format!("scene: {who} {verb} {}", w.window)
 }
 
 /// A frame as the port takes it, with where each bound control shows
@@ -278,9 +311,13 @@ mod tests {
             ring: 8,
         };
         let mut port = AgentPort::open_with(config, || {}).expect("the port opens");
-        // the person launched it with PLEV_MIRROR=1
+        // the person launched it with PLEV_MIRROR=1, and PLEV_RECORD=1
         port.share_scenes(true);
         app.access.agent = Some(port);
+        app.recording = Some(super::super::record::Recording::new(
+            dir.join("sessions"),
+            rec::Limits::default(),
+        ));
         app.draw_main();
         app
     }
@@ -313,6 +350,22 @@ mod tests {
     }
 
     #[test]
+    fn a_watch_is_said_by_its_agent_and_window() {
+        let w = |began| SceneWatch {
+            actor: Actor::Agent {
+                name: "claude".into(),
+            },
+            window: "main".into(),
+            began,
+        };
+        assert_eq!(watch_line(&w(true)), "scene: claude watches main");
+        assert_eq!(
+            watch_line(&w(false)),
+            "scene: claude no longer watches main"
+        );
+    }
+
+    #[test]
     fn the_shell_offers_the_main_window_to_its_watch() {
         let tmp = tempfile::tempdir().expect("a temporary directory");
         let mut app = app(tmp.path());
@@ -335,6 +388,33 @@ mod tests {
         c.watch_scene(MAIN).expect("the watch goes");
         let mut v = Viewer::new();
         assert_eq!(next(&mut app, &mut c, &mut v), 1);
+        // the shell took (and logged) the watch that began
+        let port = app.access.agent.as_mut().expect("the port");
+        assert!(port.take_scene_watches().is_empty(), "told already");
+        // and the recording keeps it as the agent's observation
+        let session = app
+            .recording
+            .as_ref()
+            .expect("a recording")
+            .recorder()
+            .snapshot_window();
+        let watched: Vec<_> = session
+            .events()
+            .iter()
+            .filter_map(|e| match &e.kind {
+                rec::Kind::Observed { actor, scope, .. } => Some((actor.clone(), scope.clone())),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            watched,
+            [(
+                Actor::Agent {
+                    name: "mirror".into()
+                },
+                None
+            )]
+        );
         let mut drawn = Compositor::new();
         v.draw(&mut drawn, false);
         let main = app.main.expect("a main window");
