@@ -1,0 +1,38 @@
+#!/bin/sh
+# a stand-in for `lpstat` in the tests of engine::platform::print
+# (tests/print.rs): a machine with two printers, Office (the default,
+# idle) and Home (disabled). `-p -d` lists them as lpstat does. `-W
+# <which> -o <destination>` lists the jobs of one destination: Office-7
+# is queued (listed under not-completed), Home-7 is done (listed under
+# completed), and a destination it does not know is refused as this
+# machine refused one.
+
+case "$1" in
+-p)
+    echo "printer Office is idle.  enabled since Wed Sep 24 10:00:00 2026"
+    echo "printer Home disabled since Wed Sep 24 09:00:00 2026 -"
+    printf '\tPaused\n'
+    echo "system default destination: Office"
+    ;;
+-W)
+    which=$2
+    dest=$4
+    case "$which:$dest" in
+    not-completed:Office)
+        echo "Office-7                nn               1024   Wed Sep 24 10:00:00 2026"
+        ;;
+    completed:Home)
+        echo "Home-7                  nn               1024   Wed Sep 24 09:30:00 2026"
+        ;;
+    *:Office | *:Home) ;;
+    *)
+        echo "lpstat: Invalid destination name in list \"$dest\"." >&2
+        exit 1
+        ;;
+    esac
+    ;;
+*)
+    echo "lpstat: unexpected arguments: $*" >&2
+    exit 2
+    ;;
+esac
