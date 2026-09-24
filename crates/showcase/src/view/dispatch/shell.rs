@@ -6,9 +6,12 @@
 //! `shell.detach` (a toggle: `on`, `toggle`; a person only, as the Files
 //! page's `open_file`), `shell.show` (a button: `activate`, brings the
 //! main window forward; a person only; the tray icon's own click and a
-//! notification's button ask it, task-76 item 5) and, while the session
-//! is recorded, `shell.save_session` (a button: `activate`; a person
-//! only), and run through the gallery's one dispatcher (the todo page's,
+//! notification's button ask it, task-76 item 5), `shell.print` (a
+//! button: `activate`; a person only, cmd-p and the menu; the frame on
+//! paper through the system's printer, task-76 item 9, `print.rs`) and,
+//! while the session is recorded, `shell.save_session` (a button:
+//! `activate`; a person only), and run through the gallery's one
+//! dispatcher (the todo page's,
 //! lent by `TodoPage::with_dispatcher` as the Surface, Silences and Files
 //! pages do). A key, a menu item, a tray item, a notification, the theme
 //! page's cards, the sidebar, a screen reader and an agent through the
@@ -78,6 +81,9 @@ pub struct Shell {
     asks: Asks,
     recording: bool,
     notice: String,
+    /// The printer, the destinations, the job in course and the last
+    /// (`print.rs`).
+    print: print::Printing,
 }
 
 impl Default for Shell {
@@ -102,6 +108,7 @@ struct Ids {
     theme: SemId,
     detach: SemId,
     show: SemId,
+    print: SemId,
     save: SemId,
 }
 
@@ -113,6 +120,7 @@ impl Ids {
             theme: shell.child("theme")?,
             detach: shell.child("detach")?,
             show: shell.child("show")?,
+            print: shell.child("print")?,
             save: shell.child("save_session")?,
             shell,
         })
@@ -125,6 +133,7 @@ impl Ids {
             &self.theme,
             &self.detach,
             &self.show,
+            &self.print,
             &self.save,
         ]
         .contains(&id)
@@ -135,6 +144,7 @@ impl Ids {
             ShellTarget::Page => &self.page,
             ShellTarget::Theme => &self.theme,
             ShellTarget::Detach => &self.detach,
+            ShellTarget::Print => &self.print,
             ShellTarget::Save => &self.save,
         }
     }
@@ -143,13 +153,14 @@ impl Ids {
 /// The shell's capabilities a key or a control of the view asks for,
 /// named without the ids (the view's own name for them; outside the view
 /// they are their ids: `shell.page`, `shell.theme`, `shell.detach`,
-/// `shell.save_session`). `shell.show` is asked from outside the window
-/// alone (the tray, a notification), by `Clicked`.
+/// `shell.print`, `shell.save_session`). `shell.show` is asked from
+/// outside the window alone (the tray, a notification), by `Clicked`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ShellTarget {
     Page,
     Theme,
     Detach,
+    Print,
     Save,
 }
 
@@ -160,6 +171,7 @@ impl Shell {
             asks: Asks::default(),
             recording: false,
             notice: String::new(),
+            print: print::Printing::new(),
         }
     }
 
@@ -203,7 +215,8 @@ fn project(shell: &Shell, view: View<'_>, b: &mut SnapshotBuilder) {
     };
     let page = &PAGES[view.page];
     b.node(&ids.shell, Role::Region, "plev")
-        .state("notice", shell.notice.as_str());
+        .state("notice", shell.notice.as_str())
+        .state("print", shell.print.summary());
     let mut node = b.node(&ids.page, Role::Select, "page");
     node.parent(&ids.shell)
         .state("selected", page.title)
@@ -239,6 +252,8 @@ fn project(shell: &Shell, view: View<'_>, b: &mut SnapshotBuilder) {
         actors: PERSON_ONLY,
         ..Policy::default()
     });
+    // the frame on paper: a person's, with a destination to print to
+    print::project(&shell.print, ids, b);
     if shell.recording {
         let mut node = b.node(&ids.save, Role::Button, "save the session recording");
         node.parent(&ids.shell).focusable(false);
@@ -256,10 +271,12 @@ impl Semantics for ShellOp<'_> {
 }
 
 impl Operable for ShellOp<'_> {
-    /// Everything here ends now: a page or a theme is applied by the view
-    /// right after the dispatch, a detach or a save is taken by the shell
-    /// on its loop (a window that does not open is logged there).
-    fn execute(&mut self, _id: RequestId, req: &Request) -> Execution {
+    /// Everything here ends now but a print: a page or a theme is applied
+    /// by the view right after the dispatch, a detach or a save is taken
+    /// by the shell on its loop (a window that does not open is logged
+    /// there); a print starts, and its request is ended by `settle_print`
+    /// when the job answers.
+    fn execute(&mut self, id: RequestId, req: &Request) -> Execution {
         let Some(ids) = &self.shell.ids else {
             return Execution::Failed("the shell has no ids".to_owned());
         };
@@ -298,6 +315,10 @@ impl Operable for ShellOp<'_> {
             }
             ("activate", target) if *target == ids.save => asks.save = true,
             ("activate", target) if *target == ids.show => asks.show = true,
+            ("activate", target) if *target == ids.print => {
+                self.shell.print.asked = Some(id);
+                return Execution::Started;
+            }
             _ => {
                 return Execution::Failed(format!(
                     "the shell has no {} on {}",
@@ -372,6 +393,11 @@ impl ShowcaseView {
         if let Some(name) = self.panes.shell.asks.theme.take() {
             self.set_theme(&name);
         }
+        // a print started: the scene is built now, the job runs beside
+        // the loop, and the request waits for it (`print.rs`)
+        if let Some(print) = self.panes.shell.print.asked.take() {
+            self.start_print(print);
+        }
         self.panes.todo.receipt(id).cloned()
     }
 
@@ -391,21 +417,32 @@ impl ShowcaseView {
         action: &str,
         param: Option<Value>,
     ) -> bool {
-        let Some(target) = self.panes.shell.id(target) else {
-            return false;
-        };
+        self.ask_shell_receipt(target, action, param)
+            .is_some_and(|r| matches!(r.stage(), Some(Stage::Completed(_))))
+    }
+
+    /// [`ask_shell`](Self::ask_shell) with the receipt as it stands after
+    /// the dispatch (a print is `Executing` then); `None` when the ask
+    /// never became a request.
+    pub(crate) fn ask_shell_receipt(
+        &mut self,
+        target: ShellTarget,
+        action: &str,
+        param: Option<Value>,
+    ) -> Option<Receipt> {
+        let target = self.panes.shell.id(target)?;
         let seen = match self.shell_semantics() {
             Ok(seen) => seen,
             Err(e) => {
                 log::warn!("shell: the projection does not validate: {e}");
-                return false;
+                return None;
             }
         };
         let req = match Request::observe(&seen, Actor::Human, &target, action, param) {
             Ok(req) => req,
             Err(e) => {
                 log::debug!("shell: {e}");
-                return false;
+                return None;
             }
         };
         let receipt = self.act_shell(req);
@@ -413,7 +450,7 @@ impl ShowcaseView {
             "shell: {target} {action}: {:?}",
             receipt.as_ref().and_then(Receipt::stage)
         );
-        receipt.is_some_and(|r| matches!(r.stage(), Some(Stage::Completed(_))))
+        receipt
     }
 
     /// `D`, or the menu, asked for the page in a window of its own, or
@@ -492,6 +529,10 @@ impl ShowcaseView {
             .is_ok_and(|now| now.revision() != seen.revision())
     }
 }
+
+/// The frame on paper (task-76 item 9): `shell.print`, the job beside the
+/// loop, and what is projected about it.
+mod print;
 
 #[cfg(test)]
 mod tests;

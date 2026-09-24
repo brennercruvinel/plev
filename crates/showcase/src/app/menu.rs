@@ -4,8 +4,9 @@
 //! back as clicks the view dispatches as a person's requests, the path a
 //! key and a button take. The bar: "plev" (the platform's own items),
 //! "view" (the shell's capabilities: the theme, the page to go to, the
-//! page in a window of its own, the recording's save while the session
-//! is recorded) and the active page's title with its plain actions
+//! page in a window of its own, the page on paper with cmd-p, the
+//! recording's save while the session is recorded) and the active page's
+//! title with its plain actions
 //! (every action a person may ask without a value; the rows are left
 //! out, their actions belong to the row on screen), when it has any.
 //!
@@ -26,7 +27,7 @@ use engine::platform::menu::{
 };
 use sem::{Role, SemId, Snapshot};
 
-use super::{App, UserEvent, record};
+use super::{App, UserEvent, print, record};
 use crate::view::ShowcaseView;
 
 /// The shell's capabilities by their ids, as the projection names them
@@ -34,6 +35,7 @@ use crate::view::ShowcaseView;
 const THEME: &str = "shell.theme";
 const PAGE: &str = "shell.page";
 const DETACH: &str = "shell.detach";
+const PRINT: &str = "shell.print";
 const SAVE: &str = "shell.save_session";
 
 /// The bar as shown, and the model it shows.
@@ -144,7 +146,8 @@ fn app_menu() -> Submenu {
 }
 
 /// The shell's capabilities: the theme and the page as submenus of
-/// options, the page in a window of its own as a check item, the
+/// options, the page in a window of its own as a check item, the page
+/// on paper with its keys (disabled without a destination), the
 /// recording's save with its keys while the session is recorded. The
 /// tray's menu carries the same entries (`tray.rs`).
 pub(super) fn view_menu(gallery: &Snapshot) -> Submenu {
@@ -162,6 +165,16 @@ pub(super) fn view_menu(gallery: &Snapshot) -> Submenu {
         .ok()
         .and_then(|id| MenuItem::of(gallery, &id, "toggle"))
     {
+        menu = menu.item(item);
+    }
+    if let Some(item) = SemId::parse(PRINT)
+        .ok()
+        .and_then(|id| MenuItem::of(gallery, &id, "activate"))
+    {
+        let item = match Shortcut::parse(print::PRINT_KEYS) {
+            Ok(keys) => item.shortcut(keys),
+            Err(_) => item,
+        };
         menu = menu.item(item);
     }
     if let Some(item) = SemId::parse(SAVE)

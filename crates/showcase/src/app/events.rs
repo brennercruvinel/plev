@@ -60,6 +60,12 @@ impl App {
                 if self.record_key(&key_event.logical_key) {
                     return;
                 }
+                // The print keys: `shell.print`, the person's request
+                // (task-76 item 9), desktop only.
+                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+                if self.print_key(&key_event.logical_key) {
+                    return;
+                }
                 match &key_event.logical_key {
                     Key::Named(NamedKey::Escape) => {
                         if self.view.close_top_overlay() {

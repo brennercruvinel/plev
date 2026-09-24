@@ -412,6 +412,7 @@ impl ApplicationHandler<UserEvent> for App {
             self.install_menu();
             self.install_tray();
             self.install_notices();
+            self.install_print();
             self.view.set_window_focused(false);
         }
     }
@@ -536,6 +537,11 @@ mod tray;
 /// item 5), desktop only.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod notify;
+
+/// The page on paper: the platform's printer and the print keys (task-76
+/// item 9), desktop only.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod print;
 
 /// `PLEV_BACKGROUND=1`: the window comes up without taking the focus.
 #[cfg(target_os = "macos")]

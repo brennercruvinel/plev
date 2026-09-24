@@ -112,6 +112,13 @@ impl App {
         {
             self.invalidate_in(id);
         }
+        // A print job that answered, or one held for the wake: the shell
+        // projects it and the bar follows the next frame (task-76 item 9).
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        if self.view.settle_print() {
+            self.caught_up = true;
+            self.invalidate();
+        }
         #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
         self.notify_pending();
     }
