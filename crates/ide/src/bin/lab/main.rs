@@ -13,7 +13,7 @@
 //! ide-lab --arm plev|scripted|git|screenshot
 //!         [--human none|unstage-after-observe:<path>|unstage-before-submit:<path>]
 //!         [--out <dir>] [--until commit|timeout] [--timeout <s>] [--grace <s>] [--app <name>]
-//!         [--scripted observe|chain]
+//!         [--scripted observe|chain|ask]
 //! ```
 //!
 //! unix only: the port is a unix socket.

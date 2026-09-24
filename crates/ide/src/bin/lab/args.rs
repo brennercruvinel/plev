@@ -8,7 +8,7 @@ usage:
   ide-lab --arm plev|scripted|git|screenshot
           [--human none|unstage-after-observe:<path>|unstage-before-submit:<path>]
           [--out <dir>] [--until commit|timeout] [--timeout <s>] [--grace <s>] [--app <name>]
-          [--scripted observe|chain]
+          [--scripted observe|chain|ask]
 arms:
   plev        the workbench on the agent port, for an agent outside (plev observe / plev act)
   scripted    the same, driven by the laboratory's own agent over the wire (the control run)
@@ -30,6 +30,10 @@ the scripted agent (--arm scripted):
             stage shows no state (task-89): that submit rests on the message the agent was last
             shown, empty, and is refused stale by the agent's own write, as an LLM agent that
             chains after writing will be
+  ask       observes as `observe` does; when a submit comes back stale and the refusal names a
+            person who acted, it asks the person before it puts a file of the task back in the
+            index (`Act::ask`, as `plev act --ask`), and waits for the answer: allowed, it stages
+            the file and commits; declined, it stops with no commit
 defaults: --out ./ide-lab-out --until commit --timeout 600 --grace 1 --app ide --scripted observe
 --until commit ends --grace seconds after the first commit completes (or at --timeout);
 --until timeout runs the whole --timeout.
@@ -93,6 +97,10 @@ pub enum Script {
     /// observation before it (task-87); after a refusal it observes and
     /// decides again, as `Observe` does.
     Chain,
+    /// observes as `Observe` does; after a stale refusal that names a
+    /// person, asks the person before it puts a file of the task back
+    /// (`Act::ask`, task-92), and stops with no commit when declined.
+    Ask,
 }
 
 impl Script {
@@ -100,6 +108,7 @@ impl Script {
         match self {
             Script::Observe => "observe",
             Script::Chain => "chain",
+            Script::Ask => "ask",
         }
     }
 }
@@ -181,8 +190,11 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
                 script = match value()?.as_str() {
                     "observe" => Script::Observe,
                     "chain" => Script::Chain,
+                    "ask" => Script::Ask,
                     other => {
-                        return Err(format!("--scripted takes observe or chain, got {other:?}"));
+                        return Err(format!(
+                            "--scripted takes observe, chain or ask, got {other:?}"
+                        ));
                     }
                 };
             }

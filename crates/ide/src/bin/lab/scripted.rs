@@ -15,12 +15,21 @@
 //! stale world is refused, never acted on. each observation's step says
 //! what it weighs: the bytes of the line the server writes for it, and
 //! each act's step says the revision its last stage carried.
+//!
+//! in the `ask` mode, when a stale refusal names a person among who
+//! acted, the agent asks the person before it puts a file of the task
+//! back (`Act::ask`, task-92) and waits for the answer as `plev act --ask`
+//! does: allowed, the stage runs and the agent goes on to its commit;
+//! declined, it stops there, with no commit.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::thread::JoinHandle;
 
-use sem::{ActionName, Change, Node, Outcome, Rejection, Revision, SemId, Stage, StateKey, Value};
+use sem::{
+    Acted, ActionName, Actor, Change, Node, Outcome, Rejection, Revision, SemId, Stage, StateKey,
+    Value,
+};
 use wire::{
     Act, Client, Observe, Reply, ServerMsg, SnapshotReply, StageReply, WireError, encode_server,
 };
@@ -31,6 +40,10 @@ use crate::repo::{TASK_FILES, TASK_MESSAGE};
 
 /// how long the agent waits for one reply.
 const TIMEOUT_MS: u64 = 30_000;
+
+/// how long the agent waits for the person to answer its question, as
+/// `plev act --ask` waits when no `--timeout` is given.
+const ASK_TIMEOUT_MS: u64 = 300_000;
 
 /// how many submits the agent tries before giving up: one for the
 /// decision, one for the recovery after a stale world, one spare.
@@ -138,7 +151,7 @@ impl Agent {
         )?;
         let mut chained = match self.script {
             Script::Chain => Some(self.landed(out, &stages)?),
-            Script::Observe => None,
+            Script::Observe | Script::Ask => None,
         };
 
         // the decision: one observation, then the submit on exactly that
@@ -164,7 +177,10 @@ impl Agent {
                         "submit {attempt} refused as stale: {changes:?}; acted: {}",
                         crate::story::acted_text(acted)
                     ));
-                    self.repair(out, decided)?;
+                    let ask = self.script == Script::Ask && by_a_person(acted);
+                    if !self.repair(out, decided, ask)? {
+                        return Ok(());
+                    }
                 }
                 other => return Err(format!("submit {attempt} ended {other:?}")),
             }
@@ -204,8 +220,10 @@ impl Agent {
 
     /// after a stale refusal: what changed since the decision, then the
     /// index put back where the task wants it, decided on one observation,
-    /// each act resting on the revision the one before left.
-    fn repair(&mut self, out: &mut Scripted, since: Revision) -> Result<(), String> {
+    /// each act resting on the revision the one before left. with `ask`,
+    /// each file goes back only if the person allows it; `false` when she
+    /// declined, and the agent stops.
+    fn repair(&mut self, out: &mut Scripted, since: Revision, ask: bool) -> Result<bool, String> {
         let reply = self
             .client
             .observe(Observe {
@@ -227,18 +245,24 @@ impl Agent {
         let staged = staged(&seen);
         let mut revision = seen.revision;
         for path in TASK_FILES {
-            if !staged.contains(path) {
-                let stages = self.act(
-                    out,
-                    &format!("changes.file[{path}]"),
-                    "stage",
-                    None,
-                    revision,
-                )?;
-                revision = self.landed(out, &stages)?;
+            if staged.contains(path) {
+                continue;
             }
+            let target = format!("changes.file[{path}]");
+            let stages = if ask {
+                let question = format!(
+                    "you took {path} out of the index, and the task commits it: stage it again?"
+                );
+                match self.ask(out, &target, "stage", revision, &question)? {
+                    Some(stages) => stages,
+                    None => return Ok(false),
+                }
+            } else {
+                self.act(out, &target, "stage", None, revision)?
+            };
+            revision = self.landed(out, &stages)?;
         }
-        Ok(())
+        Ok(true)
     }
 
     /// the revision the last stage of `stages` carries, the app as that
@@ -308,11 +332,69 @@ impl Agent {
         if let Some(param) = param {
             act = act.with_param(param);
         }
+        let stages = self.send(out, act, revision, "")?;
+        match terminal(&stages) {
+            Some(Stage::Completed(_)) => Ok(stages),
+            Some(Stage::Rejected(Rejection::Stale { .. })) if action.as_str() == "submit" => {
+                Ok(stages)
+            }
+            other => Err(format!("{target} {action} ended {other:?}")),
+        }
+    }
+
+    /// one act resting on `revision` that asks the person `question`
+    /// first (`Act::ask`), waiting for her answer as `plev act --ask`
+    /// does. its stages when she allowed it and it ran; `None` when she
+    /// declined it, and the agent stops.
+    fn ask(
+        &mut self,
+        out: &mut Scripted,
+        target: &str,
+        action: &str,
+        revision: Revision,
+        question: &str,
+    ) -> Result<Option<Vec<StageReply>>, String> {
+        let target = SemId::parse(target).map_err(|e| e.to_string())?;
+        let action = ActionName::parse(action).map_err(|e| e.to_string())?;
+        let act = Act::from_revision(target.clone(), action.clone(), revision).with_ask(question);
+        self.wait_for(ASK_TIMEOUT_MS)?;
+        let stages = self.send(out, act, revision, &format!(", asking {question:?}"));
+        self.wait_for(TIMEOUT_MS)?;
+        let stages = stages?;
+        match terminal(&stages) {
+            Some(Stage::Completed(_)) => Ok(Some(stages)),
+            Some(Stage::Rejected(Rejection::Declined { by })) => {
+                out.steps.push(format!(
+                    "{by} declined {target} {action}: the agent stops, with no commit"
+                ));
+                Ok(None)
+            }
+            other => Err(format!("{target} {action} ended {other:?}")),
+        }
+    }
+
+    /// how long the agent waits for one reply from now on.
+    fn wait_for(&mut self, ms: u64) -> Result<(), String> {
+        self.client.set_timeout(Some(ms)).map_err(|e| e.to_string())
+    }
+
+    /// sends `act`, resting on `revision`, and reads its stages until the
+    /// terminal one; the step says them, with `how` after the revision. an
+    /// act the port refused before the dispatcher is kept and stops the
+    /// agent.
+    fn send(
+        &mut self,
+        out: &mut Scripted,
+        act: Act,
+        revision: Revision,
+        how: &str,
+    ) -> Result<Vec<StageReply>, String> {
+        let (target, action) = (act.target.clone(), act.action.clone());
         let stages = match self.client.act(act, |_| {}) {
             Ok(stages) => stages,
             Err(WireError::Refused(e)) => {
                 out.steps.push(format!(
-                    "act {target} {action} from {revision}: refused, {e}"
+                    "act {target} {action} from {revision}{how}: refused, {e}"
                 ));
                 out.refused
                     .push(Refused::of(target.as_str(), action.as_str(), &e));
@@ -326,17 +408,19 @@ impl Agent {
             .and_then(|s| s.revision)
             .map_or_else(String::new, |r| format!(", the app at {r}"));
         out.steps.push(format!(
-            "act {target} {action} from {revision}: {}{landed}",
+            "act {target} {action} from {revision}{how}: {}{landed}",
             names.join(" -> ")
         ));
-        match terminal(&stages) {
-            Some(Stage::Completed(_)) => Ok(stages),
-            Some(Stage::Rejected(Rejection::Stale { .. })) if action.as_str() == "submit" => {
-                Ok(stages)
-            }
-            other => Err(format!("{target} {action} ended {other:?}")),
-        }
+        Ok(stages)
     }
+}
+
+/// a stale refusal whose `acted` names a person: someone at the screen
+/// moved what the agent rested on.
+fn by_a_person(acted: &[Acted]) -> bool {
+    acted
+        .iter()
+        .any(|a| matches!(a.actor, Actor::Human | Actor::Assistive))
 }
 
 /// the bytes of the line the server writes for this observation: the
