@@ -251,7 +251,11 @@ scene needs it.
   projects. recording is opt-in and local; persistence and export must
   never leave the machine without a person's action.
 - the showcase wiring (a debug shortcut that persists, the panic hook)
-  waits for task-60, which edits the showcase shell.
+  waited for task-60, which edited the showcase shell. task-60 is
+  integrated and the showcase still does not depend on `rec`
+  (`crates/showcase/Cargo.toml`): the wiring is task-63 phase d now.
+  outside tests, the one caller of `Recorder` today is the `ide-lab`
+  binary (task-62 phase c).
 
 ## the format decision
 
