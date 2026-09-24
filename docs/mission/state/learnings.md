@@ -12,6 +12,17 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-76 fase 1
+
+- **o device perdido era um buraco silencioso:** o wgpu engole todo erro
+  `DeviceLost` antes do handler fatal, então um `draw` num device morto
+  "termina" sem pânico e o compositor marca as layers como limpas em cima
+  de nada; só o readback estourava. `destroy` sozinho não avisa: o
+  callback chega no primeiro `poll`. a recuperação no lugar refaz o que
+  mora no device e o frame seguinte é byte a byte o anterior. a surface
+  sobrevive (é do `Instance`) e só precisa ser reconfigurada. fonte:
+  `task-76-platform-integration.md`, "handoff da fase 1".
+
 ### 2026-09-24, task-74 fase 1
 
 - **o texto do plev hoje é latino:** com as 9 faces embutidas, árabe,

@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [gpu, wgpu, device-lost, robustness, headless, frame-path, platform-integration]
 date: 2026-09-24
 ---
