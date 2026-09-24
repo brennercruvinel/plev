@@ -371,6 +371,22 @@ fn stale_on(run: &Run, index: usize) -> Vec<String> {
         .collect()
 }
 
+/// what a refusal whose submit the person raced says in `acted`: her
+/// unstage when her request was checked on the very revision the agent's
+/// submit named, nothing when the app moved in between (a git refresh
+/// landing, say): the chain of task-90 starts only at a request checked
+/// on the revision the agent saw, and the lab cannot hold the app still
+/// between the agent's last look and the person's act. CI on macOS saw
+/// the second (PR #59). task-91 anchors `acted` on the look instead, and
+/// then this becomes the exact `[the person's unstage]`.
+fn names_the_person_or_nobody(run: &Run, index: usize) {
+    let acted = acted_on(run, index);
+    assert!(
+        acted.is_empty() || acted == ["human unstage changes.file[src/session.rs]"],
+        "{acted:?}"
+    );
+}
+
 /// the actors a stale refusal names, as `actor action target`.
 fn acted_on(run: &Run, index: usize) -> Vec<String> {
     run.list("stale")[index]["acted"]
@@ -436,15 +452,12 @@ fn the_person_before_the_submit_makes_the_observed_submit_stale() {
         ["src/login.rs", "tests/login_test.rs"]
     );
     // the submit that brought the person is the next request, and it is
-    // refused on the staged set she moved, naming her.
+    // refused on the staged set she moved.
     let person: u64 = run.str("intervention.request").parse().expect("an id");
     assert_eq!(submits(&run).first(), Some(&(person + 1)));
     assert_eq!(run.list("stale").len(), 1);
     assert_eq!(stale_on(&run, 0), ["changes:staged"]);
-    assert_eq!(
-        acted_on(&run, 0),
-        ["human unstage changes.file[src/session.rs]"]
-    );
+    names_the_person_or_nobody(&run, 0);
     assert_eq!(
         run.list("stale")[0]["head"].as_str(),
         Some(run.str("truth.head_before"))
@@ -516,13 +529,9 @@ fn before_the_submit_the_person_makes_the_chained_submit_stale() {
 
     assert_eq!(run.str("intervention.trigger"), "submit arriving");
     assert_eq!(run.list("stale").len(), 1);
-    // the person's unstage and the agent's own write, in one refusal that
-    // names the person.
+    // the person's unstage and the agent's own write, in one refusal.
     assert_eq!(stale_on(&run, 0), ["changes:staged", "commit.message:text"]);
-    assert_eq!(
-        acted_on(&run, 0),
-        ["human unstage changes.file[src/session.rs]"]
-    );
+    names_the_person_or_nobody(&run, 0);
     measured_on_the_old_world(&run);
     // measured whatever revision it named: the refused submit rested on a
     // revision a terminal stage carried, which no observation served.
