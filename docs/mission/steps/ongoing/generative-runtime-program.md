@@ -337,6 +337,14 @@ decididas em 2026-09-23:
     a onda seguinte espera só os critérios essenciais da atual (seção 6),
     sem perfeição local.
 
+12. onda 5 fechada, onda 6 aberta (2026-09-24, decisão autônoma pela
+    regra de severidade): os seis critérios essenciais da seção 6 estão
+    satisfeitos. o que sobrou da onda 5 é P2 e P3 (64 fases b e c, 65 fases
+    c e d, task-91 em andamento). a task-68 abre com as decisões escritas
+    no arquivo dela: crate `uir`, vocabulário v1 do que existe no comps e no
+    engine, fixtures no domínio do ide e do todo, registro de capacidades
+    derivado do `Snapshot`.
+
 abertas:
 
 5. task-39 (memoização, pendente desde 2023) é absorvida pela task-73.
@@ -376,6 +384,7 @@ atualizado em cada integração.
 | task-64 | fase a integrada; b e c na fila | `e6560a2` | crate `inspect`, CLI `plev-inspect`: a cadeia causal de cada request pela gravação; achou o buraco da task-89; a fase b (UI) precisa gravar as ligações por frame no `rec` |
 | task-86 | integrada | `7f866e8` | o binário `ide` abre a porta do agente (`PLEV_AGENT=1`, debug) por `ide::agent`; prova numa janela real com cliques de uma pessoa e um agente ao mesmo tempo: recusa stale nomeando a pessoa, o mesmo texto na tela e no nó que o agente lê; `Binding::visible_rect` no engine |
 | task-90 | integrada | `d02b4d1` | o `acted` nomeia a cadeia de ações de outros atores desde a primeira que rodou na revisão que o autor viu; o toast em uma frase por ator; a cena do clique na janela continua sem âncora (a seleção muda a revisão fora do dispatcher), teste escreve o limite |
+| task-68 | em andamento (onda 6) | | crate `uir`: IR tipado em JSON, vocabulário fechado do comps, props só por token, ligação a estado e capacidades do app (registro derivado do `Snapshot`), `verify` como único construtor de `VerifiedIr`, erros por caminho, schema exportado |
 | task-91 | em andamento (P2, com um P1 dentro) | | o `acted` ancora no olhar (a marca do dispatcher quando a observação foi servida), nomeia também as ações do próprio autor desde o olhar (explica a recusa pela própria escrita), e o laboratório conta a forma de cada ato pelo `Traffic` (P1: o relatório errava a forma dos atos encadeados em revisão de estágio) |
 | task-89 | integrada | `79b8c93` | um ato com `from_revision` se apoia só no que foi mostrado ao ator (o nome do `hello`, em qualquer conexão): o valor de cada `read` vem da última observação que o mostrou; nunca mostrado dá `not_observed` (aditivo no v1, `plev` sai 3); reproduzido no laboratório: o submit depois de olhar só o formulário é recusado stale; adr an-act-rests-on-what-its-actor-was-shown |
 | task-65 | fases a e b integradas; c e d depois (P2) | `042d34e` | cmd+clique (debug desktop) no showcase: controle para o site de projeção (`Node.source`), texto para o literal (linha e coluna no baseline do hot reload); adr view-source-for-pixels |

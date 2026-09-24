@@ -14,6 +14,27 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a onda 5 fecha, a onda 6 abre
+
+- **integrada:** task-65 fases a e b (`042d34e`), do pixel ao código.
+  gate verde (2261). ADR view-source-for-pixels aceito.
+- **publicado:** PR #60 (a correção do teste que deixou a main vermelha),
+  merge `f309ab4`. a guarda nova (colunas por `awk`) mergeou só com as
+  nove checagens verdes.
+- **onda 5 fechada:** os seis critérios essenciais satisfeitos. sobram P2
+  e P3, que seguem sem bloquear.
+- **onda 6 aberta: task-68 (plev IR e verifier).** a sonda nas premissas
+  achou dois componentes do vocabulário sem equivalente no comps
+  (`Media`/vídeo, `Toolbar`) e a revisão de silêncios da tese sem nenhuma
+  capacidade num app do plev.
+- **decisões autônomas:**
+  - o crate se chama `uir`;
+  - o vocabulário v1 só tem o que existe;
+  - as fixtures ficam no ide e no todo;
+  - o registro de capacidades é derivado da projeção;
+  - o domínio do checkpoint b (vídeo ou ide) se decide na task-69 e pode
+    ser pergunta para o brenner.
+
 ### ciclo 2: a terceira rodada do checkpoint a e uma main vermelha
 
 - **experimento (P1, critério da onda 5):** quatro corridas com LLM sob a
