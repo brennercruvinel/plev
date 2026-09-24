@@ -1,0 +1,350 @@
+{
+  "focused": "commit.message",
+  "nodes": [
+    {
+      "id": "changes",
+      "label": "changes",
+      "role": "list",
+      "state": {
+        "files": {
+          "kind": "list",
+          "value": [
+            "src/lexer.rs",
+            "notes.md",
+            "src/parser.rs"
+          ]
+        },
+        "selected": {
+          "kind": "text",
+          "value": ""
+        },
+        "staged": {
+          "kind": "set",
+          "value": [
+            "src/lexer.rs"
+          ]
+        }
+      }
+    },
+    {
+      "actions": [
+        {
+          "enabled": false,
+          "name": "stage",
+          "reads": [
+            "changes.file[src/lexer.rs]:staged",
+            "changes.file[src/lexer.rs]:unstaged"
+          ]
+        },
+        {
+          "name": "unstage",
+          "reads": [
+            "changes.file[src/lexer.rs]:staged",
+            "changes.file[src/lexer.rs]:unstaged"
+          ]
+        },
+        {
+          "name": "discard",
+          "policy": {
+            "confirm": "for_agents",
+            "destructive": true
+          },
+          "reads": [
+            "changes.file[src/lexer.rs]:staged",
+            "changes.file[src/lexer.rs]:unstaged"
+          ]
+        },
+        {
+          "name": "ignore",
+          "reads": [
+            "changes.file[src/lexer.rs]:staged",
+            "changes.file[src/lexer.rs]:unstaged"
+          ]
+        },
+        {
+          "name": "show_diff",
+          "reads": [
+            "diff:target"
+          ]
+        }
+      ],
+      "id": "changes.file[src/lexer.rs]",
+      "label": "src/lexer.rs",
+      "parent": "changes",
+      "role": "list_item",
+      "state": {
+        "staged": {
+          "kind": "bool",
+          "value": true
+        },
+        "status": {
+          "kind": "text",
+          "value": "added"
+        },
+        "unstaged": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "actions": [
+        {
+          "name": "stage",
+          "reads": [
+            "changes.file[notes.md]:staged",
+            "changes.file[notes.md]:unstaged"
+          ]
+        },
+        {
+          "enabled": false,
+          "name": "unstage",
+          "reads": [
+            "changes.file[notes.md]:staged",
+            "changes.file[notes.md]:unstaged"
+          ]
+        },
+        {
+          "name": "discard",
+          "policy": {
+            "confirm": "for_agents",
+            "destructive": true
+          },
+          "reads": [
+            "changes.file[notes.md]:staged",
+            "changes.file[notes.md]:unstaged"
+          ]
+        },
+        {
+          "name": "ignore",
+          "reads": [
+            "changes.file[notes.md]:staged",
+            "changes.file[notes.md]:unstaged"
+          ]
+        },
+        {
+          "name": "show_diff",
+          "reads": [
+            "diff:target"
+          ]
+        }
+      ],
+      "id": "changes.file[notes.md]",
+      "label": "notes.md",
+      "parent": "changes",
+      "role": "list_item",
+      "state": {
+        "staged": {
+          "kind": "bool",
+          "value": false
+        },
+        "status": {
+          "kind": "text",
+          "value": "untracked"
+        },
+        "unstaged": {
+          "kind": "bool",
+          "value": true
+        }
+      }
+    },
+    {
+      "actions": [
+        {
+          "name": "stage",
+          "reads": [
+            "changes.file[src/parser.rs]:staged",
+            "changes.file[src/parser.rs]:unstaged"
+          ]
+        },
+        {
+          "enabled": false,
+          "name": "unstage",
+          "reads": [
+            "changes.file[src/parser.rs]:staged",
+            "changes.file[src/parser.rs]:unstaged"
+          ]
+        },
+        {
+          "name": "discard",
+          "policy": {
+            "confirm": "for_agents",
+            "destructive": true
+          },
+          "reads": [
+            "changes.file[src/parser.rs]:staged",
+            "changes.file[src/parser.rs]:unstaged"
+          ]
+        },
+        {
+          "name": "ignore",
+          "reads": [
+            "changes.file[src/parser.rs]:staged",
+            "changes.file[src/parser.rs]:unstaged"
+          ]
+        },
+        {
+          "name": "show_diff",
+          "reads": [
+            "diff:target"
+          ]
+        }
+      ],
+      "id": "changes.file[src/parser.rs]",
+      "label": "src/parser.rs",
+      "parent": "changes",
+      "role": "list_item",
+      "state": {
+        "staged": {
+          "kind": "bool",
+          "value": false
+        },
+        "status": {
+          "kind": "text",
+          "value": "untracked"
+        },
+        "unstaged": {
+          "kind": "bool",
+          "value": true
+        }
+      }
+    },
+    {
+      "id": "diff",
+      "label": "diff",
+      "role": "region",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 0
+        },
+        "lines": {
+          "kind": "list",
+          "value": []
+        },
+        "target": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "actions": [
+        {
+          "enabled": false,
+          "name": "open",
+          "reads": [
+            "commit.form:open"
+          ]
+        },
+        {
+          "name": "cancel",
+          "reads": [
+            "commit.form:open",
+            "commit.message:text"
+          ]
+        }
+      ],
+      "id": "commit.form",
+      "label": "commit",
+      "role": "group",
+      "state": {
+        "open": {
+          "kind": "bool",
+          "value": true
+        }
+      }
+    },
+    {
+      "actions": [
+        {
+          "name": "set_value",
+          "param": {
+            "constrained": true,
+            "kind": "text"
+          },
+          "reads": [
+            "commit.message:text"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "required": true
+      },
+      "focusable": true,
+      "id": "commit.message",
+      "label": "commit message",
+      "parent": "commit.form",
+      "role": "text_input",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "fix parser"
+        }
+      }
+    },
+    {
+      "actions": [
+        {
+          "name": "submit",
+          "reads": [
+            "changes:staged",
+            "commit.message:text"
+          ]
+        }
+      ],
+      "focusable": true,
+      "id": "commit.submit",
+      "label": "Commit",
+      "parent": "commit.form",
+      "role": "button"
+    },
+    {
+      "id": "stacks",
+      "label": "stacks",
+      "role": "list",
+      "state": {
+        "branch": {
+          "kind": "text",
+          "value": "main"
+        }
+      }
+    },
+    {
+      "actions": [
+        {
+          "name": "show_diff",
+          "reads": [
+            "diff:target"
+          ]
+        }
+      ],
+      "id": "stacks.commit[48948ff99b2bab50ad30b69c2a71ef75edae1dd9]",
+      "label": "initial",
+      "parent": "stacks",
+      "role": "list_item",
+      "state": {
+        "author": {
+          "kind": "text",
+          "value": "Test Author"
+        },
+        "files": {
+          "kind": "list",
+          "value": [
+            "README"
+          ]
+        },
+        "summary": {
+          "kind": "text",
+          "value": "initial"
+        }
+      }
+    },
+    {
+      "id": "notices",
+      "label": "notices",
+      "role": "region"
+    }
+  ]
+}

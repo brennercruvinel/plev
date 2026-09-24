@@ -1,0 +1,91 @@
+{
+  "plev_ir": 1,
+  "surface": {
+    "id": "commit",
+    "title": "commit",
+    "root": {
+      "sem": "commit.form",
+      "label": "commit",
+      "props": {
+        "padding": "md",
+        "background": "bg_panel",
+        "shape": "card"
+      },
+      "layout": {
+        "stack": {
+          "axis": "vertical",
+          "gap": "sm",
+          "align": "stretch"
+        }
+      },
+      "children": [
+        {
+          "sem": "commit.message",
+          "component": "text_field",
+          "label": "commit message",
+          "props": {
+            "typography": "base_2r"
+          },
+          "size": {
+            "min": "field_min_w"
+          },
+          "bind": {
+            "state": {
+              "text": "commit.message:text"
+            },
+            "actions": {
+              "set_value": {
+                "target": "commit.message",
+                "action": "set_value"
+              }
+            }
+          }
+        },
+        {
+          "sem": "commit.buttons",
+          "layout": {
+            "stack": {
+              "axis": "horizontal",
+              "gap": "sm",
+              "align": "end"
+            }
+          },
+          "children": [
+            {
+              "sem": "commit.cancel",
+              "component": "button",
+              "label": "Cancel",
+              "props": {
+                "control_size": "sm"
+              },
+              "bind": {
+                "actions": {
+                  "activate": {
+                    "target": "commit.form",
+                    "action": "cancel"
+                  }
+                }
+              }
+            },
+            {
+              "sem": "commit.submit",
+              "component": "button",
+              "label": "Commit",
+              "props": {
+                "control_size": "sm"
+              },
+              "bind": {
+                "actions": {
+                  "activate": {
+                    "target": "commit.submit",
+                    "action": "submit"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

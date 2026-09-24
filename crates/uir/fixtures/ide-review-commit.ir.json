@@ -1,0 +1,127 @@
+{
+  "plev_ir": 1,
+  "surface": {
+    "id": "review",
+    "title": "review what goes into the commit",
+    "root": {
+      "sem": "review.root",
+      "props": {
+        "padding": "lg"
+      },
+      "layout": {
+        "stack": {
+          "axis": "vertical",
+          "gap": "md",
+          "align": "stretch"
+        }
+      },
+      "children": [
+        {
+          "sem": "review.heading",
+          "component": "text",
+          "label": "what goes into the commit",
+          "props": {
+            "typography": "title"
+          }
+        },
+        {
+          "sem": "review.files",
+          "component": "list",
+          "label": "changed files",
+          "repeat": {
+            "each": "changes:files",
+            "item": {
+              "sem": "review.file[{item}]",
+              "layout": {
+                "stack": {
+                  "axis": "horizontal",
+                  "gap": "sm",
+                  "align": "center"
+                }
+              },
+              "children": [
+                {
+                  "sem": "review.file[{item}].status",
+                  "component": "badge",
+                  "bind": {
+                    "state": {
+                      "text": "changes.file[{item}]:status"
+                    }
+                  }
+                },
+                {
+                  "sem": "review.file[{item}].stage",
+                  "component": "button",
+                  "label": "stage",
+                  "props": {
+                    "control_size": "xs"
+                  },
+                  "bind": {
+                    "actions": {
+                      "activate": {
+                        "target": "changes.file[{item}]",
+                        "action": "stage"
+                      }
+                    }
+                  }
+                },
+                {
+                  "sem": "review.file[{item}].unstage",
+                  "component": "button",
+                  "label": "unstage",
+                  "props": {
+                    "control_size": "xs"
+                  },
+                  "bind": {
+                    "actions": {
+                      "activate": {
+                        "target": "changes.file[{item}]",
+                        "action": "unstage"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "sem": "review.rule",
+          "component": "separator"
+        },
+        {
+          "sem": "review.message",
+          "component": "text_field",
+          "label": "commit message",
+          "bind": {
+            "state": {
+              "text": "commit.message:text"
+            },
+            "actions": {
+              "set_value": {
+                "target": "commit.message",
+                "action": "set_value"
+              }
+            }
+          }
+        },
+        {
+          "sem": "review.commit",
+          "component": "button",
+          "label": "Commit",
+          "props": {
+            "control_size": "md"
+          },
+          "bind": {
+            "actions": {
+              "activate": {
+                "target": "commit.submit",
+                "action": "submit"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

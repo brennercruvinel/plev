@@ -4756,6 +4756,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "uir"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "sem",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "unarray"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
