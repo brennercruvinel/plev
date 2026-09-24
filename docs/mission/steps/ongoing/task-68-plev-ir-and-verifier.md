@@ -346,23 +346,29 @@ decisões do orquestrador:
 
 goal: task-68, o plev IR e o verifier.
 
-status: implementado e testado. o gate para em um teste só,
-`crates/engine/tests/arc_sync_guard.rs` (`README.md does not mention
-these workspace crates: ["uir"]`), cuja correção é uma linha num arquivo
-que o briefing proíbe. é condição de parada ("o gate falhar por algo fora
-do seu escopo"); o relato está no fim, em "parada".
+status: implementado, testado, rebaseado na `main` e com o
+`./script/gate` verde (perna urnaui incluída). a parada no
+`arc_sync_guard` (fim deste handoff) foi resolvida pela opção 2, com a
+liberação do orquestrador.
 
-commits (`task/68-plev-ir`, base `main` @ 8a7a0ea, todos assinados):
+commits (`task/68-plev-ir`, rebaseada sobre `main` @ 39a76cf, que contém
+141dbd2; todos assinados):
 
-- dca66a7 task-68: a sonda no arquivo da task
-- 50c0495 task-68: crate do IR com tipos e serde
-- 26e3aec task-68: registro de capacidades
-- 3034a58 task-68: verifier com erros por caminho
-- 100fa1d task-68: regras de policy e accessibility
-- 1a91c3c task-68: fixtures golden e JSON schema
-- f6dcc89 task-68: ADR plev IR tipado e verificado (proposto)
-- e92b0a9 task-68: a doc do leitor diz que ele é o único
-- e o commit deste handoff
+- 08dd8f8 task-68: a sonda no arquivo da task
+- 12e38d3 task-68: crate do IR com tipos e serde
+- d6c66ad task-68: registro de capacidades
+- cd9c183 task-68: verifier com erros por caminho
+- 7380294 task-68: regras de policy e accessibility
+- 2427a55 task-68: fixtures golden e JSON schema
+- 454fe6d task-68: ADR plev IR tipado e verificado (proposto)
+- 7721adb task-68: a doc do leitor diz que ele é o único
+- 5350b47 task-68: handoff, com a parada no arc_sync_guard
+- 2461bb5 task-68: uir in the README and the arc map
+- e o commit desta atualização do handoff
+
+(antes do rebase, sobre 8a7a0ea, os mesmos commits eram dca66a7,
+50c0495, 26e3aec, 3034a58, 100fa1d, 1a91c3c, f6dcc89, e92b0a9 e
+67a0856.)
 
 a sonda: a seção "sonda" acima, escrita antes do primeiro tipo.
 
@@ -478,12 +484,21 @@ test -p uir` diz se os IR ainda verificam.
 
 #### validação e contagem
 
-- antes (`main` @ 8a7a0ea, `cargo test --workspace`): 2179 passam, 11
-  ignorados, 84 suítes.
-- depois (`cargo test --workspace --no-fail-fast`): 2239 passam, 1 falha
-  (o `arc_sync_guard`), 11 ignorados, 91 suítes. são 61 testes novos: 59
-  no `uir` (19 unitários, 1 doctest, 27 de regras, 7 de fixtures, 5 de
-  proptest), 1 no ide, 1 no showcase.
+contagem final, depois do rebase:
+
+| | workspace | perna urnaui | total do gate |
+|---|---|---|---|
+| antes, `main` @ 39a76cf (`cargo test --workspace` com a `main` em detached HEAD neste worktree) | 2195 passam, 11 ignorados | 82 passam, 1 ignorado (o urnaui não mudou) | 2277 |
+| depois, esta branch (`./script/gate`, saída 0) | 2256 passam, 0 falhas, 11 ignorados | 82 passam, 0 falhas, 1 ignorado | 2338 |
+
+são 61 testes novos: 59 no `uir` (19 unitários, 1 doctest, 27 de regras,
+7 de fixtures, 5 de proptest), 1 no ide, 1 no showcase. a contagem não
+cai. o `arc_sync_guard` e os dois `uir_fixture` passam depois do rebase:
+a task-91 e a task-65 não mudaram as projeções gravadas.
+
+o registro de antes do rebase, mantido: sobre 8a7a0ea eram 2179 antes e
+2239 depois, com 1 falha (o `arc_sync_guard`).
+
 - `cargo clippy --workspace --all-targets -- -D warnings`, `cargo fmt
   --check`, `cargo check --target wasm32-unknown-unknown -p showcase` e
   `cargo check -p uir --target wasm32-unknown-unknown` (com `-D
@@ -491,7 +506,8 @@ test -p uir` diz se os IR ainda verificam.
 - perna urnaui (rodada à mão como o gate roda, com o target dir próprio):
   82 passam, clippy, fmt e wasm verdes. o urnaui não depende do `uir` e
   não mudou.
-- `./script/gate`: para no `arc_sync_guard`, como dito.
+- `./script/gate` (antes da resolução): parava no `arc_sync_guard`.
+  depois da resolução e do rebase: verde, todas as pernas.
 - proptest também rodado com `PROPTEST_CASES=5000`: verde.
 
 #### decisões
@@ -560,15 +576,13 @@ test -p uir` diz se os IR ainda verificam.
 
 #### dependências pendentes e riscos de integração
 
-- a entrada do `uir` no `README.md` e no `docs/arc/arc.toml` (ver
-  "parada") e a linha do índice de ADR:
+- as entradas do `uir` no `README.md` e no `docs/arc/arc.toml` estão
+  feitas (2461bb5). fica a linha do índice de ADR, que é do orquestrador:
   `| 2026-09-24 | [plev-ir-typed-and-verified](plev-ir-typed-and-verified.md) | proposed | crate uir, puro (sem, serde): o plev IR (id, componente de um vocabulário fechado espelho do comps, props só por token do theme, layout por primitivas, estado e ações ligados a capacidades que o app declara, repetição mínima sobre List/Set com [{item}]); um leitor só com erro por JSON pointer; Capabilities saem do Snapshot; verify com oito regras é o único caminho a um VerifiedIr; JSON schema gerado das mesmas tabelas (task-68) |`
-- a `main` andou (task-91: `sem` check, dispatch e receipt, `ide`
-  notice e testes). `git merge-tree` da `main` com esta branch não dá
-  conflito, e a task-91 não tocou `crates/ide/src/workbench/project.rs`
-  nem os tipos do `sem` que o `uir` usa; depois do rebase, rodar `cargo
-  test -p ide --test uir_fixture` confirma que a projeção gravada ainda é
-  a do ide.
+- rebaseada sobre `main` @ 39a76cf (as tasks 91 e 65 e a nota de
+  aprendizado sobre este briefing) sem conflito; os testes `uir_fixture`
+  do ide e do showcase passam, então as projeções gravadas ainda são as
+  de hoje.
 - os testes `uir_fixture` do ide e do showcase são guardas: uma mudança
   futura dessas projeções os deixa vermelhos, com o comando para gravar
   de novo.
@@ -611,3 +625,33 @@ ausência.
 
 decisão necessária: quem escreve as entradas do `uir` no `README.md` e no
 `docs/arc/arc.toml`, e em que momento.
+
+#### resolução da parada (2026-09-24)
+
+o orquestrador escolheu a opção 2: o erro era do briefing, e a seção 8 do
+programa já dizia que o agente adiciona a própria entrada. no commit
+2461bb5:
+
+- `README.md`, na tabela de crates: `| crates | crates/ | git, ide,
+  inspect, lot, macros, monster, narrate, narrate-macro, parser, prime,
+  rec, rope, sem, showcase, svg, uir, urnaui, wire |`. no parágrafo dos
+  crates do contrato, depois da frase do `wire`, na mesma linha de "as a
+  click.": "`uir` is the plev IR: a surface described by meaning over
+  that contract, and only what its verifier accepts reaches the
+  runtime." o README cresceu uma linha.
+- `docs/arc/arc.toml`: uma entrada `[crates.uir]` antes de
+  `[crates.git]`, com `path = "crates/uir"`, `depends = ["sem"]` e um
+  `role` no estilo das vizinhas (o que o IR descreve, o leitor único, o
+  registro vindo do snapshot, o `verify` e as oito regras, a policy
+  padrão, o schema, as fixtures, puro e wasm). o guard agora acha
+  `uir` pela entrada, não pelo "acquire".
+
+outro crate passando por acaso no `arc_sync_guard`: nenhum. conferi os
+19 membros do workspace nos dois arquivos: cada um aparece como palavra
+inteira (sem letra, dígito, `_` ou `-` colado) no `README.md` e no
+`arc.toml`, e cada um tem entrada própria no `arc.toml` (`[crates.<nome>]`
+ou o caminho `crates/<nome>` no `path`; `narrate-macro` está no `path`
+de `[crates.narrate]`). antes desta mudança o `uir` era o único que só
+aparecia dentro de outra palavra. o guard continua testando substring,
+então um crate novo cujo nome caiba dentro de uma palavra dos dois
+arquivos passaria sem entrada; não mexi nisso.
