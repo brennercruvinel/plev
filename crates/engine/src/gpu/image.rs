@@ -371,6 +371,17 @@ impl ImageStore {
         ((entry.width, entry.height) == (handle.width, handle.height))
             .then_some(entry.pixels.as_slice())
     }
+
+    /// Whether `handle` is a stream image's (a slot `stream` made, whose
+    /// pixels a `replace` changes: a camera's frames), through any of its
+    /// handles; `false` for a fixed image and for a handle no slot holds.
+    /// Only reads (task-79: a stream's pixels never leave the process).
+    pub fn is_stream(&self, handle: &ImageHandle) -> bool {
+        self.streams
+            .get(&(handle.atlas_x, handle.atlas_y))
+            .and_then(|&i| self.uploads.get(i))
+            .is_some_and(|e| (e.width, e.height) == (handle.width, handle.height))
+    }
 }
 
 fn hash_bytes(parts: &[&[u8]]) -> u64 {
@@ -418,6 +429,12 @@ pub fn image_pixels(handle: &ImageHandle) -> Option<Vec<u8>> {
         .unwrap()
         .pixels(handle)
         .map(<[u8]>::to_vec)
+}
+
+/// Whether `handle` is a stream image's in the global image store
+/// (`ImageStore::is_stream`).
+pub fn image_is_stream(handle: &ImageHandle) -> bool {
+    IMAGE_STORE.lock().unwrap().is_stream(handle)
 }
 
 // ---------------------------------------------------------------------------
@@ -1010,5 +1027,25 @@ mod tests {
         ] {
             assert_eq!(store.pixels(&wrong), None, "{wrong:?}");
         }
+    }
+
+    /// A stream is a stream through every handle it gave; a fixed image,
+    /// a handle of another size and a placement no slot sits at are not.
+    #[test]
+    fn a_stream_is_told_from_a_fixed_image() {
+        let mut store = ImageStore::new();
+        let fixed = store
+            .load_rgba(2, 2, solid_rgba(2, 2, [5, 5, 5, 255]))
+            .unwrap();
+        let slot = store.stream(2, 1).unwrap();
+        let next = store.replace(&slot, &[1, 1, 1, 255, 2, 2, 2, 255]).unwrap();
+        assert!(store.is_stream(&slot) && store.is_stream(&next));
+        assert!(!store.is_stream(&fixed));
+        assert!(!store.is_stream(&ImageHandle { width: 3, ..slot }));
+        assert!(!store.is_stream(&ImageHandle {
+            atlas_y: slot.atlas_y + 400,
+            ..slot
+        }));
+        assert_eq!(store.upload_count(), 2, "reading adds nothing");
     }
 }
