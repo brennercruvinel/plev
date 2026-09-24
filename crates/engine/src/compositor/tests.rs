@@ -1429,3 +1429,67 @@ fn path_node_participates_in_dirty_tracking() {
     }
     assert!(comp.layer(LayerId::DEFAULT).unwrap().is_dirty());
 }
+
+/// A lost device: every layer forgets its textures and buffers and is
+/// dirty again, whatever its state was. Needs a device for the resources
+/// to exist; skips without an adapter.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn drop_gpu_resources_forgets_every_layer_and_marks_it_dirty() {
+    let Some(gpu) = pollster::block_on(crate::gpu::GpuContext::new_headless(
+        16,
+        16,
+        crate::gpu::RenderConfig::default(),
+    )) else {
+        eprintln!("no GPU adapter; skipping");
+        return;
+    };
+    let mut comp = Compositor::new();
+    let upper = comp.create_layer(10);
+    comp.begin_frame();
+    comp.draw_rect(0.0, 0.0, 4.0, 4.0, [1.0, 0.0, 0.0, 1.0]);
+    comp.push_to_layer(
+        upper,
+        SceneNode::Rect {
+            x: 4.0,
+            y: 4.0,
+            w: 4.0,
+            h: 4.0,
+            color: [0.0, 1.0, 0.0, 1.0],
+        },
+    );
+    comp.resolve(&ResolveResources {
+        device: &gpu.device,
+        queue: &gpu.queue,
+        format: gpu.surface_format(),
+        width: 16,
+        height: 16,
+        msaa_samples: gpu.config.msaa_samples,
+        composite_bgl: &gpu.composite_bind_group_layout,
+        opacity_bgl: &gpu.opacity_bind_group_layout,
+        sampler: &gpu.composite_sampler,
+    });
+    for id in [LayerId::DEFAULT, upper] {
+        comp.mark_layer_clean(id);
+        let layer = comp.layer(id).unwrap();
+        assert!(layer.texture_view().is_some());
+        assert!(layer.quad_buffers().is_some());
+        assert!(!layer.is_dirty());
+    }
+    assert!(comp.gpu_memory_bytes() > 0);
+
+    comp.drop_gpu_resources();
+
+    assert_eq!(comp.gpu_memory_bytes(), 0);
+    for id in [LayerId::DEFAULT, upper] {
+        let layer = comp.layer(id).unwrap();
+        assert!(layer.texture_view().is_none());
+        assert!(layer.composite_bind_group().is_none());
+        assert!(layer.opacity_bind_group().is_none());
+        assert!(layer.quad_buffers().is_none());
+        assert!(layer.is_dirty());
+        // the scene and its geometry are CPU data and stay
+        assert_eq!(layer.nodes().len(), 1);
+        assert!(!layer.quad_vertices.is_empty());
+    }
+}

@@ -40,6 +40,21 @@ impl super::App {
             self.compositor.mark_all_dirty();
         }
 
+        // A lost device: recover in place and draw on the new one, or skip
+        // the frame (as `present_frame` does).
+        if gpu.poll_device_loss()
+            && !crate::gpu::recover_or_skip(
+                &mut self.compositor,
+                gpu,
+                text_system,
+                effect_processor,
+                texture_pool,
+                "render",
+            )
+        {
+            return;
+        }
+
         let surface = match gpu.surface.as_ref() {
             Some(s) => s,
             None => return,
@@ -48,7 +63,13 @@ impl super::App {
         let output = match surface.get_current_texture() {
             Ok(t) => t,
             Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
-                gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
+                // a lost device loses its surface too: the next requested
+                // frame recovers before acquiring
+                if gpu.poll_device_loss() {
+                    self.compositor.invalidate();
+                } else {
+                    gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
+                }
                 return;
             }
             Err(wgpu::SurfaceError::Timeout) => {

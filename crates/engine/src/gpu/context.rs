@@ -3,6 +3,7 @@ use wgpu::util::DeviceExt;
 use winit::window::Window;
 
 use super::config::RenderConfig;
+use super::loss::DeviceLoss;
 use super::utils::{ortho_projection, texture_sampler_bgl, uniform_bgl};
 
 /// Per-pipeline WGSL source: read from disk when `hot-reload` is enabled,
@@ -26,8 +27,16 @@ macro_rules! shader_src {
 pub const HEADLESS_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
 
 pub struct GpuContext {
+    /// The instance the device and the surface came from. The surface
+    /// belongs to it, so a recovery asks it for the next adapter.
+    pub(crate) instance: wgpu::Instance,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
+    /// The lost flag of `device`, raised by wgpu's callback (`gpu::loss`).
+    pub(crate) loss: DeviceLoss,
+    /// Backends a recovery asks for an adapter on in place of `instance`
+    /// (`gpu::recover`); `None`, the default, is the context's own.
+    pub(crate) recovery_backends: Option<wgpu::Backends>,
     pub surface: Option<wgpu::Surface<'static>>,
     pub surface_config: wgpu::SurfaceConfiguration,
     pub config: RenderConfig,
@@ -68,7 +77,7 @@ pub struct GpuContext {
     /// rebuild and relaunch. It lives here only because this is the one
     /// constructor every app calls.
     #[cfg(hot_reload)]
-    _source_watcher: Option<crate::hot_reload::SourceWatcher>,
+    pub(super) _source_watcher: Option<crate::hot_reload::SourceWatcher>,
 }
 
 impl GpuContext {
@@ -112,57 +121,18 @@ impl GpuContext {
             size.height
         );
 
-        let surface_caps = surface.get_capabilities(&adapter);
-        let surface_format = surface_caps
-            .formats
-            .iter()
-            .find(|f| f.is_srgb())
-            .copied()
-            .unwrap_or(surface_caps.formats[0]);
-
-        // Render-target format. WebGPU canvases only expose non-sRGB formats
-        // (bgra8unorm), which would skip the linear→sRGB encode-on-write that
-        // every shader and clear color assumes — colors come out ~2.5× darker
-        // (#303030 background measured (8,8,8)). Registering the sRGB variant
-        // as a view format and rendering into that view restores the encode.
-        // On desktop the surface is already sRGB and this is a no-op.
-        let render_format = surface_format.add_srgb_suffix();
-        let view_formats = if render_format != surface_format {
-            vec![render_format]
-        } else {
-            vec![]
-        };
-
-        let width = size.width.max(1);
-        let height = size.height.max(1);
-
-        let present_mode = if matches!(
-            config.present_mode,
-            wgpu::PresentMode::AutoVsync | wgpu::PresentMode::AutoNoVsync
-        ) || surface_caps.present_modes.contains(&config.present_mode)
-        {
-            config.present_mode
-        } else {
-            log::warn!(
-                "Present mode {:?} unsupported by surface -- falling back to AutoVsync",
-                config.present_mode
-            );
-            wgpu::PresentMode::AutoVsync
-        };
-
-        let surface_config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: surface_format,
-            width,
-            height,
-            present_mode,
-            alpha_mode: surface_caps.alpha_modes[0],
-            view_formats,
-            desired_maximum_frame_latency: 2,
-        };
+        let surface_config =
+            Self::surface_configuration(&surface, &adapter, &config, size.width, size.height);
         surface.configure(&device, &surface_config);
 
-        let gpu = Self::from_device(device, queue, Some(surface), surface_config, config);
+        let gpu = Self::from_device(
+            instance,
+            device,
+            queue,
+            Some(surface),
+            surface_config,
+            config,
+        );
         #[cfg(hot_reload)]
         let gpu = gpu.with_source_watchers(&window);
         gpu
@@ -215,12 +185,68 @@ impl GpuContext {
             desired_maximum_frame_latency: 2,
         };
         Some(Self::from_device(
+            instance,
             device,
             queue,
             None,
             surface_config,
             config,
         ))
+    }
+
+    /// The configuration a window's surface takes on `adapter`: an sRGB
+    /// format when the surface offers one, else the raw format with its
+    /// sRGB variant registered as the view format (WebGPU canvases only
+    /// expose bgra8unorm, and rendering into a plain view would skip the
+    /// linear to sRGB encode every shader and clear color assume: #303030
+    /// measured (8,8,8)); the requested present mode when the surface has
+    /// it, else AutoVsync; the first alpha mode. The constructor and a
+    /// recovery on a fresh adapter both configure the surface with it.
+    pub(super) fn surface_configuration(
+        surface: &wgpu::Surface<'_>,
+        adapter: &wgpu::Adapter,
+        config: &RenderConfig,
+        width: u32,
+        height: u32,
+    ) -> wgpu::SurfaceConfiguration {
+        let surface_caps = surface.get_capabilities(adapter);
+        let surface_format = surface_caps
+            .formats
+            .iter()
+            .find(|f| f.is_srgb())
+            .copied()
+            .unwrap_or(surface_caps.formats[0]);
+        let render_format = surface_format.add_srgb_suffix();
+        let view_formats = if render_format != surface_format {
+            vec![render_format]
+        } else {
+            vec![]
+        };
+
+        let present_mode = if matches!(
+            config.present_mode,
+            wgpu::PresentMode::AutoVsync | wgpu::PresentMode::AutoNoVsync
+        ) || surface_caps.present_modes.contains(&config.present_mode)
+        {
+            config.present_mode
+        } else {
+            log::warn!(
+                "Present mode {:?} unsupported by surface -- falling back to AutoVsync",
+                config.present_mode
+            );
+            wgpu::PresentMode::AutoVsync
+        };
+
+        wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: surface_format,
+            width: width.max(1),
+            height: height.max(1),
+            present_mode,
+            alpha_mode: surface_caps.alpha_modes[0],
+            view_formats,
+            desired_maximum_frame_latency: 2,
+        }
     }
 
     /// Clamp the sample count and install the path tolerance, first thing
@@ -231,18 +257,31 @@ impl GpuContext {
     }
 
     fn instance() -> wgpu::Instance {
+        Self::instance_on(Self::backends())
+    }
+
+    /// The backends the constructors ask for.
+    fn backends() -> wgpu::Backends {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            wgpu::Backends::PRIMARY
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            wgpu::Backends::BROWSER_WEBGPU
+        }
+    }
+
+    pub(super) fn instance_on(backends: wgpu::Backends) -> wgpu::Instance {
         wgpu::Instance::new(&wgpu::InstanceDescriptor {
-            #[cfg(not(target_arch = "wasm32"))]
-            backends: wgpu::Backends::PRIMARY,
-            #[cfg(target_arch = "wasm32")]
-            backends: wgpu::Backends::BROWSER_WEBGPU,
+            backends,
             ..Default::default()
         })
     }
 
     /// No feature, unless `config` asks for GPU timestamps and the adapter
     /// has them.
-    fn device_descriptor(
+    pub(super) fn device_descriptor(
         adapter: &wgpu::Adapter,
         config: &RenderConfig,
     ) -> wgpu::DeviceDescriptor<'static> {
@@ -266,8 +305,10 @@ impl GpuContext {
     /// into: the projection, the bind group layouts, every pipeline in the
     /// render format (the sRGB view format, `surface_format()`), the
     /// composite sampler. The windowed and the headless constructors both
-    /// end here, so a frame is drawn by the same pipelines either way.
-    fn from_device(
+    /// end here, so a frame is drawn by the same pipelines either way, and
+    /// so does a recovery after the device was lost (`gpu::recover`).
+    pub(super) fn from_device(
+        instance: wgpu::Instance,
         device: wgpu::Device,
         queue: wgpu::Queue,
         surface: Option<wgpu::Surface<'static>>,
@@ -390,9 +431,14 @@ impl GpuContext {
             None
         };
 
+        let loss = DeviceLoss::install(&device);
+
         Self {
+            instance,
             device,
             queue,
+            loss,
+            recovery_backends: None,
             surface,
             surface_config,
             config,
