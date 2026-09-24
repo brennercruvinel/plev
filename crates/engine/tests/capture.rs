@@ -8,15 +8,17 @@
 //! rgba`) and raw samples (`-f f32le -ac 1`) to its stdout. Measured:
 //! the bytes of a frame, the frames per second that arrive, the latency
 //! of the first frame and of the first samples, the size of a pipe read,
-//! the level of a block. Then a captured frame into the image atlas
-//! (`load_image_rgba`) and drawn through the window's frame path without
-//! a window (`engine::headless`), timed; and what the atlas does with a
-//! stream of frames: every new frame is a new handle and a new upload
-//! kept whole, since the store is grow-only (`gpu/image.rs`), so the
-//! stream grows the memory and ends in `TooLarge`.
+//! the level of a block. Then captured frames into one stream image
+//! (`stream_image_rgba`, `replace_image_rgba`: one slot whose pixels
+//! change in place) and drawn through the window's frame path without a
+//! window (`engine::headless`), timed, in every context over the store.
+//! Loaded as fixed images instead, every frame would be a new handle and
+//! a new upload kept whole, since the store is grow-only
+//! (`gpu/image.rs`): the stream would grow the memory and end in
+//! `TooLarge`, which the ignored test measures.
 //!
 //! The probe skips without ffmpeg (`PLEV_FFMPEG` or the PATH) and the GPU
-//! test skips without an adapter. `--nocapture` prints the measures; the
+//! tests skip without an adapter. `--nocapture` prints the measures; the
 //! run to `TooLarge` is `--ignored` (it holds a quarter of a gigabyte).
 
 use std::io::Read;
@@ -26,8 +28,8 @@ use std::time::{Duration, Instant};
 
 use engine::compositor::Compositor;
 use engine::gpu::image::{ImageError, ImageStore};
-use engine::gpu::{RenderConfig, load_image_rgba};
-use engine::headless::{HeadlessError, Renderer, Viewport};
+use engine::gpu::{ImageHandle, RenderConfig, replace_image_rgba, stream_image_rgba};
+use engine::headless::{Frame, HeadlessError, Renderer, Viewport};
 
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 360;
@@ -176,11 +178,12 @@ fn a_microphone_is_a_stream_of_mono_f32_samples() {
     );
 }
 
-/// A frame, as the pipe gives it, into the atlas and on screen: the
-/// cost of the load and of a frame drawn and read back; and ten frames
-/// in a row, each a new handle.
+/// Frames, as the pipe gives them, into one stream image and on screen:
+/// the cost of a replacement and of a frame drawn and read back, the
+/// same place in the atlas for all of them under a new id each, and the
+/// drawn frame the captured one.
 #[test]
-fn a_captured_frame_drawn_costs_a_load_and_a_frame_and_each_is_a_new_handle() {
+fn captured_frames_replace_one_stream_image_and_draw_as_captured() {
     let Some(program) = ffmpeg() else {
         return;
     };
@@ -212,68 +215,134 @@ fn a_captured_frame_drawn_costs_a_load_and_a_frame_and_each_is_a_new_handle() {
         .collect();
     kill(child);
 
-    let viewport = Viewport::new(WIDTH as f32, HEIGHT as f32, 1.0);
-    let mut renderer = match Renderer::new(viewport, RenderConfig::default()) {
-        Ok(r) => r,
-        Err(HeadlessError::NoAdapter) => {
-            eprintln!("no GPU adapter; skipping");
-            return;
-        }
-        Err(e) => panic!("{e}"),
+    let Some(mut renderer) = renderer(WIDTH as f32, HEIGHT as f32) else {
+        return;
     };
+    let slot = stream_image_rgba(WIDTH, HEIGHT).expect("the slot packs");
+    let mut handle = slot;
     let mut ids = Vec::new();
-    let mut loads = Vec::new();
+    let mut replaces = Vec::new();
     let mut draws = Vec::new();
     let mut last = None;
     for pixels in &frames {
         let t = Instant::now();
-        let handle = load_image_rgba(WIDTH, HEIGHT, pixels.clone()).expect("the frame packs");
-        loads.push(t.elapsed());
+        handle = replace_image_rgba(&handle, pixels).expect("the frame replaces");
+        replaces.push(t.elapsed());
         ids.push(handle.id);
-        let mut c = Compositor::new();
-        c.begin_frame();
-        c.draw_image(0.0, 0.0, WIDTH as f32, HEIGHT as f32, handle, 0.0);
+        assert_eq!(
+            (handle.atlas_x, handle.atlas_y),
+            (slot.atlas_x, slot.atlas_y)
+        );
         let t = Instant::now();
-        let frame = renderer
-            .render(&mut c, [0.0, 0.0, 0.0, 1.0])
-            .expect("reads");
+        let frame = draw(&mut renderer, handle, WIDTH as f32, HEIGHT as f32);
         draws.push(t.elapsed());
         last = Some((frame, pixels));
     }
     let ms = |d: &Duration| d.as_secs_f64() * 1000.0;
     eprintln!(
-        "load_image_rgba {WIDTH}x{HEIGHT}: {:.2} ms first, {:.2} to {:.2} ms after; \
-         draw and read back: {:.1} ms first (device warm-up), {:.1} to {:.1} ms after; handles {:?}",
-        ms(&loads[0]),
-        loads[1..].iter().map(ms).fold(f64::MAX, f64::min),
-        loads[1..].iter().map(ms).fold(0.0, f64::max),
+        "replace_image_rgba {WIDTH}x{HEIGHT}: {:.2} to {:.2} ms; \
+         draw and read back: {:.1} ms first (device warm-up), {:.1} to {:.1} ms after; ids {:?}",
+        replaces.iter().map(ms).fold(f64::MAX, f64::min),
+        replaces.iter().map(ms).fold(0.0, f64::max),
         ms(&draws[0]),
         draws[1..].iter().map(ms).fold(f64::MAX, f64::min),
         draws[1..].iter().map(ms).fold(0.0, f64::max),
         ids
     );
-    // testsrc moves every frame: no two frames share a handle
     let mut unique = ids.clone();
     unique.dedup();
-    assert_eq!(unique.len(), ids.len(), "{ids:?}");
-    // the drawn frame is the captured one where the bars are flat
+    assert_eq!(unique.len(), ids.len(), "a new id per frame: {ids:?}");
+    // the drawn frame is the last captured one, where the bars are flat
     let (frame, pixels) = last.expect("a frame");
     let (x, y) = (40u32, 40u32);
     let at = ((y * WIDTH + x) * 4) as usize;
-    let drawn = frame.pixel(x, y).expect("inside");
-    for k in 0..3 {
-        assert!(
-            (drawn[k] as i32 - pixels[at + k] as i32).abs() <= 2,
-            "{drawn:?} vs {:?}",
-            &pixels[at..at + 4]
-        );
+    assert!(close(frame.pixel(x, y), &pixels[at..at + 4]));
+}
+
+/// A stream image is one slot drawn by every context over the one store
+/// (a window each, the headless one): two renderers draw its first
+/// frame, the frame is replaced and both draw the second at the same
+/// place; a renderer that starts after, and one whose device was lost
+/// and recovered, draw the latest, never the first.
+#[test]
+fn a_stream_image_draws_its_latest_frame_in_every_context() {
+    let (Some(mut a), Some(mut b)) = (renderer(16.0, 16.0), renderer(16.0, 16.0)) else {
+        return;
+    };
+    let red = [200u8, 30, 30, 255];
+    let green = [30u8, 200, 30, 255];
+    let blue = [30u8, 30, 200, 255];
+    let slot = stream_image_rgba(8, 8).expect("a slot");
+    let first = replace_image_rgba(&slot, &red.repeat(64)).expect("red");
+    assert!(close(draw(&mut a, first, 8.0, 8.0).pixel(4, 4), &red));
+    assert!(close(draw(&mut b, first, 8.0, 8.0).pixel(4, 4), &red));
+
+    let second = replace_image_rgba(&first, &green.repeat(64)).expect("green");
+    assert_eq!(
+        (second.atlas_x, second.atlas_y),
+        (slot.atlas_x, slot.atlas_y)
+    );
+    assert!(close(draw(&mut a, second, 8.0, 8.0).pixel(4, 4), &green));
+    assert!(close(draw(&mut b, second, 8.0, 8.0).pixel(4, 4), &green));
+
+    // a new context, and a context whose device is lost and recovered
+    // (its atlas refilled from the log): both write the latest frame
+    let third = replace_image_rgba(&second, &blue.repeat(64)).expect("blue");
+    let Some(mut late) = renderer(16.0, 16.0) else {
+        return;
+    };
+    assert!(
+        close(draw(&mut late, third, 8.0, 8.0).pixel(4, 4), &blue),
+        "a new atlas writes the latest frame"
+    );
+    a.gpu().device.destroy();
+    assert!(
+        close(draw(&mut a, third, 8.0, 8.0).pixel(4, 4), &blue),
+        "a recovered atlas writes the latest frame"
+    );
+    assert!(!a.gpu().device_lost(), "recovered in place");
+    assert!(close(draw(&mut b, third, 8.0, 8.0).pixel(4, 4), &blue));
+}
+
+fn renderer(width: f32, height: f32) -> Option<Renderer> {
+    match Renderer::new(Viewport::new(width, height, 1.0), RenderConfig::default()) {
+        Ok(r) => Some(r),
+        Err(HeadlessError::NoAdapter) => {
+            eprintln!("no GPU adapter; skipping");
+            None
+        }
+        Err(e) => panic!("{e}"),
     }
 }
 
-/// A stream of frames into a store of its own, as a live camera would
-/// load them: each frame a new upload with its pixels kept, the atlas
-/// doubling, until the store refuses. Prints the count, the bytes held
-/// and the seconds of a 15 fps camera that is.
+/// `image` drawn at the origin at `w x h`, on black, read back.
+fn draw(renderer: &mut Renderer, image: ImageHandle, w: f32, h: f32) -> Frame {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    c.draw_image(0.0, 0.0, w, h, image, 0.0);
+    renderer
+        .render(&mut c, [0.0, 0.0, 0.0, 1.0])
+        .expect("the frame reads")
+}
+
+/// A drawn pixel against a source one, within the rounding of the sRGB
+/// texture's round trip.
+fn close(drawn: Option<[u8; 4]>, source: &[u8]) -> bool {
+    let Some(drawn) = drawn else {
+        return false;
+    };
+    let ok = (0..3).all(|k| (drawn[k] as i32 - source[k] as i32).abs() <= 2);
+    if !ok {
+        eprintln!("drawn {drawn:?}, source {source:?}");
+    }
+    ok
+}
+
+/// Why the stream image exists: frames loaded as fixed images into a
+/// store of their own, as a live camera would without it. Each frame is a
+/// new upload with its pixels kept, the atlas doubles, until the store
+/// refuses. Prints the count, the bytes held and the seconds of a 15 fps
+/// camera that is (the probe: 244 frames, 225 MB, 16.3 s).
 #[test]
 #[ignore = "holds a quarter of a gigabyte; the probe's number, run once"]
 fn a_stream_of_frames_fills_the_grow_only_atlas() {
