@@ -1,0 +1,907 @@
+{
+  "format": "regress.baseline.v1",
+  "hash": "regress.layer.v1",
+  "page": "Silences, review by the Claude (fixture)",
+  "theme": "core",
+  "width": 1280.0,
+  "height": 800.0,
+  "scale": 1.0,
+  "settle": {
+    "steps": 2,
+    "settled": true
+  },
+  "semantics": {
+    "revision": "4d4c5090eaffc6b6",
+    "nodes": 54
+  },
+  "layers": [
+    {
+      "name": "silences_surface+silences+review",
+      "z": 0,
+      "hash": "b14e0028f983c586",
+      "nodes": 189,
+      "bounds": [
+        283.0,
+        49.0,
+        962.0,
+        711.0
+      ]
+    },
+    {
+      "name": "z10",
+      "z": 10,
+      "hash": "c853f02ec00cb9d8",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1000",
+      "z": 1000,
+      "hash": "41dc04b6fa7988ef",
+      "nodes": 46,
+      "bounds": [
+        0.0,
+        0.0,
+        248.0,
+        800.0
+      ]
+    },
+    {
+      "name": "z1200",
+      "z": 1200,
+      "hash": "ef5874151115e51e",
+      "nodes": 0,
+      "bounds": null
+    }
+  ],
+  "bindings": [
+    {
+      "id": "silences_surface",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        288.0,
+        134.2,
+        874.0,
+        100.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.intent",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        288.0,
+        134.2,
+        655.0,
+        44.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.proposer",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        951.0,
+        134.2,
+        101.0,
+        44.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.propose",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        1060.0,
+        136.2,
+        102.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.cancel",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        1070.0,
+        186.2,
+        92.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.status",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        288.0,
+        198.885,
+        774.0,
+        14.63
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.close",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        1170.0,
+        138.2,
+        70.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        288.0,
+        234.2,
+        460.0,
+        985.01996
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.video",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        308.0,
+        254.2,
+        420.0,
+        236.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.threshold",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        308.0,
+        671.46,
+        420.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.min_duration",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        308.0,
+        738.09,
+        420.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.detect",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        308.0,
+        786.09,
+        420.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.status",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        308.0,
+        838.09,
+        420.0,
+        14.63
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.counts",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        308.0,
+        924.72003,
+        301.0,
+        38.5
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.apply_all",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        641.0,
+        924.72003,
+        87.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.cut[1]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        308.0,
+        975.22003,
+        420.0,
+        112.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.cut[2]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        308.0,
+        1087.22,
+        420.0,
+        112.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.root",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        234.2,
+        460.0,
+        1163.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.title",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        234.2,
+        460.0,
+        23.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.video_card",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        269.2,
+        460.0,
+        369.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.video_file",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        269.2,
+        460.0,
+        22.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.video_duration",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        300.2,
+        58.0,
+        43.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.video_original",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        350.2,
+        460.0,
+        140.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.video_result",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        498.2,
+        460.0,
+        140.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.controls",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        650.2,
+        460.0,
+        165.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.threshold",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        668.2,
+        460.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.min_duration",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        732.2,
+        460.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.detect",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        775.2,
+        147.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.counts_card",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        827.2,
+        460.0,
+        298.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.status_message",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        827.2,
+        460.0,
+        45.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.count_total",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        880.2,
+        22.0,
+        43.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.count_applied",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        931.2,
+        37.0,
+        42.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.count_rejected",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        981.2,
+        41.0,
+        43.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.count_pending",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        1032.2,
+        41.0,
+        42.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.count_cut_secs",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        1083.2,
+        62.0,
+        43.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.apply_all",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        1137.2,
+        102.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cuts_list",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        1189.2,
+        460.0,
+        208.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_item[1]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        1189.2,
+        460.0,
+        100.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_range[1]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        1204.2,
+        108.0,
+        22.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_decision[1]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        896.0,
+        1205.2,
+        58.0,
+        20.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_duration[1]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        962.0,
+        1194.2,
+        58.0,
+        42.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_frame[1]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        1028.0,
+        1189.2,
+        92.0,
+        52.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_preview[1]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        1128.0,
+        1195.2,
+        100.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_apply[1]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        1249.2,
+        109.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_reject[1]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        897.0,
+        1249.2,
+        109.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_item[2]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        1297.2,
+        460.0,
+        100.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_range[2]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        1312.2,
+        105.0,
+        22.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_decision[2]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        893.0,
+        1313.2,
+        58.0,
+        20.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_duration[2]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        959.0,
+        1302.2,
+        58.0,
+        42.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_frame[2]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        1025.0,
+        1297.2,
+        92.0,
+        52.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_preview[2]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        1125.0,
+        1303.2,
+        100.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_apply[2]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        780.0,
+        1357.2,
+        109.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "review.cut_reject[2]",
+      "layer": "silences_surface+silences+review",
+      "rect": [
+        897.0,
+        1357.2,
+        109.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
+}

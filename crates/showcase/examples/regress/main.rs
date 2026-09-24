@@ -15,7 +15,9 @@
 //! `crates/showcase/fixtures/regress` (`baseline`): the page's projection,
 //! every layer under a stable name with a stable content hash (`scene`),
 //! the bound controls. `bless` stages each page without a window
-//! (`showcase::app::stage_page`, a fixed clock) and writes what it holds;
+//! (`showcase::app::stage_page`, a fixed clock), or a page in a state
+//! named by `--page` (`state`: the Silences page with the review of the
+//! checkpoint b open), and writes what it holds;
 //! `check` stages it again and compares (`compare`): the projection by
 //! `Snapshot::diff`, the layers by hash, the bindings by rect. When
 //! nothing moved it ends there, without drawing a frame. When a layer's
@@ -52,6 +54,8 @@ mod requested;
 mod run;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod scene;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod state;
 #[cfg(all(
     test,
     not(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))
@@ -108,7 +112,8 @@ held, 1 when something moved.
 bless stages each page and writes its baseline (semantics, layers,
 bindings), printing what it accepts: the pages named with --page, every
 page of the gallery with --all, else every baseline already in the
-directory. new baselines take
+directory. --page also takes a page in a state: \"Silences, review by the
+rules\", \"Silences, review by the Claude (fixture)\". new baselines take
 --theme core --width 1280 --height 800 --scale 1 unless given. --png
 keeps the frame's image too (needs a GPU), --no-png drops it; without
 either a baseline keeps what it had.

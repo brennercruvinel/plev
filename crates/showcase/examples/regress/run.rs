@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 use engine::gpu::RenderConfig;
 use engine::headless::{Frame, HeadlessError, Renderer, Viewport};
 use sem::Snapshot;
-use showcase::app::{RenderError, StagedPage, semantics_json, stage_page};
+use showcase::app::semantics_json;
 use showcase::view::PAGES;
 
 use crate::baseline::{self, Baseline, Image, Key, Meta, Settle};
@@ -17,6 +17,7 @@ use crate::compare::{self, Status};
 use crate::pixels::{self, Pixels};
 use crate::report;
 use crate::scene::{self, Scene};
+use crate::state::{self, Page};
 
 /// `Ok(true)` when every baseline held (a bless always holds).
 pub fn run(r: &Request) -> Result<bool, String> {
@@ -26,10 +27,11 @@ pub fn run(r: &Request) -> Result<bool, String> {
     }
 }
 
-/// A page staged for a baseline: its frame, its projection, its scene.
+/// A page staged for a baseline (a gallery page at launch, or a page in
+/// a state, `state`): its frame, its projection, its scene.
 pub struct Staged {
     pub key: Key,
-    pub page: StagedPage,
+    pub page: Page,
     pub semantics: Option<Snapshot>,
     pub scene: Scene,
     /// Staging the page and projecting it.
@@ -51,18 +53,14 @@ impl Staged {
 /// every layer's extent (a bless; a check measures only what changed).
 pub fn stage(key: &Key, with_bounds: bool) -> Result<Staged, String> {
     let start = Instant::now();
-    let page = stage_page(key.viewport, &key.page, &key.theme, None).map_err(|e| e.to_string())?;
-    let semantics = match page.semantics() {
-        Ok(s) => Some(s),
-        Err(RenderError::NoSemantics(_)) => None,
-        Err(e) => return Err(e.to_string()),
-    };
+    let page = state::stage(key.viewport, &key.page, &key.theme)?;
+    let semantics = page.semantics()?;
     let staged = start.elapsed();
     let start = Instant::now();
     let scene = scene::capture(page.compositor(), key.viewport, with_bounds);
     let captured = start.elapsed();
     let key = Key {
-        page: page.title().to_string(),
+        page: page.title(),
         ..key.clone()
     };
     Ok(Staged {
@@ -98,7 +96,8 @@ pub fn existing(r: &Request) -> Result<Vec<Baseline>, String> {
 }
 
 /// The keys `--page` or `--all` name, at the theme and viewport given or
-/// the defaults.
+/// the defaults. `--all` is every page of the gallery; a page in a state
+/// (`state::STATES`) is named by `--page`.
 fn named(r: &Request) -> Vec<Key> {
     let viewport = Viewport::new(
         r.width.unwrap_or(cli::DEFAULT_WIDTH),
@@ -145,7 +144,7 @@ impl Gpu {
     /// `None` on a machine without an adapter.
     pub fn frame(
         &mut self,
-        page: &mut StagedPage,
+        page: &mut Page,
         viewport: Viewport,
     ) -> Result<Option<(Frame, Duration)>, String> {
         if self.absent {
@@ -173,7 +172,7 @@ impl Gpu {
         };
         let renderer = self.renderer.insert(renderer);
         let start = Instant::now();
-        let frame = page.render(renderer).map_err(|e| e.to_string())?;
+        let frame = page.render(renderer)?;
         self.frames += 1;
         Ok(Some((frame, start.elapsed())))
     }

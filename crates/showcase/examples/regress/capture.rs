@@ -16,7 +16,6 @@ use std::time::Instant;
 
 use engine::headless::{Frame, Viewport};
 use serde::Serialize;
-use showcase::app::stage_page;
 use showcase::view::PAGES;
 
 use crate::baseline::{Key, read_png};
@@ -174,8 +173,7 @@ fn keys(o: &Options) -> Result<Vec<Key>, String> {
 
 /// Stage `key` and draw it through `gpu`.
 fn draw(gpu: &mut Gpu, key: &Key) -> Result<Frame, String> {
-    let mut page =
-        stage_page(key.viewport, &key.page, &key.theme, None).map_err(|e| e.to_string())?;
+    let mut page = crate::state::stage(key.viewport, &key.page, &key.theme)?;
     match gpu.frame(&mut page, key.viewport)? {
         Some((frame, _)) => Ok(frame),
         None => Err("no GPU adapter here: nothing to capture".to_string()),
