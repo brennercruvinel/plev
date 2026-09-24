@@ -79,7 +79,9 @@ protocol adds an envelope and nothing else.
   revision does not offer), `unknown_revision {revision}`, `not_enabled
   {reason}` (a confirmation by an agent, an act before hello, nothing
   projected, no dispatcher). a refused action is not one of these: it is
-  a `stage` with `rejected`, from the dispatcher.
+  a `stage` with `rejected`, from the dispatcher. added by task-89,
+  still v1: `not_observed {reads}`, an act on `from_revision` that reads
+  state its actor was never shown (see the ring below).
 
 ### the ring of served revisions
 
@@ -89,6 +91,21 @@ configurable), keyed by revision. `since` rebuilds a delta from one;
 `Request::observe`, so the stale check compares what the agent saw, not a
 later frame. a revision out of the ring answers `unknown_revision` and the
 agent observes again. serving a held revision again makes it the newest.
+
+corrected on 2026-09-23 (task-89): the code did not keep the promise
+above. it rebuilt the observed values from the whole snapshot of the
+revision, out of the scope and the keys the agent observed too, so an act
+could say it saw state that was never shown to it. the session inspector
+(task-64 phase a) found it in the session of A2 of checkpoint a: a submit
+resting on an observation of `commit.form` only. the rule now: the port
+remembers, per actor (the name of `hello`, over every connection under
+it), the revisions it gave it and what each one showed; an act on
+`from_revision r` needs `r` given to its actor, takes the action from
+`r`, and takes the value of each read from the last observation up to `r`
+that showed it to that actor. a read never shown is refused before the
+dispatcher with `not_observed`. a terminal stage's revision shows no
+state, and a delta shows only what it carries. the rule, its bounds and
+the name as the agent: `docs/ADR/an-act-rests-on-what-its-actor-was-shown.md`.
 
 ### one path, through the host
 
@@ -152,7 +169,11 @@ over-long line got the end without its last replies).
 - the actor's name is declared, not authenticated. any process of the
   same user can connect and call itself anything; the boundary is the
   user account, as for any file in `$TMPDIR`. agent authentication and
-  finer permissions are future work.
+  finer permissions are future work. since task-89 the name also keys
+  what the port showed: two processes under one name are one actor for
+  the contract (receipts, `acted`, what was shown). the default name of
+  `plev` is `plev`, so distinct agents pass `--name` or
+  `PLEV_AGENT_NAME`.
 
 ### the `plev` binary
 
@@ -167,6 +188,11 @@ connection, the arguments). `act` without `--from-revision` observes the
 target first and acts on that revision, the state as it is now, so the
 check still compares what was seen. `--param` takes a sem value or a
 plain JSON string, bool, number or list of strings.
+
+updated on 2026-09-23 (task-89): that look at the target counts as shown
+to the name, and what the act reads outside the target rests on the
+earlier observations under that name, or is `not_observed`, which exits
+3 like `unknown_revision`.
 
 ### the showcase
 
@@ -279,6 +305,10 @@ one toggle still 624 B; the new numbers are in
   projects through the `Host` and serves it into the ring as `observe`
   does, once per call; it decides nothing and is not an observation:
   `docs/ADR/a-terminal-stage-carries-the-revision.md`.
+- task-89, still protocol v1: an act on `from_revision` rests on what its
+  actor was shown, never on the whole snapshot of the revision; a read
+  never shown is `not_observed`:
+  `docs/ADR/an-act-rests-on-what-its-actor-was-shown.md`.
 - a process killed by a signal leaves its socket file behind. `plev`
   ignores a socket nobody answers on, and the next process with that pid
   replaces it; nothing else sweeps them.

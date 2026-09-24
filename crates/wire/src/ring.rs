@@ -1,6 +1,8 @@
 //! `Ring`, the last revisions the app served, so a later message can rest
 //! on what an agent saw: `since` rebuilds a delta from it, `from_revision`
-//! rebuilds the observed values of an act from it.
+//! takes the action's declaration from it, and the observed values of an
+//! act are read in it, in the snapshots of the observations that showed
+//! them to the agent (`Shown`).
 
 use std::collections::VecDeque;
 

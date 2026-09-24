@@ -22,7 +22,10 @@
 //!
 //! the terminal stage carries the revision the app is at when it goes
 //! out, which the next `act` can rest on (`from_revision`) and `observe`
-//! can start from (`since`) with no observation in between.
+//! can start from (`since`) with no observation in between. an act rests
+//! on what its agent was shown, and on nothing else: a stage's revision
+//! shows no state, so what the act reads comes from the agent's last
+//! observations of it, or the act is refused as `not_observed`.
 //!
 //! the messages (`proto`), their codec (`codec`), the ring of served
 //! revisions (`Ring`) and the protocol against an app (`Server`, which
