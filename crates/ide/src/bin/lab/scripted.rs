@@ -22,11 +22,6 @@ const TIMEOUT_MS: u64 = 30_000;
 /// decision, one for the recovery after a stale world, one spare.
 const ATTEMPTS: usize = 3;
 
-/// how many observations the agent takes while it waits for the index to
-/// hold still, and how long it waits between two of them.
-const SETTLE_TRIES: usize = 200;
-const SETTLE_WAIT: std::time::Duration = std::time::Duration::from_millis(20);
-
 /// what the scripted agent went through.
 #[derive(Debug, Default)]
 pub struct Scripted {
@@ -92,14 +87,14 @@ impl Agent {
             revision = self.observe(out)?.revision;
         }
 
-        // the index is moved by a worker and reconciled by a refresh, so
-        // the agent waits for the projection to hold still on the set it
-        // asked for before it decides anything. the message is still
+        // the view shows each act as it completes, and a status read
+        // before an act never lands over it (task-84), so the agent goes
+        // on from the next observation as it is. the message is still
         // empty here, so the person of the script, who waits for a
-        // message too, cannot fire during this.
-        let quiet = self.settle(out)?;
-        if value(&quiet, "commit.form", "open") != Some(Value::Bool(true)) {
-            self.act(out, "commit.form", "open", None, quiet.revision)?;
+        // message too, cannot fire yet.
+        let now = self.observe(out)?;
+        if value(&now, "commit.form", "open") != Some(Value::Bool(true)) {
+            self.act(out, "commit.form", "open", None, now.revision)?;
         }
         let seen = self.observe(out)?;
         self.act(
@@ -140,8 +135,7 @@ impl Agent {
     }
 
     /// after a stale refusal: what changed since the decision, then the
-    /// index put back where the task wants it, then the projection quiet
-    /// again.
+    /// index put back where the task wants it.
     fn repair(&mut self, out: &mut Scripted, since: Revision) -> Result<(), String> {
         let reply = self
             .client
@@ -174,29 +168,7 @@ impl Agent {
             }
             seen = self.observe(out)?;
         }
-        self.settle(out)?;
         Ok(())
-    }
-
-    /// observes until the projection holds still on the task's staged
-    /// set: the same revision twice in a row, with exactly those files
-    /// staged. the answer is the second of the two.
-    fn settle(&mut self, out: &mut Scripted) -> Result<SnapshotReply, String> {
-        let want: BTreeSet<String> = TASK_FILES.iter().map(|f| (*f).to_owned()).collect();
-        let mut last: Option<Revision> = None;
-        for _ in 0..SETTLE_TRIES {
-            let seen = self.observe(out)?;
-            if staged(&seen) == want && last == Some(seen.revision) {
-                out.steps
-                    .push(format!("the index holds still at {}", seen.revision));
-                return Ok(seen);
-            }
-            last = Some(seen.revision);
-            std::thread::sleep(SETTLE_WAIT);
-        }
-        Err(format!(
-            "the staged set did not hold still on the task's files in {SETTLE_TRIES} looks"
-        ))
     }
 
     fn observe(&mut self, out: &mut Scripted) -> Result<SnapshotReply, String> {

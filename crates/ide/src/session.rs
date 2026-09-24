@@ -3,6 +3,17 @@
 //! `GitEvent`s back onto the views. The workbench owns it, so the ide
 //! binary and the hosts that embed the workspace (the showcase's Git tab)
 //! share one copy of the mapping.
+//!
+//! The view shows a mutation as soon as it leaves for the worker, and the
+//! refresh its answer sends reconciles it with git. A status read before
+//! a mutation the view already shows is older than the view, and applying
+//! it would undo the mutation until the next refresh. The worker runs
+//! commands one at a time in the order they were sent, so the session
+//! knows which answers were read before the last mutation without the
+//! worker saying so: it counts the reads it asked for and, when a
+//! mutation leaves, marks every read still owed as read before it
+//! ([`Reads`]). Those answers are dropped; the refresh the mutation's own
+//! answer sends is read after it, and after any change made outside.
 
 use git::{Branch, Commit, GitClient, GitCommand, GitEvent};
 
@@ -20,12 +31,102 @@ enum DiffTarget {
     Commit(String),
 }
 
+/// The answers of one read (status, log or branches) the worker still
+/// owes. It answers in the order it was asked, so the oldest `stale` of
+/// the `owed` ones were read before a mutation that changes what they
+/// read, which the view already shows.
+#[derive(Debug, Default, PartialEq)]
+struct Owed {
+    owed: usize,
+    stale: usize,
+}
+
+impl Owed {
+    fn asked(&mut self) {
+        self.owed += 1;
+    }
+
+    /// A mutation that changes this read left behind every answer owed.
+    fn outdated(&mut self) {
+        self.stale = self.owed;
+    }
+
+    /// One answer arrived: `false` when it was read before a mutation
+    /// the view already shows. An answer nobody asked for through the
+    /// session has nothing to compare with and is taken.
+    fn fresh(&mut self) -> bool {
+        let Some(left) = self.owed.checked_sub(1) else {
+            return true;
+        };
+        self.owed = left;
+        match self.stale.checked_sub(1) {
+            Some(left) => {
+                self.stale = left;
+                false
+            }
+            None => true,
+        }
+    }
+}
+
+/// The three reads the views are built from, and which answers of each
+/// are still owed. A stage, an unstage, a discard or an ignore changes
+/// what the status reads; a commit changes the status, the log and the
+/// branches (a first commit creates the branch).
+#[derive(Debug, Default)]
+struct Reads {
+    status: Owed,
+    log: Owed,
+    branches: Owed,
+}
+
+impl Reads {
+    /// `command` is leaving for the worker.
+    fn sent(&mut self, command: &GitCommand) {
+        match command {
+            GitCommand::Refresh { .. } => {
+                self.status.asked();
+                self.log.asked();
+                self.branches.asked();
+            }
+            GitCommand::Status => self.status.asked(),
+            GitCommand::Log { .. } => self.log.asked(),
+            GitCommand::Branches => self.branches.asked(),
+            GitCommand::Stage { .. }
+            | GitCommand::Unstage { .. }
+            | GitCommand::Discard { .. }
+            | GitCommand::Ignore { .. } => self.status.outdated(),
+            GitCommand::CommitIf { .. } => {
+                self.status.outdated();
+                self.log.outdated();
+                self.branches.outdated();
+            }
+            GitCommand::DiffWorkdir { .. }
+            | GitCommand::DiffCommit { .. }
+            | GitCommand::Shutdown => {}
+        }
+    }
+
+    /// `event` arrived: `false` when it is a read taken before a mutation
+    /// the view already shows.
+    fn fresh(&mut self, event: &GitEvent) -> bool {
+        match event {
+            GitEvent::Status(_) => self.status.fresh(),
+            GitEvent::Log(_) => self.log.fresh(),
+            GitEvent::Branches(_) => self.branches.fresh(),
+            _ => true,
+        }
+    }
+}
+
 pub struct GitSession {
     git: GitClient,
     diff_target: Option<DiffTarget>,
     /// Last log/branches payloads — the stacks panel needs both.
     log_cache: Vec<Commit>,
     branch_cache: Vec<Branch>,
+    /// The reads still owed, and which of them are older than the view.
+    reads: Reads,
 }
 
 impl GitSession {
@@ -35,9 +136,12 @@ impl GitSession {
             diff_target: None,
             log_cache: Vec::new(),
             branch_cache: Vec::new(),
+            reads: Reads::default(),
         }
     }
 
+    /// The worker's handle, for what it knows (its workdir). Commands go
+    /// through [`GitSession::send`], which counts the reads still owed.
     pub fn client(&self) -> &GitClient {
         &self.git
     }
@@ -52,14 +156,17 @@ impl GitSession {
     }
 
     /// Reload status, log and branches (results stream back as events).
-    pub fn refresh(&self) {
-        self.git.send(GitCommand::Refresh {
+    pub fn refresh(&mut self) {
+        self.send(GitCommand::Refresh {
             log_limit: LOG_LIMIT,
         });
     }
 
     /// Queues `command` on the worker. `false` when the worker is gone.
-    pub fn send(&self, command: GitCommand) -> bool {
+    /// Every command goes through here, so the session knows which reads
+    /// are older than the mutations the view shows.
+    pub fn send(&mut self, command: GitCommand) -> bool {
+        self.reads.sent(&command);
         self.git.send(command)
     }
 
@@ -85,8 +192,14 @@ impl GitSession {
         self.diff_target = None;
     }
 
-    /// Applies a result from the git worker to the views.
+    /// Applies a result from the git worker to the views. A status, log
+    /// or branches read before a mutation the view already shows is
+    /// dropped: the refresh that mutation's answer sends replaces it.
     pub fn apply(&mut self, workspace: &mut WorkspaceView, event: GitEvent) {
+        if !self.reads.fresh(&event) {
+            log::debug!("ide: dropped a read older than the view: {event:?}");
+            return;
+        }
         match event {
             GitEvent::Status(Ok(status)) => {
                 workspace
@@ -157,5 +270,66 @@ impl GitSession {
         workspace
             .stacks
             .set_stacks(adapters::stacks(&self.branch_cache, &self.log_cache));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeSet;
+
+    use super::*;
+
+    fn refresh() -> GitCommand {
+        GitCommand::Refresh {
+            log_limit: LOG_LIMIT,
+        }
+    }
+
+    /// The three answers of one refresh, in the worker's order: which
+    /// of them the session takes.
+    fn answers(reads: &mut Reads) -> [bool; 3] {
+        [
+            reads.fresh(&GitEvent::Status(Ok(Vec::new()))),
+            reads.fresh(&GitEvent::Log(Ok(Vec::new()))),
+            reads.fresh(&GitEvent::Branches(Ok(Vec::new()))),
+        ]
+    }
+
+    #[test]
+    fn a_stage_outdates_the_status_owed_and_not_the_log_or_the_branches() {
+        let mut reads = Reads::default();
+        reads.sent(&refresh());
+        reads.sent(&GitCommand::Stage { path: "B".into() });
+        reads.sent(&refresh());
+        assert_eq!(answers(&mut reads), [false, true, true], "read before B");
+        assert_eq!(answers(&mut reads), [true, true, true], "read after B");
+        assert_eq!(reads.status, Owed::default());
+    }
+
+    #[test]
+    fn a_commit_outdates_the_status_the_log_and_the_branches_owed() {
+        let mut reads = Reads::default();
+        reads.sent(&refresh());
+        reads.sent(&refresh());
+        reads.sent(&GitCommand::CommitIf {
+            message: "m".into(),
+            expect_staged: BTreeSet::from(["A".to_owned()]),
+        });
+        reads.sent(&refresh());
+        for _ in 0..2 {
+            assert_eq!(answers(&mut reads), [false; 3], "read before the commit");
+        }
+        assert_eq!(answers(&mut reads), [true; 3], "read after it");
+    }
+
+    #[test]
+    fn reads_asked_after_the_last_mutation_and_reads_nobody_asked_for_are_taken() {
+        let mut reads = Reads::default();
+        reads.sent(&GitCommand::Discard { path: "A".into() });
+        reads.sent(&GitCommand::DiffWorkdir { path: "B".into() });
+        reads.sent(&GitCommand::Status);
+        assert!(reads.fresh(&GitEvent::Status(Ok(Vec::new()))));
+        assert_eq!(answers(&mut reads), [true; 3], "nothing owed");
+        assert_eq!(reads.status, Owed::default());
     }
 }

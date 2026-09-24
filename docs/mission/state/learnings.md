@@ -12,6 +12,43 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, task-84 e auditoria de verdade
+
+fonte: `steps/checked/task-84-ide-refresh-never-goes-back-done.md`,
+`state/truth.md`.
+
+- **pressuposto errado:** "a view é otimista e reconcilia com um refresh"
+  era tratado como inofensivo. não era: um refresh lido antes de uma
+  mutação pousava por cima dela, e a projeção mostrava por um instante um
+  estado que não era nem o do git nem o que o ide aceitou. o agente
+  roteirizado sem a espera que o contornava deu errado nas dez corridas
+  com intervenção na base (nove recusas à toa ou decisões erradas, e um
+  commit de dois arquivos em vez de três).
+- **o que isso ensina sobre o contrato:** a checagem de stale protege
+  contra o mundo que mudou, não contra o app que mostra um mundo errado.
+  o contrato ficou coerente o tempo todo; quem mentiu foi a projeção.
+  projeção verdadeira é uma invariante de cada `Operable`, que o `sem`
+  não tem como garantir: cada app precisa de teste que prove que a
+  projeção nunca fica mais velha que uma mutação aceita e converge para
+  a verdade.
+- **o checkpoint a teve sorte que não mediu:** os dois agentes LLM
+  escaparam da corrida por tempo. H1 e H2 continuam de pé, mas a
+  confiabilidade do resultado dependia de algo que o experimento não
+  controlava. a nova rodada do experimento, depois das tasks 83 a 85, é
+  necessária também por isso.
+- **o cenário da tese ainda não rodou num app de verdade:** o binário
+  `ide` não abre a porta do agente; o checkpoint a rodou no `ide-lab`,
+  com o workbench sem janela e uma pessoa roteirizada. "uma pessoa usa o
+  app enquanto um agente o opera" nunca aconteceu num app que alguém usa.
+- **digitação fora do contrato:** no todo e no ide, digitar muda o texto
+  projetado sem request nem receipt (o ADR de ligação isenta de
+  propósito). consequência: nem o `acted` da task-83 nem o recorder sabem
+  dizer quem digitou. fica como limite registrado até a task-64
+  (inspector) precisar.
+- **cobertura semântica fina:** dos 19 widgets com `project`, só
+  `TextField` e `Toast` têm chamador de produção; só o todo e o ide
+  projetam. para superfícies geradas (69) isso vai importar.
+
 ### 2026-09-23, checkpoint a (task-62 fase c)
 
 fonte: `steps/ongoing/task-62-ide-human-agent-proof.md`, "resultado da fase
@@ -47,6 +84,32 @@ c"; saídas em `target/agents/exp/`.
 ## processo
 
 ### 2026-09-23
+
+- **contorno de harness escondeu defeito de produto:** o agente
+  roteirizado esperava o index "parar" (até 200 observações), e isso
+  escondia a corrida do `Refresh`. regra: um harness ou agente que
+  espera o app "assentar" antes de agir é sintoma; a espera vira bug do
+  app, registrado, nunca contorno silencioso.
+- **a perna urnaui do gate pulava em todo worktree:** o gate procura
+  `../urna` a partir do worktree, que não existe. o symlink
+  `.claude/worktrees/urna` fez a perna rodar (a primeira vez foi no gate
+  da task-84).
+- **32 divergências doc x código acumuladas:** os fechamentos escreviam
+  o doc novo e não corrigiam os docs que a mudança contradizia (a 58b
+  trouxe `decline` e o ADR commit-checks continuou dizendo que não
+  existia). regra nova do fechamento: procurar em `docs/` e no README os
+  nomes do contrato que mudou e corrigir o que ficou falso
+  (`docs/how-to/orchestrate-coding-agents-on-this-repo.md`).
+
+- **o gate local divergia do CI:** a 66b deixou `ShapedGlyph` e
+  `shaped_glyphs` como código morto no wasm32 (o único leitor, o export
+  svg, é só nativo). o CI (`RUSTFLAGS=-D warnings`) reprovou os jobs wasm e
+  urnaui do PR #45; o gate local passou porque a perna wasm rodava sem `-D
+  warnings` e nunca checava o urnaui no wasm32. a classe: uma perna do
+  gate mais frouxa que a do CI deixa passar o que o CI reprova. o gate
+  agora roda as duas pernas wasm como o CI (`c07a7f0`); a falha reproduziu
+  localmente antes da correção e sumiu depois. regra: toda perna do CI tem
+  a mesma perna, com as mesmas flags, em `script/gate`.
 
 - **graça do laboratório:** o laboratório fechava 1 s depois do commit e
   derrubou a verificação final de dois agentes (A2, B2). a classe: um

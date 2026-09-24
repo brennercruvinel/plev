@@ -43,9 +43,15 @@ guidelines win and this file gets fixed.
    cost tokens and the orchestrator is the one accountable.
 9. accepted: rebase on `main`, fast-forward, gate again after the merge,
    close-out (task file to checked/, ADR, arc.toml, README, changelog,
-   this manual and the engine manual when a rule changed). rejected: back
-   to the agent with file, line, what is wrong and what is expected.
-10. the next briefing is revised with what this task taught.
+   this manual and the engine manual when a rule changed). the close-out
+   also searches `docs/` and `README.md` for the names of every contract
+   the task changed and fixes what became false: close-outs that only
+   wrote new docs left 32 stale claims behind (`docs/mission/state/truth.md`,
+   section 5). rejected: back to the agent with file, line, what is wrong
+   and what is expected.
+10. the next briefing is revised with what this task taught, and
+    `docs/mission/state/learnings.md` gets what the task taught about the
+    product and about the process (`docs/mission/autonomy.md`).
 
 ## parallel work
 
@@ -63,7 +69,16 @@ guidelines win and this file gets fixed.
 
 - every briefing ends with mandatory validation: build, targeted tests,
   workspace tests, the wasm check (cheap, catches cfg rot), clippy and fmt:
-  `./script/gate` runs them in order.
+  `./script/gate` runs them in order, with the same flags as CI
+  (`-D warnings` on the wasm legs). every CI leg has its twin in the gate;
+  a looser local leg let dead code on wasm32 reach a PR.
+- the urnaui leg needs the sibling `urna` checkout at `../urna` from the
+  directory the gate runs in. agent worktrees live in `.claude/worktrees/`,
+  so a symlink `.claude/worktrees/urna -> <the urna checkout>` makes the
+  leg run there too; without it the leg skips with a warning.
+- a harness or scripted agent that waits for the app to "settle" before
+  acting is a symptom: the wait becomes a bug of the app, filed, never a
+  silent workaround (the ide laboratory's wait hid a real race, task-84).
 - visual claims need pixel numbers (docs/how-to/validate-visuals-by-pixel.md).
   a measured check once rejected a branch an approving eyeball would have
   merged (#121212 against a measured #303030).
