@@ -21,7 +21,7 @@ integration that is an action to be a capability of the contract: the
 several representations.
 
 the probe (the handoff of item 3 in
-docs/mission/steps/ongoing/task-76-platform-integration.md) measured:
+docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
 
 - `rfd` 0.15 has a backend for macos, windows, linux and wasm, none for
   android or ios; on wasm it is asynchronous only and answers bytes (a

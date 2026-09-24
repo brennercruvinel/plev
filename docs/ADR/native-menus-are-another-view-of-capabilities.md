@@ -25,7 +25,7 @@ recording. none of them was projected, so no menu, no screen reader and
 no agent could ask for them.
 
 the probe (the handoff of item 4 in
-docs/mission/steps/ongoing/task-76-platform-integration.md) measured:
+docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
 
 - `muda` 0.20 with its default features off resolves offline into the
   root lock as `muda` and `keyboard-types` alone; the features only pick

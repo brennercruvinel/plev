@@ -22,7 +22,7 @@ panel, an inspector, a dialog of its own) and closes one without closing
 the app.
 
 the probe (task-76 item 2, the handoff in
-docs/mission/steps/ongoing/task-76-platform-integration.md) measured
+docs/mission/steps/checked/task-76-platform-integration-done.md) measured
 what a second window would share with the first: two `GpuContext`s with
 two compositors drew two scenes in one loop and each frame showed only
 what was pushed into it (the glyph atlas, the layer textures, the

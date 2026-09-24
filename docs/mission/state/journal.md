@@ -14,6 +14,47 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: deep links (task-76 item 6); a task-76 fecha
+
+- **integrada:** item 6 (merge da `task/76j-links`). o showcase segue
+  links `plev-showcase://` lidos por gramática estrita; todo link pede
+  como o agente `link`, só em `shell.page` e `shell.theme`, e cada
+  recusa aparece na tela. no macOS o link chega pelo argumento de
+  lançamento até o bundle. nada registrado no sistema, nenhum `open`.
+- **revisão:** sem defeito. conferido que o aviso na tela não carrega
+  texto de fora sem checagem (o caractere recusado sai escapado).
+- **task-76 concluída:** os dez itens na `main`; o arquivo foi para
+  `checked/` e as referências dos ADRs, do `truth.md`, dos learnings e do
+  manifesto do engine foram atualizadas. o que resta é bring-up de
+  plataforma (bundle do macOS, linux, windows) e as provas em tela real
+  do brenner.
+- **próximo:** task-77 fase 1 (determinismo visual): o comparador com
+  classificação, a captura do desktop e as divergências que esta máquina
+  reproduz. a web e o iOS esperam ferramentas que precisam de rede.
+
+### ciclo 3: item 6 parou na sonda; decisão do orquestrador
+
+- **parada correta, premissa errada do briefing:** a documentação do
+  winit diz que ele não registra delegado de aplicação no macOS; a fonte
+  da 0.30.13, a do lock, registra e entra em pânico se o delegado for
+  trocado. e o engine não tem `objc2` como dependência direta, ao
+  contrário do que o handoff do item 5 dava a entender: usar o objc
+  mudaria o lock em 3 linhas.
+- **decidido (técnico, dentro do item):** opção 4. no macOS o link chega
+  pelo argumento de lançamento até o bring-up; o handler do evento
+  `GURL` fica desenhado no ADR e entra com o bundle, porque sem esquema
+  registrado o evento não chega. manifesto e lock intactos.
+
+### ciclo 3: publicado #86 (task-76 item 10); disparado o item 6
+
+- **publicado:** PR #86, merge commit, gate local verde na `main` (2726,
+  +37), regressão 163 sem mudança (161 e os 2 da página Capture).
+- **disparado:** task-76 item 6, deep links, o último item. um link não
+  é uma pessoa: qualquer página web pode abrir um, então ele age como o
+  ator de fora com menos direitos, só nas capacidades que o app abre a
+  link (navegar), e a pessoa vê cada recusa. nada é registrado no
+  sistema desta máquina. no Opus, um agente só, no worktree fixo.
+
 ### ciclo 3: câmera e microfone (task-76 item 10)
 
 - **integrada:** item 10 (merge da `task/76i-capture`). a página Capture

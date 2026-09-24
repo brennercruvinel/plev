@@ -31,7 +31,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   (a tinta de um texto cresce na mesma razão da escala), então imprimir
   não precisa de um segundo renderer. o svg do mesmo frame já tem a
   geometria de um PDF vetorial; falta só o escritor. fonte:
-  `task-76-platform-integration.md`, handoff do item 9.
+  `task-76-platform-integration-done.md`, handoff do item 9.
 
 ### 2026-09-24, task-76 item 7
 
@@ -42,7 +42,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   enquanto o estado andava. agora um host não acordado retém o pedido e
   acorda com o estado de agora. o sleep do sistema não vem pelo winit
   (é `NSWorkspace`, atrás de feature que ninguém liga): fica para o
-  bring-up. fonte: `task-76-platform-integration.md`, handoff do item 7.
+  bring-up. fonte: `task-76-platform-integration-done.md`, handoff do item 7.
 
 ### 2026-09-24, task-76 itens 4, 5 e 8
 
@@ -56,7 +56,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 - **o diálogo nativo bloqueia o laço:** o `act` de um agente pela porta
   só volta quando a pessoa fecha o diálogo, por isso o modal desenhado
   continua o padrão e o nativo é opção. fonte:
-  `task-76-platform-integration.md`, handoffs dos itens 4, 5 e 8.
+  `task-76-platform-integration-done.md`, handoffs dos itens 4, 5 e 8.
 
 ### 2026-09-24, task-76 itens 2 e 3
 
@@ -69,7 +69,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 - **o drop de arquivo não tem posição em plataforma nenhuma:** o winit
   0.30 entrega `HoveredFile` e `DroppedFile` sem coordenadas e não manda
   `CursorMoved` durante o arraste; a posição fica opcional até ele expor.
-  fonte: `task-76-platform-integration.md`, handoffs dos itens 2 e 3.
+  fonte: `task-76-platform-integration-done.md`, handoffs dos itens 2 e 3.
 
 ### 2026-09-24, task-76 fase 1
 
@@ -80,7 +80,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   callback chega no primeiro `poll`. a recuperação no lugar refaz o que
   mora no device e o frame seguinte é byte a byte o anterior. a surface
   sobrevive (é do `Instance`) e só precisa ser reconfigurada. fonte:
-  `task-76-platform-integration.md`, "handoff da fase 1".
+  `task-76-platform-integration-done.md`, "handoff da fase 1".
 
 ### 2026-09-24, task-74 fase 1
 
@@ -465,6 +465,16 @@ c"; saídas em `target/agents/exp/`.
   token do contrato era forma, não conteúdo.
 
 ## processo
+
+### 2026-09-24, documentação de biblioteca não é fonte
+
+- **o briefing do item 6 citou a doc do winit como fato:** a doc dizia
+  que o winit não registra delegado de aplicação no macOS; a fonte da
+  versão travada no lock registra, e trocar o delegado derruba o laço. o
+  agente leu a fonte na sonda e parou. regra para o briefing: afirmação
+  sobre biblioteca vem da fonte da versão do lock, com arquivo e linha,
+  não da doc; e uma frase de handoff anterior ("o engine já tem X")
+  se confere no manifesto antes de virar premissa.
 
 ### 2026-09-24, a lição do item 9 chegou ao item 10
 

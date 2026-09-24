@@ -69,6 +69,9 @@ enum UserEvent {
     /// tray icon, a notification): the engine woke the loop from the
     /// platform's thread; poll them all and dispatch them, desktop only.
     Clicked,
+    /// A link was delivered while the app runs (`links.rs`): poll the
+    /// source and follow it, as a link and never as the person.
+    Link,
     /// The main window's device, requested off the loop (wasm).
     GpuReady { gpu: GpuContext },
 }
@@ -118,6 +121,9 @@ pub struct App {
     /// lands is told to the person by notification (`notify`).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     focus: Option<WindowId>,
+    /// Where the app's links come from (`links`; `None` before the main
+    /// window is up).
+    links: Option<Box<dyn engine::platform::links::LinkSource>>,
     /// A cmd+click is taking the button until it is released (`source`).
     #[cfg(all(
         debug_assertions,
@@ -128,12 +134,18 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
+        Self::with_view(Self::launch_view(std::env::args().skip(1)))
+    }
+
+    /// The gallery as the launch arguments ask. Optional launch state for
+    /// demos/snapshots: the page title (as the sidebar shows it, "Data
+    /// Table"), theme, then the page scroll offset in px. (Empty iterator
+    /// on wasm: no process args in the browser.) An argument that starts
+    /// with `plev-showcase://` is a link, never one of these: the link
+    /// source reads it once the window is up (`links.rs`).
+    fn launch_view(args: impl Iterator<Item = String>) -> ShowcaseView {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        // Optional launch state for demos/snapshots: the page title (as
-        // the sidebar shows it, "Data Table"), theme, then the page scroll
-        // offset in px. (Empty iterator on wasm: no process args in the
-        // browser.)
-        let mut args = std::env::args().skip(1);
+        let mut args = args.filter(|a| !engine::platform::links::is_link(a, links::SCHEME));
         if let Some(page) = args.next() {
             view.jump_to_page(&page);
         }
@@ -143,7 +155,7 @@ impl App {
         if let Some(offset) = args.next().and_then(|a| a.parse::<f32>().ok()) {
             view.scroll_page_to(offset);
         }
-        Self::with_view(view)
+        view
     }
 
     /// The shell around `view`, with no window yet.
@@ -172,6 +184,7 @@ impl App {
             notices: None,
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             focus: None,
+            links: None,
             #[cfg(all(
                 debug_assertions,
                 any(target_os = "macos", target_os = "linux", target_os = "windows")
@@ -343,6 +356,8 @@ impl ApplicationHandler<UserEvent> for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.main.is_some() {
             self.wake();
+            // a link that came asleep waited in its source (`links.rs`)
+            self.links_arrived();
             return;
         }
 
@@ -416,6 +431,11 @@ impl ApplicationHandler<UserEvent> for App {
             self.install_capture();
             self.view.set_window_focused(false);
         }
+
+        // The links, the launch's read now that a refusal has a window to
+        // show in; a link is followed as a link, never as the person.
+        self.install_links();
+        self.links_arrived();
     }
 
     fn user_event(&mut self, event_loop: &ActiveEventLoop, event: UserEvent) {
@@ -458,6 +478,7 @@ impl ApplicationHandler<UserEvent> for App {
                 }
                 self.detach_requested(event_loop);
             }
+            UserEvent::Link => self.links_arrived(),
             UserEvent::GpuReady { gpu } => {
                 log::info!("GPU context ready (async)");
                 if let Some(id) = self.main {
@@ -521,6 +542,10 @@ mod events;
 mod pace;
 /// Asleep, covered, awake again (task-76 item 7).
 mod sleep;
+
+/// The app's URL scheme: a link followed as a link, never as the person
+/// (task-76 item 6).
+pub mod links;
 
 /// The camera and the microphone follow the windows (task-76 item 10).
 mod capture;
