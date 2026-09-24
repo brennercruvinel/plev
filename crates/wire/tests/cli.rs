@@ -18,6 +18,8 @@ use wire::{AgentPort, Config, Host, ProtoError, Reply, ServerMsg, decode_server}
 struct Run {
     code: i32,
     out: Vec<ServerMsg>,
+    /// stdout as it came.
+    stdout: String,
     err: String,
 }
 
@@ -62,7 +64,7 @@ fn plev_with(
         person(host);
     }
     let output = child.join().unwrap();
-    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
     Run {
         code: output.status.code().unwrap_or(-1),
         out: stdout
@@ -70,6 +72,7 @@ fn plev_with(
             .filter(|l| l.starts_with('{'))
             .map(|l| decode_server(l).unwrap_or_else(|e| panic!("{l}: {e:?}")))
             .collect(),
+        stdout,
         err: String::from_utf8_lossy(&output.stderr).into_owned(),
     }
 }
@@ -473,6 +476,10 @@ fn act_ask_waits_for_the_person_and_exits_by_the_answer() {
     );
     assert!(last.revision.is_some(), "a terminal stage");
     assert_eq!(host.app.done(1), Some(false), "nothing ran");
+    assert_eq!(
+        declined.err, "",
+        "the person answered: nothing points at asking"
+    );
 
     let long = "x".repeat(wire::MAX_ASK + 1);
     let refused = plev(
@@ -485,4 +492,69 @@ fn act_ask_waits_for_the_person_and_exits_by_the_answer() {
     assert_eq!(refused.code, 3);
     assert!(refused.out.is_empty(), "refused before connecting");
     assert!(refused.err.contains("--ask"), "{}", refused.err);
+}
+
+/// a person's act through the toy's dispatcher by assistive technology.
+fn assistive(host: &mut ToyHost, target: &str, action: &str) {
+    let seen = host.snapshot();
+    let req = sem::Request::observe(&seen, sem::Actor::Assistive, target, action, None).unwrap();
+    host.clock += 1;
+    host.dispatcher.dispatch(&mut host.app, req, host.clock);
+}
+
+/// task-94: an act refused as stale whose `acted` names a person, when it
+/// did not ask, gets one line on stderr after its stages: who acted, and
+/// `--ask`. stdout is the stages, as the app sent them, and nothing else.
+/// no line when only another agent acted, or when the act asked.
+#[test]
+fn a_stale_refusal_naming_a_person_points_at_the_question_on_stderr() {
+    let tmp = tempfile::tempdir().unwrap();
+    let t = tmp.path();
+    let (mut port, woke) = open(t);
+    let mut host = ToyHost::new();
+    let seen = plev(&mut port, &woke, &mut host, t, &["observe"]);
+    let r = revision(&seen).to_string();
+    let on_r = |item| ["act", item, "toggle", "--from-revision", r.as_str()];
+
+    // only another agent acted since the look: refused, no line.
+    let other = ["act", "todo.item[1]", "toggle", "--name", "other"];
+    assert_eq!(plev(&mut port, &woke, &mut host, t, &other).code, 0);
+    let by_agent = plev(&mut port, &woke, &mut host, t, &on_r("todo.item[1]"));
+    assert_eq!(by_agent.code, 1, "{}", by_agent.err);
+    assert_eq!(stages(&by_agent), ["requested", "rejected"]);
+    assert_eq!(by_agent.err, "", "only an agent acted");
+
+    // a person at the screen, then one through assistive technology.
+    host.click("todo.item[2]", "toggle");
+    assistive(&mut host, "todo.item[3]", "toggle");
+    let by_people = plev(&mut port, &woke, &mut host, t, &on_r("todo.item[2]"));
+    assert_eq!(by_people.code, 1, "{}", by_people.err);
+    assert_eq!(stages(&by_people), ["requested", "rejected"]);
+    let canonical: String = by_people
+        .out
+        .iter()
+        .map(|m| format!("{}\n", wire::encode_server(m)))
+        .collect();
+    assert_eq!(by_people.stdout, canonical, "the stages and nothing else");
+    assert_eq!(
+        by_people.err,
+        "plev: a person acted since this agent looked (request 3, human: toggle todo.item[2]; \
+         request 4, assistive: toggle todo.item[3]); to act over that, ask the person first: \
+         add --ask \"<why>\" to the act (one line, at most 280 characters)\n"
+    );
+
+    // the same act asking the person: refused as stale before any
+    // question, and no line, since it asked.
+    let ask = ["--ask", "toggle item 2 back?"];
+    let asking = plev(
+        &mut port,
+        &woke,
+        &mut host,
+        t,
+        &[&on_r("todo.item[2]")[..], &ask].concat(),
+    );
+    assert_eq!(asking.code, 1, "{}", asking.err);
+    assert_eq!(stages(&asking), ["requested", "rejected"]);
+    assert_eq!(asking.err, "", "it asked");
+    assert_eq!(host.app.done(2), Some(true), "only the person's toggle ran");
 }

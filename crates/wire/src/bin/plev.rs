@@ -25,7 +25,7 @@ fn main() {
 mod cli {
     use std::path::PathBuf;
 
-    use sem::{ActionName, Revision, SemId, Stage, StateKey, Value};
+    use sem::{ActionName, Actor, Rejection, Revision, SemId, Stage, StateKey, Value};
     use serde::Deserialize;
     use serde::de::IntoDeserializer;
     use serde::de::value::{Error as DeError, StrDeserializer};
@@ -305,6 +305,7 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
 
     /// every stage of the act as it arrives, until a terminal one.
     fn act_once(s: &mut Session, mut act: Act, from: Option<Revision>) -> Result<i32, WireError> {
+        let asked = act.ask.is_some();
         if from.is_none() {
             let now = s.client.observe(Observe {
                 scope: Some(act.target.clone()),
@@ -319,10 +320,12 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
         let id = s.client.send(Ask::Act(act))?;
         loop {
             let reply = s.client.recv_for(&id)?;
-            let code = match &reply {
-                Reply::Stage(stage) if stage.is_terminal() => Some(exit_of(stage)),
-                Reply::Stage(_) => None,
-                Reply::Error(e) => Some(refused(e)),
+            let (code, hint) = match &reply {
+                Reply::Stage(stage) if stage.is_terminal() => {
+                    (Some(exit_of(stage)), ask_hint(&stage.stage, asked))
+                }
+                Reply::Stage(_) => (None, None),
+                Reply::Error(e) => (Some(refused(e)), None),
                 other => return Err(WireError::BadReply(format!("{other:?}"))),
             };
             let msg = ServerMsg {
@@ -330,6 +333,9 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 reply,
             };
             print(&msg, s.pretty);
+            if let Some(hint) = hint {
+                eprintln!("{hint}");
+            }
             if let Some(code) = code {
                 return Ok(code);
             }
@@ -339,6 +345,29 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
     fn refused(e: &ProtoError) -> i32 {
         eprintln!("plev: {e}");
         ERROR
+    }
+
+    /// the line an act without `--ask` writes on stderr after a stale
+    /// refusal whose `acted` names a person (human or assistive): who acted,
+    /// and that `--ask` asks the person first. none after any other stage,
+    /// a decline included (the person answered), or when only agents acted.
+    pub fn ask_hint(stage: &Stage, asked: bool) -> Option<String> {
+        let Stage::Rejected(Rejection::Stale { acted, .. }) = stage else {
+            return None;
+        };
+        let people: Vec<String> = acted
+            .iter()
+            .filter(|a| matches!(a.actor, Actor::Human | Actor::Assistive))
+            .map(|a| format!("request {}, {}: {} {}", a.id, a.actor, a.action, a.target))
+            .collect();
+        (!asked && !people.is_empty()).then(|| {
+            format!(
+                "plev: a person acted since this agent looked ({}); to act over that, ask the \
+                 person first: add --ask \"<why>\" to the act (one line, at most {} characters)",
+                people.join("; "),
+                wire::MAX_ASK
+            )
+        })
     }
 
     pub fn exit_of(stage: &StageReply) -> i32 {
@@ -542,6 +571,44 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 "a decline ends it (rejected, declined, exit 1). an agent never answers.",
             ] {
                 assert!(one_line.contains(words), "{words:?} in {USAGE}");
+            }
+        }
+
+        /// a stale refusal naming a person points at --ask; nothing after a
+        /// decline, with only agents, when the act asked, or else (task-94).
+        #[test]
+        fn a_stale_refusal_naming_a_person_points_at_the_question() {
+            let acted = |id: &str, actor: Actor| sem::Acted {
+                id: text(id).unwrap(),
+                actor,
+                target: text("changes.file[src/session.rs]").unwrap(),
+                action: text("unstage").unwrap(),
+            };
+            let stale = |acted| {
+                Stage::Rejected(Rejection::Stale {
+                    changes: vec![],
+                    acted,
+                })
+            };
+            let agent = Actor::Agent { name: "b".into() };
+            let named = stale(vec![acted("5", agent.clone()), acted("6", Actor::Human)]);
+            assert_eq!(
+                ask_hint(&named, false).unwrap(),
+                "plev: a person acted since this agent looked (request 6, human: unstage \
+                 changes.file[src/session.rs]); to act over that, ask the person first: add \
+                 --ask \"<why>\" to the act (one line, at most 280 characters)"
+            );
+            let assistive = ask_hint(&stale(vec![acted("7", Actor::Assistive)]), false);
+            assert!(assistive.is_some_and(|l| l.contains("(request 7, assistive: unstage")));
+            let declined = Stage::Rejected(Rejection::Declined { by: Actor::Human });
+            for (stage, asked) in [
+                (named, true),
+                (stale(vec![acted("5", agent)]), false),
+                (declined, false),
+                (Stage::Completed(sem::Outcome::default()), false),
+                (Stage::Failed { error: "no".into() }, false),
+            ] {
+                assert_eq!(ask_hint(&stage, asked), None, "{stage:?}, asked: {asked}");
             }
         }
 
