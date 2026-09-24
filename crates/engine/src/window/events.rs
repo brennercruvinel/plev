@@ -5,6 +5,7 @@ use winit::event_loop::ActiveEventLoop;
 use winit::window::WindowId;
 
 use super::state::GpuState;
+use crate::input::FileDrop;
 use crate::platform::SafeAreaInsets;
 
 pub(crate) enum BufferedEvent {
@@ -16,13 +17,25 @@ pub(crate) enum BufferedEvent {
     ModifiersChanged(winit::event::Modifiers),
     Touch(winit::event::Touch, Instant),
     Ime(winit::event::Ime),
+    FileDrop(FileDrop),
 }
 
 impl super::App {
     /// Buffer an input event and invalidate the compositor so the next
-    /// `about_to_wait` schedules a frame to process it.
+    /// `about_to_wait` schedules a frame to process it. The platform
+    /// sends one drop event per file, all before the next frame: a file
+    /// drop joins the one buffered just before it when both are the same
+    /// phase, so the view gets one `Dropped` with every path.
     fn buffer_event(&mut self, event: BufferedEvent) {
-        self.event_buffer.push(event);
+        let event = match (event, self.event_buffer.last_mut()) {
+            (BufferedEvent::FileDrop(next), Some(BufferedEvent::FileDrop(last))) => {
+                last.join(next).err().map(BufferedEvent::FileDrop)
+            }
+            (event, _) => Some(event),
+        };
+        if let Some(event) = event {
+            self.event_buffer.push(event);
+        }
         self.compositor.invalidate();
     }
 
@@ -73,6 +86,9 @@ impl super::App {
                         0.0
                     };
                     self.ime_state.handle_event(ime, window_height);
+                }
+                BufferedEvent::FileDrop(drop) => {
+                    self.input_state.handle_file_drop(drop);
                 }
             }
         }
@@ -168,6 +184,13 @@ impl super::App {
             }
             WindowEvent::ModifiersChanged(mods) => {
                 self.buffer_event(BufferedEvent::ModifiersChanged(mods));
+            }
+            WindowEvent::HoveredFile(_)
+            | WindowEvent::DroppedFile(_)
+            | WindowEvent::HoveredFileCancelled => {
+                if let Some(drop) = FileDrop::from_window_event(&event) {
+                    self.buffer_event(BufferedEvent::FileDrop(drop));
+                }
             }
             _ => {}
         }

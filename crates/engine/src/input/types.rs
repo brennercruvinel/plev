@@ -235,10 +235,22 @@ pub struct ScrollEvent {
     pub modifiers: ModifierState,
 }
 
+/// Files hovered over, dropped on, or dragged away from the window
+/// ([`FileDrop`](super::FileDrop)), delivered like a pointer event: to
+/// the view under the position, when the platform gave one and a hit
+/// region takes it, else to no view (`view_id` is `None`), so the app
+/// decides what a drop on the window as a whole means.
+#[derive(Clone, Debug)]
+pub struct FileDropEvent {
+    pub view_id: Option<ViewId>,
+    pub drop: super::FileDrop,
+}
+
 #[derive(Clone, Debug)]
 pub enum InputEvent {
     Click(ClickEvent),
     Key(PlevKeyEvent),
     Hover(HoverEvent),
     Scroll(ScrollEvent),
+    FileDrop(FileDropEvent),
 }

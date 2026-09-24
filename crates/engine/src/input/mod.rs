@@ -1,4 +1,5 @@
 pub mod dispatch;
+pub mod drop;
 pub mod gesture;
 pub mod scroll;
 pub mod touch;
@@ -11,6 +12,7 @@ mod tests;
 #[cfg(test)]
 mod tests_hit;
 
+pub use drop::FileDrop;
 pub use touch::{SyntheticPointerEvent, TouchPointerSynth};
 pub use types::*;
 

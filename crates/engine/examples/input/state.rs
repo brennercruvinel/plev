@@ -73,6 +73,13 @@ impl InputDemoApp {
                         scroll.view_id
                     );
                 }
+                InputEvent::FileDrop(drop) => {
+                    log::info!(
+                        "File drop: {:?} on view {:?}",
+                        drop.drop.paths(),
+                        drop.view_id
+                    );
+                }
             }
         }
     }
