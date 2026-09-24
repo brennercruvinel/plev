@@ -14,6 +14,18 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #85 (task-76 item 9); disparado o item 10
+
+- **publicado:** PR #85, merge commit, gate local verde na `main` (2689,
+  +27), regressão 161 sem mudança.
+- **disparado:** task-76 item 10, câmera e microfone: o ffmpeg como
+  processo filho lê a câmera e o microfone (sem dependência nova, o cache
+  não tem crate de AVFoundation nem de áudio), o frame vira imagem na
+  tela e o áudio vira um medidor de nível. ligar é só de pessoa; coberto
+  ou dormindo solta o dispositivo. o agente nunca abre a câmera nem o
+  microfone desta máquina: os testes usam o `testsrc` e o `sine` do
+  ffmpeg. a prova real é do brenner. um agente só, no worktree fixo.
+
 ### ciclo 3: impressão (task-76 item 9)
 
 - **integrada:** item 9 (merge da `task/76h-print`). cmd-p ou o menu
