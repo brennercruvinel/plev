@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: um flake do laboratório corrigido antes de publicar a 4c
+
+- **P1 achado na integração:** o gate da `main` com a fase 4c caiu em
+  `the_agent_asks_the_person_who_declines_and_it_stops` (task-93): duas
+  leituras do relógio (o clique gravado e o estágio carimbado dentro do
+  clique) divergindo por 1 ms sob carga; 20 corridas sozinho passaram.
+  correção na fonte (`6e284bf`, o clique gravado no instante do estágio
+  que causou), 10 corridas verdes, gate completo verde (2533, 0 falhas).
+  o PR #76 ficou segurando até aqui. learnings: uma leitura só do relógio
+  para um fato gravado em dois lugares; publicar só condicionado ao gate.
+
 ### ciclo 3: a demo gravada (task-69 fase 4c); a task-69 espera só o checkpoint b
 
 - **integrada:** fase 4c (merge da `task/69h-recorded-demo`). o showcase
