@@ -27,10 +27,6 @@ use showcase::model::silences::{Detected, Settings, TEST_VIDEO};
 /// How often the page looks at the channel while a job runs.
 pub(super) const POLL: Duration = Duration::from_millis(100);
 
-/// The widest frame decoded, in pixels: the atlas is grow-only, and the
-/// test video is narrower than this anyway.
-const FRAME_MAX_W: u32 = 480;
-
 /// A job for the worker.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) enum Job {
@@ -298,7 +294,7 @@ mod child {
     use engine::gpu::image::{ImageHandle, load_image_bytes};
     use showcase::model::silences::{Detected, Settings, parse};
 
-    use super::{Done, FRAME_MAX_W, Job};
+    use super::{Done, Job};
 
     /// How often the child is asked whether it has exited.
     const POLL: Duration = Duration::from_millis(10);
@@ -308,6 +304,9 @@ mod child {
     const GENERATE: Duration = Duration::from_secs(30);
     const DETECT: Duration = Duration::from_secs(60);
     const FRAME: Duration = Duration::from_secs(20);
+    /// The widest frame decoded, in pixels: the atlas is grow-only, and
+    /// the test video is narrower than this anyway.
+    const FRAME_MAX_W: u32 = 480;
 
     /// `PLEV_FFMPEG`, or `ffmpeg` in a directory of the PATH; a file at
     /// that path, without running it.
