@@ -6,7 +6,10 @@
 //! writes the replies. a thread never touches the app. it queues and
 //! wakes the loop through the closure the shell gave (its event loop
 //! proxy); the shell then calls `drain` on the app's thread, which
-//! projects, dispatches and answers there, through `Host`.
+//! projects, dispatches and answers there, through `Host`. the same wake
+//! is called on the app's thread when the port's sink hears a stage of a
+//! request an agent asked for here after the drain that dispatched it,
+//! so a stage that ends outside a drain goes out too.
 //!
 //! what a client cannot do to the app: block it (the app never waits on a
 //! socket: a client that does not read its replies is cut off, when its
@@ -223,9 +226,12 @@ impl AgentPort {
             let _ = fs::remove_file(&path);
             return Err(e);
         }
+        let mut server = Server::new(config.app, config.ring);
+        let waking = Arc::clone(&shared);
+        server.wake_with(move || waking.wake());
         Ok(AgentPort {
             path,
-            server: Server::new(config.app, config.ring),
+            server,
             events,
             conns: HashMap::new(),
             shared,
@@ -260,10 +266,13 @@ impl AgentPort {
 
     /// serves what the connections asked since the last drain, on the
     /// calling thread (the app's), through `host`, and sends every stage
-    /// that ended since. call it after the port's wake, and after anything
-    /// that may end a request later (a worker's wake), so late stages go
-    /// out. true when an act was dispatched, so the app may have changed
-    /// and the shell draws again.
+    /// that ended since. call it after the port's wake. a stage of a
+    /// request an agent asked for here that ends later, outside a drain (a
+    /// person's answer to a confirmation, a worker's answer), wakes the
+    /// port itself when the sink hears it (task-92), so the next drain
+    /// sends it; a shell that also drains right after a worker's answer
+    /// sends it sooner. true when an act was dispatched, so the app may
+    /// have changed and the shell draws again.
     pub fn drain(&mut self, host: &mut dyn Host) -> bool {
         self.shared.pending.store(false, Ordering::SeqCst);
         let mut acted = false;

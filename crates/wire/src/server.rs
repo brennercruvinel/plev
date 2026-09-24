@@ -43,7 +43,7 @@ use crate::proto::{
 };
 use crate::ring::Ring;
 use crate::shown::{Looks, Part, Shown, keeps};
-use crate::sink::{Heard, PortSink};
+use crate::sink::{Heard, PortSink, Waits};
 
 /// a connection, numbered by the transport.
 pub type ConnId = u64;
@@ -75,7 +75,8 @@ pub trait Host {
     /// every receipt, now or later, must reach it. through it the port
     /// also follows the dispatcher's order, so a stale refusal of its acts
     /// names what ran since the agent looked; a sink that is dropped leaves
-    /// that to the rule without a look.
+    /// that to the rule without a look. a stage it hears of an agent's
+    /// request that ends later wakes the port (`Server::wake_with`).
     fn add_sink(&mut self, sink: Box<dyn ReceiptSink>);
 
     /// `actor` was just served an observation: the whole snapshot (`scope`
@@ -134,6 +135,7 @@ pub struct Server {
     issued: HashMap<RequestId, Issued>,
     heard: Rc<RefCell<VecDeque<Heard>>>,
     looks: Rc<RefCell<Looks>>,
+    waits: Rc<Waits>,
     listening: bool,
     /// what this server answered; the transport fills the rest.
     traffic: Traffic,
@@ -162,6 +164,7 @@ impl Server {
             issued: HashMap::new(),
             heard: Rc::new(RefCell::new(VecDeque::new())),
             looks: Rc::new(RefCell::new(Looks::default())),
+            waits: Rc::new(Waits::default()),
             listening: false,
             traffic: Traffic::default(),
         }
@@ -289,6 +292,7 @@ impl Server {
                 self.issued.remove(&h.id);
             }
         }
+        self.waiting();
         out
     }
 
@@ -298,6 +302,27 @@ impl Server {
     pub fn close(&mut self, conn: ConnId) {
         self.names.remove(&conn);
         self.issued.retain(|_, issued| issued.conn != conn);
+        self.waiting();
+    }
+
+    /// the wake of the app's loop, the one the port's reader threads call
+    /// (task-92). from then on a stage of a request this server issued,
+    /// heard after the act that dispatched it, calls it, so a stage that
+    /// ends outside a drain (a person's answer to a confirmation, a
+    /// worker's answer) goes out in the drain that follows. a server
+    /// without one leaves the stages queued until `forward` is called.
+    pub fn wake_with(&mut self, wake: impl Fn() + 'static) {
+        if let Ok(mut slot) = self.waits.wake.try_borrow_mut() {
+            *slot = Some(Box::new(wake));
+        }
+    }
+
+    /// the sink's copy of the requests this server forwards, after they
+    /// changed.
+    fn waiting(&self) {
+        if let Ok(mut ids) = self.waits.ids.try_borrow_mut() {
+            *ids = self.issued.keys().copied().collect();
+        }
     }
 
     /// adds the port's sink to the app's dispatcher, once.
@@ -306,6 +331,7 @@ impl Server {
             host.add_sink(Box::new(PortSink {
                 heard: Rc::clone(&self.heard),
                 looks: Rc::clone(&self.looks),
+                waits: Rc::clone(&self.waits),
             }));
             self.listening = true;
         }
@@ -505,6 +531,7 @@ impl Server {
                 secrets,
             },
         );
+        self.waiting();
         Ok(())
     }
 

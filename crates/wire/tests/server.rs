@@ -1402,3 +1402,134 @@ proptest! {
         let _ = server.forward(&mut host);
     }
 }
+
+/// how many times the server called the wake it was given.
+fn counting(server: &mut Server) -> std::rc::Rc<std::cell::Cell<u32>> {
+    let woke = std::rc::Rc::new(std::cell::Cell::new(0));
+    let count = std::rc::Rc::clone(&woke);
+    server.wake_with(move || count.set(count.get() + 1));
+    woke
+}
+
+/// the P0 of task-92: a stage of a request an agent asked for here, heard
+/// after the act that dispatched it, wakes the port, so it goes out
+/// without the agent sending anything: a person's decline, a person's
+/// confirmation with what runs after it, an execution that ends later.
+/// nothing else wakes it: the stages of the act's own dispatch, a
+/// person's click, an agent's request that did not come through the
+/// port, a request whose connection ended.
+#[test]
+fn a_stage_heard_after_its_act_wakes_the_port() {
+    let (mut server, mut host) = setup();
+    let woke = counting(&mut server);
+    let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    let out = act(
+        &mut server,
+        &mut host,
+        A,
+        "rm",
+        "todo.item[3]",
+        "remove",
+        &from(r),
+    );
+    let out = stages(out, "rm");
+    assert_eq!(names(&out), ["requested", "awaiting_confirmation"]);
+    assert_eq!(woke.get(), 0, "the act's own drain sends its stages");
+    let id = out[0].request;
+
+    host.click("todo.item[1]", "toggle");
+    assert_eq!(woke.get(), 0, "a person's click is not the agent's");
+
+    host.clock += 1;
+    host.dispatcher
+        .decline(id, Actor::Human, host.clock)
+        .unwrap();
+    assert_eq!(woke.get(), 1, "the decline woke the port");
+    let later = stages(
+        server
+            .forward(&mut host)
+            .into_iter()
+            .map(|o| o.msg)
+            .collect(),
+        "rm",
+    );
+    assert_eq!(
+        later[0].stage,
+        Stage::Rejected(Rejection::Declined { by: Actor::Human })
+    );
+
+    // a confirmation wakes it once per stage it hears: confirmed,
+    // executing, completed; the wakes coalesce in the port.
+    let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    let out = act(
+        &mut server,
+        &mut host,
+        A,
+        "rm2",
+        "todo.item[2]",
+        "remove",
+        &from(r),
+    );
+    let id = stages(out, "rm2")[0].request;
+    host.clock += 1;
+    host.dispatcher
+        .confirm(&mut host.app, id, Actor::Human, host.clock)
+        .unwrap();
+    assert_eq!(woke.get(), 1 + 3);
+    let later = stages(
+        server
+            .forward(&mut host)
+            .into_iter()
+            .map(|o| o.msg)
+            .collect(),
+        "rm2",
+    );
+    assert_eq!(names(&later), ["confirmed", "executing", "completed"]);
+
+    // an execution that ends later, on a worker.
+    let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    let out = act(
+        &mut server,
+        &mut host,
+        A,
+        "sy",
+        "todo.sync",
+        "sync",
+        &from(r),
+    );
+    assert_eq!(
+        names(&stages(out, "sy")),
+        ["requested", "accepted", "executing"]
+    );
+    assert_eq!(woke.get(), 4);
+    host.finish_sync();
+    assert_eq!(woke.get(), 5);
+    assert_eq!(server.forward(&mut host).len(), 1);
+
+    // an agent's request that did not come through the port.
+    let seen = host.snapshot();
+    let agent = Actor::Agent {
+        name: "claude".into(),
+    };
+    let req = Request::observe(&seen, agent, "todo.sync", "sync", None).unwrap();
+    host.dispatch(req);
+    host.finish_sync();
+    assert_eq!(woke.get(), 5, "not a request of this port");
+    assert!(server.forward(&mut host).is_empty());
+
+    // a request whose connection ended is forgotten, and wakes nothing.
+    let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    let out = act(
+        &mut server,
+        &mut host,
+        A,
+        "sy2",
+        "todo.sync",
+        "sync",
+        &from(r),
+    );
+    assert_eq!(stages(out, "sy2").len(), 3);
+    server.close(A);
+    host.finish_sync();
+    assert_eq!(woke.get(), 5, "nobody waits on it");
+}

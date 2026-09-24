@@ -145,6 +145,9 @@ struct Shell<'a> {
     drains: Vec<Drain>,
     /// `Branches` events applied since the shell started.
     branches: usize,
+    /// Whether the shell also serves the port right after a worker event,
+    /// as the ide's window does; without it, only the port's wake serves.
+    after_worker: bool,
 }
 
 impl Shell<'_> {
@@ -163,8 +166,10 @@ impl Shell<'_> {
         let cause = Cause::Worker(kind(&event));
         self.branches += usize::from(matches!(event, GitEvent::Branches(_)));
         self.rig.bench.apply(event);
-        let acted = ide::agent::serve(&mut self.port, &mut self.rig.bench, &self.frame);
-        self.drained(cause, acted);
+        if self.after_worker {
+            let acted = ide::agent::serve(&mut self.port, &mut self.rig.bench, &self.frame);
+            self.drained(cause, acted);
+        }
         self.frame = frame(&mut self.rig.bench);
     }
 
@@ -209,6 +214,24 @@ fn shell<T: Send + 'static>(
     rig: &mut Rig,
     agent: impl FnOnce(PathBuf, Pokes) -> T + Send + 'static,
 ) -> (T, Vec<Drain>) {
+    run_shell(rig, true, agent)
+}
+
+/// [`shell`], with a shell that serves the port only after its wake:
+/// what reaches the agent after a worker's answer or a person's input
+/// goes out because the port woke the loop itself.
+fn shell_on_wake<T: Send + 'static>(
+    rig: &mut Rig,
+    agent: impl FnOnce(PathBuf, Pokes) -> T + Send + 'static,
+) -> (T, Vec<Drain>) {
+    run_shell(rig, false, agent)
+}
+
+fn run_shell<T: Send + 'static>(
+    rig: &mut Rig,
+    after_worker: bool,
+    agent: impl FnOnce(PathBuf, Pokes) -> T + Send + 'static,
+) -> (T, Vec<Drain>) {
     let dir = tempfile::TempDir::new().expect("a temp dir");
     let (tx, woke): (Sender<()>, Receiver<()>) = mpsc::channel();
     let config = Config {
@@ -227,6 +250,7 @@ fn shell<T: Send + 'static>(
         port,
         drains: Vec::new(),
         branches: 0,
+        after_worker,
     };
     let (pokes, poked) = mpsc::channel::<(Poke, Sender<()>)>();
     let agent = thread::spawn(move || agent(path, pokes));
@@ -506,17 +530,18 @@ fn act_on(target: &str, action: &str, at: Revision) -> Act {
     )
 }
 
-/// The probe of task-92, the path of today end to end: an agent asks
-/// through the port for a `discard`, which waits for a person
-/// (`Confirm::ForAgents`); the ide opens its modal; the person clicks
-/// Discard, which confirms through the dispatcher as `Actor::Human`; the
-/// discard runs, and its stages reach the agent in the drain after the
-/// worker's answer.
+/// The probe of task-92, the path end to end: an agent asks through the
+/// port for a `discard`, which waits for a person (`Confirm::ForAgents`);
+/// the ide opens its modal; the person clicks Discard, which confirms
+/// through the dispatcher as `Actor::Human`; the discard runs. The shell
+/// serves the port only after its wake: the stages after the person's
+/// answer and the worker's reach the agent because the port woke the loop
+/// when its sink heard them (the P0 of task-92).
 #[test]
 fn an_agent_discard_through_the_port_waits_for_the_person_who_confirms_it() {
     let mut rig = Rig::new(&["README", "new.txt"], &[]);
     let readme = rig.dir.path().join("README");
-    let ((stages, asked), _) = shell(&mut rig, |path, pokes| {
+    let ((stages, asked), drains) = shell_on_wake(&mut rig, |path, pokes| {
         let mut c = client(&path);
         c.hello("test-agent").expect("welcome");
         let seen = snapshot(c.observe(Observe::default()).expect("an observation"));
@@ -550,6 +575,10 @@ fn an_agent_discard_through_the_port_waits_for_the_person_who_confirms_it() {
         ]
     );
     assert_eq!(stages[2].stage, Stage::Confirmed { by: Actor::Human });
+    assert!(
+        drains.iter().all(|d| d.cause == Cause::Port),
+        "only the port's wake served: {drains:?}"
+    );
     // what the person read: the text is born in `Workbench::confirmation`
     // (crates/ide/src/workbench/notice.rs), from the request's actor,
     // action and target.
@@ -570,83 +599,58 @@ fn an_agent_discard_through_the_port_waits_for_the_person_who_confirms_it() {
 
 /// The probe of task-92, the decline: the person clicks Cancel, which
 /// declines through the dispatcher as `Actor::Human`, and nothing runs.
-/// The port's sink hears the `rejected` stage at once, but the shell
-/// serves the port only after its wake and after a worker's answer, as
-/// the ide's window does (`crates/ide/src/main.rs`, `serve_agent`), and a
-/// decline sends nothing to the worker: the stage waits in the port until
-/// the next drain. The agent gets it when its next message wakes the
-/// port; one that only waits for it (`plev act`) never does.
+/// Before the P0 the stage waited in the port until the agent's next
+/// message, since a decline sends nothing to the worker and the shell
+/// serves nothing after a person's input (`crates/ide/src/main.rs`,
+/// `serve_agent`); a `plev act` that only waits never got it. Now the
+/// port's sink hears it and wakes the loop, and the agent gets it without
+/// sending anything more.
 #[test]
-fn a_decline_reaches_the_agent_only_at_the_next_drain() {
+fn a_decline_reaches_the_agent_with_no_message_from_it() {
     let mut rig = Rig::new(&["README", "new.txt"], &[]);
     let new = rig.dir.path().join("new.txt");
-    let ((early, waited, late, asked), _) = shell(&mut rig, |path, pokes| {
+    let ((stages, asked, sent), drains) = shell_on_wake(&mut rig, |path, pokes| {
         let mut c = client(&path);
         c.hello("test-agent").expect("welcome");
         let seen = snapshot(c.observe(Observe::default()).expect("an observation"));
-        let id = c
-            .send(Ask::Act(act_on(
-                "changes.file[new.txt]",
-                "discard",
-                seen.revision,
-            )))
-            .expect("the act is sent");
-        let mut early = Vec::new();
-        while early.len() < 2 {
-            match c.recv_for(&id).expect("a stage") {
-                Reply::Stage(s) => early.push(s),
-                other => panic!("a stage: {other:?}"),
-            }
-        }
         let (said, heard) = mpsc::channel();
-        poke(
-            &pokes,
-            Poke::Answer {
-                confirm: false,
-                said,
-            },
-        );
-        // nothing drains the port after the person's answer.
-        c.set_timeout(Some(500)).expect("a short wait");
-        let waited = c.recv_for(&id);
-        c.set_timeout(Some(20_000)).expect("a timeout");
-        // the agent's next message wakes the port: the drain that answers
-        // it sends the decline too.
-        let look = c
-            .send(Ask::Observe(Observe {
-                scope: Some(sid("notices")),
-                ..Observe::default()
-            }))
-            .expect("an observation is sent");
-        let mut late = Vec::new();
-        let mut looked = false;
-        while !(looked && late.iter().any(StageReply::is_terminal)) {
-            let msg = c.recv().expect("a message");
-            match msg.reply {
-                Reply::Stage(s) if msg.id.as_deref() == Some(id.as_str()) => late.push(s),
-                Reply::Snapshot(_) if msg.id.as_deref() == Some(look.as_str()) => looked = true,
-                other => panic!("the observation or the act's stage: {other:?}"),
-            }
-        }
-        (
-            early,
-            waited,
-            late,
-            heard.recv().expect("what the modal said"),
-        )
+        let act = act_on("changes.file[new.txt]", "discard", seen.revision);
+        let mut sent = None;
+        let stages = c
+            .act(act, |s| {
+                if s.stage == Stage::AwaitingConfirmation {
+                    let said = said.clone();
+                    poke(
+                        &pokes,
+                        Poke::Answer {
+                            confirm: false,
+                            said,
+                        },
+                    );
+                    sent = Some(Instant::now());
+                }
+            })
+            .expect("the act's stages, the decline among them");
+        let sent = sent.map(|at| at.elapsed());
+        (stages, heard.recv().expect("what the modal said"), sent)
     });
 
-    assert_eq!(names(&early), ["requested", "awaiting_confirmation"]);
-    assert!(
-        matches!(waited, Err(wire::WireError::Timeout(_))),
-        "the decline did not reach the agent after the person's answer: {waited:?}"
-    );
-    assert_eq!(names(&late), ["rejected"]);
     assert_eq!(
-        late[0].stage,
+        names(&stages),
+        ["requested", "awaiting_confirmation", "rejected"]
+    );
+    assert_eq!(
+        stages[2].stage,
         Stage::Rejected(Rejection::Declined { by: Actor::Human })
     );
-    assert!(late[0].revision.is_some(), "a terminal stage");
+    assert!(stages[2].revision.is_some(), "a terminal stage");
+    // the act sent nothing after itself: the decline went out in a drain
+    // of the port's own wake.
+    assert!(drains.iter().all(|d| d.cause == Cause::Port), "{drains:?}");
+    assert!(
+        sent.is_some_and(|waited| waited < Duration::from_secs(5)),
+        "the decline came without a message: {sent:?}"
+    );
     assert_eq!(
         asked,
         Asked {

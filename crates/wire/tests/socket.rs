@@ -522,3 +522,89 @@ fn random_lines_over_the_socket_never_break_the_port() {
     assert!(answered > 100, "{answered}");
     assert!(matches!(last, Reply::Snapshot(_)), "{last:?}");
 }
+
+/// the P0 of task-92 over a real socket, with a shell that drains only
+/// after the port's wake, as the showcase's and the ide's window do after
+/// a person's input: the person answers two confirmations between drains,
+/// declining the first and confirming the second, and each answer reaches
+/// the agent, which sends nothing after its act and only waits.
+#[test]
+fn a_persons_answer_reaches_an_agent_that_only_waits() {
+    let tmp = tempfile::tempdir().unwrap();
+    let (mut port, woke) = open(tmp.path());
+    let mut host = ToyHost::new();
+    let path = port.path().to_owned();
+    let (asked_tx, asked) = mpsc::channel();
+    let agent = thread::spawn(move || {
+        let mut c = client(&path, "claude");
+        let r = revision_of(&c.observe(Observe::default()).unwrap());
+        let mut each = |s: &wire::StageReply| {
+            if s.stage == Stage::AwaitingConfirmation {
+                let _ = asked_tx.send(s.request);
+            }
+        };
+        let first = c
+            .act(
+                Act::from_revision(sid("todo.item[3]"), action("remove"), r),
+                &mut each,
+            )
+            .unwrap();
+        let r = first.last().and_then(|s| s.revision).unwrap();
+        let second = c
+            .act(
+                Act::from_revision(sid("todo.item[2]"), action("remove"), r),
+                &mut each,
+            )
+            .unwrap();
+        (first, second)
+    });
+    let deadline = Instant::now() + Duration::from_secs(20);
+    let mut answers = 0;
+    while !agent.is_finished() {
+        assert!(
+            Instant::now() < deadline,
+            "the agent did not get its answers"
+        );
+        if woke.recv_timeout(Duration::from_millis(5)).is_ok() {
+            port.drain(&mut host);
+        }
+        // the person, between two drains.
+        if let Ok(id) = asked.try_recv() {
+            host.clock += 1;
+            if answers == 0 {
+                host.dispatcher
+                    .decline(id, Actor::Human, host.clock)
+                    .unwrap();
+            } else {
+                host.dispatcher
+                    .confirm(&mut host.app, id, Actor::Human, host.clock)
+                    .unwrap();
+            }
+            answers += 1;
+        }
+    }
+    let (first, second) = agent.join().unwrap();
+    let names = |stages: &[wire::StageReply]| -> Vec<&str> {
+        stages.iter().map(|s| s.stage.name()).collect()
+    };
+    assert_eq!(
+        names(&first),
+        ["requested", "awaiting_confirmation", "rejected"]
+    );
+    assert_eq!(
+        first[2].stage,
+        Stage::Rejected(Rejection::Declined { by: Actor::Human })
+    );
+    assert_eq!(
+        names(&second),
+        [
+            "requested",
+            "awaiting_confirmation",
+            "confirmed",
+            "executing",
+            "completed"
+        ]
+    );
+    assert_eq!(host.app.done(3), Some(true), "the declined one stays");
+    assert_eq!(host.app.done(2), None, "the confirmed one ran");
+}
