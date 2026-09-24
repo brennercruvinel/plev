@@ -14,6 +14,20 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: determinismo visual (task-77 fase 1)
+
+- **integrada:** fase 1 (merge da `task/77a-determinism`). o `regress`
+  ganhou `compare` e `capture`. o desktop é determinístico consigo
+  mesmo: 1312 de 1312 frames iguais em bit, entre dois contextos de GPU
+  e dois processos. nenhum baseline novo.
+- **achado:** o blur do vidro aplica o sigma em texels físicos, então o
+  mesmo vidro espalha 9 px lógicos a 1x e 4,5 a 2x. decidido pelo
+  orquestrador: é defeito, não decisão de produto, e a correção entra
+  como fase 1b (engine e shader), com o teste ignorado como critério.
+- **para o brenner, sem pressa:** a web e o iOS destravam com poucos
+  comandos de instalação (dezenas de MB, com rede); o android pede uns
+  4 GB. os comandos estão no handoff da task-77.
+
 ### ciclo 3: disco
 
 - o disco chegou a 13 GB com o agente da task-77 compilando. `trash` no

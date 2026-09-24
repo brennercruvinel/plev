@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [determinism, pixels, regression, headless, targets, color, scale, ci, generative-runtime]
 date: 2026-09-24
 ---
@@ -134,3 +134,12 @@ what runs where:
 - sampling a capture tagged with a display profile as if it were sRGB.
 - measuring the web on swiftshader and calling it the GPU's frame: the
   capture records the adapter.
+
+## integração (2026-09-24, orquestrador)
+
+aceito. o limite de 2 por canal entre GPUs fica como proposta até a
+primeira medida em outra GPU. a divergência do blur (o sigma em texels
+físicos, então o vidro espalha 9 px lógicos a 1x e 4,5 a 2x) é defeito,
+não decisão de produto: a correção entra como task-77 fase 1b, com o
+teste ignorado desta fase como critério.
+
