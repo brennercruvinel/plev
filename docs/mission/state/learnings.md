@@ -12,6 +12,18 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, checkpoint a, quinta rodada
+
+- **o contrato ensina uma capacidade quando a mostra na hora em que ela
+  serve:** com o mesmo briefing da quarta rodada, e o `plev` apontando
+  para o `--ask` só na recusa que nomeia uma pessoa (task-94), os dois
+  agentes perguntaram, e a resposta da pessoa decidiu (commit com
+  `allow`, parada com `decline`). a documentação (`--help`) não tinha
+  bastado: nenhum agente a abriu. vale para o resto do contrato: o que
+  um agente precisa decidir deve vir junto do estado ou da recusa que
+  pede a decisão. fonte: `task-62-ide-human-agent-proof.md`, "resultado
+  da quinta rodada".
+
 ### 2026-09-24, checkpoint a, quarta rodada (o handoff)
 
 - **o agente usa o que o contrato mostra na hora da decisão:** com a
@@ -353,6 +365,15 @@ c"; saídas em `target/agents/exp/`.
   token do contrato era forma, não conteúdo.
 
 ## processo
+
+### 2026-09-24, o auditor de transcrição
+
+- **o auditor contava errado um `;` entre aspas:** os dois `--ask` da
+  quinta rodada tinham `;` no texto, e o auditor partia a linha ali e
+  contava uma palavra da pergunta como programa. o erro só soma (nunca
+  esconde um programa), então as contagens de zero das rodadas
+  anteriores valem. o partidor agora respeita aspas, e um `--ask` com
+  `;` e `|` virou caso de teste dele.
 
 ### 2026-09-24
 

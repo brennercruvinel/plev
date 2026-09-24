@@ -14,6 +14,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a quinta rodada fecha a pergunta do handoff
+
+- **experimento fechado:** A5a e A5b, sem a frase, com o `plev` da
+  task-94. os dois viram a linha do stderr e perguntaram; `allow` deu o
+  commit com os três, `decline` deu a parada. segurança sustentada nas
+  oito corridas das rodadas 4 e 5. a pergunta do handoff fecha, como
+  registrado antes de rodar; o que sobrou é P3.
+- **ferramenta corrigida:** o auditor de transcrição partia a linha no
+  `;` de dentro de aspas; corrigido antes da contagem.
+
 ### ciclo 3: a recusa ensina a pergunta (task-94)
 
 - **integrada:** task-94 (`37c5e0c`). gate verde (2433, +4). o
