@@ -1,0 +1,61 @@
+{
+  "format": "determinism.requested.v1",
+  "rows": [
+    {
+      "target": "desktop",
+      "name": "size",
+      "area": { "kind": "size" },
+      "status": "known",
+      "reason": "the frame is the logical viewport times the window's scale factor (backingScaleFactor on macOS, 1 or 2; windows and linux also give 1.25 and 1.5): a frame is compared only with one of the same viewport and scale"
+    },
+    {
+      "target": "web",
+      "name": "size",
+      "area": { "kind": "size" },
+      "status": "to_confirm",
+      "reason": "the canvas fills the page (100vw by 100vh) and devicePixelRatio is the scale (1 or 2 on a mac, fractional under browser zoom or a 125% or 150% display): the capture sets the desktop's viewport and scale on the page"
+    },
+    {
+      "target": "ios",
+      "name": "status-bar",
+      "area": { "kind": "edge", "edge": "top", "px": 62 },
+      "status": "to_confirm",
+      "reason": "iOS draws the status bar and the dynamic island over the app, which does not inset the gallery for the safe area; 62 pt is the top inset taken for the iPhone 17 Pro until the first capture measures it"
+    },
+    {
+      "target": "ios",
+      "name": "home-indicator",
+      "area": { "kind": "edge", "edge": "bottom", "px": 34 },
+      "status": "to_confirm",
+      "reason": "iOS draws the home indicator over the bottom of the app; 34 pt is the bottom inset taken until the first capture measures it"
+    },
+    {
+      "target": "ios",
+      "name": "size",
+      "area": { "kind": "size" },
+      "status": "to_confirm",
+      "reason": "the device's screen is the viewport and its scale the frame's (402x874 at 3x on the iPhone 17 Pro): the desktop reference is drawn at that viewport and scale"
+    },
+    {
+      "target": "android",
+      "name": "status-bar",
+      "area": { "kind": "edge", "edge": "top", "px": 24 },
+      "status": "to_confirm",
+      "reason": "android draws the status bar over an edge-to-edge activity; 24 dp is the height taken until the first capture on the emulator measures it (a display cutout makes it taller)"
+    },
+    {
+      "target": "android",
+      "name": "navigation-bar",
+      "area": { "kind": "edge", "edge": "bottom", "px": 48 },
+      "status": "to_confirm",
+      "reason": "android draws the navigation bar (gesture handle or three buttons) over the bottom of an edge-to-edge activity; 48 dp covers the three-button bar until the first capture measures it"
+    },
+    {
+      "target": "android",
+      "name": "size",
+      "area": { "kind": "size" },
+      "status": "to_confirm",
+      "reason": "the device's density is the scale (420 dpi is 2.625, a fractional one) and its screen the viewport: the desktop reference is drawn at that viewport and scale"
+    }
+  ]
+}

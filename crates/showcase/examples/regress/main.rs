@@ -45,6 +45,8 @@ mod pixels;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod report;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod requested;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod run;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod scene;
@@ -91,7 +93,7 @@ usage: regress check [--page <title>]... [--theme <name>]
        regress bless [--page <title>]... [--all] [--theme <name>]
                      [--width <px>] [--height <px>] [--scale <s>]
                      [--png | --no-png] [--dir <dir>]
-       regress compare <base.png> <other.png> [--scale <s>]
+       regress compare <base.png> <other.png> [--scale <s>] [--target <name>]
 check stages every baseline in the directory (narrowed by the flags) and
 compares meaning, then layers and bindings; nothing moved, no frame is
 drawn. a layer moved and the baseline keeps an image: the frame is drawn
