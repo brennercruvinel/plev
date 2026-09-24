@@ -26,7 +26,7 @@ use std::fmt;
 use crate::compositor::Compositor;
 use crate::effects::EffectProcessor;
 use crate::gpu::texture_pool::TexturePool;
-use crate::gpu::{GpuContext, HEADLESS_FORMAT, RenderConfig};
+use crate::gpu::{GpuContext, HEADLESS_FORMAT, LostDevice, RenderConfig};
 use crate::text::TextSystem;
 use crate::window::draw_frame;
 
@@ -82,12 +82,21 @@ pub enum HeadlessError {
     Png(image::ImageError),
     /// The PNG could not be written.
     Io(std::io::Error),
+    /// The GPU device was lost and no adapter answered the recovery yet
+    /// (`gpu::recover`): the last frame was skipped and there is nothing
+    /// to read. The next `draw` tries again.
+    DeviceLost(LostDevice),
 }
 
 impl fmt::Display for HeadlessError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::NoAdapter => write!(f, "no GPU adapter available"),
+            Self::DeviceLost(lost) => write!(
+                f,
+                "GPU device lost ({:?}: {:?}) and not recovered yet",
+                lost.reason, lost.message
+            ),
             Self::InvalidViewport(v) => write!(
                 f,
                 "invalid viewport {}x{} at scale {} (all must be positive)",
@@ -181,10 +190,34 @@ impl Renderer {
         &self.gpu
     }
 
+    /// The context, mutably: to point a recovery elsewhere
+    /// (`GpuContext::set_recovery_backends`).
+    pub fn gpu_mut(&mut self) -> &mut GpuContext {
+        &mut self.gpu
+    }
+
     /// Draw the scene already pushed into `compositor` (after its
     /// `begin_frame`) into the target. `clear_linear` is the background
-    /// in linear space, as for `present_frame`. Returns the draw calls.
+    /// in linear space, as for `present_frame`. Returns the draw calls,
+    /// or 0 when the frame was skipped because the device was lost and no
+    /// adapter answers yet (logged once; `read` says so too).
+    ///
+    /// A lost device is recovered here, before drawing, as `present_frame`
+    /// does for a window; the target is recreated with it.
     pub fn draw(&mut self, compositor: &mut Compositor, clear_linear: [f32; 4]) -> u32 {
+        if self.gpu.poll_device_loss() {
+            if !crate::gpu::recover_or_skip(
+                compositor,
+                &mut self.gpu,
+                &mut self.text_system,
+                &mut self.effects,
+                &mut self.texture_pool,
+                "headless_frame",
+            ) {
+                return 0;
+            }
+            self.target = create_target(&self.gpu);
+        }
         let view = self.gpu.texture_render_view(&self.target);
         draw_frame(
             compositor,
@@ -199,7 +232,17 @@ impl Renderer {
     }
 
     /// The target's pixels as they are now (the last drawn frame).
+    /// `DeviceLost` while the device is gone and not recovered: the
+    /// target died with it, and mapping a dead buffer is a fatal wgpu
+    /// error, not a readable frame.
     pub fn read(&self) -> Result<Frame, HeadlessError> {
+        if self.gpu.poll_device_loss() {
+            let lost = self.gpu.lost_device().unwrap_or(LostDevice {
+                reason: wgpu::DeviceLostReason::Unknown,
+                message: String::new(),
+            });
+            return Err(HeadlessError::DeviceLost(lost));
+        }
         read_texture(&self.gpu, &self.target)
     }
 

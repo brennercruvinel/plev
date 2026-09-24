@@ -18,4 +18,5 @@ pub use image::{ImageError, ImageHandle, load_image_bytes, load_image_rgba};
 pub use loss::LostDevice;
 #[cfg(not(target_arch = "wasm32"))]
 pub use recover::recover_frame_resources;
+pub(crate) use recover::recover_or_skip;
 pub use recover::{RecoverError, recover_frame_resources_async};

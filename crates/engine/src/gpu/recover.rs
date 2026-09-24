@@ -18,9 +18,9 @@
 //! whole scene again on the new device.
 //!
 //! What survives, being CPU data: the scene, the render config, the
-//! logical projection, the shaping cache, the image store's handles and
-//! its copy of every uploaded image (`image::restage_resident`), the hot
-//! reload watchers.
+//! logical projection, the shaping cache, the image store (its handles
+//! and its log of every upload, pixels included: the fresh atlas writes
+//! the whole log on the next `prepare`), the hot reload watchers.
 
 use std::fmt;
 
@@ -128,8 +128,6 @@ impl GpuContext {
             fresh.shader_watcher = self.shader_watcher.take();
             fresh._source_watcher = self._source_watcher.take();
         }
-        // the new atlas texture is empty; every image goes up again
-        super::image::restage_resident();
 
         log::info!(
             "gpu: device lost ({:?}: {:?}); recovered on {}",
@@ -169,6 +167,49 @@ pub async fn recover_frame_resources_async(
     texture_pool.clear();
     compositor.drop_gpu_resources();
     Ok(lost)
+}
+
+/// What a frame does once it sees the device lost: recover everything in
+/// place and go on drawing (`true`), or skip this frame (`false`) with
+/// the error logged once per loss, not once per frame; the next requested
+/// frame tries again. Native only for the recovery itself: on wasm the
+/// device request cannot block inside a frame, so the frame is skipped
+/// and the loss reported.
+pub(crate) fn recover_or_skip(
+    compositor: &mut Compositor,
+    gpu: &mut GpuContext,
+    text_system: &mut TextSystem,
+    effects: &mut EffectProcessor,
+    texture_pool: &mut TexturePool,
+    label: &str,
+) -> bool {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        match recover_frame_resources(compositor, gpu, text_system, effects, texture_pool) {
+            Ok(_) => true,
+            Err(e) => {
+                if gpu.first_loss_report() {
+                    log::error!(
+                        "{label}: GPU device lost and not recovered ({e}); frames are \
+                         skipped until an adapter answers"
+                    );
+                }
+                false
+            }
+        }
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = (compositor, text_system, effects, texture_pool);
+        if gpu.first_loss_report() {
+            let lost = gpu.lost_device();
+            log::error!(
+                "{label}: GPU device lost ({lost:?}); recovery on wasm needs the async \
+                 device request and is not wired: frames are skipped"
+            );
+        }
+        false
+    }
 }
 
 /// [`recover_frame_resources_async`] driven to completion. Native only.

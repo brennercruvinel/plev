@@ -33,6 +33,8 @@ struct State {
     /// The engine is taking this device down itself: a `Destroyed` is
     /// expected and not a loss.
     expected: AtomicBool,
+    /// A failed recovery was logged already; the next frames stay quiet.
+    reported: AtomicBool,
     detail: Mutex<Option<LostDevice>>,
 }
 
@@ -67,6 +69,11 @@ impl DeviceLoss {
     pub(crate) fn expect_destroy(&self) {
         self.0.expected.store(true, Ordering::Release);
     }
+
+    /// `true` for the first caller per loss; the rest stay quiet.
+    pub(crate) fn first_report(&self) -> bool {
+        !self.0.reported.swap(true, Ordering::AcqRel)
+    }
 }
 
 /// A poisoned lock only means a thread panicked while holding it; the
@@ -93,6 +100,12 @@ impl GpuContext {
         // the poll's own result says nothing about the loss; the flag does
         let _ = self.device.poll(wgpu::PollType::Poll);
         self.loss.is_lost()
+    }
+
+    /// Whether this loss is still unreported; the first call per loss
+    /// answers `true`, so a failed recovery is logged once, not per frame.
+    pub(crate) fn first_loss_report(&self) -> bool {
+        self.loss.first_report()
     }
 }
 
