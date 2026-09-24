@@ -14,6 +14,20 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a sonda da task-92 achou um P0
+
+- **bug de contrato (P0):** um estágio produzido fora de um drain do
+  agent port nunca chega ao agente enquanto ele não manda outra mensagem.
+  o caso da sonda é a pessoa recusando no modal um `discard` pedido pelo
+  agente (58b). o `plev act` espera até o timeout, e o estágio se perde
+  quando a conexão fecha. vale para todo estágio que termina sem passar
+  pelo git. nenhum teste pegava isso: os testes de confirmação da 58b
+  rodavam sem o porto, e os do porto só recusavam pelo git.
+- **decisão:** a correção vem primeiro e sozinha, na origem: o porto
+  acorda o próprio loop quando o sink ouve um estágio fora de um drain,
+  sem mudar o protocolo. o `ask` vem depois, na mesma branch.
+- **publicado:** PR #64 (task-64 fase c), merge `de95a20`.
+
 ### ciclo 3: uma sessão vira teste (task-64 fase c)
 
 - **integrada:** task-64 fase c (`d611fa4`). gate verde (2349). o teste

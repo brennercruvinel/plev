@@ -312,6 +312,13 @@ c"; saídas em `target/agents/exp/`.
 
 ### 2026-09-23
 
+- **teste do caminho inteiro pega o que teste de peça não pega:** a
+  recusa de confirmação (58b) foi testada no `sem` e no ide, e o porto foi
+  testado com atos que terminam pelo git. ninguém testou a recusa pela
+  porta real com o shell servindo só no wake. a sonda da 92, que
+  atravessou tudo, achou o estágio parado. um contrato que atravessa
+  crates pede um teste pelo caminho inteiro, porta real e host real.
+
 - **briefing que proíbe o que o gate exige:** o briefing da 68 proibiu
   `README.md` e `docs/arc/arc.toml`, e o `arc_sync_guard` exige de todo
   crate novo uma entrada nos dois. o agente parou com o gate vermelho
