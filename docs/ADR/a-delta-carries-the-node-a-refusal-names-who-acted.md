@@ -109,21 +109,29 @@ state.
 ### compatibility
 
 protocol v1 keeps its version. the new `node_added` form ships before
-any consumer outside this repository reads a delta, and the old form, a
-bare id, no longer reads: `serde_json` refuses it, and a test pins that.
+any consumer outside this repository reads a delta, and `Change` itself
+does not read the old form, a bare id: `serde_json` refuses it, and a
+test pins that. a bare id cannot become a node without the snapshot
+that holds it, and `sem` has no snapshot in hand when it reads a change.
 
 a persisted session is the one place the old form was kept. the recorder
 never puts `node_added` in a `Kind::Changes`, but a whole snapshot
 (`Kind::Snapshot { snapshot, changes }`) keeps the diff that explains
-it, and that diff holds `node_added` when the step added a node. so a
-session persisted before this change with a node added in its window no
-longer opens: `Session::open` answers `FileError::Event` on that line
-(serde finds a string where a `Node` goes), typed and without panic.
-that covers the sessions of checkpoint a (`target/agents/exp/a1` and
-`a2`, not tracked) and any lab run before this change. the session format
-keeps version 0. a reader that upgraded the old line would be lossless,
-since the node a snapshot event adds is the one its own snapshot holds;
-it was not written (see consequences).
+it, and that diff holds `node_added` when the step added a node. the
+session reader, which has that snapshot, converts the old line
+(`read_event` in `crates/rec/src/persist.rs`): in a snapshot event, each
+`node_added` written as a bare id becomes the node the event's own
+snapshot holds under that id. nothing is lost, because the node a step
+adds is exactly the node the snapshot of that step holds. an id the
+snapshot does not hold (a file no recorder wrote) is `FileError::Event`
+on that line, typed, and no node is made up. the writer writes only the
+new form, and the session format keeps version 0.
+
+the sessions of checkpoint a and of the laboratory runs before this
+change (`target/agents/exp/a1` and `a2`, `lab-scripted`, `lab-plev`,
+`lab-control`, `lab-control2`; not tracked) all open with it, their
+commit's node in place and their `commit.submit` receipts as recorded
+(a refusal recorded then names nobody in `acted`).
 
 ## consequences
 
@@ -171,6 +179,8 @@ it was not written (see consequences).
 - a recorded snapshot event that adds nodes repeats them in its `changes`.
   in the laboratory run above the semantic section went from 53732 to
   54066 bytes, 51 events each.
+- the session reader carries one conversion for the form before this
+  change, tried only on a line that does not read as it is.
 - the recorder weighs the node of a `node_added` and the entries of
   `acted` in its byte estimate.
 
