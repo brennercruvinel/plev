@@ -413,6 +413,7 @@ impl ApplicationHandler<UserEvent> for App {
             self.install_tray();
             self.install_notices();
             self.install_print();
+            self.install_capture();
             self.view.set_window_focused(false);
         }
     }
@@ -520,6 +521,9 @@ mod events;
 mod pace;
 /// Asleep, covered, awake again (task-76 item 7).
 mod sleep;
+
+/// The camera and the microphone follow the windows (task-76 item 10).
+mod capture;
 
 /// The page in a window of its own (task-76 item 2), desktop only.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]

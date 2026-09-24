@@ -1,0 +1,61 @@
+#!/bin/sh
+# a stand-in for ffmpeg in the tests of engine::platform::capture
+# (tests/capture.rs). it opens no device: the platform's input (-f
+# avfoundation, dshow, v4l2 or alsa, then -i <device>) is replaced by a
+# lavfi source paced as a device paces itself (-re): testsrc at 640x360
+# and 30 fps for a camera (the output is rawvideo), a 440 Hz sine at 48
+# kHz for a microphone. the output arguments are kept as the capture
+# built them, and the real ffmpeg on the PATH runs them in this process
+# (exec), so the pid the capture kills is ffmpeg's. its pid and its
+# arguments go to $TMPDIR/plev-capture-fakes/<pid>.args.
+# a camera at index 5 opened without -framerate refuses as avfoundation
+# refuses a camera that does not take the default rate: it lists its
+# modes and exits 1.
+
+dir="${TMPDIR:-/tmp}/plev-capture-fakes"
+mkdir -p "$dir"
+printf '%s\n' "$@" > "$dir/$$.args"
+
+camera=
+for a; do
+    [ "$a" = rawvideo ] && camera=1
+done
+src=
+framerate=
+while [ $# -gt 0 ]; do
+    case "$1" in
+    -framerate) framerate=$2; shift 2 ;;
+    -i) src=$2; shift 2; break ;;
+    *) shift ;;
+    esac
+done
+index=$(printf '%s' "$src" | tr -cd '0-9')
+# what is left is the output: a device input there would reach a device
+for a; do
+    case "$a" in
+    avfoundation | dshow | v4l2 | video4linux2 | alsa)
+        echo "fake-ffmpeg: a device input past -i ($a): refused" >&2
+        exit 2
+        ;;
+    esac
+done
+
+if [ -n "$camera" ] && [ "$index" = 5 ] && [ -z "$framerate" ]; then
+    {
+        echo "[avfoundation @ 0x13b004c80] Selected framerate (29.970030) is not supported by the device."
+        echo "[avfoundation @ 0x13b004c80] Supported modes:"
+        echo "[avfoundation @ 0x13b004c80]   1920x1080@[1.000000 30.000000]fps"
+        echo "[avfoundation @ 0x13b004c80]   640x480@[15.000000 30.000000]fps"
+        echo "[in#0 @ 0x600003a0c000] Error opening input: Input/output error"
+        echo "Error opening input file $src."
+        echo "Error opening input files: Input/output error"
+    } >&2
+    exit 1
+fi
+
+if [ -n "$camera" ]; then
+    exec ffmpeg -hide_banner -nostdin -loglevel error -re -f lavfi \
+        -i "testsrc=size=640x360:rate=30" "$@"
+fi
+exec ffmpeg -hide_banner -nostdin -loglevel error -re -f lavfi \
+    -i "sine=frequency=440:sample_rate=48000" "$@"

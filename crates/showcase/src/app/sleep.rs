@@ -15,7 +15,9 @@
 //! each), catches up (the answers that arrived asleep are applied, an ask
 //! held is started, what ended is told), and the frame that follows shows
 //! it all. The work beside the frames hears the sleep through
-//! `engine::window::Background`, set by `Windows::sleep` and `wake`.
+//! `engine::window::Background`, set by `Windows::sleep` and `wake`. The
+//! camera and the microphone hear it at once, asleep or covered
+//! (`capture.rs`): a device is released, not paused.
 
 use winit::window::WindowId;
 
@@ -26,6 +28,7 @@ impl App {
     /// `wake`.
     pub(super) fn sleep(&mut self) {
         self.windows.sleep();
+        self.capture_follows();
     }
 
     /// The app wakes: every window is invalidated and asks for one new
@@ -36,6 +39,7 @@ impl App {
             return;
         }
         self.windows.wake();
+        self.capture_follows();
         self.catch_up();
     }
 
@@ -45,6 +49,7 @@ impl App {
         if let Some(host) = self.windows.get_mut(id) {
             host.set_occluded(covered);
         }
+        self.capture_follows();
     }
 }
 

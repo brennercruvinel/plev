@@ -484,6 +484,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         A,
+        "Capture",
+        "eye",
+        "Camera and microphone as capabilities only a person turns on: the frame as a texture, the level as a meter, the permission as state.",
+        Pane::Capture,
+    ),
+    page(
+        A,
         "Dock",
         "terminal",
         "Floating message dock: glass blur, hover lift, width morph on click.",

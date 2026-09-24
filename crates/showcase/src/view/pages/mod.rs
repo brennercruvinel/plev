@@ -93,6 +93,7 @@ pub enum Pane {
     Surface,
     Silences,
     Files,
+    Capture,
     Dock,
     Editor,
     Git,
