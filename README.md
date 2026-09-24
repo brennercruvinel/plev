@@ -66,6 +66,7 @@ cargo run -p comps --example editor    # the design-system editor demo
 cargo run -p wire --bin plev -- observe --scope todo --app showcase   # an app opened with PLEV_AGENT=1 (debug), as an agent sees it
 cargo run -p wire --bin plev -- act todo.item[1] toggle --from-revision <rev>   # act on what that observation saw; exit 0 done, 1 rejected, 2 failed, 3 error
 cargo run -p inspect --bin plev-inspect -- <session.monster> [--timeline] [--why <request>] [--control <id> --at <ms>] [--json]   # a recorded session read back: a summary, every event, a request's causal chain, a control at an instant; it never runs anything
+cargo run -p claude-model --example propose -- --app todo "show the filter as chips and hide the counts"   # an intent to a verified IR over the todo's (or --app ide, the workbench's) golden projection, proposed by the Claude through the local claude -p (PLEV_CLAUDE names another program); prints each attempt, the time and the IR
 ```
 
 every debug build is its own dev loop: save a `.wgsl`, a string or a hex

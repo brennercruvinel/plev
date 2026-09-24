@@ -39,9 +39,10 @@ pub const PROGRAM_ENV: &str = "PLEV_CLAUDE";
 /// the todo's prompt with an IR the verifier accepted at once, in 24 to
 /// 40 s.
 pub const MODEL: &str = "sonnet";
-/// the longest one call may take: three times the slowest call of the
-/// probe (40 s). a proposal makes three calls at most (`Llm::ATTEMPTS`).
-pub const TIMEOUT: Duration = Duration::from_secs(120);
+/// the longest one call may take: twice the slowest call measured in
+/// phase 3b-i (89 s, over the ide's workbench; the todo's took 5 to 40 s).
+/// a proposal makes three calls at most (`Llm::ATTEMPTS`).
+pub const TIMEOUT: Duration = Duration::from_secs(180);
 /// the most one call may spend, as the child counts it: about ten times
 /// a call of the probe. the child checks it after its turn, so it caps a
 /// session that would go on, and never cuts a call short.
@@ -163,9 +164,13 @@ impl ClaudeCli {
         &self.calls
     }
 
-    /// what the calls so far cost, as the child counts it.
+    /// what the calls so far cost, as the child counts it: zero before the
+    /// first, and only what the calls said.
     pub fn spent_usd(&self) -> f64 {
-        self.calls.iter().filter_map(|c| c.cost_usd).sum()
+        self.calls
+            .iter()
+            .filter_map(|c| c.cost_usd)
+            .fold(0.0, |all, c| all + c)
     }
 
     fn command(&self) -> Command {
@@ -253,6 +258,6 @@ mod tests {
         assert_eq!(cli.budget_usd, BUDGET_USD);
         assert_eq!(cli.dir, std::env::temp_dir());
         assert!(cli.calls().is_empty());
-        assert_eq!(cli.spent_usd(), 0.0);
+        assert!(cli.spent_usd().is_sign_positive() && cli.spent_usd() == 0.0);
     }
 }

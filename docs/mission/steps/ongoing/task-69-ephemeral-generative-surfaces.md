@@ -2038,3 +2038,113 @@ o que a sonda decide:
   Code acima e roda o filho num diretório dele;
 - a condição de parada não disparou: sem interação, sem login, sem
   permissão, as duas chamadas longe dos 5 minutos, custo pequeno.
+
+### corridas reais do exemplo (2026-09-24)
+
+`cargo run -p claude-model --example propose -- --app todo|ide "<intenção>"`,
+com o `claude` de verdade (sonnet, as flags do crate), da branch @ 31ff396
+mais o exemplo; o todo com a superfície compacta mostrada, o ide sem
+superfície. as quatro primeiras rodaram com o tempo máximo em 120 s; a
+do ide levou 89 s, e o padrão subiu para 180 s antes do commit. a
+quinta repete a terceira com o exemplo como foi commitado (ele passou a
+imprimir o tamanho do prompt e o layout de cada nó).
+
+| # | app | intenção | as regras | tentativas | tempo | custo | resposta |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | todo | the add field and the counts in two columns | verificam, 7 nós | 1, verificada | 4,5 s | 0,033 USD | 1.051 bytes |
+| 2 | todo | a compact card with the input on top and the counts below | `"card", "top", "below" are not a word of the app` | 1, verificada | 5,6 s | 0,034 USD | 1.049 bytes |
+| 3 | todo | show the filter as chips and hide the counts | `"chips", "hide" are not a word of the app` | 1, verificada | 6,3 s | 0,035 USD | 1.308 bytes |
+| 4 | ide | review what goes into the commit: each changed file with stage and unstage, then the message and the commit button | `"review", "goes", "each", "changed", "file", "stage", "unstage", "then" are not a word of the app` | 1, verificada | 88,9 s | 0,111 USD | 5.653 bytes |
+| 5 | todo | a 3 de novo | igual | 1, verificada | 8,7 s | 0,011 USD (prompt em cache) | 1.308 bytes, o mesmo IR |
+
+os prompts: 17.710, 17.724 e 17.711 bytes no todo, 17.075 no ide (sem
+superfície atual, mas com mais nós). nenhuma resposta foi recusada, então
+o laço de conserto não rodou de verdade; ele está provado com o `claude`
+falso (teste `a_refused_answer_is_repaired_by_the_second_call`).
+
+os IRs, resumidos (id, componente, label, layout, o que liga):
+
+1, "the add field and the counts in two columns":
+
+```text
+surface todo_panel "quick todo"
+todo_panel.card (card, "todo", stack vertical md; padding lg, raised)
+  todo_panel.entry (container, stack horizontal sm)
+    todo_panel.input (text_field, "new todo"): text <- todo.input:text, set_value -> todo.input set_value, submit -> todo.input submit
+    todo_panel.add (button, "add"): activate -> todo.input submit
+  todo_panel.counts (container, grid min_col card_min_w, gap sm)
+    todo_panel.active (stat, "active"): value <- todo.counter:active
+    todo_panel.done (stat, "done"): value <- todo.counter:done
+```
+
+o Claude leu "two columns" como os dois números lado a lado num grid, e
+não a superfície inteira em duas colunas, como as regras leem. as duas
+leituras cabem na frase.
+
+2, "a compact card with the input on top and the counts below":
+
+```text
+surface todo_panel "quick todo"
+todo_panel.card (card, "todo", stack vertical sm; padding sm, raised)
+  todo_panel.entry (container, stack horizontal sm)
+    todo_panel.input (text_field, "new todo"): (as mesmas ligações)
+    todo_panel.add (button, "add"): activate -> todo.input submit
+  todo_panel.counts (container, stack horizontal sm)
+    todo_panel.active (stat, "active"): value <- todo.counter:active
+    todo_panel.done (stat, "done"): value <- todo.counter:done
+```
+
+"compact" virou padding e gap `sm`; o filtro saiu, porque a frase não o
+pede.
+
+3, "show the filter as chips and hide the counts":
+
+```text
+surface todo_panel "quick todo"
+todo_panel.card (card, "todo", stack vertical md; padding lg, raised)
+  todo_panel.entry (container, stack horizontal sm)
+    todo_panel.input (text_field, "new todo"): (as mesmas ligações)
+    todo_panel.add (button, "add"): activate -> todo.input submit
+  todo_panel.filter (container, "filter", stack horizontal xs)
+    todo_panel.filter.all (chip, "All"): activate -> todo.filter[all] select
+    todo_panel.filter.active (chip, "Active"): activate -> todo.filter[active] select
+    todo_panel.filter.completed (chip, "Completed"): activate -> todo.filter[completed] select
+```
+
+nas três do todo, cada nó cuja capacidade continua ficou com o id da
+superfície compacta (`todo_panel.input`, `todo_panel.add`,
+`todo_panel.filter.*`, `todo_panel.active`, `todo_panel.done`), e o id da
+superfície também: a página transformaria no lugar.
+
+4, "review what goes into the commit: ...", sobre o workbench do ide:
+
+```text
+surface commit_review "Commit Review"
+commit_review.root (container, stack vertical md)
+  commit_review.changes (card, "Changes", stack vertical sm)
+    commit_review.changes.list (list, "Changed files")
+      changes.file[src/lexer.rs] (container, stack horizontal sm)
+        changes.file[src/lexer.rs].name (text, "src/lexer.rs")
+        changes.file[src/lexer.rs].status (badge, "src/lexer.rs status"): text <- changes.file[src/lexer.rs]:status
+        changes.file[src/lexer.rs].stage_btn (button, "Stage src/lexer.rs"): activate -> changes.file[src/lexer.rs] stage
+        changes.file[src/lexer.rs].unstage_btn (button, "Unstage src/lexer.rs"): activate -> changes.file[src/lexer.rs] unstage
+      changes.file[notes.md] (...o mesmo, para notes.md)
+      changes.file[src/parser.rs] (...o mesmo, para src/parser.rs)
+  commit_review.commit (card, "Commit", stack vertical sm)
+    commit_review.commit.message (text_field, "Commit message"): text <- commit.message:text, set_value -> commit.message set_value
+    commit_review.commit.submit (button, "Commit"): activate -> commit.submit submit
+```
+
+duas coisas desse IR importam para depois. primeiro, o Claude escreveu os
+três arquivos um a um, e não um `repeat` sobre `changes:files` (a lista
+existe no registro, e a fixture `ide-review-commit.ir.json` repete sobre
+ela): é a mesma leitura dos valores de agora que a sonda mostrou nos
+itens do todo, e um arquivo que mudar depois não aparece. segundo, os nós
+dos arquivos tomam o id do nó do app (`changes.file[src/lexer.rs]`) e os
+filhos nascem embaixo dele. o verifier aceita (regra identity: um nó com
+o id de um nó do app só manda as ações dele), e o host da superfície
+trata esse nó como do app, o caso da tela fixa escrita em IR
+(`crates/surface/src/project.rs`): não o projeta de novo, e os filhos
+novos ficam sob o nó do app na projeção. se é isso que uma superfície
+gerada ao lado do app deve fazer, a 3b-ii decide. nenhuma das duas é
+deste crate; estão no handoff.
