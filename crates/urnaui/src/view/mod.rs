@@ -589,12 +589,14 @@ mod tests {
             }
         }
         assert_eq!(view.wake(TURN), Wake::idle(), "nothing moves at rest");
+        // time catches up to the push (five idle seconds) before it lands
+        view.wake(5.0);
         view.toasts.push(
             "opening dropped file",
             engine::theme::Intent::Informational,
             &theme,
         );
-        let mut drawn = vec![(0, view.wake(5.0))];
+        let mut drawn = vec![(0, view.wake(0.004))];
         for turn in 1..360 {
             let (last, ask) = *drawn.last().expect("drawn");
             let since = (turn - last) as f32 * TURN;

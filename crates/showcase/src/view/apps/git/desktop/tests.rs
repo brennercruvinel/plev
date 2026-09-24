@@ -8,16 +8,20 @@ use sem::SemId;
 /// One turn of a 60 Hz display.
 const TURN: f32 = 1.0 / 60.0;
 
-/// How long the window sat idle before the event: the event's frame
-/// reports it as its `since_last`.
+/// How long the window sat idle before the event. The shell catches up
+/// (a tick of this length) before it applies the event.
 const IDLE: f32 = 5.0;
 
-/// The shell over `turns` display turns: turn 0 is the frame of the
-/// event, after an idle window; afterwards a turn is drawn when the last
-/// ask was continuous or its deadline has come due, and the drawn turn's
-/// tick gets the time since the last drawn turn (`since_last`).
+/// How long after the event its frame is drawn.
+const LATENCY: f32 = 0.004;
+
+/// The shell over `turns` display turns after an event it applied once
+/// caught up: turn 0 is the event's frame, a few milliseconds after it;
+/// afterwards a turn is drawn when the last ask was continuous or its
+/// deadline has come due, and the drawn turn's tick gets the time since
+/// the last drawn turn (`since_last`).
 fn paced(turns: usize, mut wake: impl FnMut(f32) -> Wake) -> Vec<(usize, Wake)> {
-    let mut drawn = vec![(0, wake(IDLE))];
+    let mut drawn = vec![(0, wake(LATENCY))];
     for turn in 1..turns {
         let (last, ask) = *drawn.last().expect("turn 0 is drawn");
         let since = (turn - last) as f32 * TURN;
@@ -38,6 +42,7 @@ fn notices(page: &GitPage) -> usize {
 #[test]
 fn a_focused_commit_field_asks_for_a_frame_only_at_each_flip() {
     let mut page = GitPage::new();
+    page.wake(IDLE);
     page.bench.workspace_mut().commit_form.show();
     let drawn = paced(360, |dt| page.wake(dt));
     let flips = &drawn[1..];
@@ -52,6 +57,7 @@ fn a_focused_commit_field_asks_for_a_frame_only_at_each_flip() {
 fn a_refusal_toast_draws_while_it_moves_and_at_the_instant_it_leaves() {
     let mut page = GitPage::new();
     page.bench.workspace_mut().commit_form.show();
+    page.wake(IDLE);
     // Enter with no message: the dispatcher refuses and says so
     assert!(page.handle_enter());
     assert_eq!(notices(&page), 1, "the refusal shows as a toast");
@@ -77,14 +83,14 @@ fn a_refusal_toast_draws_while_it_moves_and_at_the_instant_it_leaves() {
 }
 
 #[test]
-fn worker_events_ask_for_a_frame_now() {
+fn worker_events_wait_for_the_host_to_apply_them() {
     let mut page = GitPage::new();
-    assert_eq!(page.wake(TURN), Wake::idle());
     page.sender
         .send(GitEvent::Status(Ok(Vec::new())))
         .expect("send");
-    assert!(page.wake(TURN).now, "an applied event is a change");
-    assert_eq!(page.wake(TURN), Wake::idle(), "drained");
+    assert_eq!(page.wake(TURN), Wake::idle(), "a tick applies nothing");
+    assert!(page.apply_events(), "the host applies them: a change");
+    assert!(!page.apply_events(), "drained");
 }
 
 /// Ticks the gallery until nothing on it moves.

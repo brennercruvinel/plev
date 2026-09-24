@@ -17,7 +17,8 @@ use ide::workbench::Workbench;
 pub struct GitPage {
     bench: Workbench,
     /// Worker events parked until the host applies them (the worker runs
-    /// on its own thread; the view is single-threaded).
+    /// on its own thread; the view is single-threaded; every event is
+    /// followed by a call to the host's wake).
     events: Receiver<GitEvent>,
     sender: Sender<GitEvent>,
     /// Why there is no repository (none at the cwd).
@@ -211,17 +212,14 @@ impl GitPage {
         changed
     }
 
-    /// Apply parked worker events and advance the widgets that animate:
-    /// the workbench's ask (motion every turn, a caret flip or a toast
-    /// leaving as a deadline), and a frame now when an event changed the
-    /// workspace.
+    /// Advance the widgets that animate: the workbench's ask (motion
+    /// every turn, a caret flip or a toast leaving as a deadline). Worker
+    /// events are not applied here but by [`GitPage::apply_events`], when
+    /// the worker wakes the host, after the host caught up to that
+    /// instant: a toast an event pushes then counts its time from the
+    /// event.
     pub fn wake(&mut self, dt: f32) -> Wake {
-        let applied = if self.apply_events() {
-            Wake::now()
-        } else {
-            Wake::idle()
-        };
-        applied.merge(self.bench.wake(dt))
+        self.bench.wake(dt)
     }
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {

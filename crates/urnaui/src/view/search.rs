@@ -791,9 +791,10 @@ mod tests {
     }
 
     /// A focused query field asks the loop for a frame at each caret flip
-    /// and nothing between, the way the shell paces it: the click's frame
-    /// reports the idle before it, then a frame only when a deadline is
-    /// due, with the real time since the last frame.
+    /// and nothing between, the way the shell paces it: time catches up
+    /// to the click (five idle seconds) before the click lands, its frame
+    /// comes a few milliseconds later, then a frame only when a deadline
+    /// is due, with the real time since the last frame.
     #[test]
     fn a_focused_query_asks_for_a_frame_only_at_each_flip() {
         const TURN: f32 = 1.0 / 60.0;
@@ -801,8 +802,9 @@ mod tests {
         let content = Rect::new(40.0, 128.0, 1200.0, 600.0);
         let field = screen.layout(content, false, &theme).query_field;
         let (x, y) = field.center();
+        screen.wake(5.0);
         screen.handle_event(&WidgetEvent::MouseDown { x, y }, content, true, &theme);
-        let mut last = (0, screen.wake(5.0));
+        let mut last = (0, screen.wake(0.004));
         let mut flips = 0;
         for turn in 1..360 {
             let since = (turn - last.0) as f32 * TURN;

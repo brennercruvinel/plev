@@ -2,8 +2,9 @@
 //! the gallery's content rect against the repository the showcase was
 //! launched from. The panels are the ide's own views (`ide::views`), so a
 //! comps change shows up here and in the ide binary alike. The git worker
-//! wakes the event loop through the host-provided callback; its events
-//! are drained on the next tick.
+//! wakes the event loop through the host-provided callback; the host
+//! applies its events then, whichever page shows, and draws only when the
+//! Git page is on screen.
 //!
 //! Needs the `git` CLI and a thread: desktop only. Elsewhere the section
 //! explains itself instead of rendering a dead workspace.

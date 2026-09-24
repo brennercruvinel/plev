@@ -8,18 +8,21 @@ use comps::prelude::Wake;
 /// One turn of a 60 Hz display.
 const TURN: f32 = 1.0 / 60.0;
 
-/// How long the window sat idle before the event: the event's frame
-/// reports it as its `since_last`.
+/// How long the window sat idle before the event. The shell catches up
+/// (a tick of this length) before it applies the event.
 const IDLE: f32 = 5.0;
 
-/// The ide shell over `turns` display turns: turn 0 is the frame of the
-/// event (the key that focused, the refusal that notified), after an idle
-/// window; afterwards a turn is drawn when the last ask was continuous or
-/// its deadline has come due, and the drawn turn's tick gets the time
-/// since the last drawn turn (`since_last`). Returns each drawn turn with
-/// its ask.
+/// How long after the event its frame is drawn.
+const LATENCY: f32 = 0.004;
+
+/// The ide shell over `turns` display turns after an event it applied
+/// once caught up: turn 0 is the event's frame (the key that focused, the
+/// refusal that notified), a few milliseconds after it; afterwards a turn
+/// is drawn when the last ask was continuous or its deadline has come
+/// due, and the drawn turn's tick gets the time since the last drawn turn
+/// (`since_last`). Returns each drawn turn with its ask.
 fn paced(w: &mut WorkspaceView, turns: usize) -> Vec<(usize, Wake)> {
-    let mut drawn = vec![(0, w.wake(IDLE))];
+    let mut drawn = vec![(0, w.wake(LATENCY))];
     for turn in 1..turns {
         let (last, ask) = *drawn.last().expect("turn 0 is drawn");
         let since = (turn - last) as f32 * TURN;
@@ -33,6 +36,7 @@ fn paced(w: &mut WorkspaceView, turns: usize) -> Vec<(usize, Wake)> {
 #[test]
 fn a_focused_commit_field_asks_for_a_frame_only_at_each_flip() {
     let (mut w, _) = ws();
+    w.wake(IDLE);
     w.commit_form.show();
     // six seconds at 60 Hz with nothing typed
     let drawn = paced(&mut w, 360);
@@ -60,6 +64,7 @@ fn a_hidden_commit_form_asks_for_nothing() {
 #[test]
 fn a_toast_asks_for_the_instant_it_leaves_then_nothing() {
     let (mut w, _) = ws();
+    w.wake(IDLE);
     w.notify("Refused: the commit message is empty", Intent::Neutral);
     let drawn = paced(&mut w, 360);
     assert!(w.toasts.is_empty(), "gone within six seconds");
@@ -73,7 +78,7 @@ fn a_toast_asks_for_the_instant_it_leaves_then_nothing() {
         .expect("the entry settles");
     let (rest_turn, rest_ask) = drawn[rest];
     let left = rest_ask.next.expect("a deadline while it rests");
-    let due = rest_turn as f32 * TURN + left.as_secs_f32();
+    let due = rest_turn as f32 * TURN + LATENCY + left.as_secs_f32();
     assert!((due - w.toasts.duration).abs() < TURN, "leaves at {due} s");
     let (leave_turn, leave_ask) = drawn[rest + 1];
     assert!(leave_ask.is_continuous(), "the exit spring moves");
@@ -86,6 +91,7 @@ fn a_toast_asks_for_the_instant_it_leaves_then_nothing() {
 #[test]
 fn a_toast_and_a_focused_field_ask_for_the_earliest_of_the_two() {
     let (mut w, _) = ws();
+    w.wake(IDLE);
     w.commit_form.show();
     w.notify("Refused: the commit message is empty", Intent::Neutral);
     let drawn = paced(&mut w, 360);
