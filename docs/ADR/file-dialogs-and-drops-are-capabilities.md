@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [platform-integration, file-dialog, drag-and-drop, input, semantic-contract, agents, rfd, winit]
 date: 2026-09-24
 ---

@@ -125,7 +125,7 @@ o que a tese precisa e o que existe hoje:
 | task-72 | UI asset compiler | trilha | monster (existente); espera 63 liberar o container |
 | task-73 | sistema de dependências incremental | trilha (medição na onda 3) | medição: nenhuma; desenho: 57, 59 |
 | task-74 | texto e edição | trilha | independente; accessibility de texto: 60 |
-| task-76 | fase 1 integrada (trilha): a perda de device de GPU recupera no lugar (callback do wgpu 28, `recover`, atlas e recursos recriados, frame igual byte a byte depois da perda forçada); item 3 em andamento (diálogos de arquivo e drop no `engine::platform`, o urnaui usando o do engine, a capacidade projetada numa página); o item 2 (múltiplas janelas) depois, por ser o maior | merge da `task/76a-device-loss` | achado: o wgpu engole `DeviceLost` e o compositor marcava layers limpas sobre nada; wasm só sinaliza (request de device é promise) |
+| task-76 | fase 1 integrada (trilha): a perda de device de GPU recupera no lugar (callback do wgpu 28, `recover`, atlas e recursos recriados, frame igual byte a byte depois da perda forçada); item 3 integrado (diálogos de arquivo atrás de trait com falso, drop como evento do engine, o urnaui pelo engine, a página Files com `open_file` só de pessoa e `drop_files`); próximo: o item 2 (múltiplas janelas), depois 4 a 10 na ordem | merge da `task/76a-device-loss` | achado: o wgpu engole `DeviceLost` e o compositor marcava layers limpas sobre nada; wasm só sinaliza (request de device é promise) |
 | task-75 | accessibility de plataforma production-ready | trilha | 60 |
 | task-76 | integração de plataforma | trilha | independente; itens como capability: 58 |
 | task-77 | determinismo visual | trilha | 66 |
