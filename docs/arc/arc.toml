@@ -63,7 +63,7 @@ depends = ["text"]
 
 [modules.input]
 path = "crates/engine/src/input"
-role = "pointer state, hit regions, touch tracker + gesture recognizer, touch-to-pointer synth, scroll, dispatch"
+role = "pointer state, hit regions, touch tracker + gesture recognizer, touch-to-pointer synth, scroll, dispatch. InputState and its hit regions run only in engine::window::App and the builder; the shells that ship hand pointer events straight to their view (the showcase, as comps::WidgetEvent) or workbench (the ide), which hit-tests with the rects it draws (crates/showcase/src/app.rs, crates/ide/src/main.rs)"
 
 [modules.animation]
 path = "crates/engine/src/animation"
@@ -83,6 +83,20 @@ role = "reactive primitives (experimental: no new app code without an adr, see o
 path = "crates/engine/src/window"
 role = "App runner: event loop, render-on-demand, render passes, wasm canvas; draw_frame draws a built scene into any srgb view (resolve, text, images, layer passes, composite, submit) and present_frame is acquire + draw_frame + present, the shared path every app (showcase, ide, urnaui) goes through (adr headless-render-shares-the-frame-path)"
 depends = ["gpu", "compositor", "text", "input"]
+
+[modules.effects]
+path = "crates/engine/src/effects"
+role = "EffectProcessor: the blur, shadow and composite pipelines and the passes that run them over pooled textures. draw_frame uses its two-pass blur for backdrop-blur nodes and composites with no per-layer effect (&[]); only engine::window::App's own frame tail (window/render.rs) applies the per-layer blur and shadow"
+depends = ["gpu"]
+
+[modules.actions]
+path = "crates/engine/src/actions"
+role = "zed-style key bindings: Keystroke, KeyContext and ContextStack, the json Keymap and KeymapMatcher resolve a key to an action name, ActionRegistry builds the boxed Action. it knows nothing of sem: no binding names a capability; the ide sends the keys that act on one through its Workbench"
+
+[modules.accessibility]
+path = "crates/engine/src/accessibility"
+role = "behind the accessibility feature (on by default; task-60, adr accessibility-projects-the-semantic-snapshot): tree::build projects a sem Snapshot into an AccessKit tree placed by the compositor's bindings, NodeIds follow each SemId across frames, role maps sem roles, action::translate turns a screen reader's request into a sem Request with Actor::Assistive for the app's dispatcher, focus::next walks the snapshot's focus order (called only by a test today); Bridge (native only) attaches accesskit_winit to a hidden window, used by the showcase shell and engine::window::App"
+depends = ["compositor", "sem"]
 
 [modules.headless]
 path = "crates/engine/src/headless"
@@ -141,7 +155,7 @@ depends = ["engine", "rope", "sem"]
 [crates.showcase]
 path = "crates/showcase"
 role = "design-system gallery app: a sidebar tree of three groups (Foundations: theme, typography, icons, effects; Components: one page per comps widget, alphabetical, with placeholder slots for the widgets comps does not have yet and alias pages that share a neighbour's example while noting what their own still lacks; Apps Demo: the todo app, the message dock, the embedded editor, the ide git workspace, the builder tour); the table is view::pages::PAGES, one module per page under view/{foundations,components,apps}; the template of the official app pattern, framed by comps::shell::AppShell (full sidebar / rail / drawer by breakpoint, captioned groups that fold); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main"
-depends = ["engine", "comps", "sem"]
+depends = ["engine", "comps", "rope", "sem", "ide (desktop)", "git (desktop)", "wire (desktop)"]
 targets = ["desktop", "web", "android", "ios"]
 
 [crates.urnaui]
@@ -159,8 +173,8 @@ targets = ["desktop", "web"]
 
 [crates.ide]
 path = "crates/ide"
-role = "plev-native git client, a lib + bin: views (three columns: changes, stacks, diff, built from comps over engine::theme), adapters (git types -> view rows), session (GitSession: UiRequest <-> GitCommand/GitEvent, diff target, log/branch caches) and status (the file-status colors, the only app-owned tokens); the workspace takes a frame origin (set_frame) so a host can embed it, which the showcase Git tab does; main.rs is the winit shell. workbench (task-62, adr commit-checks-the-index-it-observed): one Workbench owns the WorkspaceView, the GitSession and a sem Dispatcher, projects the workspace (changes, changes.file[<path>], diff, commit.form, commit.message, commit.submit, stacks, notices) and runs every capability through the dispatcher for every actor; mutations leave for the git worker as Execution::Started and their receipts end at the point of truth (CommitIf checks the real index before git commit); refusals show as toasts, an agent's discard waits for a person in a modal; the ide binary and the showcase Git page hold the same Workbench"
-depends = ["git", "engine", "comps", "sem"]
+role = "plev-native git client, a lib and two bins: views (three columns: changes, stacks, diff, built from comps over engine::theme), adapters (git types -> view rows), session (GitSession: UiRequest <-> GitCommand/GitEvent, diff target, log/branch caches) and status (the file-status colors, the only app-owned tokens); the workspace takes a frame origin (set_frame) so a host can embed it, which the showcase Git tab does; main.rs is the winit shell (the ide bin). workbench (task-62, adr commit-checks-the-index-it-observed): one Workbench owns the WorkspaceView, the GitSession and a sem Dispatcher, projects the workspace (changes, changes.file[<path>], diff, commit.form, commit.message, commit.submit, stacks, notices) and runs every capability through the dispatcher for every actor; mutations leave for the git worker as Execution::Started and their receipts end at the point of truth (CommitIf checks the real index before git commit); refusals show as toasts, an agent's discard waits for a person in a modal; the ide binary and the showcase Git page hold the same Workbench, and no agent reaches either (the ide binary opens no port; the showcase's port serves only its todo page). ide-lab (src/bin/lab, unix only, task-62 phase c) is the laboratory of the experiment: a real repository in a temp dir, the Workbench with no window served through wire's AgentPort as app ide, rec's Recorder on the workbench's clock, a scripted person, arms plev, scripted, git and screenshot, a json report and the session file checked against git; crates/ide/tests/lab.rs runs it in the gate"
+depends = ["git", "engine", "comps", "sem", "wire (ide-lab only)", "rec (ide-lab only)"]
 
 [crates.rope]
 path = "crates/rope"
@@ -177,7 +191,7 @@ depends = ["sem", "monster", "engine"]
 
 [crates.wire]
 path = "crates/wire"
-role = "the agent surface (task-61, adr agents-act-through-the-semantic-contract): protocol v1 as json lines, every message with v 1, an id the client picks and a type; hello names the connection's actor (sem Actor::Agent), observe {scope, keys, since, bounds, source} answers a snapshot (the nodes in sem's lean serde form, without each node's source unless asked, the whole snapshot's revision) or a delta (sem Changes since a served revision), act {target, action, param, observed or from_revision} answers one stage message per receipt stage, confirm and decline are refused for agents, typed errors (bad_version, bad_message, unknown_revision, not_enabled); the messages, the codec, the Ring of the last N served whole snapshots (since rebuilds a delta, from_revision rebuilds the observed values with Request::observe, out of the ring is unknown_revision) and Server (the protocol against an app with no transport, reaching it only through Host: project, bounds, dispatch through its one dispatcher, add_sink; stages forwarded only to the connection that asked, later ones included; a value aimed at a secret node leaves as its length, an unknown node counts as secret) are pure and compile for wasm. unix only: AgentPort (off unless PLEV_AGENT=1 in a debug build, or the app calls open; $TMPDIR/plev/<app>-<pid>.sock, dir 0700, socket 0600, removed on drop; an accepting thread and a reader and a writer per connection only decode and queue, and wake the loop through the shell's closure; drain(host) serves on the app's thread; bounded queues, lines of at most 1 MiB, 16 connections, a client that does not read is cut off) and Client; the plev binary (plev observe [--scope --keys --since --bounds], plev act <target> <action> [--from-revision --param], --app by name or socket path, json lines out, exit 0 observed or completed, 1 rejected, 2 failed, 3 error). the showcase opens the port in its desktop shell beside the accessibility bridge, wakes on UserEvent::Agent and draws only when an act ran, and serves the active page through the hooks assistive technology uses (ShowcaseView::semantics, act, add_sink), bounds from the frame's bindings"
+role = "the agent surface (task-61, adr agents-act-through-the-semantic-contract): protocol v1 as json lines, every message with v 1, an id the client picks and a type; hello names the connection's actor (sem Actor::Agent), observe {scope, keys, since, bounds, source} answers a snapshot (the nodes in sem's lean serde form, without each node's source unless asked, the whole snapshot's revision) or a delta (sem Changes since a served revision), act {target, action, param, observed or from_revision} answers one stage message per receipt stage, confirm and decline are refused for agents, typed errors (bad_version, bad_message, unknown_revision, not_enabled); the messages, the codec, the Ring of the last N served whole snapshots (since rebuilds a delta, from_revision rebuilds the observed values with Request::observe, out of the ring is unknown_revision) and Server (the protocol against an app with no transport, reaching it only through Host: project, bounds, dispatch through its one dispatcher, add_sink, and observed, told of each observation served, empty by default, task-62 phase c; stages forwarded only to the connection that asked, later ones included; a value aimed at a secret node leaves as its length, an unknown node counts as secret) are pure and compile for wasm; Traffic counts what went through one port (connections, messages and bytes each way, snapshot and delta observations, acts, stages out, stale refusals, errors), read by the app through AgentPort::traffic. unix only: AgentPort (off unless PLEV_AGENT=1 in a debug build, or the app calls open; $TMPDIR/plev/<app>-<pid>.sock, dir 0700, socket 0600, removed on drop; an accepting thread and a reader and a writer per connection only decode and queue, and wake the loop through the shell's closure; drain(host) serves on the app's thread; bounded queues, lines of at most 1 MiB, 16 connections, a client that does not read is cut off) and Client; the plev binary (plev observe [--scope --keys --since --bounds], plev act <target> <action> [--from-revision --param], --app by name or socket path, json lines out, exit 0 observed or completed, 1 rejected, 2 failed, 3 error). the showcase opens the port in its desktop shell beside the accessibility bridge, wakes on UserEvent::Agent and draws only when an act ran, and serves the active page through the hooks assistive technology uses (ShowcaseView::semantics, act, add_sink), bounds from the frame's bindings. the ide-lab opens the port too, over the ide's Workbench, and is the one Host that implements observed (it records each observation)"
 depends = ["sem"]
 
 [crates.git]
@@ -238,6 +252,10 @@ comps = ["editor"]
 cli = ["lot2monsters", "svg2monster", "text_probe"]
 # examples of the other crates (`cargo run -p <crate> --example <name>`).
 sem = ["commit"]
+parser = ["transpile", "preview"]
+# crates/showcase/examples/measure: nine interactions through the frame
+# path, the per-stage cost tables of task-73 (see [modules.perf]).
+showcase = ["measure"]
 notes = [
   "text_probe is headless through engine::headless (the window's own frame path into a texture, no second pipeline); with showcase --render and monster_player --frame it is the tool behind docs/how-to/validate-visuals-by-pixel.md",
   "scene3d and snake-game were crates; they are demos and moved here (commit e6f7091). examples moved from the root into crates/engine/examples when the engine became its own crate",
@@ -336,8 +354,11 @@ event -> input state / app state mutation -> invalidate (request_redraw)
 -> build scene (per-frame regeneration, no retained diffing) -> compositor
 resolve (dirty layers only) -> text resolve (atlas) -> encode layer passes
 (quads, sdf, shadows, images, text, backdrop blur, in push order) ->
-composite pass to the srgb surface view -> present. unchanged layers cost
-zero gpu work.
+composite pass to the srgb surface view -> present. an unchanged layer is
+not redrawn, but every frame drawn composites every visible layer
+(task-73), and today some frames are drawn with nothing changed: the ide
+with its commit field focused or a toast up, the showcase on each wake of
+its git worker or accessibility bridge (task-82 phase b and its debts).
 '''
 
 targets = '''
@@ -388,10 +409,15 @@ sequenceDiagram
     participant P as surface (srgb view)
 
     E->>I: pointer / synthesized touch
-    I->>A: hit regions -> events drained
+    I->>A: events to the view, which hit-tests its own rects
+    %% hit regions and InputState run only in engine::window::App and the
+    %% builder; the showcase and the ide hand events straight to their view
     A->>A: mutate state
     A->>C: invalidate + request_redraw
     Note over A,C: render on demand: no change, no frame
+    %% exceptions today: the ide with its commit field focused or a toast up,
+    %% the showcase on each git worker or accessibility bridge wake (task-82
+    %% phase b and its debts), and every visible layer composited (task-73)
     A->>S: build scene nodes
     %% animation playback: crates/monster MonsterPlayer consumes the tick at A
     %% and hands S a lowered SceneNode scene (scene_at)

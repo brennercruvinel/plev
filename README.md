@@ -8,8 +8,12 @@ a scene is rebuilt every frame, the compositor resolves only the layers
 that changed, and everything lands on an srgb surface. glass, backdrop
 blur, analytic shadows, content-driven layout, real text shaping, HiDPI
 rasterization at native scale. render on demand: no change, no frame, and
-an unchanged layer costs zero GPU work. the apps consume the engine and
-nothing bypasses it.
+an unchanged layer is not redrawn, though every frame drawn still
+composites every visible layer (task-73). today the ide, alone or in the
+showcase Git page, still draws every frame while its commit field is
+focused or a toast is up, and the showcase draws one on each wake of its
+git worker or accessibility bridge (task-82 phase b and its debts). the
+apps consume the engine and nothing bypasses it.
 
 ## why this exists
 
@@ -52,7 +56,8 @@ cargo build --release --workspace
 cargo run -p showcase [page] [theme] [scroll]      # the design-system gallery, one page per component (title as the sidebar shows it, "Data Table")
 cargo run -p showcase -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png   # any page to png, no window
 cargo run -p showcase -- --render Todo --svg todo.svg --semantics todo.json   # the same frame as svg (each approximation reported on stderr) and the page's semantic projection as the json `plev observe` serves
-cargo run -p ide [path]                # plev-native git client
+cargo run -p ide --bin ide [path]      # plev-native git client
+cargo run -p ide --bin ide-lab -- --arm scripted   # the task-62 lab (unix): the ide's workbench with no window, on a temp repo, served to an agent through the port, recorded, checked against git
 cargo run -p prime                     # prime-coherence particle swarm
 cargo run -p engine --example snake    # any of the windowed demos
 cargo run -p comps --example editor    # the design-system editor demo
@@ -111,7 +116,7 @@ demos are the engine's (and comps') examples.
 
 | tier | where | what |
 |---|---|---|
-| engine | `crates/engine` | gpu, compositor, text, path, layout, input, animation, signal, theme (the tokens), graph, builder, window, platform |
+| engine | `crates/engine` | gpu, compositor, effects, text, path, layout, input, actions, animation, signal, theme (the tokens), graph, builder, window, headless, accessibility, perf, hot_reload, platform |
 | comps | `crates/comps` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/catalog.md](docs/catalog.md) |
 | crates | `crates/` | git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rec, rope, sem, showcase, svg, urnaui, wire |
 | examples | `crates/engine/examples/`, `crates/comps/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters and svg2monster clis |
@@ -136,7 +141,8 @@ as a click.
 
 two of the crates are pipelines: a foreign format in, our format out.
 
-`monster` is a binary animation format, magic `MON0`, frozen at v1.
+`monster` is a binary animation format, magic `MON0`, container version
+0 (the v0 spec), its golden fixtures frozen.
 keyframes are full snapshots so seek is O(1), between them only discovered
 deltas travel, and a node that does not change costs zero bytes. `lot`
 converts a lottie json into it once, `svg` imports a still through the
