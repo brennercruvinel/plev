@@ -199,7 +199,9 @@ quando as superfícies (seção 8) são disjuntas.
   (terceira rodada, 2026-09-24: sustentada; uma corrida parou para não
   passar por cima da pessoa, `task-62-ide-human-agent-proof.md`.)
   não bloqueiam a onda 6 (P2, seguem quando couber): um canal para o
-  agente perguntar à pessoa (handoff, achado da terceira rodada); task-64 fases b
+  agente perguntar à pessoa (handoff, achado da terceira rodada); o todo
+  projetar os itens como lista (a superfície gerada repete sobre eles,
+  achado da task-69); task-64 fases b
   (interface) e c (sessão para teste), task-65 fases b a d, task-91 (a
   âncora do `acted` no olhar), estado projetado fora do dispatcher no ide
   (seleção, digitação), cobertura semântica além do Todo e do ide. P3 no
