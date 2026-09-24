@@ -8,8 +8,12 @@
 //! cargo test -p engine --test blur_scale -- --ignored --nocapture --test-threads=1
 //! ```
 //!
-//! The test of scale 1 compares a frame of glass and shadows with the
-//! frame the engine drew before the blur followed the scale
+//! The tests hold what the fix of phase 1b promises: at the fractional
+//! scales the glass has the reach and the profile of 1x in logical px,
+//! and keeps the light of a detail thinner than a logical px wherever it
+//! falls on the grid. The test of scale 1 compares a frame of glass and
+//! shadows with the frame the engine drew before the blur followed the
+//! scale
 //! (`tests/fixtures/blur_at_scale_1.png`, recorded at `3a30113e`, the
 //! base of phase 1b, with `PLEV_RECORD_BLUR_FIXTURE=1`). Bytes depend on
 //! the GPU and its compiler, so the comparison runs on the adapter that
@@ -353,6 +357,53 @@ fn probe_the_blur_profile_against_1x() {
             let label = sigma.map_or("no glass".to_string(), |s| s.to_string());
             println!("| {label} | {scale} | {max:.1} | {mean:.2} |");
         }
+    }
+}
+
+#[test]
+fn a_backdrop_blur_has_the_profile_of_1x_at_the_fractional_scales() {
+    for sigma in SIGMAS {
+        let Some(one) = edge(sigma, 1.0).map(|f| middle_row(&f)) else {
+            return;
+        };
+        for scale in [1.25, 1.5] {
+            let Some(row) = edge(sigma, scale).map(|f| middle_row(&f)) else {
+                return;
+            };
+            let (r1, r) = (reach(&one, 1.0), reach(&row, scale));
+            assert!(
+                (r - r1).abs() <= 1.0,
+                "sigma {sigma} at {scale}x spreads {r} logical px, {r1} at 1x"
+            );
+            let (max, mean) = against_1x(&one, &row, scale);
+            assert!(
+                max <= 2.0,
+                "sigma {sigma} at {scale}x: {max} from 1x resampled (mean {mean})"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_line_thinner_than_a_logical_px_keeps_its_light_under_the_glass() {
+    for scale in [1.25f32, 1.5, 3.0] {
+        let mut peaks = Vec::new();
+        for phase in 0..scale.ceil() as u32 {
+            let Some(row) = line(8.0, scale, phase).map(|f| middle_row(&f)) else {
+                return;
+            };
+            let light = light(&row);
+            assert!(
+                (light - 1.0).abs() <= 0.02,
+                "{scale}x, phase {phase}: the line's light is {light} after the blur"
+            );
+            peaks.push(row.iter().max().copied().unwrap_or(0));
+        }
+        let (lo, hi) = (peaks.iter().min(), peaks.iter().max());
+        assert!(
+            hi.zip(lo).is_some_and(|(h, l)| h - l <= 1),
+            "{scale}x: the peak moves with the phase, {peaks:?}"
+        );
     }
 }
 
