@@ -188,15 +188,18 @@ quando as superfícies (seção 8) são disjuntas.
     (task-64 fase a);
   - [x] uma sessão real do `ide` com pessoa e agente, gravada pelo próprio
     ide e lida pelo inspector (task-63 fase d);
-  - [ ] do pixel à capacidade e ao código num controle (task-65 fase a);
+  - [x] do pixel à capacidade e ao código num controle (task-65 fase a);
   - [x] P1: o laboratório mede pelo valor visto e pelo valor vivo (task-88);
-  - [ ] P1: a conclusão do checkpoint a revista sob a regra da task-89. o
+  - [x] P1: a conclusão do checkpoint a revista sob a regra da task-89. o
     inspector mostrou que o acerto do A2 da primeira rodada dependeu da
     ordem dos eventos; uma rodada curta com agentes LLM no cenário
     `unstage-before-submit` confirma que H1 se sustenta e que agentes se
     recuperam de `not_observed` e de escrever e encadear.
 
-  não bloqueiam a onda 6 (P2, seguem quando couber): task-64 fases b
+  (terceira rodada, 2026-09-24: sustentada; uma corrida parou para não
+  passar por cima da pessoa, `task-62-ide-human-agent-proof.md`.)
+  não bloqueiam a onda 6 (P2, seguem quando couber): um canal para o
+  agente perguntar à pessoa (handoff, achado da terceira rodada); task-64 fases b
   (interface) e c (sessão para teste), task-65 fases b a d, task-91 (a
   âncora do `acted` no olhar), estado projetado fora do dispatcher no ide
   (seleção, digitação), cobertura semântica além do Todo e do ide. P3 no
@@ -334,6 +337,14 @@ decididas em 2026-09-23:
     a onda seguinte espera só os critérios essenciais da atual (seção 6),
     sem perfeição local.
 
+12. onda 5 fechada, onda 6 aberta (2026-09-24, decisão autônoma pela
+    regra de severidade): os seis critérios essenciais da seção 6 estão
+    satisfeitos. o que sobrou da onda 5 é P2 e P3 (64 fases b e c, 65 fases
+    c e d, task-91 em andamento). a task-68 abre com as decisões escritas
+    no arquivo dela: crate `uir`, vocabulário v1 do que existe no comps e no
+    engine, fixtures no domínio do ide e do todo, registro de capacidades
+    derivado do `Snapshot`.
+
 abertas:
 
 5. task-39 (memoização, pendente desde 2023) é absorvida pela task-73.
@@ -373,9 +384,10 @@ atualizado em cada integração.
 | task-64 | fase a integrada; b e c na fila | `e6560a2` | crate `inspect`, CLI `plev-inspect`: a cadeia causal de cada request pela gravação; achou o buraco da task-89; a fase b (UI) precisa gravar as ligações por frame no `rec` |
 | task-86 | integrada | `7f866e8` | o binário `ide` abre a porta do agente (`PLEV_AGENT=1`, debug) por `ide::agent`; prova numa janela real com cliques de uma pessoa e um agente ao mesmo tempo: recusa stale nomeando a pessoa, o mesmo texto na tela e no nó que o agente lê; `Binding::visible_rect` no engine |
 | task-90 | integrada | `d02b4d1` | o `acted` nomeia a cadeia de ações de outros atores desde a primeira que rodou na revisão que o autor viu; o toast em uma frase por ator; a cena do clique na janela continua sem âncora (a seleção muda a revisão fora do dispatcher), teste escreve o limite |
-| task-91 | na fila (P2) | | o dispatcher sabe quando o agente olhou: quem serve a observação avisa; o `acted` ancora no olhar; depois da 89 (`wire`) |
+| task-68 | em andamento (onda 6) | | crate `uir`: IR tipado em JSON, vocabulário fechado do comps, props só por token, ligação a estado e capacidades do app (registro derivado do `Snapshot`), `verify` como único construtor de `VerifiedIr`, erros por caminho, schema exportado |
+| task-91 | em andamento (P2, com um P1 dentro) | | o `acted` ancora no olhar (a marca do dispatcher quando a observação foi servida), nomeia também as ações do próprio autor desde o olhar (explica a recusa pela própria escrita), e o laboratório conta a forma de cada ato pelo `Traffic` (P1: o relatório errava a forma dos atos encadeados em revisão de estágio) |
 | task-89 | integrada | `79b8c93` | um ato com `from_revision` se apoia só no que foi mostrado ao ator (o nome do `hello`, em qualquer conexão): o valor de cada `read` vem da última observação que o mostrou; nunca mostrado dá `not_observed` (aditivo no v1, `plev` sai 3); reproduzido no laboratório: o submit depois de olhar só o formulário é recusado stale; adr an-act-rests-on-what-its-actor-was-shown |
-| task-65 | fases a e b em andamento | | pixel para código: cmd+clique (dev) num controle abre o site que o projetou (`Node.source`), num texto sem id abre o literal (hot reload com linha e coluna); c (gravar) e d (quem leu o token) depois |
+| task-65 | fases a e b integradas; c e d depois (P2) | `042d34e` | cmd+clique (debug desktop) no showcase: controle para o site de projeção (`Node.source`), texto para o literal (linha e coluna no baseline do hot reload); adr view-source-for-pixels |
 | task-88 | integrada (P1) | `96c20a0` | o laboratório mede pelo valor visto e pelo valor vivo, não pela revisão (hash de conteúdo colide); cenário `unstage-before-submit` (a pessoa entre a decisão e o submit) além do antigo; `--scripted chain`; recusas do protocolo no relatório; `lab.rs` dividido |
 | task-67 | integrada | `49e2822` | `regress check|bless`: significado, hash estável por layer e ligações, pixel só na região que mudou, nomeando o controle; 157 baselines em 0,6 s sem GPU; job de CI no macOS; adr regression-by-meaning-before-pixels |
 | auditoria de verdade | integrada | `7621403` | `docs/mission/state/truth.md`: contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |

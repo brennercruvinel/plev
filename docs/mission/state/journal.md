@@ -14,6 +14,53 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a onda 5 fecha, a onda 6 abre
+
+- **integrada:** task-65 fases a e b (`042d34e`), do pixel ao código.
+  gate verde (2261). ADR view-source-for-pixels aceito.
+- **publicado:** PR #60 (a correção do teste que deixou a main vermelha),
+  merge `f309ab4`. a guarda nova (colunas por `awk`) mergeou só com as
+  nove checagens verdes.
+- **onda 5 fechada:** os seis critérios essenciais satisfeitos. sobram P2
+  e P3, que seguem sem bloquear.
+- **onda 6 aberta: task-68 (plev IR e verifier).** a sonda nas premissas
+  achou dois componentes do vocabulário sem equivalente no comps
+  (`Media`/vídeo, `Toolbar`) e a revisão de silêncios da tese sem nenhuma
+  capacidade num app do plev.
+- **decisões autônomas:**
+  - o crate se chama `uir`;
+  - o vocabulário v1 só tem o que existe;
+  - as fixtures ficam no ide e no todo;
+  - o registro de capacidades é derivado da projeção;
+  - o domínio do checkpoint b (vídeo ou ide) se decide na task-69 e pode
+    ser pergunta para o brenner.
+
+### ciclo 2: a terceira rodada do checkpoint a e uma main vermelha
+
+- **experimento (P1, critério da onda 5):** quatro corridas com LLM sob a
+  regra da task-89. segurança sustentada nas quatro; tarefa feita em
+  três; o A2''b parou para não desfazer a ação da pessoa. resultado em
+  `task-62-ide-human-agent-proof.md`, "resultado da terceira rodada".
+- **decisão autônoma importante (para o brenner revisar):** o critério
+  escrito antes ("uma corrida que falhe a tarefa") disparou ao pé da
+  letra no A2''b. li como não sendo falha da hipótese central: o
+  contrato deu ao agente o que ele precisava, e ele escolheu não passar
+  por cima da pessoa. não parei. a lacuna (o agente não pode perguntar à
+  pessoa) virou P2 no programa.
+- **main vermelha no github:** o PR #59 (task-88) foi mergeado às 00:24
+  pela conta do github, não por um comando do orquestrador, com o teste
+  do macOS já falhando. o teste
+  `before_the_submit_the_person_makes_the_chained_submit_stale` supunha
+  que o `acted` nomeia a pessoa, mas a regra da task-90 só nomeia quando
+  nada mudou entre o olhar do agente e o ato dela. no CI um refresh do
+  git entrou no meio. correção no PR #60 (o teste diz "a pessoa ou
+  ninguém", com o motivo; a task-91 volta ao exato). o orquestrador
+  achou também que a própria guarda de merge nunca funcionou (learnings,
+  processo).
+- **publicado:** PR #58 (task-63 fase d), merge `f248dd1`; PR #59 (task-88).
+- **disco:** o gate da task-65 desceu a 6,1 GiB; o diretório ocioso da
+  63d foi limpo com `cargo clean` (15,6 GiB).
+
 ### ciclo 2: o laboratório mede pelo valor (task-88)
 
 - **integrada:** task-88 (`96c20a0`, P1). gate verde (2240). reproduzido:

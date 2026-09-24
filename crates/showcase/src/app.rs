@@ -97,16 +97,12 @@ pub struct App {
     /// requests go into its dispatcher (desktop; mobile is next).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     access: Access,
-}
-
-/// The window's outside actors (a screen reader, agents through the port)
-/// and how their threads wake the event loop.
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-#[derive(Default)]
-struct Access {
-    bridge: Option<engine::accessibility::Bridge>,
-    agent: Option<wire::AgentPort>,
-    proxy: Option<winit::event_loop::EventLoopProxy<UserEvent>>,
+    /// A cmd+click is taking the button until it is released (`source`).
+    #[cfg(all(
+        debug_assertions,
+        any(target_os = "macos", target_os = "linux", target_os = "windows")
+    ))]
+    source_click: bool,
 }
 
 impl App {
@@ -145,6 +141,11 @@ impl App {
             proxy: None,
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             access: Access::default(),
+            #[cfg(all(
+                debug_assertions,
+                any(target_os = "macos", target_os = "linux", target_os = "windows")
+            ))]
+            source_click: false,
         }
     }
 
@@ -207,6 +208,10 @@ impl ApplicationHandler<UserEvent> for App {
 
         #[allow(unused_mut)] // mut needed for cfg(not(wasm)) inner_size
         let mut attrs = WindowAttributes::default().with_title(TITLE);
+        #[cfg(target_os = "macos")]
+        {
+            attrs = background::window(attrs);
+        }
 
         // AccessKit attaches before the window is first shown.
         #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
@@ -390,6 +395,13 @@ impl ApplicationHandler<UserEvent> for App {
                 state,
                 ..
             } => {
+                #[cfg(all(
+                    debug_assertions,
+                    any(target_os = "macos", target_os = "linux", target_os = "windows")
+                ))]
+                if self.view_source(state) {
+                    return;
+                }
                 let (x, y) = self.cursor;
                 let ev = match state {
                     ElementState::Pressed => WidgetEvent::MouseDown { x, y },
@@ -484,7 +496,10 @@ impl Default for App {
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub fn run() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
-    let event_loop = EventLoop::<UserEvent>::with_user_event().build().unwrap();
+    let mut builder = EventLoop::<UserEvent>::with_user_event();
+    #[cfg(target_os = "macos")]
+    background::event_loop(&mut builder);
+    let event_loop = builder.build().unwrap();
     let mut app = App::new();
     let proxy = event_loop.create_proxy();
     app.access.proxy = Some(proxy.clone());
@@ -498,51 +513,6 @@ pub fn run() {
     event_loop.run_app(&mut app).unwrap();
 }
 
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-impl Access {
-    /// Creates the bridge for `window`, which is still hidden. Without a
-    /// bridge the window still opens, and the reason is logged.
-    fn attach(&mut self, event_loop: &ActiveEventLoop, window: &Window) {
-        let proxy = self.proxy.clone();
-        let wake = move || {
-            if let Some(proxy) = &proxy {
-                let _ = proxy.send_event(UserEvent::Access);
-            }
-        };
-        match engine::accessibility::Bridge::new(event_loop, window, TITLE, wake) {
-            Ok(bridge) => self.bridge = Some(bridge),
-            Err(e) => log::error!("accessibility: {e}"),
-        }
-    }
-
-    /// What the screen reader asked, on the main thread: a request goes
-    /// through the active page's dispatcher as `Actor::Assistive`, a focus
-    /// move to the page's focus.
-    fn carry_out(&mut self, view: &mut ShowcaseView) {
-        let Some(bridge) = self.bridge.as_mut() else {
-            return;
-        };
-        for assist in bridge.take() {
-            match assist {
-                engine::accessibility::Assist::Request(req) => {
-                    let asked = format!("{} {}", req.target, req.action);
-                    match view.act(req) {
-                        Some(receipt) => {
-                            log::debug!("accessibility: {asked}: {:?}", receipt.stage());
-                        }
-                        None => log::debug!("accessibility: no page takes {asked}"),
-                    }
-                }
-                engine::accessibility::Assist::Focus(id) => {
-                    if !view.assist_focus(&id) {
-                        log::debug!("accessibility: no page takes focus on {id}");
-                    }
-                }
-            }
-        }
-    }
-}
-
 /// `showcase --render`: one frame of a page without a window, as png, as
 /// svg with its report, and as the page's semantic projection.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
@@ -552,6 +522,24 @@ pub use headless::{RenderError, StagedPage, render_page, semantics_json, stage_p
 mod headless;
 
 mod pace;
+
+/// `PLEV_BACKGROUND=1`: the window comes up without taking the focus.
+#[cfg(target_os = "macos")]
+mod background;
+
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod access;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+use access::Access;
+
+/// cmd+click to the code: desktop debug builds, the terms on which the
+/// engine compiles `hot_reload` (its build.rs), so nothing of it exists in
+/// release, wasm or mobile.
+#[cfg(all(
+    debug_assertions,
+    any(target_os = "macos", target_os = "linux", target_os = "windows")
+))]
+mod source;
 
 /// Browser entry: GPU init is async, so hand the proxy to the app and let
 /// `spawn_app` keep the loop alive inside the browser's own event loop

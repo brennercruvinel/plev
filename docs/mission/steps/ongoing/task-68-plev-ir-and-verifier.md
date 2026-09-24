@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: in-progress
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-68
@@ -12,7 +12,47 @@ branch: task/68-plev-ir
 
 # task-68: plev IR e verifier
 
-## objetivo
+## decisões do orquestrador antes do briefing (2026-09-24)
+
+a onda 5 fechou com os critérios essenciais (programa, seção 6), e a
+onda 6 abre com esta task. a sonda nas premissas desta task achou:
+
+- **o nome do crate é `uir`**, como sugerido. é curto como os outros
+  (`sem`, `wire`, `rec`) e não confunde com `crates/parser/src/ir.rs`.
+- **o vocabulário v1 é o que existe no comps ou no engine**, conferido
+  no código:
+  - no comps: `Button`, `IconButton`, `TextField`, `Checkbox`, `Switch`,
+    `Slider`, `Select`, `Tabs`, `List` (`VirtualList`), `Table`, `Card`,
+    `Stat`, `Chart` (tipos linha, barra, área e rosca, de
+    `comps::charts`), `Separator`, `Dialog` (`Modal`), `EmptyState`,
+    `Progress` (`ProgressBar`), `Badge` e `Chip`;
+  - no engine: `Text` e `Image`.
+
+  `Media` (vídeo) e `Toolbar` não têm equivalente e ficam fora: uma barra
+  de ferramentas é um `Stack` de botões, e vídeo entra por ADR quando o
+  comps tiver o componente.
+- **as fixtures ficam no domínio que tem capacidades de verdade.** a
+  revisão de silêncios da tese depende de vídeo e de capacidades
+  (`detect_silence`, `apply_cut`) que nenhum app do plev tem, então sai
+  das fixtures desta task. as três fixtures são:
+  - o formulário de commit do ide, a tela fixa;
+  - uma superfície gerada no ide, "revisar o que vai no commit": a lista
+    de arquivos com stage e unstage, a mensagem e o commit, sobre as
+    capacidades que o `Workbench` projeta;
+  - uma superfície do todo do showcase.
+
+  o domínio do checkpoint b (vídeo ou ide) se decide na task-69; se
+  houver trade-off estratégico, é pergunta para o brenner.
+- **o registro de capacidades sai da projeção.** o `sem::Snapshot` de um
+  app já declara estado (`StateRef`, `ValueKind`) e ações (`ActionDecl`
+  com `ParamSpec` e `Policy`). o registro se constrói dele e não é uma
+  segunda declaração à mão, que envelheceria.
+- **repetição ligada a lista:** a forma mínima que a sonda pede é um nó
+  que repete um molde para cada item de um `List`/`Set` do estado, com o
+  `SemId` do molde levando o item (`changes.file[{item}]`). se precisar de
+  mais que isso, o agente para e reporta, como a task já diz.
+
+
 
 uma representação intermediária própria, tipada e verificável, que
 descreve uma superfície de interface com significado (identidade, role,

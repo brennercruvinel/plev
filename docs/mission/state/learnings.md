@@ -12,6 +12,26 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, checkpoint a, terceira rodada (a regra da task-89)
+
+- **a segurança se sustentou com a regra nova:** quatro corridas com
+  agentes LLM, nenhum commit errado, nenhuma recusa do protocolo, todo ato
+  com `--from-revision`. com a pessoa agindo entre a decisão e o submit, a
+  recusa veio antes do efeito e nomeou a pessoa nas duas corridas.
+- **um agente escolheu não passar por cima da pessoa:** com a recusa e o
+  aviso dizendo que a pessoa tirou o arquivo, um agente recolocou o
+  arquivo e commitou; o outro parou e explicou por quê. o contrato deu a
+  informação para os dois; o que falta é o agente poder perguntar à
+  pessoa. é o primeiro sinal concreto de handoff, e a lacuna é de
+  capacidade, não de segurança.
+- **a recusa pela própria escrita confunde:** o agente que encadeou
+  depois de escrever foi recusado, se recuperou, mas explicou a causa
+  errado. a regra está certa; a recusa não diz que a mudança foi dele.
+- **os agentes não economizaram:** mesmo com o estágio trazendo a
+  revisão, eles observam antes de decidir, e o controle gastou mais bytes
+  que na segunda rodada. o ganho da task-87 aparece no roteirizado, não
+  num agente LLM que prefere olhar.
+
 ### 2026-09-23, task-88 (sonda)
 
 - **com a regra da task-89, escrever e encadear exige olhar:** um agente
@@ -261,6 +281,16 @@ c"; saídas em `target/agents/exp/`.
 ## processo
 
 ### 2026-09-23
+
+- **a guarda de merge nunca guardou:** o orquestrador decidia o merge
+  com `if ! grep -qv pass`, e o `grep` desta shell é uma função de
+  snapshot que devolveu 1 com uma linha `fail` no arquivo. todo PR até o
+  #58 estava verde, então nada entrou vermelho por isso. o PR #59 entrou
+  vermelho por outro caminho (merge feito na conta do github às 00:24, com
+  o teste do macOS já falhando), e a guarda também não teria segurado.
+  regra: a decisão de merge lê as colunas com `awk -F'\t' '$2!="pass"'` e
+  só mergeia com zero linhas; e o teste que falhou era de tempo (task-91),
+  corrigido em seguida (PR #60).
 
 - **não roubar o foco dá mais trabalho do que parece no macOS:** só
   não ativar o app não segurou o foco quando o app da frente era o que

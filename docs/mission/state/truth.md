@@ -129,6 +129,15 @@ o da base até ser reescrito.
   `--scripted observe|chain`. `refused.rs` conta as recusas do protocolo;
   `finish.rs` fecha a corrida. `lab.rs` saiu da lista congelada.
 
+- `042d34e` (task-65 fases a e b): `engine::hot_reload::view_source`
+  (`origin_at`, `text_at`, `open`, `editor_command`) sob o cfg
+  `hot_reload`; o baseline de literais tem linha e coluna
+  (`proc-macro2/span-locations` só pela feature `hot-reload`) e ignora
+  literais de teste e doc; o showcase tem o atalho em
+  `crates/showcase/src/app/source.rs` (gate por `debug_assertions` e
+  desktop), `Access` em `app/access.rs` e a janela em segundo plano em
+  `app/background.rs`. `Compositor::hit` tem o primeiro uso de produção.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

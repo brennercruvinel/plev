@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- a pixel leads to the code that made it (2026-09-24, task-65 phases a
+  and b, adr view-source-for-pixels): in a desktop debug build, cmd+click
+  on a control of the showcase opens the line that projected that
+  capability (`Node.source`), and cmd+click on a text with no control
+  opens the string literal that holds it (the hot reload baseline now
+  knows each literal's line and column). several literals are listed,
+  never guessed; a formatted text says so. the editor is `$PLEV_EDITOR`,
+  else zed, else `code -g`. `PLEV_BACKGROUND=1` opens the showcase window
+  without taking the focus on macOS. none of it exists in release, wasm
+  or mobile.
+
 - the laboratory measures what the agent rested on (2026-09-24,
   task-88): the stale measurement of `ide-lab` found the act by its
   revision, and a revision is a hash of what the app shows, so a world put
