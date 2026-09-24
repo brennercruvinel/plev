@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-24
 domain: experiment
 task: task-88
@@ -421,3 +421,29 @@ pessoa, e uma sem pessoa por modo como referência. as 22 saíram exit 0.
 - `5742826` as recusas do protocolo no relatório
 - `ce6bc15` os testes das combinações e a nota na task-62
 - este: o handoff
+
+## fechamento (orquestrador, 2026-09-24)
+
+integrada na `main` em `96c20a0` (oito commits, rebaseados sobre
+`67bf96d`, a task-63 fase d, sem conflito). severidade: P1, porque a
+medição de antes dava falso válido.
+
+a sonda parou o trabalho antes de qualquer correção e mudou três
+decisões do briefing (journal, ciclo 2): o gatilho da pessoa virou um
+cenário novo, `unstage-before-submit`; a medição passou a ser pelo valor
+visto e pelo valor vivo; e o modo `chain` do roteirizado ficou como
+sonda permanente.
+
+validação do orquestrador:
+- diff lido commit a commit (`finish.rs`, `refused.rs`, a medição em
+  `story.rs`, o gatilho em `host.rs`, o modo em `scripted.rs`);
+- `lab.rs` com 336 linhas e fora do `FROZEN`;
+- gate verde no diretório da task: 2240 passaram, 0 falharam, 12
+  ignorados, com a perna urnaui;
+- reprodução do orquestrador: `--scripted observe` e `--scripted chain`
+  com `--human unstage-before-submit:src/session.rs`, exit 0, MATCH e
+  medição válida nos dois, com o valor visto (três arquivos) e o vivo
+  (dois) no texto.
+
+critério essencial da onda 5 satisfeito: o laboratório mede pelo valor.
+o próximo é a rodada curta com LLM (P1), no protocolo do handoff acima.

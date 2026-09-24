@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 2: o laboratório mede pelo valor (task-88)
+
+- **integrada:** task-88 (`96c20a0`, P1). gate verde (2240). reproduzido:
+  os dois agentes do roteiro (observa, encadeia) com a pessoa antes do
+  submit dão medição válida com o valor visto e o vivo.
+- **publicado:** PR #58 (task-63 fase d), CI rodando.
+- **próximo P1:** a rodada curta com agentes LLM que revê a conclusão do
+  checkpoint a sob a regra da task-89 (cenário `unstage-before-submit`,
+  protocolo no handoff da 88). depois dela, a onda 5 fica só com a 65
+  fase a, que está rodando.
+
 ### ciclo 2: o ide grava a própria sessão (task-63 fase d)
 
 - **integrada:** task-63 fase d (`8e6e814`). gate verde (2231). o

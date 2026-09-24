@@ -9,6 +9,18 @@ status: living
 
 ## unreleased
 
+- the laboratory measures what the agent rested on (2026-09-24,
+  task-88): the stale measurement of `ide-lab` found the act by its
+  revision, and a revision is a hash of what the app shows, so a world put
+  back as it was counted as the old one (a false "valid"). now a run is
+  valid when a submit after the person's act carried the staged files of
+  before it while the app held others. a new scenario,
+  `--human unstage-before-submit:<path>`, has the person act between the
+  agent's decision and its submit, as the git arm's hook does; the old one
+  stays for comparison. `--scripted chain` is an agent that chains on
+  stage revisions without observing; the report counts the protocol's
+  refusals (`not_observed`, `unknown_revision`).
+
 - the ide records its own session, and a frame says where each control
   shows (2026-09-23, task-63 phase d): with `PLEV_RECORD=1` in a debug
   build the ide keeps a flight recorder on the workbench's clock (every
