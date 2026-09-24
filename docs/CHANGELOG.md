@@ -9,6 +9,15 @@ status: living
 
 ## unreleased
 
+- the ide never shows a status older than what it already did
+  (2026-09-23, task-84): a refresh read before a stage, an unstage, a
+  discard or an ignore used to land over it, and for a moment
+  `changes:staged` said a file was out of the index when it was in, or
+  the reverse. the session now drops a read asked before a mutation the
+  view already shows; the refresh the mutation's answer sends replaces
+  it. the scripted agent of the ide laboratory no longer waits for the
+  index to hold still: without that wait, on the old code, all ten runs
+  with a person's intervention went wrong.
 - a caret at rest costs two frames a second, not sixty (2026-09-23,
   task-82, adr a-tick-asks-for-a-deadline): text widgets answer their tick
   with a `Wake` (a frame now, and when the next is due) instead of "keep

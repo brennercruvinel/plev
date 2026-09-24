@@ -8,6 +8,23 @@ tags: [truth, audit, sem, wire, rec, ide, git, engine, comps, showcase]
 
 # o que o código da main faz agora
 
+## 0. mudanças desde a base
+
+integrações que mudaram algo descrito abaixo; o texto das seções continua
+o da base até ser reescrito.
+
+- `c07a7f0`: `ShapedGlyph`, `shaped_glyphs` e o import de `CacheKey` em
+  `crates/engine/src/text/system.rs` passam a ser só nativos, como o
+  export svg; `script/gate` roda as pernas wasm (showcase e urnaui) com
+  `-D warnings`, como o CI.
+- `4896451` (task-84): a corrida da seção 4a está corrigida. a sessão
+  conta as leituras pedidas (`Reads`, `crates/ide/src/session.rs`) e
+  descarta uma leitura feita antes de uma mutação que a view já mostra;
+  testes em `crates/ide/tests/human_agent.rs` (o primeiro item da seção
+  6.6 deixa de valer); o roteirizado do laboratório não espera mais o
+  index parar. `GitSession::refresh`, `send` e `Workbench::refresh` pedem
+  `&mut self`.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

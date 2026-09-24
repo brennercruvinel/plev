@@ -121,7 +121,14 @@ naming who asks for what; its confirm calls `Dispatcher::confirm` as
   gives; a later decision can take that trade.
 - the correlation of answers to requests relies on one worker answering
   in order. a pool of workers, or reordering, would need an opaque tag
-  echoed by `GitCommand` and `GitEvent`.
+  echoed by `GitCommand` and `GitEvent`. the reads rely on the same order
+  (task-84): the session counts the status, log and branches reads it
+  asked for, and a read asked before a mutation the view already shows is
+  dropped when it arrives, since the refresh that mutation's answer sends
+  is queued after it (`crates/ide/src/session.rs`, `Reads`). without it a
+  status read before a stage landed over the stage and the projection
+  showed, for a moment, a state that was neither git's nor the one the
+  ide had accepted.
 - `sem` has no way to decline or expire a request awaiting confirmation:
   when the person closes the modal without confirming, the receipt stays
   awaiting and the workbench stops asking and says so.

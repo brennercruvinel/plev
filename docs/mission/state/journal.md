@@ -14,6 +14,24 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 1: task-84 integrada, verdade reconstruída
+
+- **integrada:** task-84 (`4896451`), a corrida do `Refresh`. gate verde
+  (2073 passaram), laboratório reproduzido pelo orquestrador (seis
+  corridas certas).
+- **integrada:** a auditoria de verdade (`7621403`),
+  `docs/mission/state/truth.md`. achados que mudam o plano: o binário
+  `ide` não abre a porta do agente (o checkpoint a rodou só no
+  `ide-lab`); digitar não passa pelo dispatcher; 32 divergências entre
+  docs e código.
+- **publicado:** PR #45 (os 28 commits atrasados, com a correção do
+  wasm), merge commit `1ecc84c`.
+- **disparada:** task-85 (o commit que o receipt anuncia já está na
+  projeção, com `files`), no lugar que a 84 liberou.
+- **decisão autônoma:** as 32 divergências se corrigem antes de planejar
+  a partir dos docs; um agente de docs, sem build, com `truth.md` como
+  fonte; o orquestrador corrige o programa.
+
 ### ciclo 1: CI do PR #45 pegou um defeito que o gate deixou passar
 
 - o PR #45 (os 28 commits que não estavam no GitHub) falhou nos jobs wasm

@@ -1,12 +1,13 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: ide
 task: task-84
 depends: [task-62]
 branch: task/84-refresh-order
+integrated: 4896451
 origin: agente roteirizado do checkpoint a (task-62 fase c)
 ---
 
@@ -253,3 +254,33 @@ commits:
 - `1a4594b` task-84: the scripted agent stops waiting for the index to
   hold still
 - o commit desta seção: doc, mecanismo e handoff
+
+## fechamento (orquestrador, 2026-09-23)
+
+integrada na `main` em `4896451` (quatro commits, rebaseados sobre a
+`main` sem conflito; a `main` tinha andado só em docs e na correção do
+wasm `c07a7f0`). validação do orquestrador:
+
+- diff inteiro lido, commit por commit. o `Reads`/`Owed` da sessão está
+  certo pela ordem FIFO do worker: as respostas `stale` são exatamente as
+  mais antigas das devidas; toda mutação termina num refresh posterior,
+  então descartar nunca deixa a view sem a leitura seguinte. o `match` de
+  `Reads::sent` não tem curinga: comando novo obriga a decidir.
+- os testes de `crates/ide/tests/human_agent.rs` dirigem a ordem pelos
+  eventos do worker real (`Rig::until`), sem sleep.
+- gate verde no diretório da task sobre a base rebaseada: 2073 passaram,
+  0 falharam, 7 ignorados, agora com a perna urnaui rodando no worktree
+  (symlink `.claude/worktrees/urna`; antes ela pulava em todo worktree) e
+  as pernas wasm com `-D warnings` como o CI.
+- reproduzido pelo orquestrador: `ide-lab --arm scripted`, três corridas
+  sem intervenção (exit 0, zero recusas, MATCH) e três com
+  `unstage-after-observe:src/session.rs` (exit 0, uma recusa stale,
+  recuperação, MATCH).
+- o ADR commit-checks-the-index-it-observed ganhou a consequência das
+  leituras na ordem do worker.
+
+achados do agente que viraram trabalho: o receipt do commit conclui antes
+de a projeção mostrar o commit (entrou na task-85, junto com `files` no nó
+do commit); o diff mostrado nunca é relido depois de um commit ou de uma
+edição de fora (registrado em `state/truth.md`, limite, sem task: não é
+corrida de ordem e nenhum agente dependeu dele).

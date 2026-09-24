@@ -200,10 +200,10 @@ interna. mudança em qualquer um deles passa pelo orquestrador.
 |---|---|---|---|
 | `SemId`, `Role`, `Value`, `StateRef`, `Node`, `ActionDecl`, `Policy`, `Constraints`, `Snapshot`, `Revision`, `SnapshotBuilder`, `Semantics`, `Change` (diff) | 57 | 58 a 71, 73 | `crates/sem` |
 | `Actor`, `Request`, `Observation`, `Verdict`, `Rejection`, `Receipt`, `Stage`, `Outcome`, `check`, `Operable`, `Dispatcher` | 58 | 59, 60, 61, 62, 63, 68, 69, 70 | `crates/sem` |
-| ligação por frame `SemId -> (ViewId, bounds, layer, clip)` e o caminho único de dispatch em comps e apps | 59 | 60, 61, 62, 65, 67, 69 | `crates/engine` (compositor e input), `crates/comps` |
+| ligação por frame `SemId -> Binding { rect, layer, clip, order, view }` (`view` ainda sempre `None`) e o caminho único de dispatch em comps e apps | 59 | 60, 61, 62, 65, 67, 69 | `crates/engine/src/compositor/binding.rs`, `crates/comps` |
 | projeção AccessKit a partir de `Snapshot` + ligação | 60 | 75, 74 | `crates/engine/src/accessibility` |
-| protocolo de observação e ação (versionado) | 61 | 62, 79, 80 | crate novo (nome na task) |
-| formato de sessão e API de gravação | 63 | 64, 70, 80 | `crates/monster` (perfil de sessão) ou crate irmão, decidido em ADR |
+| protocolo de observação e ação (v1) | 61, 57b, 83 | 62, 79, 80 | `crates/wire` (`proto.rs`, `server.rs`, binário `plev`) |
+| formato de sessão e API de gravação | 63 | 64, 70, 80 | `crates/rec` (arquivo `MONS`, `Recorder`, `Session`; adr session-recording-replay-not-reexecution) |
 | API de render headless | 66 | 64, 67, 77, 78, 79 | `crates/engine` |
 | plev IR + `VerifiedIr` + registro de capabilities | 68 | 69, 70, 71 | crate novo (nome na task) |
 | host de superfícies materializadas | 69 | 70, 80 | `crates/comps` ou crate novo, decidido em ADR |
@@ -217,7 +217,11 @@ interna. mudança em qualquer um deles passa pelo orquestrador.
 | `crates/comps` (declaração semântica dos widgets) | 59 | 69 consome, não altera sem aprovação |
 | `crates/engine/src/accessibility`, `crates/engine/src/window/{mod,render,lifecycle}.rs` | 60 | o caminho antigo derivado de hit region é substituído, não mantido em paralelo |
 | `crates/ide`, `crates/git` | 62 | 60 só liga o ide depois da integração da 62 |
-| `crates/monster/src/container.rs` e formato | 63 | 72 espera; o golden v1 (`fixtures/golden_v0_minimal.monster`) não muda |
+| `crates/monster/src/container.rs` e formato | livre (a 63 escolheu o formato irmão em `crates/rec` e nunca tocou este arquivo) | 72 pode abrir; o golden (`fixtures/golden_v0_minimal.monster`, versão 0 do container) não muda |
+| `crates/wire` | orquestrador (83 agora) | protocolo v1; mudança de forma passa pelo orquestrador e vai para ADR |
+| `crates/rec` | 63 fase d, depois 64 | uma task por vez; o formato `MONS` só muda com ADR |
+| `crates/showcase/src/app.rs` (o shell) | uma task por vez (63 fase d, 65, 75 disputam) | o orquestrador sequencia; já foi tocado por 60, 61, 66b, 82 |
+| `crates/ide/src/main.rs`, `crates/ide/src/views/**` | uma task por vez (82 fase b, porta do agente no ide, 75) | o orquestrador sequencia |
 | `crates/engine/src/hot_reload` | 65 | só `#[cfg(hot_reload)]` |
 | `crates/engine/src/theme` | ninguém sem aprovação | tocado por 65 (leitura de token) só depois de proposta aprovada |
 | `crates/engine/src/text` | 74 | 66 toca só `probe.rs` e o novo módulo headless |
@@ -325,5 +329,6 @@ atualizado em cada integração.
 | task-82 | fase a integrada; fase b (ide, urnaui) pendente | `d97a375` | `comps::Wake` e `Blink`, `AnimationTick::since_last`, shell do showcase em `WaitUntil`: campo focado e parado de 120 para 4 turnos desenhados em 120; ADR a-tick-asks-for-a-deadline |
 | task-66b | integrada | `efc87b6` | `engine::headless::svg` com relatório de aproximação por nó, `TextSystem::shaped_glyphs` (um shaping só), `showcase --render --svg/--svg-report/--semantics/--source`; imagens ficam para depois da retenção de pixels (63d); ADR svg-export-reads-the-scene |
 | task-83 | em andamento | | delta com o nó (`Change::NodeAdded` com o nó), recusa stale com as ações de outros atores (`acted`), regra de stale escrita no `plev`; origem: checkpoint a |
-| task-84 | em andamento | | a view do ide nunca volta para um status do git lido antes de uma mutação já mandada; origem: agente roteirizado do checkpoint a |
-| task-85 | na fila, depois da 84 | | `files` como estado do nó `stacks.commit[sha]` (git + projeção do ide) |
+| task-84 | integrada | `4896451` | a sessão do ide descarta leitura do git feita antes de uma mutação que a view já mostra; teste que falhava 10 de 10 na base; o roteirizado não espera mais o index parar (sem essa espera, na base, as dez corridas com intervenção davam errado) |
+| task-85 | em andamento | | o commit que o receipt anuncia já está na projeção quando o receipt conclui, e todo `stacks.commit[sha]` tem `files` |
+| auditoria de verdade | integrada | `7621403` | `docs/mission/state/truth.md`: contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |
