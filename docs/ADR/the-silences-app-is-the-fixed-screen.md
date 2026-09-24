@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [showcase, silences, ffmpeg, worker, dispatcher, fixed-screen, checkpoint-b, generative-runtime]
 date: 2026-09-24
 ---
