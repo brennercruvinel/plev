@@ -23,15 +23,21 @@
 
 use std::sync::mpsc::{Receiver, TryRecvError};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use std::time::Instant;
 
+use comps::prelude::Wake;
 use engine::platform::print::{Destination, Printer};
 use engine::window::Background;
 use sem::{Policy, RequestId, Role, SnapshotBuilder, Value};
 
 use super::super::super::ShowcaseView;
 use super::{Ids, PERSON_ONLY};
+
+/// How often the loop looks at a thread's channel while one is out:
+/// nothing else wakes it when the thread answers (the Surface's `POLL`).
+const POLL: Duration = Duration::from_millis(100);
 
 /// The printer, shared with the job's thread.
 type Shared = Arc<Mutex<Box<dyn Printer + Send>>>;
@@ -136,11 +142,10 @@ impl Printing {
 
     /// The one line an agent reads (`shell:print`).
     pub fn summary(&self) -> String {
-        if let Some(id) = self.held {
-            let _ = id;
-            if let Some(destination) = self.destination() {
-                return format!("printing on {destination}");
-            }
+        if self.held.is_some()
+            && let Some(destination) = self.destination()
+        {
+            return format!("printing on {destination}");
         }
         if let Some(running) = self.running.as_ref().filter(|r| r.id.is_some()) {
             return format!("printing on {}", running.destination);
@@ -239,6 +244,19 @@ impl ShowcaseView {
         #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
         {
             self.end_print(id, Err("printing needs the desktop".to_owned()));
+        }
+    }
+
+    /// While a thread is out (the look for destinations, a job) or a job
+    /// waits for the wake, a look at the channel every `POLL`: the answer
+    /// is read by `settle_print` on the catch-up the deadline brings, not
+    /// on whatever input comes next.
+    pub fn print_wake(&self) -> Wake {
+        let printing = &self.panes.shell.print;
+        if printing.running.is_some() || printing.held.is_some() {
+            Wake::after(POLL)
+        } else {
+            Wake::idle()
         }
     }
 

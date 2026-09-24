@@ -131,6 +131,26 @@ mod tests {
         assert_eq!(Shortcut::parse(PRINT_KEYS).unwrap().to_string(), PRINT_KEYS);
     }
 
+    /// While the look for destinations or a job is out, the frame's wake
+    /// asks for a look at the channel, so the answer lands on the
+    /// catch-up a deadline brings and not on whatever input comes next;
+    /// once it answered the print asks nothing.
+    #[test]
+    fn a_print_thread_out_keeps_a_deadline_until_it_answers() {
+        let (mut app, _menu) = app("Todo");
+        assert_eq!(app.view.print_wake().next, None, "no printer, nothing out");
+        app.view
+            .set_printer(Box::new(FakePrinter::new().destination("Office", true)));
+        assert!(app.view.print_wake().next.is_some(), "the look is out");
+        assert!(app.frame_wake(0.0).next.is_some(), "the frame carries it");
+        assert!(settled(&mut app), "the destinations land");
+        assert_eq!(app.view.print_wake().next, None, "the look answered");
+        assert!(app.view.request_print(), "a job starts");
+        assert!(app.view.print_wake().next.is_some(), "the job is out");
+        assert!(settled(&mut app), "the job answers");
+        assert_eq!(app.view.print_wake().next, None, "the job answered");
+    }
+
     /// Without a destination the item is in the bar, disabled, with its
     /// keys; the keys ask and are refused as the disabled button is, and
     /// the projection says why. A printer with a destination, looked for
