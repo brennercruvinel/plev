@@ -14,6 +14,14 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 2: task-89 integrada, o buraco do inspector fechado
+
+- **integrada:** task-89 (`79b8c93`). gate verde (2218). reproduzido no
+  laboratório com o `plev`: nome que nunca olhou sai `not_observed`; o
+  cenário do A2 é recusado stale, com o arquivo que a pessoa tirou; o
+  roteirizado deu MATCH com e sem a pessoa.
+- a 88 (laboratório) pode começar: a 89 não mexeu no roteirizado.
+
 ### ciclo 2: a task-90 parou com uma premissa errada do briefing
 
 - o agente da 90 sondou a cena pelo clique real antes de implementar: a

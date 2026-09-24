@@ -12,6 +12,22 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, task-89
+
+- **o furo fechou e ficou reproduzível:** no laboratório, olhar
+  `changes` (três arquivos), a pessoa tirar um, olhar só o formulário e
+  submeter agora é recusado stale, com o arquivo que saiu. antes, o
+  commit saía com dois arquivos e o agente achava que eram três.
+- **a identidade do agente é o nome, não a conexão:** "o que foi mostrado
+  àquela conexão" recusaria todo agente pelo cli, que abre uma conexão
+  por comando. o nome do `hello` já era a identidade dos receipts e do
+  `acted`, e virou também a do que foi mostrado. o custo é que dois
+  processos com o mesmo nome contam como um agente só.
+- **`keys` também corta o que foi mostrado:** um agente que observa com
+  `--keys staged` não viu o `unstaged` que o `stage` lê, e o ato sai
+  `not_observed`. as `reads` de cada ação estão na observação, então o
+  agente sabe o que precisa ver.
+
 ### 2026-09-23, task-90 (sonda)
 
 - **estado projetado que muda fora do dispatcher:** no ide, a seleção

@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: agent-surface
 task: task-89
@@ -239,3 +239,42 @@ são as mensagens da task-87 (12 e 17).
 - `a125a06` docs: doc do `Act`, `plev act --help`, ADR novo e correções
   datadas no ADR do agent port
 - este: o handoff
+
+## fechamento (orquestrador, 2026-09-23)
+
+integrada na `main` em `79b8c93` (seis commits sobre `1f16133`).
+
+o agente parou uma vez, antes de implementar. a regra "por conexão" do
+briefing fechava o furo e também recusava todo `plev act
+--from-revision`, porque cada `plev` abre uma conexão nova. decisão do
+orquestrador: por ator, com o nome do `hello` (journal, ciclo 2).
+
+validação do orquestrador:
+- diff inteiro lido commit a commit (`shown.rs`, `server.rs::rest`, o
+  registro no `observe` e no `forward`, o erro, os docs);
+- gate verde no diretório da task: 2218 passaram, 0 falharam, 12
+  ignorados, com a perna urnaui (a main tinha 2202; 16 testes novos).
+
+reprodução do orquestrador no laboratório (`ide-lab --arm plev`, a
+pessoa tirando `src/session.rs` logo depois de uma observação), com o
+`plev` desta branch:
+- um nome que nunca observou: `plev act commit.submit submit --name
+  fresh` sai 3 com `not_observed` e as reads `changes:staged` e
+  `commit.message:text`;
+- o cenário do A2: o agente observa `changes` e vê os três arquivos, a
+  pessoa tira um, o agente observa só `commit.form` e submete com a
+  revisão nova. o request leva `changes:staged` com os três, que é o que
+  ele viu, e é recusado stale com `removed: ["src/session.rs"]`. antes
+  desta task, o valor saía da revisão inteira (dois arquivos) e o commit
+  saía com dois;
+- de quebra, uma observação com `--keys staged,files` não mostra o
+  `unstaged` que o `stage` lê, e o stage saiu `not_observed`. a regra
+  vale também para `keys`.
+
+o roteirizado: `--arm scripted` sem e com a pessoa, exit 0 e MATCH nos
+dois.
+
+fica para a task-91: nessa cena o `acted` sai vazio. a recusa usa a
+revisão `r` do ato (a do formulário, depois do unstage) e não a da
+observação de onde veio o valor. o agente propôs `Shown::values`
+devolver a revisão de onde saiu cada `read`, que é a âncora da task-91.
