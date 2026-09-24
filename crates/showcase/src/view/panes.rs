@@ -3,7 +3,7 @@
 
 use engine::theme::Theme;
 
-use super::apps::{app, builder, dock, editor, files, git, silences, surface_page};
+use super::apps::{app, builder, capture, dock, editor, files, git, silences, surface_page};
 use super::components::{
     avatar, badge, breadcrumb, button, card, chart, checkbox, chip, code_block, context_menu,
     dialog, empty, graph, icon_button, input, navigation_menu, panel, panel_header, progress,
@@ -63,6 +63,10 @@ pub struct Panes {
     /// The file dialog and the file drop as capabilities; it dispatches
     /// through `todo`'s dispatcher too.
     pub files: files::FilesPage,
+    /// The camera and the microphone as capabilities; it dispatches
+    /// through `todo`'s dispatcher too, and holds no device until the
+    /// shell gives it the platform's (`ShowcaseView::set_capture`).
+    pub capture: capture::CapturePage,
     pub dock: dock::DockPage,
     pub editor: editor::EditorPage,
     pub git: git::GitPage,
@@ -125,6 +129,7 @@ impl Panes {
             surface,
             silences: silences::SilencesPage::new(),
             files: files::FilesPage::new(),
+            capture: capture::CapturePage::new(theme),
             dock: dock::DockPage::new(),
             editor: editor::EditorPage::new(theme),
             git: git::GitPage::new(),

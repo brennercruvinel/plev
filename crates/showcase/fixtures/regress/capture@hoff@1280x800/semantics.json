@@ -1,0 +1,113 @@
+{
+  "nodes": [
+    {
+      "id": "capture",
+      "role": "region",
+      "label": "capture",
+      "state": {
+        "camera": {
+          "kind": "text",
+          "value": "off"
+        },
+        "microphone": {
+          "kind": "text",
+          "value": "off"
+        }
+      }
+    },
+    {
+      "id": "capture.camera",
+      "role": "toggle",
+      "label": "camera",
+      "parent": "capture",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "capture.camera:on"
+          ],
+          "policy": {
+            "actors": {
+              "human": true,
+              "agent": false,
+              "assistive": true,
+              "test": true
+            }
+          }
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "capture.microphone",
+      "role": "toggle",
+      "label": "microphone",
+      "parent": "capture",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "capture.microphone:on"
+          ],
+          "policy": {
+            "actors": {
+              "human": true,
+              "agent": false,
+              "assistive": true,
+              "test": true
+            }
+          }
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "capture.frame",
+      "role": "image",
+      "label": "camera frame",
+      "parent": "capture",
+      "state": {
+        "showing": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "capture.level",
+      "role": "progress_bar",
+      "label": "microphone level",
+      "parent": "capture",
+      "state": {
+        "level": {
+          "kind": "num",
+          "value": 0.0
+        }
+      }
+    },
+    {
+      "id": "capture.status",
+      "role": "status",
+      "label": "nothing is captured until a person turns a device on",
+      "parent": "capture",
+      "state": {
+        "message": {
+          "kind": "text",
+          "value": "nothing is captured until a person turns a device on"
+        }
+      }
+    }
+  ]
+}
