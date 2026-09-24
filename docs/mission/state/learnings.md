@@ -12,6 +12,21 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-69 fase 3a
+
+- **gerar sem template funcionou pela estrutura do registro:** o
+  proponente por regras monta a superfície a partir de roles, tipos de
+  valor, parâmetros e parents, e as palavras da intenção só escolhem
+  entre as do app. as mesmas regras, sem mudança, leem o todo do
+  showcase e o workbench do ide. o limite apareceu onde o registro é
+  pobre: "os itens ativos" não sai dele porque o todo não projeta os
+  itens como lista (P2). o que falta a um proponente é informação no
+  contrato, não regra no proponente.
+- **o autor da proposta é quem pediu:** a página verifica a proposta sob
+  a policy de quem pediu, então um agente só gera superfície com o que
+  agentes podem pedir. a verificação usa o mesmo contrato que já decide
+  cada ato.
+
 ### 2026-09-24, checkpoint a, quinta rodada
 
 - **o contrato ensina uma capacidade quando a mostra na hora em que ela

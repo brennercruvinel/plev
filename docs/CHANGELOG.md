@@ -9,6 +9,28 @@ status: living
 
 ## unreleased
 
+- a surface proposed from an intent (2026-09-24, task-69 phase 3a): the
+  new `propose` crate turns an intent in text, the app's capability
+  registry, its snapshot and the surface it shows into a proposed plev IR,
+  and `propose_verified` lets only a verified IR out. `Rules` proposes
+  without a model, from a small grammar (add, filter, counts, compact, two
+  columns, everything) bound by the registry's structure, never by an
+  app's names; the same rules read the todo and the ide's workbench. `Llm`
+  asks a language model behind the `Model` trait and sends the verifier's
+  errors back, three attempts at most; no provider is wired yet. the
+  Surface page has an intent field and a propose button, projected
+  capabilities an agent uses through the port too, and the surface changes
+  in place, keeping what was typed. from intent to verified IR takes about
+  0.2 ms in a debug build.
+
+- a refusal that names a person points at the question (2026-09-24,
+  task-94): when `plev act` is refused as stale and a person acted since
+  the agent looked, `plev` writes one line on stderr naming the person's
+  request and pointing at `--ask`; none after the person declines, when
+  only agents acted, or when the act already asked. stdout and the
+  protocol do not change. with it, agents that were never told about
+  `--ask` asked the person (task-62, fifth round).
+
 - a surface changes form without losing what it is (2026-09-24, task-69
   phase 2): an open surface takes a new verified IR and reconciles by
   identity. a control that keeps its `SemId` and widget keeps its focus,

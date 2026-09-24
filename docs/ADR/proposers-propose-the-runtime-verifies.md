@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [propose, uir, plev-ir, verifier, surface, llm, dispatcher, generative-runtime]
 date: 2026-09-24
 ---

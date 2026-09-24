@@ -14,6 +14,20 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: uma intenção vira superfície (task-69 fase 3a)
+
+- **integrada:** task-69 fase 3a (merge da `task/69c-proposers`). gate
+  verde na branch (2450); o gate de novo na `main` com a task-94 junto,
+  mais a regressão estrutural que o CI rodaria, porque o CI está fora.
+  o orquestrador leu o diff inteiro (o crate `propose` sem nome de app
+  nas regras, `propose_verified` como única saída, o laço do LLM com 3
+  tentativas, `with_dispatcher` com o mesmo empréstimo do `dispatch`) e
+  conferiu o render headless da proposta.
+- **ADR aceito:** proposers-propose-the-runtime-verifies. CHANGELOG da
+  69c e da task-94 (esquecido na integração dela).
+- **parada da onda 6:** a fase 3b (provedor real do LLM) é decisão do
+  brenner. o checkpoint b e a fase 4 vêm depois dela.
+
 ### ciclo 3: a quinta rodada fecha a pergunta do handoff
 
 - **experimento fechado:** A5a e A5b, sem a frase, com o `plev` da
