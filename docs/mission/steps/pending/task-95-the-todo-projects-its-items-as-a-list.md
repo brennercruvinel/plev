@@ -106,3 +106,103 @@ o que a sonda mostra:
   próprio).
 
 a condição de parada (o todo já projetar uma lista) não disparou.
+
+## a forma da lista (decidida, código pronto, não commitado)
+
+- `todo:items`, uma `List` no nó `todo` (a região que já é o parent de
+  cada `todo.item[<id>]`), com os ids dos itens visíveis na ordem em que
+  a página os mostra. `List` e não `Set`: a ordem é a da tela, e um `Set`
+  se desenrola em ordem de texto ("10" antes de "2"). no nó `todo` e não
+  num nó novo: os itens já são filhos dele, e um nó de lista novo pediria
+  mudar o parent de cada item (a mudança só cresce). segue o filtro,
+  como os nós: a projeção só mostra o que existe agora, então cada id da
+  lista é um nó da página e cada nó de item está na lista. trazer todos
+  pediria projetar nós para itens que a tela esconde (capacidades que a
+  pessoa não vê e que a página não liga).
+- `todo.item[<id>]:text`, o texto do item como estado. o IR nomeia uma
+  instância pelo item (o id, "1") e não interpola label, então sem esse
+  estado uma superfície gerada mostra o checkbox de cada item e nenhum
+  texto: o checkpoint b não teria o mesmo conteúdo para comparar. é o que
+  o handoff da fase 1 da task-69 já apontava.
+- aditivo: o diff do golden `crates/uir/fixtures/showcase-todo.snapshot.json`
+  só acrescenta (`todo.state.items` e um `text` em cada item); nenhum id,
+  role, estado ou ação que existia muda. a fixture compacta de hoje
+  continua verificando contra ele.
+- teste novo `the_items_are_projected_as_a_list_in_the_order_shown`
+  (`app/tests/semantics.rs`): a lista é exatamente os nós de item, na
+  ordem, sob `todo`; o `text` de cada um é o label; adicionar, marcar sob
+  um filtro, remover e filtrar movem a lista; sem itens, lista vazia.
+- `regress`: as cinco baselines que mostram o todo (`todo@core@1280x800`,
+  `todo@core@390x844`, `todo@hoff@1280x800`, `toggle-group@core@1280x800`,
+  `toggle-group@hoff@1280x800`, a página Toggle Group mostra o todo)
+  mudaram só de sentido (`items` e os três `text`), "visual unchanged";
+  `bless` nelas, o `frame.png` intacto, e o `check` passa nas 157.
+
+## parada: um teste do `regress` fora da lista quebra com o `text` do item
+
+problema: `cargo test --workspace --no-fail-fast` com a mudança acima dá
+2372 passam, 1 falha, 13 ignorados. a falha é
+`tests::another_label_in_the_baseline_is_a_semantic_change_of_that_control_only`
+em `crates/showcase/examples/regress/tests.rs` (o briefing não lista
+`crates/showcase/examples/**`; é "o resto do showcase"). o `relabel` do
+teste troca o texto "Measure text, never estimate it" no JSON inteiro da
+baseline, e agora o texto também está no estado `text` do item, então o
+`check` vê duas mudanças no mesmo controle e o teste espera uma:
+
+```text
+[LabelChanged { node: SemId("todo.item[2]"), before: "Measure text, then estimate it", after: "Measure text, never estimate it" },
+ StateChanged { at: StateRef { node: SemId("todo.item[2]"), key: StateKey("text") }, before: Some(Text("Measure text, then estimate it")), after: Some(Text("Measure text, never estimate it")), added: [], removed: [] }]
+```
+
+opções:
+
+1. o `relabel` do teste troca só o campo `label` do nó (lê o JSON, muda
+   o label de `todo.item[2]`, escreve), e o teste fica como está: "outro
+   label é mudança de sentido só daquele controle". umas dez linhas num
+   arquivo fora da lista.
+2. o teste aceita as duas mudanças, as duas em `todo.item[2]` (o label e
+   o `text`): é o que acontece de verdade quando o texto de um item muda,
+   e "só daquele controle" continua valendo. umas cinco linhas no mesmo
+   arquivo.
+3. o todo não projeta o `text` do item. nada fora da lista muda, e a
+   superfície gerada mostra os itens sem o texto (só o checkbox de cada
+   um, a instância nomeada pelo id): o repeat existe, o checkpoint b não
+   tem o que comparar.
+
+recomendação: 2, e a autorização para `crates/showcase/examples/regress/tests.rs`
+(só esse teste). a 1 também serve; a 3 esvazia a task.
+
+decisão necessária: qual opção; na 1 ou na 2, a autorização para o
+arquivo.
+
+### o plano do resto (não bloqueia; confirmar junto)
+
+- as duas fixtures do todo ganham os itens por `repeat` sobre
+  `todo:items`, o mesmo molde nas duas (trocar de forma mantém cada
+  instância): uma linha com o texto (`text` ligado a
+  `todo.item[{item}]:text`) e um checkbox "done" (`checked` de
+  `completed`, `toggle`). a compacta põe a lista entre a entrada e o
+  filtro; a de duas colunas ganha `todo_panel.main` com a entrada e a
+  lista, ao lado de `todo_panel.side`.
+- remover pela superfície: o `remove` do todo é destrutivo e não pede
+  confirmação a ninguém (`Confirm::Never`), e a regra 6 do verifier só
+  deixa ligar uma ação assim ao `confirm` de um dialog. o molde ganha um
+  dialog por item, `open` ligado a `completed` (a confirmação aparece sob
+  um item feito) e `confirm` ligado ao `remove`. o `cancel` fica sem
+  ligação: a superfície desenha o botão e ele não pede nada (limite da
+  materialização do dialog, vai para o handoff). alternativas: o dialog
+  sempre aberto em cada item, ou nenhuma remoção na superfície (só o
+  todo fixo remove, a superfície acompanha). e um dialog fechado continua
+  projetado com o `confirm` (regra da fase 1): para um agente, o
+  `remove` de um item ativo continua ao alcance pela superfície.
+- `Rules`: uma parte nova, "items" (item, items, itens, list, lista),
+  que acha por estrutura um estado `List` ou `Set` de um nó cujos valores
+  são exatamente as chaves dos filhos dele de um mesmo prefixo
+  (`P[<valor>]`): no todo, `todo:items`; no ide, `changes:files` (o
+  `changes:staged` é só parte dos arquivos e fica de fora). por item: um
+  estado text, int ou num vira `text`; um bool com uma ação sem parâmetro
+  que lê só ele vira checkbox (o `toggle` do todo; o `stage` do ide lê
+  dois estados e não vira); as outras ações sem parâmetro, não
+  destrutivas e permitidas ao autor, viram botões. "everything" passa a
+  incluir a lista. os ids do molde que continua são mantidos (hoje o
+  `Namer` nunca guarda ids de molde).
