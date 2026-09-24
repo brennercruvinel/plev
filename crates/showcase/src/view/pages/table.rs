@@ -470,6 +470,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         A,
+        "Silences",
+        "play",
+        "Review the silences ffmpeg finds in a test video: a frame per cut, apply or reject each.",
+        Pane::Silences,
+    ),
+    page(
+        A,
         "Dock",
         "terminal",
         "Floating message dock: glass blur, hover lift, width morph on click.",
