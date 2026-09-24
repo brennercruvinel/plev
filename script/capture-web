@@ -1,0 +1,127 @@
+#!/bin/bash
+# capture one frame of the showcase's web build and classify it against the
+# desktop's frame of the same page, theme, viewport and scale (task-77).
+#
+#   script/capture-web [--page <title>] [--theme <name>] [--width <px>]
+#                      [--height <px>] [--scale <s>] [--out <dir>] [--port <n>]
+#
+# defaults: the launch page (Theme) in core, 1280x800 at scale 1, into
+# target/determinism/web-<time>/. the build is `script/web build --release`
+# (task-20's path, web/dist); the page is served on 127.0.0.1 and opened by
+# python playwright in the headless chromium shell with WebGPU on Metal
+# (`--enable-unsafe-webgpu --use-angle=metal`; without the second flag the
+# adapter is SwiftShader, software, and the capture says so). the viewport is
+# the page's size and the scale its deviceScaleFactor.
+#
+# the browser has no launch arguments: the page and the theme reach the web
+# build only through the keyboard, as a person's: the digits 1 to 9 and 0
+# select the first ten pages, T cycles core, hoff, dark, light. a page past
+# the tenth needs a launch channel the web build does not have yet.
+set -euo pipefail
+# shellcheck source=script/capture-common.sh
+. "$(dirname "$0")/capture-common.sh"
+
+PAGE="Theme"; THEME="core"; WIDTH=1280; HEIGHT=800; SCALE=1; PORT=8090
+OUT="$REPO_ROOT/target/determinism/web-$(date +%Y%m%d-%H%M%S)"
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --page) PAGE="$2"; shift 2 ;;
+        --theme) THEME="$2"; shift 2 ;;
+        --width) WIDTH="$2"; shift 2 ;;
+        --height) HEIGHT="$2"; shift 2 ;;
+        --scale) SCALE="$2"; shift 2 ;;
+        --out) OUT="$2"; shift 2 ;;
+        --port) PORT="$2"; shift 2 ;;
+        -h | --help) usage; exit 0 ;;
+        *) echo "capture-web: unknown argument '$1'" >&2; exit 2 ;;
+    esac
+done
+
+need trunk "brew install trunk"
+need wasm-bindgen "cargo install --locked wasm-bindgen-cli --version 0.2.123 (the version Cargo.lock pins)"
+need python3 "brew install python"
+need sips "part of macOS"
+need_rust_target wasm32-unknown-unknown
+if command -v python3 >/dev/null 2>&1 && ! python3 -c "import playwright" 2>/dev/null; then
+    MISSING="$MISSING
+  python playwright: python3 -m pip install playwright"
+fi
+if ! ls -d "$HOME"/Library/Caches/ms-playwright/chromium* >/dev/null 2>&1; then
+    MISSING="$MISSING
+  a playwright chromium: python3 -m playwright install chromium-headless-shell"
+fi
+missing_stop web
+
+# the key that selects the page, and how many T presses reach the theme
+PAGES=("Theme" "Typography" "Icons" "Effects" "Accordion" "Alert" "Alert Dialog" "Aspect Ratio" "Attachment" "Avatar")
+KEY=""
+for i in "${!PAGES[@]}"; do
+    if [ "$(echo "${PAGES[$i]}" | tr '[:upper:]' '[:lower:]')" = "$(echo "$PAGE" | tr '[:upper:]' '[:lower:]')" ]; then
+        KEY=$(( (i + 1) % 10 ))
+        PAGE="${PAGES[$i]}"
+    fi
+done
+if [ -z "$KEY" ]; then
+    echo "capture-web: '$PAGE' is not one of the first ten pages, the only ones a key selects" >&2
+    exit 2
+fi
+case "$THEME" in
+    core) PRESSES=0 ;; hoff) PRESSES=1 ;; dark) PRESSES=2 ;; light) PRESSES=3 ;;
+    *) echo "capture-web: the T key reaches core, hoff, dark and light, not '$THEME'" >&2; exit 2 ;;
+esac
+
+mkdir -p "$OUT"
+echo ">> building the web target (script/web build --release)"
+"$REPO_ROOT/script/web" build --release
+
+echo ">> serving web/dist on 127.0.0.1:$PORT"
+python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$REPO_ROOT/web/dist" >/dev/null 2>&1 &
+SERVER=$!
+trap 'kill "$SERVER" 2>/dev/null || true' EXIT
+sleep 1
+
+SHOT="$OUT/web.png"
+echo ">> capturing $PAGE / $THEME at ${WIDTH}x${HEIGHT}, scale $SCALE"
+python3 - "$PORT" "$WIDTH" "$HEIGHT" "$SCALE" "$KEY" "$PRESSES" "$SHOT" <<'PY'
+import asyncio, sys
+from playwright.async_api import async_playwright
+
+port, width, height, scale, key, presses, shot = sys.argv[1:]
+
+async def main():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(
+            headless=True, args=["--enable-unsafe-webgpu", "--use-angle=metal"])
+        page = await browser.new_page(
+            viewport={"width": round(float(width)), "height": round(float(height))},
+            device_scale_factor=float(scale))
+        ready = asyncio.get_running_loop().create_future()
+        def console(msg):
+            if "GPU context ready" in msg.text and not ready.done():
+                ready.set_result(True)
+        page.on("console", console)
+        await page.goto(f"http://127.0.0.1:{port}/")
+        await asyncio.wait_for(ready, timeout=60)
+        adapter = await page.evaluate("""async () => {
+            const a = await navigator.gpu.requestAdapter();
+            const i = (a && a.info) || {};
+            return [i.vendor, i.architecture].join(' / ');
+        }""")
+        print(f">> WebGPU adapter: {adapter}")
+        if "swiftshader" in adapter:
+            print(">> warning: a software adapter; this is not the GPU's frame", file=sys.stderr)
+        await page.focus("canvas")
+        if key != "1":
+            await page.keyboard.press(key)
+            await page.wait_for_timeout(300)
+        for _ in range(int(presses)):
+            await page.keyboard.press("t")
+            await page.wait_for_timeout(300)
+        await page.wait_for_timeout(1500)
+        await page.screenshot(path=shot)
+        await browser.close()
+
+asyncio.run(main())
+PY
+
+desktop_and_compare web "$SHOT" "$PAGE" "$THEME" "$WIDTH" "$HEIGHT" "$SCALE" "$OUT"
