@@ -762,3 +762,54 @@ fn a_path_unstaged_after_the_commit_left_is_left_for_the_refresh() {
     shows_commit(&rig, &sha, &files);
     assert_eq!(rig.value("changes:files"), list(&[]));
 }
+
+#[test]
+fn a_commit_with_a_rename_holds_both_paths_in_the_receipt_and_the_node() {
+    let mut rig = Rig::new(&[], &[]);
+    // README moves to docs/README, unchanged: the index will pair the two
+    // into one rename, at the new path.
+    std::fs::create_dir_all(rig.dir.path().join("docs")).expect("docs");
+    std::fs::rename(
+        rig.dir.path().join("README"),
+        rig.dir.path().join("docs/README"),
+    )
+    .expect("move README");
+    rig.bench.refresh();
+    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    for path in ["README", "docs/README"] {
+        let id = rig.ask(agent(), &format!("changes.file[{path}]"), "stage", None);
+        rig.settle(id);
+        assert!(
+            completed(&rig.receipt(id)).is_some(),
+            "{:?}",
+            rig.receipt(id)
+        );
+    }
+    assert_eq!(rig.value("changes:staged"), set(&["docs/README"]));
+    assert_eq!(
+        rig.value("changes.file[docs/README]:status"),
+        Value::from("renamed")
+    );
+    rig.agent_writes("move the readme");
+
+    let id = rig.ask(agent(), "commit.submit", "submit", None);
+    rig.until(|e| matches!(e, git::GitEvent::Committed(_)));
+    let (sha, files) = committed(&rig.receipt(id));
+    assert_eq!(
+        files,
+        ["README", "docs/README"],
+        "both paths the commit changes"
+    );
+    shows_commit(&rig, &sha, &files);
+    assert_eq!(rig.value("changes:files"), list(&[]));
+
+    // After the refresh the node comes from the log: the same paths.
+    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    shows_commit(&rig, &sha, &files);
+    assert_eq!(rig.head(), sha);
+    assert_eq!(
+        rig.head_files(),
+        files,
+        "what git diff-tree --no-renames lists"
+    );
+}
