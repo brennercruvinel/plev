@@ -3,6 +3,7 @@
 //! and unit tested before any view consumes it.
 
 pub mod dock;
+pub mod silences;
 pub mod todo;
 
 #[cfg(test)]
