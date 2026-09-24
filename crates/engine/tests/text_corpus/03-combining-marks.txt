@@ -1,0 +1,4 @@
+# escrita: latim com marcas combinantes (decomposto)
+# cobre: e + U+0301, a + U+0303, o + U+0308, n + U+0303 (composição pelo shaper), e + U+0302 + U+0323 (duas marcas empilhadas, vietnamita)
+# fonte da frase: escrita à mão; escapes para a marca ficar visível no arquivo
+e\u{301} a\u{303}o o\u{308} n\u{303}o e\u{302}\u{323}

@@ -1,0 +1,5 @@
+# escrita: han (chinês simplificado)
+# cobre: ideogramas, vírgula fullwidth U+FF0C, ausência de espaço entre palavras
+# significado: olá, mundo
+# fonte da frase: saudação corrente, escrita à mão
+你好，世界

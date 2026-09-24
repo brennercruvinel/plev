@@ -1,0 +1,5 @@
+# escrita: bidi, RTL dentro de LTR
+# cobre: hebraico dentro de latim, árabe e dígitos dentro de latim (ordem visual dos runs, espelhamento dos espaços)
+# fonte da frase: escrita à mão para este corpus
+abc אבג def
+hello مرحبا 123 world

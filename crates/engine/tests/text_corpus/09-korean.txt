@@ -1,0 +1,5 @@
+# escrita: hangul (coreano)
+# cobre: sílabas hangul precompostas, vírgula e espaço latinos no meio
+# significado: olá, mundo
+# fonte da frase: saudação corrente, escrita à mão
+안녕하세요, 세계
