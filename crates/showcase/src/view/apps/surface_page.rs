@@ -26,17 +26,26 @@
 //! and acts on it like on any page; an act on one of its nodes is routed
 //! to the capability the IR bound (`SurfaceHost::route`).
 //!
-//! Above the surface, an intent field and a propose button (phase 3a,
-//! `proposing`): the deterministic proposer turns what was asked into a
-//! verified IR over the todo's registry, and the surface opens or takes
-//! the new form in place, keeping the ids of what stays; an intent the
-//! rules do not understand leaves the surface as it was, and the page
-//! says why. The field and the button are capabilities of the page, run
-//! by the todo's one dispatcher like everything else here, so an agent
-//! proposes through the port as a person does with a click.
+//! Above the surface, an intent field, a proposer and a propose button
+//! (phases 3a and 3b-ii, `proposing`): the rules or the Claude turn what
+//! was asked into a verified IR over the todo's registry, and the surface
+//! opens or takes the new form in place, keeping the ids of what stays;
+//! an intent the proposer cannot serve leaves the surface as it was, and
+//! the page says why. The rules answer at once; the Claude is asked off
+//! the app's thread (`asking`), the request stays open while it thinks
+//! (the status says the attempt and the seconds, the app goes on taking
+//! clicks and keys, a cancel button kills the child), and the answer
+//! ends the request and shows the surface. The field, the proposer and
+//! the buttons are capabilities of the page, run by the todo's one
+//! dispatcher like everything else here, so an agent proposes through
+//! the port as a person does with a click. Where there is no `claude`
+//! (wasm, mobile, a machine without it) the proposer offers the rules
+//! alone.
 //!
 //! Wide, the two halves sit side by side; narrow, the todo is on top.
 
+mod asking;
+mod page;
 mod proposing;
 
 use comps::prelude::{EmptyState, EventResult, Rect, Tabs, Wake, WidgetEvent};
@@ -51,7 +60,8 @@ use uir::{Capabilities, GenerationPolicy, verify_json};
 
 use super::EditKey;
 use super::app::TodoPage;
-use proposing::{Page, Proposing, Row};
+use page::Page;
+use proposing::{Proposing, Row, Said};
 
 /// One form of the generated surface: what the control calls it, the
 /// caption naming its IR, the IR.
@@ -78,8 +88,10 @@ const FORMS: [Form; 2] = [
 
 const FIXED: &str = "the todo page, written by hand";
 
-/// The caption of the surface when the rules proposed it.
+/// The caption of the surface when the rules proposed it, and when the
+/// Claude did.
 const PROPOSED: &str = "the same capabilities, proposed by the rules for the intent above";
+const ANSWERED: &str = "the same capabilities, proposed by the Claude for the intent above";
 
 pub struct SurfacePage {
     host: SurfaceHost,
@@ -133,13 +145,13 @@ fn caption_h(text: &str, width: f32, theme: &Theme) -> f32 {
 }
 
 /// The band the surface's caption takes at `width`: the tallest of the
-/// forms' captions and the proposal's, so that switching the form moves
+/// forms' captions and the proposals', so that switching the form moves
 /// nothing but the surface.
 fn generated_h(width: f32, theme: &Theme) -> f32 {
     FORMS
         .iter()
         .map(|f| f.caption)
-        .chain([PROPOSED])
+        .chain([PROPOSED, ANSWERED])
         .map(|text| caption_h(text, width, theme))
         .fold(0.0, f32::max)
 }
@@ -302,12 +314,17 @@ impl SurfacePage {
     ) -> EventResult {
         self.set_inert(inert, todo);
         let h = self.halves(content, theme, todo);
-        let mut r = todo.handle_event(event, h.todo, theme);
-        let (row, asked) = self.proposing.handle_event(event, &h.row, theme);
-        r = r.merge(row);
-        if asked {
+        let (mut r, asked) = self.proposing.handle_event(event, &h.row, theme);
+        if asked.propose {
             self.propose(todo);
         }
+        if asked.cancel {
+            self.cancel(todo);
+        }
+        if asked.taken {
+            return r;
+        }
+        r = r.merge(todo.handle_event(event, h.todo, theme));
         if !inert && self.id.is_some() {
             let asked = self.forms.handle_event(event, h.forms, theme);
             if asked.clicked {
@@ -366,6 +383,9 @@ impl SurfacePage {
     }
 
     pub fn handle_escape(&mut self, todo: &mut TodoPage) -> bool {
+        if self.proposing.escape() {
+            return true;
+        }
         if self.proposing.intent.is_focused() {
             self.proposing.intent.unfocus();
             return true;
@@ -374,11 +394,20 @@ impl SurfacePage {
         surface || todo.handle_escape()
     }
 
-    /// The caret of every field, and the surface's change of form while
-    /// it runs.
+    /// The caret of every field, the surface's change of form while it
+    /// runs, and the proposal the Claude is answering: while it is asked
+    /// the page looks at the worker's channel every `asking::POLL` and
+    /// asks for a frame when the status moved; when the answer arrives
+    /// the surface opens or transforms and the request ends
+    /// (`Page::settle`).
     pub fn wake(&mut self, dt: f32, todo: &mut TodoPage) -> Wake {
         let fields = todo.wake(dt).merge(self.proposing.wake(dt));
-        fields.merge(self.host.wake(dt))
+        let moved = self.page(todo).settle();
+        if moved {
+            self.sync(todo);
+        }
+        let asked = if moved { Wake::now() } else { Wake::idle() };
+        fields.merge(self.host.wake(dt)).merge(asked)
     }
 
     pub fn render(
@@ -393,10 +422,10 @@ impl SurfacePage {
         self.sync(todo);
         let h = self.halves(content, theme, todo);
         let style = caption_style(theme);
-        let generated = if self.proposing.shown {
-            PROPOSED
-        } else {
-            FORMS[self.form].caption
+        let generated = match (&self.proposing.shown, &self.proposing.said) {
+            (true, Some(Said::Answered { .. })) => ANSWERED,
+            (true, _) => PROPOSED,
+            (false, _) => FORMS[self.form].caption,
         };
         for (at, text) in h.captions.into_iter().zip([FIXED, generated]) {
             c.push(SceneNode::Text {
@@ -426,6 +455,7 @@ impl SurfacePage {
                 EmptyState::new("the surface did not open", message).render(c, rect, theme);
             }
         }
+        self.proposing.render_open(c, &h.row, theme);
     }
 
     /// The page as the contract sees it: the todo, the surface and the
@@ -454,11 +484,22 @@ impl SurfacePage {
     /// the person, through the todo's dispatcher.
     fn propose(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
         let target = self.proposing.ids.as_ref()?.propose.clone();
+        self.ask(todo, &target, "propose")
+    }
+
+    /// A person cancels the proposal the Claude is answering: the cancel
+    /// button's `activate`, observed and dispatched the same way.
+    fn cancel(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
+        let target = self.proposing.ids.as_ref()?.cancel.clone();
+        self.ask(todo, &target, "activate")
+    }
+
+    fn ask(&mut self, todo: &mut TodoPage, target: &SemId, action: &str) -> Option<RequestId> {
         let seen = self
             .snapshot(todo)
             .inspect_err(|e| log::warn!("surface page: the projection does not validate: {e}"))
             .ok()?;
-        let req = Request::observe(&seen, Actor::Human, &target, "propose", None)
+        let req = Request::observe(&seen, Actor::Human, target, action, None)
             .inspect_err(|e| log::warn!("surface page: {e}"))
             .ok()?;
         let id = self.page(todo).dispatch(req);

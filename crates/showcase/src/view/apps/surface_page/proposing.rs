@@ -1,45 +1,54 @@
-//! The Surface page's own capabilities (task-69 phase 3a): an intent in
-//! text and a button that proposes a surface for it.
+//! The Surface page's own capabilities (task-69 phases 3a and 3b-ii): an
+//! intent in text, who proposes for it, a button that proposes, a button
+//! that cancels, and a status that says what came of it.
 //!
-//! `surface_page.intent` is a text input (`set_value`) and
-//! `surface_page.propose` a button whose `propose` reads the intent: the
-//! deterministic proposer (`propose::Rules`) turns the intent, the todo's
-//! registry, its snapshot and the surface shown into an IR, the verifier
-//! admits it (`propose::propose_verified`), and the surface opens or
-//! transforms in place (`SurfaceHost::transform`, by `SemId`, so what was
-//! typed in a field that stays goes on). `surface_page.status` says what
-//! the last proposal came to, the rules' error when they did not
-//! understand.
+//! `surface_page.intent` is a text input (`set_value`);
+//! `surface_page.proposer` a select between `rules` and `claude`
+//! (`claude` offered, and chosen, only where the program is:
+//! `asking::Claude::find`); `surface_page.propose` a button whose
+//! `propose` reads the intent and the proposer; `surface_page.cancel` a
+//! button enabled only while the Claude is asked; `surface_page.status`
+//! the message of the last proposal, and as state whether the page is
+//! busy, the attempt, the seconds and the cost. An agent reads and acts
+//! on the same nodes.
 //!
-//! Both capabilities run through the page's one dispatcher, the todo's,
-//! lent for the request (`TodoPage::with_dispatcher`) to `Page`, an
-//! `Operable` that projects the todo, the surface and these nodes, runs
-//! these two and passes everything else to the todo's own `execute`. A
-//! person's click, the Enter key, an agent through the port and a screen
-//! reader take the same path, and the receipt is kept where every other
-//! receipt of the page is. The author of the IR is whoever asked
-//! (`GenerationPolicy::by`), so a surface an agent proposes binds only
-//! what agents may ask for.
+//! The rules (`propose::Rules`) propose inside `execute`, in a fraction
+//! of a millisecond, and the request ends at once. The Claude takes
+//! seconds to a minute and a half per attempt, up to three: `propose`
+//! answers `Execution::Started`, a worker runs the proposal (`asking`),
+//! the page keeps asking for frames while it waits, and when the answer
+//! arrives `Page::settle` opens or transforms the surface
+//! (`SurfaceHost::transform`, by `SemId`, so what was typed in a field
+//! that stays goes on) and ends the request with `Dispatcher::complete`
+//! or `fail`, through the same lending of the todo's dispatcher
+//! (`TodoPage::with_dispatcher`), at the page clock's now. One proposal
+//! at a time: while one is asked the propose button and its action are
+//! disabled. A cancel raises the worker's signal (the child dies by its
+//! pid) and fails the request as cancelled by whoever asked.
+//!
+//! Every capability runs through the page's one dispatcher, the todo's,
+//! lent for the request to `page::Page`, the `Operable` over the whole
+//! page (`page.rs`): this file is the row itself, its widgets, where they
+//! sit, what they project and what a person's pointer does on them.
 
-use comps::prelude::{Button, EventResult, Rect, TextField, Wake, WidgetEvent};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
+use std::time::Duration;
+
+use comps::prelude::{Button, EventResult, Rect, Select, TextField, Wake, WidgetEvent};
+use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
-use propose::{Ask, Rules, propose_verified};
-use sem::{
-    Actor, Execution, Operable, Outcome, Request, RequestId, Role, SemError, SemId, Semantics,
-    SnapshotBuilder, Value,
-};
-use surface::{Surface, SurfaceHost};
-use uir::{Capabilities, GenerationPolicy};
+use engine::theme::{IconSize, Theme};
+use propose::{Llm, Model};
+use sem::{Request, Role, SemError, SemId, SnapshotBuilder, Value};
 
-use super::super::app::TodoPage;
+use super::asking::{Claude, POLL, Pending};
 
 /// The ids the page's own capabilities project and bind.
 pub(super) struct Ids {
     pub region: SemId,
     pub intent: SemId,
+    pub proposer: SemId,
     pub propose: SemId,
+    pub cancel: SemId,
     pub status: SemId,
 }
 
@@ -48,57 +57,136 @@ impl Ids {
         let region = SemId::name("surface_page")?;
         Ok(Self {
             intent: region.child("intent")?,
+            proposer: region.child("proposer")?,
             propose: region.child("propose")?,
+            cancel: region.child("cancel")?,
             status: region.child("status")?,
             region,
         })
     }
+
+    /// The option row `<proposer>[<index>]` behind `target`, projected
+    /// while the select is open.
+    fn option_of(&self, target: &SemId) -> Option<usize> {
+        target
+            .as_str()
+            .strip_prefix(self.proposer.as_str())?
+            .strip_prefix('[')?
+            .strip_suffix(']')?
+            .parse()
+            .ok()
+    }
+}
+
+/// The two proposers as the select names them: the words a `select`
+/// takes.
+const RULES: &str = "rules";
+const CLAUDE: &str = "claude";
+
+/// Who the select chooses.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Proposer {
+    Rules,
+    Claude,
 }
 
 /// What the last proposal came to.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(super) enum Said {
     /// The surface shows what the rules proposed for this intent.
     Proposed(String),
-    /// Why there is no proposal: the rules' error, or the verifier's.
+    /// The surface shows what the Claude proposed for this intent: in how
+    /// many attempts, how long it took, what it cost (as the child counts
+    /// it; none when it did not say).
+    Answered {
+        intent: String,
+        attempts: usize,
+        took: Duration,
+        cost_usd: Option<f64>,
+    },
+    /// Why there is no proposal: the rules' error, the verifier's, the
+    /// model's, or who cancelled it.
     Refused(String),
+}
+
+fn usd(cost: Option<f64>) -> String {
+    cost.map_or_else(|| "cost unknown".to_owned(), |c| format!("{c:.3} USD"))
 }
 
 impl Said {
     fn text(&self) -> String {
         match self {
             Said::Proposed(intent) => format!("proposed by the rules for \"{intent}\""),
+            Said::Answered {
+                intent,
+                attempts,
+                took,
+                cost_usd,
+            } => {
+                let noun = if *attempts == 1 {
+                    "attempt"
+                } else {
+                    "attempts"
+                };
+                format!(
+                    "proposed by the Claude for \"{intent}\" in {:.1} s, {attempts} {noun}, {}",
+                    took.as_secs_f64(),
+                    usd(*cost_usd)
+                )
+            }
             Said::Refused(why) => why.clone(),
         }
     }
 }
 
-/// The intent field, the propose button, and what the last proposal
-/// came to.
+/// The intent field, the proposer, the two buttons, the Claude when it
+/// is there, the proposal it is answering, and what the last one came to.
 pub(super) struct Proposing {
     pub ids: Option<Ids>,
     pub intent: TextField,
+    pub proposer: Select,
     button: Button,
+    cancel: Button,
+    pub claude: Claude,
+    pub pending: Option<Pending>,
     pub said: Option<Said>,
-    /// The surface shows what the rules last proposed (not a hand-written
+    /// The surface shows what was last proposed (not a hand-written
     /// form).
     pub shown: bool,
     inert: bool,
 }
 
-/// Where the proposing row sits: the field and the button, the message
-/// under them, and the band they take together.
+/// Where the proposing row sits: the field, the proposer and the propose
+/// button (the two under the field when the width does not hold the
+/// three), the message with the cancel button at its end, and the band
+/// they take together.
 pub(super) struct Row {
     pub band: Rect,
     pub intent: Rect,
+    pub proposer: Rect,
     pub propose: Rect,
+    pub cancel: Rect,
     pub message: Rect,
 }
 
+/// What a person's pointer on the row asked.
+#[derive(Default)]
+pub(super) struct Asked {
+    pub propose: bool,
+    pub cancel: bool,
+    /// The open options panel took the event: nothing under it sees it.
+    pub taken: bool,
+}
+
 /// What a request accepted against the page asks of these capabilities.
-enum Op {
+pub(super) enum Op {
     Write(String),
     Propose,
+    Choose(String),
+    ChooseAt(usize),
+    Open,
+    Close,
+    Cancel,
 }
 
 fn message_style(theme: &Theme) -> TextStyle {
@@ -109,25 +197,74 @@ fn bounds(r: Rect) -> [f32; 4] {
     [r.x, r.y, r.w, r.h]
 }
 
+pub(super) fn int(n: usize) -> i64 {
+    i64::try_from(n).unwrap_or(i64::MAX)
+}
+
+fn secs(d: Duration) -> i64 {
+    i64::try_from(d.as_secs()).unwrap_or(i64::MAX)
+}
+
+/// How many times the Claude is asked for one proposal.
+fn attempts() -> usize {
+    Llm::<&mut dyn Model>::ATTEMPTS
+}
+
 impl Proposing {
+    /// The row over the Claude found on this machine (none in the crate's
+    /// own tests, none off the desktop).
     pub fn new() -> Self {
+        Self::with(Claude::find())
+    }
+
+    /// The row over `claude`: the select offers the Claude, and chooses
+    /// it, when there is a program; the rules alone otherwise.
+    pub fn with(claude: Claude) -> Self {
         let ids = Ids::new()
             .inspect_err(|e| log::error!("surface page: the ids do not parse: {e}"))
             .ok();
         let mut intent = TextField::new("what should it show?");
+        let mut proposer = Self::select(&claude);
         let mut button = Button::new("propose").disabled(true);
+        let mut cancel = Button::new("cancel").disabled(true);
         if let Some(ids) = &ids {
             intent = intent.sem(ids.intent.clone());
+            proposer = proposer.sem(ids.proposer.clone());
             button = button.sem(ids.propose.clone());
+            cancel = cancel.sem(ids.cancel.clone());
         }
         Self {
             ids,
             intent,
+            proposer,
             button,
+            cancel,
+            claude,
+            pending: None,
             said: None,
             shown: false,
             inert: false,
         }
+    }
+
+    fn select(claude: &Claude) -> Select {
+        if claude.is_some() {
+            Select::new([RULES, CLAUDE], 1)
+        } else {
+            Select::new([RULES], 0)
+        }
+    }
+
+    /// The Claude the page asks from now on (a test's fake, the real one
+    /// in the proof): the select offers it and chooses it.
+    #[cfg(test)]
+    pub fn set_claude(&mut self, claude: Claude) {
+        let mut select = Self::select(&claude);
+        if let Some(ids) = &self.ids {
+            select = select.sem(ids.proposer.clone());
+        }
+        self.proposer = select;
+        self.claude = claude;
     }
 
     pub fn set_inert(&mut self, inert: bool) {
@@ -138,16 +275,63 @@ impl Proposing {
         self.intent.text().trim().is_empty()
     }
 
-    /// True when `id` is one of these nodes.
-    pub fn holds(&self, id: &SemId) -> bool {
-        self.ids
-            .as_ref()
-            .is_some_and(|ids| [&ids.region, &ids.intent, &ids.propose, &ids.status].contains(&id))
+    /// True while the Claude is asked.
+    pub fn waiting(&self) -> bool {
+        self.pending.is_some()
     }
 
-    /// The region, the intent field, the propose button (its `propose`
-    /// reads the intent, and runs only when the intent is not blank) and
-    /// the status with the last proposal's message.
+    pub fn chosen(&self) -> Proposer {
+        match self.proposer.selected_label() {
+            Some(CLAUDE) => Proposer::Claude,
+            _ => Proposer::Rules,
+        }
+    }
+
+    /// True when `id` is one of these nodes (an option row of the
+    /// proposer included).
+    pub fn holds(&self, id: &SemId) -> bool {
+        self.ids.as_ref().is_some_and(|ids| {
+            [
+                &ids.region,
+                &ids.intent,
+                &ids.proposer,
+                &ids.propose,
+                &ids.cancel,
+                &ids.status,
+            ]
+            .contains(&id)
+                || ids.option_of(id).is_some()
+        })
+    }
+
+    /// The status line: the wait, or what the last proposal came to.
+    pub fn message(&self) -> String {
+        match &self.pending {
+            Some(p) => format!(
+                "asking the Claude for \"{}\": attempt {} of {}, {} s",
+                p.intent,
+                p.attempt().max(1),
+                attempts(),
+                p.elapsed().as_secs()
+            ),
+            None => self.said.as_ref().map_or_else(String::new, Said::text),
+        }
+    }
+
+    /// The buttons follow the state: propose only with an intent and
+    /// nothing asked, cancel only while asking.
+    fn refresh(&mut self) {
+        self.button.disabled = self.blank() || self.waiting();
+        self.cancel.disabled = !self.waiting();
+    }
+
+    /// The region; the intent field; the proposer (a select, `select`
+    /// with the name, `open`, `close`); the propose button (its `propose`
+    /// reads the intent and the proposer, and runs only with an intent
+    /// and nothing asked); the cancel button (enabled only while asking);
+    /// and the status with the message, `busy`, and while asking or after
+    /// the Claude answered the `attempt`, the `seconds` and the
+    /// `cost_usd` when known.
     pub fn project(&self, b: &mut SnapshotBuilder) {
         let Some(ids) = &self.ids else {
             return;
@@ -156,211 +340,216 @@ impl Proposing {
             .inert(self.inert);
         self.intent
             .project(b, &ids.intent, "intent", Some(&ids.region));
-        let ready = !self.blank();
+        self.proposer
+            .project(b, &ids.proposer, "proposer", Some(&ids.region));
+        let waiting = self.waiting();
+        let ready = !self.blank() && !waiting;
         let mut propose = b.node(&ids.propose, Role::Button, "propose");
         propose.parent(&ids.region).enabled(ready);
         propose
             .action("propose")
             .enabled(ready)
-            .reads(format!("{}:text", ids.intent));
-        let message = self.said.as_ref().map_or_else(String::new, Said::text);
-        b.node(&ids.status, Role::Status, "proposal")
+            .reads(format!("{}:text", ids.intent))
+            .reads(format!("{}:selected", ids.proposer));
+        let mut cancel = b.node(&ids.cancel, Role::Button, "cancel");
+        cancel.parent(&ids.region).enabled(waiting);
+        cancel.action("activate").enabled(waiting);
+        let mut status = b.node(&ids.status, Role::Status, "proposal");
+        status
             .parent(&ids.region)
-            .state("message", message);
+            .state("message", self.message())
+            .state("busy", waiting);
+        match (&self.pending, &self.said) {
+            (Some(p), _) => {
+                status
+                    .state("attempt", int(p.attempt()))
+                    .state("seconds", secs(p.elapsed()));
+            }
+            (
+                None,
+                Some(Said::Answered {
+                    attempts,
+                    took,
+                    cost_usd,
+                    ..
+                }),
+            ) => {
+                status
+                    .state("attempt", int(*attempts))
+                    .state("seconds", secs(*took));
+                if let Some(cost) = cost_usd {
+                    status.state("cost_usd", *cost);
+                }
+            }
+            _ => {}
+        }
         if self.intent.is_focused() {
             b.focus(&ids.intent);
         }
     }
 
-    fn op(&self, req: &Request) -> Option<Op> {
+    pub fn op(&self, req: &Request) -> Option<Op> {
         let ids = self.ids.as_ref()?;
+        let target = &req.target;
         match req.action.as_str() {
-            "set_value" if req.target == ids.intent => match &req.param {
+            "set_value" if *target == ids.intent => match &req.param {
                 Some(Value::Text(text)) => Some(Op::Write(text.clone())),
                 _ => None,
             },
-            "propose" if req.target == ids.propose => Some(Op::Propose),
+            "propose" if *target == ids.propose => Some(Op::Propose),
+            "select" if *target == ids.proposer => match &req.param {
+                Some(Value::Text(name)) => Some(Op::Choose(name.clone())),
+                _ => None,
+            },
+            "select" => ids.option_of(target).map(Op::ChooseAt),
+            "open" if *target == ids.proposer => Some(Op::Open),
+            "close" if *target == ids.proposer => Some(Op::Close),
+            "activate" if *target == ids.cancel => Some(Op::Cancel),
             _ => None,
         }
     }
 
-    /// The row at `(x, y)`, `w` wide: the field and the button on one
-    /// line, the message under them (one line at least, so that a message
-    /// arriving moves nothing below).
+    /// The width the proposer takes: its widest option, the paddings and
+    /// the chevron, as the select draws them.
+    fn proposer_w(&self, theme: &Theme) -> f32 {
+        let style = theme.typography.base_2m();
+        let text = self
+            .proposer
+            .options
+            .iter()
+            .map(|o| TextMeasurer::measure_styled(o, &style, None).0)
+            .fold(0.0, f32::max);
+        let chevron = theme.control.icon(IconSize::Sm);
+        (text + theme.spacing.lg * 2.0 + theme.spacing.xs + chevron).ceil()
+    }
+
+    /// The row at `(x, y)`, `w` wide: the field, the proposer and the
+    /// button on one line while the field keeps its minimum width, the
+    /// two under the field otherwise; then the message (one line at
+    /// least, so that a message arriving moves nothing below) with the
+    /// cancel button at its end.
     pub fn row(&self, x: f32, y: f32, w: f32, theme: &Theme) -> Row {
         let gap = theme.spacing.sm;
         let h = TextField::height(theme);
         let (bw, bh) = self.button.preferred_size(theme);
-        let field_w = (w - bw - gap).max(0.0);
-        let intent = Rect::new(x, y, field_w, h);
-        let propose = Rect::new(x + field_w + gap, y + (h - bh) / 2.0, bw, bh);
+        let (cw, ch) = self.cancel.preferred_size(theme);
+        let sw = self.proposer_w(theme).min(w);
+        let controls = sw + gap + bw + gap;
+        let (intent, left, line) = if w - controls >= theme.size.field_min_w {
+            let field_w = w - controls;
+            (Rect::new(x, y, field_w, h), x + field_w + gap, y)
+        } else {
+            (Rect::new(x, y, w, h), x, y + h + gap)
+        };
+        let proposer = Rect::new(left, line, sw, h);
+        let propose = Rect::new(left + sw + gap, line + (h - bh) / 2.0, bw, bh);
+        let below = line + h + gap;
         let style = message_style(theme);
-        let line = TextMeasurer::measure_styled("Ag", &style, None).1;
-        let text = self.said.as_ref().map_or_else(String::new, Said::text);
-        let wrapped = TextMeasurer::measure_styled(&text, &style, Some(w)).1;
-        let message = Rect::new(x, y + h + gap, w, line.max(wrapped));
-        let bottom = message.y + message.h + gap;
+        let one = TextMeasurer::measure_styled("Ag", &style, None).1;
+        let text_w = (w - cw - gap).max(0.0);
+        let wrapped = TextMeasurer::measure_styled(&self.message(), &style, Some(text_w)).1;
+        let text_h = one.max(wrapped);
+        let band_h = text_h.max(ch);
+        let message = Rect::new(x, below + (band_h - text_h) / 2.0, text_w, text_h);
+        let cancel = Rect::new(x + w - cw, below + (band_h - ch) / 2.0, cw, ch);
+        let bottom = below + band_h + gap;
         Row {
             band: Rect::new(x, y, w, bottom - y),
             intent,
+            proposer,
             propose,
+            cancel,
             message,
         }
     }
 
-    /// A person's pointer on the row: the field takes focus, the button
-    /// is clicked; true in the second field when the button asks for a
-    /// proposal.
+    /// A person's pointer on the row: the field takes focus, the
+    /// proposer opens and chooses, the buttons are clicked. While the
+    /// proposer's panel is open it sees the event alone.
     pub fn handle_event(
         &mut self,
         event: &WidgetEvent,
         row: &Row,
         theme: &Theme,
-    ) -> (EventResult, bool) {
+    ) -> (EventResult, Asked) {
         if self.inert {
-            return (EventResult::IGNORED, false);
+            return (EventResult::IGNORED, Asked::default());
         }
-        self.button.disabled = self.blank();
+        self.refresh();
+        if self.proposer.is_open() {
+            let panel = self.proposer.handle_event(event, row.proposer, theme);
+            let asked = Asked {
+                taken: true,
+                ..Asked::default()
+            };
+            return (panel, asked);
+        }
         let field = self.intent.handle_event(event, row.intent, theme);
+        let select = self.proposer.handle_event(event, row.proposer, theme);
         let button = self.button.handle_event(event, row.propose);
-        (field.merge(button), button.clicked)
+        let cancel = self.cancel.handle_event(event, row.cancel);
+        let asked = Asked {
+            propose: button.clicked,
+            cancel: cancel.clicked,
+            taken: false,
+        };
+        (field.merge(select).merge(button).merge(cancel), asked)
     }
 
+    /// Escape closes the proposer's panel; true when it was open.
+    pub fn escape(&mut self) -> bool {
+        let open = self.proposer.is_open();
+        if open {
+            self.proposer.close();
+        }
+        open
+    }
+
+    /// The caret, and while the Claude is asked a look at the channel
+    /// every `POLL`.
     pub fn wake(&mut self, dt: f32) -> Wake {
-        self.intent.wake(dt)
+        let field = self.intent.wake(dt);
+        if self.waiting() {
+            field.merge(Wake::after(POLL))
+        } else {
+            field
+        }
     }
 
     pub fn render(&mut self, c: &mut Compositor, row: &Row, theme: &Theme) {
+        self.refresh();
         let Some(ids) = &self.ids else {
             return;
         };
         c.bind(&ids.region, bounds(row.band));
         self.intent.render(c, row.intent, theme);
-        self.button.disabled = self.blank();
+        self.proposer.render(c, row.proposer, theme);
         self.button.render(c, row.propose, theme);
+        self.cancel.render(c, row.cancel, theme);
         c.bind(&ids.status, bounds(row.message));
-        let Some(said) = &self.said else {
+        let text = self.message();
+        if text.is_empty() {
             return;
-        };
-        let color = match said {
-            Said::Proposed(_) => theme.glass.text_faint.0,
-            Said::Refused(_) => theme.colors.danger.0,
+        }
+        let color = match (&self.pending, &self.said) {
+            (None, Some(Said::Refused(_))) => theme.colors.danger.0,
+            _ => theme.glass.text_faint.0,
         };
         let style = message_style(theme);
         c.push(SceneNode::Text {
-            key: TextNodeKey::from_style(&said.text(), &style, Some(row.message.w)),
+            key: TextNodeKey::from_style(&text, &style, Some(row.message.w)),
             x: row.message.x,
             y: row.message.y,
             color,
         });
     }
-}
 
-/// The page as its one dispatcher sees it for a request: the todo, the
-/// surface and the proposing row, one projection; the proposing row's
-/// two capabilities run here, everything else in the todo's `execute`.
-pub(super) struct Page<'a> {
-    pub todo: &'a mut TodoPage,
-    pub host: &'a mut SurfaceHost,
-    /// The surface the page shows, by id.
-    pub id: &'a mut Option<SemId>,
-    /// Why no surface opened, when none did.
-    pub refused: &'a mut Option<String>,
-    pub proposing: &'a mut Proposing,
-}
-
-impl Page<'_> {
-    /// Runs `req` through the todo's dispatcher over the whole page.
-    pub fn dispatch(self, req: Request) -> RequestId {
-        let Page {
-            todo,
-            host,
-            id,
-            refused,
-            proposing,
-        } = self;
-        todo.with_dispatcher(|dispatcher, todo, now| {
-            let mut page = Page {
-                todo,
-                host,
-                id,
-                refused,
-                proposing,
-            };
-            dispatcher.dispatch(&mut page, req, now)
-        })
-    }
-
-    /// The rules propose for the intent, as `author` wrote it, over the
-    /// todo as it is and the surface shown; verified, the surface opens
-    /// or takes the new form in place.
-    fn propose(&mut self, author: &Actor) -> Execution {
-        let intent = self.proposing.intent.text().trim().to_owned();
-        let app = match self.todo.snapshot() {
-            Ok(app) => app,
-            Err(e) => return Execution::Failed(e.to_string()),
-        };
-        let caps = Capabilities::from_snapshot(&app);
-        let policy = GenerationPolicy::by(author.clone());
-        let now = self.id.as_ref().and_then(|id| self.host.get(id));
-        let ask = Ask {
-            intent: &intent,
-            caps: &caps,
-            app: &app,
-            current: now.map(Surface::verified),
-            policy: &policy,
-        };
-        let proposed = propose_verified(&mut Rules, &ask).map_err(|e| e.to_string());
-        let opened = proposed.and_then(|ir| {
-            let open = self.host.get(&ir.ir().surface.id).is_some();
-            let surface = if open {
-                self.host.transform(ir, &app)
-            } else {
-                self.host.open(ir, &app)
-            };
-            surface
-                .map(|s| (s.id().clone(), s.nodes().count()))
-                .map_err(|e| e.to_string())
-        });
-        match opened {
-            Ok((surface, nodes)) => {
-                *self.id = Some(surface.clone());
-                *self.refused = None;
-                self.proposing.said = Some(Said::Proposed(intent));
-                self.proposing.shown = true;
-                let mut outcome = Outcome::default();
-                let nodes = i64::try_from(nodes).unwrap_or(i64::MAX);
-                outcome
-                    .result
-                    .insert("surface".to_owned(), Value::Text(surface.to_string()));
-                outcome.result.insert("nodes".to_owned(), Value::Int(nodes));
-                Execution::Done(outcome)
-            }
-            Err(why) => {
-                self.proposing.said = Some(Said::Refused(why.clone()));
-                Execution::Failed(why)
-            }
-        }
-    }
-}
-
-impl Semantics for Page<'_> {
-    fn project(&self, b: &mut SnapshotBuilder) {
-        self.todo.project(b);
-        self.host.project(b);
-        self.proposing.project(b);
-    }
-}
-
-impl Operable for Page<'_> {
-    fn execute(&mut self, id: RequestId, req: &Request) -> Execution {
-        match self.proposing.op(req) {
-            Some(Op::Write(text)) => {
-                self.proposing.intent.set_text(&text);
-                Execution::Done(Outcome::default())
-            }
-            Some(Op::Propose) => self.propose(&req.actor),
-            None => self.todo.execute(id, req),
+    /// The proposer's options panel, when open: drawn after everything
+    /// else on the page, so it lies over the surface.
+    pub fn render_open(&self, c: &mut Compositor, row: &Row, theme: &Theme) {
+        if self.proposer.is_open() {
+            self.proposer
+                .render_dropdown(c, LayerId::DEFAULT, row.proposer, theme);
         }
     }
 }

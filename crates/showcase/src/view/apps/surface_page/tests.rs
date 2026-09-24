@@ -405,6 +405,13 @@ mod items;
 /// `Operable` leaves the todo as the todo's own path does.
 mod proposals;
 
+/// The Claude asked from the page, against the fake claude: the request
+/// starts and the page goes on, the answer arrives through the wake, a
+/// cancel kills the child, the rules alone without a program, and the
+/// real port; the real claude in one ignored test.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod claude;
+
 /// Two columns where the width allows, one where it does not: at a
 /// phone's width the second form wraps and nothing of the surface
 /// leaves the page's width.
