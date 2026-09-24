@@ -97,3 +97,49 @@ fn the_page_draws_headless_in_both_forms() {
     }
     assert_ne!(rects[0], rects[1], "the field sits elsewhere in each form");
 }
+
+/// The page after a proposal, as the gallery draws it without a window:
+/// the intent written in the page's field and proposed, every transition
+/// settled; the proposed form in the projection and the scene, and with
+/// a GPU its pixels (`surface-proposed.png` and `.json` under
+/// `SURFACE_PAGE_OUT`).
+#[test]
+fn the_page_draws_headless_after_a_proposal() {
+    let (mut view, mut c) = staged(0);
+    let intent = "only what is active and the add field";
+    view.panes.surface.proposing.intent.set_text(intent);
+    let todo = &mut view.panes.todo;
+    assert!(view.panes.surface.propose(todo).is_some());
+    view.render(&mut c);
+    let mut steps = 0;
+    while view.tick(TURN) {
+        view.render(&mut c);
+        steps += 1;
+        assert!(steps < 600, "the page never settles");
+    }
+    view.render(&mut c);
+    let snap = view.semantics().expect("the page projects");
+    for (id, kept) in [
+        ("todo_panel.filter.active", true),
+        ("todo_panel.active", true),
+        ("todo_panel.filter.all", false),
+        ("todo_panel.done", false),
+        ("surface_page.intent", true),
+    ] {
+        assert_eq!(snap.get(&sid(id)).is_some(), kept, "{id}");
+        assert_eq!(c.binding(&sid(id)).is_some(), kept, "{id} drawn");
+    }
+    let Ok(mut r) = Renderer::new(DESKTOP, RenderConfig::default()) else {
+        eprintln!("no GPU adapter: the scene and the projection only");
+        return;
+    };
+    let clear = view.theme.colors.bg.to_linear_array();
+    let frame = r.render(&mut c, clear).expect("the frame draws");
+    if let Some(path) = out("proposed") {
+        frame
+            .write_png(path.with_extension("png"))
+            .expect("the png writes");
+        let json = semantics_json(&snap, false).expect("the json");
+        std::fs::write(path.with_extension("json"), json).expect("the json writes");
+    }
+}

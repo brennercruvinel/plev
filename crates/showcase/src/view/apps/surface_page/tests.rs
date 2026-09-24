@@ -390,6 +390,16 @@ mod agent;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod forms;
 
+/// What an intent costs until the surface is verified and until its
+/// first frame (ignored: run by hand).
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod measure;
+
+/// The intent field and the propose button: a person proposes, the
+/// surface takes the form in place; a refusal says why; the page's
+/// `Operable` leaves the todo as the todo's own path does.
+mod proposals;
+
 /// Two columns where the width allows, one where it does not: at a
 /// phone's width the second form wraps and nothing of the surface
 /// leaves the page's width.

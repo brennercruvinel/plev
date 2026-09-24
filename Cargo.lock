@@ -4231,6 +4231,7 @@ dependencies = [
  "image",
  "log",
  "pollster",
+ "propose",
  "rope",
  "sem",
  "serde",
