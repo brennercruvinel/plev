@@ -496,7 +496,7 @@ mod child {
         assert!(args.contains("-f avfoundation -i 0:none"), "{args}");
         assert!(
             args.ends_with(
-                "-vf scale=320:180:force_original_aspect_ratio=increase,crop=320:180,fps=15 \
+                "-vf fps=15,scale=320:180:force_original_aspect_ratio=increase,crop=320:180 \
                  -f rawvideo -pix_fmt rgba pipe:1"
             ),
             "{args}"

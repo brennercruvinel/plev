@@ -96,17 +96,19 @@ pub(crate) fn input_args(
     Ok(args)
 }
 
-/// The arguments after the input: the camera's frames filled into the
-/// asked size (scaled to cover it and cropped at the center, so any
-/// device's aspect gives the same size) at the asked rate, raw RGBA; the
-/// microphone's samples mono f32 at the asked rate. Both to stdout.
+/// The arguments after the input: the camera's frames at the asked rate
+/// (dropped first, so a device faster than asked is not scaled for
+/// frames that go), filled into the asked size (scaled to cover it and
+/// cropped at the center, so any device's aspect gives the same size),
+/// raw RGBA; the microphone's samples mono f32 at the asked rate. Both
+/// to stdout.
 pub(crate) fn output_args(kind: DeviceKind, settings: &CaptureSettings) -> Vec<String> {
     let (w, h) = (settings.width, settings.height);
     let mut args: Vec<String> = match kind {
         DeviceKind::Camera => vec![
             "-vf".to_owned(),
             format!(
-                "scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},fps={}",
+                "fps={},scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h}",
                 settings.fps
             ),
             "-f".to_owned(),
@@ -343,7 +345,7 @@ mod tests {
                 .unwrap()
                 .join(" "),
             "-hide_banner -nostdin -loglevel error -f avfoundation -i 0:none \
-             -vf scale=640:360:force_original_aspect_ratio=increase,crop=640:360,fps=15 \
+             -vf fps=15,scale=640:360:force_original_aspect_ratio=increase,crop=640:360 \
              -f rawvideo -pix_fmt rgba pipe:1"
         );
         assert_eq!(
