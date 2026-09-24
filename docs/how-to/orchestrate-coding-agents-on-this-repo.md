@@ -76,6 +76,10 @@ guidelines win and this file gets fixed.
   directory the gate runs in. agent worktrees live in `.claude/worktrees/`,
   so a symlink `.claude/worktrees/urna -> <the urna checkout>` makes the
   leg run there too; without it the leg skips with a warning.
+- the file-hygiene limit (639 lines of production code per source file,
+  tests out of the count) is checked by
+  `crates/engine/tests/file_hygiene_guard.rs` in the gate; the files that
+  were past it when the guard came are frozen at their size then.
 - a harness or scripted agent that waits for the app to "settle" before
   acting is a symptom: the wait becomes a bug of the app, filed, never a
   silent workaround (the ide laboratory's wait hid a real race, task-84).

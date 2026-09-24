@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- a regression says which control changed before it counts pixels
+  (2026-09-23, task-67, adr regression-by-meaning-before-pixels):
+  `cargo run -p showcase --example regress -- check` stages every
+  baselined page, compares its meaning (`Snapshot::diff`), then a stable
+  hash per layer and the bindings, and only then the pixels in the region
+  of a layer that moved, naming the controls there. nothing changed:
+  157 baselines in about 0.6 s, no frame drawn, no GPU opened. `bless`
+  accepts a change and prints what it accepts. a CI job runs the check
+  on macOS.
+
 - the ide and urnaui sleep when nothing changes (2026-09-23, task-82
   phase b, adr a-tick-asks-for-a-deadline): the ide's workbench, the
   showcase's Git page and urnaui answer their tick with a `Wake`, and the

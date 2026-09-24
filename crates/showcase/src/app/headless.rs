@@ -68,6 +68,8 @@ impl From<serde_json::Error> for RenderError {
 pub struct StagedPage {
     view: ShowcaseView,
     compositor: Compositor,
+    steps: usize,
+    settled: bool,
 }
 
 /// Stage `page` under `theme` at `viewport`, scrolled to `scroll` when
@@ -93,20 +95,43 @@ pub fn stage_page(
     view.resize(viewport.width, viewport.height, viewport.scale);
 
     let mut compositor = Compositor::new();
-    for step in 0..SETTLE_STEPS {
-        let moving = view.tick(if step == 0 { 0.0 } else { SETTLE_DT });
+    let (mut steps, mut settled) = (0, false);
+    while steps < SETTLE_STEPS && !settled {
+        let moving = view.tick(if steps == 0 { 0.0 } else { SETTLE_DT });
         view.render(&mut compositor);
-        if !moving {
-            break;
-        }
+        steps += 1;
+        settled = !moving;
     }
-    Ok(StagedPage { view, compositor })
+    Ok(StagedPage {
+        view,
+        compositor,
+        steps,
+        settled,
+    })
 }
 
 impl StagedPage {
     /// The page's title as the sidebar shows it.
     pub fn title(&self) -> &'static str {
         self.view.page_title()
+    }
+
+    /// The scene of the frame, as built (read only: the regression
+    /// harness names and hashes its layers and reads its bindings).
+    pub fn compositor(&self) -> &Compositor {
+        &self.compositor
+    }
+
+    /// Fixed animation steps taken before the frame was built; the clock
+    /// never reads the wall, so the same page stages the same frame.
+    pub fn steps(&self) -> usize {
+        self.steps
+    }
+
+    /// `false` when the page still moved after the last step (a spinner,
+    /// a blinking caret): its frame is the one at that fixed step.
+    pub fn settled(&self) -> bool {
+        self.settled
     }
 
     /// Draw the frame by the window's own frame path into the renderer's
@@ -488,6 +513,35 @@ mod tests {
                 let other = if at == 0 { &run.0 } else { &run.1 };
                 assert_eq!(first, other, "{label} differs between Card and {title}");
             }
+        }
+    }
+
+    /// The staging clock is fixed steps, never the wall: the same page
+    /// staged twice holds the same scene node for node, after the same
+    /// steps. The regression harness hashes that scene (task-67).
+    #[test]
+    fn a_page_stages_the_same_scene_every_time() {
+        for (title, theme) in [("Todo", "core"), ("Card", "hoff"), ("Spinner", "core")] {
+            let first = staged(title, theme, DESKTOP);
+            let second = staged(title, theme, DESKTOP);
+            assert!(
+                first.settled(),
+                "{title} still moves after {} steps",
+                first.steps()
+            );
+            assert_eq!(first.steps(), second.steps(), "{title}");
+            let layers = |s: &StagedPage| {
+                s.compositor()
+                    .layers()
+                    .iter()
+                    .map(|l| (l.id, l.z_order, l.nodes().to_vec()))
+                    .collect::<Vec<_>>()
+            };
+            assert!(
+                layers(&first) == layers(&second),
+                "{title}: the scene moved"
+            );
+            assert!(!layers(&first).is_empty());
         }
     }
 

@@ -342,6 +342,7 @@ atualizado em cada integração.
 | task-85 | integrada | `476bbb4` | o commit aparece na projeção no passo em que o receipt conclui; `files` (uma definição: contra o primeiro pai, renomeação nos dois caminhos) nos 10 commits mais recentes e no último que o ide fez; devolvida uma vez (definição única, limite na projeção) |
 | task-87 | integrada | `365d8fd` | um estágio terminal traz `revision` (aditivo no v1); o roteirizado com intervenção foi de 24 para 17 mensagens e de 91,5 para 45,9 KB; adr a-terminal-stage-carries-the-revision |
 | task-64 | fase a em andamento | | o modelo do inspector e a CLI `plev-inspect` (crate `inspect`): a cadeia causal de cada request, pela gravação; fases b (UI) e c (export, sessão para teste) depois |
+| task-86 | em andamento | | o binário `ide` abre a porta do agente (opt-in), para o cenário da tese num app que alguém usa; prova numa janela com pessoa e agente ao mesmo tempo |
 | task-88 | na fila | | o laboratório reconhece a revisão de um estágio (o `form` do relatório) e a pessoa do roteiro age também quando o agente encadeia sem observar; `lab.rs` dividido (acima do limite de linhas); antes do próximo experimento com LLM |
-| task-67 | em andamento | | regressão por significado antes de pixel (onda 5); a única da onda que não disputa arquivo com 82b e 87 |
+| task-67 | integrada | `49e2822` | `regress check|bless`: significado, hash estável por layer e ligações, pixel só na região que mudou, nomeando o controle; 157 baselines em 0,6 s sem GPU; job de CI no macOS; adr regression-by-meaning-before-pixels |
 | auditoria de verdade | integrada | `7621403` | `docs/mission/state/truth.md`: contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |

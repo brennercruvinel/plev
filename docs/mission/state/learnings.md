@@ -12,6 +12,18 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, task-67
+
+- **o contrato serve para verificar, não só para operar:** a regressão
+  do Todo diz `todo.item[2] semantics changed: label ...` com a região,
+  em vez de "727 pixels diferentes". só o Todo e o ide projetam; nas
+  outras páginas a regressão cai para layer e pixel. a cobertura
+  semântica fina (task-59 e a auditoria) é o limite prático dela.
+- **o hash da cena pega mudança que o pixel não vê:** o Button no tema
+  hoff mudou de hash com 0 pixels diferentes quando um token mudou. o
+  check falha por isso e diz 0 px; se isso é ruído ou sinal, o uso vai
+  dizer.
+
 ### 2026-09-23, task-82 fase b
 
 - **a promessa do README era falsa num lugar que ninguém mediu:** o ide
@@ -169,6 +181,14 @@ c"; saídas em `target/agents/exp/`.
 ## processo
 
 ### 2026-09-23
+
+- **regra sem gate não vale:** o limite de 639 linhas de produção por
+  arquivo estava na convenção e nenhum gate conferia; três entregas do
+  ciclo passaram dele sem aviso, e o próprio orquestrador contou errado
+  uma vez (contou o arquivo inteiro, não a produção). agora o gate conta
+  (`crates/engine/tests/file_hygiene_guard.rs`), com a regra exata e os
+  seis arquivos que já passavam congelados no tamanho de hoje; um
+  arquivo de prova com 700 linhas fez o guard falhar com o nome dele.
 
 - **o auditor de transcrição dava falso positivo:** um agente guardou o
   caminho do `plev` numa variável (`P=...; $P observe`) e o auditor, que

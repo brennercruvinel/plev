@@ -1,6 +1,6 @@
 ---
 type: how-to
-tags: [validation, screenshots, pixels, semantics, macos, headless, playwright, qa]
+tags: [validation, screenshots, pixels, semantics, regression, macos, headless, playwright, qa]
 date: 2026-09-23
 status: living
 ---
@@ -22,8 +22,42 @@ onward), a claim about a control has two halves: its projected state
 (role, label, state, actions, from the snapshot) and its pixels. a change
 that should only restyle a control shows "semantic unchanged, visual
 changed"; a label change shows up in the snapshot before any pixel is
-sampled. task-67 turns this into the regression harness; until then,
-check the snapshot by hand when the page has one.
+sampled. the regression harness below asks in that order.
+
+## regression: meaning, then layers, then pixels
+
+`crates/showcase/examples/regress` keeps a baseline per page, theme and
+viewport under `crates/showcase/fixtures/regress` (the projection, every
+layer under a stable name with a stable content hash, every bound
+control) and checks the tree against it
+(docs/ADR/regression-by-meaning-before-pixels.md):
+
+```
+cargo run -p showcase --example regress -- check [--page Todo] [--json report.json]
+cargo run -p showcase --example regress -- bless [--page Todo | --all] [--theme hoff] [--png | --no-png]
+```
+
+- `check` stages every baseline without a window and compares the
+  projection (`Snapshot::diff`), then each layer's hash and each
+  binding's rect. nothing moved: it ends there, no frame drawn, no GPU
+  opened (the last line says so). a layer that moved on a baseline that
+  keeps its image draws the frame, compares pixels only inside the
+  regions of the layers that moved, and names the controls the changed
+  pixels fall in: `todo.item[2]  semantics unchanged; visual changed,
+  layer todo, 964 px at 507,274 204x12`. exit 0 held, 1 moved.
+- the verdict is meaning and hash; pixels explain it. a hash that moved
+  with 0 px changed still fails and says 0 px.
+- a change that moves a page is accepted with `bless` in the same
+  change. read what it prints: it is the check of the baseline it
+  replaces. the CI job `structural regression (macos)` runs `check`.
+- the todo baselines at 1280x800 keep their image, so a todo change
+  comes back with the exact control and region; every other baseline
+  keeps none and names the layer (and every control bound in it).
+  `bless --png --dir <tmp>` makes a local copy with images when a page
+  change needs regions.
+- the hash sees the scene, not the raster: a shader, a font file or the
+  rasterizer change pixels without moving a hash. those still need the
+  sampling below.
 
 ## headless first
 
