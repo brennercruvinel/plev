@@ -14,6 +14,24 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: impressão (task-76 item 9)
+
+- **integrada:** item 9 (merge da `task/76h-print`). cmd-p ou o menu
+  imprimem a página: o mesmo frame da janela, renderizado sem janela a
+  300 dpi, vai para a fila do CUPS por `lp` como filho com prazo. o job
+  roda numa thread ao lado do laço, e o agente lê o estado mas não
+  imprime. nada foi impresso de verdade: esta máquina não tem
+  impressora. a prova real está no fim do arquivo da task.
+- **corrigido na revisão:** o laço não acordava para ler a resposta do
+  job. sem animação na tela, a barra ficava em "printing on" até a
+  pessoa mexer o mouse. agora a view pede uma olhada a cada 100 ms
+  enquanto o job está fora, como a Surface faz com o Claude. commit do
+  orquestrador no branch da task, com teste.
+- **brenner pediu para ver rodando:** abri o showcase numa janela real
+  na página Silences. o clique dele em "warn" na Files abriu o alerta
+  do sistema solto na tela, porque a página não passa a janela como mãe.
+  cosmético, registrado no programa como P3.
+
 ### ciclo 3: publicado #84 (task-76 item 7); disparado o item 9
 
 - **publicado:** PR #84, merge commit, gate local verde na `main` (2662,

@@ -3412,3 +3412,17 @@ cargo run --offline -p showcase --example regress -- check
 cargo run --offline -p showcase -- --render Todo --scale 4.1667 --out todo-paper.png   (o png do papel, sem impressora)
 lpstat -p -d                                                          (esta máquina: No destinations added)
 ```
+
+### integração do item 9 (orquestrador, 2026-09-24)
+
+- merge da `task/76h-print` na `main` com um commit a mais no branch:
+  `task-76: a print thread that is out keeps the loop looking until it
+  answers`. o job e a busca de destinos respondiam num canal que nada
+  acordava o laço para ler; agora `ShowcaseView::print_wake` pede uma
+  olhada a cada 100 ms enquanto uma thread está fora, somado em
+  `App::frame_wake`. teste novo em `app/print.rs`.
+- o `summary()` perdeu o `let _ = id` que só existia para usar a
+  variável.
+- fica para depois: o poll do status da fila depois do spool (a
+  projeção fica em "queued"), paginação, PDF vetorial, painel nativo.
+

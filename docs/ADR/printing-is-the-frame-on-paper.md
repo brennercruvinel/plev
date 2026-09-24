@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [platform-integration, printing, cups, headless, frame-path, semantic-contract, background, showcase]
 date: 2026-09-24
 ---
@@ -152,3 +152,15 @@ docs/mission/steps/ongoing/task-76-platform-integration.md) measured:
 - a print capability an agent may ask for; the agent reads `shell:print`.
 - a test that runs the machine's `lp` or `lpstat`: the fakes by path,
   never a real queue.
+
+## integração (2026-09-24, orquestrador)
+
+aceito com uma correção feita na revisão, no mesmo branch: o job e a
+busca de destinos respondiam num canal que nada acordava o laço para
+ler. sem animação na tela, a barra dizia "printing on ..." e o pedido
+ficava `Executing` até o próximo input. agora, enquanto uma thread de
+impressão está fora ou um job espera o wake, o `Wake` do frame pede uma
+olhada a cada 100 ms (`ShowcaseView::print_wake`, somado em
+`App::frame_wake`), a mesma forma do Claude da Surface. o teste
+`a_print_thread_out_keeps_a_deadline_until_it_answers` prova o prazo
+enquanto a thread está fora e o fim dele quando responde.
