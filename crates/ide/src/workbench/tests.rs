@@ -532,7 +532,7 @@ fn a_stale_agent_request_names_the_person_who_acted() {
         [(
             Role::Alert,
             "Refused test-agent's submit: the commit message changed \
-             (you edited the commit message)"
+             (the person edited the commit message)"
                 .to_owned()
         )]
     );

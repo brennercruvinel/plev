@@ -14,6 +14,20 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 2: checkpoint a de novo, e a onda 5 abre
+
+- **experimento:** a segunda rodada da fase c (A1', A2'a, A2'b) com o app
+  corrigido. MATCH nas três, recusa e recuperação nas duas com
+  intervenção, `acted` nomeando a pessoa e citado pelos agentes,
+  confirmação do commit numa observação. bytes mistos. resultado no
+  arquivo da task-62.
+- **decisão autônoma (programa, decisão 10):** nenhuma condição de parada;
+  a onda 5 abre. o brenner pediu para a onda 5 esperar outro checkpoint:
+  foi este.
+- **corrigido direto:** o aviso do ide nomeia a pessoa ("the person") em
+  vez de "you", porque o agente lê o mesmo texto.
+- **publicado:** PR #49 (task-85).
+
 ### ciclo 1: task-85 integrada; as correções do checkpoint a completas
 
 - **integrada:** task-85 (`476bbb4`): o commit aparece na projeção no

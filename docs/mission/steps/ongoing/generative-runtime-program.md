@@ -296,6 +296,15 @@ decididas em 2026-09-23:
    merge commit), e os checkpoints da seção 9 param só quando o resultado
    cai numa das condições de parada de `autonomy.md`.
 
+10. checkpoint a, segunda rodada (2026-09-23, decisão autônoma dentro do
+    item 9): o experimento rodou de novo com as tasks 83, 84 e 85, o mesmo
+    briefing e o mesmo modelo. R1 a R3 se sustentaram; R4 veio misto
+    (controle mais barato, intervenção 14 a 16% mais cara em bytes, menos
+    tokens nas três). nenhuma condição de parada: a onda 5 abre. antes,
+    duas correções pequenas que a rodada achou: o aviso sem segunda pessoa
+    (feito) e a revisão no `completed` (task-87). resultado em
+    `task-62-ide-human-agent-proof.md`, "resultado da segunda rodada".
+
 abertas:
 
 5. task-39 (memoização, pendente desde 2023) é absorvida pela task-73.
@@ -319,7 +328,7 @@ atualizado em cada integração.
 | task-59 | integrada | `f71dc20`, `f5b7cee` | ligação no compositor e todo pelo dispatcher (fase a); os 16 widgets restantes com `SemId` e projeção, regra "toda ação lê o que muda", defeito do `Select` corrigido (fase b); rolagem do `Select` virou a task-81 |
 | task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (integrada, linha abaixo) |
 | task-73 | fases 1 e 1b integradas; fase 2 (ADR de desenho) espera decisão do brenner | `ed814da`, `91fdb33` | limitado pela GPU mesmo sem a latência de envio (4 a 12 vezes a CPU); pass de layer segue os pixels; composite em todo frame; o caret a 60 fps é a task-82 |
-| task-62 | fase c rodada; checkpoint a decidido (correções primeiro, decisão 8) | `8978602`, `d26c9b1` | experimento completo: H1, H2, H3 e H5 sustentadas, H4 diz onde o plev ganha (recusa antes do efeito, com o delta; receipt e sessão) e onde não (bytes e idas e voltas contra o `git`); resultado e decisão pedida no arquivo da task |
+| task-62 | fase c rodada duas vezes; checkpoint a decidido (decisões 8 e 10) | `8978602`, `d26c9b1` | experimento completo: H1, H2, H3 e H5 sustentadas, H4 diz onde o plev ganha (recusa antes do efeito, com o delta; receipt e sessão) e onde não (bytes e idas e voltas contra o `git`); resultado e decisão pedida no arquivo da task |
 | task-63 | fases a, b e c integradas; fase d na fila | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d = retenção de pixels opt-in e ligação no shell do showcase, depois da 61 |
 | task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
 | task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |

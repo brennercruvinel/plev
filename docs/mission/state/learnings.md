@@ -12,6 +12,28 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, checkpoint a, segunda rodada
+
+fonte: `steps/ongoing/task-62-ide-human-agent-proof.md`, "resultado da
+segunda rodada"; saídas em `target/agents/exp2/`.
+
+- **confirmado de novo, com o app corrigido:** três agentes LLM
+  (`claude-fable-5-1`, o mesmo briefing da primeira rodada) fizeram a
+  tarefa só pelo contrato; as duas intervenções foram recusadas antes do
+  efeito e recuperadas; receipt igual ao git nas três.
+- **as correções aparecem no comportamento:** os três confirmaram o
+  próprio commit numa observação por delta que já trazia o nó com
+  `files`; os dois com intervenção citaram o `acted` (a pessoa, request 6)
+  ao explicar a recuperação. tokens de saída caíram 24 a 26%.
+- **bytes, não:** com intervenção, 14 a 16% mais bytes que antes, com as
+  mesmas 30 mensagens. o que sobra de custo de idas e voltas é uma
+  observação depois de cada ato só para saber a revisão nova; os três
+  agentes pediram a revisão no `completed` (task-87).
+- **texto projetado não pode supor quem lê:** o aviso dizia "you unstaged
+  src/session.rs" para a pessoa na tela, e o agente leu o mesmo nó achando
+  que o "you" era ele. um contrato único para humano e agente quer frases
+  que nomeiam o ator; corrigido ("the person").
+
 ### 2026-09-23, task-85
 
 - **o receipt e a projeção podem se contradizer sem ninguém mentir:** o
@@ -118,6 +140,13 @@ c"; saídas em `target/agents/exp/`.
 ## processo
 
 ### 2026-09-23
+
+- **o auditor de transcrição dava falso positivo:** um agente guardou o
+  caminho do `plev` numa variável (`P=...; $P observe`) e o auditor, que
+  olhava o começo da linha, marcou 12 comandos como proibidos. conferido
+  à mão antes de concluir; o script agora resolve a variável. regra:
+  número de auditoria que acusa o agente se confere na transcrição antes
+  de entrar no resultado.
 
 - **dois workspaces num target dir:** com a perna urnaui rodando nos
   worktrees, o workspace raiz e o do urnaui passaram a gravar no mesmo
