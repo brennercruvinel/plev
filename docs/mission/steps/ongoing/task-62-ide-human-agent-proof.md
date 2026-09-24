@@ -608,6 +608,31 @@ estado. com `unstage-after-observe` a pessoa chega tarde para ele (age
 na observação da recuperação) e a medição sai inválida, dizendo isso;
 com `unstage-before-submit` ela sai válida.
 
+nota (2026-09-24, task-93): a pessoa também responde ao modal.
+
+- `--answer none|allow|decline` e `--answer-after <ms>` (padrão `none` e
+  0): a mesma pessoa roteirizada responde a todo request de agente que o
+  dispatcher deixa esperando uma pessoa (a pergunta de um agente, `plev
+  act --ask`, ou uma ação que pede confirmação, como o `discard`),
+  `<ms>` depois de ele começar a esperar, com um clique no botão do modal
+  (Allow ou Cancel): o caminho de uma pessoa na tela, pelo dispatcher
+  como `Actor::Human`, gravado como input dela. combina com `--human`:
+  ela ainda tira o arquivo, e agora também responde. `none` é o de
+  antes: o request espera até o fim da corrida.
+- o relatório ganha `agent.questions` (a pergunta, a resposta,
+  `answer_ms`, o modal, como terminou, o próximo ato do agente e, numa
+  palavra, o que ele fez depois: `then`), `agent.questions_asked`,
+  `person_answers`, `run.no_commit_because` e `agent.over_the_person`
+  (atos sem pergunta que decidem sobre o que a pessoa mexeu, depois de uma
+  recusa que a nomeou).
+- `--scripted ask` é o roteirizado que, recusado stale com a pessoa em
+  `acted`, pergunta antes de recolocar o arquivo. com `allow` commita os
+  três (exit 0); com `decline` para sem commit (exit 2), e
+  `run.no_commit_because` diz que foi ela.
+- o experimento do handoff com LLM roda `--arm plev --human
+  unstage-before-submit:src/session.rs` com `--answer allow` e com
+  `--answer decline`; o protocolo está no handoff da task-93.
+
 ## resultado da fase c (checkpoint a, 2026-09-23)
 
 rodado pelo orquestrador com o `ide-lab` da `main` em `d26c9b1`, build de
