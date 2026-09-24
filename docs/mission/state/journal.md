@@ -14,6 +14,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #90 (task-79 fase 1); disparada a task-72 fase 1
+
+- **publicado:** PR #90, merge commit, gate local verde na `main` (2816,
+  +35), regressão 163 sem mudança.
+- **disparado:** task-72 fase 1, UI asset compiler: o inventário medido
+  do que o app parseia, tessela, decodifica e valida em runtime, e o que
+  o número justificar entre ícones tesselados antes do runtime e WGSL
+  validado no gate; pixels iguais e saída determinística; sem aresta nova
+  no lock. no Opus, um agente só.
+
 ### ciclo 3: cena por socket (task-79 fase 1)
 
 - **integrada:** fase 1 (merge da `task/79a-scene-socket`), depois da
