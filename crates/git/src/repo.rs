@@ -30,8 +30,10 @@ pub struct GitRepo {
     repo: gix::Repository,
     /// Working tree root — also the cwd for every CLI invocation.
     workdir: PathBuf,
-    /// The paths each commit changes, read once per commit by [`log`](Self::log).
-    files: RefCell<FilesCache>,
+    /// The paths each commit changes, read once per commit
+    /// ([`commit_files`](Self::commit_files)), and the buffers that read
+    /// them.
+    files: RefCell<CommitFiles>,
 }
 
 impl GitRepo {
@@ -55,12 +57,10 @@ impl GitRepo {
     // -- read side (gix) ----------------------------------------------------
 
     /// Last `limit` commits reachable from HEAD, newest first, each with the
-    /// paths it changes (see [`Commit::files`]). Returns an empty list on a
-    /// repository without commits yet.
+    /// paths it changes ([`commit_files`](Self::commit_files)). Returns an
+    /// empty list on a repository without commits yet.
     ///
-    /// The paths come from comparing trees in process, never from a `git`
-    /// process. A commit never changes, so its paths are read once and kept
-    /// by commit id; the cache keeps the four times `limit` commits asked
+    /// The cache of those paths keeps the four times `limit` commits asked
     /// for most recently, so a log that moves by one commit reads one tree
     /// diff.
     pub fn log(&self, limit: usize) -> Result<Vec<Commit>> {
@@ -73,20 +73,11 @@ impl GitRepo {
             .all()
             .map_err(repo_err)?;
 
-        let mut cache = self.files.borrow_mut();
-        let mut diff = TreeDiff::default();
         let mut commits = Vec::new();
         for info in walk.take(limit) {
             let info = info.map_err(repo_err)?;
             let commit = info.object().map_err(repo_err)?;
-            let files = match cache.get(&info.id) {
-                Some(files) => files,
-                None => {
-                    let files = diff.files(&self.repo, &commit, info.parent_ids.first())?;
-                    cache.put(info.id, files.clone());
-                    files
-                }
-            };
+            let files = self.files_of(info.id)?;
             let sha = commit.id().to_hex().to_string();
             let message = commit.message().map_err(repo_err)?.summary().to_string();
             let author = commit.author().map_err(repo_err)?;
@@ -100,7 +91,7 @@ impl GitRepo {
                 files,
             });
         }
-        cache.trim(limit.saturating_mul(4));
+        self.files.borrow_mut().cache.trim(limit.saturating_mul(4));
         Ok(commits)
     }
 
@@ -215,7 +206,7 @@ impl GitRepo {
     }
 
     /// Commits the index with `message`; returns the new commit's sha and
-    /// the paths it recorded.
+    /// the paths it changes ([`commit_files`](Self::commit_files)).
     pub fn commit(&self, message: &str) -> Result<NewCommit> {
         self.git(&["commit", "--message", message])?;
         let sha = self.git(&["rev-parse", "HEAD"])?.trim().to_string();
@@ -254,15 +245,30 @@ impl GitRepo {
             .collect())
     }
 
-    /// The paths commit `sha` recorded (`git show --name-only`), in git's
-    /// order.
+    /// The paths commit `sha` changes (see [`Commit::files`]): its tree
+    /// against its first parent's, a root commit's against the empty tree,
+    /// in git's order, a renamed file at both paths. The same paths as
+    /// `git diff-tree -r --no-renames --root --diff-merges=first-parent`,
+    /// read in process with gix, never by a `git` process. `sha` is any
+    /// revision naming a commit.
+    ///
+    /// A commit never changes, so its paths are read once and kept by
+    /// commit id: the receipt of a commit and the log that shows it later
+    /// read the same entry.
     pub fn commit_files(&self, sha: &str) -> Result<Vec<String>> {
-        let raw = self.git(&["show", "--name-only", "--format=", "-z", sha])?;
-        Ok(raw
-            .split('\0')
-            .filter(|p| !p.is_empty())
-            .map(str::to_string)
-            .collect())
+        let id = self.repo.rev_parse_single(sha).map_err(repo_err)?;
+        self.files_of(id.detach())
+    }
+
+    /// The paths commit `id` changes, from the cache or read once.
+    fn files_of(&self, id: gix::ObjectId) -> Result<Vec<String>> {
+        let mut files = self.files.borrow_mut();
+        if let Some(hit) = files.cache.get(&id) {
+            return Ok(hit);
+        }
+        let read = files.diff.files(&self.repo, &id)?;
+        files.cache.put(id, read.clone());
+        Ok(read)
     }
 
     // -- helpers ---------------------------------------------------------------
@@ -320,6 +326,13 @@ impl GitRepo {
     }
 }
 
+/// What [`GitRepo::commit_files`] keeps between calls.
+#[derive(Default)]
+struct CommitFiles {
+    cache: FilesCache,
+    diff: TreeDiff,
+}
+
 /// The paths each commit changes, by commit id. A commit never changes, so
 /// an entry never goes stale; the cache only forgets the commits asked for
 /// least recently, to stay bounded.
@@ -369,11 +382,12 @@ impl FilesCache {
 }
 
 /// Reads the paths a commit changes: its tree against its first parent's
-/// (a root commit's against the empty tree), with the buffers kept across
-/// the commits of one log.
+/// (a root commit's against the empty tree), with the buffers kept from
+/// one commit to the next.
 #[derive(Default)]
 struct TreeDiff {
     state: gix::diff::tree::State,
+    commit: Vec<u8>,
     parent: Vec<u8>,
     ours: Vec<u8>,
     theirs: Vec<u8>,
@@ -383,19 +397,19 @@ impl TreeDiff {
     /// Every path whose entry differs between the two trees, sorted as
     /// git sorts them (byte order of the full path). No rename detection:
     /// a moved file counts at both paths.
-    fn files(
-        &mut self,
-        repo: &gix::Repository,
-        commit: &gix::Commit<'_>,
-        first_parent: Option<&gix::ObjectId>,
-    ) -> Result<Vec<String>> {
+    fn files(&mut self, repo: &gix::Repository, id: &gix::oid) -> Result<Vec<String>> {
         let kind = repo.object_hash();
         let objects = &repo.objects;
-        let tree = commit.tree_id().map_err(repo_err)?.detach();
+        // The tree comes first in a commit, then its parents.
+        let mut commit = objects
+            .find_commit_iter(id, &mut self.commit)
+            .map_err(repo_err)?;
+        let tree = commit.tree_id().map_err(repo_err)?;
+        let first_parent = commit.parent_ids().next();
         let before = match first_parent {
             Some(parent) => {
                 let mut parent = objects
-                    .find_commit_iter(parent, &mut self.parent)
+                    .find_commit_iter(&parent, &mut self.parent)
                     .map_err(repo_err)?;
                 let tree = parent.tree_id().map_err(repo_err)?;
                 objects

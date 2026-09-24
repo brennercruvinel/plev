@@ -38,7 +38,8 @@ pub struct Commit {
     pub time: i64,
     /// The paths the commit changes against its first parent (a root
     /// commit against the empty tree; a merge against the branch it was
-    /// made on), in git's order. A renamed file counts at both paths.
+    /// made on), in git's order, a renamed file at both paths: what `git
+    /// diff-tree -r --no-renames --root --diff-merges=first-parent` lists.
     pub files: Vec<String>,
 }
 
@@ -72,8 +73,8 @@ pub struct Hunk {
     pub lines: Vec<DiffLine>,
 }
 
-/// A commit just created: its full sha and the paths it recorded, as
-/// `git show --name-only` lists them.
+/// A commit just created: its full sha and the paths it changes, as
+/// [`Commit::files`] defines them (the log lists the same paths for it).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewCommit {
     pub sha: String,

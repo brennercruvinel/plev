@@ -159,15 +159,21 @@ fn stdout(dir: &Path, args: &[&str]) -> String {
     String::from_utf8(out.stdout).unwrap()
 }
 
-/// The paths git itself says commit `sha` changes against `parent` (the
-/// empty tree when `None`), in git's order, renames not detected.
-fn changed(dir: &Path, parent: Option<&str>, sha: &str) -> Vec<String> {
-    let mut args = vec!["diff-tree", "-r", "-z", "--name-only", "--no-renames"];
-    args.extend(match parent {
-        Some(parent) => [parent, sha],
-        None => ["--root", sha],
-    });
-    args.push("--no-commit-id");
+/// The paths git itself says commit `sha` changes: against its first
+/// parent (a root commit against the empty tree), renames not detected.
+/// The definition of `Commit::files`, by the CLI.
+fn changed(dir: &Path, sha: &str) -> Vec<String> {
+    let args = [
+        "diff-tree",
+        "--no-commit-id",
+        "--name-only",
+        "-r",
+        "-z",
+        "--no-renames",
+        "--root",
+        "--diff-merges=first-parent",
+        sha,
+    ];
     stdout(dir, &args)
         .split('\0')
         .filter(|p| !p.is_empty())
@@ -193,13 +199,13 @@ fn log_lists_the_files_each_commit_changes_in_gits_order() {
         log[0].files,
         ["a.txt", "a/inner.txt", "b c.txt", "src/lib.rs"]
     );
-    assert_eq!(
-        log[0].files,
-        changed(dir.path(), Some(&log[1].sha), &log[0].sha)
-    );
+    assert_eq!(log[0].files, changed(dir.path(), &log[0].sha));
     // The root commit, against the empty tree.
     assert_eq!(log[1].files, ["a.txt", "src/lib.rs"]);
-    assert_eq!(log[1].files, changed(dir.path(), None, &log[1].sha));
+    assert_eq!(log[1].files, changed(dir.path(), &log[1].sha));
+    for commit in &log {
+        assert_eq!(repo.commit_files(&commit.sha).unwrap(), commit.files);
+    }
 }
 
 #[test]
@@ -219,27 +225,27 @@ fn the_files_of_a_merge_are_what_it_brings_to_its_first_parent() {
 
     let log = repo.log(10).unwrap();
     let merge = &log[0];
-    let first_parent = stdout(dir.path(), &["rev-parse", "HEAD^1"]);
     assert_eq!(merge.sha, head(dir.path()));
     assert_eq!(merge.files, ["f.txt"], "what the branch brought to main");
-    assert_eq!(
-        merge.files,
-        changed(dir.path(), Some(first_parent.trim()), &merge.sha)
-    );
+    assert_eq!(merge.files, changed(dir.path(), &merge.sha));
+    assert_eq!(repo.commit_files("HEAD").unwrap(), merge.files);
 }
 
 #[test]
-fn a_moved_file_counts_at_both_paths() {
+fn a_moved_file_counts_at_both_paths_in_the_commit_and_in_the_log() {
     let (dir, repo) = repo_with_commit();
     git(dir.path(), &["config", "diff.renames", "true"]);
     git(dir.path(), &["mv", "a.txt", "moved.txt"]);
-    git(dir.path(), &["commit", "-m", "move"]);
+    // The index shows the move as one rename, at its new path.
+    assert_eq!(repo.staged_paths().unwrap(), set(&["moved.txt"]));
 
-    let log = repo.log(1).unwrap();
-    assert_eq!(log[0].files, ["a.txt", "moved.txt"]);
-    // `git show`, where a commit's receipt comes from, pairs the two into
-    // a rename and names the new path only.
-    assert_eq!(repo.commit_files(&log[0].sha).unwrap(), ["moved.txt"]);
+    let check = repo.commit_if("move", &set(&["moved.txt"])).unwrap();
+    let CommitCheck::Committed(commit) = check else {
+        panic!("expected a commit, got {check:?}");
+    };
+    assert_eq!(commit.files, ["a.txt", "moved.txt"]);
+    assert_eq!(commit.files, changed(dir.path(), &commit.sha));
+    assert_eq!(repo.log(1).unwrap()[0].files, commit.files);
 }
 
 #[test]
