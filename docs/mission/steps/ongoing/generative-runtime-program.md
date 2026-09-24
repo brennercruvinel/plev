@@ -190,13 +190,16 @@ quando as superfícies (seção 8) são disjuntas.
     ide e lida pelo inspector (task-63 fase d);
   - [ ] do pixel à capacidade e ao código num controle (task-65 fase a);
   - [x] P1: o laboratório mede pelo valor visto e pelo valor vivo (task-88);
-  - [ ] P1: a conclusão do checkpoint a revista sob a regra da task-89. o
+  - [x] P1: a conclusão do checkpoint a revista sob a regra da task-89. o
     inspector mostrou que o acerto do A2 da primeira rodada dependeu da
     ordem dos eventos; uma rodada curta com agentes LLM no cenário
     `unstage-before-submit` confirma que H1 se sustenta e que agentes se
     recuperam de `not_observed` e de escrever e encadear.
 
-  não bloqueiam a onda 6 (P2, seguem quando couber): task-64 fases b
+  (terceira rodada, 2026-09-24: sustentada; uma corrida parou para não
+  passar por cima da pessoa, `task-62-ide-human-agent-proof.md`.)
+  não bloqueiam a onda 6 (P2, seguem quando couber): um canal para o
+  agente perguntar à pessoa (handoff, achado da terceira rodada); task-64 fases b
   (interface) e c (sessão para teste), task-65 fases b a d, task-91 (a
   âncora do `acted` no olhar), estado projetado fora do dispatcher no ide
   (seleção, digitação), cobertura semântica além do Todo e do ide. P3 no
