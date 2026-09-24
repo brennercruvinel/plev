@@ -123,6 +123,8 @@ fn another_label_in_the_baseline_is_a_semantic_change_of_that_control_only() {
         Err(e) => panic!("{e}"),
     };
     assert!(!o.delta.unchanged());
+    // the item's text is its label and its `text` state (task-95): both
+    // move, both on that control
     match o.delta.semantics.changes.as_slice() {
         [
             Change::LabelChanged {
@@ -130,10 +132,19 @@ fn another_label_in_the_baseline_is_a_semantic_change_of_that_control_only() {
                 before,
                 after,
             },
+            Change::StateChanged {
+                at,
+                before: was,
+                after: now,
+                ..
+            },
         ] => {
             assert_eq!(node.as_str(), "todo.item[2]");
             assert_eq!(before, "Measure text, then estimate it");
             assert_eq!(after, "Measure text, never estimate it");
+            assert_eq!(at.to_string(), "todo.item[2]:text");
+            assert_eq!(was.as_ref(), Some(&before.as_str().into()));
+            assert_eq!(now.as_ref(), Some(&after.as_str().into()));
         }
         other => panic!("{other:?}"),
     }

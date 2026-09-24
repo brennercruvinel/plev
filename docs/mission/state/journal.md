@@ -14,6 +14,55 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a tela gerada mostra os itens (task-95)
+
+- **integrada:** task-95 (`460c854`). gate verde (2465, +11), regressão
+  estrutural 157 sem mudança (5 baselines do todo abençoadas só por
+  sentido, pixel igual). a tela gerada e a fixa mostram agora o mesmo
+  conteúdo, do mesmo estado: é o que o checkpoint b precisa. uma decisão
+  do orquestrador: remover pela tela gerada fica de fora (a regra 6 só
+  liga ação destrutiva por um dialog de confirmação).
+
+### intervenção do brenner: voltar ao que ele mandou
+
+- o brenner apontou a deriva: as tasks 81 a 94, do orquestrador, poliram
+  a colaboração segura (objetivo 5) muito além do que o programa pedia,
+  enquanto o centro da tese (intenção vira interface, objetivos 1, 7, 8,
+  9 e 10) andou pouco. correção: o ciclo segue só as tasks do programa
+  dele, na ordem das ondas (69 até o fim e o checkpoint b, depois 70, 71,
+  as trilhas e a 80). task nova do orquestrador só para P0. sem rodada
+  nova de experimento de handoff. relatórios curtos, em palavras simples.
+
+### intervenção do brenner: o provedor do LLM é o Claude
+
+- "usa você mesmo por enquanto, eu não tenho outro LLM". decisão 13 do
+  programa: o `claude -p` desta máquina atrás de `propose::Model`. a fase
+  3b destrava: 3b-i (o provedor) agora, 3b-ii (a página) depois da
+  task-95. o brenner também disse que se perdeu no volume de tarefas; o
+  status passa a abrir pelo objetivo dele, em poucas linhas.
+
+### intervenção do brenner: o que depende dele fica parado por enquanto
+
+- o brenner disse que o que depende dele não se resolve agora: o
+  provedor do LLM (69 fase 3b), o checkpoint b, a fase 2 da 73, o
+  VoiceOver e a cobrança do CI ficam parados. o ciclo segue só com o que
+  não depende dele, sem serviço pago: merge com o gate local verde, sem
+  provedor de LLM. a onda 6 fica aberta até a 3b; enquanto isso, P2 do
+  backlog e trilhas cujas dependências estão integradas.
+
+### ciclo 3: publicados #69 e #70; disparada a task-95
+
+- **publicados:** PR #69 (task-94 e a quarta rodada) e PR #70 (task-69
+  fase 3a e a quinta rodada), merge commit, com o gate local verde na
+  `main` (2454) e a regressão estrutural (157 sem mudança); o CI segue
+  fora por cobrança.
+- **disparada:** task-95 (P2, onda 6), o todo projeta os itens como
+  lista e o proponente gera o `repeat`. escolhida porque é o limite que a
+  fase 3a achou e o que o checkpoint b precisa para comparar a tela
+  gerada com a fixa pelo mesmo conteúdo; a superfície do todo ficou livre
+  com a integração da 69c. build dir da 69c reaproveitado; o da task-94
+  limpo (12,5 GB).
+
 ### ciclo 3: uma intenção vira superfície (task-69 fase 3a)
 
 - **integrada:** task-69 fase 3a (merge da `task/69c-proposers`). gate

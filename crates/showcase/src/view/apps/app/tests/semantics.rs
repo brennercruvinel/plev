@@ -88,6 +88,64 @@ fn the_page_projects_the_todo_model() {
     assert_eq!(snap.focused(), None);
 }
 
+/// `todo:items` lists the ids of the visible items in the order shown
+/// (task-95). It follows the filter as the item nodes do, so every id in
+/// it is a node of the page under `todo`, in the same order, and every
+/// item node is in it; each item carries its text as state, which a
+/// generated surface binds (its instances are named by the id). Adding,
+/// toggling under a filter, removing and filtering move it.
+#[test]
+fn the_items_are_projected_as_a_list_in_the_order_shown() {
+    let mut s = TodoPage::new();
+    let items = StateRef::parse("todo:items").unwrap();
+    let list = |s: &TodoPage| -> Vec<String> {
+        let snap = s.snapshot().unwrap();
+        let Some(Value::List(ids)) = snap.value(&items).cloned() else {
+            panic!("todo:items is a list: {:?}", snap.value(&items));
+        };
+        let nodes: Vec<String> = snap
+            .nodes()
+            .values()
+            .filter(|n| n.role == Role::ListItem)
+            .map(|n| {
+                assert_eq!(n.parent, Some(sid("todo")), "{}", n.id);
+                assert_eq!(n.state.get("text"), Some(&Value::from(n.label.as_str())));
+                n.id.to_string()
+            })
+            .collect();
+        let named: Vec<String> = ids.iter().map(|id| format!("todo.item[{id}]")).collect();
+        assert_eq!(named, nodes, "the list is the item nodes, in order");
+        ids
+    };
+    let done = |stage: Stage| assert!(matches!(stage, Stage::Completed(_)), "{stage:?}");
+    assert_eq!(list(&s), ["1", "2", "3"]);
+
+    let milk = Some(Value::from("buy milk"));
+    done(ask_as_test(&mut s, "todo.input", "set_value", milk));
+    done(ask_as_test(&mut s, "todo.input", "submit", None));
+    assert_eq!(list(&s), ["1", "2", "3", "4"], "a new item comes last");
+
+    done(ask_as_test(&mut s, "todo.filter[active]", "select", None));
+    assert_eq!(list(&s), ["1", "2", "4"], "the filter hides the done one");
+    done(ask_as_test(&mut s, "todo.item[2]", "toggle", None));
+    assert_eq!(list(&s), ["1", "4"], "done, it leaves the active list");
+    done(ask_as_test(&mut s, "todo.item[1]", "remove", None));
+    assert_eq!(list(&s), ["4"]);
+    done(ask_as_test(
+        &mut s,
+        "todo.filter[completed]",
+        "select",
+        None,
+    ));
+    assert_eq!(list(&s), ["2", "3"]);
+    done(ask_as_test(&mut s, "todo.filter[all]", "select", None));
+    assert_eq!(list(&s), ["2", "3", "4"]);
+    done(ask_as_test(&mut s, "todo.item[4]", "remove", None));
+    done(ask_as_test(&mut s, "todo.item[2]", "remove", None));
+    done(ask_as_test(&mut s, "todo.item[3]", "remove", None));
+    assert!(list(&s).is_empty(), "no item, an empty list");
+}
+
 #[test]
 fn clicks_and_test_requests_reach_the_same_state_and_snapshot() {
     let content = content_at(1500.0);

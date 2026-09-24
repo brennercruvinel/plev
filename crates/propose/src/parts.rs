@@ -8,6 +8,7 @@ use std::collections::BTreeSet;
 use sem::{ActionDecl, Actor, Actors, Node, Role, SemId, Snapshot, StateRef, ValueKind};
 use uir::{Capabilities, CapabilityRef};
 
+use crate::list::{List, lists};
 use crate::words::{fold, folded, split};
 
 /// a text input of the app.
@@ -58,6 +59,7 @@ pub(crate) struct Parts {
     pub entries: Vec<Entry>,
     pub choices: Vec<Choice>,
     pub counts: Vec<Count>,
+    pub lists: Vec<List>,
 }
 
 /// true when `actors` lets `actor` ask, as the dispatcher reads it.
@@ -187,6 +189,7 @@ impl Parts {
                 }
             }
         }
+        parts.lists = lists(caps, app, &usable);
         parts
     }
 
@@ -205,6 +208,9 @@ impl Parts {
         for c in &self.counts {
             all.extend(c.words.iter().cloned());
         }
+        for l in &self.lists {
+            all.extend(l.words.iter().cloned());
+        }
         all.into_iter().collect()
     }
 
@@ -215,6 +221,7 @@ impl Parts {
             Part::Entry => !self.entries.is_empty(),
             Part::Choice => !self.choices.is_empty(),
             Part::Count => !self.counts.is_empty(),
+            Part::List => !self.lists.is_empty(),
         }
     }
 }

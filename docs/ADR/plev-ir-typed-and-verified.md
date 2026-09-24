@@ -221,10 +221,10 @@ checks it and answers with the pointer.
 - a template can only be verified while the app projects at least one
   node that fits it: over an empty list the registry cannot prove the
   per-item capability exists.
-- the todo of the showcase projects no list of its items, so no surface
-  can repeat over them yet; its filter is one capability per tab, which
-  `tabs` (which sends the chosen key) cannot bind, so the todo fixture
-  uses chips.
+- the todo of the showcase projects `todo:items` (the visible ids, in
+  order) and each item's `text` since task-95, so a surface repeats over
+  them; its filter is one capability per tab, which `tabs` (which sends
+  the chosen key) cannot bind, so the todo fixture uses chips.
 - the fixtures pin two real projections, the ide's workbench and the
   showcase's todo, written by tests in those crates that fail when the
   projection moves away from them.

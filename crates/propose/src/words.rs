@@ -22,10 +22,14 @@ pub enum Part {
     Choice,
     /// a number the app shows (an `int` or a `num` state): one stat each.
     Count,
+    /// a list of the app's items (a `List` or `Set` state whose values key
+    /// its node's children): the list repeated, each item with what it
+    /// shows and accepts.
+    List,
 }
 
 impl Part {
-    pub const ALL: [Part; 3] = [Part::Entry, Part::Choice, Part::Count];
+    pub const ALL: [Part; 4] = [Part::Entry, Part::Choice, Part::Count, Part::List];
 }
 
 impl fmt::Display for Part {
@@ -34,6 +38,7 @@ impl fmt::Display for Part {
             Part::Entry => "an entry (add)",
             Part::Choice => "a choice (filter)",
             Part::Count => "counts",
+            Part::List => "a list (items)",
         })
     }
 }
@@ -41,16 +46,18 @@ impl fmt::Display for Part {
 /// how the surface is laid out.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Form {
-    /// one column: the entry, the choices, the counts, one under the other.
+    /// one column: the entry, the lists, the choices, the counts, one
+    /// under the other.
     Compact,
     /// two columns where the width holds them: the choices and the counts
-    /// in one, the entry in the other.
+    /// in one, the entry over the lists in the other.
     Columns,
 }
 
 /// the words of the grammar, as a person reads them.
-pub const GRAMMAR: &str = "add, filter, counts (or stats), compact, two columns and everything \
-                           (adicionar, filtro, contagem, compacto, duas colunas, tudo)";
+pub const GRAMMAR: &str = "add, filter, counts (or stats), items (or list), compact, two columns \
+                           and everything (adicionar, filtro, contagem, itens, compacto, duas \
+                           colunas, tudo)";
 
 const ADD: &[&str] = &[
     "add",
@@ -78,6 +85,7 @@ const COUNT: &[&str] = &[
     "numero",
     "total",
 ];
+const LIST: &[&str] = &["item", "items", "itens", "list", "lista", "listar"];
 const COMPACT: &[&str] = &["compact", "compacto", "compacta", "single"];
 const COLUMNS: &[&str] = &["column", "coluna"];
 /// "one column" and "uma coluna" are the compact form.
@@ -164,6 +172,8 @@ pub(crate) fn read(intent: &str) -> Reading {
             r.parts.insert(Part::Choice);
         } else if is(&word, COUNT) {
             r.parts.insert(Part::Count);
+        } else if is(&word, LIST) {
+            r.parts.insert(Part::List);
         } else if is(&word, COLUMNS) {
             let one = is(&before, ONE);
             r.form = Some(if one { Form::Compact } else { Form::Columns });
@@ -208,6 +218,9 @@ mod tests {
         assert_eq!(read("compacto").form, Some(Form::Compact));
         let counts = read("contagem e filtros");
         assert_eq!(counts.parts, BTreeSet::from([Part::Choice, Part::Count]));
+        for list in ["the items", "os itens", "a list", "a lista", "item"] {
+            assert_eq!(read(list).parts, BTreeSet::from([Part::List]), "{list}");
+        }
         assert!(read("tudo").everything);
         assert!(read("  ,  ").is_empty());
         assert!(read("the only field").is_empty());

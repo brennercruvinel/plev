@@ -361,6 +361,13 @@ abertas:
    com o proponente atrás de um trait e um proponente determinístico para
    os testes.
 
+13. o provedor do LLM (2026-09-24, brenner: "usa você mesmo por enquanto,
+    eu não tenho outro LLM"): o Claude, pelo `claude -p` do Claude Code que
+    já roda nesta máquina, atrás de `propose::Model`. sem API paga nova.
+    a fase 3b da task-69 se divide: 3b-i, o provedor num crate próprio
+    (`propose` continua puro), agora; 3b-ii, a página Surface usando o
+    provedor, depois da task-95 (a mesma superfície).
+
 ## 12. estado
 
 atualizado em cada integração.
@@ -400,3 +407,4 @@ atualizado em cada integração.
 | task-92 | integrada (P0 dentro, e o P2) | `f101359` | P0: um estágio fora de um drain acorda o porto (a recusa da pessoa chegava só na próxima mensagem do agente); o agente pede à pessoa que confirme um ato (`Request::ask`, `plev act --ask`), o modal do ide pergunta, o `why` mostra |
 | task-93 | integrada | `654d740` | a pessoa do laboratório responde ao modal (`--answer allow|decline|none`, `--answer-after`), o relatório conta perguntas, respostas, tempo e o que o agente fez depois; `--scripted ask` |
 | task-94 | integrada (P2) | `37c5e0c` | um `plev act` sem `--ask` recusado stale com uma pessoa no `acted` escreve no stderr uma linha que nomeia o request dela e aponta para o `--ask`; nenhuma depois de um `declined`, com só agentes, ou quando o ato perguntava; o stdout igual byte a byte; o cenário da quarta rodada pela porta real com o binário `plev` como agente |
+| task-95 | integrada (onda 6, parte da 69) | `460c854` | o todo projeta os itens como lista; a superfície gerada repete sobre eles; `Rules` gera o `repeat` pela estrutura do registro; origem: handoffs das fases 1 e 3a da task-69 |

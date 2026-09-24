@@ -15,9 +15,16 @@
 //!   action.
 //! - **count** ("counts", "stats", "contagem"): one `stat` per `int` or
 //!   `num` state, named by its key.
+//! - **list** ("items", "list", "itens", "lista"): for each list of the
+//!   app (a `List` or `Set` state whose values are the keys of its node's
+//!   children of one kind, all of them), a `list` that repeats over it;
+//!   each item a row of what every item declares alike: a `text` per
+//!   text or number state, a `checkbox` per bool with an action of no
+//!   parameter that reads only it, a `button` per other action of no
+//!   parameter (`list.rs`).
 //! - **form** ("compact", "two columns", "compacto", "duas colunas"): the
-//!   layout. without one, the current surface's form (two columns when its
-//!   root is a grid), else compact.
+//!   layout, the lists under the entry. without one, the current
+//!   surface's form (two columns when its root is a grid), else compact.
 //! - **everything** ("everything", "tudo"): every part.
 //!
 //! every other word of the intent is a word of the app (a label, an id's
@@ -33,12 +40,13 @@ use std::collections::BTreeSet;
 
 use sem::{Node, Role};
 use uir::{
-    Align, Axis, Component, Elevation, Ir, IrNode, Layout, Props, Size, SizeToken, SpacingToken,
-    Surface,
+    Align, Axis, Component, Elevation, Ir, IrNode, Layout, Props, Repeat, Size, SizeToken,
+    SpacingToken, Surface,
 };
 
 use crate::error::ProposeError;
 use crate::ids::{Anchor, Namer, anchor, anchors};
+use crate::list::List;
 use crate::parts::{Choice, Count, Entry, Parts};
 use crate::words::{Form, GRAMMAR, Part, Reading, read};
 use crate::{Ask, Proposer};
@@ -54,11 +62,13 @@ struct Chosen {
     entries: Vec<Entry>,
     choices: Vec<Choice>,
     counts: Vec<Count>,
+    lists: Vec<List>,
 }
 
 impl Chosen {
     fn is_empty(&self) -> bool {
-        self.entries.is_empty() && self.choices.is_empty() && self.counts.is_empty()
+        let none = self.entries.is_empty() && self.choices.is_empty();
+        none && self.counts.is_empty() && self.lists.is_empty()
     }
 }
 
@@ -108,6 +118,7 @@ fn choose(r: &Reading, parts: &Parts) -> Chosen {
         }),
         choices,
         counts: keep(&parts.counts, named(Part::Count), w, |c| names(w, &c.words)),
+        lists: keep(&parts.lists, named(Part::List), w, |l| names(w, &l.words)),
     }
 }
 
@@ -137,6 +148,12 @@ fn shown(parts: &Parts, current: &IrNode) -> Chosen {
             .counts
             .iter()
             .filter(|c| on.contains(&Anchor::State(c.at.clone())))
+            .cloned()
+            .collect(),
+        lists: parts
+            .lists
+            .iter()
+            .filter(|l| on.contains(&Anchor::Each(l.each.clone())))
             .cloned()
             .collect(),
     }
@@ -283,6 +300,61 @@ impl Build<'_> {
         self.container("counts", None, layout, stats)
     }
 
+    /// a list over `l.each`: one row per item, its template bound to the
+    /// item by `[{item}]`; the template root is named by its item.
+    fn list(&mut self, l: &List) -> IrNode {
+        let mut row = Vec::new();
+        for at in &l.texts {
+            let mut text = IrNode::new(l.item.clone());
+            text.component = Some(Component::Text);
+            text.size = Size {
+                flex: Some(1),
+                ..Size::default()
+            };
+            text.bind.state.insert("text".to_owned(), at.clone());
+            let name = format!("{}.{}", l.item, at.key);
+            text.sem = self
+                .namer
+                .bound(&Anchor::State(at.clone()), &name, String::new())
+                .0;
+            row.push(text);
+        }
+        for (at, flip) in &l.checks {
+            let mut check = IrNode::new(l.item.clone());
+            check.component = Some(Component::Checkbox);
+            check.bind.state.insert("checked".to_owned(), at.clone());
+            check.bind.actions.insert("toggle".to_owned(), flip.clone());
+            let name = format!("{}.{}", l.item, at.key);
+            row.push(self.bound(check, &name, at.key.as_str().to_owned()));
+        }
+        for (cap, label) in &l.buttons {
+            let mut button = IrNode::new(l.item.clone());
+            button.component = Some(Component::Button);
+            button
+                .bind
+                .actions
+                .insert("activate".to_owned(), cap.clone());
+            let name = format!("{}.{}", l.item, cap.action);
+            row.push(self.bound(button, &name, label.clone()));
+        }
+        let mut held = BTreeSet::new();
+        for n in &row {
+            held.extend(anchors(n));
+        }
+        let mut item = IrNode::new(self.namer.template(&l.each, &held, l.item.as_str()));
+        item.layout = stack(Axis::Horizontal, SpacingToken::Sm, Some(Align::Center));
+        item.children = row;
+        let mut list = IrNode::new(l.each.node.clone());
+        list.component = Some(Component::List);
+        list.layout = stack(Axis::Vertical, SpacingToken::Xs, None);
+        list.repeat = Some(Box::new(Repeat {
+            each: l.each.clone(),
+            item,
+        }));
+        let name = format!("{}.{}", l.each.node, l.each.key);
+        self.bound(list, &name, l.each.key.as_str().to_owned())
+    }
+
     /// `nodes` as one node: itself when it is one, a column otherwise.
     fn column(&mut self, name: &str, mut nodes: Vec<IrNode>) -> Option<IrNode> {
         match nodes.len() {
@@ -296,7 +368,12 @@ impl Build<'_> {
     }
 
     fn surface(&mut self, chosen: &Chosen, form: Form, card: Option<String>) -> IrNode {
-        let entries: Vec<IrNode> = chosen.entries.iter().map(|e| self.entry(e, form)).collect();
+        // the entries, and the lists under them
+        let mut main: Vec<IrNode> = chosen.entries.iter().map(|e| self.entry(e, form)).collect();
+        for l in &chosen.lists {
+            let list = self.list(l);
+            main.push(list);
+        }
         let mut side: Vec<IrNode> = chosen
             .choices
             .iter()
@@ -307,13 +384,13 @@ impl Build<'_> {
         }
         let (children, layout) = match form {
             Form::Compact => {
-                let mut all = entries;
+                let mut all = main;
                 all.extend(side);
                 (all, stack(Axis::Vertical, SpacingToken::Md, None))
             }
             Form::Columns => {
                 let side = self.column("side", side);
-                let main = self.column("main", entries);
+                let main = self.column("main", main);
                 let grid = Layout::Grid {
                     min_col: SizeToken::FieldMinW,
                     gap: Some(SpacingToken::Lg),
@@ -425,5 +502,9 @@ fn missing(part: Part) -> String {
             "no choice (tabs, options or radios whose action takes no parameter)".to_owned()
         }
         Part::Count => "no number (an int or a num state)".to_owned(),
+        Part::List => {
+            "no list of items (a list or a set state whose values key its node's children)"
+                .to_owned()
+        }
     }
 }

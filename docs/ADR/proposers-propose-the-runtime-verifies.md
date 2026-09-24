@@ -179,3 +179,61 @@ what phase 3b adds, orders of magnitude above it.
   rules.
 - a network call, a credential or a provider in this crate.
 - a second dispatcher for a page's own capabilities.
+
+## addendum, 2026-09-24: the rules propose the items (task-95, proposed)
+
+### context
+
+the todo of the showcase now projects its items as a list: `todo:items`,
+a `List` on the `todo` region with the ids of the visible items in the
+order shown, following the filter as the item nodes do, and each item's
+text as state (`todo.item[<id>]:text`), since an instance is named by its
+item and the IR does not interpolate a label. the consequence above,
+"the todo projects no list of its items", no longer holds, and the rules
+had no part that repeats.
+
+### decision
+
+- a fourth part of the grammar, items: `item`, `items`, `itens`, `list`,
+  `lista`, `listar`.
+- a list is found by structure: a `List` or `Set` state of a node whose
+  values are the keys of that node's children of one kind
+  (`<prefix>[<value>]`), all of them and nothing else, not empty. over
+  the todo, `todo:items`; over the ide's workbench, `changes:files`. the
+  ide's `changes:staged` holds only some of the files (a selection, not
+  the list); an empty list is `Nothing`, since a template over it could
+  not verify.
+- each item shows and accepts what every item declares alike, as the
+  verifier checks a template: a `text`, `int` or `num` state is a
+  `text`; a bool with an action of no parameter that reads that bool and
+  nothing else is a `checkbox` bound to both (the todo's `toggle`; the
+  ide's `stage` reads two states and is not); every other action of no
+  parameter, allowed to the author and not destructive, is a `button`
+  named by its label or its name (`show_diff` is "show diff"). the
+  template root is named by its item, so it has no label.
+- the list's words are its key and its items' name (`item`, `file`), so
+  the app's own word ("the files") chooses it like any other word of the
+  app. no app's name is read.
+- the lists go under the entry: after it in the compact form, in its
+  column in two columns. everything includes them.
+- continuity: the namer walks into templates. a template over the same
+  list keeps its root's id, and each node in it keeps the id its anchor
+  had there, so every instance (`todo_panel.item[<id>]` and its
+  checkbox) keeps its widget through a proposal. a list node's anchor is
+  the list it repeats over.
+
+### consequences
+
+- a surface proposed for the items never removes one: the todo's
+  `remove` is destructive and confirms with no one, and a destructive
+  action binds only to a dialog's confirm (rule 6). a removal on a
+  generated surface needs a confirmation the app holds (an open state, a
+  pending removal), which the todo does not have.
+- the ide's files show their status and their buttons, not their path:
+  the instance is named by the path in the projection, and the path is
+  no state of the file's node, so nothing can bind it as text.
+- "the active items" still does not come from the registry: `completed`
+  is a bool, and "active" is the todo's sense of it. "only the active
+  items" gives the whole list with the Active chip and count.
+- a list the filter empties has no list to find; a surface that already
+  shows it keeps its list node, with no instance.
