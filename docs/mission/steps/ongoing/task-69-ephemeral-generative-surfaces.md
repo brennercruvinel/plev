@@ -1263,3 +1263,175 @@ a fase 3 se divide. a 3a faz tudo o que não depende do provedor do LLM:
   proposta, verificada e aberta ou transformada.
 
 a 3b liga um provedor real e espera a decisão do brenner (local ou API).
+
+## fase 3a: proponentes sem provedor
+
+branch `task/69c-proposers`, worktree próprio, sobre a `main` @ a678ef4.
+
+### sonda da fase 3a (antes do primeiro tipo, 2026-09-24)
+
+um teste descartável (`crates/uir/tests/probe_69c.rs`, rodado e depois
+jogado fora) lê o golden da projeção real do todo
+(`crates/uir/fixtures/showcase-todo.snapshot.json`, que o teste
+`uir_fixture` do showcase mantém igual à página), monta
+`Capabilities::from_snapshot` e escreve à mão o IR que um proponente por
+regras escreveria para "só o que está ativo e o campo de adicionar". a
+superfície atual é a da página Surface (a fixture da task-68, id
+`todo_panel`), e os nós das capacidades que continuam guardam os ids
+dela.
+
+o registro, como o proponente o recebe (saída do teste, os itens 2 e 3
+iguais ao 1):
+
+```text
+data   todo.input:text          text  label="new todo"
+data   todo.filter:selected     text  label="filter"
+data   todo.item[1]:completed   bool  label="Absorb the plev demos into the showcase"
+data   todo.counter:active      int   label="2 active · 1 done"
+data   todo.counter:done        int   label="2 active · 1 done"
+action todo.input               set_value param=text
+action todo.input               submit    param=none
+action todo.filter[all]         select    param=none  label="All"
+action todo.filter[active]      select    param=none  label="Active"
+action todo.filter[completed]   select    param=none  label="Completed"
+action todo.item[1]             toggle    param=none
+action todo.item[1]             remove    param=none  destructive=true
+```
+
+o registro não carrega role nem parent. o `Snapshot`, que o proponente
+também recebe, carrega: `todo` region, `todo.input` text_input,
+`todo.filter` tab_list com três filhos `tab`, `todo.item[k]` list_item,
+`todo.counter` status.
+
+o IR escrito à mão verifica (`verify` com a `GenerationPolicy` padrão; a
+ordem de foco é `todo_panel.input`, `todo_panel.add`,
+`todo_panel.filter.active`):
+
+```json
+{ "plev_ir": 1, "surface": { "id": "todo_panel", "title": "quick todo", "root": {
+  "sem": "todo_panel.card", "component": "card", "label": "todo",
+  "props": { "padding": "lg", "elevation": "raised" },
+  "layout": { "stack": { "axis": "vertical", "gap": "md" } },
+  "children": [
+    { "sem": "todo_panel.entry",
+      "layout": { "stack": { "axis": "horizontal", "gap": "sm", "align": "center" } },
+      "children": [
+        { "sem": "todo_panel.input", "component": "text_field", "label": "new todo", "size": { "flex": 1 },
+          "bind": { "state": { "text": "todo.input:text" },
+                    "actions": { "set_value": { "target": "todo.input", "action": "set_value" },
+                                 "submit": { "target": "todo.input", "action": "submit" } } } },
+        { "sem": "todo_panel.add", "component": "button", "label": "add",
+          "bind": { "actions": { "activate": { "target": "todo.input", "action": "submit" } } } } ] },
+    { "sem": "todo_panel.filter", "label": "filter",
+      "layout": { "stack": { "axis": "horizontal", "gap": "xs" } },
+      "children": [
+        { "sem": "todo_panel.filter.active", "component": "chip", "label": "Active",
+          "bind": { "actions": { "activate": { "target": "todo.filter[active]", "action": "select" } } } } ] },
+    { "sem": "todo_panel.active", "component": "stat", "label": "active",
+      "bind": { "state": { "value": "todo.counter:active" } } } ] } } }
+```
+
+de onde vem cada ligação, e a regra que a acha sem nome do todo:
+
+| nó | ligação | o fato | a regra |
+|---|---|---|---|
+| `todo_panel.input`, text_field | `text` de `todo.input:text`; `set_value` e `submit` para `todo.input` | um nó de role `text_input` com um estado de kind text, uma ação com `ParamSpec` text e outra sem parâmetro | "adicionar": o campo liga o estado de texto, a ação de parâmetro text e a sem parâmetro do mesmo nó; o label é o do nó |
+| `todo_panel.add`, button | `activate` para `todo.input` `submit` | a ação sem parâmetro do mesmo nó | o botão liga a ação que o Enter do campo liga |
+| `todo_panel.filter.active`, chip | `activate` para `todo.filter[active]` `select` | filho `tab` de um nó `tab_list`, uma ação só, sem parâmetro, label "Active" | "filtro": um chip por opção de uma escolha (tab_list ou select com filhos tab, option ou radio de uma ação sem parâmetro); o seletor deixa só a opção cujo label ou chave é a palavra |
+| `todo_panel.active`, stat | `value` de `todo.counter:active` | um estado de kind int com a chave `active` | "contagem": um stat por estado int ou num; o label é a chave, porque o label do nó (`2 active · 1 done`) muda com o valor |
+
+os containers (`todo_panel.card`, `todo_panel.entry`, `todo_panel.filter`)
+guardam os ids da superfície atual porque os nós que eles seguram
+continuam.
+
+resposta: basta. cada ligação sai de role, `ValueKind`, `ParamSpec` e
+parent, e nenhuma regra cita `todo`, `input`, `filter`, `counter`,
+`active` ou `done`. a condição de parada da sonda não disparou. três
+achados ficam como limite do proponente por regras:
+
+1. o seletor é uma palavra da intenção comparada com as palavras do
+   registro (chave de estado, label e chave de opção), sem caixa, sem
+   acento e sem o s do plural. o registro do todo está em inglês. a saída
+   do teste: `selector "ativo": stats [], options []` e `selector "active":
+   stats ["todo.counter:active"], options ["todo.filter[active] select"]`.
+   as palavras de regra (adicionar, filtro, contagem, compacto, duas
+   colunas, só) o proponente entende nas duas línguas porque são dele; a
+   palavra que escolhe o que mostrar é do app.
+2. "o que está ativo" como os itens ativos não sai do registro. ele diz
+   `completed: bool` por item, e "ativo quer dizer não concluído" é um
+   sentido do todo, não um fato. o todo também não projeta a lista dos
+   itens (o P2 da fase 1), então nenhuma superfície repete sobre eles. o
+   que o registro dá para "active" é a contagem e a opção do filtro que o
+   próprio app chama assim, e é isso que o IR liga.
+3. o `Capabilities` sozinho não acha a escolha: role e parent (a tab_list
+   e as tabs) só estão no snapshot. o trait recebe os dois, então não
+   falta nada, mas a regra lê o snapshot além do registro.
+
+### parada: o campo de intenção e o botão propor não chegam ao dispatcher da página
+
+problema: o item 5 do briefing pede o campo e o botão como capacidades
+projetadas, pelo mesmo dispatcher da página, e isso não se faz com os
+arquivos permitidos (`surface_page.rs` e `surface_page/**`).
+
+- o único dispatcher da página Surface é o do todo, `TodoPage.dispatcher`,
+  campo privado de `crates/showcase/src/view/apps/app.rs`.
+  `TodoPage::dispatch` (`app/semantics.rs:244`) o empresta com o próprio
+  `TodoPage` como `Operable`, e o `Dispatcher` valida cada pedido contra a
+  projeção desse `Operable`. um `set_value` no campo de intenção, ou um
+  `propose`, volta `NotFound`: o todo não projeta esses nós;
+- a página não alcança o campo. a privacidade é por módulo, e um
+  `impl TodoPage` escrito em `surface_page.rs` também não vê `dispatcher`;
+- um segundo `Dispatcher` na página não serve à porta. o
+  `ShowcaseView::add_sink` (`view/dispatch.rs`) põe a sink da porta só no
+  dispatcher do todo, e o servidor recusa o ato cujo id a sink não ouviu
+  ("request N was dispatched, but the app's dispatcher reports no stage",
+  `crates/wire/src/server.rs:516`). e os dois dispatchers numeram a partir
+  de 1: a porta casa estágio por `RequestId`, então um id do outro
+  dispatcher passaria por esse teste com o estágio errado.
+
+opções:
+
+1. um método em `crates/showcase/src/view/apps/app/semantics.rs` que
+   empresta o dispatcher do todo para um `Operable` maior, o mesmo
+   `mem::take` que `dispatch` já faz, umas dez linhas:
+   `pub(crate) fn with_dispatcher<R>(&mut self, f: impl FnOnce(&mut Dispatcher, &mut TodoPage, Millis) -> R) -> R`.
+   a página monta um `Operable` que segura o todo, o host e o campo:
+   projeta o todo, a superfície e os dois nós da página
+   (`surface_page.intent`, text_input com `set_value` de texto;
+   `surface_page.propose`, button com `propose` lendo
+   `surface_page.intent:text`), executa esses dois e passa o resto para
+   o `Operable::execute` do todo. o receipt fica onde fica o de todo ato da
+   página, a porta ouve, o ator é o de quem pediu. impacto: um arquivo
+   fora da lista, nenhuma mudança na projeção do todo, no golden ou no
+   caminho de hoje (o clique no todo e o evento da superfície seguem por
+   `TodoPage::dispatch`).
+2. um dispatcher próprio da página, com a porta ouvindo os dois: muda
+   `view/dispatch.rs` (o `add_sink`) e o `wire` (uma sink por dispatcher e
+   ids que não colidam). impacto: o protocolo da porta muda por causa de
+   uma página de demo. não recomendo.
+3. o campo e o botão como controles da página, não capacidades, como o
+   controle de forma da fase 2: uma pessoa propõe, um agente não. nenhum
+   arquivo fora da lista. impacto: o aceite "um agente propõe pela porta"
+   não se cumpre, e o P2 da fase 2 (o controle da página não é
+   capacidade) cresce.
+4. o todo projetar a intenção e o `propose` como capacidades dele: muda
+   `app/semantics.rs`, o golden `showcase-todo.snapshot.json` e o registro
+   de que as fixtures verificam, e põe o proponente dentro do app de
+   exemplo. não recomendo.
+
+recomendação: 1. os itens 1 a 4, 6 e 7 do briefing não dependem da
+escolha (o crate `propose`, o trait, o determinístico, o LLM com o modelo
+falso, a medição, o ADR).
+
+decisão necessária: qual opção; na 1, a autorização para o método em
+`crates/showcase/src/view/apps/app/semantics.rs`.
+
+### o seletor em português (não bloqueia; decidir junto)
+
+opções: (i) o seletor casa com as palavras do registro (sem caixa, acento
+e plural), e o que não casa é um erro claro que lista as palavras que o
+registro tem; a intenção de exemplo da página usa a palavra do app ("só
+active e o campo de adicionar"); (ii) um léxico português e inglês no
+proponente (ativo, feito, concluído), que são as palavras do todo com
+outro nome, template pela porta dos fundos; (iii) a tradução fica com o
+proponente LLM. recomendação: (i) agora, e (iii) na 3b.
