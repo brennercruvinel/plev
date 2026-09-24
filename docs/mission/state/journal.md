@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #76; a task-69 espera só o brenner; disparada a task-74 fase 1
+
+- **publicado:** PR #76 (fase 4c e o flake do laboratório), merge
+  commit, gate local verde (2533). a task-69 está completa no que é do
+  orquestrador; falta o checkpoint b, do brenner.
+- **disparada:** task-74 (texto e edição), fase 1: a auditoria de
+  cobertura por escrita com as fontes embutidas de hoje, pelo render
+  headless, com relatório e golden. é a trilha do programa cuja
+  dependência está integrada; a onda 7 espera o checkpoint b. um agente
+  só.
+
 ### ciclo 3: um flake do laboratório corrigido antes de publicar a 4c
 
 - **P1 achado na integração:** o gate da `main` com a fase 4c caiu em
