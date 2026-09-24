@@ -1,0 +1,4 @@
+# escrita: latim com diacríticos (português)
+# cobre: precomposed ã ç é á à ê í ó, cedilha, til, crase, pontuação
+# fonte da frase: escrita à mão para este corpus
+ação, coração e pão: não é fácil, mas você já viu à vontade?

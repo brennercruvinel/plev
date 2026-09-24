@@ -1,0 +1,6 @@
+# escrita: hebraico
+# cobre: parágrafo RTL, letra final (ם), niqqud como marcas combinantes na segunda frase
+# significado: paz ao mundo; shalom com vogais
+# fonte da frase: saudação corrente, escrita à mão
+שלום עולם
+שָׁלוֹם
