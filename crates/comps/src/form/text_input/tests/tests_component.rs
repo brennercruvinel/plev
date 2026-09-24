@@ -48,10 +48,44 @@ fn text_input_blink() {
     let mut ti = TextInput::new();
     ti.focus();
     assert!(ti.cursor_visible());
+    ti.wake(0.0); // the focus frame
     ti.wake(0.54);
     assert!(!ti.cursor_visible());
     ti.wake(0.54);
     assert!(ti.cursor_visible());
+}
+
+/// A shell passes the real time since the last frame, and the key that
+/// focused can come after seconds of idle: the half-period starts at the
+/// focus, so the caret shows solid and its first flip is a whole
+/// half-period away.
+#[test]
+fn text_input_focus_after_an_idle_gap_starts_the_half_period_at_the_focus() {
+    let mut ti = TextInput::new();
+    ti.focus();
+    let w = ti.wake(10.0);
+    assert!(!w.now, "no flip on the focus frame");
+    assert!(ti.cursor_visible());
+    let next = w.next.expect("focused: a flip is pending").as_secs_f32();
+    assert!((next - CURSOR_BLINK_INTERVAL).abs() < 1e-6, "{next}");
+}
+
+/// A key that lands late in a half-period restarts it at the key: the
+/// caret stays solid for a whole half-period after typing, never the
+/// remainder of the one before.
+#[test]
+fn text_input_a_keystroke_restarts_the_half_period_at_the_key() {
+    let mut ti = TextInput::new();
+    ti.focus();
+    ti.wake(0.0);
+    ti.wake(0.5);
+    assert!(ti.cursor_visible(), "0.5 s: not flipped yet");
+    ti.handle_char('a');
+    // the key's frame arrives 0.5 s after the last one
+    let w = ti.wake(0.5);
+    assert!(!w.now && ti.cursor_visible());
+    let next = w.next.expect("a flip is pending").as_secs_f32();
+    assert!((next - CURSOR_BLINK_INTERVAL).abs() < 1e-6, "{next}");
 }
 
 /// The blink is a deadline: with a 60 Hz `dt` the caret flips at the
@@ -61,6 +95,7 @@ fn text_input_blink() {
 fn text_input_blink_flips_on_time_and_asks_only_for_the_next_flip() {
     let mut ti = TextInput::new();
     ti.focus();
+    ti.wake(0.0); // the focus frame
     let dt = 1.0 / 60.0;
     let mut flips = Vec::new();
     for turn in 1..=120 {
@@ -106,6 +141,7 @@ fn text_input_unfocused_has_no_caret_and_nothing_pending() {
 fn text_input_reset_blink_on_type() {
     let mut ti = TextInput::new();
     ti.focus();
+    ti.wake(0.0); // the focus frame
     ti.wake(0.54); // blink off
     assert!(!ti.cursor_visible());
     ti.handle_char('a'); // resets blink
