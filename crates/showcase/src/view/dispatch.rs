@@ -6,7 +6,7 @@ use comps::prelude::{EmptyState, EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::input::FileDrop;
 use engine::theme::Theme;
-use sem::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot};
+use sem::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot, Value};
 
 use super::components::toast;
 use super::{Layers, Pane, ShowcaseView, panel};
@@ -92,10 +92,14 @@ impl ShowcaseView {
         match self.pane() {
             None => EventResult::IGNORED,
             Some(pane) => match pane {
+                // A card picked is the shell's `shell.theme`, the same
+                // capability as the T key and the menu, through the
+                // dispatcher.
                 Pane::Theme => {
                     let (r, picked) = self.panes.themes.handle_event(event, content);
                     if let Some(name) = picked {
-                        self.set_theme(name);
+                        let name = Value::Text(name.to_owned());
+                        self.ask_shell(ShellTarget::Theme, "select", Some(name));
                     }
                     r
                 }
@@ -349,11 +353,16 @@ impl ShowcaseView {
     }
 
     /// A request from an actor outside the page's own input (assistive
-    /// technology, an agent through the port), through the active page's
-    /// one dispatcher (an open overlay leaves the page inert, as for a
-    /// click); the receipt as it stands after the dispatch. `None` when
-    /// the page takes none.
+    /// technology, an agent through the port, the menu), through the
+    /// gallery's one dispatcher: aimed at the shell it runs over the
+    /// shell (`shell.rs`); aimed at the active page it runs over the page
+    /// (an open overlay leaves the page inert, as for a click). The
+    /// receipt as it stands after the dispatch; `None` when the page
+    /// takes none.
     pub fn act(&mut self, req: Request) -> Option<Receipt> {
+        if self.is_shell(&req.target) {
+            return self.act_shell(req);
+        }
         match self.pane() {
             Some(Pane::Todo) => {
                 let inert = self.overlay_holds_pointer();
@@ -450,3 +459,9 @@ mod agent;
 /// view's side of the second window.
 mod detached;
 pub use detached::Detached;
+
+/// The shell's capabilities (task-76 item 4): the page, the theme, the
+/// page in a window of its own and the recording's save, projected and
+/// run through the gallery's dispatcher.
+mod shell;
+pub use shell::{Shell, ShellTarget};

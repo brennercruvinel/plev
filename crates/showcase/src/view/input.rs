@@ -8,7 +8,10 @@ use comps::prelude::{EventResult, Modal, ModalAction, Rect, WidgetEvent};
 use engine::input::FileDrop;
 use engine::theme::Intent;
 
+use sem::Value;
+
 use super::components::context_menu;
+use super::dispatch::ShellTarget;
 use super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
 
 /// Non-character editing keys the platform shell forwards (winit-free so
@@ -58,6 +61,10 @@ impl ShowcaseView {
         if typed {
             return true;
         }
+        // The shell's keys are its capabilities (`dispatch::shell`): each
+        // is a person's request through the gallery's dispatcher, the
+        // path the menu, a screen reader and an agent take. A refused
+        // request still counts as handled: the person aimed at the shell.
         match key {
             "t" | "T" => {
                 let next = match self.theme_name.as_str() {
@@ -66,28 +73,38 @@ impl ShowcaseView {
                     "dark" => "light",
                     _ => "core",
                 };
-                self.set_theme(next);
+                self.ask_shell(ShellTarget::Theme, "select", Some(Value::Text(next.into())));
                 true
             }
             d @ ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9") => {
                 let idx = (d.as_bytes()[0] - b'1') as usize;
-                self.set_page(idx);
+                self.ask_page(idx);
                 true
             }
             // "0" reads as 10 (matching the sidebar hints); the pages
             // past the tenth are reachable via the sidebar.
             "0" if PAGES.len() >= HOTKEY_PAGES => {
-                self.set_page(HOTKEY_PAGES - 1);
+                self.ask_page(HOTKEY_PAGES - 1);
                 true
             }
             // The page to a window of its own, or back (task-76 item 2):
             // the shell owns the windows and takes the request.
             "d" | "D" => {
-                self.panes.detach_asked = true;
+                self.ask_shell(ShellTarget::Detach, "toggle", None);
                 true
             }
             _ => false,
         }
+    }
+
+    /// A person picks the page at `index` of the table (a digit, a
+    /// sidebar link): `shell.page`, through the dispatcher.
+    fn ask_page(&mut self, index: usize) -> bool {
+        let Some(page) = PAGES.get(index) else {
+            return false;
+        };
+        let title = Value::Text(page.title.to_owned());
+        self.ask_shell(ShellTarget::Page, "select", Some(title))
     }
 
     /// Close the topmost overlay (Escape): the page's focus blurs first
@@ -357,7 +374,7 @@ impl ShowcaseView {
         // the menu button on a phone.
         let (shell_result, nav) = self.shell.handle_event(event, &self.theme);
         if let Some(i) = nav {
-            self.set_page(i);
+            self.ask_page(i);
             return true;
         }
         result = result.merge(shell_result);

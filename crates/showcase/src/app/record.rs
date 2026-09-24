@@ -25,8 +25,10 @@
 //!
 //! The recorder keeps a bounded window (the last 20 seconds by default)
 //! and the shell writes it on the save keys (`SAVE_KEYS`: cmd-shift-s on
-//! macOS, ctrl-shift-s elsewhere), when the window closes, and on a
-//! panic, to `default_dir()`: `showcase-<pid>-<n>.monster` for a save,
+//! macOS, ctrl-shift-s elsewhere; the keys and the menu item are the
+//! shell's `shell.save_session`, a person's request through the
+//! gallery's dispatcher, task-76 item 4), when the window closes, and on
+//! a panic, to `default_dir()`: `showcase-<pid>-<n>.monster` for a save,
 //! `session-<unix ms>-<pid>-<n>.monster` from the panic hook. The
 //! directory is made private to the user, and nothing leaves the
 //! machine. Without the variable nothing is created: no recorder, no
@@ -221,6 +223,7 @@ impl App {
     /// dispatcher's stages, the state now, the panic hook, and where the
     /// files go, in the log.
     pub(super) fn record(&mut self, recording: Option<Recording>) {
+        self.view.set_recording(recording.is_some());
         if let Some(recording) = &recording {
             recording.attach(&mut self.view);
             if let Err(e) = recording.catch_panics() {
@@ -246,19 +249,29 @@ impl App {
         }
     }
 
-    /// A key pressed, when the session is recorded: the save keys write
-    /// the window and the key goes to nobody else (`true`); any other key
-    /// is recorded by its kind, never its character (`false`).
+    /// A key pressed, when the session is recorded: the save keys ask the
+    /// shell's `shell.save_session` (the person's request, through the
+    /// dispatcher; the save follows) and go to nobody else (`true`); any
+    /// other key is recorded by its kind, never its character (`false`).
     pub(super) fn record_key(&mut self, key: &Key) -> bool {
         if self.recording.is_none() {
             return false;
         }
         if is_save_key(key, self.modifiers) {
-            self.save_session("key");
+            self.view.request_save();
+            self.save_requested();
             return true;
         }
         self.record_input(kind_of(key), None, None);
         false
+    }
+
+    /// `shell.save_session` ran (the keys, the menu, a screen reader):
+    /// the shell, which owns the recording, writes the window.
+    pub(super) fn save_requested(&mut self) {
+        if self.view.take_save_request() {
+            self.save_session("asked");
+        }
     }
 
     /// A button of the pointer pressed or released at `(x, y)` in window
