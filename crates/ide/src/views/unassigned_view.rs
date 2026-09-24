@@ -14,7 +14,7 @@ use crate::status::StatusColors;
 use comps::action::Badge;
 use comps::feedback::Scrollbar;
 use comps::nav::PanelHeader;
-use comps::prelude::{Rect, edge_light, rounded_rect};
+use comps::prelude::{Rect, Wake, edge_light, rounded_rect};
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
 use engine::text::TextMeasurer;
@@ -243,9 +243,9 @@ impl UnassignedView {
         self.scrollbar.notify_scroll();
     }
 
-    /// Advance the scrollbar fade. `true` while animating.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        self.scrollbar.tick(dt)
+    /// Advance the scrollbar fade: a frame on every turn while it moves.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        Wake::moving(self.scrollbar.tick(dt))
     }
 
     /// Build and render into a compositor layer.

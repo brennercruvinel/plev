@@ -13,6 +13,7 @@ use super::unassigned_view::UnassignedView;
 use crate::ids::Ids;
 use comps::feedback::{ContextMenu, Modal, ToastManager};
 use comps::overlay::OverlayManager;
+use comps::prelude::Wake;
 use engine::compositor::{Compositor, LayerId};
 use engine::theme::{Intent, Theme};
 use sem::RequestId;
@@ -307,15 +308,17 @@ impl WorkspaceView {
     }
 
     /// Advance the widgets that animate (scrollbar fades, the commit
-    /// field caret, the toasts). `true` while frames are needed; a toast
-    /// on screen keeps them coming until it dismisses itself.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        let a = self.unassigned.tick(dt);
-        let b = self.stacks.tick(dt);
-        let c = self.diff.tick(dt);
-        let d = self.commit_form.tick(dt);
-        let e = self.toasts.tick(dt) || !self.toasts.is_empty();
-        a || b || c || d || e
+    /// field caret, the toasts) and merge what they ask of the loop: a
+    /// frame on every turn while something moves; otherwise the earliest
+    /// deadline (the caret's next flip, the instant a toast dismisses
+    /// itself); nothing when all rest.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        self.unassigned
+            .wake(dt)
+            .merge(self.stacks.wake(dt))
+            .merge(self.diff.wake(dt))
+            .merge(self.commit_form.wake(dt))
+            .merge(self.toasts.wake(dt))
     }
 
     pub fn toggle_theme(&mut self) {

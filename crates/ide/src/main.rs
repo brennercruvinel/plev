@@ -8,6 +8,13 @@
 //! repository or the commit form becomes a request through its
 //! dispatcher, the same path an agent or a test takes.
 //!
+//! Frames render on demand, paced as the showcase paces them: the
+//! workbench's tick answers a [`Wake`], motion (a scrollbar fade, a toast
+//! springing in) draws every turn, and a caret or a toast at rest sleeps
+//! the loop until its deadline (`ControlFlow::WaitUntil`), or for good
+//! when nothing is pending. Input, the git worker and the file watcher end
+//! the wait early, as winit documents.
+//!
 //! Run: `cargo run -p ide [path-to-repo]` (defaults to the cwd).
 
 mod actions;
@@ -16,7 +23,9 @@ mod watcher;
 
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Instant;
 
+use comps::prelude::Wake;
 use engine::actions::{
     Action, ActionRegistry, ContextStack, KeyContext, KeymapMatcher, MatchResult,
     keystroke_from_key_event,
@@ -29,8 +38,10 @@ use git::{GitClient, GitEvent};
 use ide::views::workspace::Side;
 use ide::workbench::Workbench;
 use winit::application::ApplicationHandler;
-use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
-use winit::event_loop::{ActiveEventLoop, EventLoop};
+use winit::event::{
+    ElementState, KeyEvent, MouseButton, MouseScrollDelta, StartCause, WindowEvent,
+};
+use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::{Key, ModifiersState};
 use winit::window::{CursorIcon, Window, WindowAttributes, WindowId};
 
@@ -80,7 +91,8 @@ struct App {
     registry: ActionRegistry,
 
     /// Frame clock for the widgets that animate (scrollbar fades, the
-    /// commit field caret). Ticks only while a frame is being drawn.
+    /// commit field caret, the toasts). Ticks only while a frame is being
+    /// drawn; its `since_last` is the real time a deadline slept through.
     clock: engine::animation::FrameClock,
 }
 
@@ -108,6 +120,24 @@ impl App {
         self.compositor.invalidate();
         if let Some(w) = &self.window {
             w.request_redraw();
+        }
+    }
+
+    /// What the frame's [`Wake`] asks of the loop, after the frame that
+    /// carries its `now` was drawn: continuous motion draws the next
+    /// frame; a deadline sets the wait to that instant; nothing pending
+    /// sleeps until an event. Any event ends a wait early.
+    fn pace(&mut self, event_loop: &ActiveEventLoop, wake: Wake) {
+        match wake.next {
+            Some(next) if next.is_zero() => {
+                // Something still moves: keep the frames coming.
+                self.invalidate();
+                event_loop.set_control_flow(ControlFlow::Wait);
+            }
+            Some(next) => {
+                event_loop.set_control_flow(ControlFlow::WaitUntil(Instant::now() + next))
+            }
+            None => event_loop.set_control_flow(ControlFlow::Wait),
         }
     }
 
@@ -209,6 +239,18 @@ impl App {
 }
 
 impl ApplicationHandler<AppEvent> for App {
+    /// The deadline a tick asked for came due: the frame whose tick flips
+    /// the caret or lets a toast go. The wait goes back to `Wait` first,
+    /// since a `WaitUntil` in the past would fire on every iteration if
+    /// the redraw does not come (an occluded window); the redraw's own
+    /// wake sets the next.
+    fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: StartCause) {
+        if let StartCause::ResumeTimeReached { .. } = cause {
+            event_loop.set_control_flow(ControlFlow::Wait);
+            self.invalidate();
+        }
+    }
+
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         let title = format!("plev ide - {}", self.bench.workspace().repo_label);
         let attrs = WindowAttributes::default()
@@ -395,14 +437,16 @@ impl ApplicationHandler<AppEvent> for App {
                 else {
                     return;
                 };
-                // Animated widgets keep frames coming while they settle.
+                // The real time since the last frame: a deadline the loop
+                // slept through arrives whole (`dt` is clamped for motion).
                 let tick = self.clock.tick();
-                if self.bench.tick(tick.dt) {
-                    self.compositor.invalidate();
-                    if let Some(w) = &self.window {
-                        w.request_redraw();
-                    }
-                }
+                let wake = self.bench.wake(tick.since_last);
+                log::debug!(
+                    "frame: {:.3} s since the last, wake now {} next {:?}",
+                    tick.since_last,
+                    wake.now,
+                    wake.next
+                );
                 renderer::render_frame(
                     gpu,
                     text_system,
@@ -411,6 +455,9 @@ impl ApplicationHandler<AppEvent> for App {
                     &mut self.compositor,
                     &mut self.bench,
                 );
+                // `wake.now` is carried by this frame: the scene was built
+                // after the tick, so a flipped caret is already in it.
+                self.pace(event_loop, wake);
             }
 
             _ => {}

@@ -5,7 +5,7 @@
 
 use comps::feedback::Scrollbar;
 use comps::nav::PanelHeader;
-use comps::prelude::Rect;
+use comps::prelude::{Rect, Wake};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::input::scroll::ScrollState;
 use engine::text::{TextMeasurer, TextStyle};
@@ -107,8 +107,9 @@ impl DiffView {
         self.scrollbar.notify_scroll();
     }
 
-    pub fn tick(&mut self, dt: f32) -> bool {
-        self.scrollbar.tick(dt)
+    /// Advance the scrollbar fade: a frame on every turn while it moves.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        Wake::moving(self.scrollbar.tick(dt))
     }
 
     pub fn render(

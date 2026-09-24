@@ -25,6 +25,7 @@ use std::collections::VecDeque;
 use std::path::Path;
 use std::time::Instant;
 
+use comps::prelude::Wake;
 use engine::compositor::Compositor;
 use git::{GitClient, GitEvent};
 use sem::{
@@ -178,9 +179,21 @@ impl Workbench {
         }
     }
 
-    /// Advances what animates; `true` while frames are needed.
+    /// Advances what animates by `dt` seconds (the real time since the
+    /// last frame) and says what it asks of the loop: a frame on every
+    /// turn while something moves, the earliest deadline while things
+    /// rest (a caret flip, a toast leaving), nothing otherwise.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        self.workspace.wake(dt)
+    }
+
+    /// [`Workbench::wake`] as the `bool` a settle loop reads (the
+    /// workbench tests let the toasts spring in with it): `true` while
+    /// something moves, a frame now or on the very next turn. A focused
+    /// caret between flips and a toast at rest are settled.
     pub fn tick(&mut self, dt: f32) -> bool {
-        self.workspace.tick(dt)
+        let wake = self.wake(dt);
+        wake.now || wake.is_continuous()
     }
 
     /// Draws the workspace into its frame and binds its ids; the host owns
