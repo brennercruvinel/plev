@@ -47,6 +47,7 @@ mod error;
 mod ir;
 mod item;
 mod policy;
+mod schema;
 mod token;
 mod verify;
 mod vocab;
@@ -56,6 +57,7 @@ pub use decode::{decode, parse};
 pub use error::{IrError, Rule};
 pub use ir::{Bind, CapabilityRef, ITEM, Ir, IrNode, Repeat, Surface, VERSION};
 pub use policy::{GenerationPolicy, HARD_DEPTH};
+pub use schema::schema;
 pub use token::{
     Align, Axis, ColorRole, ControlSize, Elevation, Layout, MAX_FLEX, MAX_RATIO, MIN_RATIO, Props,
     ShapeRole, Size, SizeToken, SpacingToken, TypographyRole,

@@ -14,7 +14,7 @@
 use std::collections::BTreeMap;
 
 use sem::{ActionName, SemError, SemId, StateRef};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::token::{Layout, Props, Size};
 use crate::vocab::Component;
@@ -122,10 +122,8 @@ impl Bind {
     }
 }
 
-/// an action of the app: the node that declares it and its name. the
-/// decoder reads it only from an object.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+/// an action of the app: the node that declares it and its name.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct CapabilityRef {
     pub target: SemId,
     pub action: ActionName,

@@ -1,11 +1,17 @@
 //! Random IRs over the registry of `support::caps()`: the verifier never
 //! panics and always answers `Ok` or at least one error; the serde form
 //! round trips; a verified IR binds only declared capabilities; the IR's
-//! JSON holds no number but its version and its proportions. Random edits
+//! JSON holds no number but its version and its proportions; the schema
+//! accepts every IR whose names and proportions are in range. Random edits
 //! of a valid document: the reader never panics, every error it answers
-//! points at a place that is in the document, and what it accepts writes
-//! back to itself.
+//! points at a place that is in the document, what it accepts writes back
+//! to itself, and whatever the schema accepts the reader reads but for the
+//! grammar of an id, a state ref or an action name, which the schema
+//! leaves to the reader (a string there, the reader says which one is not
+//! an id).
 
+// the validator for the keywords the schema uses (no schema dependency).
+mod jsonschema;
 // shared with rules.rs: this binary uses the registry only.
 #[allow(dead_code)]
 mod support;
@@ -17,8 +23,8 @@ use serde_json::Value;
 use support::caps;
 use uir::{
     Align, Axis, CapabilityRef, ColorRole, Component, ControlSize, Elevation, GenerationPolicy, Ir,
-    IrNode, Layout, Props, Repeat, ShapeRole, Size, SizeToken, SpacingToken, Surface,
-    TypographyRole, decode, names, verify,
+    IrNode, Layout, Props, Repeat, Rule, ShapeRole, Size, SizeToken, SpacingToken, Surface,
+    TypographyRole, decode, names, schema, verify,
 };
 
 const IDS: &[&str] = &[
@@ -140,18 +146,13 @@ fn capability() -> impl Strategy<Value = CapabilityRef> {
     })
 }
 
+/// a node without children; `bounded` also keeps its binding names to the
+/// ones some component accepts.
 fn leaf(bounded: bool) -> impl Strategy<Value = IrNode> {
     let (states, events) = names();
-    let state_names: Vec<String> = states
-        .iter()
-        .chain(&["bogus"])
-        .map(|s| s.to_string())
-        .collect();
-    let event_names: Vec<String> = events
-        .iter()
-        .chain(&["bogus"])
-        .map(|s| s.to_string())
-        .collect();
+    let bogus: &[&str] = if bounded { &[] } else { &["bogus"] };
+    let state_names: Vec<String> = states.iter().chain(bogus).map(|s| s.to_string()).collect();
+    let event_names: Vec<String> = events.iter().chain(bogus).map(|s| s.to_string()).collect();
     (
         sem_id(),
         proptest::option::of(select(Component::ALL.to_vec())),
@@ -271,6 +272,13 @@ proptest! {
     }
 
     #[test]
+    fn the_schema_accepts_every_ir_within_its_ranges(ir in ir(true)) {
+        let doc = serde_json::to_value(&ir).unwrap();
+        let errors = jsonschema::validate(&schema(), &doc);
+        prop_assert!(errors.is_empty(), "{errors:#?}");
+    }
+
+    #[test]
     fn the_serde_form_round_trips(ir in ir(false)) {
         let json = serde_json::to_value(&ir).unwrap();
         prop_assert_eq!(&serde_json::from_value::<Ir>(json.clone()).unwrap(), &ir);
@@ -302,6 +310,14 @@ proptest! {
         };
         if let Some(slot) = doc.pointer_mut(&at) {
             *slot = replacement;
+        }
+        let fits = jsonschema::validate(&schema(), &doc).is_empty();
+        if let (true, Err(errors)) = (fits, decode(&doc)) {
+            for e in errors {
+                let grammar = matches!(e.rule, Rule::Identity | Rule::State | Rule::Action)
+                    && doc.pointer(&e.pointer).is_some_and(Value::is_string);
+                prop_assert!(grammar, "the schema takes what the reader refuses: {e} in {doc}");
+            }
         }
         match decode(&doc) {
             Ok(read) => {

@@ -7,6 +7,8 @@
 //! binding) to the serde form of its type, so the two readers accept the
 //! same documents and build the same `Ir`; the tests hold them to that.
 
+use std::collections::BTreeMap;
+
 use serde::de::{DeserializeOwned, Error as _};
 use serde::{Deserialize, Deserializer};
 use serde_json::{Map, Value};
@@ -32,6 +34,7 @@ const NODE: &[&str] = &[
 ];
 const BIND: &[&str] = &["state", "actions"];
 const REPEAT: &[&str] = &["each", "item"];
+const CAPABILITY: &[&str] = &["target", "action"];
 
 /// reads an IR from JSON text: a text that is not JSON is one error at the
 /// document, anything else is every shape error at once.
@@ -215,9 +218,7 @@ impl Decoder {
     fn bind(&mut self, v: &Value, at: &Ptr) -> Option<Bind> {
         let map = self.object(v, at, "a binding", BIND)?;
         let state = self.entries::<sem::StateRef>(map, at, "state", Rule::State);
-        let objects = self.objects(map, at, "actions");
-        let actions = self.entries::<CapabilityRef>(map, at, "actions", Rule::Action);
-        let actions = actions.filter(|_| objects);
+        let actions = self.capabilities(map, at);
         Some(Bind {
             state: state?,
             actions: actions?,
@@ -231,7 +232,7 @@ impl Decoder {
         at: &Ptr,
         key: &str,
         rule: Rule,
-    ) -> Option<std::collections::BTreeMap<String, T>> {
+    ) -> Option<BTreeMap<String, T>> {
         let Some(v) = map.get(key) else {
             return Some(Default::default());
         };
@@ -240,7 +241,7 @@ impl Decoder {
             self.fail(Rule::Schema, &at, format!("{key} is an object of names"));
             return None;
         };
-        let mut out = Some(std::collections::BTreeMap::new());
+        let mut out = Some(BTreeMap::new());
         for (name, value) in sorted(entries) {
             let one = self.typed::<T>(value, &at.key(name), rule);
             out = out.zip(one).map(|(mut all, one)| {
@@ -251,23 +252,40 @@ impl Decoder {
         out
     }
 
-    /// true when every entry of the map at `key` is an object, as a
-    /// capability is; an entry written as a list is refused at its place.
-    fn objects(&mut self, map: &Map<String, Value>, at: &Ptr, key: &str) -> bool {
-        let entries = map.get(key).and_then(Value::as_object);
-        let mut ok = true;
-        for (name, value) in entries.into_iter().flatten() {
-            if !value.is_object() {
-                let here = at.key(key).key(name);
-                self.fail(
-                    Rule::Action,
-                    &here,
-                    "a capability is an object: target and action",
-                );
-                ok = false;
-            }
+    /// the capabilities a binding names, each an object read field by
+    /// field so an error points at the id or the name that is wrong.
+    fn capabilities(
+        &mut self,
+        map: &Map<String, Value>,
+        at: &Ptr,
+    ) -> Option<BTreeMap<String, CapabilityRef>> {
+        let Some(v) = map.get("actions") else {
+            return Some(BTreeMap::new());
+        };
+        let at = at.key("actions");
+        let Some(entries) = v.as_object() else {
+            self.fail(Rule::Schema, &at, "actions is an object of names");
+            return None;
+        };
+        let mut out = Some(BTreeMap::new());
+        for (name, value) in sorted(entries) {
+            let here = at.key(name);
+            let one = self
+                .object(value, &here, "a capability", CAPABILITY)
+                .and_then(|cap| {
+                    let target = self.field(cap, &here, "target", Rule::Action);
+                    let action = self.field(cap, &here, "action", Rule::Action);
+                    Some(CapabilityRef {
+                        target: target?,
+                        action: action?,
+                    })
+                });
+            out = out.zip(one).map(|(mut all, one)| {
+                all.insert(name.clone(), one);
+                all
+            });
         }
-        ok
+        out
     }
 
     /// a struct whose fields are all optional, each field read on its own
@@ -433,7 +451,7 @@ mod tests {
                     "/surface/root/children/1/bind/state/text".to_owned()
                 ),
                 (
-                    Rule::Action,
+                    Rule::Schema,
                     "/surface/root/children/1/bind/actions/activate".to_owned()
                 ),
                 (Rule::Schema, "/surface/root/children/2".to_owned()),

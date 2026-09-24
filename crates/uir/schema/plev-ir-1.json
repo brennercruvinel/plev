@@ -1,0 +1,466 @@
+{
+  "$defs": {
+    "action_name": {
+      "description": "an action name, [a-z0-9_]+.",
+      "minLength": 1,
+      "type": "string"
+    },
+    "align": {
+      "enum": [
+        "start",
+        "center",
+        "end",
+        "stretch"
+      ]
+    },
+    "axis": {
+      "enum": [
+        "horizontal",
+        "vertical"
+      ]
+    },
+    "bind": {
+      "additionalProperties": false,
+      "properties": {
+        "actions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/capability"
+          },
+          "propertyNames": {
+            "enum": [
+              "activate",
+              "set_value",
+              "submit",
+              "toggle",
+              "select",
+              "confirm",
+              "cancel"
+            ]
+          },
+          "type": "object"
+        },
+        "state": {
+          "additionalProperties": {
+            "$ref": "#/$defs/state_ref"
+          },
+          "propertyNames": {
+            "enum": [
+              "busy",
+              "active",
+              "text",
+              "checked",
+              "on",
+              "value",
+              "selected",
+              "options",
+              "rows",
+              "data",
+              "open",
+              "source"
+            ]
+          },
+          "type": "object"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "capability": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/action_name"
+        },
+        "target": {
+          "$ref": "#/$defs/sem_id"
+        }
+      },
+      "required": [
+        "target",
+        "action"
+      ],
+      "type": "object"
+    },
+    "color": {
+      "enum": [
+        "bg",
+        "surface",
+        "bg_panel",
+        "bg_hover",
+        "text",
+        "text_dim",
+        "text_mid",
+        "accent",
+        "accent_dim",
+        "success",
+        "danger",
+        "warning",
+        "info",
+        "divider",
+        "border_active"
+      ]
+    },
+    "component": {
+      "anyOf": [
+        {
+          "enum": [
+            "button",
+            "icon_button",
+            "text_field",
+            "checkbox",
+            "switch",
+            "slider",
+            "select",
+            "tabs",
+            "list",
+            "table",
+            "card",
+            "stat",
+            "separator",
+            "dialog",
+            "empty_state",
+            "progress",
+            "badge",
+            "chip",
+            "text",
+            "image"
+          ]
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "chart": {
+              "enum": [
+                "line",
+                "bar",
+                "area",
+                "donut"
+              ]
+            }
+          },
+          "required": [
+            "chart"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "control_size": {
+      "enum": [
+        "xs",
+        "sm",
+        "md",
+        "lg",
+        "xl"
+      ]
+    },
+    "elevation": {
+      "enum": [
+        "base",
+        "raised",
+        "floating",
+        "overlay",
+        "hint"
+      ]
+    },
+    "layout": {
+      "anyOf": [
+        {
+          "const": "overlay"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "stack": {
+              "additionalProperties": false,
+              "properties": {
+                "align": {
+                  "$ref": "#/$defs/align"
+                },
+                "axis": {
+                  "$ref": "#/$defs/axis"
+                },
+                "gap": {
+                  "$ref": "#/$defs/spacing"
+                }
+              },
+              "required": [
+                "axis"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "stack"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "grid": {
+              "additionalProperties": false,
+              "properties": {
+                "gap": {
+                  "$ref": "#/$defs/spacing"
+                },
+                "min_col": {
+                  "$ref": "#/$defs/size_token"
+                }
+              },
+              "required": [
+                "min_col"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "grid"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "split": {
+              "additionalProperties": false,
+              "properties": {
+                "axis": {
+                  "$ref": "#/$defs/axis"
+                },
+                "ratio": {
+                  "maximum": 90,
+                  "minimum": 10,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "axis",
+                "ratio"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "split"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "node": {
+      "additionalProperties": false,
+      "properties": {
+        "bind": {
+          "$ref": "#/$defs/bind"
+        },
+        "children": {
+          "items": {
+            "$ref": "#/$defs/node"
+          },
+          "type": "array"
+        },
+        "component": {
+          "$ref": "#/$defs/component"
+        },
+        "description": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "layout": {
+          "$ref": "#/$defs/layout"
+        },
+        "props": {
+          "$ref": "#/$defs/props"
+        },
+        "repeat": {
+          "$ref": "#/$defs/repeat"
+        },
+        "sem": {
+          "$ref": "#/$defs/sem_id"
+        },
+        "size": {
+          "$ref": "#/$defs/size"
+        }
+      },
+      "required": [
+        "sem"
+      ],
+      "type": "object"
+    },
+    "props": {
+      "additionalProperties": false,
+      "properties": {
+        "background": {
+          "$ref": "#/$defs/color"
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "control_size": {
+          "$ref": "#/$defs/control_size"
+        },
+        "elevation": {
+          "$ref": "#/$defs/elevation"
+        },
+        "padding": {
+          "$ref": "#/$defs/spacing"
+        },
+        "shape": {
+          "$ref": "#/$defs/shape"
+        },
+        "typography": {
+          "$ref": "#/$defs/typography"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "repeat": {
+      "additionalProperties": false,
+      "properties": {
+        "each": {
+          "$ref": "#/$defs/state_ref"
+        },
+        "item": {
+          "$ref": "#/$defs/node"
+        }
+      },
+      "required": [
+        "each",
+        "item"
+      ],
+      "type": "object"
+    },
+    "sem_id": {
+      "description": "a SemId in canonical text: name segments [a-z0-9_]+ joined by '.', a segment may be followed by bracketed keys ('changes.file[src/lib.rs]'). inside a repeat, every id carries the key [{item}] once.",
+      "minLength": 1,
+      "type": "string"
+    },
+    "shape": {
+      "enum": [
+        "pill",
+        "dropdown",
+        "tabs",
+        "card",
+        "block",
+        "item",
+        "nav",
+        "cluster",
+        "tooltip",
+        "micro"
+      ]
+    },
+    "size": {
+      "additionalProperties": false,
+      "properties": {
+        "flex": {
+          "maximum": 12,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "max": {
+          "$ref": "#/$defs/size_token"
+        },
+        "min": {
+          "$ref": "#/$defs/size_token"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "size_token": {
+      "enum": [
+        "menu_w",
+        "modal_max_w",
+        "sidebar_w",
+        "sidebar_rail_w",
+        "card_w",
+        "card_min_w",
+        "readable_max_w",
+        "field_min_w",
+        "toast_w",
+        "tooltip_max_w",
+        "dropdown_max_h"
+      ]
+    },
+    "spacing": {
+      "enum": [
+        "xs",
+        "sm",
+        "md",
+        "lg",
+        "xl",
+        "xxl"
+      ]
+    },
+    "state_ref": {
+      "description": "a piece of app state, '<sem_id>:<key>' ('commit.message:text').",
+      "minLength": 3,
+      "type": "string"
+    },
+    "surface": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/sem_id"
+        },
+        "root": {
+          "$ref": "#/$defs/node"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "root"
+      ],
+      "type": "object"
+    },
+    "typography": {
+      "enum": [
+        "h4",
+        "headline",
+        "title",
+        "base_r",
+        "base_m",
+        "base_2r",
+        "base_2m",
+        "base_2sm",
+        "base_2b",
+        "caption_r",
+        "caption_sm",
+        "small_r",
+        "small_sm",
+        "body",
+        "body_2r",
+        "body_2m",
+        "body_2b",
+        "hairline",
+        "mono",
+        "readout"
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "an interface surface described by meaning: identity, a component of a closed vocabulary, props by theme token, layout by primitives, and bindings to the state and the actions the app declares. only what the verifier accepts reaches the runtime.",
+  "properties": {
+    "plev_ir": {
+      "const": 1
+    },
+    "surface": {
+      "$ref": "#/$defs/surface"
+    }
+  },
+  "required": [
+    "plev_ir",
+    "surface"
+  ],
+  "title": "plev IR, version 1",
+  "type": "object"
+}
