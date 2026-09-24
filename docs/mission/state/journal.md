@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #88 (task-77 fase 1); disparada a fase 1b
+
+- **publicado:** PR #88, merge commit, gate local verde na `main` (2772,
+  +15), regressão 163 sem mudança.
+- **disparado:** task-77 fase 1b, o blur segue a escala. regra: a escala
+  1 não muda nenhum byte, porque os `frame.png` dos baselines são de 1x e
+  o `regress check` compara hash de cena; as outras escalas reproduzem o
+  perfil de 1x em pixels lógicos. a sonda mede as duas opções (sigma
+  multiplicado com mais amostras, ou desfocar na resolução lógica) e
+  escolhe pelos números. no Opus, um agente só.
+
 ### ciclo 3: determinismo visual (task-77 fase 1)
 
 - **integrada:** fase 1 (merge da `task/77a-determinism`). o `regress`
