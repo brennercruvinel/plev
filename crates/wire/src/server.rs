@@ -42,8 +42,10 @@ use crate::proto::{
     StageReply,
 };
 use crate::ring::Ring;
+use crate::scene::{Offer, SceneAsk, SceneWatch, Watches};
 use crate::shown::{Looks, Part, Shown, keeps};
 use crate::sink::{Heard, PortSink, Waits};
+pub use crate::traffic::Traffic;
 
 /// a connection, numbered by the transport.
 pub type ConnId = u64;
@@ -93,30 +95,6 @@ pub trait Host {
     }
 }
 
-/// what went through one port since it opened, counted where it happens:
-/// the transport counts connections, messages and bytes (a line as
-/// written on the socket, its `\n` included), the server counts what the
-/// messages were. `errors` adds the lines refused before the app (not
-/// JSON, another version) to the errors the server answered.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct Traffic {
-    pub conns: u64,
-    pub msgs_in: u64,
-    pub msgs_out: u64,
-    pub bytes_in: u64,
-    pub bytes_out: u64,
-    pub observes_snapshot: u64,
-    pub observes_delta: u64,
-    pub acts: u64,
-    /// acts by what they rest on: `from_revision`, or `observed` given
-    /// explicitly. an act with both or neither is in `acts` only.
-    pub acts_from_revision: u64,
-    pub acts_observed: u64,
-    pub stages_out: u64,
-    pub rejected_stale: u64,
-    pub errors: u64,
-}
-
 /// one reply for one connection.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Outgoing {
@@ -139,6 +117,8 @@ pub struct Server {
     listening: bool,
     /// what this server answered; the transport fills the rest.
     traffic: Traffic,
+    /// the connections that watch a window's scene (task-79).
+    scenes: Watches,
 }
 
 /// a request an agent of this port issued, until its terminal stage.
@@ -167,6 +147,7 @@ impl Server {
             waits: Rc::new(Waits::default()),
             listening: false,
             traffic: Traffic::default(),
+            scenes: Watches::default(),
         }
     }
 
@@ -207,6 +188,7 @@ impl Server {
                         .map_or_else(|| "an agent".to_owned(), |a| a.to_string())
                 ),
             }),
+            Ask::Scene(s) => self.watch_scene(conn, &id, s, host),
         };
         let mut out = Vec::new();
         match reply {
@@ -301,8 +283,53 @@ impl Server {
     /// stays: another connection under the same name is the same actor.
     pub fn close(&mut self, conn: ConnId) {
         self.names.remove(&conn);
+        self.scenes.close(conn);
         self.issued.retain(|_, issued| issued.conn != conn);
         self.waiting();
+    }
+
+    /// whether a connection watches the scene of `window`: an app writes
+    /// that window's frames only then (task-79).
+    pub fn watching(&self, window: &str) -> bool {
+        self.scenes.watching(window)
+    }
+
+    /// whether the person who launched the app shares its windows'
+    /// scenes (`PLEV_MIRROR=1`); off, a `scene` request is refused with
+    /// `scene_not_shared`. off by default.
+    pub fn share_scenes(&mut self, on: bool) {
+        self.scenes.share(on);
+    }
+
+    /// the watches that began or ended since the last call, in order,
+    /// each with its actor and window: for the app to say who watches.
+    pub fn take_scene_watches(&mut self) -> Vec<SceneWatch> {
+        self.scenes.take_events()
+    }
+
+    /// a watch of a window's scene: refused unless the scenes are shared,
+    /// and before `hello`. it shows its actor the whole window from now
+    /// on, so the host is told of it as of an observation of the whole
+    /// app at the revision it projects now (`Host::observed`).
+    fn watch_scene(
+        &mut self,
+        conn: ConnId,
+        msg: &str,
+        ask: SceneAsk,
+        host: &mut dyn Host,
+    ) -> Result<Option<Reply>, ProtoError> {
+        let actor = self.actor(conn);
+        self.scenes.watch(conn, msg, ask, actor.clone())?;
+        if let (Some(actor), Some(now)) = (actor, host.project()) {
+            host.observed(&actor, None, now.revision());
+        }
+        Ok(None)
+    }
+
+    /// the lines each watch of `window` needs of `offer`, the frame the
+    /// app drew there: none for a watch it shows nothing new.
+    pub fn offer_scene(&mut self, window: &str, offer: &Offer) -> Vec<Outgoing> {
+        self.scenes.offer(window, offer)
     }
 
     /// the wake of the app's loop, the one the port's reader threads call
