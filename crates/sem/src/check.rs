@@ -46,7 +46,7 @@ pub enum Rejection {
     /// went, as `Snapshot::diff` computes them.
     ///
     /// `acted` names who, among the app's actors, ran something since the
-    /// state the actor saw (see `Acted`). `check` and a point of truth
+    /// actor looked (see `Acted`). `check` and a point of truth
     /// leave it empty (`Rejection::stale`); the dispatcher fills it for
     /// every stale refusal it records. it is not written when empty.
     Stale {
@@ -86,34 +86,44 @@ impl Rejection {
     }
 }
 
-/// an action of another actor that ran since the state the author of a
-/// refused action saw: its request, who asked, the target and the action.
-/// no parameter and no value, so nothing of the state travels here.
+/// an action that ran since the author of a refused action looked: its
+/// request, who asked, the target and the action. no parameter and no
+/// value, so nothing of the state travels here.
 ///
 /// exactly, among the receipts the dispatcher still holds (open, or among
 /// the finished ones it retains), where a receipt ran when it reached
 /// execution (executing now, completed or failed; a refused one, a
-/// declined one and one awaiting confirmation never ran): the start is
-/// the lowest id of a receipt, by any actor, the author included, that
-/// ran and whose `validated_against` is the revision the refused request
-/// observed (`Observation::revision`). named are the receipts that ran,
-/// with an id from the start on, whose actor is not the refused
-/// request's. ids grow in dispatch order, and the start ran on the state
-/// the author saw, so it and every later one ran after the author looked
-/// (unless the state came back to exactly that revision later). the
-/// author's own receipts are never named and do not cut the chain. with
-/// no start, nobody is named.
+/// declined one and one awaiting confirmation never ran), in id order:
 ///
-/// this is the rule inside the process, and the fallback for an anchor
-/// on the author's look, which comes later. it says who ran something
-/// since that state, not that what they ran moved what the refused action
-/// reads; the delta in `changes` says what moved. what moves the
-/// projected state without a receipt starts nothing: a change from
-/// outside the app (a `git` in a terminal), and state an app moves outside
-/// the dispatcher (a selection, typing, focus, a toast leaving on its
-/// timer, a worker's answer landing). when such a change comes first after
-/// the look, the next receipt is checked on another revision and nobody
-/// is named. a start past the retention is gone, and so is the chain.
+/// - with the look (task-91): when a sink knows when the author looked at
+///   what the refused request rests on (`ReceiptSink::looked`, the
+///   dispatcher's `Mark` at that instant), named are the receipts that
+///   ran and were taken after it, whoever asked, the author included.
+///   the agent port knows it for the acts it dispatches: the oldest of
+///   the observations that showed the author what the act reads. a change
+///   no receipt made (a selection by click, a `git` in a terminal) moves
+///   nothing here, so the receipts after it are named all the same.
+/// - without a look (task-90), the rule inside the process: the start is
+///   the lowest id of a receipt, by any actor, the author included, that
+///   ran and whose `validated_against` is the revision the refused
+///   request observed (`Observation::revision`). named are the receipts
+///   that ran, with an id from the start on, whose actor is not the
+///   refused request's. ids grow in dispatch order, and the start ran on
+///   the state the author saw, so it and every later one ran after the
+///   author looked (unless the state came back to exactly that revision
+///   later). the author's own receipts are never named and do not cut the
+///   chain. with no start, nobody is named: when a change no receipt made
+///   (outside the app, or state an app moves outside the dispatcher: a
+///   selection, typing, focus, a toast leaving on its timer, a worker's
+///   answer landing) comes first after the look, the next receipt is
+///   checked on another revision and the chain has nowhere to start.
+///
+/// either way it says who ran something since the author looked, not that
+/// what they ran moved what the refused action reads; the delta in
+/// `changes` says what moved. a receipt past the retention is not named
+/// (without a look, a start past it takes the chain with it), and a
+/// request taken before the look whose effect lands after it is not
+/// named either.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Acted {

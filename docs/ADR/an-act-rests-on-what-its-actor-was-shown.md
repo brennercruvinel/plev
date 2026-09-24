@@ -105,6 +105,13 @@ posture).
 - `acted` names who acted on the revision the act names. when a read
   rests on an older observation and someone moved it before that
   revision, `changes` says what moved and `acted` names nobody for it.
+- updated on 2026-09-24 (task-91): `Shown` keeps, with each revision
+  given, the dispatcher's mark at that instant, and an act rests on the
+  oldest observation its reads come from (with `observed` given, on the
+  last giving of its revision); `acted` names what ran after that look,
+  the agent's own acts included, so the two consequences above about an
+  `acted` that names nobody hold only when there is no look
+  (`docs/ADR/a-delta-carries-the-node-a-refusal-names-who-acted.md`).
 - the scripted agent of the laboratory needed no extra observation: it
   observes the whole workspace before each decision, and each act it
   chains reads the state of its own file, which no act of its own moved.

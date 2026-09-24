@@ -14,6 +14,14 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: task-91 integrada
+
+- **integrada:** task-91 (`29373d4`). gate verde (2277). reproduzido no
+  laboratório: a cena da task-89 agora nomeia a pessoa. o teste que o PR
+  #60 afrouxou voltou ao exato (dez corridas seguidas no agente).
+- **publicado:** PR #61 (task-65, a terceira rodada, a onda 6), merge
+  `804e57d`.
+
 ### ciclo 3: a onda 5 fecha, a onda 6 abre
 
 - **integrada:** task-65 fases a e b (`042d34e`), do pixel ao código.

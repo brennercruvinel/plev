@@ -83,12 +83,13 @@
 //! (`Request::observe`); `check` decides it against the current snapshot
 //! in a fixed order and answers a `Verdict`, with a `Rejection::Stale`
 //! that holds the delta when the observed state moved and, once the
-//! dispatcher records it, the actions of other actors that ran since the
-//! state the actor saw (`Acted`). the `Dispatcher` is
-//! the one path for a person, an agent, assistive technology and a test:
-//! it projects the app's live state (`Operable`), checks, executes, and
-//! keeps a `Receipt` whose `Stage`s walk only legal transitions, with the
-//! time the caller passed; `ReceiptSink`s see every stage as it happens.
+//! dispatcher records it, the actions that ran since the actor looked
+//! (`Acted`, anchored on a `Mark` when the agent port knows the look). the
+//! `Dispatcher` is the one path for a person, an agent, assistive
+//! technology and a test: it projects the app's live state (`Operable`),
+//! checks, executes, and keeps a `Receipt` whose `Stage`s walk only legal
+//! transitions, with the time the caller passed; `ReceiptSink`s see every
+//! stage as it happens.
 //! `examples/commit.rs` runs the thesis scenario and prints the receipts.
 //!
 //! a `secret` field leaves the snapshot as its length. whoever carries a
@@ -126,7 +127,7 @@ pub use hash::Revision;
 pub use id::SemId;
 pub use name::{ActionName, StateKey};
 pub use node::{Node, Source};
-pub use receipt::{Millis, Outcome, Receipt, RequestId, Stage};
+pub use receipt::{Mark, Millis, Outcome, Receipt, RequestId, Stage};
 pub use request::{Actor, Observation, Request};
 pub use role::Role;
 pub use snapshot::Snapshot;

@@ -8,7 +8,7 @@ use std::rc::Rc;
 
 use indexmap::IndexMap;
 use sem::{
-    Acted, Actor, Change, Confirm, Constraints, Dispatcher, Execution, Operable, Outcome,
+    Acted, Actor, Change, Confirm, Constraints, Dispatcher, Execution, Mark, Operable, Outcome,
     ParamSpec, Policy, Receipt, ReceiptSink, Rejection, Request, RequestId, Role, SemError,
     Semantics, Snapshot, SnapshotBuilder, Stage, StateRef, Value, ValueKind, Verdict, check,
 };
@@ -1026,6 +1026,237 @@ fn a_chain_is_read_from_the_receipts_the_dispatcher_holds() {
         let id = d.dispatch(&mut git, commit, 6);
         assert_eq!(last_acted(&log, id).len(), named, "retention {retention}");
     }
+}
+
+// -- the look (task-91) --
+
+/// knows when `actor` looked: at the mark this sink was added at, as the
+/// agent port tells the dispatcher for the acts it dispatches. adding it
+/// is the look.
+struct Looking {
+    actor: Actor,
+    at: Option<Mark>,
+}
+
+impl ReceiptSink for Looking {
+    fn on_stage(&mut self, _receipt: &Receipt, _stage: &Stage) {}
+
+    fn attached(&mut self, mark: Mark) {
+        self.at = Some(mark);
+    }
+
+    fn looked(&self, receipt: &Receipt) -> Option<Mark> {
+        self.at.filter(|_| receipt.request.actor == self.actor)
+    }
+}
+
+/// `actor` looks now: from here on the dispatcher knows it.
+fn looks(d: &mut Dispatcher, actor: Actor) {
+    d.add_sink(Box::new(Looking { actor, at: None }));
+}
+
+/// the window scene of the ide, in memory: the agent looks, the state
+/// moves with no request (a click that only selects, here the cursor set
+/// outside the dispatcher), and the person unstages B on what that left.
+/// with the look, the person's unstage is named; without it, the rule of
+/// task-90 has nowhere to start and names nobody.
+#[test]
+fn a_look_names_what_ran_after_it_whatever_moved_the_state_first() {
+    for look in [true, false] {
+        let mut git = Git::new(&["A", "B"], "fix login");
+        let mut d = Dispatcher::new();
+        let seen = git.snapshot();
+        let commit = Request::observe(&seen, agent(), "commit.submit", "submit", None).unwrap();
+        if look {
+            looks(&mut d, agent());
+        }
+        git.cursor = 3;
+        let person = file_act(&mut d, &mut git, Actor::Human, "unstage", "B");
+        assert_ne!(receipt(&d, person).validated_against, Some(seen.revision()));
+
+        let id = d.dispatch(&mut git, commit, 6);
+        let named = acted_of(receipt(&d, id)).to_vec();
+        match look {
+            true => assert_eq!(named, [acted(person, Actor::Human, "changes", "unstage")]),
+            false => assert!(named.is_empty(), "no look, no start: {named:?}"),
+        }
+    }
+}
+
+/// with the look, the author's own acts after it are named too, in id
+/// order with the others (the refusal by its own write, task-62), and
+/// nothing taken before the look is: the person moved the cursor before
+/// the agent looked, the agent then rewrote the message and the person
+/// unstaged B, and the agent's commit on its look names those two.
+#[test]
+fn with_a_look_the_authors_own_acts_after_it_are_named_and_nothing_before_it() {
+    let mut git = Git::new(&["A", "B"], "fix login");
+    let mut d = Dispatcher::new();
+    let before = moves(&mut d, &mut git, Actor::Human, 1);
+    let seen = git.snapshot();
+    let commit = Request::observe(&seen, agent(), "commit.submit", "submit", None).unwrap();
+    looks(&mut d, agent());
+    let now = git.snapshot();
+    let text = Some(Value::from("fix login flow"));
+    let write = Request::observe(&now, agent(), "commit.message", "set", text).unwrap();
+    let write = d.dispatch(&mut git, write, 3);
+    let person = file_act(&mut d, &mut git, Actor::Human, "unstage", "B");
+
+    let id = d.dispatch(&mut git, commit, 6);
+    let r = receipt(&d, id);
+    assert_eq!(
+        acted_of(r),
+        [
+            acted(write, agent(), "commit.message", "set"),
+            acted(person, Actor::Human, "changes", "unstage"),
+        ]
+    );
+    assert!(acted_of(r).iter().all(|a| a.id != before));
+}
+
+/// the look only names. the same requests, with and without a look, end
+/// in the same stages with the same delta; only `acted` differs: with the
+/// look it names the agent's own move after it too, without it the rule
+/// of task-90 names the person alone. a look the sink gives for another
+/// actor's requests is not this one's.
+#[test]
+fn a_look_never_decides() {
+    let run = |look: Option<Actor>| {
+        let mut git = Git::new(&["A", "B"], "fix login");
+        let mut d = Dispatcher::new();
+        let seen = git.snapshot();
+        let stale = Request::observe(&seen, agent(), "commit.submit", "submit", None).unwrap();
+        if let Some(actor) = look {
+            looks(&mut d, actor);
+        }
+        let person = file_act(&mut d, &mut git, Actor::Human, "unstage", "B");
+        let fresh = Request::observe(
+            &git.snapshot(),
+            agent(),
+            "changes",
+            "move",
+            Some(Value::Int(2)),
+        )
+        .unwrap();
+        let ok = d.dispatch(&mut git, fresh, 5);
+        let refused = d.dispatch(&mut git, stale, 6);
+        let stages = |id| {
+            receipt(&d, id)
+                .stages
+                .iter()
+                .map(|(stage, _)| match stage {
+                    Stage::Rejected(Rejection::Stale { changes, .. }) => {
+                        format!("stale {changes:?}")
+                    }
+                    other => other.name().to_owned(),
+                })
+                .collect::<Vec<_>>()
+        };
+        let named: Vec<RequestId> = acted_of(receipt(&d, refused))
+            .iter()
+            .map(|a| a.id)
+            .collect();
+        ((stages(ok), stages(refused)), named, (person, ok))
+    };
+    let (with, named, (person, own)) = run(Some(agent()));
+    let (without, none, _) = run(None);
+    let (elsewhere, other, _) = run(Some(Actor::Human));
+    assert_eq!(with, without);
+    assert_eq!(with, elsewhere);
+    assert_eq!(
+        named,
+        [person, own],
+        "the look names the agent's own move too"
+    );
+    assert_eq!(
+        (none, other),
+        (vec![person], vec![person]),
+        "the rule of task-90"
+    );
+}
+
+/// the look names at a confirmation's second check and at the point of
+/// truth as at dispatch: an agent's discard waits, the person unstages B
+/// and then confirms it, and the discard, stale now, names the unstage;
+/// an agent's commit starts on the worker, the person unstages A, and the
+/// index refuses the commit, naming the unstage and the discard's run.
+#[test]
+fn a_look_names_at_the_confirmation_and_at_the_point_of_truth_too() {
+    let mut git = Git::new(&["A", "B", "C"], "fix login");
+    git.background = true;
+    let mut d = Dispatcher::new();
+    let seen = git.snapshot();
+    looks(&mut d, agent());
+    let discard = Request::observe(&seen, agent(), "changes", "discard", None).unwrap();
+    let waiting = d.dispatch(&mut git, discard, 1);
+    let person = file_act(&mut d, &mut git, Actor::Human, "unstage", "B");
+    d.confirm(&mut git, waiting, Actor::Human, 2).unwrap();
+    assert_eq!(
+        acted_of(receipt(&d, waiting)),
+        [acted(person, Actor::Human, "changes", "unstage")]
+    );
+
+    let commit =
+        Request::observe(&git.snapshot(), agent(), "commit.submit", "submit", None).unwrap();
+    let running = d.dispatch(&mut git, commit, 3);
+    let second = file_act(&mut d, &mut git, Actor::Human, "unstage", "A");
+    let answer = git.work();
+    assert_eq!(answer.0, running);
+    settle(&mut d, answer, 4).unwrap();
+    assert_eq!(
+        acted_of(receipt(&d, running)),
+        [
+            acted(person, Actor::Human, "changes", "unstage"),
+            acted(second, Actor::Human, "changes", "unstage"),
+        ],
+        "the refused discard ran nothing; the commit itself is not named"
+    );
+}
+
+/// with a look, what retention dropped is not named, and the rest still
+/// is: no start to lose.
+#[test]
+fn a_look_reads_the_receipts_the_dispatcher_holds() {
+    for (retention, named) in [(0, 0), (1, 1), (2, 2)] {
+        let mut git = Git::new(&["A", "B"], "fix login");
+        let mut d = Dispatcher::with_retention(retention);
+        let log = Log::default();
+        d.add_sink(Box::new(log.clone()));
+        let seen = git.snapshot();
+        let commit = Request::observe(&seen, agent(), "commit.submit", "submit", None).unwrap();
+        looks(&mut d, agent());
+        moves(&mut d, &mut git, Actor::Human, 1);
+        file_act(&mut d, &mut git, Actor::Human, "unstage", "B");
+        let id = d.dispatch(&mut git, commit, 6);
+        assert_eq!(last_acted(&log, id).len(), named, "retention {retention}");
+    }
+}
+
+/// a mark is how many requests the dispatcher had taken: a sink is told
+/// the one it came at, and a request comes after a mark exactly when it
+/// was taken later.
+#[test]
+fn a_sink_is_told_the_mark_it_came_at() {
+    let mut git = Git::new(&["A"], "wip");
+    let mut d = Dispatcher::new();
+    assert_eq!(d.mark(), Mark::default());
+    let first = moves(&mut d, &mut git, Actor::Human, 1);
+    assert_eq!(d.mark(), Mark::after(first));
+    let told = Rc::new(RefCell::new(None));
+    struct Told(Rc<RefCell<Option<Mark>>>);
+    impl ReceiptSink for Told {
+        fn on_stage(&mut self, _receipt: &Receipt, _stage: &Stage) {}
+        fn attached(&mut self, mark: Mark) {
+            *self.0.borrow_mut() = Some(mark);
+        }
+    }
+    d.add_sink(Box::new(Told(Rc::clone(&told))));
+    assert_eq!(*told.borrow(), Some(Mark::after(first)));
+    let second = moves(&mut d, &mut git, Actor::Human, 2);
+    let at = Mark::after(first);
+    assert!(!at.precedes(first) && at.precedes(second));
+    assert!(Mark::default().precedes(first));
+    assert!(Mark::after(first) < Mark::after(second));
 }
 
 #[test]

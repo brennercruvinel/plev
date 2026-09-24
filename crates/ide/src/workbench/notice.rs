@@ -19,6 +19,15 @@ fn who(actor: &Actor) -> &str {
     }
 }
 
+/// A refused request's own actor, when it is named among who acted since
+/// it looked (task-91): still in the third person, as `who`.
+fn itself(actor: &Actor) -> String {
+    match actor {
+        Actor::Human => "the person themself".to_owned(),
+        other => format!("{} itself", who(other)),
+    }
+}
+
 /// `a`, `a and b`, `a, b and c`.
 fn series(items: &[String]) -> String {
     match items {
@@ -95,7 +104,7 @@ impl Workbench {
             Rejection::Stale { changes, acted } => {
                 let moved: Vec<String> = changes.iter().map(|c| self.moved(c)).collect();
                 let moved = moved.join("; ");
-                let reason = match self.acted(acted) {
+                let reason = match self.acted(req, acted) {
                     Some(who) => format!("{moved} ({who})"),
                     None => moved,
                 };
@@ -123,13 +132,14 @@ impl Workbench {
         (format!("{head}: {reason}"), intent)
     }
 
-    /// Who ran something since the state a stale request rested on, in
+    /// Who ran something since the stale request `req`'s actor looked, in
     /// words and in the order it ran: `the person unstaged src/session.rs`,
     /// `the person unstaged B, opened the diff of C and unstaged C`. One
     /// clause per actor's run of actions; another actor starts the next,
-    /// after a semicolon. `None` when nobody the app knows did (a change
-    /// from outside it has no request).
-    fn acted(&self, acted: &[Acted]) -> Option<String> {
+    /// after a semicolon. The request's own actor, named since task-91 when
+    /// it ran something after its look, is `claude itself`. `None` when
+    /// nobody the app knows did (a change from outside it has no request).
+    fn acted(&self, req: &Request, acted: &[Acted]) -> Option<String> {
         let mut runs: Vec<(&Actor, Vec<String>)> = Vec::new();
         for a in acted {
             let did = self.did(a);
@@ -140,7 +150,14 @@ impl Workbench {
         }
         let clauses: Vec<String> = runs
             .iter()
-            .map(|(actor, dids)| format!("{} {}", who(actor), series(dids)))
+            .map(|(actor, dids)| {
+                let name = if **actor == req.actor {
+                    itself(actor)
+                } else {
+                    who(actor).to_owned()
+                };
+                format!("{name} {}", series(dids))
+            })
             .collect();
         (!clauses.is_empty()).then(|| clauses.join("; "))
     }

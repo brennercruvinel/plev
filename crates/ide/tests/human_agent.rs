@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 use comps::feedback::{ContextMenu, MenuEntry};
 use engine::compositor::Compositor;
-use sem::{Actor, Change, Receipt, ReceiptSink, Rejection, SemId, Stage, Value};
+use sem::{Actor, Change, Receipt, ReceiptSink, Rejection, Revision, SemId, Stage, Value};
 use support::{Rig, agent, completed, set};
 
 fn tester() -> Actor {
@@ -978,41 +978,50 @@ fn a_chain_the_person_starts_on_what_the_agent_saw_is_named_whole() {
     assert_eq!(rig.commits(), 1);
 }
 
-/// The window scene of task-86 through the pointer, and a known limit of
-/// `acted`. The agent decides with no row selected. The person clicks B:
-/// the view moves the selection itself, outside the dispatcher, and the
-/// projected `changes:selected` with it, so the revision leaves the one
-/// the agent saw before any request; only then is the diff asked for.
-/// The person unstages B from its menu. The agent's commit is refused
-/// stale with the right delta and names nobody: no request ran on the
-/// state the agent saw, so the chain has nowhere to start. task-91
-/// anchors on the agent's look instead, and this test changes there.
-#[test]
-fn a_click_on_a_new_row_moves_the_state_outside_the_dispatcher_and_nobody_is_named() {
-    let mut rig = Rig::new(&["A", "B"], &["A", "B"]);
-    let log = Log::default();
-    rig.bench.add_sink(Box::new(log.clone()));
-    rig.agent_writes("login and session");
-    let seen = rig.look();
+/// The window scene of task-86 through the pointer, after the agent
+/// looked at `seen` with no row selected. The person clicks B: the view
+/// moves the selection itself, outside the dispatcher, and the projected
+/// `changes:selected` with it, so the revision leaves the one the agent
+/// saw before any request; only then is the diff asked for. The person
+/// unstages B from its menu. The receipts of the diff and of the unstage.
+fn click_a_new_row_then_unstage(rig: &mut Rig, log: &Log, seen: Revision) -> (Receipt, Receipt) {
     assert_eq!(rig.value("changes:selected"), Value::from(""));
-    let commit = rig.observe(agent(), "commit.submit", "submit", None);
-
-    let c = frame(&mut rig);
+    let c = frame(rig);
     let (x, y) = center(&c, "changes.file[B]");
     assert!(rig.bench.click(x, y));
-    let show = last(&log);
+    let show = last(log);
     assert_eq!(asked(&show), human("changes.file[B]", "show_diff"));
     assert!(show.validated_against.is_some());
     assert_ne!(
         show.validated_against,
-        Some(seen.revision()),
+        Some(seen),
         "the selection moved the revision before the diff was asked for"
     );
     rig.until(|e| matches!(e, git::GitEvent::DiffWorkdir { .. }));
-    unstage_from_the_menu(&mut rig, "B");
-    let unstage = last(&log);
+    unstage_from_the_menu(rig, "B");
+    let unstage = last(log);
     assert_eq!(asked(&unstage), human("changes.file[B]", "unstage"));
-    assert_ne!(unstage.validated_against, Some(seen.revision()));
+    assert_ne!(unstage.validated_against, Some(seen));
+    (show, unstage)
+}
+
+/// The window scene with the agent looking in the process
+/// (`Request::observe`), not through the port: no look is known, and the
+/// rule of task-90 is the fallback. No request ran on the state the agent
+/// saw, so the chain has nowhere to start: the commit is refused stale
+/// with the right delta and names nobody. Through the port the look
+/// anchors instead, and the same scene names the person
+/// (`through_the_port`; task-90 pinned this as the limit, task-91 moved
+/// it there).
+#[test]
+fn without_a_look_a_click_on_a_new_row_leaves_the_chain_nowhere_to_start() {
+    let mut rig = Rig::new(&["A", "B"], &["A", "B"]);
+    let log = Log::default();
+    rig.bench.add_sink(Box::new(log.clone()));
+    rig.agent_writes("login and session");
+    let seen = rig.look().revision();
+    let commit = rig.observe(agent(), "commit.submit", "submit", None);
+    let (_, unstage) = click_a_new_row_then_unstage(&mut rig, &log, seen);
 
     let id = rig.bench.dispatch(commit);
     assert_eq!(rig.stages(id), ["requested", "rejected"]);
@@ -1024,11 +1033,213 @@ fn a_click_on_a_new_row_moves_the_state_outside_the_dispatcher_and_nobody_is_nam
         changes.as_slice(),
         [Change::StateChanged { removed, .. }] if removed == &["B"]
     ));
-    assert!(acted.is_empty(), "known limit (task-91): {acted:?}");
+    assert!(acted.is_empty(), "no look, no start: {acted:?}");
     assert_eq!(
         rig.notices(),
         ["Refused test-agent's submit: B left the staged files"]
     );
     rig.settle(unstage.id);
     assert_eq!(rig.git(&["diff", "--cached", "--name-only"]), "A\n");
+}
+
+// -- who acted since the agent looked, through the port (task-91) --
+
+/// The agent through the ide's agent port, in process: the protocol's
+/// server over the ide's own host (`ide::agent::Served`, what the window
+/// shell serves), with no socket. What it observes goes through the port
+/// as the window's agent's does.
+#[cfg(unix)]
+mod through_the_port {
+    use sem::{ActionName, Rejection, Revision, SemId, Stage, Value};
+    use wire::{Act, Ask, ClientMsg, Observe, Reply, Server, StageReply};
+
+    use super::support::{Rig, agent};
+    use super::{Log, asked, click_a_new_row_then_unstage, frame, human};
+
+    /// The one connection of the agent.
+    const CONN: wire::ConnId = 1;
+
+    struct Port {
+        server: Server,
+    }
+
+    impl Port {
+        /// A port on the workbench of `rig`, and the agent's hello.
+        fn hello(rig: &mut Rig) -> Port {
+            let mut port = Port {
+                server: Server::new(ide::agent::APP, 16),
+            };
+            let name = match agent() {
+                sem::Actor::Agent { name } => name,
+                other => panic!("an agent: {other:?}"),
+            };
+            match port.ask(rig, Ask::Hello { name }).as_slice() {
+                [Reply::Welcome { .. }] => port,
+                other => panic!("welcome: {other:?}"),
+            }
+        }
+
+        /// One message of the agent, served through the ide's host with
+        /// the frame on screen; the replies.
+        fn ask(&mut self, rig: &mut Rig, ask: Ask) -> Vec<Reply> {
+            let compositor = frame(rig);
+            let mut host = ide::agent::Served {
+                bench: &mut rig.bench,
+                compositor: &compositor,
+                recorder: None,
+            };
+            let msg = ClientMsg {
+                id: "1".into(),
+                ask,
+            };
+            self.server
+                .handle(CONN, msg, &mut host)
+                .into_iter()
+                .map(|o| o.msg.reply)
+                .collect()
+        }
+
+        /// An observation of `scope` (the whole workbench without one):
+        /// its revision.
+        fn observe(&mut self, rig: &mut Rig, scope: Option<&str>) -> Revision {
+            let o = Observe {
+                scope: scope.map(|s| SemId::parse(s).expect("an id")),
+                ..Observe::default()
+            };
+            match self.ask(rig, Ask::Observe(o)).as_slice() {
+                [Reply::Snapshot(s)] => s.revision,
+                other => panic!("a snapshot: {other:?}"),
+            }
+        }
+
+        /// An act on `from`: its stages as the port sent them.
+        fn act(
+            &mut self,
+            rig: &mut Rig,
+            target: &str,
+            action: &str,
+            param: Option<Value>,
+            from: Revision,
+        ) -> Vec<StageReply> {
+            let name = ActionName::parse(action).expect("an action");
+            let mut act = Act::from_revision(SemId::parse(target).expect("an id"), name, from);
+            if let Some(param) = param {
+                act = act.with_param(param);
+            }
+            self.ask(rig, Ask::Act(act))
+                .into_iter()
+                .map(|reply| match reply {
+                    Reply::Stage(s) => s,
+                    other => panic!("a stage: {other:?}"),
+                })
+                .collect()
+        }
+    }
+
+    fn names(stages: &[StageReply]) -> Vec<&'static str> {
+        stages.iter().map(|s| s.stage.name()).collect()
+    }
+
+    /// `(id, (actor, target, action))` of each entry of the stale refusal
+    /// the last stage of `stages` holds.
+    fn named(stages: &[StageReply]) -> Vec<(sem::RequestId, (String, String, String))> {
+        let Some(Stage::Rejected(Rejection::Stale { acted, .. })) = stages.last().map(|s| &s.stage)
+        else {
+            panic!("stale: {stages:?}");
+        };
+        acted
+            .iter()
+            .map(|a| {
+                let who = (
+                    a.actor.to_string(),
+                    a.target.to_string(),
+                    a.action.to_string(),
+                );
+                (a.id, who)
+            })
+            .collect()
+    }
+
+    /// The window scene of task-86 and task-90, with the agent's look and
+    /// act through the port. The agent looks with no row selected; the
+    /// person clicks B (the selection moves outside the dispatcher, then
+    /// the diff is asked for) and unstages it from its menu; the agent's
+    /// submit on what it looked at is refused stale and names both, since
+    /// both ran after the look.
+    #[test]
+    fn a_click_on_a_new_row_and_an_unstage_are_named_since_the_agents_look() {
+        let mut rig = Rig::new(&["A", "B"], &["A", "B"]);
+        let log = Log::default();
+        rig.bench.add_sink(Box::new(log.clone()));
+        rig.agent_writes("login and session");
+        let mut port = Port::hello(&mut rig);
+        let seen = port.observe(&mut rig, None);
+        let (show, unstage) = click_a_new_row_then_unstage(&mut rig, &log, seen);
+
+        let stages = port.act(&mut rig, "commit.submit", "submit", None, seen);
+        assert_eq!(names(&stages), ["requested", "rejected"]);
+        assert_eq!(
+            named(&stages),
+            [(show.id, asked(&show)), (unstage.id, asked(&unstage))]
+        );
+        assert_eq!(
+            rig.notices(),
+            ["Refused test-agent's submit: B left the staged files \
+                 (the person opened the diff of B and unstaged B)"]
+        );
+        rig.settle(unstage.id);
+        assert_eq!(rig.git(&["diff", "--cached", "--name-only"]), "A\n");
+    }
+
+    /// The reproduction of task-89 with a stage's revision. The agent
+    /// observes the form (the message); the person opens the diff of A;
+    /// the agent observes `changes` (A and B staged); the person unstages
+    /// B through the dispatcher; the agent writes the message again, and
+    /// submits on the revision that act's last stage carried, which shows
+    /// no state: the submit rests on the `staged` of the earlier
+    /// observation and is refused stale. Named are the acts that ran since
+    /// the oldest look the submit rests on (the form's, where its message
+    /// comes from): the diff, the unstage and the agent's own write, which
+    /// the toast says in the third person.
+    #[test]
+    fn a_submit_on_a_stage_revision_names_who_acted_since_the_look_it_rests_on() {
+        let mut rig = Rig::new(&["A", "B"], &["A", "B"]);
+        rig.agent_writes("login and session");
+        let mut port = Port::hello(&mut rig);
+        port.observe(&mut rig, Some("commit.form"));
+        let show = rig.ask(sem::Actor::Human, "changes.file[A]", "show_diff", None);
+        rig.until(|e| matches!(e, git::GitEvent::DiffWorkdir { .. }));
+        let changes = port.observe(&mut rig, Some("changes"));
+        let unstage = rig.ask(sem::Actor::Human, "changes.file[B]", "unstage", None);
+
+        let text = Some(Value::from("login and session"));
+        let set = port.act(&mut rig, "commit.message", "set_value", text, changes);
+        assert_eq!(names(&set).last(), Some(&"completed"));
+        let landed = set.last().and_then(|s| s.revision).expect("a revision");
+        let submit = port.act(&mut rig, "commit.submit", "submit", None, landed);
+        assert_eq!(names(&submit), ["requested", "rejected"]);
+        let own = set[0].request;
+        assert_eq!(
+            named(&submit),
+            [
+                (show, human("changes.file[A]", "show_diff")),
+                (unstage, human("changes.file[B]", "unstage")),
+                (
+                    own,
+                    (
+                        "agent:test-agent".into(),
+                        "commit.message".into(),
+                        "set_value".into()
+                    )
+                ),
+            ]
+        );
+        assert_eq!(
+            rig.notices(),
+            ["Refused test-agent's submit: B left the staged files \
+                 (the person opened the diff of A and unstaged B; \
+                 test-agent itself edited the commit message)"]
+        );
+        rig.settle(unstage);
+    }
 }

@@ -298,8 +298,9 @@ fn an_act_chained_on_a_stage_revision_rests_on_what_was_observed_before() {
 /// an empty delta since a stage's revision shows no state: the act still
 /// rests on the value the agent was last shown, so a change the stage's
 /// revision took in and no observation showed makes it stale. `acted`
-/// names who acted on the revision the act names, and the person acted
-/// before it: nobody is named, and `changes` says what moved.
+/// names what ran since the look the act rests on (task-91): the person's
+/// toggle and the agent's own write, though the toggle ran before the
+/// revision the act names (task-89 named nobody here).
 #[test]
 fn an_empty_delta_since_a_stage_revision_shows_nothing() {
     let (mut server, mut host) = setup();
@@ -315,6 +316,7 @@ fn an_empty_delta_since_a_stage_revision_shows_nothing() {
         &format!("{draft}{}", from(seen)),
     ));
     let stage = landed(&out);
+    let write = out[0].request;
     let d = delta(observe(
         &mut server,
         &mut host,
@@ -339,7 +341,12 @@ fn an_empty_delta_since_a_stage_revision_shows_nothing() {
         matches!(&changes[..], [Change::StateChanged { at, added, .. }] if *at == done() && added == &["1"]),
         "{changes:?}"
     );
-    assert!(acted.is_empty(), "{acted:?}");
+    let named: Vec<_> = acted.iter().map(|a| (a.id, a.actor.clone())).collect();
+    let claude = Actor::Agent {
+        name: "claude".into(),
+    };
+    let toggle = RequestId::parse("1").unwrap();
+    assert_eq!(named, [(toggle, Actor::Human), (write, claude)]);
     assert_eq!(host.app.items.len(), 3, "nothing cleared");
 
     // a delta that carries the change shows it.

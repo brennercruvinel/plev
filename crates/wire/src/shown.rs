@@ -17,10 +17,19 @@
 //! was shown the other was. it is bounded: the last `cap` revisions given
 //! to each actor, and at most `MAX_ACTORS` actors, the one served longest
 //! ago forgotten first. whatever was forgotten counts as never shown.
+//!
+//! each revision given carries the dispatcher's mark at that instant
+//! (`sem::Mark`, followed by the port's sink in `Looks`), so an act says
+//! when its actor looked at what it reads: the oldest of the observations
+//! its reads come from. the dispatcher names what ran after that look in a
+//! stale refusal (task-91); the mark only names.
 
 use std::collections::{BTreeSet, VecDeque};
 
-use sem::{Change, Revision, SemId, Snapshot, StateKey, StateRef, Value};
+use sem::{
+    Actor, Change, Mark, Receipt, RequestId, Revision, SemId, Snapshot, Stage, StateKey, StateRef,
+    Value,
+};
 
 use crate::ring::Ring;
 
@@ -115,11 +124,23 @@ fn under(snapshot: &Snapshot, node: &SemId, scope: &SemId) -> bool {
     false
 }
 
-/// a revision given to an actor, with what came with it.
+/// the values an act on a revision rests on, one per read, and the look
+/// they come from.
+pub(crate) struct Rested {
+    pub(crate) values: Vec<Option<Value>>,
+    /// the oldest mark of the parts the values came from; `None` with no
+    /// read, or when one of those parts has no mark.
+    pub(crate) look: Option<Mark>,
+}
+
+/// a revision given to an actor, with what came with it and the
+/// dispatcher's mark when it was given (`None` before the port's sink was
+/// on the dispatcher).
 #[derive(Clone, Debug)]
 struct Given {
     revision: Revision,
     part: Part,
+    mark: Option<Mark>,
 }
 
 /// what a port showed each actor, bounded (see the module).
@@ -140,10 +161,16 @@ impl Shown {
         }
     }
 
-    /// `actor` was given `revision` with `part`. a terminal stage at the
-    /// revision the actor was last given adds nothing, since it shows
-    /// nothing.
-    pub(crate) fn record(&mut self, actor: &str, revision: Revision, part: Part) {
+    /// `actor` was given `revision` with `part`, at `mark`. a terminal
+    /// stage at the revision the actor was last given adds nothing, since
+    /// it shows nothing.
+    pub(crate) fn record(
+        &mut self,
+        actor: &str,
+        revision: Revision,
+        part: Part,
+        mark: Option<Mark>,
+    ) {
         let mut given = match self.actors.iter().position(|(name, _)| name == actor) {
             Some(at) => self
                 .actors
@@ -154,7 +181,11 @@ impl Shown {
         };
         let again = part == Part::Nothing && given.back().is_some_and(|g| g.revision == revision);
         if !again {
-            given.push_back(Given { revision, part });
+            given.push_back(Given {
+                revision,
+                part,
+                mark,
+            });
             while given.len() > self.cap {
                 given.pop_front();
             }
@@ -176,33 +207,49 @@ impl Shown {
     /// or whose last showing can no longer be read (its revision left the
     /// ring), are the error, each once, in the order of `reads`; every
     /// read is when `revision` was not given.
+    ///
+    /// with the values, the look they rest on (`Rested`).
     pub(crate) fn values(
         &self,
         actor: &str,
         revision: Revision,
         reads: &[StateRef],
         ring: &Ring,
-    ) -> Result<Vec<Option<Value>>, Vec<StateRef>> {
+    ) -> Result<Rested, Vec<StateRef>> {
         let given = self
             .until(actor, revision)
             .map(|(given, until)| given.range(..=until));
         let mut values = Vec::with_capacity(reads.len());
+        let mut marks = Vec::with_capacity(reads.len());
         let mut missing: Vec<StateRef> = Vec::new();
         for read in reads {
             match given
                 .clone()
                 .and_then(|given| last_shown(given, read, ring))
             {
-                Some(value) => values.push(value),
+                Some((value, mark)) => {
+                    values.push(value);
+                    marks.push(mark);
+                }
                 None if missing.contains(read) => {}
                 None => missing.push(read.clone()),
             }
         }
-        if missing.is_empty() {
-            Ok(values)
-        } else {
-            Err(missing)
+        if !missing.is_empty() {
+            return Err(missing);
         }
+        let marks: Option<Vec<Mark>> = marks.into_iter().collect();
+        Ok(Rested {
+            values,
+            look: marks.and_then(|m| m.into_iter().min()),
+        })
+    }
+
+    /// the mark of the last time `actor` was given `revision`: the look an
+    /// act with explicit `observed` values names.
+    pub(crate) fn looked(&self, actor: &str, revision: Revision) -> Option<Mark> {
+        let (given, until) = self.until(actor, revision)?;
+        given.get(until)?.mark
     }
 
     /// the revisions given to `actor` and where the last giving of
@@ -214,21 +261,86 @@ impl Shown {
     }
 }
 
-/// the value the last of `given` that showed `read` holds for it. `None`
-/// when none showed it, and when the last one that did (or may have) can
-/// no longer be read: an older showing is not what the actor saw last.
+/// the value the last of `given` that showed `read` holds for it, with
+/// that part's mark. `None` when none showed it, and when the last one
+/// that did (or may have) can no longer be read: an older showing is not
+/// what the actor saw last.
 fn last_shown<'a>(
     given: impl DoubleEndedIterator<Item = &'a Given>,
     read: &StateRef,
     ring: &Ring,
-) -> Option<Option<Value>> {
+) -> Option<(Option<Value>, Option<Mark>)> {
     for g in given.rev() {
         let at = ring.get(g.revision);
         match g.part.shows(read, at) {
             Some(false) => continue,
-            Some(true) => return at.map(|snapshot| snapshot.value(read).cloned()),
+            Some(true) => return at.map(|snapshot| (snapshot.value(read).cloned(), g.mark)),
             None => return None,
         }
     }
     None
+}
+
+/// how many open requests of a port keep the look they rest on.
+const MAX_LOOKS: usize = 256;
+
+/// the dispatcher's order as the port's sink follows it (`sem::Mark`).
+/// the sink learns the dispatcher's mark when it is added and follows it
+/// as requests are taken, so an observation served now is marked now
+/// (`now`). an act says which look it rests on right before its dispatch
+/// (`expect`); the sink files that look under the request's id when the
+/// dispatcher takes it, and gives it back while the request is open
+/// (`of`), which is when a stale refusal can come. bounded: the looks of
+/// the last `MAX_LOOKS` open requests; one past it is named by the rule
+/// without a look.
+#[derive(Debug, Default)]
+pub(crate) struct Looks {
+    now: Option<Mark>,
+    /// the actor of the act about to be dispatched, and its look.
+    pending: Option<(Actor, Mark)>,
+    open: VecDeque<(RequestId, Mark)>,
+}
+
+impl Looks {
+    /// the dispatcher took the sink at `mark`.
+    pub(crate) fn attached(&mut self, mark: Mark) {
+        self.now = Some(mark);
+    }
+
+    /// the dispatcher's mark now; `None` while the sink is not on it.
+    pub(crate) fn now(&self) -> Option<Mark> {
+        self.now
+    }
+
+    /// the next request of this actor the dispatcher takes rests on this
+    /// look; `None` expects nothing.
+    pub(crate) fn expect(&mut self, next: Option<(Actor, Mark)>) {
+        self.pending = next;
+    }
+
+    /// a stage the sink heard: a request taken moves the mark on and
+    /// takes the look expected for its actor; a terminal stage ends the
+    /// request's look.
+    pub(crate) fn heard(&mut self, receipt: &Receipt, stage: &Stage) {
+        if matches!(stage, Stage::Requested) {
+            self.now = self.now.map(|now| now.max(Mark::after(receipt.id)));
+            let ours = |(actor, _): &mut (Actor, Mark)| *actor == receipt.request.actor;
+            if let Some((_, look)) = self.pending.take_if(ours) {
+                self.open.push_back((receipt.id, look));
+                while self.open.len() > MAX_LOOKS {
+                    self.open.pop_front();
+                }
+            }
+        } else if stage.is_terminal() {
+            self.open.retain(|(id, _)| *id != receipt.id);
+        }
+    }
+
+    /// the look the open request `id` rests on.
+    pub(crate) fn of(&self, id: RequestId) -> Option<Mark> {
+        self.open
+            .iter()
+            .find(|(at, _)| *at == id)
+            .map(|(_, look)| *look)
+    }
 }

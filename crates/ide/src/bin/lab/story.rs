@@ -7,6 +7,7 @@ use std::collections::BTreeSet;
 
 use sem::{Acted, Actor, Millis, Receipt, Rejection, RequestId, Revision, Stage, StateRef, Value};
 use serde_json::{Value as Json, json};
+use wire::Traffic;
 
 use crate::host::{ActSeen, Intervention, Served};
 
@@ -268,7 +269,37 @@ pub fn served_json(served: &[Served]) -> Json {
     )
 }
 
-pub fn acts_json(acts: &[ActStory]) -> Json {
+/// what every act of the run rested on, as the port counted it
+/// (`Traffic`): `from_revision` or `observed` when all of them did, `None`
+/// otherwise. the laboratory does not infer it from the revision an act
+/// named: an act chained on a stage's revision rests on `from_revision`
+/// on a revision no observation served (task-87).
+pub fn form(t: &Traffic) -> Option<&'static str> {
+    match (t.acts_from_revision, t.acts_observed) {
+        _ if t.acts == 0 => None,
+        (all, _) if all == t.acts => Some("from_revision"),
+        (_, all) if all == t.acts => Some("observed"),
+        _ => None,
+    }
+}
+
+/// the same, said: `every act on from_revision (--from-revision)`, or
+/// how many took each form.
+pub fn forms_text(t: &Traffic) -> String {
+    match form(t) {
+        Some("from_revision") => "every act on from_revision (--from-revision)".to_owned(),
+        Some(_) => "every act with its observed values".to_owned(),
+        None if t.acts == 0 => "no act".to_owned(),
+        None => format!(
+            "{} of {} acts on from_revision, {} with observed values",
+            t.acts_from_revision, t.acts, t.acts_observed
+        ),
+    }
+}
+
+/// the acts, each with `form`, what every act of the run rested on
+/// (`null` when they did not all rest on the same).
+pub fn acts_json(acts: &[ActStory], form: Option<&str>) -> Json {
     Json::Array(
         acts.iter()
             .map(|a| {
@@ -285,7 +316,7 @@ pub fn acts_json(acts: &[ActStory]) -> Json {
                     "revision_served_at": a.served_at,
                     "observations_between": a.observations_between,
                     "fresh_before": a.fresh_before,
-                    "form": if a.served_index.is_some() { "from_revision" } else { "observed" },
+                    "form": form,
                     "seen_staged": a.seen_staged,
                     "live_staged": a.live_staged,
                 })
@@ -451,5 +482,31 @@ mod tests {
         let blind = stale_measurement(&[submit(7, Some(ALL), None, "rejected")], Some(&person(6)));
         assert!(!blind.valid);
         assert!(blind.text.contains("unknown"), "{}", blind.text);
+    }
+
+    /// the port's counts say the form, never the revision an act named.
+    #[test]
+    fn the_form_of_the_acts_is_the_ports_count() {
+        let t = |acts, from_revision, observed| Traffic {
+            acts,
+            acts_from_revision: from_revision,
+            acts_observed: observed,
+            ..Traffic::default()
+        };
+        assert_eq!(form(&t(9, 9, 0)), Some("from_revision"));
+        assert_eq!(
+            forms_text(&t(9, 9, 0)),
+            "every act on from_revision (--from-revision)"
+        );
+        assert_eq!(form(&t(2, 0, 2)), Some("observed"));
+        assert_eq!(form(&t(3, 2, 0)), None, "one with both or neither");
+        assert_eq!(
+            forms_text(&t(4, 2, 1)),
+            "2 of 4 acts on from_revision, 1 with observed values"
+        );
+        assert_eq!(
+            (form(&t(0, 0, 0)), forms_text(&t(0, 0, 0)).as_str()),
+            (None, "no act")
+        );
     }
 }
