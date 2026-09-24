@@ -14,6 +14,18 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #81 (task-76 item 4); disparado o item 8
+
+- **publicado:** PR #81, merge commit, gate local verde na `main` (2605,
+  +26), regressão 161 sem mudança.
+- **disparado:** task-76 item 8, diálogos nativos de alerta e
+  confirmação pelo molde dos arquivos e do menu (nenhuma dependência
+  nova: o `rfd` já traz `MessageDialog`); no ide, a confirmação humana
+  do contrato pode ir pelo diálogo nativo por opção do shell, desligada
+  por padrão, respondendo pelo mesmo `confirm`/`decline` de pessoa; no
+  showcase, o alerta como capacidade só de pessoa. um agente só, no
+  worktree fixo; nenhum diálogo abre nesta máquina.
+
 ### ciclo 3: menus nativos (task-76 item 4)
 
 - **integrada:** item 4 (merge da `task/76d-menus`). o modelo do menu
