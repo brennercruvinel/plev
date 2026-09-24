@@ -40,6 +40,10 @@ task; aqui fica o que aconteceu e onde ler.
   que traz; `not_observed` sai com 3. um ato encadeado que lê o que o
   próprio ato anterior mudou passa a precisar de uma observação.
 - **publicado:** PR #54 (task-64 fase a), merge `eea529b`.
+- **disparados:** task-90 (sem, o `acted` desde o olhar) e task-63 fase
+  d re-escopada (o `ide` grava a sessão com as ligações por frame, e a
+  janela pode subir sem tomar o foco). com a 89, três agentes compilando.
+  a 88 (laboratório) espera a 89, porque as duas mexem no roteirizado.
 
 ### ciclo 2: o inspector entra e acha um buraco no contrato
 
