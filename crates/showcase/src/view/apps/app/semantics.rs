@@ -8,12 +8,20 @@
 //! same ids (`draw.rs`), beside the scene.
 //!
 //! The semantic model: `todo` (region, inert while the view holds an
-//! overlay up), `todo.input` (text input: `text`, `set_value` and `submit`
-//! reading `todo.input:text`), `todo.filter` (tab list: `selected`) with
-//! one tab per filter (`select` reading `todo.filter:selected`),
-//! `todo.item[<id>]` for each visible item
-//! (list item: `completed`, `toggle` reading it, `remove`) and
-//! `todo.counter` (status: `active`, `done`).
+//! overlay up; `items`, the ids of the visible items in the order shown),
+//! `todo.input` (text input: `text`, `set_value` and `submit` reading
+//! `todo.input:text`), `todo.filter` (tab list: `selected`) with one tab
+//! per filter (`select` reading `todo.filter:selected`), `todo.item[<id>]`
+//! for each visible item (list item named by its text: `completed`,
+//! `text`, `toggle` reading `completed`, `remove`) and `todo.counter`
+//! (status: `active`, `done`).
+//!
+//! `todo:items` follows the filter, as the item nodes do: a projection
+//! shows only what exists now, so every id in the list is a node here and
+//! every item node is in the list. A generated surface repeats over it
+//! (`uir::Repeat`), one instance per `todo.item[<id>]`, and shows each
+//! item's `text` (the IR names an instance by its item, the id, and does
+//! not interpolate a label).
 
 use comps::prelude::{EventResult, Rect};
 use engine::perf::stages::{self, Stage};
@@ -148,7 +156,11 @@ impl Semantics for TodoPage {
         let Some(ids) = &self.ids else {
             return;
         };
-        b.node(&ids.todo, Role::Region, "todo").inert(self.inert);
+        let visible = self.model.visible_items();
+        let shown: Vec<String> = visible.iter().map(|i| i.id().to_string()).collect();
+        b.node(&ids.todo, Role::Region, "todo")
+            .inert(self.inert)
+            .state("items", Value::List(shown));
         self.input
             .project(b, &ids.input, "new todo", Some(&ids.todo))
             .action("submit")
@@ -164,10 +176,12 @@ impl Semantics for TodoPage {
                 .action("select")
                 .reads(selected.as_str());
         }
-        for item in self.model.visible_items() {
+        for item in visible {
             let id = ids.item(item.id());
             let mut node = b.node(&id, Role::ListItem, item.text());
-            node.parent(&ids.todo).state("completed", item.completed());
+            node.parent(&ids.todo)
+                .state("completed", item.completed())
+                .state("text", item.text());
             node.action("toggle").reads(format!("{id}:completed"));
             node.action("remove").policy(Policy {
                 destructive: true,
