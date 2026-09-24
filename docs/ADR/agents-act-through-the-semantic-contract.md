@@ -45,17 +45,19 @@ protocol adds an envelope and nothing else.
 
 - `hello {name}` names the actor of the connection, `Actor::Agent {
   name }`, and gets `welcome {app, actor}`. an `act` before it is refused.
-- `observe {scope?, keys?, since?, bounds?}` gets `snapshot {revision,
-  nodes, focused, bounds?}` or `delta {base, revision, changes, bounds?}`.
+- `observe {scope?, keys?, since?, bounds?, source?}` gets `snapshot
+  {revision, nodes, focused, bounds?}` or `delta {base, revision,
+  changes, bounds?}`.
   `scope` keeps one node and its descendants (`Snapshot::subtree`); `keys`
   keeps only those state keys (a node keeps its other fields, a delta
   loses the changes of other keys); `since` answers the `Snapshot::diff`
   from a revision the app served, when it still holds it, and the whole
   snapshot otherwise; `bounds` adds the visible rect of each bound node of
   the frame on screen, and is off by default, since an agent acts by id.
-  `revision` is always the revision of the app's whole snapshot at that
-  instant, also for a scoped observation: it is what `since` and
-  `from_revision` take.
+  `source` keeps each node's `source` in a snapshot, off by default too
+  (task-57b, see the consequences). `revision` is always the revision of
+  the app's whole snapshot at that instant, also for a scoped
+  observation: it is what `since` and `from_revision` take.
 - `act {target, action, param?, observed}` or `act {target, action,
   param?, from_revision}`, exactly one of the two. the reply is one `stage
   {request, stage, at}` message per stage of the receipt, in order, under
@@ -215,6 +217,13 @@ whole page: a row is under 1 KB, a delta after a change under 1 KB. keys
 cut little, since the bulk of a node is its actions, constraints and
 source, not its state.
 
+updated on 2026-09-23: the table and the token counts above measure the
+verbose form this task shipped, and stay as its record. the lean form of
+task-57b replaced it (see the consequences): a whole observation is now
+2039 B with 3 items and 26237 B with 103, one row 361 B, a delta after
+one toggle still 624 B; the new numbers are in
+`docs/ADR/lean-semantic-form-and-one-redaction.md`, consequences.
+
 ## reason
 
 - the agent works on the structure the engine uses (thesis, section 2),
@@ -234,10 +243,13 @@ source, not its state.
 
 ## consequences
 
-- the ide opens the port on its own shell (task-62 phase c) with its
-  `Workbench` as the host. its executions end on the git worker, so its
-  shell drains the port also after the worker's wake, for the late stages
-  to go out.
+- the ide's `Workbench` is served as the host by the `ide-lab` binary
+  (task-62 phase c, `crates/ide/src/bin/lab/lab.rs`), not by the ide's
+  own shell as planned here. its executions end on the git worker, so the
+  lab drains the port also after the worker's wake, for the late stages
+  to go out. updated on 2026-09-23: the `ide` binary does not use `wire`
+  and opens no port (`crates/ide/src/main.rs`); a port on its window
+  shell is still to do.
 - a host with more than one dispatcher gets one sink; the showcase has
   one today (the todo page). request ids are per dispatcher, so a host
   must route the port to one.
