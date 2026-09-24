@@ -309,7 +309,7 @@ impl ShowcaseView {
 /// reader goes through, desktop only.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod agent {
-    use engine::compositor::{Compositor, intersect_rects};
+    use engine::compositor::Compositor;
     use sem::{ReceiptSink, Request, RequestId, Snapshot};
     use wire::{AgentPort, Bound, Host};
 
@@ -351,14 +351,13 @@ mod agent {
 
         /// The visible part of each binding (its rect inside its clip).
         fn bounds(&self) -> Vec<Bound> {
-            let visible = |(id, b): (&sem::SemId, &engine::compositor::Binding)| {
-                let [x, y, w, h] = b.clip.map_or(b.rect, |clip| intersect_rects(b.rect, clip));
-                (w > 0.0 && h > 0.0).then(|| Bound {
+            self.compositor
+                .visible_bindings()
+                .map(|(id, rect)| Bound {
                     id: id.clone(),
-                    rect: [x, y, w, h],
+                    rect,
                 })
-            };
-            self.compositor.bindings().filter_map(visible).collect()
+                .collect()
         }
 
         fn dispatch(&mut self, req: Request) -> Option<RequestId> {

@@ -17,7 +17,7 @@ use indexmap::IndexMap;
 use rustc_hash::{FxBuildHasher, FxHashSet};
 use sem::SemId;
 
-use super::clip::{ClipRect, ClipStack};
+use super::clip::{ClipRect, ClipStack, intersect_rects};
 use super::{Compositor, LayerId, SceneNode};
 use crate::input::ViewId;
 use crate::perf::stages::{self, Stage};
@@ -39,6 +39,19 @@ pub struct Binding {
     /// The temporary render identity, when the widget registered a hit
     /// region under one this frame (`Compositor::set_binding_view`).
     pub view: Option<ViewId>,
+}
+
+impl Binding {
+    /// The part of the rect inside its clip, `(x, y, w, h)` in logical
+    /// window pixels: where the bound id shows in the frame. `None` when
+    /// nothing of it shows (clipped away, or an empty rect). The layer's
+    /// visibility and opacity are not read, only the geometry.
+    pub fn visible_rect(&self) -> Option<[f32; 4]> {
+        let [x, y, w, h] = self
+            .clip
+            .map_or(self.rect, |clip| intersect_rects(self.rect, clip));
+        (w > 0.0 && h > 0.0).then_some([x, y, w, h])
+    }
 }
 
 /// The per-frame table and what it needs to fill it.
@@ -168,6 +181,14 @@ impl Compositor {
     /// This frame's bindings, in bind order.
     pub fn bindings(&self) -> impl Iterator<Item = (&SemId, &Binding)> + '_ {
         self.bind_table.table.iter()
+    }
+
+    /// This frame's bindings that show, each with its visible rect
+    /// ([`Binding::visible_rect`]), in bind order: where an agent or a
+    /// screen reader finds each id on screen.
+    pub fn visible_bindings(&self) -> impl Iterator<Item = (&SemId, [f32; 4])> + '_ {
+        self.bindings()
+            .filter_map(|(id, b)| b.visible_rect().map(|rect| (id, rect)))
     }
 
     /// Where `id` sits in this frame, if it was bound.
@@ -376,6 +397,47 @@ mod tests {
         assert!(c.set_binding_view(&id("x"), ViewId(7)));
         assert_eq!(c.binding(&id("x")).unwrap().view, Some(ViewId(7)));
         assert!(!c.set_binding_view(&id("y"), ViewId(8)));
+    }
+
+    #[test]
+    fn the_visible_rect_is_the_part_inside_the_clip() {
+        let mut c = Compositor::new();
+        c.begin_frame();
+        c.bind(&id("free"), [5.0, 5.0, 10.0, 10.0]);
+        c.push_clip(0.0, 0.0, 100.0, 50.0);
+        // A row scrolled half out of its list viewport.
+        c.bind(&id("half"), [0.0, 30.0, 100.0, 40.0]);
+        c.bind(&id("inside"), [10.0, 10.0, 20.0, 20.0]);
+        // Below the viewport: nothing of it shows.
+        c.bind(&id("below"), [0.0, 60.0, 100.0, 40.0]);
+        // Touching the clip's edge only: a line, no area.
+        c.bind(&id("edge"), [0.0, 50.0, 100.0, 40.0]);
+        c.pop_clip();
+        c.bind(&id("empty"), [0.0, 0.0, 0.0, 10.0]);
+
+        let seen = |s| c.binding(&id(s)).unwrap().visible_rect();
+        assert_eq!(seen("free"), Some([5.0, 5.0, 10.0, 10.0]), "unclipped");
+        assert_eq!(seen("half"), Some([0.0, 30.0, 100.0, 20.0]));
+        assert_eq!(seen("inside"), Some([10.0, 10.0, 20.0, 20.0]));
+        assert_eq!(seen("below"), None);
+        assert_eq!(seen("edge"), None);
+        assert_eq!(seen("empty"), None);
+
+        // The frame's visible bindings: those that show, in bind order.
+        let shown: Vec<(&str, [f32; 4])> = c
+            .visible_bindings()
+            .map(|(id, rect)| (id.as_str(), rect))
+            .collect();
+        assert_eq!(
+            shown,
+            [
+                ("free", [5.0, 5.0, 10.0, 10.0]),
+                ("half", [0.0, 30.0, 100.0, 20.0]),
+                ("inside", [10.0, 10.0, 20.0, 20.0]),
+            ]
+        );
+        c.begin_frame();
+        assert_eq!(c.visible_bindings().count(), 0);
     }
 
     #[test]
