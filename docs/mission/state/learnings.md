@@ -292,6 +292,15 @@ c"; saídas em `target/agents/exp/`.
 
 ### 2026-09-23
 
+- **briefing que proíbe o que o gate exige:** o briefing da 68 proibiu
+  `README.md` e `docs/arc/arc.toml`, e o `arc_sync_guard` exige de todo
+  crate novo uma entrada nos dois. o agente parou com o gate vermelho
+  num teste só. regra: crate novo sempre leva, nos arquivos permitidos, a
+  própria linha no README e a entrada no `arc.toml`, como a seção 8 do
+  programa já dizia. o agente achou também que o guard passava por acaso
+  para o `uir` no `arc.toml` (a palavra "acquire" contém "uir"): o guard
+  procura texto, não entrada.
+
 - **a guarda de merge nunca guardou:** o orquestrador decidia o merge
   com `if ! grep -qv pass`, e o `grep` desta shell é uma função de
   snapshot que devolveu 1 com uma linha `fail` no arquivo. todo PR até o
