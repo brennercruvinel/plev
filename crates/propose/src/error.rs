@@ -27,8 +27,11 @@ pub enum ProposeError {
     #[error("{part} asked for, and the app declares {missing}")]
     Nothing { part: Part, missing: String },
     /// the app declares nothing the rules can show: no text input, no
-    /// choice, no number.
-    #[error("the app declares nothing these rules can show: no text input, no choice, no number")]
+    /// choice, no number, no list.
+    #[error(
+        "the app declares nothing these rules can show: no text input, no choice, no number, \
+         no list"
+    )]
     Empty,
     /// the model did not answer.
     #[error("the model failed: {0}")]

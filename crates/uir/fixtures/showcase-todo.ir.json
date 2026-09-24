@@ -67,6 +67,60 @@
           ]
         },
         {
+          "sem": "todo_panel.items",
+          "component": "list",
+          "label": "items",
+          "layout": {
+            "stack": {
+              "axis": "vertical",
+              "gap": "xs"
+            }
+          },
+          "repeat": {
+            "each": "todo:items",
+            "item": {
+              "sem": "todo_panel.item[{item}]",
+              "layout": {
+                "stack": {
+                  "axis": "horizontal",
+                  "gap": "sm",
+                  "align": "center"
+                }
+              },
+              "children": [
+                {
+                  "sem": "todo_panel.item[{item}].text",
+                  "component": "text",
+                  "size": {
+                    "flex": 1
+                  },
+                  "bind": {
+                    "state": {
+                      "text": "todo.item[{item}]:text"
+                    }
+                  }
+                },
+                {
+                  "sem": "todo_panel.item[{item}].done",
+                  "component": "checkbox",
+                  "label": "done",
+                  "bind": {
+                    "state": {
+                      "checked": "todo.item[{item}]:completed"
+                    },
+                    "actions": {
+                      "toggle": {
+                        "target": "todo.item[{item}]",
+                        "action": "toggle"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
           "sem": "todo_panel.filter",
           "label": "filter",
           "layout": {

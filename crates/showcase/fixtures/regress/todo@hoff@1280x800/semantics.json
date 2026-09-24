@@ -3,7 +3,17 @@
     {
       "id": "todo",
       "role": "region",
-      "label": "todo"
+      "label": "todo",
+      "state": {
+        "items": {
+          "kind": "list",
+          "value": [
+            "1",
+            "2",
+            "3"
+          ]
+        }
+      }
     },
     {
       "id": "todo.input",
@@ -106,6 +116,10 @@
         "completed": {
           "kind": "bool",
           "value": false
+        },
+        "text": {
+          "kind": "text",
+          "value": "Absorb the plev demos into the showcase"
         }
       },
       "actions": [
@@ -132,6 +146,10 @@
         "completed": {
           "kind": "bool",
           "value": false
+        },
+        "text": {
+          "kind": "text",
+          "value": "Measure text, never estimate it"
         }
       },
       "actions": [
@@ -158,6 +176,10 @@
         "completed": {
           "kind": "bool",
           "value": true
+        },
+        "text": {
+          "kind": "text",
+          "value": "Port the todo domain (tested first)"
         }
       },
       "actions": [

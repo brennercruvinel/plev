@@ -395,6 +395,11 @@ mod forms;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod measure;
 
+/// The todo's items on the surface (task-95): both forms show them by the
+/// live list, a check on either half reaches the other through the todo's
+/// dispatcher, and a change of form keeps each item's instance.
+mod items;
+
 /// The intent field and the propose button: a person proposes, the
 /// surface takes the form in place; a refusal says why; the page's
 /// `Operable` leaves the todo as the todo's own path does.
