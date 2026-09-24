@@ -114,7 +114,7 @@ o que a tese precisa e o que existe hoje:
 | task-61 | superfície do agente (socket local, observe, act) | 4 | 57, 58, 59 |
 | task-62 | prova no ide: stale-state rejection e handoff | 4 | 57, 58, 59 (fase c: 61, 63) |
 | task-63 | flight recorder de sessão | 4 | 57, 58 |
-| task-64 | fase a integrada; fase c em andamento (P2); b depois | `e6560a2` | crate `inspect`, CLI `plev-inspect`; fase c: export de trecho como bug report e uma sessão gravada que vira teste de regressão num harness isolado (reexecução controlada, o que o inspector nunca faz); a fase b (UI) já tem as ligações por frame (63d) |
+| task-64 | fases a e c integradas; b depois (P2) | `e6560a2`, `d611fa4` | crate `inspect`, CLI `plev-inspect` (com `--export`); uma sessão gravada vira teste de regressão (`crates/ide/tests/rerun`, fixture do app, veredito e marcas), o primeiro é a sessão a2ppa da terceira rodada; adr sessions-become-regression-tests |
 | task-65 | pixel para código e inspector de desenvolvimento | 5 | 57, 59 |
 | task-66 | headless como primeira classe | 3 | nenhuma (saída semântica: 57) |
 | task-67 | regressão estrutural antes de pixel | 5 | 59, 66 |

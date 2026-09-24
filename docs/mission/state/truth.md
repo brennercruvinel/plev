@@ -156,6 +156,12 @@ o da base até ser reescrito.
   `crates/uir/fixtures/`, regeneradas pelos testes `uir_fixture` do ide e
   do showcase. nada materializa ainda (task-69).
 
+- `d611fa4` (task-64 fase c): `crates/ide/tests/rerun/` (harness de
+  reexecução controlada, trait `Fixture`, formato `.marks`), a fixture
+  `crates/ide/tests/fixtures/sessions/a2ppa.{monster,marks}`;
+  `crates/ide/src/lab_repo.rs` (o repositório do laboratório, antes
+  `src/bin/lab/repo.rs`, agora público na lib); `plev-inspect --export`.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

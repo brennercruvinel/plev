@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [rec, inspect, ide, session, regression, harness, fixture, export, generative-runtime]
 date: 2026-09-24
 ---

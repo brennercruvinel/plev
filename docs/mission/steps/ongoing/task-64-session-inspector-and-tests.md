@@ -1068,3 +1068,27 @@ sessão que não lê (exit 3). o parse ganhou os casos no teste do bin.
   precisa de nada novo para isso.
 - mostrar o relatório do rerun ao lado da cadeia causal, quando a fase b
   quiser; hoje ele é texto de teste.
+
+## fechamento da fase c (orquestrador, 2026-09-24)
+
+integrada na `main` em `d611fa4` (cinco commits, rebaseados sem
+conflito). o ADR sessions-become-regression-tests foi aceito.
+
+validação do orquestrador:
+- diff lido (o harness, a fixture do ide, as marcas, o export, o
+  `lab_repo` movido para a lib sem mudar o arquivo);
+- gate verde no diretório da task: 2349 passaram, 0 falharam, 12
+  ignorados, com a perna urnaui;
+- o teste gerado da sessão a2ppa rodou dez vezes seguidas, verde nas dez;
+- a prova de que ele pega regressão foi repetida pelo orquestrador: com
+  o `changes:staged` tirado dos `reads` do `submit` em `project.rs`, o
+  teste falhou com "DIVERGED request 7 ... recorded rejected: stale,
+  changes:staged ... rerun accepted", e o arquivo foi restaurado.
+
+severidade do que ficou:
+- P3: o `lab_repo` é módulo público da lib do ide (código do
+  laboratório no caminho de produção); o relógio do workbench não é
+  injetado (nada que o harness compara lê esse relógio);
+- P2: o showcase não grava sessão nem tem fixture; com a segunda fixture
+  o harness vira crate próprio; a fase b (UI) marca valores e escreve o
+  `.marks`.

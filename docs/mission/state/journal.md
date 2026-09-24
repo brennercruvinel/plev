@@ -14,6 +14,12 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: uma sessão vira teste (task-64 fase c)
+
+- **integrada:** task-64 fase c (`d611fa4`). gate verde (2349). o teste
+  gerado rodou dez vezes seguidas, e o orquestrador repetiu a prova de
+  regressão quebrando a precondição do commit.
+
 ### ciclo 3: a task-69 parou na página
 
 - a sonda da fase 1 passou: os widgets, o layout e os tokens mapeiam sem
