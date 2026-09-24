@@ -243,3 +243,116 @@ set; these are the numbers of the proposer's latency (phase 3) to add to.
 - a second layout engine, a literal visual value, or a token read by a
   name the theme does not have.
 - materializing an `Ir` that did not go through `verify`.
+
+## addendum, 2026-09-24: a surface changes form (task-69 phase 2, proposed)
+
+### context
+
+phase 1 kept a node's widget across a `sync`, and `SurfaceHost` refused a
+second IR for an open surface. the only way to another form was to close
+the surface and open the other: the app's state came back through the
+bindings, and everything a widget held (the focus, the caret, a drag in
+flight) was lost with it (the probe, in the task file). the program asks
+the opposite: a capability keeps its identity and its semantics while its
+representation is born, leaves or changes in real time.
+
+### decision
+
+- **transform.** `SurfaceHost::transform(VerifiedIr, &Snapshot)` gives the
+  open surface the IR names its new form (`Surface::transform`
+  underneath). a form for a surface that is not open (`NotOpen`), or one
+  whose nodes would take the ids of another open surface's (`Collision`),
+  is refused, and the surface keeps its form. only a `VerifiedIr`
+  transforms a surface, as only one materializes it.
+- **reconciliation by `SemId` and widget.** a node keeps its retained
+  widget while its id stays and it is drawn by the same comps widget
+  (`Kind`: the component, and for a `button` whether it binds `busy`,
+  a `SubmitButton` then). the widget keeps what lives in it: focus,
+  caret, selection, hover, a drag in flight; what a new form may change
+  on it (a label, a placeholder, a column's title) is set again. an id
+  that stays under another widget gets a new one, and nothing of the old
+  widget passes: what it shows is the app's, read again through the
+  binding, while the old widget's picture leaves as the new one enters.
+  a new id gets a widget; a gone id drops its own. a node that comes
+  back before its picture is gone is the same instance again.
+- **geometry by `SemId`.** the rect each node was drawn at lives under its
+  id. a node that stays keeps it until the next frame, so a click in
+  between lands on what the person saw; a node that left loses it at
+  once. it is where a move starts and where a leaving node stays.
+- **semantics first, frames after.** the projection, the routing and the
+  hit test follow the new form at once. a node born is projected and
+  bound at once, and fades in. a node gone is out of the projection at
+  once, and an act on it is the refusal the contract already gives a
+  target that does not exist (`route` passes it on as it is; the app's
+  dispatcher answers `NotFound`). its picture, a ghost holding its node,
+  its widget, the snapshot it showed and its rect, fades out where it
+  was, drawn over the live nodes, bound to nothing, hit by nothing.
+- **transitions without an engine of their own.** the entry and the exit
+  are the overlay's progress spring (`Spring<f32>` on `theme.motion`,
+  as `OverlayManager` runs it), drawn as the opacity: the node draws
+  into a compositor of its own and each scene node it pushed goes to the
+  frame with its alpha scaled (a path's vertices too, with its hash
+  moved; an image or a backdrop blur, which have no color, show whole
+  down to half). a move is an engine `Tween` over `theme.duration.slow`
+  (`EaseInOutCubic`), from the rect drawn to the rect laid out in each
+  frame, so a resize in the middle lands. a transition starts at the
+  first frame that draws the new form, with that frame's theme and
+  layout. a fade is over within one 8-bit step of its end (1/255): the
+  engine spring's own rest threshold asked for half as many frames
+  again, all of them the same picture.
+- **render on demand.** `Surface::wake` and `SurfaceHost::wake` ask for a
+  frame when a change of form waits to be drawn, for every frame while a
+  transition runs, and for nothing once it settles.
+- **reduced motion.** the engine exposes no motion preference yet (the
+  system's comes with task-75), so the host takes it from whoever knows
+  it (`SurfaceHost::set_reduced_motion`, `Surface::set_reduced_motion`).
+  with it every change is instant, the transitions in flight included,
+  and a dismissal lets go at once.
+- **dismissal.** `SurfaceHost::close` takes the surface out of the
+  projection, the routing and the hit test at once, fades its picture
+  where it was drawn (`draw_closing`), and then lets everything go; it
+  answers whether the surface was open.
+- **the demo.** the Surface page of the showcase switches its surface
+  between two forms with a segmented control: compact (the fixture of
+  task-68) and two columns (`crates/surface/tests/fixtures/showcase-todo-columns.ir.json`,
+  a grid over `field_min_w`, one column at a phone's width), each
+  verified against what the todo projects when the person asks for it.
+
+### cost
+
+the mixer of the tests (a slider moves to the other panel, a hint is born,
+a reset button leaves, a switch becomes a checkbox) draws 37 of 120 turns
+of a 60 Hz display after its change of form, one run from the change on,
+and none after; with reduced motion, 1 of 120. while a node fades it is
+drawn twice (into its own compositor, then copied); at rest the cost is
+phase 1's. the time per frame of a transition was not measured.
+
+### consequences
+
+- a sync that changes the tree (a repeat's list moved) shows the same
+  transitions as a new form: it is the same reconciliation.
+- a surface shows at once when it opens and before its first frame: there
+  is nothing to move from.
+- a fade is per scene node, not per group: the primitives of one node
+  blend with each other while they fade, where a layer's opacity would
+  composite them first. the surface draws into the layer it is given and
+  owns no layer of its own.
+- a ghost is drawn over the live nodes: a leaving container with a
+  background would veil the new form while it fades (no fixture has one).
+- a `button` that starts or stops binding `busy` changes comps widget
+  (`Button`, `SubmitButton`); their hover and press are private in comps
+  and do not pass. hover returns at the next pointer move; a press in
+  flight at that instant does not complete.
+- the page's control is the page's, not a capability: an agent does not
+  switch the form. that is a proposer's job (phase 3), through
+  `transform`.
+
+### avoid
+
+- a transition that holds the semantics back: a node gone is no
+  capability from the change on, whatever its picture shows.
+- a second animation engine, or a duration or a spring that is not the
+  theme's.
+- carrying a widget's state into a widget of another kind by hand: what
+  must survive a change of representation is the app's, and it is read
+  again through the binding.
