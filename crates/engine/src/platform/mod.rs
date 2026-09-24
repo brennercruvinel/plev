@@ -3,6 +3,7 @@ pub mod capture;
 pub mod files;
 pub mod ime;
 pub mod lifecycle;
+pub mod links;
 pub mod menu;
 pub mod notify;
 pub mod print;
