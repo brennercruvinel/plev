@@ -150,3 +150,49 @@ resolução de editor.
 - a fase d, sempre antes de código;
 - `source` do site de projeção não servir e o site de render exigir
   mudança de assinatura em comps.
+
+## rodada 1: handoff do agente (fases a e b)
+
+### a sonda do `source` (antes de qualquer código)
+
+rodado na base (`76f58a0`), sem janela:
+
+```text
+cargo run -p showcase -- --render Todo --semantics todo.json --source
+wrote todo.json (10 nodes, revision cfc1185078f7c825, Todo / core at 1200x800 scale 1)
+```
+
+o `source` de cada nó, e a linha para onde ele aponta
+(`crates/showcase/src/view/apps/app/semantics.rs`):
+
+```text
+todo                    region     151:11  b.node(&ids.todo, Role::Region, "todo").inert(self.inert);
+todo.input              text_input 153:14  .project(b, &ids.input, "new todo", Some(&ids.todo))
+todo.filter             tab_list   157:11  b.node(&ids.filter, Role::TabList, "filter")
+todo.filter[all|active|completed]  162:15  b.node(tab, Role::Tab, f.label())
+todo.item[1|2|3]        list_item  169:30  let mut node = b.node(&id, Role::ListItem, item.text());
+todo.counter            status     178:11  b.node(&ids.counter, Role::Status, self.counter_text())
+```
+
+os três pedidos: o controle de adicionar, um item e o filtro.
+
+- adicionar: o todo não tem botão de adicionar. quem adiciona é o campo
+  (`todo.input`, ação `submit`, "Enter adds it" no placeholder). o
+  `source` dele é `153:14`, a chamada `TextField::project` do app: como
+  `project` é `#[track_caller]` no comps, o site é o do showcase e não o
+  do comps. nesta rodada "o botão de adicionar" é esse campo.
+- um item: `todo.item[1]` em `169:30`, o `b.node` do list item dentro do
+  laço dos itens visíveis.
+- o filtro: `todo.filter` em `157:11`; cada pílula
+  (`todo.filter[active]`) em `162:15`, o `b.node` da aba dentro do laço.
+
+serve para quem clica: cada nó leva à linha do código do app que declara
+aquela capacidade (id, papel, rótulo, estado e ações), no arquivo do app
+e não no comps. a coluna aponta para o nome do método (`node`,
+`project`). o site de render (`draw.rs`, que faz o `bind` dos mesmos ids)
+fica a um passo, e o módulo `semantics.rs` diz isso no topo. limite
+esperado: um nó projetado dentro de um laço (itens, abas) leva todos à
+mesma linha, porque é o código, não o dado; o texto do item leva ao
+literal pela fase b quando ele existe no código (os três itens do seed
+existem). decisão: seguir com o site de projeção, sem `#[track_caller]`
+no render.
