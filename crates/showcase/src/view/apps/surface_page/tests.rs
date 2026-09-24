@@ -419,3 +419,15 @@ fn the_two_column_form_fits_a_phone_width() {
         );
     }
 }
+
+/// A form the surface cannot take leaves it as it was: the form it
+/// shows, the control on it, the nodes it projects.
+#[test]
+fn a_form_that_does_not_transform_leaves_the_surface_as_it_was() {
+    let (todo, mut page, _) = setup();
+    assert!(!page.switch(FORMS.len(), &todo));
+    assert_eq!((page.form, page.forms.active), (0, 0));
+    let snap = page.snapshot(&todo).expect("the page projects");
+    assert!(snap.get(&sid("todo_panel.counts")).is_some());
+    assert!(snap.get(&sid("todo_panel.side")).is_none());
+}
