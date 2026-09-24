@@ -8,10 +8,12 @@ use sem::{Acted, Actor, Change, Receipt, Rejection, Request, SemId, Stage};
 
 use super::Workbench;
 
-/// How an actor is named in a sentence.
+/// How an actor is named in a sentence. Never "you": the notices are
+/// projected, and an agent reads the same sentence a person does (an
+/// agent took "you unstaged src/session.rs" as said about itself).
 fn who(actor: &Actor) -> &str {
     match actor {
-        Actor::Human => "you",
+        Actor::Human => "the person",
         Actor::Agent { name } | Actor::Test { name } => name,
         Actor::Assistive => "assistive technology",
     }
@@ -113,7 +115,7 @@ impl Workbench {
     }
 
     /// Who ran something on the state a stale request rested on, in
-    /// words: `you unstaged src/session.rs`. `None` when nobody the app
+    /// words: `the person unstaged src/session.rs`. `None` when nobody the app
     /// knows did (a change from outside it has no request).
     fn acted(&self, acted: &[Acted]) -> Option<String> {
         let each: Vec<String> = acted

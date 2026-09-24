@@ -131,7 +131,7 @@ fn a_person_unstaging_b_makes_the_agent_commit_stale() {
     // executing on the worker, ran on the state the agent saw.
     assert_eq!(
         rig.notices(),
-        ["Refused test-agent's submit: B left the staged files (you unstaged B)"]
+        ["Refused test-agent's submit: B left the staged files (the person unstaged B)"]
     );
 
     rig.settle(unstage);

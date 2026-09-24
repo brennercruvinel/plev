@@ -296,6 +296,15 @@ decididas em 2026-09-23:
    merge commit), e os checkpoints da seção 9 param só quando o resultado
    cai numa das condições de parada de `autonomy.md`.
 
+10. checkpoint a, segunda rodada (2026-09-23, decisão autônoma dentro do
+    item 9): o experimento rodou de novo com as tasks 83, 84 e 85, o mesmo
+    briefing e o mesmo modelo. R1 a R3 se sustentaram; R4 veio misto
+    (controle mais barato, intervenção 14 a 16% mais cara em bytes, menos
+    tokens nas três). nenhuma condição de parada: a onda 5 abre. antes,
+    duas correções pequenas que a rodada achou: o aviso sem segunda pessoa
+    (feito) e a revisão no `completed` (task-87). resultado em
+    `task-62-ide-human-agent-proof.md`, "resultado da segunda rodada".
+
 abertas:
 
 5. task-39 (memoização, pendente desde 2023) é absorvida pela task-73.
@@ -319,7 +328,7 @@ atualizado em cada integração.
 | task-59 | integrada | `f71dc20`, `f5b7cee` | ligação no compositor e todo pelo dispatcher (fase a); os 16 widgets restantes com `SemId` e projeção, regra "toda ação lê o que muda", defeito do `Select` corrigido (fase b); rolagem do `Select` virou a task-81 |
 | task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (integrada, linha abaixo) |
 | task-73 | fases 1 e 1b integradas; fase 2 (ADR de desenho) espera decisão do brenner | `ed814da`, `91fdb33` | limitado pela GPU mesmo sem a latência de envio (4 a 12 vezes a CPU); pass de layer segue os pixels; composite em todo frame; o caret a 60 fps é a task-82 |
-| task-62 | fase c rodada; checkpoint a decidido (correções primeiro, decisão 8) | `8978602`, `d26c9b1` | experimento completo: H1, H2, H3 e H5 sustentadas, H4 diz onde o plev ganha (recusa antes do efeito, com o delta; receipt e sessão) e onde não (bytes e idas e voltas contra o `git`); resultado e decisão pedida no arquivo da task |
+| task-62 | fase c rodada duas vezes; checkpoint a decidido (decisões 8 e 10) | `8978602`, `d26c9b1` | experimento completo: H1, H2, H3 e H5 sustentadas, H4 diz onde o plev ganha (recusa antes do efeito, com o delta; receipt e sessão) e onde não (bytes e idas e voltas contra o `git`); resultado e decisão pedida no arquivo da task |
 | task-63 | fases a, b e c integradas; fase d na fila | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d = retenção de pixels opt-in e ligação no shell do showcase, depois da 61 |
 | task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
 | task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
@@ -331,4 +340,6 @@ atualizado em cada integração.
 | task-83 | integrada | `78f463c` | `Change::NodeAdded` carrega o nó (o commit nascendo em `stacks`: 427 B numa ida, antes 172 B mais 402 B); `Rejection::Stale.acted` nomeia as ações de outros atores sobre o estado que o autor viu; regra de stale no `plev --help`; sessões antigas continuam abrindo; adr a-delta-carries-the-node-a-refusal-names-who-acted |
 | task-84 | integrada | `4896451` | a sessão do ide descarta leitura do git feita antes de uma mutação que a view já mostra; teste que falhava 10 de 10 na base; o roteirizado não espera mais o index parar (sem essa espera, na base, as dez corridas com intervenção davam errado) |
 | task-85 | integrada | `476bbb4` | o commit aparece na projeção no passo em que o receipt conclui; `files` (uma definição: contra o primeiro pai, renomeação nos dois caminhos) nos 10 commits mais recentes e no último que o ide fez; devolvida uma vez (definição única, limite na projeção) |
+| task-87 | em andamento | | um estágio terminal servido a um agente traz a revisão em que o app ficou (aditivo no v1); origem: os três agentes da segunda rodada do checkpoint a |
+| task-67 | em andamento | | regressão por significado antes de pixel (onda 5); a única da onda que não disputa arquivo com 82b e 87 |
 | auditoria de verdade | integrada | `7621403` | `docs/mission/state/truth.md`: contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |
