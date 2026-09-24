@@ -148,3 +148,87 @@ fn the_agents_own_act_after_its_look_is_named_while_it_runs() {
     );
     host.finish_sync();
 }
+
+/// an act with `observed` given rests on the last time its actor was
+/// given the revision it names. the agent looks at the list, the field
+/// moves with no request (typing), and the person toggles item 1 on what
+/// that left: the claim on the look names the toggle, where the rule of
+/// task-90 had nowhere to start. a claim on a revision the actor was
+/// never given has no look, and falls back to that rule.
+#[test]
+fn an_explicit_claim_rests_on_the_last_giving_of_its_revision() {
+    let (mut server, mut host) = setup();
+    let r = look(&mut server, &mut host, A, "todo");
+    host.app.text = "typed".into();
+    host.click("todo.item[1]", "toggle");
+    let claim = |revision: &str| {
+        format!(
+            r#"{{"v":1,"id":"c","type":"act","target":"todo.clear","action":"clear","observed":{{"revision":"{revision}","values":[["todo.counter:done",{{"kind":"set","value":["3"]}}]]}}}}"#
+        )
+    };
+    let stages = |out: Vec<ServerMsg>| -> Vec<StageReply> {
+        out.into_iter()
+            .map(|m| match m.reply {
+                Reply::Stage(s) => s,
+                other => panic!("a stage expected, got {other:?}"),
+            })
+            .collect()
+    };
+    let out = stages(say(&mut server, &mut host, A, &claim(&r.to_string())));
+    assert_eq!(names(&out), ["requested", "rejected"]);
+    assert_eq!(
+        acted(&out),
+        [entry(1, Actor::Human, "todo.item[1]", "toggle")]
+    );
+
+    let never = "0000000000000001";
+    let out = stages(say(&mut server, &mut host, A, &claim(never)));
+    assert_eq!(names(&out), ["requested", "rejected"]);
+    assert!(acted(&out).is_empty(), "no look: {:?}", acted(&out));
+}
+
+/// the port puts its sink on the dispatcher at the first observation it
+/// serves an actor, and the look is marked there: what the person did
+/// before it is not named, what she did after it is.
+#[test]
+fn what_ran_before_the_first_look_is_not_named() {
+    let (mut server, mut host) = setup();
+    host.click("todo.item[2]", "toggle");
+    look(&mut server, &mut host, A, "todo.counter");
+    host.click("todo.item[1]", "toggle");
+    let r = look(&mut server, &mut host, A, "todo.clear");
+    let out = act(&mut server, &mut host, A, "todo.clear", "clear", r);
+    assert_eq!(
+        acted(&out),
+        [entry(2, Actor::Human, "todo.item[1]", "toggle")]
+    );
+}
+
+/// the port remembers the last `ring` revisions it gave each actor, and a
+/// look it forgot has no mark: past it, an explicit claim on that
+/// revision falls back to the rule of task-90, which names nobody here
+/// (the field moved with no request before the person's toggle). an act
+/// on `from_revision` never gets there: a read whose showing was
+/// forgotten is `not_observed` (task-89).
+#[test]
+fn a_look_forgotten_past_the_cap_falls_back_to_the_rule_without_it() {
+    let (mut server, mut host) = setup();
+    let r = look(&mut server, &mut host, A, "todo");
+    host.app.text = "typed".into();
+    host.click("todo.item[1]", "toggle");
+    for _ in 0..4 {
+        look(&mut server, &mut host, A, "todo.sync");
+    }
+    let line = format!(
+        r#"{{"v":1,"id":"c","type":"act","target":"todo.clear","action":"clear","observed":{{"revision":"{r}","values":[["todo.counter:done",{{"kind":"set","value":["3"]}}]]}}}}"#
+    );
+    let out: Vec<StageReply> = say(&mut server, &mut host, A, &line)
+        .into_iter()
+        .map(|m| match m.reply {
+            Reply::Stage(s) => s,
+            other => panic!("a stage expected, got {other:?}"),
+        })
+        .collect();
+    assert_eq!(names(&out), ["requested", "rejected"]);
+    assert!(acted(&out).is_empty(), "{:?}", acted(&out));
+}

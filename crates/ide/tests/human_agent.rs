@@ -1192,20 +1192,23 @@ mod through_the_port {
     }
 
     /// The reproduction of task-89 with a stage's revision. The agent
-    /// observes the form (the message) and then `changes` (A and B
-    /// staged); the person unstages B through the dispatcher; the agent
-    /// writes the message again, and submits on the revision that act's
-    /// last stage carried, which shows no state: the submit rests on the
-    /// `staged` of the earlier observation and is refused stale. Named are
-    /// the acts that ran since the oldest look the submit rests on: the
-    /// person's unstage and the agent's own write, which the toast says
-    /// in the third person.
+    /// observes the form (the message); the person opens the diff of A;
+    /// the agent observes `changes` (A and B staged); the person unstages
+    /// B through the dispatcher; the agent writes the message again, and
+    /// submits on the revision that act's last stage carried, which shows
+    /// no state: the submit rests on the `staged` of the earlier
+    /// observation and is refused stale. Named are the acts that ran since
+    /// the oldest look the submit rests on (the form's, where its message
+    /// comes from): the diff, the unstage and the agent's own write, which
+    /// the toast says in the third person.
     #[test]
     fn a_submit_on_a_stage_revision_names_who_acted_since_the_look_it_rests_on() {
         let mut rig = Rig::new(&["A", "B"], &["A", "B"]);
         rig.agent_writes("login and session");
         let mut port = Port::hello(&mut rig);
         port.observe(&mut rig, Some("commit.form"));
+        let show = rig.ask(sem::Actor::Human, "changes.file[A]", "show_diff", None);
+        rig.until(|e| matches!(e, git::GitEvent::DiffWorkdir { .. }));
         let changes = port.observe(&mut rig, Some("changes"));
         let unstage = rig.ask(sem::Actor::Human, "changes.file[B]", "unstage", None);
 
@@ -1219,6 +1222,7 @@ mod through_the_port {
         assert_eq!(
             named(&submit),
             [
+                (show, human("changes.file[A]", "show_diff")),
                 (unstage, human("changes.file[B]", "unstage")),
                 (
                     own,
@@ -1233,7 +1237,8 @@ mod through_the_port {
         assert_eq!(
             rig.notices(),
             ["Refused test-agent's submit: B left the staged files \
-                 (the person unstaged B; test-agent itself edited the commit message)"]
+                 (the person opened the diff of A and unstaged B; \
+                 test-agent itself edited the commit message)"]
         );
         rig.settle(unstage);
     }
