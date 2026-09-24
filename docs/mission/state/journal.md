@@ -16,6 +16,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ### ciclo 3: a quarta rodada fecha, e o CI parou por cobrança
 
+- **decisão autônoma, task-69 fase 3a:** a sonda passou (o IR da
+  intenção verifica sobre o registro real, sem nome do todo nas regras).
+  o agente parou porque a página precisa emprestar o dispatcher único do
+  todo a um `Operable` maior, e o arquivo (`view/apps/app/semantics.rs`)
+  estava fora da lista. o orquestrador conferiu as duas premissas
+  (dispatcher privado, a sink em `server.rs:516`) e autorizou a opção 1,
+  um método, sem mudar a projeção nem o golden. a palavra de escolha casa
+  só com as palavras do app; traduzir fica para o proponente LLM.
+- **disparada:** task-94 (P2), a recusa que nomeia uma pessoa aponta
+  para o `--ask`; build dir da task-93 reaproveitado.
 - **experimento fechado, quarta rodada:** seis corridas. a segurança se
   sustentou nas seis. sem dica, ninguém perguntou (dois pararam, dois
   passaram por cima da pessoa); com a frase, os dois perguntaram e a
