@@ -14,6 +14,19 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #80 (task-76 item 2); disparado o item 4
+
+- **publicado:** PR #80, merge commit, gate local verde na `main` (2579,
+  +9), regressão 161 sem mudança.
+- **disparado:** task-76 item 4, menus nativos como outra vista das
+  capacidades: o modelo do menu nasce da projeção, o `muda` 0.20 (sem
+  features, só desktop, já no cache offline: dependência aprovada pelo
+  orquestrador, não é estrutural) monta o menu, o clique vira `Request`
+  com `Actor::Human` pelo dispatcher, e o shell do showcase ganha um
+  `Operable` projetado (`shell.detach`, `shell.theme`, `shell.save_session`)
+  para os atalhos e o menu pedirem pelo mesmo caminho. um agente só, no
+  worktree fixo.
+
 ### ciclo 3: múltiplas janelas (task-76 item 2)
 
 - **integrada:** item 2 (merge da `task/76c-windows`). `WindowHost` e
