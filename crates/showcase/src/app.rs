@@ -208,6 +208,10 @@ impl ApplicationHandler<UserEvent> for App {
 
         #[allow(unused_mut)] // mut needed for cfg(not(wasm)) inner_size
         let mut attrs = WindowAttributes::default().with_title(TITLE);
+        #[cfg(target_os = "macos")]
+        {
+            attrs = background::window(attrs);
+        }
 
         // AccessKit attaches before the window is first shown.
         #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
@@ -492,7 +496,10 @@ impl Default for App {
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub fn run() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
-    let event_loop = EventLoop::<UserEvent>::with_user_event().build().unwrap();
+    let mut builder = EventLoop::<UserEvent>::with_user_event();
+    #[cfg(target_os = "macos")]
+    background::event_loop(&mut builder);
+    let event_loop = builder.build().unwrap();
     let mut app = App::new();
     let proxy = event_loop.create_proxy();
     app.access.proxy = Some(proxy.clone());
@@ -515,6 +522,10 @@ pub use headless::{RenderError, StagedPage, render_page, semantics_json, stage_p
 mod headless;
 
 mod pace;
+
+/// `PLEV_BACKGROUND=1`: the window comes up without taking the focus.
+#[cfg(target_os = "macos")]
+mod background;
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod access;
