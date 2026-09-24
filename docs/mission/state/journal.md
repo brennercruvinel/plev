@@ -14,6 +14,45 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: um flake do laboratório corrigido antes de publicar a 4c
+
+- **P1 achado na integração:** o gate da `main` com a fase 4c caiu em
+  `the_agent_asks_the_person_who_declines_and_it_stops` (task-93): duas
+  leituras do relógio (o clique gravado e o estágio carimbado dentro do
+  clique) divergindo por 1 ms sob carga; 20 corridas sozinho passaram.
+  correção na fonte (`6e284bf`, o clique gravado no instante do estágio
+  que causou), 10 corridas verdes, gate completo verde (2533, 0 falhas).
+  o PR #76 ficou segurando até aqui. learnings: uma leitura só do relógio
+  para um fato gravado em dois lugares; publicar só condicionado ao gate.
+
+### ciclo 3: a demo gravada (task-69 fase 4c); a task-69 espera só o checkpoint b
+
+- **integrada:** fase 4c (merge da `task/69h-recorded-demo`). o showcase
+  grava a própria sessão como o ide; a demo do editor de vídeo, dirigida
+  pela porta sem janela, ficou gravada em duas fixtures (regras e Claude)
+  que um teste e o `plev-inspect` leem. gate na `main` em andamento no
+  registro; o agente reportou 2533 (+7) e 159 baselines iguais. 2
+  chamadas reais ao Claude (0,19 USD).
+- **task-69 completa no que é do orquestrador.** falta o checkpoint b, do
+  brenner: comparar a tela gerada com a fixa (as duas na página Silences)
+  e escrever o resultado. três achados da gravação ficam registrados no
+  ADR para ele.
+- **próximo:** a onda 7 (70, 71) espera o checkpoint b. enquanto isso,
+  uma trilha do programa cuja dependência está integrada: a task-74
+  (texto e edição), fase 1, a auditoria de cobertura por escrita com
+  render headless.
+
+### ciclo 3: publicado #75; disparada a fase 4c
+
+- **publicado:** PR #75 (fase 4b), merge commit, gate local verde na
+  `main` (2526, +16), regressão 159 sem mudança.
+- **disparada:** task-69 fase 4c, o showcase grava a própria sessão como
+  o ide (`PLEV_RECORD=1`) e a demo do editor de vídeo fica gravada num
+  `.monster` que o `plev-inspect` lê (critério de aceitação da task-69:
+  "demo gravada e roteiro no handoff"). um agente só; no máximo 2
+  chamadas reais ao Claude. depois dela, a task-69 só espera o
+  checkpoint b, do brenner.
+
 ### ciclo 3: a tela gerada do editor de vídeo (task-69 fase 4b)
 
 - **integrada:** fase 4b (merge da `task/69g-silences-surface`). na

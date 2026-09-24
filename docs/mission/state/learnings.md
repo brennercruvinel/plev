@@ -381,6 +381,23 @@ c"; saídas em `target/agents/exp/`.
 
 ## processo
 
+### 2026-09-24, um milissegundo que derruba o gate
+
+- **o gate caiu num teste que não era da task:** na integração da fase 4c,
+  `the_agent_asks_the_person_who_declines_and_it_stops` (task-93) caiu
+  uma vez em 20 corridas sob carga e nenhuma sozinha. a causa: o
+  laboratório lia o relógio para gravar o clique da pessoa e o dispatcher
+  lia de novo dentro do clique para carimbar o estágio; num limite de
+  milissegundo os dois divergem por 1, e o teste exige o mesmo instante.
+  correção na fonte, não no teste: o clique é gravado no instante do
+  estágio que ele causou (o mesmo `answered_at` do relatório). regra: um
+  fato gravado em dois lugares vem de uma leitura só do relógio.
+- **o orquestrador publicou antes de ler o gate:** o comando que
+  commitava e abria o PR estava encadeado depois do `tail` do gate, sem
+  condição. o PR #76 ficou aberto com o gate vermelho até a correção.
+  regra: a publicação só entra no mesmo comando quando está condicionada
+  ao `exit 0` do gate (`&&` sobre o resultado, não sobre o `tail`).
+
 ### 2026-09-24, briefing com premissa velha (fase 4a)
 
 - **"congelado" tinha deixado de valer:** o briefing da fase 4a chamou o

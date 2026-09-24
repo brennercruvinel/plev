@@ -5,7 +5,7 @@
 use comps::prelude::{EmptyState, EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::Theme;
-use sem::{Receipt, ReceiptSink, Request, SemId, Snapshot};
+use sem::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot};
 
 use super::components::toast;
 use super::{Layers, Pane, ShowcaseView, panel};
@@ -315,6 +315,14 @@ impl ShowcaseView {
     /// silences pages ask through it too).
     pub fn add_sink(&mut self, sink: Box<dyn ReceiptSink>) {
         self.panes.todo.add_sink(sink);
+    }
+
+    /// Milliseconds on the clock the gallery's receipts are stamped with
+    /// (the one dispatcher's): the clock anything recorded beside them (a
+    /// `rec::Recorder`) must use, or its events and the receipts would
+    /// not line up. Read through the dispatcher's lending, hence `&mut`.
+    pub fn now(&mut self) -> Millis {
+        self.panes.todo.with_dispatcher(|_, _, now| now)
     }
 
     /// Keyboard focus from assistive technology to a node of the active

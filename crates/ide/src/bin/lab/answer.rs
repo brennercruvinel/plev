@@ -177,8 +177,6 @@ impl Lab {
                 .map(|w| w.request)
                 .filter(|r| waits(&self.app.bench, *r))
                 .collect();
-            let t = self.app.bench.now();
-            self.rec.input(t, InputKind::PointerDown, Some(at), None);
             self.app.bench.click(at[0], at[1]);
             clicked = true;
             // the modal asks the oldest request that waits, which is the
@@ -188,6 +186,16 @@ impl Lab {
                 .into_iter()
                 .filter(|r| !waits(&self.app.bench, *r))
                 .collect();
+            // her click is recorded at the instant the answer landed: the
+            // stage that followed the wait, stamped by the dispatcher
+            // inside the click. reading the clock a second time here
+            // could cross a millisecond and leave the click one ahead or
+            // behind the stage it caused.
+            let t = ended
+                .first()
+                .and_then(|r| answered_at(self.app.bench.receipt(*r)))
+                .unwrap_or_else(|| self.app.bench.now());
+            self.rec.input(t, InputKind::PointerDown, Some(at), None);
             for r in &ended {
                 if let Some(w) = self.person.answers.get(*r) {
                     w.answered = Some(Answered {
@@ -226,4 +234,15 @@ fn modal_on_screen(bench: &Workbench) -> Option<(String, String)> {
             OverlayKind::Modal { title, body, .. } => Some((title.clone(), body.clone())),
             _ => None,
         })
+}
+
+/// the instant the person's answer landed on `receipt`: the stage right
+/// after its wait for her (`AwaitingConfirmation`), the same one the
+/// report calls `answered_at`.
+fn answered_at(receipt: Option<&sem::Receipt>) -> Option<Millis> {
+    let stages = &receipt?.stages;
+    let waiting = stages
+        .iter()
+        .position(|(stage, _)| matches!(stage, sem::Stage::AwaitingConfirmation))?;
+    stages.get(waiting + 1).map(|(_, t)| *t)
 }

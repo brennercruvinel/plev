@@ -346,6 +346,52 @@ scene needs it.
   variable nothing is created, and the shell pays an `Option` check per
   frame and per input. the laboratory keeps its own recording
   (task-88).
+- the showcase records itself too (added on 2026-09-24, task-69 phase
+  4c). with `PLEV_RECORD=1` in a debug build the gallery's shell keeps a
+  `Recorder` on the clock its receipts are stamped with (the one
+  dispatcher's, read as `ShowcaseView::now`) through
+  `showcase::app::record::Recording`, the ide's form: the sink on the one
+  dispatcher (`ShowcaseView::add_sink`, the todo page's, lent to the
+  Surface and the Silences pages), the port's observations and the state
+  an act left (`ShowcaseView::serve_agent_recorded`, `Host::observed` of
+  its `Served`), the state after a person's click or key that changed
+  something, after a screen reader's request or a git result shown, and
+  before every frame, every frame drawn with its bindings, and a person's
+  clicks and keys by kind, never a character. it saves on cmd-shift-s
+  (ctrl-shift-s off macOS; the gallery has no keymap, so the keys are a
+  bare check of `s` with shift and the primary modifier, only while
+  recording), when the loop exits and on a panic, to
+  `$TMPDIR/plev/sessions/showcase-<pid>-<n>.monster`. without the variable
+  nothing is created; the wasm and mobile shells have none of it. the
+  recorded demo of the video editor is one of these sessions:
+  `crates/showcase/examples/demo` drives the Silences page through the
+  port with no window (the shell's loop on the example's thread, an agent
+  on another, every act from a revision it was shown) and
+  `crates/showcase/fixtures/demo/` keeps the run by the rules (187 KB)
+  and the run with the Claude proposing the review (861 KB, two calls,
+  124 s), read back by `crates/showcase/tests/demo.rs` and by
+  `plev-inspect`. what such a session says of a generated surface, and
+  what it cannot: an act on a node of the surface reaches the dispatcher
+  as the capability it was routed to (`surface::Surface::route`), so the
+  receipt names the app's node and action (`apply_cut on
+  silences.cut[4]`), never the surface's button; the inspector's `why`
+  explains it on the app's node, and `--control` of the surface's button
+  finds no request that touched it. a person's click on the surface is
+  recorded with the surface's button under the pointer, but the request
+  it makes rests on the app-only snapshot the surface holds
+  (`Surface::shown`, the fixed screen's projection; the fixed screen's
+  own clicks rest on the same), a revision the recording never has,
+  since the recorder keeps the whole page's projection
+  (`ShowcaseView::semantics`): the inspector answers "the recorded state
+  never had revision ..." for every request a person makes on that page.
+  and a proposal from the Claude that names its nodes with the app's ids
+  (the template root `silences.cut[{item}]`, task-69 phase 4b) binds
+  twice in one frame, the fixed screen's row and the surface's card, and
+  the first binding holds: the surface's copy is neither hit nor bound in
+  the recording. none of the three is fixed here; each is a decision for
+  the checkpoint (a receipt that keeps the node the actor aimed at beside
+  the one it was routed to; one projection for a page's own clicks; ids
+  of the surface's own asked of the model).
 
 ## the format decision
 
