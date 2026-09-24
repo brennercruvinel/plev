@@ -41,10 +41,12 @@
 //! the crate is pure data, like `sem`: no gpu, no window, no engine and
 //! no comps. materializing a surface on the widgets is task-69.
 
+mod caps;
 mod ir;
 mod token;
 mod vocab;
 
+pub use caps::{ActionCap, Capabilities, DataCap};
 pub use ir::{Bind, CapabilityRef, ITEM, Ir, IrNode, Repeat, Surface, VERSION};
 pub use token::{
     Align, Axis, ColorRole, ControlSize, Elevation, Layout, MAX_FLEX, MAX_RATIO, MIN_RATIO, Props,
