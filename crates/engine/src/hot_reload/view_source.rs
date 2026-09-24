@@ -214,7 +214,16 @@ fn on_path(name: &str, path: &str) -> Option<PathBuf> {
 pub fn open(site: &Site) -> std::io::Result<String> {
     let editor = std::env::var("PLEV_EDITOR").ok();
     let path = std::env::var("PATH").ok();
-    let Some(mut cmd) = editor_command(site, editor.as_deref(), path.as_deref()) else {
+    open_with(site, editor.as_deref(), path.as_deref())
+}
+
+/// [`open`] with `PLEV_EDITOR` and `PATH` given, not read.
+pub fn open_with(
+    site: &Site,
+    plev_editor: Option<&str>,
+    path: Option<&str>,
+) -> std::io::Result<String> {
+    let Some(mut cmd) = editor_command(site, plev_editor, path) else {
         return Err(std::io::Error::new(
             std::io::ErrorKind::NotFound,
             "no editor: set PLEV_EDITOR, or put zed or code on the PATH",
@@ -479,9 +488,49 @@ mod tests {
         assert!(editor_command(&site, None, None).is_none());
     }
 
-    fn exe(p: &std::path::Path, mode: u32) {
-        use std::os::unix::fs::PermissionsExt;
+    #[test]
+    fn open_runs_the_editor_with_the_site_and_says_when_there_is_none() {
+        let dir = std::env::temp_dir().join("plev-view-source-open");
+        std::fs::create_dir_all(&dir).unwrap();
+        let (script, got) = (dir.join("rec.sh"), dir.join("args.txt"));
+        let _ = std::fs::remove_file(&got);
+        std::fs::write(
+            &script,
+            format!("#!/bin/sh\nprintf '%s\\n' \"$*\" > '{}'\n", got.display()),
+        )
+        .unwrap();
+        mode(&script, 0o755);
+        let site = Site {
+            file: PathBuf::from("/w/crates/a/src/lib.rs"),
+            line: 3,
+            column: 9,
+        };
+
+        let editor = format!("{} --wait", script.display());
+        let ran = open_with(&site, Some(&editor), None).unwrap();
+        assert_eq!(ran, format!("{editor} /w/crates/a/src/lib.rs:3:9"));
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        while !got.exists() && std::time::Instant::now() < deadline {
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        assert_eq!(
+            std::fs::read_to_string(&got).unwrap(),
+            "--wait /w/crates/a/src/lib.rs:3:9\n"
+        );
+
+        let none = open_with(&site, None, Some(dir.to_str().unwrap())).unwrap_err();
+        assert_eq!(none.kind(), std::io::ErrorKind::NotFound);
+        assert!(none.to_string().contains("PLEV_EDITOR"), "{none}");
+    }
+
+    /// A script at `p` that does nothing, with `bits` as its mode.
+    fn exe(p: &std::path::Path, bits: u32) {
         std::fs::write(p, "#!/bin/sh\n").unwrap();
-        std::fs::set_permissions(p, std::fs::Permissions::from_mode(mode)).unwrap();
+        mode(p, bits);
+    }
+
+    fn mode(p: &std::path::Path, bits: u32) {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(p, std::fs::Permissions::from_mode(bits)).unwrap();
     }
 }

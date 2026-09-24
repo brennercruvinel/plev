@@ -62,8 +62,12 @@ fn primary(modifiers: ModifiersState) -> bool {
 #[cfg(test)]
 mod tests {
     use std::cell::RefCell;
+    use std::path::Path;
+    use std::time::{Duration, Instant};
 
     use comps::prelude::WidgetEvent;
+    use engine::compositor::SceneNode;
+    use engine::hot_reload::{literals, source_dirs};
     use sem::{SemId, Value};
 
     use super::*;
@@ -144,5 +148,96 @@ mod tests {
         app.cursor = (270.0, 20.0);
         assert!(app.view_source_with(ElementState::Pressed, |_| unreachable!()));
         assert!(app.view_source_with(ElementState::Released, |_| unreachable!()));
+    }
+
+    /// The source at `file:line:column`, from the column to the line's end.
+    fn source_at(at: &str) -> (String, String) {
+        let mut parts = at.rsplitn(3, ':');
+        let column: usize = parts.next().unwrap().parse().unwrap();
+        let line: usize = parts.next().unwrap().parse().unwrap();
+        let file = parts.next().unwrap().to_owned();
+        let src = std::fs::read_to_string(&file).unwrap();
+        let text = src
+            .lines()
+            .nth(line - 1)
+            .unwrap()
+            .chars()
+            .skip(column - 1)
+            .collect();
+        (file, text)
+    }
+
+    /// The lines `path` holds once it holds `n`, or what it has after 5 s.
+    fn lines(path: &Path, n: usize) -> Vec<String> {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        loop {
+            let got: Vec<String> = std::fs::read_to_string(path)
+                .unwrap_or_default()
+                .lines()
+                .map(str::to_owned)
+                .collect();
+            if got.len() >= n || Instant::now() > deadline {
+                return got;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+    }
+
+    /// The window's proof, minus the posted click: the function the click
+    /// calls, over the todo's frame and the workspace's literals, with the
+    /// real opener running a `PLEV_EDITOR` that only records its arguments.
+    #[test]
+    fn the_click_hands_the_editor_the_line_under_the_cursor() {
+        literals::take_baseline(&source_dirs());
+        let dir = std::env::temp_dir().join("plev-view-source-shell");
+        std::fs::create_dir_all(&dir).unwrap();
+        let (editor, got) = (dir.join("rec.sh"), dir.join("args.txt"));
+        let _ = std::fs::remove_file(&got);
+        let body = format!("#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{}'\n", got.display());
+        std::fs::write(&editor, body).unwrap();
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let exe = std::fs::Permissions::from_mode(0o755);
+            std::fs::set_permissions(&editor, exe).unwrap();
+        }
+        let editor = editor.to_str().unwrap();
+
+        let mut app = todo();
+        app.modifiers = PRIMARY;
+        let input = SemId::parse("todo.input").unwrap();
+        let [x, y, w, h] = app.compositor.binding(&input).unwrap().rect;
+        let title = app
+            .compositor
+            .layers()
+            .iter()
+            .flat_map(|l| l.nodes())
+            .find_map(|n| match n {
+                SceneNode::Text { key, x, y, .. } if key.text == "Todo" => Some((x + 3.0, y + 5.0)),
+                _ => None,
+            })
+            .unwrap();
+        for (n, at) in [(x + w / 2.0, y + h / 2.0), title].into_iter().enumerate() {
+            app.cursor = at;
+            let open = |site: &Site| view_source::open_with(site, Some(editor), None);
+            assert!(app.view_source_with(ElementState::Pressed, open));
+            assert!(app.view_source_with(ElementState::Released, |_| unreachable!()));
+            assert_eq!(
+                lines(&got, n + 1).len(),
+                n + 1,
+                "the editor ran once per click"
+            );
+        }
+
+        let got = lines(&got, 2);
+        println!("PLEV_EDITOR received:\n{}", got.join("\n"));
+        let (file, text) = source_at(&got[0]);
+        assert!(file.ends_with("crates/showcase/src/view/apps/app/semantics.rs"));
+        assert!(
+            text.starts_with("project(b, &ids.input, \"new todo\""),
+            "{text}"
+        );
+        let (file, text) = source_at(&got[1]);
+        assert!(file.ends_with("crates/showcase/src/view/pages/table.rs"));
+        assert!(text.starts_with("\"Todo\","), "{text}");
     }
 }
