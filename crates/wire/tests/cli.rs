@@ -299,3 +299,71 @@ fn a_refusal_or_no_app_is_the_error_exit() {
     assert_eq!(help.code, 0);
     assert!(help.out.is_empty());
 }
+
+/// task-89: an act rests on what its name was shown. `plev act` without
+/// a revision looks at the target's scope first, which counts as shown;
+/// what the act reads outside the target was never shown to a fresh name,
+/// so it exits 3 with `not_observed`. after `plev observe` of that node
+/// under the same name, one command later, the same command is taken.
+#[test]
+fn an_act_that_reads_a_node_its_name_never_observed_is_the_error_exit() {
+    let tmp = tempfile::tempdir().unwrap();
+    let t = tmp.path();
+    let (mut port, woke) = open(t);
+    let mut host = ToyHost::new();
+    let clear = ["act", "todo.clear", "clear", "--name", "fresh"];
+    let not_observed = |run: &Run| {
+        assert_eq!(run.code, 3, "{}", run.err);
+        assert!(
+            matches!(
+                &run.out[..],
+                [ServerMsg { reply: Reply::Error(ProtoError::NotObserved { reads }), .. }]
+                    if reads.iter().map(ToString::to_string).eq(["todo.counter:done"])
+            ),
+            "{:?}",
+            run.out
+        );
+        assert!(run.err.contains("observe it"), "{}", run.err);
+    };
+
+    let refused = plev(&mut port, &woke, &mut host, t, &clear);
+    not_observed(&refused);
+    assert_eq!(host.app.items.len(), 3, "nothing cleared");
+
+    // what another name was shown does not count for this one.
+    let other = plev(
+        &mut port,
+        &woke,
+        &mut host,
+        t,
+        &["observe", "--scope", "todo.counter"],
+    );
+    assert_eq!(other.code, 0, "{}", other.err);
+    not_observed(&plev(&mut port, &woke, &mut host, t, &clear));
+
+    let seen = plev(
+        &mut port,
+        &woke,
+        &mut host,
+        t,
+        &["observe", "--scope", "todo.counter", "--name", "fresh"],
+    );
+    assert_eq!(seen.code, 0, "{}", seen.err);
+    let done = plev(&mut port, &woke, &mut host, t, &clear);
+    assert_eq!(done.code, 0, "{}", done.err);
+    assert_eq!(
+        stages(&done),
+        ["requested", "accepted", "executing", "completed"]
+    );
+    let Reply::Stage(first) = &done.out[0].reply else {
+        panic!("a stage");
+    };
+    let asked = first.asked.as_ref().unwrap();
+    assert_eq!(
+        asked.actor,
+        sem::Actor::Agent {
+            name: "fresh".into()
+        }
+    );
+    assert_eq!(host.app.items.len(), 2, "item 3 cleared");
+}
