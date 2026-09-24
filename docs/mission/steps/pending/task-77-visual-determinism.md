@@ -118,3 +118,144 @@ como job.
 
 - a correção de uma divergência exigir mudar o contrato de cor;
 - a causa estiver no driver e não houver contorno no plev.
+
+## fase 1 (task-77a): a sonda
+
+feita antes do código, no worktree da branch `task/77a-determinism`, base
+`5207f9b8`. máquina: apple M4 (metal 4), macOS 26.6.2, dois displays (o
+built-in liquid retina XDR, backing scale 2, e um DELL AW2518HF, backing
+scale 1). toda afirmação sobre biblioteca vem da fonte da versão do
+`Cargo.lock` (wgpu 28.0.0, wgpu-core 28.0.1, wgpu-hal 28.0.1, wgpu-types
+28.0.0, winit 0.30.13), com arquivo e linha.
+
+### (a) ferramentas, alvo por alvo
+
+| alvo | o que existe | o que falta | o que o brenner roda (com rede) | tamanho aproximado |
+|---|---|---|---|---|
+| web | python playwright 1.62 (`/opt/homebrew/bin/playwright`), chrome-headless-shell 151.0.7922.34 em `~/Library/Caches/ms-playwright/chromium_headless_shell-1234`, node 26.7; alvo `wasm32-unknown-unknown` | `trunk`, `wasm-bindgen` (CLI), `wasm-opt`; Chrome.app (só o Safari está em /Applications) | `brew install trunk` e `cargo install --locked wasm-bindgen-cli --version 0.2.123` (a versão do lock); `brew install binaryen` só se o build release pedir o wasm-opt | trunk uns 10 MB; wasm-bindgen-cli uns 20 MB (compila alguns minutos); binaryen uns 40 MB |
+| iOS | Xcode 27.0 (27A266a), runtimes iOS 26.5 e 27.0, iPhone 17 Pro no 26.5 (`D2B562EB-DEFA-4B56-9AC9-FD6B82614ED2`, desligado), 1206x2622 a 3x (402x874 lógico, do `profile.plist` do device type) | o alvo rust `aarch64-apple-ios-sim`; o `xcodegen`, que o `ios/showcase/build_ios.sh` chama e o orquestrador não listou | `rustup target add aarch64-apple-ios-sim` e `brew install xcodegen` | o rust-std do alvo, algumas dezenas de MB; xcodegen uns 10 MB |
+| android | nada: sem SDK em `~/Library/Android/sdk`, sem `emulator`, `adb`, `sdkmanager`, sem JDK (`java` é o stub do macOS, "Unable to locate a Java Runtime"), sem `cargo-ndk`, sem NDK na raiz, sem alvos rust de android | tudo | `brew install --cask temurin@17 android-commandlinetools`; `sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis;arm64-v8a" "ndk;27.2.12479018"`; `avdmanager create avd -n plev35 -k "system-images;android-35;google_apis;arm64-v8a"`; `cargo install cargo-ndk`; `rustup target add aarch64-linux-android x86_64-linux-android` | uns 4 GB no total (imagem do sistema uns 1,5 GB, NDK uns 1,5 GB, emulador uns 300 MB); o disco tem uns 15 GB livres |
+
+achado da sonda (a): a web está mais perto do que parecia. o
+chrome-headless-shell que já está instalado expõe WebGPU numa página
+segura (`file://`), sem janela: com `--enable-unsafe-webgpu
+--use-angle=metal` o adapter é `apple / metal-3` (a GPU desta máquina,
+pelo Dawn); sem `--use-angle=metal` é `google / swiftshader`, software. o
+formato preferido do canvas é `bgra8unorm` nos dois. o script da web fixa
+as flags e registra o adapter, senão a captura mede o SwiftShader achando
+que mede a GPU.
+
+### (b) o desktop consigo mesmo
+
+`crates/engine/tests/headless_determinism.rs` (novo): uma cena com cada
+primitivo do frame path (rect, rounded rect com borda, gradiente com
+stop transparente, sombra externa e interna, path preenchido e com
+traço, imagem com raio, texto em três tamanhos dentro de um clip, uma
+layer de vidro com backdrop blur e opacidade, uma layer com efeito de
+blur), em coordenadas lógicas fracionárias de propósito. resultado neste
+M4:
+
+- dois contextos de GPU no mesmo processo dão os mesmos bytes em 1, 1.25,
+  1.5 e 2;
+- um renderer redimensionado por 2, 1.5, 1.25, 1, 1.5, 2 dá, em cada
+  escala, os bytes de um renderer novo.
+
+dois processos e todas as páginas da galeria ficam com a captura
+(`regress capture --against`), relatório na seção da captura abaixo.
+
+### (c) a janela contra o headless
+
+- formato. no metal a surface oferece `Bgra8Unorm`, `Bgra8UnormSrgb`,
+  `Rgba16Float` e, quando dá, `Rgb10a2Unorm`
+  (`wgpu-hal-28.0.1/src/metal/adapter.rs:361-372`); o wgpu-core põe os
+  sRGB na frente (`wgpu-core-28.0.1/src/device/global.rs:56`); o engine
+  pega o primeiro sRGB (`crates/engine/src/gpu/context.rs`,
+  `surface_configuration`): `Bgra8UnormSrgb`. `add_srgb_suffix` nele é a
+  identidade (`wgpu-types-28.0.0/src/texture/format.rs:1466`), então
+  `view_formats` fica vazio. o headless desenha em `Rgba8UnormSrgb`. as
+  layers seguem `surface_format()`: BGRA na janela, RGBA no headless. a
+  diferença é a ordem dos canais; o encode linear para sRGB na escrita é o
+  mesmo. evidência já registrada: `monster_player --capture` (a textura da
+  surface lida antes do present) e `--frame --out` (headless) dão o mesmo
+  sha256 (ADR headless-render-shares-the-frame-path). para as páginas da
+  galeria isso não foi medido: pede janela, fica para a fase 2.
+- a layer metal. `configure` (`wgpu-hal-28.0.1/src/metal/surface.rs:140-190`)
+  define `opaque` pelo alpha mode (161-162; o engine pega o primeiro,
+  `Opaque`), `pixelFormat` (168), `framebufferOnly` (169), EDR só para
+  `Rgba16Float` (172-174), o número de drawables, o tamanho e o display
+  sync. não define `colorspace`: a palavra não aparece em
+  `wgpu-hal-28.0.1/src/metal/`. o winit 0.30.13 também não define espaço
+  de cor na janela nem na view (só `setWantsLayer(true)`,
+  `src/platform_impl/macos/window_delegate.rs:652`; `NSDeviceRGBColorSpace`
+  só no cursor, `cursor.rs:45`). o default de `CAMetalLayer.colorspace`,
+  medido nesta máquina com um `CAMetalLayer()` sem janela (swift): `nil`.
+- na web o wgpu configura o canvas com formato, uso, alpha mode e view
+  formats e não toca no espaço de cor (`wgpu-28.0.0/src/backend/webgpu.rs:3904-3942`),
+  que fica no default do `GPUCanvasConfiguration`.
+- o que a pessoa vê. os bytes da janela são os do baseline (sRGB de 8 bits),
+  mas o que chega ao display passa pelo window server depois do present,
+  fora do plev: a layer vai sem espaço de cor (nil), e o display built-in
+  é P3 com perfil próprio. o manual de validação registra uma medida que
+  cabe em "o window server trata o conteúdo como sRGB e converte para o
+  perfil do display": numa captura de janela, #303030 leu (42,42,42) cru e
+  (48,48,48) depois de converter do perfil embutido para sRGB
+  (`docs/how-to/validate-visuals-by-pixel.md`, "color profiles in
+  captures"). cinza neutro só testa a curva de transferência, não o gamut.
+  se o window server tratasse nil como "já está no espaço do display", um
+  vermelho sRGB puro sairia vermelho P3, mais saturado. isso fica aberto:
+  falta uma captura de janela com as primárias sRGB puras no display P3 e
+  no DELL, convertida pelo perfil embutido, ou ler o `colorspace` da layer
+  viva. a correção, se for preciso, é definir o espaço de cor da layer no
+  engine (contrato de cor): não se muda nesta fase.
+- a escala. no macOS o fator vem de `backingScaleFactor`
+  (`winit-0.30.13/src/platform_impl/macos/view.rs:842-843`,
+  `window_delegate.rs:1147-1148`), que é 1 ou 2 (2 no built-in, 1 no
+  DELL). as resoluções "parece com" do macOS são o window server
+  reamostrando um backing de 2x depois dos bytes: outra transformação que
+  a pessoa vê e o baseline não. a janela calcula o lógico como físico
+  dividido pela escala (`window/events.rs`, `logical_projection_size`), o
+  headless o físico como lógico vezes a escala arredondado
+  (`Viewport::physical`); para 1280x800 nas quatro escalas os dois batem.
+
+### (d) os shaders
+
+- antialiasing de borda. `rect_sdf.wgsl`, `image.wgsl`, `backdrop.wgsl` e
+  o modo inset de `shadow_analytic.wgsl` fazem `1 - smoothstep(-0.5, 0.5,
+  d)` sobre a distância do SDF em unidades lógicas (`p = uv * half_size`,
+  com `half_size` em px lógicos, `compositor/layer/geometry.rs`,
+  `emit_sdf_rect`). não há `fwidth`, `dpdx`, `dpdy` nem dithering em shader
+  nenhum. a borda tem largura fixa de 1 px lógico, que são `escala` px
+  físicos: 1 px a 1x, 2 px a 2x, 1,25 a 1.25x. por cima disso as layers
+  desenham com MSAA 4x (`RenderConfig::default`) e resolvem numa textura
+  sRGB de 8 bits.
+- gradientes. `rect_sdf.wgsl` mistura dois stops em linear
+  pré-multiplicado, `t` pela projeção do ponto na direção, sem dithering:
+  a quantização é a do encode sRGB de 8 bits na escrita.
+- derivadas implícitas. todo `textureSample` (texto, imagem, composite,
+  blur, backdrop) usa sampler `Linear` em mag e min e textura de um mip só
+  (`text/atlas.rs:41`, `gpu/image.rs:484`, `gpu/context.rs:419`,
+  `effects/processor.rs:24`): a escolha de LOD por derivada não muda o
+  resultado. os quads de glifo caem em px físicos inteiros
+  (`text/atlas.rs`, `emit_glyphs`), então o texto amostra no centro do
+  texel.
+- o que pode variar por driver ou GPU, a medir na fase 2 contra este
+  baseline: a precisão de `pow` (`srgb_to_linear` em quad, rect_sdf, text,
+  shadow, shadow_analytic), de `exp`, `sqrt` e da `erf` polinomial da
+  sombra analítica; a interpolação dos varyings; o encode sRGB e o blend na
+  escrita em alvo de 8 bits; o resolve do MSAA num formato sRGB (em linear
+  ou no espaço codificado); os pesos do filtro bilinear (a fração de
+  subtexel) no composite e no blur. nada disso usa derivada. o esperado é
+  delta de 1 ou 2 em borda, gradiente, sombra e vidro, e zero em cor chapada
+  e no texto.
+- achado que esta máquina reproduz: o blur não segue a escala. o
+  `sigma` do backdrop blur e dos efeitos de layer `Blur` e `Shadow` passa
+  inalterado da cena (px lógicos) até `EffectProcessor::apply_blur`
+  (`window/render_passes.rs:228-238` e `482-504`), que o aplica em texels
+  físicos (`effects/apply.rs:71-73`, `texel_size = 1 / largura física`,
+  `gaussian_weights(sigma)` sem a escala). medido com uma cena
+  descartável (borda branca e preta sob um backdrop blur de sigma 4): a
+  rampa de 10% a 90% tem 9 px físicos em toda escala, 9 px lógicos a 1x, 6
+  a 1.5x, 4,5 a 2x. o mesmo vidro fica mais nítido a 2x do que a 1x, e
+  mais ainda no iPhone a 3x. a sombra analítica não tem isso (o sigma e a
+  posição estão em px lógicos no shader). a correção é no engine, fora
+  desta fase: vai no relatório de parada no fim.
