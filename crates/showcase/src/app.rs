@@ -97,6 +97,12 @@ pub struct App {
     /// requests go into its dispatcher (desktop; mobile is next).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     access: Access,
+    /// A cmd+click is taking the button until it is released (`source`).
+    #[cfg(all(
+        debug_assertions,
+        any(target_os = "macos", target_os = "linux", target_os = "windows")
+    ))]
+    source_click: bool,
 }
 
 /// The window's outside actors (a screen reader, agents through the port)
@@ -145,6 +151,11 @@ impl App {
             proxy: None,
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             access: Access::default(),
+            #[cfg(all(
+                debug_assertions,
+                any(target_os = "macos", target_os = "linux", target_os = "windows")
+            ))]
+            source_click: false,
         }
     }
 
@@ -390,6 +401,13 @@ impl ApplicationHandler<UserEvent> for App {
                 state,
                 ..
             } => {
+                #[cfg(all(
+                    debug_assertions,
+                    any(target_os = "macos", target_os = "linux", target_os = "windows")
+                ))]
+                if self.view_source(state) {
+                    return;
+                }
                 let (x, y) = self.cursor;
                 let ev = match state {
                     ElementState::Pressed => WidgetEvent::MouseDown { x, y },
@@ -552,6 +570,15 @@ pub use headless::{RenderError, StagedPage, render_page, semantics_json, stage_p
 mod headless;
 
 mod pace;
+
+/// cmd+click to the code: desktop debug builds, the terms on which the
+/// engine compiles `hot_reload` (its build.rs), so nothing of it exists in
+/// release, wasm or mobile.
+#[cfg(all(
+    debug_assertions,
+    any(target_os = "macos", target_os = "linux", target_os = "windows")
+))]
+mod source;
 
 /// Browser entry: GPU init is async, so hand the proxy to the app and let
 /// `spawn_app` keep the loop alive inside the browser's own event loop
