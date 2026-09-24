@@ -14,6 +14,23 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: item 10 parou na sonda; decisão do orquestrador
+
+- **parada correta:** para mostrar a câmera, os pixels de uma imagem
+  precisam mudar 15 vezes por segundo. o depósito de imagens do engine
+  só cresce, deduplica pelo conteúdo e guarda cada envio: frame novo
+  vira imagem nova, e em 16 s o atlas enche e recusa imagens do app
+  inteiro. o briefing mandava parar se fosse preciso abrir `gpu/**`.
+- **decidido (técnico, dentro do item):** uma imagem de fluxo, com um
+  lugar fixo no atlas e os pixels trocados no lugar
+  (`stream_image_rgba`, `replace_image_rgba`), liberando `gpu/image.rs`.
+  condições: cada atlas de janela reenvia a troca uma vez, um device
+  recuperado recebe o último frame, a memória fica em um frame por
+  fluxo, e o dedupe das outras imagens não muda.
+- **sonda:** a página nova no Apps Demo não muda nenhum dos 161
+  baselines, porque o grupo fica fora da tela. o ffmpeg não pede
+  permissão: quem decide é o macOS, pelo terminal ou `.app` que lança.
+
 ### ciclo 3: publicado #85 (task-76 item 9); disparado o item 10
 
 - **publicado:** PR #85, merge commit, gate local verde na `main` (2689,
