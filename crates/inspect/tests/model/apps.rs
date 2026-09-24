@@ -116,6 +116,13 @@ pub fn id(text: &str) -> SemId {
     }
 }
 
+pub fn rid(n: u64) -> RequestId {
+    match RequestId::parse(&n.to_string()) {
+        Ok(id) => id,
+        Err(e) => panic!("{n}: {e}"),
+    }
+}
+
 /// the app, its dispatcher and the recorder, driven with explicit times.
 pub struct Lab {
     pub rec: Recorder,
@@ -149,6 +156,16 @@ impl Lab {
         let seen = self.look();
         self.rec.snapshot(t, &seen);
         self.rec.observed(t, actor, None, seen.revision());
+        seen
+    }
+
+    /// `actor` observes only `scope` at `t`: the revision is still the
+    /// whole snapshot's, as the agent port serves it.
+    pub fn observe_scope(&self, t: Millis, actor: Actor, scope: &str) -> Snapshot {
+        let seen = self.look();
+        self.rec.snapshot(t, &seen);
+        self.rec
+            .observed(t, actor, Some(id(scope)), seen.revision());
         seen
     }
 
@@ -190,6 +207,13 @@ impl Lab {
             "unstage",
             Some(file.into()),
         )
+    }
+
+    /// the index moves at `t` from outside the app (a `git` in a
+    /// terminal): no request, only the next projection shows it.
+    pub fn outside_unstages(&mut self, t: Millis, file: &str) {
+        self.git.staged.remove(file);
+        self.rec.snapshot(t, &self.look());
     }
 
     pub fn session(&self) -> Session {
