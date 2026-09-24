@@ -48,8 +48,8 @@ impl ShowcaseView {
     }
 }
 
-/// The active page as the port serves it: its projection, where its
-/// bound nodes sit, its dispatcher.
+/// The gallery as the port serves it: the shell and the active page in
+/// one projection, where the page's bound nodes sit, the one dispatcher.
 struct Served<'a> {
     view: &'a mut ShowcaseView,
     compositor: &'a Compositor,
@@ -58,8 +58,13 @@ struct Served<'a> {
 }
 
 impl Host for Served<'_> {
+    /// The shell's capabilities and the page's (task-76 item 4): an agent
+    /// switches the theme or the page here, and is refused the window.
     fn project(&self) -> Option<Snapshot> {
-        self.view.semantics()
+        self.view
+            .gallery_semantics()
+            .inspect_err(|e| log::warn!("the gallery projection does not validate: {e}"))
+            .ok()
     }
 
     /// The visible part of each binding (its rect inside its clip).
@@ -227,6 +232,22 @@ mod tests {
             .collect()
     }
 
+    fn act_with(
+        c: &mut Client,
+        target: &str,
+        action: &str,
+        r: sem::Revision,
+        param: Value,
+    ) -> Vec<Stage> {
+        let act = Act::from_revision(sid(target), sem::ActionName::parse(action).unwrap(), r)
+            .with_param(param);
+        c.act(act, |_| {})
+            .unwrap()
+            .into_iter()
+            .map(|s| s.stage)
+            .collect()
+    }
+
     fn names(stages: &[Stage]) -> Vec<&'static str> {
         stages.iter().map(Stage::name).collect()
     }
@@ -365,6 +386,56 @@ mod tests {
                 target: sid("todo.item[1]")
             }))
         );
+    }
+
+    /// The shell through the port (task-76 item 4): the agent sees the
+    /// shell's capabilities beside the page's, switches the theme and
+    /// the page from the revision it saw, and is refused the page's own
+    /// window, which is a person's.
+    #[test]
+    fn an_agent_switches_the_theme_and_the_page_and_is_refused_the_window() {
+        let dir = Dir::new("shell");
+        let ((ids, themed, paged, refused), view) = gallery(&dir.0, |path, _pokes| {
+            let mut c = agent(&path);
+            let whole = snapshot(c.observe(Observe::default()).unwrap());
+            let ids: Vec<String> = whole.nodes.iter().map(|n| n.id.to_string()).collect();
+            let themed = act_with(
+                &mut c,
+                "shell.theme",
+                "select",
+                whole.revision,
+                Value::Text("dark".into()),
+            );
+            let r = snapshot(c.observe(Observe::default()).unwrap()).revision;
+            let paged = act_with(
+                &mut c,
+                "shell.page",
+                "select",
+                r,
+                Value::Text("Card".into()),
+            );
+            let r = snapshot(c.observe(Observe::default()).unwrap()).revision;
+            let refused = act(&mut c, "shell.detach", "toggle", r);
+            (ids, themed, paged, refused)
+        });
+        for id in ["shell", "shell.theme", "shell.page", "shell.detach", "todo"] {
+            assert!(ids.contains(&id.to_owned()), "{id} in {ids:?}");
+        }
+        assert_eq!(
+            names(&themed),
+            ["requested", "accepted", "executing", "completed"]
+        );
+        assert_eq!(view.theme_name, "dark");
+        assert_eq!(names(&paged).last(), Some(&"completed"));
+        assert_eq!(view.page_title(), "Card");
+        assert_eq!(names(&refused), ["requested", "rejected"]);
+        assert!(matches!(
+            &refused[1],
+            Stage::Rejected(Rejection::NotAuthorized {
+                actor: Actor::Agent { .. }
+            })
+        ));
+        assert!(!view.is_detached());
     }
 
     fn bytes(reply: Reply) -> usize {

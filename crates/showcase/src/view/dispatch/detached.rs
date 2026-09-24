@@ -58,12 +58,6 @@ impl ShowcaseView {
         self.panes.detached.is_some()
     }
 
-    /// `D` was pressed outside a text field since the last call: the
-    /// shell opens the page's own window, or closes it.
-    pub fn take_detach_request(&mut self) -> bool {
-        std::mem::take(&mut self.panes.detach_asked)
-    }
-
     /// The active page shows in a window of its own too, one of `width x
     /// height` logical pixels at `scale`. `false` for a placeholder page
     /// (nothing to show) or when it has one already.
@@ -190,6 +184,16 @@ pub(super) fn with_window(page: &Snapshot, title: &str) -> Result<Snapshot, SemE
     b.node("window", Role::Window, format!("plev, {title}"))
         .state("page", Value::Text(title.to_string()))
         .state("shows", Value::List(roots));
+    extend(&mut b, page);
+    b.finish()
+}
+
+/// Every node of `page` declared again into `b`, with its parent,
+/// description, state, constraints, flags, actions and the focus, so a
+/// finished snapshot joins another (the window beside the page, the
+/// shell beside the page). What the rebuild loses is each node's
+/// `source`: the builder records its call site, and that is here.
+pub(super) fn extend(b: &mut sem::SnapshotBuilder, page: &Snapshot) {
     for node in page.nodes().values() {
         let mut n = b.node(&node.id, node.role, node.label.clone());
         if let Some(parent) = &node.parent {
@@ -222,5 +226,4 @@ pub(super) fn with_window(page: &Snapshot, title: &str) -> Result<Snapshot, SemE
     if let Some(focused) = page.focused() {
         b.focus(focused);
     }
-    b.finish()
 }
