@@ -53,3 +53,60 @@ teste no wire: o `revision` de um `completed` é aceito por `observe
 --since` e por `act --from-revision`; o laboratório roteirizado usa a
 revisão do `completed` onde hoje observa só para saber a revisão, com as
 mensagens antes e depois no arquivo da task; gate verde.
+
+## medição (laboratório roteirizado)
+
+`ide-lab --arm scripted`, binário de debug, cinco corridas por cenário
+antes (base, `main @ f741246`) e depois (esta branch), todas com exit 0 e
+verdict MATCH. mensagens e bytes são os do `Traffic` da porta (a linha
+com o `\n`); as mensagens do cliente contam o `hello`.
+
+| | none, antes | none, depois | unstage, antes | unstage, depois |
+| --- | --- | --- | --- | --- |
+| mensagens do cliente | 16 | 12 | 24 | 17 |
+| mensagens do servidor | 34 | 30 | 46 | 39 |
+| observações (snapshot / delta) | 9 / 0 | 5 / 0 | 14 / 1 | 7 / 1 |
+| atos / estágios enviados | 6 / 24 | 6 / 24 | 8 / 30 | 8 / 30 |
+| bytes do cliente | 1132 | 992 | 1601 | 1356 |
+| bytes do servidor | 54453 a 54473 | 28782 a 28791 | 91502 a 91507 | 45874 a 45878 |
+| recusa stale / medição válida / recuperou | 0 / não / não | 0 / não / não | 1 / sim / sim | 1 / sim / sim |
+
+o cenário unstage é `unstage-after-observe:src/session.rs`. as cinco
+corridas de cada linha deram os mesmos números, fora os bytes do
+servidor, que variam na faixa escrita (os tempos dentro das mensagens).
+
+o que saiu: a observação depois de cada ato de arquivo (três), a
+observação depois do `open` e, no reparo, a observação depois de cada
+arquivo (três). o que ficou, porque decide: a primeira observação (quais
+arquivos entram e saem), a que lê se o formulário está aberto, a decisão
+antes de cada submit (é nela que a pessoa do roteiro age), o delta depois
+da recusa, a observação do índice que decide o reparo, a observação de
+`stacks` que confirma o commit, e a do workspace inteiro depois dele (só
+pelo peso, como antes). a linha de um estágio terminal ficou 30 bytes
+maior (`,"revision":"<16 hex>"`); cada observação inteira que saiu pesava
+uns 6,5 KB.
+
+custo: a projeção do `forward` (projetar e servir no anel), medida com um
+build instrumentado que não foi commitado, deu mediana de 158 us no
+cenário none e 172 us no unstage, máximo de 306 us, em 70 chamadas (uma
+por estágio terminal; nenhum `forward` mandou dois terminais juntos), em
+debug. o limite da task era 2 ms. as chamadas a `project` do laboratório
+foram de 15 para 17 (none) e de 31 para 28 (unstage), a uns 120 us cada.
+
+a revisão engana? nas 25 vezes em que um ato foi seguido direto por uma
+observação (o último ato de arquivo e a leitura do formulário, o
+`set_value` e a decisão, o reparo e a nova decisão), a observação serviu
+exatamente a revisão que o estágio terminal daquele ato trouxe: o ide
+mostra o efeito de um ato quando ele termina (task-84), e a projeção do
+`forward` vê isso. o que a revisão não traz, e uma observação no mesmo
+instante também não traria, está no ADR
+(`docs/ADR/a-terminal-stage-carries-the-revision.md`, consequências): o
+`show_diff` termina antes das linhas chegarem, e um stage que falha no
+git deixa o palpite da view até o refresh.
+
+o relatório do laboratório rotula como `observed` o `form` dos atos que
+se apoiam na revisão de um estágio (`FooFoF` no none, `FooFoFFF` no
+unstage, onde F é `from_revision`): `story::acts` só conhece as
+observações servidas. o teste do laboratório deixou de ler o `form` e
+confere que cada ato se apoia numa revisão servida, por observação ou
+por estágio (o script escreve "the app at <rev>" depois de cada ato).

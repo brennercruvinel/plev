@@ -61,8 +61,17 @@ that path when it ended.
 ## consequences
 
 - a terminal stage costs one projection of the app on its thread, and a
-  hash of it. the laboratory measures it against the 2 ms the task set
-  (`docs/mission/steps/ongoing/task-87-a-terminal-stage-carries-the-revision.md`).
+  hash of it. measured in the laboratory (`ide-lab --arm scripted`, the
+  ide's workbench, debug build, five runs of each scenario): a median of
+  158 us with nobody intervening and 172 us with the person of the
+  script, 306 us at most, against the 2 ms the task set.
+- the scripted agent of the laboratory chains the acts it has nothing to
+  decide between on the revision the last stage carries. with nobody
+  intervening it sends 12 messages instead of 16 and receives 28.8 KB
+  instead of 54.5 KB; with the person of the script, 17 instead of 24 and
+  45.9 KB instead of 91.5 KB; the stale refusal, the recovery and the
+  commit are the same. the table is in
+  `docs/mission/steps/ongoing/task-87-a-terminal-stage-carries-the-revision.md`.
 - the ring is shared by every connection of a port and bounded (16 by
   default). a revision served in a stage takes a place in it as an
   observation does, so a run of acts now pushes out old revisions that

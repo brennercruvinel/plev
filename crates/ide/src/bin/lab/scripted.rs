@@ -1,15 +1,20 @@
 //! the scripted agent (arm A0): the laboratory's own agent over the wire,
 //! doing the canonical cycle with no model behind it. it observes, puts
-//! the task's files in the index and takes the others out, writes the
-//! message, observes again, submits on the revision it observed; when the
-//! submit comes back stale it observes the changes since, repairs the
-//! index and submits again on the new revision; then it confirms its
-//! commit on the very next observation of the stacks, with no wait: the
-//! node of the sha the receipt names holds the receipt's files, and it
-//! observes the whole workspace once more. every act rests on the
-//! observation it was decided on (`from_revision`), so a stale world is
-//! refused, never acted on. each observation's step says what it weighs:
-//! the bytes of the line the server writes for it.
+//! the task's files in the index and takes the others out, opens the form
+//! if it is closed, writes the message, observes again, submits on the
+//! revision it observed; when the submit comes back stale it observes the
+//! changes since, observes the index, repairs it and submits again on a
+//! new observation; then it confirms its commit on the very next
+//! observation of the stacks, with no wait: the node of the sha the
+//! receipt names holds the receipt's files, and it observes the whole
+//! workspace once more. an act that follows another with nothing to
+//! decide in between rests on the revision the last stage of the one
+//! before carries (task-87), the app as that act left it; an act that
+//! follows a decision rests on the observation it was decided on. either
+//! way it rests on a revision the port served (`from_revision`), so a
+//! stale world is refused, never acted on. each observation's step says
+//! what it weighs: the bytes of the line the server writes for it, and
+//! each act's step says the revision its last stage carried.
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -70,7 +75,10 @@ impl Agent {
         let files = files(&seen);
         let mut revision = seen.revision;
 
-        // the index as the task wants it: its files in, the rest out.
+        // the index as the task wants it: its files in, the rest out,
+        // decided on the first observation. each act rests on the revision
+        // the one before left the app at, which its last stage carries:
+        // the next act reads its own file, which no act of the agent moved.
         for path in &files {
             let is_task = TASK_FILES.contains(&path.as_str());
             let is_staged = staged.contains(path);
@@ -79,34 +87,34 @@ impl Agent {
                 (false, true) => "unstage",
                 _ => continue,
             };
-            self.act(
+            let stages = self.act(
                 out,
                 &format!("changes.file[{path}]"),
                 action,
                 None,
                 revision,
             )?;
-            // the next act reads its own file, and the world just moved:
-            // the revision an act rests on is the one it was decided on.
-            revision = self.observe(out)?.revision;
+            revision = self.landed(out, &stages)?;
         }
 
+        // whether the form is open is a decision, taken on an observation.
         // the view shows each act as it completes, and a status read
         // before an act never lands over it (task-84), so the agent goes
-        // on from the next observation as it is. the message is still
-        // empty here, so the person of the script, who waits for a
-        // message too, cannot fire yet.
+        // on from this observation as it is. the message is still empty
+        // here, so the person of the script, who waits for a message too,
+        // cannot fire yet.
         let now = self.observe(out)?;
+        let mut revision = now.revision;
         if value(&now, "commit.form", "open") != Some(Value::Bool(true)) {
-            self.act(out, "commit.form", "open", None, now.revision)?;
+            let stages = self.act(out, "commit.form", "open", None, revision)?;
+            revision = self.landed(out, &stages)?;
         }
-        let seen = self.observe(out)?;
         self.act(
             out,
             "commit.message",
             "set_value",
             Some(Value::Text(TASK_MESSAGE.to_owned())),
-            seen.revision,
+            revision,
         )?;
 
         // the decision: one observation, then the submit on exactly that
@@ -166,7 +174,8 @@ impl Agent {
     }
 
     /// after a stale refusal: what changed since the decision, then the
-    /// index put back where the task wants it.
+    /// index put back where the task wants it, decided on one observation,
+    /// each act resting on the revision the one before left.
     fn repair(&mut self, out: &mut Scripted, since: Revision) -> Result<(), String> {
         let reply = self
             .client
@@ -185,21 +194,32 @@ impl Agent {
                 .push(format!("observed since {since}: the whole snapshot")),
             other => return Err(format!("an observation: {other:?}")),
         }
-        let mut seen = self.observe(out)?;
+        let seen = self.observe(out)?;
+        let staged = staged(&seen);
+        let mut revision = seen.revision;
         for path in TASK_FILES {
-            if !staged(&seen).contains(path) {
-                let revision = seen.revision;
-                self.act(
+            if !staged.contains(path) {
+                let stages = self.act(
                     out,
                     &format!("changes.file[{path}]"),
                     "stage",
                     None,
                     revision,
                 )?;
+                revision = self.landed(out, &stages)?;
             }
-            seen = self.observe(out)?;
         }
         Ok(())
+    }
+
+    /// the revision the last stage of `stages` carries, the app as that
+    /// act left it; when the app projected nothing then it carries none,
+    /// and the agent observes to learn it.
+    fn landed(&mut self, out: &mut Scripted, stages: &[StageReply]) -> Result<Revision, String> {
+        match stages.last().and_then(|s| s.revision) {
+            Some(revision) => Ok(revision),
+            None => Ok(self.observe(out)?.revision),
+        }
     }
 
     fn observe(&mut self, out: &mut Scripted) -> Result<SnapshotReply, String> {
@@ -261,8 +281,12 @@ impl Agent {
         }
         let stages = self.client.act(act, |_| {}).map_err(|e| e.to_string())?;
         let names: Vec<&str> = stages.iter().map(|s| s.stage.name()).collect();
+        let landed = stages
+            .last()
+            .and_then(|s| s.revision)
+            .map_or_else(String::new, |r| format!(", the app at {r}"));
         out.steps.push(format!(
-            "act {target} {action} from {revision}: {}",
+            "act {target} {action} from {revision}: {}{landed}",
             names.join(" -> ")
         ));
         match terminal(&stages) {
