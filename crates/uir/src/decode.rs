@@ -7,7 +7,8 @@
 //! binding) to the serde form of its type, so the two readers accept the
 //! same documents and build the same `Ir`; the tests hold them to that.
 
-use serde::de::DeserializeOwned;
+use serde::de::{DeserializeOwned, Error as _};
+use serde::{Deserialize, Deserializer};
 use serde_json::{Map, Value};
 
 use crate::error::{IrError, Ptr, Rule};
@@ -54,6 +55,18 @@ pub fn decode(value: &Value) -> Result<Ir, Vec<IrError>> {
     match ir {
         Some(ir) if d.errors.is_empty() => Ok(ir),
         _ => Err(d.errors),
+    }
+}
+
+/// serde reads an IR through `decode`, so there is one reader: the error
+/// is every `IrError`, one per line.
+impl<'de> Deserialize<'de> for Ir {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Ir, D::Error> {
+        let value = Value::deserialize(d)?;
+        decode(&value).map_err(|errors| {
+            let lines: Vec<String> = errors.iter().map(ToString::to_string).collect();
+            D::Error::custom(lines.join("\n"))
+        })
     }
 }
 
@@ -113,7 +126,7 @@ impl Decoder {
         let label = self.optional(map, at, "label", Rule::Schema);
         let description = self.optional(map, at, "description", Rule::Schema);
         let props = self.fields::<Props>(map, at, "props");
-        let layout = self.optional(map, at, "layout", Rule::Vocabulary);
+        let layout = self.layout(map, at);
         let size = self.fields::<Size>(map, at, "size");
         let bind = match map.get("bind") {
             Some(b) => self.bind(b, &at.key("bind")),
@@ -138,6 +151,28 @@ impl Decoder {
             children: children?,
             repeat: repeat?,
         })
+    }
+
+    /// a layout is `"overlay"` or one key whose value is an object; serde
+    /// alone would also take the object written as a list.
+    fn layout(
+        &mut self,
+        map: &Map<String, Value>,
+        at: &Ptr,
+    ) -> Option<Option<crate::token::Layout>> {
+        let inner = map.get("layout").and_then(Value::as_object);
+        for (kind, fields) in inner.into_iter().flatten() {
+            if !fields.is_object() {
+                let here = at.key("layout").key(kind);
+                self.fail(
+                    Rule::Vocabulary,
+                    &here,
+                    format!("a {kind} layout is an object"),
+                );
+                return None;
+            }
+        }
+        self.optional(map, at, "layout", Rule::Vocabulary)
     }
 
     fn children(
@@ -180,7 +215,9 @@ impl Decoder {
     fn bind(&mut self, v: &Value, at: &Ptr) -> Option<Bind> {
         let map = self.object(v, at, "a binding", BIND)?;
         let state = self.entries::<sem::StateRef>(map, at, "state", Rule::State);
+        let objects = self.objects(map, at, "actions");
         let actions = self.entries::<CapabilityRef>(map, at, "actions", Rule::Action);
+        let actions = actions.filter(|_| objects);
         Some(Bind {
             state: state?,
             actions: actions?,
@@ -212,6 +249,25 @@ impl Decoder {
             });
         }
         out
+    }
+
+    /// true when every entry of the map at `key` is an object, as a
+    /// capability is; an entry written as a list is refused at its place.
+    fn objects(&mut self, map: &Map<String, Value>, at: &Ptr, key: &str) -> bool {
+        let entries = map.get(key).and_then(Value::as_object);
+        let mut ok = true;
+        for (name, value) in entries.into_iter().flatten() {
+            if !value.is_object() {
+                let here = at.key(key).key(name);
+                self.fail(
+                    Rule::Action,
+                    &here,
+                    "a capability is an object: target and action",
+                );
+                ok = false;
+            }
+        }
+        ok
     }
 
     /// a struct whose fields are all optional, each field read on its own

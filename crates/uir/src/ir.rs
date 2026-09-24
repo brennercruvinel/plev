@@ -3,10 +3,13 @@
 //! the state and the actions the app declares.
 //!
 //! the JSON form is the one an LLM writes: every field but `sem` optional,
-//! nothing written at its default, and no field the types do not know
-//! (`deny_unknown_fields`), so a literal color or a pixel has nowhere to
-//! go. reading JSON into an `Ir` checks its shape only; `verify` decides
-//! whether it may exist.
+//! nothing written at its default, and no field the types do not know, so
+//! a literal color or a pixel has nowhere to go. there is one reader, the
+//! pointer decoder (`decode`), and `Ir`'s `Deserialize` goes through it:
+//! the node types derive only `Serialize`, because serde's derived reader
+//! would also take a struct written as a JSON array, a second form the
+//! schema does not have. reading checks the shape only; `verify` decides
+//! whether an IR may exist.
 
 use std::collections::BTreeMap;
 
@@ -23,9 +26,8 @@ pub const VERSION: u32 = 1;
 /// `changes.file[{item}]`.
 pub const ITEM: &str = "{item}";
 
-/// a surface described by meaning.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+/// a surface described by meaning. its `Deserialize` is `decode`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Ir {
     /// always `VERSION`; another value is refused before anything else is
     /// read.
@@ -44,8 +46,7 @@ impl Ir {
 }
 
 /// one surface: its identity, the title that names it, and its tree.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Surface {
     pub id: SemId,
     pub title: String,
@@ -58,27 +59,26 @@ pub struct Surface {
 /// position. without a `component` the node is a layout container. a
 /// node takes children or a `repeat`, never both, and only when its
 /// component is a container.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct IrNode {
     pub sem: SemId,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub component: Option<Component>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Props::is_empty")]
+    #[serde(skip_serializing_if = "Props::is_empty")]
     pub props: Props,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub layout: Option<Layout>,
-    #[serde(default, skip_serializing_if = "Size::is_empty")]
+    #[serde(skip_serializing_if = "Size::is_empty")]
     pub size: Size,
-    #[serde(default, skip_serializing_if = "Bind::is_empty")]
+    #[serde(skip_serializing_if = "Bind::is_empty")]
     pub bind: Bind,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub children: Vec<IrNode>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub repeat: Option<Box<Repeat>>,
 }
 
@@ -108,12 +108,11 @@ impl IrNode {
 /// (`activate`, `set_value`) to the capability that runs. the names come
 /// from the component's `Spec`. the IR only references: nothing here can
 /// create a capability.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct Bind {
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub state: BTreeMap<String, StateRef>,
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub actions: BTreeMap<String, CapabilityRef>,
 }
 
@@ -123,7 +122,8 @@ impl Bind {
     }
 }
 
-/// an action of the app: the node that declares it and its name.
+/// an action of the app: the node that declares it and its name. the
+/// decoder reads it only from an object.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CapabilityRef {
@@ -148,8 +148,7 @@ impl CapabilityRef {
 /// inside the template may carry it too, and then name one capability per
 /// item. an instance is named by its item, so the template root has no
 /// label.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Repeat {
     pub each: StateRef,
     pub item: IrNode,
@@ -211,9 +210,14 @@ mod tests {
         assert_eq!(serde_json::from_value::<Ir>(json).unwrap(), ir);
     }
 
+    /// a document whose root is `node`.
+    fn doc(node: &str) -> String {
+        format!(r#"{{"plev_ir": 1, "surface": {{"id": "s", "title": "t", "root": {node}}}}}"#)
+    }
+
     #[test]
     fn a_repeat_round_trips_with_its_template() {
-        let text = r#"{
+        let text = doc(r#"{
             "sem": "review.files",
             "component": "list",
             "repeat": {
@@ -223,25 +227,32 @@ mod tests {
                     "bind": { "state": { "text": "changes.file[{item}]:status" } }
                 }
             }
-        }"#;
-        let node: IrNode = serde_json::from_str(text).unwrap();
-        let repeat = node.repeat.as_deref().unwrap();
+        }"#);
+        let ir: Ir = serde_json::from_str(&text).unwrap();
+        let repeat = ir.surface.root.repeat.as_deref().unwrap();
         assert_eq!(repeat.each.to_string(), "changes:files");
         assert_eq!(repeat.item.sem.as_str(), "review.file[{item}]");
-        let back: IrNode = serde_json::from_value(serde_json::to_value(&node).unwrap()).unwrap();
-        assert_eq!(back, node);
+        let back: Ir = serde_json::from_value(serde_json::to_value(&ir).unwrap()).unwrap();
+        assert_eq!(back, ir);
     }
 
     #[test]
-    fn an_unknown_field_or_a_bad_id_is_refused() {
+    fn an_unknown_field_a_bad_id_or_a_second_form_is_refused() {
         for bad in [
             r#"{"sem": "a", "colour": "red"}"#,
             r#"{"sem": "A"}"#,
             r#"{"sem": "a", "bind": {"state": {"text": "no_colon"}}}"#,
             r#"{"sem": "a", "bind": {"actions": {"activate": {"target": "a"}}}}"#,
+            r#"{"sem": "a", "bind": {"actions": {"activate": ["a", "go"]}}}"#,
+            r#"{"sem": "a", "bind": []}"#,
+            r#"{"sem": "a", "props": []}"#,
+            r#"{"sem": "a", "layout": {"split": ["horizontal", 50]}}"#,
+            r#"["a"]"#,
             r#"{"component": "button"}"#,
         ] {
-            assert!(serde_json::from_str::<IrNode>(bad).is_err(), "{bad}");
+            assert!(serde_json::from_str::<Ir>(&doc(bad)).is_err(), "{bad}");
         }
+        let text = r#"{"plev_ir": 1, "surface": ["s", "t", {"sem": "a"}]}"#;
+        assert!(serde_json::from_str::<Ir>(text).is_err());
     }
 }

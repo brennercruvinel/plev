@@ -4,6 +4,7 @@
 
 mod support;
 
+use sem::Actor;
 use serde_json::json;
 use support::{
     COMMIT, FILES, ITEM, MESSAGE, STAGE, STATUS, base, caps, errors, errors_under, refused,
@@ -471,6 +472,162 @@ fn a_chip_is_a_toggle_or_a_button_not_both() {
     );
 }
 
+// rule 6: generation policy
+
+#[test]
+fn an_agent_binds_only_what_agents_may_ask_for() {
+    let admin = json!({
+        "sem": "review.reset",
+        "component": "button",
+        "label": "reset everything",
+        "bind": { "actions": { "activate": { "target": "admin", "action": "reset" } } }
+    });
+    let doc = with(base(), "/surface/root/children/3", admin);
+    let at = "/surface/root/children/3/bind/actions/activate";
+    refused(
+        &doc,
+        Rule::Policy,
+        at,
+        "agent:unknown may not bind `reset` on `admin`: its policy leaves agents out",
+    );
+    let person = GenerationPolicy::by(Actor::Human);
+    assert_eq!(errors_under(&doc, &person), [], "a person may bind it");
+}
+
+#[test]
+fn a_destructive_action_sits_behind_a_confirmation() {
+    let at = format!("{STAGE}/bind/actions/activate");
+    let doc = with(
+        base(),
+        &at,
+        json!({ "target": "changes.file[{item}]", "action": "discard" }),
+    );
+    refused(
+        &doc,
+        Rule::Policy,
+        &at,
+        "is destructive and the app asks no one to confirm it",
+    );
+    let dialog = json!({
+        "sem": "review.discard",
+        "component": "dialog",
+        "label": "discard the changes to a.rs?",
+        "description": "they are lost",
+        "bind": { "actions": {
+            "confirm": { "target": "changes.file[a.rs]", "action": "discard" },
+            "cancel": { "target": "commit.form", "action": "cancel" }
+        } }
+    });
+    let doc = with(base(), "/surface/root/children/3", dialog);
+    assert_eq!(errors(&doc), [], "a dialog's confirm is the confirmation");
+    let trash = json!({
+        "sem": "review.trash",
+        "component": "button",
+        "label": "empty the trash",
+        "bind": { "actions": { "activate": { "target": "trash", "action": "empty" } } }
+    });
+    let doc = with(base(), "/surface/root/children/3", trash);
+    assert_eq!(
+        errors(&doc),
+        [],
+        "the app asks everyone to confirm this one"
+    );
+}
+
+// rule 7: accessibility
+
+#[test]
+fn every_control_is_named() {
+    let doc = without(base(), &format!("{COMMIT}/label"));
+    refused(
+        &doc,
+        Rule::Access,
+        &format!("{COMMIT}/label"),
+        "a button needs a label",
+    );
+    let doc = with(base(), &format!("{COMMIT}/label"), json!("   "));
+    refused(
+        &doc,
+        Rule::Access,
+        &format!("{COMMIT}/label"),
+        "a button needs a label",
+    );
+    let doc = without(base(), &format!("{STATUS}/bind"));
+    refused(
+        &doc,
+        Rule::Access,
+        &format!("{STATUS}/label"),
+        "a badge needs a label or its `text` bound",
+    );
+    let doc = with(base(), "/surface/title", json!(""));
+    refused(
+        &doc,
+        Rule::Access,
+        "/surface/title",
+        "a surface needs a title",
+    );
+}
+
+#[test]
+fn a_repeated_item_is_named_by_its_item() {
+    let doc = with(base(), &format!("{ITEM}/label"), json!("file"));
+    refused(
+        &doc,
+        Rule::Access,
+        &format!("{ITEM}/label"),
+        "named by its item",
+    );
+}
+
+#[test]
+fn a_node_without_a_role_is_never_named() {
+    let line = json!({ "sem": "review.line", "component": "separator", "label": "a line" });
+    let doc = with(base(), "/surface/root/children/3", line);
+    refused(
+        &doc,
+        Rule::Access,
+        "/surface/root/children/3/label",
+        "has no role",
+    );
+}
+
+#[test]
+fn a_control_is_never_only_visual() {
+    let doc = without(base(), &format!("{MESSAGE}/bind/actions"));
+    refused(
+        &doc,
+        Rule::Access,
+        &format!("{MESSAGE}/bind"),
+        "only visual",
+    );
+}
+
+#[test]
+fn the_focus_order_follows_the_tree_and_an_overlay_keeps_controls_in_one_layer() {
+    let ir: Ir = serde_json::from_value(base()).unwrap();
+    let verified = verify(&ir, &caps(), &GenerationPolicy::default()).unwrap();
+    let order: Vec<&str> = verified
+        .focus_order()
+        .iter()
+        .map(|id| id.as_str())
+        .collect();
+    assert_eq!(
+        order,
+        [
+            "review.file[{item}].stage",
+            "review.message",
+            "review.commit"
+        ]
+    );
+    let doc = with(base(), "/surface/root/layout", json!("overlay"));
+    refused(
+        &doc,
+        Rule::Access,
+        "/surface/root/layout",
+        "controls in 3 layers of an overlay",
+    );
+}
+
 // rule 8: limits
 
 #[test]
@@ -530,12 +687,19 @@ fn every_error_comes_at_once() {
         json!("changes:staged"),
     );
     let doc = with(doc, &format!("{STATUS}/sem"), json!("review.status"));
+    let doc = with(doc, &format!("{ITEM}/label"), json!("file"));
     let terse = GenerationPolicy {
         max_text: 10,
         ..GenerationPolicy::default()
     };
     let rules: Vec<Rule> = errors_under(&doc, &terse).iter().map(|e| e.rule).collect();
-    for rule in [Rule::Identity, Rule::State, Rule::Action, Rule::Limits] {
+    for rule in [
+        Rule::Identity,
+        Rule::State,
+        Rule::Action,
+        Rule::Access,
+        Rule::Limits,
+    ] {
         assert!(rules.contains(&rule), "{rule:?} missing from {rules:?}");
     }
 }

@@ -6,6 +6,7 @@
 //! person, a model, an importer or a tool proposes; the verifier decides
 //! what may exist; only a `VerifiedIr` reaches the runtime.
 
+mod access;
 mod bind;
 
 use std::collections::BTreeMap;
@@ -27,11 +28,20 @@ use crate::vocab::{Component, spec_of};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VerifiedIr {
     ir: Ir,
+    focus: Vec<SemId>,
 }
 
 impl VerifiedIr {
     pub fn ir(&self) -> &Ir {
         &self.ir
+    }
+
+    /// the controls of the surface in the order focus visits them: tree
+    /// order, depth first. a control inside a repeat is here once, by its
+    /// template id; its instances take the place of the template, in the
+    /// order of the list.
+    pub fn focus_order(&self) -> &[SemId] {
+        &self.focus
     }
 
     pub fn into_ir(self) -> Ir {
@@ -75,17 +85,22 @@ pub fn verify(
         ids: BTreeMap::new(),
         statics: Vec::new(),
         templates: Vec::new(),
+        focus: Vec::new(),
     };
     walk.surface_id(&ir.surface.id, &surface.key("id"));
-    walk.text(Some(&ir.surface.title), &surface.key("title"));
+    walk.title(&ir.surface.title, &surface.key("title"));
     let root = Ctx {
         depth: 1,
         template: false,
+        item: false,
     };
     walk.node(&ir.surface.root, &surface.key("root"), root);
     walk.collisions();
     if walk.errors.is_empty() {
-        Ok(VerifiedIr { ir: ir.clone() })
+        Ok(VerifiedIr {
+            ir: ir.clone(),
+            focus: walk.focus,
+        })
     } else {
         Err(walk.errors)
     }
@@ -115,17 +130,20 @@ fn count(root: &IrNode) -> usize {
     n
 }
 
-/// where the walk is: how deep, and whether inside a repeat's template.
+/// where the walk is: how deep, whether inside a repeat's template, and
+/// whether at the template's root, the node each item names.
 #[derive(Clone, Copy, Debug)]
 struct Ctx {
     depth: usize,
     template: bool,
+    item: bool,
 }
 
 impl Ctx {
     fn child(self) -> Ctx {
         Ctx {
             depth: self.depth + 1,
+            item: false,
             ..self
         }
     }
@@ -141,6 +159,8 @@ struct Walk<'a> {
     /// an instance must never take a fixed id.
     statics: Vec<(SemId, Ptr)>,
     templates: Vec<(Pattern, Ptr)>,
+    /// the controls, in tree order.
+    focus: Vec<SemId>,
 }
 
 impl Walk<'_> {
@@ -157,7 +177,9 @@ impl Walk<'_> {
         }
         self.identity(n, at, ctx);
         self.vocabulary(n, at);
-        self.bindings(n, at, ctx);
+        let bound = self.bindings(n, at, ctx);
+        self.generation(n, at, &bound);
+        self.access(n, at, ctx);
         self.text(n.label.as_deref(), &at.key("label"));
         self.text(n.description.as_deref(), &at.key("description"));
         let children = at.key("children");
@@ -181,6 +203,7 @@ impl Walk<'_> {
         let item = Ctx {
             depth: ctx.depth + 1,
             template: true,
+            item: true,
         };
         self.node(&r.item, &at.key("item"), item);
     }
