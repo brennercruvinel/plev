@@ -26,10 +26,14 @@
 //! change counts its time from the change, not from the last frame. Keys
 //! go through the keymap (`keys.rs`).
 //!
-//! With `PLEV_BACKGROUND=1` on macOS the window comes up behind the app in
-//! front and does not take the focus (the app does not activate over
-//! another, the window is ordered front without becoming key), so it can
-//! open beside someone at work; nothing changes without it, or elsewhere.
+//! With `PLEV_BACKGROUND=1` on macOS the window comes up without taking the
+//! focus, whatever app is in front, so it can open beside someone at work
+//! (an agent's run the person watches, not one they use): the app never
+//! activates (its activation policy is prohibited, so no Dock icon and no
+//! menu bar either), the window is ordered front without becoming key, and
+//! it sits below every other window, so it covers nothing and takes no
+//! click meant for another app. Keys reach it only posted to its pid.
+//! Nothing changes without it, or elsewhere.
 //!
 //! Run: `cargo run -p ide [path-to-repo]` (defaults to the cwd).
 
@@ -193,6 +197,11 @@ impl ApplicationHandler<AppEvent> for App {
             .with_title(title)
             .with_inner_size(winit::dpi::LogicalSize::new(1280u32, 800u32))
             .with_active(!self.background);
+        let attrs = if self.background {
+            attrs.with_window_level(winit::window::WindowLevel::AlwaysOnBottom)
+        } else {
+            attrs
+        };
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
         self.window = Some(window.clone());
 
@@ -419,6 +428,11 @@ impl ApplicationHandler<AppEvent> for App {
 
 /// `PLEV_BACKGROUND=1` on macOS: the window comes up without taking the
 /// focus. Off by default and on every other platform.
+///
+/// Asking not to activate over another app is not enough: since macOS 14
+/// activation is cooperative, and a process started from the terminal of
+/// the app in front is let in over it. An app whose activation policy is
+/// prohibited may not be activated at all, and still shows its window.
 fn background() -> bool {
     cfg!(target_os = "macos")
         && std::env::var_os("PLEV_BACKGROUND").is_some_and(|v| v == std::ffi::OsStr::new("1"))
@@ -437,8 +451,10 @@ fn main() {
     let mut builder = EventLoop::<AppEvent>::with_user_event();
     #[cfg(target_os = "macos")]
     if background {
-        use winit::platform::macos::EventLoopBuilderExtMacOS;
-        builder.with_activate_ignoring_other_apps(false);
+        use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
+        builder
+            .with_activation_policy(ActivationPolicy::Prohibited)
+            .with_activate_ignoring_other_apps(false);
     }
     let event_loop = builder.build().unwrap();
     let proxy = event_loop.create_proxy();
