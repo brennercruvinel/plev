@@ -466,6 +466,16 @@ c"; saídas em `target/agents/exp/`.
 
 ## processo
 
+### 2026-09-24, `trash` não libera disco
+
+- **o orquestrador mandou um build dir de 3 GB para a Lixeira:** o
+  `/usr/bin/trash` move para a Lixeira do mesmo volume, então o espaço
+  não volta, e esta sessão não tem permissão de ler a Lixeira para
+  desfazer. esvaziar a Lixeira é do brenner (apaga as coisas dele
+  também). regra: cache de build se limpa com `cargo clean` (com
+  `--target-dir` ou `--profile`, e antes um `--dry-run` que mostra o que
+  sai); `trash` fica para arquivo que alguém pode querer de volta.
+
 ### 2026-09-24, documentação de biblioteca não é fonte
 
 - **o briefing do item 6 citou a doc do winit como fato:** a doc dizia

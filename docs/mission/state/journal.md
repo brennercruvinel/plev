@@ -14,6 +14,14 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: disco
+
+- o disco chegou a 13 GB com o agente da task-77 compilando. `trash` no
+  build do showcase que o orquestrador abriu para o brenner (3 GB) não
+  liberou nada: foi para a Lixeira, que só o brenner esvazia.
+  `cargo clean --profile dev` no checkout principal (conferido antes com
+  `--dry-run`: só `target/debug`, 4,5 GB) levou o disco a 18 GB.
+
 ### ciclo 3: publicado #87 (task-76 item 6, task-76 concluída); disparada a task-77 fase 1
 
 - **publicado:** PR #87, merge commit, gate local verde na `main` (2757,
