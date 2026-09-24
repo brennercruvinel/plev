@@ -68,3 +68,102 @@ fn from_env_in_a_child() {
     assert_eq!(port.is_some(), sockets == 1);
     println!("port: {}", if port.is_some() { "open" } else { "none" });
 }
+
+/// the scenes are shared only when the person who launches the app says
+/// so, `PLEV_MIRROR=1` beside `PLEV_AGENT=1` (task-79): without it, or
+/// with anything else, a `scene` request is refused as
+/// `scene_not_shared`. a build without debug assertions opens no port
+/// from the environment at all, so there is nothing to ask there.
+#[test]
+fn the_scene_is_shared_only_with_plev_mirror() {
+    if std::env::var_os("WIRE_T79_CHILD").is_some() || !cfg!(debug_assertions) {
+        return;
+    }
+    let exe = std::env::current_exe().unwrap();
+    for (value, expect) in [
+        (None, "scene_not_shared"),
+        (Some("0"), "scene_not_shared"),
+        (Some("true"), "scene_not_shared"),
+        (Some("1"), "watching"),
+    ] {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cmd = Command::new(&exe);
+        cmd.args([
+            "--exact",
+            "scene_from_env_in_a_child",
+            "--nocapture",
+            "--test-threads=1",
+        ])
+        .env("WIRE_T79_CHILD", "1")
+        .env("PLEV_AGENT", "1")
+        .env("TMPDIR", tmp.path());
+        match value {
+            None => cmd.env_remove("PLEV_MIRROR"),
+            Some(v) => cmd.env("PLEV_MIRROR", v),
+        };
+        let out = cmd.output().unwrap();
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        assert!(out.status.success(), "{value:?}: {stdout}");
+        assert!(
+            stdout.contains(&format!("scene: {expect}")),
+            "{value:?}: {stdout}"
+        );
+    }
+}
+
+/// an app that projects nothing and takes nothing.
+struct Nothing;
+
+impl wire::Host for Nothing {
+    fn project(&self) -> Option<sem::Snapshot> {
+        None
+    }
+
+    fn dispatch(&mut self, _req: sem::Request) -> Option<sem::RequestId> {
+        None
+    }
+
+    fn add_sink(&mut self, _sink: Box<dyn sem::ReceiptSink>) {}
+}
+
+#[test]
+fn scene_from_env_in_a_child() {
+    use std::time::{Duration, Instant};
+    use wire::{Client, ProtoError, Reply, WireError};
+
+    if std::env::var_os("WIRE_T79_CHILD").is_none() {
+        return;
+    }
+    let mut port = AgentPort::from_env("toy", || {})
+        .unwrap()
+        .expect("PLEV_AGENT=1 opens the port");
+    let path = port.path().to_owned();
+    let asker = std::thread::spawn(move || {
+        let mut c = Client::connect(&path).unwrap();
+        c.set_timeout(Some(10_000)).unwrap();
+        c.hello("claude").unwrap();
+        let id = c.watch_scene("main").unwrap();
+        c.set_timeout(Some(300)).unwrap();
+        let said = match c.recv_for(&id) {
+            Ok(Reply::Error(ProtoError::SceneNotShared { .. })) => "scene_not_shared".to_owned(),
+            Err(WireError::Timeout(_)) => "no answer".to_owned(),
+            other => format!("{other:?}"),
+        };
+        // the connection stays open while the app is asked who watches
+        (said, c)
+    });
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while !asker.is_finished() {
+        assert!(Instant::now() < deadline, "the asker did not finish");
+        std::thread::sleep(Duration::from_millis(5));
+        port.drain(&mut Nothing);
+    }
+    let (said, _c) = asker.join().unwrap();
+    port.drain(&mut Nothing);
+    let said = if said == "no answer" && port.watching("main") {
+        "watching".to_owned()
+    } else {
+        said
+    };
+    println!("scene: {said}");
+}

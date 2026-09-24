@@ -95,17 +95,7 @@ fn every_page_mirrors_in_process_with_the_same_pixels() {
     };
     let mut view = ShowcaseView::new(WIDTH as f32, HEIGHT as f32);
     view.resize(WIDTH as f32, HEIGHT as f32, 1.0);
-    let mut server = wire::Server::new("mirror", 8);
-    let _ = server.handle(
-        1,
-        wire::ClientMsg {
-            id: "w".into(),
-            ask: wire::Ask::Scene(wire::SceneAsk {
-                window: MAIN.into(),
-            }),
-        },
-        &mut NoHost,
-    );
+    let mut server = watched(1);
     let mut sender = Sender::new();
     let mut viewer = Viewer::new();
     let mut pages = 0;
@@ -152,17 +142,7 @@ fn the_bindings_are_drawn_over_the_mirror_where_the_controls_are() {
     view.render(app.compositor_mut());
     app.present(clear, "app").expect("the app drew");
     let drawn = app.read().expect("the app reads");
-    let mut server = wire::Server::new("mirror", 8);
-    let _ = server.handle(
-        1,
-        wire::ClientMsg {
-            id: "w".into(),
-            ask: wire::Ask::Scene(wire::SceneAsk {
-                window: MAIN.into(),
-            }),
-        },
-        &mut NoHost,
-    );
+    let mut server = watched(1);
     let frame = Sender::new().frame(app.compositor(), head(clear));
     let mut viewer = Viewer::new();
     for out in server.offer_scene(MAIN, &offer(frame, app.compositor())) {
@@ -214,6 +194,45 @@ fn the_bindings_are_drawn_over_the_mirror_where_the_controls_are() {
         );
     }
     assert!(changed > 1000, "{changed} pixels changed");
+}
+
+/// A server whose scenes the app's person shares (`PLEV_MIRROR=1`).
+fn shared_server() -> wire::Server {
+    let mut server = wire::Server::new("mirror", 8);
+    server.share_scenes(true);
+    server
+}
+
+/// `conn` names itself and watches the main window.
+fn watch_on(server: &mut wire::Server, conn: u64) {
+    for ask in [
+        wire::Ask::Hello {
+            name: format!("viewer{conn}"),
+        },
+        wire::Ask::Scene(wire::SceneAsk {
+            window: MAIN.into(),
+        }),
+    ] {
+        let out = server.handle(
+            conn,
+            wire::ClientMsg {
+                id: format!("w{conn}"),
+                ask,
+            },
+            &mut NoHost,
+        );
+        assert!(
+            !out.iter().any(|o| matches!(o.msg.reply, Reply::Error(_))),
+            "{out:?}"
+        );
+    }
+}
+
+/// A shared server with `conn` watching the main window.
+fn watched(conn: u64) -> wire::Server {
+    let mut server = shared_server();
+    watch_on(&mut server, conn);
+    server
 }
 
 /// A host for a server driven in process: the scene asks nothing of it.
@@ -277,6 +296,8 @@ fn app_child() {
         let _ = wake_tx.send(());
     })
     .expect("the port opens");
+    // the person launched this app with PLEV_MIRROR=1
+    port.share_scenes(true);
     let mut scenes = Scenes::default();
     let (cmd_tx, cmds) = mpsc::channel::<String>();
     thread::spawn(move || {
@@ -536,6 +557,7 @@ fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
     let path = app.said("socket").expect("the port opens");
     let mut c = Client::connect(std::path::Path::new(&path)).expect("the viewer connects");
     c.set_timeout(Some(60_000)).expect("a timeout");
+    c.hello("mirror").expect("the viewer names itself");
     c.watch_scene(MAIN).expect("the watch goes");
     let mut w = Watch {
         c,
@@ -656,7 +678,7 @@ impl Band {
             view,
             c: engine::compositor::Compositor::new(),
             sender: Sender::new(),
-            server: wire::Server::new("band", 8),
+            server: shared_server(),
             clear,
         };
         band.view.render(&mut band.c);
@@ -665,16 +687,7 @@ impl Band {
 
     /// A watch that comes now: the bytes and lines of its first frame.
     fn watch(&mut self, conn: u64) -> (usize, usize) {
-        let _ = self.server.handle(
-            conn,
-            wire::ClientMsg {
-                id: format!("w{conn}"),
-                ask: wire::Ask::Scene(wire::SceneAsk {
-                    window: MAIN.into(),
-                }),
-            },
-            &mut NoHost,
-        );
+        watch_on(&mut self.server, conn);
         self.offer()
     }
 

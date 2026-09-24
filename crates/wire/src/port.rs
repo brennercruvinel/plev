@@ -45,7 +45,7 @@ use crate::error::WireError;
 use crate::place::{check_app, clear_stale, io, private_dir, socket_dir, socket_path};
 use crate::proto::{Ask, ClientMsg, ProtoError, Reply};
 use crate::ring::DEFAULT_RING;
-use crate::scene::{MAX_LINE, Offer};
+use crate::scene::{MAX_LINE, Offer, SceneWatch};
 use crate::server::{ConnId, Host, Outgoing, Server, Traffic};
 
 /// the variable that opens the port in a debug build: `PLEV_AGENT=1`.
@@ -183,7 +183,8 @@ impl Shared {
 
 impl AgentPort {
     /// opens the port of `app` in `$TMPDIR/plev` when `enabled()`;
-    /// `Ok(None)` otherwise, and then nothing is created.
+    /// `Ok(None)` otherwise, and then nothing is created. its scenes are
+    /// shared when `PLEV_MIRROR=1` too (`scene::mirror_enabled`).
     pub fn from_env(
         app: &str,
         wake: impl Fn() + Send + 'static,
@@ -191,7 +192,9 @@ impl AgentPort {
         if !enabled() {
             return Ok(None);
         }
-        AgentPort::open(app, wake).map(Some)
+        let mut port = AgentPort::open(app, wake)?;
+        port.share_scenes(crate::scene::mirror_enabled());
+        Ok(Some(port))
     }
 
     /// opens the port of `app` in `$TMPDIR/plev`, whatever the build: the
@@ -332,6 +335,18 @@ impl AgentPort {
     /// app writes that window's frames only then.
     pub fn watching(&self, window: &str) -> bool {
         self.server.watching(window)
+    }
+
+    /// whether the scenes are shared (`Server::share_scenes`): `from_env`
+    /// sets it from `PLEV_MIRROR`; an app that opens the port itself says.
+    pub fn share_scenes(&mut self, on: bool) {
+        self.server.share_scenes(on);
+    }
+
+    /// the watches that began or ended since the last call
+    /// (`Server::take_scene_watches`), a cut one among them.
+    pub fn take_scene_watches(&mut self) -> Vec<SceneWatch> {
+        self.server.take_scene_watches()
     }
 
     /// `offer`, the frame the app just drew in `window` (or the one it

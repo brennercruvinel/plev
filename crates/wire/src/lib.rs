@@ -40,10 +40,12 @@
 //! `Client` (the agent's side, which the `plev` binary uses).
 //!
 //! the same connection also carries a window's scene (task-79,
-//! `scene`): a `scene` request watches it, and its frames come back as
-//! replies, only the layers that changed, binary parts as base64. the
-//! app offers each frame it draws (`AgentPort::offer_scene`); a viewer
-//! puts the lines back together (`SceneReader`).
+//! `scene`), when the person who launched the app shares it
+//! (`PLEV_MIRROR=1`): a `scene` request after `hello` watches it, and its
+//! frames come back as replies, only the layers that changed, binary
+//! parts as base64. the app offers each frame it draws
+//! (`AgentPort::offer_scene`); a viewer puts the lines back together
+//! (`SceneReader`).
 
 mod b64;
 #[cfg(unix)]
@@ -61,6 +63,7 @@ mod scene_read;
 mod server;
 mod shown;
 mod sink;
+mod traffic;
 
 pub use b64::{decode as decode_base64, encode as encode_base64};
 #[cfg(unix)]
@@ -77,8 +80,8 @@ pub use proto::{
 };
 pub use ring::{DEFAULT_RING, Ring};
 pub use scene::{
-    BlobReply, MAIN_WINDOW, MAX_LINE, MAX_WINDOW, Offer, OfferLayer, SCENE_PART, SceneAsk,
-    SceneLayer, SceneReply,
+    BlobReply, MAIN_WINDOW, MAX_LINE, MAX_WINDOW, MIRROR_ENV, Offer, OfferLayer, SCENE_PART,
+    SceneAsk, SceneLayer, SceneReply, SceneWatch, mirror_enabled,
 };
 pub use scene_read::{LayerBody, MAX_BLOB, SceneFrame, SceneLayerIn, SceneReader};
 pub use server::{ConnId, Host, MAX_NAME, Outgoing, Server, Traffic};

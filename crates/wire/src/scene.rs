@@ -27,11 +27,24 @@
 //! is the one the watch holds or the blob just sent under its hash. the
 //! watch holds an asset while each frame references it, the rule the
 //! receiver keeps too. a watch lasts as long as its connection.
+//!
+//! the scene carries whatever the window draws, which the semantic
+//! contract's redaction never sees, so it is shared apart from the port:
+//! only when the person who launches the app asks for it (`PLEV_MIRROR=1`
+//! beside `PLEV_AGENT=1`, or an app's own `share_scenes`), and only to a
+//! connection that said `hello`, so every watch has a name. unshared, a
+//! `scene` request is refused as `scene_not_shared`, saying how to share.
+//! a stream image's pixels (a camera) are never in a frame: the codec
+//! sends its size and place only. the app is told who began and who
+//! ended a watch (`take_scene_watches`), and the host hears a watch that
+//! begins as an observation of its actor (`Host::observed`).
 
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
+
+use sem::Actor;
 
 use crate::b64;
 use crate::proto::{Bound, ProtoError, Reply, ServerMsg};
@@ -138,6 +151,30 @@ pub struct OfferLayer {
 #[derive(Debug, Default)]
 pub(crate) struct Watches {
     by_conn: HashMap<ConnId, Watch>,
+    /// the person who launched the app shares its scenes.
+    shared: bool,
+    /// watches begun or ended, not yet taken.
+    events: Vec<SceneWatch>,
+}
+
+/// a watch that began or ended: who, which window.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SceneWatch {
+    pub actor: Actor,
+    pub window: String,
+    /// `true` when it began, `false` when it ended (its connection did).
+    pub began: bool,
+}
+
+/// the variable by which the person who launches an app shares its
+/// windows' scenes with the agent port's watchers: `PLEV_MIRROR=1`,
+/// beside `PLEV_AGENT=1`.
+pub const MIRROR_ENV: &str = "PLEV_MIRROR";
+
+/// true when `PLEV_MIRROR` is `1` and this is a debug build, as the port
+/// itself (`AgentPort::from_env` reads it).
+pub fn mirror_enabled() -> bool {
+    cfg!(debug_assertions) && std::env::var_os(MIRROR_ENV).is_some_and(|v| v == "1")
 }
 
 /// what one watch was sent.
@@ -145,6 +182,7 @@ pub(crate) struct Watches {
 struct Watch {
     /// the id of the `scene` request.
     msg: String,
+    actor: Actor,
     window: String,
     seq: u64,
     head: Option<Arc<[u8]>>,
@@ -154,13 +192,41 @@ struct Watch {
 }
 
 impl Watches {
-    /// `conn` watches `ask.window`, one watch per connection.
+    pub(crate) fn share(&mut self, on: bool) {
+        self.shared = on;
+    }
+
+    pub(crate) fn take_events(&mut self) -> Vec<SceneWatch> {
+        std::mem::take(&mut self.events)
+    }
+
+    /// `actor`, on `conn`, watches `ask.window`, one watch per
+    /// connection: only when the app's scenes are shared, and only under
+    /// a name (after `hello`).
     pub(crate) fn watch(
         &mut self,
         conn: ConnId,
         msg: &str,
         ask: SceneAsk,
+        actor: Option<Actor>,
     ) -> Result<(), ProtoError> {
+        if !self.shared {
+            return Err(ProtoError::SceneNotShared {
+                reason: format!(
+                    "this app's person did not share its windows: a scene is shown to a \
+                     watcher only when the person who launches the app asks for it, with \
+                     {MIRROR_ENV}=1 beside PLEV_AGENT=1 (a debug build); observe and act \
+                     work without it"
+                ),
+            });
+        }
+        let Some(actor) = actor else {
+            return Err(ProtoError::NotEnabled {
+                reason: "say hello first: a scene is watched under the name its watcher \
+                         declares"
+                    .to_owned(),
+            });
+        };
         let name = &ask.window;
         let fits = (1..=MAX_WINDOW).contains(&name.chars().count())
             && name
@@ -183,10 +249,16 @@ impl Watches {
                 ),
             });
         }
+        self.events.push(SceneWatch {
+            actor: actor.clone(),
+            window: ask.window.clone(),
+            began: true,
+        });
         self.by_conn.insert(
             conn,
             Watch {
                 msg: msg.to_owned(),
+                actor,
                 window: ask.window,
                 seq: 0,
                 head: None,
@@ -203,7 +275,13 @@ impl Watches {
     }
 
     pub(crate) fn close(&mut self, conn: ConnId) {
-        self.by_conn.remove(&conn);
+        if let Some(w) = self.by_conn.remove(&conn) {
+            self.events.push(SceneWatch {
+                actor: w.actor,
+                window: w.window,
+                began: false,
+            });
+        }
     }
 
     /// what each watch of `window` needs of `offer`, the watches in the

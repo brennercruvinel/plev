@@ -14,7 +14,9 @@ use std::sync::mpsc::{self, Receiver};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use sem::{ReceiptSink, Request, RequestId, Role, SemId, Snapshot, SnapshotBuilder};
+use sem::{
+    Actor, ReceiptSink, Request, RequestId, Revision, Role, SemId, Snapshot, SnapshotBuilder,
+};
 use wire::{
     AgentPort, Ask, BlobReply, Bound, Client, ClientMsg, Config, Host, LayerBody, MAX_BLOB,
     MAX_LINE, Observe, Offer, OfferLayer, Outgoing, ProtoError, Reply, SCENE_PART, SCENE_QUEUE,
@@ -22,9 +24,12 @@ use wire::{
     encode_client, encode_server,
 };
 
-/// an app that projects one node and takes no request: the scene
-/// channel asks nothing of the host.
-struct Still;
+/// an app that projects one node and takes no request; it keeps what it
+/// was told was observed, as a recording would.
+#[derive(Default)]
+struct Still {
+    observed: Vec<(Actor, Option<SemId>, Revision)>,
+}
 
 impl Host for Still {
     fn project(&self) -> Option<Snapshot> {
@@ -38,6 +43,30 @@ impl Host for Still {
     }
 
     fn add_sink(&mut self, _sink: Box<dyn ReceiptSink>) {}
+
+    fn observed(&mut self, actor: &Actor, scope: Option<&SemId>, revision: Revision) {
+        self.observed
+            .push((actor.clone(), scope.cloned(), revision));
+    }
+}
+
+fn hello(server: &mut Server, conn: u64, name: &str) {
+    let out = server.handle(
+        conn,
+        ClientMsg {
+            id: format!("h{conn}"),
+            ask: Ask::Hello { name: name.into() },
+        },
+        &mut Still::default(),
+    );
+    assert!(matches!(out[0].msg.reply, Reply::Welcome { .. }));
+}
+
+/// a server whose scenes the app's person shares.
+fn shared() -> Server {
+    let mut s = Server::new("toy", 8);
+    s.share_scenes(true);
+    s
 }
 
 fn bytes(n: usize, seed: u8) -> Arc<[u8]> {
@@ -74,6 +103,7 @@ fn offer() -> Offer {
 }
 
 fn watch(server: &mut Server, conn: u64, window: &str) {
+    hello(server, conn, &format!("agent{conn}"));
     let out = server.handle(
         conn,
         ClientMsg {
@@ -82,7 +112,7 @@ fn watch(server: &mut Server, conn: u64, window: &str) {
                 window: window.to_owned(),
             }),
         },
-        &mut Still,
+        &mut Still::default(),
     );
     assert!(out.is_empty(), "a watch answers with frames only: {out:?}");
 }
@@ -212,7 +242,7 @@ fn a_frame_with_broken_bytes_does_not_read() {
 
 #[test]
 fn a_watch_gets_the_whole_frame_then_only_what_moved() {
-    let mut s = Server::new("toy", 8);
+    let mut s = shared();
     assert!(!s.watching("main"));
     watch(&mut s, 1, "main");
     assert!(s.watching("main"));
@@ -285,7 +315,7 @@ fn a_watch_gets_the_whole_frame_then_only_what_moved() {
 
 #[test]
 fn an_asset_goes_once_while_the_frames_reference_it() {
-    let mut s = Server::new("toy", 8);
+    let mut s = shared();
     watch(&mut s, 1, "main");
     assert_eq!(blobs(&s.offer_scene("main", &offer())).len(), 1);
     let mut again = offer();
@@ -310,7 +340,7 @@ fn an_asset_goes_once_while_the_frames_reference_it() {
 
 #[test]
 fn a_large_asset_and_a_large_body_go_in_parts_under_the_line_limit() {
-    let mut s = Server::new("toy", 8);
+    let mut s = shared();
     watch(&mut s, 1, "main");
     let camera = 640 * 360 * 4;
     let mut big = offer();
@@ -345,8 +375,9 @@ fn a_large_asset_and_a_large_body_go_in_parts_under_the_line_limit() {
 
 #[test]
 fn a_watch_is_one_per_connection_of_a_named_window_and_ends_with_it() {
-    let mut s = Server::new("toy", 8);
-    let mut host = Still;
+    let mut s = shared();
+    let mut host = Still::default();
+    hello(&mut s, 1, "claude");
     let ask = |window: &str| ClientMsg {
         id: "x".into(),
         ask: Ask::Scene(SceneAsk {
@@ -363,7 +394,7 @@ fn a_watch_is_one_per_connection_of_a_named_window_and_ends_with_it() {
             "{bad:?}"
         );
     }
-    watch(&mut s, 1, "page");
+    assert!(s.handle(1, ask("page"), &mut host).is_empty());
     let out = s.handle(1, ask("main"), &mut host);
     match &out[0].msg.reply {
         Reply::Error(ProtoError::BadMessage { reason }) => {
@@ -440,12 +471,14 @@ fn open(dir: &Path) -> (AgentPort, Receiver<()>) {
 fn a_watch_over_the_socket_beside_an_observation() {
     let tmp = tempfile::tempdir().unwrap();
     let (mut port, woke) = open(tmp.path());
-    let mut host = Still;
+    port.share_scenes(true);
+    let mut host = Still::default();
     let path = port.path().to_owned();
     let (done_tx, done) = mpsc::channel::<Vec<u64>>();
     let watcher = thread::spawn(move || {
         let mut c = Client::connect(&path).unwrap();
         c.set_timeout(Some(10_000)).unwrap();
+        c.hello("viewer").unwrap();
         let id = c.watch_scene("main").unwrap();
         let look = c.send(Ask::Observe(Observe::default())).unwrap();
         let mut r = SceneReader::new();
@@ -499,8 +532,13 @@ fn a_watch_over_the_socket_beside_an_observation() {
 fn a_watcher_that_does_not_read_is_cut_and_the_app_never_waits() {
     let tmp = tempfile::tempdir().unwrap();
     let (mut port, woke) = open(tmp.path());
-    let mut host = Still;
+    port.share_scenes(true);
+    let mut host = Still::default();
     let mut c = Client::connect(port.path()).unwrap();
+    c.send(Ask::Hello {
+        name: "viewer".into(),
+    })
+    .unwrap();
     c.watch_scene("main").unwrap();
     let deadline = Instant::now() + Duration::from_secs(10);
     while !port.watching("main") {
@@ -530,5 +568,119 @@ fn a_watcher_that_does_not_read_is_cut_and_the_app_never_waits() {
         slowest < Duration::from_secs(2),
         "an offer took {slowest:?}"
     );
+    let ended = port.take_scene_watches();
+    assert_eq!(
+        ended.last().map(|w| w.began),
+        Some(false),
+        "the cut ends it"
+    );
     drop(c);
+}
+
+/// with the scenes not shared (no `PLEV_MIRROR=1`), a `scene` request is
+/// refused with its own code, saying what the person does to share them;
+/// the rest of the protocol is as before, on the same connection.
+#[test]
+fn an_unshared_scene_is_refused_with_its_own_code() {
+    let mut s = Server::new("toy", 8);
+    let mut host = Still::default();
+    hello(&mut s, 1, "claude");
+    let out = s.handle(
+        1,
+        ClientMsg {
+            id: "9".into(),
+            ask: Ask::Scene(SceneAsk {
+                window: "main".into(),
+            }),
+        },
+        &mut host,
+    );
+    let Reply::Error(ProtoError::SceneNotShared { reason }) = &out[0].msg.reply else {
+        panic!("{out:?}");
+    };
+    assert!(reason.contains("PLEV_MIRROR=1"), "{reason}");
+    let line = encode_server(&out[0].msg);
+    assert!(
+        line.starts_with(r#"{"v":1,"id":"9","type":"error","error":"scene_not_shared","reason":""#),
+        "{line}"
+    );
+    assert!(!s.watching("main"));
+    assert!(s.take_scene_watches().is_empty());
+    assert!(host.observed.is_empty(), "a refused watch observes nothing");
+    let seen = s.handle(
+        1,
+        ClientMsg {
+            id: "10".into(),
+            ask: Ask::Observe(Observe::default()),
+        },
+        &mut host,
+    );
+    assert!(matches!(seen[0].msg.reply, Reply::Snapshot(_)));
+
+    // over the socket: the refusal as a client reads it
+    let tmp = tempfile::tempdir().unwrap();
+    let (mut port, woke) = open(tmp.path());
+    let path = port.path().to_owned();
+    let asker = thread::spawn(move || {
+        let mut c = Client::connect(&path).unwrap();
+        c.set_timeout(Some(10_000)).unwrap();
+        c.hello("claude").unwrap();
+        let id = c.watch_scene("main").unwrap();
+        c.recv_for(&id).unwrap()
+    });
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while !asker.is_finished() {
+        assert!(Instant::now() < deadline, "no answer");
+        let _ = woke.recv_timeout(Duration::from_millis(5));
+        port.drain(&mut Still::default());
+    }
+    assert!(matches!(
+        asker.join().unwrap(),
+        Reply::Error(ProtoError::SceneNotShared { .. })
+    ));
+}
+
+/// a watch is under a name: before `hello` it is refused; after it, the
+/// app is told who began watching which window and when it ended, and
+/// the host hears it as an observation of its actor.
+#[test]
+fn a_watch_has_a_name_and_the_app_is_told_of_it() {
+    let mut s = shared();
+    let mut host = Still::default();
+    let ask = ClientMsg {
+        id: "9".into(),
+        ask: Ask::Scene(SceneAsk {
+            window: "page".into(),
+        }),
+    };
+    let out = s.handle(1, ask.clone(), &mut host);
+    assert!(
+        matches!(&out[0].msg.reply, Reply::Error(ProtoError::NotEnabled { reason }) if reason.contains("hello")),
+        "{out:?}"
+    );
+    hello(&mut s, 1, "claude");
+    assert!(s.handle(1, ask, &mut host).is_empty());
+    let claude = Actor::Agent {
+        name: "claude".into(),
+    };
+    assert_eq!(
+        s.take_scene_watches(),
+        [wire::SceneWatch {
+            actor: claude.clone(),
+            window: "page".into(),
+            began: true,
+        }]
+    );
+    let now = host.project().unwrap().revision();
+    assert_eq!(host.observed, [(claude.clone(), None, now)]);
+    assert!(s.take_scene_watches().is_empty(), "taken once");
+    s.close(1);
+    assert_eq!(
+        s.take_scene_watches(),
+        [wire::SceneWatch {
+            actor: claude,
+            window: "page".into(),
+            began: false,
+        }]
+    );
 }

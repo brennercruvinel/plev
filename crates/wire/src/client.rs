@@ -105,10 +105,12 @@ impl Client {
         }
     }
 
-    /// watches the scene of `window` (task-79): its frames come as
-    /// replies to the returned id, the first whole, then what changed,
-    /// for as long as the connection lasts; read them with `recv` and put
-    /// them back together with a `SceneReader`.
+    /// watches the scene of `window` (task-79), after `hello`: its frames
+    /// come as replies to the returned id, the first whole, then what
+    /// changed, for as long as the connection lasts; read them with
+    /// `recv` and put them back together with a `SceneReader`. an app
+    /// whose person did not share its scenes (`PLEV_MIRROR=1`) answers
+    /// `scene_not_shared` instead.
     pub fn watch_scene(&mut self, window: &str) -> Result<String, WireError> {
         self.send(Ask::Scene(crate::scene::SceneAsk {
             window: window.to_owned(),

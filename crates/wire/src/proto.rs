@@ -337,6 +337,10 @@ pub enum ProtoError {
     /// dispatcher right now.
     #[error("not enabled: {reason}")]
     NotEnabled { reason: String },
+    /// a `scene` request to an app whose person did not share its
+    /// windows' scenes (task-79): `reason` says how to (`PLEV_MIRROR=1`).
+    #[error("scene not shared: {reason}")]
+    SceneNotShared { reason: String },
 }
 
 fn refs(reads: &[StateRef]) -> String {

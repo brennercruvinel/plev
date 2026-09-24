@@ -277,7 +277,10 @@ mod tests {
             dir: dir.to_owned(),
             ring: 8,
         };
-        app.access.agent = Some(AgentPort::open_with(config, || {}).expect("the port opens"));
+        let mut port = AgentPort::open_with(config, || {}).expect("the port opens");
+        // the person launched it with PLEV_MIRROR=1
+        port.share_scenes(true);
+        app.access.agent = Some(port);
         app.draw_main();
         app
     }
@@ -325,6 +328,10 @@ mod tests {
 
         let mut c = Client::connect(&path).expect("the client connects");
         c.set_timeout(Some(50)).expect("a timeout");
+        c.send(wire::Ask::Hello {
+            name: "mirror".into(),
+        })
+        .expect("the viewer names itself");
         c.watch_scene(MAIN).expect("the watch goes");
         let mut v = Viewer::new();
         assert_eq!(next(&mut app, &mut c, &mut v), 1);

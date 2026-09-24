@@ -188,6 +188,9 @@ fn every_reply() -> Vec<Reply> {
         Reply::Error(ProtoError::NotEnabled {
             reason: "why".into(),
         }),
+        Reply::Error(ProtoError::SceneNotShared {
+            reason: "why".into(),
+        }),
         Reply::Scene(wire::SceneReply {
             seq: 1,
             head: Some(vec![0, 1, 2, 255]),

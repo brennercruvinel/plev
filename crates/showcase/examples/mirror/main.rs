@@ -152,6 +152,7 @@ mod headless {
     pub fn run(opts: &Opts) -> Result<(), String> {
         let path = cli::socket(opts.app.as_deref())?;
         let mut c = Client::connect(&path).map_err(|e| e.to_string())?;
+        c.hello("mirror").map_err(|e| e.to_string())?;
         c.watch_scene(&opts.window).map_err(|e| e.to_string())?;
         println!("watching {} of {}", opts.window, path.display());
         let mut viewer = Viewer::new();
