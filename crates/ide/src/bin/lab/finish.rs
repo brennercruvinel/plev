@@ -8,6 +8,7 @@ use serde_json::{Value as Json, json};
 
 use crate::host::{Intervention, Trigger};
 use crate::lab::Lab;
+use crate::refused;
 use crate::repo::{TASK, TASK_FILES, TASK_MESSAGE};
 use crate::report::{self, Truth, human, ms, per_call_us, row};
 use crate::story;
@@ -43,9 +44,13 @@ impl Lab {
         let port_path = port.path().to_owned();
         drop(port);
         let script = scripted.map(|h| match h.join() {
-            Ok(Ok(s)) => (s.steps, s.error),
-            Ok(Err(e)) => (Vec::new(), Some(e)),
-            Err(_) => (Vec::new(), Some("the scripted agent panicked".to_owned())),
+            Ok(Ok(s)) => (s.steps, s.error, s.refused),
+            Ok(Err(e)) => (Vec::new(), Some(e), Vec::new()),
+            Err(_) => (
+                Vec::new(),
+                Some("the scripted agent panicked".to_owned()),
+                Vec::new(),
+            ),
         });
 
         let file = args.out.join("session.monster");
@@ -75,6 +80,11 @@ impl Lab {
         let truth = Truth::read(&app.repo, &head_before, Some(completed))?;
 
         let receipts = log.receipts();
+        let refusals = refused::Account {
+            met: script.as_ref().map(|(_, _, met)| met.as_slice()),
+            taken: traffic.acts,
+            dispatched: acts.len(),
+        };
         let acts = story::acts(&receipts, &acts, &served);
         let intervention = person.fired.as_ref();
         let measured = story::stale_measurement(&acts, intervention);
@@ -108,7 +118,7 @@ impl Lab {
                 }
             });
         }
-        if let Some((_, Some(e))) = &script {
+        if let Some((_, Some(e), _)) = &script {
             notes.push(format!("the scripted agent: {e}"));
         }
         notes.push(
@@ -184,7 +194,8 @@ impl Lab {
                 "stale_measurement_valid": measured.valid,
                 "stale_measurement": measured.text,
                 "stale_measured": measured.json(),
-                "script": script.as_ref().map(|(steps, _)| steps.clone()),
+                "script": script.as_ref().map(|(steps, _, _)| steps.clone()),
+                "protocol_refusals": refusals.json(),
             },
             "intervention": intervention.map(intervention_json),
             "intervention_recorded_at": intervention_recorded_at,
@@ -273,6 +284,7 @@ impl Lab {
             ));
         }
         report::print_table("agent", &agent);
+        report::print_table("refusals of the protocol", &refusals.rows());
         match intervention {
             Some(i) => report::print_table("intervention", &intervention_rows(i)),
             None => report::print_table("intervention", &[row("fired", "false")]),

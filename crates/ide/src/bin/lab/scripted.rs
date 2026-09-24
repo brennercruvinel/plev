@@ -21,9 +21,12 @@ use std::path::{Path, PathBuf};
 use std::thread::JoinHandle;
 
 use sem::{ActionName, Change, Node, Outcome, Rejection, Revision, SemId, Stage, StateKey, Value};
-use wire::{Act, Client, Observe, Reply, ServerMsg, SnapshotReply, StageReply, encode_server};
+use wire::{
+    Act, Client, Observe, Reply, ServerMsg, SnapshotReply, StageReply, WireError, encode_server,
+};
 
 use crate::args::Script;
+use crate::refused::Refused;
 use crate::repo::{TASK_FILES, TASK_MESSAGE};
 
 /// how long the agent waits for one reply.
@@ -42,6 +45,8 @@ pub struct Scripted {
     pub stale: Vec<Vec<Change>>,
     /// the outcome of the completed submit.
     pub completed: Option<Outcome>,
+    /// every act the port refused before the dispatcher, as met here.
+    pub refused: Vec<Refused>,
     /// what stopped the script early.
     pub error: Option<String>,
 }
@@ -303,7 +308,18 @@ impl Agent {
         if let Some(param) = param {
             act = act.with_param(param);
         }
-        let stages = self.client.act(act, |_| {}).map_err(|e| e.to_string())?;
+        let stages = match self.client.act(act, |_| {}) {
+            Ok(stages) => stages,
+            Err(WireError::Refused(e)) => {
+                out.steps.push(format!(
+                    "act {target} {action} from {revision}: refused, {e}"
+                ));
+                out.refused
+                    .push(Refused::of(target.as_str(), action.as_str(), &e));
+                return Err(format!("{target} {action} was refused: {e}"));
+            }
+            Err(e) => return Err(e.to_string()),
+        };
         let names: Vec<&str> = stages.iter().map(|s| s.stage.name()).collect();
         let landed = stages
             .last()

@@ -31,6 +31,8 @@ mod host;
 #[cfg(unix)]
 mod lab;
 #[cfg(unix)]
+mod refused;
+#[cfg(unix)]
 mod repo;
 #[cfg(unix)]
 mod report;
