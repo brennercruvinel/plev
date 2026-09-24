@@ -12,6 +12,26 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, task-64 fase a e o buraco que ela achou
+
+- **a inspeção pagou na primeira leitura:** lendo a sessão do A2 da
+  primeira rodada, o inspector mostrou um submit apoiado numa observação
+  só de `commit.form`, com `changes:staged` fora do escopo, e o servidor
+  dizendo que o agente tinha visto aquele valor. a promessa escrita no
+  ADR ("the stale check compares what the agent saw") não valia com
+  observação por escopo. nenhum teste, nenhuma revisão de diff e nenhum
+  dos dois experimentos tinha pego isso: o experimento passou porque a
+  pessoa agiu depois da observação com escopo; se tivesse agido antes, o
+  commit errado teria saído. virou a task-89.
+- **pressuposto errado:** "o anel guarda o que foi servido" foi lido como
+  "guarda o que o agente viu". o anel guarda o snapshot inteiro; o que a
+  conexão viu é um recorte dele, e ninguém registrava o recorte.
+- **a pergunta do núcleo começa a ter resposta:** a CLI respondeu, sobre
+  as nove sessões gravadas, qual controle, quem observou o quê, o que
+  mudou no intervalo e quem mudou, o veredito e o resultado. a interface
+  visual (fase b) ainda falta; o checkpoint c pergunta se isso basta para
+  confiar numa delegação.
+
 ### 2026-09-23, task-67
 
 - **o contrato serve para verificar, não só para operar:** a regressão
@@ -19,6 +39,10 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   em vez de "727 pixels diferentes". só o Todo e o ide projetam; nas
   outras páginas a regressão cai para layer e pixel. a cobertura
   semântica fina (task-59 e a auditoria) é o limite prático dela.
+- **o hash é estável fora desta máquina:** o primeiro job `structural
+  regression` no macOS do GitHub (PR #53) passou com as 157 baselines
+  gravadas aqui; o medo dos bits de `sin`/`cos` do sistema não se
+  confirmou nesse runner.
 - **o hash da cena pega mudança que o pixel não vê:** o Button no tema
   hoff mudou de hash com 0 pixels diferentes quando um token mudou. o
   check falha por isso e diz 0 px; se isso é ruído ou sinal, o uso vai

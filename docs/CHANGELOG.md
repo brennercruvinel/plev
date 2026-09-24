@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- a recorded session answers why (2026-09-23, task-64 phase a, adr
+  the-inspector-reads-a-session-never-runs-it): the new crate `inspect`
+  and its cli `plev-inspect <session.monster>` read a session and answer,
+  for any request or control, the questions of the thesis: which control,
+  what state, who observed what and when, which request with which
+  precondition, what moved in what it read between the observation and
+  the request and which receipt ran then (a correlation in time, said as
+  such), the verdict with its delta, the result. it never runs anything.
+  it opened all nine sessions of the two checkpoint a rounds.
+
 - a regression says which control changed before it counts pixels
   (2026-09-23, task-67, adr regression-by-meaning-before-pixels):
   `cargo run -p showcase --example regress -- check` stages every

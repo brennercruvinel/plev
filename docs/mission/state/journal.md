@@ -14,6 +14,26 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 2: o inspector entra e acha um buraco no contrato
+
+- **integrada:** task-64 fase a (`e6560a2`), o crate `inspect` e a CLI
+  `plev-inspect`. gate verde (2199); o orquestrador rodou a CLI nas
+  sessões reais dos dois checkpoints.
+- **bug de contrato achado pelo inspector (invariante quebrada):** um
+  `act --from-revision` monta os valores observados do snapshot inteiro
+  da revisão, inclusive estado fora do escopo que a conexão pediu. um
+  agente que observa só `commit.form` depois de uma pessoa tirar um
+  arquivo do index commitaria dois arquivos achando que eram três.
+- **decisão autônoma importante (para o brenner revisar):** task-89
+  aberta e disparada: um ato se apoia só no que foi mostrado àquela
+  conexão (escopo e `keys`); um estado nunca mostrado é recusado com um
+  erro tipado novo. o formato das mensagens não muda; alguns atos que
+  hoje passam passarão a ser recusados, exatamente os que se apoiam em
+  estado não visto. segui sem parar porque a resposta conservadora é
+  evidente e a mudança cumpre uma garantia que o ADR já escrevia.
+- **publicado:** PR #53 (task-67 e o guard); o job de regressão passou no
+  macOS do GitHub.
+
 ### ciclo 2: task-67 integrada; o guard do limite de linhas no gate
 
 - **integrada:** task-67 (`49e2822`), a regressão por significado antes
