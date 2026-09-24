@@ -14,6 +14,15 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### intervenção do brenner: o que depende dele fica parado por enquanto
+
+- o brenner disse que o que depende dele não se resolve agora: o
+  provedor do LLM (69 fase 3b), o checkpoint b, a fase 2 da 73, o
+  VoiceOver e a cobrança do CI ficam parados. o ciclo segue só com o que
+  não depende dele, sem serviço pago: merge com o gate local verde, sem
+  provedor de LLM. a onda 6 fica aberta até a 3b; enquanto isso, P2 do
+  backlog e trilhas cujas dependências estão integradas.
+
 ### ciclo 3: publicados #69 e #70; disparada a task-95
 
 - **publicados:** PR #69 (task-94 e a quarta rodada) e PR #70 (task-69
