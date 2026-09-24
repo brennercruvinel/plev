@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-24
 domain: experiment
 task: task-93
@@ -382,3 +382,28 @@ roteirizado padrão, que não pergunta, com a pessoa respondendo `allow`.
 - `363d6dd` task-93: over the person counts only the acts that decide on
   what she moved
 - o commit deste handoff, com a nota na task-62
+
+## fechamento (orquestrador, 2026-09-24)
+
+integrada na `main` em `654d740` (seis commits, rebaseados sem
+conflito).
+
+validação do orquestrador:
+- diff lido: `answer.rs`, `asked.rs`, o gatilho no `LabHost`, o modo
+  `--scripted ask`;
+- gate verde no diretório da task: 2411 passaram, 0 falharam, 13
+  ignorados, com a perna urnaui;
+- reprodução com `--scripted ask --human unstage-before-submit:src/session.rs`:
+  - `--answer allow`: exit 0 e MATCH, uma pergunta ("you took
+    src/session.rs out of the index, and the task commits it: stage it
+    again?"), resposta em 302 ms, `then` = committed;
+  - `--answer decline`: exit 2 e NO_COMMIT, com o motivo "the person
+    declined request 8 ... and the agent acted no more".
+
+nota de processo: o agente rodou por engano um `rm -f /dev/null`, que
+falhou sem efeito. conferido: `/dev/null` intacto. a regra "nunca `rm`"
+vale para todo comando.
+
+P3: `Compositor::hit` no botão do modal devolve o controle que está
+embaixo (`stacks`), então a janela do ide grava o clique no modal com o
+alvo errado.
