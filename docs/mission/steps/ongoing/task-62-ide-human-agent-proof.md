@@ -846,3 +846,59 @@ hipótese central continua de pé com o app corrigido, e as correções
 aparecem no comportamento dos agentes. nenhuma condição de parada. a
 onda 5 abre. antes, duas correções pequenas do que esta rodada achou: o
 aviso sem segunda pessoa e a revisão no `completed`.
+
+## fase c, terceira rodada (a regra da task-89, 2026-09-24)
+
+severidade P1 (`docs/mission/autonomy.md`): a conclusão do checkpoint a
+está em uso (a onda 5 abriu com ela), e o inspector mostrou que o acerto
+do A2 da primeira rodada dependeu da ordem dos eventos. o submit tinha se
+apoiado num `changes:staged` que o agente nunca viu. a task-89 fechou
+isso, e a regra nova muda o que um agente encontra: um valor nunca
+mostrado dá `not_observed` (exit 3), e um estágio terminal não mostra
+estado. esta rodada confere se a conclusão se sustenta com a regra.
+escrito antes de qualquer corrida.
+
+o que mudou no app desde a segunda rodada: o estágio terminal traz a
+revisão (task-87); um ato se apoia só no que foi mostrado ao ator
+(task-89); o `acted` nomeia a cadeia desde o estado que o agente viu
+(task-90). no laboratório: a medição de stale pelo valor visto e pelo
+valor vivo e o cenário `unstage-before-submit`, com a pessoa entre a
+decisão do agente e o submit (task-88).
+
+o que não mudou, de propósito: o briefing do agente (o mesmo texto das
+rodadas 1 e 2, só com os caminhos e o nome de cada corrida), sem ensinar
+a regra nova. a mensagem de erro e o `plev act --help` a explicam, e
+ensinar mediria obediência, não recuperação. também não mudaram o modelo
+(`claude-fable-5-1`), o repositório do laboratório e a graça de 180 s.
+
+corridas, em paralelo, cada uma com seu laboratório, binários de `main @
+96c20a0`:
+- A1'' (controle, `--human none`);
+- A2''a e A2''b (`--human unstage-before-submit:src/session.rs`);
+- A2''c (`--human unstage-after-observe:src/session.rs`, comparável às
+  rodadas 1 e 2).
+
+hipóteses:
+
+- **S1:** H1, H2, H3 e H5 se sustentam nas quatro: tarefa só pelo
+  contrato, receipt igual ao git e todo ato com `--from-revision`. nas
+  corridas com a pessoa antes do submit, a medição é válida pelo valor, o
+  HEAD não se move com o submit recusado e o agente se recupera.
+- **S2:** nas corridas com intervenção válida, o `acted` da recusa nomeia
+  a pessoa e o agente cita isso na recuperação.
+- **S3, sem resultado favorito:** quantas recusas do protocolo
+  (`not_observed`, `unknown_revision`) e quantas recusas stale pela
+  própria escrita cada agente recebe, e se ele se recupera de cada uma
+  sem ajuda.
+- **S4, sem resultado favorito:** bytes enviados ao agente e mensagens
+  por corrida, contra a segunda rodada (A1' 19.274 B e 24 mensagens do
+  cliente; A2'a 25.602 B e 30). o estágio com revisão pode baixar; as
+  recusas novas podem subir.
+
+o que derruba (P1 que para o avanço, e condição de parada de
+`autonomy.md` se a hipótese central cair):
+- uma corrida que falhe a tarefa ou commite arquivos errados;
+- um agente que fique preso em `not_observed` sem se recuperar;
+- uma corrida com a pessoa antes do submit cuja medição saia inválida.
+
+o resultado vai como sair.
