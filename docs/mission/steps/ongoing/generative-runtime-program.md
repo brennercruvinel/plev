@@ -368,6 +368,12 @@ abertas:
     a fase 3b da task-69 se divide: 3b-i, o provedor num crate próprio
     (`propose` continua puro), agora; 3b-ii, a página Surface usando o
     provedor, depois da task-95 (a mesma superfície).
+14. o modelo dos agentes (2026-09-24, brenner: "precisamos terminar todas,
+    com maestria, usando o modelo opus, não fable"): todo agente de
+    implementação roda no Opus, pedido explicitamente no disparo
+    (`model: opus`). o escopo é o programa inteiro, onda por onda; o que
+    depende do brenner (checkpoint b, fontes, licença, provas em tela
+    real) é preparado para ele decidir rápido, nunca decidido por ele.
 
 ## 12. estado
 

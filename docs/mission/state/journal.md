@@ -14,6 +14,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### intervenção do brenner: terminar todas, no Opus
+
+- **pedido:** "precisamos terminar todas, com maestria, usando o modelo
+  opus, não fable". decisão 14 do programa: todo agente roda no Opus,
+  pedido no disparo. o agente da câmera já roda no Opus 5.5 (conferido
+  no transcript).
+- **plano:** câmera, deep links, 77, 79, 72, 78 e 75, um agente por vez.
+  o checkpoint b trava 70, 71 e 80: o orquestrador prepara a comparação
+  da tela gerada com a fixa para o brenner decidir rápido.
+
 ### ciclo 3: item 10 parou na sonda; decisão do orquestrador
 
 - **parada correta:** para mostrar a câmera, os pixels de uma imagem
