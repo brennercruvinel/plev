@@ -12,6 +12,20 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, task-87
+
+- **o custo de idas e voltas era o protocolo, não o contrato:** com a
+  revisão no estágio terminal, o agente roteirizado com intervenção caiu
+  de 24 para 17 mensagens e de 91,5 para 45,9 KB, sem perder a recusa
+  stale nem a recuperação. a derrota do plev em bytes e idas e voltas
+  (H4) encolheu pela metade no laboratório; contra o `git` direto (1,5 KB
+  em 20 invocações) continua perdendo em bytes, e isso é a observação
+  inteira do ide, que é grande.
+- **a revisão do estágio nunca enganou:** nas 25 vezes em que um ato foi
+  seguido por uma observação, ela serviu a mesma revisão. só é verdade
+  porque a task-84 e a 85 fizeram o ide mostrar o efeito no passo em que
+  o ato termina: uma correção de invariante habilitou uma otimização.
+
 ### 2026-09-23, checkpoint a, segunda rodada
 
 fonte: `steps/ongoing/task-62-ide-human-agent-proof.md`, "resultado da

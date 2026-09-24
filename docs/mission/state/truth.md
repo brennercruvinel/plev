@@ -53,6 +53,11 @@ o da base até ser reescrito.
   o ide fez. testemunha do laboratório e dos testes: `git diff-tree
   --no-renames`.
 
+- `365d8fd` (task-87): `StageReply.revision` num estágio terminal, a
+  revisão em que o app ficou, servida no anel (seção 2.3); `Server::forward`
+  recebe o `Host`; `plev --help` diz que `--keys` corta só estado. o
+  anel continua com 16 revisões, e cada ato concluído ocupa uma.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

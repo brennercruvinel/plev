@@ -1,12 +1,13 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: agent-surface
 task: task-87
 depends: [task-61, task-83]
 branch: task/87-stage-revision
+integrated: 365d8fd
 origin: checkpoint a, segunda rodada (os três agentes pediram)
 ---
 
@@ -239,3 +240,17 @@ linha proposta para `docs/ADR/README.md`, depois da do task-83:
 ```text
 | 2026-09-23 | [a-terminal-stage-carries-the-revision](a-terminal-stage-carries-the-revision.md) | accepted | um estágio terminal (`completed`, `rejected`, `failed`) traz `revision`, a revisão em que o app ficou quando ele saiu, com o que outros atores mudaram até ali, servida no anel como a do `observe` e aceita por `since` e `from_revision`; uma projeção por `forward`, só quando sai um terminal (mediana de 160 us no laboratório, em debug); não é observação (`Traffic` e `Host::observed` não contam) e não decide nada; protocolo continua v1; `plev --help` diz também o que `--keys` corta; o agente roteirizado foi de 16 para 12 mensagens sem intervenção e de 24 para 17 com a pessoa, com metade dos bytes (task-87) |
 ```
+
+## fechamento (orquestrador, 2026-09-23)
+
+integrada na `main` em `365d8fd` (cinco commits, rebaseados sobre a
+`main` sem conflito). validação: diff inteiro lido; o `forward` projeta
+uma vez por chamada e só quando sai um terminal, e é chamado no fim do
+`handle` (ato síncrono, todo) e no fim do `drain` (ato assíncrono, ide);
+gate verde no diretório da task, com a perna urnaui: 2102 passaram, 0
+falharam, 12 ignorados; laboratório reproduzido pelo orquestrador (12
+mensagens e 28,8 KB sem intervenção, 17 e 45,9 KB com, recusa válida,
+MATCH). o risco do anel (16 revisões, cada ato concluído ocupa uma) fica
+como está: um agente que perde a revisão recebe `unknown_revision` e
+observa de novo, falha segura. os dois problemas do laboratório viraram a
+task-88.
