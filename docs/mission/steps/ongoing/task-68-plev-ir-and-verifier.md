@@ -341,3 +341,273 @@ decisões do orquestrador:
   `crates/uir` no workspace, o teste do guard fica vermelho até alguém
   pôr o crate no README. isso não bloqueia os tipos; vira uma condição de
   parada no gate (reportada no fim).
+
+### handoff (2026-09-24)
+
+goal: task-68, o plev IR e o verifier.
+
+status: implementado e testado. o gate para em um teste só,
+`crates/engine/tests/arc_sync_guard.rs` (`README.md does not mention
+these workspace crates: ["uir"]`), cuja correção é uma linha num arquivo
+que o briefing proíbe. é condição de parada ("o gate falhar por algo fora
+do seu escopo"); o relato está no fim, em "parada".
+
+commits (`task/68-plev-ir`, base `main` @ 8a7a0ea, todos assinados):
+
+- dca66a7 task-68: a sonda no arquivo da task
+- 50c0495 task-68: crate do IR com tipos e serde
+- 26e3aec task-68: registro de capacidades
+- 3034a58 task-68: verifier com erros por caminho
+- 100fa1d task-68: regras de policy e accessibility
+- 1a91c3c task-68: fixtures golden e JSON schema
+- f6dcc89 task-68: ADR plev IR tipado e verificado (proposto)
+- e92b0a9 task-68: a doc do leitor diz que ele é o único
+- e o commit deste handoff
+
+a sonda: a seção "sonda" acima, escrita antes do primeiro tipo.
+
+#### o IR como ficou
+
+o formulário de commit do ide, encurtado (a fixture inteira é
+`crates/uir/fixtures/ide-commit-form.ir.json`):
+
+```json
+{
+  "plev_ir": 1,
+  "surface": {
+    "id": "commit",
+    "title": "commit",
+    "root": {
+      "sem": "commit.form",
+      "label": "commit",
+      "props": { "padding": "md", "background": "bg_panel", "shape": "card" },
+      "layout": { "stack": { "axis": "vertical", "gap": "sm", "align": "stretch" } },
+      "children": [
+        { "sem": "commit.message", "component": "text_field", "label": "commit message",
+          "bind": { "state": { "text": "commit.message:text" },
+                    "actions": { "set_value": { "target": "commit.message", "action": "set_value" } } } },
+        { "sem": "commit.submit", "component": "button", "label": "Commit",
+          "bind": { "actions": { "activate": { "target": "commit.submit", "action": "submit" } } } }
+      ]
+    }
+  }
+}
+```
+
+a repetição mínima (da fixture gerada): `"repeat": { "each":
+"changes:files", "item": { "sem": "review.file[{item}]", ... } }`, com os
+botões do molde ligados a `{ "target": "changes.file[{item}]", "action":
+"stage" }`.
+
+interfaces novas (crate `uir`, nenhuma alterada fora dele):
+
+- IR: `Ir`, `Surface`, `IrNode`, `Bind`, `CapabilityRef`, `Repeat`,
+  `VERSION`, `ITEM`;
+- vocabulário: `Component`, `ChartKind`, `Spec`, `Named`, `StateProp`,
+  `Event`, `CONTAINER`, `spec_of`, `role_of`, `is_control`, `names`;
+- tokens: `Props`, `SpacingToken`, `TypographyRole`, `ColorRole`,
+  `Elevation`, `ControlSize`, `ShapeRole`, `SizeToken`, `Layout`,
+  `Axis`, `Align`, `Size`, `MIN_RATIO`, `MAX_RATIO`, `MAX_FLEX`;
+- registro: `Capabilities` (`from_snapshot`, `with_data`, `with_action`,
+  `data`, `actions`, `datum`, `action`, `nodes`, `has_node`), `DataCap`,
+  `ActionCap`;
+- leitura e verificação: `parse`, `decode`, `verify`, `verify_json`,
+  `VerifiedIr` (`ir`, `focus_order`, `into_ir`; sem construtor público,
+  sem `Deserialize`, sem `Default`), `IrError { rule, pointer, reason }`,
+  `Rule`;
+- `GenerationPolicy { author, max_nodes, max_depth, max_text }`,
+  `HARD_DEPTH`; `schema()`.
+
+#### as regras do verifier e os erros
+
+todos os erros vêm de uma vez, cada um com a regra, o JSON pointer e o
+motivo; `IrError` tem forma serde para voltar a um modelo.
+
+| regra | o que checa | exemplo de erro (pointer: motivo) |
+|---|---|---|
+| 1 schema | forma do JSON, campo desconhecido, `plev_ir` = 1 | `/surface/root/children/2/onclick`: unknown field `onclick`; `/plev_ir`: version 2; this runtime reads version 1 |
+| 2 identity | `SemId` válido e único (o id da superfície conta); `[{item}]` só no molde e uma vez por id; nenhum id fixo é instance de um molde; um nó com id de nó do app só manda as ações desse nó | `/.../sem`: `review.message` is already the id at /surface/root/children/1/sem |
+| 3 vocabulary | componente conhecido, props só token, children, layout e repeat só em container, split com dois filhos, ratio 10 a 90, flex 1 a 12, repeat só em list ou container, sem repeat dentro de repeat | `/.../props/color`: unknown variant `#ff0000`; `/.../children`: a button holds no children |
+| 4 state | estado ligado existe e o kind é um que o componente mostra; repeat sobre `List` ou `Set`; no molde, a referência casa com todos os nós, de um kind só | `/.../bind/state/text`: `changes:staged` is set; a text_field's `text` takes text |
+| 5 action | ação ligada existe e o parâmetro do evento é o do `ParamSpec`; no molde, todo nó que casa declara a ação, igual | `/.../bind/actions/activate`: `set_value` takes a text; a button's `activate` sends none |
+| 6 policy | o autor só liga o que ele pode pedir (`Policy::actors`); ação destrutiva só no `confirm` de um dialog, ou com `Confirm::Always` | `/.../bind/actions/activate`: agent:unknown may not bind `reset` on `admin`: its policy leaves agents out |
+| 7 access | label em todo controle, dialog, imagem, chart, stat, status e progress (text e badge podem ligar `text`); item repetido é nomeado pelo item (molde sem label); nó sem role sem nome; controle sem ação é só visual; num overlay só uma camada tem controles; título da superfície não vazio | `/.../bind`: a text_field with no action bound is only visual: bind the capability it operates |
+| 8 limits | nós (molde conta uma vez), profundidade, tamanho de texto | `/surface/root`: 7 nodes; the policy allows 3 |
+
+a policy padrão (`GenerationPolicy::default()`): autor `agent:unknown`
+(o caso mais restrito), 256 nós, profundidade 16, 256 caracteres por
+título, label ou descrição. `GenerationPolicy::by(actor)` troca só o
+autor. independente da policy, nenhuma árvore é percorrida além de
+profundidade 256 (`HARD_DEPTH`).
+
+#### o schema
+
+`uir::schema()` (função pública, montada das mesmas tabelas dos tipos) e
+o arquivo `crates/uir/schema/plev-ir-1.json`, que é esse valor escrito.
+um teste mantém os dois iguais; regenera com `UIR_BLESS=1 cargo test -p
+uir --test fixtures`. nenhuma dependência nova: sem `schemars` e sem
+validador de schema. o validador do teste (`crates/uir/tests/jsonschema/mod.rs`)
+conhece só as palavras que o schema usa e falha em qualquer outra. o
+schema não carrega a gramática de id, state ref e nome de ação (sem
+`pattern`, o workspace não tem regex); o leitor checa e aponta.
+
+`proptest` já está em `[workspace.dependencies]`; o `uir` o usa como
+dev-dependency, sem dependência nova de workspace.
+
+#### as fixtures
+
+em `crates/uir/fixtures/`:
+
+- `ide-commit-form.ir.json`: a tela fixa do ide, com os ids do ide;
+- `ide-review-commit.ir.json`: "review what goes into the commit",
+  gerada sobre as capacidades do `Workbench`;
+- `showcase-todo.ir.json`: uma superfície do todo (campo, add, filtro em
+  chips, contadores em stats);
+- `ide-workbench.snapshot.json` e `showcase-todo.snapshot.json`: as
+  projeções reais de onde saem os registros.
+
+os snapshots são gravados por `crates/ide/tests/uir_fixture.rs` (um
+repositório real, três arquivos mudados, `src/lexer.rs` no index, o
+formulário aberto com "fix parser" escrito por uma pessoa pelo
+dispatcher, a data do primeiro commit fixa para o sha ser estável) e por
+`crates/showcase/tests/uir_fixture.rs` (a página Todo encenada
+headless). os dois testes falham quando a projeção se afasta do arquivo.
+regeneração: `UIR_BLESS=1 cargo test -p ide --test uir_fixture`,
+`UIR_BLESS=1 cargo test -p showcase --test uir_fixture`, depois `cargo
+test -p uir` diz se os IR ainda verificam.
+
+#### validação e contagem
+
+- antes (`main` @ 8a7a0ea, `cargo test --workspace`): 2179 passam, 11
+  ignorados, 84 suítes.
+- depois (`cargo test --workspace --no-fail-fast`): 2239 passam, 1 falha
+  (o `arc_sync_guard`), 11 ignorados, 91 suítes. são 61 testes novos: 59
+  no `uir` (19 unitários, 1 doctest, 27 de regras, 7 de fixtures, 5 de
+  proptest), 1 no ide, 1 no showcase.
+- `cargo clippy --workspace --all-targets -- -D warnings`, `cargo fmt
+  --check`, `cargo check --target wasm32-unknown-unknown -p showcase` e
+  `cargo check -p uir --target wasm32-unknown-unknown` (com `-D
+  warnings`): verdes.
+- perna urnaui (rodada à mão como o gate roda, com o target dir próprio):
+  82 passam, clippy, fmt e wasm verdes. o urnaui não depende do `uir` e
+  não mudou.
+- `./script/gate`: para no `arc_sync_guard`, como dito.
+- proptest também rodado com `PROPTEST_CASES=5000`: verde.
+
+#### decisões
+
+- um leitor só. o proptest achou que o `Deserialize` derivado da serde
+  aceita uma struct escrita como lista JSON (`"bind": []`), uma forma que
+  o schema não tem. o `Deserialize` de `Ir` passa pelo `decode`, os tipos
+  do nó derivam só `Serialize`, e a capacidade é lida campo a campo.
+- nó sem `component` é container de layout (role `Group`); a barra de
+  ferramentas é um stack de botões, como o orquestrador decidiu.
+- os nove componentes sem `project` no comps têm role dado pelo `uir`:
+  card `Group`, stat `Label`, chart `Image`, separator sem role, empty
+  state `Status`, progress `ProgressBar`, badge `Label`, text `Label`,
+  image `Image`. o chip toma o role do que liga, como o comps projeta.
+- "controle primário" (item 6 da task) ficou como qualquer controle que
+  dispara a ação com uma ativação; só o `confirm` de um dialog não é,
+  porque ele é a confirmação. uma ação destrutiva só entra ali, ou quando
+  a `Policy` do app pede confirmação de todos. o `discard` do ide
+  (`ForAgents`) não pode virar um botão direto numa superfície gerada.
+- a regra de foco derivável (7) ficou concreta como "num overlay só uma
+  camada tem controles": os controles são folhas, então a ordem de árvore
+  sempre existe, e o único caso em que ela não segue o que a pessoa vê é
+  controle empilhado sobre controle.
+- um nó que usa o id de um nó do app só manda as ações desse nó: o IR não
+  pode vestir uma capacidade com a identidade de outra.
+- `tabs` manda a chave escolhida (`select` com texto). as abas do comps e
+  o filtro do todo são uma capacidade por aba, sem parâmetro, e não casam;
+  a fixture do todo usa chips.
+- o `uir` não entrou em `[workspace.dependencies]`: ninguém o consome
+  ainda; a task-69 adiciona `uir = { path = "crates/uir" }` quando usar.
+
+#### limitações
+
+- um molde só verifica enquanto o app projeta pelo menos um nó que casa
+  com ele; sobre uma lista vazia o registro não prova a capacidade por
+  item.
+- o verifier não vê valores: uma `List` com item repetido daria dois
+  instances com o mesmo id; a materialização descarta o repetido.
+- um `VerifiedIr` vale para o registro de um instante; o dispatcher
+  continua checando cada ação quando ela é pedida.
+- fora do v1: ícone do `icon_button` (a tabela de ícones é do comps),
+  ênfase do botão (as receitas de `theme.button`), abas por capacidade,
+  dados de chart como números (o `sem` só tem lista de texto), tabela
+  além de `rows`.
+- o casamento dos tokens do `uir` com o theme só é garantido quando a
+  task-69 fizer o `match` exaustivo; o `uir` não pode depender do engine.
+- um campo `secret` entra no registro como o snapshot o guarda (o
+  tamanho), então nenhuma superfície o mostra como texto.
+
+#### o que a task-69 precisa para materializar
+
+- consumir só `VerifiedIr` (`verify` ou `verify_json`) e o
+  `Capabilities::from_snapshot` da projeção viva do app;
+- mapear cada `Component` no widget do comps (tabela do `Spec` e a
+  sonda), cada token no campo do theme com o mesmo nome, e `Layout`/`Size`
+  no layout do engine; os props ausentes são o padrão do widget;
+- projetar cada nó com o seu `SemId` e o role de `role_of`, os nove sem
+  `project` com o role da tabela, e cada instance de um repeat com o id
+  do molde trocando `[{item}]` pelo item (`SemId::key`) e nomeado pelo
+  item;
+- ligar cada evento à capacidade como um `Request` pelo dispatcher do app
+  (a pessoa que clica é `Actor::Human`), nunca por um caminho paralelo;
+- decidir o que fazer com um item repetido numa `List` e com uma
+  capacidade que sumiu depois da verificação;
+- a ordem de foco está em `VerifiedIr::focus_order`.
+
+#### dependências pendentes e riscos de integração
+
+- a entrada do `uir` no `README.md` e no `docs/arc/arc.toml` (ver
+  "parada") e a linha do índice de ADR:
+  `| 2026-09-24 | [plev-ir-typed-and-verified](plev-ir-typed-and-verified.md) | proposed | crate uir, puro (sem, serde): o plev IR (id, componente de um vocabulário fechado espelho do comps, props só por token do theme, layout por primitivas, estado e ações ligados a capacidades que o app declara, repetição mínima sobre List/Set com [{item}]); um leitor só com erro por JSON pointer; Capabilities saem do Snapshot; verify com oito regras é o único caminho a um VerifiedIr; JSON schema gerado das mesmas tabelas (task-68) |`
+- a `main` andou (task-91: `sem` check, dispatch e receipt, `ide`
+  notice e testes). `git merge-tree` da `main` com esta branch não dá
+  conflito, e a task-91 não tocou `crates/ide/src/workbench/project.rs`
+  nem os tipos do `sem` que o `uir` usa; depois do rebase, rodar `cargo
+  test -p ide --test uir_fixture` confirma que a projeção gravada ainda é
+  a do ide.
+- os testes `uir_fixture` do ide e do showcase são guardas: uma mudança
+  futura dessas projeções os deixa vermelhos, com o comando para gravar
+  de novo.
+
+#### parada
+
+problema: o `arc_sync_guard` exige que todo membro do workspace apareça
+no `README.md` e no `docs/arc/arc.toml`. o briefing proíbe os dois
+arquivos; o programa (seção 8) diz que o agente que cria um crate
+adiciona a própria entrada. o `arc.toml` passa por acaso ("acquire"
+contém "uir"); o `README.md` falha. é o único vermelho da branch.
+
+opções:
+
+1. o orquestrador põe as entradas na integração. impacto: a branch fica
+   vermelha neste teste até lá; nada mais muda.
+2. o orquestrador autoriza e eu ponho as duas entradas nesta branch.
+   impacto: branch verde; toca dois arquivos do orquestrador.
+3. tirar o `uir` do workspace. impacto: quebra a task (o crate precisa
+   entrar no workspace e no gate). descartada.
+
+recomendação: 1 ou 2, com o texto abaixo, e uma entrada real no
+`arc.toml` em qualquer caso, porque o acaso do "acquire" esconde a
+ausência.
+
+- `README.md`, na linha `| crates | crates/ | ... |`: `..., showcase,
+  svg, uir, urnaui, wire |`, e depois do parágrafo do `sem`: "`uir` is
+  the plev IR: a surface described by meaning (ids, a closed component
+  vocabulary, props by theme token, state and actions bound to the
+  capabilities an app projects), and `verify`, the only way to a
+  `VerifiedIr` ([docs/ADR/plev-ir-typed-and-verified.md](docs/ADR/plev-ir-typed-and-verified.md))."
+- `docs/arc/arc.toml`:
+
+  ```toml
+  [crates.uir]
+  path = "crates/uir"
+  role = "the plev IR (task-68, adr plev-ir-typed-and-verified): Ir, Surface, IrNode with a SemId, a Component of the closed vocabulary (the comps widgets and the builder's text and image, declared as data in Spec), Props by theme token, Layout (stack, grid, split, overlay) and Size by token, Bind of state to StateRefs and of events to CapabilityRefs, Repeat over a List or Set with [{item}] in the template ids; one reader (decode, Ir's Deserialize) with every shape error at its JSON pointer; Capabilities::from_snapshot; verify(ir, caps, GenerationPolicy) -> VerifiedIr or every IrError at once (schema, identity, vocabulary, state, action, policy, access, limits); schema() and schema/plev-ir-1.json; pure, wasm"
+  depends = ["sem"]
+  ```
+
+decisão necessária: quem escreve as entradas do `uir` no `README.md` e no
+`docs/arc/arc.toml`, e em que momento.
