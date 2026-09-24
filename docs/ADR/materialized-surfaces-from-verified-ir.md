@@ -244,7 +244,7 @@ set; these are the numbers of the proposer's latency (phase 3) to add to.
   name the theme does not have.
 - materializing an `Ir` that did not go through `verify`.
 
-## addendum, 2026-09-24: a surface changes form (task-69 phase 2, proposed)
+## addendum, 2026-09-24: a surface changes form (task-69 phase 2, accepted)
 
 ### context
 
