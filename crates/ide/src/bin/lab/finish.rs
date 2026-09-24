@@ -128,10 +128,11 @@ impl Lab {
                 .to_owned(),
         );
         notes.push(
-            "form, revision_served_index, observations_between, fresh_before: the revision an act \
+            "form: what every act rested on, as the port counted the acts (acts_form). \
+             revision_served_index, observations_between, fresh_before: the revision an act \
              named, against the observations served, as information. a revision is a hash of \
              what the app projects, so a world put back as it was has the revision it had then, \
-             and a revision a terminal stage carried is served by no observation (form observed)"
+             and a revision a terminal stage carried is served by no observation"
                 .to_owned(),
         );
         let contract = json!({
@@ -187,7 +188,12 @@ impl Lab {
             "traffic": report::traffic_json(&traffic),
             "agent": {
                 "observations": story::served_json(&served),
-                "acts": story::acts_json(&acts),
+                "acts": story::acts_json(&acts, story::form(&traffic)),
+                "acts_form": story::forms_text(&traffic),
+                "acts_by_form": {
+                    "from_revision": traffic.acts_from_revision,
+                    "observed": traffic.acts_observed,
+                },
                 "round_trips": traffic.msgs_in,
                 "stale_rejections": stale.len(),
                 "recovered": recovered,
@@ -248,6 +254,7 @@ impl Lab {
         let mut agent = vec![
             row("observations served", &served.len().to_string()),
             row("acts", &acts.len().to_string()),
+            row("acts rested on", &story::forms_text(&traffic)),
             row("round trips (messages in)", &traffic.msgs_in.to_string()),
             row("stale rejections", &stale.len().to_string()),
             row("recovered after stale", &recovered.to_string()),
@@ -273,11 +280,7 @@ impl Lab {
                     a.t,
                     a.request,
                     a.revision,
-                    if a.served_index.is_some() {
-                        "from_revision"
-                    } else {
-                        "observed"
-                    },
+                    story::form(&traffic).unwrap_or("form mixed"),
                     a.observations_between,
                     a.fresh_before
                 ),

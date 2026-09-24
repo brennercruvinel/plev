@@ -294,6 +294,60 @@ fn the_server_counts_what_it_answered() {
     );
 }
 
+/// acts are counted by what they rest on, as the message says it
+/// (task-91): `from_revision`, or `observed` given explicitly. one with
+/// both or neither is refused and is in `acts` only; a refused act keeps
+/// its form (the laboratory says what every act asked for).
+#[test]
+fn acts_are_counted_by_what_they_rest_on() {
+    let mut server = Server::new("toy", 4);
+    let mut host = Ear::new();
+    say(
+        &mut server,
+        &mut host,
+        A,
+        r#"{"v":1,"id":"h","type":"hello","name":"claude"}"#,
+    );
+    let r = revision_of(&one(say(
+        &mut server,
+        &mut host,
+        A,
+        r#"{"v":1,"id":"1","type":"observe"}"#,
+    )));
+    let observed = r#""observed":{"revision":"0000000000000001","values":[["todo.item[2]:completed",{"kind":"bool","value":false}]]}"#;
+    let from = format!(r#""from_revision":"{r}""#);
+    for (id, rest) in [
+        ("f", from.clone()),
+        ("o", observed.to_owned()),
+        ("b", format!("{from},{observed}")),
+    ] {
+        say(
+            &mut server,
+            &mut host,
+            A,
+            &format!(
+                r#"{{"v":1,"id":"{id}","type":"act","target":"todo.item[2]","action":"toggle",{rest}}}"#
+            ),
+        );
+    }
+    say(
+        &mut server,
+        &mut host,
+        A,
+        r#"{"v":1,"id":"n","type":"act","target":"todo.item[2]","action":"toggle"}"#,
+    );
+    let t = server.traffic();
+    assert_eq!(
+        (t.acts, t.acts_from_revision, t.acts_observed, t.errors),
+        (4, 1, 1, 2)
+    );
+    assert_eq!(
+        host.host.app.done(2),
+        Some(true),
+        "the first toggled it, the second claimed it was not done: stale"
+    );
+}
+
 /// a port for the toy in `dir`, and the channel its wake sends on.
 fn open(dir: &Path) -> (AgentPort, Receiver<()>) {
     let (tx, rx) = mpsc::channel();

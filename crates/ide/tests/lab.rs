@@ -148,9 +148,9 @@ fn task_files() -> Vec<&'static str> {
 /// every act of the agent rests on a revision this port served: one an
 /// observation served, or one the last stage of an earlier act carried
 /// (task-87; the script writes it after each act, "the app at <rev>").
-/// the report's `form` tells only the first kind, since the laboratory
-/// hears observations and not stages. returns how many acts rest on a
-/// revision no observation served.
+/// the report's `form` is what the port counted, `from_revision` for
+/// both kinds (task-91); the laboratory hears observations and not
+/// stages. returns how many acts rest on a revision no observation served.
 fn every_act_rests_on_a_served_revision(run: &Run) -> usize {
     let observed: BTreeSet<&str> = run
         .list("agent.observations")
@@ -354,6 +354,15 @@ fn commits_the_task(run: &Run) {
     assert_eq!(run.u64("agent.protocol_refusals.before_dispatch"), 0);
     assert_eq!(run.u64("agent.protocol_refusals.not_observed"), 0);
     assert_eq!(run.u64("agent.protocol_refusals.unknown_revision"), 0);
+    assert_eq!(
+        run.str("agent.acts_form"),
+        "every act on from_revision (--from-revision)"
+    );
+    assert!(
+        run.list("agent.acts")
+            .iter()
+            .all(|a| a["form"] == "from_revision")
+    );
 }
 
 /// the states each stale refusal names, in order.
