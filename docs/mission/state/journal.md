@@ -14,6 +14,22 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: o Claude gera a tela (task-69 fase 3b-i)
+
+- **integrada:** fase 3b-i (`4573c81`), o crate `claude-model`. o Claude
+  atrás de `propose::Model` pelo `claude -p` local, sem ferramenta, sem
+  sessão, com teto de custo e tempo. 4 intenções reais viraram IR
+  verificado na primeira tentativa (4,5 s no todo, 89 s no ide; 0,03 a
+  0,11 USD cada). o gate na `main` junto com a task-95; o conflito no ADR
+  (dois adendos) resolvido mantendo os dois, aceitos.
+- **achado para a 3b-ii:** o Claude lê "o que está ativo" como os itens
+  não concluídos, e as regras como o chip Active; e ele escreve os itens
+  um a um em vez de um `repeat` sobre a lista. o prompt precisa pedir o
+  `repeat` (a task-95 já projeta a lista).
+- **próximo, na ordem do programa:** 3b-ii, a página Surface usando o
+  Claude, fora da thread do app, com a espera na tela; depois a fase 4
+  (o editor de vídeo) e o checkpoint b. um agente por vez.
+
 ### ciclo 3: a tela gerada mostra os itens (task-95)
 
 - **integrada:** task-95 (`460c854`). gate verde (2465, +11), regressão

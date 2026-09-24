@@ -277,6 +277,7 @@ comps = ["editor"]
 cli = ["lot2monsters", "svg2monster", "text_probe"]
 # examples of the other crates (`cargo run -p <crate> --example <name>`).
 sem = ["commit"]
+claude-model = ["propose"]
 parser = ["transpile", "preview"]
 # crates/showcase/examples/measure: nine interactions through the frame
 # path, the per-stage cost tables of task-73 (see [modules.perf]);
