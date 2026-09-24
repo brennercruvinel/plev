@@ -14,6 +14,18 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 1: task-83 devolvida com uma correção
+
+- a task-83 voltou pronta (delta com o nó, `acted` na recusa, regra no
+  `plev --help`, gate verde com 1995 no workspace) e com uma decisão: a
+  forma nova do `node_added` fazia as sessões gravadas antes (as do
+  checkpoint a) não abrirem.
+- **decisão autônoma:** ler a forma antiga convertendo (o nó adicionado de
+  um evento de snapshot é o nó do próprio snapshot: sem perda), sem subir
+  a versão do `MONS`. motivo: é a resposta conservadora e mantém a
+  evidência do experimento legível para a task-64. devolvida ao mesmo
+  agente com a correção específica.
+
 ### ciclo 1: replanejamento pela verdade
 
 - **disparados:** agente de docs (`task/docs-follow-code`, sem build:
