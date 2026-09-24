@@ -277,3 +277,154 @@ na criação do pipeline (`load_shader`, :121, :191, :216).
   só de conteúdo do usuário (arquivo solto, miniatura do ffmpeg). a
   recomendação é não mover: pré-decodificar o único PNG do engine
   custaria 4,6 MB de binário para tirar 0,87 ms de um exemplo.
+
+## handoff da fase 1
+
+goal: task-72 fase 1, o inventário medido do trabalho de runtime e o que
+o número justificar entre ícones antes do runtime e WGSL validado antes
+do runtime.
+status: pronta para validação. nada saiu do runtime: os ícones não
+passaram do limite; o WGSL passou a ser validado no gate.
+
+### commits (branch task/72a-asset-compiler, base main @ 3720ce0b)
+
+- 74d68143 `task-72: inventário medido de trabalho em runtime`: as duas
+  sondas e o inventário acima.
+- deee5143 `task-72: validação de WGSL no gate`.
+- o commit deste handoff e do ADR: `task-72: ADR do asset compiler e
+  handoff da fase 1`.
+- o commit dos ícones antes do runtime não existe: o número não
+  justificou (ver "ícones" no inventário).
+
+### a sonda e o inventário, em uma linha cada
+
+- primeiro frame headless do showcase (`Theme`, core, 1200x800, debug):
+  79,1 ms de mediana, processo inteiro.
+- fontes ~23 ms (a varredura das 805 faces do sistema, duas vezes; as 9
+  embutidas custam 28 us de registro), 1,66 MiB de heap por font system
+  e 1.744.532 bytes no binário.
+- device metal 26 ms (não é asset).
+- shaders 2,7 ms em 11 pipelines, naga 0,7 ms; 21.107 bytes no binário.
+- ícones 0,17 ms (9 tesselações na abertura), 0,97 ms na galeria
+  inteira (83 pares, 38 em tamanho de token); cache de 17,6 KB na
+  abertura e 188 KB com a galeria inteira.
+- imagens: o showcase não embute nenhuma; 0 no startup.
+
+### o que foi movido e o que ficou
+
+| item | antes | depois | decisão |
+| --- | --- | --- | --- |
+| ícones | tesselados em runtime, 0,17 ms no primeiro frame, 0,9 a 1,7 ms os 42 x 3 tamanhos de token | igual | ficam: abaixo do limite (5% do primeiro frame, 4 ms, ou 16,7 ms na sessão); a tabela custaria ~105 KB de binário e não aposentaria o tesselador (45 de 83 pares fora do token, tolerância configurável em runtime) |
+| WGSL, erro | um shader quebrado aparecia no primeiro run que montava o pipeline; o teste de unidade em src/gpu/tests.rs cobria uma lista manual de 9, com `Capabilities::all()` e sem linha | o gate lê todo `.wgsl` do engine (11) e falha com arquivo, linha e coluna | movido para o gate |
+| WGSL, custo | 0,7 ms de naga e 2,7 ms de pipelines em runtime | igual | fica: o `wgpu-core` sempre refaz o parse e a validação; tirar pede módulo traduzido, abaixo do limite |
+| fontes | ~23 ms, 1,66 MiB de heap por font system | igual | fora de escopo (task-74); recomendação no inventário |
+| imagens | 0 no startup | igual | nada a mover |
+
+pixels iguais e saída determinística: nenhum asset mudou de lugar, então
+não há gerador nem saída para comparar. o `regress capture` da task-77
+não rodou: a branch não muda código de produção (só testes em
+crates/*/tests e crates/comps/src/icons/tests.rs, e docs), e o
+`regress check` passa nos 163.
+
+### testes
+
+- crates/engine/tests/wgsl.rs (5, no gate):
+  `every_engine_shader_parses_and_validates` (os 11 `.wgsl` de src/ e
+  examples/, achados pela varredura, com os 9 que o engine carrega
+  conferidos entre eles; validador sem capacidade opcional),
+  `a_syntax_error_names_the_file_the_line_and_the_column` (o quad.wgsl
+  real com um `;` a menos: `crates/engine/src/gpu/shaders/quad.wgsl:23:5`
+  e a linha `return out;`), `a_validation_error_names_the_file_and_the_line`
+  (dois uniforms no mesmo binding: a linha 4),
+  `a_validation_error_without_a_place_still_names_the_file` (f64 sem a
+  capacidade: o arquivo na frente do relatório), `a_valid_shader_passes`.
+- a mensagem do gate com um shader real quebrado (o quad.wgsl alterado
+  no disco e desfeito em seguida):
+
+```text
+1 of 11 shaders are not valid WGSL:
+error: expected `;`, found "return"
+   ┌─ crates/engine/src/gpu/shaders/quad.wgsl:23:5
+   │
+23 │     return out;
+   │     ^^^^^^ expected `;`
+```
+
+- as sondas (ignoradas no gate, rodam à mão):
+  `cargo test -p engine --test asset_cost -- --ignored --nocapture` e
+  `cargo test -p comps --lib icons::tests::the_tessellation_cost -- --ignored --nocapture`.
+
+### contagem do gate e o regress
+
+| | workspace | perna urnaui | total que passa |
+| --- | --- | --- | --- |
+| antes, main @ 3720ce0b (`./script/gate` neste worktree, antes do primeiro código, saída 0) | 2731 passam, 0 falhas, 23 ignorados | 85 passam, 1 ignorado | 2816 |
+| depois, esta branch @ deee5143 (`./script/gate`, saída 0) | 2736 passam, 0 falhas, 25 ignorados | 85 passam, 1 ignorado | 2821 |
+
+5 testes novos (wgsl.rs) e 2 ignorados novos (as duas sondas); a
+contagem não cai. clippy `-D warnings`, `cargo fmt --check` e o check
+wasm do showcase com `-D warnings` verdes, dentro do gate, com a perna
+urnaui. `df -h /` antes de cada gate: 15 GB livres. o gate levou 2:05
+antes e 2:27 depois (a segunda compilou os testes novos).
+
+`cargo run --offline -p showcase --example regress -- check`: 163
+baselines, 163 unchanged, nenhum frame desenhado.
+
+### a linha do ADR para o índice (docs/ADR/README.md)
+
+```text
+| 2026-09-24 | [ui-asset-compiler](ui-asset-compiler.md) | proposed | task-72 fase 1: um asset só sai do runtime com o número medido (ganho de pelo menos 5% do primeiro frame headless do showcase ou um frame a 60 Hz na sessão, sem o binário crescer mais do que o runtime economiza); o inventário em debug (primeiro frame 79 ms: device 26, fontes ~23 pela varredura do sistema duas vezes, shaders 2,7 com o naga em 0,7, ícones 0,17, imagens 0); os ícones ficam em runtime (~105 KB de tabela para 0,17 ms, 45 dos 83 pares pedidos fora do token); WGSL validado no gate por teste (naga sem capacidade opcional, arquivo, linha e coluna), não por build.rs (aresta nova no lock); quando algo mover, passo de CLI com arquivo versionado, hash no cabeçalho e teste de bytes no gate; fontes ficam para a task-74; interação gravada e container do monster esperam a task-63 |
+```
+
+### decisões
+
+- limite para mover: 5% do primeiro frame headless do showcase (4 ms)
+  ou 16,7 ms na sessão, sem o binário crescer mais do que o runtime
+  economiza em memória. escolhido antes de olhar a alternativa; está no
+  ADR.
+- WGSL no gate por teste de integração, não por build.rs: o build.rs
+  pediria `naga` ou `wgpu` em `[build-dependencies]`.
+- validador sem capacidade opcional (`Capabilities::empty()`), o mais
+  estrito que os 11 shaders passam; espelha o `create_validator` do
+  `wgpu-core` para um device sem feature
+  (wgpu-core-28.0.1/src/device/mod.rs:395).
+- os arquivos lidos do disco, não por `include_str!`: a varredura acha
+  shader novo sem lista, e são os mesmos arquivos que o hot reload lê.
+
+### limitações e riscos
+
+- os números são do perfil debug, numa máquina (apple silicon, metal).
+  o primeiro run depois de um build é mais lento (122 ms na primeira das
+  11 execuções); o primeiro device e a primeira varredura de fontes
+  dependem do cache do sistema. o release é do brenner; um número de
+  release que passe do limite reabre os ícones.
+- o rastro dos ícones pedidos pelo showcase veio de um patch temporário
+  em `icon_path` (um `eprintln!` por pedido, ligado por variável de
+  ambiente), desfeito antes do commit; reproduzir pede o mesmo patch.
+- os deltas de RSS da sonda do engine são indicativos (a memória
+  residente muda por página, não por alocação).
+- alguns erros de validação do naga vêm sem span (tipo, estágio): o
+  gate nomeia o arquivo, mas não a linha.
+- o teste antigo `all_engine_shaders_are_valid_wgsl`
+  (crates/engine/src/gpu/tests.rs) ficou redundante; está em
+  crates/engine/src/**, fora dos arquivos permitidos, então removê-lo é
+  decisão da integração.
+- `crates/engine/src/gpu/shaders/3Dscene.wgsl` nenhum código carrega (o
+  exemplo scene3d tem a própria cópia); agora é validado, mas continua
+  órfão.
+- nenhuma interface pública mudou, nenhuma dependência nova, o
+  Cargo.lock não mudou.
+
+### o que fica para a fase 2
+
+- gravar uma interação real (spring, fade, gesto) como asset `.monster`,
+  pelo discover e pelo optimize do monster: espera a task-63 fechar o
+  ADR de sessão, como qualquer mudança no container do monster
+  (inclusive ícones como `asset_path`).
+- remedir os ícones em release; se passar do limite, o passo de CLI do
+  ADR (gerador no comps chamando o mesmo `tessellate_icon`, arquivo
+  versionado com hash no cabeçalho, teste de bytes no gate, comando em
+  script/).
+- fontes com a task-74: um banco de faces só para o `TextSystem` e o
+  `TextMeasurer`, ou a varredura do sistema adiada, e `Source::Binary`
+  sobre os bytes estáticos.
