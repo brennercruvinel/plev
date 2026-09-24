@@ -1,4 +1,8 @@
-//! Layer system demo -- per-layer dirty tracking + offscreen composition.
+//! Layer system demo, in two windows -- per-layer dirty tracking +
+//! offscreen composition in the first, which animates; a second window
+//! with another scene, at rest, which draws nothing while the first
+//! animates (render on demand, per window). Close either: the other
+//! stays. Close both: the app exits. (task-76 item 2)
 //!
 //! Run: `cargo run --example layers`
 #![allow(dead_code)]
@@ -7,35 +11,27 @@ mod palette;
 mod render;
 mod ui;
 
-use std::sync::Arc;
-
-use engine::compositor::{Compositor, LayerId};
-use engine::gpu::GpuContext;
-use engine::text::TextSystem;
+use engine::compositor::LayerId;
+use engine::window::{Routed, Windows};
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::WindowEvent;
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};
-use engine::winit::window::{Window, WindowAttributes, WindowId};
+use engine::winit::window::{WindowAttributes, WindowId};
 
 // ---------------------------------------------------------------------------
 // App
 // ---------------------------------------------------------------------------
 
-// Ready is ~2320 B vs 0 for Uninitialized; one instance lives for the
-// whole process, so boxing would only add indirection on the render path.
-#[allow(clippy::large_enum_variant)]
-enum State {
-    Uninitialized,
-    Ready {
-        gpu: GpuContext,
-        text_system: TextSystem,
-    },
-}
-
 struct LayersDemoApp {
-    window: Option<Arc<Window>>,
-    state: State,
-    compositor: Compositor,
+    /// Every window with what it needs (its context, compositor, input
+    /// and clock); the app keeps the frame counter the animation reads.
+    windows: Windows,
+    /// The animated layers demo.
+    main: Option<WindowId>,
+    /// The other window: a card at rest.
+    side: Option<WindowId>,
+    /// The main window's layers, made in its compositor (a layer id names
+    /// a layer of one compositor).
     bg_layer: LayerId,
     fg_layer: LayerId,
     frame_count: u64,
@@ -43,17 +39,12 @@ struct LayersDemoApp {
 
 impl LayersDemoApp {
     fn new() -> Self {
-        let mut compositor = Compositor::new();
-        let bg_layer = compositor.create_layer(-1);
-        let fg_layer = compositor.create_layer(1);
-        compositor.set_layer_opacity(fg_layer, 0.8);
-
         Self {
-            window: None,
-            state: State::Uninitialized,
-            compositor,
-            bg_layer,
-            fg_layer,
+            windows: Windows::new(),
+            main: None,
+            side: None,
+            bg_layer: LayerId::DEFAULT,
+            fg_layer: LayerId::DEFAULT,
             frame_count: 0,
         }
     }
@@ -61,38 +52,66 @@ impl LayersDemoApp {
 
 impl ApplicationHandler for LayersDemoApp {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        if self.window.is_some() {
+        if !self.windows.is_empty() {
             return;
         }
         let attrs = WindowAttributes::default()
             .with_title("plev -- Layer System")
             .with_inner_size(engine::winit::dpi::LogicalSize::new(900, 600));
-        let window = Arc::new(event_loop.create_window(attrs).unwrap());
-        self.window = Some(window.clone());
-        let gpu = pollster::block_on(GpuContext::new(window));
-        let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        self.state = State::Ready { gpu, text_system };
+        let main = self.windows.open(event_loop, attrs).unwrap();
+        {
+            let host = self.windows.get_mut(main).unwrap();
+            let c = host.compositor_mut();
+            self.bg_layer = c.create_layer(-1);
+            self.fg_layer = c.create_layer(1);
+            c.set_layer_opacity(self.fg_layer, 0.8);
+            // the demo's foreground moves every 60 frames: a frame every
+            // frame, for this window only
+            host.set_animating(true);
+        }
+        self.main = Some(main);
+
+        let attrs = WindowAttributes::default()
+            .with_title("plev -- Layer System, the other window")
+            .with_inner_size(engine::winit::dpi::LogicalSize::new(460, 320));
+        let side = self.windows.open(event_loop, attrs).unwrap();
+        self.side = Some(side);
     }
 
-    fn window_event(&mut self, event_loop: &ActiveEventLoop, _: WindowId, event: WindowEvent) {
-        match event {
-            WindowEvent::CloseRequested => event_loop.exit(),
-            WindowEvent::Resized(size) => {
-                if let State::Ready { ref mut gpu, .. } = self.state {
-                    gpu.resize(size.width, size.height);
+    fn window_event(&mut self, event_loop: &ActiveEventLoop, id: WindowId, event: WindowEvent) {
+        match self.windows.route(id, &event) {
+            Routed::Redraw => {
+                if Some(id) == self.main {
+                    render::render_layers(self, id);
+                } else {
+                    render::render_side(self, id);
                 }
-                if let Some(ref w) = self.window {
-                    w.request_redraw();
+                // the animating window asks for its next frame; the other
+                // rests until something changes in it
+                if let Some(host) = self.windows.get_mut(id)
+                    && host.needs_redraw()
+                {
+                    host.request_redraw();
                 }
             }
-            WindowEvent::RedrawRequested => {
-                render::render(self);
-                if let Some(ref w) = self.window {
-                    w.request_redraw();
+            Routed::CloseRequested => {
+                self.windows.close(id);
+                if Some(id) == self.main {
+                    self.main = None;
+                }
+                if Some(id) == self.side {
+                    self.side = None;
+                }
+                if self.windows.should_exit() {
+                    event_loop.exit();
                 }
             }
-            _ => {}
+            Routed::Handled | Routed::Unknown => {}
         }
+    }
+
+    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        self.windows.request_pending_redraws();
     }
 }
 

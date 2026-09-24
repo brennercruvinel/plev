@@ -1,12 +1,12 @@
+//! A window's events, buffered until its next frame and then handed to
+//! its `InputState`: the host's side of `Windows::route`.
+
 use web_time::Instant;
 
 use winit::event::WindowEvent;
-use winit::event_loop::ActiveEventLoop;
-use winit::window::WindowId;
 
-use super::state::GpuState;
+use super::host::WindowHost;
 use crate::input::FileDrop;
-use crate::platform::SafeAreaInsets;
 
 pub(crate) enum BufferedEvent {
     CursorMoved(f32, f32),
@@ -20,51 +20,54 @@ pub(crate) enum BufferedEvent {
     FileDrop(FileDrop),
 }
 
-impl super::App {
+impl WindowHost {
     /// Buffer an input event and invalidate the compositor so the next
     /// `about_to_wait` schedules a frame to process it. The platform
     /// sends one drop event per file, all before the next frame: a file
     /// drop joins the one buffered just before it when both are the same
     /// phase, so the view gets one `Dropped` with every path.
     fn buffer_event(&mut self, event: BufferedEvent) {
-        let event = match (event, self.event_buffer.last_mut()) {
+        let event = match (event, self.events.last_mut()) {
             (BufferedEvent::FileDrop(next), Some(BufferedEvent::FileDrop(last))) => {
                 last.join(next).err().map(BufferedEvent::FileDrop)
             }
             (event, _) => Some(event),
         };
         if let Some(event) = event {
-            self.event_buffer.push(event);
+            self.events.push(event);
         }
         self.compositor.invalidate();
+        self.request_redraw();
     }
 
+    /// The events buffered since the last frame, in order, into this
+    /// window's input state.
     pub(crate) fn process_buffered_events(&mut self) {
-        let events: Vec<BufferedEvent> = std::mem::take(&mut self.event_buffer);
+        let events: Vec<BufferedEvent> = std::mem::take(&mut self.events);
         for event in events {
             match event {
                 BufferedEvent::CursorMoved(x, y) => {
-                    self.input_state.handle_cursor_moved(x, y);
+                    self.input_mut().handle_cursor_moved(x, y);
                 }
                 BufferedEvent::CursorLeft => {
-                    self.input_state.handle_cursor_left();
+                    self.input_mut().handle_cursor_left();
                 }
                 BufferedEvent::MouseInput(button, state) => {
-                    self.input_state.handle_mouse_input(button, state);
+                    self.input_mut().handle_mouse_input(button, state);
                 }
                 BufferedEvent::KeyboardInput(event) => {
-                    self.input_state.handle_keyboard_input(&event);
+                    self.input_mut().handle_keyboard_input(&event);
                 }
                 BufferedEvent::MouseWheel(delta) => {
-                    self.input_state.handle_mouse_wheel(delta);
+                    self.input_mut().handle_mouse_wheel(delta);
                 }
                 BufferedEvent::ModifiersChanged(mods) => {
-                    self.input_state.handle_modifiers_changed(&mods);
+                    self.input_mut().handle_modifiers_changed(&mods);
                 }
                 BufferedEvent::Touch(touch, when) => {
                     // Gesture recognition (tap/double-tap/long-press/drag/
                     // pinch/swipe) for consumers of the recognizer...
-                    self.touch_input.handle_touch(&touch, when);
+                    self.touch.handle_touch(&touch, when);
                     // ...AND mouse-equivalent pointer synthesis from the
                     // primary finger, injected into the same `InputState`
                     // path as real mouse input, so hover/click/focus work
@@ -76,93 +79,51 @@ impl super::App {
                         touch.location.y as f32,
                     );
                     for pointer_event in synthesized {
-                        self.input_state.handle_synthetic_pointer(pointer_event);
+                        self.input_mut().handle_synthetic_pointer(pointer_event);
                     }
                 }
                 BufferedEvent::Ime(ref ime) => {
-                    let window_height = if let GpuState::Ready { ref gpu, .. } = self.state {
-                        gpu.surface_config.height as f32
-                    } else {
-                        0.0
-                    };
-                    self.ime_state.handle_event(ime, window_height);
+                    let window_height = self.physical_size().1 as f32;
+                    self.ime.handle_event(ime, window_height);
                 }
                 BufferedEvent::FileDrop(drop) => {
-                    self.input_state.handle_file_drop(drop);
+                    self.input_mut().handle_file_drop(drop);
                 }
             }
         }
     }
 
-    pub(crate) fn handle_window_event(
-        &mut self,
-        event_loop: &ActiveEventLoop,
-        _window_id: WindowId,
-        event: WindowEvent,
-    ) {
-        // Forward events to accessibility adapter
-        #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
-        if let Some(ref mut bridge) = self.a11y
-            && let Some(ref window) = self.window
-        {
-            bridge.process_event(window, &event);
+    /// What a redraw request does first: the buffered events reach the
+    /// input state, in order, then the touch recognizer ticks. The frame
+    /// itself is the caller's (`render`, or a scene and `present`). A
+    /// driver without a platform (a test over a bare or headless host)
+    /// calls it where the platform's `RedrawRequested` would.
+    pub fn process_events(&mut self) {
+        self.process_buffered_events();
+        self.touch.tick(Instant::now());
+        for gesture in self.touch.drain_events() {
+            log::debug!("Gesture: {gesture:?}");
         }
+    }
 
+    /// One window event of this window, everything but the close and the
+    /// redraw request (those are `Windows::route`'s answer to its caller):
+    /// a resize and a scale change take effect now; input, IME and file
+    /// drops are buffered for the next frame. `true` when the event was
+    /// this host's to take.
+    pub fn handle_event(&mut self, event: &WindowEvent) -> bool {
         match event {
-            WindowEvent::CloseRequested => {
-                event_loop.exit();
-            }
             WindowEvent::Resized(size) => {
-                // `gpu.resize` reconfigures the surface AND resets the
-                // projection to physical pixels (clearing `logical_size`).
-                // Reapply the logical projection right away, otherwise on
-                // HiDPI every resize would leave the scene rendering at
-                // physical scale (half-size content on a 2x display).
-                let scale_factor = self
-                    .window
-                    .as_ref()
-                    .map(|w| w.scale_factor())
-                    .unwrap_or(self.scale_factor);
-                if let GpuState::Ready { ref mut gpu, .. } = self.state {
-                    gpu.resize(size.width, size.height);
-                    let (lw, lh) = logical_projection_size(size.width, size.height, scale_factor);
-                    gpu.set_projection(lw, lh);
-                }
-                self.compositor.invalidate();
-                if let Some(ref window) = self.window {
-                    self.safe_area = SafeAreaInsets::from_window(window);
-                    window.request_redraw();
-                }
+                self.resize(size.width, size.height);
             }
             WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
-                self.scale_factor = scale_factor;
-                self.compositor.invalidate();
-                log::info!("Scale factor changed: {scale_factor}");
+                self.scale_factor_changed(*scale_factor);
             }
             WindowEvent::Ime(ime) => {
-                self.buffer_event(BufferedEvent::Ime(ime));
-            }
-            WindowEvent::RedrawRequested => {
-                // Drain all buffered events before rendering
-                self.process_buffered_events();
-                self.touch_input.tick(Instant::now());
-                for gesture in self.touch_input.drain_events() {
-                    log::debug!("Gesture: {gesture:?}");
-                }
-                self.render();
-                // Re-schedule only while animating or when new work arrived
-                // during the frame; otherwise stay idle until invalidated.
-                // The perf HUD counts as animation: it redraws every frame.
-                if let Some(ref window) = self.window
-                    && (self.is_animating
-                        || self.perf_overlay_active()
-                        || self.compositor.needs_render())
-                {
-                    window.request_redraw();
-                }
+                self.buffer_event(BufferedEvent::Ime(ime.clone()));
             }
             WindowEvent::Touch(touch) => {
-                self.buffer_event(BufferedEvent::Touch(touch, Instant::now()));
+                self.buffer_event(BufferedEvent::Touch(*touch, Instant::now()));
             }
             WindowEvent::CursorMoved { position, .. } => {
                 self.buffer_event(BufferedEvent::CursorMoved(
@@ -174,31 +135,37 @@ impl super::App {
                 self.buffer_event(BufferedEvent::CursorLeft);
             }
             WindowEvent::MouseInput { state, button, .. } => {
-                self.buffer_event(BufferedEvent::MouseInput(button, state));
+                self.buffer_event(BufferedEvent::MouseInput(*button, *state));
             }
             WindowEvent::KeyboardInput { event, .. } => {
-                self.buffer_event(BufferedEvent::KeyboardInput(event));
+                self.buffer_event(BufferedEvent::KeyboardInput(event.clone()));
             }
             WindowEvent::MouseWheel { delta, .. } => {
-                self.buffer_event(BufferedEvent::MouseWheel(delta));
+                self.buffer_event(BufferedEvent::MouseWheel(*delta));
             }
             WindowEvent::ModifiersChanged(mods) => {
-                self.buffer_event(BufferedEvent::ModifiersChanged(mods));
+                self.buffer_event(BufferedEvent::ModifiersChanged(*mods));
             }
             WindowEvent::HoveredFile(_)
             | WindowEvent::DroppedFile(_)
             | WindowEvent::HoveredFileCancelled => {
-                if let Some(drop) = FileDrop::from_window_event(&event) {
+                if let Some(drop) = FileDrop::from_window_event(event) {
                     self.buffer_event(BufferedEvent::FileDrop(drop));
                 }
             }
-            _ => {}
+            _ => return false,
         }
+        true
+    }
+
+    /// Events buffered and not yet processed.
+    pub fn pending_events(&self) -> usize {
+        self.events.len()
     }
 }
 
 /// Logical size for the projection matrix: physical surface pixels divided
-/// by the window scale factor. This is what the engine `App` feeds to
+/// by the window scale factor. This is what a host feeds to
 /// [`GpuContext::set_projection`] after every resize, so scenes keep
 /// addressing logical pixels on HiDPI displays.
 ///

@@ -1,10 +1,9 @@
-use std::sync::Arc;
-
+use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
-use winit::window::WindowAttributes;
+use winit::window::{WindowAttributes, WindowId};
 
 use super::AppEvent;
-use super::state::GpuState;
+use super::windows::Routed;
 use crate::platform::lifecycle::AppState;
 
 /// The window's title, which also names the root of its accessibility
@@ -12,154 +11,108 @@ use crate::platform::lifecycle::AppState;
 const TITLE: &str = "plev, showcase";
 
 impl super::App {
-    pub(crate) fn handle_resumed(&mut self, event_loop: &ActiveEventLoop) {
-        match &self.state {
-            GpuState::Uninitialized => {
-                #[allow(unused_mut)]
-                // mut needed for cfg(feature=accessibility), cfg(desktop), cfg(ios)
-                let mut attrs = WindowAttributes::default().with_title(TITLE);
+    /// The one window this `App` opens: titled, sized on the desktop,
+    /// hidden until the accessibility bridge attached, both orientations
+    /// on iOS.
+    fn window_attributes() -> WindowAttributes {
+        #[allow(unused_mut)]
+        // mut needed for cfg(feature=accessibility), cfg(desktop), cfg(ios)
+        let mut attrs = WindowAttributes::default().with_title(TITLE);
 
-                // AccessKit attaches before the window is first shown.
-                #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
-                {
-                    attrs = attrs.with_visible(false);
-                }
-
-                #[cfg(not(any(target_os = "android", target_os = "ios", target_arch = "wasm32")))]
-                {
-                    attrs = attrs.with_inner_size(winit::dpi::LogicalSize::new(1024, 820));
-                }
-
-                #[cfg(target_os = "ios")]
-                {
-                    use winit::platform::ios::WindowAttributesExtIOS;
-                    attrs = attrs.with_valid_orientations(
-                        winit::platform::ios::ValidOrientations::LandscapeAndPortrait,
-                    );
-                }
-
-                let window = Arc::new(
-                    event_loop
-                        .create_window(attrs)
-                        .expect("plev: failed to create window"),
-                );
-
-                #[cfg(target_arch = "wasm32")]
-                if let Err(e) = setup_wasm_canvas(&window) {
-                    log::error!("WASM canvas setup failed: {e}");
-                }
-
-                self.window = Some(window.clone());
-
-                // No meaning to project and nothing to act on, so the
-                // bridge needs no wake: the next frame sends the tree.
-                #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
-                {
-                    match crate::accessibility::Bridge::new(event_loop, &window, TITLE, || {}) {
-                        Ok(bridge) => self.a11y = Some(bridge),
-                        Err(e) => log::warn!("accessibility: {e}"),
-                    }
-                    window.set_visible(true);
-                }
-
-                self.init_gpu(window.clone());
-                self.lifecycle.transition_to(AppState::Active);
-                window.request_redraw();
-            }
-            GpuState::Suspended { .. } => {
-                #[allow(unused_mut)] // mut needed for cfg(desktop), cfg(ios)
-                let mut attrs = WindowAttributes::default().with_title(TITLE);
-
-                #[cfg(not(any(target_os = "android", target_os = "ios", target_arch = "wasm32")))]
-                {
-                    attrs = attrs.with_inner_size(winit::dpi::LogicalSize::new(1024, 820));
-                }
-
-                #[cfg(target_os = "ios")]
-                {
-                    use winit::platform::ios::WindowAttributesExtIOS;
-                    attrs = attrs.with_valid_orientations(
-                        winit::platform::ios::ValidOrientations::LandscapeAndPortrait,
-                    );
-                }
-
-                let window = Arc::new(
-                    event_loop
-                        .create_window(attrs)
-                        .expect("plev: failed to create window"),
-                );
-                self.window = Some(window.clone());
-
-                let state = std::mem::replace(&mut self.state, GpuState::Uninitialized);
-                #[allow(unused_mut)] // mut needed for cfg(not(wasm)) gpu.recreate_surface()
-                if let GpuState::Suspended {
-                    mut gpu,
-                    text_system,
-                    effect_processor,
-                    texture_pool,
-                } = state
-                {
-                    #[cfg(not(target_arch = "wasm32"))]
-                    gpu.recreate_surface(window.clone());
-                    self.state = GpuState::Ready {
-                        gpu,
-                        text_system,
-                        effect_processor,
-                        texture_pool,
-                    };
-                    log::info!("Resumed from suspended state");
-                    window.request_redraw();
-                }
-                self.lifecycle.transition_to(AppState::Active);
-            }
-            _ => {}
+        // AccessKit attaches before the window is first shown.
+        #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
+        {
+            attrs = attrs.with_visible(false);
         }
+
+        #[cfg(not(any(target_os = "android", target_os = "ios", target_arch = "wasm32")))]
+        {
+            attrs = attrs.with_inner_size(winit::dpi::LogicalSize::new(1024, 820));
+        }
+
+        #[cfg(target_os = "ios")]
+        {
+            use winit::platform::ios::WindowAttributesExtIOS;
+            attrs = attrs.with_valid_orientations(
+                winit::platform::ios::ValidOrientations::LandscapeAndPortrait,
+            );
+        }
+
+        attrs
+    }
+
+    pub(crate) fn handle_resumed(&mut self, event_loop: &ActiveEventLoop) {
+        // Back from the background (android): the windows come back with
+        // their surfaces on the kept devices.
+        if self.windows.has_suspended() {
+            #[cfg(not(target_arch = "wasm32"))]
+            match self.windows.resume(event_loop, Self::window_attributes) {
+                Ok(ids) => log::info!("Resumed from suspended state: {} window(s)", ids.len()),
+                Err(e) => log::error!("plev: failed to recreate a window: {e}"),
+            }
+            self.lifecycle.transition_to(AppState::Active);
+            return;
+        }
+        if !self.windows.is_empty() {
+            return;
+        }
+
+        let id = self
+            .windows
+            .open(event_loop, Self::window_attributes())
+            .expect("plev: failed to create window");
+        let animating = self.is_animating;
+        let host = self
+            .windows
+            .get_mut(id)
+            .expect("the window just opened has a host");
+
+        #[cfg(target_arch = "wasm32")]
+        if let Some(window) = host.window()
+            && let Err(e) = super::setup_wasm_canvas(window)
+        {
+            log::error!("WASM canvas setup failed: {e}");
+        }
+
+        // No meaning to project and nothing to act on, so the bridge
+        // needs no wake: the next frame sends the tree.
+        #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
+        if let Some(window) = host.window().cloned() {
+            match crate::accessibility::Bridge::new(event_loop, &window, TITLE, || {}) {
+                Ok(bridge) => host.set_accessibility(bridge),
+                Err(e) => log::warn!("accessibility: {e}"),
+            }
+            window.set_visible(true);
+        }
+
+        // Browsers forbid blocking on the device inside the event loop:
+        // the request is spawned and its result comes back through the
+        // proxy as `AppEvent::GpuReady` for this window.
+        #[cfg(target_arch = "wasm32")]
+        if let (Some(proxy), Some(window)) = (self.event_loop_proxy.take(), host.window().cloned())
+        {
+            wasm_bindgen_futures::spawn_local(async move {
+                let gpu = crate::gpu::GpuContext::new(window).await;
+                let _ = proxy.send_event(AppEvent::GpuReady { window: id, gpu });
+            });
+        }
+
+        host.set_animating(animating);
+        host.request_redraw();
+        self.lifecycle.transition_to(AppState::Active);
     }
 
     pub(crate) fn handle_suspended(&mut self, _event_loop: &ActiveEventLoop) {
         self.lifecycle.transition_to(AppState::Suspended);
-        let state = std::mem::replace(&mut self.state, GpuState::Uninitialized);
-        if let GpuState::Ready {
-            mut gpu,
-            text_system,
-            effect_processor,
-            texture_pool,
-        } = state
-        {
-            gpu.drop_surface();
-            self.state = GpuState::Suspended {
-                gpu,
-                text_system,
-                effect_processor,
-                texture_pool,
-            };
-            log::info!("App suspended \u{2014} surface dropped");
-        }
-        // The adapter belongs to the window being dropped.
-        #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
-        {
-            self.a11y = None;
-        }
-        self.window = None;
+        self.windows.suspend();
     }
 
     pub(crate) fn handle_user_event(&mut self, _event_loop: &ActiveEventLoop, event: AppEvent) {
         match event {
-            AppEvent::GpuReady {
-                gpu,
-                text_system,
-                effect_processor,
-                texture_pool,
-            } => {
+            AppEvent::GpuReady { window, gpu } => {
                 log::info!("GPU context ready (async)");
-                self.state = GpuState::Ready {
-                    gpu,
-                    text_system,
-                    effect_processor,
-                    texture_pool,
-                };
-                if let Some(ref window) = self.window {
-                    window.request_redraw();
+                if !self.windows.attach_gpu(window, gpu) {
+                    log::warn!("GPU context ready for a window that closed meanwhile");
                 }
             }
         }
@@ -167,33 +120,55 @@ impl super::App {
 
     pub(crate) fn handle_memory_warning(&mut self, _event_loop: &ActiveEventLoop) {
         self.lifecycle.fire_memory_warning();
-        if let GpuState::Ready {
-            ref mut text_system,
-            ..
+        self.windows.purge_caches();
+    }
+
+    /// One event of one window: its host takes it; a redraw request draws
+    /// that window alone; a close closes that window alone, and the app
+    /// when it was the last.
+    pub(crate) fn handle_window_event(
+        &mut self,
+        event_loop: &ActiveEventLoop,
+        window_id: WindowId,
+        event: WindowEvent,
+    ) {
+        match self.windows.route(window_id, &event) {
+            Routed::Redraw => self.render_window(window_id),
+            Routed::CloseRequested => {
+                self.windows.close(window_id);
+                if self.windows.should_exit() {
+                    event_loop.exit();
+                }
+            }
+            Routed::Handled | Routed::Unknown => {}
         }
-        | GpuState::Suspended {
-            ref mut text_system,
-            ..
-        } = self.state
-        {
-            text_system.purge_caches();
+    }
+
+    /// The frame of window `id`: the frame signal advances, the host draws
+    /// (its own tail, `render.rs`), and the next frame is asked for only
+    /// while that window animates or new work arrived during the frame.
+    fn render_window(&mut self, id: WindowId) {
+        let Some(host) = self.windows.get_mut(id) else {
+            return;
+        };
+        let counter_value = self.frame_read.get();
+        self.frame_write.set(counter_value + 1);
+        host.render(&self.theme);
+        if host.needs_redraw() {
+            host.request_redraw();
         }
     }
 
     pub(crate) fn handle_about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
         #[cfg(hot_reload)]
         if self.check_narrate_reload() {
-            self.compositor.invalidate();
+            self.windows.invalidate_all();
         }
 
-        // Render on demand: schedule a frame only when something changed or
-        // an animation is running; otherwise the event loop stays idle.
-        // The perf HUD counts as animation: it redraws every frame.
-        if let Some(ref window) = self.window
-            && (self.is_animating || self.perf_overlay_active() || self.compositor.needs_render())
-        {
-            window.request_redraw();
-        }
+        // Render on demand, per window: a window with a change, an
+        // animation or a pending request asks for its frame; the others
+        // stay idle.
+        self.windows.request_pending_redraws();
     }
 }
 

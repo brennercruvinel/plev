@@ -67,6 +67,13 @@ pub struct Panes {
     pub editor: editor::EditorPage,
     pub git: git::GitPage,
     pub builder: builder::BuilderPage,
+    /// Where the active page shows when it left the main window: a
+    /// window of its own (task-76 item 2, `dispatch::Detached`). `None`,
+    /// the usual: in the main window.
+    pub detached: Option<super::dispatch::Detached>,
+    /// `D` was pressed outside a text field: the shell, which owns the
+    /// windows, takes it and opens or closes the page's own window.
+    pub detach_asked: bool,
 }
 
 impl Panes {
@@ -120,6 +127,8 @@ impl Panes {
             editor: editor::EditorPage::new(theme),
             git: git::GitPage::new(),
             builder: builder::BuilderPage::new(),
+            detached: None,
+            detach_asked: false,
         }
     }
 }

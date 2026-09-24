@@ -13,29 +13,35 @@ use engine::hot_reload::Site;
 use engine::hot_reload::view_source::{self, origin_at};
 use winit::event::ElementState;
 use winit::keyboard::ModifiersState;
+use winit::window::WindowId;
 
 use super::App;
 
 impl App {
-    /// `true` when this left click is a view-source click, press and its
-    /// release both: the caller hands it to nobody else.
-    pub(super) fn view_source(&mut self, state: ElementState) -> bool {
-        self.view_source_with(state, view_source::open)
+    /// `true` when this left click in window `id` is a view-source click,
+    /// press and its release both: the caller hands it to nobody else.
+    pub(super) fn view_source(&mut self, id: WindowId, state: ElementState) -> bool {
+        self.view_source_with(id, state, view_source::open)
     }
 
     /// [`view_source`](Self::view_source) with the opener given: the
-    /// window opens the editor; a test keeps the site.
+    /// window opens the editor; a test keeps the site. The pixel is read
+    /// in the frame of the window the click landed in.
     fn view_source_with(
         &mut self,
+        id: WindowId,
         state: ElementState,
         open: impl FnOnce(&Site) -> std::io::Result<String>,
     ) -> bool {
         match state {
             ElementState::Pressed if primary(self.modifiers) => {
                 self.source_click = true;
-                let (x, y) = self.cursor;
+                let (x, y) = self.cursor_in(id);
+                let Some(host) = self.windows.get(id) else {
+                    return true;
+                };
                 let snapshot = self.view.semantics();
-                let origin = origin_at(&self.compositor, snapshot.as_ref(), x, y);
+                let origin = origin_at(host.compositor(), snapshot.as_ref(), x, y);
                 match origin.site().map(|site| (site, open(site))) {
                     Some((_, Ok(ran))) => log::info!("view source: {origin}; ran {ran}"),
                     Some((_, Err(e))) => log::warn!("view source: {origin}; {e}"),
@@ -85,12 +91,21 @@ mod tests {
         let mut view = ShowcaseView::new(1200.0, 800.0);
         view.jump_to_page("Todo");
         view.resize(1200.0, 800.0, 1.0);
-        let mut app = App::with_view(view);
-        app.view.render(&mut app.compositor);
+        let mut app = App::with_bare_window(view);
+        let App { view, windows, .. } = &mut app;
+        let host = windows.get_mut(MAIN).unwrap();
+        view.render(host.compositor_mut());
         let item = SemId::parse("todo.item[1]").unwrap();
-        let [x, y, _, h] = app.compositor.binding(&item).unwrap().rect;
+        let [x, y, _, h] = host.compositor().binding(&item).unwrap().rect;
         app.cursor = (x + 19.0, y + h / 2.0);
         app
+    }
+
+    /// The bare main window of the tests.
+    const MAIN: WindowId = WindowId::dummy();
+
+    fn compositor(app: &App) -> &engine::compositor::Compositor {
+        app.windows.get(MAIN).unwrap().compositor()
     }
 
     fn completed(app: &App) -> Value {
@@ -109,10 +124,10 @@ mod tests {
             opened.borrow_mut().push(site.clone());
             Ok(String::new())
         };
-        assert!(app.view_source_with(ElementState::Pressed, open));
+        assert!(app.view_source_with(MAIN, ElementState::Pressed, open));
         // cmd let go before the button: the release is still taken
         app.modifiers = ModifiersState::empty();
-        assert!(app.view_source_with(ElementState::Released, |_| unreachable!()));
+        assert!(app.view_source_with(MAIN, ElementState::Released, |_| unreachable!()));
         assert_eq!(completed(&app), before, "the item was not toggled");
 
         let opened = opened.into_inner();
@@ -131,8 +146,8 @@ mod tests {
     fn a_plain_click_is_the_page_s() {
         let mut app = todo();
         let before = completed(&app);
-        assert!(!app.view_source_with(ElementState::Pressed, |_| unreachable!()));
-        assert!(!app.view_source_with(ElementState::Released, |_| unreachable!()));
+        assert!(!app.view_source_with(MAIN, ElementState::Pressed, |_| unreachable!()));
+        assert!(!app.view_source_with(MAIN, ElementState::Released, |_| unreachable!()));
         // what the shell then does with it: the page toggles the item
         let (x, y) = app.cursor;
         app.view.handle_event(&WidgetEvent::MouseDown { x, y });
@@ -146,8 +161,8 @@ mod tests {
         app.modifiers = PRIMARY;
         // the margin between the sidebar and the page title
         app.cursor = (270.0, 20.0);
-        assert!(app.view_source_with(ElementState::Pressed, |_| unreachable!()));
-        assert!(app.view_source_with(ElementState::Released, |_| unreachable!()));
+        assert!(app.view_source_with(MAIN, ElementState::Pressed, |_| unreachable!()));
+        assert!(app.view_source_with(MAIN, ElementState::Released, |_| unreachable!()));
     }
 
     /// The source at `file:line:column`, from the column to the line's end.
@@ -205,9 +220,8 @@ mod tests {
         let mut app = todo();
         app.modifiers = PRIMARY;
         let input = SemId::parse("todo.input").unwrap();
-        let [x, y, w, h] = app.compositor.binding(&input).unwrap().rect;
-        let title = app
-            .compositor
+        let [x, y, w, h] = compositor(&app).binding(&input).unwrap().rect;
+        let title = compositor(&app)
             .layers()
             .iter()
             .flat_map(|l| l.nodes())
@@ -219,8 +233,8 @@ mod tests {
         for (n, at) in [(x + w / 2.0, y + h / 2.0), title].into_iter().enumerate() {
             app.cursor = at;
             let open = |site: &Site| view_source::open_with(site, Some(editor), None);
-            assert!(app.view_source_with(ElementState::Pressed, open));
-            assert!(app.view_source_with(ElementState::Released, |_| unreachable!()));
+            assert!(app.view_source_with(MAIN, ElementState::Pressed, open));
+            assert!(app.view_source_with(MAIN, ElementState::Released, |_| unreachable!()));
             assert_eq!(
                 lines(&got, n + 1).len(),
                 n + 1,

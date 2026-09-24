@@ -1,40 +1,48 @@
 //! Showcase application shell: the winit `ApplicationHandler` that owns the
-//! window, GPU state, compositor and `ShowcaseView`, plus the per-platform
+//! windows (`engine::window::Windows`: each with its GPU context, its
+//! compositor and its clock) and the `ShowcaseView`, plus the per-platform
 //! entry points (desktop `run`, web `run_web`, android `android_main`, iOS
-//! `showcase_ios_main`). The view stays winit-free; this is the only module
-//! that touches the event loop.
+//! `showcase_ios_main`). The view stays winit-free; this is the only
+//! module that touches the event loop.
+//!
+//! One window shows the gallery: the chrome and the active page. On the
+//! desktop the active page can show in a window of its own as well (`D`,
+//! and `D` again to close it; `detached.rs`): the same page state and the
+//! same dispatcher, drawn into that window's compositor and laid out in
+//! its size, so a change made in either window shows in the other on its
+//! next frame. Each window draws only when something in it changed
+//! (render on demand, per window); closing the page's window leaves the
+//! page in the main one; closing the main window quits.
 //!
 //! Frames render on demand; animations (springs, fades) keep requesting
 //! frames only while something is actually moving, and a caret at rest
 //! asks for its next flip: the view's tick answers a [`comps::Wake`], and
-//! the loop sleeps until the earliest deadline (`ControlFlow::WaitUntil`),
-//! or for good when nothing is pending. Input, the git worker, the screen
-//! reader and the agent port wake it as before: a wait ends on any event
-//! (winit: "suspend the thread until either another event arrives or the
-//! given time is reached"). Each loop iteration first advances what
-//! animates to the instant it woke (`catch_up`), so what the events then
-//! change counts its time from the change, not from the last frame. On
-//! wasm GPU init is
-//! async: `resumed` spawns `GpuContext::new` and the result comes back
-//! through a `UserEvent::GpuReady` on the event loop proxy. On desktop and
-//! mobile GPU init blocks inside `resumed` instead.
+//! the loop sleeps until the earliest deadline of any window
+//! (`ControlFlow::WaitUntil`), or for good when nothing is pending. Input,
+//! the git worker, the screen reader and the agent port wake it as before:
+//! a wait ends on any event (winit: "suspend the thread until either
+//! another event arrives or the given time is reached"). Each loop
+//! iteration first advances what animates to the instant it woke
+//! (`catch_up`), so what the events then change counts its time from the
+//! change, not from the last frame. On wasm GPU init is async: `resumed`
+//! spawns `GpuContext::new` and the result comes back through a
+//! `UserEvent::GpuReady` on the event loop proxy. On desktop and mobile
+//! GPU init blocks inside `resumed` instead.
 
-use std::sync::Arc;
-
-use crate::keys;
 use crate::view::ShowcaseView;
 use comps::prelude::WidgetEvent;
 use engine::animation::FrameClock;
-use engine::compositor::Compositor;
 use engine::gpu::GpuContext;
-use engine::text::TextSystem;
+#[cfg(test)]
+use engine::window::WindowHost;
+use engine::window::Windows;
 use winit::application::ApplicationHandler;
-use winit::event::{ElementState, MouseButton, MouseScrollDelta, StartCause, WindowEvent};
+use winit::event::{StartCause, WindowEvent};
 #[cfg(target_arch = "wasm32")]
 use winit::event_loop::EventLoopProxy;
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
-use winit::keyboard::{Key, ModifiersState, NamedKey};
-use winit::window::{Window, WindowAttributes, WindowId};
+use winit::keyboard::ModifiersState;
+use winit::window::{WindowAttributes, WindowId};
 
 /// The window's title, which also names the root of its accessibility
 /// tree.
@@ -57,38 +65,26 @@ enum UserEvent {
     Access,
     /// An agent asked through the port: serve it, draw if an act ran.
     Agent,
-    GpuReady {
-        gpu: GpuContext,
-        text_system: TextSystem,
-        effects: engine::effects::EffectProcessor,
-        texture_pool: engine::gpu::texture_pool::TexturePool,
-    },
-}
-
-// Ready is ~2464 B vs 0 for Uninitialized; one instance lives for the
-// whole process, so boxing would only add indirection on the render path.
-#[allow(clippy::large_enum_variant)]
-enum GpuState {
-    Uninitialized,
-    Ready {
-        gpu: GpuContext,
-        text_system: TextSystem,
-        effects: engine::effects::EffectProcessor,
-        texture_pool: engine::gpu::texture_pool::TexturePool,
-    },
+    /// The main window's device, requested off the loop (wasm).
+    GpuReady { gpu: GpuContext },
 }
 
 pub struct App {
-    window: Option<Arc<Window>>,
-    state: GpuState,
-    compositor: Compositor,
+    /// Every window with what it needs: the main one (the chrome and the
+    /// page) and, while open, the page's own window (`detached.rs`).
+    windows: Windows,
+    main: Option<WindowId>,
+    /// The page's own window, desktop only (task-76 item 2).
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    page_window: Option<detached::PageWindow>,
     view: ShowcaseView,
     clock: FrameClock,
     /// A catch-up tick since the last frame changed something visible
     /// (a deadline came due as the loop woke): the next frame shows it.
     caught_up: bool,
+    /// The cursor in the main window, logical pixels (the page's own
+    /// window keeps its own).
     cursor: (f32, f32),
-    scale_factor: f64,
     modifiers: ModifiersState,
     #[cfg(target_arch = "wasm32")]
     proxy: Option<EventLoopProxy<UserEvent>>,
@@ -132,14 +128,14 @@ impl App {
     /// The shell around `view`, with no window yet.
     fn with_view(view: ShowcaseView) -> Self {
         Self {
-            window: None,
-            state: GpuState::Uninitialized,
-            compositor: Compositor::new(),
+            windows: Windows::new(),
+            main: None,
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            page_window: None,
             view,
             clock: FrameClock::new(),
             caught_up: false,
             cursor: (0.0, 0.0),
-            scale_factor: 1.0,
             modifiers: ModifiersState::empty(),
             #[cfg(target_arch = "wasm32")]
             proxy: None,
@@ -155,10 +151,72 @@ impl App {
         }
     }
 
+    /// The shell around `view` with a main window that has no platform
+    /// window and no device (`WindowHost::bare`): frames build into its
+    /// compositor and nothing is drawn. For the tests.
+    #[cfg(test)]
+    fn with_bare_window(view: ShowcaseView) -> Self {
+        let mut app = Self::with_view(view);
+        app.main = Some(WindowId::dummy());
+        app.windows.insert(WindowId::dummy(), WindowHost::bare());
+        app
+    }
+
+    /// Whether `id` is the page's own window.
+    fn is_page_window(&self, id: WindowId) -> bool {
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        {
+            self.page_window.as_ref().is_some_and(|w| w.id == id)
+        }
+        #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+        {
+            let _ = id;
+            false
+        }
+    }
+
+    /// The window the agent port reads the page's bounds from: the page's
+    /// own while it is open, the main one otherwise.
+    fn page_window_id(&self) -> Option<WindowId> {
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        if let Some(page) = &self.page_window {
+            return Some(page.id);
+        }
+        self.main
+    }
+
+    /// The cursor in window `id`, logical pixels.
+    fn cursor_in(&self, id: WindowId) -> (f32, f32) {
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        if let Some(page) = self.page_window.as_ref().filter(|w| w.id == id) {
+            return page.cursor;
+        }
+        let _ = id;
+        self.cursor
+    }
+
+    fn set_cursor(&mut self, id: WindowId, at: (f32, f32)) {
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        if let Some(page) = self.page_window.as_mut().filter(|w| w.id == id) {
+            page.cursor = at;
+            return;
+        }
+        let _ = id;
+        self.cursor = at;
+    }
+
+    /// Every window's scene is stale (a state change may show in the
+    /// chrome and in the page, wherever the page is): each asks for a
+    /// frame.
     fn invalidate(&mut self) {
-        self.compositor.invalidate();
-        if let Some(w) = &self.window {
-            w.request_redraw();
+        self.windows.invalidate_all();
+    }
+
+    /// Window `id` alone is stale (a hover, a scroll in it).
+    fn invalidate_in(&mut self, id: WindowId) {
+        if let Some(host) = self.windows.get_mut(id) {
+            host.compositor_mut().invalidate();
+            host.request_redraw();
         }
     }
 
@@ -171,37 +229,67 @@ impl App {
         self.invalidate();
     }
 
-    /// Sync surface, projection, and view layout to the window's current
-    /// inner size. Called once GPU state becomes `Ready` (and harmless to
-    /// call again: `gpu.resize` clamps to at least 1x1).
-    fn configure_viewport(&mut self) {
-        let Some(window) = self.window.clone() else {
+    /// Sync the view's layout to window `id`'s size and scale (its host
+    /// keeps the surface and the projection in step itself): the main
+    /// window lays out the chrome and the page, the page's own window the
+    /// page alone. Harmless to call again.
+    fn viewport_changed(&mut self, id: WindowId) {
+        let Some(host) = self.windows.get(id) else {
             return;
         };
-        let size = window.inner_size();
-        let sf = self.scale_factor as f32;
-        let (lw, lh) = (size.width as f32 / sf, size.height as f32 / sf);
-        if let GpuState::Ready { gpu, .. } = &mut self.state {
-            gpu.resize(size.width, size.height);
-            gpu.set_projection(lw, lh);
+        let (lw, lh) = host.logical_size();
+        let sf = host.scale_factor() as f32;
+        if Some(id) == self.main {
+            self.view.resize(lw, lh, sf);
+        } else if self.is_page_window(id) {
+            self.view.resize_detached(lw, lh, sf);
         }
-        self.view.resize(lw, lh, sf);
-        self.invalidate();
+        self.invalidate_in(id);
+    }
+
+    /// A pointer event in window `id`, in its logical pixels: to the page
+    /// alone in its own window, to the whole view in the main one. `true`
+    /// when a frame is needed.
+    fn pointer(&mut self, id: WindowId, event: &WidgetEvent) -> bool {
+        if self.is_page_window(id) {
+            self.view.detached_event(event)
+        } else {
+            self.view.handle_event(event)
+        }
     }
 
     /// What agents asked through the port, served on this thread; a frame
     /// only when an act ran, since an observation changes nothing. The
-    /// recording keeps who observed what, and the state an act left.
+    /// recording keeps who observed what, and the state an act left. The
+    /// bounds come from the window that shows the page.
     fn serve_agent(&mut self) {
         #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-        if let Some(port) = self.access.agent.as_mut() {
+        if let Some(shown_in) = self.page_window_id()
+            && let Some(port) = self.access.agent.as_mut()
+            && let Some(host) = self.windows.get(shown_in)
+        {
             let recorder = self.recording.as_ref().map(record::Recording::recorder);
             if self
                 .view
-                .serve_agent_recorded(port, &self.compositor, recorder)
+                .serve_agent_recorded(port, host.compositor(), recorder)
             {
-                self.invalidate();
+                self.windows.invalidate_all();
             }
+        }
+    }
+
+    /// `D` outside a text field: the page to a window of its own, or
+    /// back. Desktop only; elsewhere the request is logged and dropped.
+    fn detach_requested(&mut self, event_loop: &ActiveEventLoop) {
+        if !self.view.take_detach_request() {
+            return;
+        }
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        self.toggle_page_window(event_loop);
+        #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+        {
+            let _ = event_loop;
+            log::info!("a page window needs the desktop: one window here");
         }
     }
 }
@@ -209,20 +297,20 @@ impl App {
 impl ApplicationHandler<UserEvent> for App {
     /// The loop woke: time catches up first, so whatever woke it lands at
     /// this instant. When a deadline a tick asked for came due (the caret
-    /// flips), the wait goes back to `Wait` and the frame is asked for,
-    /// since a `WaitUntil` in the past would fire on every iteration if
-    /// the redraw does not come (an occluded window); the redraw's own
-    /// wake sets the next.
+    /// flips), the wait goes back to `Wait` and the frame is asked of the
+    /// window whose deadline it was, since a `WaitUntil` in the past would
+    /// fire on every iteration if the redraw does not come (an occluded
+    /// window); the redraw's own wake sets the next.
     fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: StartCause) {
         self.catch_up();
         if let StartCause::ResumeTimeReached { .. } = cause {
             event_loop.set_control_flow(ControlFlow::Wait);
-            self.invalidate();
+            self.deadlines_due();
         }
     }
 
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        if self.window.is_some() {
+        if self.main.is_some() {
             return;
         }
 
@@ -248,7 +336,15 @@ impl ApplicationHandler<UserEvent> for App {
             attrs = attrs.with_inner_size(winit::dpi::LogicalSize::new(1200u32, 800u32));
         }
 
-        let window = Arc::new(event_loop.create_window(attrs).unwrap());
+        // Native: the window and its device (blocking, as before). Wasm:
+        // the window alone, the device below.
+        let id = self.windows.open(event_loop, attrs).unwrap();
+        self.main = Some(id);
+        let window = self
+            .windows
+            .get(id)
+            .and_then(|host| host.window().cloned())
+            .expect("the window just opened");
 
         #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
         {
@@ -261,40 +357,17 @@ impl ApplicationHandler<UserEvent> for App {
             log::error!("WASM canvas setup failed: {e}");
         }
 
-        self.window = Some(window.clone());
-        self.scale_factor = window.scale_factor();
-
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let gpu = pollster::block_on(GpuContext::new(window));
-            let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-            let effects = engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
-            self.state = GpuState::Ready {
-                gpu,
-                text_system,
-                effects,
-                texture_pool: engine::gpu::texture_pool::TexturePool::new(),
-            };
-            self.configure_viewport();
-        }
-
         // Browsers forbid blocking on async GPU setup inside the event
         // loop: spawn it and hand the result back via the proxy.
         #[cfg(target_arch = "wasm32")]
         if let Some(proxy) = self.proxy.take() {
             wasm_bindgen_futures::spawn_local(async move {
                 let gpu = GpuContext::new(window).await;
-                let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-                let effects =
-                    engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
-                let _ = proxy.send_event(UserEvent::GpuReady {
-                    gpu,
-                    text_system,
-                    effects,
-                    texture_pool: engine::gpu::texture_pool::TexturePool::new(),
-                });
+                let _ = proxy.send_event(UserEvent::GpuReady { gpu });
             });
         }
+
+        self.viewport_changed(id);
     }
 
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: UserEvent) {
@@ -318,172 +391,20 @@ impl ApplicationHandler<UserEvent> for App {
                 self.changed();
             }
             UserEvent::Agent => self.serve_agent(),
-            UserEvent::GpuReady {
-                gpu,
-                text_system,
-                effects,
-                texture_pool,
-            } => {
+            UserEvent::GpuReady { gpu } => {
                 log::info!("GPU context ready (async)");
-                self.state = GpuState::Ready {
-                    gpu,
-                    text_system,
-                    effects,
-                    texture_pool,
-                };
-                // The canvas may have been resized while the adapter and
-                // device were being requested; re-sync everything.
-                self.configure_viewport();
+                if let Some(id) = self.main {
+                    self.windows.attach_gpu(id, gpu);
+                    // The canvas may have been resized while the adapter
+                    // and device were being requested; re-sync everything.
+                    self.viewport_changed(id);
+                }
             }
         }
     }
 
-    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
-        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-        if let (Some(bridge), Some(window)) = (self.access.bridge.as_mut(), self.window.as_ref()) {
-            bridge.process_event(window, &event);
-        }
-        match event {
-            WindowEvent::CloseRequested => event_loop.exit(),
-
-            WindowEvent::ModifiersChanged(mods) => {
-                self.modifiers = mods.state();
-                self.view.set_modifiers(self.modifiers);
-            }
-
-            WindowEvent::KeyboardInput {
-                event: key_event, ..
-            } => {
-                if key_event.state != ElementState::Pressed {
-                    return;
-                }
-                // The save keys of the recording, when it records.
-                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-                if self.record_key(&key_event.logical_key) {
-                    return;
-                }
-                match &key_event.logical_key {
-                    Key::Named(NamedKey::Escape) => {
-                        if !self.view.close_top_overlay() {
-                            event_loop.exit();
-                        } else {
-                            self.changed();
-                        }
-                    }
-                    // The editor owns the keyboard while it is showing.
-                    key if self.view.handle_editor_key(key, self.modifiers) => {
-                        self.changed();
-                    }
-                    // Space and the editing keys bridge through keys.rs
-                    // (the view stays winit-free).
-                    Key::Named(named) => {
-                        if keys::handle_named(&mut self.view, named) {
-                            self.changed();
-                        }
-                    }
-                    Key::Character(c) if self.view.handle_key(c.as_str()) => {
-                        self.changed();
-                    }
-                    _ => {}
-                }
-            }
-
-            WindowEvent::Resized(size) => {
-                let sf = self.scale_factor as f32;
-                let (lw, lh) = (size.width as f32 / sf, size.height as f32 / sf);
-                if let GpuState::Ready { gpu, .. } = &mut self.state {
-                    gpu.resize(size.width, size.height);
-                    gpu.set_projection(lw, lh);
-                }
-                self.view.resize(lw, lh, sf);
-                self.invalidate();
-            }
-
-            WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
-                // A Resized follows on most platforms, but invalidating here
-                // is cheap and guarantees a frame on DPI changes.
-                self.scale_factor = scale_factor;
-                self.invalidate();
-            }
-
-            WindowEvent::CursorMoved { position, .. } => {
-                let sf = self.scale_factor as f32;
-                let (x, y) = (position.x as f32 / sf, position.y as f32 / sf);
-                self.cursor = (x, y);
-                if self.view.handle_event(&WidgetEvent::MouseMove { x, y }) {
-                    self.invalidate();
-                }
-            }
-
-            WindowEvent::MouseInput {
-                button: MouseButton::Left,
-                state,
-                ..
-            } => {
-                #[cfg(all(
-                    debug_assertions,
-                    any(target_os = "macos", target_os = "linux", target_os = "windows")
-                ))]
-                if self.view_source(state) {
-                    return;
-                }
-                let (x, y) = self.cursor;
-                #[cfg(not(any(
-                    target_arch = "wasm32",
-                    target_os = "android",
-                    target_os = "ios"
-                )))]
-                self.record_pointer(state, x, y);
-                let ev = match state {
-                    ElementState::Pressed => WidgetEvent::MouseDown { x, y },
-                    ElementState::Released => WidgetEvent::MouseUp { x, y },
-                };
-                if self.view.handle_event(&ev) {
-                    self.changed();
-                }
-            }
-
-            WindowEvent::MouseInput {
-                button: MouseButton::Right,
-                state: ElementState::Pressed,
-                ..
-            } => {
-                let (x, y) = self.cursor;
-                #[cfg(not(any(
-                    target_arch = "wasm32",
-                    target_os = "android",
-                    target_os = "ios"
-                )))]
-                self.record_pointer(ElementState::Pressed, x, y);
-                if self.view.handle_right_click(x, y) {
-                    self.changed();
-                }
-            }
-
-            WindowEvent::MouseWheel { delta, .. } => {
-                let (x, y) = self.cursor;
-                let delta = match delta {
-                    MouseScrollDelta::LineDelta(_, dy) => -dy * 24.0,
-                    MouseScrollDelta::PixelDelta(pos) => -pos.y as f32,
-                };
-                if self.view.handle_event(&WidgetEvent::Scroll { x, y, delta }) {
-                    self.invalidate();
-                }
-            }
-
-            WindowEvent::RedrawRequested => self.redraw(event_loop),
-
-            // A file dragged over or dropped on the window is the engine's
-            // event (it knows which platform events say so); the active
-            // page takes it (task-76: the Files page).
-            other => {
-                if let Some(drop) = engine::input::FileDrop::from_window_event(&other)
-                    && self.view.handle_file_drop(&drop)
-                {
-                    self.changed();
-                }
-            }
-        }
+    fn window_event(&mut self, event_loop: &ActiveEventLoop, id: WindowId, event: WindowEvent) {
+        self.handle_window_event(event_loop, id, event);
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {}
@@ -541,7 +462,12 @@ pub use headless::{RenderError, StagedPage, render_page, semantics_json, stage_p
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod headless;
 
+mod events;
 mod pace;
+
+/// The page in a window of its own (task-76 item 2), desktop only.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod detached;
 
 /// `PLEV_BACKGROUND=1`: the window comes up without taking the focus.
 #[cfg(target_os = "macos")]

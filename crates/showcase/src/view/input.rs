@@ -80,6 +80,12 @@ impl ShowcaseView {
                 self.set_page(HOTKEY_PAGES - 1);
                 true
             }
+            // The page to a window of its own, or back (task-76 item 2):
+            // the shell owns the windows and takes the request.
+            "d" | "D" => {
+                self.panes.detach_asked = true;
+                true
+            }
             _ => false,
         }
     }
