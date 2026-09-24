@@ -31,7 +31,6 @@ const FROZEN: &[(&str, usize)] = &[
     ("crates/urnaui/src/model/urnaread.rs", 794),
     ("crates/showcase/src/view/dispatch.rs", 776),
     ("crates/urnaui/src/view/search.rs", 752),
-    ("crates/ide/src/bin/lab/lab.rs", 733),
 ];
 
 /// The repository root: this guard lives in `crates/engine`.

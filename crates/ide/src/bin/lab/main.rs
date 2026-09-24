@@ -20,6 +20,8 @@ mod args;
 #[cfg(unix)]
 mod bench;
 #[cfg(unix)]
+mod finish;
+#[cfg(unix)]
 mod gitarm;
 #[cfg(unix)]
 mod host;
