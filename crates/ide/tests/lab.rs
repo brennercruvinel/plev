@@ -129,6 +129,26 @@ fn task_files() -> Vec<&'static str> {
     vec!["src/login.rs", "src/session.rs", "tests/login_test.rs"]
 }
 
+/// the scripted agent confirmed its commit on the observation right after
+/// the receipt: the node of the sha git says holds the task's files.
+fn confirmed_by_the_node(run: &Run) {
+    let node = format!("stacks.commit[{}]", run.str("truth.head_after"));
+    let files = format!("{:?}", task_files());
+    let script = run.strings("agent.script");
+    assert!(
+        script
+            .iter()
+            .any(|step| step
+                .starts_with(&format!("stacks: {node} holds the receipt's files {files}"))),
+        "the agent confirmed its commit by the node's files: {script:?}"
+    );
+    let notes = run.strings("notes");
+    assert!(
+        !notes.iter().any(|n| n.starts_with("the scripted agent")),
+        "the scripted agent ended clean: {notes:?}"
+    );
+}
+
 #[test]
 fn the_person_makes_the_agents_submit_stale_and_the_agent_recovers() {
     let run = scripted("ide-lab-stale", "unstage-after-observe:src/session.rs");
@@ -197,6 +217,7 @@ fn the_person_makes_the_agents_submit_stale_and_the_agent_recovers() {
     // the session says the same thing git says.
     assert_eq!(run.str("truth.session_commit"), run.str("truth.head_after"));
     assert_eq!(run.strings("truth.session_files"), task_files());
+    confirmed_by_the_node(&run);
 
     // the port carried it: more lines out than in, and bytes both ways.
     let (msgs_in, msgs_out) = (run.u64("traffic.msgs_in"), run.u64("traffic.msgs_out"));
@@ -252,6 +273,7 @@ fn without_the_person_the_agent_commits_the_task_with_no_refusal() {
     assert_eq!(run.str("truth.verdict"), "MATCH");
     assert_eq!(run.strings("truth.head_files"), task_files());
     assert!(run.bool("truth.files_are_the_task"));
+    confirmed_by_the_node(&run);
 
     // every act of the agent rests on a revision this port served.
     for act in run.list("agent.acts") {
