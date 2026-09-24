@@ -78,6 +78,10 @@ fn every_ask() -> Vec<Ask> {
             Act::observed(sid("todo.input"), action("set_value"), observed)
                 .with_param(Value::Text("call mom".into())),
         ),
+        Ask::Act(
+            Act::from_revision(sid("todo.item[1]"), action("remove"), seen.revision())
+                .with_ask("item 1 is done; remove it?"),
+        ),
         Ask::Confirm {
             request: request_id("7"),
         },
@@ -489,4 +493,70 @@ fn deep_nesting_is_refused_not_a_stack_overflow() {
         "]".repeat(10_000)
     );
     assert!(decode_client(&object).is_err());
+}
+
+/// task-92, additive in v1: an act may ask a person first. the question
+/// is written last and only when there is one, so the act of before keeps
+/// its form (pinned above) and a client that never sends it is unchanged;
+/// `requested` echoes it in `asked`.
+#[test]
+fn a_question_for_a_person_is_pinned_and_optional() {
+    let asks = r#"{"v":1,"id":"4","type":"act","target":"changes.file[src/session.rs]","action":"stage","from_revision":"3ba694e7d3941ec0","ask":"put src/session.rs back?"}"#;
+    let msg = ClientMsg {
+        id: "4".into(),
+        ask: Ask::Act(
+            Act::from_revision(
+                sid("changes.file[src/session.rs]"),
+                action("stage"),
+                revision("3ba694e7d3941ec0"),
+            )
+            .with_ask("put src/session.rs back?"),
+        ),
+    };
+    assert_eq!(decode_client(asks), Ok(msg.clone()));
+    assert_eq!(encode_client(&msg), asks);
+
+    let plain = r#"{"v":1,"id":"3","type":"act","target":"todo.item[1]","action":"toggle","from_revision":"3ba694e7d3941ec0"}"#;
+    let Ok(ClientMsg {
+        ask: Ask::Act(a), ..
+    }) = decode_client(plain)
+    else {
+        panic!("an act");
+    };
+    assert_eq!(a.ask, None);
+    assert_eq!(a.ask_fault(), None);
+
+    let requested = r#"{"v":1,"id":"4","type":"stage","request":"9","stage":"requested","at":5,"asked":{"actor":{"agent":{"name":"claude"}},"target":"todo.item[1]","action":"remove","observed":{"revision":"3ba694e7d3941ec0","values":[]},"ask":"remove it?"}}"#;
+    let Ok(ServerMsg {
+        reply: Reply::Stage(stage),
+        ..
+    }) = decode_server(requested)
+    else {
+        panic!("a stage");
+    };
+    assert_eq!(
+        stage.asked.and_then(|r| r.ask).as_deref(),
+        Some("remove it?")
+    );
+
+    let fault = |q: &str| {
+        Act::from_revision(sid("t"), action("a"), revision("3ba694e7d3941ec0"))
+            .with_ask(q)
+            .ask_fault()
+    };
+    assert_eq!(fault(&"x".repeat(wire::MAX_ASK)), None);
+    assert_eq!(
+        fault("é".repeat(wire::MAX_ASK).as_str()),
+        None,
+        "characters, not bytes"
+    );
+    for bad in [
+        "x".repeat(wire::MAX_ASK + 1),
+        String::new(),
+        " \t ".into(),
+        "one\ntwo".into(),
+    ] {
+        let why = fault(&bad).unwrap_or_else(|| panic!("{bad:?} refused"));
+        assert!(why.contains("1 to 280 characters"), "{why}");
+    }
 }

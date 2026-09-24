@@ -472,6 +472,9 @@ impl Server {
                 reason: "say hello first: an agent acts under the name it declares".to_owned(),
             });
         };
+        if let Some(fault) = a.ask_fault() {
+            return Err(bad(fault));
+        }
         let (req, look) = match (a.observed.take(), a.from_revision) {
             (Some(observed), None) => {
                 let name = self.names.get(&conn).map_or("", String::as_str);
@@ -482,7 +485,7 @@ impl Server {
                     action: a.action,
                     param: a.param,
                     observed,
-                    ask: None,
+                    ask: a.ask,
                 };
                 (req, look)
             }
@@ -560,6 +563,7 @@ impl Server {
         };
         let mut req = Request::observe(seen, actor, a.target, a.action, a.param)
             .map_err(|e| bad(format!("in revision {revision}: {e}")))?;
+        req.ask = a.ask;
         let reads: Vec<StateRef> = req.observed.values.drain(..).map(|(r, _)| r).collect();
         let rested = self
             .shown

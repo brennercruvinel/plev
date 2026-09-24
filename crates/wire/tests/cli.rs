@@ -30,6 +30,19 @@ fn plev(
     tmp: &Path,
     args: &[&str],
 ) -> Run {
+    plev_with(port, woke, host, tmp, args, |_| {})
+}
+
+/// [`plev`], with `person` acting on the app between two drains, as a
+/// person at the screen would.
+fn plev_with(
+    port: &mut AgentPort,
+    woke: &Receiver<()>,
+    host: &mut ToyHost,
+    tmp: &Path,
+    args: &[&str],
+    mut person: impl FnMut(&mut ToyHost),
+) -> Run {
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_plev"));
     cmd.args(args)
         .env("TMPDIR", tmp)
@@ -46,6 +59,7 @@ fn plev(
             host.finish_sync();
             port.drain(host);
         }
+        person(host);
     }
     let output = child.join().unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -366,4 +380,109 @@ fn an_act_that_reads_a_node_its_name_never_observed_is_the_error_exit() {
         }
     );
     assert_eq!(host.app.items.len(), 2, "item 3 cleared");
+}
+
+/// the request that waits for a person, if one does.
+fn waiting(host: &ToyHost) -> Option<sem::RequestId> {
+    (1..=64)
+        .filter_map(|n| sem::RequestId::parse(&n.to_string()).ok())
+        .find(|id| {
+            host.dispatcher
+                .receipt(*id)
+                .is_some_and(|r| r.stage() == Some(&sem::Stage::AwaitingConfirmation))
+        })
+}
+
+/// task-92: `plev act --ask` asks a person first. it prints
+/// `awaiting_confirmation` and waits; the person confirms (exit 0, the
+/// act ran) or declines (exit 1, `declined`, nothing ran). the question
+/// goes out in `asked`, and one that does not fit never connects.
+#[test]
+fn act_ask_waits_for_the_person_and_exits_by_the_answer() {
+    let tmp = tempfile::tempdir().unwrap();
+    let t = tmp.path();
+    let (mut port, woke) = open(t);
+    let mut host = ToyHost::new();
+    let answer = |confirm: bool| {
+        move |host: &mut ToyHost| {
+            if let Some(id) = waiting(host) {
+                host.clock += 1;
+                if confirm {
+                    host.dispatcher
+                        .confirm(&mut host.app, id, sem::Actor::Human, host.clock)
+                        .unwrap();
+                } else {
+                    host.dispatcher
+                        .decline(id, sem::Actor::Human, host.clock)
+                        .unwrap();
+                }
+            }
+        }
+    };
+
+    let question = "item 2 is not done: mark it done?";
+    let confirmed = plev_with(
+        &mut port,
+        &woke,
+        &mut host,
+        t,
+        &["act", "todo.item[2]", "toggle", "--ask", question],
+        answer(true),
+    );
+    assert_eq!(confirmed.code, 0, "{}", confirmed.err);
+    assert_eq!(
+        stages(&confirmed),
+        [
+            "requested",
+            "awaiting_confirmation",
+            "confirmed",
+            "executing",
+            "completed"
+        ]
+    );
+    let Reply::Stage(first) = &confirmed.out[0].reply else {
+        panic!("a stage");
+    };
+    assert_eq!(
+        first.asked.as_ref().and_then(|a| a.ask.as_deref()),
+        Some(question)
+    );
+    assert_eq!(host.app.done(2), Some(true));
+
+    let declined = plev_with(
+        &mut port,
+        &woke,
+        &mut host,
+        t,
+        &["act", "todo.item[1]", "toggle", "--ask", "item 1 too?"],
+        answer(false),
+    );
+    assert_eq!(declined.code, 1, "{}", declined.err);
+    assert_eq!(
+        stages(&declined),
+        ["requested", "awaiting_confirmation", "rejected"]
+    );
+    let Some(Reply::Stage(last)) = declined.out.last().map(|m| &m.reply) else {
+        panic!("a stage");
+    };
+    assert_eq!(
+        last.stage,
+        sem::Stage::Rejected(sem::Rejection::Declined {
+            by: sem::Actor::Human
+        })
+    );
+    assert!(last.revision.is_some(), "a terminal stage");
+    assert_eq!(host.app.done(1), Some(false), "nothing ran");
+
+    let long = "x".repeat(wire::MAX_ASK + 1);
+    let refused = plev(
+        &mut port,
+        &woke,
+        &mut host,
+        t,
+        &["act", "todo.item[1]", "toggle", "--ask", &long],
+    );
+    assert_eq!(refused.code, 3);
+    assert!(refused.out.is_empty(), "refused before connecting");
+    assert!(refused.err.contains("--ask"), "{}", refused.err);
 }

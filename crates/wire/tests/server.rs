@@ -1533,3 +1533,194 @@ fn a_stage_heard_after_its_act_wakes_the_port() {
     host.finish_sync();
     assert_eq!(woke.get(), 5, "nobody waits on it");
 }
+
+/// `,"ask":<question>` for an act line, the question escaped as JSON.
+fn asking(question: &str) -> String {
+    format!(r#","ask":{}"#, serde_json::to_string(question).unwrap())
+}
+
+/// the stages `forward` sends now, all for `id`.
+fn later(server: &mut Server, host: &mut ToyHost, id: &str) -> Vec<StageReply> {
+    let out = server.forward(host);
+    stages(out.into_iter().map(|o| o.msg).collect(), id)
+}
+
+/// task-92: an act may ask a person first. the toy's `toggle` asks no
+/// confirmation; with a question it waits, the question travels back in
+/// `asked`, and the person's answer reaches the agent through the port's
+/// wake: a confirmation runs it after the second check, which refuses it
+/// as stale when the state moved while it waited, and a decline ends it.
+#[test]
+fn an_act_that_asks_waits_for_a_person_who_answers() {
+    let (mut server, mut host) = setup();
+    let woke = counting(&mut server);
+    let question = "item 1 is not done yet: mark it done?";
+    let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    let rest = format!("{}{}", from(r), asking(question));
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "t",
+            "todo.item[1]",
+            "toggle",
+            &rest,
+        ),
+        "t",
+    );
+    assert_eq!(names(&out), ["requested", "awaiting_confirmation"]);
+    let asked = out[0]
+        .asked
+        .as_ref()
+        .expect("requested carries the request");
+    assert_eq!(asked.ask.as_deref(), Some(question));
+    assert_eq!(host.app.done(1), Some(false), "nothing ran");
+    host.clock += 1;
+    let id = out[0].request;
+    host.dispatcher
+        .confirm(&mut host.app, id, Actor::Human, host.clock)
+        .unwrap();
+    assert!(woke.get() > 0, "the answer woke the port");
+    let done = later(&mut server, &mut host, "t");
+    assert_eq!(names(&done), ["confirmed", "executing", "completed"]);
+    assert_eq!(host.app.done(1), Some(true));
+
+    // declined: nothing runs.
+    let r = landed(&done);
+    let rest = format!("{}{}", from(r), asking("and item 2?"));
+    let out = act(
+        &mut server,
+        &mut host,
+        A,
+        "t2",
+        "todo.item[2]",
+        "toggle",
+        &rest,
+    );
+    let id = stages(out, "t2")[0].request;
+    host.clock += 1;
+    host.dispatcher
+        .decline(id, Actor::Human, host.clock)
+        .unwrap();
+    let declined = later(&mut server, &mut host, "t2");
+    assert_eq!(
+        declined[0].stage,
+        Stage::Rejected(Rejection::Declined { by: Actor::Human })
+    );
+    assert_eq!(host.app.done(2), Some(false));
+
+    // the second check: the person toggles item 2 while the question
+    // waits, then confirms. what the act read moved: refused, not run.
+    let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    let rest = format!("{}{}", from(r), asking("item 2 too?"));
+    let out = act(
+        &mut server,
+        &mut host,
+        A,
+        "t3",
+        "todo.item[2]",
+        "toggle",
+        &rest,
+    );
+    let id = stages(out, "t3")[0].request;
+    host.click("todo.item[2]", "toggle");
+    host.clock += 1;
+    host.dispatcher
+        .confirm(&mut host.app, id, Actor::Human, host.clock)
+        .unwrap();
+    let stale = later(&mut server, &mut host, "t3");
+    assert_eq!(names(&stale), ["rejected"]);
+    assert!(matches!(
+        &stale[0].stage,
+        Stage::Rejected(Rejection::Stale { acted, .. })
+            if acted.iter().any(|a| a.actor == Actor::Human)
+    ));
+    assert_eq!(host.app.done(2), Some(true), "only the person's toggle ran");
+}
+
+/// the question is bounded before the dispatcher: blank, past `MAX_ASK`
+/// characters or not one line is `bad_message`, and nothing is dispatched.
+/// an act on `observed` values asks the same way.
+#[test]
+fn a_question_that_does_not_fit_is_refused_before_the_dispatcher() {
+    let (mut server, mut host) = setup();
+    let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    for bad in [
+        "x".repeat(wire::MAX_ASK + 1),
+        "  ".to_owned(),
+        "put it\nback?".to_owned(),
+    ] {
+        let rest = format!("{}{}", from(r), asking(&bad));
+        let e = error(one(act(
+            &mut server,
+            &mut host,
+            A,
+            "b",
+            "todo.item[1]",
+            "toggle",
+            &rest,
+        )));
+        assert!(
+            matches!(&e, ProtoError::BadMessage { reason } if reason.contains("question")),
+            "{bad:?}: {e:?}"
+        );
+    }
+    assert!(
+        host.dispatcher
+            .receipt(RequestId::parse("1").unwrap())
+            .is_none(),
+        "nothing was dispatched"
+    );
+
+    let exact = "x".repeat(wire::MAX_ASK);
+    let observed = r#","observed":{"revision":"0000000000000001","values":[["todo.item[1]:completed",{"kind":"bool","value":false}]]}"#;
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "o",
+            "todo.item[1]",
+            "toggle",
+            &format!("{observed}{}", asking(&exact)),
+        ),
+        "o",
+    );
+    assert_eq!(names(&out), ["requested", "awaiting_confirmation"]);
+    assert_eq!(
+        out[0].asked.as_ref().and_then(|a| a.ask.as_deref()),
+        Some(exact.as_str())
+    );
+}
+
+/// a question about a secret target could quote the secret: it leaves the
+/// port as `REDACTED`, like the parameter leaves as its length.
+#[test]
+fn a_question_about_a_secret_target_leaves_redacted() {
+    let (mut server, mut host) = setup();
+    let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    let rest = format!(
+        r#","param":{{"kind":"text","value":"9876"}}{}{}"#,
+        from(r),
+        asking("set the pin to 9876?")
+    );
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "p",
+            "todo.pin",
+            "set_value",
+            &rest,
+        ),
+        "p",
+    );
+    assert_eq!(names(&out), ["requested", "awaiting_confirmation"]);
+    let asked = out[0].asked.as_ref().unwrap();
+    assert_eq!(asked.ask.as_deref(), Some(REDACTED));
+    assert_eq!(asked.param, Some(Value::Int(4)));
+    let line = serde_json::to_string(&out).unwrap();
+    assert!(!line.contains("9876"), "{line}");
+}

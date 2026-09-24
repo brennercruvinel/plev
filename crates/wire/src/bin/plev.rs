@@ -2,7 +2,7 @@
 //!
 //! ```text
 //! plev observe [--scope <id>] [--keys <k,k>] [--since <rev>] [--bounds] [--source]
-//! plev act <target> <action> [--from-revision <rev>] [--param <json>]
+//! plev act <target> <action> [--from-revision <rev>] [--param <json>] [--ask <question>]
 //! common: [--app <name or socket path>] [--name <agent>] [--timeout <ms>] [--pretty]
 //! ```
 //!
@@ -37,12 +37,12 @@ mod cli {
     pub const USAGE: &str = "\
 usage:
   plev observe [--scope <id>] [--keys <k,k>] [--since <rev>] [--bounds] [--source]
-  plev act <target> <action> [--from-revision <rev>] [--param <json>]
+  plev act <target> <action> [--from-revision <rev>] [--param <json>] [--ask <question>]
 common options:
   --app <name|path>  the app's name (its socket in $TMPDIR/plev) or a socket
                      path; without it, the one app listening there
   --name <agent>     the actor's name (default $PLEV_AGENT_NAME, else plev)
-  --timeout <ms>     how long to wait for the app (default 30000)
+  --timeout <ms>     how long to wait for the app (default 30000; 300000 with --ask)
   --pretty           indented JSON
 act without --from-revision looks at the target first (its --scope) and
 acts on that revision: the target as it is now. --source keeps each node's
@@ -74,7 +74,18 @@ what moved, and its acted says who, among the app's actors, ran something
 since the agent looked: every request the app took after the oldest
 observation the act rests on, the agent's own included (a change no
 request made, as from outside the app, names nobody).
+ask: --ask <question> asks a person before the act runs, with a short text
+saying why (one line, at most 280 characters). the act waits
+(awaiting_confirmation), even when the action asks no confirmation, and the
+person reads the question: a confirmation runs it (confirmed, then checked
+again against the state now, so it can still be refused as stale), a
+decline ends it (rejected, declined, exit 1). an agent never answers.
+nobody answering keeps it waiting, in the app and in plev, up to --timeout.
 exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
+
+    /// how long `act --ask` waits for the app when `--timeout` is not given:
+    /// a person reads the question before anything comes back.
+    pub const ASK_TIMEOUT: u64 = 300_000;
 
     /// how an invocation ended.
     pub const DONE: i32 = 0;
@@ -123,6 +134,8 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
         let mut observe = Observe::default();
         let mut from = None;
         let mut param = None;
+        let mut ask = None;
+        let mut timed = false;
         while let Some(arg) = it.next() {
             let mut value = || {
                 it.next()
@@ -138,6 +151,7 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                     common.timeout = v
                         .parse()
                         .map_err(|_| format!("--timeout takes ms, got {v:?}"))?;
+                    timed = true;
                 }
                 "--pretty" => common.pretty = true,
                 "--scope" => observe.scope = Some(text(&value()?)?),
@@ -151,6 +165,7 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 "--source" => observe.source = true,
                 "--from-revision" => from = Some(text(&value()?)?),
                 "--param" => param = Some(value_of(&value()?)?),
+                "--ask" => ask = Some(value()?),
                 flag if flag.starts_with("--") => return Err(format!("unknown option {flag}")),
                 other => positional.push(other.to_owned()),
             }
@@ -168,7 +183,14 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                     param,
                     observed: None,
                     from_revision: from,
+                    ask,
                 };
+                if let Some(fault) = act.ask_fault() {
+                    return Err(format!("--ask: {fault}"));
+                }
+                if act.ask.is_some() && !timed {
+                    common.timeout = ASK_TIMEOUT;
+                }
                 Ok(Command::Act(common, act, from))
             }
             (Some("act"), _) => Err("act takes <target> <action>".to_owned()),
@@ -465,6 +487,59 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 "the look act takes at the target without --from-revision counts as shown",
                 "two processes under one name are one agent",
                 "it shows no state",
+            ] {
+                assert!(one_line.contains(words), "{words:?} in {USAGE}");
+            }
+        }
+
+        #[test]
+        fn act_takes_a_question_for_a_person_and_waits_longer_for_it() {
+            let parsed = parse(&[
+                "act".into(),
+                "changes.file[src/session.rs]".into(),
+                "stage".into(),
+                "--ask".into(),
+                "put src/session.rs back?".into(),
+            ]);
+            let Ok(Command::Act(common, act, None)) = parsed else {
+                panic!("an act: {parsed:?}");
+            };
+            assert_eq!(act.ask.as_deref(), Some("put src/session.rs back?"));
+            assert_eq!(common.timeout, ASK_TIMEOUT, "a person reads it first");
+
+            let Ok(Command::Act(common, _, _)) =
+                parse(&args("act todo.item[1] toggle --ask why? --timeout 500"))
+            else {
+                panic!("an act");
+            };
+            assert_eq!(common.timeout, 500, "--timeout wins");
+            let Ok(Command::Act(common, plain, _)) = parse(&args("act todo.item[1] toggle")) else {
+                panic!("an act");
+            };
+            assert_eq!((common.timeout, plain.ask), (30_000, None));
+
+            let long = "x".repeat(wire::MAX_ASK + 1);
+            let exact = "x".repeat(wire::MAX_ASK);
+            for (question, ok) in [
+                (exact.as_str(), true),
+                (long.as_str(), false),
+                ("   ", false),
+                ("two\nlines", false),
+            ] {
+                let line = ["act", "todo.item[1]", "toggle", "--ask", question];
+                let line: Vec<String> = line.iter().map(|s| s.to_string()).collect();
+                match parse(&line) {
+                    Ok(Command::Act(..)) => assert!(ok, "{question:?}"),
+                    Err(e) => assert!(!ok && e.starts_with("--ask: "), "{question:?}: {e}"),
+                    other => panic!("{other:?}"),
+                }
+            }
+            assert!(parse(&args("act todo.item[1] toggle --ask")).is_err());
+            let one_line = USAGE.split_whitespace().collect::<Vec<_>>().join(" ");
+            for words in [
+                "[--ask <question>]",
+                &format!("at most {} characters", wire::MAX_ASK),
+                "a decline ends it (rejected, declined, exit 1). an agent never answers.",
             ] {
                 assert!(one_line.contains(words), "{words:?} in {USAGE}");
             }
