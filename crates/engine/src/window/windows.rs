@@ -47,6 +47,9 @@ pub struct Windows {
     /// one closed, not that none opened yet.
     opened: bool,
     exit_when_empty: bool,
+    /// The app sleeps (`sleep`, or `suspend`): no window draws until
+    /// `wake` (`sleep.rs`).
+    pub(crate) asleep: bool,
 }
 
 impl Default for Windows {
@@ -62,6 +65,7 @@ impl Windows {
             suspended: Vec::new(),
             opened: false,
             exit_when_empty: true,
+            asleep: false,
         }
     }
 
@@ -108,9 +112,11 @@ impl Windows {
 
     /// Keep `host` under `id`, replacing one there. For a host built by
     /// the caller: a headless one in a test under `WindowId::dummy()`, or
-    /// one whose window needed something before its device.
-    pub fn insert(&mut self, id: WindowId, host: WindowHost) -> WindowId {
+    /// one whose window needed something before its device. A host that
+    /// joins a sleeping app sleeps with it.
+    pub fn insert(&mut self, id: WindowId, mut host: WindowHost) -> WindowId {
         self.opened = true;
+        host.set_sleeping(self.asleep);
         match self.hosts.iter_mut().find(|(k, _)| *k == id) {
             Some(slot) => slot.1 = host,
             None => self.hosts.push((id, host)),
@@ -230,8 +236,9 @@ impl Windows {
     }
 
     /// Render on demand, per window: every host with a reason to draw
-    /// asks the platform for its frame, the others stay idle. For a
-    /// shell's `about_to_wait`. Returns how many asked.
+    /// asks the platform for its frame, the others stay idle; a covered
+    /// window and a sleeping app have none. For a shell's
+    /// `about_to_wait`. Returns how many asked.
     pub fn request_pending_redraws(&mut self) -> usize {
         let mut asked = 0;
         for (_, host) in &mut self.hosts {
@@ -260,7 +267,8 @@ impl Windows {
     }
 
     /// The earliest instant any window needs a frame on its own
-    /// (`WindowHost::set_deadline`); the loop's `WaitUntil`.
+    /// (`WindowHost::set_deadline`); the loop's `WaitUntil`. A covered
+    /// window's deadline does not count, nor any while the app sleeps.
     pub fn earliest_deadline(&self) -> Option<Instant> {
         self.hosts
             .iter()
@@ -276,9 +284,11 @@ impl Windows {
     }
 
     /// The app went to the background and the platform takes its windows
-    /// (android): every host drops its surface and window and waits for
-    /// `resume`. The map is empty meanwhile; `should_exit` stays false.
+    /// (android): the app sleeps (`sleep`), then every host drops its
+    /// surface and window and waits for `resume`. The map is empty
+    /// meanwhile; `should_exit` stays false.
     pub fn suspend(&mut self) {
+        self.sleep();
         for (_, mut host) in self.hosts.drain(..) {
             host.suspend();
             self.suspended.push(host);
@@ -290,8 +300,9 @@ impl Windows {
     }
 
     /// Back from the background: each suspended host gets a new window
-    /// from `attrs` (called once per host) and its surface again. The new
-    /// ids, in the old order.
+    /// from `attrs` (called once per host) and its surface again, then
+    /// the app wakes (`wake`: one new frame per window). The new ids, in
+    /// the old order.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn resume(
         &mut self,
@@ -306,6 +317,7 @@ impl Windows {
             self.insert(id, host);
             ids.push(id);
         }
+        self.wake();
         Ok(ids)
     }
 }

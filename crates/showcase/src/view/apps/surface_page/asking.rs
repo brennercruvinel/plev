@@ -13,6 +13,13 @@
 //! `Cancel` that kills the child. Only `VerifiedIr` crosses the channel:
 //! the worker verifies, as `propose_verified` always does.
 //!
+//! An ask made while the app sleeps (`engine::window::Background`, task-76
+//! item 7) does not start a thread: `Pending` holds everything the thread
+//! would take and starts it on the first look after the app wakes, its
+//! time counted from then. A cancel meanwhile ends it without a child.
+//! An answer that arrives while the app sleeps stays on the channel: the
+//! page's `settle` reads nothing until the wake.
+//!
 //! Off the desktop (wasm, mobile) there is no program and no thread:
 //! `find` finds nothing, the page offers only the rules, and nothing here
 //! but the types is used.
@@ -26,6 +33,8 @@ use uir::{Capabilities, GenerationPolicy, VerifiedIr};
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use claude_model::{Cancel, ClaudeCli};
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+use engine::window::Background;
 
 /// How often the page looks at the channel while it waits.
 pub(crate) const POLL: Duration = Duration::from_millis(100);
@@ -59,6 +68,34 @@ pub(crate) struct Answer {
     /// What the calls cost, as the child counts it; none when no call
     /// said.
     pub cost_usd: Option<f64>,
+}
+
+/// Everything the worker's thread takes, owned: what an ask holds while
+/// the app sleeps, and what the thread is started with.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+struct Held {
+    cli: ClaudeCli,
+    intent: String,
+    app: Snapshot,
+    caps: Capabilities,
+    current: Option<VerifiedIr>,
+    policy: GenerationPolicy,
+}
+
+/// Where a proposal is: held for the app to wake, or running on its
+/// thread.
+// off the desktop there is no thread: nothing constructs a pending.
+#[cfg_attr(
+    any(target_arch = "wasm32", target_os = "android", target_os = "ios"),
+    allow(dead_code)
+)]
+enum Work {
+    /// Asked while the app slept: the thread starts on the first look
+    /// after the wake.
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    Held(Box<Held>),
+    /// The thread runs; what it sends comes here.
+    Running(Receiver<Msg>),
 }
 
 /// The Claude the page may ask: the program, when it is there.
@@ -115,7 +152,9 @@ impl Claude {
     /// Starts asking for `intent` over the app as it is (`app`, `caps`),
     /// the surface shown (`current`) and the policy of whoever asked, for
     /// the request `id`: a thread runs the proposal and `Pending` follows
-    /// it. The reason when it cannot start (no program, no thread).
+    /// it. While the app sleeps the thread is not started: the ask is
+    /// held and starts on the first look after the wake. The reason when
+    /// it cannot start (no program, no thread).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     pub fn start(
         &self,
@@ -126,68 +165,29 @@ impl Claude {
         current: Option<VerifiedIr>,
         policy: GenerationPolicy,
     ) -> Result<Pending, String> {
-        use std::sync::mpsc::{self, Sender};
-
-        use propose::{Ask, Llm, Model, ModelError, propose_verified};
-
-        /// The model as the worker runs it: says which attempt begins.
-        struct Counted<'a> {
-            cli: &'a mut ClaudeCli,
-            tx: &'a Sender<Msg>,
-            n: usize,
-        }
-
-        impl Model for Counted<'_> {
-            fn complete(&mut self, prompt: &str) -> Result<String, ModelError> {
-                self.n += 1;
-                let _ = self.tx.send(Msg::Attempt(self.n));
-                self.cli.complete(prompt)
-            }
-        }
-
         let mut cli = self.cli.clone().ok_or("there is no claude to ask")?;
         cli.cancel = Cancel::new();
         let cancel = cli.cancel.clone();
-        let (tx, rx) = mpsc::channel();
-        let asked = intent.clone();
-        std::thread::Builder::new()
-            .name("surface-page-claude".to_owned())
-            .spawn(move || {
-                let ask = Ask {
-                    intent: &asked,
-                    caps: &caps,
-                    app: &app,
-                    current: current.as_ref(),
-                    policy: &policy,
-                };
-                let started = web_time::Instant::now();
-                let mut counted = Counted {
-                    cli: &mut cli,
-                    tx: &tx,
-                    n: 0,
-                };
-                let proposed = propose_verified(&mut Llm::new(&mut counted), &ask);
-                let took = started.elapsed();
-                let calls = cli.calls();
-                let cost_usd = calls
-                    .iter()
-                    .any(|c| c.cost_usd.is_some())
-                    .then(|| cli.spent_usd());
-                let _ = tx.send(Msg::Done(Box::new(Answer {
-                    proposed,
-                    attempts: calls.len(),
-                    took,
-                    cost_usd,
-                })));
-            })
-            .map_err(|e| format!("could not start a thread for the claude: {e}"))?;
+        let held = Held {
+            cli,
+            intent: intent.clone(),
+            app,
+            caps,
+            current,
+            policy,
+        };
+        let work = if Background::asleep() {
+            Work::Held(Box::new(held))
+        } else {
+            Work::Running(spawn(held)?)
+        };
         Ok(Pending {
             id,
             intent,
             started: web_time::Instant::now(),
             attempt: 0,
             shown_secs: 0,
-            rx,
+            work,
             cancel,
             cancelled: None,
         })
@@ -208,6 +208,73 @@ impl Claude {
     }
 }
 
+/// The worker: a thread that runs the proposal over `held` and reports
+/// each attempt and the answer on the channel returned. The reason when
+/// no thread could start.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+fn spawn(held: Held) -> Result<Receiver<Msg>, String> {
+    use std::sync::mpsc::Sender;
+
+    use propose::{Ask, Llm, Model, ModelError, propose_verified};
+
+    /// The model as the worker runs it: says which attempt begins.
+    struct Counted<'a> {
+        cli: &'a mut ClaudeCli,
+        tx: &'a Sender<Msg>,
+        n: usize,
+    }
+
+    impl Model for Counted<'_> {
+        fn complete(&mut self, prompt: &str) -> Result<String, ModelError> {
+            self.n += 1;
+            let _ = self.tx.send(Msg::Attempt(self.n));
+            self.cli.complete(prompt)
+        }
+    }
+
+    let Held {
+        mut cli,
+        intent,
+        app,
+        caps,
+        current,
+        policy,
+    } = held;
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::Builder::new()
+        .name("surface-page-claude".to_owned())
+        .spawn(move || {
+            let ask = Ask {
+                intent: &intent,
+                caps: &caps,
+                app: &app,
+                current: current.as_ref(),
+                policy: &policy,
+            };
+            let started = web_time::Instant::now();
+            let mut counted = Counted {
+                cli: &mut cli,
+                tx: &tx,
+                n: 0,
+            };
+            let proposed = propose_verified(&mut Llm::new(&mut counted), &ask);
+            let took = started.elapsed();
+            let calls = cli.calls();
+            let cost_usd = calls
+                .iter()
+                .any(|c| c.cost_usd.is_some())
+                .then(|| cli.spent_usd());
+            let _ = tx.send(Msg::Done(Box::new(Answer {
+                proposed,
+                attempts: calls.len(),
+                took,
+                cost_usd,
+            })));
+        })
+        .map_err(|e| format!("could not start a thread for the claude: {e}"))?;
+    Ok(rx)
+}
+
 /// A proposal the Claude is answering: the request that started, what it
 /// was asked, how long it has been, the attempt in course.
 // off the desktop there is no thread: nothing constructs a pending.
@@ -223,7 +290,7 @@ pub(crate) struct Pending {
     /// The whole seconds the page last showed (the status moves once a
     /// second, not every frame).
     shown_secs: u64,
-    rx: Receiver<Msg>,
+    work: Work,
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     cancel: Cancel,
     /// Who cancelled it, when someone did: the request ends failed, as
@@ -242,23 +309,70 @@ impl Pending {
         self.attempt
     }
 
+    /// Asked while the app slept and not started yet.
+    #[cfg(all(
+        test,
+        not(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))
+    ))]
+    pub fn held(&self) -> bool {
+        matches!(self.work, Work::Held(_))
+    }
+
     /// Raises the signal: the child is killed at the worker's next poll
     /// (within 10 ms) and the proposal ends as a model error nobody
-    /// reads any more. `by` is who asked.
+    /// reads any more; an ask still held never starts. `by` is who asked.
     pub fn cancel(&mut self, by: Actor) {
         #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
         self.cancel.cancel();
         self.cancelled = Some(by);
     }
 
+    /// A held ask starts once the app is awake, its time counted from
+    /// now; while the app sleeps nothing moves. The answer when no thread
+    /// could start.
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    fn start_held(&mut self) -> Option<Answer> {
+        if !matches!(self.work, Work::Held(_)) || Background::asleep() {
+            return None;
+        }
+        let (_, idle) = std::sync::mpsc::channel();
+        let Work::Held(held) = std::mem::replace(&mut self.work, Work::Running(idle)) else {
+            return None;
+        };
+        self.started = web_time::Instant::now();
+        match spawn(*held) {
+            Ok(rx) => {
+                self.work = Work::Running(rx);
+                None
+            }
+            Err(why) => Some(Answer {
+                proposed: Err(ProposeError::Model(why)),
+                attempts: 0,
+                took: Duration::ZERO,
+                cost_usd: None,
+            }),
+        }
+    }
+
     /// What the worker sent since the last look: true when what the
     /// status shows moved (the attempt, the whole seconds), and the
     /// answer when the proposal ended. A worker gone without an answer
-    /// is an answer too: the model failed.
+    /// is an answer too: the model failed. An ask held for the wake
+    /// starts here once the app is awake, and moves nothing before.
     pub fn poll(&mut self) -> (bool, Option<Answer>) {
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        if let Some(answer) = self.start_held() {
+            return (true, Some(answer));
+        }
+        let rx = match &self.work {
+            Work::Running(rx) => rx,
+            // asleep still: the ask waits, nothing moves
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            Work::Held(_) => return (false, None),
+        };
         let mut moved = false;
         loop {
-            match self.rx.try_recv() {
+            match rx.try_recv() {
                 Ok(Msg::Attempt(n)) => {
                     self.attempt = n;
                     moved = true;

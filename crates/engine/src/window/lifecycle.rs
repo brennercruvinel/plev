@@ -124,8 +124,9 @@ impl super::App {
     }
 
     /// One event of one window: its host takes it; a redraw request draws
-    /// that window alone; a close closes that window alone, and the app
-    /// when it was the last.
+    /// that window alone, and only while it shows (a covered window, or a
+    /// sleeping app, draws on the frame asked as it shows again); a close
+    /// closes that window alone, and the app when it was the last.
     pub(crate) fn handle_window_event(
         &mut self,
         event_loop: &ActiveEventLoop,
@@ -133,7 +134,8 @@ impl super::App {
         event: WindowEvent,
     ) {
         match self.windows.route(window_id, &event) {
-            Routed::Redraw => self.render_window(window_id),
+            Routed::Redraw if self.windows.awake(window_id) => self.render_window(window_id),
+            Routed::Redraw => {}
             Routed::CloseRequested => {
                 self.windows.close(window_id);
                 if self.windows.should_exit() {
