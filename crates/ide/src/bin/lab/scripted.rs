@@ -5,15 +5,17 @@
 //! submit comes back stale it observes the changes since, repairs the
 //! index and submits again on the new revision; then it confirms its
 //! commit on the very next observation of the stacks, with no wait: the
-//! node of the sha the receipt names holds the receipt's files. every act
-//! rests on the observation it was decided on (`from_revision`), so a
-//! stale world is refused, never acted on.
+//! node of the sha the receipt names holds the receipt's files, and it
+//! observes the whole workspace once more. every act rests on the
+//! observation it was decided on (`from_revision`), so a stale world is
+//! refused, never acted on. each observation's step says what it weighs:
+//! the bytes of the line the server writes for it.
 
 use std::collections::BTreeSet;
 use std::path::Path;
 
 use sem::{ActionName, Change, Node, Outcome, Rejection, Revision, SemId, Stage, StateKey, Value};
-use wire::{Act, Client, Observe, Reply, SnapshotReply, StageReply};
+use wire::{Act, Client, Observe, Reply, ServerMsg, SnapshotReply, StageReply, encode_server};
 
 use crate::repo::{TASK_FILES, TASK_MESSAGE};
 
@@ -146,7 +148,7 @@ impl Agent {
         };
         let stacks = self.observe_scope(out, "stacks")?;
         let id = format!("stacks.commit[{sha}]");
-        match value(&stacks, &id, "files") {
+        let confirmed = match value(&stacks, &id, "files") {
             Some(Value::List(projected)) if projected == *files => {
                 out.steps.push(format!(
                     "stacks: {id} holds the receipt's files {files:?} ({} commit(s) projected)",
@@ -157,7 +159,10 @@ impl Agent {
             other => Err(format!(
                 "stacks: {id} does not hold the receipt's files {files:?}: {other:?}"
             )),
-        }
+        };
+        // the whole workspace after the commit, for what it weighs.
+        self.observe(out)?;
+        confirmed
     }
 
     /// after a stale refusal: what changed since the decision, then the
@@ -205,9 +210,10 @@ impl Agent {
         match reply {
             Reply::Snapshot(s) => {
                 out.steps.push(format!(
-                    "observed revision {} ({} nodes, staged {:?})",
+                    "observed revision {} ({} nodes, {} bytes, staged {:?})",
                     s.revision,
                     s.nodes.len(),
+                    weight(&s),
                     staged(&s)
                 ));
                 Ok(s)
@@ -227,8 +233,11 @@ impl Agent {
             .map_err(|e| e.to_string())?;
         match reply {
             Reply::Snapshot(s) => {
-                out.steps
-                    .push(format!("observed {scope}: {} nodes", s.nodes.len()));
+                out.steps.push(format!(
+                    "observed {scope}: {} nodes, {} bytes",
+                    s.nodes.len(),
+                    weight(&s)
+                ));
                 Ok(s)
             }
             other => Err(format!("a snapshot: {other:?}")),
@@ -264,6 +273,18 @@ impl Agent {
             other => Err(format!("{target} {action} ended {other:?}")),
         }
     }
+}
+
+/// the bytes of the line the server writes for this observation: the
+/// reply through the wire codec under a one-character id, and the
+/// newline, as the screenshot arm weighs an observation.
+fn weight(seen: &SnapshotReply) -> usize {
+    encode_server(&ServerMsg {
+        id: Some("1".to_owned()),
+        reply: Reply::Snapshot(seen.clone()),
+    })
+    .len()
+        + 1
 }
 
 fn terminal(stages: &[StageReply]) -> Option<&Stage> {
