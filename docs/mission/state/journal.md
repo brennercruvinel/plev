@@ -14,6 +14,31 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: tray e notificações (task-76 item 5)
+
+- **integrada:** item 5 (merge da `task/76f-tray-notify`). o tray com o
+  menu do shell e `shell.show`; a notificação atrás de trait, real só
+  com bundle no macOS (`NeedsBundle`, o crate ficou fora do manifesto);
+  a Files avisa fora de foco e o fim da detecção avisa pelo dispatcher.
+  gate na `main` em andamento no registro; o agente reportou 2565 (+25)
+  e 161 baselines iguais (2 da Files só por semântica). decisões do
+  orquestrador aceitas: o lock do urnaui escrito à mão (o resolver 3
+  daquele workspace rebaixa 22 pacotes a cada relock; `--locked` passou).
+- **próximo:** item 7 (sleep e wake); o 6 (deep links) espera o bundle.
+
+### ciclo 3: publicado #82 (task-76 item 8); disparado o item 5
+
+- **publicado:** PR #82, merge commit, gate local verde na `main` (2625,
+  +20), regressão 161 sem mudança.
+- **disparado:** task-76 item 5, tray e notificações do sistema como
+  capacidades fora da janela: o tray com o menu lido da projeção (o
+  mesmo `MenuModel` do item 4), a notificação com uma ação nomeada por
+  capacidade, o clique de volta como `Request` de pessoa; `tray-icon` e
+  `objc2-user-notifications` sem features, do cache offline (aprovados
+  pelo orquestrador, não estruturais); a notificação real no macOS pode
+  exigir bundle, e a sonda decide sem disparar nada nesta máquina. um
+  agente só, no worktree fixo.
+
 ### ciclo 3: diálogos nativos (task-76 item 8)
 
 - **integrada:** item 8 (merge da `task/76e-alerts`). o alerta e a

@@ -95,6 +95,21 @@ rfd = { version = "0.15", default-features = false }
 # backend, which is the linux bring-up's choice, so they are off.
 muda = { version = "0.20", default-features = false }
 
+# tray-icon is the system tray icon (macos: an NSStatusItem; windows: the
+# notification area) behind `platform::tray`, with a `muda` menu as its
+# menu. its default features (`muda-libxdo`, `libappindicator`) only pick
+# the linux backend, and on linux the crate refuses to build without one
+# (libappindicator or ksni), which is the linux bring-up's choice: so it
+# enters on macos and windows alone, and linux gets `NoTray` meanwhile.
+[target.'cfg(any(target_os = "macos", target_os = "windows"))'.dependencies]
+tray-icon = { version = "0.25", default-features = false }
+# the system notification (`platform::notify`) has no crate here yet: on
+# macos the UserNotifications framework refuses a process without an app
+# bundle (`objc2-user-notifications` 0.3 would enter with the classes it
+# uses, plus `objc2` and `objc2-foundation` directly; see the item 5 probe
+# in docs/mission/steps/ongoing/task-76-platform-integration.md), and the
+# bundle is the platform bring-up's. until then `NativeNotifier` says why.
+
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger.workspace = true
 

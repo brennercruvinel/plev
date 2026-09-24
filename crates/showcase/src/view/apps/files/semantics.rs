@@ -19,7 +19,9 @@
 //! `files:received` since the text counts it; the body shown is the
 //! region's `alert`, empty until one was shown, so an agent reads what
 //! the person saw) and `files.status` (`message`). The first two actions
-//! read the list because both change it.
+//! read the list because both change it. The region's `notice` is the
+//! body of the last notification the page asked for (files that landed
+//! while no window had the focus), empty until one was.
 
 use std::path::PathBuf;
 
@@ -27,6 +29,7 @@ use comps::prelude::{EventResult, Rect};
 use engine::perf::stages::{self, Stage};
 use engine::platform::alerts::Alert;
 use engine::platform::files::DialogRequest;
+use engine::platform::notify::{Action, Notification};
 use sem::{
     Actor, Actors, Execution, Operable, Outcome, ParamSpec, Policy, Receipt, Request, RequestId,
     Role, SemError, SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder, Value, ValueKind,
@@ -145,7 +148,8 @@ impl Semantics for FilesPage {
             .inert(self.inert)
             .state("received", Value::List(received))
             .state("count", count(self.received.len()))
-            .state("alert", self.alerted.as_str());
+            .state("alert", self.alerted.as_str())
+            .state("notice", self.notice.as_str());
         let reads = format!("{}:received", ids.region);
         let mut zone = b.node(&ids.drop, Role::Region, "drop files here");
         zone.parent(&ids.region);
@@ -192,6 +196,25 @@ impl FilesPage {
             format!("{files} received; nothing was written to disk."),
         )
     }
+
+    /// What the person is told when `now` files land while no window has
+    /// the focus: how many came, with the open button as the
+    /// notification's own button (as the projection declares it: a
+    /// person's, enabled), so a click on it runs `open_file` by the person.
+    fn received_notice(&self, now: usize) -> Notification {
+        let files = match now {
+            1 => "1 file".to_owned(),
+            n => format!("{n} files"),
+        };
+        let mut notice = Notification::info("Files", format!("{files} received"));
+        if let Some(ids) = &self.ids
+            && let Ok(seen) = self.snapshot()
+            && let Some(open) = Action::of(&seen, &ids.open, "open_file")
+        {
+            notice = notice.action(open);
+        }
+        notice
+    }
 }
 
 impl Operable for FilesPage {
@@ -232,11 +255,20 @@ impl Operable for FilesPage {
                 if paths.is_empty() {
                     return Execution::Failed("the drop carries no file".to_owned());
                 }
-                outcome
-                    .result
-                    .insert("received".to_owned(), count(paths.len()));
-                self.said = Said::Received(paths.len());
+                let now = paths.len();
+                outcome.result.insert("received".to_owned(), count(now));
+                self.said = Said::Received(now);
                 self.received.extend(paths);
+                // nobody was looking: the person is told, and the text
+                // is state whether the platform shows it or not
+                if !self.window_focused {
+                    let notice = self.received_notice(now);
+                    outcome
+                        .result
+                        .insert("notice".to_owned(), Value::Text(notice.body.clone()));
+                    self.notice = notice.body.clone();
+                    self.notices.push(notice);
+                }
             }
             Op::Warn => {
                 let alert = self.warning();

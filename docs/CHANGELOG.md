@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- tray and notifications are capabilities out of the window (2026-09-24,
+  task-76 item 5): the engine puts a tray icon with a menu read from the
+  projection, and a system notification with at most one action a person
+  may press, behind traits with fakes; a click on either comes back as a
+  request of a person through the app's dispatcher. the showcase has a
+  tray with the shell's menu and a `show` capability, the Files page
+  notifies when files are dropped while the window is behind, and the end
+  of a silence detection notifies through the dispatcher. on macOS a real
+  notification needs an `.app` bundle, so the desktop answers "needs a
+  bundle" until the platform bring-up; the tray works today.
+
 - native dialogs answer the same contract (2026-09-24, task-76 item 8):
   `engine::platform::alerts` puts the system's alert and confirmation
   behind a trait, with a fake for tests and none on wasm and mobile. in

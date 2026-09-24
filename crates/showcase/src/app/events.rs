@@ -179,6 +179,19 @@ impl App {
 
             WindowEvent::RedrawRequested => self.redraw(event_loop, id),
 
+            // A window of ours took or lost the focus: while none has it,
+            // what lands is told to the person by notification (desktop).
+            WindowEvent::Focused(on) => {
+                #[cfg(not(any(
+                    target_arch = "wasm32",
+                    target_os = "android",
+                    target_os = "ios"
+                )))]
+                self.focus_changed(id, on);
+                #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+                let _ = on;
+            }
+
             // A file dragged over or dropped on a window is the engine's
             // event (it knows which platform events say so); the active
             // page takes it, whichever window it is in (task-76: the

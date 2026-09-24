@@ -4,19 +4,29 @@
 //! projected, `shell` (a region) with `shell.page` and `shell.theme`
 //! (selects: `selected`, `select` with the name as text, any actor),
 //! `shell.detach` (a toggle: `on`, `toggle`; a person only, as the Files
-//! page's `open_file`) and, while the session is recorded,
-//! `shell.save_session` (a button: `activate`; a person only), and run
-//! through the gallery's one dispatcher (the todo page's, lent by
-//! `TodoPage::with_dispatcher` as the Surface, Silences and Files pages
-//! do). A key, a menu item, the theme page's cards, the sidebar, a screen
-//! reader and an agent through the port ask the same way and get a
-//! receipt; the policy holds for every one of them.
+//! page's `open_file`), `shell.show` (a button: `activate`, brings the
+//! main window forward; a person only; the tray icon's own click and a
+//! notification's button ask it, task-76 item 5) and, while the session
+//! is recorded, `shell.save_session` (a button: `activate`; a person
+//! only), and run through the gallery's one dispatcher (the todo page's,
+//! lent by `TodoPage::with_dispatcher` as the Surface, Silences and Files
+//! pages do). A key, a menu item, a tray item, a notification, the theme
+//! page's cards, the sidebar, a screen reader and an agent through the
+//! port ask the same way and get a receipt; the policy holds for every
+//! one of them. The region's `notice` is the last thing the shell told
+//! the person by notification on its own (a job that ended in the
+//! background), for an agent to read.
 //!
-//! The shell owns the windows and the recording; the view does not. So
-//! `execute` records what was asked ([`Asks`]): a page or a theme the view
-//! applies right after the dispatch; a detach or a save the shell takes on
-//! its loop ([`ShowcaseView::take_detach_request`],
-//! [`ShowcaseView::take_save_request`]), as `D` always worked.
+//! The shell owns the windows, the recording and the platform's tray and
+//! notifications; the view does not. So `execute` records what was asked
+//! ([`Asks`]): a page or a theme the view applies right after the
+//! dispatch; a detach, a save or a show the shell takes on its loop
+//! ([`ShowcaseView::take_detach_request`],
+//! [`ShowcaseView::take_save_request`],
+//! [`ShowcaseView::take_show_request`]), as `D` always worked. The shell
+//! also tells the view whether a window has the focus
+//! ([`ShowcaseView::set_window_focused`]) and takes what a page asked to
+//! tell the person ([`ShowcaseView::take_notifications`]).
 //!
 //! Where it shows: [`ShowcaseView::semantics`] stays the page's alone (the
 //! goldens, the regress baselines, the accessibility tree, the recording
@@ -25,6 +35,7 @@
 //! serves and the menu is built from.
 
 use engine::platform::menu::Clicked;
+use engine::platform::notify::Notification;
 use sem::{
     Actor, Actors, Constraints, Execution, Operable, Outcome, ParamSpec, Policy, Receipt, Request,
     RequestId, Role, SemError, SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder, Stage,
@@ -59,12 +70,14 @@ const TEXT: ParamSpec = ParamSpec {
 };
 
 /// The shell's capabilities as the view keeps them: the ids it projects,
-/// what was asked of it since the shell last looked, and whether the
-/// session is recorded (`shell.save_session` is projected while it is).
+/// what was asked of it since the shell last looked, whether the session
+/// is recorded (`shell.save_session` is projected while it is), and the
+/// last notice the shell gave on its own (`shell:notice`).
 pub struct Shell {
     ids: Option<Ids>,
     asks: Asks,
     recording: bool,
+    notice: String,
 }
 
 impl Default for Shell {
@@ -80,6 +93,7 @@ struct Asks {
     theme: Option<String>,
     detach: bool,
     save: bool,
+    show: bool,
 }
 
 struct Ids {
@@ -87,6 +101,7 @@ struct Ids {
     page: SemId,
     theme: SemId,
     detach: SemId,
+    show: SemId,
     save: SemId,
 }
 
@@ -97,6 +112,7 @@ impl Ids {
             page: shell.child("page")?,
             theme: shell.child("theme")?,
             detach: shell.child("detach")?,
+            show: shell.child("show")?,
             save: shell.child("save_session")?,
             shell,
         })
@@ -108,6 +124,7 @@ impl Ids {
             &self.page,
             &self.theme,
             &self.detach,
+            &self.show,
             &self.save,
         ]
         .contains(&id)
@@ -123,9 +140,11 @@ impl Ids {
     }
 }
 
-/// The shell's capabilities, named without the ids (the view's own name
-/// for them; outside the view they are their ids: `shell.page`,
-/// `shell.theme`, `shell.detach`, `shell.save_session`).
+/// The shell's capabilities a key or a control of the view asks for,
+/// named without the ids (the view's own name for them; outside the view
+/// they are their ids: `shell.page`, `shell.theme`, `shell.detach`,
+/// `shell.save_session`). `shell.show` is asked from outside the window
+/// alone (the tray, a notification), by `Clicked`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ShellTarget {
     Page,
@@ -140,6 +159,7 @@ impl Shell {
             ids: Ids::new().inspect_err(|e| log::warn!("shell: {e}")).ok(),
             asks: Asks::default(),
             recording: false,
+            notice: String::new(),
         }
     }
 
@@ -182,7 +202,8 @@ fn project(shell: &Shell, view: View<'_>, b: &mut SnapshotBuilder) {
         return;
     };
     let page = &PAGES[view.page];
-    b.node(&ids.shell, Role::Region, "plev");
+    b.node(&ids.shell, Role::Region, "plev")
+        .state("notice", shell.notice.as_str());
     let mut node = b.node(&ids.page, Role::Select, "page");
     node.parent(&ids.shell)
         .state("selected", page.title)
@@ -210,6 +231,14 @@ fn project(shell: &Shell, view: View<'_>, b: &mut SnapshotBuilder) {
             actors: PERSON_ONLY,
             ..Policy::default()
         });
+    // the main window forward: what the tray icon's click and a
+    // notification's button ask for; a window is a person's
+    let mut node = b.node(&ids.show, Role::Button, "show plev");
+    node.parent(&ids.shell).enabled(DESKTOP).focusable(false);
+    node.action("activate").policy(Policy {
+        actors: PERSON_ONLY,
+        ..Policy::default()
+    });
     if shell.recording {
         let mut node = b.node(&ids.save, Role::Button, "save the session recording");
         node.parent(&ids.shell).focusable(false);
@@ -268,6 +297,7 @@ impl Operable for ShellOp<'_> {
                     .insert("on".to_owned(), Value::Bool(!self.view.detached));
             }
             ("activate", target) if *target == ids.save => asks.save = true,
+            ("activate", target) if *target == ids.show => asks.show = true,
             _ => {
                 return Execution::Failed(format!(
                     "the shell has no {} on {}",
@@ -398,16 +428,44 @@ impl ShowcaseView {
         std::mem::take(&mut self.panes.shell.asks.save)
     }
 
+    /// The tray icon, its item or a notification asked for the main
+    /// window to come forward: the shell, which owns the windows, takes
+    /// the ask.
+    pub fn take_show_request(&mut self) -> bool {
+        std::mem::take(&mut self.panes.shell.asks.show)
+    }
+
+    /// What the shell told the person by notification on its own (a job
+    /// that ended while no window had the focus), projected as
+    /// `shell:notice` for an agent to read.
+    pub fn set_notice(&mut self, text: &str) {
+        self.panes.shell.notice = text.to_owned();
+    }
+
+    /// The shell says whether one of its windows has the focus; the pages
+    /// that tell the person about what lands while nobody looks (the
+    /// Files page) read it.
+    pub fn set_window_focused(&mut self, on: bool) {
+        self.panes.files.set_window_focused(on);
+    }
+
+    /// What the pages asked to tell the person since the shell last took
+    /// it, in order; the shell shows it through the platform.
+    pub fn take_notifications(&mut self) -> Vec<Notification> {
+        self.panes.files.take_notifications()
+    }
+
     /// The session is recorded (`PLEV_RECORD=1`): `shell.save_session`
     /// is projected while it is.
     pub fn set_recording(&mut self, on: bool) {
         self.panes.shell.recording = on;
     }
 
-    /// A person clicked an item of the gallery's menu: the request a
-    /// click on the button makes, observed on the gallery as it is now,
-    /// dispatched to the shell or the page it aims at (`act`). `true`
-    /// when the gallery's projection moved (a frame is needed).
+    /// A person clicked an item of the gallery's menu, of the tray, the
+    /// tray icon itself or a notification: the request a click on the
+    /// button makes, observed on the gallery as it is now, dispatched to
+    /// the shell or the page it aims at (`act`). `true` when the gallery's
+    /// projection moved (a frame is needed).
     pub fn menu_click(&mut self, clicked: &Clicked) -> bool {
         let seen = match self.gallery_semantics() {
             Ok(seen) => seen,

@@ -27,8 +27,9 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use sem::{ActionName, Actor, Request, Role, SemError, SemId, Snapshot, StateKey, Value};
 
+/// The `muda` side; the tray (`platform::tray`) builds its menu with it.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-mod native;
+pub(in crate::platform) mod native;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub use native::MudaMenu;
 
