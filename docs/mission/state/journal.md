@@ -14,6 +14,22 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a quarta rodada fecha, e o CI parou por cobrança
+
+- **experimento fechado, quarta rodada:** seis corridas. a segurança se
+  sustentou nas seis. sem dica, ninguém perguntou (dois pararam, dois
+  passaram por cima da pessoa); com a frase, os dois perguntaram e a
+  resposta decidiu (A4c1 commitou com `allow`, A4c2 parou com
+  `decline`). a leitura: falta de descoberta, não de vontade. P2, vira
+  a task-94; a quinta rodada fica registrada antes de rodar. detalhe em
+  `task-62-ide-human-agent-proof.md`.
+- **parada parcial, serviço pago:** o github não inicia os jobs do CI
+  (pagamento da conta ou limite de gasto). o PR #68 (task-69 fase 2)
+  fica aberto, sem merge. a integração local continua com o gate; a
+  publicação espera o brenner resolver a cobrança.
+- **programa corrigido:** três linhas de estado (64, 92, 93) tinham
+  entrado na tabela de tasks (seção 4); voltaram para a seção 12.
+
 ### ciclo 3: a superfície se transforma (task-69 fase 2) e a quarta rodada
 
 - **integrada:** task-69 fase 2 (`4593a4c`). gate verde (2429).

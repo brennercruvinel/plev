@@ -114,13 +114,11 @@ o que a tese precisa e o que existe hoje:
 | task-61 | superfície do agente (socket local, observe, act) | 4 | 57, 58, 59 |
 | task-62 | prova no ide: stale-state rejection e handoff | 4 | 57, 58, 59 (fase c: 61, 63) |
 | task-63 | flight recorder de sessão | 4 | 57, 58 |
-| task-64 | fases a e c integradas; b depois (P2) | `e6560a2`, `d611fa4` | crate `inspect`, CLI `plev-inspect` (com `--export`); uma sessão gravada vira teste de regressão (`crates/ide/tests/rerun`, fixture do app, veredito e marcas), o primeiro é a sessão a2ppa da terceira rodada; adr sessions-become-regression-tests |
+| task-64 | inspector de sessão, bug report e sessão para teste | 5 | 63, 66 (link de código: 65) |
 | task-65 | pixel para código e inspector de desenvolvimento | 5 | 57, 59 |
 | task-66 | headless como primeira classe | 3 | nenhuma (saída semântica: 57) |
 | task-67 | regressão estrutural antes de pixel | 5 | 59, 66 |
 | task-68 | plev IR e verifier | 6 | 57, 58 |
-| task-92 | integrada (P0 dentro, e o P2) | `f101359` | P0: um estágio fora de um drain acorda o porto (a recusa da pessoa chegava só na próxima mensagem do agente); o agente pede à pessoa que confirme um ato (`Request::ask`, `plev act --ask`), o modal do ide pergunta, o `why` mostra |
-| task-93 | integrada | `654d740` | a pessoa do laboratório responde ao modal (`--answer allow|decline|none`, `--answer-after`), o relatório conta perguntas, respostas, tempo e o que o agente fez depois; `--scripted ask` |
 | task-69 | superfícies efêmeras e geradas | 6 | 68, 59 (fase 0 em refs/ sem dependência) |
 | task-70 | transformações adaptativas | 7 | 68, 69, 63 |
 | task-71 | plev como compiler target (importers para IR) | 7 | 68 |
@@ -372,7 +370,7 @@ atualizado em cada integração.
 | task-59 | integrada | `f71dc20`, `f5b7cee` | ligação no compositor e todo pelo dispatcher (fase a); os 16 widgets restantes com `SemId` e projeção, regra "toda ação lê o que muda", defeito do `Select` corrigido (fase b); rolagem do `Select` virou a task-81 |
 | task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (integrada, linha abaixo) |
 | task-73 | fases 1 e 1b integradas; fase 2 (ADR de desenho) espera decisão do brenner | `ed814da`, `91fdb33` | limitado pela GPU mesmo sem a latência de envio (4 a 12 vezes a CPU); pass de layer segue os pixels; composite em todo frame; o caret a 60 fps é a task-82 |
-| task-62 | fase c rodada duas vezes; checkpoint a decidido (decisões 8 e 10) | `8978602`, `d26c9b1` | experimento completo: H1, H2, H3 e H5 sustentadas, H4 diz onde o plev ganha (recusa antes do efeito, com o delta; receipt e sessão) e onde não (bytes e idas e voltas contra o `git`); resultado e decisão pedida no arquivo da task |
+| task-62 | fase c em quatro rodadas; checkpoint a decidido (decisões 8 e 10); a quarta (o handoff, 2026-09-24): a segurança se sustentou nas seis, sem dica ninguém perguntou, com a frase os dois perguntaram e a resposta da pessoa decidiu; a quinta espera a task-94 e fecha a pergunta do handoff | `8978602`, `d26c9b1` | experimento completo: H1, H2, H3 e H5 sustentadas, H4 diz onde o plev ganha (recusa antes do efeito, com o delta; receipt e sessão) e onde não (bytes e idas e voltas contra o `git`); resultado e decisão pedida no arquivo da task |
 | task-63 | fases a a d integradas | `c62a05d`, `8e6e814` | arquivo `.monster` de sessão (magic `MONS`); fase d re-escopada: o `ide` grava a própria sessão (`PLEV_RECORD=1`, debug; salva por atalho, ao fechar e no panic) e cada frame leva as ligações visíveis (seção B, versão 1); `PLEV_BACKGROUND=1` abre a janela sem tomar o foco; retenção de pixels e o shell do showcase ficam sem task (P2) |
 | task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
 | task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
@@ -385,7 +383,7 @@ atualizado em cada integração.
 | task-84 | integrada | `4896451` | a sessão do ide descarta leitura do git feita antes de uma mutação que a view já mostra; teste que falhava 10 de 10 na base; o roteirizado não espera mais o index parar (sem essa espera, na base, as dez corridas com intervenção davam errado) |
 | task-85 | integrada | `476bbb4` | o commit aparece na projeção no passo em que o receipt conclui; `files` (uma definição: contra o primeiro pai, renomeação nos dois caminhos) nos 10 commits mais recentes e no último que o ide fez; devolvida uma vez (definição única, limite na projeção) |
 | task-87 | integrada | `365d8fd` | um estágio terminal traz `revision` (aditivo no v1); o roteirizado com intervenção foi de 24 para 17 mensagens e de 91,5 para 45,9 KB; adr a-terminal-stage-carries-the-revision |
-| task-64 | fase a integrada; b e c na fila | `e6560a2` | crate `inspect`, CLI `plev-inspect`: a cadeia causal de cada request pela gravação; achou o buraco da task-89; a fase b (UI) precisa gravar as ligações por frame no `rec` |
+| task-64 | fases a e c integradas; b depois (P2) | `e6560a2`, `d611fa4` | crate `inspect`, CLI `plev-inspect` (com `--export`); uma sessão gravada vira teste de regressão (`crates/ide/tests/rerun`, fixture do app, veredito e marcas), o primeiro é a sessão a2ppa da terceira rodada; adr sessions-become-regression-tests |
 | task-86 | integrada | `7f866e8` | o binário `ide` abre a porta do agente (`PLEV_AGENT=1`, debug) por `ide::agent`; prova numa janela real com cliques de uma pessoa e um agente ao mesmo tempo: recusa stale nomeando a pessoa, o mesmo texto na tela e no nó que o agente lê; `Binding::visible_rect` no engine |
 | task-90 | integrada | `d02b4d1` | o `acted` nomeia a cadeia de ações de outros atores desde a primeira que rodou na revisão que o autor viu; o toast em uma frase por ator; a cena do clique na janela continua sem âncora (a seleção muda a revisão fora do dispatcher), teste escreve o limite |
 | task-68 | integrada | `871f0dd` | crate `uir`: IR em JSON (vocabulário fechado, props por token, ligação a capacidades declaradas, repetição mínima), registro de capacidades do `Snapshot`, `verify` com oito regras e erros por JSON pointer como único caminho a `VerifiedIr`, schema gerado; adr plev-ir-typed-and-verified |
@@ -396,3 +394,6 @@ atualizado em cada integração.
 | task-88 | integrada (P1) | `96c20a0` | o laboratório mede pelo valor visto e pelo valor vivo, não pela revisão (hash de conteúdo colide); cenário `unstage-before-submit` (a pessoa entre a decisão e o submit) além do antigo; `--scripted chain`; recusas do protocolo no relatório; `lab.rs` dividido |
 | task-67 | integrada | `49e2822` | `regress check|bless`: significado, hash estável por layer e ligações, pixel só na região que mudou, nomeando o controle; 157 baselines em 0,6 s sem GPU; job de CI no macOS; adr regression-by-meaning-before-pixels |
 | auditoria de verdade | integrada | `7621403` | `docs/mission/state/truth.md`: contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |
+| task-92 | integrada (P0 dentro, e o P2) | `f101359` | P0: um estágio fora de um drain acorda o porto (a recusa da pessoa chegava só na próxima mensagem do agente); o agente pede à pessoa que confirme um ato (`Request::ask`, `plev act --ask`), o modal do ide pergunta, o `why` mostra |
+| task-93 | integrada | `654d740` | a pessoa do laboratório responde ao modal (`--answer allow|decline|none`, `--answer-after`), o relatório conta perguntas, respostas, tempo e o que o agente fez depois; `--scripted ask` |
+| task-94 | na fila (P2) | | a recusa que nomeia uma pessoa aponta para o `--ask` no stderr do `plev`; origem: quarta rodada da task-62, nenhum agente sem dica achou a pergunta |
