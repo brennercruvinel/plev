@@ -8,6 +8,7 @@ resolver = "2"
 members = [
     "crates/engine",
     "crates/comps",
+    "crates/claude-model",
     "crates/macros",
     "crates/git",
     "crates/ide",
@@ -54,6 +55,7 @@ uninlined_format_args = "warn"
 # -- internal (path)
 engine = { path = "crates/engine" }
 comps = { path = "crates/comps" }
+claude-model = { path = "crates/claude-model" }
 git = { path = "crates/git" }
 ide = { path = "crates/ide" }
 lot = { path = "crates/lot" }

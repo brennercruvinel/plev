@@ -180,7 +180,7 @@ what phase 3b adds, orders of magnitude above it.
 - a network call, a credential or a provider in this crate.
 - a second dispatcher for a page's own capabilities.
 
-## addendum, 2026-09-24: the rules propose the items (task-95, proposed)
+## addendum, 2026-09-24: the rules propose the items (task-95, accepted)
 
 ### context
 
@@ -237,3 +237,114 @@ had no part that repeats.
   items" gives the whole list with the Active chip and count.
 - a list the filter empties has no list to find; a surface that already
   shows it keeps its list node, with no instance.
+## addendum, 2026-09-24: the Claude as the model (task-69 phase 3b-i, accepted)
+
+### context
+
+phase 3a left `propose::Model` without a provider. decision 13 of the
+program (brenner, 2026-09-24) names it: the Claude, through the `claude
+-p` of the Claude Code already installed and logged in on this machine,
+with no new paid API and no key in the code. phase 3b splits: 3b-i puts
+the provider behind `Model` in a crate of its own and proves it on the
+real projections; 3b-ii has the Surface page use it, off the app's
+thread, after task-95.
+
+### decision
+
+- **a crate of its own, `crates/claude-model`.** it depends on `propose`
+  (the trait) and `serde_json` (the child's result), never on `uir`,
+  `sem`, the engine, the widgets or an HTTP client. `propose` stays pure.
+- **a child process.** `ClaudeCli` implements `Model` by running the
+  program (`claude`, or what `PLEV_CLAUDE` names) once per call, the
+  prompt on its stdin, its stdout and stderr read on threads of their
+  own. the network is the child's; the crate opens no socket and holds
+  no key, and the child uses the login its Claude Code already has.
+- **the flags, each for a reason the probe showed.** `-p` and
+  `--output-format json` (one object: the reply, or the error with its
+  kind, and the cost and turns; an exceeded budget exits 1 with the
+  reason on stdout and nothing on stderr, so the json is what tells a
+  reply from an error); `--tools ""` (no tool: the child reads no file
+  and takes one turn); `--no-session-persistence`; `--setting-sources ""`
+  (no settings file: no hooks, no permissions, no user memory);
+  `--strict-mcp-config` with no config (no MCP server);
+  `--disable-slash-commands` (no skill listed in the prompt);
+  `--permission-prompts none` (anything that would ask is denied, so
+  nothing waits for a person); `--system-prompt` with two sentences of
+  its own in place of Claude Code's (about 4,200 input tokens fewer, and
+  no talk of tools, directories or git the child does not have);
+  `--model` (`sonnet` by default); `--max-budget-usd` (0.5 by default).
+- **the child is not part of a Claude Code session.** it runs in a
+  directory of its own (the system's temporary one by default) and
+  without the variables such a session sets for its processes
+  (`CLAUDECODE`, `CLAUDE_CODE_SESSION_ID`, `CLAUDE_CODE_MESSAGING_SOCKET`,
+  `CLAUDE_EFFORT` and the others of `SESSION_VARS`), which an app run
+  from a session would otherwise hand down.
+- **a deadline.** past `timeout` (180 s by default, twice the slowest
+  call measured) the child is killed by its pid and reaped, and the call
+  is a `ModelError`. once the child exits, the end of its output is
+  waited for one second at most, so a grandchild that keeps a pipe open
+  cannot hold the call; what the child wrote is kept.
+- **every failure is a short `ModelError`**: it could not start, it was
+  killed at the deadline, it exited with a failure (its stderr, else its
+  stdout, on one line), its result says `is_error` (the kind and the
+  reason), or it answered no result. `Llm` stops at once on any of them,
+  as it did in phase 3a.
+- **`propose::prompt` does not change.** both probe replies were the
+  JSON alone, with no prose and no fence, and verified at once.
+- **proven without the network.** the tests run `tests/fake-claude`, a
+  shell script `program` points at, never the real `claude`: a good
+  answer, a refused one repaired by the second call, a child past the
+  timeout killed (its pid gone), a grandchild holding the pipes, a
+  failing program, an exceeded budget, a program that is not there; and
+  the child gets exactly the flags, the whole prompt (17 KB, more than a
+  pipe holds) and none of the session's variables.
+- **the demo** is `cargo run -p claude-model --example propose -- --app
+  todo|ide "<intent>"`, over the goldens of task-68.
+
+### cost
+
+the probe (the todo, the compact surface shown, "only what is active and
+the add field", sonnet): 40.1 s with Claude Code's system prompt, 24.5 s
+with the crate's; 11,150 and 6,983 input tokens; about 2,000 to 3,000
+tokens of thinking; 0.069 and 0.054 USD as the child counts it (list
+prices; the account is a subscription). both verified at once. the four
+runs of the example, each verified at the first attempt: 4.5, 5.6 and
+6.3 s on the todo (about 0.034 USD each), 88.9 s on the ide's workbench
+(5.6 KB of IR, 0.111 USD). the same prompt again within the hour costs a
+third (the service keeps the prompt in its cache for an hour). a proposal by the Claude costs
+seconds to a minute and a half, against 0.16 ms for the rules.
+
+### consequences
+
+- the Claude reads what the rules refuse ("a compact card with the input
+  on top and the counts below", "show the filter as chips and hide the
+  counts", a review of the commit on the ide) and keeps the ids of the
+  current surface for what stays.
+- it reads values now, not lists: "what is active" became the two items
+  not completed today, and the ide's changed files were written one by
+  one instead of a `repeat` over `changes:files`. a surface like that
+  does not follow the app when an item or a file comes or goes.
+- on the ide, the file rows took the ids of the app's nodes and the new
+  nodes were named under them. the verifier accepts it and the host
+  treats such a node as the app's (the fixed screen case).
+- `--max-budget-usd` is checked after the child's turn: it caps a session
+  that would go on, it never cuts a call short. the deadline is what
+  bounds a call.
+- the child writes its own state (`~/.claude.json`) and fetches the list
+  of claude.ai connectors at start, as any run of Claude Code does; it
+  connects none.
+- what 3b-ii must decide and wire: the call off the app's thread
+  (`Execution::Started`, then `Dispatcher::complete` or `fail`, with the
+  snapshot, the registry and the current IR owned by the worker); what
+  the page shows during seconds to minutes, and a cancel (killing the
+  child is already how a deadline ends); the rules first and the Claude
+  when they do not understand, or the Claude alone; whether to ask for a
+  `repeat` over a list in the prompt, and whether an id taken from the
+  app belongs on a generated surface.
+
+### avoid
+
+- a key, a credential or a socket in this crate; an HTTP client.
+- running the real `claude` in a test of the gate.
+- a child that inherits the Claude Code session that runs the app.
+- waiting for a child without a deadline.
