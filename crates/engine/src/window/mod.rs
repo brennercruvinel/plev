@@ -1,82 +1,54 @@
 mod events;
 mod frame;
+mod host;
 mod hot_reload;
 mod lifecycle;
 mod render;
 mod render_passes;
-pub(crate) mod state;
+mod windows;
 
 pub use frame::{draw_frame, present_frame};
+pub use host::WindowHost;
 pub use render_passes::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+pub use windows::{Routed, Windows};
 
 #[cfg(target_arch = "wasm32")]
 pub use lifecycle::setup_wasm_canvas;
-
-use std::sync::Arc;
 
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 #[cfg(any(target_arch = "wasm32", target_os = "android"))]
 use winit::event_loop::EventLoopProxy;
-use winit::window::{Window, WindowId};
+use winit::window::WindowId;
 
-use crate::animation::{AnimationTick, FrameClock};
-use crate::compositor::Compositor;
-use crate::effects::EffectProcessor;
 use crate::gpu::GpuContext;
-use crate::gpu::texture_pool::TexturePool;
-use crate::input::{InputState, TouchInputState, TouchPointerSynth};
-use crate::perf::{PerfHud, PerfMonitor};
-use crate::platform::SafeAreaInsets;
-use crate::platform::ime::ImeState;
 use crate::platform::lifecycle::LifecycleManager;
 use crate::signal::{ReadSignal, WriteSignal, create_signal};
-use crate::text::TextSystem;
-
-use events::BufferedEvent;
-use state::GpuState;
 
 pub enum AppEvent {
-    GpuReady {
-        gpu: GpuContext,
-        text_system: TextSystem,
-        effect_processor: EffectProcessor,
-        texture_pool: TexturePool,
-    },
+    /// The device a browser shell asked for asynchronously, for the
+    /// window it was asked for (`Windows::attach_gpu`).
+    GpuReady { window: WindowId, gpu: GpuContext },
 }
 
+/// The engine's own application handler: one window through
+/// [`Windows`], with everything a window needs in its [`WindowHost`], and
+/// what the app keeps beside them (the theme, the frame signal, the
+/// lifecycle, the loop's proxy). It draws nothing but its perf HUD; an
+/// app with a view keeps the same shape and builds its scene into each
+/// host's compositor before presenting.
 pub struct App {
-    window: Option<Arc<Window>>,
-    pub(crate) state: GpuState,
-    compositor: Compositor,
-    input_state: InputState,
-    #[allow(dead_code)]
-    touch_input: TouchInputState,
-    /// Synthesizes mouse-equivalent pointer events from the primary touch,
-    /// so touch input drives the same widget path as the mouse.
-    touch_pointer: TouchPointerSynth,
+    pub(crate) windows: Windows,
     theme: crate::theme::Theme,
     frame_read: ReadSignal<u64>,
     frame_write: WriteSignal<u64>,
-    frame_clock: FrameClock,
-    #[allow(dead_code)]
-    animation_tick: AnimationTick,
     lifecycle: LifecycleManager,
-    ime_state: ImeState,
-    safe_area: SafeAreaInsets,
-    scale_factor: f64,
+    /// Continuous frames on every window while true (`set_animating`);
+    /// applied to a window as it opens.
     is_animating: bool,
-    perf: PerfMonitor,
-    perf_hud: PerfHud,
-    pub(crate) event_buffer: Vec<BufferedEvent>,
     #[cfg(any(target_arch = "wasm32", target_os = "android"))]
     pub(crate) event_loop_proxy: Option<EventLoopProxy<AppEvent>>,
-    /// The window's accessibility. This `App` projects no meaning, so
-    /// its tree is the window alone; an app shell with a `sem::Snapshot`
-    /// projects it through the same `Bridge`.
-    #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
-    a11y: Option<crate::accessibility::Bridge>,
     #[cfg(hot_reload)]
     narrate_watcher: Option<crate::hot_reload::NarrateWatcher>,
 }
@@ -91,34 +63,14 @@ impl Default for App {
 impl App {
     #[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
     pub fn new() -> Self {
-        let compositor = Compositor::new();
         let (frame_read, frame_write) = create_signal(0u64);
         Self {
-            window: None,
-            state: GpuState::Uninitialized,
-            compositor,
-            input_state: InputState::new(),
-            touch_input: TouchInputState::new(),
-            touch_pointer: TouchPointerSynth::new(),
+            windows: Windows::new(),
             theme: crate::theme::Theme::default(),
             frame_read,
             frame_write,
-            frame_clock: FrameClock::new(),
-            animation_tick: AnimationTick {
-                dt: 0.0,
-                elapsed: 0.0,
-                since_last: 0.0,
-            },
             lifecycle: LifecycleManager::new(),
-            ime_state: ImeState::new(),
-            safe_area: SafeAreaInsets::default(),
-            scale_factor: 1.0,
             is_animating: false,
-            perf: PerfMonitor::new(),
-            perf_hud: PerfHud::new(),
-            event_buffer: Vec::with_capacity(64),
-            #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
-            a11y: None,
             #[cfg(hot_reload)]
             narrate_watcher: {
                 let dirs = crate::hot_reload::source_dirs();
@@ -142,53 +94,33 @@ impl App {
     /// resize, or explicit `Compositor::invalidate` calls.
     pub fn set_animating(&mut self, animating: bool) {
         self.is_animating = animating;
-        if animating && let Some(ref window) = self.window {
-            window.request_redraw();
-        }
+        self.windows.set_animating(animating);
     }
 
     pub fn is_animating(&self) -> bool {
         self.is_animating
     }
 
-    /// Whether the perf HUD forces continuous frames. The overlay text
-    /// changes every frame, so while it is on the render loop cannot go
-    /// idle: that invalidation cost is the price of live measurement.
-    pub(crate) fn perf_overlay_active(&self) -> bool {
-        matches!(&self.state, GpuState::Ready { gpu, .. } if gpu.config.perf_hud)
+    /// The app's windows, one after `resumed`.
+    pub fn windows(&self) -> &Windows {
+        &self.windows
+    }
+
+    pub fn windows_mut(&mut self) -> &mut Windows {
+        &mut self.windows
     }
 
     #[cfg(any(target_arch = "wasm32", target_os = "android"))]
     pub fn new_with_proxy(proxy: EventLoopProxy<AppEvent>) -> Self {
-        let compositor = Compositor::new();
         let (frame_read, frame_write) = create_signal(0u64);
         Self {
-            window: None,
-            state: GpuState::Uninitialized,
-            compositor,
-            input_state: InputState::new(),
-            touch_input: TouchInputState::new(),
-            touch_pointer: TouchPointerSynth::new(),
+            windows: Windows::new(),
             theme: crate::theme::Theme::default(),
             frame_read,
             frame_write,
-            frame_clock: FrameClock::new(),
-            animation_tick: AnimationTick {
-                dt: 0.0,
-                elapsed: 0.0,
-                since_last: 0.0,
-            },
             lifecycle: LifecycleManager::new(),
-            ime_state: ImeState::new(),
-            safe_area: SafeAreaInsets::default(),
-            scale_factor: 1.0,
             is_animating: false,
-            perf: PerfMonitor::new(),
-            perf_hud: PerfHud::new(),
-            event_buffer: Vec::with_capacity(64),
             event_loop_proxy: Some(proxy),
-            #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
-            a11y: None,
         }
     }
 }

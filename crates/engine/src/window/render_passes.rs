@@ -435,7 +435,7 @@ pub(crate) fn encode_layer_passes_timed(
     draw_calls
 }
 
-impl super::App {
+impl super::host::WindowHost {
     pub(super) fn apply_layer_effects(
         compositor: &crate::compositor::Compositor,
         gpu: &mut crate::gpu::GpuContext,
