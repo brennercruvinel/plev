@@ -196,3 +196,242 @@ mesma linha, porque é o código, não o dado; o texto do item leva ao
 literal pela fase b quando ele existe no código (os três itens do seed
 existem). decisão: seguir com o site de projeção, sem `#[track_caller]`
 no render.
+
+### parada: disco abaixo de 8 GB antes do gate
+
+```text
+problema     antes do gate, df mostrou 7,81 GiB livres (7,76 no fim), abaixo
+             dos 8 GB do briefing. três agentes compilam ao mesmo tempo
+             (target/agents/task-65 17 GB, task-63d 15 GB, task-88 13 GB).
+             o target desta task cresceu uns 2 GB porque a feature nova do
+             proc-macro2 recompila o engine e quem depende dele (dev, test,
+             clippy). trash não libera espaço (vai para a lixeira do mesmo
+             volume) e rm -rf está proibido, então não liberei nada.
+opções       1. esvaziar a lixeira ou limpar um target de outro agente que já
+                terminou, e rodar o gate daqui;
+             2. autorizar `cargo clean --release` neste target (260 MB, só o
+                check de release) e rodar o gate no limite;
+             3. o orquestrador roda o gate e o check de release na validação,
+                que já faz de qualquer forma.
+impacto      1 e 3 não mexem em nada desta branch; 2 ganha pouco e o gate
+             ainda consome disco (a perna urnaui recompila o engine no
+             próprio subdiretório).
+recomendação 3, ou 1 se a próxima rodada precisar do gate verde aqui.
+decisão      quem roda o gate, e se algum espaço pode ser liberado.
+```
+
+o código, os testes, o ADR e este handoff estão commitados; faltam só o
+gate e as conferências abaixo marcadas como "não rodado".
+
+### handoff
+
+```text
+Goal: task-65, rodada 1 (fases a e b): em build de debug no desktop,
+      cmd+clique num controle abre o código que projetou a capacidade, e
+      num texto sem id abre o literal que o produziu
+Status: implementado e testado por crate; gate não rodado (disco, acima)
+
+Implementado:
+- engine, feature hot-reload: proc-macro2/span-locations. só o
+  proc-macro2 do engine ganha a feature (resolver 2; `cargo tree -e
+  features -i proc-macro2`: o único caminho é `engine feature
+  "hot-reload"`); o dos proc macros fica como era; wasm e mobile não têm
+  a dependência; o release compila sem ligar, como antes. Cargo.lock sem
+  mudança.
+- engine hot_reload::literals: cada literal guarda linha e coluna (de 1,
+  coluna em chars, como Location), e marca o que o app nunca desenha:
+  texto de doc comment, literal dentro de item sob #[cfg(test)], arquivo
+  de teste (regra do file hygiene guard). o mapa do lexer é liberado a
+  cada snapshot. um save que mantém o esqueleto atualiza as posições.
+  sites_of(texto) devolve os literais que casam, ordenados.
+- engine hot_reload::Site (arquivo absoluto, linha, coluna; imprime
+  file:line:column) e hot_reload::view_source: origin_at, text_at,
+  Origin (Projected, Unsourced, Literal, Formatted, Nothing) com site() e
+  Display, editor_command, open, open_with.
+- showcase: app/source.rs (App::view_source), o campo source_click e a
+  chamada no MouseInput esquerdo; app/background.rs (PLEV_BACKGROUND=1,
+  macOS); app/access.rs (Access movido de app.rs, sem mudança).
+
+Como a resolução funciona:
+- cmd+clique (ctrl fora do macOS) no MouseInput esquerdo: o shell toma o
+  press e o release (mesmo se o cmd sair antes), a página não vê o
+  clique, nada desenha.
+- origin_at(compositor, snapshot da página ativa, cursor): Compositor::hit
+  primeiro; com id, o Node.source do snapshot, absoluto a partir da raiz
+  do workspace. sem id, text_at: o último text run cuja caixa medida
+  (x, y do nó, tamanho do TextMeasurer com o estilo da chave) contém o
+  ponto, dentro do clip, em camada visível, camadas empilhadas como no
+  hit; e sites_of do texto.
+- um site: abre. vários: log em warn com a lista, não abre (decisão: a
+  lista, "lista para escolher" da task; abrir o primeiro seria chute).
+  nenhum: log "formatted". sem nó ou sem source: log. o log vai em warn,
+  o nível que o shell mostra por padrão; quando abre, info.
+- editor, sempre com file:line:column como último argumento (caminho
+  absoluto): $PLEV_EDITOR, dividido em palavras (programa e argumentos
+  iniciais; caminho de programa com espaço não é suportado); senão
+  `zed file:line:column`; senão `code -g file:line:column`; os dois
+  procurados no PATH como executável; nenhum: erro dizendo isso. o filho
+  é esperado numa thread, sem bloquear o loop.
+
+Arquivos principais:
+- crates/engine/Cargo.toml (só a feature)
+- crates/engine/src/hot_reload/{mod.rs, literals.rs, view_source.rs (novo)}
+- crates/showcase/src/app.rs (595 linhas), crates/showcase/src/app/
+  {source.rs, background.rs, access.rs} (novos)
+- crates/showcase/tests/view_source.rs (novo)
+- docs/ADR/view-source-for-pixels.md (novo, proposed), este arquivo
+
+Interfaces adicionadas/alteradas (todas novas, nenhuma alterada):
+- engine::hot_reload::Site
+- engine::hot_reload::literals::sites_of
+- engine::hot_reload::view_source::{Origin, origin_at, text_at,
+  editor_command, open, open_with}
+- sem, wire, rec, comps, dispatch.rs e engine fora de hot_reload: sem
+  mudança. a forma serde do Node e o source opt-in no wire: iguais.
+
+Itens novos e o gate de cada um (release, wasm e mobile sem o código):
+- engine: tudo dentro de `hot_reload`, que o lib.rs declara sob
+  #[cfg(hot_reload)] (build.rs: feature, profile debug, macos, linux ou
+  windows)
+- showcase: `mod source`, o campo `source_click`, a inicialização e a
+  chamada em window_event sob #[cfg(all(debug_assertions, any(target_os =
+  "macos", target_os = "linux", target_os = "windows")))], os termos do
+  build.rs do engine (o showcase não tem o cfg hot_reload: build.rs vale
+  por crate); tests/view_source.rs com o mesmo #![cfg]
+- showcase `mod background` (PLEV_BACKGROUND): #[cfg(target_os =
+  "macos")], em todo profile, como no ide; não é parte do view source.
+  se o orquestrador quiser só em debug, é uma linha.
+- alternativa ao gate por debug_assertions: um build.rs no showcase
+  repetindo a regra do engine daria o cfg hot_reload por nome (arquivo
+  fora da lista, por isso não fiz).
+
+Testes (21 novos):
+- engine literals: each_literal_keeps_its_line_and_column,
+  the_column_counts_chars_and_a_second_file_starts_over,
+  a_text_finds_its_literals_and_follows_a_save,
+  literals_in_test_code_are_unseen
+- engine view_source: a_bound_control_leads_to_where_it_was_projected,
+  a_bound_control_the_snapshot_does_not_source_is_said_so,
+  a_text_leads_to_the_one_literal_that_holds_it,
+  a_text_several_literals_hold_is_listed_and_not_opened,
+  a_formatted_text_has_no_literal,
+  the_text_is_the_topmost_one_that_shows_at_the_point,
+  the_editor_is_plev_editor_then_zed_then_code,
+  open_runs_the_editor_with_the_site_and_says_when_there_is_none
+- showcase tests/view_source.rs (frame da página pelo stage_page, os
+  literais do workspace): the_field_that_adds_leads_to_where_the_todo_
+  projects_it, an_item_leads_to_the_list_item_projection,
+  a_static_title_leads_to_its_one_literal ("Todo" e o subtítulo, linha
+  e coluna conferidas lendo o arquivo), a_text_several_literals_hold_is_
+  listed_and_not_opened ("plev", 10 literais), a_formatted_text_has_no_
+  literal (célula da Data Table; o contador do todo acha o card)
+- showcase app/source.rs: a_primary_click_opens_the_projection_and_
+  never_reaches_the_page, a_plain_click_is_the_page_s,
+  a_primary_click_on_nothing_opens_nothing,
+  the_click_hands_the_editor_the_line_under_the_cursor
+
+Validação executada (CARGO_TARGET_DIR do briefing):
+- cargo test -p engine --lib hot_reload: verde (29 testes do módulo)
+- cargo test -p showcase: verde em b138ba7 (lib 142, bins e testes de
+  integração); depois, cargo test -p showcase --lib verde em 6e8e134 e os
+  testes novos de 228bb60 verdes
+- cargo clippy -p engine -p showcase --all-targets -- -D warnings e
+  cargo fmt --check -p engine -p showcase: limpos em 228bb60
+- RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown
+  -p showcase: verde em 6e8e134
+- cargo check --release -p showcase: verde em b138ba7
+- não rodado (disco): ./script/gate, cargo test -p engine inteiro, e o
+  check de release e o wasm depois de 6e8e134. contagem esperada:
+  2225 + 21 = 2246, não medida.
+
+A prova na janela:
+- janela real: o showcase de debug, `PLEV_BACKGROUND=1 PLEV_AGENT=1
+  PLEV_EDITOR=<script que só grava os argumentos>`, pelo guard da task-63d
+  (mata o pid se a janela pegar o foco em 3 s). o app da frente ficou na
+  frente a execução toda; janela na camada -1; baseline "literal hot
+  reload on: 584 files"; a porta do agente devolveu os bounds do todo
+  iguais aos do frame headless (todo.input [428, 158.2, 592, 44],
+  todo.item[1] [428, 216.2, 592, 44]); um Escape postado no pid fechou.
+- o cmd+clique postado no pid (CGEventPostToPid, com o número da janela
+  nos campos 91 e 92, com e sem mouse moved antes) não chegou à página:
+  nem ele nem um clique simples mudaram o foco ou o item. as duas telas
+  estavam cobertas (Dia na principal, Zed na segunda), e com a janela no
+  nível normal, sem foco, ela ficou sob o app da frente (índice 2, abaixo
+  de sarue e Dia). o AppKit só entrega um evento de mouse à janela que
+  está em cima no ponto; sem tomar o foco nem flutuar sobre a tela da
+  pessoa, nenhum clique postado chega. o editor não abriu nada em
+  nenhuma execução (o script não recebeu nada); todo processo foi morto
+  pelo pid exato.
+- por isso a prova vai pela função que o atalho chama (o briefing prevê):
+  the_click_hands_the_editor_the_line_under_the_cursor monta o shell no
+  todo, desenha o frame pelo caminho da janela, toma o baseline do
+  workspace como o watcher, põe o cursor no campo que adiciona e depois no
+  título, com cmd, e chama App::view_source_with com o opener real
+  (open_with, PLEV_EDITOR = script gravador). o script recebeu:
+
+  .../crates/showcase/src/view/apps/app/semantics.rs:153:14
+      .project(b, &ids.input, "new todo", Some(&ids.todo))
+  .../crates/showcase/src/view/pages/table.rs:459:9
+      "Todo",
+
+  (caminhos absolutos do worktree; a coluna aponta para `project` e para
+  a aspa de abertura). um item leva a semantics.rs:169:30 (`node(&id,
+  Role::ListItem, item.text())`) e o item não é marcado.
+- se o orquestrador quiser o clique postado mesmo assim: a janela sobe
+  flutuando (WindowLevel::AlwaysOnTop) sem foco durante os segundos da
+  prova, cobrindo a tela da pessoa nesse tempo. não fiz.
+
+Decisões:
+- site de projeção, sem site de render (a sonda, acima).
+- vários literais: lista no log, nada abre.
+- id antes do texto: um texto dentro de um controle ligado acha o
+  controle.
+- literais de teste e doc comments fora da busca (senão "Todo" tinha 5
+  sites, 4 de teste; agora 1).
+- gate do showcase por debug_assertions + os três OS (acima).
+- app.rs dividido (Access para app/access.rs) antes do background, que o
+  passaria de 639.
+- PLEV_BACKGROUND igual ao do ide (abaixo de todas as janelas): uma
+  tentativa no nível normal não ajudou a prova e cobria a tela.
+
+Limitações:
+- nó projetado dentro de laço: todas as instâncias levam à mesma linha.
+- texto cortado (reticências) ou formatado: nenhum literal.
+- módulo de teste declarado fora de linha com outro nome ainda conta
+  (hoje só showcase semantics/assistive.rs: "2 active · 1 done" tem um
+  literal de teste; na janela o contador acha o card, então não aparece).
+- um save que muda código e cujo rebuild falha deixa posições velhas.
+- o modificador é cmd no macOS e ctrl fora dele; linux e windows não
+  foram rodados.
+
+Dependências pendentes: nenhuma de código. docs/ADR/README.md (índice
+do ADR novo) é do orquestrador.
+
+Riscos de integração:
+- a task-63d mexe no shell do ide, não no do showcase; background.rs do
+  showcase copia a regra dela (se ela mudar, as duas divergem).
+- o custo de memória do baseline sobe 1,2 MB (medido); o tempo, uns 35 ms.
+
+O que a fase c precisa:
+- o intervalo em bytes de cada literal (Span::byte_range, mesma feature)
+  para trocar exatamente o span; hoje há só o início em linha e coluna.
+- na escrita, reler o arquivo e conferir o esqueleto contra o do snapshot
+  de onde veio a posição (baseline ou EDITED); diferente: recusa e diz.
+- escapar o texto novo na forma do literal (normal ou raw).
+- só com Origin::Literal de um site (nunca doc, teste ou vários).
+- a edição inline no shell (um campo do comps sobre o texto) e o color
+  picker; cor resolve como texto, pela cor do nó sob o cursor contra os
+  Lit::Hex.
+
+Commits:
+- a7ae568 task-65: the probe of Node.source on the todo, in the handoff
+- d57e86d task-65: each literal of the hot reload baseline knows its line and column
+- c254236 task-65: a literal in test code is never what a click on a text finds
+- dae72fb task-65: a point of the window resolves to the code that made it, testable without a window
+- b138ba7 task-65: cmd+click in the showcase window opens the code that made the pixel
+- 6e8e134 task-65: the showcase shell's outside actors move to app/access.rs
+- 683354b task-65: the showcase window can come up without taking the focus
+- 228bb60 task-65: the view-source click proved through the function it calls, with the real opener
+- ec77e30 task-65: ADR view source for pixels (proposed)
+- (este) task-65: handoff of round 1
+```
