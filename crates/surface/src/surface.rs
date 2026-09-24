@@ -15,7 +15,7 @@ use crate::expand::{Node, expand};
 use crate::host::Dispatch;
 use crate::layout::{self, axis_of};
 use crate::project;
-use crate::widget::Widget;
+use crate::widget::{Kind, Widget};
 
 /// a surface materialized from a verified IR over an app's state.
 ///
@@ -107,14 +107,29 @@ impl Surface {
         true
     }
 
+    /// the surface takes the form `ir` describes, over the app state
+    /// `app`, and reconciles by `SemId`: a node whose id stays and whose
+    /// component stays drawn by the same comps widget keeps its retained
+    /// widget, and with it what lives there (focus, caret, selection, a
+    /// drag in flight); a node whose id stays under another widget gets a
+    /// new one, and nothing of the old widget passes to it (what it shows
+    /// is the app's, read again through its bindings); a new id gets a new
+    /// widget; an id that is gone drops its own. the new form is
+    /// projected, routed and hit-tested at once. only a `VerifiedIr`
+    /// transforms a surface, as only one materializes it.
+    pub fn transform(&mut self, ir: VerifiedIr, app: &Snapshot) {
+        self.ir = ir;
+        self.read(app);
+    }
+
     fn read(&mut self, app: &Snapshot) {
         let tree = expand(&self.ir.ir().surface.root, app);
         let mut widgets = BTreeMap::new();
         for node in &tree {
-            let mut widget = self
-                .widgets
-                .remove(&node.id)
-                .unwrap_or_else(|| Widget::new(node));
+            let mut widget = match self.widgets.remove(&node.id) {
+                Some(kept) if kept.kind() == Kind::of(node) => kept,
+                _ => Widget::new(node),
+            };
             widget.sync(node, app);
             widgets.insert(node.id.clone(), widget);
         }

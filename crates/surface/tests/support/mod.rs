@@ -7,8 +7,9 @@ use std::path::PathBuf;
 
 use indexmap::IndexMap;
 use sem::{
-    Dispatcher, Execution, Node, Operable, Outcome, Receipt, Request, RequestId, SemId, Semantics,
-    Snapshot, SnapshotBuilder, StateKey, StateRef, Value,
+    Constraints, Dispatcher, Execution, Node, Operable, Outcome, ParamSpec, Receipt, Request,
+    RequestId, Role, SemId, Semantics, Snapshot, SnapshotBuilder, StateKey, StateRef, Value,
+    ValueKind,
 };
 use surface::{Dispatch, Surface};
 use uir::{Capabilities, GenerationPolicy, Ir, VerifiedIr, parse, verify};
@@ -19,8 +20,41 @@ pub const TODO: &str = "showcase-todo.ir.json";
 pub const IDE: &str = "ide-workbench.snapshot.json";
 pub const SHOWCASE: &str = "showcase-todo.snapshot.json";
 /// The todo surface in two columns (a local fixture): the same ids as
-/// `TODO`, the counts in a column of their own.
+/// `TODO`, the filter and the counts in a column of their own.
 pub const COLUMNS: &str = "showcase-todo-columns.ir.json";
+/// The mixer surface (local fixtures, over `mixer()`): the volume slider
+/// in the left panel, then in the right one.
+pub const MIXER_LEFT: &str = "mixer-left.ir.json";
+pub const MIXER_RIGHT: &str = "mixer-right.ir.json";
+
+/// A small app with a slider, which no fixture of task-68 has: a volume
+/// from 0 to 1 that `set_value` sets and `reset` puts back to 0, and a
+/// mute that `toggle` flips.
+pub fn mixer() -> Snapshot {
+    let mut b = SnapshotBuilder::new();
+    b.node("mixer", Role::Region, "mixer");
+    let mut volume = b.node("mixer.volume", Role::Slider, "volume");
+    volume
+        .parent("mixer")
+        .state("value", 0.5)
+        .constraints(Constraints {
+            editable: true,
+            range: Some((0.0, 1.0)),
+            ..Constraints::default()
+        });
+    volume
+        .action("set_value")
+        .param(ParamSpec {
+            kind: ValueKind::Num,
+            constrained: true,
+        })
+        .reads("mixer.volume:value");
+    volume.action("reset").reads("mixer.volume:value");
+    let mut mute = b.node("mixer.mute", Role::Toggle, "mute");
+    mute.parent("mixer").state("on", false);
+    mute.action("toggle").reads("mixer.mute:on");
+    b.finish().expect("the mixer projects")
+}
 
 /// Each IR fixture and the projection it is written against.
 pub const CASES: [(&str, &str); 3] = [(COMMIT_FORM, IDE), (REVIEW, IDE), (TODO, SHOWCASE)];
@@ -184,6 +218,18 @@ impl Operable for App {
         match (req.action.as_str(), &req.param) {
             ("set_value", Some(Value::Text(text))) => {
                 self.state(&req.target, "text", Value::Text(text.clone()));
+            }
+            ("set_value", Some(Value::Num(n))) => {
+                self.state(&req.target, "value", Value::Num(*n));
+            }
+            ("reset", None) => self.state(&req.target, "value", Value::Num(0.0)),
+            ("toggle", None) => {
+                let on = self
+                    .nodes
+                    .get(&req.target)
+                    .and_then(|n| n.state.get(&StateKey::parse("on").unwrap()));
+                let on = matches!(on, Some(Value::Bool(true)));
+                self.state(&req.target, "on", Value::Bool(!on));
             }
             ("stage" | "unstage", None) => {
                 let on = req.action.as_str() == "stage";

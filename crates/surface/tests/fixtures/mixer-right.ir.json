@@ -1,0 +1,100 @@
+{
+  "plev_ir": 1,
+  "surface": {
+    "id": "mix_panel",
+    "title": "mixer",
+    "root": {
+      "sem": "mix_panel.card",
+      "component": "card",
+      "label": "mixer",
+      "props": {
+        "padding": "md"
+      },
+      "layout": {
+        "stack": {
+          "axis": "horizontal",
+          "gap": "md"
+        }
+      },
+      "children": [
+        {
+          "sem": "mix_panel.left",
+          "label": "left",
+          "size": {
+            "flex": 1
+          },
+          "layout": {
+            "stack": {
+              "axis": "vertical",
+              "gap": "sm"
+            }
+          },
+          "children": [
+            {
+              "sem": "mix_panel.level",
+              "component": "stat",
+              "label": "level",
+              "bind": {
+                "state": {
+                  "value": "mixer.volume:value"
+                }
+              }
+            },
+            {
+              "sem": "mix_panel.mute",
+              "component": "checkbox",
+              "label": "mute",
+              "bind": {
+                "state": {
+                  "checked": "mixer.mute:on"
+                },
+                "actions": {
+                  "toggle": {
+                    "target": "mixer.mute",
+                    "action": "toggle"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "sem": "mix_panel.right",
+          "label": "right",
+          "size": {
+            "flex": 1
+          },
+          "layout": {
+            "stack": {
+              "axis": "vertical",
+              "gap": "sm"
+            }
+          },
+          "children": [
+            {
+              "sem": "mix_panel.hint",
+              "component": "text",
+              "label": "drag to set the volume"
+            },
+            {
+              "sem": "mix_panel.volume",
+              "component": "slider",
+              "label": "volume",
+              "bind": {
+                "state": {
+                  "value": "mixer.volume:value"
+                },
+                "actions": {
+                  "set_value": {
+                    "target": "mixer.volume",
+                    "action": "set_value"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
