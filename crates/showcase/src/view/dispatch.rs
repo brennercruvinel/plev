@@ -14,8 +14,13 @@ use super::{Layers, Pane, ShowcaseView, panel};
 impl ShowcaseView {
     /// Natural (unclipped) height of the active page's content.
     pub(super) fn page_content_height(&self, content: Rect) -> f32 {
+        self.pane_content_height(content) + self.note_h()
+    }
+
+    /// The active pane's natural height in `content`.
+    fn pane_content_height(&self, content: Rect) -> f32 {
         let t = &self.theme;
-        let body = match self.pane() {
+        match self.pane() {
             None => t.size.card_min_w / 2.0,
             Some(pane) => match pane {
                 Pane::Theme => self.panes.themes.content_height(content, t),
@@ -68,14 +73,21 @@ impl ShowcaseView {
                 Pane::Git => self.panes.git.content_height(content),
                 Pane::Builder => self.panes.builder.content_height(content),
             },
-        };
-        body + self.note_h()
+        }
     }
 
-    /// The active pane's share of a pointer event, with the view-level
-    /// effects a page asks for (a dialog, a toast, a theme).
+    /// The active pane's share of a pointer event in the main window,
+    /// with the view-level effects a page asks for (a dialog, a toast, a
+    /// theme). The events in the page's own window come through
+    /// `detached_event`, laid out for that window.
     pub(super) fn page_event(&mut self, event: &WidgetEvent) -> EventResult {
         let content = self.page_rect();
+        self.pane_event(event, content)
+    }
+
+    /// The active pane's share of a pointer event, laid out in `content`
+    /// (the main window's page rect, or the detached window's).
+    fn pane_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
         let t = &self.theme;
         match self.pane() {
             None => EventResult::IGNORED,
@@ -192,9 +204,11 @@ impl ShowcaseView {
     /// Motion that would run forever ticks only while visible: the
     /// dock's caret, the chart reveal, spinners, breathing skeletons,
     /// the todo caret, the editor. Continuous motion asks for every
-    /// frame; a caret asks for its next flip.
+    /// frame; a caret asks for its next flip. While the page shows in a
+    /// window of its own too, its ask goes to that window as well
+    /// (`detached_wake`): both windows draw its motion, each its own frame.
     pub(super) fn page_wake(&mut self, dt: f32) -> Wake {
-        match self.pane() {
+        let wake = match self.pane() {
             Some(Pane::Dock) => Wake::moving(self.panes.dock.tick(dt)),
             Some(Pane::Chart) => Wake::moving(self.panes.chart.tick(dt)),
             Some(Pane::Spinner) => Wake::moving(self.panes.spinner.tick(dt)),
@@ -204,10 +218,15 @@ impl ShowcaseView {
             Some(Pane::Silences) => self.panes.silences.wake(dt, &mut self.panes.todo),
             Some(Pane::Editor) => self.panes.editor.wake(dt),
             _ => Wake::idle(),
+        };
+        if let Some(detached) = self.panes.detached.as_mut() {
+            detached.wake = detached.wake.merge(wake);
         }
+        wake
     }
 
-    /// Draw the active page into `content` (a placeholder names its slot).
+    /// Draw the active page into `content` of the main window (a
+    /// placeholder names its slot).
     pub(super) fn page_render(
         &mut self,
         c: &mut Compositor,
@@ -215,6 +234,11 @@ impl ShowcaseView {
         content: Rect,
         theme: &Theme,
     ) {
+        self.pane_render(c, layers, content, theme);
+    }
+
+    /// Draw the active pane into `content`, whichever window's.
+    fn pane_render(&mut self, c: &mut Compositor, layers: Layers, content: Rect, theme: &Theme) {
         match self.pane() {
             None => self.render_placeholder(c, content, theme),
             Some(pane) => match pane {
@@ -302,7 +326,9 @@ impl ShowcaseView {
     /// What the active page means, when it projects it (the todo page,
     /// the surface over it, the silences, the files): the snapshot
     /// assistive technology is shown. A page without a projection has no
-    /// tree yet.
+    /// tree yet. While the page shows in a window of its own too, the
+    /// projection carries that window (`with_window`); with one window it
+    /// is the page's alone.
     pub fn semantics(&self) -> Option<Snapshot> {
         let snapshot = match self.pane() {
             Some(Pane::Todo) => self.panes.todo.snapshot(),
@@ -311,8 +337,14 @@ impl ShowcaseView {
             Some(Pane::Files) => self.panes.files.snapshot(),
             _ => return None,
         };
-        snapshot
+        let snapshot = snapshot
             .inspect_err(|e| log::warn!("the projection does not validate: {e}"))
+            .ok()?;
+        if self.panes.detached.is_none() {
+            return Some(snapshot);
+        }
+        detached::with_window(&snapshot, self.current().title)
+            .inspect_err(|e| log::warn!("the window projection does not validate: {e}"))
             .ok()
     }
 
@@ -413,3 +445,8 @@ impl ShowcaseView {
 /// reader goes through, desktop only.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod agent;
+
+/// The active page in a window of its own as well (task-76 item 2): the
+/// view's side of the second window.
+mod detached;
+pub use detached::Detached;
