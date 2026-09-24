@@ -1,13 +1,14 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-23
 domain: engine
 task: task-82
 depends: [task-62]
 branch: task/82-caret-wake
 integrated-phase-a: d97a375
+integrated-phase-b: a6fec8d
 ---
 
 # task-82: o caret não pode pedir 60 frames por segundo
@@ -575,3 +576,25 @@ Commits:
 - 8a61778 task-82b: comps: the toast and the text input lose their fresh flag, the shells' catch-up covers them
 - o commit deste texto: rodada 2, dívidas, ADR e handoff
 ```
+
+## fechamento da fase b (orquestrador, 2026-09-23)
+
+integrada na `main` em `a6fec8d` (onze commits). validação: diff inteiro
+lido nas duas rodadas; devolvida uma vez com dois achados do próprio
+agente, da mesma responsabilidade: o laço do `index.lock` (o ide parado
+nunca parava de desenhar num repositório comum) e as molas que pulavam o
+intervalo antes de um evento (a flag `fresh` por widget virou o tick de
+alcance nos shells, e a flag saiu). gate verde no diretório da task, com
+a perna urnaui: 2128 passaram, 0 falharam, 12 ignorados. reproduzido pelo
+orquestrador: o ide desta branch num repositório novo com o index velho,
+sem `GIT_OPTIONAL_LOCKS` no ambiente, desenhou 2 frames na subida e
+depois 0 frames e 0 processos `git` em uns 8,7 s parado (um `git status`
+na subida, contado por um shim no PATH). fechamento: README e arc.toml
+sem as exceções que a fase b fechou, o comentário do watcher com o número
+certo (um `git status` por volta), changelog, programa, truth.
+
+dívidas que ficam, sem task ainda (nenhuma quebra uma promessa com
+usuário real hoje): o blink do `EditorView` sem foco; o caret do dock da
+demo; a ponte de acessibilidade pedindo frame sem mudança visível; a mola
+do toast levando ~1,7 s para repousar abaixo de um pixel; o exemplo
+`measure` modelando o shell sem o tick de alcance.

@@ -9,6 +9,19 @@ status: living
 
 ## unreleased
 
+- the ide and urnaui sleep when nothing changes (2026-09-23, task-82
+  phase b, adr a-tick-asks-for-a-deadline): the ide's workbench, the
+  showcase's Git page and urnaui answer their tick with a `Wake`, and the
+  shells wait for the next deadline instead of drawing every frame. a
+  focused ide commit field went from every frame (720 in 6 s) to 11; a
+  toast at rest is a deadline. the idle ide drew forever in an ordinary
+  repository (`git status` took the optional index lock, the file watcher
+  saw it and refreshed): every git process now runs with
+  `GIT_OPTIONAL_LOCKS=0` and the watcher ignores `.git/index.lock`, and
+  the idle ide draws 0 frames and runs 0 git processes. each shell
+  catches time up as the loop wakes, so an animation started after a
+  long idle runs from its start instead of jumping to its end.
+
 - an agent chains its acts without observing only to learn the revision
   (2026-09-23, task-87, adr a-terminal-stage-carries-the-revision): a
   terminal stage (`completed`, `rejected`, `failed`) carries `revision`,

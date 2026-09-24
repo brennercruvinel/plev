@@ -49,7 +49,7 @@ pub fn spawn(root: &Path, on_change: impl Fn() + Send + 'static) -> notify::Resu
 /// is `.git/index.lock`: `git status` takes that lock to store the stat
 /// data it refreshed, and the refresh the event asked for ran `git status`
 /// again, a loop that never ended (task-82 phase b measured two frames
-/// every ~0.34 s and three git processes a turn, with the app idle). The
+/// every ~0.34 s and a `git status` a turn, with the app idle). The
 /// ide's own reads no longer take the lock (`GIT_OPTIONAL_LOCKS=0` in the
 /// `git` crate); this keeps another git on the machine (a shell prompt,
 /// an editor) from starting the loop through the lock. The index those
