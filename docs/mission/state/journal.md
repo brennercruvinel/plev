@@ -14,6 +14,19 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: múltiplas janelas (task-76 item 2)
+
+- **integrada:** item 2 (merge da `task/76c-windows`). `WindowHost` e
+  `Windows` no engine, o `App` do engine e o shell do showcase roteando
+  por `WindowId`, o exemplo `layers` com duas janelas, e D no showcase
+  destacando a página atual numa segunda janela sobre o mesmo estado.
+  gate na `main` em andamento no registro; o agente reportou 2494 (+9) e
+  161 baselines iguais. nenhuma janela real abriu.
+- **P3 registrado no programa:** o nó `window` perde o `source` dos nós
+  enquanto a segunda janela existe (pede `SnapshotBuilder::extend` no
+  `sem`); `shell.detach` como capacidade espera o `Operable` do shell
+  (item 4).
+
 ### ciclo 3: publicado #79 (task-76 item 3); disparado o item 2
 
 - **publicado:** PR #79, merge commit, gate local verde na `main` (2570,

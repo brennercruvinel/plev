@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [engine, window, multi-window, render-on-demand, semantic-contract, platform-integration, winit]
 date: 2026-09-24
 ---
