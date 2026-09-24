@@ -108,9 +108,9 @@ impl WindowHost {
 
     /// One window event of this window, everything but the close and the
     /// redraw request (those are `Windows::route`'s answer to its caller):
-    /// a resize and a scale change take effect now; input, IME and file
-    /// drops are buffered for the next frame. `true` when the event was
-    /// this host's to take.
+    /// a resize, a scale change and the platform's word on visibility
+    /// take effect now; input, IME and file drops are buffered for the
+    /// next frame. `true` when the event was this host's to take.
     pub fn handle_event(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::Resized(size) => {
@@ -118,6 +118,9 @@ impl WindowHost {
             }
             WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
                 self.scale_factor_changed(*scale_factor);
+            }
+            WindowEvent::Occluded(covered) => {
+                self.set_occluded(*covered);
             }
             WindowEvent::Ime(ime) => {
                 self.buffer_event(BufferedEvent::Ime(ime.clone()));
