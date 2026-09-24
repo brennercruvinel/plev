@@ -14,6 +14,13 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: o P0 fechado e o agente pergunta (task-92)
+
+- **integrada:** task-92 (`f101359`). gate verde (2401). o orquestrador
+  repetiu a prova do P0: sem o wake, a recusa da pessoa não chega ao
+  agente e o teste cai por timeout.
+- **publicado:** PR #65 (task-69 fase 1), merge `fed9c8d`.
+
 ### ciclo 3: a primeira superfície materializada (task-69 fase 1)
 
 - **integrada:** task-69 fase 1 (`22d59fb`), o crate `surface` e a página

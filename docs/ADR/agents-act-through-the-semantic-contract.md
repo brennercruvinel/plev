@@ -281,6 +281,13 @@ one toggle still 624 B; the new numbers are in
   binding is `Binding::visible_rect` in the engine, read by both hosts.
   proved in a real window with a person's clicks and an agent at once
   (`docs/mission/steps/checked/task-86-the-ide-opens-the-agent-port-done.md`).
+  updated on 2026-09-24 (task-92): a stage of an agent's request that
+  ends outside a drain (a person's answer to a confirmation, the second
+  check refusing, a worker's answer) wakes the port through its sink, so
+  every host that drains on the port's wake sends it; before, it waited
+  for the agent's next message and was lost when a `plev act` gave up
+  (P0). an agent may also ask a person to confirm an act first
+  (`Act.ask`, `plev act --ask`, adr actions-carry-observed-state).
 - a host with more than one dispatcher gets one sink; the showcase has
   one today (the todo page). request ids are per dispatcher, so a host
   must route the port to one.

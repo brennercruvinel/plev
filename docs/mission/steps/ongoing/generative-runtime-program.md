@@ -119,7 +119,7 @@ o que a tese precisa e o que existe hoje:
 | task-66 | headless como primeira classe | 3 | nenhuma (saída semântica: 57) |
 | task-67 | regressão estrutural antes de pixel | 5 | 59, 66 |
 | task-68 | plev IR e verifier | 6 | 57, 58 |
-| task-92 | em andamento (P2) | | o agente pede à pessoa que confirme um ato (a confirmação que o `discard` já usa, pedida pelo agente, com o texto dele); vem do A2''b da terceira rodada, que parou por não ter como perguntar |
+| task-92 | integrada (P0 dentro, e o P2) | `f101359` | P0: um estágio fora de um drain acorda o porto (a recusa da pessoa chegava só na próxima mensagem do agente); o agente pede à pessoa que confirme um ato (`Request::ask`, `plev act --ask`), o modal do ide pergunta, o `why` mostra |
 | task-69 | superfícies efêmeras e geradas | 6 | 68, 59 (fase 0 em refs/ sem dependência) |
 | task-70 | transformações adaptativas | 7 | 68, 69, 63 |
 | task-71 | plev como compiler target (importers para IR) | 7 | 68 |

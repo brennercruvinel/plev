@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-24
 domain: agent-surface
 task: task-92
@@ -441,3 +441,30 @@ de um request seu (P0 da task-92)".
 - `d293046` task-92: what ends at once or at the second check reaches the
   agent too
 - o commit deste handoff, com o ADR
+
+## fechamento (orquestrador, 2026-09-24)
+
+integrada na `main` em `f101359` (dez commits, rebaseados sobre
+`426e4b7` sem conflito).
+
+validação do orquestrador:
+- diff lido: o sink em `wire/src/sink.rs` (movimento) com `Waits`, o
+  wake no `port.rs`, `Request.ask` e `asks_a_person`, a ordem no `check`
+  (a pergunta é o último passo), o limite e a redação, o modal, o `why`;
+- gate verde no diretório da task: 2401 passaram, 0 falharam, 13
+  ignorados, com a perna urnaui;
+- os testes do porto do ide rodaram três vezes seguidas, verdes;
+- a prova do P0 repetida pelo orquestrador: sem a linha do wake no
+  `port.rs`, `a_decline_reaches_the_agent_with_no_message_from_it` falha
+  por timeout em 20 s; com ela, passa. o arquivo foi restaurado.
+
+aplicado no fechamento: a doc de `crates/ide/src/agent.rs` e a
+consequência no ADR agents-act-through (o wake e o `ask`); o índice de
+ADR e o CHANGELOG.
+
+severidade do que ficou:
+- P2: o laboratório não tem pessoa que responde ao modal. o próximo
+  experimento com LLM precisa dela, para medir se o agente pergunta em
+  vez de passar por cima ou parar;
+- P3: o `rec` estima o peso do request sem a pergunta (no máximo 280
+  caracteres).
