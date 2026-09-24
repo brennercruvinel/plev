@@ -42,16 +42,25 @@
 //! no comps. materializing a surface on the widgets is task-69.
 
 mod caps;
+mod decode;
+mod error;
 mod ir;
+mod item;
+mod policy;
 mod token;
+mod verify;
 mod vocab;
 
 pub use caps::{ActionCap, Capabilities, DataCap};
+pub use decode::{decode, parse};
+pub use error::{IrError, Rule};
 pub use ir::{Bind, CapabilityRef, ITEM, Ir, IrNode, Repeat, Surface, VERSION};
+pub use policy::{GenerationPolicy, HARD_DEPTH};
 pub use token::{
     Align, Axis, ColorRole, ControlSize, Elevation, Layout, MAX_FLEX, MAX_RATIO, MIN_RATIO, Props,
     ShapeRole, Size, SizeToken, SpacingToken, TypographyRole,
 };
+pub use verify::{VerifiedIr, verify, verify_json};
 pub use vocab::{
     CONTAINER, ChartKind, Component, Event, Named, Spec, StateProp, is_control, names, role_of,
     spec_of,
