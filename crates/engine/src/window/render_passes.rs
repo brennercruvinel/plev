@@ -234,6 +234,7 @@ fn resolve_blurred_backdrop(
             source_view: &compose_view,
             width: vw,
             height: vh,
+            scale: gpu.clip_scale(),
         },
         sigma,
     );
@@ -488,6 +489,7 @@ impl super::host::WindowHost {
                             source_view: sv,
                             width: sw,
                             height: sh,
+                            scale: gpu.clip_scale(),
                         },
                         *sigma,
                     ),
@@ -500,6 +502,7 @@ impl super::host::WindowHost {
                             source_view: sv,
                             width: sw,
                             height: sh,
+                            scale: gpu.clip_scale(),
                         },
                         *sigma,
                         *color,

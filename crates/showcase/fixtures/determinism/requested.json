@@ -6,7 +6,7 @@
       "name": "size",
       "area": { "kind": "size" },
       "status": "known",
-      "reason": "the frame is the logical viewport times the window's scale factor (backingScaleFactor on macOS, 1 or 2; windows and linux also give 1.25 and 1.5): a frame is compared only with one of the same viewport and scale"
+      "reason": "the frame is the logical viewport times the window's scale factor (backingScaleFactor on macOS, 1 or 2; windows and linux also give 1.25 and 1.5): a frame is compared only with one of the same viewport and scale; across scales the layout, the text and every primitive keep their size in logical px, and since task-77 phase 1b the backdrop blur and the layer blur and shadow effects too"
     },
     {
       "target": "web",

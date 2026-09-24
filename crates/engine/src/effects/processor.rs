@@ -8,6 +8,8 @@ use super::types::*;
 
 pub struct EffectProcessor {
     pub blur_pipeline: wgpu::RenderPipeline,
+    /// The blur at a scale other than 1 (`apply_blur`).
+    pub scaled_blur_pipeline: wgpu::RenderPipeline,
     pub shadow_pipeline: wgpu::RenderPipeline,
     pub composite_pipeline: wgpu::RenderPipeline,
     pub effect_texture_bgl: wgpu::BindGroupLayout,
@@ -96,6 +98,13 @@ impl EffectProcessor {
             &blur_uniform_bgl,
             surface_format,
         );
+        let scaled_blur_pipeline = Self::create_scaled_blur_pipeline(
+            device,
+            &blur_src,
+            &effect_texture_bgl,
+            &blur_uniform_bgl,
+            surface_format,
+        );
 
         #[cfg(hot_reload)]
         let shadow_src = crate::hot_reload::shader_source("shadow.wgsl");
@@ -139,6 +148,7 @@ impl EffectProcessor {
 
         Self {
             blur_pipeline,
+            scaled_blur_pipeline,
             shadow_pipeline,
             composite_pipeline,
             effect_texture_bgl,

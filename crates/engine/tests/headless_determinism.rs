@@ -9,10 +9,9 @@
 //! fractional scale their edges fall inside pixels, where the SDF
 //! feather, the MSAA resolve and the blend decide the bytes.
 //!
-//! One test is ignored: it pins the divergence the probe found across
-//! scales (a blur's sigma in physical texels) and turns green with the
-//! engine's fix (`cargo test -p engine --test headless_determinism --
-//! --ignored`).
+//! One test pins the divergence the probe found across scales (a blur's
+//! sigma in physical texels): ignored until the engine's fix (task-77
+//! phase 1b), it runs with the rest now; `blur_scale.rs` has the others.
 //!
 //! Needs a GPU adapter; without one every test skips.
 
@@ -275,12 +274,12 @@ fn blur_reach(scale: f32) -> Option<f32> {
 }
 
 /// The divergence the probe found (task-77): the backdrop blur, and the
-/// layer blur and shadow effects, take their sigma in physical texels
-/// (`effects/apply.rs`, `apply_blur`), so the same glass spreads 9
-/// logical px at 1x, 6 at 1.5x and 4.5 at 2x. The fix is the engine's
-/// and waits for approval; this is the test it has to turn green.
+/// layer blur and shadow effects, took their sigma in physical texels
+/// (`effects/apply.rs`, `apply_blur`), so the same glass spread 9
+/// logical px at 1x, 6 at 1.5x and 4.5 at 2x. Since phase 1b the kernel
+/// of 1x is laid over the physical texels at any other scale
+/// (`effects::scaled_weights`).
 #[test]
-#[ignore = "task-77: blur sigma in physical texels; the engine fix awaits approval"]
 fn a_backdrop_blur_reaches_as_far_in_logical_px_at_every_scale() {
     let Some(one) = blur_reach(1.0) else {
         eprintln!("no GPU adapter; skipping");

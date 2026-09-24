@@ -31,6 +31,35 @@ impl EffectProcessor {
         )
     }
 
+    /// The blur of a scale other than 1: `blur.wgsl`'s `fs_scaled`, the
+    /// same layouts (its uniform is larger; the layout leaves the size to
+    /// the shader).
+    pub(super) fn create_scaled_blur_pipeline(
+        device: &wgpu::Device,
+        shader_source: &str,
+        texture_bgl: &wgpu::BindGroupLayout,
+        uniform_bgl: &wgpu::BindGroupLayout,
+        surface_format: wgpu::TextureFormat,
+    ) -> wgpu::RenderPipeline {
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("scaled_blur_shader"),
+            source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+        });
+        let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("scaled_blur_pipeline_layout"),
+            bind_group_layouts: &[texture_bgl, uniform_bgl],
+            immediate_size: 0,
+        });
+        fullscreen_pipeline(
+            device,
+            "scaled_blur_pipeline",
+            &layout,
+            (&shader, "fs_scaled"),
+            surface_format,
+            None,
+        )
+    }
+
     pub(super) fn create_shadow_pipeline(
         device: &wgpu::Device,
         shader_source: &str,
@@ -113,11 +142,19 @@ impl EffectProcessor {
                     &self.blur_uniform_bgl,
                     sf,
                 );
+                let scaled = Self::create_scaled_blur_pipeline(
+                    device,
+                    source,
+                    &self.effect_texture_bgl,
+                    &self.blur_uniform_bgl,
+                    sf,
+                );
                 if let Some(err) = pollster::block_on(guard.pop()) {
                     log::error!("Shader reload failed for blur.wgsl: {err}");
                     return false;
                 }
                 self.blur_pipeline = pipeline;
+                self.scaled_blur_pipeline = scaled;
                 log::info!("Reloaded blur.wgsl");
                 true
             }
@@ -172,6 +209,18 @@ pub(crate) fn create_fullscreen_pipeline(
     format: wgpu::TextureFormat,
     blend: Option<wgpu::BlendState>,
 ) -> wgpu::RenderPipeline {
+    fullscreen_pipeline(device, label, layout, (shader, "fs_main"), format, blend)
+}
+
+/// [`create_fullscreen_pipeline`] with the fragment entry point named.
+fn fullscreen_pipeline(
+    device: &wgpu::Device,
+    label: &str,
+    layout: &wgpu::PipelineLayout,
+    (shader, fragment): (&wgpu::ShaderModule, &str),
+    format: wgpu::TextureFormat,
+    blend: Option<wgpu::BlendState>,
+) -> wgpu::RenderPipeline {
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: Some(label),
         layout: Some(layout),
@@ -183,7 +232,7 @@ pub(crate) fn create_fullscreen_pipeline(
         },
         fragment: Some(wgpu::FragmentState {
             module: shader,
-            entry_point: Some("fs_main"),
+            entry_point: Some(fragment),
             targets: &[Some(wgpu::ColorTargetState {
                 format,
                 blend,

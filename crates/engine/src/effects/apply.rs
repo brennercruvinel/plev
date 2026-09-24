@@ -13,6 +13,10 @@ pub(crate) struct EffectContext<'a> {
     pub source_view: &'a wgpu::TextureView,
     pub width: u32,
     pub height: u32,
+    /// Physical px per logical px, per axis (`GpuContext::clip_scale`):
+    /// a sigma is in logical px, and the blur spreads as far in them at
+    /// every scale.
+    pub scale: (f32, f32),
 }
 
 // ---------------------------------------------------------------------------
@@ -47,14 +51,10 @@ impl EffectProcessor {
     /// submit executes any pass, so reusing one buffer across the H and V
     /// passes (or across several blurs in one frame -- e.g. backdrop
     /// nodes) would make every pass read the LAST write.
-    fn create_blur_uniform_bg(
-        &self,
-        device: &wgpu::Device,
-        uniforms: &BlurUniforms,
-    ) -> wgpu::BindGroup {
+    fn create_blur_uniform_bg(&self, device: &wgpu::Device, contents: &[u8]) -> wgpu::BindGroup {
         let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("blur_uniforms"),
-            contents: bytemuck::bytes_of(uniforms),
+            contents,
             usage: wgpu::BufferUsages::UNIFORM,
         });
         device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -67,9 +67,42 @@ impl EffectProcessor {
         })
     }
 
-    /// Apply a two-pass Gaussian blur. Returns a TextureHandle with the result.
+    /// The pipeline and the uniforms of one blur pass along `direction`,
+    /// at `scale` physical px per logical px on that axis. Scale 1 is the
+    /// blur as it always was (`fs_main`, 13 taps of
+    /// `gaussian_weights`); any other lays that kernel over the physical
+    /// texels (`fs_scaled`, `scaled_weights`), so a sigma in logical px
+    /// reaches as far at every scale.
+    fn blur_pass(
+        &self,
+        device: &wgpu::Device,
+        direction: [f32; 2],
+        texel_size: [f32; 2],
+        (sigma, scale): (f32, f32),
+    ) -> (&wgpu::RenderPipeline, wgpu::BindGroup) {
+        if scale == 1.0 {
+            let uniforms = BlurUniforms {
+                direction,
+                texel_size,
+                weights: gaussian_weights(sigma),
+            };
+            let bg = self.create_blur_uniform_bg(device, bytemuck::bytes_of(&uniforms));
+            return (&self.blur_pipeline, bg);
+        }
+        let (taps, weights) = scaled_weights(sigma, scale);
+        let uniforms = ScaledBlurUniforms {
+            direction,
+            texel_size,
+            taps: [taps as f32, 0.0, 0.0, 0.0],
+            weights,
+        };
+        let bg = self.create_blur_uniform_bg(device, bytemuck::bytes_of(&uniforms));
+        (&self.scaled_blur_pipeline, bg)
+    }
+
+    /// Apply a two-pass Gaussian blur of `sigma` logical px. Returns a
+    /// TextureHandle with the result.
     pub(crate) fn apply_blur(&self, ctx: &mut EffectContext<'_>, sigma: f32) -> TextureHandle {
-        let weights = gaussian_weights(sigma);
         let texel_size = [1.0 / ctx.width as f32, 1.0 / ctx.height as f32];
 
         let temp_a = ctx
@@ -81,14 +114,8 @@ impl EffectProcessor {
 
         // Horizontal pass: source -> temp_a
         {
-            let blur_uniform_bg = self.create_blur_uniform_bg(
-                ctx.device,
-                &BlurUniforms {
-                    direction: [1.0, 0.0],
-                    texel_size,
-                    weights,
-                },
-            );
+            let (pipeline, blur_uniform_bg) =
+                self.blur_pass(ctx.device, [1.0, 0.0], texel_size, (sigma, ctx.scale.0));
             let source_bg = self.create_source_bind_group(ctx.device, ctx.source_view);
 
             let mut pass = ctx.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -107,7 +134,7 @@ impl EffectProcessor {
                 occlusion_query_set: None,
                 multiview_mask: None,
             });
-            pass.set_pipeline(&self.blur_pipeline);
+            pass.set_pipeline(pipeline);
             pass.set_bind_group(0, &source_bg, &[]);
             pass.set_bind_group(1, &blur_uniform_bg, &[]);
             pass.draw(0..3, 0..1);
@@ -115,14 +142,8 @@ impl EffectProcessor {
 
         // Vertical pass: temp_a -> temp_b
         {
-            let blur_uniform_bg = self.create_blur_uniform_bg(
-                ctx.device,
-                &BlurUniforms {
-                    direction: [0.0, 1.0],
-                    texel_size,
-                    weights,
-                },
-            );
+            let (pipeline, blur_uniform_bg) =
+                self.blur_pass(ctx.device, [0.0, 1.0], texel_size, (sigma, ctx.scale.1));
             let temp_a_bg = self.create_source_bind_group(ctx.device, temp_a.view());
 
             let mut pass = ctx.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -141,7 +162,7 @@ impl EffectProcessor {
                 occlusion_query_set: None,
                 multiview_mask: None,
             });
-            pass.set_pipeline(&self.blur_pipeline);
+            pass.set_pipeline(pipeline);
             pass.set_bind_group(0, &temp_a_bg, &[]);
             pass.set_bind_group(1, &blur_uniform_bg, &[]);
             pass.draw(0..3, 0..1);
@@ -216,6 +237,7 @@ impl EffectProcessor {
                     source_view: &sil_view,
                     width: ctx.width,
                     height: ctx.height,
+                    scale: ctx.scale,
                 },
                 sigma,
             );
