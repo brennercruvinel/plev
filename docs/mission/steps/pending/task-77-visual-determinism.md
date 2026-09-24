@@ -132,17 +132,17 @@ scale 1). toda afirmação sobre biblioteca vem da fonte da versão do
 
 | alvo | o que existe | o que falta | o que o brenner roda (com rede) | tamanho aproximado |
 |---|---|---|---|---|
-| web | python playwright 1.62 (`/opt/homebrew/bin/playwright`), chrome-headless-shell 151.0.7922.34 em `~/Library/Caches/ms-playwright/chromium_headless_shell-1234`, node 26.7; alvo `wasm32-unknown-unknown` | `trunk`, `wasm-bindgen` (CLI), `wasm-opt`; Chrome.app (só o Safari está em /Applications) | `brew install trunk` e `cargo install --locked wasm-bindgen-cli --version 0.2.123` (a versão do lock); `brew install binaryen` só se o build release pedir o wasm-opt | trunk uns 10 MB; wasm-bindgen-cli uns 20 MB (compila alguns minutos); binaryen uns 40 MB |
-| iOS | Xcode 27.0 (27A266a), runtimes iOS 26.5 e 27.0, iPhone 17 Pro no 26.5 (`D2B562EB-DEFA-4B56-9AC9-FD6B82614ED2`, desligado), 1206x2622 a 3x (402x874 lógico, do `profile.plist` do device type) | o alvo rust `aarch64-apple-ios-sim`; o `xcodegen`, que o `ios/showcase/build_ios.sh` chama e o orquestrador não listou | `rustup target add aarch64-apple-ios-sim` e `brew install xcodegen` | o rust-std do alvo, algumas dezenas de MB; xcodegen uns 10 MB |
+| web | python playwright 1.62 (`/opt/homebrew/bin/playwright`), chrome-headless-shell 151.0.7922.34 em `~/Library/Caches/ms-playwright/chromium_headless_shell-1234`, node 26.7; alvo `wasm32-unknown-unknown` | `trunk`, `wasm-bindgen` (CLI), `wasm-opt`; Chrome.app (só o Safari.app está em /Applications) | `brew install trunk` e `cargo install --locked wasm-bindgen-cli --version 0.2.123` (a versão do lock); `brew install binaryen` só se o build release pedir o wasm-opt | trunk uns 10 MB; wasm-bindgen-cli uns 20 MB (compila alguns minutos); binaryen uns 40 MB |
+| iOS | xcode 27.0 (27A266a), runtimes iOS 26.5 e 27.0, iPhone 17 Pro no 26.5 (`D2B562EB-DEFA-4B56-9AC9-FD6B82614ED2`, desligado), 1206x2622 a 3x (402x874 lógico, do `profile.plist` do device type) | o alvo rust `aarch64-apple-ios-sim`; o `xcodegen`, que o `ios/showcase/build_ios.sh` chama e o orquestrador não listou | `rustup target add aarch64-apple-ios-sim` e `brew install xcodegen` | o rust-std do alvo, algumas dezenas de MB; xcodegen uns 10 MB |
 | android | nada: sem SDK em `~/Library/Android/sdk`, sem `emulator`, `adb`, `sdkmanager`, sem JDK (`java` é o stub do macOS, "Unable to locate a Java Runtime"), sem `cargo-ndk`, sem NDK na raiz, sem alvos rust de android | tudo | `brew install --cask temurin@17 android-commandlinetools`; `sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis;arm64-v8a" "ndk;27.2.12479018"`; `avdmanager create avd -n plev35 -k "system-images;android-35;google_apis;arm64-v8a"`; `cargo install cargo-ndk`; `rustup target add aarch64-linux-android x86_64-linux-android` | uns 4 GB no total (imagem do sistema uns 1,5 GB, NDK uns 1,5 GB, emulador uns 300 MB); o disco tem uns 15 GB livres |
 
 achado da sonda (a): a web está mais perto do que parecia. o
 chrome-headless-shell que já está instalado expõe WebGPU numa página
 segura (`file://`), sem janela: com `--enable-unsafe-webgpu
 --use-angle=metal` o adapter é `apple / metal-3` (a GPU desta máquina,
-pelo Dawn); sem `--use-angle=metal` é `google / swiftshader`, software. o
+pelo dawn); sem `--use-angle=metal` é `google / swiftshader`, software. o
 formato preferido do canvas é `bgra8unorm` nos dois. o script da web fixa
-as flags e registra o adapter, senão a captura mede o SwiftShader achando
+as flags e registra o adapter, senão a captura mede o swiftshader achando
 que mede a GPU.
 
 ### (b) o desktop consigo mesmo
@@ -161,7 +161,7 @@ M4:
   escala, os bytes de um renderer novo.
 
 dois processos e todas as páginas da galeria: `regress capture`
-(seção seguinte). as 82 páginas nos quatro temas nas quatro escalas, 1312
+(seção "a captura do desktop", mais abaixo). as 82 páginas nos quatro temas nas quatro escalas, 1312
 frames, deram 1312 iguais em bit entre dois contextos, nos dois processos,
 e 1312 iguais em bit entre os dois processos, o segundo desenhando na
 ordem inversa (outro histórico de atlas e de resize). o desktop é
@@ -331,6 +331,233 @@ contextos e dois processos). o que a sonda achou, com causa ou aberto:
    candidatos pela leitura dos shaders, sem derivada em nenhum: precisão
    de `pow`, `exp`, `sqrt` e da `erf` polinomial; encode sRGB e blend em
    alvo de 8 bits; resolve do MSAA em formato sRGB; pesos do bilinear. a
-   web no Dawn sobre o mesmo M4 (flag `--use-angle=metal`) e o simulador
-   de iOS (metal do host) são as primeiras comparações; o SwiftShader do
+   web no dawn sobre o mesmo M4 (flag `--use-angle=metal`) e o simulador
+   de iOS (metal do host) são as primeiras comparações; o swiftshader do
    chromium sem a flag é o primeiro adapter de software.
+
+## handoff da fase 1 (task-77a): o comparador, a captura do desktop e as divergências desta máquina
+
+branch `task/77a-determinism`, base `5207f9b8`. commits, em ordem:
+
+- `2dd2bc0d` task-77: the probe, the desktop against itself
+- `c779fca6` task-77: the comparator classifies two frames
+- `65d45235` task-77: the table of requested differences
+- `8af26af5` task-77: the desktop captured against itself, and its report
+- `35a47b26` task-77: the blur does not follow the scale (the cause, not the fix)
+- `a69cd464` task-77: the capture scripts for web, iOS and android
+- (este) task-77: ADR and the phase 1 handoff
+
+```text
+Goal: task-77 fase 1, determinismo visual (comparador, captura do desktop,
+      divergências que esta máquina reproduz, scripts dos outros alvos)
+Status: concluída; web, iOS e android com scripts prontos e sem captura
+        (faltam ferramentas); uma correção de engine espera aprovação
+```
+
+### a sonda
+
+colada acima ("fase 1 (task-77a): a sonda"). em uma linha por item: (a) a
+web tem playwright e um chromium headless com WebGPU no metal, faltam
+trunk e wasm-bindgen; o iOS tem xcode 27 e o simulador, faltam o alvo
+`aarch64-apple-ios-sim` e o xcodegen; o android não tem nada. (b) o
+desktop é igual em bit consigo mesmo: dois contextos, dois processos, 1,
+2, 1.25 e 1.5. (c) a janela escreve os mesmos bytes sRGB que o headless
+(BGRA contra RGBA), mas a layer metal vai sem `colorspace` (nil) e o que
+a pessoa vê depende do window server e do display. (d) nenhum shader usa
+derivada nem dithering; a borda é um feather fixo de 1 px lógico; o que
+pode variar entre GPUs é precisão de função e de blend.
+
+### o comparador e as classes
+
+`crates/showcase/examples/regress/classify.rs`. dois frames da mesma
+página, tema, viewport e escala:
+
+- `Equal`: todo byte igual;
+- `Requested { reasons }`: diferem, e todo pixel diferente cai numa área
+  que uma decisão declara (faixa numa borda ou retângulo, em px lógicos,
+  mapeados por centro de pixel como o `pixels.rs` faz com um controle);
+  cada razão com o nome e os pixels que explica;
+- `Silent { pixels, max_delta, mean_delta, bbox, explained }`: medido só
+  sobre os pixels que nenhuma decisão explica; delta de um pixel é o maior
+  dos quatro canais (0 a 255); bbox em px físicos;
+- `Resized { base, other, reason }`: tamanhos diferentes não se comparam
+  por pixel; a razão quando a tabela declara uma decisão de tamanho.
+
+linha de comando: `regress compare <base.png> <other.png> [--scale <s>]
+[--target <desktop|web|ios|android>] [--table <file>]`, saída 0 igual ou
+pedido, 1 calado ou de outro tamanho, 2 pedido malformado, 3 erro. testes
+com imagens sintéticas para cada classe, o mapeamento de área nas quatro
+bordas a 1.25, e a leitura de dois pngs em disco.
+
+### a tabela
+
+`crates/showcase/fixtures/determinism/requested.json`, formato
+`determinism.requested.v1`. JSON e não TOML: o exemplo já lê serde_json, e
+um leitor de TOML seria dependência nova. uma linha por decisão: alvo,
+nome kebab-case, área (`edge`, `rect` ou `size`), `known` ou
+`to_confirm`, razão numa linha. a leitura recusa alvo desconhecido, nome
+repetido no alvo, razão em duas linhas, área vazia, duas linhas de
+tamanho num alvo.
+
+| alvo | nome | área | status |
+|---|---|---|---|
+| desktop | size | tamanho | known |
+| web | size | tamanho | to_confirm |
+| ios | status-bar | faixa no topo, 62 pt | to_confirm |
+| ios | home-indicator | faixa embaixo, 34 pt | to_confirm |
+| ios | size | tamanho (402x874 a 3) | to_confirm |
+| android | status-bar | faixa no topo, 24 dp | to_confirm |
+| android | navigation-bar | faixa embaixo, 48 dp | to_confirm |
+| android | size | tamanho (densidade / 160) | to_confirm |
+
+### o relatório do desktop em números
+
+`regress capture`, apple M4 (metal), 1280x800 lógico: 82 páginas x 4
+temas (core, hoff, dark, light) x 4 escalas (1, 2, 1.25, 1.5) = 1312
+frames.
+
+- dois contextos de GPU do mesmo processo: 1312 iguais, 0 pedidas, 0
+  caladas, 0 de outro tamanho (68,5 s, escrevendo os pngs, 183 MB);
+- segundo processo, ordem inversa, contra os pngs do primeiro: 1312
+  iguais entre contextos e 1312 iguais entre processos (43,2 s).
+
+reproduzir: `cargo run -p showcase --example regress -- capture`, depois
+`... capture --out target/determinism/desktop-b --against
+target/determinism/desktop --reverse --no-png`. o relatório fica em
+`target/determinism/<dir>/report.txt` e `report.json`.
+
+### as divergências
+
+detalhe na seção "as divergências que esta máquina reproduz" acima.
+
+1. o blur não segue a escala: causa achada (sigma em texels físicos em
+   `EffectProcessor::apply_blur`), medida (9, 6 e 4,5 px lógicos de
+   espalhamento a 1x, 1.5x e 2x para sigma 4), correção proibida nesta
+   fase; teste ignorado que a correção tem que deixar verde.
+2. o `colorspace` da layer metal: aberto, falta captura de janela num
+   display P3.
+3. a janela contra o headless nas páginas da galeria: aberto, esperado
+   igual, falta um caminho de captura de surface no showcase.
+4. entre GPUs e drivers: aberto, uma GPU só nesta máquina.
+
+### relatório de parada: o blur e a escala
+
+- problema: o backdrop blur e os efeitos de layer `Blur` e `Shadow`
+  aplicam o sigma em texels físicos; o mesmo vidro espalha 9 px lógicos a
+  1x, 6 a 1.5x, 4,5 a 2x, e ficaria em 3 no iPhone a 3x. uma tela igual
+  em px lógicos fica diferente por escala, sem ninguém ter pedido.
+- opções: (a) multiplicar o sigma pela escala do contexto
+  (`clip_scale`) antes de `gaussian_weights`, e dar ao `blur.wgsl` taps
+  que alcancem uns 3 sigma (hoje 13 taps cortam em 6 texels, 1,5 sigma a
+  1x para sigma 4); (b) desfocar num alvo reduzido pela escala e
+  reamostrar, o que mantém os 13 taps; (c) aceitar e declarar como decisão
+  de produto na tabela (não recomendo: é uma diferença que ninguém
+  escolheu).
+- impacto: (a) e (b) mexem no engine (`effects/apply.rs`,
+  `window/render_passes.rs`) e no shader, mudam os pixels do vidro em toda
+  escala que não é 1 e, em (a), também a 1x se o kernel crescer; o
+  `regress check` não muda (os hashes são da cena), as imagens de baseline
+  do todo não têm backdrop blur (conferir no bless); (b) custa um
+  downsample e um upsample por backdrop. (c) não custa nada e deixa a
+  divergência.
+- recomendação: (a), numa task de engine com aprovação, com o teste
+  `a_backdrop_blur_reaches_as_far_in_logical_px_at_every_scale` como
+  critério; o custo de mais taps medido com `perf::stages`.
+- decisão necessária: aprovar a mudança de engine e shader, e em que
+  task ela entra.
+
+### os scripts e o que o brenner instala
+
+`script/capture-web`, `script/capture-ios`, `script/capture-android`, com
+`script/capture-common.sh`. cada um checa as ferramentas primeiro e para
+com o comando que instala o que falta (rodados nesta máquina: os três
+param ali, código 2, sem compilar nada). depois compilam pelo caminho das
+tasks 18, 19 e 20 (`android/build_android.sh`, `ios/showcase/build_ios.sh`,
+`script/web build --release`), capturam um frame, desenham o frame do
+desktop da mesma página, tema, viewport e escala com `regress capture`, e
+classificam com `regress compare --target`. a cadeia desktop mais compare
+foi exercitada com um png do próprio desktop a 402x874 a 3: igual deu 0;
+a faixa do status bar mexida deu `requested (status-bar)`; um pixel a
+mais no meio deu `silent 1 px`, código 1.
+
+- web: `brew install trunk`; `cargo install --locked wasm-bindgen-cli
+  --version 0.2.123`; `brew install binaryen` se o build release pedir o
+  wasm-opt. uns 30 a 70 MB. o chromium headless e o playwright já estão
+  na máquina.
+- iOS: `rustup target add aarch64-apple-ios-sim`; `brew install xcodegen`.
+  algumas dezenas de MB.
+- android: `brew install --cask temurin@17 android-commandlinetools`;
+  `sdkmanager "platform-tools" "emulator" "platforms;android-35"
+  "system-images;android-35;google_apis;arm64-v8a" "ndk;27.2.12479018"`;
+  `avdmanager create avd -n plev35 -k
+  "system-images;android-35;google_apis;arm64-v8a"`; `cargo install
+  cargo-ndk`; `rustup target add aarch64-linux-android
+  x86_64-linux-android`. uns 4 GB; o `build_android.sh` lê `ANDROID_HOME`
+  e `JAVA_HOME` (default `~/Library/Android/sdk` e `~/jdk17`), então exportar
+  os caminhos do cask. o primeiro gradle baixa a distribuição.
+
+### gate e regress
+
+- antes (base `5207f9b8`): workspace 2672 passaram, 17 ignorados; urnaui
+  85 passaram, 1 ignorado; total 2757.
+- depois: workspace 2687 passaram, 18 ignorados; urnaui 85 e 1; total
+  2772. os 15 novos: 13 no exemplo `regress` (31 para 44) e 2 em
+  `crates/engine/tests/headless_determinism.rs`; o ignorado novo é o do
+  blur. `./script/gate` verde com as pernas wasm e urnaui.
+- `regress check`: 163 baselines, 163 inalterados, nenhum frame, nenhuma
+  GPU; a saída é a de antes fora os tempos.
+- `cargo check --target wasm32-unknown-unknown -p showcase --example
+  regress` verde. iOS e android não compilam aqui (alvos ausentes); o
+  código novo fica todo atrás do mesmo `cfg` desktop do exemplo, e o `src`
+  do showcase não mudou.
+
+### a linha do ADR para o índice
+
+```text
+| 2026-09-24 | [what-identical-means](what-identical-means.md) | proposed | idêntico por classe de comparação: o desktop contra ele mesmo em todo byte (1312 de 1312 frames, 82 páginas, 4 temas, escalas 1, 2, 1.25 e 1.5, dois contextos e dois processos no M4); outro alvo na mesma GPU em todo byte fora das áreas declaradas; entre GPUs delta de canal medido, proposto em no máximo 2, zero esperado dentro de cor chapada e glifo; entre escalas não se compara por pixel; o veredito é `equal`, `requested`, `silent` (pixels, delta máximo e médio, retângulo) ou `resized`; as decisões de produto numa tabela versionada (`crates/showcase/fixtures/determinism/requested.json`), web, iOS e android `to_confirm`; idêntico para nos bytes da surface, color management do sistema fica fora; `regress compare` e `regress capture` (task-77 fase 1) |
+```
+
+### decisões
+
+- a tabela em JSON (sem dependência nova).
+- os quatro temas são os que a tecla T percorre (core, hoff, dark, light).
+- a captura escreve em `target/determinism/`, nada no git; nenhum baseline
+  novo.
+- o segundo processo desenha na ordem inversa, para que a comparação entre
+  processos também cubra outro histórico de atlas e de resize.
+- um delta dentro do limite nunca vira `equal`: o comparador diz `silent`
+  com os números, e o limite decide um job.
+
+### limitações e riscos
+
+- nenhuma captura real de web, iOS e android; as linhas desses alvos na
+  tabela são `to_confirm` e os números das faixas (62, 34, 24, 48) são os
+  do comportamento de cada plataforma, a medir na primeira captura.
+- a web e o android só escolhem página e tema por tecla: as dez primeiras
+  páginas e os quatro temas. qualquer página exige um canal de lançamento
+  (query na URL, extra do intent), que é mudança no `src` do showcase.
+- o screenshot do chromium headless e o do simulador podem vir com perfil
+  de cor; o script converte para sRGB com `sips` quando o perfil não é
+  sRGB, e diz qual achou. sem medida ainda.
+- o `target/agents/one` é compartilhado entre checkouts: numa rodada de
+  teste dos scripts, um `REPO_ROOT` errado (corrigido com `BASH_SOURCE`)
+  fez o cargo compilar o `regress` do checkout principal nesse diretório, e
+  o `cargo run` seguinte deste worktree executou aquele binário (o
+  fingerprint local estava fresco e o cargo não recopiou o executável).
+  resolvido com `touch` e novo build; vale para qualquer agente que
+  compartilhe o diretório.
+
+### o que fica para a fase 2
+
+- as capturas reais: web (depois de trunk e wasm-bindgen; o chromium e o
+  playwright já estão), iOS (depois do alvo e do xcodegen), android
+  (depois do SDK). cada uma confirma ou corrige as linhas `to_confirm` da
+  tabela na mesma mudança e mede o primeiro delta entre GPUs (dawn sobre
+  metal, simulador sobre a GPU do host, emulador).
+- um canal de lançamento de página e tema na web e no android.
+- a janela contra o headless nas páginas (ler a textura da surface antes
+  do present, como o `monster_player --capture`), e o `colorspace` da
+  layer medido num display P3 com as primárias sRGB puras.
+- a correção do blur, se aprovada, com o teste ignorado como critério.
+- o job de CI no mac com `regress capture` exigindo `equal` em todo frame,
+  quando o CI voltar.
