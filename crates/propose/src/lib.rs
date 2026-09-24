@@ -32,11 +32,15 @@
 
 mod error;
 mod ids;
+mod llm;
 mod parts;
+mod prompt;
 mod rules;
 mod words;
 
 pub use error::ProposeError;
+pub use llm::{Llm, Model, ModelError};
+pub use prompt::prompt;
 pub use rules::Rules;
 pub use words::{GRAMMAR, Part};
 
