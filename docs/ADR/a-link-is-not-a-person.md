@@ -60,9 +60,9 @@ docs/mission/steps/ongoing/task-76-platform-integration.md) found:
   control character and no direction mark, override or isolate. no
   fragment, no user or password (`@`), no port (`:`), no slash more.
   `LinkError` names the first refusal, in a fixed order; `Refused`
-  carries an excerpt of what came, one printable line of at most 96
-  characters. `Link::url(scheme)` writes a link back in the form the
-  parse reads.
+  carries an excerpt of what came, one printable line (96 characters at
+  most, then an ellipsis; anything else escaped). `Link::url(scheme)`
+  writes a link back in the form the parse reads.
 - **the actor.** a link's request is `Link::request(seen)`:
   `Request::observe` over the projection as it is now, by `Actor::Agent`
   named `link` (`links::ACTOR`, `links::actor()`), never `Actor::Human`
@@ -139,7 +139,7 @@ docs/mission/steps/ongoing/task-76-platform-integration.md) found:
   case by case (`crates/engine/src/platform/links/tests.rs`), the sources
   (`links/source.rs`), the request and the policy on a test app
   (`crates/engine/tests/links.rs`), and the showcase with a fake source
-  and a bare window (`crates/showcase/src/app/links.rs`) and with a
+  and a bare window (`crates/showcase/src/app/links/tests.rs`) and with a
   headless frame (`crates/showcase/tests/links.rs`): a page link changes
   the page by `agent:link`, the camera, the print, the open-file dialog
   and an id that does not exist are refused and nothing runs, the line
@@ -149,8 +149,11 @@ docs/mission/steps/ongoing/task-76-platform-integration.md) found:
 - the showcase's projection is unchanged: the refusal goes into the
   `shell:notice` that item 5 projected, and the pages know nothing of
   links.
-- nothing on macOS receives a link from the system yet; `cargo run --
-  <link>` is the way in there until the bring-up.
+- nothing on macOS receives a link from the system yet; `cargo run -p
+  showcase -- <link>` is the way in there until the bring-up.
+- `showcase::app::links` is public (`SCHEME`, `OPEN`, `follow`,
+  `Followed`), so an integration test drives a link on a headless frame
+  as the shell does.
 
 ## bring-up
 
