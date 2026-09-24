@@ -229,3 +229,26 @@ fn an_inert_surface_takes_no_input() {
     assert!(seen.get(region).is_some_and(|n| n.inert));
     assert!(seen.get(&id("review.commit")).is_some_and(|n| n.inert));
 }
+
+/// The geometry is kept by id, not by place in the tree: after the list
+/// moved and before the next frame, a click lands on the node the person
+/// saw there, and where a node that left was drawn nothing is hit.
+#[test]
+fn before_the_next_frame_a_click_hits_what_the_person_saw() {
+    let (mut app, mut surface, theme) = setup();
+    let c = frame(&mut surface, &theme);
+    let notes = center(&c, "review.file[notes.md].stage");
+    let lexer = center(&c, "review.file[src/lexer.rs].unstage");
+    // src/lexer.rs leaves the list: every instance after it moves up a
+    // place in the tree
+    let files = ["notes.md", "src/parser.rs"].map(str::to_owned);
+    app.set("changes:files", Value::List(files.to_vec()));
+    assert!(surface.sync(&app.snapshot()));
+
+    click(&mut surface, &mut app, lexer, &theme);
+    assert!(app.executed.is_empty(), "a node that left is not hit");
+    click(&mut surface, &mut app, notes, &theme);
+    let req = app.executed.last().expect("the stage ran");
+    assert_eq!(req.target, id("changes.file[notes.md]"));
+    assert_eq!(req.action.as_str(), "stage");
+}

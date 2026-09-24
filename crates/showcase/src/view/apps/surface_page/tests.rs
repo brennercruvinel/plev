@@ -2,15 +2,24 @@
 //! todo, both over the todo's one dispatcher. A person adds a todo and
 //! changes the filter on the generated surface and the fixed todo shows
 //! it; the fixed todo moves the surface; the page projects both as one
-//! snapshot; and an agent operates the surface through the real port.
+//! snapshot; the control switches the surface between its two forms and
+//! what was typed and the filter go on; and an agent operates the surface
+//! through the real port.
+
+use std::collections::BTreeSet;
 
 use comps::prelude::{Rect, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::Theme;
 use sem::{Actor, SemId, StateRef, Value};
+use uir::{Capabilities, GenerationPolicy, verify_json};
 
-use super::SurfacePage;
+use super::{FORMS, SurfacePage};
+use crate::view::EditKey;
 use crate::view::apps::app::TodoPage;
+
+/// One turn of a 60 Hz display.
+const TURN: f32 = 1.0 / 60.0;
 
 fn sid(text: &str) -> SemId {
     SemId::parse(text).unwrap()
@@ -245,7 +254,180 @@ fn the_halves_sit_side_by_side_when_wide_and_stack_when_narrow() {
     }
 }
 
+/// Both forms verify against what the todo projects, and they are two
+/// forms of one surface: the same id, the same controls.
+#[test]
+fn both_forms_verify_against_the_todo_as_one_surface() {
+    let todo = TodoPage::new();
+    let app = todo.snapshot().expect("the todo projects");
+    let caps = Capabilities::from_snapshot(&app);
+    let forms: Vec<_> = FORMS
+        .iter()
+        .map(|f| {
+            verify_json(f.ir, &caps, &GenerationPolicy::default())
+                .unwrap_or_else(|e| panic!("{}: {e:#?}", f.label))
+        })
+        .collect();
+    let controls =
+        |i: usize| -> BTreeSet<SemId> { forms[i].focus_order().iter().cloned().collect() };
+    assert_eq!(forms[0].ir().surface.id, forms[1].ir().surface.id);
+    assert_eq!(controls(0), controls(1));
+    assert!(controls(0).contains(&sid("todo_panel.input")));
+}
+
+/// The segment `i` of the form control, where the person clicks it.
+fn segment(
+    page: &SurfacePage,
+    todo: &TodoPage,
+    content: Rect,
+    theme: &Theme,
+    i: usize,
+) -> (f32, f32) {
+    let h = page.halves(content, theme, todo);
+    page.forms.item_rects(h.forms, theme)[i].center()
+}
+
+/// Frames a turn apart for as long as the page asks for one (a caret
+/// flip draws one too): the last one, and how many.
+fn settle(
+    page: &mut SurfacePage,
+    todo: &mut TodoPage,
+    content: Rect,
+    theme: &Theme,
+) -> (Compositor, usize) {
+    let mut c = frame(page, todo, content, theme);
+    let mut frames = 0;
+    loop {
+        let wake = page.wake(TURN, todo);
+        if wake.now {
+            c = frame(page, todo, content, theme);
+            frames += 1;
+        }
+        if !wake.is_continuous() {
+            return (c, frames);
+        }
+        assert!(frames < 600, "the page never settles");
+    }
+}
+
+/// The acceptance of phase 2 on the page: a person types in the
+/// surface's field and filters on it, then switches the surface to two
+/// columns with the control. The surface transforms in place: the new
+/// form is what the page projects, the typed text and the filter go on
+/// (the fixed todo still filtered), the field is the same widget (its
+/// caret where it was), and the nodes slide to their places. And back.
+#[test]
+fn the_control_switches_the_form_and_the_typed_text_and_the_filter_go_on() {
+    let (mut todo, mut page, theme) = setup();
+    let content = wide();
+    let field = sid("todo_panel.input");
+    let c = frame(&mut page, &mut todo, content, &theme);
+    let compact = c.binding(&field).expect("the field").rect;
+    click(
+        &mut page,
+        &mut todo,
+        content,
+        &theme,
+        center(&c, "todo_panel.input"),
+    );
+    for ch in "buy".chars() {
+        assert!(page.handle_text(&ch.to_string(), &mut todo));
+    }
+    assert!(page.handle_edit_key(EditKey::Left, &mut todo));
+    let c = frame(&mut page, &mut todo, content, &theme);
+    click(
+        &mut page,
+        &mut todo,
+        content,
+        &theme,
+        center(&c, "todo_panel.filter.completed"),
+    );
+    assert_eq!(
+        value(&page, &todo, "todo.filter:selected"),
+        text("completed")
+    );
+
+    let to = segment(&page, &todo, content, &theme, 1);
+    click(&mut page, &mut todo, content, &theme, to);
+    assert_eq!(page.form, 1);
+    let snap = page.snapshot(&todo).expect("the page projects");
+    assert!(snap.get(&sid("todo_panel.side")).is_some());
+    assert!(snap.get(&sid("todo_panel.counts")).is_none());
+    // what was typed and the filter are the todo's: they go on
+    assert_eq!(value(&page, &todo, "todo_panel.input:text"), text("buy"));
+    assert_eq!(
+        value(&page, &todo, "todo.filter:selected"),
+        text("completed")
+    );
+    // the field is the same widget: the click on the control blurred it,
+    // and focused again its caret is where it was, one place back
+    assert!(page.focus(&field, &mut todo, false));
+    assert!(page.handle_text("X", &mut todo));
+    assert_eq!(value(&page, &todo, "todo.input:text"), text("buXy"));
+
+    let (c, frames) = settle(&mut page, &mut todo, content, &theme);
+    assert!(frames > 1, "the change of form took {frames} frames");
+    let columns = c.binding(&field).expect("the field").rect;
+    assert!(columns[0] > compact[0], "{compact:?} then {columns:?}");
+    assert!(c.binding(&sid("todo.item[3]")).is_some(), "still filtered");
+    assert!(c.binding(&sid("todo.item[1]")).is_none());
+
+    let back = segment(&page, &todo, content, &theme, 0);
+    click(&mut page, &mut todo, content, &theme, back);
+    assert_eq!(page.form, 0);
+    let (c, _) = settle(&mut page, &mut todo, content, &theme);
+    assert_eq!(c.binding(&field).expect("the field").rect, compact);
+    assert_eq!(value(&page, &todo, "todo_panel.input:text"), text("buXy"));
+}
+
 /// An agent through the real port, no window: it observes the page and
 /// operates the surface by the same contract as the todo.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod agent;
+
+/// The page in both forms, as the gallery draws it without a window: its
+/// scene, its projection, and with a GPU its pixels.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod forms;
+
+/// Two columns where the width allows, one where it does not: at a
+/// phone's width the second form wraps and nothing of the surface
+/// leaves the page's width.
+#[test]
+fn the_two_column_form_fits_a_phone_width() {
+    let (mut todo, mut page, theme) = setup();
+    let content = narrow();
+    frame(&mut page, &mut todo, content, &theme);
+    assert!(page.switch(1, &todo));
+    let (c, _) = settle(&mut page, &mut todo, content, &theme);
+    let side = c.binding(&sid("todo_panel.side")).expect("drawn").rect;
+    let entry = c.binding(&sid("todo_panel.entry")).expect("drawn").rect;
+    assert!(
+        entry[1] >= side[1] + side[3],
+        "one column: {side:?} {entry:?}"
+    );
+    let bound: Vec<_> = c
+        .bindings()
+        .filter(|(id, _)| id.as_str().starts_with("todo_panel"))
+        .map(|(id, b)| (id.clone(), b.rect))
+        .collect();
+    assert!(bound.len() > 10);
+    for (id, [x, _, w, _]) in bound {
+        assert!(
+            x >= content.x - 0.5 && x + w <= content.x + content.w + 0.5,
+            "{id} leaves the page: {x} + {w}"
+        );
+    }
+}
+
+/// A form the surface cannot take leaves it as it was: the form it
+/// shows, the control on it, the nodes it projects.
+#[test]
+fn a_form_that_does_not_transform_leaves_the_surface_as_it_was() {
+    let (todo, mut page, _) = setup();
+    assert!(!page.switch(FORMS.len(), &todo));
+    assert_eq!((page.form, page.forms.active), (0, 0));
+    let snap = page.snapshot(&todo).expect("the page projects");
+    assert!(snap.get(&sid("todo_panel.counts")).is_some());
+    assert!(snap.get(&sid("todo_panel.side")).is_none());
+}

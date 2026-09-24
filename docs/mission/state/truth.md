@@ -183,6 +183,12 @@ o da base até ser reescrito.
   relatório conta perguntas e respostas (`asked.rs`: `questions_asked`,
   `questions`, `over_the_person`, `run.no_commit_because`).
 
+- `4593a4c` (task-69 fase 2): `SurfaceHost::transform` e
+  `set_reduced_motion`, geometria por `SemId`, `crates/surface/src/motion.rs`
+  (a mola do overlay e um `Tween`); fixtures `mixer-left`, `mixer-right` e
+  `showcase-todo-columns` em `crates/surface/tests/fixtures/`; a página
+  Surface alterna duas formas.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse

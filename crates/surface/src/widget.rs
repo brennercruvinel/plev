@@ -129,42 +129,96 @@ fn cap_label(node: &Node, event: &str, shown: &Snapshot, fallback: &str) -> Stri
         .unwrap_or_else(|| fallback.to_owned())
 }
 
+/// which comps widget a node is drawn by: its component, and for a
+/// button whether it binds `busy` (a `SubmitButton` then). a node keeps
+/// its retained widget across a sync or a transformation while this stays
+/// the same.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Kind {
+    Static,
+    Button,
+    Submit,
+    IconButton,
+    TextField,
+    Checkbox,
+    Switch,
+    Slider,
+    Select,
+    Tabs,
+    Chip,
+    Table,
+    Dialog,
+}
+
+impl Kind {
+    pub fn of(node: &Node) -> Kind {
+        match node.component {
+            Some(Component::Button) if node.bind.state.contains_key("busy") => Kind::Submit,
+            Some(Component::Button) => Kind::Button,
+            Some(Component::IconButton) => Kind::IconButton,
+            Some(Component::TextField) => Kind::TextField,
+            Some(Component::Checkbox) => Kind::Checkbox,
+            Some(Component::Switch) => Kind::Switch,
+            Some(Component::Slider) => Kind::Slider,
+            Some(Component::Select) => Kind::Select,
+            Some(Component::Tabs) => Kind::Tabs,
+            Some(Component::Chip) => Kind::Chip,
+            Some(Component::Table) => Kind::Table,
+            Some(Component::Dialog) => Kind::Dialog,
+            _ => Kind::Static,
+        }
+    }
+}
+
 impl Widget {
     /// the widget of `node`; the ones that bind themselves get its id.
     pub fn new(node: &Node) -> Widget {
         let id = node.id.clone();
         let label = node.label.clone().unwrap_or_default();
-        match node.component {
-            Some(Component::Button) if node.bind.state.contains_key("busy") => {
-                Widget::Submit(SubmitButton::new().sem(id))
-            }
-            Some(Component::Button) => Widget::Button(Button::new(label).sem(id)),
-            Some(Component::IconButton) => Widget::IconButton(IconButton::new(ICON).sem(id)),
-            Some(Component::TextField) => {
-                Widget::TextField(Box::new(TextField::new(label).sem(id)))
-            }
-            Some(Component::Checkbox) => {
-                Widget::Checkbox(Checkbox::new(false).label(label).sem(id))
-            }
-            Some(Component::Switch) => Widget::Switch(Switch::new(false).sem(id)),
-            Some(Component::Slider) => Widget::Slider(Slider::new(0.0, 1.0, 0.0).sem(id)),
-            Some(Component::Select) => {
-                Widget::Select(Box::new(Select::new(Vec::<String>::new(), 0)))
-            }
-            Some(Component::Tabs) => Widget::Tabs(Tabs::new(Vec::<String>::new())),
-            Some(Component::Chip) => Widget::Chip(Chip::new(label).sem(id)),
-            Some(Component::Table) => Widget::Table(None),
-            Some(Component::Dialog) => Widget::Dialog(Box::new(DialogButtons {
+        match Kind::of(node) {
+            Kind::Submit => Widget::Submit(SubmitButton::new().sem(id)),
+            Kind::Button => Widget::Button(Button::new(label).sem(id)),
+            Kind::IconButton => Widget::IconButton(IconButton::new(ICON).sem(id)),
+            Kind::TextField => Widget::TextField(Box::new(TextField::new(label).sem(id))),
+            Kind::Checkbox => Widget::Checkbox(Checkbox::new(false).label(label).sem(id)),
+            Kind::Switch => Widget::Switch(Switch::new(false).sem(id)),
+            Kind::Slider => Widget::Slider(Slider::new(0.0, 1.0, 0.0).sem(id)),
+            Kind::Select => Widget::Select(Box::new(Select::new(Vec::<String>::new(), 0))),
+            Kind::Tabs => Widget::Tabs(Tabs::new(Vec::<String>::new())),
+            Kind::Chip => Widget::Chip(Chip::new(label).sem(id)),
+            Kind::Table => Widget::Table(None),
+            Kind::Dialog => Widget::Dialog(Box::new(DialogButtons {
                 cancel: Button::new("cancel"),
                 confirm: Button::new("confirm").variant(ButtonVariant::Secondary),
             })),
-            _ => Widget::Static,
+            Kind::Static => Widget::Static,
+        }
+    }
+
+    /// the comps widget this is.
+    pub fn kind(&self) -> Kind {
+        match self {
+            Widget::Static => Kind::Static,
+            Widget::Button(_) => Kind::Button,
+            Widget::Submit(_) => Kind::Submit,
+            Widget::IconButton(_) => Kind::IconButton,
+            Widget::TextField(_) => Kind::TextField,
+            Widget::Checkbox(_) => Kind::Checkbox,
+            Widget::Switch(_) => Kind::Switch,
+            Widget::Slider(_) => Kind::Slider,
+            Widget::Select(_) => Kind::Select,
+            Widget::Tabs(_) => Kind::Tabs,
+            Widget::Chip(_) => Kind::Chip,
+            Widget::Table(_) => Kind::Table,
+            Widget::Dialog(_) => Kind::Dialog,
         }
     }
 
     /// feeds the widget what the app holds in `shown`: the bound state,
     /// and whether its capabilities can run (a capability disabled or
     /// gone leaves the control disabled: a stale surface fails safe).
+    /// what a new form of the surface may change on a widget it keeps
+    /// (a label, a placeholder, a column's title) is set here too.
     pub fn sync(&mut self, node: &Node, shown: &Snapshot) {
         let value = |prop: &str| node.value(prop, shown);
         match self {
@@ -182,6 +236,10 @@ impl Widget {
                 b.disabled = !enabled(node, "activate", shown);
             }
             Widget::TextField(f) => {
+                let label = node.label.as_deref().unwrap_or_default();
+                if f.input.placeholder != label {
+                    label.clone_into(&mut f.input.placeholder);
+                }
                 let text = value("text").map(text_of).unwrap_or_default();
                 if f.text() != text {
                     f.set_text(&text);
@@ -189,6 +247,7 @@ impl Widget {
                 f.disabled = !enabled(node, "set_value", shown);
             }
             Widget::Checkbox(c) => {
+                c.label = Some(node.label.clone().unwrap_or_default());
                 c.checked = flag(value("checked"));
                 c.disabled = !enabled(node, "toggle", shown);
             }
@@ -229,6 +288,12 @@ impl Widget {
             }
             Widget::Table(table) => {
                 if let Some(t) = table {
+                    let title = node.label.as_deref().unwrap_or_default();
+                    if let Some(column) = t.columns.first_mut()
+                        && column.title != title
+                    {
+                        title.clone_into(&mut column.title);
+                    }
                     t.set_row_count(list_of(value("rows")).len());
                 }
             }
@@ -399,4 +464,43 @@ pub(crate) fn dialog_buttons(d: &DialogButtons, rect: Rect, theme: &Theme) -> (R
     let confirm = Rect::new(rect.x + rect.w - pad - fw, y, fw, fh);
     let cancel = Rect::new(confirm.x - gap - cw, y, cw, ch);
     (cancel, confirm)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sem::{SemId, StateRef};
+    use uir::{Bind, Props, Size};
+
+    fn button(busy: bool) -> Node {
+        let mut bind = Bind::default();
+        if busy {
+            let at = StateRef::parse("commit:busy").unwrap();
+            bind.state.insert("busy".to_owned(), at);
+        }
+        Node {
+            id: SemId::parse("form.commit").unwrap(),
+            component: Some(Component::Button),
+            label: Some("commit".to_owned()),
+            description: None,
+            props: Props::default(),
+            layout: None,
+            size: Size::default(),
+            bind,
+            item: None,
+            parent: None,
+            children: Vec::new(),
+        }
+    }
+
+    /// A button that starts or stops binding `busy` is drawn by another
+    /// comps widget, so a transformation gives it a new one.
+    #[test]
+    fn a_button_that_binds_busy_is_another_widget() {
+        let (plain, busy) = (button(false), button(true));
+        assert_eq!(Kind::of(&plain), Kind::Button);
+        assert_eq!(Kind::of(&busy), Kind::Submit);
+        assert_eq!(Widget::new(&plain).kind(), Kind::Button);
+        assert_eq!(Widget::new(&busy).kind(), Kind::Submit);
+    }
 }
