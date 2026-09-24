@@ -8,12 +8,20 @@
 //! repository or the commit form becomes a request through its
 //! dispatcher, the same path an agent or a test takes.
 //!
+//! With `PLEV_AGENT=1` in a debug build the window also opens the agent
+//! port (`ide::agent`, `$TMPDIR/plev/ide-<pid>.sock`), so a person and an
+//! agent operate the same workbench at once. The port wakes the loop; the
+//! shell serves it on this thread, and again after every git result it
+//! applies, since a stage, an unstage or a commit ends on the worker and
+//! its last stage goes out only then. A frame is drawn only when an act
+//! ran: an observation changes nothing.
+//!
 //! Frames render on demand, paced as the showcase paces them (`pace.rs`):
 //! the workbench's tick answers a `Wake`, motion (a scrollbar fade, a toast
 //! springing in) draws every turn, and a caret or a toast at rest sleeps
 //! the loop until its deadline (`ControlFlow::WaitUntil`), or for good
-//! when nothing is pending. Input, the git worker and the file watcher end
-//! the wait early, as winit documents, and each loop iteration first
+//! when nothing is pending. Input, the git worker, the file watcher and
+//! the agent port end the wait early, as winit documents, and each loop iteration first
 //! advances what animates to the instant it woke, so what the events then
 //! change counts its time from the change, not from the last frame. Keys
 //! go through the keymap (`keys.rs`).
@@ -48,6 +56,9 @@ enum AppEvent {
     Git(GitEvent),
     /// The worktree or `.git` changed on disk (debounced).
     FsChange,
+    /// An agent asked through the port: serve it, draw if an act ran.
+    #[cfg_attr(not(unix), allow(dead_code))] // the port is a unix socket
+    Agent,
 }
 
 // ---------------------------------------------------------------------------
@@ -96,6 +107,10 @@ struct App {
     /// A catch-up tick since the last frame changed something visible
     /// (a deadline came due as the loop woke): the next frame shows it.
     caught_up: bool,
+
+    /// The agent port, when `PLEV_AGENT=1` in a debug build.
+    #[cfg(unix)]
+    port: Option<wire::AgentPort>,
 }
 
 impl App {
@@ -113,6 +128,8 @@ impl App {
             registry: actions::registry(),
             clock: engine::animation::FrameClock::new(),
             caught_up: false,
+            #[cfg(unix)]
+            port: None,
         }
     }
 
@@ -130,6 +147,18 @@ impl App {
     fn apply_git_event(&mut self, event: GitEvent) {
         self.bench.apply(event);
         self.invalidate();
+    }
+
+    /// What agents asked through the port, served on this thread with the
+    /// frame on screen, and every stage that ended since sent; a frame
+    /// only when an act ran, since an observation changes nothing.
+    fn serve_agent(&mut self) {
+        #[cfg(unix)]
+        if let Some(port) = self.port.as_mut()
+            && ide::agent::serve(port, &mut self.bench, &self.compositor)
+        {
+            self.invalidate();
+        }
     }
 }
 
@@ -180,7 +209,13 @@ impl ApplicationHandler<AppEvent> for App {
 
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: AppEvent) {
         match event {
-            AppEvent::Git(git_event) => self.apply_git_event(git_event),
+            AppEvent::Git(git_event) => {
+                self.apply_git_event(git_event);
+                // The result may end an agent's request (a stage, an
+                // unstage, a commit): its last stage goes out now.
+                self.serve_agent();
+            }
+            AppEvent::Agent => self.serve_agent(),
             AppEvent::FsChange => {
                 // Something changed on disk: reload status/log/branches.
                 // The resulting events invalidate the scene when applied.
@@ -411,5 +446,16 @@ fn main() {
     .ok();
 
     let mut app = App::new(bench, fs_watcher);
+    // Off unless `PLEV_AGENT=1` in a debug build; nothing is created then.
+    #[cfg(unix)]
+    {
+        let agent = event_loop.create_proxy();
+        app.port = ide::agent::port(move || {
+            let _ = agent.send_event(AppEvent::Agent);
+        });
+        if let Some(port) = &app.port {
+            log::info!("agent port: {}", port.path().display());
+        }
+    }
     event_loop.run_app(&mut app).unwrap();
 }
