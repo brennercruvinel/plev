@@ -1,0 +1,80 @@
+#!/bin/bash
+# capture one frame of the showcase on the iOS simulator and classify it
+# against the desktop's frame of the same page, theme, viewport and scale
+# (task-77).
+#
+#   script/capture-ios [--page <title>] [--theme <name>] [--device <name>]
+#                      [--out <dir>]
+#
+# defaults: the launch page (Theme) in core on the "iPhone 17 Pro", into
+# target/determinism/ios-<time>/. the build is task-19's
+# ios/showcase/build_ios.sh; the launch is here and not in run_ios.sh because
+# the page and the theme go as launch arguments (App::launch_view reads
+# `[page] [theme]`), which run_ios.sh does not pass. the viewport and the
+# scale are the device type's screen (its profile.plist): 402x874 at 3 on
+# the iPhone 17 Pro. the status bar is pinned (9:41, full battery) so the
+# band iOS draws over the app is the same every run; the table declares it
+# (status-bar, home-indicator) as the platform's.
+set -euo pipefail
+# shellcheck source=script/capture-common.sh
+. "$(dirname "$0")/capture-common.sh"
+
+PAGE="Theme"; THEME="core"; DEVICE="iPhone 17 Pro"
+OUT="$REPO_ROOT/target/determinism/ios-$(date +%Y%m%d-%H%M%S)"
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --page) PAGE="$2"; shift 2 ;;
+        --theme) THEME="$2"; shift 2 ;;
+        --device) DEVICE="$2"; shift 2 ;;
+        --out) OUT="$2"; shift 2 ;;
+        -h | --help) usage; exit 0 ;;
+        *) echo "capture-ios: unknown argument '$1'" >&2; exit 2 ;;
+    esac
+done
+
+export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
+need xcrun "Xcode from the App Store, then xcode-select -s /Applications/Xcode.app"
+need xcodebuild "Xcode from the App Store"
+need xcodegen "brew install xcodegen"
+need plutil "part of macOS"
+need sips "part of macOS"
+need_rust_target aarch64-apple-ios-sim
+missing_stop ios
+
+TYPES="$(xcrun simctl list devicetypes -j)"
+PROFILE="$(python3 -c 'import json,sys; t=[d for d in json.loads(sys.argv[1])["devicetypes"] if d["name"]==sys.argv[2]]; print(t[0]["bundlePath"] if t else "")' "$TYPES" "$DEVICE")"
+if [ -z "$PROFILE" ] || ! xcrun simctl list devices available | grep -q "    $DEVICE ("; then
+    echo "capture-ios: no available simulator named '$DEVICE' (xcrun simctl list devices available)" >&2
+    exit 2
+fi
+screen() {
+    plutil -extract "mainScreen$1" raw "$PROFILE/Contents/Resources/profile.plist" 2>/dev/null
+}
+PX_W="$(screen Width)"; PX_H="$(screen Height)"; SCALE="$(screen Scale)"
+WIDTH="$(python3 -c "print(repr(${PX_W} / ${SCALE}))")"
+HEIGHT="$(python3 -c "print(repr(${PX_H} / ${SCALE}))")"
+
+mkdir -p "$OUT"
+echo ">> building the showcase for the simulator (ios/showcase/build_ios.sh)"
+# build_ios.sh links the staticlib from target/<triple>/<profile> of the
+# repository: a CARGO_TARGET_DIR elsewhere would leave it looking at nothing
+(unset CARGO_TARGET_DIR; "$REPO_ROOT/ios/showcase/build_ios.sh")
+APP="$REPO_ROOT/ios/showcase/build/Build/Products/Debug-iphonesimulator/ShowcaseDemo.app"
+
+echo ">> booting $DEVICE"
+xcrun simctl boot "$DEVICE" 2>/dev/null || true
+xcrun simctl bootstatus "$DEVICE" -b
+xcrun simctl status_bar "$DEVICE" override --time "9:41" --dataNetwork wifi \
+    --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 \
+    --batteryState charged --batteryLevel 100
+xcrun simctl install "$DEVICE" "$APP"
+xcrun simctl terminate "$DEVICE" com.plev.showcase 2>/dev/null || true
+echo ">> launching $PAGE / $THEME"
+xcrun simctl launch "$DEVICE" com.plev.showcase "$PAGE" "$THEME"
+sleep 5
+
+SHOT="$OUT/ios.png"
+xcrun simctl io "$DEVICE" screenshot --type=png "$SHOT"
+echo ">> $SHOT: ${PX_W}x${PX_H}, ${WIDTH}x${HEIGHT} logical at $SCALE"
+
+desktop_and_compare ios "$SHOT" "$PAGE" "$THEME" "$WIDTH" "$HEIGHT" "$SCALE" "$OUT"

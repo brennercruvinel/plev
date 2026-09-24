@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- what identical means (2026-09-24, task-77 phase 1): the regression
+  tool gains `regress compare`, which says whether two frames are equal,
+  different only where a product decision says so, or different with
+  nothing to explain it (with the number of pixels and the color delta),
+  and `regress capture`, which draws every page against itself. the
+  desktop is deterministic: 1312 of 1312 frames (82 pages, 4 themes,
+  scales 1, 1.25, 1.5 and 2) are equal in every byte across two GPU
+  contexts and two processes. one real divergence was found: the glass
+  blur does not follow the display scale. capture scripts for web, iOS
+  and android are ready and wait for tools that need the network.
+
 - a link is not a person (2026-09-24, task-76 item 6): the showcase
   follows `plev-showcase://<capability>/<action>?value=<text>` links read
   by a strict grammar. a link always acts as an outside agent named

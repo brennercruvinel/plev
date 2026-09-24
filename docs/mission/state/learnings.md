@@ -466,6 +466,27 @@ c"; saídas em `target/agents/exp/`.
 
 ## processo
 
+### 2026-09-24, dois checkouts num target dir só
+
+- **o cargo rodou um `regress` velho:** um script de captura com o
+  `REPO_ROOT` errado compilou o exemplo do checkout principal em
+  `target/agents/one`; o `cargo run` seguinte no worktree executou esse
+  binário, porque o cargo não recopia o executável quando o build local
+  está em dia. regra: um target dir serve a um checkout só; quem precisar
+  compilar o checkout principal usa outro dir, e antes de um gate que
+  valida um exemplo o orquestrador toca a fonte do exemplo para forçar o
+  rebuild.
+
+### 2026-09-24, `trash` não libera disco
+
+- **o orquestrador mandou um build dir de 3 GB para a Lixeira:** o
+  `/usr/bin/trash` move para a Lixeira do mesmo volume, então o espaço
+  não volta, e esta sessão não tem permissão de ler a Lixeira para
+  desfazer. esvaziar a Lixeira é do brenner (apaga as coisas dele
+  também). regra: cache de build se limpa com `cargo clean` (com
+  `--target-dir` ou `--profile`, e antes um `--dry-run` que mostra o que
+  sai); `trash` fica para arquivo que alguém pode querer de volta.
+
 ### 2026-09-24, documentação de biblioteca não é fonte
 
 - **o briefing do item 6 citou a doc do winit como fato:** a doc dizia

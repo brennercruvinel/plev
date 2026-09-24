@@ -155,7 +155,7 @@ fn outward(r: [f32; 4], scale: f32, w: u32, h: u32) -> Option<[u32; 4]> {
 
 /// The pixels of `r` by center: pixel `x` is in when `x + 0.5` lies in
 /// `[lo, hi)` in physical px. `[x0, y0, x1, y1)`.
-fn centers(r: [f32; 4], scale: f32, w: u32, h: u32) -> Option<[u32; 4]> {
+pub fn centers(r: [f32; 4], scale: f32, w: u32, h: u32) -> Option<[u32; 4]> {
     let side = |lo: f32, hi: f32, max: u32| {
         let a = (lo * scale - 0.5).ceil().clamp(0.0, max as f32);
         let b = (hi * scale - 0.5).ceil().clamp(0.0, max as f32);

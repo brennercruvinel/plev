@@ -14,6 +14,39 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: determinismo visual (task-77 fase 1)
+
+- **integrada:** fase 1 (merge da `task/77a-determinism`). o `regress`
+  ganhou `compare` e `capture`. o desktop é determinístico consigo
+  mesmo: 1312 de 1312 frames iguais em bit, entre dois contextos de GPU
+  e dois processos. nenhum baseline novo.
+- **achado:** o blur do vidro aplica o sigma em texels físicos, então o
+  mesmo vidro espalha 9 px lógicos a 1x e 4,5 a 2x. decidido pelo
+  orquestrador: é defeito, não decisão de produto, e a correção entra
+  como fase 1b (engine e shader), com o teste ignorado como critério.
+- **para o brenner, sem pressa:** a web e o iOS destravam com poucos
+  comandos de instalação (dezenas de MB, com rede); o android pede uns
+  4 GB. os comandos estão no handoff da task-77.
+
+### ciclo 3: disco
+
+- o disco chegou a 13 GB com o agente da task-77 compilando. `trash` no
+  build do showcase que o orquestrador abriu para o brenner (3 GB) não
+  liberou nada: foi para a Lixeira, que só o brenner esvazia.
+  `cargo clean --profile dev` no checkout principal (conferido antes com
+  `--dry-run`: só `target/debug`, 4,5 GB) levou o disco a 18 GB.
+
+### ciclo 3: publicado #87 (task-76 item 6, task-76 concluída); disparada a task-77 fase 1
+
+- **publicado:** PR #87, merge commit, gate local verde na `main` (2757,
+  +31), regressão 163 sem mudança.
+- **disparado:** task-77 fase 1, determinismo visual: o `regress` ganha
+  um comparador que mede e classifica (igual, pedido, calado), a captura
+  do desktop cobre todas as páginas em quatro temas e três escalas, e o
+  que esta máquina reproduz das divergências é investigado com causa. a
+  web e o iOS ficam com scripts prontos: faltam `trunk`, `wasm-bindgen` e
+  o alvo `aarch64-apple-ios-sim`, que pedem rede. no Opus, um agente só.
+
 ### ciclo 3: deep links (task-76 item 6); a task-76 fecha
 
 - **integrada:** item 6 (merge da `task/76j-links`). o showcase segue

@@ -201,14 +201,19 @@ impl Baseline {
         if !path.is_file() {
             return Ok(None);
         }
-        let img = image::open(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-        let rgba = img.to_rgba8();
-        Ok(Some(Frame {
-            width: rgba.width(),
-            height: rgba.height(),
-            rgba: rgba.into_raw(),
-        }))
+        read_png(&path).map(Some)
     }
+}
+
+/// A png decoded to RGBA rows, as a frame.
+pub fn read_png(path: &Path) -> Result<Frame, String> {
+    let img = image::open(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let rgba = img.to_rgba8();
+    Ok(Frame {
+        width: rgba.width(),
+        height: rgba.height(),
+        rgba: rgba.into_raw(),
+    })
 }
 
 /// Every baseline directory under `root` (one holding `scene.json`), in
