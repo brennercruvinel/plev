@@ -8,7 +8,11 @@
 //! request; the gallery routing the row, the surface and the keys; the
 //! Claude answering off the thread (the fake claude); and the page drawn
 //! headless with both forms (a png each with `SILENCES_OUT`, the real
-//! frames in the ignored test).
+//! frames in the ignored test). The round of the checkpoint b (the review
+//! open at the default window, by the rules and by the Claude's fixture)
+//! is `generated/checkpoint.rs`.
+
+mod checkpoint;
 
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
