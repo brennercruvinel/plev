@@ -95,6 +95,7 @@ impl ShowcaseView {
             Some(Pane::Tabs) => self.panes.tabs.handle_escape(),
             Some(Pane::Todo) => self.panes.todo.handle_escape(),
             Some(Pane::Surface) => self.panes.surface.handle_escape(&mut self.panes.todo),
+            Some(Pane::Silences) => self.panes.silences.handle_escape(),
             Some(Pane::Git) => self.panes.git.handle_escape(),
             _ => false,
         };
@@ -119,6 +120,10 @@ impl ShowcaseView {
             Some(Pane::Surface) => self
                 .panes
                 .surface
+                .handle_edit_key(key, &mut self.panes.todo),
+            Some(Pane::Silences) => self
+                .panes
+                .silences
                 .handle_edit_key(key, &mut self.panes.todo),
             Some(Pane::Git) if key == EditKey::Backspace => self.panes.git.handle_backspace(),
             _ => false,

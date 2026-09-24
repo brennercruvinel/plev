@@ -91,6 +91,7 @@ pub enum Pane {
     // apps demo
     Todo,
     Surface,
+    Silences,
     Dock,
     Editor,
     Git,
