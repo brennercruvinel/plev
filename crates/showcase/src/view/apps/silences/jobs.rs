@@ -9,10 +9,18 @@
 //! surface binds an `image` to one of those and the host asks the page
 //! for it through `surface::Frames`; the page decodes what it does not
 //! have in `wake`, never in a frame.
+//!
+//! While the app sleeps (`engine::window::Background`, task-76 item 7)
+//! `settle` reads nothing: an answer that arrives stays on the worker's
+//! channel and is applied on the first wake after the app wakes, when the
+//! shell draws the frame that shows it. A job asked while asleep still
+//! starts today: the detect and the preview submit from the page's
+//! `execute` (`semantics.rs`), outside this file.
 
 use std::collections::HashMap;
 
 use engine::gpu::image::ImageHandle;
+use engine::window::Background;
 use sem::{SemId, Value};
 use showcase::model::silences::{Decision, TEST_VIDEO, Video};
 use surface::Frames;
@@ -86,8 +94,12 @@ impl SilencesPage {
     /// What the worker sent since the page last looked: a detection
     /// replaces the cuts and ends its request; a frame goes into the cache,
     /// ends the previews waiting for it and asks for the frames still
-    /// missing. True when what the page shows moved.
+    /// missing. True when what the page shows moved. Nothing while the
+    /// app sleeps: the channel keeps it for the wake.
     pub(super) fn settle(&mut self, todo: &mut TodoPage) -> bool {
+        if Background::asleep() {
+            return false;
+        }
         let done = self.worker.poll();
         let moved = !done.is_empty();
         for d in done {
@@ -180,7 +192,45 @@ impl SilencesPage {
 
 #[cfg(test)]
 mod tests {
+    use sem::{Actor, Request, Stage};
+    use showcase::model::silences::{PROBE_STDERR, parse};
+
+    use super::super::worker::Worker;
     use super::*;
+
+    /// One turn of a 60 Hz display.
+    const TURN: f32 = 1.0 / 60.0;
+
+    /// A detection's answer that arrives while the app sleeps stays on
+    /// the channel: the wake reads nothing and asks for no frame, the
+    /// request stays open; the first wake after the app wakes applies it
+    /// and asks for the frame that shows it.
+    #[test]
+    fn an_answer_that_arrives_while_the_app_sleeps_is_applied_on_the_first_awake_wake() {
+        let mut page = SilencesPage::with(Worker::fake(parse(PROBE_STDERR), true));
+        let mut todo = TodoPage::new();
+        let seen = page.snapshot().expect("the page projects");
+        let detect = SemId::parse("silences.detect").unwrap();
+        let req = Request::observe(&seen, Actor::Human, &detect, "detect_silence", None).unwrap();
+        let id = page.dispatch(req, &mut todo);
+        let stage = |todo: &TodoPage| todo.receipt(id).unwrap().stage().unwrap().clone();
+        assert_eq!(stage(&todo), Stage::Executing);
+
+        Background::sleeping(true);
+        page.worker.release();
+        let wake = page.wake(TURN, &mut todo);
+        assert!(!wake.now, "asleep: nothing applied, no frame");
+        assert_eq!(stage(&todo), Stage::Executing, "the request stays open");
+        assert!(page.worker.busy(), "the answer is still on the channel");
+
+        Background::sleeping(false);
+        let wake = page.wake(TURN, &mut todo);
+        assert!(wake.now, "awake: applied, a frame");
+        let Stage::Completed(outcome) = stage(&todo) else {
+            panic!("the detection completes: {:?}", stage(&todo));
+        };
+        assert_eq!(outcome.result.get("cuts"), Some(&Value::Int(2)));
+    }
 
     #[test]
     fn a_frame_ref_names_the_media_node_and_the_instant() {

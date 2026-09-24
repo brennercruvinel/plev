@@ -20,6 +20,11 @@ impl App {
         if !self.windows.get(id).is_some_and(|host| host.has_gpu()) {
             return;
         }
+        // A covered window, or a sleeping app: no frame (the one it shows
+        // with is asked as it shows again; `sleep.rs`).
+        if !self.windows.awake(id) {
+            return;
+        }
         // The real time since the last tick: a deadline the loop
         // slept through arrives whole (`dt` is clamped for motion).
         let since_last = self.clock.tick().since_last;
@@ -80,8 +85,12 @@ impl App {
     /// jump to its end, a toast pushed then would start three seconds
     /// old, a caret focused then would start in any phase. This tick
     /// draws nothing; if it changed something visible, it asks for the
-    /// frame.
+    /// frame. Asleep, nothing: the clock does not tick either, so the
+    /// whole time asleep lands on the first tick after the wake.
     pub(super) fn catch_up(&mut self) {
+        if self.windows.asleep() {
+            return;
+        }
         let since_last = self.clock.tick().since_last;
         self.advance(since_last);
     }
@@ -89,7 +98,11 @@ impl App {
     /// [`App::catch_up`] with the elapsed time given. What the tick
     /// settled (a job that ended) and what the pages asked to tell the
     /// person are notified right after, when no window has the focus.
+    /// Nothing while the app sleeps.
     pub(super) fn advance(&mut self, since_last: f32) {
+        if self.windows.asleep() {
+            return;
+        }
         if self.view.wake(since_last).now {
             self.caught_up = true;
             self.invalidate();

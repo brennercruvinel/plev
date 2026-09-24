@@ -18,7 +18,14 @@
 //! other receipt of the page is. The author of the IR is whoever asked
 //! (`GenerationPolicy::by`), so a surface an agent proposes binds only
 //! what agents may ask for.
+//!
+//! While the app sleeps (`engine::window::Background`, task-76 item 7) a
+//! `propose` by the Claude is held (`asking::Pending`): the request
+//! starts and stays open, and the child runs only after the app wakes.
+//! `settle` reads nothing meanwhile, so an answer that arrives asleep
+//! waits on the channel for the first wake after the app wakes.
 
+use engine::window::Background;
 use propose::{Ask, Rules, propose_verified};
 use sem::{
     Actor, Execution, Operable, Outcome, Request, RequestId, SemId, Semantics, SnapshotBuilder,
@@ -105,8 +112,12 @@ impl Page<'_> {
     /// page last looked: a cancel ends it now; the attempt or the seconds
     /// moved; or the answer arrived, the surface opens or takes the form
     /// in place and the request ends `completed` (or `failed`, with the
-    /// reason). True when what the page shows moved.
+    /// reason). True when what the page shows moved. Nothing while the
+    /// app sleeps: the channel keeps the answer for the wake.
     pub fn settle(&mut self) -> bool {
+        if Background::asleep() {
+            return false;
+        }
         if let Some((pending, why)) = self.cancelled() {
             let ended = self
                 .todo
@@ -205,8 +216,8 @@ impl Page<'_> {
     /// A proposal for the intent, as `author` wrote it, over the todo as
     /// it is and the surface shown. By the rules it is verified and shown
     /// now, and the request is done; by the Claude the worker starts,
-    /// with everything it needs owned, and the request `id` stays open
-    /// until `settle` ends it.
+    /// with everything it needs owned (or is held until the app wakes),
+    /// and the request `id` stays open until `settle` ends it.
     fn propose(&mut self, id: RequestId, author: &Actor) -> Execution {
         let intent = self.proposing.intent.text().trim().to_owned();
         let app = match self.todo.snapshot() {
@@ -315,6 +326,165 @@ impl Operable for Page<'_> {
                 }
                 None => Execution::Failed("nothing is being asked".to_owned()),
             },
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    //! The Claude asked while the app sleeps (task-76 item 7), against
+    //! the fake claude of `claude-model` (`tests/fake-claude`, a shell
+    //! script): the request starts and stays open with no child running,
+    //! the wakes meanwhile start and settle nothing, and the first wake
+    //! after the app wakes runs the child and the answer ends the
+    //! request; an answer that arrives while the app sleeps waits on the
+    //! channel for that wake. The desktop's: there is no child elsewhere.
+
+    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    mod asleep {
+
+        use std::path::PathBuf;
+        use std::thread;
+        use std::time::{Duration, Instant};
+
+        use claude_model::ClaudeCli;
+        use engine::window::Background;
+        use sem::{Stage, Value};
+        use serde_json::json;
+        use tempfile::TempDir;
+
+        use crate::view::apps::app::TodoPage;
+        use crate::view::apps::surface_page::SurfacePage;
+        use crate::view::apps::surface_page::asking::Claude;
+
+        /// One turn of a 60 Hz display.
+        const TURN: f32 = 1.0 / 60.0;
+        const INTENT: &str = "the items as a list with the add field on top";
+
+        fn manifest(rel: &str) -> PathBuf {
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(rel)
+        }
+
+        /// The fake answering the two-columns form of the todo's surface at
+        /// once, and a `ClaudeCli` that runs it in a directory of its own.
+        fn fake() -> (TempDir, ClaudeCli) {
+            let dir = tempfile::tempdir().unwrap();
+            let columns = manifest("../surface/tests/fixtures/showcase-todo-columns.ir.json");
+            let columns = std::fs::read_to_string(&columns)
+                .unwrap_or_else(|e| panic!("{}: {e}", columns.display()));
+            let good = json!({
+                "type": "result", "subtype": "success", "is_error": false,
+                "num_turns": 1, "total_cost_usd": 0.05, "result": columns
+            })
+            .to_string();
+            std::fs::write(dir.path().join("mode"), "ok").unwrap();
+            std::fs::write(dir.path().join("good"), good).unwrap();
+            let mut cli = ClaudeCli::new();
+            cli.program = manifest("../claude-model/tests/fake-claude");
+            cli.dir = dir.path().to_owned();
+            (dir, cli)
+        }
+
+        /// The page over the fake, its intent typed, the Claude chosen.
+        fn setup() -> (TodoPage, SurfacePage, TempDir) {
+            let todo = TodoPage::new();
+            let mut page = SurfacePage::new(&todo);
+            let (dir, cli) = fake();
+            page.proposing.set_claude(Claude::with(cli));
+            page.proposing.intent.set_text(INTENT);
+            (todo, page, dir)
+        }
+
+        fn stage(todo: &TodoPage, id: sem::RequestId) -> Stage {
+            todo.receipt(id)
+                .expect("kept")
+                .stage()
+                .expect("a stage")
+                .clone()
+        }
+
+        /// Wakes the page until the request `id` ends, within `max`.
+        fn pump(page: &mut SurfacePage, todo: &mut TodoPage, id: sem::RequestId, max: Duration) {
+            let started = Instant::now();
+            while matches!(stage(todo, id), Stage::Executing) {
+                assert!(started.elapsed() < max, "the fake answers within {max:?}");
+                thread::sleep(Duration::from_millis(25));
+                page.wake(TURN, todo);
+            }
+        }
+
+        #[test]
+        fn a_propose_asked_while_the_app_sleeps_is_held_and_runs_on_the_wake() {
+            let (mut todo, mut page, dir) = setup();
+            Background::sleeping(true);
+            let asked = page.propose(&mut todo).expect("dispatched");
+            assert_eq!(stage(&todo, asked), Stage::Executing, "started, open");
+            assert!(page.proposing.waiting());
+            assert!(
+                page.proposing.pending.as_ref().is_some_and(|p| p.held()),
+                "held: no child"
+            );
+            // the loop wakes for other reasons: nothing starts, nothing moves
+            for _ in 0..5 {
+                let wake = page.wake(TURN, &mut todo);
+                assert!(!wake.now, "asleep: nothing moved");
+                thread::sleep(Duration::from_millis(20));
+            }
+            assert!(
+                !dir.path().join("prompt.1").exists(),
+                "the child never ran asleep"
+            );
+            assert_eq!(stage(&todo, asked), Stage::Executing);
+
+            // the app wakes: the first wake starts the child, the answer ends
+            // the request and shows the surface
+            Background::sleeping(false);
+            page.wake(TURN, &mut todo);
+            assert!(
+                page.proposing.pending.as_ref().is_some_and(|p| !p.held()),
+                "started on the wake"
+            );
+            pump(&mut page, &mut todo, asked, Duration::from_secs(10));
+            let Stage::Completed(outcome) = stage(&todo, asked) else {
+                panic!("the proposal completes: {:?}", stage(&todo, asked));
+            };
+            assert_eq!(outcome.result.get("attempts"), Some(&Value::Int(1)));
+            assert!(
+                dir.path().join("prompt.1").exists(),
+                "one call, after the wake"
+            );
+            assert!(page.proposing.shown);
+            assert!(!page.proposing.waiting());
+        }
+
+        #[test]
+        fn an_answer_that_arrives_while_the_app_sleeps_waits_on_the_channel_for_the_wake() {
+            let (mut todo, mut page, dir) = setup();
+            let asked = page.propose(&mut todo).expect("dispatched");
+            assert!(
+                page.proposing.pending.as_ref().is_some_and(|p| !p.held()),
+                "awake: the child runs"
+            );
+            // the app sleeps before the answer is read; the fake answers
+            // meanwhile (its prompt is written as it runs)
+            Background::sleeping(true);
+            let started = Instant::now();
+            while !dir.path().join("prompt.1").exists() {
+                assert!(started.elapsed() < Duration::from_secs(10), "the child ran");
+                thread::sleep(Duration::from_millis(20));
+            }
+            thread::sleep(Duration::from_millis(200));
+            for _ in 0..3 {
+                let wake = page.wake(TURN, &mut todo);
+                assert!(!wake.now, "asleep: the answer waits on the channel");
+                assert_eq!(stage(&todo, asked), Stage::Executing);
+            }
+            assert!(!page.proposing.shown, "the surface did not change asleep");
+
+            Background::sleeping(false);
+            pump(&mut page, &mut todo, asked, Duration::from_secs(10));
+            assert!(matches!(stage(&todo, asked), Stage::Completed(_)));
+            assert!(page.proposing.shown, "shown on the wake");
         }
     }
 }
