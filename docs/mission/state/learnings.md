@@ -381,6 +381,16 @@ c"; saídas em `target/agents/exp/`.
 
 ## processo
 
+### 2026-09-24, briefing com premissa velha (fase 4a)
+
+- **"congelado" tinha deixado de valer:** o briefing da fase 4a chamou o
+  `view/dispatch.rs` de congelado e proibiu tocá-lo; ele saiu da lista
+  `FROZEN` na fase 1 e tem 338 linhas. o agente parou certo e perdeu uma
+  rodada. quarto briefing do ciclo com premissa que o código já não
+  sustentava (83, 86, 90, 4a). regra: toda proibição de arquivo num
+  briefing vem com o motivo conferido na hora (`grep` no guard, `wc -l`),
+  não copiado do briefing anterior.
+
 ### 2026-09-24, o auditor de transcrição
 
 - **o auditor contava errado um `;` entre aspas:** os dois `--ask` da
