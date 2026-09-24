@@ -14,6 +14,19 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: o asset compiler mede primeiro (task-72 fase 1)
+
+- **integrada:** fase 1 (merge da `task/72a-asset-compiler`), só testes e
+  docs. o número decidiu que nada sai do runtime agora: os ícones custam
+  0,17 ms. o WGSL é validado no gate. o maior custo de abertura que é de
+  asset é a varredura das fontes do sistema, duas vezes: vai para a
+  task-74.
+- **replanejado:** a task-78 (apps AI-native) depende quase toda de rede
+  e de decisões do brenner: a biblioteca de inferência (dele, pela
+  task), um modelo local para baixar e o Electron para a comparação;
+  nada disso está no cache. a próxima é a task-75 (acessibilidade), que
+  dá para fazer aqui fora o VoiceOver.
+
 ### ciclo 3: publicado #90 (task-79 fase 1); disparada a task-72 fase 1
 
 - **publicado:** PR #90, merge commit, gate local verde na `main` (2816,

@@ -9,6 +9,14 @@ status: living
 
 ## unreleased
 
+- the asset compiler measures first (2026-09-24, task-72 phase 1): the
+  work the app does at startup was measured before moving anything. the
+  first headless frame takes 79 ms in debug: 26 ms opening the GPU and
+  about 23 ms scanning the system's 805 fonts, twice. shaders take 2.7
+  ms and icons 0.17 ms, so the icons stay in runtime. every WGSL shader
+  is now validated in the gate, and an error names the file, the line
+  and the column.
+
 - the scene travels as data (2026-09-24, task-79 phase 1): a window's
   scene can be watched over the agent's local socket, layer by dirty
   layer, and the `mirror` example draws it in another process with the

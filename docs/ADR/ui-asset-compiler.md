@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [assets, icons, shaders, fonts, images, naga, lyon, gate, build, monster, generative-runtime]
 date: 2026-09-24
 ---
@@ -110,3 +110,12 @@ showcase embeds none).
 - a `build.rs` that copies runtime code to precompute its output.
 - a baked file without the hash of what produced it and a gate test
   that regenerates it and compares bytes.
+
+## integração (2026-09-24, orquestrador)
+
+aceito. nenhum asset saiu do runtime nesta fase, pelo número: os ícones
+custam 0,17 ms na abertura contra uns 105 KB de tabela. o WGSL passou a
+ser validado no gate. o maior custo medido do primeiro frame que é de
+asset é a varredura das 805 fontes do sistema, feita duas vezes: fica
+para a task-74, junto com a decisão de fontes do brenner.
+
