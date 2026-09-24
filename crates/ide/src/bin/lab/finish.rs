@@ -6,7 +6,7 @@ use rec::Session;
 use sem::{SemId, Stage, Value};
 use serde_json::{Value as Json, json};
 
-use crate::host::Intervention;
+use crate::host::{Intervention, Trigger};
 use crate::lab::Lab;
 use crate::repo::{TASK, TASK_FILES, TASK_MESSAGE};
 use crate::report::{self, Truth, human, ms, per_call_us, row};
@@ -99,8 +99,14 @@ impl Lab {
         if let Some(i) = intervention
             && !i.revision_matched
         {
-            notes
-                .push("the live projection at the intervention was not the revision served".into());
+            notes.push(match i.trigger {
+                Trigger::Observation => {
+                    "the live projection at the intervention was not the revision served".into()
+                }
+                Trigger::Submit => {
+                    "the submit that brought the person named a revision the app had left".into()
+                }
+            });
         }
         if let Some((_, Some(e))) = &script {
             notes.push(format!("the scripted agent: {e}"));
@@ -412,6 +418,7 @@ impl Lab {
 fn intervention_json(i: &Intervention) -> Json {
     json!({
         "t": i.t,
+        "trigger": i.trigger.name(),
         "served_index": i.served_index,
         "path": i.path,
         "revision_served": i.revision_served.to_string(),
@@ -427,9 +434,13 @@ fn intervention_rows(i: &Intervention) -> Vec<(String, String)> {
     vec![
         row("fired", "true"),
         row("t", &format!("{} ms", i.t)),
+        row("trigger", i.trigger.name()),
         row("path", &i.path),
         row(
-            "revision served just before",
+            match i.trigger {
+                Trigger::Observation => "revision served just before",
+                Trigger::Submit => "revision the submit named",
+            },
             &i.revision_served.to_string(),
         ),
         row("head at that instant", &i.head),

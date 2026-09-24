@@ -5,7 +5,8 @@ use std::time::Duration;
 
 pub const USAGE: &str = "\
 usage:
-  ide-lab --arm plev|scripted|git|screenshot [--human none|unstage-after-observe:<path>]
+  ide-lab --arm plev|scripted|git|screenshot
+          [--human none|unstage-after-observe:<path>|unstage-before-submit:<path>]
           [--out <dir>] [--until commit|timeout] [--timeout <s>] [--grace <s>] [--app <name>]
           [--scripted observe|chain]
 arms:
@@ -13,15 +14,22 @@ arms:
   scripted    the same, driven by the laboratory's own agent over the wire (the control run)
   git         the same repository for an agent that uses git itself: hook, shim, no port
   screenshot  the frame of the workbench as PNG at scale 1 and 2, beside the bytes of an observation
-the person of the script:
+the person of the script acts once, through the dispatcher, when the agent has every file of
+the task in the index and a message written:
   none                              nobody intervenes (default)
-  unstage-after-observe:<path>      once the agent has every file of the task in the index and a
-                                    message written, right after it is served an observation, the
-                                    person takes <path> out of the index; the observation is stale
+  unstage-after-observe:<path>      takes <path> out of the index right after the agent is served
+                                    an observation: the person right after the agent looked (the
+                                    scenario of the rounds of task-62)
+  unstage-before-submit:<path>      takes <path> out of the index right before the agent's submit
+                                    reaches the dispatcher: the person between the agent's decision
+                                    and its submit, as the hook of the git arm fires at the commit
 the scripted agent (--arm scripted):
   observe   observes the workspace right before each submit and submits on it (default)
   chain     submits the first time on the revision the last stage carried, with no
-            observation before it; after a refusal it observes and decides again
+            observation before it; after a refusal it observes and decides again. a terminal
+            stage shows no state (task-89): that submit rests on the message the agent was last
+            shown, empty, and is refused stale by the agent's own write, as an LLM agent that
+            chains after writing will be
 defaults: --out ./ide-lab-out --until commit --timeout 600 --grace 1 --app ide --scripted observe
 --until commit ends --grace seconds after the first commit completes (or at --timeout);
 --until timeout runs the whole --timeout.
@@ -54,6 +62,9 @@ pub enum Human {
     /// takes this path out of the index once, right after the agent is
     /// served an observation in which the task is ready to commit.
     UnstageAfterObserve(String),
+    /// takes this path out of the index once, right before an agent's
+    /// submit reaches the dispatcher while the task is ready to commit.
+    UnstageBeforeSubmit(String),
 }
 
 impl Human {
@@ -61,13 +72,14 @@ impl Human {
         match self {
             Human::None => "none".to_owned(),
             Human::UnstageAfterObserve(path) => format!("unstage-after-observe:{path}"),
+            Human::UnstageBeforeSubmit(path) => format!("unstage-before-submit:{path}"),
         }
     }
 
     pub fn path(&self) -> Option<&str> {
         match self {
             Human::None => None,
-            Human::UnstageAfterObserve(path) => Some(path),
+            Human::UnstageAfterObserve(path) | Human::UnstageBeforeSubmit(path) => Some(path),
         }
     }
 }
@@ -141,12 +153,17 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
             }
             "--human" => {
                 let v = value()?;
-                human = match v.as_str() {
-                    "none" => Human::None,
-                    _ => match v.strip_prefix("unstage-after-observe:") {
-                        Some(path) if !path.is_empty() => Human::UnstageAfterObserve(path.into()),
-                        _ => return Err(format!("unknown person {v:?}")),
-                    },
+                let after = v.strip_prefix("unstage-after-observe:");
+                let before = v.strip_prefix("unstage-before-submit:");
+                human = match (v.as_str(), after, before) {
+                    ("none", _, _) => Human::None,
+                    (_, Some(path), _) if !path.is_empty() => {
+                        Human::UnstageAfterObserve(path.into())
+                    }
+                    (_, _, Some(path)) if !path.is_empty() => {
+                        Human::UnstageBeforeSubmit(path.into())
+                    }
+                    _ => return Err(format!("unknown person {v:?}")),
                 };
             }
             "--out" => out = PathBuf::from(value()?),
@@ -225,6 +242,14 @@ mod tests {
         assert_eq!(d.grace, Duration::from_secs(1));
         assert_eq!(d.app, "ide");
         assert_eq!(d.script, Script::Observe);
+
+        let b = parse(&args(
+            "--arm scripted --human unstage-before-submit:src/session.rs",
+        ))
+        .unwrap();
+        assert_eq!(b.human, Human::UnstageBeforeSubmit("src/session.rs".into()));
+        assert_eq!(b.human.describe(), "unstage-before-submit:src/session.rs");
+        assert_eq!(b.human.path(), Some("src/session.rs"));
     }
 
     #[test]
@@ -235,6 +260,10 @@ mod tests {
             ("--arm plev --human sleep", "unknown person"),
             (
                 "--arm plev --human unstage-after-observe:",
+                "unknown person",
+            ),
+            (
+                "--arm plev --human unstage-before-submit:",
                 "unknown person",
             ),
             ("--arm plev --until never", "--until"),

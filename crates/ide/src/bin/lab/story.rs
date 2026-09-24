@@ -324,6 +324,7 @@ pub fn acted_text(acted: &[Acted]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::host::Trigger;
 
     fn id(n: u64) -> RequestId {
         RequestId::parse(&n.to_string()).expect("a request id")
@@ -370,6 +371,7 @@ mod tests {
     fn person(n: u64) -> Intervention {
         Intervention {
             t: n,
+            trigger: Trigger::Submit,
             served_index: 0,
             path: "src/session.rs".to_owned(),
             revision_served: revision(),
