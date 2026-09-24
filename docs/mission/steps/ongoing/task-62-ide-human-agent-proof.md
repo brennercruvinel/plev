@@ -692,3 +692,49 @@ task-67 regressão estrutural) levando as três correções pequenas que os
 agentes apontaram (nó inteiro no `node_added`, `files` no nó do commit,
 ator na recusa), e a corrida do `Refresh` no ide como task própria. o que
 não entra ainda: IR, superfícies geradas, adaptativo, como pedido.
+
+## fase c, segunda rodada (depois das tasks 83, 84 e 85, 2026-09-23)
+
+o brenner decidiu no checkpoint a por "correções primeiro", com a onda 5
+esperando outro checkpoint. este é ele: o mesmo experimento, com o app
+corrigido. escrito antes de qualquer corrida.
+
+o que mudou no app desde a primeira rodada: a view do ide nunca volta
+para um status do git lido antes de uma mutação já mandada (task-84); um
+`node_added` no delta traz o nó inteiro, a recusa stale traz `acted`
+(quem, entre os atores do app, rodou algo sobre o estado que o agente
+viu) e a regra de stale está no `plev act --help` (task-83); o commit
+aparece em `stacks` no passo em que o receipt conclui, com `files` nos
+dez commits mais recentes (task-85).
+
+o que não mudou, de propósito: o briefing do agente (o mesmo texto,
+`briefing-arm-a.md` da primeira rodada), o modelo (`claude-fable-5-1`,
+o das corridas A1 e A2, conferido nas transcrições), o repositório do
+laboratório, a intervenção roteirizada. a graça passa a 180 s em todas
+as corridas (na primeira rodada, o A2 teve 1 s e perdeu a verificação
+final).
+
+corridas: A1' (controle, sem intervenção), A2'a e A2'b (intervenção
+`unstage-after-observe:src/session.rs`). três corridas não fazem
+estatística: o objetivo é ver se algo piorou e se as correções aparecem
+no comportamento do agente.
+
+hipóteses:
+
+- **R1:** H1, H2, H3 e H5 continuam de pé nas três: tarefa feita só pelo
+  contrato, recusa stale válida e recuperação nas corridas com
+  intervenção, receipt igual ao git, todo ato com `--from-revision`.
+- **R2:** o agente confirma o próprio commit com menos observações que
+  na primeira rodada, porque o delta traz o nó e o nó traz `files`. na
+  primeira rodada o A1 confirmou por `stacks.commit[sha]` e `show_diff`,
+  e o A2 não confirmou (graça de 1 s).
+- **R3:** nas corridas com intervenção, o agente cita quem agiu (o
+  `acted` da recusa) quando explica a recuperação.
+- **R4, sem resultado favorito:** bytes enviados ao agente e idas e
+  voltas por corrida, contra A1 (21.639 B, 28 mensagens do cliente) e A2
+  (22.040 B, 30). podem subir (nó inteiro no delta, `files`) ou descer
+  (menos observações).
+
+o que derruba: uma corrida que falhe a tarefa, confirme errado, ou
+precise de mais idas e voltas para confirmar do que antes. o resultado
+vai como sair.
