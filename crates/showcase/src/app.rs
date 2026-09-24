@@ -473,7 +473,16 @@ impl ApplicationHandler<UserEvent> for App {
 
             WindowEvent::RedrawRequested => self.redraw(event_loop),
 
-            _ => {}
+            // A file dragged over or dropped on the window is the engine's
+            // event (it knows which platform events say so); the active
+            // page takes it (task-76: the Files page).
+            other => {
+                if let Some(drop) = engine::input::FileDrop::from_window_event(&other)
+                    && self.view.handle_file_drop(&drop)
+                {
+                    self.changed();
+                }
+            }
         }
     }
 

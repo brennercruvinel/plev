@@ -1,0 +1,72 @@
+{
+  "nodes": [
+    {
+      "id": "files",
+      "role": "region",
+      "label": "files",
+      "state": {
+        "received": {
+          "kind": "list",
+          "value": []
+        },
+        "count": {
+          "kind": "int",
+          "value": 0
+        }
+      }
+    },
+    {
+      "id": "files.drop",
+      "role": "region",
+      "label": "drop files here",
+      "parent": "files",
+      "actions": [
+        {
+          "name": "drop_files",
+          "reads": [
+            "files:received"
+          ],
+          "param": {
+            "kind": "list",
+            "constrained": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "files.open",
+      "role": "button",
+      "label": "open file",
+      "parent": "files",
+      "actions": [
+        {
+          "name": "open_file",
+          "reads": [
+            "files:received"
+          ],
+          "policy": {
+            "actors": {
+              "human": true,
+              "agent": false,
+              "assistive": true,
+              "test": true
+            }
+          }
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "files.status",
+      "role": "status",
+      "label": "no files yet: drop some on the window, or open one",
+      "parent": "files",
+      "state": {
+        "message": {
+          "kind": "text",
+          "value": "no files yet: drop some on the window, or open one"
+        }
+      }
+    }
+  ]
+}

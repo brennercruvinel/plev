@@ -5,6 +5,7 @@
 
 use comps::overlay::OverlayKind;
 use comps::prelude::{EventResult, Modal, ModalAction, Rect, WidgetEvent};
+use engine::input::FileDrop;
 use engine::theme::Intent;
 
 use super::components::context_menu;
@@ -97,6 +98,7 @@ impl ShowcaseView {
             Some(Pane::Todo) => self.panes.todo.handle_escape(),
             Some(Pane::Surface) => self.panes.surface.handle_escape(&mut self.panes.todo),
             Some(Pane::Silences) => self.panes.silences.handle_escape(),
+            Some(Pane::Files) => self.panes.files.handle_escape(),
             Some(Pane::Git) => self.panes.git.handle_escape(),
             _ => false,
         };
@@ -104,6 +106,13 @@ impl ShowcaseView {
             return true;
         }
         self.overlay_mgr.pop_animated().is_some()
+    }
+
+    /// Files dragged over the window, as the engine says it (the shell
+    /// forwards the event whole, translating nothing): the active page
+    /// takes it. `true` when a frame is needed.
+    pub fn handle_file_drop(&mut self, drop: &FileDrop) -> bool {
+        self.page_file_drop(drop).changed
     }
 
     /// Non-character editing keys (Tab, Backspace, arrows) forwarded by
@@ -126,14 +135,15 @@ impl ShowcaseView {
                 .panes
                 .silences
                 .handle_edit_key(key, &mut self.panes.todo),
+            Some(Pane::Files) => self.panes.files.handle_edit_key(key),
             Some(Pane::Git) if key == EditKey::Backspace => self.panes.git.handle_backspace(),
             _ => false,
         }
     }
 
     /// Enter: the todo app adds the field text as a todo; the Surface and
-    /// Silences pages propose from their intent field; the Git tab
-    /// submits its commit form.
+    /// Silences pages propose from their intent field; the Files page
+    /// presses its focused button; the Git tab submits its commit form.
     pub fn handle_enter(&mut self) -> bool {
         match self.pane() {
             Some(Pane::Todo) => {
@@ -150,6 +160,10 @@ impl ShowcaseView {
                 self.panes
                     .silences
                     .handle_enter(&mut self.panes.todo, inert)
+            }
+            Some(Pane::Files) => {
+                let inert = self.overlay_holds_pointer();
+                self.panes.files.handle_enter(&mut self.panes.todo, inert)
             }
             Some(Pane::Git) => self.panes.git.handle_enter(),
             _ => false,

@@ -92,6 +92,7 @@ pub enum Pane {
     Todo,
     Surface,
     Silences,
+    Files,
     Dock,
     Editor,
     Git,

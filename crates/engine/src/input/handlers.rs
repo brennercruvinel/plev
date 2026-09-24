@@ -1,6 +1,7 @@
 use winit::event::{ElementState, MouseButton, MouseScrollDelta};
 use winit::keyboard::{Key, NamedKey};
 
+use super::drop::FileDrop;
 use super::touch::SyntheticPointerEvent;
 use super::types::*;
 
@@ -139,6 +140,17 @@ impl super::InputState {
             }
             SyntheticPointerEvent::CursorLeft => self.handle_cursor_left(),
         }
+    }
+
+    /// A file drag over the window ([`FileDrop`]), queued like a pointer
+    /// event: hit tested at its position when it has one (the view under
+    /// the files), to no view when it has none. The cursor position is
+    /// not a stand-in: the pointer does not move for the window while a
+    /// file is dragged, so it is where the mouse was before the drag.
+    pub fn handle_file_drop(&mut self, drop: FileDrop) {
+        let view_id = drop.position().and_then(|(x, y)| self.hit_test(x, y));
+        self.pending_events
+            .push(InputEvent::FileDrop(FileDropEvent { view_id, drop }));
     }
 
     pub fn handle_modifiers_changed(&mut self, mods: &winit::event::Modifiers) {

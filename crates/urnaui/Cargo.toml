@@ -41,8 +41,8 @@ thiserror = "2"
 # read-only map of the open file for the sections the UI decodes itself
 # (same crate + version urna-runtime maps with).
 memmap2 = "0.9"
-# native open / save dialogs (Browse…, blob export); desktop only.
-rfd = "0.15"
+# the native open / save dialogs (Browse…, blob export) come from
+# engine::platform::files, which holds rfd on the desktop.
 # urna vector database (sibling workspace, read-only): the native backend.
 # needs hoffresearch/urna at v0.4.0 or later (the `urna-*` crate names).
 # urna pins sha2 0.11 while urnaui pins 0.10 — both coexist in the lockfile,

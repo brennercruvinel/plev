@@ -286,3 +286,74 @@ fn synthetic_touch_drag_moves_cursor_across_views() {
     assert_eq!(input.hovered_view(), Some(b));
     assert_eq!(input.cursor_position(), Some((250.0, 50.0)));
 }
+
+/// A file drop reaches the view under its position the way a click does,
+/// with its paths; without a position it reaches no view, and the app
+/// reads it as a drop on the window.
+#[test]
+fn a_file_drop_is_delivered_to_the_view_under_it_with_its_paths() {
+    use std::path::PathBuf;
+
+    let mut input = InputState::new();
+    let zone = input.next_view_id();
+    let other = input.next_view_id();
+    input.register_hit_region(zone, 0.0, 0.0, 100.0, 100.0, false);
+    input.register_hit_region(other, 200.0, 0.0, 100.0, 100.0, false);
+
+    input.handle_file_drop(FileDrop::Hovered {
+        paths: vec![PathBuf::from("/a.urna")],
+        position: Some((50.0, 50.0)),
+    });
+    input.handle_file_drop(FileDrop::Dropped {
+        paths: vec![PathBuf::from("/a.urna"), PathBuf::from("/b.urna")],
+        position: Some((50.0, 50.0)),
+    });
+    // begin_frame clears regions and ids, never the events waiting
+    input.begin_frame();
+    let events = input.drain_events();
+    assert_eq!(events.len(), 2);
+    let InputEvent::FileDrop(hover) = &events[0] else {
+        panic!("a file drop, got {:?}", events[0]);
+    };
+    assert_eq!(hover.view_id, Some(zone));
+    assert!(!hover.drop.is_drop());
+    let InputEvent::FileDrop(dropped) = &events[1] else {
+        panic!("a file drop, got {:?}", events[1]);
+    };
+    assert_eq!(dropped.view_id, Some(zone));
+    assert!(dropped.drop.is_drop());
+    assert_eq!(
+        dropped.drop.paths(),
+        [PathBuf::from("/a.urna"), PathBuf::from("/b.urna")]
+    );
+    assert_eq!(dropped.drop.position(), Some((50.0, 50.0)));
+
+    // over no region, and with no position at all (winit 0.30), no view
+    input.register_hit_region(zone, 0.0, 0.0, 100.0, 100.0, false);
+    input.handle_file_drop(FileDrop::Dropped {
+        paths: vec![PathBuf::from("/c.urna")],
+        position: Some((150.0, 50.0)),
+    });
+    input.handle_file_drop(FileDrop::Dropped {
+        paths: vec![PathBuf::from("/d.urna")],
+        position: None,
+    });
+    input.handle_file_drop(FileDrop::Cancelled);
+    let events = input.drain_events();
+    assert_eq!(events.len(), 3);
+    for (event, path) in events.iter().zip(["/c.urna", "/d.urna"]) {
+        let InputEvent::FileDrop(e) = event else {
+            panic!("a file drop, got {event:?}");
+        };
+        assert_eq!(e.view_id, None);
+        assert_eq!(e.drop.paths(), [PathBuf::from(path)]);
+    }
+    let InputEvent::FileDrop(cancel) = &events[2] else {
+        panic!("a file drop, got {:?}", events[2]);
+    };
+    assert_eq!(cancel.drop, FileDrop::Cancelled);
+    assert_eq!(cancel.view_id, None);
+    // a drop never moves the pointer or the hover
+    assert_eq!(input.cursor_position(), None);
+    assert_eq!(input.hovered_view(), None);
+}

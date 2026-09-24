@@ -81,8 +81,14 @@ env_logger.workspace = true
 
 # arboard is a desktop clipboard backend (no android/ios platform impl); mobile
 # falls back to the in-memory clipboard, so it is desktop-only here.
+# rfd is the native file dialog (macos, windows, linux) behind
+# `platform::files`; it has no android/ios backend either, and on wasm it
+# is async and gives bytes, not paths, so it is desktop-only too. its
+# default features are off: they only pick the linux backend (the xdg
+# portal through ashpd, or gtk3), which is the linux bring-up's choice.
 [target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
 arboard.workspace = true
+rfd = { version = "0.15", default-features = false }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger.workspace = true
