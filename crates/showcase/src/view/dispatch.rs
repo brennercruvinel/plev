@@ -56,6 +56,10 @@ impl ShowcaseView {
                 Pane::Tooltip => self.panes.tooltip.content_height(content, t),
                 Pane::Tree => self.panes.tree.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
+                Pane::Surface => self
+                    .panes
+                    .surface
+                    .content_height(content, t, &self.panes.todo),
                 Pane::Dock => self.panes.dock.content_height(content),
                 Pane::Editor => self.panes.editor.content_height(content),
                 Pane::Git => self.panes.git.content_height(content),
@@ -135,6 +139,13 @@ impl ShowcaseView {
                     self.panes.todo.set_inert(inert);
                     self.panes.todo.handle_event(event, content, t)
                 }
+                Pane::Surface => {
+                    let inert = self.overlay_holds_pointer();
+                    let todo = &mut self.panes.todo;
+                    self.panes
+                        .surface
+                        .handle_event(event, content, t, todo, inert)
+                }
                 Pane::Dock => self.panes.dock.handle_event(event, content),
                 Pane::Editor => self.panes.editor.handle_event(event, content),
                 Pane::Git => self.panes.git.handle_event(event, content),
@@ -154,6 +165,7 @@ impl ShowcaseView {
             Some(Pane::Spinner) => Wake::moving(self.panes.spinner.tick(dt)),
             Some(Pane::Skeleton) => Wake::moving(self.panes.skeleton.tick(dt)),
             Some(Pane::Todo) => self.panes.todo.wake(dt),
+            Some(Pane::Surface) => self.panes.surface.wake(dt, &mut self.panes.todo),
             Some(Pane::Editor) => self.panes.editor.wake(dt),
             _ => Wake::idle(),
         }
@@ -228,6 +240,11 @@ impl ShowcaseView {
                     self.panes.todo.set_inert(inert);
                     self.panes.todo.render(c, content, theme);
                 }
+                Pane::Surface => {
+                    let inert = self.overlay_holds_pointer();
+                    let todo = &mut self.panes.todo;
+                    self.panes.surface.render(c, content, theme, todo, inert);
+                }
                 Pane::Dock => self.panes.dock.render(c, content, theme),
                 Pane::Editor => self.panes.editor.render(c, content),
                 Pane::Git => self.panes.git.render(c, content, theme),
@@ -237,18 +254,17 @@ impl ShowcaseView {
     }
 
     /// What the active page means, when it projects it (the todo page,
-    /// today): the snapshot assistive technology is shown. A page without
-    /// a projection has no tree yet.
+    /// and the surface over it): the snapshot assistive technology is
+    /// shown. A page without a projection has no tree yet.
     pub fn semantics(&self) -> Option<Snapshot> {
-        match self.pane() {
-            Some(Pane::Todo) => self
-                .panes
-                .todo
-                .snapshot()
-                .inspect_err(|e| log::warn!("todo: the projection does not validate: {e}"))
-                .ok(),
-            _ => None,
-        }
+        let snapshot = match self.pane() {
+            Some(Pane::Todo) => self.panes.todo.snapshot(),
+            Some(Pane::Surface) => self.panes.surface.snapshot(&self.panes.todo),
+            _ => return None,
+        };
+        snapshot
+            .inspect_err(|e| log::warn!("the projection does not validate: {e}"))
+            .ok()
     }
 
     /// A request from an actor outside the page's own input (assistive
@@ -264,13 +280,19 @@ impl ShowcaseView {
                 let id = self.panes.todo.dispatch(req);
                 self.panes.todo.receipt(id).cloned()
             }
+            Some(Pane::Surface) => {
+                let inert = self.overlay_holds_pointer();
+                let todo = &mut self.panes.todo;
+                self.panes.surface.act(req, todo, inert)
+            }
             _ => None,
         }
     }
 
     /// Adds a sink to the dispatcher `act` goes through, so every stage of
     /// every receipt reaches it, later ones included (the todo page's is
-    /// the only dispatcher of the gallery today).
+    /// the only dispatcher of the gallery today; the surface page asks
+    /// through it too).
     pub fn add_sink(&mut self, sink: Box<dyn ReceiptSink>) {
         self.panes.todo.add_sink(sink);
     }
@@ -283,6 +305,11 @@ impl ShowcaseView {
                 let inert = self.overlay_holds_pointer();
                 self.panes.todo.set_inert(inert);
                 self.panes.todo.focus(id)
+            }
+            Some(Pane::Surface) => {
+                let inert = self.overlay_holds_pointer();
+                let todo = &mut self.panes.todo;
+                self.panes.surface.focus(id, todo, inert)
             }
             _ => false,
         }

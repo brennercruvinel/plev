@@ -49,6 +49,7 @@ impl ShowcaseView {
         let typed = match self.pane() {
             Some(Pane::Input) => self.panes.input.handle_text(key),
             Some(Pane::Todo) => self.panes.todo.handle_text(key),
+            Some(Pane::Surface) => self.panes.surface.handle_text(key, &mut self.panes.todo),
             Some(Pane::Git) => self.panes.git.handle_text(key),
             _ => false,
         };
@@ -93,6 +94,7 @@ impl ShowcaseView {
             Some(Pane::Select) => self.panes.select.handle_escape(),
             Some(Pane::Tabs) => self.panes.tabs.handle_escape(),
             Some(Pane::Todo) => self.panes.todo.handle_escape(),
+            Some(Pane::Surface) => self.panes.surface.handle_escape(&mut self.panes.todo),
             Some(Pane::Git) => self.panes.git.handle_escape(),
             _ => false,
         };
@@ -114,6 +116,10 @@ impl ShowcaseView {
             Some(Pane::Select) => self.panes.select.handle_edit_key(key),
             Some(Pane::Tabs) => self.panes.tabs.handle_edit_key(key),
             Some(Pane::Todo) => self.panes.todo.handle_edit_key(key),
+            Some(Pane::Surface) => self
+                .panes
+                .surface
+                .handle_edit_key(key, &mut self.panes.todo),
             Some(Pane::Git) if key == EditKey::Backspace => self.panes.git.handle_backspace(),
             _ => false,
         }
@@ -127,6 +133,10 @@ impl ShowcaseView {
                 let inert = self.overlay_holds_pointer();
                 self.panes.todo.set_inert(inert);
                 self.panes.todo.handle_enter()
+            }
+            Some(Pane::Surface) => {
+                let inert = self.overlay_holds_pointer();
+                self.panes.surface.handle_enter(&mut self.panes.todo, inert)
             }
             Some(Pane::Git) => self.panes.git.handle_enter(),
             _ => false,

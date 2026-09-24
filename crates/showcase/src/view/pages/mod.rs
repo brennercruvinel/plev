@@ -90,6 +90,7 @@ pub enum Pane {
     Tree,
     // apps demo
     Todo,
+    Surface,
     Dock,
     Editor,
     Git,
