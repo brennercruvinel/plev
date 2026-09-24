@@ -726,9 +726,10 @@ fn a_completed_act_carries_the_revision_the_next_one_rests_on() {
 
 /// task-89: an act that reads a row the agent's own act moved, with no
 /// observation in between, rests on what the agent was shown before its
-/// own act, so it is stale. the refusal names nobody in `acted`: the only
-/// actor on that state was the agent itself. observing the row and acting
-/// on that observation goes through.
+/// own act, so it is stale. the refusal names the agent's own first
+/// toggle in `acted`, the one act that ran since the look (task-91; the
+/// rule of task-90 never named the author, and the refusal named nobody).
+/// observing the row and acting on that observation goes through.
 #[test]
 fn a_row_the_agents_own_act_moved_is_stale_until_it_observes_it() {
     let (mut server, mut host) = setup();
@@ -746,6 +747,7 @@ fn a_row_the_agents_own_act_moved_is_stale_until_it_observes_it() {
         "t1",
     );
     let first = landed(&out);
+    let own = out[0].request;
     assert_eq!(host.app.done(1), Some(true));
 
     let out = stages(
@@ -774,7 +776,20 @@ fn a_row_the_agents_own_act_moved_is_stale_until_it_observes_it() {
         matches!(&changes[..], [Change::StateChanged { at, before: Some(Value::Bool(false)), after: Some(Value::Bool(true)), .. }] if *at == completed),
         "{changes:?}"
     );
-    assert!(acted.is_empty(), "the agent itself moved it: {acted:?}");
+    let [who] = &acted[..] else {
+        panic!("the agent's own toggle: {acted:?}");
+    };
+    assert_eq!(
+        (who.id, &who.actor, who.action.as_str()),
+        (
+            own,
+            &Actor::Agent {
+                name: "claude".into()
+            },
+            "toggle"
+        ),
+        "the agent itself moved it"
+    );
     assert_eq!(host.app.done(1), Some(true), "nothing ran");
 
     let row = snapshot(observe(

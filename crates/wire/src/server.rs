@@ -15,6 +15,13 @@
 //! revision that showed it to the actor. a read never shown is refused
 //! before the dispatcher (`ProtoError::NotObserved`).
 //!
+//! a stale refusal of an act the port dispatched names what ran since its
+//! actor looked (task-91). the port's sink follows the dispatcher's order
+//! (`sem::Mark`) and marks each revision it gives an actor; an act rests
+//! on the oldest observation its reads come from (with `observed` given,
+//! on the last giving of the revision it names), and the sink hands that
+//! look to the dispatcher when it fills `acted` (`ReceiptSink::looked`).
+//!
 //! a secret never leaves through the port. the request as dispatched and
 //! every stage of it are reduced by `sem::redact`, the one rule the
 //! recorder applies too, with the secret nodes read from the live snapshot
@@ -26,8 +33,8 @@ use std::rc::Rc;
 
 use sem::redact::Secrets;
 use sem::{
-    Actor, Change, Millis, Node, Receipt, ReceiptSink, Rejection, Request, RequestId, Revision,
-    SemId, Snapshot, Stage, StateRef,
+    Actor, Change, Mark, Millis, Node, Receipt, ReceiptSink, Rejection, Request, RequestId,
+    Revision, SemId, Snapshot, Stage, StateRef,
 };
 
 use crate::proto::{
@@ -35,7 +42,7 @@ use crate::proto::{
     StageReply,
 };
 use crate::ring::Ring;
-use crate::shown::{Part, Shown, keeps};
+use crate::shown::{Looks, Part, Shown, keeps};
 
 /// a connection, numbered by the transport.
 pub type ConnId = u64;
@@ -62,9 +69,12 @@ pub trait Host {
     /// returns its id; `None` when nothing takes requests now.
     fn dispatch(&mut self, req: Request) -> Option<RequestId>;
 
-    /// adds the port's sink to that dispatcher. called once, before the
-    /// first dispatch; every stage of every receipt, now or later, must
-    /// reach it.
+    /// adds the port's sink to that dispatcher. called once, at the first
+    /// observation served to an actor or the first act; every stage of
+    /// every receipt, now or later, must reach it. through it the port
+    /// also follows the dispatcher's order, so a stale refusal of its acts
+    /// names what ran since the agent looked; a sink that is dropped leaves
+    /// that to the rule without a look.
     fn add_sink(&mut self, sink: Box<dyn ReceiptSink>);
 
     /// `actor` was just served an observation: the whole snapshot (`scope`
@@ -96,6 +106,10 @@ pub struct Traffic {
     pub observes_snapshot: u64,
     pub observes_delta: u64,
     pub acts: u64,
+    /// acts by what they rest on: `from_revision`, or `observed` given
+    /// explicitly. an act with both or neither is in `acts` only.
+    pub acts_from_revision: u64,
+    pub acts_observed: u64,
     pub stages_out: u64,
     pub rejected_stale: u64,
     pub errors: u64,
@@ -118,6 +132,7 @@ pub struct Server {
     names: HashMap<ConnId, String>,
     issued: HashMap<RequestId, Issued>,
     heard: Rc<RefCell<VecDeque<Heard>>>,
+    looks: Rc<RefCell<Looks>>,
     listening: bool,
     /// what this server answered; the transport fills the rest.
     traffic: Traffic,
@@ -141,22 +156,39 @@ struct Heard {
 }
 
 /// the port's ear on the dispatcher: every stage of an agent's request,
-/// kept until the port forwards the ones it issued.
-struct PortSink(Rc<RefCell<VecDeque<Heard>>>);
+/// kept until the port forwards the ones it issued, and the dispatcher's
+/// order with the look each of its acts rests on (`Looks`).
+struct PortSink {
+    heard: Rc<RefCell<VecDeque<Heard>>>,
+    looks: Rc<RefCell<Looks>>,
+}
 
 impl ReceiptSink for PortSink {
     fn on_stage(&mut self, receipt: &Receipt, stage: &Stage) {
+        if let Ok(mut looks) = self.looks.try_borrow_mut() {
+            looks.heard(receipt, stage);
+        }
         if !matches!(receipt.request.actor, Actor::Agent { .. }) {
             return;
         }
         let at = receipt.stages.last().map_or(0, |(_, at)| *at);
-        if let Ok(mut heard) = self.0.try_borrow_mut() {
+        if let Ok(mut heard) = self.heard.try_borrow_mut() {
             heard.push_back(Heard {
                 id: receipt.id,
                 stage: stage.clone(),
                 at,
             });
         }
+    }
+
+    fn attached(&mut self, mark: Mark) {
+        if let Ok(mut looks) = self.looks.try_borrow_mut() {
+            looks.attached(mark);
+        }
+    }
+
+    fn looked(&self, receipt: &Receipt) -> Option<Mark> {
+        self.looks.try_borrow().ok()?.of(receipt.id)
     }
 }
 
@@ -172,6 +204,7 @@ impl Server {
             names: HashMap::new(),
             issued: HashMap::new(),
             heard: Rc::new(RefCell::new(VecDeque::new())),
+            looks: Rc::new(RefCell::new(Looks::default())),
             listening: false,
             traffic: Traffic::default(),
         }
@@ -199,6 +232,11 @@ impl Server {
             Ask::Observe(o) => self.observe(conn, &o, host),
             Ask::Act(a) => {
                 self.traffic.acts += 1;
+                match (&a.observed, &a.from_revision) {
+                    (None, Some(_)) => self.traffic.acts_from_revision += 1,
+                    (Some(_), None) => self.traffic.acts_observed += 1,
+                    _ => {}
+                }
                 self.act(conn, &id, a, host).map(|()| None)
             }
             Ask::Confirm { request } | Ask::Decline { request } => Err(ProtoError::NotEnabled {
@@ -259,6 +297,7 @@ impl Server {
         } else {
             None
         };
+        let mark = self.mark();
         let mut out = Vec::new();
         for h in heard {
             let Some(issued) = self.issued.get_mut(&h.id) else {
@@ -270,7 +309,7 @@ impl Server {
             };
             let revision = if h.stage.is_terminal() { now } else { None };
             if let (Some(r), Some(name)) = (revision, self.names.get(&issued.conn)) {
-                self.shown.record(name, r, Part::Nothing);
+                self.shown.record(name, r, Part::Nothing, mark);
             }
             self.traffic.stages_out += 1;
             if matches!(h.stage, Stage::Rejected(Rejection::Stale { .. })) {
@@ -302,6 +341,30 @@ impl Server {
     pub fn close(&mut self, conn: ConnId) {
         self.names.remove(&conn);
         self.issued.retain(|_, issued| issued.conn != conn);
+    }
+
+    /// adds the port's sink to the app's dispatcher, once.
+    fn listen(&mut self, host: &mut dyn Host) {
+        if !self.listening {
+            host.add_sink(Box::new(PortSink {
+                heard: Rc::clone(&self.heard),
+                looks: Rc::clone(&self.looks),
+            }));
+            self.listening = true;
+        }
+    }
+
+    /// the dispatcher's mark now, as the port's sink follows it.
+    fn mark(&self) -> Option<Mark> {
+        self.looks.try_borrow().ok()?.now()
+    }
+
+    /// the look the next request of this actor rests on, for the sink to
+    /// file when the dispatcher takes it; `None` expects nothing.
+    fn expect(&self, next: Option<(Actor, Mark)>) {
+        if let Ok(mut looks) = self.looks.try_borrow_mut() {
+            looks.expect(next);
+        }
     }
 
     /// the actor of `conn`, once it said hello.
@@ -394,6 +457,10 @@ impl Server {
                 bounds,
             }),
         };
+        if self.names.contains_key(&conn) {
+            self.listen(host);
+        }
+        let mark = self.mark();
         if let Some(name) = self.names.get(&conn) {
             let part = match &reply {
                 Reply::Delta(d) => Part::moved(&d.changes, o.keys.clone()),
@@ -402,7 +469,7 @@ impl Server {
                     keys: o.keys.clone(),
                 },
             };
-            self.shown.record(name, revision, part);
+            self.shown.record(name, revision, part, mark);
         }
         if let Some(actor) = self.actor(conn) {
             host.observed(&actor, o.scope.as_ref(), revision);
@@ -422,14 +489,19 @@ impl Server {
                 reason: "say hello first: an agent acts under the name it declares".to_owned(),
             });
         };
-        let req = match (a.observed.take(), a.from_revision) {
-            (Some(observed), None) => Request {
-                actor,
-                target: a.target,
-                action: a.action,
-                param: a.param,
-                observed,
-            },
+        let (req, look) = match (a.observed.take(), a.from_revision) {
+            (Some(observed), None) => {
+                let name = self.names.get(&conn).map_or("", String::as_str);
+                let look = self.shown.looked(name, observed.revision);
+                let req = Request {
+                    actor,
+                    target: a.target,
+                    action: a.action,
+                    param: a.param,
+                    observed,
+                };
+                (req, look)
+            }
             (None, Some(revision)) => self.rest(conn, actor, a, revision)?,
             (Some(_), Some(_)) => {
                 return Err(bad(
@@ -445,11 +517,11 @@ impl Server {
         let secrets = Secrets::of(&req, host.project().as_ref());
         let asked = secrets.request(&req);
         let target = req.target.clone();
-        if !self.listening {
-            host.add_sink(Box::new(PortSink(Rc::clone(&self.heard))));
-            self.listening = true;
-        }
-        let Some(id) = host.dispatch(req) else {
+        self.listen(host);
+        self.expect(look.map(|look| (req.actor.clone(), look)));
+        let id = host.dispatch(req);
+        self.expect(None);
+        let Some(id) = id else {
             return Err(ProtoError::NotEnabled {
                 reason: "nothing takes requests now".to_owned(),
             });
@@ -483,14 +555,16 @@ impl Server {
     /// given to the actor of `conn` and still be held; the action and what
     /// it reads come from the revision's snapshot, and the value of each
     /// read from what the actor was shown up to that revision. the
-    /// observation keeps `revision`, to trace the request.
+    /// observation keeps `revision`, to trace the request. with it, the
+    /// look it rests on: the oldest mark of the observations its values
+    /// came from.
     fn rest(
         &self,
         conn: ConnId,
         actor: Actor,
         a: Act,
         revision: Revision,
-    ) -> Result<Request, ProtoError> {
+    ) -> Result<(Request, Option<Mark>), ProtoError> {
         let name = self.names.get(&conn).map_or("", String::as_str);
         let seen = self
             .ring
@@ -502,12 +576,12 @@ impl Server {
         let mut req = Request::observe(seen, actor, a.target, a.action, a.param)
             .map_err(|e| bad(format!("in revision {revision}: {e}")))?;
         let reads: Vec<StateRef> = req.observed.values.drain(..).map(|(r, _)| r).collect();
-        let values = self
+        let rested = self
             .shown
             .values(name, revision, &reads, &self.ring)
             .map_err(|reads| ProtoError::NotObserved { reads })?;
-        req.observed.values = reads.into_iter().zip(values).collect();
-        Ok(req)
+        req.observed.values = reads.into_iter().zip(rested.values).collect();
+        Ok((req, rested.look))
     }
 }
 

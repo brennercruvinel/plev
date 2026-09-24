@@ -104,7 +104,7 @@ fn setup() -> (Server, ToyHost) {
 /// the person, who acted after that look, is named, though her toggle was
 /// checked on no revision the act names.
 #[test]
-#[ignore = "task-91 probe: the refusal anchors on the revision the act names, so acted comes back empty"]
+
 fn the_person_between_the_look_and_the_revision_acted_on_is_named() {
     let (mut server, mut host) = setup();
     look(&mut server, &mut host, A, "todo.counter");
@@ -126,7 +126,7 @@ fn the_person_between_the_look_and_the_revision_acted_on_is_named() {
 /// and the clear on that look names the sync and the toggle, in the order
 /// they were taken. what ran before the look is not named.
 #[test]
-#[ignore = "task-91 probe: the rule of task-90 never names the author"]
+
 fn the_agents_own_act_after_its_look_is_named_while_it_runs() {
     let (mut server, mut host) = setup();
     host.click("todo.item[2]", "toggle");

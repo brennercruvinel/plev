@@ -371,20 +371,27 @@ fn stale_on(run: &Run, index: usize) -> Vec<String> {
         .collect()
 }
 
-/// what a refusal whose submit the person raced says in `acted`: her
-/// unstage when her request was checked on the very revision the agent's
-/// submit named, nothing when the app moved in between (a git refresh
-/// landing, say): the chain of task-90 starts only at a request checked
-/// on the revision the agent saw, and the lab cannot hold the app still
-/// between the agent's last look and the person's act. CI on macOS saw
-/// the second (PR #59). task-91 anchors `acted` on the look instead, and
-/// then this becomes the exact `[the person's unstage]`.
-fn names_the_person_or_nobody(run: &Run, index: usize) {
-    let acted = acted_on(run, index);
-    assert!(
-        acted.is_empty() || acted == ["human unstage changes.file[src/session.rs]"],
-        "{acted:?}"
-    );
+/// the person's unstage, as a refusal names it.
+const PERSON: &str = "human unstage changes.file[src/session.rs]";
+
+/// the scripted agent's own acts after the last look its chained submit
+/// rests on: it opens the form and writes the message, each on the
+/// revision the act before carried.
+const OWN_WRITE: [&str; 2] = [
+    "agent:scripted open commit.form",
+    "agent:scripted set_value commit.message",
+];
+
+/// what a refusal whose submit the person raced says in `acted`: exactly
+/// her unstage, after `own`, the agent's own acts since the look the
+/// submit rests on. under task-90 it named her or nobody: a git refresh
+/// landing between the agent's last look and her act left the chain
+/// nowhere to start (CI on macOS saw it, PR #59). task-91 anchors `acted`
+/// on the look, which no refresh moves.
+fn names_the_person(run: &Run, index: usize, own: &[&str]) {
+    let mut expected = own.to_vec();
+    expected.push(PERSON);
+    assert_eq!(acted_on(run, index), expected);
 }
 
 /// the actors a stale refusal names, as `actor action target`.
@@ -457,7 +464,7 @@ fn the_person_before_the_submit_makes_the_observed_submit_stale() {
     assert_eq!(submits(&run).first(), Some(&(person + 1)));
     assert_eq!(run.list("stale").len(), 1);
     assert_eq!(stale_on(&run, 0), ["changes:staged"]);
-    names_the_person_or_nobody(&run, 0);
+    names_the_person(&run, 0, &[]);
     assert_eq!(
         run.list("stale")[0]["head"].as_str(),
         Some(run.str("truth.head_before"))
@@ -470,14 +477,15 @@ fn the_person_before_the_submit_makes_the_observed_submit_stale() {
 fn the_chained_submit_is_refused_by_the_agents_own_write() {
     // a terminal stage shows no state (task-89): the first submit rests on
     // the message the agent was last shown, empty, and the agent wrote it
-    // since. nobody else acted, so the refusal names nobody.
+    // since. nobody else acted, and the refusal names the agent's own acts
+    // since that look (task-91; task-90 named nobody).
     let run = chained("ide-lab-chain", "none");
     commits_the_task(&run);
 
     assert!(run.at("intervention").is_null());
     assert_eq!(run.list("stale").len(), 1);
     assert_eq!(stale_on(&run, 0), ["commit.message:text"]);
-    assert!(acted_on(&run, 0).is_empty(), "{:?}", acted_on(&run, 0));
+    assert_eq!(acted_on(&run, 0), OWN_WRITE);
     assert!(run.bool("agent.recovered"));
     assert!(!run.bool("agent.stale_measurement_valid"));
     assert!(
@@ -506,7 +514,7 @@ fn after_the_look_the_person_comes_too_late_for_the_chained_submit() {
     );
     assert_eq!(run.list("stale").len(), 1);
     assert_eq!(stale_on(&run, 0), ["commit.message:text"]);
-    assert!(acted_on(&run, 0).is_empty());
+    assert_eq!(acted_on(&run, 0), OWN_WRITE, "she came after the refusal");
 
     assert!(!run.bool("agent.stale_measurement_valid"));
     let text = run.str("agent.stale_measurement");
@@ -531,7 +539,7 @@ fn before_the_submit_the_person_makes_the_chained_submit_stale() {
     assert_eq!(run.list("stale").len(), 1);
     // the person's unstage and the agent's own write, in one refusal.
     assert_eq!(stale_on(&run, 0), ["changes:staged", "commit.message:text"]);
-    names_the_person_or_nobody(&run, 0);
+    names_the_person(&run, 0, &OWN_WRITE);
     measured_on_the_old_world(&run);
     // measured whatever revision it named: the refused submit rested on a
     // revision a terminal stage carried, which no observation served.
