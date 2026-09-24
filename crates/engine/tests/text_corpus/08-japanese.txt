@@ -1,0 +1,6 @@
+# escrita: japonês
+# cobre: hiragana, kanji, vírgula ideográfica U+3001, katakana na segunda frase
+# significado: olá, mundo; texto
+# fonte da frase: saudação corrente, escrita à mão
+こんにちは、世界
+テキスト

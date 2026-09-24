@@ -1,0 +1,7 @@
+# escrita: emoji
+# cobre: sequência ZWJ (família: homem, mulher, menina, menino), modificador de tom de pele, emoji simples, VS16 sobre um símbolo de texto (coração)
+# fonte da frase: escrita à mão; escapes para ZWJ e VS16 ficarem visíveis
+\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}\u{200D}\u{1F466}
+\u{1F44D}\u{1F3FD}
+\u{1F600}
+\u{2764}\u{FE0F}

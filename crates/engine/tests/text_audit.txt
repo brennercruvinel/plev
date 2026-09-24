@@ -1,0 +1,69 @@
+text audit: shaping with the embedded faces only (1744532 bytes of fonts), 16px, wrap 80px
+
+script | family | chars | glyphs | notdef | width | lines@80 | starts | runs | faces
+01-latin-diacritics | Inclusive Sans | 60 | 60 | 0 | 457.4 | 7 | 0|8|20|31|42|52|63 | L0:0..71 | Inclusive Sans
+01-latin-diacritics | Inter | 60 | 60 | 0 | 454.8 | 7 | 0|8|20|34|46|56|63 | L0:0..71 | Inter
+02-latin-ligatures-kerning | Inclusive Sans | 30 | 30 | 0 | 211.4 | 4 | 0|7|14|26 | L0:0..30 | Inclusive Sans
+02-latin-ligatures-kerning | Inter | 30 | 30 | 0 | 207.6 | 4 | 0|7|14|26 | L0:0..30 | Inter
+02-latin-ligatures-kerning | Inclusive Sans | 19 | 19 | 0 | 163.0 | 3 | 0|7|12 | L0:0..19 | Inclusive Sans
+02-latin-ligatures-kerning | Inter | 19 | 19 | 0 | 175.4 | 3 | 0|7|12 | L0:0..19 | Inter
+03-combining-marks | Inclusive Sans | 17 | 11 | 0 | 84.4 | 2 | 0|18 | L0:0..23 | Inclusive Sans
+03-combining-marks | Inter | 17 | 11 | 0 | 83.9 | 2 | 0|18 | L0:0..23 | Inter
+04-arabic | Inclusive Sans | 27 | 27 | 24 | 251.7 | 4 | 0|13|26|37 | R1:0..51 | Inclusive Sans
+04-arabic | Inter | 27 | 27 | 24 | 265.5 | 4 | 0|13|26|37 | R1:0..51 | Inter
+05-hebrew | Inclusive Sans | 9 | 9 | 8 | 83.9 | 2 | 0|9 | R1:0..17 | Inclusive Sans
+05-hebrew | Inter | 9 | 9 | 8 | 88.5 | 2 | 0|9 | R1:0..17 | Inter
+05-hebrew | Inclusive Sans | 7 | 7 | 7 | 39.6 | 1 | 0 | R1:0..14 | Inclusive Sans
+05-hebrew | Inter | 7 | 7 | 7 | 42.0 | 1 | 0 | R1:0..14 | Inter
+06-devanagari | Inclusive Sans | 13 | 13 | 12 | 123.5 | 2 | 0|19 | L0:0..37 | Inclusive Sans
+06-devanagari | Inter | 13 | 13 | 12 | 130.5 | 2 | 0|19 | L0:0..37 | Inter
+06-devanagari | Inclusive Sans | 8 | 8 | 8 | 79.1 | 1 | 0 | L0:0..24 | Inclusive Sans
+06-devanagari | Inter | 8 | 8 | 8 | 84.0 | 2 | 0|21 | L0:0..24 | Inter
+07-chinese | Inclusive Sans | 5 | 5 | 5 | 49.4 | 1 | 0 | L0:0..15 | Inclusive Sans
+07-chinese | Inter | 5 | 5 | 5 | 52.5 | 1 | 0 | L0:0..15 | Inter
+08-japanese | Inclusive Sans | 8 | 8 | 8 | 79.1 | 1 | 0 | L0:0..24 | Inclusive Sans
+08-japanese | Inter | 8 | 8 | 8 | 84.0 | 2 | 0|21 | L0:0..24 | Inter
+08-japanese | Inclusive Sans | 4 | 4 | 4 | 39.6 | 1 | 0 | L0:0..12 | Inclusive Sans
+08-japanese | Inter | 4 | 4 | 4 | 42.0 | 1 | 0 | L0:0..12 | Inter
+09-korean | Inclusive Sans | 9 | 9 | 7 | 77.8 | 1 | 0 | L0:0..23 | Inclusive Sans
+09-korean | Inter | 9 | 9 | 7 | 82.6 | 2 | 0|20 | L0:0..23 | Inter
+10-emoji | Inclusive Sans | 7 | 7 | 4 | 39.6 | 1 | 0 | L0:0..25 | Inclusive Sans
+10-emoji | Inter | 7 | 7 | 4 | 42.0 | 1 | 0 | L0:0..25 | Inter
+10-emoji | Inclusive Sans | 2 | 2 | 2 | 19.8 | 1 | 0 | L0:0..8 | Inclusive Sans
+10-emoji | Inter | 2 | 2 | 2 | 21.0 | 1 | 0 | L0:0..8 | Inter
+10-emoji | Inclusive Sans | 1 | 1 | 1 | 9.9 | 1 | 0 | L0:0..4 | Inclusive Sans
+10-emoji | Inter | 1 | 1 | 1 | 10.5 | 1 | 0 | L0:0..4 | Inter
+10-emoji | Inclusive Sans | 2 | 2 | 0 | 16.4 | 1 | 0 | L0:0..6 | Inter
+10-emoji | Inter | 2 | 2 | 0 | 16.4 | 1 | 0 | L0:0..6 | Inter
+11-bidi-mixed | Inclusive Sans | 11 | 11 | 3 | 92.4 | 2 | 0|11 | L0:0..4 R1:4..10 L0:10..14 | Inclusive Sans
+11-bidi-mixed | Inter | 11 | 11 | 3 | 93.5 | 2 | 0|11 | L0:0..4 R1:4..10 L0:10..14 | Inter
+11-bidi-mixed | Inclusive Sans | 21 | 21 | 5 | 165.4 | 3 | 0|6|21 | L0:0..6 L2:17..20 R1:6..17 L0:20..26 | Inclusive Sans
+11-bidi-mixed | Inter | 21 | 21 | 5 | 170.6 | 3 | 0|6|17 | L0:0..6 L2:17..20 R1:6..17 L0:20..26 | Inter
+
+kerning and ligatures
+phrase | family | width | solo sum | delta | glyphs/chars
+office waffle fjord affix flow | Inclusive Sans | 211.4 | 212.6 | -1.1 | 30/30
+office waffle fjord affix flow | Inter | 207.6 | 210.0 | -2.4 | 30/30
+AVATAR WAVY Type LT | Inclusive Sans | 163.0 | 168.4 | -5.4 | 19/19
+AVATAR WAVY Type LT | Inter | 175.4 | 184.8 | -9.4 | 19/19
+
+glyph/advance per phrase, Inclusive Sans
+01-latin-diacritics | ação, coração e pão: não é fácil, mas você já viu à vontade? | 193/9.7 221/8.6 214/9.7 299/8.8 428/3.8 1/4.8 218/8.6 299/9.1 328/6.1 193/9.7 221/8.6 214/9.7 299/9.3 1/4.8 230/9.1 1/4.8 325/9.8 214/9.7 299/9.3 429/5.0 1/4.8 289/9.4 214/9.7 299/9.3 1/4.8 231/9.1 1/4.8 250/6.0 194/9.7 218/8.6 260/4.0 280/3.6 428/3.8 1/4.8 288/14.8 193/9.7 334/8.0 1/4.8 366/7.8 299/9.3 218/8.6 234/9.1 1/4.8 274/4.6 194/9.7 1/4.8 366/7.9 260/4.0 347/9.6 1/4.8 209/9.7 1/4.8 366/7.8 299/9.3 289/9.4 341/5.7 193/9.7 224/10.0 230/8.8 434/8.2
+02-latin-ligatures-kerning | office waffle fjord affix flow | 299/9.1 250/6.0 250/6.0 260/4.0 218/8.6 230/9.1 1/4.8 367/13.1 193/9.7 250/6.0 250/6.3 280/3.6 230/9.1 1/4.8 250/6.0 274/4.5 299/9.1 328/6.1 224/10.0 1/4.8 193/9.7 250/6.0 250/6.0 260/4.0 372/7.6 1/4.8 250/6.3 280/3.6 299/8.8 367/13.6
+02-latin-ligatures-kerning | AVATAR WAVY Type LT | 2/9.1 172/9.0 2/8.2 147/8.2 2/9.5 134/10.3 1/4.8 173/14.8 2/9.1 172/9.6 179/9.3 1/4.8 147/8.4 373/8.1 325/9.8 230/9.1 1/4.8 87/7.1 147/9.0
+03-combining-marks | é ão ö ño ệ | 231/9.1 1/4.8 214/9.7 299/9.3 1/4.8 308/9.3 1/4.8 297/9.4 299/9.3 1/4.8 236/9.1
+04-arabic | السلام عليكم، مرحبا بالعالم | 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 1/4.8 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 1/4.8 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 1/4.8 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9
+05-hebrew | שלום עולם | 0/9.9 0/9.9 0/9.9 0/9.9 1/4.8 0/9.9 0/9.9 0/9.9 0/9.9
+05-hebrew | שָׁלוֹם | 0/9.9 0/0.0 0/0.0 0/9.9 0/9.9 0/0.0 0/9.9
+06-devanagari | नमस्ते दुनिया | 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 1/4.8 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9
+06-devanagari | क्षत्रिय | 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9
+07-chinese | 你好，世界 | 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9
+08-japanese | こんにちは、世界 | 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9
+08-japanese | テキスト | 0/9.9 0/9.9 0/9.9 0/9.9
+09-korean | 안녕하세요, 세계 | 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 428/3.8 1/4.8 0/9.9 0/9.9
+10-emoji | 👨‍👩‍👧‍👦 | 0/9.9 1/0.0 0/9.9 1/0.0 0/9.9 1/0.0 0/9.9
+10-emoji | 👍🏽 | 0/9.9 0/9.9
+10-emoji | 😀 | 0/9.9
+10-emoji | ❤️ | 1868/16.4 1777/0.0
+11-bidi-mixed | abc אבג def | 193/9.7 217/9.8 218/8.6 1/4.8 0/9.9 0/9.9 0/9.9 1/4.8 224/10.0 230/8.9 250/6.0
+11-bidi-mixed | hello مرحبا 123 world | 257/8.8 230/9.1 280/3.6 280/3.6 299/9.3 1/4.8 417/7.3 418/8.3 419/9.2 1/4.8 0/9.9 0/9.9 0/9.9 0/9.9 0/9.9 1/4.8 367/13.1 299/9.1 328/6.4 280/3.6 224/10.0

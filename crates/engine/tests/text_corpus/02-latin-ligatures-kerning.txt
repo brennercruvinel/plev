@@ -1,0 +1,5 @@
+# escrita: latim, ligatures e kerning
+# cobre: grupos fi ff ffi fl fj (feature liga do shaper), pares de kerning AV AT Ty LT WA
+# fonte da frase: escrita à mão para este corpus
+office waffle fjord affix flow
+AVATAR WAVY Type LT

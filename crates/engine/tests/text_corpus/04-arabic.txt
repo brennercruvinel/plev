@@ -1,0 +1,5 @@
+# escrita: árabe
+# cobre: formas contextuais (inicial, medial, final), ligadura lam-alef em السلام, parágrafo RTL, vírgula árabe U+060C
+# significado: a paz esteja convosco, olá mundo
+# fonte da frase: saudação corrente, escrita à mão
+السلام عليكم، مرحبا بالعالم
