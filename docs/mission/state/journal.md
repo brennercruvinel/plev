@@ -14,6 +14,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #86 (task-76 item 10); disparado o item 6
+
+- **publicado:** PR #86, merge commit, gate local verde na `main` (2726,
+  +37), regressão 163 sem mudança (161 e os 2 da página Capture).
+- **disparado:** task-76 item 6, deep links, o último item. um link não
+  é uma pessoa: qualquer página web pode abrir um, então ele age como o
+  ator de fora com menos direitos, só nas capacidades que o app abre a
+  link (navegar), e a pessoa vê cada recusa. nada é registrado no
+  sistema desta máquina. no Opus, um agente só, no worktree fixo.
+
 ### ciclo 3: câmera e microfone (task-76 item 10)
 
 - **integrada:** item 10 (merge da `task/76i-capture`). a página Capture
