@@ -14,6 +14,15 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### intervenção do brenner: merge com o CI fora
+
+- com o CI parado por cobrança, o brenner mandou mergear ("já dê
+  merge") e mergeou o PR #68 (task-69 fase 2) pelo github, merge
+  `0071764`, às 06:38 UTC. o gate local daquele head estava verde (2429).
+- regra enquanto o CI estiver fora: o orquestrador mergeia com o gate
+  local verde no head do PR, com merge commit, e comenta no PR que o CI
+  não rodou e qual gate valeu. quando o CI voltar, a regra antiga volta.
+
 ### ciclo 3: a quarta rodada fecha, e o CI parou por cobrança
 
 - **decisão autônoma, task-69 fase 3a:** a sonda passou (o IR da

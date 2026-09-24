@@ -362,7 +362,8 @@ c"; saídas em `target/agents/exp/`.
   pagamento da conta falhou ou o limite de gasto precisa subir. é
   serviço pago (condição de parada da autonomia): o orquestrador não
   mergeia sem o CI, continua integrando na `main` local com o gate, e a
-  publicação espera o brenner. uma falha de todos os jobs em segundos
+  publicação espera o brenner (ele decidiu: mergear com o gate local
+  verde enquanto o CI estiver fora, journal). uma falha de todos os jobs em segundos
   se lê pelas anotações antes de se ler como código quebrado.
 
 ### 2026-09-23
