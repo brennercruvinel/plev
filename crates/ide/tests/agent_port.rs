@@ -9,7 +9,10 @@
 //! stage completes only in the drain after the worker's answer is applied,
 //! with the revision the app is at, and an act that rests on a state a
 //! person changed is refused as stale, naming the person, to the agent
-//! and on screen in the same words.
+//! and on screen in the same words. An agent's request that waits for a
+//! person opens the modal, and the person's answer goes through the
+//! dispatcher; a decline reaches the agent only at the next drain, since
+//! nothing is served after a person's input (the probe of task-92).
 
 #![cfg(unix)]
 
@@ -22,6 +25,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use comps::overlay::OverlayKind;
 use engine::compositor::Compositor;
 use git::GitEvent;
 use ide::workbench::Workbench;
@@ -61,6 +65,44 @@ enum Poke {
     /// A person unstages a file, as the file menu's "Unstage file" asks
     /// it: through the dispatcher, as `Actor::Human`.
     Unstage(&'static str),
+    /// The person reads the confirmation modal on screen and clicks its
+    /// confirm button (`confirm`) or its cancel button: the answer goes
+    /// through the dispatcher as `Actor::Human`. What the modal said goes
+    /// back through `said`. Like the ide's window after a person's input,
+    /// the shell draws and does not serve the port.
+    Answer { confirm: bool, said: Sender<Asked> },
+}
+
+/// What a confirmation modal says: its title, its body and the label of
+/// its confirm button.
+#[derive(Clone, Debug, PartialEq)]
+struct Asked {
+    title: String,
+    body: String,
+    confirm: String,
+}
+
+/// The confirmation modal on screen, from the top of the overlay stack.
+fn modal_on_screen(bench: &Workbench) -> Option<Asked> {
+    bench
+        .workspace()
+        .overlay_mgr
+        .stack
+        .iter()
+        .rev()
+        .find_map(|overlay| match &overlay.kind {
+            OverlayKind::Modal {
+                title,
+                body,
+                confirm,
+                ..
+            } => Some(Asked {
+                title: title.clone(),
+                body: body.clone(),
+                confirm: confirm.clone(),
+            }),
+            _ => None,
+        })
 }
 
 type Pokes = Sender<(Poke, Sender<()>)>;
@@ -145,6 +187,15 @@ impl Shell<'_> {
             Poke::Unstage(path) => {
                 let target = format!("changes.file[{path}]");
                 self.rig.ask(Actor::Human, &target, "unstage", None);
+                self.frame = frame(&mut self.rig.bench);
+            }
+            Poke::Answer { confirm, said } => {
+                let asked = modal_on_screen(&self.rig.bench).expect("a modal asks the person");
+                let _ = said.send(asked);
+                self.frame = frame(&mut self.rig.bench);
+                let (yes, no) = self.rig.bench.workspace().modal_buttons().expect("drawn");
+                let [x, y, w, h] = if confirm { yes } else { no };
+                assert!(self.rig.bench.click(x + w / 2.0, y + h / 2.0));
                 self.frame = frame(&mut self.rig.bench);
             }
         }
@@ -444,4 +495,174 @@ fn a_person_unstaging_between_the_agents_look_and_its_submit_is_named_in_both_pl
     assert_eq!(rig.commits(), 2);
     assert_eq!(rig.head_files(), ["A"]);
     assert_eq!(rig.git(&["log", "-1", "--format=%s"]).trim(), "two files");
+}
+
+/// The act of `action` on `target`, resting on `at`.
+fn act_on(target: &str, action: &str, at: Revision) -> Act {
+    Act::from_revision(
+        sid(target),
+        ActionName::parse(action).expect("an action"),
+        at,
+    )
+}
+
+/// The probe of task-92, the path of today end to end: an agent asks
+/// through the port for a `discard`, which waits for a person
+/// (`Confirm::ForAgents`); the ide opens its modal; the person clicks
+/// Discard, which confirms through the dispatcher as `Actor::Human`; the
+/// discard runs, and its stages reach the agent in the drain after the
+/// worker's answer.
+#[test]
+fn an_agent_discard_through_the_port_waits_for_the_person_who_confirms_it() {
+    let mut rig = Rig::new(&["README", "new.txt"], &[]);
+    let readme = rig.dir.path().join("README");
+    let ((stages, asked), _) = shell(&mut rig, |path, pokes| {
+        let mut c = client(&path);
+        c.hello("test-agent").expect("welcome");
+        let seen = snapshot(c.observe(Observe::default()).expect("an observation"));
+        let (said, heard) = mpsc::channel();
+        let act = act_on("changes.file[README]", "discard", seen.revision);
+        let stages = c
+            .act(act, |s| {
+                if s.stage == Stage::AwaitingConfirmation {
+                    let said = said.clone();
+                    poke(
+                        &pokes,
+                        Poke::Answer {
+                            confirm: true,
+                            said,
+                        },
+                    );
+                }
+            })
+            .expect("the act's stages");
+        (stages, heard.recv().expect("what the modal said"))
+    });
+
+    assert_eq!(
+        names(&stages),
+        [
+            "requested",
+            "awaiting_confirmation",
+            "confirmed",
+            "executing",
+            "completed"
+        ]
+    );
+    assert_eq!(stages[2].stage, Stage::Confirmed { by: Actor::Human });
+    // what the person read: the text is born in `Workbench::confirmation`
+    // (crates/ide/src/workbench/notice.rs), from the request's actor,
+    // action and target.
+    assert_eq!(
+        asked,
+        Asked {
+            title: "Discard changes?".into(),
+            body: "test-agent asks to discard all changes to README. This cannot be undone.".into(),
+            confirm: "Discard".into(),
+        }
+    );
+    assert_eq!(
+        std::fs::read_to_string(&readme).expect("README"),
+        "readme\n",
+        "the discard ran"
+    );
+}
+
+/// The probe of task-92, the decline: the person clicks Cancel, which
+/// declines through the dispatcher as `Actor::Human`, and nothing runs.
+/// The port's sink hears the `rejected` stage at once, but the shell
+/// serves the port only after its wake and after a worker's answer, as
+/// the ide's window does (`crates/ide/src/main.rs`, `serve_agent`), and a
+/// decline sends nothing to the worker: the stage waits in the port until
+/// the next drain. The agent gets it when its next message wakes the
+/// port; one that only waits for it (`plev act`) never does.
+#[test]
+fn a_decline_reaches_the_agent_only_at_the_next_drain() {
+    let mut rig = Rig::new(&["README", "new.txt"], &[]);
+    let new = rig.dir.path().join("new.txt");
+    let ((early, waited, late, asked), _) = shell(&mut rig, |path, pokes| {
+        let mut c = client(&path);
+        c.hello("test-agent").expect("welcome");
+        let seen = snapshot(c.observe(Observe::default()).expect("an observation"));
+        let id = c
+            .send(Ask::Act(act_on(
+                "changes.file[new.txt]",
+                "discard",
+                seen.revision,
+            )))
+            .expect("the act is sent");
+        let mut early = Vec::new();
+        while early.len() < 2 {
+            match c.recv_for(&id).expect("a stage") {
+                Reply::Stage(s) => early.push(s),
+                other => panic!("a stage: {other:?}"),
+            }
+        }
+        let (said, heard) = mpsc::channel();
+        poke(
+            &pokes,
+            Poke::Answer {
+                confirm: false,
+                said,
+            },
+        );
+        // nothing drains the port after the person's answer.
+        c.set_timeout(Some(500)).expect("a short wait");
+        let waited = c.recv_for(&id);
+        c.set_timeout(Some(20_000)).expect("a timeout");
+        // the agent's next message wakes the port: the drain that answers
+        // it sends the decline too.
+        let look = c
+            .send(Ask::Observe(Observe {
+                scope: Some(sid("notices")),
+                ..Observe::default()
+            }))
+            .expect("an observation is sent");
+        let mut late = Vec::new();
+        let mut looked = false;
+        while !(looked && late.iter().any(StageReply::is_terminal)) {
+            let msg = c.recv().expect("a message");
+            match msg.reply {
+                Reply::Stage(s) if msg.id.as_deref() == Some(id.as_str()) => late.push(s),
+                Reply::Snapshot(_) if msg.id.as_deref() == Some(look.as_str()) => looked = true,
+                other => panic!("the observation or the act's stage: {other:?}"),
+            }
+        }
+        (
+            early,
+            waited,
+            late,
+            heard.recv().expect("what the modal said"),
+        )
+    });
+
+    assert_eq!(names(&early), ["requested", "awaiting_confirmation"]);
+    assert!(
+        matches!(waited, Err(wire::WireError::Timeout(_))),
+        "the decline did not reach the agent after the person's answer: {waited:?}"
+    );
+    assert_eq!(names(&late), ["rejected"]);
+    assert_eq!(
+        late[0].stage,
+        Stage::Rejected(Rejection::Declined { by: Actor::Human })
+    );
+    assert!(late[0].revision.is_some(), "a terminal stage");
+    assert_eq!(
+        asked,
+        Asked {
+            title: "Discard changes?".into(),
+            body: "test-agent asks to discard all changes to new.txt. This cannot be undone."
+                .into(),
+            confirm: "Discard".into(),
+        }
+    );
+    assert_eq!(
+        std::fs::read_to_string(&new).expect("new.txt"),
+        "new.txt\n",
+        "nothing ran"
+    );
+    assert_eq!(
+        rig.notices(),
+        ["Declined: discard of new.txt by test-agent did not run"]
+    );
 }
