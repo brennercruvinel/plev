@@ -3,7 +3,7 @@
 
 use engine::theme::Theme;
 
-use super::apps::{app, builder, dock, editor, git, surface_page};
+use super::apps::{app, builder, dock, editor, git, silences, surface_page};
 use super::components::{
     avatar, badge, breadcrumb, button, card, chart, checkbox, chip, code_block, context_menu,
     dialog, empty, graph, icon_button, input, navigation_menu, panel, panel_header, progress,
@@ -57,6 +57,9 @@ pub struct Panes {
     pub todo: app::TodoPage,
     /// Materialized over the todo's capabilities: it operates `todo`.
     pub surface: surface_page::SurfacePage,
+    /// The silences app; it dispatches through `todo`'s dispatcher, the
+    /// gallery's one.
+    pub silences: silences::SilencesPage,
     pub dock: dock::DockPage,
     pub editor: editor::EditorPage,
     pub git: git::GitPage,
@@ -108,6 +111,7 @@ impl Panes {
             tree: tree::TreePage::new(),
             todo,
             surface,
+            silences: silences::SilencesPage::new(),
             dock: dock::DockPage::new(),
             editor: editor::EditorPage::new(theme),
             git: git::GitPage::new(),

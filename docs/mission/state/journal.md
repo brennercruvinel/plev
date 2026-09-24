@@ -14,6 +14,29 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: o app dos silêncios (task-69 fase 4a)
+
+- **integrada:** fase 4a (merge da `task/69f-silences-app`). a página
+  Silences: o ffmpeg detecta os silêncios de verdade (28 ms no vídeo de
+  teste), um frame por trecho (30 ms), aplicar e rejeitar cada corte, tudo
+  projetado; um agente aplica um corte pela porta. gate na `main` em
+  andamento na hora do registro; o agente reportou 2428 no workspace
+  (+24) e 159 baselines iguais (2 novas). decisão do orquestrador: a
+  página registrada pelo `dispatch.rs` (338 para 363 linhas), que não é
+  mais congelado.
+- **próximo:** 4b, a tela gerada dos silêncios (componente de imagem no
+  IR, a superfície de revisão, a comparação lado a lado).
+
+### ciclo 3: publicado #73; disparada a fase 4a
+
+- **publicado:** PR #73 (fase 3b-ii), merge commit, gate local verde
+  (2486), regressão 157 sem mudança.
+- **disparada:** task-69 fase 4a, o app dos silêncios com capacidades
+  reais (ffmpeg `silencedetect` fora da thread) e a tela fixa bem
+  desenhada, referência do checkpoint b. um agente só. a 4b (a tela
+  gerada dos silêncios, o componente de imagem no IR, a comparação) vem
+  depois; a 4c é o vídeo.
+
 ### ciclo 3: a tela nasce do que a pessoa escreve (task-69 fase 3b-ii)
 
 - **integrada:** fase 3b-ii (merge da `task/69e-page-asks-claude`). na
