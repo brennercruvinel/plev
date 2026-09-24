@@ -1,11 +1,11 @@
 //! reading an IR from JSON with every shape error at once, each at its
 //! JSON pointer.
 //!
-//! `serde_json::from_str::<Ir>` reads the same documents but stops at the
-//! first error and names a line, not a place in the tree. this walks the
-//! tree by hand and hands each leaf (an id, a component, a prop, a
-//! binding) to the serde form of its type, so the two readers accept the
-//! same documents and build the same `Ir`; the tests hold them to that.
+//! this is the one reader of the IR: `Ir`'s `Deserialize` calls it, so
+//! `serde_json::from_str::<Ir>` accepts exactly what `decode` accepts. it
+//! walks the tree by hand and hands each leaf (an id, a component, a
+//! token, a state ref) to the serde form of its type, so an error points
+//! at the leaf and says what was expected there.
 
 use std::collections::BTreeMap;
 
