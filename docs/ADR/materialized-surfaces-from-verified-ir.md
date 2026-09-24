@@ -356,3 +356,28 @@ phase 1's. the time per frame of a transition was not measured.
 - carrying a widget's state into a widget of another kind by hand: what
   must survive a change of representation is the app's, and it is read
   again through the binding.
+
+## addendum, 2026-09-24: the todo's surface shows its items (task-95, proposed)
+
+- the showcase todo projects `todo:items` (the visible ids, in the order
+  shown) and each item's `text`. both forms of the Surface page repeat
+  over it with one template: `todo_panel.item[{item}]`, a row of the
+  item's text (`todo_panel.item[{item}].text`) and a checkbox "done"
+  (`todo_panel.item[{item}].done`, `checked` from `completed`, `toggle`).
+  the two-column form holds the entry and the list in
+  `todo_panel.main`.
+- a check on the surface is the todo's `toggle` on that item, by whoever
+  acted, through the todo's one dispatcher; the fixed todo shows it and
+  moves the surface back. a change of form keeps each instance: a press
+  begun on an item's checkbox completes after the surface takes the other
+  form.
+- removal stays on the fixed todo. the todo's `remove` is destructive
+  with no confirmation of its own, and the verifier binds such an action
+  only to a dialog's `confirm`. a dialog that opens because of an unrelated
+  state (an item being done) would say the wrong thing, and an always
+  open one per item is noise, so the surface binds none; when the item
+  leaves the list (removed on the fixed todo, or filtered out), its
+  instance leaves the surface.
+- a materialized dialog draws its cancel button even when `cancel` is
+  not bound, and a closed dialog stays projected with its `confirm`
+  (phase 1): both matter to any surface that binds a removal later.
