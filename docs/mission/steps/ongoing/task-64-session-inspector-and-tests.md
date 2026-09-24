@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: in-progress
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-64
@@ -136,3 +136,23 @@ uma fixture de brinquedo.
 
 - a geração de teste exigir reexecução que toque estado externo;
 - o formato de sessão não der acesso O(1) que o scrub precisa.
+
+## fases (orquestrador, 2026-09-23)
+
+a task é grande (modelo, UI, export, sessão para teste) e foi dividida:
+
+- **fase a, agora:** o modelo do inspector sem UI e uma CLI
+  (`plev-inspect`) que responde às perguntas da tese sobre uma sessão
+  gravada: o que era o controle, qual era o estado, quem observou o quê e
+  quando, qual request, qual veredito (com o delta e o `acted`), o que
+  aconteceu entre a observação e o request (as mudanças no que a ação lê
+  e os receipts de outros atores que rodaram nesse intervalo, pela
+  gravação), e o resultado. responde por tempo a pergunta "quem mudou o
+  que eu li", que o `acted` da task-83 responde só em parte. funciona já
+  nas sessões dos dois checkpoints a (`target/agents/exp/`,
+  `target/agents/exp2/`).
+- **fase b:** a UI (timeline, frame com as ligações por cima, painel do
+  controle). pede gravar as ligações por frame no `rec`, que hoje não
+  grava (`state/truth.md`, 2.4).
+- **fase c:** export de trecho como bug report e sessão para teste com o
+  harness isolado.
