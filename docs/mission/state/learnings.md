@@ -466,6 +466,17 @@ c"; saídas em `target/agents/exp/`.
 
 ## processo
 
+### 2026-09-24, um canal novo herda as promessas dos antigos
+
+- **o canal de cena reabriu o que o item 10 fechou:** o briefing da
+  task-79 falou de segurança de rede (localhost, pareamento), mas não
+  lembrou que todo cliente do port é agente e que a câmera tinha
+  promessa própria (pixels nunca vão para agente). o agente seguiu o
+  briefing e o teste dele provou o vazamento. regra para briefing de
+  canal ou de saída nova: listar as promessas de privacidade já
+  aceitas nos ADRs (câmera, redação do `sem`, só pessoa) e exigir um
+  teste de cada uma contra o canal novo.
+
 ### 2026-09-24, dois checkouts num target dir só
 
 - **o cargo rodou um `regress` velho:** um script de captura com o

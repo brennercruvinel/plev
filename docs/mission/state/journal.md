@@ -14,6 +14,20 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: task-79 devolvida por privacidade
+
+- **entregue pelo agente:** o espelho funciona entre dois processos com
+  hash de frame igual (Card com imagens, Todo, Effects com vidro,
+  Capture), um hover custa 318 bytes e um frame sem mudança custa zero.
+- **devolvida na revisão (P1):** todo mundo que conecta no port é agente,
+  e o canal de cena mandava os frames da câmera a quem assistisse,
+  contra o ADR do item 10 (pixels da câmera nunca vão para agente). o
+  canal também passa por cima da redação do `sem`.
+- **correção pedida:** o canal só existe com `PLEV_MIRROR=1` dado pela
+  pessoa ao lançar; sem ele a recusa diz como ligar. imagem de fluxo
+  nunca cruza, nem com o opt-in: o espelho desenha uma caixa no lugar.
+  quem assiste fica no log e na gravação.
+
 ### ciclo 3: task-79 parou na sonda; decisão do orquestrador
 
 - **sonda:** o canal de cena cabe na versão 1 do protocolo como pedido
