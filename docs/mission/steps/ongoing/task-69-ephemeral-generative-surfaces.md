@@ -2440,3 +2440,102 @@ configurações, system prompt próprio, fora da sessão do Claude Code,
 - custo e limites: cada proposta custa uma a três chamadas do plano do
   brenner; o cache do prompt (uma hora) barateia a segunda proposta
   sobre o mesmo app.
+
+## fase 3b-ii: a página Surface pede a tela ao Claude
+
+branch `task/69e-page-asks-claude`, worktree próprio, sobre a `main` @
+cc908560 (a `main` já tinha andado para dcd731f4, só o journal). a
+decisão é a 13 do programa: o Claude pelo `claude -p` local, já atrás de
+`propose::Model` no crate `claude-model` (3b-i). nesta fase a página usa
+esse modelo, fora da thread do app, com a espera visível e um cancelar.
+
+### sonda da fase 3b-ii (antes do primeiro tipo, 2026-09-24)
+
+dois testes descartáveis (`surface_page/tests/probe.rs` no showcase e
+`crates/claude-model/tests/probe.rs`, rodados e jogados fora, nunca
+commitados) e uma chamada real pelo exemplo do `claude-model`.
+
+(a) na base, o `propose` da página roda na thread de quem despacha e já
+está `completed` quando `dispatch` volta. um `propose` pelas regras
+("only what is active and the add field") por `Page::dispatch`: o
+receipt tem `requested`, `accepted`, `executing` e `completed` todos no
+mesmo `now` do relógio da página (4 ms), `dispatch` voltou depois de
+1,9 ms (build debug) na thread do teste, e a superfície abriu
+(`todo_panel`). as regras rodam dentro do `execute`.
+
+o que `Execution::Started` mais `Dispatcher::complete` exigem de quem
+chama, medido com um `Operable` sobre o todo cujo `toggle` devolve
+`Started`:
+
+- o id que `execute` recebe é o que `dispatch` devolve (o `Operable`
+  guarda esse id; nenhum outro canal diz qual request acabou);
+- o receipt fica aberto em `executing`; enquanto isso o todo recebe e
+  completa um `set_value` pelo caminho de sempre, e o item não mudou (a
+  execução não terminou);
+- `todo.with_dispatcher(|d, _, now| d.complete(id, outcome, now))`
+  termina: `completed` no `now` 5, os estágios anteriores no 4. o
+  `complete` pede o `RequestId`, um `Outcome` (o mapa de resultado) e um
+  `Millis` do relógio da página, que só o `with_dispatcher` dá; não pede
+  o `Operable`, só o dispatcher emprestado de novo;
+- um segundo `complete` é `IllegalTransition { from: completed, to:
+  completed }`; um `fail` num request que terminou na hora é
+  `IllegalTransition { from: completed, to: failed }`; um id desconhecido
+  é `UnknownRequest`.
+
+a condição de parada não disparou: o `with_dispatcher` empresta o
+dispatcher depois, e `complete` e `fail` servem com o id e o `now` da
+página.
+
+(b) com o `fake-claude`, `propose_verified(Llm::new(&mut ClaudeCli {
+program: fake, .. }))` segura a thread que o chama pela chamada inteira:
+o falso que responde na hora segurou 338 ms na primeira rodada (o
+primeiro processo) e 16 a 17 ms nas duas seguintes (a chamada em si, 15
+a 16 ms, é o `sh` subindo); o falso que nunca responde, com prazo de 2 s,
+segurou 2,01 s até o kill. com o Claude de verdade, 5 a 90 s por
+tentativa e até três tentativas: a thread do app congelaria isso tudo.
+
+(c) chamada real 1 de 6: `cargo run -p claude-model --example propose --
+--app todo "the items as a list with the add field on top"`, das
+05:04:24 às 05:04:32. as regras recusam (`"top" is not a word of the
+app`). o prompt tem 18.760 bytes: a superfície mostrada é a compacta da
+task-95, que já repete `todo_panel.items` sobre `todo:items`. uma
+tentativa, 7,2 s, 0,038 USD, 1.335 bytes, verificada de primeira. o IR
+resumido:
+
+```text
+surface todo_panel "quick todo"
+todo_panel.card (card, "todo", stack vertical md; padding lg, raised)
+  todo_panel.entry (container, stack horizontal sm, center)
+    todo_panel.input (text_field, "new todo", flex 1): text <- todo.input:text, set_value -> todo.input set_value, submit -> todo.input submit
+    todo_panel.add (button, "add"): activate -> todo.input submit
+  todo_panel.items (list, "items", stack vertical xs)
+    repeat over todo:items:
+      todo_panel.item[{item}] (container, stack horizontal sm, center)
+        todo_panel.item[{item}].text (text): text <- todo.item[{item}]:text
+        todo_panel.item[{item}].done (checkbox, "done"): checked <- todo.item[{item}]:completed, toggle -> todo.item[{item}] toggle
+```
+
+o Claude usou um `repeat` sobre `todo:items`, com os ids do molde da
+superfície mostrada (`todo_panel.item[{item}]`, `.text`, `.done`), tirou
+o filtro e as contagens e deixou a entrada em cima. a condição do item 5
+do briefing ("enumera os itens em vez de repetir") não disparou: o
+`propose::prompt` não muda nesta fase. a ressalva fica registrada: a
+superfície mostrada já carregava o `repeat`, e na corrida do ide da 3b-i,
+sem superfície mostrada, o Claude escreveu os arquivos um a um. se ele
+repete do zero é uma chamada sobressalente desta task, se o orçamento
+sobrar, e importa para a fase 4, que nasce sem superfície.
+
+o que a sonda decide para o desenho:
+
+- o `propose` da página com `claude` devolve `Execution::Started` e
+  guarda o id; um trabalhador (thread) leva o `ClaudeCli` clonado e as
+  cópias do que o `Ask` empresta, roda `propose_verified(Llm)` e devolve
+  por canal; o `wake` da página recolhe e chama `complete` ou `fail`
+  pelo `with_dispatcher`, com o `now` do relógio da página;
+- cancelar é um sinal conferido no laço do `try_wait` do `run`, junto do
+  prazo, a cada 10 ms; o filho morre pelo pid como no prazo;
+- o proponente padrão é `claude` quando o programa existe
+  (`ClaudeCli::exists`: um caminho com diretório é um arquivo ali, um
+  nome é achado no PATH), sem chamar o modelo; nos testes do próprio
+  crate o programa não é procurado, para que nenhum teste do gate chegue
+  ao `claude` de verdade (o teste que quer o falso o aponta).
