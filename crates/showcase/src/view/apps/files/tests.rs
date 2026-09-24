@@ -156,6 +156,11 @@ fn the_page_projects_the_dialog_for_a_person_and_the_drop_for_anyone() {
         Some(&Value::from("")),
         "no alert shown yet"
     );
+    assert_eq!(
+        files.state.get("notice"),
+        Some(&Value::from("")),
+        "nothing told by notification yet"
+    );
     assert!(!files.inert);
 
     let zone = node("files.drop");
@@ -458,6 +463,94 @@ fn the_warn_button_shows_the_platforms_warning_and_the_text_shown_is_state() {
         alerted(&page),
         "1 file received; nothing was written to disk."
     );
+}
+
+/// Files that land while no window of the app has the focus are told to
+/// the person by a notification the page asks for (the shell shows it):
+/// how many came, with the open button as the notification's own button,
+/// and the text is state whether the platform shows it or not. A drop
+/// while a window has the focus is seen, not told; an agent's drop in the
+/// background is told too (the person was not looking, whoever dropped).
+#[test]
+fn files_that_land_while_no_window_has_the_focus_are_told_by_notification() {
+    let (mut todo, mut page, theme, fake) = setup(FakeDialogs::new());
+    let content = wide();
+    let notice = |page: &FilesPage| {
+        let snap = page.snapshot().unwrap();
+        match snap.value(&StateRef::parse("files:notice").unwrap()) {
+            Some(Value::Text(text)) => text.clone(),
+            other => panic!("a text: {other:?}"),
+        }
+    };
+
+    // looked at: seen, not told
+    page.handle_file_drop(&dropped(&["/a"], None), content, &theme, &mut todo, false);
+    assert!(page.take_notifications().is_empty());
+    assert_eq!(notice(&page), "");
+
+    // nobody looking: told, with the open button, and the text is state
+    page.set_window_focused(false);
+    page.handle_file_drop(
+        &dropped(&["/b", "/c"], None),
+        content,
+        &theme,
+        &mut todo,
+        false,
+    );
+    let told = page.take_notifications();
+    assert_eq!(told.len(), 1);
+    assert_eq!(told[0].level, Level::Info);
+    assert_eq!(told[0].title, "Files");
+    assert_eq!(told[0].body, "2 files received");
+    let button = told[0].action.as_ref().expect("the open button");
+    assert_eq!(button.sem, sid("files.open"));
+    assert_eq!(button.action.as_str(), "open_file");
+    assert_eq!(button.label, "open file");
+    assert_eq!(notice(&page), "2 files received");
+    let Stage::Completed(outcome) = stage(&todo, 2) else {
+        panic!("{:?}", stage(&todo, 2));
+    };
+    assert_eq!(
+        outcome.result.get("notice"),
+        Some(&Value::from("2 files received"))
+    );
+    assert!(page.take_notifications().is_empty(), "taken once");
+
+    // the button's click is the person's open_file, as at the button
+    let seen = page.snapshot().unwrap();
+    let req = button.clicked().request(&seen).unwrap();
+    assert_eq!(req.actor, Actor::Human);
+    assert_eq!(req.target, sid("files.open"));
+    let receipt = page.act(req, &mut todo, false).unwrap();
+    assert!(matches!(receipt.stage(), Some(Stage::Completed(_))));
+    assert_eq!(message(&page), "the dialog was cancelled");
+    assert_eq!(fake.lock().unwrap().asked().len(), 1);
+
+    // one file: the singular; an agent's drop in the background is told
+    let agent = Actor::Agent {
+        name: "claude".to_owned(),
+    };
+    let seen = page.snapshot().unwrap();
+    let req = Request::observe(
+        &seen,
+        agent,
+        "files.drop",
+        "drop_files",
+        Some(Value::List(vec!["/agent".into()])),
+    )
+    .unwrap();
+    page.act(req, &mut todo, false);
+    let told = page.take_notifications();
+    assert_eq!(told.len(), 1);
+    assert_eq!(told[0].body, "1 file received");
+    assert_eq!(notice(&page), "1 file received");
+
+    // looked at again: the next drop is seen, the last notice stays
+    page.set_window_focused(true);
+    page.handle_file_drop(&dropped(&["/d"], None), content, &theme, &mut todo, false);
+    assert!(page.take_notifications().is_empty());
+    assert_eq!(notice(&page), "1 file received");
+    assert_eq!(received(&page).len(), 5);
 }
 
 /// An agent is refused the alert before anything opens (the fake is

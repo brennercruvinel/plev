@@ -17,6 +17,14 @@
 //! the person saw is the page's projected state (`files:alert`), so an
 //! agent reads what was shown and never raises a panel itself.
 //!
+//! The system notification is the app's own doing (task-76, item 5):
+//! files that land while no window of the app has the focus (the shell
+//! says so, `set_window_focused`) are told to the person by a notification
+//! the page asks for (`take_notifications`; the shell shows it through
+//! `engine::platform::notify`), with the open button as its one button,
+//! and the text is the page's projected state (`files:notice`) whether the
+//! platform showed it or not, so an agent reads what the person was told.
+//!
 //! Wiring contract for the chrome (view/dispatch.rs, view/input.rs):
 //! every entry takes the todo page (the dispatcher's owner) and the
 //! inert flag; the shell hands the engine's drop event to the view's
@@ -35,6 +43,7 @@ use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::input::FileDrop;
 use engine::platform::alerts::Alerts;
 use engine::platform::files::FileDialogs;
+use engine::platform::notify::Notification;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ControlSize, Intent, Theme};
 use sem::Value;
@@ -78,6 +87,15 @@ pub struct FilesPage {
     /// The body of the last alert the person saw, projected as
     /// `files:alert`; empty until one was shown.
     alerted: String,
+    /// Whether a window of the app has the focus, as the shell says. A
+    /// drop that lands while none has is told by notification: nobody
+    /// was looking. A page on its own is looked at.
+    window_focused: bool,
+    /// The notifications asked for and not yet taken by the shell.
+    notices: Vec<Notification>,
+    /// The body of the last notification asked for, projected as
+    /// `files:notice`; empty until one was.
+    notice: String,
     said: Said,
 }
 
@@ -132,8 +150,23 @@ impl FilesPage {
             dialogs,
             alerts,
             alerted: String::new(),
+            window_focused: true,
+            notices: Vec::new(),
+            notice: String::new(),
             said: Said::Nothing,
         }
+    }
+
+    /// The shell says whether one of its windows has the focus. While
+    /// none has, files that land are told to the person by notification.
+    pub fn set_window_focused(&mut self, on: bool) {
+        self.window_focused = on;
+    }
+
+    /// The notifications asked for since the shell last took them, in
+    /// order; the shell shows them through the platform.
+    pub fn take_notifications(&mut self) -> Vec<Notification> {
+        std::mem::take(&mut self.notices)
     }
 
     /// Other dialogs for a page already built (a test on the gallery).

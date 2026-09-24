@@ -3,6 +3,8 @@ pub mod files;
 pub mod ime;
 pub mod lifecycle;
 pub mod menu;
+pub mod notify;
+pub mod tray;
 use winit::window::Window;
 
 /// Safe area insets in physical pixels.
