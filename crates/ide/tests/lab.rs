@@ -161,6 +161,20 @@ fn the_person_makes_the_agents_submit_stale_and_the_agent_recovers() {
         change["added"].as_array().is_some_and(Vec::is_empty),
         "nothing was added: {change}"
     );
+    // and it names who moved it: the person's unstage of that file, the
+    // request the intervention made, and nobody else.
+    let acted = stale[0]["acted"].as_array().expect("who acted");
+    assert_eq!(acted.len(), 1, "one actor named: {acted:?}");
+    assert_eq!(acted[0]["actor"].as_str(), Some("human"));
+    assert_eq!(acted[0]["action"].as_str(), Some("unstage"));
+    assert_eq!(
+        acted[0]["target"].as_str(),
+        Some("changes.file[src/session.rs]")
+    );
+    assert_eq!(
+        acted[0]["request"].as_str(),
+        Some(run.str("intervention.request"))
+    );
 
     // the refusal committed nothing: HEAD is the one the run started
     // with, at the intervention and at the refusal alike.
