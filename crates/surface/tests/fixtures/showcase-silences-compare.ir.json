@@ -1,0 +1,218 @@
+{
+  "plev_ir": 1,
+  "surface": {
+    "id": "review",
+    "title": "compare the original with the cuts",
+    "root": {
+      "sem": "review.card",
+      "component": "card",
+      "label": "silences",
+      "props": {
+        "padding": "lg",
+        "elevation": "raised"
+      },
+      "layout": {
+        "stack": {
+          "axis": "vertical",
+          "gap": "md"
+        }
+      },
+      "children": [
+        {
+          "sem": "review.compare",
+          "layout": {
+            "grid": {
+              "min_col": "card_min_w",
+              "gap": "lg"
+            }
+          },
+          "children": [
+            {
+              "sem": "review.original",
+              "layout": {
+                "stack": {
+                  "axis": "vertical",
+                  "gap": "sm"
+                }
+              },
+              "children": [
+                {
+                  "sem": "review.original.title",
+                  "component": "text",
+                  "label": "the original",
+                  "props": {
+                    "typography": "caption_sm",
+                    "color": "text_mid"
+                  }
+                },
+                {
+                  "sem": "review.video",
+                  "component": "image",
+                  "label": "the original at the instant shown",
+                  "bind": {
+                    "state": {
+                      "source": "silences.video:original"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "sem": "review.result",
+              "layout": {
+                "stack": {
+                  "axis": "vertical",
+                  "gap": "sm"
+                }
+              },
+              "children": [
+                {
+                  "sem": "review.result.title",
+                  "component": "text",
+                  "label": "with the cuts",
+                  "props": {
+                    "typography": "caption_sm",
+                    "color": "text_mid"
+                  }
+                },
+                {
+                  "sem": "review.result.video",
+                  "component": "image",
+                  "label": "the result at the instant shown",
+                  "bind": {
+                    "state": {
+                      "source": "silences.video:result"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "sem": "review.counts",
+          "layout": {
+            "stack": {
+              "axis": "horizontal",
+              "gap": "md"
+            }
+          },
+          "children": [
+            {
+              "sem": "review.applied",
+              "component": "stat",
+              "label": "applied",
+              "bind": {
+                "state": {
+                  "value": "silences.counts:applied"
+                }
+              }
+            },
+            {
+              "sem": "review.cut_secs",
+              "component": "stat",
+              "label": "seconds cut",
+              "bind": {
+                "state": {
+                  "value": "silences.counts:cut_secs"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "sem": "review.cuts",
+          "component": "list",
+          "label": "the marks on the timeline",
+          "layout": {
+            "stack": {
+              "axis": "vertical",
+              "gap": "xs"
+            }
+          },
+          "repeat": {
+            "each": "silences:cuts",
+            "item": {
+              "sem": "review.cut[{item}]",
+              "layout": {
+                "stack": {
+                  "axis": "horizontal",
+                  "gap": "sm",
+                  "align": "center"
+                }
+              },
+              "children": [
+                {
+                  "sem": "review.cut[{item}].frame",
+                  "component": "image",
+                  "label": "the middle of the cut",
+                  "props": {
+                    "control_size": "xl"
+                  },
+                  "bind": {
+                    "state": {
+                      "source": "silences.cut[{item}]:frame"
+                    }
+                  }
+                },
+                {
+                  "sem": "review.cut[{item}].range",
+                  "component": "text",
+                  "size": {
+                    "flex": 1
+                  },
+                  "bind": {
+                    "state": {
+                      "text": "silences.cut[{item}]:range"
+                    }
+                  }
+                },
+                {
+                  "sem": "review.cut[{item}].decision",
+                  "component": "badge",
+                  "bind": {
+                    "state": {
+                      "text": "silences.cut[{item}]:decision"
+                    }
+                  }
+                },
+                {
+                  "sem": "review.cut[{item}].apply",
+                  "component": "button",
+                  "label": "apply",
+                  "props": {
+                    "control_size": "sm"
+                  },
+                  "bind": {
+                    "actions": {
+                      "activate": {
+                        "target": "silences.cut[{item}]",
+                        "action": "apply_cut"
+                      }
+                    }
+                  }
+                },
+                {
+                  "sem": "review.cut[{item}].reject",
+                  "component": "button",
+                  "label": "reject",
+                  "props": {
+                    "control_size": "sm"
+                  },
+                  "bind": {
+                    "actions": {
+                      "activate": {
+                        "target": "silences.cut[{item}]",
+                        "action": "reject_cut"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

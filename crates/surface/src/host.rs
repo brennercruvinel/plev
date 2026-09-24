@@ -1,10 +1,11 @@
-//! the host of the active surfaces, and the way a surface reaches the
-//! app's dispatcher.
+//! the host of the active surfaces, and the ways a surface reaches the
+//! app: its dispatcher (`Dispatch`) and its frames (`Frames`).
 
 use std::collections::BTreeSet;
 
 use comps::Wake;
 use engine::compositor::Compositor;
+use engine::gpu::image::ImageHandle;
 use engine::theme::Theme;
 use sem::{Receipt, Request, SemId, Snapshot, SnapshotBuilder};
 use uir::VerifiedIr;
@@ -23,6 +24,30 @@ pub trait Dispatch {
 
     /// the app projected now, what the surface shows after its request.
     fn project(&self) -> Option<Snapshot>;
+}
+
+/// the frames an app holds for the images of a surface. an `image` binds
+/// its `source` to a text of the app: a frame ref the app projects, naming
+/// a media node and an instant (`silences.video@4.017052`), the app's own
+/// form. when it draws, the host asks the app for the picture by that
+/// text; `None` draws the shell with the label, and the app decodes on
+/// its own time (a worker, a cache, from its wake), so the next frame
+/// asks again. the surface never holds bytes, never decodes, and never
+/// asks for a decode itself: `Surface::sources` tells the app what it
+/// shows.
+pub trait Frames {
+    fn frame(&self, source: &str) -> Option<ImageHandle>;
+}
+
+/// no frames: every image is its shell and label (a surface drawn
+/// without an app that holds pictures).
+#[derive(Clone, Copy, Debug, Default)]
+pub struct NoFrames;
+
+impl Frames for NoFrames {
+    fn frame(&self, _source: &str) -> Option<ImageHandle> {
+        None
+    }
 }
 
 /// a surface that cannot open next to the ones already open, or a form it
@@ -136,11 +161,31 @@ impl SurfaceHost {
     }
 
     /// draws what is left of the surfaces dismissed, fading out where
-    /// they were; nothing once they are gone.
+    /// they were; nothing once they are gone. their images are their
+    /// shells (`draw_closing_with` for the pictures).
     pub fn draw_closing(&mut self, c: &mut Compositor, theme: &Theme) {
+        self.draw_closing_with(c, theme, &NoFrames);
+    }
+
+    /// `draw_closing`, the pictures of the images asked of `frames`.
+    pub fn draw_closing_with(&mut self, c: &mut Compositor, theme: &Theme, frames: &dyn Frames) {
         for ghost in &mut self.closing {
-            ghost.draw(c, theme);
+            ghost.draw(c, theme, frames);
         }
+    }
+
+    /// the frame refs the images of every open surface show now
+    /// (`Surface::sources`), once each: what the app decodes for them.
+    pub fn sources(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        for surface in &self.surfaces {
+            for source in surface.sources() {
+                if !out.contains(&source) {
+                    out.push(source);
+                }
+            }
+        }
+        out
     }
 
     /// the person's preference for reduced motion, for every surface open

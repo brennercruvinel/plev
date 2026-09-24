@@ -16,6 +16,12 @@
 //!   `uir::role_of`, label, the state bound, the actions bound
 //!   (`Surface::project`), so an agent or a screen reader observes the
 //!   surface and acts on it like on any page;
+//! - **pictures** asked of the app (`Frames`): an `image` binds its
+//!   `source` to a frame ref the app projects (a media node and an
+//!   instant), and the host asks the app for the decoded frame by that
+//!   text when it draws (`Surface::render_with`); without one it draws
+//!   the image's shell and label, and `Surface::sources` says what the
+//!   app should decode;
 //! - **events** as `sem::Request`s for the capability the IR bound, with
 //!   the actor who acted and the state the surface showed as the
 //!   observation, handed to the app's own dispatcher (`Dispatch`). the
@@ -54,5 +60,5 @@ mod surface;
 mod token;
 mod widget;
 
-pub use host::{Dispatch, SurfaceError, SurfaceHost};
+pub use host::{Dispatch, Frames, NoFrames, SurfaceError, SurfaceHost};
 pub use surface::Surface;
