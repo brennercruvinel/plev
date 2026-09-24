@@ -4637,3 +4637,95 @@ janela de 1200x800. imagens em `checkpoint-b/`.
   corrigidos como bug do núcleo e o checkpoint roda de novo do mesmo
   jeito, com as mesmas imagens. a regra do programa não muda.
 
+## checkpoint b, as correções (task/69i)
+
+branch `task/69i-checkpoint-b`, sobre a `main` em `5cfb0dfb`.
+
+### sonda das correções (antes do primeiro tipo, 2026-09-24)
+
+reproduzido em teste, na galeria de 1200x800 com o worker falso
+(`silences/tests/generated/checkpoint.rs`, a versão de sonda que só
+imprime): a coluna da superfície vai de x = 740 a 1160 (420 px); o card
+das regras tem `padding: lg` (20 px), então a linha do corte tem 380 px.
+
+(a) a linha. `crates/surface/src/layout.rs:138` passa o texto ao engine
+como `Leaf::Text` sem largura mínima, e o `LayoutStyle` nasce com
+`flex_shrink: 1.0` e `flex_wrap: false` (`crates/engine/src/layout/types.rs:75`
+e `:77`); o `stack` só põe direção, gap e alinhamento (`layout.rs:175` a
+`183`), nunca `flex_wrap` (só o `grid` quebra, `layout.rs:184` a `188`).
+no taffy 0.9.2 o mínimo automático de um item flex é o seu min-content
+(`compute/flexbox.rs:798` a `818`), e o engine mede o min-content de um
+texto com largura 0 (`crates/engine/src/layout/engine.rs:143`): o shaper
+quebra dentro da palavra, e o texto encolhe até um glifo. os botões e a
+imagem são `Leaf::Fixed` com `flex_shrink = 0` (`layout.rs:133` a `137`),
+não encolhem, e numa linha que não quebra passam da borda. a linha das
+regras é um `stack` horizontal (`crates/propose/src/rules.rs:429`) com a
+imagem `xl` (`:386`), cinco textos com `flex: 1` (`:395`) e três botões.
+os números: os cinco textos com 9 a 10 px de largura e 158 a 360 px de
+altura (um caractere por linha), quando a palavra mais longa de cada um
+mede 43,8 a 63,8 px; "preview segment", "apply cut" e "reject cut"
+terminam em x = 1107, 1224 e 1341, este 181 px além da borda do card. a
+fixture do Claude (item 5 abaixo) repete o defeito na linha do corte: a
+faixa com 9 px e os botões até x = 1348. não precisa mexer no engine
+nem no comps: a largura mínima do texto e a quebra da linha são estilos
+que a superfície já passa ao `LayoutEngine`.
+
+(b) o slider. `crates/surface/src/widget.rs:185` cria o
+`Slider::new(0.0, 1.0, 0.0).sem(id)` sem rótulo; o `sync_slider`
+(`widget.rs:438` a `454`) põe faixa, passo, valor e `disabled`; o
+`draw.rs:141` dá à folha só a altura do controle (`ControlSize::Xs`, 36
+px) e o `draw.rs:330` chama `s.render`, que desenha trilho e botão e
+nenhum texto (`crates/comps/src/form/slider.rs:243` a `330`). o rótulo do
+nó nunca é desenhado. a tela fixa desenha ela mesma o nome em
+`caption_sm`/`text_mid` e o valor em `caption_r`/`text`, alinhado à
+direita, numa linha acima do slider (`silences/draw.rs:209` a `247`,
+`silences/layout.rs:201` a `211`: a linha do rótulo, `spacing.xs`, o
+slider).
+
+(c) o número. `crates/surface/src/widget.rs:94`, `Value::Num(n) =>
+n.to_string()`, no `text_of`, que serve o texto e o badge (`shown_text`,
+`draw.rs:63`), o stat (`draw.rs:84`) e o rótulo que o texto e o badge
+projetam (`project.rs:43`). a tela fixa formata com o que sabe do app:
+`"{:.0} dB"` (`silences/draw.rs:222`), `"{:.1} s"` (`:228`), `"{:.1} s of
+silence"` (`:319`). o IR não tem campo de unidade nem de formato (os
+`prop` do stat e do texto são só `Text`, `Int`, `Num`,
+`crates/uir/src/vocab.rs:246` e `:290`), e não precisa: a unidade já vem
+no rótulo, o do app ("threshold (dB)", "minimum silence (s)") e o do
+Claude ("duration (s)"). o formato mais justo sem tocar o IR: no máximo
+duas casas, sem zero à direita. o vocabulário fica como está; não há
+parada.
+
+(d) o prompt. `crates/propose/src/prompt.rs:271` a `306`: o pedido, a
+intenção, as regras do verificador, a política, os componentes, o
+registro, a superfície de agora e o schema. nada sobre ordem, sobre o
+que vem primeiro, sobre repetir um controle; de rótulo, só a regra de
+acesso (`prompt.rs:49` a `53`: todo controle tem rótulo), que o Claude
+cumpriu e o slider não desenhou. o `SYSTEM`
+(`crates/claude-model/src/lib.rs:55` a `57`) só pede a resposta na forma
+pedida: não precisa mudar.
+
+(e) o regress. `run::stage` (`examples/regress/run.rs:52` a `76`) chama
+`showcase::app::stage_page` (`src/app/headless.rs:77` a `111`): a view
+nova, a página, o tema, 120 passos de `tick` e `render`. só o estado
+inicial; a chave do baseline é página, tema e viewport
+(`examples/regress/baseline.rs:40` a `64`). a Silences parada nunca chama
+o ffmpeg (`silences/worker.rs:10` a `15`), mas uma superfície com imagem
+pede os frames no `wake` (`silences/jobs.rs:70` e `184` a `190`), e fora
+dos testes o worker é o ffmpeg de verdade (`worker.rs:88` a `95`); o falso
+(`worker.rs:98` a `103`, `256` a `283`) só existe sob `cfg(test)` e o
+exemplo, que é outro crate, não o vê. do exemplo, a página só é
+alcançável pela API pública da `ShowcaseView` (`view/mod.rs:10`, `mod
+apps` privado; `panes` privado em `view/mod.rs:97`): `act`, `semantics`,
+`tick`, `render`. as regras chegam por `act` (proposer, intenção,
+propose, como no roteiro da 4c); a fixture do Claude não tem caminho
+público (as operações da linha são escrever, propor, escolher, abrir,
+fechar e cancelar, `surface_page/proposing.rs:401` a `412`). o que
+precisa: no regress, encenar um estado com nome (o roteiro pelo `act`) e
+um tipo de página encenada que não seja o `StagedPage` (campos privados,
+`run.rs:32`); no showcase, em `generated/page.rs`, dois ganchos de
+encenação: os frames dos instantes que a página mostra postos no cache
+antes do `wake` pedir (o conteúdo vem do exemplo, sintético e
+determinístico; o hash de uma imagem é o tamanho, `examples/regress/hash.rs:30`
+a `33`), e a fixture verificada pelo `uir` contra o registro do app e
+mostrada por `Page::show` (`page.rs:156` a `170`).
+
