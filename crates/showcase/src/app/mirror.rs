@@ -182,6 +182,13 @@ impl Viewer {
         &self.mirror
     }
 
+    /// Draws into another compositor from now on (a window made anew):
+    /// its layers are made again at the next `draw`.
+    pub fn forget_layers(&mut self) {
+        self.mirror.forget_layers();
+        self.overlay = None;
+    }
+
     /// The scene into `c`, as the app's compositor held it; with
     /// `bindings`, each bound control outlined and named on a layer above
     /// every other (the frame without them is the app's, pixel for pixel).

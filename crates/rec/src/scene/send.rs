@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 
-use engine::compositor::{Compositor, SceneNode};
+use engine::compositor::{Compositor, Layer, SceneNode};
 
 use super::asset;
 use super::bytes::fnv;
@@ -27,8 +27,9 @@ pub struct LayerOut {
 }
 
 /// one frame as the sender wrote it: the head, every layer in composite
-/// order, every asset the layers reference (each once, in the order they
-/// are first drawn).
+/// order (by z-order, a tie in the order the compositor holds them, as
+/// it composites them), every asset the layers reference (each once, in
+/// the order they are first drawn).
 #[derive(Clone, Debug)]
 pub struct Frame {
     pub head: Arc<[u8]>,
@@ -62,7 +63,11 @@ impl Sender {
         let mut kept: HashMap<u64, Arc<[u8]>> = HashMap::new();
         let mut layers = Vec::with_capacity(compositor.layers().len());
         let mut held = HashMap::with_capacity(compositor.layers().len());
-        for layer in compositor.layers() {
+        // composite order: by z-order, a tie in the order the compositor
+        // holds them, as its next resolve sorts them
+        let mut stack: Vec<&Layer> = compositor.layers().iter().collect();
+        stack.sort_by_key(|l| l.z_order);
+        for layer in stack {
             let key = layer.id.0;
             let nodes: Vec<Drawn> = layer
                 .nodes()

@@ -281,11 +281,22 @@ impl Mirror {
         }
     }
 
+    /// forgets which compositor layers draw which app layers: the next
+    /// `draw` makes them anew. for a receiver that draws into another
+    /// compositor from now on (a viewer that remade its window).
+    pub fn forget_layers(&mut self) {
+        self.ids.clear();
+    }
+
     /// the compositor's layers made to match the ones held: made, set,
     /// removed, and remade in order when the compositor would stack them
     /// otherwise (layers of one z-order stack in the order they were
     /// made).
     fn arrange(&mut self, c: &mut Compositor) {
+        if self.ids.values().any(|id| c.layer(*id).is_none()) {
+            // another compositor than the one drawn into before
+            self.ids.clear();
+        }
         let wanted: Vec<u32> = self.layers.iter().map(|l| l.key).collect();
         let gone: Vec<u32> = self
             .ids
