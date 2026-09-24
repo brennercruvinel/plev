@@ -121,7 +121,7 @@ demos are the engine's (and comps') examples.
 |---|---|---|
 | engine | `crates/engine` | gpu, compositor, effects, text, path, layout, input, actions, animation, signal, theme (the tokens), graph, builder, window, headless, accessibility, perf, hot_reload, platform |
 | comps | `crates/comps` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/catalog.md](docs/catalog.md) |
-| crates | `crates/` | git, ide, inspect, lot, macros, monster, narrate, narrate-macro, parser, prime, rec, rope, sem, showcase, svg, urnaui, wire |
+| crates | `crates/` | git, ide, inspect, lot, macros, monster, narrate, narrate-macro, parser, prime, rec, rope, sem, showcase, svg, uir, urnaui, wire |
 | examples | `crates/engine/examples/`, `crates/comps/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters and svg2monster clis |
 
 `comps` is the crate an app draws with. widgets are plain structs the app
@@ -140,7 +140,8 @@ never creates a request.
 `wire` lets an agent outside the process observe and operate an app
 through that contract only, over a local socket in json lines: scoped and
 incremental observations, and actions that go through the same dispatcher
-as a click.
+as a click. `uir` is the plev IR: a surface described by meaning over
+that contract, and only what its verifier accepts reaches the runtime.
 
 two of the crates are pipelines: a foreign format in, our format out.
 
