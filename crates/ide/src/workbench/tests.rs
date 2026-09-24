@@ -438,6 +438,48 @@ fn a_stale_agent_request_says_what_changed_and_a_click_dismisses_it() {
     );
 }
 
+/// A person edits the message through the dispatcher on the state the
+/// agent saw: the refusal of the agent's submit names who did what.
+#[test]
+fn a_stale_agent_request_names_the_person_who_acted() {
+    let mut bench = bench();
+    let seen = bench.snapshot().expect("snapshot");
+    let agent = Actor::Agent {
+        name: "test-agent".into(),
+    };
+    let req = Request::observe(&seen, agent, "commit.submit", "submit", None).expect("observe");
+    let edit = Request::observe(
+        &seen,
+        Actor::Human,
+        "commit.message",
+        "set_value",
+        Some(Value::Text("fix login flow".into())),
+    )
+    .expect("observe");
+    let edited = bench.dispatch(edit);
+    assert!(matches!(
+        bench.receipt(edited).and_then(Receipt::stage),
+        Some(Stage::Completed(_))
+    ));
+    let id = bench.dispatch(req);
+    let Some(Stage::Rejected(Rejection::Stale { acted, .. })) =
+        bench.receipt(id).and_then(Receipt::stage)
+    else {
+        panic!("stale: {:?}", bench.receipt(id));
+    };
+    assert_eq!(acted.len(), 1);
+    assert_eq!((acted[0].id, &acted[0].actor), (edited, &Actor::Human));
+    assert_eq!(
+        notices(&bench),
+        [(
+            Role::Alert,
+            "Refused test-agent's submit: the commit message changed \
+             (you edited the commit message)"
+                .to_owned()
+        )]
+    );
+}
+
 #[test]
 fn an_agent_discard_opens_the_modal_and_cancel_declines_it() {
     let mut bench = bench();

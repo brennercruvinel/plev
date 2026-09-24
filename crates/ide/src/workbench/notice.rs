@@ -4,7 +4,7 @@
 //! receipt, in the words of the ui.
 
 use engine::theme::Intent;
-use sem::{Actor, Change, Receipt, Rejection, Request, SemId, Stage};
+use sem::{Acted, Actor, Change, Receipt, Rejection, Request, SemId, Stage};
 
 use super::Workbench;
 
@@ -81,9 +81,14 @@ impl Workbench {
         let (reason, intent) = match why {
             // A person's own answer, not a refusal of the workspace.
             Rejection::Declined { .. } => return (self.declined(req), quiet),
-            Rejection::Stale { changes } => {
+            Rejection::Stale { changes, acted } => {
                 let moved: Vec<String> = changes.iter().map(|c| self.moved(c)).collect();
-                (moved.join("; "), Intent::Destructive)
+                let moved = moved.join("; ");
+                let reason = match self.acted(acted) {
+                    Some(who) => format!("{moved} ({who})"),
+                    None => moved,
+                };
+                (reason, Intent::Destructive)
             }
             Rejection::Disabled { .. } => (self.unavailable(req), quiet),
             Rejection::NotFound { target } => (format!("{} is gone", self.name(target)), quiet),
@@ -105,6 +110,33 @@ impl Workbench {
             other => format!("Refused {}'s {}", who(other), req.action),
         };
         (format!("{head}: {reason}"), intent)
+    }
+
+    /// Who ran something on the state a stale request rested on, in
+    /// words: `you unstaged src/session.rs`. `None` when nobody the app
+    /// knows did (a change from outside it has no request).
+    fn acted(&self, acted: &[Acted]) -> Option<String> {
+        let each: Vec<String> = acted
+            .iter()
+            .map(|a| format!("{} {}", who(&a.actor), self.did(a)))
+            .collect();
+        (!each.is_empty()).then(|| each.join(", "))
+    }
+
+    /// What an action did, in the past tense of the ui.
+    fn did(&self, a: &Acted) -> String {
+        let name = self.name(&a.target);
+        match a.action.as_str() {
+            "stage" => format!("staged {name}"),
+            "unstage" => format!("unstaged {name}"),
+            "discard" => format!("discarded the changes to {name}"),
+            "ignore" => format!("ignored {name}"),
+            "submit" => "committed".to_owned(),
+            "set_value" => "edited the commit message".to_owned(),
+            "open" => "opened the commit form".to_owned(),
+            "cancel" => "closed the commit form".to_owned(),
+            action => format!("ran {action} on {name}"),
+        }
     }
 
     /// What one stale change means to a person.

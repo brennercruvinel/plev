@@ -528,3 +528,176 @@ fn an_event_with_no_json_form_is_left_out_with_the_changes_after_it() -> Fallibl
     );
     Ok(())
 }
+
+/// a list whose items come and go.
+struct Items(Vec<&'static str>);
+
+impl Semantics for Items {
+    fn project(&self, b: &mut SnapshotBuilder) {
+        b.node("todo", Role::List, "todo");
+        for item in &self.0 {
+            b.node(format!("todo.item[{item}]").as_str(), Role::ListItem, *item)
+                .parent("todo")
+                .state("done", false);
+        }
+    }
+}
+
+/// the same file with its S section replaced by `events`, the section
+/// index rewritten (offsets, lengths, sha256) as the writer lays it out.
+fn with_events(bytes: &[u8], events: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    use sha2::{Digest, Sha256};
+    const ENTRY: usize = 1 + 8 + 8 + 32;
+    let at = index_at();
+    let mut payloads: Vec<(u8, &[u8])> = Vec::new();
+    for n in 0..4 {
+        let entry = &bytes[at + n * ENTRY..at + (n + 1) * ENTRY];
+        let offset = usize::try_from(u64::from_le_bytes(entry[1..9].try_into()?))?;
+        let len = usize::try_from(u64::from_le_bytes(entry[9..17].try_into()?))?;
+        let payload = if entry[0] == b'S' {
+            events
+        } else {
+            &bytes[offset..offset + len]
+        };
+        payloads.push((entry[0], payload));
+    }
+    let mut out = bytes[..at].to_vec();
+    let mut offset = (at + 4 * ENTRY) as u64;
+    for (tag, payload) in &payloads {
+        out.push(*tag);
+        out.extend_from_slice(&offset.to_le_bytes());
+        out.extend_from_slice(&(payload.len() as u64).to_le_bytes());
+        out.extend_from_slice(&Sha256::digest(payload));
+        offset += payload.len() as u64;
+    }
+    for (_, payload) in payloads {
+        out.extend_from_slice(payload);
+    }
+    Ok(out)
+}
+
+/// the S section of `session` as a file before task-83 held it: every
+/// `node_added` a snapshot event keeps is its id alone, or `id` when
+/// given.
+fn events_before_83(session: &Session, id: Option<&str>) -> Result<Vec<u8>, serde_json::Error> {
+    let mut out = Vec::new();
+    for event in session.events() {
+        let mut json = serde_json::to_value(event)?;
+        if let Some(changes) = json
+            .pointer_mut("/kind/snapshot/changes")
+            .and_then(serde_json::Value::as_array_mut)
+        {
+            for change in changes {
+                if let Some(node) = change.get("node_added") {
+                    let named = id.map_or_else(|| node["id"].clone(), serde_json::Value::from);
+                    change["node_added"] = named;
+                }
+            }
+        }
+        out.extend_from_slice(serde_json::to_string(&json)?.as_bytes());
+        out.push(b'\n');
+    }
+    Ok(out)
+}
+
+/// a session written before task-83 kept `{"node_added": "<id>"}` in the
+/// changes of a snapshot event. it still opens: the node is the one the
+/// event's own snapshot holds, so it reads back equal to what the
+/// recorder holds today. an id that snapshot does not hold is a typed
+/// error on that line, and no node is made up.
+#[test]
+fn a_node_added_by_id_alone_reads_as_the_node_its_snapshot_holds() -> Fallible {
+    let rec = Recorder::default();
+    rec.snapshot(0, &look(&Items(vec!["milk"])));
+    rec.snapshot(10, &look(&Items(vec!["milk", "mail"])));
+    let window = rec.snapshot_window();
+    let Some(Kind::Snapshot { snapshot, changes }) = window.events().get(1).map(|e| &e.kind) else {
+        return Err(format!("a whole snapshot at 10: {:?}", window.events()).into());
+    };
+    let mail = snapshot.get(&id("todo.item[mail]")).ok_or("no mail")?;
+    assert_eq!(changes, &[sem::Change::NodeAdded(Box::new(mail.clone()))]);
+    let (bytes, _) = window.to_bytes()?;
+
+    let old = events_before_83(&window, None)?;
+    let text = String::from_utf8(old.clone())?;
+    assert!(
+        text.contains(r#""changes":[{"node_added":"todo.item[mail]"}]"#),
+        "{text}"
+    );
+    let file = Session::from_bytes(&with_events(&bytes, &old)?)?;
+    assert_eq!(file.events(), window.events(), "the node, as recorded");
+    let state = file.state_at(10)?.ok_or("a state")?;
+    assert!(state.get(&id("todo.item[mail]")).is_some());
+    // written again, only the form of today comes out.
+    let (again, _) = file.to_bytes()?;
+    assert_eq!(Session::from_bytes(&again)?.events(), window.events());
+    assert!(!String::from_utf8_lossy(&again).contains(r#""node_added":"todo"#));
+
+    let ghost = events_before_83(&window, Some("todo.item[ghost]"))?;
+    match Session::from_bytes(&with_events(&bytes, &ghost)?) {
+        Err(FileError::Event { line, message }) => {
+            assert_eq!(line, 2, "the snapshot event at 10");
+            assert!(message.contains("todo.item[ghost]"), "{message}");
+        }
+        other => return Err(format!("a typed error on line 2: {other:?}").into()),
+    }
+    Ok(())
+}
+
+/// opens the session files named in `REC_OPEN` (paths joined by `:`) and
+/// prints what each holds: its events by kind, the `node_added` its
+/// snapshot events keep, its span, and the receipts of `commit.submit` at
+/// its end. a check on files outside the repository (the sessions of
+/// checkpoint a, task-83), so run by hand:
+/// `REC_OPEN=a.monster:b.monster cargo test -p rec --test session open_the_named_sessions -- --ignored --nocapture`.
+#[test]
+#[ignore = "reads the files named in REC_OPEN"]
+fn open_the_named_sessions() -> Fallible {
+    let paths = std::env::var("REC_OPEN").unwrap_or_default();
+    let mut refused = Vec::new();
+    for path in paths.split(':').filter(|p| !p.is_empty()) {
+        let session = match Session::open(path) {
+            Ok(session) => session,
+            Err(e) => {
+                println!("{path}: does not open: {e}");
+                refused.push(path.to_owned());
+                continue;
+            }
+        };
+        let mut kinds: Vec<(&str, usize)> = Vec::new();
+        let mut added = Vec::new();
+        for event in session.events() {
+            let name = event.kind.name();
+            match kinds.iter_mut().find(|(k, _)| *k == name) {
+                Some((_, n)) => *n += 1,
+                None => kinds.push((name, 1)),
+            }
+            if let Kind::Snapshot { changes, .. } = &event.kind {
+                for change in changes {
+                    if let sem::Change::NodeAdded(node) = change {
+                        added.push(format!("{} ({:?} {:?})", node.id, node.role, node.label));
+                    }
+                }
+            }
+        }
+        let end = session.span().map_or(0, |(_, end)| end);
+        println!(
+            "{path}: opens, {} events {kinds:?}, span {:?}",
+            session.events().len(),
+            session.span()
+        );
+        println!("  node_added in snapshot events: {added:?}");
+        for r in session.receipts_for(&id("commit.submit"), end) {
+            let stages: Vec<&str> = r.receipt.stages.iter().map(|(s, _)| s.name()).collect();
+            println!(
+                "  commit.submit request {} by {}: {} ({:?})",
+                r.receipt.id,
+                r.receipt.request.actor,
+                stages.join(" -> "),
+                r.receipt.stage()
+            );
+        }
+    }
+    assert!(refused.is_empty(), "did not open: {refused:?}");
+    Ok(())
+}

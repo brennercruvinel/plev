@@ -60,7 +60,10 @@ what exists (updated at each task close-out):
 - the dispatcher, also in `crates/sem` (task-58, adr
   actions-carry-observed-state): `Request::observe` records the values the
   actor saw for the action's `reads`; `check` decides in a fixed order and
-  goes `Stale` only when one of those values moved, with the delta; one
+  goes `Stale` only when one of those values moved, with the delta and,
+  once the dispatcher records the refusal, `acted`: the actions of other
+  actors that were checked against the state the refused actor saw and
+  ran (task-83; a change from outside the app names nobody); one
   `Dispatcher` for every actor projects the app at dispatch, runs
   `Operable::execute(id, req)` only after acceptance or a person's
   confirmation (`Actor::Human` or `Actor::Assistive`), and keeps a

@@ -14,6 +14,20 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 1: task-83 integrada
+
+- **integrada:** task-83 (`78f463c`): delta com o nó, `acted` na recusa,
+  regra de stale no `plev --help`, sessões antigas legíveis. gate verde
+  (2084), laboratório reproduzido pelo orquestrador (a recusa nomeia só a
+  pessoa).
+- **corrigido:** o gate com a perna urnaui num subdiretório próprio do
+  target dir compartilhado (`1bf6606`).
+- **devolvida:** task-85, com duas correções: uma definição só dos
+  arquivos de um commit (receipt e nó concordavam até o refresh e
+  discordavam depois, em renomeação), e `files` só nos commits mais
+  recentes (81 KB a mais na observação inteira deste repositório era
+  inaceitável).
+
 ### ciclo 1: docs voltam a dizer o que o código faz
 
 - **integrado:** as correções de docs (`2d4aa4b`, 8 commits: README,

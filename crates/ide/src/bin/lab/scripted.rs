@@ -122,10 +122,12 @@ impl Agent {
                     ));
                     return Ok(());
                 }
-                Some(Stage::Rejected(Rejection::Stale { changes })) => {
+                Some(Stage::Rejected(Rejection::Stale { changes, acted })) => {
                     out.stale.push(changes.clone());
-                    out.steps
-                        .push(format!("submit {attempt} refused as stale: {changes:?}"));
+                    out.steps.push(format!(
+                        "submit {attempt} refused as stale: {changes:?}; acted: {}",
+                        crate::story::acted_text(acted)
+                    ));
                     self.repair(out, decided.revision)?;
                 }
                 other => return Err(format!("submit {attempt} ended {other:?}")),

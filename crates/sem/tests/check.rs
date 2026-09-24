@@ -131,15 +131,13 @@ fn a_file_unstaged_after_the_observation_is_stale_with_removed_b() {
     };
     assert_eq!(
         check(&req, &now.snapshot()),
-        Verdict::Rejected(Rejection::Stale {
-            changes: vec![Change::StateChanged {
-                at: at("changes:staged"),
-                before: Some(set(&["A", "B", "C"])),
-                after: Some(set(&["A", "C"])),
-                added: vec![],
-                removed: strings(&["B"]),
-            }],
-        })
+        Verdict::Rejected(Rejection::stale(vec![Change::StateChanged {
+            at: at("changes:staged"),
+            before: Some(set(&["A", "B", "C"])),
+            after: Some(set(&["A", "C"])),
+            added: vec![],
+            removed: strings(&["B"]),
+        }]))
     );
 }
 
@@ -152,7 +150,7 @@ fn every_read_that_moved_is_one_change_in_the_order_of_the_reads() {
         message: "fix logout",
         ..seen
     };
-    let Rejection::Stale { changes } = rejection(check(&req, &now.snapshot())) else {
+    let Rejection::Stale { changes, .. } = rejection(check(&req, &now.snapshot())) else {
         panic!("expected stale");
     };
     assert_eq!(
@@ -183,7 +181,7 @@ fn a_read_the_actor_never_observed_is_stale_as_seen_without_a_value() {
     req.observed
         .values
         .retain(|(r, _)| *r != at("changes:staged"));
-    let Rejection::Stale { changes } = rejection(check(&req, &git.snapshot())) else {
+    let Rejection::Stale { changes, .. } = rejection(check(&req, &git.snapshot())) else {
         panic!("expected stale");
     };
     assert_eq!(
@@ -230,7 +228,7 @@ fn a_read_declared_twice_is_one_change() {
         .action("go")
         .reads("a:n")
         .reads("a:n");
-    let Rejection::Stale { changes } = rejection(check(&req, &b.finish().unwrap())) else {
+    let Rejection::Stale { changes, .. } = rejection(check(&req, &b.finish().unwrap())) else {
         panic!("expected stale");
     };
     assert_eq!(changes.len(), 1);
@@ -663,7 +661,7 @@ proptest! {
         if expected.is_empty() {
             prop_assert_eq!(verdict, Verdict::Accepted);
         } else {
-            prop_assert_eq!(verdict, Verdict::Rejected(Rejection::Stale { changes: expected }));
+            prop_assert_eq!(verdict, Verdict::Rejected(Rejection::stale(expected)));
         }
     }
 }

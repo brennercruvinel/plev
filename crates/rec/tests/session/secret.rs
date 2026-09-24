@@ -115,7 +115,7 @@ fn a_secret_is_never_recorded_in_state_or_param() -> Fallible {
         .iter()
         .find(|(at, _)| *at == password);
     assert_eq!(observed, Some(&(password.clone(), Some(Value::Int(7)))));
-    let Stage::Rejected(Rejection::Stale { changes }) = stale else {
+    let Stage::Rejected(Rejection::Stale { changes, .. }) = stale else {
         return Err("not stale".into());
     };
     assert!(!changes.is_empty());

@@ -158,7 +158,7 @@ fn the_receipts_for_commit_submit_are_right_up_to_each_instant() -> Fallible {
         .collect();
     assert_eq!(names, ["requested", "rejected"]);
     match &rejected.receipt.stages[1].0 {
-        Stage::Rejected(Rejection::Stale { changes }) => match changes.as_slice() {
+        Stage::Rejected(Rejection::Stale { changes, .. }) => match changes.as_slice() {
             [Change::StateChanged { at, removed, .. }] => {
                 assert_eq!(at.to_string(), "changes:staged");
                 assert_eq!(removed, &["B".to_owned()]);

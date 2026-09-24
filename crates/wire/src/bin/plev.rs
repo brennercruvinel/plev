@@ -50,6 +50,11 @@ file, line and column that projected it), which an agent acting by id does
 not need. --param takes a sem value
 ({\"kind\":\"text\",\"value\":\"x\"}) or a plain JSON string, bool, number or
 list of strings.
+stale: an act is refused as stale when a state it reads (the action's reads,
+as observe shows them) changed since the observation it rests on; the
+revision only names what was seen, never decides. the refusal's changes say
+what moved, and its acted says who, among the app's actors, ran something on
+that same state (a change from outside the app names nobody).
 exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
 
     /// how an invocation ended.
@@ -414,6 +419,19 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
             }
             assert_eq!(parse(&[]), Ok(Command::Help));
             assert_eq!(parse(&args("observe --help")), Ok(Command::Help));
+        }
+
+        /// the rule an agent otherwise has to deduce is in `plev act --help`.
+        #[test]
+        fn the_help_says_what_makes_an_act_stale() {
+            assert_eq!(parse(&args("act --help")), Ok(Command::Help));
+            for words in [
+                "refused as stale when a state it reads",
+                "revision only names what was seen, never decides",
+                "its acted says who",
+            ] {
+                assert!(USAGE.contains(words), "{words:?} in {USAGE}");
+            }
         }
     }
 }

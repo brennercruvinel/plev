@@ -149,7 +149,7 @@ fn show(dispatcher: &Dispatcher, id: RequestId) {
 fn describe(stage: &Stage) -> String {
     match stage {
         Stage::Confirmed { by } => format!("confirmed by {by}"),
-        Stage::Rejected(Rejection::Stale { changes }) => {
+        Stage::Rejected(Rejection::Stale { changes, .. }) => {
             let mut out = "rejected: the state it observed changed".to_owned();
             for change in changes {
                 if let Change::StateChanged {

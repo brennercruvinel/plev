@@ -136,7 +136,7 @@ fn every_reply() -> Vec<Reply> {
             base: revision("00000000000000ff"),
             revision: seen.revision(),
             changes: vec![
-                Change::NodeAdded(sid("todo.item[2]")),
+                Change::NodeAdded(Box::new(seen.get(&sid("todo.item[1]")).unwrap().clone())),
                 stale.clone(),
                 Change::FocusChanged {
                     before: None,
@@ -152,9 +152,7 @@ fn every_reply() -> Vec<Reply> {
         Reply::Stage(stage(Stage::Accepted)),
         Reply::Stage(stage(Stage::AwaitingConfirmation)),
         Reply::Stage(stage(Stage::Executing)),
-        Reply::Stage(stage(Stage::Rejected(Rejection::Stale {
-            changes: vec![stale],
-        }))),
+        Reply::Stage(stage(Stage::Rejected(Rejection::stale(vec![stale])))),
         Reply::Stage(stage(Stage::Completed(Outcome {
             result: [("item".to_owned(), Value::Set(BTreeSet::from(["x".into()])))]
                 .into_iter()

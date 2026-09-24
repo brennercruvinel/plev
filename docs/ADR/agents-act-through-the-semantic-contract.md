@@ -261,6 +261,11 @@ one toggle still 624 B; the new numbers are in
 - the redaction rule of a secret was written twice, in `rec` and in
   `wire`, and had diverged; it lives once now, in `sem::redact` (same
   ADR).
+- task-83, still protocol v1: a delta's `node_added` carries the node,
+  served as a snapshot's, a stale refusal names in `acted` who ran
+  something on the state the agent saw, and the stale rule is in `plev
+  --help` and the doc of `Act`:
+  `docs/ADR/a-delta-carries-the-node-a-refusal-names-who-acted.md`.
 - a process killed by a signal leaves its socket file behind. `plev`
   ignores a socket nobody answers on, and the next process with that pid
   replaces it; nothing else sweeps them.

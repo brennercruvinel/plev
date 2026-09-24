@@ -6,6 +6,7 @@ use crate::diff::{Change, state_change};
 use crate::error::SemErrors;
 use crate::id::SemId;
 use crate::name::ActionName;
+use crate::receipt::RequestId;
 use crate::request::{Actor, Request};
 use crate::snapshot::Snapshot;
 use crate::value::{StateRef, Value};
@@ -43,7 +44,19 @@ pub enum Rejection {
     /// action's `reads`: `before` is the observed value, `after` the
     /// current one, and `added` and `removed` name the items that came and
     /// went, as `Snapshot::diff` computes them.
-    Stale { changes: Vec<Change> },
+    ///
+    /// `acted` names who, among the app's actors, ran something on the
+    /// state the actor saw (see `Acted`). `check` and a point of truth
+    /// leave it empty (`Rejection::stale`); the dispatcher fills it for
+    /// every stale refusal it records. it is not written when empty.
+    Stale {
+        changes: Vec<Change>,
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Vec::is_empty")
+        )]
+        acted: Vec<Acted>,
+    },
     /// the target is inert (an open modal, a blocked region).
     Inert { target: SemId },
     /// the target or the action is disabled.
@@ -59,6 +72,43 @@ pub enum Rejection {
     /// (`Actor::Assistive`), with `Dispatcher::decline`; nothing ran.
     /// only the dispatcher answers this, never `check`.
     Declined { by: Actor },
+}
+
+impl Rejection {
+    /// a stale refusal with its delta and nobody named in `acted`: what
+    /// `check` builds, and what a point of truth outside the dispatcher
+    /// builds. the dispatcher names who acted when it records the refusal.
+    pub fn stale(changes: Vec<Change>) -> Rejection {
+        Rejection::Stale {
+            changes,
+            acted: Vec::new(),
+        }
+    }
+}
+
+/// an action of another actor that ran on the state the author of a
+/// refused action saw: its request, who asked, the target and the action.
+/// no parameter and no value, so nothing of the state travels here.
+///
+/// exactly: a receipt the dispatcher still holds (open, or among the
+/// finished ones it retains) whose actor is not the refused request's,
+/// whose `validated_against` is the revision the refused request observed
+/// (`Observation::revision`), and that reached execution (executing now,
+/// completed or failed; a refused one, a declined one and one awaiting
+/// confirmation never ran). it says who ran something on that same state,
+/// not that what they ran moved what the refused action reads; the delta
+/// in `changes` says what moved. a change from outside the app (a `git`
+/// in a terminal) has no receipt and is never named, and of a chain of
+/// actions by someone else only the ones checked against that exact
+/// revision are (the next one was checked against the state the first
+/// left).
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Acted {
+    pub id: RequestId,
+    pub actor: Actor,
+    pub target: SemId,
+    pub action: ActionName,
 }
 
 /// decides `req` against `now`, the current state. pure: the same request
@@ -115,7 +165,7 @@ pub fn check(req: &Request, now: &Snapshot) -> Verdict {
     }
     let changes = stale(req, decl, now);
     if !changes.is_empty() {
-        return reject(Rejection::Stale { changes });
+        return reject(Rejection::stale(changes));
     }
     if node.inert {
         return reject(Rejection::Inert {

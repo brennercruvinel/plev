@@ -64,12 +64,14 @@ struct Timing {
     draws: u64,
 }
 
-/// a stale rejection of `commit.submit`, with HEAD at that instant.
+/// a stale rejection of `commit.submit`, with HEAD at that instant and
+/// who acted on the state it rested on.
 struct StaleSeen {
     t: Millis,
     request: sem::RequestId,
     head: String,
     changes: Vec<sem::Change>,
+    acted: Vec<sem::Acted>,
 }
 
 struct Lab {
@@ -311,13 +313,14 @@ impl Lab {
                 continue;
             };
             match stage {
-                Stage::Rejected(Rejection::Stale { changes }) => {
+                Stage::Rejected(Rejection::Stale { changes, acted }) => {
                     if !self.stale.iter().any(|s| s.request == r.id) {
                         self.stale.push(StaleSeen {
                             t: *t,
                             request: r.id,
                             head: self.app.repo.head().unwrap_or_default(),
                             changes: changes.clone(),
+                            acted: acted.clone(),
                         });
                     }
                 }
@@ -492,6 +495,7 @@ impl Lab {
                 "request": s.request.to_string(),
                 "head": s.head,
                 "changes": s.changes.iter().map(|c| serde_json::to_value(c).unwrap_or(Json::Null)).collect::<Vec<_>>(),
+                "acted": story::acted_json(&s.acted),
             })).collect::<Vec<_>>(),
             "cost": { "contract": contract, "recording": recording },
             "session": {
@@ -572,6 +576,7 @@ impl Lab {
                     row("request", &s.request.to_string()),
                     row("head at that instant", &s.head),
                     row("changes", &format!("{:?}", s.changes)),
+                    row("acted on what it rested on", &story::acted_text(&s.acted)),
                 ],
             );
         }

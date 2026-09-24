@@ -94,13 +94,18 @@ impl Secrets {
     /// the stage with what it says about secret state reduced: a stale
     /// delta on a secret node keeps lengths and loses its items; the
     /// refusal reason of a parameter, the values of an outcome and the
-    /// error of a secret target are not kept.
+    /// error of a secret target are not kept. who acted, in a stale
+    /// refusal, goes as it is: request ids, actors, targets and action
+    /// names, no value.
     pub fn stage(&self, target: &SemId, stage: &Stage) -> Stage {
         let secret = self.holds(target);
         match stage {
-            Stage::Rejected(Rejection::Stale { changes }) => Stage::Rejected(Rejection::Stale {
-                changes: changes.iter().map(|c| self.change(c)).collect(),
-            }),
+            Stage::Rejected(Rejection::Stale { changes, acted }) => {
+                Stage::Rejected(Rejection::Stale {
+                    changes: changes.iter().map(|c| self.change(c)).collect(),
+                    acted: acted.clone(),
+                })
+            }
             Stage::Rejected(Rejection::InvalidParam { .. }) if secret => {
                 Stage::Rejected(Rejection::InvalidParam {
                     reason: REDACTED.to_owned(),
@@ -144,8 +149,8 @@ mod tests {
 
     use super::{REDACTED, Secrets, is_secret, length};
     use crate::{
-        Actor, Change, Constraints, Observation, Outcome, Rejection, Request, Role, Snapshot,
-        SnapshotBuilder, Stage, StateRef, Value,
+        Acted, Actor, Change, Constraints, Observation, Outcome, Rejection, Request, RequestId,
+        Role, Snapshot, SnapshotBuilder, Stage, StateRef, Value,
     };
 
     /// a login form: a clear user field, a secret password, a submit that
@@ -348,26 +353,42 @@ mod tests {
             removed: Vec::new(),
         };
         let other = Change::NodeRemoved(sid("login.password"));
+        // who acted is ids, an actor and an action name: nothing of a
+        // value, so it goes out as it is, also about a secret node.
+        let acted = vec![Acted {
+            id: RequestId::parse("4").unwrap(),
+            actor: Actor::Human,
+            target: sid("login.password"),
+            action: "set".parse().unwrap(),
+        }];
         let stale = Stage::Rejected(Rejection::Stale {
             changes: vec![secret, clear.clone(), other.clone()],
+            acted: acted.clone(),
         });
-        let out = s.stage(&sid("login.submit"), &stale);
-        let Stage::Rejected(Rejection::Stale { changes }) = out else {
-            panic!("{out:?}");
-        };
-        assert_eq!(
-            changes,
-            [
-                Change::StateChanged {
-                    at: at("login.password:text"),
-                    before: Some(Value::Int(7)),
-                    after: Some(Value::Int(2)),
-                    added: Vec::new(),
-                    removed: Vec::new(),
-                },
-                clear,
-                other,
-            ]
-        );
+        let reduced = [
+            Change::StateChanged {
+                at: at("login.password:text"),
+                before: Some(Value::Int(7)),
+                after: Some(Value::Int(2)),
+                added: Vec::new(),
+                removed: Vec::new(),
+            },
+            clear,
+            other,
+        ];
+        // the refusal of a clear target and of the secret one alike.
+        for target in ["login.submit", "login.password"] {
+            let out = s.stage(&sid(target), &stale);
+            let Stage::Rejected(Rejection::Stale {
+                changes,
+                acted: kept,
+            }) = out
+            else {
+                panic!("{out:?}");
+            };
+            assert_eq!(changes, reduced, "{target}");
+            assert_eq!(kept, acted, "{target}");
+            assert!(!format!("{changes:?}").contains("hunter"));
+        }
     }
 }

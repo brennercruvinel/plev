@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- a delta says what was born, and a refusal says who acted (2026-09-23,
+  task-83, adr a-delta-carries-the-node-a-refusal-names-who-acted): a
+  `node_added` carries the whole node, served by the agent port as a
+  snapshot serves a node, so an agent that sees a commit appear in the
+  ide's `stacks` knows what it is in one trip (427 B instead of 172 B
+  plus a second observation of 402 B); a stale refusal carries `acted`,
+  the actions of other actors that ran on the state the refused actor
+  saw, and the ide's toast says it ("you unstaged src/session.rs"); the
+  stale rule is in `plev act --help`. sessions recorded before still
+  open: the reader puts the node the event's own snapshot holds in place
+  of the bare id.
 - the ide never shows a status older than what it already did
   (2026-09-23, task-84): a refresh read before a stage, an unstage, a
   discard or an ignore used to land over it, and for a moment

@@ -8,8 +8,8 @@ use std::collections::BTreeSet;
 
 use indexmap::IndexMap;
 use sem::{
-    ActionDecl, Actor, Actors, Confirm, Constraints, Outcome, Policy, Receipt, Rejection, Request,
-    RequestId, Role, Snapshot, SnapshotBuilder, Stage, Value, Verdict, check,
+    Acted, ActionDecl, Actor, Actors, Change, Confirm, Constraints, Outcome, Policy, Receipt,
+    Rejection, Request, RequestId, Role, Snapshot, SnapshotBuilder, Stage, Value, Verdict, check,
 };
 
 fn set(items: &[&str]) -> Value {
@@ -613,4 +613,138 @@ fn a_node_with_a_source_keeps_it_through_the_wire() {
         assert_eq!(kept, node.source, "{id}");
     }
     assert_eq!(back.revision(), seen.revision());
+}
+
+/// a node that came, in a delta: the node in the lean form of a snapshot,
+/// under `node_added` (task-83). `source` is removed from the pinned text
+/// for the reason the snapshot's is.
+const NODE_ADDED: &str = r#"{
+  "node_added": {
+    "id": "commit.submit",
+    "role": "button",
+    "label": "commit",
+    "actions": [
+      {
+        "name": "submit",
+        "reads": [
+          "changes:staged",
+          "commit.message:text"
+        ]
+      }
+    ],
+    "focusable": true
+  }
+}"#;
+
+#[test]
+fn a_node_added_has_a_pinned_json_form_and_roundtrips() {
+    let mut b = SnapshotBuilder::new();
+    b.node("changes", Role::List, "changes")
+        .state("staged", set(&["A", "B", "C"]));
+    b.node("commit.message", Role::TextInput, "commit message")
+        .state("text", "fix login");
+    let before = b.finish().unwrap();
+    let after = git(&["A", "B", "C"], "fix login");
+    let delta = Snapshot::diff(&before, &after);
+    let [added @ Change::NodeAdded(node)] = &delta[..] else {
+        panic!("one node added: {delta:?}");
+    };
+    assert!(node.source.is_some(), "the node as after holds it");
+
+    let text = serde_json::to_string(added).unwrap();
+    assert!(
+        text.starts_with(r#"{"node_added":{"id":"commit.submit","#),
+        "{text}"
+    );
+    assert_eq!(&serde_json::from_str::<Change>(&text).unwrap(), added);
+
+    let mut wire = serde_json::to_value(added).unwrap();
+    let node = wire["node_added"].as_object_mut().unwrap();
+    assert!(node.remove("source").is_some_and(|s| s["line"].is_u64()));
+    let unsourced: Change = serde_json::from_value(wire).unwrap();
+    assert_eq!(
+        unsourced, *added,
+        "source is not part of the node's meaning"
+    );
+    assert_eq!(
+        serde_json::to_string_pretty(&unsourced).unwrap(),
+        NODE_ADDED
+    );
+
+    // the form before, a bare id, is not a change: without the snapshot
+    // that holds it there is no node. a session reader, which has that
+    // snapshot, converts it (crates/rec/src/persist.rs).
+    assert!(serde_json::from_str::<Change>(r#"{"node_added":"commit.submit"}"#).is_err());
+}
+
+/// the thesis refusal naming who acted: the person's unstage, request 3.
+/// ids, an actor, a target and an action name; no value.
+const STALE_ACTED: &str = r#"{
+  "stale": {
+    "changes": [
+      {
+        "state_changed": {
+          "at": "changes:staged",
+          "before": {
+            "kind": "set",
+            "value": [
+              "A",
+              "B",
+              "C"
+            ]
+          },
+          "after": {
+            "kind": "set",
+            "value": [
+              "A",
+              "C"
+            ]
+          },
+          "added": [],
+          "removed": [
+            "B"
+          ]
+        }
+      }
+    ],
+    "acted": [
+      {
+        "id": "3",
+        "actor": "human",
+        "target": "changes",
+        "action": "unstage"
+      }
+    ]
+  }
+}"#;
+
+/// `acted` is written only when someone is named, and reads back either
+/// way; a refusal written before task-83 (no `acted`) reads as one that
+/// names nobody.
+#[test]
+fn a_stale_refusal_roundtrips_with_and_without_who_acted() {
+    let Verdict::Rejected(bare) = check(&thesis_request(), &git(&["A", "C"], "fix login")) else {
+        panic!("the thesis request must be rejected");
+    };
+    let Rejection::Stale { changes, acted } = &bare else {
+        panic!("stale: {bare:?}");
+    };
+    assert!(acted.is_empty(), "check names nobody");
+    assert_eq!(bare, Rejection::stale(changes.clone()));
+    let text = serde_json::to_string(&bare).unwrap();
+    assert!(!text.contains("acted"), "{text}");
+    assert_eq!(serde_json::from_str::<Rejection>(&text).unwrap(), bare);
+
+    let named = Rejection::Stale {
+        changes: changes.clone(),
+        acted: vec![Acted {
+            id: RequestId::parse("3").unwrap(),
+            actor: Actor::Human,
+            target: "changes".parse().unwrap(),
+            action: "unstage".parse().unwrap(),
+        }],
+    };
+    let text = serde_json::to_string_pretty(&named).unwrap();
+    assert_eq!(text, STALE_ACTED);
+    assert_eq!(serde_json::from_str::<Rejection>(&text).unwrap(), named);
 }

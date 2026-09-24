@@ -3,7 +3,7 @@
 //! rested on, whether the stale check was exercised at all, and whether
 //! the agent recovered.
 
-use sem::{Actor, Millis, Receipt, Rejection, Revision, Stage};
+use sem::{Acted, Actor, Millis, Receipt, Rejection, Revision, Stage};
 use serde_json::{Value as Json, json};
 
 use crate::host::{ActSeen, Intervention, Served};
@@ -174,4 +174,31 @@ pub fn acts_json(acts: &[ActStory]) -> Json {
             })
             .collect(),
     )
+}
+
+/// who, among the app's actors, ran something on the state a stale
+/// refusal rested on (`Rejection::Stale::acted`), one entry each.
+pub fn acted_json(acted: &[Acted]) -> Json {
+    Json::Array(
+        acted
+            .iter()
+            .map(|a| {
+                json!({
+                    "request": a.id.to_string(),
+                    "actor": a.actor.to_string(),
+                    "action": a.action.to_string(),
+                    "target": a.target.to_string(),
+                })
+            })
+            .collect(),
+    )
+}
+
+/// the same in one line: `human unstage changes.file[src/session.rs]`.
+pub fn acted_text(acted: &[Acted]) -> String {
+    let each: Vec<String> = acted
+        .iter()
+        .map(|a| format!("{} {} {}", a.actor, a.action, a.target))
+        .collect();
+    each.join(", ")
 }

@@ -12,6 +12,21 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, task-83
+
+- **confirmado no laboratório:** a regra exata do `acted` (ações de
+  outros atores checadas na mesma revisão que o autor viu e que rodaram)
+  nomeia no cenário da intervenção exatamente a pessoa que tirou o
+  arquivo do index, e ninguém mais. a atribuição útil saiu barata porque
+  o dispatcher já guardava `validated_against` em cada receipt.
+- **bytes, pela primeira vez a favor:** o commit nascendo em `stacks`
+  custava ao agente 172 B de delta mais 402 B de uma segunda observação;
+  com o nó no delta, 427 B numa ida. o delta de um item novo no todo
+  subiu de 423 para 647 B, ainda 28% da observação inteira com 3 itens.
+- **limite que continua:** uma mudança de fora do app e uma digitação
+  (sem request) nunca aparecem em `acted`; a recusa diz o que mudou e
+  fica calada sobre quem.
+
 ### 2026-09-23, task-84 e auditoria de verdade
 
 fonte: `steps/checked/task-84-ide-refresh-never-goes-back-done.md`,
@@ -84,6 +99,16 @@ c"; saídas em `target/agents/exp/`.
 ## processo
 
 ### 2026-09-23
+
+- **dois workspaces num target dir:** com a perna urnaui rodando nos
+  worktrees, o workspace raiz e o do urnaui passaram a gravar no mesmo
+  `CARGO_TARGET_DIR`; o engine, com crate-type cdylib e staticlib, grava
+  `libengine.rlib` sem hash no nome, e um workspace pegava o arquivo do
+  outro ("multiple different versions of crate `sem`"). a classe:
+  artefato sem hash compartilhado entre workspaces. o gate agora dá à
+  perna urnaui um subdiretório próprio (`1bf6606`). achado pelo agente da
+  task-83, que o contornou com `cargo clean -p engine` e reportou em vez
+  de mexer no gate.
 
 - **premissa de compatibilidade errada no briefing:** o briefing da
   task-83 afirmou que nenhum arquivo gravado continha `node_added`,

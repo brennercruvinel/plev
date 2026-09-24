@@ -78,7 +78,9 @@ fn a_snapshot_is_stored_whole_as_changes_or_not_at_all() -> Fallible {
     else {
         return Err("no snapshot at 30".into());
     };
-    assert_eq!(changes, &[Change::NodeAdded(id("todo.item[mail]"))]);
+    let born = look(&todo_at("work", &["milk", "mail"]));
+    let mail = born.get(&id("todo.item[mail]")).ok_or("no mail")?;
+    assert_eq!(changes, &[Change::NodeAdded(Box::new(mail.clone()))]);
 
     let at_45 = session.state_at(45)?.ok_or("no state")?;
     let ids: Vec<&str> = at_45.nodes().iter().map(|n| n.id.as_str()).collect();
@@ -195,9 +197,11 @@ fn a_change_list_the_recorder_never_writes_reads_back_as_an_error() -> Fallible 
             changes: Vec::new(),
         },
     };
+    let born = look(&todo_at("home", &["milk", "mail"]));
+    let mail = born.get(&id("todo.item[mail]")).ok_or("no mail")?;
     let added = Event {
         t: 1,
-        kind: Kind::Changes(vec![Change::NodeAdded(id("todo.item[mail]"))]),
+        kind: Kind::Changes(vec![Change::NodeAdded(Box::new(mail.clone()))]),
     };
     let unknown = Event {
         t: 1,

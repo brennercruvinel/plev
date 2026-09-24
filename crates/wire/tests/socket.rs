@@ -176,7 +176,7 @@ fn observe_act_and_the_stale_case_over_the_socket() {
 
     let names: Vec<&str> = stale.iter().map(|s| s.stage.name()).collect();
     assert_eq!(names, ["requested", "rejected"]);
-    let Stage::Rejected(Rejection::Stale { changes }) = &stale[1].stage else {
+    let Stage::Rejected(Rejection::Stale { changes, .. }) = &stale[1].stage else {
         panic!("{:?}", stale[1].stage);
     };
     assert!(matches!(

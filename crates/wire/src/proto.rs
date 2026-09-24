@@ -55,11 +55,16 @@ pub enum Ask {
 /// revision, a whole `snapshot` otherwise. `bounds` adds where each bound
 /// node sits in the frame on screen; it is off by default, since an agent
 /// acts by id and never by position. `source` keeps each node's `source`
-/// (the file, line and column that projected it) in a `snapshot` reply;
-/// it is off by default too: an agent acts by id and the code that
-/// projected a control is not part of its meaning. it is for whoever goes
-/// from a replay or an observation back to the code (task-65), which is
-/// why the recorder always keeps it.
+/// (the file, line and column that projected it), in a `snapshot` reply
+/// and in the node a delta's `node_added` carries; it is off by default
+/// too: an agent acts by id and the code that projected a control is not
+/// part of its meaning. it is for whoever goes from a replay or an
+/// observation back to the code (task-65), which is why the recorder
+/// always keeps it.
+///
+/// a node a delta adds is served as a snapshot serves it: the same `keys`
+/// cut and the same `source` rule, so it reads as the node an observation
+/// of it would return.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Observe {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -78,6 +83,14 @@ pub struct Observe {
 /// exactly one of `observed` (the values of the action's reads, given
 /// explicitly) or `from_revision` (a revision the app served, from which
 /// the app reads those values itself).
+///
+/// the act is refused as stale when a state it reads (the action's
+/// `reads`, as an observation shows them) changed since what it rests on;
+/// the revision only names what was seen and never decides. the refusal
+/// (`rejected`, `stale`) carries `changes`, what moved, and `acted`, who
+/// among the app's actors ran something on that same state (the dispatcher
+/// knows the requests it took, so a change from outside the app, a `git`
+/// in a terminal, names nobody).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Act {
     pub target: SemId,
@@ -164,7 +177,8 @@ pub struct SnapshotReply {
 
 /// what changed in the observed part from `base` to `revision`, as
 /// `Snapshot::diff` lists it. empty when nothing the observation sees
-/// moved.
+/// moved. a `node_added` carries the whole node, served as a snapshot
+/// serves it (see `Observe`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct DeltaReply {
     pub base: Revision,

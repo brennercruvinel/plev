@@ -8,9 +8,9 @@ use std::rc::Rc;
 
 use indexmap::IndexMap;
 use sem::{
-    Actor, Change, Confirm, Constraints, Dispatcher, Execution, Operable, Outcome, ParamSpec,
-    Policy, Receipt, ReceiptSink, Rejection, Request, RequestId, Role, SemError, Semantics,
-    Snapshot, SnapshotBuilder, Stage, StateRef, Value, ValueKind, Verdict, check,
+    Acted, Actor, Change, Confirm, Constraints, Dispatcher, Execution, Operable, Outcome,
+    ParamSpec, Policy, Receipt, ReceiptSink, Rejection, Request, RequestId, Role, SemError,
+    Semantics, Snapshot, SnapshotBuilder, Stage, StateRef, Value, ValueKind, Verdict, check,
 };
 
 fn at(text: &str) -> StateRef {
@@ -283,7 +283,7 @@ fn the_agent_commit_is_rejected_stale_after_the_human_unstages_b() {
     let id = d.dispatch(&mut git, commit, 20);
     let r = receipt(&d, id);
     assert_eq!(stages(r), ["requested", "rejected"]);
-    let Some(Stage::Rejected(Rejection::Stale { changes })) = r.stage() else {
+    let Some(Stage::Rejected(Rejection::Stale { changes, .. })) = r.stage() else {
         panic!("expected stale, got {:?}", r.stage());
     };
     assert_eq!(
@@ -594,7 +594,7 @@ fn a_confirmation_checks_the_live_state_again() {
     );
     assert!(matches!(
         r.stage(),
-        Some(Stage::Rejected(Rejection::Stale { changes }))
+        Some(Stage::Rejected(Rejection::Stale { changes, .. }))
             if matches!(&changes[..], [Change::StateChanged { added, .. }] if *added == strings(&["D"]))
     ));
     assert_eq!(r.validated_against, Some(git.snapshot().revision()));
@@ -662,7 +662,7 @@ fn the_point_of_truth_rejects_a_commit_whose_index_moved() {
     );
     assert!(matches!(
         r.stage(),
-        Some(Stage::Rejected(Rejection::Stale { changes }))
+        Some(Stage::Rejected(Rejection::Stale { changes, .. }))
             if matches!(&changes[..], [Change::StateChanged { removed, .. }] if *removed == strings(&["C"]))
     ));
     assert!(git.commits.is_empty());
@@ -688,6 +688,203 @@ fn an_async_point_of_truth_rejects_through_reject_at_truth() {
         ["requested", "accepted", "executing", "rejected"]
     );
     assert!(git.commits.is_empty());
+}
+
+/// `stage` or `unstage` of `file` by `actor`, on the state now.
+fn file_act(
+    d: &mut Dispatcher,
+    git: &mut Git,
+    actor: Actor,
+    action: &str,
+    file: &str,
+) -> RequestId {
+    let seen = git.snapshot();
+    let req = Request::observe(&seen, actor, "changes", action, Some(file.into())).unwrap();
+    d.dispatch(git, req, 5)
+}
+
+/// the one entry `acted` holds for request `id`.
+fn acted(id: RequestId, actor: Actor, target: &str, action: &str) -> Acted {
+    Acted {
+        id,
+        actor,
+        target: target.parse().unwrap(),
+        action: action.parse().unwrap(),
+    }
+}
+
+fn acted_of(r: &Receipt) -> &[Acted] {
+    match r.stage() {
+        Some(Stage::Rejected(Rejection::Stale { acted, .. })) => acted,
+        other => panic!("a stale refusal, got {other:?}"),
+    }
+}
+
+/// the thesis again, with the room full: the person takes B out of the
+/// state the agent saw, and the agent's commit, refused stale, names the
+/// person's unstage. who only observed, who was refused, who waits for a
+/// confirmation and the agent itself ran nothing on that state, or are
+/// the author, and are not named; the person's next unstage was checked
+/// against the state the first one left, so it is not named either.
+#[test]
+fn a_stale_refusal_names_who_ran_something_on_the_state_the_agent_saw() {
+    let mut git = Git::new(&["A", "B", "C"], "fix login");
+    let mut d = Dispatcher::new();
+    let seen = git.snapshot();
+    let commit = Request::observe(&seen, agent(), "commit.submit", "submit", None).unwrap();
+    // another agent observes the same state and asks nothing.
+    let watcher = Actor::Agent {
+        name: "watcher".into(),
+    };
+    let _looked = Request::observe(&seen, watcher, "commit.submit", "submit", None).unwrap();
+
+    let long = "x".repeat(73);
+    let refused =
+        Request::observe(&seen, tester(), "commit.message", "set", Some(long.into())).unwrap();
+    let refused = d.dispatch(&mut git, refused, 1);
+    assert_eq!(stages(receipt(&d, refused)), ["requested", "rejected"]);
+    let cleaner = Actor::Agent {
+        name: "cleaner".into(),
+    };
+    let discard = Request::observe(&seen, cleaner.clone(), "changes", "discard", None).unwrap();
+    let waiting = d.dispatch(&mut git, discard, 2);
+    assert_eq!(
+        stages(receipt(&d, waiting)),
+        ["requested", "awaiting_confirmation"]
+    );
+    // the agent's own act runs on that state and leaves it as it was.
+    let own = file_act(&mut d, &mut git, agent(), "stage", "A");
+    assert!(matches!(
+        receipt(&d, own).stage(),
+        Some(Stage::Completed(_))
+    ));
+    assert_eq!(git.snapshot().revision(), seen.revision());
+
+    let person = file_act(&mut d, &mut git, Actor::Human, "unstage", "B");
+    assert_eq!(receipt(&d, person).validated_against, Some(seen.revision()));
+    let chained = file_act(&mut d, &mut git, Actor::Human, "unstage", "C");
+    assert_ne!(
+        receipt(&d, chained).validated_against,
+        Some(seen.revision())
+    );
+
+    let id = d.dispatch(&mut git, commit, 6);
+    let r = receipt(&d, id);
+    assert_eq!(stages(r), ["requested", "rejected"]);
+    assert_eq!(
+        acted_of(r),
+        [acted(person, Actor::Human, "changes", "unstage")]
+    );
+    let Some(Stage::Rejected(Rejection::Stale { changes, .. })) = r.stage() else {
+        unreachable!();
+    };
+    assert!(matches!(
+        &changes[..],
+        [Change::StateChanged { removed, .. }] if *removed == strings(&["B", "C"])
+    ));
+
+    // the discard that waited is refused stale at its confirmation, and
+    // names the same unstage: the agent's own stage is someone else's
+    // for the cleaner, and ran on what the cleaner saw.
+    d.confirm(&mut git, waiting, Actor::Human, 7).unwrap();
+    let r = receipt(&d, waiting);
+    assert_eq!(
+        stages(r),
+        ["requested", "awaiting_confirmation", "rejected"]
+    );
+    assert_eq!(
+        acted_of(r),
+        [
+            acted(own, agent(), "changes", "stage"),
+            acted(person, Actor::Human, "changes", "unstage"),
+        ]
+    );
+    assert!(acted_of(r).iter().all(|a| a.actor != cleaner));
+}
+
+/// the same at the point of truth: the refusal that comes back through
+/// `reject_at_truth` names who ran on the state the request observed,
+/// an execution still running and one that failed among them; one the
+/// point of truth refused ran nothing.
+#[test]
+fn a_refusal_at_the_point_of_truth_names_who_acted_too() {
+    let mut git = Git::new(&["A", "B"], "fix login");
+    git.background = true;
+    let mut d = Dispatcher::new();
+    let seen = git.snapshot();
+    let commit = Request::observe(&seen, agent(), "commit.submit", "submit", None).unwrap();
+    let late = Request::observe(&seen, agent(), "commit.submit", "submit", None).unwrap();
+    let theirs = Request::observe(&seen, Actor::Human, "commit.submit", "submit", None).unwrap();
+    let other = Actor::Agent {
+        name: "other".into(),
+    };
+    let stale_other = Request::observe(&seen, other, "commit.submit", "submit", None).unwrap();
+
+    let ours = d.dispatch(&mut git, commit, 1);
+    let running = d.dispatch(&mut git, theirs, 2);
+    assert_eq!(
+        stages(receipt(&d, running)),
+        ["requested", "accepted", "executing"]
+    );
+    let person = file_act(&mut d, &mut git, Actor::Human, "unstage", "B");
+
+    // the agent's commit reaches the index, which lost B.
+    let answer = git.work();
+    assert_eq!(answer.0, ours);
+    settle(&mut d, answer, 3).unwrap();
+    let r = receipt(&d, ours);
+    assert_eq!(
+        stages(r),
+        ["requested", "accepted", "executing", "rejected"]
+    );
+    assert_eq!(
+        acted_of(r),
+        [
+            acted(running, Actor::Human, "commit.submit", "submit"),
+            acted(person, Actor::Human, "changes", "unstage"),
+        ]
+    );
+
+    // the person's commit fails on the worker; it still ran.
+    git.worker_error = Some("index.lock exists".into());
+    let answer = git.work();
+    assert_eq!(answer.0, running);
+    settle(&mut d, answer, 4).unwrap();
+    let id = d.dispatch(&mut git, stale_other, 5);
+    assert_eq!(
+        acted_of(receipt(&d, id)),
+        [
+            acted(running, Actor::Human, "commit.submit", "submit"),
+            acted(person, Actor::Human, "changes", "unstage"),
+        ],
+        "the agent's commit, refused at the point of truth, ran nothing"
+    );
+    // and the author's own refused commit is never named for it.
+    let id = d.dispatch(&mut git, late, 6);
+    assert!(acted_of(receipt(&d, id)).iter().all(|a| a.id != ours));
+}
+
+/// who acted is read from the receipts the dispatcher still holds: past
+/// the retention a finished one is gone and is not named. the refusal is
+/// read from a sink, since with no retention its own receipt goes too.
+#[test]
+fn who_acted_is_read_from_the_receipts_the_dispatcher_holds() {
+    for (retention, named) in [(0, 0), (1, 1)] {
+        let mut git = Git::new(&["A", "B"], "fix login");
+        let mut d = Dispatcher::with_retention(retention);
+        let log = Log::default();
+        d.add_sink(Box::new(log.clone()));
+        let seen = git.snapshot();
+        let commit = Request::observe(&seen, agent(), "commit.submit", "submit", None).unwrap();
+        file_act(&mut d, &mut git, Actor::Human, "unstage", "B");
+        let id = d.dispatch(&mut git, commit, 6);
+        let last = log.0.borrow().last().cloned();
+        let Some((at, Stage::Rejected(Rejection::Stale { acted, .. }), ..)) = last else {
+            panic!("a stale refusal last, got {last:?}");
+        };
+        assert_eq!(at, id);
+        assert_eq!(acted.len(), named, "retention {retention}");
+    }
 }
 
 #[test]

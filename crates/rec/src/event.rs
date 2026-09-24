@@ -39,7 +39,8 @@ pub enum Kind {
     /// the diff from the state recorded before, applied in place. it
     /// never holds a node added, a parent changed or a reorder: a
     /// projection with any of those is stored whole, because a `Change`
-    /// does not carry the new node or the new order.
+    /// does not say where a node goes among its siblings, nor the new
+    /// order (a `node_added` carries the node, not its place).
     Changes(Vec<Change>),
     /// one stage of a receipt. `origin` names the dispatcher the stage
     /// came from (one per `Recorder::sink`), `id` the request in it. every

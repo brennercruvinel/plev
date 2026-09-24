@@ -580,7 +580,7 @@ mod agent {
             );
 
             assert_eq!(names(&stale), ["requested", "rejected"]);
-            let Stage::Rejected(Rejection::Stale { changes }) = &stale[1] else {
+            let Stage::Rejected(Rejection::Stale { changes, .. }) = &stale[1] else {
                 panic!("stale: {stale:?}");
             };
             assert_eq!(
@@ -725,6 +725,45 @@ mod agent {
                         bytes(scoped),
                         bytes(keyed),
                         best.as_micros()
+                    ));
+                }
+                lines
+            });
+            for line in lines {
+                println!("{line}");
+            }
+        }
+
+        /// The line of the delta a new row makes (a person adds one item
+        /// through the page), beside the whole observation after it, with
+        /// 3 and with 103 items before the one added. Bytes only, so a
+        /// debug build measures them. Run by hand:
+        /// `cargo test -p showcase agent_port_new_row -- --ignored --nocapture`.
+        #[test]
+        #[ignore = "a measurement, not a check"]
+        fn agent_port_new_row() {
+            let dir = Dir::new("row");
+            let (lines, _) = gallery(&dir.0, |path, pokes| {
+                let mut c = agent(&path);
+                let mut lines = Vec::new();
+                // the page opens with 3 items; the first round leaves 4.
+                for (extra, items) in [(0, 3), (99, 103)] {
+                    poke(&pokes, Poke::AddItems(extra));
+                    let r = snapshot(c.observe(Observe::default()).unwrap()).revision;
+                    poke(&pokes, Poke::AddItems(1));
+                    let since = Observe {
+                        since: Some(r),
+                        ..Observe::default()
+                    };
+                    let delta = c.observe(since).unwrap();
+                    let whole = bytes(c.observe(Observe::default()).unwrap());
+                    let line = encode_server(&ServerMsg {
+                        id: Some("1".into()),
+                        reply: delta,
+                    });
+                    lines.push(format!(
+                        "{items} items, one added: delta {} B, whole after it {whole} B\n{line}",
+                        line.len()
                     ));
                 }
                 lines

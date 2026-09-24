@@ -22,7 +22,7 @@ fn tester() -> Actor {
 /// The one change of a stale rejection.
 fn stale(receipt: Receipt) -> Change {
     match receipt.stage() {
-        Some(Stage::Rejected(Rejection::Stale { changes })) if changes.len() == 1 => {
+        Some(Stage::Rejected(Rejection::Stale { changes, .. })) if changes.len() == 1 => {
             changes[0].clone()
         }
         other => panic!("expected one stale change, got {other:?}"),
@@ -127,10 +127,11 @@ fn a_person_unstaging_b_makes_the_agent_commit_stale() {
     assert!(added.is_empty());
     assert_eq!(before.as_ref(), Some(&set(&["A", "B", "C"])));
     assert_eq!(after.as_ref(), Some(&set(&["A", "C"])));
-    // The person sees why.
+    // The person sees why, and who moved it: their own unstage, still
+    // executing on the worker, ran on the state the agent saw.
     assert_eq!(
         rig.notices(),
-        ["Refused test-agent's submit: B left the staged files"]
+        ["Refused test-agent's submit: B left the staged files (you unstaged B)"]
     );
 
     rig.settle(unstage);

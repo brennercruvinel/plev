@@ -3,6 +3,12 @@
 //! is strict: the header, every section, every event line, every chunk
 //! (through `monster::decode`) and every asset reference is checked, and
 //! anything the writer would not have written is a typed `FileError`.
+//!
+//! one form the writer no longer writes still reads: a snapshot event
+//! from before task-83 names each node its step added by id only
+//! (`{"node_added": "<id>"}`). that node is the one the event's own
+//! snapshot holds under the id, so the reader puts it in place and loses
+//! nothing (see `read_event`).
 
 use std::ffi::OsString;
 use std::fs;
@@ -11,6 +17,7 @@ use std::path::{Path, PathBuf};
 use engine::gpu::image::MAX_IMAGE_ATLAS_SIZE;
 use monster::{LoweredAsset, NodeKind};
 use sem::Millis;
+use serde_json::Value as Json;
 
 use crate::error::FileError;
 use crate::event::{Event, Kind};
@@ -179,16 +186,71 @@ fn read_events(payload: &[u8]) -> Result<Vec<Event>, FileError> {
     };
     for (at, line) in body.split(|b| *b == b'\n').enumerate() {
         let line_no = at + 1;
-        let event: Event = serde_json::from_slice(line).map_err(|e| FileError::Event {
-            line: line_no,
-            message: e.to_string(),
-        })?;
+        let event = read_event(line, line_no)?;
         if out.last().is_some_and(|last| event.t < last.t) {
             return Err(FileError::EventOrder { line: line_no });
         }
         out.push(event);
     }
     Ok(out)
+}
+
+/// one line of the S section. a line that does not read as an `Event` gets
+/// one more try, for the form before task-83: in a snapshot event, each
+/// `node_added` that is a bare id becomes the node the event's snapshot
+/// holds under that id, exactly as it was recorded (the node a step adds
+/// is in the snapshot that step recorded). an id the snapshot does not
+/// hold is a typed error; no node is ever made up. any other line keeps
+/// the error it had.
+fn read_event(line: &[u8], line_no: usize) -> Result<Event, FileError> {
+    let bad = |message: String| FileError::Event {
+        line: line_no,
+        message,
+    };
+    let refused = match serde_json::from_slice::<Event>(line) {
+        Ok(event) => return Ok(event),
+        Err(e) => e,
+    };
+    let Ok(mut json) = serde_json::from_slice::<Json>(line) else {
+        return Err(bad(refused.to_string()));
+    };
+    match nodes_added_by_id(&mut json) {
+        Ok(0) => Err(bad(refused.to_string())),
+        Ok(_) => serde_json::from_value(json).map_err(|e| bad(e.to_string())),
+        Err(id) => Err(bad(format!(
+            "node_added names {id}, which the snapshot of its event does not hold"
+        ))),
+    }
+}
+
+/// puts in place, in a snapshot event's `changes`, the node its snapshot
+/// holds for each `node_added` written as a bare id; how many it put.
+/// `Err` with the first id the snapshot does not hold.
+fn nodes_added_by_id(json: &mut Json) -> Result<usize, String> {
+    let Some(event) = json.pointer_mut("/kind/snapshot") else {
+        return Ok(0);
+    };
+    let Some(mut changes) = event.get_mut("changes").map(Json::take) else {
+        return Ok(0);
+    };
+    let nodes = event
+        .pointer("/snapshot/nodes")
+        .and_then(Json::as_array)
+        .map_or(&[][..], Vec::as_slice);
+    let mut put = 0;
+    for change in changes.as_array_mut().into_iter().flatten() {
+        let Some(Json::String(id)) = change.get("node_added") else {
+            continue;
+        };
+        let node = nodes
+            .iter()
+            .find(|n| n.get("id").and_then(Json::as_str) == Some(id.as_str()))
+            .ok_or_else(|| id.clone())?;
+        change["node_added"] = node.clone();
+        put += 1;
+    }
+    event["changes"] = changes;
+    Ok(put)
 }
 
 fn read_assets(payload: &[u8]) -> Result<Vec<Asset>, FileError> {

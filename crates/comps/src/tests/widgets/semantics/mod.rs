@@ -71,7 +71,7 @@ fn reads(s: &Snapshot, who: &SemId, action: &str) -> Vec<String> {
 /// to `after`.
 #[track_caller]
 fn assert_stale(req: &Request, now: &Snapshot, before: Value, after: Value) {
-    let Verdict::Rejected(Rejection::Stale { changes }) = check(req, now) else {
+    let Verdict::Rejected(Rejection::Stale { changes, .. }) = check(req, now) else {
         panic!("expected stale, got {:?}", check(req, now));
     };
     match &changes[..] {
@@ -154,7 +154,7 @@ fn checkbox_toggle_goes_stale_when_the_widget_state_moves() {
     let now = snap(|b| {
         cb.project(b, &agree, "agree", None);
     });
-    let Verdict::Rejected(Rejection::Stale { changes }) = check(&req, &now) else {
+    let Verdict::Rejected(Rejection::Stale { changes, .. }) = check(&req, &now) else {
         panic!("expected stale");
     };
     assert!(matches!(

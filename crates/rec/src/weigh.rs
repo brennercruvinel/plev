@@ -9,8 +9,8 @@
 use std::mem::size_of;
 
 use sem::{
-    ActionDecl, Actor, Change, Constraints, Node, Outcome, Rejection, Request, SemErrors, SemId,
-    Snapshot, Stage, StateRef, Value,
+    Acted, ActionDecl, Actor, Change, Constraints, Node, Outcome, Rejection, Request, SemErrors,
+    SemId, Snapshot, Stage, StateRef, Value,
 };
 
 use crate::event::{Event, Kind};
@@ -142,10 +142,14 @@ fn rejection(r: &Rejection) -> usize {
             id(target) + action.as_str().len()
         }
         Rejection::NotAuthorized { actor: a } | Rejection::Declined { by: a } => actor(a),
-        Rejection::Stale { changes } => list(changes, change),
+        Rejection::Stale { changes, acted } => list(changes, change) + list(acted, self::acted),
         Rejection::InvalidParam { reason } => reason.len(),
         Rejection::InvalidProjection { errors } => errors_weight(errors),
     }
+}
+
+fn acted(a: &Acted) -> usize {
+    size_of::<Acted>() + actor(&a.actor) + id(&a.target) + a.action.as_str().len()
 }
 
 fn errors_weight(errors: &SemErrors) -> usize {
@@ -159,7 +163,8 @@ fn errors_weight(errors: &SemErrors) -> usize {
 pub(crate) fn change(c: &Change) -> usize {
     size_of::<Change>()
         + match c {
-            Change::NodeAdded(n) | Change::NodeRemoved(n) => id(n),
+            Change::NodeAdded(n) => node(n),
+            Change::NodeRemoved(n) => id(n),
             Change::StateChanged {
                 at: a,
                 before,
