@@ -14,10 +14,11 @@
 //! verifies. Desktop only, like the headless staging it uses.
 //!
 //! The Silences page (task-69 phase 4a) has its golden the same way,
-//! `crates/uir/fixtures/showcase-silences.snapshot.json`: the page as it
-//! opens, seeded with the probe's detection (no ffmpeg runs), so the
-//! registry the generated surface of phase 4b verifies against is the
-//! page's own projection.
+//! `crates/uir/fixtures/showcase-silences.snapshot.json`, kept by a test
+//! of the page itself (`view::apps::silences::tests::the_app_projection_is_the_uir_golden`):
+//! since phase 4b the page's semantics carry the proposing row too, and
+//! the golden is the app alone (the fixed screen as it opens, seeded, no
+//! ffmpeg run), the registry the generated surface verifies against.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
 use std::path::PathBuf;
@@ -27,7 +28,6 @@ use sem::Snapshot;
 use showcase::app::{semantics_json, stage_page};
 
 const FIXTURE: &str = "../uir/fixtures/showcase-todo.snapshot.json";
-const SILENCES: &str = "../uir/fixtures/showcase-silences.snapshot.json";
 
 #[test]
 fn the_todo_projection_is_the_uir_fixture() {
@@ -38,18 +38,6 @@ fn the_todo_projection_is_the_uir_fixture() {
     let mut text = semantics_json(&snap, false).expect("json prints");
     text.push('\n');
     golden(FIXTURE, &text);
-}
-
-#[test]
-fn the_silences_projection_is_the_uir_fixture() {
-    let page = stage_page(Viewport::new(1200.0, 800.0, 1.0), "Silences", "core", None)
-        .expect("the silences page stages");
-    assert!(page.settled(), "at rest the page asks for nothing");
-    let snap = page.semantics().expect("the silences page projects");
-    print!("{}", capabilities(&snap));
-    let mut text = semantics_json(&snap, false).expect("json prints");
-    text.push('\n');
-    golden(SILENCES, &text);
 }
 
 /// What the probe of task-68 reads: every state with its kind and every

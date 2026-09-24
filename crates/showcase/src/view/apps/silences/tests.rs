@@ -3,11 +3,14 @@
 //! gallery's dispatcher, `detect_silence` started and completed in the
 //! wake with the fake worker (the probe's stderr, no ffmpeg), a preview
 //! decoding a frame, the stale case, the inert background, the sliders,
-//! two viewports, and the chrome's routes. The agent through the real
-//! port is `agent.rs`; the real ffmpeg is `ffmpeg.rs`, ignored.
+//! two viewports, the chrome's routes, and the golden of the app's
+//! projection. The agent through the real port is `agent.rs`; the real
+//! ffmpeg is `ffmpeg.rs`, ignored; the generated surface beside the fixed
+//! screen (phase 4b) is `generated.rs`.
 
 mod agent;
 mod ffmpeg;
+mod generated;
 
 use comps::prelude::{Rect, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode};
@@ -542,9 +545,11 @@ fn preview_segment_shows_the_cut_and_decodes_its_frame() {
         value(&page, "silences.video:shown"),
         Some(Value::Num(4.017052))
     );
-    // a click on a mark of the band previews too
+    // a click on a mark of the band previews too (the band is in the
+    // fixed screen's rect, under the proposing row)
+    let fixed = page.halves(content, &theme).fixed;
     let mark = super::layout::mark_rect(
-        super::layout::compute(&page, content, &theme).timeline,
+        super::layout::compute(&page, fixed, &theme).timeline,
         page.model.cuts()[1].segment(),
         12.0,
     );
@@ -781,7 +786,13 @@ fn wide_and_narrow_viewports_lay_the_cards_out_and_bind_the_same_ids() {
     let (_, mut page, theme) = setup(false);
     let mut ids = Vec::new();
     for content in [wide(), narrow()] {
-        let l = super::layout::compute(&page, content, &theme);
+        // the fixed screen sits under the proposing row, at the whole
+        // width while no surface is open
+        let h = page.halves(content, &theme);
+        assert!(h.surface.is_none());
+        assert_eq!((h.fixed.x, h.fixed.w), (content.x, content.w));
+        assert!(h.fixed.y >= h.row.band.bottom());
+        let l = super::layout::compute(&page, h.fixed, &theme);
         let wide = content.w >= theme.size.card_min_w * 2.0 + theme.spacing.xl;
         if wide {
             assert_eq!(l.side_card.y, l.video_card.y, "side by side");
@@ -809,7 +820,10 @@ fn wide_and_narrow_viewports_lay_the_cards_out_and_bind_the_same_ids() {
             );
         }
         assert!(l.apply_all.right() <= l.cuts_card.right());
-        assert_eq!(page.content_height(content, &theme), l.height);
+        assert_eq!(
+            page.content_height(content, &theme),
+            h.fixed.y - content.y + l.height
+        );
         assert_eq!(l.region.h, l.height);
         let c = frame(&mut page, content, &theme);
         let mut bound: Vec<String> = c.bindings().map(|(id, _)| id.to_string()).collect();
@@ -828,9 +842,52 @@ fn wide_and_narrow_viewports_lay_the_cards_out_and_bind_the_same_ids() {
         "silences.counts",
         "silences.apply_all",
         "silences.status",
+        "silences_surface",
+        "silences_surface.intent",
+        "silences_surface.propose",
+        "silences_surface.close",
     ] {
         assert!(ids[0].contains(&id.to_owned()), "{id} in {:?}", ids[0]);
     }
+}
+
+/// The app's projection (the fixed screen alone, without the proposing
+/// row) is the golden of `crates/uir/fixtures`, the registry a generated
+/// surface verifies against and the proposers read: the page as it
+/// opens, seeded, no ffmpeg run, settled as the headless staging settles
+/// it. `UIR_BLESS=1` writes it again.
+#[test]
+fn the_app_projection_is_the_uir_golden() {
+    let mut view = crate::view::ShowcaseView::new(1200.0, 800.0);
+    view.jump_to_page("silences");
+    let mut c = Compositor::new();
+    view.render(&mut c);
+    let mut steps = 0;
+    while view.tick(TURN) {
+        view.render(&mut c);
+        steps += 1;
+        assert!(steps < 120, "at rest the page asks for nothing");
+    }
+    let snap = view.panes.silences.snapshot().expect("the app projects");
+    assert!(
+        snap.get(&sid("silences_surface.intent")).is_none(),
+        "the row is the page's, not the app's"
+    );
+    let mut text = crate::app::semantics_json(&snap, false).expect("json prints");
+    text.push('\n');
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../uir/fixtures/showcase-silences.snapshot.json");
+    if std::env::var_os("UIR_BLESS").is_some() {
+        std::fs::write(&path, text).expect("the golden writes");
+        return;
+    }
+    let kept = std::fs::read_to_string(&path).unwrap_or_default();
+    assert!(
+        kept == text,
+        "the projection moved away from the golden; regenerate it with \
+         UIR_BLESS=1 cargo test -p showcase --lib silences::tests::the_app_projection, \
+         then run cargo test -p uir -p propose -p surface"
+    );
 }
 
 /// The chrome's routes: the gallery on the Silences page projects it,

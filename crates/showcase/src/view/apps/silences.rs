@@ -1,9 +1,10 @@
 //! Apps Demo, Silences: the app of the video editor scenario (task-69
 //! phase 4a, the thesis' section 4), the fixed screen the checkpoint b
-//! compares the generated one against. A person, an agent through the
-//! port and a screen reader review the silences ffmpeg finds in a test
-//! video: detect them at a threshold and a minimum length, see a frame of
-//! each, apply or reject each cut, apply them all.
+//! compares the generated one against, and, since phase 4b, the generated
+//! one beside it. A person, an agent through the port and a screen reader
+//! review the silences ffmpeg finds in a test video: detect them at a
+//! threshold and a minimum length, see a frame of each, apply or reject
+//! each cut, apply them all.
 //!
 //! The page is a capability (`semantics.rs`): it projects what it means,
 //! runs what it offers in `execute`, and every actor goes through the
@@ -15,18 +16,30 @@
 //!
 //! ffmpeg runs off the app's thread (`worker.rs`), one child at a time,
 //! and only after an actor asks: `detect_silence` (the test video is
-//! generated first when it is missing) or `preview_segment`. The page
-//! opens seeded with the recorded detection of the probe, so at rest it is
-//! the same on every machine; a real detection replaces the seed, and the
-//! frames of the instant shown and of every cut follow. Off the desktop
-//! the seed is there and every job says it needs the desktop.
+//! generated first when it is missing), `preview_segment`, or a generated
+//! surface showing a frame the page does not have (`jobs.rs`). The page
+//! opens seeded with the recorded detection of the probe, so at rest it
+//! is the same on every machine; a real detection replaces the seed, and
+//! the frames of the instant shown and of every cut follow. Off the
+//! desktop the seed is there and every job says it needs the desktop.
+//!
+//! Over the fixed screen sits the proposing row of the Surface page
+//! (`generated.rs`): an intent, a proposer (the rules, or the Claude off
+//! the app's thread), propose, cancel, close. A proposal opens a surface
+//! materialized from verified IR over this app's registry, beside the
+//! fixed screen, on the same dispatcher: a cut applied on either shows
+//! on both. The surface's images draw the frames the page holds
+//! (`surface::Frames`); the page decodes what they lack from its wake.
 //!
 //! Wiring contract for the chrome (view/dispatch.rs, view/input.rs): every
 //! entry takes the todo page (the dispatcher's owner) and the inert flag,
-//! `wake` settles the worker's answers, Tab and the arrows reach the
-//! sliders through `handle_edit_key`, Escape through `handle_escape`.
+//! `wake` settles the worker's answers and the Claude's, typing reaches
+//! the intent field and the surface's fields through `handle_text`, Tab
+//! and the arrows reach the sliders through `handle_edit_key`, Enter
+//! proposes through `handle_enter`, Escape through `handle_escape`.
 
 mod draw;
+mod generated;
 mod jobs;
 mod layout;
 mod semantics;
@@ -40,11 +53,13 @@ use std::time::Duration;
 use comps::prelude::{Button, ButtonSize, EventResult, Rect, Slider, Wake, WidgetEvent};
 use engine::gpu::image::ImageHandle;
 use engine::theme::Theme;
-use sem::RequestId;
+use sem::{Receipt, Request, RequestId, Snapshot};
 use showcase::model::silences::{Decision, Settings, SilencesModel};
+use surface::{Dispatch, SurfaceHost};
 
 use super::app::TodoPage;
 use super::{EditKey, panel};
+use generated::{Generated, Halves, page::Page};
 use layout::{compute, row_parts};
 use semantics::{Ids, Target, Which};
 use worker::{POLL, Worker};
@@ -96,10 +111,30 @@ pub struct SilencesPage {
     /// is never asked again in a loop.
     frames: HashMap<u64, Result<ImageHandle, String>>,
     said: Said,
+    /// The generated surface: the proposing row, the close, the host.
+    generated: Generated,
     /// What each frame took the worker, in the order they came (the
     /// measurement of the ignored test).
     #[cfg(test)]
     frame_took: Vec<Duration>,
+}
+
+/// The app as its generated surface reaches it: the fixed screen's
+/// projection and the gallery's dispatcher.
+struct App<'a> {
+    page: &'a mut SilencesPage,
+    todo: &'a mut TodoPage,
+}
+
+impl Dispatch for App<'_> {
+    fn dispatch(&mut self, req: Request) -> Option<Receipt> {
+        let id = self.page.dispatch(req, self.todo);
+        self.todo.receipt(id).cloned()
+    }
+
+    fn project(&self) -> Option<Snapshot> {
+        self.page.snapshot().ok()
+    }
 }
 
 impl SilencesPage {
@@ -148,21 +183,53 @@ impl SilencesPage {
             previews: Vec::new(),
             frames: HashMap::new(),
             said: Said::Seed,
+            generated: Generated::new(),
             #[cfg(test)]
             frame_took: Vec::new(),
         }
     }
 
     /// The view says whether an overlay holds the pointer. While it does,
-    /// `silences` is projected inert, so any request comes back `Inert`,
-    /// and keys fall through to the chrome.
+    /// the page and its surface are projected inert, so any request comes
+    /// back `Inert`, and keys fall through to the chrome.
     pub fn set_inert(&mut self, inert: bool) {
         self.inert = inert;
+        self.generated.set_inert(inert);
     }
 
-    /// Natural height: the three cards, one under the other.
+    /// Where the row, the fixed screen and the surface go in `content`.
+    fn halves(&self, content: Rect, theme: &Theme) -> Halves {
+        self.generated
+            .halves(content, theme, |fixed| compute(self, fixed, theme).height)
+    }
+
+    /// Natural height: the row, then the fixed screen alone, or the
+    /// taller of the fixed screen and the surface beside it, or both
+    /// stacked.
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
-        compute(self, content, theme).height
+        let h = self.halves(content, theme);
+        let fixed = h.fixed.y - content.y + compute(self, h.fixed, theme).height;
+        let surface = h.surface.map_or(0.0, |r| {
+            r.y - content.y + self.generated.surface_h(r.w, theme)
+        });
+        fixed.max(surface)
+    }
+
+    /// Lends the host to `f` with the page, so a surface can reach the
+    /// page's dispatcher and projection while the page holds the host
+    /// (the todo page lends its dispatcher the same way).
+    fn with_host<R>(&mut self, f: impl FnOnce(&mut SurfaceHost, &mut SilencesPage) -> R) -> R {
+        let mut host = std::mem::take(&mut self.generated.host);
+        let out = f(&mut host, self);
+        self.generated.host = host;
+        out
+    }
+
+    /// The surface reads the app's state again when it moved.
+    fn sync_surface(&mut self) {
+        if let Ok(now) = self.snapshot() {
+            self.generated.host.sync(&now);
+        }
     }
 
     /// Mirror the cuts into the retained rows: a row per cut, the buttons
@@ -197,7 +264,42 @@ impl SilencesPage {
         todo: &mut TodoPage,
         inert: bool,
     ) -> EventResult {
-        self.inert = inert;
+        self.set_inert(inert);
+        let h = self.halves(content, theme);
+        let (mut r, row) = self.generated.handle_event(event, &h, theme);
+        if row.asked.propose {
+            self.propose(todo);
+        }
+        if row.asked.cancel {
+            self.cancel(todo);
+        }
+        if row.close {
+            self.close(todo);
+        }
+        if row.asked.taken {
+            return r;
+        }
+        r = r.merge(self.handle_fixed_event(event, h.fixed, theme, todo));
+        if h.surface.is_some() {
+            let surface = self.with_host(|host, page| {
+                let mut app = App { page, todo };
+                host.iter_mut().fold(EventResult::IGNORED, |r, s| {
+                    r.merge(s.handle_event(event, theme, &mut app))
+                })
+            });
+            r = r.merge(surface);
+        }
+        r
+    }
+
+    /// The fixed screen's share of a pointer event, in its rect.
+    fn handle_fixed_event(
+        &mut self,
+        event: &WidgetEvent,
+        content: Rect,
+        theme: &Theme,
+        todo: &mut TodoPage,
+    ) -> EventResult {
         self.sync_rows();
         let l = compute(self, content, theme);
         let mut r = EventResult::IGNORED;
@@ -283,11 +385,41 @@ impl SilencesPage {
         r
     }
 
-    /// Tab moves the keyboard focus over the two sliders; the arrows nudge
-    /// the focused one by a step, as a request (`increment`, `decrement`).
+    /// A printable key: the intent field or a field of the surface when
+    /// it has the keyboard; the fixed screen types nothing.
+    pub fn handle_text(&mut self, key: &str, todo: &mut TodoPage) -> bool {
+        if self.inert {
+            return false;
+        }
+        if self.generated.proposing.intent.insert(key) {
+            return true;
+        }
+        self.with_host(|host, page| {
+            let mut app = App { page, todo };
+            host.iter_mut().any(|s| s.handle_text(key, &mut app))
+        })
+    }
+
+    /// Editing keys: the intent field or a field of the surface when it
+    /// has the keyboard; else Tab moves the keyboard focus over the two
+    /// sliders and the arrows nudge the focused one by a step, as a
+    /// request (`increment`, `decrement`).
     pub fn handle_edit_key(&mut self, key: EditKey, todo: &mut TodoPage) -> bool {
         if self.inert {
             return false;
+        }
+        if key != EditKey::Tab {
+            if self.generated.proposing.intent.edit(key.into()) {
+                return true;
+            }
+            let typed = self.with_host(|host, page| {
+                let mut app = App { page, todo };
+                host.iter_mut()
+                    .any(|s| s.handle_edit_key(key.into(), &mut app))
+            });
+            if typed {
+                return true;
+            }
         }
         match key {
             EditKey::Tab => {
@@ -319,24 +451,72 @@ impl SilencesPage {
         }
     }
 
-    /// Escape takes the focus off the sliders; `false` when none had it.
+    /// Enter: in the intent field, the person proposes; in a field of
+    /// the surface, what that field submits.
+    pub fn handle_enter(&mut self, todo: &mut TodoPage, inert: bool) -> bool {
+        self.set_inert(inert);
+        if inert {
+            return false;
+        }
+        if self.generated.proposing.intent.is_focused() {
+            self.propose(todo);
+            return true;
+        }
+        self.with_host(|host, page| {
+            let mut app = App { page, todo };
+            host.iter_mut().any(|s| s.handle_enter(&mut app))
+        })
+    }
+
+    /// Escape closes the proposer's panel, blurs the intent field, a
+    /// field of the surface, or takes the focus off the sliders; `false`
+    /// when nothing had it.
     pub fn handle_escape(&mut self) -> bool {
-        if self.inert || self.focus.is_none() {
+        if self.inert {
+            return false;
+        }
+        if self.generated.proposing.escape() {
+            return true;
+        }
+        if self.generated.proposing.intent.is_focused() {
+            self.generated.proposing.intent.unfocus();
+            return true;
+        }
+        if self.generated.host.iter_mut().any(|s| s.handle_escape()) {
+            return true;
+        }
+        if self.focus.is_none() {
             return false;
         }
         self.set_focus(None);
         true
     }
 
-    /// The worker's answers: while a job runs the page looks at the
-    /// channel every `POLL` and asks for a frame when something arrived.
-    pub fn wake(&mut self, _dt: f32, todo: &mut TodoPage) -> Wake {
+    /// The worker's answers and the Claude's: while a job runs the page
+    /// looks at the channel every `POLL` and asks for a frame when
+    /// something arrived; the frames the surface shows and the page lacks
+    /// are asked for here, never in a frame; the surface's transitions and
+    /// the row's caret ask for their own frames.
+    pub fn wake(&mut self, dt: f32, todo: &mut TodoPage) -> Wake {
         let moved = self.settle(todo);
-        let now = if moved { Wake::now() } else { Wake::idle() };
-        if self.worker.busy() {
-            now.merge(Wake::after(POLL))
-        } else {
-            now
+        let answered = Page { app: self }.settle(todo);
+        if moved || answered {
+            self.sync_surface();
         }
+        let sources = self.generated.host.sources();
+        self.want_sources(sources.iter().map(String::as_str));
+        let now = if moved || answered {
+            Wake::now()
+        } else {
+            Wake::idle()
+        };
+        let poll = if self.worker.busy() {
+            Wake::after(POLL)
+        } else {
+            Wake::idle()
+        };
+        now.merge(poll)
+            .merge(self.generated.host.wake(dt))
+            .merge(self.generated.proposing.wake(dt))
     }
 }

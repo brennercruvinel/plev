@@ -38,6 +38,7 @@ use sem::{
 };
 use showcase::model::silences::{Decision, Settings, TEST_VIDEO};
 
+use super::generated::page::{Page, project_all};
 use super::jobs::frame_ref;
 use super::worker::Job;
 use super::{Said, SilencesPage};
@@ -361,12 +362,57 @@ impl Operable for SilencesPage {
 }
 
 impl SilencesPage {
-    /// The page projected now.
+    /// The app projected now: the fixed screen alone, the registry a
+    /// generated surface verifies against and reads.
     pub(crate) fn snapshot(&self) -> Result<Snapshot, SemErrors> {
         let _probe = stages::span(Stage::Projection);
         let mut b = SnapshotBuilder::new();
         self.project(&mut b);
         b.finish()
+    }
+
+    /// The whole page projected now: the fixed screen, the generated
+    /// surface and the proposing row, one snapshot, what assistive
+    /// technology and an agent are shown.
+    pub(crate) fn projection(&self) -> Result<Snapshot, SemErrors> {
+        let _probe = stages::span(Stage::Projection);
+        let mut b = SnapshotBuilder::new();
+        project_all(self, &mut b);
+        b.finish()
+    }
+
+    /// A person proposes: `propose` observed on the page as it is now,
+    /// by the person, through the todo's dispatcher.
+    pub(super) fn propose(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
+        let target = self.generated.proposing.ids.as_ref()?.propose.clone();
+        self.ask_page(todo, &target, "propose")
+    }
+
+    /// A person cancels the proposal the Claude is answering.
+    pub(super) fn cancel(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
+        let target = self.generated.proposing.ids.as_ref()?.cancel.clone();
+        self.ask_page(todo, &target, "activate")
+    }
+
+    /// A person closes the generated surface.
+    pub(super) fn close(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
+        let target = self.generated.close_id.clone()?;
+        self.ask_page(todo, &target, "close")
+    }
+
+    /// A person's click on the block: observed on the whole page,
+    /// dispatched over it.
+    fn ask_page(&mut self, todo: &mut TodoPage, target: &SemId, action: &str) -> Option<RequestId> {
+        let seen = self
+            .projection()
+            .inspect_err(|e| log::warn!("silences: the projection does not validate: {e}"))
+            .ok()?;
+        let req = Request::observe(&seen, Actor::Human, target, action, None)
+            .inspect_err(|e| log::warn!("silences: {e}"))
+            .ok()?;
+        let id = Page { app: self }.dispatch(req, todo);
+        self.sync_surface();
+        Some(id)
     }
 
     /// Runs `req` through the gallery's dispatcher (the todo page lends
@@ -376,28 +422,63 @@ impl SilencesPage {
     }
 
     /// A request from an actor outside the page's own input (an agent
-    /// through the port, a screen reader); the receipt as it stands.
+    /// through the port, a screen reader): aimed at the row or the close
+    /// it runs over the whole page; aimed at a node of the surface it is
+    /// the capability the IR bound (`SurfaceHost::route`); either way it
+    /// goes through the gallery's one dispatcher, and the surface then
+    /// shows what came out. The receipt as it stands.
     pub(crate) fn act(
         &mut self,
         req: Request,
         todo: &mut TodoPage,
         inert: bool,
     ) -> Option<Receipt> {
-        self.inert = inert;
-        let id = self.dispatch(req, todo);
+        self.set_inert(inert);
+        let id = if self.generated.holds(&req.target) {
+            Page { app: self }.dispatch(req, todo)
+        } else {
+            let routed = self.generated.host.route(req);
+            self.dispatch(routed, todo)
+        };
+        self.sync_surface();
         todo.receipt(id).cloned()
     }
 
-    /// Keyboard focus asked from outside the page's pointer handling: a
-    /// slider takes it; another node of the page takes it from the
-    /// sliders. `false` for an id the page does not project, and while
-    /// inert.
+    /// Keyboard focus asked from outside the page's pointer handling: the
+    /// intent field takes it; a node of the surface (its field, or away
+    /// from the fields); a slider takes it; another node of the page
+    /// takes it from the sliders. `false` for an id the page does not
+    /// project, and while inert.
     pub(crate) fn focus(&mut self, id: &SemId) -> bool {
+        if self.inert {
+            return false;
+        }
+        if self.generated.holds(id) {
+            let intent = self.generated.proposing.ids.as_ref().map(|ids| &ids.intent);
+            if intent == Some(id) {
+                self.generated.proposing.intent.focus();
+            } else {
+                self.generated.proposing.intent.unfocus();
+            }
+            self.set_focus(None);
+            for s in self.generated.host.iter_mut() {
+                s.handle_escape();
+            }
+            return true;
+        }
+        self.generated.proposing.intent.unfocus();
+        if self.generated.host.iter_mut().any(|s| s.focus(id)) {
+            self.set_focus(None);
+            return true;
+        }
         let Some(ids) = &self.ids else {
             return false;
         };
-        if self.inert || !ids.holds(id) {
+        if !ids.holds(id) {
             return false;
+        }
+        for s in self.generated.host.iter_mut() {
+            s.handle_escape();
         }
         let which = if *id == ids.threshold {
             Some(Which::Threshold)

@@ -1,0 +1,322 @@
+//! The Silences page as its one dispatcher runs a request over the whole
+//! of it (task-69 phase 4b): `Page`, an `Operable` that projects the
+//! fixed screen, the generated surface and the proposing row, runs the
+//! row's capabilities and `close`, and passes everything else to the
+//! fixed screen's own `execute`. The pattern of the Surface page's
+//! `page::Page`, over this app instead of the todo: the rules propose
+//! inside `execute` and the request ends at once; the Claude is asked off
+//! the app's thread (`surface_page::asking`), `propose` answers
+//! `Execution::Started`, and `settle`, called from the page's wake, ends
+//! the request when the answer arrives, through the same lending of the
+//! todo page's dispatcher. A cancel ends the proposal it cancelled in the
+//! same lending as the cancel itself. The author of a proposal is whoever
+//! asked (`GenerationPolicy::by`).
+
+use propose::{Ask, Rules, propose_verified};
+use sem::{
+    Actor, Execution, Operable, Outcome, Request, RequestId, SemId, Semantics, SnapshotBuilder,
+    Value,
+};
+use surface::Surface;
+use uir::{Capabilities, GenerationPolicy, VerifiedIr};
+
+use super::super::SilencesPage;
+use crate::view::apps::app::TodoPage;
+use crate::view::apps::surface_page::asking::{Answer, Pending};
+use crate::view::apps::surface_page::proposing::{Op, Proposer, Said, int};
+
+/// The outcome of a proposal shown: the surface and how many nodes it
+/// has.
+fn result(surface: &SemId, nodes: usize) -> Outcome {
+    let mut outcome = Outcome::default();
+    outcome
+        .result
+        .insert("surface".to_owned(), Value::Text(surface.to_string()));
+    outcome
+        .result
+        .insert("nodes".to_owned(), Value::Int(int(nodes)));
+    outcome
+}
+
+/// The whole page as its dispatcher sees it for a request: the fixed
+/// screen (`app`) with its generated block.
+pub(in crate::view::apps::silences) struct Page<'a> {
+    pub app: &'a mut SilencesPage,
+}
+
+impl Page<'_> {
+    /// Runs `req` through the todo's dispatcher over the whole page. A
+    /// cancel ends the proposal it cancelled in the same lending.
+    pub fn dispatch(self, req: Request, todo: &mut TodoPage) -> RequestId {
+        let mut page = self;
+        todo.with_dispatcher(|dispatcher, _, now| {
+            let asked = dispatcher.dispatch(&mut page, req, now);
+            if let Some((pending, why)) = page.cancelled() {
+                if let Err(e) = dispatcher.fail(pending, why.clone(), now) {
+                    log::warn!("silences: the cancelled proposal did not end: {e}");
+                }
+                page.refuse(why);
+            }
+            asked
+        })
+    }
+
+    /// The proposal someone cancelled, when one was: its request and why
+    /// it ends.
+    fn cancelled(&self) -> Option<(RequestId, String)> {
+        let pending = self.app.generated.proposing.pending.as_ref()?;
+        let by = pending.cancelled.as_ref()?;
+        Some((pending.id, format!("cancelled by {by}")))
+    }
+
+    /// No proposal is asked any more; the status says `why`.
+    fn refuse(&mut self, why: String) {
+        self.app.generated.proposing.said = Some(Said::Refused(why));
+        self.app.generated.proposing.pending = None;
+    }
+
+    /// What happened to the proposal the Claude is answering since the
+    /// page last looked: a cancel ends it now; the attempt or the seconds
+    /// moved; or the answer arrived, the surface opens or takes the form
+    /// in place and the request ends `completed` (or `failed`, with the
+    /// reason). True when what the page shows moved.
+    pub fn settle(&mut self, todo: &mut TodoPage) -> bool {
+        if let Some((pending, why)) = self.cancelled() {
+            let ended = todo.with_dispatcher(|d, _, now| d.fail(pending, why.clone(), now));
+            if let Err(e) = ended {
+                log::warn!("silences: the cancelled proposal did not end: {e}");
+            }
+            self.refuse(why);
+            return true;
+        }
+        let Some(pending) = self.app.generated.proposing.pending.as_mut() else {
+            return false;
+        };
+        let (moved, answer) = pending.poll();
+        let Some(answer) = answer else {
+            return moved;
+        };
+        if let Some(pending) = self.app.generated.proposing.pending.take() {
+            self.arrived(pending, answer, todo);
+        }
+        true
+    }
+
+    /// The Claude answered `pending`: the surface shows the proposal and
+    /// the request completes with it, the attempts, the seconds and the
+    /// cost; or the request fails with why there is none.
+    fn arrived(&mut self, pending: Pending, answer: Answer, todo: &mut TodoPage) {
+        let Answer {
+            proposed,
+            attempts,
+            took,
+            cost_usd,
+        } = answer;
+        let id = pending.id;
+        let shown = proposed
+            .map_err(|e| e.to_string())
+            .and_then(|ir| self.show(ir));
+        let proposing = &mut self.app.generated.proposing;
+        let ended = match shown {
+            Ok((surface, nodes)) => {
+                let mut outcome = result(&surface, nodes);
+                outcome
+                    .result
+                    .insert("attempts".to_owned(), Value::Int(int(attempts)));
+                outcome
+                    .result
+                    .insert("seconds".to_owned(), Value::Num(took.as_secs_f64()));
+                if let Some(cost) = cost_usd {
+                    outcome
+                        .result
+                        .insert("cost_usd".to_owned(), Value::Num(cost));
+                }
+                proposing.said = Some(Said::Answered {
+                    intent: pending.intent,
+                    attempts,
+                    took,
+                    cost_usd,
+                });
+                proposing.shown = true;
+                todo.with_dispatcher(|d, _, now| d.complete(id, outcome, now))
+            }
+            Err(why) => {
+                proposing.said = Some(Said::Refused(why.clone()));
+                todo.with_dispatcher(|d, _, now| d.fail(id, why, now))
+            }
+        };
+        if let Err(e) = ended {
+            log::warn!("silences: the proposal's request did not end: {e}");
+        }
+    }
+
+    /// Shows `ir` over the app as it is: the surface opens, or takes the
+    /// form in place when its id is open (`SurfaceHost::transform`,
+    /// reconciled by `SemId`). Its id and how many nodes it has.
+    pub fn show(&mut self, ir: VerifiedIr) -> Result<(SemId, usize), String> {
+        let app = self.app.snapshot().map_err(|e| e.to_string())?;
+        let generated = &mut self.app.generated;
+        let open = generated.host.get(&ir.ir().surface.id).is_some();
+        let surface = if open {
+            generated.host.transform(ir, &app)
+        } else {
+            generated.host.open(ir, &app)
+        };
+        let (id, nodes) = surface
+            .map(|s| (s.id().clone(), s.nodes().count()))
+            .map_err(|e| e.to_string())?;
+        generated.id = Some(id.clone());
+        Ok((id, nodes))
+    }
+
+    fn refused(&mut self, why: String) -> Execution {
+        self.app.generated.proposing.said = Some(Said::Refused(why.clone()));
+        Execution::Failed(why)
+    }
+
+    /// A proposal for the intent, as `author` wrote it, over the app as
+    /// it is (the fixed screen's registry, never the row's) and the
+    /// surface shown. By the rules it is verified and shown now, and the
+    /// request is done; by the Claude the worker starts, with everything
+    /// it needs owned, and the request `id` stays open until `settle`
+    /// ends it.
+    fn propose(&mut self, id: RequestId, author: &Actor) -> Execution {
+        let intent = self.app.generated.proposing.intent.text().trim().to_owned();
+        let app = match self.app.snapshot() {
+            Ok(app) => app,
+            Err(e) => return Execution::Failed(e.to_string()),
+        };
+        let caps = Capabilities::from_snapshot(&app);
+        let policy = GenerationPolicy::by(author.clone());
+        let generated = &self.app.generated;
+        let current: Option<VerifiedIr> = generated
+            .id
+            .as_ref()
+            .and_then(|id| generated.host.get(id))
+            .map(Surface::verified)
+            .cloned();
+        match generated.proposing.chosen() {
+            Proposer::Rules => {
+                let ask = Ask {
+                    intent: &intent,
+                    caps: &caps,
+                    app: &app,
+                    current: current.as_ref(),
+                    policy: &policy,
+                };
+                let proposed = propose_verified(&mut Rules, &ask).map_err(|e| e.to_string());
+                match proposed.and_then(|ir| self.show(ir)) {
+                    Ok((surface, nodes)) => {
+                        let proposing = &mut self.app.generated.proposing;
+                        proposing.said = Some(Said::Proposed(intent));
+                        proposing.shown = true;
+                        Execution::Done(result(&surface, nodes))
+                    }
+                    Err(why) => self.refused(why),
+                }
+            }
+            Proposer::Claude => {
+                if generated.proposing.waiting() {
+                    let why = "a proposal is already being asked of the Claude: wait for it, \
+                               or cancel it";
+                    return self.refused(why.to_owned());
+                }
+                let started = generated
+                    .proposing
+                    .claude
+                    .start(id, intent, app, caps, current, policy);
+                match started {
+                    Ok(pending) => {
+                        self.app.generated.proposing.pending = Some(pending);
+                        Execution::Started
+                    }
+                    Err(why) => self.refused(why),
+                }
+            }
+        }
+    }
+
+    /// The surface is dismissed: out of the projection at once, its
+    /// picture fading where it was (`SurfaceHost::close`); the row says
+    /// nothing until the next proposal.
+    fn close(&mut self) -> Execution {
+        let generated = &mut self.app.generated;
+        let Some(id) = generated.id.take() else {
+            return Execution::Failed("no surface is open".to_owned());
+        };
+        generated.host.close(&id);
+        generated.proposing.said = None;
+        generated.proposing.shown = false;
+        let mut outcome = Outcome::default();
+        outcome
+            .result
+            .insert("closed".to_owned(), Value::Text(id.to_string()));
+        Execution::Done(outcome)
+    }
+}
+
+/// The whole page projected: the fixed screen, then its generated block
+/// (the surface, the row, the close).
+pub(in crate::view::apps::silences) fn project_all(app: &SilencesPage, b: &mut SnapshotBuilder) {
+    app.project(b);
+    app.generated.project(b);
+}
+
+impl Semantics for Page<'_> {
+    fn project(&self, b: &mut SnapshotBuilder) {
+        project_all(self.app, b);
+    }
+}
+
+impl Operable for Page<'_> {
+    fn execute(&mut self, id: RequestId, req: &Request) -> Execution {
+        if self.app.generated.is_close(req) {
+            return self.close();
+        }
+        let Some(op) = self.app.generated.proposing.op(req) else {
+            return self.app.execute(id, req);
+        };
+        let done = || Execution::Done(Outcome::default());
+        let proposing = &mut self.app.generated.proposing;
+        match op {
+            Op::Write(text) => {
+                proposing.intent.set_text(&text);
+                done()
+            }
+            Op::Propose => self.propose(id, &req.actor),
+            Op::Choose(name) => {
+                if proposing.proposer.select_label(&name) {
+                    done()
+                } else {
+                    Execution::Failed(format!("no proposer is named {name:?}"))
+                }
+            }
+            Op::ChooseAt(at) => {
+                if proposing.proposer.select_index(at) {
+                    done()
+                } else {
+                    Execution::Failed(format!("no proposer at {at}"))
+                }
+            }
+            Op::Open => {
+                proposing.proposer.open();
+                done()
+            }
+            Op::Close => {
+                proposing.proposer.close();
+                done()
+            }
+            Op::Cancel => match proposing.pending.as_mut() {
+                Some(pending) => {
+                    pending.cancel(req.actor.clone());
+                    let mut outcome = Outcome::default();
+                    outcome
+                        .result
+                        .insert("cancelled".to_owned(), Value::Text(pending.id.to_string()));
+                    Execution::Done(outcome)
+                }
+                None => Execution::Failed("nothing is being asked".to_owned()),
+            },
+        }
+    }
+}

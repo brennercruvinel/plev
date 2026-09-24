@@ -172,38 +172,37 @@
                   }
                 },
                 {
-                  "sem": "review.cut[{item}].range",
-                  "component": "text",
+                  "sem": "review.cut[{item}].text",
                   "size": {
                     "flex": 1
                   },
-                  "bind": {
-                    "state": {
-                      "text": "silences.cut[{item}]:range"
+                  "layout": {
+                    "stack": {
+                      "axis": "vertical",
+                      "gap": "xs",
+                      "align": "start"
                     }
-                  }
-                },
-                {
-                  "sem": "review.cut[{item}].duration",
-                  "component": "text",
-                  "props": {
-                    "typography": "caption_r",
-                    "color": "text_dim"
                   },
-                  "bind": {
-                    "state": {
-                      "text": "silences.cut[{item}]:duration"
+                  "children": [
+                    {
+                      "sem": "review.cut[{item}].range",
+                      "component": "text",
+                      "bind": {
+                        "state": {
+                          "text": "silences.cut[{item}]:range"
+                        }
+                      }
+                    },
+                    {
+                      "sem": "review.cut[{item}].decision",
+                      "component": "badge",
+                      "bind": {
+                        "state": {
+                          "text": "silences.cut[{item}]:decision"
+                        }
+                      }
                     }
-                  }
-                },
-                {
-                  "sem": "review.cut[{item}].decision",
-                  "component": "badge",
-                  "bind": {
-                    "state": {
-                      "text": "silences.cut[{item}]:decision"
-                    }
-                  }
+                  ]
                 },
                 {
                   "sem": "review.cut[{item}].apply",

@@ -22,7 +22,7 @@
           "sem": "review.compare",
           "layout": {
             "grid": {
-              "min_col": "card_min_w",
+              "min_col": "field_min_w",
               "gap": "lg"
             }
           },
@@ -156,25 +156,37 @@
                   }
                 },
                 {
-                  "sem": "review.cut[{item}].range",
-                  "component": "text",
+                  "sem": "review.cut[{item}].text",
                   "size": {
                     "flex": 1
                   },
-                  "bind": {
-                    "state": {
-                      "text": "silences.cut[{item}]:range"
+                  "layout": {
+                    "stack": {
+                      "axis": "vertical",
+                      "gap": "xs",
+                      "align": "start"
                     }
-                  }
-                },
-                {
-                  "sem": "review.cut[{item}].decision",
-                  "component": "badge",
-                  "bind": {
-                    "state": {
-                      "text": "silences.cut[{item}]:decision"
+                  },
+                  "children": [
+                    {
+                      "sem": "review.cut[{item}].range",
+                      "component": "text",
+                      "bind": {
+                        "state": {
+                          "text": "silences.cut[{item}]:range"
+                        }
+                      }
+                    },
+                    {
+                      "sem": "review.cut[{item}].decision",
+                      "component": "badge",
+                      "bind": {
+                        "state": {
+                          "text": "silences.cut[{item}]:decision"
+                        }
+                      }
                     }
-                  }
+                  ]
                 },
                 {
                   "sem": "review.cut[{item}].apply",

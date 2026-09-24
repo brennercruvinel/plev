@@ -274,7 +274,7 @@ impl ShowcaseView {
         let snapshot = match self.pane() {
             Some(Pane::Todo) => self.panes.todo.snapshot(),
             Some(Pane::Surface) => self.panes.surface.snapshot(&self.panes.todo),
-            Some(Pane::Silences) => self.panes.silences.snapshot(),
+            Some(Pane::Silences) => self.panes.silences.projection(),
             _ => return None,
         };
         snapshot

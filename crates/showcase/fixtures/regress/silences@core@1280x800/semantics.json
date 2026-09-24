@@ -311,6 +311,149 @@
           "value": false
         }
       }
+    },
+    {
+      "id": "silences_surface",
+      "role": "region",
+      "label": "propose a surface"
+    },
+    {
+      "id": "silences_surface.intent",
+      "role": "text_input",
+      "label": "intent",
+      "parent": "silences_surface",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "silences_surface.intent:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "silences_surface.proposer",
+      "role": "select",
+      "label": "proposer",
+      "parent": "silences_surface",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "claude"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "silences_surface.proposer:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "silences_surface.proposer:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "silences_surface.proposer:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "rules",
+          "claude"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "silences_surface.propose",
+      "role": "button",
+      "label": "propose",
+      "parent": "silences_surface",
+      "actions": [
+        {
+          "name": "propose",
+          "enabled": false,
+          "reads": [
+            "silences_surface.intent:text",
+            "silences_surface.proposer:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "silences_surface.cancel",
+      "role": "button",
+      "label": "cancel",
+      "parent": "silences_surface",
+      "actions": [
+        {
+          "name": "activate",
+          "enabled": false
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "silences_surface.status",
+      "role": "status",
+      "label": "proposal",
+      "parent": "silences_surface",
+      "state": {
+        "message": {
+          "kind": "text",
+          "value": ""
+        },
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "silences_surface.close",
+      "role": "button",
+      "label": "close the surface",
+      "parent": "silences_surface",
+      "actions": [
+        {
+          "name": "close",
+          "enabled": false
+        }
+      ],
+      "enabled": false,
+      "focusable": true
     }
   ]
 }

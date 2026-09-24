@@ -10,8 +10,12 @@
 //! for it through `surface::Frames`; the page decodes what it does not
 //! have in `wake`, never in a frame.
 
+use std::collections::HashMap;
+
+use engine::gpu::image::ImageHandle;
 use sem::{SemId, Value};
 use showcase::model::silences::{Decision, TEST_VIDEO, Video};
+use surface::Frames;
 
 use super::semantics::{count, micros, ms};
 use super::worker::{Done, Job};
@@ -23,7 +27,49 @@ pub(super) fn frame_ref(video: &SemId, t: f64) -> String {
     format!("{video}@{}", micros(t))
 }
 
+/// The instant (ms) a frame ref of `video` names; `None` for a text that
+/// is not one, or that names another node.
+pub(super) fn instant_of(video: &SemId, source: &str) -> Option<u64> {
+    let (node, at) = source.rsplit_once('@')?;
+    if node != video.as_str() {
+        return None;
+    }
+    let secs: f64 = at.parse().ok()?;
+    secs.is_finite().then(|| ms(secs))
+}
+
+/// The page's frames, as a generated surface reads them: the cache,
+/// looked up by the instant a frame ref names. Nothing is decoded here.
+pub(super) struct PageFrames<'a> {
+    pub video: &'a SemId,
+    pub frames: &'a HashMap<u64, Result<ImageHandle, String>>,
+}
+
+impl Frames for PageFrames<'_> {
+    fn frame(&self, source: &str) -> Option<ImageHandle> {
+        let at = instant_of(self.video, source)?;
+        match self.frames.get(&at) {
+            Some(Ok(handle)) => Some(*handle),
+            _ => None,
+        }
+    }
+}
+
 impl SilencesPage {
+    /// The frame refs `sources` name that the page does not have yet are
+    /// asked for: what the generated surface's images show, looked at
+    /// from `wake`.
+    pub(super) fn want_sources<'a>(&mut self, sources: impl IntoIterator<Item = &'a str>) {
+        let Some(video) = self.ids.as_ref().map(|ids| ids.video.clone()) else {
+            return;
+        };
+        let wanted: Vec<u64> = sources
+            .into_iter()
+            .filter_map(|s| instant_of(&video, s))
+            .collect();
+        self.want(wanted);
+    }
+
     /// The instant of the result (the video with the applied cuts) at the
     /// instant shown: inside an applied cut, the cut's end (the first
     /// frame that stays); elsewhere, the instant shown itself.
@@ -129,5 +175,22 @@ impl SilencesPage {
                 self.worker.submit(Job::Frame { ms: at });
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_frame_ref_names_the_media_node_and_the_instant() {
+        let video = SemId::parse("silences.video").unwrap();
+        assert_eq!(frame_ref(&video, 4.017052), "silences.video@4.017052");
+        assert_eq!(frame_ref(&video, 0.0), "silences.video@0");
+        assert_eq!(instant_of(&video, "silences.video@4.017052"), Some(4017));
+        assert_eq!(instant_of(&video, "silences.video@0"), Some(0));
+        assert_eq!(instant_of(&video, "silences.other@1"), None);
+        assert_eq!(instant_of(&video, "silences.video@x"), None);
+        assert_eq!(instant_of(&video, "silences-test.mp4"), None);
     }
 }

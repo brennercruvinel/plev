@@ -50,6 +50,7 @@ impl ShowcaseView {
             Some(Pane::Input) => self.panes.input.handle_text(key),
             Some(Pane::Todo) => self.panes.todo.handle_text(key),
             Some(Pane::Surface) => self.panes.surface.handle_text(key, &mut self.panes.todo),
+            Some(Pane::Silences) => self.panes.silences.handle_text(key, &mut self.panes.todo),
             Some(Pane::Git) => self.panes.git.handle_text(key),
             _ => false,
         };
@@ -130,7 +131,8 @@ impl ShowcaseView {
         }
     }
 
-    /// Enter: the todo app adds the field text as a todo; the Git tab
+    /// Enter: the todo app adds the field text as a todo; the Surface and
+    /// Silences pages propose from their intent field; the Git tab
     /// submits its commit form.
     pub fn handle_enter(&mut self) -> bool {
         match self.pane() {
@@ -142,6 +144,12 @@ impl ShowcaseView {
             Some(Pane::Surface) => {
                 let inert = self.overlay_holds_pointer();
                 self.panes.surface.handle_enter(&mut self.panes.todo, inert)
+            }
+            Some(Pane::Silences) => {
+                let inert = self.overlay_holds_pointer();
+                self.panes
+                    .silences
+                    .handle_enter(&mut self.panes.todo, inert)
             }
             Some(Pane::Git) => self.panes.git.handle_enter(),
             _ => false,
