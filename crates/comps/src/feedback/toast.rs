@@ -78,11 +78,6 @@ pub struct Toast {
     /// Entry/exit progress spring (0 hidden -> 1 shown).
     anim: Spring<f32>,
     closing: bool,
-    /// Pushed or dismissed since the last tick: the change happened at an
-    /// event, so the next tick counts no time for this toast. A shell
-    /// passes the real time since the last frame, and seconds of idle
-    /// before a push are not time the toast was on screen or moving.
-    fresh: bool,
 }
 
 impl Toast {
@@ -210,7 +205,6 @@ impl ToastManager {
             age: 0.0,
             anim,
             closing: false,
-            fresh: true,
         });
     }
 
@@ -239,7 +233,6 @@ impl ToastManager {
             && !t.closing
         {
             t.closing = true;
-            t.fresh = true;
             t.anim.set_target(0.0);
         }
     }
@@ -249,19 +242,14 @@ impl ToastManager {
     /// springs in or out; while all rest, the time until the first on
     /// screen dismisses itself; nothing without toasts. Auto-dismiss only
     /// ages *visible* toasts, so queued ones get their full time on
-    /// screen. A toast pushed or dismissed since the last tick counts no
-    /// time on this one (the change came with an event, not with the
-    /// frame), and a `dt` that is not time (negative, NaN, infinite)
-    /// counts as none.
+    /// screen. A `dt` that is not time (negative, NaN, infinite) counts as
+    /// none. The tick counts all the time it is given: a shell advances
+    /// the toasts to the instant of an event before a push or a dismiss,
+    /// so the gap before it is not counted as time on screen.
     pub fn wake(&mut self, dt: f32) -> Wake {
         let dt = if dt.is_finite() && dt > 0.0 { dt } else { 0.0 };
         let duration = self.duration;
         for t in self.toasts.iter_mut().take(self.max_visible) {
-            let dt = if std::mem::take(&mut t.fresh) {
-                0.0
-            } else {
-                dt
-            };
             t.anim.tick(dt);
             if !t.closing {
                 t.age += dt;

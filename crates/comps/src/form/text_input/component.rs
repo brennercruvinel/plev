@@ -18,11 +18,6 @@ pub struct TextInput {
     pub focused: bool,
     pub placeholder: String,
     blink: Blink,
-    /// Focused or edited since the last tick: the half-period restarted
-    /// at that event, so the next tick counts none of the time before it
-    /// (a shell passes the real time since the last frame, which can be
-    /// seconds of idle before the key that focused).
-    fresh: bool,
 }
 
 impl Default for TextInput {
@@ -38,7 +33,6 @@ impl TextInput {
             focused: false,
             placeholder: String::new(),
             blink: Blink::new(),
-            fresh: false,
         }
     }
 
@@ -55,7 +49,7 @@ impl TextInput {
 
     pub fn focus(&mut self) {
         self.focused = true;
-        self.reset_blink();
+        self.blink.reset();
     }
 
     pub fn unfocus(&mut self) {
@@ -66,27 +60,16 @@ impl TextInput {
     /// is the blink's: `now` when the caret flipped, `next` the time to
     /// the next flip, so a shell draws two or three frames a second for
     /// a caret at rest, not sixty. Unfocused there is no caret and
-    /// nothing pending. The first tick after a focus or an edit counts
-    /// no time: the half-period restarted at that event, not at the last
-    /// frame.
+    /// nothing pending.
     pub fn wake(&mut self, dt: f32) -> Wake {
         if !self.focused {
             return Wake::idle();
         }
-        let dt = if std::mem::take(&mut self.fresh) {
-            0.0
-        } else {
-            dt
-        };
         self.blink.advance(dt, CURSOR_BLINK_INTERVAL)
     }
 
-    /// Solid caret, the half-period restarted from this event (any edit
-    /// or caret move calls this so the caret never blinks away
-    /// mid-typing).
     pub fn reset_blink(&mut self) {
         self.blink.reset();
-        self.fresh = true;
     }
 
     pub fn handle_char(&mut self, c: char) {

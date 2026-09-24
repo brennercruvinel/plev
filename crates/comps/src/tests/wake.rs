@@ -212,31 +212,30 @@ fn a_toast_springs_in_rests_on_a_deadline_and_springs_out() {
     );
 }
 
+/// A tick counts all the time it is given: a toast pushed and then
+/// ticked with ten idle seconds is already leaving. That is why the
+/// shells catch up to the instant of an event before they apply it, and
+/// why the toast needs no notion of when it was pushed.
 #[test]
-fn a_toast_pushed_after_an_idle_gap_lives_from_the_next_tick() {
+fn a_toast_counts_all_the_time_its_tick_is_given() {
     let theme = Theme::dark();
-    let mut toasts = ToastManager::new();
-    toasts.push("refused", Intent::Destructive, &theme);
-    // the frame after the push arrives with the real time since the last
-    // frame: ten seconds of an idle window, none of them the toast's
-    let w = toasts.wake(10.0);
-    assert!(w.is_continuous(), "springing in, not dismissed");
-    let t = toasts.visible().next().expect("on screen");
+    let mut late = ToastManager::new();
+    late.push("refused", Intent::Destructive, &theme);
+    late.wake(10.0);
+    assert!(late.visible().next().is_none_or(|t| t.is_closing()));
+
+    // caught up first, the same push lives its whole duration
+    let mut caught = ToastManager::new();
+    assert_eq!(caught.wake(10.0), Wake::idle(), "the catch-up");
+    caught.push("refused", Intent::Destructive, &theme);
+    assert!(caught.wake(TURN).is_continuous(), "springing in");
+    let t = caught.visible().next().expect("on screen");
     assert!(!t.is_closing());
-    assert!(t.progress() < 0.01, "the entry starts on this frame");
-    // settled, the whole duration is still ahead
-    for _ in 0..60 {
-        toasts.wake(TURN);
-    }
-    let left = toasts.wake(0.0).next.expect("a deadline").as_secs_f32();
-    assert!(
-        (left - (toasts.duration - 60.0 * TURN)).abs() < 1e-3,
-        "{left}"
-    );
+    assert!(t.progress() < 0.1, "the entry starts on this frame");
 }
 
 #[test]
-fn a_click_after_a_rest_springs_the_toast_out_from_the_next_tick() {
+fn a_click_dismiss_springs_the_toast_out() {
     let theme = Theme::dark();
     let mut toasts = ToastManager::new();
     toasts.push("clickme", Intent::Neutral, &theme);
@@ -247,12 +246,9 @@ fn a_click_after_a_rest_springs_the_toast_out_from_the_next_tick() {
     let (x, y) = rect.center();
     let click = WidgetEvent::MouseDown { x, y };
     assert!(toasts.handle_event(&click, &theme, 800.0, 600.0).clicked);
-    // the loop slept on the deadline; the click's frame reports the gap
-    let w = toasts.wake(2.5);
+    let w = toasts.wake(TURN);
     assert!(w.is_continuous(), "the exit spring moves");
-    let t = toasts.visible().next().expect("still leaving");
-    assert!(t.is_closing());
-    assert!(t.progress() > 0.99, "the exit starts on this frame");
+    assert!(toasts.visible().next().expect("still leaving").is_closing());
 }
 
 #[test]
