@@ -137,11 +137,17 @@ asks `Confirm::Always`).
 
 ### keyboard order (`focus`)
 
-Tab and Shift-Tab walk the snapshot: the nodes that are focusable, enabled
-and not inert, in the tree order the accessibility tree presents, wrapping
-around, starting from the snapshot's focus (or either end). a disabled
-control is skipped, as on the web. the order replaces the hit-region
-`FocusGraph`; what focus means for a widget stays the app's.
+Tab and Shift-Tab walk the snapshot (`focus::next`): the nodes that are
+focusable, enabled and not inert, in the tree order the accessibility
+tree presents, wrapping around, starting from the snapshot's focus (or
+either end). a disabled control is skipped, as on the web. the order
+replaces the hit-region `FocusGraph`, which this task removed; what focus
+means for a widget stays the app's.
+
+updated on 2026-09-23: no shell calls `focus::next` yet; its one caller
+is a test (`crates/showcase/src/view/apps/app/semantics/assistive.rs`).
+Tab in the showcase still follows each page's own cycle
+(`crates/showcase/src/keys.rs`), as the consequences below say.
 
 ### the bridge (`Bridge`)
 
@@ -168,10 +174,11 @@ the showcase shell wires it (desktop): the window is titled `plev, design
 system showcase` and that title labels the root; the view projects the
 active page when it has a projection (`ShowcaseView::semantics`, the todo
 page today), and a screen reader's request goes through that page's
-dispatcher (`ShowcaseView::assist`), its focus to the page's field
-(`ShowcaseView::assist_focus`). a page without a projection has no tree
-beyond the window yet; that is expected, not a fallback. the engine's own
-`App` uses the same bridge with no projection (the window alone).
+dispatcher (`ShowcaseView::act`, named `assist` until task-61), its
+focus to the page's field (`ShowcaseView::assist_focus`). a page without
+a projection has no tree beyond the window yet; that is expected, not a
+fallback. the engine's own `App` uses the same bridge with no projection
+(the window alone).
 
 ## cost
 
@@ -215,9 +222,9 @@ listens. no target was set.
   the composite pass, and `window::draw_frame` composites with none.
   folding it into `draw_frame` means moving the effects into the frame
   path every app and the headless renderer share, its own change.
-- `Theme::intent_role` (an `Intent` to an AccessKit role guess) has no
-  caller since `AccessibilityState` left; it stays until theme is next
-  touched.
+- `Theme::intent_role` (an `Intent` to an AccessKit role guess) had no
+  caller once `AccessibilityState` left, and was removed (commit
+  `263c00c`).
 
 ## avoid
 
