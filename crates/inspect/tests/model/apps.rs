@@ -14,11 +14,14 @@ use sem::{
 };
 
 /// the git client of the thesis: what is staged, the message, the commits.
+/// a `slow` one only starts a submit (`Execution::Started`), and the test
+/// ends it later through the dispatcher, the way the ide's git worker does.
 pub struct Git {
     pub staged: BTreeSet<String>,
     pub message: String,
     pub commits: Vec<(String, Vec<String>)>,
     pub executed: usize,
+    pub slow: bool,
 }
 
 impl Git {
@@ -28,6 +31,7 @@ impl Git {
             message: message.to_owned(),
             commits: Vec::new(),
             executed: 0,
+            slow: false,
         }
     }
 }
@@ -77,6 +81,7 @@ impl Operable for Git {
                 self.message = text.clone();
                 Execution::Done(Outcome::default())
             }
+            ("submit", None) if self.slow => Execution::Started,
             ("submit", None) => {
                 let files: Vec<String> = self.staged.iter().cloned().collect();
                 let sha = sha(&files, &self.message);

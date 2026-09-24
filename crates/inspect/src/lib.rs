@@ -14,6 +14,8 @@
 //!   rested on, the request with the values it read, what moved in those
 //!   values between the observation and the request and which receipt ran
 //!   then, the stages, the verdict with its delta, and the result.
+//! - `Inspector::control`: a control at an instant, and every request that
+//!   touched it up to then, each with its `why`.
 //!
 //! who moved a value is a correlation by time, never a declaration: the
 //! contract declares what an action reads, not what it writes. a change is
@@ -28,11 +30,13 @@
 //! docs/ADR/session-recording-replay-not-reexecution.md). every model type
 //! is `Serialize`.
 
+mod control;
 mod describe;
 mod index;
 mod timeline;
 mod why;
 
+pub use control::Control;
 pub use index::{Inspector, Stamp};
 pub use timeline::{Count, Entry, Tally, Timeline, What};
 pub use why::{

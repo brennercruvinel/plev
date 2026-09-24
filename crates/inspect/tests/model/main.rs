@@ -3,6 +3,7 @@
 //! reach the recorder, read back by the inspector.
 
 mod apps;
+mod control;
 mod thesis;
 mod timeline;
 mod why;

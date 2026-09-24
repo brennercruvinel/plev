@@ -383,3 +383,60 @@ fn a_request_cut_by_the_window_is_not_whole() -> Fallible {
     assert!(matches!(why.basis, Basis::Observed { at: 0, .. }));
     Ok(())
 }
+
+/// a submit refused at the point of truth after it started: it ends
+/// rejected at the truth, and since it ran nothing it never explains a
+/// move.
+#[test]
+fn a_refusal_at_the_point_of_truth_ran_nothing() -> Fallible {
+    let mut lab = Lab::new(&["A", "B", "C"], "fix login", 0);
+    lab.git.slow = true;
+    let seen = lab.observe(10, agent());
+    let now = lab.look();
+    let person = lab.act(20, &now, Actor::Human, "commit.submit", "submit", None);
+    lab.dispatcher
+        .reject_at_truth(person, Rejection::stale(Vec::new()), 30)?;
+    lab.outside_unstages(40, "C");
+    lab.git.slow = false;
+    let submit = lab.act(50, &seen, agent(), "commit.submit", "submit", None);
+    let session = lab.session();
+    assert!(matches!(
+        why(&session, person)?.ending,
+        Ending::Rejected { at_truth: true, .. }
+    ));
+    let why = why(&session, submit)?;
+    let [moved] = why.between.reads[0].moves.as_slice() else {
+        panic!("one move, got {:?}", why.between.reads[0].moves);
+    };
+    assert_eq!(moved.by, By::Outside);
+    Ok(())
+}
+
+/// the documented limit of the correlation: a receipt that started before
+/// the recorded state before a change and ended after the change has no
+/// stage in the change's window, so it is not named and the move reads as
+/// one from outside the app. the ide does not do this (its view moves
+/// right after the act starts); an app whose effect lands long after the
+/// start, with other projections in between, would.
+#[test]
+fn a_receipt_running_across_the_window_is_not_named() -> Fallible {
+    let mut lab = Lab::new(&["A", "B"], "fix login", 0);
+    lab.git.slow = true;
+    let seen = lab.observe(10, agent());
+    let now = lab.look();
+    let person = lab.act(20, &now, Actor::Human, "commit.submit", "submit", None);
+    lab.rec.snapshot_full(25, &lab.look());
+    lab.git.staged.clear();
+    lab.rec.snapshot(40, &lab.look());
+    lab.dispatcher
+        .complete(person, sem::Outcome::default(), 50)?;
+    lab.git.slow = false;
+    let submit = lab.act(60, &seen, agent(), "commit.submit", "submit", None);
+    let why = why(&lab.session(), submit)?;
+    let [moved] = why.between.reads[0].moves.as_slice() else {
+        panic!("one move, got {:?}", why.between.reads[0].moves);
+    };
+    assert_eq!((moved.at, moved.since.map(|s| s.at)), (40, Some(25)));
+    assert_eq!(moved.by, By::Outside);
+    Ok(())
+}
