@@ -279,9 +279,8 @@ impl GitRepo {
 
     /// `true` when the path exists in the index (i.e. not untracked).
     fn is_tracked(&self, path: &str) -> Result<bool> {
-        let out = Command::new("git")
-            .arg("-C")
-            .arg(&self.workdir)
+        let out = self
+            .command()
             .args(["ls-files", "--error-unmatch", "--", path])
             .output()?;
         Ok(out.status.success())
@@ -309,13 +308,25 @@ impl GitRepo {
         }])
     }
 
-    /// Runs `git <args>` in the working tree, returning stdout on success.
-    fn git(&self, args: &[&str]) -> Result<String> {
-        let out = Command::new("git")
+    /// A `git` process in the working tree; every invocation starts here.
+    /// `GIT_OPTIONAL_LOCKS=0` (the environment form of
+    /// `--no-optional-locks`) keeps a read from writing: without it
+    /// `status` takes `.git/index.lock` to store the stat data it
+    /// refreshed, and a watcher on the repository (the ide's) sees that
+    /// write, refreshes, runs `status` again, and never stops. Mutations
+    /// still take the locks they need; only the optional ones go.
+    fn command(&self) -> Command {
+        let mut command = Command::new("git");
+        command
             .arg("-C")
             .arg(&self.workdir)
-            .args(args)
-            .output()?;
+            .env("GIT_OPTIONAL_LOCKS", "0");
+        command
+    }
+
+    /// Runs `git <args>` in the working tree, returning stdout on success.
+    fn git(&self, args: &[&str]) -> Result<String> {
+        let out = self.command().args(args).output()?;
         if !out.status.success() {
             return Err(GitError::Command {
                 command: args.join(" "),

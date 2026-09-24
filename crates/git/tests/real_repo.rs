@@ -102,6 +102,48 @@ fn stage_and_unstage_transition_entries() {
     assert!(!status[0].staged);
 }
 
+/// Pushes a tracked file's mtime an hour ahead, content unchanged: the
+/// stat data the index keeps for it goes stale, which a `status` allowed
+/// to write refreshes and stores back.
+fn stale_stat(dir: &Path, rel: &str) {
+    let file = std::fs::File::options()
+        .write(true)
+        .open(dir.join(rel))
+        .unwrap();
+    let later = std::time::SystemTime::now() + Duration::from_secs(3600);
+    file.set_modified(later).unwrap();
+}
+
+/// `.git/index`: when it was last written, and its bytes.
+fn index(dir: &Path) -> (std::time::SystemTime, Vec<u8>) {
+    let path = dir.join(".git").join("index");
+    let written = std::fs::metadata(&path).unwrap().modified().unwrap();
+    (written, std::fs::read(&path).unwrap())
+}
+
+/// A read writes nothing under `.git`: a watcher on the repository (the
+/// ide's) would see the write, refresh, run `status` again and never stop.
+#[test]
+fn status_leaves_a_stale_index_as_it_found_it() {
+    let (dir, repo) = repo_with_commit();
+    stale_stat(dir.path(), "a.txt");
+    let before = index(dir.path());
+    assert!(repo.status().unwrap().is_empty(), "same content: clean");
+    assert_eq!(index(dir.path()), before, "the index is not rewritten");
+
+    // the control: a plain `git status` in the same state takes the
+    // optional lock and stores the refreshed stat data
+    let plain = Command::new("git")
+        .arg("-C")
+        .arg(dir.path())
+        .arg("status")
+        .env_remove("GIT_OPTIONAL_LOCKS")
+        .output()
+        .unwrap();
+    assert!(plain.status.success());
+    assert_ne!(index(dir.path()), before, "plain git rewrites it");
+}
+
 // -- commit & log ---------------------------------------------------------------
 
 #[test]
