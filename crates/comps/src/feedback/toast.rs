@@ -8,6 +8,12 @@
 //! on screen as `<id>[<toast id>]` to the rect it draws and hit-tests it
 //! with, and [`ToastManager::project`] declares the toasts in a semantic
 //! projection.
+//!
+//! A toast at rest is a deadline, not motion: [`ToastManager::wake`] asks
+//! for frames while one springs in or out and, between, for the instant
+//! the next one dismisses itself.
+
+use std::time::Duration;
 
 use crate::icons;
 use engine::animation::Spring;
@@ -18,6 +24,7 @@ use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 use crate::recipe::{rounded_rect, rounded_rect_stroke};
+use crate::wake::Wake;
 
 /// The per-theme geometry the rects, the hit test and the render share.
 struct Metrics {
@@ -71,6 +78,11 @@ pub struct Toast {
     /// Entry/exit progress spring (0 hidden -> 1 shown).
     anim: Spring<f32>,
     closing: bool,
+    /// Pushed or dismissed since the last tick: the change happened at an
+    /// event, so the next tick counts no time for this toast. A shell
+    /// passes the real time since the last frame, and seconds of idle
+    /// before a push are not time the toast was on screen or moving.
+    fresh: bool,
 }
 
 impl Toast {
@@ -198,6 +210,7 @@ impl ToastManager {
             age: 0.0,
             anim,
             closing: false,
+            fresh: true,
         });
     }
 
@@ -226,20 +239,29 @@ impl ToastManager {
             && !t.closing
         {
             t.closing = true;
+            t.fresh = true;
             t.anim.set_target(0.0);
         }
     }
 
-    /// Advance animations and lifetimes. Returns `true` while any toast is
-    /// animating (callers keep requesting frames). Auto-dismiss only ages
-    /// *visible* toasts, so queued ones get their full time on screen.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        let max_visible = self.max_visible;
+    /// Advance animations and lifetimes by `dt` seconds and say what the
+    /// toasts ask of the loop: a frame now and on the next while one
+    /// springs in or out; while all rest, the time until the first on
+    /// screen dismisses itself; nothing without toasts. Auto-dismiss only
+    /// ages *visible* toasts, so queued ones get their full time on
+    /// screen. A toast pushed or dismissed since the last tick counts no
+    /// time on this one (the change came with an event, not with the
+    /// frame), and a `dt` that is not time (negative, NaN, infinite)
+    /// counts as none.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        let dt = if dt.is_finite() && dt > 0.0 { dt } else { 0.0 };
         let duration = self.duration;
-        for (i, t) in self.toasts.iter_mut().enumerate() {
-            if i >= max_visible {
-                break;
-            }
+        for t in self.toasts.iter_mut().take(self.max_visible) {
+            let dt = if std::mem::take(&mut t.fresh) {
+                0.0
+            } else {
+                dt
+            };
             t.anim.tick(dt);
             if !t.closing {
                 t.age += dt;
@@ -249,9 +271,34 @@ impl ToastManager {
                 }
             }
         }
-        // Drop a toast once its close animation has finished.
+        // Drop a toast once its close animation has finished; the frame
+        // that no longer draws it is a visible change.
+        let count = self.toasts.len();
         self.toasts.retain(|t| !t.closing || t.anim.is_animating());
-        self.is_animating()
+        let mut wake = if self.toasts.len() < count {
+            Wake::now()
+        } else {
+            Wake::idle()
+        };
+        for t in self.visible() {
+            if t.anim.is_animating() {
+                wake = wake.merge(Wake::continuous());
+            } else if !t.closing
+                && let Ok(left) = Duration::try_from_secs_f32(duration - t.age)
+            {
+                // an infinite or NaN duration never dismisses: no deadline
+                wake = wake.merge(Wake::after(left));
+            }
+        }
+        wake
+    }
+
+    /// [`ToastManager::wake`] as the `bool` its last callers read (the
+    /// ide, the showcase and urnaui until each adopts `Wake`, task-82
+    /// phase b): `true` while a toast springs in or out.
+    pub fn tick(&mut self, dt: f32) -> bool {
+        let wake = self.wake(dt);
+        wake.now || wake.is_continuous()
     }
 
     pub fn is_animating(&self) -> bool {

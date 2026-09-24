@@ -78,7 +78,7 @@ fn toast_auto_dismisses_after_duration() {
 
     // Entry + lifetime + exit: generously tick 4 simulated seconds.
     for _ in 0..240 {
-        tm.tick(1.0 / 60.0);
+        tm.wake(1.0 / 60.0);
     }
     assert!(tm.is_empty(), "toast should have auto-dismissed");
 }
@@ -94,7 +94,7 @@ fn toast_queue_promotes_waiting_toasts() {
     assert_eq!(tm.visible().next().unwrap().message, "first");
 
     for _ in 0..240 {
-        tm.tick(1.0 / 60.0);
+        tm.wake(1.0 / 60.0);
     }
     assert!(tm.is_empty(), "both toasts eventually shown and dismissed");
 }
@@ -106,7 +106,7 @@ fn toast_click_dismisses() {
     tm.push("clickme", Intent::Destructive, &theme);
     // Let the entry animation settle so the rect is in place.
     for _ in 0..120 {
-        tm.tick(1.0 / 60.0);
+        tm.wake(1.0 / 60.0);
     }
     let rect = tm.visible_rects(&theme, 800.0, 600.0)[0];
     let (cx, cy) = rect.center();
@@ -121,7 +121,7 @@ fn toast_render_emits_nodes() {
     let mut tm = ToastManager::new();
     tm.push("render", Intent::Constructive, &theme);
     for _ in 0..60 {
-        tm.tick(1.0 / 60.0);
+        tm.wake(1.0 / 60.0);
     }
     let mut c = Compositor::new();
     let layer = c.create_layer(500);

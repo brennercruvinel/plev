@@ -1,8 +1,12 @@
-//! The tick contract: how asks compose, and the caret clock's flips with
-//! an injected `dt`.
+//! The tick contract: how asks compose, the caret clock's flips and the
+//! toasts' lifetimes, with an injected `dt`.
 
 use std::time::Duration;
 
+use engine::theme::{Intent, Theme};
+
+use crate::core::WidgetEvent;
+use crate::feedback::ToastManager;
 use crate::wake::{Blink, Wake};
 
 const HALF: f32 = 0.53;
@@ -139,4 +143,131 @@ fn blink_survives_a_very_long_stall() {
     // and keeps ticking sanely afterwards
     let w = b.advance(0.1, HALF);
     assert!(w.next.is_some());
+}
+
+// -- toasts: a deadline between two springs ---------------------------------
+
+/// One turn of a 60 Hz display.
+const TURN: f32 = 1.0 / 60.0;
+
+/// A shell over `turns` display turns, as the showcase and ide shells
+/// pace: turn 0 is the frame of the event that pushed; afterwards a turn
+/// is drawn when the last ask was continuous or its deadline has come
+/// due, and the drawn turn's tick gets the time since the last drawn turn
+/// (`since_last`). Returns each drawn turn with its ask.
+fn paced(turns: usize, mut wake: impl FnMut(f32) -> Wake) -> Vec<(usize, Wake)> {
+    let mut drawn = vec![(0, wake(0.0))];
+    for turn in 1..turns {
+        let (last, ask) = *drawn.last().expect("turn 0 is drawn");
+        let since = (turn - last) as f32 * TURN;
+        let due = match ask.next {
+            Some(d) => since >= d.as_secs_f32(),
+            None => false,
+        };
+        if due {
+            drawn.push((turn, wake(since)));
+        }
+    }
+    drawn
+}
+
+#[test]
+fn a_toast_springs_in_rests_on_a_deadline_and_springs_out() {
+    let theme = Theme::dark();
+    let mut toasts = ToastManager::new();
+    toasts.push("saved", Intent::Constructive, &theme);
+    // six seconds at 60 Hz: 360 turns
+    let drawn = paced(360, |dt| toasts.wake(dt));
+    assert!(toasts.is_empty(), "gone within the six seconds");
+    assert_eq!(drawn.last().map(|(_, w)| w.next), Some(None), "idle after");
+
+    // the entry: consecutive turns, each asking for the next
+    let rest = drawn
+        .iter()
+        .position(|(_, w)| !w.is_continuous())
+        .expect("the entry settles");
+    let (rest_turn, rest_ask) = drawn[rest];
+    assert_eq!(rest_turn, rest, "the entry draws every turn");
+    // at rest the ask is the dismissal: 4 s after the first tick, which
+    // counted no time (the push came with the event)
+    let left = rest_ask.next.expect("a deadline, not idle").as_secs_f32();
+    let due = rest_turn as f32 * TURN + left;
+    assert!((due - toasts.duration).abs() < TURN, "due at {due}");
+    // nothing drawn while it rests; the next frame is the dismissal, on
+    // the first turn at or after the deadline
+    let (dismiss_turn, dismiss_ask) = drawn[rest + 1];
+    let at = dismiss_turn as f32 * TURN - toasts.duration;
+    assert!((-1e-3..TURN + 1e-3).contains(&at), "dismissed {at} s late");
+    assert!(dismiss_ask.is_continuous(), "the exit spring moves");
+    // and the exit draws every turn until the toast is dropped
+    let exit = &drawn[rest + 1..];
+    assert!(exit.windows(2).all(|p| p[1].0 == p[0].0 + 1));
+    // the springs draw every turn; the rest between them draws none
+    let resting = dismiss_turn - rest_turn - 1;
+    let last = drawn.last().map_or(0, |(turn, _)| *turn);
+    assert_eq!(drawn.len() + resting, last + 1, "every turn but the rest");
+    assert!(
+        resting as f32 * TURN > 2.0,
+        "rested {resting} turns undrawn"
+    );
+}
+
+#[test]
+fn a_toast_pushed_after_an_idle_gap_lives_from_the_next_tick() {
+    let theme = Theme::dark();
+    let mut toasts = ToastManager::new();
+    toasts.push("refused", Intent::Destructive, &theme);
+    // the frame after the push arrives with the real time since the last
+    // frame: ten seconds of an idle window, none of them the toast's
+    let w = toasts.wake(10.0);
+    assert!(w.is_continuous(), "springing in, not dismissed");
+    let t = toasts.visible().next().expect("on screen");
+    assert!(!t.is_closing());
+    assert!(t.progress() < 0.01, "the entry starts on this frame");
+    // settled, the whole duration is still ahead
+    for _ in 0..60 {
+        toasts.wake(TURN);
+    }
+    let left = toasts.wake(0.0).next.expect("a deadline").as_secs_f32();
+    assert!(
+        (left - (toasts.duration - 60.0 * TURN)).abs() < 1e-3,
+        "{left}"
+    );
+}
+
+#[test]
+fn a_click_after_a_rest_springs_the_toast_out_from_the_next_tick() {
+    let theme = Theme::dark();
+    let mut toasts = ToastManager::new();
+    toasts.push("clickme", Intent::Neutral, &theme);
+    for _ in 0..60 {
+        toasts.wake(TURN);
+    }
+    let rect = toasts.visible_rects(&theme, 800.0, 600.0)[0];
+    let (x, y) = rect.center();
+    let click = WidgetEvent::MouseDown { x, y };
+    assert!(toasts.handle_event(&click, &theme, 800.0, 600.0).clicked);
+    // the loop slept on the deadline; the click's frame reports the gap
+    let w = toasts.wake(2.5);
+    assert!(w.is_continuous(), "the exit spring moves");
+    let t = toasts.visible().next().expect("still leaving");
+    assert!(t.is_closing());
+    assert!(t.progress() > 0.99, "the exit starts on this frame");
+}
+
+#[test]
+fn toasts_that_never_dismiss_or_are_gone_ask_for_nothing() {
+    let theme = Theme::dark();
+    let mut toasts = ToastManager::new();
+    assert_eq!(toasts.wake(TURN), Wake::idle(), "no toast");
+    toasts.duration = f32::INFINITY;
+    toasts.push("sticky", Intent::Neutral, &theme);
+    for _ in 0..60 {
+        toasts.wake(TURN);
+    }
+    assert_eq!(toasts.wake(TURN), Wake::idle(), "at rest with no deadline");
+    for dt in [-1.0, f32::NAN, f32::INFINITY] {
+        assert_eq!(toasts.wake(dt), Wake::idle(), "dt {dt} is no time");
+    }
+    assert_eq!(toasts.len(), 1);
 }

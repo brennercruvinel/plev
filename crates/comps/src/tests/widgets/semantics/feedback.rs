@@ -187,7 +187,7 @@ fn modal_hover_and_press_are_visual_only() {
 
 fn settle(toasts: &mut ToastManager) {
     for _ in 0..30 {
-        toasts.tick(1.0 / 60.0);
+        toasts.wake(1.0 / 60.0);
     }
 }
 
@@ -241,7 +241,7 @@ fn a_toast_keeps_its_id_when_the_one_before_it_leaves() {
     let kids: Vec<&str> = s.children(&area).map(|n| n.id.as_str()).collect();
     assert_eq!(kids, ["toasts[1]"]);
     for _ in 0..240 {
-        toasts.tick(1.0 / 60.0);
+        toasts.wake(1.0 / 60.0);
         if toasts.len() == 1 {
             break;
         }
