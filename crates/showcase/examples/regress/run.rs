@@ -32,8 +32,10 @@ pub struct Staged {
     pub page: StagedPage,
     pub semantics: Option<Snapshot>,
     pub scene: Scene,
-    /// Staging, projecting and capturing the scene.
-    pub took: Duration,
+    /// Staging the page and projecting it.
+    pub staged: Duration,
+    /// Naming and hashing its layers, reading its bindings.
+    pub captured: Duration,
 }
 
 impl Staged {
@@ -55,7 +57,10 @@ pub fn stage(key: &Key, with_bounds: bool) -> Result<Staged, String> {
         Err(RenderError::NoSemantics(_)) => None,
         Err(e) => return Err(e.to_string()),
     };
+    let staged = start.elapsed();
+    let start = Instant::now();
     let scene = scene::capture(page.compositor(), key.viewport, with_bounds);
+    let captured = start.elapsed();
     let key = Key {
         page: page.title().to_string(),
         ..key.clone()
@@ -65,7 +70,8 @@ pub fn stage(key: &Key, with_bounds: bool) -> Result<Staged, String> {
         page,
         semantics,
         scene,
-        took: start.elapsed(),
+        staged,
+        captured,
     })
 }
 
@@ -182,8 +188,10 @@ pub struct Outcome {
     /// The page's scene; a layer that moved carries its bounds.
     pub now: Scene,
     pub pixels: Pixels,
-    /// Staging, projecting and capturing the scene.
+    /// Staging the page and projecting it.
     pub staged: Duration,
+    /// Naming and hashing its layers, reading its bindings.
+    pub captured: Duration,
     /// Comparing it with the baseline.
     pub compared: Duration,
     /// Drawing the frame and reading it back, when pixels were asked
@@ -242,7 +250,8 @@ pub fn check_one(b: &Baseline, gpu: &mut Gpu) -> Result<Outcome, String> {
         semantics: staged.semantics.clone(),
         now: staged.scene.clone(),
         pixels: Pixels::NotNeeded,
-        staged: staged.took,
+        staged: staged.staged,
+        captured: staged.captured,
         compared,
         rendered: None,
         decoded: None,

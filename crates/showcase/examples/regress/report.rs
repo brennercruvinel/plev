@@ -92,14 +92,16 @@ pub struct LayerReport {
 #[derive(Debug, Serialize)]
 pub struct Timings {
     pub stage: f64,
+    pub capture: f64,
     pub compare: f64,
     pub render: Option<f64>,
     pub decode: Option<f64>,
     pub diff: Option<f64>,
 }
 
+/// Milliseconds to the microsecond.
 fn ms(d: std::time::Duration) -> f64 {
-    (d.as_secs_f64() * 10_000.0).round() / 10.0
+    (d.as_secs_f64() * 1_000_000.0).round() / 1000.0
 }
 
 /// The report of `o`, checked against a baseline whose scene is `base`.
@@ -181,6 +183,7 @@ pub fn build(o: &Outcome, base: &Scene) -> Report {
         layers,
         timings_ms: Timings {
             stage: ms(o.staged),
+            capture: ms(o.captured),
             compare: ms(o.compared),
             render: o.rendered.map(ms),
             decode: o.decoded.map(ms),
@@ -270,7 +273,10 @@ fn lean(change: &Change) -> Change {
 /// The report as text: the baseline and its timings, then [`body`].
 pub fn text(r: &Report) -> String {
     let t = &r.timings_ms;
-    let mut times = format!("stage {:.1} ms, compare {:.1} ms", t.stage, t.compare);
+    let mut times = format!(
+        "stage {:.1} ms, hash {:.1} ms, compare {:.1} ms",
+        t.stage, t.capture, t.compare
+    );
     for (what, v) in [("render", t.render), ("decode", t.decode), ("diff", t.diff)] {
         if let Some(v) = v {
             times.push_str(&format!(", {what} {v:.1} ms"));
@@ -651,6 +657,7 @@ mod tests {
             now,
             pixels: Pixels::Diffed(changed),
             staged: Duration::from_millis(4),
+            captured: Duration::from_micros(200),
             compared: Duration::ZERO,
             rendered: Some(Duration::from_millis(20)),
             decoded: Some(Duration::from_millis(3)),
@@ -695,7 +702,7 @@ mod tests {
         let r = build(&o, &base);
         let text = text(&r);
         for needle in [
-            "CHANGED  todo@core@100x100 (stage 4.0 ms, compare 0.0 ms, render 20.0 ms",
+            "CHANGED  todo@core@100x100 (stage 4.0 ms, hash 0.2 ms, compare 0.0 ms, render 20.0 ms",
             "todo.a  semantics unchanged; visual changed, layer todo, 20 px at 15,12 5x4",
             "todo.b  semantics changed: label \"B\" -> \"B2\"; visual unchanged, layer todo",
             "todo.c  semantics changed: added (button \"C\"); visual changed, layer todo, \
@@ -732,7 +739,7 @@ mod tests {
         assert!(!r.changed && r.controls.iter().all(|c| !c.changed()));
         assert_eq!(
             text(&r),
-            "ok       todo@core@100x100 (stage 4.0 ms, compare 0.0 ms)\n"
+            "ok       todo@core@100x100 (stage 4.0 ms, hash 0.2 ms, compare 0.0 ms)\n"
         );
     }
 }
