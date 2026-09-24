@@ -214,22 +214,31 @@ impl UrnauiView {
         self.explorer.open_database(path);
     }
 
-    /// A file was dropped on the window.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn file_dropped(&mut self, path: std::path::PathBuf) {
-        self.explorer.set_file_hover(false);
-        self.explorer.open_database(path);
-        self.toasts.push(
-            "opening dropped file…",
-            engine::theme::Intent::Informational,
-            &self.theme,
-        );
-    }
-
-    /// Drag-and-drop hover feedback on the Open screen.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn set_file_hover(&mut self, hovering: bool) {
-        self.explorer.set_file_hover(hovering);
+    /// Files dragged over the window, as the engine says it
+    /// (`engine::input::FileDrop`, forwarded whole by the shell): while
+    /// they hover the Open screen shows it, a drop opens each path in
+    /// turn (a corpus is one file, so the last one dropped is the one
+    /// open), and a cancel clears the hover. Always a frame. The browser
+    /// never sends one (no drag on the canvas); the web build compiles the
+    /// same route.
+    pub fn handle_file_drop(&mut self, drop: &engine::input::FileDrop) -> bool {
+        use engine::input::FileDrop;
+        match drop {
+            FileDrop::Hovered { .. } => self.explorer.set_file_hover(true),
+            FileDrop::Cancelled => self.explorer.set_file_hover(false),
+            FileDrop::Dropped { paths, .. } => {
+                self.explorer.set_file_hover(false);
+                for path in paths {
+                    self.explorer.open_database(path.clone());
+                    self.toasts.push(
+                        "opening dropped file…",
+                        engine::theme::Intent::Informational,
+                        &self.theme,
+                    );
+                }
+            }
+        }
+        true
     }
 
     /// Drain pending worker events. Returns `true` when state changed and
@@ -565,6 +574,34 @@ mod tests {
         assert_eq!(view.theme.colors.bg.0, engine::theme::hoff::PAGE_BG.0);
         #[cfg(not(target_arch = "wasm32"))]
         assert_eq!(view.explorer.screen(), Screen::Open);
+    }
+
+    /// The engine's drop event, as the shell forwards it: the hover shows
+    /// on the Open screen, a cancel clears it, a drop clears it and opens
+    /// the file with a toast.
+    #[test]
+    fn a_file_drag_shows_the_hover_and_a_drop_opens_the_file() {
+        use engine::input::FileDrop;
+        use std::path::PathBuf;
+
+        let mut view = UrnauiView::new(1200.0, 800.0);
+        let hovered = FileDrop::Hovered {
+            paths: vec![PathBuf::from("/x.urna")],
+            position: None,
+        };
+        assert!(view.handle_file_drop(&hovered));
+        assert!(view.explorer.file_hover());
+        assert!(view.handle_file_drop(&FileDrop::Cancelled));
+        assert!(!view.explorer.file_hover());
+
+        assert!(view.handle_file_drop(&hovered));
+        assert!(view.handle_file_drop(&FileDrop::Dropped {
+            paths: vec![PathBuf::from("/definitely/not/here.urna")],
+            position: Some((300.0, 200.0)),
+        }));
+        assert!(!view.explorer.file_hover(), "the drop ends the hover");
+        assert!(view.explorer.opening(), "the dropped file opens");
+        assert_eq!(view.toasts.len(), 1, "opening dropped file");
     }
 
     #[test]

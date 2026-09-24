@@ -359,23 +359,6 @@ impl ApplicationHandler<UserEvent> for App {
                 }
             }
 
-            // Drag-and-drop a .urna file onto the window to open it.
-            #[cfg(not(target_arch = "wasm32"))]
-            WindowEvent::DroppedFile(path) => {
-                self.view.file_dropped(path);
-                self.invalidate();
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            WindowEvent::HoveredFile(_) => {
-                self.view.set_file_hover(true);
-                self.invalidate();
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            WindowEvent::HoveredFileCancelled => {
-                self.view.set_file_hover(false);
-                self.invalidate();
-            }
-
             WindowEvent::Resized(size) => {
                 let sf = self.scale_factor as f32;
                 let (lw, lh) = (size.width as f32 / sf, size.height as f32 / sf);
@@ -468,7 +451,16 @@ impl ApplicationHandler<UserEvent> for App {
                 self.pace(event_loop, wake);
             }
 
-            _ => {}
+            // A file dragged over or dropped on the window is the engine's
+            // event (it knows which platform events say so); the view
+            // opens what was dropped.
+            other => {
+                if let Some(drop) = engine::input::FileDrop::from_window_event(&other)
+                    && self.view.handle_file_drop(&drop)
+                {
+                    self.invalidate();
+                }
+            }
         }
     }
 

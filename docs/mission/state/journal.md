@@ -14,6 +14,31 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: diálogos de arquivo e drop no engine (task-76 item 3)
+
+- **integrada:** item 3 (merge da `task/76b-file-dialogs`). o diálogo
+  nativo atrás de um trait com falso para teste (nenhum painel abriu
+  nesta máquina), o drop como evento do engine com uma tradução só, o
+  urnaui sem `rfd` próprio, e a página Files projetando `open_file` (só
+  pessoa) e `drop_files`. gate na `main` em andamento no registro; o
+  agente reportou 2485 (+20) e 161 baselines iguais (2 novas). decisões
+  do orquestrador: `rfd` sem features (o backend linux é do bring-up de
+  linux), uma linha no shell do showcase para repassar o evento.
+- **achado:** o winit 0.30 não entrega a posição do arquivo solto em
+  nenhum backend; a posição fica opcional.
+
+### ciclo 3: publicado #78 (task-76 fase 1); disparado o item 3 da task-76
+
+- **publicado:** PR #78, merge commit, gate local verde na `main` (2547,
+  +11), regressão 159 sem mudança.
+- **disparado:** task-76 item 3, diálogos de arquivo e drag and drop no
+  `engine::platform` atrás de um trait com implementação falsa para
+  teste, o urnaui usando o do engine (o `rfd` sai de lá), e uma página
+  Files no showcase com `open_file` (só pessoa) e `drop_files` como
+  capacidades. escolhido antes do item 2 (múltiplas janelas) por ser
+  menor e não pedir decisão; o item 2 mexe em todos os shells e vem em
+  seguida. um agente só; nenhum diálogo nativo abre nesta máquina.
+
 ### ciclo 3: publicado #77 (task-74 fase 1); disparada a task-76 fase 1
 
 - **publicado:** PR #77, merge commit, gate local verde na `main` (2536,

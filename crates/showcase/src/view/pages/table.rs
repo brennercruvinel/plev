@@ -477,6 +477,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         A,
+        "Files",
+        "folder-open",
+        "The file dialog and a drop zone as capabilities: open_file for a person, drop_files for anyone, the files received as state.",
+        Pane::Files,
+    ),
+    page(
+        A,
         "Dock",
         "terminal",
         "Floating message dock: glass blur, hover lift, width morph on click.",

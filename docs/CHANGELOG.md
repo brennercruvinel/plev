@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- file dialogs and file drops belong to the engine (2026-09-24, task-76
+  item 3): `engine::platform::files` puts the native dialog (open, open
+  many, save, pick a folder) behind a trait with a fake for tests and a
+  no-dialog answer on wasm and mobile; a file dragged over or dropped on
+  a window is an engine input event with the paths and, when the platform
+  says it, the position. the urnaui opens and exports through the engine
+  and no longer depends on `rfd` itself. the new Files page in the
+  showcase shows both as capabilities: `open_file` only a person may ask,
+  `drop_files` anyone, and the files received are projected state.
+
 - a lost GPU device recovers in place (2026-09-24, task-76 phase 1): every
   device, windowed or headless, installs wgpu's device-lost callback;
   before a frame the engine polls it and, when the device is gone,
