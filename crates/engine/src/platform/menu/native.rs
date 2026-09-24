@@ -12,8 +12,10 @@
 //! nothing. The engine sets the handler once per process: it queues the
 //! id and calls the waker the shell gave it, so a winit loop at `Wait`
 //! wakes (`muda`'s own note for winit users) and polls on its thread,
-//! before the frame. One `MudaMenu` per process: the queue is the
-//! process's, and the first to poll takes every click.
+//! before the frame. The queue is the process's, and two menus share it:
+//! the bar here and the tray's menu (`platform::tray`, whose items carry
+//! [`TRAY_PREFIX`] in their id), each taking its own ids when it polls
+//! ([`take_clicks`]) and leaving the other's.
 //!
 //! Every `muda` type here must be made and used on the main thread
 //! (`muda::Menu::new` panics elsewhere on macOS); a shell installs and
@@ -39,17 +41,50 @@ static CLICKS: Mutex<VecDeque<MenuId>> = Mutex::new(VecDeque::new());
 static WAKER: Mutex<Option<Box<dyn Fn() + Send + Sync>>> = Mutex::new(None);
 static ROUTE: Once = Once::new();
 
+/// What the tray's menu puts before every item id, so the two consumers
+/// of the one queue tell their clicks apart. A key (`sem#action[#param]`)
+/// never starts with it: an id has no `:`.
+pub(in crate::platform) const TRAY_PREFIX: &str = "tray:";
+
 /// Sends every `muda` click of this process to `CLICKS` and wakes the
-/// shell. Once: `muda` keeps one handler per process.
-fn route_clicks() {
+/// shell through `wake`. The handler is set once (`muda` keeps one per
+/// process); the waker is the last one given, which is the one loop's
+/// proxy however many menus the process shows.
+pub(in crate::platform) fn route_clicks_to(wake: impl Fn() + Send + Sync + 'static) {
+    *locked(&WAKER) = Some(Box::new(wake));
     ROUTE.call_once(|| {
         MenuEvent::set_event_handler(Some(|event: MenuEvent| {
             locked(&CLICKS).push_back(event.id);
-            if let Some(wake) = locked(&WAKER).as_ref() {
-                wake();
-            }
+            self::wake();
         }));
     });
+}
+
+/// Wakes the shell's loop, if one asked to be woken.
+pub(in crate::platform) fn wake() {
+    if let Some(wake) = locked(&WAKER).as_ref() {
+        wake();
+    }
+}
+
+/// The queued ids `mine` claims, in order, taken out of the queue; the
+/// rest stay for their owner.
+pub(in crate::platform) fn take_clicks(mut mine: impl FnMut(&MenuId) -> bool) -> Vec<MenuId> {
+    let mut queue = locked(&CLICKS);
+    let mut taken = Vec::new();
+    queue.retain(|id| {
+        if mine(id) {
+            taken.push(id.clone());
+            false
+        } else {
+            true
+        }
+    });
+    taken
+}
+
+fn is_tray(id: &MenuId) -> bool {
+    id.as_ref().starts_with(TRAY_PREFIX)
 }
 
 /// The bar as `muda` shows it, with a handle on every entry so a moved
@@ -64,8 +99,10 @@ pub struct MudaMenu {
     hwnd: Option<isize>,
 }
 
-struct Installed {
-    submenu: NativeSubmenu,
+/// One submenu as `muda` shows it, with a handle on every entry. The tray
+/// shows one as its whole menu (`muda::Submenu` is a context menu too).
+pub(in crate::platform) struct Installed {
+    pub(in crate::platform) submenu: NativeSubmenu,
     entries: Vec<Handle>,
 }
 
@@ -82,8 +119,7 @@ impl MudaMenu {
     /// A menu that wakes `wake` on every click (from the platform's
     /// thread) so the shell polls it. Nothing is shown until `install`.
     pub fn new(wake: impl Fn() + Send + Sync + 'static) -> MudaMenu {
-        *locked(&WAKER) = Some(Box::new(wake));
-        route_clicks();
+        route_clicks_to(wake);
         MudaMenu {
             menu: None,
             bar: Vec::new(),
@@ -143,7 +179,7 @@ impl NativeMenu for MudaMenu {
         let mut ids = HashMap::new();
         let mut bar = Vec::with_capacity(model.menus.len());
         for submenu in &model.menus {
-            let installed = build(submenu, &mut ids)?;
+            let installed = build(submenu, &mut ids, "")?;
             menu.append(&installed.submenu).map_err(platform)?;
             bar.push(installed);
         }
@@ -173,8 +209,8 @@ impl NativeMenu for MudaMenu {
     }
 
     fn poll(&mut self) -> Vec<Clicked> {
-        let ids: Vec<MenuId> = locked(&CLICKS).drain(..).collect();
-        ids.into_iter()
+        take_clicks(|id| !is_tray(id))
+            .into_iter()
             .filter_map(|id| {
                 let clicked = self.ids.get(&id).cloned();
                 if clicked.is_none() {
@@ -186,15 +222,19 @@ impl NativeMenu for MudaMenu {
     }
 }
 
-/// `submenu` as `muda` items, appended in order; every item's id goes
-/// into `ids` with the capability it names.
-fn build(submenu: &Submenu, ids: &mut HashMap<MenuId, Clicked>) -> Result<Installed, MenuError> {
+/// `submenu` as `muda` items, appended in order; every item's id, `prefix`
+/// then its key, goes into `ids` with the capability it names.
+pub(in crate::platform) fn build(
+    submenu: &Submenu,
+    ids: &mut HashMap<MenuId, Clicked>,
+    prefix: &str,
+) -> Result<Installed, MenuError> {
     let native = NativeSubmenu::new(mnemonic_free(&submenu.label), true);
     let mut entries = Vec::with_capacity(submenu.entries.len());
     for entry in &submenu.entries {
         let handle = match entry {
             Entry::Item(item) => {
-                let id = MenuId::new(item.key());
+                let id = MenuId::new(format!("{prefix}{}", item.key()));
                 ids.insert(id.clone(), item.clicked());
                 let accelerator = item.shortcut.and_then(accelerator);
                 let text = mnemonic_free(&item.label);
@@ -222,7 +262,7 @@ fn build(submenu: &Submenu, ids: &mut HashMap<MenuId, Clicked>) -> Result<Instal
                 Handle::Predefined
             }
             Entry::Submenu(inner) => {
-                let h = build(inner, ids)?;
+                let h = build(inner, ids, prefix)?;
                 native.append(&h.submenu).map_err(platform)?;
                 Handle::Submenu(h)
             }
@@ -237,7 +277,7 @@ fn build(submenu: &Submenu, ids: &mut HashMap<MenuId, Clicked>) -> Result<Instal
 
 /// The entries of `installed` follow `submenu`, of the same shape: only
 /// what shows differently is touched.
-fn refresh(installed: &mut Installed, submenu: &Submenu) {
+pub(in crate::platform) fn refresh(installed: &mut Installed, submenu: &Submenu) {
     for (handle, entry) in installed.entries.iter_mut().zip(&submenu.entries) {
         match (handle, entry) {
             (Handle::Item(h), Entry::Item(item)) => {
