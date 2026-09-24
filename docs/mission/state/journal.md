@@ -14,6 +14,21 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: o blur segue a escala (task-77 fase 1b)
+
+- **integrada:** fase 1b (merge da `task/77b-blur-scale`). o vidro, o
+  blur e a sombra de layer alcançam o mesmo em pixels lógicos em toda
+  escala. a escala 1 ficou igual byte a byte (o MSL do `fs_main` tem os
+  mesmos bytes antes e depois); as outras usam uma entrada nova do
+  shader com o kernel de 1x espalhado pelos texels físicos. escolha pelos
+  números: as três opções tinham a mesma precisão; desfocar na
+  resolução lógica faria o conteúdo sob o vidro piscar ao rolar um px.
+- **custo:** a 2x, 1,55x por frame numa página com vidro; a 3x num
+  telefone não foi medido.
+- **captura depois:** 1312 de 1312 iguais entre contextos; contra a de
+  antes, os 328 frames de 1x iguais em bit e só as 5 páginas com vidro
+  mudaram nas outras escalas.
+
 ### ciclo 3: publicado #88 (task-77 fase 1); disparada a fase 1b
 
 - **publicado:** PR #88, merge commit, gate local verde na `main` (2772,
