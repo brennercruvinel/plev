@@ -15,7 +15,7 @@ use std::path::PathBuf;
 use comps::overlay::OverlayManager;
 use comps::prelude::{Button, EventResult, Rect, Tabs, ToastManager, Wake, WidgetEvent};
 use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::platform::files::{DialogRequest, FileDialogs};
+use engine::platform::files::FileDialogs;
 use engine::theme::{Intent, Theme};
 
 use crate::model::Worker;
@@ -30,6 +30,8 @@ use super::overview::{OverviewContext, OverviewScreen};
 use super::search::{SearchContext, SearchScreen};
 use super::stats::StatsScreen;
 use super::{Action, ChunkLookup, EditKey, Screen, text};
+
+mod dialogs;
 
 /// Longer edge of a decoded frame preview: half the forge's 488x680
 /// canvas, enough for the detail panels and cheap on the image atlas.
@@ -454,72 +456,6 @@ impl Explorer {
             max_side: FRAME_MAX_SIDE,
         });
         false
-    }
-
-    /// The Browse… button: the platform's open dialog, filtered to the
-    /// corpus extensions; what it picks opens, a cancel does nothing, and
-    /// a target without dialogs (mobile) says so.
-    #[cfg(not(target_arch = "wasm32"))]
-    fn pick_file(&mut self, toasts: &mut ToastManager, theme: &Theme) {
-        let req = DialogRequest::new()
-            .title("Open a .urna corpus")
-            .filter("urna corpus", &["urna", "nest"]);
-        match self.dialogs.pick_file(&req) {
-            Ok(Some(path)) => self.open_database(path),
-            Ok(None) => {}
-            Err(e) => {
-                log::info!("file picker: {e}");
-                toasts.push(
-                    "the file picker needs the desktop app",
-                    Intent::Informational,
-                    theme,
-                );
-            }
-        }
-    }
-
-    /// Export blob `index` to a path the user picks (the platform's save
-    /// dialog), named after the blob's own uri. Where there is no dialog
-    /// (wasm, mobile) the toast says the export needs the desktop app.
-    fn export_blob(&mut self, index: usize, toasts: &mut ToastManager, theme: &Theme) -> bool {
-        let Some(db) = &self.db else {
-            return false;
-        };
-        let Some(blob) = db.inspect.blobs.get(index) else {
-            return false;
-        };
-        // media:// uris are relative names by construction; the final
-        // component is the suggested file name.
-        let name = blob
-            .original_uri
-            .trim_start_matches("media://")
-            .rsplit('/')
-            .next()
-            .unwrap_or("blob")
-            .to_string();
-        let req = DialogRequest::new()
-            .title("Export media blob")
-            .file_name(&name);
-        let dest = match self.dialogs.save_file(&req) {
-            Ok(Some(dest)) => dest,
-            Ok(None) => return true,
-            Err(e) => {
-                log::info!("blob export: {e}");
-                toasts.push(
-                    "blob export needs the desktop app",
-                    Intent::Informational,
-                    theme,
-                );
-                return true;
-            }
-        };
-        toasts.push(
-            format!("exporting {name}… (hash-verified before writing)"),
-            Intent::Informational,
-            theme,
-        );
-        self.worker.send(UrnaCommand::ExportBlob { index, dest });
-        true
     }
 
     /// The lookup every screen resolves chunks through.
