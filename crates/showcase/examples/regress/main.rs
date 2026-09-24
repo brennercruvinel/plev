@@ -33,13 +33,21 @@
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod baseline;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod capture;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod classify;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod compare;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod determinism;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod hash;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod pixels;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod report;
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+mod requested;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod run;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
@@ -53,6 +61,9 @@ mod tests;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if let Some(code) = determinism::main(&args) {
+        std::process::exit(code);
+    }
     match cli::parse(&args) {
         Ok(None) => println!("{}", cli::USAGE),
         Ok(Some(request)) => match run::run(&request) {
@@ -84,6 +95,9 @@ usage: regress check [--page <title>]... [--theme <name>]
        regress bless [--page <title>]... [--all] [--theme <name>]
                      [--width <px>] [--height <px>] [--scale <s>]
                      [--png | --no-png] [--dir <dir>]
+       regress compare <base.png> <other.png> [--scale <s>] [--target <name>]
+       regress capture [--page <title>]... [--theme <name>]... [--scale <s>]...
+                       [--out <dir>] [--against <dir>]
 check stages every baseline in the directory (narrowed by the flags) and
 compares meaning, then layers and bindings; nothing moved, no frame is
 drawn. a layer moved and the baseline keeps an image: the frame is drawn
@@ -98,7 +112,9 @@ directory. new baselines take
 --theme core --width 1280 --height 800 --scale 1 unless given. --png
 keeps the frame's image too (needs a GPU), --no-png drops it; without
 either a baseline keeps what it had.
---dir defaults to crates/showcase/fixtures/regress.";
+--dir defaults to crates/showcase/fixtures/regress.
+compare classifies two frames, capture draws the desktop against itself
+(task-77): regress compare --help, regress capture --help.";
 
     /// The baselines of the repository, wherever the example runs from.
     pub const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/fixtures/regress");
