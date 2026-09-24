@@ -106,6 +106,56 @@ in `crates/sem`, next to the contract:
   it checks `changes:staged` alone; `commit.message:text` is checked once,
   by the dispatcher, and the commit carries the message the request sent.
 
+## updated on 2026-09-24 (task-92): an agent asks the person
+
+in the third round of checkpoint a (task-62) an agent was refused because
+a person had taken a file the task needed out of the index. one agent put
+it back over the person; the other stopped, since putting it back would
+undo a person's deliberate act "with no way to ask why". the contract told
+both what happened and who did it, and gave neither a way to ask.
+
+- an agent may ask a person before its action runs. `Request::ask` is an
+  optional short text saying why ("recolocar src/session.rs?"). an
+  agent's request that carries it waits for a person
+  (`Verdict::NeedsConfirmation`) even when the action's policy asks
+  nothing, and is answered like any request that waits: `confirm`, with
+  the second check against the live state, or `decline`. the question is
+  the last step of `check`: a stale, inert or disabled request is refused
+  as it would be without it, and a request that already waited waits the
+  same. nobody answering keeps it waiting, as a discard waits.
+- a person does not ask a person: the question of `Actor::Human` or
+  `Actor::Assistive`, and of a test, asks nothing, as `Confirm::ForAgents`
+  asks nothing of them. refusing it would need a new `Rejection`, and the
+  recorder matches that enum whole.
+- the serde form writes `ask` only when there is one: a request without
+  it, and every session recorded before (`MONS`), reads the same, and the
+  recorder carries it with no change of its own. `sem::redact` sends it as
+  `REDACTED` when the target is secret, like any free text about one.
+- the agent port bounds it before the dispatcher (`wire::MAX_ASK`, 280
+  characters, one line, not blank; `bad_message` otherwise) and carries it
+  as `Act::ask`, still protocol v1: `plev act <target> <action> --ask
+  "<question>"`, which waits 300 s for the person unless `--timeout` says
+  otherwise. `requested` echoes it in `asked`.
+- the ide's confirmation modal says that the agent asks and quotes it, in
+  the third person ("test-agent asks the person: ..."); confirming and
+  declining go through the dispatcher as `Actor::Human`, as before. it
+  never enters the projection: the modal is not projected, and an agent
+  reads only its own question, in `asked`. the inspector's `why` shows
+  the question and who answered it.
+
+the probe of this task found a P0 on the way, fixed first and alone: the
+agent port promised the stages of an agent's requests, but sent them only
+when the shell drained it, and the shells drain after the port's wake
+(the ide's window also after a git result). a stage that ended outside a
+drain with nothing behind it never went out: a person's decline in the
+modal (task-58b), a confirmation whose second check refused it, one whose
+action ended at once. it waited for the agent's next message, and was
+lost when a `plev act` that only waited gave up and closed its
+connection. the port's sink now wakes the loop when it hears a stage of a
+request the port waits on (`Server::wake_with`, `crates/wire/src/sink.rs`),
+so every host that drains after the wake sends it, with no change to its
+shell.
+
 ## reason
 
 - an agent's action then rests on the world it saw, not on a world it

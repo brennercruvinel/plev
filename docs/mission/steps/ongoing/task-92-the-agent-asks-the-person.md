@@ -48,6 +48,10 @@ mensagens só cresce; gate verde.
 
 ## handoff (2026-09-24): parada na sonda
 
+(superada: o orquestrador classificou o achado como P0, escolheu a opção
+1 e liberou `port.rs`, `redact.rs` e `why.rs`; o handoff final está no fim
+deste arquivo. esta seção fica como o registro da parada.)
+
 goal: task-92, o agente pergunta à pessoa.
 status: parada na sonda. a condição "a sonda sair diferente" disparou; só
 a sonda foi feita, como teste, e nada do pedido foi implementado.
@@ -214,3 +218,226 @@ como um `Confirm::ForAgents`".
 
 - `2f61463` task-92: the probe, an agent's discard through the port and
   the person's answer
+
+## handoff final (2026-09-24)
+
+goal: task-92, o agente pergunta à pessoa.
+status: feito na branch `task/92-ask-the-person`, rebaseada em `main @
+e840904`; gate verde. falta a integração do orquestrador.
+
+### a decisão que destravou
+
+a sonda achou que a recusa da pessoa não chegava ao agente (seção acima).
+o orquestrador classificou como P0: o porto promete os estágios dos
+requests que o agente emitiu, e essa promessa quebrava num caminho que já
+existia (58b). escolheu a opção 1, a correção veio primeiro e sozinha, e
+liberou `crates/wire/src/port.rs`, `crates/sem/src/redact.rs` e
+`crates/inspect/src/why.rs`.
+
+### o P0: um estágio ouvido fora de um drain acorda o porto
+
+- o sink do porto sabe quais requests o servidor espera (`Waits`, as
+  chaves de `issued`) e chama o wake do porto quando ouve um estágio de um
+  deles. `Server::wake_with` recebe o wake, e o `AgentPort` dá o mesmo que
+  as threads de leitura já chamam. os estágios do próprio dispatch de um
+  act vêm antes de o request entrar na espera, então não acordam nada. o
+  clique de uma pessoa, o request de um agente que não veio pela porta e
+  o request de uma conexão que fechou também não.
+- cobre a recusa, a confirmação com o que roda depois, a segunda checagem
+  que recusa como stale na confirmação e a ação que termina na hora, sem
+  git (`open`, `set_value`, `dismiss`: provado com `open`). cobre também
+  o que termina depois no worker, que antes dependia de o shell drenar
+  depois do resultado do git.
+- os três hosts: a janela do ide e o showcase drenam no wake do porto
+  (`AppEvent::Agent`, `UserEvent::Agent`), então recebem a correção sem
+  mudar o shell. o laboratório já drenava a cada `TICK`. não escrevi
+  teste dentro do showcase nem do laboratório: os dois estão fora da
+  lista, o showcase não tem ação que espere uma pessoa e o laboratório não
+  tem pessoa que responda ao modal. a prova vale para qualquer host que
+  drene no wake: um teste com socket real em que o shell do toy só drena
+  no wake (`crates/wire/tests/socket.rs`) e os testes do ide com o shell
+  servindo só no wake.
+- custo: um drain vazio a mais por estágio tardio num shell que também
+  drena depois do resultado do git (o wake que ficou na fila durante o
+  `apply`). os wakes já coalescem.
+- o `server.rs` estava com 610 das 639 linhas de produção: o sink foi para
+  `crates/wire/src/sink.rs` num commit só de movimento, antes. agora o
+  `server.rs` tem 599.
+
+### a sonda, depois do P0
+
+os dois testes da sonda (`crates/ide/tests/agent_port.rs`) usam agora um
+shell que serve o porto só no wake. o do discard confirmado recebe
+`confirmed`, `executing` e `completed`. o da recusa, que fixava a espera,
+virou `a_decline_reaches_the_agent_with_no_message_from_it`: a pessoa
+recusa e o agente recebe o `declined` sem mandar mensagem nenhuma. sem a
+linha do wake em `port.rs`, os dois caem por timeout (conferido).
+
+### a forma do pedido
+
+- request: `sem::Request.ask: Option<String>`, escrito por último e só
+  quando existe. `Request::asking(texto)` o põe, e
+  `Request::asks_a_person()` diz se ele pede uma pessoa (a pergunta de um
+  agente).
+- `check`: o passo 8 (`NeedsConfirmation`) vale quando a `Policy` exige
+  ou quando um agente pergunta. a pergunta é o último passo: um request
+  stale, inerte ou desabilitado é recusado como seria sem ela, e quem já
+  exigia confirmação continua igual. a segunda checagem na confirmação não
+  mudou.
+- `Act.ask` no `wire`, aditivo no v1. o porto limita o texto antes do
+  dispatcher com `wire::MAX_ASK` (280 caracteres, uma linha, não vazio;
+  `bad_message` fora disso), como já limita o nome do `hello`, e o
+  `requested` devolve a pergunta em `asked`.
+- `plev act <target> <action> --ask "<texto>"` imprime o
+  `awaiting_confirmation` e espera. a confirmação sai com 0, ou com 1
+  quando a segunda checagem recusa; a recusa sai com 1 (`declined`); um
+  texto que não cabe sai com 3 antes de conectar. sem `--timeout`, espera
+  300 s em vez de 30, porque uma pessoa lê antes de responder. a regra
+  está no `plev act --help` e na doc do `Act`.
+
+### o modal
+
+título "Question from test-agent", corpo `test-agent asks the person:
+"recolocar src/session.rs?" If allowed, it will stage src/session.rs.`,
+botões "Allow" e "Cancel". num discard, o botão continua "Discard" e o
+corpo mantém "This cannot be undone.". fica na terceira pessoa ("the
+person", nunca "you"). confirmar e recusar seguem como antes, pelo
+dispatcher como `Actor::Human`. o texto nasce em `Workbench::confirmation`
+(`crates/ide/src/workbench/notice.rs`).
+
+### as decisões
+
+- a pergunta não entra na projeção: nem em `notices` nem num nó do modal,
+  que não é projetado. o autor a vê no `asked` do `requested`; um outro
+  agente não vê requests alheios pela porta. o toast de recusa continua
+  dizendo o que dizia.
+- uma pessoa não pergunta a outra: a pergunta de `Actor::Human`, de
+  `Actor::Assistive` ou de um teste não pede nada, como o
+  `Confirm::ForAgents` não pede nada a eles. recusar exigiria uma
+  variante nova em `Rejection`, e o `rec` faz um `match` completo nela.
+- ninguém responde: o request espera, como o `discard`; não há api de
+  expirar. o `plev` desiste depois do `--timeout`, e aí o estágio se perde
+  para aquela conexão, mas o agente ainda pode observar o resultado.
+- segredo: a pergunta sobre um alvo secreto vira `REDACTED` em
+  `Secrets::request`, a regra única que o `rec` e o porto aplicam.
+- dentro do processo, o código do app não é limitado: como o nome do
+  agente, o limite vale na porta, que é por onde entra texto de fora.
+- o `why` do inspector ganha duas linhas quando há pergunta: "asked" (o
+  ator e a pergunta) e "answered" (quem confirmou ou recusou, e quando).
+
+### o aceite
+
+- sem: seis testes em `crates/sem/tests/dispatch.rs` (o pedido espera,
+  confirmado roda com a segunda checagem, recusado não roda, quem já
+  exigia continua igual, pessoa e teste não pedem nada, a pergunta nunca
+  passa de uma recusa), a forma serde em `crates/sem/tests/wire.rs` e a
+  redação em `redact.rs`.
+- wire: a forma de `Act` com e sem pergunta (`codec.rs`); pela porta, a
+  espera, a confirmação, a recusa e a segunda checagem, o texto limitado
+  antes do dispatcher e redigido num alvo secreto (`server.rs`); o wake
+  (`server.rs`, `socket.rs`); o `plev act --ask` com
+  `awaiting_confirmation` e depois o estágio terminal, 0 na confirmação e
+  1 na recusa (`cli.rs`); o parse e o help (`plev.rs`).
+- ide: o A2''b pela porta real, com a pessoa respondendo no modal pelo
+  dispatcher. o agente observa, põe os três arquivos no stage e escreve a
+  mensagem; a pessoa tira `src/session.rs`; o submit é recusado stale
+  nomeando a pessoa; o agente pergunta "recolocar src/session.rs?", e o
+  modal mostra o texto.
+  - `the_agent_asks_the_person_who_confirms_and_the_three_files_are_committed`:
+    a pessoa confirma, o stage roda e o agente commita os três.
+  - `the_agent_asks_the_person_who_declines_and_it_stops`: a pessoa
+    recusa, o agente recebe o `declined` e para; nada é commitado, e
+    `src/session.rs` fica fora do index.
+  - `what_ends_at_once_or_at_the_second_check_reaches_the_agent`.
+  - `an_agents_question_is_asked_in_the_modal_and_never_projected`, em
+    `workbench/tests.rs`.
+- inspector: a sessão gravada do teste confirmado fica em
+  `$CARGO_TARGET_TMPDIR/ide-ask-test.monster`. `plev-inspect <arquivo>
+  --why 8` mostra:
+
+```text
+request 8 (origin 0): stage on changes.file[src/session.rs] by agent:test-agent, at +0.196s
+  control       changes.file[src/session.rs]: list_item "src/session.rs", enabled
+  state         status = "added", staged = false, unstaged = true
+  initiated by  agent:test-agent
+  action        stage, no parameter
+  asked         agent:test-agent asked a person first: "recolocar src/session.rs?"
+  answered      human confirmed it, at +0.197s
+  observed      +0.196s, the whole app, at revision 684de68c20da1cee
+  ...
+  stages        +0.196s requested
+                +0.196s awaiting_confirmation
+                +0.197s confirmed: by human
+                +0.197s executing
+                +0.219s completed
+  verdict       waited for a person to confirm, from +0.196s
+  result        completed at +0.219s
+```
+
+### validação e contagem
+
+`./script/gate` verde depois do rebase em `e840904`, com teste, clippy
+`-D warnings`, fmt, wasm check e a perna urnaui. `cargo test --workspace`:
+na base eram 2267 passando e 11 ignorados; agora são 2289 e 11 (+22). a
+perna urnaui tem 82 passando e 1 ignorado, igual. os testes novos da porta
+(`agent_port`, `socket`) rodaram seis e três vezes seguidas, todas verdes.
+
+### ADR
+
+seção datada "updated on 2026-09-24 (task-92): an agent asks the person"
+em `docs/ADR/actions-carry-observed-state.md`, com o P0 descrito. a linha
+para o índice, se o orquestrador quiser: "um agente pode pedir, no próprio
+request, que uma pessoa confirme antes (`Request::ask`, `Act::ask`, `plev
+act --ask`); o porto se acorda quando ouve, fora de um drain, um estágio
+de um request seu (P0 da task-92)".
+
+### limitações e o que fica para a integração
+
+- `crates/ide/src/agent.rs` (proibido) ainda diz que os estágios tardios
+  esperam a próxima mensagem se o shell não drenar depois do worker. com
+  o P0 isso deixou de valer.
+- `docs/ADR/agents-act-through-the-semantic-contract.md`, o `README.md`,
+  o `docs/arc/arc.toml` e o `docs/CHANGELOG.md` não mudaram. o ADR do
+  porto não cita o `ask` nem o wake do sink; a seção do ADR da 58b cobre
+  os dois.
+- o `rec` estima o peso de um request sem o texto da pergunta
+  (`weigh.rs`): no máximo 280 caracteres por request, um erro pequeno.
+- não medi em pixel um modal com 280 caracteres, porque não há janela
+  nesta task.
+- o `Traffic` do porto não conta atos com pergunta; a transcrição conta.
+
+### o que o próximo experimento com LLM precisa dizer sobre isso
+
+- o laboratório não tem uma pessoa que responde ao modal: os modos
+  `--human` só tiram um arquivo do index. para medir o handoff, precisa de
+  um modo em que a pessoa confirma ou recusa (por exemplo, depois de um
+  atraso), em `crates/ide/src/bin/lab/**`, fora desta task. o P0 já faz a
+  resposta chegar ao agente.
+- o briefing do agente não ensina a pergunta, como a terceira rodada não
+  ensinou a regra da task-89: ela está no `plev act --help` e na doc do
+  `Act`, e a corrida mede se o agente a encontra, não se obedece.
+- escrever antes, como hipótese: com a pessoa antes do submit
+  (`unstage-before-submit`), o agente pergunta em vez de passar por cima
+  (A2''a) ou de parar (A2''b), e a resposta da pessoa decide o commit.
+  contar, por corrida: perguntas feitas, confirmadas e recusadas; atos
+  que passaram por cima da pessoa sem perguntar; o que o agente faz
+  depois de um `declined`.
+- o `plev act --ask` espera 300 s por padrão. o laboratório deve dizer em
+  quanto tempo a pessoa responde, para não medir o timeout.
+
+### commits
+
+- `7623b7f` task-92: the probe, an agent's discard through the port and
+  the person's answer
+- `e3cf244` task-92: stopped at the probe; the handoff with the decision
+  it needs
+- `01b9b2a` task-92: the port's sink moves to its own module, with no
+  change
+- `ae544b7` task-92: a stage heard outside a drain wakes the port (P0)
+- `d56ef44` task-92: an agent's request can ask a person first (sem)
+- `64011de` task-92: the act asks a person over the port, plev act --ask
+- `9792058` task-92: the why shows the question and who answered it
+- `82202ab` task-92: the ide asks the person the agent's question
+- `d293046` task-92: what ends at once or at the second check reaches the
+  agent too
+- o commit deste handoff, com o ADR
