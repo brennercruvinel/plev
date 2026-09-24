@@ -74,6 +74,15 @@ impl Rig {
         }
     }
 
+    /// The next worker event, if one comes within `wait`, not applied: a
+    /// test that plays the shell applies it and then serves the port.
+    // each test binary compiles this module whole; only agent_port.rs
+    // plays the shell.
+    #[allow(dead_code)]
+    pub fn event(&self, wait: Duration) -> Option<GitEvent> {
+        self.events.recv_timeout(wait).ok()
+    }
+
     /// Waits for the worker's answer to request `id`, which left for it,
     /// then for the status refresh that answer triggers.
     pub fn settle(&mut self, id: RequestId) {

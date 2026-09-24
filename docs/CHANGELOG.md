@@ -9,6 +9,20 @@ status: living
 
 ## unreleased
 
+- the ide a person uses opens the agent port (2026-09-23, task-86): with
+  `PLEV_AGENT=1` in a debug build the `ide` window serves its workbench to
+  agents as app `ide` (`ide::agent`, a `wire::Host` over the `Workbench`
+  and the frame's visible bindings), the same dispatcher a click goes
+  through. the shell serves the port when it wakes and again after every
+  git result, so a stage or a commit that ends on the worker sends its
+  last stage then, and it draws only when an act ran. proved in a real
+  window: an agent staged two files and wrote the message, a person
+  unstaged one with real clicks, the agent's submit was refused as stale
+  naming the person, the toast on screen and the node the agent reads said
+  the same words, and the agent committed what the person left staged.
+  the engine gains `Binding::visible_rect` and
+  `Compositor::visible_bindings`, which the showcase's port now reads too.
+
 - a recorded session answers why (2026-09-23, task-64 phase a, adr
   the-inspector-reads-a-session-never-runs-it): the new crate `inspect`
   and its cli `plev-inspect <session.monster>` read a session and answer,

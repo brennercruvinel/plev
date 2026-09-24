@@ -58,7 +58,7 @@ cargo run -p showcase [page] [theme] [scroll]      # the design-system gallery, 
 cargo run -p showcase -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png   # any page to png, no window
 cargo run -p showcase -- --render Todo --svg todo.svg --semantics todo.json   # the same frame as svg (each approximation reported on stderr) and the page's semantic projection as the json `plev observe` serves
 cargo run -p showcase --example regress -- check   # structural regression over crates/showcase/fixtures/regress: meaning, then layer hashes, then pixels only where a layer moved; `-- bless` accepts a change
-cargo run -p ide --bin ide [path]      # plev-native git client
+cargo run -p ide --bin ide [path]      # plev-native git client; with PLEV_AGENT=1 (debug) its window opens the agent port as app ide
 cargo run -p ide --bin ide-lab -- --arm scripted   # the task-62 lab (unix): the ide's workbench with no window, on a temp repo, served to an agent through the port, recorded, checked against git
 cargo run -p prime                     # prime-coherence particle swarm
 cargo run -p engine --example snake    # any of the windowed demos

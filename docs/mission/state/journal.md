@@ -14,6 +14,33 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 2: o ide que alguém usa abre a porta; a 89 decidida por ator
+
+- **integrada:** task-86 (`7f866e8`), o binário `ide` com janela abre a
+  porta do agente. gate verde (2202). prova do agente numa janela real:
+  um agente e uma pessoa com cliques reais, recusa stale nomeando a
+  pessoa, o mesmo texto no toast e no nó `notices`, recuperação que
+  respeita o que a pessoa deixou no index.
+- **incidente:** na primeira tentativa da prova, um clique sintético do
+  harness caiu no navegador do brenner (Dia), em (328, 389) da tela; não
+  sei no que clicou. na minha reprodução, a janela do ide tomou o foco
+  com ele na máquina; fechei pelo pid. regra nova em learnings.
+- **bug de validação real, aberto:** task-90. na ordem natural de uma
+  pessoa (clicar na linha, depois tirar do index), a recusa nomeia a
+  seleção e esconde o unstage.
+- **decisão autônoma (task-89, para o brenner revisar junto com a
+  anterior):** o agente parou com um problema real. cada `plev` abre uma
+  conexão nova, então "o que foi mostrado àquela conexão" recusaria todo
+  `plev act --from-revision`, inclusive o braço A dos experimentos.
+  decidi: o que foi mostrado é guardado por ator (o nome do `hello`, a
+  mesma identidade dos receipts e do `acted`), limitado (as últimas
+  revisões do anel por ator, 16 atores). dois processos com o mesmo
+  nome contam como um ator só, e o nome não é autenticado; a porta é
+  local, do mesmo usuário, opt-in e só em debug. um delta mostra só o
+  que traz; `not_observed` sai com 3. um ato encadeado que lê o que o
+  próprio ato anterior mudou passa a precisar de uma observação.
+- **publicado:** PR #54 (task-64 fase a), merge `eea529b`.
+
 ### ciclo 2: o inspector entra e acha um buraco no contrato
 
 - **integrada:** task-64 fase a (`e6560a2`), o crate `inspect` e a CLI

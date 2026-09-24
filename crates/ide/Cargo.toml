@@ -34,10 +34,13 @@ env_logger.workspace = true
 pollster.workspace = true
 # Same major as plev's optional hot-reload dep (shared build cache).
 notify.workspace = true
-# the laboratory (src/bin/lab): the agent port and the flight recorder
-# around the workbench, the report as json, a real repository in a temp
-# dir. the lib uses none of these; cargo has no per-binary dependencies.
+# the agent port: the lib serves the workbench through it (src/agent.rs,
+# unix only), the ide's window opens it with PLEV_AGENT=1 in a debug build,
+# and the laboratory (src/bin/lab) serves it too.
 wire.workspace = true
+# the laboratory (src/bin/lab): the flight recorder around the workbench,
+# the report as json, a real repository in a temp dir. the lib uses none
+# of these; cargo has no per-binary dependencies.
 rec.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true

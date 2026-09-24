@@ -247,9 +247,14 @@ one toggle still 624 B; the new numbers are in
   (task-62 phase c, `crates/ide/src/bin/lab/lab.rs`), not by the ide's
   own shell as planned here. its executions end on the git worker, so the
   lab drains the port also after the worker's wake, for the late stages
-  to go out. updated on 2026-09-23: the `ide` binary does not use `wire`
-  and opens no port (`crates/ide/src/main.rs`); a port on its window
-  shell is still to do.
+  to go out. updated on 2026-09-23 (task-86): the `ide` binary's window
+  opens the port too (`PLEV_AGENT=1`, debug) through `ide::agent`, a
+  `Host` over the `Workbench` and the frame's bindings; the shell drains
+  after the port's wake and after every git result it applies, so late
+  stages go out, and draws only when an act ran. the visible part of a
+  binding is `Binding::visible_rect` in the engine, read by both hosts.
+  proved in a real window with a person's clicks and an agent at once
+  (`docs/mission/steps/checked/task-86-the-ide-opens-the-agent-port-done.md`).
 - a host with more than one dispatcher gets one sink; the showcase has
   one today (the todo page). request ids are per dispatcher, so a host
   must route the port to one.
