@@ -12,6 +12,21 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-74 fase 1
+
+- **o texto do plev hoje é latino:** com as 9 faces embutidas, árabe,
+  hebraico, devanágari, chinês, japonês e coreano viram tofu, e o tofu
+  (9,9 px em 16 px) erra a largura medida nos dois sentidos, então até a
+  quebra de linha sai errada. o que já funciona sem fonte: a ordem bidi
+  (inclusive dígitos em nível 2), as marcas combinantes (o shaper compõe)
+  e o kerning. o que não existe: `liga` nas duas faces e o caminho de cor
+  no atlas (emoji tem largura e nenhuma tinta, mesmo com Apple Color
+  Emoji). embutido e desktop são dois produtos: a mesma frase mede 251 px
+  embutida e 151 px com a fonte do sistema. a fase 2 (embutir subsets
+  Noto, fallback de sistema, ou os dois) é decisão do brenner, com a
+  estimativa de tamanho no relatório. fonte:
+  `task-74-text-and-editing.md`, "relatório da fase 1".
+
 ### 2026-09-24, task-69 fase 3a
 
 - **gerar sem template funcionou pela estrutura do registro:** o

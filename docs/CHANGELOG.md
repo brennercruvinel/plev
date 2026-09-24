@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- the text coverage audit (2026-09-24, task-74 phase 1): a corpus with one
+  phrase per script (latin with diacritics, ligatures and kerning,
+  combining marks, arabic, hebrew, devanagari, chinese, japanese, korean,
+  emoji with ZWJ, mixed bidi) shaped and rendered headless, with the
+  glyphs, the notdefs, the measured width and the ink per line in
+  `crates/engine/tests/text_audit.txt`. with the embedded fonts every
+  non-latin script is tofu; bidi order, combining marks and kerning work;
+  no embedded face has `liga`; colour emoji has width and no ink. the
+  probe reports shaping per glyph (`engine::text::probe::shape_report`).
+
 - the showcase records its session, and the video editor demo is recorded
   (2026-09-24, task-69 phase 4c): with `PLEV_RECORD=1` in a debug build
   the gallery records what the ide records (every stage of every receipt,
