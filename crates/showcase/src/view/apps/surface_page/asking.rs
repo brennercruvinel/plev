@@ -28,7 +28,7 @@ use uir::{Capabilities, GenerationPolicy, VerifiedIr};
 use claude_model::{Cancel, ClaudeCli};
 
 /// How often the page looks at the channel while it waits.
-pub(super) const POLL: Duration = Duration::from_millis(100);
+pub(crate) const POLL: Duration = Duration::from_millis(100);
 
 /// What the worker sends back.
 // off the desktop there is no thread: nothing constructs a message.
@@ -50,7 +50,7 @@ enum Msg {
     any(target_arch = "wasm32", target_os = "android", target_os = "ios"),
     allow(dead_code)
 )]
-pub(super) struct Answer {
+pub(crate) struct Answer {
     pub proposed: Result<VerifiedIr, ProposeError>,
     /// The calls made, one per attempt.
     pub attempts: usize,
@@ -62,7 +62,7 @@ pub(super) struct Answer {
 }
 
 /// The Claude the page may ask: the program, when it is there.
-pub(super) struct Claude {
+pub(crate) struct Claude {
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     cli: Option<ClaudeCli>,
 }
@@ -215,7 +215,7 @@ impl Claude {
     any(target_arch = "wasm32", target_os = "android", target_os = "ios"),
     allow(dead_code)
 )]
-pub(super) struct Pending {
+pub(crate) struct Pending {
     pub id: RequestId,
     pub intent: String,
     started: web_time::Instant,

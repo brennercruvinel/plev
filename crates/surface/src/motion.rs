@@ -27,6 +27,7 @@ use sem::{SemId, Snapshot};
 
 use crate::draw;
 use crate::expand::Node;
+use crate::host::Frames;
 use crate::widget::{Kind, Widget};
 
 /// the smallest step of opacity a frame shows: one level of an 8-bit
@@ -181,8 +182,9 @@ impl Ghost {
         }
     }
 
-    /// draws it at its opacity, starting its exit on its first frame.
-    pub fn draw(&mut self, c: &mut Compositor, theme: &Theme) {
+    /// draws it at its opacity, starting its exit on its first frame; an
+    /// image's picture is asked of `frames` as a live node's is.
+    pub fn draw(&mut self, c: &mut Compositor, theme: &Theme, frames: &dyn Frames) {
         let from = self.from;
         self.fade.get_or_insert_with(|| spring(from, 0.0, theme));
         let alpha = self.opacity();
@@ -193,8 +195,9 @@ impl Ghost {
             shown,
             ..
         } = self;
+        let picture = draw::picture(node, shown, frames);
         draw_faded(c, alpha, false, |own| {
-            draw::draw(own, node, widget, *rect, shown, theme);
+            draw::draw(own, node, widget, *rect, shown, theme, picture);
         });
     }
 }

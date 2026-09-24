@@ -357,7 +357,7 @@ phase 1's. the time per frame of a transition was not measured.
   must survive a change of representation is the app's, and it is read
   again through the binding.
 
-## addendum, 2026-09-24: the todo's surface shows its items (task-95, proposed)
+## addendum, 2026-09-24: the todo's surface shows its items (task-95, accepted)
 
 - the showcase todo projects `todo:items` (the visible ids, in the order
   shown) and each item's `text`. both forms of the Surface page repeat
@@ -381,3 +381,84 @@ phase 1's. the time per frame of a transition was not measured.
 - a materialized dialog draws its cancel button even when `cancel` is
   not bound, and a closed dialog stays projected with its `confirm`
   (phase 1): both matter to any surface that binds a removal later.
+
+## addendum, 2026-09-24: an image draws the frame the app holds (task-69 phase 4b, accepted)
+
+### context
+
+phase 1 drew an `image` as its shell with its label: the IR names a
+source, and the engine takes a GPU image handle the surface has no way to
+get. the video editor scenario (the thesis' section 4, the silences app
+of phase 4a) needs the generated review to show a frame of the video and
+one per cut, decoded by the app's own worker (ffmpeg, one child at a
+time, cached by instant), and the comparison to show two views of the
+video at two instants. the probe of phase 4b (the task file) showed the
+verifier needs nothing new: an `image` binds any text of the app as its
+`source`; what was missing was a text that names a frame, and a way for
+the host to reach the app's cache.
+
+### decision
+
+- **the frame ref is the app's.** an app that can decode frames projects
+  one text state per frame it offers, whose value is the media node's id
+  and the instant in seconds: `silences.video@4.017052`. the silences
+  project `silences.video:original` (the frame of the original at the
+  instant shown), `silences.video:result` (the frame of the result at
+  that instant: inside an applied cut, the cut's end, the first frame
+  that stays) and `silences.cut[<id>]:frame` (the middle of the cut).
+  an `image` binds its `source` to one of them; nothing in the
+  vocabulary, the schema or the verifier changes.
+- **`Frames`.** a trait of the crate, `fn frame(&self, source: &str) ->
+  Option<ImageHandle>`: the app's frames as the surface reads them, by
+  the frame ref. `Surface::render_with` and `SurfaceHost::draw_closing_with`
+  take one; `render` and `draw_closing` are the same with `NoFrames`. a
+  ghost of an image asks the same, so a picture fades out with the rest.
+  the surface never holds bytes, never decodes, and never asks for a
+  decode: it draws what the app holds now.
+- **`Surface::sources`** (and the host's) names the frame refs the
+  surface's images show. the app decodes what it lacks on its own time:
+  the silences page asks its worker from `wake`, never in a frame, one
+  job at a time, the failures cached so nothing is asked in a loop; when
+  a frame arrives, the page asks for a frame and the surface draws it.
+- **the picture is fitted.** an image draws its shell, and inside it the
+  picture fitted and centered, never scaled up; without one, the shell
+  and its label as before. its size is the block's (half the narrowest
+  card), or, with a `control_size`, that control height at 16:9 (a
+  thumbnail in a row). the layout is the same with or without the
+  picture, so a frame arriving moves nothing.
+- **the silences page** implements the trait over its cache
+  (`jobs::PageFrames`, the instant parsed from the ref), and lends its
+  `SurfaceHost` out for a surface's events the way the todo lends its
+  dispatcher; the surface opens beside the fixed screen (the fixed screen
+  takes the left half, or the top at a phone's width) and the fixed
+  screen takes the width back when it closes.
+
+### consequences
+
+- the two fixtures of the silences surface,
+  `crates/surface/tests/fixtures/showcase-silences-review.ir.json` and
+  `showcase-silences-compare.ir.json`, verify over the app's golden, draw
+  with frames made in memory in the crate's tests and with ffmpeg's in
+  the page's ignored test, and transform one into the other keeping
+  every cut's instance (a press begun on a cut's button completes after
+  the change of form).
+- the app's list state holds the items' keys (`silences:cuts` is `["1",
+  "2"]`, as `todo:items`), which a repeat keys its instances by: the
+  phase 4a projection held the ids and gave instances named
+  `review.cut[silences.cut[1\]]`.
+- a 32 by 18 picture stays 32 by 18 in a 140 tall box: the surface
+  never scales up, as the fixed screen does not. a frame decoded wider
+  than its box is fitted.
+- the surface half at 1200 wide is about 430 px inside its card
+  padding: a row of a thumbnail, two texts, a badge and two buttons does
+  not fit in one line and wraps its texts; the fixtures put the texts
+  in a column between the thumbnail and the buttons.
+
+### avoid
+
+- an image that carries bytes, or a surface that decodes: the frames are
+  the app's, by their ref.
+- a decode started from a frame: the app asks its worker from its wake,
+  after an actor's request opened the surface.
+- a frame ref that is not the media node's id and an instant: the rules
+  and the page read it by that form.

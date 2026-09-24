@@ -5,6 +5,12 @@
 //! host draws itself (a container's fill, a text run, a dialog's title)
 //! reads the field the IR token names. a prop a widget does not take (a
 //! typography on a text field, a color on a control) is its default.
+//!
+//! an image draws the picture the app holds for its bound `source`
+//! (`Frames`), fitted inside its shell and never scaled up; without one,
+//! the shell with its label. its size is the block's, or, with a
+//! `control_size`, that control height at the frame's usual aspect (a
+//! thumbnail in a row).
 
 use comps::Rect;
 use comps::action::Badge;
@@ -15,6 +21,7 @@ use comps::form::TextField;
 use comps::nav::Tabs;
 use comps::recipe::{rounded_rect, shadow_stack};
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::gpu::image::ImageHandle;
 use engine::layout::TextMeasureSpec;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ControlSize, Elevation, Theme};
@@ -22,9 +29,35 @@ use sem::{Snapshot, Value};
 use uir::{Axis, ChartKind, Component, SpacingToken};
 
 use crate::expand::Node;
+use crate::host::Frames;
 use crate::layout::Leaf;
 use crate::token;
 use crate::widget::{Widget, dialog_buttons, list_of, text_of};
+
+/// the aspect of an image sized by a control height, width over height:
+/// the frame of a video, the common one, before or without a picture.
+/// pure geometry, not a token: it is the shape of the content, not of
+/// the design system.
+const FRAME_ASPECT: f32 = 16.0 / 9.0;
+
+/// the picture an image shows now: the frame the app holds for the text
+/// its `source` is bound to. none for any other node, for an unbound
+/// source, or while the app has no frame for it.
+pub(crate) fn picture(node: &Node, shown: &Snapshot, frames: &dyn Frames) -> Option<ImageHandle> {
+    if node.component != Some(Component::Image) {
+        return None;
+    }
+    let source = node.value("source", shown).map(text_of)?;
+    frames.frame(&source)
+}
+
+/// the frame ref an image shows, when its `source` is bound.
+pub(crate) fn source(node: &Node, shown: &Snapshot) -> Option<String> {
+    if node.component != Some(Component::Image) {
+        return None;
+    }
+    node.value("source", shown).map(text_of)
+}
 
 /// the text a text or a badge shows: its bound `text`, or its label.
 pub(crate) fn shown_text(node: &Node, shown: &Snapshot) -> String {
@@ -112,9 +145,14 @@ pub(crate) fn leaf(
             let rows = list_of(node.value("rows", shown)).len() as f32;
             fill(Table::header_h(theme) + rows * Table::row_h(theme))
         }
-        Some(Component::Chart(_) | Component::Image | Component::EmptyState) => {
-            fill(block_h(theme))
-        }
+        Some(Component::Chart(_) | Component::EmptyState) => fill(block_h(theme)),
+        Some(Component::Image) => match node.props.control_size {
+            Some(size) => {
+                let h = theme.control.height(token::control(size));
+                Leaf::Fixed((h * FRAME_ASPECT).round(), h)
+            }
+            None => fill(block_h(theme)),
+        },
         Some(Component::Progress) => fill(theme.control.progress_track),
         Some(Component::Separator) => match axis {
             Axis::Horizontal => Leaf::Fixed(
@@ -197,7 +235,8 @@ fn text(c: &mut Compositor, s: &str, style: &TextStyle, rect: Rect, color: [f32;
 }
 
 /// draws `node` at `rect`, and binds its id to that rect when its widget
-/// does not bind itself.
+/// does not bind itself. `picture` is the frame an image shows, when the
+/// app holds one (`picture`).
 pub(crate) fn draw(
     c: &mut Compositor,
     node: &Node,
@@ -205,6 +244,7 @@ pub(crate) fn draw(
     rect: Rect,
     shown: &Snapshot,
     theme: &Theme,
+    picture: Option<ImageHandle>,
 ) {
     let binds_itself = matches!(
         widget,
@@ -276,7 +316,7 @@ pub(crate) fn draw(
             EmptyState::new(node.label.clone().unwrap_or_default(), message).render(c, rect, theme);
         }
         (Some(Component::Progress), _) => progress(node, shown).render(c, rect, theme),
-        (Some(Component::Image), _) => image(c, node, rect, theme),
+        (Some(Component::Image), _) => image(c, node, rect, theme, picture),
         (Some(Component::Chart(kind)), _) => {
             let data = list_of(node.value("data", shown));
             draw_chart(c, kind, &data, rect, theme);
@@ -327,9 +367,11 @@ fn progress(node: &Node, shown: &Snapshot) -> ProgressBar {
     ProgressBar::new(fraction as f32)
 }
 
-/// an image the surface cannot decode (the IR names a source; the engine
-/// takes a GPU image handle): the card shell with its label in the middle.
-fn image(c: &mut Compositor, node: &Node, rect: Rect, theme: &Theme) {
+/// an image: its shell, and inside it the picture the app holds for its
+/// source, fitted and centered, never scaled up; without one, its label
+/// in the middle (the surface cannot decode: the IR names a source, the
+/// app holds the frames).
+fn image(c: &mut Compositor, node: &Node, rect: Rect, theme: &Theme, picture: Option<ImageHandle>) {
     let radius = node
         .props
         .shape
@@ -342,6 +384,22 @@ fn image(c: &mut Compositor, node: &Node, rect: Rect, theme: &Theme) {
         radius,
         theme.glass.surface.0,
     ));
+    if let Some(handle) = picture {
+        let (iw, ih) = (handle.width as f32, handle.height as f32);
+        if iw > 0.0 && ih > 0.0 {
+            let scale = (rect.w / iw).min(rect.h / ih).min(1.0);
+            let (w, h) = (iw * scale, ih * scale);
+            c.draw_image(
+                rect.x + (rect.w - w) / 2.0,
+                rect.y + (rect.h - h) / 2.0,
+                w,
+                h,
+                handle,
+                radius,
+            );
+            return;
+        }
+    }
     let style = theme.typography.caption_r();
     let label = node.label.as_deref().unwrap_or_default();
     let (w, h) = TextMeasurer::measure_styled(label, &style, Some(rect.w));

@@ -5,23 +5,30 @@
 //! adds its sink to that one dispatcher and matches acts by `RequestId`,
 //! so a second dispatcher would be unheard and would collide on ids).
 //!
-//! The semantic model: `silences` (region; `cuts`, the ids of the cuts in
-//! the order shown), `silences.video` (media: `file`, `duration`, `shown`),
-//! `silences.threshold` and `silences.min_duration` (sliders: `value`,
-//! `set_value`, `increment`, `decrement`), `silences.detect` (button:
+//! The semantic model: `silences` (region; `cuts`, the keys of the cuts in
+//! the order shown, as the todo lists its items: a `repeat` over it keys
+//! each instance by them), `silences.video` (media: `file`, `duration`,
+//! `shown`, and two frame refs, `original`, the frame of the original at
+//! the instant shown, and `result`, the frame of the result at that
+//! instant: inside an applied cut, the cut's end), `silences.threshold`
+//! and `silences.min_duration` (sliders: `value`, `set_value`,
+//! `increment`, `decrement`), `silences.detect` (button:
 //! `detect_silence`, reading the cuts and both values), `silences.cut[<id>]`
 //! for each cut (list item named by its range: `start`, `end`, `duration`,
-//! `decision`; `preview_segment` reading `silences.video:shown`,
-//! `apply_cut` and `reject_cut` reading `decision`, each disabled when it
-//! is the decision already), `silences.counts` (status: `total`,
-//! `applied`, `rejected`, `pending`, `cut_secs`), `silences.apply_all`
-//! (button: `apply_all` reading `silences.counts:pending`) and
-//! `silences.status` (`message`, `busy`).
+//! `range` as text, `decision`, and `frame`, the frame ref of its middle;
+//! `preview_segment` reading `silences.video:shown`, `apply_cut` and
+//! `reject_cut` reading `decision`, each disabled when it is the decision
+//! already), `silences.counts` (status: `total`, `applied`, `rejected`,
+//! `pending`, `cut_secs`), `silences.apply_all` (button: `apply_all`
+//! reading `silences.counts:pending`) and `silences.status` (`message`,
+//! `busy`). A frame ref is `<media id>@<seconds>` (`jobs::frame_ref`):
+//! what a generated surface's `image` binds as its `source`.
 //!
 //! `detect_silence`, and a `preview_segment` whose frame is not decoded
-//! yet, answer `Execution::Started` and keep the request open; `settle`,
-//! called from the page's wake, reads what the worker sent and ends them
-//! with `Dispatcher::complete` or `fail`, through the same lending.
+//! yet, answer `Execution::Started` and keep the request open; `settle`
+//! (`jobs.rs`), called from the page's wake, reads what the worker sent
+//! and ends them with `Dispatcher::complete` or `fail`, through the same
+//! lending.
 
 use comps::prelude::EventResult;
 use engine::perf::stages::{self, Stage};
@@ -29,9 +36,11 @@ use sem::{
     Actor, Execution, Operable, Receipt, Request, RequestId, Role, SemError, SemErrors, SemId,
     Semantics, Snapshot, SnapshotBuilder, Value,
 };
-use showcase::model::silences::{Decision, Settings, TEST_VIDEO, Video};
+use showcase::model::silences::{Decision, Settings, TEST_VIDEO};
 
-use super::worker::{Done, Job};
+use super::generated::page::{Page, project_all};
+use super::jobs::frame_ref;
+use super::worker::Job;
 use super::{Said, SilencesPage};
 use crate::view::apps::app::TodoPage;
 
@@ -163,13 +172,13 @@ enum Op {
     ApplyAll,
 }
 
-fn count(n: usize) -> Value {
+pub(super) fn count(n: usize) -> Value {
     Value::Int(i64::try_from(n).unwrap_or(i64::MAX))
 }
 
 /// Seconds at ffmpeg's six decimals: a difference or a sum of the values
 /// it printed carries no binary noise into the projection.
-fn micros(secs: f64) -> f64 {
+pub(super) fn micros(secs: f64) -> f64 {
     (secs * 1e6).round() / 1e6
 }
 
@@ -199,7 +208,7 @@ impl Semantics for SilencesPage {
             .model
             .cuts()
             .iter()
-            .map(|c| ids.cut(c.id()).to_string())
+            .map(|c| c.id().to_string())
             .collect();
         b.node(&ids.region, Role::Region, "silences")
             .inert(self.inert)
@@ -213,7 +222,9 @@ impl Semantics for SilencesPage {
             .parent(&ids.region)
             .state("file", name.as_str())
             .state("duration", self.model.duration())
-            .state("shown", self.model.shown());
+            .state("shown", self.model.shown())
+            .state("original", frame_ref(&ids.video, self.model.shown()))
+            .state("result", frame_ref(&ids.video, self.result_instant()));
         self.threshold
             .project(b, &ids.threshold, "threshold (dB)", Some(&ids.region));
         self.min_duration.project(
@@ -237,12 +248,14 @@ impl Semantics for SilencesPage {
             let seg = cut.segment();
             let decision = cut.decision();
             let label = format!("{} to {}", clock(seg.start), clock(seg.end));
-            let mut node = b.node(&id, Role::ListItem, label);
+            let mut node = b.node(&id, Role::ListItem, label.as_str());
             node.parent(&ids.region)
                 .state("start", seg.start)
                 .state("end", seg.end)
                 .state("duration", micros(seg.duration()))
-                .state("decision", decision.name());
+                .state("range", label.as_str())
+                .state("decision", decision.name())
+                .state("frame", frame_ref(&ids.video, seg.middle()));
             node.action("preview_segment").reads(shown.as_str());
             let reads = format!("{id}:decision");
             node.action("apply_cut")
@@ -349,12 +362,57 @@ impl Operable for SilencesPage {
 }
 
 impl SilencesPage {
-    /// The page projected now.
+    /// The app projected now: the fixed screen alone, the registry a
+    /// generated surface verifies against and reads.
     pub(crate) fn snapshot(&self) -> Result<Snapshot, SemErrors> {
         let _probe = stages::span(Stage::Projection);
         let mut b = SnapshotBuilder::new();
         self.project(&mut b);
         b.finish()
+    }
+
+    /// The whole page projected now: the fixed screen, the generated
+    /// surface and the proposing row, one snapshot, what assistive
+    /// technology and an agent are shown.
+    pub(crate) fn projection(&self) -> Result<Snapshot, SemErrors> {
+        let _probe = stages::span(Stage::Projection);
+        let mut b = SnapshotBuilder::new();
+        project_all(self, &mut b);
+        b.finish()
+    }
+
+    /// A person proposes: `propose` observed on the page as it is now,
+    /// by the person, through the todo's dispatcher.
+    pub(super) fn propose(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
+        let target = self.generated.proposing.ids.as_ref()?.propose.clone();
+        self.ask_page(todo, &target, "propose")
+    }
+
+    /// A person cancels the proposal the Claude is answering.
+    pub(super) fn cancel(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
+        let target = self.generated.proposing.ids.as_ref()?.cancel.clone();
+        self.ask_page(todo, &target, "activate")
+    }
+
+    /// A person closes the generated surface.
+    pub(super) fn close(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
+        let target = self.generated.close_id.clone()?;
+        self.ask_page(todo, &target, "close")
+    }
+
+    /// A person's click on the block: observed on the whole page,
+    /// dispatched over it.
+    fn ask_page(&mut self, todo: &mut TodoPage, target: &SemId, action: &str) -> Option<RequestId> {
+        let seen = self
+            .projection()
+            .inspect_err(|e| log::warn!("silences: the projection does not validate: {e}"))
+            .ok()?;
+        let req = Request::observe(&seen, Actor::Human, target, action, None)
+            .inspect_err(|e| log::warn!("silences: {e}"))
+            .ok()?;
+        let id = Page { app: self }.dispatch(req, todo);
+        self.sync_surface();
+        Some(id)
     }
 
     /// Runs `req` through the gallery's dispatcher (the todo page lends
@@ -364,28 +422,63 @@ impl SilencesPage {
     }
 
     /// A request from an actor outside the page's own input (an agent
-    /// through the port, a screen reader); the receipt as it stands.
+    /// through the port, a screen reader): aimed at the row or the close
+    /// it runs over the whole page; aimed at a node of the surface it is
+    /// the capability the IR bound (`SurfaceHost::route`); either way it
+    /// goes through the gallery's one dispatcher, and the surface then
+    /// shows what came out. The receipt as it stands.
     pub(crate) fn act(
         &mut self,
         req: Request,
         todo: &mut TodoPage,
         inert: bool,
     ) -> Option<Receipt> {
-        self.inert = inert;
-        let id = self.dispatch(req, todo);
+        self.set_inert(inert);
+        let id = if self.generated.holds(&req.target) {
+            Page { app: self }.dispatch(req, todo)
+        } else {
+            let routed = self.generated.host.route(req);
+            self.dispatch(routed, todo)
+        };
+        self.sync_surface();
         todo.receipt(id).cloned()
     }
 
-    /// Keyboard focus asked from outside the page's pointer handling: a
-    /// slider takes it; another node of the page takes it from the
-    /// sliders. `false` for an id the page does not project, and while
-    /// inert.
+    /// Keyboard focus asked from outside the page's pointer handling: the
+    /// intent field takes it; a node of the surface (its field, or away
+    /// from the fields); a slider takes it; another node of the page
+    /// takes it from the sliders. `false` for an id the page does not
+    /// project, and while inert.
     pub(crate) fn focus(&mut self, id: &SemId) -> bool {
+        if self.inert {
+            return false;
+        }
+        if self.generated.holds(id) {
+            let intent = self.generated.proposing.ids.as_ref().map(|ids| &ids.intent);
+            if intent == Some(id) {
+                self.generated.proposing.intent.focus();
+            } else {
+                self.generated.proposing.intent.unfocus();
+            }
+            self.set_focus(None);
+            for s in self.generated.host.iter_mut() {
+                s.handle_escape();
+            }
+            return true;
+        }
+        self.generated.proposing.intent.unfocus();
+        if self.generated.host.iter_mut().any(|s| s.focus(id)) {
+            self.set_focus(None);
+            return true;
+        }
         let Some(ids) = &self.ids else {
             return false;
         };
-        if self.inert || !ids.holds(id) {
+        if !ids.holds(id) {
             return false;
+        }
+        for s in self.generated.host.iter_mut() {
+            s.handle_escape();
         }
         let which = if *id == ids.threshold {
             Some(Which::Threshold)
@@ -437,93 +530,6 @@ impl SilencesPage {
             EventResult {
                 handled: true,
                 ..EventResult::IGNORED
-            }
-        }
-    }
-
-    /// What the worker sent since the page last looked: a detection
-    /// replaces the cuts and ends its request; a frame goes into the cache,
-    /// ends the previews waiting for it and asks for the frames still
-    /// missing. True when what the page shows moved.
-    pub(super) fn settle(&mut self, todo: &mut TodoPage) -> bool {
-        let done = self.worker.poll();
-        let moved = !done.is_empty();
-        for d in done {
-            match d {
-                Done::Detected { with, result, took } => {
-                    let id = self.detecting.take();
-                    let ended = match result {
-                        Ok(detected) => {
-                            let video = Video {
-                                name: TEST_VIDEO.to_owned(),
-                                duration: detected.duration.unwrap_or(0.0),
-                            };
-                            self.model.set_detected(video, with, &detected.segments);
-                            let cuts = self.model.cuts().len();
-                            self.said = Said::Detected { took };
-                            self.want_frames();
-                            let mut outcome = sem::Outcome::default();
-                            outcome.result.insert("cuts".to_owned(), count(cuts));
-                            outcome
-                                .result
-                                .insert("seconds".to_owned(), Value::Num(took.as_secs_f64()));
-                            id.map(|id| {
-                                todo.with_dispatcher(|d, _, now| d.complete(id, outcome, now))
-                            })
-                        }
-                        Err(why) => {
-                            self.said = Said::Failed(why.clone());
-                            id.map(|id| todo.with_dispatcher(|d, _, now| d.fail(id, why, now)))
-                        }
-                    };
-                    if let Some(Err(e)) = ended {
-                        log::warn!("silences: the detection's request did not end: {e}");
-                    }
-                }
-                Done::Frame { ms, result, took } => {
-                    log::debug!("silences: the frame at {ms} ms took {took:?}");
-                    #[cfg(test)]
-                    self.frame_took.push(took);
-                    if let Err(why) = &result {
-                        self.said = Said::Failed(why.clone());
-                    }
-                    let (ready, rest): (Vec<_>, Vec<_>) =
-                        self.previews.drain(..).partition(|(_, at)| *at == ms);
-                    self.previews = rest;
-                    for (id, _) in ready {
-                        let ended = todo.with_dispatcher(|d, _, now| match &result {
-                            Ok(_) => {
-                                let mut outcome = sem::Outcome::default();
-                                outcome
-                                    .result
-                                    .insert("shown".to_owned(), Value::Num(ms as f64 / 1000.0));
-                                d.complete(id, outcome, now)
-                            }
-                            Err(why) => d.fail(id, why.clone(), now),
-                        });
-                        if let Err(e) = ended {
-                            log::warn!("silences: the preview's request did not end: {e}");
-                        }
-                    }
-                    let ok = result.is_ok();
-                    self.frames.insert(ms, result);
-                    if ok {
-                        self.want_frames();
-                    }
-                }
-            }
-        }
-        moved
-    }
-
-    /// The frames the screen shows and does not have yet: the instant
-    /// shown and the middle of each cut, one job each, in that order.
-    fn want_frames(&mut self) {
-        let mut wanted = vec![ms(self.model.shown())];
-        wanted.extend(self.model.cuts().iter().map(|c| ms(c.segment().middle())));
-        for at in wanted {
-            if !self.frames.contains_key(&at) {
-                self.worker.submit(Job::Frame { ms: at });
             }
         }
     }

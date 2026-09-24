@@ -13,7 +13,7 @@ use uir::{Axis, CapabilityRef, VerifiedIr};
 
 use crate::draw::{self, closed};
 use crate::expand::{Node, expand};
-use crate::host::Dispatch;
+use crate::host::{Dispatch, Frames, NoFrames};
 use crate::layout::{self, axis_of};
 use crate::motion::{self, Ghost, Motion};
 use crate::project;
@@ -236,14 +236,42 @@ impl Surface {
         rects.first().map_or(0.0, |r| r.h)
     }
 
+    /// the frame refs the surface's images show now: the text each one's
+    /// `source` is bound to, in tree order, once each. what the app
+    /// decodes for the surface (`Frames`).
+    pub fn sources(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        for node in &self.tree {
+            if let Some(source) = draw::source(node, &self.shown)
+                && !out.contains(&source)
+            {
+                out.push(source);
+            }
+        }
+        out
+    }
+
     /// draws the surface at the top of `rect`, as wide as it and as tall
     /// as its content: every node on its widget, every projected node
     /// bound to the rect it is drawn and hit-tested with, the pictures of
     /// the nodes that left over them (bound to nothing), an open dropdown
     /// on top. the first frame after a change of form starts its
     /// transitions: each node born fades in from here, each node drawn
-    /// elsewhere before slides from there.
+    /// elsewhere before slides from there. every image is its shell and
+    /// label (`render_with` for the pictures).
     pub fn render(&mut self, c: &mut Compositor, rect: Rect, theme: &Theme) {
+        self.render_with(c, rect, theme, &NoFrames);
+    }
+
+    /// `render`, with the picture of each image asked of `frames`, the
+    /// app's, by the frame ref its `source` is bound to.
+    pub fn render_with(
+        &mut self,
+        c: &mut Compositor,
+        rect: Rect,
+        theme: &Theme,
+        frames: &dyn Frames,
+    ) {
         for node in &self.tree {
             if let Some(w) = self.widgets.get_mut(&node.id) {
                 w.prepare(node, &self.shown, theme);
@@ -278,13 +306,14 @@ impl Surface {
             }
             let r = self.motion.rect(&node.id, to);
             let alpha = self.motion.opacity(&node.id);
+            let picture = draw::picture(node, &self.shown, frames);
             if alpha < 1.0 {
                 let shown = &self.shown;
                 motion::draw_faded(c, alpha, true, |own| {
-                    draw::draw(own, node, w, r, shown, theme);
+                    draw::draw(own, node, w, r, shown, theme, picture);
                 });
             } else {
-                draw::draw(c, node, w, r, &self.shown, theme);
+                draw::draw(c, node, w, r, &self.shown, theme, picture);
             }
             if w.is_open() {
                 open.push((at, r));
@@ -292,7 +321,7 @@ impl Surface {
             self.drawn.insert(node.id.clone(), r);
         }
         for ghost in self.motion.leaving_mut() {
-            ghost.draw(c, theme);
+            ghost.draw(c, theme, frames);
         }
         for (at, r) in open {
             let node = self.tree.get(at);

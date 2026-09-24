@@ -29,7 +29,10 @@
 //! Every capability runs through the page's one dispatcher, the todo's,
 //! lent for the request to `page::Page`, the `Operable` over the whole
 //! page (`page.rs`): this file is the row itself, its widgets, where they
-//! sit, what they project and what a person's pointer does on them.
+//! sit, what they project and what a person's pointer does on them. The
+//! row is shared with the Silences page (task-69 phase 4b), which puts it
+//! over its fixed screen under its own region (`silences_surface`): the
+//! region's name is the row's one parameter, the rest is the same.
 
 use std::time::Duration;
 
@@ -43,7 +46,7 @@ use sem::{Request, Role, SemError, SemId, SnapshotBuilder, Value};
 use super::asking::{Claude, POLL, Pending};
 
 /// The ids the page's own capabilities project and bind.
-pub(super) struct Ids {
+pub(crate) struct Ids {
     pub region: SemId,
     pub intent: SemId,
     pub proposer: SemId,
@@ -53,8 +56,9 @@ pub(super) struct Ids {
 }
 
 impl Ids {
-    fn new() -> Result<Self, SemError> {
-        let region = SemId::name("surface_page")?;
+    /// The row's ids under `region` (`surface_page`, `silences_surface`).
+    fn new(region: &str) -> Result<Self, SemError> {
+        let region = SemId::name(region)?;
         Ok(Self {
             intent: region.child("intent")?,
             proposer: region.child("proposer")?,
@@ -85,14 +89,14 @@ const CLAUDE: &str = "claude";
 
 /// Who the select chooses.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Proposer {
+pub(crate) enum Proposer {
     Rules,
     Claude,
 }
 
 /// What the last proposal came to.
 #[derive(Clone, Debug, PartialEq)]
-pub(super) enum Said {
+pub(crate) enum Said {
     /// The surface shows what the rules proposed for this intent.
     Proposed(String),
     /// The surface shows what the Claude proposed for this intent: in how
@@ -141,7 +145,7 @@ impl Said {
 
 /// The intent field, the proposer, the two buttons, the Claude when it
 /// is there, the proposal it is answering, and what the last one came to.
-pub(super) struct Proposing {
+pub(crate) struct Proposing {
     pub ids: Option<Ids>,
     pub intent: TextField,
     pub proposer: Select,
@@ -160,7 +164,7 @@ pub(super) struct Proposing {
 /// button (the two under the field when the width does not hold the
 /// three), the message with the cancel button at its end, and the band
 /// they take together.
-pub(super) struct Row {
+pub(crate) struct Row {
     pub band: Rect,
     pub intent: Rect,
     pub proposer: Rect,
@@ -171,7 +175,7 @@ pub(super) struct Row {
 
 /// What a person's pointer on the row asked.
 #[derive(Default)]
-pub(super) struct Asked {
+pub(crate) struct Asked {
     pub propose: bool,
     pub cancel: bool,
     /// The open options panel took the event: nothing under it sees it.
@@ -179,7 +183,7 @@ pub(super) struct Asked {
 }
 
 /// What a request accepted against the page asks of these capabilities.
-pub(super) enum Op {
+pub(crate) enum Op {
     Write(String),
     Propose,
     Choose(String),
@@ -197,7 +201,7 @@ fn bounds(r: Rect) -> [f32; 4] {
     [r.x, r.y, r.w, r.h]
 }
 
-pub(super) fn int(n: usize) -> i64 {
+pub(crate) fn int(n: usize) -> i64 {
     i64::try_from(n).unwrap_or(i64::MAX)
 }
 
@@ -211,16 +215,17 @@ fn attempts() -> usize {
 }
 
 impl Proposing {
-    /// The row over the Claude found on this machine (none in the crate's
-    /// own tests, none off the desktop).
-    pub fn new() -> Self {
-        Self::with(Claude::find())
+    /// The row under `region`, over the Claude found on this machine
+    /// (none in the crate's own tests, none off the desktop).
+    pub fn new(region: &str) -> Self {
+        Self::with(region, Claude::find())
     }
 
-    /// The row over `claude`: the select offers the Claude, and chooses
-    /// it, when there is a program; the rules alone otherwise.
-    pub fn with(claude: Claude) -> Self {
-        let ids = Ids::new()
+    /// The row under `region` over `claude`: the select offers the
+    /// Claude, and chooses it, when there is a program; the rules alone
+    /// otherwise.
+    pub fn with(region: &str, claude: Claude) -> Self {
+        let ids = Ids::new(region)
             .inspect_err(|e| log::error!("surface page: the ids do not parse: {e}"))
             .ok();
         let mut intent = TextField::new("what should it show?");

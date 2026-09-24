@@ -3,7 +3,9 @@
 //! the page draws for a capability it also binds, beside the scene, with
 //! the rect it hit-tests with: the page as `silences`, the frame box as
 //! `silences.video`, each row as its `silences.cut[<id>]`, the counts and
-//! the status; the sliders and the buttons bind themselves.
+//! the status; the sliders and the buttons bind themselves. The row and
+//! the generated surface draw themselves (`generated.rs`, the `surface`
+//! crate); `render` puts them where the halves say.
 
 use comps::prelude::{Badge, ButtonVariant, Intent, Rect, rounded_rect};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
@@ -12,6 +14,9 @@ use engine::text::TextMeasurer;
 use engine::theme::Theme;
 use showcase::model::silences::Decision;
 
+use surface::{Frames, NoFrames};
+
+use super::jobs::PageFrames;
 use super::layout::{
     Layout, RowParts, compute, detail_style, label_style, mark_rect, mark_x, range_style,
     row_parts, stats, status_style, time_style, value_style,
@@ -60,8 +65,34 @@ fn fit(c: &mut Compositor, box_: Rect, handle: ImageHandle, radius: f32) {
 }
 
 impl SilencesPage {
+    /// The row, the fixed screen and, when one is open, the generated
+    /// surface beside it with the frames the page holds; the surface
+    /// reads the app again first when it moved.
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {
         self.sync_rows();
+        self.sync_surface();
+        let h = self.halves(content, theme);
+        self.generated.render_row(c, &h, theme);
+        self.render_fixed(c, h.fixed, theme);
+        let frames = self.ids.as_ref().map(|ids| PageFrames {
+            video: &ids.video,
+            frames: &self.frames,
+        });
+        let frames: &dyn Frames = match &frames {
+            Some(f) => f,
+            None => &NoFrames,
+        };
+        self.generated.host.draw_closing_with(c, theme, frames);
+        if let (Some(rect), Some(id)) = (h.surface, &self.generated.id)
+            && let Some(s) = self.generated.host.get_mut(id)
+        {
+            s.render_with(c, rect, theme, frames);
+        }
+        self.generated.proposing.render_open(c, &h.row, theme);
+    }
+
+    /// The fixed screen in `content`: the three cards.
+    fn render_fixed(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let l = compute(self, content, theme);
         if let Some(ids) = &self.ids {
             c.bind(&ids.region, bounds(l.region));

@@ -14,6 +14,33 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a tela gerada do editor de vídeo (task-69 fase 4b)
+
+- **integrada:** fase 4b (merge da `task/69g-silences-surface`). na
+  página Silences, uma frase vira a tela de revisão com os frames de
+  verdade ao lado da tela fixa, no mesmo dispatcher; "compare the
+  original with the cuts" transforma a revisão em comparação lado a lado
+  mantendo os ids; um `close` desfaz. o Claude gerou as duas (138 s e
+  40 s, 0,29 USD). o `uir` não mudou: um `image` liga uma referência de
+  frame que o app projeta, e o `surface::Frames` entrega o frame. gate
+  na `main` em andamento no registro; o agente reportou 2444 no
+  workspace (+16) e 159 baselines iguais.
+- **o cenário da tese existe agora, de ponta a ponta:** a pessoa escreve,
+  a tela de revisão nasce com o vídeo e os cortes reais, ela compara, e
+  fecha. o checkpoint b (gerada contra fixa) é decisão do brenner, com
+  as duas telas na frente dele.
+
+### ciclo 3: publicado #74; disparada a fase 4b
+
+- **publicado:** PR #74 (fase 4a), merge commit, gate local verde na
+  `main` (2510, +24), regressão 159 sem mudança (2 baselines novas).
+- **disparada:** task-69 fase 4b, a tela gerada dos silêncios: frames de
+  verdade na superfície (um trait de frames no `surface`; o `image` do
+  v1 já existe), a revisão nascendo de uma frase pelas regras e pelo
+  Claude (no máximo 4 chamadas reais), a comparação lado a lado com
+  identidade mantida, e o fechar. um agente só. depois dela: a 4c (o
+  vídeo) e o checkpoint b, que é do brenner.
+
 ### ciclo 3: o app dos silêncios (task-69 fase 4a)
 
 - **integrada:** fase 4a (merge da `task/69f-silences-app`). a página

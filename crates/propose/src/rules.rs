@@ -18,10 +18,17 @@
 //! - **list** ("items", "list", "itens", "lista"): for each list of the
 //!   app (a `List` or `Set` state whose values are the keys of its node's
 //!   children of one kind, all of them), a `list` that repeats over it;
-//!   each item a row of what every item declares alike: a `text` per
-//!   text or number state, a `checkbox` per bool with an action of no
-//!   parameter that reads only it, a `button` per other action of no
+//!   each item a row of what every item declares alike: an `image` per
+//!   frame ref (a text naming a media node and an instant), a `text` per
+//!   other text or number state, a `checkbox` per bool with an action of
+//!   no parameter that reads only it, a `button` per other action of no
 //!   parameter (`list.rs`).
+//! - **media** ("video", "image", "frame", "vídeo", "imagem", "quadro"):
+//!   for each media or image node of the app with a frame ref state, an
+//!   `image` bound to it: the first view (the first such state), or the
+//!   views a word of the intent names by their key; with **compare**
+//!   ("compare", "comparar"), every view, side by side. the media goes
+//!   on top.
 //! - **form** ("compact", "two columns", "compacto", "duas colunas"): the
 //!   layout, the lists under the entry. without one, the current
 //!   surface's form (two columns when its root is a grid), else compact.
@@ -40,15 +47,15 @@ use std::collections::BTreeSet;
 
 use sem::{Node, Role};
 use uir::{
-    Align, Axis, Component, Elevation, Ir, IrNode, Layout, Props, Repeat, Size, SizeToken,
-    SpacingToken, Surface,
+    Align, Axis, Component, ControlSize, Elevation, Ir, IrNode, Layout, Props, Repeat, Size,
+    SizeToken, SpacingToken, Surface,
 };
 
 use crate::error::ProposeError;
 use crate::ids::{Anchor, Namer, anchor, anchors};
 use crate::list::List;
-use crate::parts::{Choice, Count, Entry, Parts};
-use crate::words::{Form, GRAMMAR, Part, Reading, read};
+use crate::parts::{Choice, Count, Entry, Media, Parts};
+use crate::words::{Form, GRAMMAR, Part, Reading, fold, read};
 use crate::{Ask, Proposer};
 
 /// the deterministic proposer. it has no state: the same ask gives the
@@ -63,13 +70,32 @@ struct Chosen {
     choices: Vec<Choice>,
     counts: Vec<Count>,
     lists: Vec<List>,
+    media: Vec<Media>,
 }
 
 impl Chosen {
     fn is_empty(&self) -> bool {
         let none = self.entries.is_empty() && self.choices.is_empty();
-        none && self.counts.is_empty() && self.lists.is_empty()
+        none && self.counts.is_empty() && self.lists.is_empty() && self.media.is_empty()
     }
+}
+
+/// the views of `m` the intent shows: every one with "compare", the ones
+/// a word names by their key, else the first.
+fn views(m: &Media, r: &Reading) -> Vec<(sem::StateRef, String)> {
+    if r.compare {
+        return m.views.clone();
+    }
+    let named: Vec<_> = m
+        .views
+        .iter()
+        .filter(|(_, key)| r.words.iter().any(|(_, w)| fold(key) == *w))
+        .cloned()
+        .collect();
+    if !named.is_empty() {
+        return named;
+    }
+    m.views.iter().take(1).cloned().collect()
 }
 
 /// true when one of `words` names something with `own` words.
@@ -112,6 +138,13 @@ fn choose(r: &Reading, parts: &Parts) -> Chosen {
             (!c.options.is_empty()).then_some(c)
         })
         .collect();
+    let media = keep(&parts.media, named(Part::Media), w, |m| names(w, &m.words))
+        .into_iter()
+        .map(|mut m| {
+            m.views = views(&m, r);
+            m
+        })
+        .collect();
     Chosen {
         entries: keep(&parts.entries, named(Part::Entry), w, |e| {
             names(w, &e.words)
@@ -119,6 +152,7 @@ fn choose(r: &Reading, parts: &Parts) -> Chosen {
         choices,
         counts: keep(&parts.counts, named(Part::Count), w, |c| names(w, &c.words)),
         lists: keep(&parts.lists, named(Part::List), w, |l| names(w, &l.words)),
+        media,
     }
 }
 
@@ -155,6 +189,16 @@ fn shown(parts: &Parts, current: &IrNode) -> Chosen {
             .iter()
             .filter(|l| on.contains(&Anchor::Each(l.each.clone())))
             .cloned()
+            .collect(),
+        media: parts
+            .media
+            .iter()
+            .filter_map(|m| {
+                let mut m = m.clone();
+                m.views
+                    .retain(|(at, _)| on.contains(&Anchor::State(at.clone())));
+                (!m.views.is_empty()).then_some(m)
+            })
             .collect(),
     }
 }
@@ -300,10 +344,50 @@ impl Build<'_> {
         self.container("counts", None, layout, stats)
     }
 
+    /// the views of a media node: one `image` per view, bound to its
+    /// frame ref, named by the node when there is one view and by the
+    /// view's key when there are more, which then sit side by side.
+    fn media(&mut self, m: &Media) -> IrNode {
+        let one = m.views.len() == 1;
+        let mut images: Vec<IrNode> = m
+            .views
+            .iter()
+            .map(|(at, key)| {
+                let mut image = IrNode::new(m.node.clone());
+                image.component = Some(Component::Image);
+                image.bind.state.insert("source".to_owned(), at.clone());
+                let label = if one {
+                    named(&m.label, key, self.max)
+                } else {
+                    key.clone()
+                };
+                let name = format!("{}.{}", m.node, key);
+                self.bound(image, &name, label)
+            })
+            .collect();
+        if one && let Some(image) = images.pop() {
+            return image;
+        }
+        let grid = Layout::Grid {
+            min_col: SizeToken::FieldMinW,
+            gap: Some(SpacingToken::Lg),
+        };
+        let name = format!("{}_views", m.node);
+        self.container(&name, None, Some(grid), images)
+    }
+
     /// a list over `l.each`: one row per item, its template bound to the
     /// item by `[{item}]`; the template root is named by its item.
     fn list(&mut self, l: &List) -> IrNode {
         let mut row = Vec::new();
+        for at in &l.frames {
+            let mut image = IrNode::new(l.item.clone());
+            image.component = Some(Component::Image);
+            image.props.control_size = Some(ControlSize::Xl);
+            image.bind.state.insert("source".to_owned(), at.clone());
+            let name = format!("{}.{}", l.item, at.key);
+            row.push(self.bound(image, &name, at.key.as_str().to_owned()));
+        }
         for at in &l.texts {
             let mut text = IrNode::new(l.item.clone());
             text.component = Some(Component::Text);
@@ -368,8 +452,9 @@ impl Build<'_> {
     }
 
     fn surface(&mut self, chosen: &Chosen, form: Form, card: Option<String>) -> IrNode {
-        // the entries, and the lists under them
-        let mut main: Vec<IrNode> = chosen.entries.iter().map(|e| self.entry(e, form)).collect();
+        // the media on top, then the entries, and the lists under them
+        let mut main: Vec<IrNode> = chosen.media.iter().map(|m| self.media(m)).collect();
+        main.extend(chosen.entries.iter().map(|e| self.entry(e, form)));
         for l in &chosen.lists {
             let list = self.list(l);
             main.push(list);
@@ -504,6 +589,11 @@ fn missing(part: Part) -> String {
         Part::Count => "no number (an int or a num state)".to_owned(),
         Part::List => {
             "no list of items (a list or a set state whose values key its node's children)"
+                .to_owned()
+        }
+        Part::Media => {
+            "no media (a media or image node with a frame ref state, a text naming a media \
+             node and an instant)"
                 .to_owned()
         }
     }
