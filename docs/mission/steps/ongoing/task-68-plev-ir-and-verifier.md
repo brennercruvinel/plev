@@ -239,3 +239,105 @@ entra em panic e sempre devolve `Ok` ou erros), roundtrip.
 
 - repetição ligada a lista exigir mini linguagem;
 - algum componente do vocabulário não tiver equivalente no comps.
+
+## handoff (task-68)
+
+### sonda (antes do primeiro tipo, 2026-09-24)
+
+lida no worktree `task/68-plev-ir` sobre `main` @ 8a7a0ea.
+
+(a) o vocabulário v1, o tipo que existe e o `Role` que o `project` dele
+declara. nove dos 21 não têm `project` (o comps não projeta conteúdo
+sem ação); para esses o role sai da tabela do `uir`, marcado "uir".
+
+| componente | tipo | onde | role e o que o `project` declara |
+|---|---|---|---|
+| `button` | `Button` (e `SubmitButton`) | `crates/comps/src/action/button.rs:74`, `submit_button.rs` | `Button`; `activate`. o `SubmitButton` tem `busy` e o `activate` lê `busy` |
+| `icon_button` | `IconButton` | `crates/comps/src/action/icon_button.rs:47` | `Button`; `activate`; na variante toolbar, `active` e o `activate` lê `active` |
+| `text_field` | `TextField` | `crates/comps/src/form/text_field.rs:42` | `TextInput`; `text`; `set_value` com `ParamSpec { Text, constrained }`, editable |
+| `checkbox` | `Checkbox` | `crates/comps/src/form/checkbox.rs:22` | `Checkbox`; `checked`; `toggle` lê `checked` |
+| `switch` | `Switch` | `crates/comps/src/form/switch.rs:27` | `Toggle`; `on`; `toggle` lê `on` |
+| `slider` | `Slider` | `crates/comps/src/form/slider.rs:20` | `Slider`; `value` (num) com range e step; `set_value` com `ParamSpec { Num, constrained }`; `increment` e `decrement` só com step |
+| `select` | `Select` | `crates/comps/src/form/select.rs:68` | `Select`; `selected` (text), `expanded`; `select` com `ParamSpec { Text, constrained }`, `open`, `close`; aberto, filhos `Option` `<id>[i]` com `select` |
+| `tabs` | `Tabs` | `crates/comps/src/nav/tabs.rs:24` | `TabList`; `selected` (a chave da aba); filhos `Tab` `<id>[i]` com `select` sem parâmetro |
+| `list` | `VirtualList` | `crates/comps/src/content/list.rs:38` | `List`; `count`, `selected`; filhos `ListItem` `<id>[i]` com `select` |
+| `table` | `Table` | `crates/comps/src/content/table.rs:87` | `Table`; `count`, `selected_row`; filhos `Row` `<id>[i]` com `select` |
+| `card` | `Card` | `crates/comps/src/content/card.rs:140` | sem `project`; uir: `Group` |
+| `stat` | `Stat` | `crates/comps/src/content/stat.rs:26` | sem `project`; uir: `Label` |
+| `chart` (line, bar, area, donut) | `LineChart`, `BarChart`, `StackedArea`, `Donut` | `crates/comps/src/charts/{line,bars,area,donut}.rs` | sem `project`; uir: `Image` |
+| `separator` | `Separator` | `crates/comps/src/content/separator.rs:10` | sem `project`; uir: sem role (decorativo, não é controle) |
+| `dialog` | `Modal` | `crates/comps/src/feedback/modal.rs:43` | `Dialog` nomeado pelo título, descrito pelo corpo; `confirm` (destrutivo quando o intent é) e `cancel`; filhos `Button` `<id>[confirm]` e `<id>[cancel]` |
+| `empty_state` | `EmptyState` | `crates/comps/src/content/empty_state.rs:22` | sem `project`; uir: `Status` |
+| `progress` | `ProgressBar` | `crates/comps/src/feedback/progress.rs:12` | sem `project`; uir: `ProgressBar` |
+| `badge` | `Badge` | `crates/comps/src/action/badge.rs:27` | sem `project`; uir: `Label` |
+| `chip` | `Chip` | `crates/comps/src/action/chip.rs:25` | `Toggle` com `selected` e `toggle` quando selecionável; `Button` com `activate` quando interativo; `Label` quando estático |
+| `text` | `engine::builder::text` | `crates/engine/src/builder/element/mod.rs:98` | sem `project`; uir: `Label` |
+| `image` | `engine::builder::image` | `crates/engine/src/builder/element/mod.rs:137` | sem `project`; uir: `Image` |
+
+(b) os papéis de token do theme por categoria de `Props`.
+
+| categoria | onde | papéis |
+|---|---|---|
+| cor | `ColorTokens`, `crates/engine/src/theme/tokens.rs:200` (`theme.colors`) | `bg`, `surface`, `bg_panel`, `bg_hover`, `text`, `text_dim`, `text_mid`, `accent`, `accent_dim`, `success`, `danger`, `warning`, `info`, `divider`, `border_active`. o `theme.glass` (`tokens.rs:226`) é receita de superfície, não papel de cor, e fica fora do v1 |
+| tipografia | `TypographyScale`, `tokens.rs:27` (`theme.typography`, um método por estilo) | `h4`, `headline`, `title`, `base_r`, `base_m`, `base_2r`, `base_2m`, `base_2sm`, `base_2b`, `caption_r`, `caption_sm`, `small_r`, `small_sm`, `body`, `body_2r`, `body_2m`, `body_2b`, `hairline`, `mono`, `readout` |
+| espaçamento | `SpacingScale`, `tokens.rs:9` (`theme.spacing`) | `xs`, `sm`, `md`, `lg`, `xl`, `xxl` |
+| forma | `ShapeTokens`, `crates/engine/src/theme/scales.rs:22` (`theme.shape`) | `pill`, `dropdown`, `tabs`, `card`, `block`, `item`, `nav`, `cluster`, `tooltip`, `micro` |
+| tamanho de controle | `ControlSize`, `scales.rs:88` (alturas em `theme.control.heights`) | `xs`, `sm`, `md`, `lg`, `xl` |
+| elevação | `Elevation`, `scales.rs:505` (`theme.shadows`) | `base`, `raised`, `floating`, `overlay`, `hint` |
+| tamanho de container (layout `min`, `max`, `min_col`) | `SizeTokens`, `scales.rs:259` (`theme.size`) | `menu_w`, `modal_max_w`, `sidebar_w`, `sidebar_rail_w`, `card_w`, `card_min_w`, `readable_max_w`, `field_min_w`, `toast_w`, `tooltip_max_w`, `dropdown_max_h` |
+
+(c) as capacidades, lidas de projeções reais por dois testes novos que
+projetam, imprimem (`--nocapture`) e gravam o snapshot:
+`crates/ide/tests/uir_fixture.rs` (um repositório real num temp dir, três
+arquivos mudados, `src/lexer.rs` no index, o formulário de commit aberto
+com "fix parser" escrito por uma pessoa pelo dispatcher) e
+`crates/showcase/tests/uir_fixture.rs` (a página Todo encenada headless,
+como `showcase --render Todo --semantics`). policy omitida é a padrão
+(todos os atores, `Confirm::Never`, não destrutiva).
+
+ide (`Workbench`):
+
+| dado (`StateRef`, `ValueKind`) | ações (alvo, ação, `ParamSpec`, `Policy`) |
+|---|---|
+| `changes:files` list, `changes:staged` set, `changes:selected` text | |
+| `changes.file[<path>]:status` text, `:staged` bool, `:unstaged` bool (uma por arquivo: `src/lexer.rs`, `notes.md`, `src/parser.rs`) | `changes.file[<path>]` `stage`, `unstage`, `ignore`, `show_diff` sem parâmetro; `discard` sem parâmetro, `{ confirm: ForAgents, destructive: true }` |
+| `diff:target` text, `diff:lines` list, `diff:count` int | |
+| `commit.form:open` bool | `commit.form` `open`, `cancel` sem parâmetro |
+| `commit.message:text` text | `commit.message` `set_value` com `ParamSpec { Text, constrained: true }` |
+| | `commit.submit` `submit` sem parâmetro (lê `changes:staged` e `commit.message:text`) |
+| `stacks:branch` text; `stacks.commit[<sha>]:summary` text, `:author` text, `:files` list | `stacks.commit[<sha>]` `show_diff` sem parâmetro |
+
+todo (showcase):
+
+| dado | ações |
+|---|---|
+| `todo.input:text` text | `todo.input` `set_value` com `ParamSpec { Text, constrained: true }`; `submit` sem parâmetro |
+| `todo.filter:selected` text | `todo.filter[all]`, `todo.filter[active]`, `todo.filter[completed]` `select` sem parâmetro |
+| `todo.item[1]`, `[2]`, `[3]` `:completed` bool | `todo.item[<id>]` `toggle` sem parâmetro; `remove` sem parâmetro, `{ destructive: true }` (sem confirmação) |
+| `todo.counter:active` int, `todo.counter:done` int | |
+
+o que a sonda achou, nenhum item contradiz o arquivo da task nem as
+decisões do orquestrador:
+
+- nove componentes do v1 não têm `project` (tabela a). o role deles é
+  decisão do `uir`, declarada como dado na tabela do vocabulário, e a
+  task-69 projeta com esse role ao materializar.
+- o todo não projeta uma `List`/`Set` com os ids dos itens, só os nós
+  `todo.item[<id>]`. então não há repetição sobre os itens do todo; a
+  fixture do todo liga o campo, o filtro e o contador. o ide tem
+  `changes:files` (list), que é o que a repetição mínima usa.
+- as abas do comps e o filtro do todo são capacidades por aba, sem
+  parâmetro (`todo.filter[active]` `select`). uma aba do IR que emite a
+  chave escolhida não casa com elas; a fixture do todo usa botões para o
+  filtro (ver a decisão sobre `tabs` no ADR).
+- o id de um commit no ide é o sha, que muda com a data do commit; o
+  teste do ide fixa a data do primeiro commit do repositório para que o
+  snapshot seja o mesmo a cada execução.
+- o briefing proíbe `README.md` e `docs/arc/arc.toml`, mas o
+  `crates/engine/tests/arc_sync_guard.rs` exige que todo membro do
+  workspace apareça nos dois, e o programa (seção 8) diz que o agente que
+  cria um crate adiciona a própria entrada. hoje o `arc.toml` passa por
+  acaso (contém "acquire", que contém "uir"); o `README.md` não. com
+  `crates/uir` no workspace, o teste do guard fica vermelho até alguém
+  pôr o crate no README. isso não bloqueia os tipos; vira uma condição de
+  parada no gate (reportada no fim).
