@@ -721,11 +721,12 @@ fn acted_of(r: &Receipt) -> &[Acted] {
 }
 
 /// the thesis again, with the room full: the person takes B out of the
-/// state the agent saw, and the agent's commit, refused stale, names the
-/// person's unstage. who only observed, who was refused, who waits for a
-/// confirmation and the agent itself ran nothing on that state, or are
-/// the author, and are not named; the person's next unstage was checked
-/// against the state the first one left, so it is not named either.
+/// state the agent saw, then C out of the state that left, and the
+/// agent's commit, refused stale, names both unstages. who only observed,
+/// who was refused, who waits for a confirmation and the agent itself ran
+/// nothing, or are the author, and are not named. (task-83 named only the
+/// first unstage, the one checked on exactly the state the agent saw;
+/// task-90 names the chain from there.)
 #[test]
 fn a_stale_refusal_names_who_ran_something_on_the_state_the_agent_saw() {
     let mut git = Git::new(&["A", "B", "C"], "fix login");
@@ -773,7 +774,10 @@ fn a_stale_refusal_names_who_ran_something_on_the_state_the_agent_saw() {
     assert_eq!(stages(r), ["requested", "rejected"]);
     assert_eq!(
         acted_of(r),
-        [acted(person, Actor::Human, "changes", "unstage")]
+        [
+            acted(person, Actor::Human, "changes", "unstage"),
+            acted(chained, Actor::Human, "changes", "unstage"),
+        ]
     );
     let Some(Stage::Rejected(Rejection::Stale { changes, .. })) = r.stage() else {
         unreachable!();
@@ -784,8 +788,8 @@ fn a_stale_refusal_names_who_ran_something_on_the_state_the_agent_saw() {
     ));
 
     // the discard that waited is refused stale at its confirmation, and
-    // names the same unstage: the agent's own stage is someone else's
-    // for the cleaner, and ran on what the cleaner saw.
+    // names the same chain: the agent's own stage is someone else's for
+    // the cleaner, and ran on what the cleaner saw.
     d.confirm(&mut git, waiting, Actor::Human, 7).unwrap();
     let r = receipt(&d, waiting);
     assert_eq!(
@@ -797,13 +801,14 @@ fn a_stale_refusal_names_who_ran_something_on_the_state_the_agent_saw() {
         [
             acted(own, agent(), "changes", "stage"),
             acted(person, Actor::Human, "changes", "unstage"),
+            acted(chained, Actor::Human, "changes", "unstage"),
         ]
     );
     assert!(acted_of(r).iter().all(|a| a.actor != cleaner));
 }
 
 /// the same at the point of truth: the refusal that comes back through
-/// `reject_at_truth` names who ran on the state the request observed,
+/// `reject_at_truth` names who ran since the state the request observed,
 /// an execution still running and one that failed among them; one the
 /// point of truth refused ran nothing.
 #[test]
@@ -913,7 +918,6 @@ fn last_acted(log: &Log, id: RequestId) -> Vec<Acted> {
 /// id order. the agent's own move in the middle is not named and does not
 /// cut the chain.
 #[test]
-#[ignore = "task-90: fails until the dispatcher names the chain; the rule of task-83 names only what was checked on the exact revision the agent saw"]
 fn a_stale_refusal_names_the_chain_that_ran_since_the_state_the_agent_saw() {
     let mut git = Git::new(&["A", "B", "C"], "fix login");
     let mut d = Dispatcher::new();
@@ -944,7 +948,6 @@ fn a_stale_refusal_names_the_chain_that_ran_since_the_state_the_agent_saw() {
 /// left, and the agent's commit names the person's unstage and never the
 /// agent's own move.
 #[test]
-#[ignore = "task-90: fails until the dispatcher names the chain; the rule of task-83 names only what was checked on the exact revision the agent saw"]
 fn the_authors_own_act_on_the_state_it_saw_can_start_the_chain() {
     let mut git = Git::new(&["A", "B"], "fix login");
     let mut d = Dispatcher::new();
@@ -1010,7 +1013,6 @@ fn a_change_no_request_made_leaves_the_chain_nowhere_to_start() {
 /// started at, the acts after it are not named either, since nothing
 /// held ran on the state the agent saw.
 #[test]
-#[ignore = "task-90: fails until the dispatcher names the chain; the rule of task-83 names only what was checked on the exact revision the agent saw"]
 fn a_chain_is_read_from_the_receipts_the_dispatcher_holds() {
     for (retention, named) in [(0, 0), (1, 0), (2, 2)] {
         let mut git = Git::new(&["A", "B"], "fix login");

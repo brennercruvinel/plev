@@ -66,7 +66,7 @@ pub const DEFAULT_RETENTION: usize = 256;
 /// every stale refusal it records (at dispatch, at a confirmation's second
 /// check, from the point of truth through `execute` or `reject_at_truth`)
 /// names in `Rejection::Stale::acted` the actions of other actors that ran
-/// on the state the refused request observed, read from those same
+/// since the state the refused request observed, read from those same
 /// receipts (see `Acted`); whatever the refusal held there is replaced.
 pub struct Dispatcher {
     last: u64,
@@ -315,17 +315,24 @@ impl Dispatcher {
         }
     }
 
-    /// the actions of other actors that were checked against the state
-    /// `req`'s actor saw and ran, in id order (see `Acted`). only the
-    /// receipts held here count: the open ones and the finished ones
-    /// retention keeps.
+    /// the actions of other actors that ran since the state `req`'s actor
+    /// saw, in id order (see `Acted`): from the first request, of any
+    /// actor, that ran after being checked against that state. ids grow in
+    /// dispatch order, so that one and every later one ran after the actor
+    /// looked. only the receipts held here count: the open ones and the
+    /// finished ones retention keeps.
     fn acted(&self, req: &Request) -> Vec<Acted> {
         let seen = Some(req.observed.revision);
-        let mut out: Vec<Acted> = self
-            .open
-            .values()
-            .chain(&self.finished)
-            .filter(|r| r.request.actor != req.actor && r.validated_against == seen && ran(r))
+        let held = || self.open.values().chain(&self.finished);
+        let Some(start) = held()
+            .filter(|r| r.validated_against == seen && ran(r))
+            .map(|r| r.id)
+            .min()
+        else {
+            return Vec::new();
+        };
+        let mut out: Vec<Acted> = held()
+            .filter(|r| r.id >= start && r.request.actor != req.actor && ran(r))
             .map(|r| Acted {
                 id: r.id,
                 actor: r.request.actor.clone(),
