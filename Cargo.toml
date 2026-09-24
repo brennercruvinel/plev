@@ -11,6 +11,7 @@ members = [
     "crates/macros",
     "crates/git",
     "crates/ide",
+    "crates/inspect",
     "crates/lot",
     "crates/monster",
     "crates/svg",

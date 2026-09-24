@@ -120,7 +120,7 @@ demos are the engine's (and comps') examples.
 |---|---|---|
 | engine | `crates/engine` | gpu, compositor, effects, text, path, layout, input, actions, animation, signal, theme (the tokens), graph, builder, window, headless, accessibility, perf, hot_reload, platform |
 | comps | `crates/comps` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/catalog.md](docs/catalog.md) |
-| crates | `crates/` | git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rec, rope, sem, showcase, svg, urnaui, wire |
+| crates | `crates/` | git, ide, inspect, lot, macros, monster, narrate, narrate-macro, parser, prime, rec, rope, sem, showcase, svg, urnaui, wire |
 | examples | `crates/engine/examples/`, `crates/comps/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters and svg2monster clis |
 
 `comps` is the crate an app draws with. widgets are plain structs the app
