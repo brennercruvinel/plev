@@ -116,9 +116,11 @@ os dois), do cruzamento região para `SemId`, e do relatório.
 
 ## estado (agente, 2026-09-23, branch `task/67-structural-regression`)
 
-implementado em sete commits pequenos na branch, cada um compilando e
-passando clippy e fmt; `./script/gate` verde no fim (perna urnaui
-incluída). nenhum dos "pare e reporte" disparou:
+implementado, rebaseado na `main` @ bf67799 (task-82 fase b, 85, 87, 86
+aberta; o último passo só trouxe o journal) e revisto a pedido do
+orquestrador; `./script/gate` verde na
+árvore final, perna urnaui incluída. nenhum dos "pare e reporte"
+disparou:
 
 - nome estável de layer existe sem mudar a API do compositor:
   `Compositor::layers`, `Layer::nodes` e `Compositor::bindings` já eram
@@ -134,17 +136,54 @@ incluída). nenhum dos "pare e reporte" disparou:
 `cargo run -p showcase --example regress -- check|bless`, em
 `crates/showcase/examples/regress/`:
 
-- `scene.rs`: nome e hash estável de cada layer, bounds do que ela
-  desenha, ligações por layer.
+- `scene.rs`: nome de cada layer, bounds do que ela desenha, ligações
+  por layer; `hash.rs`: a codificação estável do hash.
 - `baseline.rs`: o formato em disco, leitura e escrita.
 - `compare.rs`: as duas primeiras perguntas (significado, desenho), sem
   pixel.
 - `pixels.rs`: a terceira, só dentro da região das layers que mudaram,
   e a contagem por rect.
-- `report.rs`: o relatório por `SemId`, em texto e JSON.
+- `report.rs`: o relatório por `SemId` (modelo e `build`);
+  `report/text.rs` o texto, `report/json.rs` o JSON do `check --json`,
+  `report/describe.rs` uma mudança semântica em poucas palavras.
 - `run.rs`: os comandos, o renderer aberto sob demanda e contado.
 - `tests.rs`: de ponta a ponta sobre páginas reais, em diretórios
   temporários.
+
+### depois da revisão do orquestrador
+
+1. rebase na `main` sem conflito. `regress check` na árvore rebaseada:
+   `checked 157 baselines in 838.6 ms: 157 unchanged, 0 changed; no
+   frame drawn, no GPU opened`. nenhuma baseline mudou, então não houve
+   bless de rebase. o que a 82b mexeu é o ritmo, não o desenho em
+   repouso: `ShowcaseView::wake` pede ao `ToastManager` e ao workbench um
+   `Wake` em vez de um `bool`, a meia-fase do caret recomeça na tecla, o
+   shell alcança o tempo antes de um evento de fora (`app/pace.rs`) e os
+   eventos do worker git entram por `apply_git`. o `stage_page` monta a
+   página no estado de lançamento, sem foco, sem toast e sem worker git
+   conectado, e assenta em 2 passos; nada disso aparece nesse frame. as
+   imagens do todo desenhadas depois do rebase têm os mesmos bytes das
+   de antes (sha1 `12e343d0...` core, `aaf7cf23...` hoff).
+2. `report.rs` e `scene.rs` divididos por responsabilidade, sem mudar
+   comportamento: o JSON de um check sobre as 157 baselines é o mesmo
+   fora os tempos, e os 31 testes são os mesmos (três mudaram de módulo
+   com o que testam). registro: contando só o código de produção, como a
+   convenção manda (bloco `#[cfg(test)]` fora da conta), eles tinham 517
+   e 535 linhas, abaixo das 639; os 745 e 730 eram o arquivo inteiro.
+   agora o maior arquivo de produção do exemplo é `run.rs`, com 428.
+3. o baseline do todo em core e hoff a 1280x800 guarda a imagem (87 KB e
+   95 KB). por que só esses: o todo é a página que projeta e liga os
+   controles (o Toggle Group é alias dele), então a imagem é o que troca
+   "todo controle ligado na layer que mudou" pelo controle exato e a
+   região; nenhuma outra página projeta (o Git liga três regiões do
+   workbench sem projetar, as outras não ligam nada), e ali a imagem só
+   estreitaria a layer a uma região. core é o tema de lançamento e hoff o
+   vidro escuro, o par que os testes do headless desenham; cada imagem
+   custa uns 90 KB a cada bless e são os pixels de uma GPU só.
+4. `docs/how-to/validate-visuals-by-pixel.md` ganha a seção do fluxo
+   check/bless no lugar de "until then, check the snapshot by hand"; o
+   README ganha a linha do `regress -- check`; o `arc.toml` ganha
+   `showcase = ["measure", "regress"]`.
 
 ### formato do baseline
 
@@ -164,7 +203,8 @@ um diretório por (página, tema, viewport) em
   continua guardando no próximo bless, até `--no-png`.
 
 commitados: as 78 páginas em core e em hoff a 1280x800 e o todo em core a
-390x844, 157 baselines, 166 KB de JSON, sem imagem.
+390x844, 157 baselines, 166 KB de JSON; imagem só no todo em core e hoff
+a 1280x800 (182 KB).
 
 ### nome e hash de layer, e por que são estáveis
 
@@ -176,7 +216,7 @@ commitados: as 78 páginas em core e em hoff a 1280x800 e o todo em core a
   outro z também não. a lista completa dos ids foi descartada porque
   renomeia a layer a cada item, e a posição entre as layers porque
   renomeia tudo que está acima de uma layer nova.
-- hash: FNV-1a 64 sobre uma codificação escrita no doc de `scene.rs`
+- hash: FNV-1a 64 sobre uma codificação escrita no doc de `hash.rs`
   (tag de versão, z, visibilidade, opacidade, scissor, efeitos, e cada
   nó em ordem de push com uma tag e os campos, `f32` pelos bits). um
   valor dourado calculado por um script à parte (python, `struct.pack`)
@@ -187,6 +227,10 @@ commitados: as 78 páginas em core e em hoff a 1280x800 e o todo em core a
 
 ### aceite
 
+na árvore final, contra as baselines commitadas; as mudanças de token e
+de label foram feitas numa cópia de trabalho e revertidas (`git status`
+limpo depois de cada uma).
+
 1. sem mudança, `check` em todas as baselines termina verde sem abrir
    GPU. o resumo conta os frames desenhados, e o teste
    `a_page_checked_against_its_own_bless_holds_without_opening_a_gpu`
@@ -194,17 +238,16 @@ commitados: as 78 páginas em core e em hoff a 1280x800 e o todo em core a
 
    ```text
    ok       typography@hoff@1280x800 (stage 3.6 ms, hash 0.1 ms, compare 0.0 ms)
-   checked 157 baselines in 606.6 ms: 157 unchanged, 0 changed; no frame drawn, no GPU opened
+   checked 157 baselines in 627.2 ms: 157 unchanged, 0 changed; no frame drawn, no GPU opened
    ```
 
-2. cor de um token (`text_mid` do hoff em `crates/engine/src/theme/hoff.rs`,
-   `n2(0.70)` para `n2(0.60)`, numa cópia de trabalho, revertida). com um
-   baseline local do todo com imagem (`bless --page Todo --theme hoff
-   --png --dir <tmp>`, idem core):
+2. cor de um token: `text_mid` do hoff em `crates/engine/src/theme/hoff.rs`,
+   `n2(0.70)` para `n2(0.60)`. 28 baselines hoff mudam, nenhuma core; o
+   todo em hoff tem imagem e nomeia os controles com região, o único
+   frame desenhado:
 
    ```text
-   ok       todo@core@1280x800 (stage 13.1 ms, hash 0.1 ms, compare 0.0 ms)
-   CHANGED  todo@hoff@1280x800 (stage 3.9 ms, hash 0.1 ms, compare 0.0 ms, render 20.7 ms, decode 2.9 ms, diff 12.0 ms)
+   CHANGED  todo@hoff@1280x800 (stage 3.8 ms, hash 0.1 ms, compare 0.0 ms, render 19.1 ms, decode 2.5 ms, diff 11.6 ms)
      todo          semantics unchanged; visual changed, layer todo, 3597 px at 506,230 273x100
      todo.item[1]  semantics unchanged; visual changed, layer todo, 1272 px at 506,230 273x13
      todo.item[2]  semantics unchanged; visual changed, layer todo, 964 px at 507,274 204x12
@@ -212,46 +255,50 @@ commitados: as 78 páginas em core e em hoff a 1280x800 e o todo em core a
      6 other controls unchanged
      layer todo: changed (f038f7f55fdc9bd6 -> 18a4a7dec0cfac78), 3597 px at 506,230 273x100
      pixels: 3597 changed of 572539 compared at 506,230 273x100
-   checked 2 baselines in 95.1 ms: 1 unchanged, 1 changed; 1 frames drawn, GPU opened in 23.3 ms
+   ...
+   checked 157 baselines in 730.0 ms: 129 unchanged, 28 changed; 1 frames drawn, GPU opened in 21.2 ms
    ```
 
-   contra as baselines commitadas (sem imagem): 28 páginas hoff mudam,
-   nenhuma core, nenhum frame desenhado; cada controle ligado numa layer
-   que mudou sai como "visual changed, layer todo (the layer moved; its
-   pixels were not compared)", e a página sem controle diz a layer:
+   uma página sem imagem diz a layer:
 
    ```text
    CHANGED  button@hoff@1280x800 (stage 3.7 ms, hash 0.3 ms, compare 0.0 ms)
      layer z0: changed (4f2d8232e76eca3d -> 27f396cf34e7130d)
      pixels: visual changed, no baseline image to diff (bless --png keeps one)
-   checked 157 baselines in 732.9 ms: 129 unchanged, 28 changed; no frame drawn, no GPU opened
    ```
 
-3. uma label do todo (`"Measure text, never estimate it"` para `"Measure
-   text, then estimate it"` em `crates/showcase/src/view/apps/app.rs:68`,
-   numa cópia de trabalho, revertida), contra o mesmo baseline local com
-   imagem:
+3. uma label do todo: `"Measure text, never estimate it"` para `"Measure
+   text, then estimate it"` em `crates/showcase/src/view/apps/app.rs:68`.
+   5 baselines mudam (as três do todo, o Toggle Group
+   nos dois temas); as duas com imagem:
 
    ```text
-   CHANGED  todo@core@1280x800 (stage 220.3 ms, hash 0.2 ms, compare 0.4 ms, render 33.2 ms, decode 3.6 ms, diff 11.7 ms)
+   CHANGED  todo@core@1280x800 (stage 3.9 ms, hash 0.1 ms, compare 0.2 ms, render 24.5 ms, decode 2.3 ms, diff 11.5 ms)
      todo          semantics unchanged; visual changed, layer todo, 727 px at 600,277 111x10
      todo.item[2]  semantics changed: label "Measure text, never estimate it" -> "Measure text, then estimate it"; visual changed, layer todo, 727 px at 600,277 111x10
      8 other controls unchanged
      layer todo: changed (541caa8afab91996 -> de9200db8cf27cee), 727 px at 600,277 111x10
      pixels: 727 changed of 572539 compared at 600,277 111x10
+   CHANGED  todo@hoff@1280x800 (stage 3.8 ms, hash 0.1 ms, compare 0.1 ms, render 10.9 ms, decode 2.1 ms, diff 11.4 ms)
+     todo          semantics unchanged; visual changed, layer todo, 732 px at 600,274 111x10
+     todo.item[2]  semantics changed: label "Measure text, never estimate it" -> "Measure text, then estimate it"; visual changed, layer todo, 732 px at 600,274 111x10
+     8 other controls unchanged
+     layer todo: changed (f038f7f55fdc9bd6 -> 1674e8c6fe44670e), 732 px at 600,274 111x10
+     pixels: 732 changed of 572539 compared at 600,274 111x10
+   ...
+   checked 157 baselines in 784.2 ms: 152 unchanged, 5 changed; 2 frames drawn, GPU opened in 22.7 ms
    ```
 
-   (o todo em hoff dá o mesmo, 732 px). contra as commitadas: `todo`
-   core e hoff a 1280x800, `todo` a 390x844 e o Toggle Group nos dois
-   temas (alias do todo) mudam, e `todo.item[2]` diz a mudança de label
-   em cada um. os 220 ms do primeiro stage são o aquecimento do processo
-   logo depois do build; nas medições abaixo o primeiro stage fica entre
-   13 e 29 ms.
+   sem imagem (o todo a 390x844, o Toggle Group), `todo.item[2]` diz a
+   mesma mudança de label, e cada controle da layer sai como "visual
+   changed, layer todo (the layer moved; its pixels were not compared)".
 
 ### medições
 
 máquina apple m4, build de debug (release não foi medido: o briefing
-proíbe `cargo build --release`).
+proíbe `cargo build --release`). medido antes do rebase; depois dele o
+check sem mudança seguiu entre 0,61 e 0,84 s com a máquina dividida com
+outros builds.
 
 check sem mudança, 157 baselines, cinco execuções:
 
@@ -263,7 +310,8 @@ check sem mudança, 157 baselines, cinco execuções:
 | comparação, por página | | 1 us | 4 us | 19 us |
 
 a primeira página de um processo custa de 9 a 26 ms a mais (13 a 29 ms
-no total, o aquecimento do processo). as mais lentas: Builder (4,7 ms) e Icons (4,7 ms).
+no total, o aquecimento do processo). as mais lentas: Builder (4,7 ms) e
+Icons (4,7 ms).
 
 quando uma layer muda, as 78 páginas hoff com imagem num diretório
 local e `text_mid` alterado (28 mudam), três execuções:
@@ -284,7 +332,9 @@ diferentes: um nó cuja cor mudou não aparece. o check falha e diz 0 px.
 
 ```text
 Goal: task-67, regressão estrutural antes de pixel.
-Status: implementado; gate verde no worktree (2128 testes passados).
+Status: implementado, rebaseado na main @ bf67799 e revisto; gate verde
+(2160 testes passados, perna urnaui incluída); regress check verde na
+árvore final.
 
 Implementado:
 - `cargo run -p showcase --example regress -- check|bless`, com
@@ -301,15 +351,19 @@ Implementado:
   qualquer controle; tempos por etapa; frames desenhados.
 - bless imprime o check do baseline que substitui ("accept", "same",
   "new") e escreve.
-- 157 baselines commitadas; job `structural regression (macos)` no CI.
+- 157 baselines commitadas, imagem no todo core e hoff a 1280x800; job
+  `structural regression (macos)` no CI.
 
 Arquivos principais:
-- crates/showcase/examples/regress/{main,run,scene,baseline,compare,pixels,report,tests}.rs (novos)
+- crates/showcase/examples/regress/{main,run,scene,hash,baseline,compare,pixels,report,tests}.rs
+  e report/{text,json,describe}.rs (novos)
 - crates/showcase/fixtures/regress/** (novos)
 - crates/showcase/src/app/headless.rs (aditivo)
 - crates/showcase/Cargo.toml, Cargo.lock
 - .github/workflows/ci.yml (o job novo)
-- docs/ADR/regression-by-meaning-before-pixels.md (novo), este arquivo
+- docs/ADR/regression-by-meaning-before-pixels.md (novo)
+- docs/how-to/validate-visuals-by-pixel.md, README.md, docs/arc/arc.toml
+- este arquivo
 
 Interfaces adicionadas/alteradas:
 - `StagedPage::compositor(&self) -> &Compositor`, `steps() -> usize`,
@@ -323,36 +377,40 @@ Interfaces adicionadas/alteradas:
   temporários nos testes).
 
 Testes (antes -> depois):
-- gate inteiro: 2096 -> 2128 passados (2048 do workspace + 80 da perna
-  urnaui), 0 falhas, 11 ignorados, nenhum pulado por falta de GPU.
+- gate inteiro na árvore rebaseada: 2160 passados, 0 falhas, 12
+  ignorados, nenhum pulado por falta de GPU. 32 são desta task (31 do
+  exemplo, 1 do headless); a main em bf67799 teria 2128 por essa conta
+  (não rodei o gate da main à parte). antes do rebase: 2096 -> 2128.
 - `cargo test -p showcase --example regress`: 0 -> 31 (cena: nome
-  estável, codificação presa, hash que muda com valor e não com
-  ligação, bounds com clip e texto; baseline: rótulo, ida e volta,
-  formato velho recusado; comparador: igual, só hash, só semântica, os
-  dois, projeção de um lado só; pixels: região e só ela, centro do
-  pixel, buraco, tamanhos diferentes; relatório: por controle, texto e
-  JSON, linha única quando segurou; ponta a ponta: página contra o
-  próprio bless sem abrir GPU, label que nomeia `todo.item[2]`, layer
-  sem imagem, e com GPU um bloco sobre o segundo item nomeado com a
-  região exata).
+  estável, bounds com clip e texto, ligações, JSON; hash: codificação
+  presa, muda com valor e não com ligação; baseline: rótulo, ida e
+  volta, formato velho recusado; comparador: igual, só hash, só
+  semântica, os dois, projeção de um lado só; pixels: região e só ela,
+  centro do pixel, buraco, tamanhos diferentes; relatório: por
+  controle, texto e JSON, linha única quando segurou, uma mudança
+  descrita pelo nó; ponta a ponta: página contra o próprio bless sem
+  abrir GPU, label que nomeia `todo.item[2]`, layer sem imagem, e com
+  GPU um bloco sobre o segundo item nomeado com a região exata).
 - `cargo test -p showcase --lib`: +1 (`a_page_stages_the_same_scene_every_time`).
 
 Validação executada:
-- ./script/gate (com o ambiente de build do briefing): verde.
-- os três aceites acima, com as mudanças revertidas (`git status` limpo).
+- ./script/gate (com o ambiente de build do briefing, perna urnaui
+  incluída): verde na árvore final.
+- regress check na árvore rebaseada e na final: 157 unchanged, nenhum
+  frame desenhado.
+- os três aceites acima contra as baselines commitadas, com as mudanças
+  revertidas.
 - `bless --all` duas vezes em processos separados: arquivos idênticos;
-  Git, Card e Avatar sozinhos: o mesmo scene.json.
-- actionlint no ci.yml.
+  Git, Card e Avatar sozinhos: o mesmo scene.json; as imagens do todo
+  antes e depois do rebase: os mesmos bytes.
+- actionlint no ci.yml; o `arc_sync_guard` com a linha nova do arc.toml.
 
 Decisões:
 - o veredito é o hash e a semântica; pixel explica, nunca decide. sem
   GPU o veredito é o mesmo, e um hash que muda com 0 px diferentes
   falha (o relatório diz 0 px; bless aceita).
-- as baselines commitadas não guardam imagem (90 KB por baseline a cada
-  bless, pixels de uma GPU só). decisão para o orquestrador: commitar a
-  imagem do todo em core e hoff (uns 180 KB) faz o check do repositório
-  nomear o controle exato e a região; sem ela, nomeia todo controle da
-  layer que mudou.
+- imagem só no baseline do todo em core e hoff a 1280x800 (decidido pelo
+  orquestrador; o porquê está acima e no ADR).
 - viewport padrão 1280x800 escala 1, o desktop dos testes do headless.
 
 Limitações:
@@ -374,48 +432,37 @@ Dependências pendentes: nenhuma.
 
 Riscos de integração:
 - toda mudança que mexe no desenho de uma página precisa de `regress
-  bless` na mesma mudança, ou o job de CI fica vermelho. a 82b mexe no
-  shell e nas views agora: quem integrar por último roda
-  `cargo run -p showcase --example regress -- bless` e confere o que
-  ele aceita.
+  bless` na mesma mudança, ou o job de CI fica vermelho. o bless das
+  duas páginas com imagem precisa de GPU (sem adapter ele recusa e diz
+  que `--no-png` tira a imagem).
 - os hashes são bits exatos de `f32` de uma cena montada na CPU. poucas
   páginas passam coordenadas pelo libm do sistema (seno e cosseno no
   donut, no spinner, no skeleton e em Effects); outro macOS no runner
   pode mudar o último bit. a primeira execução do job no PR confirma;
   se divergir, as opções são tirar essas páginas das baselines,
   abençoar no runner, ou quantizar essas coordenadas no hash.
+- as imagens do todo são pixels do Metal desta máquina: num runner que
+  desenha diferente, uma mudança no todo traz o ruído da outra GPU na
+  contagem de pixels. o veredito não muda (é o hash), só o detalhe.
 
-Commits:
-- 7ead4fc task-67: baseline semântico e de layers por página
-- a636b55 task-67: check sem render quando nada mudou
-- b1ace88 task-67: diff de pixel por layer e cruzamento com SemId
-- d6a2143 task-67: relatório por controle e bless
-- ea178ef task-67: job de CI
-- f0af392 task-67: o tempo do hash sai à parte do stage
-- (este arquivo e o ADR, no commit seguinte)
+Commits (depois do rebase):
+- 9862f55 task-67: baseline semântico e de layers por página
+- 8a5c89f task-67: check sem render quando nada mudou
+- f824a95 task-67: diff de pixel por layer e cruzamento com SemId
+- 89e10c0 task-67: relatório por controle e bless
+- 92297e6 task-67: job de CI
+- 7a75708 task-67: o tempo do hash sai à parte do stage
+- fc4d637 task-67: ADR, medição e handoff
+- d3f146e task-67: report e scene divididos por responsabilidade
+- ca41424 task-67: o baseline do todo guarda a imagem, em core e hoff no desktop
+- a595c7f task-67: o manual, o README e o arc.toml falam do regress
+- (o ADR e este arquivo depois da revisão, no commit seguinte)
 ```
 
-### propostas para o orquestrador
+### proposta para o orquestrador
 
 linha do índice de ADRs (`docs/ADR/README.md`):
 
 ```text
-| 2026-09-23 | [regression-by-meaning-before-pixels](regression-by-meaning-before-pixels.md) | proposed | regressão pergunta na ordem: o significado mudou (revision, `Snapshot::diff`), o desenho mudou (hash estável por layer, FNV-1a 64 sobre codificação documentada, `f32` pelos bits; nome de layer pelas raízes dos `SemId` ligados, ou pelo z-order), e só então os pixels, só na região das layers que mudaram, cruzados com as ligações para nomear o controle; nada mudou, nenhuma GPU aberta; pixel explica e não decide o veredito; `regress check|bless` no showcase e job de CI no macOS (task-67) |
+| 2026-09-23 | [regression-by-meaning-before-pixels](regression-by-meaning-before-pixels.md) | proposed | regressão pergunta na ordem: o significado mudou (revision, `Snapshot::diff`), o desenho mudou (hash estável por layer, FNV-1a 64 sobre codificação documentada, `f32` pelos bits; nome de layer pelas raízes dos `SemId` ligados, ou pelo z-order), e só então os pixels, só na região das layers que mudaram, cruzados com as ligações para nomear o controle; nada mudou, nenhuma GPU aberta; pixel explica e não decide o veredito; imagem só no baseline do todo; `regress check|bless` no showcase e job de CI no macOS (task-67) |
 ```
-
-linha do `docs/arc/arc.toml`, seção `[examples]`:
-
-```toml
-# crates/showcase/examples/measure: nine interactions through the frame
-# path, the per-stage cost tables of task-73 (see [modules.perf]);
-# crates/showcase/examples/regress: structural regression by meaning, then
-# layer hash, then pixels in the region that moved (task-67, adr
-# regression-by-meaning-before-pixels), baselines in
-# crates/showcase/fixtures/regress.
-showcase = ["measure", "regress"]
-```
-
-no close-out: `docs/how-to/validate-visuals-by-pixel.md` ainda diz
-"task-67 turns this into the regression harness; until then, check the
-snapshot by hand"; a linha passa a apontar para `regress check` e
-`bless`. o README ganha a linha de execução do exemplo.

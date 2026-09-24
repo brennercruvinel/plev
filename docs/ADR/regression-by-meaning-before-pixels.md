@@ -64,7 +64,9 @@ compared).
   `semantics.json` (the lean form `showcase --render --semantics`
   writes) for a page that projects. `frame.png` only when asked for
   (`bless --png`); a baseline that keeps one keeps it on the next bless
-  unless `--no-png` drops it.
+  unless `--no-png` drops it. the committed set: the 78 pages in core and
+  hoff at 1280x800 and the todo at 390x844, images for the todo at
+  1280x800 only (see consequences).
 - `bless` prints what it accepts (the check of the baseline it
   replaces), then writes. `check --json` writes every report for a tool.
 - the report goes by `SemId`: every id the page projects or binds says
@@ -136,11 +138,18 @@ the compositor it hashed: nothing ticks between the hash and the pixels.
 - regression by meaning covers the pages that project: the todo and its
   alias Toggle Group. the Git page binds three ids without projecting;
   every other page is compared by layers, bindings and pixels only.
-- the committed baselines keep no image. an image is 90 KB per baseline
-  and per bless, and it is the pixels of one GPU. without one, a layer
-  that moved names every control bound in it as changed, pixels not
-  compared; `bless --png` on a local copy of the baselines names the
-  exact controls and regions.
+- of the committed baselines, only the todo in core and hoff at 1280x800
+  keeps its image. the todo is the page that projects and binds its
+  controls (Toggle Group is its alias), so its image is what turns "every
+  control bound in the layer that moved" into the exact control and
+  region. no other page projects: Git binds three regions of the
+  embedded workbench, every other page binds nothing, so there an image
+  would only narrow the layer to a region. core is the launch theme and
+  hoff the dark glass one, the pair the headless tests render. each
+  image costs about 90 KB per bless and is the pixels of one GPU. every
+  other baseline, when a layer moves, names that layer and every control
+  bound in it, pixels not compared; `bless --png --dir <tmp>` makes a
+  local copy with images when regions are needed.
 - the hashes are exact `f32` bits of a scene built on the CPU. a few
   pages take coordinates from the system libm (`sin` and `cos` in the
   donut chart, the spinner, the skeleton and the Effects page); another
