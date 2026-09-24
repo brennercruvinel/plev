@@ -1,0 +1,182 @@
+{
+  "format": "regress.baseline.v1",
+  "hash": "regress.layer.v1",
+  "page": "Todo",
+  "theme": "core",
+  "width": 390.0,
+  "height": 844.0,
+  "scale": 1.0,
+  "settle": {
+    "steps": 2,
+    "settled": true
+  },
+  "semantics": {
+    "revision": "cfc1185078f7c825",
+    "nodes": 10
+  },
+  "layers": [
+    {
+      "name": "todo",
+      "z": 0,
+      "hash": "a076b281d8c4f782",
+      "nodes": 34,
+      "bounds": [
+        16.0,
+        25.0,
+        358.0,
+        803.0
+      ]
+    },
+    {
+      "name": "z10",
+      "z": 10,
+      "hash": "c853f02ec00cb9d8",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1000",
+      "z": 1000,
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1200",
+      "z": 1200,
+      "hash": "ef5874151115e51e",
+      "nodes": 0,
+      "bounds": null
+    }
+  ],
+  "bindings": [
+    {
+      "id": "todo",
+      "layer": "todo",
+      "rect": [
+        16.0,
+        110.2,
+        358.0,
+        717.8
+      ],
+      "clip": [
+        0.0,
+        110.2,
+        390.0,
+        717.8
+      ]
+    },
+    {
+      "id": "todo.input",
+      "layer": "todo",
+      "rect": [
+        40.0,
+        134.2,
+        310.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        110.2,
+        390.0,
+        717.8
+      ]
+    },
+    {
+      "id": "todo.item[1]",
+      "layer": "todo",
+      "rect": [
+        40.0,
+        192.2,
+        310.0,
+        44.0
+      ],
+      "clip": [
+        40.0,
+        192.2,
+        310.0,
+        545.8
+      ]
+    },
+    {
+      "id": "todo.item[2]",
+      "layer": "todo",
+      "rect": [
+        40.0,
+        236.2,
+        310.0,
+        44.0
+      ],
+      "clip": [
+        40.0,
+        192.2,
+        310.0,
+        545.8
+      ]
+    },
+    {
+      "id": "todo.item[3]",
+      "layer": "todo",
+      "rect": [
+        40.0,
+        280.2,
+        310.0,
+        44.0
+      ],
+      "clip": [
+        40.0,
+        192.2,
+        310.0,
+        545.8
+      ]
+    },
+    {
+      "id": "todo.filter[all]",
+      "layer": "todo",
+      "rect": [
+        147.0,
+        789.0,
+        39.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        110.2,
+        390.0,
+        717.8
+      ]
+    },
+    {
+      "id": "todo.filter[active]",
+      "layer": "todo",
+      "rect": [
+        194.0,
+        789.0,
+        60.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        110.2,
+        390.0,
+        717.8
+      ]
+    },
+    {
+      "id": "todo.filter[completed]",
+      "layer": "todo",
+      "rect": [
+        262.0,
+        789.0,
+        88.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        110.2,
+        390.0,
+        717.8
+      ]
+    }
+  ]
+}

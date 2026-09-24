@@ -1,0 +1,195 @@
+{
+  "nodes": [
+    {
+      "id": "todo",
+      "role": "region",
+      "label": "todo"
+    },
+    {
+      "id": "todo.input",
+      "role": "text_input",
+      "label": "new todo",
+      "parent": "todo",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "todo.input:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "submit",
+          "enabled": false,
+          "reads": [
+            "todo.input:text"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "todo.filter",
+      "role": "tab_list",
+      "label": "filter",
+      "parent": "todo",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "all"
+        }
+      }
+    },
+    {
+      "id": "todo.filter[all]",
+      "role": "tab",
+      "label": "All",
+      "parent": "todo.filter",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "todo.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo.filter[active]",
+      "role": "tab",
+      "label": "Active",
+      "parent": "todo.filter",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "todo.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo.filter[completed]",
+      "role": "tab",
+      "label": "Completed",
+      "parent": "todo.filter",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "todo.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo.item[1]",
+      "role": "list_item",
+      "label": "Absorb the plev demos into the showcase",
+      "parent": "todo",
+      "state": {
+        "completed": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "todo.item[1]:completed"
+          ]
+        },
+        {
+          "name": "remove",
+          "policy": {
+            "destructive": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "todo.item[2]",
+      "role": "list_item",
+      "label": "Measure text, never estimate it",
+      "parent": "todo",
+      "state": {
+        "completed": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "todo.item[2]:completed"
+          ]
+        },
+        {
+          "name": "remove",
+          "policy": {
+            "destructive": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "todo.item[3]",
+      "role": "list_item",
+      "label": "Port the todo domain (tested first)",
+      "parent": "todo",
+      "state": {
+        "completed": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "todo.item[3]:completed"
+          ]
+        },
+        {
+          "name": "remove",
+          "policy": {
+            "destructive": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "todo.counter",
+      "role": "status",
+      "label": "2 active · 1 done",
+      "parent": "todo",
+      "state": {
+        "active": {
+          "kind": "int",
+          "value": 2
+        },
+        "done": {
+          "kind": "int",
+          "value": 1
+        }
+      }
+    }
+  ]
+}

@@ -16,6 +16,14 @@ crate-type = ["lib", "cdylib", "staticlib"]
 name = "showcase"
 path = "src/main.rs"
 
+# the structural regression harness (task-67). `test = true`: cargo only
+# builds an example under `cargo test`; this one runs its tests there too,
+# so the comparator's tests are part of the gate.
+[[example]]
+name = "regress"
+path = "examples/regress/main.rs"
+test = true
+
 [dependencies]
 engine.workspace = true
 comps.workspace = true
@@ -50,6 +58,10 @@ serde_json.workspace = true
 # the svg importer reads `--render --svg` exports back: the round trip is
 # the test that the file is well-formed svg with drawable content.
 svg.workspace = true
+# examples/regress decodes the png a baseline keeps and writes its
+# baselines into temporary directories in its tests.
+image.workspace = true
+tempfile.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true
