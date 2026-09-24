@@ -293,14 +293,6 @@ impl ToastManager {
         wake
     }
 
-    /// [`ToastManager::wake`] as the `bool` its last callers read (the
-    /// ide, the showcase and urnaui until each adopts `Wake`, task-82
-    /// phase b): `true` while a toast springs in or out.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        let wake = self.wake(dt);
-        wake.now || wake.is_continuous()
-    }
-
     pub fn is_animating(&self) -> bool {
         self.toasts
             .iter()
