@@ -63,14 +63,31 @@ ActionName }`: no parameter and no value, nothing of the state. `acted`
 is not written when empty, and reads as empty when absent, so a refusal
 written before this change reads as one that names nobody.
 
-what it means, exactly: the actions of other actors that were checked on
-the state the author of the refused action saw and got to run. the rule:
-among the receipts the dispatcher holds (the open ones and the finished
-ones retention keeps), those whose actor is not the refused request's,
-whose `validated_against` is `Some(request.observed.revision)`, and whose
-stage is executing, completed or failed; a refusal (at the check or at
-the point of truth), a decline and a wait for confirmation ran nothing.
-in id order.
+what it means, exactly: the actions of other actors that ran since the
+state the author of the refused action saw. the rule, among the receipts
+the dispatcher holds (the open ones and the finished ones retention
+keeps), where a receipt ran when its stage is executing, completed or
+failed (a refusal at the check or at the point of truth, a decline and a
+wait for confirmation ran nothing): the start is the lowest id of a
+receipt that ran and whose `validated_against` is
+`Some(request.observed.revision)`, by any actor, the author included;
+named are the receipts that ran, with an id from the start on, whose
+actor is not the refused request's, in id order. with no start, nobody is
+named. the dispatcher numbers requests in dispatch order, and the start
+ran on the state the author saw, so it and every later one ran after the
+author looked. the author's own receipts are never named (the author
+knows what it did) and do not cut the chain; a receipt that ran nothing
+starts nothing.
+
+updated on 2026-09-23 (task-90): the rule of task-83 named only the
+receipts checked on exactly that revision, so of a person's chain only
+the first act was named. the proof of task-86 in a real window wrote
+that limit down, and the probe of task-90 ran the window's scene through
+the ide's real click: a person who clicks a new row moves the selection
+outside the dispatcher before any request, so nothing runs on the state
+the agent saw and the refusal names nobody, under either rule. the rule
+above is the one inside the process, and the fallback for an anchor on
+the author's look (task-91), which covers that scene.
 
 the dispatcher fills it in one place, `push`, the function every stage
 goes through, so the refusal at dispatch, at a confirmation's second
@@ -92,9 +109,12 @@ snapshot. it still reduces the delta of a secret node to lengths, for a
 clear target and for a secret one (a test in `crates/sem/src/redact.rs`).
 
 the ide's toast adds who acted, with the `who` the notice already used
-and the action in the past tense of the ui: "Refused lab's submit:
-src/session.rs left the staged files (you unstaged src/session.rs)". with
-`acted` empty the text is the one it was.
+and the action in the past tense of the ui: "Refused claude's submit:
+src/session.rs left the staged files (the person unstaged
+src/session.rs)". a chain is one clause per actor's run of actions, in
+the order they ran, another actor after a semicolon (task-90): "(the
+person unstaged B, opened the diff of C and unstaged C)". with `acted`
+empty the text is the one it was.
 
 ### the rule, where an agent reads it
 
@@ -103,7 +123,7 @@ src/session.rs left the staged files (you unstaged src/session.rs)". with
 stale when a state it reads (the action's `reads`, as an observation
 shows them) changed since the observation it rests on; the revision only
 names what was seen and never decides; `changes` says what moved, and
-`acted` says who, among the app's actors, ran something on that same
+`acted` says who, among the app's actors, ran something since that
 state.
 
 ### compatibility
@@ -164,18 +184,32 @@ commit's node in place and their `commit.submit` receipts as recorded
 
   574 bytes in two round trips became 427 in one.
 - known limits of `acted`, written in the doc of `Acted`:
-  - a change from outside the app (a `git` in a terminal) has no receipt:
-    it shows in `changes` and never in `acted`.
-  - of a chain of actions by someone else, only the ones checked on the
-    exact revision the author saw are named; the next one was checked on
-    the state the first left.
-  - it says who ran something on that same state, not that their action
+  - a projected change no receipt made starts nothing: a change from
+    outside the app (a `git` in a terminal), and state an app moves
+    outside the dispatcher. in the ide that is the selection by click or
+    keys, typing in the commit message, focus, a toast leaving on its
+    timer and the diff lines landing from the worker. when one of them
+    comes first after the look, the next receipt is checked on another
+    revision and nobody is named: the window's scene of a click on a new
+    row, then an unstage, is this case, pinned in
+    `crates/ide/tests/human_agent.rs`. the change still shows in
+    `changes`. task-91 anchors on the look instead.
+  - a state that comes back to exactly the revision the author saw can
+    start the chain before the look: what ran from the first time the
+    state was there is named.
+  - the start is read from the revision the act names
+    (`Observation::revision`). an act over the port whose read rests on
+    an earlier observation (task-89) does not name what ran between that
+    observation and the revision; task-91 anchors on the oldest look.
+  - it says who ran something since that state, not that their action
     moved what the refused one reads: a person who only moved a list
-    cursor on that state is named beside the one who unstaged the file.
-    `changes` says what moved.
+    cursor or opened a diff is named beside the one who unstaged the
+    file. `changes` says what moved.
   - a receipt dropped past the retention (256 finished ones by default)
-    is not named; a failed action is, since it ran and may have moved
-    something before it failed.
+    is not named, and a start dropped past it takes the chain with it
+    (unless another receipt held ran on that revision); a failed action
+    is named, since it ran and may have moved something before it
+    failed.
 - a recorded snapshot event that adds nodes repeats them in its `changes`.
   in the laboratory run above the semantic section went from 53732 to
   54066 bytes, 51 events each.
