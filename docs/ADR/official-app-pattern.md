@@ -1,11 +1,42 @@
 ---
 type: adr
 status: accepted
-tags: [ui, patterns, apps, widgets, builder, experimental]
+tags: [ui, patterns, apps, widgets, builder, experimental, surface, plev-ir]
 date: 2026-08-30
 ---
 
 # official app pattern: state in structs, retained widgets, explicit invalidation
+
+## addendum (2026-09-24, task-69): the second pattern, a surface materialized from verified IR
+
+a screen can also be a surface materialized from verified plev IR
+(docs/ADR/materialized-surfaces-from-verified-ir.md): the `surface` crate
+lays a `uir::VerifiedIr` out by the engine, draws it by the comps widgets
+with the theme's tokens, projects it from the IR and turns every event
+into a request through the app's dispatcher. it is the second supported
+pattern, beside state in structs with retained widgets, and it never
+replaces the first: the capabilities it operates are always an app's,
+held in structs, projected (`sem::Semantics`) and run (`sem::Operable`)
+by that app. a surface is a view over them and owns no state but its
+widgets' (hover, focus, a caret).
+
+when to use each:
+
+- state in structs, retained widgets: every capability an app has,
+  and every screen that is part of the app: long-lived, with its own
+  interaction, motion, custom drawing or editing (the editor, the git
+  workspace), a list that must virtualize, a layout the vocabulary of the
+  IR cannot say. this is where a capability is born, projected and run.
+- a surface materialized from verified IR: a screen that exists for a
+  task and is composed from what apps already offer: written by a
+  proposer, an agent, an importer or a person as IR, verified against the
+  registry the app projects, and closed when the task ends. it composes
+  the vocabulary's widgets over existing capabilities; it cannot add a
+  capability, a widget or a visual value. the showcase's Surface page is
+  the reference: the todo's IR beside the todo, one dispatcher.
+
+a screen that needs a widget the vocabulary lacks is written by hand
+(first pattern) until comps has the widget and an ADR adds it to the IR.
 
 ## context
 
