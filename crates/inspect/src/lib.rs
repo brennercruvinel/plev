@@ -16,6 +16,8 @@
 //!   then, the stages, the verdict with its delta, and the result.
 //! - `Inspector::control`: a control at an instant, and every request that
 //!   touched it up to then, each with its `why`.
+//! - `Inspector::summary`: the build, the span, the actors, every request
+//!   with how it ended, and every refusal with its `why`.
 //!
 //! who moved a value is a correlation by time, never a declaration: the
 //! contract declares what an action reads, not what it writes. a change is
@@ -27,17 +29,21 @@
 //! it only reads. the inspector borrows the session and nothing else; it
 //! holds no app and takes nothing that could run an action, so reading a
 //! session can never create a request (replay, never re-execution:
-//! docs/ADR/session-recording-replay-not-reexecution.md). every model type
-//! is `Serialize`.
+//! docs/ADR/session-recording-replay-not-reexecution.md). `text` renders
+//! every answer as plain english, the way the `plev-inspect` binary prints
+//! it; every model type is also `Serialize`, for its `--json`.
 
 mod control;
 mod describe;
 mod index;
+mod summary;
+pub mod text;
 mod timeline;
 mod why;
 
 pub use control::Control;
 pub use index::{Inspector, Stamp};
+pub use summary::{Line, Summary};
 pub use timeline::{Count, Entry, Tally, Timeline, What};
 pub use why::{
     Asked, Basis, Between, By, Cause, Ending, InputAt, Move, Read, ReadMoves, StageAt, Unrecorded,

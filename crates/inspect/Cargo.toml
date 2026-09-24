@@ -13,6 +13,12 @@ rust-version.workspace = true
 publish = false
 description = "Session inspector of plev: reads a recorded session and explains any request or control, by time, without running anything; the plev-inspect cli"
 
+# the inspector's command line: a summary, the timeline, a request's causal
+# chain, a control at an instant, as text or json.
+[[bin]]
+name = "plev-inspect"
+path = "src/bin/plev_inspect.rs"
+
 [dependencies]
 # the read side of a recorded session: events, the state at an instant,
 # receipts rebuilt from their stages.
@@ -21,7 +27,7 @@ rec.workspace = true
 # stages and rejections exactly as sem writes them.
 sem = { workspace = true, features = ["serde"] }
 serde.workspace = true
-# the serde name of a role, in the plain-english forms.
+# the serde names in the plain-english forms, and the cli's --json.
 serde_json.workspace = true
 
 [dev-dependencies]
