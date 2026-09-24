@@ -14,6 +14,18 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a recusa ensina a pergunta (task-94)
+
+- **integrada:** task-94 (`37c5e0c`). gate verde (2433, +4). o
+  orquestrador leu o diff inteiro e conferiu o stdout igual byte a byte
+  pelos testes. no fechamento, corrigiu o topo de
+  `crates/ide/tests/agent_port.rs` (um decline já chega na hora, desde o
+  P0 da 92).
+- **registrado:** `plev.rs` a uma linha do limite; a próxima task nele
+  começa movendo os testes (programa, seção 8).
+- **próximo:** a quinta rodada da task-62 (A5a allow, A5b decline, sem a
+  frase), com os binários desta integração.
+
 ### intervenção do brenner: merge com o CI fora
 
 - com o CI parado por cobrança, o brenner mandou mergear ("já dê

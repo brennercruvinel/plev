@@ -245,7 +245,7 @@ interna. mudança em qualquer um deles passa pelo orquestrador.
 | `crates/engine/src/accessibility`, `crates/engine/src/window/{mod,render,lifecycle}.rs` | 60 | o caminho antigo derivado de hit region é substituído, não mantido em paralelo |
 | `crates/ide`, `crates/git` | 62 | 60 só liga o ide depois da integração da 62 |
 | `crates/monster/src/container.rs` e formato | livre (a 63 escolheu o formato irmão em `crates/rec` e nunca tocou este arquivo) | 72 pode abrir; o golden (`fixtures/golden_v0_minimal.monster`, versão 0 do container) não muda |
-| `crates/wire` | orquestrador (83 agora) | protocolo v1; mudança de forma passa pelo orquestrador e vai para ADR |
+| `crates/wire` | orquestrador (83 agora) | protocolo v1; mudança de forma passa pelo orquestrador e vai para ADR. `src/bin/plev.rs` está em 638 das 639 linhas (os testes dentro de `mod cli` contam como produção): a próxima task que mexer nele começa por um commit só de movimento que leve os testes para o nível do arquivo (task-94) |
 | `crates/rec` | 63 fase d, depois 64 | uma task por vez; o formato `MONS` só muda com ADR |
 | `crates/showcase/src/app.rs` (o shell) | uma task por vez (63 fase d, 65, 75 disputam) | o orquestrador sequencia; já foi tocado por 60, 61, 66b, 82 |
 | `crates/ide/src/main.rs`, `crates/ide/src/views/**` | uma task por vez (82 fase b, porta do agente no ide, 75) | o orquestrador sequencia |
@@ -396,4 +396,4 @@ atualizado em cada integração.
 | auditoria de verdade | integrada | `7621403` | `docs/mission/state/truth.md`: contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |
 | task-92 | integrada (P0 dentro, e o P2) | `f101359` | P0: um estágio fora de um drain acorda o porto (a recusa da pessoa chegava só na próxima mensagem do agente); o agente pede à pessoa que confirme um ato (`Request::ask`, `plev act --ask`), o modal do ide pergunta, o `why` mostra |
 | task-93 | integrada | `654d740` | a pessoa do laboratório responde ao modal (`--answer allow|decline|none`, `--answer-after`), o relatório conta perguntas, respostas, tempo e o que o agente fez depois; `--scripted ask` |
-| task-94 | na fila (P2) | | a recusa que nomeia uma pessoa aponta para o `--ask` no stderr do `plev`; origem: quarta rodada da task-62, nenhum agente sem dica achou a pergunta |
+| task-94 | integrada (P2) | `37c5e0c` | um `plev act` sem `--ask` recusado stale com uma pessoa no `acted` escreve no stderr uma linha que nomeia o request dela e aponta para o `--ask`; nenhuma depois de um `declined`, com só agentes, ou quando o ato perguntava; o stdout igual byte a byte; o cenário da quarta rodada pela porta real com o binário `plev` como agente |

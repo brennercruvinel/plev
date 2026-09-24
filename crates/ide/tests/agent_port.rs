@@ -11,8 +11,9 @@
 //! person changed is refused as stale, naming the person, to the agent
 //! and on screen in the same words. An agent's request that waits for a
 //! person opens the modal, and the person's answer goes through the
-//! dispatcher; a decline reaches the agent only at the next drain, since
-//! nothing is served after a person's input (the probe of task-92).
+//! dispatcher; a decline reaches the agent at once, since the port's sink
+//! hears the stage outside a drain and wakes the port (the P0 of task-92;
+//! before it, a decline waited for the agent's next message).
 //! The last tests run the `plev` binary itself as the agent, as an agent
 //! in a shell runs it, and read what it printed (task-94).
 
