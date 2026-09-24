@@ -2,7 +2,8 @@
 //!
 //! Split of responsibilities (ADR #5 of the technical plan):
 //! - **gix** handles the read side that it makes easy and fast: opening /
-//!   discovering the repository, walking history, listing references.
+//!   discovering the repository, walking history (with the paths each
+//!   commit changes, a tree diff), listing references.
 //! - **git CLI** handles worktree status, diffs and all mutations
 //!   (stage/unstage/discard/commit). For these, gix either lacks a porcelain
 //!   API or requires assembling plumbing crates by hand; the CLI's porcelain
@@ -12,9 +13,13 @@
 //! Every method is synchronous; the UI talks to [`GitClient`](crate::GitClient)
 //! instead, which runs a `GitRepo` on a worker thread.
 
-use std::collections::BTreeSet;
+use std::cell::RefCell;
+use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+use gix::diff::tree::recorder::Change;
+use gix::objs::FindExt;
 
 use crate::diff::parse_unified;
 use crate::error::{GitError, Result, repo_err};
@@ -25,6 +30,8 @@ pub struct GitRepo {
     repo: gix::Repository,
     /// Working tree root — also the cwd for every CLI invocation.
     workdir: PathBuf,
+    /// The paths each commit changes, read once per commit by [`log`](Self::log).
+    files: RefCell<FilesCache>,
 }
 
 impl GitRepo {
@@ -33,7 +40,11 @@ impl GitRepo {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let repo = gix::discover(path.as_ref()).map_err(repo_err)?;
         let workdir = repo.workdir().ok_or(GitError::Bare)?.to_path_buf();
-        Ok(Self { repo, workdir })
+        Ok(Self {
+            repo,
+            workdir,
+            files: RefCell::default(),
+        })
     }
 
     /// Working tree root.
@@ -43,8 +54,15 @@ impl GitRepo {
 
     // -- read side (gix) ----------------------------------------------------
 
-    /// Last `limit` commits reachable from HEAD, newest first. Returns an
-    /// empty list on a repository without commits yet.
+    /// Last `limit` commits reachable from HEAD, newest first, each with the
+    /// paths it changes (see [`Commit::files`]). Returns an empty list on a
+    /// repository without commits yet.
+    ///
+    /// The paths come from comparing trees in process, never from a `git`
+    /// process. A commit never changes, so its paths are read once and kept
+    /// by commit id; the cache keeps the four times `limit` commits asked
+    /// for most recently, so a log that moves by one commit reads one tree
+    /// diff.
     pub fn log(&self, limit: usize) -> Result<Vec<Commit>> {
         let Ok(head_id) = self.repo.head_id() else {
             return Ok(Vec::new()); // unborn HEAD (fresh `git init`)
@@ -55,10 +73,20 @@ impl GitRepo {
             .all()
             .map_err(repo_err)?;
 
+        let mut cache = self.files.borrow_mut();
+        let mut diff = TreeDiff::default();
         let mut commits = Vec::new();
         for info in walk.take(limit) {
             let info = info.map_err(repo_err)?;
             let commit = info.object().map_err(repo_err)?;
+            let files = match cache.get(&info.id) {
+                Some(files) => files,
+                None => {
+                    let files = diff.files(&self.repo, &commit, info.parent_ids.first())?;
+                    cache.put(info.id, files.clone());
+                    files
+                }
+            };
             let sha = commit.id().to_hex().to_string();
             let message = commit.message().map_err(repo_err)?.summary().to_string();
             let author = commit.author().map_err(repo_err)?;
@@ -69,8 +97,10 @@ impl GitRepo {
                 message,
                 author: author.name.to_string(),
                 time: time.seconds,
+                files,
             });
         }
+        cache.trim(limit.saturating_mul(4));
         Ok(commits)
     }
 
@@ -287,5 +317,146 @@ impl GitRepo {
             });
         }
         Ok(String::from_utf8_lossy(&out.stdout).into_owned())
+    }
+}
+
+/// The paths each commit changes, by commit id. A commit never changes, so
+/// an entry never goes stale; the cache only forgets the commits asked for
+/// least recently, to stay bounded.
+#[derive(Default)]
+struct FilesCache {
+    /// The paths, and when they were last asked for.
+    entries: HashMap<gix::ObjectId, (Vec<String>, u64)>,
+    /// Counts every get and put: a larger stamp was asked for later.
+    clock: u64,
+}
+
+impl FilesCache {
+    fn tick(&mut self) -> u64 {
+        self.clock += 1;
+        self.clock
+    }
+
+    fn get(&mut self, id: &gix::ObjectId) -> Option<Vec<String>> {
+        let now = self.tick();
+        let (files, used) = self.entries.get_mut(id)?;
+        *used = now;
+        Some(files.clone())
+    }
+
+    fn put(&mut self, id: gix::ObjectId, files: Vec<String>) {
+        let now = self.tick();
+        self.entries.insert(id, (files, now));
+    }
+
+    /// Keeps the `cap` commits asked for most recently.
+    fn trim(&mut self, cap: usize) {
+        let extra = self.entries.len().saturating_sub(cap);
+        if extra == 0 {
+            return;
+        }
+        if cap == 0 {
+            self.entries.clear();
+            return;
+        }
+        // Stamps are unique, so exactly `cap` are at or above the one at
+        // index `extra` once sorted.
+        let mut stamps: Vec<u64> = self.entries.values().map(|(_, used)| *used).collect();
+        let (_, oldest_kept, _) = stamps.select_nth_unstable(extra);
+        let oldest_kept = *oldest_kept;
+        self.entries.retain(|_, (_, used)| *used >= oldest_kept);
+    }
+}
+
+/// Reads the paths a commit changes: its tree against its first parent's
+/// (a root commit's against the empty tree), with the buffers kept across
+/// the commits of one log.
+#[derive(Default)]
+struct TreeDiff {
+    state: gix::diff::tree::State,
+    parent: Vec<u8>,
+    ours: Vec<u8>,
+    theirs: Vec<u8>,
+}
+
+impl TreeDiff {
+    /// Every path whose entry differs between the two trees, sorted as
+    /// git sorts them (byte order of the full path). No rename detection:
+    /// a moved file counts at both paths.
+    fn files(
+        &mut self,
+        repo: &gix::Repository,
+        commit: &gix::Commit<'_>,
+        first_parent: Option<&gix::ObjectId>,
+    ) -> Result<Vec<String>> {
+        let kind = repo.object_hash();
+        let objects = &repo.objects;
+        let tree = commit.tree_id().map_err(repo_err)?.detach();
+        let before = match first_parent {
+            Some(parent) => {
+                let mut parent = objects
+                    .find_commit_iter(parent, &mut self.parent)
+                    .map_err(repo_err)?;
+                let tree = parent.tree_id().map_err(repo_err)?;
+                objects
+                    .find_tree_iter(&tree, &mut self.theirs)
+                    .map_err(repo_err)?
+            }
+            None => gix::objs::TreeRefIter::from_bytes(&[], kind),
+        };
+        let after = objects
+            .find_tree_iter(&tree, &mut self.ours)
+            .map_err(repo_err)?;
+        let mut recorder = gix::diff::tree::Recorder::default();
+        gix::diff::tree(before, after, &mut self.state, objects, &mut recorder)
+            .map_err(repo_err)?;
+        let mut files: Vec<String> = recorder
+            .records
+            .into_iter()
+            .filter_map(|change| match change {
+                Change::Addition {
+                    entry_mode, path, ..
+                }
+                | Change::Deletion {
+                    entry_mode, path, ..
+                }
+                | Change::Modification {
+                    entry_mode, path, ..
+                } => (!entry_mode.is_tree()).then(|| path.to_string()),
+            })
+            .collect();
+        files.sort_unstable();
+        files.dedup();
+        Ok(files)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn id(n: u8) -> gix::ObjectId {
+        gix::ObjectId::from_bytes_or_panic(&[n; 20])
+    }
+
+    #[test]
+    fn the_files_cache_keeps_the_commits_asked_for_most_recently() {
+        let mut cache = FilesCache::default();
+        for n in 1..=5 {
+            cache.put(id(n), vec![format!("f{n}")]);
+        }
+        // 1 and 2 are asked for again, after 3, 4 and 5 went in.
+        assert_eq!(cache.get(&id(1)), Some(vec!["f1".to_owned()]));
+        assert!(cache.get(&id(2)).is_some());
+        cache.trim(3);
+        assert_eq!(cache.entries.len(), 3);
+        for (n, kept) in [(1, true), (2, true), (3, false), (4, false), (5, true)] {
+            assert_eq!(cache.get(&id(n)).is_some(), kept, "commit {n}");
+        }
+        // Under the cap nothing goes.
+        cache.trim(3);
+        assert_eq!(cache.entries.len(), 3);
+        cache.trim(0);
+        assert!(cache.entries.is_empty());
     }
 }

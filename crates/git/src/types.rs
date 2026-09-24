@@ -36,6 +36,10 @@ pub struct Commit {
     pub author: String,
     /// Commit time in seconds since the Unix epoch.
     pub time: i64,
+    /// The paths the commit changes against its first parent (a root
+    /// commit against the empty tree; a merge against the branch it was
+    /// made on), in git's order. A renamed file counts at both paths.
+    pub files: Vec<String>,
 }
 
 /// Kind of a single diff line.

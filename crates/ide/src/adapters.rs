@@ -157,6 +157,7 @@ mod tests {
             message: "subject".into(),
             author: "Author".into(),
             time: 0,
+            files: vec!["src/lib.rs".into()],
         }];
         let stacks = stacks(&branches, &log);
         assert_eq!(stacks.len(), 2);
