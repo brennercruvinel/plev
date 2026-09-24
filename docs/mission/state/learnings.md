@@ -170,6 +170,14 @@ c"; saídas em `target/agents/exp/`.
 
 ### 2026-09-23
 
+- **regra sem gate não vale:** o limite de 639 linhas de produção por
+  arquivo estava na convenção e nenhum gate conferia; três entregas do
+  ciclo passaram dele sem aviso, e o próprio orquestrador contou errado
+  uma vez (contou o arquivo inteiro, não a produção). agora o gate conta
+  (`crates/engine/tests/file_hygiene_guard.rs`), com a regra exata e os
+  seis arquivos que já passavam congelados no tamanho de hoje; um
+  arquivo de prova com 700 linhas fez o guard falhar com o nome dele.
+
 - **o auditor de transcrição dava falso positivo:** um agente guardou o
   caminho do `plev` numa variável (`P=...; $P observe`) e o auditor, que
   olhava o começo da linha, marcou 12 comandos como proibidos. conferido
