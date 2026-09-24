@@ -57,7 +57,7 @@ what identical means, by class of comparison:
 | the same target on another machine of the same GPU family | every byte | not yet |
 | another target on the same GPU through another API (the web on dawn over metal, the iOS simulator on the host GPU) | every byte outside the declared areas | not yet; the headless chromium already installed reaches the M4 through dawn with `--use-angle=metal` |
 | across GPUs and drivers (a software adapter in CI, windows, linux, android) | a bounded delta, measured: proposed at a channel delta of at most 2 per pixel. 0 is expected inside flat fills and glyphs away from their edges (one sRGB color decoded by `pow` in the shader and encoded back by the target; glyphs rasterized on the CPU from embedded fonts and sampled at texel centers), and a delta there is named, not absorbed | not yet; the bound is a proposal that the first cross-GPU capture confirms or replaces with its numbers |
-| across scales | not comparable by pixel (`resized`); the layout, the text and every primitive keep their size in logical px | the backdrop blur and the layer blur and shadow effects do not: their sigma is in physical texels, 9 logical px of spread at 1x, 6 at 1.5x, 4.5 at 2x for sigma 4 (task-77 probe) |
+| across scales | not comparable by pixel (`resized`); the layout, the text and every primitive keep their size in logical px | the blur too since task-77 phase 1b (the glass, the layer blur and shadow effects): under sigma 4 an edge's 10% to 90% ramp is 9 logical px at 1x and 2x, 8.7 at 1.5x and 9.6 at 1.25x (a physical px of grain), where it was 6 at 1.5x and 4.5 at 2x; scale 1 kept every byte |
 
 a bounded delta is never a verdict of equal: the comparator says silent,
 with its numbers, and the bound decides whether that silent difference
@@ -114,8 +114,10 @@ what runs where:
   report go to `target/determinism/`, outside git; no baseline was added.
 - the desktop is deterministic with itself on this machine, at the
   fractional scales too: every byte, every frame.
-- one divergence across scales has its cause and waits for the engine's
-  fix (the blur's sigma); an ignored test pins it.
+- the divergence across scales the probe found (the blur's sigma in
+  physical texels) is fixed (task-77 phase 1b): at any scale other than 1
+  the kernel of 1x is laid over the physical texels by area, scale 1 keeps
+  its pipeline and its bytes, and the test it left ignored runs.
 - the rows of web, iOS and android are declared from each platform's
   behavior and marked `to_confirm`: the first capture on each target
   measures the bands and corrects the table in the same change.

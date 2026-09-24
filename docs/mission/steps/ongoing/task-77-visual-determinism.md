@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: ongoing
-last-updated: 2026-09-23
+last-updated: 2026-09-24
 domain: generative-runtime
 task: task-77
 wave: trilha
@@ -765,3 +765,190 @@ recomendação: a opção 1, com uma amostra por texel.
 - ninguém compensa: todos passam o token cru, em px lógicos, sem
   multiplicar nem dividir por escala. a correção fica inteira no engine, e
   nenhum tema ou widget muda.
+
+### commits
+
+- `7127f65a` task-77: the blur-scale probe, its measures and the frame of before
+- `f6c688b5` task-77: the blur follows the scale
+- `adbf948b` task-77: the tests of the blur at every scale
+- (este) task-77: the table, the ADR line and the phase 1b handoff
+
+```text
+Goal: task-77 fase 1b, o vidro e os efeitos de layer Blur e Shadow com o
+      mesmo alcance e o mesmo perfil em px lógicos em toda escala
+Status: concluída; a escala 1 igual byte a byte, o teste ignorado verde,
+        o custo a 2x em 1,55x o de antes numa página com vidro
+```
+
+### a opção escolhida
+
+a opção 1, uma amostra por texel físico, pelos números da sonda: a mesma
+precisão contra 1x das outras duas (delta máximo abaixo de 1 na borda,
+média de 0,9 a 1,5 no detalhe sob vidro, contra 5,4 a 14,0 antes), a luz
+de um detalhe fino guardada em toda fase da grade (a opção 2 perde e
+triplica uma linha de um px físico a 3x), sigma 0 continua sem blur em
+toda escala, e o custo fica abaixo do limite de parada (2x a 2x). a 1b
+teria a mesma precisão por menos, mas põe a fração bilinear dentro do
+blur; fica para quando o custo a 3x pedir.
+
+### a correção, arquivo por arquivo
+
+- `crates/engine/src/effects/types.rs`: `scaled_weights(sigma, scale)`, os
+  pesos de `gaussian_weights(sigma)` espalhados por área sobre os texels
+  físicos (mesmo corte, soma 1; sigma 0 ou menos é uma amostra), e o
+  uniform do caminho novo, `ScaledBlurUniforms`, com 64 pesos
+  (`SCALED_WEIGHTS`). o `BlurUniforms` de 16 floats não muda.
+- `crates/engine/src/effects/apply.rs`: `EffectContext.scale`, px físicos
+  por px lógico, por eixo. `blur_pass` escolhe por eixo: escala
+  exatamente 1 usa o `blur_pipeline` com o `BlurUniforms` de antes (os
+  mesmos bytes); outra usa o `scaled_blur_pipeline` com `scaled_weights`.
+  `apply_shadow` repassa a escala ao blur da silhueta.
+- `crates/engine/src/effects/pipelines.rs` e `processor.rs`: o pipeline do
+  `fs_scaled` (o construtor de pipeline de tela cheia ganhou o nome da
+  entrada de fragmento), e o hot reload do `blur.wgsl` troca os dois.
+- `crates/engine/src/gpu/shaders/blur.wgsl`: a entrada `fs_scaled` e o seu
+  uniform, abaixo do `fs_main`, que não mudou.
+- `crates/engine/src/window/render_passes.rs`: `scale: gpu.clip_scale()`
+  nos três `EffectContext` (o vidro em `resolve_blurred_backdrop`, o
+  `Blur` e o `Shadow` em `apply_layer_effects`). são três linhas no
+  compositor que chama o efeito; nenhum outro arquivo do engine mudou, e
+  nenhum tema, widget, shader de sombra ou o contrato de cor.
+
+### os testes
+
+- `crates/engine/tests/headless_determinism.rs`:
+  `a_backdrop_blur_reaches_as_far_in_logical_px_at_every_scale` sem
+  `#[ignore]`, verde.
+- `crates/engine/tests/blur_scale.rs`:
+  - `the_glass_at_scale_1_is_the_glass_of_before_byte_for_byte`: um frame
+    de 160x96 a 1x, vidro em sigma 3, 8 e 50 sobre uma borda fracionária,
+    listras, imagem, círculo e texto, com sombra analítica de fora e de
+    dentro, contra `crates/engine/tests/fixtures/blur_at_scale_1.png`. o
+    png foi gravado na base, com `PLEV_RECORD_BLUR_FIXTURE=1`, antes de
+    qualquer mudança no engine, e entrou no commit 1: o teste é verde
+    antes e depois da correção. bytes dependem da GPU e do compilador, então
+    ele compara no adapter que gravou (apple M4, metal) e em outro pula
+    dizendo qual é.
+  - `a_backdrop_blur_has_the_profile_of_1x_at_the_fractional_scales`: a
+    1.25 e a 1.5, sigma 4, 8 e 50, a rampa a até 1 px lógico da de 1x e a
+    borda a até 2 da linha de 1x reamostrada.
+  - `a_line_thinner_than_a_logical_px_keeps_its_light_under_the_glass`: a
+    1.25, 1.5 e 3, a luz de uma linha de um px físico em 1 ± 0,02 em cada
+    fase, e o mesmo pico (± 1) em todas. o blur de antes também passa
+    nesse (ele não depende da fase, só do tamanho físico); o teste segura
+    a escolha contra um alvo reduzido.
+  - os dois probes, ignorados.
+- `crates/engine/src/effects/tests.rs`: `scaled_weights` a 1 dá os pesos
+  de 1x bit a bit; a 0.5, 1.25, 1.5, 2 e 3 guarda o corte (3, 8, 10, 13 e 19
+  amostras por lado) e soma 1; sigma 0 é uma amostra; o uniform limita a 63
+  por lado. e `the_layer_blur_and_shadow_reach_as_far_in_logical_px_at_every_scale`:
+  o `EffectProcessor` na GPU, `apply_blur` e `apply_shadow` sobre uma borda
+  opaca, a 1.25, 1.5, 2 e 3 contra 1x. os efeitos de layer ficam testados
+  nesse nível porque o frame do `App` (`WindowHost::render`) limpa a cena
+  antes de desenhar e o `draw_frame` não aplica efeitos: as três linhas
+  de `apply_layer_effects` que passam a escala não têm teste que as
+  alcance.
+
+com o blur de antes (a escala forçada a 1 num build de conferência,
+descartado), falham: o teste de alcance ("1.5x: the blur spreads 6
+logical px, 9 at 1x"), o de perfil fracionário ("sigma 4 at 1.25x spreads
+7.2 logical px, 9 at 1x") e o dos efeitos de layer ("blur at 1.25x spreads
+6.4 logical px, 8 at 1x").
+
+### a escala 1, byte a byte
+
+- o caminho: um eixo de escala exatamente 1 usa o mesmo pipeline, o mesmo
+  uniform com os mesmos bytes e as mesmas passadas de antes. o MSL do
+  `fs_main` do blur que o Metal recebe tem os mesmos 3339 bytes antes e
+  depois (a sonda diz como foi lido).
+- o frame de vidro e sombras: `the_glass_at_scale_1_is_the_glass_of_before_byte_for_byte`,
+  verde.
+- a galeria inteira: `regress capture --against` a captura feita na base
+  antes da correção (`target/determinism/desktop-before`): os 328 frames
+  a 1x (82 páginas nos 4 temas) iguais em bit, inclusive as 5 páginas com
+  vidro. os `frame.png` dos 163 baselines são de escala 1, então nenhum
+  fica velho.
+
+### o custo antes e depois
+
+o probe de custo com o binário de teste da base e o da correção, lado a
+lado, em seis rodadas intercaladas (a página de 1280x800 com um vidro de
+sigma 8, toda layer redesenhada, span de GPU p50 em us, mediana de 5
+execuções por caso). a tabela dá a mediana das seis rodadas; a última
+coluna, a razão rodada a rodada. esta GPU alterna entre dois estados de
+clock entre processos (844 ou 900 us a 1x no mesmo binário), e a razão
+dentro de um mesmo estado é a mais estável: 1,18 a 1.25, 1,32 a 1.5.
+
+| escala | sem vidro | com vidro, antes | com vidro, depois | depois / antes |
+|---|---|---|---|---|
+| 1 | 416 | 901 | 893 | 0,99 (0,94 a 1,04) |
+| 1.25 | 644 | 1403 | 1650 | 1,18 (1,10 a 1,25) |
+| 1.5 | 896 | 2011 | 2645 | 1,32 (1,24 a 1,40) |
+| 2 | 1605 | 3549 | 5487 | 1,55 (1,31 a 1,71) |
+
+só a parte do vidro (com menos sem vidro): 737 para 985 us a 1.25, 1059
+para 1717 a 1.5, 1911 para 3813 a 2. a 2x o blur em si dobra (27 amostras
+por passada em vez de 13), e a página com vidro fica em 1,55x, abaixo do
+limite de 2x. a 1x nada muda.
+
+### a captura da fase 1 depois da correção
+
+| execução | frames | contextos | processos | tempo |
+|---|---|---|---|---|
+| `capture` (escreve os pngs) | 1312 | 1312 iguais | não pedido | 64,4 s |
+| `capture --out target/determinism/desktop-b --against target/determinism/desktop --reverse --no-png` | 1312 | 1312 iguais | 1312 iguais | 38,8 s |
+| `capture --out target/determinism/desktop-vs-before --against target/determinism/desktop-before --no-png` | 1312 | 1312 iguais | 1252 iguais, 60 caladas | |
+
+o desktop continua determinístico consigo mesmo: zero pedidas, zero
+caladas, zero de outro tamanho entre contextos e entre processos. as 60
+caladas da última linha são o que a correção mudou, contra os pngs da
+base: 5 páginas, 4 temas, 3 escalas (1.25, 1.5, 2), e nenhuma a 1x. são as
+páginas com vidro: Effects (o painel de backdrop blur; a 2x até 66208 px,
+delta máximo de 76 a 157 por tema) e Bubble, Message, Message Scroller e
+Dock (o vidro do dock de mensagens, sobre fundo quase liso: até 7371 px,
+delta máximo de 1 a 5).
+
+### gate e regress
+
+- antes (a base, o log do gate da fase 1 sobre a mesma árvore): workspace
+  2687 passaram, 18 ignorados; urnaui 85 passaram, 1 ignorado; total 2772.
+- depois: workspace 2696 passaram, 19 ignorados; urnaui 85 e 1; total
+  2781. os 9 a mais: o teste de alcance que deixou de ser ignorado, 3 em
+  `blur_scale.rs` e 5 em `effects/tests.rs`; os ignorados são 18 menos o
+  de alcance mais os 2 probes. `./script/gate` verde com as pernas wasm e
+  urnaui (log em `target/agents/gate-77b.txt`).
+- `regress check`: 163 baselines, 163 inalterados, nenhum frame, nenhuma
+  GPU; a saída é a da fase 1 fora os tempos.
+- o `cargo check --target wasm32-unknown-unknown -p showcase` do gate é
+  verde. iOS e android não compilam aqui (os alvos não estão instalados,
+  como na fase 1); a mudança não tem código por plataforma.
+
+### decisões
+
+- os pesos por área, e não a gaussiana amostrada na escala: reproduzem os
+  pesos de 1x por px lógico, são contínuos na escala (a última amostra
+  cresce de zero) e dão os pesos de 1x exatos a 1. o que a área soma de
+  largura é uma variância de 1/16 de px lógico² a 2x (1/12 no limite),
+  nada perto das 16 de sigma 4.
+- a escala por eixo, de `GpuContext::clip_scale()`: sem projeção lógica ela
+  é 1 e o sigma fica em px físicos, que ali são as unidades da cena.
+- o frame de antes como fixture de 10 KB, gravado na base e comparado só
+  no adapter que o gravou.
+- a tabela ganhou a frase na razão da linha `size` do desktop, porque o
+  blur não é uma área e a tabela não tinha entrada sobre ele para tirar.
+  no ADR mudaram a linha "across scales" e a consequência que esperava a
+  correção.
+
+### o que fica aberto
+
+- o custo a 3x num telefone: 39 amostras por passada e 9 vezes os pixels de
+  1x. não medido aqui. se pesar, a 1b corta para 21 amostras com a mesma
+  precisão neste M4, trazendo a fração bilinear para o blur.
+- as três linhas de `apply_layer_effects` que passam a escala aos efeitos
+  de layer não têm teste que as alcance; o frame do `App` do engine limpa
+  a cena antes de desenhar. os efeitos em si estão testados no
+  `EffectProcessor`.
+- o `effects::LayerEffect` sem uso em `effects/types.rs`.
+- o fixture de escala 1 só compara no apple M4 com metal; outra máquina
+  precisa gravar o seu, ou fica no limite entre GPUs do ADR.
+- iOS e android sem compilar nesta máquina.
