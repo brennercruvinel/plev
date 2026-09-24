@@ -14,6 +14,24 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### checkpoint b, primeira rodada: a gerada é pior hoje
+
+- **pedido do brenner:** "testa você mesmo". o orquestrador fez a
+  comparação pelo contrato (`plev act`, sem clique sintético) e tirou as
+  imagens pelo espelho da task-79. detalhe e imagens na task-69, seção
+  "checkpoint b, primeira rodada".
+- **resultado:** a tela gerada pelas regras quebra na janela padrão (a
+  linha do corte encolhe, texto na vertical, botões fora da borda). a do
+  Claude tem tudo, mas põe a lista de cortes por último, repete a
+  detecção e mostra números crus; custou 119 s e 0,196 USD. o estado
+  compartilhado funcionou nas duas.
+- **decisão:** corrigir os três defeitos (layout de linha em coluna
+  estreita, formato de número, a proposta pôr a tarefa primeiro) e rodar
+  o checkpoint de novo antes de aplicar a regra do programa. a task-75
+  espera.
+- **publicado:** PR #91 (task-72 fase 1), gate local verde (2821),
+  regressão 163 sem mudança.
+
 ### ciclo 3: o asset compiler mede primeiro (task-72 fase 1)
 
 - **integrada:** fase 1 (merge da `task/72a-asset-compiler`), só testes e

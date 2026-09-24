@@ -12,6 +12,18 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, checkpoint b, primeira rodada
+
+- **a tela gerada nunca tinha sido vista inteira na janela padrão:** os
+  testes da task-69 provavam a projeção, as ações e os frames, e o
+  regress só tinha a Silences no estado inicial. a primeira vez que
+  alguém olhou a revisão gerada a 1200x800, a linha do corte estava
+  quebrada. regra: toda tela gerada que a tese usa tem imagem de
+  referência no regress no estado em que a pessoa a usa.
+- **o espelho da task-79 virou a ferramenta do checkpoint:** o
+  orquestrador operou pelo contrato e fotografou pelo espelho, sem
+  tocar a tela do brenner. é o jeito de repetir o checkpoint igual.
+
 ### 2026-09-24, task-76 item 10
 
 - **um frame por imagem enchia o atlas em 16 segundos:** o depósito de
