@@ -152,7 +152,6 @@ fn transforming_keeps_the_widget_and_the_state_of_every_id_that_stays() {
     // what left
     let seen = page(&app.snapshot(), surface);
     assert!(seen.get(&id("todo_panel.side")).is_some());
-    assert!(seen.get(&id("todo_panel.main")).is_some());
     assert!(seen.get(&id("todo_panel.counts")).is_none());
     assert_eq!(seen.focused(), Some(&field));
 

@@ -22,8 +22,9 @@ pub const REVIEW: &str = "ide-review-commit.ir.json";
 pub const TODO: &str = "showcase-todo.ir.json";
 pub const IDE: &str = "ide-workbench.snapshot.json";
 pub const SHOWCASE: &str = "showcase-todo.snapshot.json";
-/// The todo surface in two columns (a local fixture): the same ids as
-/// `TODO`, the filter and the counts in a column of their own.
+/// The todo surface in two columns (a local fixture): the same controls
+/// as `TODO`, in a grid of two columns where the width allows (the
+/// filter and the counts, then the entry) and one where it does not.
 pub const COLUMNS: &str = "showcase-todo-columns.ir.json";
 /// The mixer surface (local fixtures, over `mixer()`): the volume slider
 /// in the left panel, then in the right one.
