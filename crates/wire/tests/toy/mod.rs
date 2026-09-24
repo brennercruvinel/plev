@@ -1,8 +1,10 @@
 //! a toy app the port serves in these tests: a small todo list with a
 //! field, a secret pin, a destructive `remove` that asks agents for a
-//! person's confirmation, and a `sync` that ends later. it implements
-//! `Semantics` and `Operable`, and `ToyHost` holds it with its one
-//! dispatcher, as a shell would.
+//! person's confirmation, a `sync` that ends later, and a `clear` that
+//! removes the rows done and reads the counter's `done`, state of another
+//! node, as the ide's `commit.submit` reads `changes:staged`. it
+//! implements `Semantics` and `Operable`, and `ToyHost` holds it with its
+//! one dispatcher, as a shell would.
 
 use std::collections::BTreeSet;
 
@@ -106,6 +108,10 @@ impl Semantics for Toy {
         b.node("todo.counter", Role::Status, "counter")
             .parent("todo")
             .state("done", Value::Set(done));
+        b.node("todo.clear", Role::Button, "clear done")
+            .parent("todo")
+            .action("clear")
+            .reads("todo.counter:done");
     }
 }
 
@@ -134,6 +140,7 @@ impl Operable for Toy {
                 Some(Value::Text(t)) => return Execution::Failed(format!("{t} is not 4 digits")),
                 _ => return Execution::Failed("a text".into()),
             },
+            ("todo.clear", "clear") => self.items.retain(|(_, _, done)| !done),
             ("todo.sync", "sync") => {
                 self.syncing.push(id);
                 return Execution::Started;

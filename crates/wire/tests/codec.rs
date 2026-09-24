@@ -175,6 +175,9 @@ fn every_reply() -> Vec<Reply> {
         Reply::Error(ProtoError::UnknownRevision {
             revision: seen.revision(),
         }),
+        Reply::Error(ProtoError::NotObserved {
+            reads: vec![sem::StateRef::parse("todo.item[1]:completed").unwrap()],
+        }),
         Reply::Error(ProtoError::NotEnabled {
             reason: "why".into(),
         }),
@@ -319,6 +322,29 @@ fn the_forms_an_agent_writes_are_pinned() {
         }),
     };
     assert_eq!(encode_server(&back), error);
+
+    // task-89, additive in v1: the reads an act rests on that its actor
+    // was never shown, by name and never by value.
+    let error = r#"{"v":1,"id":"9","type":"error","error":"not_observed","reads":["changes:staged","commit.message:text"]}"#;
+    let not_observed = ServerMsg {
+        id: Some("9".into()),
+        reply: Reply::Error(ProtoError::NotObserved {
+            reads: vec![
+                sem::StateRef::parse("changes:staged").unwrap(),
+                sem::StateRef::parse("commit.message:text").unwrap(),
+            ],
+        }),
+    };
+    assert_eq!(encode_server(&not_observed), error);
+    assert_eq!(decode_server(error), Ok(not_observed.clone()));
+    let Reply::Error(e) = not_observed.reply else {
+        unreachable!("built as an error");
+    };
+    assert_eq!(
+        e.to_string(),
+        "not observed: this agent was never shown changes:staged, commit.message:text; \
+         observe it and decide again"
+    );
 }
 
 fn refused(line: &str) -> Refusal {

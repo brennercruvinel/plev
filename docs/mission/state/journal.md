@@ -14,6 +14,28 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 2: task-89 integrada, o buraco do inspector fechado
+
+- **integrada:** task-89 (`79b8c93`). gate verde (2218). reproduzido no
+  laboratório com o `plev`: nome que nunca olhou sai `not_observed`; o
+  cenário do A2 é recusado stale, com o arquivo que a pessoa tirou; o
+  roteirizado deu MATCH com e sem a pessoa.
+- a 88 (laboratório) pode começar: a 89 não mexeu no roteirizado.
+
+### ciclo 2: a task-90 parou com uma premissa errada do briefing
+
+- o agente da 90 sondou a cena pelo clique real antes de implementar: a
+  seleção muda a revisão fora do dispatcher, e o `acted` sai vazio (não
+  nomeia a seleção, como o briefing dizia). opções: A (só o `sem`, cadeias
+  dentro do processo), B (seleção pelo dispatcher no ide), C (o
+  dispatcher sabe do olhar; depende da 89).
+- **decisão autônoma:** A agora, como reserva e correção das cadeias que
+  começam numa ação validada na revisão do autor; C vira a task-91,
+  depois da 89. a cena do clique fica escrita como limite conhecido, com
+  teste que prova que ainda não nomeia. motivo: A é pequena e correta
+  como reserva; C é a correção exata e precisa do `wire`, que a 89 ocupa.
+- **publicado:** PR #55 (task-86), merge `0e0a7b3`.
+
 ### ciclo 2: o ide que alguém usa abre a porta; a 89 decidida por ator
 
 - **integrada:** task-86 (`7f866e8`), o binário `ide` com janela abre a
@@ -40,6 +62,10 @@ task; aqui fica o que aconteceu e onde ler.
   que traz; `not_observed` sai com 3. um ato encadeado que lê o que o
   próprio ato anterior mudou passa a precisar de uma observação.
 - **publicado:** PR #54 (task-64 fase a), merge `eea529b`.
+- **disparados:** task-90 (sem, o `acted` desde o olhar) e task-63 fase
+  d re-escopada (o `ide` grava a sessão com as ligações por frame, e a
+  janela pode subir sem tomar o foco). com a 89, três agentes compilando.
+  a 88 (laboratório) espera a 89, porque as duas mexem no roteirizado.
 
 ### ciclo 2: o inspector entra e acha um buraco no contrato
 

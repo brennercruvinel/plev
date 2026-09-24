@@ -12,6 +12,33 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, task-89
+
+- **o furo fechou e ficou reproduzível:** no laboratório, olhar
+  `changes` (três arquivos), a pessoa tirar um, olhar só o formulário e
+  submeter agora é recusado stale, com o arquivo que saiu. antes, o
+  commit saía com dois arquivos e o agente achava que eram três.
+- **a identidade do agente é o nome, não a conexão:** "o que foi mostrado
+  àquela conexão" recusaria todo agente pelo cli, que abre uma conexão
+  por comando. o nome do `hello` já era a identidade dos receipts e do
+  `acted`, e virou também a do que foi mostrado. o custo é que dois
+  processos com o mesmo nome contam como um agente só.
+- **`keys` também corta o que foi mostrado:** um agente que observa com
+  `--keys staged` não viu o `unstaged` que o `stage` lê, e o ato sai
+  `not_observed`. as `reads` de cada ação estão na observação, então o
+  agente sabe o que precisa ver.
+
+### 2026-09-23, task-90 (sonda)
+
+- **estado projetado que muda fora do dispatcher:** no ide, a seleção
+  por clique ou teclado muda `changes:selected` direto na view, e a
+  revisão muda sem receipt; o mesmo vale para a digitação na mensagem, o
+  foco, o toast saindo e as linhas do diff. o `check` não sofre (as ações
+  leem o que muda com elas), mas atribuição e inspeção sim: a recusa não
+  tem onde ancorar "desde que o agente olhou", e o inspector vê a mudança
+  sem ator. é a mesma classe da dívida "digitação fora do contrato".
+  a correção de atribuição é a task-91 (o dispatcher sabe do olhar).
+
 ### 2026-09-23, task-86: o cenário da tese numa janela de verdade
 
 - **a tese saiu do laboratório:** no `ide` com janela, um agente pelo
@@ -219,6 +246,17 @@ c"; saídas em `target/agents/exp/`.
 ## processo
 
 ### 2026-09-23
+
+- **limitação "lida no código, não rodada" não vira cenário de task sem
+  sonda:** o handoff da 86 descreveu a limitação do `acted` lendo o
+  código, e eu escrevi a task-90 com esse cenário. a sonda do agente, pelo
+  clique real, mostrou outro mecanismo (a seleção muda a revisão fora do
+  dispatcher) e o `acted` vazio, não nomeando a seleção. terceiro briefing
+  do ciclo com premissa errada (83, 86, 90). em todos, o agente conferiu
+  antes de implementar, porque o briefing mandava confirmar e parar. regra
+  a partir daqui: o cenário que motiva uma task nova é reproduzido por
+  teste ou sonda antes do briefing, ou o briefing o marca como hipótese e
+  pede a sonda como primeiro passo.
 
 - **prova em janela real na máquina do brenner:** a primeira tentativa
   da prova da task-86 postou um clique sintético que caiu no navegador

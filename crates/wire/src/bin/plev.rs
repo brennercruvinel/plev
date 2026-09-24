@@ -44,18 +44,29 @@ common options:
   --name <agent>     the actor's name (default $PLEV_AGENT_NAME, else plev)
   --timeout <ms>     how long to wait for the app (default 30000)
   --pretty           indented JSON
-act without --from-revision observes the target first and acts on that
-revision: the state as it is now. --source keeps each node's source (the
-file, line and column that projected it), which an agent acting by id does
-not need. --keys cuts only state: the values and the changes of the other
-state keys; a node added or removed, a label, actions, flags, a parent, the
-order and the focus always pass. --param takes a sem value
+act without --from-revision looks at the target first (its --scope) and
+acts on that revision: the target as it is now. --source keeps each node's
+source (the file, line and column that projected it), which an agent acting
+by id does not need. --keys cuts only state: the values and the changes of
+the other state keys; a node added or removed, a label, actions, flags, a
+parent, the order and the focus always pass. --param takes a sem value
 ({\"kind\":\"text\",\"value\":\"x\"}) or a plain JSON string, bool, number or
 list of strings.
 revision: the last stage of an act (completed, rejected, failed) carries
 the revision the app is at when that stage goes out. it includes what other
 actors changed until then, and --since and --from-revision take it, so the
-next act needs no observe only to learn it.
+next act needs no observe only to learn it. it shows no state.
+shown: an act rests on what its agent (the --name) was shown, over every
+command under that name, and on nothing else. --from-revision takes a
+revision given to that name; each state the act reads has the value of the
+last observe up to that revision that showed it (within its --scope and
+--keys; a delta shows only what it carries). a state never shown to that
+name is refused before the app runs anything: not_observed, with the reads
+(exit 3); observe them and decide again. the look act takes at the target
+without --from-revision counts as shown; what it reads outside the target
+rests on earlier observations under that name, or is not_observed. two
+processes under one name are one agent (receipts, acted, what was shown):
+distinct agents pass --name or $PLEV_AGENT_NAME.
 stale: an act is refused as stale when a state it reads (the action's reads,
 as observe shows them) changed since the observation it rests on; the
 revision only names what was seen, never decides. the refusal's changes say
@@ -437,6 +448,23 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 "its acted says who",
             ] {
                 assert!(USAGE.contains(words), "{words:?} in {USAGE}");
+            }
+        }
+
+        /// what an act rests on, and what a name is, are in `plev act
+        /// --help` (task-89).
+        #[test]
+        fn the_help_says_an_act_rests_on_what_its_name_was_shown() {
+            let one_line = USAGE.split_whitespace().collect::<Vec<_>>().join(" ");
+            for words in [
+                "an act rests on what its agent (the --name) was shown",
+                "a state never shown to that name is refused before the app runs anything: \
+                 not_observed, with the reads (exit 3)",
+                "the look act takes at the target without --from-revision counts as shown",
+                "two processes under one name are one agent",
+                "it shows no state",
+            ] {
+                assert!(one_line.contains(words), "{words:?} in {USAGE}");
             }
         }
 

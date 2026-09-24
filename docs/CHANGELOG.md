@@ -9,6 +9,22 @@ status: living
 
 ## unreleased
 
+- an act rests only on what its agent was shown (2026-09-23, task-89,
+  adr an-act-rests-on-what-its-actor-was-shown): the session inspector
+  found that `act --from-revision` built the values an agent "saw" from
+  the whole snapshot of the revision, including state outside the scope
+  and keys it observed; an agent that looked only at the commit form after
+  a person unstaged a file would have committed two files believing
+  three. the port now remembers, per actor (the name of `hello`, over
+  every connection under it), what each observation showed, and each
+  read takes the value from the last observation up to that revision
+  that showed it; a read never shown is refused before the dispatcher
+  with the new error `not_observed` (additive in v1, `plev` exits 3). a
+  terminal stage's revision shows no state, so an act chained on it reads
+  what the agent observed before. reproduced on the laboratory: the
+  submit after a form-only look is refused as stale, with the file the
+  person took out.
+
 - the ide a person uses opens the agent port (2026-09-23, task-86): with
   `PLEV_AGENT=1` in a debug build the `ide` window serves its workbench to
   agents as app `ide` (`ide::agent`, a `wire::Host` over the `Workbench`

@@ -537,6 +537,78 @@ fn a_stale_refusal_names_the_person_who_acted_on_what_the_agent_saw() {
     assert!(line.contains(r#""acted":[{"id":"#), "{line}");
 }
 
+/// the counter's `done`, what `todo.clear` reads.
+fn done_set(items: &[&str]) -> Value {
+    Value::Set(items.iter().map(|i| (*i).to_owned()).collect())
+}
+
+/// task-89, the hole the session inspector found in the session of A2:
+/// the agent sees what `clear` would remove (the counter's `done`, item
+/// 3), a person marks item 1 done, the agent observes only the button and
+/// clears on the revision that observation served. the act rests on the
+/// `done` the agent was shown, not on the one the revision holds whole:
+/// it is refused as stale, with the delta, and nothing is removed.
+#[test]
+fn an_act_rests_on_what_was_shown_not_on_the_whole_revision() {
+    let (mut server, mut host) = setup();
+    let seen = snapshot(observe(
+        &mut server,
+        &mut host,
+        A,
+        r#","scope":"todo.counter""#,
+    ));
+    let counter = seen.nodes.iter().find(|n| n.id == sid("todo.counter"));
+    assert_eq!(
+        counter.and_then(|n| n.state.get("done")),
+        Some(&done_set(&["3"]))
+    );
+    host.click("todo.item[1]", "toggle");
+    let r = snapshot(observe(
+        &mut server,
+        &mut host,
+        A,
+        r#","scope":"todo.clear""#,
+    ))
+    .revision;
+    assert_ne!(r, seen.revision, "the person moved the app");
+
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "c",
+            "todo.clear",
+            "clear",
+            &from(r),
+        ),
+        "c",
+    );
+    let done = StateRef::parse("todo.counter:done").unwrap();
+    let asked = out[0].asked.as_ref().unwrap();
+    assert_eq!(asked.observed.revision, r, "the revision still traces");
+    assert_eq!(
+        asked.observed.values,
+        [(done.clone(), Some(done_set(&["3"])))],
+        "what the agent was shown, not what the revision holds"
+    );
+    assert_eq!(names(&out), ["requested", "rejected"]);
+    let Stage::Rejected(Rejection::Stale { changes, .. }) = &out[1].stage else {
+        panic!("stale: {:?}", out[1].stage);
+    };
+    assert_eq!(
+        changes,
+        &[Change::StateChanged {
+            at: done,
+            before: Some(done_set(&["3"])),
+            after: Some(done_set(&["1", "3"])),
+            added: vec!["1".to_owned()],
+            removed: Vec::new(),
+        }]
+    );
+    assert_eq!(host.app.items.len(), 3, "nothing was cleared");
+}
+
 /// the revision the terminal stage of `stages` carries; the stages
 /// before it carry none.
 fn landed(stages: &[StageReply]) -> Revision {
@@ -554,7 +626,9 @@ fn landed(stages: &[StageReply]) -> Revision {
 
 /// the acceptance: the `completed` of an act carries the revision the app
 /// is at, `since` it is a delta, and the next act rests on it with no
-/// observation in between.
+/// observation in between. each act of the chain reads a row none of the
+/// acts before it moved, so what it reads is what the agent was shown
+/// (task-89; a row its own act moved is the next test).
 #[test]
 fn a_completed_act_carries_the_revision_the_next_one_rests_on() {
     let (mut server, mut host) = setup();
@@ -590,7 +664,8 @@ fn a_completed_act_carries_the_revision_the_next_one_rests_on() {
     assert!(d.changes.is_empty(), "{d:?}");
 
     // `from_revision` it: the next act is taken and runs, and so is the
-    // one after it, each on the revision the one before left.
+    // one after it, each on the revision the one before left, each on
+    // what the first observation showed of its row.
     let out = stages(
         act(
             &mut server,
@@ -615,7 +690,7 @@ fn a_completed_act_carries_the_revision_the_next_one_rests_on() {
             &mut host,
             A,
             "t3",
-            "todo.item[1]",
+            "todo.item[3]",
             "toggle",
             &from(second),
         ),
@@ -623,8 +698,8 @@ fn a_completed_act_carries_the_revision_the_next_one_rests_on() {
     );
     assert_eq!(names(&out).last(), Some(&"completed"));
     assert_eq!(
-        (host.app.done(1), host.app.done(2)),
-        (Some(false), Some(true))
+        (host.app.done(1), host.app.done(2), host.app.done(3)),
+        (Some(true), Some(true), Some(false))
     );
 
     // what the two acts did, since the first one's end.
@@ -642,11 +717,87 @@ fn a_completed_act_carries_the_revision_the_next_one_rests_on() {
     assert_eq!(
         moved,
         [
-            "todo.item[1]:completed",
             "todo.item[2]:completed",
+            "todo.item[3]:completed",
             "todo.counter:done"
         ]
     );
+}
+
+/// task-89: an act that reads a row the agent's own act moved, with no
+/// observation in between, rests on what the agent was shown before its
+/// own act, so it is stale. the refusal names nobody in `acted`: the only
+/// actor on that state was the agent itself. observing the row and acting
+/// on that observation goes through.
+#[test]
+fn a_row_the_agents_own_act_moved_is_stale_until_it_observes_it() {
+    let (mut server, mut host) = setup();
+    let seen = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "t1",
+            "todo.item[1]",
+            "toggle",
+            &from(seen),
+        ),
+        "t1",
+    );
+    let first = landed(&out);
+    assert_eq!(host.app.done(1), Some(true));
+
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "t2",
+            "todo.item[1]",
+            "toggle",
+            &from(first),
+        ),
+        "t2",
+    );
+    assert_eq!(names(&out), ["requested", "rejected"]);
+    let completed = StateRef::parse("todo.item[1]:completed").unwrap();
+    assert_eq!(
+        out[0].asked.as_ref().map(|a| a.observed.values.clone()),
+        Some(vec![(completed.clone(), Some(Value::Bool(false)))]),
+        "what the first observation showed, not what the landed revision holds"
+    );
+    let Stage::Rejected(Rejection::Stale { changes, acted }) = &out[1].stage else {
+        panic!("stale: {:?}", out[1].stage);
+    };
+    assert!(
+        matches!(&changes[..], [Change::StateChanged { at, before: Some(Value::Bool(false)), after: Some(Value::Bool(true)), .. }] if *at == completed),
+        "{changes:?}"
+    );
+    assert!(acted.is_empty(), "the agent itself moved it: {acted:?}");
+    assert_eq!(host.app.done(1), Some(true), "nothing ran");
+
+    let row = snapshot(observe(
+        &mut server,
+        &mut host,
+        A,
+        r#","scope":"todo.item[1]""#,
+    ))
+    .revision;
+    let out = stages(
+        act(
+            &mut server,
+            &mut host,
+            A,
+            "t3",
+            "todo.item[1]",
+            "toggle",
+            &from(row),
+        ),
+        "t3",
+    );
+    assert_eq!(names(&out).last(), Some(&"completed"));
+    assert_eq!(host.app.done(1), Some(false));
 }
 
 /// a stale refusal ends too: it carries the app as it is, the change that
@@ -1053,6 +1204,9 @@ fn stages_reach_only_the_connection_that_asked() {
     let (mut server, mut host) = setup();
     hello(&mut server, &mut host, B, "gemini");
     let r = snapshot(observe(&mut server, &mut host, B, "")).revision;
+    // an act rests on a revision given to its own actor (task-89).
+    let mine = snapshot(observe(&mut server, &mut host, A, "")).revision;
+    assert_eq!(mine, r, "nothing moved between the two");
     let out = server.handle(
         A,
         ClientMsg {

@@ -13,7 +13,7 @@
 
 use sem::{
     ActionName, Actor, Change, Millis, Node, Observation, Request, RequestId, Revision, SemId,
-    Stage, StateKey, Value,
+    Stage, StateKey, StateRef, Value,
 };
 use serde::{Deserialize, Serialize};
 
@@ -83,6 +83,24 @@ pub struct Observe {
 /// exactly one of `observed` (the values of the action's reads, given
 /// explicitly) or `from_revision` (a revision the app served, from which
 /// the app reads those values itself).
+///
+/// on `from_revision` the act rests on what its actor (the name of
+/// `hello`, over every connection under that name) was shown, and on
+/// nothing else. the revision must have been given to that actor, by an
+/// observation or by a terminal stage, and still be held
+/// (`unknown_revision` otherwise). the action and what it reads come from
+/// the revision; the value of each read comes from the last observation up
+/// to that revision that showed it: a snapshot shows the nodes under its
+/// `scope` with the state under its `keys`, a delta shows only what it
+/// carries, a terminal stage's revision shows no state. a read never shown
+/// to the actor, or shown last by an observation whose revision the app no
+/// longer holds, refuses the act before the dispatcher with
+/// `not_observed`, naming the reads: observe them and decide again. the
+/// request keeps `from_revision` as the revision it saw, to trace it.
+///
+/// `observed` given explicitly is the agent's claim, taken as given: the
+/// app checks it against the live state like any act, and does not ask
+/// whether it was shown.
 ///
 /// the act is refused as stale when a state it reads (the action's
 /// `reads`, as an observation shows them) changed since what it rests on;
@@ -164,9 +182,9 @@ pub enum Reply {
 ///
 /// `revision` is always the revision of the app's whole snapshot at that
 /// instant, also for a scoped observation: it is the value `since` and
-/// `from_revision` take, and the app keeps the whole snapshot under it, so
-/// an action whose reads lie outside the scope still rests on what was
-/// served.
+/// `from_revision` take. an act on it rests on what the observation showed
+/// (its scope, its keys) and on what earlier observations showed the same
+/// actor; a read outside all of them is `not_observed` (see `Act`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct SnapshotReply {
     pub revision: Revision,
@@ -198,12 +216,13 @@ pub struct DeltaReply {
 /// a terminal one (`completed`, `rejected`, `failed`) also carries
 /// `revision`: the revision the app is at when the terminal stage goes
 /// out. it includes what other actors changed until then, and it serves
-/// `since` and `from_revision` as the revision of an observation does (the
-/// app holds the whole snapshot under it), so the next act needs no
-/// observation only to learn it. it is absent from the other stages, and
-/// when the app projects nothing at that instant. it decides nothing: an
-/// act resting on it is checked on its reads like any other. it is a hash
-/// of the projection, and carries no value.
+/// `since` and `from_revision` as the revision of an observation does, so
+/// the next act needs no observation only to learn it. it shows no state:
+/// an act resting on it reads the values the agent was shown before it
+/// (see `Act`). it is absent from the other stages, and when the app
+/// projects nothing at that instant. it decides nothing: an act resting on
+/// it is checked on its reads like any other. it is a hash of the
+/// projection, and carries no value.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct StageReply {
     pub request: RequestId,
@@ -249,11 +268,23 @@ pub enum ProtoError {
     /// served): observe again.
     #[error("revision {revision} is not held; observe again")]
     UnknownRevision { revision: Revision },
+    /// an act on `from_revision` reads state its actor was never shown in
+    /// an observation up to that revision (out of every scope it observed,
+    /// cut by `keys`, or shown only by an observation whose revision the
+    /// app no longer holds): `reads` names it, in the action's order. the
+    /// act is refused before the dispatcher; observe it and decide again.
+    #[error("not observed: this agent was never shown {}; observe it and decide again", refs(.reads))]
+    NotObserved { reads: Vec<StateRef> },
     /// the app does not take this here and now: a confirmation or a
     /// decline by an agent, an act before `hello`, nothing projected or no
     /// dispatcher right now.
     #[error("not enabled: {reason}")]
     NotEnabled { reason: String },
+}
+
+fn refs(reads: &[StateRef]) -> String {
+    let names: Vec<String> = reads.iter().map(ToString::to_string).collect();
+    names.join(", ")
 }
 
 fn is_false(b: &bool) -> bool {

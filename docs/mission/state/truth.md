@@ -91,6 +91,17 @@ o da base até ser reescrito.
   seção 2.2 nomeia só o que foi validado na revisão exata do autor; na
   janela isso esconde o unstage atrás de uma seleção (task-90).
 
+- `79b8c93` (task-89): o anel continua guardando o snapshot inteiro, mas
+  um ato com `from_revision` não lê mais nele os valores observados. o
+  `Server` guarda o que mostrou a cada ator (`crates/wire/src/shown.rs`,
+  por nome de `hello`, 16 revisões por ator, 16 atores), e cada `read`
+  vem da última observação daquele ator que o mostrou (seção 2.3). um
+  `read` nunca mostrado dá `ProtoError::NotObserved`. a revisão de um
+  estágio terminal não mostra estado. o `plev act --help` diz a regra; a
+  seção 4f continua valendo (uma conexão por comando), e agora o nome é
+  a identidade que liga os comandos. o `Observation::revision` de um ato
+  continua `r`, e o `acted` ancora nele (task-91).
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse
