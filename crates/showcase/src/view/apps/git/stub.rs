@@ -1,7 +1,7 @@
 //! The git section where no git worker can run (web, mobile): one line
 //! saying so, same contract as the desktop section.
 
-use comps::prelude::{EventResult, Rect, WidgetEvent};
+use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::Theme;
 
@@ -51,8 +51,12 @@ impl GitPage {
         false
     }
 
-    pub fn tick(&mut self, _dt: f32) -> bool {
+    pub fn apply_events(&mut self) -> bool {
         false
+    }
+
+    pub fn wake(&mut self, _dt: f32) -> Wake {
+        Wake::idle()
     }
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {

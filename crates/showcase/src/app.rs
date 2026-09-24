@@ -47,7 +47,8 @@ const TITLE: &str = "plev, design system showcase";
 /// One instance is in flight at a time, so the size gap is irrelevant.
 #[allow(dead_code, clippy::large_enum_variant)]
 enum UserEvent {
-    /// The git worker finished a command: drain it on the next frame.
+    /// The git worker finished a command: apply it now, draw only if the
+    /// Git page shows it.
     Wake,
     /// A screen reader started listening or asked for something: carry
     /// out what it asked and draw, which sends it the tree.
@@ -282,7 +283,15 @@ impl ApplicationHandler<UserEvent> for App {
 
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: UserEvent) {
         match event {
-            UserEvent::Wake => self.invalidate(),
+            UserEvent::Wake => {
+                // The embedded workspace takes the events whichever page
+                // shows; a frame only when the change is on screen.
+                let shown = self.view.apply_git();
+                log::debug!("git worker woke: frame {shown}");
+                if shown {
+                    self.invalidate();
+                }
+            }
             UserEvent::Access => {
                 #[cfg(not(any(
                     target_arch = "wasm32",

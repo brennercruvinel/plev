@@ -17,7 +17,7 @@ impl ShowcaseView {
     /// focused caret's next flip) when nothing does.
     pub fn wake(&mut self, dt: f32) -> Wake {
         let mut wake = Wake::moving(self.overlay_mgr.tick(dt));
-        wake = wake.merge(Wake::moving(self.toasts.tick(dt)));
+        wake = wake.merge(self.toasts.wake(dt));
         // Widgets that settle on their own tick whichever page shows
         // (a focused field, a knob spring, a scrollbar fade, a tooltip
         // delay): they must not freeze mid-motion when the page changes.
@@ -28,9 +28,12 @@ impl ShowcaseView {
         wake = wake.merge(Wake::moving(self.panes.table.tick(dt)));
         wake = wake.merge(self.page_wake(dt));
         // The git tab always ticks: worker events land there whichever
-        // page is showing, and must not pile up until it is.
-        let git = self.panes.git.tick(dt) && self.pane() == Some(Pane::Git);
-        wake = wake.merge(Wake::moving(git));
+        // page is showing, and must not pile up until it is. Only the
+        // page on screen asks the loop for frames.
+        let git = self.panes.git.wake(dt);
+        if self.pane() == Some(Pane::Git) {
+            wake = wake.merge(git);
+        }
 
         // Drop overlay widgets whose exit animation finished.
         if let Some(active) = &self.active_overlay {
@@ -40,6 +43,15 @@ impl ShowcaseView {
             }
         }
         wake
+    }
+
+    /// What the git worker sent, applied to the embedded workspace
+    /// whichever page shows (it must not fall behind while hidden).
+    /// `true` when that changed something on screen: the Git page is
+    /// showing and there were events.
+    pub fn apply_git(&mut self) -> bool {
+        let changed = self.panes.git.apply_events();
+        changed && self.pane() == Some(Pane::Git)
     }
 
     /// [`ShowcaseView::wake`] as the `bool` the settle loops read (the
