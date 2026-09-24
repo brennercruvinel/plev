@@ -14,6 +14,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 1: docs voltam a dizer o que o código faz
+
+- **integrado:** as correções de docs (`2d4aa4b`, 8 commits: README,
+  arc.toml, manual, nove ADRs, task-62). as afirmações falsas saíram; as
+  promessas de design que o código ainda não cumpre ficaram, com a
+  exceção de hoje e a task que a fecha. `arc_sync_guard` verde.
+- **bug achado pelo agente de docs:** `cargo run -p ide` não rodava desde
+  a fase c da task-62 (dois binários, sem `default-run`). corrigido no
+  manifesto.
+
 ### ciclo 1: task-83 devolvida com uma correção
 
 - a task-83 voltou pronta (delta com o nó, `acted` na recusa, regra no

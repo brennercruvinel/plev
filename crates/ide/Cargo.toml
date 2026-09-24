@@ -4,6 +4,8 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish = false
+# two bins (the ide and ide-lab): `cargo run -p ide` runs the ide.
+default-run = "ide"
 description = "Simple IDE test"
 
 [[bin]]

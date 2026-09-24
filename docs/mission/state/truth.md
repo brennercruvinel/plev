@@ -25,6 +25,12 @@ o da base até ser reescrito.
   index parar. `GitSession::refresh`, `send` e `Workbench::refresh` pedem
   `&mut self`.
 
+- `2d4aa4b` (docs seguem o código): os itens 1 a 25, 31 e 32 da seção 5
+  estão corrigidos nos docs (README, arc.toml, manual do engine, nove
+  ADRs, arquivo da task-62); os itens 26 a 30 foram corrigidos no
+  programa pelo orquestrador. o `ide` ganhou `default-run = "ide"`: com
+  o `ide-lab`, `cargo run -p ide` não sabia qual binário rodar.
+
 ## 1. como ler
 
 - base: `main @ c5fdf36`. todo `arquivo:linha` foi conferido nesse
