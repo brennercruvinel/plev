@@ -2925,3 +2925,131 @@ mata o filho".
   que a capacidade `detect_silence` rode antes da superfície (o ffmpeg
   em subprocesso, como o urnaui): outro trabalho fora da thread, pelo
   mesmo `Started`/`complete`; o padrão desta fase serve.
+
+## fase 4a: o app dos silêncios e a tela fixa
+
+branch `task/69f-silences-app`, worktree próprio, sobre a `main` @
+205d0e1d. o cenário da seção 4 da tese (o editor de vídeo) precisa, antes
+da tela gerada (4b), do app com as capacidades de verdade e de uma tela
+fixa bem desenhada para a mesma tarefa: é contra ela que o checkpoint b
+compara a tela gerada. esta fase é esse app e essa tela, uma página do
+grupo Apps Demo.
+
+### sonda da fase 4a (antes do primeiro tipo, 2026-09-24)
+
+o `ffmpeg` desta máquina é o 9.0.1 em `/opt/homebrew/bin/ffmpeg`. tudo
+rodou num diretório temporário da sessão; um teste descartável do
+showcase (`tests/silences_probe.rs`, rodado e jogado fora, nunca
+commitado) fez a parte (b) que precisa do engine. nenhuma janela.
+
+(a) o vídeo de teste, gerado por `lavfi` sem arquivo de entrada: 12 s,
+`testsrc` 320x180 a 10 fps, áudio `sine` de 440 Hz a 44100 Hz, dois
+trechos de silêncio (3 a 5 s e 8 a 10 s) pelo filtro `volume` com
+`enable` na linha do tempo:
+
+```text
+ffmpeg -hide_banner -nostdin -y -v error \
+  -f lavfi -i "testsrc=size=320x180:rate=10" \
+  -f lavfi -i "sine=frequency=440:sample_rate=44100" -t 12 \
+  -af "volume=enable='between(t,3,5)+between(t,8,10)':volume=0" \
+  -c:v libx264 -preset ultrafast -crf 28 -pix_fmt yuv420p -c:a aac -b:a 64k \
+  silences-test.mp4
+```
+
+162.908 bytes, os mesmos nas três gerações (o arquivo é determinístico);
+`ffprobe`: h264 320x180 10/1, aac 44100 Hz mono, `duration=12.000000`;
+81 a 83 ms de parede por geração. a detecção, `ffmpeg -hide_banner
+-nostdin -nostats -i silences-test.mp4 -af silencedetect=noise=-30dB:d=0.5
+-f null -`, o stderr inteiro (o stdout tem 0 bytes):
+
+```text
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'silences-test.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2avc1mp41
+    encoder         : Lavf63.1.101
+  Duration: 00:00:12.00, start: 0.000000, bitrate: 108 kb/s
+  Stream #0:0[0x1](und): Video: h264 (Constrained Baseline) (avc1 / 0x31637661), yuv420p(progressive), 320x180 [SAR 1:1 DAR 16:9], 59 kb/s, 10 fps, 10 tbr, 10240 tbn (default)
+    Metadata:
+      handler_name    : VideoHandler
+      encoder         : Lavc63.1.101 libx264
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, mono, fltp, 45 kb/s (default)
+    Metadata:
+      handler_name    : SoundHandler
+Stream mapping:
+  Stream #0:0 -> #0:0 (h264 (native) -> wrapped_avframe (native))
+  Stream #0:1 -> #0:1 (aac (native) -> pcm_s16le (native))
+Output #0, null, to 'pipe:':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2avc1mp41
+    encoder         : Lavf63.1.101
+  Stream #0:0(und): Video: wrapped_avframe, yuv420p(progressive), 320x180 [SAR 1:1 DAR 16:9], q=2-31, 200 kb/s, 10 fps, 10 tbn (default)
+    Metadata:
+      encoder         : Lavc63.1.101 wrapped_avframe
+      handler_name    : VideoHandler
+  Stream #0:1(und): Audio: pcm_s16le, 44100 Hz, mono, s16, 705 kb/s (default)
+    Metadata:
+      encoder         : Lavc63.1.101 pcm_s16le
+      handler_name    : SoundHandler
+[Parsed_silencedetect_0 @ 0x71903dd40] silence_start: 3.018594
+[Parsed_silencedetect_0 @ 0x71903dd40] silence_end: 5.01551 | silence_duration: 1.996916
+[Parsed_silencedetect_0 @ 0x71903dd40] silence_start: 8.010884
+[Parsed_silencedetect_0 @ 0x71903dd40] silence_end: 10.0078 | silence_duration: 1.996916
+[out#0/null @ 0x71903c300] video:50KiB audio:1034KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame=  120 fps=0.0 q=-0.0 Lsize=N/A time=00:00:12.00 bitrate=N/A speed=2.07e+03x elapsed=0:00:00.00
+```
+
+os dois trechos: `silence_start: 3.018594`, `silence_end: 5.01551 |
+silence_duration: 1.996916`; `silence_start: 8.010884`, `silence_end:
+10.0078 | silence_duration: 1.996916` (o aac tem 18 ms de ataque e o
+`d=0.5` conta a partir do limiar cruzado). a linha `Duration:
+00:00:12.00` do mesmo stderr dá a duração sem um `ffprobe` à parte.
+cinco corridas da detecção: 77 ms a primeira (o cache do disco), depois
+41 a 43 ms. um áudio de 6 s calado a partir dos 4 s (o caso "silêncio
+até o fim"): o ffmpeg 9 escreve `silence_end: 6 | silence_duration:
+1.983039` no fim do stream, mas versões anteriores deixavam o
+`silence_start` sem `silence_end`, e o parser cobre os dois.
+
+(b) um frame do meio do primeiro trecho, `ffmpeg -hide_banner -nostdin
+-v error -ss 4 -i silences-test.mp4 -frames:v 1 -f image2 -c:v png
+pipe:1`: 12.978 bytes, `PNG image data, 320 x 180, 8-bit/color RGB`; com
+`-vf "scale='min(160,iw)':-2"` aos 9 s: 6.954 bytes, 160x90. 39 a 42 ms
+de parede por frame. o teste descartável leu os dois arquivos e chamou
+`engine::gpu::image::load_image_bytes`: `12978 bytes -> ImageHandle {
+id: 0, 320x180, atlas (1, 1) }` e `6954 bytes -> ImageHandle { id: 1,
+160x90, atlas (513, 193) }`, sem GPU (o atlas é a metade de CPU).
+
+(c) o `silencedetect` escreve no stderr, não no stdout: com o stderr
+descartado o stdout tem 0 bytes; com o stdout descartado o stderr tem
+as quatro linhas acima. o nível: `-loglevel quiet`, `error` e `warning`
+não escrevem nenhuma linha com `silence` (o filtro loga em `info`);
+`info` (o padrão) escreve as quatro mais a linha `Input #0`; `verbose`
+escreve sete (duas linhas de configuração do filtro a mais);
+`level+info` prefixa `[info]` depois da tag do filtro:
+`[Parsed_silencedetect_0 @ 0xc1503dd40] [info] silence_start: 3.018594`.
+a tag com o endereço muda a cada corrida e o parser não a lê: procura
+`silence_start:`, `silence_end:` e `silence_duration:` em qualquer
+lugar da linha. `-nostats` tira a linha de progresso (que, num vídeo
+longo, vem com `\r`); `-nostdin` impede o filho de ler o terminal.
+
+nenhuma condição de parada disparou: o ffmpeg gerou o vídeo, detectou os
+dois trechos, decodificou o frame e o atlas o aceitou.
+
+o que a sonda decide para o desenho:
+
+- o trabalhador roda o ffmpeg com `-hide_banner -nostdin -nostats
+  -loglevel info` na detecção e lê o stderr até o fim (a saída pode
+  passar do buffer do pipe: um dreno numa thread, como o `run.rs` do
+  `claude-model`); com `-v error` na decodificação e lê o png do stdout;
+- o parser lê `Duration:` e as três chaves do `silencedetect` de
+  qualquer linha, fecha um `silence_start` sem `silence_end` na duração
+  e ignora o resto do texto;
+- o vídeo de teste é gerado pelo mesmo trabalhador, pelo comando acima,
+  em `std::env::temp_dir()/plev-silences/silences-test.mp4`, quando não
+  existe;
+- um frame por instante, em png de até 480 px de largura (o vídeo de
+  teste fica em 320x180), carregado no atlas na thread do trabalhador;
+  o `ImageHandle` cruza o canal.
