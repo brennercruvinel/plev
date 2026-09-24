@@ -12,7 +12,7 @@ use comps::content::{Column, Table};
 use comps::form::{Checkbox, Select, Slider, Switch, TextField};
 use comps::nav::Tabs;
 use comps::{EventResult, Rect, Wake, WidgetEvent};
-use engine::theme::Theme;
+use engine::theme::{ControlSize, Theme};
 use sem::{Snapshot, Value};
 use uir::{CapabilityRef, Component};
 
@@ -364,7 +364,7 @@ impl Widget {
             }
             Widget::Slider(s) => {
                 let old = s.value();
-                let r = s.handle_event(event, rect, theme);
+                let r = s.handle_event(event, slider_track(rect, theme), theme);
                 let moved = s.value() != old;
                 let fire = moved.then(|| Fire {
                     event: "set_value",
@@ -451,6 +451,31 @@ fn sync_slider(s: &mut Slider, node: &Node, shown: &Snapshot) {
         s.set_value(v);
     }
     s.disabled = !enabled(node, "set_value", shown);
+}
+
+/// the band a slider's label and value take above its track: the label's
+/// line and the gap under it, the fixed screen's slider row (the label in
+/// `caption_sm`, the value in `caption_r`).
+pub(crate) fn slider_band(theme: &Theme) -> f32 {
+    theme
+        .typography
+        .caption_sm()
+        .line_height
+        .max(theme.typography.caption_r().line_height)
+        + theme.spacing.xs
+}
+
+/// the whole height of a slider: its band and its track.
+pub(crate) fn slider_h(theme: &Theme) -> f32 {
+    slider_band(theme) + theme.control.height(ControlSize::Xs)
+}
+
+/// where the track of a slider drawn at `rect` goes: under its band, the
+/// control's height, as wide as the node. what a pointer drags, and what
+/// the slider binds itself to.
+pub(crate) fn slider_track(rect: Rect, theme: &Theme) -> Rect {
+    let h = theme.control.height(ControlSize::Xs);
+    Rect::new(rect.x, rect.y + rect.h - h, rect.w, h)
 }
 
 /// where a dialog draws its buttons: the bottom row inside its padding,
