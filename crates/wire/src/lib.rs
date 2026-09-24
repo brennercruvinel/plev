@@ -46,6 +46,7 @@ mod proto;
 mod ring;
 mod server;
 mod shown;
+mod sink;
 
 #[cfg(unix)]
 pub use client::Client;

@@ -33,8 +33,8 @@ use std::rc::Rc;
 
 use sem::redact::Secrets;
 use sem::{
-    Actor, Change, Mark, Millis, Node, Receipt, ReceiptSink, Rejection, Request, RequestId,
-    Revision, SemId, Snapshot, Stage, StateRef,
+    Actor, Change, Mark, Node, ReceiptSink, Rejection, Request, RequestId, Revision, SemId,
+    Snapshot, Stage, StateRef,
 };
 
 use crate::proto::{
@@ -43,6 +43,7 @@ use crate::proto::{
 };
 use crate::ring::Ring;
 use crate::shown::{Looks, Part, Shown, keeps};
+use crate::sink::{Heard, PortSink};
 
 /// a connection, numbered by the transport.
 pub type ConnId = u64;
@@ -146,50 +147,6 @@ struct Issued {
     /// the request as dispatched, redacted; sent with `requested`.
     asked: Option<Request>,
     secrets: Secrets,
-}
-
-/// a stage the sink heard.
-struct Heard {
-    id: RequestId,
-    stage: Stage,
-    at: Millis,
-}
-
-/// the port's ear on the dispatcher: every stage of an agent's request,
-/// kept until the port forwards the ones it issued, and the dispatcher's
-/// order with the look each of its acts rests on (`Looks`).
-struct PortSink {
-    heard: Rc<RefCell<VecDeque<Heard>>>,
-    looks: Rc<RefCell<Looks>>,
-}
-
-impl ReceiptSink for PortSink {
-    fn on_stage(&mut self, receipt: &Receipt, stage: &Stage) {
-        if let Ok(mut looks) = self.looks.try_borrow_mut() {
-            looks.heard(receipt, stage);
-        }
-        if !matches!(receipt.request.actor, Actor::Agent { .. }) {
-            return;
-        }
-        let at = receipt.stages.last().map_or(0, |(_, at)| *at);
-        if let Ok(mut heard) = self.heard.try_borrow_mut() {
-            heard.push_back(Heard {
-                id: receipt.id,
-                stage: stage.clone(),
-                at,
-            });
-        }
-    }
-
-    fn attached(&mut self, mark: Mark) {
-        if let Ok(mut looks) = self.looks.try_borrow_mut() {
-            looks.attached(mark);
-        }
-    }
-
-    fn looked(&self, receipt: &Receipt) -> Option<Mark> {
-        self.looks.try_borrow().ok()?.of(receipt.id)
-    }
 }
 
 impl Server {
