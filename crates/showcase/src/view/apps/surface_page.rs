@@ -44,9 +44,9 @@
 //!
 //! Wide, the two halves sit side by side; narrow, the todo is on top.
 
-mod asking;
+pub(crate) mod asking;
 mod page;
-mod proposing;
+pub(crate) mod proposing;
 
 use comps::prelude::{EmptyState, EventResult, Rect, Tabs, Wake, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
@@ -87,6 +87,9 @@ const FORMS: [Form; 2] = [
 ];
 
 const FIXED: &str = "the todo page, written by hand";
+
+/// The region the proposing row projects under on this page.
+const REGION: &str = "surface_page";
 
 /// The caption of the surface when the rules proposed it, and when the
 /// Claude did.
@@ -177,7 +180,7 @@ impl SurfacePage {
             refused: None,
             form: 0,
             forms: Tabs::new(FORMS.iter().map(|f| f.label)),
-            proposing: Proposing::new(),
+            proposing: Proposing::new(REGION),
         };
         let Ok(app) = todo.snapshot() else {
             page.refused = Some("the todo page does not project".to_owned());

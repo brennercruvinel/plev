@@ -149,7 +149,10 @@ fn components(out: &mut String) {
     }
     out.push_str(
         "a chip is a toggle when it shows `selected` or sends `toggle`, a button when it sends \
-         `activate`.\n",
+         `activate`.\n\
+         an image shows a frame of the app's media when its `source` is bound to a text state \
+         whose value names a media node and an instant, `<id>@<seconds>` (a frame ref): the \
+         app decodes that frame. an image needs no other source.\n",
     );
 }
 

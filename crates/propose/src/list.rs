@@ -7,10 +7,12 @@
 //! the items, not their list).
 //!
 //! each item shows and accepts what every item declares alike, the way
-//! the verifier checks a template: a `text`, `int` or `num` state is a
-//! text; a bool with an action of no parameter that reads that bool and
-//! nothing else is a checkbox bound to both; every other action of no
-//! parameter the author may ask for, and not destructive, is a button.
+//! the verifier checks a template: a text that is a frame ref (a media
+//! node and an instant, `parts::is_frame_ref`) is an image; any other
+//! `text`, `int` or `num` state is a text; a bool with an action of no
+//! parameter that reads that bool and nothing else is a checkbox bound to
+//! both; every other action of no parameter the author may ask for, and
+//! not destructive, is a button.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -28,6 +30,8 @@ pub(crate) struct List {
     pub item: SemId,
     /// the state's key and the items' name.
     pub words: BTreeSet<String>,
+    /// the frames each item shows (its frame ref states), before the texts.
+    pub frames: Vec<StateRef>,
     /// what each item shows as text.
     pub texts: Vec<StateRef>,
     /// each bool an item flips, and the action that flips it.
@@ -73,11 +77,13 @@ fn last_key(id: &str) -> Option<(&str, String)> {
 }
 
 /// every list of `app` whose items show or accept something; an action
-/// counts when `usable` says the author may bind it.
+/// counts when `usable` says the author may bind it; a text `frame` says
+/// is a frame ref shows as an image.
 pub(crate) fn lists(
     caps: &Capabilities,
     app: &Snapshot,
     usable: &impl Fn(&Node, &ActionDecl) -> bool,
+    frame: &impl Fn(&Value) -> bool,
 ) -> Vec<List> {
     let mut out = Vec::new();
     for node in app.nodes().values() {
@@ -113,8 +119,9 @@ pub(crate) fn lists(
                     .iter()
                     .filter_map(|v| children.get(*v).copied())
                     .collect();
-                let list = List::of(each.clone(), item, &members, caps, usable);
-                if !list.texts.is_empty() || !list.checks.is_empty() || !list.buttons.is_empty() {
+                let list = List::of(each.clone(), item, &members, caps, usable, frame);
+                let shows = !list.frames.is_empty() || !list.texts.is_empty();
+                if shows || !list.checks.is_empty() || !list.buttons.is_empty() {
                     out.push(list);
                 }
             }
@@ -124,12 +131,32 @@ pub(crate) fn lists(
 }
 
 impl List {
+    /// the ids of the items the list holds now, in its order: the ones a
+    /// template over it names.
+    pub fn members(&self, app: &Snapshot) -> Vec<SemId> {
+        let prefix = self
+            .item
+            .as_str()
+            .strip_suffix("[{item}]")
+            .unwrap_or_default();
+        let Ok(prefix) = SemId::parse(prefix) else {
+            return Vec::new();
+        };
+        let values: Vec<&str> = match app.value(&self.each) {
+            Some(Value::List(v)) => v.iter().map(String::as_str).collect(),
+            Some(Value::Set(s)) => s.iter().map(String::as_str).collect(),
+            _ => Vec::new(),
+        };
+        values.into_iter().map(|v| prefix.key(v)).collect()
+    }
+
     fn of(
         each: StateRef,
         item: SemId,
         members: &[&Node],
         caps: &Capabilities,
         usable: &impl Fn(&Node, &ActionDecl) -> bool,
+        frame: &impl Fn(&Value) -> bool,
     ) -> List {
         let slot = |key: &sem::StateKey| StateRef::new(item.clone(), key.clone());
         let cap = |decl: &ActionDecl| CapabilityRef {
@@ -167,6 +194,7 @@ impl List {
         };
         let mut list = List {
             words: split(each.key.as_str()).map(fold).collect(),
+            frames: Vec::new(),
             texts: Vec::new(),
             checks: Vec::new(),
             buttons: Vec::new(),
@@ -192,6 +220,7 @@ impl List {
                 continue;
             }
             match kind {
+                ValueKind::Text if frame(value) => list.frames.push(slot(key)),
                 ValueKind::Text | ValueKind::Int | ValueKind::Num => list.texts.push(slot(key)),
                 ValueKind::Bool => {
                     if let Some(a) = flip(key, &flips) {

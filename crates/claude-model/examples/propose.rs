@@ -2,12 +2,14 @@
 //! proposed by the Claude:
 //!
 //! ```text
-//! cargo run -p claude-model --example propose -- [--app todo|ide] [--model <name>] [--timeout <s>] "<intent>"
+//! cargo run -p claude-model --example propose -- [--app todo|ide|silences] [--shown <ir.json>] [--model <name>] [--timeout <s>] "<intent>"
 //! ```
 //!
 //! it reads the golden projection of the app (`crates/uir/fixtures`: the
-//! showcase todo, with the compact surface of the Surface page shown, or
-//! the ide's workbench, with no surface shown), says what the rules make
+//! showcase todo, with the compact surface of the Surface page shown, the
+//! ide's workbench, with no surface shown, or the showcase silences, with
+//! no surface shown unless `--shown` names an IR file to verify and show
+//! as the current one), says what the rules make
 //! of the intent (`propose::Rules`, for comparison), asks the Claude through
 //! `propose::Llm` (the real `claude -p`, or what `PLEV_CLAUDE` names) and
 //! `propose_verified`, and prints every attempt (its time, its cost, and
@@ -26,8 +28,8 @@ use uir::{
     Capabilities, Component, GenerationPolicy, IrNode, VerifiedIr, parse, verify, verify_json,
 };
 
-const USAGE: &str =
-    "usage: propose [--app todo|ide] [--model <name>] [--timeout <seconds>] \"<intent>\"";
+const USAGE: &str = "usage: propose [--app todo|ide|silences] [--shown <ir.json>] [--model <name>] \
+                     [--timeout <seconds>] \"<intent>\"";
 
 fn fixture(name: &str) -> Result<String, String> {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -39,6 +41,9 @@ fn fixture(name: &str) -> Result<String, String> {
 /// what the command line asks.
 struct Args {
     app: String,
+    /// an IR file to show as the current surface, in place of the app's
+    /// own.
+    shown: Option<PathBuf>,
     model: Option<String>,
     timeout: Option<Duration>,
     intent: String,
@@ -47,6 +52,7 @@ struct Args {
 fn args() -> Result<Args, String> {
     let mut out = Args {
         app: "todo".to_owned(),
+        shown: None,
         model: None,
         timeout: None,
         intent: String::new(),
@@ -56,6 +62,7 @@ fn args() -> Result<Args, String> {
         let mut value = || all.next().ok_or(format!("{arg} takes a value"));
         match arg.as_str() {
             "--app" => out.app = value()?,
+            "--shown" => out.shown = Some(PathBuf::from(value()?)),
             "--model" => out.model = Some(value()?),
             "--timeout" => {
                 let secs: u64 = value()?.parse().map_err(|e| format!("--timeout: {e}"))?;
@@ -73,12 +80,13 @@ fn args() -> Result<Args, String> {
 }
 
 /// the app's golden projection, and the surface it shows (the todo's
-/// compact form; the ide shows none).
+/// compact form; the ide and the silences show none).
 fn app(name: &str) -> Result<(Snapshot, Option<&'static str>), String> {
     let (snapshot, shown) = match name {
         "todo" => ("showcase-todo.snapshot.json", Some("showcase-todo.ir.json")),
         "ide" => ("ide-workbench.snapshot.json", None),
-        other => return Err(format!("no app {other}: todo or ide")),
+        "silences" => ("showcase-silences.snapshot.json", None),
+        other => return Err(format!("no app {other}: todo, ide or silences")),
     };
     let app = serde_json::from_str(&fixture(snapshot)?).map_err(|e| format!("{snapshot}: {e}"))?;
     Ok((app, shown))
@@ -178,12 +186,20 @@ fn run() -> Result<bool, String> {
     let (app, shown) = app(&args.app)?;
     let caps = Capabilities::from_snapshot(&app);
     let policy = GenerationPolicy::default();
-    let current = match shown {
-        Some(name) => Some(
+    let current = match (&args.shown, shown) {
+        (Some(path), _) => {
+            let text =
+                std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
+            Some(
+                verify_json(&text, &caps, &policy)
+                    .map_err(|e| format!("{} does not verify: {e:?}", path.display()))?,
+            )
+        }
+        (None, Some(name)) => Some(
             verify_json(&fixture(name)?, &caps, &policy)
                 .map_err(|e| format!("{name} does not verify: {e:?}"))?,
         ),
-        None => None,
+        (None, None) => None,
     };
     let ask = Ask {
         intent: &args.intent,
@@ -199,11 +215,11 @@ fn run() -> Result<bool, String> {
     if let Some(timeout) = args.timeout {
         cli.timeout = timeout;
     }
-    println!(
-        "app {}, surface shown: {}",
-        args.app,
-        shown.unwrap_or("none")
-    );
+    let shown_name = match &args.shown {
+        Some(path) => path.display().to_string(),
+        None => shown.unwrap_or("none").to_owned(),
+    };
+    println!("app {}, surface shown: {shown_name}", args.app);
     println!("intent: {:?}", args.intent);
     match propose_verified(&mut Rules, &ask) {
         Ok(ir) => println!(

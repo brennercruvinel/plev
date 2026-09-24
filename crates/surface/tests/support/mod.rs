@@ -30,6 +30,14 @@ pub const COLUMNS: &str = "showcase-todo-columns.ir.json";
 /// in the left panel, then in the right one.
 pub const MIXER_LEFT: &str = "mixer-left.ir.json";
 pub const MIXER_RIGHT: &str = "mixer-right.ir.json";
+/// The silences app of the showcase (task-69 phase 4a), as
+/// `crates/uir/fixtures` pins its projection, and the two forms of its
+/// generated surface (local fixtures, phase 4b): the review, with the
+/// video's frame and one per cut, and the comparison of the original
+/// with the result, side by side, over the same cuts.
+pub const SILENCES: &str = "showcase-silences.snapshot.json";
+pub const REVIEW_SILENCES: &str = "showcase-silences-review.ir.json";
+pub const COMPARE_SILENCES: &str = "showcase-silences-compare.ir.json";
 
 /// A small app with a slider, which no fixture of task-68 has: a volume
 /// from 0 to 1 that `set_value` sets and `reset` puts back to 0, and a
@@ -263,6 +271,14 @@ impl Operable for App {
                 let on = req.action.as_str() == "stage";
                 self.state(&req.target, "staged", Value::Bool(on));
                 self.state(&req.target, "unstaged", Value::Bool(!on));
+            }
+            ("apply_cut" | "reject_cut", None) => {
+                let decision = if req.action.as_str() == "apply_cut" {
+                    "apply"
+                } else {
+                    "reject"
+                };
+                self.state(&req.target, "decision", Value::Text(decision.to_owned()));
             }
             _ => {}
         }

@@ -453,3 +453,77 @@ second, and at each attempt).
 - an unverified IR crossing the worker's channel.
 - a test of the gate that finds or runs the real `claude`.
 - the page waiting for a child it cannot cancel.
+
+## addendum, 2026-09-24: the rules show the media by structure (task-69 phase 4b, proposed)
+
+### context
+
+the rules of phase 3a and task-95 had no part for a video or an image:
+over the silences app the probe of phase 4b got `"video" is not a word
+of the app`, and the review the thesis asks for (the video, the counts,
+the cuts with a frame each) was out of the rules' reach. the app now
+projects a frame ref per frame it offers (a text naming a media node and
+an instant, the addendum of `materialized-surfaces-from-verified-ir.md`),
+which is structure the rules can read without an app's name.
+
+### decision
+
+- **a fifth part, media.** found by structure: a node with the media or
+  image role whose text states are frame refs (the node named is looked
+  up by its role, the instant parsed). each such state is a view of the
+  media (`original`, `result`), and the part's words are the node's and
+  the views' keys. the grammar's words for it are `video`, `image`,
+  `frame` (and `vídeo`, `imagem`, `quadro`, `media`, `preview`).
+- **which views.** the first view of each media node; the views a word
+  of the intent names by their key (`the original`, `the result`); or,
+  with `compare` (`comparar`, `comparison`, `versus`, `diff`), every
+  view side by side in a grid over `field_min_w`. `compare` names the
+  media part too, so "compare the original with the cuts" needs no other
+  grammar word. one view is an `image` named by the node; several are
+  named by their key.
+- **in a list, an item's frame ref is an image**, a thumbnail
+  (`control_size` xl) in front of its texts, never a text.
+- **the numbers of a list's items are the list's.** the counts part no
+  longer makes a stat of a state of a node a found list repeats over:
+  over the silences, a stat per cut's `start` took the id the template
+  makes for that item and the verifier refused the whole. the todo and
+  the ide have no number on an item, so their proposals are the same.
+- **the media goes on top**, before the entries and the lists, in both
+  forms.
+- **the prompt** says an image shows a frame when its `source` binds a
+  text whose value names a media node and an instant. with it the Claude
+  bound the cut thumbnails to `silences.cut[{item}]:frame` on the first
+  proposal of the review (the calls are in the task file).
+- **the example** takes `--app silences` (the golden of phase 4a) and
+  `--shown <ir.json>`, an IR verified and shown as the current surface.
+
+### consequences
+
+- over the silences golden, "the cuts as a list with the video and the
+  counts" is the review: the video's first view, the counts the words
+  name (`cut` names `cut_secs`; "the list with the video and the counts"
+  names them all), and the cuts with a frame, the range, the decision
+  and the two buttons each; "compare the original with the cuts" is the
+  comparison: the original and the result side by side over the same
+  list. a comparison over the review keeps the ids of the video's view,
+  the list and its template, so the instances go on; the result's view
+  is new.
+- `cut` is a word of the list (its items' name) and of a count
+  (`cut_secs`): "the cuts ... and the counts" keeps the one count the
+  word names, by the rule of phase 3a. a person who wants every count
+  says "the counts" without naming the cuts, as the todo's "only what is
+  active" keeps the one count "active" names.
+- the counts of everything over the silences are the video's `duration`
+  and `shown` and the sliders' `value` (twice, each labelled by its key)
+  beside the summary's five: the rule "each int or num is a stat" reads
+  a slider's value as a number the app shows. narrowing it (a number an
+  action of its node takes is the control's) is a rule for another
+  phase.
+- an app without media refuses the media words as `Nothing`, and its
+  lists carry no image.
+
+### avoid
+
+- reading a frame ref by a state's name: the value's form and the role
+  of the node it names are the structure.
+- a stat of a number a list already shows.

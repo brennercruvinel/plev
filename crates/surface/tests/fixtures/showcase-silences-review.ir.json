@@ -1,0 +1,246 @@
+{
+  "plev_ir": 1,
+  "surface": {
+    "id": "review",
+    "title": "review the cuts",
+    "root": {
+      "sem": "review.card",
+      "component": "card",
+      "label": "silences",
+      "props": {
+        "padding": "lg",
+        "elevation": "raised"
+      },
+      "layout": {
+        "stack": {
+          "axis": "vertical",
+          "gap": "md"
+        }
+      },
+      "children": [
+        {
+          "sem": "review.video",
+          "component": "image",
+          "label": "the video at the instant shown",
+          "bind": {
+            "state": {
+              "source": "silences.video:original"
+            }
+          }
+        },
+        {
+          "sem": "review.counts",
+          "layout": {
+            "stack": {
+              "axis": "horizontal",
+              "gap": "md"
+            }
+          },
+          "children": [
+            {
+              "sem": "review.total",
+              "component": "stat",
+              "label": "silences",
+              "bind": {
+                "state": {
+                  "value": "silences.counts:total"
+                }
+              }
+            },
+            {
+              "sem": "review.applied",
+              "component": "stat",
+              "label": "applied",
+              "bind": {
+                "state": {
+                  "value": "silences.counts:applied"
+                }
+              }
+            },
+            {
+              "sem": "review.rejected",
+              "component": "stat",
+              "label": "rejected",
+              "bind": {
+                "state": {
+                  "value": "silences.counts:rejected"
+                }
+              }
+            },
+            {
+              "sem": "review.cut_secs",
+              "component": "stat",
+              "label": "seconds cut",
+              "bind": {
+                "state": {
+                  "value": "silences.counts:cut_secs"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "sem": "review.detection",
+          "layout": {
+            "stack": {
+              "axis": "horizontal",
+              "gap": "md",
+              "align": "center"
+            }
+          },
+          "children": [
+            {
+              "sem": "review.threshold",
+              "component": "slider",
+              "label": "threshold (dB)",
+              "size": {
+                "flex": 1
+              },
+              "bind": {
+                "state": {
+                  "value": "silences.threshold:value"
+                },
+                "actions": {
+                  "set_value": {
+                    "target": "silences.threshold",
+                    "action": "set_value"
+                  }
+                }
+              }
+            },
+            {
+              "sem": "review.detect",
+              "component": "button",
+              "label": "detect silences",
+              "bind": {
+                "actions": {
+                  "activate": {
+                    "target": "silences.detect",
+                    "action": "detect_silence"
+                  }
+                }
+              }
+            },
+            {
+              "sem": "review.apply_all",
+              "component": "button",
+              "label": "apply all",
+              "bind": {
+                "actions": {
+                  "activate": {
+                    "target": "silences.apply_all",
+                    "action": "apply_all"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "sem": "review.cuts",
+          "component": "list",
+          "label": "cuts",
+          "layout": {
+            "stack": {
+              "axis": "vertical",
+              "gap": "xs"
+            }
+          },
+          "repeat": {
+            "each": "silences:cuts",
+            "item": {
+              "sem": "review.cut[{item}]",
+              "layout": {
+                "stack": {
+                  "axis": "horizontal",
+                  "gap": "sm",
+                  "align": "center"
+                }
+              },
+              "children": [
+                {
+                  "sem": "review.cut[{item}].frame",
+                  "component": "image",
+                  "label": "the middle of the cut",
+                  "props": {
+                    "control_size": "xl"
+                  },
+                  "bind": {
+                    "state": {
+                      "source": "silences.cut[{item}]:frame"
+                    }
+                  }
+                },
+                {
+                  "sem": "review.cut[{item}].text",
+                  "size": {
+                    "flex": 1
+                  },
+                  "layout": {
+                    "stack": {
+                      "axis": "vertical",
+                      "gap": "xs",
+                      "align": "start"
+                    }
+                  },
+                  "children": [
+                    {
+                      "sem": "review.cut[{item}].range",
+                      "component": "text",
+                      "bind": {
+                        "state": {
+                          "text": "silences.cut[{item}]:range"
+                        }
+                      }
+                    },
+                    {
+                      "sem": "review.cut[{item}].decision",
+                      "component": "badge",
+                      "bind": {
+                        "state": {
+                          "text": "silences.cut[{item}]:decision"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "sem": "review.cut[{item}].apply",
+                  "component": "button",
+                  "label": "apply",
+                  "props": {
+                    "control_size": "sm"
+                  },
+                  "bind": {
+                    "actions": {
+                      "activate": {
+                        "target": "silences.cut[{item}]",
+                        "action": "apply_cut"
+                      }
+                    }
+                  }
+                },
+                {
+                  "sem": "review.cut[{item}].reject",
+                  "component": "button",
+                  "label": "reject",
+                  "props": {
+                    "control_size": "sm"
+                  },
+                  "bind": {
+                    "actions": {
+                      "activate": {
+                        "target": "silences.cut[{item}]",
+                        "action": "reject_cut"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
