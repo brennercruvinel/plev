@@ -12,7 +12,8 @@
 //! no MCP server, no settings file, no skill, a short system prompt of its
 //! own instead of Claude Code's, in a directory of its own, and without
 //! the variables a Claude Code session sets for the processes it runs.
-//! past `timeout` it is killed by its pid. nothing is interactive: a
+//! past `timeout` it is killed by its pid, and so is it when the call is
+//! cancelled from another thread (`Cancel`). nothing is interactive: a
 //! child that would ask for a login or a permission fails, and its text
 //! becomes the `ModelError`.
 //!
@@ -26,6 +27,8 @@ mod run;
 
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use propose::{Model, ModelError};
@@ -83,6 +86,28 @@ pub struct Call {
     pub reply: Result<usize, ModelError>,
 }
 
+/// cancels a call from another thread: the child is killed by its pid,
+/// as at the deadline, and the call ends as a `ModelError` that says so;
+/// a call not started yet does not start. a clone is the same signal, so
+/// a `ClaudeCli` sent to a worker is cancelled through the handle kept
+/// behind. once raised it stays raised: a new call takes a new one.
+#[derive(Clone, Debug, Default)]
+pub struct Cancel(Arc<AtomicBool>);
+
+impl Cancel {
+    pub fn new() -> Cancel {
+        Cancel::default()
+    }
+
+    pub fn cancel(&self) {
+        self.0.store(true, Ordering::Relaxed);
+    }
+
+    pub fn is_cancelled(&self) -> bool {
+        self.0.load(Ordering::Relaxed)
+    }
+}
+
 /// the Claude behind `propose::Model`: each `complete` runs `program -p`
 /// once, with the flags of `args`.
 #[derive(Clone, Debug)]
@@ -97,6 +122,9 @@ pub struct ClaudeCli {
     pub budget_usd: f64,
     /// where the child runs: no project of the app is read from it.
     pub dir: PathBuf,
+    /// the signal that ends a call before its deadline, shared with every
+    /// clone of this `ClaudeCli`.
+    pub cancel: Cancel,
     calls: Vec<Call>,
 }
 
@@ -119,8 +147,26 @@ impl ClaudeCli {
             timeout: TIMEOUT,
             budget_usd: BUDGET_USD,
             dir: std::env::temp_dir(),
+            cancel: Cancel::new(),
             calls: Vec::new(),
         }
+    }
+
+    /// whether the program is there to run, without running it: a
+    /// program named with a directory is a file at that path; a bare name
+    /// is a file in one of the directories of the PATH. what an app asks
+    /// before it offers the Claude at all.
+    pub fn exists(&self) -> bool {
+        let named_with_dir = self
+            .program
+            .parent()
+            .is_some_and(|dir| !dir.as_os_str().is_empty());
+        if named_with_dir {
+            return self.program.is_file();
+        }
+        std::env::var_os("PATH").is_some_and(|path| {
+            std::env::split_paths(&path).any(|dir| dir.join(&self.program).is_file())
+        })
     }
 
     /// every argument the program gets: print mode, the prompt read from
@@ -184,7 +230,13 @@ impl ClaudeCli {
 
     fn ask(&self, prompt: &str) -> reply::Answer {
         let program = self.program.display().to_string();
-        match run::run(self.command(), &self.program, prompt, self.timeout) {
+        match run::run(
+            self.command(),
+            &self.program,
+            prompt,
+            self.timeout,
+            &self.cancel,
+        ) {
             Ok(exit) => reply::read(&program, exit.status, &exit.stdout, &exit.stderr),
             Err(e) => reply::Answer {
                 reply: Err(e),
@@ -257,7 +309,38 @@ mod tests {
         assert_eq!(cli.timeout, TIMEOUT);
         assert_eq!(cli.budget_usd, BUDGET_USD);
         assert_eq!(cli.dir, std::env::temp_dir());
+        assert!(!cli.cancel.is_cancelled());
         assert!(cli.calls().is_empty());
         assert!(cli.spent_usd().is_sign_positive() && cli.spent_usd() == 0.0);
+    }
+
+    /// a clone shares the signal; a new one does not.
+    #[test]
+    fn a_cancel_is_shared_by_its_clones() {
+        let cli = ClaudeCli::new();
+        let mut worker = cli.clone();
+        cli.cancel.cancel();
+        assert!(worker.cancel.is_cancelled());
+        worker.cancel = Cancel::new();
+        assert!(!worker.cancel.is_cancelled());
+        assert!(cli.cancel.is_cancelled());
+    }
+
+    /// the program is looked for where it says, never run: a path with a
+    /// directory at that path, a bare name on the PATH.
+    #[test]
+    #[cfg(unix)]
+    fn exists_looks_for_the_program_without_running_it() {
+        let mut cli = ClaudeCli::new();
+        cli.program = PathBuf::from("sh");
+        assert!(cli.exists(), "sh is on the PATH");
+        cli.program = PathBuf::from("no-such-claude-anywhere");
+        assert!(!cli.exists());
+        cli.program = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fake-claude");
+        assert!(cli.exists(), "a file at its path");
+        cli.program = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/no-such-claude");
+        assert!(!cli.exists());
+        cli.program = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+        assert!(!cli.exists(), "a directory is not a program");
     }
 }

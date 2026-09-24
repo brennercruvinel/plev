@@ -348,3 +348,108 @@ seconds to a minute and a half, against 0.16 ms for the rules.
 - running the real `claude` in a test of the gate.
 - a child that inherits the Claude Code session that runs the app.
 - waiting for a child without a deadline.
+
+## addendum, 2026-09-24: the page asks the Claude off the app's thread (task-69 phase 3b-ii, proposed)
+
+### context
+
+phase 3b-i put the Claude behind `propose::Model` (`claude-model`,
+`ClaudeCli` over `claude -p`), synchronous: a call holds the thread that
+makes it for 5 to 90 s, up to three times per proposal. the Surface page
+proposed by the rules alone, inside `execute`, in a fraction of a
+millisecond. the probe of 3b-ii measured both: the rules' request is
+`completed` when `dispatch` returns; the fake claude holds the caller for
+the whole call. the page needed the Claude without freezing the app, with
+the wait and the cost visible, a way to cancel, and the rules where the
+program is absent.
+
+### decision
+
+- **who proposes is a capability of the page.** `surface_page.proposer`
+  is a `select` between `rules` and `claude`; a person clicks it, an
+  agent acts `select` with the name through the port. `claude` is
+  offered, and chosen by default, only where the program is:
+  `ClaudeCli::exists` looks for `claude` (or what `PLEV_CLAUDE` names) as
+  a file at its path or on the PATH, and never runs it. off the desktop
+  (wasm, mobile) `claude-model` is not a dependency and the select
+  offers the rules alone. in the showcase's own tests the program is
+  never looked for, so no test of the gate reaches the real `claude`; a
+  test that wants the fake sets it.
+- **the Claude is asked off the app's thread through the dispatcher's
+  own contract.** `propose` with `claude` answers `Execution::Started`
+  and keeps the request's id. a worker thread takes a clone of the
+  `ClaudeCli` and owned copies of everything a `propose::Ask` borrows
+  (the intent, the todo's snapshot and registry, the surface shown, the
+  policy of whoever asked), runs `propose_verified(Llm)` there and
+  reports back through a channel: each attempt as it begins, then the
+  answer with the attempts, the time and the cost. only a `VerifiedIr`
+  crosses the channel. the page's `wake` polls the channel every 100 ms
+  while it waits; when the answer arrives the surface opens or
+  transforms in place (`SurfaceHost::transform`, by `SemId`) and the
+  request ends with `Dispatcher::complete` (the surface, the nodes, the
+  attempts, the seconds, the cost) or `fail` (the reason), through the
+  same lending of the todo's dispatcher (`TodoPage::with_dispatcher`) at
+  the page clock's now. the app keeps taking requests, keys and frames
+  meanwhile; a `toggle` of the todo completes while the Claude thinks.
+- **one proposal at a time.** while one is asked the propose button and
+  its action are disabled: a second `propose` is refused by the check as
+  `Disabled`, before `execute`.
+- **the wait is state.** `surface_page.status` says, as text and as
+  state, that it is asking the Claude for the intent, the attempt (1 to
+  3) and the seconds (`busy`, `attempt`, `seconds`); when it ends, who
+  proposed, the time, the attempts and the cost (`cost_usd`, as the
+  child counts it), or the reason it was refused. an agent reads the same
+  nodes a person sees.
+- **cancel is a signal in the run loop.** `claude_model::Cancel` is a
+  shared flag a `ClaudeCli` carries (its clones share it); `run` reads it
+  every 10 ms beside the deadline and kills the child by its pid, as at
+  the deadline, and a call not started yet does not start. the page's
+  `surface_page.cancel` (enabled only while asking) raises it and fails
+  the request as `cancelled by <actor>` in the same lending of the
+  dispatcher as the cancel itself; the worker's later message is dropped.
+- **the prompt does not change.** the probe asked the todo, with the
+  compact surface of task-95 shown, for "the items as a list with the add
+  field on top" and the Claude answered a `repeat` over `todo:items` with
+  the shown template's ids; the ide, with no surface shown, asked for
+  "the changed files as a list ..." got a `repeat` over `changes:files`.
+  the instruction to repeat was not needed.
+
+### cost
+
+the real calls of this phase (sonnet, list prices under the
+subscription): the todo through the example, 7.2 s and 0.038 USD; the
+todo through the page and the real port, 9.3 s and 0.040 USD (the
+agent's act returned `completed` 9.4 s after `executing`); the ide from
+scratch, 77.5 s and 0.102 USD. every one verified at the first attempt.
+the page's own cost is a thread and a channel; the poll every 100 ms
+while it waits asks for a frame only when the status text moved (once a
+second, and at each attempt).
+
+### consequences
+
+- the receipt of a proposal by the Claude has `executing` and
+  `completed` seconds apart, with the surface, the attempts, the seconds
+  and the cost in its outcome; the agent port forwards the terminal stage
+  when it comes, and a client's `act` returns then.
+- the IR is verified against the registry at the instant of the ask. a
+  capability that disappears while the Claude answers (an item removed)
+  gives no instance, and a request on it is refused by the dispatcher;
+  nothing unverified is shown.
+- a person's click on the proposer changes the widget directly, as a
+  key in the intent field does; an agent's `select` goes through the
+  dispatcher. the same asymmetry the row had since 3a.
+- the template of a surface the Claude proposes from scratch takes the
+  app's ids (`changes.file[{item}]`), which the host treats as the app's
+  nodes; over a shown surface it keeps the surface's template ids. asking
+  for surface-owned ids is a prompt change for a later phase.
+- the elapsed seconds and the attempt change the projection's revision
+  while the page waits; requests are checked by their reads, so nothing
+  else goes stale for it.
+
+### avoid
+
+- calling the model on the app's thread, or a second dispatcher for the
+  proposal that ends later.
+- an unverified IR crossing the worker's channel.
+- a test of the gate that finds or runs the real `claude`.
+- the page waiting for a child it cannot cancel.
