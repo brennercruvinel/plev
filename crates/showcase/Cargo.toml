@@ -39,10 +39,17 @@ git.workspace = true
 # the agent port (PLEV_AGENT=1, debug): agents observe and act on the
 # active page over a local socket, through the hooks a screen reader uses.
 wire.workspace = true
+# `--render --semantics` writes the page's projection in the sem serde
+# form, the json an agent receives from `plev observe`.
+serde.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
 # the agent port's cost test weighs a leaner JSON form of a snapshot.
 serde_json.workspace = true
+# the svg importer reads `--render --svg` exports back: the round trip is
+# the test that the file is well-formed svg with drawable content.
+svg.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true

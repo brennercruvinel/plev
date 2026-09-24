@@ -1,3 +1,5 @@
+#[cfg(not(target_arch = "wasm32"))]
+use cosmic_text::CacheKey;
 use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight};
 use etagere::{BucketedAtlasAllocator, size2};
 use lru::LruCache;
@@ -9,6 +11,23 @@ use crate::compositor::{SceneNode, TextNodeKey};
 use super::atlas::{self, create_atlas_texture, emit_glyphs};
 use super::cache::{GlyphCacheKey, GlyphEntry, ShapedEntry};
 use super::vertex::TextVertex;
+
+/// One glyph of a shaped run as the frame places it (see
+/// [`TextSystem::shaped_glyphs`]): which face, glyph and size (`key`, at
+/// the glyph's own size, no subpixel bin), where its origin sits on the
+/// baseline in logical pixels relative to the text node's `(x, y)`, and
+/// how far the pen advances after it.
+/// Native only, like its one reader, the headless svg export.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct ShapedGlyph {
+    pub(crate) key: CacheKey,
+    pub(crate) x: f32,
+    pub(crate) y: f32,
+    pub(crate) advance: f32,
+    /// The laid-out line the glyph sits on; wrapped text has several.
+    pub(crate) line: usize,
+}
 
 // ---------------------------------------------------------------------------
 // TextSystem
@@ -188,40 +207,7 @@ impl TextSystem {
                 continue;
             };
             self.keys_this_frame.insert(key.clone());
-
-            if !self.shaping_cache.contains_key(key) {
-                let font_size = f32::from_bits(key.font_size_bits);
-                let line_height = f32::from_bits(key.line_height_bits);
-                let letter_spacing = f32::from_bits(key.letter_spacing_bits);
-                let max_width = key.max_width_bits.map(f32::from_bits);
-
-                let mut buffer =
-                    Buffer::new(&mut self.font_system, Metrics::new(font_size, line_height));
-                buffer.set_size(&mut self.font_system, max_width, None);
-                let mut attrs = Attrs::new().weight(Weight(key.font_weight));
-                if letter_spacing != 0.0 && font_size > 0.0 {
-                    // cosmic-text tracking is in EM; the key stores px.
-                    attrs = attrs.letter_spacing(letter_spacing / font_size);
-                }
-                if let Some(ref family) = key.font_family {
-                    attrs = attrs.family(Family::Name(family));
-                }
-                buffer.set_text(
-                    &mut self.font_system,
-                    &key.text,
-                    &attrs,
-                    Shaping::Advanced,
-                    None,
-                );
-                buffer.shape_until_scroll(&mut self.font_system, false);
-
-                self.shaping_cache
-                    .insert(key.clone(), ShapedEntry { buffer });
-                log::debug!(
-                    "Shaping cache miss: {:?}",
-                    key.text.get(..40.min(key.text.len()))
-                );
-            }
+            self.ensure_shaped(key);
         }
 
         // Phase 2: emit glyph vertices (needs &mut self for glyph atlas, but
@@ -256,6 +242,85 @@ impl TextSystem {
         let vertices = std::mem::take(&mut self.staging_vertices);
         let indices = std::mem::take(&mut self.staging_indices);
         (vertices, indices)
+    }
+
+    /// Shape `key` into the cache when it is not there yet. The one shaping
+    /// path: the frame (`resolve_for_layer`) and the headless svg export
+    /// (`shaped_glyphs`) both come here, so a run is shaped once and every
+    /// consumer sees the same glyphs.
+    fn ensure_shaped(&mut self, key: &TextNodeKey) {
+        if self.shaping_cache.contains_key(key) {
+            return;
+        }
+        let font_size = f32::from_bits(key.font_size_bits);
+        let line_height = f32::from_bits(key.line_height_bits);
+        let letter_spacing = f32::from_bits(key.letter_spacing_bits);
+        let max_width = key.max_width_bits.map(f32::from_bits);
+
+        let mut buffer = Buffer::new(&mut self.font_system, Metrics::new(font_size, line_height));
+        buffer.set_size(&mut self.font_system, max_width, None);
+        let mut attrs = Attrs::new().weight(Weight(key.font_weight));
+        if letter_spacing != 0.0 && font_size > 0.0 {
+            // cosmic-text tracking is in EM; the key stores px.
+            attrs = attrs.letter_spacing(letter_spacing / font_size);
+        }
+        if let Some(ref family) = key.font_family {
+            attrs = attrs.family(Family::Name(family));
+        }
+        buffer.set_text(
+            &mut self.font_system,
+            &key.text,
+            &attrs,
+            Shaping::Advanced,
+            None,
+        );
+        buffer.shape_until_scroll(&mut self.font_system, false);
+
+        self.shaping_cache
+            .insert(key.clone(), ShapedEntry { buffer });
+        log::debug!(
+            "Shaping cache miss: {:?}",
+            key.text.get(..40.min(key.text.len()))
+        );
+    }
+
+    /// The glyphs of `key` as the frame places them, in logical pixels
+    /// relative to the node's `(x, y)`: the same shaping `resolve_for_layer`
+    /// draws from, so a run drawn this frame comes back exactly as drawn,
+    /// and a run not drawn yet comes back as it will be. The headless svg
+    /// export asks here for the glyphs whose outlines it writes.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) fn shaped_glyphs(&mut self, key: &TextNodeKey) -> Vec<ShapedGlyph> {
+        self.ensure_shaped(key);
+        let Some(shaped) = self.shaping_cache.get(key) else {
+            return Vec::new();
+        };
+        let mut glyphs = Vec::new();
+        for (line, run) in shaped.buffer.layout_runs().enumerate() {
+            for glyph in run.glyphs.iter() {
+                // The origin the raster path derives in `atlas::emit_glyphs`
+                // through `LayoutGlyph::physical`, before it snaps to the
+                // physical pixel grid: the offsets are in em.
+                let x = glyph.x + glyph.font_size * glyph.x_offset;
+                let y = run.line_y + glyph.y - glyph.font_size * glyph.y_offset;
+                let (key, _, _) = CacheKey::new(
+                    glyph.font_id,
+                    glyph.glyph_id,
+                    glyph.font_size,
+                    (0.0, 0.0),
+                    glyph.font_weight,
+                    glyph.cache_key_flags,
+                );
+                glyphs.push(ShapedGlyph {
+                    key,
+                    x,
+                    y,
+                    advance: glyph.w,
+                    line,
+                });
+            }
+        }
+        glyphs
     }
 
     /// Resident bytes of the glyph atlas texture (R8Unorm, 1 byte per

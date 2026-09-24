@@ -18,8 +18,9 @@ mod stub;
 #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
 pub use stub::GitPage;
 
-/// Wakes the host event loop from the git worker thread.
-pub type Wake = Box<dyn Fn() + Send + 'static>;
+/// Wakes the host event loop from the git worker thread (not
+/// `comps::Wake`, what a tick asks of that loop).
+pub type GitWake = Box<dyn Fn() + Send + 'static>;
 
 /// Vertical navigation of the file list (arrow keys).
 #[derive(Clone, Copy, Debug, PartialEq)]

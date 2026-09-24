@@ -435,3 +435,256 @@ resultado. o agente do laboratório nunca é o agente do experimento.
 - proibido: `crates/sem`, `crates/rec` (consumir só; o que faltar é
   parada e reporte), `crates/engine`, `crates/comps`, `crates/git`,
   `crates/showcase`.
+
+## como rodar a fase c
+
+o laboratório é o binário `ide-lab` (`crates/ide/src/bin/lab/`, unix
+only; em outro alvo imprime e sai com 3). ele monta o repositório do
+experimento num diretório temporário, sobe o `Workbench` sem janela com
+o worker de git de verdade, abre o `AgentPort`, liga o `Recorder` no
+relógio do workbench (`Workbench::now`), roda o humano roteirizado e, no
+fim, reabre a sessão gravada e confere com o git real.
+
+ambiente, em todo comando:
+
+```sh
+export CARGO_TARGET_DIR=<um target dir por agente>
+export CARGO_INCREMENTAL=0
+```
+
+o repositório é sempre o mesmo, em `$TMPDIR`: um commit inicial e seis
+alterações, três da tarefa (`src/login.rs` no index, `src/session.rs`
+fora, `tests/login_test.rs` novo e fora) e três que não são
+(`README.md` no index, `notes.txt` novo, `Cargo.toml` modificado). a
+tarefa: "commit only the login fix: src/login.rs, src/session.rs,
+tests/login_test.rs, message: fix login session timeout". nos braços
+`plev` e `scripted` o caminho do repositório nunca é impresso; no braço
+`git` ele é impresso, porque o agente precisa dele.
+
+### braço A0, o agente roteirizado (controle, sem token)
+
+```sh
+cargo run -p ide --bin ide-lab -- --arm scripted \
+    --human unstage-after-observe:src/session.rs --out <dir>
+cargo run -p ide --bin ide-lab -- --arm scripted --human none --out <dir>
+```
+
+é o mesmo que `crates/ide/tests/lab.rs` roda no gate. mede o protocolo
+puro: bytes, idas e voltas, custo do contrato e da gravação, sem o ruído
+do llm.
+
+### braço A, o agente llm pelo contrato
+
+o laboratório sobe e espera; o agente é outro processo.
+
+```sh
+cargo run -p ide --bin ide-lab -- --arm plev \
+    --human unstage-after-observe:src/session.rs --out <dir> --app ide
+```
+
+ele imprime a tarefa, o nome do app e o caminho do socket, e fica no
+loop até o primeiro `commit.submit` concluído (mais `--grace`, 1 s por
+padrão) ou até `--timeout` (600 s por padrão). o agente recebe só a
+tarefa e dois comandos, com o binário já compilado:
+
+```sh
+cargo build -p wire --bin plev
+plev observe --app ide [--scope <id>] [--keys <k,k>] [--since <rev>]
+plev act <target> <action> --from-revision <rev> [--param <json>]
+```
+
+a regra do braço A: agir sempre com `--from-revision` da observação em
+que a decisão se apoiou. sem ela o `plev act` observa o alvo antes e age
+sobre o estado de agora, o que nunca fica stale e anula a medição
+daquela corrida; o relatório marca isso em `agent.stale_measurement_valid`
+e diz por quê. proibido ao agente: `git`, ler arquivo, screenshot,
+qualquer comando fora do `plev`.
+
+para a corrida de controle, o mesmo comando com `--human none`.
+
+### braço B, o git na linha de comando
+
+```sh
+cargo run -p ide --bin ide-lab -- --arm git \
+    --human unstage-after-observe:src/session.rs --out <dir>
+```
+
+imprime o caminho do repositório e a linha `export PATH=<dir>/bin:$PATH`
+que o orquestrador dá ao agente, instala o shim de `git` e, com
+`--human`, o hook `pre-commit` que uma vez só roda
+`git reset -q HEAD -- <path>` no instante do commit. o agente usa o git
+normalmente (`status --porcelain`, `add`, `reset`, `commit`, `log`,
+`show`); o laboratório observa o `.git` até um HEAD novo e então fecha.
+sem `--human`, o commit bate com a tarefa e o exit é 0; com o hook, o
+commit gravado é menor do que a tarefa, o git não avisa ninguém, e o
+laboratório sai 1 dizendo isso. este braço não tem workbench, porta nem
+gravação: o relatório diz "receipts: none; session: none".
+
+### braço C, o volume de um screenshot
+
+```sh
+cargo run -p ide --bin ide-lab -- --arm screenshot --out <dir>
+```
+
+desenha o ide em 1280x800 na escala 1 e na 2 (um renderer, redimensionado
+entre as duas), escreve `frame@1.png` e `frame@2.png` e imprime os bytes
+do PNG e do RGBA cru de cada um ao lado dos bytes de uma observação
+inteira e de uma com `--scope changes`, serializadas como o servidor
+escreve. é comparação de volume de dados, não de capacidade, e a tabela
+diz isso. sem GPU na máquina, ele avisa e segue sem os frames.
+
+### o que fica em `out/`
+
+| arquivo | conteúdo |
+| --- | --- |
+| `report.json` | o relatório inteiro: `traffic`, `agent` (observações, atos, forma de cada ato, recusas, recuperação, `stale_measurement_valid`), `intervention`, `stale` (com o HEAD no instante de cada recusa), `cost.contract`, `cost.recording`, `session`, `truth`, `notes`, `exit` |
+| `session.monster` | a sessão gravada (magic `MONS`), reaberta pelo próprio laboratório com `Session::open`; `monster_player` recusa com a mensagem de sessão, sem panic |
+| `frame@1.png`, `frame@2.png` | só no braço `screenshot` |
+| `bin/git`, `git-log.jsonl`, `hooks/pre-commit`, `hook-fired` | só no braço `git`: o shim, uma linha json por invocação (hora, argumentos, bytes de stdout, exit), o hook e o marcador que o faz disparar uma vez só |
+
+### exit codes
+
+| code | significado |
+| --- | --- |
+| 0 | o commit existe, é exatamente o conjunto da tarefa e, quando há sessão, o receipt concluído bate com `git rev-parse HEAD` e `git show --name-only` (MATCH) |
+| 1 | um commit existe e difere: conjunto errado, ou a sessão discorda do git (MISMATCH) |
+| 2 | não houve commit |
+| 3 | erro do laboratório (argumento, repositório, porta, gravação) |
+
+### o que ler no relatório antes de concluir qualquer coisa
+
+- `agent.stale_measurement_valid`: falso quer dizer que a recusa por
+  estado velho não foi exercida naquela corrida, mesmo que o humano
+  tenha agido. o texto em `agent.stale_measurement` diz o motivo.
+- `agent.acts[].form`: `from_revision` quando o ato se apoia numa
+  revisão que esta porta serviu, `observed` quando não.
+- `cost.recording.gpu`: falso quer dizer que a máquina não tem adapter e
+  a trilha visual está vazia; a semântica continua completa.
+- `notes`: projeção que não validou, frame não gravado, agente
+  roteirizado que parou no meio.
+
+os números medidos aqui são de build debug. release muda o custo do
+contrato e da gravação, não os bytes.
+
+## resultado da fase c (checkpoint a, 2026-09-23)
+
+rodado pelo orquestrador com o `ide-lab` da `main` em `d26c9b1`, build de
+debug, num M4. os agentes LLM são agentes novos, sem contexto do
+repositório, com o briefing da seção anterior; a transcrição de cada um
+foi auditada por script (turnos, tokens por tipo, todo comando de shell,
+comandos fora do permitido). relatórios, sessões e logs em
+`target/agents/exp/{a0,a1,a2,b1,b2,b3,c}/`.
+
+### as corridas
+
+| corrida | braço | intervenção | resultado | exit |
+| --- | --- | --- | --- | --- |
+| A0 | roteirizado pelo socket, sem LLM | sim | 1 recusa stale nomeando `src/session.rs`, HEAD igual na recusa, recuperação, MATCH sessão x git | 0 |
+| A0 | roteirizado | não | 0 recusas, MATCH | 0 |
+| A2 | LLM pelo contrato | sim | 1 recusa stale válida, recuperação, receipt igual ao git, três arquivos | 0 |
+| A1 | LLM pelo contrato | não | 0 recusas, três arquivos, confirmado pela interface (`stacks.commit[sha]` e `show_diff`) | 0 |
+| B2 | LLM pelo `git` | hook no commit (graça 1 s) | commit com 2 arquivos, sem aviso do git; o agente viu "2 files changed" e tentou `show --name-only`, mas o laboratório já tinha derrubado o repositório | 1 |
+| B3 | LLM pelo `git` | hook no commit (graça 180 s) | commit `cfe1156` com 2 arquivos; o agente viu "2 files changed", investigou, re-adicionou e fez `commit --amend` para `e6116c6` com os três | 0 |
+| B1 | LLM pelo `git` | não | três arquivos, confirmado por `show --name-only` | 0 |
+| C | volume de screenshot, sem LLM | | PNG 1280x800 = 62.939 B; observação inteira = 6.359 B (14 nós); `--scope changes` = 4.975 B; RGBA cru 4 MB | |
+
+### as hipóteses
+
+- **H1, suficiência do contrato: sustentada.** nas duas corridas A o
+  agente concluiu com exatamente os três arquivos e a mensagem certa, sem
+  nenhum comando fora do `plev` (auditoria: A2 18 comandos, A1 12; os
+  únicos "fora" foram um `sleep 2` e uma variável de shell na frente do
+  próprio `plev`, declarados pelo agente). ele descobriu sozinho que o
+  form precisa ser aberto antes da mensagem (`enabled: false`), usou
+  escopo e delta sem ser ensinado, e no A1 confirmou o commit lendo o
+  nó novo em `stacks` e o diff dele.
+- **H2, stale-state rejection: sustentada.** no A2 o `submit` apoiado na
+  revisão servida antes da intervenção voltou `rejected` `stale` com o
+  delta exato (`changes:staged` perdeu `src/session.rs`), o HEAD não
+  mudou, o agente leu o delta, observou de novo, repôs o arquivo e o
+  segundo `submit` concluiu com sha e arquivos iguais aos do git
+  (`stale_measurement_valid: true`). todos os oito atos carregaram
+  `from_revision`.
+- **H3, gravação: sustentada.** a sessão do A2 tem 67 eventos e 15
+  frames em 181.586 bytes (152.594 semânticos, 28.764 visuais); o
+  laboratório reabriu o arquivo e leu de volta o receipt concluído, igual
+  ao `git rev-parse HEAD` e ao `git show --name-only`; o teste do
+  roteirizado prova `state_at` antes e depois da intervenção com o
+  arquivo saindo de `changes:staged`.
+- **H4, comparação: o plev ganha em segurança e explicação, e não ganha
+  em bytes nem em idas e voltas.** no `git`, a intervenção equivalente
+  produziu um commit diferente da tarefa sem nenhum aviso (B2 e B3, exit
+  0 do `git commit`). o agente diligente percebeu pelo "2 files changed",
+  mas só conseguiu saber o que faltava investigando depois, e consertou
+  reescrevendo o commit (`--amend`), o que só funciona porque o commit
+  era local; num branch compartilhado seria um segundo commit ou um
+  force push. no plev o commit errado nunca existiu: a recusa veio antes
+  do efeito, nomeando o arquivo. em volume, o `git` é muito mais enxuto:
+  1.459 bytes de saída em 20 invocações (B3) contra 22.040 bytes em 30
+  mensagens (A2); e o contrato custa mais idas e voltas (o `plev` abre
+  uma conexão por comando, 30 no A2). contra screenshot, uma observação
+  inteira é 9,9 vezes menor que um PNG a escala 1, e isso é volume de
+  dados, não capacidade: nenhum agente por screenshot foi rodado.
+- **H5, validade: nenhuma corrida anulada.** os dois agentes A usaram
+  `--from-revision` em todo ato.
+
+### os números
+
+| | A2 (plev, intervenção) | A1 (plev, controle) | B3 (git, intervenção) | B1 (git, controle) |
+| --- | --- | --- | --- | --- |
+| turnos do modelo | 15 | 13 | 11 | 7 |
+| tokens de saída | 10.510 | 7.747 | 8.857 | 3.875 |
+| contexto novo (cache criado) | 43.054 | 40.999 | 33.998 | 28.689 |
+| contexto relido (cache lido) | 748.597 | 629.534 | 469.273 | 273.973 |
+| comandos de shell | 18 | 12 | 19 | 8 |
+| bytes enviados ao agente | 22.040 | 21.639 | 1.459 | (456 no B2) |
+| mensagens / invocações | 30 in, 52 out | 28 in, 49 out | 20 | 8 |
+| observações (snapshot / delta) | 2 / 5 | 4 / 3 | | |
+| atos | 8 | 7 | | |
+| recusas stale | 1 | 0 | (hook silencioso) | |
+| primeira mensagem ao commit | 109 s | 66 s | ~57 s ao primeiro commit, +57 s até o amend | ~40 s |
+| tempo do agente (transcrição) | 3 min 15 s | 2 min 31 s | 2 min 40 s | 1 min 12 s |
+| sessão gravada | 181.586 B, 67 eventos, 15 frames | 162.817 B, 61 eventos, 15 frames | nenhuma | nenhuma |
+
+custo do contrato (lado do servidor, debug): 254,8 us por
+`bench.snapshot()` e 326,1 us por `bench.dispatch()` no A2, 2,6 ms por
+mensagem servida dentro de `drain` (0,06 % dos 149 s da corrida); no A1
+454 us por mensagem. custo da gravação: 138 us por `rec.snapshot`, 289 us
+por `rec.frame`, 1,2 ms por draw de GPU do frame do ide. no roteirizado
+sem LLM (A0) a corrida inteira levou 1.313 ms com 27 mensagens: o tempo
+do experimento é o modelo pensando, não o contrato.
+
+### o que o experimento mostrou além das hipóteses
+
+- **falha de protocolo, minha:** o laboratório fechava 1 s depois do
+  commit e derrubava a porta e o repositório. no A2 o agente não pôde
+  confirmar pelo `stacks` (três `observe` com exit 3), e no B2 o agente do
+  `git` não pôde rodar o `show --name-only` que teria revelado o commit
+  de dois arquivos. corrigi para 180 s de graça nas corridas A1, B1 e B3;
+  os números de A2 e B2 valem, a verificação final deles não.
+- **ergonomia do contrato, levantada pelos agentes:** o delta de
+  `node_added` traz só o id (obriga uma segunda observação); o nó do
+  commit em `stacks` não expõe a lista de arquivos como estado; o aviso
+  em `notices` diz que a recusa aconteceu mas não quem agiu (o ator do
+  request 6); a regra "a checagem de stale é por `reads`, não por
+  revisão" foi deduzida, não lida; o `set_value` conclui sem eco do
+  valor. tudo isso é candidato à task-64 (inspector) e a um ajuste do
+  protocolo, e nenhum impediu a tarefa.
+- **uma corrida no ide, achada pelo roteirizado:** um `Refresh` que
+  responde a uma mutação anterior pode carregar um status lido antes de
+  uma mutação posterior e tirar do `changes:staged` um arquivo já
+  staged; o roteirizado espera o index parar. é defeito do ide, não do
+  contrato, e vai virar task.
+- **o `plev` abre uma conexão por comando** (30 no A2). um agente que
+  mantivesse a conexão gastaria menos idas e voltas; é decisão de
+  ferramenta, não de contrato.
+
+### decisão pedida (checkpoint a)
+
+a hipótese central sobreviveu ao experimento que podia derrubá-la, e a
+comparação honesta diz onde ela não ganha. recomendação do orquestrador:
+seguir para a onda 5 (task-64 inspector, task-65 pixel para código,
+task-67 regressão estrutural) levando as três correções pequenas que os
+agentes apontaram (nó inteiro no `node_added`, `files` no nó do commit,
+ator na recusa), e a corrida do `Refresh` no ide como task própria. o que
+não entra ainda: IR, superfícies geradas, adaptativo, como pedido.

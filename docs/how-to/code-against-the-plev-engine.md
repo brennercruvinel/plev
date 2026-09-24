@@ -90,7 +90,10 @@ what exists (updated at each task close-out):
   lives outside the ui is checked again there (`GitCommand::CommitIf`).
 - headless (task-66, adr headless-render-shares-the-frame-path):
   `GpuContext::new_headless` and `window::draw_frame` draw any frame into
-  a texture through the window's path; `showcase --render` and
+  a texture through the window's path; `Renderer::svg` writes the same
+  scene as svg with every approximation reported, and text in it is the
+  outline of the glyphs `TextSystem::shaped_glyphs` returns from the one
+  shaping path, never a second shaping (task-66b); `showcase --render` and
   `monster_player --frame` use it.
 - the only identity the engine itself has is still `ViewId`, a per-frame
   counter reset in `InputState::begin_frame`
@@ -278,6 +281,11 @@ one binding table, one accessibility projection. never a local copy.
 - any handler that changes visible state invalidates (return true or
   request redraw). under render on demand a missed invalidation is a
   frozen app.
+- motion on a clock (a caret) asks for the instant it next changes, not
+  for every frame: a tick answers `comps::Wake` (a frame now, the next
+  deadline), the owner merges its children's asks, and the shell sleeps
+  until the earliest one (task-82). a `tick -> bool` that is true while
+  focused is the defect, not the pattern.
 - clip rects are logical; scale by `gpu.clip_scale()` for physical
   scissors (HiDPI).
 - after `gpu.resize`, reapply the logical projection (`set_projection`);

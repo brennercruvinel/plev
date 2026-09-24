@@ -18,10 +18,13 @@ cargo fmt --check
 # wasm cross-platform guard. Skippable only when the std for the target is
 # genuinely absent (Homebrew rust); with rustup the target comes from
 # rust-toolchain.toml and this leg always runs.
+# RUSTFLAGS as in CI (.github/workflows/ci.yml sets -D warnings for every
+# job): code only native builds read is dead on wasm32, and a warning there
+# is red in CI, so it is red here too.
 if command -v rustup >/dev/null 2>&1; then
-    cargo check --target wasm32-unknown-unknown -p showcase
+    RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown -p showcase
 elif [ -d "$(rustc --print sysroot)/lib/rustlib/wasm32-unknown-unknown" ]; then
-    cargo check --target wasm32-unknown-unknown -p showcase
+    RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown -p showcase
 else
     echo "warning: skipping the wasm32 check — rust-std for wasm32-unknown-unknown" >&2
     echo "         is not installed (Homebrew rust). the leg runs in CI." >&2
@@ -35,6 +38,7 @@ if [ -f ../urna/crates/urna-format/Cargo.toml ]; then
     cargo test --manifest-path crates/urnaui/Cargo.toml
     cargo clippy --manifest-path crates/urnaui/Cargo.toml --all-targets -- -D warnings
     cargo fmt --check --manifest-path crates/urnaui/Cargo.toml
+    RUSTFLAGS="-D warnings" cargo check --manifest-path crates/urnaui/Cargo.toml --target wasm32-unknown-unknown
 else
     echo "warning: skipping urnaui — sibling urna checkout not found at ../urna." >&2
     echo "         the leg runs in CI (.github/workflows/ci.yml)." >&2

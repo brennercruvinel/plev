@@ -32,9 +32,12 @@
 //! - [`icons`]: the lucide set, tessellated and cached
 //! - [`core`] and [`recipe`]: the widget contract and the glass drawing
 //!   recipes every category shares
+//! - [`wake`]: what a tick asks of the loop (a frame now, the next
+//!   deadline), and the caret clock the text widgets share
 
 pub mod core;
 pub mod recipe;
+pub mod wake;
 
 pub mod icons;
 
@@ -55,6 +58,7 @@ mod tests;
 
 pub use core::{EventResult, Rect, WidgetEvent};
 pub use engine::theme::{self, Intent, Theme};
+pub use wake::Wake;
 
 /// Everything an app screen usually needs, in one import.
 pub mod prelude {
@@ -67,5 +71,6 @@ pub mod prelude {
     pub use crate::nav::*;
     pub use crate::recipe::*;
     pub use crate::shell::{AppShell, SafeArea, ShellLayout};
+    pub use crate::wake::Wake;
     pub use engine::theme::{Intent, Theme};
 }

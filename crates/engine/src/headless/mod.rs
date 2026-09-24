@@ -15,9 +15,11 @@
 //! requests, which a browser cannot do.
 
 mod readback;
+pub mod svg;
 
 pub(crate) use readback::write_png;
 pub use readback::{Frame, read_texture};
+pub use svg::{Approximation, SvgExport};
 
 use std::fmt;
 
@@ -193,6 +195,19 @@ impl Renderer {
     /// The target's pixels as they are now (the last drawn frame).
     pub fn read(&self) -> Result<Frame, HeadlessError> {
         read_texture(&self.gpu, &self.target)
+    }
+
+    /// The scene in `compositor` as SVG, every approximation reported
+    /// ([`svg::export`]). The glyph outlines come from this renderer's
+    /// text system, the shaping the last [`draw`](Self::draw) drew from.
+    /// `background` is the page color in sRGB (`Color::to_array`), the
+    /// clear the frame started from; `None` for a transparent page.
+    pub fn svg(
+        &mut self,
+        compositor: &Compositor,
+        background: Option<[f32; 4]>,
+    ) -> Result<SvgExport, HeadlessError> {
+        svg::export(compositor, &mut self.text_system, self.viewport, background)
     }
 
     /// [`draw`](Self::draw) then [`read`](Self::read).

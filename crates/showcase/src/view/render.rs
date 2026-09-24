@@ -3,7 +3,7 @@
 //! overlay, the toasts).
 
 use comps::overlay::OverlayManager;
-use comps::prelude::Rect;
+use comps::prelude::{Rect, Wake};
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 
 use super::components::scroll_area::ScrollAreaPage;
@@ -12,23 +12,25 @@ use super::{ActiveOverlay, Body, Layers, PAGES, Pane, ShowcaseView, pages};
 impl ShowcaseView {
     // -- Animation -------------------------------------------------------------
 
-    /// Advance all animations. Returns `true` while anything is moving.
-    pub fn tick(&mut self, dt: f32) -> bool {
-        let mut animating = false;
-        animating |= self.overlay_mgr.tick(dt);
-        animating |= self.toasts.tick(dt);
+    /// Advance all animations. The answer is every widget's ask merged:
+    /// a frame now while anything moves, and the earliest deadline (a
+    /// focused caret's next flip) when nothing does.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        let mut wake = Wake::moving(self.overlay_mgr.tick(dt));
+        wake = wake.merge(Wake::moving(self.toasts.tick(dt)));
         // Widgets that settle on their own tick whichever page shows
         // (a focused field, a knob spring, a scrollbar fade, a tooltip
         // delay): they must not freeze mid-motion when the page changes.
-        animating |= self.panes.input.tick(dt);
-        animating |= self.panes.switch.tick(dt);
-        animating |= self.panes.scroll_area.tick(dt);
-        animating |= self.panes.tooltip.tick(dt);
-        animating |= self.panes.table.tick(dt);
-        animating |= self.page_tick(dt);
+        wake = wake.merge(self.panes.input.wake(dt));
+        wake = wake.merge(Wake::moving(self.panes.switch.tick(dt)));
+        wake = wake.merge(Wake::moving(self.panes.scroll_area.tick(dt)));
+        wake = wake.merge(Wake::moving(self.panes.tooltip.tick(dt)));
+        wake = wake.merge(Wake::moving(self.panes.table.tick(dt)));
+        wake = wake.merge(self.page_wake(dt));
         // The git tab always ticks: worker events land there whichever
         // page is showing, and must not pile up until it is.
-        animating |= self.panes.git.tick(dt) && self.pane() == Some(Pane::Git);
+        let git = self.panes.git.tick(dt) && self.pane() == Some(Pane::Git);
+        wake = wake.merge(Wake::moving(git));
 
         // Drop overlay widgets whose exit animation finished.
         if let Some(active) = &self.active_overlay {
@@ -37,7 +39,16 @@ impl ShowcaseView {
                 self.active_overlay = None;
             }
         }
-        animating
+        wake
+    }
+
+    /// [`ShowcaseView::wake`] as the `bool` the settle loops read (the
+    /// headless `render_page`, the session recorder): `true` while
+    /// something moves, a frame now or on the very next one. A caret at
+    /// rest between flips is settled, not moving.
+    pub fn tick(&mut self, dt: f32) -> bool {
+        let wake = self.wake(dt);
+        wake.now || wake.is_continuous()
     }
 
     // -- Rendering -------------------------------------------------------------

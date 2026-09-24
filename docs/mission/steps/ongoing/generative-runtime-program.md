@@ -69,6 +69,11 @@ elas.
 
 ## 3. estado real do código (diagnóstico, 2026-09-23)
 
+> esta seção é o diagnóstico de antes da onda 1 e ficou velha. o retrato
+> do código agora é `docs/mission/state/truth.md` (truth), que vence esta
+> seção quando os dois divergem. o modo de operação é
+> `docs/mission/autonomy.md`.
+
 base: branch `plevrev` em `b8ba096`, dois commits à frente de `main`
 (`c89d11e`), com o hot reload. gate completo verde nesta base (test,
 clippy -D warnings, fmt, wasm check, perna urnaui).
@@ -276,6 +281,17 @@ decididas em 2026-09-23:
    de fonte e de biblioteca de inferência, e testes manuais que só ele
    pode fazer). nada é enviado para o remoto sem pedido dele.
 
+8. checkpoint a (2026-09-23): a hipótese central sobreviveu ao experimento
+   da task-62 fase c. o brenner escolheu **correções primeiro**: as três
+   lacunas de contrato que os agentes acharam (task-83) e a corrida do
+   `Refresh` (task-84) antes da onda 5; a onda 5 espera o experimento
+   rodar de novo com as correções.
+9. modo de operação (2026-09-23): orquestrador autônomo
+   (`docs/mission/autonomy.md`). o item 4 continua valendo com duas
+   mudanças: o orquestrador publica cada integração no GitHub (PR com
+   merge commit), e os checkpoints da seção 9 param só quando o resultado
+   cai numa das condições de parada de `autonomy.md`.
+
 abertas:
 
 5. task-39 (memoização, pendente desde 2023) é absorvida pela task-73.
@@ -299,12 +315,15 @@ atualizado em cada integração.
 | task-59 | integrada | `f71dc20`, `f5b7cee` | ligação no compositor e todo pelo dispatcher (fase a); os 16 widgets restantes com `SemId` e projeção, regra "toda ação lê o que muda", defeito do `Select` corrigido (fase b); rolagem do `Select` virou a task-81 |
 | task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (pendente) |
 | task-73 | fases 1 e 1b integradas; fase 2 (ADR de desenho) espera decisão do brenner | `ed814da`, `91fdb33` | limitado pela GPU mesmo sem a latência de envio (4 a 12 vezes a CPU); pass de layer segue os pixels; composite em todo frame; o caret a 60 fps é a task-82 |
-| task-62 | fases a e b integradas; fase c (checkpoint a) desenhada, briefing depois da 57b | `8978602` | `Workbench` no ide, commit conferido no dispatcher e no index real; recusa de confirmação virou a task-58b; o desenho do experimento está no arquivo da task |
+| task-62 | fase c rodada; checkpoint a decidido (correções primeiro, decisão 8) | `8978602`, `d26c9b1` | experimento completo: H1, H2, H3 e H5 sustentadas, H4 diz onde o plev ganha (recusa antes do efeito, com o delta; receipt e sessão) e onde não (bytes e idas e voltas contra o `git`); resultado e decisão pedida no arquivo da task |
 | task-63 | fases a, b e c integradas; fase d na fila | `c62a05d` | arquivo `.monster` de sessão (magic `MONS`); fase d = retenção de pixels opt-in e ligação no shell do showcase, depois da 61 |
 | task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
 | task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
 | task-58b | integrada | `dc6fde2` | recusa de confirmação no `sem` e no ide |
 | task-81 | integrada | `7b3e48f` | painel do `Select` rola; um `Window` para desenho, ligação e clique |
 | task-57b | integrada | `a7a6735` | forma serde enxuta (todo com 3 itens: 6419 para 2039 B; 103 itens: 87 para 26 KB), `source` opt-in no wire (`plev observe --source`), redação de segredo uma vez só em `sem::redact`; ADR lean-semantic-form-and-one-redaction |
-| task-82 | em andamento | | caret como prazo (`WaitUntil`), sem 60 fps num campo parado; comps e showcase agora, ide depois da 62c |
-| task-66b | em andamento | | SVG do frame headless com relatório de aproximação; `showcase --render --semantics` |
+| task-82 | fase a integrada; fase b (ide, urnaui) pendente | `d97a375` | `comps::Wake` e `Blink`, `AnimationTick::since_last`, shell do showcase em `WaitUntil`: campo focado e parado de 120 para 4 turnos desenhados em 120; ADR a-tick-asks-for-a-deadline |
+| task-66b | integrada | `efc87b6` | `engine::headless::svg` com relatório de aproximação por nó, `TextSystem::shaped_glyphs` (um shaping só), `showcase --render --svg/--svg-report/--semantics/--source`; imagens ficam para depois da retenção de pixels (63d); ADR svg-export-reads-the-scene |
+| task-83 | em andamento | | delta com o nó (`Change::NodeAdded` com o nó), recusa stale com as ações de outros atores (`acted`), regra de stale escrita no `plev`; origem: checkpoint a |
+| task-84 | em andamento | | a view do ide nunca volta para um status do git lido antes de uma mutação já mandada; origem: agente roteirizado do checkpoint a |
+| task-85 | na fila, depois da 84 | | `files` como estado do nó `stacks.commit[sha]` (git + projeção do ide) |

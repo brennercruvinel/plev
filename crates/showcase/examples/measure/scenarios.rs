@@ -340,8 +340,9 @@ fn caret(cfg: &Config) -> Result<Run, String> {
     focus_todo_input(&mut h)?;
     let samples = sample(&mut h, cfg.frames, |h, _| h.frame(&[]));
     let setup = "Todo page with `todo.input` focused by a click; no input afterwards. \
-                 the todo page asks for frames while its field is focused (the caret \
-                 blinks), so every turn draws."
+                 the focused field asks for a frame at each flip of its caret (every \
+                 0.53 s) and for nothing in between, so only the turns that cross a \
+                 flip draw."
         .to_string();
     Ok(finish(&h, setup, samples))
 }

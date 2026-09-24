@@ -6,18 +6,18 @@
 use engine::text::{TextMeasurer, TextStyle};
 
 use super::buffer::TextBuffer;
+use crate::wake::{Blink, Wake};
 
 /// Caret blink half-period in seconds (the platform convention: 530ms
 /// on macOS and windows).
-const CURSOR_BLINK_INTERVAL: f32 = 0.53;
+pub const CURSOR_BLINK_INTERVAL: f32 = 0.53;
 
 #[derive(Clone, Debug)]
 pub struct TextInput {
     pub buffer: TextBuffer,
     pub focused: bool,
     pub placeholder: String,
-    pub(crate) cursor_visible: bool,
-    cursor_blink_timer: f32,
+    blink: Blink,
 }
 
 impl Default for TextInput {
@@ -32,8 +32,7 @@ impl TextInput {
             buffer: TextBuffer::new(),
             focused: false,
             placeholder: String::new(),
-            cursor_visible: true,
-            cursor_blink_timer: 0.0,
+            blink: Blink::new(),
         }
     }
 
@@ -45,33 +44,32 @@ impl TextInput {
     /// Caret currently drawn (focused and on the visible half of the
     /// blink).
     pub fn cursor_visible(&self) -> bool {
-        self.focused && self.cursor_visible
+        self.focused && self.blink.visible()
     }
 
     pub fn focus(&mut self) {
         self.focused = true;
-        self.cursor_visible = true;
-        self.cursor_blink_timer = 0.0;
+        self.blink.reset();
     }
 
     pub fn unfocus(&mut self) {
         self.focused = false;
     }
 
-    pub fn tick(&mut self, dt: f32) {
+    /// Advance the caret blink by `dt` seconds. While focused the answer
+    /// is the blink's: `now` when the caret flipped, `next` the time to
+    /// the next flip, so a shell draws two or three frames a second for
+    /// a caret at rest, not sixty. Unfocused there is no caret and
+    /// nothing pending.
+    pub fn wake(&mut self, dt: f32) -> Wake {
         if !self.focused {
-            return;
+            return Wake::idle();
         }
-        self.cursor_blink_timer += dt;
-        if self.cursor_blink_timer >= CURSOR_BLINK_INTERVAL {
-            self.cursor_blink_timer -= CURSOR_BLINK_INTERVAL;
-            self.cursor_visible = !self.cursor_visible;
-        }
+        self.blink.advance(dt, CURSOR_BLINK_INTERVAL)
     }
 
     pub fn reset_blink(&mut self) {
-        self.cursor_visible = true;
-        self.cursor_blink_timer = 0.0;
+        self.blink.reset();
     }
 
     pub fn handle_char(&mut self, c: char) {

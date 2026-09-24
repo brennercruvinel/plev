@@ -5,7 +5,7 @@ mod buffer;
 mod component;
 
 pub use buffer::TextBuffer;
-pub use component::TextInput;
+pub use component::{CURSOR_BLINK_INTERVAL, TextInput};
 
 #[cfg(test)]
 mod tests;

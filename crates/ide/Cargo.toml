@@ -10,6 +10,14 @@ description = "Simple IDE test"
 name = "ide"
 path = "src/main.rs"
 
+# the laboratory of the plev experiment (task-62 phase c): the workbench
+# without a window, served to agents through the port, recorded, measured
+# and checked against the real git. unix only (the port is a unix
+# socket); elsewhere it says so and exits.
+[[bin]]
+name = "ide-lab"
+path = "src/bin/lab/main.rs"
+
 [dependencies]
 engine.workspace = true
 comps.workspace = true
@@ -24,9 +32,12 @@ env_logger.workspace = true
 pollster.workspace = true
 # Same major as plev's optional hot-reload dep (shared build cache).
 notify.workspace = true
-
-[dev-dependencies]
-# real repositories in temp dirs, like crates/git/tests/real_repo.rs.
+# the laboratory (src/bin/lab): the agent port and the flight recorder
+# around the workbench, the report as json, a real repository in a temp
+# dir. the lib uses none of these; cargo has no per-binary dependencies.
+wire.workspace = true
+rec.workspace = true
+serde_json.workspace = true
 tempfile.workspace = true
 
 [lints]

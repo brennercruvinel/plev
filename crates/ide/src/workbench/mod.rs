@@ -311,8 +311,11 @@ impl Workbench {
         })
     }
 
-    /// Milliseconds since the workbench was made.
-    fn now(&self) -> Millis {
+    /// Milliseconds since the workbench was made: the clock every receipt
+    /// is stamped with, and so the clock anything recorded beside them
+    /// (a `rec::Recorder`) must use, or its events and the receipts
+    /// would not line up.
+    pub fn now(&self) -> Millis {
         u64::try_from(self.clock.elapsed().as_millis()).unwrap_or(u64::MAX)
     }
 }

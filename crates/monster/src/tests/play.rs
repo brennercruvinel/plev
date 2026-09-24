@@ -11,7 +11,11 @@ use engine::compositor::SceneNode;
 
 fn tick(dt: f32) -> AnimationTick {
     // elapsed is wall-clock data; the player must key off dt alone.
-    AnimationTick { dt, elapsed: 999.0 }
+    AnimationTick {
+        dt,
+        elapsed: 999.0,
+        since_last: dt,
+    }
 }
 
 fn rect(id: u16, depth: u16, x: f32, color: [f32; 4]) -> Node {

@@ -45,11 +45,11 @@ fn click(s: &mut TodoPage, content: Rect, x: f32, y: f32) -> EventResult {
 
 fn settle(s: &mut TodoPage) {
     for _ in 0..600 {
-        if !s.tick(1.0 / 60.0) {
+        if !s.wake(1.0 / 60.0).pending() {
             return;
         }
     }
-    panic!("tick never settles (busy loop)");
+    panic!("wake never settles (busy loop)");
 }
 
 fn render(s: &mut TodoPage, content: Rect) -> Compositor {
@@ -159,7 +159,10 @@ fn checkbox_click_toggles_and_strike_animates_to_one() {
     assert_eq!(s.model.counts().completed, before + 1);
     assert!(s.model.visible_items()[0].completed());
     assert_eq!(s.model.visible_items()[0].strike_progress(), 0.0);
-    assert!(s.tick(0.05), "strike tween must request frames");
+    assert!(
+        s.wake(0.05).is_continuous(),
+        "strike tween must request frames"
+    );
     let mid = s.model.visible_items()[0].strike_progress();
     assert!(mid > 0.0 && mid < 1.0, "mid progress, got {mid}");
     settle(&mut s);
@@ -255,7 +258,10 @@ fn enter_progress_drives_label_alpha() {
 
     let a0 = label_alpha(&render(&mut s, content), "fade me in").unwrap();
     assert_eq!(a0, 0.0, "fresh item starts transparent");
-    assert!(s.tick(1.0 / 60.0), "enter tween must request frames");
+    assert!(
+        s.wake(1.0 / 60.0).is_continuous(),
+        "enter tween must request frames"
+    );
     let a1 = label_alpha(&render(&mut s, content), "fade me in").unwrap();
     assert!(a1 > a0, "alpha follows the tween, got {a1}");
     settle(&mut s);

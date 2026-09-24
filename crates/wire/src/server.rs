@@ -18,7 +18,10 @@ use std::collections::{HashMap, VecDeque};
 use std::rc::Rc;
 
 use sem::redact::Secrets;
-use sem::{Actor, Millis, Receipt, ReceiptSink, Request, RequestId, SemId, Snapshot, Stage};
+use sem::{
+    Actor, Millis, Receipt, ReceiptSink, Rejection, Request, RequestId, Revision, SemId, Snapshot,
+    Stage,
+};
 
 use crate::proto::{
     Act, Ask, Bound, ClientMsg, DeltaReply, Observe, ProtoError, Reply, ServerMsg, SnapshotReply,
@@ -55,6 +58,36 @@ pub trait Host {
     /// first dispatch; every stage of every receipt, now or later, must
     /// reach it.
     fn add_sink(&mut self, sink: Box<dyn ReceiptSink>);
+
+    /// `actor` was just served an observation: the whole snapshot (`scope`
+    /// none) or the subtree under `scope`, at `revision`, the revision of
+    /// the whole snapshot at that instant. called right after the reply is
+    /// built, on the app's thread, only for a connection that said hello
+    /// (before it there is no actor). an app records it
+    /// (`rec::Recorder::observed`) or reacts to it; nothing by default.
+    fn observed(&mut self, actor: &Actor, scope: Option<&SemId>, revision: Revision) {
+        let _ = (actor, scope, revision);
+    }
+}
+
+/// what went through one port since it opened, counted where it happens:
+/// the transport counts connections, messages and bytes (a line as
+/// written on the socket, its `\n` included), the server counts what the
+/// messages were. `errors` adds the lines refused before the app (not
+/// JSON, another version) to the errors the server answered.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Traffic {
+    pub conns: u64,
+    pub msgs_in: u64,
+    pub msgs_out: u64,
+    pub bytes_in: u64,
+    pub bytes_out: u64,
+    pub observes_snapshot: u64,
+    pub observes_delta: u64,
+    pub acts: u64,
+    pub stages_out: u64,
+    pub rejected_stale: u64,
+    pub errors: u64,
 }
 
 /// one reply for one connection.
@@ -74,6 +107,8 @@ pub struct Server {
     issued: HashMap<RequestId, Issued>,
     heard: Rc<RefCell<VecDeque<Heard>>>,
     listening: bool,
+    /// what this server answered; the transport fills the rest.
+    traffic: Traffic,
 }
 
 /// a request an agent of this port issued, until its terminal stage.
@@ -123,6 +158,7 @@ impl Server {
             issued: HashMap::new(),
             heard: Rc::new(RefCell::new(VecDeque::new())),
             listening: false,
+            traffic: Traffic::default(),
         }
     }
 
@@ -131,14 +167,25 @@ impl Server {
         &self.ring
     }
 
+    /// what this server answered so far: observations by kind, acts,
+    /// stages sent, stale rejections among them, errors. connections,
+    /// messages and bytes are the transport's (`AgentPort::traffic`) and
+    /// stay zero here.
+    pub fn traffic(&self) -> Traffic {
+        self.traffic
+    }
+
     /// takes one message of `conn`; returns the replies, the stages of
     /// an act among them, and any stage that ended since.
     pub fn handle(&mut self, conn: ConnId, msg: ClientMsg, host: &mut dyn Host) -> Vec<Outgoing> {
         let ClientMsg { id, ask } = msg;
         let reply = match ask {
             Ask::Hello { name } => self.hello(conn, name),
-            Ask::Observe(o) => self.observe(&o, host),
-            Ask::Act(a) => self.act(conn, &id, a, host).map(|()| None),
+            Ask::Observe(o) => self.observe(conn, &o, host),
+            Ask::Act(a) => {
+                self.traffic.acts += 1;
+                self.act(conn, &id, a, host).map(|()| None)
+            }
             Ask::Confirm { request } | Ask::Decline { request } => Err(ProtoError::NotEnabled {
                 reason: format!(
                     "only a person confirms or declines request {request}, at the screen \
@@ -158,13 +205,16 @@ impl Server {
                 },
             }),
             Ok(None) => {}
-            Err(error) => out.push(Outgoing {
-                conn,
-                msg: ServerMsg {
-                    id: Some(id),
-                    reply: Reply::Error(error),
-                },
-            }),
+            Err(error) => {
+                self.traffic.errors += 1;
+                out.push(Outgoing {
+                    conn,
+                    msg: ServerMsg {
+                        id: Some(id),
+                        reply: Reply::Error(error),
+                    },
+                });
+            }
         }
         out.extend(self.forward());
         out
@@ -187,6 +237,10 @@ impl Server {
                 Stage::Requested => issued.asked.take(),
                 _ => None,
             };
+            self.traffic.stages_out += 1;
+            if matches!(h.stage, Stage::Rejected(Rejection::Stale { .. })) {
+                self.traffic.rejected_stale += 1;
+            }
             out.push(Outgoing {
                 conn: issued.conn,
                 msg: ServerMsg {
@@ -240,7 +294,14 @@ impl Server {
         }))
     }
 
-    fn observe(&mut self, o: &Observe, host: &mut dyn Host) -> Result<Option<Reply>, ProtoError> {
+    /// serves an observation and, when `conn` has an actor, tells the host
+    /// who was served what (`Host::observed`), after the reply is built.
+    fn observe(
+        &mut self,
+        conn: ConnId,
+        o: &Observe,
+        host: &mut dyn Host,
+    ) -> Result<Option<Reply>, ProtoError> {
         let Some(live) = host.project() else {
             return Err(ProtoError::NotEnabled {
                 reason: "the app projects nothing now".to_owned(),
@@ -260,6 +321,10 @@ impl Server {
                 .collect()
         });
         let keep = |key: &sem::StateKey| o.keys.as_ref().is_none_or(|keys| keys.contains(key));
+        match base {
+            Some(_) => self.traffic.observes_delta += 1,
+            None => self.traffic.observes_snapshot += 1,
+        }
         let reply = match base {
             Some((base, seen)) => Reply::Delta(DeltaReply {
                 base,
@@ -291,6 +356,9 @@ impl Server {
                 bounds,
             }),
         };
+        if let Some(actor) = self.actor(conn) {
+            host.observed(&actor, o.scope.as_ref(), revision);
+        }
         Ok(Some(reply))
     }
 
