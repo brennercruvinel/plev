@@ -302,7 +302,11 @@ branch `task/79a-scene-socket`, base `8c4ad908`. worktree
 `.claude/worktrees/agent`, target `target/agents/one`. a rodada parou uma
 vez, depois da sonda (a seção "parada: os pixels de uma imagem" acima); o
 orquestrador liberou a opção 1 (`gpu/image.rs` e a linha de `gpu/mod.rs`)
-com cinco condições, e a rodada seguiu. commits, em ordem:
+com cinco condições, e a rodada seguiu. a revisão achou depois um
+problema de privacidade (o canal mostrava a um agente o que o contrato
+proíbe: os frames da câmera, e tudo o que a redação não vê); a correção
+são os cinco commits a partir de `697ff1f2` (seção "a revisão de
+privacidade"). commits, em ordem:
 
 - `91be2cd6` task-79: the scene channel probe
 - `73f08fbc` task-79: the image store reads its pixels back
@@ -312,18 +316,83 @@ com cinco condições, e a rodada seguiu. commits, em ordem:
 - `f45bc235` task-79: the mirror, headless or in a window, with the bindings over it
 - `853b885b` task-79: the mirror's pixels, in process and between two processes, and the band
 - `aef62a07` task-79: base64 a quad at a time, and the offer's cost measured
-- (este) task-79: ADR and the phase 1 handoff
+- `ccb6dc31` task-79: ADR and the phase 1 handoff
+- `697ff1f2` task-79: the image store tells a stream from a fixed image
+- `22489539` task-79: the scene is shared only when the person asks, under a name
+- `575bc605` task-79: a camera's frames never cross
+- `d210a7c2` task-79: the shell says who watches
+- `0bdef89f` task-79: the windowed mirror says a refusal
+- (este) task-79: the privacy section of the ADR, and the handoff after the review
 
 nenhuma janela foi aberta: o app do teste de socket é um processo filho
 headless, o visualizador também; o `--show` do exemplo compila e não foi
 rodado. nenhum processo ficou para trás (o filho sai pelo `quit`, e o
 `Drop` do teste mata só o próprio filho pelo handle dele).
 
+### a revisão de privacidade
+
+todo mundo que conecta no port é `Actor::Agent`, pelo `hello`, e o
+contrato decide o que um agente vê: o snapshot guarda só o comprimento
+de um segredo (`sem::redact`), e o ADR
+`capture-is-a-job-the-person-turns-on` tira os frames da câmera e as
+amostras do microfone de todo agente. a cena carrega tudo o que a janela
+desenha, que a redação nunca vê. o que mudou:
+
+1. opt-in separado, da pessoa: o canal de cena só existe se quem lançou
+   o app pedir, `PLEV_MIRROR=1` além do `PLEV_AGENT=1` (build de debug;
+   `AgentPort::from_env` lê, `wire::mirror_enabled`), ou se um app que
+   abre o próprio port chamar `share_scenes`. sem isso, um `scene` é
+   recusado com um código próprio, `scene_not_shared` (um
+   `ProtoError::SceneNotShared` novo, não `bad_message`), e a razão diz o
+   que a pessoa faz: "this app's person did not share its windows: a
+   scene is shown to a watcher only when the person who launches the app
+   asks for it, with PLEV_MIRROR=1 beside PLEV_AGENT=1 (a debug build);
+   observe and act work without it". `plev observe`, `plev act` e
+   `--ask` não mudam.
+2. imagem de fluxo nunca cruza: uma imagem de fluxo (a câmera) viaja
+   como tamanho e lugar, sem pixels e sem id, com ou sem `PLEV_MIRROR`,
+   sob uma chave que os frames dela dividem, então um frame novo da
+   câmera não move layer nenhuma e não manda nada. o visualizador desenha
+   no lugar uma caixa escura com a borda e "live image, not mirrored"
+   (`rec::scene::LIVE_LABEL`). sem override nesta fase. a imagem fixa
+   (a da Card) segue cruzando. para o codec saber o que é fluxo, o store
+   ganhou `ImageStore::is_stream` e `image_is_stream` (commit
+   `697ff1f2`): só leitura, no `gpu/image.rs` liberado e na mesma linha
+   de reexportação do `gpu/mod.rs`, testado no `image.rs`. **é uma
+   função a mais que a API liberada (que eram `pixels` e
+   `image_pixels`)**: sem ela o primeiro frame da câmera cruzaria antes
+   de o fluxo ser reconhecido pelo segundo id no mesmo lugar. o
+   orquestrador decide se a mantém.
+3. quem assiste fica registrado: o watch vem depois do `hello` (antes,
+   `not_enabled`); o servidor guarda quem começou e quem terminou de
+   assistir qual janela (`take_scene_watches`, um watch cortado entre
+   eles), e o shell loga "scene: claude watches main" e "scene: claude no
+   longer watches main". o watch que começa chega ao host como observação
+   do agente (`Host::observed`, na revisão que o app projeta), então a
+   gravação (`PLEV_RECORD=1`) guarda o `observed` daquele agente, sem
+   mudar nada em `src/view`.
+4. testes: sem `PLEV_MIRROR` o pedido é recusado com o código novo (em
+   processo, pelo socket, e com o ambiente lido de verdade num processo
+   filho: sem a variável, `0` e `true` recusam, `1` assiste); com a
+   câmera falsa ligada, nenhum byte dos frames do `FakeCapture` está na
+   saída inteira do watch (as partes binárias decodificadas e as linhas
+   em base64, nas quatro fases de um pixel de 4 bytes nos grupos de 3), e
+   o espelho difere do app só dentro da caixa da câmera; a Card segue com
+   hash igual.
+5. o ADR ganhou a seção de privacidade (abaixo, na linha do índice
+   também).
+6. o roteiro do brenner usa `PLEV_AGENT=1 PLEV_MIRROR=1`.
+
+a condição 3 da liberação (o receptor transforma a imagem de fluxo num
+slot de fluxo) ficou sem objeto: nenhum pixel de fluxo chega mais, e o
+`Mirror` não faz slot nenhum. o código dela está no `7728da47`, para
+quando uma fase com override quiser.
+
 ### o acessor de pixels e as cinco condições
 
 `ImageStore::pixels(&ImageHandle) -> Option<&[u8]>` e
-`image_pixels(&ImageHandle) -> Option<Vec<u8>>` (`gpu/image.rs`, 587
-linhas de produção; a reexportação em `gpu/mod.rs`).
+`image_pixels(&ImageHandle) -> Option<Vec<u8>>` (`gpu/image.rs`, 604
+linhas de produção com o `is_stream`; a reexportação em `gpu/mod.rs`).
 
 1. nada muda no store: nenhum campo, nenhum comportamento, nenhuma
    memória; o `git diff` do `image.rs` só acrescenta, e nenhum teste que
@@ -331,59 +400,61 @@ linhas de produção; a reexportação em `gpu/mod.rs`).
 2. testes no `image.rs`: `a_fixed_image_reads_back_its_pixels` (e o store
    igual depois de ler), `a_stream_reads_back_its_latest_frame` (o último
    frame por qualquer handle do fluxo, transparente antes do primeiro
-   `replace`) e `a_handle_the_store_does_not_hold_reads_nothing` (outro
-   tamanho, outro lugar, store vazio).
-3. no receptor (`rec::scene::Mirror`) a imagem fixa entra por
-   `load_image_rgba`, uma vez por conteúdo; o segundo conteúdo num lugar
-   que o store do app já deu é fluxo: um slot de fluxo
-   (`stream_image_rgba` uma vez, `replace_image_rgba` por frame).
-   testado em processo (`a_stream_becomes_one_stream_slot_on_the_receiver`:
-   5 frames, 1 load, 1 slot, 4 replaces, um lugar só) e pelo socket (a
-   câmera falsa: no máximo um slot novo, um replace por frame).
+   `replace`), `a_handle_the_store_does_not_hold_reads_nothing` (outro
+   tamanho, outro lugar, store vazio) e, da revisão,
+   `a_stream_is_told_from_a_fixed_image`.
+3. sem objeto depois da revisão (acima).
 4. a prova é pelo socket entre dois processos (abaixo), com a Card
    (imagens) e páginas sem imagem, hash de frame igual dos dois lados; a
-   câmera pelo `FakeCapture`.
+   câmera pelo `FakeCapture`, que agora prova o contrário: nada cruza.
 5. o mesmo acessor fecha a lacuna do gravador: `rec/src/payload.rs`
    escreve a imagem com `has_pixels = 0` porque não havia como ler os
    pixels de um handle; com `image_pixels` há, e o replay desenharia as
-   imagens. não foi fechada aqui (dito no ADR).
+   imagens (as fixas: a regra da câmera vale para ele também). não foi
+   fechada aqui (dito no ADR).
 
 ### o canal
 
 um pedido novo da versão 1, na conexão do agente, sem segundo protocolo:
 
 ```text
+-> {"v":1,"id":"1","type":"hello","name":"mirror"}
 -> {"v":1,"id":"9","type":"scene","window":"main"}
 <- {"v":1,"id":"9","type":"scene_blob","key":"8a1f...","at":0,"total":24012,"bytes":"..."}
 <- {"v":1,"id":"9","type":"scene","seq":1,"head":"...","layers":[{"key":0,"hash":"3c9e...","body":"..."},...],"bounds":[...]}
 <- {"v":1,"id":"9","type":"scene","seq":2,"layers":[{"key":0,"hash":"77d0...","patch":"..."},{"key":1,"hash":"51aa..."}]}
+
+sem PLEV_MIRROR=1:
+<- {"v":1,"id":"9","type":"error","error":"scene_not_shared","reason":"this app's person did not share its windows: ..."}
 ```
 
 - `wire::scene` (puro, compila no wasm): o `Ask::Scene`, os `Reply::Scene`
   e `Reply::SceneBlob`, o `Offer` que o app entrega e o estado de cada
   watch no `Server` (o hash de cada layer, os assets e os bindings que
-  mandou). um watch por conexão, janela nomeada por 1 a 32 de
-  `[A-Za-z0-9_-]`, `main` por padrão. o que não mudou não vai: layer com
-  hash igual vai sem corpo, o patch quando o watch tem a base, o corpo
-  senão, o asset que o watch não tem, head e bindings quando mudam; frame
-  sem mudança não manda nada.
+  mandou). um watch por conexão, depois do `hello`, janela nomeada por 1 a
+  32 de `[A-Za-z0-9_-]`, `main` por padrão. o que não mudou não vai: layer
+  com hash igual vai sem corpo, o patch quando o watch tem a base, o
+  corpo senão, o asset que o watch não tem, head e bindings quando mudam;
+  frame sem mudança não manda nada.
 - base64 nas partes binárias (`wire::b64`, próprio, sem dependência). um
   asset, e um corpo que não caberia na linha do frame, vão antes em
   linhas `scene_blob` de até `SCENE_PART` (384 KiB), toda linha abaixo de
   `MAX_LINE`. o `MAX_LINE` mudou de casa (`port.rs` para `scene.rs`) e
-  segue exportado como `wire::MAX_LINE`.
-- o port (`port.rs`, 608 linhas de produção): `offer_scene` e `watching`
-  no fio do app, sem esperar socket; cada conexão conta os bytes na
-  fila, e um watch que passa de `SCENE_QUEUE` (16 MiB) é cortado. as
-  respostas de sempre não olham esse teto: o contrato dos clientes de
-  hoje não muda.
+  segue exportado como `wire::MAX_LINE`; o `Traffic` foi para um módulo
+  próprio (`traffic.rs`), o `server.rs` fica com o protocolo.
+- o port (`port.rs`, 623 linhas de produção): `offer_scene`, `watching`,
+  `share_scenes` e `take_scene_watches` no fio do app, sem esperar
+  socket; cada conexão conta os bytes na fila, e um watch que passa de
+  `SCENE_QUEUE` (16 MiB) é cortado. as respostas de sempre não olham esse
+  teto: o contrato dos clientes de hoje não muda.
 - `SceneReader` junta as linhas do lado de quem assiste.
 - o showcase (`src/app/mirror.rs`, módulo novo; `app.rs` 603, `pace.rs`
-  e `access.rs` com uma chamada cada): com o port ligado, o shell escreve
-  o frame de uma janela (`main`, ou `page` para a janela própria da
-  página) só se alguém assiste, depois de cada frame desenhado nela e
-  depois de cada drain do port, então um watch que chega recebe o frame
-  que está na tela sem esperar o próximo.
+  e `access.rs` com uma chamada cada): com o port ligado e a cena
+  compartilhada, o shell escreve o frame de uma janela (`main`, ou `page`
+  para a janela própria da página) só se alguém assiste, depois de cada
+  frame desenhado nela e depois de cada drain do port, então um watch que
+  chega recebe o frame que está na tela sem esperar o próximo; e loga
+  quem começa e quem termina de assistir.
 
 ### o codec
 
@@ -395,12 +466,14 @@ contra a galeria):
   e sombra como nó), FNV-1a 64 como hash, e um patch contra o frame
   anterior (quantos nós do começo e do fim ficam, os do meio escritos)
   quando é menor. imagem e path viajam como asset com chave; cada asset
-  é montado uma vez enquanto frames seguidos o referenciam.
+  é montado uma vez enquanto frames seguidos o referenciam; a imagem de
+  fluxo, só como tamanho e lugar.
 - `Mirror` lê estrito (entrada cortada ou quebrada é `SceneError`, nunca
   pânico), confere o corpo pelo hash e o patch pelo que ele produz, solta
   o asset que o frame não referencia (a mesma regra do servidor, então os
   dois lados concordam sem dizer), e desenha num compositor próprio com as
-  mesmas layers, ordem e propriedades.
+  mesmas layers, ordem e propriedades; no lugar da imagem de fluxo, a
+  caixa.
 - o `SceneNode` não mudou; a `TextNodeKey` volta pelo literal, nunca por
   `TextNodeKey::new` (hot reload).
 
@@ -408,31 +481,37 @@ contra a galeria):
 
 `showcase::app::mirror::Viewer` (junta, aplica, desenha, e com `bindings`
 contorna e nomeia cada controle numa layer acima de todas) e
-`crates/showcase/examples/mirror` (headless por padrão, uma linha por
-frame com bytes, layers mandadas e o hash dos pixels; `--show` numa
-janela). rodado headless contra o app filho do teste: o hash do frame do
-exemplo foi o do app (`258ff798e84965ad` na primeira página,
-`26849f9186861eb2` no Todo sem ligações), e o png com ligações mostra o
-contorno e o nome de `todo`, `todo.input`, `todo.item[1..3]` e dos três
-filtros.
+`crates/showcase/examples/mirror` (diz `hello` como "mirror"; headless
+por padrão, uma linha por frame com bytes, layers mandadas e o hash dos
+pixels; `--show` numa janela). rodado headless contra o app filho do
+teste: o hash do frame do exemplo foi o do app (`258ff798e84965ad` na
+primeira página, `26849f9186861eb2` no Todo sem ligações), e o png com
+ligações mostra o contorno e o nome de `todo`, `todo.input`,
+`todo.item[1..3]` e dos três filtros.
 
 ### os testes e as páginas espelhadas
 
+- `engine`: 4 no `image.rs` (os 3 do acessor e o `is_stream`).
 - `rec`: 8 no `scene/tests.rs` (todo tipo de nó de volta, texto com toda
   a chave, delta de uma layer suja como patch, asset montado uma vez, o
   receptor soltando o que não desenha, recusas, entrada cortada e
-  virada byte a byte, o fluxo num slot) e `tests/scene.rs` (as 82 páginas
-  nos dois temas, nó por nó, sem GPU).
-- `wire`: 3 do base64 (os vetores da RFC, todo byte, o que não decodifica)
-  e 10 no `tests/scene.rs` (as formas fixadas, bytes quebrados recusados,
-  inteiro e depois só o que mudou, asset uma vez, partes abaixo do limite,
-  corpo grande como blob, um watch por conexão e o nome da janela, o
-  leitor recusando fora de ordem, pelo socket ao lado de um `observe` na
-  mesma conexão, e o watch que não lê cortado sem o app esperar nenhuma
-  oferta); o roundtrip do `codec.rs` ganhou as mensagens novas.
-- `showcase`: `app::mirror::tests` (o shell com janela nua oferece o
-  frame da janela principal ao watch depois do drain, nada num frame
-  igual, o patch do hover) e `tests/mirror.rs`:
+  virada byte a byte, e a imagem de fluxo: cinco frames viajam uma vez,
+  como a caixa, sem nenhum byte deles em asset ou corpo, sem mover a
+  layer) e `tests/scene.rs` (as 82 páginas nos dois temas, nó por nó,
+  sem GPU).
+- `wire`: 3 do base64, 12 no `tests/scene.rs` (as formas fixadas, bytes
+  quebrados recusados, inteiro e depois só o que mudou, asset uma vez,
+  partes abaixo do limite, corpo grande como blob, um watch por conexão
+  e o nome da janela, o leitor recusando fora de ordem, pelo socket ao
+  lado de um `observe`, o watch que não lê cortado sem o app esperar e
+  com o fim dito, a recusa `scene_not_shared` em processo e pelo socket,
+  o watch antes do `hello` recusado e depois dele dito ao app e ao host)
+  e 2 no `tests/env.rs` (`PLEV_MIRROR` lido de verdade num filho); o
+  roundtrip do `codec.rs` ganhou as mensagens novas e o erro novo.
+- `showcase`: `app::mirror::tests` (a linha do log; o shell com janela
+  nua e uma gravação oferece o frame da janela principal ao watch depois
+  do drain, nada num frame igual, o patch do hover, e a gravação guarda o
+  watch como observação do agente) e `tests/mirror.rs`:
   - em processo, dois compositores: as 82 páginas nos temas core e hoff
     (164 frames), uma view percorrendo a galeria e um visualizador
     seguindo por um `Server`, cada página um delta da anterior: os bytes
@@ -441,14 +520,17 @@ filtros.
     provam nada (o store é um só no processo).
   - entre dois processos, pelo socket: o binário do teste roda a si mesmo
     como o app (`app_child`: `ShowcaseView` desenhado por um
-    `WindowHost::headless`, o port aberto, as ofertas como o shell faz) e
-    o teste é o visualizador. hash igual no frame que estava na tela
-    quando o watch chegou (Theme), na Card/hoff (as duas imagens cruzaram
-    de um store para o outro), no Todo/core (e no hover, uma layer,
-    patch), no Effects/hoff (vidro) e no Capture/core com a câmera falsa
-    ligada (quatro frames de fluxo). porque essas: imagem, texto com
-    ligações e um delta, vidro, e fluxo. um frame redesenhado sem mudança
-    não manda nada (300 ms de silêncio no socket).
+    `WindowHost::headless`, o port aberto e a cena compartilhada, as
+    ofertas como o shell faz) e o teste é o visualizador, com `hello`.
+    hash igual no frame que estava na tela quando o watch chegou (Theme),
+    na Card/hoff (as duas imagens cruzaram de um store para o outro), no
+    Todo/core (e no hover, uma layer, patch), no Effects/hoff (vidro) e
+    no Capture/core com a câmera desligada. com a câmera falsa ligada:
+    nenhum byte dos frames do fake na saída do watch, os frames da câmera
+    não mandam nada (300 ms de silêncio cada), e o espelho difere do app
+    só dentro da caixa `capture.frame`. porque essas: imagem fixa, texto
+    com ligações e um delta, vidro, e fluxo. um frame redesenhado sem
+    mudança não manda nada.
   - as ligações por cima: o frame com elas só difere do do app perto dos
     controles, e o contorno aparece em todo controle ligado.
   - `band` (ignorado): a banda por página, abaixo.
@@ -480,40 +562,43 @@ pelo socket entre os dois processos, com o custo no fio do app (build de
 debug, os crates do workspace em opt-level 0):
 
 ```text
-Card / hoff, a página chega:       561 269 bytes em 19 linhas, oferecido em 9,5 ms
-Todo / core, a página chega:        48 225 bytes em 19 linhas, 2,4 ms
-Effects / hoff, a página chega:     57 462 bytes em 19 linhas, 2,2 ms
-Todo / core, um hover:                 318 bytes em 1 linha, 0,17 ms
-redesenho sem mudança:                   0 bytes, 0,09 a 0,14 ms
-Capture / core, frame da câmera:  1 229 410 bytes em 4 linhas, 19,4 ms
+Card / hoff, a página chega:          561 269 bytes em 19 linhas, oferecido em 9,2 ms
+Todo / core, a página chega:           48 225 bytes em 19 linhas, 2,1 ms
+Effects / hoff, a página chega:        57 462 bytes em 19 linhas, 2,5 ms
+Todo / core, um hover:                    318 bytes em 1 linha, 0,16 ms
+redesenho sem mudança:                      0 bytes, 0,09 a 0,14 ms
+Capture / core, a câmera liga:          1 433 bytes em 2 linhas (a caixa no lugar), 0,13 ms
+Capture / core, um frame da câmera:         0 bytes, 0,07 a 0,27 ms
 ```
 
-o frame da câmera custava 38 ms no fio do app com o primeiro base64; o
-commit `aef62a07` o reescreveu (um quad por vez, tabela na volta) e caiu
-para 19 ms. o que resta é o base64 de 921 600 bytes em opt-level 0; em
-release é da ordem de 1 ms (não medido). o próximo passo, se a câmera
-for assistida por muito tempo, é codificar as linhas no fio do escritor
-ou comprimir os pixels.
+antes da revisão o frame da câmera custava 1 229 410 bytes em 4 linhas e
+19 ms do fio do app (38 ms com o primeiro base64, que o `aef62a07`
+reescreveu); agora a câmera não cruza e não custa nada no fio. o base64
+mais rápido segue valendo para as imagens fixas (as duas da Card, 9 ms
+da oferta em debug).
 
 ### o gate e o regress
 
 - antes (base `8c4ad908`, `target/agents/gate-79a-before.txt`): verde,
   2 781 passados, 0 falhas, 20 ignorados.
-- depois (`target/agents/gate-79a.txt`): verde, 2 810 passados, 0
-  falhas, 24 ignorados. +29 testes: 3 do `image.rs`, 9 do `rec`, 13 do
-  `wire` e 4 do showcase; +4 ignorados: as duas medições da sonda, o
+- depois da primeira entrega (`target/agents/gate-79a.txt`): verde,
+  2 810 passados, 0 falhas, 24 ignorados.
+- depois da revisão de privacidade (`target/agents/gate-79a-privacy.txt`):
+  verde, 2 816 passados, 0 falhas, 24 ignorados. +35 testes sobre a base:
+  4 do `image.rs`, 9 do `rec`, 17 do `wire` (base64, `scene.rs`, `env.rs`)
+  e 5 do showcase; +4 ignorados: as duas medições da sonda, o
   `app_child` (o lado do app no teste de socket, rodado por ele) e o
   `band`. pernas urnaui e wasm rodaram. `df -h /`: 15 GB livres.
-- `regress check` (`target/agents/regress-79a.txt`): 163 baselines, 163
-  iguais.
-- linhas de produção dos arquivos tocados: `port.rs` 608, `server.rs`
-  618, `app.rs` 603, `image.rs` 587, `rec/scene/node.rs` 502, os outros
-  abaixo de 400; o guard de higiene verde.
+- `regress check` (`target/agents/regress-79a-privacy.txt`): 163
+  baselines, 163 iguais.
+- linhas de produção dos arquivos tocados: `server.rs` 627, `port.rs`
+  623, `image.rs` 604, `app.rs` 603, `rec/scene/node.rs` 502, os outros
+  abaixo de 430; o guard de higiene verde.
 
 ### a linha do ADR para o índice
 
 ```text
-| 2026-09-24 | [scene-travels-as-data](scene-travels-as-data.md) | proposed | task-79 fase 1: a cena de uma janela viaja pela conexão do agente como um pedido novo da v1 (`{"type":"scene","window":"main"}`, recusado como `bad_message` por um app de antes), frames como respostas ao mesmo id: o primeiro inteiro, depois só as layers com hash novo (o patch quando o watch tem a base), os assets que o watch não tem, head e bindings quando mudam, nada num frame igual; linhas JSON com base64, asset e corpo grande em `scene_blob` de até 384 KiB, toda linha abaixo do `MAX_LINE`; o app nunca espera, watch com mais de 16 MiB na fila é cortado; codec próprio por layer suja no `rec` (todo nó como é, `f32` em bits, texto como `TextNodeKey`, clip, vidro e sombra, que o monster não carrega), imagem uma vez por conteúdo com os pixels (`image_pixels`, só leitura, liberado no engine), fluxo num slot de fluxo no receptor; visualizador headless ou em janela com as ligações por cima; pixel igual nas 164 páginas em processo e pelo socket entre dois processos (Card, Todo, Effects, câmera falsa); local, só com o port ligado; fora do localhost só com pareamento, fase 2 é input como request semântica |
+| 2026-09-24 | [scene-travels-as-data](scene-travels-as-data.md) | proposed | task-79 fase 1: a cena de uma janela viaja pela conexão do agente como um pedido novo da v1 (`{"type":"scene","window":"main"}` depois do `hello`, recusado como `bad_message` por um app de antes), só quando a pessoa que lança o app pede (`PLEV_MIRROR=1` além do `PLEV_AGENT=1`; sem isso, `scene_not_shared`, que diz como ligar); frames como respostas ao mesmo id: o primeiro inteiro, depois só as layers com hash novo (o patch quando o watch tem a base), os assets que o watch não tem, head e bindings quando mudam, nada num frame igual; linhas JSON com base64, asset e corpo grande em `scene_blob` de até 384 KiB, toda linha abaixo do `MAX_LINE`; o app nunca espera, watch com mais de 16 MiB na fila é cortado; codec próprio por layer suja no `rec` (todo nó como é, `f32` em bits, texto como `TextNodeKey`, clip, vidro e sombra, que o monster não carrega), imagem fixa uma vez por conteúdo com os pixels (`image_pixels`, só leitura, liberado no engine), imagem de fluxo nunca (a câmera vai como tamanho e lugar, o visualizador desenha uma caixa que diz que não espelha); o app loga quem assiste e a gravação guarda o watch como observação do agente; a lacuna da redação registrada (um campo que desenhasse um segredo chegaria a quem assiste; nenhum desenha, a fase 2 fecha antes de sair do localhost); visualizador headless ou em janela com as ligações por cima; pixel igual nas 164 páginas em processo e pelo socket entre dois processos (Card, Todo, Effects), a câmera diferindo só na caixa; local; fase 2 é input como request semântica |
 ```
 
 ### o roteiro para o brenner ver o espelho numa janela
@@ -521,13 +606,15 @@ ou comprimir os pixels.
 num checkout desta branch, dois terminais:
 
 ```text
-# 1. o app, com o port ligado (build de debug)
-PLEV_AGENT=1 cargo run -p showcase
+# 1. o app, com o port ligado e a cena compartilhada (build de debug)
+PLEV_AGENT=1 PLEV_MIRROR=1 cargo run -p showcase
 
 # 2. o espelho numa janela, a janela principal do app, com as ligações
 cargo run -p showcase --example mirror -- --show
 ```
 
+- o app loga `scene: mirror watches main` quando o espelho começa, e
+  `scene: mirror no longer watches main` quando ele fecha.
 - `b` liga e desliga as ligações; Escape ou fechar a janela encerra o
   espelho (o app segue).
 - a janela própria da página: `D` no app abre, e
@@ -536,10 +623,12 @@ cargo run -p showcase --example mirror -- --show
   socket em `$TMPDIR/plev/`.
 - sem janela: `cargo run -p showcase --example mirror -- --frames 3 --png
   /tmp/espelho.png` imprime bytes e hash de três frames e grava o último.
-- o que olhar: navegue, passe o ponteiro, troque o tema (`T`), ligue a
-  câmera na página Capture; o espelho acompanha no frame seguinte. a
-  janela do espelho abre no tamanho lógico do app; se a escala da tela
-  for outra, o desenho é o mesmo em pixels lógicos.
+- sem o `PLEV_MIRROR=1` o espelho sai com a recusa:
+  `mirror: scene not shared: this app's person did not share its windows: ...`.
+- o que olhar: navegue, passe o ponteiro, troque o tema (`T`); na página
+  Capture, ligue a câmera: no espelho a caixa diz "live image, not
+  mirrored". a janela do espelho abre no tamanho lógico do app; se a
+  escala da tela for outra, o desenho é o mesmo em pixels lógicos.
 
 ### o que fica para a fase 2
 
@@ -547,10 +636,14 @@ cargo run -p showcase --example mirror -- --show
   visualizador acha o controle sob o clique pelas ligações que já recebe
   e manda um `act` sobre ele, apoiado numa observação, como qualquer
   agente; nunca evento cru nem coordenada.
+- a lacuna da redação: um nó que desenhe um segredo marcado, e viajando
+  mascarado, antes de qualquer coisa sair do localhost.
 - fora do localhost: pareamento explícito, transporte cifrado, nunca
   execução remota (o ADR decide que esta fase não sai).
-- o gravador guardar os pixels das imagens pelo mesmo acessor
+- o gravador guardar os pixels das imagens fixas pelo mesmo acessor
   (`rec/src/payload.rs`).
-- o custo da câmera no fio do app: codificar as linhas no fio do
-  escritor, ou comprimir.
+- um override para a câmera, se algum dia houver, é decisão da pessoa e
+  de um ADR, não desta fase.
+- o custo de uma imagem fixa grande no fio do app: codificar as linhas no
+  fio do escritor.
 - vídeo de pixels, multiusuário, iOS e android seguem fora.

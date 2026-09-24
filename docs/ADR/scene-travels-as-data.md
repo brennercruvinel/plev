@@ -43,6 +43,8 @@ file) measured the gallery, 82 pages in two themes at 1280x800:
 ### the channel: a request of protocol v1 on the agent's connection
 
 ```text
+-> {"v":1,"id":"1","type":"hello","name":"mirror"}
+<- {"v":1,"id":"1","type":"welcome","app":"showcase","actor":{"agent":{"name":"mirror"}}}
 -> {"v":1,"id":"9","type":"scene","window":"main"}
 <- {"v":1,"id":"9","type":"scene_blob","key":"8a1f...","at":0,"total":24012,"bytes":"AQAAAA..."}
 <- {"v":1,"id":"9","type":"scene","seq":1,"head":"AAAgRA...","layers":[{"key":0,"hash":"3c9e...","body":"..."},...],"bounds":[...]}
@@ -52,9 +54,11 @@ file) measured the gallery, 82 pages in two themes at 1280x800:
 - `scene` watches one window (`main` by default; the showcase also
   offers `page`, the page's own window). its frames come as replies to
   that id for as long as the connection lasts; one watch per
-  connection. an app of before refuses it as `bad_message`, which is how
-  a client learns there is no scene there. `plev observe`, `plev act`
-  and `--ask` are untouched: no client of before sends it or gets its
+  connection, after `hello`. an app of before refuses it as
+  `bad_message`, which is how a client learns there is no scene there;
+  an app whose person did not share its scenes refuses it as
+  `scene_not_shared` (see privacy). `plev observe`, `plev act` and
+  `--ask` are untouched: no client of before sends it or gets its
   replies.
 - the transport does not read a frame (`wire::scene`). the app offers
   each frame it draws (`AgentPort::offer_scene`): per layer a key (the
@@ -88,8 +92,9 @@ keeps assets once per content, and tests against the gallery):
   effects) and every node as it is: a tag and its fields, an `f32` as
   its bits, a text as its `TextNodeKey` (the string and the typography)
   and its place, a clip, a blur and a shadow like any other node. an
-  image is named by an asset key (its handle: one per content, or per
-  frame of a stream), a path by one (its engine hash and sizes). the hash
+  image is named by an asset key (a fixed image's handle, one per
+  content; a stream image's place and size, the same for all its
+  frames), a path by one (its engine hash and sizes). the hash
   is FNV-1a 64 of the body; the layers go in composite order.
 - a patch is the layer against the frame before's: how many nodes of the
   start and of the end stay, and the nodes between. the sender writes it
@@ -109,27 +114,37 @@ keeps assets once per content, and tests against the gallery):
 
 - travels: every node of every layer, bit for bit; each layer's
   properties; the head (logical size, scale, clear in linear space);
-  each image's pixels, once per content while frames reference it; each
-  path's geometry, the same way; where each bound control shows (its
-  `SemId` and visible rect, the form an observation's `bounds` has).
-- does not travel: the glyphs (a text is shaped and rasterized on the
-  other side with the same embedded fonts: the frame is equal because
-  the engine is the same); the fonts; anything of the app's state or
-  semantics beyond the bindings (the snapshot is `observe`'s); input
-  (phase 2).
+  each fixed image's pixels, once per content while frames reference
+  it; each path's geometry, the same way; a stream image's size and
+  place; where each bound control shows (its `SemId` and visible rect,
+  the form an observation's `bounds` has).
+- does not travel: a stream image's pixels (a camera's frames), ever;
+  the glyphs (a text is shaped and rasterized on the other side with the
+  same embedded fonts: the frame is equal because the engine is the
+  same); the fonts; anything of the app's state or semantics beyond the
+  bindings (the snapshot is `observe`'s); input (phase 2).
 
 ### images
 
 `ImageStore::pixels(&handle)` and `image_pixels(&handle)` (task-79,
 `gpu/image.rs`) read the pixels the store's log keeps: a stream's latest
 frame through any of its handles, `None` for a handle of another size or
-of a placement no slot sits at. no field, no behavior and no memory was
-added. on the receiver a fixed image enters its store by
-`load_image_rgba`, once per content (the store's dedupe answers the same
-handle when it comes again); a second content at a placement the app's
-store gave before is a stream, and gets one stream slot there
-(`stream_image_rgba` once, `replace_image_rgba` per frame), so a camera
-never fills the viewer's grow-only atlas.
+of a placement no slot sits at. `ImageStore::is_stream(&handle)` and
+`image_is_stream(&handle)` tell a stream image (a slot `stream` made,
+whose pixels `replace` changes) from a fixed one. no field, no behavior
+and no memory was added.
+
+the sender asks, per image node, whether it is a stream. a fixed image
+travels with its pixels, once per content; on the receiver it enters
+the store by `load_image_rgba` (the store's dedupe answers the same
+handle when it comes again). a stream image travels as its size and
+place and nothing else (the asset's pixel flag is 2, its id is written
+0), under a key its frames share, so a new frame of a camera moves no
+layer and sends nothing; the receiver draws in its place a dark box
+with its edge and the words "live image, not mirrored"
+(`rec::scene::LIVE_LABEL`). the first version of this phase had the
+receiver keep a stream slot per camera (commit `7728da47`); with no
+stream pixels coming, it makes none.
 
 ### the viewer
 
@@ -140,24 +155,49 @@ task-59 bindings, the inspector's view). `examples/mirror` is the
 viewer: headless by default (a hash per frame), in a window with
 `--show`.
 
+### privacy
+
+every connection to the port is an agent (`Actor::Agent`, by its
+`hello`), and the semantic contract decides what an agent is shown: a
+snapshot keeps a secret's length only (`sem::redact`), and the capture
+ADR keeps a camera's frames and a microphone's samples from every agent.
+a scene carries everything the window draws, which the redaction never
+sees. so:
+
+- **the scene is shared apart, by the person.** the port alone does not
+  share it: the person who launches the app asks for it, `PLEV_MIRROR=1`
+  beside `PLEV_AGENT=1` (a debug build; `AgentPort::from_env` reads it),
+  or an app that opens its port itself calls `share_scenes`. unshared, a
+  `scene` request is refused with a code of its own, `scene_not_shared`,
+  whose reason says what the person does to share; everything else on
+  the connection goes on as before.
+- **a stream image never crosses.** a camera's frames (any stream image)
+  travel as their size and place only, with the scenes shared or not;
+  the viewer draws a box that says the live image is not mirrored. this
+  phase has no override.
+- **every watch has a name, and the app says it.** a watch comes after
+  `hello`. the app logs who begins and who ends watching which window
+  ("scene: claude watches main", "scene: claude no longer watches
+  main"); a watch that begins reaches the host as an observation of its
+  agent (`Host::observed`), so a recording keeps it.
+- **the redaction's gap is known.** a field that drew a secret would
+  reach whoever watches: the scene is pixels as data, and `sem::redact`
+  only governs the semantic channel. no comp draws a secret today (no
+  masked field exists yet); phase 2 closes this before anything leaves
+  localhost: a node that draws a secret is marked and travels masked.
+
 ### security
 
 - local only. the channel is the agent port: a unix socket `0600` in a
   private directory of this user (`$TMPDIR/plev`), off by default,
-  opened by `PLEV_AGENT=1` in a debug build or by an app that opts in.
+  opened by `PLEV_AGENT=1` in a debug build or by an app that opts in,
+  and the scene on it only with `PLEV_MIRROR=1` (privacy, above).
   nothing listens on a network interface; nothing leaves the machine.
-- a scene carries what the window draws, which may be the user's data,
-  to a process of the same user: the trust `observe` already has. it is
-  not redacted: `sem::redact` keeps a secret out of the semantic channel
-  (a snapshot keeps its length), but a scene is pixels as data, and a
-  field that draws its value draws it for the watcher too. the comps
-  draw no masked field today; one that holds a secret should draw it
-  masked, on screen and so on the wire.
 - leaving localhost is out of this phase. it needs explicit pairing (a
   person on both ends agreeing, a key per viewer), an encrypted
-  transport, and never remote execution: phase 2's input goes back as
-  semantic requests through the dispatcher, the same path an agent's act
-  takes, never as code.
+  transport, the redaction's gap closed, and never remote execution:
+  phase 2's input goes back as semantic requests through the
+  dispatcher, the same path an agent's act takes, never as code.
 
 ## measured
 
@@ -166,17 +206,19 @@ opt-level 0):
 
 - in process, every page in both themes (164 frames) and, over the
   socket between two processes, the first frame, Card (images), Todo (a
-  hover), Effects (glass) and Capture with the fake camera: the viewer's
-  frame has the app's frame hash.
+  hover), Effects (glass) and Capture: the viewer's frame has the app's
+  frame hash. with the fake camera on, none of its frames' bytes is in
+  the watch's output, and the viewer's frame differs from the app's only
+  inside the camera's box.
 - the band, a watch's bytes on the wire (`band`, ignored): the first
   frame 41 899 to 561 420 bytes (median 43 811; Card's two images are
   506 KB of it; the sidebar's icon paths, about 37 KB as base64, are most
   of a plain page's);
   one change 243 to 32 288 (median 347, over 100 frames; a hover's patch
-  318 bytes in one line); a frame with no change 0; a camera frame of
-  640x360, 1 229 410 bytes in 4 lines.
+  318 bytes in one line); a frame with no change 0; the camera turning
+  on, 1 433 bytes (the box in its place); a frame of the camera, 0.
 - on the app's thread, per offer: a hover 0.2 ms, a whole page 2 to 10
-  ms, a camera frame 19 ms (base64 of 921 600 bytes at opt-level 0).
+  ms, a frame of the camera 0.1 to 0.3 ms (nothing moves).
 
 ## reason
 
@@ -206,13 +248,11 @@ opt-level 0):
   here: `rec/src/payload.rs` writes an image asset with `has_pixels = 0`
   because a recorder could not read pixels from a handle; with
   `image_pixels` it can, and a replay would draw its images.
-- the base64 of a camera frame costs 19 ms of the app's thread in a
-  debug build (the port opens only there by default). encoding the lines
-  on the writer threads, or compressing the pixels, is the next step if
-  a camera is watched for long.
-- a stream frame written between two draws travels with the store's
-  newer pixels (the store keeps one frame per slot); its next frame draws
-  them anyway.
+- a mirror of a window that shows a camera is not pixel-equal there:
+  the box stands where the frames are, by design.
+- a large fixed image costs its base64 on the app's thread once per
+  watch (Card's two images, 9 ms of an offer in a debug build); encoding
+  the lines on the writer threads is the next step if that matters.
 
 ## phase 2
 
@@ -235,3 +275,6 @@ machine, comes with it.
   mirror.
 - a second copy of the image pixels for the channel: the store's log is
   the one copy, read through `image_pixels`.
+- a stream image's pixels on the wire, or a scene without the person's
+  `PLEV_MIRROR=1`: the port is an agent's door, and the contract decides
+  what an agent sees.
