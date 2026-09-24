@@ -120,7 +120,7 @@ ninguém além da pessoa.
 
 ```text
 Goal: task-83, o delta traz o nó que nasceu, e a recusa diz quem agiu
-Status: pronto para validação; uma decisão pedida (sessões gravadas antes, abaixo)
+Status: pronto para validação; a decisão pedida foi tomada (B) e está feita
 ```
 
 commits, na ordem:
@@ -138,7 +138,13 @@ commits, na ordem:
   relatório e o agente roteirizado o registra; teste de notice e do lab.
 - `5eefba5` a regra de stale no `plev --help` e no doc do `Act`; teste.
 - `d7f7c60` o ADR novo e a linha no ADR dos agentes.
-- o commit deste handoff (medição e handoff neste arquivo).
+- `dc8396f` medição e handoff neste arquivo.
+- `def57cf` rec: o leitor da sessão converte o `node_added` da forma
+  antiga num evento de snapshot; doc de `Kind::Changes`; teste da leitura
+  e teste ignorado que abre sessões por caminho (`REC_OPEN`).
+- `3687980` o ADR diz o que é verdade depois da conversão; comentário do
+  teste pinado.
+- o commit desta atualização do handoff.
 
 o que mudou em cada contrato:
 
@@ -146,7 +152,15 @@ o que mudou em cada contrato:
   snapshot `after` o tem, com `source`; forma
   `{"node_added": {<nó na forma enxuta>}}`. `Snapshot::diff` lista as
   mesmas mudanças na mesma ordem, e nada exatamente quando os snapshots
-  são iguais. a forma antiga (string) não lê mais.
+  são iguais. o `Change` não lê a forma antiga (string): sem o snapshot
+  não há nó.
+- rec, leitura de sessão (`read_event` em `crates/rec/src/persist.rs`):
+  uma linha que não lê como `Event` tem mais uma chance. num evento de
+  snapshot, cada `node_added` escrito como id vira o nó que o snapshot do
+  próprio evento tem para aquele id, como foi gravado. id que o snapshot
+  não tem é `FileError::Event` naquela linha; nenhum nó inventado. a
+  escrita só escreve a forma nova; o `MONS` continua na versão 0; nenhum
+  tipo público do rec mudou.
 - wire: o nó de um `node_added` passa pelo mesmo `serve` do snapshot
   (`state` cortado por `keys`, `source` só com `observe.source`).
   nenhum tipo público do wire mudou; docs de `Observe`, `DeltaReply` e
@@ -184,12 +198,26 @@ decisões minhas, locais:
 
 validação executada (com o ambiente do briefing):
 
-- `cargo test -p sem && cargo test -p wire && cargo test -p rec &&
-  cargo test -p ide`: verde.
-- `./script/gate`: verde. workspace 1995 passed, 0 failed, 7 ignored (a
-  main tinha 1985, 0, 6: dez testes novos e um ignorado novo, o de
-  medição). a perna do urnaui rodou também, porque existe um checkout
-  em `../urna` relativo ao worktree: 80 passed, 0 failed, 1 ignored.
+- `cargo test -p rec && cargo test -p sem && cargo test -p wire &&
+  cargo test -p ide`: verde, 323 passed, 0 failed, 2 ignored.
+- `./script/gate` na ponta da branch: verde. workspace 1996 passed, 0
+  failed, 8 ignored (a main tinha 1985, 0, 6: onze testes novos e dois
+  ignorados novos, o de medição do todo e o que abre sessões por
+  caminho). a perna do urnaui rodou também, porque existe um checkout em
+  `../urna` relativo ao worktree: 80 passed, 0 failed, 1 ignored.
+- uma rodada do gate falhou antes dessa, na perna do urnaui, sem relação
+  com o código: 25 erros "multiple different versions of crate `sem`"
+  compilando `comps`. o motivo: o `engine` tem `crate-type = ["cdylib",
+  "staticlib", "rlib"]`, e com cdylib o cargo escreve `libengine.rlib` sem
+  hash no nome. o workspace da raiz e o do urnaui compartilham esse
+  arquivo no mesmo target dir: quando a raiz recompila o `engine` depois
+  de uma rodada do urnaui, o urnaui acha o seu `engine` em dia, mas o
+  arquivo é o da raiz, ligado a outro `sem`. a mesma perna falhava
+  sozinha, de novo, até um `cargo clean -p engine` no mesmo target dir;
+  depois dele o gate inteiro passou. acontece desde que o `engine` passou
+  a depender do `sem` (task-59), num target dir usado pelas duas pernas.
+  fica para o orquestrador: não mexi em `script/gate` nem no
+  `crates/engine/Cargo.toml`.
 - o comando do laboratório de aceite: exit 0, com a recusa nomeando a
   pessoa (seção medição).
 
@@ -209,37 +237,40 @@ testes novos ou estendidos:
   `human_agent` com o texto novo do toast; o `lab` confere que `acted`
   nomeia o unstage da pessoa, request da intervenção.
 - showcase: `agent_port_new_row` (ignorado, medição).
+- rec: `a_node_added_by_id_alone_reads_as_the_node_its_snapshot_holds`
+  e `open_the_named_sessions` (ignorado, lê `REC_OPEN`), em
+  `crates/rec/tests/session/file.rs`.
 
-decisão pedida (formato de ambiguidade):
+decisão tomada pelo orquestrador: B. as sessões gravadas antes continuam
+abrindo. o `Kind::Snapshot { snapshot, changes }` guardava o diff do
+passo com `node_added` como id; o leitor da sessão, que tem o snapshot,
+põe no lugar o nó que o próprio snapshot tem (sem perda). a conversão não
+foi para o `sem`: a forma antiga não carrega o nó e o `sem` não tem o
+snapshot em mãos.
 
-```text
-problema: o briefing supôs que nenhum arquivo persistido guardava a forma
-  antiga do node_added. o Kind::Changes nunca guarda, mas o
-  Kind::Snapshot { snapshot, changes } guarda o diff que explica o passo,
-  com node_added quando um nó nasceu. sessão gravada antes desta task com
-  um nó adicionado na janela não abre mais: Session::open responde
-  FileError::Event naquela linha, tipado, sem panic. conferido nas
-  sessões do checkpoint a (target/agents/exp/a1 e a2, fora do git) e numa
-  do lab rodada na base.
-opções:
-  A. aceitar, como está (o briefing pede "não há leitura da forma
-     antiga"); o ADR diz o custo.
-  B. ler a forma antiga no rec (crates/rec/src/persist.rs, fora da minha
-     lista): ao ler um Kind::Snapshot, trocar {"node_added": "<id>"} pelo
-     nó que o snapshot do próprio evento tem. sem perda, porque o nó
-     adicionado num evento de snapshot é exatamente o nó do seu snapshot.
-     umas 30 linhas e um teste com uma linha antiga fixada.
-  C. subir a versão do MONS para 1, para a sessão antiga ser recusada
-     pela versão, com mensagem clara, sem leitura.
-impacto: A deixa as sessões do checkpoint a sem abrir no Session::open e
-  no inspector (task-64); os report.json continuam legíveis. B mantém a
-  regra da 57b ("a forma antiga continua lendo") e custa um shim no
-  leitor. C troca um erro de linha por um de versão e muda o formato.
-recomendação: B, se as sessões do checkpoint a servem de material para a
-  task-64; senão A. não fiz B porque o arquivo não é meu e o briefing
-  decidiu por A com a premissa errada.
-decisão necessária: A, B ou C.
-```
+aceite manual, `Session::open` pelo teste ignorado
+(`REC_OPEN=<caminhos separados por :> cargo test -p rec --test session
+open_the_named_sessions -- --ignored --nocapture`), nas sessões de
+`/Users/nn/Dev/hoff/plevdev/target/agents/`. todas abrem; antes da
+conversão as quatro primeiras davam `FileError::Event` (conferido em a1,
+a2 e numa do lab rodada na base):
+
+| sessão | eventos | `node_added` nos eventos de snapshot | receipts de `commit.submit` no fim |
+| --- | --- | --- | --- |
+| `exp/a1` | 61 (15 snapshot, 11 changes, 7 observed, 28 stage) | `stacks.commit[6eb55b7]` | request 6 de `agent:claude-a1`, completed, commit `6eb55b7`, os três arquivos |
+| `exp/a2` | 67 (17 snapshot, 8 changes, 7 observed, 34 stage, 1 input) | `notices[0]` (o toast da recusa), `stacks.commit[7c21633]` | request 7 de `agent:claude-a2` rejected stale (`src/session.rs` saiu de `changes:staged`, `acted` vazio: gravada antes); request 9 completed, commit `7c21633`, os três arquivos |
+| `lab-scripted` | 71 | `notices[0]`, `stacks.commit[117a78b]` | request 7 rejected stale; request 9 completed, `117a78b` |
+| `lab-plev` | 58 | `notices[0]`, `stacks.commit[60685b2]` | request 7 rejected stale; request 9 completed, `60685b2` |
+| `lab-control` | 46 | `stacks.commit[0222ec0]` | request 6 completed, `0222ec0` |
+| `lab-control2` | 46 | `stacks.commit[9f33318]` | request 6 completed, `9f33318` |
+
+o teste `a_node_added_by_id_alone_reads_as_the_node_its_snapshot_holds`
+(`crates/rec/tests/session/file.rs`) escreve a seção S de uma sessão
+gravada na forma antiga, com o índice e os sha256 refeitos, e confere:
+abre, e os eventos são iguais aos da janela em memória (o nó do
+snapshot, com `source`); gravada de novo, só a forma nova sai; o mesmo
+arquivo com um id que o snapshot não tem dá `FileError::Event` na linha
+2, com o id na mensagem.
 
 limites conhecidos (também no ADR e no doc de `Acted`):
 
@@ -255,30 +286,34 @@ limites conhecidos (também no ADR e no doc de `Acted`):
 - o `NodeAdded` continua obrigando o recorder a gravar o snapshot
   inteiro (a posição entre irmãos não vem no `Change`), e o evento de
   snapshot agora repete o nó adicionado no seu `changes`.
+- o leitor da sessão carrega uma conversão da forma antiga, tentada só
+  numa linha que não lê como está. `node_added` como id fora de um evento
+  de snapshot (num `Kind::Changes`, que o recorder nunca escreveu)
+  continua sendo o erro de hoje.
 
 o que ficou de fora, e por quê:
 
-- `crates/rec/src/event.rs`: o doc de `Kind::Changes` ainda diz que um
-  `Change` "does not carry the new node or the new order"; a primeira
-  metade não vale mais. uma linha, fora dos meus arquivos.
-- `docs/ADR/session-recording-replay-not-reexecution.md` diz o mesmo
-  ("a `Change` carries neither the new node nor the new order") e
+- `docs/ADR/session-recording-replay-not-reexecution.md` diz que "a
+  `Change` carries neither the new node nor the new order" e
   `docs/ADR/lean-semantic-form-and-one-redaction.md` diz que "a `delta`
-  never carried `source`". o ADR novo corrige os dois; uma nota em cima
-  de cada um fica para o close-out.
-- `crates/ide/src/bin/lab/lab.rs` já tinha 728 linhas na main (acima das
-  639) e foi a 733; a formatação de `acted` foi para `story.rs` para não
-  crescer mais.
+  never carried `source`". o ADR novo corrige os dois; a nota em cima
+  de cada um fica com o orquestrador no fechamento.
+- dívida registrada, fora deste escopo: `crates/ide/src/bin/lab/lab.rs`
+  já tinha 728 linhas na main (acima das 639) e foi a 733; a formatação
+  de `acted` foi para `story.rs` para não crescer mais.
 - `docs/arc/arc.toml` (papel do `sem`): cabe dizer que um `node_added`
   carrega o nó e que o dispatcher nomeia em `acted` quem agiu sobre o
   estado visto. `docs/how-to/code-against-the-plev-engine.md` (seção do
-  contrato semântico) pode ganhar a mesma frase. os dois são do
-  close-out.
+  contrato semântico) pode ganhar a mesma frase. os dois ficam com o
+  orquestrador no fechamento.
 - fora do escopo pelo arquivo da task: aplicar `NodeAdded` no recorder
   sem snapshot inteiro, `files` no nó do commit (task-85), a corrida do
   `Refresh` (task-84), eco do `set_value`.
 
-riscos de integração: quem casar `Rejection::Stale { changes }` numa
+riscos de integração: o gate num target dir compartilhado pelas duas
+pernas pode falhar na do urnaui depois de uma recompilação do `engine`
+pela raiz (acima); `cargo clean -p engine` resolve. quem casar
+`Rejection::Stale { changes }` numa
 branch aberta precisa de `..` (a task-84 mexe no ide; os arquivos dela,
 `session.rs`, `views/` e `crates/git`, não foram tocados aqui). a task-85
 põe `files` no nó do commit, que passa a viajar dentro do `node_added`
@@ -287,5 +322,5 @@ sem mais nada.
 linha proposta para `docs/ADR/README.md`:
 
 ```text
-| 2026-09-23 | [a-delta-carries-the-node-a-refusal-names-who-acted](a-delta-carries-the-node-a-refusal-names-who-acted.md) | accepted | `Change::NodeAdded` carrega o nó como o snapshot `after` o tem, e o agent port o serve com o mesmo filtro de `keys` e `source` do snapshot (o delta que mostra o commit nascendo em `stacks`: 172 B mais uma observação de 402 B viram 427 B numa ida só); `Rejection::Stale` ganha `acted`, as ações de outros atores checadas na revisão que o autor viu e que rodaram, preenchido só pelo dispatcher; a regra de stale fica no `plev --help` e no doc do `Act`; protocolo continua v1, e sessão gravada antes com nó adicionado não abre mais (task-83) |
+| 2026-09-23 | [a-delta-carries-the-node-a-refusal-names-who-acted](a-delta-carries-the-node-a-refusal-names-who-acted.md) | accepted | `Change::NodeAdded` carrega o nó como o snapshot `after` o tem, e o agent port o serve com o mesmo filtro de `keys` e `source` do snapshot (o delta que mostra o commit nascendo em `stacks`: 172 B mais uma observação de 402 B viram 427 B numa ida só); `Rejection::Stale` ganha `acted`, as ações de outros atores checadas na revisão que o autor viu e que rodaram, preenchido só pelo dispatcher; a regra de stale fica no `plev --help` e no doc do `Act`; protocolo continua v1, e a sessão gravada antes continua abrindo: o leitor põe no lugar do id o nó que o snapshot do próprio evento tem, sem perda (task-83) |
 ```
