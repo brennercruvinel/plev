@@ -12,6 +12,20 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-76 itens 4, 5 e 8
+
+- **fora da janela, o macOS cobra o bundle:** menu de barra, diálogo e
+  tray funcionam num binário de `cargo run`; notificação do sistema
+  (`UNUserNotificationCenter`) e esquema de URL exigem um `.app` com
+  `CFBundleIdentifier`, senão o processo estoura. o engine responde
+  `NeedsBundle` e o bundle vira item do bring-up de plataforma. criar um
+  tray mostra o ícone na hora, então nenhum teste cria um real: o falso
+  é o único caminho de teste, como nos diálogos.
+- **o diálogo nativo bloqueia o laço:** o `act` de um agente pela porta
+  só volta quando a pessoa fecha o diálogo, por isso o modal desenhado
+  continua o padrão e o nativo é opção. fonte:
+  `task-76-platform-integration.md`, handoffs dos itens 4, 5 e 8.
+
 ### 2026-09-24, task-76 itens 2 e 3
 
 - **a segunda janela fechava a primeira:** no shell antigo do showcase,

@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [platform-integration, tray, notifications, tray-icon, muda, semantic-contract, dispatcher, agents, showcase, macos]
 date: 2026-09-24
 ---
