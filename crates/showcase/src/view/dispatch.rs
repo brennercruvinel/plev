@@ -4,6 +4,7 @@
 
 use comps::prelude::{EmptyState, EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::Compositor;
+use engine::input::FileDrop;
 use engine::theme::Theme;
 use sem::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot};
 
@@ -61,6 +62,7 @@ impl ShowcaseView {
                     .surface
                     .content_height(content, t, &self.panes.todo),
                 Pane::Silences => self.panes.silences.content_height(content, t),
+                Pane::Files => self.panes.files.content_height(content, t),
                 Pane::Dock => self.panes.dock.content_height(content),
                 Pane::Editor => self.panes.editor.content_height(content),
                 Pane::Git => self.panes.git.content_height(content),
@@ -154,11 +156,36 @@ impl ShowcaseView {
                         .silences
                         .handle_event(event, content, t, todo, inert)
                 }
+                Pane::Files => {
+                    let inert = self.overlay_holds_pointer();
+                    let todo = &mut self.panes.todo;
+                    self.panes
+                        .files
+                        .handle_event(event, content, t, todo, inert)
+                }
                 Pane::Dock => self.panes.dock.handle_event(event, content),
                 Pane::Editor => self.panes.editor.handle_event(event, content),
                 Pane::Git => self.panes.git.handle_event(event, content),
                 Pane::Builder => self.panes.builder.handle_event(event, content),
             },
+        }
+    }
+
+    /// The active page's share of a file drag over the window (the
+    /// engine's event, forwarded whole by the shell): the Files page
+    /// receives it; the other pages take no files.
+    pub(super) fn page_file_drop(&mut self, drop: &FileDrop) -> EventResult {
+        let content = self.page_rect();
+        let t = &self.theme;
+        match self.pane() {
+            Some(Pane::Files) => {
+                let inert = self.overlay_holds_pointer();
+                let todo = &mut self.panes.todo;
+                self.panes
+                    .files
+                    .handle_file_drop(drop, content, t, todo, inert)
+            }
+            _ => EventResult::IGNORED,
         }
     }
 
@@ -259,6 +286,11 @@ impl ShowcaseView {
                     self.panes.silences.set_inert(inert);
                     self.panes.silences.render(c, content, theme);
                 }
+                Pane::Files => {
+                    let inert = self.overlay_holds_pointer();
+                    self.panes.files.set_inert(inert);
+                    self.panes.files.render(c, content, theme);
+                }
                 Pane::Dock => self.panes.dock.render(c, content, theme),
                 Pane::Editor => self.panes.editor.render(c, content),
                 Pane::Git => self.panes.git.render(c, content, theme),
@@ -268,13 +300,15 @@ impl ShowcaseView {
     }
 
     /// What the active page means, when it projects it (the todo page,
-    /// the surface over it, the silences): the snapshot assistive
-    /// technology is shown. A page without a projection has no tree yet.
+    /// the surface over it, the silences, the files): the snapshot
+    /// assistive technology is shown. A page without a projection has no
+    /// tree yet.
     pub fn semantics(&self) -> Option<Snapshot> {
         let snapshot = match self.pane() {
             Some(Pane::Todo) => self.panes.todo.snapshot(),
             Some(Pane::Surface) => self.panes.surface.snapshot(&self.panes.todo),
             Some(Pane::Silences) => self.panes.silences.projection(),
+            Some(Pane::Files) => self.panes.files.snapshot(),
             _ => return None,
         };
         snapshot
@@ -304,6 +338,11 @@ impl ShowcaseView {
                 let inert = self.overlay_holds_pointer();
                 let todo = &mut self.panes.todo;
                 self.panes.silences.act(req, todo, inert)
+            }
+            Some(Pane::Files) => {
+                let inert = self.overlay_holds_pointer();
+                let todo = &mut self.panes.todo;
+                self.panes.files.act(req, todo, inert)
             }
             _ => None,
         }
@@ -343,6 +382,11 @@ impl ShowcaseView {
                 let inert = self.overlay_holds_pointer();
                 self.panes.silences.set_inert(inert);
                 self.panes.silences.focus(id)
+            }
+            Some(Pane::Files) => {
+                let inert = self.overlay_holds_pointer();
+                self.panes.files.set_inert(inert);
+                self.panes.files.focus(id)
             }
             _ => false,
         }

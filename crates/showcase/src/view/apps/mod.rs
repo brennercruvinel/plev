@@ -1,13 +1,15 @@
 //! The Apps Demo group: complete small apps and the embedded ones (the
 //! editor, the ide's git workspace), the template of the official app
 //! pattern, a surface materialized from verified plev IR over the todo's
-//! capabilities (the second pattern), and the silences app of the video
-//! editor scenario (the fixed screen of task-69 phase 4a).
+//! capabilities (the second pattern), the silences app of the video
+//! editor scenario (the fixed screen of task-69 phase 4a), and the files
+//! page, the file dialog and the file drop as capabilities (task-76).
 
 pub mod app;
 pub mod builder;
 pub mod dock;
 pub mod editor;
+pub mod files;
 pub mod git;
 pub mod silences;
 pub mod surface_page;
