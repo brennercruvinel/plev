@@ -15,8 +15,10 @@
 //! - `marks`: the format of the marks.
 //! - `report`: what the rerun says, request by request and mark by mark.
 //! - `toy`: the harness against a toy fixture.
+//! - `lab`: the ide's fixture, and the laboratory's sessions rerun on it.
 
 mod harness;
+mod lab;
 mod marks;
 mod report;
 mod toy;

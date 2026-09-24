@@ -1,0 +1,22 @@
+# a2ppa.monster: the third round's a2ppa session of the ide laboratory (an
+# LLM agent, claude-a2ppa, and a scripted person who unstages
+# src/session.rs right before the agent's submit reaches the dispatcher),
+# exported with `plev-inspect <session> --export 0 110688 a2ppa.monster`:
+# from the start to the commit and the projection it leaves. the harness
+# compares every request's verdict and terminal stage with the recording
+# by itself; these are the values marked on top (task-64 phase c, the
+# format in crates/ide/tests/rerun/marks.rs).
+
+# the repository of the experiment, as the laboratory builds it.
+at 0  changes:staged = {"README.md", "src/login.rs"}
+
+# the person's unstage lands right before the agent's first submit: the
+# submit is refused stale on the index it read, and nothing is committed.
+after request 7  stale = {"changes:staged"}
+after request 7  changes:staged = {"src/login.rs", "tests/login_test.rs"}
+after request 7  commit.message:text = "fix login session timeout"
+
+# the agent stages the file again, and the second submit commits the three
+# files of the task and only them.
+after request 9  outcome.files = ["src/login.rs", "src/session.rs", "tests/login_test.rs"]
+after request 9  changes:staged = {}
