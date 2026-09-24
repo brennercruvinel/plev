@@ -14,6 +14,19 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicados #69 e #70; disparada a task-95
+
+- **publicados:** PR #69 (task-94 e a quarta rodada) e PR #70 (task-69
+  fase 3a e a quinta rodada), merge commit, com o gate local verde na
+  `main` (2454) e a regressão estrutural (157 sem mudança); o CI segue
+  fora por cobrança.
+- **disparada:** task-95 (P2, onda 6), o todo projeta os itens como
+  lista e o proponente gera o `repeat`. escolhida porque é o limite que a
+  fase 3a achou e o que o checkpoint b precisa para comparar a tela
+  gerada com a fixa pelo mesmo conteúdo; a superfície do todo ficou livre
+  com a integração da 69c. build dir da 69c reaproveitado; o da task-94
+  limpo (12,5 GB).
+
 ### ciclo 3: uma intenção vira superfície (task-69 fase 3a)
 
 - **integrada:** task-69 fase 3a (merge da `task/69c-proposers`). gate
