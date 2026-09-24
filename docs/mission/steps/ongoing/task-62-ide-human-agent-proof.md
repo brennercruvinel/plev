@@ -118,7 +118,7 @@ sessão gravada (63).
 | `commit.form` | Group | `open: Bool` | `open`, `cancel` |
 | `commit.message` | TextInput | `text: Text` | `set_value` (constraints `required`, `editable`) |
 | `commit.submit` | Button | `enabled` pelo form aberto, mensagem e staged não vazios | `submit` (reads `changes:staged`, `commit.message:text`) |
-| `stacks.commit[<sha>]` | ListItem | `summary: Text`, `author: Text` | `show_diff` |
+| `stacks.commit[<sha>]` | ListItem | `summary: Text`, `author: Text`, `files: List` (os caminhos que o commit muda contra o primeiro pai, na ordem do git; task-85) | `show_diff` |
 
 `selected_idx` pode aparecer como seleção da lista, nunca em `reads` de
 `submit`.

@@ -22,6 +22,8 @@ pub struct CommitEntry {
     pub message: String,
     pub author: String,
     pub time_ago: String,
+    /// The paths the commit changes, in git's order (`git::Commit::files`).
+    pub files: Vec<String>,
 }
 
 /// A branch/stack containing commits.

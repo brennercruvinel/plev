@@ -18,7 +18,8 @@
 //!   `changes:staged` and `commit.message:text`, and nothing else, so a
 //!   moved cursor or a new diff never makes a commit stale.
 //! - `stacks` (list): `branch`; `stacks.commit[<sha>]` (list item):
-//!   `summary`, `author`; `show_diff` reads `diff:target`.
+//!   `summary`, `author`, `files` (the paths the commit changes, in git's
+//!   order); `show_diff` reads `diff:target`.
 //! - `notices` (region): one `notices[<id>]` per toast on screen (status,
 //!   or alert for a refusal that names a change), named by its message,
 //!   with `dismiss` (the comps toast helper).
@@ -170,7 +171,8 @@ fn stacks(ws: &WorkspaceView, ids: &Ids, b: &mut SnapshotBuilder) {
         let mut node = b.node(ids.commit(&commit.sha), Role::ListItem, label);
         node.parent(&ids.stacks)
             .state("summary", commit.message.as_str())
-            .state("author", commit.author.as_str());
+            .state("author", commit.author.as_str())
+            .state("files", commit.files.clone());
         node.action("show_diff").reads(target.as_str());
     }
 }

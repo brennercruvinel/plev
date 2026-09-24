@@ -401,6 +401,18 @@ fn a_person_who_closes_the_modal_declines_and_the_next_request_is_asked() {
     );
 }
 
+#[test]
+fn every_commit_in_the_stacks_exposes_the_files_it_changes() {
+    let rig = Rig::new(&["A"], &[]);
+    let head = rig.head();
+    assert_eq!(
+        rig.value(&format!("stacks.commit[{head}]:files")),
+        Value::List(rig.head_files()),
+        "the log's files, as git lists them"
+    );
+    assert_eq!(rig.head_files(), ["README"]);
+}
+
 /// The frame a person would see: the workbench drawn and bound.
 fn frame(rig: &mut Rig) -> Compositor {
     let mut c = Compositor::new();

@@ -70,6 +70,7 @@ fn commit_entry(commit: &git::Commit, now: i64) -> CommitEntry {
         message: commit.message.clone(),
         author: commit.author.clone(),
         time_ago: time_ago(now, commit.time),
+        files: commit.files.clone(),
     }
 }
 
@@ -165,6 +166,7 @@ mod tests {
         assert!(stacks[0].is_active);
         assert_eq!(stacks[0].commits.len(), 1);
         assert_eq!(stacks[0].commits[0].message, "subject");
+        assert_eq!(stacks[0].commits[0].files, ["src/lib.rs"]);
         assert!(stacks[1].commits.is_empty());
     }
 

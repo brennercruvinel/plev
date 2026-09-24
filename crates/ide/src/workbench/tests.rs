@@ -79,6 +79,7 @@ fn bench() -> Workbench {
             message: "initial".into(),
             author: "Test".into(),
             time_ago: "now".into(),
+            files: vec!["README".into(), "src/main.rs".into()],
         }],
     }]);
     ws.branch_label = "main".into();
@@ -184,6 +185,15 @@ fn the_workbench_projects_the_workspace_model() {
     let commit = node(&format!("stacks.commit[{sha}]"));
     assert_eq!(commit.parent, Some(sid("stacks")));
     assert_eq!(commit.state.get("summary"), Some(&Value::from("initial")));
+    assert_eq!(
+        commit.state.get("files"),
+        Some(&Value::List(vec!["README".into(), "src/main.rs".into()])),
+        "the paths the commit changes, as a list in git's order"
+    );
+    assert_eq!(
+        reads(&snap, &format!("stacks.commit[{sha}]"), "show_diff"),
+        ["diff:target"]
+    );
     assert_eq!(value(&snap, "stacks:branch"), Value::from("main"));
 }
 
