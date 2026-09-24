@@ -20,7 +20,11 @@ task; aqui fica o que aconteceu e onde ler.
   laboratório com o `plev`: nome que nunca olhou sai `not_observed`; o
   cenário do A2 é recusado stale, com o arquivo que a pessoa tirou; o
   roteirizado deu MATCH com e sem a pessoa.
-- a 88 (laboratório) pode começar: a 89 não mexeu no roteirizado.
+- **disparada:** task-88 (o laboratório mede pelo valor que o request
+  carrega; a pessoa age também depois de um estágio; o relatório conta
+  `not_observed`; `lab.rs` dividido). o briefing pede a sonda antes de
+  implementar, pela regra nova. três agentes: 63d, 88 e 90.
+- **publicado:** PR #56 (task-89), com a CI rodando.
 
 ### ciclo 2: a task-90 parou com uma premissa errada do briefing
 
