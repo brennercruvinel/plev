@@ -14,6 +14,19 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #89 (task-77 fase 1b); disparada a task-79 fase 1
+
+- **publicado:** PR #89, merge commit, gate local verde na `main` (2781,
+  +9), regressão 163 sem mudança.
+- **disparado:** task-79 fase 1, cena por socket: a cena de uma janela
+  viaja pelo transporte da task-61 num canal próprio, por layer suja, e
+  um visualizador desenha os mesmos pixels com as ligações por cima. a
+  sonda decide se o canal cabe na versão 1 do protocolo (senão para) e
+  mede o codec do monster contra um próprio. socket unix, nada sai da
+  máquina. no Opus, um agente só.
+- **task-77:** a fase 2 (web, iOS, android) espera o brenner instalar as
+  ferramentas; o arquivo fica em `ongoing/`.
+
 ### ciclo 3: o blur segue a escala (task-77 fase 1b)
 
 - **integrada:** fase 1b (merge da `task/77b-blur-scale`). o vidro, o
