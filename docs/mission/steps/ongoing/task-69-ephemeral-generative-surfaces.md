@@ -2148,3 +2148,295 @@ trata esse nó como do app, o caso da tela fixa escrita em IR
 novos ficam sob o nó do app na projeção. se é isso que uma superfície
 gerada ao lado do app deve fazer, a 3b-ii decide. nenhuma das duas é
 deste crate; estão no handoff.
+
+### handoff da fase 3b-i (2026-09-24)
+
+goal: task-69 fase 3b-i, o Claude como modelo do proponente: um crate
+novo implementa `propose::Model` chamando o `claude -p` como processo, e
+um exemplo mostra uma intenção em texto virando um `VerifiedIr` sobre a
+projeção real do todo e do ide, pelo `propose::Llm` e pelo
+`propose_verified`.
+
+status: implementado. `cargo test -p claude-model -p propose` verdes,
+`./script/gate` verde com a perna urnaui, sobre a `main` @ ce9acee. a
+`main` andou para 9299f2d depois (só o journal); o rebase é do
+orquestrador.
+
+#### commits
+
+branch `task/69d-claude-model`, na ordem do briefing:
+
+- b771ead task-69d: a sonda da fase 3b-i no arquivo da task
+- 31ff396 task-69d: claude-model, the Claude behind propose::Model through claude -p
+- 524332f task-69d: the propose example, and the Claude run for real on the todo and the ide
+- e o commit do ADR e deste handoff
+
+#### a sonda
+
+acima ("sonda da fase 3b-i"). em uma linha: o prompt do `propose` para
+"only what is active and the add field" sobre o golden do todo, 17,7 KB,
+pelo `claude -p` sem ferramentas, sem sessão salva, sem MCP e sem as
+configurações do usuário, voltou só com o json e passou pelo
+`propose_verified` de primeira nas duas chamadas (40,1 s com o system
+prompt do Claude Code, 24,5 s com o do crate); o `claude` não usou
+ferramenta nem arquivo do repositório (`tools: []`, `num_turns: 1`,
+`permission_denials: []`); a terceira chamada mostrou que um orçamento
+estourado sai com exit 1 e o motivo no json da stdout. o `propose::prompt`
+não mudou. nenhuma condição de parada disparou.
+
+#### o crate
+
+`crates/claude-model` (pacote `claude-model`, lib `claude_model`).
+depende de `propose` (o trait) e de `serde_json` (o resultado do
+filho); nunca de `uir`, `sem`, engine, comps, showcase, ide ou de um
+cliente HTTP. `uir`, `sem` e `tempfile` só nos testes e no exemplo.
+
+o `serde_json` não estava na lista do briefing (`propose`, a std e
+`thiserror`). entrou porque a saída em json é o que separa resposta de
+erro: um orçamento estourado sai com exit 1, nada no stderr e o motivo no
+objeto da stdout; em texto, o erro e a resposta seriam o mesmo texto. o
+`propose` já depende dele, então nada novo compila. o `thiserror` não
+foi preciso: todo erro é o `ModelError` do `propose`.
+
+a API:
+
+- `ClaudeCli { program, model, timeout, budget_usd, dir }`, campos
+  públicos, e o registro das chamadas, privado. `ClaudeCli::new()` (e
+  `Default`): `PLEV_CLAUDE` ou `claude`, `sonnet`, 180 s, 0,5 USD, o
+  diretório temporário do sistema;
+- `impl propose::Model for ClaudeCli`: roda o programa uma vez por
+  `complete`;
+- `args()`: os argumentos exatos (os testes comparam com o que o
+  `claude` falso recebeu); `calls()`: cada chamada como `Call { took,
+  cost_usd, turns, reply: Result<usize, ModelError> }`; `spent_usd()`;
+- as constantes `PROGRAM`, `PROGRAM_ENV` (`PLEV_CLAUDE`), `MODEL`,
+  `TIMEOUT`, `BUDGET_USD`, `SYSTEM` e `SESSION_VARS`.
+
+três módulos, todos pequenos: `lib.rs` (a configuração, os argumentos, o
+`Model`, 263 linhas com os testes), `run.rs` (o processo: stdin numa
+thread, stdout e stderr em threads, o prazo, o kill; 129) e `reply.rs`
+(o json do resultado virando resposta ou `ModelError`; 177 com os
+testes).
+
+#### as flags do `claude` e o motivo de cada uma
+
+| flag | por quê |
+| --- | --- |
+| `-p` | uma resposta e o processo sai; o prompt vem da stdin, sem argumento posicional |
+| `--output-format json` | um objeto só: `result`, ou `is_error` com `subtype` e `errors`, mais `total_cost_usd` e `num_turns`. é o que separa resposta de erro (a sonda: orçamento estourado sai com exit 1 e o motivo na stdout) |
+| `--tools ""` | nenhuma ferramenta: o filho responde texto, não lê arquivo, não roda comando, e o turno é um só |
+| `--no-session-persistence` | nada salvo em disco para retomar |
+| `--setting-sources ""` | nenhum arquivo de configuração (usuário, projeto, local): sem hooks, sem permissões, sem a memória do usuário; o log da sonda diz "project memory is off" e 0 hooks |
+| `--strict-mcp-config` | só os servidores MCP do `--mcp-config`, que não é passado: nenhum (`mcp_servers: []`) |
+| `--disable-slash-commands` | nenhuma skill listada no prompt (`skills: []`) |
+| `--permission-prompts none` | o que pediria permissão é negado sozinho: nada espera uma pessoa |
+| `--system-prompt <SYSTEM>` | duas frases no lugar do system prompt do Claude Code, que fala de ferramentas, diretório e git que o filho não tem; uns 4.200 tokens de entrada a menos (11.150 para 6.983 na sonda) |
+| `--model <model>` | `sonnet` por padrão: a sonda verificou de primeira em 24 a 40 s; `opus` ou um nome completo pelo campo |
+| `--max-budget-usd <budget>` | 0,5 por padrão, umas dez vezes uma chamada do todo. teto de sessão: o filho confere depois do turno, não corta uma chamada no meio |
+
+e fora das flags: o filho roda em `dir` (o diretório temporário do
+sistema por padrão, nenhum projeto do app é lido dali) e sem as onze
+variáveis que uma sessão do Claude Code põe nos processos dela
+(`SESSION_VARS`: `CLAUDECODE`, `CLAUDE_CODE_ENTRYPOINT`,
+`CLAUDE_CODE_SESSION_ID`, `CLAUDE_CODE_CHILD_SESSION`,
+`CLAUDE_CODE_SESSION_ATTENDED`, `CLAUDE_CODE_MESSAGING_SOCKET`,
+`CLAUDE_CODE_MESSAGING_TOKEN`, `CLAUDE_CODE_EXECPATH`, `CLAUDE_PID`,
+`CLAUDE_EFFORT`, `AI_AGENT`). um app rodado de dentro de uma sessão (como
+o exemplo, rodado por um agente) passaria essas variáveis ao filho, e o
+`CLAUDE_EFFORT=xhigh` desta sessão mudaria o esforço dele. o resto do
+ambiente passa (PATH, HOME, e o que o usuário configurou para o login).
+
+não usadas: `--bare` (lê só `ANTHROPIC_API_KEY`, nunca o login OAuth da
+conta), `--json-schema` (decodificação restrita pelo `uir::schema()`; não
+testada, porque o prompt já leva o schema e o verifier é quem decide, e
+fica como opção para a 3b-ii), `--safe-mode` (o `--setting-sources ""`
+com as outras flags já deixou tudo vazio na sonda), `--effort` (o padrão
+do modelo verificou de primeira).
+
+#### o tempo máximo
+
+180 s por chamada (`TIMEOUT`), o dobro da chamada mais lenta medida (89
+s, o workbench do ide, 5,6 KB de IR); as do todo levaram de 4,5 a 40 s.
+começou em 120 s (três vezes a sonda) e subiu depois da corrida do ide.
+uma proposta faz até três chamadas (`Llm::ATTEMPTS`), então espera no
+máximo 9 minutos; a página (3b-ii) não deve esperar isso sem mostrar e
+sem deixar cancelar.
+
+ao estourar, `Child::kill` (SIGKILL no pid do filho), `wait` para colher,
+e `ModelError("<programa> did not answer in 180 s: killed (pid N)")`; o
+`Llm` para na hora. o filho é consultado a cada 10 ms (`try_wait`).
+depois que ele sai, o fim da saída é esperado no máximo 1 s: um neto que
+segura o pipe não segura a chamada, e o que o filho escreveu fica (teste
+`a_grandchild_holding_the_pipes_does_not_hold_the_call`). o neto não é
+morto: só o pid do filho.
+
+#### as corridas reais
+
+a tabela e os IRs estão acima ("corridas reais do exemplo"). resumo:
+
+| app | intenção | as regras | tentativas | tempo |
+| --- | --- | --- | --- | --- |
+| todo | the add field and the counts in two columns | entendem | 1 | 4,5 s |
+| todo | a compact card with the input on top and the counts below | não entendem | 1 | 5,6 s |
+| todo | show the filter as chips and hide the counts | não entendem | 1 | 6,3 s (8,7 s de novo, com o exemplo final) |
+| ide | review what goes into the commit: each changed file with stage and unstage, then the message and the commit button | não entendem | 1 | 88,9 s |
+
+as quatro verificaram de primeira; nas do todo, os ids do que ficou são
+os da superfície compacta. o custo que o `claude` mostra: uns 0,034 USD
+por chamada no todo, 0,111 no ide, um terço com o prompt em cache.
+
+#### contagem do gate
+
+| | workspace | perna urnaui | total |
+| --- | --- | --- | --- |
+| antes, `main` @ ce9acee (`./script/gate` neste worktree, antes do primeiro código) | 2372 passam, 0 falhas, 13 ignorados | 82 passam, 0 falhas, 1 ignorado | 2454 |
+| depois, esta branch @ 524332f (`./script/gate`, saída 0) | 2385 passam, 0 falhas, 13 ignorados | 82 passam, 0 falhas, 1 ignorado | 2467 |
+
+13 testes novos, todos no `claude-model`: 6 unitários e 7 com o `claude`
+falso. a contagem não cai. clippy `-D warnings`, `cargo fmt --check` e o
+check wasm do showcase verdes, dentro do gate. `df -h /` antes do gate:
+14 GB livres.
+
+#### testes
+
+- `src/lib.rs` (2): os argumentos são os da sonda, cada flag uma vez,
+  as listas vazias como argumento vazio, o modelo e o orçamento dos
+  campos; os padrões;
+- `src/reply.rs` (4): um resultado é a resposta com o custo e os
+  turnos; um resultado de erro é o erro com o tipo e o motivo (o do
+  orçamento da sonda); um resultado só é resposta quando tudo diz que é
+  (exit 0, `is_error: false`, `result` presente); saída que não é
+  resultado vira um erro curto, numa linha;
+- `tests/cli.rs` (7), com `tests/fake-claude` (um script sh que responde
+  de arquivos no diretório que o `ClaudeCli` dá a ele, e guarda os
+  argumentos, o ambiente, cada prompt e o pid): uma resposta boa é uma
+  superfície verificada, e o filho recebeu exatamente `args()`, o prompt
+  inteiro pela stdin (17 KB, mais do que um pipe segura) e nenhuma das
+  variáveis da sessão (o gate rodou dentro de uma, então o teste
+  conferiu de verdade); uma resposta ruim é consertada pela segunda
+  chamada, que leva a resposta e os erros; um filho além do tempo morre
+  (o pid dele não existe mais) e a proposta para em 1 s, não em 30; um
+  neto que segura os pipes não segura a chamada; um programa que falha
+  é o erro na hora; um orçamento estourado é o erro com o custo; um
+  programa que não existe é o erro.
+
+nenhum teste chama o `claude` de verdade: todos apontam `program` para o
+script. os testes de processo são `#[cfg(unix)]`.
+
+#### validação executada
+
+- `cargo test -p claude-model -p propose`;
+- `cargo clippy -p claude-model --all-targets -- -D warnings`,
+  `cargo fmt -p claude-model --check`;
+- `cargo test -p engine --test arc_sync_guard`;
+- `./script/gate`, saída 0, com a perna urnaui;
+- o exemplo com o `claude` de verdade: as quatro corridas e a repetição
+  acima, e com `PLEV_CLAUDE=/nonexistent/claude` (erro "could not
+  start", exit 1) e `--app nope` (uso, exit 2).
+
+para reproduzir sem rede: `cargo test -p claude-model`. com rede, uma
+chamada: `cargo run -p claude-model --example propose -- --app todo
+"show the filter as chips and hide the counts"`.
+
+#### seção de ADR
+
+`docs/ADR/proposers-propose-the-runtime-verifies.md`, seção nova no fim,
+"addendum, 2026-09-24: the Claude as the model (task-69 phase 3b-i,
+proposed)": contexto (a decisão 13), decisão (o crate, o processo, cada
+flag com o motivo, o filho fora da sessão, o prazo, os erros, o prompt
+que não muda, os testes sem rede, o exemplo), custo (a sonda e as
+corridas), consequências (o que ele lê que as regras não leem, valores
+de agora em vez de listas, os ids tomados do app, o teto de orçamento, o
+que o `claude` escreve, o que a 3b-ii decide) e o que evitar.
+
+para o orquestrador (o `docs/ADR/README.md` é proibido aqui): no fim da
+linha do índice desse ADR, algo como "; addendum 3b-i (proposed): crate
+claude-model, `ClaudeCli` implementa `Model` pelo `claude -p` como
+processo (json, sem ferramentas, sem sessão salva, sem MCP, sem
+configurações, system prompt próprio, fora da sessão do Claude Code,
+180 s e kill pelo pid), testes com um `claude` falso".
+
+#### decisões
+
+- saída em json e `serde_json`. contexto: a sonda mostrou que um erro
+  sai com exit 1 e o motivo na stdout. decisão: ler o objeto de
+  resultado. razão: só ele separa resposta de erro, e dá custo e turnos.
+  consequência: uma dependência a mais no crate (já compilada pelo
+  `propose`);
+- system prompt próprio. razão: o do Claude Code descreve ferramentas
+  que o filho não tem e o diretório e o git dele; tirar poupa 40% da
+  entrada. consequência: a instrução de responder só o json continua no
+  prompt do `propose`, e o do crate só diz que quem chama é um programa;
+- o filho fora da sessão do Claude Code (as onze variáveis) e num
+  diretório dele. razão: um agente roda o exemplo de dentro de uma
+  sessão, e o app também pode ser rodado assim;
+- `sonnet` por padrão, 180 s, 0,5 USD; tudo campo;
+- `PLEV_CLAUDE` só para o programa. os testes não usam a variável
+  (mudar o ambiente num teste é `unsafe` na edição 2024); apontam
+  `program` direto;
+- o registro das chamadas no `ClaudeCli` (tempo, custo, turnos), para
+  a página mostrar e o exemplo imprimir;
+- o `propose` não mudou em nada.
+
+#### limitações
+
+- síncrono: `complete` bloqueia a thread de quem chama de segundos a um
+  minuto e meio por tentativa. rodar fora da thread do app é da 3b-ii;
+- cancelar só pelo prazo: não há como matar o filho de fora antes dele;
+- o Claude lê valores de agora, não listas (os itens do todo, os
+  arquivos do ide), e responde diferente a cada chamada (as duas da
+  sonda diferem no gap e nos ids dos itens);
+- `SESSION_VARS` é a lista da versão 2.1.281; uma variável nova de uma
+  versão futura passa;
+- o custo mostrado é o de lista. as chamadas contam no plano do brenner,
+  o mesmo das sessões dos agentes (a sonda viu `rate_limit_event` com a
+  janela de cinco horas em 20%);
+- o `--max-budget-usd` não corta uma chamada; o prazo é que corta;
+- o `claude` escreve o próprio `~/.claude.json` e busca a lista de
+  conectores do claude.ai ao iniciar, como em qualquer uso;
+- um neto que segura um pipe continua vivo depois da chamada;
+- os testes de processo são só unix (o `claude` falso é um script sh).
+
+#### dependências pendentes e riscos de integração
+
+- para o orquestrador: a linha do índice de ADR (acima); o
+  `docs/CHANGELOG.md` (crate novo e o exemplo); no `docs/arc/arc.toml`,
+  a linha `claude-model = ["propose"]` em `[examples]` (só a entrada do
+  crate era permitida; o exemplo está citado nela); no `AGENTS.md`,
+  "## running", o comando do exemplo, se quiser;
+- rebase sobre a `main` @ 9299f2d (só o journal; sem conflito
+  esperado);
+- o exemplo chama o `claude` de verdade e custa uma chamada ou mais;
+  nada no gate o roda (é exemplo, compila no clippy, não executa);
+- o `tests/fake-claude` precisa do bit de execução (está como 100755 no
+  git).
+
+#### o que a 3b-ii (a página) precisa
+
+- rodar fora da thread do app: o `propose` da página responde
+  `Execution::Started` e termina com `Dispatcher::complete` ou `fail`
+  quando o Claude responde. o `ClaudeCli` é `Clone` e `Send` e pode ir
+  inteiro para um trabalhador; o `Ask` empresta, então o trabalhador
+  leva o snapshot, o registro e o `VerifiedIr` atual clonados e monta o
+  `Ask` lá dentro;
+- cancelar: hoje só o prazo mata o filho. um cancelamento de fora pede
+  uma mudança pequena no `run` (um sinal conferido a cada 10 ms, junto
+  do prazo), e é a forma de a página abandonar uma proposta;
+- o que a página mostra durante 5 a 90 s por tentativa, até três; o
+  `calls()` dá tempo e custo de cada uma;
+- qual proponente: as regras primeiro (0,16 ms) e o Claude quando elas
+  não entendem, ou só o Claude. as duas leem "only what is active"
+  diferente (o chip "Active" contra os itens não concluídos), então
+  "regras primeiro" muda o sentido de uma intenção que as duas leem.
+  decisão do orquestrador ou do brenner;
+- o prompt: pedir um `repeat` quando uma lista mostra cada membro (o
+  Claude desenrolou os itens e os arquivos), agora que a task-95 projeta
+  os itens do todo como lista; e se um id tomado de um nó do app cabe
+  numa superfície gerada ao lado dele. as duas mexem no `propose` e
+  pedem uma sonda nova;
+- continuidade: se uma proposta que troca o id de uma capacidade que
+  continua volta ao modelo como erro brando (nas corridas, o Claude
+  manteve todos);
+- custo e limites: cada proposta custa uma a três chamadas do plano do
+  brenner; o cache do prompt (uma hora) barateia a segunda proposta
+  sobre o mesmo app.
