@@ -32,13 +32,11 @@ pub struct Surface {
     widgets: BTreeMap<SemId, Widget>,
     shown: Snapshot,
     revision: Revision,
-    /// the rect of each node in the last frame drawn (what the person
-    /// saw, what a click is tested against); empty until one is drawn and
-    /// after the tree changed.
-    rects: Vec<Rect>,
-    /// the nodes drawn in the last frame (a closed dialog's subtree is
-    /// not).
-    drawn: Vec<bool>,
+    /// the rect each node was drawn at in the last frame, by its id: what
+    /// the person saw, what a click is tested against. a node not drawn
+    /// (not yet, or inside a closed dialog) has none; a node that left the
+    /// tree loses its own at once.
+    drawn: BTreeMap<SemId, Rect>,
     inert: bool,
     last: Option<Receipt>,
 }
@@ -53,8 +51,7 @@ impl Surface {
             widgets: BTreeMap::new(),
             shown: Snapshot::default(),
             revision: Snapshot::default().revision(),
-            rects: Vec::new(),
-            drawn: Vec::new(),
+            drawn: BTreeMap::new(),
             inert: false,
             last: None,
         };
@@ -121,12 +118,9 @@ impl Surface {
             widget.sync(node, app);
             widgets.insert(node.id.clone(), widget);
         }
-        if tree != self.tree {
-            // the geometry of the last frame no longer names these
-            // nodes: nothing is hit until the next frame is drawn.
-            self.rects.clear();
-            self.drawn.clear();
-        }
+        // a node that left is no longer where it was drawn; one that stays
+        // is, until the next frame draws it again.
+        self.drawn.retain(|id, _| widgets.contains_key(id));
         self.widgets = widgets;
         self.tree = tree;
         self.shown = app.clone();
@@ -166,8 +160,8 @@ impl Surface {
                 w.prepare(node, &self.shown, theme);
             }
         }
-        self.rects = self.lay_out(rect, theme);
-        self.drawn = vec![false; self.tree.len()];
+        let rects = self.lay_out(rect, theme);
+        self.drawn.clear();
         let mut open = Vec::new();
         let mut hidden = vec![false; self.tree.len()];
         for (at, node) in self.tree.iter().enumerate() {
@@ -180,7 +174,7 @@ impl Surface {
                 }
                 continue;
             }
-            let (Some(r), Some(w)) = (self.rects.get(at).copied(), self.widgets.get_mut(&node.id))
+            let (Some(r), Some(w)) = (rects.get(at).copied(), self.widgets.get_mut(&node.id))
             else {
                 continue;
             };
@@ -188,13 +182,11 @@ impl Surface {
             if w.is_open() {
                 open.push(at);
             }
-            if let Some(d) = self.drawn.get_mut(at) {
-                *d = true;
-            }
+            self.drawn.insert(node.id.clone(), r);
         }
         for at in open {
             let node = self.tree.get(at);
-            let r = self.rects.get(at).copied().unwrap_or_default();
+            let r = rects.get(at).copied().unwrap_or_default();
             if let Some(Widget::Select(s)) = node.and_then(|n| self.widgets.get(&n.id)) {
                 s.render_dropdown(c, LayerId::DEFAULT, r, theme);
             }
@@ -220,13 +212,13 @@ impl Surface {
         let mut result = EventResult::IGNORED;
         let mut asks = Vec::new();
         for (at, node) in self.tree.iter().enumerate() {
-            let visible = self.drawn.get(at).copied().unwrap_or(false);
-            if !visible || open.is_some_and(|o| o != at) {
+            if open.is_some_and(|o| o != at) {
                 continue;
             }
-            let (Some(rect), Some(w)) =
-                (self.rects.get(at).copied(), self.widgets.get_mut(&node.id))
-            else {
+            let (Some(rect), Some(w)) = (
+                self.drawn.get(&node.id).copied(),
+                self.widgets.get_mut(&node.id),
+            ) else {
                 continue;
             };
             let (r, fire) = w.handle(node, event, rect, theme);
