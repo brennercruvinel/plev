@@ -5,23 +5,30 @@
 //! adds its sink to that one dispatcher and matches acts by `RequestId`,
 //! so a second dispatcher would be unheard and would collide on ids).
 //!
-//! The semantic model: `silences` (region; `cuts`, the ids of the cuts in
-//! the order shown), `silences.video` (media: `file`, `duration`, `shown`),
-//! `silences.threshold` and `silences.min_duration` (sliders: `value`,
-//! `set_value`, `increment`, `decrement`), `silences.detect` (button:
+//! The semantic model: `silences` (region; `cuts`, the keys of the cuts in
+//! the order shown, as the todo lists its items: a `repeat` over it keys
+//! each instance by them), `silences.video` (media: `file`, `duration`,
+//! `shown`, and two frame refs, `original`, the frame of the original at
+//! the instant shown, and `result`, the frame of the result at that
+//! instant: inside an applied cut, the cut's end), `silences.threshold`
+//! and `silences.min_duration` (sliders: `value`, `set_value`,
+//! `increment`, `decrement`), `silences.detect` (button:
 //! `detect_silence`, reading the cuts and both values), `silences.cut[<id>]`
 //! for each cut (list item named by its range: `start`, `end`, `duration`,
-//! `decision`; `preview_segment` reading `silences.video:shown`,
-//! `apply_cut` and `reject_cut` reading `decision`, each disabled when it
-//! is the decision already), `silences.counts` (status: `total`,
-//! `applied`, `rejected`, `pending`, `cut_secs`), `silences.apply_all`
-//! (button: `apply_all` reading `silences.counts:pending`) and
-//! `silences.status` (`message`, `busy`).
+//! `range` as text, `decision`, and `frame`, the frame ref of its middle;
+//! `preview_segment` reading `silences.video:shown`, `apply_cut` and
+//! `reject_cut` reading `decision`, each disabled when it is the decision
+//! already), `silences.counts` (status: `total`, `applied`, `rejected`,
+//! `pending`, `cut_secs`), `silences.apply_all` (button: `apply_all`
+//! reading `silences.counts:pending`) and `silences.status` (`message`,
+//! `busy`). A frame ref is `<media id>@<seconds>` (`jobs::frame_ref`):
+//! what a generated surface's `image` binds as its `source`.
 //!
 //! `detect_silence`, and a `preview_segment` whose frame is not decoded
-//! yet, answer `Execution::Started` and keep the request open; `settle`,
-//! called from the page's wake, reads what the worker sent and ends them
-//! with `Dispatcher::complete` or `fail`, through the same lending.
+//! yet, answer `Execution::Started` and keep the request open; `settle`
+//! (`jobs.rs`), called from the page's wake, reads what the worker sent
+//! and ends them with `Dispatcher::complete` or `fail`, through the same
+//! lending.
 
 use comps::prelude::EventResult;
 use engine::perf::stages::{self, Stage};
@@ -29,9 +36,10 @@ use sem::{
     Actor, Execution, Operable, Receipt, Request, RequestId, Role, SemError, SemErrors, SemId,
     Semantics, Snapshot, SnapshotBuilder, Value,
 };
-use showcase::model::silences::{Decision, Settings, TEST_VIDEO, Video};
+use showcase::model::silences::{Decision, Settings, TEST_VIDEO};
 
-use super::worker::{Done, Job};
+use super::jobs::frame_ref;
+use super::worker::Job;
 use super::{Said, SilencesPage};
 use crate::view::apps::app::TodoPage;
 
@@ -163,13 +171,13 @@ enum Op {
     ApplyAll,
 }
 
-fn count(n: usize) -> Value {
+pub(super) fn count(n: usize) -> Value {
     Value::Int(i64::try_from(n).unwrap_or(i64::MAX))
 }
 
 /// Seconds at ffmpeg's six decimals: a difference or a sum of the values
 /// it printed carries no binary noise into the projection.
-fn micros(secs: f64) -> f64 {
+pub(super) fn micros(secs: f64) -> f64 {
     (secs * 1e6).round() / 1e6
 }
 
@@ -199,7 +207,7 @@ impl Semantics for SilencesPage {
             .model
             .cuts()
             .iter()
-            .map(|c| ids.cut(c.id()).to_string())
+            .map(|c| c.id().to_string())
             .collect();
         b.node(&ids.region, Role::Region, "silences")
             .inert(self.inert)
@@ -213,7 +221,9 @@ impl Semantics for SilencesPage {
             .parent(&ids.region)
             .state("file", name.as_str())
             .state("duration", self.model.duration())
-            .state("shown", self.model.shown());
+            .state("shown", self.model.shown())
+            .state("original", frame_ref(&ids.video, self.model.shown()))
+            .state("result", frame_ref(&ids.video, self.result_instant()));
         self.threshold
             .project(b, &ids.threshold, "threshold (dB)", Some(&ids.region));
         self.min_duration.project(
@@ -237,12 +247,14 @@ impl Semantics for SilencesPage {
             let seg = cut.segment();
             let decision = cut.decision();
             let label = format!("{} to {}", clock(seg.start), clock(seg.end));
-            let mut node = b.node(&id, Role::ListItem, label);
+            let mut node = b.node(&id, Role::ListItem, label.as_str());
             node.parent(&ids.region)
                 .state("start", seg.start)
                 .state("end", seg.end)
                 .state("duration", micros(seg.duration()))
-                .state("decision", decision.name());
+                .state("range", label.as_str())
+                .state("decision", decision.name())
+                .state("frame", frame_ref(&ids.video, seg.middle()));
             node.action("preview_segment").reads(shown.as_str());
             let reads = format!("{id}:decision");
             node.action("apply_cut")
@@ -437,93 +449,6 @@ impl SilencesPage {
             EventResult {
                 handled: true,
                 ..EventResult::IGNORED
-            }
-        }
-    }
-
-    /// What the worker sent since the page last looked: a detection
-    /// replaces the cuts and ends its request; a frame goes into the cache,
-    /// ends the previews waiting for it and asks for the frames still
-    /// missing. True when what the page shows moved.
-    pub(super) fn settle(&mut self, todo: &mut TodoPage) -> bool {
-        let done = self.worker.poll();
-        let moved = !done.is_empty();
-        for d in done {
-            match d {
-                Done::Detected { with, result, took } => {
-                    let id = self.detecting.take();
-                    let ended = match result {
-                        Ok(detected) => {
-                            let video = Video {
-                                name: TEST_VIDEO.to_owned(),
-                                duration: detected.duration.unwrap_or(0.0),
-                            };
-                            self.model.set_detected(video, with, &detected.segments);
-                            let cuts = self.model.cuts().len();
-                            self.said = Said::Detected { took };
-                            self.want_frames();
-                            let mut outcome = sem::Outcome::default();
-                            outcome.result.insert("cuts".to_owned(), count(cuts));
-                            outcome
-                                .result
-                                .insert("seconds".to_owned(), Value::Num(took.as_secs_f64()));
-                            id.map(|id| {
-                                todo.with_dispatcher(|d, _, now| d.complete(id, outcome, now))
-                            })
-                        }
-                        Err(why) => {
-                            self.said = Said::Failed(why.clone());
-                            id.map(|id| todo.with_dispatcher(|d, _, now| d.fail(id, why, now)))
-                        }
-                    };
-                    if let Some(Err(e)) = ended {
-                        log::warn!("silences: the detection's request did not end: {e}");
-                    }
-                }
-                Done::Frame { ms, result, took } => {
-                    log::debug!("silences: the frame at {ms} ms took {took:?}");
-                    #[cfg(test)]
-                    self.frame_took.push(took);
-                    if let Err(why) = &result {
-                        self.said = Said::Failed(why.clone());
-                    }
-                    let (ready, rest): (Vec<_>, Vec<_>) =
-                        self.previews.drain(..).partition(|(_, at)| *at == ms);
-                    self.previews = rest;
-                    for (id, _) in ready {
-                        let ended = todo.with_dispatcher(|d, _, now| match &result {
-                            Ok(_) => {
-                                let mut outcome = sem::Outcome::default();
-                                outcome
-                                    .result
-                                    .insert("shown".to_owned(), Value::Num(ms as f64 / 1000.0));
-                                d.complete(id, outcome, now)
-                            }
-                            Err(why) => d.fail(id, why.clone(), now),
-                        });
-                        if let Err(e) = ended {
-                            log::warn!("silences: the preview's request did not end: {e}");
-                        }
-                    }
-                    let ok = result.is_ok();
-                    self.frames.insert(ms, result);
-                    if ok {
-                        self.want_frames();
-                    }
-                }
-            }
-        }
-        moved
-    }
-
-    /// The frames the screen shows and does not have yet: the instant
-    /// shown and the middle of each cut, one job each, in that order.
-    fn want_frames(&mut self) {
-        let mut wanted = vec![ms(self.model.shown())];
-        wanted.extend(self.model.cuts().iter().map(|c| ms(c.segment().middle())));
-        for at in wanted {
-            if !self.frames.contains_key(&at) {
-                self.worker.submit(Job::Frame { ms: at });
             }
         }
     }

@@ -154,12 +154,11 @@ fn the_page_projects_every_capability_reading_what_it_changes() {
     };
 
     assert_eq!(node("silences").role, Role::Region);
+    // the keys of the cuts, as the todo lists its items: a repeat keys
+    // each instance by them
     assert_eq!(
         node("silences").state.get("cuts"),
-        Some(&Value::List(vec![
-            "silences.cut[1]".into(),
-            "silences.cut[2]".into()
-        ]))
+        Some(&Value::List(vec!["1".into(), "2".into()]))
     );
     let video = node("silences.video");
     assert_eq!(video.role, Role::Media);
@@ -169,6 +168,15 @@ fn the_page_projects_every_capability_reading_what_it_changes() {
     );
     assert_eq!(video.state.get("duration"), Some(&Value::Num(12.0)));
     assert_eq!(video.state.get("shown"), Some(&Value::Num(0.0)));
+    // the frame refs: the media node and the instant in seconds
+    assert_eq!(
+        video.state.get("original"),
+        Some(&Value::from("silences.video@0"))
+    );
+    assert_eq!(
+        video.state.get("result"),
+        Some(&Value::from("silences.video@0"))
+    );
 
     for (id, v) in [
         ("silences.threshold", -30.0),
@@ -198,6 +206,11 @@ fn the_page_projects_every_capability_reading_what_it_changes() {
     assert_eq!(cut.label, "0:03.0 to 0:05.0");
     assert_eq!(cut.state.get("decision"), text("pending").as_ref());
     assert_eq!(cut.state.get("start"), Some(&Value::Num(3.018594)));
+    assert_eq!(cut.state.get("range"), text("0:03.0 to 0:05.0").as_ref());
+    assert_eq!(
+        cut.state.get("frame"),
+        text("silences.video@4.017052").as_ref()
+    );
     assert_eq!(
         actions("silences.cut[1]"),
         [
@@ -271,6 +284,27 @@ fn apply_by_click_and_reject_by_request_reach_the_same_state() {
     assert!(matches!(stage, Stage::Completed(_)), "{stage:?}");
     assert_eq!(decisions(&page), [Decision::Apply, Decision::Reject]);
     assert_eq!(value(&page, "silences.cut[1]:decision"), text("apply"));
+    // the result's frame ref: shown at 0, outside every cut, the same
+    // instant as the original's; inside the applied cut, its end
+    assert_eq!(
+        value(&page, "silences.video:result"),
+        text("silences.video@0")
+    );
+    ask_as_test(
+        &mut page,
+        &mut todo,
+        "silences.cut[1]",
+        "preview_segment",
+        None,
+    );
+    assert_eq!(
+        value(&page, "silences.video:original"),
+        text("silences.video@4.017052")
+    );
+    assert_eq!(
+        value(&page, "silences.video:result"),
+        text("silences.video@5.01551")
+    );
     assert_eq!(value(&page, "silences.cut[2]:decision"), text("reject"));
     assert_eq!(value(&page, "silences.counts:applied"), Some(Value::Int(1)));
     assert_eq!(

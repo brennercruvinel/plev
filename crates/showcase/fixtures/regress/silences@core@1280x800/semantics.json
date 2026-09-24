@@ -8,8 +8,8 @@
         "cuts": {
           "kind": "list",
           "value": [
-            "silences.cut[1]",
-            "silences.cut[2]"
+            "1",
+            "2"
           ]
         }
       }
@@ -31,6 +31,14 @@
         "shown": {
           "kind": "num",
           "value": 0.0
+        },
+        "original": {
+          "kind": "text",
+          "value": "silences.video@0"
+        },
+        "result": {
+          "kind": "text",
+          "value": "silences.video@0"
         }
       }
     },
@@ -159,9 +167,17 @@
           "kind": "num",
           "value": 1.996916
         },
+        "range": {
+          "kind": "text",
+          "value": "0:03.0 to 0:05.0"
+        },
         "decision": {
           "kind": "text",
           "value": "pending"
+        },
+        "frame": {
+          "kind": "text",
+          "value": "silences.video@4.017052"
         }
       },
       "actions": [
@@ -203,9 +219,17 @@
           "kind": "num",
           "value": 1.996916
         },
+        "range": {
+          "kind": "text",
+          "value": "0:08.0 to 0:10.0"
+        },
         "decision": {
           "kind": "text",
           "value": "pending"
+        },
+        "frame": {
+          "kind": "text",
+          "value": "silences.video@9.009342"
         }
       },
       "actions": [

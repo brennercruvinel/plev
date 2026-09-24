@@ -27,6 +27,7 @@
 //! sliders through `handle_edit_key`, Escape through `handle_escape`.
 
 mod draw;
+mod jobs;
 mod layout;
 mod semantics;
 #[cfg(test)]
