@@ -23,6 +23,7 @@ members = [
     "crates/rope",
     "crates/sem",
     "crates/showcase",
+    "crates/uir",
     "crates/wire",
 ]
 exclude = ["crates/urnaui"]
