@@ -197,31 +197,17 @@ literal pela fase b quando ele existe no código (os três itens do seed
 existem). decisão: seguir com o site de projeção, sem `#[track_caller]`
 no render.
 
-### parada: disco abaixo de 8 GB antes do gate
+### disco antes do gate
 
-```text
-problema     antes do gate, df mostrou 7,81 GiB livres (7,76 no fim), abaixo
-             dos 8 GB do briefing. três agentes compilam ao mesmo tempo
-             (target/agents/task-65 17 GB, task-63d 15 GB, task-88 13 GB).
-             o target desta task cresceu uns 2 GB porque a feature nova do
-             proc-macro2 recompila o engine e quem depende dele (dev, test,
-             clippy). trash não libera espaço (vai para a lixeira do mesmo
-             volume) e rm -rf está proibido, então não liberei nada.
-opções       1. esvaziar a lixeira ou limpar um target de outro agente que já
-                terminou, e rodar o gate daqui;
-             2. autorizar `cargo clean --release` neste target (260 MB, só o
-                check de release) e rodar o gate no limite;
-             3. o orquestrador roda o gate e o check de release na validação,
-                que já faz de qualquer forma.
-impacto      1 e 3 não mexem em nada desta branch; 2 ganha pouco e o gate
-             ainda consome disco (a perna urnaui recompila o engine no
-             próprio subdiretório).
-recomendação 3, ou 1 se a próxima rodada precisar do gate verde aqui.
-decisão      quem roda o gate, e se algum espaço pode ser liberado.
-```
-
-o código, os testes, o ADR e este handoff estão commitados; faltam só o
-gate e as conferências abaixo marcadas como "não rodado".
+na primeira conferência, depois do código, df mostrou 7,81 GiB livres,
+abaixo dos 8 GB do briefing (três agentes compilando; o target desta task
+cresceu uns 2 GB porque a feature nova do proc-macro2 recompila o engine
+e quem depende dele). parei, commitei o ADR e o handoff e não liberei
+nada (trash não libera espaço no mesmo volume; rm -rf proibido). minutos
+depois havia 9,94 GiB livres, sem nada feito por mim: rodei o gate. ele
+desceu a 6,1 GiB durante a perna urnaui e terminou verde. se o
+orquestrador preferir que a parada valha até a decisão dele, o gate
+desta rodada foi rodado acima do limite na hora da conferência.
 
 ### handoff
 
@@ -229,7 +215,7 @@ gate e as conferências abaixo marcadas como "não rodado".
 Goal: task-65, rodada 1 (fases a e b): em build de debug no desktop,
       cmd+clique num controle abre o código que projetou a capacidade, e
       num texto sem id abre o literal que o produziu
-Status: implementado e testado por crate; gate não rodado (disco, acima)
+Status: pronto para validação do orquestrador; gate verde
 
 Implementado:
 - engine, feature hot-reload: proc-macro2/span-locations. só o
@@ -330,19 +316,19 @@ Testes (21 novos):
   a_primary_click_on_nothing_opens_nothing,
   the_click_hands_the_editor_the_line_under_the_cursor
 
-Validação executada (CARGO_TARGET_DIR do briefing):
-- cargo test -p engine --lib hot_reload: verde (29 testes do módulo)
-- cargo test -p showcase: verde em b138ba7 (lib 142, bins e testes de
-  integração); depois, cargo test -p showcase --lib verde em 6e8e134 e os
-  testes novos de 228bb60 verdes
-- cargo clippy -p engine -p showcase --all-targets -- -D warnings e
-  cargo fmt --check -p engine -p showcase: limpos em 228bb60
-- RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown
-  -p showcase: verde em 6e8e134
-- cargo check --release -p showcase: verde em b138ba7
-- não rodado (disco): ./script/gate, cargo test -p engine inteiro, e o
-  check de release e o wasm depois de 6e8e134. contagem esperada:
-  2225 + 21 = 2246, não medida.
+Validação executada (CARGO_TARGET_DIR e as variáveis do briefing):
+- ./script/gate em 41d65d4: verde, com a perna urnaui (../urna presente
+  pelo link do worktree): test, clippy -D warnings, fmt, wasm32 com
+  RUSTFLAGS -D warnings, e urnaui (test, clippy, fmt, wasm).
+- contagem: 2246 testes passaram em todas as pernas somadas (2164 do
+  workspace e 82 do urnaui), 0 falhas, 12 ignorados; a main tinha 2225,
+  e os 21 novos são os listados acima.
+- cargo test -p engine e cargo test -p showcase estão dentro do cargo
+  test --workspace do gate.
+- cargo check --release -p showcase em 41d65d4: verde; só o showcase foi
+  rechecado, os arquivos novos do engine não entram no build de release.
+- durante o trabalho, por crate: cargo test -p engine --lib hot_reload,
+  cargo test -p showcase, clippy e fmt de engine e showcase.
 
 A prova na janela:
 - janela real: o showcase de debug, `PLEV_BACKGROUND=1 PLEV_AGENT=1
@@ -433,5 +419,6 @@ Commits:
 - 683354b task-65: the showcase window can come up without taking the focus
 - 228bb60 task-65: the view-source click proved through the function it calls, with the real opener
 - ec77e30 task-65: ADR view source for pixels (proposed)
-- (este) task-65: handoff of round 1
+- 41d65d4 task-65: handoff of round 1, stopped before the gate (disk under 8 GB)
+- (este) task-65: handoff, the gate green with the urnaui leg (2246 tests)
 ```
