@@ -14,6 +14,21 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-23
 
+### ciclo 2: a sonda da task-88 mudou o gatilho da pessoa
+
+- a 88 parou na sonda. três achados:
+  - com a regra da 89, o agente que encadeia é recusado pela própria
+    escrita antes de a pessoa contar;
+  - a medição por revisão dá falso válido quando o estado volta ao
+    mesmo hash;
+  - o gatilho proposto (a pessoa depois de um estágio terminal) quebraria
+    o cenário padrão do gate.
+- **decisão autônoma:** cenário novo `unstage-before-submit:<path>` (a
+  pessoa entre a decisão do agente e o submit chegar, como o hook do
+  braço `git`); o cenário antigo fica, comparável às rodadas 1 e 2; a
+  medição passa a ser pelo valor visto e pelo valor vivo. o próximo
+  experimento com LLM roda o cenário novo.
+
 ### ciclo 2: task-90 integrada
 
 - **integrada:** task-90 (`d02b4d1`), a recusa nomeia a cadeia desde o

@@ -12,6 +12,21 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-23, task-88 (sonda)
+
+- **com a regra da task-89, escrever e encadear exige olhar:** um agente
+  que escreve a mensagem (`set_value`) e submete encadeado na revisão do
+  estágio é recusado pela própria escrita. um estágio terminal não mostra
+  estado, e a mensagem em que ele se apoia vem da última observação, que
+  estava vazia. o `acted` sai vazio, porque ninguém mais agiu. é
+  conservador e está escrito no `plev act --help`. o próximo experimento
+  com LLM precisa medir quanto isso custa em idas e voltas.
+- **revisão é hash de conteúdo:** um estado que volta exatamente ao que
+  era tem a mesma revisão. a medição de stale do laboratório, que achava
+  o ato pela revisão, deu "válida" numa rodada em que a pessoa nunca
+  exerceu a checagem. medir pelo valor que o request carrega e pelo valor
+  vivo no dispatch, nunca pela revisão.
+
 ### 2026-09-23, task-89
 
 - **o furo fechou e ficou reproduzível:** no laboratório, olhar
@@ -246,6 +261,12 @@ c"; saídas em `target/agents/exp/`.
 ## processo
 
 ### 2026-09-23
+
+- **a sonda antes do briefing pagou na primeira vez:** o briefing da
+  88 marcou o diagnóstico como hipótese e pediu a sonda primeiro. ela
+  mostrou que o gatilho proposto para a pessoa quebraria o teste do gate
+  e que a medição proposta dava falso válido. nenhuma linha de correção
+  foi escrita em cima da premissa errada.
 
 - **limitação "lida no código, não rodada" não vira cenário de task sem
   sonda:** o handoff da 86 descreveu a limitação do `acted` lendo o
