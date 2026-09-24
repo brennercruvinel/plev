@@ -19,6 +19,10 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   em vez de "727 pixels diferentes". só o Todo e o ide projetam; nas
   outras páginas a regressão cai para layer e pixel. a cobertura
   semântica fina (task-59 e a auditoria) é o limite prático dela.
+- **o hash é estável fora desta máquina:** o primeiro job `structural
+  regression` no macOS do GitHub (PR #53) passou com as 157 baselines
+  gravadas aqui; o medo dos bits de `sin`/`cos` do sistema não se
+  confirmou nesse runner.
 - **o hash da cena pega mudança que o pixel não vê:** o Button no tema
   hoff mudou de hash com 0 pixels diferentes quando um token mudou. o
   check falha por isso e diz 0 px; se isso é ruído ou sinal, o uso vai
