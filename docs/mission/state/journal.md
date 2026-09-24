@@ -14,6 +14,15 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: a tela gerada mostra os itens (task-95)
+
+- **integrada:** task-95 (`460c854`). gate verde (2465, +11), regressão
+  estrutural 157 sem mudança (5 baselines do todo abençoadas só por
+  sentido, pixel igual). a tela gerada e a fixa mostram agora o mesmo
+  conteúdo, do mesmo estado: é o que o checkpoint b precisa. uma decisão
+  do orquestrador: remover pela tela gerada fica de fora (a regra 6 só
+  liga ação destrutiva por um dialog de confirmação).
+
 ### intervenção do brenner: voltar ao que ele mandou
 
 - o brenner apontou a deriva: as tasks 81 a 94, do orquestrador, poliram

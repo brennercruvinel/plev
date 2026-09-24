@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- the generated todo shows its items (2026-09-24, task-95): the todo
+  projects `todo:items`, the ids of the visible items in the order shown,
+  and each item's `text`. both forms of the Surface page repeat over that
+  list, one text and one "done" checkbox per item, and checking an item on
+  the generated surface runs the todo's `toggle` through its dispatcher.
+  the rules proposer understands "items" and finds the list by structure,
+  the same way in the todo and in the ide (`changes:files`). removal stays
+  on the fixed todo: a destructive action without confirmation can only
+  be bound through a dialog.
+
 - a surface proposed from an intent (2026-09-24, task-69 phase 3a): the
   new `propose` crate turns an intent in text, the app's capability
   registry, its snapshot and the surface it shows into a proposed plev IR,
