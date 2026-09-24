@@ -162,7 +162,7 @@ impl Lab {
         self.record();
         if self.args.arm == Arm::Scripted {
             let path = self.port.path().to_owned();
-            self.scripted = Some(std::thread::spawn(move || scripted::run(&path, "scripted")));
+            self.scripted = Some(scripted::spawn(path, self.args.script));
         }
         let ended_by = self.serve();
         self.finish(ended_by)

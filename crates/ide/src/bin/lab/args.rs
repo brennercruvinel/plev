@@ -7,6 +7,7 @@ pub const USAGE: &str = "\
 usage:
   ide-lab --arm plev|scripted|git|screenshot [--human none|unstage-after-observe:<path>]
           [--out <dir>] [--until commit|timeout] [--timeout <s>] [--grace <s>] [--app <name>]
+          [--scripted observe|chain]
 arms:
   plev        the workbench on the agent port, for an agent outside (plev observe / plev act)
   scripted    the same, driven by the laboratory's own agent over the wire (the control run)
@@ -17,7 +18,11 @@ the person of the script:
   unstage-after-observe:<path>      once the agent has every file of the task in the index and a
                                     message written, right after it is served an observation, the
                                     person takes <path> out of the index; the observation is stale
-defaults: --out ./ide-lab-out --until commit --timeout 600 --grace 1 --app ide
+the scripted agent (--arm scripted):
+  observe   observes the workspace right before each submit and submits on it (default)
+  chain     submits the first time on the revision the last stage carried, with no
+            observation before it; after a refusal it observes and decides again
+defaults: --out ./ide-lab-out --until commit --timeout 600 --grace 1 --app ide --scripted observe
 --until commit ends --grace seconds after the first commit completes (or at --timeout);
 --until timeout runs the whole --timeout.
 exit: 0 the commit matches the task (and the session matches git); 1 a commit exists and
@@ -67,6 +72,26 @@ impl Human {
     }
 }
 
+/// how the scripted agent comes to its first submit.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Script {
+    /// observes the workspace right before the submit and submits on it.
+    Observe,
+    /// submits on the revision the last stage carried, with no
+    /// observation before it (task-87); after a refusal it observes and
+    /// decides again, as `Observe` does.
+    Chain,
+}
+
+impl Script {
+    pub fn name(self) -> &'static str {
+        match self {
+            Script::Observe => "observe",
+            Script::Chain => "chain",
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Until {
     Commit,
@@ -84,6 +109,7 @@ pub struct Args {
     /// the late stages and a last observation.
     pub grace: Duration,
     pub app: String,
+    pub script: Script,
 }
 
 pub fn parse(args: &[String]) -> Result<Args, String> {
@@ -94,6 +120,7 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
     let mut timeout = Duration::from_secs(600);
     let mut grace = Duration::from_secs(1);
     let mut app = "ide".to_owned();
+    let mut script = Script::Observe;
     let mut it = args.iter();
     while let Some(flag) = it.next() {
         let mut value = || {
@@ -133,6 +160,15 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
             "--timeout" => timeout = seconds(flag, &value()?)?,
             "--grace" => grace = seconds(flag, &value()?)?,
             "--app" => app = value()?,
+            "--scripted" => {
+                script = match value()?.as_str() {
+                    "observe" => Script::Observe,
+                    "chain" => Script::Chain,
+                    other => {
+                        return Err(format!("--scripted takes observe or chain, got {other:?}"));
+                    }
+                };
+            }
             other => return Err(format!("unknown option {other}")),
         }
     }
@@ -145,6 +181,7 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
         timeout,
         grace,
         app,
+        script,
     })
 }
 
@@ -167,7 +204,7 @@ mod tests {
     fn every_option_parses_and_the_defaults_hold() {
         let a = parse(&args(
             "--arm scripted --human unstage-after-observe:src/session.rs --out /tmp/x \
-             --until timeout --timeout 30 --grace 2.5 --app lab",
+             --until timeout --timeout 30 --grace 2.5 --app lab --scripted chain",
         ))
         .unwrap();
         assert_eq!(a.arm, Arm::Scripted);
@@ -178,6 +215,7 @@ mod tests {
         assert_eq!(a.timeout, Duration::from_secs(30));
         assert_eq!(a.grace, Duration::from_secs_f64(2.5));
         assert_eq!(a.app, "lab");
+        assert_eq!(a.script, Script::Chain);
 
         let d = parse(&args("--arm plev")).unwrap();
         assert_eq!(d.human, Human::None);
@@ -186,6 +224,7 @@ mod tests {
         assert_eq!(d.timeout, Duration::from_secs(600));
         assert_eq!(d.grace, Duration::from_secs(1));
         assert_eq!(d.app, "ide");
+        assert_eq!(d.script, Script::Observe);
     }
 
     #[test]
@@ -202,6 +241,7 @@ mod tests {
             ("--arm plev --timeout soon", "--timeout"),
             ("--arm plev --out", "needs a value"),
             ("--arm plev --fast", "unknown option"),
+            ("--arm scripted --scripted blind", "--scripted"),
         ] {
             match parse(&args(line)) {
                 Err(e) => assert!(e.contains(needle), "{line}: {e:?} lacks {needle:?}"),
