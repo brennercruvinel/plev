@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: in-progress
 last-updated: 2026-09-23
 domain: generative-runtime
 task: task-65
@@ -11,6 +11,13 @@ branch: task/65-pixel-to-source
 ---
 
 # task-65: pixel para código e inspector de desenvolvimento
+
+## rodada 1 (orquestrador, 2026-09-23)
+
+esta rodada faz as fases a e b (ler: do pixel ao código). a fase c
+(gravar no `.rs`) e a fase d (quem leu este token, proposta primeiro)
+ficam para depois de validar a e b. o shell do ide não entra nesta
+rodada: outra task mexe nele agora.
 
 ## objetivo
 
