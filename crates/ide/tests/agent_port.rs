@@ -386,9 +386,10 @@ fn a_person_unstaging_between_the_agents_look_and_its_submit_is_named_in_both_pl
             })
             .expect("the notices"),
         );
-        // it recovers on the revision the refusal carried: what is staged
-        // now, the person's choice.
-        let recovered = act(&mut c, "commit.submit", "submit", landed(&stale));
+        // it recovers: it looks again and commits what is staged now, the
+        // person's choice, deciding on what it was shown.
+        let now = snapshot(c.observe(Observe::default()).expect("a new look"));
+        let recovered = act(&mut c, "commit.submit", "submit", now.revision);
         (stale, notices, recovered)
     });
 
