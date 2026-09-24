@@ -254,8 +254,12 @@ cli = ["lot2monsters", "svg2monster", "text_probe"]
 sem = ["commit"]
 parser = ["transpile", "preview"]
 # crates/showcase/examples/measure: nine interactions through the frame
-# path, the per-stage cost tables of task-73 (see [modules.perf]).
-showcase = ["measure"]
+# path, the per-stage cost tables of task-73 (see [modules.perf]);
+# crates/showcase/examples/regress: structural regression by meaning, then
+# layer hash, then pixels in the region that moved (task-67, adr
+# regression-by-meaning-before-pixels), baselines in
+# crates/showcase/fixtures/regress.
+showcase = ["measure", "regress"]
 notes = [
   "text_probe is headless through engine::headless (the window's own frame path into a texture, no second pipeline); with showcase --render and monster_player --frame it is the tool behind docs/how-to/validate-visuals-by-pixel.md",
   "scene3d and snake-game were crates; they are demos and moved here (commit e6f7091). examples moved from the root into crates/engine/examples when the engine became its own crate",
