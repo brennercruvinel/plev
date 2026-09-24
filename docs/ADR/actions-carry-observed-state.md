@@ -83,11 +83,11 @@ in `crates/sem`, next to the contract:
 - validation happens at two points when the truth lives outside the ui
   process (the git index, a server). the dispatcher's check is the first.
   `execute` carries the request to the point of truth, which checks the
-  observed values again against its own state, with the same `check`,
-  right before the effect. if it disagrees, the receipt goes from executing
-  to rejected with the delta seen there. the first check alone leaves the
-  race the ide has today: the index can move from a terminal between the
-  check and the commit.
+  observed values it owns again against its own state, right before the
+  effect. if it disagrees, the receipt goes from executing to rejected
+  with the delta seen there. the first check alone leaves the race the ide
+  has today: the index can move from a terminal between the check and the
+  commit.
 - `ReceiptSink`s see every stage, in order, as it happens. open receipts
   stay in the dispatcher; finished ones are kept up to a retention limit
   (256 by default) and dropped after it.
@@ -98,6 +98,13 @@ in `crates/sem`, next to the contract:
   have a serde form behind the `serde` feature: snake_case, ids and refs as
   canonical text, `RequestId` as decimal text like `Revision` is hex text.
   the JSON of one request and of the thesis receipt is pinned by tests.
+- updated on 2026-09-23: the point of truth does not run `check`. the
+  ide's git worker compares the staged set the actor observed with the
+  paths the index stages (`GitRepo::commit_if`,
+  `crates/git/src/repo.rs`), a set comparison of its own: `crates/git`
+  does not depend on `sem`, and `check` has one caller, the dispatcher.
+  it checks `changes:staged` alone; `commit.message:text` is checked once,
+  by the dispatcher, and the commit carries the message the request sent.
 
 ## reason
 
