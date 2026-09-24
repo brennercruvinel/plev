@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
+status: ongoing
 last-updated: 2026-09-23
 domain: semantic-contract
 task: task-90
