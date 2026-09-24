@@ -1,6 +1,7 @@
-//! The capture probe (task-76 item 10), before any capture code: what a
-//! camera and a microphone would hand the engine through ffmpeg's pipe,
-//! and what it costs to put a frame on screen.
+//! Camera and microphone (task-76 item 10), without a device.
+//!
+//! The probe first, kept: what a camera and a microphone hand the engine
+//! through ffmpeg's pipe, and what it costs to put a frame on screen.
 //!
 //! No device is opened here, ever: ffmpeg reads `-f lavfi` sources only
 //! (`testsrc` for the camera, `sine` for the microphone), paced by `-re`
@@ -17,9 +18,23 @@
 //! (`gpu/image.rs`): the stream would grow the memory and end in
 //! `TooLarge`, which the ignored test measures.
 //!
-//! The probe skips without ffmpeg (`PLEV_FFMPEG` or the PATH) and the GPU
-//! tests skip without an adapter. `--nocapture` prints the measures; the
-//! run to `TooLarge` is `--ignored` (it holds a quarter of a gigabyte).
+//! Then `FfmpegCapture` over three fake programs (`tests/fake-ffmpeg`,
+//! `fake-ffmpeg-refuses`, `fake-ffmpeg-mute`, shell scripts): the first
+//! replaces the platform's input with a lavfi source paced by `-re` and
+//! runs the real ffmpeg on the capture's own output arguments, so frames
+//! of the asked size and chunks of the asked rate come through the same
+//! pipe a device's would; the second refuses as ffmpeg refuses a device;
+//! the third never writes. Proven: the newest frame wins and nothing
+//! piles up, the ring of samples stays bounded, stopping kills the child
+//! (its pid is gone), the deadline kills a device that never answers,
+//! what ffmpeg says becomes `Denied`, `NoDevice` or `Failed`, and a
+//! camera that refuses its default rate starts again with a mode it
+//! listed.
+//!
+//! The probe and the fake that runs ffmpeg skip without ffmpeg on the
+//! PATH, and the GPU tests skip without an adapter. `--nocapture` prints
+//! the measures; the run to `TooLarge` is `--ignored` (it holds a quarter
+//! of a gigabyte).
 
 use std::io::Read;
 use std::path::PathBuf;
@@ -37,11 +52,8 @@ const FPS: u32 = 15;
 const RATE: u32 = 16_000;
 const FRAME_BYTES: usize = (WIDTH * HEIGHT * 4) as usize;
 
-/// `PLEV_FFMPEG`, or `ffmpeg` in a directory of the PATH.
+/// `ffmpeg` in a directory of the PATH: what the probe and the fake run.
 fn ffmpeg() -> Option<PathBuf> {
-    if let Some(named) = std::env::var_os("PLEV_FFMPEG") {
-        return Some(PathBuf::from(named));
-    }
     let dirs = std::env::var_os("PATH").unwrap_or_default();
     let found = std::env::split_paths(&dirs)
         .map(|dir| dir.join("ffmpeg"))
@@ -94,7 +106,7 @@ fn a_camera_frame_is_a_fixed_block_of_rgba_at_the_devices_pace() {
     let mut out = child.stdout.take().expect("a pipe");
     let mut frame = vec![0u8; FRAME_BYTES];
     let mut stamps = Vec::new();
-    while started.elapsed() < Duration::from_millis(2500) {
+    while started.elapsed() < Duration::from_millis(1800) {
         out.read_exact(&mut frame).expect("a whole frame");
         stamps.push(started.elapsed());
     }
@@ -105,7 +117,7 @@ fn a_camera_frame_is_a_fixed_block_of_rgba_at_the_devices_pace() {
     let fps = (steady.len() - 1) as f64 / span;
     eprintln!(
         "camera {WIDTH}x{HEIGHT} at {FPS}: {FRAME_BYTES} bytes a frame, first frame {:.1} ms, \
-         {} frames in 2.5 s, {fps:.2} fps after the burst",
+         {} frames in 1.8 s, {fps:.2} fps after the burst",
         first.as_secs_f64() * 1000.0,
         stamps.len()
     );
@@ -138,7 +150,7 @@ fn a_microphone_is_a_stream_of_mono_f32_samples() {
     let mut reads = Vec::new();
     let mut bytes = Vec::new();
     let mut late = (0usize, None::<Duration>, Duration::ZERO);
-    while started.elapsed() < Duration::from_millis(2500) {
+    while started.elapsed() < Duration::from_millis(1800) {
         let n = out.read(&mut chunk).expect("the pipe reads");
         assert!(n > 0, "the pipe ended");
         let now = started.elapsed();
@@ -371,4 +383,309 @@ fn a_stream_of_frames_fills_the_grow_only_atlas() {
     );
     assert!(matches!(refused, ImageError::TooLarge { .. }));
     assert_eq!(store.upload_count(), n);
+}
+
+// -- FfmpegCapture over the fakes --------------------------------------------
+
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+mod child {
+    use super::*;
+    use engine::platform::capture::{
+        Capture, CaptureSettings, CaptureState, Device, DeviceKind, FfmpegCapture, Input,
+    };
+
+    fn fake(name: &str) -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join(name)
+    }
+
+    /// The capture over `name`, with avfoundation's arguments whatever the
+    /// platform (the fakes read any input).
+    fn capture(name: &str) -> FfmpegCapture {
+        FfmpegCapture::with(fake(name)).input(Input::AvFoundation)
+    }
+
+    /// Asks `capture` about `kind` until it is no longer `Starting`, for
+    /// at most `within`.
+    fn settle(capture: &FfmpegCapture, kind: DeviceKind, within: Duration) -> CaptureState {
+        let started = Instant::now();
+        loop {
+            let state = capture.state(kind);
+            if state != CaptureState::Starting || started.elapsed() > within {
+                return state;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+    }
+
+    /// What the fake with `pid` was run with, one argument a line; the
+    /// file is taken.
+    fn fake_args(pid: u32) -> String {
+        let path = std::env::temp_dir()
+            .join("plev-capture-fakes")
+            .join(format!("{pid}.args"));
+        let args = std::fs::read_to_string(&path).expect("the fake left its arguments");
+        let _ = std::fs::remove_file(&path);
+        args.lines().collect::<Vec<_>>().join(" ")
+    }
+
+    fn alive(pid: u32) -> bool {
+        Command::new("kill")
+            .args(["-0", &pid.to_string()])
+            .stderr(Stdio::null())
+            .status()
+            .expect("kill runs")
+            .success()
+    }
+
+    /// The camera through the capture's own output arguments: frames of the
+    /// asked size (scaled from the fake's 640x360), `On` once the first
+    /// came, the asked rate. A frame nobody takes is replaced by the next:
+    /// after half a second untaken, one frame waits, and it is recent.
+    #[test]
+    fn the_camera_hands_frames_of_the_asked_size_and_the_newest_wins() {
+        if ffmpeg().is_none() {
+            return;
+        }
+        let mut capture = capture("fake-ffmpeg");
+        let settings = CaptureSettings {
+            width: 320,
+            height: 180,
+            ..CaptureSettings::default()
+        };
+        let started = Instant::now();
+        capture.start(DeviceKind::Camera, &settings).unwrap();
+        assert_eq!(capture.state(DeviceKind::Camera), CaptureState::Starting);
+        let pid = capture.pid(DeviceKind::Camera).expect("a child runs");
+        assert_eq!(
+            settle(&capture, DeviceKind::Camera, Duration::from_secs(10)),
+            CaptureState::On
+        );
+        let first = started.elapsed();
+
+        let mut taken = 0;
+        let counting = Instant::now();
+        let mut last = None;
+        while counting.elapsed() < Duration::from_millis(1500) {
+            if let Some(frame) = capture.latest_frame() {
+                assert_eq!((frame.width, frame.height), (320, 180));
+                assert_eq!(frame.rgba.len(), 320 * 180 * 4);
+                taken += 1;
+                last = Some(frame);
+            }
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        let fps = taken as f64 / 1.5;
+        eprintln!(
+            "fake camera: on after {:.0} ms, {taken} frames taken in 1.5 s ({fps:.1} fps)",
+            first.as_secs_f64() * 1000.0
+        );
+        assert!((10.0..=20.0).contains(&fps), "{fps} fps for 15 asked");
+        assert!(last.is_some_and(|f| f.rgba[3] == 255), "opaque pixels");
+
+        std::thread::sleep(Duration::from_millis(500));
+        let waiting = capture.latest_frame().expect("the newest waited");
+        assert!(
+            waiting.at.elapsed() < Duration::from_millis(150),
+            "the frame that waited is the newest, not one from half a second ago"
+        );
+        assert!(capture.latest_frame().is_none(), "one frame, not a queue");
+
+        let args = fake_args(pid);
+        assert!(args.contains("-f avfoundation -i 0:none"), "{args}");
+        assert!(
+            args.ends_with(
+                "-vf scale=320:180:force_original_aspect_ratio=increase,crop=320:180,fps=15 \
+                 -f rawvideo -pix_fmt rgba pipe:1"
+            ),
+            "{args}"
+        );
+        capture.stop(DeviceKind::Camera);
+    }
+
+    /// The microphone: mono chunks of a twentieth of a second at the asked
+    /// rate with the sine's level; left untaken for three seconds, the ring
+    /// holds two seconds at most.
+    #[test]
+    fn the_microphone_hands_mono_chunks_into_a_bounded_ring() {
+        if ffmpeg().is_none() {
+            return;
+        }
+        let mut capture = capture("fake-ffmpeg");
+        let settings = CaptureSettings::default();
+        capture.start(DeviceKind::Microphone, &settings).unwrap();
+        let pid = capture.pid(DeviceKind::Microphone).expect("a child runs");
+        assert_eq!(
+            settle(&capture, DeviceKind::Microphone, Duration::from_secs(10)),
+            CaptureState::On
+        );
+        assert_eq!(
+            fake_args(pid),
+            "-hide_banner -nostdin -loglevel error -f avfoundation -i none:0 \
+             -f f32le -ac 1 -ar 16000 pipe:1"
+        );
+        std::thread::sleep(Duration::from_secs(3));
+        let chunks = capture.take_audio();
+        let held: usize = chunks.iter().map(|c| c.samples.len()).sum();
+        eprintln!(
+            "fake microphone: {} chunks, {held} samples held after 3 s",
+            chunks.len()
+        );
+        assert!(held <= settings.ring_samples(), "{held} past the ring");
+        assert!(
+            held >= settings.ring_samples() - 2 * 800,
+            "{held}: the ring was full"
+        );
+        assert!(
+            chunks
+                .iter()
+                .all(|c| c.samples.len() == 800 && c.rate == 16_000)
+        );
+        let level = chunks[chunks.len() - 1].rms();
+        assert!((level - 0.0884).abs() < 0.003, "{level}");
+        assert!(capture.take_audio().len() <= 2, "taken");
+        capture.stop(DeviceKind::Microphone);
+        assert!(capture.take_audio().is_empty());
+    }
+
+    /// Stopping kills the child by its pid and reaps it: the pid is gone,
+    /// the state is `Off`, and nothing it handed is left. Dropping the
+    /// capture stops what it had started.
+    #[test]
+    fn stopping_kills_the_child_and_its_pid_is_gone() {
+        if ffmpeg().is_none() {
+            return;
+        }
+        let mut capture = capture("fake-ffmpeg");
+        let settings = CaptureSettings::default();
+        capture.start(DeviceKind::Camera, &settings).unwrap();
+        capture.start(DeviceKind::Microphone, &settings).unwrap();
+        let camera = capture.pid(DeviceKind::Camera).expect("camera child");
+        let microphone = capture
+            .pid(DeviceKind::Microphone)
+            .expect("microphone child");
+        assert_ne!(camera, microphone, "a child per device");
+        for kind in DeviceKind::ALL {
+            assert_eq!(
+                settle(&capture, kind, Duration::from_secs(10)),
+                CaptureState::On
+            );
+        }
+        assert!(alive(camera) && alive(microphone));
+        std::thread::sleep(Duration::from_millis(200));
+
+        capture.stop(DeviceKind::Camera);
+        assert_eq!(capture.state(DeviceKind::Camera), CaptureState::Off);
+        assert_eq!(capture.pid(DeviceKind::Camera), None);
+        assert!(!alive(camera), "pid {camera} still runs");
+        assert!(
+            capture.latest_frame().is_none(),
+            "the untaken frame went with it"
+        );
+        assert!(alive(microphone), "the microphone is another child");
+
+        drop(capture);
+        assert!(!alive(microphone), "pid {microphone} outlived the capture");
+        let _ = fake_args(camera);
+        let _ = fake_args(microphone);
+    }
+
+    /// A device that never answers is killed at the deadline, by its pid,
+    /// and the state says so.
+    #[test]
+    fn nothing_within_the_deadline_is_failed_and_the_child_killed() {
+        let mut capture = capture("fake-ffmpeg-mute").first_frame(Duration::from_secs(2));
+        let started = Instant::now();
+        capture
+            .start(DeviceKind::Camera, &CaptureSettings::default())
+            .unwrap();
+        let pid = capture.pid(DeviceKind::Camera).expect("a child runs");
+        let state = settle(&capture, DeviceKind::Camera, Duration::from_secs(10));
+        assert!(
+            started.elapsed() >= Duration::from_secs(2),
+            "not before the deadline"
+        );
+        assert!(
+            started.elapsed() < Duration::from_secs(8),
+            "killed, not waited for"
+        );
+        assert_eq!(
+            state,
+            CaptureState::Failed("nothing from the camera in 2 s".to_owned())
+        );
+        assert_eq!(capture.pid(DeviceKind::Camera), None);
+        assert!(!alive(pid), "pid {pid} still runs");
+        let _ = fake_args(pid);
+    }
+
+    /// What ffmpeg says as it refuses a device, read from every line of
+    /// its stderr: the permission (the text is a guess), a device that is
+    /// not there, anything else in its words. A refused device is not
+    /// live: starting it again asks again.
+    #[test]
+    fn what_ffmpeg_says_becomes_the_state() {
+        let settings = |index| CaptureSettings {
+            camera: Device::at(DeviceKind::Camera, index),
+            ..CaptureSettings::default()
+        };
+        let mut capture = capture("fake-ffmpeg-refuses");
+        for (index, want) in [
+            (0, CaptureState::Denied),
+            (9, CaptureState::NoDevice),
+            (
+                3,
+                CaptureState::Failed(
+                    "[avfoundation @ 0x1] can't add video input to capture session".to_owned(),
+                ),
+            ),
+        ] {
+            capture.start(DeviceKind::Camera, &settings(index)).unwrap();
+            let pid = capture.pid(DeviceKind::Camera);
+            assert_eq!(
+                settle(&capture, DeviceKind::Camera, Duration::from_secs(10)),
+                want,
+                "index {index}"
+            );
+            assert!(capture.latest_frame().is_none());
+            if let Some(pid) = pid {
+                let _ = fake_args(pid);
+            }
+        }
+    }
+
+    /// A camera that does not take the default rate lists its modes and
+    /// ends; the capture starts it once more with the smallest mode that
+    /// covers the asked size at the asked rate, and the frames come.
+    #[test]
+    fn a_camera_that_refuses_its_default_rate_starts_again_with_a_mode() {
+        if ffmpeg().is_none() {
+            return;
+        }
+        let mut capture = capture("fake-ffmpeg");
+        let settings = CaptureSettings {
+            camera: Device::at(DeviceKind::Camera, 5),
+            ..CaptureSettings::default()
+        };
+        capture.start(DeviceKind::Camera, &settings).unwrap();
+        let refused = capture.pid(DeviceKind::Camera).expect("the first child");
+        assert_eq!(
+            settle(&capture, DeviceKind::Camera, Duration::from_secs(10)),
+            CaptureState::On
+        );
+        let again = capture.pid(DeviceKind::Camera).expect("the second child");
+        assert_ne!(again, refused);
+        let frame = capture.latest_frame().or_else(|| {
+            std::thread::sleep(Duration::from_millis(200));
+            capture.latest_frame()
+        });
+        assert_eq!(frame.map(|f| f.rgba.len()), Some(921_600));
+        assert!(!fake_args(refused).contains("-framerate"));
+        let args = fake_args(again);
+        assert!(
+            args.contains("-f avfoundation -framerate 15 -video_size 640x480 -i 5:none"),
+            "{args}"
+        );
+        capture.stop(DeviceKind::Camera);
+    }
 }

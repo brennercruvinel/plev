@@ -1,0 +1,31 @@
+#!/bin/sh
+# a stand-in for ffmpeg in the tests of engine::platform::capture
+# (tests/capture.rs) that refuses as ffmpeg refuses a device, and exits
+# 1 without writing a frame. the device's index picks the refusal: 0 is
+# the system's permission denied (what avfoundation says then is a
+# guess: "Failed to create AV capture input device: Cannot use ..."), 9
+# is a device that is not there ("Invalid device index", from the
+# strings of libavdevice), any other a failure in ffmpeg's words. ffmpeg
+# closes with generic lines after the one that says why, as here.
+
+dir="${TMPDIR:-/tmp}/plev-capture-fakes"
+mkdir -p "$dir"
+printf '%s\n' "$@" > "$dir/$$.args"
+
+src=
+while [ $# -gt 0 ]; do
+    case "$1" in
+    -i) src=$2; shift 2; break ;;
+    *) shift ;;
+    esac
+done
+index=$(printf '%s' "$src" | tr -cd '0-9')
+
+case "$index" in
+0) echo "[avfoundation @ 0x1] Failed to create AV capture input device: Cannot use FaceTime HD Camera" >&2 ;;
+9) echo "[avfoundation @ 0x1] Invalid device index" >&2 ;;
+*) echo "[avfoundation @ 0x1] can't add video input to capture session" >&2 ;;
+esac
+echo "Error opening input file $src." >&2
+echo "Error opening input files: Input/output error" >&2
+exit 1

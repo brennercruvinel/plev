@@ -1,0 +1,11 @@
+#!/bin/sh
+# a stand-in for ffmpeg in the tests of engine::platform::capture
+# (tests/capture.rs) that never writes a frame nor a word: a device that
+# does not answer (a prompt nobody answers, a camera that hangs). it
+# becomes a sleep of 30 s in this process, for the deadline to kill by
+# its pid; its pid and arguments go to $TMPDIR/plev-capture-fakes/<pid>.args.
+
+dir="${TMPDIR:-/tmp}/plev-capture-fakes"
+mkdir -p "$dir"
+printf '%s\n' "$@" > "$dir/$$.args"
+exec sleep 30
