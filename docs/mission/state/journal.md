@@ -14,6 +14,18 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### ciclo 3: publicado #84 (task-76 item 7); disparado o item 9
+
+- **publicado:** PR #84, merge commit, gate local verde na `main` (2662,
+  +12), regressão 161 sem mudança.
+- **disparado:** task-76 item 9, impressão: o documento é o mesmo frame
+  renderizado sem janela em escala de papel, o sistema de impressão é o
+  CUPS (`lp` como filho, com prazo e morte pelo pid) atrás de trait com
+  falso, `shell.print` só pessoa (menu e cmd-P) e o estado do job
+  projetado. sem dependência nova. esta máquina não tem impressora
+  (`lpstat -p`: nenhum destino): nada é impresso de verdade, e a prova
+  real fica para o brenner. um agente só, no worktree fixo.
+
 ### ciclo 3: sleep e wake (task-76 item 7)
 
 - **integrada:** item 7 (merge da `task/76g-sleep-wake`). coberto ou
