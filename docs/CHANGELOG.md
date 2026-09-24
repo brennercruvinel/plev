@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- windows are hosts, the app owns the state (2026-09-24, task-76 item 2):
+  the engine groups what belongs to a window (the window, its GPU
+  context, compositor, input, IME, scale, clocks) in a `WindowHost` and
+  keeps several in `Windows`, routed by id, each drawn only when it asks
+  (render on demand per window), closed one at a time, with the app
+  exiting on the last. the `layers` example opens two windows; in the
+  showcase, `D` outside a text field opens the current page in a second
+  window over the same state and dispatcher, and the projection says
+  which window shows it. a lost device in one window recovers alone.
+
 - file dialogs and file drops belong to the engine (2026-09-24, task-76
   item 3): `engine::platform::files` puts the native dialog (open, open
   many, save, pick a folder) behind a trait with a fake for tests and a

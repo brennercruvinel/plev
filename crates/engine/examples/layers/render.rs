@@ -1,58 +1,43 @@
-//! Render logic for the layers demo: scene building + GPU submission.
+//! Render logic for the layers demo: each window's scene, built into its
+//! host's compositor and presented through the engine's shared frame tail
+//! (`WindowHost::present`, the `present_frame` every app uses).
 
-use engine::compositor::SceneNode;
+use engine::compositor::{LayerId, SceneNode, TextNodeKey};
+use engine::winit::window::WindowId;
 
+use crate::LayersDemoApp;
 use crate::palette::*;
 use crate::ui;
-use crate::{LayersDemoApp, State};
 
-pub fn render(app: &mut LayersDemoApp) {
-    let State::Ready {
-        ref mut gpu,
-        ref mut text_system,
-    } = app.state
-    else {
+fn clear_linear() -> [f32; 4] {
+    engine::color::Color::rgb(pal().bg[0], pal().bg[1], pal().bg[2]).to_linear_array()
+}
+
+/// The animated demo: a static dot grid on the background layer, the
+/// chrome on the default layer, a card that moves every 60 frames on the
+/// foreground layer.
+pub fn render_layers(app: &mut LayersDemoApp, id: WindowId) {
+    let Some(host) = app.windows.get_mut(id) else {
         return;
     };
-
-    let surface = match gpu.surface.as_ref() {
-        Some(s) => s,
-        None => return,
-    };
-
-    let output = match surface.get_current_texture() {
-        Ok(t) => t,
-        Err(_) => {
-            gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
-            return;
-        }
-    };
-
-    let surface_view = gpu.surface_render_view(&output);
-
-    let w = gpu.surface_config.width as f32;
-    let h = gpu.surface_config.height as f32;
-
-    app.compositor.begin_frame();
-    text_system.begin_frame();
+    host.begin_frame();
+    let (w, h) = host.logical_size();
+    let c = host.compositor_mut();
+    c.begin_frame();
 
     let margin = 32.0;
 
-    // ====================================================================
     // Background layer (static dot grid)
-    // ====================================================================
     let dot_spacing = 40.0;
     let cols = (w / dot_spacing) as i32 + 1;
     let rows = (h / dot_spacing) as i32 + 1;
     for row in 0..rows {
         for col in 0..cols {
-            let dx = col as f32 * dot_spacing;
-            let dy = row as f32 * dot_spacing;
-            app.compositor.push_to_layer(
+            c.push_to_layer(
                 app.bg_layer,
                 SceneNode::Rect {
-                    x: dx,
-                    y: dy,
+                    x: col as f32 * dot_spacing,
+                    y: row as f32 * dot_spacing,
                     w: 1.0,
                     h: 1.0,
                     color: pal().dot,
@@ -61,149 +46,98 @@ pub fn render(app: &mut LayersDemoApp) {
         }
     }
 
-    // ====================================================================
     // Default layer (UI chrome + info card)
-    // ====================================================================
-    ui::build_header(&mut app.compositor, w, margin);
-    ui::build_info_card(&mut app.compositor, w, margin);
-    ui::build_footer(&mut app.compositor, w, h, margin);
+    ui::build_header(c, w, margin);
+    ui::build_info_card(c, w, margin);
+    ui::build_footer(c, w, h, margin);
 
-    // ====================================================================
     // Foreground layer (dynamic -- changes every 60 frames)
-    // ====================================================================
-    ui::build_foreground(&mut app.compositor, app.fg_layer, app.frame_count, w, h);
+    ui::build_foreground(c, app.fg_layer, app.frame_count, w, h);
     app.frame_count += 1;
 
-    // ====================================================================
-    // Resolve all layers
-    // ====================================================================
-    app.compositor
-        .resolve(&engine::compositor::ResolveResources {
-            msaa_samples: gpu.config.msaa_samples,
-            device: &gpu.device,
-            queue: &gpu.queue,
-            format: gpu.surface_format(),
-            width: gpu.surface_config.width,
-            height: gpu.surface_config.height,
-            composite_bgl: &gpu.composite_bind_group_layout,
-            opacity_bgl: &gpu.opacity_bind_group_layout,
-            sampler: &gpu.composite_sampler,
-        });
+    host.present(clear_linear(), "layers");
+}
 
-    // Resolve text per clip group so the ranges patched into the
-    // draw sequence line up 1:1 with its Text commands.
-    engine::window::resolve_layer_text(&mut app.compositor, gpu, text_system);
-    text_system.finish_frame();
+/// The other window: a card at rest, drawn once and then only when the
+/// window changes (a resize).
+pub fn render_side(app: &mut LayersDemoApp, id: WindowId) {
+    let Some(host) = app.windows.get_mut(id) else {
+        return;
+    };
+    host.begin_frame();
+    let frames = host.frames();
+    let (w, h) = host.logical_size();
+    let c = host.compositor_mut();
+    c.begin_frame();
 
-    let mut encoder = gpu
-        .device
-        .create_command_encoder(&engine::wgpu::CommandEncoderDescriptor {
-            label: Some("layers_encoder"),
-        });
-
-    let dirty_layer_ids: Vec<_> = app
-        .compositor
-        .layers()
-        .iter()
-        .filter(|l| l.visible && l.is_dirty())
-        .map(|l| l.id)
-        .collect();
-
-    for layer_id in &dirty_layer_ids {
-        let layer = app.compositor.layer(*layer_id).unwrap();
-        let Some(msaa_v) = layer.msaa_view() else {
-            continue;
+    let margin = 24.0;
+    let card = (margin, margin, w - margin * 2.0, h - margin * 2.0);
+    c.push_to_layer(
+        LayerId::DEFAULT,
+        SceneNode::Rect {
+            x: card.0,
+            y: card.1,
+            w: card.2,
+            h: card.3,
+            color: pal().surface,
+        },
+    );
+    c.push_to_layer(
+        LayerId::DEFAULT,
+        SceneNode::Rect {
+            x: card.0 + 1.0,
+            y: card.1,
+            w: card.2 - 2.0,
+            h: 2.0,
+            color: pal().accent,
+        },
+    );
+    let lines: [(&str, [f32; 4]); 4] = [
+        ("THE OTHER WINDOW", pal().accent),
+        (
+            "a second window of the same app, on its own context",
+            pal().text,
+        ),
+        (
+            "at rest it draws nothing while the first one animates",
+            pal().text_dim,
+        ),
+        (
+            "close either window: the other stays. close both: the app exits",
+            pal().text_dim,
+        ),
+    ];
+    let mut y = card.1 + 18.0;
+    for (i, (line, color)) in lines.iter().enumerate() {
+        let style = if i == 0 {
+            card_title_style(14.0, 18.0)
+        } else {
+            body_style(12.0, 16.0)
         };
-        let resolve_v = layer.texture_view();
-
-        let mut pass = encoder.begin_render_pass(&engine::wgpu::RenderPassDescriptor {
-            label: Some("layer_pass"),
-            color_attachments: &[Some(engine::wgpu::RenderPassColorAttachment {
-                view: msaa_v,
-                resolve_target: resolve_v,
-                ops: engine::wgpu::Operations {
-                    load: engine::wgpu::LoadOp::Clear(engine::wgpu::Color {
-                        r: 0.0,
-                        g: 0.0,
-                        b: 0.0,
-                        a: 0.0,
-                    }),
-                    store: engine::wgpu::StoreOp::Store,
-                },
-                depth_slice: None,
-            })],
-            depth_stencil_attachment: None,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-            multiview_mask: None,
-        });
-
-        if let Some((vb, ib, count)) = layer.quad_buffers() {
-            pass.set_pipeline(&gpu.quad_pipeline);
-            pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
-            pass.set_vertex_buffer(0, vb.slice(..));
-            pass.set_index_buffer(ib.slice(..), engine::wgpu::IndexFormat::Uint32);
-            pass.draw_indexed(0..count, 0, 0..1);
-        }
-
-        if let Some((vb, ib, count)) = layer.text_buffers() {
-            pass.set_pipeline(&gpu.text_pipeline);
-            pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
-            pass.set_bind_group(1, &text_system.atlas_bind_group, &[]);
-            pass.set_vertex_buffer(0, vb.slice(..));
-            pass.set_index_buffer(ib.slice(..), engine::wgpu::IndexFormat::Uint32);
-            pass.draw_indexed(0..count, 0, 0..1);
-        }
+        c.push_to_layer(
+            LayerId::DEFAULT,
+            SceneNode::Text {
+                key: TextNodeKey::from_style(line, &style, Some(card.2 - 32.0)),
+                x: card.0 + 16.0,
+                y,
+                color: *color,
+            },
+        );
+        y += if i == 0 { 30.0 } else { 22.0 };
     }
+    c.push_to_layer(
+        LayerId::DEFAULT,
+        SceneNode::Text {
+            key: TextNodeKey::from_style(
+                &format!("frames drawn by this window: {}", frames + 1),
+                &code_style(11.0, 14.0),
+                Some(card.2 - 32.0),
+            ),
+            x: card.0 + 16.0,
+            y: card.1 + card.3 - 30.0,
+            color: pal().accent_dim,
+        },
+    );
 
-    for id in &dirty_layer_ids {
-        app.compositor.mark_layer_clean(*id);
-    }
-
-    // Composite pass
-    {
-        let mut pass = encoder.begin_render_pass(&engine::wgpu::RenderPassDescriptor {
-            label: Some("composite_pass"),
-            color_attachments: &[Some(engine::wgpu::RenderPassColorAttachment {
-                view: &surface_view,
-                resolve_target: None,
-                ops: engine::wgpu::Operations {
-                    load: engine::wgpu::LoadOp::Clear({
-                        let [lr, lg, lb, la] =
-                            engine::color::Color::rgb(pal().bg[0], pal().bg[1], pal().bg[2])
-                                .to_linear_array();
-                        engine::wgpu::Color {
-                            r: lr as f64,
-                            g: lg as f64,
-                            b: lb as f64,
-                            a: la as f64,
-                        }
-                    }),
-                    store: engine::wgpu::StoreOp::Store,
-                },
-                depth_slice: None,
-            })],
-            depth_stencil_attachment: None,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-            multiview_mask: None,
-        });
-
-        pass.set_pipeline(&gpu.composite_pipeline);
-        for layer in app.compositor.layers() {
-            if !layer.visible {
-                continue;
-            }
-            if let (Some(composite_bg), Some(opacity_bg)) =
-                (layer.composite_bind_group(), layer.opacity_bind_group())
-            {
-                pass.set_bind_group(0, composite_bg, &[]);
-                pass.set_bind_group(1, opacity_bg, &[]);
-                pass.draw(0..3, 0..1);
-            }
-        }
-    }
-
-    gpu.queue.submit(std::iter::once(encoder.finish()));
-    output.present();
+    host.present(clear_linear(), "layers_side");
 }

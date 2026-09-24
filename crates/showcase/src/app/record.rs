@@ -42,6 +42,7 @@ use engine::compositor::Compositor;
 use rec::{FileError, InputKind, Limits, Persisted, Recorder};
 use winit::event::ElementState;
 use winit::keyboard::{Key, ModifiersState};
+use winit::window::WindowId;
 
 use super::App;
 use crate::view::ShowcaseView;
@@ -256,32 +257,42 @@ impl App {
             self.save_session("key");
             return true;
         }
-        self.record_input(kind_of(key), None);
+        self.record_input(kind_of(key), None, None);
         false
     }
 
-    /// A button of the pointer pressed or released at `(x, y)`, when the
-    /// session is recorded: with the control under it in the frame on
-    /// screen.
-    pub(super) fn record_pointer(&mut self, state: ElementState, x: f32, y: f32) {
+    /// A button of the pointer pressed or released at `(x, y)` in window
+    /// `id`, when the session is recorded: with the control under it in
+    /// that window's frame on screen. A press in the page's own window
+    /// is recorded in that window's coordinates (the frames recorded are
+    /// the main window's).
+    pub(super) fn record_pointer(&mut self, id: WindowId, state: ElementState, x: f32, y: f32) {
         let kind = match state {
             ElementState::Pressed => InputKind::PointerDown,
             ElementState::Released => InputKind::PointerUp,
         };
-        self.record_input(kind, Some([x, y]));
+        self.record_input(kind, Some([x, y]), Some(id));
     }
 
-    fn record_input(&mut self, kind: InputKind, at: Option<[f32; 2]>) {
-        if let Some(recording) = &self.recording {
-            recording.input(&mut self.view, kind, at, &self.compositor);
+    fn record_input(&mut self, kind: InputKind, at: Option<[f32; 2]>, in_window: Option<WindowId>) {
+        let Some(recording) = &self.recording else {
+            return;
+        };
+        let window = in_window.or(self.main);
+        if let Some(host) = window.and_then(|id| self.windows.get(id)) {
+            recording.input(&mut self.view, kind, at, host.compositor());
         }
     }
 
-    /// The frame just drawn, where each bound control shows in it, and
-    /// the state it was drawn from, when the session is recorded.
+    /// The frame just drawn in the main window, where each bound control
+    /// shows in it, and the state it was drawn from, when the session is
+    /// recorded.
     pub(super) fn record_frame(&mut self) {
-        if let Some(recording) = &self.recording {
-            recording.frame(&mut self.view, &self.compositor);
+        let Some(recording) = &self.recording else {
+            return;
+        };
+        if let Some(host) = self.main.and_then(|id| self.windows.get(id)) {
+            recording.frame(&mut self.view, host.compositor());
         }
     }
 

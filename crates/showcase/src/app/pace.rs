@@ -1,64 +1,69 @@
 //! The loop's pacing: time catches up before what woke the loop lands,
 //! the frame's tick says what it asks of the loop, the frame is drawn
-//! (given to the screen reader, and recorded when the session is), and
-//! the answer sets the wait (see the shell's module doc).
+//! for the window that asked (given to the screen reader, and recorded
+//! when the session is), and the answer sets each window's deadline and
+//! the loop's wait (see the shell's module doc).
 
 use comps::prelude::Wake;
 use web_time::Instant;
 use winit::event_loop::{ActiveEventLoop, ControlFlow};
+use winit::window::WindowId;
 
-use super::{App, GpuState};
-use crate::renderer;
+use super::App;
 
 impl App {
-    /// The frame, once the GPU is ready: the tick, the scene drawn from
-    /// it, the tree of it for a screen reader, the recording's copy, and
-    /// the pace it asks for.
-    pub(super) fn redraw(&mut self, event_loop: &ActiveEventLoop) {
-        if !matches!(self.state, GpuState::Ready { .. }) {
+    /// The frame of window `id`, once its GPU is ready: the tick, the
+    /// scene drawn from it (the whole view in the main window, the page
+    /// alone in its own), the tree of it for a screen reader and the
+    /// recording's copy (main window), and the pace each window asks for.
+    pub(super) fn redraw(&mut self, event_loop: &ActiveEventLoop, id: WindowId) {
+        if !self.windows.get(id).is_some_and(|host| host.has_gpu()) {
             return;
         }
         // The real time since the last tick: a deadline the loop
         // slept through arrives whole (`dt` is clamped for motion).
         let since_last = self.clock.tick().since_last;
         let wake = self.frame_wake(since_last);
+        let page_wake = self.view.detached_wake();
         log::debug!(
-            "frame: {:.3} s since the last tick, wake now {} next {:?}",
+            "frame: {:.3} s since the last tick, wake now {} next {:?}, page {:?}",
             since_last,
             wake.now,
-            wake.next
+            wake.next,
+            page_wake.next
         );
-        let GpuState::Ready {
-            gpu,
-            text_system,
-            effects,
-            texture_pool,
-        } = &mut self.state
-        else {
-            return;
-        };
-        renderer::render_frame(
-            gpu,
-            text_system,
-            effects,
-            texture_pool,
-            &mut self.compositor,
-            &mut self.view,
-        );
-        // The tree of this frame, placed by the bindings it just drew;
-        // the page is projected only while a reader listens.
-        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-        if let (Some(bridge), Some(window)) = (self.access.bridge.as_mut(), self.window.as_ref()) {
-            let view = &self.view;
-            bridge.update(window, &self.compositor, || view.semantics());
+        let clear = self.view.theme.colors.bg.to_linear_array();
+        if Some(id) == self.main {
+            let Some(host) = self.windows.get_mut(id) else {
+                return;
+            };
+            host.begin_frame();
+            // Build the scene (includes compositor.begin_frame()), then
+            // the shared frame tail.
+            self.view.render(host.compositor_mut());
+            host.present(clear, "showcase_frame");
+            // The tree of this frame, placed by the bindings it just drew;
+            // the page is projected only while a reader listens.
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            if let (Some(bridge), Some(window)) = (self.access.bridge.as_mut(), host.window()) {
+                let view = &self.view;
+                bridge.update(window, host.compositor(), || view.semantics());
+            }
+            // The frame just drawn, where each bound control shows in it,
+            // and the state it was drawn from.
+            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+            self.record_frame();
+        } else if self.is_page_window(id) {
+            let Some(host) = self.windows.get_mut(id) else {
+                return;
+            };
+            host.begin_frame();
+            self.view.render_detached(host.compositor_mut());
+            host.present(clear, "showcase_page_window");
         }
-        // The frame just drawn, where each bound control shows in it, and
-        // the state it was drawn from.
-        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-        self.record_frame();
         // `wake.now` is carried by this frame: the scene was built after
         // the tick, so a flipped caret is already in it.
-        self.pace(event_loop, wake);
+        self.pace(event_loop, wake, page_wake);
     }
 
     /// Advances what animates to now, before anything from outside the
@@ -81,6 +86,11 @@ impl App {
             self.caught_up = true;
             self.invalidate();
         }
+        if self.view.detached_wake().now
+            && let Some(id) = self.page_window_id()
+        {
+            self.invalidate_in(id);
+        }
     }
 
     /// The frame's tick: what animates, advanced by the time since the
@@ -93,26 +103,53 @@ impl App {
         wake
     }
 
-    /// What the frame's [`Wake`] asks of the loop, after the frame that
-    /// carries its `now` was drawn: continuous motion draws the next
-    /// frame; a deadline sets the wait to that instant; nothing pending
-    /// sleeps until input. The wait ends early on any event, so the git
-    /// worker, the screen reader and the agent port still get their frame
-    /// through `invalidate` whenever they ask.
-    pub(super) fn pace(&mut self, event_loop: &ActiveEventLoop, wake: Wake) {
+    /// What the frame's [`Wake`]s ask of the loop, after the frame that
+    /// carries their `now` was drawn: `wake` is the main window's (the
+    /// chrome, the overlays and, when it is there, the page), `page_wake`
+    /// the page's while it is in its own window. Continuous motion draws
+    /// that window's next frame; a deadline is that window's, and the
+    /// loop waits until the earliest of all; nothing pending sleeps until
+    /// input. The wait ends early on any event, so the git worker, the
+    /// screen reader and the agent port still get their frame through
+    /// `invalidate` whenever they ask.
+    pub(super) fn pace(&mut self, event_loop: &ActiveEventLoop, wake: Wake, page_wake: Wake) {
+        let main = self.main;
+        self.pace_window(main, wake);
+        let page = self.page_window_id().filter(|id| Some(*id) != main);
+        self.pace_window(page, page_wake);
+        match self.windows.earliest_deadline() {
+            Some(at) => event_loop.set_control_flow(ControlFlow::WaitUntil(at)),
+            None => event_loop.set_control_flow(ControlFlow::Wait),
+        }
+    }
+
+    /// One window's share of the pace.
+    fn pace_window(&mut self, id: Option<WindowId>, wake: Wake) {
+        let Some(host) = id.and_then(|id| self.windows.get_mut(id)) else {
+            return;
+        };
         match wake.next {
             Some(next) if next.is_zero() => {
                 // Springs still moving: keep the frames coming.
-                self.compositor.invalidate();
-                if let Some(w) = &self.window {
-                    w.request_redraw();
-                }
-                event_loop.set_control_flow(ControlFlow::Wait);
+                host.compositor_mut().invalidate();
+                host.request_redraw();
+                host.set_deadline(None);
             }
-            Some(next) => {
-                event_loop.set_control_flow(ControlFlow::WaitUntil(Instant::now() + next))
+            Some(next) => host.set_deadline(Some(Instant::now() + next)),
+            None => host.set_deadline(None),
+        }
+    }
+
+    /// A deadline came due: the windows whose deadline it was ask for
+    /// their frame; the others keep theirs.
+    pub(super) fn deadlines_due(&mut self) {
+        let now = Instant::now();
+        for (_, host) in self.windows.iter_mut() {
+            if host.deadline().is_some_and(|at| at <= now) {
+                host.set_deadline(None);
+                host.compositor_mut().invalidate();
+                host.request_redraw();
             }
-            None => event_loop.set_control_flow(ControlFlow::Wait),
         }
     }
 }

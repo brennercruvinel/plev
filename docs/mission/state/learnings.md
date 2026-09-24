@@ -12,6 +12,19 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-76 itens 2 e 3
+
+- **a segunda janela fechava a primeira:** no shell antigo do showcase,
+  um segundo `create_window` sobrescrevia o `Arc<Window>`, o `Drop` do
+  macOS fechava a primeira janela e os eventos dela passavam a ser
+  roteados como da segunda. o `WindowId` que o winit entrega em todo
+  evento era ignorado por todos os shells. agora cada janela é um host
+  com o próprio contexto e o app roteia por id.
+- **o drop de arquivo não tem posição em plataforma nenhuma:** o winit
+  0.30 entrega `HoveredFile` e `DroppedFile` sem coordenadas e não manda
+  `CursorMoved` durante o arraste; a posição fica opcional até ele expor.
+  fonte: `task-76-platform-integration.md`, handoffs dos itens 2 e 3.
+
 ### 2026-09-24, task-76 fase 1
 
 - **o device perdido era um buraco silencioso:** o wgpu engole todo erro
