@@ -216,7 +216,8 @@ B := id_count u32, (len u16, utf8)*, chunk_count u32 (the index's),
   hook installed before. it never panics (a panic in a panic hook
   aborts), and it only tries the recorder's lock, since the panic may
   have come from inside the recorder on the same thread. no app installs
-  it yet.
+  it yet. (updated on 2026-09-23: the ide installs it when it records,
+  task-63 phase d, see the consequences.)
 
 ## measured cost
 
@@ -308,7 +309,26 @@ scene needs it.
   integrated and the showcase still does not depend on `rec`
   (`crates/showcase/Cargo.toml`): the wiring is task-63 phase d now.
   outside tests, the one caller of `Recorder` today is the `ide-lab`
-  binary (task-62 phase c).
+  binary (task-62 phase c). (updated on 2026-09-23: the orchestrator
+  took the showcase wiring and the image pixel retention out of phase d,
+  and phase d wired the ide instead, below.)
+- the ide records itself (added on 2026-09-23, task-63 phase d). with
+  `PLEV_RECORD=1` in a debug build, the window's shell keeps a `Recorder`
+  on the workbench's clock through `ide::record::Recording`: a sink on
+  the workbench's dispatcher for every stage, the agent port's
+  observations through `Host::observed` of `ide::agent::Served`
+  (`ide::agent::serve_recorded`), the state after an agent's act, after a
+  git result, after a person's click or key that changed something and
+  before each frame, every frame drawn with its bindings, and a person's
+  clicks and keys (kind, position, the control under the pointer, never
+  a character). it saves the window on `session::Save` (cmd-shift-s or
+  ctrl-shift-s, bound only while recording), when the loop exits (the
+  window closed, or Escape), and on a panic, to `$TMPDIR/plev/sessions/`
+  (made private to the user): `ide-<pid>-<n>.monster` for a save, the
+  panic hook's own name for a panic, each path in the log. without the
+  variable nothing is created, and the shell pays an `Option` check per
+  frame and per input. the laboratory keeps its own recording
+  (task-88).
 
 ## the format decision
 

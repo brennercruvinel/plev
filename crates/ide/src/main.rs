@@ -26,6 +26,13 @@
 //! change counts its time from the change, not from the last frame. Keys
 //! go through the keymap (`keys.rs`).
 //!
+//! With `PLEV_RECORD=1` in a debug build the shell records the session
+//! for the inspector (`ide::record`): the receipts, who observed what
+//! through the port, the state, a person's clicks and keys, and every
+//! frame drawn with where each bound control shows. It saves the retained
+//! window to `$TMPDIR/plev/sessions/ide-<pid>-<n>.monster` on cmd-shift-s
+//! (ctrl-shift-s), when the window closes, and on a panic, and logs where.
+//!
 //! With `PLEV_BACKGROUND=1` on macOS the window comes up without taking the
 //! focus, whatever app is in front, so it can open beside someone at work
 //! (an agent's run the person watches, not one they use): the app never
@@ -40,11 +47,13 @@
 mod actions;
 mod keys;
 mod pace;
+mod recording;
 mod renderer;
 mod watcher;
 
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Instant;
 
 use engine::actions::{ActionRegistry, KeymapMatcher};
 use engine::compositor::Compositor;
@@ -52,8 +61,10 @@ use engine::gpu::GpuContext;
 use engine::gpu::texture_pool::TexturePool;
 use engine::text::TextSystem;
 use git::{GitClient, GitEvent};
+use ide::record::Recording;
 use ide::views::workspace::Side;
 use ide::workbench::Workbench;
+use rec::InputKind;
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, StartCause, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
@@ -124,6 +135,9 @@ struct App {
     /// The window comes up without taking the focus (`PLEV_BACKGROUND=1`
     /// on macOS).
     background: bool,
+
+    /// The session's recording, when `PLEV_RECORD=1` in a debug build.
+    recording: Option<Recording>,
 }
 
 impl App {
@@ -144,6 +158,7 @@ impl App {
             #[cfg(unix)]
             port: None,
             background: false,
+            recording: None,
         }
     }
 
@@ -165,11 +180,17 @@ impl App {
 
     /// What agents asked through the port, served on this thread with the
     /// frame on screen, and every stage that ended since sent; a frame
-    /// only when an act ran, since an observation changes nothing.
+    /// only when an act ran, since an observation changes nothing. The
+    /// recording keeps who observed what, and the state an act left.
     fn serve_agent(&mut self) {
         #[cfg(unix)]
         if let Some(port) = self.port.as_mut()
-            && ide::agent::serve(port, &mut self.bench, &self.compositor)
+            && ide::agent::serve_recorded(
+                port,
+                &mut self.bench,
+                &self.compositor,
+                self.recording.as_ref(),
+            )
         {
             self.invalidate();
         }
@@ -234,6 +255,7 @@ impl ApplicationHandler<AppEvent> for App {
                 // The result may end an agent's request (a stage, an
                 // unstage, a commit): its last stage goes out now.
                 self.serve_agent();
+                self.record_state();
             }
             AppEvent::Agent => self.serve_agent(),
             AppEvent::FsChange => {
@@ -258,7 +280,7 @@ impl ApplicationHandler<AppEvent> for App {
                 if key_event.state == ElementState::Pressed
                     && self.handle_key_event(&key_event, event_loop)
                 {
-                    self.invalidate();
+                    self.changed();
                 }
             }
 
@@ -344,8 +366,9 @@ impl ApplicationHandler<AppEvent> for App {
                         Some(Side::Left) => self.bench.workspace_mut().begin_drag_left(cx),
                         Some(Side::Right) => self.bench.workspace_mut().begin_drag_right(cx),
                         None => {
+                            self.record_input(InputKind::PointerDown, Some([cx, cy]));
                             if self.bench.click(cx, cy) {
-                                self.invalidate();
+                                self.changed();
                             }
                         }
                     },
@@ -362,8 +385,9 @@ impl ApplicationHandler<AppEvent> for App {
                 ..
             } => {
                 let (cx, cy) = self.cursor_pos;
+                self.record_input(InputKind::PointerDown, Some([cx, cy]));
                 if self.bench.right_click(cx, cy) {
-                    self.invalidate();
+                    self.changed();
                 }
             }
 
@@ -402,6 +426,7 @@ impl ApplicationHandler<AppEvent> for App {
                 else {
                     return;
                 };
+                let drawing = Instant::now();
                 renderer::render_frame(
                     gpu,
                     text_system,
@@ -410,6 +435,17 @@ impl ApplicationHandler<AppEvent> for App {
                     &mut self.compositor,
                     &mut self.bench,
                 );
+                let drawn = drawing.elapsed().as_secs_f64() * 1e3;
+                // The frame just drawn, where each bound control shows in
+                // it, and the state it was drawn from.
+                if let Some(recording) = &self.recording {
+                    let recording_at = Instant::now();
+                    recording.frame(&self.bench, &self.compositor);
+                    let recorded = recording_at.elapsed().as_secs_f64() * 1e3;
+                    log::debug!("drawn: {drawn:.3} ms, recorded: {recorded:.3} ms");
+                } else {
+                    log::debug!("drawn: {drawn:.3} ms");
+                }
                 // `wake.now` is carried by this frame: the scene was built
                 // after the tick, so a flipped caret is already in it.
                 self.pace(event_loop, wake);
@@ -420,6 +456,12 @@ impl ApplicationHandler<AppEvent> for App {
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {}
+
+    /// The loop ends (the window closed, or Escape quit): the recording's
+    /// window is saved.
+    fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
+        self.save_session("close");
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -439,7 +481,15 @@ fn background() -> bool {
 }
 
 fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
+    // A recording says where its files go: the ide's own info lines show
+    // by default when it records.
+    let recording = Recording::from_env();
+    let filter = if recording.is_some() {
+        "warn,ide=info"
+    } else {
+        "warn"
+    };
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(filter)).init();
 
     // Repository: argv[1] or the current directory (any subdir works).
     let repo_path = std::env::args()
@@ -475,6 +525,10 @@ fn main() {
     let mut bench = Workbench::new(1280.0, 800.0);
     // Initial data load (results stream in as user events).
     bench.connect(git);
+    // Off unless `PLEV_RECORD=1` in a debug build; nothing is created then.
+    if let Some(recording) = &recording {
+        recording::start(recording, &mut bench);
+    }
 
     // Watch worktree + .git so external changes (editor saves, CLI
     // commits) refresh the UI automatically. The app still works if the
@@ -488,6 +542,7 @@ fn main() {
 
     let mut app = App::new(bench, fs_watcher);
     app.background = background;
+    app.record(recording);
     // Off unless `PLEV_AGENT=1` in a debug build; nothing is created then.
     #[cfg(unix)]
     {

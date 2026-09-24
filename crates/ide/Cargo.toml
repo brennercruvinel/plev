@@ -38,12 +38,19 @@ notify.workspace = true
 # unix only), the ide's window opens it with PLEV_AGENT=1 in a debug build,
 # and the laboratory (src/bin/lab) serves it too.
 wire.workspace = true
-# the laboratory (src/bin/lab): the flight recorder around the workbench,
-# the report as json, a real repository in a temp dir. the lib uses none
-# of these; cargo has no per-binary dependencies.
+# the flight recorder: the lib records the ide's session with it
+# (src/record.rs, PLEV_RECORD=1 in a debug build), and the laboratory
+# (src/bin/lab) around its workbench. the laboratory's report as json and
+# its real repository in a temp dir: the lib uses neither; cargo has no
+# per-binary dependencies.
 rec.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true
+
+[dev-dependencies]
+# the recording test reads the session back the way plev-inspect does,
+# and asks it why each act of the agent went as it did.
+inspect = { path = "../inspect" }
 
 [lints]
 workspace = true

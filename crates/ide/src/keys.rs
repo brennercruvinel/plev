@@ -3,6 +3,7 @@
 //! the actions that act on a capability through the workbench.
 
 use engine::actions::{Action, ContextStack, KeyContext, MatchResult, keystroke_from_key_event};
+use rec::InputKind;
 use winit::event::KeyEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::keyboard::Key;
@@ -31,6 +32,8 @@ impl App {
             for ch in text.chars() {
                 form.append_char(ch);
             }
+            // typed into the field: recorded as text, never the text.
+            self.record_input(InputKind::Text, None);
             return true;
         }
 
@@ -44,6 +47,7 @@ impl App {
                     log::warn!("keymap resolved unknown action `{name}`");
                     return false;
                 };
+                self.record_input(InputKind::Key, None);
                 self.dispatch(action.as_ref(), event_loop)
             }
             MatchResult::Pending | MatchResult::None => false,
@@ -73,6 +77,9 @@ impl App {
         let bench = &mut self.bench;
         if action.is::<actions::Quit>() {
             event_loop.exit();
+            false
+        } else if action.is::<ide::record::Save>() {
+            self.save_session("key");
             false
         } else if action.is::<actions::Toggle>() {
             bench.workspace_mut().toggle_theme();
