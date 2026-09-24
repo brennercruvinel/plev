@@ -30,7 +30,7 @@ use std::str::FromStr;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{LazyLock, Mutex, RwLock};
 
-use proc_macro2::{TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Group, TokenStream, TokenTree};
 use rustc_hash::FxHasher;
 
 use super::Site;
@@ -56,13 +56,14 @@ pub(crate) struct Snapshot {
 }
 
 /// Where a literal starts in its file: line and column from 1, the column
-/// counted in chars, as `std::panic::Location` counts them. `doc` marks the
-/// text of a doc comment, which the window never draws.
+/// counted in chars, as `std::panic::Location` counts them. `unseen` marks
+/// a literal the app never draws: the text of a doc comment, or one inside
+/// an item under `#[cfg(test)]`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct At {
     line: u32,
     column: u32,
-    doc: bool,
+    unseen: bool,
 }
 
 /// What a saved file turned out to be.
@@ -105,7 +106,7 @@ pub(crate) fn snapshot(src: &str) -> Option<Snapshot> {
     let lexed = TokenStream::from_str(src).ok().map(|stream| {
         let mut hasher = FxHasher::default();
         let (mut lits, mut at) = (Vec::new(), Vec::new());
-        walk(stream, &mut hasher, &mut lits, &mut at);
+        walk(stream, &mut hasher, &mut lits, &mut at, false);
         Snapshot {
             skeleton: hasher.finish(),
             lits,
@@ -120,10 +121,19 @@ pub(crate) fn snapshot(src: &str) -> Option<Snapshot> {
     lexed
 }
 
-fn walk(stream: TokenStream, hasher: &mut FxHasher, lits: &mut Vec<Lit>, at: &mut Vec<At>) {
+fn walk(
+    stream: TokenStream,
+    hasher: &mut FxHasher,
+    lits: &mut Vec<Lit>,
+    at: &mut Vec<At>,
+    test: bool,
+) {
     // 1 after `doc`, 2 after `doc =`: a literal then is a doc comment's text
     // (`/// x` lexes as `#[doc = " x"]`).
     let mut after_doc = 0u8;
+    // after `#[cfg(test)]`, the next `{ .. }` here is test code (a module,
+    // a fn body); an item that ends with `;` first ends it.
+    let mut cfg_test = false;
     for tt in stream {
         let next = match &tt {
             TokenTree::Ident(i) if i == "doc" => 1,
@@ -132,10 +142,15 @@ fn walk(stream: TokenStream, hasher: &mut FxHasher, lits: &mut Vec<Lit>, at: &mu
         };
         match tt {
             TokenTree::Ident(i) => i.to_string().hash(hasher),
-            TokenTree::Punct(p) => p.as_char().hash(hasher),
+            TokenTree::Punct(p) => {
+                cfg_test &= p.as_char() != ';';
+                p.as_char().hash(hasher);
+            }
             TokenTree::Group(g) => {
                 (g.delimiter() as u8).hash(hasher);
-                walk(g.stream(), hasher, lits, at);
+                let body = cfg_test && g.delimiter() == Delimiter::Brace;
+                cfg_test = (cfg_test && !body) || is_cfg_test(&g);
+                walk(g.stream(), hasher, lits, at, test || body);
             }
             TokenTree::Literal(l) => {
                 0xB1u8.hash(hasher);
@@ -144,12 +159,23 @@ fn walk(stream: TokenStream, hasher: &mut FxHasher, lits: &mut Vec<Lit>, at: &mu
                 at.push(At {
                     line: u32::try_from(start.line).unwrap_or(u32::MAX),
                     column: u32::try_from(start.column + 1).unwrap_or(u32::MAX),
-                    doc: after_doc == 2,
+                    unseen: test || after_doc == 2,
                 });
             }
         }
         after_doc = next;
     }
+}
+
+/// `[cfg(test)]`, the group of the attribute.
+fn is_cfg_test(g: &Group) -> bool {
+    let mut inner = g.stream().into_iter();
+    g.delimiter() == Delimiter::Bracket
+        && matches!(
+            (inner.next(), inner.next(), inner.next()),
+            (Some(TokenTree::Ident(cfg)), Some(TokenTree::Group(args)), None)
+                if cfg == "cfg" && args.stream().to_string() == "test"
+        )
 }
 
 fn classify(text: &str) -> Lit {
@@ -307,9 +333,12 @@ pub fn apply_change(path: &Path) -> Change {
 
 /// Every string literal whose value is `text`, ordered by file, line and
 /// column: the sources as the baseline read them, or as the last save that
-/// kept a file's skeleton left it. Doc comments are left out. Empty when no
-/// literal holds the text (formatted before display) or before the
-/// baseline is taken.
+/// kept a file's skeleton left it. Literals the app never draws are left
+/// out: doc comments, items under `#[cfg(test)]`, and test files (the
+/// file hygiene guard's rule: `tests.rs`, `tests_*.rs`, a `tests` or
+/// `benches` directory). A test module declared out of line under another
+/// name still counts. Empty when no literal holds the text (formatted
+/// before display) or before the baseline is taken.
 pub fn sites_of(text: &str) -> Vec<Site> {
     let base = BASELINE.lock().unwrap_or_else(|e| e.into_inner());
     let edited = EDITED.lock().unwrap_or_else(|e| e.into_inner());
@@ -325,10 +354,14 @@ pub fn sites_of(text: &str) -> Vec<Site> {
 }
 
 impl Snapshot {
-    /// The string literals of this file whose value is `text`.
+    /// The string literals of this file whose value is `text`, none in a
+    /// test file.
     fn find(&self, path: &Path, text: &str, out: &mut Vec<Site>) {
+        if is_test_file(path) {
+            return;
+        }
         for (lit, at) in self.lits.iter().zip(&self.at) {
-            if !at.doc && matches!(lit, Lit::Str(s) if s == text) {
+            if !at.unseen && matches!(lit, Lit::Str(s) if s == text) {
                 out.push(Site {
                     file: path.to_path_buf(),
                     line: at.line,
@@ -358,6 +391,17 @@ fn rebuild_overrides(deltas: &Deltas) {
     let active = !over.text.is_empty() || !over.colors.is_empty();
     *OVERRIDES.write().unwrap_or_else(|e| e.into_inner()) = over;
     ACTIVE.store(active, Ordering::Release);
+}
+
+/// Test code by where it lives, under the workspace root.
+fn is_test_file(path: &Path) -> bool {
+    let rel = path.strip_prefix(super::project_root()).unwrap_or(path);
+    let stem = rel.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+    stem == "tests"
+        || stem.starts_with("tests_")
+        || rel
+            .components()
+            .any(|c| matches!(c.as_os_str().to_str(), Some("tests" | "benches")))
 }
 
 // ── apply ──
@@ -547,8 +591,56 @@ mod tests {
         assert_eq!((snap.at[1].line, snap.at[1].column), (line, column));
         let (line, column) = position(OLD, "0xf8f8f8");
         assert_eq!((snap.at[4].line, snap.at[4].column), (line, column));
-        assert!(snap.at[0].doc, "the doc comment is marked");
-        assert!(!snap.at[1].doc && !snap.at[4].doc);
+        assert!(snap.at[0].unseen, "the doc comment is marked");
+        assert!(!snap.at[1].unseen && !snap.at[4].unseen);
+    }
+
+    #[test]
+    fn literals_in_test_code_are_unseen() {
+        let src = r#"
+            const A: &str = "shown";
+            #[cfg(test)]
+            mod tests {
+                const B: &str = "in a test module";
+            }
+            #[cfg(test)]
+            pub(crate) fn helper(x: u32) -> Vec<&'static str> { vec!["in a test fn"] }
+            #[cfg(test)]
+            mod out_of_line;
+            #[cfg(not(test))]
+            fn g() -> &'static str { "not test" }
+            fn f() -> &'static str { "in a fn" }
+        "#;
+        let snap = snapshot(src).unwrap();
+        let marks: Vec<(String, bool)> = snap
+            .lits
+            .iter()
+            .zip(&snap.at)
+            .map(|(lit, at)| match lit {
+                Lit::Str(s) => (s.clone(), at.unseen),
+                other => panic!("{other:?}"),
+            })
+            .collect();
+        let want = [
+            ("shown", false),
+            ("in a test module", true),
+            ("in a test fn", true),
+            ("not test", false),
+            ("in a fn", false),
+        ];
+        assert_eq!(marks, want.map(|(s, u)| (s.to_owned(), u)));
+
+        let root = super::super::project_root();
+        for (rel, test) in [
+            ("crates/a/src/tests.rs", true),
+            ("crates/a/src/b/tests_scales.rs", true),
+            ("crates/a/src/tests/widgets/mod.rs", true),
+            ("crates/a/src/view/apps/dock/tests.rs", true),
+            ("crates/a/src/view/latest.rs", false),
+            ("crates/a/src/contests.rs", false),
+        ] {
+            assert_eq!(is_test_file(&root.join(rel)), test, "{rel}");
+        }
     }
 
     #[test]
