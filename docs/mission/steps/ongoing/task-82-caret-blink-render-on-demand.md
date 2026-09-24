@@ -247,3 +247,17 @@ também é só do `engine::window`, então o contrato
   tick e não eram desta task, mas são frames sem mudança visível.
 - a linha `log::debug!` por frame no shell fica: só aparece com
   `RUST_LOG=showcase=debug` e é o contador que a verificação usou.
+
+## fase b aberta (orquestrador, 2026-09-23)
+
+a auditoria de verdade (`docs/mission/state/truth.md`, seções 4g e 5.1)
+mostrou que a promessa do README ("no change, no frame") está quebrada no
+app da prova da tese: o binário `ide` desenha todo frame com o campo de
+commit focado ou com um toast na tela, a página Git do showcase volta a 60
+fps pelo mesmo caminho, e o worker do git faz o showcase desenhar mesmo
+com outra página visível. é invariante quebrada, primeira na ordem do
+ciclo autônomo. escopo da fase b: o `Wake` no ide (cadeia e shell), na
+página Git, no urnaui, o toast como prazo e o frame avulso do worker no
+showcase; medição antes e depois numa janela real. fora: o blink sem foco
+do `EditorView` e o caret do dock (demo), que ficam na lista de dívidas.
+branch `task/82b-wake-everywhere`.
