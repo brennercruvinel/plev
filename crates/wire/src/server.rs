@@ -8,6 +8,13 @@
 //! `sem::Request` with `Actor::Agent` and goes through the dispatcher a
 //! click goes through, and its stages come back through the sink.
 //!
+//! an act on `from_revision` rests on what its actor was shown, and on
+//! nothing else (`Shown`): the revision must have been given to that
+//! actor, the action's declaration comes from the revision, and the value
+//! of each state it reads comes from the last observation up to that
+//! revision that showed it to the actor. a read never shown is refused
+//! before the dispatcher (`ProtoError::NotObserved`).
+//!
 //! a secret never leaves through the port. the request as dispatched and
 //! every stage of it are reduced by `sem::redact`, the one rule the
 //! recorder applies too, with the secret nodes read from the live snapshot
@@ -20,7 +27,7 @@ use std::rc::Rc;
 use sem::redact::Secrets;
 use sem::{
     Actor, Change, Millis, Node, Receipt, ReceiptSink, Rejection, Request, RequestId, Revision,
-    SemId, Snapshot, Stage, StateKey,
+    SemId, Snapshot, Stage, StateRef,
 };
 
 use crate::proto::{
@@ -28,6 +35,7 @@ use crate::proto::{
     StageReply,
 };
 use crate::ring::Ring;
+use crate::shown::{Part, Shown, keeps};
 
 /// a connection, numbered by the transport.
 pub type ConnId = u64;
@@ -101,11 +109,12 @@ pub struct Outgoing {
 }
 
 /// the protocol state of one port: the actor of each connection, the
-/// revisions served, and the requests its agents issued, whose stages it
-/// forwards to the connection that asked.
+/// revisions served, what each actor was shown, and the requests its
+/// agents issued, whose stages it forwards to the connection that asked.
 pub struct Server {
     app: String,
     ring: Ring,
+    shown: Shown,
     names: HashMap<ConnId, String>,
     issued: HashMap<RequestId, Issued>,
     heard: Rc<RefCell<VecDeque<Heard>>>,
@@ -152,11 +161,14 @@ impl ReceiptSink for PortSink {
 }
 
 impl Server {
-    /// a server for `app` keeping the last `ring` revisions it serves.
+    /// a server for `app` keeping the last `ring` revisions it serves,
+    /// and the last `ring` revisions it gave each actor.
     pub fn new(app: impl Into<String>, ring: usize) -> Self {
+        let ring = Ring::new(ring);
         Server {
             app: app.into(),
-            ring: Ring::new(ring),
+            shown: Shown::new(ring.cap()),
+            ring,
             names: HashMap::new(),
             issued: HashMap::new(),
             heard: Rc::new(RefCell::new(VecDeque::new())),
@@ -233,7 +245,7 @@ impl Server {
     /// stage goes out: nothing runs on this thread between two stages of
     /// one call, so they all leave it at the same revision. it is not an
     /// observation: the traffic's observations and `Host::observed` do not
-    /// count it.
+    /// count it, and it shows the actor no state.
     pub fn forward(&mut self, host: &mut dyn Host) -> Vec<Outgoing> {
         let heard: Vec<Heard> = match self.heard.try_borrow_mut() {
             Ok(mut q) => q.drain(..).collect(),
@@ -257,6 +269,9 @@ impl Server {
                 _ => None,
             };
             let revision = if h.stage.is_terminal() { now } else { None };
+            if let (Some(r), Some(name)) = (revision, self.names.get(&issued.conn)) {
+                self.shown.record(name, r, Part::Nothing);
+            }
             self.traffic.stages_out += 1;
             if matches!(h.stage, Stage::Rejected(Rejection::Stale { .. })) {
                 self.traffic.rejected_stale += 1;
@@ -282,7 +297,8 @@ impl Server {
     }
 
     /// forgets a connection that ended, with the requests it was waiting
-    /// on (they still run; nobody listens).
+    /// on (they still run; nobody listens). what its actor was shown
+    /// stays: another connection under the same name is the same actor.
     pub fn close(&mut self, conn: ConnId) {
         self.names.remove(&conn);
         self.issued.retain(|_, issued| issued.conn != conn);
@@ -315,8 +331,9 @@ impl Server {
         }))
     }
 
-    /// serves an observation and, when `conn` has an actor, tells the host
-    /// who was served what (`Host::observed`), after the reply is built.
+    /// serves an observation and, when `conn` has an actor, remembers what
+    /// it showed that actor and tells the host who was served what
+    /// (`Host::observed`), after the reply is built.
     fn observe(
         &mut self,
         conn: ConnId,
@@ -352,7 +369,7 @@ impl Server {
                 changes: Snapshot::diff(&seen, &now)
                     .into_iter()
                     .filter_map(|c| match c {
-                        Change::StateChanged { ref at, .. } if !keeps(o, &at.key) => None,
+                        Change::StateChanged { ref at, .. } if !keeps(&o.keys, &at.key) => None,
                         Change::NodeAdded(mut node) => {
                             serve(&mut node, o);
                             Some(Change::NodeAdded(node))
@@ -377,6 +394,16 @@ impl Server {
                 bounds,
             }),
         };
+        if let Some(name) = self.names.get(&conn) {
+            let part = match &reply {
+                Reply::Delta(d) => Part::moved(&d.changes, o.keys.clone()),
+                _ => Part::Cut {
+                    scope: o.scope.clone(),
+                    keys: o.keys.clone(),
+                },
+            };
+            self.shown.record(name, revision, part);
+        }
         if let Some(actor) = self.actor(conn) {
             host.observed(&actor, o.scope.as_ref(), revision);
         }
@@ -387,7 +414,7 @@ impl Server {
         &mut self,
         conn: ConnId,
         msg: &str,
-        a: Act,
+        mut a: Act,
         host: &mut dyn Host,
     ) -> Result<(), ProtoError> {
         let Some(actor) = self.actor(conn) else {
@@ -395,7 +422,7 @@ impl Server {
                 reason: "say hello first: an agent acts under the name it declares".to_owned(),
             });
         };
-        let req = match (a.observed, a.from_revision) {
+        let req = match (a.observed.take(), a.from_revision) {
             (Some(observed), None) => Request {
                 actor,
                 target: a.target,
@@ -403,13 +430,7 @@ impl Server {
                 param: a.param,
                 observed,
             },
-            (None, Some(revision)) => {
-                let Some(seen) = self.ring.get(revision) else {
-                    return Err(ProtoError::UnknownRevision { revision });
-                };
-                Request::observe(seen, actor, a.target, a.action, a.param)
-                    .map_err(|e| bad(format!("in revision {revision}: {e}")))?
-            }
+            (None, Some(revision)) => self.rest(conn, actor, a, revision)?,
             (Some(_), Some(_)) => {
                 return Err(bad(
                     "an act rests on observed or on from_revision, not on both",
@@ -457,22 +478,47 @@ impl Server {
         );
         Ok(())
     }
+
+    /// the request of an act on `revision`: the revision must have been
+    /// given to the actor of `conn` and still be held; the action and what
+    /// it reads come from the revision's snapshot, and the value of each
+    /// read from what the actor was shown up to that revision. the
+    /// observation keeps `revision`, to trace the request.
+    fn rest(
+        &self,
+        conn: ConnId,
+        actor: Actor,
+        a: Act,
+        revision: Revision,
+    ) -> Result<Request, ProtoError> {
+        let name = self.names.get(&conn).map_or("", String::as_str);
+        let seen = self
+            .ring
+            .get(revision)
+            .filter(|_| self.shown.given(name, revision));
+        let Some(seen) = seen else {
+            return Err(ProtoError::UnknownRevision { revision });
+        };
+        let mut req = Request::observe(seen, actor, a.target, a.action, a.param)
+            .map_err(|e| bad(format!("in revision {revision}: {e}")))?;
+        let reads: Vec<StateRef> = req.observed.values.drain(..).map(|(r, _)| r).collect();
+        let values = self
+            .shown
+            .values(name, revision, &reads, &self.ring)
+            .map_err(|reads| ProtoError::NotObserved { reads })?;
+        req.observed.values = reads.into_iter().zip(values).collect();
+        Ok(req)
+    }
 }
 
 /// a node as an observation serves it, whether a snapshot holds it or a
 /// delta adds it: its state cut to the keys asked for, and without
 /// `source` unless asked.
 fn serve(node: &mut Node, o: &Observe) {
-    node.state.retain(|key, _| keeps(o, key));
+    node.state.retain(|key, _| keeps(&o.keys, key));
     if !o.source {
         node.source = None;
     }
-}
-
-/// true when the observation keeps state under `key`: every key when it
-/// names none.
-fn keeps(o: &Observe, key: &StateKey) -> bool {
-    o.keys.as_ref().is_none_or(|keys| keys.contains(key))
 }
 
 /// `scope` and its descendants, or the whole snapshot.

@@ -42,6 +42,7 @@ mod port;
 mod proto;
 mod ring;
 mod server;
+mod shown;
 
 #[cfg(unix)]
 pub use client::Client;
@@ -57,3 +58,4 @@ pub use proto::{
 };
 pub use ring::{DEFAULT_RING, Ring};
 pub use server::{ConnId, Host, MAX_NAME, Outgoing, Server, Traffic};
+pub use shown::MAX_ACTORS;
