@@ -11,15 +11,15 @@
     "settled": true
   },
   "semantics": {
-    "revision": "d7a661b0bdabefd9",
-    "nodes": 4
+    "revision": "03ab4ac8cb79e00c",
+    "nodes": 5
   },
   "layers": [
     {
       "name": "files",
       "z": 0,
-      "hash": "e9cd1590941c3797",
-      "nodes": 16,
+      "hash": "34753c5be541f48e",
+      "nodes": 22,
       "bounds": [
         283.0,
         49.0,
@@ -91,9 +91,9 @@
       "id": "files.status",
       "layer": "files",
       "rect": [
-        569.0,
+        686.0,
         314.2,
-        535.0,
+        418.0,
         14.63
       ],
       "clip": [
@@ -110,6 +110,22 @@
         424.0,
         302.2,
         133.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "files.warn",
+      "layer": "files",
+      "rect": [
+        565.0,
+        302.2,
+        109.0,
         40.0
       ],
       "clip": [

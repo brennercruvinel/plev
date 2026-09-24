@@ -33,6 +33,14 @@
 //! window to `$TMPDIR/plev/sessions/ide-<pid>-<n>.monster` on cmd-shift-s
 //! (ctrl-shift-s), when the window closes, and on a panic, and logs where.
 //!
+//! With `PLEV_NATIVE_CONFIRM=1` a request that waits for a person (an
+//! agent's discard, an agent's question) is asked in the platform's own
+//! dialog, a sheet of the window, instead of the drawn modal
+//! (`Workbench::confirm_natively`, `engine::platform::alerts`): the same
+//! words, the same `confirm` or `decline` as the person, the same
+//! receipt. The dialog blocks the loop until the person answers. Off by
+//! default: the drawn modal stays the ide's way.
+//!
 //! With `PLEV_BACKGROUND=1` on macOS the window comes up without taking the
 //! focus, whatever app is in front, so it can open beside someone at work
 //! (an agent's run the person watches, not one they use): the app never
@@ -136,6 +144,11 @@ struct App {
     /// on macOS).
     background: bool,
 
+    /// Confirmations are asked in the platform's dialog over the window
+    /// (`PLEV_NATIVE_CONFIRM=1`), installed on the workbench once the
+    /// window exists.
+    native_confirm: bool,
+
     /// The session's recording, when `PLEV_RECORD=1` in a debug build.
     recording: Option<Recording>,
 }
@@ -158,6 +171,7 @@ impl App {
             #[cfg(unix)]
             port: None,
             background: false,
+            native_confirm: false,
             recording: None,
         }
     }
@@ -225,6 +239,14 @@ impl ApplicationHandler<AppEvent> for App {
         };
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
         self.window = Some(window.clone());
+        if self.native_confirm {
+            // The platform's dialog, a sheet of this window; the drawn
+            // modal otherwise.
+            self.bench.confirm_natively(
+                engine::platform::alerts::default_alerts(),
+                Some(Box::new(window.clone())),
+            );
+        }
 
         self.scale_factor = window.scale_factor();
         let gpu = pollster::block_on(GpuContext::new(window.clone()));
@@ -480,6 +502,13 @@ fn background() -> bool {
         && std::env::var_os("PLEV_BACKGROUND").is_some_and(|v| v == std::ffi::OsStr::new("1"))
 }
 
+/// `PLEV_NATIVE_CONFIRM=1`: a request that waits for a person is asked in
+/// the platform's dialog over the window instead of the drawn modal. Off
+/// by default.
+fn native_confirm() -> bool {
+    std::env::var_os("PLEV_NATIVE_CONFIRM").is_some_and(|v| v == std::ffi::OsStr::new("1"))
+}
+
 fn main() {
     // A recording says where its files go: the ide's own info lines show
     // by default when it records.
@@ -542,6 +571,7 @@ fn main() {
 
     let mut app = App::new(bench, fs_watcher);
     app.background = background;
+    app.native_confirm = native_confirm();
     app.record(recording);
     // Off unless `PLEV_AGENT=1` in a debug build; nothing is created then.
     #[cfg(unix)]

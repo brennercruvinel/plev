@@ -12,6 +12,10 @@
         "count": {
           "kind": "int",
           "value": 0
+        },
+        "alert": {
+          "kind": "text",
+          "value": ""
         }
       }
     },
@@ -41,6 +45,29 @@
       "actions": [
         {
           "name": "open_file",
+          "reads": [
+            "files:received"
+          ],
+          "policy": {
+            "actors": {
+              "human": true,
+              "agent": false,
+              "assistive": true,
+              "test": true
+            }
+          }
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "files.warn",
+      "role": "button",
+      "label": "warn",
+      "parent": "files",
+      "actions": [
+        {
+          "name": "warn",
           "reads": [
             "files:received"
           ],

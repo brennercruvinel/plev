@@ -11,12 +11,18 @@
 //! the window and the fake in the crate's tests; nothing here opens one
 //! on its own.
 //!
+//! The native alert is a capability the same way (task-76, item 8): the
+//! "warn" button asks `engine::platform::alerts` for the platform's
+//! warning panel through the dispatcher, a person's alone, and the text
+//! the person saw is the page's projected state (`files:alert`), so an
+//! agent reads what was shown and never raises a panel itself.
+//!
 //! Wiring contract for the chrome (view/dispatch.rs, view/input.rs):
 //! every entry takes the todo page (the dispatcher's owner) and the
 //! inert flag; the shell hands the engine's drop event to the view's
-//! `handle_file_drop`, which reaches this page; Tab reaches the button
-//! through `handle_edit_key`, Enter presses it through `handle_enter`,
-//! Escape lets it go through `handle_escape`.
+//! `handle_file_drop`, which reaches this page; Tab walks the two
+//! buttons through `handle_edit_key`, Enter presses the focused one
+//! through `handle_enter`, Escape lets it go through `handle_escape`.
 
 mod semantics;
 #[cfg(test)]
@@ -27,6 +33,7 @@ use std::path::PathBuf;
 use comps::prelude::{Button, EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::input::FileDrop;
+use engine::platform::alerts::Alerts;
 use engine::platform::files::FileDialogs;
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ControlSize, Intent, Theme};
@@ -42,16 +49,19 @@ enum Said {
     Received(usize),
     Cancelled,
     NoDialog,
+    Warned,
+    NoAlert,
 }
 
 pub struct FilesPage {
     /// Every file received, in the order it came: the page's state.
     received: Vec<PathBuf>,
     open: Button,
+    warn: Button,
     /// Files are held over the window: the zone lights up.
     hovering: bool,
-    /// Keyboard focus, on the button.
-    focused: bool,
+    /// Keyboard focus, on one of the two buttons.
+    focused: Option<Target>,
     /// The ids the page projects and binds; `None` only if the constant
     /// ids failed to parse (a test proves they do not), which leaves the
     /// page without semantics: every request is then refused.
@@ -62,47 +72,66 @@ pub struct FilesPage {
     /// The platform's dialogs behind `open_file`: native in the window,
     /// the fake in the crate's tests.
     dialogs: Box<dyn FileDialogs>,
+    /// The platform's panels behind `warn`: native in the window, the
+    /// fake in the crate's tests.
+    alerts: Box<dyn Alerts>,
+    /// The body of the last alert the person saw, projected as
+    /// `files:alert`; empty until one was shown.
+    alerted: String,
     said: Said,
 }
 
-/// One frame of geometry: the card, the drop zone, the button with the
-/// status beside it, one row per file received.
+/// One frame of geometry: the card, the drop zone, the two buttons with
+/// the status beside them, one row per file received.
 struct Layout {
     panel: Rect,
     zone: Rect,
     open: Rect,
+    warn: Rect,
     status: Rect,
     rows: Vec<Rect>,
 }
 
 impl FilesPage {
-    /// The page over the platform's dialogs; in the crate's tests over
-    /// the fake, so no test ever opens a native dialog by mistake.
+    /// The page over the platform's dialogs and panels; in the crate's
+    /// tests over the fakes, so no test ever opens a native one by
+    /// mistake.
     pub fn new() -> Self {
         #[cfg(not(test))]
-        let dialogs = engine::platform::files::default_dialogs();
+        let (dialogs, alerts) = (
+            engine::platform::files::default_dialogs(),
+            engine::platform::alerts::default_alerts(),
+        );
         #[cfg(test)]
-        let dialogs: Box<dyn FileDialogs> = Box::new(engine::platform::files::FakeDialogs::new());
-        Self::with(dialogs)
+        let (dialogs, alerts): (Box<dyn FileDialogs>, Box<dyn Alerts>) = (
+            Box::new(engine::platform::files::FakeDialogs::new()),
+            Box::new(engine::platform::alerts::FakeAlerts::new()),
+        );
+        Self::with(dialogs, alerts)
     }
 
-    /// The page over other dialogs (the fake of a test).
-    pub(crate) fn with(dialogs: Box<dyn FileDialogs>) -> Self {
+    /// The page over other dialogs and panels (the fakes of a test).
+    pub(crate) fn with(dialogs: Box<dyn FileDialogs>, alerts: Box<dyn Alerts>) -> Self {
         let ids = Ids::new()
             .inspect_err(|e| log::error!("files: the page ids do not parse: {e}"))
             .ok();
         let mut open = Button::new("open file").icon("folder-open");
+        let mut warn = Button::new("warn").icon("alert-triangle");
         if let Some(ids) = &ids {
             open = open.sem(ids.open.clone());
+            warn = warn.sem(ids.warn.clone());
         }
         Self {
             received: Vec::new(),
             open,
+            warn,
             hovering: false,
-            focused: false,
+            focused: None,
             ids,
             inert: false,
             dialogs,
+            alerts,
+            alerted: String::new(),
             said: Said::Nothing,
         }
     }
@@ -111,6 +140,12 @@ impl FilesPage {
     #[cfg(test)]
     pub(crate) fn set_dialogs(&mut self, dialogs: Box<dyn FileDialogs>) {
         self.dialogs = dialogs;
+    }
+
+    /// Other panels for a page already built (a test on the gallery).
+    #[cfg(test)]
+    pub(crate) fn set_alerts(&mut self, alerts: Box<dyn Alerts>) {
+        self.alerts = alerts;
     }
 
     /// The view says whether an overlay holds the pointer. While it does,
@@ -126,6 +161,8 @@ impl FilesPage {
             Said::Received(now) => format!("{now} received now, {} in all", self.received.len()),
             Said::Cancelled => "the dialog was cancelled".to_owned(),
             Said::NoDialog => "no file dialog on this target".to_owned(),
+            Said::Warned => "the warning was shown".to_owned(),
+            Said::NoAlert => "no native alert on this target".to_owned(),
         }
     }
 
@@ -142,8 +179,8 @@ impl FilesPage {
     }
 
     /// The card fills the readable width, centered; the zone is as tall
-    /// as two of the tallest controls with a gap between; the button and
-    /// the status share a row; the files received stack under them.
+    /// as two of the tallest controls with a gap between; the two buttons
+    /// and the status share a row; the files received stack under them.
     fn layout(&self, content: Rect, theme: &Theme) -> Layout {
         let pad = theme.spacing.lg;
         let w = content.w.min(theme.size.readable_max_w);
@@ -155,11 +192,13 @@ impl FilesPage {
         y += zone_h + theme.spacing.md;
         let (bw, bh) = self.open.preferred_size(theme);
         let open = Rect::new(x + pad, y, bw, bh);
+        let (ww, wh) = self.warn.preferred_size(theme);
+        let warn = Rect::new(open.right() + theme.spacing.sm, y, ww, wh.max(bh));
         let status_h = Self::status_style(theme).line_height;
         let status = Rect::new(
-            open.right() + theme.spacing.md,
+            warn.right() + theme.spacing.md,
             y + ((bh - status_h) / 2.0).floor(),
-            (inner_w - bw - theme.spacing.md).max(0.0),
+            (inner_w - (warn.right() - open.x) - theme.spacing.md).max(0.0),
             status_h,
         );
         y += bh;
@@ -178,6 +217,7 @@ impl FilesPage {
             panel,
             zone,
             open,
+            warn,
             status,
             rows,
         }
@@ -207,15 +247,20 @@ impl FilesPage {
         let mut r = EventResult::IGNORED;
         // a click anywhere lets the keyboard focus go, as in a field
         if let WidgetEvent::MouseDown { .. } = event
-            && self.focused
+            && self.focused.is_some()
         {
-            self.set_focus(false);
+            self.set_focus(None);
             r.changed = true;
         }
-        let button = self.open.handle_event(event, l.open);
-        r = r.merge(button);
-        if button.clicked {
+        let open = self.open.handle_event(event, l.open);
+        r = r.merge(open);
+        if open.clicked {
             r = r.merge(self.ask(todo, Target::Open, "open_file", None));
+        }
+        let warn = self.warn.handle_event(event, l.warn);
+        r = r.merge(warn);
+        if warn.clicked {
+            r = r.merge(self.ask(todo, Target::Warn, "warn", None));
         }
         r
     }
@@ -275,44 +320,56 @@ impl FilesPage {
         }
     }
 
-    /// Tab moves the keyboard focus onto the button and off it again.
+    /// Tab walks the keyboard focus over the two buttons and off again:
+    /// open file, warn, none.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
         if self.inert || key != EditKey::Tab {
             return false;
         }
-        let on = !self.focused;
-        self.set_focus(on);
+        let next = match self.focused {
+            None => Some(Target::Open),
+            Some(Target::Open) => Some(Target::Warn),
+            Some(Target::Warn | Target::Drop) => None,
+        };
+        self.set_focus(next);
         true
     }
 
-    /// Enter presses the focused button: `open_file` by the person.
+    /// Enter presses the focused button: `open_file` or `warn` by the
+    /// person.
     pub fn handle_enter(&mut self, todo: &mut TodoPage, inert: bool) -> bool {
         self.set_inert(inert);
-        if inert || !self.focused {
+        if inert {
             return false;
         }
-        self.ask(todo, Target::Open, "open_file", None);
+        match self.focused {
+            Some(Target::Open) => self.ask(todo, Target::Open, "open_file", None),
+            Some(Target::Warn) => self.ask(todo, Target::Warn, "warn", None),
+            Some(Target::Drop) | None => return false,
+        };
         true
     }
 
     /// Escape lets the keyboard focus go; `false` when there was none.
     pub fn handle_escape(&mut self) -> bool {
-        if !self.focused {
+        if self.focused.is_none() {
             return false;
         }
-        self.set_focus(false);
+        self.set_focus(None);
         true
     }
 
-    fn set_focus(&mut self, on: bool) {
+    fn set_focus(&mut self, on: Option<Target>) {
         self.focused = on;
-        self.open.set_focused(on);
+        self.open.set_focused(on == Some(Target::Open));
+        self.warn.set_focused(on == Some(Target::Warn));
     }
 
     /// The card, the zone (its edge the accent while files hover), the
-    /// button, the status and the files received. What the page draws
-    /// for a capability it binds, beside the scene: the card as `files`,
-    /// the zone as `files.drop`, the status; the button binds itself.
+    /// two buttons, the status and the files received. What the page
+    /// draws for a capability it binds, beside the scene: the card as
+    /// `files`, the zone as `files.drop`, the status; each button binds
+    /// itself.
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let l = self.layout(content, theme);
         panel(c, l.panel, theme);
@@ -362,10 +419,11 @@ impl FilesPage {
             color: ink,
         });
         self.open.render(c, l.open, theme);
+        self.warn.render(c, l.warn, theme);
         let status = self.status_text();
         let style = Self::status_style(theme);
         let color = match self.said {
-            Said::NoDialog => theme.intent_color(Intent::Destructive).0,
+            Said::NoDialog | Said::NoAlert => theme.intent_color(Intent::Destructive).0,
             _ => theme.colors.text_mid.0,
         };
         c.push(SceneNode::Text {

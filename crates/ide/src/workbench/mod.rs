@@ -11,7 +11,10 @@
 //! An agent or a test builds its own `Request` from a snapshot it took
 //! and calls [`Workbench::dispatch`]. Either way the effect happens once,
 //! in `execute`. What the dispatcher refuses shows as a toast, and a
-//! request that waits for a person opens a modal (`person.rs`).
+//! request that waits for a person opens a modal (`person.rs`), or the
+//! platform's own dialog when the app chose it
+//! ([`Workbench::confirm_natively`]); either answers the same `confirm`
+//! or `decline` as the person.
 
 mod execute;
 mod notice;
@@ -27,6 +30,7 @@ use std::time::Instant;
 
 use comps::prelude::Wake;
 use engine::compositor::Compositor;
+use engine::platform::alerts::{Alerts, Parent};
 use git::{GitClient, GitEvent};
 use sem::{
     Actor, Dispatcher, Millis, Receipt, ReceiptSink, Request, RequestId, SemError, SemErrors,
@@ -38,6 +42,14 @@ use crate::views::workspace::{UiRequest, WorkspaceView};
 use truth::Inflight;
 
 pub use project::{DIFF_LINES, FILES_PROJECTED};
+
+/// The platform's confirmation, when the app chose it over the drawn
+/// modal: the panels, and the window they open over (the shell's, once
+/// it exists; a test has none).
+pub(super) struct NativeConfirm {
+    pub(super) alerts: Box<dyn Alerts>,
+    pub(super) parent: Option<Box<dyn Parent>>,
+}
 
 pub struct Workbench {
     workspace: WorkspaceView,
@@ -52,6 +64,9 @@ pub struct Workbench {
     /// Requests waiting for a person to confirm them, oldest first; the
     /// first one is asked in the modal.
     awaiting: VecDeque<RequestId>,
+    /// The platform's dialog asks in the modal's place, when the app
+    /// chose it (`confirm_natively`); `None` draws the modal.
+    native_confirm: Option<NativeConfirm>,
     /// The monotonic clock receipts are stamped with (`sem` never reads
     /// one).
     clock: Instant,
@@ -66,8 +81,26 @@ impl Workbench {
             dispatcher: Dispatcher::new(),
             inflight: VecDeque::new(),
             awaiting: VecDeque::new(),
+            native_confirm: None,
             clock: Instant::now(),
         }
+    }
+
+    /// From now on a request that waits for a person is asked in the
+    /// platform's dialog (`alerts`, over `parent` when there is one)
+    /// instead of the drawn modal, with the same words, and the answer
+    /// goes through the same `confirm` or `decline` as `Actor::Human`.
+    /// The drawn modal stays the default, and comes back on a target
+    /// whose dialogs are `Unsupported`. An app's choice, never a
+    /// request's: nothing in the contract changes.
+    pub fn confirm_natively(&mut self, alerts: Box<dyn Alerts>, parent: Option<Box<dyn Parent>>) {
+        self.native_confirm = Some(NativeConfirm { alerts, parent });
+    }
+
+    /// Whether requests that wait for a person are asked in the
+    /// platform's dialog.
+    pub fn confirms_natively(&self) -> bool {
+        self.native_confirm.is_some()
     }
 
     /// Takes the repository behind `client` and starts loading it (the
