@@ -19,7 +19,11 @@
 //! since task-70 phase 3, the review by the rules with a sequence the
 //! harness repeated (it looks at each cut and applies it): offered to the
 //! person under the row, and made one action, a button in each cut of the
-//! review. The frames the page shows are synthetic, made here from their
+//! review; and, since task-70 phase 4, the review by the rules with the
+//! person's preferences of accessibility on: "accessibility" asked
+//! through the row opens the band, larger text and more contrast pressed
+//! (the harness is a test actor, which the band's `PERSON_ONLY` lets in),
+//! then done. The frames the page shows are synthetic, made here from their
 //! instant, so no ffmpeg runs and the frame is the same on every machine
 //! (a layer hashes an image by its size, `hash.rs`).
 
@@ -162,6 +166,26 @@ pub const STATES: &[State] = &[
         asks: &[],
         acts: &COMPOSED,
     },
+    State {
+        name: "Silences, review by the rules, larger text and more contrast",
+        page: "Silences",
+        intent: RULES,
+        proposal: Proposal::Rules,
+        ops: &[],
+        asks: &[Asked {
+            intent: "accessibility",
+            taken: true,
+        }],
+        acts: &PREFERRED,
+    },
+];
+
+/// The person's preferences of accessibility, on the band the row opened:
+/// larger text, more contrast, then the band closed.
+const PREFERRED: [(&str, &str); 3] = [
+    ("silences_surface.access.larger_text", "activate"),
+    ("silences_surface.access.more_contrast", "activate"),
+    ("silences_surface.access.done", "activate"),
 ];
 
 /// Each cut looked at, then applied: the sequence a person repeats.

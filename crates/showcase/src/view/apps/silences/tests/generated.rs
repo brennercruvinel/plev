@@ -15,8 +15,10 @@
 //! (task-70 phase 2) is `generated/change.rs`, and its demo, with what
 //! continues through it, `generated/demo.rs`.
 
+mod access;
 mod change;
 mod checkpoint;
+mod contrast;
 mod demo;
 mod transform;
 

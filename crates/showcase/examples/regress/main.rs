@@ -117,7 +117,8 @@ directory. --page also takes a page in a state: \"Silences, review by the
 rules\", \"Silences, review by the Claude (fixture)\", \"Silences, review
 by the Claude (fixture), adapted\", \"Silences, review by the rules, too
 much information\", \"Silences, review by the Claude (fixture), too
-much, in portuguese\", \"Silences, review by the rules, can't compare\".
+much, in portuguese\", \"Silences, review by the rules, can't compare\",
+\"Silences, review by the rules, larger text and more contrast\".
 new baselines take
 --theme core --width 1280 --height 800 --scale 1 unless given. --png
 keeps the frame's image too (needs a GPU), --no-png drops it; without

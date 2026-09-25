@@ -19,11 +19,18 @@
 //! the IR holds a template once, so an operation on a template acts on
 //! every item; an instance's id is refused with the template that makes
 //! it.
+//!
+//! the person's preferences of accessibility (larger text, more contrast,
+//! a density) are lists of these operations (`Preferences::over`, phase
+//! 4), made on the person's behalf and verified the same way.
 
 mod look;
+mod prefer;
 mod shape;
 mod tree;
 mod view;
+
+pub use prefer::{Applied, Preference, Preferences, Preferred};
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;

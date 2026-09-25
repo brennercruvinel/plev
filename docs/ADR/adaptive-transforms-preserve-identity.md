@@ -543,3 +543,156 @@ counts as one more member of the collection (`registry` in
 understanding a template, and then that detour goes (P2).
 local gate green, 2932 passed, 0 failed (was 2894); regress 175
 unchanged (2 new).
+
+## addition: phase 4, accessibility as transformation, and the promote of a template (2026-09-25)
+
+### context
+
+task-75 phase 1 made reduced motion the thread's (`engine::animation`)
+and measured the contrast of the four themes against WCAG AA (102 of 301
+pairs fail; in the core the secondary ink `#7B7B7B` gives 4.13 on the
+paper). the task's other half of section 16 was left: a person's
+preferences (a bigger text, more contrast, a density) changing a
+generated surface by the operations of phase 1, on the person's behalf.
+and phase 3 left a debt: the host lent `promote` a registry where the
+template of an item was one more member.
+
+### decision
+
+#### each preference is operations by token (`uir::Preferences`)
+
+`uir::Preferences` (larger text, more contrast, a density: denser or
+sparser, one or neither) and `Preference`, pure. `Preferences::over`
+makes each preference on, in a fixed order, as a list of phase 1
+operations over the surface as it is, each applied and verified by
+`Adapted::apply`; one refused (the top of a ladder, nothing to move) is
+left out and said.
+
+- **larger text**: `emphasize` on every text and every stat (a template
+  for every item): one step up the type ramp, a stat's value one of its
+  sizes (its label grows with it). a badge, a button, a field, a slider,
+  a table and an image draw their text at the component's size: not
+  reached. the ramp's step carries its weight, so the text is heavier
+  too.
+- **more contrast**: `restyle` to `text`, the strongest ink, of a text in
+  `text_dim` or `text_mid`, and of every slider, table and image; a badge
+  with no fill filled with the accent. in the four themes `text` meets AA
+  on every surface the engine's test measures, so the same operations
+  serve every theme, and the IR stays theme-blind. `restyle` gained two
+  parts for it, additive: a badge's `background` (a role of the fills
+  its filled shape takes: accent, success, danger, info) and the `color`
+  of a slider, a table and an image, which the materializer now reads as
+  the ink of the text it draws for them (a slider's label and value, a
+  table's rows, an image's label), where it used a fixed secondary one.
+- **denser** or **sparser**: `density` once.
+
+what no token reaches is listed, not forced: a stat's label (comps draws
+it in `text_dim`: 4.13 on the core's paper), a table's header, a text in
+an intent's color (the color is its meaning), a text over a dark fill, a
+button's label (the theme's recipe). changing them is a theme's color or
+comps: the design's decision.
+
+#### the last layer of the host
+
+the history is a stack, and a preference turned on before an agent's
+change could not be taken back without taking the agent's first. so the
+preferences are the last layer: `SurfaceHost` keeps each surface as it
+was asked (its form and the changes asked, by anyone) and draws it with
+the preferences made over it again after every change, at every new
+form, and when they change (`SurfaceHost::prefer`). a surface opens with
+them before its first frame (made before `Surface::materialize`), so the
+person never sees it without them. turning one off makes the asked
+surface again without it: what others asked stays, the rest comes back
+byte for byte. an operation anyone asks applies to the asked surface,
+the one a proposer and a model are shown (`current`); `adapted` is the
+drawn one.
+
+#### the person's, in the same history
+
+`prefer(preferences, by, app)` refuses an agent (`SurfaceError::NotThePerson`);
+the operations are made in the name of whoever turned them on (a person,
+assistive technology, a test), no new `Actor`, no change to `sem`.
+`Change` gained `preference: Option<Preference>`: `changes` lists the
+changes asked, then the preferences'; `last_ask`, `undo` and `undo_asked`
+see only the asked ones ("undo" never takes a preference back; turning
+it off does).
+
+#### where the person turns them on, and what leaves
+
+an action always projected on the page would change the projection of
+every baseline of the page (the regress compares it), its menu and the
+reader's list; the shell is outside this phase. so the Silences has a
+band under its row, like the composite's offer: projected only while
+open, opened by the person asking "accessibility" (or "acessibilidade")
+through the row's `propose` (an agent is refused), with "larger text",
+"more contrast", "denser", "sparser" and "done", every one `PERSON_ONLY`
+(an agent is refused `not_authorized`). no node of it holds a state and
+the labels never change: what is on is not in the projection. the person
+sees it on the band (a preference on reads dark) and on the surface.
+the surface's projection has no look, so the page projects the same with
+and without preferences; the page proposes over `current`, so a model's
+prompt is the same byte for byte (a model never copies the larger text
+into a new form the preference would raise again).
+
+#### the contrast, measured as task-75 measures
+
+a test draws the review and measures every text run as the window shows
+it: its ink composed in linear light over the fills drawn under it and
+the page's `bg`, WCAG's relative luminance, 4.5 (3 for large text). in
+the core, with more contrast, the badges go from 3.96 to 17.96 (filled),
+the images' and the sliders' labels from 4.13 to 18.26, and every pair
+passes but the stats' labels (4.13), listed.
+
+#### reduced motion from the first frame
+
+the surface made its transitions on the first frame after a change and
+read them before any tick, so with the thread's reduced motion the first
+frame still showed the node born invisible, the moved one where it was
+and the gone one whole. the surface's motion now reads the thread's
+preference too (`engine::animation::reduced_motion`) and makes no
+transition: the first frame is the new form. no new read of the system.
+
+#### the promote of a template, in `uir`
+
+`promote` on the template of an item (`silences.cut[{item}]`) finds the
+action on the first node of the registry that fits the template and
+declares it, the rule the verifier binds a template by (every node that
+fits declares it alike, checked after). the host's `registry` is gone.
+
+### consequences
+
+- the preferences serve the Silences page's host; the Surface page's
+  host has `prefer` and no place for the person yet. a gallery-wide home
+  (the shell, where the theme lives) would serve both, with the menu's
+  check mark as the value it shows: a decision.
+- reading "increase contrast" and the text size of the system is not
+  done: the reader of reduced motion (`engine::accessibility::motion`) is
+  the pattern, and the view would pass the value to `prefer`.
+- the prompt of a change (`propose/src/ops.rs`) does not name the two
+  new parts of `restyle`.
+- a stat's label stays at 4.13 in the core with more contrast.
+
+### integração (fase 4)
+
+accepted on 2026-09-25 by the orchestrator (merge of
+`task/70d-a11y-transforms`). the whole diff read: `sem`, the protocol v1
+and every theme value unchanged, no new read of the system; the
+preferences are the host's last layer, made again over the surface as it
+was asked after every change, so turning one off leaves what others
+asked; the template promote lives in `uir` and the host's `registry`
+detour is gone, with phase 3's tests unchanged. the images seen: the
+review by the rules before, and with larger text and more contrast (the
+cut rows 15 to 20 px, the numbers one size up, the "pending" badge
+filled). gate 3010 passed, regress 176 (one new). debt recorded:
+
+- a person using a screen reader cannot hear which preference is on:
+  the band's buttons hold no state, because the projection that feeds
+  the port is the one that feeds AccessKit and a preference is personal
+  data the port must not carry. the fix is a state only the reader's
+  tree gets (task-75 phase 2, P2).
+- `SurfaceHost::prefer` refuses `Actor::Agent` by name; an allow list of
+  the person's actors (human, assistive, test) would refuse a variant
+  added later (P3).
+- a stat's label stays at 4.13 in the core with more contrast: `comps`
+  draws it in `text_dim`, which no IR role reaches (the theme or `comps`,
+  a design decision).

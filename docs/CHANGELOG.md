@@ -9,6 +9,19 @@ status: living
 
 ## unreleased
 
+- accessibility preferences change a generated surface (2026-09-25,
+  task-70 phase 4): on the Silences page, a person writes
+  "accessibility" in the row and a band opens with "larger text", "more
+  contrast", "denser" and "sparser". each one changes every generated
+  surface, the open one and every one that opens after, by the same small
+  verified steps as any other change, within the theme's tokens. with
+  more contrast, the secondary text of the review goes from 4.13 to over
+  18 against its background. turning one off undoes only what it
+  changed, and what someone else asked meanwhile stays. only the person
+  can turn them on; an agent is refused and never learns which are on.
+  with the system's reduce motion on, a generated surface now changes at
+  once too.
+
 - the parser writes plev IR (2026-09-25, task-71 phase 1): next to the
   Rust builder code it writes today (unchanged, byte for byte), the parser
   now turns a React component or a gpui widget into plev IR, the same

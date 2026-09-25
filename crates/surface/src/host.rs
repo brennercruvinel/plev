@@ -11,13 +11,24 @@
 //!
 //! a `promote` may name the template of an item (`silences.cut[{item}]`,
 //! task-70 phase 3: a composite runs on each item): the button then goes
-//! inside the item's template, one per item. the registry has no such
-//! node, so the promote is looked up in the app's registry with the
-//! template as one more member of its collection (`registry`), the rule
-//! the verifier binds a template by: every node that fits declares the
-//! action alike.
+//! inside the item's template, one per item; `uir::Op::Promote` finds the
+//! action on the items the template stands for (task-70 phase 4).
+//!
+//! the person's preferences of accessibility (`prefer`, task-70 phase 4:
+//! larger text, more contrast, a density) are the last layer of every
+//! surface the host shows: the host keeps each surface as it was asked
+//! (its form and the changes asked, by anyone) and draws it with the
+//! operations of the preferences over it (`uir::Preferences::over`), made
+//! again after every change, in the name of the person who turned them
+//! on, and kept in the same history (`Change::preference`). a surface
+//! opens with them already, before its first frame; turning one off makes
+//! the asked surface again without it, so what others asked stays and the
+//! rest comes back byte for byte. what a transformation is asked about,
+//! and what a model is shown, is the asked surface (`current`): the
+//! preferences never leave the host.
 
-use std::borrow::Cow;
+mod prefer;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use comps::Wake;
@@ -26,8 +37,8 @@ use engine::gpu::image::ImageHandle;
 use engine::theme::Theme;
 use sem::{Actor, Receipt, Request, SemId, Snapshot, SnapshotBuilder};
 use uir::{
-    ActionCap, Adapted, Capabilities, Context, GenerationPolicy, ITEM, Inverse, Op, TransformError,
-    VerifiedIr,
+    Adapted, Capabilities, Context, GenerationPolicy, Inverse, Op, Preference, Preferences,
+    TransformError, VerifiedIr,
 };
 
 use crate::expand::expand;
@@ -92,58 +103,38 @@ pub enum SurfaceError {
     /// the surface has no transformation left to undo.
     #[error("the surface {0} has no transformation to undo")]
     NothingToUndo(SemId),
+    /// the preferences of accessibility are the person's: an agent does
+    /// not set them.
+    #[error("the preferences of accessibility are the person's: {0} does not set them")]
+    NotThePerson(Actor),
 }
 
 /// one transformation the host applied to a surface: the operation, the
-/// way back, and who asked for it.
+/// way back, who asked for it, and, for an operation made for one of the
+/// person's preferences of accessibility, which one.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Change {
     pub op: Op,
     pub inverse: Inverse,
     pub by: Actor,
+    /// the preference the operation is made for; `None` when someone
+    /// asked for it.
+    pub preference: Option<Preference>,
 }
 
-/// the transformations of one open surface: the form they left it in,
-/// with the nodes set aside, every change applied, the last one last,
-/// and how many changes each ask made, in order.
-#[derive(Debug)]
+/// the transformations of one open surface: the surface as it was asked
+/// (its form and the changes asked, no preference), the one drawn (the
+/// asked one with the preferences over it), both with the nodes set
+/// aside; every change, the ones asked in order and then the
+/// preferences' (the last `preferred`); and how many changes each ask
+/// made, in order.
+#[derive(Clone, Debug)]
 struct Adapting {
+    asked: Adapted,
     now: Adapted,
     changes: Vec<Change>,
+    preferred: usize,
     asks: Vec<usize>,
-}
-
-/// the registry `op` is checked and verified against: the app's, and,
-/// for a `promote` aimed at the template of an item (`base[{item}]`), the
-/// app's with that template as one more node of the collection, with the
-/// actions of the first node that fits (`base[<key>]`), so the promote
-/// finds the action there. the template binds only when every node that
-/// fits declares the action alike, which the verifier checks; nothing
-/// else in the registry moves.
-fn registry<'c>(caps: &'c Capabilities, op: &Op) -> Cow<'c, Capabilities> {
-    let Op::Promote { target, .. } = op else {
-        return Cow::Borrowed(caps);
-    };
-    let slot = format!("[{ITEM}]");
-    let Some(base) = target.as_str().strip_suffix(slot.as_str()) else {
-        return Cow::Borrowed(caps);
-    };
-    let member = caps.nodes().find(|id| {
-        *id != target
-            && id.as_str().ends_with(']')
-            && id.parent_path().is_some_and(|p| p.as_str() == base)
-    });
-    let Some(member) = member.cloned() else {
-        return Cow::Borrowed(caps);
-    };
-    let mut out = caps.clone();
-    for cap in caps.actions().iter().filter(|a| a.target == member) {
-        out = out.with_action(ActionCap {
-            target: target.clone(),
-            ..cap.clone()
-        });
-    }
-    Cow::Owned(out)
 }
 
 /// the active surfaces of an app, in the order they opened. each is a
@@ -160,6 +151,10 @@ pub struct SurfaceHost {
     /// the policy each open surface was verified under: its operations
     /// are verified under it again.
     policies: BTreeMap<SemId, GenerationPolicy>,
+    /// the person's preferences of accessibility, over every surface.
+    preferences: Preferences,
+    /// who turned them on: the operations are made in their name.
+    person: Option<Actor>,
 }
 
 impl SurfaceHost {
@@ -183,7 +178,8 @@ impl SurfaceHost {
         app: &Snapshot,
         policy: GenerationPolicy,
     ) -> Result<&mut Surface, SurfaceError> {
-        let mut surface = Surface::materialize(ir, app);
+        let preferred = self.preferred(ir, app, &policy);
+        let mut surface = Surface::materialize(preferred.now.verified().clone(), app);
         surface.set_reduced_motion(self.reduced);
         if self.get(surface.id()).is_some() {
             return Err(SurfaceError::AlreadyOpen(surface.id().clone()));
@@ -192,6 +188,9 @@ impl SurfaceHost {
         self.collision(ids.collect(), None)?;
         let at = self.surfaces.len();
         self.policies.insert(surface.id().clone(), policy);
+        if !self.preferences.is_empty() {
+            self.adapting.insert(surface.id().clone(), preferred);
+        }
         self.surfaces.push(surface);
         Ok(&mut self.surfaces[at])
     }
@@ -221,8 +220,12 @@ impl SurfaceHost {
     ) -> Result<&mut Surface, SurfaceError> {
         let id = ir.ir().surface.id.clone();
         let at = self.at(&id)?;
-        self.take_form(at, ir, app)?;
+        let preferred = self.preferred(ir, app, &policy);
+        self.take_form(at, preferred.now.verified().clone(), app)?;
         self.adapting.remove(&id);
+        if !self.preferences.is_empty() {
+            self.adapting.insert(id.clone(), preferred);
+        }
         self.policies.insert(id, policy);
         Ok(&mut self.surfaces[at])
     }
@@ -259,15 +262,9 @@ impl SurfaceHost {
         let entry = self
             .adapting
             .entry(surface.id().clone())
-            .or_insert_with(|| Adapting {
-                now: Adapted::new(surface.verified().clone()),
-                changes: Vec::new(),
-                asks: Vec::new(),
-            });
+            .or_insert_with(|| Adapting::fresh(Adapted::new(surface.verified().clone())));
         if entry.now.verified() != surface.verified() {
-            entry.now = Adapted::new(surface.verified().clone());
-            entry.changes.clear();
-            entry.asks.clear();
+            *entry = Adapting::fresh(Adapted::new(surface.verified().clone()));
         }
         entry
     }
@@ -291,9 +288,10 @@ impl SurfaceHost {
     }
 
     /// `ops`, asked together by `by`, as `apply` does each, in order,
-    /// each over what the ones before made: all or none. the surface
-    /// takes the form they make once, and the changes are kept as one
-    /// ask (`undo_asked`). an empty list changes nothing.
+    /// each over what the ones before made: all or none. they apply to the
+    /// surface as it was asked, and the preferences are made again over
+    /// what they make. the surface takes the form once, and the changes
+    /// are kept as one ask (`undo_asked`). an empty list changes nothing.
     pub fn apply_all(
         &mut self,
         id: &SemId,
@@ -304,31 +302,34 @@ impl SurfaceHost {
         let at = self.at(id)?;
         let caps = Capabilities::from_snapshot(app);
         let policy = self.policies.get(id).cloned().unwrap_or_default();
-        let mut now = self.adapting(at).now.clone();
+        let cx = Context {
+            caps: &caps,
+            policy: &policy,
+        };
+        let mut next = self.adapting(at).clone();
         let mut changes = Vec::with_capacity(ops.len());
         for op in ops {
-            let caps = registry(&caps, &op);
-            let cx = Context {
-                caps: &caps,
-                policy: &policy,
-            };
-            let (next, inverse) = now.apply(&op, &by, cx).map_err(SurfaceError::Transform)?;
-            now = next;
+            let (made, inverse) = next
+                .asked
+                .apply(&op, &by, cx)
+                .map_err(SurfaceError::Transform)?;
+            next.asked = made;
             changes.push(Change {
                 op,
                 inverse,
                 by: by.clone(),
+                preference: None,
             });
         }
         if changes.is_empty() {
             return Ok(&mut self.surfaces[at]);
         }
-        self.take_form(at, now.verified().clone(), app)?;
-        if let Some(adapting) = self.adapting.get_mut(id) {
-            adapting.now = now;
-            adapting.asks.push(changes.len());
-            adapting.changes.extend(changes);
-        }
+        let asked = next.asked_len();
+        next.changes.truncate(asked);
+        next.asks.push(changes.len());
+        next.changes.extend(changes);
+        next.preferred = 0;
+        self.settle(at, next, cx, app)?;
         Ok(&mut self.surfaces[at])
     }
 
@@ -365,44 +366,42 @@ impl SurfaceHost {
             caps: &caps,
             policy: &policy,
         };
-        let adapting = self.adapting(at);
-        let made = adapting.changes.len();
-        let n = count(adapting).min(made);
+        let mut next = self.adapting(at).clone();
+        let made = next.asked_len();
+        let n = count(&next).min(made);
         if n == 0 {
             return Err(SurfaceError::NothingToUndo(id.clone()));
         }
-        let mut before = adapting.now.clone();
-        for change in adapting.changes[made - n..].iter().rev() {
-            before = before
+        for change in next.changes[made - n..made].iter().rev() {
+            next.asked = next
+                .asked
                 .undo(&change.inverse, cx)
                 .map_err(SurfaceError::Transform)?;
         }
-        self.take_form(at, before.verified().clone(), app)?;
-        let adapting = self
-            .adapting
-            .get_mut(id)
-            .ok_or_else(|| SurfaceError::NothingToUndo(id.clone()))?;
-        adapting.now = before;
-        let undone = adapting.changes.split_off(made - n);
+        next.changes.truncate(made);
+        let undone = next.changes.split_off(made - n);
+        next.preferred = 0;
         let mut left = n;
         while left > 0 {
-            match adapting.asks.last_mut() {
+            match next.asks.last_mut() {
                 Some(k) if *k > left => {
                     *k -= left;
                     left = 0;
                 }
                 Some(k) => {
                     left -= *k;
-                    adapting.asks.pop();
+                    next.asks.pop();
                 }
                 None => left = 0,
             }
         }
+        self.settle(at, next, cx, app)?;
         Ok(undone)
     }
 
     /// the transformations applied to the open surface `id` since it took
-    /// its form, the last one last.
+    /// its form: the ones asked, the last one last, then the ones made for
+    /// the person's preferences (`Change::preference`).
     pub fn changes(&self, id: &SemId) -> &[Change] {
         self.adapting.get(id).map_or(&[], |a| a.changes.as_slice())
     }
@@ -411,24 +410,28 @@ impl SurfaceHost {
     /// they were made: what `undo_asked` takes back.
     pub fn last_ask(&self, id: &SemId) -> &[Change] {
         self.adapting.get(id).map_or(&[], |a| {
-            let n = a.asks.last().copied().unwrap_or(0).min(a.changes.len());
-            &a.changes[a.changes.len() - n..]
+            let asked = a.asked_len();
+            let n = a.asks.last().copied().unwrap_or(0).min(asked);
+            &a.changes[asked - n..asked]
         })
     }
 
-    /// the open surface `id` as its transformations left it, with the
-    /// nodes set aside; `None` before its first.
+    /// the open surface `id` as its transformations left it, the
+    /// preferences' included, with the nodes set aside: what is drawn and
+    /// projected. `None` before its first.
     pub fn adapted(&self, id: &SemId) -> Option<&Adapted> {
         self.adapting.get(id).map(|a| &a.now)
     }
 
-    /// the open surface `id` as it is now, with the nodes set aside: what
-    /// a transformation is asked about. its form alone, nothing aside,
-    /// before its first transformation or after a whole new form.
+    /// the open surface `id` as it was asked, with the nodes set aside:
+    /// what a transformation is asked about and what a model is shown,
+    /// never the person's preferences (they are made over it). its form
+    /// alone, nothing aside, before its first transformation or after a
+    /// whole new form.
     pub fn current(&self, id: &SemId) -> Option<Adapted> {
         let surface = self.get(id)?;
         Some(match self.adapting.get(id) {
-            Some(a) if a.now.verified() == surface.verified() => a.now.clone(),
+            Some(a) if a.now.verified() == surface.verified() => a.asked.clone(),
             _ => Adapted::new(surface.verified().clone()),
         })
     }
