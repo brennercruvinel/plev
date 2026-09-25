@@ -381,7 +381,9 @@ impl Demo {
                 .ok_or("the diff's code is not whole on screen")?;
             let block = CodeBlock::lines(vec![CodeLine::default()]).caption("lines");
             let area = block.rows_rect(comps::Rect::new(x, y, w, h), &theme);
-            let fit = (area.h / CodeBlock::row_h(&theme)).floor().max(0.0) as usize;
+            // half a pixel is the layout's rounding of the block, not a
+            // row cut (as `whole` takes it)
+            let fit = ((area.h + 0.5) / CodeBlock::row_h(&theme)).floor().max(0.0) as usize;
             let on_screen = lines.len().min(fit);
             let shown: Vec<&str> = lines.iter().take(on_screen).map(String::as_str).collect();
             let room = w - theme.spacing.md * 2.0;
