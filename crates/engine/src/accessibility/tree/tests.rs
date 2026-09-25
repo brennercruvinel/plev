@@ -342,6 +342,50 @@ fn node_ids_are_stable_across_frames_whose_layout_differs() {
     }
 }
 
+/// The Surface page's quick todo wraps its field and its counts in groups
+/// with no name (the sonda of task-75): a reader would stop on "group"
+/// and hear nothing. Such a group is structure, and every other one keeps
+/// its role.
+#[test]
+fn a_group_that_names_and_does_nothing_is_only_structure() {
+    let mut b = SnapshotBuilder::new();
+    b.node("panel", Role::Region, "panel");
+    b.node("panel.entry", Role::Group, "").parent("panel");
+    b.node("panel.entry.input", Role::TextInput, "new todo")
+        .parent("panel.entry");
+    b.node("panel.named", Role::Group, "filter").parent("panel");
+    b.node("panel.told", Role::Group, "")
+        .parent("panel")
+        .description("the counts");
+    b.node("panel.acts", Role::Group, "")
+        .parent("panel")
+        .action("activate");
+    b.node("panel.list", Role::List, "").parent("panel");
+    let (u, ids) = build(&finish(b), &unbound(), &CHROME);
+    assert_valid(&u);
+    let role = |id: &str| node(&u, &ids, id).role();
+    assert_eq!(role("panel.entry"), accesskit::Role::GenericContainer);
+    assert_eq!(
+        node(&u, &ids, "panel.entry").children(),
+        ids.node(&sid("panel.entry.input"))
+            .into_iter()
+            .collect::<Vec<_>>(),
+        "its children stay under it; the adapter lifts them"
+    );
+    assert_eq!(role("panel.named"), accesskit::Role::Group);
+    assert_eq!(
+        role("panel.told"),
+        accesskit::Role::Group,
+        "it says something"
+    );
+    assert_eq!(
+        role("panel.acts"),
+        accesskit::Role::Group,
+        "it does something"
+    );
+    assert_eq!(role("panel.list"), accesskit::Role::List, "a group alone");
+}
+
 #[test]
 fn with_no_meaning_the_tree_is_the_window() {
     let (u, ids) = build(&Snapshot::default(), &unbound(), &CHROME);

@@ -25,6 +25,9 @@
 //!   from the dispatcher.
 //! - a `secret` node is a password field when it is a text input, and
 //!   never has a value (the snapshot only holds its length anyway).
+//! - a group with no label, no description, no action and no focus is a
+//!   `GenericContainer`: structure the adapters leave out, its children
+//!   lifted into its place, so a reader never stops on an empty "group".
 //! - state, by key: `text` of a text input, `value` of any node (a
 //!   number with the node's range and step, or a text) and `selected` of
 //!   a select are the value; the bool the node's own `toggle` action
@@ -194,10 +197,29 @@ fn physical(b: &Binding, scale: f64) -> Option<Rect> {
     ))
 }
 
+/// The AccessKit role of `n`: its contract role (`role::of`), but for a
+/// group that names nothing, says nothing and does nothing. That one is
+/// only structure, a `GenericContainer`, which every adapter of the lock
+/// leaves out of the platform tree and lifts its children into its place
+/// (accesskit_consumer 0.35.0 and 0.36.0 filters.rs:31-34), so a reader
+/// does not stop on an empty "group".
+fn ak_role(n: &Node) -> accesskit::Role {
+    let bare = n.role == Role::Group
+        && n.label.is_empty()
+        && n.description.is_none()
+        && n.actions.is_empty()
+        && !n.focusable;
+    if bare {
+        accesskit::Role::GenericContainer
+    } else {
+        role::of(n.role, n.constraints.secret)
+    }
+}
+
 /// One node's role, label, description, states and actions.
 fn describe(n: &Node) -> AkNode {
     let secret = n.constraints.secret;
-    let mut out = AkNode::new(role::of(n.role, secret));
+    let mut out = AkNode::new(ak_role(n));
     if !n.label.is_empty() {
         out.set_label(n.label.as_str());
     }
