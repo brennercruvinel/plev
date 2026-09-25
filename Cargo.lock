@@ -2479,6 +2479,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "inspector"
+version = "0.1.0"
+dependencies = [
+ "comps",
+ "engine",
+ "inspect",
+ "rec",
+ "sem",
+]
+
+[[package]]
 name = "instant"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
