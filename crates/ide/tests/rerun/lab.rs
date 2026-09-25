@@ -73,22 +73,40 @@ impl Lab {
     /// asks for one more (`GitSession::apply`).
     fn drain(&mut self) -> Result<(), String> {
         while self.owed > 0 {
-            let event = self
-                .events
-                .recv_timeout(WAIT)
-                .map_err(|e| format!("the git worker did not answer in time: {e}"))?;
-            match event {
-                GitEvent::Staged { .. }
-                | GitEvent::Unstaged { .. }
-                | GitEvent::Discarded { .. }
-                | GitEvent::Ignored { .. }
-                | GitEvent::Committed(_)
-                | GitEvent::CommitRejected { .. } => self.owed += 1,
-                GitEvent::Branches(_) => self.owed -= 1,
-                _ => {}
-            }
-            self.bench.apply(event);
+            self.take()?;
         }
+        Ok(())
+    }
+
+    /// applies the worker's answers, one at a time and in order, while
+    /// `busy` holds for the workbench; every refresh asked on the way
+    /// stays owed, for a later `drain` (task-80: the rerun with the
+    /// reads in flight, `crate::inflight`).
+    pub fn answer_while(&mut self, busy: impl Fn(&Workbench) -> bool) -> Result<(), String> {
+        while busy(&self.bench) {
+            self.take()?;
+        }
+        Ok(())
+    }
+
+    /// the worker's next answer applied, counting the refresh a mutation
+    /// answered asks for and the one a `Branches` ends.
+    fn take(&mut self) -> Result<(), String> {
+        let event = self
+            .events
+            .recv_timeout(WAIT)
+            .map_err(|e| format!("the git worker did not answer in time: {e}"))?;
+        match event {
+            GitEvent::Staged { .. }
+            | GitEvent::Unstaged { .. }
+            | GitEvent::Discarded { .. }
+            | GitEvent::Ignored { .. }
+            | GitEvent::Committed(_)
+            | GitEvent::CommitRejected { .. } => self.owed += 1,
+            GitEvent::Branches(_) => self.owed = self.owed.saturating_sub(1),
+            _ => {}
+        }
+        self.bench.apply(event);
         Ok(())
     }
 
@@ -130,7 +148,7 @@ impl Fixture for Lab {
 }
 
 /// `crates/ide/tests/fixtures/sessions/<name>.monster` and its marks.
-fn fixture(name: &str) -> (Session, Vec<marks::Mark>) {
+pub fn fixture(name: &str) -> (Session, Vec<marks::Mark>) {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/sessions");
     let excerpt = dir.join(format!("{name}.monster"));
     let session = match Session::open(&excerpt) {

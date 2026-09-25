@@ -1,0 +1,26 @@
+# bug84.monster: the task-84 race as a bug report (task-80 demo 3). the
+# laboratory's scripted agent, with nobody else (`ide-lab --arm scripted
+# --human none`), on a build with the race back (the throwaway branch
+# task/80a-bug84: `GitSession::apply` in crates/ide/src/session.rs applies
+# a read taken before a mutation the view already shows), exported with
+# `plev-inspect <session> --export 0 92 bug84.monster`: from the start to
+# the form opened, before the submit the race misled.
+#
+# in the recording, a status read before each stage lands while that
+# stage is executing: src/session.rs leaves changes:staged at +0.048s,
+# tests/login_test.rs at +0.077s, and the agent's observation at +0.090s
+# sees two files. every verdict was right; the marks say what the view
+# must hold, not what the recording holds. they are read with the reads
+# in flight (crates/ide/tests/rerun/inflight.rs), the format in
+# crates/ide/tests/rerun/marks.rs.
+
+# the repository of the experiment, as the laboratory builds it.
+at 0  changes:staged = {"README.md", "src/login.rs"}
+
+# each stage ended, its refresh still on the worker: the view keeps what
+# the ide accepted.
+after request 1  changes:staged = {"src/login.rs"}
+after request 2  changes:staged = {"src/login.rs", "src/session.rs"}
+after request 3  changes:staged = {"src/login.rs", "src/session.rs", "tests/login_test.rs"}
+after request 3  changes.file[tests/login_test.rs]:staged = true
+after request 4  commit.form:open = true

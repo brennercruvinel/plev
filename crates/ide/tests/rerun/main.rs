@@ -16,8 +16,11 @@
 //! - `report`: what the rerun says, request by request and mark by mark.
 //! - `toy`: the harness against a toy fixture.
 //! - `lab`: the ide's fixture, and the laboratory's sessions rerun on it.
+//! - `inflight`: the same fixture settled only as far as its executions,
+//!   and the task-84 race caught by a recorded session (task-80).
 
 mod harness;
+mod inflight;
 mod lab;
 mod marks;
 mod report;

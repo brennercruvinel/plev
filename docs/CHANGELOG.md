@@ -9,6 +9,18 @@ status: living
 
 ## unreleased
 
+- the proof starts (2026-09-25, task-80 phase 1): the method of the five
+  demonstrations is written down before any new one ran, each with its
+  script, the alternative it is compared against and what would knock it
+  down. two ran now. a real old bug (a git status read landing after the
+  change it predates, fixed in task-84) was recorded as a bug report,
+  read in the inspector at the exact instant, and turned into a test in
+  the gate that fails with the bug and passes without it. the review of
+  the silences was recorded being born from an intent, turned into a
+  comparison and closed, with nothing of it left after; the recording
+  shows it was never a screen of the app. a generated surface inside the
+  ide (for the fifth demonstration) is a new task.
+
 - accessibility preferences change a generated surface (2026-09-25,
   task-70 phase 4): on the Silences page, a person writes
   "accessibility" in the row and a band opens with "larger text", "more
