@@ -187,7 +187,20 @@ impl ShowcaseView {
         if node.role == Role::Select && action == "open" {
             self.focus_chosen(&id);
         }
+        self.show_overlay_focus();
         true
+    }
+
+    /// A modal or a menu the key opened takes the focus the projection
+    /// gives it (the modal's cancel, the menu's first item) and shows it.
+    fn show_overlay_focus(&mut self) {
+        if !self.overlay_holds_pointer() || self.overlay_focus.is_some() {
+            return;
+        }
+        let at = self.semantics().and_then(|s| s.focused().cloned());
+        if let Some(at) = at.filter(|at| self.is_overlay(at)) {
+            self.focus_overlay(&at);
+        }
     }
 
     /// An open select's focus to its chosen option.

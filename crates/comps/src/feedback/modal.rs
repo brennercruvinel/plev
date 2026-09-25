@@ -162,6 +162,25 @@ impl Modal {
         Rect::new(((vw - w) / 2.0).max(0.0), ((vh - h) / 2.0).max(0.0), w, h)
     }
 
+    /// Keyboard focus on one of the two buttons, driven by the owning view
+    /// (the button a screen reader or the Tab key moved it to): that
+    /// button's accent ring shows. `ModalAction::None` clears it.
+    pub fn set_focused(&mut self, button: ModalAction) {
+        self.confirm.set_focused(button == ModalAction::Confirm);
+        self.cancel.set_focused(button == ModalAction::Cancel);
+    }
+
+    /// The button the keyboard focus is on, `ModalAction::None` for none.
+    pub fn focused(&self) -> ModalAction {
+        if self.confirm.is_focused() {
+            ModalAction::Confirm
+        } else if self.cancel.is_focused() {
+            ModalAction::Cancel
+        } else {
+            ModalAction::None
+        }
+    }
+
     /// Confirm and cancel button rects inside `dialog`.
     pub fn button_rects(&self, theme: &Theme, dialog: Rect) -> (Rect, Rect) {
         let pad = Self::pad(theme);

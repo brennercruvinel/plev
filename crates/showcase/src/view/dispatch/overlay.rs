@@ -22,7 +22,7 @@
 //! toast's `dismiss` is how a reader or an agent takes one away.
 
 use comps::overlay::{OverlayId, OverlayManager};
-use comps::prelude::{ContextMenu, MenuEntry, ToastManager};
+use comps::prelude::{ContextMenu, MenuEntry, ModalAction, ToastManager};
 use engine::theme::{Intent, Theme};
 use sem::{
     Actor, Execution, Operable, Outcome, Receipt, Request, RequestId, SemErrors, SemId, Semantics,
@@ -325,8 +325,33 @@ impl ShowcaseView {
         let takes = seen.get(id).is_some_and(|n| n.focusable && n.enabled);
         if takes {
             self.overlay_focus = Some(id.clone());
+            self.show_overlay_focus_on(id);
         }
         takes
+    }
+
+    /// The focus a reader or the keyboard moved into the overlay, drawn:
+    /// the ring on the modal's button (task-75 phase 2c), the highlight
+    /// on the menu's item, which the pointer's hover shares.
+    fn show_overlay_focus_on(&mut self, id: &SemId) {
+        match &mut self.active_overlay {
+            Some(ActiveOverlay::Modal { widget, .. }) => {
+                let button = widget.sem_id().and_then(|dialog| key_under(id, dialog));
+                widget.set_focused(match button {
+                    Some("confirm") => ModalAction::Confirm,
+                    Some("cancel") => ModalAction::Cancel,
+                    _ => ModalAction::None,
+                });
+            }
+            Some(ActiveOverlay::Menu { widget, .. }) => {
+                let item = widget
+                    .sem_id()
+                    .and_then(|menu| key_under(id, menu))
+                    .and_then(|key| key.parse::<u64>().ok());
+                widget.set_highlighted(item);
+            }
+            None => {}
+        }
     }
 }
 
