@@ -6,8 +6,10 @@
 //! (docs/ADR/official-app-pattern.md).
 //!
 //! Three stages, one module each per source language:
-//! 1. parse  (tsx.rs, sass.rs, gpui.rs): tree-sitter -> raw trees/chains
-//! 2. resolve (resolve_react.rs via css_map.rs, resolve_gpui.rs): normalize
+//! 1. parse  (tsx.rs, sass.rs, gpui.rs, html.rs): tree-sitter -> raw
+//!    trees/chains
+//! 2. resolve (resolve_react.rs via css_map.rs, resolve_gpui.rs,
+//!    resolve_html/ via html_map.rs and css_map.rs): normalize
 //!    to the ParserNode IR, map colors to HOFF theme tokens, apply the
 //!    documented flow rewrites, fill the droplist with file:line entries
 //! 3. emit, two emitters over the same ParserNode:
@@ -21,7 +23,8 @@
 //! Scope is brutally small and honest (ADR transpiler-reports-every-
 //! unmapped-construct): one react component instance (the hoff research
 //! card, base variant) and one gpui widget instance (the horizontal labeled
-//! separator). The emitted code obeys docs/how-to/code-against-the-plev-
+//! separator); task-71 phase 2 adds an HTML/CSS subset (one document, the
+//! body's element). The emitted code obeys docs/how-to/code-against-the-plev-
 //! engine.md: theme tokens where colors hit the HOFF palette, one TextStyle
 //! per text run, content-driven layout (no absolute positioning).
 
@@ -30,9 +33,12 @@ pub mod emit;
 pub mod emit_ir;
 pub mod gpui;
 pub(crate) mod gpui_ir;
+pub mod html;
+pub mod html_map;
 pub mod ir;
 pub mod report;
 pub mod resolve_gpui;
+pub mod resolve_html;
 pub mod resolve_react;
 pub mod sass;
 pub mod tokens;
@@ -74,6 +80,13 @@ pub fn resolve_gpui(rust: (&str, &str)) -> Result<Resolution, ParserError> {
     resolve_gpui::resolve_gpui(&parsed, rust.0)
 }
 
+/// Resolve an HTML document (task-71 phase 2): `(file_name, source)`. The
+/// component is the body's element; the CSS is its `<style>` and `style=""`.
+pub fn resolve_html(html: (&str, &str)) -> Result<Resolution, ParserError> {
+    let doc = html::parse_html(html.1)?;
+    resolve_html::resolve_html(&doc, html.0)
+}
+
 fn transpiled(res: Resolution) -> Transpiled {
     Transpiled {
         code: emit::emit(&res),
@@ -94,6 +107,17 @@ pub fn transpile_react(
 /// Transpile a gpui widget to plev builder code (see `resolve_gpui`).
 pub fn transpile_gpui(rust: (&str, &str)) -> Result<Transpiled, ParserError> {
     resolve_gpui(rust).map(transpiled)
+}
+
+/// Transpile an HTML document to plev builder code (see `resolve_html`).
+pub fn transpile_html(html: (&str, &str)) -> Result<Transpiled, ParserError> {
+    resolve_html(html).map(transpiled)
+}
+
+/// Import an HTML document as plev IR, measured against `tokens`, with its
+/// report (see `resolve_html`).
+pub fn import_html(html: (&str, &str), tokens: &Tokens) -> Result<Imported, ParserError> {
+    emit_ir(&resolve_html(html)?, tokens)
 }
 
 /// Import a react component as plev IR, measured against `tokens`, with

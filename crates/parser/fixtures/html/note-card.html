@@ -1,0 +1,100 @@
+<!doctype html>
+<!--
+  Written for task-71 phase 2 (not copied from any design source): the note
+  card of the react fixture as a page (a meta line, a title, the content, a
+  text field and a button), so the two sources can be compared. It also
+  holds what the subset does not read (a hover state, a positioned badge, a
+  grid, a descendant selector, a media query, a script), each one reported
+  at its line.
+-->
+<html lang="en">
+<head>
+<title>Note card</title>
+<style>
+.note-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 368px;
+  padding: 16px;
+  background: #2e2e2e;
+  border-radius: 32px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.meta {
+  font-size: 12px;
+  line-height: 16px;
+  color: rgba(248, 248, 248, 0.66);
+}
+.title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 500;
+  color: rgba(248, 248, 248, 0.95);
+}
+.content {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(248, 248, 248, 0.7);
+}
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.reply {
+  flex-grow: 1;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+}
+.open {
+  padding: 12px 32px;
+  background: #282828;
+  border-radius: 32px;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(248, 248, 248, 0.7);
+}
+.open:hover {
+  background: #3a3a3a;
+}
+.badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 12px;
+}
+.tags {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.note-card p + p {
+  margin-top: 4px;
+}
+@media (max-width: 767px) {
+  .note-card {
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+<section class="note-card">
+  <header class="meta">Field note</header>
+  <h2 class="title">Tokens over literals</h2>
+  <p class="content">Every value a widget draws comes from the theme.</p>
+  <div class="actions">
+    <input class="reply" type="text" placeholder="Reply" oninput="reply(this.value)">
+    <button class="open" onclick="open()">Open</button>
+  </div>
+  <span class="badge" style="color: #f8f8f8">New</span>
+  <ul class="tags"><li>ui</li><li>ir</li></ul>
+</section>
+<script>
+function open() { location.hash = "note"; }
+</script>
+</body>
+</html>

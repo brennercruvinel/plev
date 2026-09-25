@@ -16,6 +16,8 @@
 //!   `button` and `text_field` components (`control`), bound to an action
 //!   the importer names on `<surface>.props`: a binding the app has to
 //!   make, listed in the report;
+//! - an `<img>` is the `image` component, named by its `alt`; the IR holds
+//!   its place, size and name, never its pixels (task-71 phase 2);
 //! - a text run is `text`: its literal is its label, a text parameter is
 //!   bound to `<surface>.props:<parameter>`, another binding required;
 //! - an element slot is left out: the IR holds no element the caller
@@ -80,6 +82,10 @@ pub fn emit_ir(res: &Resolution, tokens: &Tokens) -> Result<Imported, ParserErro
             DropKind::Rewritten => Verdict::Transformed {
                 ir: "carried by the rewrite".into(),
                 rule: d.why.clone(),
+            },
+            DropKind::Approximated => Verdict::Approximated {
+                ir: "carried by the rule".into(),
+                difference: d.why.clone(),
             },
         };
         let src = Src::new(d.at.clone(), d.what.clone());
@@ -223,6 +229,7 @@ impl Cx<'_> {
                 Ok(None)
             }
             Tag::Text(value) => self.text_node(p, id, value).map(Some),
+            Tag::Div if p.origin.tag == "img" => self.image(p, id).map(Some),
             Tag::Div if self.is_separator(p, axis) => self.separator(p, id).map(Some),
             Tag::Div => self.container(p, id).map(Some),
         }
@@ -385,6 +392,7 @@ impl Cx<'_> {
             }
         }
         stray.extend(pending.1);
+        let flex = self.flex_gap(&c.gap, kids.len(), id);
         let mut gap = None;
         if c.row {
             let reason =
@@ -398,8 +406,28 @@ impl Cx<'_> {
                     },
                 );
             }
+            if let Some((v, s)) = flex {
+                let across = vec![(v, s); kids.len().saturating_sub(1)];
+                let (g, decisions) = props::gap(&across, "the gap between children", self.tokens);
+                gap = g;
+                for d in &decisions {
+                    self.decided(d, id);
+                }
+            }
         } else {
-            let (g, decisions) = props::gap(&pairs, self.tokens);
+            let mut what = "the margin below a child";
+            if let Some((v, s)) = flex {
+                what = if pairs.iter().any(|(_, p)| !p.is_empty()) {
+                    "the gap plus the margin below a child"
+                } else {
+                    "the gap between children"
+                };
+                for pair in &mut pairs {
+                    pair.0 += v;
+                    pair.1.extend(s.iter().cloned());
+                }
+            }
+            let (g, decisions) = props::gap(&pairs, what, self.tokens);
             gap = g;
             for d in &decisions {
                 self.decided(d, id);
@@ -427,6 +455,30 @@ impl Cx<'_> {
         Ok(node)
     }
 
+    /// A `gap(v)` that spaces children: `None` when it spaces nothing (0,
+    /// or fewer than two children), which the report says holds as is.
+    fn flex_gap(
+        &mut self,
+        gap: &Option<(f32, Vec<Src>)>,
+        children: usize,
+        id: &str,
+    ) -> Option<(f32, Vec<Src>)> {
+        let (v, srcs) = gap.as_ref()?;
+        if *v > 0.0 && children > 1 {
+            return Some((*v, srcs.clone()));
+        }
+        let ir = if children > 1 {
+            "no gap, the stack's default"
+        } else {
+            "no gap: the stack has fewer than two children to space"
+        };
+        for s in srcs {
+            let verdict = Verdict::Supported { ir: ir.into() };
+            self.ledger.add(s, Some(id), verdict);
+        }
+        None
+    }
+
     /// `<parent>.<name>`: the child's class name, or the kind of node it
     /// becomes; `_2`, `_3` when a sibling took it.
     fn child_id(
@@ -441,6 +493,7 @@ impl Cx<'_> {
             (_, Some(Control::Field)) => "field",
             (Tag::Text(_), _) => "text",
             (Tag::Slot(_), _) => "slot",
+            (Tag::Div, _) if child.origin.tag == "img" => "image",
             (Tag::Div, _) if self.is_separator(child, axis) => "line",
             _ => "box",
         };

@@ -13,13 +13,18 @@ pub fn emit(res: &Resolution) -> String {
         res.source_label
     ));
     let uses_text = tree_any(&res.root, &|n| matches!(n.tag, Tag::Text(_)));
-    let uses_justify = tree_any(&res.root, &|n| {
-        n.props.iter().any(|p| {
-            p.args
-                .iter()
-                .any(|a| matches!(a, Arg::Token(t) if t.starts_with("Justify::")))
+    let uses = |prefix: &str| {
+        tree_any(&res.root, &|n| {
+            n.props.iter().any(|p| {
+                p.args
+                    .iter()
+                    .any(|a| matches!(a, Arg::Token(t) if t.starts_with(prefix)))
+            })
         })
-    });
+    };
+    let uses_justify = uses("Justify::");
+    // `align_items(Align::..)`: the html and figma importers (task-71)
+    let uses_align = uses("Align::");
     let uses_theme = tree_any(&res.root, &|n| {
         n.props.iter().any(|p| {
             p.args
@@ -27,7 +32,11 @@ pub fn emit(res: &Resolution) -> String {
                 .any(|a| matches!(a, Arg::Token(t) if t.contains("theme.")))
         })
     });
-    let mut builder_items: Vec<&str> = vec!["Element"];
+    let mut builder_items: Vec<&str> = Vec::new();
+    if uses_align {
+        builder_items.push("Align");
+    }
+    builder_items.push("Element");
     if uses_justify {
         builder_items.push("Justify");
     }

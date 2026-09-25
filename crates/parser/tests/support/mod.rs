@@ -6,6 +6,8 @@
 //! the actions the report says the IR binds (`bindings`). The importer
 //! declares none.
 
+pub mod checks;
+
 use std::fs;
 use std::path::PathBuf;
 
