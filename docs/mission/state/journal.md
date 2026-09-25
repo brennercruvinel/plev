@@ -14,6 +14,22 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### o Claude estourou o prazo três vezes: o prazo sobe para 300 s
+
+- **o que aconteceu:** a prova da fase 2 da task-70 pediu a revisão ao
+  Claude três vezes (duas com o agente da fase 3 rodando, uma sem nenhum
+  agente) e as três foram mortas em 180 s, pagas e jogadas fora.
+- **a causa medida:** o prompt capturado por um stub (sem chamar modelo)
+  mudou só uma linha desde a segunda rodada do checkpoint (+277 bytes,
+  17.920 contra 17.643): a orientação de mostrar a imagem, os números com
+  nome e o estado de cada item. o resto é igual. a hipótese é que a
+  resposta ficou maior e passou do prazo; a mais lenta que já passou foi
+  138 s. a concorrência com o agente não explica a terceira.
+- **decisão:** o prazo de uma chamada vai para 300 s, a regra do ADR
+  (duas vezes a mais lenta medida). o teto de custo por chamada continua
+  o mesmo; matar uma chamada paga é o desperdício, esperar não.
+- **publicado com isto:** a task-75 aberta (fase 1).
+
 ### task-70 fase 3: a sequência repetida vira uma ação
 
 - **integrada:** `task/70c-composites` (9 commits, agente no Opus). o

@@ -279,8 +279,10 @@ thread, after task-95.
   (`CLAUDECODE`, `CLAUDE_CODE_SESSION_ID`, `CLAUDE_CODE_MESSAGING_SOCKET`,
   `CLAUDE_EFFORT` and the others of `SESSION_VARS`), which an app run
   from a session would otherwise hand down.
-- **a deadline.** past `timeout` (180 s by default, twice the slowest
-  call measured) the child is killed by its pid and reaped, and the call
+- **a deadline.** past `timeout` (300 s by default since 2026-09-25,
+  about twice the slowest call measured, 138 s; it was 180 s, twice the
+  89 s of phase 3b-i, until three calls of the Silences review were killed
+  in a row) the child is killed by its pid and reaped, and the call
   is a `ModelError`. once the child exits, the end of its output is
   waited for one second at most, so a grandchild that keeps a pipe open
   cannot hold the call; what the child wrote is kept.
