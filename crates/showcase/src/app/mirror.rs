@@ -18,13 +18,16 @@
 //! (`wire::SceneReader`), applied to a `rec::scene::Mirror`, and drawn
 //! into a compositor of its own, with the bindings (where each control
 //! shows, task-59) drawn over it on a layer of their own when asked. The
-//! `mirror` example and the tests draw through it.
+//! app sends the bindings from the bottom of the frame to the top
+//! ([`stacked`]), so the viewer finds the control under a point
+//! ([`Viewer::hit`]) as the app's own hit test does. The `mirror`
+//! example and the tests draw through it.
 
 use std::collections::HashMap;
 
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use rec::scene::{Brought, Frame, Head, Incoming, Mirror, Sender};
-use sem::Actor;
+use sem::{Actor, SemId};
 use winit::window::WindowId;
 use wire::{AgentPort, Bound, LayerBody, Offer, OfferLayer, Reply, SceneReader, SceneWatch};
 
@@ -92,7 +95,8 @@ pub fn watch_line(w: &SceneWatch) -> String {
 }
 
 /// A frame as the port takes it, with where each bound control shows
-/// in it (the visible part of each binding, as an observation serves it).
+/// in it (the visible part of each binding, as an observation serves it),
+/// in the order a click finds them ([`stacked`]).
 pub fn offer(frame: Frame, compositor: &Compositor) -> Offer {
     Offer {
         head: frame.head,
@@ -107,14 +111,36 @@ pub fn offer(frame: Frame, compositor: &Compositor) -> Offer {
             })
             .collect(),
         assets: frame.assets,
-        bounds: compositor
-            .visible_bindings()
-            .map(|(id, rect)| Bound {
+        bounds: stacked(compositor),
+    }
+}
+
+/// Where each bound control shows (the visible part of its binding),
+/// from the bottom of the frame to the top: by its layer's z-order, then
+/// the layer's place among the compositor's, then the bind order, the
+/// order `Compositor::hit` ranks them by. A binding on a hidden layer
+/// (not visible, or no opacity) shows nowhere and is left out, as `hit`
+/// leaves it. So the last one holding a point is the one the app's own
+/// hit test finds there ([`Viewer::hit`]).
+pub fn stacked(compositor: &Compositor) -> Vec<Bound> {
+    let layers = compositor.layers();
+    let mut shown: Vec<((i32, usize, u32), Bound)> = compositor
+        .bindings()
+        .filter_map(|(id, b)| {
+            let (rank, layer) = layers.iter().enumerate().find(|(_, l)| l.id == b.layer)?;
+            if !layer.visible || layer.opacity <= 0.0 {
+                return None;
+            }
+            let rect = b.visible_rect()?;
+            let bound = Bound {
                 id: id.clone(),
                 rect,
-            })
-            .collect(),
-    }
+            };
+            Some(((layer.z_order, rank, b.order), bound))
+        })
+        .collect();
+    shown.sort_by_key(|(at, _)| *at);
+    shown.into_iter().map(|(_, b)| b).collect()
 }
 
 impl App {
@@ -206,9 +232,26 @@ impl Viewer {
         self.mirror.head()
     }
 
-    /// Where each bound control shows in the last frame.
+    /// Where each bound control shows in the last frame, from the bottom
+    /// of the frame to the top.
     pub fn bounds(&self) -> &[Bound] {
         &self.bounds
+    }
+
+    /// The bound control at `(x, y)` in the last frame, in the scene's
+    /// logical pixels: the topmost binding whose visible rect holds the
+    /// point (edges included), the one the app's own hit test finds
+    /// there. `None` over no control. The bindings the viewer draws over
+    /// the scene take no part.
+    pub fn hit(&self, x: f32, y: f32) -> Option<&SemId> {
+        self.bounds
+            .iter()
+            .rev()
+            .find(|b| {
+                let [bx, by, bw, bh] = b.rect;
+                x >= bx && x <= bx + bw && y >= by && y <= by + bh
+            })
+            .map(|b| &b.id)
     }
 
     pub fn mirror(&self) -> &Mirror {
@@ -347,6 +390,35 @@ mod tests {
                 Err(e) => panic!("{e}"),
             }
         }
+    }
+
+    fn sid(text: &str) -> SemId {
+        SemId::parse(text).expect("an id")
+    }
+
+    /// Bound out of the stacking order: the overlay's control first,
+    /// then the one under it, and a third on a layer made invisible. The
+    /// viewer finds what the app's hit test finds, never the later bind.
+    #[test]
+    fn the_viewer_hits_by_stacking_not_by_bind_order() {
+        let mut c = Compositor::new();
+        let overlay = c.create_layer(10);
+        let hidden = c.create_layer(20);
+        c.begin_frame();
+        c.bind_to_layer(overlay, &sid("dialog.ok"), [100.0, 100.0, 80.0, 40.0]);
+        c.bind(&sid("page.button"), [90.0, 90.0, 200.0, 60.0]);
+        c.bind_to_layer(hidden, &sid("gone"), [0.0, 0.0, 400.0, 400.0]);
+        c.set_layer_visible(hidden, false);
+        let mut v = Viewer::new();
+        v.bounds = stacked(&c);
+        let ids: Vec<&str> = v.bounds().iter().map(|b| b.id.as_str()).collect();
+        assert_eq!(ids, ["page.button", "dialog.ok"], "bottom to top");
+        for (x, y) in [(120.0, 120.0), (250.0, 120.0), (10.0, 10.0), (100.0, 100.0)] {
+            assert_eq!(v.hit(x, y), c.hit(x, y), "at ({x}, {y})");
+        }
+        assert_eq!(v.hit(120.0, 120.0), Some(&sid("dialog.ok")));
+        assert_eq!(v.hit(250.0, 120.0), Some(&sid("page.button")));
+        assert_eq!(v.hit(10.0, 10.0), None, "the hidden layer shows nothing");
     }
 
     #[test]

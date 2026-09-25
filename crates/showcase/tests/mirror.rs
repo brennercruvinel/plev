@@ -196,6 +196,52 @@ fn the_bindings_are_drawn_over_the_mirror_where_the_controls_are() {
     assert!(changed > 1000, "{changed} pixels changed");
 }
 
+/// The viewer finds under a point the control the app's own hit test
+/// finds there (`Compositor::hit`), from the bindings the frame carries
+/// alone: every page in both main themes, at the center of each bound
+/// control and on a 20 px grid over the window. No GPU: the scene is
+/// built into a plain compositor.
+#[test]
+fn the_viewer_hits_the_control_the_app_hits() {
+    let (mut points, mut controls) = (0, 0);
+    for theme in ["core", "hoff"] {
+        for p in PAGES {
+            let mut view = ShowcaseView::new(WIDTH as f32, HEIGHT as f32);
+            view.jump_to_page(p.title);
+            view.apply_theme(theme);
+            view.resize(WIDTH as f32, HEIGHT as f32, 1.0);
+            settle(&mut view);
+            let mut c = engine::compositor::Compositor::new();
+            view.render(&mut c);
+            let mut server = watched(1);
+            let frame = Sender::new().frame(&c, head([0.0; 4]));
+            let mut viewer = Viewer::new();
+            for out in server.offer_scene(MAIN, &offer(frame, &c)) {
+                viewer.take(out.msg.reply).expect("the frame reads");
+            }
+            let mut at: Vec<(f32, f32)> = c
+                .visible_bindings()
+                .map(|(_, [x, y, w, h])| (x + w / 2.0, y + h / 2.0))
+                .collect();
+            for y in (0..HEIGHT).step_by(20) {
+                for x in (0..WIDTH).step_by(20) {
+                    at.push((x as f32 + 0.5, y as f32 + 0.5));
+                }
+            }
+            for (x, y) in at {
+                let app = c.hit(x, y);
+                assert_eq!(viewer.hit(x, y), app, "{} / {theme} at ({x}, {y})", p.title);
+                points += 1;
+                controls += usize::from(app.is_some());
+            }
+        }
+    }
+    assert!(
+        controls > 1000,
+        "{controls} of {points} points on a control"
+    );
+}
+
 /// A server whose scenes the app's person shares (`PLEV_MIRROR=1`).
 fn shared_server() -> wire::Server {
     let mut server = wire::Server::new("mirror", 8);
