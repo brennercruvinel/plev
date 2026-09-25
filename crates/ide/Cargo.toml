@@ -54,6 +54,10 @@ tempfile.workspace = true
 uir.workspace = true
 propose.workspace = true
 surface.workspace = true
+# the Claude as a proposer of the line, off the workbench's thread, the
+# way the showcase asks it (claude -p as a child process; the rules stay
+# the first choice, and a test only ever runs the repository's fake).
+claude-model.workspace = true
 
 [dev-dependencies]
 # the recording test reads the session back the way plev-inspect does,

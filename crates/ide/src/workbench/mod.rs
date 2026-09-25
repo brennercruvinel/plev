@@ -23,6 +23,7 @@
 //! a surface routed to the capability it stands for before the dispatcher
 //! takes it.
 
+mod asking;
 mod column;
 mod execute;
 mod generated;
@@ -178,6 +179,8 @@ impl Workbench {
         let id = dispatcher.dispatch(self, req, now);
         self.dispatcher = dispatcher;
         self.report(id);
+        // a cancel of the Claude's proposal ends that proposal now
+        self.settle_claude();
         self.sync_surfaces();
         id
     }
@@ -242,9 +245,15 @@ impl Workbench {
     /// last frame) and says what it asks of the loop: a frame on every
     /// turn while something moves, the earliest deadline while things
     /// rest (a caret flip, a toast leaving), nothing otherwise.
+    /// The Claude's answer, when it arrived, is settled here first.
     pub fn wake(&mut self, dt: f32) -> Wake {
+        let answered = self.settle_claude();
+        if answered {
+            self.sync_surfaces();
+        }
         let column = self.generated.as_mut().map_or(Wake::idle(), |g| g.wake(dt));
-        self.workspace.wake(dt).merge(column)
+        let now = if answered { Wake::now() } else { Wake::idle() };
+        self.workspace.wake(dt).merge(column).merge(now)
     }
 
     /// [`Workbench::wake`] as the `bool` a settle loop reads (the

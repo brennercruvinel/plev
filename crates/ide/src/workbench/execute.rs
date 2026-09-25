@@ -160,7 +160,7 @@ impl Operable for Workbench {
     /// answers; the rest ends here. What aims at the intent line of the
     /// generated surface runs there first (`generated.rs`).
     fn execute(&mut self, id: RequestId, req: &Request) -> Execution {
-        if let Some(done) = self.execute_generated(req) {
+        if let Some(done) = self.execute_generated(id, req) {
             return done;
         }
         let Some(op) = self.op(req) else {

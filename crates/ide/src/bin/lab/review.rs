@@ -456,7 +456,9 @@ fn read_back(path: &Path) -> Result<Json, String> {
 fn demo(args: &Args) -> Result<(), String> {
     std::fs::create_dir_all(&args.out).map_err(|e| format!("{}: {e}", args.out.display()))?;
     let mut app = Bench::open_on(Repo::build_review()?, true)?;
-    app.bench.host_surfaces();
+    // the rules alone: the laboratory never asks the Claude, and the line
+    // is the same on every machine, with or without the program
+    app.bench.host_surfaces_with(None);
     let limits = Limits {
         max_age: u64::MAX / 2,
         max_bytes: 1 << 30,

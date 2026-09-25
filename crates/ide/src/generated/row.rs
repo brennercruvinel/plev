@@ -27,8 +27,8 @@ pub(crate) struct Column {
     pub surface: Rect,
 }
 
-/// The line: its band, the field, the proposer, the two buttons and the
-/// status message.
+/// The line: its band, the field, the proposer, the two buttons, the
+/// status message and, while the Claude is asked, the cancel at its end.
 pub(crate) struct Row {
     pub band: Rect,
     pub intent: Rect,
@@ -36,6 +36,7 @@ pub(crate) struct Row {
     pub propose: Rect,
     pub close: Rect,
     pub message: Rect,
+    pub cancel: Option<Rect>,
 }
 
 /// What a person's pointer on the line asked.
@@ -43,6 +44,7 @@ pub(crate) struct Row {
 pub(crate) struct Asked {
     pub propose: bool,
     pub close: bool,
+    pub cancel: bool,
     /// The open options panel took the event: nothing under it sees it.
     pub taken: bool,
 }
@@ -97,7 +99,8 @@ impl Generated {
     /// buttons on one line while the field keeps a card's minimum width
     /// (an intent is a sentence), the three under the field otherwise;
     /// then the message, one line at least, so a message arriving moves
-    /// nothing below it.
+    /// nothing below it, with the cancel at its end while the Claude is
+    /// asked.
     fn row(&self, x: f32, y: f32, w: f32, theme: &Theme) -> Row {
         let gap = theme.spacing.sm;
         let h = TextField::height(theme);
@@ -116,10 +119,25 @@ impl Generated {
         let close = Rect::new(propose.right() + gap, line + (h - ch) / 2.0, cw, ch);
         let below = line + h + gap;
         let style = message_style(theme);
+        let (kw, kh) = if self.waiting() {
+            self.cancel.preferred_size(theme)
+        } else {
+            (0.0, 0.0)
+        };
+        let text_w = if self.waiting() {
+            (w - kw - gap).max(0.0)
+        } else {
+            w
+        };
         let one = TextMeasurer::measure_styled("Ag", &style, None).1;
-        let wrapped = TextMeasurer::measure_styled(&self.message(), &style, Some(w)).1;
-        let message = Rect::new(x, below, w, one.max(wrapped));
-        let bottom = message.bottom() + gap;
+        let wrapped = TextMeasurer::measure_styled(&self.message(), &style, Some(text_w)).1;
+        let text_h = one.max(wrapped);
+        let band_h = text_h.max(kh);
+        let message = Rect::new(x, below + (band_h - text_h) / 2.0, text_w, text_h);
+        let cancel = self
+            .waiting()
+            .then(|| Rect::new(x + w - kw, below + (band_h - kh) / 2.0, kw, kh));
+        let bottom = below + band_h + gap;
         Row {
             band: Rect::new(x, y, w, bottom - y),
             intent,
@@ -127,6 +145,7 @@ impl Generated {
             propose,
             close,
             message,
+            cancel,
         }
     }
 
@@ -153,12 +172,18 @@ impl Generated {
         let select = self.proposer.handle_event(event, row.proposer, theme);
         let propose = self.propose.handle_event(event, row.propose);
         let close = self.close.handle_event(event, row.close);
+        let cancel = match row.cancel {
+            Some(r) => self.cancel.handle_event(event, r),
+            None => EventResult::IGNORED,
+        };
         let asked = Asked {
             propose: propose.clicked,
             close: close.clicked,
+            cancel: cancel.clicked,
             taken: false,
         };
-        (field.merge(select).merge(propose).merge(close), asked)
+        let all = field.merge(select).merge(propose).merge(close);
+        (all.merge(cancel), asked)
     }
 
     /// The column: its ground and the hairline at its left edge, the
@@ -190,6 +215,9 @@ impl Generated {
         self.proposer.render(c, row.proposer, theme);
         self.propose.render(c, row.propose, theme);
         self.close.render(c, row.close, theme);
+        if let Some(r) = row.cancel {
+            self.cancel.render(c, r, theme);
+        }
         let text = self.message();
         if !text.is_empty() {
             let color = match &self.said {

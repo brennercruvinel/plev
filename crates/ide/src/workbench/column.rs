@@ -91,6 +91,7 @@ impl Workbench {
             result = result.merge(r);
             asked.propose |= a.propose;
             asked.close |= a.close;
+            asked.cancel |= a.cancel;
             asked.taken |= a.taken;
         }
         if asked.taken {
@@ -98,7 +99,11 @@ impl Workbench {
         }
         let ids = self.generated.as_ref().and_then(|g| g.ids.as_ref());
         let (propose, close) = (ids.map(|i| i.propose.clone()), ids.map(|i| i.close.clone()));
+        let cancel = ids.map(|i| i.cancel.clone());
         if asked.propose && self.ask_line(propose, "propose") {
+            result = result.merge(EventResult::changed());
+        }
+        if asked.cancel && self.ask_line(cancel, "activate") {
             result = result.merge(EventResult::changed());
         }
         if asked.close && self.ask_line(close, "close") {

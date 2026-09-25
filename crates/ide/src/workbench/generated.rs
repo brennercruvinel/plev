@@ -14,17 +14,22 @@
 //! nodes it has, or `failed` with why there is none (the line says it
 //! too). Only a `VerifiedIr` opens: `propose::propose_verified` is the way.
 
+use claude_model::ClaudeCli;
 use propose::{Ask, Rules, propose_verified};
-use sem::{Actor, Execution, Outcome, Request, SemErrors, SemId, Snapshot, SnapshotBuilder, Value};
+use sem::{
+    Actor, Execution, Outcome, Request, RequestId, SemErrors, SemId, Snapshot, SnapshotBuilder,
+    Value,
+};
 use surface::SurfaceHost;
 use uir::{Capabilities, GenerationPolicy, VerifiedIr};
 
 use super::Workbench;
+use crate::generated::claude::Claude;
 use crate::generated::{Generated, Op, Proposer, Said};
 
 /// The outcome of a proposal shown: the surface and how many nodes it
 /// has.
-fn shown(surface: &SemId, nodes: usize) -> Outcome {
+pub(super) fn shown(surface: &SemId, nodes: usize) -> Outcome {
     let mut outcome = Outcome::default();
     outcome
         .result
@@ -38,10 +43,22 @@ impl Workbench {
     /// Turns on the intent line and the host of generated surfaces, in a
     /// column at the right of the window, beside the fixed views. Off by
     /// default: a workbench without it projects, draws and runs as
-    /// before. The ide's window turns it on.
+    /// before. The ide's window turns it on. The Claude is offered when
+    /// its program is found (`claude`, or what `PLEV_CLAUDE` names), never
+    /// run to find it; the rules are chosen first either way.
     pub fn host_surfaces(&mut self) {
+        self.host_surfaces_over(Claude::find());
+    }
+
+    /// [`Workbench::host_surfaces`], with this Claude to offer, or none
+    /// (the rules alone): a test gives the repository's fake here.
+    pub fn host_surfaces_with(&mut self, claude: Option<ClaudeCli>) {
+        self.host_surfaces_over(Claude::with(claude));
+    }
+
+    fn host_surfaces_over(&mut self, claude: Claude) {
         if self.generated.is_none() {
-            self.generated = Some(Box::new(Generated::new()));
+            self.generated = Some(Box::new(Generated::new(claude)));
             self.lay_out();
         }
     }
@@ -120,7 +137,7 @@ impl Workbench {
 
     /// What `req` asks of the line, run now; `None` when it aims
     /// elsewhere (the workspace, whose `execute` runs it).
-    pub(super) fn execute_generated(&mut self, req: &Request) -> Option<Execution> {
+    pub(super) fn execute_generated(&mut self, id: RequestId, req: &Request) -> Option<Execution> {
         let g = self.generated.as_mut()?;
         let op = g.op(req)?;
         let done = Execution::Done(Outcome::default());
@@ -129,7 +146,7 @@ impl Workbench {
                 g.intent.set_text(&text);
                 done
             }
-            Op::Propose => self.propose(&req.actor),
+            Op::Propose => self.propose(id, &req.actor),
             Op::Choose(name) => {
                 if g.proposer.select_label(&name) {
                     done
@@ -152,14 +169,27 @@ impl Workbench {
                 g.proposer.close();
                 done
             }
+            Op::Cancel => match g.pending.as_mut() {
+                Some(pending) => {
+                    pending.cancel(req.actor.clone());
+                    let mut outcome = Outcome::default();
+                    let what = Value::Text(pending.id.to_string());
+                    outcome.result.insert("cancelled".to_owned(), what);
+                    Execution::Done(outcome)
+                }
+                None => Execution::Failed("nothing is being asked".to_owned()),
+            },
             Op::Dismiss => self.dismiss(),
         })
     }
 
     /// A proposal for the intent, as `author` wrote it, over the
     /// workspace as it is (its own registry, never the line's) and the
-    /// surface shown: verified, shown, and the request done.
-    fn propose(&mut self, author: &Actor) -> Execution {
+    /// surface shown. By the rules it is verified and shown now, and the
+    /// request is done; by the Claude a worker starts with what the
+    /// review scopes for it (`asking.rs`), and the request `id` stays
+    /// open until the answer ends it.
+    fn propose(&mut self, id: RequestId, author: &Actor) -> Execution {
         let app = match self.app_snapshot() {
             Ok(app) => app,
             Err(e) => return Execution::Failed(e.to_string()),
@@ -175,18 +205,17 @@ impl Workbench {
             .as_ref()
             .and_then(|id| g.host.current(id))
             .map(|asked| asked.verified().clone());
-        let proposed = match g.chosen() {
-            Proposer::Rules => {
-                let ask = Ask {
-                    intent: &intent,
-                    caps: &caps,
-                    app: &app,
-                    current: current.as_ref(),
-                    policy: &policy,
-                };
-                propose_verified(&mut Rules, &ask).map_err(|e| e.to_string())
-            }
+        let ask = Ask {
+            intent: &intent,
+            caps: &caps,
+            app: &app,
+            current: current.as_ref(),
+            policy: &policy,
         };
+        let proposed = propose_verified(&mut Rules, &ask).map_err(|e| e.to_string());
+        if g.chosen() == Proposer::Claude {
+            return self.ask_claude(id, intent, &app, proposed, policy);
+        }
         match proposed.and_then(|ir| self.show(ir, policy, &app)) {
             Ok((surface, nodes)) => {
                 self.say(Said::Proposed(intent));
@@ -199,7 +228,7 @@ impl Workbench {
         }
     }
 
-    fn say(&mut self, said: Said) {
+    pub(super) fn say(&mut self, said: Said) {
         if let Some(g) = self.generated.as_mut() {
             g.said = Some(said);
         }
@@ -207,16 +236,21 @@ impl Workbench {
 
     /// Shows `ir`, verified under `policy`, over `app`: the surface
     /// opens, or takes the form in place when its id is open (reconciled
-    /// by `SemId`), and the workspace makes room for it. Its id and how
+    /// by `SemId`), and the workspace makes room for it. One surface at a
+    /// time: an open one of another id is dismissed first. Its id and how
     /// many nodes it has.
-    fn show(
+    pub(super) fn show(
         &mut self,
         ir: VerifiedIr,
         policy: GenerationPolicy,
         app: &Snapshot,
     ) -> Result<(SemId, usize), String> {
         let g = self.generated.as_mut().ok_or("no surface is hosted here")?;
-        let open = g.host.get(&ir.ir().surface.id).is_some();
+        let id = &ir.ir().surface.id;
+        if let Some(other) = g.open.take_if(|open| open != id) {
+            g.host.close(&other);
+        }
+        let open = g.host.get(id).is_some();
         let surface = if open {
             g.host.transform_under(ir, app, policy)
         } else {
