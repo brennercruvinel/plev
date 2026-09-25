@@ -15,8 +15,17 @@
 //! platform's own dialog when the app chose it
 //! ([`Workbench::confirm_natively`]); either answers the same `confirm`
 //! or `decline` as the person.
+//!
+//! With [`Workbench::host_surfaces`] (task-96, `generated.rs`, `column.rs`) the
+//! workbench also holds an intent line and the host of generated
+//! surfaces, in a column beside the fixed views: projected after the
+//! workspace, run by the same dispatcher, and a request aimed at a node of
+//! a surface routed to the capability it stands for before the dispatcher
+//! takes it.
 
+mod column;
 mod execute;
+mod generated;
 mod notice;
 mod person;
 mod project;
@@ -37,6 +46,7 @@ use sem::{
     SemId, Semantics, Snapshot, SnapshotBuilder,
 };
 
+use crate::generated::Generated;
 use crate::session::GitSession;
 use crate::views::workspace::{UiRequest, WorkspaceView};
 use truth::Inflight;
@@ -70,6 +80,12 @@ pub struct Workbench {
     /// The monotonic clock receipts are stamped with (`sem` never reads
     /// one).
     clock: Instant,
+    /// The window, in logical pixels: the workspace takes it, less the
+    /// column of the generated surface when there is one.
+    window: (f32, f32),
+    /// The intent line and the host of generated surfaces, when turned on
+    /// ([`Workbench::host_surfaces`]).
+    generated: Option<Box<Generated>>,
 }
 
 impl Workbench {
@@ -83,6 +99,8 @@ impl Workbench {
             awaiting: VecDeque::new(),
             native_confirm: None,
             clock: Instant::now(),
+            window: (vw, vh),
+            generated: None,
         }
     }
 
@@ -147,7 +165,11 @@ impl Workbench {
     /// workspace as it is at this instant, executed if accepted. The
     /// receipt tells the rest; the person sees a refusal as a toast, and
     /// a request that waits for a person as a modal.
+    /// A request aimed at a node of a generated surface is the
+    /// capability that node stands for, asked by the same actor
+    /// (`SurfaceHost::route`), before the dispatcher takes it.
     pub fn dispatch(&mut self, req: Request) -> RequestId {
+        let req = self.route(req);
         let now = self.now();
         // `execute` needs the workbench itself, so the dispatcher is lent
         // out for the call (taking it leaves an empty one behind, no
@@ -156,6 +178,7 @@ impl Workbench {
         let id = dispatcher.dispatch(self, req, now);
         self.dispatcher = dispatcher;
         self.report(id);
+        self.sync_surfaces();
         id
     }
 
@@ -173,6 +196,7 @@ impl Workbench {
         self.workspace.close_confirm_modal(id);
         self.report(id);
         self.ask_next_confirmation();
+        self.sync_surfaces();
         Ok(())
     }
 
@@ -188,6 +212,7 @@ impl Workbench {
         self.workspace.close_confirm_modal(id);
         self.report(id);
         self.ask_next_confirmation();
+        self.sync_surfaces();
         Ok(())
     }
 
@@ -210,6 +235,7 @@ impl Workbench {
         if let Some(git) = &mut self.git {
             git.apply(&mut self.workspace, event);
         }
+        self.sync_surfaces();
     }
 
     /// Advances what animates by `dt` seconds (the real time since the
@@ -217,7 +243,8 @@ impl Workbench {
     /// turn while something moves, the earliest deadline while things
     /// rest (a caret flip, a toast leaving), nothing otherwise.
     pub fn wake(&mut self, dt: f32) -> Wake {
-        self.workspace.wake(dt)
+        let column = self.generated.as_mut().map_or(Wake::idle(), |g| g.wake(dt));
+        self.workspace.wake(dt).merge(column)
     }
 
     /// [`Workbench::wake`] as the `bool` a settle loop reads (the
@@ -229,17 +256,27 @@ impl Workbench {
         wake.now || wake.is_continuous()
     }
 
-    /// Draws the workspace into its frame and binds its ids; the host owns
+    /// Draws the workspace into its frame and binds its ids, then the
+    /// column of the generated surface when there is one; the host owns
     /// the frame boundary (`Compositor::begin_frame`).
     pub fn render(&mut self, compositor: &mut Compositor) {
+        if self.generated.is_some() {
+            self.lay_out();
+            self.sync_surfaces();
+        }
         self.workspace.render(compositor);
+        self.render_column(compositor);
     }
 
     // -- a person's pointer and keys -----------------------------------------
 
-    /// A left click at `(x, y)` in window coordinates. `true` when
-    /// something changed.
+    /// A left click at `(x, y)` in window coordinates: the column of the
+    /// generated surface's when it is there, else the workspace's. `true`
+    /// when something changed.
     pub fn click(&mut self, x: f32, y: f32) -> bool {
+        if let Some(changed) = self.click_column(x, y) {
+            return changed;
+        }
         self.act(|ws| ws.handle_click(x, y))
     }
 

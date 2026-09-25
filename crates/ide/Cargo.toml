@@ -47,6 +47,13 @@ wire.workspace = true
 rec.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true
+# the generated surface beside the fixed views (task-96): an intent
+# proposed as IR (propose: the rules), verified against the registry the
+# workbench's own projection gives (uir), and hosted beside the panels,
+# every act through the workbench's dispatcher (surface).
+uir.workspace = true
+propose.workspace = true
+surface.workspace = true
 
 [dev-dependencies]
 # the recording test reads the session back the way plev-inspect does,

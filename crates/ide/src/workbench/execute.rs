@@ -157,8 +157,12 @@ impl Workbench {
 impl Operable for Workbench {
     /// Runs request `id`. Everything that reaches the repository leaves
     /// for the git worker (`Execution::Started`) and ends when the worker
-    /// answers; the rest ends here.
+    /// answers; the rest ends here. What aims at the intent line of the
+    /// generated surface runs there first (`generated.rs`).
     fn execute(&mut self, id: RequestId, req: &Request) -> Execution {
+        if let Some(done) = self.execute_generated(req) {
+            return done;
+        }
         let Some(op) = self.op(req) else {
             return Execution::Failed(format!(
                 "the workspace has no {} on {}",
