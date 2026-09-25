@@ -17,11 +17,11 @@
 //! or `decline` as the person.
 //!
 //! With [`Workbench::host_surfaces`] (task-96, `generated.rs`, `column.rs`) the
-//! workbench also holds an intent line and the host of generated
-//! surfaces, in a column beside the fixed views: projected after the
-//! workspace, run by the same dispatcher, and a request aimed at a node of
-//! a surface routed to the capability it stands for before the dispatcher
-//! takes it.
+//! workbench also holds an intent line, in a strip under the fixed views,
+//! and the host of generated surfaces, in a column beside them while one
+//! is open: projected after the workspace, run by the same dispatcher, and
+//! a request aimed at a node of a surface routed to the capability it
+//! stands for before the dispatcher takes it.
 
 mod asking;
 mod column;
@@ -82,7 +82,7 @@ pub struct Workbench {
     /// one).
     clock: Instant,
     /// The window, in logical pixels: the workspace takes it, less the
-    /// column of the generated surface when there is one.
+    /// line's strip and an open surface's column when the block is on.
     window: (f32, f32),
     /// The intent line and the host of generated surfaces, when turned on
     /// ([`Workbench::host_surfaces`]).
@@ -266,8 +266,8 @@ impl Workbench {
     }
 
     /// Draws the workspace into its frame and binds its ids, then the
-    /// column of the generated surface when there is one; the host owns
-    /// the frame boundary (`Compositor::begin_frame`).
+    /// line and an open surface's column when the block is on; the host
+    /// owns the frame boundary (`Compositor::begin_frame`).
     pub fn render(&mut self, compositor: &mut Compositor) {
         if self.generated.is_some() {
             self.lay_out();
@@ -279,8 +279,8 @@ impl Workbench {
 
     // -- a person's pointer and keys -----------------------------------------
 
-    /// A left click at `(x, y)` in window coordinates: the column of the
-    /// generated surface's when it is there, else the workspace's. `true`
+    /// A left click at `(x, y)` in window coordinates: the line's or an
+    /// open surface's when it lands on them, else the workspace's. `true`
     /// when something changed.
     pub fn click(&mut self, x: f32, y: f32) -> bool {
         if let Some(changed) = self.click_column(x, y) {

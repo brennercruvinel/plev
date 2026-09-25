@@ -1,7 +1,9 @@
-//! The generated surface of the ide (task-96): the intent line and the
-//! `SurfaceHost` that holds the surface a proposal opened, in a column
-//! beside the fixed views, which stay as they are (the workspace is only
-//! given less width, by its own `resize`).
+//! The generated surface of the ide (task-96): the intent line, in a
+//! strip under the fixed views, and the `SurfaceHost` that holds the
+//! surface a proposal opened, in a column beside them while it is open.
+//! The fixed views stay as they are: the workspace keeps the window's
+//! width with no surface open and is only given less room, by its own
+//! `resize` (phase b).
 //!
 //! The line under the region `ide_surface`, projected as the Silences
 //! projects its own (`crates/showcase/src/view/apps/silences/generated.rs`):

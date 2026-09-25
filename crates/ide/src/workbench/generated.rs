@@ -5,9 +5,9 @@
 //! (propose, close, the field, the proposer); a request aimed at a node of
 //! an open surface routed to the capability the IR bound before the
 //! dispatcher (`route`), so a person's click, an agent through the port
-//! and a test reach the same one; and the window laid out with the
-//! column. A person's pointer and keys on the column, and its drawing, are
-//! `column.rs`.
+//! and a test reach the same one; and the window laid out with the line's
+//! strip and an open surface's column. A person's pointer and keys on
+//! them, and their drawing, are `column.rs`.
 //!
 //! The rules propose inside `execute`, in a fraction of a millisecond, and
 //! the request ends at once, `completed` with the surface and how many
@@ -40,10 +40,11 @@ pub(super) fn shown(surface: &SemId, nodes: usize) -> Outcome {
 }
 
 impl Workbench {
-    /// Turns on the intent line and the host of generated surfaces, in a
-    /// column at the right of the window, beside the fixed views. Off by
-    /// default: a workbench without it projects, draws and runs as
-    /// before. The ide's window turns it on. The Claude is offered when
+    /// Turns on the intent line and the host of generated surfaces: the
+    /// line in a strip along the bottom of the window, under the fixed
+    /// views, which keep the window's width; a surface in a column at the
+    /// right while it is open. Off by default: a workbench without it
+    /// projects, draws and runs as before. The ide's window turns it on. The Claude is offered when
     /// its program is found (`claude`, or what `PLEV_CLAUDE` names), never
     /// run to find it; the rules are chosen first either way.
     pub fn host_surfaces(&mut self) {
@@ -89,7 +90,8 @@ impl Workbench {
     }
 
     /// The window is `w` by `h` logical pixels: the workspace takes it,
-    /// less the column when the block is on.
+    /// less the line's strip and an open surface's column when the block
+    /// is on.
     pub fn resize(&mut self, w: f32, h: f32) {
         self.window = (w, h);
         match self.generated {
@@ -98,16 +100,16 @@ impl Workbench {
         }
     }
 
-    /// The workspace gets the window less the column, when the block is
-    /// on; nothing moves otherwise.
+    /// The workspace gets the window less the line's strip and an open
+    /// surface's column, when the block is on; nothing moves otherwise.
     pub(super) fn lay_out(&mut self) {
         let Some(g) = &self.generated else {
             return;
         };
         let (w, h) = self.window;
-        let ws = (w - g.column_w(w, self.workspace.theme())).max(0.0);
-        if (self.workspace.vw, self.workspace.vh) != (ws, h) {
-            self.workspace.resize(ws, h);
+        let (ws, hs) = g.workspace_size(w, h, self.workspace.theme());
+        if (self.workspace.vw, self.workspace.vh) != (ws, hs) {
+            self.workspace.resize(ws, hs);
         }
     }
 
@@ -228,10 +230,13 @@ impl Workbench {
         }
     }
 
+    /// What the last proposal came to, on the line; a message longer than
+    /// the lines the strip holds takes the room it needs now.
     pub(super) fn say(&mut self, said: Said) {
         if let Some(g) = self.generated.as_mut() {
             g.said = Some(said);
         }
+        self.lay_out();
     }
 
     /// Shows `ir`, verified under `policy`, over `app`: the surface
@@ -266,8 +271,9 @@ impl Workbench {
 
     /// The surface is dismissed: out of the projection, the routing and
     /// the hit test at once, its picture fading where it was
-    /// (`SurfaceHost::close`), the workspace back to its width, and the
-    /// line says nothing until the next proposal.
+    /// (`SurfaceHost::close`), its column gone and the workspace back to
+    /// the window's width, and the line says nothing until the next
+    /// proposal.
     fn dismiss(&mut self) -> Execution {
         let Some(g) = self.generated.as_mut() else {
             return Execution::Failed("no surface is hosted here".to_owned());
