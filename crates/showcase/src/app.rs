@@ -126,12 +126,13 @@ pub struct App {
     /// Where the app's links come from (`links`; `None` before the main
     /// window is up).
     links: Option<Box<dyn engine::platform::links::LinkSource>>,
-    /// A cmd+click is taking the button until it is released (`source`).
+    /// View source (`source`): a cmd+click taking the button until it is
+    /// released, a literal edited in place.
     #[cfg(all(
         debug_assertions,
         any(target_os = "macos", target_os = "linux", target_os = "windows")
     ))]
-    source_click: bool,
+    source: source::ViewSource,
 }
 
 impl App {
@@ -198,7 +199,7 @@ impl App {
                 debug_assertions,
                 any(target_os = "macos", target_os = "linux", target_os = "windows")
             ))]
-            source_click: false,
+            source: source::ViewSource::default(),
         }
     }
 

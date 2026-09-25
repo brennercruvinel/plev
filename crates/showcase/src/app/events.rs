@@ -55,6 +55,14 @@ impl App {
                 if key_event.state != ElementState::Pressed {
                     return;
                 }
+                // A literal edited in place owns the keyboard (`source`).
+                #[cfg(all(
+                    debug_assertions,
+                    any(target_os = "macos", target_os = "linux", target_os = "windows")
+                ))]
+                if self.edit_key(&key_event.logical_key) {
+                    return;
+                }
                 // The save keys of the recording, when it records.
                 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
                 if self.record_key(&key_event.logical_key) {
