@@ -1508,3 +1508,198 @@ mede. junto, a dívida P2 da fase 3: o `promote` de um template sai do
 `registry` do host e vai para o `uir`. nenhuma leitura nova do sistema e
 nenhuma cor de tema muda. fica de fora a prova com o Claude de verdade da
 fase 2, que é do orquestrador.
+
+branch `task/70d-a11y-transforms`, sobre a `main` em `91bade03`.
+
+### sonda (antes do primeiro tipo, 2026-09-25)
+
+o que existe hoje: nenhuma preferência além do reduced motion. nada em
+`crates/showcase/src`, `crates/surface/src` ou `crates/uir/src` guarda
+texto maior, contraste ou densidade da pessoa (grep). as operações da
+fase 1 que mexem na aparência são três, só por token:
+`crates/uir/src/transform/look.rs`, `emphasize` (`:97` a `144`),
+`density` (`:160` a `202`) e `restyle` (`:233` a `262`). o host guarda o
+histórico como uma pilha (`crates/surface/src/host.rs:106` a `114`,
+`Adapting`) e desfaz só pelo topo (`take_back`, `:355` a `402`).
+
+#### (a) as preferências: quais, onde moram, quem liga
+
+- **quais.** três nesta fase: texto maior, mais contraste, densidade
+  (mais denso ou mais espaçado, uma das duas). o reduced motion já vale
+  desde a 75: o valor é da thread (`crates/engine/src/animation/mod.rs:15`
+  a `40`), e a superfície gerada passa só por `Spring` (a entrada e a
+  saída, `crates/surface/src/motion.rs:41` a `52`) e `Tween` (o deslizar,
+  `:307` a `316`). falta um frame: a transição nasce no primeiro desenho
+  depois da mudança (`crates/surface/src/surface.rs:295` a `305`, `enter`
+  e `slide`) e é lida logo em seguida, antes de qualquer tick
+  (`:307` e `:308`; o fantasma, `motion.rs:187` a `197`): o nó que nasce
+  sai com opacidade 0, o que mudou de lugar sai no lugar de antes, o que
+  saiu sai inteiro; só o tick seguinte (`Motion::wake`, `:345`) pousa. o
+  flag do próprio host, que não cria nada disso (`host.rs:505` a `515`,
+  `motion.rs:245` a `256`), nenhuma página liga (grep de
+  `set_reduced_motion` em `crates/showcase/src`: nada). a correção cabe
+  no `surface`: o `Motion` lê também `engine::animation::reduced_motion()`,
+  o valor que a ponte já põe; nenhuma leitura nova do sistema.
+- **onde moram.** no app, como valor da pessoa: o `SurfaceHost` guarda as
+  preferências e quem as ligou, e a página que mostra superfícies as
+  passa a ele. um host novo nasce sem nenhuma, então uma thread (um
+  teste, um frame sem janela, o regress) começa sem preferência, como o
+  reduced motion. nada é lido do sistema; o que seria preciso para ler
+  "aumentar contraste" e o tamanho de texto do macOS fica no fim.
+- **quem liga, e onde.** só a pessoa. a primeira ideia, uma ação
+  `PERSON_ONLY` sempre projetada na página, não cabe sem mudar baseline:
+  o `semantics.json` de cada baseline guarda as ações de cada nó
+  (`crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/semantics.json`,
+  a linha `silences_surface`), e o regress compara a revisão da projeção
+  inteira (`crates/showcase/examples/regress/compare.rs:74` a `96`): as 14
+  baselines da Silences mudariam. mudaria também o menu da página, que
+  lista as ações simples da Silences (`crates/showcase/src/app/menu.rs:411`
+  a `432`), e a lista do leitor de tela (`crates/showcase/tests/access_tree.rs:323`
+  a `339`), fora dos meus arquivos. a shell, onde mora o tema, não entra
+  nas baselines, mas está fora dos meus arquivos, e o menu dela mostra o
+  estado de um item com a marca, que é o valor.
+  o caminho: uma faixa de acessibilidade sob a linha de proposta, como a
+  oferta da fase 3 (`crates/showcase/src/view/apps/silences/generated/offer.rs:1`
+  a `9`), projetada só enquanto está aberta, então nada do que a página
+  projeta hoje muda. a pessoa abre escrevendo "accessibility" ou
+  "acessibilidade" na linha e pedindo, pelo mesmo `propose` da fase 2;
+  um agente que pede isso é recusado ("the accessibility preferences are
+  the person's"). na faixa, "larger text", "more contrast", "denser",
+  "sparser" e "done", todos `PERSON_ONLY`
+  (`crates/showcase/src/view/dispatch/shell.rs:55` a `60`): um agente é
+  recusado `not_authorized` pelo `check`. cada botão liga ou desliga a
+  sua. arquivos: `crates/showcase/src/view/apps/silences/generated/access.rs`
+  (novo), `generated.rs`, `generated/page.rs`, `silences.rs` e os testes
+  em `silences/tests/`.
+
+#### (b) cada preferência em operações da fase 1, dentro dos tokens
+
+- **texto maior**: `emphasize` em cada `text` e em cada `stat` da árvore
+  (num template, vale para todo item). o texto sobe um degrau da rampa do
+  tema (`look.rs:27` a `57`: sem estilo é `body`, vai a `title`; do topo,
+  `h4`, não passa); o stat sobe o tamanho do valor (`base_m`, `title`,
+  `headline`, `look.rs:61` a `65`), e o rótulo dele cresce junto
+  (`crates/comps/src/content/stat.rs:72` a `79`). a escada leva o estilo
+  com peso do degrau (`look.rs:47` a `57`), então o texto também fica
+  mais forte. o que não alcança: badge, botão, campo, select, abas,
+  slider, tabela, imagem desenham o texto no tamanho do componente, e
+  nenhum lê `typography` (`crates/surface/src/draw.rs:150` a `212`); o
+  que já está no topo fica.
+- **mais contraste**: `restyle` para o papel `text`, a tinta mais forte
+  que todo tema desenha: nos quatro temas, `colors.text` passa AA sobre
+  as cinco superfícies que a 75 mede (nenhum par de `colors.text` em
+  `KNOWN`, `crates/engine/src/theme/tests_contrast.rs:192` a `398`). o
+  IR não sabe o tema (os tokens são nomes, `crates/uir/src/token.rs:5` a
+  `8`), e a mesma superfície desenha em qualquer um dos quatro, então a
+  troca é a mesma em todos, e o teste mede. o que vai: um `text` em
+  `text_dim` ou `text_mid` (no core as duas são `#7B7B7B`, 4,13 sobre o
+  papel, `tests_contrast.rs:196` e `:197`). a Silences não tem nenhum:
+  nem as regras nem o Claude da fixture pintam texto
+  (`crates/showcase/fixtures/ir/silences-review-claude.ir.json`), e os
+  pares que falham nela são de componentes. dois deles cabem num token,
+  e a fase ganha as duas linhas, aditivas: o `restyle` passa a aceitar o
+  fundo de um badge (um dos papéis que o materializador já lê como
+  intenção do formato preenchido, `crates/surface/src/token.rs:65` a
+  `73`; o texto dele vem em contraste com o fundo,
+  `crates/comps/src/core.rs:164` a `170`), e a tinta de um slider, de
+  uma tabela e de uma imagem, que o próprio host desenha em `text_mid` e
+  `text_dim` (`draw.rs:351` a `361`, `:382` a `390`, `:448` a `457`) e
+  passa a ler de `props.color`. assim "mais contraste" enche o badge sem
+  fundo (`accent`) e passa slider, tabela e imagem a `text`. o que nenhum
+  token faz passar: o rótulo do stat (o comps desenha em `text_dim`,
+  `stat.rs:164`, e não recebe cor), o cabeçalho da tabela
+  (`glass.text_faint`, `crates/comps/src/content/table.rs:354`), o texto
+  num papel de intenção (success, danger, warning, info: a cor é o
+  sentido; no core o verde dá 2,41), o texto sobre um fundo escuro
+  (`accent_dim` no core é `#323232`, e `text` também é escuro), o rótulo
+  de botão (a receita do tema; o warning do core dá 3,37). mudar isso é
+  mudar cor de tema ou o comps.
+- **densidade**: `density` com `denser` ou `sparser`, uma vez: todo gap
+  de stack e grid e todo padding que tem token andam um degrau
+  (`look.rs:146` a `202`). o que não tem token é do componente e fica;
+  nas pontas, para.
+
+a escolha de cada operação é pura e mora no `uir`
+(`crates/uir/src/transform/prefer.rs`, novo): as preferências viram a
+lista de operações sobre a superfície como ela está, e cada uma é
+aplicada pelo `Adapted::apply` de sempre, verificada; a que é recusada
+(o topo da escada, nada a mover) fica de fora, e a lista diz qual.
+
+#### (c) quando aplicam
+
+- ao abrir (`open_under`, `host.rs:180` a `197`) e numa forma nova
+  (`transform_under`, `:216` a `228`): a forma com as preferências é
+  feita antes de `Surface::materialize` (antes do `take_form`, na forma
+  nova), então o primeiro frame já é ela; nenhuma transição, e a pessoa
+  nunca vê a superfície sem a preferência.
+- quando a pessoa liga ou desliga com uma aberta: cada superfície do host
+  toma a forma nova como uma mudança (reconciliada por `SemId`, com as
+  transições de uma mudança, nenhuma com reduced motion).
+
+#### (d) desligar
+
+o histórico é pilha: desfazer só o que está no topo. se a preferência
+entrou e um agente escondeu um nó depois, desfazer a preferência pelo
+histórico desfaria o esconder antes. a saída, sem mudar a fase 1: as
+preferências são a última camada. o host guarda a superfície como foi
+pedida (a forma e as mudanças pedidas, sem preferência) e a desenhada, que
+é a pedida com as operações das preferências por cima, refeitas depois de
+toda mudança. desligar é refazer sem aquela: o que foi pedido não é
+tocado, e o resto volta byte a byte por construção. uma operação pedida
+(pela pessoa, pelas regras, por um agente, pelo Claude) é aplicada sobre
+a pedida, que é também a que o proponente e o modelo veem.
+
+o custo: cada mudança refaz as operações das preferências (poucas, sobre
+um IR pequeno, cada uma verificada). uma operação cuja aparência a
+preferência cobre por cima pode ser recusada por já estar feita na pedida
+(um `restyle` para o papel que a pedida já tem): a preferência da pessoa
+ganha. a outra saída, refazer da materialização sem as entradas da
+preferência, custa o mesmo e perde a preferência num nó mostrado depois
+dela.
+
+#### (e) o ator e o histórico
+
+a operação de uma preferência entra em nome de quem a ligou: a pessoa
+(`Actor::Human`), a tecnologia assistiva (`Actor::Assistive`) ou um teste
+(`Actor::Test`), os que o `PERSON_ONLY` deixa. nenhuma variante nova de
+`Actor` (`crates/sem/src/request.rs:23` a `28`) e nenhum tipo do `sem`
+muda. o host recusa um agente também, além da política. o histórico
+mostra a preferência no `Change`, com um campo novo, `preference`, que
+diz qual (`crates/surface/src/host.rs:100` a `104`): `changes` dá as
+mudanças pedidas, na ordem, e depois as das preferências; `last_ask`,
+`undo` e `undo_asked` só veem as pedidas ("desfazer" não tira uma
+preferência; desligar tira).
+
+privacidade: a projeção de uma superfície não tem `props`
+(`crates/surface/src/project.rs:1` a `27`), então ela é a mesma com ou
+sem preferência; a faixa só existe aberta, e os botões não têm estado. o
+modelo vê a superfície pedida: a mudança já pergunta sobre `current`
+(`crates/showcase/src/view/apps/surface_page/proposing/changing.rs:152`),
+que passa a ser a pedida, e a proposta de uma superfície nova passa a
+mandar o mesmo (`generated/page.rs:249` a `254` e
+`surface_page/page.rs:265` a `270` leem hoje `Surface::verified`, a
+desenhada). assim o prompt é o mesmo, byte a byte, com e sem preferência,
+e um modelo nunca copia o texto maior para a forma nova (que a preferência
+subiria de novo).
+
+#### (f) o `promote` do template no `uir`
+
+hoje o host empresta ao `promote` um registro onde o template é mais um
+membro da coleção (`registry`, `crates/surface/src/host.rs:116` a `147`,
+usado em `apply_all`, `:310`), porque o `promote` procura a ação pelo
+alvo exato (`crates/uir/src/transform/view.rs:154`, `caps.action`). o
+mínimo no `uir`: quando o alvo carrega o item uma vez (`Pattern::of`,
+`crates/uir/src/item.rs:44` a `54`), a declaração é a do primeiro nó do
+registro que cabe no template e declara a ação, a regra com que o
+verifier liga um template (`crates/uir/src/verify/bind.rs:167` a `213`):
+todo nó que cabe declara igual, conferido depois, como sempre. o
+`registry` do host sai. os testes da fase 3
+(`crates/surface/tests/promote.rs`, a composta da Silences) não mudam.
+
+#### nenhuma parada
+
+nenhum tipo do `sem` muda, o protocolo v1 não muda, nenhuma cor de tema
+muda, nenhuma leitura nova do sistema, e o desligar não pede mudar a
+fase 1 (as preferências são uma camada do host). nenhum baseline existente
+muda: a faixa só é projetada aberta, e as superfícies das baselines não
+têm preferência.
