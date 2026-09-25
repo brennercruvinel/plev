@@ -14,6 +14,30 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### task-70 fase 2: uma mudança pedida em palavras
+
+- **integrada:** `task/70b-transform-proposer` (9 commits, agente no
+  Opus). com uma superfície aberta, o `propose` da linha lê a intenção
+  como mudança primeiro; as regras (en e pt) e o Claude devolvem
+  operações da fase 1, verificadas e aplicadas pelo dispatcher como quem
+  pediu; o host guarda a política de cada superfície; a revisão pelas
+  regras mostra o frame de cada corte, números com rótulo e a decisão
+  como selo. sem ação nova no sem: a projeção das baselines não muda.
+- **incidente:** no primeiro bless de um estado novo, o regress deixou o
+  proponente no Claude (o `claude` estava no PATH) e pediu uma mudança:
+  uma chamada real ao `claude -p` pode ter começado (o processo saiu na
+  hora; o `ps` depois não mostrava nada; teto de 0,5 USD). o agente
+  corrigiu o regress (escolhe as regras antes de pedir). trava nova: o
+  orquestrador e os agentes rodam com `PLEV_CLAUDE` apontando para um
+  stub que só falha (o proponente continua listando o Claude, as
+  baselines não mudam, e nenhuma chamada sai).
+- **validação:** diff inteiro lido; imagens conferidas. gate local verde,
+  2894 passam, 0 falham (antes 2861); regress 173 sem mudança com o
+  stub (170 de antes, 3 novos; as 3 da revisão pelas regras aceitas).
+  sem nenhum `claude` (`PLEV_CLAUDE` num caminho que não existe), 12
+  baselines da Silences mudam, porque o seletor deixa de listar o
+  Claude: por isso o stub existe, e não um caminho vazio.
+
 ### task-70 fase 1: a superfície muda aos poucos
 
 - **integrada:** `task/70a-transforms` (8 commits, agente no Opus). nove

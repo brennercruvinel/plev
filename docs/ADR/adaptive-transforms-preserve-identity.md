@@ -384,3 +384,17 @@ own, one under the other.
 
 proposed by task-70 phase 2 (`task/70b-transform-proposer`); the
 orchestrator accepts it.
+
+### integração da fase 2
+
+accepted on 2026-09-24 by the orchestrator (merge of
+`task/70b-transform-proposer`). the whole diff read; the images seen:
+the rules' review with each cut's frame, its range, a "pending" badge,
+start, end and duration named, and the buttons on one line; "too much
+information" over it keeps only the cuts; "tem informação demais" over
+the Claude's first-round review hides the video and the counts and fits
+both cuts in the window; "I can't compare these" refused with why. the
+3 baselines of the rules' review changed and were accepted; nothing
+else moved. local gate green, 2894 passed, 0 failed (was 2861); regress
+173 unchanged. the real Claude answering a change is the orchestrator's
+proof, next.
