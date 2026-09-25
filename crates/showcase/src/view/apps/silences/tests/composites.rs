@@ -504,4 +504,20 @@ fn the_demo_offers_the_sequence_then_a_button_in_each_cut_of_the_review() {
         assert_eq!(node.label, "preview segment, then apply cut");
         assert!(c.binding(button).is_some(), "{button} is drawn");
     }
+
+    // an action of the app like the others: a review the rules propose
+    // again shows it on each cut by itself, with no promote
+    act(&mut view, "silences_surface.propose", "propose", None);
+    let snap = view.semantics().expect("the page projects");
+    let routed: Vec<&SemId> = snap
+        .nodes()
+        .values()
+        .filter(|n| {
+            n.actions.iter().any(|a| a.name.as_str() == "activate")
+                && n.id.as_str().starts_with("proposed.")
+                && n.label == "preview segment, then apply cut"
+        })
+        .map(|n| &n.id)
+        .collect();
+    assert_eq!(routed.len(), 2, "{routed:?}");
 }
