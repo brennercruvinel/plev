@@ -7,6 +7,9 @@
 //!   session (the `rec` stage events of one origin), and finds the same
 //!   sequence of actions, by the same actor, in the same order, repeated
 //!   at the end of what happened (`Found`, with its `Shape`).
+//! - `Composer` keeps the detector of one app for one session, what it
+//!   offers the person, what the person declined, and what the person
+//!   accepted: a `Composite`, one action of the app that runs the steps.
 //!
 //! two steps are the same when they ask the same action of the same
 //! node, or of items of the same collection (`silences.cut[3]` and
@@ -18,9 +21,13 @@
 //! pure, like the rest of the crate: no clock, no file, nothing leaves
 //! the process.
 
+mod composite;
 mod detect;
+mod offer;
 
+pub use composite::Composite;
 pub use detect::{Detector, Listener, MAX_STEPS};
+pub use offer::Composer;
 
 use sem::{ActionName, Actor, SemId};
 

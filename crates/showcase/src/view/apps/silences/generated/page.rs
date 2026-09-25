@@ -36,6 +36,7 @@ use uir::{Capabilities, GenerationPolicy, VerifiedIr, verify_json};
 use super::super::SilencesPage;
 use super::super::jobs::instant_of;
 use super::super::semantics::ms;
+use super::offer::Answer as Reply;
 use crate::view::ShowcaseView;
 use crate::view::apps::app::TodoPage;
 use crate::view::apps::surface_page::asking::{Answer, Job, Pending, Proposal};
@@ -66,7 +67,8 @@ impl Page<'_> {
     /// cancel ends the proposal it cancelled in the same lending.
     pub fn dispatch(self, req: Request, todo: &mut TodoPage) -> RequestId {
         let mut page = self;
-        todo.with_dispatcher(|dispatcher, _, now| {
+        page.app.generated.offer.listen(todo);
+        let asked = todo.with_dispatcher(|dispatcher, _, now| {
             let asked = dispatcher.dispatch(&mut page, req, now);
             if let Some((pending, why)) = page.cancelled() {
                 if let Err(e) = dispatcher.fail(pending, why.clone(), now) {
@@ -75,7 +77,9 @@ impl Page<'_> {
                 page.refuse(why);
             }
             asked
-        })
+        });
+        page.app.refresh_offer();
+        asked
     }
 
     /// The proposal someone cancelled, when one was: its request and why
@@ -294,6 +298,44 @@ impl Page<'_> {
         }
     }
 
+    /// The person's answer to the composite offered: accepted, the
+    /// sequence becomes a composite of the app (its action is declared on
+    /// the nodes it runs on from the next projection); declined, it goes
+    /// and is not offered again in this session. Only a person gets here:
+    /// both answers are `PERSON_ONLY`.
+    fn answered(&mut self, answer: Reply) -> Execution {
+        let mut outcome = Outcome::default();
+        let offer = &mut self.app.generated.offer;
+        match answer {
+            Reply::Install => {
+                let app = match self.app.snapshot() {
+                    Ok(app) => app,
+                    Err(e) => return Execution::Failed(e.to_string()),
+                };
+                let composer = &mut self.app.generated.offer.composer;
+                match composer.accept(&app) {
+                    Ok(composite) => {
+                        let name = Value::Text(composite.name.to_string());
+                        outcome.result.insert("installed".to_owned(), name);
+                        let label = Value::Text(composite.label.clone());
+                        outcome.result.insert("label".to_owned(), label);
+                    }
+                    Err(why) => return Execution::Failed(why),
+                }
+            }
+            Reply::Dismiss => match offer.composer.decline() {
+                Some(shape) => {
+                    let steps = shape.steps.len();
+                    outcome
+                        .result
+                        .insert("dismissed".to_owned(), Value::Int(int(steps)));
+                }
+                None => return Execution::Failed("nothing is offered".to_owned()),
+            },
+        }
+        Execution::Done(outcome)
+    }
+
     /// The surface is dismissed: out of the projection at once, its
     /// picture fading where it was (`SurfaceHost::close`); the row says
     /// nothing until the next proposal.
@@ -330,6 +372,9 @@ impl Operable for Page<'_> {
     fn execute(&mut self, id: RequestId, req: &Request) -> Execution {
         if self.app.generated.is_close(req) {
             return self.close();
+        }
+        if let Some(answer) = self.app.generated.offer.answer(req) {
+            return self.answered(answer);
         }
         let Some(op) = self.app.generated.proposing.op(req) else {
             return self.app.execute(id, req);

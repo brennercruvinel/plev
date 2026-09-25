@@ -276,6 +276,9 @@ impl SilencesPage {
         if row.close {
             self.close(todo);
         }
+        if let Some(answer) = row.answer {
+            self.answer(todo, answer);
+        }
         if row.asked.taken {
             return r;
         }
@@ -502,6 +505,7 @@ impl SilencesPage {
         let answered = Page { app: self }.settle(todo);
         if moved || answered {
             self.sync_surface();
+            self.refresh_offer();
         }
         let sources = self.generated.host.sources();
         self.want_sources(sources.iter().map(String::as_str));
