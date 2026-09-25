@@ -94,14 +94,16 @@ fn with_no_surface_open_the_fixed_views_have_the_width_they_had_before_the_line(
         );
         assert!(b[1] + b[3] <= ws.vh + 0.5, "{view} ends above the strip");
     }
-    let commit = before
-        .bindings()
-        .map(|(k, _)| k.to_string())
-        .find(|k| k.starts_with("stacks.commit["))
-        .expect("a commit's card");
+    // each repository has its own first commit, with a sha of its own
+    let card = |c: &Compositor| {
+        c.bindings()
+            .find(|(k, _)| k.as_str().starts_with("stacks.commit["))
+            .map(|(_, b)| b.rect)
+            .expect("a commit's card")
+    };
     assert_eq!(
-        rect(&before, &commit)[2],
-        rect(&now, &commit)[2],
+        card(&before)[2],
+        card(&now)[2],
         "a commit's card is as wide as it was"
     );
     for control in LINE {
