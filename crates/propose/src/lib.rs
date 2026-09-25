@@ -49,6 +49,7 @@ mod ops;
 mod parts;
 mod prompt;
 mod reshape;
+mod row;
 mod rules;
 mod words;
 

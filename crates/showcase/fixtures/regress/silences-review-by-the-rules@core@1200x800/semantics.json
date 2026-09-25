@@ -348,10 +348,16 @@
       "parent": "proposed.silences.cuts"
     },
     {
+      "id": "proposed.silences.cut[1].about",
+      "role": "group",
+      "label": "",
+      "parent": "proposed.silences.cut[1]"
+    },
+    {
       "id": "proposed.silences.cut[1].frame",
       "role": "image",
       "label": "frame",
-      "parent": "proposed.silences.cut[1]",
+      "parent": "proposed.silences.cut[1].about",
       "state": {
         "source": {
           "kind": "text",
@@ -360,46 +366,10 @@
       }
     },
     {
-      "id": "proposed.silences.cut[1].start",
-      "role": "label",
-      "label": "3.02",
-      "parent": "proposed.silences.cut[1]",
-      "state": {
-        "text": {
-          "kind": "num",
-          "value": 3.018594
-        }
-      }
-    },
-    {
-      "id": "proposed.silences.cut[1].end",
-      "role": "label",
-      "label": "5.02",
-      "parent": "proposed.silences.cut[1]",
-      "state": {
-        "text": {
-          "kind": "num",
-          "value": 5.01551
-        }
-      }
-    },
-    {
-      "id": "proposed.silences.cut[1].duration",
-      "role": "label",
-      "label": "2",
-      "parent": "proposed.silences.cut[1]",
-      "state": {
-        "text": {
-          "kind": "num",
-          "value": 1.996916
-        }
-      }
-    },
-    {
       "id": "proposed.silences.cut[1].range",
       "role": "label",
       "label": "0:03.0 to 0:05.0",
-      "parent": "proposed.silences.cut[1]",
+      "parent": "proposed.silences.cut[1].about",
       "state": {
         "text": {
           "kind": "text",
@@ -411,7 +381,7 @@
       "id": "proposed.silences.cut[1].decision",
       "role": "label",
       "label": "pending",
-      "parent": "proposed.silences.cut[1]",
+      "parent": "proposed.silences.cut[1].about",
       "state": {
         "text": {
           "kind": "text",
@@ -420,10 +390,58 @@
       }
     },
     {
+      "id": "proposed.silences.cut[1].numbers",
+      "role": "group",
+      "label": "",
+      "parent": "proposed.silences.cut[1]"
+    },
+    {
+      "id": "proposed.silences.cut[1].start",
+      "role": "label",
+      "label": "start",
+      "parent": "proposed.silences.cut[1].numbers",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 3.018594
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[1].end",
+      "role": "label",
+      "label": "end",
+      "parent": "proposed.silences.cut[1].numbers",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 5.01551
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[1].duration",
+      "role": "label",
+      "label": "duration",
+      "parent": "proposed.silences.cut[1].numbers",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 1.996916
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[1].actions",
+      "role": "group",
+      "label": "",
+      "parent": "proposed.silences.cut[1]"
+    },
+    {
       "id": "proposed.silences.cut[1].preview_segment",
       "role": "button",
       "label": "preview segment",
-      "parent": "proposed.silences.cut[1]",
+      "parent": "proposed.silences.cut[1].actions",
       "actions": [
         {
           "name": "activate",
@@ -438,7 +456,7 @@
       "id": "proposed.silences.cut[1].apply_cut",
       "role": "button",
       "label": "apply cut",
-      "parent": "proposed.silences.cut[1]",
+      "parent": "proposed.silences.cut[1].actions",
       "actions": [
         {
           "name": "activate",
@@ -453,7 +471,7 @@
       "id": "proposed.silences.cut[1].reject_cut",
       "role": "button",
       "label": "reject cut",
-      "parent": "proposed.silences.cut[1]",
+      "parent": "proposed.silences.cut[1].actions",
       "actions": [
         {
           "name": "activate",
@@ -471,10 +489,16 @@
       "parent": "proposed.silences.cuts"
     },
     {
+      "id": "proposed.silences.cut[2].about",
+      "role": "group",
+      "label": "",
+      "parent": "proposed.silences.cut[2]"
+    },
+    {
       "id": "proposed.silences.cut[2].frame",
       "role": "image",
       "label": "frame",
-      "parent": "proposed.silences.cut[2]",
+      "parent": "proposed.silences.cut[2].about",
       "state": {
         "source": {
           "kind": "text",
@@ -483,46 +507,10 @@
       }
     },
     {
-      "id": "proposed.silences.cut[2].start",
-      "role": "label",
-      "label": "8.01",
-      "parent": "proposed.silences.cut[2]",
-      "state": {
-        "text": {
-          "kind": "num",
-          "value": 8.010884
-        }
-      }
-    },
-    {
-      "id": "proposed.silences.cut[2].end",
-      "role": "label",
-      "label": "10.01",
-      "parent": "proposed.silences.cut[2]",
-      "state": {
-        "text": {
-          "kind": "num",
-          "value": 10.0078
-        }
-      }
-    },
-    {
-      "id": "proposed.silences.cut[2].duration",
-      "role": "label",
-      "label": "2",
-      "parent": "proposed.silences.cut[2]",
-      "state": {
-        "text": {
-          "kind": "num",
-          "value": 1.996916
-        }
-      }
-    },
-    {
       "id": "proposed.silences.cut[2].range",
       "role": "label",
       "label": "0:08.0 to 0:10.0",
-      "parent": "proposed.silences.cut[2]",
+      "parent": "proposed.silences.cut[2].about",
       "state": {
         "text": {
           "kind": "text",
@@ -534,7 +522,7 @@
       "id": "proposed.silences.cut[2].decision",
       "role": "label",
       "label": "pending",
-      "parent": "proposed.silences.cut[2]",
+      "parent": "proposed.silences.cut[2].about",
       "state": {
         "text": {
           "kind": "text",
@@ -543,10 +531,58 @@
       }
     },
     {
+      "id": "proposed.silences.cut[2].numbers",
+      "role": "group",
+      "label": "",
+      "parent": "proposed.silences.cut[2]"
+    },
+    {
+      "id": "proposed.silences.cut[2].start",
+      "role": "label",
+      "label": "start",
+      "parent": "proposed.silences.cut[2].numbers",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 8.010884
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[2].end",
+      "role": "label",
+      "label": "end",
+      "parent": "proposed.silences.cut[2].numbers",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 10.0078
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[2].duration",
+      "role": "label",
+      "label": "duration",
+      "parent": "proposed.silences.cut[2].numbers",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 1.996916
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[2].actions",
+      "role": "group",
+      "label": "",
+      "parent": "proposed.silences.cut[2]"
+    },
+    {
       "id": "proposed.silences.cut[2].preview_segment",
       "role": "button",
       "label": "preview segment",
-      "parent": "proposed.silences.cut[2]",
+      "parent": "proposed.silences.cut[2].actions",
       "actions": [
         {
           "name": "activate",
@@ -561,7 +597,7 @@
       "id": "proposed.silences.cut[2].apply_cut",
       "role": "button",
       "label": "apply cut",
-      "parent": "proposed.silences.cut[2]",
+      "parent": "proposed.silences.cut[2].actions",
       "actions": [
         {
           "name": "activate",
@@ -576,7 +612,7 @@
       "id": "proposed.silences.cut[2].reject_cut",
       "role": "button",
       "label": "reject cut",
-      "parent": "proposed.silences.cut[2]",
+      "parent": "proposed.silences.cut[2].actions",
       "actions": [
         {
           "name": "activate",

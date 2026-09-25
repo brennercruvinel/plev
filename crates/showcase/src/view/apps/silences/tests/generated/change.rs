@@ -1,8 +1,8 @@
 //! A change of the review asked through the row (task-70 phase 2): with
 //! the review open, `propose` reads the intent as a change of it first.
-//! By the rules, a person's "too much information" hides the context,
-//! groups the controls and tightens the spacing, at once, as the
-//! person's change; "desfazer" takes it back whole, byte for byte; an
+//! By the rules, a person's "too much information" hides the context
+//! (the video and the counts; the rules' row is grouped by sense
+//! already) and tightens the spacing, at once, as the person's change; "desfazer" takes it back whole, byte for byte; an
 //! agent asks the same way, and the change is the agent's; "I can't
 //! compare these" says why nothing fits and changes nothing; an intent
 //! for a surface still proposes one. By the Claude (the fake claude), the
@@ -81,7 +81,7 @@ fn a_person_asks_for_less_through_the_row_and_undoes_it() {
     let Stage::Completed(outcome) = done else {
         panic!("{done:?}");
     };
-    assert_eq!(outcome.result.get("steps"), Some(&Value::Int(4)));
+    assert_eq!(outcome.result.get("steps"), Some(&Value::Int(3)));
     let Some(Value::List(ops)) = outcome.result.get("ops") else {
         panic!("the ops in lines");
     };
@@ -90,20 +90,17 @@ fn a_person_asks_for_less_through_the_row_and_undoes_it() {
         &[
             "hide proposed.silences.video.original",
             "hide proposed.counts",
-            "group proposed.silences.cut[{item}].preview_segment, \
-             proposed.silences.cut[{item}].apply_cut, proposed.silences.cut[{item}].reject_cut \
-             into proposed.silences.cut[{item}].actions",
             "density denser",
         ]
     );
     assert_eq!(
         status(&page),
-        "changed by the rules for \"too much information\", 4 steps"
+        "changed by the rules for \"too much information\", 3 steps"
     );
     assert!(!shown(&page, "proposed.counts"), "hidden from the surface");
     assert!(shown(&page, "silences.counts"), "the fixed screen's own");
     assert!(shown(&page, "proposed.silences.cut[1].actions"));
-    assert_eq!(by(&page), vec![Actor::Human; 4]);
+    assert_eq!(by(&page), vec![Actor::Human; 3]);
     assert_eq!(
         page.generated.proposing.intent.text(),
         "too much information"
@@ -113,9 +110,9 @@ fn a_person_asks_for_less_through_the_row_and_undoes_it() {
     let Stage::Completed(outcome) = undone else {
         panic!("{undone:?}");
     };
-    assert_eq!(outcome.result.get("undone"), Some(&Value::Int(4)));
+    assert_eq!(outcome.result.get("undone"), Some(&Value::Int(3)));
     assert_eq!(written(&page), before, "byte for byte");
-    assert_eq!(status(&page), "undone: the last change, 4 steps");
+    assert_eq!(status(&page), "undone: the last change, 3 steps");
     assert!(shown(&page, "proposed.counts"));
 
     let (_, nothing) = person(&mut page, &mut todo, "undo");
@@ -151,7 +148,7 @@ fn an_agent_asks_for_a_change_as_it_proposes() {
         "{:?}",
         asked.stage()
     );
-    assert_eq!(by(&page).len(), 4);
+    assert_eq!(by(&page).len(), 3);
     assert!(by(&page).iter().all(|a| *a == agent));
 }
 
