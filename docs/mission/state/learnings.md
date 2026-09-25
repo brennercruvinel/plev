@@ -14,6 +14,11 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ### 2026-09-24, checkpoint b, primeira rodada
 
+- **o mínimo de um texto num flex era um glifo:** o taffy toma o
+  min-content como mínimo de um item, e o `TextMeasurer` mede o
+  min-content com largura zero. qualquer linha apertada do IR espremia o
+  texto em vez de quebrar. fonte: handoff das correções, sonda (a),
+  `crates/surface/src/layout.rs` (`longest_word`).
 - **a tela gerada nunca tinha sido vista inteira na janela padrão:** os
   testes da task-69 provavam a projeção, as ações e os frames, e o
   regress só tinha a Silences no estado inicial. a primeira vez que

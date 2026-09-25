@@ -14,6 +14,24 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### checkpoint b, as correções integradas
+
+- **integrada:** `task/69i-checkpoint-b` (7 commits, agente no Opus). a
+  causa da linha quebrada: o taffy usa o min-content como mínimo de um
+  item e o engine mede o min-content de um texto com largura zero, então
+  o texto encolhia a um glifo. agora um texto nunca fica mais estreito
+  que a sua palavra mais longa e uma linha que não cabe quebra. o slider
+  do IR mostra rótulo e valor; número com no máximo duas casas; o prompt
+  pede a tarefa primeiro, rótulo em todo controle e cada controle uma
+  vez. nada mudou no `uir`, no comps nem no engine.
+- **validação:** diff inteiro lido; as imagens novas a 1200x800 conferidas
+  (pelas regras a linha inteira dentro do card; pela fixture do Claude os
+  sliders com rótulo e valor, as durações "2"). gate local verde, 2832
+  passam, 0 falham (antes 2821); regress 169 sem mudança (163 antigos
+  iguais, 6 novos da revisão aberta).
+- **próximo:** a segunda rodada do checkpoint, com os mesmos comandos e
+  uma chamada real ao Claude.
+
 ### checkpoint b, primeira rodada: a gerada é pior hoje
 
 - **pedido do brenner:** "testa você mesmo". o orquestrador fez a
