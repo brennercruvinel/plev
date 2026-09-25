@@ -12,7 +12,11 @@
 //! (`fixtures/ir/silences-review-claude.ir.json`), no model asked; and
 //! that fixture adapted by task-70's operations (the cuts first, the
 //! detection the fixed screen offers hidden), applied as the host applies
-//! one. The frames the page shows are synthetic, made here from their
+//! one; and, since task-70 phase 2, the review changed by an intent asked
+//! through the row after it opened, as a person or an agent asks ("too
+//! much information" over the rules' review, "tem informação demais" over
+//! the Claude's, and "I can't compare these", refused with why). The
+//! frames the page shows are synthetic, made here from their
 //! instant, so no ffmpeg runs and the frame is the same on every machine
 //! (a layer hashes an image by its size, `hash.rs`).
 
@@ -40,9 +44,18 @@ pub enum Proposal {
     Fixture(&'static str),
 }
 
+/// An intent asked through the row once the surface is open: written and
+/// proposed, as a person or an agent asks for a change; `taken` when the
+/// page changes the surface for it, else it refuses and says why.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Asked {
+    pub intent: &'static str,
+    pub taken: bool,
+}
+
 /// A page in a state: its name, the page it is of, the intent typed in
-/// the row, how its surface is proposed, and the operations applied to it
-/// then (`uir::Op` in JSON, in order).
+/// the row, how its surface is proposed, the operations applied to it
+/// then (`uir::Op` in JSON, in order), and the intents asked after them.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct State {
     pub name: &'static str,
@@ -50,33 +63,75 @@ pub struct State {
     pub intent: &'static str,
     pub proposal: Proposal,
     pub ops: &'static [&'static str],
+    pub asks: &'static [Asked],
 }
+
+/// The intent of the checkpoint's rules round.
+const RULES: &str = "the list with the video and the counts";
+/// The intent of the checkpoint's Claude round.
+const CLAUDE: &str = "cut the silences of this video, then I want to review the cuts";
 
 /// Every state a baseline may be of.
 pub const STATES: &[State] = &[
     State {
         name: "Silences, review by the rules",
         page: "Silences",
-        intent: "the list with the video and the counts",
+        intent: RULES,
         proposal: Proposal::Rules,
         ops: &[],
+        asks: &[],
     },
     State {
         name: "Silences, review by the Claude (fixture)",
         page: "Silences",
-        intent: "cut the silences of this video, then I want to review the cuts",
+        intent: CLAUDE,
         proposal: Proposal::Fixture(CLAUDE_REVIEW),
         ops: &[],
+        asks: &[],
     },
     State {
         name: "Silences, review by the Claude (fixture), adapted",
         page: "Silences",
-        intent: "cut the silences of this video, then I want to review the cuts",
+        intent: CLAUDE,
         proposal: Proposal::Fixture(CLAUDE_REVIEW),
         ops: &[
             r#"{"op": "reorder", "parent": "review.root", "ids": ["review.title", "review.cuts_list"]}"#,
             r#"{"op": "hide", "id": "review.controls"}"#,
         ],
+        asks: &[],
+    },
+    State {
+        name: "Silences, review by the rules, too much information",
+        page: "Silences",
+        intent: RULES,
+        proposal: Proposal::Rules,
+        ops: &[],
+        asks: &[Asked {
+            intent: "too much information",
+            taken: true,
+        }],
+    },
+    State {
+        name: "Silences, review by the Claude (fixture), too much, in portuguese",
+        page: "Silences",
+        intent: CLAUDE,
+        proposal: Proposal::Fixture(CLAUDE_REVIEW),
+        ops: &[],
+        asks: &[Asked {
+            intent: "tem informação demais",
+            taken: true,
+        }],
+    },
+    State {
+        name: "Silences, review by the rules, can't compare",
+        page: "Silences",
+        intent: RULES,
+        proposal: Proposal::Rules,
+        ops: &[],
+        asks: &[Asked {
+            intent: "I can't compare these",
+            taken: false,
+        }],
     },
 ];
 
@@ -214,6 +269,9 @@ impl StagedState {
             view.stage_silences_op(op, harness())
                 .map_err(|e| format!("{}: {e}", state.name))?;
         }
+        for asked in state.asks {
+            ask(&mut view, asked).map_err(|e| format!("{}: {e}", state.name))?;
+        }
         view.stage_silences_frames(&mut synthetic);
         let mut compositor = Compositor::new();
         let (mut steps, mut settled) = (0, false);
@@ -261,6 +319,36 @@ fn act(
     match receipt.stage() {
         Some(sem::Stage::Completed(_)) => Ok(()),
         other => Err(format!("{target} {action}: {other:?}")),
+    }
+}
+
+/// `asked` through the row by the regression harness: the rules chosen
+/// (a baseline never asks a model, whatever program the machine has), the
+/// intent written, then `propose`, ending completed when it is `taken`
+/// and failed (the page says why) when not.
+fn ask(view: &mut ShowcaseView, asked: &Asked) -> Result<(), String> {
+    act(view, "silences_surface.proposer", "select", Some("rules"))?;
+    act(
+        view,
+        "silences_surface.intent",
+        "set_value",
+        Some(asked.intent),
+    )?;
+    let seen = view
+        .semantics()
+        .ok_or_else(|| "the page projects nothing".to_string())?;
+    let req = Request::observe(
+        &seen,
+        harness(),
+        "silences_surface.propose",
+        "propose",
+        None,
+    )
+    .map_err(|e| format!("propose: {e}"))?;
+    let receipt = view.act(req).ok_or("propose: not taken")?;
+    match (receipt.stage(), asked.taken) {
+        (Some(sem::Stage::Completed(_)), true) | (Some(sem::Stage::Failed { .. }), false) => Ok(()),
+        (other, _) => Err(format!("\"{}\": {other:?}", asked.intent)),
     }
 }
 

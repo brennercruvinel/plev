@@ -12,10 +12,12 @@
 //! open at the default window, by the rules and by the Claude's fixture)
 //! is `generated/checkpoint.rs`; the Claude's review adapted by task-70's
 //! operations is `generated/transform.rs`; a change asked through the row
-//! (task-70 phase 2) is `generated/change.rs`.
+//! (task-70 phase 2) is `generated/change.rs`, and its demo, with what
+//! continues through it, `generated/demo.rs`.
 
 mod change;
 mod checkpoint;
+mod demo;
 mod transform;
 
 use std::path::PathBuf;
