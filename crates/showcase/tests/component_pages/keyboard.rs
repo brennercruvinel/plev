@@ -1,13 +1,15 @@
-//! The keyboard on the component pages (task-75 phase 2c), as the window
-//! delivers it and nothing more: Tab and Shift-Tab (`handle_edit_key` with
-//! the modifiers the shell forwards), the arrows (`handle_nav` and
-//! `handle_edit_key`), Enter (`handle_enter`), Space (`handle_key(" ")`)
-//! and Escape (`close_top_overlay`). No window, no key of the system.
+//! The keyboard on the component pages (task-75 phases 2c and 2d), as
+//! the window delivers it and nothing more: Tab and Shift-Tab
+//! (`handle_edit_key` with the modifiers the shell forwards), the arrows
+//! (`handle_nav` and `handle_edit_key`), Enter (`handle_enter`), Space
+//! (`handle_key(" ")`), Escape (`close_top_overlay`) and the wheel
+//! (`handle_event`). No window, no key of the system.
 
+use comps::prelude::WidgetEvent;
 use engine::accessibility::focus;
 use engine::compositor::SceneNode;
 use engine::theme::Theme;
-use sem::Value;
+use sem::{Role, SemId, Snapshot, Value};
 use showcase::view::{EditKey, NavKey};
 use winit::keyboard::ModifiersState;
 
@@ -50,15 +52,24 @@ const PAGES: &[&str] = &[
 
 /// The pages Tab does not reach, and why: their projection has no node
 /// that takes the focus (task-75, "fase 2c: a sonda do teclado", (c)).
-/// Making the rows focusable changes their baselines; the decision is in
-/// the handoff of phase 2c.
-const UNREACHABLE: &[(&str, &str)] = &[
-    ("Data Table", "rows select, none is focusable"),
-    ("Item", "list items select, none is focusable"),
-    ("Resizable", "the split has no splitter role"),
-    ("Scroll Area", "list items select, none is focusable"),
-    ("Table", "rows select, none is focusable"),
-];
+/// Since phase 2d a list and a table are one stop of Tab each.
+const UNREACHABLE: &[(&str, &str)] = &[("Resizable", "the split has no splitter role")];
+
+/// The pages with a widget that is one stop of Tab (task-75 phase 2d): a
+/// tab list, a tree, a list or a table.
+const COMPOSITE: &[&str] = &["Data Table", "Item", "Scroll Area", "Table", "Tabs", "Tree"];
+
+/// Whether `id` is `widget` or under it.
+fn inside(seen: &Snapshot, id: &SemId, widget: &SemId) -> bool {
+    let mut at = Some(id);
+    while let Some(now) = at {
+        if now == widget {
+            return true;
+        }
+        at = seen.get(now).and_then(|n| n.parent.as_ref());
+    }
+    false
+}
 
 impl Gallery {
     fn focused(&self) -> Option<String> {
@@ -73,6 +84,37 @@ impl Gallery {
             .iter()
             .map(|id| id.to_string())
             .collect()
+    }
+
+    /// Each widget of the page that is one stop of Tab (a tab list, a
+    /// tree, a list, a table), with the nodes under it that take the
+    /// focus.
+    fn stops(&self) -> Vec<(String, Vec<String>)> {
+        let seen = self.view.semantics().unwrap_or_default();
+        let order = focus::order(&seen);
+        seen.nodes()
+            .values()
+            .filter(|n| {
+                matches!(
+                    n.role,
+                    Role::TabList | Role::Tree | Role::List | Role::Table
+                )
+            })
+            .map(|w| {
+                let under = order.iter().filter(|id| inside(&seen, id, &w.id));
+                (w.id.to_string(), under.map(|id| id.to_string()).collect())
+            })
+            .collect()
+    }
+
+    /// The wheel over the middle of where `id` is bound.
+    fn wheel(&mut self, id: &str, delta: f32) {
+        let Some([x, y, w, h]) = self.c.binding(&sid(id)).map(|b| b.rect) else {
+            panic!("{id} is not bound");
+        };
+        let (x, y) = (x + w / 2.0, y + h / 2.0);
+        self.view.handle_event(&WidgetEvent::Scroll { x, y, delta });
+        self.frame();
     }
 
     fn tab(&mut self) -> bool {
@@ -170,12 +212,21 @@ impl Gallery {
 /// Tab walks every component page in the order of its projection, the
 /// one a screen reader walks, and wraps; Shift-Tab walks it back; the
 /// focus is never nowhere once Tab took it, and the control that has it
-/// shows its ring.
+/// shows its ring. A tab list, a tree, a list and a table are one stop
+/// each.
 #[test]
 fn tab_walks_every_component_page_in_the_projection_s_order_with_the_ring_on() {
     let mut unreachable = Vec::new();
+    let mut composite = Vec::new();
     for page in PAGES {
         let mut g = gallery(page);
+        let stops = g.stops();
+        for (widget, under) in &stops {
+            assert_eq!(under.len(), 1, "{page}: {widget} is one stop of Tab");
+        }
+        if !stops.is_empty() {
+            composite.push(*page);
+        }
         let order = g.order();
         if order.is_empty() {
             assert!(!g.tab(), "{page}: nothing to reach");
@@ -203,6 +254,7 @@ fn tab_walks_every_component_page_in_the_projection_s_order_with_the_ring_on() {
     }
     let known: Vec<&str> = UNREACHABLE.iter().map(|(p, _)| *p).collect();
     assert_eq!(unreachable, known);
+    assert_eq!(composite, COMPOSITE);
 }
 
 /// The tab list: the arrows move along it and wrap, Home and End go to
@@ -223,6 +275,7 @@ fn the_arrows_walk_the_tabs_and_enter_and_space_select() {
         assert!(g.key(key), "{key:?}");
         assert_eq!(g.focused().as_deref(), Some(at), "{key:?}");
         assert!(g.ringed(at));
+        assert_eq!(g.order(), [at], "{key:?}: the focused tab is the stop");
     }
     let selected = |g: &Gallery| g.state_of("tabs_page.tabs", "selected");
     assert_eq!(
@@ -236,6 +289,14 @@ fn the_arrows_walk_the_tabs_and_enter_and_space_select() {
     assert!(g.space());
     assert_eq!(selected(&g), Some(Value::Text("1".into())));
     assert!(!g.nav(NavKey::Down), "a tab list is horizontal");
+    g.key(EditKey::End);
+    assert!(g.view.close_top_overlay(), "Escape blurs");
+    assert!(g.tab());
+    assert_eq!(
+        g.focused().as_deref(),
+        Some("tabs_page.tabs[1]"),
+        "Tab comes back on the active tab"
+    );
 }
 
 /// The tree: up and down along the rows it shows, right opens a closed
@@ -266,12 +327,96 @@ fn the_arrows_walk_the_tree_open_and_close_its_branches() {
     assert!(g.key(EditKey::Home));
     assert_eq!(g.focused().as_deref(), Some("tree_page.tree[1]"));
     assert!(g.ringed("tree_page.tree[1]"));
-    g.tab_to("tree_page.tree[5]");
+    assert_eq!(
+        g.order(),
+        ["tree_page.tree[1]"],
+        "the focused row is the stop"
+    );
+    for _ in 0..4 {
+        assert!(g.nav(NavKey::Down));
+    }
+    assert_eq!(g.focused().as_deref(), Some("tree_page.tree[5]"));
     assert!(g.enter());
     assert_eq!(
         g.state_of("tree_page.tree[5]", "selected"),
         Some(Value::Bool(true))
     );
+    assert!(g.key(EditKey::Home));
+    assert!(g.view.close_top_overlay(), "Escape blurs");
+    assert!(g.tab());
+    assert_eq!(
+        g.focused().as_deref(),
+        Some("tree_page.tree[5]"),
+        "Tab comes back on the selected row"
+    );
+}
+
+/// A list and a table (task-75 phase 2d): one stop of Tab, on the first
+/// row in view; down and up move along the rows, Home and End go to the
+/// ends of the whole list, held or not, and the list scrolls to them;
+/// Enter and Space select the focused row as its click does; Tab comes
+/// back on the selected row; the focus follows the wheel, never nowhere.
+#[test]
+fn the_arrows_walk_the_rows_of_a_list_and_a_table() {
+    for (page, list, key, count) in [
+        ("Scroll Area", "scroll_area_page.list", "selected", 10_000),
+        ("Item", "scroll_area_page.list", "selected", 10_000),
+        ("Data Table", "table_page.table", "selected_row", 2_000),
+        ("Table", "table_page.table", "selected_row", 2_000),
+    ] {
+        let row = |i: usize| format!("{list}[{i}]");
+        let mut g = gallery(page);
+        assert!(g.tab(), "{page}: Tab");
+        assert_eq!(g.focused(), Some(row(0)), "{page}: the first row in view");
+        assert!(g.nav(NavKey::Down) && g.nav(NavKey::Down), "{page}: down");
+        assert_eq!(g.focused(), Some(row(2)), "{page}");
+        assert!(g.ringed(&row(2)), "{page}: the ring on the row");
+        assert_eq!(g.order(), [row(2)], "{page}: the focused row is the stop");
+        assert!(g.nav(NavKey::Up), "{page}: up");
+        assert_eq!(g.focused(), Some(row(1)), "{page}");
+        assert!(g.key(EditKey::End), "{page}: End");
+        assert_eq!(g.focused(), Some(row(count - 1)), "{page}: the last row");
+        assert!(g.ringed(&row(count - 1)), "{page}: scrolled to it");
+        assert!(!g.nav(NavKey::Down), "{page}: the rows do not wrap");
+        assert!(g.key(EditKey::Home), "{page}: Home");
+        assert_eq!(g.focused(), Some(row(0)), "{page}: the first row");
+        assert!(!g.nav(NavKey::Up), "{page}: nor at the top");
+
+        for _ in 0..3 {
+            g.nav(NavKey::Down);
+        }
+        assert!(g.enter(), "{page}: Enter");
+        assert_eq!(g.state_of(list, key), Some(Value::Text("3".into())));
+        let mut clicked = gallery(page);
+        clicked.click(&row(3));
+        assert_eq!(g.state(), clicked.state(), "{page}: as the click does");
+        g.nav(NavKey::Down);
+        assert!(g.space(), "{page}: Space");
+        assert_eq!(g.state_of(list, key), Some(Value::Text("4".into())));
+
+        assert!(g.view.close_top_overlay(), "{page}: Escape blurs");
+        g.frame();
+        assert_eq!(g.focused(), None, "{page}");
+        assert!(g.tab());
+        assert_eq!(
+            g.focused(),
+            Some(row(4)),
+            "{page}: back on the selected row"
+        );
+
+        g.wheel(list, 4_000.0);
+        let Some(at) = g.focused() else {
+            panic!("{page}: the focus is gone with the wheel");
+        };
+        assert_ne!(at, row(4), "{page}: the focus followed the rows");
+        assert!(g.ringed(&at), "{page}: {at} in view, with its ring");
+        assert_eq!(
+            g.order(),
+            std::slice::from_ref(&at),
+            "{page}: and it is the stop"
+        );
+        assert!(g.nav(NavKey::Down), "{page}: the arrows go on from there");
+    }
 }
 
 /// The select: down opens it on the chosen option, the arrows, Home and

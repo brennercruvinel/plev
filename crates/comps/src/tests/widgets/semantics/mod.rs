@@ -8,6 +8,7 @@ mod content;
 mod feedback;
 mod form;
 mod nav;
+mod roving;
 
 use super::*;
 use sem::{
