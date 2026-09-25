@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- code and diffs in a generated surface (2026-09-25, task-97): a
+  generated surface can now show code, a line per row, and a diff with
+  each line tinted by its kind (added in green, removed in red, the hunk
+  header in grey) using colors the theme already had; every kind reads
+  at WCAG AA in the four themes. the ide's review of three commits shows
+  its diff this way: 14, 7 and 14 lines in view instead of 5, 5 and 5
+  without color. against the fixed panel it still loses 4 lines of one
+  commit (the surface's height is bounded by the one height token the IR
+  has) and the line numbers.
+
 - a generated surface in the ide (2026-09-25, task-96): beside its
   panels, the ide has a line where a person writes what they want to see.
   "review these three commits" (or "revise estes três commits") gives a

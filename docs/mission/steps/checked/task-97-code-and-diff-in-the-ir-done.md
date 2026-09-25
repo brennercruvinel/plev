@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: ongoing
+status: done
 last-updated: 2026-09-25
 domain: generative-runtime
 task: task-97
@@ -452,3 +452,15 @@ com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
   à esquerda: a pessoa vê o diff duas vezes.
 - a prova com o Claude de verdade e a demo 5 com janela pelo brenner
   seguem com o orquestrador e o brenner.
+
+## fechamento (2026-09-25, orquestrador)
+
+integrada. aceito o `pub use` em `crates/comps/src/content/mod.rs`, fora
+da lista do briefing: é a única forma de os tipos novos do `CodeBlock`
+saírem do módulo privado, e nada que o comps desenha mudou. conferido nas
+imagens da demo 5: o diff colorido pelo tipo de linha, 14, 7 e 14 linhas
+à vista. dois defeitos visuais vistos na validação, que ficam como dívida
+(P2): o cartão do diff tem como título o id cru do commit
+(`stacks.commit[847f583…`) em vez da mensagem; e a coluna da superfície
+gerada ocupa uns 370 px do ide o tempo todo, mesmo sem superfície aberta,
+e aperta as vistas fixas.
