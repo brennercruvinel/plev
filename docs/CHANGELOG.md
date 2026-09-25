@@ -9,6 +9,11 @@ status: living
 
 ## unreleased
 
+- the editor holds a million lines (2026-09-25, task-74): it opens one
+  in about 21 ms, scrolls and edits in the middle in under half a
+  millisecond per frame, the same as with ten thousand lines; clicks near
+  the end of a huge file land on the right line again.
+
 - emoji in color (2026-09-25, task-74): Noto Color Emoji (640 emoji,
   with skin tones and families, 1.4 MB) is built in, and the glyph atlas
   draws a color glyph with its own colors. emoji used to be empty boxes on

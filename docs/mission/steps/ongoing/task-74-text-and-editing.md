@@ -1361,3 +1361,25 @@ morto. disco: 9,3 GB livres.
   segura o `String` e o rope ao mesmo tempo enquanto abre; carregar em
   pedaços, direto do arquivo, não foi feito.
 - o IME (fase 4) continua aberto e pede o brenner.
+
+## fase 7 integrada (orquestrador, 2026-09-25)
+
+fecha o item "benchmark de um milhão de linhas com números". o editor já
+emitia só as linhas visíveis; a fase corrigiu a posição das linhas (f64,
+errava a partir da linha 100 mil), pôs um cache de shaping por texto de
+linha (4 MiB, o menos usado sai) e abriu o documento sem cópia. com um
+milhão de linhas, em release no M4: abrir 21 ms (pico de 65 MiB, antes
+121), rolagem pela roda 0,36 ms por frame, edição no meio até o frame
+seguinte 0,27 ms; rolar e editar custam o mesmo com 10 mil e com um
+milhão. tabela completa e comando acima.
+
+validação do orquestrador: diff lido (a chave do cache cobre todo campo
+do `TextStyle` e a largura; nenhuma API pública mudou; os quatro testes
+de um milhão de linhas falhavam antes da correção em f64); 176 baselines
+iguais.
+
+continua aberto no critério: o roteiro de IME executado (fase 4), que
+pede o brenner. pendência: a rolagem do engine em f32 anda em passos de
+2 px perto do fim de um milhão de linhas (mudar é API pública).
+
+o agente gastou uns 190 mil tokens.
