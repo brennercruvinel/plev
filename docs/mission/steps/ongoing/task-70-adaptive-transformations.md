@@ -1703,3 +1703,220 @@ muda, nenhuma leitura nova do sistema, e o desligar não pede mudar a
 fase 1 (as preferências são uma camada do host). nenhum baseline existente
 muda: a faixa só é projetada aberta, e as superfícies das baselines não
 têm preferência.
+
+### handoff da fase 4 (2026-09-25)
+
+```text
+Goal: task-70 fase 4: a pessoa liga uma preferência (texto maior, mais
+      contraste, mais ou menos denso) e toda superfície gerada aberta e
+      toda que abrir depois muda por operações verificadas da fase 1,
+      dentro dos tokens, em nome dela, no mesmo histórico; desligar
+      devolve só o que ela mudou; e o promote de um template no uir
+Status: pronto para o orquestrador; adição ao ADR proposta
+```
+
+#### commits
+
+- 921e159a task-70: the probe of phase 4, accessibility as transformation and the promote of a template in uir
+- 490fe38d task-70: the promote of a template finds the action on its items in uir, and the host lends no registry
+- d39385b7 task-70: each preference of accessibility is operations by token over the surface, verified, and restyle reaches a badge's fill and the ink a slider, a table and an image are drawn in
+- 89a97fa0 task-70: the host draws the person's preferences as the last layer, from the first frame, and turning one off leaves what others asked; the thread's reduced motion makes a change instant
+- 7b34736f task-70: only the person opens the accessibility band and turns a preference on; the page projects the same and a model is shown the surface as it was asked
+- c8c16ed1 task-70: more contrast measured pair by pair in core as task-75 measures, and the stat's label no token reaches listed
+- 8124e8a7 task-70: the demo, the review by the rules with larger text and more contrast, in the regress with its image
+- o commit deste texto e do ADR
+
+#### a sonda
+
+está na seção "sonda" da fase 4, acima, de (a) a (f). nenhuma condição
+de parada aconteceu: nenhum tipo do `sem` mudou, o protocolo v1 não
+mudou, nenhuma cor de tema mudou, nenhuma leitura nova do sistema,
+nenhum baseline existente mudou, nenhuma dependência nova, o disco ficou
+em 16 GB livres.
+
+o que a sonda achou e mudou o desenho: uma ação `PERSON_ONLY` sempre
+projetada na página mudaria as 14 baselines da Silences (o regress
+compara a projeção), o menu da página e a lista do leitor; por isso a
+faixa só existe aberta. e nem as regras nem o Claude da fixture pintam
+texto em tinta secundária: os pares que falham na revisão são de
+componentes, e dois deles couberam num token (o fundo do badge, a tinta
+de slider, tabela e imagem).
+
+#### cada preferência e as operações
+
+o código: `crates/uir/src/transform/prefer.rs` (`Preferences`,
+`Preference`, `Preferences::over`), `crates/uir/src/transform/look.rs`
+(o `restyle` com as duas partes novas), `crates/surface/src/draw.rs` (a
+tinta de slider, tabela e imagem lida de `props.color`).
+
+| preferência | operação | o que alcança | o que não alcança |
+| --- | --- | --- | --- |
+| texto maior | `emphasize` em todo `text` e todo `stat` | o texto um degrau da rampa (sem estilo: `body` para `title`), o valor do stat um tamanho (o rótulo cresce junto); num template, todo item | badge, botão, campo, slider, tabela, imagem (o texto no tamanho do componente); o que já está no topo (`h4`) fica, e a lista diz |
+| mais contraste | `restyle` para `text` de um `text` em `text_dim`/`text_mid` e de todo slider, tabela e imagem; `restyle` do fundo de um badge sem fundo para `accent` | o texto secundário, o rótulo e o valor do slider, as linhas da tabela, o rótulo da imagem, o badge (formato preenchido, o texto em contraste) | o rótulo do stat (`text_dim` do comps), o cabeçalho da tabela, o texto numa cor de intenção, o texto sobre fundo escuro, o rótulo de botão |
+| mais denso / mais espaçado | `density` uma vez | todo gap de stack e grid e todo padding com token | o que não tem token; as pontas |
+
+testes: `crates/uir/tests/prefer.rs` (cada preferência sozinha e todas
+juntas: só operações de aparência, cada resultado verificado de novo,
+nenhum id sai, o JSON do resultado lido de volta só com tokens, as
+inversas da última para a primeira devolvem a superfície byte a byte; o
+que cada uma alcança e deixa; o `restyle` novo), `crates/uir/tests/transform.rs`
+(os de antes, iguais).
+
+#### o contraste, antes e depois, par a par
+
+medido como a 75 mede (`crates/showcase/src/view/apps/silences/tests/generated/contrast.rs`):
+a revisão desenhada, cada texto com a tinta composta em luz linear sobre
+os fundos desenhados embaixo dele e o `bg` da página, luminância relativa
+do WCAG, 4,5 (3 para texto grande). no core; o teste confere cada razão.
+
+| par (texto sobre o que ele pisa) | antes | com mais contraste |
+| --- | --- | --- |
+| texto do IR (faixa do corte, título, arquivo) `#121212` sobre `#FCFCFC` | 18,26 | 18,26 |
+| valor do stat `#121212` sobre `#FCFCFC` | 18,26 | 18,26 |
+| rótulo de botão `#121212` sobre `#E2E2E2` | 14,46 | 14,46 |
+| badge "pending" (vidro) `#7B7B7B` sobre `#F8F7F7` | 3,96 | 17,96 (`#FAFAFC` sobre `#121212`, preenchido) |
+| rótulo de imagem sem quadro (o vídeo, "frame", "original frame", "result frame", "silence frame") `#7B7B7B` sobre `#FCFCFC` | 4,13 | 18,26 |
+| rótulo do slider (Claude: "threshold (dB)", "minimum silence (s)") `#7B7B7B` sobre `#FCFCFC` | 4,13 | 18,26 |
+| valor do slider (Claude: "-30", "0.5") `#121212` sobre `#FCFCFC` | 18,26 | 18,26 |
+| rótulo do stat (regras: "start", "end", "duration", "shown", "value", "total", "applied", "rejected", "pending", "cut_secs"; Claude: "duration (s)", "total", "applied", "rejected", "pending", "seconds cut") `#7B7B7B` sobre `#FCFCFC` | 4,13 | 4,13, listado |
+
+o par que nenhum token faz passar: o rótulo do stat. o comps desenha em
+`colors.text_dim` (`crates/comps/src/content/stat.rs:164`) e não recebe
+cor, e nenhum papel do IR chega nele. passar pede uma cor de rótulo no
+`Stat` do comps ou o `text_dim` do core mais escuro: comps ou tema,
+decisão do brenner. nenhuma cor de tema mudou.
+
+#### desligar
+
+as preferências são a última camada do host
+(`crates/surface/src/host.rs`, `crates/surface/src/host/prefer.rs`): o
+host guarda a superfície como foi pedida e desenha as preferências por
+cima, refeitas depois de toda mudança. desligar refaz sem ela. teste
+(`crates/surface/tests/prefer.rs`,
+`turned_off_what_it_changed_goes_back_and_what_an_agent_asked_stays`):
+texto maior e mais contraste ligados, um agente esconde
+`review.detection`, a pessoa desliga uma (a outra fica) e depois as
+duas: o nó continua escondido, o histórico tem só o `hide` do agente, e
+a superfície é a revisão com o `hide`, byte a byte. também: uma
+superfície abre já com elas, antes do primeiro frame (nenhum frame de
+transição); ligar com uma aberta muda na hora; um nó mostrado depois
+pega a preferência; "desfazer" tira só o pedido; uma forma nova pega as
+preferências.
+
+#### o ator e o histórico
+
+`SurfaceHost::prefer(preferences, by, app)` recusa um agente
+(`SurfaceError::NotThePerson`). as operações entram em nome de quem
+ligou (a pessoa, a tecnologia assistiva ou um teste), sem variante nova
+de `Actor`. o `Change` ganhou `preference: Option<Preference>`:
+`changes` dá as pedidas e depois as das preferências; `last_ask`,
+`undo` e `undo_asked` só veem as pedidas.
+
+na página (`crates/showcase/src/view/apps/silences/generated/access.rs`,
+novo; `generated.rs`, `generated/page.rs`, `silences.rs`): a pessoa
+escreve "accessibility" ou "acessibilidade" na linha e pede; a faixa
+abre sob a linha com "larger text", "more contrast", "denser",
+"sparser" e "done", todos `PERSON_ONLY`, sem estado, rótulo fixo; a
+preferência ligada aparece escura. testes
+(`crates/showcase/src/view/apps/silences/tests/generated/access.rs`): um
+agente que pede "accessibility" falha com o motivo; um agente que aperta
+um botão é recusado `not_authorized`; a pessoa liga e desliga, e o
+histórico é dela; pelo port de verdade, com a faixa aberta, o agente vê
+a faixa sem estado, os botões voltam `requested, rejected` e "accessibility"
+pela linha termina `failed`; nada liga.
+
+privacidade: a página projeta o mesmo, revisão igual, com e sem
+preferências (a projeção da superfície não tem aparência); e o prompt do
+Claude (o falso) é o mesmo, byte a byte, com e sem preferências, para
+uma mudança e para uma superfície nova: a página propõe sobre `current`,
+a superfície como foi pedida (`generated/page.rs` e
+`surface_page/page.rs` liam `Surface::verified`, a desenhada; o teste
+falha se voltar a ler).
+
+#### o reduced motion
+
+`crates/surface/src/motion.rs`: o `Motion` lê também
+`engine::animation::reduced_motion()` e não cria transição; o primeiro
+frame depois de uma mudança já é a forma nova. teste em
+`crates/surface/tests/motion.rs` (sem a correção, o primeiro frame
+desenha o nó que saiu inteiro: conferido).
+
+#### o `promote` no `uir`
+
+`crates/uir/src/transform/view.rs`, `declared`: no template de um item,
+a ação do primeiro nó do registro que cabe e a declara, com o template
+como alvo; o verifier confere o resto. o `registry` saiu do host. teste
+novo em `crates/uir/tests/transform.rs`; os da fase 3
+(`crates/surface/tests/promote.rs`, `crates/showcase/tests/composites.rs`
+e os de `silences/tests/composites.rs`) passam sem mudança.
+
+#### a demo
+
+o estado novo "Silences, review by the rules, larger text and more
+contrast" (`crates/showcase/examples/regress/state.rs`): a revisão pelas
+regras, "accessibility" pela linha, "larger text", "more contrast" e
+"done" pela faixa, como a pessoa (o harness é um ator de teste). em
+teste também:
+`the_demo_larger_text_and_more_contrast_over_the_review_by_the_rules`.
+
+| | imagem |
+| --- | --- |
+| antes (baseline da fase 2) | `crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/frame.png` |
+| depois | `crates/showcase/fixtures/regress/silences-review-by-the-rules-larger-text-and-more-contrast@core@1280x800/frame.png` |
+
+no depois, a faixa de cada corte ("0:03.0 to 0:05.0") passa de 15 para
+20 px, os números dos cortes e das contagens sobem um tamanho, o selo
+"pending" fica preenchido escuro com o texto claro, e os dois cortes
+continuam dentro de 1280x800. os rótulos dos stats continuam cinza (o
+par listado). a linha mostra "accessibility", o que a pessoa escreveu.
+
+#### baselines
+
+- novo (1): `silences-review-by-the-rules-larger-text-and-more-contrast@core@1280x800`,
+  com imagem.
+- nenhum baseline existente mudou.
+
+#### contagem do gate e o regress
+
+| | workspace | perna urnaui | total |
+| --- | --- | --- | --- |
+| antes, `main` @ 91bade03 (o número do briefing) | | | 2990 passam, 27 ignorados |
+| depois, esta branch @ 8124e8a7 (`./script/gate` offline, saída 0, 02:35:14 a 02:37:33) | 2925 passam, 0 falhas, 26 ignorados (156 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 3010 passam, 27 ignorados |
+
+20 testes novos e três suítes (`uir`: `prefer`, 5, e 1 em `transform`;
+`surface`: `prefer`, 6, e 1 em `motion`; a lib do `showcase`: 5 em
+`access` e 2 em `contrast`). o gate inteiro verde, com a perna urnaui e
+o check wasm com `-D warnings`. `df -h /`: 16 GB livres antes e depois.
+`cargo run --offline -p showcase --example regress -- check` (com o
+`main.rs` tocado): 176 baselines, 176 iguais, nenhum frame desenhado,
+nenhuma GPU aberta (os 175 de antes iguais, 1 novo). todo cargo com o
+`PLEV_CLAUDE` apontando para o stub que só falha; nenhum `claude -p`
+chamado (o teste do prompt usa o `claude` falso do repositório).
+
+#### linha de ADR para o índice (o `docs/ADR/README.md` não está na minha lista)
+
+| 2026-09-25 | [adaptive-transforms-preserve-identity](adaptive-transforms-preserve-identity.md) | adição proposta | fase 4: `uir::Preferences` (texto maior, mais contraste, densidade) viram operações da fase 1 por token, cada uma verificada (`emphasize` em texto e stat; `restyle` para `text` e badge preenchido, com o `restyle` alcançando o fundo do badge e a tinta de slider, tabela e imagem; `density`); o host desenha as preferências como a última camada, desde o primeiro frame, e desligar deixa o que outros pediram; só a pessoa liga (`SurfaceHost::prefer` recusa agente; a faixa `PERSON_ONLY` da Silences, projetada só aberta, sem estado); a projeção e o prompt são os mesmos com e sem preferência; contraste medido como a 75, o rótulo do stat listado; o reduced motion da thread sem transição no primeiro frame; o `promote` de template no `uir`, sem o `registry` do host (task-70 fase 4) |
+
+#### o que fica aberto
+
+- ler do sistema "aumentar contraste" e o tamanho de texto: nada foi
+  lido. o caminho seria um irmão de `engine::accessibility::motion` (a
+  leitura do reduced motion) e a view passando o valor para
+  `SurfaceHost::prefer`, como a ponte passa o reduced motion; a chave de
+  cada um tem que ser achada na máquina.
+- a prova com o Claude de verdade (da fase 2) é do orquestrador.
+- o lugar da pessoa é só a Silences. o host da página Surface tem
+  `prefer` e não tem a faixa; um lugar da galeria inteira (a shell, onde
+  mora o tema) serviria as duas, mas o menu da shell mostra o estado com
+  a marca, que é o valor: decisão.
+- o rótulo do stat fica em 4,13 no core com mais contraste (comps ou
+  tema).
+- o prompt de mudança (`crates/propose/src/ops.rs`) não fala das duas
+  partes novas do `restyle`.
+- um leitor de tela ouve "larger text, button" e não se está ligado: é a
+  troca que a promessa de privacidade pede; quem usa essas preferências
+  vê o resultado na tela.
+- uma operação pedida cuja aparência a preferência cobre pode ser
+  recusada por já estar feita na superfície pedida (um `restyle` para o
+  papel que ela já tem): a preferência da pessoa ganha.
+- a adição ao ADR está como proposta; o índice é do orquestrador.
