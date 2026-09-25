@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: ongoing
-last-updated: 2026-09-23
+last-updated: 2026-09-25
 domain: generative-runtime
 task: task-74
 wave: trilha
@@ -492,3 +492,125 @@ rodada faz, só em `src/text`: um construtor único do `FontSystem` em
 com uma chave por thread que a sonda liga em volta do `Renderer::new`
 (`probe::render_with(Faces::Embedded, ...)`). fora do `cfg` do desktop a
 chave não existe; nada fora de `src/text` muda.
+
+## handoff da fase 2: Noto Sans embutida
+
+o critério "corpus renderizado sem tofu nas escritas decididas", com gate
+verde, fechou para árabe, hebraico, devanágari, chinês simplificado,
+japonês e coreano. a ADR é `docs/ADR/embedded-fonts-by-script.md`
+(proposed).
+
+### commits
+
+- `3882aedd` task-74: phase 2 probe, how the embedded path finds a face per script
+- `a0f7a0b6` task-74: script/font-subset and the Noto subsets for six scripts, with the OFL
+- `fc304299` task-74: register the Noto faces, one font-system constructor, and the probe's embedded render
+- `caad36f2` task-74: the text audit holds the six scripts to zero tofu and draws the embedded path
+- o commit da ADR e deste handoff
+
+### a sonda, curta
+
+(a) o embutido acha as faces Noto no último passo do fallback do
+cosmic-text (todas as faces, por distância de peso e depois ordem de
+carga), sem nome de família e sem mudar a biblioteca; 500 cai na Regular,
+600 na Bold. (b) o han vai na ordem de carga: SC, JP, KR, porque com
+`en-US` o próprio cosmic-text escolhe o chinês simplificado; palavra
+japonesa sai com kanji de SC e kana de JP. (c) o desktop não muda: as
+listas do macOS acham a fonte do sistema antes; as faces por escrita e
+peso (400 a 700) saíram iguais antes e depois nas oito linhas medidas.
+(d) o pixel do embutido agora roda nesta máquina, por
+`probe::render_with(Faces::Embedded, ...)`.
+
+### arquivos novos
+
+| arquivo | bytes |
+|---|---|
+| `crates/engine/assets/fonts/NotoSansArabic-Regular.ttf` | 217.320 |
+| `crates/engine/assets/fonts/NotoSansArabic-Bold.ttf` | 243.820 |
+| `crates/engine/assets/fonts/NotoSansHebrew-Regular.ttf` | 25.204 |
+| `crates/engine/assets/fonts/NotoSansHebrew-Bold.ttf` | 25.204 |
+| `crates/engine/assets/fonts/NotoSansDevanagari-Regular.ttf` | 225.236 |
+| `crates/engine/assets/fonts/NotoSansDevanagari-Bold.ttf` | 231.752 |
+| `crates/engine/assets/fonts/NotoSansSC-Regular.otf` | 946.616 |
+| `crates/engine/assets/fonts/NotoSansSC-Bold.otf` | 956.892 |
+| `crates/engine/assets/fonts/NotoSansJP-Regular.otf` | 794.888 |
+| `crates/engine/assets/fonts/NotoSansJP-Bold.otf` | 813.168 |
+| `crates/engine/assets/fonts/NotoSansKR-Regular.otf` | 350.204 |
+| `crates/engine/assets/fonts/NotoSansKR-Bold.otf` | 361.128 |
+| `crates/engine/assets/fonts/LICENSE-Noto-OFL.txt` | 4.823 |
+| `script/font-subset` | 9.926 |
+| `docs/ADR/embedded-fonts-by-script.md` | a ADR |
+
+fontes embutidas: antes 1.744.532 bytes (834.203 com gzip -9), depois
+6.935.964 bytes (4.873.679 com gzip -9). nenhum arquivo passa de 1 MB.
+`script/font-subset --src target/fonts-noto --check` refaz tudo num
+diretório temporário e compara byte a byte: 13 arquivos iguais.
+
+### o audit, notdef antes e depois (caminho embutido, 16 px, 400)
+
+| linha | Inclusive Sans | Inter |
+|---|---|---|
+| árabe | 24 para 0 | 24 para 0 |
+| hebraico | 8 para 0 | 8 para 0 |
+| hebraico com niqqud | 7 para 0 | 7 para 0 |
+| devanágari नमस्ते दुनिया | 12 para 0 | 12 para 0 |
+| devanágari क्षत्रिय | 8 para 0 | 8 para 0 |
+| chinês | 5 para 0 | 5 para 0 |
+| japonês こんにちは、世界 | 8 para 0 | 8 para 0 |
+| japonês テキスト | 4 para 0 | 4 para 0 |
+| coreano | 7 para 0 | 7 para 0 |
+| bidi abc אבג def | 3 para 0 | 3 para 0 |
+| bidi hello مرحبا 123 world | 5 para 0 | 5 para 0 |
+
+o teste novo `decided_scripts_have_no_tofu` segura esses zeros nas duas
+famílias e em 400, 500, 600 e 700. o golden (`text_audit.txt`) mudou só no
+cabeçalho (os bytes) e nas linhas dessas escritas; latim, marcas
+combinantes, emoji e a tabela de kerning ficaram iguais. o devanágari agora
+forma os conjuntos (क्षत्रिय, 8 caracteres, 4 glifos) e o árabe mede 167,4
+px em vez de 251,7 de tofu. emoji continua tofu no embutido (fase 5).
+
+pixel: as quatro folhas saem em
+`/Users/nn/Dev/hoff/plevdev/target/agents/one/text-audit-74b/`; a do
+embutido é `Inclusive-Sans-embedded.png` (e `Inter-embedded.png`). as 38
+linhas do embutido ficam "ok" (tinta dentro da largura medida), e toda
+linha das escritas decididas tem tinta; o teste afirma as duas coisas.
+
+### gate e regress
+
+`./script/gate` verde com o ambiente do briefing: `cargo test --workspace`
+3079 passed, 0 failed, 27 ignored (a base tinha um teste a menos: este
+trabalho soma `decided_scripts_have_no_tofu` e não tira nenhum); clippy,
+fmt e wasm verdes; perna urnaui 85 passed, 0 failed, 1 ignored.
+`regress -- check`: 176 unchanged, 0 changed. fora do gate:
+`cargo check -p engine --target aarch64-apple-ios-sim` com `-D warnings`
+verde; `cargo ndk -t arm64-v8a check -p showcase --lib` compila, com dois
+avisos de código morto que já existiam e ficam fora do escopo
+(`crates/engine/src/window/mod.rs:57`, `crates/showcase/src/app.rs:407`).
+disco: 13 GB livres antes do gate, 11 GB no fim.
+
+### linha para o índice de ADR
+
+```
+| 2026-09-25 | [embedded-fonts-by-script](embedded-fonts-by-script.md) | proposed | Noto Sans embutida por escrita (decisão do brenner): árabe, hebraico, devanágari, SC, JP e KR em Regular e Bold, subsets reprodutíveis por script/font-subset (sha256 das fontes, conjuntos pelos codecs da stdlib); de 1,7 MB para 6,9 MB embutidos; o fallback acha as faces no último passo do cosmic-text, han na ordem SC, JP, KR; o desktop segue com as fontes do sistema; emoji fica para a fase 5 |
+```
+
+### pendências
+
+- palavra japonesa sai com kanji de SC. o conserto é um `Fallback` próprio
+  do embutido (kana para JP, hangul para KR, han pelo locale), que precisa
+  de `unicode-script` como dependência direta do engine: o pacote já está
+  no Cargo.lock (0.5.8), mas é mudança no `Cargo.toml`, decisão do
+  orquestrador.
+- o desktop desenha essas escritas com fontes do sistema, diferentes das
+  do embutido (e o chinês em 700 sai em Songti SC, serifada). preferir Noto
+  no desktop é uma decisão à parte.
+- a cobertura é um conjunto: hanzi fora do GB2312 nível 1, kanji fora do
+  JIS nível 1 e os jamo de compatibilidade do coreano (ㅋ, U+3131 a U+318E)
+  não estão; alargar é editar `script/font-subset` e rodar de novo.
+- o wasm cresce uns 5,2 MB crus (uns 4 MB com gzip); não medi o wasm de
+  release (o briefing proíbe `--release`).
+- herdadas da fase 1 e ainda abertas: o travessão no aviso de fallback de
+  `atlas.rs` e as três cópias da montagem de `Attrs` (agora a sonda e o
+  medidor dividem o construtor do `FontSystem`, mas não o de `Attrs`).
+- os outros itens do critério de aceitação (bidi no cursor, IME, emoji,
+  um milhão de linhas) são das fases 3, 4, 5 e 7.
