@@ -70,6 +70,11 @@ fn see(title: &str) -> Seen {
     let mut view = ShowcaseView::new(1280.0, 800.0);
     view.jump_to_page(title);
     assert_eq!(view.page_title(), title);
+    look(view)
+}
+
+/// The view as a reader meets it now: one frame drawn, its tree.
+fn look(mut view: ShowcaseView) -> Seen {
     let mut c = Compositor::new();
     view.render(&mut c);
     let snapshot = view.semantics().unwrap_or_default();
@@ -397,10 +402,11 @@ fn the_actions_no_reader_can_reach_are_the_known_ones() {
 }
 
 /// Every status line of every page is a polite live region, and an
-/// alert an assertive one, that says its words: the message a status
-/// keeps (`silences.status`, `surface_page.status`, the Files and
-/// Capture lines), or its label (the todo's counter, the Silences
-/// counts). What announces a toast is `app/access.rs`, tested there.
+/// alert an assertive one, that says its words as its value (what macOS
+/// announces) and as its name (what Windows and AT-SPI announce): the
+/// message a status keeps (`silences.status`, `surface_page.status`, the
+/// Files and Capture lines), or its label (the todo's counter, the
+/// Silences counts).
 #[test]
 fn every_status_line_is_a_live_region_that_says_its_words() {
     let mut lines = Vec::new();
@@ -427,6 +433,9 @@ fn every_status_line_is_a_live_region_that_says_its_words() {
                 None => Some(node.label.as_str()),
             };
             assert_eq!(n.value(), words, "{title}: {id} says its words");
+            // the name too: Windows and AT-SPI announce the name (phase 2a)
+            let name = words.unwrap_or(node.label.as_str());
+            assert_eq!(n.label(), Some(name), "{title}: {id} is named by its words");
             lines.push(id.to_string());
         }
     }
@@ -539,5 +548,61 @@ fn the_row_holds_a_checkbox_the_quick_todo_says_its_items_and_the_level_its_valu
     assert_eq!(
         (level.min_numeric_value(), level.max_numeric_value()),
         (Some(0.0), Some(1.0))
+    );
+}
+
+/// A reader writes an intent the rules do not understand and presses
+/// propose, all through the tree: the status line says why, as its value
+/// (macOS) and as its name (Windows and AT-SPI announce the name), and the
+/// focus stays on the field.
+#[test]
+fn a_status_says_its_new_message_as_its_name_and_its_value() {
+    let sid = |t: &str| SemId::parse(t).unwrap_or_else(|e| panic!("{t}: {e}"));
+    let ask = |seen: &Seen, id: &str, action: Action, data: Option<ActionData>| {
+        let req = ActionRequest {
+            action,
+            target_tree: TreeId::ROOT,
+            target_node: seen.shown.ids.node(&sid(id)).unwrap_or(accessibility::ROOT),
+            data,
+        };
+        match accessibility::translate(&req, &seen.shown) {
+            Ok(Assist::Request(r)) => r,
+            other => panic!("{id} {action:?}: {other:?}"),
+        }
+    };
+    let mut seen = see("Surface");
+    assert!(seen.view.assist_focus(&sid("surface_page.intent")));
+    let words = Some(ActionData::Value("xyzzy plugh".into()));
+    let req = ask(&seen, "surface_page.intent", Action::SetValue, words);
+    assert!(seen.view.act(req).is_some());
+    let mut seen = look(seen.view);
+    let req = ask(&seen, "surface_page.propose", Action::Click, None);
+    assert_eq!(req.action.as_str(), "propose");
+    assert!(seen.view.act(req).is_some());
+
+    let seen = look(seen.view);
+    let message = match seen.sem(&sid("surface_page.status")).state.get("message") {
+        Some(Value::Text(m)) if !m.is_empty() => m.clone(),
+        other => panic!("the status says why: {other:?}"),
+    };
+    let status = seen
+        .shown
+        .ids
+        .node(&sid("surface_page.status"))
+        .and_then(|n| seen.node(n));
+    let Some(status) = status else {
+        panic!("the status is in the tree");
+    };
+    assert_eq!(
+        status.label(),
+        Some(message.as_str()),
+        "named by its message"
+    );
+    assert_eq!(status.value(), Some(message.as_str()));
+    assert_eq!(status.live(), Some(Live::Polite));
+    assert_eq!(
+        Some(seen.update.focus),
+        seen.shown.ids.node(&sid("surface_page.intent")),
+        "the focus stays on the field"
     );
 }

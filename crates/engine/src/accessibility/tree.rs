@@ -41,7 +41,8 @@
 //! - a status is a polite live region and an alert an assertive one (a
 //!   secret one is neither), and what a reader hears when it changes is
 //!   the node's value: its own, else its `message`, else its label (see
-//!   `live`). The focus never moves for it.
+//!   `live`); a message is its name too, since some adapters announce the
+//!   name. The focus never moves for it.
 //! - actions: `Click` when the node has a primary action (see
 //!   `action::primary`) and both are on (a press the app would refuse is
 //!   not offered: a reader would hear nothing happen; the node keeps
@@ -403,10 +404,14 @@ fn value(n: &Node, out: &mut AkNode) {
 /// Value and name both: macOS announces a live node's value
 /// (accesskit_macos 0.26.1 event.rs:35-44, 236-239, 298-306), Windows and
 /// AT-SPI its name (accesskit_windows 0.32.1 adapter.rs:225-232, 271-281;
-/// accesskit_atspi_common 0.18.1 adapter.rs:71-76, node.rs:543-556). The
-/// label stays the name, so a node whose words are its label is heard on
-/// all three, and one whose words are a message is heard on macOS alone
-/// until its label follows the message.
+/// accesskit_atspi_common 0.18.1 adapter.rs:71-76, node.rs:543-556). So
+/// the words are the name as well (task-75 phase 2a): a status whose words
+/// are its label already had them there, and one that keeps them in a
+/// `message` under a fixed label (`silences.status`, "status"; the
+/// proposing row's, "proposal") is named by the message while it says
+/// one, and by its label while it says nothing. The projection keeps its
+/// label and its message: this is how a reader is told, not what the
+/// node is.
 fn live(n: &Node, out: &mut AkNode) {
     let politeness = match n.role {
         Role::Status => Live::Polite,
@@ -424,6 +429,7 @@ fn live(n: &Node, out: &mut AkNode) {
     };
     if !words.is_empty() {
         out.set_value(words);
+        out.set_label(words);
     }
 }
 

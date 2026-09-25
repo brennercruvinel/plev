@@ -449,7 +449,11 @@ fn a_status_is_a_polite_live_region_and_an_alert_an_assertive_one() {
         "the name stays"
     );
     assert_eq!(n("page.status").value(), Some("detecting"));
-    assert_eq!(n("page.status").label(), Some("status"));
+    assert_eq!(
+        n("page.status").label(),
+        Some("detecting"),
+        "the name follows the message: Windows and AT-SPI announce the name"
+    );
     assert_eq!(n("toasts[0]").value(), Some("saved"));
     assert_eq!(n("toasts[1]").value(), Some("push failed"));
     // a status with a value of its own keeps it
@@ -463,7 +467,35 @@ fn an_empty_message_says_nothing() {
     let status = node(&u, &ids, "page.status");
     assert_eq!(status.live(), Some(Live::Polite));
     assert_eq!(status.value(), None, "no words, nothing to announce");
-    assert_eq!(status.label(), Some("status"));
+    assert_eq!(
+        status.label(),
+        Some("status"),
+        "the page's name, while silent"
+    );
+}
+
+/// The name follows the message frame to frame, where Windows and AT-SPI
+/// announce a live node (on a change of its name), and the value where
+/// macOS does (on a change of its value): the same words on all three.
+#[test]
+fn a_status_message_is_its_name_and_its_value_frame_to_frame() {
+    let say = |message: &str| {
+        let (u, ids) = build(&announcing("2 active", message, false), &unbound(), &CHROME);
+        let n = node(&u, &ids, "page.status");
+        (n.label().map(str::to_owned), n.value().map(str::to_owned))
+    };
+    assert_eq!(
+        say("detecting"),
+        (Some("detecting".into()), Some("detecting".into()))
+    );
+    assert_eq!(
+        say("2 silences in 40 ms"),
+        (
+            Some("2 silences in 40 ms".into()),
+            Some("2 silences in 40 ms".into())
+        )
+    );
+    assert_eq!(say(""), (Some("status".into()), None));
 }
 
 /// A live region is heard where it is: a status that changes, or a
