@@ -19,10 +19,16 @@ pub(crate) struct GlyphEntry {
     pub(crate) alloc_id: Option<etagere::AllocId>,
     pub(crate) atlas_x: u32,
     pub(crate) atlas_y: u32,
+    /// Size in pixels of the bitmap. A mask glyph takes one texel per
+    /// pixel; a color glyph takes [`super::atlas::COLOR_TEXELS`] per pixel
+    /// on a row, from an `atlas_x` that is a multiple of it.
     pub(crate) width: u32,
     pub(crate) height: u32,
     pub(crate) left: f32,
     pub(crate) top: f32,
+    /// A color glyph (an emoji bitmap): straight-alpha sRGB RGBA, drawn
+    /// with its own color. `false` is a coverage mask tinted by the text.
+    pub(crate) color: bool,
 }
 
 // ---------------------------------------------------------------------------

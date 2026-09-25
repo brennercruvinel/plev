@@ -11,6 +11,12 @@ use cosmic_text::Buffer;
 /// side is what a bilinear tap can reach past the UV rect.
 pub(super) const GLYPH_PADDING: u32 = 1;
 
+/// Texels a color glyph takes per pixel in the R8 atlas: its RGBA bytes
+/// sit side by side on the row, as swash decodes them. `text.wgsl` reads
+/// them back with `textureLoad`, so a color glyph's slot starts at a
+/// multiple of this in x and keeps one whole empty pixel on each side.
+pub(super) const COLOR_TEXELS: u32 = 4;
+
 pub(super) fn create_atlas_texture(
     device: &wgpu::Device,
     size: u32,
@@ -183,14 +189,44 @@ pub(super) fn emit_glyphs(
 ///
 /// Deliberately not normalized: the shader divides by the size of the atlas
 /// bound at draw time (see `text.wgsl`), so quads emitted before a mid-frame
-/// atlas grow stay valid.
+/// atlas grow stay valid. A color glyph spans `COLOR_TEXELS` texels per
+/// pixel and carries its `u` negated: that sign is how the shader tells it
+/// from a mask, whose `u` is never negative.
 pub(super) fn glyph_uv_rect(entry: &GlyphEntry) -> [f32; 4] {
-    [
-        entry.atlas_x as f32,
-        entry.atlas_y as f32,
-        (entry.atlas_x + entry.width) as f32,
-        (entry.atlas_y + entry.height) as f32,
-    ]
+    let x0 = entry.atlas_x as f32;
+    let y0 = entry.atlas_y as f32;
+    let y1 = (entry.atlas_y + entry.height) as f32;
+    if entry.color {
+        let x1 = (entry.atlas_x + entry.width * COLOR_TEXELS) as f32;
+        [-x0, y0, -x1, y1]
+    } else {
+        [x0, y0, (entry.atlas_x + entry.width) as f32, y1]
+    }
+}
+
+/// Texels a slot spans in x for a bitmap `gw` pixels wide, gutters
+/// included. A mask takes one texel per pixel and `GLYPH_PADDING` on each
+/// side. A color glyph takes `COLOR_TEXELS` per pixel, one whole empty
+/// pixel on each side (so a `textureLoad` that lands one pixel off reads
+/// transparency, not a neighbour), and the slack to start at a multiple of
+/// `COLOR_TEXELS` wherever the allocator puts the slot.
+pub(super) fn slot_width(gw: u32, color: bool) -> u32 {
+    if color {
+        gw * COLOR_TEXELS + COLOR_TEXELS * 2 + (COLOR_TEXELS - 1)
+    } else {
+        gw + GLYPH_PADDING * 2
+    }
+}
+
+/// Where the bitmap starts in a slot that starts at `slot_x`: inset by the
+/// gutter, and for a color glyph at the next multiple of `COLOR_TEXELS`
+/// past a whole pixel of gutter.
+pub(super) fn bitmap_x(slot_x: u32, color: bool) -> u32 {
+    if color {
+        (slot_x + COLOR_TEXELS).next_multiple_of(COLOR_TEXELS)
+    } else {
+        slot_x + GLYPH_PADDING
+    }
 }
 
 pub(super) fn rasterize_and_upload(
@@ -208,9 +244,13 @@ pub(super) fn rasterize_and_upload(
     let mut swash = cosmic_text::SwashCache::new();
     let image = swash.get_image_uncached(&mut sys.font_system, cache_key)?;
 
-    if image.content != SwashContent::Mask {
-        return None;
-    }
+    // A mask is one coverage byte per pixel; a color bitmap (CBDT, sbix,
+    // COLR) comes as RGBA, which the atlas keeps as four texels per pixel.
+    let color = match image.content {
+        SwashContent::Mask => false,
+        SwashContent::Color => true,
+        SwashContent::SubpixelMask => return None,
+    };
 
     let gw = image.placement.width;
     let gh = image.placement.height;
@@ -224,6 +264,7 @@ pub(super) fn rasterize_and_upload(
             height: 0,
             left: image.placement.left as f32,
             top: image.placement.top as f32,
+            color,
         };
         cache_insert(sys, cache_key, entry.clone());
         return Some(entry);
@@ -232,7 +273,9 @@ pub(super) fn rasterize_and_upload(
     // Transparent border on every side: the atlas samples with
     // `FilterMode::Linear`, and a bilinear tap can reach one texel past the
     // UV rect — the gutter makes it bleed transparency, not a neighbour.
-    let padded_w = gw as i32 + GLYPH_PADDING as i32 * 2;
+    // A color glyph's row is wider and its side gutters too (`slot_width`).
+    let row_texels = if color { gw * COLOR_TEXELS } else { gw };
+    let padded_w = slot_width(gw, color) as i32;
     let padded_h = gh as i32 + GLYPH_PADDING as i32 * 2;
 
     // Grow before evicting: eviction is only safe for glyphs nothing still
@@ -297,7 +340,7 @@ pub(super) fn rasterize_and_upload(
     // origin so the gutter stays empty on all four sides.
     let slot_x = u32::try_from(alloc.rectangle.min.x).expect("atlas x coordinate negative");
     let slot_y = u32::try_from(alloc.rectangle.min.y).expect("atlas y coordinate negative");
-    let atlas_x = slot_x + GLYPH_PADDING;
+    let atlas_x = bitmap_x(slot_x, color);
     let atlas_y = slot_y + GLYPH_PADDING;
 
     // Upload glyph and gutter as one zeroed block: a reused slot's border
@@ -305,10 +348,11 @@ pub(super) fn rasterize_and_upload(
     let pw = padded_w as u32;
     let ph = padded_h as u32;
     let mut padded = vec![0u8; (pw * ph) as usize];
+    let row_len = row_texels as usize;
     for row in 0..gh {
-        let src = (row * gw) as usize;
-        let dst = ((row + GLYPH_PADDING) * pw + GLYPH_PADDING) as usize;
-        padded[dst..dst + gw as usize].copy_from_slice(&image.data[src..src + gw as usize]);
+        let src = (row * row_texels) as usize;
+        let dst = ((row + GLYPH_PADDING) * pw + (atlas_x - slot_x)) as usize;
+        padded[dst..dst + row_len].copy_from_slice(&image.data[src..src + row_len]);
     }
 
     queue.write_texture(
@@ -343,6 +387,7 @@ pub(super) fn rasterize_and_upload(
         height: gh,
         left: image.placement.left as f32,
         top: image.placement.top as f32,
+        color,
     };
     cache_insert(sys, cache_key, entry.clone());
     log::debug!(
