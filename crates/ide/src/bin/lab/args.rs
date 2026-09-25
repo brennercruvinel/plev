@@ -5,7 +5,7 @@ use std::time::Duration;
 
 pub const USAGE: &str = "\
 usage:
-  ide-lab --arm plev|scripted|git|screenshot
+  ide-lab --arm plev|scripted|git|screenshot|review
           [--human none|unstage-after-observe:<path>|unstage-before-submit:<path>]
           [--out <dir>] [--until commit|timeout] [--timeout <s>] [--grace <s>] [--app <name>]
           [--scripted observe|chain|ask] [--answer none|allow|decline] [--answer-after <ms>]
@@ -14,6 +14,10 @@ arms:
   scripted    the same, driven by the laboratory's own agent over the wire (the control run)
   git         the same repository for an agent that uses git itself: hook, shim, no port
   screenshot  the frame of the workbench as PNG at scale 1 and 2, beside the bytes of an observation
+  review      the demo 5 of task-80 (task-96): on a repository of three commits, a person reviews
+              them with the fixed panel (stacks and diff), then with the surface her intent
+              generates beside it (\"review these three commits\"), and closes it; no port, no
+              agent; recorded to review.monster and measured against the fixed panel
 the person of the script acts once, through the dispatcher, when the agent has every file of
 the task in the index and a message written:
   none                              nobody intervenes (default)
@@ -54,6 +58,7 @@ pub enum Arm {
     Scripted,
     Git,
     Screenshot,
+    Review,
 }
 
 impl Arm {
@@ -63,6 +68,7 @@ impl Arm {
             Arm::Scripted => "scripted",
             Arm::Git => "git",
             Arm::Screenshot => "screenshot",
+            Arm::Review => "review",
         }
     }
 }
@@ -193,6 +199,7 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
                     "scripted" => Arm::Scripted,
                     "git" => Arm::Git,
                     "screenshot" => Arm::Screenshot,
+                    "review" => Arm::Review,
                     other => return Err(format!("unknown arm {other:?}")),
                 });
             }
@@ -257,7 +264,7 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
         }
     }
     let arm = arm.ok_or("--arm is required")?;
-    if answer != Answer::None && matches!(arm, Arm::Git | Arm::Screenshot) {
+    if answer != Answer::None && matches!(arm, Arm::Git | Arm::Screenshot | Arm::Review) {
         return Err(format!(
             "--answer {}: the {} arm has no modal to answer; it takes the plev or scripted arm",
             answer.name(),
@@ -354,6 +361,9 @@ mod tests {
             }
         }
         assert!(parse(&args("--help")).unwrap_err().starts_with("usage"));
+        let review = parse(&args("--arm review --out /tmp/r")).unwrap();
+        assert_eq!((review.arm, review.arm.name()), (Arm::Review, "review"));
+        assert!(parse(&args("--arm review --answer allow")).is_err());
     }
 
     #[test]
