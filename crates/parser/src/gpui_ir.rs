@@ -2,8 +2,8 @@
 //! mutable node under construction (ParserNode plus the flags the flank
 //! rewrite needs) and accessors over the parsed chain mini-AST.
 
-use crate::gpui::{GCall, GExpr};
-use crate::ir::{ParserNode, Prop, Tag, TextValue};
+use crate::gpui::{GCall, GExpr, GFn};
+use crate::ir::{Origin, ParserNode, Prop, Src, Tag, TextValue};
 
 /// Node under construction: a ParserNode plus the absolute/full-width flags
 /// consumed by the flank rewrite.
@@ -16,6 +16,9 @@ pub(crate) struct WNode {
     pub absolute: Option<usize>,
     /// `.w_full()` on the main axis; becomes `grow(1.0)` in the rewrite.
     pub full_main: bool,
+    /// The `.w_full()` calls behind `full_main`, for the grow prop.
+    pub full_src: Vec<Src>,
+    pub origin: Origin,
 }
 
 pub(crate) fn finish(w: WNode) -> ParserNode {
@@ -27,6 +30,71 @@ pub(crate) fn finish(w: WNode) -> ParserNode {
         tag,
         props: w.props,
         children: w.children.into_iter().map(finish).collect(),
+        origin: w.origin,
+    }
+}
+
+/// `.h(px(1.))`, `.child(..)`: a call as a construct of the report, its
+/// arguments as written when they are plain source text.
+pub(crate) fn call_label(call: &GCall) -> String {
+    let args: Vec<String> = call
+        .args
+        .iter()
+        .map(|a| match a {
+            GExpr::Src { text, .. } => text.clone(),
+            GExpr::Match { scrutinee, .. } => format!("match {scrutinee}"),
+            GExpr::Chain { base, .. } => format!("{base}.."),
+            GExpr::Closure { .. } => "|..|".into(),
+        })
+        .collect();
+    format!(".{}({})", call.method, args.join(", "))
+}
+
+/// The `file:line` of every call under `e`, following closures, match arms,
+/// call arguments and the `Self::f(..)` helpers a chain starts from: what
+/// an entry that drops `e` whole answers for.
+pub(crate) fn call_sites(e: &GExpr, fns: &[GFn], file: &str, out: &mut Vec<String>) {
+    let mut seen = Vec::new();
+    sites(e, fns, file, &mut seen, out);
+}
+
+fn sites<'a>(
+    e: &'a GExpr,
+    fns: &'a [GFn],
+    file: &str,
+    seen: &mut Vec<&'a str>,
+    out: &mut Vec<String>,
+) {
+    match e {
+        GExpr::Chain { base, calls, .. } => {
+            let helper = base
+                .strip_prefix("Self::")
+                .and_then(|b| b.split('(').next());
+            if let Some(f) = helper.and_then(|n| fns.iter().find(|f| f.name == n))
+                && !seen.contains(&f.name.as_str())
+            {
+                seen.push(f.name.as_str());
+                if let Some(tail) = &f.tail {
+                    sites(tail, fns, file, seen, out);
+                }
+            }
+            for call in calls {
+                let site = format!("{file}:{}", call.line);
+                if !out.contains(&site) {
+                    out.push(site);
+                }
+                for arg in &call.args {
+                    sites(arg, fns, file, seen, out);
+                }
+            }
+        }
+        GExpr::Match { arms, .. } => {
+            for arm in arms {
+                sites(&arm.body, fns, file, seen, out);
+            }
+        }
+        GExpr::Closure { body, .. } => sites(body, fns, file, seen, out),
+        GExpr::Src { .. } => {}
     }
 }
 

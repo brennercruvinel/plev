@@ -104,6 +104,13 @@ pub fn map_decl(prop: &str, value: &str, font_size: Option<f32>) -> MapOut {
     }
 }
 
+/// True for the three no-ops that exist because of the overlay-merge
+/// rewrite (the layer's marker, its hit target, its inset); every other
+/// no-op holds in plev by construction.
+pub fn noop_is_merge(prop: &str) -> bool {
+    matches!(prop, "content" | "pointer-events" | "inset")
+}
+
 /// Properties that live on a plev `text()` run rather than on its box.
 pub fn is_text_prop(name: &str) -> bool {
     matches!(
