@@ -12,6 +12,18 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, checkpoint b, segunda rodada
+
+- **uma orientação de prompt corta mais do que o alvo:** "só o que a
+  intenção precisa" tirou a repetição que o checkpoint pediu e também o
+  frame de cada corte, que é como a pessoa vê o que vai cortar. regra:
+  toda orientação de prompt nova é conferida na rodada seguinte contra o
+  que a tela fixa considera central, não só contra o defeito que a
+  motivou. fonte: `steps/checked/checkpoint-b/r2-04-generated-claude.png`.
+- **a mesma tela, duas escalas:** a primeira rodada saiu a 1200x800
+  físicos e a segunda a 2400x1600 (a janela abriu numa tela retina). o
+  espelho entrega o físico; para comparar rodadas, reduzir ao lógico.
+
 ### 2026-09-24, checkpoint b, primeira rodada
 
 - **o mínimo de um texto num flex era um glifo:** o taffy toma o
