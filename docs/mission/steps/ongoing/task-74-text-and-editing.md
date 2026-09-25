@@ -365,3 +365,130 @@ TEXT_AUDIT_OUT=/tmp/text-audit cargo test -p engine --test text_audit -- --nocap
 #   escreve Inclusive-Sans.png, Inter.png, pixels.txt e desktop.txt
 TEXT_AUDIT_UPDATE=1 cargo test -p engine --test text_audit  # regrava o golden após mudança intencional
 ```
+
+## fase 2: a sonda
+
+data: 2026-09-25. branch `task/74b-noto` sobre `5dad7ec1`. decisão do
+brenner: "Noto, amigo. Noto, sans". escritas: árabe, hebraico, devanágari,
+chinês simplificado, japonês e coreano; emoji fica na fase 5. as linhas
+citadas da biblioteca são do fonte travado no Cargo.lock: cosmic-text
+0.18.2 e fontdb 0.23.0, no registro do cargo.
+
+### (a) como o cosmic-text escolhe a face de fallback
+
+por palavra. `shape_run` (cosmic-text `src/shape.rs:273`) junta as
+escritas do trecho na ordem em que aparecem, sem `Common`, `Inherited`,
+`Latin` e `Unknown` (`shape.rs:288-297`), abre um `FontFallbackIter`
+(`shape.rs:306`), molda com a primeira face e, enquanto sobra cluster sem
+glifo, molda o trecho inteiro com a próxima face e copia só os clusters
+que ela cobre (`shape.rs:326-400`). a ordem das faces, em
+`FontFallbackIter::next_item` (`src/font/fallback/mod.rs`):
+
+1. a família pedida pelo estilo (`mod.rs:305`), só com peso exato
+   (`default_font_match_key`, `mod.rs:279`);
+2. a lista por escrita do `Fallback` (`mod.rs:419`), só faces de peso
+   exato (o filtro `font_weight_diff == 0`, `mod.rs:302`);
+3. a lista comum do `Fallback` (`mod.rs:446`), também de peso exato;
+4. todas as faces do banco, menos as proibidas (`mod.rs:462-463`), sem
+   filtro de peso, na ordem de `FontMatchKey`: derivada dos campos
+   `not_emoji`, `font_weight_diff`, `font_stretch_diff`,
+   `font_style_diff`, `font_weight`, `font_stretch`, `id`
+   (`src/font/system.rs:18-27`, ordenada em `system.rs:370`, com a face
+   da consulta levada para a frente em `system.rs:380-394`). o `id` do
+   fontdb é chave de slotmap (`fontdb src/lib.rs:92-95`), crescente na
+   ordem de carga num banco novo.
+
+qual `Fallback` cada caminho usa: o motor constrói o caminho embutido com
+`FontSystem::new_with_locale_and_db("en-US", Database::new())`
+(`crates/engine/src/text/system.rs:91-95`, `measure.rs:121-125`), que é
+`PlatformFallback` do alvo (`system.rs:266-267` do cosmic-text). o alvo
+escolhe a lista em `fallback/mod.rs:12-26`: wasm e android caem em
+`other.rs`, listas vazias (`other.rs:30-42`); ios é `unix` e cai em
+`unix.rs`, que nomeia "Noto Sans Arabic", "Noto Sans Devanagari" e "Noto
+Sans Hebrew" (`unix.rs:76`, `:88`, `:98`) e, para han, kana e hangul,
+"Noto Sans CJK SC/JP/KR" (`unix.rs:56-68`, `:95-102`). o desktop usa
+`FontSystem::new()` com `macos.rs`, que nomeia fontes do sistema
+(`macos.rs:61-109`).
+
+o que faz o embutido achar as faces Noto sem as fontes do sistema: o
+passo 4. em wasm e android as listas são vazias, então toda escrita sem
+glifo na face pedida chega ao passo 4, que percorre todas as faces do
+banco e pega a primeira que cobre o cluster; como as faces Noto são as
+únicas com glifo dessas escritas, é nelas que o cluster cai, em qualquer
+peso (o passo 4 não filtra peso, e a ordem por `font_weight_diff` faz 500
+cair na Regular e 600 na Bold). no ios, árabe, hebraico e devanágari
+batem no passo 2 pelo nome, em 400 e 700; os CJK não batem (a família do
+subset é "Noto Sans SC", não "Noto Sans CJK SC") e vão ao passo 4. o
+resultado é o mesmo nos três alvos: a única face que cobre, ou, para o
+han, a primeira na ordem de carga (item b). nenhuma mudança na
+biblioteca, nenhum `Fallback` próprio.
+
+um `Fallback` próprio do embutido (kana para JP, hangul para KR, han pelo
+locale) não compila sem pacote: o método `script_fallback` recebe
+`unicode_script::Script` (`fallback/mod.rs:9`, `:76`), o cosmic-text não
+reexporta esse tipo, e o engine não depende de `unicode-script`. o
+pacote já está no Cargo.lock (0.5.8), mas pô-lo no `Cargo.toml` do engine
+está fora do que esta rodada pode tocar. fica como pendência (ver
+handoff).
+
+### (b) a ordem das faces CJK para o han unificado
+
+no embutido, o han não acha nome em lista nenhuma (vazias em wasm e
+android; no ios os nomes "Noto Sans CJK *" não batem) e cai no passo 4,
+onde as faces Noto Regular empatam em tudo menos no `id`. então a ordem é
+a de carga em `register_embedded_fonts`: SC, depois JP, depois KR. SC vem
+primeiro porque é o que o próprio cosmic-text faz com `en-US`: as tabelas
+de unificação han dele mandam qualquer locale que não seja `ja`, `ko`,
+`zh-HK` ou `zh-TW` para o chinês simplificado (`unix.rs:56-68`,
+`macos.rs:45-57`), e o locale embutido é `en-US`. o subset KR não tem
+hanja, então para o han ele nunca entra.
+
+consequência medida: uma palavra chinesa sai inteira em SC; uma palavra
+japonesa sai com kanji e pontuação CJK em SC e kana em JP, porque SC é
+avaliada antes e cobre o que tem. é o mesmo que o cosmic-text faz no
+desktop com `en-US` quando a palavra começa por kanji ("世界は" dá
+Arial Unicode MS e Hiragino Sans aqui, abaixo). o conserto é o
+`Fallback` próprio do item (a).
+
+### (c) o que o desktop passa a mostrar
+
+a fonte do sistema, como antes. `macos.rs` nomeia uma face do sistema
+por escrita (Geeza Pro, Arial, Devanagari Sangam MN, Hiragino Sans, Apple
+SD Gothic Neo; PingFang SC para han, que o fontdb não acha neste macOS e
+cai na lista comum, Arial Unicode MS), e o passo 2 vem antes do 4. em 500
+e 600 os passos 2 e 3 não acham peso exato e o passo 4 decide pela
+distância de peso e depois pelo `id`; as faces do sistema carregam antes
+das embutidas (`id` menor), então empatadas elas ganham. as faces por
+peso, antes desta fase, neste mac (Inclusive Sans, `probe::shape_report`,
+`Faces::Desktop`):
+
+| linha | 400 | 500 | 600 | 700 |
+|---|---|---|---|---|
+| السلام عليكم... | Geeza Pro | Damascus | Damascus | Geeza Pro |
+| שלום עולם | Arial | Lucida Grande | Lucida Grande | Arial |
+| नमस्ते दुनिया | Devanagari Sangam MN | Kohinoor Devanagari | Kohinoor Devanagari | Devanagari Sangam MN |
+| 你好，世界 | Arial Unicode MS | Hiragino Sans e Apple SD Gothic Neo | Hiragino Sans GB e Apple SD Gothic Neo | Songti SC e Apple SD Gothic Neo |
+| こんにちは、世界 | Hiragino Sans e Arial Unicode MS | Hiragino Sans e Apple SD Gothic Neo | idem | idem |
+| 안녕하세요, 세계 | Apple SD Gothic Neo | idem | idem | idem |
+
+o chinês em 700 sai em Songti SC, uma serifada; é o desktop de hoje, e
+esta fase não mexe nele (fonte de sistema por configuração está fora do
+escopo). o regress: nenhuma página do showcase tem texto dessas escritas
+(só testes de `rope`, `sem` e do editor de `comps` têm), então nenhuma
+das 176 baselines passa por esse caminho; a rodada confirma com o
+`regress check` no handoff.
+
+### (d) se o `text_audit` mede o caminho embutido nesta máquina
+
+o shaping, sim: `probe::shape_report` com `Faces::Embedded` já monta um
+`FontSystem` só com as faces do repositório (`probe.rs:336-347`). o
+pixel, não: `probe::render` passa pelo `headless::Renderer`
+(`probe.rs:207`), que cria o `TextSystem` dele
+(`crates/engine/src/headless/mod.rs:157`) e o guarda privado, e
+`TextSystem::new` escolhe as fontes do sistema por `cfg` no desktop
+(`system.rs:84-95`). falta uma chave em tempo de execução. o que esta
+rodada faz, só em `src/text`: um construtor único do `FontSystem` em
+`fonts.rs`, usado pelo `TextSystem`, pelo `TextMeasurer` e pela sonda,
+com uma chave por thread que a sonda liga em volta do `Renderer::new`
+(`probe::render_with(Faces::Embedded, ...)`). fora do `cfg` do desktop a
+chave não existe; nada fora de `src/text` muda.
