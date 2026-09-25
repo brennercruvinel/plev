@@ -301,7 +301,12 @@ Status: pronto para o orquestrador, na branch task/96a-ide-surface
   deixou uma asserção sem `cargo fmt`; o gate pegou; commit à parte para
   não reescrever a branch, porque a gravação da demo nomeia `2e6c9e9a`)
 - `3df1297f` task-96: a move off the column lets go of what it hovered
-- o commit deste texto
+- `205e90b3` task-96: the handoff
+- `1283cc5b` task-96: the review's tests of propose, inside propose's src
+  (os testes das regras saem de `crates/propose/tests/review.rs` para
+  `crates/propose/src/review/tests.rs`: o briefing deixa a task mexer só em
+  `crates/propose/src/**`)
+- o commit desta última versão do handoff
 
 ### a linha e o host
 
@@ -439,8 +444,8 @@ versão nova:
   `crates/ide/src/bin/lab/{review.rs (novo),args.rs,bench.rs,main.rs}`.
 - testes: `crates/ide/tests/{surface,review,review_acts,lab_review,claude}.rs`
   (novos), `crates/ide/tests/support/mod.rs` (`Rig::review`).
-- `crates/propose/src/review.rs` (novo), `crates/propose/src/{rules,lib,error,words,list,parts}.rs`,
-  `crates/propose/tests/review.rs` (novo).
+- `crates/propose/src/review.rs` e `crates/propose/src/review/tests.rs`
+  (novos), `crates/propose/src/{rules,lib,error,words,list,parts}.rs`.
 - `crates/surface/src/draw.rs` (o recorte da tabela limitada, com teste).
 - `docs/mission/steps/ongoing/task-96-ide-generated-surface.md` (este),
   a seção da demo 5 em `docs/mission/steps/ongoing/task-80-proof-qualitatively-different-software.md`.
@@ -467,17 +472,19 @@ com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
 `target/agents/one`, `CARGO_INCREMENTAL=0`, debug `line-tables-only`, o
 `PLEV_CLAUDE` no stub que só sai com erro) e `--offline`:
 
-- `./script/gate` em `3df1297f`: verde (exit 0, 04:26 a 04:28), com a
+- `./script/gate` em `1283cc5b`: verde (exit 0, 04:32 a 04:35), com a
   perna urnaui e o check wasm com `-D warnings`. workspace 2951 passam, 0
-  falham, 26 ignorados (163 suítes); urnaui 85 passam, 1 ignorado (6
+  falham, 26 ignorados (162 suítes); urnaui 85 passam, 1 ignorado (6
   suítes). total 3036 passam e 27 ignorados, contra 3012 e 27 na base: os
-  24 testes novos. `df -h /`: 14 GB livres antes, 12 GB depois.
+  24 testes novos. o mesmo total em `3df1297f`, antes de os testes das
+  regras mudarem de lugar (163 suítes). `df -h /`: 14 GB livres antes do
+  primeiro gate, 12 GB depois do último.
 - um gate anterior, em `9dadd352`, caiu no `cargo fmt --check` por uma
   asserção de `crates/propose/tests/review.rs` (o `855b1a4d` corrige); os
   testes e o clippy já passavam nele.
 - `cargo run --offline -p showcase --example regress -- check`, com o
   `main.rs` tocado: 176 baselines, 176 iguais, nenhum frame desenhado,
-  nenhuma GPU aberta (em `9dadd352` e de novo em `3df1297f`).
+  nenhuma GPU aberta (em `9dadd352`, `3df1297f` e `1283cc5b`).
 - `cargo test -p ide --test lab_review` cinco vezes seguidas, e
   `--test claude` três: todas verdes. o braço da demo rodado à mão
   (`cargo run -p ide --bin ide-lab -- --arm review --out <scratch>`), a
