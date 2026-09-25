@@ -435,3 +435,112 @@ demo 2): o que ele consegue descobrir, e se isso basta para confiar nela,
 com as palavras dele. uma pessoa de fora usa as demos 2 e 4 quando
 possível, e o relato dela entra no resultado. nenhuma das duas é deste
 agente.
+
+## fase 1: o que já estava provado, com a fonte
+
+nada aqui foi rodado de novo; cada linha vem do arquivo que registrou o
+resultado.
+
+### demo 1, stale-state rejection: provada pela task-62, com dois controles faltando
+
+fonte: `checked/task-62-ide-human-agent-proof-done.md`, seções
+"resultado da fase c" e os resultados da segunda à quinta rodada.
+
+- **primeira rodada (checkpoint a, `main` @ `d26c9b1`).** H1 a H5
+  sustentadas. no A2 (LLM pelo contrato, com a pessoa) o `submit` apoiado
+  na revisão de antes da pessoa voltou `stale` com o delta exato
+  (`changes:staged` perdeu `src/session.rs`), o HEAD não mudou, o agente
+  observou, repôs e commitou os três arquivos, receipt igual ao git. no
+  `git` (B2, B3) a intervenção equivalente, um hook no commit, produziu
+  um commit de dois arquivos sem aviso; o B3 só consertou investigando
+  depois e reescrevendo com `--amend`. em volume o `git` ganhou: 1.459 B
+  em 20 invocações (B3) contra 22.040 B em 30 mensagens (A2). uma
+  observação inteira é 9,9 vezes menor que o PNG do frame a escala 1
+  (6.359 B contra 62.939 B), como volume, não como capacidade.
+- **segunda rodada (depois das tasks 83, 84 e 85).** R1 a R3 sustentadas
+  (o `acted` nomeou a pessoa e os dois agentes citaram isso); R4 mista:
+  o controle 11% mais barato em bytes, as corridas com a pessoa 14 a 16%
+  mais caras.
+- **terceira rodada (a regra da task-89).** a segurança se sustentou nas
+  quatro: nenhum commit errado. um agente (A2''b) parou sem commit por
+  não ter como perguntar à pessoa, o que virou a task-92.
+- **quarta e quinta rodada (o handoff).** a segurança se sustentou nas
+  oito. sem dica ninguém perguntou; com a frase no briefing, ou com a
+  linha do stderr da task-94, os quatro que puderam perguntar perguntaram,
+  e a resposta da pessoa decidiu o commit.
+- **o custo da gravação**, primeira rodada, debug: 138 us por
+  `rec.snapshot`, 289 us por `rec.frame`; a sessão do A2 com 181.586 B,
+  67 eventos e 15 frames ("os números").
+
+o que ainda não cobre: um agente por screenshot (o braço C mediu só
+volume) e um agente por snapshot de accessibility de terceiros; todas as
+corridas com um modelo só (`claude-fable-5-1`) e duas a quatro corridas
+por braço ("duas corridas por braço não medem taxa", quinta rodada); os
+custos em build de debug; a pessoa sempre roteirizada.
+
+### demo 2, handoff: provado com uma pessoa roteirizada, não com o brenner
+
+fonte: a mesma task-62, quarta e quinta rodada; `checked/task-92-the-agent-asks-the-person-done.md`
+e `checked/task-93-the-lab-person-answers-done.md`.
+
+- cada recusa nomeou a pessoa no `acted` (request 6, `unstage` de
+  `src/session.rs`) nas seis corridas da quarta rodada e nas duas da
+  quinta; o `--ask` chegou à pessoa pelo modal e a resposta dela decidiu
+  nas quatro corridas em que houve pergunta (A4c1, A4c2, A5a, A5b);
+  nenhum ato depois de um `declined`.
+
+o que ainda não cobre: o roteiro do escopo (o brenner assume, muda parte,
+devolve) numa janela de verdade; a pessoa de fora; a pergunta do núcleo.
+
+### demo 3, inspectability: provada em parte pela task-64
+
+fonte: `ongoing/task-64-session-inspector-and-tests.md`, "saídas de
+aceite", "fase a integrada", "o teste gerado e a prova de que pega
+regressão" e "fechamento da fase c".
+
+- o `plev-inspect` respondeu, numa linha rotulada por pergunta, sobre as
+  nove sessões dos checkpoints; na do A2 da primeira rodada mostrou que o
+  submit se apoiou num `changes:staged` "outside the scope observed", um
+  valor que a conexão nunca viu. isso foi um defeito real achado lendo a
+  sessão, e virou a task-89.
+- a sessão a2ppa virou teste no gate
+  (`crates/ide/tests/rerun/lab.rs:165`), e com a precondição do `submit`
+  quebrada de propósito o teste falhou dizendo onde (à mão, repetido pelo
+  orquestrador; no gate quem guarda o caso é o brinquedo).
+
+o que ainda não cobre: um bug do histórico, com correção conhecida,
+enviado como trecho e virando teste no gate que o pega quando volta; uma
+corrida entre o worker e um ato, que o `settle` de hoje esconde (sonda,
+item c).
+
+### demo 4, interface efêmera: provada pela task-69 e pelo checkpoint b, no que eles mediram
+
+fonte: `checked/task-69-ephemeral-generative-surfaces-done.md`, "fase 4c"
+("a demo", "o que o plev-inspect disse"), "checkpoint b, primeira rodada"
+e "checkpoint b, segunda rodada"; `checked/task-70-adaptive-transformations-done.md`,
+"a demo" da fase 2.
+
+- a demo do editor de vídeo foi gravada sem janela, pelas regras e pelo
+  Claude (`crates/showcase/fixtures/demo/silences-demo.monster`, 186.837
+  B; `silences-demo-claude.monster`, 861.354 B), e
+  `crates/showcase/tests/demo.rs` confere no gate que a superfície está no
+  estado e nas ligações no instante do apply e sumiu no fim.
+- checkpoint b, primeira rodada: a gerada saiu pior (a linha do corte
+  quebrada pelas regras; pelo Claude a tarefa por último, sliders sem
+  rótulo, números crus). segunda rodada, com as correções: a gerada
+  deixou de ser pior. a do Claude põe os dois cortes e as ações à vista
+  sem rolar em 1200 por 800; a fixa mostra mais por corte (o frame e a
+  duração). o estado é um só: decidir pela fixa e pela gerada deixou as
+  duas iguais.
+- task-70 fase 2: "too much information" enxuga a revisão aberta pelas
+  regras; "I can't compare these" é recusado na Silences com o motivo.
+
+o que ainda não cobre: o passo da comparação contra a tela fixa (o
+checkpoint b comparou só a revisão); uma gravação com a revisão das regras
+depois da task-70; uma medida pela gravação em vez do olho; a leitura pelo
+inspector mostrando que a superfície nunca foi tela.
+
+### demo 5, UI generativa em app real: nada provado
+
+nenhuma superfície gerada num app que já existe (sonda, item a). a demo
+espera a task-96.
