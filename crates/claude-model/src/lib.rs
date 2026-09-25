@@ -42,10 +42,13 @@ pub const PROGRAM_ENV: &str = "PLEV_CLAUDE";
 /// the todo's prompt with an IR the verifier accepted at once, in 24 to
 /// 40 s.
 pub const MODEL: &str = "sonnet";
-/// the longest one call may take: twice the slowest call measured in
-/// phase 3b-i (89 s, over the ide's workbench; the todo's took 5 to 40 s).
-/// a proposal makes three calls at most (`Llm::ATTEMPTS`).
-pub const TIMEOUT: Duration = Duration::from_secs(180);
+/// the longest one call may take: about twice the slowest call measured
+/// (138 s, the Silences review of task-69 phase 4b; 126 s in the checkpoint
+/// b). 180 s, twice the 89 s of phase 3b-i, killed three calls of the same
+/// review in a row after the prompt asked for each item's picture and
+/// named numbers (task-70 phase 2), paid and thrown away. a proposal makes
+/// three calls at most (`Llm::ATTEMPTS`).
+pub const TIMEOUT: Duration = Duration::from_secs(300);
 /// the most one call may spend, as the child counts it: about ten times
 /// a call of the probe. the child checks it after its turn, so it caps a
 /// session that would go on, and never cuts a call short.
