@@ -1595,3 +1595,135 @@ fase 2b).
 os atalhos anunciados: o `sem::Node` não tem campo de atalho
 (`crates/sem/src/node.rs:35-73`), e dizer um atalho ao leitor pede o
 contrato. vai para as pendências.
+
+## handoff da fase 2c (2026-09-25)
+
+branch `task/75d-keyboard`, sobre `main` em `73f99094`. sem push.
+
+### commits
+
+1. `8ba4ef6d` a sonda (seção "fase 2c: a sonda do teclado" acima).
+2. `92635707` Tab e Shift-Tab na ordem da projeção, com o anel em todo
+   controle.
+3. `f1e04c32` as setas por widget; Enter e Espaço acionam.
+4. `5dddcf6a` o modal: o trap, o anel no botão e o foco de volta.
+5. `917cdd2a` os testes, sem janela.
+6. este commit: o handoff.
+
+### a sonda, curta
+
+- (a) antes, Tab andava em 6 dos 19 panes, cada um com um índice próprio;
+  Shift-Tab era Tab; Enter, Espaço e as setas não chegavam às páginas de
+  componente.
+- (b) a ordem já existia no engine (`focus::next`), e é a que o leitor
+  anda. Tab virou `focus::next` sobre `semantics()` seguido de
+  `assist_focus`; o índice das páginas saiu.
+- (c) pedem setas: abas, árvore, menu de contexto, select e slider.
+  listas e tabelas não têm nó focável (ver pendências); nenhuma página de
+  componente tem radio.
+- (d) o trap e o retorno já saíam da projeção. faltavam o anel no botão do
+  modal e o Escape fechar o modal antes de tirar o foco da página.
+
+### o mecanismo
+
+`crates/showcase/src/view/dispatch/keyboard.rs`. a view manda para ele o
+Tab, as setas, Home, End, Enter e Espaço quando a página é de componente
+ou quando um overlay segura o ponteiro (`input.rs`, `mod.rs`). o Shift
+vem das teclas modificadoras que a view já recebia; a ponte
+(`src/keys.rs`) não mudou.
+
+- Tab: `focus::next` na projeção inteira e `assist_focus` no id que sai.
+- setas: escolhem, na mesma ordem, os nós do widget em que o foco está.
+- Enter e Espaço: a ação primária do nó focado
+  (`accessibility::primary`), a mesma do clique do leitor.
+- tudo que muda estado é pedido da pessoa (`Actor::Human`) pelo
+  dispatcher da galeria (`act`). nenhum caminho novo para agente.
+
+### o que mudou por widget
+
+| widget | teclas | comps | página |
+|---|---|---|---|
+| botões (Button, Icon Button, Tooltip, Spinner, Toast, Dialog) | Tab, Enter, Espaço | nada (o anel já existia) | nada |
+| caixa, switch, chip de filtro | Tab, Espaço, Enter | `Chip::set_focused` e o anel | o índice de Tab saiu; o chip liga o anel |
+| campo de texto | Tab; as setas editam | nada | o índice de Tab saiu |
+| link de navegação, crumb | Tab, Enter | `NavLink::set_focused`, `Breadcrumb::set_focused` e o anel | ligam o anel |
+| abas | Tab; esquerda e direita dão a volta; Home, End; Enter e Espaço selecionam | `Tabs::set_focused_tab`: o anel na aba, por dentro | o foco é a aba focada |
+| árvore | Tab; cima e baixo; direita abre ou entra; esquerda fecha ou sobe; Home, End; Enter seleciona | `Tree::set_focused` e o anel na linha, por dentro | liga o anel |
+| select | Tab; cima, baixo, Enter ou Espaço abrem na opção escolhida; cima e baixo nas opções; Home, End; Enter escolhe; Escape fecha | `Select::set_highlighted`, que rola até a opção | o destaque segue a opção focada |
+| slider | Tab; direita e cima sobem, esquerda e baixo descem; Home, End | nada | o índice de Tab saiu |
+| menu de contexto | cima e baixo dão a volta e pulam o separador e o item desligado; Home, End; Enter escolhe | `ContextMenu::set_highlighted` | o destaque segue o foco |
+| modal | Tab e Shift-Tab ficam nos dois botões; Enter e Espaço respondem; Escape fecha | `Modal::set_focused` e `focused` | o modal aberto pelo teclado mostra o anel no cancel; o foco volta ao botão que abriu |
+
+o slider contínuo (sem passo) anda um centésimo da faixa por tecla, com
+`set_value`; o com passo usa `increment` e `decrement`. o anel dentro da
+linha e da aba é `recipe::focus_ring_inside`, o mesmo traço do
+`focus_ring`, para não invadir a vizinha. o Escape agora fecha primeiro o
+overlay que segura o ponteiro, e nada debaixo dele recebe letra ou tecla
+de edição.
+
+### os testes
+
+- `crates/showcase/tests/component_pages/keyboard.rs` (6):
+  - Tab em todas as 30 páginas: cada controle focável é alcançado na
+    ordem da projeção, dá a volta, Shift-Tab volta, o foco nunca some, o
+    anel aparece no controle focado (um anel a mais no quadro), e o
+    Escape tira. as cinco páginas sem nó focável são a lista conhecida.
+  - as setas nas abas, na árvore, no select e nos sliders.
+  - Enter e Espaço: caixa, switch e chip terminam no mesmo estado do
+    clique; link, crumb e botão do Toast.
+  - o modal: o foco entra no cancel com anel, Tab e Shift-Tab ficam
+    dentro, Espaço responde, o foco volta ao botão que abriu; o mesmo
+    com Escape.
+- `crates/showcase/src/view/dispatch/keyboard/tests.rs` (1): o menu de
+  contexto com as setas, o destaque, o Tab preso e o Enter.
+- `crates/comps/src/tests/focus.rs` (+5): os anéis e destaques novos.
+- mudaram dois testes de teclado, nenhum de clique: o de Tab da página
+  Input virou "o campo toma o foco que o Tab pede" (o Tab é da view); e
+  em `apps/app/tests/semantics.rs` o Enter com o modal aberto agora
+  responde o modal (antes caía na página inerte).
+
+### os PNGs (sem janela, tema core, 1280x800)
+
+- `target/task-75d/tree-after-3-tabs.png`: a árvore depois de três Tabs,
+  o anel em widgets.rs.
+- `target/task-75d/tabs-tab-then-right.png`: Tab e seta para a direita, o
+  anel em Appearance, Account segue ativa.
+- `target/task-75d/dialog-modal-open-focus-on-cancel.png`: dois Tabs e
+  Enter na página Dialog; o modal aberto com o anel no Cancel.
+
+o caminho é relativo ao worktree
+(`/Users/nn/Dev/hoff/plevdev/.claude/worktrees/agent`).
+
+### gate e regress
+
+- `./script/gate` verde, pernas urnaui e wasm rodaram: 3213 passam (3128
+  no workspace, 85 no urnaui), 28 ignorados, 0 falhas. a branch soma 13
+  testes e não tira nenhum.
+- `regress check`: 176 baselines, 176 iguais. nenhuma baseline mudou.
+- `Cargo.toml` e `Cargo.lock` intocados; engine, tema, sem e wire
+  intocados. sempre `--offline`, com `PLEV_CLAUDE` no stub, sem janela e
+  sem tecla do sistema.
+
+### pendências
+
+- listas e tabelas (Table, Data Table, Scroll Area, Item): nenhum nó
+  focável, então o Tab não chega. é decisão, porque muda baseline.
+  opções: (1) toda linha visível focável: 11 a 20 paradas de Tab por
+  página, ruim; (2) uma linha focável por vez (a selecionada, ou a
+  primeira visível) e as setas andam nas linhas; (3) a lista focável com
+  um item ativo, o que pede um conceito novo no `sem`. recomendo (2),
+  junto com o item abaixo, num bless só: 8 baselines das listas e
+  tabelas, mais 4 de Tabs e Tree.
+- uma parada de Tab por widget composto (o tabindex que roda, como o
+  WAI-ARIA recomenda): hoje cada aba e cada linha da árvore é uma parada,
+  porque o engine põe todo nó focável na sequência. pede a projeção dizer
+  qual item é focável; muda o `semantics.json` de Tabs e Tree.
+- o split da Resizable: pede um papel de splitter no contrato.
+- os atalhos anunciados: o `sem::Node` não tem campo de atalho.
+- o menu de contexto não abre pelo teclado (Shift-F10 ou a tecla de
+  menu), e PageUp e PageDown não chegam: a ponte (`src/keys.rs`) não
+  manda essas teclas.
+- o modal aberto por clique não mostra o anel no cancel até o primeiro
+  Tab; um clique não dá foco a controle, como antes.
+- o roteiro do VoiceOver da fase 2b pode ganhar um passo de teclado
+  (Tab, setas e o modal), para o brenner rodar.
