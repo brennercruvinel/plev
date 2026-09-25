@@ -177,3 +177,22 @@ fn an_intent_the_rules_do_not_read_is_refused_with_why() {
     assert_eq!(rig.bench.surface_open(), None);
     assert!(rig.bench.surfaces().unwrap().is_empty());
 }
+
+#[test]
+fn a_move_off_the_column_lets_go_of_what_it_hovered() {
+    let mut rig = Rig::new(&["a.txt"], &[]);
+    rig.bench.host_surfaces_with(None);
+    let intent = Some("the items".into());
+    rig.ask(Actor::Human, "ide_surface.intent", "set_value", intent);
+    let c = frame(&mut rig);
+    let [x, y, w, h] = c.binding(&id("ide_surface.propose")).expect("drawn").rect;
+    assert!(
+        rig.bench.hover(x + w / 2.0, y + h / 2.0),
+        "the button takes the hover"
+    );
+    assert!(
+        rig.bench.hover(100.0, 400.0),
+        "and lets it go when the pointer leaves the column"
+    );
+    assert!(!rig.bench.hover(110.0, 400.0), "nothing more to let go");
+}

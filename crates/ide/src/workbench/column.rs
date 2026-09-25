@@ -71,16 +71,20 @@ impl Workbench {
     /// A pointer event on the column, when it is the column's: the line's
     /// widgets, then the surface's. `None` when the block is off, an
     /// overlay of the workspace holds the screen, or the point is outside
-    /// the column and no panel of the line is open.
+    /// the column and no panel of the line is open; a move reaches the
+    /// column's widgets wherever it lands, so what it left stops being
+    /// hovered.
     fn point_column(&mut self, events: &[WidgetEvent]) -> Option<EventResult> {
         let g = self.generated.as_ref()?;
-        let (x, y) = events.first()?.pos();
+        let first = events.first()?;
+        let (x, y) = first.pos();
         if !self.workspace.overlay_mgr.is_empty() {
             return None;
         }
         let theme = self.workspace.theme().clone();
         let col = g.column(self.window.0, self.window.1, &theme);
-        if !col.rect.contains(x, y) && !g.proposer.is_open() {
+        let moving = matches!(first, WidgetEvent::MouseMove { .. });
+        if !col.rect.contains(x, y) && !g.proposer.is_open() && !moving {
             return None;
         }
         let mut result = EventResult::IGNORED;
@@ -109,7 +113,7 @@ impl Workbench {
         if asked.close && self.ask_line(close, "close") {
             result = result.merge(EventResult::changed());
         }
-        if col.surface.contains(x, y) {
+        if col.surface.contains(x, y) || moving {
             let surface = self.with_host(|host, bench| {
                 let mut app = App(bench);
                 let mut r = EventResult::IGNORED;
