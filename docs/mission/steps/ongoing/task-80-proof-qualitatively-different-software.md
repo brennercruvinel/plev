@@ -978,6 +978,167 @@ evento a evento) e em todos os eventos:
   promessa sobre o input, e fica anotado para quem decidir se um campo de
   intenção deve ser secreto.
 
+## demo 5, UI generativa em aplicação real (feita pela task-96)
+
+rodada pelo laboratório sem janela, `ide-lab --arm review`, no build
+`2e6c9e9a` da branch `task/96a-ide-surface`, sobre o repositório da
+revisão do laboratório (`Repo::build_review` em
+`crates/ide/src/lab_repo.rs`: o commit inicial, três commits por cima em
+datas fixas, os shas iguais em toda corrida, e um `notes.txt` na árvore
+que nenhum commit tem). só as regras: sem porta, sem agente, sem Claude.
+a pessoa roteirizada clica no meio de cada controle como o frame na tela
+o desenha (achado pelo id nas ligações do frame, pelo `Workbench::click`,
+como a resposta dela na task-93) e digita a intenção uma tecla por vez.
+primeiro o controle: os três cartões de commit do painel de stacks, um
+clique cada, o diff no painel de diff. depois a superfície: o campo da
+linha, "review these three commits", propor, o "show diff" de cada
+commit na superfície, fechar. o teste `crates/ide/tests/lab_review.rs`
+roda o mesmo braço no gate.
+
+### a gravação
+
+`review.monster`, guardada fora do git (na scratchpad da sessão, com o
+`report.json` e os PNGs dos três momentos), 128.824 bytes, 84 eventos,
+19 frames, sha256 `9dfac51d...`.
+
+```text
+$ plev-inspect review.monster
+session   rec 0.1.0, built from 2e6c9e9a
+span      +0.000s to +0.179s, 84 events, 19 frames
+actors    human: 8 requests, 32 stages, 35 inputs
+requests  8
+  +0.017s  request 1  human  show_diff on stacks.commit[13ed9dbe...]  completed
+  +0.035s  request 2  human  show_diff on stacks.commit[78f371df...]  completed
+  +0.049s  request 3  human  show_diff on stacks.commit[847f583a...]  completed
+  +0.085s  request 4  human  propose on ide_surface.propose           completed: surface = "proposed", nodes = 24
+  +0.115s  request 5  human  show_diff on stacks.commit[13ed9dbe...]  completed
+  +0.129s  request 6  human  show_diff on stacks.commit[78f371df...]  completed
+  +0.142s  request 7  human  show_diff on stacks.commit[847f583a...]  completed
+  +0.176s  request 8  human  close on ide_surface.close               completed: closed = "proposed"
+refusals  0
+```
+
+(os shas cortados aqui; na saída eles vêm inteiros.) a timeline, sem as
+linhas de estágio e com as 26 teclas numa linha só:
+
+```text
++0.017s  input     pointer_down on stacks.commit[13ed9dbe...]
++0.017s  changes   diff:target: "" -> "stacks.commit[13ed9dbe...]"
++0.030s  changes   diff:lines: added Cargo.toml: @@ -1,4 +1,4 @@, ...; diff:count: 0 -> 14
+...
++0.082s  input     pointer_down on ide_surface.intent
++0.083s  input     text (26 vezes, nenhuma com conteúdo)
++0.083s  changes   ide_surface.intent:text: "" -> "review these three commits"; ...
++0.085s  input     pointer_down on ide_surface.propose
++0.086s  snapshot  keyframe, 43 nodes: proposed added; proposed.card added; proposed.stacks added; and 26 more
++0.115s  input     pointer_down on proposed.stacks.commit[13ed9dbe...].show_diff
++0.115s  changes   diff:target: "stacks.commit[847f583a...]" -> "stacks.commit[13ed9dbe...]"; ...
+...
++0.176s  input     pointer_down on ide_surface.close
++0.176s  changes   proposed removed; proposed.card removed; proposed.stacks removed; and 25 more
+```
+
+### a leitura pelo inspector
+
+```text
+$ plev-inspect review.monster --control proposed --at 100
+control proposed at +0.100s
+  node          proposed: region "review these three commits", enabled
+  source        crates/surface/src/project.rs:96:11, in build 2e6c9e9a
+
+$ plev-inspect review.monster --control proposed --at 179
+control proposed at +0.179s
+  node          not in the recorded state at that instant
+
+$ plev-inspect review.monster --control 'proposed.stacks.commit[78f371df...].files' --at 128
+  node          proposed.stacks.commit[78f371df...].files: table "files", enabled
+  state         rows = [src/login.rs]
+  source        crates/surface/src/project.rs:104:23, in build 2e6c9e9a
+
+$ plev-inspect review.monster --control 'proposed.stacks.commit[78f371df...].show_diff' --at 128
+  node          ...show_diff: button "show diff", enabled
+  actions       activate (reads proposed.diff.target:text)
+  source        crates/surface/src/project.rs:104:23, in build 2e6c9e9a
+  requests      0 touched it up to +0.128s (their target, or a state they read)
+
+$ plev-inspect review.monster --why 6
+request 6 (origin 0): show_diff on stacks.commit[78f371df...] by human, at +0.129s
+  control       stacks.commit[78f371df...]: list_item "login remembers the user", enabled
+  state         summary = "login remembers the user", author = "Lab Author", files = [src/login.rs]
+  initiated by  human
+  observed      not recorded: no observation by human before the request
+                the recorded state never had revision cebc8640d6caed52 in this window
+  precondition  diff:target = "stacks.commit[13ed9dbe...]"
+  stages        +0.129s requested, accepted, executing, completed
+```
+
+a superfície e cada controle dela vêm do materializador
+(`crates/surface/src/project.rs`); os commits vêm de
+`crates/ide/src/workbench/project.rs` (o teste confere nó a nó no estado
+gravado). os dois achados da task-69 fase 4c continuam: o ato pela
+superfície chega ao dispatcher como a capacidade do app, e só o input da
+pessoa nomeia o botão gerado; e a observação da pessoa não é colocada. no
+ide ela é ainda um passo mais longe: o request da superfície é observado
+no snapshot do app sozinho (o que a superfície mostra), e o gravador
+guarda o do workbench inteiro (o app, a linha e a superfície), então a
+revisão que o request carrega nunca aparece na gravação.
+
+### o resultado contra o painel fixo, pelo critério do método
+
+| critério | superfície gerada | painel fixo | fonte |
+| --- | --- | --- | --- |
+| atos para ver os arquivos e o diff dos três | 5 cliques (o campo, propor, três "show diff") e 26 teclas; fechar é mais 1 clique | 3 cliques, um cartão de commit por vez | receipts e inputs gravados |
+| tempo, relógio do workbench (máquina, não pessoa) | 73 ms do primeiro ato ao terceiro diff; a proposta pelas regras em 0 ms (o receipt do `propose` abre e fecha no mesmo milissegundo, 24 nós) | 47 ms | `report.json` |
+| arquivos dos três à vista de uma vez | 3 de 3: a tabela de arquivos de cada commit, inteira no frame, desde a proposta | 1 de 3 no máximo: o painel de stacks não mostra arquivo nenhum, o de diff mostra um commit por vez, e o cabeçalho do hunk só nomeia o arquivo quando o commit muda mais de um (o `src/login.rs` do commit de um arquivo nunca aparece) | ligações e `diff:lines` |
+| linhas do diff à vista sem rolar | 5 de 14, 5 de 7 e 5 de 18: uma tabela com a altura limitada pelo token `dropdown_max_h`, linhas de 48 px, sem cor e sem número de linha; o resto rola dentro dela | 14 de 14, 7 de 7 e 18 de 18: o painel de diff, mono, colorido, com número de linha | ligações e a geometria de cada vista |
+| os três commits à vista | 3 cartões inteiros, com a mensagem inteira, o autor, os arquivos e o botão | 3 cartões inteiros, a mensagem cortada, o sha e o autor | ligações |
+| cada ato no dispatcher, com o receipt da pessoa | os 5 requests (`propose`, três `show_diff`, `close`) de `human`, `completed`; o `show_diff` chega como a capacidade do app | os 3 requests de `human`, `completed` | summary do `plev-inspect` |
+| nada da superfície depois de fechar | 0 nós, 0 ligações, 0 superfícies no host; no estado gravado só de +0.086 s (logo depois do propose) até antes do close (+0.176 s); o último frame não liga nada dela; o diff que ela abriu fica no painel fixo, que é o estado do app | não se aplica | `report.json` e a sessão |
+
+o que isso diz, pelo critério escrito antes: o resultado é misto, e numa
+parte a superfície sai pior. ela é melhor no que o painel fixo não tem:
+os arquivos dos três commits de uma vez (3 contra no máximo 1, e o arquivo
+do commit de um arquivo só nunca aparece no painel fixo), e os três com
+a mensagem inteira num lugar só. ela é pior em atos (5 cliques e 26
+teclas contra 3 cliques, para ver os arquivos e o diff dos três) e no
+diff: mostra 5 linhas por vez contra o diff inteiro destes três commits,
+sem cor e sem número de linha. o diff é um por vez nos dois. então, na
+tarefa inteira ("ver os arquivos e o diff dos três"), a superfície não
+foi melhor que o painel fixo, e no diff foi pior: pelo método, a demo 5
+cai no diff e se sustenta nos arquivos. os atos fora do dispatcher e o
+rastro depois de fechar, as outras duas coisas que a derrubam, não
+aconteceram.
+
+o que falta para a superfície não perder no diff não é do ide: o
+vocabulário do IR não tem um componente de código ou de diff, e a tabela
+é o único jeito de mostrar uma lista de textos (linhas de 48 px, um
+único token de altura, `dropdown_max_h`). um componente novo pede o widget
+no comps primeiro e um ADR (`crates/uir/src/vocab.rs`), decisão do
+orquestrador. os três diffs de uma vez, que o painel fixo também não tem,
+pediriam um estado de diff por commit na projeção (P3 da sonda da
+task-96).
+
+o que isso não cobre, dito: só as regras (o Claude pelo mesmo caminho
+foi testado só com o modelo falso, e a prova com o Claude de verdade é do
+orquestrador); a pessoa roteirizada, sem hesitação, então o tempo é de
+máquina e o custo humano está nos atos e nas teclas; diffs pequenos, que
+cabem inteiros no painel fixo; e o painel fixo medido com a linha ligada,
+como o ide abre agora: a coluna tira a largura de um card da janela, os
+painéis de changes e de diff guardam a largura deles e só a coluna de
+stacks fica mais estreita, então a altura do diff é a mesma. a demo com
+janela pelo brenner fica aberta.
+
+### privacidade da gravação
+
+- a entrada da pessoa: 9 `pointer_down`, cada um com o controle sob ele e
+  a posição, e 26 `text`, sem alvo e sem conteúdo (o tipo do evento não
+  tem campo para ele).
+- a intenção chega à gravação como o estado projetado da linha
+  (`ide_surface.intent:text`), como a demo 4 anotou para a Silences.
+- segredo: nenhum nó do ide é `secret`; nada a redigir aqui.
+- o `notes.txt`, fora dos commits, está na gravação só como o que o app
+  projeta no painel de changes, nunca na superfície.
+
 ## fase 1: handoff (2026-09-25)
 
 ```text
