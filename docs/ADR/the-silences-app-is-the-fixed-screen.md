@@ -10,7 +10,7 @@ date: 2026-09-24
 ## context
 
 the thesis' scenario for a generated interface is the video editor
-(docs/mission/steps/ongoing/generative-runtime-thesis.md, section 4): the
+(docs/mission/generative-runtime-thesis.md, section 4): the
 person says "cut the silences of this video and let me review the cuts",
 a review surface is born; "compare the original with the cuts", the same
 surface becomes a comparison; done, it goes. before the surface is

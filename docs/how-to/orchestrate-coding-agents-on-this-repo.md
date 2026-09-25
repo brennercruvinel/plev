@@ -8,7 +8,7 @@ status: living
 # how to orchestrate coding agents on this repo
 
 the binding rules are in
-docs/mission/steps/ongoing/generative-runtime-guidelines.md (the
+docs/mission/generative-runtime-guidelines.md (the
 orchestrator and agent guidelines, their adaptation to this repo, the
 briefing and handoff templates). this how-to is the short operating
 version plus the lessons that produced it. when the two disagree, the
@@ -20,7 +20,7 @@ guidelines win and this file gets fixed.
    docs/mission/steps/pending/ before any code.
 2. the orchestrator checks that the task's dependencies are merged into
    `main` and that its code surface is free (ownership table in
-   docs/mission/steps/ongoing/generative-runtime-program.md, section 8).
+   docs/mission/generative-runtime-program.md, section 8).
 3. the orchestrator diagnoses first: reads the code the task touches and
    writes the mechanism into the briefing with file:line. prompts that
    carry the mechanism produce root fixes; prompts that carry symptoms

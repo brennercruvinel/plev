@@ -1,8 +1,8 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
-last-updated: 2023-11-25
+status: superseded
+last-updated: 2026-09-25
 domain: task-tracking
 ---
 
@@ -37,3 +37,11 @@ implementar otimizacoes de rendering por componente: memoizacao via partialeq (b
 - pattern b8 de masonry: flags separados `request_layout`, `request_paint`, `needs_layout`, `needs_paint`
 - plev nao tem arvore de componentes retida, implementar merge_up pode requerer mudar o modelo ou limitar ao subset de flags paint vs layout
 - consultar `mission/knowledge/extracted-patterns.md` secoes b7 e b8 antes de implementar
+
+## fechamento (orquestrador, 2026-09-25)
+
+absorvida pela task-73 (`absorbs: [task-39]` no arquivo dela): a
+memoização por `PartialEq` e as flags de layout e paint separadas são
+opções que o ADR da fase 2 da 73 compara com os números da fase 1. o
+`cached_nodes` e o `needs_render` que esta task citava continuam no
+engine; o que falta é decisão da 73, não trabalho desta.

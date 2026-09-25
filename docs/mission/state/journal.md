@@ -14,6 +14,28 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### o brenner parou o ciclo: fechar antes de abrir
+
+- **intervenção do brenner:** "pq ficou criando task nova ao invés de
+  terminar, gastando todos os meus tokens". parou o agente da 64 fase b
+  (sem commit) e mandou terminar a lista de `ongoing` um por um.
+- **causa (do orquestrador):** escolhia o próximo trabalho pela task que
+  tinha acabado de integrar (75 fase 1, 2a, 2b), transformava o "o que fica
+  para depois" de cada handoff na fase seguinte, criou a 96 e a 97 a partir
+  do resultado da demo 5, não conferia o critério de aceite antes de abrir
+  fase, e não parava quando o resto dependia do brenner. custo dos agentes
+  de hoje: 75 fase 2a uns 660 mil tokens, 75 fase 2b uns 630 mil, 79 fase 2
+  uns 500 mil.
+- **correção do processo:** `autonomy.md`, seção "contra gasto de tokens",
+  e o template de briefing nas diretrizes (critério de aceite que a rodada
+  fecha, economia de leitura e de saída, pendências em vez de fase).
+- **arrumação:** o programa, a tese e as diretrizes subiram para
+  `docs/mission/`; as medições da 73 também; as notas do mon para
+  `docs/refs/`; a cópia repetida do mon saiu (o texto era igual, só a data
+  mudava). fechadas: 42 (substituída pelo ide), 72 e 79 (critério de aceite
+  batido), 39 (absorvida pela 73). em `ongoing` ficam só tasks: 18, 19,
+  20, 64, 65, 71, 73, 74, 75, 77, 80.
+
 ### task-79 fase 2: o espelho responde e o segredo não atravessa
 
 - **disparada e integrada:** `task/79b-mirror-input` (6 commits, agente

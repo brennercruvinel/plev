@@ -210,7 +210,7 @@ edits, `monster` codec, `lot` conversion, `parser` transpile.
 - [docs/arc/arc.toml](docs/arc/arc.toml): the architecture in one file. tables for machines, prose for humans, the frame-flow diagram at the end.
 - [docs/ADR/](docs/ADR/): the decision records.
 - [docs/how-to/code-against-the-plev-engine.md](docs/how-to/code-against-the-plev-engine.md): the operating manual, read before touching ui or rendering code. its siblings in [docs/how-to/](docs/how-to/): pixel validation, the web target, orchestrating agents.
-- [docs/mission/steps/ongoing/generative-runtime-program.md](docs/mission/steps/ongoing/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime. the thesis, the task graph (task-57 to task-80) and the rules every agent follows sit next to it.
+- [docs/mission/generative-runtime-program.md](docs/mission/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime. the thesis, the task graph (task-57 to task-80) and the rules every agent follows sit next to it.
 - [.contracts/.agents/AGENTS.md](.contracts/.agents/AGENTS.md): the single instruction source for ai agents and contributors. route every tool here, no per-tool files.
 
 ## license

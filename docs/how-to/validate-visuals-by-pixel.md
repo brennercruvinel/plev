@@ -10,7 +10,7 @@ status: living
 "looks the same" approved two broken color systems in this project before
 numeric validation was adopted. the protocol below is how a visual claim
 is settled. the orchestrator applies it to every delivery itself; there is
-no separate verifier agent (docs/mission/steps/ongoing/generative-runtime-guidelines.md).
+no separate verifier agent (docs/mission/generative-runtime-guidelines.md).
 
 ## principle
 

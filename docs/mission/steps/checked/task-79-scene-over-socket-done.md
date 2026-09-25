@@ -1,8 +1,8 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: ongoing
-last-updated: 2026-09-23
+status: done
+last-updated: 2026-09-25
 domain: generative-runtime
 task: task-79
 wave: trilha
@@ -1089,3 +1089,24 @@ cargo run -p showcase --example mirror -- --show
   cifrado), o gravador guardar os pixels das imagens fixas, o custo de
   uma imagem fixa grande no fio do app, override da câmera, vídeo de
   pixels, multiusuário, iOS e android.
+
+## fechamento (orquestrador, 2026-09-25)
+
+fechada pelo critério de aceite, item por item:
+
+- o showcase num processo espelhado num visualizador desktop com pixels
+  iguais: feito na fase 1 (164 páginas em processo e três entre dois
+  processos, hash de frame igual).
+- banda medida por página, com e sem mudança: feito na fase 1.
+- gate verde: feito, fases 1 e 2 (PR #106).
+
+a fase 2 (o clique de volta como `act`, o segredo mascarado) já está
+integrada. pendências (não viram fase nem task sem o ok do brenner):
+
+- a página Git projetada na galeria (tira a máscara dela no espelho);
+- um campo de senha no comps;
+- digitar, arrastar e rolar pelo espelho;
+- a revisão no próprio frame (muda o `wire`);
+- sair do localhost com pareamento e transporte cifrado;
+- o gravador guardar os pixels das imagens fixas; o custo de uma imagem
+  fixa grande no fio do app.

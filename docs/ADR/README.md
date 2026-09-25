@@ -117,7 +117,7 @@ status usados: `reference` (conhecimento congelado de uma sessao), `accepted` (d
 
 ## runtime de interação generativa (2026)
 
-o programa em docs/mission/steps/ongoing/generative-runtime-program.md; uma linha por decisão das tasks 57 a 80.
+o programa em docs/mission/generative-runtime-program.md; uma linha por decisão das tasks 57 a 80.
 
 | data | adr | status | resumo |
 |------|-----|--------|--------|

@@ -13,7 +13,7 @@ in this repository, shipped a visible defect, and was root-caused; treat a
 violation as a defect even when the screen looks right.
 
 plev is moving from a GPU UI engine to a generative interaction runtime
-(docs/mission/steps/ongoing/generative-runtime-program.md). the direction
+(docs/mission/generative-runtime-program.md). the direction
 adds one layer on top of everything below: every control keeps a
 persistent identity and meaning while its pixels are born, disappear or
 transform. the section "the semantic contract" says which parts of that

@@ -1,8 +1,8 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
-last-updated: 2022-10-19
+status: superseded
+last-updated: 2026-09-25
 domain: task-tracking
 ---
 
@@ -65,3 +65,14 @@ nenhuma task pendente. usa core plev (compositor, text, input, signal, layout).
 - widgetaction trait = any + send + 'static
 - crate: `experiment/gitbutler-plev/`
 - ~3800 LOC total (incluindo dispatch/overlay no core)
+
+## fechamento (orquestrador, 2026-09-25)
+
+substituída, não terminada. parada desde 2022 na fase 4, num crate
+(`experiment/gitbutler-plev/`) que não existe mais no repositório. o que
+ela queria provar, um app de produção nativo em plev, o `ide` provou por
+outro caminho: o despacho tipado virou o dispatcher do `sem` (task-58), os
+overlays viraram o `OverlayManager`, o modal e o menu de contexto do comps
+(projetados desde a task-75 fase 2a), e os dados reais vieram do crate
+`git` e do workbench do ide com git de verdade (task-62). as fases 5 e 6
+(watcher, animações, atalhos) não viram trabalho novo.
