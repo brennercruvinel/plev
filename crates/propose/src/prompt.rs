@@ -1,8 +1,8 @@
-//! the prompt a language model is given: what it is asked, the rules the
-//! verifier applies, the components, the app's registry in a form to
-//! read, the surface shown now with the ids to keep, and the IR's JSON
-//! schema; and, after a refusal, the reply and every error the verifier
-//! found in it.
+//! the prompt a language model is given: what it is asked, how the
+//! surface should read, the rules the verifier applies, the components,
+//! the app's registry in a form to read, the surface shown now with the
+//! ids to keep, and the IR's JSON schema; and, after a refusal, the reply
+//! and every error the verifier found in it.
 
 use std::fmt::Write as _;
 
@@ -65,6 +65,22 @@ const RULES: [Rule; 8] = [
     Rule::Access,
     Rule::Limits,
 ];
+
+/// how a surface reads, for any app. the verifier checks none of it, and
+/// the checkpoint b of task-69 found a model that passed every rule and
+/// still put the task last, under the fold, and showed again the
+/// controls the app's own screen has: guidance, not rules.
+const READS: &str = "\
+- first what the intent asks to do: the list to review, the action to run, the value to \
+set. then what gives it context: a file, the counts, the settings. a person reads from \
+the top, and the window may show only the top of the surface.
+- every control has a label that says what it changes, with the unit when its value has \
+one (the app's labels often carry it: keep them). a slider shows its label and its \
+value; a number shows with at most two decimals.
+- each control once, and only what the intent needs: the app's own screen already offers \
+every capability below. a second control for an action already bound, or a state shown \
+twice, needs a reason in the intent.
+";
 
 fn clip(text: &str, max: usize) -> String {
     let mut out: String = text.chars().take(max).collect();
@@ -278,7 +294,9 @@ pub fn prompt(ask: &Ask<'_>) -> String {
          JSON object, no prose.\n\n## the intent\n\n",
     );
     let _ = writeln!(out, "{}\n", ask.intent.trim());
-    out.push_str("## the verifier's rules\n\n");
+    out.push_str("## how the surface reads\n\n");
+    out.push_str(READS);
+    out.push_str("\n## the verifier's rules\n\n");
     for (i, r) in RULES.iter().enumerate() {
         let _ = writeln!(out, "{}. {}: {}.", i + 1, r.as_str(), rule(*r));
     }

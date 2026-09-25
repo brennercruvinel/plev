@@ -17,7 +17,7 @@ use comps::action::Badge;
 use comps::charts::draw as chart;
 use comps::content::{EmptyState, Panel, Separator, Stat, Table};
 use comps::feedback::ProgressBar;
-use comps::form::TextField;
+use comps::form::{Slider, TextField};
 use comps::nav::Tabs;
 use comps::recipe::{rounded_rect, shadow_stack};
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
@@ -32,7 +32,7 @@ use crate::expand::Node;
 use crate::host::Frames;
 use crate::layout::Leaf;
 use crate::token;
-use crate::widget::{Widget, dialog_buttons, list_of, text_of};
+use crate::widget::{Widget, dialog_buttons, list_of, slider_h, slider_track, text_of};
 
 /// the aspect of an image sized by a control height, width over height:
 /// the frame of a video, the common one, before or without a picture.
@@ -138,7 +138,7 @@ pub(crate) fn leaf(
         Some(Component::Badge) => fixed(Badge::tag(shown_text(node, shown)).preferred_size(theme)),
         Some(Component::Stat) => fixed(stat(node, shown).preferred_size(theme)),
         Some(Component::TextField) => fill(TextField::height(theme)),
-        Some(Component::Slider) => fill(theme.control.height(ControlSize::Xs)),
+        Some(Component::Slider) => fill(slider_h(theme)),
         Some(Component::Select) => fill(theme.control.height(ControlSize::Md)),
         Some(Component::Tabs) => fill(Tabs::height(theme)),
         Some(Component::Table) => {
@@ -327,7 +327,7 @@ pub(crate) fn draw(
         (_, Widget::TextField(f)) => f.render(c, rect, theme),
         (_, Widget::Checkbox(b)) => b.render(c, rect, theme),
         (_, Widget::Switch(s)) => s.render(c, rect, theme),
-        (_, Widget::Slider(s)) => s.render(c, rect, theme),
+        (_, Widget::Slider(s)) => slider(c, node, s, rect, theme),
         (_, Widget::Select(s)) => s.render(c, rect, theme),
         (_, Widget::Tabs(t)) => t.render(c, rect, theme),
         (_, Widget::Chip(b)) => b.render(c, rect, theme),
@@ -344,6 +344,34 @@ pub(crate) fn draw(
         }
         (_, Widget::Table(None) | Widget::Dialog(_) | Widget::Static) => {}
     }
+}
+
+/// a slider as the fixed screens draw one: its label on the left and its
+/// value on the right, on a line above the track, and the track under
+/// them. the value is the widget's, so a drag shows where it is going.
+fn slider(c: &mut Compositor, node: &Node, s: &Slider, rect: Rect, theme: &Theme) {
+    let label_style = theme.typography.caption_sm();
+    let value_style = theme.typography.caption_r();
+    let value = text_of(&Value::Num(f64::from(s.value())));
+    let (vw, _) = TextMeasurer::measure_styled(&value, &value_style, None);
+    let vw = vw.ceil();
+    text(
+        c,
+        &value,
+        &value_style,
+        Rect::new(rect.x + rect.w - vw, rect.y, vw, value_style.line_height),
+        theme.colors.text.0,
+    );
+    let label = node.label.as_deref().unwrap_or_default();
+    let room = (rect.w - vw - theme.spacing.sm).max(1.0);
+    text(
+        c,
+        label,
+        &label_style,
+        Rect::new(rect.x, rect.y, room, label_style.line_height),
+        theme.colors.text_mid.0,
+    );
+    s.render(c, slider_track(rect, theme), theme);
 }
 
 /// a progress bar over its value: a fraction of the range the node

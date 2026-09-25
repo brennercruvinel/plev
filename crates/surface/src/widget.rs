@@ -12,7 +12,7 @@ use comps::content::{Column, Table};
 use comps::form::{Checkbox, Select, Slider, Switch, TextField};
 use comps::nav::Tabs;
 use comps::{EventResult, Rect, Wake, WidgetEvent};
-use engine::theme::Theme;
+use engine::theme::{ControlSize, Theme};
 use sem::{Snapshot, Value};
 use uir::{CapabilityRef, Component};
 
@@ -86,15 +86,33 @@ pub(crate) fn enabled(node: &Node, event: &str, shown: &Snapshot) -> bool {
     }
 }
 
-/// the text of a value the way a widget shows it.
+/// the text of a value the way a widget shows it; a number by
+/// `number_text`.
 pub(crate) fn text_of(value: &Value) -> String {
     match value {
         Value::Bool(b) => b.to_string(),
         Value::Int(i) => i.to_string(),
-        Value::Num(n) => n.to_string(),
+        Value::Num(n) => number_text(*n),
         Value::Text(t) => t.clone(),
         Value::List(items) => items.join(", "),
         Value::Set(items) => items.iter().cloned().collect::<Vec<_>>().join(", "),
+    }
+}
+
+/// a number the way a surface shows it: at most two decimals and no zero
+/// at the right (1.996916 is "2", 3.018594 is "3.02", 0.5 stays "0.5",
+/// -30 stays "-30"). the IR carries no unit and no format: the unit goes
+/// in the label, as the app's own labels have it ("threshold (dB)"). a
+/// number that is not finite reads as Rust writes it.
+pub(crate) fn number_text(n: f64) -> String {
+    if !n.is_finite() {
+        return n.to_string();
+    }
+    let fixed = format!("{n:.2}");
+    let short = fixed.trim_end_matches('0').trim_end_matches('.');
+    match short {
+        "-0" => "0".to_owned(),
+        s => s.to_owned(),
     }
 }
 
@@ -364,7 +382,7 @@ impl Widget {
             }
             Widget::Slider(s) => {
                 let old = s.value();
-                let r = s.handle_event(event, rect, theme);
+                let r = s.handle_event(event, slider_track(rect, theme), theme);
                 let moved = s.value() != old;
                 let fire = moved.then(|| Fire {
                     event: "set_value",
@@ -453,6 +471,31 @@ fn sync_slider(s: &mut Slider, node: &Node, shown: &Snapshot) {
     s.disabled = !enabled(node, "set_value", shown);
 }
 
+/// the band a slider's label and value take above its track: the label's
+/// line and the gap under it, the fixed screen's slider row (the label in
+/// `caption_sm`, the value in `caption_r`).
+pub(crate) fn slider_band(theme: &Theme) -> f32 {
+    theme
+        .typography
+        .caption_sm()
+        .line_height
+        .max(theme.typography.caption_r().line_height)
+        + theme.spacing.xs
+}
+
+/// the whole height of a slider: its band and its track.
+pub(crate) fn slider_h(theme: &Theme) -> f32 {
+    slider_band(theme) + theme.control.height(ControlSize::Xs)
+}
+
+/// where the track of a slider drawn at `rect` goes: under its band, the
+/// control's height, as wide as the node. what a pointer drags, and what
+/// the slider binds itself to.
+pub(crate) fn slider_track(rect: Rect, theme: &Theme) -> Rect {
+    let h = theme.control.height(ControlSize::Xs);
+    Rect::new(rect.x, rect.y + rect.h - h, rect.w, h)
+}
+
 /// where a dialog draws its buttons: the bottom row inside its padding,
 /// right aligned, cancel then confirm.
 pub(crate) fn dialog_buttons(d: &DialogButtons, rect: Rect, theme: &Theme) -> (Rect, Rect) {
@@ -491,6 +534,32 @@ mod tests {
             parent: None,
             children: Vec::new(),
         }
+    }
+
+    /// A number shows with at most two decimals and no zero at the right,
+    /// whatever the app holds (the checkpoint b saw "1.996916").
+    #[test]
+    fn a_number_shows_two_decimals_at_most() {
+        for (n, shown) in [
+            (1.996916, "2"),
+            (3.018594, "3.02"),
+            (5.01551, "5.02"),
+            (10.0078, "10.01"),
+            (0.5, "0.5"),
+            (-30.0, "-30"),
+            (12.0, "12"),
+            (0.0, "0"),
+            (-0.001, "0"),
+            (f64::from(0.1f32), "0.1"),
+            (1_000_000.0, "1000000"),
+            (-2.345, "-2.35"),
+        ] {
+            assert_eq!(number_text(n), shown, "{n}");
+            assert_eq!(text_of(&Value::Num(n)), shown, "{n}");
+        }
+        assert_eq!(number_text(f64::NAN), "NaN");
+        assert_eq!(number_text(f64::INFINITY), "inf");
+        assert_eq!(text_of(&Value::Int(1_000)), "1000", "an int as it is");
     }
 
     /// A button that starts or stops binding `busy` is drawn by another

@@ -1,6 +1,9 @@
 //! the IR's layout on the engine's `LayoutEngine`, no second engine.
 //!
-//! - `stack` is a flex row or column with its gap and alignment;
+//! - `stack` is a flex row or column with its gap and alignment. a row
+//!   first shrinks what can shrink; when its children still pass its
+//!   content box, it wraps: the children that do not fit go down a line,
+//!   in order, and nothing runs past the row's edge;
 //! - `grid` is a wrapping row whose children start at `min_col` and grow:
 //!   as many columns as fit, none narrower than `min_col`. unlike a CSS
 //!   grid, the last row, when it is not full, stretches its children;
@@ -12,11 +15,14 @@
 //!
 //! `size` bounds a node by `theme.size` tokens (each on the dimension its
 //! name says) and weighs it for the free space; `padding` insets a
-//! container. a leaf takes the size its widget measures.
+//! container. a leaf takes the size its widget measures; a text is never
+//! narrower than its longest word (the flex minimum of a text would be
+//! one glyph: the engine measures its min-content at width zero).
 
 use comps::Rect;
 use engine::layout::TextMeasureSpec;
 use engine::layout::{Align as FlexAlign, Direction, LayoutEngine, LayoutItem, LayoutStyle};
+use engine::text::TextMeasurer;
 use engine::theme::Theme;
 use uir::{Align, Axis, Layout};
 
@@ -43,31 +49,75 @@ pub(crate) enum Leaf {
 
 /// the rect of every node of `tree` laid out in `rect`: the root is as
 /// wide as `rect` and as tall as its content, from `rect`'s origin.
+///
+/// a row whose children pass its content box once they shrank all they
+/// can wraps, and the tree is laid out again, until no row that does not
+/// wrap yet overflows: one pass when everything fits, one more per level
+/// of rows that did not.
 pub(crate) fn compute(
     tree: &[Node],
     rect: Rect,
     theme: &Theme,
     leaf: &dyn Fn(usize) -> Leaf,
 ) -> Vec<Rect> {
-    let mut rects = vec![Rect::default(); tree.len()];
+    let mut wrap = vec![false; tree.len()];
     let mut engine = LayoutEngine::new();
-    let mut pass = Pass {
-        tree,
-        theme,
-        leaf,
-        engine: &mut engine,
-        rects: &mut rects,
-    };
-    pass.run(0, rect, false);
-    rects
+    loop {
+        let mut pass = Pass {
+            tree,
+            theme,
+            leaf,
+            wrap: &wrap,
+            engine: &mut engine,
+            rects: vec![Rect::default(); tree.len()],
+            padding: vec![None; tree.len()],
+        };
+        pass.run(0, rect, false);
+        let over = pass.overflowing();
+        if over.is_empty() {
+            return pass.rects;
+        }
+        for at in over {
+            if let Some(w) = wrap.get_mut(at) {
+                *w = true;
+            }
+        }
+    }
+}
+
+/// true for a row: a horizontal stack, the one layout that wraps only
+/// when its children do not fit.
+fn is_row(node: &Node) -> bool {
+    matches!(
+        node.layout,
+        Some(Layout::Stack {
+            axis: Axis::Horizontal,
+            ..
+        })
+    )
+}
+
+/// the width of the longest word of a text run: what it takes without
+/// breaking a word.
+fn longest_word(spec: &TextMeasureSpec) -> f32 {
+    spec.content
+        .split_whitespace()
+        .map(|w| TextMeasurer::measure_styled(w, &spec.style, None).0)
+        .fold(0.0, f32::max)
+        .ceil()
 }
 
 struct Pass<'a> {
     tree: &'a [Node],
     theme: &'a Theme,
     leaf: &'a dyn Fn(usize) -> Leaf,
+    /// the rows that wrap in this pass.
+    wrap: &'a [bool],
     engine: &'a mut LayoutEngine,
-    rects: &'a mut Vec<Rect>,
+    rects: Vec<Rect>,
+    /// the padding of each container laid out, none for a leaf or a node
+    /// not laid out.
+    padding: Vec<Option<[f32; 4]>>,
 }
 
 impl Pass<'_> {
@@ -95,10 +145,31 @@ impl Pass<'_> {
         }
     }
 
+    /// the rows that do not wrap yet and whose children pass their
+    /// content box, by more than half a pixel on either side.
+    fn overflowing(&self) -> Vec<usize> {
+        let mut out = Vec::new();
+        for (at, node) in self.tree.iter().enumerate() {
+            let wraps = self.wrap.get(at).copied().unwrap_or(true);
+            let (Some(Some(pad)), Some(r)) = (self.padding.get(at), self.rects.get(at)) else {
+                continue;
+            };
+            if wraps || !is_row(node) {
+                continue;
+            }
+            let (left, right) = (r.x + pad[3] - 0.5, r.x + r.w - pad[1] + 0.5);
+            let mut children = node.children.iter().filter_map(|&c| self.rects.get(c));
+            if children.any(|c| c.x < left || c.x + c.w > right) {
+                out.push(at);
+            }
+        }
+        out
+    }
+
     /// pushes the item of `at` (and of its subtree) and returns its index.
     /// `nth` is its place among its parent's children.
     fn item(
-        &self,
+        &mut self,
         at: usize,
         parent: Option<&Node>,
         nth: usize,
@@ -112,11 +183,15 @@ impl Pass<'_> {
         };
         let mut style = LayoutStyle::default();
         let mut text = None;
+        let mut word = None;
         match (self.leaf)(at) {
             Leaf::Container { inset } => {
-                self.container(node, &mut style);
+                self.container(at, node, &mut style);
                 for (p, extra) in style.padding.iter_mut().zip(inset) {
                     *p += extra;
+                }
+                if let Some(p) = self.padding.get_mut(at) {
+                    *p = Some(style.padding);
                 }
             }
             Leaf::Hidden => {
@@ -135,13 +210,19 @@ impl Pass<'_> {
                 style.height = Some(h);
                 style.flex_shrink = 0.0;
             }
-            Leaf::Text(spec) => text = Some(spec),
+            Leaf::Text(spec) => {
+                word = Some(longest_word(&spec));
+                text = Some(spec);
+            }
             Leaf::Fill { height, min_w } => {
                 style.height = Some(height);
                 style.min_width = Some(min_w);
             }
         }
         self.sized(node, &mut style);
+        if let Some(w) = word {
+            style.min_width = Some(style.min_width.map_or(w, |m| m.max(w)));
+        }
         if let Some(parent) = parent {
             self.in_parent(parent, nth, &mut style);
         }
@@ -166,8 +247,9 @@ impl Pass<'_> {
         index
     }
 
-    /// how a container arranges its children, and its padding.
-    fn container(&self, node: &Node, style: &mut LayoutStyle) {
+    /// how a container arranges its children, and its padding. a row
+    /// wraps when an earlier pass found it overflowing.
+    fn container(&self, at: usize, node: &Node, style: &mut LayoutStyle) {
         let theme = self.theme;
         let gap = |g: Option<uir::SpacingToken>| g.map_or(0.0, |g| token::spacing(g, theme));
         match node.layout {
@@ -180,6 +262,7 @@ impl Pass<'_> {
                 style.direction = direction(axis);
                 style.gap = gap(g);
                 style.align = align.map_or(FlexAlign::Stretch, flex_align);
+                style.flex_wrap = self.wrap.get(at).copied().unwrap_or(false);
             }
             Some(Layout::Grid { gap: g, .. }) => {
                 style.direction = Direction::Row;
@@ -359,6 +442,127 @@ mod tests {
         assert_eq!(r[1].y, r[2].y);
         assert!(r[3].y > r[1].y);
         assert!(r[1].w >= min && r[2].w >= min);
+    }
+
+    /// the row of a cut as the rules propose it (task-69 checkpoint b):
+    /// a thumbnail, five texts that grow, three buttons, in a card.
+    fn cut_row() -> (Vec<Node>, Vec<Leaf>) {
+        let theme = Theme::hoff_core();
+        let row = Layout::Stack {
+            axis: Axis::Horizontal,
+            gap: Some(SpacingToken::Sm),
+            align: Some(Align::Center),
+        };
+        let mut card = node("a", None, vec![1]);
+        card.props.padding = Some(SpacingToken::Lg);
+        let mut tree = vec![
+            card,
+            node("a.row", Some(row), (2..11).collect()),
+            node("a.row.frame", None, vec![]),
+        ];
+        let mut leaves = vec![
+            Leaf::Container { inset: [0.0; 4] },
+            Leaf::Container { inset: [0.0; 4] },
+            Leaf::Fixed(92.0, 52.0),
+        ];
+        for text in [
+            "pending",
+            "1.996916",
+            "5.01551",
+            "0:03.0 to 0:05.0",
+            "3.018594",
+        ] {
+            let mut n = node("a.row.text", None, vec![]);
+            n.size.flex = Some(1);
+            tree.push(n);
+            leaves.push(Leaf::Text(TextMeasureSpec {
+                content: text.to_owned(),
+                style: theme.typography.body(),
+                max_width: None,
+            }));
+        }
+        for w in [161.0, 109.0, 109.0] {
+            tree.push(node("a.row.button", None, vec![]));
+            leaves.push(Leaf::Fixed(w, 40.0));
+        }
+        (tree, leaves)
+    }
+
+    fn lay_leaves(tree: &[Node], leaves: &[Leaf], w: f32) -> Vec<Rect> {
+        let theme = Theme::hoff_core();
+        let leaf = |at: usize| leaves.get(at).cloned().unwrap_or(Leaf::Hidden);
+        compute(tree, Rect::new(10.0, 20.0, w, 600.0), &theme, &leaf)
+    }
+
+    /// what a text's run measures without breaking a word, and each text
+    /// of `leaves` with its rect.
+    fn texts<'a>(leaves: &'a [Leaf], r: &'a [Rect]) -> impl Iterator<Item = (f32, Rect)> + 'a {
+        leaves.iter().zip(r).filter_map(|(l, r)| match l {
+            Leaf::Text(spec) => Some((longest_word(spec), *r)),
+            _ => None,
+        })
+    }
+
+    /// The row of a cut in the column the review has at 1200x800 (a card
+    /// 420 wide) and in a narrower one: nothing passes the row's box, and
+    /// no text is narrower than its longest word; the row wraps (the
+    /// buttons go down a line) instead of shrinking the texts to a glyph.
+    #[test]
+    fn a_row_that_does_not_fit_wraps_and_keeps_every_word_whole() {
+        let theme = Theme::hoff_core();
+        let (tree, leaves) = cut_row();
+        for width in [420.0, 280.0] {
+            let r = lay_leaves(&tree, &leaves, width);
+            let row = r[1];
+            assert_eq!(row.w, width - theme.spacing.lg * 2.0);
+            for (at, c) in r.iter().enumerate().skip(2) {
+                assert!(
+                    c.x >= row.x - 0.5 && c.x + c.w <= row.x + row.w + 0.5,
+                    "{width}: child {at} {c:?} passes the row {row:?}"
+                );
+            }
+            for (word, c) in texts(&leaves, &r) {
+                assert!(c.w + 0.5 >= word, "{width}: {c:?} under its word {word}");
+            }
+            let lines: std::collections::BTreeSet<i32> =
+                r[2..].iter().map(|c| (c.y + c.h / 2.0) as i32).collect();
+            assert!(lines.len() > 1, "{width}: the row wrapped: {lines:?}");
+        }
+    }
+
+    /// A row shrinks before it wraps: a long text beside a button keeps
+    /// the button on its line and breaks between its own words.
+    #[test]
+    fn a_row_shrinks_its_text_before_it_wraps() {
+        let theme = Theme::hoff_core();
+        let row = Layout::Stack {
+            axis: Axis::Horizontal,
+            gap: Some(SpacingToken::Sm),
+            align: None,
+        };
+        let mut text = node("a.text", None, vec![]);
+        text.size.flex = Some(1);
+        let tree = [
+            node("a", Some(row), vec![1, 2]),
+            text,
+            node("a.button", None, vec![]),
+        ];
+        let leaves = [
+            Leaf::Container { inset: [0.0; 4] },
+            Leaf::Text(TextMeasureSpec {
+                content: "a sentence that is much longer than the room it has".to_owned(),
+                style: theme.typography.body(),
+                max_width: None,
+            }),
+            Leaf::Fixed(100.0, 40.0),
+        ];
+        let r = lay_leaves(&tree, &leaves, 300.0);
+        assert_eq!(r[1].y, r[2].y, "one line: {r:?}");
+        assert!(r[2].x + r[2].w <= 310.5, "{r:?}");
+        assert!(
+            r[1].h > theme.typography.body().line_height,
+            "the text wraps"
+        );
     }
 
     #[test]

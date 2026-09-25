@@ -11,16 +11,26 @@
 //! todo page's dispatcher. A cancel ends the proposal it cancelled in the
 //! same lending as the cancel itself. The author of a proposal is whoever
 //! asked (`GenerationPolicy::by`).
+//!
+//! The two staging entries at the end (`ShowcaseView::stage_silences_*`)
+//! are for the regression harness (`examples/regress`, task-69 checkpoint
+//! b), which reaches the gallery only through its public API: the page
+//! with frames it did not decode, so no ffmpeg runs, and a fixture of IR
+//! shown as a proposal would show it, so no model is asked.
 
+use engine::gpu::image::ImageHandle;
 use propose::{Ask, Rules, propose_verified};
 use sem::{
     Actor, Execution, Operable, Outcome, Request, RequestId, SemId, Semantics, SnapshotBuilder,
     Value,
 };
 use surface::Surface;
-use uir::{Capabilities, GenerationPolicy, VerifiedIr};
+use uir::{Capabilities, GenerationPolicy, VerifiedIr, verify_json};
 
 use super::super::SilencesPage;
+use super::super::jobs::instant_of;
+use super::super::semantics::ms;
+use crate::view::ShowcaseView;
 use crate::view::apps::app::TodoPage;
 use crate::view::apps::surface_page::asking::{Answer, Pending};
 use crate::view::apps::surface_page::proposing::{Op, Proposer, Said, int};
@@ -318,5 +328,53 @@ impl Operable for Page<'_> {
                 None => Execution::Failed("nothing is being asked".to_owned()),
             },
         }
+    }
+}
+
+/// Staging, for the regression harness only (`examples/regress`): the
+/// Silences page in a state a person reaches with ffmpeg and a model,
+/// reached without either.
+impl ShowcaseView {
+    /// Puts in the Silences page's cache a frame for every instant it
+    /// shows or its surface binds and it lacks: the instant shown, the
+    /// result's, the middle of each cut, and each frame ref of the
+    /// surface's images. `frame` makes each one from its instant (ms), so
+    /// the page asks the worker for none and no ffmpeg runs. The instants
+    /// filled, in that order.
+    pub fn stage_silences_frames(
+        &mut self,
+        frame: &mut dyn FnMut(u64) -> Result<ImageHandle, String>,
+    ) -> Vec<u64> {
+        let page = &mut self.panes.silences;
+        let mut wanted = vec![ms(page.model.shown()), ms(page.result_instant())];
+        wanted.extend(page.model.cuts().iter().map(|c| ms(c.segment().middle())));
+        if let Some(video) = page.ids.as_ref().map(|ids| ids.video.clone()) {
+            let sources = page.generated.host.sources();
+            wanted.extend(sources.iter().filter_map(|s| instant_of(&video, s)));
+        }
+        let mut filled = Vec::new();
+        for at in wanted {
+            if let std::collections::hash_map::Entry::Vacant(e) = page.frames.entry(at) {
+                e.insert(frame(at));
+                filled.push(at);
+            }
+        }
+        filled
+    }
+
+    /// Shows the IR `json` on the Silences page as a proposal shows it:
+    /// verified by the verifier against the app's registry (the fixed
+    /// screen's projection, never the row's) and opened beside the fixed
+    /// screen, or transformed in place. The row says nothing of it: no
+    /// proposer was asked. The surface's id, or every reason.
+    pub fn stage_silences_ir(&mut self, json: &str) -> Result<SemId, String> {
+        let page = &mut self.panes.silences;
+        let app = page.snapshot().map_err(|e| e.to_string())?;
+        let caps = Capabilities::from_snapshot(&app);
+        let ir = verify_json(json, &caps, &GenerationPolicy::default()).map_err(|errors| {
+            let all: Vec<String> = errors.iter().map(ToString::to_string).collect();
+            all.join("; ")
+        })?;
+        Page { app: page }.show(ir).map(|(id, _)| id)
     }
 }

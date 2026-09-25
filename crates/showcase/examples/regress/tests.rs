@@ -75,6 +75,50 @@ fn a_page_checked_against_its_own_bless_holds_without_opening_a_gpu() {
     assert!(!gpu.opened());
 }
 
+/// A page in a state (task-69 checkpoint b) is blessed and checked as a
+/// page is: the Silences with the review open, by the rules and from the
+/// Claude's fixture, holds against its own bless with no frame drawn; its
+/// baseline is named by the state, its projection holds the surface
+/// beside the fixed screen, and it settled.
+#[test]
+fn a_page_in_a_state_checked_against_its_own_bless_holds() {
+    let root = temp();
+    let mut gpu = Gpu::default();
+    for (state, label, surface) in [
+        (
+            "Silences, review by the rules",
+            "silences-review-by-the-rules@core@1280x800",
+            "proposed",
+        ),
+        (
+            "silences, review by the claude (fixture)",
+            "silences-review-by-the-claude-fixture@core@1280x800",
+            "review",
+        ),
+    ] {
+        let b = bless(root.path(), state, "core");
+        assert_eq!(b.key().label(), label);
+        assert!(b.meta.settle.settled, "{state}");
+        let o = match check_one(&b, &mut gpu) {
+            Ok(o) => o,
+            Err(e) => panic!("{state}: {e}"),
+        };
+        assert!(o.delta.unchanged(), "{state}: {:?}", o.delta);
+        let Some(snap) = o.semantics else {
+            panic!("{state}: no projection");
+        };
+        for id in [surface, "silences", "silences_surface"] {
+            let at = sem::SemId::parse(id).unwrap_or_else(|e| panic!("{id}: {e}"));
+            assert!(snap.get(&at).is_some(), "{state}: {id}");
+        }
+    }
+    assert_eq!(gpu.frames, 0);
+    match run::stage(&key("No such state", "core"), false) {
+        Err(e) => assert!(e.contains("no page titled"), "{e}"),
+        Ok(_) => panic!("an unknown page stages"),
+    }
+}
+
 /// A baseline blessed when the second item read otherwise: rewrite its
 /// label in `semantics.json` and the revision `scene.json` keeps.
 fn relabel(b: &Baseline, from: &str, to: &str) {
