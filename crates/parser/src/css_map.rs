@@ -111,6 +111,45 @@ pub fn noop_is_merge(prop: &str) -> bool {
     matches!(prop, "content" | "pointer-events" | "inset")
 }
 
+/// Every named token expression this mapper (and the gpui resolver) can
+/// print that is not a `theme.colors.<role>`: what a caller of the plev IR
+/// emitter gives the value of (`emit_ir::Tokens::exprs`). The parametric
+/// ones (`n2(a)`, `n3(a)`, `Color::rgba(..)`) are read back by
+/// [`token_rgba`].
+pub const NAMED_EXPRS: &[&str] = &[
+    "theme.glass.inset_highlight",
+    "theme.glass.edge_soft",
+    "theme.glass.edge",
+    "theme.glass.button",
+    "engine::theme::hoff::CARD_OVERLAY",
+    "theme.radius.xl",
+    "theme.effects.blur_sigma",
+];
+
+/// The sRGB color (0 to 1, alpha included) of a parametric expression
+/// [`color_token`] prints: `engine::theme::hoff::n2(a)` (`#F8F8F8` at a),
+/// `engine::theme::hoff::n3(a)` (`#282828` at a) and
+/// `engine::color::Color::rgba(r, g, b, a)`. The inverse of its own table;
+/// `None` for any other expression.
+pub fn token_rgba(expr: &str) -> Option<[f32; 4]> {
+    let args = |prefix: &str| -> Option<Vec<f32>> {
+        let inner = expr.strip_prefix(prefix)?.strip_suffix(')')?;
+        inner.split(',').map(|v| v.trim().parse().ok()).collect()
+    };
+    if let Some(a) = args("engine::theme::hoff::n2(") {
+        let g = 248.0 / 255.0;
+        return Some([g, g, g, *a.first()?]);
+    }
+    if let Some(a) = args("engine::theme::hoff::n3(") {
+        let g = 40.0 / 255.0;
+        return Some([g, g, g, *a.first()?]);
+    }
+    match args("engine::color::Color::rgba(")?.as_slice() {
+        [r, g, b, a] => Some([*r, *g, *b, *a]),
+        _ => None,
+    }
+}
+
 /// Properties that live on a plev `text()` run rather than on its box.
 pub fn is_text_prop(name: &str) -> bool {
     matches!(
@@ -330,6 +369,20 @@ mod tests {
             panic!()
         };
         assert_eq!(lh[0].args, vec![Arg::F32(24.0)]);
+    }
+
+    #[test]
+    fn a_parametric_token_reads_back_its_color() {
+        for (r, g, b, a) in [(248, 248, 248, 0.25), (40, 40, 40, 0.6), (18, 52, 86, 0.5)] {
+            let expr = color_token((r, g, b, a));
+            let back = token_rgba(&expr).unwrap_or_else(|| panic!("{expr}"));
+            let want = [r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0, a];
+            for (x, y) in back.iter().zip(want) {
+                assert!((x - y).abs() < 1e-4, "{expr}: {back:?}");
+            }
+        }
+        assert_eq!(token_rgba("theme.colors.text"), None);
+        assert_eq!(token_rgba("engine::theme::hoff::n2(x)"), None);
     }
 
     #[test]

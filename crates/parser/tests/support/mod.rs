@@ -1,0 +1,178 @@
+//! What the IR tests share (task-71): the fixtures, the theme's values as
+//! the IR emitter measures them, and the registries of the apps the IR is
+//! verified against.
+//!
+//! The registries are the test playing the app: they declare the state and
+//! the actions the report says the IR binds (`bindings`). The importer
+//! declares none.
+
+use std::fs;
+use std::path::PathBuf;
+
+use engine::theme::Theme;
+use parser::{Imported, Tokens, TypeStyle, Value};
+use sem::{Role, Snapshot, SnapshotBuilder};
+use uir::{ColorRole, ShapeRole, SizeToken, SpacingToken, TypographyRole};
+
+pub fn fixture_path(rel: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures")
+        .join(rel)
+}
+
+pub fn fixture(rel: &str) -> String {
+    fs::read_to_string(fixture_path(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
+}
+
+/// Compares `actual` with the golden `rel`; `UPDATE_GOLDEN=1` writes it.
+pub fn check_golden(rel: &str, actual: &str) {
+    let path = fixture_path(rel);
+    if std::env::var("UPDATE_GOLDEN").is_ok() {
+        fs::write(&path, actual).unwrap_or_else(|e| panic!("write {rel}: {e}"));
+        return;
+    }
+    let expected = fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("missing golden {rel} (run with UPDATE_GOLDEN=1): {e}"));
+    assert_eq!(expected, actual, "golden mismatch for {rel}");
+}
+
+pub fn gpui_source() -> String {
+    fixture("gpui/separator.rs")
+}
+
+fn style(s: engine::text::TextStyle) -> TypeStyle {
+    TypeStyle {
+        size: s.font_size,
+        line_height: s.line_height,
+        weight: s.font_weight,
+    }
+}
+
+/// The values of `theme` the IR emitter measures against, field by field
+/// by the name each IR token has in the theme.
+pub fn tokens(theme: &Theme) -> Tokens {
+    let s = &theme.spacing;
+    let c = &theme.colors;
+    let ty = &theme.typography;
+    let sh = &theme.shape;
+    let sz = &theme.size;
+    use ColorRole as C;
+    use TypographyRole as T;
+    Tokens {
+        spacing: vec![
+            (SpacingToken::Xs, s.xs),
+            (SpacingToken::Sm, s.sm),
+            (SpacingToken::Md, s.md),
+            (SpacingToken::Lg, s.lg),
+            (SpacingToken::Xl, s.xl),
+            (SpacingToken::Xxl, s.xxl),
+        ],
+        colors: vec![
+            (C::Bg, c.bg.0),
+            (C::Surface, c.surface.0),
+            (C::BgPanel, c.bg_panel.0),
+            (C::BgHover, c.bg_hover.0),
+            (C::Text, c.text.0),
+            (C::TextDim, c.text_dim.0),
+            (C::TextMid, c.text_mid.0),
+            (C::Accent, c.accent.0),
+            (C::AccentDim, c.accent_dim.0),
+            (C::Success, c.success.0),
+            (C::Danger, c.danger.0),
+            (C::Warning, c.warning.0),
+            (C::Info, c.info.0),
+            (C::Divider, c.divider.0),
+            (C::BorderActive, c.border_active.0),
+        ],
+        typography: vec![
+            (T::H4, style(ty.h4())),
+            (T::Headline, style(ty.headline())),
+            (T::Title, style(ty.title())),
+            (T::BaseR, style(ty.base_r())),
+            (T::BaseM, style(ty.base_m())),
+            (T::Base2r, style(ty.base_2r())),
+            (T::Base2m, style(ty.base_2m())),
+            (T::Base2sm, style(ty.base_2sm())),
+            (T::Base2b, style(ty.base_2b())),
+            (T::CaptionR, style(ty.caption_r())),
+            (T::CaptionSm, style(ty.caption_sm())),
+            (T::SmallR, style(ty.small_r())),
+            (T::SmallSm, style(ty.small_sm())),
+            (T::Body, style(ty.body())),
+            (T::Body2r, style(ty.body_2r())),
+            (T::Body2m, style(ty.body_2m())),
+            (T::Body2b, style(ty.body_2b())),
+            (T::Hairline, style(ty.hairline())),
+            (T::Mono, style(ty.mono())),
+            (T::Readout, style(ty.readout())),
+        ],
+        shapes: vec![
+            (ShapeRole::Pill, sh.pill),
+            (ShapeRole::Dropdown, sh.dropdown),
+            (ShapeRole::Tabs, sh.tabs),
+            (ShapeRole::Card, sh.card),
+            (ShapeRole::Block, sh.block),
+            (ShapeRole::Item, sh.item),
+            (ShapeRole::Nav, sh.nav),
+            (ShapeRole::Cluster, sh.cluster),
+            (ShapeRole::Tooltip, sh.tooltip),
+            (ShapeRole::Micro, sh.micro),
+        ],
+        sizes: vec![
+            (SizeToken::MenuW, sz.menu_w),
+            (SizeToken::ModalMaxW, sz.modal_max_w),
+            (SizeToken::SidebarW, sz.sidebar_w),
+            (SizeToken::SidebarRailW, sz.sidebar_rail_w),
+            (SizeToken::CardW, sz.card_w),
+            (SizeToken::CardMinW, sz.card_min_w),
+            (SizeToken::ReadableMaxW, sz.readable_max_w),
+            (SizeToken::FieldMinW, sz.field_min_w),
+            (SizeToken::ToastW, sz.toast_w),
+            (SizeToken::TooltipMaxW, sz.tooltip_max_w),
+            (SizeToken::DropdownMaxH, sz.dropdown_max_h),
+        ],
+        edge_width: theme.control.edge_width,
+        exprs: vec![
+            (
+                "theme.glass.inset_highlight".into(),
+                Value::Color(theme.glass.inset_highlight.0),
+            ),
+            (
+                "theme.glass.edge_soft".into(),
+                Value::Color(theme.glass.edge_soft.0),
+            ),
+            ("theme.glass.edge".into(), Value::Color(theme.glass.edge.0)),
+            (
+                "theme.glass.button".into(),
+                Value::Color(theme.glass.button.0),
+            ),
+            (
+                "engine::theme::hoff::CARD_OVERLAY".into(),
+                Value::Color(engine::theme::hoff::CARD_OVERLAY.0),
+            ),
+            ("theme.radius.xl".into(), Value::Length(theme.radius.xl)),
+            (
+                "theme.effects.blur_sigma".into(),
+                Value::Length(theme.effects.blur_sigma),
+            ),
+        ],
+    }
+}
+
+/// The theme the emitted builder code reads (`let theme = Theme::hoff();`),
+/// and so the one its IR is measured against.
+pub fn hoff() -> Tokens {
+    tokens(&Theme::hoff())
+}
+
+pub fn import_gpui() -> Imported {
+    parser::import_gpui(("separator.rs", &gpui_source()), &hoff()).expect("gpui import")
+}
+
+/// The app the separator is written for: its label.
+pub fn separator_app(label: &str) -> Snapshot {
+    let mut b = SnapshotBuilder::new();
+    b.node("separator.props", Role::Group, "separator")
+        .state("label", label);
+    b.finish().expect("the separator app projects")
+}
