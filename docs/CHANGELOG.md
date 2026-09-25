@@ -9,6 +9,18 @@ status: living
 
 ## unreleased
 
+- the parser writes plev IR (2026-09-25, task-71 phase 1): next to the
+  Rust builder code it writes today (unchanged, byte for byte), the parser
+  now turns a React component or a gpui widget into plev IR, the same
+  form a generated surface is made of. every construct of the source is
+  reported, with its file and line, as supported, transformed (and by
+  which rule), approximated (and by how much) or impossible (and why). a
+  color or a spacing goes to the nearest theme token when it is within a
+  tolerance measured from the theme itself. a button, a click handler or
+  a text field becomes a control whose action the app has to declare; the
+  importer never invents one. the IR and the builder code are drawn side
+  by side and every pixel of difference is explained.
+
 - a screen reader hears what changes (2026-09-25, task-75 phase 1): a
   status line and a toast are announced without taking the focus, an
   error louder than the rest; seven buttons a reader could reach and not

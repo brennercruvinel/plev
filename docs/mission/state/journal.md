@@ -14,6 +14,29 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-71 fase 1: o parser escreve plev IR
+
+- **integrada:** `task/71a-compiler-target` (6 commits, agente no Opus).
+  o segundo emissor, `ParserNode` para plev IR, ao lado do código builder,
+  que não mudou um byte (o golden do gpui e 128 componentes React reais
+  conferidos antes e depois); o relatório em quatro categorias com
+  arquivo:linha, que estende a droplist e prova por um censo lido do
+  parse que nada some; a tolerância de cada token medida no tema; botão,
+  `onClick` e campo de texto viram componente ligado a uma ação que o app
+  declara (`binding required`); os dois desenhados lado a lado, cada
+  pixel de diferença explicado.
+- **validação:** diff inteiro lido; o lock só ganhou arestas do pacote
+  `parser` para crates do workspace (`uir`, `serde_json`, e nos testes
+  `surface`, `sem`, `comps`), autorizadas no briefing; nenhum pacote
+  novo. gate local verde, 2990 passam (antes 2960), 27 ignorados (+1, o
+  diagnóstico que grava os png na pasta temporária do build); regress 175
+  sem mudança.
+- **a droplist ficou mais honesta:** dois casos que sumiam calados
+  (filho `{expressão}` que não é identificador, estilo de texto sem texto)
+  agora têm entrada; aparecem em 26 dos 128 componentes.
+- **fase 2 com o brenner:** a fonte nova. HTML/CSS pede grammar nova
+  (dependência); o Figma pede um export real salvo como fixture.
+
 ### task-75 fase 1: accessibility de plataforma
 
 - **integrada:** `task/75a-a11y` (6 commits, agente no Opus). a matriz
