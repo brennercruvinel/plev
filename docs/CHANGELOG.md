@@ -9,6 +9,12 @@ status: living
 
 ## unreleased
 
+- the parser imports HTML/CSS and Figma (2026-09-25, task-71): a page
+  (a subset: flex, color, radius, type, buttons and fields) and a Figma
+  screen become plev IR with the same four-way report as react and gpui.
+  `script/figma-fixture` reads a `.fig` file with no network and no API
+  token and writes one screen as the Figma API would.
+
 - a window for a recorded session (2026-09-25, task-64):
   `plev-inspector <session.monster>` shows the timeline with a scrub, the
   frame that was on screen at that instant with every control outlined,

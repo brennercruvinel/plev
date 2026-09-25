@@ -22,7 +22,7 @@ carries the source's execution model
 (docs/ADR/import-foreign-formats-by-conversion-not-embedding.md).
 
 the probe of task-71 phase 1 (in
-`docs/mission/steps/ongoing/task-71-compiler-target.md`) found that the
+`docs/mission/steps/checked/task-71-compiler-target-done.md`) found that the
 `ParserNode` loses what the IR needs: the source tag (a `<button>` and a
 `<div>` were one `Tag::Div`), the attributes other than `className`, and
 where each prop came from (the resolvers only counted). the IR itself

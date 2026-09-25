@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-71 fechada
+
+- fase 2 integrada: o parser importa HTML/CSS (subset) e Figma, pelo
+  mesmo caminho do react e do gpui, com relatório em quatro categorias. a
+  fixture do Figma é a tela settings do `Artify App.fig` que o brenner
+  mandou, lida por `script/figma-fixture` (o `.fig` fica fora do repo).
+- o agente (Opus) gastou uns 440 mil tokens. pendências no arquivo da
+  task: ícone, forma e imagem no IR; unidades e elementos fora do subset
+  de HTML; texto quebrado em coluna estreita desenhado por cima da linha
+  de baixo.
+
 ### task-64 fechada
 
 - fase b integrada: a janela `plev-inspector` (crate `inspector`) abre uma
