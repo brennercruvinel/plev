@@ -959,3 +959,100 @@ então em Inter o `U+2764 U+FE0F` fica coração de texto. o subset não põe
 no cmap nada que as faces latinas tenham (dígitos, `#`, `*`, espaço, (c),
 (r), TM): esses nunca chegariam à face, e o espaço dela tem avanço de
 1,245 em.
+
+## handoff da fase 5: emoji colorido
+
+fecha, no caminho embutido, o item "emoji colorido com pixel medido" do
+critério de aceite. a fonte é Noto Color Emoji v2.051 em CBDT; o caminho
+de cor mora no mesmo atlas R8.
+
+### commits
+
+- `a5457d9d` a sonda
+- `2460a0ea` o subset (CBDT, 640 glifos) e a licença
+- `17f8393d` o caminho de cor no atlas
+- `787291fb` a face registrada e o audit com emoji
+- o commit desta seção: a ADR e o handoff
+
+### a sonda, curta
+
+o swash do lock entrega o bitmap de cor (`Content::Color`, RGBA de alfa
+reto) e já o reduz para o tamanho físico com filtro Mitchell; o raster só
+jogava fora tudo que não era máscara. a família ZWJ e o tom de pele são
+ligaduras da `ccmp` da fonte, e o fallback do cosmic-text molda a palavra
+inteira, então saem num glifo só. a face de emoji é a primeira do último
+passo do fallback em qualquer peso (`FontMatchKey::not_emoji`).
+
+### o subset
+
+`script/font-subset` ganhou o emoji: conjunto fixo escrito no script
+(bloco Emoticons, os rostos do bloco suplementar, 197 símbolos comuns, os
+cinco tons sozinhos e em 45 mãos e pessoas, 15 famílias e 30 profissões
+em ZWJ). 369 code points e 270 sequências, 640 glifos, 1.421.996 bytes
+(fonte de 10.673.480). sha256 da fonte conferido; `--check` refaz os 15
+arquivos byte a byte e bate. o script falha se o cmap do emoji tiver algo
+de outra face embutida, fora o coração (U+2764, que Inter tem) e o ZWJ.
+licença em `LICENSE-NotoColorEmoji-OFL.txt`. fontes embutidas: 8.357.960
+bytes em 22 arquivos (eram 6.935.964).
+
+### o caminho de cor
+
+o atlas continua uma textura `R8Unorm`. o glifo de cor guarda o RGBA
+como quatro texels por pixel, começando num x múltiplo de 4, com um pixel
+inteiro de margem vazia de cada lado; o quad leva o `u` negativo, e o
+`text.wgsl` lê os quatro texels com `textureLoad` e desenha a cor do
+próprio glifo (do texto só entra o alfa). o glifo de máscara não mudou:
+mesmo formato, mesma subida, mesmo sampler, mesma conta. o `TextVertex`
+não ganhou campo. 3 testes novos em `tests_raster.rs` (a margem da
+máscara igual, o alinhamento e a margem do glifo de cor, o `u` negativo).
+
+### o audit
+
+`10-emoji` entrou nos `DECIDED`: 0 notdef nas quatro linhas de emoji, nas
+duas famílias e nos pesos 400, 500, 600 e 700, pelo caminho embutido. o
+pixel: o `probe` ganhou `Rendered::color_pixels`, os pixels que a tinta
+branca do teste não consegue fazer sobre o cinza (com matiz, ou mais
+escuros que o fundo). toda linha que a face de emoji desenha tem que
+deixar pelo menos 150; toda outra linha, zero. medido a 2x: família 374
+(é o desenho da Noto 2.051, silhuetas num quadrado cinza, então conta
+pelo escuro), polegar com tom 599, sorriso 921, coração 819; Inter com o
+coração, 0 (é o coração de texto de Inter, ver pendências). o golden
+mudou só nas oito linhas de emoji, nas quatro do detalhe e no total de
+bytes do cabeçalho.
+
+### o PNG
+
+`/Users/nn/Dev/hoff/plevdev/target/agents/one/text-audit-74d/Inclusive-Sans-embedded.png`
+(as linhas de emoji são as quatro a partir da 14ª faixa) e
+`Inter-embedded.png` na mesma pasta, com `pixels.txt`.
+
+### gate e regress
+
+`./script/gate` verde com o ambiente do briefing: `cargo test --workspace`
+3136 passed, 0 failed, 27 ignored (o diff só acrescenta 3 testes e não
+tira nenhum); clippy, fmt e wasm verdes; perna urnaui 85 passed, 0
+failed, 1 ignored. `regress -- check` depois de tocar
+`crates/showcase/examples/regress/main.rs`: 176 unchanged, 0 changed.
+fora do gate: `cargo check -p engine --target aarch64-apple-ios-sim` com
+`-D warnings` verde; `cargo ndk -t arm64-v8a check -p showcase --lib`
+compila, com os dois avisos antigos de código morto. disco: 12 GB livres.
+
+### pendências
+
+- em Inter, `U+2764 U+FE0F` fica coração de texto: Inter tem o coração e
+  o cosmic-text 0.18 não lê o VS16 para escolher face. tirar o U+2764 de
+  Inter ou um `Fallback` próprio resolve; os dois são decisão.
+- fora do subset (tofu no caminho embutido): keycaps (o dígito vem da
+  face latina e a ligadura não forma nem com ele no subset), bandeiras,
+  sequências com tag, variantes com gênero (U+2640, U+2642), profissões
+  e casais com tom. aumentar o conjunto é editar as listas do script,
+  uns 2,2 KB por emoji.
+- o glifo de cor é lido sem filtro: sob uma transformação de camada que
+  escala (animação), o emoji sai no vizinho mais próximo; a máscara
+  continua bilinear.
+- o swash reduz o bitmap em alfa reto; uma franja escura na borda é
+  possível e não foi medida.
+- no desktop o mesmo caminho agora desenha a face de emoji do sistema
+  (Apple Color Emoji, sbix, no macOS), que antes reservava o avanço sem
+  tinta. o desktop e o embutido desenham emoji com faces diferentes,
+  como já era com as escritas.
