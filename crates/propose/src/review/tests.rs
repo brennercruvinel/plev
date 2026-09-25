@@ -3,7 +3,10 @@
 //! the files of the ide's own golden, and every refusal with why.
 
 use sem::{Confirm, Policy, Role, Snapshot, SnapshotBuilder};
-use uir::{Capabilities, Component, GenerationPolicy, IrNode, Layout, SizeToken, VerifiedIr};
+use uir::{
+    Capabilities, Component, GenerationPolicy, IrNode, Layout, SizeToken, TypographyRole,
+    VerifiedIr,
+};
 
 use super::read;
 use crate::error::ProposeError;
@@ -249,7 +252,12 @@ fn review_these_three_commits_shows_the_three_with_their_files_and_the_diff() {
         Some("proposed.diff.lines"),
         "the lines last, to scroll"
     );
-    assert_eq!(bound(root, "proposed.diff.target"), ["text=diff:target"]);
+    let heading = region.children.first().expect("what opens the card");
+    assert_eq!(heading.sem.as_str(), "proposed.diff.heading");
+    assert_eq!(heading.component, Some(Component::Text));
+    assert_eq!(heading.label.as_deref(), Some("diff"), "the region's label");
+    assert_eq!(heading.props.typography, Some(TypographyRole::Base2sm));
+    assert!(heading.bind.is_empty(), "it binds nothing");
     assert_eq!(
         bound(root, "proposed.diff.lines"),
         ["kinds=diff:kinds", "lines=diff:lines"],
@@ -275,6 +283,65 @@ fn review_these_three_commits_shows_the_three_with_their_files_and_the_diff() {
             .any(|b| b.contains("[c0]") || b.contains("changes")),
         "nothing of the fourth commit or of the working tree: {all:?}"
     );
+    assert!(
+        !all.iter()
+            .flat_map(|(_, b)| b)
+            .any(|b| b.contains("diff:target")),
+        "which commit the diff shows is the dispatcher's word, never shown: {all:?}"
+    );
+}
+
+/// The diff's `target` names the commit it shows by its id, the word the
+/// commits' `show_diff` reads: the region never shows it and opens with
+/// its label instead, whichever commit it shows. A text the actions do not
+/// read, or one that names no node, is the region's own and opens it as
+/// before.
+#[test]
+fn the_region_says_what_it_shows_never_the_id_of_the_commit_it_shows() {
+    let region = |target: &str, title: Option<&str>| {
+        let mut b = SnapshotBuilder::new();
+        let mut diff = b.node("diff", Role::Region, "diff");
+        diff.state("target", target);
+        if let Some(title) = title {
+            diff.state("title", title);
+        }
+        diff.state("lines", vec!["+x".to_owned()]);
+        b.node("stacks", Role::List, "stacks");
+        for (sha, subject) in [("c1", "one"), ("c2", "two")] {
+            let id = format!("stacks.commit[{sha}]");
+            let mut c = b.node(id.as_str(), Role::ListItem, subject);
+            c.parent("stacks").state("summary", subject);
+            c.action("show_diff").reads("diff:target");
+        }
+        b.finish().expect("projects")
+    };
+    let opening = |target: &str, title: Option<&str>| {
+        let asking = Asking::new(region(target, title));
+        let ir = review(&asking, "review the commits").expect("verified");
+        let root = ir.ir().surface.root.clone();
+        let diff = node(&root, "proposed.diff");
+        let first = diff.children.first().expect("a child").clone();
+        let texts: Vec<String> = diff
+            .children
+            .iter()
+            .filter(|c| c.component == Some(Component::Text))
+            .map(|c| c.sem.to_string())
+            .collect();
+        (first.label, bound(&root, first.sem.as_str()), texts)
+    };
+    for target in ["", "stacks.commit[c1]", "stacks.commit[c2]"] {
+        let (label, binds, texts) = opening(target, None);
+        assert_eq!(label.as_deref(), Some("diff"), "{target:?}");
+        assert!(binds.is_empty(), "{target:?}: {binds:?}");
+        assert_eq!(texts, ["proposed.diff.heading"], "{target:?}");
+    }
+    // a text of its own opens the region, as it always did
+    let (_, binds, texts) = opening("stacks.commit[c1]", Some("the diff of one"));
+    assert_eq!(binds, ["text=diff:title"]);
+    assert_eq!(texts, ["proposed.diff.title"]);
+    // a read text that names no node is a value, shown as one
+    let (_, binds, _) = opening("hello", None);
+    assert_eq!(binds, ["text=diff:target"]);
 }
 
 /// A region's list named `lines` is a code with or without its `kinds`;
@@ -389,11 +456,19 @@ fn a_review_over_the_one_shown_keeps_the_ids_of_what_stays() {
         "proposed.stacks.commit[c3]",
         "proposed.stacks.commit[c3].show_diff",
         "proposed.stacks.commit[c2].files",
+        "proposed.diff.heading",
         "proposed.diff.lines",
     ] {
         assert!(kept.iter().any(|k| k == id), "{id} in {kept:?}");
     }
     assert!(!kept.iter().any(|k| k.contains("[c1]")));
+    // and again over that one: the heading, which binds nothing, keeps
+    // its id every time
+    let over = Asking::new(workbench()).over(two.clone());
+    let again = review(&over, "review these three commits").expect("verified");
+    let ids = ids(&again.ir().surface.root);
+    assert!(ids.iter().any(|k| k == "proposed.diff.heading"), "{ids:?}");
+    assert!(!ids.iter().any(|k| k.starts_with("proposed.diff.heading_")));
 }
 
 #[test]

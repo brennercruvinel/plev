@@ -30,6 +30,13 @@
 //! inside it. the items on the left and the region on the right, in a
 //! split; the items alone in a column when there is no region.
 //!
+//! a text of the region those actions read, holding the id of a node of
+//! the app or nothing (`diff:target`, `stacks.commit[<sha>]`), says which
+//! item the region shows in the dispatcher's words, not a person's: it is
+//! not shown (task-96, phase b). a region with no text of its own opens
+//! with its label ("diff"), in the typography of what names a card, and
+//! binding nothing; a new form keeps the id the current surface gave it.
+//!
 //! a list a node names `lines` is a `code` (task-97), not a table: the
 //! name a code shows its lines by. when the node also has a list named
 //! `kinds`, the name a code shows the kind of each line by, it is bound
@@ -44,10 +51,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sem::{ActionDecl, Node, SemId, Snapshot, StateRef, Value, ValueKind};
+use sem::{ActionDecl, Node, SemId, Snapshot, StateKey, StateRef, Value, ValueKind};
 use uir::{
     Align, Axis, CapabilityRef, Component, ControlSize, Elevation, Ir, IrNode, Layout, Props, Size,
-    SizeToken, SpacingToken, Surface, TypographyRole,
+    SizeToken, SpacingToken, Surface, TypographyRole, VerifiedIr,
 };
 
 use crate::Ask;
@@ -235,6 +242,41 @@ fn label(key: &str) -> String {
     key.replace('_', " ")
 }
 
+/// whether `value` names a node of `app` by its id, or nothing: what a
+/// region holds to say which item it shows.
+fn names_a_node(app: &Snapshot, value: &Value) -> bool {
+    match value {
+        Value::Text(text) => {
+            text.is_empty() || SemId::parse(text).is_ok_and(|id| app.get(&id).is_some())
+        }
+        _ => false,
+    }
+}
+
+/// the id of the text that opens the card of `region` on `current`: the
+/// first child of the node whose children show `region`'s state, when it
+/// is a text that binds nothing. such a node has no anchor and holds
+/// nothing, so the namer never gives its id out (`ids.rs`): keeping it
+/// cannot give one id twice.
+fn kept_heading(current: Option<&Ir>, region: &SemId) -> Option<SemId> {
+    let mut stack = vec![&current?.surface.root];
+    while let Some(n) = stack.pop() {
+        let shows = n
+            .children
+            .iter()
+            .any(|c| c.bind.state.values().any(|at| at.node == *region));
+        match n.children.first() {
+            Some(first)
+                if shows && first.component == Some(Component::Text) && first.bind.is_empty() =>
+            {
+                return Some(first.sem.clone());
+            }
+            _ => stack.extend(n.children.iter()),
+        }
+    }
+    None
+}
+
 impl Build<'_> {
     /// a node bound to `anchor`, named `name` and labelled `text`.
     fn bound(&mut self, mut node: IrNode, anchor: Anchor, name: &str, text: String) -> IrNode {
@@ -273,8 +315,9 @@ impl Build<'_> {
     /// `node`'s state by sense: each text (the first larger, as what names
     /// it, and a frame ref as an image), each number as a stat, each list
     /// as a table, its `lines` as a code with their `kinds` (every list
-    /// bounded in height when `bounded`).
-    fn senses(&mut self, node: &Node, bounded: bool) -> Senses {
+    /// bounded in height when `bounded`). a text of `pointers` that names
+    /// a node of the app, or nothing, is left out.
+    fn senses(&mut self, node: &Node, bounded: bool, pointers: &BTreeSet<StateKey>) -> Senses {
         let mut out = Senses::default();
         let data = self.data(node);
         let list = |name: &str| {
@@ -294,6 +337,8 @@ impl Build<'_> {
             let mut n = IrNode::new(node.id.clone());
             let anchor = Anchor::State(at.clone());
             match value.kind() {
+                // which item the region shows, by its id: the dispatcher's
+                ValueKind::Text if pointers.contains(key) && names_a_node(self.ask.app, value) => {}
                 ValueKind::Text if is_frame_ref(self.ask.app, value) => {
                     n.component = Some(Component::Image);
                     n.props.control_size = Some(ControlSize::Xl);
@@ -396,7 +441,7 @@ impl Build<'_> {
             mut texts,
             lists,
             numbers,
-        } = self.senses(node, false);
+        } = self.senses(node, false, &BTreeSet::new());
         let mut head = Vec::new();
         if !texts.is_empty() {
             let mut name = texts.remove(0);
@@ -428,20 +473,42 @@ impl Build<'_> {
         card
     }
 
-    /// the region the items' actions read outside them, as a card: its
-    /// texts, its numbers, and its lists bounded in height, last.
-    fn region(&mut self, node: &Node) -> IrNode {
+    /// the region the items' actions read outside them (`read`, the keys
+    /// they read of it), as a card: its texts, or its label when it has
+    /// none of its own, its numbers, and its lists bounded in height, last.
+    fn region(&mut self, node: &Node, read: &BTreeSet<StateKey>) -> IrNode {
         let Senses {
-            texts,
+            mut texts,
             lists,
             numbers,
-        } = self.senses(node, true);
+        } = self.senses(node, true, read);
+        if texts.is_empty() {
+            texts.push(self.heading(node));
+        }
         let children = texts.into_iter().chain(numbers).chain(lists).collect();
         let mut card = self.container(node.id.as_str(), Some(node.label.clone()), children);
         card.component = Some(Component::Card);
         card.props.padding = Some(SpacingToken::Md);
         card.layout = stack(Axis::Vertical, SpacingToken::Sm, None);
         card
+    }
+
+    /// what opens the card of a region with no text of its own: its label,
+    /// in the typography of what names a card, binding nothing. the id the
+    /// current surface gave it, or one of its own.
+    fn heading(&mut self, node: &Node) -> IrNode {
+        let current = self.ask.current.map(VerifiedIr::ir);
+        let id = kept_heading(current, &node.id).unwrap_or_else(|| {
+            // it holds and binds nothing: a fresh id, as a container that
+            // held nothing before takes one
+            let name = format!("{}.heading", node.id);
+            self.namer.container(&BTreeSet::new(), &name, None).0
+        });
+        let mut text = IrNode::new(id);
+        text.component = Some(Component::Text);
+        text.label = Some(clip(&node.label, self.max));
+        text.props.typography = Some(TypographyRole::Base2sm);
+        text
     }
 }
 
@@ -454,23 +521,22 @@ struct Senses {
 }
 
 /// the nodes the actions of `members` read outside them, in the order
-/// they are first read, each once: the region those actions open.
+/// they are first read, each once: the region those actions open, with
+/// the keys they read of it.
 fn regions<'a>(
     app: &'a Snapshot,
     members: &[&Node],
     usable: impl Fn(&Node, &ActionDecl) -> bool,
-) -> Vec<&'a Node> {
+) -> Vec<(&'a Node, BTreeSet<StateKey>)> {
     let own: BTreeSet<&SemId> = members.iter().map(|m| &m.id).collect();
-    let mut seen = BTreeSet::new();
-    let mut out = Vec::new();
+    let mut out: Vec<(&Node, BTreeSet<StateKey>)> = Vec::new();
     for m in members {
         for decl in m.actions.iter().filter(|d| usable(m, d)) {
-            for read in &decl.reads {
-                if own.contains(&read.node) || !seen.insert(read.node.clone()) {
-                    continue;
-                }
-                if let Some(node) = app.get(&read.node).filter(|n| !n.constraints.secret) {
-                    out.push(node);
+            for read in decl.reads.iter().filter(|r| !own.contains(&r.node)) {
+                if let Some((_, keys)) = out.iter_mut().find(|(n, _)| n.id == read.node) {
+                    keys.insert(read.key.clone());
+                } else if let Some(node) = app.get(&read.node).filter(|n| !n.constraints.secret) {
+                    out.push((node, BTreeSet::from([read.key.clone()])));
                 }
             }
         }
@@ -504,7 +570,10 @@ pub(crate) fn propose(review: &Review, ask: &Ask<'_>) -> Result<Ir, ProposeError
     let name = last_name(kind.parent.id.as_str()).to_owned();
     let mut list = build.container(&name, Some(kind.parent.label.clone()), items);
     list.layout = stack(Axis::Vertical, SpacingToken::Md, None);
-    let mut shown: Vec<IrNode> = regions.iter().map(|r| build.region(r)).collect();
+    let mut shown: Vec<IrNode> = regions
+        .iter()
+        .map(|(node, read)| build.region(node, read))
+        .collect();
     let side = match shown.len() {
         0 => None,
         1 => shown.pop(),
