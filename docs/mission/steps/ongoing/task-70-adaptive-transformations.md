@@ -1283,3 +1283,217 @@ na superfície o botão "preview segment, then apply cut".
 
 a composta não pede tipo incompatível no `sem` (dois métodos novos no
 builder) nem mudança no protocolo v1, nem transação, nem crate novo.
+
+### handoff da fase 3 (2026-09-24)
+
+```text
+Goal: task-70 fase 3: a sequência que uma pessoa repete vira uma proposta
+      de composta, só a pessoa aceita, e a composta roda como requests
+      encadeados, cada passo conferido contra o estado depois do
+      anterior; o primeiro recusado para a sequência com o motivo
+Status: pronto para o orquestrador; adição ao ADR proposta
+```
+
+#### commits
+
+- 43cf8ff5 task-70: the probe of phase 3, the composite capabilities
+- a3ecffd4 task-70: a detector reads the stages of the dispatcher, live and recorded, and finds the sequence an actor repeats
+- 6ccfbad6 task-70: the repeated sequence is offered to the person, and only a person makes it one action
+- d1106ad8 task-70: the composite accepted is an action of the app on every item, and the host promotes it into the item's template
+- 5fa0874c task-70: the composite runs its steps as chained requests, and the first refused stops it with which step and why
+- 4d96973a task-70: the demo, a sequence repeated on the review is offered and made one action, in a test and in the regress
+- f00af5ea task-70: a step that waits for a person stops the chain and stays waiting
+- f74ce129 task-70: a review the rules propose again shows the composite on each cut by itself
+- o commit deste texto e do ADR
+
+#### a sonda
+
+está na seção "sonda" da fase 3, acima, de (a) a (f). nenhuma condição
+de parada aconteceu: nenhum tipo do `sem` mudou de forma incompatível
+(dois métodos novos no `SnapshotBuilder`), o protocolo v1 não mudou,
+nenhuma transação foi preciso, nenhum crate novo, nenhum baseline
+existente mudou, o disco ficou em 18 GB livres.
+
+um desvio da sonda, na (c): a composta fica ligada quando o primeiro
+passo está, e não quando todos estão. com todos, "review, approve,
+publish" nunca ligaria (publicar só liga depois de aprovar); cada passo
+seguinte é conferido quando chega.
+
+#### o detector e a igualdade de passos
+
+`crates/propose/src/compose/detect.rs`: `Detector::stage` (`:102`) lê o
+fluxo de estágios `(id, request, estágio)` de um dispatcher; um request
+entra no histórico (`:30`, 64 no máximo) quando termina, na ordem do id;
+um request feito enquanto uma composta do mesmo ator roda é passo dela e
+não entra. `found` (`:173`) acha a sequência mais curta, de dois passos
+ou mais e primitiva, repetida N vezes seguidas no fim, pelo mesmo ator;
+`runs` (`:195`) é a igualdade: a mesma ação no mesmo nó, ou em itens da
+mesma coleção (`item_of`, `compose/mod.rs`), um item por repetição. só
+entra como passo o que completou sem parâmetro, sem esperar pessoa e não
+é composta. ao vivo, `Listener` (`:278`) é um `ReceiptSink`; gravado, os
+eventos `Kind::Stage` do `rec` na ordem do arquivo, pela mesma chamada.
+o detector não guarda valor de parâmetro nenhum.
+
+testes: `crates/propose/tests/compose/detect.rs` (repetida N vezes
+acha; outro ator no meio, outra ordem, um passo recusado, dois itens numa
+repetição, uma ação só repetida, um passo que esperou a pessoa: não
+acha; um passo que termina depois entra na ordem pedida; o parâmetro
+secreto não fica no detector) e `crates/showcase/tests/composites.rs` (a
+sessão real da galeria gravada pelo `rec`, escrita num `.monster`, lida
+de volta: a mesma resposta do detector ao vivo; e a demo gravada da 69,
+`fixtures/demo/silences-demo.monster`, onde o agente repetiu "escolher o
+proponente, escrever a intenção, propor": nada é achado, porque dois
+desses passos levam parâmetro).
+
+#### onde a composta mora e o que mudou no `sem`
+
+o módulo é `crates/propose/src/compose/` (sem crate novo, sem
+dependência nova, compila em wasm e mobile). a composta é uma ação do
+app: `Composite::declare` (`composite.rs:57`) a declara depois da
+projeção do app, em cada item que tem as ações dos passos (ou no nó do
+primeiro passo, se exata), com a união do que os passos leem, ligada
+pelo primeiro passo, e a política mais estreita (`decl`, `:103`:
+atores que todos deixam, confirmação mais forte, destrutiva se algum
+for). `calls` (`:145`) dá os passos para o nó pedido.
+
+no `sem`, só adição: `SnapshotBuilder::declared` (`crates/sem/src/builder.rs:99`)
+e `reopen` (`:107`), com o teste em `crates/sem/tests/builder.rs`. na
+Silences, `SilencesPage::project` termina com as compostas
+(`crates/showcase/src/view/apps/silences/semantics.rs:300`).
+
+no host, o mínimo: `registry` (`crates/surface/src/host.rs:123`, usado
+em `apply_all`, `:310`) dá ao `promote` da fase 1 um registro onde o
+template do item (`silences.cut[{item}]`) é mais um membro, com as ações
+de um membro de verdade, só para aquela operação; o verifier confere o
+resto como sempre. testes: `crates/surface/tests/promote.rs` (um botão
+por item, cada um pede a composta do seu corte, desfazer volta; um corte
+sem a ação faz o verifier recusar).
+
+#### o aceite
+
+`Composer` (`crates/propose/src/compose/offer.rs`): `offer` (`:53`) só
+oferece o que o app admite e que não foi recusado nem instalado na
+sessão; `decline` (`:72`); `accept` (`:82`) instala e diz ao detector
+que a ação é composta. nada instala sozinho. na Silences, a faixa
+`silences_surface.composite` sob a linha de proposta
+(`crates/showcase/src/view/apps/silences/generated/offer.rs`: `band`
+`:169`, `project` `:188`), com `install` e `dismiss` `PERSON_ONLY`; a
+resposta roda em `Page::answered`
+(`crates/showcase/src/view/apps/silences/generated/page.rs:309`), que
+promove o botão na revisão aberta (`promote`, `:360`, dentro do
+contêiner de um passo, `beside`, `offer.rs:252`).
+
+testes (`crates/showcase/src/view/apps/silences/tests/composites.rs`):
+oferecida e nada instalado; a pessoa aceita com um clique; um agente é
+recusado `not_authorized` e a oferta fica; recusada, some e não volta
+com a mesma sequência; pelo port de verdade, o agente repete os dois
+cortes, vê a oferta e o `install` volta `requested, rejected`;
+instalada com a revisão aberta, é ação de cada corte no registro e botão
+de cada corte na revisão; sem superfície, instala e não promove.
+`crates/propose/tests/compose/offer.rs` e `declare.rs` (o nome e o
+rótulo vindos do app, um nome tomado ganha número, uma sequência que
+passa por uma ação só da pessoa vira composta que um agente não pede).
+
+#### o encadeamento e a parada no meio
+
+`Chain::advance` (`crates/propose/src/compose/chain.rs:75`): o `execute`
+da composta responde `Started` (`start_composite`, `offer.rs:352`) e a
+página roda a cadeia no mesmo empréstimo (`composed`, `offer.rs:334`;
+`semantics.rs:437`) e no wake, quando um passo que começou termina
+(`silences.rs:506`). cada passo é um request do ator da composta; o
+seguinte é observado sobre o estado que o anterior deixou e despachado
+quando ele termina. a composta completa com `steps` e `requests`, ou
+falha dizendo o passo, o request, o porquê e o que rodou (`stop`,
+`:138`). o que rodou fica rodado.
+
+testes: `crates/propose/tests/compose/chain.rs` (todos os passos, do
+ator da composta; um passo que o anterior desligou para, com o motivo, e
+o que rodou fica; um passo cujo estado outro ator mudou enquanto o
+anterior rodava para stale, com o delta e quem agiu; um agente não roda
+a composta com um passo só da pessoa; um passo que pede confirmação
+para a cadeia e fica esperando a pessoa) e, na Silences, a composta
+clicada na revisão olha e aplica o corte, e a parada no meio: depois de
+uma detecção nova, a pessoa pede a composta num corte cujo frame não foi
+decodificado, um agente rejeita o corte enquanto isso, e o receipt da
+composta diz `stopped at step 2 of 2, apply_cut on silences.cut[3]
+(request ...): stale: silences.cut[3]:decision was "pending", is
+"reject" (agent:bot ran reject_cut on silences.cut[3]); step 1 ran and
+stays`; a prévia ficou, a decisão do agente ficou.
+
+#### a demo
+
+a Silences com a revisão pelas regras aberta a 1280x800: o harness olha
+e aplica cada corte (`examples/regress/state.rs:148` e `:157`, `acts`
+novo no `State`, `:321`), a oferta aparece sob a linha; aceita, cada
+corte da revisão ganha "preview segment, then apply cut", ao lado dos
+botões do corte, e a faixa some. em teste:
+`the_demo_offers_the_sequence_then_a_button_in_each_cut_of_the_review`
+(a faixa dentro da janela, os dois botões desenhados, e uma revisão que
+as regras propõem de novo mostra a composta em cada corte sozinha).
+
+| | imagem |
+| --- | --- |
+| antes (a revisão pelas regras, baseline da fase 2) | `crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/frame.png` |
+| a proposta à vista | `crates/showcase/fixtures/regress/silences-review-by-the-rules-a-sequence-repeated@core@1280x800/frame.png` |
+| a composta instalada | `crates/showcase/fixtures/regress/silences-review-by-the-rules-the-sequence-as-one-action@core@1280x800/frame.png` |
+
+na proposta, sob "proposed by the rules for ...", a linha "you did
+"preview segment, then apply cut" on each cut, 2 times in a row" com
+"make it one action" e "not now"; os dois cortes aplicados. na
+instalada, a linha sumiu, e cada corte tem, sob "preview segment",
+"apply cut" e "reject cut", o botão "preview segment, then apply cut".
+
+#### baselines
+
+- novos (2): `silences-review-by-the-rules-a-sequence-repeated@core@1280x800`
+  e `silences-review-by-the-rules-the-sequence-as-one-action@core@1280x800`,
+  com imagem.
+- nenhum baseline existente mudou.
+
+#### contagem do gate e o regress
+
+| | workspace | perna urnaui | total |
+| --- | --- | --- | --- |
+| antes, `main` @ a0330678 (a contagem da fase 2) | 2809 passam, 25 ignorados (147 suítes) | 85 passam, 1 ignorado (6 suítes) | 2894 |
+| depois, esta branch @ f74ce129 (`./script/gate` offline, saída 0, 23:56:01 a 23:58:22) | 2847 passam, 0 falhas, 25 ignorados (150 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2932 |
+
+38 testes novos e três suítes (`propose`: `compose`, 23; `surface`:
+`promote`, 2; `showcase`: `composites`, 2; mais 10 na lib do showcase e
+1 no `builder` do `sem`); o gate inteiro verde, com a perna urnaui e o
+check wasm com `-D warnings`. `df -h /`: 18 GB livres antes e depois.
+`cargo run --offline -p showcase --example regress -- check` (com o
+`main.rs` tocado): 175 baselines, 175 iguais, nenhum frame desenhado,
+nenhuma GPU aberta (os 173 de antes iguais, 2 novos). todo cargo com o
+`PLEV_CLAUDE` apontando para o stub que só falha; nenhum `claude -p`
+chamado.
+
+#### linha de ADR para o índice (o `docs/ADR/README.md` não está na minha lista)
+
+| 2026-09-24 | [adaptive-transforms-preserve-identity](adaptive-transforms-preserve-identity.md) | adição proposta | fase 3: `propose::compose`; o detector lê o fluxo de estágios de um dispatcher, ao vivo (`Listener`, um `ReceiptSink`) e gravado (os `Kind::Stage` do `rec`), pela mesma chamada; passos iguais pela ação e pelo nó, ou por itens da mesma coleção com um item por repetição, do mesmo ator, contíguos; passo com parâmetro, recusado, que esperou pessoa ou composto corta, e nenhum valor de parâmetro fica; a composta é ação do app declarada depois da projeção (`SnapshotBuilder::declared` e `reopen`, a única adição ao `sem`), ligada pelo primeiro passo, com a política mais estreita dos passos; o aceite é o request da pessoa (`install`/`dismiss` `PERSON_ONLY`), não `confirm`; o host promove no template do item com o template como membro do registro; a cadeia roda cada passo como request do mesmo ator, observado sobre o que o anterior deixou, e o primeiro recusado falha a composta dizendo qual passo e por quê; sem rollback (task-70 fase 3) |
+
+#### o que fica aberto para fechar a task-70
+
+- accessibility como transformação (escala de fonte, contraste,
+  densidade, reduced motion), depois da task-75, como a task manda.
+- o `promote` de um template está no host (`registry`), pelo mínimo que
+  esta fase podia; o lugar certo é o `promote` do `uir` entender o
+  template, e aí o registro do host sai. decisão do orquestrador.
+- o botão promovido tem o tamanho padrão ao lado dos botões pequenos da
+  regra (o `promote` não lê os irmãos) e, na largura do cartão, desce
+  para a linha de baixo.
+- a composta liga pelo primeiro passo: num corte já aplicado o botão
+  fica ligado, e a sequência para no aplicar (desligado), com o motivo. a
+  imagem da instalada mostra os dois cortes aplicados, porque a semente
+  tem dois.
+- N é 2 na Silences (a semente tem dois cortes); num uso real, 3 talvez
+  seja o certo. é uma constante (`REPEATS`, `generated/offer.rs:34`).
+- a tela fixa da Silences não desenha o botão da composta: sem
+  superfície aberta, ela está na projeção (agente, leitor de tela) e em
+  toda superfície proposta depois.
+- compostas não se aninham, não passam de uma sessão para outra, e o
+  nome é das regras (os rótulos dos passos); nomear pelo Claude fica para
+  depois, se valer.
+- um passo que começa e cujo próprio efeito chega depois pode envelhecer
+  o seguinte; a cadeia para com o motivo, em vez de agir sobre o que não
+  viu.
+- a adição ao ADR está como proposta; o índice é do orquestrador.
