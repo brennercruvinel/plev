@@ -873,3 +873,89 @@ continuam abertos no critério: roteiro de IME executado (fase 4, pede o
 brenner), emoji colorido (fase 5), um milhão de linhas (fase 7).
 
 o agente gastou uns 260 mil tokens.
+
+## fase 5: a sonda
+
+data: 2026-09-25. branch `task/74d-emoji` sobre `afb19a4c`. as linhas da
+biblioteca são do fonte travado no Cargo.lock: cosmic-text 0.18.2 e swash
+0.2.8, no registro do cargo. a fonte é Noto Color Emoji v2.051 em bitmap
+CBDT/CBLC (`target/fonts-noto/NotoColorEmoji-CBDT.ttf`, fora do repo),
+lida com fontTools 4.64.0.
+
+### (a) como o raster pede a imagem ao swash, e o que muda
+
+`rasterize_and_upload` pede a imagem com `SwashCache::get_image_uncached`
+(`crates/engine/src/text/atlas.rs:209`) e descarta tudo que não é máscara
+(`atlas.rs:211`, `image.content != SwashContent::Mask` devolve `None`: o
+glifo reserva o avanço e não desenha). o cosmic-text já pede as três
+fontes na ordem certa, `ColorOutline(0)`, `ColorBitmap(BestFit)` e
+`Outline`, com `Format::Alpha` (`cosmic-text-0.18.2/src/swash.rs:56-65`).
+o swash acha o bitmap de cor (`swash-0.2.8/src/scale/mod.rs:971-977`),
+decodifica o PNG do CBDT em RGBA de alfa reto (4 canais,
+`strike.rs:310-314`) e marca `Content::Color` (`mod.rs:760-763`). então o
+que muda é só do nosso lado: aceitar `Content::Color` e subir os 4 bytes
+por pixel em vez de 1. nenhuma chamada nova à biblioteca.
+
+### (b) o atlas e o shader
+
+o atlas é uma textura `R8Unorm` (`atlas.rs:28`), ligada no grupo 1 por um
+layout de uma textura e um sampler (`gpu/utils.rs:39-50`, criado em
+`gpu/context.rs:346`, fora de `text/`). a cor tem três caminhos:
+
+- uma segunda textura RGBA: pede um segundo binding no layout e um segundo
+  draw ou bind group, em `gpu/context.rs` e `window/render_passes.rs`, fora
+  dos arquivos da fase.
+- o atlas inteiro em `Rgba8Unorm`: cabe no mesmo layout, mas quadruplica a
+  memória de todo texto (até 64 MB a 4096²) para um punhado de emoji, e
+  mexe no formato que os glifos de máscara usam hoje.
+- o RGBA do glifo de cor guardado no mesmo atlas R8, quatro texels por
+  pixel (r, g, b, a lado a lado na linha): o PNG decodificado já vem nessa
+  ordem, então a subida é uma cópia de bytes com largura 4w. o glifo de
+  máscara não muda em nada (formato, subida, sampler, conta do shader).
+
+escolho o terceiro. o shader lê o glifo de cor com `textureLoad` (quatro
+leituras, sem filtro), o que funciona porque o quad cai em pixel físico
+inteiro (`glyph_quads_land_on_whole_physical_pixels`, `tests_raster.rs:213`)
+e o bitmap já vem na escala física (c). o `TextVertex` não ganha campo:
+`compositor/tests.rs:447` e `:1367` montam o vértice por literal, fora dos
+arquivos da fase. a marca de cor vai no `u`: negativo no glifo de cor,
+nunca negativo no de máscara. a cor é a do glifo, em sRGB linearizado como
+a do texto; da cor do texto só entra o alfa (opacidade), nunca o rgb. o
+`textureSample` da máscara continua fora de qualquer `if` (o WGSL exige
+controle uniforme para ele); o `textureLoad` não exige.
+
+### (c) o tamanho do bitmap e a escala
+
+o CBLC tem uma strike só, de 109 ppem e 32 bits (bitmaps de 136x128). o
+cosmic-text pede o tamanho físico: a chave carrega `font_size * scale`
+(`LayoutGlyph::physical`) e o scaler é montado com esse tamanho
+(`swash.rs:31-33`). o swash escolhe a strike mais próxima
+(`scale/mod.rs:688-694`), e, se o tamanho difere, reduz o bitmap com filtro
+Mitchell para `size / ppem` e escala o placement junto, truncando
+(`mod.rs:705-735`). a 16 px e escala 2 o emoji sai em 39x37 pixels
+físicos. o offset de subpixel não entra no bitmap (só em contorno), então
+bins diferentes dão chaves diferentes com a mesma imagem: gasta atlas, não
+quebra a identidade.
+
+### (d) ZWJ, tom de pele e VS16
+
+a fonte faz tudo por GSUB, feature `ccmp`: a lookup 0 é de ligaduras
+(4.164), com a família U+1F468 ZWJ U+1F469 ZWJ U+1F467 ZWJ U+1F466 e o
+polegar com tom (U+1F44D U+1F3FD) cada um num glifo só; as lookups 1 a 5
+são das bandeiras e das tags. o VS16 (U+FE0F) não está no cmap, só no
+formato 14; o shaper o esconde como default ignorable. o cosmic-text molda
+a palavra inteira com a face de fallback e troca os clusters que faltavam
+(`shape.rs:318-400`): a ligadura começa no primeiro emoji, que faltava na
+face latina, e leva junto os ZWJ que a face latina escondeu.
+
+qual face chega primeiro: `FontMatchKey` ordena por `not_emoji` antes do
+peso (`font/system.rs:18-33`, a face cujo nome PostScript tem "Emoji"),
+e o último passo do fallback anda nessa ordem (`font/fallback/mod.rs:463-476`).
+então, no caminho embutido, a face de emoji é a primeira do último passo,
+antes das Noto Sans, em qualquer peso. consequência: o coração (U+2764)
+em Inclusive Sans vai para o emoji; em Inter não, porque Inter tem o
+coração e ele nunca falta. o cosmic-text não lê o VS16 para escolher face,
+então em Inter o `U+2764 U+FE0F` fica coração de texto. o subset não põe
+no cmap nada que as faces latinas tenham (dígitos, `#`, `*`, espaço, (c),
+(r), TM): esses nunca chegariam à face, e o espaço dela tem avanço de
+1,245 em.
