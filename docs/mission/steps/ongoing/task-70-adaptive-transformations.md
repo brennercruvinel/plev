@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: ongoing
-last-updated: 2026-09-23
+last-updated: 2026-09-25
 domain: generative-runtime
 task: task-70
 wave: 7
@@ -1497,3 +1497,14 @@ chamado.
   o seguinte; a cadeia para com o motivo, em vez de agir sobre o que não
   viu.
 - a adição ao ADR está como proposta; o índice é do orquestrador.
+
+## fase 4: accessibility como transformação (aberta em 2026-09-25)
+
+aberta pelo orquestrador depois da task-75 fase 1. as preferências da
+pessoa (texto maior, mais contraste, densidade) mudam a superfície gerada
+pelas operações da fase 1, dentro dos tokens, em nome dela; desligar
+devolve só o que a preferência mudou; o contraste é medido como a task-75
+mede. junto, a dívida P2 da fase 3: o `promote` de um template sai do
+`registry` do host e vai para o `uir`. nenhuma leitura nova do sistema e
+nenhuma cor de tema muda. fica de fora a prova com o Claude de verdade da
+fase 2, que é do orquestrador.
