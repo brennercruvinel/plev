@@ -3,6 +3,12 @@
 //! mixing the files of the task with files that are not. the same for
 //! every arm, so the arms compare.
 //!
+//! and the repository of the review (task-96, the demo 5 of task-80,
+//! `Repo::build_review`): the same first commit, three commits over it
+//! (`REVIEWED`), each on a date of its own so every sha is the same on
+//! every run, and a note in the working tree that no commit holds
+//! (`UNCOMMITTED`): what a review of the three never shows.
+//!
 //! the shape follows `crates/ide/tests/support/mod.rs` (`Rig::new`): real
 //! git, a temp dir, `git(args)`, `head`, `head_files`. the tests panic on
 //! a failure; a binary reports it, so the helpers return `Result`.
@@ -62,6 +68,13 @@ impl Repo {
         }
         repo.add(&staged_at_start())?;
         Ok(repo)
+    }
+
+    /// builds the repository of the review in a temp dir (`review_in`).
+    pub fn build_review() -> Result<Repo, String> {
+        let dir = TempDir::new().map_err(|e| format!("a temp dir: {e}"))?;
+        review_in(dir.path())?;
+        Ok(Repo { dir })
     }
 
     pub fn path(&self) -> &Path {
@@ -155,6 +168,100 @@ pub fn git(dir: &Path, args: &[&str]) -> Result<String, String> {
     } else {
         Err(format!(
             "git {args:?} failed: {}",
+            String::from_utf8_lossy(&out.stderr).trim()
+        ))
+    }
+}
+
+/// the three commits of the review, oldest first: the subject and the
+/// files each one writes over the tree before it, in git's order (by
+/// path).
+pub const REVIEWED: [(&str, &[(&str, &str)]); 3] = [
+    (
+        "session timeout from the server",
+        &[
+            (
+                "src/session.rs",
+                "pub struct Session {\n    pub started_at: u64,\n    pub timeout_secs: u64,\n}\n\nimpl Session {\n    pub fn expired(&self, now: u64) -> bool {\n        now.saturating_sub(self.started_at) > self.timeout_secs\n    }\n}\n",
+            ),
+            (
+                "tests/session_test.rs",
+                "#[test]\nfn a_session_expires_after_its_timeout() {\n    let s = demo::Session { started_at: 0, timeout_secs: 60 };\n    assert!(s.expired(61));\n}\n",
+            ),
+        ],
+    ),
+    (
+        "login remembers the user",
+        &[(
+            "src/login.rs",
+            "pub struct Login {\n    pub user: String,\n    pub remember: bool,\n}\n\nimpl Login {\n    pub fn timeout_secs(&self) -> u64 {\n        30\n    }\n}\n",
+        )],
+    ),
+    (
+        "readme: how to run the demo",
+        &[
+            (
+                "Cargo.toml",
+                "[package]\nname = \"demo\"\nversion = \"0.2.0\"\nedition = \"2024\"\n",
+            ),
+            (
+                "README.md",
+                "# demo\n\na login form and a session store.\n\n## running\n\ncargo run\n",
+            ),
+        ],
+    ),
+];
+
+/// the subject of the first commit, the one under the review's three.
+pub const FIRST: &str = "login form and session store";
+
+/// what the working tree of the review holds and no commit does.
+pub const UNCOMMITTED: (&str, &str) = ("notes.txt", "ideas for the next sprint\n- dark theme\n");
+
+/// writes the repository of the review in `at`, an empty directory: the
+/// first commit (the experiment's `BEFORE`), the three of `REVIEWED` on
+/// dates of their own, and `UNCOMMITTED` left in the working tree.
+pub fn review_in(at: &Path) -> Result<(), String> {
+    git(at, &["init", "-q", "--initial-branch=main"])?;
+    git(at, &["config", "user.name", "Lab Author"])?;
+    git(at, &["config", "user.email", "lab@example.com"])?;
+    git(at, &["config", "commit.gpgsign", "false"])?;
+    for (path, content) in BEFORE {
+        write(at, path, content)?;
+    }
+    let mut add = vec!["add", "--"];
+    add.extend(tracked());
+    git(at, &add)?;
+    commit_on(at, FIRST, 1)?;
+    for (day, (subject, files)) in (2..).zip(REVIEWED) {
+        let mut add = vec!["add", "--"];
+        for (path, content) in files {
+            write(at, path, content)?;
+            add.push(path);
+        }
+        git(at, &add)?;
+        commit_on(at, subject, day)?;
+    }
+    write(at, UNCOMMITTED.0, UNCOMMITTED.1)
+}
+
+/// `git commit` of what the index holds, as of the `day`th of January
+/// 2026 for its author and committer both.
+fn commit_on(at: &Path, message: &str, day: u32) -> Result<(), String> {
+    let date = format!("2026-01-{day:02}T00:00:00+0000");
+    let out = Command::new("git")
+        .arg("-C")
+        .arg(at)
+        .env("GIT_AUTHOR_DATE", &date)
+        .env("GIT_COMMITTER_DATE", &date)
+        .args(["commit", "-q", "--message", message])
+        .output()
+        .map_err(|e| format!("git commit: {e}"))?;
+    if out.status.success() {
+        Ok(())
+    } else {
+        Err(format!(
+            "git commit failed: {}",
             String::from_utf8_lossy(&out.stderr).trim()
         ))
     }
@@ -258,5 +365,20 @@ mod tests {
         assert!(is_the_task(&task));
         task.push("README.md".into());
         assert!(!is_the_task(&task));
+    }
+
+    #[test]
+    fn the_review_has_its_three_commits_and_the_note_outside_them() {
+        let one = Repo::build_review().unwrap();
+        let log = one.git(&["log", "--format=%s"]).unwrap();
+        let subjects: Vec<&str> = log.lines().collect();
+        let mut want: Vec<&str> = REVIEWED.iter().rev().map(|(s, _)| *s).collect();
+        want.push(FIRST);
+        assert_eq!(subjects, want, "newest first");
+        assert_eq!(one.status().unwrap().trim(), "?? notes.txt");
+        let files: Vec<&str> = REVIEWED[2].1.iter().map(|(p, _)| *p).collect();
+        assert_eq!(one.head_files().unwrap(), files);
+        let two = Repo::build_review().unwrap();
+        assert_eq!(one.head(), two.head(), "the same shas on every run");
     }
 }
