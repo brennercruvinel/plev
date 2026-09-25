@@ -689,7 +689,10 @@ filled). gate 3010 passed, regress 176 (one new). debt recorded:
   the band's buttons hold no state, because the projection that feeds
   the port is the one that feeds AccessKit and a preference is personal
   data the port must not carry. the fix is a state only the reader's
-  tree gets (task-75 phase 2, P2).
+  tree gets (task-75 phase 2, P2). closed by task-75 phase 2a
+  (2026-09-25): the reader's snapshot alone gives each preference button
+  its `on`, heard as a toggle button's state; the port and the prompt
+  never get it (tested through the real port).
 - `SurfaceHost::prefer` refuses `Actor::Agent` by name; an allow list of
   the person's actors (human, assistive, test) would refuse a variant
   added later (P3).

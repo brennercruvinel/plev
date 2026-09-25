@@ -14,6 +14,23 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-75 fase 2a: as páginas que projetam, para o leitor de tela
+
+- **integrada:** `task/75b-a11y-pages` (12 commits, agente no Opus). as
+  listas exatas da fase 1 caíram de 22, 13 e 4 para 1, 0 e 0 (fica o
+  arraste de arquivo: leitor não arrasta). gate local verde, 3086 passam
+  (antes 3062); regress 176 iguais.
+- **dois desvios do briefing, aceitos pelo orquestrador:** (1) o briefing
+  pedia a página projetar cada ação da linha como controle; a projeção da
+  página é lida pelos goldens do `uir`, pelo registro do IR e do prompt e
+  pelo `scene.json`, então os controles moram só na árvore do leitor
+  (`engine::accessibility::present`), e o clique volta como a ação do
+  item pelo dispatcher. o contrato não mudou. (2) a Capture re-abençoada
+  mudou uma linha do `scene.json` (a revisão do `semantics.json`, que o
+  scene carrega); frame, camadas e bindings iguais, conferido no diff.
+- a dívida da task-70 fase 4 (o leitor não ouvia a preferência) fechou,
+  com teste pelo port de verdade de que ela não sai.
+
 ### task-96 fase b: os defeitos visuais da validação
 
 - **integrada:** `task/96b-ide-surface-polish` (6 commits, agente no
