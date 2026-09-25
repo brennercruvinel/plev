@@ -254,3 +254,201 @@ nenhum código mudou. toda afirmação sobre código tem arquivo e linha.
   três commits (14, 7 e 18 linhas). então o terceiro diff deve seguir
   perdendo algumas linhas para o painel fixo, e o número de linha continua
   só no painel fixo. a medida decide.
+
+## handoff (2026-09-25)
+
+```text
+Goal: task-97, código e diff no vocabulário do IR, e a demo 5 de novo
+Status: pronto para o orquestrador, na branch task/97a-code-in-ir
+```
+
+### commits
+
+- `a82087d8` task-97: the probe, and the task file in ongoing
+- `38960bf8` task-97: the code block draws rows, each with its kind by
+  the theme's tokens, and scrolls
+- `82658d2a` task-97: code in the IR's vocabulary, verified by the usual
+  rules, in the schema and the prompt, materialized on the code block
+- `2b4fe23c` task-97: the ide's diff says the kind of each line, by name,
+  beside the lines
+- `593ff9bf` task-97: the review shows the diff in a code, the lines with
+  the kind of each
+- `10f66729` task-97: the laboratory takes half a pixel of the layout's
+  rounding as no row cut (a gravação da demo nomeia este build)
+- `9c96bde4` task-97: the demo 5 again, with the code in the IR, written
+  in task-80 beside the first
+- `19ea59bd` task-97: the code in the two ADRs (o gate e o `regress`
+  rodaram aqui)
+- o commit deste handoff (só este arquivo)
+
+a ordem mudou um pouco da do briefing: o widget veio antes do
+vocabulário. cada commit compila, e o `match` do `surface` sobre
+`Component` é exaustivo: com o `code` no vocabulário e sem o widget, o
+`surface` não compilava. é também a regra do `vocab.rs` ("a new
+component needs the widget in comps first").
+
+### a sonda
+
+a seção "sonda" acima, (a) a (e), escrita antes do código. o que a
+execução acrescentou a ela:
+
+- o tipo de linha pede dois tipos novos no comps (`LineKind`,
+  `CodeLine`), e o módulo `content::code_block` é privado: eles só saem
+  pela linha de `pub use` em `crates/comps/src/content/mod.rs`. é a única
+  linha fora de `code_block.rs` no comps, fora da lista de arquivos
+  permitidos; nada do que o comps desenha mudou por ela.
+- a revisão liga pelo nome: o nó que projeta uma lista `lines` e uma
+  `kinds` fala o vocabulário do `code`. o `code` é ancorado pelo primeiro
+  estado dele, como o `Namer` ancora o nó da superfície que já está
+  aberta (`crates/propose/src/ids.rs`, `anchor`), senão uma revisão sobre
+  a aberta trocava o id dele.
+- o layout arredonda o bloco a pixel inteiro: um bloco da altura das
+  linhas sai uma fração de pixel mais baixo, e a primeira contagem do
+  laboratório deu 13 de 14 e 6 de 7. o laboratório passou a tomar meio
+  pixel como o arredondamento, como o `whole` já toma para um controle.
+
+### o `code`, lugar por lugar
+
+- `uir` (`crates/uir/src/vocab.rs`): `Component::Code` no fim do enum e
+  de `ALL` (25), nome `code`, `Spec` com papel `region`, sem filhos,
+  `Named::Always`, estado `lines` (lista ou texto) e `kinds` (lista),
+  nenhum evento; `LineKind` (`context`, `added`, `removed`, `header`) com
+  `ALL`, `as_str` e `parse`, exportado em `lib.rs`. o verificador não
+  mudou uma linha. o schema cresceu só no fim dos enums (`code`, `lines`,
+  `kinds`) e o arquivo foi escrito de novo.
+- `propose` (`crates/propose/src/prompt.rs`): o prompt diz o que o
+  `code` mostra, os nomes dos tipos, que ele rola quando o `size` o
+  limita e que o rótulo é a legenda; a regra 7 no texto inclui o `code`.
+- `comps` (`crates/comps/src/content/code_block.rs`): `rows`, `scroll`,
+  `CodeBlock::lines`, `row_h`, `content_h`, `rows_rect`, `max_scroll`; sem
+  linhas o bloco desenha como antes (teste da cena).
+- `surface` (`crates/surface/src/code.rs`, novo; `widget.rs`, `draw.rs`,
+  `token.rs`, `lib.rs`): o widget retido `Widget::Code` (o bloco, um
+  `ScrollState` e o `Scrollbar`), a altura das linhas como folha, o
+  nome do tipo para o tipo do comps num `match` exaustivo em `token.rs`.
+  o `project` não mudou: o nó sai como `region` com o rótulo, `lines` e
+  `kinds`.
+- testes: `crates/uir/tests/code.rs` (verifica, round trip, o schema
+  aceita, as regras de ligação recusam o que devem, e os oito IR de antes
+  leem e escrevem de volta o mesmo documento, os três do `uir` byte a
+  byte); o teste do `Spec` em `vocab.rs`; o do prompt em `prompt.rs`.
+
+### o estado do diff
+
+`diff:kinds` ao lado de `diff:lines`
+(`crates/ide/src/workbench/project.rs`): o mesmo tamanho, um nome de
+`uir::LineKind` por linha, do `DiffLineKind` do painel. nenhum tipo do
+`sem` mudou; nenhuma linha de `diff:lines` mudou. o golden
+`crates/uir/fixtures/ide-workbench.snapshot.json` ganhou só o `kinds`
+vazio. o recorte do Claude (`crates/ide/src/generated/scope.rs`) leva
+`kinds` na mesma condição de `lines` (teste em `crates/ide/tests/claude.rs`,
+que continua passando e agora confere os dois). teste novo:
+`crates/ide/tests/review.rs`, `the_diff_says_the_kind_of_each_line_beside_it`.
+
+### o desenho e o contraste de cada tipo de linha
+
+atrás da linha, a lavagem de intenção do design system: `colors.success`
+no alfa `glass.wash_alpha` na adicionada, `colors.danger` no mesmo alfa na
+removida, `glass.surface_hover` no cabeçalho, nada no contexto. o texto de
+todas em `colors.text`. nenhuma cor fora do tema (teste: toda cor da cena
+é um desses tokens). o contraste do texto sobre a linha, medido como a
+task-75 mede (`every_kind_reads_at_aa_over_its_row`):
+
+| tema, sobre | contexto | adicionada | removida | cabeçalho |
+| --- | --- | --- | --- | --- |
+| core, `colors.bg` e `colors.surface` | 18,26 | 17,19 | 17,03 | 17,52 |
+| hoff, `colors.bg` | 7,56 | 4,59 | 7,12 | 5,63 |
+| hoff, `colors.surface` | 7,69 | 4,63 | 7,22 | 5,70 |
+| dark, `colors.bg` | 9,11 | 5,48 | 6,65 | 6,48 |
+| dark, `colors.surface` | 8,82 | 5,39 | 6,51 | 6,34 |
+| light, `colors.bg` | 15,92 | 14,46 | 14,27 | 15,17 |
+| light, `colors.surface` | 16,60 | 15,05 | 14,85 | 15,82 |
+| hoff_light, `colors.bg` | 7,82 | 7,55 | 7,33 | 7,60 |
+| hoff_light, `colors.surface` | 7,97 | 7,68 | 7,46 | 7,74 |
+
+todos passam AA (4,5); o menor é 4,59. a rolagem: a roda sobre o bloco
+limitado desloca as linhas, para na última, fora dele não é dele, a
+posição não é projetada e linhas novas voltam ao topo
+(`crates/surface/tests/code.rs`); o bloco recorta as linhas à área dele e
+desenha só as que aparecem (`rows_scroll_inside_the_area_and_stop_at_the_last`).
+
+### a revisão
+
+`crates/propose/src/review.rs`: uma lista que o nó chama `lines` vira um
+`code` (limitado por `dropdown_max_h` na região); com uma lista `kinds` no
+mesmo nó ela vai no mesmo `code` e não aparece sozinha; toda outra lista
+segue tabela. testes em `crates/propose/src/review/tests.rs` (o da revisão
+de três commits e um novo, `only_the_lines_are_a_code_and_the_kinds_go_with_them`)
+e em `crates/ide/tests/review_acts.rs` (o `code` mostra as linhas e os
+tipos que o dispatcher pediu).
+
+### a demo 5 de novo, ao lado da primeira
+
+na task-80, seção "de novo, com o `code` no IR (task-97)", gravada sem
+janela no build `10f66729`, lida pelo `plev-inspect`. linhas do diff à
+vista sem rolar: 14 de 14, 7 de 7 e 14 de 18 na superfície (eram 5, 5 e
+5 na tabela), contra 14, 7 e 18 no painel fixo; com a cor do tipo de cada
+linha. arquivos dos três de uma vez: 3 contra no máximo 1. atos: 5
+cliques e 26 teclas contra 3 cliques. pelo critério escrito antes, a demo
+continua caindo no diff, agora por 4 linhas do terceiro commit e pelo
+número de linha, e continua de pé nos arquivos; nada fora do dispatcher e
+nada depois de fechar.
+
+### validação
+
+com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
+`target/agents/one`, `CARGO_INCREMENTAL=0`, debug `line-tables-only`, o
+`PLEV_CLAUDE` no stub) e `--offline`:
+
+- `./script/gate` em `19ea59bd`: verde (exit 0, 05:13 a 05:19), com a
+  perna urnaui e o check wasm com `-D warnings`. workspace 2969 passam, 0
+  falham, 26 ignorados (164 suítes); urnaui 85 passam, 1 ignorado (6
+  suítes). total 3054 e 27, contra 3036 e 27 na base: os 18 testes novos.
+  `df -h /`: 31 GB livres antes, 28 GB depois.
+- `cargo run --offline -p showcase --example regress -- check`, com o
+  `main.rs` tocado: 176 baselines, 176 iguais, nenhum frame desenhado,
+  nenhuma GPU aberta.
+- `cargo test -p ide --test lab_review` cinco vezes seguidas e `--test
+  claude` três: todas verdes.
+- nenhuma janela aberta, nenhum clique ou tecla do sistema (os do
+  laboratório são pelo `Workbench::click`), nenhuma chamada ao `claude -p`,
+  nenhuma dependência nova, o `Cargo.lock` igual.
+
+### linhas para o índice de ADRs
+
+- `plev-ir-typed-and-verified.md`: adendo de 2026-09-25, o componente
+  `code` (task-97): o `Spec`, os nomes dos tipos de linha, o verificador e
+  o schema iguais a não ser pelo fim.
+- `materialized-surfaces-from-verified-ir.md`: adendo de 2026-09-25, um
+  `code` desenha as linhas pelo tipo e rola (task-97): os tokens, o
+  contraste medido, a marca no texto, o widget retido que rola.
+
+### o que fica aberto
+
+- a demo 5 ainda perde no diff: as 4 linhas do terceiro commit (o único
+  token de altura do IR, `dropdown_max_h`; fechar pede um token de altura
+  para um bloco de leitura, decisão de design do brenner, ou um layout em
+  que um nó toma o que sobra da superfície, decisão do orquestrador) e o
+  número de linha (a projeção não leva os números antigo e novo).
+- três temas com nome fora dos quatro da task-75 ficam abaixo de AA numa
+  linha adicionada (tokyo-night 4,30 a 4,38, gruvbox 3,79 a 3,94,
+  one-dark 3,32 a 3,40; no one-dark também a removida, 4,00 a 4,12, e o
+  cabeçalho sobre um card, 4,43): o `colors.text` deles é mais baixo.
+  cor de tema é decisão de design.
+- a lavagem sozinha fica de 1,06 a 1,67 contra o bloco: o tipo vem também
+  da marca no texto, que o ide projeta; um app sem marca no texto teria o
+  tipo só pela cor.
+- a legenda do bloco segue em `glass.text_faint`, como sempre desenhou
+  (3,76 no hoff sobre o fundo); não mudou porque o que o bloco desenha
+  hoje não muda.
+- a página do bloco no showcase não mostra as linhas (o showcase ficou de
+  fora; nenhum baseline mudou).
+- o `code` não entra numa família do `SwapView`.
+- a observação do ide pesa até 200 nomes curtos a mais quando um diff está
+  aberto.
+- a linha de `pub use` em `crates/comps/src/content/mod.rs`, fora da lista
+  de arquivos, pelo motivo acima.
+- com a superfície aberta, o painel fixo mais estreito mostra o mesmo diff
+  à esquerda: a pessoa vê o diff duas vezes.
+- a prova com o Claude de verdade e a demo 5 com janela pelo brenner
+  seguem com o orquestrador e o brenner.
