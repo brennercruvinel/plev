@@ -17,7 +17,13 @@
 //! screen reader take the same path, and the receipt is kept where every
 //! other receipt of the page is. The author of the IR is whoever asked
 //! (`GenerationPolicy::by`), so a surface an agent proposes binds only
-//! what agents may ask for.
+//! what agents may ask for; the host keeps the surface with that policy.
+//!
+//! With a surface open, `propose` reads the intent as a change of it
+//! first (task-70 phase 2, `proposing::changing`): the rules apply it at
+//! once, the Claude off the thread, the host applies the operations as
+//! whoever asked, and "undo" takes the last change back; an intent that
+//! is no change proposes a surface.
 //!
 //! While the app sleeps (`engine::window::Background`, task-76 item 7) a
 //! `propose` by the Claude is held (`asking::Pending`): the request
@@ -35,7 +41,8 @@ use surface::{Surface, SurfaceHost};
 use uir::{Capabilities, GenerationPolicy, VerifiedIr};
 
 use super::super::app::TodoPage;
-use super::asking::{Answer, Pending};
+use super::asking::{Answer, Job, Pending, Proposal};
+use super::proposing::changing::{self, Changing};
 use super::proposing::{Op, Proposer, Proposing, Said, int};
 
 /// The outcome of a proposal shown: the surface and how many nodes it
@@ -141,9 +148,10 @@ impl Page<'_> {
         true
     }
 
-    /// The Claude answered `pending`: the surface shows the proposal and
-    /// the request completes with it, the attempts, the seconds and the
-    /// cost; or the request fails with why there is none.
+    /// The Claude answered `pending`: the surface shows the proposal, or
+    /// the change is applied, and the request completes with it, the
+    /// attempts, the seconds and the cost; or the request fails with why
+    /// there is none.
     fn arrived(&mut self, pending: Pending, answer: Answer) {
         let Answer {
             proposed,
@@ -152,33 +160,52 @@ impl Page<'_> {
             cost_usd,
         } = answer;
         let id = pending.id;
-        let shown = proposed
-            .map_err(|e| e.to_string())
-            .and_then(|ir| self.show(ir));
-        let ended = match shown {
-            Ok((surface, nodes)) => {
-                let mut outcome = result(&surface, nodes);
-                outcome
-                    .result
-                    .insert("attempts".to_owned(), Value::Int(int(attempts)));
-                outcome
-                    .result
-                    .insert("seconds".to_owned(), Value::Num(took.as_secs_f64()));
-                if let Some(cost) = cost_usd {
+        let done = match proposed.map_err(|e| e.to_string()) {
+            Err(why) => Err(why),
+            Ok(Proposal::Change(ops)) => {
+                let app = self.todo.snapshot().map_err(|e| e.to_string());
+                app.and_then(|app| {
+                    changing::arrived(
+                        self.host,
+                        self.id.as_ref(),
+                        self.proposing,
+                        pending,
+                        ops,
+                        (attempts, took, cost_usd),
+                        &app,
+                    )
+                })
+            }
+            Ok(Proposal::Surface(ir)) => {
+                let Pending { intent, policy, .. } = pending;
+                self.show(*ir, policy).map(|(surface, nodes)| {
+                    let mut outcome = result(&surface, nodes);
                     outcome
                         .result
-                        .insert("cost_usd".to_owned(), Value::Num(cost));
-                }
-                self.proposing.said = Some(Said::Answered {
-                    intent: pending.intent,
-                    attempts,
-                    took,
-                    cost_usd,
-                });
-                self.proposing.shown = true;
-                self.todo
-                    .with_dispatcher(|d, _, now| d.complete(id, outcome, now))
+                        .insert("attempts".to_owned(), Value::Int(int(attempts)));
+                    outcome
+                        .result
+                        .insert("seconds".to_owned(), Value::Num(took.as_secs_f64()));
+                    if let Some(cost) = cost_usd {
+                        outcome
+                            .result
+                            .insert("cost_usd".to_owned(), Value::Num(cost));
+                    }
+                    self.proposing.said = Some(Said::Answered {
+                        intent,
+                        attempts,
+                        took,
+                        cost_usd,
+                    });
+                    self.proposing.shown = true;
+                    outcome
+                })
             }
+        };
+        let ended = match done {
+            Ok(outcome) => self
+                .todo
+                .with_dispatcher(|d, _, now| d.complete(id, outcome, now)),
             Err(why) => {
                 self.proposing.said = Some(Said::Refused(why.clone()));
                 self.todo.with_dispatcher(|d, _, now| d.fail(id, why, now))
@@ -189,16 +216,17 @@ impl Page<'_> {
         }
     }
 
-    /// Shows `ir`: the surface opens, or takes the form in place when its
-    /// id is open (`SurfaceHost::transform`, reconciled by `SemId`). Its
-    /// id and how many nodes it has.
-    fn show(&mut self, ir: VerifiedIr) -> Result<(SemId, usize), String> {
+    /// Shows `ir`, verified under `policy`: the surface opens, or takes
+    /// the form in place when its id is open
+    /// (`SurfaceHost::transform_under`, reconciled by `SemId`); the host
+    /// keeps the policy for its changes. Its id and how many nodes it has.
+    fn show(&mut self, ir: VerifiedIr, policy: GenerationPolicy) -> Result<(SemId, usize), String> {
         let app = self.todo.snapshot().map_err(|e| e.to_string())?;
         let open = self.host.get(&ir.ir().surface.id).is_some();
         let surface = if open {
-            self.host.transform(ir, &app)
+            self.host.transform_under(ir, &app, policy)
         } else {
-            self.host.open(ir, &app)
+            self.host.open_under(ir, &app, policy)
         };
         let (id, nodes) = surface
             .map(|s| (s.id().clone(), s.nodes().count()))
@@ -214,16 +242,24 @@ impl Page<'_> {
     }
 
     /// A proposal for the intent, as `author` wrote it, over the todo as
-    /// it is and the surface shown. By the rules it is verified and shown
-    /// now, and the request is done; by the Claude the worker starts,
-    /// with everything it needs owned (or is held until the app wakes),
-    /// and the request `id` stays open until `settle` ends it.
+    /// it is and the surface shown: with a surface open, a change of it
+    /// first (`changing::change`), else a surface. By the rules it is
+    /// verified and shown now, and the request is done; by the Claude the
+    /// worker starts, with everything it needs owned (or is held until
+    /// the app wakes), and the request `id` stays open until `settle`
+    /// ends it.
     fn propose(&mut self, id: RequestId, author: &Actor) -> Execution {
         let intent = self.proposing.intent.text().trim().to_owned();
         let app = match self.todo.snapshot() {
             Ok(app) => app,
             Err(e) => return Execution::Failed(e.to_string()),
         };
+        if let Some(open) = self.id.clone() {
+            let asked = changing::change(self.host, &open, self.proposing, id, author, app.clone());
+            if let Changing::Ran(done) = asked {
+                return done;
+            }
+        }
         let caps = Capabilities::from_snapshot(&app);
         let policy = GenerationPolicy::by(author.clone());
         let current: Option<VerifiedIr> = self
@@ -242,7 +278,7 @@ impl Page<'_> {
                     policy: &policy,
                 };
                 let proposed = propose_verified(&mut Rules, &ask).map_err(|e| e.to_string());
-                match proposed.and_then(|ir| self.show(ir)) {
+                match proposed.and_then(|ir| self.show(ir, policy.clone())) {
                     Ok((surface, nodes)) => {
                         self.proposing.said = Some(Said::Proposed(intent));
                         self.proposing.shown = true;
@@ -257,10 +293,11 @@ impl Page<'_> {
                                or cancel it";
                     return self.refused(why.to_owned());
                 }
-                let started = self
-                    .proposing
-                    .claude
-                    .start(id, intent, app, caps, current, policy);
+                let job = Job::Propose(Box::new(current));
+                let started =
+                    self.proposing
+                        .claude
+                        .start(id, intent, app, caps, job, policy, author.clone());
                 match started {
                     Ok(pending) => {
                         self.proposing.pending = Some(pending);

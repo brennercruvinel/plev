@@ -4,7 +4,10 @@
 //! every visual value is a token: the widgets read the theme, and what the
 //! host draws itself (a container's fill, a text run, a dialog's title)
 //! reads the field the IR token names. a prop a widget does not take (a
-//! typography on a text field, a color on a control) is its default.
+//! typography on a text field, a color on a control) is its default. a
+//! stat reads its `typography` as the size of its value (`StatSize`),
+//! and a badge its `background` as the intent it is filled with (the
+//! filled shape instead of the glass tag): the tokens `emphasize` moves.
 //!
 //! an image draws the picture the app holds for its bound `source`
 //! (`Frames`), fitted inside its shell and never scaled up; without one,
@@ -82,7 +85,21 @@ fn text_style(node: &Node, theme: &Theme) -> TextStyle {
 
 fn stat(node: &Node, shown: &Snapshot) -> Stat {
     let value = node.value("value", shown).map(text_of).unwrap_or_default();
-    Stat::new(value, node.label.clone().unwrap_or_default())
+    let stat = Stat::new(value, node.label.clone().unwrap_or_default());
+    match node.props.typography {
+        Some(t) => stat.size(token::stat_size(t)),
+        None => stat,
+    }
+}
+
+/// a badge: the glass tag, or filled with the intent its `background`
+/// names.
+fn badge(node: &Node, shown: &Snapshot) -> Badge {
+    let text = shown_text(node, shown);
+    match node.props.background.and_then(token::badge_intent) {
+        Some(intent) => Badge::count(text).intent(intent),
+        None => Badge::tag(text),
+    }
 }
 
 /// a dialog's padding, its title's style and the band above and below
@@ -135,7 +152,7 @@ pub(crate) fn leaf(
             style: text_style(node, theme),
             max_width: None,
         }),
-        Some(Component::Badge) => fixed(Badge::tag(shown_text(node, shown)).preferred_size(theme)),
+        Some(Component::Badge) => fixed(badge(node, shown).preferred_size(theme)),
         Some(Component::Stat) => fixed(stat(node, shown).preferred_size(theme)),
         Some(Component::TextField) => fill(TextField::height(theme)),
         Some(Component::Slider) => fill(slider_h(theme)),
@@ -301,7 +318,7 @@ pub(crate) fn draw(
                 color,
             );
         }
-        (Some(Component::Badge), _) => Badge::tag(shown_text(node, shown)).render(c, rect, theme),
+        (Some(Component::Badge), _) => badge(node, shown).render(c, rect, theme),
         (Some(Component::Stat), _) => stat(node, shown).render(c, rect, theme),
         (Some(Component::Separator), _) => {
             let dir = if rect.w < rect.h {

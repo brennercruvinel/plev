@@ -219,7 +219,9 @@ fn the_prompt_carries_the_schema_the_registry_and_the_ids_to_keep() {
 /// proposal that passed every rule put the task last and showed the
 /// app's controls again): what the intent asks to do first and its
 /// context after; a label on every control, with its unit; each control
-/// once, only what the intent needs.
+/// once, only what the intent needs; and (its second round, where the
+/// model dropped each cut's frame) reviewing items shows what each is,
+/// its picture included, whatever the intent leaves out.
 #[test]
 fn the_prompt_says_how_the_surface_reads_before_the_rules() {
     let intent = "cut the silences of this video, then I want to review the cuts";
@@ -246,6 +248,10 @@ fn the_prompt_says_how_the_surface_reads_before_the_rules() {
             "at most two decimals",
             "each control once, and only what the intent needs",
             "a second control for an action already bound, or a state shown twice",
+            "to review items is to see what each item is",
+            "its picture when the app has one (a frame ref of the item)",
+            "its numbers with their names, and its state",
+            "\"only what the intent needs\" never takes these away",
         ] {
             assert!(section.contains(said), "{said:?} in {section}");
         }

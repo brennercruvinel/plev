@@ -18,11 +18,13 @@
 //! - **list** ("items", "list", "itens", "lista"): for each list of the
 //!   app (a `List` or `Set` state whose values are the keys of its node's
 //!   children of one kind, all of them), a `list` that repeats over it;
-//!   each item a row of what every item declares alike: an `image` per
-//!   frame ref (a text naming a media node and an instant), a `text` per
-//!   other text or number state, a `checkbox` per bool with an action of
-//!   no parameter that reads only it, a `button` per other action of no
-//!   parameter (`list.rs`).
+//!   each item a row of what every item declares alike, by sense: what
+//!   the item is (an `image` per frame ref, a `text` per other text, a
+//!   `badge` per decision), its numbers (a small `stat` each, named by
+//!   its key), its actions (a `checkbox` per bool with an action of no
+//!   parameter that reads only it, a `button` per other action of no
+//!   parameter); each sense of two nodes or more is a group of its own
+//!   (`list.rs`, `row.rs`).
 //! - **media** ("video", "image", "frame", "vídeo", "imagem", "quadro"):
 //!   for each media or image node of the app with a frame ref state, an
 //!   `image` bound to it: the first view (the first such state), or the
@@ -47,8 +49,8 @@ use std::collections::BTreeSet;
 
 use sem::{Node, Role};
 use uir::{
-    Align, Axis, Component, ControlSize, Elevation, Ir, IrNode, Layout, Props, Repeat, Size,
-    SizeToken, SpacingToken, Surface,
+    Align, Axis, Component, Elevation, Ir, IrNode, Layout, Props, Size, SizeToken, SpacingToken,
+    Surface,
 };
 
 use crate::error::ProposeError;
@@ -203,7 +205,7 @@ fn shown(parts: &Parts, current: &IrNode) -> Chosen {
     }
 }
 
-fn stack(axis: Axis, gap: SpacingToken, align: Option<Align>) -> Option<Layout> {
+pub(crate) fn stack(axis: Axis, gap: SpacingToken, align: Option<Align>) -> Option<Layout> {
     Some(Layout::Stack {
         axis,
         gap: Some(gap),
@@ -222,14 +224,14 @@ fn named(text: &str, or: &str, max: usize) -> String {
     clip(t, max)
 }
 
-struct Build<'a> {
-    namer: Namer,
-    max: usize,
+pub(crate) struct Build<'a> {
+    pub namer: Namer,
+    pub max: usize,
     add: Option<&'a str>,
 }
 
 impl Build<'_> {
-    fn bound(&mut self, mut node: IrNode, name: &str, label: String) -> IrNode {
+    pub(crate) fn bound(&mut self, mut node: IrNode, name: &str, label: String) -> IrNode {
         let (id, label) = match anchor(&node) {
             Some(a) => self.namer.bound(&a, name, label),
             None => (node.sem.clone(), label),
@@ -374,69 +376,6 @@ impl Build<'_> {
         };
         let name = format!("{}_views", m.node);
         self.container(&name, None, Some(grid), images)
-    }
-
-    /// a list over `l.each`: one row per item, its template bound to the
-    /// item by `[{item}]`; the template root is named by its item.
-    fn list(&mut self, l: &List) -> IrNode {
-        let mut row = Vec::new();
-        for at in &l.frames {
-            let mut image = IrNode::new(l.item.clone());
-            image.component = Some(Component::Image);
-            image.props.control_size = Some(ControlSize::Xl);
-            image.bind.state.insert("source".to_owned(), at.clone());
-            let name = format!("{}.{}", l.item, at.key);
-            row.push(self.bound(image, &name, at.key.as_str().to_owned()));
-        }
-        for at in &l.texts {
-            let mut text = IrNode::new(l.item.clone());
-            text.component = Some(Component::Text);
-            text.size = Size {
-                flex: Some(1),
-                ..Size::default()
-            };
-            text.bind.state.insert("text".to_owned(), at.clone());
-            let name = format!("{}.{}", l.item, at.key);
-            text.sem = self
-                .namer
-                .bound(&Anchor::State(at.clone()), &name, String::new())
-                .0;
-            row.push(text);
-        }
-        for (at, flip) in &l.checks {
-            let mut check = IrNode::new(l.item.clone());
-            check.component = Some(Component::Checkbox);
-            check.bind.state.insert("checked".to_owned(), at.clone());
-            check.bind.actions.insert("toggle".to_owned(), flip.clone());
-            let name = format!("{}.{}", l.item, at.key);
-            row.push(self.bound(check, &name, at.key.as_str().to_owned()));
-        }
-        for (cap, label) in &l.buttons {
-            let mut button = IrNode::new(l.item.clone());
-            button.component = Some(Component::Button);
-            button
-                .bind
-                .actions
-                .insert("activate".to_owned(), cap.clone());
-            let name = format!("{}.{}", l.item, cap.action);
-            row.push(self.bound(button, &name, label.clone()));
-        }
-        let mut held = BTreeSet::new();
-        for n in &row {
-            held.extend(anchors(n));
-        }
-        let mut item = IrNode::new(self.namer.template(&l.each, &held, l.item.as_str()));
-        item.layout = stack(Axis::Horizontal, SpacingToken::Sm, Some(Align::Center));
-        item.children = row;
-        let mut list = IrNode::new(l.each.node.clone());
-        list.component = Some(Component::List);
-        list.layout = stack(Axis::Vertical, SpacingToken::Xs, None);
-        list.repeat = Some(Box::new(Repeat {
-            each: l.each.clone(),
-            item,
-        }));
-        let name = format!("{}.{}", l.each.node, l.each.key);
-        self.bound(list, &name, l.each.key.as_str().to_owned())
     }
 
     /// `nodes` as one node: itself when it is one, a column otherwise.

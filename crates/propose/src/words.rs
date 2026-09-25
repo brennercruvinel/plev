@@ -165,6 +165,12 @@ fn is(word: &str, list: &[&str]) -> bool {
     list.iter().any(|w| fold(w) == word)
 }
 
+/// true when the grammar skips `word` (folded): a filler of either
+/// language, or a number word of "one column".
+pub(crate) fn is_filler(word: &str) -> bool {
+    FILLER.split_whitespace().any(|f| fold(f) == word) || is(word, ONE)
+}
+
 /// an intent read by the grammar.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(crate) struct Reading {
@@ -221,7 +227,7 @@ pub(crate) fn read(intent: &str) -> Reading {
             r.form = Some(Form::Compact);
         } else if is(&word, EVERYTHING) {
             r.everything = true;
-        } else if !FILLER.split_whitespace().any(|f| fold(f) == word) && !is(&word, ONE) {
+        } else if !is_filler(&word) {
             r.words.push((written.to_owned(), word.clone()));
         }
         before = word;

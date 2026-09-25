@@ -3,12 +3,20 @@
 //! verified; the errors go back to the model with its reply, a bounded
 //! number of times; an IR the verifier refuses is never returned.
 //!
+//! with a surface shown, the same model is a transformer (task-70 phase
+//! 2): it reads the prompt of a change (`ops`) and answers
+//! `{"ops": [...]}`; the operations are applied in order over the surface,
+//! each verified, and the one refused goes back with why, the same
+//! bounded number of times.
+//!
 //! no model lives here. a provider (a local model or an API) implements
 //! `Model` in phase 3b; the tests use models that answer from a script.
 
 use uir::{Ir, IrError, parse, verify};
 
+use crate::adapt::{Adapt, Adaptation, Transformer, apply_all};
 use crate::error::ProposeError;
+use crate::ops;
 use crate::prompt::{prompt, repair};
 use crate::{Ask, Proposer};
 
@@ -115,5 +123,43 @@ impl<M: Model> Proposer for Llm<M> {
             attempts: self.attempts,
             errors: last,
         })
+    }
+}
+
+impl<M: Model> Transformer for Llm<M> {
+    /// asks the model for operations, and while one of them is refused
+    /// over the surface (or the answer is no list of operations), asks
+    /// again with the answer and why; `Unchanged` with the last reasons
+    /// after `attempts` answers. what it returns applied over the surface
+    /// once; `transform_verified` applies it again, as for any
+    /// transformer.
+    fn transform(&mut self, ask: &Adapt<'_>) -> Result<Adaptation, ProposeError> {
+        let base = ops::prompt(ask);
+        let mut asked = base.clone();
+        let mut last = Vec::new();
+        for attempt in 1..=self.attempts {
+            let reply = self
+                .model
+                .complete(&asked)
+                .map_err(|e| ProposeError::Model(e.0))?;
+            let checked =
+                ops::read(&reply).map_err(|why| vec![why]).and_then(|list| {
+                    match apply_all(&list, ask) {
+                        Ok(_) => Ok(list),
+                        Err((at, e)) => Err(list
+                            .get(at)
+                            .map(|op| ops::reasons(at + 1, op, &e))
+                            .unwrap_or_default()),
+                    }
+                });
+            match checked {
+                Ok(list) => return Ok(Adaptation::Ops(list)),
+                Err(why) => {
+                    asked = ops::repair(&base, attempt, &reply, &why);
+                    last = why;
+                }
+            }
+        }
+        Err(ops::unchanged(self.attempts, last))
     }
 }

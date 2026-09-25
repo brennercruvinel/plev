@@ -166,9 +166,20 @@ impl Namer {
         name: &str,
         label: Option<String>,
     ) -> (SemId, Option<String>) {
+        self.container_where(held, name, label, |_| true)
+    }
+
+    /// `container`, among the current containers whose id `fits`.
+    fn container_where(
+        &mut self,
+        held: &BTreeSet<Anchor>,
+        name: &str,
+        label: Option<String>,
+        fits: impl Fn(&SemId) -> bool,
+    ) -> (SemId, Option<String>) {
         let mut best: Option<((f32, f32), usize)> = None;
         for (at, c) in self.containers.iter().enumerate() {
-            if self.given.contains(&c.id) {
+            if self.given.contains(&c.id) || !fits(&c.id) {
                 continue;
             }
             let shared = c.anchors.intersection(held).count() as f32;
@@ -187,6 +198,14 @@ impl Namer {
             }
             None => (self.derive(name), label),
         }
+    }
+
+    /// the id of a container inside a template holding `held`: a current
+    /// container of a template (its id carries the item) that held at
+    /// least half of it, or one named `name`, which carries the item.
+    pub fn in_template(&mut self, held: &BTreeSet<Anchor>, name: &str) -> SemId {
+        let templated = |id: &SemId| id.as_str().contains("[{item}]");
+        self.container_where(held, name, None, templated).0
     }
 
     /// the id of the template root of a list over `each` holding `held`:

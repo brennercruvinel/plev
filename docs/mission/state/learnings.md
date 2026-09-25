@@ -12,6 +12,16 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-70 fase 2
+
+- **"nunca chame o claude" no briefing não basta:** o agente não chamou,
+  mas o regress que ele rodou chamou, porque o proponente escolhe o
+  Claude sozinho quando ele existe no PATH. regra: todo comando de agente
+  e do orquestrador fora da prova real roda com `PLEV_CLAUDE` apontando
+  para um stub que sai com erro (o `ClaudeCli::exists` só olha se o
+  arquivo existe, `crates/claude-model/src/lib.rs:159`, então a tela e as
+  baselines ficam iguais). fonte: handoff da fase 2, incidente.
+
 ### 2026-09-24, task-70 fase 1
 
 - **um gráfico que passa no verifier pode mentir:** o `Chart` aceita

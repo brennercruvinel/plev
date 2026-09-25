@@ -8,11 +8,13 @@
 //!
 //! each item shows and accepts what every item declares alike, the way
 //! the verifier checks a template: a text that is a frame ref (a media
-//! node and an instant, `parts::is_frame_ref`) is an image; any other
-//! `text`, `int` or `num` state is a text; a bool with an action of no
-//! parameter that reads that bool and nothing else is a checkbox bound to
-//! both; every other action of no parameter the author may ask for, and
-//! not destructive, is a button.
+//! node and an instant, `parts::is_frame_ref`) is an image; a text that
+//! two actions of no parameter or more read and nothing else is a
+//! decision, a state of few values (one per action): a badge; any other
+//! text is a text; an `int` or a `num` is a number, a stat named by its
+//! key; a bool with an action of no parameter that reads that bool and
+//! nothing else is a checkbox bound to both; every other action of no
+//! parameter the author may ask for, and not destructive, is a button.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -34,6 +36,10 @@ pub(crate) struct List {
     pub frames: Vec<StateRef>,
     /// what each item shows as text.
     pub texts: Vec<StateRef>,
+    /// each decision of an item: a text its actions set among few values.
+    pub states: Vec<StateRef>,
+    /// each number of an item, shown with its key.
+    pub numbers: Vec<StateRef>,
     /// each bool an item flips, and the action that flips it.
     pub checks: Vec<(StateRef, CapabilityRef)>,
     /// every other action an item takes with no parameter, with its label.
@@ -74,6 +80,26 @@ fn last_key(id: &str) -> Option<(&str, String)> {
         }
     }
     Some((id.get(..start)?, key))
+}
+
+/// true when the `List` or `Set` at `at` holds the keys of its node's
+/// children of one kind, all of them: a list of items, whose values are
+/// ids, not measures.
+pub(crate) fn is_items(app: &Snapshot, at: &StateRef) -> bool {
+    let values: BTreeSet<&str> = match app.value(at) {
+        Some(Value::List(v)) => v.iter().map(String::as_str).collect(),
+        Some(Value::Set(s)) => s.iter().map(String::as_str).collect(),
+        _ => return false,
+    };
+    let mut kinds: BTreeMap<&str, BTreeSet<String>> = BTreeMap::new();
+    for child in app.children(&at.node) {
+        if let Some((prefix, key)) = last_key(child.id.as_str()) {
+            kinds.entry(prefix).or_default().insert(key);
+        }
+    }
+    kinds
+        .values()
+        .any(|keys| keys.len() == values.len() && keys.iter().all(|k| values.contains(k.as_str())))
 }
 
 /// every list of `app` whose items show or accept something; an action
@@ -120,7 +146,10 @@ pub(crate) fn lists(
                     .filter_map(|v| children.get(*v).copied())
                     .collect();
                 let list = List::of(each.clone(), item, &members, caps, usable, frame);
-                let shows = !list.frames.is_empty() || !list.texts.is_empty();
+                let shows = !list.frames.is_empty()
+                    || !list.texts.is_empty()
+                    || !list.states.is_empty()
+                    || !list.numbers.is_empty();
                 if shows || !list.checks.is_empty() || !list.buttons.is_empty() {
                     out.push(list);
                 }
@@ -192,10 +221,24 @@ impl List {
                     })
             })
         };
+        // a text that two actions or more of every item read, and nothing
+        // else: they set it, among few values
+        let decided = |key: &sem::StateKey| {
+            members.iter().all(|m| {
+                let own = [StateRef::new(m.id.clone(), key.clone())];
+                let setters = bare.iter().filter(|a| {
+                    let decl = m.actions.iter().find(|b| b.name == a.name);
+                    decl.is_some_and(|b| b.reads == own)
+                });
+                setters.count() >= 2
+            })
+        };
         let mut list = List {
             words: split(each.key.as_str()).map(fold).collect(),
             frames: Vec::new(),
             texts: Vec::new(),
+            states: Vec::new(),
+            numbers: Vec::new(),
             checks: Vec::new(),
             buttons: Vec::new(),
             each,
@@ -221,7 +264,9 @@ impl List {
             }
             match kind {
                 ValueKind::Text if frame(value) => list.frames.push(slot(key)),
-                ValueKind::Text | ValueKind::Int | ValueKind::Num => list.texts.push(slot(key)),
+                ValueKind::Text if decided(key) => list.states.push(slot(key)),
+                ValueKind::Text => list.texts.push(slot(key)),
+                ValueKind::Int | ValueKind::Num => list.numbers.push(slot(key)),
                 ValueKind::Bool => {
                     if let Some(a) = flip(key, &flips) {
                         flips.insert(a.name.clone());

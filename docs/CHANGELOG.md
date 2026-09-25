@@ -9,6 +9,18 @@ status: living
 
 ## unreleased
 
+- a change asked in words (2026-09-24, task-70 phase 2): with a
+  generated surface open, the same propose of the row reads the intent as
+  a change of it first. "too much information", "I can't compare these",
+  "bigger numbers" and "undo" (and "tem informação demais", "não consigo
+  comparar", "números maiores", "desfazer") become the operations of
+  phase 1, by the rules at once or by the Claude off the app's thread,
+  each verified again and applied through the app's dispatcher as
+  whoever asked; an agent asks through the port the same way. the review
+  by the rules now shows each cut's frame, its numbers named and its
+  decision as a badge, and the prompt tells the model that reviewing
+  items means seeing what each one is.
+
 - a generated surface changes by small steps (2026-09-24, task-70 phase
   1): nine operations change a surface that is open without building it
   again: hide, show, group, reorder, emphasize, density, restyle, swap a
