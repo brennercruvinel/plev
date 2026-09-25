@@ -14,6 +14,13 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-74 fase 5 integrada
+
+- emoji colorido: Noto Color Emoji em bitmap, 640 glifos, pelo atlas de
+  cor; pixel medido no audit. faltam IME (pede o brenner) e um milhão de
+  linhas.
+- o agente (Opus) gastou uns 235 mil tokens.
+
 ### task-75 fase 2d integrada
 
 - listas e tabelas recebem o foco uma linha por vez; o teclado chega a 29

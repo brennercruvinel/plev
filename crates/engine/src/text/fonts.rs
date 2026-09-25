@@ -33,6 +33,13 @@
 //! on Regular and 600 on Bold). Load order therefore decides the unified
 //! Han: SC loads before JP (the `en-US` choice cosmic-text makes too), and
 //! KR carries no Han at all.
+//!
+//! Emoji come from a Noto Color Emoji subset in its CBDT build (PNG
+//! bitmaps, drawn by the color path of the glyph atlas), loaded last. It
+//! needs no place in the order: cosmic-text sorts a face whose PostScript
+//! name holds "Emoji" before every other in that last step
+//! (`FontMatchKey::not_emoji`), and its cmap holds nothing another
+//! embedded face has but the heart (Inter's) and the joiner.
 
 use std::cell::Cell;
 use std::sync::Arc;
@@ -62,6 +69,10 @@ const NOTO: [&[u8]; 12] = [
     include_bytes!("../../assets/fonts/NotoSansKR-Regular.otf"),
     include_bytes!("../../assets/fonts/NotoSansKR-Bold.otf"),
 ];
+
+/// Noto Color Emoji, a CBDT subset (SIL OFL,
+/// assets/fonts/LICENSE-NotoColorEmoji-OFL.txt), made by `script/font-subset`.
+const NOTO_EMOJI: &[u8] = include_bytes!("../../assets/fonts/NotoColorEmoji-CBDT.ttf");
 
 /// The faces a font system holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -156,10 +167,11 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
 
     // The Noto faces load last, after every Latin face: a glyph the Latin
     // faces carry never reaches them. Borrowed from the binary instead of
-    // copied (5 MB, once per font system).
+    // copied (6.6 MB, once per font system). The emoji face goes last.
     for face in NOTO {
         db.load_font_source(Source::Binary(Arc::new(face)));
     }
+    db.load_font_source(Source::Binary(Arc::new(NOTO_EMOJI)));
 
     // `font_family: None` (the engine default) shapes as `Family::SansSerif`.
     // cosmic-text points that at "Open Sans", which is neither embedded nor

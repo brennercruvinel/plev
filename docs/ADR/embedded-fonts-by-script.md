@@ -1,7 +1,7 @@
 ---
 type: adr
 status: proposed
-tags: [fonts, text, noto, cosmic-text, fontdb, fallback, subset, wasm, mobile, determinism, cjk, arabic, hebrew, devanagari, generative-runtime]
+tags: [fonts, text, noto, cosmic-text, fontdb, fallback, subset, wasm, mobile, determinism, cjk, arabic, hebrew, devanagari, emoji, cbdt, glyph-atlas, generative-runtime]
 date: 2026-09-25
 ---
 
@@ -24,8 +24,8 @@ machine) or both behind a setting.
 
 brenner, 2026-09-25: "Noto, amigo. Noto, sans". the engine embeds Noto
 Sans for six scripts, Regular and Bold: Arabic, Hebrew, Devanagari,
-Simplified Chinese (SC), Japanese (JP) and Korean (KR). emoji is not part
-of it (see below).
+Simplified Chinese (SC), Japanese (JP) and Korean (KR). emoji came in
+phase 5, from Noto Color Emoji (see below).
 
 ### the subsets
 
@@ -135,15 +135,60 @@ desktop needed: one font-system constructor in `text/fonts.rs` shared by
 render. nothing outside `src/text` changed; on wasm, android and ios the
 switch has nothing to switch.
 
-### what stays for emoji
+### emoji (phase 5)
 
-task-74 phase 5. an emoji needs two things: a face with emoji and the
-color path in the glyph atlas (COLR, CBDT or sbix; `rasterize_and_upload`
-returns `None` for anything that is not a mask today). a color emoji
-font embedded before that path exists reserves the advance and draws
-nothing, the hole the phase 1 probe measured on the desktop. the audit's
-emoji rows are still tofu on the embedded path (four for the ZWJ family,
-two for the thumb with skin tone) and are not held to zero.
+task-74 phase 5 added the emoji, which needed two things: a face with
+emoji and a color path in the glyph atlas.
+
+the face is Noto Color Emoji v2.051 in its CBDT/CBLC build (PNG bitmaps
+in one 109 ppem strike, from the `v2.051` tag of googlefonts/noto-emoji,
+sha256 in the script). the current Google Fonts build is COLR v1, which
+swash 0.2.8 (the rasterizer in Cargo.lock) does not draw; it draws CBDT,
+sbix and COLR v0. `script/font-subset` writes a subset of a fixed set
+written in the script: the Emoticons block (80), the face emoji of the
+Supplemental Symbols and Pictographs block (52), 197 common symbols
+(hearts, marks, objects, nature, food, animals), the five skin tones
+alone and on 45 hands and people, 15 family and 30 profession ZWJ
+sequences. 369 code points and 270 sequences, 640 glyphs, 1,421,996
+bytes (1,336,545 with gzip -9; PNG does not compress further) out of a
+10,673,480 byte source. the kept GSUB rules are exactly those sequences
+(no layout closure). the license goes to
+`LICENSE-NotoColorEmoji-OFL.txt` (the source's copyright and trademark
+records, then its OFL 1.1 as shipped). embedded fonts after: 8,357,960
+bytes in 22 files.
+
+no family name reaches the face and no load order matters: cosmic-text
+sorts a face whose PostScript name holds "Emoji" before every other in
+its last fallback step (`FontMatchKey::not_emoji`), in any weight. so
+the subset's cmap must not hold what another embedded face has, or that
+code point would move to the emoji face; the script fails if it does,
+except for U+200D (a shaper hides a joiner, so it never falls back) and
+U+2764, the heart, which Inter carries and Inclusive Sans does not. a
+heart in Inclusive Sans text is the emoji; in Inter text it is Inter's
+text heart, VS16 or not: cosmic-text 0.18 does not read the variation
+selector to choose a face. the ZWJ sequences and the tones are ligatures
+of the face's `ccmp`, which the fallback shapes over the whole word, so
+a family is one glyph, not four tofu.
+
+the color path keeps the atlas one `R8Unorm` texture. a color glyph's
+RGBA (straight alpha, sRGB, as swash decodes the PNG and resizes it to
+the physical size with a Mitchell filter) sits in the atlas as four
+texels per pixel, from an x that is a multiple of four, with one whole
+empty pixel of gutter on each side. its quad carries `u` negated;
+`text.wgsl` reads the four texels with `textureLoad` (the quad lands on
+whole physical pixels, so each fragment reads its own pixel) and draws
+the glyph's own color, with only the text color's alpha as opacity. a
+mask glyph's upload, slot, sampling and shader math did not change. the
+alternatives: a second RGBA texture needs a second binding in the text
+pipeline's layout; an RGBA atlas for all text quadruples its memory (64
+MB at 4096 squared) for a handful of emoji.
+
+the audit holds the emoji rows to zero `.notdef` on the embedded path in
+both families and every UI weight, and measures the pixel: every emoji
+row the emoji face draws leaves at least 150 pixels the white specimen
+ink cannot make (a hue, or darker than the clear), and every other row
+none. on the desktop the same color path draws the system's emoji face
+(Apple Color Emoji, sbix, on macOS), which before drew nothing.
 
 ## consequences
 
@@ -151,7 +196,11 @@ two for the thumb with skin tone) and are not held to zero.
   and Korean; the widths the layout measures are the real ones (the
   Chinese line measured 49.4 px of tofu, now 80.0 px of ideographs).
 - about 5.2 MB more in every binary and wasm; every further weight of a
-  CJK face costs about as much as all the Latin faces together.
+  CJK face costs about as much as all the Latin faces together. the
+  emoji subset adds 1.4 MB more.
+- an emoji outside the subset is tofu on wasm and mobile; widening the
+  set is an edit to the lists in `script/font-subset` and a rerun, about
+  2.2 KB per emoji.
 - the coverage is a set, not the script: a hanzi outside GB2312 level 1
   or a kanji outside JIS level 1 falls to the other CJK face if it has it
   and to tofu if not; Korean compatibility jamo (ㅋ, U+3131 to U+318E) are

@@ -41,11 +41,31 @@ fn srgb_to_linear(c: vec3<f32>) -> vec3<f32> {
     return select(hi, lo, c <= vec3<f32>(0.04045));
 }
 
+// A color glyph (an emoji bitmap) keeps its RGBA in the same R8 atlas, four
+// texels per pixel side by side (straight alpha, sRGB), from an x that is a
+// multiple of 4; its quad carries u negated. The quad lands on whole
+// physical pixels and the bitmap comes at the physical size, so each
+// fragment reads its own pixel, unfiltered. Of the text color only the
+// alpha (opacity) applies, never the rgb.
+fn color_glyph(uv: vec2<f32>, opacity: f32) -> vec4<f32> {
+    let x = i32(floor(-uv.x / 4.0)) * 4;
+    let y = i32(floor(uv.y));
+    let r = textureLoad(atlas_texture, vec2<i32>(x, y), 0).r;
+    let g = textureLoad(atlas_texture, vec2<i32>(x + 1, y), 0).r;
+    let b = textureLoad(atlas_texture, vec2<i32>(x + 2, y), 0).r;
+    let a = textureLoad(atlas_texture, vec2<i32>(x + 3, y), 0).r * opacity;
+    return vec4<f32>(srgb_to_linear(vec3<f32>(r, g, b)) * a, a);
+}
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let dims = vec2<f32>(textureDimensions(atlas_texture));
+    // Sampled before the branch: textureSample needs uniform control flow.
     let alpha = textureSample(atlas_texture, atlas_sampler, in.uv / dims).r;
-    // Linearize, then premultiplied alpha output.
+    if in.uv.x < 0.0 {
+        return color_glyph(in.uv, in.color.a);
+    }
+    // A coverage mask: linearize, then premultiplied alpha output.
     let a = in.color.a * alpha;
     let rgb = srgb_to_linear(in.color.rgb);
     return vec4<f32>(rgb * a, a);

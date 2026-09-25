@@ -8,7 +8,7 @@
 
 use cosmic_text::{Attrs, Buffer, Family, Metrics, Shaping, Weight};
 
-use super::atlas::{GLYPH_PADDING, glyph_uv_rect};
+use super::atlas::{COLOR_TEXELS, GLYPH_PADDING, bitmap_x, glyph_uv_rect, slot_width};
 use super::backend::TextStyle;
 use super::cache::GlyphEntry;
 
@@ -185,6 +185,7 @@ fn emitted_uvs_are_texels_so_they_survive_an_atlas_grow() {
         height: 11,
         left: 0.0,
         top: 0.0,
+        color: false,
     };
     let [u0, v0, u1, v1] = glyph_uv_rect(&entry);
 
@@ -204,6 +205,64 @@ fn emitted_uvs_are_texels_so_they_survive_an_atlas_grow() {
     // resolves correctly against whichever atlas is bound.
     let normalized = |size: f32| (u0 / size, v0 / size);
     assert_ne!(normalized(512.0), normalized(1024.0));
+}
+
+/// A mask slot is what it always was: the bitmap one texel in from the
+/// slot, one texel of gutter on each side.
+#[test]
+fn mask_slots_keep_their_one_texel_gutter() {
+    for slot_x in [0u32, 1, 40, 4093] {
+        assert_eq!(bitmap_x(slot_x, false), slot_x + GLYPH_PADDING);
+    }
+    assert_eq!(slot_width(7, false), 7 + GLYPH_PADDING * 2);
+}
+
+/// A color glyph keeps its RGBA as `COLOR_TEXELS` texels per pixel. The
+/// shader finds a pixel's texels by rounding down to a multiple of
+/// `COLOR_TEXELS`, so the bitmap must start on one wherever the slot
+/// lands, and a whole empty pixel must sit on each side of it.
+#[test]
+fn color_slots_start_on_a_pixel_boundary_with_a_pixel_of_gutter() {
+    assert_eq!(COLOR_TEXELS, 4);
+    for slot_x in 0u32..32 {
+        for gw in 1u32..6 {
+            let x = bitmap_x(slot_x, true);
+            let row = gw * COLOR_TEXELS;
+            assert_eq!(x % COLOR_TEXELS, 0, "slot {slot_x}: bitmap at {x}");
+            assert!(x - slot_x >= COLOR_TEXELS, "slot {slot_x}: left gutter");
+            let right = slot_x + slot_width(gw, true) - (x + row);
+            assert!(
+                right >= COLOR_TEXELS,
+                "slot {slot_x}, {gw} px: right gutter {right}"
+            );
+        }
+    }
+}
+
+/// A color glyph's quad spans its RGBA texels and carries `u` negated,
+/// the mark `text.wgsl` reads it by; a mask's `u` is never negative.
+#[test]
+fn color_uvs_are_negative_and_span_four_texels_per_pixel() {
+    let entry = GlyphEntry {
+        alloc_id: None,
+        atlas_x: 40,
+        atlas_y: 64,
+        width: 7,
+        height: 11,
+        left: 0.0,
+        top: 0.0,
+        color: true,
+    };
+    let [u0, v0, u1, v1] = glyph_uv_rect(&entry);
+    assert_eq!([u0, v0, u1, v1], [-40.0, 64.0, -68.0, 75.0]);
+    // What the shader does at the centre of the quad's third pixel.
+    let u = -(u0 + (u1 - u0) * 2.5 / 7.0);
+    assert_eq!((u / 4.0).floor() * 4.0, 40.0 + 2.0 * 4.0);
+    let mask = GlyphEntry {
+        color: false,
+        ..entry
+    };
+    assert!(glyph_uv_rect(&mask).iter().all(|c| *c >= 0.0));
 }
 
 /// The glyph quad lands on whole physical pixels: both terms of `gx` are
