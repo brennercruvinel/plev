@@ -92,6 +92,8 @@ pub struct App {
     /// The cursor in the main window, logical pixels (the page's own
     /// window keeps its own).
     cursor: (f32, f32),
+    /// The first finger on a touch screen (`touch.rs`).
+    finger: touch::Finger,
     modifiers: ModifiersState,
     #[cfg(target_arch = "wasm32")]
     proxy: Option<EventLoopProxy<UserEvent>>,
@@ -169,6 +171,7 @@ impl App {
             clock: FrameClock::new(),
             caught_up: false,
             cursor: (0.0, 0.0),
+            finger: touch::Finger::default(),
             modifiers: ModifiersState::empty(),
             #[cfg(target_arch = "wasm32")]
             proxy: None,
@@ -357,6 +360,10 @@ impl ApplicationHandler<UserEvent> for App {
     /// the app back) the wake: new frames, the answers that arrived asleep.
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.main.is_some() {
+            #[cfg(target_os = "android")]
+            if self.windows.has_suspended() {
+                self.resume(event_loop);
+            }
             self.wake();
             // a link that came asleep waited in its source (`links.rs`)
             self.links_arrived();
@@ -546,6 +553,7 @@ mod events;
 mod pace;
 /// Asleep, covered, awake again (task-76 item 7).
 mod sleep;
+mod touch;
 
 /// The app's URL scheme: a link followed as a link, never as the person
 /// (task-76 item 6).

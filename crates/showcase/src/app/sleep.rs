@@ -27,6 +27,13 @@ impl App {
     /// The app falls asleep: no window draws and nothing settles until
     /// `wake`.
     pub(super) fn sleep(&mut self) {
+        // android takes the window away while asleep: each host drops its
+        // surface and waits for `resume`. the old surface, configured
+        // again on the way back from the home screen, failed wgpu's
+        // validation and killed the render thread (task-18)
+        #[cfg(target_os = "android")]
+        self.windows.suspend();
+        #[cfg(not(target_os = "android"))]
         self.windows.sleep();
         self.capture_follows();
     }
@@ -39,6 +46,25 @@ impl App {
             return;
         }
         self.windows.wake();
+        self.capture_follows();
+        self.catch_up();
+    }
+
+    /// Back on android: each suspended host gets the new window and a
+    /// surface on the kept device, the main window's id follows, and the
+    /// shell catches up (`Windows::resume` wakes the windows).
+    #[cfg(target_os = "android")]
+    pub(super) fn resume(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        let attrs = || winit::window::WindowAttributes::default().with_title(super::TITLE);
+        match self.windows.resume(event_loop, attrs) {
+            Ok(ids) => {
+                if let Some(&id) = ids.first() {
+                    self.main = Some(id);
+                    self.viewport_changed(id);
+                }
+            }
+            Err(e) => log::error!("resume: {e}"),
+        }
         self.capture_follows();
         self.catch_up();
     }

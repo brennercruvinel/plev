@@ -14,6 +14,15 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-18 fechada pelo orquestrador, sem agente
+
+- APK no emulador Pixel 7 sem janela. testar toque e lifecycle achou dois
+  defeitos: o toque não chegava à galeria, e voltar da tela inicial matava
+  a thread de desenho (superfície velha). os dois corrigidos, com teste
+  do dedo (`app/touch.rs`). frame a 2/255 do desktop (GPU por software).
+- pendências: activity recriada pelo sistema não desenha; slider por
+  toque; toque no iOS sem teste. custo: só tokens do orquestrador.
+
 ### task-19 fechada pelo orquestrador, sem agente
 
 - o app compila, instala e abre no simulador; a janela nascia com o

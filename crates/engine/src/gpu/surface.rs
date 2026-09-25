@@ -37,47 +37,20 @@ impl GpuContext {
         log::info!("Surface dropped");
     }
 
-    /// Recreate the surface from a new window (Android resume).
+    /// Recreate the surface from a new window (Android resume), on the
+    /// instance the device came from and with the configuration it had:
+    /// the same device and the same kind of window, so the same format.
+    /// A new instance, as before, asked for a new adapter the kept device
+    /// does not belong to.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn recreate_surface(&mut self, window: Arc<Window>) {
         let size = window.inner_size();
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::PRIMARY,
-            ..Default::default()
-        });
-
-        let surface = instance.create_surface(window).unwrap();
+        let surface = self.instance.create_surface(window).unwrap();
 
         let width = size.width.max(1);
         let height = size.height.max(1);
         self.surface_config.width = width;
         self.surface_config.height = height;
-
-        let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
-            power_preference: wgpu::PowerPreference::HighPerformance,
-            compatible_surface: Some(&surface),
-            force_fallback_adapter: false,
-        }))
-        .expect("Failed to find adapter on surface recreate");
-
-        let caps = surface.get_capabilities(&adapter);
-        let format = caps
-            .formats
-            .iter()
-            .find(|f| f.is_srgb())
-            .copied()
-            .unwrap_or(caps.formats[0]);
-        self.surface_config.format = format;
-        // Mirror GpuContext::new_with_config: render into an sRGB view even
-        // when the surface format itself can't be sRGB.
-        let render_format = format.add_srgb_suffix();
-        self.surface_config.view_formats = if render_format != format {
-            vec![render_format]
-        } else {
-            vec![]
-        };
-        self.surface_config.alpha_mode = caps.alpha_modes[0];
-
         surface.configure(&self.device, &self.surface_config);
         self.surface = Some(surface);
 

@@ -172,6 +172,9 @@ impl App {
                 }
             }
 
+            // a finger (android, iOS): a tap clicks, a drag scrolls
+            WindowEvent::Touch(touch) => self.touched(id, &touch),
+
             WindowEvent::MouseWheel { delta, .. } => {
                 let (x, y) = self.cursor_in(id);
                 let delta = match delta {
