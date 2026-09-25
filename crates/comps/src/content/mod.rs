@@ -14,7 +14,7 @@ mod tree;
 
 pub use avatar::{Avatar, AvatarSize};
 pub use card::{Card, CardListRow, CardVariant};
-pub use code_block::CodeBlock;
+pub use code_block::{CodeBlock, CodeLine, LineKind};
 pub use empty_state::EmptyState;
 pub use list::VirtualList;
 pub use panel::Panel;

@@ -145,6 +145,7 @@ fn workbench() -> Snapshot {
     b.node("diff", Role::Region, "diff")
         .state("target", "")
         .state("lines", Vec::<String>::new())
+        .state("kinds", Vec::<String>::new())
         .state("count", 0i64);
     b.node("stacks", Role::List, "stacks")
         .state("branch", "main");
@@ -249,13 +250,23 @@ fn review_these_three_commits_shows_the_three_with_their_files_and_the_diff() {
         "the lines last, to scroll"
     );
     assert_eq!(bound(root, "proposed.diff.target"), ["text=diff:target"]);
-    assert_eq!(bound(root, "proposed.diff.lines"), ["rows=diff:lines"]);
+    assert_eq!(
+        bound(root, "proposed.diff.lines"),
+        ["kinds=diff:kinds", "lines=diff:lines"],
+        "the lines and the kind of each, in one code (task-97)"
+    );
     assert_eq!(bound(root, "proposed.diff.count"), ["value=diff:count"]);
     let lines = node(root, "proposed.diff.lines");
+    assert_eq!(lines.component, Some(Component::Code));
+    assert_eq!(lines.label.as_deref(), Some("lines"));
     assert_eq!(
         lines.size.max,
         Some(SizeToken::DropdownMaxH),
         "bounded in height"
+    );
+    assert!(
+        !ids(root).iter().any(|i| i == "proposed.diff.kinds"),
+        "the kinds are the code's, never a table of their own"
     );
     let all = bindings(root);
     assert!(
@@ -264,6 +275,59 @@ fn review_these_three_commits_shows_the_three_with_their_files_and_the_diff() {
             .any(|b| b.contains("[c0]") || b.contains("changes")),
         "nothing of the fourth commit or of the working tree: {all:?}"
     );
+}
+
+/// A region's list named `lines` is a code with or without its `kinds`;
+/// a list by any other name stays a table, and `kinds` without `lines`
+/// is a list like any other.
+#[test]
+fn only_the_lines_are_a_code_and_the_kinds_go_with_them() {
+    let region = |states: &[&str]| {
+        let mut b = SnapshotBuilder::new();
+        let mut diff = b.node("diff", Role::Region, "diff");
+        diff.state("target", "");
+        for key in states {
+            diff.state(*key, vec!["x".to_owned()]);
+        }
+        b.node("stacks", Role::List, "stacks");
+        let mut c = b.node("stacks.commit[c1]", Role::ListItem, "one");
+        c.parent("stacks").state("summary", "one");
+        c.action("show_diff").reads("diff:target");
+        b.finish().expect("projects")
+    };
+    let shown = |states: &[&str]| {
+        let asking = Asking::new(region(states));
+        let ir = review(&asking, "review the commits").expect("verified");
+        let root = ir.ir().surface.root.clone();
+        nodes(&root)
+            .iter()
+            .filter(|n| n.sem.as_str().starts_with("proposed.diff."))
+            .filter(|n| n.component.is_some_and(|c| c != Component::Text))
+            .map(|n| (n.sem.to_string(), n.component, bound(&root, n.sem.as_str())))
+            .collect::<Vec<_>>()
+    };
+    let code = |binds: &[&str]| {
+        (
+            "proposed.diff.lines".to_owned(),
+            Some(Component::Code),
+            binds.iter().map(|b| (*b).to_owned()).collect::<Vec<_>>(),
+        )
+    };
+    assert_eq!(shown(&["lines"]), [code(&["lines=diff:lines"])]);
+    assert_eq!(
+        shown(&["lines", "kinds", "notes"]),
+        [
+            code(&["kinds=diff:kinds", "lines=diff:lines"]),
+            (
+                "proposed.diff.notes".to_owned(),
+                Some(Component::Table),
+                vec!["rows=diff:notes".to_owned()]
+            ),
+        ]
+    );
+    let alone = shown(&["kinds"]);
+    assert_eq!(alone.len(), 1);
+    assert_eq!(alone[0].1, Some(Component::Table), "{alone:?}");
 }
 
 #[test]

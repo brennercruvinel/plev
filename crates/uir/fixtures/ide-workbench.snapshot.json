@@ -218,6 +218,10 @@
           "kind": "int",
           "value": 0
         },
+        "kinds": {
+          "kind": "list",
+          "value": []
+        },
         "lines": {
           "kind": "list",
           "value": []

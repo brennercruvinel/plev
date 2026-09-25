@@ -3,10 +3,23 @@
 //! the theme stops the build here, not at a surface on screen.
 
 use comps::action::ButtonSize;
-use comps::content::StatSize;
+use comps::content::{LineKind as Row, StatSize};
 use engine::text::TextStyle;
 use engine::theme::{self, Intent, Theme};
-use uir::{ColorRole, ControlSize, Elevation, ShapeRole, SizeToken, SpacingToken, TypographyRole};
+use uir::{
+    ColorRole, ControlSize, Elevation, LineKind, ShapeRole, SizeToken, SpacingToken, TypographyRole,
+};
+
+/// the kind of a `code`'s line, by name in the app's `kinds`, on the
+/// kind of row the comps `CodeBlock` draws with its own tokens.
+pub(crate) fn line_kind(k: LineKind) -> Row {
+    match k {
+        LineKind::Context => Row::Context,
+        LineKind::Added => Row::Added,
+        LineKind::Removed => Row::Removed,
+        LineKind::Header => Row::Header,
+    }
+}
 
 /// `theme.spacing.<token>`.
 pub(crate) fn spacing(t: SpacingToken, theme: &Theme) -> f32 {

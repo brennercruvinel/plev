@@ -9,7 +9,10 @@
 //!   for a person) and `ignore` read the file's `staged` and `unstaged`,
 //!   the state they change; `show_diff` reads `diff:target`.
 //! - `diff` (region): `target` (the id whose diff is shown), the first
-//!   [`DIFF_LINES`] `lines` and their `count`.
+//!   [`DIFF_LINES`] `lines` (each with the diff's `+`, `-` or space in
+//!   front, a hunk's header as it is), the kind of each of them in
+//!   `kinds` (`context`, `added`, `removed`, `header`: the names of
+//!   `uir::LineKind`, task-97) and the `count` of every line.
 //! - `commit.form` (group): `open`; `open` reads it, `cancel` reads it and
 //!   the message it clears.
 //! - `commit.message` (text input): `text`, required; `set_value` reads it.
@@ -32,6 +35,7 @@
 use std::collections::{BTreeSet, HashSet};
 
 use sem::{Confirm, Constraints, Policy, Role, Semantics, SnapshotBuilder, Value};
+use uir::LineKind;
 
 use super::Workbench;
 use crate::ids::Ids;
@@ -128,10 +132,8 @@ fn changes(ws: &WorkspaceView, ids: &Ids, b: &mut SnapshotBuilder) {
 
 fn diff(ws: &WorkspaceView, ids: &Ids, b: &mut SnapshotBuilder) {
     let view = &ws.diff;
-    let lines: Vec<String> = view
-        .lines
-        .iter()
-        .take(DIFF_LINES)
+    let shown = || view.lines.iter().take(DIFF_LINES);
+    let lines: Vec<String> = shown()
         .map(|line| {
             let mark = match line.kind {
                 DiffLineKind::Header => return line.content.clone(),
@@ -142,11 +144,27 @@ fn diff(ws: &WorkspaceView, ids: &Ids, b: &mut SnapshotBuilder) {
             format!("{mark}{}", line.content)
         })
         .collect();
+    // the kind of each line by name: a header's first letter is its
+    // file's, so the mark alone cannot say it
+    let kinds: Vec<String> = shown()
+        .map(|line| line_kind(line.kind).as_str().to_owned())
+        .collect();
     let target = view.target.as_ref().map_or("", |id| id.as_str());
     b.node(&ids.diff, Role::Region, "diff")
         .state("target", target)
         .state("lines", lines)
+        .state("kinds", kinds)
         .state("count", count(view.lines.len()));
+}
+
+/// The kind of a line of the diff panel by the name a `code` shows it by.
+fn line_kind(kind: DiffLineKind) -> LineKind {
+    match kind {
+        DiffLineKind::Context => LineKind::Context,
+        DiffLineKind::Added => LineKind::Added,
+        DiffLineKind::Removed => LineKind::Removed,
+        DiffLineKind::Header => LineKind::Header,
+    }
 }
 
 fn commit(ws: &WorkspaceView, ids: &Ids, b: &mut SnapshotBuilder) {

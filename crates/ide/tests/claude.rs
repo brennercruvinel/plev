@@ -265,6 +265,22 @@ fn the_claude_proposes_off_the_thread_over_only_the_commits_asked() {
         asked.contains("\"@@ -1,5 +1,6 @@\", \" pub struct Login {\""),
         "the diff of a commit asked goes along: {asked}"
     );
+    // and the kind of each of its lines, under the same condition
+    let kinds = |prompt: &str| {
+        prompt
+            .lines()
+            .find(|l| l.contains("state diff:kinds"))
+            .map(str::to_owned)
+    };
+    assert_eq!(
+        kinds(&seen[0]).as_deref(),
+        Some("  state diff:kinds: list = []")
+    );
+    let asked = kinds(&seen[1]).expect("the kinds");
+    assert!(
+        asked.contains("[\"header\", \"context\""),
+        "the kinds of a commit asked go along: {asked}"
+    );
     assert!(!seen[1].contains(UNCOMMITTED.0));
 }
 

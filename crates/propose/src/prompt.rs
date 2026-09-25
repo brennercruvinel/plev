@@ -7,7 +7,7 @@
 use std::fmt::Write as _;
 
 use sem::{Actors, Confirm, Node, Value};
-use uir::{Component, IrError, IrNode, Named, Rule, schema};
+use uir::{Component, IrError, IrNode, LineKind, Named, Rule, schema};
 
 use crate::Ask;
 
@@ -47,9 +47,9 @@ pub(crate) fn rule(r: Rule) -> &'static str {
              `confirm`, unless its policy asks everyone to confirm"
         }
         Rule::Access => {
-            "every control, dialog, image, chart, stat, status and progress has a label (a text \
-             or a badge may bind its `text` instead); a separator has none; a control binds at \
-             least one action; in an overlay, controls sit in one layer"
+            "every control, dialog, image, chart, stat, status, progress and code has a label (a \
+             text or a badge may bind its `text` instead); a separator has none; a control binds \
+             at least one action; in an overlay, controls sit in one layer"
         }
         Rule::Limits => "nodes, depth and text within the policy below",
     }
@@ -175,6 +175,17 @@ pub(crate) fn components(out: &mut String) {
          an image shows a frame of the app's media when its `source` is bound to a text state \
          whose value names a media node and an instant, `<id>@<seconds>` (a frame ref): the \
          app decodes that frame. an image needs no other source.\n",
+    );
+    let kinds: Vec<String> = LineKind::ALL
+        .iter()
+        .map(|k| format!("`{}`", k.as_str()))
+        .collect();
+    let _ = writeln!(
+        out,
+        "a code shows its `lines` (a list, or one text) a row per line in the mono face, and \
+         scrolls inside when its `size` bounds it; its `kinds`, when bound, is a list with the \
+         kind of each line, one of {}: a diff, drawn by the theme. its label is its caption.",
+        kinds.join(", ")
     );
 }
 
@@ -344,4 +355,29 @@ pub(crate) fn repair(base: &str, attempt: usize, reply: &str, errors: &[IrError]
     }
     out.push_str("\nanswer again with the whole corrected IR, one JSON object.\n");
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The components a model is told of name the code (task-97), what
+    /// it shows, the names of the kinds of a line it can be given, and
+    /// that its label is one it needs.
+    #[test]
+    fn the_prompt_tells_the_code_and_the_kinds_of_its_lines() {
+        let mut out = String::new();
+        components(&mut out);
+        assert!(
+            out.contains(
+                "- code: role region; needs a label; shows lines (list or text), kinds (list)."
+            ),
+            "{out}"
+        );
+        assert!(
+            out.contains("one of `context`, `added`, `removed`, `header`"),
+            "{out}"
+        );
+        assert!(rule(Rule::Access).contains("progress and code has a label"));
+    }
 }

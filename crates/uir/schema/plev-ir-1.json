@@ -56,7 +56,9 @@
               "rows",
               "data",
               "open",
-              "source"
+              "source",
+              "lines",
+              "kinds"
             ]
           },
           "type": "object"
@@ -123,7 +125,8 @@
             "badge",
             "chip",
             "text",
-            "image"
+            "image",
+            "code"
           ]
         },
         {

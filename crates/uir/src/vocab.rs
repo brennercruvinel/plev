@@ -90,6 +90,48 @@ pub enum Component {
     Text,
     /// an image of the engine builder (`engine::builder::image`).
     Image,
+    /// `comps::content::CodeBlock`: text in the mono step, a row per line,
+    /// each line with its kind when the app says it (task-97).
+    Code,
+}
+
+/// the kind of one line a `code` shows, by the name an app's `kinds`
+/// state holds for it: a diff's context, a line added, a line removed, a
+/// hunk's header. the IR never holds one (the verifier checks that
+/// `kinds` is a list, not its values); the app projects the names, the
+/// materializer draws each by the theme's tokens, and a name it does not
+/// know is a context line.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum LineKind {
+    #[default]
+    Context,
+    Added,
+    Removed,
+    Header,
+}
+
+impl LineKind {
+    pub const ALL: [LineKind; 4] = [
+        LineKind::Context,
+        LineKind::Added,
+        LineKind::Removed,
+        LineKind::Header,
+    ];
+
+    /// the name an app writes in a `kinds` list.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            LineKind::Context => "context",
+            LineKind::Added => "added",
+            LineKind::Removed => "removed",
+            LineKind::Header => "header",
+        }
+    }
+
+    /// the kind `name` names, if any.
+    pub fn parse(name: &str) -> Option<LineKind> {
+        LineKind::ALL.into_iter().find(|k| k.as_str() == name)
+    }
 }
 
 /// how a node gets its accessible name.
@@ -301,10 +343,20 @@ const IMAGE: Spec = spec(
     &[prop("source", &[Text])],
     &[],
 );
+/// a code block: a region named by its caption, as a scrollable block of
+/// text is to a screen reader. `lines` is the code, a list of lines or one
+/// text; `kinds` is the kind of each line, `LineKind` by name.
+const CODE: Spec = spec(
+    Some(Role::Region),
+    false,
+    Always,
+    &[prop("lines", &[List, Text]), prop("kinds", &[List])],
+    &[],
+);
 
 impl Component {
     /// every component, a chart once per kind.
-    pub const ALL: [Component; 24] = [
+    pub const ALL: [Component; 25] = [
         Component::Button,
         Component::IconButton,
         Component::TextField,
@@ -329,6 +381,7 @@ impl Component {
         Component::Chip,
         Component::Text,
         Component::Image,
+        Component::Code,
     ];
 
     /// the name in the JSON form (`chart` for every chart).
@@ -355,6 +408,7 @@ impl Component {
             Component::Chip => "chip",
             Component::Text => "text",
             Component::Image => "image",
+            Component::Code => "code",
         }
     }
 
@@ -381,6 +435,7 @@ impl Component {
             Component::Chip => &CHIP,
             Component::Text => &TEXT,
             Component::Image => &IMAGE,
+            Component::Code => &CODE,
         }
     }
 }
@@ -462,6 +517,31 @@ mod tests {
                 assert!(!spec.container, "{c:?}: a control holds no children");
             }
         }
+    }
+
+    #[test]
+    fn a_code_is_a_named_region_that_shows_lines_and_their_kinds() {
+        let spec = Component::Code.spec();
+        assert_eq!(spec.role, Some(Role::Region));
+        assert_eq!(spec.named, Named::Always);
+        assert!(!spec.container && spec.events.is_empty());
+        let kinds = |name: &str| spec.state_prop(name).map(|p| p.kinds);
+        assert_eq!(kinds("lines"), Some(&[List, Text][..]));
+        assert_eq!(kinds("kinds"), Some(&[List][..]));
+        assert!(!is_control(role_of(
+            Some(Component::Code),
+            &Bind::default()
+        )));
+        for k in LineKind::ALL {
+            assert_eq!(LineKind::parse(k.as_str()), Some(k));
+        }
+        assert_eq!(LineKind::parse("+"), None);
+        assert_eq!(LineKind::default(), LineKind::Context);
+        // the vocabulary grows at its end: every name of before keeps its
+        // place in the schema's lists
+        assert_eq!(Component::ALL.last(), Some(&Component::Code));
+        let (state, _) = names();
+        assert_eq!(state[state.len() - 2..], ["lines", "kinds"]);
     }
 
     #[test]

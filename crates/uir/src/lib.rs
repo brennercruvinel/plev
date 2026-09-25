@@ -71,6 +71,6 @@ pub use transform::{
 };
 pub use verify::{VerifiedIr, verify, verify_json};
 pub use vocab::{
-    CONTAINER, ChartKind, Component, Event, Named, Spec, StateProp, is_control, names, role_of,
-    spec_of,
+    CONTAINER, ChartKind, Component, Event, LineKind, Named, Spec, StateProp, is_control, names,
+    role_of, spec_of,
 };
