@@ -9,7 +9,7 @@ mod system;
 mod vertex;
 
 pub use backend::{CosmicTextBackend, StyleRun, TextBackend, TextStyle};
-pub use measure::{LineMetrics, ShapedText, TextMeasurer};
+pub use measure::{ClusterBox, LineMetrics, ShapedText, TextMeasurer};
 pub use system::TextSystem;
 pub use vertex::TextVertex;
 

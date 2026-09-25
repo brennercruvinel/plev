@@ -119,6 +119,24 @@ impl TextBuffer {
         self.cursor = self.text.len();
     }
 
+    /// Put the caret at byte offset `pos` (clamped to the text) and drop
+    /// the selection.
+    pub fn set_cursor(&mut self, pos: usize) {
+        self.selection = None;
+        self.cursor = pos.min(self.text.len());
+    }
+
+    /// Move the caret to byte offset `pos` and extend the selection from
+    /// its anchor, the caret itself when nothing is selected. The
+    /// selection stays one logical range `(anchor, caret)`; one that
+    /// closes to nothing is dropped.
+    pub fn select_to(&mut self, pos: usize) {
+        let pos = pos.min(self.text.len());
+        let anchor = self.selection.map_or(self.cursor, |(anchor, _)| anchor);
+        self.cursor = pos;
+        self.selection = (anchor != pos).then_some((anchor, pos));
+    }
+
     pub fn select_all(&mut self) {
         if self.text.is_empty() {
             return;
