@@ -57,6 +57,8 @@ pub struct GFn {
 pub struct GpuiSource {
     /// Name of the widget struct from `impl RenderOnce for X`.
     pub widget: Option<String>,
+    /// Line of that `impl` (0 when there is none).
+    pub widget_line: usize,
     pub fns: Vec<GFn>,
 }
 
@@ -73,6 +75,7 @@ pub fn parse_gpui(src: &str) -> Result<GpuiSource, ParserError> {
     }
     let mut out = GpuiSource {
         widget: None,
+        widget_line: 0,
         fns: Vec::new(),
     };
     collect(tree.root_node(), src, &mut out);
@@ -99,6 +102,7 @@ fn collect(node: Node, src: &str, out: &mut GpuiSource) {
             .is_some_and(|t| text(t, src).contains("RenderOnce"));
         if is_render_once && let Some(ty) = node.child_by_field_name("type") {
             out.widget = Some(text(ty, src).to_string());
+            out.widget_line = line(node);
         }
     }
     if node.kind() == "function_item" {
@@ -278,6 +282,7 @@ impl RenderOnce for Widget {
 "#;
         let parsed = parse_gpui(src).unwrap();
         assert_eq!(parsed.widget.as_deref(), Some("Widget"));
+        assert_eq!(parsed.widget_line, 2);
         let render = parsed.fns.iter().find(|f| f.name == "render").unwrap();
         let Some(GExpr::Chain { base, calls, .. }) = &render.tail else {
             panic!("expected chain tail");

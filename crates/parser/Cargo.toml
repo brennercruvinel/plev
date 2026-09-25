@@ -13,6 +13,10 @@ tree-sitter.workspace = true
 tree-sitter-typescript.workspace = true
 tree-sitter-rust.workspace = true
 thiserror.workspace = true
+# the second emitter writes plev IR (task-71): the uir types, and the
+# report's JSON form.
+uir.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
 # janela do preview ao vivo (examples/preview.rs)
@@ -22,6 +26,12 @@ env_logger.workspace = true
 # tests/emitted_compiles.rs, so the engine is a dev-dependency only.
 engine.workspace = true
 criterion.workspace = true
+# task-71: the IR the parser emits is verified against a registry the test
+# declares (sem), materialized (surface) and drawn headless next to the
+# builder code it came with (comps::Rect is the surface's area).
+surface.workspace = true
+sem.workspace = true
+comps.workspace = true
 
 [lints]
 workspace = true

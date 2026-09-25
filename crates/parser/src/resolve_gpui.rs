@@ -10,11 +10,18 @@
 //! pixels, content-driven flow (the manual's rule).
 
 use crate::gpui::{GCall, GExpr, GFn, GpuiSource};
-use crate::gpui_ir::{Applied, WNode, arg_px, closure_body, expr_line, finish};
-use crate::ir::{Dropped, Param, Prop, Resolution, TextValue, snake_case};
+use crate::gpui_ir::{
+    Applied, WNode, arg_px, call_label, call_sites, closure_body, expr_line, finish,
+};
+use crate::ir::{Dropped, Note, NoteKind, Param, Prop, Resolution, Src, TextValue, snake_case};
 
 /// Variant configuration of the transpiled instance.
 const TARGET_ARMS: &[(&str, &str)] = &[("axis", "Horizontal"), ("line_style", "Solid")];
+
+const FLANK_RULE: &str =
+    "no absolute positioning; rewritten as two grow(1.0) segments flanking the label";
+
+const COMBINATOR_RULE: &str = "the combinator's closure is applied to the transpiled instance (horizontal, solid, with label)";
 
 pub fn resolve_gpui(src: &GpuiSource, file: &str) -> Result<Resolution, crate::ParserError> {
     let render = src
@@ -22,7 +29,12 @@ pub fn resolve_gpui(src: &GpuiSource, file: &str) -> Result<Resolution, crate::P
         .iter()
         .find(|f| f.name == "render")
         .ok_or_else(|| crate::ParserError::Parse("no render fn in gpui source".into()))?;
-    let Some(GExpr::Chain { calls, .. }) = &render.tail else {
+    let Some(GExpr::Chain {
+        base,
+        base_line,
+        calls,
+    }) = &render.tail
+    else {
         return Err(crate::ParserError::Parse(
             "render fn does not end in a builder chain".into(),
         ));
@@ -32,20 +44,29 @@ pub fn resolve_gpui(src: &GpuiSource, file: &str) -> Result<Resolution, crate::P
         file,
         mapped: 0,
         dropped: Vec::new(),
+        notes: Vec::new(),
         params: Vec::new(),
         color_noted: false,
     };
     let mut root = WNode::default();
+    root.origin.src = Some(Src::new(format!("{file}:{base_line}"), base.clone()));
+    root.origin.tag = "div()".into();
     cx.apply_calls(&mut root, calls);
     cx.flank_rewrite(&mut root);
     let widget = src.widget.clone().unwrap_or_else(|| "Widget".into());
     Ok(Resolution {
         fn_name: snake_case(&widget),
+        name: widget.clone(),
+        decl: Src::new(
+            format!("{file}:{}", src.widget_line),
+            format!("impl RenderOnce for {widget}"),
+        ),
         source_label: format!("{file} ({widget}::horizontal().label(..))"),
         root: finish(root),
         params: cx.params,
         mapped: cx.mapped,
         dropped: cx.dropped,
+        notes: cx.notes,
     })
 }
 
@@ -54,6 +75,7 @@ struct Ctx<'a> {
     file: &'a str,
     mapped: usize,
     dropped: Vec<Dropped>,
+    notes: Vec<Note>,
     params: Vec<Param>,
     color_noted: bool,
 }
@@ -67,36 +89,42 @@ impl<'a> Ctx<'a> {
 
     fn apply_call(&mut self, node: &mut WNode, call: &GCall) {
         let at = format!("{}:{}", self.file, call.line);
+        let src = Src::new(at.clone(), call_label(call));
+        let from = |p: Prop| p.from(src.clone());
         match call.method.as_str() {
-            "flex" => self.push(node, Prop::flag("row")),
-            "flex_shrink_0" => self.push(node, Prop::f32("shrink", 0.0)),
-            "items_center" => self.push(node, Prop::flag("align_center")),
-            "justify_center" => self.push(node, Prop::token("justify", "Justify::Center")),
+            "flex" => self.push(node, from(Prop::flag("row"))),
+            "flex_shrink_0" => self.push(node, from(Prop::f32("shrink", 0.0))),
+            "items_center" => self.push(node, from(Prop::flag("align_center"))),
+            "justify_center" => self.push(node, from(Prop::token("justify", "Justify::Center"))),
             "absolute" => node.absolute = Some(call.line),
             "w_full" => {
                 node.full_main = true; // becomes grow(1.0) in the flank rewrite
+                node.full_src.push(src.clone());
                 self.mapped += 1;
             }
             "h" | "w" => match call.args.first().and_then(arg_px) {
-                Some(v) => self.push(node, Prop::f32(call.method_static(), v)),
+                Some(v) => self.push(node, from(Prop::f32(call.method_static(), v))),
                 None => self.drop_call(call, &at, "non-pixel size argument"),
             },
-            "px_2" => self.push(node, Prop::f32("px", 8.0)),
-            "py_1" => self.push(node, Prop::f32("py", 4.0)),
+            "px_2" => self.push(node, from(Prop::f32("px", 8.0))),
+            "py_1" => self.push(node, from(Prop::f32("py", 4.0))),
             "text_xs" => {
                 // tailwind text-xs: 12px font, 16px line height.
-                node.props.push(Prop::f32("font_size", 12.0));
-                node.props.push(Prop::f32("line_height", 16.0));
+                node.props.push(from(Prop::f32("font_size", 12.0)));
+                node.props.push(from(Prop::f32("line_height", 16.0)));
                 self.mapped += 1;
             }
-            "mx_auto" => self.dropped.push(Dropped::new(
-                ".mx_auto()",
-                "no auto margins; centering comes from the flank rewrite",
-                at,
-            )),
+            "mx_auto" => self.dropped.push(
+                Dropped::new(
+                    ".mx_auto()",
+                    "no auto margins; centering comes from the flank rewrite",
+                    at,
+                )
+                .rewritten(),
+            ),
             "h_full" => self.drop_call(call, &at, "percent height (vertical variant only)"),
             "bg" | "text_color" => match call.args.first().and_then(|a| self.color_expr(a, &at)) {
-                Some(token) => self.push(node, Prop::token(call.method_static(), token)),
+                Some(token) => self.push(node, from(Prop::token(call.method_static(), token))),
                 None => self.drop_call(call, &at, "unresolved color expression"),
             },
             "refine_style" => self.drop_call(
@@ -110,6 +138,7 @@ impl<'a> Ctx<'a> {
                     match self.resolve_expr_onto(body) {
                         Applied::Calls(calls) => {
                             self.mapped += 1;
+                            self.note(src, NoteKind::Rewrite(COMBINATOR_RULE));
                             self.apply_calls(node, &calls);
                         }
                         Applied::None => self.drop_call(call, &at, "unresolved combinator body"),
@@ -119,12 +148,19 @@ impl<'a> Ctx<'a> {
                 }
             }
             "child" => match call.args.first() {
-                Some(arg) => self.child_arg(node, arg, &at),
+                Some(arg) => self.child_arg(node, arg, &src),
                 None => self.drop_call(call, &at, "child() without argument"),
             },
-            "into_any_element" => self.mapped += 1, // type erasure, no visual effect
+            "into_any_element" => {
+                self.mapped += 1;
+                self.note(src, NoteKind::Holds("type erasure, no visual effect"));
+            }
             _ => self.drop_call(call, &at, "method not covered by the poc table"),
         }
+    }
+
+    fn note(&mut self, src: Src, kind: NoteKind) {
+        self.notes.push(Note { src, kind });
     }
 
     fn push(&mut self, node: &mut WNode, prop: Prop) {
@@ -132,7 +168,8 @@ impl<'a> Ctx<'a> {
         self.mapped += 1;
     }
 
-    fn child_arg(&mut self, node: &mut WNode, arg: &GExpr, at: &str) {
+    fn child_arg(&mut self, node: &mut WNode, arg: &GExpr, call: &Src) {
+        let at = call.at.as_str();
         match arg {
             GExpr::Src { text, .. } if text == "label" => {
                 self.mapped += 1;
@@ -143,6 +180,9 @@ impl<'a> Ctx<'a> {
                     text: Some(TextValue::Param("label".into())),
                     ..WNode::default()
                 };
+                child.origin.src = Some(call.clone());
+                child.origin.tag = "text".into();
+                child.origin.name = "label".into();
                 // One TextStyle per run: typography stays on the text run.
                 let (text_props, box_props): (Vec<Prop>, Vec<Prop>) = node
                     .props
@@ -158,6 +198,8 @@ impl<'a> Ctx<'a> {
                 calls,
             } => {
                 let mut child = WNode::default();
+                child.origin.src = Some(call.clone());
+                child.origin.tag = "div()".into();
                 if base != "div()" {
                     match self.inline_fn(base) {
                         Some(inner) => self.apply_calls(&mut child, &inner),
@@ -178,6 +220,8 @@ impl<'a> Ctx<'a> {
             GExpr::Match { .. } => match self.resolve_expr_onto(arg) {
                 Applied::Calls(calls) => {
                     let mut child = WNode::default();
+                    child.origin.src = Some(call.clone());
+                    child.origin.tag = "div()".into();
                     self.mapped += 1;
                     self.apply_calls(&mut child, &calls);
                     node.children.push(child);
@@ -224,14 +268,19 @@ impl<'a> Ctx<'a> {
                     if arm.pattern.contains(want) {
                         taken = self.resolve_expr_onto(&arm.body);
                     } else {
-                        self.dropped.push(Dropped::new(
-                            format!("match arm {}", arm.pattern),
-                            format!(
-                                "variant not in the transpiled instance ({})",
-                                "horizontal, solid, with label"
-                            ),
-                            format!("{}:{}", self.file, expr_line(&arm.body)),
-                        ));
+                        let mut covers = Vec::new();
+                        call_sites(&arm.body, self.fns, self.file, &mut covers);
+                        self.dropped.push(
+                            Dropped::new(
+                                format!("match arm {}", arm.pattern),
+                                format!(
+                                    "variant not in the transpiled instance ({})",
+                                    "horizontal, solid, with label"
+                                ),
+                                format!("{}:{}", self.file, expr_line(&arm.body)),
+                            )
+                            .covering(covers),
+                        );
                     }
                 }
                 taken
@@ -295,24 +344,30 @@ impl<'a> Ctx<'a> {
             return;
         }
         let mut line = root.children.remove(idx);
-        self.dropped.push(Dropped::new(
-            ".absolute() line overlay",
-            "no absolute positioning; rewritten as two grow(1.0) segments flanking the label",
+        let overlay = Src::new(
             format!("{}:{}", self.file, line.absolute.unwrap_or(0)),
-        ));
+            ".absolute() line overlay",
+        );
+        self.dropped
+            .push(Dropped::new(overlay.what.clone(), FLANK_RULE, overlay.at.clone()).rewritten());
         line.absolute = None;
         line.full_main = false;
-        line.props.push(Prop::f32("grow", 1.0));
+        let mut grow = Prop::f32("grow", 1.0);
+        grow.src = std::mem::take(&mut line.full_src);
+        line.props.push(grow);
         // h before grow before bg for deterministic output.
         line.props.sort_by_key(|p| match p.name {
             "h" | "w" => 0,
             "grow" => 1,
             _ => 2,
         });
-        let second = WNode {
+        // the segment after the label is the rewrite's own
+        let mut second = WNode {
             props: line.props.clone(),
             ..WNode::default()
         };
+        second.origin.tag = line.origin.tag.clone();
+        second.origin.folded.push((overlay, FLANK_RULE));
         root.children.insert(0, line);
         root.children.push(second);
     }
