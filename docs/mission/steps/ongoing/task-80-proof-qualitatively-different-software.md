@@ -275,3 +275,163 @@ mudou, o teste nasce do mesmo cenário gravado na `main`.
   `task/80a-proof`, que é a `main` com os commits desta fase (passa).
   o teste do a2ppa com o `settle` de sempre roda nas duas, como controle.
 - antes do handoff, o worktree volta para `task/80a-proof`, limpo.
+
+## fase 1: o método das cinco demos (escrito antes de rodar)
+
+escrito e commitado antes de qualquer demo nova rodar: o sha deste commit
+é a prova. vale para as cinco o critério de parada do programa (seção 9 e
+"critérios de parada" acima): se a rejeição e os receipts não mudarem
+como a delegação é feita, ou se as superfícies geradas forem piores que
+as fixas nas mesmas tarefas, a direção é reavaliada com os dados. o
+resultado de cada demo vai como sair, inclusive negativo.
+
+### demo 1, stale-state rejection
+
+- **roteiro.** o do laboratório da task-62 (repositório com seis
+  alterações, a tarefa "commit only the login fix", a pessoa tirando
+  `src/session.rs` do index depois de uma observação ou logo antes do
+  submit), com os dois braços de controle que faltam: (i) um agente LLM
+  por screenshot, que recebe só o PNG do frame do ide e age por "clique
+  em x, y", resolvido pelo `Compositor::hit` do frame headless; (ii) um
+  agente LLM pelo snapshot de accessibility de terceiros, a árvore do
+  AccessKit da janela lida por fora, como o Playwright MCP lê um
+  navegador.
+- **alternativa de controle.** o `git` na linha de comando (braço B, já
+  rodado), o volume de um screenshot (braço C, já medido) e os dois
+  braços acima.
+- **critério.** o das hipóteses H1 a H5 da task-62, braço a braço lado a
+  lado: o commit é exatamente o da tarefa; um commit errado nunca existe
+  (a recusa vem antes do efeito, com o delta nomeando o arquivo); o
+  agente se recupera; o receipt bate com o git; bytes e tokens enviados
+  ao agente, turnos, tempo até o commit, custo da gravação. o plev pode
+  perder em bytes e idas e voltas, e isso é escrito como está.
+- **o que a derruba.** um commit errado no braço do plev; uma recusa sem
+  o delta; um agente que não se recupera; receipt diferente do git; ou um
+  braço de controle com a mesma segurança (nada commitado sobre um index
+  que mudou, sem ninguém avisar) por menos bytes e tokens: aí a diferença
+  é de contrato, não de modelo.
+
+### demo 2, handoff humano-agente
+
+- **roteiro.** a janela do ide com `PLEV_AGENT=1 PLEV_RECORD=1` num
+  repositório de rascunho; um agente Claude de verdade prepara o commit
+  pelo `plev` (stage, mensagem); o brenner assume na janela e muda parte
+  (tira um arquivo ou reescreve a mensagem); devolve dizendo ao agente
+  que siga; o agente termina. a sessão é salva e aberta pelo
+  `plev-inspect`.
+- **alternativa de controle.** o mesmo handoff com o agente e o brenner
+  no mesmo repositório pelo `git` e um terminal, sem receipt nem sessão.
+- **critério.** cada passo com o ator certo no receipt (passos certos
+  sobre o total); nenhum ato do agente sobre o que o brenner mudou sem
+  uma recusa que o nomeie ou uma pergunta a ele; o commit final é o que
+  ele decidiu; depois, o que ele reconstrói de quem fez o quê pela sessão
+  contra o que reconstrói pelo `git` (reflog, log), com as palavras dele.
+- **o que a derruba.** um passo sem ator ou com o ator errado; o agente
+  passando por cima do brenner sem recusa nem pergunta; o brenner não
+  conseguir dizer pela sessão quem fez o quê.
+
+### demo 3, inspectability (feita nesta fase)
+
+- **roteiro.** (1) na branch descartável `task/80a-bug84`, com a corrida
+  da task-84 de volta, `ide-lab --arm scripted --human none` grava uma
+  sessão sem janela e sem modelo (se a corrida não aparecer no estado
+  gravado, a mesma com `--human unstage-after-observe:src/session.rs`);
+  (2) o instante em que um arquivo que o ide aceitou sai do
+  `changes:staged` é achado na sessão, e o trecho em volta é exportado
+  com `plev-inspect --export`: o bug report; (3) o trecho é aberto pelo
+  `plev-inspect` (resumo, `--timeline`, `--control changes --at
+  <instante>`, `--why` do ato mais perto) e as oito perguntas da tese são
+  respondidas só pelo arquivo; (4) o trecho vira teste em
+  `crates/ide/tests/rerun/`, com marcas e a fixture que assenta só as
+  execuções (sonda, item c); se o bug mudou algum veredito gravado, o
+  teste nasce do mesmo cenário gravado em `task/80a-proof`; (5) o teste
+  roda em `task/80a-bug84` e em `task/80a-proof`, o do a2ppa com o
+  `settle` de sempre roda nas duas como controle, e o novo roda dez vezes
+  seguidas em `task/80a-proof`.
+- **alternativa de controle.** (i) o bug report como mídia: só os frames
+  do mesmo trecho (a trilha visual, sem a semântica), o que um vídeo
+  mostra; (ii) o rerun do harness como está (assenta tudo antes de cada
+  ato); (iii) o teste escrito à mão da task-84
+  (`crates/ide/tests/human_agent.rs:491-611`).
+- **critério.** K1: das oito perguntas, quantas o `plev-inspect` responde
+  pelo trecho sozinho, com a resposta conferida contra o código (o
+  defeito em `crates/ide/src/session.rs`), contra quantas os frames
+  sozinhos respondem. K2: o teste do trecho falha em `task/80a-bug84` e
+  passa em `task/80a-proof`, dez de dez sem oscilar; o controle (ii)
+  passa nas duas. K3: o trecho abaixo de 1 MB, dentro do git ao lado do
+  teste. K4: o que foi escrito à mão para ter o teste (linhas de marcas e
+  de fixture) contra o teste da task-84.
+- **o que a derruba.** o inspector nomeia um ator errado ou não localiza
+  a mudança no tempo; a corrida não aparece em estado gravado nenhum (a
+  sessão não serve de bug report, e isso é escrito); o teste passa com o
+  bug; o teste oscila na `task/80a-proof`; o trecho passa de 1 MB.
+
+### demo 4, interface efêmera (feita nesta fase)
+
+- **roteiro.** um teste em `crates/showcase/tests/` grava, sem janela, a
+  Silences em 1200 por 800 (a janela do checkpoint b), servida por uma
+  porta de verdade, a partir da semente (os cortes 1 e 2, sem ffmpeg) e
+  com frames sintéticos no cache: um agente escolhe as regras, escreve
+  "the list with the video and the counts" (a revisão como as regras a
+  leem, task-69 fase 4c) e propõe; a revisão nasce ao lado da tela fixa;
+  uma pessoa decide um corte com um clique na superfície gerada (input
+  gravado); o agente escreve "I can't compare these" e propõe (pelas
+  regras, a sonda espera a recusa na Silences); escreve "compare the
+  original with the cuts" e propõe (a revisão vira a comparação no
+  lugar, o mesmo id); fecha. a sessão é salva fora do git e lida pelo
+  `plev-inspect`.
+- **alternativa de controle.** a tela fixa da Silences, na mesma página e
+  no mesmo instante, ao lado da gerada, para as mesmas duas tarefas:
+  revisar os cortes (decidir cada um) e comparar o original com o
+  resultado.
+- **critério**, medido na gravação, não no olho:
+  - K1, a tarefa chega ao app: a decisão tomada na superfície é um
+    request sobre o corte do app (`silences.cut[n]`), pela pessoa, e a
+    tela fixa mostra a mesma decisão depois (um estado só);
+  - K2, à vista sem rolar em 1200 por 800: por corte, os controles da
+    revisão (o frame do corte, a faixa, a decisão, aplicar, rejeitar)
+    com a ligação dentro do frame, na gerada e na fixa, no mesmo
+    instante, pelas ligações gravadas. a gerada não é pior se tem pelo
+    menos tantos quanto a fixa;
+  - K3, a comparação: depois da intenção de comparar, quantos frames do
+    vídeo estão à vista para pôr o original ao lado do resultado, na
+    gerada e na fixa;
+  - K4, efêmera: os nós da superfície existem no estado gravado só entre
+    o propose e o close; depois do close nenhum nó e nenhuma ligação
+    dela; o `source` de todo nó dela é o materializador
+    (`crates/surface/src/**`), nunca um arquivo da tela do app, enquanto
+    os nós da fixa apontam para `crates/showcase/src/view/apps/silences/**`;
+  - K5, custo: tempo do propose à superfície pelas regras, nós, bytes e
+    frames da gravação;
+  - K6, a recusa: "I can't compare these" deixa a superfície como estava
+    (os mesmos nós, as mesmas decisões) e a linha diz por quê.
+- **o que a derruba.** a gerada pior que a fixa em K2 ou K3; qualquer
+  coisa da superfície depois do close (nó, ligação, estado); uma decisão
+  na superfície que não chega ao dispatcher do app; a gravação sem a vida
+  da superfície; um vazamento de privacidade (as promessas do briefing:
+  segredo só como tamanho, input só como tipo e `SemId`, nenhuma câmera,
+  a preferência de accessibility fora da gravação).
+
+### demo 5, UI generativa em aplicação real (task-96)
+
+- **roteiro.** no ide, com a task-96: a pessoa escreve "review these
+  three commits" na linha de intenção; as regras (e o Claude, pelo
+  orquestrador) propõem; a superfície mostra os três commits com os
+  arquivos e o diff de cada um; a pessoa abre cada diff pela superfície e
+  fecha. gravado, sem janela pelo laboratório e com janela pelo brenner.
+- **alternativa de controle.** o painel de stacks fixo mais o diff, para
+  os mesmos três commits.
+- **critério.** atos e tempo para ver os arquivos e o diff dos três; o que
+  fica à vista sem rolar; cada ato da superfície no dispatcher do
+  workbench, com o receipt da pessoa; nada da superfície depois de
+  fechar.
+- **o que a derruba.** a superfície pior que o painel fixo nessa tarefa;
+  um ato fora do dispatcher; a superfície deixando rastro.
+
+### a pergunta do núcleo e a pessoa de fora
+
+com o brenner, ao abrir o primeiro `.monster` de uma delegação real (a
+demo 2): o que ele consegue descobrir, e se isso basta para confiar nela,
+com as palavras dele. uma pessoa de fora usa as demos 2 e 4 quando
+possível, e o relato dela entra no resultado. nenhuma das duas é deste
+agente.
