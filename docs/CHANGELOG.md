@@ -9,6 +9,12 @@ status: living
 
 ## unreleased
 
+- the ide's intent line moves under the panels (2026-09-25, task-96
+  phase b): with no generated surface open the ide's panels have the
+  whole width again, and the line sits in a strip at the bottom; the
+  surface opens in a column beside the panels only while it is open. the
+  diff card of the review is titled "diff" instead of the commit's id.
+
 - code and diffs in a generated surface (2026-09-25, task-97): a
   generated surface can now show code, a line per row, and a diff with
   each line tinted by its kind (added in green, removed in red, the hunk

@@ -1,10 +1,10 @@
 //! The generated surface of the ide (task-96): the intent line and the
-//! host beside the fixed views, on a real repository and the real git
+//! host with the fixed views, on a real repository and the real git
 //! worker. Off by default, the workbench projects and draws as before; on,
-//! the line is projected and drawn in a column at the right of the window,
-//! an intent the rules read opens a verified surface through the one
-//! dispatcher, and closing it leaves nothing of it: no node, no binding,
-//! no state in the host.
+//! the line is projected and drawn in a strip under the workspace (phase
+//! b, `line.rs`), an intent the rules read opens a verified surface
+//! through the one dispatcher, in a column at the right, and closing it
+//! leaves nothing of it: no node, no binding, no state in the host.
 
 // shared with the other ide tests: this binary uses part of the rig.
 #[allow(dead_code)]
@@ -76,7 +76,7 @@ fn off_by_default_the_workbench_is_what_it_was() {
 }
 
 #[test]
-fn on_the_line_is_projected_and_drawn_beside_the_workspace() {
+fn on_the_line_is_projected_and_drawn_under_the_workspace() {
     let mut rig = Rig::new(&["a.txt"], &[]);
     rig.bench.host_surfaces();
     let whole = rig.look();
@@ -97,12 +97,11 @@ fn on_the_line_is_projected_and_drawn_beside_the_workspace() {
         assert_eq!(whole.get(kept), app.get(kept), "{kept} as it was");
     }
     let c = frame(&mut rig);
-    let theme = Theme::hoff();
-    let ws = rig.bench.workspace().vw;
-    assert_eq!(ws, 1280.0 - theme.size.card_w, "the column is a card wide");
+    let ws = rig.bench.workspace();
+    assert_eq!(ws.vw, 1280.0, "no surface, no column: the window's width");
     for at in ["ide_surface", "ide_surface.intent", "ide_surface.propose"] {
         let rect = c.binding(&id(at)).expect(at).rect;
-        assert!(rect[0] >= ws, "{at} sits in the column: {rect:?}");
+        assert!(rect[1] >= ws.vh, "{at} sits in the strip: {rect:?}");
     }
 }
 
@@ -159,7 +158,7 @@ fn an_intent_the_rules_read_opens_a_surface_and_closing_it_leaves_nothing() {
     assert!(host.changes(&id(&surface)).is_empty());
     assert!(host.policy(&id(&surface)).is_none());
     assert_eq!(rig.bench.surface_open(), None);
-    assert_eq!(rig.bench.workspace().vw, 1280.0 - Theme::hoff().size.card_w);
+    assert_eq!(rig.bench.workspace().vw, 1280.0, "the column is gone");
     assert!(!after.get(&id("ide_surface.close")).unwrap().enabled);
 }
 
@@ -179,7 +178,7 @@ fn an_intent_the_rules_do_not_read_is_refused_with_why() {
 }
 
 #[test]
-fn a_move_off_the_column_lets_go_of_what_it_hovered() {
+fn a_move_off_the_line_lets_go_of_what_it_hovered() {
     let mut rig = Rig::new(&["a.txt"], &[]);
     rig.bench.host_surfaces_with(None);
     let intent = Some("the items".into());
@@ -192,7 +191,7 @@ fn a_move_off_the_column_lets_go_of_what_it_hovered() {
     );
     assert!(
         rig.bench.hover(100.0, 400.0),
-        "and lets it go when the pointer leaves the column"
+        "and lets it go when the pointer leaves the line"
     );
     assert!(!rig.bench.hover(110.0, 400.0), "nothing more to let go");
 }

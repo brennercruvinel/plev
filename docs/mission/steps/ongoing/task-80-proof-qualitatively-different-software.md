@@ -1263,6 +1263,50 @@ nunca na superfície. o que entrou: `diff:kinds`, os nomes dos tipos das
 linhas do diff que o app já mostra, no estado gravado ao lado de
 `diff:lines`.
 
+### de novo, com a linha embaixo (task-96, fase b)
+
+a validação da task-97 viu nas imagens dois defeitos que o critério não
+conta: o cartão do diff na superfície tinha como título o id do commit
+(`stacks.commit[847f583a…`), e a coluna da linha de intenção tirava 368
+px da janela mesmo sem superfície aberta, então o painel fixo desta demo
+era medido com a coluna de stacks mais estreita. a fase b da task-96 pôs
+a linha numa faixa ao longo de baixo da janela, na largura inteira, a
+coluna só com superfície aberta, e o cartão do diff abrindo com "diff".
+rodada pelo laboratório sem janela, `ide-lab --arm review`, no build
+`e42bd571` da branch `task/96b-ide-surface-polish`, o mesmo repositório,
+o mesmo roteiro, a mesma pessoa roteirizada, só as regras; o critério não
+mudou.
+
+`review.monster`, fora do git (na scratchpad, `demo5b/after/`, com o
+`report.json` e os PNGs), 136.414 bytes, 84 eventos, 19 frames, sha256
+`874bd206...`; os mesmos 8 requests de `human`, todos `completed`, 0
+recusas (`plev-inspect`). o laboratório diz agora também quantas das
+três mensagens o painel de stacks corta na largura do cartão, pela
+geometria do painel (um dado a mais, lido só do lado fixo, onde a
+mensagem é cortada; na superfície ela quebra dentro do cartão).
+
+| critério | antes (task-97) | agora (fase b) | por quê |
+| --- | --- | --- | --- |
+| atos | 5 cliques e 26 teclas contra 3 cliques | igual | o roteiro não mudou |
+| tempo (máquina) | superfície 94 ms, painel fixo 64 ms | superfície 70 ms, painel fixo 44 ms | varia de corrida a corrida: a base desta fase, antes da mudança, deu 71 e 43 ms |
+| arquivos dos três de uma vez | 3 contra 1 no máximo | igual | |
+| linhas do diff à vista sem rolar | superfície 14, 7 e 14 de 14, 7 e 18; painel fixo 14, 7 e 18 | igual | o `code` segue limitado por `dropdown_max_h`; o painel fixo perdeu 60 px de altura para a faixa, e as 18 linhas ainda cabem |
+| das linhas à vista, cortadas na largura | superfície 0, 0 e 3; painel fixo 0, 0 e 4 | igual | o painel de diff guarda a largura dele; é a coluna de stacks que ganhou a largura |
+| os três commits no painel fixo | 3 cartões, a mensagem cortada (3 de 3, medido pelo dado novo sobre o layout de antes) | 3 cartões, a mensagem inteira (0 de 3) | sem superfície o workspace tem a largura inteira da janela, e a coluna de stacks tem de volta os 368 px |
+| o título do cartão do diff na superfície | o id do commit, `stacks.commit[847f583a…` | "diff" | o `target` é a palavra do dispatcher; a região abre com o rótulo dela |
+| nada da superfície depois de fechar | 0 nós, 0 ligações, 0 superfícies | igual | |
+
+o que isso diz, pelo critério escrito antes: nada do resultado da
+task-97 mudou de lado. a superfície continua melhor nos arquivos e pior
+nos atos e no diff (4 linhas do terceiro commit e o número de linha); o
+painel fixo, medido agora com a largura que ele tinha antes da task-96,
+mostra as três mensagens inteiras. com a superfície aberta nada mudou
+para ela: a coluna é a mesma metade da janela, agora do topo até a
+faixa. o botão "show diff" de cada commit na superfície passou a ler
+`diff:target` como o app o guarda (antes, `proposed.diff.target:text`,
+o texto que mostrava o id), porque a superfície não mostra mais esse
+estado; o stale continua o mesmo (o teste da task-96 passa igual).
+
 ## fase 1: handoff (2026-09-25)
 
 ```text

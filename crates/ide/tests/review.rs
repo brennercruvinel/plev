@@ -204,13 +204,52 @@ fn review_these_three_commits_opens_a_verified_surface_with_their_files_and_the_
         snap.get(&first).is_none(),
         "the fourth commit is not reviewed"
     );
-    for part in ["proposed.diff.target", "proposed.diff.lines"] {
+    for part in ["proposed.diff.heading", "proposed.diff.lines"] {
         assert!(snap.get(&id(part)).is_some(), "{part}");
     }
     assert!(
         !surface_nodes(&rig).iter().any(|n| n.contains("notes.txt")),
         "the note no commit holds is not in the review"
     );
+}
+
+/// The diff's card on the surface says what it shows, "diff", whichever
+/// commit's diff it shows: never the commit's id, the dispatcher's word
+/// for which one (task-96, phase b). The commit's message is its card's,
+/// on the left.
+#[test]
+fn the_diff_card_says_diff_never_the_id_of_the_commit_it_shows() {
+    let mut rig = Rig::review();
+    rig.bench.host_surfaces();
+    assert!(completed(&propose(&mut rig, "review these three commits")).is_some());
+    let commits = commits(&rig);
+    for node in commits.iter().take(REVIEWED.len()) {
+        let button = format!("proposed.{}.show_diff", node.id);
+        let asked = rig.ask(Actor::Human, &button, "activate", None);
+        assert!(completed(&rig.receipt(asked)).is_some());
+        rig.until(|e| matches!(e, GitEvent::DiffCommit { .. }));
+        assert_eq!(rig.value("diff:target"), Value::Text(node.id.to_string()));
+        let snap = rig.look();
+        let card = snap.get(&id("proposed.diff")).expect("the diff's card");
+        let first = snap.children(&card.id).next().expect("what opens it");
+        assert_eq!(first.id.as_str(), "proposed.diff.heading");
+        assert_eq!(first.label, "diff", "{}", node.id);
+        for shown in surface_nodes(&rig) {
+            let n = snap.get(&id(&shown)).expect("projected");
+            assert!(
+                !n.label.contains("stacks.commit["),
+                "{shown} is named {:?}",
+                n.label
+            );
+            assert!(
+                n.state
+                    .values()
+                    .all(|v| *v != Value::Text(node.id.to_string())),
+                "{shown} shows the commit's id: {:?}",
+                n.state
+            );
+        }
+    }
 }
 
 #[test]
