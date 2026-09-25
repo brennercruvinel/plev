@@ -9,6 +9,13 @@ status: living
 
 ## unreleased
 
+- edit a text in the running gallery and it lands in the source
+  (2026-09-25, task-65): in a debug build, cmd+shift+click on a text that
+  one string literal holds opens a field over it; enter writes the new
+  string into the `.rs` file, and `git diff` shows only that string. it
+  refuses when the file's code changed since the build, and an agent can
+  never do it.
+
 - the caret and the selection follow mixed text (2026-09-25, task-74):
   in a field or the editor holding hebrew or arabic next to latin, the
   arrows move across the screen, the caret sits where the next letter will

@@ -110,6 +110,12 @@ pub fn origin_at(compositor: &Compositor, snapshot: Option<&Snapshot>, x: f32, y
 /// visible layer, layers stacked as `Compositor::hit` stacks them (z-order,
 /// then creation). The text as drawn, a hot reloaded literal included.
 pub fn text_at(compositor: &Compositor, x: f32, y: f32) -> Option<String> {
+    text_run_at(compositor, x, y).map(|(text, _)| text)
+}
+
+/// [`text_at`] with the run's box, `[x, y, w, h]` in logical window
+/// pixels: where a field that edits the text goes.
+pub fn text_run_at(compositor: &Compositor, x: f32, y: f32) -> Option<(String, [f32; 4])> {
     let mut layers: Vec<_> = compositor
         .layers()
         .iter()
@@ -133,15 +139,16 @@ pub fn text_at(compositor: &Compositor, x: f32, y: f32) -> Option<String> {
                     key, x: tx, y: ty, ..
                 } => {
                     let shows = clips.last().is_none_or(|c| contains(*c, x, y));
-                    if shows && contains(text_box(key, *tx, *ty), x, y) {
-                        top = Some(&key.text);
+                    let run = text_box(key, *tx, *ty);
+                    if shows && contains(run, x, y) {
+                        top = Some((&key.text, run));
                     }
                 }
                 _ => {}
             }
         }
     }
-    top.cloned()
+    top.map(|(text, run)| (text.clone(), run))
 }
 
 /// Where a text run sits: drawn from `(x, y)` down and right, as wide and
@@ -416,6 +423,11 @@ mod tests {
         let over = c.create_layer(5);
         text(&mut c, over, "above", 10.0, 10.0);
         assert_eq!(text_at(&c, 14.0, 16.0).as_deref(), Some("above"));
+        // the run's box: where it is drawn, as big as it measures
+        let (_, [x, y, w, h]) = text_run_at(&c, 14.0, 16.0).unwrap();
+        let key = TextNodeKey::new("above", 14.0, 18.0, None);
+        assert_eq!([x, y, w, h], text_box(&key, 10.0, 10.0));
+        assert!(w > 0.0 && h > 0.0);
         // a text whose box does not reach the point is not there
         assert_eq!(text_at(&c, 14.0, 60.0), None);
 

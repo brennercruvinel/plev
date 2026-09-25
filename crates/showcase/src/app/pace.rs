@@ -46,6 +46,13 @@ impl App {
             // Build the scene (includes compositor.begin_frame()), then
             // the shared frame tail.
             self.view.render(host.compositor_mut());
+            // a literal edited in place, over the frame (`source`)
+            #[cfg(all(
+                debug_assertions,
+                any(target_os = "macos", target_os = "linux", target_os = "windows")
+            ))]
+            self.source
+                .draw(id, host.compositor_mut(), &self.view.theme);
             host.present(clear, "showcase_frame");
             // The tree of this frame, placed by the bindings it just drew;
             // what a reader is shown (the page, the toasts and the overlay
@@ -75,6 +82,12 @@ impl App {
             };
             host.begin_frame();
             self.view.render_detached(host.compositor_mut());
+            #[cfg(all(
+                debug_assertions,
+                any(target_os = "macos", target_os = "linux", target_os = "windows")
+            ))]
+            self.source
+                .draw(id, host.compositor_mut(), &self.view.theme);
             host.present(clear, "showcase_page_window");
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             self.offer_scene(id);

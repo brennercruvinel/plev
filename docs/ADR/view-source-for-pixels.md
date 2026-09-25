@@ -114,6 +114,77 @@ it and opens what it names.
   (hex literals) resolve the same way from the color of the node under
   the cursor.
 
+## phase c: a literal written back (2026-09-25)
+
+task-65 phase c: editing a text in the window writes its literal in the
+`.rs`, and the result is a normal `git diff` of one string. what was
+decided:
+
+1. the write is the engine's, under `hot_reload`:
+   `literals::write(site, from, to, by)`. it takes the site a click
+   found (a `sites_of` answer) and the text the literal held, and finds
+   the literal's slot (its index in the file's literal order) in the
+   sources the click read: the last save that kept the skeleton, else the
+   baseline; never a doc comment or test literal.
+2. the file on disk must still have the baseline's code: the same
+   skeleton hash, as many literals, and every literal that is not a
+   string or a hex color as it was. this is the test `apply_change`
+   already made (now one function, `same_code`), so "the same skeleton"
+   means one thing for the hot reload and for the write. the running
+   binary was built from that code; a slot names the same literal only
+   while it holds. otherwise `Refused::Code`: rebuild, then edit. the slot
+   must also still hold `from` on disk (`Refused::Moved`: a save from the
+   editor the watcher has not seen yet).
+3. the bytes are read at the write, not kept: the disk text is lexed once
+   more and the slot's `Span::byte_range` taken (same `span-locations`
+   feature); the token found there must unquote to `from`. the baseline
+   keeps no byte ranges, so its memory did not change.
+4. exactly the token is replaced. a plain string escapes the quote, the
+   backslash, `\n`, `\r`, `\t`, `\0` and any other control character
+   as `\u{..}`; every other character, unicode included, is written as
+   typed. a raw string stays raw, with as many `#` as the new text needs
+   and never fewer than it had (a bare carriage return cannot be raw: it
+   goes plain).
+5. the file is replaced at once: a dot file beside it (the watcher skips
+   dot files), the file's permissions, synced, renamed over it; a failure
+   removes the dot file and leaves the file as it was. then the write
+   calls `apply_change` itself, so the next frame shows the text without
+   waiting for the watcher's debounce; the watcher's own event finds the
+   same delta later.
+6. the person's alone. the edit is no capability: nothing of it is
+   projected or goes through the dispatcher, so the agent port cannot
+   name it, and the mirror's hand acts through the dispatcher only. the
+   write itself takes the actor and refuses `Actor::Agent` before reading
+   anything, so a later caller on the port's path is refused too. every
+   refusal leaves the file untouched.
+7. the shell (the showcase): cmd+shift+click (ctrl+shift off macOS) on a
+   text `origin_at` resolves to one literal opens a
+   `comps::form::TextField` over the text run (`view_source::text_run_at`
+   gives its box), on a layer above every layer of the frame, from the
+   field's inset before the text to the window's right edge, the page
+   ground under the text. while it shows it owns the keyboard (the first
+   hook of `KeyboardInput`): Enter writes, Escape drops it, a press
+   outside drops it and reaches the page. a control, several literals or
+   a formatted text are told in a toast; so is a refusal. a toast and the
+   log, never the shell's notice, which an agent reads.
+8. the same gate as phases a and b: release, wasm and mobile compile none
+   of it. checked on the check's metadata: the new names (`write_beside`,
+   `text_run_at`, `same_code`, `ViewSource`, `not_one_literal`) are in
+   the debug metadata and absent from the release and wasm32 ones.
+
+consequences of phase c:
+
+- an edit on one line is a one-line `git diff`, the literal's line.
+- the field draws in the field's body style, not the text's (a title
+  shows smaller while edited), and stays where the text was drawn: a
+  scroll under it does not move it.
+- the new text shows wherever the old one is drawn (the override's find
+  and replace, as for any save), until the next build.
+- a watch of the window (`PLEV_MIRROR`) sees the field as pixels, like
+  anything drawn; nothing of it is in the projection.
+- the color picker for hex literals and phase d (who read this token)
+  are not done.
+
 ## avoid
 
 - guessing among several literals, or opening anything without an
@@ -124,3 +195,6 @@ it and opens what it names.
   draws them.
 - `span-locations` reaching the `proc-macro2` of the proc macros, or the
   lexer's map left to grow on the watcher thread.
+- a write through the dispatcher, or the edit projected as a capability.
+- a write that skips the code check, or finds its literal by text alone.
+- byte ranges kept in the baseline: they are read at the write.
