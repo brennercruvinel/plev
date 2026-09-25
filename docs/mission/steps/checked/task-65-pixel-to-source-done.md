@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-25
 domain: generative-runtime
 task: task-65
@@ -670,3 +670,33 @@ Commits:
 - 6910ad37 task-65: the title edited on a copy in a git repository, git diff is that one string
 - (este) task-65: ADR phase c and the handoff of round 2
 ```
+
+## fechamento (orquestrador, 2026-09-25)
+
+fechada pelo critério de aceite, item por item:
+
+- item 1: o cmd+clique que abre o site e o literal fechou na rodada 1;
+  editar o título grava o `.rs` e o `git diff` mostra só aquela string
+  (`crates/showcase/tests/edit_literal.rs`, numa cópia do `table.rs` num
+  repositório git temporário: `-"Todo",` e `+"Todo list",`, e o frame
+  seguinte já desenha o texto novo).
+- item 2: os nomes novos aparecem zero vezes no release e no wasm e
+  aparecem no debug; `cargo check --release -p showcase` verde.
+- item 3: com o código mudado desde o baseline, a gravação é recusada e o
+  arquivo, a data e a pasta ficam iguais (engine e teste com git).
+- item 4: gate abaixo.
+
+validação do orquestrador: diff lido (`literals::write` recusa agente
+antes de ler, confere o código do baseline e o literal no disco, troca só
+o token com o escape da forma dele, escrita atômica); os testes só gravam
+em diretório temporário, e a árvore do repositório ficou limpa depois do
+gate. o agente mexeu em três arquivos fora da lista do briefing
+(`app.rs`, `app/events.rs`, `app/pace.rs`), só os ganchos do teclado e do
+desenho, sob o mesmo cfg de debug no desktop; aceito, porque sem eles a
+edição não recebe tecla nem aparece.
+
+pendências: o color picker de hex e a fase d (quem leu este token), sem
+item no critério; o campo usa o estilo do corpo (um título fica menor
+enquanto edita) e não acompanha um scroll.
+
+o agente gastou uns 245 mil tokens.

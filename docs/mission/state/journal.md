@@ -14,6 +14,14 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-65 fechada
+
+- fase c integrada: editar um texto na janela (debug) grava o literal no
+  `.rs`, um `git diff` de uma string; recusa quando o código mudou desde
+  o build e recusa agente. o color picker e a fase d ficam como
+  pendência (sem item no critério).
+- o agente (Opus) gastou uns 245 mil tokens.
+
 ### task-74 fase 3 integrada
 
 - bidi no cursor e na seleção, no campo de texto e no editor, com 25
