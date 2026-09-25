@@ -16,8 +16,8 @@ use super::{After, Component, child_id, key_under, panel, root_id, under};
 pub struct TreePage {
     root: Option<SemId>,
     tree: Tree,
-    /// The row a screen reader focused, by node id (a row draws no ring);
-    /// Escape or a click lets it go.
+    /// The row a screen reader or the keyboard focused, by node id (its
+    /// ring shows while the row does); Escape or a click lets it go.
     focus: Option<u64>,
 }
 
@@ -149,10 +149,12 @@ impl Component for TreePage {
             return false;
         }
         self.focus = self.row_at(id);
+        self.tree.set_focused(self.focus);
         true
     }
 
     fn blur(&mut self) -> bool {
+        self.tree.set_focused(None);
         self.focus.take().is_some()
     }
 }

@@ -79,6 +79,10 @@ pub struct Select {
     /// The panel opened and has not been laid out since: the selected
     /// option is scrolled into view the first time the geometry is read.
     reveal: bool,
+    /// The view moved the highlight ([`Select::set_highlighted`]) and the
+    /// panel has not been laid out since: the highlighted option is
+    /// scrolled into view the first time the geometry is read.
+    reveal_highlight: bool,
     sem: Option<SemId>,
 }
 
@@ -96,6 +100,7 @@ impl Select {
             focused: false,
             scroll: ScrollState::new(),
             reveal: false,
+            reveal_highlight: false,
             sem: None,
         }
     }
@@ -233,6 +238,16 @@ impl Select {
     /// the panel is open.
     pub fn highlighted(&self) -> Option<usize> {
         self.highlighted
+    }
+
+    /// Highlights the option at `index`, or none, as the arrow keys do: the
+    /// owning view calls it when a person's keys or a screen reader move
+    /// the focus to an open option, and the panel scrolls the least that
+    /// shows it the next time it is laid out. A closed panel or an index
+    /// past the options highlights nothing.
+    pub fn set_highlighted(&mut self, index: Option<usize>) {
+        self.highlighted = index.filter(|i| self.open && *i < self.options.len());
+        self.reveal_highlight = self.highlighted.is_some();
     }
 
     /// The options panel is laid out from the theme, so the event path

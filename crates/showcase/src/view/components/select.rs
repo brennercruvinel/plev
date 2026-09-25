@@ -1,26 +1,27 @@
 //! Select page: the pill select and its dropdown (drawn on the overlay
 //! layer so it floats over the page). The open dropdown takes events
-//! before everything beneath it; Escape closes it, Tab focuses the pill.
+//! before everything beneath it; Escape closes it.
 //!
 //! Projected (task-75 phase 2b): the select, `select_page.select`, named
 //! "appearance" (what its options choose), as the comps projects it, with
 //! its options while open: `open`, `close`, `select` with an option, and an
 //! option's own `select`, each doing what the click on the pill or on the
-//! option does. The focus a reader asks for is the pill's, or the open
-//! option's.
+//! option does. The focus a reader or the keyboard asks for is the
+//! pill's, or the open option's, which the panel highlights (task-75
+//! phase 2c).
 
 use comps::prelude::{EventResult, Rect, Select, WidgetEvent};
 use engine::compositor::{Compositor, LayerId};
 use engine::theme::{ControlSize, Theme};
 use sem::{Request, SemId, SnapshotBuilder, Value};
 
-use super::{After, Component, EditKey, child_id, key_under, root_id, under};
+use super::{After, Component, child_id, key_under, root_id, under};
 
 pub struct SelectPage {
     root: Option<SemId>,
     select: Select,
-    /// The open option a screen reader focused; it goes when the list
-    /// closes.
+    /// The open option a screen reader or the keyboard focused; it goes
+    /// when the list closes.
     option: Option<usize>,
 }
 
@@ -63,14 +64,6 @@ impl SelectPage {
 
     pub fn is_open(&self) -> bool {
         self.select.is_open()
-    }
-
-    pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
-        if key == EditKey::Tab {
-            self.select.set_focused(true);
-            return true;
-        }
-        false
     }
 
     /// Escape: close the dropdown, else blur. `false` when neither applied.
@@ -162,6 +155,7 @@ impl Component for SelectPage {
         let pill = self.select.sem_id() == Some(id);
         self.option = self.option_at(id).filter(|_| self.select.is_open());
         self.select.set_focused(pill || self.option.is_some());
+        self.select.set_highlighted(self.option);
         true
     }
 }

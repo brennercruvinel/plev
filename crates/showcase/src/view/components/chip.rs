@@ -15,8 +15,8 @@ use super::{After, Component, child_id, flow, root_id, under};
 pub struct ChipPage {
     root: Option<SemId>,
     chips: Vec<Chip>,
-    /// The chip a screen reader focused (a chip draws no ring); Escape or
-    /// a click lets it go.
+    /// The chip a screen reader or the keyboard focused (its ring shows);
+    /// Escape or a click lets it go.
     focus: Option<usize>,
 }
 
@@ -56,6 +56,13 @@ impl ChipPage {
     #[cfg(test)]
     pub fn toggled(&self) -> bool {
         self.chips[5].selected
+    }
+
+    /// The focused chip rings, the others do not.
+    fn ring(&mut self) {
+        for (i, chip) in self.chips.iter_mut().enumerate() {
+            chip.set_focused(self.focus == Some(i));
+        }
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> (Vec<Rect>, f32) {
@@ -136,11 +143,14 @@ impl Component for ChipPage {
             return false;
         }
         self.focus = self.at(id).filter(|i| self.chips[*i].selectable);
+        self.ring();
         true
     }
 
     fn blur(&mut self) -> bool {
-        self.focus.take().is_some()
+        let had = self.focus.take().is_some();
+        self.ring();
+        had
     }
 }
 

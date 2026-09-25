@@ -14,6 +14,13 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-75 fase 2c integrada
+
+- teclado nas páginas de componente: Tab na ordem da projeção, setas,
+  Enter e Espaço, o modal prende e devolve o foco. faltam listas e
+  tabelas focáveis (muda 12 baselines, o orquestrador revisa).
+- o agente (Opus) gastou uns 350 mil tokens.
+
 ### task-65 fechada
 
 - fase c integrada: editar um texto na janela (debug) grava o literal no

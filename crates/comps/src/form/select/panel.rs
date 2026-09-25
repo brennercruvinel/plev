@@ -27,6 +27,18 @@ const CONSUMED: EventResult = EventResult {
     clicked: false,
 };
 
+/// Scrolls `scroll` the least that shows option `i` whole inside a strip
+/// `view_h` tall.
+fn reveal(scroll: &mut ScrollState, i: usize, m: &Metrics, view_h: f32) {
+    let top = i as f32 * m.option_h;
+    let bottom = top + m.option_h;
+    if top < scroll.offset() {
+        scroll.scroll_to(top);
+    } else if bottom > scroll.offset() + view_h {
+        scroll.scroll_to(bottom - view_h);
+    }
+}
+
 /// The option rows the open panel shows: the strip they scroll in, how
 /// far they are scrolled, and the rows that reach into the strip.
 struct Window {
@@ -97,6 +109,11 @@ impl Select {
         if self.reveal {
             scroll.scroll_to(self.selected as f32 * m.option_h);
         }
+        if self.reveal_highlight
+            && let Some(i) = self.highlighted
+        {
+            reveal(&mut scroll, i, m, self.view_h(m));
+        }
         scroll
     }
 
@@ -105,6 +122,7 @@ impl Select {
     pub(super) fn settle(&mut self, m: &Metrics) {
         self.scroll = self.scroll_for(m);
         self.reveal = false;
+        self.reveal_highlight = false;
     }
 
     /// The rows the panel `dd` shows. The draw, the binding and the hit
@@ -223,14 +241,8 @@ impl Select {
 
     /// Scrolls the least that shows option `i` whole inside the strip.
     fn scroll_into_view(&mut self, i: usize, m: &Metrics) {
-        let top = i as f32 * m.option_h;
-        let bottom = top + m.option_h;
         let view_h = self.view_h(m);
-        if top < self.scroll.offset() {
-            self.scroll.scroll_to(top);
-        } else if bottom > self.scroll.offset() + view_h {
-            self.scroll.scroll_to(bottom - view_h);
-        }
+        reveal(&mut self.scroll, i, m, view_h);
     }
 
     /// Render the open dropdown list (call only when [`is_open`](Select::is_open)).

@@ -8,6 +8,8 @@
 //! With a [`SemId`] ([`Breadcrumb::sem`]) the render binds the trail and
 //! each crumb it draws to the rects it draws and hit-tests them with, and
 //! [`Breadcrumb::project`] declares the trail in a semantic projection.
+//! Keyboard focus on a crumb ([`Breadcrumb::set_focused`], driven by the
+//! owning view) rings it where it is drawn.
 
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
@@ -16,6 +18,7 @@ use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent};
 use crate::icons;
+use crate::recipe::focus_ring;
 
 const ELLIPSIS: &str = "\u{2026}";
 
@@ -24,6 +27,7 @@ pub struct Breadcrumb {
     pub crumbs: Vec<String>,
     hovered: Option<usize>,
     pressed: Option<usize>,
+    focused: Option<usize>,
     sem: Option<SemId>,
 }
 
@@ -33,6 +37,7 @@ impl Breadcrumb {
             crumbs: crumbs.into_iter().map(Into::into).collect(),
             hovered: None,
             pressed: None,
+            focused: None,
             sem: None,
         }
     }
@@ -84,6 +89,17 @@ impl Breadcrumb {
 
     pub fn hovered(&self) -> Option<usize> {
         self.hovered
+    }
+
+    /// Keyboard focus on the crumb at `index`, or on none, driven by the
+    /// owning view (plev has no global focus chain): the accent ring
+    /// around it while it is drawn (a collapsed crumb shows none).
+    pub fn set_focused(&mut self, index: Option<usize>) {
+        self.focused = index.filter(|i| *i < self.crumbs.len());
+    }
+
+    pub fn focused(&self) -> Option<usize> {
+        self.focused
     }
 
     pub fn text_style(theme: &Theme) -> TextStyle {
@@ -229,6 +245,10 @@ impl Breadcrumb {
             }
         }
         for (k, (i, r)) in rects.iter().enumerate() {
+            if i.is_some() && *i == self.focused {
+                let radius = theme.shape.micro.min(r.h / 2.0);
+                c.push_to_layer(layer, focus_ring(*r, radius, theme));
+            }
             let (text, color) = match i {
                 Some(i) if *i == last => (self.crumbs[*i].as_str(), theme.colors.text.0),
                 Some(i) if self.hovered == Some(*i) => {

@@ -10,7 +10,8 @@
 //! `selectable(true)` makes it a filter chip: a click toggles `selected`,
 //! like a checkbox. With a [`SemId`] ([`Chip::sem`]) the render binds the
 //! bounds it draws and hit-tests with, and [`Chip::project`] declares the
-//! chip in a semantic projection.
+//! chip in a semantic projection. Keyboard focus ([`Chip::set_focused`],
+//! driven by the owning view) rings a chip the pointer reaches.
 
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
@@ -18,7 +19,7 @@ use engine::theme::{Intent, Theme};
 use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
-use crate::recipe::{rounded_rect, rounded_rect_stroke};
+use crate::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
 
 /// Status/tag pill. See the module docs for the interactivity contract.
 #[derive(Clone, Debug)]
@@ -34,6 +35,7 @@ pub struct Chip {
     pub selectable: bool,
     hovered: bool,
     pressed: bool,
+    focused: bool,
     sem: Option<SemId>,
 }
 
@@ -47,6 +49,7 @@ impl Chip {
             selectable: false,
             hovered: false,
             pressed: false,
+            focused: false,
             sem: None,
         }
     }
@@ -121,6 +124,17 @@ impl Chip {
         self.hovered
     }
 
+    /// Keyboard focus, driven by the owning view (plev has no global
+    /// focus chain): the accent ring around the capsule. A static chip
+    /// (neither `interactive` nor `selectable`) refuses it.
+    pub fn set_focused(&mut self, focused: bool) {
+        self.focused = focused && self.pressable();
+    }
+
+    pub fn is_focused(&self) -> bool {
+        self.focused
+    }
+
     /// Whether the pointer reaches the chip at all.
     fn pressable(&self) -> bool {
         self.interactive || self.selectable
@@ -191,6 +205,9 @@ impl Chip {
         let accent = intent_fill(theme, self.intent);
         let text = theme.colors.text;
         let glass = &theme.glass;
+        if self.focused {
+            compositor.push(focus_ring(bounds, bounds.h / 2.0, theme));
+        }
 
         // Filled (selected): intent wash + intent label. Outline: glass
         // edge stroke + dim label. Hover brightens both (interactive only).

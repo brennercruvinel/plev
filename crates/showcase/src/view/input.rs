@@ -1,7 +1,8 @@
 //! Input routing of the gallery: keyboard shortcuts and the text routes
-//! of the pages that take typing, the pointer chain (toasts, the active
-//! overlay, the open select, the chrome, the page, the page scroll), and
-//! the demo overlays the Dialog and Context Menu pages open.
+//! of the pages that take typing, the keyboard of the component pages and
+//! of the overlays (`dispatch::keyboard`), the pointer chain (toasts, the
+//! active overlay, the open select, the chrome, the page, the page
+//! scroll), and the demo overlays the Dialog and Context Menu pages open.
 
 use comps::overlay::OverlayKind;
 use comps::prelude::{EventResult, Modal, ModalAction, Rect, WidgetEvent};
@@ -11,6 +12,7 @@ use engine::theme::Intent;
 use sem::Value;
 
 use super::components::context_menu;
+use super::dispatch::keyboard::Walk;
 use super::dispatch::{ShellTarget, overlay};
 use super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
 
@@ -49,16 +51,24 @@ impl ShowcaseView {
     /// Returns `true` when the key was consumed (and a redraw is needed).
     pub fn handle_key(&mut self, key: &str) -> bool {
         // A focused text field owns the characters: "t" types, it does
-        // not switch the theme.
-        let typed = match self.pane() {
-            Some(Pane::Input) => self.panes.input.handle_text(key),
-            Some(Pane::Todo) => self.panes.todo.handle_text(key),
-            Some(Pane::Surface) => self.panes.surface.handle_text(key, &mut self.panes.todo),
-            Some(Pane::Silences) => self.panes.silences.handle_text(key, &mut self.panes.todo),
-            Some(Pane::Git) => self.panes.git.handle_text(key),
-            _ => false,
-        };
+        // not switch the theme. Not beneath an overlay that holds the
+        // pointer: the keyboard is the overlay's then.
+        let held = self.overlay_holds_pointer();
+        let typed = !held
+            && match self.pane() {
+                Some(Pane::Input) => self.panes.input.handle_text(key),
+                Some(Pane::Todo) => self.panes.todo.handle_text(key),
+                Some(Pane::Surface) => self.panes.surface.handle_text(key, &mut self.panes.todo),
+                Some(Pane::Silences) => self.panes.silences.handle_text(key, &mut self.panes.todo),
+                Some(Pane::Git) => self.panes.git.handle_text(key),
+                _ => false,
+            };
         if typed {
+            return true;
+        }
+        // Space presses what has the focus on a component page or in the
+        // overlay, as Enter does.
+        if key == " " && self.walks() && self.walk(Walk::Press) {
             return true;
         }
         // The shell's keys are its capabilities (`dispatch::shell`): each
@@ -107,10 +117,15 @@ impl ShowcaseView {
         self.ask_shell(ShellTarget::Page, "select", Some(title))
     }
 
-    /// Close the topmost overlay (Escape): the page's focus blurs first
-    /// (an open select closes), then the overlay stack. Returns `false`
+    /// Close the topmost overlay (Escape): the modal or the menu that
+    /// holds the pointer first (the page beneath keeps its focus, the
+    /// control that opened it), then the page's focus blurs (an open
+    /// select closes), then the rest of the overlay stack. Returns `false`
     /// when there was nothing to close (caller may quit).
     pub fn close_top_overlay(&mut self) -> bool {
+        if self.overlay_holds_pointer() && self.overlay_mgr.pop_animated().is_some() {
+            return true;
+        }
         let blurred = match self.pane() {
             Some(Pane::Input) => self.panes.input.handle_escape(),
             Some(Pane::Checkbox) => self.panes.checkbox.handle_escape(),
@@ -140,16 +155,34 @@ impl ShowcaseView {
     }
 
     /// Non-character editing keys (Tab, Backspace, arrows) forwarded by
-    /// the platform shell: Tab cycles the page's focusable widgets, the
-    /// rest edit its focused text field.
+    /// the platform shell. On a component page, or over the modal or the
+    /// menu, Tab walks the projection and the arrows, Home and End move in
+    /// the widget the focus is in (`dispatch::keyboard`), unless a focused
+    /// text field edits with them; on an app page, the page's own.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        if !self.walks() {
+            return self.page_edit_key(key);
+        }
+        let walk = match key {
+            EditKey::Tab => return self.walk(Walk::Tab),
+            EditKey::Left => Walk::Left,
+            EditKey::Right => Walk::Right,
+            EditKey::Home => Walk::Home,
+            EditKey::End => Walk::End,
+            EditKey::Backspace | EditKey::Delete => return self.page_edit_key(key),
+        };
+        self.page_edit_key(key) || self.walk(walk)
+    }
+
+    /// The active page's own editing keys: a focused text field edits, an
+    /// app page walks its own focus. Nothing beneath an overlay that
+    /// holds the pointer.
+    fn page_edit_key(&mut self, key: EditKey) -> bool {
+        if self.overlay_holds_pointer() {
+            return false;
+        }
         match self.pane() {
             Some(Pane::Input) => self.panes.input.handle_edit_key(key),
-            Some(Pane::Checkbox) => self.panes.checkbox.handle_edit_key(key),
-            Some(Pane::Switch) => self.panes.switch.handle_edit_key(key),
-            Some(Pane::Slider) => self.panes.slider.handle_edit_key(key),
-            Some(Pane::Select) => self.panes.select.handle_edit_key(key),
-            Some(Pane::Tabs) => self.panes.tabs.handle_edit_key(key),
             Some(Pane::Todo) => self.panes.todo.handle_edit_key(key),
             Some(Pane::Surface) => self
                 .panes
@@ -166,10 +199,15 @@ impl ShowcaseView {
         }
     }
 
-    /// Enter: the todo app adds the field text as a todo; the Surface and
-    /// Silences pages propose from their intent field; the Files page
-    /// presses its focused button; the Git tab submits its commit form.
+    /// Enter: on a component page, or over the modal or the menu, what
+    /// has the focus is pressed (`dispatch::keyboard`); the todo app adds
+    /// the field text as a todo; the Surface and Silences pages propose
+    /// from their intent field; the Files page presses its focused button;
+    /// the Git tab submits its commit form.
     pub fn handle_enter(&mut self) -> bool {
+        if self.walks() {
+            return self.walk(Walk::Press);
+        }
         match self.pane() {
             Some(Pane::Todo) => {
                 let inert = self.overlay_holds_pointer();

@@ -169,6 +169,18 @@ impl ContextMenu {
         self.hovered
     }
 
+    /// The item `id` highlighted as the pointer highlights it, or none:
+    /// what the owning view calls when the arrow keys or a screen reader
+    /// move the focus to an item, so the one highlight follows both. A
+    /// separator or an unknown id highlights nothing.
+    pub fn set_highlighted(&mut self, id: Option<u64>) {
+        self.hovered = id.and_then(|want| {
+            self.entries
+                .iter()
+                .position(|e| matches!(e, MenuEntry::Item { id, .. } if *id == want))
+        });
+    }
+
     /// Item label style: base-2sm, the same for measuring and rendering.
     fn label_style(theme: &Theme) -> TextStyle {
         theme.typography.base_2sm()

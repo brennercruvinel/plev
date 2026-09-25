@@ -29,5 +29,9 @@ mod values;
 /// split.
 mod choices;
 
+/// The keyboard (task-75 phase 2c): Tab in the projection's order on
+/// every page, the arrows by widget, Enter and Space, the modal's trap.
+mod keyboard;
+
 /// The privacy promises: no case on these pages, guarded.
 mod promises;
