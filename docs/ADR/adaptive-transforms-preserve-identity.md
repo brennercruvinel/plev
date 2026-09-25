@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [uir, surface, plev-ir, transform, verifier, identity, history, generative-runtime]
 date: 2026-09-24
 ---
@@ -240,3 +240,15 @@ its one list is the cuts' ids, and the durations are one number per cut.
 - a promotion for an actor the app keeps the action from, or of a
   destructive action without the app's confirmation.
 - transforming a fixed screen at the projection only.
+
+## integração
+
+accepted on 2026-09-24 by the orchestrator (task-70 phase 1, merge of
+`task/70a-transforms`). the whole diff read; the demo seen at 1280x800
+(the Claude's first-round review with the cuts right after the title,
+each with its frame, its duration and its buttons, the repeated
+detection hidden and still on the fixed screen). local gate green, 2861
+passed, 0 failed (was 2832); regress 170 unchanged (169 old, 1 new).
+open for phase 2: who asks (the rules and the Claude answer operations,
+through the app's dispatcher), the policy each surface was verified
+under kept by the host, emphasis drawn by `stat` and `badge`.

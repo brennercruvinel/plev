@@ -12,6 +12,15 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-24, task-70 fase 1
+
+- **um gráfico que passa no verifier pode mentir:** o `Chart` aceita
+  qualquer `List`, e o único da Silences são os ids dos cortes ("1",
+  "2"). o verifier checa o tipo, não o sentido; o gráfico desenharia ids
+  como barras. regra: trocar uma vista exige que o dado seja o que a
+  vista nova mostra, e isso vem do registro do app, não do verifier.
+  fonte: handoff da fase 1, sonda (a).
+
 ### 2026-09-24, checkpoint b, segunda rodada
 
 - **uma orientação de prompt corta mais do que o alvo:** "só o que a

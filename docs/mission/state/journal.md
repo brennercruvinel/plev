@@ -14,6 +14,24 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### task-70 fase 1: a superfície muda aos poucos
+
+- **integrada:** `task/70a-transforms` (8 commits, agente no Opus). nove
+  operações como dado em `uir::transform`, cada resultado verificado de
+  novo, cada uma com a inversa que volta byte a byte; só o hide tira um
+  id da árvore (guardado de lado, sem campo novo no IR); o host aplica
+  com histórico (operação, inversa, ator) e desfaz. nada mudou no
+  vocabulário nem no verifier.
+- **validação:** diff inteiro lido; a imagem da demo conferida (a revisão
+  do Claude da primeira rodada com os cortes primeiro, cada um com frame
+  e duração, e a detecção repetida escondida). gate local verde, 2861
+  passam, 0 falham (antes 2832); regress 170 sem mudança.
+- **achado:** o gráfico das durações não cabe hoje: o único `List` da
+  Silences são os ids dos cortes. telas fixas: exprimir em IR (o todo
+  cabe, a Silences não, pela linha do tempo).
+- **próximo:** task-70 fase 2, o proponente de transformação e as lacunas
+  do checkpoint b.
+
 ### checkpoint b, segunda rodada: a gerada deixou de ser pior
 
 - **rodada:** os mesmos passos da primeira, pelo contrato e pelo
