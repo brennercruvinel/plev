@@ -345,3 +345,199 @@ formulário de commit cabe), e a tela que não couber fica fixa e sem
 transformação até o componente existir. a opção 2 quebra a promessa de
 que o que se vê é o que se projeta. não é motivo de parada nesta fase: a
 fase 1 trabalha só sobre IR.
+
+### handoff da fase 1 (2026-09-24)
+
+```text
+Goal: task-70 fase 1: as nove operações sobre o IR de uma superfície
+      aberta, cada uma verificada de novo, com a inversa exata,
+      preservando identidade, e o host que as aplica com histórico e
+      desfazer
+Status: pronto para o orquestrador; ADR proposto
+```
+
+#### commits
+
+- 872ccafe task-70: the probe of phase 1, the transformations over the IR
+- a35131bf task-70: hide, show, group and reorder over a verified IR, each with its inverse
+- 34993190 task-70: emphasize, density and restyle, by token, each with the looks before
+- 35078c72 task-70: swap a view within its family and promote an action the registry declares
+- ce755a67 task-70: identity as a property, over random surfaces and the real fixtures
+- b3c66abd task-70: the host applies an operation with history and undoes the last
+- ec2ab5db task-70: the Claude's review adapted, in a test and in the regress
+- o commit deste texto e do ADR
+
+#### a sonda
+
+está na seção "sonda" acima, com (a) a (e). o resumo: nenhuma operação
+exigiu mudar o vocabulário nem o verifier; o `Hide` guarda o nó ao lado
+da árvore, sem campo novo; toda inversa volta byte a byte; o estado
+retido ficou pelo host, sem mexer na reconciliação da 69. nenhuma
+condição de parada aconteceu. o que a sonda achou e mudou a demo: o
+gráfico das durações não cabe na Silences (o único `List` do app são os
+ids dos cortes), então a demo ficou com o `Reorder` e o `Hide`.
+
+#### cada operação, a inversa e onde pode falhar
+
+o código: `crates/uir/src/transform/` (`mod.rs:55` o `Op`, `:197` o
+`Adapted`, `:241` o `apply`, `:268` o `undo`, `:355` a verificação de
+todo resultado; `shape.rs`, `look.rs`, `view.rs` as operações; `tree.rs`
+o caminho até um nó).
+
+| operação | inversa | recusa antes | o verifier recusa |
+| --- | --- | --- | --- |
+| `hide` (`shape.rs:37`) | `show` | raiz, item de um repeat, já escondido, id de instância | `split` com um filho |
+| `show` (`shape.rs:64`) | o nó de lado de novo, na posição guardada | não escondido, dentro de um escondido, lugar escondido ou sumido | `split` com três, controles em duas camadas de um `overlay` |
+| `group` (`shape.rs:136`) | o pai de antes | não irmãos, `into` já usado (na árvore ou de lado), nome repetido | `into` sem `[{item}]` num template, filho de `split`, profundidade e contagem |
+| `reorder` (`shape.rs:156`) | `reorder` com a ordem inteira de antes | repeat (a ordem é do app), estranho, ordem igual | nada |
+| `emphasize` (`look.rs:82`) | props e layout de antes | topo da escala, componente sem token de ênfase | nada |
+| `density` (`look.rs:131`) | props e layout de cada nó que mexeu | nada se move | nada |
+| `restyle` (`look.rs:204`) | props de antes | papel de outro tipo (tinta num texto, fundo num contêiner), componente com cores do tema, papel igual | nada |
+| `swap_view` (`view.rs:58`) | `swap_view` com o componente de antes | fora da família (`view.rs:38`), lista que repete template, chip que manda `activate` | tipo do dado (regra 4), rótulo exigido (regra 7) |
+| `promote` (`view.rs:147`) | o contêiner de antes | ação não declarada, política que deixa de fora quem pediu, ação com parâmetro, já mostrada (ou escondida), lugar sem filhos | autor da superfície sem permissão, destrutiva sem confirmação (regra 6) |
+
+a escada de ênfase do texto segue a rampa do tema por tamanho
+(`look.rs:27` e `:49`): sem estilo é `body` (16) e vai para `title` (20),
+depois `headline` e `h4`.
+
+#### onde o módulo mora e por quê
+
+no `uir` (`crates/uir/src/transform/`), puro: a operação é dado que o
+gravador guarda e que o proponente da fase 2 escreve, e o `propose` só
+depende de `uir` e `sem`; aplicar é função de IR para IR seguida do
+`verify`, que está no `uir`; e o `proptest` só é dev-dependency do
+`uir`. o histórico, quem pediu e a reconciliação ficam no `surface`.
+
+#### o host e o histórico
+
+`crates/surface/src/host.rs`: `apply` (`:201`) confere e verifica a
+operação contra o registro do app sob a política dada, e a superfície
+toma a forma pelo mesmo caminho da troca inteira (`take_form`, `:166`:
+a colisão com as outras superfícies e o `Surface::transform`,
+reconciliado por `SemId`); guarda um `Change` (`:88`: a operação, a
+inversa, o ator). `undo` (`:232`) aplica a última inversa, verificada de
+novo, do mesmo jeito. `changes` (`:263`) e `adapted` (`:269`) leem o
+histórico e o que está de lado. uma operação recusada deixa superfície
+e histórico como estavam; `transform` (`:151`) e `close` (`:308`)
+encerram o histórico. o `apply` recebe a política porque o `VerifiedIr`
+não guarda a sua. a reconciliação da 69 não mudou.
+
+o estado retido, testado em `crates/surface/tests/adapt.rs`: um slider
+no meio de um arraste continua o arraste depois de um `hide`, de um
+`reorder` e do desfazer do `reorder`; um campo mantém o teclado e o caret
+(a tecla cai três posições atrás) depois de `hide`, `emphasize` e
+`reorder`; um clique começado no aplicar do primeiro corte completa
+depois que a lista sobe acima do vídeo, e o app aplica o corte pelo
+dispatcher (a instância do corte manteve o widget).
+
+`PERSON_ONLY`, no mesmo arquivo: uma superfície escrita por uma pessoa
+sobre um cofre cujo `toggle` e `open` o app guarda de agentes; depois de
+`group`, `reorder`, `swap_view` (checkbox para switch) e `promote` do
+`open`, a página projeta as ações com a política do app (agente
+fora); o `promote` pedido por um agente é recusado. no `uir`
+(`crates/uir/tests/transform.rs`), o mesmo com a ação `admin reset`, e o
+autor agente não liga a ação nem para uma pessoa (regra 6).
+
+#### a identidade
+
+`crates/uir/tests/identity.rs`: superfícies aleatórias que verificam por
+construção e sequências de até sete operações escolhidas por índice no
+que a superfície tem quando cada uma se aplica (256 casos): toda
+operação que se aplica verifica, nenhum id sai da superfície, só o
+`hide` tira ids da árvore (os do nó escondido), a inversa volta byte a
+byte; a sequência inteira desfeita na ordem do histórico volta ao
+começo. e toda operação em todo nó das quatro fixtures reais (o
+formulário de commit e a revisão do ide, o todo, a revisão do Claude da
+Silences), com o conjunto de tipos aplicados fixado por fixture.
+
+#### a demo
+
+sobre a fixture do Claude da primeira rodada, pelo gancho novo
+`ShowcaseView::stage_silences_op`
+(`crates/showcase/src/view/apps/silences/generated/page.rs:389`), como o
+host aplica: `reorder review.root: review.title, review.cuts_list` e
+`hide review.controls`. o teste
+(`crates/showcase/src/view/apps/silences/tests/generated/transform.rs`):
+a 1280x800 os dois cortes ficam dentro da janela, acima do vídeo; a
+detecção sai da superfície e continua na tela fixa; o histórico tem as
+duas mudanças pelo `test:regress`; desfazer as duas devolve a fixture
+byte a byte; e o `swap_view` da lista para gráfico é recusado ("repeats
+a template"), com o app declarando uma lista só, `silences:cuts`.
+
+o regress: `State` ganhou `ops` (operações em JSON aplicadas depois da
+proposta, `examples/regress/state.rs:211`), e o estado novo "Silences,
+review by the Claude (fixture), adapted" (`:72`), abençoado a 1280x800
+em core com a imagem.
+
+| | imagem |
+| --- | --- |
+| antes (a fixture do Claude, baseline da 69) | `crates/showcase/fixtures/regress/silences-review-by-the-claude-fixture@core@1280x800/frame.png` |
+| depois (o `reorder` e o `hide`) | `crates/showcase/fixtures/regress/silences-review-by-the-claude-fixture-adapted@core@1280x800/frame.png` |
+
+no antes, a superfície mostra o título, o arquivo, a duração, os dois
+frames e os sliders repetidos, e os cortes ficam abaixo da dobra. no
+depois, logo abaixo do título vêm os dois cortes, cada um com faixa,
+estado, duração, frame, prévia, aplicar e rejeitar; depois o arquivo e
+os frames do vídeo; os sliders saíram da superfície e seguem na tela
+fixa à esquerda.
+
+#### telas fixas
+
+a resposta está na sonda (e) e no ADR: exprimir a tela fixa em IR, tela
+por tela, quando ela cabe no vocabulário (o todo e o formulário de
+commit cabem); a Silences não cabe por causa da linha do tempo, e fica
+fixa e sem transformação até o componente existir. transformar só a
+projeção não é o caminho: o que se vê e o que se projeta se separam.
+
+#### contagem do gate e o regress
+
+| | workspace | perna urnaui | total |
+| --- | --- | --- | --- |
+| antes, `main` @ d64b4b85 (a contagem da 69, sem código mudado desde 25633cba) | 2747 passam, 25 ignorados (139 suítes) | 85 passam, 1 ignorado (6 suítes) | 2832 |
+| depois, esta branch @ ec2ab5db (`./script/gate` offline, saída 0, 21:44:23 a 21:46:38) | 2776 passam, 0 falhas, 25 ignorados (142 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2861 |
+
+29 testes novos (2 do `tree`, 17 de `uir/tests/transform.rs`, 2 de
+`uir/tests/identity.rs`, 5 de `surface/tests/adapt.rs`, 3 da demo) e três
+suítes; nenhum ignorado a mais. o gate inteiro verde, com a perna
+urnaui e o check wasm com `-D warnings`. `df -h /`: 19 GB livres antes
+e depois. `cargo run --offline -p showcase --example regress --
+check` (com o `main.rs` tocado): 170 baselines, 170 iguais, nenhum frame
+desenhado, nenhuma GPU aberta; os 169 de antes iguais, um novo.
+
+#### linha de ADR para o índice (o `docs/ADR/README.md` não está na minha lista)
+
+| 2026-09-24 | [adaptive-transforms-preserve-identity](adaptive-transforms-preserve-identity.md) | proposed | módulo `uir::transform`, puro: nove operações como dado (`Op`, serde com `op`) sobre um `Adapted` (o `VerifiedIr` e os nós guardados de lado); cada resultado verificado de novo, com a inversa exata (a operação contrária onde ela é exata: hide e show, reorder, swap_view; o pedaço de antes onde não: props e layout de emphasize, restyle e density, o pai de group e promote); identidade: todo id na árvore ou guardado, só o hide tira da árvore, sem campo novo no `IrNode`; operação sobre template vale para todo item, id de instância recusado com o template; swap_view só dentro de uma família (valor, bool, escolha, lista) e nunca de uma lista que repete; promote só de ação que o registro declara para quem pediu; `SurfaceHost::apply` e `undo` com histórico (`Change`: operação, inversa, ator), reconciliado por `SemId` como a troca inteira; telas fixas: exprimir em IR, não transformar a projeção (task-70 fase 1) |
+
+#### o que as fases 2 e 3 precisam desta
+
+- fase 2 escreve `Op` no JSON acima (a regra de campo desconhecido já
+  recusa um erro de digitação do modelo) e aplica por
+  `SurfaceHost::apply` com o ator que pediu; falta o schema do `Op` para
+  o prompt, a ação de transformar pelo port da página e a linha de
+  status. as preferências de accessibility são `emphasize` e `density`
+  pedidas em nome da pessoa, com o mesmo histórico.
+- fase 3 lê `SurfaceHost::changes` (com o ator) ao lado dos receipts da
+  63; instalar uma composta é um `promote` depois que o app a declarar.
+
+#### o que ficou aberto
+
+- o gráfico das durações: o app precisaria declarar uma lista de
+  durações (a Silences, fora da fase), e trocar a lista pelo gráfico
+  tiraria da árvore os ids do template; se isso deve virar um "hide
+  dentro do swap", dito no resultado, é decisão do orquestrador. hoje a
+  regra da task vale como está: nenhum id sai sem `hide`.
+- mexer num item só de um template pede uma sobreposição por item no
+  vocabulário (ADR).
+- `emphasize` num botão depois de `md` não muda nada no hoff core: a
+  escada do botão para em 44 px (`crates/surface/src/token.rs:142` a
+  `154`). stat e badge não desenham token de ênfase
+  (`crates/surface/src/draw.rs:304` e `305`), então "números maiores"
+  num stat pede o materializador ler `typography` ali (fase 2, no
+  `surface`).
+- não há refazer; o `Inverse` é só `Serialize` (o `Restore` guarda um
+  `IrNode`, que o `uir` só lê dentro de um documento inteiro).
+- o host recebe a política a cada `apply`; guardar a política de cada
+  superfície ao abrir mudaria o `open`.
+- o estado novo do regress depende do `claude` no PATH de quem abençoa,
+  como os dois de antes (o seletor do proponente).
+- o ADR está como proposto; o índice é do orquestrador.
