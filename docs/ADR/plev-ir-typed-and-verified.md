@@ -237,3 +237,60 @@ checks it and answers with the pointer.
 - a registry declared by hand next to the app's projection.
 - growing the repeat into a template language (loops in loops,
   expressions, interpolated labels) without an ADR.
+
+## addendum, 2026-09-25: the `code` component (task-97, proposed)
+
+### context
+
+the demo 5 of task-80 (task-96) measured a generated review of three
+commits in the ide against the fixed panels and found the surface worse
+on the diff: the vocabulary had no component for code, so the review
+bound the diff's lines to a `table`, five rows of 48 px at a time, with
+no color and no kind of line. the widget existed (`comps::content::CodeBlock`)
+without rows or kinds; the rule above ("a new component needs the widget
+in comps first, then an ADR") is what this addendum follows.
+
+### decision
+
+- `Component::Code`, at the end of the enum and of `Component::ALL`: the
+  comps `CodeBlock`, whose rows mode came first (task-97, additive). its
+  `Spec`: role `region` (a scrollable block of text is a region named by
+  its caption to a screen reader), no children, `Named::Always` (its
+  label is the caption), state `lines` (a list, or one text a row per
+  line) and `kinds` (a list), no event. it is read, never operated: it
+  sends nothing and takes no stop of the focus order.
+- `uir::LineKind` names the kinds an app writes in the state a `code`'s
+  `kinds` binds: `context`, `added`, `removed`, `header`. the IR never
+  holds one; the verifier checks that `kinds` is a list, not its values
+  (values move); the materializer draws a name it does not know as a
+  context line.
+- no line of the verifier changes: rule 3 (no children), the binding
+  rules 4 and 5 (a state it shows, of a kind it takes; no event) and
+  rule 7 (a label) read the `Spec` as for every component. the prompt
+  describes rule 7 with the code among what needs a label, and says the
+  names of the kinds.
+- the schema grows only at its ends: `code` last in the component enum,
+  `lines` and `kinds` last in the names a binding may use; the file is
+  written again. an IR of before reads, verifies and writes back the same
+  document (a test over the eight fixtures of `uir` and `surface`; the
+  three of `uir` byte for byte).
+- the transformation leaves it where it is: no `SwapView` family holds it
+  (a table's `rows` and a code's `lines` stay two views until an ADR says
+  a swap keeps what each shows), and `Restyle` refuses it as it refuses
+  every component drawn in the theme's own colors.
+
+### consequences
+
+- the ide projects `diff:kinds` beside `diff:lines` (task-97): the kind
+  was only the first letter of a line, and a hunk's header carries none
+  (in a commit of several files it starts with its path, so a path that
+  starts with `-`, `+` or a space would read as a line's mark).
+- an app that projects a list named `lines` and one named `kinds` speaks
+  the vocabulary: the rules' review shows them as one `code`
+  (`crates/propose/src/review.rs`).
+
+### avoid
+
+- reading a line's kind from its text in the materializer or in the
+  rules; the app says it in `kinds`.
+- a check of `kinds` values in the verifier.

@@ -55,6 +55,7 @@
 //! }
 //! ```
 
+mod code;
 mod draw;
 mod expand;
 mod host;

@@ -511,3 +511,65 @@ surface open, so the defect passed every phase.
 
 - a generated surface the thesis uses without a baseline in the state a
   person uses it.
+
+## addendum, 2026-09-25: a `code` draws its rows by kind and scrolls (task-97, proposed)
+
+### context
+
+the IR gained `code` (docs/ADR/plev-ir-typed-and-verified.md, addendum
+of task-97), so the review of the ide shows its diff with the kind of
+each line instead of in a table. what it takes to draw it was open: the
+kinds' colors had to come from tokens the theme already has, readable at
+WCAG AA over the block, and a diff longer than its room had to scroll.
+
+### decision
+
+- the comps `CodeBlock` gains rows (`CodeLine`: a text and a
+  `LineKind`) and a scroll offset, additively: without rows it draws
+  exactly as before. with rows, one line box of the mono step per row,
+  cut at the inner width with an ellipsis, clipped to the area under the
+  caption and moved up by the offset.
+- each kind by the tokens the design system already uses for an intent
+  wash (a selected chip, a progress fill): behind a line added,
+  `colors.success` at `glass.wash_alpha`; behind one removed,
+  `colors.danger` at the same alpha; behind a header, `glass.surface_hover`;
+  nothing behind context. the text of every row in `colors.text`, the one
+  text token that reads at AA over every wash: measured as task-75
+  measures (the field over the page or a card, the wash over it, the ink
+  over the wash, in linear light), the lowest is 4.59, a line added in
+  hoff over the page, in the four themes of task-75 and hoff_light. the
+  secondary `text_mid` of the wrapped code would read 3.64 over the added
+  wash in hoff.
+- the wash alone is 1.06 to 1.67 against the block, so the kind never
+  rests on the hue (WCAG 1.4.1): the row's text is the app's, and a
+  diff's text carries its `+` and `-`. the block draws no mark of its own.
+- the surface keeps a `code` in a retained widget (`crates/surface/src/code.rs`):
+  the block, an `engine` `ScrollState` and the comps `Scrollbar`, the
+  pair the fixed diff panel scrolls with. its lines are the block's rows,
+  each with the kind its `kinds` names at the same place; the label is
+  the caption. it is as tall as its rows; bounded by `size.max`, its rows
+  scroll inside it with the wheel, the scrollbar shows while they move,
+  new lines (another diff) start at the top, and the offset is never
+  projected.
+
+### consequences
+
+- the demo 5 of task-80 measured again (task-80, "de novo, com o `code`
+  no IR"): 14 of 14, 7 of 7 and 14 of 18 lines of the three diffs
+  without scrolling, against 5, 5 and 5 in the table and 14, 7 and 18 in
+  the fixed panel. the one height token of the IR (`dropdown_max_h`)
+  bounds the block; the fixed panel takes the window's height.
+- the showcase's code block page does not show the rows (the showcase
+  was outside task-97); no baseline changed.
+- three named themes outside the four task-75 measures read below AA on
+  a line added (tokyo-night 4.30 to 4.38, gruvbox 3.79 to 3.94,
+  one-dark 3.32 to 3.40, and one-dark's removed line 4.00 to 4.12 and
+  its header 4.43 over a card): their
+  `colors.text` is lower than the four's. a theme's color is the design's
+  decision.
+
+### avoid
+
+- a color for a kind that is not a token, or a text token that does not
+  read at AA over its row.
+- projecting a scroll offset.

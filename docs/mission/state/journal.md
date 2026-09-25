@@ -14,6 +14,27 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-97: código e diff no IR, e a demo 5 de novo
+
+- **integrada:** `task/97a-code-in-ir` (9 commits, agente no Opus). o
+  `code` no fim do vocabulário do IR, verificador igual, schema só
+  cresceu no fim, os IR de antes iguais; o `CodeBlock` do comps ganhou
+  linhas com tipo e rolagem, por adição; o ide projeta `diff:kinds`; a
+  revisão das regras mostra o diff no `code`. a task fechou (`checked/`).
+- **validação:** diff inteiro lido; as imagens da demo 5 vistas. aceitei
+  um arquivo fora da lista (`comps/src/content/mod.rs`, só o `pub use`
+  dos tipos novos). gate local verde, 3054 passam (antes 3036); regress
+  176 sem mudança.
+- **a demo 5 pelo mesmo critério:** 14, 7 e 14 linhas coloridas à vista
+  contra 5, 5 e 5 sem cor; o painel fixo ainda ganha em 4 linhas de um
+  commit (o único token de altura do IR é `dropdown_max_h`) e no número
+  de linha. fica misto, agora mais perto.
+- **defeitos visuais achados na validação (P2):** o título do cartão do
+  diff é o id cru do commit; a coluna da superfície ocupa uns 370 px do
+  ide mesmo sem superfície aberta.
+- **com o brenner:** um token de altura para bloco de leitura, ou um
+  layout em que um nó ocupa o que sobra.
+
 ### task-96: uma superfície gerada no ide, e a demo 5
 
 - **integrada:** `task/96a-ide-surface` (14 commits, agente no Opus). uma

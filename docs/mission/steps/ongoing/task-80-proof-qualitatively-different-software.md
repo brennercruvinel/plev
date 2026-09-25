@@ -1139,6 +1139,130 @@ janela pelo brenner fica aberta.
 - o `notes.txt`, fora dos commits, está na gravação só como o que o app
   projeta no painel de changes, nunca na superfície.
 
+### de novo, com o `code` no IR (task-97)
+
+a task-97 pôs no vocabulário do IR o componente que faltava ao diff: o
+`code`, desenhado pelo `CodeBlock` do comps, uma linha por caixa de linha
+do passo mono, com o tipo de cada linha (contexto, adicionada, removida,
+cabeçalho) pelos tokens do tema, e rolagem dentro quando o `size.max` o
+limita. o ide passou a projetar o tipo de cada linha ao lado dela
+(`diff:kinds`), e a revisão das regras mostra o diff num `code` limitado
+pelo mesmo token de antes (`dropdown_max_h`) no lugar da tabela. o
+critério é o de cima, escrito antes da primeira corrida; nada nele mudou.
+o laboratório conta as linhas à vista pela geometria do `code` (a área
+das linhas sobre a altura de uma linha) em vez da tabela, e diz dos dois
+lados quantas das linhas à vista a largura corta, um dado a mais, lido do
+mesmo jeito nos dois.
+
+rodada pelo laboratório sem janela, `ide-lab --arm review`, no build
+`10f66729` da branch `task/97a-code-in-ir`, o mesmo repositório da
+revisão, o mesmo roteiro, a mesma pessoa roteirizada, só as regras.
+
+#### a gravação
+
+`review.monster`, guardada fora do git (na scratchpad da sessão, com o
+`report.json` e os PNGs), 138.262 bytes, 84 eventos, 19 frames, sha256
+`598b83d2...`.
+
+```text
+$ plev-inspect review.monster
+session   rec 0.1.0, built from 10f66729
+span      +0.000s to +0.232s, 84 events, 19 frames
+actors    human: 8 requests, 32 stages, 35 inputs
+requests  8
+  +0.022s  request 1  human  show_diff on stacks.commit[13ed9dbe...]  completed
+  +0.046s  request 2  human  show_diff on stacks.commit[78f371df...]  completed
+  +0.064s  request 3  human  show_diff on stacks.commit[847f583a...]  completed
+  +0.112s  request 4  human  propose on ide_surface.propose           completed: surface = "proposed", nodes = 24
+  +0.147s  request 5  human  show_diff on stacks.commit[13ed9dbe...]  completed
+  +0.166s  request 6  human  show_diff on stacks.commit[78f371df...]  completed
+  +0.184s  request 7  human  show_diff on stacks.commit[847f583a...]  completed
+  +0.227s  request 8  human  close on ide_surface.close               completed: closed = "proposed"
+refusals  0
+```
+
+na timeline, cada diff que chega traz agora o tipo das linhas junto
+(`+0.061s changes diff:lines: added @@ -1,5 +1,6 @@, ...; diff:kinds:
+added header, context, context, added, context, context, context;
+diff:count: 0 -> 7`). a leitura do `code` depois do terceiro diff pela
+superfície:
+
+```text
+$ plev-inspect review.monster --control proposed.diff.lines --at 205
+control proposed.diff.lines at +0.205s
+  node          proposed.diff.lines: region "lines", enabled
+  state         kinds = [header, context, context, added, context, context, context, context,
+                removed, added, context, context, header, added, added, added, added, added],
+                lines = [src/session.rs: @@ -1,9 +1,10 @@,  pub struct Session {, ...]
+  actions       none
+  source        crates/surface/src/project.rs:104:23, in build 10f66729
+
+$ plev-inspect review.monster --control proposed --at 232
+control proposed at +0.232s
+  node          not in the recorded state at that instant
+```
+
+#### o resultado lado a lado, pelo mesmo critério
+
+| critério | superfície, task-96 | superfície, task-97 | painel fixo (nesta corrida) | fonte |
+| --- | --- | --- | --- | --- |
+| atos para ver os arquivos e o diff dos três | 5 cliques e 26 teclas; fechar é mais 1 | 5 cliques e 26 teclas; fechar é mais 1 | 3 cliques | receipts e inputs gravados |
+| tempo, relógio do workbench (máquina, não pessoa) | 73 ms; a proposta em 0 ms, 24 nós | 94 ms; a proposta em 0 ms, 24 nós | 64 ms (47 ms na corrida da task-96) | `report.json` |
+| arquivos dos três à vista de uma vez | 3 de 3 | 3 de 3 | 1 de 3 no máximo | ligações e `diff:lines` |
+| linhas do diff à vista sem rolar | 5 de 14, 5 de 7, 5 de 18 (tabela, linhas de 48 px) | 14 de 14, 7 de 7, 14 de 18 (`code`, linhas de 19,6 px, limitado por `dropdown_max_h`, 320 px; o resto rola dentro) | 14 de 14, 7 de 7, 18 de 18 | ligações e a geometria de cada vista |
+| das linhas à vista, cortadas na largura (dado novo) | não medido | 0, 0 e 3 | 0, 0 e 4 | a largura de cada vista, medida pelo `TextMeasurer` |
+| o tipo de cada linha | sem cor | a lavagem do token do tipo atrás da linha (verde, vermelha, cinza no cabeçalho) e a marca `+` ou `-` no texto | a linha tingida, a marca colorida | o frame e `diff:kinds` |
+| número de linha | não | não | sim, antigo e novo | o frame |
+| os três commits à vista | 3 cartões inteiros | 3 cartões inteiros | 3 cartões, a mensagem cortada | ligações |
+| cada ato no dispatcher, com o receipt da pessoa | os 5 de `human`, `completed` | os 5 de `human`, `completed`; o `show_diff` chega como a capacidade do app | os 3 de `human`, `completed` | summary do `plev-inspect` |
+| nada da superfície depois de fechar | 0 nós, 0 ligações, 0 superfícies | 0 nós, 0 ligações, 0 superfícies; no estado gravado de +0.114 s (a proposta) até antes do close (+0.227 s); o último frame não liga nada dela | não se aplica | `report.json` e a sessão |
+
+o que isso diz, pelo critério escrito antes: o diff deixou de ser o
+ponto fraco nos dois primeiros commits e ficou perto no terceiro. a
+superfície mostra agora 14 de 14 e 7 de 7 linhas, igual ao painel fixo,
+com a cor pelo tipo de cada linha; no terceiro commit, 18 linhas, mostra
+14 sem rolar contra 18 do painel fixo, e as outras 4 rolam dentro do
+bloco. e o número de linha continua só no painel fixo. nos arquivos ela
+segue melhor (3 contra no máximo 1) e nos atos segue pior (5 cliques e 26
+teclas contra 3 cliques). então, na tarefa inteira ("ver os arquivos e o
+diff dos três"), a superfície ainda não é melhor que o painel fixo: pelo
+método, a demo 5 continua caindo no diff, agora por 4 linhas de um dos
+três commits e pelo número de linha, e continua de pé nos arquivos. os
+atos fora do dispatcher e o rastro depois de fechar, as outras duas coisas
+que a derrubam, não aconteceram.
+
+onde ela perde, e por quê:
+
+- as 4 linhas do terceiro diff: o `code` é limitado pelo único token de
+  altura do vocabulário (`SizeToken::DropdownMaxH`, 320 px no hoff), que
+  dá 14 linhas de 19,6 px abaixo da legenda; o painel fixo usa a altura
+  da janela. a superfície se desenha pelo conteúdo, então um bloco não
+  sabe quanto sobra da coluna; sem o limite, um diff de 200 linhas
+  passaria da janela sem rolar. fechar isso pede um token de altura para
+  um bloco de leitura (tema, decisão de design do brenner) ou um layout em
+  que um nó toma o que sobra do retângulo da superfície (decisão do
+  orquestrador).
+- o número de linha: a projeção leva a marca de cada linha, não os
+  números antigo e novo (`crates/ide/src/workbench/project.rs`, `diff`).
+- os atos: a intenção digitada e o propor, como na primeira corrida.
+
+o que isso não cobre, dito como na primeira: só as regras; a pessoa
+roteirizada, então o tempo é de máquina (e varia de corrida a corrida: o
+painel fixo levou 47 ms na primeira e 64 ms nesta); diffs pequenos; a
+demo com janela pelo brenner segue aberta. com a superfície aberta, o
+painel fixo, mais estreito, continua mostrando o mesmo diff à esquerda,
+então a pessoa vê o diff duas vezes; o critério compara os dois braços
+separados, como antes.
+
+#### privacidade da gravação
+
+a mesma da primeira: 9 `pointer_down` com o controle sob ele e a
+posição, 26 `text` sem alvo e sem conteúdo; a intenção só como o estado
+projetado da linha; nenhum nó `secret`; o `notes.txt` fora dos commits
+nunca na superfície. o que entrou: `diff:kinds`, os nomes dos tipos das
+linhas do diff que o app já mostra, no estado gravado ao lado de
+`diff:lines`.
+
 ## fase 1: handoff (2026-09-25)
 
 ```text

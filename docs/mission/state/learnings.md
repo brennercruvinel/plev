@@ -12,6 +12,18 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-25, task-97
+
+- **medir de novo pelo mesmo critério mostrou o próximo teto:** com o
+  componente de diff, a demo 5 passou de 5 para 14 linhas à vista, e o
+  que sobrou de derrota é o layout (um só token de altura), não o
+  componente. cada rodada de medida move o gargalo; o critério fixo é o
+  que deixa ver para onde. fonte: a demo 5 no arquivo da task-80.
+- **olhar a imagem pega o que o teste não pega:** os testes da demo
+  contam linhas e atos, e passaram com o título do cartão sendo o id cru
+  do commit e a coluna vazia apertando o ide. a validação do orquestrador
+  abre as imagens, sempre. fonte: a demo 5 da task-97.
+
 ### 2026-09-25, task-96 e a demo 5
 
 - **a superfície gerada ganha onde junta, perde onde precisa de um
