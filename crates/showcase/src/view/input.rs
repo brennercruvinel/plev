@@ -124,7 +124,7 @@ impl ShowcaseView {
             Some(Pane::Files) => self.panes.files.handle_escape(),
             Some(Pane::Capture) => self.panes.capture.handle_escape(),
             Some(Pane::Git) => self.panes.git.handle_escape(),
-            _ => false,
+            _ => self.blur_component(),
         };
         if blurred {
             return true;

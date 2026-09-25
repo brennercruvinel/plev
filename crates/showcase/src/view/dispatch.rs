@@ -9,8 +9,8 @@ use engine::platform::capture::Capture;
 use engine::theme::Theme;
 use sem::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot, SnapshotBuilder, Value};
 
-use super::components::toast;
 use super::{Layers, Pane, ShowcaseView, panel};
+use component::After;
 
 impl ShowcaseView {
     /// Natural (unclipped) height of the active page's content.
@@ -121,7 +121,7 @@ impl ShowcaseView {
                 Pane::Dialog => {
                     let (r, open) = self.panes.dialog.handle_event(event, content, t);
                     if let Some(destructive) = open {
-                        self.open_modal(destructive);
+                        self.after_component(After::Modal { destructive });
                     }
                     r
                 }
@@ -148,8 +148,7 @@ impl ShowcaseView {
                 Pane::Toast => {
                     let (r, queued) = self.panes.toast.handle_event(event, content, t);
                     if let Some(intent) = queued {
-                        self.toasts
-                            .push(toast::ToastPage::message(intent), intent, &self.theme);
+                        self.after_component(After::Toast(intent));
                     }
                     r
                 }
@@ -350,7 +349,8 @@ impl ShowcaseView {
     }
 
     /// What the active page means, when it projects it (the todo page,
-    /// the surface over it, the silences, the files, the capture), and
+    /// the surface over it, the silences, the files, the capture, a
+    /// component page whose widgets project in comps), and
     /// what the view shows over it while it does (`overlay`: the toasts on
     /// screen, the modal or the context menu that holds the pointer): the
     /// snapshot assistive technology is shown (`reader_semantics` builds
@@ -383,7 +383,8 @@ impl ShowcaseView {
             Some(Pane::Silences) => self.panes.silences.projection(),
             Some(Pane::Files) => self.panes.files.snapshot(),
             Some(Pane::Capture) => self.panes.capture.snapshot(),
-            _ => return None,
+            Some(pane) => self.component_semantics(pane)?,
+            None => return None,
         };
         let snapshot = snapshot
             .inspect_err(|e| log::warn!("the projection does not validate: {e}"))
@@ -437,7 +438,7 @@ impl ShowcaseView {
                 let todo = &mut self.panes.todo;
                 self.panes.capture.act(req, todo, inert)
             }
-            _ => None,
+            _ => self.act_component(req),
         }
     }
 
@@ -490,7 +491,7 @@ impl ShowcaseView {
                 self.panes.capture.set_inert(inert);
                 self.panes.capture.focus(id)
             }
-            _ => false,
+            _ => self.focus_component(id),
         }
     }
 
@@ -531,6 +532,10 @@ impl ShowcaseView {
 /// reader goes through, desktop only.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod agent;
+
+/// The component pages whose widgets project in comps, projected and run
+/// through the gallery's dispatcher (task-75 phase 2b).
+pub(in crate::view) mod component;
 
 /// The active page in a window of its own as well (task-76 item 2): the
 /// view's side of the second window.
