@@ -1754,28 +1754,33 @@ o agente gastou uns 350 mil tokens.
 
 ## handoff da fase 2d (2026-09-25)
 
-branch `task/75e-roving`, sobre `main` em `12e18669`. sem push. fecha o
-item "teclado completo nas páginas de componente, com teste" nas 29
-páginas; a Resizable fica de fora (pede o papel de splitter).
+branch `task/75e-roving`, sobre `main` em `12e18669`. sem push. listas e
+tabelas ganham o teclado; abas e árvore ficam como na fase 2c (cada item
+uma parada de Tab), por decisão do orquestrador (ver pendências). a
+Resizable fica de fora (pede o papel de splitter).
 
 ### commits
 
 1. `e61cfa14` listas e tabelas focáveis, uma linha por vez.
-2. `63e36503` abas e árvore como uma parada só de Tab.
+2. `63e36503` abas e árvore como uma parada só (desfeito no 6).
 3. `503b9bef` os testes, sem janela.
-4. `cc6fafc9` as 12 baselines, só significado.
-5. este commit: o handoff.
+4. `cc6fafc9` as 12 baselines, só significado (4 delas voltam no 6).
+5. `10891b80` o primeiro handoff.
+6. `2a19ad66` a correção do orquestrador: abas e árvore voltam à fase 2c
+   (projeção, testes e o teste do leitor iguais à main), e as baselines
+   de tabs e tree voltam às da main, sem bless novo.
+7. este commit: o handoff corrigido.
 
 ### o mecanismo
 
-a projeção diz qual item do widget é focável (o tabindex que roda do
-WAI-ARIA): só esse entra na sequência de Tab, então `focus::next` para
-uma vez em cada widget. quem decide é o comps, no `project` de cada um:
-o item focado, senão o escolhido, senão o primeiro. as setas
-(`view/dispatch/keyboard.rs`) andam entre todos os itens do widget,
-focáveis ou não, e o item que recebe o foco vira a parada na projeção
-seguinte. nenhuma ordem própria na view, nada novo no `sem` nem no
-engine.
+a lista e a tabela dizem na projeção qual linha é focável (o tabindex
+que roda do WAI-ARIA): só essa entra na sequência de Tab, então
+`focus::next` para uma vez em cada uma. quem decide é o comps, no
+`project`: a linha focada, senão a selecionada em vista, senão a
+primeira em vista. as setas (`view/dispatch/keyboard.rs`) andam entre
+todas as linhas, focáveis ou não, e a linha que recebe o foco vira a
+parada na projeção seguinte. nenhuma ordem própria na view, nada novo no
+`sem` nem no engine.
 
 ### o que mudou por widget
 
@@ -1783,8 +1788,7 @@ engine.
 |---|---|---|---|---|
 | lista (Scroll Area, Item) | a linha focada, senão a selecionada em vista, senão a primeira em vista | cima e baixo; Home e End às pontas da lista inteira (10 mil linhas), guardada ou não; Enter e Espaço selecionam | `VirtualList::set_focused` (rola até a linha), `focused` (segue a rolagem), `tab_stop`, `shown`; o anel dentro da linha | toma e larga o foco; o clique larga, como na árvore |
 | tabela (Table, Data Table) | a mesma regra, nas linhas | as mesmas | `Table::project` usa a parada da lista | a mesma |
-| abas | a aba focada, senão a ativa | as de antes | `Tabs::project` | nada |
-| árvore | a linha focada, senão a selecionada, senão a primeira, entre as que aparecem | as de antes | `Tree::project` | nada |
+| abas, árvore | como na fase 2c: cada item é uma parada | as da fase 2c | nada | nada |
 
 o foco segue a rolagem nos dois sentidos: a seta rola o mínimo para a
 linha focada caber inteira, e a roda, quando tira a linha focada de
@@ -1795,24 +1799,20 @@ nunca some. a seta que rola mostra a barra de rolagem, como a roda.
 
 - `crates/showcase/tests/component_pages/keyboard.rs`: o Tab em todas
   as 30 páginas agora chega em 29 (só a Resizable fica sem nó focável),
-  e em cada tab list, árvore, lista e tabela para uma vez só (6 páginas
-  com widget assim, lista conferida). novo
-  `the_arrows_walk_the_rows_of_a_list_and_a_table`, nas 4 páginas: Tab
-  cai na primeira linha, setas, Home e End às pontas com rolagem, o anel
-  na linha, a linha focada é a única parada, Enter e Espaço selecionam
-  como o clique (o estado inteiro igual ao do clique), Escape e Tab voltam
-  na selecionada, a roda leva o foco junto e ele nunca some. os testes de
-  abas e árvore conferem a parada única e o Tab voltando na aba ativa e na
-  linha selecionada.
-- `crates/comps/src/tests/widgets/semantics/roving.rs` (5): a parada de
-  cada widget; a linha que rola para a vista; o foco seguindo a roda.
+  e em cada lista e tabela para uma vez só (4 páginas, lista conferida).
+  novo `the_arrows_walk_the_rows_of_a_list_and_a_table`, nas 4 páginas:
+  Tab cai na primeira linha, setas, Home e End às pontas com rolagem, o
+  anel na linha, a linha focada é a única parada, Enter e Espaço
+  selecionam como o clique (o estado inteiro igual ao do clique), Escape
+  e Tab voltam na selecionada, a roda leva o foco junto e ele nunca
+  some. os testes de abas e árvore são os da fase 2c.
+- `crates/comps/src/tests/widgets/semantics/roving.rs` (3): a parada da
+  lista e da tabela; a linha que rola para a vista; o foco seguindo a
+  roda.
 - `crates/comps/src/tests/focus.rs` (+1): o anel dentro da linha da lista
   e da tabela.
-- mudou um teste: em `crates/showcase/tests/access_tree.rs`,
-  `every_control_has_a_name_and_takes_focus_and_no_group_is_empty` aceita
-  uma aba ou linha da árvore sem o `Focus` do leitor quando outro item do
-  mesmo widget é a parada (ver pendências). digitar num campo, o clique e
-  o mouse: os testes de 2b e 2c seguem verdes sem mudança.
+- `crates/showcase/tests/access_tree.rs` igual à main. digitar num campo,
+  o clique e o mouse: os testes de 2b e 2c seguem verdes sem mudança.
 
 ### as baselines regravadas
 
@@ -1820,8 +1820,8 @@ o antes e o depois de cada uma estão em `target/task-75e/baselines/<página>@<t
 (`before.png`, `after.png`, `before-after.png` lado a lado,
 `before.semantics.json`, `after.semantics.json`, `semantics.diff`). os
 PNGs antes e depois são iguais byte a byte; o regress disse "visual
-unchanged" nas 12, sem desenhar quadro. o `scene.json` de cada uma muda
-só a revisão da projeção.
+unchanged", sem desenhar quadro. o `scene.json` de cada uma muda só a
+revisão da projeção.
 
 - data-table@core: a linha 0 passa a ser focável.
 - data-table@hoff: a linha 0 passa a ser focável.
@@ -1831,12 +1831,10 @@ só a revisão da projeção.
 - scroll-area@hoff: o item 0 passa a ser focável.
 - item@core: o item 0 passa a ser focável.
 - item@hoff: o item 0 passa a ser focável.
-- tabs@core: Appearance e About saem da sequência de Tab; Account fica.
-- tabs@hoff: Appearance e About saem da sequência de Tab; Account fica.
-- tree@core: as 8 linhas depois de src saem da sequência de Tab; src fica.
-- tree@hoff: as 8 linhas depois de src saem da sequência de Tab; src fica.
 
-nenhuma outra baseline mudou.
+tabs e tree (core e hoff) foram regravadas no commit 4 e voltaram às da
+main no commit 6; as pastas delas em `target/task-75e/baselines/` são do
+primeiro handoff e não valem mais. nenhuma outra baseline mudou.
 
 ### o PNG
 
@@ -1846,24 +1844,24 @@ linha file_2.rs.
 
 ### gate e regress
 
-- `./script/gate` verde, pernas urnaui e wasm rodaram: 3220 passam (3135
-  no workspace, 85 no urnaui), 28 ignorados, 0 falhas. a branch soma 7
+- `./script/gate` verde, pernas urnaui e wasm rodaram: 3218 passam (3133
+  no workspace, 85 no urnaui), 28 ignorados, 0 falhas. a branch soma 5
   testes e não tira nenhum.
-- `regress check` antes do bless: 176 baselines, 12 mudaram (as da
-  lista, só significado). depois do bless: 176 iguais.
+
+- `regress check` antes do bless: 176 baselines, 12 mudaram (só
+  significado); depois da correção: 176 iguais.
 - `Cargo.toml`, `Cargo.lock`, engine, tema, `sem` e wire intocados.
   sempre `--offline`, com `PLEV_CLAUDE` no stub, sem janela e sem tecla do
   sistema.
 
 ### pendências
 
-- o leitor de tela e o foco: o contrato liga `focusable` à sequência de
-  Tab, e o engine só oferece o `Focus` do leitor ao nó focável. então uma
-  aba ou linha da árvore que não é a parada não recebe mais o `Focus` do
-  leitor; ele ainda lê, seleciona e aperta qualquer uma. o certo é o
-  contrato ter "focável fora da sequência de Tab" (o tabindex -1), o que
-  pede `sem` e engine. as linhas de lista e tabela não perdem nada (antes
-  nenhuma era focável).
+- parada única por widget composto pede no contrato um focável fora da
+  sequência de Tab. hoje o contrato liga `focusable` à sequência de Tab,
+  e o engine só oferece o `Focus` do leitor ao nó focável: tirar uma aba
+  ou uma linha da árvore da sequência tira o `Focus` do leitor dela. por
+  isso abas e árvore seguem com uma parada por item. as linhas de lista e
+  tabela não perdem nada (antes nenhuma era focável).
 - o split da Resizable: pede um papel de splitter no contrato.
 - os atalhos anunciados: o `sem::Node` não tem campo de atalho.
 - PageUp e PageDown nas listas, e o menu de contexto pelo teclado: a
