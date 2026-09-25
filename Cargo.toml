@@ -13,6 +13,7 @@ members = [
     "crates/git",
     "crates/ide",
     "crates/inspect",
+    "crates/inspector",
     "crates/lot",
     "crates/monster",
     "crates/svg",

@@ -66,6 +66,7 @@ cargo run -p comps --example editor    # the design-system editor demo
 cargo run -p wire --bin plev -- observe --scope todo --app showcase   # an app opened with PLEV_AGENT=1 (debug), as an agent sees it
 cargo run -p wire --bin plev -- act todo.item[1] toggle --from-revision <rev>   # act on what that observation saw; exit 0 done, 1 rejected, 2 failed, 3 error
 cargo run -p inspect --bin plev-inspect -- <session.monster> [--timeline] [--why <request>] [--control <id> --at <ms>] [--json]   # a recorded session read back: a summary, every event, a request's causal chain, a control at an instant; it never runs anything
+cargo run -p inspector --bin plev-inspector -- <session.monster>   # the inspector's window: the timeline and the scrub, the recorded frame with its controls, the thesis answers about the control clicked; it never runs anything
 cargo run -p claude-model --example propose -- --app todo "show the filter as chips and hide the counts"   # an intent to a verified IR over the todo's (or --app ide, the workbench's) golden projection, proposed by the Claude through the local claude -p (PLEV_CLAUDE names another program); prints each attempt, the time and the IR
 ```
 
@@ -122,7 +123,7 @@ demos are the engine's (and comps') examples.
 |---|---|---|
 | engine | `crates/engine` | gpu, compositor, effects, text, path, layout, input, actions, animation, signal, theme (the tokens), graph, builder, window, headless, accessibility, perf, hot_reload, platform |
 | comps | `crates/comps` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/catalog.md](docs/catalog.md) |
-| crates | `crates/` | claude-model, git, ide, inspect, lot, macros, monster, narrate, narrate-macro, parser, prime, propose, rec, rope, sem, showcase, surface, svg, uir, urnaui, wire |
+| crates | `crates/` | claude-model, git, ide, inspect, inspector, lot, macros, monster, narrate, narrate-macro, parser, prime, propose, rec, rope, sem, showcase, surface, svg, uir, urnaui, wire |
 | examples | `crates/engine/examples/`, `crates/comps/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters and svg2monster clis |
 
 `comps` is the crate an app draws with. widgets are plain structs the app

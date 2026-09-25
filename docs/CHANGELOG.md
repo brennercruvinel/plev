@@ -9,6 +9,13 @@ status: living
 
 ## unreleased
 
+- a window for a recorded session (2026-09-25, task-64):
+  `plev-inspector <session.monster>` shows the timeline with a scrub, the
+  frame that was on screen at that instant with every control outlined,
+  and, for the control clicked, what it was, its state, who observed what,
+  the request, the verdict with what changed, and the result. it only
+  reads the file: nothing in it can send a request.
+
 - every page compared on the web and on iOS (2026-09-25, task-77): the
   web build opens any page from its address (`?page=…&theme=…`), and the
   capture scripts take `--all`. of 82 pages, 79 match the desktop byte for
