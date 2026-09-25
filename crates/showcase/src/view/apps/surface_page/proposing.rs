@@ -33,6 +33,12 @@
 //! row is shared with the Silences page (task-69 phase 4b), which puts it
 //! over its fixed screen under its own region (`silences_surface`): the
 //! region's name is the row's one parameter, the rest is the same.
+//!
+//! With a surface open, `propose` reads the intent as a change of it
+//! first (task-70 phase 2, `changing`): the rules or the Claude answer
+//! operations, applied by the host with the actor who asked, and "undo"
+//! takes the last change back; an intent that is no change proposes a
+//! surface, as before.
 
 use std::time::Duration;
 
@@ -44,6 +50,8 @@ use propose::{Llm, Model};
 use sem::{Request, Role, SemError, SemId, SnapshotBuilder, Value};
 
 use super::asking::{Claude, POLL, Pending};
+
+pub(crate) mod changing;
 
 /// The ids the page's own capabilities project and bind.
 pub(crate) struct Ids {
@@ -111,9 +119,24 @@ pub(crate) enum Said {
     /// Why there is no proposal: the rules' error, the verifier's, the
     /// model's, or who cancelled it.
     Refused(String),
+    /// The surface shown was changed by the rules for this intent, by
+    /// this many operations.
+    Changed { intent: String, steps: usize },
+    /// The surface shown was changed by the Claude for this intent: by
+    /// how many operations, in how many attempts, how long it took, what
+    /// it cost.
+    ChangedBy {
+        intent: String,
+        steps: usize,
+        attempts: usize,
+        took: Duration,
+        cost_usd: Option<f64>,
+    },
+    /// The last change asked was taken back, this many operations.
+    Undone(usize),
 }
 
-fn usd(cost: Option<f64>) -> String {
+pub(crate) fn usd(cost: Option<f64>) -> String {
     cost.map_or_else(|| "cost unknown".to_owned(), |c| format!("{c:.3} USD"))
 }
 
@@ -139,6 +162,7 @@ impl Said {
                 )
             }
             Said::Refused(why) => why.clone(),
+            Said::Changed { .. } | Said::ChangedBy { .. } | Said::Undone(_) => changing::text(self),
         }
     }
 }
@@ -372,12 +396,20 @@ impl Proposing {
             }
             (
                 None,
-                Some(Said::Answered {
-                    attempts,
-                    took,
-                    cost_usd,
-                    ..
-                }),
+                Some(
+                    Said::Answered {
+                        attempts,
+                        took,
+                        cost_usd,
+                        ..
+                    }
+                    | Said::ChangedBy {
+                        attempts,
+                        took,
+                        cost_usd,
+                        ..
+                    },
+                ),
             ) => {
                 status
                     .state("attempt", int(*attempts))
@@ -388,6 +420,7 @@ impl Proposing {
             }
             _ => {}
         }
+        changing::project(self.said.as_ref(), &mut status);
         if self.intent.is_focused() {
             b.focus(&ids.intent);
         }

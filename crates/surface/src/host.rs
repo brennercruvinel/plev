@@ -2,10 +2,12 @@
 //! app: its dispatcher (`Dispatch`) and its frames (`Frames`).
 //!
 //! a surface changes form two ways: a whole new `VerifiedIr`
-//! (`transform`, a new proposal), or one small operation at a time
-//! (`apply`, task-70), each verified again, reconciled the same way, and
-//! kept with its inverse and who asked, so the last one is undone
-//! (`undo`).
+//! (`transform`, a new proposal), or small operations (`apply`, one;
+//! `apply_all`, the ones a person or an agent asked for together,
+//! task-70), each verified again under the policy the surface was
+//! verified under (kept here since it opened), reconciled the same way,
+//! and kept with its inverse and who asked, so the last one is undone
+//! (`undo`), or the last ask whole (`undo_asked`).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -92,11 +94,13 @@ pub struct Change {
 }
 
 /// the transformations of one open surface: the form they left it in,
-/// with the nodes set aside, and every change applied, the last one last.
+/// with the nodes set aside, every change applied, the last one last,
+/// and how many changes each ask made, in order.
 #[derive(Debug)]
 struct Adapting {
     now: Adapted,
     changes: Vec<Change>,
+    asks: Vec<usize>,
 }
 
 /// the active surfaces of an app, in the order they opened. each is a
@@ -110,6 +114,9 @@ pub struct SurfaceHost {
     reduced: bool,
     /// the transformations of each surface since it took its form.
     adapting: BTreeMap<SemId, Adapting>,
+    /// the policy each open surface was verified under: its operations
+    /// are verified under it again.
+    policies: BTreeMap<SemId, GenerationPolicy>,
 }
 
 impl SurfaceHost {
@@ -117,10 +124,22 @@ impl SurfaceHost {
         SurfaceHost::default()
     }
 
-    /// materializes `ir` over `app` and keeps it open. refused when a
-    /// surface with its id is open, or when one of its nodes would take
-    /// the id of a node another open surface holds.
+    /// materializes `ir` over `app` and keeps it open, as verified under
+    /// the default policy (`open_under`). refused when a surface with its
+    /// id is open, or when one of its nodes would take the id of a node
+    /// another open surface holds.
     pub fn open(&mut self, ir: VerifiedIr, app: &Snapshot) -> Result<&mut Surface, SurfaceError> {
+        self.open_under(ir, app, GenerationPolicy::default())
+    }
+
+    /// `open`, with the policy `ir` was verified under: every operation
+    /// on the surface is verified under it again.
+    pub fn open_under(
+        &mut self,
+        ir: VerifiedIr,
+        app: &Snapshot,
+        policy: GenerationPolicy,
+    ) -> Result<&mut Surface, SurfaceError> {
         let mut surface = Surface::materialize(ir, app);
         surface.set_reduced_motion(self.reduced);
         if self.get(surface.id()).is_some() {
@@ -129,6 +148,7 @@ impl SurfaceHost {
         let ids = std::iter::once(surface.id()).chain(surface.nodes());
         self.collision(ids.collect(), None)?;
         let at = self.surfaces.len();
+        self.policies.insert(surface.id().clone(), policy);
         self.surfaces.push(surface);
         Ok(&mut self.surfaces[at])
     }
@@ -139,17 +159,34 @@ impl SurfaceHost {
     /// nodes would take the id of a node another open surface holds; the
     /// surface keeps its form then.
     /// a whole new form ends the history of the one before: what was set
-    /// aside and every change are let go.
+    /// aside and every change are let go. the form is taken as verified
+    /// under the default policy (`transform_under`).
     pub fn transform(
         &mut self,
         ir: VerifiedIr,
         app: &Snapshot,
     ) -> Result<&mut Surface, SurfaceError> {
+        self.transform_under(ir, app, GenerationPolicy::default())
+    }
+
+    /// `transform`, with the policy the new form was verified under.
+    pub fn transform_under(
+        &mut self,
+        ir: VerifiedIr,
+        app: &Snapshot,
+        policy: GenerationPolicy,
+    ) -> Result<&mut Surface, SurfaceError> {
         let id = ir.ir().surface.id.clone();
         let at = self.at(&id)?;
         self.take_form(at, ir, app)?;
         self.adapting.remove(&id);
+        self.policies.insert(id, policy);
         Ok(&mut self.surfaces[at])
+    }
+
+    /// the policy the open surface `id` was verified under.
+    pub fn policy(&self, id: &SemId) -> Option<&GenerationPolicy> {
+        self.get(id).and(self.policies.get(id))
     }
 
     /// where the open surface `id` is, or `NotOpen`.
@@ -182,18 +219,20 @@ impl SurfaceHost {
             .or_insert_with(|| Adapting {
                 now: Adapted::new(surface.verified().clone()),
                 changes: Vec::new(),
+                asks: Vec::new(),
             });
         if entry.now.verified() != surface.verified() {
             entry.now = Adapted::new(surface.verified().clone());
             entry.changes.clear();
+            entry.asks.clear();
         }
         entry
     }
 
     /// `op`, asked by `by`, on the open surface `id` over `app`: checked
-    /// and verified again against the app's registry under `policy` (the
-    /// policy the surface was verified under), the surface takes the form
-    /// it makes, reconciled by `SemId` as `transform` does (a widget whose
+    /// and verified again against the app's registry under the policy
+    /// the surface was verified under, the surface takes the form it
+    /// makes, reconciled by `SemId` as `transform` does (a widget whose
     /// node stays keeps what lives in it), and the change is kept for
     /// `undo`. refused, the surface as it was, when it is not open, when
     /// the operation makes no verified surface, or when the form would
@@ -204,23 +243,47 @@ impl SurfaceHost {
         op: Op,
         by: Actor,
         app: &Snapshot,
-        policy: &GenerationPolicy,
+    ) -> Result<&mut Surface, SurfaceError> {
+        self.apply_all(id, vec![op], by, app)
+    }
+
+    /// `ops`, asked together by `by`, as `apply` does each, in order,
+    /// each over what the ones before made: all or none. the surface
+    /// takes the form they make once, and the changes are kept as one
+    /// ask (`undo_asked`). an empty list changes nothing.
+    pub fn apply_all(
+        &mut self,
+        id: &SemId,
+        ops: Vec<Op>,
+        by: Actor,
+        app: &Snapshot,
     ) -> Result<&mut Surface, SurfaceError> {
         let at = self.at(id)?;
         let caps = Capabilities::from_snapshot(app);
+        let policy = self.policies.get(id).cloned().unwrap_or_default();
         let cx = Context {
             caps: &caps,
-            policy,
+            policy: &policy,
         };
-        let (next, inverse) = self
-            .adapting(at)
-            .now
-            .apply(&op, &by, cx)
-            .map_err(SurfaceError::Transform)?;
-        self.take_form(at, next.verified().clone(), app)?;
+        let mut now = self.adapting(at).now.clone();
+        let mut changes = Vec::with_capacity(ops.len());
+        for op in ops {
+            let (next, inverse) = now.apply(&op, &by, cx).map_err(SurfaceError::Transform)?;
+            now = next;
+            changes.push(Change {
+                op,
+                inverse,
+                by: by.clone(),
+            });
+        }
+        if changes.is_empty() {
+            return Ok(&mut self.surfaces[at]);
+        }
+        self.take_form(at, now.verified().clone(), app)?;
         if let Some(adapting) = self.adapting.get_mut(id) {
-            adapting.now = next;
-            adapting.changes.push(Change { op, inverse, by });
+            adapting.now = now;
+            adapting.asks.push(changes.len());
+            adapting.changes.extend(changes);
         }
         Ok(&mut self.surfaces[at])
     }
@@ -229,33 +292,69 @@ impl SurfaceHost {
     /// inverse, verified again, reconciled as `apply` does. the change
     /// undone; refused, the surface as it was, when there is none or the
     /// form before no longer verifies against the app.
-    pub fn undo(
+    pub fn undo(&mut self, id: &SemId, app: &Snapshot) -> Result<Change, SurfaceError> {
+        let mut undone = self.take_back(id, app, |_| 1)?;
+        undone
+            .pop()
+            .ok_or_else(|| SurfaceError::NothingToUndo(id.clone()))
+    }
+
+    /// undoes the last ask on the open surface `id`, every change it made
+    /// (the last first), as `undo` does one: the form before them taken
+    /// once. the changes undone, in the order they were made.
+    pub fn undo_asked(&mut self, id: &SemId, app: &Snapshot) -> Result<Vec<Change>, SurfaceError> {
+        self.take_back(id, app, |a| a.asks.last().copied().unwrap_or(0))
+    }
+
+    /// the last `count(adapting)` changes of the open surface `id`
+    /// undone, verified again, the form they leave taken once.
+    fn take_back(
         &mut self,
         id: &SemId,
         app: &Snapshot,
-        policy: &GenerationPolicy,
-    ) -> Result<Change, SurfaceError> {
+        count: impl Fn(&Adapting) -> usize,
+    ) -> Result<Vec<Change>, SurfaceError> {
         let at = self.at(id)?;
         let caps = Capabilities::from_snapshot(app);
+        let policy = self.policies.get(id).cloned().unwrap_or_default();
         let cx = Context {
             caps: &caps,
-            policy,
+            policy: &policy,
         };
         let adapting = self.adapting(at);
-        let Some(last) = adapting.changes.last() else {
+        let made = adapting.changes.len();
+        let n = count(adapting).min(made);
+        if n == 0 {
             return Err(SurfaceError::NothingToUndo(id.clone()));
-        };
-        let before = adapting
-            .now
-            .undo(&last.inverse, cx)
-            .map_err(SurfaceError::Transform)?;
+        }
+        let mut before = adapting.now.clone();
+        for change in adapting.changes[made - n..].iter().rev() {
+            before = before
+                .undo(&change.inverse, cx)
+                .map_err(SurfaceError::Transform)?;
+        }
         self.take_form(at, before.verified().clone(), app)?;
-        let adapting = self.adapting.get_mut(id);
-        let undone = adapting.and_then(|a| {
-            a.now = before;
-            a.changes.pop()
-        });
-        undone.ok_or_else(|| SurfaceError::NothingToUndo(id.clone()))
+        let adapting = self
+            .adapting
+            .get_mut(id)
+            .ok_or_else(|| SurfaceError::NothingToUndo(id.clone()))?;
+        adapting.now = before;
+        let undone = adapting.changes.split_off(made - n);
+        let mut left = n;
+        while left > 0 {
+            match adapting.asks.last_mut() {
+                Some(k) if *k > left => {
+                    *k -= left;
+                    left = 0;
+                }
+                Some(k) => {
+                    left -= *k;
+                    adapting.asks.pop();
+                }
+                None => left = 0,
+            }
+        }
+        Ok(undone)
     }
 
     /// the transformations applied to the open surface `id` since it took
@@ -264,10 +363,30 @@ impl SurfaceHost {
         self.adapting.get(id).map_or(&[], |a| a.changes.as_slice())
     }
 
+    /// the changes of the last ask on the open surface `id`, in the order
+    /// they were made: what `undo_asked` takes back.
+    pub fn last_ask(&self, id: &SemId) -> &[Change] {
+        self.adapting.get(id).map_or(&[], |a| {
+            let n = a.asks.last().copied().unwrap_or(0).min(a.changes.len());
+            &a.changes[a.changes.len() - n..]
+        })
+    }
+
     /// the open surface `id` as its transformations left it, with the
     /// nodes set aside; `None` before its first.
     pub fn adapted(&self, id: &SemId) -> Option<&Adapted> {
         self.adapting.get(id).map(|a| &a.now)
+    }
+
+    /// the open surface `id` as it is now, with the nodes set aside: what
+    /// a transformation is asked about. its form alone, nothing aside,
+    /// before its first transformation or after a whole new form.
+    pub fn current(&self, id: &SemId) -> Option<Adapted> {
+        let surface = self.get(id)?;
+        Some(match self.adapting.get(id) {
+            Some(a) if a.now.verified() == surface.verified() => a.now.clone(),
+            _ => Adapted::new(surface.verified().clone()),
+        })
     }
 
     /// the first of `ids` that an open surface other than the one at
@@ -306,6 +425,7 @@ impl SurfaceHost {
         };
         let surface = self.surfaces.remove(at);
         self.adapting.remove(surface.id());
+        self.policies.remove(surface.id());
         self.closing.extend(surface.dismiss());
         true
     }
