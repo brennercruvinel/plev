@@ -45,6 +45,7 @@ mod error;
 mod ids;
 mod list;
 mod llm;
+mod ops;
 mod parts;
 mod prompt;
 mod reshape;
