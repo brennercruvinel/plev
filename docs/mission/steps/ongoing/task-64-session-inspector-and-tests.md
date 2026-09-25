@@ -1092,3 +1092,114 @@ severidade do que ficou:
 - P2: o showcase não grava sessão nem tem fixture; com a segunda fixture
   o harness vira crate próprio; a fase b (UI) marca valores e escreve o
   `.marks`.
+
+## fase b: a sonda (2026-09-25)
+
+lida contra a main `702f2827`, com as duas sessões gravadas do repositório
+(`crates/ide/tests/fixtures/sessions/{a2ppa,bug84}.monster`).
+
+### (a) onde a UI mora
+
+um crate novo, `crates/inspector` (lib e o binário `plev-inspector`), não
+um segundo binário no `inspect`:
+
+- o `inspect` é o leitor, e um teste fixa as arestas dele em `rec`, `sem`,
+  `serde` e `serde_json` (`crates/inspect/tests/model/readonly.rs:123`),
+  como o ADR diz (`docs/ADR/the-inspector-reads-a-session-never-runs-it.md:39-40`).
+  a UI precisa de `comps` e da janela; num binário atrás de feature, essas
+  arestas entrariam no manifesto do leitor.
+- a task já recomendava crate de app próprio, porque abre arquivo e vai
+  crescer (arquivo da task, linha 44).
+- arestas: `inspect`, `rec`, `sem`, `engine`, `comps`, todas do workspace.
+  a janela vem pelo `engine`, que reexporta o `winit`
+  (`crates/engine/src/lib.rs:64`), e o `WindowHost::open` abre o device
+  sem executor próprio (`crates/engine/src/window/host.rs:170`). nenhum
+  pacote de fora, nem `log` nem `web-time`.
+
+### (b) o frame do instante
+
+- o que foi desenhado vem de `Session::scene_at(t)`
+  (`crates/rec/src/session.rs:115`): os nós rebaixados do frame que estava
+  na tela em `t`, em pixels lógicos da janela, o mesmo espaço dos
+  contornos (`Bound.rect`, `crates/rec/src/bound.rs:43-47`;
+  `Session::bindings_at`, `session.rs:130`; `Session::hit_at`,
+  `session.rs:146`). a UI escala cada nó por um fator e um deslocamento
+  (retângulo, texto pelo tamanho da fonte, path pelos vértices) e desenha
+  por cima o contorno de cada ligação, no mesmo fator. o frame gravado não
+  entra na tabela de ligações do compositor da UI: é imagem, e o controle
+  sob o ponteiro sai do `hit_at` da gravação.
+- tamanho e escala: a sessão não guarda nenhum dos dois. o
+  `Recorder::frame` recebe só o compositor (`crates/rec/src/recorder.rs:105`)
+  e o compositor não tem tamanho (`crates/engine/src/compositor/mod.rs:45-54`).
+  mas o frame sai certo sem eles: nas duas sessões, o primeiro nó de todo
+  frame é o fundo da janela em (0, 0, 1280, 800), e a extensão de todos os
+  nós e de todas as ligações é exatamente 1280 x 800 (a2ppa, 12 frames;
+  bug84, 7 frames). a escala não entra no desenho: os nós são lógicos e a
+  UI desenha na escala da própria janela. então a UI tira o tamanho do
+  frame da extensão dos nós e das ligações, recorta o desenho nela, e o
+  `rec` não muda. fica pendência: a extensão deixa de ser a janela quando
+  um nó passa da borda, porque o IR v0 do monster não guarda o recorte de
+  uma camada (`recorder.rs:96-99`); uma lista rolada com linhas fora da
+  tela alargaria o frame, e aí gravar o tamanho da janela resolve.
+- a imagem de fluxo sem pixels: o arquivo grava toda imagem sem pixels
+  (`crates/rec/src/payload.rs:44-46`) e a lê de volta só com o tamanho
+  (`payload.rs:16-18`); no rebaixamento ela vira um path vazio
+  (`crates/rec/src/screen.rs:77`) e o monster não desenha um nó de imagem
+  cujo asset não é imagem (`crates/monster/src/lower.rs:106-116`). a UI
+  não recebe nenhum nó de imagem e nenhum pixel, e o teste de privacidade
+  prova isso em todo frame. mas ela também não sabe onde a imagem estava:
+  desenhar a caixa no lugar pede do `rec` uma leitura dos nós de imagem sem
+  pixels do frame, fora da permissão desta rodada (o `rec` só para tamanho
+  e escala). vira pendência; nenhuma das duas sessões tem imagem.
+
+### (c) a timeline e o scrub
+
+- o instante é um `t` no relógio do recorder, entre `Inspector::start` e
+  `Inspector::end` (`crates/inspect/src/index.rs:111-119`). o scrub é o
+  `Slider` do comps de 0 até a duração em ms; as setas andam de evento em
+  evento.
+- o frame em `t` usa o mesmo seek da fase a: `Screen::locate`
+  (`crates/rec/src/screen.rs:142`) acha o chunk por busca binária e o frame
+  dentro dele, e o player do monster avalia aquele tempo
+  (`crates/monster/src/play.rs:148`). a UI guarda a cena pelo tempo do
+  frame (`Session::frame_at`, `session.rs:120`), então um scrub que não
+  troca de frame não decodifica nada.
+- as faixas saem de `Inspector::timeline` (`crates/inspect/src/timeline.rs:100`):
+  uma faixa por ator (a pessoa inclusive) e uma do estado do app
+  (snapshot e changes), cada evento uma marca no seu `at`, com a cor do
+  tipo; as contagens por tipo e por ator são as do mesmo modelo.
+
+### (d) quem responde cada pergunta do painel
+
+- `Inspector::control(id, t)` (`crates/inspect/src/control.rs:33`): o nó
+  no estado gravado em `t` (role, label, estado, ações, o `source` com o
+  sha do build) e os requests que tocaram o id até `t`, cada um com a
+  cadeia causal como a janela até `t` conta.
+- o texto é o do modelo: `inspect::text::control`
+  (`crates/inspect/src/text/mod.rs:191`), que escreve uma linha por
+  pergunta da tese para cada request com `text::why`
+  (`crates/inspect/src/text/chain.rs:18`): control, state, initiated by,
+  action, observed, precondition, before, stages, verdict, what changed,
+  acted, result.
+- o que veio depois de `t`: a mesma `control(id, end)`, e o painel mostra
+  os requests dela que não estão inteiros na resposta em `t` (um request
+  novo, ou um que em `t` ainda estava aberto). é o que o critério 1 pede:
+  o botão só aparece no frame antes do commit (a2ppa: em +110.688s o form
+  fecha junto com o `completed`), e o sha só existe depois.
+- a lista de requests ao lado sai de `Inspector::summary`
+  (`crates/inspect/src/summary.rs:51`).
+
+### (e) a prova de que a UI não cria request
+
+- as fontes do crate não nomeiam `Dispatcher`, `Operable`, `ReceiptSink`,
+  `Execution`, `Recorder`, `Request::` nem `Request {`, nem `.dispatch(`,
+  `.execute(`, `.confirm(`, `.decline(`, nem socket ou processo; e o
+  manifesto depende exatamente de `comps`, `engine`, `inspect`, `rec`,
+  `sem` (o mesmo teste do `inspect`, `readonly.rs:88-124`).
+- um teste passa por todo handler da view (ponteiro numa grade da janela
+  inteira, clique em cada ligação de cada frame, cada request da lista,
+  cada tecla, cada posição do scrub) e acha a sessão igual à aberta do
+  arquivo e os bytes do arquivo iguais.
+- o frame gravado não liga nada no compositor da UI
+  (`Compositor::visible_bindings`, `crates/engine/src/compositor/binding.rs:189`):
+  nenhum id gravado vira controle vivo.
