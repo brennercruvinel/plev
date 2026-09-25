@@ -263,3 +263,267 @@ nenhum teste novo rodou. toda afirmação sobre código tem arquivo e linha.
 `crates/ide/Cargo.toml` ganha `surface`, `propose`, `uir` e `claude-model`
 (o Claude entra pelo caminho do showcase), todos do workspace. no
 `Cargo.lock` muda só a lista `dependencies` do pacote `ide`.
+
+### adendo à sonda (depois da primeira gravação da demo)
+
+o primeiro frame da revisão, no laboratório, mostrou duas coisas que a
+sonda não viu: o terceiro commit cortado embaixo da coluna, e as linhas
+do diff passando da tabela que as limita, por cima do que vinha depois.
+a primeira era do layout das regras (corrigido em `review.rs`: a mensagem
+e o botão numa linha só, a região num card com as linhas por último). a
+segunda era do `surface`: a lista virtual da tabela desenha a sobra além
+dos limites dela, e quem hospeda recorta; o `draw.rs` da superfície não
+recortava, porque até aqui nenhuma tabela gerada tinha menos altura que
+as linhas. a adição mínima: uma tabela limitada em altura (`size.max`)
+com mais linhas do que cabem é recortada ao retângulo dela
+(`crates/surface/src/draw.rs`, com teste na mesma fonte); uma tabela da
+altura das linhas desenha como sempre, e os 176 baselines não mudam.
+
+## handoff (2026-09-25)
+
+```text
+Goal: task-96, uma superfície gerada no ide e a demo 5 da task-80
+Status: pronto para o orquestrador, na branch task/96a-ide-surface
+```
+
+### commits
+
+- `73a318a7` task-96: the probe, and the task file in ongoing
+- `6bacaa3d` task-96: the intent line and the host of generated surfaces in the ide
+- `f53667c0` task-96: the registry of a review, and each commit's diff through it
+- `73704549` task-96: the rules review items: "review these three commits"
+- `f8f39298` task-96: every act on the review through the workbench's one dispatcher
+- `e315e11e` task-96: the review fits one screen, and a bounded table keeps its rows
+- `2e6c9e9a` task-96: the demo 5 in the laboratory, recorded with no window
+- `07650665` task-96: the demo 5 result, written in task-80
+- `9dadd352` task-96: the Claude proposes for the line, by the showcase's path
+- `855b1a4d` task-96: the review test of propose, formatted (o `e315e11e`
+  deixou uma asserção sem `cargo fmt`; o gate pegou; commit à parte para
+  não reescrever a branch, porque a gravação da demo nomeia `2e6c9e9a`)
+- `3df1297f` task-96: a move off the column lets go of what it hovered
+- o commit deste texto
+
+### a linha e o host
+
+- moram no workbench, ligados por `Workbench::host_surfaces` (a janela do
+  ide liga; o showcase, os testes antigos e os braços antigos do
+  laboratório não): `crates/ide/src/generated/` (a linha, o host, onde
+  eles ficam e como desenham, o Claude e o recorte dele) e
+  `crates/ide/src/workbench/{generated,column,asking}.rs` (o lado do
+  workbench: o que um request pede da linha, o roteamento, o layout, o
+  ponteiro e as teclas, o Claude).
+- uma coluna à direita da janela: a largura de um card sem superfície,
+  metade da janela com uma; a linha em cima (campo, proponente, propor,
+  fechar, a mensagem, o cancelar enquanto o Claude responde), a superfície
+  embaixo, recortada à coluna. o workspace recebe a janela menos a coluna
+  pelo `resize` dele; nenhum arquivo de `crates/ide/src/views/**` mudou.
+- a projeção: o workspace, depois a superfície e a linha (`ide_surface`).
+  `Workbench::app_snapshot` é o workspace sozinho: o registro de toda
+  proposta e o que a superfície mostra. o golden
+  `crates/uir/fixtures/ide-workbench.snapshot.json` continua igual.
+- o shell (`main.rs`, `keys.rs`): o tamanho, a roda e o hover vão para o
+  workbench; as teclas vão para a linha ou para um campo da superfície
+  enquanto um deles tem o teclado.
+- fechar: `SurfaceHost::close`; fora da projeção, do roteamento e do hit
+  na hora; o workspace volta à largura; no host nada fica (teste).
+
+### o registro e o diff
+
+nada mudou na projeção: cada commit já tem `summary`, `author`, `files`
+(os 10 mais novos) e `show_diff`, que lê `diff:target`; a região `diff`
+mostra o diff de um commit por vez. a superfície abre cada diff pelo
+`show_diff` do commit, como o painel fixo. os três diffs ao mesmo tempo
+ficam como P3 (um estado de diff por commit).
+
+### as regras
+
+`crates/propose/src/review.rs` (novo), um caminho próprio das regras
+aberto por uma palavra de revisão (en e pt), antes da gramática de hoje,
+que não muda. acha os tipos de item por estrutura, escolhe o tipo pela
+palavra, o número pelo "three"/"três"/"3", e faz um card por item (a
+mensagem e o botão numa linha, o autor, os arquivos em tabela) e a
+região que as ações dele leem ao lado (o diff, com as linhas numa tabela
+limitada por `dropdown_max_h`), num split. recusa com o motivo: palavra
+que não nomeia item (`NoMatch`), nada a revisar, nenhuma palavra dizendo
+quais itens, menos itens do que o número (`ProposeError::Review`, variante
+nova). em `propose` também: três funções privadas viraram `pub(crate)`
+(`words::is`, `list::last_key`, `parts::allows`) e o `Rules::propose`
+ganhou o desvio de três linhas.
+
+### os atos
+
+- o clique da pessoa na superfície: o widget monta o request dela para a
+  capacidade (`show_diff` em `stacks.commit[<sha>]`), observado no estado
+  do app que a superfície mostrava, e o `Workbench::dispatch` roda; o
+  receipt é `human` (teste).
+- um agente pela porta observa a superfície e aperta o mesmo botão pelo
+  nó dela; o `Workbench::dispatch` passa pelo `SurfaceHost::route` antes
+  do dispatcher e o request chega como a capacidade, com o nome do agente
+  (teste).
+- stale: o agente olhou, a pessoa abriu outro diff pela superfície, o ato
+  do agente volta `stale` com o delta de `diff:target` e o clique da
+  pessoa em `acted` (teste).
+- a gravação do ide não mudou: o estado gravado leva a superfície e a
+  linha, os frames levam as ligações dela.
+
+### a demo 5 e o resultado contra o painel fixo
+
+`ide-lab --arm review` (novo braço), gravado sem janela no build
+`2e6c9e9a`, lido pelo `plev-inspect`; o resultado inteiro na task-80,
+seção "demo 5, UI generativa em aplicação real (feita pela task-96)". em
+resumo: a superfície mostra os arquivos dos três commits de uma vez (3
+contra no máximo 1 no painel fixo, que nunca nomeia o arquivo de um
+commit de um arquivo só), cada ato dela é um request da pessoa pelo
+dispatcher, e nada fica depois de fechar. ela custa mais atos (5 cliques
+e 26 teclas contra 3 cliques) e mostra o diff pior (5 linhas por vez numa
+tabela, sem cor e sem número, contra o diff inteiro). pelo critério
+escrito antes, a demo cai no diff e se sustenta nos arquivos; o que falta
+ao diff é um componente do vocabulário do IR, não o ide.
+
+### o Claude
+
+o mesmo caminho do showcase: `claude-model` (o `ClaudeCli`), uma thread
+com o `propose::Llm` e o `propose_verified`, `Execution::Started`, o
+wake do workbench termina o request (`completed` com a superfície, as
+tentativas, os segundos e o custo, ou `failed`), e o cancelar termina
+como cancelado por quem pediu. o seletor oferece o Claude onde o programa
+existe e começa em regras. o Claude recebe um snapshot só dele: os
+commits que a revisão das regras nomeia na intenção, com a mensagem, os
+arquivos e o `show_diff`, e a região do diff só enquanto ela mostra um
+deles; nunca a árvore de trabalho, outro commit, autor, branch, a
+mensagem em edição, a linha ou a superfície aberta. uma intenção que não
+nomeia commit não é enviada. testado só com o `fake-claude` do
+repositório (o prompt dele conferido palavra a palavra); nenhuma chamada
+ao `claude -p`. o prompt do `propose` mostra cada valor nos primeiros 60
+caracteres, então o Claude vê só o começo do diff.
+
+### o diff do lock
+
+só a lista `dependencies` do pacote `ide`; nenhum pacote novo, nenhuma
+versão nova:
+
+```diff
+@@ -2391,6 +2391,7 @@
+ name = "ide"
+ version = "0.1.0"
+ dependencies = [
++ "claude-model",
+  "comps",
+  "engine",
+  "env_logger",
+@@ -2399,10 +2400,13 @@ dependencies = [
+  "log",
+  "notify",
+  "pollster",
++ "propose",
+  "rec",
+  "sem",
+  "serde_json",
++ "surface",
+  "tempfile",
++ "uir",
+  "wgpu",
+  "winit",
+  "wire",
+```
+
+### arquivos
+
+- `crates/ide/Cargo.toml` (quatro dependências do workspace), `Cargo.lock`
+  (a lista do `ide`).
+- `crates/ide/src/generated/{mod,row,claude,scope}.rs` (novos),
+  `crates/ide/src/workbench/{generated,column,asking}.rs` (novos),
+  `crates/ide/src/workbench/{mod,project,execute}.rs`, `crates/ide/src/lib.rs`,
+  `crates/ide/src/main.rs`, `crates/ide/src/keys.rs`,
+  `crates/ide/src/lab_repo.rs` (o repositório da revisão),
+  `crates/ide/src/bin/lab/{review.rs (novo),args.rs,bench.rs,main.rs}`.
+- testes: `crates/ide/tests/{surface,review,review_acts,lab_review,claude}.rs`
+  (novos), `crates/ide/tests/support/mod.rs` (`Rig::review`).
+- `crates/propose/src/review.rs` (novo), `crates/propose/src/{rules,lib,error,words,list,parts}.rs`,
+  `crates/propose/tests/review.rs` (novo).
+- `crates/surface/src/draw.rs` (o recorte da tabela limitada, com teste).
+- `docs/mission/steps/ongoing/task-96-ide-generated-surface.md` (este),
+  a seção da demo 5 em `docs/mission/steps/ongoing/task-80-proof-qualitatively-different-software.md`.
+
+nenhum arquivo de `crates/sem`, `wire`, `engine`, `comps`, `claude-model`,
+`showcase`, `uir`, nem das vistas fixas do ide; nenhum baseline.
+
+### interfaces
+
+- `ide::workbench::Workbench`: `host_surfaces`, `host_surfaces_with`,
+  `hosts_surfaces`, `surfaces`, `surface_open`, `app_snapshot`, `resize`,
+  `scroll`, `hover`, `has_keyboard`, `type_text`, `edit_key`, `enter`,
+  `escape` (novos); `dispatch` passa pelo roteamento da superfície antes
+  do dispatcher; `click`, `render` e `wake` cuidam da coluna quando ela
+  está ligada.
+- `ide::lab_repo`: `Repo::build_review`, `review_in`, `REVIEWED`, `FIRST`,
+  `UNCOMMITTED`.
+- `propose::ProposeError::Review` (variante nova). nenhuma interface do
+  `sem`, do `wire`, do `uir` ou do `surface` mudou.
+
+### validação
+
+com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
+`target/agents/one`, `CARGO_INCREMENTAL=0`, debug `line-tables-only`, o
+`PLEV_CLAUDE` no stub que só sai com erro) e `--offline`:
+
+- `./script/gate` em `3df1297f`: verde (exit 0, 04:26 a 04:28), com a
+  perna urnaui e o check wasm com `-D warnings`. workspace 2951 passam, 0
+  falham, 26 ignorados (163 suítes); urnaui 85 passam, 1 ignorado (6
+  suítes). total 3036 passam e 27 ignorados, contra 3012 e 27 na base: os
+  24 testes novos. `df -h /`: 14 GB livres antes, 12 GB depois.
+- um gate anterior, em `9dadd352`, caiu no `cargo fmt --check` por uma
+  asserção de `crates/propose/tests/review.rs` (o `855b1a4d` corrige); os
+  testes e o clippy já passavam nele.
+- `cargo run --offline -p showcase --example regress -- check`, com o
+  `main.rs` tocado: 176 baselines, 176 iguais, nenhum frame desenhado,
+  nenhuma GPU aberta (em `9dadd352` e de novo em `3df1297f`).
+- `cargo test -p ide --test lab_review` cinco vezes seguidas, e
+  `--test claude` três: todas verdes. o braço da demo rodado à mão
+  (`cargo run -p ide --bin ide-lab -- --arm review --out <scratch>`), a
+  sessão lida pelo `plev-inspect`.
+- nenhuma janela aberta (o binário `ide` não rodou), nenhum clique ou
+  tecla por coordenada de tela do sistema (os cliques do laboratório e dos
+  testes são pelo `Workbench::click`, no meio do retângulo que o frame
+  ligou ao id), nenhuma chamada ao `claude -p` (só o `fake-claude`),
+  nenhum pacote novo no lock.
+
+### decisões
+
+- a linha e o host dentro do workbench, ligados por opção: o dispatcher é
+  do workbench, e só assim a porta, a gravação e o clique da pessoa
+  passam pelo mesmo caminho sem tocar no shell de cada host.
+- a coluna à direita, não uma faixa embaixo: o seletor abre para baixo, e
+  a coluna é onde a superfície cresce.
+- a revisão fixa os três commits na superfície (cards, não repeat): "estes
+  três" são estes três.
+- o Claude só para uma revisão que as regras leem: é o jeito de saber
+  quais commits o prompt pode levar.
+- o laboratório oferece só as regras (`host_surfaces_with(None)`), para a
+  linha ser a mesma em toda máquina.
+
+### limitações
+
+- o diff na superfície: 5 linhas por vez, sem cor e sem número (o
+  vocabulário não tem componente de código; a tabela é a única lista de
+  textos, com linhas de 48 px e um token de altura). as linhas longas
+  quebram dentro da célula.
+- um diff por vez, como no painel fixo.
+- a linha de intenção do ide é uma segunda cópia da linha da Silences
+  (`crates/showcase/src/view/apps/surface_page/proposing.rs`); o showcase
+  estava fora desta task, então a extração para um lugar comum fica para
+  depois.
+- a observação da pessoa na superfície não aparece na gravação: o request
+  dela é observado no snapshot do app sozinho, e o gravador guarda o do
+  workbench inteiro (o achado da task-69 fase 4c, um passo mais longe).
+- o Claude vê só os primeiros 60 caracteres de cada valor (o `propose`
+  corta assim para todo app), então só o começo do diff.
+
+### o que fica aberto
+
+- a prova com o Claude de verdade (o orquestrador).
+- a demo 5 com janela, pelo brenner (`cargo run -p ide`, com
+  `PLEV_RECORD=1`).
+- P3: um estado de diff por commit (os três diffs de uma vez); um
+  componente de código ou diff no vocabulário (widget no comps e ADR); a
+  linha de intenção num lugar comum ao showcase e ao ide.
