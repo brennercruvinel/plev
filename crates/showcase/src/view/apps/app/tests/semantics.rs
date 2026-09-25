@@ -432,11 +432,13 @@ fn an_open_modal_leaves_the_todo_page_inert() {
         matches!(stage, Stage::Rejected(Rejection::Inert { .. })),
         "{stage:?}"
     );
+    // Enter is the modal's while it holds the pointer (task-75 phase
+    // 2c): it presses the focused cancel; the page beneath never sees it.
     assert!(view.handle_enter(), "Enter is consumed");
     assert_eq!(view.panes.todo.model.counts().total, total, "and refused");
 
     // The modal goes away: the page takes requests again.
-    assert!(view.close_top_overlay());
+    assert!(!view.overlay_holds_pointer(), "the cancel answered it");
     for _ in 0..600 {
         if !view.tick(1.0 / 60.0) {
             break;

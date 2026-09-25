@@ -26,6 +26,8 @@ pub use pages::{Body, Group, PAGES, Page, Pane};
 
 pub(crate) use draw::{group_label, panel, text, with_alpha};
 
+use dispatch::keyboard::Walk;
+
 use winit::keyboard::{Key, ModifiersState};
 
 use comps::nav::{NavGroup, NavLink, PanelHeader, Sidebar};
@@ -181,8 +183,17 @@ impl ShowcaseView {
         self.pane() == Some(Pane::Editor) && self.panes.editor.handle_key(key, modifiers)
     }
 
-    /// Arrow up/down: the Git tab's file list.
+    /// Arrow up/down: the Git tab's file list; on a component page, or
+    /// over the modal or the menu, the widget the focus is in
+    /// (`dispatch::keyboard`).
     pub fn handle_nav(&mut self, key: NavKey) -> bool {
+        if self.walks() {
+            let walk = match key {
+                NavKey::Up => Walk::Up,
+                NavKey::Down => Walk::Down,
+            };
+            return self.walk(walk);
+        }
         self.pane() == Some(Pane::Git) && self.panes.git.handle_nav(key)
     }
 
