@@ -10,6 +10,7 @@ use engine::layout::ComputedBounds;
 use engine::text::TextMeasurer;
 
 use super::config::{EditorConfig, EditorTheme};
+use crate::form::text_input::visual::VisualLine;
 use crate::wake::{Blink, Wake};
 use engine::clipboard::{ClipboardProvider, default_clipboard};
 
@@ -138,9 +139,11 @@ impl EditorView {
         s
     }
 
-    /// Caret x (relative to the text origin) for a byte offset in a line.
+    /// Caret x (relative to the text origin) for a byte offset in a line,
+    /// on the side of a change of direction the paragraph reads from (see
+    /// [`VisualLine`]).
     pub(super) fn caret_x(&self, line_text: &str, byte_in_line: usize) -> f32 {
-        TextMeasurer::cursor_x_styled(line_text, &self.config.text_style(), None, byte_in_line)
+        VisualLine::new(line_text, &self.config.text_style(), None).caret_x(byte_in_line)
     }
 
     /// Window point -> byte offset in the document, honoring scroll.
@@ -154,7 +157,7 @@ impl EditorView {
         let byte_in_line = if text.is_empty() {
             0
         } else {
-            TextMeasurer::hit_test_styled(&text, &self.config.text_style(), None, rel_x, lh * 0.5)
+            VisualLine::new(&text, &self.config.text_style(), None).hit(rel_x)
         };
         rope.line_to_byte(line) + byte_in_line.min(text.len())
     }
@@ -314,7 +317,7 @@ impl EditorView {
             }
 
             for sel in selections.iter() {
-                if let Some((x0, w)) = self.selection_rect_on_line(sel, line, &text) {
+                for (x0, w) in self.selection_boxes_on_line(sel, line, &text) {
                     compositor.push(SceneNode::Rect {
                         x: text_x + x0,
                         y,
@@ -411,18 +414,15 @@ impl EditorView {
         }
     }
 
-    /// `(x, width)` of the part of `sel` lying on `line` (text-origin
-    /// relative), or `None` when the selection does not touch the line.
-    /// A selection crossing the line break gets a small extra width to make
-    /// the newline visible.
-    fn selection_rect_on_line(
-        &self,
-        sel: &Selection,
-        line: usize,
-        text: &str,
-    ) -> Option<(f32, f32)> {
+    /// `(x, width)` of the boxes the part of `sel` lying on `line` covers
+    /// (text-origin relative, left to right): one in Latin text, more
+    /// where the range crosses a change of direction, none when the
+    /// selection does not touch the line. A selection crossing the line
+    /// break gets a small extra width past the line's end, on the side the
+    /// paragraph ends, to make the newline visible.
+    fn selection_boxes_on_line(&self, sel: &Selection, line: usize, text: &str) -> Vec<(f32, f32)> {
         if sel.is_caret() {
-            return None;
+            return Vec::new();
         }
         let rope = self.document.rope();
         let lstart = rope.line_to_byte(line);
@@ -433,18 +433,33 @@ impl EditorView {
         };
         let (smin, smax) = (sel.min(), sel.max());
         if smin >= lnext || smax <= lstart {
-            return None;
+            return Vec::new();
         }
         let content_end = lstart + text.len();
         let seg_start = smin.max(lstart).min(content_end) - lstart;
         let seg_end = smax.min(content_end) - lstart;
-        let x0 = self.caret_x(text, seg_start);
-        let mut w = self.caret_x(text, seg_end) - x0;
+        let visual = VisualLine::new(text, &self.config.text_style(), None);
+        let mut boxes = visual.boxes(seg_start, seg_end);
         if smax >= lnext && line + 1 < rope.len_lines() {
             // Selection includes this line's newline.
-            w += self.config.font_size * 0.5;
+            let ext = self.config.font_size * 0.5;
+            let end_x = visual.caret_x(text.len());
+            if visual.is_rtl() {
+                match boxes.first_mut() {
+                    Some(b) if (b.0 - end_x).abs() < 0.01 => {
+                        b.0 -= ext;
+                        b.1 += ext;
+                    }
+                    _ => boxes.insert(0, (end_x - ext, ext)),
+                }
+            } else {
+                match boxes.last_mut() {
+                    Some(b) if (b.0 + b.1 - end_x).abs() < 0.01 => b.1 += ext,
+                    _ => boxes.push((end_x, ext)),
+                }
+            }
         }
-        (w > 0.0).then_some((x0, w))
+        boxes
     }
 }
 

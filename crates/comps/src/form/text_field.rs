@@ -25,7 +25,10 @@ use crate::wake::Wake;
 
 /// Non-character editing keys a field understands. Apps map their key
 /// events onto these; Enter and Tab stay with the screen (submit and
-/// focus traversal are not the field's business).
+/// focus traversal are not the field's business). Left and Right move on
+/// screen (in a right-to-left run Left goes forward in the text); the
+/// `Select` variants are the same keys with Shift, extending the
+/// selection.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EditKey {
     Backspace,
@@ -35,6 +38,10 @@ pub enum EditKey {
     Home,
     End,
     SelectAll,
+    SelectLeft,
+    SelectRight,
+    SelectHome,
+    SelectEnd,
 }
 
 /// Retained single-line text field over a [`TextInput`].
@@ -192,6 +199,10 @@ impl TextField {
             EditKey::Home => self.input.handle_home(),
             EditKey::End => self.input.handle_end(),
             EditKey::SelectAll => self.input.handle_select_all(),
+            EditKey::SelectLeft => self.input.handle_select_left(),
+            EditKey::SelectRight => self.input.handle_select_right(),
+            EditKey::SelectHome => self.input.handle_select_home(),
+            EditKey::SelectEnd => self.input.handle_select_end(),
         }
         true
     }
@@ -239,8 +250,10 @@ impl TextField {
             WidgetEvent::MouseDown { x, y } => {
                 if bounds.contains(x, y) {
                     let style = Self::text_style(theme);
+                    let pad_x = Self::pad_x(theme);
+                    let text_w = (bounds.w - pad_x * 2.0).max(0.0);
                     self.input
-                        .handle_click(x - bounds.x - Self::pad_x(theme), &style);
+                        .handle_click_in(x - bounds.x - pad_x, &style, Some(text_w));
                     EventResult::clicked()
                 } else if self.input.focused {
                     self.input.unfocus();
@@ -315,25 +328,21 @@ impl TextField {
         let text_w = (bounds.w - pad_x * 2.0).max(0.0);
         let text = self.input.buffer.text();
 
-        // Selection wash under the text: the accent at the wash alpha.
-        if focused && let Some((start, end)) = self.input.buffer.selection() {
-            let (lo, hi) = if start <= end {
-                (start, end)
-            } else {
-                (end, start)
-            };
-            let sel_x = TextMeasurer::cursor_x_styled(text, &style, None, lo);
-            let sel_w = TextMeasurer::cursor_x_styled(text, &style, None, hi) - sel_x;
-            c.push_to_layer(
-                layer,
-                SceneNode::Rect {
-                    x: text_x + sel_x,
-                    y: text_y,
-                    w: sel_w,
-                    h: style.line_height,
-                    color: with_alpha(theme.colors.accent, glass.wash_alpha),
-                },
-            );
+        // Selection wash under the text: the accent at the wash alpha, one
+        // box per stretch the logical range covers on screen.
+        if focused {
+            for (sel_x, sel_w) in self.input.selection_boxes(&style, Some(text_w)) {
+                c.push_to_layer(
+                    layer,
+                    SceneNode::Rect {
+                        x: text_x + sel_x,
+                        y: text_y,
+                        w: sel_w,
+                        h: style.line_height,
+                        color: with_alpha(theme.colors.accent, glass.wash_alpha),
+                    },
+                );
+            }
         }
 
         // Text, or the placeholder while empty.
@@ -362,8 +371,7 @@ impl TextField {
 
         // Caret: the accent, one focus-ring stroke wide, the line box tall.
         if self.input.cursor_visible() {
-            let caret_x =
-                TextMeasurer::cursor_x_styled(text, &style, None, self.input.buffer.cursor());
+            let caret_x = self.input.caret_x(&style, Some(text_w));
             c.push_to_layer(
                 layer,
                 SceneNode::Rect {

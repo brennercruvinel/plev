@@ -4,6 +4,11 @@
 //! unit), word movement uses Unicode word boundaries, and vertical movement
 //! keeps a persistent goal column so crossing a short line and coming back
 //! restores the original column.
+//!
+//! Horizontal movement is logical: "left" is the previous grapheme in text
+//! order and "right" the next one, whatever the direction of the script.
+//! In right-to-left text that is the other way on screen; the widget maps
+//! the arrow keys to the visual order it reads from the layout.
 
 use std::borrow::Cow;
 
@@ -170,8 +175,8 @@ fn with_head(sel: Selection, head: usize, extend: bool) -> Selection {
     }
 }
 
-/// Move one grapheme left. A non-caret selection collapses to its start
-/// when not extending.
+/// Move one grapheme back in text order. A non-caret selection collapses
+/// to its start when not extending.
 pub fn move_left(rope: &Rope, sel: Selection, extend: bool) -> Selection {
     if !extend && !sel.is_caret() {
         return Selection::caret(sel.min());
@@ -179,8 +184,8 @@ pub fn move_left(rope: &Rope, sel: Selection, extend: bool) -> Selection {
     with_head(sel, prev_grapheme_boundary(rope, sel.head), extend)
 }
 
-/// Move one grapheme right. A non-caret selection collapses to its end
-/// when not extending.
+/// Move one grapheme forward in text order. A non-caret selection
+/// collapses to its end when not extending.
 pub fn move_right(rope: &Rope, sel: Selection, extend: bool) -> Selection {
     if !extend && !sel.is_caret() {
         return Selection::caret(sel.max());

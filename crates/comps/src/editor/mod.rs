@@ -19,6 +19,8 @@ mod view;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_bidi;
 
 pub use config::{EditorConfig, EditorTheme};
 pub use input::MouseEvent;

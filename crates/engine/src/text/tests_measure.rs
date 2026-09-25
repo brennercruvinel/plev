@@ -567,3 +567,48 @@ fn elide_path_falls_back_to_truncating_the_name() {
     let (w, _) = TextMeasurer::measure_styled(&out, &style, None);
     assert!(w <= 60.0);
 }
+
+// -- clusters --
+
+#[test]
+fn clusters_come_left_to_right_with_their_bidi_levels() {
+    // "abc אבג def": the Hebrew run reads right to left, so its clusters
+    // come last letter first on screen, at level 1 inside a level-0 line.
+    let clusters = TextMeasurer::clusters_styled("abc אבג def", &sans(16.0), None);
+    let starts: Vec<usize> = clusters.iter().map(|c| c.start).collect();
+    assert_eq!(starts, vec![0, 1, 2, 3, 8, 6, 4, 10, 11, 12, 13]);
+    let levels: Vec<u8> = clusters.iter().map(|c| c.level).collect();
+    assert_eq!(levels, vec![0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0]);
+    assert!(clusters.iter().all(|c| !c.paragraph_rtl));
+    assert!(clusters.windows(2).all(|w| w[0].x < w[1].x));
+    // An RTL paragraph also comes left to right: its last letter first.
+    let rtl = TextMeasurer::clusters_styled("שלום", &sans(16.0), None);
+    assert_eq!(
+        rtl.iter().map(|c| c.start).collect::<Vec<_>>(),
+        vec![6, 4, 2, 0]
+    );
+    assert!(rtl.iter().all(|c| c.paragraph_rtl && c.is_rtl()));
+    assert!(rtl.windows(2).all(|w| w[0].x < w[1].x));
+    assert!(TextMeasurer::clusters_styled("", &sans(16.0), None).is_empty());
+}
+
+#[test]
+fn latin_clusters_start_where_the_caret_does() {
+    let style = sans(16.0);
+    let text = "Wide and iiii";
+    for c in TextMeasurer::clusters_styled(text, &style, None) {
+        assert_eq!(c.end, c.start + 1);
+        let caret = TextMeasurer::cursor_x_styled(text, &style, None, c.start);
+        assert_eq!(c.x.to_bits(), caret.to_bits(), "byte {}", c.start);
+    }
+}
+
+#[test]
+fn marks_merge_into_their_letter_cluster() {
+    // Hebrew with niqqud: one box per letter with its marks.
+    let text = "שָׁלוֹם";
+    let clusters = TextMeasurer::clusters_styled(text, &sans(16.0), None);
+    let mut ranges: Vec<(usize, usize)> = clusters.iter().map(|c| (c.start, c.end)).collect();
+    ranges.sort_unstable();
+    assert_eq!(ranges, vec![(0, 6), (6, 8), (8, 12), (12, 14)]);
+}

@@ -2,12 +2,14 @@
 
 use std::ops::Range;
 
-use rope::{Selection, SelectionSet, Transaction, movement};
+use engine::text::TextStyle;
+use rope::{Rope, Selection, SelectionSet, Transaction, movement};
 use unicode_segmentation::UnicodeSegmentation;
 use winit::event::Ime;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use super::view::{ClickRecord, DragState, EditorView, Preedit};
+use crate::form::text_input::visual::VisualLine;
 
 /// Max delay between clicks of a multi-click, in seconds.
 const MULTI_CLICK_SECS: f32 = 0.4;
@@ -59,18 +61,20 @@ impl EditorView {
             }
             Key::Named(NamedKey::Space) if !primary => self.edit(|v| v.document.insert(" ")),
             Key::Named(NamedKey::ArrowLeft) => {
+                let style = self.config.text_style();
                 self.move_each(move |rope, sel| match (primary, alt) {
                     (true, _) => movement::line_start(rope, sel, shift),
                     (_, true) => movement::move_word_left(rope, sel, shift),
-                    _ => movement::move_left(rope, sel, shift),
+                    _ => visual_move(rope, sel, shift, false, &style),
                 });
                 true
             }
             Key::Named(NamedKey::ArrowRight) => {
+                let style = self.config.text_style();
                 self.move_each(move |rope, sel| match (primary, alt) {
                     (true, _) => movement::line_end(rope, sel, shift),
                     (_, true) => movement::move_word_right(rope, sel, shift),
-                    _ => movement::move_right(rope, sel, shift),
+                    _ => visual_move(rope, sel, shift, true, &style),
                 });
                 true
             }
@@ -417,6 +421,66 @@ impl EditorView {
 }
 
 /// Move the head to `pos`, collapsing unless extending.
+/// Line `line`'s text without its line break, as the caret lays it out.
+fn line_content(rope: &Rope, line: usize) -> String {
+    let text = rope.line(line).to_string();
+    let text = text.strip_suffix('\n').unwrap_or(&text);
+    text.strip_suffix('\r').unwrap_or(text).to_string()
+}
+
+/// An arrow key on screen: one caret stop left or right (`rightward`) on
+/// the head's line, so in a right-to-left run Left goes forward in the
+/// text. Past the line's end on that side, the logical move in the
+/// paragraph's direction takes over and crosses to the neighbouring line.
+/// Without `extend` a selection collapses to its end on that side of the
+/// screen.
+fn visual_move(
+    rope: &Rope,
+    sel: Selection,
+    extend: bool,
+    rightward: bool,
+    style: &TextStyle,
+) -> Selection {
+    let line = rope.byte_to_line(sel.head);
+    let start = rope.line_to_byte(line);
+    let text = line_content(rope, line);
+    let visual = VisualLine::new(&text, style, None);
+    let on_line = |pos: usize| (start..=start + text.len()).contains(&pos);
+    if !extend && !sel.is_caret() {
+        let (lo, hi) = (sel.min(), sel.max());
+        let to = if on_line(lo) && on_line(hi) {
+            let (xl, xh) = (visual.caret_x(lo - start), visual.caret_x(hi - start));
+            match rightward {
+                true if xl > xh => lo,
+                true => hi,
+                false if xh < xl => hi,
+                false => lo,
+            }
+        } else if rightward {
+            hi
+        } else {
+            lo
+        };
+        return Selection::caret(to);
+    }
+    if on_line(sel.head) {
+        let rel = sel.head - start;
+        let next = if rightward {
+            visual.right_of(rel)
+        } else {
+            visual.left_of(rel)
+        };
+        if let Some(pos) = next {
+            return head_to(sel, start + pos, extend);
+        }
+    }
+    if rightward != visual.is_rtl() {
+        movement::move_right(rope, sel, extend)
+    } else {
+        movement::move_left(rope, sel, extend)
+    }
+}
+
 fn head_to(sel: Selection, pos: usize, extend: bool) -> Selection {
     if extend {
         Selection::new(sel.anchor, pos)

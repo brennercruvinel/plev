@@ -1,11 +1,18 @@
 //! TextInput: the editing core of a single-line field. Owns the buffer,
-//! focus, the caret blink, IME commits and click-to-caret mapping. It
-//! draws nothing: [`TextField`](crate::form::TextField) wraps it with the
-//! HOFF glass field, and any other look can wrap it the same way.
+//! focus, the caret blink, IME commits, click-to-caret mapping and the
+//! caret and selection geometry. It draws nothing:
+//! [`TextField`](crate::form::TextField) wraps it with the HOFF glass
+//! field, and any other look can wrap it the same way.
+//!
+//! The arrow keys move on screen: in a right-to-left run the left arrow
+//! goes forward in the text. Home and End go to the logical ends, and the
+//! `select` variants extend the selection, which stays one logical range
+//! and draws as the boxes it covers (see `super::visual`).
 
-use engine::text::{TextMeasurer, TextStyle};
+use engine::text::TextStyle;
 
 use super::buffer::TextBuffer;
+use super::visual::VisualLine;
 use crate::wake::{Blink, Wake};
 
 /// Caret blink half-period in seconds (the platform convention: 530ms
@@ -96,20 +103,15 @@ impl TextInput {
         self.reset_blink();
     }
 
+    /// One caret stop left on screen (in a right-to-left run, forward in
+    /// the text); drops the selection.
     pub fn handle_left(&mut self) {
-        if !self.focused {
-            return;
-        }
-        self.buffer.move_left();
-        self.reset_blink();
+        self.step(false, false);
     }
 
+    /// One caret stop right on screen; drops the selection.
     pub fn handle_right(&mut self) {
-        if !self.focused {
-            return;
-        }
-        self.buffer.move_right();
-        self.reset_blink();
+        self.step(true, false);
     }
 
     pub fn handle_home(&mut self) {
@@ -126,6 +128,75 @@ impl TextInput {
         }
         self.buffer.move_end();
         self.reset_blink();
+    }
+
+    /// Shift+Left: extend the selection one caret stop left on screen.
+    pub fn handle_select_left(&mut self) {
+        self.step(false, true);
+    }
+
+    /// Shift+Right: extend the selection one caret stop right on screen.
+    pub fn handle_select_right(&mut self) {
+        self.step(true, true);
+    }
+
+    /// Shift+Home: extend the selection to the start of the text.
+    pub fn handle_select_home(&mut self) {
+        if !self.focused {
+            return;
+        }
+        self.buffer.select_to(0);
+        self.reset_blink();
+    }
+
+    /// Shift+End: extend the selection to the end of the text.
+    pub fn handle_select_end(&mut self) {
+        if !self.focused {
+            return;
+        }
+        self.buffer.select_to(self.buffer.len());
+        self.reset_blink();
+    }
+
+    /// Move (or, `extend`, select) to the neighbouring caret stop on
+    /// screen. The order comes from the bidi levels, which the text alone
+    /// fixes, so any style gives it; the default one is used. At the end
+    /// of the line the caret stays.
+    fn step(&mut self, rightward: bool, extend: bool) {
+        if !self.focused {
+            return;
+        }
+        let pos = self.buffer.cursor();
+        let line = VisualLine::new(self.buffer.text(), &TextStyle::default(), None);
+        let next = if rightward {
+            line.right_of(pos)
+        } else {
+            line.left_of(pos)
+        };
+        let next = next.unwrap_or(pos);
+        if extend {
+            self.buffer.select_to(next);
+        } else {
+            self.buffer.set_cursor(next);
+        }
+        self.reset_blink();
+    }
+
+    /// Where the caret draws, px from the text origin, for the text laid
+    /// out with `style` in a box `width` wide (`None`: unbounded; a
+    /// right-to-left paragraph hangs from the box's right edge).
+    pub fn caret_x(&self, style: &TextStyle, width: Option<f32>) -> f32 {
+        VisualLine::new(self.buffer.text(), style, width).caret_x(self.buffer.cursor())
+    }
+
+    /// The selection as the boxes it covers on screen, `(x, w)` from the
+    /// text origin, left to right: one box in Latin text, more where the
+    /// range crosses a change of direction. Empty without a selection.
+    pub fn selection_boxes(&self, style: &TextStyle, width: Option<f32>) -> Vec<(f32, f32)> {
+        let Some((a, b)) = self.buffer.selection() else {
+            return Vec::new();
+        };
+        VisualLine::new(self.buffer.text(), style, width).boxes(a.min(b), a.max(b))
     }
 
     pub fn handle_select_all(&mut self) {
@@ -151,13 +222,16 @@ impl TextInput {
     /// Focus and place the caret at `local_x` (px from the text origin),
     /// hit-tested with the same `style` the owner draws the text with.
     pub fn handle_click(&mut self, local_x: f32, style: &TextStyle) {
+        self.handle_click_in(local_x, style, None);
+    }
+
+    /// [`handle_click`](Self::handle_click) for text drawn in a box
+    /// `width` wide: the caret goes to the stop nearest the click, the
+    /// place it is drawn.
+    pub fn handle_click_in(&mut self, local_x: f32, style: &TextStyle, width: Option<f32>) {
         self.focus();
-        // Single-line input: hit-test on the first (only) line, no wrapping.
-        let line_middle = style.line_height / 2.0;
-        let cursor_pos =
-            TextMeasurer::hit_test_styled(self.buffer.text(), style, None, local_x, line_middle);
-        self.buffer.cursor = cursor_pos;
-        self.buffer.selection = None;
+        let pos = VisualLine::new(self.buffer.text(), style, width).hit(local_x);
+        self.buffer.set_cursor(pos);
         self.reset_blink();
     }
 }

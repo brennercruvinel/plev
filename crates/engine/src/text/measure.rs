@@ -212,6 +212,69 @@ fn cursor_rect_in(buffer: &Buffer, starts: &[usize], cursor_byte: usize) -> Comp
     rect
 }
 
+/// One shaped cluster as laid out: the bytes it covers, its box on the
+/// line and its bidi direction. The read a caret needs in mixed text,
+/// where a byte offset alone does not say which edge of which glyph the
+/// caret sits on.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ClusterBox {
+    /// Byte range of the text the cluster covers (whole text, not line).
+    pub start: usize,
+    pub end: usize,
+    /// Left edge and advance, px from the text origin.
+    pub x: f32,
+    pub w: f32,
+    /// Top of the visual line the cluster sits on.
+    pub line_top: f32,
+    /// Bidi embedding level (UAX #9); odd runs right to left.
+    pub level: u8,
+    /// Direction of the paragraph the line belongs to.
+    pub paragraph_rtl: bool,
+}
+
+impl ClusterBox {
+    /// The cluster runs right to left.
+    pub fn is_rtl(&self) -> bool {
+        self.level % 2 == 1
+    }
+}
+
+/// Every cluster of the laid-out text, line by line, each line left to
+/// right. cosmic-text lays an RTL paragraph out from its right edge, so
+/// those glyphs are read backwards; glyphs sharing one cluster (a mark
+/// shaped apart, a ligature) merge into one box.
+fn clusters_in(buffer: &Buffer, starts: &[usize]) -> Vec<ClusterBox> {
+    let mut out: Vec<ClusterBox> = Vec::new();
+    for run in buffer.layout_runs() {
+        let base = starts.get(run.line_i).copied().unwrap_or(0);
+        let line_from = out.len();
+        let n = run.glyphs.len();
+        for i in 0..n {
+            let glyph = &run.glyphs[if run.rtl { n - 1 - i } else { i }];
+            let (start, end) = (base + glyph.start, base + glyph.end);
+            if let Some(last) = out[line_from..].last_mut()
+                && last.start == start
+                && last.end == end
+            {
+                let right = (last.x + last.w).max(glyph.x + glyph.w);
+                last.x = last.x.min(glyph.x);
+                last.w = right - last.x;
+                continue;
+            }
+            out.push(ClusterBox {
+                start,
+                end,
+                x: glyph.x,
+                w: glyph.w,
+                line_top: run.line_top,
+                level: glyph.level.number(),
+                paragraph_rtl: run.rtl,
+            });
+        }
+    }
+    out
+}
+
 // ---------------------------------------------------------------------------
 // LineMetrics — real vertical metrics of a shaped line
 // ---------------------------------------------------------------------------
@@ -327,6 +390,25 @@ impl TextMeasurer {
             let ctx = &mut *ctx.borrow_mut();
             ctx.prepare(text, style, max_width);
             cursor_rect_in(&ctx.scratch, &line_starts(text), cursor_byte).x
+        })
+    }
+
+    /// The shaped clusters of `text` with their boxes and bidi levels,
+    /// line by line, left to right (see [`ClusterBox`]). Visual caret
+    /// movement and selection in mixed-direction text read this; empty
+    /// text has none.
+    pub fn clusters_styled(
+        text: &str,
+        style: &TextStyle,
+        max_width: Option<f32>,
+    ) -> Vec<ClusterBox> {
+        if text.is_empty() {
+            return Vec::new();
+        }
+        MEASURE_CTX.with(|ctx| {
+            let ctx = &mut *ctx.borrow_mut();
+            ctx.prepare(text, style, max_width);
+            clusters_in(&ctx.scratch, &line_starts(text))
         })
     }
 
