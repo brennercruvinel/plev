@@ -612,3 +612,26 @@ fn marks_merge_into_their_letter_cluster() {
     ranges.sort_unstable();
     assert_eq!(ranges, vec![(0, 6), (6, 8), (8, 12), (12, 14)]);
 }
+
+#[test]
+fn clusters_shape_once_per_line_text() {
+    use super::measure::cached_cluster_lines;
+    let style = sans(14.0);
+    let line = "let cached = \u{5d0}\u{5d1}\u{5d2} + 41;";
+    let before = cached_cluster_lines();
+    let first = TextMeasurer::clusters_styled(line, &style, None);
+    assert!(!first.is_empty());
+    assert_eq!(cached_cluster_lines(), before + 1, "the miss is kept");
+    assert_eq!(TextMeasurer::clusters_styled(line, &style, None), first);
+    assert_eq!(
+        cached_cluster_lines(),
+        before + 1,
+        "the hit shapes nothing new"
+    );
+    // An edit is a new text: that line alone shapes again.
+    let edited = "let cached = \u{5d0}\u{5d1}\u{5d2} + 42;";
+    let again = TextMeasurer::clusters_styled(edited, &style, None);
+    assert_eq!(again.len(), first.len());
+    assert_eq!(cached_cluster_lines(), before + 2);
+    assert_eq!(TextMeasurer::clusters_styled(line, &style, None), first);
+}
