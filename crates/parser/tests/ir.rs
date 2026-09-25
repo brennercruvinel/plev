@@ -8,6 +8,9 @@
 //! To write the goldens again after an intentional change:
 //! UPDATE_GOLDEN=1 cargo test -p parser --test ir
 
+// shared with the other test binaries (the html and figma helpers are
+// theirs).
+#[allow(dead_code)]
 mod support;
 
 use parser::gpui::{GExpr, GFn};

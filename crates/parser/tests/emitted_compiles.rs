@@ -36,3 +36,15 @@ fn emitted_html_note_card_builds_its_tree() {
     assert_eq!(root.children_ref().len(), 7);
     assert_eq!(root.children_ref()[4].children_ref().len(), 2);
 }
+
+mod settings {
+    include!("../fixtures/figma/expected.rs");
+}
+
+#[test]
+fn emitted_figma_screen_builds_its_tree() {
+    let root = settings::settings();
+    // the status bar, the header, the pro card, the list: the frame's
+    // children by the position rule (the ellipses are vectors, lost)
+    assert_eq!(root.children_ref().len(), 4);
+}

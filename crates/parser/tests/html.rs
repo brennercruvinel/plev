@@ -11,19 +11,15 @@
 #[allow(dead_code)]
 mod support;
 
+use parser::Category;
 use parser::html::{HtmlChild, HtmlNode};
-use parser::{Category, Imported};
 use support::checks::*;
 use support::*;
 
-const FILE: &str = "note-card.html";
+const FILE: &str = HTML;
 
 fn source() -> String {
     fixture("html/note-card.html")
-}
-
-fn import() -> Imported {
-    parser::import_html((FILE, &source()), &hoff()).expect("html import")
 }
 
 /// Every construct of the document: each element with its attributes (and
@@ -72,7 +68,7 @@ fn census(src: &str) -> Vec<Site> {
 
 #[test]
 fn the_html_note_card_ir_its_report_and_its_code() {
-    let imported = import();
+    let imported = import_html();
     goldens(&imported, "html");
     let code = parser::transpile_html((FILE, &source())).expect("html");
     check_golden("html/expected.rs", &code.code);
@@ -111,7 +107,7 @@ fn the_html_note_card_ir_its_report_and_its_code() {
 
 #[test]
 fn nothing_of_the_html_note_card_is_lost_or_invented() {
-    let imported = import();
+    let imported = import_html();
     let src = source();
     nothing_is_lost(&imported.report, &census(&src), &[(FILE, &src)]);
     nothing_is_invented(&imported);
@@ -119,7 +115,7 @@ fn nothing_of_the_html_note_card_is_lost_or_invented() {
 
 #[test]
 fn the_html_note_card_needs_the_same_app_as_the_react_one() {
-    let imported = import();
+    let imported = import_html();
     assert_eq!(imported.ir.surface.id.as_str(), "note_card");
     let actions: Vec<String> = imported
         .report
@@ -138,7 +134,7 @@ fn the_html_note_card_needs_the_same_app_as_the_react_one() {
 
 #[test]
 fn an_html_import_is_deterministic_and_a_broken_one_an_error() {
-    assert_eq!(import(), import());
+    assert_eq!(import_html(), import_html());
     let broken = parser::import_html(("x.html", "<style>.a { color: }}}</style>"), &hoff());
     assert!(matches!(broken, Err(parser::ParserError::Parse(_))));
 }

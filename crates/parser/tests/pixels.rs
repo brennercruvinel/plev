@@ -29,6 +29,15 @@ mod card {
     include!("../fixtures/react/expected.rs");
 }
 
+#[allow(dead_code)]
+mod html_card {
+    include!("../fixtures/html/expected.rs");
+}
+#[allow(dead_code)]
+mod settings {
+    include!("../fixtures/figma/expected.rs");
+}
+
 use comps::Rect;
 use engine::builder::{Align, Element, div};
 use engine::compositor::{Compositor, SceneNode};
@@ -379,11 +388,71 @@ fn the_note_card_by_pixel() {
     );
 }
 
+/// A phase 2 source (task-71): its IR, the app it is verified against,
+/// the builder code emitted from the same `ParserNode`, the area, and the
+/// texts it holds in the source's order.
+struct Case {
+    name: &'static str,
+    imported: parser::Imported,
+    app: Snapshot,
+    code: Element,
+    size: [f32; 2],
+    texts: &'static [&'static str],
+}
+
+fn phase2() -> [Case; 2] {
+    [
+        Case {
+            name: "html-note-card",
+            imported: import_html(),
+            app: note_card_app("", ""),
+            code: html_card::note_card(),
+            size: [400.0, 460.0],
+            texts: &["Field note", "Tokens over literals", "New", "ui", "ir"],
+        },
+        Case {
+            name: "figma-settings",
+            imported: import_figma(),
+            app: sem::SnapshotBuilder::new().finish().expect("an empty app"),
+            code: settings::settings(),
+            size: [393.0, 852.0],
+            texts: &[
+                "9:41",
+                "Settings",
+                "UrAI Pro",
+                "Upgrade Now",
+                "Privacy Policy",
+            ],
+        },
+    ]
+}
+
+/// The IR each phase 2 importer writes, verified and materialized, draws
+/// every text the source holds, in the source's order; the builder code
+/// draws them too. No comparison by pixel: `write_the_frames` writes the
+/// frames for a person to look at.
+#[test]
+fn the_html_and_figma_ir_materialize_and_draw() {
+    let theme = Theme::hoff();
+    for c in phase2() {
+        let Some(mut r) = renderer(c.size[0], c.size[1]) else {
+            return;
+        };
+        let ir = materialized(&c.imported, &c.app, &mut r, &theme);
+        let code = builder(c.code, &mut r, &theme);
+        for drawn in [&ir, &code] {
+            let ys: Vec<f32> = c.texts.iter().map(|t| run(&drawn.runs, t).y).collect();
+            assert!(ys.windows(2).all(|p| p[0] <= p[1]), "{}: {ys:?}", c.name);
+        }
+    }
+}
+
 /// The frames, written for a person to look at:
 /// `cargo test -p parser --test pixels -- --ignored`, then the pngs in the
-/// test's target tmp dir.
+/// test's target tmp dir (the separator, the react note card, and the two
+/// phase 2 sources: the html note card and the figma screen).
 #[test]
-#[ignore = "diagnostic: writes the four frames as png"]
+#[ignore = "diagnostic: writes the frames as png"]
 fn write_the_frames() {
     let theme = Theme::hoff();
     let out = std::path::PathBuf::from(env!("CARGO_TARGET_TMPDIR"));
@@ -411,6 +480,18 @@ fn write_the_frames() {
         b.frame
             .write_png(out.join("note-card-ir.png"))
             .expect("png");
+    }
+    for c in phase2() {
+        if let Some(mut r) = renderer(c.size[0], c.size[1]) {
+            let ir = materialized(&c.imported, &c.app, &mut r, &theme);
+            let code = builder(c.code, &mut r, &theme);
+            ir.frame
+                .write_png(out.join(format!("{}-ir.png", c.name)))
+                .expect("png");
+            code.frame
+                .write_png(out.join(format!("{}-builder.png", c.name)))
+                .expect("png");
+        }
     }
     eprintln!("frames in {}", out.display());
 }

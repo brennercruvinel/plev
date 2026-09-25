@@ -207,6 +207,22 @@ pub fn import_gpui() -> Imported {
     parser::import_gpui(("separator.rs", &gpui_source()), &hoff()).expect("gpui import")
 }
 
+/// The HTML note card (`fixtures/html`, task-71 phase 2).
+pub const HTML: &str = "note-card.html";
+
+pub fn import_html() -> Imported {
+    let src = fixture("html/note-card.html");
+    parser::import_html((HTML, &src), &hoff()).expect("html import")
+}
+
+/// The Figma screen (`fixtures/figma`, exported by `script/figma-fixture`).
+pub const FIGMA: &str = "settings.json";
+
+pub fn import_figma() -> Imported {
+    let src = fixture("figma/settings.json");
+    parser::import_figma((FIGMA, &src), &hoff()).expect("figma import")
+}
+
 /// The app the note card is written for: its data and its two actions,
 /// as the report's bindings ask.
 pub fn note_card_app(title: &str, content: &str) -> Snapshot {
