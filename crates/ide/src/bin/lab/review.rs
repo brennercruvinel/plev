@@ -20,11 +20,19 @@
 //! surface in the dispatcher with her receipt; and nothing of the surface
 //! after it closes. with a GPU the frames at the three moments are also
 //! written as PNG, to look at.
+//!
+//! since task-97 the review shows the diff in a `code` (the lines and the
+//! kind of each), and its lines on screen are counted by the code block's
+//! geometry; each side also says how many of the lines on screen are cut
+//! at the width, the panel's by its own gutters, the code's by its
+//! padding. the criterion is the one written before.
 
 use std::path::{Path, PathBuf};
 
-use comps::content::Table;
+use comps::content::{CodeBlock, CodeLine};
 use comps::nav::PanelHeader;
+use engine::text::TextMeasurer;
+use engine::theme::Theme;
 use git::GitEvent;
 use ide::lab_repo::REVIEWED;
 use rec::{InputKind, Kind, Limits, Recorder, Session};
@@ -81,6 +89,42 @@ fn id(text: &str) -> Result<SemId, String> {
 
 fn millis(t: u64) -> Json {
     json!(t)
+}
+
+/// how many of `texts` are wider than `room` in the mono step: the ones
+/// a view cuts at its width.
+fn cut(texts: &[&str], room: f32, theme: &Theme) -> usize {
+    let style = theme.typography.mono();
+    texts
+        .iter()
+        .filter(|t| TextMeasurer::measure_styled(t, &style, None).0 > room + 0.5)
+        .count()
+}
+
+/// the lines of the fixed diff panel at `[x, _, w, _]` cut at its width,
+/// of the first `on_screen`: the room its code column has once the two
+/// gutters of line numbers and the mark's column are taken
+/// (`crates/ide/src/views/diff_view.rs`, `render`).
+fn panel_cut(app: &Bench, rect: [f32; 4], on_screen: usize, theme: &Theme) -> usize {
+    let lines = &app.bench.workspace().diff.lines;
+    let widest = lines
+        .iter()
+        .flat_map(|l| [l.line_no_old, l.line_no_new])
+        .flatten()
+        .max()
+        .unwrap_or(0);
+    let numbers = theme.typography.small_r();
+    let (num_w, _) = TextMeasurer::measure_styled(&widest.to_string(), &numbers, None);
+    let pad = theme.spacing.md;
+    let gutter = num_w + theme.spacing.sm;
+    let code_x = rect[0] + pad + gutter * 2.0 + theme.spacing.md;
+    let room = (rect[0] + rect[2] - pad - code_x).max(0.0);
+    let texts: Vec<&str> = lines
+        .iter()
+        .take(on_screen)
+        .map(|l| l.content.as_str())
+        .collect();
+    cut(&texts, room, theme)
 }
 
 impl Demo {
@@ -233,11 +277,12 @@ impl Demo {
             let clicked = self.click(&c.id)?;
             last = self.diff_arrived()?;
             let lines = self.lines("diff:lines")?;
-            let [_, _, _, h] = self
+            let panel = self
                 .whole(&id("diff")?)
                 .ok_or("the diff panel is not whole on screen")?;
-            let fit = ((h - header) / line).floor().max(0.0) as usize;
+            let fit = ((panel[3] - header) / line).floor().max(0.0) as usize;
             let on_screen = lines.len().min(fit);
+            let cut_on_screen = panel_cut(&self.app, panel, on_screen, &theme);
             let named: Vec<&String> = c
                 .files
                 .iter()
@@ -260,6 +305,7 @@ impl Demo {
                 "files_named_on_screen": named,
                 "diff_lines": lines.len(),
                 "diff_lines_on_screen": on_screen,
+                "diff_lines_cut_at_the_width": cut_on_screen,
                 "cards_whole": self.cards(commits, "")?,
             }));
         }
@@ -275,8 +321,9 @@ impl Demo {
     /// the surface: the person clicks the intent field, types the intent,
     /// clicks propose; then each commit's "show diff" on the surface, and
     /// reads the diff beside the three. what shows: the files table of
-    /// each commit, and how many lines of the diff the table shows, by
-    /// the table's geometry.
+    /// each commit, and how many lines of the diff the code shows, by the
+    /// code block's geometry (its rows area over one row's height), and
+    /// how many of those its width cuts.
     fn surface(&mut self, commits: &[Commit]) -> Result<Json, String> {
         let theme = self.app.bench.workspace().theme().clone();
         let (clicks, keys) = (self.clicks, self.keys);
@@ -326,19 +373,26 @@ impl Demo {
             let button = id(&format!("{SURFACE}.{}.show_diff", c.id))?;
             let clicked = self.click(&button)?;
             last = self.diff_arrived()?;
-            let lines = self.lines(&format!("{SURFACE}.diff.lines:rows"))?;
-            let table = self
-                .whole(&id(&format!("{SURFACE}.diff.lines"))?)
-                .ok_or("the diff's table is not whole on screen")?;
-            let fit = ((table[3] - Table::header_h(&theme)) / Table::row_h(&theme))
-                .floor()
-                .max(0.0) as usize;
+            let code = id(&format!("{SURFACE}.diff.lines"))?;
+            let lines = self.lines(&format!("{code}:lines"))?;
+            let kinds = self.lines(&format!("{code}:kinds"))?;
+            let [x, y, w, h] = self
+                .whole(&code)
+                .ok_or("the diff's code is not whole on screen")?;
+            let block = CodeBlock::lines(vec![CodeLine::default()]).caption("lines");
+            let area = block.rows_rect(comps::Rect::new(x, y, w, h), &theme);
+            let fit = (area.h / CodeBlock::row_h(&theme)).floor().max(0.0) as usize;
+            let on_screen = lines.len().min(fit);
+            let shown: Vec<&str> = lines.iter().take(on_screen).map(String::as_str).collect();
+            let room = w - theme.spacing.md * 2.0;
             each.push(json!({
                 "commit": c.id.to_string(),
                 "clicked_ms": clicked,
                 "diff_ms": last,
                 "diff_lines": lines.len(),
-                "diff_lines_on_screen": lines.len().min(fit),
+                "diff_lines_on_screen": on_screen,
+                "diff_lines_cut_at_the_width": cut(&shown, room, &theme),
+                "kinds_beside_the_lines": kinds.len() == lines.len(),
                 "target": match self.value("diff:target")? {
                     Value::Text(t) => t,
                     other => format!("{other:?}"),

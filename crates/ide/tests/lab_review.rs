@@ -84,8 +84,18 @@ fn the_demo_reviews_three_commits_with_the_fixed_panel_and_with_the_surface() {
                 n(&c["diff_lines_on_screen"]) <= n(&c["diff_lines"]),
                 "{side}: {c}"
             );
+            assert!(
+                n(&c["diff_lines_cut_at_the_width"]) <= n(&c["diff_lines_on_screen"]),
+                "{side}: {c}"
+            );
         }
     }
+    // the surface's diff is a code with the kind of each line (task-97)
+    let shown = report["surface"]["commits"].as_array().expect("commits");
+    assert!(
+        shown.iter().all(|c| c["kinds_beside_the_lines"] == true),
+        "{shown:?}"
+    );
 
     // every act, a request of the person through the dispatcher
     let requests = report["requests"].as_array().expect("requests");

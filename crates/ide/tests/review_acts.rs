@@ -134,9 +134,14 @@ fn a_click_on_the_surface_is_the_persons_request_for_the_capability() {
     let lines = rig.value("diff:lines");
     assert!(matches!(&lines, Value::List(l) if !l.is_empty()));
     assert_eq!(
-        rig.value("proposed.diff.lines:rows"),
+        rig.value("proposed.diff.lines:lines"),
         lines,
         "the surface shows the diff the dispatcher asked for"
+    );
+    assert_eq!(
+        rig.value("proposed.diff.lines:kinds"),
+        rig.value("diff:kinds"),
+        "in its code, with the kind of each line (task-97)"
     );
     for (n, commit) in commits.iter().take(3).enumerate() {
         click(&mut rig, &button(commit));

@@ -26,10 +26,16 @@
 //! as a stat each. what those actions read outside the item (the
 //! `diff:target` a `show_diff` reads) is the region they open, a card
 //! shown once beside the items: its texts, its numbers, and last its
-//! lists as tables whose height the token `dropdown_max_h` bounds (the
-//! diff's lines, which scroll inside it). the items on the left and the
-//! region on the right, in a split; the items alone in a column when
-//! there is no region.
+//! lists, whose height the token `dropdown_max_h` bounds, which scroll
+//! inside it. the items on the left and the region on the right, in a
+//! split; the items alone in a column when there is no region.
+//!
+//! a list a node names `lines` is a `code` (task-97), not a table: the
+//! name a code shows its lines by. when the node also has a list named
+//! `kinds`, the name a code shows the kind of each line by, it is bound
+//! to the same code and not shown on its own: the diff's lines, each
+//! with its kind, in one block. the app that projects them speaks the
+//! vocabulary; every other list stays a table.
 //!
 //! the refusals, each with why: a word that names no item of the app
 //! (`NoMatch`, with the words of the items), nothing to review, no word
@@ -266,10 +272,23 @@ impl Build<'_> {
 
     /// `node`'s state by sense: each text (the first larger, as what names
     /// it, and a frame ref as an image), each number as a stat, each list
-    /// as a table (bounded in height when `bounded`).
+    /// as a table, its `lines` as a code with their `kinds` (every list
+    /// bounded in height when `bounded`).
     fn senses(&mut self, node: &Node, bounded: bool) -> Senses {
         let mut out = Senses::default();
-        for (key, value) in self.data(node) {
+        let data = self.data(node);
+        let list = |name: &str| {
+            data.iter()
+                .find(|(key, value)| key.as_str() == name && value.kind() == ValueKind::List)
+                .map(|(key, _)| StateRef::new(node.id.clone(), (*key).clone()))
+        };
+        let lines = list("lines");
+        let kinds = lines.as_ref().and_then(|_| list("kinds"));
+        let bound = || Size {
+            max: Some(SizeToken::DropdownMaxH),
+            ..Size::default()
+        };
+        for (key, value) in data {
             let at = StateRef::new(node.id.clone(), key.clone());
             let name = format!("{}.{key}", node.id);
             let mut n = IrNode::new(node.id.clone());
@@ -292,14 +311,28 @@ impl Build<'_> {
                     n.bind.state.insert("text".to_owned(), at);
                     out.texts.push(self.bound(n, anchor, &name, String::new()));
                 }
+                // the kinds are the code's, never a list of their own
+                ValueKind::List if kinds.as_ref() == Some(&at) => {}
+                ValueKind::List if lines.as_ref() == Some(&at) => {
+                    n.component = Some(Component::Code);
+                    n.bind.state.insert("lines".to_owned(), at);
+                    if let Some(kinds) = &kinds {
+                        n.bind.state.insert("kinds".to_owned(), kinds.clone());
+                    }
+                    if bounded {
+                        n.size = bound();
+                    }
+                    // anchored as the current surface's node is, by its
+                    // first state, so a new form keeps its id
+                    let anchor = crate::ids::anchor(&n).unwrap_or(anchor);
+                    out.lists
+                        .push(self.bound(n, anchor, &name, label(key.as_str())));
+                }
                 ValueKind::List | ValueKind::Set => {
                     n.component = Some(Component::Table);
                     n.bind.state.insert("rows".to_owned(), at);
                     if bounded {
-                        n.size = Size {
-                            max: Some(SizeToken::DropdownMaxH),
-                            ..Size::default()
-                        };
+                        n.size = bound();
                     }
                     out.lists
                         .push(self.bound(n, anchor, &name, label(key.as_str())));
