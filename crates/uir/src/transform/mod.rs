@@ -23,11 +23,12 @@
 mod look;
 mod shape;
 mod tree;
+mod view;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-use sem::{Actor, SemId};
+use sem::{ActionName, Actor, SemId};
 use serde::{Deserialize, Serialize};
 
 use crate::caps::Capabilities;
@@ -36,6 +37,7 @@ use crate::ir::{Ir, IrNode};
 use crate::policy::GenerationPolicy;
 use crate::token::{ColorRole, Layout, Props};
 use crate::verify::{VerifiedIr, verify};
+use crate::vocab::Component;
 
 /// which way `Density` moves every gap and padding: one step of the
 /// spacing scale, down or up.
@@ -66,6 +68,15 @@ pub enum Op {
     Density { step: Step },
     /// a text's color or a container's fill, by role.
     Restyle { id: SemId, role: ColorRole },
+    /// the same datum shown by another component.
+    SwapView { id: SemId, component: Component },
+    /// a button for an action the app declares and the surface does not
+    /// show, at the end of the container `into`.
+    Promote {
+        target: SemId,
+        action: ActionName,
+        into: SemId,
+    },
 }
 
 /// the op in a line, for a history or a log.
@@ -86,6 +97,12 @@ impl fmt::Display for Op {
                 step: Step::Sparser,
             } => f.write_str("density sparser"),
             Op::Restyle { id, role } => write!(f, "restyle {id} {}", role.as_str()),
+            Op::SwapView { id, component } => write!(f, "swap {id} to {}", view::name(*component)),
+            Op::Promote {
+                target,
+                action,
+                into,
+            } => write!(f, "promote {action} on {target} into {into}"),
         }
     }
 }
@@ -115,14 +132,15 @@ pub struct Look {
 #[serde(rename_all = "snake_case")]
 pub enum Inverse {
     /// the contrary operation, where it is exact: `Show` for `Hide`, the
-    /// whole order before for `Reorder`.
+    /// whole order before for `Reorder`, the component before for
+    /// `SwapView`.
     Op(Op),
     /// `Show`'s: the node set aside again, at the place it was kept with.
     Aside { id: SemId, at: usize },
     /// the props and layouts before (`Emphasize`, `Restyle`, `Density`).
     Looks(Vec<Look>),
-    /// the node before, whole, in place of the node with its id (`Group`,
-    /// the parent).
+    /// the node before, whole, in place of the node with its id (`Group`
+    /// and `Promote`, the parent).
     Restore(IrNode),
 }
 
@@ -223,7 +241,7 @@ impl Adapted {
     pub fn apply(
         &self,
         op: &Op,
-        _by: &Actor,
+        by: &Actor,
         cx: Context<'_>,
     ) -> Result<(Adapted, Inverse), TransformError> {
         let mut d = self.draft();
@@ -235,6 +253,12 @@ impl Adapted {
             Op::Emphasize { id } => look::emphasize(&mut d, id)?,
             Op::Density { step } => look::density(&mut d, *step)?,
             Op::Restyle { id, role } => look::restyle(&mut d, id, *role)?,
+            Op::SwapView { id, component } => view::swap(&mut d, id, *component)?,
+            Op::Promote {
+                target,
+                action,
+                into,
+            } => view::promote(&mut d, (target, action), into, by, cx.caps)?,
         };
         Ok((d.verify(cx)?, inverse))
     }

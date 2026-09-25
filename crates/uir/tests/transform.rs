@@ -7,12 +7,13 @@
 #[allow(dead_code)]
 mod support;
 
-use sem::{Actor, SemId};
+use sem::{Actor, SemId, ValueKind};
 use serde_json::{Value, json};
 use support::caps;
 use uir::{
-    Adapted, Capabilities, ColorRole, Context, ControlSize, Elevation, GenerationPolicy, Inverse,
-    Ir, IrNode, Layout, Op, Rule, SpacingToken, Step, TransformError, TypographyRole, verify,
+    Adapted, Capabilities, ChartKind, ColorRole, Component, Context, ControlSize, DataCap,
+    Elevation, GenerationPolicy, Inverse, Ir, IrNode, Layout, Op, Rule, SpacingToken, Step,
+    TransformError, TypographyRole, verify,
 };
 
 /// A surface over `caps()`: a title, the files repeated with a status and
@@ -116,6 +117,12 @@ fn id(text: &str) -> SemId {
 
 fn human() -> Actor {
     Actor::Human
+}
+
+fn agent() -> Actor {
+    Actor::Agent {
+        name: "claude".to_owned(),
+    }
 }
 
 /// `doc` read, verified against `caps` under `policy`, nothing aside.
@@ -764,6 +771,329 @@ fn restyle_sets_a_text_s_color_or_a_container_s_fill_by_role() {
     )
     .to_string();
     assert!(why.contains("already"), "{why}");
+}
+
+/// `caps()` with a number to show and an action kept from agents.
+fn more_caps() -> Capabilities {
+    caps().with_data(DataCap {
+        at: "meter:level".parse().unwrap(),
+        kind: ValueKind::Num,
+        label: "level".to_owned(),
+    })
+}
+
+#[test]
+fn swap_view_shows_the_same_datum_by_another_component_of_its_family() {
+    let before = adapted();
+    let chart = apply(
+        &before,
+        &Op::SwapView {
+            id: id("review.table"),
+            component: Component::Chart(ChartKind::Bar),
+        },
+    );
+    let table = node(&chart, "review.table");
+    assert_eq!(table.component, Some(Component::Chart(ChartKind::Bar)));
+    assert_eq!(
+        table.bind.state.get("data").map(ToString::to_string),
+        Some("changes:files".to_owned())
+    );
+    assert!(!table.bind.state.contains_key("rows"));
+    let line = apply(
+        &chart,
+        &Op::SwapView {
+            id: id("review.table"),
+            component: Component::Chart(ChartKind::Line),
+        },
+    );
+    assert_eq!(
+        node(&line, "review.table").component,
+        Some(Component::Chart(ChartKind::Line))
+    );
+    // a text of a count as a stat and as a badge
+    for to in [Component::Stat, Component::Badge] {
+        let swapped = apply(
+            &before,
+            &Op::SwapView {
+                id: id("review.count"),
+                component: to,
+            },
+        );
+        assert_eq!(node(&swapped, "review.count").component, Some(to));
+    }
+    // the checkbox of every file as a switch, and as a chip that toggles
+    let switch = apply(
+        &before,
+        &Op::SwapView {
+            id: id("review.file[{item}].staged"),
+            component: Component::Switch,
+        },
+    );
+    let staged = node(&switch, "review.file[{item}].staged");
+    assert!(staged.bind.state.contains_key("on"));
+    assert!(staged.bind.actions.contains_key("toggle"));
+    apply(
+        &switch,
+        &Op::SwapView {
+            id: id("review.file[{item}].staged"),
+            component: Component::Chip,
+        },
+    );
+}
+
+#[test]
+fn swap_view_is_refused_across_families_and_for_a_list_and_fails_what_the_verifier_refuses() {
+    let before = adapted();
+    for (at, to, says) in [
+        (
+            "review.files",
+            Component::Table,
+            "ids of its items would leave the surface",
+        ),
+        (
+            "review.commit",
+            Component::Chip,
+            "no chip shows what a button shows",
+        ),
+        ("review.row", Component::Card, "layout container"),
+        ("review.title", Component::Text, "a text already"),
+    ] {
+        let why = refused(
+            &before,
+            &Op::SwapView {
+                id: id(at),
+                component: to,
+            },
+        )
+        .to_string();
+        assert!(why.contains(says), "{at}: {why}");
+    }
+    // a chart is always named; a table of a set is no chart's data
+    let unnamed = support::without(doc(), "/surface/root/children/4/label");
+    let unnamed = adapted_over(&unnamed, &caps(), &GenerationPolicy::default());
+    unverified(
+        &unnamed,
+        &Op::SwapView {
+            id: id("review.table"),
+            component: Component::Chart(ChartKind::Bar),
+        },
+        Rule::Access,
+    );
+    let set = support::with(
+        doc(),
+        "/surface/root/children/4/bind/state/rows",
+        json!("changes:staged"),
+    );
+    let set = adapted_over(&set, &caps(), &GenerationPolicy::default());
+    unverified(
+        &set,
+        &Op::SwapView {
+            id: id("review.table"),
+            component: Component::Chart(ChartKind::Donut),
+        },
+        Rule::State,
+    );
+    // a stat of a number is no badge's text
+    let level = support::with(
+        doc(),
+        "/surface/root/children/2/children/1/bind/state/text",
+        json!("meter:level"),
+    );
+    let (caps, policy) = (more_caps(), GenerationPolicy::default());
+    let level = adapted_over(&level, &caps, &policy);
+    let cx = Context {
+        caps: &caps,
+        policy: &policy,
+    };
+    let stat = apply_by(
+        &level,
+        &Op::SwapView {
+            id: id("review.count"),
+            component: Component::Stat,
+        },
+        &human(),
+        cx,
+    );
+    let badge = Op::SwapView {
+        id: id("review.count"),
+        component: Component::Badge,
+    };
+    match stat.apply(&badge, &human(), cx) {
+        Err(TransformError::Unverified(errors)) => {
+            assert!(errors.iter().any(|e| e.rule == Rule::State), "{errors:#?}");
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
+#[test]
+fn promote_adds_a_button_for_an_action_the_surface_does_not_show() {
+    let before = adapted();
+    let after = apply(
+        &before,
+        &Op::Promote {
+            target: id("commit.form"),
+            action: "cancel".parse().unwrap(),
+            into: id("review.row"),
+        },
+    );
+    assert_eq!(
+        children(&after, "review.row"),
+        ["review.commit", "review.row.cancel"]
+    );
+    let button = node(&after, "review.row.cancel");
+    assert_eq!(button.component, Some(Component::Button));
+    assert_eq!(button.label.as_deref(), Some("commit"), "the app's label");
+    assert!(
+        after
+            .verified()
+            .focus_order()
+            .contains(&id("review.row.cancel"))
+    );
+    // an action the app keeps from agents, confirmed always, destructive
+    let empty = apply(
+        &before,
+        &Op::Promote {
+            target: id("trash"),
+            action: "empty".parse().unwrap(),
+            into: id("review.root"),
+        },
+    );
+    assert!(empty.ids().contains(&id("review.root.empty")));
+}
+
+#[test]
+fn promote_is_refused_for_what_is_shown_undeclared_or_takes_a_value() {
+    let before = adapted();
+    let promote = |target: &str, action: &str, into: &str| Op::Promote {
+        target: id(target),
+        action: action.parse().unwrap(),
+        into: id(into),
+    };
+    for (op, says) in [
+        (
+            promote("commit.submit", "submit", "review.root"),
+            "`review.commit` shows `submit`",
+        ),
+        (
+            promote("changes.file[a.rs]", "stage", "review.root"),
+            "`review.file[{item}].staged` shows `stage`",
+        ),
+        (
+            promote("commit.submit", "push", "review.root"),
+            "declares no `push`",
+        ),
+        (
+            promote("commit.message", "set_value", "review.root"),
+            "takes a text",
+        ),
+        (
+            promote("commit.form", "cancel", "review.commit"),
+            "holds no children",
+        ),
+        (
+            promote("commit.form", "cancel", "review.files"),
+            "holds no children",
+        ),
+    ] {
+        let why = refused(&before, &op).to_string();
+        assert!(why.contains(says), "{op}: {why}");
+    }
+    // hidden: then it is a `Show`
+    let hidden = apply(
+        &before,
+        &Op::Hide {
+            id: id("review.row"),
+        },
+    );
+    let why = refused(&hidden, &promote("commit.submit", "submit", "review.root")).to_string();
+    assert!(why.contains("hidden `review.row`: show it"), "{why}");
+    // destructive, confirmed for agents only: the verifier refuses the
+    // button
+    unverified(
+        &before,
+        &promote("changes.file[a.rs]", "discard", "review.root"),
+        Rule::Policy,
+    );
+}
+
+/// An action kept from agents (`admin reset`, `caps()`): promoted for a
+/// person on a surface a person wrote, never for an agent, and whatever
+/// binds it keeps binding it through a group, a reorder and a swap.
+#[test]
+fn an_action_kept_from_agents_stays_kept_and_is_promoted_only_for_whoever_may_ask() {
+    let caps = caps();
+    let by_human = GenerationPolicy::by(human());
+    let cx = Context {
+        caps: &caps,
+        policy: &by_human,
+    };
+    let before = adapted_over(&doc(), &caps, &by_human);
+    let reset = Op::Promote {
+        target: id("admin"),
+        action: "reset".parse().unwrap(),
+        into: id("review.row"),
+    };
+    let why = before
+        .apply(&reset, &agent(), cx)
+        .err()
+        .map(|e| e.to_string());
+    assert!(
+        why.as_deref()
+            .is_some_and(|w| w.contains("keeps `reset` on `admin` from agent:claude")),
+        "{why:?}"
+    );
+    let promoted = apply_by(&before, &reset, &human(), cx);
+    // written by an agent, the surface may not bind it, whoever asks
+    let by_agent = GenerationPolicy::default();
+    let agents = adapted_over(&doc(), &caps, &by_agent);
+    let refused = agents.apply(
+        &reset,
+        &human(),
+        Context {
+            caps: &caps,
+            policy: &by_agent,
+        },
+    );
+    assert!(
+        matches!(&refused, Err(TransformError::Unverified(e)) if e.iter().any(|e| e.rule == Rule::Policy)),
+        "{refused:?}"
+    );
+    // through the other operations the node binds the same capability
+    let cap = |a: &Adapted| {
+        node(a, "review.row.reset")
+            .bind
+            .actions
+            .get("activate")
+            .map(|c| (c.target.to_string(), c.action.to_string()))
+    };
+    let admin = Some(("admin".to_owned(), "reset".to_owned()));
+    let grouped = apply_by(
+        &promoted,
+        &Op::Group {
+            ids: vec![id("review.row.reset")],
+            into: id("review.row.danger"),
+        },
+        &human(),
+        cx,
+    );
+    let reordered = apply_by(
+        &grouped,
+        &Op::Reorder {
+            parent: id("review.row"),
+            ids: vec![id("review.row.danger")],
+        },
+        &human(),
+        cx,
+    );
+    for a in [&promoted, &grouped, &reordered] {
+        assert_eq!(cap(a), admin);
+    }
+    assert_eq!(
+        caps.action(&id("admin"), &"reset".parse().unwrap())
+            .map(|c| c.policy.actors.agent),
+        Some(false)
+    );
 }
 
 #[test]
