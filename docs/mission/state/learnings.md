@@ -609,6 +609,20 @@ c"; saídas em `target/agents/exp/`.
 
 ## processo
 
+### 2026-09-25, antes de dizer onde a correção mora, ver quem lê
+
+- **o briefing da task-75 fase 2a mandou a página projetar as ações da
+  linha como controles:** a projeção da página parada é golden do `uir`,
+  é o registro contra o qual o IR se verifica e o prompt se monta, e
+  entra no `scene.json` do regress. o agente viu na sonda e pôs os
+  controles só na árvore do leitor. regra para o briefing: antes de
+  prescrever onde uma correção mora, listar quem lê aquele dado (goldens,
+  registro, prompt, port, regress) e deixar a sonda escolher o lugar.
+- **"só o `semantics.json` muda" não existe:** o `scene.json` de uma
+  baseline carrega a revisão do `semantics.json`, então toda mudança de
+  significado mexe numa linha dele. a regra certa é "o `scene.json` só
+  na linha `semantics.revision`; frame, camadas e bindings iguais".
+
 ### 2026-09-24, um canal novo herda as promessas dos antigos
 
 - **o canal de cena reabriu o que o item 10 fechou:** o briefing da

@@ -9,10 +9,15 @@
 //!   that declares none of them and exactly one action without a
 //!   parameter (`propose`, `open_file`, `detect_silence`) is pressed by
 //!   that one, as a person's click presses it; with two or more, a click
-//!   would have to guess, and it has none.
-//! - `SetValue` asks for `set_value` with the value as the parameter, in
-//!   the kind the action declares (a number for a slider, a text for a
-//!   field).
+//!   would have to guess, and it has none. A select is pressed by its
+//!   `open`, and by its `close` while its list is `expanded` (a pop-up
+//!   button's press; its options, projected while open, are pressed by
+//!   their own `select`).
+//! - `Click` on a control the tree presents inside an item (`present`)
+//!   asks for the item's action it stands for.
+//! - `SetValue` asks for the node's setter with the value as the
+//!   parameter, in the kind the action declares (a number for a slider, a
+//!   text for a field): its `set_value`, or a select's `select`.
 //! - `Increment` and `Decrement` ask for `increment` and `decrement`.
 //! - `Focus` is not a capability: moving keyboard focus is editing, as a
 //!   click into a field is for a person (see the ADR
@@ -92,14 +97,42 @@ impl std::error::Error for Unmapped {}
 
 /// The action a click on `node` asks for: the first of `PRIMARY` it
 /// declares without a parameter, else, on a node whose role exists to be
-/// pressed, its one action without a parameter.
+/// pressed, its one action without a parameter, else a select's `open`
+/// (its `close` while it is `expanded`).
 pub fn primary(node: &Node) -> Option<&ActionDecl> {
     let named = PRIMARY.iter().find_map(|name| {
         node.actions
             .iter()
             .find(|a| a.name.as_str() == *name && a.param.is_none())
     });
-    named.or_else(|| sole(node))
+    named.or_else(|| sole(node)).or_else(|| popup(node))
+}
+
+/// A select's press: `open`, or `close` while its list is `expanded`.
+fn popup(node: &Node) -> Option<&ActionDecl> {
+    if node.role != Role::Select {
+        return None;
+    }
+    let open = matches!(node.state.get("expanded"), Some(Value::Bool(true)));
+    let name = if open { "close" } else { "open" };
+    node.actions
+        .iter()
+        .find(|a| a.name.as_str() == name && a.param.is_none())
+}
+
+/// The action a value is set by: `set_value`, else, on a select, a
+/// `select` that takes the option as its parameter.
+pub fn setter(node: &Node) -> Option<&ActionDecl> {
+    let own = node.actions.iter().find(|a| a.name.as_str() == "set_value");
+    own.or_else(|| {
+        (node.role == Role::Select)
+            .then(|| {
+                node.actions
+                    .iter()
+                    .find(|a| a.name.as_str() == "select" && a.param.is_some())
+            })
+            .flatten()
+    })
 }
 
 /// The one action without a parameter of a button, a link or a menu
@@ -127,6 +160,17 @@ pub fn translate(req: &ActionRequest, shown: &Shown) -> Result<Assist, Unmapped>
         .ids
         .sem(req.target_node)
         .ok_or(Unmapped::UnknownNode(req.target_node))?;
+    if let Some((item, action)) = shown.ids.presented(id) {
+        return match req.action {
+            Action::Click => {
+                Request::observe(&shown.snapshot, Actor::Assistive, item, action, None)
+                    .map(Assist::Request)
+                    .map_err(Unmapped::Contract)
+            }
+            Action::Focus => Err(Unmapped::NotFocusable(id.clone())),
+            other => Err(Unmapped::Unsupported(other)),
+        };
+    }
     let node = shown
         .snapshot
         .get(id)
@@ -143,7 +187,11 @@ pub fn translate(req: &ActionRequest, shown: &Shown) -> Result<Assist, Unmapped>
                 Err(Unmapped::NotFocusable(id.clone()))
             };
         }
-        Action::SetValue => ("set_value", Some(value(node, req.data.as_ref(), id)?)),
+        Action::SetValue => {
+            let decl = setter(node);
+            let name = decl.map_or("set_value", |d| d.name.as_str());
+            (name, Some(value(decl, req.data.as_ref(), id)?))
+        }
         Action::Increment => ("increment", None),
         Action::Decrement => ("decrement", None),
         other => return Err(Unmapped::Unsupported(other)),
@@ -153,16 +201,15 @@ pub fn translate(req: &ActionRequest, shown: &Shown) -> Result<Assist, Unmapped>
         .map_err(Unmapped::Contract)
 }
 
-/// The parameter of a `SetValue`: in the kind `set_value` declares when
+/// The parameter of a `SetValue`: in the kind the setter declares when
 /// the value converts without loss, else as it came (the dispatcher
 /// refuses a kind that does not fit, with the reason in the receipt).
-fn value(node: &Node, data: Option<&ActionData>, id: &SemId) -> Result<Value, Unmapped> {
-    let kind = node
-        .actions
-        .iter()
-        .find(|a| a.name.as_str() == "set_value")
-        .and_then(|a| a.param)
-        .map(|p| p.kind);
+fn value(
+    setter: Option<&ActionDecl>,
+    data: Option<&ActionData>,
+    id: &SemId,
+) -> Result<Value, Unmapped> {
+    let kind = setter.and_then(|a| a.param).map(|p| p.kind);
     Ok(match (data, kind) {
         (Some(ActionData::Value(text)), Some(ValueKind::Num)) => match text.trim().parse() {
             Ok(n) => Value::Num(n),

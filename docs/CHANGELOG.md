@@ -9,6 +9,19 @@ status: living
 
 ## unreleased
 
+- a screen reader reaches what the mouse reaches on the pages that
+  project (2026-09-25, task-75 phase 2a): inside each row of the todo a
+  reader finds a "completed" checkbox and a "remove" button, inside each
+  cut of the Silences "preview segment", "apply cut" and "reject cut";
+  the proposer opens and is set by its value; the focus a reader moves to
+  a tab, a button or the proposer is where the page says it is; a status
+  says its message as its name, so Windows and Linux readers announce it
+  too; the toasts, the dialog and the context menu are part of what the
+  page shows an agent and a reader, and their buttons run through the
+  same dispatcher as a click; spinners and skeletons stand still with
+  "reduce motion"; and a person with a screen reader hears which
+  accessibility preference is on, which never leaves through the port.
+
 - the ide's intent line moves under the panels (2026-09-25, task-96
   phase b): with no generated surface open the ide's panels have the
   whole width again, and the line sits in a strip at the bottom; the

@@ -59,6 +59,11 @@ pub struct TodoPage {
     /// Set by the view while an overlay holds the pointer (a modal, a
     /// menu): the page projects itself inert and takes no input.
     inert: bool,
+    /// The filter tab a screen reader moved the focus to: the pills draw
+    /// no focus of their own, so the page keeps it and projects it. A
+    /// click of the person, the field taking the focus and Escape let it
+    /// go.
+    tab_focus: Option<Filter>,
 }
 
 impl TodoPage {
@@ -94,6 +99,7 @@ impl TodoPage {
             dispatcher: Dispatcher::new(),
             clock: web_time::Instant::now(),
             inert: false,
+            tab_focus: None,
         }
     }
 
@@ -155,8 +161,10 @@ impl TodoPage {
 
         // Field focus: a click inside places the cursor (the field maps
         // the local x to a byte via real shaping); a click anywhere else
-        // blurs without consuming the event.
+        // blurs without consuming the event. A click is the person's, so
+        // a tab a screen reader focused lets its focus go.
         if let WidgetEvent::MouseDown { .. } = *event {
+            self.tab_focus = None;
             let fr = self.input.handle_event(event, l.input, theme);
             if fr.clicked {
                 return EventResult::changed();
@@ -295,12 +303,13 @@ impl TodoPage {
         true
     }
 
-    /// Escape blurs the field; mirrors forms::handle_escape (the chrome
-    /// asks the section before popping overlays or quitting). An inert
-    /// page leaves it to the overlay.
+    /// Escape blurs the field, or lets go of a focused tab; mirrors
+    /// forms::handle_escape (the chrome asks the section before popping
+    /// overlays or quitting). An inert page leaves it to the overlay.
     pub fn handle_escape(&mut self) -> bool {
-        if !self.inert && self.input.is_focused() {
+        if !self.inert && (self.input.is_focused() || self.tab_focus.is_some()) {
             self.input.unfocus();
+            self.tab_focus = None;
             return true;
         }
         false

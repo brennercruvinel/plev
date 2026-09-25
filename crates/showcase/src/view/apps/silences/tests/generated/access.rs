@@ -7,8 +7,12 @@
 //! projection is the same with and without preferences, and so is the
 //! prompt a model gets. And the demo of the regress: the review by the
 //! rules with larger text and more contrast, in the default window. The
-//! contrast of the review, measured pair by pair, is `contrast.rs`.
+//! contrast of the review, measured pair by pair, is `contrast.rs`. Since
+//! task-75 phase 2a a person with a screen reader hears which preference
+//! is on, in the reader's snapshot alone.
 
+use engine::accessibility::accesskit::{Action, ActionRequest, Toggled, TreeId, TreeUpdate};
+use engine::accessibility::{self, Assist, Chrome, Shown};
 use engine::compositor::{Compositor, LayerId, SceneNode};
 use engine::theme::Theme;
 use sem::{Actor, Rejection, Request, Stage, Value};
@@ -413,4 +417,159 @@ mod claude {
             assert_eq!(prompt(intent, on), off, "{intent}");
         }
     }
+}
+
+// -- what a screen reader hears (task-75 phase 2a) --------------------------
+
+const DENSER_BUTTON: &str = "silences_surface.access.denser";
+const SPARSER: &str = "silences_surface.access.sparser";
+
+/// The window of a reader: what the bridge is shown this frame, and its
+/// tree.
+fn reader(view: &mut ShowcaseView) -> (TreeUpdate, Shown) {
+    let mut c = Compositor::new();
+    view.render(&mut c);
+    let snapshot = view.reader_semantics().expect("the page projects");
+    let chrome = Chrome {
+        title: "plev, design system showcase",
+        scale: 2.0,
+        size: (2560, 1600),
+    };
+    let (update, ids) = accessibility::build(&snapshot, &c, &chrome);
+    (update, Shown { snapshot, ids })
+}
+
+/// How a reader hears each button of the band: its toggled state, the
+/// state of a toggle button (none: a plain button).
+fn heard(view: &mut ShowcaseView) -> Vec<(&'static str, Option<Toggled>)> {
+    let (u, shown) = reader(view);
+    [LARGER, CONTRAST, DENSER_BUTTON, SPARSER, DONE]
+        .into_iter()
+        .map(|id| {
+            let at = shown.ids.node(&sid(id));
+            let node = u.nodes.iter().find(|(n, _)| Some(*n) == at);
+            (id, node.and_then(|(_, n)| n.toggled()))
+        })
+        .collect()
+}
+
+/// A reader presses `id` through its tree.
+fn press(view: &mut ShowcaseView, id: &str) -> Stage {
+    let (_, shown) = reader(view);
+    let req = ActionRequest {
+        action: Action::Click,
+        target_tree: TreeId::ROOT,
+        target_node: shown.ids.node(&sid(id)).expect("in the tree"),
+        data: None,
+    };
+    let Ok(Assist::Request(req)) = accessibility::translate(&req, &shown) else {
+        panic!("{id} is pressed");
+    };
+    assert_eq!(req.actor, Actor::Assistive);
+    view.act(req).expect("taken").stage().unwrap().clone()
+}
+
+/// The band opened by a person through the row, over the review by the
+/// rules.
+fn band_open() -> ShowcaseView {
+    let mut view = ShowcaseView::new(1280.0, 800.0);
+    view.jump_to_page("silences");
+    for intent in [RULES, "accessibility"] {
+        harness(
+            &mut view,
+            "silences_surface.intent",
+            "set_value",
+            text(intent),
+        );
+        let asked = harness(&mut view, "silences_surface.propose", "propose", None);
+        assert!(matches!(asked, Stage::Completed(_)), "{intent}: {asked:?}");
+    }
+    view
+}
+
+/// The debt of task-70 phase 4: a person using a screen reader could not
+/// hear which preference was on. The band's four preference buttons are
+/// toggle buttons in the reader's tree, and follow what the person turns
+/// on and off, the reader's own presses included.
+#[test]
+fn a_screen_reader_hears_which_preference_is_on() {
+    let mut view = band_open();
+    let off = Some(Toggled::False);
+    assert_eq!(
+        heard(&mut view),
+        [
+            (LARGER, off),
+            (CONTRAST, off),
+            (DENSER_BUTTON, off),
+            (SPARSER, off),
+            (DONE, None)
+        ]
+    );
+    assert!(matches!(press(&mut view, LARGER), Stage::Completed(_)));
+    assert!(view.panes.silences.generated.host.preferences().larger_text);
+    let on = Some(Toggled::True);
+    assert_eq!(
+        heard(&mut view),
+        [
+            (LARGER, on),
+            (CONTRAST, off),
+            (DENSER_BUTTON, off),
+            (SPARSER, off),
+            (DONE, None)
+        ]
+    );
+    // a person's press, and the reader hears that too
+    harness(&mut view, CONTRAST, "activate", None);
+    assert_eq!(heard(&mut view)[1], (CONTRAST, on));
+    assert!(matches!(press(&mut view, LARGER), Stage::Completed(_)));
+    assert_eq!(heard(&mut view)[0], (LARGER, off), "off again");
+}
+
+/// The preference a reader hears never leaves: with larger text on and
+/// the band open, the agent observes the band's buttons through the real
+/// port with no state; the view's projection and the gallery's (what the
+/// port serves) carry none; the app's projection (what a model's prompt
+/// is built from, `a_model_s_prompt_is_the_same_with_and_without_the_preferences`)
+/// has no band at all. The reader's snapshot alone says it.
+#[test]
+fn the_preference_a_reader_hears_never_goes_out_through_the_port() {
+    let dir = Dir(std::env::temp_dir().join(format!("plev-t75b-{}-reader", std::process::id())));
+    let before = |view: &mut ShowcaseView| {
+        harness(
+            view,
+            "silences_surface.intent",
+            "set_value",
+            text("accessibility"),
+        );
+        harness(view, "silences_surface.propose", "propose", None);
+        harness(view, LARGER, "activate", None);
+        assert!(view.panes.silences.generated.host.preferences().larger_text);
+    };
+    let (band, view) = gallery_with(&dir.0, before, |path| {
+        let mut c = wire::Client::connect(&path).unwrap();
+        c.set_timeout(Some(20_000)).unwrap();
+        c.hello("claude").unwrap();
+        let now = snapshot(c.observe(wire::Observe::default()).unwrap());
+        now.nodes
+            .iter()
+            .filter(|n| n.parent.as_ref() == Some(&sid(BAND)))
+            .map(|n| (n.id.to_string(), n.state.is_empty()))
+            .collect::<Vec<_>>()
+    });
+    assert_eq!(band.len(), 5, "the band's buttons, observed");
+    assert!(band.iter().all(|(_, bare)| *bare), "no state: {band:?}");
+
+    let on = |snap: &sem::Snapshot| {
+        snap.get(&sid(LARGER))
+            .and_then(|n| n.state.get("on").cloned())
+    };
+    assert_eq!(
+        view.reader_semantics().as_ref().and_then(on),
+        Some(Value::Bool(true)),
+        "the reader's snapshot says it"
+    );
+    assert_eq!(view.semantics().as_ref().and_then(on), None);
+    assert_eq!(view.gallery_semantics().ok().as_ref().and_then(on), None);
+    let app = view.panes.silences.snapshot().expect("the app projects");
+    assert!(app.get(&sid(BAND)).is_none() && app.get(&sid(LARGER)).is_none());
 }

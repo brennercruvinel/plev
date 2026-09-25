@@ -309,6 +309,8 @@ fn the_microphone_sets_the_level_meter() {
     let want = meter(FakeCapture::RMS);
     assert!((want - 0.649).abs() < 0.01, "{want}");
     assert_eq!(state(&page, "capture.level:level"), Value::Num(0.6));
+    // the bar's value, what a screen reader reads (task-75 phase 2a)
+    assert_eq!(state(&page, "capture.level:value"), Value::Num(0.6));
     assert_eq!(meter(0.0), 0.0);
     assert_eq!(meter(1.0), 1.0);
     assert_eq!(meter(0.0001), 0.0, "under the floor");

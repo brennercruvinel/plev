@@ -11,7 +11,7 @@ use engine::theme::Intent;
 use sem::Value;
 
 use super::components::context_menu;
-use super::dispatch::ShellTarget;
+use super::dispatch::{ShellTarget, overlay};
 use super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
 
 /// Non-character editing keys the platform shell forwards (winit-free so
@@ -218,7 +218,11 @@ impl ShowcaseView {
     }
 
     fn open_menu(&mut self, x: f32, y: f32) {
-        let widget = context_menu::demo_menu();
+        let mut widget = context_menu::demo_menu();
+        if let Some(id) = overlay::id(overlay::MENU) {
+            widget = widget.sem(id);
+        }
+        self.overlay_focus = None;
         let (w, h) = widget.size(&self.theme);
         // Keep the menu inside the viewport.
         let margin = self.theme.spacing.sm;
@@ -265,6 +269,11 @@ impl ShowcaseView {
                 Intent::Neutral,
             )
         };
+        let widget = match overlay::id(overlay::DIALOG) {
+            Some(id) => widget.sem(id),
+            None => widget,
+        };
+        self.overlay_focus = None;
         let dialog = widget.dialog_rect(&self.theme, self.width, self.height);
         let id = self.overlay_mgr.push_animated(
             OverlayKind::Modal {
@@ -289,13 +298,9 @@ impl ShowcaseView {
     /// or a menu that is not fading out. The page beneath is then inert
     /// (the todo page projects itself so, see `TodoPage::set_inert`).
     pub(super) fn overlay_holds_pointer(&self) -> bool {
-        self.active_overlay.as_ref().is_some_and(|active| {
-            let id = active.id();
-            self.overlay_mgr
-                .stack
-                .iter()
-                .any(|o| o.id == id && !o.is_closing())
-        })
+        self.active_overlay
+            .as_ref()
+            .is_some_and(|active| overlay::holds(&self.overlay_mgr, active))
     }
 
     /// Route a pointer event. Returns `true` if a redraw is needed.
@@ -309,62 +314,45 @@ impl ShowcaseView {
         }
         let mut result = toast_result;
 
-        // Active overlay is exclusive while it is not fading out.
+        // Active overlay is exclusive while it is not fading out. What a
+        // click asks of it (a button of the modal, an item of the menu, the
+        // menu closed by a click outside) is the person's request, through
+        // the dispatcher (`dispatch::overlay`), as a reader's press is.
         let held = self.overlay_holds_pointer();
-        if let Some(active) = &mut self.active_overlay {
-            let id = active.id();
-            if held {
-                match active {
-                    ActiveOverlay::Modal { widget, .. } => {
-                        let (action, r) = widget.handle_event(event, &self.theme, vw, vh);
-                        match action {
-                            ModalAction::Confirm => {
-                                let destructive = widget.intent == Intent::Destructive;
-                                self.overlay_mgr.pop_id_animated(id);
-                                if destructive {
-                                    self.toasts.push(
-                                        "Repository deleted (not really).",
-                                        Intent::Destructive,
-                                        &self.theme,
-                                    );
-                                } else {
-                                    self.toasts.push(
-                                        "Settings applied.",
-                                        Intent::Constructive,
-                                        &self.theme,
-                                    );
-                                }
-                            }
-                            ModalAction::Cancel => self.overlay_mgr.pop_id_animated(id),
-                            ModalAction::None => {}
-                        }
-                        return r.changed || action != ModalAction::None;
-                    }
-                    ActiveOverlay::Menu { widget, x, y, .. } => {
-                        let (r, clicked) = widget.handle_event(event, *x, *y, &self.theme);
-                        if let Some(item) = clicked {
-                            let label = context_menu::menu_label(item);
-                            self.overlay_mgr.pop_id_animated(id);
-                            self.toasts.push(
-                                format!("Context menu: {label}"),
-                                Intent::Informational,
-                                &self.theme,
-                            );
-                            return true;
-                        }
-                        if !r.handled
-                            && let WidgetEvent::MouseDown { x: px, y: py } = *event
-                        {
-                            let (w, h) = widget.size(&self.theme);
-                            if !Rect::new(*x, *y, w, h).contains(px, py) {
-                                self.overlay_mgr.pop_id_animated(id);
-                                return true;
-                            }
-                        }
-                        return r.changed;
-                    }
+        if held && let Some(active) = &mut self.active_overlay {
+            let (asked, changed): (Option<(sem::SemId, &str)>, bool) = match active {
+                ActiveOverlay::Modal { widget, .. } => {
+                    let (action, r) = widget.handle_event(event, &self.theme, vw, vh);
+                    let button = match action {
+                        ModalAction::Confirm => Some("confirm"),
+                        ModalAction::Cancel => Some("cancel"),
+                        ModalAction::None => None,
+                    };
+                    let asked =
+                        button.and_then(|b| widget.sem_id().map(|id| (id.key(b), "activate")));
+                    (asked, r.changed || button.is_some())
                 }
-            }
+                ActiveOverlay::Menu { widget, x, y, .. } => {
+                    let (r, clicked) = widget.handle_event(event, *x, *y, &self.theme);
+                    let (w, h) = widget.size(&self.theme);
+                    let outside = !r.handled
+                        && matches!(*event, WidgetEvent::MouseDown { x: px, y: py }
+                            if !Rect::new(*x, *y, w, h).contains(px, py));
+                    let asked = match (clicked, outside, widget.sem_id()) {
+                        (Some(item), _, Some(id)) => Some((id.key(item.to_string()), "activate")),
+                        (None, true, Some(id)) => Some((id.clone(), "close")),
+                        _ => None,
+                    };
+                    (asked, r.changed)
+                }
+            };
+            return match asked {
+                Some((target, action)) => {
+                    self.ask_overlay(&target, action);
+                    true
+                }
+                None => changed,
+            };
         }
 
         // An open select dropdown gets priority over everything beneath.
