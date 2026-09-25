@@ -276,6 +276,9 @@ impl SilencesPage {
         if row.close {
             self.close(todo);
         }
+        if let Some(answer) = row.answer {
+            self.answer(todo, answer);
+        }
         if row.asked.taken {
             return r;
         }
@@ -500,8 +503,10 @@ impl SilencesPage {
     pub fn wake(&mut self, dt: f32, todo: &mut TodoPage) -> Wake {
         let moved = self.settle(todo);
         let answered = Page { app: self }.settle(todo);
-        if moved || answered {
+        let chained = moved && todo.with_dispatcher(|d, _, now| self.run_chains(d, now));
+        if moved || answered || chained {
             self.sync_surface();
+            self.refresh_offer();
         }
         let sources = self.generated.host.sources();
         self.want_sources(sources.iter().map(String::as_str));

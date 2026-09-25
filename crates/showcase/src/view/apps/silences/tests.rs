@@ -9,6 +9,7 @@
 //! screen (phase 4b) is `generated.rs`.
 
 mod agent;
+mod composites;
 mod ffmpeg;
 mod generated;
 

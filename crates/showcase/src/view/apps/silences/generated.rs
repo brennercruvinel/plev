@@ -15,7 +15,13 @@
 //! surface goes under the fixed screen at its natural height (narrow).
 //! The surface's images draw the frames the page holds (`jobs::PageFrames`)
 //! and the page decodes the ones it lacks from its wake.
+//!
+//! Under the row, while the page's composer offers a sequence the person
+//! repeated (task-70 phase 3), the band of `offer.rs` asks whether to make
+//! it one action; the fixed screen moves down by its height, and only
+//! then.
 
+pub(super) mod offer;
 pub(super) mod page;
 
 use comps::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
@@ -25,6 +31,7 @@ use sem::{Request, Role, SemId, SnapshotBuilder};
 use surface::SurfaceHost;
 
 use crate::view::apps::surface_page::proposing::{Asked, Proposing, Row};
+use offer::{Answer, Band, Offer};
 
 /// The region the row projects under on this page.
 pub(super) const REGION: &str = "silences_surface";
@@ -38,6 +45,8 @@ pub(super) struct Generated {
     close: Button,
     /// `silences_surface.close`; `None` only if the ids do not parse.
     pub close_id: Option<SemId>,
+    /// The composite offered to the person, and the page's composer.
+    pub offer: Offer,
 }
 
 /// Where each part goes in the page's content: the row, the close
@@ -46,6 +55,8 @@ pub(super) struct Generated {
 pub(super) struct Halves {
     pub row: Row,
     pub close: Rect,
+    /// The offer's band, while one stands.
+    pub offer: Option<Band>,
     pub fixed: Rect,
     pub surface: Option<Rect>,
 }
@@ -54,6 +65,8 @@ pub(super) struct Halves {
 pub(super) struct RowAsked {
     pub asked: Asked,
     pub close: bool,
+    /// The person's answer to the offer, clicked on its band.
+    pub answer: Option<Answer>,
 }
 
 impl Generated {
@@ -67,12 +80,14 @@ impl Generated {
         if let Some(id) = &close_id {
             close = close.sem(id.clone());
         }
+        let offer = Offer::new(proposing.ids.as_ref().map(|ids| &ids.region));
         Self {
             host: SurfaceHost::new(),
             id: None,
             proposing,
             close,
             close_id,
+            offer,
         }
     }
 
@@ -84,7 +99,7 @@ impl Generated {
     /// True when `id` is one of the block's own nodes (the row's, the
     /// close), not the surface's.
     pub fn holds(&self, id: &SemId) -> bool {
-        self.proposing.holds(id) || self.close_id.as_ref() == Some(id)
+        self.proposing.holds(id) || self.close_id.as_ref() == Some(id) || self.offer.holds(id)
     }
 
     pub fn set_inert(&mut self, inert: bool) {
@@ -107,6 +122,7 @@ impl Generated {
         let mut node = b.node(close, Role::Button, "close the surface");
         node.parent(&ids.region).enabled(open);
         node.action("close").enabled(open);
+        self.offer.project(b, &ids.region);
     }
 
     /// `close` on the close button, when `req` asks it.
@@ -136,12 +152,18 @@ impl Generated {
             cw,
             ch,
         );
-        let below = row.band.bottom();
+        let offer = self
+            .offer
+            .band(content.x, row.band.bottom(), content.w, theme);
+        let below = offer
+            .as_ref()
+            .map_or(row.band.bottom(), |o| o.band.bottom());
         let h = (content.bottom() - below).max(0.0);
         if !self.open() {
             return Halves {
                 row,
                 close,
+                offer,
                 fixed: Rect::new(content.x, below, content.w, h),
                 surface: None,
             };
@@ -151,6 +173,7 @@ impl Generated {
             return Halves {
                 row,
                 close,
+                offer,
                 fixed: Rect::new(content.x, below, w, h),
                 surface: Some(Rect::new(content.x + w + gap, below, w, h)),
             };
@@ -160,6 +183,7 @@ impl Generated {
         Halves {
             row,
             close,
+            offer,
             fixed,
             surface: Some(Rect::new(
                 content.x,
@@ -185,15 +209,21 @@ impl Generated {
                 RowAsked {
                     asked,
                     close: false,
+                    answer: None,
                 },
             );
         }
         let close = self.close.handle_event(event, h.close);
+        let (band, answer) = match &h.offer {
+            Some(band) => self.offer.handle_event(event, band),
+            None => (EventResult::IGNORED, None),
+        };
         (
-            r.merge(close),
+            r.merge(close).merge(band),
             RowAsked {
                 asked,
                 close: close.clicked,
+                answer,
             },
         )
     }
@@ -205,5 +235,8 @@ impl Generated {
         self.close.disabled = !self.open();
         self.proposing.render(c, &h.row, theme);
         self.close.render(c, h.close, theme);
+        if let Some(band) = &h.offer {
+            self.offer.render(c, band, theme);
+        }
     }
 }

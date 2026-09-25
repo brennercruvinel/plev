@@ -79,6 +79,11 @@ impl Ids {
         self.cut.key(id.to_string())
     }
 
+    /// `silences.cut`, the collection whose items are the cuts.
+    pub(super) fn collection(&self) -> &SemId {
+        &self.cut
+    }
+
     /// The cut id behind a `silences.cut[<id>]`.
     pub(super) fn cut_of(&self, target: &SemId) -> Option<u64> {
         target
@@ -290,11 +295,17 @@ impl Semantics for SilencesPage {
             Some(Which::MinDuration) => b.focus(&ids.min_duration),
             None => {}
         }
+        // the composites the person installed (task-70 phase 3), on the
+        // cuts they run on, from what the page declared above
+        self.generated.offer.composer.declare(b);
     }
 }
 
 impl Operable for SilencesPage {
     fn execute(&mut self, id: RequestId, req: &Request) -> Execution {
+        if let Some(started) = self.start_composite(id, req) {
+            return started;
+        }
         let Some(op) = self.ids.as_ref().and_then(|ids| ids.op(req)) else {
             return Execution::Failed(format!(
                 "the silences page has no {} on {}",
@@ -402,7 +413,12 @@ impl SilencesPage {
 
     /// A person's click on the block: observed on the whole page,
     /// dispatched over it.
-    fn ask_page(&mut self, todo: &mut TodoPage, target: &SemId, action: &str) -> Option<RequestId> {
+    pub(super) fn ask_page(
+        &mut self,
+        todo: &mut TodoPage,
+        target: &SemId,
+        action: &str,
+    ) -> Option<RequestId> {
         let seen = self
             .projection()
             .inspect_err(|e| log::warn!("silences: the projection does not validate: {e}"))
@@ -418,7 +434,7 @@ impl SilencesPage {
     /// Runs `req` through the gallery's dispatcher (the todo page lends
     /// it, with its clock's now), over this page.
     pub(crate) fn dispatch(&mut self, req: Request, todo: &mut TodoPage) -> RequestId {
-        todo.with_dispatcher(|d, _, now| d.dispatch(self, req, now))
+        self.composed(todo, |page, d, now| d.dispatch(page, req, now))
     }
 
     /// A request from an actor outside the page's own input (an agent
