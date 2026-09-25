@@ -12,11 +12,12 @@
 //! same lending as the cancel itself. The author of a proposal is whoever
 //! asked (`GenerationPolicy::by`).
 //!
-//! The two staging entries at the end (`ShowcaseView::stage_silences_*`)
-//! are for the regression harness (`examples/regress`, task-69 checkpoint
-//! b), which reaches the gallery only through its public API: the page
-//! with frames it did not decode, so no ffmpeg runs, and a fixture of IR
-//! shown as a proposal would show it, so no model is asked.
+//! The staging entries at the end (`ShowcaseView::stage_silences_*`) are
+//! for the regression harness (`examples/regress`, task-69 checkpoint b),
+//! which reaches the gallery only through its public API: the page with
+//! frames it did not decode, so no ffmpeg runs; a fixture of IR shown as a
+//! proposal would show it, so no model is asked; and an operation of
+//! task-70 applied to the surface shown, as the host applies one.
 
 use engine::gpu::image::ImageHandle;
 use propose::{Ask, Rules, propose_verified};
@@ -376,5 +377,26 @@ impl ShowcaseView {
             all.join("; ")
         })?;
         Page { app: page }.show(ir).map(|(id, _)| id)
+    }
+
+    /// Applies `op`, asked by `by`, to the surface the Silences page
+    /// shows, as the host applies one (`SurfaceHost::apply`): checked and
+    /// verified again against the app's registry, under the policy
+    /// `stage_silences_ir` verifies under, reconciled by `SemId`, and kept
+    /// in the host's history with its inverse. The row says nothing: asking
+    /// for a transformation through the page is phase 2's. The operation in
+    /// a line, or why it made no surface.
+    pub fn stage_silences_op(&mut self, op: uir::Op, by: Actor) -> Result<String, String> {
+        let page = &mut self.panes.silences;
+        let app = page.snapshot().map_err(|e| e.to_string())?;
+        let generated = &mut page.generated;
+        let id = generated.id.clone().ok_or("no surface is open")?;
+        let line = op.to_string();
+        let policy = GenerationPolicy::default();
+        generated
+            .host
+            .apply(&id, op, by, &app, &policy)
+            .map_err(|e| e.to_string())?;
+        Ok(line)
     }
 }
