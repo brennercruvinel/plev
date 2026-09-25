@@ -11,7 +11,8 @@ use sem::{Actor, SemId};
 use serde_json::{Value, json};
 use support::caps;
 use uir::{
-    Adapted, Capabilities, Context, GenerationPolicy, Ir, IrNode, Op, Rule, TransformError, verify,
+    Adapted, Capabilities, ColorRole, Context, ControlSize, Elevation, GenerationPolicy, Inverse,
+    Ir, IrNode, Layout, Op, Rule, SpacingToken, Step, TransformError, TypographyRole, verify,
 };
 
 /// A surface over `caps()`: a title, the files repeated with a status and
@@ -605,4 +606,204 @@ fn an_op_is_data_in_json() {
         assert!(serde_json::from_value::<Op>(bad.clone()).is_err(), "{bad}");
     }
     assert_eq!(group.to_string(), "group a, b into c");
+}
+
+#[test]
+fn emphasize_takes_one_step_up_the_token_the_node_is_drawn_by() {
+    let before = adapted();
+    // a text with no style is body (16): one size up the ramp is title
+    // (20), then headline, h4, and no further
+    let mut text = apply(
+        &before,
+        &Op::Emphasize {
+            id: id("review.title"),
+        },
+    );
+    assert_eq!(
+        node(&text, "review.title").props.typography,
+        Some(TypographyRole::Title)
+    );
+    for next in [TypographyRole::Headline, TypographyRole::H4] {
+        text = apply(
+            &text,
+            &Op::Emphasize {
+                id: id("review.title"),
+            },
+        );
+        assert_eq!(node(&text, "review.title").props.typography, Some(next));
+    }
+    let why = refused(
+        &text,
+        &Op::Emphasize {
+            id: id("review.title"),
+        },
+    )
+    .to_string();
+    assert!(why.contains("as emphasized as a text gets"), "{why}");
+    // a button: a control size up, `md` from none
+    let button = apply(
+        &before,
+        &Op::Emphasize {
+            id: id("review.commit"),
+        },
+    );
+    assert_eq!(
+        node(&button, "review.commit").props.control_size,
+        Some(ControlSize::Md)
+    );
+    // a container, a list: an elevation up, `raised` from none
+    let row = apply(
+        &before,
+        &Op::Emphasize {
+            id: id("review.row"),
+        },
+    );
+    assert_eq!(
+        node(&row, "review.row").props.elevation,
+        Some(Elevation::Raised)
+    );
+    assert_eq!(
+        node(&row, "review.row").props.padding,
+        Some(SpacingToken::Sm)
+    );
+    // a table draws no token of emphasis
+    let why = refused(
+        &before,
+        &Op::Emphasize {
+            id: id("review.table"),
+        },
+    )
+    .to_string();
+    assert!(why.contains("a table draws no token of emphasis"), "{why}");
+}
+
+#[test]
+fn density_moves_every_gap_and_padding_set_one_step() {
+    let before = adapted();
+    let sparse = apply(
+        &before,
+        &Op::Density {
+            step: Step::Sparser,
+        },
+    );
+    let gap = |a: &Adapted, at: &str| match node(a, at).layout {
+        Some(Layout::Stack { gap, .. }) => gap,
+        other => panic!("{at}: {other:?}"),
+    };
+    assert_eq!(gap(&sparse, "review.root"), Some(SpacingToken::Lg));
+    assert_eq!(gap(&sparse, "review.files"), Some(SpacingToken::Sm));
+    assert_eq!(gap(&sparse, "review.file[{item}]"), Some(SpacingToken::Md));
+    assert_eq!(
+        node(&sparse, "review.row").props.padding,
+        Some(SpacingToken::Md)
+    );
+    // the split keeps its ratio, the rest keeps what it had
+    assert_eq!(
+        node(&sparse, "review.split").layout,
+        node(&before, "review.split").layout
+    );
+    let dense = apply(&before, &Op::Density { step: Step::Denser });
+    assert_eq!(gap(&dense, "review.root"), Some(SpacingToken::Sm));
+    // `xs` holds at the end of the scale
+    assert_eq!(gap(&dense, "review.files"), Some(SpacingToken::Xs));
+    // nothing set, nothing to move
+    let bare = adapted_over(
+        &json!({ "plev_ir": 1, "surface": { "id": "s", "title": "t",
+            "root": { "sem": "s.root", "children": [
+                { "sem": "s.text", "component": "text", "label": "hello" } ] } } }),
+        &caps(),
+        &GenerationPolicy::default(),
+    );
+    let why = refused(&bare, &Op::Density { step: Step::Denser }).to_string();
+    assert!(why.contains("nothing to move"), "{why}");
+}
+
+#[test]
+fn restyle_sets_a_text_s_color_or_a_container_s_fill_by_role() {
+    let before = adapted();
+    let text = apply(
+        &before,
+        &Op::Restyle {
+            id: id("review.title"),
+            role: ColorRole::Accent,
+        },
+    );
+    assert_eq!(
+        node(&text, "review.title").props.color,
+        Some(ColorRole::Accent)
+    );
+    let row = apply(
+        &before,
+        &Op::Restyle {
+            id: id("review.row"),
+            role: ColorRole::BgPanel,
+        },
+    );
+    assert_eq!(
+        node(&row, "review.row").props.background,
+        Some(ColorRole::BgPanel)
+    );
+    for (at, role, says) in [
+        ("review.title", ColorRole::Bg, "a text's color is one of"),
+        (
+            "review.row",
+            ColorRole::Danger,
+            "a container's fill is one of",
+        ),
+        ("review.commit", ColorRole::Accent, "theme's own colors"),
+    ] {
+        let why = refused(&before, &Op::Restyle { id: id(at), role }).to_string();
+        assert!(why.contains(says), "{at}: {why}");
+    }
+    let why = refused(
+        &text,
+        &Op::Restyle {
+            id: id("review.title"),
+            role: ColorRole::Accent,
+        },
+    )
+    .to_string();
+    assert!(why.contains("already"), "{why}");
+}
+
+#[test]
+fn an_inverse_is_data_too() {
+    let before = adapted();
+    let (caps, policy) = (caps(), GenerationPolicy::default());
+    let cx = Context {
+        caps: &caps,
+        policy: &policy,
+    };
+    let (_, inverse) = before
+        .apply(
+            &Op::Hide {
+                id: id("review.row"),
+            },
+            &human(),
+            cx,
+        )
+        .unwrap();
+    assert_eq!(
+        inverse,
+        Inverse::Op(Op::Show {
+            id: id("review.row")
+        })
+    );
+    assert_eq!(
+        serde_json::to_value(&inverse).unwrap(),
+        json!({ "op": { "op": "show", "id": "review.row" } })
+    );
+    let (_, looks) = before
+        .apply(
+            &Op::Emphasize {
+                id: id("review.title"),
+            },
+            &human(),
+            cx,
+        )
+        .unwrap();
+    assert_eq!(
+        serde_json::to_value(&looks).unwrap(),
+        json!({ "looks": [{ "id": "review.title" }] })
+    );
 }

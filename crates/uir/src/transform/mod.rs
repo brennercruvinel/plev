@@ -20,6 +20,7 @@
 //! every item; an instance's id is refused with the template that makes
 //! it.
 
+mod look;
 mod shape;
 mod tree;
 
@@ -33,7 +34,17 @@ use crate::caps::Capabilities;
 use crate::error::IrError;
 use crate::ir::{Ir, IrNode};
 use crate::policy::GenerationPolicy;
+use crate::token::{ColorRole, Layout, Props};
 use crate::verify::{VerifiedIr, verify};
+
+/// which way `Density` moves every gap and padding: one step of the
+/// spacing scale, down or up.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Step {
+    Denser,
+    Sparser,
+}
 
 /// one transformation of a surface, as data. its JSON form carries the
 /// operation's name in `op`: `{"op": "hide", "id": "review.controls"}`.
@@ -49,6 +60,12 @@ pub enum Op {
     Group { ids: Vec<SemId>, into: SemId },
     /// `ids` first, in this order, then the other children as they were.
     Reorder { parent: SemId, ids: Vec<SemId> },
+    /// one step up the token the node is drawn by.
+    Emphasize { id: SemId },
+    /// every gap and padding one step of the spacing scale.
+    Density { step: Step },
+    /// a text's color or a container's fill, by role.
+    Restyle { id: SemId, role: ColorRole },
 }
 
 /// the op in a line, for a history or a log.
@@ -63,6 +80,12 @@ impl fmt::Display for Op {
             Op::Show { id } => write!(f, "show {id}"),
             Op::Group { ids, into } => write!(f, "group {} into {into}", list(ids)),
             Op::Reorder { parent, ids } => write!(f, "reorder {parent}: {}", list(ids)),
+            Op::Emphasize { id } => write!(f, "emphasize {id}"),
+            Op::Density { step: Step::Denser } => f.write_str("density denser"),
+            Op::Density {
+                step: Step::Sparser,
+            } => f.write_str("density sparser"),
+            Op::Restyle { id, role } => write!(f, "restyle {id} {}", role.as_str()),
         }
     }
 }
@@ -76,6 +99,16 @@ pub struct Aside {
     pub at: usize,
 }
 
+/// the props and the layout a node had.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Look {
+    pub id: SemId,
+    #[serde(default, skip_serializing_if = "Props::is_empty")]
+    pub props: Props,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub layout: Option<Layout>,
+}
+
 /// the way back from one operation, made with it: applied to the surface
 /// the operation made, it gives the one before, byte for byte.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -86,6 +119,8 @@ pub enum Inverse {
     Op(Op),
     /// `Show`'s: the node set aside again, at the place it was kept with.
     Aside { id: SemId, at: usize },
+    /// the props and layouts before (`Emphasize`, `Restyle`, `Density`).
+    Looks(Vec<Look>),
     /// the node before, whole, in place of the node with its id (`Group`,
     /// the parent).
     Restore(IrNode),
@@ -197,6 +232,9 @@ impl Adapted {
             Op::Show { id } => shape::show(&mut d, id)?,
             Op::Group { ids, into } => shape::group(&mut d, ids, into)?,
             Op::Reorder { parent, ids } => shape::reorder(&mut d, parent, ids)?,
+            Op::Emphasize { id } => look::emphasize(&mut d, id)?,
+            Op::Density { step } => look::density(&mut d, *step)?,
+            Op::Restyle { id, role } => look::restyle(&mut d, id, *role)?,
         };
         Ok((d.verify(cx)?, inverse))
     }
@@ -213,6 +251,13 @@ impl Adapted {
             }
             Inverse::Aside { id, at } => {
                 shape::hide(&mut d, id, Some(*at))?;
+            }
+            Inverse::Looks(looks) => {
+                for look in looks {
+                    let node = d.node_mut(&look.id)?;
+                    node.props = look.props;
+                    node.layout = look.layout;
+                }
             }
             Inverse::Restore(before) => {
                 let node = d.node_mut(&before.sem)?;
