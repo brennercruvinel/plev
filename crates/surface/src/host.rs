@@ -1,14 +1,22 @@
 //! the host of the active surfaces, and the ways a surface reaches the
 //! app: its dispatcher (`Dispatch`) and its frames (`Frames`).
+//!
+//! a surface changes form two ways: a whole new `VerifiedIr`
+//! (`transform`, a new proposal), or one small operation at a time
+//! (`apply`, task-70), each verified again, reconciled the same way, and
+//! kept with its inverse and who asked, so the last one is undone
+//! (`undo`).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use comps::Wake;
 use engine::compositor::Compositor;
 use engine::gpu::image::ImageHandle;
 use engine::theme::Theme;
-use sem::{Receipt, Request, SemId, Snapshot, SnapshotBuilder};
-use uir::VerifiedIr;
+use sem::{Actor, Receipt, Request, SemId, Snapshot, SnapshotBuilder};
+use uir::{
+    Adapted, Capabilities, Context, GenerationPolicy, Inverse, Op, TransformError, VerifiedIr,
+};
 
 use crate::expand::expand;
 use crate::motion::{Ghost, tick_ghosts};
@@ -65,6 +73,30 @@ pub enum SurfaceError {
     /// transform.
     #[error("no open surface is {0}")]
     NotOpen(SemId),
+    /// the operation makes no surface: refused, or what it makes does not
+    /// verify. the surface keeps its form.
+    #[error("{0}")]
+    Transform(TransformError),
+    /// the surface has no transformation left to undo.
+    #[error("the surface {0} has no transformation to undo")]
+    NothingToUndo(SemId),
+}
+
+/// one transformation the host applied to a surface: the operation, the
+/// way back, and who asked for it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Change {
+    pub op: Op,
+    pub inverse: Inverse,
+    pub by: Actor,
+}
+
+/// the transformations of one open surface: the form they left it in,
+/// with the nodes set aside, and every change applied, the last one last.
+#[derive(Debug)]
+struct Adapting {
+    now: Adapted,
+    changes: Vec<Change>,
 }
 
 /// the active surfaces of an app, in the order they opened. each is a
@@ -76,6 +108,8 @@ pub struct SurfaceHost {
     /// were: drawn, never projected, routed to or hit.
     closing: Vec<Ghost>,
     reduced: bool,
+    /// the transformations of each surface since it took its form.
+    adapting: BTreeMap<SemId, Adapting>,
 }
 
 impl SurfaceHost {
@@ -104,21 +138,136 @@ impl SurfaceHost {
     /// no surface with that id is open, or when one of the new form's
     /// nodes would take the id of a node another open surface holds; the
     /// surface keeps its form then.
+    /// a whole new form ends the history of the one before: what was set
+    /// aside and every change are let go.
     pub fn transform(
         &mut self,
         ir: VerifiedIr,
         app: &Snapshot,
     ) -> Result<&mut Surface, SurfaceError> {
-        let id = &ir.ir().surface.id;
-        let Some(at) = self.surfaces.iter().position(|s| s.id() == id) else {
-            return Err(SurfaceError::NotOpen(id.clone()));
-        };
+        let id = ir.ir().surface.id.clone();
+        let at = self.at(&id)?;
+        self.take_form(at, ir, app)?;
+        self.adapting.remove(&id);
+        Ok(&mut self.surfaces[at])
+    }
+
+    /// where the open surface `id` is, or `NotOpen`.
+    fn at(&self, id: &SemId) -> Result<usize, SurfaceError> {
+        self.surfaces
+            .iter()
+            .position(|s| s.id() == id)
+            .ok_or_else(|| SurfaceError::NotOpen(id.clone()))
+    }
+
+    /// the surface at `at` takes the form `ir` over `app`, reconciled by
+    /// `SemId`, unless a node of it would take an id another open surface
+    /// holds.
+    fn take_form(&mut self, at: usize, ir: VerifiedIr, app: &Snapshot) -> Result<(), SurfaceError> {
         let tree = expand(&ir.ir().surface.root, app);
+        let id = &ir.ir().surface.id;
         let ids = std::iter::once(id).chain(tree.iter().map(|n| &n.id));
         self.collision(ids.collect(), Some(at))?;
-        let surface = &mut self.surfaces[at];
-        surface.transform(ir, app);
-        Ok(surface)
+        self.surfaces[at].transform(ir, app);
+        Ok(())
+    }
+
+    /// the transformations of the open surface at `at`, begun afresh when
+    /// its form is not the one they left (it took a form some other way).
+    fn adapting(&mut self, at: usize) -> &mut Adapting {
+        let surface = &self.surfaces[at];
+        let entry = self
+            .adapting
+            .entry(surface.id().clone())
+            .or_insert_with(|| Adapting {
+                now: Adapted::new(surface.verified().clone()),
+                changes: Vec::new(),
+            });
+        if entry.now.verified() != surface.verified() {
+            entry.now = Adapted::new(surface.verified().clone());
+            entry.changes.clear();
+        }
+        entry
+    }
+
+    /// `op`, asked by `by`, on the open surface `id` over `app`: checked
+    /// and verified again against the app's registry under `policy` (the
+    /// policy the surface was verified under), the surface takes the form
+    /// it makes, reconciled by `SemId` as `transform` does (a widget whose
+    /// node stays keeps what lives in it), and the change is kept for
+    /// `undo`. refused, the surface as it was, when it is not open, when
+    /// the operation makes no verified surface, or when the form would
+    /// take an id another open surface holds.
+    pub fn apply(
+        &mut self,
+        id: &SemId,
+        op: Op,
+        by: Actor,
+        app: &Snapshot,
+        policy: &GenerationPolicy,
+    ) -> Result<&mut Surface, SurfaceError> {
+        let at = self.at(id)?;
+        let caps = Capabilities::from_snapshot(app);
+        let cx = Context {
+            caps: &caps,
+            policy,
+        };
+        let (next, inverse) = self
+            .adapting(at)
+            .now
+            .apply(&op, &by, cx)
+            .map_err(SurfaceError::Transform)?;
+        self.take_form(at, next.verified().clone(), app)?;
+        if let Some(adapting) = self.adapting.get_mut(id) {
+            adapting.now = next;
+            adapting.changes.push(Change { op, inverse, by });
+        }
+        Ok(&mut self.surfaces[at])
+    }
+
+    /// undoes the last transformation of the open surface `id`: its
+    /// inverse, verified again, reconciled as `apply` does. the change
+    /// undone; refused, the surface as it was, when there is none or the
+    /// form before no longer verifies against the app.
+    pub fn undo(
+        &mut self,
+        id: &SemId,
+        app: &Snapshot,
+        policy: &GenerationPolicy,
+    ) -> Result<Change, SurfaceError> {
+        let at = self.at(id)?;
+        let caps = Capabilities::from_snapshot(app);
+        let cx = Context {
+            caps: &caps,
+            policy,
+        };
+        let adapting = self.adapting(at);
+        let Some(last) = adapting.changes.last() else {
+            return Err(SurfaceError::NothingToUndo(id.clone()));
+        };
+        let before = adapting
+            .now
+            .undo(&last.inverse, cx)
+            .map_err(SurfaceError::Transform)?;
+        self.take_form(at, before.verified().clone(), app)?;
+        let adapting = self.adapting.get_mut(id);
+        let undone = adapting.and_then(|a| {
+            a.now = before;
+            a.changes.pop()
+        });
+        undone.ok_or_else(|| SurfaceError::NothingToUndo(id.clone()))
+    }
+
+    /// the transformations applied to the open surface `id` since it took
+    /// its form, the last one last.
+    pub fn changes(&self, id: &SemId) -> &[Change] {
+        self.adapting.get(id).map_or(&[], |a| a.changes.as_slice())
+    }
+
+    /// the open surface `id` as its transformations left it, with the
+    /// nodes set aside; `None` before its first.
+    pub fn adapted(&self, id: &SemId) -> Option<&Adapted> {
+        self.adapting.get(id).map(|a| &a.now)
     }
 
     /// the first of `ids` that an open surface other than the one at
@@ -156,6 +305,7 @@ impl SurfaceHost {
             return false;
         };
         let surface = self.surfaces.remove(at);
+        self.adapting.remove(surface.id());
         self.closing.extend(surface.dismiss());
         true
     }
