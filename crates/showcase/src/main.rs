@@ -1,4 +1,5 @@
-//! Desktop/web binary entry: delegates to the showcase library, which owns
+//! Desktop binary entry (trunk builds `showcase-web` for the web, see
+//! `main_web.rs`): delegates to the showcase library, which owns
 //! the winit application shell and every per-platform entry point. Mobile
 //! does not use this binary: android loads the cdylib's `android_main` and
 //! iOS links the staticlib's `showcase_ios_main` instead.

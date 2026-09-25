@@ -9,6 +9,11 @@ status: living
 
 ## unreleased
 
+- the gallery runs on the web (2026-09-25, task-20): the web build
+  failed to start and then drew an empty page; now every page the
+  keyboard reaches, in every theme, at 1x, 2x and 3x, matches the desktop
+  frame byte for byte in Chrome with WebGPU, and scrolling holds 120 fps.
+
 - the mirror answers, and a secret stays home (2026-09-25, task-79 phase
   2): a click in the mirror window goes back to the app as an action on
   the control under it, through the same contract an agent uses, never as

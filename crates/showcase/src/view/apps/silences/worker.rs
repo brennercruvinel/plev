@@ -110,7 +110,7 @@ impl Worker {
 
     fn with(program: Program) -> Self {
         Self {
-            video: std::env::temp_dir().join("plev-silences").join(TEST_VIDEO),
+            video: temp_dir().join("plev-silences").join(TEST_VIDEO),
             program,
             queue: VecDeque::new(),
             running: None,
@@ -595,5 +595,16 @@ mod child {
 
     pub fn spawn(_program: PathBuf, _video: PathBuf, job: Job) -> Receiver<Done> {
         super::answered(job, "ffmpeg runs on the desktop only".to_owned())
+    }
+}
+
+/// The system's temporary directory. The web has none: there
+/// `std::env::temp_dir` panics (the gallery built for wasm32 died at start
+/// building this app), and no program runs there to write the video either.
+fn temp_dir() -> PathBuf {
+    if cfg!(target_arch = "wasm32") {
+        PathBuf::new()
+    } else {
+        std::env::temp_dir()
     }
 }

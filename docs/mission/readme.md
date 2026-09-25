@@ -83,7 +83,7 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 |------|-----------|--------|
 | task-18 | android build & device test | parcial (apk buildando no emulador via task-50; device fisico pendente) |
 | task-19 | ios simulator test | parcial (rodando no simulador via task-50; device fisico + link xcode completo pendentes) |
-| task-20 | WASM visual validation | parcial (build 2.4mb + showcase na web ok; screenshot diff formal pendente) |
+| task-20 | WASM visual validation | concluída (2026-09-25): 12 capturas web iguais ao desktop em todo byte; arquivo em `checked/` |
 
 ### fase 3, polish (p2), parcial
 | task | descricao | status |
@@ -181,7 +181,7 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 ### prioridade 3, mobile/WASM
 - task-18: APK wrapper + deploy + lifecycle tests (bloqueado: APK wrapper ainda pendente)
 - task-19: ios link (bloqueado: requer xcode.app, nao apenas cli tools)
-- task-20: WASM visual validation, pode ser desbloqueado agora com `trunk serve`
+- task-20: concluída (2026-09-25), ver `checked/task-20-wasm-visual-validation-done.md`
 
 ### prioridade 4, futuro
 - text migration: parley quando atingir 0.9+ (task-32 recomenda wait)
@@ -215,7 +215,7 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 - [x] input layer-aware hit-testing, task-17
 - [x] android .so build (cargo-ndk, GPU host), task-18 parcial (deploy pendente)
 - [x] ios check (aarch64-apple-ios-sim), task-19 parcial
-- [x] WASM trunk build release (2.4mb), task-20 parcial
+- [x] WASM trunk build release (2.4mb) e validação visual, task-20
 - [x] documentacao DSL (EBNF, 30 modifiers), task-21
 - [x] error suggestions (levenshtein), task-22 parcial
 - [x] CI/CD (6 jobs), task-23

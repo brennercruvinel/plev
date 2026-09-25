@@ -90,8 +90,13 @@ port, width, height, scale, key, presses, shot = sys.argv[1:]
 
 async def main():
     async with async_playwright() as p:
+        # the emulated deviceScaleFactor alone moves devicePixelRatio but
+        # not a ResizeObserver's device-pixel-content-box, which winit
+        # sizes the canvas by: at scale 2 the app got the CSS size as its
+        # physical size and laid out at half width. the flag moves both.
         browser = await p.chromium.launch(
-            headless=True, args=["--enable-unsafe-webgpu", "--use-angle=metal"])
+            headless=True, args=["--enable-unsafe-webgpu", "--use-angle=metal",
+                                 f"--force-device-scale-factor={scale}"])
         page = await browser.new_page(
             viewport={"width": round(float(width)), "height": round(float(height))},
             device_scale_factor=float(scale))

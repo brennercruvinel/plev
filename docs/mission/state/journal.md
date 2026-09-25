@@ -14,11 +14,24 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
-### o brenner parou o ciclo: fechar antes de abrir
+### task-20 fechada pelo orquestrador, sem agente
 
-- **intervenção do brenner:** "pq ficou criando task nova ao invés de
-  terminar, gastando todos os meus tokens". parou o agente da 64 fase b
-  (sem commit) e mandou terminar a lista de `ongoing` um por um.
+- **instalado com o ok do brenner:** `trunk`, `wasm-bindgen-cli 0.2.123`,
+  `xcodegen`, `cargo-ndk`, os targets do iOS e do android, o JDK 17
+  (`openjdk@17`; `~/jdk17` aponta para ele), o SDK do android com NDK
+  27.2, emulador, imagem arm64 35 e o AVD `plev35` (7,5 GB).
+- **o que a web tinha:** build recusado pelo trunk (nome repetido), pânico
+  ao abrir (`temp_dir` no wasm), tela vazia (surface em 0x0) e a página
+  Effects descartada (formato do backdrop). os quatro corrigidos no
+  próprio orquestrador: cada um tinha poucas linhas, e um agente custaria
+  mais que a correção.
+- **resultado:** 12 capturas iguais em todo byte ao desktop; 120 fps
+  rolando. custo: só tokens do orquestrador, nenhum agente.
+
+### fechar antes de abrir
+
+- **decisão do brenner:** terminar a lista de `ongoing` uma task por vez;
+  o agente da 64 fase b parou sem commit.
 - **causa (do orquestrador):** escolhia o próximo trabalho pela task que
   tinha acabado de integrar (75 fase 1, 2a, 2b), transformava o "o que fica
   para depois" de cada handoff na fase seguinte, criou a 96 e a 97 a partir
