@@ -2,6 +2,7 @@ mod events;
 mod frame;
 mod host;
 mod hot_reload;
+mod launch;
 mod lifecycle;
 mod render;
 mod render_passes;
@@ -10,10 +11,13 @@ mod windows;
 
 pub use frame::{draw_frame, present_frame};
 pub use host::WindowHost;
+pub use launch::launch_query;
 pub use render_passes::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 pub use sleep::Background;
 pub use windows::{Routed, Windows};
 
+#[cfg(target_arch = "wasm32")]
+pub use launch::launch_args;
 #[cfg(target_arch = "wasm32")]
 pub use lifecycle::setup_wasm_canvas;
 

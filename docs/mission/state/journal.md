@@ -14,6 +14,14 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-77 fechada pelo orquestrador, sem agente
+
+- web e iOS em todas as 82 páginas: web 79 iguais em todo byte, iOS 78 só
+  com a barra de status. as caladas têm causa (sem Claude, sem git, o
+  cursor piscando); uma era defeito (id da tabela em `usize`, 32 bits no
+  wasm) e foi corrigida. tabela de diferenças pedidas confirmada onde foi
+  medida. custo: só tokens do orquestrador.
+
 ### task-18 fechada pelo orquestrador, sem agente
 
 - APK no emulador Pixel 7 sem janela. testar toque e lifecycle achou dois

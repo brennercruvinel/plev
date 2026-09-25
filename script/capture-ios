@@ -3,8 +3,12 @@
 # against the desktop's frame of the same page, theme, viewport and scale
 # (task-77).
 #
-#   script/capture-ios [--page <title>] [--theme <name>] [--device <name>]
+#   script/capture-ios [--page <title> | --all] [--theme <name>] [--device <name>]
 #                      [--out <dir>]
+#
+# --all: every page of the gallery, launched in turn on the one booted
+# simulator, each against the desktop's, one line per page in
+# <out>/report.txt.
 #
 # defaults: the launch page (Theme) in core on the "iPhone 17 Pro", into
 # target/determinism/ios-<time>/. the build is task-19's
@@ -19,11 +23,12 @@ set -euo pipefail
 # shellcheck source=script/capture-common.sh
 . "$(dirname "$0")/capture-common.sh"
 
-PAGE="Theme"; THEME="core"; DEVICE="iPhone 17 Pro"
+PAGE="Theme"; ALL=""; THEME="core"; DEVICE="iPhone 17 Pro"
 OUT="$REPO_ROOT/target/determinism/ios-$(date +%Y%m%d-%H%M%S)"
 while [ $# -gt 0 ]; do
     case "$1" in
         --page) PAGE="$2"; shift 2 ;;
+        --all) ALL=1; shift ;;
         --theme) THEME="$2"; shift 2 ;;
         --device) DEVICE="$2"; shift 2 ;;
         --out) OUT="$2"; shift 2 ;;
@@ -77,13 +82,30 @@ xcrun simctl status_bar "$DEVICE" override --time "9:41" --dataNetwork wifi \
     --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 \
     --batteryState charged --batteryLevel 100
 xcrun simctl install "$DEVICE" "$APP"
-xcrun simctl terminate "$DEVICE" com.plev.showcase 2>/dev/null || true
-echo ">> launching $PAGE / $THEME"
-xcrun simctl launch "$DEVICE" com.plev.showcase "$PAGE" "$THEME"
-sleep 5
 
+# shoot <page> <png>: the app launched on the page and the theme, its frame
+shoot() {
+    xcrun simctl terminate "$DEVICE" com.plev.showcase 2>/dev/null || true
+    xcrun simctl launch "$DEVICE" com.plev.showcase "$1" "$THEME" >/dev/null
+    sleep "$2"
+    xcrun simctl io "$DEVICE" screenshot --type=png "$3" >/dev/null 2>&1
+}
+
+if [ -n "$ALL" ]; then
+    echo ">> the desktop's frame of every page: $THEME at ${WIDTH}x${HEIGHT}, scale $SCALE"
+    desktop_all "$THEME" "$WIDTH" "$HEIGHT" "$SCALE" "$OUT" >"$OUT/titles.txt"
+    mkdir -p "$OUT/ios"
+    echo ">> launching $(wc -l <"$OUT/titles.txt" | tr -d ' ') pages in $THEME"
+    while IFS= read -r title; do
+        shoot "$title" 4 "$OUT/ios/$(slug "$title").png"
+    done <"$OUT/titles.txt"
+    compare_all ios "$OUT/titles.txt" "$THEME" "$SCALE" "$OUT"
+    exit 0
+fi
+
+echo ">> launching $PAGE / $THEME"
 SHOT="$OUT/ios.png"
-xcrun simctl io "$DEVICE" screenshot --type=png "$SHOT"
+shoot "$PAGE" 5 "$SHOT"
 echo ">> $SHOT: ${PX_W}x${PX_H}, ${WIDTH}x${HEIGHT} logical at $SCALE"
 
 desktop_and_compare ios "$SHOT" "$PAGE" "$THEME" "$WIDTH" "$HEIGHT" "$SCALE" "$OUT"

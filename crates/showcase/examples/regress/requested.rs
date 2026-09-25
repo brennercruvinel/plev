@@ -169,17 +169,22 @@ mod tests {
             let sizes = rows.iter().filter(|r| r.area == Area::Size).count();
             assert_eq!(sizes, 1, "{target}");
         }
-        // the desktop knows what it declares; the other targets wait for
-        // their first capture
+        // the desktop knows what it declares; a row of another target is
+        // known once a capture confirmed it (2026-09-25: web, the iOS
+        // simulator and the android emulator), the rest waits for one
+        let confirmed = [
+            ("web", "size"),
+            ("ios", "status-bar"),
+            ("ios", "home-indicator"),
+            ("ios", "size"),
+            ("android", "navigation-bar"),
+            ("android", "size"),
+        ];
         for row in &t.rows {
             let known = row.status == Status::Known;
-            assert_eq!(
-                known,
-                row.target == "desktop",
-                "{} {}",
-                row.target,
-                row.name
-            );
+            let expected = row.target == "desktop"
+                || confirmed.contains(&(row.target.as_str(), row.name.as_str()));
+            assert_eq!(known, expected, "{} {}", row.target, row.name);
         }
         let ios = match t.decisions("ios") {
             Ok(d) => d,
