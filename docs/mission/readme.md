@@ -11,9 +11,9 @@ domain: project-status
 > update 2026-09-23: a direção mudou. o plev vai de GPU UI engine para
 > generative interaction runtime. o programa (goal, grafo, ownership,
 > contratos entre tasks) está em
-> `steps/ongoing/generative-runtime-program.md`, a tese em
-> `steps/ongoing/generative-runtime-thesis.md` e as regras obrigatórias em
-> `steps/ongoing/generative-runtime-guidelines.md`. as tasks são a task-57
+> `generative-runtime-program.md`, a tese em
+> `generative-runtime-thesis.md` e as regras obrigatórias em
+> `generative-runtime-guidelines.md`. as tasks são a task-57
 > até a task-80, em `steps/pending/`. o mapa abaixo é histórico.
 
 ## o que e

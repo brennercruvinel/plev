@@ -44,11 +44,11 @@ mission, refs). architecture: docs/arc/arc.toml.
    number that is not a token yet becomes one (scales.rs) in the same
    change
 5. a task of the generative runtime program (task-57 onward) also reads,
-   before any code: docs/mission/steps/ongoing/generative-runtime-guidelines.md
+   before any code: docs/mission/generative-runtime-guidelines.md
    (binding rules for the orchestrator and for agents),
-   docs/mission/steps/ongoing/generative-runtime-program.md (goal, graph,
+   docs/mission/generative-runtime-program.md (goal, graph,
    ownership, contracts between tasks) and its own task file. the thesis
-   behind it is docs/mission/steps/ongoing/generative-runtime-thesis.md;
+   behind it is docs/mission/generative-runtime-thesis.md;
    the short operating version is
    docs/how-to/orchestrate-coding-agents-on-this-repo.md
 

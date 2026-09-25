@@ -1,8 +1,8 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: ongoing
-last-updated: 2026-09-23
+status: done
+last-updated: 2026-09-25
 domain: generative-runtime
 task: task-72
 wave: trilha
@@ -428,3 +428,22 @@ baselines, 163 unchanged, nenhum frame desenhado.
 - fontes com a task-74: um banco de faces só para o `TextSystem` e o
   `TextMeasurer`, ou a varredura do sistema adiada, e `Source::Binary`
   sobre os bytes estáticos.
+
+## fechamento (orquestrador, 2026-09-25)
+
+fechada pelo critério de aceite, item por item:
+
+- inventário com números antes e depois de cada item movido: feito na
+  fase 1; nenhum asset saiu do runtime, porque os números ficaram abaixo
+  do limite (ícones 0,17 ms no primeiro frame, WGSL 0,7 ms de naga).
+- ícones com pixels iguais antes e depois: não se aplica, nenhum ícone
+  mudou de lugar.
+- erro de sintaxe em WGSL quebra o build com mensagem clara: feito, o
+  gate lê todo `.wgsl` e falha com arquivo, linha e coluna.
+- gate verde, release e wasm continuam: feito.
+
+pendências (não viram fase nem task sem o ok do brenner):
+
+- gravar uma interação (spring, fade, gesto) como asset `.monster`;
+- remedir os ícones em release e, se passarem do limite, o gerador;
+- fontes com a task-74 (um banco de faces só, `Source::Binary`).

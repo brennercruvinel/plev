@@ -483,8 +483,11 @@ retas.
 
 ## sequência por task
 
-1. o orquestrador confere que as dependências da task estão integradas na
-   `main` e que a superfície está livre (seção 8 do programa).
+1. o orquestrador confere o critério de aceite da task item por item
+   (`docs/mission/autonomy.md`, "contra gasto de tokens"): se já bate, a
+   task fecha e não há briefing; se não, escolhe o item que esta rodada
+   fecha. confere também que as dependências estão integradas na `main` e
+   que a superfície está livre (seção 8 do programa).
 2. o orquestrador escreve o briefing a partir do arquivo da task e do
    código atual (diagnóstico com arquivo:linha), no template abaixo.
 3. um agente, num worktree isolado, recebe o briefing.
@@ -502,7 +505,8 @@ retas.
 8. com o ok do brenner, o orquestrador integra (rebase na `main`, gate de
    novo depois do merge), atualiza task, ADR, arc, README e changelog.
 9. a próxima task é revisada à luz do que esta ensinou antes do próximo
-   briefing.
+   briefing. o que sobrou da entrega vai para "pendências" no arquivo da
+   task; não vira fase nem task nova sem o ok do brenner.
 
 ## template de briefing
 
@@ -520,9 +524,12 @@ mantra:
 
 missão (uma frase, pela causa, não pelo sintoma):
 
-leia antes de tocar em código:
-  docs/mission/steps/ongoing/generative-runtime-guidelines.md
-  docs/mission/steps/ongoing/task-NN-<slug>.md
+critério de aceite que esta rodada fecha (copiado do arquivo da task, item
+por item; sem item, sem briefing):
+
+leia antes de tocar em código (só as seções citadas, não o arquivo inteiro):
+  docs/mission/generative-runtime-guidelines.md
+  docs/mission/steps/ongoing/task-NN-<slug>.md, seções <quais>
   .contracts/.agents/AGENTS.md
   .contracts/.mantras/.code/.lang/.rust/rust-conventions.md
   docs/how-to/code-against-the-plev-engine.md (quando toca UI ou render)
@@ -544,6 +551,20 @@ validação obrigatória (comandos):
 commits: pequenos, na branch da task, mensagem começando com task-NN
 pare e reporte se: <as decisões que não são do agente>
 entrega: o handoff da parte 2, com contagem de testes antes e depois
+
+economia (vale para toda rodada):
+  - a sonda só com o que decide a implementação, até umas 60 linhas no
+    arquivo da task;
+  - ler só os arquivos e as seções que o briefing cita; arquivo de task
+    ou ADR grande se lê pela seção, nunca inteiro;
+  - saída de cargo, gate e regress vai para um arquivo; ler só o fim ou o
+    erro;
+  - nada de diff inteiro, JSON de baseline, log ou tabela gerada colados
+    nos docs: a lista, um resumo e o sha do commit;
+  - o handoff curto (umas 40 linhas): commits, o que mudou, o item do
+    critério de aceite que fechou, testes, contagem;
+  - o que sobra vai numa lista "pendências", curta, sem propor fase
+    nem task.
 ```
 
 ## o que o orquestrador olha no diff, sempre

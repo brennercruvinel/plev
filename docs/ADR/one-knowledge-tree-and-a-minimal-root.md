@@ -37,8 +37,10 @@ only what tools resolve there.
   mission/ (goals, rules, task history), refs/ (study notes). doc/ is
   retired; the changelog copy it held was the stale one, docs/ADR/
   changelog.md is the living one. the mon working note left the root and
-  lives next to its experiment as
-  docs/mission/steps/ongoing/mon-experiment-notes.md; a loose notes.md is
+  lives as study notes in
+  docs/refs/mon-experiment-notes.md (moved there from steps/ongoing/ on
+  2026-09-25, with the program, the thesis and the guidelines moving up to
+  docs/mission/); a loose notes.md is
   not a place.
 - web/ owns the whole web target: Trunk.toml, index.html, and the dist/
   output. script/ owns the repeatable commands: script/gate (the four-part

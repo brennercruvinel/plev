@@ -10,9 +10,9 @@ tags: [orchestration, autonomy, loop, status]
 # modo de operação: orquestrador autônomo
 
 desde 2026-09-23 o brenner não supervisiona cada integração. o orquestrador
-segue sozinho dentro da missão (`steps/ongoing/generative-runtime-thesis.md`),
-das regras (`steps/ongoing/generative-runtime-guidelines.md`) e do programa
-(`steps/ongoing/generative-runtime-program.md`). o objetivo não é executar a
+segue sozinho dentro da missão (`generative-runtime-thesis.md`),
+das regras (`generative-runtime-guidelines.md`) e do programa
+(`generative-runtime-program.md`). o objetivo não é executar a
 lista de tasks: é manter um ciclo contínuo de implementação, validação,
 aprendizado e reorganização do programa.
 
@@ -31,8 +31,12 @@ o agente sondar primeiro, parando se o resultado for outro.
    dependências, ownership, decisões abertas. a documentação nunca tem mais
    autoridade que o código; divergência se investiga e a doc se corrige antes
    de planejar com ela.
-2. **choose.** maior ganho para a missão, respeitando dependências, nesta
-   ordem: invariantes quebradas; bugs achados por validação real; contratos
+2. **choose.** fechar antes de abrir (regra de 2026-09-25, abaixo em
+   "contra gasto de tokens"): o próximo trabalho sai da lista de tasks
+   abertas em `steps/ongoing/`, a mais perto do próprio critério de
+   aceite, nunca a fase seguinte da task que acabou de integrar só porque
+   ela está à mão. dentro disso, maior ganho para a missão, respeitando
+   dependências, nesta ordem: invariantes quebradas; bugs achados por validação real; contratos
    que várias partes precisam; fechar experimento ou hipótese aberta;
    observabilidade e capacidade de validar; funcionalidade nova;
    otimização; refinamento cosmético. nunca pelo número da task.
@@ -119,7 +123,9 @@ merge, nunca force push); seguir para o próximo ciclo.
   falhou;
 - duas alternativas tecnicamente plausíveis com trade-offs estratégicos
   relevantes;
-- ação destrutiva ou irreversível fora do repositório local.
+- ação destrutiva ou irreversível fora do repositório local;
+- criar task nova, ou abrir uma fase que o critério de aceite da task não
+  pede.
 
 não é motivo de parada: naming local, organização interna reversível, bug
 pequeno, conflito mecânico, escolha de implementação encapsulada, criar
@@ -127,6 +133,30 @@ teste, corrigir documentação, refactor necessário para cumprir contrato já
 aprovado. os checkpoints do programa (seção 9) param só quando o resultado
 cai numa das condições acima; senão o orquestrador decide, registra no
 programa e segue.
+
+## contra gasto de tokens (2026-09-25)
+
+o brenner parou o ciclo: em vez de fechar as tasks abertas, o orquestrador
+abria fase nova da task que tinha acabado de integrar (75 fase 1, 2a, 2b),
+transformava o "o que fica para depois" de cada handoff na fase seguinte e
+criava task nova a partir de resultado de demo (96, 97). cada agente custou
+de 500 a 660 mil tokens. as regras:
+
+1. **uma task fecha pelo critério de aceite do arquivo dela.** antes de
+   cada briefing o orquestrador confere a seção "critérios de aceitação"
+   item por item. bateu, a task vai para `steps/checked/` e não abre fase.
+2. **todo briefing diz qual critério de aceite ele fecha.** fase que não
+   fecha nenhum item do critério não tem briefing.
+3. **o que sobra de uma entrega vira pendência, não fase.** vai para a
+   seção "pendências" do arquivo da task, em lista curta. só vira trabalho
+   se um item do critério de aceite pedir, ou com o ok do brenner.
+4. **task nova só com o ok do brenner.** resultado de demo ou de medição
+   se registra na task que mediu; não vira task.
+5. **tudo esperando o brenner, o ciclo para.** se o que resta aberto depende
+   de decisão, instalação ou teste manual dele, o orquestrador pergunta uma
+   vez, com as decisões juntas, e espera. não inventa trabalho para seguir.
+6. **um agente por vez, e o custo no journal.** a entrada de cada
+   integração diz quantos tokens o agente gastou.
 
 ## regra contra deriva
 
@@ -142,7 +172,7 @@ arquitetura pela arquitetura.
 | registro | arquivo | o que guarda |
 |---|---|---|
 | truth | `state/truth.md` | o que o código faz agora, com arquivo:linha; reescrito quando uma integração muda um contrato |
-| program | `steps/ongoing/generative-runtime-program.md` | o que falta construir e por quê: tasks, grafo, ondas, contratos, ownership, decisões, estado |
+| program | `generative-runtime-program.md` | o que falta construir e por quê: tasks, grafo, ondas, contratos, ownership, decisões, estado |
 | learnings | `state/learnings.md` | o que experimentos e implementações ensinaram, e o que isso mudou no programa |
 
 mais um: `state/journal.md`, o diário do ciclo autônomo (integrações,

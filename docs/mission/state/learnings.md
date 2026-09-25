@@ -609,6 +609,17 @@ c"; saídas em `target/agents/exp/`.
 
 ## processo
 
+### 2026-09-25, o handoff virava a próxima fase
+
+- **o ciclo gerava trabalho em vez de fechar:** o template de handoff
+  pedia "o que fica para depois", e o orquestrador disparava essa lista
+  como a fase seguinte da mesma task, porque estava à mão. as tasks
+  abertas da lista ficaram paradas e cada agente custou de 500 a 660 mil
+  tokens. regra: uma task fecha pelo critério de aceite do arquivo dela;
+  todo briefing diz qual item do critério fecha; o que sobra vira
+  "pendências", nunca fase ou task sem o ok do brenner; tudo esperando o
+  brenner, o ciclo para (`autonomy.md`, "contra gasto de tokens").
+
 ### 2026-09-25, teste de privacidade procura tudo, não amostra
 
 - **o teste da câmera da fase 1 da task-79 procurava 16 das 200 cores da

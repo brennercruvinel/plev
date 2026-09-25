@@ -713,7 +713,7 @@ status: living
   interactions through the window's frame path and prints the tables. the
   first finding: on an M4 the frame is bound by the GPU (0.45 to 2.2 ms of
   wait against 30 to 400 us of CPU), which reshapes the incremental work
-  ahead (docs/mission/steps/ongoing/task-73-measurements.md).
+  ahead (docs/mission/task-73-measurements.md).
 - every interactive comps widget speaks the semantic contract (2026-09-23,
   task-59 phase b): chip, icon button, submit button, switch, slider,
   select, tabs, nav link, breadcrumb, split pane, virtual list, table,
@@ -907,7 +907,7 @@ status: living
 - one knowledge tree: kdb/ renamed to docs/ and the arc trio moved into
   it (docs/arc/, from doc/arc/); doc/ was retired (its changelog copy
   was the stale duplicate of this file). the mon working note left the
-  root for docs/mission/steps/ongoing/mon-experiment-notes.md. web/ owns
+  root for docs/refs/mon-experiment-notes.md. web/ owns
   the web target end to end (Trunk.toml, index.html, dist output) and
   script/ owns the commands (gate, web). the arc sync guard, the
   instruction source (.contracts/.agents/AGENTS.md, the only
