@@ -14,6 +14,28 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-75 fase 1: accessibility de plataforma
+
+- **integrada:** `task/75a-a11y` (6 commits, agente no Opus). a matriz
+  por plataforma lida no lock (macOS roda; windows e linux esperam o
+  alvo; iOS e web sem adapter; android fora do lock); a árvore de toda
+  página testada, com dois consertos no builder (botão com uma ação só é
+  apertado por ela; grupo mudo vira estrutura); status polida e alerta
+  assertivo sem mover o foco, o toast na árvore do leitor; 301 pares de
+  contraste medidos, 102 falham, listados sem mudar cor; reduced motion
+  no ponto único de animação, lido do macOS pela ponte.
+- **validação:** diff inteiro lido; nenhuma cor, nenhuma dependência,
+  nenhum baseline mudou; nenhum teste roda ação de verdade. gate local
+  verde, 2960 passam (antes 2932); regress 175 sem mudança.
+- **dívida:** o reduced motion no macOS chama `/usr/bin/defaults` (10 ms,
+  ao focar a janela); um app sandboxed não pode abrir processo e fica sem
+  a preferência. o caminho certo é a API do AppKit, que pede aresta nova
+  no `Cargo.toml` do engine (aprovação). o toast entra na árvore pelo
+  shell, não pela projeção da view (fase 2).
+- **decisões do brenner, sem pressa:** o web (espelho DOM gerado do
+  snapshot, ou nada por enquanto), as cores que falham contraste, e o
+  roteiro do VoiceOver no arquivo da task.
+
 ### o Claude estourou o prazo três vezes: o prazo sobe para 300 s
 
 - **o que aconteceu:** a prova da fase 2 da task-70 pediu a revisão ao

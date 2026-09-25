@@ -12,6 +12,24 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-25, task-75 fase 1
+
+- **"tem accessibility" media 6 páginas de 82:** a árvore do AccessKit só
+  tem conteúdo onde a página projeta significado; as 76 páginas de
+  componente o leitor ouve como a janela sozinha. um teste que percorre
+  todas as páginas e guarda listas exatas do que falta pega isso; o
+  VoiceOver manual numa página só não pegava. fonte:
+  `crates/showcase/tests/access_tree.rs`.
+- **a matriz de plataforma só vale lida no lock:** o iOS compila o
+  `null.rs` do `accesskit_winit` 0.32.2 e joga fora toda atualização, e
+  nenhum adapter do lock tem custom actions. a documentação não diz nem
+  uma coisa nem outra. fonte: a sonda no arquivo da task-75.
+- **o tema padrão falha contraste no texto secundário:** o cinza do core
+  dá 4,13 sobre o fundo (AA pede 4,5); 102 de 301 pares falham nos quatro
+  temas. mudar cor é decisão de design e mexe em todo baseline, então o
+  teste guarda a lista e acusa quando um par muda de lado. fonte:
+  `crates/engine/src/theme/tests_contrast.rs`.
+
 ### 2026-09-25, o prazo do Claude
 
 - **um prazo curto não economiza, desperdiça:** a chamada morta em 180 s

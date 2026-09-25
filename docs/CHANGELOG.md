@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- a screen reader hears what changes (2026-09-25, task-75 phase 1): a
+  status line and a toast are announced without taking the focus, an
+  error louder than the rest; seven buttons a reader could reach and not
+  press (propose, detect silences, open file) now press; an empty group
+  no longer stops the reader. with the system's "reduce motion" on
+  (macOS), every transition ends on its first frame. the contrast of the
+  four themes is measured against WCAG AA: 102 of 301 pairs fail and are
+  listed, no color changed yet. what AccessKit gives each platform is
+  written down from the locked source: macOS today; Windows and Linux
+  when their target runs; no adapter yet on iOS and the web.
+
 - a sequence you repeat becomes one action (2026-09-24, task-70 phase
   3): the Silences page notices when a person does the same actions in
   the same order on each cut ("preview segment, then apply cut") and
