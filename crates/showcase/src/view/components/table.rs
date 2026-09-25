@@ -4,7 +4,10 @@
 //! Projected (task-75 phase 2b): the table, `table_page.table`, named
 //! "files", with a row per row it holds (never the 2000), as the comps
 //! projects them, each named by its cells; a row's `select` selects it as a
-//! click does.
+//! click does. One row is the table's stop in the Tab sequence; the arrow
+//! keys move the focus along the rows, the table scrolling to keep the
+//! focused one in view, and the focus follows the wheel (task-75 phase
+//! 2d).
 
 use comps::content::{Column, Panel, Table};
 use comps::prelude::{Align, EventResult, Rect, WidgetEvent};
@@ -75,6 +78,13 @@ impl TablePage {
             .then_some(row)
     }
 
+    /// The row behind `id`, `table_page.table[<row>]`, held or not: the
+    /// focus may go to any, and the table scrolls to it.
+    fn any_row(&self, id: &SemId) -> Option<usize> {
+        let row: usize = key_under(self.table.sem_id()?, id)?.parse().ok()?;
+        (row < self.table.row_count()).then_some(row)
+    }
+
     fn rect(content: Rect, theme: &Theme) -> Rect {
         let h = Table::header_h(theme) + Table::row_h(theme) * 8.0;
         Rect::new(content.x, content.y, content.w, h)
@@ -90,8 +100,14 @@ impl TablePage {
         content: Rect,
         theme: &Theme,
     ) -> EventResult {
-        self.table
-            .handle_event(event, Self::rect(content, theme), theme)
+        let blurred = matches!(event, WidgetEvent::MouseDown { .. }) && self.blur();
+        let r = self
+            .table
+            .handle_event(event, Self::rect(content, theme), theme);
+        if blurred {
+            return r.merge(EventResult::changed());
+        }
+        r
     }
 
     pub fn tick(&mut self, dt: f32) -> bool {
@@ -138,6 +154,9 @@ impl Component for TablePage {
                 .join(", ")
         };
         self.table.project(b, id, "files", Some(root), row_label);
+        if let Some(at) = self.table.rows.focused() {
+            b.focus(id.key(at.to_string()));
+        }
     }
 
     /// A row's `select` selects it, as its click does.
@@ -154,10 +173,21 @@ impl Component for TablePage {
         }
     }
 
-    /// Nothing of the table takes focus (a row does not); the page's nodes
-    /// are its own all the same.
+    /// A row takes the focus (its ring), scrolled into view; another node
+    /// of the page takes it from the table.
     fn focus(&mut self, id: &SemId) -> bool {
-        self.root.as_ref().is_some_and(|root| under(root, id))
+        if !self.root.as_ref().is_some_and(|root| under(root, id)) {
+            return false;
+        }
+        let row = self.any_row(id);
+        self.table.rows.set_focused(row);
+        true
+    }
+
+    fn blur(&mut self) -> bool {
+        let had = self.table.rows.focused().is_some();
+        self.table.rows.set_focused(None);
+        had
     }
 }
 

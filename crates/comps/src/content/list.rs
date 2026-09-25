@@ -7,14 +7,21 @@ use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent};
 use crate::feedback::Scrollbar;
+use crate::recipe::focus_ring_inside;
 
 /// Rows tessellated beyond the viewport on each side, so partially
 /// visible rows and small scroll deltas don't pop.
 const OVERSCAN: usize = 2;
 
+/// How far a row edge may miss the viewport's edge, in rows, and still
+/// count as inside it (the float error of an offset that lines a row up
+/// with the edge).
+const EDGE: f32 = 1e-3;
+
 /// Generic virtualized list: only visible rows are rendered, whatever the
-/// item count. Owns scroll state, a fading [`Scrollbar`], hover and
-/// selection — the row *content* is the caller's via a render closure.
+/// item count. Owns scroll state, a fading [`Scrollbar`], hover,
+/// selection and the keyboard focus on a row; the row *content* is the
+/// caller's via a render closure.
 ///
 /// With a [`SemId`] ([`VirtualList::sem`]) the render binds the list and
 /// each row it holds to the rects it hit-tests them with, and
@@ -42,6 +49,7 @@ pub struct VirtualList {
     pub selected: Option<usize>,
     item_count: usize,
     hovered: Option<usize>,
+    focused: Option<usize>,
     viewport: Rect,
     sem: Option<SemId>,
 }
@@ -73,6 +81,7 @@ impl VirtualList {
             selected: None,
             item_count: 0,
             hovered: None,
+            focused: None,
             viewport: Rect::default(),
             sem: None,
         }
@@ -96,8 +105,11 @@ impl VirtualList {
     /// `<id>[<index>]` per row it holds ([`VirtualList::visible_range`]),
     /// never the whole dataset, each named by `row_label` (the rows are
     /// the app's, so is their text) and with a `select` that reads the
-    /// list's `selected`. Scroll and hover are never projected; which rows
-    /// the list holds follows the scroll. It only reads the widget; the
+    /// list's `selected`. One row takes the focus, the list's one stop in
+    /// the Tab sequence ([`VirtualList::tab_stop`]); the arrow keys move
+    /// the focus along the others. Scroll and hover are never projected;
+    /// which rows the list holds follows the scroll. It only reads the
+    /// widget; the
     /// app owns it and runs `select` (sets `selected`). Pass the id given
     /// to [`VirtualList::sem`] so the nodes and the bindings name the same
     /// controls. Returns the list's node for the app to add to.
@@ -111,9 +123,10 @@ impl VirtualList {
         mut row_label: impl FnMut(usize) -> String,
     ) -> NodeBuilder<'b> {
         let selected = format!("{id}:selected");
+        let stop = self.tab_stop();
         for index in self.visible_range() {
             let mut row = b.node(id.key(index.to_string()), Role::ListItem, row_label(index));
-            row.parent(id);
+            row.parent(id).focusable(stop == Some(index));
             row.action("select").reads(selected.as_str());
         }
         let mut node = b.node(id, Role::List, label);
@@ -147,6 +160,77 @@ impl VirtualList {
 
     pub fn hovered(&self) -> Option<usize> {
         self.hovered
+    }
+
+    /// Keyboard focus on row `index`, or on none, driven by the owning
+    /// view (the keyboard, a screen reader): the row draws the focus ring
+    /// and the list scrolls it into view. A row past the end is none.
+    pub fn set_focused(&mut self, index: Option<usize>) {
+        self.focused = index.filter(|i| *i < self.item_count);
+        if let Some(i) = self.focused {
+            self.reveal(i);
+        }
+    }
+
+    /// The row with the keyboard focus. It follows the scroll: once the
+    /// rows scroll past it, the focus is on the nearest row in view
+    /// ([`VirtualList::shown`]), so it never leaves the rows the list
+    /// holds.
+    pub fn focused(&self) -> Option<usize> {
+        let at = self.focused?;
+        let shown = self.shown();
+        match shown.end.checked_sub(1) {
+            Some(last) if !shown.is_empty() => Some(at.clamp(shown.start, last)),
+            _ => Some(at),
+        }
+    }
+
+    /// The row that takes the focus when Tab comes to the list, the
+    /// list's one stop in the Tab sequence: the focused row, else the
+    /// selected one while it is in view, else the first in view.
+    pub fn tab_stop(&self) -> Option<usize> {
+        let shown = self.shown();
+        self.focused()
+            .or(self.selected.filter(|s| shown.contains(s)))
+            .or((!shown.is_empty()).then_some(shown.start))
+    }
+
+    /// The rows wholly inside the viewport; the ones that touch it when
+    /// none fits wholly (a viewport shorter than a row).
+    pub fn shown(&self) -> Range<usize> {
+        if self.item_count == 0 || self.viewport.h <= 0.0 {
+            return 0..0;
+        }
+        let top = self.scroll.offset() / self.item_height;
+        let bottom = (self.scroll.offset() + self.viewport.h) / self.item_height;
+        let whole = (top - EDGE).ceil() as usize..((bottom + EDGE).floor() as usize);
+        let range = if whole.is_empty() {
+            top.floor() as usize..(bottom.ceil() as usize)
+        } else {
+            whole
+        };
+        range.start.min(self.item_count)..range.end.min(self.item_count)
+    }
+
+    /// Scrolls the least that brings row `index` wholly into view.
+    fn reveal(&mut self, index: usize) {
+        if self.viewport.h <= 0.0 {
+            return;
+        }
+        let top = index as f32 * self.item_height;
+        let bottom = top + self.item_height;
+        let now = self.scroll.offset();
+        let to = if top < now {
+            top
+        } else if bottom > now + self.viewport.h {
+            bottom - self.viewport.h
+        } else {
+            return;
+        };
+        self.scroll.scroll_to(to);
+        if self.scroll.offset() != now {
+            self.scrollbar.notify_scroll();
+        }
     }
 
     /// Sync the scroll viewport with the rect the list is rendered into.
@@ -200,13 +284,20 @@ impl VirtualList {
 
     /// Handle wheel scrolling, scrollbar interaction, hover and click
     /// selection. `bounds` must match the rect passed to `render_with`;
-    /// the scrollbar's hit band comes from `theme`.
+    /// the scrollbar's hit band comes from `theme`. The keyboard focus
+    /// follows the scroll ([`VirtualList::focused`]).
     pub fn handle_event(
         &mut self,
         event: &WidgetEvent,
         bounds: Rect,
         theme: &Theme,
     ) -> EventResult {
+        let result = self.event(event, bounds, theme);
+        self.focused = self.focused();
+        result
+    }
+
+    fn event(&mut self, event: &WidgetEvent, bounds: Rect, theme: &Theme) -> EventResult {
         self.set_viewport(bounds);
 
         // Scrollbar first: it sits on top of rows.
@@ -257,7 +348,8 @@ impl VirtualList {
 
     /// Render visible rows. `row_fn(compositor, index, rect, hovered,
     /// selected)` draws each row's content; the list itself draws hover
-    /// and selection backgrounds plus the scrollbar.
+    /// and selection backgrounds, the focus ring on the focused row
+    /// (inside it, so it never reaches the next), plus the scrollbar.
     ///
     /// Rows at the edges overflow `bounds` by up to one row; pair the
     /// list with a layer clip rect (`Compositor::set_layer_clip_rect`)
@@ -288,6 +380,7 @@ impl VirtualList {
             self.bind_rows(compositor, layer, id);
         }
 
+        let focused = self.focused();
         for index in self.visible_range() {
             let rect = self.item_rect(index);
             let hovered = self.hovered == Some(index);
@@ -318,6 +411,10 @@ impl VirtualList {
                 );
             }
             row_fn(compositor, index, rect, hovered, selected);
+            if focused == Some(index) {
+                let radius = theme.shape.nav.min(rect.h / 2.0);
+                compositor.push_to_layer(layer, focus_ring_inside(rect, radius, theme));
+            }
         }
 
         // The scrollbar stays on the same layer so it is clipped (and

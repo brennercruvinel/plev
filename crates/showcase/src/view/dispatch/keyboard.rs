@@ -1,8 +1,14 @@
-//! The keyboard on the component pages (task-75 phase 2c): Tab and
-//! Shift-Tab walk the projection in the order a screen reader walks it,
-//! the arrow keys move inside a tab list, a tree, a menu and an open
-//! select as the WAI-ARIA patterns ask and step a slider, and Enter and
-//! Space press what has the focus.
+//! The keyboard on the component pages (task-75 phases 2c and 2d): Tab
+//! and Shift-Tab walk the projection in the order a screen reader walks
+//! it, the arrow keys move inside a tab list, a tree, a list, a table, a
+//! menu and an open select as the WAI-ARIA patterns ask and step a
+//! slider, and Enter and Space press what has the focus.
+//!
+//! A tab list, a tree, a list and a table are one stop of Tab each: their
+//! projection makes one item focusable (the focused one, else the chosen
+//! one, else the first; the comps decides), so `focus::next` stops once
+//! in each, and the arrows move the focus among all the items of the
+//! widget, focusable or not (the roving tabindex of WAI-ARIA).
 //!
 //! There is one order and it is the projection's: `focus::next` over the
 //! view's snapshot (`ShowcaseView::semantics`: the page, the toasts and
@@ -24,6 +30,7 @@ use engine::accessibility::primary;
 use sem::{Actor, Node, Request, Role, SemId, Snapshot, Value};
 
 use super::super::ShowcaseView;
+use super::super::components::key_under;
 
 /// The steps a continuous slider (one without a step of its own) takes
 /// from one end to the other, one per arrow key.
@@ -71,13 +78,24 @@ fn ancestor<'a>(seen: &'a Snapshot, node: &Node, role: Role) -> Option<&'a Node>
     None
 }
 
-/// The nodes that take the focus, in the projection's order, that pass
-/// `keep`.
-fn items(seen: &Snapshot, keep: impl Fn(&Node) -> bool) -> Vec<&SemId> {
-    focus::order(seen)
-        .into_iter()
-        .filter(|id| seen.get(id).is_some_and(&keep))
-        .collect()
+/// The nodes under `root` that pass `keep` and could have the focus
+/// (enabled, not inert), focusable or not, in the order `focus::order`
+/// walks: depth first, children in projection order.
+fn items<'a>(seen: &'a Snapshot, root: &SemId, keep: impl Fn(&Node) -> bool) -> Vec<&'a SemId> {
+    let mut out = Vec::new();
+    let mut stack: Vec<&Node> = seen.children(root).collect();
+    stack.reverse();
+    while let Some(n) = stack.pop() {
+        if n.enabled && !n.inert && keep(n) {
+            out.push(&n.id);
+        }
+        let from = stack.len();
+        stack.extend(seen.children(&n.id));
+        if let Some(pushed) = stack.get_mut(from..) {
+            pushed.reverse();
+        }
+    }
+    out
 }
 
 /// Where `mv` lands from `at` among `items`: wrapping around the ends, or
@@ -209,7 +227,7 @@ impl ShowcaseView {
             return false;
         };
         let chosen = now.get(select).and_then(|n| n.state.get("selected"));
-        let option = items(&now, |n| {
+        let option = items(&now, select, |n| {
             n.role == Role::Option
                 && n.parent.as_ref() == Some(select)
                 && chosen == Some(&Value::Text(n.label.clone()))
@@ -230,6 +248,7 @@ impl ShowcaseView {
             Role::MenuItem => (down(key), true),
             Role::Option => (down(key), false),
             Role::TreeItem => return self.tree_key(seen, &id, node, key),
+            Role::ListItem | Role::Row => return self.row_key(seen, &id, node, key),
             Role::Slider => return self.slide(seen, &id, node, key),
             Role::Select if matches!(key, Walk::Up | Walk::Down) => {
                 let open = node.state.get("expanded") == Some(&Value::Bool(true));
@@ -244,9 +263,43 @@ impl ShowcaseView {
         let Some(mv) = mv else {
             return false;
         };
-        let siblings = items(seen, |n| n.role == node.role && n.parent == node.parent);
+        let Some(parent) = node.parent.as_ref() else {
+            return false;
+        };
+        let siblings = items(seen, parent, |n| {
+            n.role == node.role && n.parent.as_ref() == Some(parent)
+        });
         let to = step(&siblings, &id, mv, wrap).cloned();
         to.is_some_and(|to| self.assist_focus(&to))
+    }
+
+    /// A list or a table: up and down along its rows, Home and End to its
+    /// first and last, whether the widget holds them now or not. A row's
+    /// key is its index (`<list>[<index>]`, as the comps projects a list's
+    /// and a table's rows) and the widget states its `count`; the page
+    /// scrolls the row it takes into view.
+    fn row_key(&mut self, seen: &Snapshot, id: &SemId, node: &Node, key: Walk) -> bool {
+        let Some(mv) = down(key) else {
+            return false;
+        };
+        let Some(list) = node.parent.as_ref() else {
+            return false;
+        };
+        let count = seen
+            .get(list)
+            .and_then(|l| number(l.state.get("count")))
+            .map_or(0, |c| c as usize);
+        let at = key_under(list, id).and_then(|k| k.parse::<usize>().ok());
+        let (Some(at), Some(last)) = (at, count.checked_sub(1)) else {
+            return false;
+        };
+        let to = match mv {
+            Move::First => 0,
+            Move::Last => last,
+            Move::Prev => at.saturating_sub(1),
+            Move::Next => (at + 1).min(last),
+        };
+        to != at && self.assist_focus(&list.key(to.to_string()))
     }
 
     /// A tree: up and down along the rows it shows, Home and End to the
@@ -254,10 +307,10 @@ impl ShowcaseView {
     /// first child of an open one; left closes an open branch, or goes to
     /// the parent row.
     fn tree_key(&mut self, seen: &Snapshot, id: &SemId, node: &Node, key: Walk) -> bool {
-        let tree = ancestor(seen, node, Role::Tree).map(|t| &t.id);
-        let rows = items(seen, |n| {
-            n.role == Role::TreeItem && ancestor(seen, n, Role::Tree).map(|t| &t.id) == tree
-        });
+        let Some(tree) = ancestor(seen, node, Role::Tree).map(|t| &t.id) else {
+            return false;
+        };
+        let rows = items(seen, tree, |n| n.role == Role::TreeItem);
         let expanded = match node.state.get("expanded") {
             Some(Value::Bool(on)) => Some(*on),
             _ => None,

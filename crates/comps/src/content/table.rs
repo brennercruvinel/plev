@@ -118,8 +118,10 @@ impl Table {
     /// one `Role::Row` child `<id>[<index>]` per row it holds, never the
     /// whole dataset, each named by `row_label` (the cells are the app's,
     /// so is the row's text) and with a `select` that reads the table's
-    /// `selected_row`. The table has no sort, so it declares none. Scroll
-    /// and hover are never projected. It only reads the widget; the app
+    /// `selected_row`. One row takes the focus, the table's one stop in
+    /// the Tab sequence ([`VirtualList::tab_stop`]); the arrow keys move
+    /// the focus along the others. The table has no sort, so it declares
+    /// none. Scroll and hover are never projected. It only reads the widget; the app
     /// owns it and runs `select`. Pass the id given to [`Table::sem`] so
     /// the nodes and the bindings name the same controls. Returns the
     /// table's node for the app to add to.
@@ -133,9 +135,10 @@ impl Table {
         mut row_label: impl FnMut(usize) -> String,
     ) -> NodeBuilder<'b> {
         let selected = format!("{id}:selected_row");
+        let stop = self.rows.tab_stop();
         for index in self.rows.visible_range() {
             let mut row = b.node(id.key(index.to_string()), Role::Row, row_label(index));
-            row.parent(id);
+            row.parent(id).focusable(stop == Some(index));
             row.action("select").reads(selected.as_str());
         }
         let mut node = b.node(id, Role::Table, label);
