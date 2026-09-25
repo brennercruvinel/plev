@@ -8,10 +8,12 @@
 //! what an agent asks her; at the end the
 //! session file is reopened and checked against the real git, and the
 //! costs are measured. the laboratory prints what happened, including
-//! what breaks the hypothesis.
+//! what breaks the hypothesis. the review arm is the demo 5 of task-80
+//! (task-96): a person reviewing three commits with the fixed panel and
+//! with the surface her intent generates, recorded and measured.
 //!
 //! ```text
-//! ide-lab --arm plev|scripted|git|screenshot
+//! ide-lab --arm plev|scripted|git|screenshot|review
 //!         [--human none|unstage-after-observe:<path>|unstage-before-submit:<path>]
 //!         [--out <dir>] [--until commit|timeout] [--timeout <s>] [--grace <s>] [--app <name>]
 //!         [--scripted observe|chain|ask] [--answer none|allow|decline] [--answer-after <ms>]
@@ -45,6 +47,8 @@ use ide::lab_repo as repo;
 #[cfg(unix)]
 mod report;
 #[cfg(unix)]
+mod review;
+#[cfg(unix)]
 mod screenshot;
 #[cfg(unix)]
 mod scripted;
@@ -69,6 +73,7 @@ fn main() {
         args::Arm::Plev | args::Arm::Scripted => lab::run(&args),
         args::Arm::Git => gitarm::run(&args),
         args::Arm::Screenshot => screenshot::run(&args),
+        args::Arm::Review => review::run(&args),
     };
     std::process::exit(code);
 }

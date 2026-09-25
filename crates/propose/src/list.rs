@@ -48,7 +48,7 @@ pub(crate) struct List {
 
 /// the prefix and the key (unescaped) of an id that ends with a key
 /// segment: `todo.item[3]` is `("todo.item", "3")`.
-fn last_key(id: &str) -> Option<(&str, String)> {
+pub(crate) fn last_key(id: &str) -> Option<(&str, String)> {
     let mut open = None;
     let mut escaped = false;
     let mut last = None;

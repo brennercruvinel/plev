@@ -25,6 +25,9 @@
 //! - `notices` (region): one `notices[<id>]` per toast on screen (status,
 //!   or alert for a refusal that names a change), named by its message,
 //!   with `dismiss` (the comps toast helper).
+//! - with the generated surface on (`crate::generated`, task-96), after
+//!   all of the above: the surface open, and the intent line under
+//!   `ide_surface`. [`Workbench::app_snapshot`] is the workspace alone.
 
 use std::collections::{BTreeSet, HashSet};
 
@@ -46,7 +49,21 @@ pub const DIFF_LINES: usize = 200;
 pub const FILES_PROJECTED: usize = 10;
 
 impl Semantics for Workbench {
+    /// The workspace, then the intent line and the generated surface when
+    /// they are on (`crate::generated`): what every actor observes and
+    /// the dispatcher checks against.
     fn project(&self, b: &mut SnapshotBuilder) {
+        self.project_app(b);
+        if let Some(generated) = &self.generated {
+            generated.project(b);
+        }
+    }
+}
+
+impl Workbench {
+    /// The workspace alone: what [`Workbench::app_snapshot`] gives, the
+    /// registry a generated surface binds.
+    pub(super) fn project_app(&self, b: &mut SnapshotBuilder) {
         let ws = &self.workspace;
         let Some(ids) = &ws.ids else {
             return;

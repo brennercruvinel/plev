@@ -1,6 +1,7 @@
 //! why a proposal did not come: the proposer did not understand, the app
-//! has nothing of the kind, the model failed or kept proposing what the
-//! verifier refuses, or the verifier refused it; and why a change of the
+//! has nothing of the kind, a review cannot be made, the model failed or
+//! kept proposing what the verifier refuses, or the verifier refused it;
+//! and why a change of the
 //! surface shown did not come: the intent asks for none, nothing on the
 //! surface takes it, or an operation was refused.
 
@@ -68,6 +69,10 @@ pub enum ProposeError {
         op: String,
         error: TransformError,
     },
+    /// a review the rules cannot make (task-96), and why: nothing to
+    /// review, no word that says which items, fewer items than asked for.
+    #[error("{0}")]
+    Review(String),
     /// every answer of the model had an operation refused, or was not
     /// operations; the reasons of the last one.
     #[error(

@@ -6,11 +6,14 @@
 //! the workbench to agents through the port (unix only); `record` keeps
 //! its session for the inspector (`PLEV_RECORD=1`, debug). `lab_repo` is
 //! the laboratory's repository, built in a temp dir: the `ide-lab` bin and
-//! the tests that rerun its recorded sessions start from it.
+//! the tests that rerun its recorded sessions start from it. `generated`
+//! is the intent line and the host of generated surfaces the workbench
+//! holds beside the fixed views when the host turns it on (task-96).
 
 pub mod adapters;
 #[cfg(unix)]
 pub mod agent;
+mod generated;
 mod ids;
 pub mod lab_repo;
 pub mod record;

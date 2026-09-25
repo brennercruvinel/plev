@@ -161,7 +161,7 @@ pub(crate) fn folded(text: &str) -> BTreeSet<String> {
     split(text).map(fold).collect()
 }
 
-fn is(word: &str, list: &[&str]) -> bool {
+pub(crate) fn is(word: &str, list: &[&str]) -> bool {
     list.iter().any(|w| fold(w) == word)
 }
 
