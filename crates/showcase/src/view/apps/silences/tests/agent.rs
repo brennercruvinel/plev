@@ -44,12 +44,23 @@ pub(super) fn gallery<T: Send + 'static>(
     dir: &Path,
     agent: impl FnOnce(PathBuf) -> T + Send + 'static,
 ) -> (T, ShowcaseView) {
+    gallery_with(dir, |_| {}, agent)
+}
+
+/// `gallery`, with the view set up by `before` (as the person left it)
+/// before the agent starts.
+pub(super) fn gallery_with<T: Send + 'static>(
+    dir: &Path,
+    before: impl FnOnce(&mut ShowcaseView),
+    agent: impl FnOnce(PathBuf) -> T + Send + 'static,
+) -> (T, ShowcaseView) {
     let mut view = ShowcaseView::new(1200.0, 800.0);
     view.jump_to_page("silences");
     assert_eq!(view.page_title(), "Silences");
     view.panes
         .silences
         .set_worker(Worker::fake(parse(PROBE_STDERR), false));
+    before(&mut view);
     let mut c = frame(&mut view);
     let (tx, woke): (Sender<()>, Receiver<()>) = mpsc::channel();
     let config = Config {

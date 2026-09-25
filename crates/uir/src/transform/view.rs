@@ -6,7 +6,7 @@ use sem::{ActionName, Actor, Actors, SemId};
 
 use super::tree;
 use super::{Draft, Inverse, Op, TransformError, refused};
-use crate::caps::Capabilities;
+use crate::caps::{ActionCap, Capabilities};
 use crate::ir::{CapabilityRef, IrNode};
 use crate::item::Pattern;
 use crate::vocab::{Component, spec_of};
@@ -136,14 +136,38 @@ fn sender<'a>(root: &'a IrNode, cap: &CapabilityRef) -> Option<&'a IrNode> {
     })
 }
 
+/// the declaration of `action` on `target`: the app's own, or, for the
+/// template of an item (`silences.cut[{item}]`, the item once), the one
+/// of the first node of the registry that fits it and declares the
+/// action, with the template as its target. the verifier binds a
+/// template the same way and then checks that every node that fits
+/// declares it alike, so a promote never widens what it binds.
+fn declared(caps: &Capabilities, target: &SemId, action: &ActionName) -> Option<ActionCap> {
+    if let Some(cap) = caps.action(target, action) {
+        return Some(cap.clone());
+    }
+    let pattern = Pattern::of(target.as_str())?;
+    let member = caps
+        .nodes()
+        .filter(|id| pattern.matches(id.as_str()))
+        .find_map(|id| caps.action(id, action))?;
+    Some(ActionCap {
+        target: target.clone(),
+        ..member.clone()
+    })
+}
+
 /// `Promote`: a button for `action` on `target`, labelled as the app
 /// labels it, at the end of the container `into`, its id `into` followed
-/// by the action. refused when the app declares no such action, when its
-/// policy keeps it from `by`, when it takes a parameter (a button's
-/// `activate` sends none), and when the surface shows it already (in its
-/// tree, or hidden: then it is `Show`). the verifier then checks that
-/// whoever wrote the surface may bind it and that it is not destructive
-/// without a confirmation. its inverse is `into` before.
+/// by the action. `target` may be the template of an item: the button then
+/// asks each item's own action (`declared`). refused when the app
+/// declares no such action, when its policy keeps it from `by`, when it
+/// takes a parameter (a button's `activate` sends none), and when the
+/// surface shows it already (in its tree, or hidden: then it is `Show`).
+/// the verifier then checks that whoever wrote the surface may bind it,
+/// that it is not destructive without a confirmation, and, for a
+/// template, that every item declares it alike. its inverse is `into`
+/// before.
 pub(super) fn promote(
     d: &mut Draft,
     (target, action): (&SemId, &ActionName),
@@ -151,7 +175,7 @@ pub(super) fn promote(
     by: &Actor,
     caps: &Capabilities,
 ) -> Result<Inverse, TransformError> {
-    let Some(declared) = caps.action(target, action) else {
+    let Some(declared) = declared(caps, target, action) else {
         return Err(refused(format!(
             "the app declares no `{action}` on `{target}`"
         )));

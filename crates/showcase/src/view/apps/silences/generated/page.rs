@@ -15,7 +15,10 @@
 //! change of it first (task-70 phase 2, `surface_page::proposing::changing`):
 //! "too much information", "I can't compare these", "bigger numbers",
 //! "undo", by the rules at once or by the Claude off the thread, applied
-//! by the host as whoever asked.
+//! by the host as whoever asked. "accessibility" opens the person's band
+//! of preferences (task-70 phase 4, `access.rs`), for a person only, and
+//! its buttons turn them on and off through the host (`SurfaceHost::prefer`);
+//! a model is shown the surface as it was asked, never the preferences.
 //!
 //! The staging entries at the end (`ShowcaseView::stage_silences_*`) are
 //! for the regression harness (`examples/regress`, task-69 checkpoint b),
@@ -31,12 +34,12 @@ use sem::{
     Actor, Execution, Operable, Outcome, Request, RequestId, SemId, Semantics, SnapshotBuilder,
     Value,
 };
-use surface::Surface;
 use uir::{Capabilities, GenerationPolicy, VerifiedIr, verify_json};
 
 use super::super::SilencesPage;
 use super::super::jobs::instant_of;
 use super::super::semantics::ms;
+use super::access::{self, Pressed};
 use super::offer::{Answer as Reply, beside};
 use crate::view::ShowcaseView;
 use crate::view::apps::app::TodoPage;
@@ -230,6 +233,9 @@ impl Page<'_> {
     /// open until `settle` ends it.
     fn propose(&mut self, id: RequestId, author: &Actor) -> Execution {
         let intent = self.app.generated.proposing.intent.text().trim().to_owned();
+        if access::asked(&intent) {
+            return self.open_access(author);
+        }
         let app = match self.app.snapshot() {
             Ok(app) => app,
             Err(e) => return Execution::Failed(e.to_string()),
@@ -245,13 +251,14 @@ impl Page<'_> {
         }
         let caps = Capabilities::from_snapshot(&app);
         let policy = GenerationPolicy::by(author.clone());
+        // the surface as it was asked: a model never sees the person's
+        // preferences (the host makes them over whatever form comes)
         let generated = &self.app.generated;
         let current: Option<VerifiedIr> = generated
             .id
             .as_ref()
-            .and_then(|id| generated.host.get(id))
-            .map(Surface::verified)
-            .cloned();
+            .and_then(|id| generated.host.current(id))
+            .map(|asked| asked.verified().clone());
         match generated.proposing.chosen() {
             Proposer::Rules => {
                 let ask = Ask {
@@ -385,6 +392,40 @@ impl Page<'_> {
         )
     }
 
+    /// "accessibility" asked by `by`: the band of the person's preferences
+    /// opens under the row. An agent is refused: the preferences are the
+    /// person's, and so is the place where they are turned on.
+    fn open_access(&mut self, by: &Actor) -> Execution {
+        if matches!(by, Actor::Agent { .. }) {
+            let why =
+                format!("the accessibility preferences are the person's: {by} does not open them");
+            return self.refused(why);
+        }
+        self.app.generated.access.open();
+        Execution::Done(Outcome::default())
+    }
+
+    /// A button of the accessibility band pressed by `by` (a person: the
+    /// buttons are `PERSON_ONLY`): a preference flipped over every surface
+    /// the host shows, or the band closed. The outcome says nothing of
+    /// what is on.
+    fn pressed(&mut self, pressed: Pressed, by: &Actor) -> Execution {
+        let Pressed::Flip(preference) = pressed else {
+            self.app.generated.access.close();
+            return Execution::Done(Outcome::default());
+        };
+        let app = match self.app.snapshot() {
+            Ok(app) => app,
+            Err(e) => return Execution::Failed(e.to_string()),
+        };
+        let host = &mut self.app.generated.host;
+        let next = host.preferences().toggled(preference);
+        match host.prefer(next, by.clone(), &app) {
+            Ok(()) => Execution::Done(Outcome::default()),
+            Err(e) => Execution::Failed(e.to_string()),
+        }
+    }
+
     /// The surface is dismissed: out of the projection at once, its
     /// picture fading where it was (`SurfaceHost::close`); the row says
     /// nothing until the next proposal.
@@ -424,6 +465,9 @@ impl Operable for Page<'_> {
         }
         if let Some(answer) = self.app.generated.offer.answer(req) {
             return self.answered(answer, &req.actor);
+        }
+        if let Some(pressed) = self.app.generated.access.pressed(req) {
+            return self.pressed(pressed, &req.actor);
         }
         let Some(op) = self.app.generated.proposing.op(req) else {
             return self.app.execute(id, req);

@@ -37,7 +37,7 @@ use sem::{
     Actor, Execution, Operable, Outcome, Request, RequestId, SemId, Semantics, SnapshotBuilder,
     Value,
 };
-use surface::{Surface, SurfaceHost};
+use surface::SurfaceHost;
 use uir::{Capabilities, GenerationPolicy, VerifiedIr};
 
 use super::super::app::TodoPage;
@@ -262,12 +262,13 @@ impl Page<'_> {
         }
         let caps = Capabilities::from_snapshot(&app);
         let policy = GenerationPolicy::by(author.clone());
+        // the surface as it was asked: a model never sees the person's
+        // preferences of accessibility (the host makes them over any form)
         let current: Option<VerifiedIr> = self
             .id
             .as_ref()
-            .and_then(|id| self.host.get(id))
-            .map(Surface::verified)
-            .cloned();
+            .and_then(|id| self.host.current(id))
+            .map(|asked| asked.verified().clone());
         match self.proposing.chosen() {
             Proposer::Rules => {
                 let ask = Ask {

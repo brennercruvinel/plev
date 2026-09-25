@@ -65,7 +65,10 @@ pub use token::{
     Align, Axis, ColorRole, ControlSize, Elevation, Layout, MAX_FLEX, MAX_RATIO, MIN_RATIO, Props,
     ShapeRole, Size, SizeToken, SpacingToken, TypographyRole,
 };
-pub use transform::{Adapted, Aside, Context, Inverse, Look, Op, Step, TransformError};
+pub use transform::{
+    Adapted, Applied, Aside, Context, Inverse, Look, Op, Preference, Preferences, Preferred, Step,
+    TransformError,
+};
 pub use verify::{VerifiedIr, verify, verify_json};
 pub use vocab::{
     CONTAINER, ChartKind, Component, Event, Named, Spec, StateProp, is_control, names, role_of,

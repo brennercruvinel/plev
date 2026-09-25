@@ -8,6 +8,10 @@
 //! stat reads its `typography` as the size of its value (`StatSize`),
 //! and a badge its `background` as the intent it is filled with (the
 //! filled shape instead of the glass tag): the tokens `emphasize` moves.
+//! the text the host draws itself for a slider (its label and value), a
+//! table (its rows) and an image (its label) is in the node's `color`
+//! when it has one, else in the host's own ink for it (task-70 phase 4:
+//! the token "more contrast" moves).
 //!
 //! an image draws the picture the app holds for its bound `source`
 //! (`Frames`), fitted inside its shell and never scaled up; without one,
@@ -351,7 +355,7 @@ pub(crate) fn draw(
         (_, Widget::Table(Some(t))) => {
             let rows = list_of(node.value("rows", shown));
             let style = theme.typography.base_2r();
-            let ink = theme.colors.text_mid.0;
+            let ink = ink(node, theme).unwrap_or(theme.colors.text_mid.0);
             t.render_with(c, rect, theme, |c, row, cell, _| {
                 if let Some(s) = rows.get(row) {
                     let y = cell.y + TextMeasurer::vertical_center(&style, cell.h);
@@ -363,12 +367,18 @@ pub(crate) fn draw(
     }
 }
 
+/// the ink the node's `color` names, when it has one.
+fn ink(node: &Node, theme: &Theme) -> Option<[f32; 4]> {
+    node.props.color.map(|t| token::color(t, theme))
+}
+
 /// a slider as the fixed screens draw one: its label on the left and its
 /// value on the right, on a line above the track, and the track under
 /// them. the value is the widget's, so a drag shows where it is going.
 fn slider(c: &mut Compositor, node: &Node, s: &Slider, rect: Rect, theme: &Theme) {
     let label_style = theme.typography.caption_sm();
     let value_style = theme.typography.caption_r();
+    let own = ink(node, theme);
     let value = text_of(&Value::Num(f64::from(s.value())));
     let (vw, _) = TextMeasurer::measure_styled(&value, &value_style, None);
     let vw = vw.ceil();
@@ -377,7 +387,7 @@ fn slider(c: &mut Compositor, node: &Node, s: &Slider, rect: Rect, theme: &Theme
         &value,
         &value_style,
         Rect::new(rect.x + rect.w - vw, rect.y, vw, value_style.line_height),
-        theme.colors.text.0,
+        own.unwrap_or(theme.colors.text.0),
     );
     let label = node.label.as_deref().unwrap_or_default();
     let room = (rect.w - vw - theme.spacing.sm).max(1.0);
@@ -386,7 +396,7 @@ fn slider(c: &mut Compositor, node: &Node, s: &Slider, rect: Rect, theme: &Theme
         label,
         &label_style,
         Rect::new(rect.x, rect.y, room, label_style.line_height),
-        theme.colors.text_mid.0,
+        own.unwrap_or(theme.colors.text_mid.0),
     );
     s.render(c, slider_track(rect, theme), theme);
 }
@@ -454,7 +464,8 @@ fn image(c: &mut Compositor, node: &Node, rect: Rect, theme: &Theme, picture: Op
         w,
         h,
     );
-    text(c, label, &style, at, theme.colors.text_dim.0);
+    let color = ink(node, theme).unwrap_or(theme.colors.text_dim.0);
+    text(c, label, &style, at, color);
 }
 
 /// a chart over the numbers of its `data` list; a donut item may carry
