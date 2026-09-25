@@ -17,7 +17,8 @@
             "scroll_area_page.list:selected"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "scroll_area_page.list[1]",
