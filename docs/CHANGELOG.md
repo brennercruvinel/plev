@@ -9,6 +9,12 @@ status: living
 
 ## unreleased
 
+- the gallery runs on android (2026-09-25, task-18): a tap clicks and a
+  drag scrolls (touch did nothing before), and coming back from the home
+  screen no longer kills the app; rotation and a low-memory warning are
+  fine. the frame matches the desktop within 2/255 on the emulator's
+  software GPU.
+
 - the gallery runs on the iPhone simulator (2026-09-25, task-19): it was
   laid out as a 1200x800 desktop window, cropped on the right; now it
   takes the phone's screen and matches the desktop frame pixel for pixel,

@@ -91,6 +91,10 @@ trap '"$ADB" emu kill >/dev/null 2>&1 || kill "$EMU" 2>/dev/null || true' EXIT
 until [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
     sleep 2
 done
+# a fresh boot applies the system's color overlays a moment after
+# boot_completed; an activity started before that is relaunched, and the
+# gallery's never draws again (task-18, pending), so the app waits
+sleep 20
 echo ">> renderer: $("$ADB" shell getprop ro.hardware.egl 2>/dev/null | tr -d '\r') / vulkan $("$ADB" shell getprop ro.hardware.vulkan 2>/dev/null | tr -d '\r')"
 
 "$ADB" install -r "$APK" >/dev/null
@@ -101,7 +105,8 @@ if [ "$KEY" != "1" ]; then
     "$ADB" shell input keyevent "KEYCODE_$KEY"
     sleep 1
 fi
-for _ in $(seq 1 "$PRESSES"); do
+# not `seq 1 "$PRESSES"`: the BSD seq of macOS counts down, `seq 1 0` is "1 0"
+for ((i = 0; i < PRESSES; i++)); do
     "$ADB" shell input keyevent KEYCODE_T
     sleep 1
 done

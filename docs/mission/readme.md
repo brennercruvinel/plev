@@ -33,7 +33,7 @@ compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, io
 
 nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do primeiro push em plevdev). a linha do tempo real do projeto vive na documentacao datada (adr/, este mapa) e no codigo, nao no git.
 
-- 52 tasks concluidas (fase 0 a fase 11); pendentes task-39/40/41 (release); em andamento task-18/19/20, task-42 e gap-1
+- 52 tasks concluidas (fase 0 a fase 11); pendentes task-40/41 (release); task-18/19/20, task-39 e task-42 fechadas em 2026-09-25; gap-1 em andamento
 - 12 crates: engine (core) + libs/apps git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rope, showcase
 - ~1274 testes verdes no workspace, clippy -D warnings limpo, fmt limpo
 - build nativo no macos (metal), web (webgpu/wasm, pixel-identico ao desktop), android (apk no emulador), ios (no simulador)
@@ -81,7 +81,7 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 ### fase 2, mobile/WASM testing (p1), parcial
 | task | descricao | status |
 |------|-----------|--------|
-| task-18 | android build & device test | parcial (apk buildando no emulador via task-50; device fisico pendente) |
+| task-18 | android build & device test | concluída (2026-09-25): APK no emulador, toque e lifecycle testados; arquivo em `checked/` |
 | task-19 | ios simulator test | concluída (2026-09-25): o frame do simulador igual ao desktop fora da barra de status; arquivo em `checked/` |
 | task-20 | WASM visual validation | concluída (2026-09-25): 12 capturas web iguais ao desktop em todo byte; arquivo em `checked/` |
 
@@ -179,7 +179,7 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 - c3: stateanimator ja implementado (task-37), animationstate<s, t>
 
 ### prioridade 3, mobile/WASM
-- task-18: APK wrapper + deploy + lifecycle tests (bloqueado: APK wrapper ainda pendente)
+- task-18: concluída (2026-09-25), ver `checked/task-18-android-device-test-done.md`
 - task-19: concluída (2026-09-25), ver `checked/task-19-ios-simulator-test-done.md`
 - task-20: concluída (2026-09-25), ver `checked/task-20-wasm-visual-validation-done.md`
 
@@ -213,7 +213,7 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 - [x] pipeline DSL -> builder -> compositor end-to-end, task-15
 - [x] effects integrados com layers, task-16
 - [x] input layer-aware hit-testing, task-17
-- [x] android .so build (cargo-ndk, GPU host), task-18 parcial (deploy pendente)
+- [x] android APK, deploy no emulador, toque e lifecycle, task-18
 - [x] ios build, deploy e captura no simulador, task-19
 - [x] WASM trunk build release (2.4mb) e validação visual, task-20
 - [x] documentacao DSL (EBNF, 30 modifiers), task-21
