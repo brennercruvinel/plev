@@ -16,6 +16,7 @@ use engine::theme::{ControlSize, Theme};
 use sem::{Snapshot, Value};
 use uir::{CapabilityRef, Component};
 
+use crate::code::Code;
 use crate::expand::Node;
 use crate::token;
 
@@ -64,6 +65,8 @@ pub(crate) enum Widget {
     /// built at the first frame: its columns read the theme.
     Table(Option<Box<Table>>),
     Dialog(Box<DialogButtons>),
+    /// a code's block and where its rows are scrolled.
+    Code(Box<Code>),
 }
 
 /// the declaration of `cap` in `shown`, with the node that holds it.
@@ -166,6 +169,7 @@ pub(crate) enum Kind {
     Chip,
     Table,
     Dialog,
+    Code,
 }
 
 impl Kind {
@@ -183,6 +187,7 @@ impl Kind {
             Some(Component::Chip) => Kind::Chip,
             Some(Component::Table) => Kind::Table,
             Some(Component::Dialog) => Kind::Dialog,
+            Some(Component::Code) => Kind::Code,
             _ => Kind::Static,
         }
     }
@@ -209,6 +214,7 @@ impl Widget {
                 cancel: Button::new("cancel"),
                 confirm: Button::new("confirm").variant(ButtonVariant::Secondary),
             })),
+            Kind::Code => Widget::Code(Box::new(Code::new())),
             Kind::Static => Widget::Static,
         }
     }
@@ -229,6 +235,7 @@ impl Widget {
             Widget::Chip(_) => Kind::Chip,
             Widget::Table(_) => Kind::Table,
             Widget::Dialog(_) => Kind::Dialog,
+            Widget::Code(_) => Kind::Code,
         }
     }
 
@@ -332,6 +339,7 @@ impl Widget {
                 d.cancel.disabled = !enabled(node, "cancel", shown);
                 d.confirm.disabled = !enabled(node, "confirm", shown);
             }
+            Widget::Code(c) => c.sync(node, shown),
         }
     }
 
@@ -412,6 +420,7 @@ impl Widget {
                 (t.handle_event(event, rect, theme), None)
             }
             Widget::Table(_) => (EventResult::IGNORED, None),
+            Widget::Code(c) => (c.handle(event, rect, theme), None),
             Widget::Dialog(d) => {
                 let (cancel, confirm) = dialog_buttons(d, rect, theme);
                 let a = d.cancel.handle_event(event, cancel);
@@ -446,6 +455,7 @@ impl Widget {
             Widget::TextField(f) => f.wake(dt),
             Widget::Switch(s) => Wake::moving(s.tick(dt)),
             Widget::Table(Some(t)) => Wake::moving(t.rows.tick(dt)),
+            Widget::Code(c) => c.wake(dt),
             _ => Wake::idle(),
         }
     }

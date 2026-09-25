@@ -35,6 +35,7 @@ use engine::theme::{ControlSize, Elevation, Theme};
 use sem::{Snapshot, Value};
 use uir::{Axis, ChartKind, Component, SpacingToken};
 
+use crate::code;
 use crate::expand::Node;
 use crate::host::Frames;
 use crate::layout::Leaf;
@@ -167,6 +168,10 @@ pub(crate) fn leaf(
             fill(Table::header_h(theme) + rows * Table::row_h(theme))
         }
         Some(Component::Chart(_) | Component::EmptyState) => fill(block_h(theme)),
+        Some(Component::Code) => fill(match widget {
+            Some(Widget::Code(c)) => c.height(theme),
+            _ => code::block(node, shown).height_for(0.0, theme),
+        }),
         Some(Component::Image) => match node.props.control_size {
             Some(size) => {
                 let h = theme.control.height(token::control(size));
@@ -380,6 +385,7 @@ pub(crate) fn draw(
                 c.push(SceneNode::PopClip);
             }
         }
+        (_, Widget::Code(v)) => v.draw(c, rect, theme),
         (_, Widget::Table(None) | Widget::Dialog(_) | Widget::Static) => {}
     }
 }
