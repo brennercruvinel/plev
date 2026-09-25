@@ -1,8 +1,8 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: ongoing
-last-updated: 2026-09-24
+status: done
+last-updated: 2026-09-25
 domain: generative-runtime
 task: task-77
 wave: trilha
@@ -952,3 +952,46 @@ delta máximo de 1 a 5).
 - o fixture de escala 1 só compara no apple M4 com metal; outra máquina
   precisa gravar o seu, ou fica no limite entre GPUs do ADR.
 - iOS e android sem compilar nesta máquina.
+
+## fechamento (orquestrador, 2026-09-25)
+
+fechada pelo critério de aceite, item por item. as ferramentas da web e
+do iOS foram instaladas com o ok do brenner (tasks 20 e 19).
+
+- relatório de todas as páginas: `script/capture-web --all` e
+  `script/capture-ios --all` desenham as 82 páginas do desktop
+  (`regress capture`), abrem cada página no alvo (web: a query da URL,
+  `?page=…&theme=…`, que o build web agora lê por
+  `engine::window::launch_args`; iOS: os argumentos de lançamento) e
+  classificam cada frame contra o do desktop, uma linha por página em
+  `target/determinism/<run>/report.txt`. tema core.
+  - web, 1280x800 a 1x, WebGPU sobre Metal: 79 iguais em todo byte, 3
+    caladas.
+  - iOS, iPhone 17 Pro, 402x874 a 3x: 78 com diferença só na barra de
+    status (pedida), 4 caladas.
+- cada calada com causa:
+  - Surface e Silences (web e iOS): o seletor de quem propõe mostra
+    "claude" no desktop, que tem o programa, e "rules" onde não há Claude.
+    decisão do app, não do renderer.
+  - Git (web e iOS): a página diz que o workspace git pede o CLI e uma
+    thread, só no desktop. decisão do app.
+  - Editor (iOS): 7x60 px físicos, o cursor: ele pisca e a captura cai em
+    outra fase do piscar. tempo, não renderer.
+  - Table e Data Table (web, na primeira rodada): defeito, corrigido. o id
+    em hex da tabela era calculado em `usize`, que tem 32 bits no wasm32 e
+    estourava; agora em u64 (`view/components/table.rs`), e as duas
+    páginas ficaram iguais em todo byte.
+- ADR: `what-identical-means`, com a adição da fase 2; a tabela
+  `requested.json` confirma as linhas medidas (web `size`; iOS
+  `status-bar`, `home-indicator`, `size`; android `navigation-bar`,
+  `size`).
+- o android (task-18) ficou a no máximo 2/255 do desktop, na GPU por
+  software do emulador.
+
+pendências:
+- a janela contra o headless nas páginas e o `colorspace` num display P3
+  (fase 2 original); o job de CI no mac quando o CI voltar.
+- android `status-bar` segue `to_confirm`: a captura não mostrou
+  diferença ali.
+- as capturas foram em um tema e uma escala por alvo; os outros temas e
+  escalas não foram varridos página a página.

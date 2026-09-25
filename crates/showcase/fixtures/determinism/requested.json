@@ -12,29 +12,29 @@
       "target": "web",
       "name": "size",
       "area": { "kind": "size" },
-      "status": "to_confirm",
-      "reason": "the canvas fills the page (100vw by 100vh) and devicePixelRatio is the scale (1 or 2 on a mac, fractional under browser zoom or a 125% or 150% display): the capture sets the desktop's viewport and scale on the page"
+      "status": "known",
+      "reason": "the canvas fills the page (100vw by 100vh) and devicePixelRatio is the scale (1 or 2 on a mac, fractional under browser zoom or a 125% or 150% display): the capture sets the desktop's viewport and scale on the page (with --force-device-scale-factor, which moves the device-pixel content box winit reads); confirmed 2026-09-25: 79 of 82 pages equal in every byte in headless chromium on Metal"
     },
     {
       "target": "ios",
       "name": "status-bar",
       "area": { "kind": "edge", "edge": "top", "px": 62 },
-      "status": "to_confirm",
-      "reason": "iOS draws the status bar and the dynamic island over the app, which does not inset the gallery for the safe area; 62 pt is the top inset taken for the iPhone 17 Pro until the first capture measures it"
+      "status": "known",
+      "reason": "iOS draws the status bar and the dynamic island over the app, which does not inset the gallery for the safe area; 62 pt is the top inset of the iPhone 17 Pro; confirmed 2026-09-25 on its simulator (iOS 27.0): in all 82 pages the differing pixels at the top lie within it"
     },
     {
       "target": "ios",
       "name": "home-indicator",
       "area": { "kind": "edge", "edge": "bottom", "px": 34 },
-      "status": "to_confirm",
-      "reason": "iOS draws the home indicator over the bottom of the app; 34 pt is the bottom inset taken until the first capture measures it"
+      "status": "known",
+      "reason": "iOS draws the home indicator over the bottom of the app; 34 pt is the bottom inset; confirmed 2026-09-25 on the iPhone 17 Pro simulator (the Git page, dark at the bottom, differs only within it)"
     },
     {
       "target": "ios",
       "name": "size",
       "area": { "kind": "size" },
-      "status": "to_confirm",
-      "reason": "the device's screen is the viewport and its scale the frame's (402x874 at 3x on the iPhone 17 Pro): the desktop reference is drawn at that viewport and scale"
+      "status": "known",
+      "reason": "the device's screen is the viewport and its scale the frame's (402x874 at 3x on the iPhone 17 Pro): the desktop reference is drawn at that viewport and scale; confirmed 2026-09-25 on the simulator: the frames are the same size"
     },
     {
       "target": "android",
@@ -47,15 +47,15 @@
       "target": "android",
       "name": "navigation-bar",
       "area": { "kind": "edge", "edge": "bottom", "px": 48 },
-      "status": "to_confirm",
-      "reason": "android draws the navigation bar (gesture handle or three buttons) over the bottom of an edge-to-edge activity; 48 dp covers the three-button bar until the first capture measures it"
+      "status": "known",
+      "reason": "android draws the navigation bar (gesture handle or three buttons) over the bottom of an edge-to-edge activity; 48 dp covers the three-button bar; confirmed 2026-09-25 on the Pixel 7 emulator (gesture handle), the differing pixels at the bottom lie within it"
     },
     {
       "target": "android",
       "name": "size",
       "area": { "kind": "size" },
-      "status": "to_confirm",
-      "reason": "the device's density is the scale (420 dpi is 2.625, a fractional one) and its screen the viewport: the desktop reference is drawn at that viewport and scale"
+      "status": "known",
+      "reason": "the device's density is the scale (420 dpi is 2.625, a fractional one) and its screen the viewport: the desktop reference is drawn at that viewport and scale; confirmed 2026-09-25 on the Pixel 7 emulator"
     }
   ]
 }

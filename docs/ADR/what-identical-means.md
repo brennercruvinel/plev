@@ -145,3 +145,20 @@ físicos, então o vidro espalha 9 px lógicos a 1x e 4,5 a 2x) é defeito,
 não decisão de produto: a correção entra como task-77 fase 1b, com o
 teste ignorado desta fase como critério.
 
+
+## adição da fase 2 (2026-09-25, orquestrador): as primeiras capturas
+
+- web (chromium headless, WebGPU sobre Metal, mesma GPU do desktop): das
+  82 páginas em core a 1280x800 e 1x, 79 iguais em todo byte; as dez
+  primeiras também a 2x e 3x. a linha `size` da web passa a `known`.
+- iOS (simulador do iPhone 17 Pro, iOS 27.0, 402x874 a 3x): 78 páginas
+  diferem só dentro da barra de status; `status-bar`, `home-indicator` e
+  `size` passam a `known`.
+- android (emulador Pixel 7, Vulkan do llvmpipe, por software): delta de
+  canal de no máximo 2 fora da barra de navegação, dentro do limite entre
+  GPUs; `navigation-bar` e `size` passam a `known`, `status-bar` segue
+  `to_confirm`.
+- as caladas que sobram não são do renderer: a página mostra outra coisa
+  porque a plataforma não tem o que o desktop tem (o Claude, o git) ou
+  porque o cursor pisca (o Editor no iOS). as causas estão no arquivo da
+  task-77.

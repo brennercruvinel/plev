@@ -9,6 +9,14 @@ status: living
 
 ## unreleased
 
+- every page compared on the web and on iOS (2026-09-25, task-77): the
+  web build opens any page from its address (`?page=…&theme=…`), and the
+  capture scripts take `--all`. of 82 pages, 79 match the desktop byte for
+  byte on the web and 78 on the iPhone simulator differ only under the
+  status bar; the rest show another thing on purpose (no Claude, no git
+  there) or a blinking caret. the table demo drew other ids on the web
+  (a 32-bit overflow), now fixed.
+
 - the gallery runs on android (2026-09-25, task-18): a tap clicks and a
   drag scrolls (touch did nothing before), and coming back from the home
   screen no longer kills the app; rotation and a low-memory warning are

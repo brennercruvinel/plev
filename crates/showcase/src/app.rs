@@ -136,13 +136,19 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-        Self::with_view(Self::launch_view(std::env::args().skip(1)))
+        #[cfg(not(target_arch = "wasm32"))]
+        let args = std::env::args().skip(1);
+        // the browser has no process arguments: the page's query stands
+        // in for them (`?page=Data%20Table&theme=hoff`)
+        #[cfg(target_arch = "wasm32")]
+        let args = engine::window::launch_args(&["page", "theme"]).into_iter();
+        Self::with_view(Self::launch_view(args))
     }
 
     /// The gallery as the launch arguments ask. Optional launch state for
     /// demos/snapshots: the page title (as the sidebar shows it, "Data
-    /// Table"), theme, then the page scroll offset in px. (Empty iterator
-    /// on wasm: no process args in the browser.) An argument that starts
+    /// Table"), theme, then the page scroll offset in px. (On wasm the
+    /// page's query: `page` and `theme`.) An argument that starts
     /// with `plev-showcase://` is a link, never one of these: the link
     /// source reads it once the window is up (`links.rs`).
     fn launch_view(args: impl Iterator<Item = String>) -> ShowcaseView {

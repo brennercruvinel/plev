@@ -21,7 +21,9 @@ fn cell(row: usize, col: usize) -> String {
         0 => format!("crates/comps/src/file_{row}.rs"),
         1 => ["modified", "added", "renamed"][row % 3].to_string(),
         2 => format!("{} KB", (row * 37) % 900 + 3),
-        _ => format!("{:07x}", row * 2654435761u64 as usize % 0xfffffff),
+        // in u64: a usize of 32 bits (wasm32) wrapped the product, and the
+        // web drew other ids than the desktop (task-77)
+        _ => format!("{:07x}", row as u64 * 2654435761 % 0xfffffff),
     }
 }
 

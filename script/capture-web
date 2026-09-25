@@ -2,8 +2,11 @@
 # capture one frame of the showcase's web build and classify it against the
 # desktop's frame of the same page, theme, viewport and scale (task-77).
 #
-#   script/capture-web [--page <title>] [--theme <name>] [--width <px>]
+#   script/capture-web [--page <title> | --all] [--theme <name>] [--width <px>]
 #                      [--height <px>] [--scale <s>] [--out <dir>] [--port <n>]
+#
+# --all: every page of the gallery in one browser, each against the
+# desktop's, one line per page in <out>/report.txt.
 #
 # defaults: the launch page (Theme) in core, 1280x800 at scale 1, into
 # target/determinism/web-<time>/. the build is `script/web build --release`
@@ -13,19 +16,19 @@
 # adapter is SwiftShader, software, and the capture says so). the viewport is
 # the page's size and the scale its deviceScaleFactor.
 #
-# the browser has no launch arguments: the page and the theme reach the web
-# build only through the keyboard, as a person's: the digits 1 to 9 and 0
-# select the first ten pages, T cycles core, hoff, dark, light. a page past
-# the tenth needs a launch channel the web build does not have yet.
+# the browser has no launch arguments: the page and the theme go in the
+# URL's query (`?page=Data%20Table&theme=hoff`), which the web build reads
+# as the desktop reads its command line (`engine::window::launch_args`).
 set -euo pipefail
 # shellcheck source=script/capture-common.sh
 . "$(dirname "$0")/capture-common.sh"
 
-PAGE="Theme"; THEME="core"; WIDTH=1280; HEIGHT=800; SCALE=1; PORT=8090
+PAGE="Theme"; ALL=""; THEME="core"; WIDTH=1280; HEIGHT=800; SCALE=1; PORT=8090
 OUT="$REPO_ROOT/target/determinism/web-$(date +%Y%m%d-%H%M%S)"
 while [ $# -gt 0 ]; do
     case "$1" in
         --page) PAGE="$2"; shift 2 ;;
+        --all) ALL=1; shift ;;
         --theme) THEME="$2"; shift 2 ;;
         --width) WIDTH="$2"; shift 2 ;;
         --height) HEIGHT="$2"; shift 2 ;;
@@ -52,24 +55,6 @@ if ! ls -d "$HOME"/Library/Caches/ms-playwright/chromium* >/dev/null 2>&1; then
 fi
 missing_stop web
 
-# the key that selects the page, and how many T presses reach the theme
-PAGES=("Theme" "Typography" "Icons" "Effects" "Accordion" "Alert" "Alert Dialog" "Aspect Ratio" "Attachment" "Avatar")
-KEY=""
-for i in "${!PAGES[@]}"; do
-    if [ "$(echo "${PAGES[$i]}" | tr '[:upper:]' '[:lower:]')" = "$(echo "$PAGE" | tr '[:upper:]' '[:lower:]')" ]; then
-        KEY=$(( (i + 1) % 10 ))
-        PAGE="${PAGES[$i]}"
-    fi
-done
-if [ -z "$KEY" ]; then
-    echo "capture-web: '$PAGE' is not one of the first ten pages, the only ones a key selects" >&2
-    exit 2
-fi
-case "$THEME" in
-    core) PRESSES=0 ;; hoff) PRESSES=1 ;; dark) PRESSES=2 ;; light) PRESSES=3 ;;
-    *) echo "capture-web: the T key reaches core, hoff, dark and light, not '$THEME'" >&2; exit 2 ;;
-esac
-
 mkdir -p "$OUT"
 echo ">> building the web target (script/web build --release)"
 "$REPO_ROOT/script/web" build --release
@@ -80,13 +65,28 @@ SERVER=$!
 trap 'kill "$SERVER" 2>/dev/null || true' EXIT
 sleep 1
 
-SHOT="$OUT/web.png"
-echo ">> capturing $PAGE / $THEME at ${WIDTH}x${HEIGHT}, scale $SCALE"
-python3 - "$PORT" "$WIDTH" "$HEIGHT" "$SCALE" "$KEY" "$PRESSES" "$SHOT" <<'PY'
+# the pages to open: "<title>\t<png>" per line
+PAGES="$OUT/pages.tsv"
+if [ -n "$ALL" ]; then
+    echo ">> the desktop's frame of every page: $THEME at ${WIDTH}x${HEIGHT}, scale $SCALE"
+    desktop_all "$THEME" "$WIDTH" "$HEIGHT" "$SCALE" "$OUT" >"$OUT/titles.txt"
+    mkdir -p "$OUT/web"
+    while IFS= read -r title; do
+        printf '%s\t%s\n' "$title" "$OUT/web/$(slug "$title").png"
+    done <"$OUT/titles.txt" >"$PAGES"
+else
+    SHOT="$OUT/web.png"
+    printf '%s\t%s\n' "$PAGE" "$SHOT" >"$PAGES"
+fi
+
+echo ">> capturing $(wc -l <"$PAGES" | tr -d ' ') page(s) in $THEME at ${WIDTH}x${HEIGHT}, scale $SCALE"
+python3 - "$PORT" "$WIDTH" "$HEIGHT" "$SCALE" "$THEME" "$PAGES" <<'PY'
 import asyncio, sys
+from urllib.parse import urlencode
 from playwright.async_api import async_playwright
 
-port, width, height, scale, key, presses, shot = sys.argv[1:]
+port, width, height, scale, theme, pages = sys.argv[1:]
+pages = [line.rstrip("\n").split("\t") for line in open(pages) if line.strip()]
 
 async def main():
     async with async_playwright() as p:
@@ -97,36 +97,37 @@ async def main():
         browser = await p.chromium.launch(
             headless=True, args=["--enable-unsafe-webgpu", "--use-angle=metal",
                                  f"--force-device-scale-factor={scale}"])
-        page = await browser.new_page(
-            viewport={"width": round(float(width)), "height": round(float(height))},
-            device_scale_factor=float(scale))
-        ready = asyncio.get_running_loop().create_future()
-        def console(msg):
-            if "GPU context ready" in msg.text and not ready.done():
-                ready.set_result(True)
-        page.on("console", console)
-        await page.goto(f"http://127.0.0.1:{port}/")
-        await asyncio.wait_for(ready, timeout=60)
-        adapter = await page.evaluate("""async () => {
-            const a = await navigator.gpu.requestAdapter();
-            const i = (a && a.info) || {};
-            return [i.vendor, i.architecture].join(' / ');
-        }""")
-        print(f">> WebGPU adapter: {adapter}")
-        if "swiftshader" in adapter:
-            print(">> warning: a software adapter; this is not the GPU's frame", file=sys.stderr)
-        await page.focus("canvas")
-        if key != "1":
-            await page.keyboard.press(key)
-            await page.wait_for_timeout(300)
-        for _ in range(int(presses)):
-            await page.keyboard.press("t")
-            await page.wait_for_timeout(300)
-        await page.wait_for_timeout(1500)
-        await page.screenshot(path=shot)
+        for title, shot in pages:
+            page = await browser.new_page(
+                viewport={"width": round(float(width)), "height": round(float(height))},
+                device_scale_factor=float(scale))
+            ready = asyncio.get_running_loop().create_future()
+            def console(msg, ready=ready):
+                if "GPU context ready" in msg.text and not ready.done():
+                    ready.set_result(True)
+            page.on("console", console)
+            query = urlencode({"page": title, "theme": theme})
+            await page.goto(f"http://127.0.0.1:{port}/?{query}")
+            await asyncio.wait_for(ready, timeout=60)
+            if title == pages[0][0]:
+                adapter = await page.evaluate("""async () => {
+                    const a = await navigator.gpu.requestAdapter();
+                    const i = (a && a.info) || {};
+                    return [i.vendor, i.architecture].join(' / ');
+                }""")
+                print(f">> WebGPU adapter: {adapter}")
+                if "swiftshader" in adapter:
+                    print(">> warning: a software adapter; this is not the GPU's frame", file=sys.stderr)
+            await page.wait_for_timeout(1500)
+            await page.screenshot(path=shot)
+            await page.close()
         await browser.close()
 
 asyncio.run(main())
 PY
 
-desktop_and_compare web "$SHOT" "$PAGE" "$THEME" "$WIDTH" "$HEIGHT" "$SCALE" "$OUT"
+if [ -n "$ALL" ]; then
+    compare_all web "$OUT/titles.txt" "$THEME" "$SCALE" "$OUT"
+else
+    desktop_and_compare web "$SHOT" "$PAGE" "$THEME" "$WIDTH" "$HEIGHT" "$SCALE" "$OUT"
+fi

@@ -89,3 +89,61 @@ desktop_and_compare() {
     to_srgb "$shot"
     regress compare "$desktop" "$shot" --scale "$scale" --target "$target"
 }
+
+# desktop_all <theme> <width> <height> <scale> <out>: the desktop's frame of
+# every page of the gallery (`regress capture`), into <out>/desktop; prints
+# the page titles, one per line, as its report names them.
+desktop_all() {
+    regress capture --theme "$1" --width "$2" --height "$3" --scale "$4" \
+        --out "$5/desktop" >/dev/null || true
+    awk 'col && (NF == 0 || /^\(/) { exit }
+         col { title = substr($0, 1, col - 1); sub(/ +$/, "", title); print title }
+         /^page +theme/ { col = index($0, "theme") }' "$5/desktop/report.txt"
+}
+
+# slug <title>: the name a page's png takes ("Alert Dialog" -> alert-dialog).
+slug() {
+    echo "$1" | tr '[:upper:]' '[:lower:]' | tr ' ' '-'
+}
+
+# the verdict of a `regress compare` line: what follows the parenthesis
+# after " at <scale>x" (the target's rows), or the line when it has none.
+VERDICT='
+import sys
+line = sys.stdin.read().strip()
+at = line.find(" at ")
+open_ = line.find("(", at) if at >= 0 else -1
+depth, end = 0, -1
+for i in range(max(open_, 0), len(line)):
+    depth += {"(": 1, ")": -1}.get(line[i], 0)
+    if open_ >= 0 and depth == 0:
+        end = i
+        break
+print(line[end + 3:] if end >= 0 else line)
+'
+
+# compare_all <target> <titles file> <theme> <scale> <out>: each page's
+# <out>/<target>/<slug>.png against the desktop's, one line per page in
+# <out>/report.txt (the page, then the verdict of `regress compare`), and
+# the count of each verdict.
+compare_all() {
+    target="$1"; titles="$2"; theme="$3"; scale="$4"; out="$5"
+    : >"$out/report.txt"
+    while IFS= read -r title; do
+        name="$(slug "$title")"
+        shot="$out/$target/$name.png"
+        desktop="$(find "$out/desktop" -name "$name@$theme@*.png" | head -n 1)"
+        if [ ! -f "$shot" ] || [ -z "$desktop" ]; then
+            printf '%s\tmissing\n' "$title" >>"$out/report.txt"
+            continue
+        fi
+        to_srgb "$shot" >/dev/null
+        # compare exits 1 on a frame that did not hold: the verdict is the data
+        verdict="$({ regress compare "$desktop" "$shot" --scale "$scale" --target "$target" 2>&1 || true; } \
+            | tail -n 1 | python3 -c "$VERDICT")"
+        printf '%s\t%s\n' "$title" "$verdict" >>"$out/report.txt"
+    done <"$titles"
+    echo ">> $out/report.txt:"
+    cut -f 2 "$out/report.txt" | sed -E 's/^(equal|requested|silent|resized|missing).*/\1/' \
+        | sort | uniq -c
+}
