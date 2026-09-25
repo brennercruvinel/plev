@@ -299,6 +299,22 @@ fn spinner_tick_advances_the_angle_and_always_animates() {
     assert!(s.angle() < std::f32::consts::TAU);
 }
 
+/// With reduced motion on (the thread's), the arc stands still and asks
+/// for no frame; off again, it turns.
+#[test]
+fn spinner_stands_still_with_reduced_motion() {
+    let mut s = Spinner::new();
+    s.tick(0.1);
+    let at = s.angle();
+    engine::animation::set_reduced_motion(true);
+    let moved = s.tick(0.1);
+    let still = s.angle();
+    engine::animation::set_reduced_motion(false);
+    assert!(!moved, "no frame asked");
+    assert_eq!(still, at, "the arc stands where it was");
+    assert!(s.tick(0.1) && s.angle() > at, "motion again");
+}
+
 #[test]
 fn spinner_renders_every_size_without_gpu() {
     let theme = Theme::hoff();

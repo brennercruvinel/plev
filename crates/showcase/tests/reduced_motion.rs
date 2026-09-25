@@ -3,7 +3,9 @@
 //! event loop's thread by the accessibility bridge), a switch's knob, a
 //! toast's slide, a modal's fade and scale, the todo rows and the whole
 //! gallery reach their end on the first frame, and ask for no more.
-//! Without it, the same first frame is mid-motion.
+//! Without it, the same first frame is mid-motion. The ambient loops,
+//! the spinner's turn and the skeleton's pulse, stand still too (task-75
+//! phase 2a, tested with their pages).
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
 use comps::overlay::{OverlayKind, OverlayManager};

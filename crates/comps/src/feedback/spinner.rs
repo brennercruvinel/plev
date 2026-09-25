@@ -3,6 +3,11 @@
 //! `tick(dt)` and only while it is visible — under render-on-demand a
 //! spinner that ticks off-screen would busy-loop every frame (the same
 //! rule the dock caret follows in the showcase).
+//!
+//! With the system's "reduce motion" on (`engine::animation::reduced_motion`,
+//! the thread's, set by the accessibility bridge) the arc stands still
+//! where it is and `tick` says it does not move, so its owner asks for no
+//! frame: a still arc still reads as "loading" (task-75 phase 2a).
 
 use std::f32::consts::TAU;
 
@@ -69,10 +74,14 @@ impl Spinner {
         self.angle
     }
 
-    /// Advance the rotation. Always animating while ticked: the caller
-    /// decides visibility, so this returns `true` unconditionally (the
-    /// view must only call it while the spinner is on screen).
+    /// Advance the rotation. Animating while ticked: the caller decides
+    /// visibility, so this returns `true` (the view must only call it
+    /// while the spinner is on screen), except with reduced motion on,
+    /// when the arc stands still and it returns `false`.
     pub fn tick(&mut self, dt: f32) -> bool {
+        if engine::animation::reduced_motion() {
+            return false;
+        }
         self.angle = (self.angle + dt * SPEED * TAU) % TAU;
         true
     }

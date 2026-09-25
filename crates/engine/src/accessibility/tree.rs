@@ -28,6 +28,9 @@
 //! - a group with no label, no description, no action and no focus is a
 //!   `GenericContainer`: structure the adapters leave out, its children
 //!   lifted into its place, so a reader never stops on an empty "group".
+//!   a group named only by the key of its own id (`todo_panel.item[1]`
+//!   named "1", how a generated surface names an instance of a repeat) is
+//!   named by the labels inside it, the words a person sees in it.
 //! - state, by key: `text` of a text input, `value` of any node (a
 //!   number with the node's range and step, or a text) and `selected` of
 //!   a select are the value; the bool the node's own `toggle` action
@@ -38,11 +41,19 @@
 //! - a status is a polite live region and an alert an assertive one (a
 //!   secret one is neither), and what a reader hears when it changes is
 //!   the node's value: its own, else its `message`, else its label (see
-//!   `live`). The focus never moves for it.
+//!   `live`); a message is its name too, since some adapters announce the
+//!   name. The focus never moves for it.
 //! - actions: `Click` when the node has a primary action (see
-//!   `action::primary`), `Focus` when it is focusable and not inert,
-//!   `SetValue`, `Increment` and `Decrement` when it declares
-//!   `set_value`, `increment` and `decrement`.
+//!   `action::primary`) and both are on (a press the app would refuse is
+//!   not offered: a reader would hear nothing happen; the node keeps
+//!   telling whether it is disabled), `Focus` when it is focusable and not inert,
+//!   `SetValue` when it has a setter (`action::setter`: its `set_value`,
+//!   or a select's `select`), `Increment` and `Decrement` when it
+//!   declares `increment` and `decrement`.
+//! - an item of a collection holds, as controls of their own, the actions
+//!   its own node does not reach (`present`): its toggle as a checkbox,
+//!   every other action without a parameter as a button. They are in the
+//!   tree only, with no bounds, and a click on one is the item's action.
 //! - focus is the snapshot's `focused`, or the window.
 
 use accesskit::{Action, Live, Node as AkNode, Rect, Toggled, Tree, TreeId, TreeUpdate};
@@ -51,6 +62,7 @@ use sem::{Node, Role, SemId, Snapshot, StateKey, Value};
 
 use super::action;
 use super::ids::{NodeIds, ROOT};
+use super::present::{self, Kind, Presented};
 use super::role;
 use crate::compositor::{Binding, Compositor, intersect_rects};
 
@@ -83,7 +95,21 @@ pub fn build(
     chrome: &Chrome<'_>,
 ) -> (TreeUpdate, NodeIds) {
     let order = tree_order(snapshot);
-    let ids = NodeIds::assign(order.iter().map(|n| &n.id));
+    let presented: Vec<Vec<Presented<'_>>> = order
+        .iter()
+        .map(|n| present::presented_in(n, snapshot))
+        .collect();
+    let mut ids = NodeIds::assign(
+        order
+            .iter()
+            .map(|n| &n.id)
+            .chain(presented.iter().flatten().map(|p| &p.id)),
+    );
+    for (node, list) in order.iter().zip(&presented) {
+        for p in list {
+            ids.stand_for(p.id.clone(), node.id.clone(), p.decl.name.clone());
+        }
+    }
     let at: FxHashMap<&SemId, usize> = order.iter().enumerate().map(|(i, n)| (&n.id, i)).collect();
     let bounds = placement(snapshot, &order, &at, compositor, chrome.scale);
 
@@ -98,18 +124,28 @@ pub fn build(
     nodes.push((ROOT, root));
 
     let mut described: Vec<AkNode> = Vec::with_capacity(order.len());
-    for (node, placed) in order.iter().zip(&bounds) {
+    for ((node, placed), list) in order.iter().zip(&bounds).zip(&presented) {
         let mut out = describe(node);
-        out.set_children(children(snapshot.children(&node.id), &ids));
+        if let Some(words) = instance_name(snapshot, node) {
+            out.set_label(words);
+        }
+        let mut kids = children(snapshot.children(&node.id), &ids);
+        kids.extend(list.iter().filter_map(|p| ids.node(&p.id)));
+        out.set_children(kids);
         if let Some(rect) = placed {
             out.set_bounds(*rect);
         }
         described.push(out);
     }
     select_children(snapshot, &order, &at, &mut described);
-    for (node, out) in order.iter().zip(described) {
+    for ((node, out), list) in order.iter().zip(described).zip(&presented) {
         if let Some(id) = ids.node(&node.id) {
             nodes.push((id, out));
+        }
+        for p in list {
+            if let Some(id) = ids.node(&p.id) {
+                nodes.push((id, describe_presented(node, p)));
+            }
         }
     }
 
@@ -220,6 +256,27 @@ fn ak_role(n: &Node) -> accesskit::Role {
     }
 }
 
+/// The name of a group named only by the key of its own id: the words of
+/// the labels right inside it, in order (a generated surface names an
+/// instance of a repeat by its item's key, and the IR interpolates no
+/// label: "1" says nothing a person sees). `None` for any other node, and
+/// for such a group with no label inside.
+fn instance_name(snapshot: &Snapshot, n: &Node) -> Option<String> {
+    if n.role != Role::Group || n.label.is_empty() {
+        return None;
+    }
+    let keyed = n.id.parent_path().map(|p| p.key(n.label.as_str()));
+    if keyed.as_ref() != Some(&n.id) {
+        return None;
+    }
+    let words: Vec<&str> = snapshot
+        .children(&n.id)
+        .filter(|c| c.role == Role::Label && !c.label.is_empty())
+        .map(|c| c.label.as_str())
+        .collect();
+    (!words.is_empty()).then(|| words.join(" "))
+}
+
 /// One node's role, label, description, states and actions.
 fn describe(n: &Node) -> AkNode {
     let secret = n.constraints.secret;
@@ -236,8 +293,11 @@ fn describe(n: &Node) -> AkNode {
     if n.inert {
         out.set_hidden();
     }
+    let holds_toggle = present::holds_toggle(n);
     let toggled = toggled_key(n);
-    if let Some(Value::Bool(on)) = toggled.and_then(|k| n.state.get(k)) {
+    if let Some(Value::Bool(on)) = toggled.and_then(|k| n.state.get(k))
+        && !holds_toggle
+    {
         out.set_toggled(Toggled::from(*on));
     }
     if let Some(Value::Bool(open)) = n.state.get("expanded") {
@@ -252,14 +312,16 @@ fn describe(n: &Node) -> AkNode {
         value(n, &mut out);
         live(n, &mut out);
     }
-    if action::primary(n).is_some() {
+    if action::primary(n).is_some_and(|d| d.enabled) && n.enabled && !holds_toggle {
         out.add_action(Action::Click);
     }
     if n.focusable && !n.inert {
         out.add_action(Action::Focus);
     }
+    if action::setter(n).is_some() {
+        out.add_action(Action::SetValue);
+    }
     for (name, act) in [
-        ("set_value", Action::SetValue),
         ("increment", Action::Increment),
         ("decrement", Action::Decrement),
     ] {
@@ -270,9 +332,34 @@ fn describe(n: &Node) -> AkNode {
     out
 }
 
+/// A control presented inside the item `item` (`present`): a checkbox
+/// checked by the bool the toggle reads, or a button; named, off while
+/// its action or the item is off, pressed by a click while on. No focus
+/// of its own: a reader walks to it, and a click on it is the item's
+/// action.
+fn describe_presented(item: &Node, p: &Presented<'_>) -> AkNode {
+    let role = match p.kind {
+        Kind::Checkbox => accesskit::Role::CheckBox,
+        Kind::Button => accesskit::Role::Button,
+    };
+    let mut out = AkNode::new(role);
+    out.set_label(p.label.as_str());
+    if p.kind == Kind::Checkbox
+        && let Some(Value::Bool(on)) = toggled_key(item).and_then(|k| item.state.get(k))
+    {
+        out.set_toggled(Toggled::from(*on));
+    }
+    if p.decl.enabled && item.enabled {
+        out.add_action(Action::Click);
+    } else {
+        out.set_disabled();
+    }
+    out
+}
+
 /// The key of the bool that says whether the node is on: the one its own
 /// `toggle` action reads, else `checked` or `on`.
-fn toggled_key(n: &Node) -> Option<&StateKey> {
+pub(crate) fn toggled_key(n: &Node) -> Option<&StateKey> {
     let read = n
         .actions
         .iter()
@@ -317,10 +404,14 @@ fn value(n: &Node, out: &mut AkNode) {
 /// Value and name both: macOS announces a live node's value
 /// (accesskit_macos 0.26.1 event.rs:35-44, 236-239, 298-306), Windows and
 /// AT-SPI its name (accesskit_windows 0.32.1 adapter.rs:225-232, 271-281;
-/// accesskit_atspi_common 0.18.1 adapter.rs:71-76, node.rs:543-556). The
-/// label stays the name, so a node whose words are its label is heard on
-/// all three, and one whose words are a message is heard on macOS alone
-/// until its label follows the message.
+/// accesskit_atspi_common 0.18.1 adapter.rs:71-76, node.rs:543-556). So
+/// the words are the name as well (task-75 phase 2a): a status whose words
+/// are its label already had them there, and one that keeps them in a
+/// `message` under a fixed label (`silences.status`, "status"; the
+/// proposing row's, "proposal") is named by the message while it says
+/// one, and by its label while it says nothing. The projection keeps its
+/// label and its message: this is how a reader is told, not what the
+/// node is.
 fn live(n: &Node, out: &mut AkNode) {
     let politeness = match n.role {
         Role::Status => Live::Polite,
@@ -338,6 +429,7 @@ fn live(n: &Node, out: &mut AkNode) {
     };
     if !words.is_empty() {
         out.set_value(words);
+        out.set_label(words);
     }
 }
 

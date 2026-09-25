@@ -94,7 +94,17 @@
         "level": {
           "kind": "num",
           "value": 0.0
+        },
+        "value": {
+          "kind": "num",
+          "value": 0.0
         }
+      },
+      "constraints": {
+        "range": [
+          0.0,
+          1.0
+        ]
       }
     },
     {

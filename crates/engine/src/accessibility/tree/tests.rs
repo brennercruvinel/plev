@@ -187,8 +187,10 @@ fn states_become_values_toggles_and_flags() {
 
     assert_eq!(n("form.gift").toggled(), Some(Toggled::True));
     assert!(n("form.gift").supports_action(Action::Click));
+    // an item that toggles holds its toggle as a checkbox (`present`)
+    assert_eq!(n("form.task").toggled(), None);
     assert_eq!(
-        n("form.task").toggled(),
+        n("form.task[toggle]").toggled(),
         Some(Toggled::False),
         "the bool its toggle reads"
     );
@@ -199,8 +201,8 @@ fn states_become_values_toggles_and_flags() {
     assert_eq!(n("form.size").is_expanded(), Some(false));
     assert!(n("form.save").is_disabled());
     assert!(
-        n("form.save").supports_action(Action::Click),
-        "still declared"
+        !n("form.save").supports_action(Action::Click),
+        "declared, and not offered while off"
     );
     assert!(!n("form.gift").is_disabled());
     assert_eq!(n("form.files[a]").is_selected(), Some(true));
@@ -330,7 +332,12 @@ fn node_ids_are_stable_across_frames_whose_layout_differs() {
     };
     let (narrow, a) = build(&s, &place(0.0, 360.0), &CHROME);
     let (wide, b) = build(&s, &place(240.0, 900.0), &CHROME);
-    assert_eq!(a.len(), s.len());
+    // every node, and the checkbox the task holds (`present`)
+    assert_eq!(a.len(), s.len() + 1);
+    assert_eq!(
+        a.node(&sid("form.task[toggle]")),
+        b.node(&sid("form.task[toggle]"))
+    );
     for id in s.nodes().keys() {
         assert_eq!(a.node(id), b.node(id), "{id}");
         let text = id.as_str();
@@ -442,7 +449,11 @@ fn a_status_is_a_polite_live_region_and_an_alert_an_assertive_one() {
         "the name stays"
     );
     assert_eq!(n("page.status").value(), Some("detecting"));
-    assert_eq!(n("page.status").label(), Some("status"));
+    assert_eq!(
+        n("page.status").label(),
+        Some("detecting"),
+        "the name follows the message: Windows and AT-SPI announce the name"
+    );
     assert_eq!(n("toasts[0]").value(), Some("saved"));
     assert_eq!(n("toasts[1]").value(), Some("push failed"));
     // a status with a value of its own keeps it
@@ -456,7 +467,35 @@ fn an_empty_message_says_nothing() {
     let status = node(&u, &ids, "page.status");
     assert_eq!(status.live(), Some(Live::Polite));
     assert_eq!(status.value(), None, "no words, nothing to announce");
-    assert_eq!(status.label(), Some("status"));
+    assert_eq!(
+        status.label(),
+        Some("status"),
+        "the page's name, while silent"
+    );
+}
+
+/// The name follows the message frame to frame, where Windows and AT-SPI
+/// announce a live node (on a change of its name), and the value where
+/// macOS does (on a change of its value): the same words on all three.
+#[test]
+fn a_status_message_is_its_name_and_its_value_frame_to_frame() {
+    let say = |message: &str| {
+        let (u, ids) = build(&announcing("2 active", message, false), &unbound(), &CHROME);
+        let n = node(&u, &ids, "page.status");
+        (n.label().map(str::to_owned), n.value().map(str::to_owned))
+    };
+    assert_eq!(
+        say("detecting"),
+        (Some("detecting".into()), Some("detecting".into()))
+    );
+    assert_eq!(
+        say("2 silences in 40 ms"),
+        (
+            Some("2 silences in 40 ms".into()),
+            Some("2 silences in 40 ms".into())
+        )
+    );
+    assert_eq!(say(""), (Some("status".into()), None));
 }
 
 /// A live region is heard where it is: a status that changes, or a
@@ -516,4 +555,67 @@ fn with_no_meaning_the_tree_is_the_window() {
         },
     );
     assert_eq!(root(&u).bounds(), None);
+}
+
+/// A press the app would refuse is not offered: a field whose `submit` is
+/// off (empty) keeps its focus and its value and loses its press until
+/// the text turns it on; an action off on an enabled button, the same.
+#[test]
+fn a_press_is_offered_only_while_its_action_is_on() {
+    let field = |text: &str| {
+        let mut b = SnapshotBuilder::new();
+        let mut f = b.node("todo.input", Role::TextInput, "new todo");
+        f.state("text", text);
+        f.action("submit")
+            .enabled(!text.is_empty())
+            .reads("todo.input:text");
+        let mut go = b.node("go", Role::Button, "go");
+        go.action("activate").enabled(false);
+        finish(b)
+    };
+    let (u, ids) = build(&field(""), &unbound(), &CHROME);
+    let input = node(&u, &ids, "todo.input");
+    assert!(!input.supports_action(Action::Click), "empty: no press");
+    assert!(input.supports_action(Action::Focus));
+    assert!(!input.is_disabled(), "the field still edits");
+    let go = node(&u, &ids, "go");
+    assert!(!go.supports_action(Action::Click) && !go.is_disabled());
+    let (u, ids) = build(&field("buy milk"), &unbound(), &CHROME);
+    assert!(node(&u, &ids, "todo.input").supports_action(Action::Click));
+}
+
+/// A group named by nothing but its key, as a generated surface names an
+/// instance of a repeat, is named by the labels inside it; a group named
+/// by words keeps them, and a keyed group with no label inside keeps its
+/// key.
+#[test]
+fn a_group_named_by_its_key_is_named_by_the_text_inside_it() {
+    let mut b = SnapshotBuilder::new();
+    b.node("panel", Role::List, "items");
+    b.node("panel.item[1]", Role::Group, "1").parent("panel");
+    b.node("panel.item[1].text", Role::Label, "buy milk")
+        .parent("panel.item[1]");
+    b.node("panel.item[1].done", Role::Checkbox, "done")
+        .parent("panel.item[1]")
+        .state("checked", false);
+    b.node("panel.item[2]", Role::Group, "2").parent("panel");
+    b.node("panel.item[2].done", Role::Checkbox, "done")
+        .parent("panel.item[2]")
+        .state("checked", true);
+    b.node("panel.named", Role::Group, "named").parent("panel");
+    b.node("panel.named.text", Role::Label, "inside")
+        .parent("panel.named");
+    let (u, ids) = build(&finish(b), &unbound(), &CHROME);
+    assert_valid(&u);
+    assert_eq!(node(&u, &ids, "panel.item[1]").label(), Some("buy milk"));
+    assert_eq!(
+        node(&u, &ids, "panel.item[1]").role(),
+        accesskit::Role::Group
+    );
+    assert_eq!(
+        node(&u, &ids, "panel.item[2]").label(),
+        Some("2"),
+        "no text inside"
+    );
+    assert_eq!(node(&u, &ids, "panel.named").label(), Some("named"));
 }

@@ -2,7 +2,10 @@
 //! (the HOFF "fake text" bar) at the progress-fill thickness, or a block
 //! at the card radius, breathing between the surface and surface-hover
 //! alphas. Tick it only while visible: under render-on-demand a
-//! skeleton that ticks off-screen would busy-loop every frame.
+//! skeleton that ticks off-screen would busy-loop every frame. With the
+//! system's "reduce motion" on (`engine::animation::reduced_motion`) the
+//! pulse stands still and `tick` says so, and the placeholder still reads
+//! as one (task-75 phase 2a).
 
 use engine::compositor::{Compositor, LayerId};
 use engine::theme::Theme;
@@ -44,8 +47,12 @@ impl Skeleton {
         self
     }
 
-    /// Advance the breathing. Always `true`: a visible skeleton animates.
+    /// Advance the breathing: `true`, a visible skeleton animates; with
+    /// reduced motion on, the pulse stands still and it is `false`.
     pub fn tick(&mut self, dt: f32) -> bool {
+        if engine::animation::reduced_motion() {
+            return false;
+        }
         self.phase += dt;
         true
     }

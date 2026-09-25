@@ -48,12 +48,13 @@ impl App {
             self.view.render(host.compositor_mut());
             host.present(clear, "showcase_frame");
             // The tree of this frame, placed by the bindings it just drew;
-            // the page (and the toasts on screen) is projected only while
-            // a reader listens.
+            // what a reader is shown (the page, the toasts and the overlay
+            // over it, what only a reader hears) is projected only while a
+            // reader listens.
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             if let (Some(bridge), Some(window)) = (self.access.bridge.as_mut(), host.window()) {
                 let view = &self.view;
-                bridge.update(window, host.compositor(), || super::access::shown(view));
+                bridge.update(window, host.compositor(), || view.reader_semantics());
             }
             // The frame just drawn, where each bound control shows in it,
             // and the state it was drawn from.

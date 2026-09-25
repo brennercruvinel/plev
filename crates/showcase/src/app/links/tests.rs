@@ -84,6 +84,26 @@ fn notice(app: &App) -> String {
 }
 
 /// The toasts on screen, oldest first.
+/// The page's own projection, as it reads: the toast a refusal pushes is
+/// the view's, over the page (task-75 phase 2a), and each node's `source`
+/// is where it was declared, which a rebuild moves.
+fn page_nodes(app: &App) -> (Vec<sem::Node>, Option<sem::SemId>) {
+    let Some(s) = app.view.semantics() else {
+        return (Vec::new(), None);
+    };
+    let nodes = s
+        .nodes()
+        .values()
+        .filter(|n| !app.view.is_overlay(&n.id))
+        .map(|n| {
+            let mut n = n.clone();
+            n.source = None;
+            n
+        })
+        .collect();
+    (nodes, s.focused().cloned())
+}
+
 fn toasts(app: &App) -> Vec<String> {
     app.view
         .toasts
@@ -190,17 +210,13 @@ fn what_is_not_open_to_links_is_refused_nothing_runs_and_the_person_is_told() {
         let camera = Arc::new(Mutex::new(FakeCapture::new()));
         app.view.set_capture(Box::new(camera.clone()));
         app.capture_follows();
-        let todo_before = app.view.semantics();
+        let todo_before = page_nodes(&app);
         open(&fake, url);
         app.links_arrived();
         assert!(locked(&seen).is_empty(), "{url}: no request at all");
         assert_eq!(app.view.page_title(), page, "{url}");
         assert_eq!(locked(&camera).starts(DeviceKind::Camera), 0, "{url}");
-        assert_eq!(
-            app.view.semantics(),
-            todo_before,
-            "{url}: the page as it was"
-        );
+        assert_eq!(page_nodes(&app), todo_before, "{url}: the page as it was");
         assert_eq!(notice(&app), line);
         assert_eq!(toasts(&app), [line], "{url}: shown on screen");
         assert!(asked(&app), "{url}: a frame shows the line");

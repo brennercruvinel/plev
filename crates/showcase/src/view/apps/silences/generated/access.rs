@@ -13,7 +13,12 @@
 //! `not_authorized` by the dispatcher. No node holds a state and the
 //! labels never change: what is on is not in the projection, for an agent
 //! or anyone reading it. The person sees it on the band (a preference on
-//! reads dark, as a decision taken on a cut does) and on the surface.
+//! reads dark, as a decision taken on a cut does) and on the surface; a
+//! person with a screen reader hears it, since task-75 phase 2a: the
+//! reader's snapshot alone (`ShowcaseView::reader_semantics`) gives each
+//! preference button its `on` (`Access::reader_states`), which the tree
+//! says as a toggle button's state. The port and a model's prompt never
+//! get it.
 
 use comps::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
@@ -182,6 +187,30 @@ impl Access {
                 .parent(band)
                 .action("activate")
                 .policy(kept);
+        }
+    }
+
+    /// Whether the band is open.
+    pub fn is_open(&self) -> bool {
+        self.open
+    }
+
+    /// What only a screen reader is told, into `b`, which holds the
+    /// page's projection with the band: each preference button of the
+    /// open band says whether its preference is `on` (task-75 phase 2a).
+    /// Never in the page's projection: a preference is the person's, and
+    /// the port and a model's prompt read that one.
+    pub fn reader_states(&self, b: &mut SnapshotBuilder, on: Preferences) {
+        let Some((_, each)) = self.ids.as_ref().filter(|_| self.open) else {
+            return;
+        };
+        for (id, (pressed, _, _)) in each.iter().zip(BUTTONS) {
+            let Pressed::Flip(preference) = pressed else {
+                continue;
+            };
+            if let Some(mut node) = b.reopen(id) {
+                node.state("on", on.has(preference));
+            }
         }
     }
 

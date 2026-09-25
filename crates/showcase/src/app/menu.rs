@@ -192,10 +192,14 @@ pub(super) fn view_menu(gallery: &Snapshot) -> Submenu {
 
 /// The active page's plain actions, under its title; `None` when the
 /// page offers none (a page without a projection, or with values only).
+/// The toasts and the overlay the gallery projects over the page are left
+/// out: they are on screen for a moment, and the bar is the page's.
 fn page_menu(view: &ShowcaseView, gallery: &Snapshot) -> Option<Submenu> {
     let items: Vec<MenuItem> = MenuItem::plain(gallery)
         .into_iter()
-        .filter(|item| !view.is_shell(&item.sem) && !is_row(gallery, item))
+        .filter(|item| {
+            !view.is_shell(&item.sem) && !view.is_overlay(&item.sem) && !is_row(gallery, item)
+        })
         .map(|item| {
             let label = page_label(gallery, &item);
             item.label(label)
@@ -304,6 +308,22 @@ mod tests {
             .filter(|i| i.checked == Some(true))
             .map(|i| i.label.clone())
             .collect()
+    }
+
+    /// The toasts and the modal the view projects over the page (task-75
+    /// phase 2a) are on screen for a moment: the bar stays the page's.
+    #[test]
+    fn the_bar_leaves_the_toasts_and_the_modal_out() {
+        let (mut app, fake) = app("Todo");
+        let before = shown(&fake);
+        let theme = app.view.theme.clone();
+        app.view
+            .toasts
+            .push("saved", comps::prelude::Intent::Constructive, &theme);
+        app.sync_menu();
+        let bar = shown(&fake);
+        assert!(bar.find(&sid("toasts[0]"), "dismiss", None).is_none());
+        assert_eq!(bar, before, "the same bar");
     }
 
     #[test]

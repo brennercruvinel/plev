@@ -92,6 +92,10 @@ pub struct ShowcaseView {
 
     pub toasts: ToastManager,
     active_overlay: Option<ActiveOverlay>,
+    /// The button of the modal or the item of the menu a screen reader
+    /// moved the focus to (`dispatch::overlay`); `None`, the overlay's
+    /// own (the modal's cancel, the menu's first item).
+    overlay_focus: Option<sem::SemId>,
 
     /// One struct per pane, the pages' state.
     panes: panes::Panes,
@@ -145,8 +149,12 @@ impl ShowcaseView {
             pending_scroll: None,
             overlay_mgr: OverlayManager::new(),
             layers: None,
-            toasts: ToastManager::new(),
+            toasts: match dispatch::overlay::id(dispatch::overlay::TOASTS) {
+                Some(id) => ToastManager::new().sem(id),
+                None => ToastManager::new(),
+            },
             active_overlay: None,
+            overlay_focus: None,
         }
     }
 

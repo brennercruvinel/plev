@@ -72,6 +72,15 @@ struct Row {
     reject: Button,
 }
 
+/// Where the fixed screen's keyboard focus is (the fields and the
+/// surface keep their own): a slider, the detect button, the apply all.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Focus {
+    Slider(Which),
+    Detect,
+    ApplyAll,
+}
+
 /// What the last run came to, for the status line.
 enum Said {
     /// The seed: the recorded run of the probe.
@@ -91,8 +100,9 @@ pub struct SilencesPage {
     rows: Vec<Row>,
     hover_cut: Option<u64>,
     hover_mark: Option<u64>,
-    /// Keyboard focus, on a slider.
-    focus: Option<Which>,
+    /// Keyboard focus on the fixed screen: a slider, or one of its two
+    /// buttons.
+    focus: Option<Focus>,
     /// The ids the page projects and binds; `None` only if the constant
     /// ids failed to parse (a test proves they do not), which leaves the
     /// page without semantics: every request is then refused.
@@ -430,15 +440,14 @@ impl SilencesPage {
         match key {
             EditKey::Tab => {
                 let next = match self.focus {
-                    None => Which::Threshold,
-                    Some(Which::Threshold) => Which::MinDuration,
-                    Some(Which::MinDuration) => Which::Threshold,
+                    Some(Focus::Slider(Which::Threshold)) => Which::MinDuration,
+                    _ => Which::Threshold,
                 };
-                self.set_focus(Some(next));
+                self.set_focus(Some(Focus::Slider(next)));
                 true
             }
             EditKey::Left | EditKey::Right => {
-                let Some(which) = self.focus else {
+                let Some(Focus::Slider(which)) = self.focus else {
                     return false;
                 };
                 let target = match which {
@@ -481,11 +490,10 @@ impl SilencesPage {
         if self.inert {
             return false;
         }
-        if self.generated.proposing.escape() {
+        if self.generated.proposing.escape() || self.generated.proposing.blur() {
             return true;
         }
-        if self.generated.proposing.intent.is_focused() {
-            self.generated.proposing.intent.unfocus();
+        if self.generated.focus.take().is_some() {
             return true;
         }
         if self.generated.host.iter_mut().any(|s| s.handle_escape()) {
@@ -496,6 +504,34 @@ impl SilencesPage {
         }
         self.set_focus(None);
         true
+    }
+
+    /// Whether the page tells a screen reader something of its own: the
+    /// accessibility band is open (`reader_states`).
+    pub(crate) fn has_reader_states(&self) -> bool {
+        self.generated.access.is_open()
+    }
+
+    /// What only a screen reader is told (task-75 phase 2a), into `b`,
+    /// which holds the page's projection: which preference is on, on the
+    /// band's buttons. Never in `projection` or `snapshot`, which the port
+    /// and a model's prompt read.
+    pub(crate) fn reader_states(&self, b: &mut sem::SnapshotBuilder) {
+        let on = self.generated.host.preferences();
+        self.generated.access.reader_states(b, on);
+    }
+
+    /// The fixed screen's focus goes to `focus`: the sliders and the two
+    /// buttons draw their ring by it.
+    fn set_focus(&mut self, focus: Option<Focus>) {
+        self.focus = focus;
+        let on = |f: Focus| focus == Some(f);
+        self.threshold
+            .set_focused(on(Focus::Slider(Which::Threshold)));
+        self.min_duration
+            .set_focused(on(Focus::Slider(Which::MinDuration)));
+        self.detect.set_focused(on(Focus::Detect));
+        self.apply_all.set_focused(on(Focus::ApplyAll));
     }
 
     /// The worker's answers and the Claude's: while a job runs the page
