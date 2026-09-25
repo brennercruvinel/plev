@@ -239,6 +239,38 @@ fn bigger_numbers_emphasizes_what_shows_a_number() {
     );
 }
 
+/// "números maiores" over the todo: its two counters are stats, one
+/// size up each (`title` to `headline`); a second time, the top.
+#[test]
+fn bigger_numbers_grows_the_stats() {
+    let changing = Changing::over(todo(), &compact());
+    let (ops, adapted) = changed(&changing, "números maiores");
+    assert_eq!(
+        ops,
+        [
+            Op::Emphasize {
+                id: sid("todo_panel.active")
+            },
+            Op::Emphasize {
+                id: sid("todo_panel.done")
+            }
+        ]
+    );
+    let root = &adapted.ir().surface.root;
+    assert_eq!(
+        node(root, "todo_panel.done").props.typography,
+        Some(TypographyRole::Headline)
+    );
+    let mut again = Changing::over(todo(), &compact());
+    again.current = adapted;
+    match transform_verified(&mut Rules, &again.ask("bigger numbers")) {
+        Err(ProposeError::NoChange(why)) => {
+            assert_eq!(why, "every number here is as big as it gets");
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
 #[test]
 fn undo_passes_to_the_host() {
     let changing = Changing::over(todo(), &compact());

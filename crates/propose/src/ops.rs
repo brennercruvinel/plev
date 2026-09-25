@@ -42,8 +42,9 @@ their parent's stack.
 - `{\"op\": \"reorder\", \"parent\": \"<id>\", \"ids\": [\"<id>\", ...]}`: `ids` first, in \
 this order, then the other children as they were. not a repeat: its order is the app's.
 - `{\"op\": \"emphasize\", \"id\": \"<id>\"}`: one step up the token the node is drawn by: a \
-text a size up the type ramp, a button or an image a control size up, a container, a card or \
-a list an elevation up. refused at the top, and for a component no token of emphasis draws.
+text a size up the type ramp, a stat's value a size up (`base_m`, `title`, `headline`), a \
+badge filled, a button or an image a control size up, a container, a card or a list an \
+elevation up. refused at the top, and for a component no token of emphasis draws.
 - `{\"op\": \"density\", \"step\": \"denser\"}` or `\"sparser\"`: every gap and padding set, \
 one step of the spacing scale.
 - `{\"op\": \"restyle\", \"id\": \"<id>\", \"role\": \"<role>\"}`: a text's color (text, \
