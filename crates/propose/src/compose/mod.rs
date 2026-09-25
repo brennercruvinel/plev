@@ -10,6 +10,10 @@
 //! - `Composer` keeps the detector of one app for one session, what it
 //!   offers the person, what the person declined, and what the person
 //!   accepted: a `Composite`, one action of the app that runs the steps.
+//! - `Chain` runs a composite asked for: each step a request of the same
+//!   actor through the app's dispatcher, checked against the state the
+//!   step before left; the first one refused stops it, and the
+//!   composite's receipt says which step and why. what ran stays run.
 //!
 //! two steps are the same when they ask the same action of the same
 //! node, or of items of the same collection (`silences.cut[3]` and
@@ -21,10 +25,12 @@
 //! pure, like the rest of the crate: no clock, no file, nothing leaves
 //! the process.
 
+mod chain;
 mod composite;
 mod detect;
 mod offer;
 
+pub use chain::Chain;
 pub use composite::Composite;
 pub use detect::{Detector, Listener, MAX_STEPS};
 pub use offer::Composer;

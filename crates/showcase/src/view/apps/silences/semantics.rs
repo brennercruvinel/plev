@@ -303,6 +303,9 @@ impl Semantics for SilencesPage {
 
 impl Operable for SilencesPage {
     fn execute(&mut self, id: RequestId, req: &Request) -> Execution {
+        if let Some(started) = self.start_composite(id, req) {
+            return started;
+        }
         let Some(op) = self.ids.as_ref().and_then(|ids| ids.op(req)) else {
             return Execution::Failed(format!(
                 "the silences page has no {} on {}",
@@ -431,10 +434,7 @@ impl SilencesPage {
     /// Runs `req` through the gallery's dispatcher (the todo page lends
     /// it, with its clock's now), over this page.
     pub(crate) fn dispatch(&mut self, req: Request, todo: &mut TodoPage) -> RequestId {
-        self.generated.offer.listen(todo);
-        let id = todo.with_dispatcher(|d, _, now| d.dispatch(self, req, now));
-        self.refresh_offer();
-        id
+        self.composed(todo, |page, d, now| d.dispatch(page, req, now))
     }
 
     /// A request from an actor outside the page's own input (an agent

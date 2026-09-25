@@ -3,8 +3,11 @@
 //! approve, publish"). Every document is `desk.doc[<id>]`, an item of the
 //! collection `desk.doc`; `fetch` starts and ends later, when the test
 //! says; `sign` is kept from agents; `shred` asks for a confirmation; the
-//! code is a secret field typed with `set_value`.
+//! code is a secret field typed with `set_value`. With a composer, the
+//! desk declares its composites and runs them as chains, the way the
+//! Silences page does.
 
+use propose::compose::{Chain, Composer};
 use sem::{
     Actor, Actors, Confirm, Constraints, Dispatcher, Execution, Millis, Operable, Outcome,
     ParamSpec, Policy, Request, RequestId, Role, Semantics, Snapshot, SnapshotBuilder, Value,
@@ -36,8 +39,13 @@ pub struct Desk {
     pub code: String,
     /// The `fetch` requests that started and wait for the test.
     pub fetching: Vec<RequestId>,
-    /// Every request `execute` ran, in order: (target, action).
+    /// Every request `execute` ran, in order: (target, action); a
+    /// composite's own request is not one of them, its steps are.
     pub ran: Vec<(String, String)>,
+    /// The composites installed, declared after the desk's own nodes.
+    pub composer: Option<Composer>,
+    /// The composites running.
+    pub chains: Vec<Chain>,
 }
 
 impl Desk {
@@ -53,6 +61,8 @@ impl Desk {
             code: String::new(),
             fetching: Vec::new(),
             ran: Vec::new(),
+            composer: None,
+            chains: Vec::new(),
         }
     }
 
@@ -128,11 +138,19 @@ impl Semantics for Desk {
                 ..Policy::default()
             });
         }
+        if let Some(composer) = &self.composer {
+            composer.declare(b);
+        }
     }
 }
 
 impl Operable for Desk {
     fn execute(&mut self, id: RequestId, req: &Request) -> Execution {
+        let chain = self.composer.as_ref().and_then(|c| c.start(id, req));
+        if let Some(chain) = chain {
+            self.chains.push(chain);
+            return Execution::Started;
+        }
         let target = req.target.as_str().to_owned();
         self.ran
             .push((target.clone(), req.action.as_str().to_owned()));
@@ -209,7 +227,18 @@ impl Bench {
         let seen = self.desk.snapshot();
         let req = Request::observe(&seen, actor, target, action, param).expect("observed");
         self.now += 10;
-        self.dispatcher.dispatch(&mut self.desk, req, self.now)
+        let id = self.dispatcher.dispatch(&mut self.desk, req, self.now);
+        self.run();
+        id
+    }
+
+    /// The composites running go on, in the same lending of the
+    /// dispatcher, until each ends or waits for a step.
+    pub fn run(&mut self) {
+        let mut chains = std::mem::take(&mut self.desk.chains);
+        chains.retain_mut(|c| !c.advance(&mut self.dispatcher, &mut self.desk, self.now));
+        chains.append(&mut self.desk.chains);
+        self.desk.chains = chains;
     }
 
     /// The `fetch` that started first ends completed.
@@ -219,6 +248,7 @@ impl Bench {
         self.dispatcher
             .complete(id, Outcome::default(), self.now)
             .expect("the fetch was running");
+        self.run();
         id
     }
 

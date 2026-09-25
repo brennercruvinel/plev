@@ -8,8 +8,9 @@
 
 use std::sync::{Arc, Mutex, PoisonError};
 
-use sem::{ActionName, SemId, Snapshot, SnapshotBuilder};
+use sem::{ActionName, Request, RequestId, SemId, Snapshot, SnapshotBuilder};
 
+use super::chain::Chain;
 use super::composite::Composite;
 use super::{Detector, Found, Listener, Shape};
 
@@ -109,6 +110,16 @@ impl Composer {
     /// the composite installed that `action` on `home` asks for.
     pub fn composite(&self, home: &SemId, action: &ActionName) -> Option<&Composite> {
         self.installed.iter().find(|c| c.is(home, action))
+    }
+
+    /// the chain of the request `id` when it asks for a composite
+    /// installed here, on a node it is declared on: what the app's
+    /// `execute` keeps, answering `Execution::Started`, and advances right
+    /// after the dispatch (`Chain::advance`).
+    pub fn start(&self, id: RequestId, req: &Request) -> Option<Chain> {
+        let composite = self.composite(&req.target, &req.action)?;
+        let calls = composite.calls(&req.target)?;
+        Some(Chain::new(id, req.actor.clone(), calls))
     }
 
     /// how many times in a row a sequence is repeated before it is

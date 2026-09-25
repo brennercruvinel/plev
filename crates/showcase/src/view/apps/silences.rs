@@ -503,7 +503,8 @@ impl SilencesPage {
     pub fn wake(&mut self, dt: f32, todo: &mut TodoPage) -> Wake {
         let moved = self.settle(todo);
         let answered = Page { app: self }.settle(todo);
-        if moved || answered {
+        let chained = moved && todo.with_dispatcher(|d, _, now| self.run_chains(d, now));
+        if moved || answered || chained {
             self.sync_surface();
             self.refresh_offer();
         }

@@ -7,13 +7,22 @@
 //! the page projected before moves. Both answers are kept for a person
 //! (`PERSON_ONLY`): an agent is refused `not_authorized` by the
 //! dispatcher, and nothing installs unless a person asks.
+//!
+//! A composite installed is an action of the app on every cut; asked, its
+//! `execute` answers `Started` and keeps a `propose::compose::Chain`,
+//! which runs the steps through the same lending of the dispatcher right
+//! after (`composed`), and goes on from the page's wake when a step
+//! waited for a frame.
 
 use comps::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
-use propose::compose::{Composer, Composite, Found, Shape, Target};
-use sem::{Policy, Request, RequestId, Role, SemId, Snapshot, SnapshotBuilder, Value};
+use propose::compose::{Chain, Composer, Composite, Found, Shape, Target};
+use sem::{
+    Dispatcher, Execution, Millis, Policy, Request, RequestId, Role, SemId, Snapshot,
+    SnapshotBuilder, Value,
+};
 use uir::IrNode;
 
 use super::super::SilencesPage;
@@ -49,6 +58,8 @@ pub struct Band {
 /// The composer of the page and the band that offers what it found.
 pub struct Offer {
     pub composer: Composer,
+    /// The composites running, each a chain of the page's requests.
+    pub chains: Vec<Chain>,
     /// The composer hears the gallery's dispatcher (the sink is added
     /// before the page's first request).
     listening: bool,
@@ -85,6 +96,7 @@ impl Offer {
         }
         Offer {
             composer: Composer::new(REPEATS),
+            chains: Vec::new(),
             listening: false,
             ids,
             install,
@@ -313,5 +325,56 @@ impl SilencesPage {
                 })
             })
         });
+    }
+
+    /// A request through the gallery's dispatcher, over this page: the
+    /// composer hears it (the sink comes before the page's first
+    /// request), the composites it started run their steps in the same
+    /// lending, and the offer is read again after.
+    pub(in crate::view::apps::silences) fn composed<R>(
+        &mut self,
+        todo: &mut TodoPage,
+        ask: impl FnOnce(&mut SilencesPage, &mut Dispatcher, Millis) -> R,
+    ) -> R {
+        self.generated.offer.listen(todo);
+        let out = todo.with_dispatcher(|d, _, now| {
+            let out = ask(self, d, now);
+            self.run_chains(d, now);
+            out
+        });
+        self.refresh_offer();
+        out
+    }
+
+    /// `execute` of a composite installed: its chain is kept, to run
+    /// right after the dispatch, and the request stays open until it
+    /// ends. `None` for any other request.
+    pub(in crate::view::apps::silences) fn start_composite(
+        &mut self,
+        id: RequestId,
+        req: &Request,
+    ) -> Option<Execution> {
+        let offer = &mut self.generated.offer;
+        let chain = offer.composer.start(id, req)?;
+        offer.chains.push(chain);
+        Some(Execution::Started)
+    }
+
+    /// The composites running go on over the page until each ends or
+    /// waits for a step that started (a frame to decode). True when one
+    /// was running.
+    pub(in crate::view::apps::silences) fn run_chains(
+        &mut self,
+        d: &mut Dispatcher,
+        now: Millis,
+    ) -> bool {
+        let mut chains = std::mem::take(&mut self.generated.offer.chains);
+        if chains.is_empty() {
+            return false;
+        }
+        chains.retain_mut(|chain| !chain.advance(d, self, now));
+        chains.append(&mut self.generated.offer.chains);
+        self.generated.offer.chains = chains;
+        true
     }
 }

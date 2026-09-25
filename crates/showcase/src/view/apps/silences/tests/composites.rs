@@ -286,3 +286,146 @@ fn without_a_surface_it_is_installed_and_nothing_is_promoted() {
     assert!(outcome.result.get("not_promoted").is_none());
     assert_eq!(composites(&page), [COMPOSITE]);
 }
+
+/// Wakes the page until the fake worker has answered every job it held.
+fn drain(page: &mut SilencesPage, todo: &mut TodoPage) {
+    for _ in 0..20 {
+        page.worker.release();
+        page.wake(TURN, todo);
+        if !page.worker.busy() {
+            return;
+        }
+    }
+    panic!("the jobs never end");
+}
+
+fn installed_by_a_person(page: &mut SilencesPage, todo: &mut TodoPage) {
+    review(page, todo, &Actor::Human, 1);
+    review(page, todo, &Actor::Human, 2);
+    let installed = answer(page, todo, Actor::Human, INSTALL);
+    assert!(matches!(installed, Stage::Completed(_)), "{installed:?}");
+}
+
+fn decision(page: &SilencesPage, cut: u64) -> Value {
+    let at = StateRef::parse(&format!("silences.cut[{cut}]:decision")).unwrap();
+    page.snapshot()
+        .unwrap()
+        .value(&at)
+        .cloned()
+        .expect("a decision")
+}
+
+#[test]
+fn clicked_in_the_review_the_composite_looks_at_the_cut_and_applies_it() {
+    let (mut todo, mut page, _) = staged();
+    review_open(&mut page);
+    installed_by_a_person(&mut page, &mut todo);
+    // the person keeps the first cut (the surface shows it), then changes
+    // their mind
+    let whole = page.projection().unwrap();
+    let req =
+        Request::observe(&whole, Actor::Human, "silences.cut[1]", "reject_cut", None).unwrap();
+    page.act(req, &mut todo, false).expect("taken");
+    assert_eq!(decision(&page, 1), Value::from("reject"));
+    let whole = page.projection().unwrap();
+    let button = format!("review.cut[1].{COMPOSITE}");
+    let req = Request::observe(&whole, Actor::Human, button.as_str(), "activate", None).unwrap();
+    let receipt = page.act(req, &mut todo, false).expect("taken");
+    assert_eq!(receipt.request.target, sid("silences.cut[1]"), "routed");
+    let Some(Stage::Completed(outcome)) = receipt.stage() else {
+        panic!("completed: {receipt:?}");
+    };
+    assert_eq!(outcome.result.get("steps"), Some(&Value::Int(2)));
+    let Some(Value::List(steps)) = outcome.result.get("requests") else {
+        panic!("the steps' requests");
+    };
+    let actions: Vec<(String, String)> = steps
+        .iter()
+        .map(|id| {
+            let step = todo.receipt(RequestId::parse(id).unwrap()).expect("a step");
+            assert_eq!(step.request.actor, Actor::Human);
+            (
+                step.request.target.to_string(),
+                step.request.action.to_string(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        actions,
+        [
+            ("silences.cut[1]".to_owned(), "preview_segment".to_owned()),
+            ("silences.cut[1]".to_owned(), "apply_cut".to_owned()),
+        ]
+    );
+    assert_eq!(decision(&page, 1), Value::from("apply"));
+    let middle = page.model.cut(1).unwrap().segment().middle();
+    assert_eq!(page.model.shown(), middle, "the preview ran");
+}
+
+/// The step that ages in the middle: a new detection gives pending cuts
+/// whose frames are not decoded; the person runs the composite on one,
+/// its preview waits for the frame, an agent rejects the cut meanwhile,
+/// and when the frame arrives the apply is stale: the chain stops there,
+/// the composite's receipt says which step and why, the preview stays.
+#[test]
+fn a_cut_rejected_while_its_frame_decodes_stops_the_composite_with_why() {
+    let (mut todo, mut page, _) = setup(true);
+    for cut in page.model.cuts().to_vec() {
+        let flat = load_image_rgba(4, 4, vec![128; 64]).map_err(|e| e.to_string());
+        page.frames.insert(ms(cut.segment().middle()), flat);
+    }
+    installed_by_a_person(&mut page, &mut todo);
+    let detect = dispatch_as_test(
+        &mut page,
+        &mut todo,
+        "silences.detect",
+        "detect_silence",
+        None,
+    );
+    drain(&mut page, &mut todo);
+    assert!(matches!(stage(&todo, detect), Stage::Completed(_)));
+    let cut = page.model.cuts()[0].id();
+    let at = format!("silences.cut[{cut}]");
+    page.frames.clear();
+
+    let seen = page.snapshot().unwrap();
+    let req = Request::observe(&seen, Actor::Human, at.as_str(), COMPOSITE, None).unwrap();
+    let composite = page.dispatch(req, &mut todo);
+    assert_eq!(
+        stage(&todo, composite),
+        Stage::Executing,
+        "the preview waits"
+    );
+    let bot = Actor::Agent {
+        name: "bot".to_owned(),
+    };
+    let seen = page.snapshot().unwrap();
+    let req = Request::observe(&seen, bot.clone(), at.as_str(), "reject_cut", None).unwrap();
+    let rejected = page.dispatch(req, &mut todo);
+    assert!(matches!(stage(&todo, rejected), Stage::Completed(_)));
+    drain(&mut page, &mut todo);
+
+    let Stage::Failed { error } = stage(&todo, composite) else {
+        panic!("failed: {:?}", stage(&todo, composite));
+    };
+    assert!(
+        error.starts_with(&format!("stopped at step 2 of 2, apply_cut on {at}")),
+        "{error}"
+    );
+    assert!(
+        error.contains(&format!(
+            r#"stale: {at}:decision was "pending", is "reject""#
+        )),
+        "{error}"
+    );
+    assert!(
+        error.contains(&format!("(agent:bot ran reject_cut on {at})")),
+        "{error}"
+    );
+    assert!(error.contains("step 1 ran and stays"), "{error}");
+    // the agent's decision stands; the preview ran and stays
+    assert_eq!(decision(&page, cut), Value::from("reject"));
+    let middle = page.model.cut(cut).unwrap().segment().middle();
+    assert_eq!(page.model.shown(), middle);
+    assert!(page.generated.offer.chains.is_empty());
+}
