@@ -889,3 +889,203 @@ caminho do shell (as máscaras da projeção, o codec, o `Server`, o
   do shell; as páginas do teste de socket não têm segredo nem id fora da
   projeção, então o pixel igual segue.
 - o codec (`rec/tests/scene.rs`): sem máscara, os bytes de sempre.
+
+## handoff da fase 2 (task-79b)
+
+branch `task/79b-mirror-input`, base `8f35c3ee`. worktree
+`.claude/worktrees/agent`, target `target/agents/one`. a rodada não
+parou: nada pediu mudança no `sem`, no `engine`, no comps, no
+`SceneNode`, no tema ou no protocolo v1. commits, em ordem:
+
+- `bfe12733` task-79: the phase 2 probe, the mirror's click and the secret's mask
+- `dfbd79de` task-79: the viewer finds the control under a point as the app does
+- `c3b94b7a` task-79: a click at the mirror goes back as an act on the control
+- `a2b70151` task-79: a secret travels masked, as its place and size
+- `80d71a45` task-79: the channel's promises, against the click and the mask
+- (este) task-79: ADR phase 2 and the phase 2 handoff
+
+nenhuma janela foi aberta (o `--show` compila e não rodou), nenhum
+clique ou tecla do sistema: os testes chamam `Viewer::hit` e
+`Hand::click` com um ponto no espaço da cena, dentro do processo. o app
+do teste de socket é o filho headless da fase 1, que sai pelo `quit` ou
+pelo `Drop` do teste, pelo handle dele; nenhum processo ficou. o
+`claude -p` não foi chamado (o `PLEV_CLAUDE` apontou para o stub).
+
+### a sonda
+
+a seção "fase 2 (task-79b): a sonda" acima, com a medição em
+`crates/showcase/tests/mirror_probe.rs` (ignorada). em uma linha: o
+espelho acha o controle pelas ligações em ordem de empilhamento, aperta a
+primária do leitor de tela com um `act` apoiado num olhar que ele faz
+depois de cada frame, numa segunda conexão com o mesmo nome; o app
+mascara o que o `sem::redact` conta como segredo, antes do codec
+escrever a layer; o protocolo v1 não muda.
+
+### o input, como ficou
+
+- `app::mirror::stacked`: o app manda os `bounds` do frame de baixo para
+  cima, na ordem do `Compositor::hit`, sem as ligações de layer
+  escondida. `Viewer::hit(x, y)` pega a última que contém o ponto.
+- `app::mirror::Hand`: a mão do espelho. `connect(path, name)` abre uma
+  conexão própria e diz `hello` com o nome do watch; `look()` observa o
+  app inteiro; `click(viewer, x, y, each)` acha o controle e chama
+  `press(target, each)`, que pega a primária do nó no último olhar
+  (`engine::accessibility::primary`, só se a ação e o nó estão ligados)
+  e manda `act` com `from_revision` do olhar. `each` ouve cada estágio.
+  `shown()` devolve o último olhar.
+- `Pressed` diz o que deu: `Nothing` (nenhum controle), `Unpressable`
+  (nada a apertar, ou desligado), `Acted` (os estágios), `Refused` (o
+  port recusou antes do dispatcher). `said()` e `said(target, action,
+  stage)` dão a frase do espelho: "todo.item[1]: toggle done",
+  "capture.camera: toggle refused: only a person asks it, and the
+  mirror acts as agent:mirror", "... refused: the mirror was behind the
+  app (todo.item[1]:completed moved, agent:claude acted since); look
+  again", "... waits for the person at the app, who confirms or declines
+  it there".
+- o exemplo: no `--show`, clique esquerdo aperta o controle sob o
+  ponteiro (numa thread própria, a mão; a mão olha o app depois de cada
+  frame) e o que veio sai no stderr e no título da janela. headless,
+  `--click x,y` aperta depois do primeiro frame e imprime os estágios.
+
+### a máscara, como ficou
+
+- `app::mirror::masks(now, compositor)`: cada ligação que
+  `sem::redact::is_secret` conta como segredo na projeção da galeria
+  daquele frame (marcada, fora da projeção, ou sem projeção: falha
+  fechada) vira um `rec::scene::Mask` (a layer e o rect ligado, a parte
+  cortada pelo clip junto). `Scenes::offer` ganhou um parâmetro, a
+  projeção (uma closure, chamada só quando alguém assiste).
+- `rec::scene::Sender::frame_masked` (e `scene/mask.rs`): antes de
+  escrever a layer, tira o que o segredo desenha (todo nó dentro de um
+  clip que cabe no rect; todo texto, imagem e path que toca o rect, o
+  texto medido pelo medidor do engine; toda outra forma que toca sem
+  cobrir) e põe no lugar do primeiro uma caixa escura com a borda e
+  "secret, not mirrored" (`SECRET_LABEL`). o chão que cobre o rect
+  inteiro e os clips seguem. `frame` é `frame_masked` sem máscara, os
+  bytes de antes.
+- o segredo mudar não muda byte da layer: digitar num campo secreto não
+  manda nada.
+- efeito medido da falha fechada: na galeria, só a página Git tem
+  máscara (changes, stacks e diff, nos dois temas), porque a galeria não
+  projeta a página Git. **decisão para o orquestrador**: manter a falha
+  fechada (a regra do port, e o diff mostra conteúdo de arquivo que o
+  contrato nunca mostrou a agente) ou mascarar só o marcado secret (a Git
+  volta inteira no espelho). o custo da troca é uma linha em
+  `app::mirror::masks` e o teste que fixa as páginas mascaradas.
+
+### os testes
+
+- `showcase`, `app::mirror::tests`: o acerto por empilhamento e não por
+  ordem de ligação, com uma layer escondida; a gravação guarda o olhar e
+  o clique do espelho em nome dele.
+- `showcase/tests/mirror.rs`: o acerto do espelho igual ao do app em
+  todas as páginas nos dois temas (centro de cada controle e grade de
+  20 px); o clique entre dois processos (o item vira feito, o frame
+  volta com o hash do app, o ato de um agente cai no mesmo frame e na
+  mesma revisão; o toggle da câmera recusado e nada redesenhado). o
+  teste da câmera da fase 1 agora procura todas as 200 cores do fake, não
+  só as 16 primeiras (o número do frame do fake segue o relógio).
+- `showcase/tests/mirror_input.rs` (em processo, sem GPU): o clique chega
+  ao estado e à revisão do ato de um agente; `PERSON_ONLY` recusado e
+  dito; ponto vazio, região e submit desligado não mandam nada; cena
+  velha volta `stale` e passa depois de olhar; e as promessas (abaixo).
+- `showcase/tests/mirror_mask.rs` (com GPU): o formulário de login
+  desenhado de verdade (senha e pin secretos) em nenhum byte do watch, o
+  espelho com a caixa em cada lugar e igual ao app fora deles, uma tecla
+  manda 0 bytes; todas as páginas pelo caminho mascarado, pixel igual
+  onde nada é mascarado, só a Git mascarada e diferente só dentro das
+  máscaras.
+- `rec`, `scene/tests_mask.rs`: nenhum byte do texto do segredo, dos
+  pixels do ícone ou do path no frame (uma linha rolada para fora e um
+  texto com origem fora do rect incluídos); os mesmos bytes qualquer que
+  seja o segredo; layer sem máscara igual a antes.
+- o segredo desenhado de teste: `showcase/tests/login/mod.rs` (sem widget
+  novo).
+
+### as promessas
+
+um teste por promessa da sonda (d), contra o clique e a máscara:
+
+1. a cena só com `PLEV_MIRROR=1`: `unshared_the_mirror_has_nothing_to_click`
+   (o watch recusado com a razão, nenhuma ligação, o clique não manda
+   nada, observar segue funcionando).
+2. a imagem de fluxo nunca atravessa:
+   `a_camera_s_frames_never_cross_whatever_the_mirror_clicks` (a caixa da
+   câmera não aperta nada, o toggle é recusado, nenhuma das 200 cores do
+   fake no fio, com os frames dela provados na cena do app).
+3. quem assiste fica no log e na gravação:
+   `the_recording_keeps_the_mirror_s_look_and_click_under_its_name` (o
+   watch e o olhar como observações de "mirror", o clique como receipt
+   de "mirror").
+4. a redação do `sem`, inclusive numa live region:
+   `a_secret_leaves_as_its_length_and_never_as_what_it_draws` (senha e
+   pin como tamanho no olhar, como caixa na cena, em nenhuma linha).
+5. `PERSON_ONLY` recusado a agente:
+   `a_click_on_an_action_kept_for_a_person_is_refused_and_said` (e o de
+   dois processos).
+6. a preferência de accessibility: `the_person_s_preference_never_leaves_by_the_port`
+   (o olhar igual, nó a nó e revisão, com e sem "larger text"; o clique
+   do espelho nela recusado). o que a cena mostra, registrado sem mudar:
+   a revisão desenhada com o texto maior e mais contraste é pixel que a
+   pessoa pediu para compartilhar; quem assiste pode inferir que a
+   preferência está ligada pelo tamanho do texto, não recebe o valor,
+   não pode mudá-lo, e nada disso vai para o prompt (a projeção que o
+   proponente lê é a mesma).
+
+### o gate e o regress
+
+- `./script/gate` (`scratchpad/gate-79b.txt`): verde, pernas urnaui e
+  wasm rodaram. 3 120 passados, 0 falhas, 28 ignorados (antes: 3 103 e
+  27). +17: 2 unitários do espelho no showcase, 2 no `mirror.rs`, 8 no
+  `mirror_input.rs`, 2 no `mirror_mask.rs`, 3 no `rec`; +1 ignorado, a
+  sonda. `df -h /`: 24 GB livres antes.
+- `regress check`: 176 baselines, 176 iguais.
+- linhas de produção: `app/mirror.rs` 580, `rec/scene/mask.rs` 201,
+  `rec/scene/send.rs` 163, `examples/mirror/show.rs` 299, `main.rs` 284.
+- nenhuma dependência nova, nenhuma aresta nova no `Cargo.lock`. arquivos
+  fora da lista: nenhum (os novos são `rec/src/scene/mask.rs` e
+  `tests_mask.rs`, dentro de `crates/rec/src/scene/**`, e testes).
+
+### a linha do ADR para o índice
+
+```text
+| 2026-09-25 | [scene-travels-as-data](scene-travels-as-data.md) | proposed | task-79 fase 2: o espelho responde e o segredo não atravessa. um clique no visualizador volta como `act` pelo contrato, nunca evento nem coordenada: o app manda os `bounds` do frame em ordem de empilhamento (a do `Compositor::hit`), o visualizador acha o controle sob o ponto e aperta a primária do leitor de tela (`engine::accessibility::primary`), com `from_revision` de um olhar que a mão do espelho faz depois de cada frame, numa segunda conexão com o mesmo nome; o app o toma como o agente "mirror" (`PERSON_ONLY` recusado, confirmação pela pessoa no app, cena velha `stale`). o que `sem::redact::is_secret` conta como segredo (falha fechada) sai do frame antes do codec escrever a layer (`Sender::frame_masked`) e uma caixa "secret, not mirrored" fica no lugar, com lugar e tamanho só; digitar num campo secreto não manda nada; na galeria só a página Git, não projetada, fica mascarada; protocolo v1 sem mudança |
+```
+
+### o roteiro para o brenner ver o clique
+
+num checkout desta branch, dois terminais:
+
+```text
+# 1. o app, com o port ligado e a cena compartilhada (build de debug)
+PLEV_AGENT=1 PLEV_MIRROR=1 cargo run -p showcase
+
+# 2. o espelho numa janela
+cargo run -p showcase --example mirror -- --show
+```
+
+- na página Todo, clique num item no espelho: o item vira feito no app, e
+  o espelho diz "todo.item[1]: toggle done" no terminal e no título.
+- na página Capture, clique no toggle da câmera no espelho: "refused:
+  only a person asks it". a câmera não liga.
+- clique num lugar sem controle: "no control at (x, y): nothing went to
+  the app".
+- sem janela: `cargo run -p showcase --example mirror -- --frames 1
+  --click 640,300` aperta o que estiver em (640, 300) depois do primeiro
+  frame e imprime o que o clique deu.
+
+### o que fica para depois
+
+- a página Git projetada na galeria (tira a máscara dela), ou a decisão
+  de mascarar só o marcado secret (acima).
+- um widget de senha no comps que marque e ligue o segredo (hoje só o
+  teste desenha um).
+- digitar, arrastar e rolar pelo espelho: pedem parâmetro vindo de quem
+  assiste, outra decisão.
+- a revisão do frame no próprio frame (o app dizer em que revisão
+  desenhou), para o clique se apoiar exatamente na cena, sem o olhar por
+  frame: pede mudar o `Server` e o `Shown` do `wire`.
+- o resto da fase 1 segue: sair do localhost (pareamento, transporte
+  cifrado), o gravador guardar os pixels das imagens fixas, o custo de
+  uma imagem fixa grande no fio do app, override da câmera, vídeo de
+  pixels, multiusuário, iOS e android.
