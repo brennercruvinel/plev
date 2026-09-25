@@ -1,8 +1,8 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
-last-updated: 2026-09-23
+status: ongoing
+last-updated: 2026-09-25
 domain: generative-runtime
 task: task-71
 wave: 7
@@ -66,6 +66,16 @@ fingir equivalência silenciosa), e a nota das anotações: "Figma -> plev IR
      `approximated` quando fica fora da tolerância);
    - SwiftUI e Flutter registrados como próximas, sem implementação nesta
      task.
+
+## fases
+
+- fase 1 (aberta em 2026-09-25): itens 1 a 4 do escopo. o segundo
+  emissor, o relatório em quatro categorias, o `binding required` e as
+  fixtures em IR com a comparação de pixels. dependências autorizadas pelo
+  orquestrador: `uir` no parser e, nos testes, `surface`, `sem` e `comps`,
+  todos do workspace; nenhum pacote novo no lock.
+- fase 2: a fonte nova (item 5). HTML/CSS pede grammar nova e o Figma
+  pede um export real; as duas passam pelo brenner.
 
 ## fora de escopo
 

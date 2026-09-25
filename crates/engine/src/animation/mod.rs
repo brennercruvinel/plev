@@ -8,7 +8,36 @@ pub use keyframe::{Keyframe, KeyframeSequence};
 pub use spring::{Spring, SpringInterpolate};
 pub use tween::{Interpolate, Repeat, Tween, TweenState};
 
+use std::cell::Cell;
+
 use web_time::Instant;
+
+thread_local! {
+    /// Whether this thread's motion is reduced (see [`set_reduced_motion`]).
+    static REDUCED: Cell<bool> = const { Cell::new(false) };
+}
+
+/// The system's "reduce motion" for every transition this thread runs:
+/// with it on, a [`Spring`] and a finite [`Tween`] reach their end on
+/// their next tick, whatever the time step, so a transition ends on the
+/// first frame and nothing asks for more (task-75 phase 1). A tween that
+/// repeats forever has no end to reach and keeps going, as the ambient
+/// loops that count their own time do (a spinner, a skeleton's pulse).
+///
+/// The preference is the thread's: the one that ticks the widgets, the
+/// event loop's, where `accessibility::Bridge` sets it from the system
+/// (`accessibility::motion`). A thread starts with it off, so a test, a
+/// headless frame and the regression baselines never see a person's
+/// setting.
+pub fn set_reduced_motion(on: bool) {
+    REDUCED.with(|r| r.set(on));
+}
+
+/// Whether this thread's transitions end at once (see
+/// [`set_reduced_motion`]).
+pub fn reduced_motion() -> bool {
+    REDUCED.with(Cell::get)
+}
 
 #[derive(Clone, Copy, Debug)]
 pub struct AnimationTick {
@@ -66,6 +95,8 @@ mod tests_clock;
 mod tests_easing;
 #[cfg(test)]
 mod tests_keyframe;
+#[cfg(test)]
+mod tests_motion;
 #[cfg(test)]
 mod tests_spring;
 #[cfg(test)]

@@ -6,14 +6,17 @@
 //! compositor's binding table, with node ids that follow each node's
 //! `SemId` across frames (`ids`). What a screen reader asks comes back as
 //! a `sem::Request` with `Actor::Assistive`, for the app's one dispatcher
-//! (`action`). Keyboard focus walks the same snapshot (`focus`). An app
-//! shell wires all of it through one `Bridge` (native only).
+//! (`action`). Keyboard focus walks the same snapshot (`focus`). The
+//! system's "reduce motion" is read here (`motion`) and ends every
+//! transition at once (`animation::set_reduced_motion`). An app shell
+//! wires all of it through one `Bridge` (native only).
 
 pub mod action;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod bridge;
 pub mod focus;
 pub mod ids;
+pub mod motion;
 pub mod role;
 pub mod tree;
 

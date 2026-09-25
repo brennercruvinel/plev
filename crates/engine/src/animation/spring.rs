@@ -93,8 +93,20 @@ impl<T: SpringInterpolate> Spring<T> {
         }
     }
 
+    /// Advances the spring by `dt` seconds. With the thread's motion
+    /// reduced (`super::reduced_motion`) it lands on its target at once,
+    /// at rest, whatever `dt` is.
     pub fn tick(&mut self, dt: f32) {
-        if self.at_rest || dt <= 0.0 {
+        if self.at_rest {
+            return;
+        }
+        if super::reduced_motion() {
+            self.value = self.target.clone();
+            self.velocity = self.velocity.scale(0.0);
+            self.at_rest = true;
+            return;
+        }
+        if dt <= 0.0 {
             return;
         }
 
