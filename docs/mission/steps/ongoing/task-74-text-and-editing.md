@@ -635,3 +635,98 @@ colorido com pixel medido (fase 5), benchmark de um milhão de linhas
 (fase 7). as fases 6, 8 e 9 não têm item no critério.
 
 o agente gastou uns 250 mil tokens.
+
+## fase 3: a sonda
+
+data: 2026-09-25. branch `task/74c-bidi` sobre `13fed644`. as linhas da
+biblioteca são do fonte travado no Cargo.lock: cosmic-text 0.18.2, no
+registro do cargo. medida com Inclusive Sans a 16 px, sem wrap, pelas
+faces embutidas (Noto Sans Hebrew e Arabic no fallback).
+
+### (a) como o caret e a seleção são posicionados hoje, e onde quebram
+
+o rope já anda por grafema e em ordem lógica: `move_left` e `move_right`
+(`crates/rope/src/movement.rs:175-189`) vão ao grafema anterior e ao
+seguinte (`movement.rs:43-78`, `grapheme_indices` por linha). em texto
+misto isso está certo como movimento lógico; o que falta é o visual. o
+editor liga as setas direto nessas funções (`crates/comps/src/editor/input.rs:60-75`),
+então em trecho RTL a seta direita anda para a esquerda na tela.
+
+o `TextBuffer` do `TextInput` anda por `char`, não por grafema
+(`crates/comps/src/form/text_input/buffer.rs:98-110`, `153-167`), e não
+tem seleção estendida: só `select_all` cria seleção.
+
+o x do caret sai de `cursor_rect_in` (`crates/engine/src/text/measure.rs:179`),
+usado por `TextMeasurer::cursor_x_styled` no `TextField`
+(`crates/comps/src/form/text_field.rs:365`) e no editor
+(`crates/comps/src/editor/view.rs:142`). ele devolve `glyph.x`, a borda
+esquerda do glifo que contém o byte (`measure.rs:200`), e no fim da linha
+`last.x + last.w` do último glifo do vetor (`measure.rs:209`). as duas
+coisas supõem LTR. num glifo RTL o começo lógico é a borda direita, e num
+parágrafo RTL o último glifo do vetor é o mais à esquerda. medido:
+
+- `abc אבג def`: o byte 4 (começo do hebraico) cai em 48,0, entre ב e א,
+  dentro do trecho; o certo é 33,0 (fim do espaço, lado LTR) ou 57,0. o
+  byte 6 cai em 39,3 e o 8 em 33,0: todo caret dentro do trecho RTL fica
+  um glifo deslocado.
+- `hello مرحبا 123 world`: o byte 6 (logo depois de `hello `) cai em
+  93,2, dentro do árabe entre ر e م, longe do espaço (39,3); os bytes de
+  dentro do árabe saem um glifo deslocados, como no hebraico (o 8 em
+  88,1, o certo é 93,2).
+- `שלום עולם` (parágrafo RTL): o byte 0 cai em 55,1 e não na borda
+  direita (66,2); o fim (17) cai em 9,6 e não em 0.
+
+a seleção é um retângulo só, de `cursor_x(lo)` a `cursor_x(hi)`
+(`text_field.rs:325-332`; no editor, `selection_rect_on_line`,
+`view.rs:418`). em texto misto um intervalo lógico cobre pedaços que não
+se tocam na tela, e a largura pode sair negativa: selecionar `א` e `ב`
+(4..8) em `abc אבג def` dá x 48,0 e largura -15,0; o editor descarta
+largura não positiva e não desenha nada.
+
+o clique usa `Buffer::hit` do cosmic-text (`measure.rs:171`), que já
+trata a metade do glifo RTL (`buffer.rs:966`, `right_half != is_rtl`), mas
+devolve o byte sem a afinidade: clicar na metade esquerda de ג em
+`abc אבג def` dá 10, que o caret então desenha em outro lugar.
+
+### (b) o que o shaping já dá e o que falta
+
+cada `LayoutGlyph` traz `start`, `end` (bytes do cluster na linha), `x`,
+`w` e o nível bidi (`layout.rs:14-36`); cada `LayoutRun` traz a direção do
+parágrafo (`buffer.rs:26`). os níveis vêm do `BidiInfo` da linha
+(`shape.rs:1155-1169`), só do texto: não dependem de face nem de tamanho.
+as runs saem reordenadas (`reorder`, `shape.rs:1320`), e o parágrafo RTL
+é montado da borda direita para a esquerda (`shape.rs:2580`,
+`2708-2709`, `2752-2763`): no vetor, o primeiro glifo é o mais à direita.
+glifos do mesmo cluster (marca separada, ligadura) repetem `start..end`.
+
+medido em `hello مرحبا 123 world`, da esquerda para a direita: `hello `
+em nível 0, `123` (17..20) em nível 2, o espaço 16..17 e as cinco letras
+árabes (14..16 até 6..8) em nível 1, ` world` em nível 0. a ordem visual
+está certa; o que falta é uma leitura que entregue isso ao widget. hoje o
+engine só expõe o x de um byte (`cursor_x_styled`) e o hit, sem nível nem
+ordem. falta também o `highlight` do cosmic-text (`buffer.rs:45`) como
+saída: ele devolve um intervalo só por run, do menor ao maior x, o mesmo
+defeito do retângulo único.
+
+### (c) o desenho
+
+- o movimento lógico fica no rope, puro, como está; entram testes em texto
+  misto (as duas frases, uma só RTL, marcas combinantes).
+- no engine, uma leitura nova e só ela: `TextMeasurer::clusters_styled`
+  devolve os clusters de cada linha da esquerda para a direita, com bytes,
+  `x`, `w`, nível e direção do parágrafo. nada do que existe muda.
+- no comps, uma linha visual construída dessa leitura: cada fronteira de
+  grafema vira uma parada com x e posição na ordem visual. na fronteira
+  entre direções, o byte fica na borda do lado de nível menor (o lado do
+  parágrafo), a regra usual: o caret em `abc |אבג def` fica logo depois do
+  espaço, e o texto LTR digitado ali aparece onde o caret está. com isso
+  cada byte tem uma parada e cada parada um byte, e a seta anda para a
+  parada vizinha na tela. na borda da linha, a seta segue a ordem lógica
+  na direção do parágrafo (no editor, vai para a linha vizinha).
+- seleção continua lógica (âncora e cabeça em bytes) e desenha como um ou
+  mais retângulos: cada cluster coberto vira uma caixa, e caixas que se
+  tocam na tela se juntam. em latim sai o retângulo de sempre, com a mesma
+  conta.
+- home e end continuam pela linha lógica; shift estende a seleção lógica.
+  o clique passa a achar a parada mais próxima, para cair onde o caret é
+  desenhado.
