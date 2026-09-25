@@ -9,6 +9,15 @@ status: living
 
 ## unreleased
 
+- the mirror answers, and a secret stays home (2026-09-25, task-79 phase
+  2): a click in the mirror window goes back to the app as an action on
+  the control under it, through the same contract an agent uses, never as
+  a raw event; the app treats the mirror as an agent, so an action kept
+  for a person is refused and says so, and a confirmation is given by the
+  person at the app. what a field marked secret draws never reaches the
+  mirror: a box that says "secret, not mirrored" takes its place, and
+  typing in it sends nothing.
+
 - the component pages speak to a screen reader and to agents (2026-09-25,
   task-75 phase 2b): 30 pages of the gallery (buttons, checkboxes,
   switches, chips, sliders, fields, the select, tabs, the tree, the table,

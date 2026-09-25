@@ -443,3 +443,14 @@ the viewer, on its hand's connection (hello "mirror", the watch's name):
   its bytes.
 - a mask decided by the codec without the app's projection, or a secret
   drawn as dots of its length.
+
+## integração da fase 2 (2026-09-25, orquestrador)
+
+aceita sem devolução. a regra da máscara falha fechada (um controle
+ligado que a projeção da galeria não tem conta como segredo, a mesma
+regra do port para um nó desconhecido): a página Git, que liga os três
+painéis mas não projeta, aparece mascarada no espelho. o orquestrador
+manteve assim, porque o diff dela mostra conteúdo de arquivo e o lado
+seguro é o padrão; a máscara sai quando a página Git projetar. o agente
+também achou o teste da câmera da fase 1 procurando só 16 das 200 cores
+da câmera falsa e o corrigiu para todas.
