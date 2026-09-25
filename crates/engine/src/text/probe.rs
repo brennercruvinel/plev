@@ -40,6 +40,13 @@ const INK: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 /// antialiased glyph edges, so it counts coverage rather than canvas.
 const INK_THRESHOLD: u8 = 170;
 
+/// The clear color as the sRGB target stores it (linear 0.15).
+const CLEAR_SRGB8: u8 = 108;
+
+/// How far apart a pixel's channels, or how far below the clear, it must
+/// be before it counts as a color the white specimen ink cannot make.
+const COLOR_SPREAD: u8 = 24;
+
 /// One line of the scene: what to draw, in which style, and where.
 #[derive(Clone)]
 pub struct Specimen {
@@ -95,6 +102,22 @@ impl Rendered {
         self.rgba
             .chunks_exact(4)
             .filter(|p| p[0] > INK_THRESHOLD)
+            .count()
+    }
+
+    /// Count of pixels the specimen ink cannot make. White coverage over
+    /// the gray clear keeps the three channels equal and never darkens
+    /// the clear, so a pixel with a hue, or darker than the clear, was
+    /// drawn with a color of its own: a color glyph. Mask glyphs leave
+    /// none.
+    pub fn color_pixels(&self) -> usize {
+        self.rgba
+            .chunks_exact(4)
+            .filter(|p| {
+                let hi = p[0].max(p[1]).max(p[2]);
+                let lo = p[0].min(p[1]).min(p[2]);
+                hi - lo > COLOR_SPREAD || hi < CLEAR_SRGB8 - COLOR_SPREAD
+            })
             .count()
     }
 

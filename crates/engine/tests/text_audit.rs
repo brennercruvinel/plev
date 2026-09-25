@@ -14,7 +14,8 @@
 //! change that was meant.
 //!
 //! `decided_scripts_have_no_tofu` (phase 2) holds the scripts the embedded
-//! Noto faces cover to zero `.notdef` glyphs, in every UI weight.
+//! Noto faces cover to zero `.notdef` glyphs, in every UI weight, and emoji
+//! too (phase 5, the Noto Color Emoji subset).
 //!
 //! `pixels_match_the_measured_width` renders every phrase through the
 //! frame path, once with the desktop faces and once with the embedded
@@ -22,7 +23,10 @@
 //! width the measurer promised. It needs a GPU adapter (skips without
 //! one), writes one PNG per family and face set to `TEXT_AUDIT_OUT`
 //! (default: the OS temp dir under `plev-text-audit`) and records the
-//! engine's once-per-face fallback warning.
+//! engine's once-per-face fallback warning. On the embedded sheets it also
+//! counts the pixels the white specimen ink cannot make: every emoji
+//! phrase drawn by the emoji face must leave them (the glyph's own color),
+//! and every other phrase none (masks only take the text color).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -40,16 +44,24 @@ const WRAP_WIDTH: f32 = 80.0;
 /// text. Codicons is an icon font and shapes no text.
 const FAMILIES: [(&str, Option<&str>); 2] = [("Inclusive Sans", None), ("Inter", Some("Inter"))];
 /// Corpus files (stems) of the scripts phase 2 decided to embed, the bidi
-/// file included: its right-to-left half is Hebrew and Arabic.
-const DECIDED: [&str; 7] = [
+/// file included (its right-to-left half is Hebrew and Arabic), and the
+/// emoji of phase 5.
+const DECIDED: [&str; 8] = [
     "04-arabic",
     "05-hebrew",
     "06-devanagari",
     "07-chinese",
     "08-japanese",
     "09-korean",
+    "10-emoji",
     "11-bidi-mixed",
 ];
+/// The face of the embedded emoji.
+const EMOJI_FACE: &str = "Noto Color Emoji";
+/// Pixels of its own color an emoji must leave, at the 2x of the sheet: a
+/// glyph there is about 39 by 37, and the family, the least colorful of
+/// the corpus, leaves about 370.
+const MIN_COLOR_PIXELS: usize = 150;
 /// The weights the typography scale requests.
 const UI_WEIGHTS: [u16; 4] = [400, 500, 600, 700];
 
@@ -461,9 +473,10 @@ fn out_dir() -> PathBuf {
     dir
 }
 
-/// Ink in the band of phrase `i`: the inked pixel count and the ink's
-/// `(left, right)` edges in logical px from the specimen origin.
-fn band_ink(img: &Rendered, i: usize) -> (usize, Option<(f32, f32)>) {
+/// Ink in the band of phrase `i`: the inked pixel count, the ink's
+/// `(left, right)` edges in logical px from the specimen origin, and the
+/// pixels of a color the specimen ink cannot make.
+fn band_ink(img: &Rendered, i: usize) -> (usize, Option<(f32, f32)>, usize) {
     let y = (i as f32 * ROW * SCALE) as u32;
     let h = (ROW * SCALE) as u32;
     let band = Rendered {
@@ -477,7 +490,7 @@ fn band_ink(img: &Rendered, i: usize) -> (usize, Option<(f32, f32)>) {
             (last + 1) as f32 / SCALE - ORIGIN_X,
         )
     });
-    (band.ink(), edges)
+    (band.ink(), edges, band.color_pixels())
 }
 
 /// One sheet per family and face set: every phrase on its own row,
@@ -494,7 +507,7 @@ fn pixels_match_the_measured_width() {
     let height = (phrases.len() as f32 * ROW + ROW) as u32;
     let mut report = String::new();
     report.push_str(
-        "script | faces | family | text | measured | ink px | ink left..right | verdict\n",
+        "script | faces | family | text | measured | ink px | ink left..right | color px | verdict\n",
     );
 
     for (faces, suffix) in [(Faces::Desktop, ""), (Faces::Embedded, "-embedded")] {
@@ -527,7 +540,7 @@ fn pixels_match_the_measured_width() {
                     Faces::Desktop => TextMeasurer::measure_styled(&p.text, &st, None).0,
                     Faces::Embedded => shape_report(&p.text, &st, None, faces).width,
                 };
-                let (ink, edges) = band_ink(&img, i);
+                let (ink, edges, color) = band_ink(&img, i);
                 let verdict = match edges {
                     None if measured > 0.0 => "measured width without ink",
                     None => "empty",
@@ -539,7 +552,7 @@ fn pixels_match_the_measured_width() {
                     Some(_) => "ok",
                 };
                 report.push_str(&format!(
-                    "{} | {} | {} | {} | {:.1} | {} | {} | {}\n",
+                    "{} | {} | {} | {} | {:.1} | {} | {} | {} | {}\n",
                     p.script,
                     if faces == Faces::Desktop {
                         "desktop"
@@ -551,6 +564,7 @@ fn pixels_match_the_measured_width() {
                     measured,
                     ink,
                     edges.map_or("-".to_string(), |(l, r)| format!("{l:.1}..{r:.1}")),
+                    color,
                     verdict
                 ));
                 assert!(
@@ -568,6 +582,24 @@ fn pixels_match_the_measured_width() {
                     p.script,
                     p.text
                 );
+                if faces == Faces::Embedded {
+                    let from = faces_used(&shape_report(&p.text, &st, None, faces));
+                    if from == EMOJI_FACE {
+                        assert!(
+                            color >= MIN_COLOR_PIXELS,
+                            "{label} embedded {:?}: {color} pixels of its own color, the \
+                             emoji drew as a mask or not at all",
+                            p.text
+                        );
+                    } else {
+                        assert_eq!(
+                            color, 0,
+                            "{label} embedded {:?} ({from}): a mask glyph drew a color \
+                             other than the text's",
+                            p.text
+                        );
+                    }
+                }
             }
         }
     }
