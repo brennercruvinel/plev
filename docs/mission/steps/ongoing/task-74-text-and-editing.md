@@ -614,3 +614,24 @@ disco: 13 GB livres antes do gate, 11 GB no fim.
   medidor dividem o construtor do `FontSystem`, mas não o de `Attrs`).
 - os outros itens do critério de aceitação (bidi no cursor, IME, emoji,
   um milhão de linhas) são das fases 3, 4, 5 e 7.
+
+## fase 2 integrada (orquestrador, 2026-09-25)
+
+fecha o item "corpus renderizado sem tofu nas escritas decididas" do
+critério de aceite. a decisão foi do brenner ("Noto, amigo. Noto, sans"):
+árabe, hebraico, devanágari, chinês simplificado, japonês e coreano em
+Noto Sans, Regular e Bold, subsets de `script/font-subset`.
+
+validação do orquestrador: diff lido (as faces entram por último no
+banco, emprestadas do binário sem cópia; `TextSystem`, `TextMeasurer` e a
+sonda passam pelo mesmo construtor); o PNG do caminho embutido aberto: as
+seis escritas desenham, o árabe ligado, o devanágari com os conjuntos, o
+hebraico com niqqud; o emoji continua tofu, que é da fase 5. o desktop
+não muda (as 176 baselines iguais).
+
+os itens que continuam abertos no critério: testes de movimento bidi
+(fase 3), roteiro de IME executado (fase 4, pede o brenner), emoji
+colorido com pixel medido (fase 5), benchmark de um milhão de linhas
+(fase 7). as fases 6, 8 e 9 não têm item no critério.
+
+o agente gastou uns 250 mil tokens.

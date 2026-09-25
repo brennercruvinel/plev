@@ -14,6 +14,14 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-74 fase 2 integrada
+
+- Noto Sans embutida para árabe, hebraico, devanágari, SC, JP e KR
+  (decisão do brenner), sem tofu no caminho embutido; o desktop não muda.
+  a task continua em `ongoing`: faltam bidi, IME, emoji e um milhão de
+  linhas.
+- o agente (Opus) gastou uns 250 mil tokens.
+
 ### task-71 fechada
 
 - fase 2 integrada: o parser importa HTML/CSS (subset) e Figma, pelo
