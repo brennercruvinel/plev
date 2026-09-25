@@ -39,26 +39,36 @@ use showcase::view::{PAGES, ShowcaseView};
 /// example), and the apps of phase 1. Every other page is in `SILENT`.
 const PROJECTING: &[&str] = &[
     "Alert Dialog",
+    "Breadcrumb",
     "Button",
     "Button Group",
     "Checkbox",
     "Chip",
     "Combobox",
+    "Data Table",
     "Dialog",
     "Field",
     "Hover Card",
     "Icon Button",
     "Input",
+    "Item",
+    "Kbd",
     "Label",
+    "Navigation Menu",
     "Popover",
+    "Resizable",
+    "Scroll Area",
     "Select",
     "Slider",
     "Spinner",
     "Switch",
+    "Table",
+    "Tabs",
     "Toast",
     "Toggle",
     "Toggle Group",
     "Tooltip",
+    "Tree",
     "Todo",
     "Surface",
     "Silences",
@@ -101,10 +111,6 @@ const SILENT: &[(&str, Why)] = &[
     ),
     ("Badge", Unprojected("Badge: a label with its count or tag")),
     (
-        "Breadcrumb",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
         "Bubble",
         Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
     ),
@@ -128,10 +134,6 @@ const SILENT: &[(&str, Why)] = &[
         "Context Menu",
         Unprojected("the area a right click opens the menu in: a trigger with an open action"),
     ),
-    (
-        "Data Table",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
     ("Date Picker", PLACEHOLDER),
     (
         "Drawer",
@@ -151,14 +153,6 @@ const SILENT: &[(&str, Why)] = &[
     ),
     ("Input Group", PLACEHOLDER),
     ("Input OTP", PLACEHOLDER),
-    (
-        "Item",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
-        "Kbd",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
     ("Marker", PLACEHOLDER),
     ("Menubar", PLACEHOLDER),
     (
@@ -168,10 +162,6 @@ const SILENT: &[(&str, Why)] = &[
     (
         "Message Scroller",
         Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
-    ),
-    (
-        "Navigation Menu",
-        Unprojected("phase 2b: the next commits of this phase"),
     ),
     ("Pagination", PLACEHOLDER),
     ("Panel", Nothing("the glass surface alone")),
@@ -185,14 +175,6 @@ const SILENT: &[(&str, Why)] = &[
     ),
     ("Questionnaire", PLACEHOLDER),
     ("Radio Group", PLACEHOLDER),
-    (
-        "Resizable",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
-        "Scroll Area",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
     ("Separator", Nothing("rules between captions")),
     (
         "Sheet",
@@ -210,19 +192,7 @@ const SILENT: &[(&str, Why)] = &[
         "Stat",
         Unprojected("Stat: a label with its value, unit and delta"),
     ),
-    (
-        "Table",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
-        "Tabs",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
     ("Textarea", PLACEHOLDER),
-    (
-        "Tree",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
     (
         "Dock",
         Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
@@ -531,8 +501,15 @@ fn told_disabled(seen: &Seen, id: &SemId) -> bool {
 /// Phase 2a reaches all but the drop: a row's and a cut's actions are
 /// controls the tree presents inside them, a select is pressed open (and
 /// shut, while open) and set by its value. The drop stays: a reader does
-/// not drag a file, and `files.open` reaches the same files.
-const UNREACHABLE: &[&str] = &["Files: files.drop drop_files"];
+/// not drag a file, and `files.open` reaches the same files. Phase 2b
+/// adds the Resizable page's split: a group whose `set_ratio` no action of
+/// the tree reaches (a value is set through `set_value` or a select's
+/// `select`, and the contract has no splitter role, AccessKit's
+/// `Splitter`); an agent asks it, and a person drags.
+const UNREACHABLE: &[&str] = &[
+    "Files: files.drop drop_files",
+    "Resizable: resizable_page.split set_ratio",
+];
 
 /// Whether the node's press is off now: its primary action, or the node,
 /// is disabled, so the tree does not offer the press until it is on (a

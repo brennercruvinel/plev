@@ -68,6 +68,17 @@ impl Gallery {
         self.frame();
     }
 
+    /// The person drags from the middle of `id` by `dx`.
+    pub(crate) fn drag(&mut self, id: &str, dx: f32) {
+        let (x, y) = self.middle(id);
+        self.view.handle_event(&WidgetEvent::MouseDown { x, y });
+        self.view
+            .handle_event(&WidgetEvent::MouseMove { x: x + dx, y });
+        self.view
+            .handle_event(&WidgetEvent::MouseUp { x: x + dx, y });
+        self.frame();
+    }
+
     /// The person types `text` into what has the keys.
     pub(crate) fn type_in(&mut self, text: &str) {
         for ch in text.chars() {
@@ -119,6 +130,16 @@ impl Gallery {
 
     pub(crate) fn press(&mut self, id: &str) {
         self.reader(id, Action::Click, None);
+    }
+
+    /// Whether the reader's tree offers `action` on `id`.
+    pub(crate) fn offers(&self, id: &str, action: Action) -> bool {
+        let (u, shown) = self.shown();
+        let want = shown.ids.node(&sid(id));
+        u.nodes
+            .iter()
+            .find(|(n, _)| Some(*n) == want)
+            .is_some_and(|(_, n)| n.supports_action(action))
     }
 }
 

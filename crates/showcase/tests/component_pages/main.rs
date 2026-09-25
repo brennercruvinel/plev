@@ -24,3 +24,7 @@ mod buttons;
 /// Toggles and values: a checkbox, a switch, a chip, a slider, a field, a
 /// select.
 mod values;
+
+/// Choices in a collection: tabs, rows, items, links, crumbs, a tree, a
+/// split.
+mod choices;

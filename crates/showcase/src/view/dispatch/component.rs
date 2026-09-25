@@ -106,18 +106,25 @@ macro_rules! components {
 }
 
 components! {
+    Breadcrumb => breadcrumb,
     Button => button,
     Checkbox => checkbox,
     Chip => chip,
     Dialog => dialog,
     IconButton => icon_button,
     Input => input,
+    NavigationMenu => navigation_menu,
+    Resizable => resizable,
+    ScrollArea => scroll_area,
     Select => select,
     Slider => slider,
     Spinner => spinner,
     Switch => switch,
+    Table => table,
+    Tabs => tabs,
     Toast => toast,
     Tooltip => tooltip,
+    Tree => tree,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

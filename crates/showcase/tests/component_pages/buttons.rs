@@ -56,6 +56,10 @@ fn a_press_that_does_nothing_leaves_the_page_as_a_click_does() {
 #[test]
 fn the_focus_a_reader_leaves_on_a_component_page_goes_with_escape_and_a_click() {
     for (page, id) in [
+        ("Navigation Menu", "navigation_menu_page.link[1]"),
+        ("Breadcrumb", "breadcrumb_page.trail[0]"),
+        ("Tree", "tree_page.tree[5]"),
+        ("Chip", "chip_page.chip[5]"),
         ("Toast", "toast_page.button[info]"),
         ("Button", "button_page.group[1].card[0]"),
     ] {
