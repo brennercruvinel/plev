@@ -161,3 +161,91 @@ two options, the decision is brenner's:
   decision.
 - reading the motion preference per frame, or a process-wide flag a test
   can leak into another.
+
+## addition: phase 2a, the pages that project and the shell (2026-09-25)
+
+task-75 phase 2a closed what phase 1 listed for the pages that already
+project (Todo and Toggle Group, Surface with its quick todo, Silences,
+Files, Capture) and for the shell; the sonda, with file and line, is in
+the task file, section "fase 2a: a sonda". The component pages and the
+full keyboard stay for phase 2b.
+
+### where a fix lives
+
+three things read a page's projection at rest and pin it: the `uir`
+goldens (`crates/uir/fixtures/showcase-{todo,silences,files}.snapshot.json`,
+what the IR fixtures verify against), the capability registry a
+generated surface is verified against and a model is prompted with
+(`uir::Capabilities::from_snapshot`), and the regress scene, which
+carries the projection's revision and every binding. So:
+
+- what the page means changes in the page: the focus a page takes is
+  projected (the todo's filter tab, a surface's node that is not a
+  field, the proposing row's select and buttons, the Silences page's
+  buttons); `capture.level` says its value.
+- what exists because the adapters lack custom actions, or read a role
+  another way, is the reader's presentation and lives in the tree
+  (`engine::accessibility`):
+  - an item of a collection (a list item, a row, a tree item) holds, as
+    controls of its own, the actions its own node does not reach
+    (`present`): its toggle as a checkbox named by the key it reads, any
+    other action without a parameter as a button named by the action.
+    A control is `<item>[<action>]`, in the tree only, with no bounds (the
+    item's rect would win the hit test); a click on it is the item's
+    action, observed over what the reader was shown, through the app's
+    one dispatcher as `Actor::Assistive`. The contract does not move: an
+    agent and an IR still ask `toggle` and `remove` of `todo.item[n]`.
+  - a select's press is its `open`, and its `close` while expanded; its
+    `SetValue` is its `select` with the option.
+  - a press is offered only while its action and its node are on; the
+    node keeps saying whether it is disabled (a field that edits is not).
+  - a group named only by the key of its own id, as a generated surface
+    names an instance of a repeat, is named by the labels inside it.
+  - a status's words are its name as well as its value: macOS announces
+    the value, Windows and AT-SPI the name, so a status that keeps its
+    words in a `message` under a fixed label is heard on all three. The
+    projection keeps its label and its message.
+- what only a reader may hear is in the view's reader snapshot
+  (`ShowcaseView::reader_semantics`, what the bridge is given), never in
+  the projection the port serves: the shell's notice as a polite status,
+  and on the Silences page each accessibility preference button's `on`,
+  which the tree says as a toggle button's state. A person's preference
+  still never leaves through the port nor into a model's prompt (tested
+  through the real port).
+
+### the view's overlays
+
+the toasts on screen, and the modal and the context menu while they hold
+the pointer, are in the view's projection (`ShowcaseView::semantics`),
+where an agent reads them too; `app/access.rs` no longer adds the toasts.
+The comps widgets project themselves under the ids the view gives them
+(`toasts`, `dialog`, `context_menu`), and bind their rects. The overlay
+takes the focus (the dialog's cancel, the menu's first item, or where a
+reader moved it); the page beneath is inert and keeps its own focus,
+which is the projection's again when the overlay closes. Everything the
+overlays do runs through the gallery's one dispatcher, a person's click
+included. The menu bar leaves them out.
+
+### reduced motion
+
+the ambient loops follow the preference too: with it on, a spinner's arc
+and a skeleton's pulse stand still and ask for no frame.
+
+### what stays, and why
+
+- the Files page's `drop_files`: a reader does not drag a file, and
+  `files.open` reaches the same files.
+- on Windows a select with `expanded` is expand-collapse, which the
+  adapter does not implement, so it gets no Invoke: it is set by value.
+  AT-SPI has no text `SetValue`: a select is set there through its
+  options.
+- a presented control has no bounds: a reader walks to it, a pointer
+  does not land on it.
+
+## consequences of phase 2a
+
+- the exact lists of `crates/showcase/tests/access_tree.rs` are down to
+  the file drop; the others are empty and stay empty.
+- the capture baselines moved in their semantics only (the scene's
+  revision with them); every other baseline and the `uir` goldens held.
+- the VoiceOver script of phase 2a, in the task file, is run by a person.

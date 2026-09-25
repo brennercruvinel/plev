@@ -762,3 +762,209 @@ o controle apresentado não tem bounds: no macOS o frame dele é zero
 (`node.rs:415-417`). o leitor chega nele andando pela árvore, não
 passando o mouse. iOS, android e web seguem sem adapter no lock (fase 1):
 nada daqui chega a eles, e tudo compila para eles (a ponte é só desktop).
+
+## fase 2a: o roteiro do VoiceOver (para o brenner rodar)
+
+o que cada passo espera vem dos testes (`crates/showcase/tests/access_tree.rs`,
+`view/dispatch/overlay/tests.rs`, `app/access.rs`,
+`view/apps/silences/tests/generated/access.rs`) e do mapeamento do
+`accesskit_macos` 0.26.1; a frase exata é do VoiceOver, e o que ele
+disser de fato é o registro. o preparo é o da fase 1 (`cargo run -p
+showcase -- <página>`, VoiceOver com Cmd-F5, VO é Control-Option). os
+passos da fase 1 que não aparecem aqui seguem valendo; estes são os que
+mudam ou são novos. nenhum passo pede o Claude: na Surface e na Silences o
+proposer fica em `rules`.
+
+| passo | o que fazer | o que ouvir |
+|---|---|---|
+| todo 3 | VO-Space no campo vazio | o aperto não é oferecido (o `submit` desligado não entra na árvore); o campo segue "campo de texto", editável, não "dimmed" |
+| todo 4 | digitar "buy milk", VO-Space | agora o aperto existe e adiciona; o contador anuncia sem o foco sair do campo |
+| todo 5 | andar até o filtro "Active" com o foco do teclado seguindo o cursor do VoiceOver | "Active, tab"; VO-Shift-F4 (cursor para o foco do teclado) fica em "Active": a página projeta o foco (antes voltava para a janela) |
+| todo 6 | andar até uma linha, VO-Shift-Down para entrar | a linha pelo texto, sem estado; dentro dela "completed, checkbox, unchecked" e "remove, button" (novos). VO-Space no checkbox marca a linha e o contador anuncia; VO-Space em remove tira a linha |
+| todo 6b | registrar o cursor do VoiceOver nos dois controles de dentro da linha | eles não têm retângulo: o cursor pode aparecer vazio ou no canto. registrar se VO-Right chega neles e se passar o mouse sobre a linha diz a linha (deve dizer), não o botão |
+| formulário 2 | "detect silences", VO-Space | aperta; com o foco do teclado seguindo o cursor, VO-Shift-F4 fica no botão (o foco agora é projetado); a status anuncia a mensagem da detecção |
+| formulário 4 | andar pelos cortes, entrar num | o corte pelo intervalo; dentro, "preview segment", "apply cut", "reject cut", botões (novos). VO-Space em "apply cut" aplica e "silences.counts" anuncia; o "apply cut" de um corte já aplicado fica "dimmed" |
+| formulário 5 | `-- Surface`, "proposer, pop-up button", VO-Space | abre a lista (novo); entrar nela: "rules", e "claude" onde houver o programa; VO-Space em "rules" escolhe e fecha. não apertar propose com `claude` |
+| formulário 5b | a quick todo, andar pelos itens | cada item pelo texto do todo ("Absorb the plev demos into the showcase"), não "1", "2", "3"; dentro, o texto e "done, checkbox" |
+| formulário 5c | no "intent" escrever "xyzzy", VO-Space em propose | a linha de status anuncia o porquê da recusa, polida, sem tirar o foco do campo; é o value no macOS, e o nome agora é a mesma frase (é o que o windows e o AT-SPI falariam) |
+| modal 1 | `-- Dialog`, abrir o diálogo com o mouse | o VoiceOver vai para "Cancel, button" dentro de "Apply settings?", diálogo, com o texto como descrição; a página some da navegação (inerte) |
+| modal 2 | VO-Space em "Apply" (ou em "Cancel") | o diálogo fecha; com Apply, "Settings applied." anunciado; o foco volta para onde estava na página |
+| menu 1 | `-- Context Menu`, clique direito na área | "context menu, menu", o foco em "Stage file, menu item"; "Locked action" dimmed |
+| menu 2 | VO-Space em "Copy path" | o menu fecha e "Context menu: Copy path" é anunciado |
+| preferência 1 | `-- Silences`, no "intent" escrever "accessibility", propose | a faixa aparece; "larger text, checkbox, unchecked", o mesmo para "more contrast", "denser", "sparser"; "done, button" |
+| preferência 2 | VO-Space em "larger text" | "checked"; a superfície aberta aumenta o texto; VO-Space de novo: "unchecked". o port e o prompt do modelo não levam esse estado (os testes provam) |
+| aviso | apertar "detect silences" e trocar de app antes de terminar (ffmpeg no PATH) | registrar se o VoiceOver fala o aviso ("silences detected...") com a janela sem foco; o nó existe na árvore do leitor, polido; o macOS pode calar um app em segundo plano |
+| nível | `-- Capture`, "microphone level" | uma barra de progresso com valor (0 sem microfone), não indeterminada |
+| reduced motion 2 | Reduzir movimento ligado; `-- Spinner`, "Start spinners"; `-- Skeleton`, clique numa linha | os arcos ficam parados, o pulso fica parado; desligar e voltar à janela: giram e respiram |
+
+no windows (NVDA, Narrator) e no AT-SPI (Orca), quando o alvo rodar: a
+linha de status de uma proposta e a da Silences passam a ser anunciadas
+(o nome segue a mensagem); no windows o proposer não abre pelo Invoke (o
+nó é expand-collapse e o adapter não tem esse pattern) e se escolhe pelo
+valor; no AT-SPI ele abre pelo `click` e se escolhe pelas opções.
+
+## handoff da fase 2a (2026-09-25)
+
+branch `task/75b-a11y-pages`, sobre `main` em `ee67f53c`. sem push.
+
+### commits
+
+1. `168b240e` a sonda (seção "fase 2a: a sonda" acima).
+2. `b7059376` as ações que o leitor não alcança viram controles que a
+   árvore apresenta dentro do item; o select abre e fecha pelo aperto e
+   se escolhe pelo valor.
+3. `d6a6def9` as páginas projetam o foco que tomam.
+4. `bcc57315` os papéis: o grupo nomeado pela chave toma o texto de
+   dentro, `capture.level` com `value`, o aperto só com a ação ligada.
+5. `b8616294` a mensagem de uma status é o nome dela também.
+6. `61bdfcec` o toast, o modal e o menu de contexto na projeção da view,
+   pelo dispatcher; o aviso do shell como status só na árvore do leitor;
+   o `app/access.rs` sem o remendo. `24df5d78` o teste da barra de menu.
+7. `17c903c9` e `f208fbab` spinner e skeleton parados com reduced motion.
+8. `0ff5e28d` o leitor ouve qual preferência está ligada; o port e o
+   prompt não.
+9. `f3e9f914` as baselines da Capture.
+10. este commit: roteiro, ADR e handoff.
+
+### onde cada correção mora (o desvio do briefing)
+
+o briefing propunha a página projetar cada ação de uma linha como um
+controle filho. a sonda mostrou que a projeção de uma página parada é
+golden do `uir` (`crates/uir/fixtures/showcase-{todo,silences,files}.snapshot.json`,
+arquivo proibido nesta fase), é o registro de capacidades que o IR e o
+prompt leem (os controles entrariam como capacidades duplicadas) e entra
+no `scene.json` do regress (revisão e bindings). por isso os controles
+das linhas, o checkbox da linha, o aperto do select, o nome da status, o
+nome dos itens da quick todo e o aperto só com a ação ligada são
+apresentação da árvore, no `crates/engine/src/accessibility/**`
+(`present.rs` novo, `tree.rs`, `action.rs`, `ids.rs`, `mod.rs`); o
+contrato não mudou. o que é significado da página mudou na página (o
+foco, o `value` do nível). o comps mudou só em `feedback/spinner.rs` e
+`content/skeleton.rs` (e os testes deles); o modal e o menu de contexto
+já sabiam se projetar, nada mudou neles.
+
+### cada item
+
+1. ações como controles: um item (`ListItem`, `Row`, `TreeItem`) mostra
+   dentro dele um botão por ação sem parâmetro que ele mesmo não alcança,
+   `<item>[<ação>]`, sem bounds; o `Click` volta como a ação do item,
+   `Actor::Assistive`, pelo dispatcher. o select: aperto é `open` (e
+   `close` aberto), `SetValue` é `select`. `drop_files` fica.
+2. foco: a Todo guarda a aba; a Surface e a Silences guardam o nó da
+   superfície que não é campo (o crate `surface` só guarda o de campo); o
+   `Proposing` guarda o select e os botões; a Silences, os dois botões. o
+   clique da pessoa e o Escape soltam.
+3. papéis: a linha do todo contém o checkbox "completed" (o toggle
+   apresentado; a linha sem `toggled` e sem `Click`); os itens da quick
+   todo têm o nome do texto; `capture.level` tem `value` de 0 a 1 (o
+   `level` ficou); `OFFERED_DISABLED` resolvido tirando o aperto quando a
+   ação está desligada: o campo continua editável, e o caminho da
+   task-60 (focar, digitar, apertar) segue, porque o texto liga o
+   `submit`.
+4. status: nome e value são a mensagem; sem mensagem, o nome da página.
+   teste por página (`a_status_says_its_new_message_as_its_name_and_its_value`)
+   e no engine.
+5. toast, aviso, modal e menu: na projeção da view enquanto estão na tela
+   (o agente lê também); o foco vai ao cancel do diálogo e ao primeiro
+   item do menu e volta à página quando fecham; tudo pelo dispatcher,
+   inclusive o clique da pessoa; a barra de menu os deixa de fora. o
+   aviso (`shell.notice`) é status só na árvore do leitor; o port segue
+   com `shell:notice`.
+6. reduced motion: spinner e skeleton parados, as páginas sem pedir frame.
+7. preferência: o `reader_semantics` da view refaz a projeção só quando
+   há algo só do leitor; a Silences reabre os quatro botões da faixa
+   aberta com `on`; a árvore diz toggle button.
+
+### as listas, antes e depois
+
+| lista | fase 1 | fase 2a |
+|---|---|---|
+| `UNREACHABLE` | 22 (o `remove` das linhas nas 3 páginas do todo, as 3 ações dos 2 cortes, `select`/`open`/`close` dos 2 proposers, o `drop_files`) | 1: `Files: files.drop drop_files` (um leitor não arrasta arquivo) |
+| `FOCUS_NOT_PROJECTED` | 13 | 0 |
+| `OFFERED_DISABLED` | 4 | 0 |
+| páginas que projetam | 6 | 6 (as 76 de componente são da fase 2b) |
+
+### as baselines re-abençoadas
+
+só `capture@core@1280x800` e `capture@hoff@1280x800`. o `frame.png` não
+mudou; no `scene.json` só a revisão da projeção:
+
+```diff
+   "semantics": {
+-    "revision": "dc796abd4976914f",
++    "revision": "e570b657d60aa4a5",
+     "nodes": 6
+   },
+```
+
+no `semantics.json`, em `capture.level`:
+
+```diff
+         "level": {
+           "kind": "num",
+           "value": 0.0
++        },
++        "value": {
++          "kind": "num",
++          "value": 0.0
+         }
++      },
++      "constraints": {
++        "range": [
++          0.0,
++          1.0
++        ]
+       }
+```
+
+o `regress check` antes do bless dizia "capture.level semantics changed:
+value none -> 0; constraints changed; visual unchanged". nota: o
+`scene.json` guarda a revisão do `semantics.json`, então a linha da
+revisão muda junto; li a autorização como cobrindo esse espelho. se o
+orquestrador ler o pare de forma estrita, o commit `f3e9f914` e o
+`value` de `capture/semantics.rs` saem juntos, e o leitor volta a não ter
+o número da barra.
+
+### os testes da preferência
+
+em `view/apps/silences/tests/generated/access.rs`:
+`a_screen_reader_hears_which_preference_is_on` (a faixa aberta, os
+quatro botões desligados na árvore do leitor, "larger text" ligado pelo
+aperto do leitor, "more contrast" pelo da pessoa, desligado de novo) e
+`the_preference_a_reader_hears_never_goes_out_through_the_port` (com
+"larger text" ligado, o agente observa pelo port de verdade os cinco
+botões sem estado; `semantics()` e `gallery_semantics()` sem `on`; o
+`snapshot()` do app, de onde sai o prompt, sem a faixa; só o
+`reader_semantics()` diz). o teste do prompt da task-70
+(`a_model_s_prompt_is_the_same_with_and_without_the_preferences`) segue
+verde.
+
+### gate e regress
+
+- antes (o briefing): 3062 passam, 27 ignorados, 176 baselines.
+- depois, em `f3e9f914`: `./script/gate` verde, pernas urnaui e wasm
+  rodaram; 3086 passam (+24: 3001 no workspace, 85 no urnaui), 27
+  ignorados, 0 falhas. `regress check`: 176 baselines, 176 iguais.
+- `Cargo.toml` e `Cargo.lock` intocados (md5 do lock igual), nenhuma
+  dependência nova, AccessKit na mesma versão; `crates/uir`,
+  `crates/surface`, `crates/sem`, `crates/wire/src`, `crates/propose` e
+  `crates/ide/src` intocados. sempre com `PLEV_CLAUDE` no stub e
+  `--offline`; nenhuma janela aberta, nenhum leitor ligado, nenhum clique
+  sintético, nenhum diálogo nativo.
+
+### linha para o índice de ADRs
+
+| 2026-09-25 | [accessibility-is-production-ready-per-platform](accessibility-is-production-ready-per-platform.md) | proposed | fase 2a: nas páginas que projetam, as ações de um item que ele mesmo não alcança são controles que a árvore apresenta dentro dele, o select abre pelo aperto e se escolhe pelo valor, o aperto só com a ação ligada, a mensagem de uma status é o nome dela; as páginas projetam o foco que tomam; o toast, o modal e o menu na projeção da view, pelo dispatcher; o aviso do shell e a preferência de accessibility só na árvore do leitor, nunca no port nem no prompt; spinner e skeleton seguem o reduced motion (task-75 fase 2a) |
+
+### o que fica para a fase 2b
+
+- as 76 páginas de componente, que não projetam nada.
+- o teclado completo nos widgets: Tab em ordem semântica nas páginas que
+  projetam (hoje a Todo não anda com Tab), setas em listas, menus, tabs e
+  árvores, o trap de foco no modal (o foco já vai e volta, o teclado
+  ainda não o prende) e o anel de foco nas pílulas do todo.
+- bounds para os controles apresentados: pede a página ligar um retângulo
+  por ação, e isso muda o `scene.json` de baselines existentes.
+- o ide não liga a ponte (`crates/ide/src`: sem `Bridge`); a página Git da
+  galeria não projeta.
+- windows, AT-SPI, iOS e android seguem esperando o alvo ou o adapter.
