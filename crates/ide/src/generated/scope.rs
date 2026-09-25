@@ -4,7 +4,8 @@
 //! (`propose::prompt`), so the workbench gives it a snapshot of its own:
 //! the commits the review names, as the rules read the intent, each with
 //! its message, its files and the action that shows its diff; and the diff
-//! region, with its lines only while it shows one of those commits.
+//! region, with its lines and their kinds only while it shows one of
+//! those commits.
 //!
 //! Left out, whatever the workspace shows: the working tree (its changed
 //! files, a file's diff), every other commit, the authors, the branch, a
@@ -67,15 +68,18 @@ pub(crate) fn scoped(app: &Snapshot, commits: &[SemId], ids: &Ids) -> Result<Sna
         _ => false,
     };
     let mut diff = b.node(&ids.diff, Role::Region, "diff");
-    match (shows, value("target"), value("lines"), value("count")) {
-        (true, Some(t), Some(lines), Some(count)) => {
+    let lines = (value("lines"), value("kinds"));
+    match (shows, value("target"), lines, value("count")) {
+        (true, Some(t), (Some(lines), Some(kinds)), Some(count)) => {
             diff.state("target", t)
                 .state("lines", lines)
+                .state("kinds", kinds)
                 .state("count", count);
         }
         _ => {
             diff.state("target", "")
                 .state("lines", Vec::<String>::new())
+                .state("kinds", Vec::<String>::new())
                 .state("count", 0i64);
         }
     }

@@ -109,6 +109,43 @@ fn the_registry_is_the_workspace_with_each_commits_files_and_the_diff() {
     }
 }
 
+/// The kind of each line of a commit's diff, by name, beside the lines
+/// (task-97): as many kinds as lines, each a name of `uir::LineKind`, a
+/// header where a hunk begins and the name of the mark on every other
+/// line; nothing before a diff is shown.
+#[test]
+fn the_diff_says_the_kind_of_each_line_beside_it() {
+    let mut rig = Rig::review();
+    let app = rig.bench.app_snapshot().expect("validates");
+    let caps = Capabilities::from_snapshot(&app);
+    let kinds_at = at(&id("diff"), "kinds");
+    assert_eq!(caps.datum(&kinds_at).map(|d| d.kind), Some(ValueKind::List));
+    assert_eq!(rig.value("diff:kinds"), Value::List(Vec::new()));
+    for node in commits(&rig).iter().take(REVIEWED.len()) {
+        rig.ask(Actor::Human, node.id.as_str(), "show_diff", None);
+        rig.until(|e| matches!(e, GitEvent::DiffCommit { .. }));
+        let shown = lines(&rig);
+        let Value::List(kinds) = rig.value("diff:kinds") else {
+            panic!("the kinds are a list");
+        };
+        assert_eq!(kinds.len(), shown.len(), "{}", node.id);
+        for (line, kind) in shown.iter().zip(&kinds) {
+            let named = uir::LineKind::parse(kind).unwrap_or_else(|| panic!("{kind}"));
+            let want = match line.chars().next() {
+                Some('+') => uir::LineKind::Added,
+                Some('-') => uir::LineKind::Removed,
+                Some(' ') => uir::LineKind::Context,
+                _ => uir::LineKind::Header,
+            };
+            assert_eq!(named, want, "{line:?}");
+            if named == uir::LineKind::Header {
+                assert!(line.contains("@@ -"), "a hunk's header: {line:?}");
+            }
+        }
+        assert!(kinds.iter().any(|k| k == "header") && kinds.iter().any(|k| k == "added"));
+    }
+}
+
 /// The person writes `intent` in the line and proposes, each through the
 /// dispatcher; the receipt of the proposal.
 fn propose(rig: &mut Rig, intent: &str) -> sem::Receipt {
