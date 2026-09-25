@@ -730,3 +730,128 @@ defeito do retângulo único.
 - home e end continuam pela linha lógica; shift estende a seleção lógica.
   o clique passa a achar a parada mais próxima, para cair onde o caret é
   desenhado.
+
+## handoff da fase 3: bidi no cursor e na seleção
+
+fecha o item "testes de movimento bidi" do critério de aceite, com gate
+verde. escopo: movimento lógico e visual, seleção contínua em texto
+misto, no `TextInput` e no editor, testes no rope e nos dois widgets.
+
+### commits
+
+- `61283afa` task-74: phase 3 probe, where the caret and the selection break in mixed text
+- `555ac24a` task-74: logical movement in the rope, pinned in mixed text (Hebrew and Arabic in Latin, an RTL paragraph, niqqud and harakat)
+- `7a30e038` task-74: visual caret movement and selection in TextInput, from a new per-cluster layout read
+- `a746f2b3` task-74: visual caret movement and selection in the editor
+- o commit deste handoff
+
+### a sonda, curta
+
+o rope já andava certo em ordem lógica, por grafema. o que quebrava era
+o desenho: o x do caret (`cursor_rect_in`) supõe LTR, então dentro de um
+trecho RTL todo caret saía um glifo deslocado, e num parágrafo RTL o
+começo e o fim caíam no lugar errado; a seleção era um retângulo só, com
+largura negativa em alguns intervalos. o shaping já dava tudo o que
+faltava (nível bidi por glifo, direção do parágrafo, ordem visual); só
+não havia leitura disso fora do engine. detalhe em "fase 3: a sonda".
+
+### o que mudou, por crate
+
+- `engine`: uma leitura nova, `TextMeasurer::clusters_styled` com o tipo
+  `ClusterBox` (`crates/engine/src/text/measure.rs`): os clusters de cada
+  linha da esquerda para a direita, com bytes, caixa, nível e direção do
+  parágrafo. nada do que existia mudou.
+- `rope`: só docs e testes. `move_left` e `move_right` passam a dizer que
+  são lógicos (grafema anterior e seguinte na ordem do texto).
+- `comps`, `TextInput`: `crates/comps/src/form/text_input/visual.rs`
+  (`VisualLine`, uso interno do crate) faz de cada fronteira de grafema
+  uma parada com x e lugar na ordem da tela. na troca de direção o byte
+  fica na borda do lado de nível menor, o lado do parágrafo: em
+  `abc |אבג def` o caret fica depois do espaço, onde a letra latina
+  digitada aparece. setas andam para a parada vizinha na tela; Home e End
+  pela linha lógica; `handle_select_left`, `_right`, `_home`, `_end`
+  estendem a seleção, que continua um intervalo lógico só
+  (`TextBuffer::select_to`, `set_cursor`); `caret_x` e `selection_boxes`
+  dão a geometria; o clique (`handle_click_in`) cai na parada mais
+  próxima. o `TextField` desenha caret e seleção por aí, um retângulo por
+  trecho coberto, e ganhou `EditKey::SelectLeft`, `SelectRight`,
+  `SelectHome`, `SelectEnd`. um parágrafo RTL fica pendurado na borda
+  direita da caixa, como o renderer desenha.
+- `comps`, editor: as setas usam a mesma linha visual; na ponta da linha,
+  o movimento lógico na direção do parágrafo leva à linha vizinha. alt e
+  cmd com seta, Home e End continuam lógicos no rope. caret, clique e
+  seleção leem as mesmas paradas; a quebra de linha selecionada aparece
+  do lado em que o parágrafo termina (à esquerda numa linha RTL).
+- latim: a mesma conta de antes, bit a bit (há teste disso), e as 176
+  baselines iguais.
+
+### testes (25 novos)
+
+- rope, `crates/rope/src/tests_bidi.rs` (6): as duas frases e a frase RTL
+  andam em ordem de texto nos dois sentidos; niqqud e harakat andam junto
+  da letra; seleção que cruza a troca de direção é um intervalo lógico
+  (e colapsa nas pontas lógicas); início, fim de linha e palavra em texto
+  misto.
+- engine, `crates/engine/src/text/tests_measure.rs` (3): clusters da
+  esquerda para a direita com os níveis (`abc אבג def` e um parágrafo
+  RTL); em latim cada cluster começa no x do caret de antes; marcas
+  entram no cluster da letra.
+- `TextInput` e `TextField`, `crates/comps/src/form/text_input/tests/tests_bidi.rs`
+  (11): a seta direita percorre a tela nas três frases, a esquerda volta,
+  o caret anda para a direita a cada toque e cada byte aparece uma vez;
+  num trecho RTL a esquerda avança no texto; o caret nas fronteiras; o
+  parágrafo RTL na borda direita da caixa; shift com setas e com Home e
+  End; clique em cada parada volta a ela; latim bit a bit igual; o
+  `TextField` desenha o caret da fronteira, as duas lavagens da seleção
+  cruzada e o caret do parágrafo RTL.
+- editor, `crates/comps/src/editor/tests_bidi.rs` (5): as setas percorrem
+  cada linha e passam para a vizinha nas pontas; na linha RTL a esquerda
+  avança; shift cruzando direções desenha duas caixas com os dígitos no
+  meio; o caret da fronteira e o clique em cada parada das três linhas; a
+  quebra de linha selecionada do lado certo.
+
+### o PNG
+
+`/Users/nn/Dev/hoff/plevdev/target/agents/one/task-74c/text-field-bidi.png`,
+sem janela, pelo caminho do frame (2x). três `TextField` no tema hoff:
+`hello مرحبا 123 world` com o caret na fronteira depois de `hello `
+(esquerda do 123); a mesma frase com shift+direita seis vezes a partir de
+`hel|lo`, duas lavagens (`lo ` e o árabe com seu espaço, o `123` fora) e
+o caret entre o 3 e o espaço árabe; `שלום עולם` com o caret no começo,
+na borda direita. para refazer:
+`TEXT_FIELD_BIDI_OUT=<dir> cargo test -p comps --lib the_field_draws_the_boundary_caret`.
+
+### gate e regress
+
+`./script/gate` verde com o ambiente do briefing: `cargo test --workspace`
+3104 passed, 0 failed, 27 ignored (a base tinha 3079: são os 25 novos,
+nenhum saiu); clippy, fmt e wasm verdes; perna urnaui 85 passed, 0
+failed, 1 ignored. `regress -- check` depois de tocar
+`crates/showcase/examples/regress/main.rs`: 176 unchanged, 0 changed.
+fora do gate: `cargo check -p comps --target aarch64-apple-ios-sim` com
+`-D warnings` verde; `cargo ndk -t arm64-v8a check -p showcase --lib`
+compila, com os dois avisos antigos de código morto. disco: 11 GB livres.
+
+### pendências
+
+- os apps não mandam shift+seta para o campo: `crates/ide/src/keys.rs`,
+  `crates/showcase/src/keys.rs` e o `keys.rs` do urnaui mapeiam só a
+  tecla, sem modificador, e estão fora dos arquivos desta fase. o
+  `TextField` já aceita `EditKey::Select*`; falta a linha em cada app. o
+  editor não precisa (recebe os modificadores).
+- no editor, entre uma linha LTR e a seguinte RTL, a direita vai e volta:
+  do fim da LTR vai ao começo da RTL (na borda direita dela), e de lá a
+  direita volta à linha anterior. é a regra "visual dentro da linha,
+  lógico entre linhas"; mudar é decisão.
+- alt+seta (palavra) e as setas de cima e de baixo continuam lógicas: numa
+  linha RTL alt+esquerda vai para a palavra anterior do texto, que na
+  tela fica à direita; a coluna-alvo vertical conta grafemas, não x.
+- um cluster maior que um grafema (ligadura, como lam-alef) põe o caret
+  numa fração da largura; o corpus não tem ligadura, então isso não tem
+  teste com pixel.
+- o `TextField` desenha com largura de quebra e mede sem ela: texto maior
+  que o campo quebra na tela e o caret segue na linha única. já era
+  assim no latim; campo de linha única pede rolagem horizontal, fora do
+  bidi.
+- o `TextInput` tira a ordem das setas do estilo padrão, porque a ordem
+  vem só dos níveis bidi do texto; o x do caret usa o estilo do dono.
