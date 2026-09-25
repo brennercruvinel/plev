@@ -448,3 +448,68 @@ severidade do que ficou:
   `hot_reload` do engine, e quebraria com `--no-default-features`;
   módulo de teste fora de linha com outro nome ainda entra na busca;
 - P2: fases c (gravar no `.rs`) e d (quem leu este token).
+
+## fase c: a sonda
+
+rodada 2 (fase c), na base `d0df381`, lendo o código, antes de qualquer
+mudança. cada afirmação aponta arquivo:linha na base.
+
+(a) o que o baseline guarda de cada literal, e o que é "o mesmo skeleton"
+
+- `Snapshot` (crates/engine/src/hot_reload/literals.rs:51) guarda o hash do
+  skeleton (`skeleton: u64`), a lista dos literais em ordem (`lits`) e onde
+  cada um começa (`at`). `At` (literals.rs:63) tem linha, coluna (de 1, em
+  chars) e `unseen` (doc comment, item sob `#[cfg(test)]`). não há span
+  em bytes: nem início nem fim. o `proc-macro2` do lock (1.0.106) tem
+  `Span::byte_range` sob a mesma feature `span-locations` (lib.rs:478 do
+  crate), com o intervalo relativo ao texto lido.
+- o skeleton é o `FxHasher` do `walk` (literals.rs:124): cada ident, cada
+  pontuação, o delimitador de cada grupo e, no lugar de cada literal, só
+  o marcador `0xB1` (literals.rs:156). comentário e espaço não entram.
+- "o mesmo skeleton" hoje é o que `apply_change` confere contra o
+  `BASELINE` (literals.rs:301): hash igual e o mesmo número de literais;
+  e nenhum literal `Other` (número, char, byte) mudou (literals.rs:311).
+  qualquer outra coisa é `Change::Code`, o rebuild.
+- o `BASELINE` é tirado uma vez, na thread do watcher, quando ele nasce
+  (hot_reload/source.rs:32, literals.rs:256 a 266); o `GpuContext` cria o
+  watcher de todo app (gpu/context.rs:491). um save que mantém o skeleton
+  guarda o arquivo como está no disco em `EDITED` (literals.rs:323 a 326):
+  é de lá que `sites_of` tira linha e coluna depois de um save.
+
+(b) por onde a edição entra na janela, e quem pode
+
+- hoje o shell só vê o clique: `WindowEvent::MouseInput` esquerdo chama
+  `App::view_source` antes da página (app/events.rs:137), e o
+  cmd+clique vai para `origin_at` (app/source.rs:37). o teclado
+  (app/events.rs:52 a 101) não tem gancho do view source: a edição
+  precisa de um, o primeiro do `KeyboardInput`, e de um no desenho do
+  frame (app/pace.rs:48, depois do `view.render`).
+- o widget é o `comps::form::TextField` (crates/comps/src/form/text_field.rs:49):
+  `insert` (:179) para o texto, `edit(EditKey)` (:190) para apagar e
+  mover, `render_to_layer` (:273) para desenhar numa camada nossa, acima
+  dos toasts. o comps não precisa de widget novo.
+- quem pode: só a pessoa, pelo teclado e pelo mouse da janela. a edição
+  não é uma capacidade: nada dela entra na projeção nem no dispatcher. o
+  que um agente pede pela porta vai para `serve_agent_recorded`, o
+  dispatcher da página (app.rs:325), e o `Hand` do mirror aperta pelo
+  mesmo dispatcher como `Actor::Agent` (app/mirror.rs:373); nenhum dos
+  dois chega ao teclado do shell. o `PERSON_ONLY` da casa é o das
+  capacidades do shell no dispatcher (view/dispatch/shell.rs:55); como a
+  gravação não passa por ele, a recusa fica na própria gravação: ela
+  recebe quem pediu e recusa `Actor::Agent`, com teste.
+
+(c) como o hot reload aplica depois da gravação
+
+- o `SourceWatcher` junta os eventos por 500 ms (hot_reload/source.rs:33),
+  fica com os `.rs` criados ou modificados que não começam com ponto
+  (:42, :96) e chama `apply_change` (:52): só literais, `Literals(n)` e
+  `wake()` (:65), o redraw da janela.
+- `apply_change` troca o mapa de overrides (`baseline[i] -> agora[i]`),
+  que o texto consulta ao virar pixel: `TextNodeKey` (compositor/scene.rs:127)
+  e o `TextMeasurer` (text/measure.rs:330). a janela mostra o texto novo
+  com o estado intacto.
+- então: a gravação escreve num arquivo temporário com ponto no nome, na
+  mesma pasta (o watcher ignora), e faz o rename por cima; em seguida
+  chama `apply_change` ela mesma, para o próximo frame já mostrar o texto
+  sem esperar os 500 ms. o evento do rename chega depois ao watcher, que
+  acha o mesmo delta (idempotente) e pede um frame.
