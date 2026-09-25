@@ -290,3 +290,167 @@ e o espelho desenha uma caixa no lugar, e quem assiste fica no log e na
 gravação. o `image_is_stream`, só de leitura, entrou no store para o
 primeiro frame da câmera também não sair; aceito pelo orquestrador.
 
+## phase 2: the mirror answers, a secret stays (task-79b, 2026-09-25)
+
+the phase 1 channel only showed. this phase adds the two things it left:
+input back through the semantic contract, and the redaction's gap. the
+probe is in the task file (`fase 2: a sonda`) and in
+`crates/showcase/tests/mirror_probe.rs`: over the gallery's 164 frames,
+445 bound controls, none marked secret, 6 bound and not projected (the
+Git page's changes, stacks and diff), none on a hidden layer, and no
+overlapping pair whose bind order and stacking disagree.
+
+### decision: a click goes back as an act
+
+```text
+the viewer, on its hand's connection (hello "mirror", the watch's name):
+-> {"v":1,"id":"2","type":"observe"}                       after each frame it takes
+<- {"v":1,"id":"2","type":"snapshot","revision":"cfc1...","nodes":[...]}
+   a click at (x, y): Viewer::hit -> todo.item[1]; primary -> toggle
+-> {"v":1,"id":"3","type":"act","target":"todo.item[1]","action":"toggle","from_revision":"cfc1..."}
+<- {"v":1,"id":"3","type":"stage","request":"4","stage":"requested",...}  ... completed
+```
+
+- **where the control is.** the app sends a frame's bindings from the
+  bottom of the frame to the top, by the rank `Compositor::hit` takes
+  (the layer's z-order, its place among the layers, the bind order), and
+  without those on a hidden layer (`app::mirror::stacked`). the viewer's
+  `hit` is the last binding whose visible rect holds the point: the
+  control the app's own hit test finds there. the bindings the viewer
+  draws over the scene take no part.
+- **what a click presses.** what a screen reader's click presses:
+  `engine::accessibility::primary` (the first of activate, toggle,
+  submit, select without a parameter; a button's one action; a select's
+  open or close), and only where the reader's tree offers a click (the
+  action and the node on). a control with nothing to press (a field, a
+  label, a region: 134 of the 445) sends nothing, and neither does a
+  point on no control. typing, dragging and scrolling stay out: each
+  carries a parameter, and a parameter from whoever watches is another
+  decision.
+- **what it rests on.** the viewer's `Hand` is a second connection under
+  the name its watch said: one actor, so what one connection was shown
+  the other was. it observes the whole app after each frame the viewer
+  takes (looks in a row are one) and acts `from_revision` of its last
+  look. the watch gives no revision (it tells the host, not what the
+  actor was shown), so the viewer looks; and it looks per frame so the
+  act rests on the scene the person saw: when the app moved on since,
+  the act is refused `stale`, with what moved and who acted, as for any
+  agent.
+- **who acts.** the app takes it as `Actor::Agent` under the hello's name
+  ("mirror" in the example): the app cannot tell who is at the other end
+  of the socket. an action kept for a person is refused `not_authorized`
+  (the camera's switch, `open_file`, the shell's window and print); one
+  whose policy asks a person waits (`awaiting_confirmation`) for the
+  person at the app, who confirms or declines it there. the viewer says
+  each outcome in a line (`app::mirror::said`: on stderr and in the title
+  with `--show`, on stdout headless with `--click x,y`).
+- **protocol v1: unchanged.** no request, reply or field is new: the
+  mirror speaks `hello`, `observe`, `act` and `scene` as they are. the
+  order of a frame's `bounds`, which the protocol never fixed, is now the
+  app's stacking order.
+
+### decision: a secret travels masked
+
+- **which.** the port's one rule, `sem::redact::is_secret`, over the
+  app's projection at that frame: a bound control marked secret, one the
+  projection does not hold, or every one when nothing projects (it fails
+  closed, as it does for a request and its stages). the shell makes each
+  a `rec::scene::Mask`: the layer the control is bound on and the rect it
+  is bound to, the part a clip hides included (`app::mirror::masks`).
+- **where.** in the codec, before anything is written
+  (`rec::scene::Sender::frame_masked`, `scene/mask.rs`): what the secret
+  draws is in no body, hash, patch or asset of the frame, so the port and
+  the server only ever hold bytes that never had it. what it draws, in
+  its layer: every node inside a clip that lies in its rect (the field's
+  own clip: a line scrolled out of sight included), every text, image and
+  path whose extent meets the rect (a text measured by the engine's
+  measurer, the one its drawing takes, so a scrolled text whose origin is
+  out of the rect too), every other node that meets the rect without
+  covering it (the caret, a selection). a node covering the whole rect is
+  a ground (the page, the panel, the field's own fill and edge) and
+  travels, and so do the clips.
+- **what is shown.** a box in the place of the first of those nodes: a
+  dark rounded rect with its edge and "secret, not mirrored"
+  (`rec::scene::SECRET_LABEL`), the place and the size and nothing else,
+  like the camera's box. its nodes depend on the rect alone: the person
+  typing in a secret field changes no byte of the layer, and nothing
+  travels, not even the caret's blink or the rhythm of the keys.
+- `SceneNode`, the theme and the engine do not change; the box is made of
+  ordinary nodes, so a viewer of phase 1 draws it as it is.
+
+### measured (phase 2)
+
+- the viewer's hit against the app's, on every page in both themes, at
+  the center of every bound control and on a 20 px grid: the same
+  control everywhere.
+- a click on a Todo item, in process and over the socket between two
+  processes: the app reaches the state and the revision an agent's act
+  on that item reaches, and the frame the click left comes back to the
+  mirror with the app's hash. the camera's switch: refused, said, nothing
+  drawn anew. a point on no control, a region, an off submit: no act.
+  a scene one look behind: `stale`, naming the agent that acted.
+- a login form drawn for real (a password field and a pin said by a
+  status, marked secret): neither is in any line or decoded byte of the
+  watch, nor in the look (their length only); the mirror is the app's
+  frame but for a box in each place; a keystroke sends 0 bytes.
+- every gallery page through the shell's masked path: the pixels of
+  phase 1 where nothing is masked; only the Git page's three panes are
+  masked, in both themes, the mirror differing only inside them.
+
+### reason (phase 2)
+
+- one translation of a click into the contract, the screen reader's: a
+  second rule for the mirror would let the two disagree on what a click
+  means.
+- a look per frame over a look per click: observing at the click would
+  rest the act on a state the person never saw, and an item toggled by
+  someone else in between would be toggled back without a refusal.
+- a connection of its own: the client reads replies by id and would
+  skip the frames while it waits for stages, and an act may wait for a
+  person for as long as the person takes.
+- the app decides, the codec masks: only the app has the projection that
+  says what is secret, and the codec is the one place a frame becomes
+  bytes, so no copy of the frame with the secret in it exists to leak.
+- a box over dots of the secret's length: dots would still leave the
+  caret and the selection, which follow the width of every glyph; they do
+  not serve a secret that is not a text; and they would say the length,
+  which the look already gives whoever observes. the box says only where
+  and how large, and the camera already speaks that way.
+- failing closed: the rule the port keeps for everything else; its cost
+  is measured (the Git page) and named.
+
+### consequences (phase 2)
+
+- the Git page's workbench is masked in the mirror (three boxes) until
+  the gallery projects the Git page; the ide binary projects it, the
+  gallery does not (`src/view`, outside this phase).
+- a mirror in a window leaves one observation of "mirror" per frame it
+  looked at in a recording, beside its watch, and its clicks as receipts
+  of "mirror".
+- a secret drawn on another layer, or out of the rect it is bound to and
+  of its clips, travels: the page marks and binds what shows a secret,
+  as a screen reader already asks (a secret status is not announced). a
+  secret projected and not bound has no place to mask.
+- the mirror's hand is an agent: it never confirms, never runs what is
+  kept for a person, and cannot type.
+
+### avoid (phase 2)
+
+- a click back as a coordinate, an event or anything but an act the
+  dispatcher checks.
+- an act that rests on an observation made after the click.
+- a mask made from the visible rect alone: a clipped node still carries
+  its bytes.
+- a mask decided by the codec without the app's projection, or a secret
+  drawn as dots of its length.
+
+## integração da fase 2 (2026-09-25, orquestrador)
+
+aceita sem devolução. a regra da máscara falha fechada (um controle
+ligado que a projeção da galeria não tem conta como segredo, a mesma
+regra do port para um nó desconhecido): a página Git, que liga os três
+painéis mas não projeta, aparece mascarada no espelho. o orquestrador
+manteve assim, porque o diff dela mostra conteúdo de arquivo e o lado
+seguro é o padrão; a máscara sai quando a página Git projetar. o agente
+também achou o teste da câmera da fase 1 procurando só 16 das 200 cores
+da câmera falsa e o corrigiu para todas.

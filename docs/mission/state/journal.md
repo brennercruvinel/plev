@@ -14,6 +14,23 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-79 fase 2: o espelho responde e o segredo não atravessa
+
+- **disparada e integrada:** `task/79b-mirror-input` (6 commits, agente
+  no Opus, base `8f35c3ee`, sem parada). o clique no espelho vira `act`
+  pelo contrato, apoiado no último olhar de uma segunda conexão com o
+  mesmo nome; o app o toma como agente (`PERSON_ONLY` recusado, stale
+  quando a cena ficou velha). o segredo sai do frame antes do codec, e
+  digitar num campo secreto não manda nenhum byte. provado com um login
+  desenhado de verdade num teste. gate local verde, 3120 passam (antes
+  3103), 28 ignorados (a sonda); regress 176 iguais.
+- **decisão do orquestrador:** a máscara falha fechada (controle ligado
+  que a projeção não tem conta como segredo, a regra do port), então a
+  página Git aparece mascarada no espelho. mantido: o diff dela mostra
+  conteúdo de arquivo; sai quando a página Git projetar.
+- o agente achou o teste da câmera da fase 1 fraco (procurava 16 das 200
+  cores) e o corrigiu.
+
 ### task-75 fase 2b: as páginas de componente projetam
 
 - **disparada e integrada:** `task/75c-a11y-component-pages` (9 commits,

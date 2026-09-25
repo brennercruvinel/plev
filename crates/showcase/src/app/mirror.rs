@@ -13,20 +13,35 @@
 //! main"), and a recording keeps a watch that begins as an observation
 //! of its agent (the port tells the host, `Host::observed`). A camera's
 //! frames never travel: the codec sends a stream image's size and place.
+//! Nor does a secret (task-79 phase 2): each frame is written with the
+//! places of the bound controls the port's one rule counts as secret, in
+//! the gallery's projection at that frame, masked ([`masks`]): what is
+//! drawn there stays out of the frame, a box in its stead.
 //!
 //! The viewer's side, [`Viewer`]: a watch's replies put back together
 //! (`wire::SceneReader`), applied to a `rec::scene::Mirror`, and drawn
 //! into a compositor of its own, with the bindings (where each control
 //! shows, task-59) drawn over it on a layer of their own when asked. The
-//! `mirror` example and the tests draw through it.
+//! app sends the bindings from the bottom of the frame to the top
+//! ([`stacked`]), so the viewer finds the control under a point
+//! ([`Viewer::hit`]) as the app's own hit test does, and its [`Hand`]
+//! presses it: an act through the app's one dispatcher, as the agent the
+//! viewer says it is, resting on its last look at the app (task-79 phase
+//! 2). The `mirror` example and the tests draw and click through them.
 
 use std::collections::HashMap;
+use std::path::Path;
 
+use engine::accessibility::primary;
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use rec::scene::{Brought, Frame, Head, Incoming, Mirror, Sender};
-use sem::Actor;
+use rec::scene::{Brought, Frame, Head, Incoming, Mask, Mirror, Sender};
+use sem::redact::is_secret;
+use sem::{ActionName, Actor, Change, Rejection, Revision, SemId, Snapshot, Stage};
 use winit::window::WindowId;
-use wire::{AgentPort, Bound, LayerBody, Offer, OfferLayer, Reply, SceneReader, SceneWatch};
+use wire::{
+    Act, AgentPort, Bound, Client, LayerBody, Observe, Offer, OfferLayer, Reply, SceneReader,
+    SceneWatch, SnapshotReply, StageReply,
+};
 
 use super::App;
 
@@ -44,28 +59,50 @@ pub struct Scenes {
 
 impl Scenes {
     /// Offers `compositor`'s frame of `window`, laid out and cleared as
-    /// `head` says, to the port's watches of it. Nothing is written when
-    /// none watches (and the writer of that window is let go). True when
-    /// a frame was offered.
+    /// `head` says, to the port's watches of it, with what a secret draws
+    /// masked ([`masks`]) by `now`, the app's projection at this frame,
+    /// asked only when someone watches. Nothing is written when none
+    /// watches (and the writer of that window is let go). True when a
+    /// frame was offered.
     pub fn offer(
         &mut self,
         port: &mut AgentPort,
         window: &str,
         compositor: &Compositor,
         head: Head,
+        now: impl FnOnce() -> Option<Snapshot>,
     ) -> bool {
         tell_watches(port);
         if !port.watching(window) {
             self.senders.remove(window);
             return false;
         }
+        let masks = masks(now().as_ref(), compositor);
         let sender = self.senders.entry(window.to_owned()).or_default();
-        let frame = sender.frame(compositor, head);
+        let frame = sender.frame_masked(compositor, head, &masks);
         port.offer_scene(window, &offer(frame, compositor));
         // a watcher cut off by this offer
         tell_watches(port);
         true
     }
+}
+
+/// The places of `compositor`'s frame whose drawing never travels: every
+/// bound control the one rule of the port counts as secret in `now`, the
+/// app's projection at this frame (`sem::redact::is_secret`: marked
+/// secret, or not held by the projection, or no projection at all; the
+/// rule fails closed), at the rect it is bound to on its layer, the part
+/// a clip hides included. The codec leaves what is drawn there out of the
+/// frame and writes a box in its stead (`rec::scene::Sender::frame_masked`).
+pub fn masks(now: Option<&Snapshot>, compositor: &Compositor) -> Vec<Mask> {
+    compositor
+        .bindings()
+        .filter(|(id, _)| is_secret(now, id))
+        .map(|(_, b)| Mask {
+            layer: b.layer.0,
+            rect: b.rect,
+        })
+        .collect()
 }
 
 /// Logs who began and who ended watching which window since the last
@@ -92,7 +129,8 @@ pub fn watch_line(w: &SceneWatch) -> String {
 }
 
 /// A frame as the port takes it, with where each bound control shows
-/// in it (the visible part of each binding, as an observation serves it).
+/// in it (the visible part of each binding, as an observation serves it),
+/// in the order a click finds them ([`stacked`]).
 pub fn offer(frame: Frame, compositor: &Compositor) -> Offer {
     Offer {
         head: frame.head,
@@ -107,14 +145,36 @@ pub fn offer(frame: Frame, compositor: &Compositor) -> Offer {
             })
             .collect(),
         assets: frame.assets,
-        bounds: compositor
-            .visible_bindings()
-            .map(|(id, rect)| Bound {
+        bounds: stacked(compositor),
+    }
+}
+
+/// Where each bound control shows (the visible part of its binding),
+/// from the bottom of the frame to the top: by its layer's z-order, then
+/// the layer's place among the compositor's, then the bind order, the
+/// order `Compositor::hit` ranks them by. A binding on a hidden layer
+/// (not visible, or no opacity) shows nowhere and is left out, as `hit`
+/// leaves it. So the last one holding a point is the one the app's own
+/// hit test finds there ([`Viewer::hit`]).
+pub fn stacked(compositor: &Compositor) -> Vec<Bound> {
+    let layers = compositor.layers();
+    let mut shown: Vec<((i32, usize, u32), Bound)> = compositor
+        .bindings()
+        .filter_map(|(id, b)| {
+            let (rank, layer) = layers.iter().enumerate().find(|(_, l)| l.id == b.layer)?;
+            if !layer.visible || layer.opacity <= 0.0 {
+                return None;
+            }
+            let rect = b.visible_rect()?;
+            let bound = Bound {
                 id: id.clone(),
                 rect,
-            })
-            .collect(),
-    }
+            };
+            Some(((layer.z_order, rank, b.order), bound))
+        })
+        .collect();
+    shown.sort_by_key(|(at, _)| *at);
+    shown.into_iter().map(|(_, b)| b).collect()
 }
 
 impl App {
@@ -138,9 +198,12 @@ impl App {
             scale: host.scale_factor() as f32,
             clear,
         };
+        let view = &self.view;
         self.access
             .scenes
-            .offer(port, name, host.compositor(), head);
+            .offer(port, name, host.compositor(), head, || {
+                view.gallery_semantics().ok()
+            });
     }
 
     /// Every window's frame to its watches: after a drain of the port, so
@@ -206,9 +269,26 @@ impl Viewer {
         self.mirror.head()
     }
 
-    /// Where each bound control shows in the last frame.
+    /// Where each bound control shows in the last frame, from the bottom
+    /// of the frame to the top.
     pub fn bounds(&self) -> &[Bound] {
         &self.bounds
+    }
+
+    /// The bound control at `(x, y)` in the last frame, in the scene's
+    /// logical pixels: the topmost binding whose visible rect holds the
+    /// point (edges included), the one the app's own hit test finds
+    /// there. `None` over no control. The bindings the viewer draws over
+    /// the scene take no part.
+    pub fn hit(&self, x: f32, y: f32) -> Option<&SemId> {
+        self.bounds
+            .iter()
+            .rev()
+            .find(|b| {
+                let [bx, by, bw, bh] = b.rect;
+                x >= bx && x <= bx + bw && y >= by && y <= by + bh
+            })
+            .map(|b| &b.id)
     }
 
     pub fn mirror(&self) -> &Mirror {
@@ -276,6 +356,216 @@ impl Viewer {
                 },
             );
         }
+    }
+}
+
+/// The viewer's hand (task-79 phase 2): a click at the viewer goes back
+/// to the app as an act on the control under it, through the semantic
+/// contract like any agent's, never as an event or a coordinate.
+///
+/// It is a connection of its own to the app's port under the name the
+/// watch said (one actor: what one connection was shown, the other
+/// was), so a watch keeps reading its frames while an act waits for its
+/// stages, or for a person. It looks at the whole app ([`Hand::look`])
+/// after each frame the viewer takes, and a press rests on the last look
+/// (`from_revision`): when the app moved on since (the scene was old),
+/// the act comes back `stale`, with what moved and who acted, as it does
+/// for any agent. The app takes it as `Actor::Agent`: an action kept for
+/// a person is refused, and one that asks a person waits for the person
+/// at the app. A click presses what a screen reader's click presses
+/// (`engine::accessibility::primary`), and only where the reader's tree
+/// offers one (the action and the node on).
+pub struct Hand {
+    client: Client,
+    seen: Option<SnapshotReply>,
+}
+
+/// What a click at the viewer came to.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Pressed {
+    /// No bound control holds the point: nothing went to the app.
+    Nothing,
+    /// The control has nothing a click presses (no primary action, or
+    /// it is off), or the hand was never shown it: nothing went.
+    Unpressable { target: SemId, why: String },
+    /// The act went: its stages as they came, the last one terminal.
+    Acted {
+        target: SemId,
+        action: ActionName,
+        stages: Vec<StageReply>,
+    },
+    /// The app refused the act before its dispatcher (a revision it no
+    /// longer holds, a read never shown), or the connection failed.
+    Refused { target: SemId, why: String },
+}
+
+impl Hand {
+    /// A connection of its own to the port at `path`, said `hello` under
+    /// `name`: the name the watch said.
+    pub fn connect(path: &Path, name: &str) -> Result<Hand, String> {
+        let mut client = Client::connect(path).map_err(|e| e.to_string())?;
+        client.hello(name).map_err(|e| e.to_string())?;
+        Ok(Hand { client, seen: None })
+    }
+
+    /// How long a read waits for the app, in milliseconds; `None` waits
+    /// for as long as it takes (a person's confirmation).
+    pub fn set_timeout(&mut self, ms: Option<u64>) -> Result<(), String> {
+        self.client.set_timeout(ms).map_err(|e| e.to_string())
+    }
+
+    /// Observes the whole app (every node, every state: no read of a
+    /// press falls outside it); the next press rests on it. Its revision.
+    pub fn look(&mut self) -> Result<Revision, String> {
+        match self.client.observe(Observe::default()) {
+            Ok(Reply::Snapshot(seen)) => {
+                let revision = seen.revision;
+                self.seen = Some(seen);
+                Ok(revision)
+            }
+            Ok(other) => Err(format!("an observation came back as {other:?}")),
+            Err(e) => Err(e.to_string()),
+        }
+    }
+
+    /// What the last look showed: the observation a press rests on, as
+    /// the port served it (a secret as its length).
+    pub fn shown(&self) -> Option<&SnapshotReply> {
+        self.seen.as_ref()
+    }
+
+    /// The control under `(x, y)` in the viewer's last frame, pressed
+    /// ([`Hand::press`]); nothing goes when no control is there.
+    pub fn click(
+        &mut self,
+        viewer: &Viewer,
+        x: f32,
+        y: f32,
+        each: impl FnMut(&ActionName, &StageReply),
+    ) -> Pressed {
+        match viewer.hit(x, y) {
+            Some(target) => {
+                let target = target.clone();
+                self.press(&target, each)
+            }
+            None => Pressed::Nothing,
+        }
+    }
+
+    /// `target`'s primary action as the last look showed it, acted on
+    /// that look's revision; `each` hears the action and every stage as
+    /// it comes (an `awaiting_confirmation` may wait long). Nothing goes
+    /// when the look does not hold the control, or holds nothing a click
+    /// presses there.
+    pub fn press(
+        &mut self,
+        target: &SemId,
+        mut each: impl FnMut(&ActionName, &StageReply),
+    ) -> Pressed {
+        let unpressable = |why: String| Pressed::Unpressable {
+            target: target.clone(),
+            why,
+        };
+        let Some(seen) = &self.seen else {
+            return unpressable("the mirror has not looked at the app yet".to_owned());
+        };
+        let Some(node) = seen.nodes.iter().find(|n| &n.id == target) else {
+            return unpressable(format!("{target} is not in what the mirror was shown"));
+        };
+        let Some(decl) = primary(node) else {
+            return unpressable(format!("{target} has nothing a click presses"));
+        };
+        if !decl.enabled || !node.enabled {
+            return unpressable(format!("{target}: {} is off", decl.name));
+        }
+        let action = decl.name.clone();
+        let act = Act::from_revision(target.clone(), action.clone(), seen.revision);
+        match self.client.act(act, |s| each(&action, s)) {
+            Ok(stages) => Pressed::Acted {
+                target: target.clone(),
+                action,
+                stages,
+            },
+            Err(e) => Pressed::Refused {
+                target: target.clone(),
+                why: e.to_string(),
+            },
+        }
+    }
+}
+
+impl Pressed {
+    /// The terminal stage, when the act went.
+    pub fn stage(&self) -> Option<&Stage> {
+        match self {
+            Pressed::Acted { stages, .. } => stages.last().map(|s| &s.stage),
+            _ => None,
+        }
+    }
+
+    /// What the viewer says of it, in one line.
+    pub fn said(&self) -> String {
+        match self {
+            Pressed::Nothing => "no control here: nothing went to the app".to_owned(),
+            Pressed::Unpressable { why, .. } => format!("{why}: nothing went to the app"),
+            Pressed::Acted {
+                target,
+                action,
+                stages,
+            } => match stages.last() {
+                Some(last) => said(target, action, &last.stage),
+                None => format!("{target}: {action} went, and no stage came back"),
+            },
+            Pressed::Refused { target, why } => format!("{target}: {why}"),
+        }
+    }
+}
+
+/// What the viewer says of a stage of its act on `target`: a refusal
+/// with its reason, a confirmation the person at the app gives there.
+pub fn said(target: &SemId, action: &ActionName, stage: &Stage) -> String {
+    let refused = |why: String| format!("{target}: {action} refused: {why}");
+    match stage {
+        Stage::Completed(_) => format!("{target}: {action} done"),
+        Stage::AwaitingConfirmation => format!(
+            "{target}: {action} waits for the person at the app, who confirms or declines it there"
+        ),
+        Stage::Confirmed { by } => format!("{target}: {action} confirmed by {by}"),
+        Stage::Failed { error } => format!("{target}: {action} failed: {error}"),
+        Stage::Rejected(Rejection::NotAuthorized { actor }) => refused(format!(
+            "only a person asks it, and the mirror acts as {actor}"
+        )),
+        Stage::Rejected(Rejection::Stale { changes, acted }) => {
+            let moved: Vec<String> = changes.iter().map(changed).collect();
+            let who: Vec<String> = acted.iter().map(|a| a.actor.to_string()).collect();
+            let who = if who.is_empty() {
+                String::new()
+            } else {
+                format!(", {} acted since", who.join(", "))
+            };
+            refused(format!(
+                "the mirror was behind the app ({} moved{who}); look again",
+                moved.join(", ")
+            ))
+        }
+        Stage::Rejected(Rejection::Declined { by }) => refused(format!("declined by {by}")),
+        Stage::Rejected(Rejection::Inert { .. }) => {
+            refused("something over it holds the pointer".to_owned())
+        }
+        Stage::Rejected(Rejection::Disabled { .. }) => refused("it is off".to_owned()),
+        Stage::Rejected(other) => refused(format!("{other:?}")),
+        other => format!("{target}: {action} {}", other.name()),
+    }
+}
+
+/// A change as the viewer names it: the state that moved (what a stale
+/// refusal carries), or the node that came or went.
+fn changed(c: &Change) -> String {
+    match c {
+        Change::StateChanged { at, .. } => at.to_string(),
+        Change::NodeAdded(node) => format!("{} came", node.id),
+        Change::NodeRemoved(id) => format!("{id} went"),
+        _ => "the app's structure".to_owned(),
     }
 }
 
@@ -347,6 +637,123 @@ mod tests {
                 Err(e) => panic!("{e}"),
             }
         }
+    }
+
+    fn sid(text: &str) -> SemId {
+        SemId::parse(text).expect("an id")
+    }
+
+    /// Bound out of the stacking order: the overlay's control first,
+    /// then the one under it, and a third on a layer made invisible. The
+    /// viewer finds what the app's hit test finds, never the later bind.
+    #[test]
+    fn the_viewer_hits_by_stacking_not_by_bind_order() {
+        let mut c = Compositor::new();
+        let overlay = c.create_layer(10);
+        let hidden = c.create_layer(20);
+        c.begin_frame();
+        c.bind_to_layer(overlay, &sid("dialog.ok"), [100.0, 100.0, 80.0, 40.0]);
+        c.bind(&sid("page.button"), [90.0, 90.0, 200.0, 60.0]);
+        c.bind_to_layer(hidden, &sid("gone"), [0.0, 0.0, 400.0, 400.0]);
+        c.set_layer_visible(hidden, false);
+        let mut v = Viewer::new();
+        v.bounds = stacked(&c);
+        let ids: Vec<&str> = v.bounds().iter().map(|b| b.id.as_str()).collect();
+        assert_eq!(ids, ["page.button", "dialog.ok"], "bottom to top");
+        for (x, y) in [(120.0, 120.0), (250.0, 120.0), (10.0, 10.0), (100.0, 100.0)] {
+            assert_eq!(v.hit(x, y), c.hit(x, y), "at ({x}, {y})");
+        }
+        assert_eq!(v.hit(120.0, 120.0), Some(&sid("dialog.ok")));
+        assert_eq!(v.hit(250.0, 120.0), Some(&sid("page.button")));
+        assert_eq!(v.hit(10.0, 10.0), None, "the hidden layer shows nothing");
+    }
+
+    /// Who watches stays in the log and the recording, and now so does
+    /// what the mirror does (task-79 phase 2): its look is an
+    /// observation of the agent "mirror" beside its watch, and its click
+    /// a receipt of the agent "mirror", in the session the shell records,
+    /// as any agent's.
+    #[test]
+    fn the_recording_keeps_the_mirror_s_look_and_click_under_its_name() {
+        let tmp = tempfile::tempdir().expect("a temporary directory");
+        let mut app = app(tmp.path());
+        // the sink on the gallery's dispatcher, as the shell puts it
+        if let Some(recording) = &app.recording {
+            recording.attach(&mut app.view);
+        }
+        let path = app
+            .access
+            .agent
+            .as_ref()
+            .expect("the port")
+            .path()
+            .to_owned();
+        let side = std::thread::spawn(move || {
+            let mut c = Client::connect(&path).expect("the watch connects");
+            c.set_timeout(Some(20_000)).expect("a timeout");
+            c.hello("mirror").expect("hello");
+            c.watch_scene(MAIN).expect("the watch goes");
+            let mut v = Viewer::new();
+            while v
+                .take(c.recv().expect("a frame").reply)
+                .expect("reads")
+                .is_none()
+            {}
+            let mut hand = Hand::connect(&path, "mirror").expect("the hand connects");
+            hand.set_timeout(Some(20_000)).expect("a timeout");
+            hand.look().expect("the hand looks");
+            let [x, y, w, h] = v
+                .bounds()
+                .iter()
+                .find(|b| b.id.as_str() == "todo.item[1]")
+                .expect("the item")
+                .rect;
+            hand.click(&v, x + w / 2.0, y + h / 2.0, |_, _| {})
+        });
+        let deadline = Instant::now() + Duration::from_secs(30);
+        while !side.is_finished() {
+            assert!(Instant::now() < deadline, "the mirror did not finish");
+            app.serve_agent();
+            std::thread::sleep(Duration::from_millis(2));
+        }
+        let pressed = side.join().expect("the mirror's thread");
+        assert_eq!(pressed.stage().map(Stage::name), Some("completed"));
+        let mirror = Actor::Agent {
+            name: "mirror".into(),
+        };
+        let session = app
+            .recording
+            .as_ref()
+            .expect("a recording")
+            .recorder()
+            .snapshot_window();
+        let looked = session
+            .events()
+            .iter()
+            .filter(|e| matches!(&e.kind, rec::Kind::Observed { actor, .. } if *actor == mirror))
+            .count();
+        assert_eq!(looked, 2, "the watch and the look");
+        let acted: Vec<(String, &str)> = session
+            .events()
+            .iter()
+            .filter_map(|e| match &e.kind {
+                rec::Kind::Stage { request, stage, .. } if request.actor == mirror => Some((
+                    format!("{} {}", request.target, request.action),
+                    stage.name(),
+                )),
+                _ => None,
+            })
+            .collect();
+        let toggle = "todo.item[1] toggle".to_owned();
+        assert_eq!(
+            acted,
+            [
+                (toggle.clone(), "requested"),
+                (toggle.clone(), "accepted"),
+                (toggle.clone(), "executing"),
+                (toggle, "completed"),
+            ]
+        );
     }
 
     #[test]
