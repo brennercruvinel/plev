@@ -18,6 +18,7 @@
 mod access;
 mod change;
 mod checkpoint;
+mod contrast;
 mod demo;
 mod transform;
 
