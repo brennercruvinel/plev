@@ -80,10 +80,13 @@ impl SpinnerPage {
         if !self.spinning {
             return false;
         }
-        // with reduced motion on each stands still and asks for nothing
-        self.spinners
-            .iter_mut()
-            .fold(false, |moved, s| s.tick(dt) || moved)
+        // with reduced motion on each stands still and asks for nothing;
+        // every one is ticked (no short circuit)
+        let mut moved = false;
+        for s in &mut self.spinners {
+            moved |= s.tick(dt);
+        }
+        moved
     }
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {

@@ -66,10 +66,13 @@ impl SkeletonPage {
         if !self.breathing {
             return false;
         }
-        // with reduced motion on each stands still and asks for nothing
-        self.skeletons
-            .iter_mut()
-            .fold(false, |moved, s| s.tick(dt) || moved)
+        // with reduced motion on each stands still and asks for nothing;
+        // every one is ticked (no short circuit)
+        let mut moved = false;
+        for s in &mut self.skeletons {
+            moved |= s.tick(dt);
+        }
+        moved
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
