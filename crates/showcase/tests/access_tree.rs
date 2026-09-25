@@ -250,17 +250,14 @@ fn same_value(n: &AkNode) -> ActionData {
     }
 }
 
-/// The presses a page offers while the action behind them is disabled:
-/// the node is enabled, so the tree offers the press, and the dispatcher
-/// refuses it (the todo field's `submit` while the field is empty; task-60
-/// made the field's press its `submit`, the VoiceOver path of the page's
-/// own tests). A reader hears nothing happen.
-const OFFERED_DISABLED: &[&str] = &[
-    "Surface: todo.input submit",
-    "Surface: todo_panel.input submit",
-    "Todo: todo.input submit",
-    "Toggle Group: todo.input submit",
-];
+/// The presses a page offers while the action behind them is disabled.
+/// Phase 1 listed the todo field's and the quick todo field's `submit`
+/// while the field is empty: the tree offered the press and the
+/// dispatcher refused it, so a reader heard nothing happen. Since phase
+/// 2a a press is offered only while its action is on; the field stays
+/// enabled (it edits), and the VoiceOver path of task-60 (focus, type,
+/// press) finds the press once the text turns the `submit` on.
+const OFFERED_DISABLED: &[&str] = &[];
 
 #[test]
 fn every_action_the_tree_offers_is_a_request_the_dispatcher_admits() {
@@ -326,6 +323,14 @@ fn told_disabled(seen: &Seen, id: &SemId) -> bool {
 /// not drag a file, and `files.open` reaches the same files.
 const UNREACHABLE: &[&str] = &["Files: files.drop drop_files"];
 
+/// Whether the node's press is off now: its primary action, or the node,
+/// is disabled, so the tree does not offer the press until it is on (a
+/// field with no text, a propose with no intent). The press is there the
+/// moment the action is.
+fn off(node: &sem::Node) -> bool {
+    accessibility::primary(node).is_some_and(|d| !d.enabled || !node.enabled)
+}
+
 /// The node with its list `expanded` the other way: a select's press is
 /// `open` while shut and `close` while open, so both are reached by it.
 fn flipped(node: &sem::Node) -> sem::Node {
@@ -365,7 +370,7 @@ fn the_actions_no_reader_can_reach_are_the_known_ones() {
                 (Action::Decrement, Some("decrement")),
             ]
             .into_iter()
-            .filter(|(a, _)| n.supports_action(*a))
+            .filter(|(a, _)| n.supports_action(*a) || *a == Action::Click && off(node))
             .filter_map(|(_, name)| name)
             .collect();
             // the controls the tree presents inside it, each its action
@@ -492,4 +497,47 @@ fn the_focus_a_reader_leaves_goes_with_escape_and_with_a_click() {
             "{page}: the click moved it to the field"
         );
     }
+}
+
+/// The roles phase 2a set right: the todo row holds a checkbox (the
+/// `toggle` presented by the tree, the row neither toggled nor pressed),
+/// each item of the quick todo is named by its text and not by its key,
+/// and the Capture page's level bar says its value.
+#[test]
+fn the_row_holds_a_checkbox_the_quick_todo_says_its_items_and_the_level_its_value() {
+    let seen = see("Surface");
+    let node = |id: &str| {
+        let sid = SemId::parse(id).unwrap_or_else(|e| panic!("{id}: {e}"));
+        let at = seen.shown.ids.node(&sid);
+        match at.and_then(|n| seen.node(n)) {
+            Some(n) => n,
+            None => panic!("{id} is not in the tree"),
+        }
+    };
+    let row = node("todo.item[1]");
+    assert_eq!((row.role(), row.toggled()), (AkRole::ListItem, None));
+    assert!(!row.supports_action(Action::Click));
+    let check = node("todo.item[1][toggle]");
+    assert_eq!(check.role(), AkRole::CheckBox);
+    assert!(check.toggled().is_some());
+    for (key, text) in [
+        ("1", "Absorb the plev demos into the showcase"),
+        ("2", "Measure text, never estimate it"),
+        ("3", "Port the todo domain (tested first)"),
+    ] {
+        let item = node(&format!("todo_panel.item[{key}]"));
+        assert_eq!(item.label(), Some(text), "todo_panel.item[{key}]");
+    }
+
+    let seen = see("Capture");
+    let sid = SemId::parse("capture.level").unwrap_or_else(|e| panic!("{e}"));
+    let Some(level) = seen.shown.ids.node(&sid).and_then(|n| seen.node(n)) else {
+        panic!("capture.level is not in the tree");
+    };
+    assert_eq!(level.role(), AkRole::ProgressIndicator);
+    assert_eq!(level.numeric_value(), Some(0.0), "nothing captured yet");
+    assert_eq!(
+        (level.min_numeric_value(), level.max_numeric_value()),
+        (Some(0.0), Some(1.0))
+    );
 }

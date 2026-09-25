@@ -28,6 +28,9 @@
 //! - a group with no label, no description, no action and no focus is a
 //!   `GenericContainer`: structure the adapters leave out, its children
 //!   lifted into its place, so a reader never stops on an empty "group".
+//!   a group named only by the key of its own id (`todo_panel.item[1]`
+//!   named "1", how a generated surface names an instance of a repeat) is
+//!   named by the labels inside it, the words a person sees in it.
 //! - state, by key: `text` of a text input, `value` of any node (a
 //!   number with the node's range and step, or a text) and `selected` of
 //!   a select are the value; the bool the node's own `toggle` action
@@ -40,7 +43,9 @@
 //!   the node's value: its own, else its `message`, else its label (see
 //!   `live`). The focus never moves for it.
 //! - actions: `Click` when the node has a primary action (see
-//!   `action::primary`), `Focus` when it is focusable and not inert,
+//!   `action::primary`) and both are on (a press the app would refuse is
+//!   not offered: a reader would hear nothing happen; the node keeps
+//!   telling whether it is disabled), `Focus` when it is focusable and not inert,
 //!   `SetValue` when it has a setter (`action::setter`: its `set_value`,
 //!   or a select's `select`), `Increment` and `Decrement` when it
 //!   declares `increment` and `decrement`.
@@ -120,6 +125,9 @@ pub fn build(
     let mut described: Vec<AkNode> = Vec::with_capacity(order.len());
     for ((node, placed), list) in order.iter().zip(&bounds).zip(&presented) {
         let mut out = describe(node);
+        if let Some(words) = instance_name(snapshot, node) {
+            out.set_label(words);
+        }
         let mut kids = children(snapshot.children(&node.id), &ids);
         kids.extend(list.iter().filter_map(|p| ids.node(&p.id)));
         out.set_children(kids);
@@ -247,6 +255,27 @@ fn ak_role(n: &Node) -> accesskit::Role {
     }
 }
 
+/// The name of a group named only by the key of its own id: the words of
+/// the labels right inside it, in order (a generated surface names an
+/// instance of a repeat by its item's key, and the IR interpolates no
+/// label: "1" says nothing a person sees). `None` for any other node, and
+/// for such a group with no label inside.
+fn instance_name(snapshot: &Snapshot, n: &Node) -> Option<String> {
+    if n.role != Role::Group || n.label.is_empty() {
+        return None;
+    }
+    let keyed = n.id.parent_path().map(|p| p.key(n.label.as_str()));
+    if keyed.as_ref() != Some(&n.id) {
+        return None;
+    }
+    let words: Vec<&str> = snapshot
+        .children(&n.id)
+        .filter(|c| c.role == Role::Label && !c.label.is_empty())
+        .map(|c| c.label.as_str())
+        .collect();
+    (!words.is_empty()).then(|| words.join(" "))
+}
+
 /// One node's role, label, description, states and actions.
 fn describe(n: &Node) -> AkNode {
     let secret = n.constraints.secret;
@@ -282,7 +311,7 @@ fn describe(n: &Node) -> AkNode {
         value(n, &mut out);
         live(n, &mut out);
     }
-    if action::primary(n).is_some() && !holds_toggle {
+    if action::primary(n).is_some_and(|d| d.enabled) && n.enabled && !holds_toggle {
         out.add_action(Action::Click);
     }
     if n.focusable && !n.inert {

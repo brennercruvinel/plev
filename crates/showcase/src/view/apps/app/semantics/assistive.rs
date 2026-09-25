@@ -111,9 +111,13 @@ fn the_tree_is_the_todo_page_under_the_window() {
         (AkRole::TextInput, Some("new todo"))
     );
     assert_eq!(input.value(), Some(""));
-    for a in [Action::Click, Action::Focus, Action::SetValue] {
+    for a in [Action::Focus, Action::SetValue] {
         assert!(input.supports_action(a), "{a:?}");
     }
+    // empty, its `submit` is off: no press the page would refuse
+    // (task-75 phase 2a); typing turns it on
+    assert!(!input.supports_action(Action::Click));
+    assert!(!input.is_disabled(), "the field still edits");
     assert_eq!(n("todo.filter").role(), AkRole::TabList);
     assert_eq!(
         n("todo.filter").children(),
@@ -276,6 +280,10 @@ fn focus_type_and_press_the_field_to_add_a_todo() {
     let (u, shown) = show(&view, &c);
     assert_eq!(Some(u.focus), shown.ids.node(&sid("todo.input")));
     assert_eq!(node(&u, &shown, "todo.input").value(), Some("buy milk"));
+    assert!(
+        node(&u, &shown, "todo.input").supports_action(Action::Click),
+        "with text, the press is offered"
+    );
 
     let req = request(ask(&shown, "todo.input", Action::Click, None));
     assert_eq!(req.action.as_str(), "submit");

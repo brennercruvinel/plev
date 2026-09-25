@@ -11,7 +11,9 @@
 //! shell's window and print capabilities carry, so the dispatcher refuses
 //! the agent before `execute` runs), `capture.frame` (image: `showing`,
 //! whether a frame is on screen), `capture.level` (progress bar: the
-//! microphone's `level`, to a tenth) and `capture.status` (`message`).
+//! microphone's `level`, to a tenth, and the same number as its `value`,
+//! from 0 to 1, the one a screen reader reads) and `capture.status`
+//! (`message`).
 //! The captured pixels and samples are never projected: an agent reads
 //! where the devices are, not what they see or hear.
 
@@ -19,8 +21,8 @@ use comps::prelude::{EventResult, Rect};
 use engine::perf::stages::{self, Stage};
 use engine::platform::capture::DeviceKind;
 use sem::{
-    Actor, Execution, Operable, Outcome, Policy, Receipt, Request, RequestId, Role, SemError,
-    SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder, Value,
+    Actor, Constraints, Execution, Operable, Outcome, Policy, Receipt, Request, RequestId, Role,
+    SemError, SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder, Value,
 };
 
 use super::{CapturePage, Said};
@@ -108,9 +110,18 @@ impl Semantics for CapturePage {
         b.node(&ids.frame, Role::Image, "camera frame")
             .parent(&ids.region)
             .state("showing", self.showing().is_some());
+        // the level is the bar's value too, from 0 to 1: a progress bar
+        // says its value (task-75 phase 2a); `level` stays for whoever
+        // reads it by that name
+        let level = Value::Num(self.level_tenths());
         b.node(&ids.level, Role::ProgressBar, "microphone level")
             .parent(&ids.region)
-            .state("level", Value::Num(self.level_tenths()));
+            .state("level", level.clone())
+            .state("value", level)
+            .constraints(Constraints {
+                range: Some((0.0, 1.0)),
+                ..Constraints::default()
+            });
         let message = self.status_text();
         b.node(&ids.status, Role::Status, message.as_str())
             .parent(&ids.region)
