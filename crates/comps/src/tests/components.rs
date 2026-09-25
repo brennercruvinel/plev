@@ -247,6 +247,27 @@ fn skeleton_lines_end_short_and_breathe() {
     );
 }
 
+/// With reduced motion on (the thread's), the pulse stands still and asks
+/// for no frame: the wash drawn is the same frame to frame.
+#[test]
+fn skeleton_stands_still_with_reduced_motion() {
+    let t = hoff();
+    let mut sk = Skeleton::new(SkeletonShape::Block);
+    let b = Rect::new(0.0, 0.0, 200.0, 100.0);
+    let color = |sk: &Skeleton| match nodes(|c| sk.render(c, b, &t)).first() {
+        Some(SceneNode::RoundedRect { color, .. }) => *color,
+        other => panic!("a block: {other:?}"),
+    };
+    let before = color(&sk);
+    engine::animation::set_reduced_motion(true);
+    let moved = sk.tick(t.duration.slow);
+    engine::animation::set_reduced_motion(false);
+    assert!(!moved, "no frame asked");
+    assert_eq!(color(&sk), before, "the wash stands where it was");
+    assert!(sk.tick(t.duration.slow), "motion again");
+    assert_ne!(color(&sk), before);
+}
+
 // ---------------------------------------------------------------------------
 // Nav link
 // ---------------------------------------------------------------------------

@@ -66,15 +66,38 @@ impl SkeletonPage {
         if !self.breathing {
             return false;
         }
-        for s in &mut self.skeletons {
-            s.tick(dt);
-        }
-        true
+        // with reduced motion on each stands still and asks for nothing
+        self.skeletons
+            .iter_mut()
+            .fold(false, |moved, s| s.tick(dt) || moved)
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
         for (sk, rect) in self.skeletons.iter().zip(self.rects(content, theme)) {
             sk.render(c, rect, theme);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const FRAME: f32 = 1.0 / 60.0;
+
+    /// Started, the page asks for every frame; with the system's "reduce
+    /// motion" on (task-75 phase 2a) it asks for none, and asks again once
+    /// the preference is off.
+    #[test]
+    fn the_page_asks_for_no_frame_with_reduced_motion() {
+        let mut page = SkeletonPage::new();
+        assert!(!page.tick(FRAME), "at rest until the person starts it");
+        page.breathing = true;
+        assert!(page.tick(FRAME), "with motion");
+        engine::animation::set_reduced_motion(true);
+        let moved = page.tick(FRAME);
+        engine::animation::set_reduced_motion(false);
+        assert!(!moved, "reduced: it stands still");
+        assert!(page.tick(FRAME), "motion again");
     }
 }
