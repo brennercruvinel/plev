@@ -28,3 +28,6 @@ mod values;
 /// Choices in a collection: tabs, rows, items, links, crumbs, a tree, a
 /// split.
 mod choices;
+
+/// The privacy promises: no case on these pages, guarded.
+mod promises;
