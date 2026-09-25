@@ -309,3 +309,6 @@ impl ShowcaseView {
         self.ask(seen, id, "set_value", Some(Value::Num(to)))
     }
 }
+
+#[cfg(test)]
+mod tests;
