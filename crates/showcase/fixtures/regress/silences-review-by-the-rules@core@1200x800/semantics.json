@@ -1,0 +1,844 @@
+{
+  "nodes": [
+    {
+      "id": "silences",
+      "role": "region",
+      "label": "silences",
+      "state": {
+        "cuts": {
+          "kind": "list",
+          "value": [
+            "1",
+            "2"
+          ]
+        }
+      }
+    },
+    {
+      "id": "silences.video",
+      "role": "media",
+      "label": "silences-test.mp4",
+      "parent": "silences",
+      "state": {
+        "file": {
+          "kind": "text",
+          "value": "silences-test.mp4"
+        },
+        "duration": {
+          "kind": "num",
+          "value": 12.0
+        },
+        "shown": {
+          "kind": "num",
+          "value": 0.0
+        },
+        "original": {
+          "kind": "text",
+          "value": "silences.video@0"
+        },
+        "result": {
+          "kind": "text",
+          "value": "silences.video@0"
+        }
+      }
+    },
+    {
+      "id": "silences.threshold",
+      "role": "slider",
+      "label": "threshold (dB)",
+      "parent": "silences",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": -30.0
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "silences.threshold:value"
+          ],
+          "param": {
+            "kind": "num",
+            "constrained": true
+          }
+        },
+        {
+          "name": "increment",
+          "reads": [
+            "silences.threshold:value"
+          ]
+        },
+        {
+          "name": "decrement",
+          "reads": [
+            "silences.threshold:value"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "range": [
+          -60.0,
+          0.0
+        ],
+        "step": 1.0
+      },
+      "focusable": true
+    },
+    {
+      "id": "silences.min_duration",
+      "role": "slider",
+      "label": "minimum silence (s)",
+      "parent": "silences",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.5
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "silences.min_duration:value"
+          ],
+          "param": {
+            "kind": "num",
+            "constrained": true
+          }
+        },
+        {
+          "name": "increment",
+          "reads": [
+            "silences.min_duration:value"
+          ]
+        },
+        {
+          "name": "decrement",
+          "reads": [
+            "silences.min_duration:value"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "range": [
+          0.10000000149011612,
+          3.0
+        ],
+        "step": 0.10000000149011612
+      },
+      "focusable": true
+    },
+    {
+      "id": "silences.detect",
+      "role": "button",
+      "label": "detect silences",
+      "parent": "silences",
+      "actions": [
+        {
+          "name": "detect_silence",
+          "reads": [
+            "silences:cuts",
+            "silences.threshold:value",
+            "silences.min_duration:value"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "silences.cut[1]",
+      "role": "list_item",
+      "label": "0:03.0 to 0:05.0",
+      "parent": "silences",
+      "state": {
+        "start": {
+          "kind": "num",
+          "value": 3.018594
+        },
+        "end": {
+          "kind": "num",
+          "value": 5.01551
+        },
+        "duration": {
+          "kind": "num",
+          "value": 1.996916
+        },
+        "range": {
+          "kind": "text",
+          "value": "0:03.0 to 0:05.0"
+        },
+        "decision": {
+          "kind": "text",
+          "value": "pending"
+        },
+        "frame": {
+          "kind": "text",
+          "value": "silences.video@4.017052"
+        }
+      },
+      "actions": [
+        {
+          "name": "preview_segment",
+          "reads": [
+            "silences.video:shown"
+          ]
+        },
+        {
+          "name": "apply_cut",
+          "reads": [
+            "silences.cut[1]:decision"
+          ]
+        },
+        {
+          "name": "reject_cut",
+          "reads": [
+            "silences.cut[1]:decision"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "silences.cut[2]",
+      "role": "list_item",
+      "label": "0:08.0 to 0:10.0",
+      "parent": "silences",
+      "state": {
+        "start": {
+          "kind": "num",
+          "value": 8.010884
+        },
+        "end": {
+          "kind": "num",
+          "value": 10.0078
+        },
+        "duration": {
+          "kind": "num",
+          "value": 1.996916
+        },
+        "range": {
+          "kind": "text",
+          "value": "0:08.0 to 0:10.0"
+        },
+        "decision": {
+          "kind": "text",
+          "value": "pending"
+        },
+        "frame": {
+          "kind": "text",
+          "value": "silences.video@9.009342"
+        }
+      },
+      "actions": [
+        {
+          "name": "preview_segment",
+          "reads": [
+            "silences.video:shown"
+          ]
+        },
+        {
+          "name": "apply_cut",
+          "reads": [
+            "silences.cut[2]:decision"
+          ]
+        },
+        {
+          "name": "reject_cut",
+          "reads": [
+            "silences.cut[2]:decision"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "silences.counts",
+      "role": "status",
+      "label": "2 silences, 0 applied, 0 rejected, 0.0 s cut",
+      "parent": "silences",
+      "state": {
+        "total": {
+          "kind": "int",
+          "value": 2
+        },
+        "applied": {
+          "kind": "int",
+          "value": 0
+        },
+        "rejected": {
+          "kind": "int",
+          "value": 0
+        },
+        "pending": {
+          "kind": "int",
+          "value": 2
+        },
+        "cut_secs": {
+          "kind": "num",
+          "value": 0.0
+        }
+      }
+    },
+    {
+      "id": "silences.apply_all",
+      "role": "button",
+      "label": "apply all",
+      "parent": "silences",
+      "actions": [
+        {
+          "name": "apply_all",
+          "reads": [
+            "silences.counts:pending"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "silences.status",
+      "role": "status",
+      "label": "status",
+      "parent": "silences",
+      "state": {
+        "message": {
+          "kind": "text",
+          "value": "2 silences from the recorded run at -30 dB, 0.5 s minimum: detect runs ffmpeg here"
+        },
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "proposed",
+      "role": "region",
+      "label": "the list with the video and the counts"
+    },
+    {
+      "id": "proposed.card",
+      "role": "group",
+      "label": "silences",
+      "parent": "proposed"
+    },
+    {
+      "id": "proposed.silences.video.original",
+      "role": "image",
+      "label": "silences-test.mp4",
+      "parent": "proposed.card",
+      "state": {
+        "source": {
+          "kind": "text",
+          "value": "silences.video@0"
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cuts",
+      "role": "list",
+      "label": "cuts",
+      "parent": "proposed.card"
+    },
+    {
+      "id": "proposed.silences.cut[1]",
+      "role": "group",
+      "label": "1",
+      "parent": "proposed.silences.cuts"
+    },
+    {
+      "id": "proposed.silences.cut[1].frame",
+      "role": "image",
+      "label": "frame",
+      "parent": "proposed.silences.cut[1]",
+      "state": {
+        "source": {
+          "kind": "text",
+          "value": "silences.video@4.017052"
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[1].start",
+      "role": "label",
+      "label": "3.02",
+      "parent": "proposed.silences.cut[1]",
+      "state": {
+        "text": {
+          "kind": "num",
+          "value": 3.018594
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[1].end",
+      "role": "label",
+      "label": "5.02",
+      "parent": "proposed.silences.cut[1]",
+      "state": {
+        "text": {
+          "kind": "num",
+          "value": 5.01551
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[1].duration",
+      "role": "label",
+      "label": "2",
+      "parent": "proposed.silences.cut[1]",
+      "state": {
+        "text": {
+          "kind": "num",
+          "value": 1.996916
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[1].range",
+      "role": "label",
+      "label": "0:03.0 to 0:05.0",
+      "parent": "proposed.silences.cut[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "0:03.0 to 0:05.0"
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[1].decision",
+      "role": "label",
+      "label": "pending",
+      "parent": "proposed.silences.cut[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "pending"
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[1].preview_segment",
+      "role": "button",
+      "label": "preview segment",
+      "parent": "proposed.silences.cut[1]",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "proposed.silences.video.shown:value"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "proposed.silences.cut[1].apply_cut",
+      "role": "button",
+      "label": "apply cut",
+      "parent": "proposed.silences.cut[1]",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "proposed.silences.cut[1].decision:text"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "proposed.silences.cut[1].reject_cut",
+      "role": "button",
+      "label": "reject cut",
+      "parent": "proposed.silences.cut[1]",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "proposed.silences.cut[1].decision:text"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "proposed.silences.cut[2]",
+      "role": "group",
+      "label": "2",
+      "parent": "proposed.silences.cuts"
+    },
+    {
+      "id": "proposed.silences.cut[2].frame",
+      "role": "image",
+      "label": "frame",
+      "parent": "proposed.silences.cut[2]",
+      "state": {
+        "source": {
+          "kind": "text",
+          "value": "silences.video@9.009342"
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[2].start",
+      "role": "label",
+      "label": "8.01",
+      "parent": "proposed.silences.cut[2]",
+      "state": {
+        "text": {
+          "kind": "num",
+          "value": 8.010884
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[2].end",
+      "role": "label",
+      "label": "10.01",
+      "parent": "proposed.silences.cut[2]",
+      "state": {
+        "text": {
+          "kind": "num",
+          "value": 10.0078
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[2].duration",
+      "role": "label",
+      "label": "2",
+      "parent": "proposed.silences.cut[2]",
+      "state": {
+        "text": {
+          "kind": "num",
+          "value": 1.996916
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[2].range",
+      "role": "label",
+      "label": "0:08.0 to 0:10.0",
+      "parent": "proposed.silences.cut[2]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "0:08.0 to 0:10.0"
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[2].decision",
+      "role": "label",
+      "label": "pending",
+      "parent": "proposed.silences.cut[2]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "pending"
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.cut[2].preview_segment",
+      "role": "button",
+      "label": "preview segment",
+      "parent": "proposed.silences.cut[2]",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "proposed.silences.video.shown:value"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "proposed.silences.cut[2].apply_cut",
+      "role": "button",
+      "label": "apply cut",
+      "parent": "proposed.silences.cut[2]",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "proposed.silences.cut[2].decision:text"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "proposed.silences.cut[2].reject_cut",
+      "role": "button",
+      "label": "reject cut",
+      "parent": "proposed.silences.cut[2]",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "proposed.silences.cut[2].decision:text"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "proposed.counts",
+      "role": "group",
+      "label": "",
+      "parent": "proposed.card"
+    },
+    {
+      "id": "proposed.silences.video.duration",
+      "role": "label",
+      "label": "duration",
+      "parent": "proposed.counts",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 12.0
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.video.shown",
+      "role": "label",
+      "label": "shown",
+      "parent": "proposed.counts",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.0
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.threshold.value",
+      "role": "label",
+      "label": "value",
+      "parent": "proposed.counts",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": -30.0
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.min_duration.value",
+      "role": "label",
+      "label": "value",
+      "parent": "proposed.counts",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.5
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.counts.total",
+      "role": "label",
+      "label": "total",
+      "parent": "proposed.counts",
+      "state": {
+        "value": {
+          "kind": "int",
+          "value": 2
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.counts.applied",
+      "role": "label",
+      "label": "applied",
+      "parent": "proposed.counts",
+      "state": {
+        "value": {
+          "kind": "int",
+          "value": 0
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.counts.rejected",
+      "role": "label",
+      "label": "rejected",
+      "parent": "proposed.counts",
+      "state": {
+        "value": {
+          "kind": "int",
+          "value": 0
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.counts.pending",
+      "role": "label",
+      "label": "pending",
+      "parent": "proposed.counts",
+      "state": {
+        "value": {
+          "kind": "int",
+          "value": 2
+        }
+      }
+    },
+    {
+      "id": "proposed.silences.counts.cut_secs",
+      "role": "label",
+      "label": "cut_secs",
+      "parent": "proposed.counts",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.0
+        }
+      }
+    },
+    {
+      "id": "silences_surface",
+      "role": "region",
+      "label": "propose a surface"
+    },
+    {
+      "id": "silences_surface.intent",
+      "role": "text_input",
+      "label": "intent",
+      "parent": "silences_surface",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "the list with the video and the counts"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "silences_surface.intent:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "silences_surface.proposer",
+      "role": "select",
+      "label": "proposer",
+      "parent": "silences_surface",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "rules"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "silences_surface.proposer:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "silences_surface.proposer:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "silences_surface.proposer:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "rules",
+          "claude"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "silences_surface.propose",
+      "role": "button",
+      "label": "propose",
+      "parent": "silences_surface",
+      "actions": [
+        {
+          "name": "propose",
+          "reads": [
+            "silences_surface.intent:text",
+            "silences_surface.proposer:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "silences_surface.cancel",
+      "role": "button",
+      "label": "cancel",
+      "parent": "silences_surface",
+      "actions": [
+        {
+          "name": "activate",
+          "enabled": false
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "silences_surface.status",
+      "role": "status",
+      "label": "proposal",
+      "parent": "silences_surface",
+      "state": {
+        "message": {
+          "kind": "text",
+          "value": "proposed by the rules for \"the list with the video and the counts\""
+        },
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "silences_surface.close",
+      "role": "button",
+      "label": "close the surface",
+      "parent": "silences_surface",
+      "actions": [
+        {
+          "name": "close"
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

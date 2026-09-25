@@ -3,7 +3,8 @@
 //! in the second prompt; a model that always errs exhausts the attempts
 //! and its last errors come back, never its IR; a model that fails stops
 //! at once; and the prompt carries the schema, the components, the rules,
-//! the registry and the ids that must stay.
+//! the registry and the ids that must stay, and says how a surface reads
+//! (the task first, a label on every control, each control once).
 
 // shared with the other test binaries: this one reads less of it.
 #[allow(dead_code)]
@@ -211,4 +212,48 @@ fn the_prompt_carries_the_schema_the_registry_and_the_ids_to_keep() {
     let text = prompt(&fresh.ask(intent));
     assert!(text.contains("no surface is shown now"));
     assert!(!text.contains("keep the id of every node"));
+}
+
+/// Right after the intent, before the rules, the prompt says how a
+/// surface reads, the same for every app (the checkpoint b of task-69: a
+/// proposal that passed every rule put the task last and showed the
+/// app's controls again): what the intent asks to do first and its
+/// context after; a label on every control, with its unit; each control
+/// once, only what the intent needs.
+#[test]
+fn the_prompt_says_how_the_surface_reads_before_the_rules() {
+    let intent = "cut the silences of this video, then I want to review the cuts";
+    let mut sections = Vec::new();
+    for app in [todo(), support::ide()] {
+        let asking = Asking::new(app);
+        let text = prompt(&asking.ask(intent));
+        let reads = text
+            .find("## how the surface reads\n")
+            .expect("the section");
+        let after_intent = text.find(&format!("## the intent\n\n{intent}\n")).unwrap();
+        let rules = text.find("## the verifier's rules").unwrap();
+        assert!(
+            after_intent < reads && reads < rules,
+            "after the intent, before the rules"
+        );
+        let section = text[reads..rules].to_owned();
+        for said in [
+            "first what the intent asks to do",
+            "then what gives it context",
+            "the window may show only the top of the surface",
+            "every control has a label that says what it changes, with the unit",
+            "a slider shows its label and its value",
+            "at most two decimals",
+            "each control once, and only what the intent needs",
+            "a second control for an action already bound, or a state shown twice",
+        ] {
+            assert!(section.contains(said), "{said:?} in {section}");
+        }
+        sections.push(section);
+    }
+    assert_eq!(sections[0], sections[1], "the same for every app");
+    assert!(
+        !sections[0].to_lowercase().contains("silence"),
+        "no app named"
+    );
 }

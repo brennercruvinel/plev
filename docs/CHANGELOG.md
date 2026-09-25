@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- a generated surface is usable at the default window (2026-09-24,
+  task-69 checkpoint b fixes): the checkpoint b found the review generated
+  by the rules broken at 1200x800 and the Claude's with unlabeled sliders
+  and raw numbers. a text in a generated surface is never narrower than
+  its longest word, a row that does not fit wraps, a slider shows its
+  label and value, and a number shows with at most two decimals. the
+  prompt now asks for the task first, a label on every control and each
+  control once. the regress gained the Silences page with the review
+  open, by the rules and from a fixture of the Claude's proposal (six
+  baselines).
+
 - the asset compiler measures first (2026-09-24, task-72 phase 1): the
   work the app does at startup was measured before moving anything. the
   first headless frame takes 79 ms in debug: 26 ms opening the GPU and
