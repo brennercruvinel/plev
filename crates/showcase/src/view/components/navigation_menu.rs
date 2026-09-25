@@ -23,8 +23,8 @@ pub struct NavigationMenuPage {
     /// column's), fed the first link's events so it hovers and presses
     /// with it, and active when it is.
     rail: NavLink,
-    /// The link a screen reader focused (a link draws no ring); Escape or
-    /// a click lets it go.
+    /// The link a screen reader or the keyboard focused (its ring shows);
+    /// Escape or a click lets it go.
     focus: Option<usize>,
 }
 
@@ -71,6 +71,13 @@ impl NavigationMenuPage {
     /// The link behind `id`.
     fn at(&self, id: &SemId) -> Option<usize> {
         self.links.iter().position(|l| l.sem_id() == Some(id))
+    }
+
+    /// The focused link rings, the others do not.
+    fn ring(&mut self) {
+        for (i, link) in self.links.iter_mut().enumerate() {
+            link.set_focused(self.focus == Some(i));
+        }
     }
 
     /// The active mark on link `i`: the click's path and a request's.
@@ -187,10 +194,13 @@ impl Component for NavigationMenuPage {
             return false;
         }
         self.focus = self.at(id);
+        self.ring();
         true
     }
 
     fn blur(&mut self) -> bool {
-        self.focus.take().is_some()
+        let had = self.focus.take().is_some();
+        self.ring();
+        had
     }
 }

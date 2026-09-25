@@ -11,6 +11,7 @@ use engine::theme::Intent;
 use sem::Value;
 
 use super::components::context_menu;
+use super::dispatch::keyboard::Walk;
 use super::dispatch::{ShellTarget, overlay};
 use super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
 
@@ -140,16 +141,16 @@ impl ShowcaseView {
     }
 
     /// Non-character editing keys (Tab, Backspace, arrows) forwarded by
-    /// the platform shell: Tab cycles the page's focusable widgets, the
-    /// rest edit its focused text field.
+    /// the platform shell. On a component page, or over the modal or the
+    /// menu, Tab walks the projection (`dispatch::keyboard`); the rest
+    /// edit the page's focused text field, or walk an app page's own
+    /// focus.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        if key == EditKey::Tab && self.walks() {
+            return self.walk(Walk::Tab);
+        }
         match self.pane() {
             Some(Pane::Input) => self.panes.input.handle_edit_key(key),
-            Some(Pane::Checkbox) => self.panes.checkbox.handle_edit_key(key),
-            Some(Pane::Switch) => self.panes.switch.handle_edit_key(key),
-            Some(Pane::Slider) => self.panes.slider.handle_edit_key(key),
-            Some(Pane::Select) => self.panes.select.handle_edit_key(key),
-            Some(Pane::Tabs) => self.panes.tabs.handle_edit_key(key),
             Some(Pane::Todo) => self.panes.todo.handle_edit_key(key),
             Some(Pane::Surface) => self
                 .panes

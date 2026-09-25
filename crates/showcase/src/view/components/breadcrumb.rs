@@ -19,8 +19,8 @@ pub struct BreadcrumbPage {
     root: Option<SemId>,
     crumbs: Breadcrumb,
     last_crumb: Option<usize>,
-    /// The crumb a screen reader focused (a crumb draws no ring); Escape or
-    /// a click lets it go.
+    /// The crumb a screen reader or the keyboard focused (its ring
+    /// shows); Escape or a click lets it go.
     focus: Option<usize>,
 }
 
@@ -138,10 +138,12 @@ impl Component for BreadcrumbPage {
         }
         let last = self.crumbs.crumbs.len().saturating_sub(1);
         self.focus = self.crumb_at(id).filter(|i| *i != last);
+        self.crumbs.set_focused(self.focus);
         true
     }
 
     fn blur(&mut self) -> bool {
+        self.crumbs.set_focused(None);
         self.focus.take().is_some()
     }
 }

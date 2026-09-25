@@ -1,11 +1,11 @@
 //! Tabs page: the segmented strip, sized from its measured labels so
-//! every one keeps its breathing room. Tab focuses the strip.
+//! every one keeps its breathing room.
 //!
 //! Projected (task-75 phase 2b): the strip, `tabs_page.tabs`, named
 //! "sections", with a tab per label, as the comps projects them; a tab's
-//! `select` makes it the active one as a click does. The focus is the
-//! strip's (its ring): on the tab a reader moved it to, else the active
-//! one.
+//! `select` makes it the active one as a click does. The focus is on the
+//! tab a screen reader or the keyboard moved it to (its ring, task-75
+//! phase 2c), which the arrow keys move along the strip.
 
 use comps::prelude::{EventResult, Rect, Tabs, WidgetEvent};
 use engine::compositor::Compositor;
@@ -13,7 +13,7 @@ use engine::text::TextMeasurer;
 use engine::theme::{Theme, TypographyScale};
 use sem::{Request, SemId, SnapshotBuilder};
 
-use super::{After, Component, EditKey, child_id, key_under, root_id, under};
+use super::{After, Component, child_id, key_under, root_id, under};
 
 /// Horizontal slack around each label inside its segment: the strip's
 /// container padding plus the breathing room the reference asks for.
@@ -22,7 +22,7 @@ const SEGMENT_SLACK: f32 = 48.0;
 pub struct TabsPage {
     root: Option<SemId>,
     tabs: Tabs,
-    /// The tab a screen reader moved the strip's focus to.
+    /// The tab a screen reader or the keyboard moved the focus to.
     tab: Option<usize>,
 }
 
@@ -73,22 +73,9 @@ impl TabsPage {
         Tabs::height(theme)
     }
 
-    pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
-        if key == EditKey::Tab {
-            self.tabs.set_focused(true);
-            return true;
-        }
-        false
-    }
-
     pub fn handle_escape(&mut self) -> bool {
-        self.tab = None;
-        if self.tabs.is_focused() {
-            self.tabs.set_focused(false);
-            true
-        } else {
-            false
-        }
+        self.tabs.set_focused_tab(None);
+        self.tab.take().is_some()
     }
 
     pub fn handle_event(
@@ -117,8 +104,7 @@ impl Component for TabsPage {
             return;
         };
         self.tabs.project(b, id, "sections", Some(root));
-        if self.tabs.is_focused() {
-            let at = self.tab.unwrap_or(self.tabs.active);
+        if let Some(at) = self.tab {
             b.focus(id.key(at.to_string()));
         }
     }
@@ -137,14 +123,14 @@ impl Component for TabsPage {
         }
     }
 
-    /// A tab takes the strip's focus (its ring), on that tab; another node
-    /// of the page takes it from the strip.
+    /// A tab takes the focus (its ring); another node of the page takes
+    /// it from the strip.
     fn focus(&mut self, id: &SemId) -> bool {
         if !self.root.as_ref().is_some_and(|root| under(root, id)) {
             return false;
         }
         self.tab = self.tab_at(id);
-        self.tabs.set_focused(self.tab.is_some());
+        self.tabs.set_focused_tab(self.tab);
         true
     }
 }

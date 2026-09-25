@@ -542,6 +542,10 @@ pub(in crate::view) mod component;
 mod detached;
 pub use detached::Detached;
 
+/// The keyboard on the component pages (task-75 phase 2c): Tab over the
+/// projection, the arrow keys by widget, Enter and Space press.
+pub(in crate::view) mod keyboard;
+
 /// The view's own layer over the page, projected and run through the
 /// gallery's dispatcher (task-75 phase 2a): the toasts, the modal, the
 /// context menu.

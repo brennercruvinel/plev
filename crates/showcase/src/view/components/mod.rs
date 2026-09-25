@@ -70,20 +70,17 @@ pub(crate) fn child_id(root: Option<&SemId>, name: &str) -> Option<SemId> {
         .ok()
 }
 
-/// Tab-order bookkeeping for a page whose widgets take keyboard focus:
-/// Tab walks `len` slots and wraps, Escape clears. The page maps the
-/// slot onto its widgets' `set_focused`.
+/// The keyboard focus of a page whose widgets take it: the slot of the
+/// widget that has it, which the page maps onto its widgets'
+/// `set_focused`. It holds no order: Tab walks the page's projection
+/// (`dispatch/keyboard.rs`) and lands through `Component::focus`; Escape
+/// clears.
 #[derive(Debug, Default)]
 pub(crate) struct Focus {
     pub slot: Option<usize>,
 }
 
 impl Focus {
-    /// The slot Tab lands on next.
-    pub fn next(&self, len: usize) -> usize {
-        self.slot.map_or(0, |i| (i + 1) % len)
-    }
-
     /// Clear the focus. `false` when nothing was focused.
     pub fn clear(&mut self) -> bool {
         self.slot.take().is_some()

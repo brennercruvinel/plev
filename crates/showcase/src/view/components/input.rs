@@ -1,7 +1,8 @@
 //! Input page: three single-line [`comps::form::TextField`]s plus the
 //! live value preview line. The page owns the keyboard focus: a click in
-//! a field places the caret, Tab cycles the fields, Escape blurs; the
-//! characters and editing keys the shell forwards go to the focused one.
+//! a field places the caret, Tab reaches the fields (the view's keyboard,
+//! in the order of the projection), Escape blurs; the characters and
+//! editing keys the shell forwards go to the focused one.
 //!
 //! Projected (task-75 phase 2b): each field, `input_page.field[<i>]`, as the
 //! comps projects it, named by its placeholder; `set_value` puts its text
@@ -123,12 +124,11 @@ impl InputPage {
         }
     }
 
-    /// Tab cycles the fields; the other editing keys edit the focused one.
+    /// The editing keys edit the focused field. Tab is the view's (it
+    /// walks the projection), never an edit.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
         if key == EditKey::Tab {
-            let next = self.focused().map_or(0, |i| (i + 1) % COUNT);
-            self.set_focused(Some(next));
-            return true;
+            return false;
         }
         match self.focused() {
             Some(i) => self.fields[i].edit(key.into()),
@@ -260,18 +260,17 @@ mod tests {
             .collect()
     }
 
-    /// Tab walks the fields and wraps, Escape blurs.
+    /// A field takes the focus the view's Tab asks for (the projection's
+    /// order, `dispatch/keyboard.rs`), and Tab itself is no edit; Escape
+    /// blurs.
     #[test]
-    fn tab_cycles_the_fields_and_wraps() {
+    fn a_field_takes_the_focus_tab_asks_for_and_escape_blurs() {
         let mut p = InputPage::new();
         assert_eq!(p.focused(), None);
-        assert!(p.handle_edit_key(EditKey::Tab));
-        assert_eq!(p.focused(), Some(0));
-        p.handle_edit_key(EditKey::Tab);
-        p.handle_edit_key(EditKey::Tab);
+        assert!(!p.handle_edit_key(EditKey::Tab), "Tab is the view's");
+        let field = p.fields[2].sem_id().cloned().expect("an id");
+        assert!(p.focus(&field));
         assert_eq!(p.focused(), Some(2));
-        p.handle_edit_key(EditKey::Tab);
-        assert_eq!(p.focused(), Some(0), "Tab wraps to the first field");
         assert!(p.handle_escape());
         assert_eq!(p.focused(), None);
         assert!(!p.handle_escape());
@@ -317,7 +316,7 @@ mod tests {
     fn typing_requires_focus_and_editing_keys_edit() {
         let mut p = InputPage::new();
         assert!(!p.handle_text("x"), "no focus: the shell keeps the key");
-        p.handle_edit_key(EditKey::Tab);
+        p.set_focused(Some(0));
         p.handle_text("abc");
         p.handle_edit_key(EditKey::Left);
         p.handle_edit_key(EditKey::Backspace);
@@ -342,7 +341,7 @@ mod tests {
             "placeholder while empty"
         );
         assert!(before.iter().any(|t| t == "live value: (empty)"));
-        p.handle_edit_key(EditKey::Tab);
+        p.set_focused(Some(0));
         p.handle_text("Ada");
         let after = texts(&p);
         assert!(after.iter().any(|t| t == "Ada"), "typed value rendered");
@@ -383,7 +382,7 @@ mod tests {
                 .collect()
         };
         assert!(rings(&p).is_empty(), "no focus, no ring");
-        p.handle_edit_key(EditKey::Tab);
+        p.set_focused(Some(0));
         let f = InputPage::rects(content(), &theme)[0];
         assert_eq!(rings(&p), vec![(f.x - 4.0, f.y - 4.0)]);
     }
@@ -394,7 +393,7 @@ mod tests {
     fn focused_field_asks_for_the_next_flip() {
         let mut p = InputPage::new();
         assert_eq!(p.wake(0.016), Wake::idle(), "idle page requests no frames");
-        p.handle_edit_key(EditKey::Tab);
+        p.set_focused(Some(0));
         let w = p.wake(0.016);
         assert!(!w.now && !w.is_continuous(), "no flip yet, no frame: {w:?}");
         assert!(w.next.is_some(), "the next flip is pending");

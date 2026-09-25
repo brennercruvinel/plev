@@ -1,18 +1,19 @@
 //! Slider page: continuous, stepped and disabled, with the live value
-//! beside each. Tab moves the focus ring over the enabled ones.
+//! beside each. Tab reaches the enabled ones (the view's keyboard, in
+//! the order of the projection), the arrow keys, Home and End move them.
 //!
 //! Projected (task-75 phase 2b): each slider, `slider_page.slider[<i>]`, as
 //! the comps projects it ("continuous", "stepped", "disabled"): `set_value`
 //! moves it where a drag would, and the stepped one also takes
-//! `increment` and `decrement`. The focus a reader asks for is the page's
-//! own (the ring Tab moves).
+//! `increment` and `decrement`. The focus a reader or the keyboard asks
+//! for is the page's own (the ring).
 
 use comps::prelude::{EventResult, Rect, Slider, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::{ControlSize, Theme};
 use sem::{Request, SemId, SnapshotBuilder, Value};
 
-use super::{After, Component, EditKey, Focus, child_id, root_id, text, under};
+use super::{After, Component, Focus, child_id, root_id, text, under};
 
 /// What each slider is called: what the page shows it for.
 const LABELS: [&str; 3] = ["continuous", "stepped", "disabled"];
@@ -73,14 +74,6 @@ impl SliderPage {
         self.focus.slot = slot;
         self.sliders[0].set_focused(slot == Some(0));
         self.sliders[1].set_focused(slot == Some(1));
-    }
-
-    pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
-        if key == EditKey::Tab {
-            self.set_focus(Some(self.focus.next(2)));
-            return true;
-        }
-        false
     }
 
     pub fn handle_escape(&mut self) -> bool {
@@ -175,8 +168,8 @@ impl Component for SliderPage {
         Ok(After::Nothing)
     }
 
-    /// An enabled slider takes the page's focus (its ring, the slot Tab
-    /// moves from); another node of the page takes it from the sliders.
+    /// An enabled slider takes the page's focus (its ring); another node
+    /// of the page takes it from the sliders.
     fn focus(&mut self, id: &SemId) -> bool {
         if !self.root.as_ref().is_some_and(|root| under(root, id)) {
             return false;

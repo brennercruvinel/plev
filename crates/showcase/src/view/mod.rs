@@ -96,6 +96,8 @@ pub struct ShowcaseView {
     /// moved the focus to (`dispatch::overlay`); `None`, the overlay's
     /// own (the modal's cancel, the menu's first item).
     overlay_focus: Option<sem::SemId>,
+    /// The shift key is held: Tab walks backward (`dispatch::keyboard`).
+    shift: bool,
 
     /// One struct per pane, the pages' state.
     panes: panes::Panes,
@@ -155,6 +157,7 @@ impl ShowcaseView {
             },
             active_overlay: None,
             overlay_focus: None,
+            shift: false,
         }
     }
 
@@ -165,8 +168,9 @@ impl ShowcaseView {
     }
 
     /// Modifier state from the platform shell (alt/shift clicks in the
-    /// editor).
+    /// editor, Shift-Tab on a component page).
     pub fn set_modifiers(&mut self, modifiers: ModifiersState) {
+        self.shift = modifiers.shift_key();
         self.panes.editor.set_modifiers(modifiers);
     }
 

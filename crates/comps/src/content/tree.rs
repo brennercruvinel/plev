@@ -6,6 +6,7 @@ use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::list::reachable;
 use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
+use crate::recipe::focus_ring_inside;
 
 /// The per-theme geometry the hit test and the render share: a dense
 /// base-2r row (line box plus `xs` above and below), one `lg` step of
@@ -107,6 +108,7 @@ pub struct Tree {
     pub roots: Vec<TreeNode>,
     pub selected: Option<u64>,
     hovered_row: Option<usize>,
+    focused: Option<u64>,
     sem: Option<SemId>,
 }
 
@@ -116,6 +118,7 @@ impl Tree {
             roots,
             selected: None,
             hovered_row: None,
+            focused: None,
             sem: None,
         }
     }
@@ -129,6 +132,17 @@ impl Tree {
 
     pub fn sem_id(&self) -> Option<&SemId> {
         self.sem.as_ref()
+    }
+
+    /// Keyboard focus on the row of node `id`, or on none, driven by the
+    /// owning view (plev has no global focus chain): the accent ring inside
+    /// that row while it shows (a row under a collapsed branch shows none).
+    pub fn set_focused(&mut self, id: Option<u64>) {
+        self.focused = id;
+    }
+
+    pub fn focused(&self) -> Option<u64> {
+        self.focused
     }
 
     /// Declares this tree as `id` in a projection: a `Role::Tree` named
@@ -320,6 +334,11 @@ impl Tree {
                         theme.glass.surface_hover.0
                     },
                 ));
+            }
+
+            if self.focused == Some(row.id) {
+                let radius = theme.shape.nav.min(row_rect.h / 2.0);
+                compositor.push(focus_ring_inside(row_rect, radius, theme));
             }
 
             let mut cx = bounds.x + m.pad_x + row.depth as f32 * m.indent;

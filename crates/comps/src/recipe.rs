@@ -317,3 +317,13 @@ pub fn focus_ring(rect: Rect, radius: f32, theme: &Theme) -> SceneNode {
         theme.control.focus_ring_width,
     )
 }
+
+/// The keyboard-focus ring drawn inside `rect` instead of around it: the
+/// same stroke, its outer edge on the rect's edge and its outer corners at
+/// `radius`. For a row or a segment packed edge to edge with its
+/// neighbors (a tree row, a tab of a strip), where the ring around it
+/// would cross into the next one.
+pub fn focus_ring_inside(rect: Rect, radius: f32, theme: &Theme) -> SceneNode {
+    let inflate = theme.control.focus_ring_offset + theme.control.focus_ring_width;
+    focus_ring(rect.inset(inflate), (radius - inflate).max(0.0), theme)
+}

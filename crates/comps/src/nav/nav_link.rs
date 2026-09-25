@@ -8,6 +8,8 @@
 //! With a [`SemId`] ([`NavLink::sem`]) the render binds the bounds it
 //! draws and hit-tests with (the rail form too), and
 //! [`NavLink::project`] declares the link in a semantic projection.
+//! Keyboard focus ([`NavLink::set_focused`], driven by the owning view)
+//! rings the row.
 
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
@@ -17,6 +19,7 @@ use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 use crate::action::Badge;
 use crate::core::{EventResult, Rect, WidgetEvent};
 use crate::icons;
+use crate::recipe::focus_ring;
 use crate::recipe::{rounded_rect, rounded_rect_stroke};
 
 #[derive(Clone, Debug)]
@@ -30,6 +33,7 @@ pub struct NavLink {
     pub active: bool,
     hovered: bool,
     pressed: bool,
+    focused: bool,
     sem: Option<SemId>,
 }
 
@@ -43,6 +47,7 @@ impl NavLink {
             active: false,
             hovered: false,
             pressed: false,
+            focused: false,
             sem: None,
         }
     }
@@ -99,6 +104,16 @@ impl NavLink {
     pub fn active(mut self, active: bool) -> Self {
         self.active = active;
         self
+    }
+
+    /// Keyboard focus, driven by the owning view (plev has no global
+    /// focus chain): the accent ring around the row, at the nav radius.
+    pub fn set_focused(&mut self, focused: bool) {
+        self.focused = focused;
+    }
+
+    pub fn is_focused(&self) -> bool {
+        self.focused
     }
 
     pub fn is_hovered(&self) -> bool {
@@ -197,6 +212,9 @@ impl NavLink {
         }
         let glass = &theme.glass;
         let radius = theme.shape.nav.min(bounds.h / 2.0);
+        if self.focused {
+            c.push_to_layer(layer, focus_ring(bounds, radius, theme));
+        }
         // The wash and the rim are the active mark; a hovered link only
         // brightens its text, so the two states never read alike.
         if self.active {

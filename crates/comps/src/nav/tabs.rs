@@ -2,7 +2,8 @@
 //! whose equal-width segments share one base-2sm style for measurement
 //! and drawing; the active segment is a raised, edge-lit glass block.
 //! Keyboard focus ([`Tabs::set_focused`]) rings the whole strip with the
-//! accent ring.
+//! accent ring; focus on one tab ([`Tabs::set_focused_tab`], what the arrow
+//! keys move) rings that segment instead.
 //!
 //! With a [`SemId`] ([`Tabs::sem`]) the render binds the strip and each
 //! segment to the rects it draws and hit-tests them with, and
@@ -15,7 +16,7 @@ use engine::theme::{ControlSize, Theme};
 use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::recipe::{focus_ring, glass_pill, shadow_node};
+use crate::recipe::{focus_ring, focus_ring_inside, glass_pill, shadow_node};
 
 /// Segmented tab strip. Tabs share the width equally (CSS `flex: 1`);
 /// give the widget [`Tabs::height`] (one `Md` control) for the canonical
@@ -26,6 +27,7 @@ pub struct Tabs {
     pub active: usize,
     hovered: Option<usize>,
     focused: bool,
+    focused_tab: Option<usize>,
     sem: Option<SemId>,
 }
 
@@ -36,6 +38,7 @@ impl Tabs {
             active: 0,
             hovered: None,
             focused: false,
+            focused_tab: None,
             sem: None,
         }
     }
@@ -99,6 +102,17 @@ impl Tabs {
 
     pub fn is_focused(&self) -> bool {
         self.focused
+    }
+
+    /// Keyboard focus on the tab at `index`, or on none, driven by the
+    /// owning view: the ring wraps that segment, not the strip, so the
+    /// focus can sit on a tab that is not the active one.
+    pub fn set_focused_tab(&mut self, index: Option<usize>) {
+        self.focused_tab = index.filter(|i| *i < self.labels.len());
+    }
+
+    pub fn focused_tab(&self) -> Option<usize> {
+        self.focused_tab
     }
 
     /// Canonical strip height: the `Md` control (segments are `Xs` inside
@@ -225,6 +239,11 @@ impl Tabs {
                 y: rect.y + TextMeasurer::vertical_center(&style, rect.h),
                 color: color.0,
             });
+        }
+        // The focused tab's ring last, over the block and the labels.
+        if let Some(rect) = self.focused_tab.and_then(|i| rects.get(i)) {
+            let block_radius = theme.shape.block.min(rect.h / 2.0);
+            compositor.push(focus_ring_inside(*rect, block_radius, theme));
         }
     }
 }
