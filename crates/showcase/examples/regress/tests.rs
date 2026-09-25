@@ -76,10 +76,11 @@ fn a_page_checked_against_its_own_bless_holds_without_opening_a_gpu() {
 }
 
 /// A page in a state (task-69 checkpoint b) is blessed and checked as a
-/// page is: the Silences with the review open, by the rules and from the
-/// Claude's fixture, holds against its own bless with no frame drawn; its
-/// baseline is named by the state, its projection holds the surface
-/// beside the fixed screen, and it settled.
+/// page is: the Silences with the review open, by the rules, from the
+/// Claude's fixture, and that fixture adapted (task-70), holds against its
+/// own bless with no frame drawn; its baseline is named by the state, its
+/// projection holds the surface beside the fixed screen, and it settled.
+/// Adapted, the detection the fixed screen offers is not the surface's.
 #[test]
 fn a_page_in_a_state_checked_against_its_own_bless_holds() {
     let root = temp();
@@ -94,6 +95,11 @@ fn a_page_in_a_state_checked_against_its_own_bless_holds() {
             "silences, review by the claude (fixture)",
             "silences-review-by-the-claude-fixture@core@1280x800",
             "review",
+        ),
+        (
+            "Silences, review by the Claude (fixture), adapted",
+            "silences-review-by-the-claude-fixture-adapted@core@1280x800",
+            "review.cuts_list",
         ),
     ] {
         let b = bless(root.path(), state, "core");
@@ -111,6 +117,14 @@ fn a_page_in_a_state_checked_against_its_own_bless_holds() {
             let at = sem::SemId::parse(id).unwrap_or_else(|e| panic!("{id}: {e}"));
             assert!(snap.get(&at).is_some(), "{state}: {id}");
         }
+        let controls = sem::SemId::parse("review.controls").unwrap_or_else(|e| panic!("{e}"));
+        let name = state.to_lowercase();
+        let (fixture, adapted) = (name.contains("claude"), name.ends_with("adapted"));
+        assert_eq!(
+            snap.get(&controls).is_some(),
+            fixture && !adapted,
+            "{state}: the detection card"
+        );
     }
     assert_eq!(gpu.frames, 0);
     match run::stage(&key("No such state", "core"), false) {

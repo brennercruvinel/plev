@@ -10,9 +10,11 @@
 //! headless with both forms (a png each with `SILENCES_OUT`, the real
 //! frames in the ignored test). The round of the checkpoint b (the review
 //! open at the default window, by the rules and by the Claude's fixture)
-//! is `generated/checkpoint.rs`.
+//! is `generated/checkpoint.rs`; the Claude's review adapted by task-70's
+//! operations is `generated/transform.rs`.
 
 mod checkpoint;
+mod transform;
 
 use std::path::PathBuf;
 use std::time::{Duration, Instant};

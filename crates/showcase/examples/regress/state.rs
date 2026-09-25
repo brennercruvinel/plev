@@ -9,10 +9,12 @@
 //! The states are the Silences page with the review of the checkpoint
 //! open beside the fixed screen: proposed by the rules, and shown from
 //! the fixture of the Claude's proposal of the first round
-//! (`fixtures/ir/silences-review-claude.ir.json`), no model asked. The
-//! frames the page shows are synthetic, made here from their instant, so
-//! no ffmpeg runs and the frame is the same on every machine (a layer
-//! hashes an image by its size, `hash.rs`).
+//! (`fixtures/ir/silences-review-claude.ir.json`), no model asked; and
+//! that fixture adapted by task-70's operations (the cuts first, the
+//! detection the fixed screen offers hidden), applied as the host applies
+//! one. The frames the page shows are synthetic, made here from their
+//! instant, so no ffmpeg runs and the frame is the same on every machine
+//! (a layer hashes an image by its size, `hash.rs`).
 
 use engine::compositor::Compositor;
 use engine::gpu::image::{ImageHandle, load_image_rgba};
@@ -39,13 +41,15 @@ pub enum Proposal {
 }
 
 /// A page in a state: its name, the page it is of, the intent typed in
-/// the row, and how its surface is proposed.
+/// the row, how its surface is proposed, and the operations applied to it
+/// then (`uir::Op` in JSON, in order).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct State {
     pub name: &'static str,
     pub page: &'static str,
     pub intent: &'static str,
     pub proposal: Proposal,
+    pub ops: &'static [&'static str],
 }
 
 /// Every state a baseline may be of.
@@ -55,12 +59,24 @@ pub const STATES: &[State] = &[
         page: "Silences",
         intent: "the list with the video and the counts",
         proposal: Proposal::Rules,
+        ops: &[],
     },
     State {
         name: "Silences, review by the Claude (fixture)",
         page: "Silences",
         intent: "cut the silences of this video, then I want to review the cuts",
         proposal: Proposal::Fixture(CLAUDE_REVIEW),
+        ops: &[],
+    },
+    State {
+        name: "Silences, review by the Claude (fixture), adapted",
+        page: "Silences",
+        intent: "cut the silences of this video, then I want to review the cuts",
+        proposal: Proposal::Fixture(CLAUDE_REVIEW),
+        ops: &[
+            r#"{"op": "reorder", "parent": "review.root", "ids": ["review.title", "review.cuts_list"]}"#,
+            r#"{"op": "hide", "id": "review.controls"}"#,
+        ],
     },
 ];
 
@@ -192,6 +208,12 @@ impl StagedState {
                     .map_err(|e| format!("{}: {e}", state.name))?;
             }
         }
+        for json in state.ops {
+            let op: uir::Op =
+                serde_json::from_str(json).map_err(|e| format!("{}: {json}: {e}", state.name))?;
+            view.stage_silences_op(op, harness())
+                .map_err(|e| format!("{}: {e}", state.name))?;
+        }
         view.stage_silences_frames(&mut synthetic);
         let mut compositor = Compositor::new();
         let (mut steps, mut settled) = (0, false);
@@ -211,6 +233,13 @@ impl StagedState {
     }
 }
 
+/// The regression harness, as the test actor that acts and asks.
+fn harness() -> Actor {
+    Actor::Test {
+        name: "regress".to_string(),
+    }
+}
+
 /// `action` on `target` with `text`, by the regression harness as a test
 /// actor, observed on the whole page as it is now; an error unless it
 /// completed.
@@ -223,11 +252,8 @@ fn act(
     let seen = view
         .semantics()
         .ok_or_else(|| "the page projects nothing".to_string())?;
-    let actor = Actor::Test {
-        name: "regress".to_string(),
-    };
     let param = text.map(|t| Value::Text(t.to_string()));
-    let req = Request::observe(&seen, actor, target, action, param)
+    let req = Request::observe(&seen, harness(), target, action, param)
         .map_err(|e| format!("{target} {action}: {e}"))?;
     let receipt = view
         .act(req)
