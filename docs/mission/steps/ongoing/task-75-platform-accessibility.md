@@ -1481,3 +1481,117 @@ as páginas escolhidas, uma por tipo:
 - breadcrumb: `breadcrumb@core@1280x800`
 - link de navegação: `navigation-menu@core@1280x800`
 - split: `resizable@core@1280x800`
+
+## fase 2c: a sonda do teclado (2026-09-25)
+
+branch `task/75d-keyboard`, sobre `main` em `73f99094`. o escopo é o
+item 3 do escopo acima nas 30 páginas de componente (os 19 panes da
+tabela em `view/dispatch/component.rs:108-128`). os caminhos são relativos
+a `crates/showcase/src/view` quando não dizem o crate. a leitura de cada
+página foi feita com um teste sem janela que projeta a página, lista
+`focus::order` e aperta Tab pela view (`handle_edit_key(EditKey::Tab)`).
+
+### (a) o que Tab faz hoje
+
+a ponte manda Tab como `EditKey::Tab`, sem olhar o Shift
+(`src/keys.rs:18`): Shift-Tab é Tab. a view só passa Tab a seis panes
+(`input.rs:145-167`), e cada um tem a sua própria ordem:
+
+| página (pane) | focáveis na projeção | Tab hoje | por quê |
+|---|---|---|---|
+| Input, Field, Label (Input) | 3 campos | anda e dá a volta | `components/input.rs:127-133`, índice próprio |
+| Checkbox | 2 caixas | anda | `components/checkbox.rs:71-77`, o `Focus` da página |
+| Switch | 2 switches | anda | `components/switch.rs:70-76`, idem |
+| Slider | 2 sliders | anda | `components/slider.rs:78-84`, idem |
+| Select, Combobox (Select) | a pílula | fica na pílula | `components/select.rs:68-74` |
+| Tabs | 3 abas | fica na aba ativa | `components/tabs.rs:76-82`: liga o anel da faixa inteira, e a projeção diz a ativa |
+| Button, Button Group, Icon Button, Tooltip, Hover Card, Popover, Spinner, Toast, Dialog, Alert Dialog, Chip, Toggle, Breadcrumb, Navigation Menu, Kbd, Tree | de 1 a 16 | nada | `input.rs:165`: o braço `_ => false` |
+| Table, Data Table, Scroll Area, Item, Resizable | 0 | nada | nenhum nó focável (ver (c)) |
+
+o `Focus` das páginas (`components/mod.rs:73-92`) é uma segunda fonte de
+ordem: um índice que a página avança, que não lê a projeção. Enter,
+Espaço e as setas também não chegam às páginas de componente:
+`handle_enter` só conhece os panes de app (`input.rs:172-200`), Espaço vira
+`handle_key(" ")` e cai no `_ => false` (`input.rs:96`), cima e baixo só
+servem à Git (`mod.rs:181-183`), e esquerda, direita, Home e End só editam
+o campo focado.
+
+### (b) onde a ordem da projeção dirige o Tab
+
+o engine já tem a ordem: `accessibility::focus::order` e `focus::next`
+(`crates/engine/src/accessibility/focus.rs:33-62`) andam o snapshot na
+ordem da árvore que o leitor recebe, pulando o que é inerte, desabilitado
+ou não focável, e dão a volta. o teste
+`tab_and_the_reader_walk_the_same_order_and_the_page_takes_the_focus`
+(`crates/showcase/tests/access_tree.rs:397-423`) já prova que essa ordem é
+a do leitor em toda página que projeta, e que toda página toma o foco que
+o leitor pede (`assist_focus`, `dispatch.rs:464-495`, que numa página de
+componente chega em `Component::focus`, `dispatch/component.rs:230-241`).
+
+então Tab é `focus::next(&self.semantics(), direção)` seguido de
+`assist_focus` no id que sai: a mesma projeção que o leitor anda, o mesmo
+método que o leitor usa para mover o foco, e nenhuma ordem própria. o
+Shift vem das teclas modificadoras que a view já recebe
+(`mod.rs:169-171`), sem mexer na ponte. com isso o `Focus::next` e os seis
+braços de Tab somem.
+
+o que o contrato do engine diz e o padrão WAI-ARIA recomenda diferente: o
+engine põe cada nó focável na sequência de Tab (`focus.rs:1-13`), então as
+três abas e as nove linhas da árvore são nove paradas de Tab, e o padrão
+recomenda uma parada por widget composto (o tabindex que roda). fazer isso
+é dizer, na projeção, qual item do composto é focável, o que muda o
+`semantics.json` das baselines. fica como pendência; as setas desta fase
+funcionam por cima da sequência de hoje.
+
+### (c) os widgets que pedem setas
+
+| widget (papel) | páginas | padrão | o que já tem | o que falta |
+|---|---|---|---|---|
+| abas (`TabList`, `Tab`) | Tabs | esquerda e direita, Home e End; Enter e Espaço selecionam | `select` na projeção; anel só na faixa inteira (`crates/comps/src/nav/tabs.rs:93-99`, `176-178`) | anel na aba focada |
+| árvore (`Tree`, `TreeItem`) | Tree | cima e baixo nas linhas visíveis, Home e End; direita abre o ramo fechado ou desce ao primeiro filho; esquerda fecha o ramo aberto ou sobe ao pai; Enter e Espaço selecionam | `select`, `toggle_expanded`, `expanded` e o pai de cada item na projeção | anel na linha (`components/tree.rs:19`: "a row draws no ring") |
+| menu (`Menu`, `MenuItem`) | o menu de contexto, overlay | cima e baixo dão a volta, Home e End; Enter e Espaço acionam | `activate` por item; o destaque do hover (`crates/comps/src/feedback/context_menu.rs:102`) | o destaque seguir o foco |
+| select (`Select`, `Option`) | Select, Combobox | Enter, Espaço, cima ou baixo abrem na opção escolhida; cima e baixo andam as opções, Home e End; Enter e Espaço escolhem; Escape fecha | `open`, `close`, `select`; o destaque por tecla no comps (`crates/comps/src/form/select/panel.rs:163-196`), sem uso | o destaque seguir a opção focada |
+| slider (`Slider`) | Slider | direita e cima sobem, esquerda e baixo descem, Home e End vão aos extremos | `increment` e `decrement` no que tem passo, `set_value` com a faixa (`crates/comps/src/form/slider.rs:74-104`) | o contínuo não tem passo: a tecla pede `set_value` |
+| lista e tabela (`List`, `Table`) | Scroll Area, Item, Table, Data Table | cima e baixo nas linhas | `select` por linha | nenhuma linha é focável na projeção; ver abaixo |
+| radio | nenhuma página de componente | | | |
+
+os outros controles não pedem seta, só anel e acionar: botões (Enter e
+Espaço), caixas e switches (Espaço), links de navegação e crumbs (Enter).
+três desenham o foco hoje sem anel: o chip de filtro
+(`crates/comps/src/action/chip.rs`), o crumb (`crates/comps/src/nav/breadcrumb.rs`)
+e o link de navegação (`crates/comps/src/nav/nav_link.rs`). Enter e Espaço
+pedem a ação primária do nó focado, a mesma que o clique do leitor pede
+(`crates/engine/src/accessibility/action.rs:102`), pelo dispatcher da
+galeria, como pessoa.
+
+as listas e tabelas: as linhas projetam `select` mas não são focáveis, e a
+lista e a tabela também não. nenhum Tab chega nelas sem a projeção dizer
+um nó focável, o que muda as oito baselines dessas páginas (core e hoff).
+é a condição de parar do briefing; não mexi, está no handoff como decisão.
+o split da Resizable pede um papel de splitter no contrato (já na lista da
+fase 2b).
+
+### (d) o modal
+
+- o trap já sai da projeção: com o modal aberto a região da página é
+  inerte (`dispatch/component.rs:132-135`), e `focus::next` pula o que é
+  inerte, então Tab sobre `semantics()` só anda entre os dois botões do
+  modal. os toasts são live regions, não focáveis.
+- o foco do modal é o cancel, ou o botão que o leitor escolheu
+  (`dispatch/overlay.rs:108-115`); o comps `Modal` tem dois `Button` com
+  `set_focused` (`crates/comps/src/feedback/modal.rs:47-48`), mas nenhum
+  jeito de a view ligar o anel neles.
+- o retorno já sai da projeção: a página guarda o foco dela enquanto o
+  modal está aberto, e ele volta a ser o foco da projeção quando o modal
+  fecha (`dispatch/overlay.rs:12-16`, `dispatch/detached.rs:226`). falta a
+  página ter o foco no botão que abriu, o que Tab e Enter dão.
+- o Escape tira o foco da página antes de fechar o overlay
+  (`input.rs:113-133`): com o modal aberto por Enter, o primeiro Escape
+  apagaria o anel do botão que abriu e deixaria o modal aberto. o overlay
+  que segura o ponteiro fecha primeiro.
+
+### (e) fora desta fase
+
+os atalhos anunciados: o `sem::Node` não tem campo de atalho
+(`crates/sem/src/node.rs:35-73`), e dizer um atalho ao leitor pede o
+contrato. vai para as pendências.
