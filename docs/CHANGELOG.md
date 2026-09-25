@@ -9,6 +9,12 @@ status: living
 
 ## unreleased
 
+- the gallery runs on the iPhone simulator (2026-09-25, task-19): it was
+  laid out as a 1200x800 desktop window, cropped on the right; now it
+  takes the phone's screen and matches the desktop frame pixel for pixel,
+  except the status bar iOS draws on top. it does not yet keep out of the
+  status bar.
+
 - the gallery runs on the web (2026-09-25, task-20): the web build
   failed to start and then drew an empty page; now every page the
   keyboard reaches, in every theme, at 1x, 2x and 3x, matches the desktop

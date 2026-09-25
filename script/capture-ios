@@ -47,10 +47,19 @@ if [ -z "$PROFILE" ] || ! xcrun simctl list devices available | grep -q "    $DE
     echo "capture-ios: no available simulator named '$DEVICE' (xcrun simctl list devices available)" >&2
     exit 2
 fi
+# the screen: `mainScreen<Width|Height|Scale>` of profile.plist on older
+# Xcodes; the Xcode 26 profiles keep it in capabilities.plist instead
+# (`ScreenDimensionsCapability`, `main-screen-<width|height|scale>`)
 screen() {
-    plutil -extract "mainScreen$1" raw "$PROFILE/Contents/Resources/profile.plist" 2>/dev/null
+    local lower
+    lower="$(echo "$1" | tr '[:upper:]' '[:lower:]')"
+    plutil -extract "mainScreen$1" raw "$PROFILE/Contents/Resources/profile.plist" 2>/dev/null \
+        || plutil -extract "capabilities.ScreenDimensionsCapability.main-screen-$lower" raw \
+            "$PROFILE/Contents/Resources/capabilities.plist" 2>/dev/null
 }
 PX_W="$(screen Width)"; PX_H="$(screen Height)"; SCALE="$(screen Scale)"
+# capabilities.plist writes the scale as a real ("3.000000"): as the desktop names it
+SCALE="$(python3 -c "print('%g' % float('${SCALE}'))")"
 WIDTH="$(python3 -c "print(repr(${PX_W} / ${SCALE}))")"
 HEIGHT="$(python3 -c "print(repr(${PX_H} / ${SCALE}))")"
 
