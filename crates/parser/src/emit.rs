@@ -125,19 +125,22 @@ mod tests {
     fn emits_deterministic_chain() {
         let res = Resolution {
             fn_name: "demo".into(),
+            name: "Demo".into(),
+            decl: Default::default(),
             source_label: "demo.tsx".into(),
-            root: ParserNode {
-                tag: Tag::Div,
-                props: vec![Prop::f32("w", 368.0), Prop::token("bg", "theme.colors.bg")],
-                children: vec![ParserNode {
-                    tag: Tag::Text(TextValue::Param("title".into())),
-                    props: vec![Prop::f32("font_size", 20.0)],
-                    children: vec![],
-                }],
-            },
+            root: ParserNode::new(
+                Tag::Div,
+                vec![Prop::f32("w", 368.0), Prop::token("bg", "theme.colors.bg")],
+                vec![ParserNode::new(
+                    Tag::Text(TextValue::Param("title".into())),
+                    vec![Prop::f32("font_size", 20.0)],
+                    vec![],
+                )],
+            ),
             params: vec![Param::Text("title".into())],
             mapped: 3,
             dropped: vec![],
+            notes: vec![],
         };
         let a = emit(&res);
         let b = emit(&res);

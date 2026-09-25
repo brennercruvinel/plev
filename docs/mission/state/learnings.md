@@ -12,6 +12,21 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-25, task-71 fase 1
+
+- **o importer perdia a semântica antes de emitir:** o `ParserNode` era
+  normalizado para o builder, então `<button>` e `<div>` eram o mesmo
+  `Tag::Div` e os atributos sumiam. o IR não precisou mudar; o que faltava
+  era carregar a origem de cada nó e prop, de forma aditiva. regra: um
+  emissor novo lê a representação intermediária antes da normalização
+  para o emissor antigo, ou a estende sem mexer no que o antigo lê.
+  fonte: `crates/parser/src/ir.rs`, `Origin`.
+- **"nada some" só se prova com um censo independente:** comparar o
+  relatório com o que o resolver contou prova só o resolver. o teste lê o
+  censo direto do parse (cada elemento, atributo, declaração, chamada) e
+  achou dois silêncios antigos na droplist. fonte:
+  `crates/parser/tests/ir.rs`.
+
 ### 2026-09-25, task-75 fase 1
 
 - **"tem accessibility" media 6 páginas de 82:** a árvore do AccessKit só

@@ -1,0 +1,54 @@
+{
+  "plev_ir": 1,
+  "surface": {
+    "id": "separator",
+    "title": "Separator",
+    "root": {
+      "sem": "separator.root",
+      "layout": {
+        "stack": {
+          "axis": "horizontal",
+          "align": "center"
+        }
+      },
+      "children": [
+        {
+          "sem": "separator.root.line",
+          "component": "separator",
+          "size": {
+            "flex": 1
+          }
+        },
+        {
+          "sem": "separator.root.box",
+          "props": {
+            "padding": "xs",
+            "background": "bg"
+          },
+          "children": [
+            {
+              "sem": "separator.root.box.label",
+              "component": "text",
+              "props": {
+                "typography": "caption_r",
+                "color": "text_mid"
+              },
+              "bind": {
+                "state": {
+                  "text": "separator.props:label"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "sem": "separator.root.line_2",
+          "component": "separator",
+          "size": {
+            "flex": 1
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,220 @@
+{
+  "bindings": [
+    {
+      "at": "separator.rs:151",
+      "binds": "state",
+      "kind": "text",
+      "node": "separator.root.box.label",
+      "prop": "text",
+      "ref": "separator.props:label",
+      "why": "`label` is a parameter of the component"
+    }
+  ],
+  "counts": {
+    "approximated": 3,
+    "impossible": 6,
+    "supported": 8,
+    "transformed": 9
+  },
+  "entries": [
+    {
+      "at": "separator.rs:80",
+      "category": "transformed",
+      "construct": ".absolute() line overlay",
+      "ir": "folded into `separator.root.line_2`; carried by the rewrite",
+      "node": "separator.root.line_2",
+      "rule": "no absolute positioning; rewritten as two grow(1.0) segments flanking the label"
+    },
+    {
+      "at": "separator.rs:80",
+      "category": "transformed",
+      "construct": ".map(|..|)",
+      "ir": "carried by the rewrite",
+      "rule": "the combinator's closure is applied to the transpiled instance (horizontal, solid, with label)"
+    },
+    {
+      "at": "separator.rs:81",
+      "category": "impossible",
+      "construct": "match arm Axis::Vertical",
+      "covers": [
+        "separator.rs:81"
+      ],
+      "reason": "variant not in the transpiled instance (horizontal, solid, with label)"
+    },
+    {
+      "at": "separator.rs:82",
+      "category": "transformed",
+      "construct": ".h(px(1.))",
+      "ir": "component separator",
+      "node": "separator.root.line",
+      "rule": "a bar 1 px thin in theme.colors.divider is the separator component, whose line is theme.control.edge_width in that color"
+    },
+    {
+      "at": "separator.rs:82",
+      "category": "supported",
+      "construct": ".w_full()",
+      "ir": "size.flex = 1",
+      "node": "separator.root.line"
+    },
+    {
+      "at": "separator.rs:87",
+      "category": "transformed",
+      "construct": ".bg(color)",
+      "ir": "component separator",
+      "node": "separator.root.line",
+      "rule": "a bar 1 px thin in theme.colors.divider is the separator component, whose line is theme.control.edge_width in that color"
+    },
+    {
+      "at": "separator.rs:87",
+      "category": "impossible",
+      "construct": "self.color override (color() setter)",
+      "reason": "not exercised by the transpiled instance; theme border token used"
+    },
+    {
+      "at": "separator.rs:126",
+      "category": "transformed",
+      "construct": "impl RenderOnce for Separator",
+      "ir": "surface `separator`, title \"Separator\"",
+      "rule": "the component names the surface"
+    },
+    {
+      "at": "separator.rs:132",
+      "category": "supported",
+      "construct": "self.base",
+      "ir": "a container (no component: a group)",
+      "node": "separator.root"
+    },
+    {
+      "at": "separator.rs:133",
+      "category": "supported",
+      "construct": ".flex()",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "separator.root"
+    },
+    {
+      "at": "separator.rs:134",
+      "category": "impossible",
+      "construct": ".flex_shrink_0()",
+      "node": "separator.root",
+      "reason": "the IR has no shrink weight"
+    },
+    {
+      "at": "separator.rs:135",
+      "category": "supported",
+      "construct": ".items_center()",
+      "ir": "layout.stack.align = center",
+      "node": "separator.root"
+    },
+    {
+      "at": "separator.rs:136",
+      "category": "impossible",
+      "construct": ".justify_center()",
+      "node": "separator.root",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "separator.rs:137",
+      "category": "impossible",
+      "construct": ".refine_style(..)",
+      "reason": "runtime StyleRefinement merge from the user; no static equivalent"
+    },
+    {
+      "at": "separator.rs:138",
+      "category": "transformed",
+      "construct": ".child(match line_style)",
+      "ir": "component separator",
+      "node": "separator.root.line",
+      "rule": "a bar 1 px thin in theme.colors.divider is the separator component, whose line is theme.control.edge_width in that color"
+    },
+    {
+      "at": "separator.rs:139",
+      "category": "supported",
+      "construct": ".into_any_element()",
+      "ir": "holds by construction: type erasure, no visual effect"
+    },
+    {
+      "at": "separator.rs:140",
+      "category": "impossible",
+      "construct": "match arm SeparatorStyle::Dashed",
+      "covers": [
+        "separator.rs:80",
+        "separator.rs:81",
+        "separator.rs:82",
+        "separator.rs:91",
+        "separator.rs:115",
+        "separator.rs:140"
+      ],
+      "reason": "variant not in the transpiled instance (horizontal, solid, with label)"
+    },
+    {
+      "at": "separator.rs:142",
+      "category": "transformed",
+      "construct": ".when_some(self.label, |..|)",
+      "ir": "carried by the rewrite",
+      "rule": "the combinator's closure is applied to the transpiled instance (horizontal, solid, with label)"
+    },
+    {
+      "at": "separator.rs:143",
+      "category": "supported",
+      "construct": ".child(div()..)",
+      "ir": "a container (no component: a group)",
+      "node": "separator.root.box"
+    },
+    {
+      "at": "separator.rs:145",
+      "category": "approximated",
+      "construct": ".px_2()",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.xs (4 px): right 8 is 4, left 8 is 4",
+      "ir": "props.padding = xs",
+      "node": "separator.root.box"
+    },
+    {
+      "at": "separator.rs:146",
+      "category": "approximated",
+      "construct": ".py_1()",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.xs (4 px): right 8 is 4, left 8 is 4",
+      "ir": "props.padding = xs",
+      "node": "separator.root.box"
+    },
+    {
+      "at": "separator.rs:147",
+      "category": "transformed",
+      "construct": ".mx_auto()",
+      "ir": "carried by the rewrite",
+      "rule": "no auto margins; centering comes from the flank rewrite"
+    },
+    {
+      "at": "separator.rs:148",
+      "category": "approximated",
+      "construct": ".text_xs()",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "separator.root.box.label"
+    },
+    {
+      "at": "separator.rs:149",
+      "category": "supported",
+      "construct": ".bg(cx.theme().background)",
+      "ir": "props.background = bg",
+      "node": "separator.root.box"
+    },
+    {
+      "at": "separator.rs:150",
+      "category": "supported",
+      "construct": ".text_color(cx.theme().muted_foreground)",
+      "ir": "props.color = text_mid",
+      "node": "separator.root.box.label"
+    },
+    {
+      "at": "separator.rs:151",
+      "category": "transformed",
+      "construct": ".child(label)",
+      "ir": "component text, bind.state.text",
+      "node": "separator.root.box.label",
+      "rule": "a text parameter is text the app's state holds: binding required"
+    }
+  ],
+  "plev_report": 1,
+  "source": "separator.rs (Separator::horizontal().label(..))",
+  "surface": "separator"
+}

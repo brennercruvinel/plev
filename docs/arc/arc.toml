@@ -246,8 +246,8 @@ emits-to = ["monster"]
 
 [crates.parser]
 path = "crates/parser"
-role = "parse-resolve-emit transpiler poc (react tsx+sass and gpui -> plev builder source via tree-sitter; HOFF token mapping, honest droplist with file:line, golden + compile tests in crates/parser/tests)"
-depends = ["engine", "builder", "theme (emitted code only)"]
+role = "parse-resolve-emit transpiler poc (react tsx+sass and gpui -> plev builder source via tree-sitter; HOFF token mapping, honest droplist with file:line, golden + compile tests in crates/parser/tests); since task-71 phase 1 (adr importers-target-plev-ir) a second emitter over the same ParserNode, emit_ir -> uir::Ir, with a Report putting every source construct in one of supported, transformed, approximated, impossible at its file:line (json form plev_report 1), values to the nearest theme token within a measured tolerance (tokens: half the distance to the nearest different token), controls (button, onClick, text input) as components bound to actions the app must declare (binding required; the importer declares nothing); the ParserNode carries its Origin additively and the builder code is byte-identical; tests/pixels.rs draws both headless and explains the difference"
+depends = ["engine", "builder", "theme (emitted code only)", "uir", "surface, sem, comps (tests only)"]
 
 [crates.monster]
 path = "crates/monster"
