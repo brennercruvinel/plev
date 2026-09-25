@@ -13,8 +13,10 @@ use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::Theme;
 use propose::compose::{Composer, Composite, Found, Shape, Target};
-use sem::{Policy, Request, Role, SemId, Snapshot, SnapshotBuilder, Value};
+use sem::{Policy, Request, RequestId, Role, SemId, Snapshot, SnapshotBuilder, Value};
+use uir::IrNode;
 
+use super::super::SilencesPage;
 use crate::view::apps::app::TodoPage;
 use crate::view::dispatch::PERSON_ONLY;
 
@@ -232,6 +234,35 @@ impl Offer {
     }
 }
 
+/// Where a composite's button goes in a surface: the container that holds
+/// the control of one of its steps (the first step that has one), beside
+/// it; inside the item's template when the step is an item's.
+pub fn beside(root: &IrNode, composite: &Composite) -> Option<SemId> {
+    composite.shape.steps.iter().find_map(|step| {
+        let target = step.target.template();
+        let sends = |n: &IrNode| {
+            n.bind
+                .actions
+                .values()
+                .any(|c| c.action == step.action && c.target == target)
+        };
+        holder(root, &sends)
+    })
+}
+
+/// The container under `node` (itself included) with a child that
+/// `sends`; never a repeat's holder (its item is the template).
+fn holder(node: &IrNode, sends: &dyn Fn(&IrNode) -> bool) -> Option<SemId> {
+    if node.repeat.is_none() && node.children.iter().any(sends) {
+        return Some(node.sem.clone());
+    }
+    let item = node.repeat.as_ref().map(|r| &r.item);
+    node.children
+        .iter()
+        .chain(item)
+        .find_map(|child| holder(child, sends))
+}
+
 /// A sequence in words without the app: its actions, ", then ".
 fn words(found: &Found) -> String {
     let steps: Vec<String> = found
@@ -250,4 +281,37 @@ fn on(shape: &Shape) -> String {
         Target::Node(_) => None,
     });
     each.map_or_else(String::new, |each| format!(", on each {each}"))
+}
+
+impl SilencesPage {
+    /// A person answers the composite offered: makes it one action, or
+    /// not now.
+    pub(in crate::view::apps::silences) fn answer(
+        &mut self,
+        todo: &mut TodoPage,
+        answer: Answer,
+    ) -> Option<RequestId> {
+        let target = self.generated.offer.id(answer)?.clone();
+        let action = match answer {
+            Answer::Install => "install",
+            Answer::Dismiss => "dismiss",
+        };
+        self.ask_page(todo, &target, action)
+    }
+
+    /// The composite offer read again from the page's composer: only a
+    /// sequence of the page's own capabilities (its nodes, and the cuts
+    /// as the items of their collection) is offered.
+    pub(in crate::view::apps::silences) fn refresh_offer(&mut self) {
+        let app = self.snapshot().ok();
+        let ids = &self.ids;
+        self.generated.offer.refresh(app.as_ref(), |shape| {
+            ids.as_ref().is_some_and(|ids| {
+                shape.steps.iter().all(|s| match &s.target {
+                    propose::compose::Target::Node(id) => ids.holds(id),
+                    propose::compose::Target::Item(base) => base == ids.collection(),
+                })
+            })
+        });
+    }
 }

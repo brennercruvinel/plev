@@ -92,6 +92,26 @@ impl SnapshotBuilder {
         NodeBuilder { b: self, slot }
     }
 
+    /// the nodes declared so far in this projection, in the order they
+    /// were declared (a node whose id did not parse is not among them).
+    /// what a projection adds after the app's own reads the app's
+    /// declarations here (task-70: a composite reads what its steps read).
+    pub fn declared(&self) -> &[Node] {
+        &self.nodes
+    }
+
+    /// goes on declaring the node `id`, declared earlier in this
+    /// projection (the first with that id): more state, more actions, as
+    /// the chain `node` returned. `None` when no node with that id was
+    /// declared.
+    pub fn reopen(&mut self, id: &SemId) -> Option<NodeBuilder<'_>> {
+        let slot = self.nodes.iter().position(|n| n.id == *id)?;
+        Some(NodeBuilder {
+            b: self,
+            slot: Some(slot),
+        })
+    }
+
     /// the node that has focus. the last call wins.
     pub fn focus(&mut self, id: impl TryInto<SemId, Error: Into<SemError>>) {
         match resolve(id) {

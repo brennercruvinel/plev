@@ -8,7 +8,7 @@
 
 use std::sync::{Arc, Mutex, PoisonError};
 
-use sem::{ActionName, Snapshot};
+use sem::{ActionName, SemId, Snapshot, SnapshotBuilder};
 
 use super::composite::Composite;
 use super::{Detector, Found, Listener, Shape};
@@ -96,6 +96,19 @@ impl Composer {
     /// the composites installed in this session, in the order accepted.
     pub fn installed(&self) -> &[Composite] {
         &self.installed
+    }
+
+    /// every composite installed, declared on the nodes it fits, after
+    /// the app's own projection (`Composite::declare`).
+    pub fn declare(&self, b: &mut SnapshotBuilder) {
+        for composite in &self.installed {
+            composite.declare(b);
+        }
+    }
+
+    /// the composite installed that `action` on `home` asks for.
+    pub fn composite(&self, home: &SemId, action: &ActionName) -> Option<&Composite> {
+        self.installed.iter().find(|c| c.is(home, action))
     }
 
     /// how many times in a row a sequence is repeated before it is

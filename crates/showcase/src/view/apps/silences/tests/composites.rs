@@ -2,12 +2,15 @@
 //! looking at a cut and applying it, twice, is offered to the person as
 //! one action; only a person accepts it (an agent is refused, here and
 //! through the real port); declined, it goes and is not asked again in
-//! the session.
+//! the session. Installed, it is an action of the app on every cut, and,
+//! with the review open, a button in each cut of it.
 
 use engine::gpu::image::load_image_rgba;
-use sem::{Actor, Rejection, Request, RequestId, Stage, StateRef, Value};
+use sem::{Actor, Rejection, Request, RequestId, SemId, Stage, StateRef, Value};
+use uir::{Capabilities, GenerationPolicy, verify_json};
 
 use super::super::SilencesPage;
+use super::super::generated::page::Page;
 use super::super::semantics::ms;
 use super::agent::{Dir, act, gallery, sid, snapshot};
 use super::{TURN, center, click, dispatch_as_test, frame, setup, stage, tester, wide};
@@ -201,4 +204,85 @@ fn through_the_port_an_agent_does_not_accept() {
     view.tick(TURN);
     assert!(composites(&view.panes.silences).is_empty());
     assert!(offered(&view.panes.silences).is_some());
+}
+
+/// The review of the checkpoint (task-69), verified against the app as it
+/// is and shown as a proposal shows it.
+fn review_open(page: &mut SilencesPage) -> SemId {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../surface/tests/fixtures/showcase-silences-review.ir.json");
+    let json = std::fs::read_to_string(&path).expect("the review fixture");
+    let app = page.snapshot().expect("the app projects");
+    let caps = Capabilities::from_snapshot(&app);
+    let ir = verify_json(&json, &caps, &GenerationPolicy::default()).expect("verified");
+    let (id, _) = Page { app: page }
+        .show(ir, GenerationPolicy::default())
+        .expect("the surface shows");
+    id
+}
+
+const COMPOSITE: &str = "preview_segment_then_apply_cut";
+
+#[test]
+fn installed_it_is_an_action_on_every_cut_and_a_button_in_the_open_review() {
+    let (mut todo, mut page, _) = staged();
+    let surface = review_open(&mut page);
+    review(&mut page, &mut todo, &tester(), 1);
+    review(&mut page, &mut todo, &tester(), 2);
+    let installed = answer(&mut page, &mut todo, tester(), INSTALL);
+    let Stage::Completed(outcome) = installed else {
+        panic!("installed: {installed:?}");
+    };
+    assert_eq!(
+        outcome.result.get("promoted"),
+        Some(&Value::from(
+            "promote preview_segment_then_apply_cut on silences.cut[{item}] into review.cut[{item}]"
+        ))
+    );
+
+    // an action of the app, in its registry, on each cut
+    let app = page.snapshot().unwrap();
+    for cut in [1, 2] {
+        let at = format!("silences.cut[{cut}]");
+        let node = app.get(&sid(&at)).unwrap();
+        let composite = node
+            .actions
+            .iter()
+            .find(|a| a.name.as_str() == COMPOSITE)
+            .unwrap_or_else(|| panic!("on {at}"));
+        let reads: Vec<String> = composite.reads.iter().map(ToString::to_string).collect();
+        assert_eq!(reads, ["silences.video:shown", &format!("{at}:decision")]);
+        assert_eq!(
+            composite.label.as_deref(),
+            Some("preview segment, then apply cut")
+        );
+        assert_eq!(composite.policy, sem::Policy::default());
+    }
+
+    // promoted by the host into each cut of the review, as the tester
+    // asked, with its inverse in the history
+    let whole = page.projection().unwrap();
+    for cut in [1, 2] {
+        let button = format!("review.cut[{cut}].{COMPOSITE}");
+        let node = whole
+            .get(&sid(&button))
+            .unwrap_or_else(|| panic!("{button}"));
+        assert_eq!(node.label, "preview segment, then apply cut");
+    }
+    let changes = page.generated.host.changes(&surface);
+    assert_eq!(changes.len(), 1);
+    assert_eq!(changes[0].by, tester());
+}
+
+#[test]
+fn without_a_surface_it_is_installed_and_nothing_is_promoted() {
+    let (mut todo, mut page, _) = staged();
+    review(&mut page, &mut todo, &tester(), 1);
+    review(&mut page, &mut todo, &tester(), 2);
+    let Stage::Completed(outcome) = answer(&mut page, &mut todo, tester(), INSTALL) else {
+        panic!("installed");
+    };
+    assert!(outcome.result.get("promoted").is_none());
+    assert!(outcome.result.get("not_promoted").is_none());
+    assert_eq!(composites(&page), [COMPOSITE]);
 }

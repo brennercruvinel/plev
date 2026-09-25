@@ -25,6 +25,7 @@
 //! task-70 applied to the surface shown, as the host applies one.
 
 use engine::gpu::image::ImageHandle;
+use propose::compose::Composite;
 use propose::{Ask, Rules, propose_verified};
 use sem::{
     Actor, Execution, Operable, Outcome, Request, RequestId, SemId, Semantics, SnapshotBuilder,
@@ -36,7 +37,7 @@ use uir::{Capabilities, GenerationPolicy, VerifiedIr, verify_json};
 use super::super::SilencesPage;
 use super::super::jobs::instant_of;
 use super::super::semantics::ms;
-use super::offer::Answer as Reply;
+use super::offer::{Answer as Reply, beside};
 use crate::view::ShowcaseView;
 use crate::view::apps::app::TodoPage;
 use crate::view::apps::surface_page::asking::{Answer, Job, Pending, Proposal};
@@ -300,10 +301,12 @@ impl Page<'_> {
 
     /// The person's answer to the composite offered: accepted, the
     /// sequence becomes a composite of the app (its action is declared on
-    /// the nodes it runs on from the next projection); declined, it goes
-    /// and is not offered again in this session. Only a person gets here:
-    /// both answers are `PERSON_ONLY`.
-    fn answered(&mut self, answer: Reply) -> Execution {
+    /// the nodes it runs on from the next projection) and, with a surface
+    /// open, its button is promoted there by the host, as `by` asked it,
+    /// beside the controls of its steps; declined, it goes and is not
+    /// offered again in this session. Only a person gets here: both
+    /// answers are `PERSON_ONLY`.
+    fn answered(&mut self, answer: Reply, by: &Actor) -> Execution {
         let mut outcome = Outcome::default();
         let offer = &mut self.app.generated.offer;
         match answer {
@@ -313,14 +316,27 @@ impl Page<'_> {
                     Err(e) => return Execution::Failed(e.to_string()),
                 };
                 let composer = &mut self.app.generated.offer.composer;
-                match composer.accept(&app) {
-                    Ok(composite) => {
-                        let name = Value::Text(composite.name.to_string());
-                        outcome.result.insert("installed".to_owned(), name);
-                        let label = Value::Text(composite.label.clone());
-                        outcome.result.insert("label".to_owned(), label);
-                    }
+                let composite = match composer.accept(&app) {
+                    Ok(composite) => composite.clone(),
                     Err(why) => return Execution::Failed(why),
+                };
+                let name = Value::Text(composite.name.to_string());
+                outcome.result.insert("installed".to_owned(), name);
+                let label = Value::Text(composite.label.clone());
+                outcome.result.insert("label".to_owned(), label);
+                match self.promote(&composite, by) {
+                    Some(Ok(line)) => {
+                        outcome
+                            .result
+                            .insert("promoted".to_owned(), Value::Text(line));
+                    }
+                    Some(Err(why)) => {
+                        log::info!("silences: the composite is not promoted: {why}");
+                        outcome
+                            .result
+                            .insert("not_promoted".to_owned(), Value::Text(why));
+                    }
+                    None => {}
                 }
             }
             Reply::Dismiss => match offer.composer.decline() {
@@ -334,6 +350,39 @@ impl Page<'_> {
             },
         }
         Execution::Done(outcome)
+    }
+
+    /// With a surface open, a button for `composite` in it, beside the
+    /// controls of its steps, as the host promotes an action the app
+    /// declares (`uir::Op::Promote`, verified again, with its inverse in
+    /// the history): the line of the operation, or why there is none.
+    /// `None` without a surface.
+    fn promote(&mut self, composite: &Composite, by: &Actor) -> Option<Result<String, String>> {
+        let id = self.app.generated.id.clone()?;
+        let current = self.app.generated.host.current(&id)?;
+        let root = &current.verified().ir().surface.root;
+        let into = match beside(root, composite) {
+            Some(into) => into,
+            None if composite.shape.collection().is_none() => root.sem.clone(),
+            None => return Some(Err("the surface shows none of its steps".to_owned())),
+        };
+        let target = composite.template()?;
+        let op = uir::Op::Promote {
+            target,
+            action: composite.name.clone(),
+            into,
+        };
+        let line = op.to_string();
+        let app = match self.app.snapshot() {
+            Ok(app) => app,
+            Err(e) => return Some(Err(e.to_string())),
+        };
+        let host = &mut self.app.generated.host;
+        Some(
+            host.apply(&id, op, by.clone(), &app)
+                .map(|_| line)
+                .map_err(|e| e.to_string()),
+        )
     }
 
     /// The surface is dismissed: out of the projection at once, its
@@ -374,7 +423,7 @@ impl Operable for Page<'_> {
             return self.close();
         }
         if let Some(answer) = self.app.generated.offer.answer(req) {
-            return self.answered(answer);
+            return self.answered(answer, &req.actor);
         }
         let Some(op) = self.app.generated.proposing.op(req) else {
             return self.app.execute(id, req);

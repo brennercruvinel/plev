@@ -38,7 +38,6 @@ use sem::{
 };
 use showcase::model::silences::{Decision, Settings, TEST_VIDEO};
 
-use super::generated::offer::Answer;
 use super::generated::page::{Page, project_all};
 use super::jobs::frame_ref;
 use super::worker::Job;
@@ -296,6 +295,9 @@ impl Semantics for SilencesPage {
             Some(Which::MinDuration) => b.focus(&ids.min_duration),
             None => {}
         }
+        // the composites the person installed (task-70 phase 3), on the
+        // cuts they run on, from what the page declared above
+        self.generated.offer.composer.declare(b);
     }
 }
 
@@ -406,36 +408,14 @@ impl SilencesPage {
         self.ask_page(todo, &target, "close")
     }
 
-    /// A person answers the composite offered: makes it one action, or
-    /// not now.
-    pub(super) fn answer(&mut self, todo: &mut TodoPage, answer: Answer) -> Option<RequestId> {
-        let target = self.generated.offer.id(answer)?.clone();
-        let action = match answer {
-            Answer::Install => "install",
-            Answer::Dismiss => "dismiss",
-        };
-        self.ask_page(todo, &target, action)
-    }
-
-    /// The composite offer read again from the page's composer: only a
-    /// sequence of the page's own capabilities (its nodes, and the cuts
-    /// as the items of their collection) is offered.
-    pub(super) fn refresh_offer(&mut self) {
-        let app = self.snapshot().ok();
-        let ids = &self.ids;
-        self.generated.offer.refresh(app.as_ref(), |shape| {
-            ids.as_ref().is_some_and(|ids| {
-                shape.steps.iter().all(|s| match &s.target {
-                    propose::compose::Target::Node(id) => ids.holds(id),
-                    propose::compose::Target::Item(base) => base == ids.collection(),
-                })
-            })
-        });
-    }
-
     /// A person's click on the block: observed on the whole page,
     /// dispatched over it.
-    fn ask_page(&mut self, todo: &mut TodoPage, target: &SemId, action: &str) -> Option<RequestId> {
+    pub(super) fn ask_page(
+        &mut self,
+        todo: &mut TodoPage,
+        target: &SemId,
+        action: &str,
+    ) -> Option<RequestId> {
         let seen = self
             .projection()
             .inspect_err(|e| log::warn!("silences: the projection does not validate: {e}"))

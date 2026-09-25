@@ -418,3 +418,31 @@ fn role_serde_names_match_the_stable_names() {
     }
     assert_eq!(names.len(), 33);
 }
+
+/// task-70: what a projection adds after the app's own reads the app's
+/// declarations, and goes on declaring one of its nodes.
+#[test]
+fn a_node_declared_earlier_is_read_and_reopened() {
+    let mut b = SnapshotBuilder::new();
+    b.node("docs", Role::List, "docs");
+    b.node("docs.item[1]", Role::ListItem, "one")
+        .parent("docs")
+        .state("status", "draft")
+        .action("approve")
+        .reads("docs.item[1]:status");
+    let declared: Vec<&str> = b.declared().iter().map(|n| n.id.as_str()).collect();
+    assert_eq!(declared, ["docs", "docs.item[1]"]);
+    let reads = b.declared()[1].actions[0].reads.clone();
+    assert!(b.reopen(&id("docs.item[2]")).is_none(), "never declared");
+    let mut item = b.reopen(&id("docs.item[1]")).expect("declared");
+    let mut both = item.action("approve_then_publish");
+    for at in &reads {
+        both.reads(at.clone());
+    }
+    let snap = snapshot(b);
+    let node = snap.get(&id("docs.item[1]")).unwrap();
+    let names: Vec<&str> = node.actions.iter().map(|a| a.name.as_str()).collect();
+    assert_eq!(names, ["approve", "approve_then_publish"]);
+    assert_eq!(node.actions[1].reads, reads);
+    assert_eq!(node.label, "one", "the node is the same one");
+}
