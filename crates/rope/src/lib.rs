@@ -19,3 +19,6 @@ pub use movement::GoalColumn;
 pub use ropey::{self, Rope};
 pub use selection::{Selection, SelectionSet};
 pub use transaction::{Bias, Edit, Transaction};
+
+#[cfg(test)]
+mod tests_bidi;
