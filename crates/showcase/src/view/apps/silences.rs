@@ -279,6 +279,9 @@ impl SilencesPage {
         if let Some(answer) = row.answer {
             self.answer(todo, answer);
         }
+        if let Some(pressed) = row.pressed {
+            self.press(todo, pressed);
+        }
         if row.asked.taken {
             return r;
         }

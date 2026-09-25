@@ -19,8 +19,11 @@
 //! Under the row, while the page's composer offers a sequence the person
 //! repeated (task-70 phase 3), the band of `offer.rs` asks whether to make
 //! it one action; the fixed screen moves down by its height, and only
-//! then.
+//! then. Under it, while the person has it open (task-70 phase 4), the
+//! band of `access.rs` turns their preferences of accessibility on and
+//! off, for every surface the host shows.
 
+pub(super) mod access;
 pub(super) mod offer;
 pub(super) mod page;
 
@@ -31,6 +34,7 @@ use sem::{Request, Role, SemId, SnapshotBuilder};
 use surface::SurfaceHost;
 
 use crate::view::apps::surface_page::proposing::{Asked, Proposing, Row};
+use access::{Access, Pressed};
 use offer::{Answer, Band, Offer};
 
 /// The region the row projects under on this page.
@@ -47,6 +51,8 @@ pub(super) struct Generated {
     pub close_id: Option<SemId>,
     /// The composite offered to the person, and the page's composer.
     pub offer: Offer,
+    /// The person's accessibility band, and whether it is open.
+    pub access: Access,
 }
 
 /// Where each part goes in the page's content: the row, the close
@@ -57,6 +63,8 @@ pub(super) struct Halves {
     pub close: Rect,
     /// The offer's band, while one stands.
     pub offer: Option<Band>,
+    /// The accessibility band, while the person has it open.
+    pub access: Option<access::Band>,
     pub fixed: Rect,
     pub surface: Option<Rect>,
 }
@@ -67,6 +75,8 @@ pub(super) struct RowAsked {
     pub close: bool,
     /// The person's answer to the offer, clicked on its band.
     pub answer: Option<Answer>,
+    /// A button of the accessibility band, clicked.
+    pub pressed: Option<Pressed>,
 }
 
 impl Generated {
@@ -81,6 +91,7 @@ impl Generated {
             close = close.sem(id.clone());
         }
         let offer = Offer::new(proposing.ids.as_ref().map(|ids| &ids.region));
+        let access = Access::new(proposing.ids.as_ref().map(|ids| &ids.region));
         Self {
             host: SurfaceHost::new(),
             id: None,
@@ -88,6 +99,7 @@ impl Generated {
             close,
             close_id,
             offer,
+            access,
         }
     }
 
@@ -99,7 +111,10 @@ impl Generated {
     /// True when `id` is one of the block's own nodes (the row's, the
     /// close), not the surface's.
     pub fn holds(&self, id: &SemId) -> bool {
-        self.proposing.holds(id) || self.close_id.as_ref() == Some(id) || self.offer.holds(id)
+        self.proposing.holds(id)
+            || self.close_id.as_ref() == Some(id)
+            || self.offer.holds(id)
+            || self.access.holds(id)
     }
 
     pub fn set_inert(&mut self, inert: bool) {
@@ -123,6 +138,7 @@ impl Generated {
         node.parent(&ids.region).enabled(open);
         node.action("close").enabled(open);
         self.offer.project(b, &ids.region);
+        self.access.project(b, &ids.region);
     }
 
     /// `close` on the close button, when `req` asks it.
@@ -158,12 +174,15 @@ impl Generated {
         let below = offer
             .as_ref()
             .map_or(row.band.bottom(), |o| o.band.bottom());
+        let access = self.access.band(content.x, below, content.w, theme);
+        let below = access.as_ref().map_or(below, |a| a.band.bottom());
         let h = (content.bottom() - below).max(0.0);
         if !self.open() {
             return Halves {
                 row,
                 close,
                 offer,
+                access,
                 fixed: Rect::new(content.x, below, content.w, h),
                 surface: None,
             };
@@ -174,6 +193,7 @@ impl Generated {
                 row,
                 close,
                 offer,
+                access,
                 fixed: Rect::new(content.x, below, w, h),
                 surface: Some(Rect::new(content.x + w + gap, below, w, h)),
             };
@@ -184,6 +204,7 @@ impl Generated {
             row,
             close,
             offer,
+            access,
             fixed,
             surface: Some(Rect::new(
                 content.x,
@@ -210,6 +231,7 @@ impl Generated {
                     asked,
                     close: false,
                     answer: None,
+                    pressed: None,
                 },
             );
         }
@@ -218,12 +240,17 @@ impl Generated {
             Some(band) => self.offer.handle_event(event, band),
             None => (EventResult::IGNORED, None),
         };
+        let (access, pressed) = match &h.access {
+            Some(band) => self.access.handle_event(event, band),
+            None => (EventResult::IGNORED, None),
+        };
         (
-            r.merge(close).merge(band),
+            r.merge(close).merge(band).merge(access),
             RowAsked {
                 asked,
                 close: close.clicked,
                 answer,
+                pressed,
             },
         )
     }
@@ -237,6 +264,10 @@ impl Generated {
         self.close.render(c, h.close, theme);
         if let Some(band) = &h.offer {
             self.offer.render(c, band, theme);
+        }
+        if let Some(band) = &h.access {
+            let on = self.host.preferences();
+            self.access.render(c, band, theme, on);
         }
     }
 }
