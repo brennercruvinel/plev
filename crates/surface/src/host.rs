@@ -11,13 +11,9 @@
 //!
 //! a `promote` may name the template of an item (`silences.cut[{item}]`,
 //! task-70 phase 3: a composite runs on each item): the button then goes
-//! inside the item's template, one per item. the registry has no such
-//! node, so the promote is looked up in the app's registry with the
-//! template as one more member of its collection (`registry`), the rule
-//! the verifier binds a template by: every node that fits declares the
-//! action alike.
+//! inside the item's template, one per item; `uir::Op::Promote` finds the
+//! action on the items the template stands for (task-70 phase 4).
 
-use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 
 use comps::Wake;
@@ -26,8 +22,7 @@ use engine::gpu::image::ImageHandle;
 use engine::theme::Theme;
 use sem::{Actor, Receipt, Request, SemId, Snapshot, SnapshotBuilder};
 use uir::{
-    ActionCap, Adapted, Capabilities, Context, GenerationPolicy, ITEM, Inverse, Op, TransformError,
-    VerifiedIr,
+    Adapted, Capabilities, Context, GenerationPolicy, Inverse, Op, TransformError, VerifiedIr,
 };
 
 use crate::expand::expand;
@@ -111,39 +106,6 @@ struct Adapting {
     now: Adapted,
     changes: Vec<Change>,
     asks: Vec<usize>,
-}
-
-/// the registry `op` is checked and verified against: the app's, and,
-/// for a `promote` aimed at the template of an item (`base[{item}]`), the
-/// app's with that template as one more node of the collection, with the
-/// actions of the first node that fits (`base[<key>]`), so the promote
-/// finds the action there. the template binds only when every node that
-/// fits declares the action alike, which the verifier checks; nothing
-/// else in the registry moves.
-fn registry<'c>(caps: &'c Capabilities, op: &Op) -> Cow<'c, Capabilities> {
-    let Op::Promote { target, .. } = op else {
-        return Cow::Borrowed(caps);
-    };
-    let slot = format!("[{ITEM}]");
-    let Some(base) = target.as_str().strip_suffix(slot.as_str()) else {
-        return Cow::Borrowed(caps);
-    };
-    let member = caps.nodes().find(|id| {
-        *id != target
-            && id.as_str().ends_with(']')
-            && id.parent_path().is_some_and(|p| p.as_str() == base)
-    });
-    let Some(member) = member.cloned() else {
-        return Cow::Borrowed(caps);
-    };
-    let mut out = caps.clone();
-    for cap in caps.actions().iter().filter(|a| a.target == member) {
-        out = out.with_action(ActionCap {
-            target: target.clone(),
-            ..cap.clone()
-        });
-    }
-    Cow::Owned(out)
 }
 
 /// the active surfaces of an app, in the order they opened. each is a
@@ -305,13 +267,12 @@ impl SurfaceHost {
         let caps = Capabilities::from_snapshot(app);
         let policy = self.policies.get(id).cloned().unwrap_or_default();
         let mut now = self.adapting(at).now.clone();
+        let cx = Context {
+            caps: &caps,
+            policy: &policy,
+        };
         let mut changes = Vec::with_capacity(ops.len());
         for op in ops {
-            let caps = registry(&caps, &op);
-            let cx = Context {
-                caps: &caps,
-                policy: &policy,
-            };
             let (next, inverse) = now.apply(&op, &by, cx).map_err(SurfaceError::Transform)?;
             now = next;
             changes.push(Change {

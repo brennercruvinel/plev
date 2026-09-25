@@ -1137,3 +1137,49 @@ fn an_inverse_is_data_too() {
         json!({ "looks": [{ "id": "review.title" }] })
     );
 }
+
+/// A promote on the template of an item (task-70 phase 4): the action is
+/// found on the items the template stands for, the button goes into the
+/// item's template, one per item, each bound to its own item; an action
+/// no item declares is refused before, and one an item keeps from
+/// agents is refused for them.
+#[test]
+fn promote_on_the_template_of_an_item_finds_the_action_on_its_items() {
+    let before = adapted();
+    let promote = |action: &str| Op::Promote {
+        target: id("changes.file[{item}]"),
+        action: action.parse().unwrap(),
+        into: id("review.file[{item}]"),
+    };
+    let after = apply(&before, &promote("unstage"));
+    assert_eq!(
+        children(&after, "review.file[{item}]"),
+        [
+            "review.file[{item}].status",
+            "review.file[{item}].staged",
+            "review.file[{item}].unstage"
+        ]
+    );
+    let bound = node(&after, "review.file[{item}].unstage")
+        .bind
+        .actions
+        .get("activate")
+        .map(|c| (c.target.to_string(), c.action.to_string()));
+    assert_eq!(
+        bound,
+        Some(("changes.file[{item}]".to_owned(), "unstage".to_owned()))
+    );
+    assert_eq!(
+        node(&after, "review.file[{item}].unstage").label.as_deref(),
+        Some("a.rs"),
+        "the label of the first item that declares it"
+    );
+    let why = refused(&before, &promote("push")).to_string();
+    assert!(
+        why.contains("declares no `push` on `changes.file[{item}]`"),
+        "{why}"
+    );
+    // destructive and confirmed for agents only: the verifier refuses it
+    // on the template as on one item
+    unverified(&before, &promote("discard"), Rule::Policy);
+}
