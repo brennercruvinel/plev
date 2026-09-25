@@ -56,6 +56,18 @@ const RAMP: [TypographyRole; 7] = [
     TypographyRole::H4,
 ];
 
+/// the sizes of a stat's value (`comps::content::StatSize`): `base_m`,
+/// `title` (a stat with no style), `headline`.
+const STAT: [TypographyRole; 3] = [
+    TypographyRole::BaseM,
+    TypographyRole::Title,
+    TypographyRole::Headline,
+];
+
+/// the fill an emphasized badge takes: the theme's accent, its filled
+/// shape (`comps::action::Badge::count`) instead of the glass tag.
+const BADGE_FILL: ColorRole = ColorRole::Accent;
+
 const ELEVATIONS: [Elevation; 4] = [
     Elevation::Base,
     Elevation::Raised,
@@ -74,11 +86,14 @@ fn name(c: Option<Component>) -> &'static str {
 }
 
 /// `Emphasize`: a text one size up the type ramp (no style is `body`,
-/// which goes to `title`); a button or an image one control size up (a
-/// button with none goes to `md`, a step above the button's own height;
-/// an image with none fills its place and is as large as it gets); a
-/// container, a card or a list one elevation up (none is `base`). refused
-/// at the top, and for a component no token of emphasis draws.
+/// which goes to `title`); a stat's value one of its three sizes up
+/// (`base_m`, `title`, the one with no style, `headline`); a badge filled
+/// (a `background`, the accent, where the tag is glass); a button or an
+/// image one control size up (a button with none goes to `md`, a step
+/// above the button's own height; an image with none fills its place and
+/// is as large as it gets); a container, a card or a list one elevation
+/// up (none is `base`). refused at the top, and for a component no token
+/// of emphasis draws.
 pub(super) fn emphasize(d: &mut Draft, id: &SemId) -> Result<Inverse, TransformError> {
     let node = d.node_mut(id)?;
     let before = look(node);
@@ -89,6 +104,20 @@ pub(super) fn emphasize(d: &mut Draft, id: &SemId) -> Result<Inverse, TransformE
             let now = node.props.typography.map_or(3, rung);
             let next = *RAMP.get(now + 1).ok_or_else(top)?;
             node.props.typography = Some(next);
+        }
+        Some(Component::Stat) => {
+            let now = node
+                .props
+                .typography
+                .map_or(rung(TypographyRole::Title), rung);
+            let next = STAT.iter().find(|&&t| rung(t) > now).ok_or_else(top)?;
+            node.props.typography = Some(*next);
+        }
+        Some(Component::Badge) => {
+            if node.props.background.is_some() {
+                return Err(top());
+            }
+            node.props.background = Some(BADGE_FILL);
         }
         Some(Component::Button | Component::Image) => {
             let now = match (node.component, node.props.control_size) {
@@ -230,4 +259,63 @@ pub(super) fn restyle(
     }
     *slot = Some(role);
     Ok(Inverse::Looks(vec![before]))
+}
+
+#[cfg(test)]
+mod tests {
+    use sem::{Actor, Role, SnapshotBuilder};
+
+    use super::*;
+    use crate::caps::Capabilities;
+    use crate::policy::GenerationPolicy;
+    use crate::transform::{Adapted, Context, Op};
+    use crate::verify::verify_json;
+
+    const PANEL: &str = r#"{"plev_ir": 1, "surface": {"id": "panel", "title": "counts",
+        "root": {"sem": "panel.root", "children": [
+            {"sem": "panel.total", "component": "stat", "label": "total",
+             "bind": {"state": {"value": "counts:total"}}},
+            {"sem": "panel.small", "component": "stat", "label": "small",
+             "props": {"typography": "caption_sm"},
+             "bind": {"state": {"value": "counts:total"}}},
+            {"sem": "panel.state", "component": "badge",
+             "bind": {"state": {"text": "counts:state"}}}
+        ]}}}"#;
+
+    fn id(text: &str) -> SemId {
+        SemId::parse(text).unwrap()
+    }
+
+    /// A stat climbs its three sizes and stops; a small one starts at
+    /// the bottom; a badge fills with the accent once.
+    #[test]
+    fn a_stat_climbs_its_sizes_and_a_badge_fills() {
+        let mut b = SnapshotBuilder::new();
+        b.node("counts", Role::Status, "counts")
+            .state("total", 3i64)
+            .state("state", "pending");
+        let app = b.finish().unwrap();
+        let caps = Capabilities::from_snapshot(&app);
+        let policy = GenerationPolicy::default();
+        let cx = Context {
+            caps: &caps,
+            policy: &policy,
+        };
+        let mut now = Adapted::new(verify_json(PANEL, &caps, &policy).unwrap());
+        let props = |a: &Adapted, at: usize| a.ir().surface.root.children[at].props;
+        let emphasize = |a: &Adapted, at: &str| {
+            a.apply(&Op::Emphasize { id: id(at) }, &Actor::Human, cx)
+                .map(|(next, _)| next)
+        };
+        now = emphasize(&now, "panel.total").unwrap();
+        assert_eq!(props(&now, 0).typography, Some(TypographyRole::Headline));
+        let why = emphasize(&now, "panel.total").unwrap_err().to_string();
+        assert!(why.contains("as emphasized as a stat gets"), "{why}");
+        now = emphasize(&now, "panel.small").unwrap();
+        assert_eq!(props(&now, 1).typography, Some(TypographyRole::BaseM));
+        now = emphasize(&now, "panel.state").unwrap();
+        assert_eq!(props(&now, 2).background, Some(ColorRole::Accent));
+        let why = emphasize(&now, "panel.state").unwrap_err().to_string();
+        assert!(why.contains("as emphasized as a badge gets"), "{why}");
+    }
 }

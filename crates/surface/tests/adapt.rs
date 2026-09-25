@@ -75,7 +75,6 @@ fn a_drag_goes_on_through_a_hide_a_reorder_and_an_undo() {
     let theme = Theme::hoff_core();
     let mut app = App::over(&mixer());
     let now = app.snapshot();
-    let policy = GenerationPolicy::default();
     let mut host = SurfaceHost::new();
     let panel = id("mix_panel");
     host.open(verified_local(MIXER_LEFT, &now), &now)
@@ -107,14 +106,14 @@ fn a_drag_goes_on_through_a_hide_a_reorder_and_an_undo() {
     let hide = Op::Hide {
         id: id("mix_panel.right"),
     };
-    host.apply(&panel, hide, person(), &now, &policy)
+    host.apply(&panel, hide, person(), &now)
         .expect("the right panel hides");
     let reorder = Op::Reorder {
         parent: id("mix_panel.left"),
         ids: vec![id("mix_panel.reset")],
     };
     let surface = host
-        .apply(&panel, reorder, person(), &now, &policy)
+        .apply(&panel, reorder, person(), &now)
         .expect("the reset goes first");
     let seen = page(&now, surface);
     assert!(
@@ -132,7 +131,7 @@ fn a_drag_goes_on_through_a_hide_a_reorder_and_an_undo() {
 
     // the reorder undone: the same widget, still in the drag
     let now = app.snapshot();
-    let undone = host.undo(&panel, &now, &policy).expect("undoes");
+    let undone = host.undo(&panel, &now).expect("undoes");
     assert!(matches!(undone.op, Op::Reorder { .. }));
     let surface = host.get_mut(&panel).expect("open");
     let (c, _) = settle(surface, AREA, &theme);
@@ -159,7 +158,6 @@ fn a_caret_stays_where_it_was_through_the_operations() {
     let theme = Theme::hoff_core();
     let mut app = App::over(&snapshot(SHOWCASE));
     let now = app.snapshot();
-    let policy = GenerationPolicy::default();
     let mut host = SurfaceHost::new();
     let panel = id("todo_panel");
     let field = id("todo_panel.input");
@@ -194,8 +192,7 @@ fn a_caret_stays_where_it_was_through_the_operations() {
             ids: vec![id("todo_panel.filter")],
         },
     ] {
-        host.apply(&panel, op, person(), &now, &policy)
-            .expect("applies");
+        host.apply(&panel, op, person(), &now).expect("applies");
     }
     let surface = host.get_mut(&panel).expect("open");
     assert_eq!(surface.focused(), Some(&field));
@@ -217,7 +214,6 @@ fn a_press_on_one_cut_completes_after_the_list_moves_up() {
     let theme = Theme::hoff_core();
     let mut app = App::over(&snapshot(SILENCES));
     let now = app.snapshot();
-    let policy = GenerationPolicy::default();
     let mut host = SurfaceHost::new();
     let review = id("review");
     host.open(verified_local(REVIEW_SILENCES, &now), &now)
@@ -238,7 +234,7 @@ fn a_press_on_one_cut_completes_after_the_list_moves_up() {
         ids: vec![id("review.cuts")],
     };
     let surface = host
-        .apply(&review, up, person(), &now, &policy)
+        .apply(&review, up, person(), &now)
         .expect("the cuts go first");
     let (c, _) = settle(surface, AREA, &theme);
     let moved = bound(&c, &id("review.cut[1].apply"));
@@ -268,7 +264,6 @@ fn a_press_on_one_cut_completes_after_the_list_moves_up() {
 fn the_host_keeps_every_change_and_undoes_the_last() {
     let app = App::over(&mixer());
     let now = app.snapshot();
-    let policy = GenerationPolicy::default();
     let mut host = SurfaceHost::new();
     let panel = id("mix_panel");
     let opened = verified_local(MIXER_LEFT, &now);
@@ -281,13 +276,13 @@ fn the_host_keeps_every_change_and_undoes_the_last() {
     let dense = Op::Density {
         step: uir::Step::Denser,
     };
-    host.apply(&panel, dense.clone(), agent(), &now, &policy)
+    host.apply(&panel, dense.clone(), agent(), &now)
         .expect("denser");
     let mute = Op::SwapView {
         id: id("mix_panel.mute"),
         component: Component::Checkbox,
     };
-    host.apply(&panel, mute.clone(), person(), &now, &policy)
+    host.apply(&panel, mute.clone(), person(), &now)
         .expect("the mute as a checkbox");
     let changes: Vec<(&Op, &Actor)> = host
         .changes(&panel)
@@ -317,7 +312,6 @@ fn the_host_keeps_every_change_and_undoes_the_last() {
         },
         person(),
         &now,
-        &policy,
     );
     assert!(matches!(
         refused.err(),
@@ -326,12 +320,12 @@ fn the_host_keeps_every_change_and_undoes_the_last() {
     assert_eq!(written(&host), before);
     assert_eq!(host.changes(&panel).len(), 2);
 
-    let undone: Change = host.undo(&panel, &now, &policy).expect("undoes");
+    let undone: Change = host.undo(&panel, &now).expect("undoes");
     assert_eq!(undone.op, mute);
-    host.undo(&panel, &now, &policy).expect("undoes");
+    host.undo(&panel, &now).expect("undoes");
     assert_eq!(written(&host), at_open, "byte for byte");
     assert_eq!(
-        host.undo(&panel, &now, &policy).err(),
+        host.undo(&panel, &now).err(),
         Some(SurfaceError::NothingToUndo(panel.clone()))
     );
 
@@ -343,7 +337,6 @@ fn the_host_keeps_every_change_and_undoes_the_last() {
         },
         person(),
         &now,
-        &policy,
     )
     .expect("hides");
     assert!(host.adapted(&panel).is_some_and(|a| a.aside().count() == 1));
@@ -351,14 +344,8 @@ fn the_host_keeps_every_change_and_undoes_the_last() {
     assert!(host.changes(&panel).is_empty());
     assert!(host.adapted(&panel).is_none());
     assert_eq!(
-        host.apply(
-            &id("nope"),
-            Op::Hide { id: id("x") },
-            person(),
-            &now,
-            &policy
-        )
-        .err(),
+        host.apply(&id("nope"), Op::Hide { id: id("x") }, person(), &now)
+            .err(),
         Some(SurfaceError::NotOpen(id("nope")))
     );
 }
@@ -424,7 +411,8 @@ fn an_action_kept_from_agents_stays_kept_through_every_operation() {
         .unwrap_or_else(|e| panic!("{e:#?}"));
     let mut host = SurfaceHost::new();
     let panel = id("vault_panel");
-    host.open(ir, &app).expect("opens");
+    host.open_under(ir, &app, policy.clone()).expect("opens");
+    assert_eq!(host.policy(&panel), Some(&policy));
     let seen = page(&app, host.get(&panel).expect("open"));
     assert_eq!(
         actors(&seen, "vault_panel.lock", "toggle"),
@@ -436,7 +424,7 @@ fn an_action_kept_from_agents_stays_kept_through_every_operation() {
         action: "open".parse().unwrap(),
         into: id("vault_panel.root"),
     };
-    let refused = host.apply(&panel, promote.clone(), agent(), &app, &policy);
+    let refused = host.apply(&panel, promote.clone(), agent(), &app);
     assert!(
         matches!(&refused, Err(SurfaceError::Transform(TransformError::Refused(why))) if why.contains("from agent:claude")),
         "{refused:?}"
@@ -457,7 +445,7 @@ fn an_action_kept_from_agents_stays_kept_through_every_operation() {
         promote,
     ] {
         let surface = host
-            .apply(&panel, op.clone(), person(), &app, &policy)
+            .apply(&panel, op.clone(), person(), &app)
             .unwrap_or_else(|e| panic!("{op}: {e}"));
         let seen = page(&app, surface);
         assert_eq!(

@@ -11,7 +11,7 @@ use comps::prelude::Rect;
 use engine::compositor::Compositor;
 use engine::gpu::image::{ImageHandle, load_image_rgba};
 use sem::{Actor, SemId};
-use uir::{ChartKind, Component, GenerationPolicy, Op};
+use uir::{ChartKind, Component, Op};
 
 use super::super::TURN;
 use super::super::sid;
@@ -175,12 +175,8 @@ fn undoing_the_demo_gives_the_claudes_review_back_byte_for_byte() {
     assert_ne!(written(&view), at_start);
     let page = &mut view.panes.silences;
     let app = page.snapshot().expect("the app projects");
-    let policy = GenerationPolicy::default();
     for _ in 0..2 {
-        page.generated
-            .host
-            .undo(&review, &app, &policy)
-            .expect("undoes");
+        page.generated.host.undo(&review, &app).expect("undoes");
     }
     assert_eq!(written(&view), at_start);
     let _ = settle(&mut view);

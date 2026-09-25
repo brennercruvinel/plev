@@ -99,9 +99,11 @@ fn whole_words(c: &Compositor, snap: &Snapshot, theme: &Theme, ids: &[String]) {
     }
 }
 
-/// The texts of a cut the rules show, by their state's key.
+/// The texts of a cut the rules show, by their state's key: its range
+/// (its decision is a badge and its numbers stats, each the size its
+/// widget measures, task-70 phase 2).
 fn rules_texts(cut: u32) -> Vec<String> {
-    ["decision", "duration", "end", "range", "start"]
+    ["range"]
         .iter()
         .map(|k| format!("proposed.silences.cut[{cut}].{k}"))
         .collect()

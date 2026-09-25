@@ -30,17 +30,31 @@
 //!   and verified, and the errors go back to the model, `Llm::ATTEMPTS`
 //!   times at most. no provider lives here (phase 3b).
 //!
+//! with a surface shown, the same two answer a change of it instead
+//! (task-70 phase 2, `adapt`): a `Transformer` answers operations of
+//! `uir::transform`, and `transform_verified` returns them only with the
+//! verified surface they make. `Rules` reads "too much", "can't compare",
+//! "bigger" and "undo", in english and portuguese; `Llm` asks the model
+//! for `{"ops": [...]}` and sends back the operation refused.
+//!
 //! pure, like `uir`: no engine, no widgets, no network.
 
+mod adapt;
+mod change;
 mod error;
 mod ids;
 mod list;
 mod llm;
+mod ops;
 mod parts;
 mod prompt;
+mod reshape;
+mod row;
 mod rules;
 mod words;
 
+pub use adapt::{Adapt, Adaptation, Transformed, Transformer, transform_verified};
+pub use change::{CHANGES, reads_as_change};
 pub use error::ProposeError;
 pub use llm::{Llm, Model, ModelError};
 pub use prompt::prompt;

@@ -107,16 +107,66 @@ fn the_review_has_the_video_the_counts_and_a_frame_per_cut() {
         !binds(&ir, "text=silences.cut[{item}]:frame"),
         "a frame ref is never a text"
     );
-    // the frame comes first in the row, as a thumbnail
+    // the row by sense (the checkpoint b of task-69): what the cut is,
+    // its numbers, its actions, each a group of the template
     let list = nodes(root)
         .into_iter()
         .find(|n| n.repeat.is_some())
         .expect("the list");
     let row = &list.repeat.as_ref().unwrap().item;
-    assert_eq!(row.children[0].component, Some(Component::Image));
+    let senses: Vec<&str> = row.children.iter().map(|n| n.sem.as_str()).collect();
     assert_eq!(
-        row.children[0].props.control_size,
+        senses,
+        [
+            "proposed.silences.cut[{item}].about",
+            "proposed.silences.cut[{item}].numbers",
+            "proposed.silences.cut[{item}].actions",
+        ]
+    );
+    // what the cut is: its frame first, as a thumbnail, its range, and
+    // its decision as a badge (two actions set it, and nothing else)
+    let about = &row.children[0];
+    let parts: Vec<Option<Component>> = about.children.iter().map(|n| n.component).collect();
+    assert_eq!(
+        parts,
+        [
+            Some(Component::Image),
+            Some(Component::Text),
+            Some(Component::Badge)
+        ]
+    );
+    assert_eq!(
+        about.children[0].props.control_size,
         Some(uir::ControlSize::Xl)
+    );
+    // its numbers, each a small stat named by its key
+    let numbers: Vec<(Option<Component>, Option<&str>, Option<uir::TypographyRole>)> = row.children
+        [1]
+    .children
+    .iter()
+    .map(|n| (n.component, n.label.as_deref(), n.props.typography))
+    .collect();
+    let small = Some(uir::TypographyRole::BaseM);
+    assert_eq!(
+        numbers,
+        [
+            (Some(Component::Stat), Some("start"), small),
+            (Some(Component::Stat), Some("end"), small),
+            (Some(Component::Stat), Some("duration"), small),
+        ]
+    );
+    let actions: Vec<Option<&str>> = row.children[2]
+        .children
+        .iter()
+        .map(|n| n.label.as_deref())
+        .collect();
+    assert_eq!(
+        actions,
+        [
+            Some("preview segment"),
+            Some("apply cut"),
+            Some("reject cut")
+        ]
     );
     // "cuts" names the list, and the count it also names; a cut's own
     // numbers are the list's, never counts

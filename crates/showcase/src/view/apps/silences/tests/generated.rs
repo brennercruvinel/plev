@@ -11,9 +11,13 @@
 //! frames in the ignored test). The round of the checkpoint b (the review
 //! open at the default window, by the rules and by the Claude's fixture)
 //! is `generated/checkpoint.rs`; the Claude's review adapted by task-70's
-//! operations is `generated/transform.rs`.
+//! operations is `generated/transform.rs`; a change asked through the row
+//! (task-70 phase 2) is `generated/change.rs`, and its demo, with what
+//! continues through it, `generated/demo.rs`.
 
+mod change;
 mod checkpoint;
+mod demo;
 mod transform;
 
 use std::path::PathBuf;
@@ -50,7 +54,9 @@ fn show(page: &mut SilencesPage, rel: &str) -> SemId {
     let caps = Capabilities::from_snapshot(&app);
     let ir = verify_json(&fixture(rel), &caps, &GenerationPolicy::default())
         .unwrap_or_else(|e| panic!("{rel}: {e:#?}"));
-    let (id, _) = Page { app: page }.show(ir).expect("the surface shows");
+    let (id, _) = Page { app: page }
+        .show(ir, GenerationPolicy::default())
+        .expect("the surface shows");
     id
 }
 

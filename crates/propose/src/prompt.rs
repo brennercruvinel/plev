@@ -14,11 +14,11 @@ use crate::Ask;
 /// the longest a value is shown in the registry, in characters.
 const VALUE_CHARS: usize = 60;
 /// the longest a refused reply is quoted back, in characters.
-const REPLY_CHARS: usize = 16_000;
+pub(crate) const REPLY_CHARS: usize = 16_000;
 
 /// the rules of the verifier, in its order: an exhaustive match, so a
 /// rule the verifier gains is a rule the prompt must describe.
-fn rule(r: Rule) -> &'static str {
+pub(crate) fn rule(r: Rule) -> &'static str {
     match r {
         Rule::Schema => {
             "the JSON has the shape of the schema below, no field it lacks, and `plev_ir` is 1"
@@ -55,7 +55,7 @@ fn rule(r: Rule) -> &'static str {
     }
 }
 
-const RULES: [Rule; 8] = [
+pub(crate) const RULES: [Rule; 8] = [
     Rule::Schema,
     Rule::Identity,
     Rule::Vocabulary,
@@ -69,7 +69,9 @@ const RULES: [Rule; 8] = [
 /// how a surface reads, for any app. the verifier checks none of it, and
 /// the checkpoint b of task-69 found a model that passed every rule and
 /// still put the task last, under the fold, and showed again the
-/// controls the app's own screen has: guidance, not rules.
+/// controls the app's own screen has; and, in its second round, one that
+/// read "only what the intent needs" as leave out each item's picture,
+/// by which a person sees what it decides on: guidance, not rules.
 const READS: &str = "\
 - first what the intent asks to do: the list to review, the action to run, the value to \
 set. then what gives it context: a file, the counts, the settings. a person reads from \
@@ -80,9 +82,13 @@ value; a number shows with at most two decimals.
 - each control once, and only what the intent needs: the app's own screen already offers \
 every capability below. a second control for an action already bound, or a state shown \
 twice, needs a reason in the intent.
+- to review items is to see what each item is: its picture when the app has one (a frame \
+ref of the item), what names it, its numbers with their names, and its state, beside its \
+actions. \"only what the intent needs\" never takes these away: they are what the person \
+decides by.
 ";
 
-fn clip(text: &str, max: usize) -> String {
+pub(crate) fn clip(text: &str, max: usize) -> String {
     let mut out: String = text.chars().take(max).collect();
     if text.chars().count() > max {
         out.push_str("...");
@@ -116,7 +122,7 @@ fn who(actors: &Actors) -> Option<String> {
     Some(format!("only {} may ask", may.join(", ")))
 }
 
-fn components(out: &mut String) {
+pub(crate) fn components(out: &mut String) {
     out.push_str("- (no component): a layout container, role group; holds children.\n");
     let mut charts = false;
     for c in Component::ALL {
@@ -183,7 +189,7 @@ fn node_line(out: &mut String, n: &Node) {
     out.push('\n');
 }
 
-fn registry(out: &mut String, ask: &Ask<'_>) {
+pub(crate) fn registry(out: &mut String, ask: &Ask<'_>) {
     for n in ask.app.nodes().values() {
         node_line(out, n);
         for (key, v) in &n.state {

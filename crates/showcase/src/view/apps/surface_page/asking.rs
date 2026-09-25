@@ -20,6 +20,13 @@
 //! An answer that arrives while the app sleeps stays on the channel: the
 //! page's `settle` reads nothing until the wake.
 //!
+//! With a surface shown, the same worker asks for a change of it
+//! (task-70 phase 2, `Claude::start_change`): it runs
+//! `transform_verified(Llm)` over the surface as its transformations left
+//! it, and only operations that applied, each verified, cross the
+//! channel; the page applies them through its host with the actor who
+//! asked (`Pending::by`).
+//!
 //! Off the desktop (wasm, mobile) there is no program and no thread:
 //! `find` finds nothing, the page offers only the rules, and nothing here
 //! but the types is used.
@@ -29,7 +36,7 @@ use std::time::Duration;
 
 use propose::ProposeError;
 use sem::{Actor, RequestId, Snapshot};
-use uir::{Capabilities, GenerationPolicy, VerifiedIr};
+use uir::{Adapted, Capabilities, GenerationPolicy, Op, VerifiedIr};
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use claude_model::{Cancel, ClaudeCli};
@@ -60,7 +67,7 @@ enum Msg {
     allow(dead_code)
 )]
 pub(crate) struct Answer {
-    pub proposed: Result<VerifiedIr, ProposeError>,
+    pub proposed: Result<Proposal, ProposeError>,
     /// The calls made, one per attempt.
     pub attempts: usize,
     /// From the first call to the answer.
@@ -68,6 +75,30 @@ pub(crate) struct Answer {
     /// What the calls cost, as the child counts it; none when no call
     /// said.
     pub cost_usd: Option<f64>,
+}
+
+/// What the Claude answered: a surface, or the operations of a change,
+/// every one applied and verified over the surface it was asked about.
+// off the desktop there is no thread: nothing constructs an answer.
+#[cfg_attr(
+    any(target_arch = "wasm32", target_os = "android", target_os = "ios"),
+    allow(dead_code)
+)]
+pub(crate) enum Proposal {
+    Surface(Box<VerifiedIr>),
+    Change(Vec<Op>),
+}
+
+/// What the Claude is asked for: a surface over the one shown (or none),
+/// or a change of the one shown, asked by someone.
+// off the desktop there is no thread: nothing reads what is asked.
+#[cfg_attr(
+    any(target_arch = "wasm32", target_os = "android", target_os = "ios"),
+    allow(dead_code)
+)]
+pub(crate) enum Job {
+    Propose(Box<Option<VerifiedIr>>),
+    Change(Box<Adapted>),
 }
 
 /// Everything the worker's thread takes, owned: what an ask holds while
@@ -78,8 +109,9 @@ struct Held {
     intent: String,
     app: Snapshot,
     caps: Capabilities,
-    current: Option<VerifiedIr>,
+    job: Job,
     policy: GenerationPolicy,
+    by: Actor,
 }
 
 /// Where a proposal is: held for the app to wake, or running on its
@@ -150,20 +182,23 @@ impl Claude {
     }
 
     /// Starts asking for `intent` over the app as it is (`app`, `caps`),
-    /// the surface shown (`current`) and the policy of whoever asked, for
-    /// the request `id`: a thread runs the proposal and `Pending` follows
-    /// it. While the app sleeps the thread is not started: the ask is
-    /// held and starts on the first look after the wake. The reason when
-    /// it cannot start (no program, no thread).
+    /// what `job` asks for (a surface over the one shown, or a change of
+    /// it) and the policy it is verified under, by `by`, for the request
+    /// `id`: a thread runs it and `Pending` follows it. While the app
+    /// sleeps the thread is not started: the ask is held and starts on
+    /// the first look after the wake. The reason when it cannot start (no
+    /// program, no thread).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    #[allow(clippy::too_many_arguments)]
     pub fn start(
         &self,
         id: RequestId,
         intent: String,
         app: Snapshot,
         caps: Capabilities,
-        current: Option<VerifiedIr>,
+        job: Job,
         policy: GenerationPolicy,
+        by: Actor,
     ) -> Result<Pending, String> {
         let mut cli = self.cli.clone().ok_or("there is no claude to ask")?;
         cli.cancel = Cancel::new();
@@ -173,8 +208,9 @@ impl Claude {
             intent: intent.clone(),
             app,
             caps,
-            current,
-            policy,
+            job,
+            policy: policy.clone(),
+            by: by.clone(),
         };
         let work = if Background::asleep() {
             Work::Held(Box::new(held))
@@ -184,6 +220,8 @@ impl Claude {
         Ok(Pending {
             id,
             intent,
+            policy,
+            by,
             started: web_time::Instant::now(),
             attempt: 0,
             shown_secs: 0,
@@ -195,14 +233,16 @@ impl Claude {
 
     /// No thread and no program here: the request cannot start.
     #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+    #[allow(clippy::too_many_arguments)]
     pub fn start(
         &self,
         _id: RequestId,
         _intent: String,
         _app: Snapshot,
         _caps: Capabilities,
-        _current: Option<VerifiedIr>,
+        _job: Job,
         _policy: GenerationPolicy,
+        _by: Actor,
     ) -> Result<Pending, String> {
         Err("there is no claude to ask on this platform".to_owned())
     }
@@ -215,7 +255,9 @@ impl Claude {
 fn spawn(held: Held) -> Result<Receiver<Msg>, String> {
     use std::sync::mpsc::Sender;
 
-    use propose::{Ask, Llm, Model, ModelError, propose_verified};
+    use propose::{
+        Adapt, Ask, Llm, Model, ModelError, Transformed, propose_verified, transform_verified,
+    };
 
     /// The model as the worker runs it: says which attempt begins.
     struct Counted<'a> {
@@ -237,27 +279,49 @@ fn spawn(held: Held) -> Result<Receiver<Msg>, String> {
         intent,
         app,
         caps,
-        current,
+        job,
         policy,
+        by,
     } = held;
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::Builder::new()
         .name("surface-page-claude".to_owned())
         .spawn(move || {
-            let ask = Ask {
-                intent: &intent,
-                caps: &caps,
-                app: &app,
-                current: current.as_ref(),
-                policy: &policy,
-            };
             let started = web_time::Instant::now();
             let mut counted = Counted {
                 cli: &mut cli,
                 tx: &tx,
                 n: 0,
             };
-            let proposed = propose_verified(&mut Llm::new(&mut counted), &ask);
+            let mut llm = Llm::new(&mut counted);
+            let proposed = match &job {
+                Job::Propose(current) => {
+                    let ask = Ask {
+                        intent: &intent,
+                        caps: &caps,
+                        app: &app,
+                        current: current.as_ref().as_ref(),
+                        policy: &policy,
+                    };
+                    propose_verified(&mut llm, &ask).map(|ir| Proposal::Surface(Box::new(ir)))
+                }
+                Job::Change(current) => {
+                    let ask = Adapt {
+                        intent: &intent,
+                        caps: &caps,
+                        app: &app,
+                        current,
+                        policy: &policy,
+                        by: &by,
+                    };
+                    transform_verified(&mut llm, &ask).and_then(|done| match done {
+                        Transformed::Changed { ops, .. } => Ok(Proposal::Change(ops)),
+                        Transformed::Undo => Err(ProposeError::NoChange(
+                            "the Claude answered no operation".to_owned(),
+                        )),
+                    })
+                }
+            };
             let took = started.elapsed();
             let calls = cli.calls();
             let cost_usd = calls
@@ -285,6 +349,10 @@ fn spawn(held: Held) -> Result<Receiver<Msg>, String> {
 pub(crate) struct Pending {
     pub id: RequestId,
     pub intent: String,
+    /// The policy what comes back is verified under.
+    pub policy: GenerationPolicy,
+    /// Who asked: a change is applied as theirs.
+    pub by: Actor,
     started: web_time::Instant,
     attempt: usize,
     /// The whole seconds the page last showed (the status moves once a

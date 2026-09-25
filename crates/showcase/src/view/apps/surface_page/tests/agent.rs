@@ -328,3 +328,70 @@ fn an_agent_proposes_through_the_port_and_what_was_typed_goes_on() {
         Some(&Value::Text("milk".into()))
     );
 }
+
+/// A change through the port (task-70 phase 2): the agent writes "too
+/// much" in the intent and proposes, the same two acts as a proposal; the
+/// rules hide the counters (context: they bind no action) and tighten
+/// the spacing, as the agent's change. "undo" takes it back the same
+/// way. The protocol is the proposal's: no action is new.
+#[test]
+fn an_agent_asks_for_a_change_through_the_port_as_it_proposes() {
+    let dir = Dir(std::env::temp_dir().join(format!("plev-t70b-{}-surface", std::process::id())));
+    let (seen, view) = gallery(&dir.0, |path| {
+        let mut c = Client::connect(&path).unwrap();
+        c.set_timeout(Some(20_000)).unwrap();
+        c.hello("claude").unwrap();
+        let ask = |c: &mut Client, intent: &str| {
+            let now = snapshot(c.observe(Observe::default()).unwrap());
+            let wrote = act(
+                c,
+                "surface_page.intent",
+                "set_value",
+                now.revision,
+                Some(Value::Text(intent.into())),
+            );
+            let now = snapshot(c.observe(Observe::default()).unwrap());
+            let asked = act(c, "surface_page.propose", "propose", now.revision, None);
+            let after = snapshot(c.observe(Observe::default()).unwrap());
+            (wrote.unwrap(), asked.unwrap(), names(&after))
+        };
+        let less = ask(&mut c, "too much");
+        (less, ask(&mut c, "undo"))
+    });
+    let ((wrote, asked, after_less), (_, undone, after_undo)) = seen;
+    let done = ["requested", "accepted", "executing", "completed"];
+    assert_eq!(wrote, done);
+    assert_eq!(asked, done);
+    assert_eq!(undone, done);
+    assert!(!after_less.contains(&"todo_panel.active".to_owned()));
+    assert!(
+        after_less.contains(&"todo.counter".to_owned()),
+        "the todo's own"
+    );
+    assert!(after_undo.contains(&"todo_panel.active".to_owned()));
+    // the change was the agent's: its request, completed with the steps
+    let receipt = view.panes.todo.receipt(sem::RequestId::parse("2").unwrap());
+    let receipt = receipt.expect("the change");
+    assert_eq!(
+        receipt.request.actor,
+        Actor::Agent {
+            name: "claude".into()
+        }
+    );
+    assert_eq!(receipt.request.target, sid("surface_page.propose"));
+    let Some(sem::Stage::Completed(outcome)) = receipt.stage() else {
+        panic!("{:?}", receipt.stage());
+    };
+    assert_eq!(outcome.result.get("steps"), Some(&Value::Int(2)));
+    let seen = view.semantics().expect("the page projects");
+    let status = seen
+        .get(&sid("surface_page.status"))
+        .expect("the status")
+        .state
+        .get("message")
+        .cloned();
+    assert_eq!(
+        status,
+        Some(Value::Text("undone: the last change, 2 steps".into()))
+    );
+}

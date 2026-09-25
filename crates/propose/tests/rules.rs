@@ -7,6 +7,8 @@
 //! structure, in the todo and in the ide, keeping the template's ids
 //! (task-95).
 
+// shared with the other test binaries: this one reads less of it.
+#[allow(dead_code)]
 mod support;
 
 use propose::{Ask, Part, ProposeError, Proposer, Rules, propose_verified};
@@ -392,9 +394,10 @@ fn the_items_are_a_repeat_over_the_todos_list() {
 
 /// The same rules over the ide's workbench: the list is `changes:files`
 /// (the `changes:staged` set holds only some of the files: a selection,
-/// not the list), each file its status as text and a button per action
-/// of no parameter; `stage` reads two states, so no checkbox, and the
-/// destructive `discard` is left out. The app's own word for its items
+/// not the list), each file its status as text (no two actions set it
+/// alone: no badge) and a button per action of no parameter, grouped;
+/// `stage` reads two states, so no checkbox, and the destructive
+/// `discard` is left out. The app's own word for its items
 /// ("files") chooses the list too.
 #[test]
 fn the_same_rules_list_the_ides_files() {
@@ -415,11 +418,23 @@ fn the_same_rules_list_the_ides_files() {
             ],
             "\"{intent}\""
         );
-        let labels: Vec<Option<&str>> = item.children.iter().map(|n| n.label.as_deref()).collect();
+        // by sense: the status alone, the four actions as one group
+        assert_eq!(item.children.len(), 2);
+        assert_eq!(item.children[0].component, Some(uir::Component::Text));
+        let actions = &item.children[1];
+        assert!(
+            actions.sem.as_str().ends_with("[{item}].actions"),
+            "{}",
+            actions.sem
+        );
+        let labels: Vec<Option<&str>> = actions
+            .children
+            .iter()
+            .map(|n| n.label.as_deref())
+            .collect();
         assert_eq!(
             labels,
             [
-                None,
                 Some("stage"),
                 Some("unstage"),
                 Some("ignore"),

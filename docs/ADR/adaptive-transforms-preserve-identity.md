@@ -252,3 +252,135 @@ passed, 0 failed (was 2832); regress 170 unchanged (169 old, 1 new).
 open for phase 2: who asks (the rules and the Claude answer operations,
 through the app's dispatcher), the policy each surface was verified
 under kept by the host, emphasis drawn by `stat` and `badge`.
+
+## addition: phase 2, who asks for a change (2026-09-24)
+
+### context
+
+phase 1 gave the operations and the host that applies them; only a test
+or the regress applied one (`ShowcaseView::stage_silences_op`), and no
+person or agent could ask for one in words. the checkpoint b of task-69
+also left three gaps in the generated review: the model's guidance made
+it drop each cut's frame, the rules' row showed numbers without a name
+and let a button fall alone to a line, and a decision showed as loose
+text, not as a badge.
+
+### decision
+
+#### a transformer beside the proposer
+
+`propose` gets a sibling of `Proposer`, untouched: `Transformer::transform(&Adapt) -> Result<Adaptation, ProposeError>`.
+`Adapt` is the intent, the registry, the snapshot, the surface as its
+transformations left it (`uir::Adapted`, with what is aside), the policy
+it was verified under and who asks. `Adaptation` is `Ops(Vec<Op>)` or
+`Undo` (undoing is the host's: it knows the last change). the way out is
+`transform_verified`, the pair of `propose_verified`: it applies every
+operation in order over the surface, each verified again by
+`Adapted::apply`, and returns the operations only with the verified
+surface they make (`Transformed::Changed`), or the first refusal with its
+place (`ProposeError::Unapplied`). no operation at all is `NoChange`.
+`Rules` and `Llm` implement both traits; the `Model` is the same.
+
+#### the rules' grammar of changes
+
+a second reader beside the one of surfaces (`crates/propose/src/change.rs`),
+with the same folding, in english and portuguese: **less** ("too much",
+"cluttered", "simpler"; "demais", "poluído", "mais simples"), **compare**
+only with a word of difficulty ("can't compare"; "não consigo comparar":
+a plain "compare the original with the cuts" stays the surface grammar's
+comparison of views), **bigger** ("bigger numbers", "can't see them";
+"números maiores", "não enxergo") and **undo** ("undo"; "desfazer").
+every other word is a filler, a word of the surface grammar taken as a
+hint, or a word of the app or of the surface shown, which chooses the
+target. anything else is not a change.
+
+the targets come from the structure and the registry, never from an
+app's name (`crates/propose/src/reshape.rs`): the task is what binds an
+action, context a block that shows state and binds none. less hides each
+block of context (down through what holds the task, never inside a
+repeat, never a split's child), groups the controls of a stack that runs
+them beside readouts, then tightens the spacing. compare swaps a table of
+a list of numbers that is not a list of items (its values are not the
+keys of its node's children) for a bar chart, a chart for a table, and
+refuses with why when nothing fits: on the Silences nothing does, as
+phase 1 found, and the page says so. bigger emphasizes every stat and
+every text bound to a number. each operation is tried over what the ones
+before made and kept only when it applies.
+
+#### the prompt of a change
+
+`Llm` as a transformer asks with its own prompt (`crates/propose/src/ops.rs`):
+the intent, how a change reads, the nine operations as JSON with what
+each refuses, the rules of identity, the verifier's rules and the
+policy, who asks, the components, the registry (the same text as a
+proposal's: a secret is its length, a picture the text that names it),
+and the surface shown with what is hidden. the answer is one object,
+`{"ops": [...]}`; each operation is tried in order, and the first refused
+goes back with the reply and why ("attempt N was refused"), at most
+`Llm::ATTEMPTS` times, then `Unchanged` with the last reasons, and the
+surface does not change. the `SYSTEM` of `claude-model` ("answer exactly
+what it asks for, in the form it asks for") serves as it is.
+
+#### the page: the same `propose`
+
+a new node or action on the proposing row would change the projection of
+every baseline that shows the row (the regress compares meaning first),
+the Claude's review and the fixed screen's included. so there is none:
+with a surface open, the row's `propose` reads the intent as a change
+first (`surface_page/proposing/changing.rs`, shared by the Surface page
+and the Silences). by the rules the change is applied at once through
+the host, as the request's actor, and "undo" takes the last ask back; by
+the Claude, when the intent reads as a change, the worker asks for
+operations off the app's thread, the request starts, the status shows the
+attempt and the seconds, and the operations are applied when they arrive
+with the attempts, the seconds and the cost; "undo" asks no model; an
+intent that is no change proposes a surface as in task-69. an agent asks
+through the port the way it proposes, `set_value` on the intent and
+`propose`: protocol v1 unchanged, and the actor is the `Change.by`.
+
+#### the host keeps the policy and the asks
+
+`SurfaceHost::open_under` and `transform_under` keep the policy a surface
+was verified under; `open` and `transform` keep the default one. `apply`
+and `undo` no longer take a policy: every operation is verified under
+the surface's own. `apply_all` applies the operations of one ask all or
+none, takes the form once and keeps them as one ask; `undo_asked` takes
+the last ask back whole; `last_ask`, `current` and `policy` read them.
+
+#### emphasis drawn by `stat` and `badge`
+
+with no change to the vocabulary or to comps: a stat reads its
+`typography` as the size of its value (`base_m` and under the inline
+readout, `title` the card's, `headline` and over the hero's), and a badge
+its `background` as the intent it is filled with (`Badge::count` instead
+of the glass tag). `emphasize` climbs a stat `base_m`, `title`,
+`headline`, and fills a badge with the accent; the phase 1 table's "stat,
+badge" among the components with no token of emphasis no longer holds.
+a badge grows in weight, not in size: comps has no bigger badge.
+
+#### the review shows what each item is
+
+the prompt's guidance says, for any app, that reviewing items is seeing
+what each one is (its picture when the app has one, its name, its
+numbers with their names, its state) and that "only what the intent
+needs" never takes that away. the rules' row goes by sense
+(`crates/propose/src/row.rs`): what the item is (picture, texts, and a
+decision as a badge: a text two actions or more of the item read and
+nothing else), its numbers (a small stat each, named by its key), its
+actions (small buttons); each sense of two nodes or more is a row of its
+own, one under the other.
+
+### consequences
+
+- phase 3 reads `SurfaceHost::changes` and the asks (`last_ask`) beside
+  the receipts of task-63.
+- the grammar of changes gates the Claude: an intent the rules do not
+  read as a change goes to a proposal of a surface. a phrase such as "put
+  the cuts first" needs its word in the grammar first.
+- the swap for a chart needs the app to declare a list of numbers; the
+  Silences does not, and the rules say so.
+
+### integração (fase 2)
+
+proposed by task-70 phase 2 (`task/70b-transform-proposer`); the
+orchestrator accepts it.

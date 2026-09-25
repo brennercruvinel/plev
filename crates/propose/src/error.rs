@@ -1,8 +1,10 @@
 //! why a proposal did not come: the proposer did not understand, the app
 //! has nothing of the kind, the model failed or kept proposing what the
-//! verifier refuses, or the verifier refused it.
+//! verifier refuses, or the verifier refused it; and why a change of the
+//! surface shown did not come: the intent asks for none, nothing on the
+//! surface takes it, or an operation was refused.
 
-use uir::IrError;
+use uir::{IrError, TransformError};
 
 use crate::words::Part;
 
@@ -49,6 +51,33 @@ pub enum ProposeError {
     /// the verifier refused the proposal: every error at once.
     #[error("the verifier refused the proposal ({} errors), the first: {}", errors_len(.0), first(.0))]
     Refused(Vec<IrError>),
+    /// the intent asks for no change of the surface shown: it asks for a
+    /// surface (a proposer answers it).
+    #[error(
+        "\"{intent}\" asks for no change of the surface shown: the rules change it for {changes}"
+    )]
+    NotAChange { intent: String, changes: String },
+    /// a change asked for that nothing on the surface takes, and why.
+    #[error("{0}")]
+    NoChange(String),
+    /// an operation of a change was refused (the first one; `at` counts
+    /// from 1): the surface stays as it is.
+    #[error("operation {at}, {op}, was refused: {error}")]
+    Unapplied {
+        at: usize,
+        op: String,
+        error: TransformError,
+    },
+    /// every answer of the model had an operation refused, or was not
+    /// operations; the reasons of the last one.
+    #[error(
+        "{attempts} answers and none changed the surface; the last one: {}",
+        errors.first().map_or("none", String::as_str)
+    )]
+    Unchanged {
+        attempts: usize,
+        errors: Vec<String>,
+    },
 }
 
 fn quoted(words: &[String]) -> String {

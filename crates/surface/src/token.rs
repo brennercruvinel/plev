@@ -3,8 +3,9 @@
 //! the theme stops the build here, not at a surface on screen.
 
 use comps::action::ButtonSize;
+use comps::content::StatSize;
 use engine::text::TextStyle;
-use engine::theme::{self, Theme};
+use engine::theme::{self, Intent, Theme};
 use uir::{ColorRole, ControlSize, Elevation, ShapeRole, SizeToken, SpacingToken, TypographyRole};
 
 /// `theme.spacing.<token>`.
@@ -44,6 +45,30 @@ pub(crate) fn typography(t: TypographyRole, theme: &Theme) -> TextStyle {
         TypographyRole::Hairline => ty.hairline(),
         TypographyRole::Mono => ty.mono(),
         TypographyRole::Readout => ty.readout(),
+    }
+}
+
+/// the size of a stat whose value is drawn in `t`: the base ramp and
+/// under is the inline readout, `title` the card's (a stat with no
+/// style), `headline` and over the hero's.
+pub(crate) fn stat_size(t: TypographyRole) -> StatSize {
+    match t {
+        TypographyRole::H4 | TypographyRole::Headline => StatSize::Lg,
+        TypographyRole::Title => StatSize::Md,
+        _ => StatSize::Sm,
+    }
+}
+
+/// the intent a badge's fill takes from its `background`: the accent and
+/// the three roles an intent has; none for a role no intent fills with
+/// (the badge stays the glass tag).
+pub(crate) fn badge_intent(t: ColorRole) -> Option<Intent> {
+    match t {
+        ColorRole::Accent => Some(Intent::Neutral),
+        ColorRole::Success => Some(Intent::Constructive),
+        ColorRole::Danger => Some(Intent::Destructive),
+        ColorRole::Info => Some(Intent::Informational),
+        _ => None,
     }
 }
 
