@@ -506,6 +506,21 @@ impl SilencesPage {
         true
     }
 
+    /// Whether the page tells a screen reader something of its own: the
+    /// accessibility band is open (`reader_states`).
+    pub(crate) fn has_reader_states(&self) -> bool {
+        self.generated.access.is_open()
+    }
+
+    /// What only a screen reader is told (task-75 phase 2a), into `b`,
+    /// which holds the page's projection: which preference is on, on the
+    /// band's buttons. Never in `projection` or `snapshot`, which the port
+    /// and a model's prompt read.
+    pub(crate) fn reader_states(&self, b: &mut sem::SnapshotBuilder) {
+        let on = self.generated.host.preferences();
+        self.generated.access.reader_states(b, on);
+    }
+
     /// The fixed screen's focus goes to `focus`: the sliders and the two
     /// buttons draw their ring by it.
     fn set_focus(&mut self, focus: Option<Focus>) {
