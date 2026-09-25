@@ -1,7 +1,7 @@
 # Trunk config for the web build of the showcase. run from the repo root:
 # `script/web` (wraps `trunk --config web serve`).
 #
-# index.html points at crates/showcase/Cargo.toml (bin "showcase"); trunk
+# index.html points at crates/showcase/Cargo.toml (bin "showcase-web"); trunk
 # runs cargo for wasm32-unknown-unknown, applies wasm-bindgen (version
 # pinned by Cargo.lock), and emits everything into web/dist/.
 

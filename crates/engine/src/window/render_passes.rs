@@ -180,7 +180,11 @@ fn resolve_blurred_backdrop(
 ) -> (wgpu::BindGroup, u32) {
     let vw = gpu.surface_config.width;
     let vh = gpu.surface_config.height;
-    let format = gpu.surface_config.format;
+    // the format the pipelines render to: the surface's own on the
+    // desktop, its sRGB view on the web canvas, whose surface is not sRGB
+    // (the composite pipeline refused the raw format there, and every
+    // frame with a backdrop blur was dropped)
+    let format = gpu.surface_format();
     let mut draw_calls = 0u32;
 
     // 1) Compose "everything below this point": clear color, lower layers

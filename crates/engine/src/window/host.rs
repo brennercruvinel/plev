@@ -221,6 +221,14 @@ impl WindowHost {
             self.target = Some(create_target(&gpu.gpu));
         }
         self.gpu = Some(gpu);
+        // In the browser the device arrives after the canvas may have
+        // been sized (a `Resized` taken while the adapter was requested,
+        // with no surface to resize), so the surface configured at 0x0
+        // follows the window's size now; left alone it drew the whole
+        // page into one pixel stretched over the canvas.
+        if self.window.is_some() && (w, h) != self.size {
+            self.resize(self.size.0, self.size.1);
+        }
         self.compositor.invalidate();
         self.request_redraw();
     }

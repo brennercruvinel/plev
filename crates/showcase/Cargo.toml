@@ -4,6 +4,9 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish = false
+# two bins (the second is the web entry, see src/main_web.rs): `cargo run -p
+# showcase` keeps running the gallery.
+default-run = "showcase"
 description = "plev design system gallery — every widget, every state, every theme"
 
 # lib: rlib for the desktop/web bin; cdylib is the android `.so` (GameActivity
@@ -15,6 +18,11 @@ crate-type = ["lib", "cdylib", "staticlib"]
 [[bin]]
 name = "showcase"
 path = "src/main.rs"
+
+# the web entry trunk builds (web/index.html): a name of its own, see the file.
+[[bin]]
+name = "showcase-web"
+path = "src/main_web.rs"
 
 # the structural regression harness (task-67). `test = true`: cargo only
 # builds an example under `cargo test`; this one runs its tests there too,
