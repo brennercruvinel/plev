@@ -1727,3 +1727,27 @@ o caminho é relativo ao worktree
   Tab; um clique não dá foco a controle, como antes.
 - o roteiro do VoiceOver da fase 2b pode ganhar um passo de teclado
   (Tab, setas e o modal), para o brenner rodar.
+
+## fase 2c integrada (orquestrador, 2026-09-25)
+
+o item "teclado completo nas páginas de componente, com teste" avançou,
+sem fechar: o Tab anda na ordem da projeção (a do leitor de tela) nas 25
+páginas de componente que têm algo focável, com o anel de foco; setas
+pelo padrão WAI-ARIA em abas, árvore, select, slider e menu de contexto;
+Enter e Espaço acionam pelo dispatcher como pedido da pessoa; o modal
+prende o foco e o devolve ao fechar. 13 testes novos sem janela.
+
+validação do orquestrador: diff lido (`view/dispatch/keyboard.rs` usa
+`focus::next` e `assist_focus`, e todo pedido sai como `Actor::Human`
+pelo dispatcher da galeria); os PNGs abertos: o anel numa linha da
+árvore depois de três Tabs e no Cancelar do modal. o botão que abriu o
+modal continua com o anel por baixo do véu (pendência pequena).
+
+o que falta para fechar o item: Table, Data Table, Scroll Area e Item
+não têm nó focável, e abas e árvore são uma parada de Tab por item. a
+recomendação do agente (uma linha focável por vez, setas andando nas
+linhas, cada widget composto uma parada só) muda 12 baselines, que o
+orquestrador revisa antes de aceitar. o split da Resizable pede um papel
+de splitter no contrato do `sem` e fica como pendência.
+
+o agente gastou uns 350 mil tokens.
