@@ -39,7 +39,9 @@
 //! ```
 //!
 //! the crate is pure data, like `sem`: no gpu, no window, no engine and
-//! no comps. materializing a surface on the widgets is task-69.
+//! no comps. materializing a surface on the widgets is task-69; changing
+//! a verified surface by small operations, each verified again and with
+//! its inverse, is `transform` (task-70).
 
 mod caps;
 mod decode;
@@ -49,6 +51,7 @@ mod item;
 mod policy;
 mod schema;
 mod token;
+mod transform;
 mod verify;
 mod vocab;
 
@@ -62,6 +65,7 @@ pub use token::{
     Align, Axis, ColorRole, ControlSize, Elevation, Layout, MAX_FLEX, MAX_RATIO, MIN_RATIO, Props,
     ShapeRole, Size, SizeToken, SpacingToken, TypographyRole,
 };
+pub use transform::{Adapted, Aside, Context, Inverse, Op, TransformError};
 pub use verify::{VerifiedIr, verify, verify_json};
 pub use vocab::{
     CONTAINER, ChartKind, Component, Event, Named, Spec, StateProp, is_control, names, role_of,
