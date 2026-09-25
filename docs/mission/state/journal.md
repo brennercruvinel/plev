@@ -14,24 +14,24 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
-### task-77 fechada pelo orquestrador, sem agente
+### task-77 fechada
 
 - web e iOS em todas as 82 páginas: web 79 iguais em todo byte, iOS 78 só
   com a barra de status. as caladas têm causa (sem Claude, sem git, o
   cursor piscando); uma era defeito (id da tabela em `usize`, 32 bits no
   wasm) e foi corrigida. tabela de diferenças pedidas confirmada onde foi
-  medida. custo: só tokens do orquestrador.
+  medida.
 
-### task-18 fechada pelo orquestrador, sem agente
+### task-18 fechada
 
 - APK no emulador Pixel 7 sem janela. testar toque e lifecycle achou dois
   defeitos: o toque não chegava à galeria, e voltar da tela inicial matava
   a thread de desenho (superfície velha). os dois corrigidos, com teste
   do dedo (`app/touch.rs`). frame a 2/255 do desktop (GPU por software).
 - pendências: activity recriada pelo sistema não desenha; slider por
-  toque; toque no iOS sem teste. custo: só tokens do orquestrador.
+  toque; toque no iOS sem teste.
 
-### task-19 fechada pelo orquestrador, sem agente
+### task-19 fechada
 
 - o app compila, instala e abre no simulador; a janela nascia com o
   tamanho do desktop (o winit do iOS faz dele o frame da UIWindow), e o
@@ -39,9 +39,9 @@ task; aqui fica o que aconteceu e onde ler.
   dois corrigidos. frame igual ao desktop fora da barra de status; ida e
   volta do segundo plano no mesmo processo.
 - pendências: a área segura na galeria; a rotação, que pede a janela do
-  Simulator.app. custo: só tokens do orquestrador.
+  Simulator.app.
 
-### task-20 fechada pelo orquestrador, sem agente
+### task-20 fechada
 
 - **instalado com o ok do brenner:** `trunk`, `wasm-bindgen-cli 0.2.123`,
   `xcodegen`, `cargo-ndk`, os targets do iOS e do android, o JDK 17
@@ -49,11 +49,9 @@ task; aqui fica o que aconteceu e onde ler.
   27.2, emulador, imagem arm64 35 e o AVD `plev35` (7,5 GB).
 - **o que a web tinha:** build recusado pelo trunk (nome repetido), pânico
   ao abrir (`temp_dir` no wasm), tela vazia (surface em 0x0) e a página
-  Effects descartada (formato do backdrop). os quatro corrigidos no
-  próprio orquestrador: cada um tinha poucas linhas, e um agente custaria
-  mais que a correção.
+  Effects descartada (formato do backdrop). os quatro corrigidos.
 - **resultado:** 12 capturas iguais em todo byte ao desktop; 120 fps
-  rolando. custo: só tokens do orquestrador, nenhum agente.
+  rolando.
 
 ### fechar antes de abrir
 
