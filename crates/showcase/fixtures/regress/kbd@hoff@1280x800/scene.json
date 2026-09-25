@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "6fe8f6ccbf55119e",
+    "nodes": 5
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "navigation_menu_page",
       "z": 0,
       "hash": "3bd9b783bcf63734",
       "nodes": 23,
@@ -51,5 +54,70 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "navigation_menu_page.link[0]",
+      "layer": "navigation_menu_page",
+      "rect": [
+        288.0,
+        171.56,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "navigation_menu_page.link[1]",
+      "layer": "navigation_menu_page",
+      "rect": [
+        288.0,
+        223.56,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "navigation_menu_page.link[2]",
+      "layer": "navigation_menu_page",
+      "rect": [
+        288.0,
+        275.56,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "navigation_menu_page.link[3]",
+      "layer": "navigation_menu_page",
+      "rect": [
+        288.0,
+        327.56,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    }
+  ]
 }

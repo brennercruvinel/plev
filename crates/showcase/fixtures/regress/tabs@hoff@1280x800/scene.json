@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "14b440d979ebcfe6",
+    "nodes": 5
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "tabs_page",
       "z": 0,
       "hash": "93d6506a32666fa8",
       "nodes": 11,
@@ -51,5 +54,70 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "tabs_page.tabs",
+      "layer": "tabs_page",
+      "rect": [
+        288.0,
+        131.6,
+        386.38202,
+        44.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "tabs_page.tabs[0]",
+      "layer": "tabs_page",
+      "rect": [
+        292.0,
+        135.6,
+        126.12734,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "tabs_page.tabs[1]",
+      "layer": "tabs_page",
+      "rect": [
+        418.12735,
+        135.6,
+        126.12734,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "tabs_page.tabs[2]",
+      "layer": "tabs_page",
+      "rect": [
+        544.2547,
+        135.6,
+        126.12734,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    }
+  ]
 }

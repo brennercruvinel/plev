@@ -134,7 +134,7 @@ mod tests {
     fn with_nothing_over_the_page_the_reader_is_shown_the_page_as_it_is() {
         let view = view_on("todo");
         assert_eq!(view.reader_semantics(), view.semantics());
-        let view = view_on("button");
+        let view = view_on("card");
         assert_eq!(
             view.reader_semantics(),
             None,
@@ -211,7 +211,7 @@ mod tests {
 
     #[test]
     fn a_toast_on_a_page_without_meaning_is_heard_too() {
-        let mut view = view_on("button");
+        let mut view = view_on("card");
         let theme = view.theme.clone();
         view.toasts.push("copied", Intent::Informational, &theme);
         let (u, ids, s) = tree(&mut view);
@@ -254,7 +254,7 @@ mod tests {
             .cloned();
         assert_eq!(said, Some(sem::Value::from("silences detected: 2 cuts")));
         // a page without meaning hears it too
-        let mut view = view_on("button");
+        let mut view = view_on("card");
         view.set_notice("done");
         let (u, ids, _) = tree(&mut view);
         assert_eq!(node(&u, &ids, "shell.notice").value(), Some("done"));

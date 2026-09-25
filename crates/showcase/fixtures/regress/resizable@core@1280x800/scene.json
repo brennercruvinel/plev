@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "c630e0d4d1fab70c",
+    "nodes": 2
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "resizable_page",
       "z": 0,
       "hash": "2616fe6386d19071",
       "nodes": 9,
@@ -51,5 +54,22 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "resizable_page.split",
+      "layer": "resizable_page",
+      "rect": [
+        616.5,
+        134.2,
+        10.0,
+        280.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
 }

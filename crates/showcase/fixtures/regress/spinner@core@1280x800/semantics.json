@@ -1,0 +1,21 @@
+{
+  "nodes": [
+    {
+      "id": "spinner_page",
+      "role": "region",
+      "label": "Spinner"
+    },
+    {
+      "id": "spinner_page.toggle",
+      "role": "button",
+      "label": "Start spinners",
+      "parent": "spinner_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

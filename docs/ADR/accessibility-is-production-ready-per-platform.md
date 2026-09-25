@@ -249,3 +249,74 @@ and a skeleton's pulse stand still and ask for no frame.
 - the capture baselines moved in their semantics only (the scene's
   revision with them); every other baseline and the `uir` goldens held.
 - the VoiceOver script of phase 2a, in the task file, is run by a person.
+
+## addition: phase 2b, the component pages (2026-09-25)
+
+task-75 phase 2b made the component pages whose widgets already project
+in comps (task-59) project what they show; the sonda, with file and line,
+is in the task file, section "fase 2b: a sonda".
+
+### a component page is a `Component`
+
+one trait (`crates/showcase/src/view/dispatch/component.rs`) and one table,
+a line per pane: the page's widgets carry the ids it gave them, so each
+draw binds its rect beside the scene; it projects them under a region
+named by the page's title (inert while an overlay holds the pointer); it
+runs a request against its own state and says what the view does after
+(a toast, a modal); it takes the focus a reader asks for. The view's
+projection, its `act`, its `assist_focus` and the Escape reach a component
+page through the table and nowhere else, so an agent through the port and
+a screen reader meet the page in one projection, and what either asks
+runs through the gallery's one dispatcher. 30 pages over 19 panes project
+now; the menu bar leaves them out (samples of the design system, not what
+the page does).
+
+### the person's click stays in the widget
+
+a comps widget changes its own state in its event (a checkbox checks, a
+tab selects, a drag moves a knob), and every action it declares reads what
+it changes (task-59). So a person's click on a component page stays where
+it was, the projection reads the widget and follows it, and a request
+decided before the click comes back stale. What a page does on top of a
+click (the Dialog page's modal, the Toast page's toast, a crumb's echo) is
+one method that the click and the request both call. The pages of the
+apps keep putting the person's click through the dispatcher. Tested per
+kind of widget: the person, a reader and an agent through a real port,
+each on a gallery of its own, end in the same projection.
+
+### what the tree learned
+
+a table says its selected row in `selected_row`, and the tree marks that
+row selected as it marks the child a container's `selected` names.
+Windows still does not say it (a row is not a `SelectionItem` in
+accesskit_windows 0.32.1); macOS and AT-SPI do.
+
+### what stays, and why
+
+- the pages whose widgets have no projection in comps (24: Theme, Avatar,
+  Badge, Stat, Progress, Skeleton, Code Block, Card, Chart, Graph, Empty,
+  Context Menu and Dropdown Menu, Sidebar, Drawer and Sheet, the dock
+  pages, Editor, Git, Builder, Panel Header) and the ones with nothing to
+  operate or read but a sample (22: Typography, Icons, Effects, Panel,
+  Separator, the 17 placeholders), each with its reason in
+  `crates/showcase/tests/access_tree.rs`.
+- the Resizable page's `set_ratio`: the tree sets a value only through
+  `set_value` and a select's `select`, and the contract has no splitter
+  role; an agent asks it, a person drags, a reader hears the share.
+- `expanded` is said by no adapter of the lock (no disclosure in
+  accesskit_macos 0.26.1, no `ExpandCollapse` in accesskit_windows, no
+  expanded state in accesskit_atspi_common): a tree branch is heard
+  through its presented "toggle expanded" control and the rows that
+  appear.
+- the `active` of a nav link or a toolbar button and a submit button's
+  `busy` are not told yet.
+- the full keyboard in the widgets (Tab in the projection's order, arrows,
+  the modal's focus trap) is the next phase.
+
+## consequences of phase 2b
+
+- the regress baselines of the 30 pages carry their projection and their
+  bindings; the page's layer is named by the roots bound in it (the
+  regress names a layer that way), its content unchanged.
+- a gallery page whose widget gains a projection in comps joins by one
+  line in the table and its `Component`.

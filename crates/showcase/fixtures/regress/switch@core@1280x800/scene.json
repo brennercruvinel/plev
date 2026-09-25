@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "b9b34bd5fa9187df",
+    "nodes": 4
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "switch_page",
       "z": 0,
       "hash": "4f518445a9b0df73",
       "nodes": 13,
@@ -51,5 +54,54 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "switch_page.switch[0]",
+      "layer": "switch_page",
+      "rect": [
+        288.0,
+        134.2,
+        44.0,
+        24.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "switch_page.switch[1]",
+      "layer": "switch_page",
+      "rect": [
+        288.0,
+        174.2,
+        44.0,
+        24.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "switch_page.switch[2]",
+      "layer": "switch_page",
+      "rect": [
+        288.0,
+        214.2,
+        44.0,
+        24.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
 }

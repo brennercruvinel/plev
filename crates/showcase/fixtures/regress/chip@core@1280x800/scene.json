@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "34660fdde1fa2016",
+    "nodes": 7
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "chip_page",
       "z": 0,
       "hash": "3614c8cff29469e3",
       "nodes": 16,
@@ -51,5 +54,102 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "chip_page.chip[0]",
+      "layer": "chip_page",
+      "rect": [
+        288.0,
+        134.2,
+        53.0,
+        22.630001
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "chip_page.chip[1]",
+      "layer": "chip_page",
+      "rect": [
+        353.0,
+        134.2,
+        44.0,
+        22.630001
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "chip_page.chip[2]",
+      "layer": "chip_page",
+      "rect": [
+        409.0,
+        134.2,
+        54.0,
+        22.630001
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "chip_page.chip[3]",
+      "layer": "chip_page",
+      "rect": [
+        475.0,
+        134.2,
+        64.0,
+        22.630001
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "chip_page.chip[4]",
+      "layer": "chip_page",
+      "rect": [
+        551.0,
+        134.2,
+        47.0,
+        22.630001
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "chip_page.chip[5]",
+      "layer": "chip_page",
+      "rect": [
+        610.0,
+        134.2,
+        67.0,
+        22.630001
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
 }

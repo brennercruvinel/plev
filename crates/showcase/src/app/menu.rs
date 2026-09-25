@@ -193,12 +193,19 @@ pub(super) fn view_menu(gallery: &Snapshot) -> Submenu {
 /// The active page's plain actions, under its title; `None` when the
 /// page offers none (a page without a projection, or with values only).
 /// The toasts and the overlay the gallery projects over the page are left
-/// out: they are on screen for a moment, and the bar is the page's.
+/// out: they are on screen for a moment, and the bar is the page's. So is
+/// a component page's (task-75 phase 2b): its widgets are samples of the
+/// design system ("Button" thirty times, a checkbox's toggle), not what
+/// the page does; a reader and an agent reach them through the tree and
+/// the port.
 fn page_menu(view: &ShowcaseView, gallery: &Snapshot) -> Option<Submenu> {
     let items: Vec<MenuItem> = MenuItem::plain(gallery)
         .into_iter()
         .filter(|item| {
-            !view.is_shell(&item.sem) && !view.is_overlay(&item.sem) && !is_row(gallery, item)
+            !view.is_shell(&item.sem)
+                && !view.is_overlay(&item.sem)
+                && !view.is_component(&item.sem)
+                && !is_row(gallery, item)
         })
         .map(|item| {
             let label = page_label(gallery, &item);
@@ -258,7 +265,7 @@ fn page_label(gallery: &Snapshot, item: &MenuItem) -> String {
 mod tests {
     use std::sync::{Arc, Mutex};
 
-    use engine::platform::menu::{Entry, FakeMenu, MenuModel, Shortcut, locked};
+    use engine::platform::menu::{Entry, FakeMenu, MenuItem, MenuModel, Shortcut, locked};
     use sem::{SemId, Value};
 
     use super::super::{App, record};
@@ -308,6 +315,33 @@ mod tests {
             .filter(|i| i.checked == Some(true))
             .map(|i| i.label.clone())
             .collect()
+    }
+
+    /// A component page projects its widgets (task-75 phase 2b), and the
+    /// bar leaves them out: samples of the design system, not what the
+    /// page does. The Toggle Group page shows the todo page, and keeps its
+    /// bar.
+    #[test]
+    fn the_bar_leaves_the_component_pages_out() {
+        for page in [
+            "Button", "Checkbox", "Toast", "Dialog", "Tabs", "Tree", "Input",
+        ] {
+            let (app, fake) = app(page);
+            assert!(app.view.semantics().is_some(), "{page} projects");
+            let gallery = app.view.gallery_semantics().unwrap();
+            assert!(
+                !MenuItem::plain(&gallery).is_empty(),
+                "{page} has plain actions"
+            );
+            assert_eq!(labels(&shown(&fake)), ["plev", "view"], "{page}");
+        }
+        let (_, fake) = app("Toggle Group");
+        let bar = shown(&fake);
+        assert_eq!(labels(&bar), ["plev", "view", "Toggle Group"]);
+        assert!(
+            bar.find(&sid("todo.filter[active]"), "select", None)
+                .is_some()
+        );
     }
 
     /// The toasts and the modal the view projects over the page (task-75

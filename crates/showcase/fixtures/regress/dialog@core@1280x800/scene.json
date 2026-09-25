@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "d4897bba299c907d",
+    "nodes": 3
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "dialog_page",
       "z": 0,
       "hash": "4590ca88cb89d148",
       "nodes": 13,
@@ -51,5 +54,38 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "dialog_page.open",
+      "layer": "dialog_page",
+      "rect": [
+        288.0,
+        134.2,
+        127.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "dialog_page.delete",
+      "layer": "dialog_page",
+      "rect": [
+        427.0,
+        134.2,
+        200.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
 }

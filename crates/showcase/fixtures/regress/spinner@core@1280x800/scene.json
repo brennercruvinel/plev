@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "5c0da32a482554b9",
+    "nodes": 2
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "spinner_page",
       "z": 0,
       "hash": "9b166ff0cf92315e",
       "nodes": 11,
@@ -51,5 +54,22 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "spinner_page.toggle",
+      "layer": "spinner_page",
+      "rect": [
+        480.0,
+        138.2,
+        147.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
 }

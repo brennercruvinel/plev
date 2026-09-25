@@ -39,7 +39,36 @@ pub mod toast;
 pub mod tooltip;
 pub mod tree;
 
+pub(in crate::view) use super::dispatch::component::{After, Component, under};
 pub(crate) use super::{EditKey, group_label, panel, text};
+
+use sem::SemId;
+
+/// A component page's root id, `<name>` (`checkbox_page`); `None`, logged,
+/// when the name does not parse, which each page's test proves it does.
+pub(crate) fn root_id(name: &str) -> Option<SemId> {
+    SemId::name(name)
+        .inspect_err(|e| log::warn!("{name}: {e}"))
+        .ok()
+}
+
+/// The key of `id` under `parent` (`3` for `<parent>[3]`), which the
+/// comps gives the children it projects; `None` for any other id.
+pub(crate) fn key_under<'a>(parent: &SemId, id: &'a SemId) -> Option<&'a str> {
+    id.as_str()
+        .strip_prefix(parent.as_str())?
+        .strip_prefix('[')?
+        .strip_suffix(']')
+}
+
+/// `<root>.<name>`, a widget's id or the stem of a keyed family of them;
+/// `None` without a root, or, logged, when the name does not parse.
+pub(crate) fn child_id(root: Option<&SemId>, name: &str) -> Option<SemId> {
+    root?
+        .child(name)
+        .inspect_err(|e| log::warn!("{name}: {e}"))
+        .ok()
+}
 
 /// Tab-order bookkeeping for a page whose widgets take keyboard focus:
 /// Tab walks `len` slots and wraps, Escape clears. The page maps the

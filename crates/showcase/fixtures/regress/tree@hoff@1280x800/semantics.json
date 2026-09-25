@@ -1,0 +1,234 @@
+{
+  "nodes": [
+    {
+      "id": "tree_page",
+      "role": "region",
+      "label": "Tree"
+    },
+    {
+      "id": "tree_page.tree[1]",
+      "role": "tree_item",
+      "label": "src",
+      "parent": "tree_page.tree",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.tree[1]:selected"
+          ]
+        },
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "tree_page.tree[1]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.tree[2]",
+      "role": "tree_item",
+      "label": "ui",
+      "parent": "tree_page.tree[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.tree[2]:selected"
+          ]
+        },
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "tree_page.tree[2]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.tree[3]",
+      "role": "tree_item",
+      "label": "widgets.rs",
+      "parent": "tree_page.tree[2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.tree[3]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.tree[4]",
+      "role": "tree_item",
+      "label": "icons.rs",
+      "parent": "tree_page.tree[2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.tree[4]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.tree[5]",
+      "role": "tree_item",
+      "label": "main.rs",
+      "parent": "tree_page.tree[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.tree[5]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.tree[6]",
+      "role": "tree_item",
+      "label": "renderer.rs",
+      "parent": "tree_page.tree[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.tree[6]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.tree[7]",
+      "role": "tree_item",
+      "label": "assets",
+      "parent": "tree_page.tree",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.tree[7]:selected"
+          ]
+        },
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "tree_page.tree[7]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.tree[10]",
+      "role": "tree_item",
+      "label": "Cargo.toml",
+      "parent": "tree_page.tree",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.tree[10]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.tree[11]",
+      "role": "tree_item",
+      "label": "README.md",
+      "parent": "tree_page.tree",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.tree[11]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.tree",
+      "role": "tree",
+      "label": "files",
+      "parent": "tree_page"
+    }
+  ]
+}

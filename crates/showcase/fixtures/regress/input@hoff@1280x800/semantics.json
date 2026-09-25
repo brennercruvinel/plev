@@ -1,0 +1,99 @@
+{
+  "nodes": [
+    {
+      "id": "input_page",
+      "role": "region",
+      "label": "Input"
+    },
+    {
+      "id": "input_page.field[0]",
+      "role": "text_input",
+      "label": "Full name",
+      "parent": "input_page",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.field[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.field[1]",
+      "role": "text_input",
+      "label": "Email address",
+      "parent": "input_page",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.field[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.field[2]",
+      "role": "text_input",
+      "label": "Project codename",
+      "parent": "input_page",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.field[2]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.preview",
+      "role": "label",
+      "label": "live value: (empty)",
+      "parent": "input_page"
+    }
+  ]
+}

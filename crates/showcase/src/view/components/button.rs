@@ -2,6 +2,13 @@
 //! a bottom rule, cards in rows, one state per card behind a chip that
 //! names it. The widgets are `comps::action` (labeled, icon-only,
 //! submit); every visual value comes from the theme.
+//!
+//! Projected (task-75 phase 2b): a group per title,
+//! `button_page.group[<g>]`, and in it each card's widget,
+//! `button_page.group[<g>].card[<c>]`, as the comps projects it, described
+//! by the card's chip (the states it shows); an icon-only button is named
+//! by its icon, the submit button "submit". A button here does nothing but
+//! press, so its `activate` changes nothing.
 
 use comps::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, IconButton, IconButtonSize, IconButtonVariant,
@@ -10,6 +17,9 @@ use comps::prelude::{
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::text::TextMeasurer;
 use engine::theme::{Theme, hoff_core};
+use sem::{Request, Role, SemId, SnapshotBuilder};
+
+use super::{After, Component, child_id, root_id, under};
 
 /// A card is as tall as the page's `h-50`.
 const CARD_H: f32 = 200.0;
@@ -46,6 +56,43 @@ impl Spec {
             Spec::Submit(b) => b.render(c, bounds, theme),
         }
     }
+
+    /// The widget with the id its draw binds to.
+    fn sem(self, id: SemId) -> Self {
+        match self {
+            Spec::Button(b) => Spec::Button(b.sem(id)),
+            Spec::Icon(b) => Spec::Icon(b.sem(id)),
+            Spec::Submit(b) => Spec::Submit(b.sem(id)),
+        }
+    }
+
+    fn sem_id(&self) -> Option<&SemId> {
+        match self {
+            Spec::Button(b) => b.sem_id(),
+            Spec::Icon(b) => b.sem_id(),
+            Spec::Submit(b) => b.sem_id(),
+        }
+    }
+
+    fn set_focused(&mut self, on: bool) {
+        match self {
+            Spec::Button(b) => b.set_focused(on),
+            Spec::Icon(b) => b.set_focused(on),
+            Spec::Submit(b) => b.set_focused(on),
+        }
+    }
+
+    /// The widget as the comps projects it, under `parent`, described by
+    /// `states`: a labeled button by its label, an icon-only one by its
+    /// icon, the submit button as "submit".
+    fn project(&self, b: &mut SnapshotBuilder, id: &SemId, parent: &SemId, states: &str) {
+        let mut node = match self {
+            Spec::Button(w) => w.project(b, id, Some(parent)),
+            Spec::Icon(w) => w.project(b, id, w.icon, Some(parent)),
+            Spec::Submit(w) => w.project(b, id, "submit", Some(parent)),
+        };
+        node.description(states);
+    }
 }
 
 struct Card {
@@ -63,7 +110,21 @@ struct Group {
 }
 
 pub struct ButtonPage {
+    root: Option<SemId>,
     groups: Vec<Group>,
+    /// The card, `(group, card)`, whose widget a screen reader focused
+    /// (its ring shows); Escape or a click lets it go.
+    focus: Option<(usize, usize)>,
+}
+
+/// `button_page.group[<g>]`.
+fn group_id(root: &SemId, g: usize) -> Option<SemId> {
+    child_id(Some(root), "group").map(|family| family.key(g.to_string()))
+}
+
+/// `button_page.group[<g>].card[<c>]`.
+fn card_id(root: &SemId, g: usize, c: usize) -> Option<SemId> {
+    child_id(group_id(root, g).as_ref(), "card").map(|family| family.key(c.to_string()))
 }
 
 const STATES: &str = "Default, Hover, Press, Focus";
@@ -224,7 +285,44 @@ impl ButtonPage {
                 },
             ],
         });
-        Self { groups }
+        let root = root_id("button_page");
+        if let Some(root) = &root {
+            for (g, group) in groups.iter_mut().enumerate() {
+                for (c, card) in std::mem::take(&mut group.cards).into_iter().enumerate() {
+                    let spec = match card_id(root, g, c) {
+                        Some(id) => card.spec.sem(id),
+                        None => card.spec,
+                    };
+                    group.cards.push(Card { spec, ..card });
+                }
+            }
+        }
+        Self {
+            root,
+            groups,
+            focus: None,
+        }
+    }
+
+    /// The card whose widget is `id`.
+    fn at(&self, id: &SemId) -> Option<(usize, usize)> {
+        self.groups.iter().enumerate().find_map(|(g, group)| {
+            let c = group
+                .cards
+                .iter()
+                .position(|c| c.spec.sem_id() == Some(id))?;
+            Some((g, c))
+        })
+    }
+
+    /// The reader's focus on the widget of one card, or on none.
+    fn set_focus(&mut self, at: Option<(usize, usize)>) {
+        self.focus = at;
+        for (g, group) in self.groups.iter_mut().enumerate() {
+            for (c, card) in group.cards.iter_mut().enumerate() {
+                card.spec.set_focused(at == Some((g, c)));
+            }
+        }
     }
 
     /// Group padding: the page's `p-12`, vertical only (the content rect
@@ -317,8 +415,11 @@ impl ButtonPage {
         content: Rect,
         theme: &Theme,
     ) -> EventResult {
-        let layout = self.layout(content, theme);
         let mut result = EventResult::IGNORED;
+        if matches!(event, WidgetEvent::MouseDown { .. }) && self.blur() {
+            result = EventResult::changed();
+        }
+        let layout = self.layout(content, theme);
         for (group, (_, rects, _)) in self.groups.iter_mut().zip(&layout) {
             for (card, rect) in group.cards.iter_mut().zip(rects) {
                 let bounds = Self::widget_rect(&card.spec, *rect, theme);
@@ -390,6 +491,59 @@ impl ButtonPage {
                 });
             }
         }
+    }
+}
+
+impl Component for ButtonPage {
+    fn root(&self) -> Option<&SemId> {
+        self.root.as_ref()
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, root: &SemId) {
+        for (g, group) in self.groups.iter().enumerate() {
+            let Some(at) = group_id(root, g) else {
+                continue;
+            };
+            b.node(&at, Role::Group, group.title).parent(root);
+            for card in &group.cards {
+                if let Some(id) = card.spec.sem_id() {
+                    card.spec.project(b, id, &at, card.title);
+                }
+            }
+        }
+        let focused = self
+            .focus
+            .and_then(|(g, c)| self.groups.get(g)?.cards.get(c))
+            .and_then(|card| card.spec.sem_id());
+        if let Some(id) = focused {
+            b.focus(id);
+        }
+    }
+
+    /// A button's `activate`: it presses, and nothing else happens, as
+    /// for a click.
+    fn run(&mut self, req: &Request) -> Result<After, String> {
+        match (self.at(&req.target), req.action.as_str()) {
+            (Some(_), "activate") => Ok(After::Nothing),
+            _ => Err(format!(
+                "the button page has no {} on {}",
+                req.action, req.target
+            )),
+        }
+    }
+
+    fn focus(&mut self, id: &SemId) -> bool {
+        if !self.root.as_ref().is_some_and(|root| under(root, id)) {
+            return false;
+        }
+        self.set_focus(self.at(id));
+        true
+    }
+
+    fn blur(&mut self) -> bool {
+        let had = self.focus.is_some();
+        self.set_focus(None);
+        had
     }
 }
 

@@ -145,11 +145,28 @@ fn a_text_several_literals_hold_is_listed_and_not_opened() {
 
 #[test]
 fn a_formatted_text_has_no_literal() {
-    let page = staged("Data Table");
-    let shown = "crates/comps/src/file_0.rs";
+    let page = staged("Slider");
+    let shown = "step 1: 4";
     let origin = origin_of(&page, on_text(page.compositor(), shown));
     assert_eq!(origin, Origin::Formatted(shown.to_owned()));
     assert_eq!(origin.site(), None);
+
+    // a row of the data table is formatted too, and since the component
+    // pages project (task-75 phase 2b) it is a bound row: it leads to the
+    // row the page projects
+    let page = staged("Data Table");
+    let origin = origin_of(
+        &page,
+        on_text(page.compositor(), "crates/comps/src/file_0.rs"),
+    );
+    let Origin::Projected { id, site } = &origin else {
+        panic!("{origin}");
+    };
+    assert_eq!(id.as_str(), "table_page.table[0]");
+    assert!(
+        site.file
+            .ends_with("crates/showcase/src/view/components/table.rs")
+    );
 
     // the todo's counter is formatted too, but it sits inside the bound
     // card: the control is what a click there finds

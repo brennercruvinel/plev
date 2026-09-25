@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "80af7102559656c0",
+    "nodes": 2
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "select_page",
       "z": 0,
       "hash": "2398615344c855b3",
       "nodes": 9,
@@ -51,5 +54,22 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "select_page.select",
+      "layer": "select_page",
+      "rect": [
+        288.0,
+        171.56,
+        240.0,
+        44.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    }
+  ]
 }

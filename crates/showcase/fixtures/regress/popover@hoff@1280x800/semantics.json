@@ -1,0 +1,22 @@
+{
+  "nodes": [
+    {
+      "id": "tooltip_page",
+      "role": "region",
+      "label": "Popover"
+    },
+    {
+      "id": "tooltip_page.button",
+      "role": "button",
+      "label": "Hover me",
+      "description": "Tooltips wait 450 ms, then place themselves above the anchor, or below when there is no room.",
+      "parent": "tooltip_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

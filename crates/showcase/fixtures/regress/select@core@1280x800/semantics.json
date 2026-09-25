@@ -1,0 +1,59 @@
+{
+  "nodes": [
+    {
+      "id": "select_page",
+      "role": "region",
+      "label": "Select"
+    },
+    {
+      "id": "select_page.select",
+      "role": "select",
+      "label": "appearance",
+      "parent": "select_page",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "System default"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "select_page.select:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "select_page.select:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "select_page.select:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "System default",
+          "Always dark",
+          "Always light",
+          "Scheduled"
+        ]
+      },
+      "focusable": true
+    }
+  ]
+}

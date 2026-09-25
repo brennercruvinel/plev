@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "95b6c6c1c1d5c9d4",
+    "nodes": 5
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "toast_page",
       "z": 0,
       "hash": "9cc101b695dc2d06",
       "nodes": 24,
@@ -51,5 +54,70 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "toast_page.button[neutral]",
+      "layer": "toast_page",
+      "rect": [
+        288.0,
+        134.2,
+        96.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "toast_page.button[success]",
+      "layer": "toast_page",
+      "rect": [
+        396.0,
+        134.2,
+        104.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "toast_page.button[error]",
+      "layer": "toast_page",
+      "rect": [
+        512.0,
+        134.2,
+        81.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "toast_page.button[info]",
+      "layer": "toast_page",
+      "rect": [
+        605.0,
+        134.2,
+        73.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
 }

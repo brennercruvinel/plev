@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "a0a1dd29ac4a13d0",
+    "nodes": 7
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "breadcrumb_page",
       "z": 0,
       "hash": "bf8d9540e76244a5",
       "nodes": 13,
@@ -51,5 +54,102 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "breadcrumb_page.trail",
+      "layer": "breadcrumb_page",
+      "rect": [
+        288.0,
+        131.6,
+        360.0,
+        19.6
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "breadcrumb_page.trail[0]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        288.0,
+        131.6,
+        41.37,
+        19.6
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "breadcrumb_page.trail[1]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        353.37,
+        131.6,
+        44.212,
+        19.6
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "breadcrumb_page.trail[2]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        421.582,
+        131.6,
+        19.894001,
+        19.6
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "breadcrumb_page.trail[3]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        465.476,
+        131.6,
+        50.134003,
+        19.6
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "breadcrumb_page.trail[4]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        539.61,
+        131.6,
+        49.447998,
+        19.6
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    }
+  ]
 }

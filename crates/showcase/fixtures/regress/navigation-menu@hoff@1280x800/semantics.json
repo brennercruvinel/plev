@@ -1,0 +1,97 @@
+{
+  "nodes": [
+    {
+      "id": "navigation_menu_page",
+      "role": "region",
+      "label": "Navigation Menu"
+    },
+    {
+      "id": "navigation_menu_page.link[0]",
+      "role": "link",
+      "label": "Workspace",
+      "description": "1",
+      "parent": "navigation_menu_page",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "navigation_menu_page.link[0]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "navigation_menu_page.link[1]",
+      "role": "link",
+      "label": "Branches",
+      "description": "2",
+      "parent": "navigation_menu_page",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "navigation_menu_page.link[1]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "navigation_menu_page.link[2]",
+      "role": "link",
+      "label": "History",
+      "description": "4",
+      "parent": "navigation_menu_page",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "navigation_menu_page.link[2]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "navigation_menu_page.link[3]",
+      "role": "link",
+      "label": "A label long enough to truncate in a narrow rail",
+      "description": "9",
+      "parent": "navigation_menu_page",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "navigation_menu_page.link[3]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "54f747095d302e7e",
+    "nodes": 13
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "table_page",
       "z": 0,
       "hash": "ebcf45e9e12ca0fb",
       "nodes": 57,
@@ -51,5 +54,166 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "table_page.table",
+      "layer": "table_page",
+      "rect": [
+        288.0,
+        131.6,
+        952.0,
+        420.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "table_page.table[0]",
+      "layer": "table_page",
+      "rect": [
+        288.0,
+        167.6,
+        952.0,
+        48.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "table_page.table[1]",
+      "layer": "table_page",
+      "rect": [
+        288.0,
+        215.6,
+        952.0,
+        48.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "table_page.table[2]",
+      "layer": "table_page",
+      "rect": [
+        288.0,
+        263.6,
+        952.0,
+        48.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "table_page.table[3]",
+      "layer": "table_page",
+      "rect": [
+        288.0,
+        311.6,
+        952.0,
+        48.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "table_page.table[4]",
+      "layer": "table_page",
+      "rect": [
+        288.0,
+        359.6,
+        952.0,
+        48.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "table_page.table[5]",
+      "layer": "table_page",
+      "rect": [
+        288.0,
+        407.6,
+        952.0,
+        48.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "table_page.table[6]",
+      "layer": "table_page",
+      "rect": [
+        288.0,
+        455.6,
+        952.0,
+        48.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "table_page.table[7]",
+      "layer": "table_page",
+      "rect": [
+        288.0,
+        503.6,
+        952.0,
+        47.99997
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    },
+    {
+      "id": "table_page.table[8]",
+      "layer": "table_page",
+      "rect": [
+        288.0,
+        551.6,
+        952.0,
+        0.0
+      ],
+      "clip": [
+        248.0,
+        131.6,
+        1032.0,
+        628.4
+      ]
+    }
+  ]
 }

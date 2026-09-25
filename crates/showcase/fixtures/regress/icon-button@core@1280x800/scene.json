@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "2b934f436f14c437",
+    "nodes": 8
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "icon_button_page",
       "z": 0,
       "hash": "871b3a0c941d685a",
       "nodes": 17,
@@ -51,5 +54,118 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "icon_button_page.button[copy]",
+      "layer": "icon_button_page",
+      "rect": [
+        288.0,
+        134.2,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "icon_button_page.button[search]",
+      "layer": "icon_button_page",
+      "rect": [
+        340.0,
+        134.2,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "icon_button_page.button[settings]",
+      "layer": "icon_button_page",
+      "rect": [
+        392.0,
+        134.2,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "icon_button_page.button[trash]",
+      "layer": "icon_button_page",
+      "rect": [
+        444.0,
+        134.2,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "icon_button_page.button[save]",
+      "layer": "icon_button_page",
+      "rect": [
+        496.0,
+        134.2,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "icon_button_page.button[play]",
+      "layer": "icon_button_page",
+      "rect": [
+        532.0,
+        134.2,
+        36.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "icon_button_page.button[undo]",
+      "layer": "icon_button_page",
+      "rect": [
+        580.0,
+        134.2,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
 }

@@ -1,0 +1,551 @@
+{
+  "nodes": [
+    {
+      "id": "button_page",
+      "role": "region",
+      "label": "Button Group"
+    },
+    {
+      "id": "button_page.group[0]",
+      "role": "group",
+      "label": "Button, medium",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[0].card[0]",
+      "role": "button",
+      "label": "Button",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[0].card[1]",
+      "role": "button",
+      "label": "Button",
+      "description": "Disabled",
+      "parent": "button_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[1]",
+      "role": "group",
+      "label": "Button, medium with icon",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[1].card[0]",
+      "role": "button",
+      "label": "Button",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[1].card[1]",
+      "role": "button",
+      "label": "Button",
+      "description": "Disabled",
+      "parent": "button_page.group[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[2]",
+      "role": "group",
+      "label": "Button, small",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[2].card[0]",
+      "role": "button",
+      "label": "Button",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[2].card[1]",
+      "role": "button",
+      "label": "Button",
+      "description": "Disabled",
+      "parent": "button_page.group[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[3]",
+      "role": "group",
+      "label": "Button, small with icon",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[3].card[0]",
+      "role": "button",
+      "label": "Button",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[3]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[3].card[1]",
+      "role": "button",
+      "label": "Button",
+      "description": "Disabled",
+      "parent": "button_page.group[3]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[4]",
+      "role": "group",
+      "label": "Call to action",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[4].card[0]",
+      "role": "button",
+      "label": "Button",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[4]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[4].card[1]",
+      "role": "button",
+      "label": "Button",
+      "description": "Disabled",
+      "parent": "button_page.group[4]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[5]",
+      "role": "group",
+      "label": "Warning button",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[5].card[0]",
+      "role": "button",
+      "label": "Button",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[5]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[5].card[1]",
+      "role": "button",
+      "label": "Button",
+      "description": "Disabled",
+      "parent": "button_page.group[5]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[6]",
+      "role": "group",
+      "label": "Sign in button",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[6].card[0]",
+      "role": "button",
+      "label": "Sign in with Google",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[6]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[6].card[1]",
+      "role": "button",
+      "label": "Sign in with Google",
+      "description": "Disabled",
+      "parent": "button_page.group[6]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[7]",
+      "role": "group",
+      "label": "Ghost icon button",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[7].card[0]",
+      "role": "button",
+      "label": "x",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[7]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[7].card[1]",
+      "role": "button",
+      "label": "x",
+      "description": "Disabled",
+      "parent": "button_page.group[7]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[8]",
+      "role": "group",
+      "label": "Large icon button",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[8].card[0]",
+      "role": "button",
+      "label": "plus",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[8]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[8].card[1]",
+      "role": "button",
+      "label": "plus",
+      "description": "Disabled",
+      "parent": "button_page.group[8]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[9]",
+      "role": "group",
+      "label": "Small icon button",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[9].card[0]",
+      "role": "button",
+      "label": "plus",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[9]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[9].card[1]",
+      "role": "button",
+      "label": "plus",
+      "description": "Disabled",
+      "parent": "button_page.group[9]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[10]",
+      "role": "group",
+      "label": "Like button",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[10].card[0]",
+      "role": "button",
+      "label": "200",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[10]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[10].card[1]",
+      "role": "button",
+      "label": "200",
+      "description": "Disabled",
+      "parent": "button_page.group[10]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[11]",
+      "role": "group",
+      "label": "Toolbar button",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[11].card[0]",
+      "role": "button",
+      "label": "send",
+      "description": "Default, Hover",
+      "parent": "button_page.group[11]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "button_page.group[11].card[0]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[11].card[1]",
+      "role": "button",
+      "label": "send",
+      "description": "Disabled",
+      "parent": "button_page.group[11]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "button_page.group[11].card[1]:active"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[11].card[2]",
+      "role": "button",
+      "label": "send",
+      "description": "Active",
+      "parent": "button_page.group[11]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "button_page.group[11].card[2]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[12]",
+      "role": "group",
+      "label": "Like comment",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[12].card[0]",
+      "role": "button",
+      "label": "2",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "button_page.group[12]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[12].card[1]",
+      "role": "button",
+      "label": "2",
+      "description": "Disabled",
+      "parent": "button_page.group[12]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[13]",
+      "role": "group",
+      "label": "Submit button",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[13].card[0]",
+      "role": "button",
+      "label": "submit",
+      "description": "Default, Hover, Focus",
+      "parent": "button_page.group[13]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "button_page.group[13].card[0]:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[13].card[1]",
+      "role": "button",
+      "label": "submit",
+      "description": "Disabled",
+      "parent": "button_page.group[13]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "button_page.group[13].card[1]:busy"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "button_page.group[13].card[2]",
+      "role": "button",
+      "label": "submit",
+      "description": "Active",
+      "parent": "button_page.group[13]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "button_page.group[13].card[2]:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}
