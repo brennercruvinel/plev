@@ -12,7 +12,7 @@ date: 2026-09-23
 checkpoint a (task-62 phase c) had two LLM agents operate the ide through
 the contract only. the contract held, and the agents pointed at three
 gaps, none of which stopped the task
-(`docs/mission/steps/ongoing/task-62-ide-human-agent-proof.md`, "o que o
+(`docs/mission/steps/checked/task-62-ide-human-agent-proof-done.md`, "o que o
 experimento mostrou"):
 
 - a `node_added` in a delta carried only the id

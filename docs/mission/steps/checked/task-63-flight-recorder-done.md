@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: in-progress
+status: done
 last-updated: 2026-09-24
 domain: generative-runtime
 task: task-63
@@ -653,7 +653,7 @@ Arquivos principais:
   agent.rs, lib.rs, main.rs, keys.rs}, crates/ide/tests/record.rs (novo),
   crates/ide/Cargo.toml (inspect como dev-dependency), Cargo.lock
 - docs/ADR/session-recording-replay-not-reexecution.md,
-  docs/mission/steps/ongoing/task-63-flight-recorder.md
+  docs/mission/steps/checked/task-63-flight-recorder-done.md
 
 Interfaces adicionadas/alteradas:
 - adicionadas: rec::Bound, rec::VERSION_BINDINGS, Session::{bindings_at,

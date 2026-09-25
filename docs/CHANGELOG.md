@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- a sequence you repeat becomes one action (2026-09-24, task-70 phase
+  3): the Silences page notices when a person does the same actions in
+  the same order on each cut ("preview segment, then apply cut") and
+  offers to make them one action. only a person can accept; an agent is
+  refused. once accepted, the action exists on every cut, and on the
+  generated review a button runs it: each step is a request of its own,
+  checked against the state the step before left, and if one no longer
+  holds the sequence stops and says which step and why. nothing is
+  undone and nothing is kept past the session.
+
 - a change asked in words (2026-09-24, task-70 phase 2): with a
   generated surface open, the same propose of the row reads the intent as
   a change of it first. "too much information", "I can't compare these",

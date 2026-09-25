@@ -12,6 +12,28 @@ brenner, integração, decisão autônoma, bug relevante, agente disparado ou
 devolvido, publicação. o mais novo em cima. o detalhe fica no arquivo da
 task; aqui fica o que aconteceu e onde ler.
 
+## 2026-09-25
+
+### task-70 fase 3: a sequência repetida vira uma ação
+
+- **integrada:** `task/70c-composites` (9 commits, agente no Opus). o
+  detector lê os estágios do dispatcher, ao vivo e gravado; a pessoa
+  aceita ("make it one action") ou recusa ("not now"), um agente é
+  recusado; a composta vira ação de cada corte com a política mais
+  estreita dos passos e roda passo a passo, parando com o motivo quando
+  um passo envelhece. no `sem`, só dois métodos novos no
+  `SnapshotBuilder`.
+- **validação:** diff inteiro lido; as duas imagens conferidas. gate local
+  verde, 2932 passam, 0 falham (antes 2894); regress 175 sem mudança.
+- **dívida:** o host empresta ao `promote` um registro com o template
+  como mais um item; o lugar certo é o `promote` do `uir` (P2).
+- **fechadas:** task-62 (a prova no ide, cinco rodadas, a decisão do
+  checkpoint a já tomada) e task-63 (o gravador, fases a a d) movidas
+  para `checked/`.
+- **decisão do brenner (programa, decisão 15):** a task-78 compara candle
+  (com tokio) e burn. depois: "tira eletron", a comparação com Electron
+  saiu da task (item 6 e o critério de aceite). falta o modelo a baixar.
+
 ## 2026-09-24
 
 ### task-70 fase 2: a prova com o Claude de verdade não saiu

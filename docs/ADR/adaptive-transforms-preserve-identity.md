@@ -527,3 +527,19 @@ for transformations, not app actions. no transaction was needed.
 
 proposed by task-70 phase 3 (`task/70c-composites`); the orchestrator
 accepts it.
+
+### integração da fase 3
+
+accepted on 2026-09-24 by the orchestrator (merge of
+`task/70c-composites`). the whole diff read: `sem` gained two methods on
+`SnapshotBuilder` and changed no type; a composite's policy is the
+narrowest of its steps', so an agent never runs one with a step kept from
+it; the chain observes each step on the state the one before left. the
+images seen: the offer under the row after "preview segment, then apply
+cut" twice, and the composite's button on each cut once accepted. debt
+recorded: the host lends `promote` a registry where the item template
+counts as one more member of the collection (`registry` in
+`crates/surface/src/host.rs`); the right place is `uir`'s `promote`
+understanding a template, and then that detour goes (P2).
+local gate green, 2932 passed, 0 failed (was 2894); regress 175
+unchanged (2 new).
