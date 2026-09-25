@@ -97,7 +97,7 @@ pub(crate) struct Parts {
 }
 
 /// true when `actors` lets `actor` ask, as the dispatcher reads it.
-fn allows(actors: &Actors, actor: &Actor) -> bool {
+pub(crate) fn allows(actors: &Actors, actor: &Actor) -> bool {
     match actor {
         Actor::Human => actors.human,
         Actor::Agent { .. } => actors.agent,

@@ -30,6 +30,11 @@
 //!   and verified, and the errors go back to the model, `Llm::ATTEMPTS`
 //!   times at most. no provider lives here (phase 3b).
 //!
+//! `Rules` also reviews items (task-96, `review`): "review these three
+//! commits" takes the first three items of the kind the words name, each
+//! a card of its own with what it shows and its actions, and beside them
+//! the region those actions open.
+//!
 //! with a surface shown, the same two answer a change of it instead
 //! (task-70 phase 2, `adapt`): a `Transformer` answers operations of
 //! `uir::transform`, and `transform_verified` returns them only with the
@@ -54,6 +59,7 @@ mod ops;
 mod parts;
 mod prompt;
 mod reshape;
+mod review;
 mod row;
 mod rules;
 mod words;

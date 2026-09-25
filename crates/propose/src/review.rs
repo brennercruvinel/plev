@@ -1,0 +1,500 @@
+//! the review of items (task-96): "review these three commits", "revise
+//! estes três commits".
+//!
+//! a word of review ("review", "revisar", "revise", "revisa", "revisão")
+//! takes the intent down this path, before the grammar of the other
+//! parts, which it leaves as it was: every intent with such a word was a
+//! `NoMatch` before. the rest of the intent is read here: a number counts
+//! the items ("three", "três", "3"; without one, all of them), a word of
+//! order says where they are taken from, which is the top ("last",
+//! "recent", "últimos"), the fillers of the grammar are skipped, and every
+//! other word must name the items.
+//!
+//! the items, found by structure: the children of one node whose ids end
+//! in a key under one prefix (`stacks.commit[<sha>]`,
+//! `changes.file[<path>]`), in projection order, named by the item's name
+//! (`commit`) and by their parent's label and name (`stacks`). there is no
+//! list state to repeat over, and a review of "these three" is of these
+//! three: each one is a card of its own, fixed on the surface, never a
+//! repeat that would follow the list as it moves.
+//!
+//! each item shows, from the registry: its texts (the first as what names
+//! it, the rest as its detail; a frame ref as an image), its lists as a
+//! table each (a commit's files), its numbers as a stat each, and a
+//! button per action with no parameter that the author may ask for and
+//! that is not destructive (a commit's `show_diff`). what those actions
+//! read outside the item (the `diff:target` a `show_diff` reads) is the
+//! region they open, shown once beside the items: its texts, its numbers,
+//! and its lists as tables whose height the token `dropdown_max_h` bounds
+//! (the diff's lines). the items on the left and the region on the right,
+//! in a split; the items alone in a column when there is no region.
+//!
+//! the refusals, each with why: a word that names no item of the app
+//! (`NoMatch`, with the words of the items), nothing to review, no word
+//! that says which items when the app has more than one kind, fewer items
+//! than the number asked for (`Review`).
+
+use std::collections::{BTreeMap, BTreeSet};
+
+use sem::{ActionDecl, Node, SemId, Snapshot, StateRef, Value, ValueKind};
+use uir::{
+    Axis, CapabilityRef, Component, ControlSize, Elevation, Ir, IrNode, Layout, Props, Size,
+    SizeToken, SpacingToken, Surface, TypographyRole,
+};
+
+use crate::Ask;
+use crate::error::ProposeError;
+use crate::ids::{Anchor, Namer, anchors};
+use crate::list::last_key;
+use crate::parts::{allows, is_frame_ref};
+use crate::rules::stack;
+use crate::words::{fold, folded, is, is_filler, split};
+
+/// the words that ask for a review, english then portuguese, as written.
+const REVIEW: &[&str] = &[
+    "review",
+    "reviewing",
+    "revisar",
+    "revise",
+    "revisa",
+    "revisão",
+    "rever",
+    "reveja",
+];
+
+/// the words of where a review takes its items from: the top, as the app
+/// projects them.
+const ORDER: &[&str] = &[
+    "last", "latest", "recent", "newest", "top", "first", "ultimo", "ultima", "recente",
+    "primeiro", "primeira",
+];
+
+/// the numbers a review counts its items by, in words, both languages.
+const NUMBERS: [&[&str]; 10] = [
+    &["one", "um", "uma"],
+    &["two", "dois", "duas"],
+    &["three", "três"],
+    &["four", "quatro"],
+    &["five", "cinco"],
+    &["six", "seis"],
+    &["seven", "sete"],
+    &["eight", "oito"],
+    &["nine", "nove"],
+    &["ten", "dez"],
+];
+
+/// a review, as the intent asks for it.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub(crate) struct Review {
+    /// how many items, from the top; all of them when `None`.
+    pub count: Option<usize>,
+    /// the words left to name the items: (as written, folded).
+    pub words: Vec<(String, String)>,
+}
+
+/// the number `word` (folded) says, in digits or in words.
+fn number(word: &str) -> Option<usize> {
+    if let Ok(n) = word.parse::<usize>() {
+        return Some(n);
+    }
+    NUMBERS
+        .iter()
+        .position(|names| is(word, names))
+        .map(|at| at + 1)
+}
+
+/// the review `intent` asks for; `None` when no word of it asks for one,
+/// and the rules read it as they always did.
+pub(crate) fn read(intent: &str) -> Option<Review> {
+    let mut asked = false;
+    let mut review = Review::default();
+    for written in split(intent) {
+        let word = fold(written);
+        if is(&word, REVIEW) {
+            asked = true;
+        } else if let Some(n) = number(&word) {
+            review.count.get_or_insert(n);
+        } else if !is(&word, ORDER) && !is_filler(&word) {
+            review.words.push((written.to_owned(), word));
+        }
+    }
+    asked.then_some(review)
+}
+
+/// items of one kind: the children of one node keyed under one prefix.
+struct Kind<'a> {
+    parent: &'a Node,
+    /// the items' own name, the last name of the prefix: `commit`.
+    name: String,
+    /// the item's name and the parent's label and name, folded.
+    words: BTreeSet<String>,
+    members: Vec<&'a Node>,
+}
+
+/// the last name of `id`, without its keys: `commit` of `stacks.commit`.
+fn last_name(id: &str) -> &str {
+    let bare = id.split('[').next().unwrap_or(id);
+    bare.rsplit('.').next().unwrap_or(bare)
+}
+
+/// every kind of item of `app`, in projection order.
+fn kinds(app: &Snapshot) -> Vec<Kind<'_>> {
+    let mut out = Vec::new();
+    for parent in app.nodes().values() {
+        if parent.constraints.secret {
+            continue;
+        }
+        let mut by_prefix: BTreeMap<&str, Vec<&Node>> = BTreeMap::new();
+        let mut order = Vec::new();
+        for child in app.children(&parent.id) {
+            if let Some((prefix, _)) = last_key(child.id.as_str()) {
+                if !by_prefix.contains_key(prefix) {
+                    order.push(prefix);
+                }
+                by_prefix.entry(prefix).or_default().push(child);
+            }
+        }
+        for prefix in order {
+            let members = by_prefix.remove(prefix).unwrap_or_default();
+            let name = fold(last_name(prefix));
+            let mut words = folded(&parent.label);
+            words.extend(split(last_name(parent.id.as_str())).map(fold));
+            words.insert(name.clone());
+            out.push(Kind {
+                parent,
+                name,
+                words,
+                members,
+            });
+        }
+    }
+    out
+}
+
+/// the kind the words name, or why there is none.
+fn chosen<'a>(review: &Review, kinds: Vec<Kind<'a>>) -> Result<Kind<'a>, ProposeError> {
+    if kinds.is_empty() {
+        return Err(ProposeError::Review(
+            "there is nothing to review here: no items of one kind under one node".to_owned(),
+        ));
+    }
+    if review.words.is_empty() {
+        let names: Vec<String> = kinds.iter().map(|k| k.name.clone()).collect();
+        return match <[Kind; 1]>::try_from(kinds) {
+            Ok([only]) => Ok(only),
+            Err(_) => Err(ProposeError::Review(format!(
+                "say which items to review: {}",
+                names.join(", ")
+            ))),
+        };
+    }
+    let every: BTreeSet<&String> = kinds.iter().flat_map(|k| &k.words).collect();
+    let unknown: Vec<String> = review
+        .words
+        .iter()
+        .filter(|(_, w)| !every.contains(w))
+        .map(|(written, _)| written.clone())
+        .collect();
+    let app: Vec<String> = every.into_iter().cloned().collect();
+    let named = |k: &Kind| review.words.iter().all(|(_, w)| k.words.contains(w));
+    match kinds.into_iter().find(named) {
+        Some(kind) if unknown.is_empty() => Ok(kind),
+        _ => {
+            let words = if unknown.is_empty() {
+                review.words.iter().map(|(w, _)| w.clone()).collect()
+            } else {
+                unknown
+            };
+            Err(ProposeError::NoMatch { words, app })
+        }
+    }
+}
+
+/// what a proposal of a review builds with.
+struct Build<'a> {
+    namer: Namer,
+    max: usize,
+    ask: &'a Ask<'a>,
+}
+
+/// the first `max` characters of `text`.
+fn clip(text: &str, max: usize) -> String {
+    text.chars().take(max).collect()
+}
+
+/// a state's key as a label: `cut_secs` reads "cut secs".
+fn label(key: &str) -> String {
+    key.replace('_', " ")
+}
+
+impl Build<'_> {
+    /// a node bound to `anchor`, named `name` and labelled `text`.
+    fn bound(&mut self, mut node: IrNode, anchor: Anchor, name: &str, text: String) -> IrNode {
+        let (id, text) = self.namer.bound(&anchor, name, text);
+        node.sem = id;
+        if !text.is_empty() {
+            node.label = Some(clip(&text, self.max));
+        }
+        node
+    }
+
+    fn container(&mut self, name: &str, label: Option<String>, children: Vec<IrNode>) -> IrNode {
+        let mut held = BTreeSet::new();
+        for c in &children {
+            held.extend(anchors(c));
+        }
+        let label = label.map(|l| clip(&l, self.max));
+        let (id, label) = self.namer.container(&held, name, label);
+        let mut node = IrNode::new(id);
+        node.label = label;
+        node.children = children;
+        node
+    }
+
+    /// what the registry holds of `node`'s state, in its order.
+    fn data<'n>(&self, node: &'n Node) -> Vec<(&'n sem::StateKey, &'n Value)> {
+        node.state
+            .iter()
+            .filter(|(key, _)| {
+                let at = StateRef::new(node.id.clone(), (*key).clone());
+                self.ask.caps.datum(&at).is_some()
+            })
+            .collect()
+    }
+
+    /// `node`'s state shown by sense: each text (the first larger, as what
+    /// names it), each list as a table (bounded in height when `bounded`),
+    /// each number as a stat.
+    fn shows(&mut self, node: &Node, bounded: bool) -> Vec<IrNode> {
+        let mut out = Vec::new();
+        let mut texts = 0;
+        for (key, value) in self.data(node) {
+            let at = StateRef::new(node.id.clone(), key.clone());
+            let name = format!("{}.{key}", node.id);
+            let mut n = IrNode::new(node.id.clone());
+            let anchor = Anchor::State(at.clone());
+            match value.kind() {
+                ValueKind::Text if is_frame_ref(self.ask.app, value) => {
+                    n.component = Some(Component::Image);
+                    n.props.control_size = Some(ControlSize::Xl);
+                    n.bind.state.insert("source".to_owned(), at);
+                    out.push(self.bound(n, anchor, &name, label(key.as_str())));
+                }
+                ValueKind::Text => {
+                    n.component = Some(Component::Text);
+                    let role = match texts {
+                        0 => TypographyRole::Base2sm,
+                        _ => TypographyRole::CaptionR,
+                    };
+                    n.props.typography = Some(role);
+                    n.bind.state.insert("text".to_owned(), at);
+                    texts += 1;
+                    out.push(self.bound(n, anchor, &name, String::new()));
+                }
+                ValueKind::List | ValueKind::Set => {
+                    n.component = Some(Component::Table);
+                    n.bind.state.insert("rows".to_owned(), at);
+                    if bounded {
+                        n.size = Size {
+                            max: Some(SizeToken::DropdownMaxH),
+                            ..Size::default()
+                        };
+                    }
+                    out.push(self.bound(n, anchor, &name, label(key.as_str())));
+                }
+                ValueKind::Int | ValueKind::Num => {
+                    n.component = Some(Component::Stat);
+                    n.props.typography = Some(TypographyRole::BaseM);
+                    n.bind.state.insert("value".to_owned(), at);
+                    out.push(self.bound(n, anchor, &name, label(key.as_str())));
+                }
+                ValueKind::Bool => {}
+            }
+        }
+        out
+    }
+
+    /// whether the author may bind `decl` of `node` on a button: in the
+    /// registry, no parameter, allowed to the author, not destructive.
+    fn usable(&self, node: &Node, decl: &ActionDecl) -> bool {
+        decl.param.is_none()
+            && !decl.policy.destructive
+            && allows(&decl.policy.actors, &self.ask.policy.author)
+            && self.ask.caps.action(&node.id, &decl.name).is_some()
+    }
+
+    /// a small button per action of `node` the author may ask for.
+    fn buttons(&mut self, node: &Node) -> Vec<IrNode> {
+        let usable: Vec<&ActionDecl> = node
+            .actions
+            .iter()
+            .filter(|d| self.usable(node, d))
+            .collect();
+        let mut out = Vec::new();
+        for decl in usable {
+            let cap = CapabilityRef {
+                target: node.id.clone(),
+                action: decl.name.clone(),
+            };
+            let mut button = IrNode::new(node.id.clone());
+            button.component = Some(Component::Button);
+            button.props.control_size = Some(ControlSize::Xs);
+            button
+                .bind
+                .actions
+                .insert("activate".to_owned(), cap.clone());
+            let text = decl
+                .label
+                .clone()
+                .unwrap_or_else(|| label(decl.name.as_str()));
+            let name = format!("{}.{}", node.id, decl.name);
+            out.push(self.bound(button, Anchor::Action(cap), &name, text));
+        }
+        out
+    }
+
+    /// one item as a card: what it shows, then its actions in a row.
+    fn item(&mut self, node: &Node) -> IrNode {
+        let mut children = self.shows(node, false);
+        let buttons = self.buttons(node);
+        if buttons.len() > 1 {
+            let name = format!("{}.actions", node.id);
+            let mut row = self.container(&name, None, buttons);
+            row.layout = stack(Axis::Horizontal, SpacingToken::Sm, None);
+            children.push(row);
+        } else {
+            children.extend(buttons);
+        }
+        let mut card = self.container(node.id.as_str(), Some(node.label.clone()), children);
+        card.component = Some(Component::Card);
+        card.props.padding = Some(SpacingToken::Md);
+        card.layout = stack(Axis::Vertical, SpacingToken::Xs, None);
+        card
+    }
+
+    /// the region the items' actions read outside them: `node`'s state,
+    /// its lists bounded in height.
+    fn region(&mut self, node: &Node) -> IrNode {
+        let children = self.shows(node, true);
+        let mut group = self.container(node.id.as_str(), Some(node.label.clone()), children);
+        group.layout = stack(Axis::Vertical, SpacingToken::Sm, None);
+        group
+    }
+}
+
+/// the nodes the actions of `members` read outside them, in the order
+/// they are first read, each once: the region those actions open.
+fn regions<'a>(
+    app: &'a Snapshot,
+    members: &[&Node],
+    usable: impl Fn(&Node, &ActionDecl) -> bool,
+) -> Vec<&'a Node> {
+    let own: BTreeSet<&SemId> = members.iter().map(|m| &m.id).collect();
+    let mut seen = BTreeSet::new();
+    let mut out = Vec::new();
+    for m in members {
+        for decl in m.actions.iter().filter(|d| usable(m, d)) {
+            for read in &decl.reads {
+                if own.contains(&read.node) || !seen.insert(read.node.clone()) {
+                    continue;
+                }
+                if let Some(node) = app.get(&read.node).filter(|n| !n.constraints.secret) {
+                    out.push(node);
+                }
+            }
+        }
+    }
+    out
+}
+
+/// the review `review` asks for over `ask`: a verified surface is still
+/// `propose_verified`'s to decide.
+pub(crate) fn propose(review: &Review, ask: &Ask<'_>) -> Result<Ir, ProposeError> {
+    let kind = chosen(review, kinds(ask.app))?;
+    let count = review.count.unwrap_or(kind.members.len());
+    if count == 0 || count > kind.members.len() {
+        return Err(ProposeError::Review(format!(
+            "{count} {} asked for, and {} has {}",
+            kind.name,
+            kind.parent.label,
+            kind.members.len()
+        )));
+    }
+    let members: Vec<&Node> = kind.members.iter().take(count).copied().collect();
+    let current = ask.current.map(|v| v.ir());
+    let mut build = Build {
+        namer: Namer::new(current, ask.app),
+        max: ask.policy.max_text,
+        ask,
+    };
+    let usable = |n: &Node, d: &ActionDecl| build.usable(n, d);
+    let regions = regions(ask.app, &members, usable);
+    let items: Vec<IrNode> = members.iter().map(|m| build.item(m)).collect();
+    let name = last_name(kind.parent.id.as_str()).to_owned();
+    let mut list = build.container(&name, Some(kind.parent.label.clone()), items);
+    list.layout = stack(Axis::Vertical, SpacingToken::Md, None);
+    let mut shown: Vec<IrNode> = regions.iter().map(|r| build.region(r)).collect();
+    let side = match shown.len() {
+        0 => None,
+        1 => shown.pop(),
+        _ => {
+            let mut all = build.container("regions", None, shown);
+            all.layout = stack(Axis::Vertical, SpacingToken::Md, None);
+            Some(all)
+        }
+    };
+    let (children, layout) = match side {
+        None => (vec![list], stack(Axis::Vertical, SpacingToken::Md, None)),
+        Some(side) => {
+            let split = Layout::Split {
+                axis: Axis::Horizontal,
+                ratio: 50,
+            };
+            (vec![list, side], Some(split))
+        }
+    };
+    let (id, label) = build.namer.root(None);
+    let mut root = IrNode::new(id);
+    root.component = Some(Component::Card);
+    root.label = label.map(|l| clip(&l, build.max));
+    root.props = Props {
+        padding: Some(SpacingToken::Lg),
+        elevation: Some(Elevation::Raised),
+        ..Props::default()
+    };
+    root.layout = layout;
+    root.children = children;
+    let title = match current {
+        Some(ir) => ir.surface.title.clone(),
+        None => clip(ask.intent.trim(), build.max),
+    };
+    Ok(Ir::new(Surface {
+        id: build.namer.surface().clone(),
+        title,
+        root,
+    }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_review_reads_its_number_in_both_languages() {
+        let en = read("review these three commits").unwrap();
+        let pt = read("revise estes três commits").unwrap();
+        assert_eq!(en.count, Some(3));
+        assert_eq!(pt.count, Some(3));
+        assert_eq!(en.words, [("commits".to_owned(), "commit".to_owned())]);
+        assert_eq!(pt.words, en.words);
+        assert_eq!(read("review the last 2 files").unwrap().count, Some(2));
+        assert_eq!(
+            read("revisar os dois últimos commits").unwrap().count,
+            Some(2)
+        );
+        assert_eq!(read("review the commits").unwrap().count, None);
+        for none in ["the items", "compare the original with the cuts", "tudo"] {
+            assert_eq!(read(none), None, "{none}");
+        }
+    }
+}
