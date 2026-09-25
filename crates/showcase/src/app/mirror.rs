@@ -13,6 +13,10 @@
 //! main"), and a recording keeps a watch that begins as an observation
 //! of its agent (the port tells the host, `Host::observed`). A camera's
 //! frames never travel: the codec sends a stream image's size and place.
+//! Nor does a secret (task-79 phase 2): each frame is written with the
+//! places of the bound controls the port's one rule counts as secret, in
+//! the gallery's projection at that frame, masked ([`masks`]): what is
+//! drawn there stays out of the frame, a box in its stead.
 //!
 //! The viewer's side, [`Viewer`]: a watch's replies put back together
 //! (`wire::SceneReader`), applied to a `rec::scene::Mirror`, and drawn
@@ -30,8 +34,9 @@ use std::path::Path;
 
 use engine::accessibility::primary;
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use rec::scene::{Brought, Frame, Head, Incoming, Mirror, Sender};
-use sem::{ActionName, Actor, Change, Rejection, Revision, SemId, Stage};
+use rec::scene::{Brought, Frame, Head, Incoming, Mask, Mirror, Sender};
+use sem::redact::is_secret;
+use sem::{ActionName, Actor, Change, Rejection, Revision, SemId, Snapshot, Stage};
 use winit::window::WindowId;
 use wire::{
     Act, AgentPort, Bound, Client, LayerBody, Observe, Offer, OfferLayer, Reply, SceneReader,
@@ -54,28 +59,50 @@ pub struct Scenes {
 
 impl Scenes {
     /// Offers `compositor`'s frame of `window`, laid out and cleared as
-    /// `head` says, to the port's watches of it. Nothing is written when
-    /// none watches (and the writer of that window is let go). True when
-    /// a frame was offered.
+    /// `head` says, to the port's watches of it, with what a secret draws
+    /// masked ([`masks`]) by `now`, the app's projection at this frame,
+    /// asked only when someone watches. Nothing is written when none
+    /// watches (and the writer of that window is let go). True when a
+    /// frame was offered.
     pub fn offer(
         &mut self,
         port: &mut AgentPort,
         window: &str,
         compositor: &Compositor,
         head: Head,
+        now: impl FnOnce() -> Option<Snapshot>,
     ) -> bool {
         tell_watches(port);
         if !port.watching(window) {
             self.senders.remove(window);
             return false;
         }
+        let masks = masks(now().as_ref(), compositor);
         let sender = self.senders.entry(window.to_owned()).or_default();
-        let frame = sender.frame(compositor, head);
+        let frame = sender.frame_masked(compositor, head, &masks);
         port.offer_scene(window, &offer(frame, compositor));
         // a watcher cut off by this offer
         tell_watches(port);
         true
     }
+}
+
+/// The places of `compositor`'s frame whose drawing never travels: every
+/// bound control the one rule of the port counts as secret in `now`, the
+/// app's projection at this frame (`sem::redact::is_secret`: marked
+/// secret, or not held by the projection, or no projection at all; the
+/// rule fails closed), at the rect it is bound to on its layer, the part
+/// a clip hides included. The codec leaves what is drawn there out of the
+/// frame and writes a box in its stead (`rec::scene::Sender::frame_masked`).
+pub fn masks(now: Option<&Snapshot>, compositor: &Compositor) -> Vec<Mask> {
+    compositor
+        .bindings()
+        .filter(|(id, _)| is_secret(now, id))
+        .map(|(_, b)| Mask {
+            layer: b.layer.0,
+            rect: b.rect,
+        })
+        .collect()
 }
 
 /// Logs who began and who ended watching which window since the last
@@ -171,9 +198,12 @@ impl App {
             scale: host.scale_factor() as f32,
             clear,
         };
+        let view = &self.view;
         self.access
             .scenes
-            .offer(port, name, host.compositor(), head);
+            .offer(port, name, host.compositor(), head, || {
+                view.gallery_semantics().ok()
+            });
     }
 
     /// Every window's frame to its watches: after a drain of the port, so

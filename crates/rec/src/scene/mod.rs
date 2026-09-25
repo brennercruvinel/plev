@@ -44,9 +44,15 @@
 //! a stream image (`engine::gpu::image_is_stream`: a camera's frames)
 //! never travels with its pixels, whoever watches: the capture ADR keeps
 //! a camera's frames from every agent, and a watcher is an agent. the
-//! receiver draws a box in its place that says so ([`LIVE_LABEL`]). a text travels as its key, the string and the
-//! typography: the receiver shapes and rasterizes it with the same
-//! embedded fonts.
+//! receiver draws a box in its place that says so ([`LIVE_LABEL`]). a
+//! text travels as its key, the string and the typography: the receiver
+//! shapes and rasterizes it with the same embedded fonts.
+//!
+//! a secret never travels either (task-79 phase 2): the app names the
+//! places its secrets are bound to ([`Mask`]), and the sender leaves what
+//! a secret draws there out of the layer before anything is written,
+//! with a box that says so ([`SECRET_LABEL`]) in its stead
+//! ([`Sender::frame_masked`]).
 //!
 //! what the receiver holds follows two rules the sender keeps too: a
 //! layer is held at the hash of its last body; an asset is held while
@@ -55,10 +61,12 @@
 
 mod asset;
 mod bytes;
+mod mask;
 mod mirror;
 mod node;
 mod send;
 
+pub use mask::{Mask, SECRET_LABEL};
 pub use mirror::{Brought, ImageCounts, Incoming, LIVE_LABEL, Mirror};
 pub use node::{Drawn, Head, Props};
 pub use send::{Frame, LayerOut, Sender};
@@ -86,3 +94,5 @@ pub enum SceneError {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_mask;

@@ -373,7 +373,9 @@ fn app_child() {
                 println!("{SAID}acted {drawn:016x}");
             }
             let clear = view.theme.colors.bg.to_linear_array();
-            scenes.offer(&mut port, MAIN, host.compositor(), head(clear));
+            scenes.offer(&mut port, MAIN, host.compositor(), head(clear), || {
+                view.gallery_semantics().ok()
+            });
         }
         let Ok(cmd) = cmds.try_recv() else {
             continue;
@@ -418,7 +420,9 @@ fn app_child() {
         println!("{SAID}drawn {drawn:016x}");
         let clear = view.theme.colors.bg.to_linear_array();
         let at = Instant::now();
-        scenes.offer(&mut port, MAIN, host.compositor(), head(clear));
+        scenes.offer(&mut port, MAIN, host.compositor(), head(clear), || {
+            view.gallery_semantics().ok()
+        });
         println!("{SAID}offered {}", at.elapsed().as_micros());
     }
 }

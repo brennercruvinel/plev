@@ -117,7 +117,10 @@ impl Gallery {
             scale: 1.0,
             clear: self.view.theme.colors.bg.to_linear_array(),
         };
-        self.scenes.offer(&mut self.port, MAIN, &self.c, head);
+        let view = &self.view;
+        self.scenes.offer(&mut self.port, MAIN, &self.c, head, || {
+            view.gallery_semantics().ok()
+        });
     }
 
     /// Serves the port while `client` runs on a thread of its own; what
