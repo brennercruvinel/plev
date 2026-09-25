@@ -5,4 +5,7 @@
 
 mod accept;
 mod model;
+mod privacy;
+mod readonly;
 mod support;
+mod viewport;
