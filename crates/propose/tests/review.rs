@@ -143,7 +143,11 @@ fn review_these_three_commits_shows_the_three_with_their_files_and_the_diff() {
     assert_eq!(region.sem.as_str(), "proposed.diff");
     assert_eq!(region.component, Some(Component::Card));
     let last = region.children.last().map(|c| c.sem.as_str());
-    assert_eq!(last, Some("proposed.diff.lines"), "the lines last, to scroll");
+    assert_eq!(
+        last,
+        Some("proposed.diff.lines"),
+        "the lines last, to scroll"
+    );
     assert_eq!(bound(root, "proposed.diff.target"), ["text=diff:target"]);
     assert_eq!(bound(root, "proposed.diff.lines"), ["rows=diff:lines"]);
     assert_eq!(bound(root, "proposed.diff.count"), ["value=diff:count"]);
