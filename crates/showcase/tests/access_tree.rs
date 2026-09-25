@@ -1,12 +1,10 @@
 //! Every page of the gallery as a screen reader meets it (task-75 phase
 //! 1): the tree the shell's bridge builds from the page's projection,
 //! placed by one drawn frame, checked for what a reader needs. Every
-//! control has a name and a role that takes focus (an item of a tab list
-//! or a tree once the arrows bring the focus to it: the widget is one
-//! stop of Tab, task-75 phase 2d); Tab and the reader walk the controls
-//! in the same order, and the page takes the focus the reader asks for;
-//! every action the tree offers reads back as a request the dispatcher
-//! admits from assistive technology.
+//! control has a name and a role that takes focus; Tab and the reader
+//! walk the controls in the same order, and the page takes the focus the
+//! reader asks for; every action the tree offers reads back as a request
+//! the dispatcher admits from assistive technology.
 //!
 //! Nothing here runs a request: the Files page asks the platform's own
 //! dialogs and the Surface page a model, and a test opens neither. What
@@ -295,38 +293,6 @@ impl Seen {
     fn presented(&self, id: &SemId) -> Option<(&SemId, &str)> {
         self.shown.ids.presented(id)
     }
-
-    /// Whether `node` is an item of a widget that is one stop of Tab
-    /// (task-75 phase 2d: a tab list, a tree) while another of its items
-    /// is that stop: the item takes the focus when the arrows bring it,
-    /// and until then it is out of the Tab sequence and out of the
-    /// reader's `Focus`, which the contract ties to it.
-    fn roves(&self, node: &sem::Node) -> bool {
-        let snapshot = &self.shown.snapshot;
-        let owner = match node.role {
-            Role::Tab => Role::TabList,
-            Role::TreeItem => Role::Tree,
-            _ => return false,
-        };
-        let mut at = node.parent.as_ref().and_then(|p| snapshot.get(p));
-        while let Some(n) = at.filter(|n| n.role != owner) {
-            at = n.parent.as_ref().and_then(|p| snapshot.get(p));
-        }
-        let Some(widget) = at else {
-            return false;
-        };
-        let stops: Vec<&SemId> = focus::order(snapshot)
-            .into_iter()
-            .filter(|id| {
-                let mut up = snapshot.get(id).and_then(|n| n.parent.as_ref());
-                while let Some(p) = up.filter(|p| *p != &widget.id) {
-                    up = snapshot.get(p).and_then(|n| n.parent.as_ref());
-                }
-                up.is_some()
-            })
-            .collect();
-        !node.focusable && stops.len() == 1
-    }
 }
 
 fn projecting() -> impl Iterator<Item = Seen> {
@@ -401,7 +367,7 @@ fn every_control_has_a_name_and_takes_focus_and_no_group_is_empty() {
                     "{title}: {id} is a control without a name"
                 );
             }
-            if node.role.is_interactive() && node.enabled && !node.inert && !seen.roves(node) {
+            if node.role.is_interactive() && node.enabled && !node.inert {
                 assert!(
                     n.supports_action(Action::Focus),
                     "{title}: {id} is a {} that takes no focus",

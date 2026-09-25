@@ -32,7 +32,8 @@
             "tabs_page.tabs:selected"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "tabs_page.tabs[2]",
@@ -46,7 +47,8 @@
             "tabs_page.tabs:selected"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "tabs_page.tabs",

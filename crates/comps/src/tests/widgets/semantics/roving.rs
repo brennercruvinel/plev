@@ -1,7 +1,7 @@
-//! the widgets that are one stop of Tab (task-75 phase 2d): a tab list, a
-//! tree, a list and a table make one item focusable (the focused one,
-//! else the chosen one, else the first), so the keyboard's Tab stops once
-//! in each and the arrows move the focus along the rest.
+//! the widgets that are one stop of Tab (task-75 phase 2d): a list and a
+//! table make one row focusable (the focused one, else the selected one
+//! in view, else the first in view), so the keyboard's Tab stops once in
+//! each and the arrows move the focus along the rest.
 
 use super::*;
 
@@ -12,54 +12,6 @@ fn stops(s: &Snapshot) -> Vec<String> {
         .filter(|n| n.focusable)
         .map(|n| n.id.to_string())
         .collect()
-}
-
-#[test]
-fn a_tab_list_is_one_stop_on_its_focused_tab_else_its_active_one() {
-    let view = id("view");
-    let mut tabs = Tabs::new(["files", "branches", "history"]);
-    let project = |tabs: &Tabs| {
-        snap(|b| {
-            tabs.project(b, &view, "view", None);
-        })
-    };
-    assert_eq!(stops(&project(&tabs)), ["view[0]"]);
-    tabs.active = 2;
-    assert_eq!(stops(&project(&tabs)), ["view[2]"], "the active tab");
-    tabs.set_focused_tab(Some(1));
-    assert_eq!(stops(&project(&tabs)), ["view[1]"], "the focused tab");
-    tabs.set_focused_tab(None);
-    tabs.active = 7;
-    assert_eq!(
-        stops(&project(&tabs)),
-        ["view[0]"],
-        "no such tab: the first"
-    );
-}
-
-#[test]
-fn a_tree_is_one_stop_on_its_focused_row_else_its_selected_one_else_the_first() {
-    let fs = id("fs");
-    let mut tree = Tree::new(vec![
-        TreeNode::branch(1, "src", vec![TreeNode::leaf(2, "main.rs")]),
-        TreeNode::leaf(3, "README.md"),
-    ]);
-    let project = |tree: &Tree| {
-        snap(|b| {
-            tree.project(b, &fs, "fs", None);
-        })
-    };
-    assert_eq!(stops(&project(&tree)), ["fs[1]"]);
-    tree.selected = Some(3);
-    assert_eq!(stops(&project(&tree)), ["fs[3]"], "the selected row");
-    tree.set_focused(Some(1));
-    assert_eq!(stops(&project(&tree)), ["fs[1]"], "the focused row");
-    tree.set_focused(Some(2));
-    assert_eq!(
-        stops(&project(&tree)),
-        ["fs[3]"],
-        "a row under a collapsed branch is no stop"
-    );
 }
 
 const LIST: Rect = Rect {

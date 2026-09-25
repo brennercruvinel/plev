@@ -4,11 +4,13 @@
 //! menu and an open select as the WAI-ARIA patterns ask and step a
 //! slider, and Enter and Space press what has the focus.
 //!
-//! A tab list, a tree, a list and a table are one stop of Tab each: their
-//! projection makes one item focusable (the focused one, else the chosen
-//! one, else the first; the comps decides), so `focus::next` stops once
-//! in each, and the arrows move the focus among all the items of the
-//! widget, focusable or not (the roving tabindex of WAI-ARIA).
+//! A list and a table are one stop of Tab each: their projection makes
+//! one row focusable (the focused one, else the selected one in view,
+//! else the first in view; the comps decides), so `focus::next` stops
+//! once in each, and the arrows move the focus among all the rows,
+//! focusable or not (the roving tabindex of WAI-ARIA). A tab list and a
+//! tree stay a stop per item: the contract ties a screen reader's focus
+//! to the Tab sequence, and an item out of it would lose that focus.
 //!
 //! There is one order and it is the projection's: `focus::next` over the
 //! view's snapshot (`ShowcaseView::semantics`: the page, the toasts and

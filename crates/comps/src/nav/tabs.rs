@@ -59,13 +59,10 @@ impl Tabs {
     /// (its index; empty without tabs), and one `Role::Tab` child
     /// `<id>[<index>]` per label with a `select` action that reads the
     /// list's `selected`, so a switch decided on a tab another actor left
-    /// goes stale. One tab takes the focus, the strip's one stop in the
-    /// Tab sequence: the focused tab, else the active one; the arrow keys
-    /// move the focus along the others. The hovered segment is never
-    /// projected. It only reads the widget; the app owns it and runs
-    /// `select` (sets `active`). Pass the id given to [`Tabs::sem`] so the
-    /// nodes and the bindings name the same controls. Returns the list's
-    /// node for the app to add to.
+    /// goes stale. The hovered segment is never projected. It only reads
+    /// the widget; the app owns it and runs `select` (sets `active`). Pass
+    /// the id given to [`Tabs::sem`] so the nodes and the bindings name the
+    /// same controls. Returns the list's node for the app to add to.
     #[track_caller]
     pub fn project<'b>(
         &self,
@@ -75,13 +72,9 @@ impl Tabs {
         parent: Option<&SemId>,
     ) -> NodeBuilder<'b> {
         let selected = format!("{id}:selected");
-        let stop = self
-            .focused_tab
-            .or((self.active < self.labels.len()).then_some(self.active))
-            .unwrap_or(0);
         for (i, tab) in self.labels.iter().enumerate() {
             let mut node = b.node(id.key(i.to_string()), Role::Tab, tab.as_str());
-            node.parent(id).focusable(i == stop);
+            node.parent(id);
             node.action("select").reads(selected.as_str());
         }
         let active = if self.active < self.labels.len() {

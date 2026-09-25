@@ -56,8 +56,9 @@ const PAGES: &[&str] = &[
 const UNREACHABLE: &[(&str, &str)] = &[("Resizable", "the split has no splitter role")];
 
 /// The pages with a widget that is one stop of Tab (task-75 phase 2d): a
-/// tab list, a tree, a list or a table.
-const COMPOSITE: &[&str] = &["Data Table", "Item", "Scroll Area", "Table", "Tabs", "Tree"];
+/// list or a table. A tab list and a tree stay a stop per item, a screen
+/// reader's focus being tied to the Tab sequence.
+const COMPOSITE: &[&str] = &["Data Table", "Item", "Scroll Area", "Table"];
 
 /// Whether `id` is `widget` or under it.
 fn inside(seen: &Snapshot, id: &SemId, widget: &SemId) -> bool {
@@ -86,20 +87,14 @@ impl Gallery {
             .collect()
     }
 
-    /// Each widget of the page that is one stop of Tab (a tab list, a
-    /// tree, a list, a table), with the nodes under it that take the
-    /// focus.
+    /// Each widget of the page that is one stop of Tab (a list, a
+    /// table), with the nodes under it that take the focus.
     fn stops(&self) -> Vec<(String, Vec<String>)> {
         let seen = self.view.semantics().unwrap_or_default();
         let order = focus::order(&seen);
         seen.nodes()
             .values()
-            .filter(|n| {
-                matches!(
-                    n.role,
-                    Role::TabList | Role::Tree | Role::List | Role::Table
-                )
-            })
+            .filter(|n| matches!(n.role, Role::List | Role::Table))
             .map(|w| {
                 let under = order.iter().filter(|id| inside(&seen, id, &w.id));
                 (w.id.to_string(), under.map(|id| id.to_string()).collect())
@@ -212,8 +207,7 @@ impl Gallery {
 /// Tab walks every component page in the order of its projection, the
 /// one a screen reader walks, and wraps; Shift-Tab walks it back; the
 /// focus is never nowhere once Tab took it, and the control that has it
-/// shows its ring. A tab list, a tree, a list and a table are one stop
-/// each.
+/// shows its ring. A list and a table are one stop each.
 #[test]
 fn tab_walks_every_component_page_in_the_projection_s_order_with_the_ring_on() {
     let mut unreachable = Vec::new();
@@ -275,7 +269,6 @@ fn the_arrows_walk_the_tabs_and_enter_and_space_select() {
         assert!(g.key(key), "{key:?}");
         assert_eq!(g.focused().as_deref(), Some(at), "{key:?}");
         assert!(g.ringed(at));
-        assert_eq!(g.order(), [at], "{key:?}: the focused tab is the stop");
     }
     let selected = |g: &Gallery| g.state_of("tabs_page.tabs", "selected");
     assert_eq!(
@@ -289,14 +282,6 @@ fn the_arrows_walk_the_tabs_and_enter_and_space_select() {
     assert!(g.space());
     assert_eq!(selected(&g), Some(Value::Text("1".into())));
     assert!(!g.nav(NavKey::Down), "a tab list is horizontal");
-    g.key(EditKey::End);
-    assert!(g.view.close_top_overlay(), "Escape blurs");
-    assert!(g.tab());
-    assert_eq!(
-        g.focused().as_deref(),
-        Some("tabs_page.tabs[1]"),
-        "Tab comes back on the active tab"
-    );
 }
 
 /// The tree: up and down along the rows it shows, right opens a closed
@@ -327,27 +312,11 @@ fn the_arrows_walk_the_tree_open_and_close_its_branches() {
     assert!(g.key(EditKey::Home));
     assert_eq!(g.focused().as_deref(), Some("tree_page.tree[1]"));
     assert!(g.ringed("tree_page.tree[1]"));
-    assert_eq!(
-        g.order(),
-        ["tree_page.tree[1]"],
-        "the focused row is the stop"
-    );
-    for _ in 0..4 {
-        assert!(g.nav(NavKey::Down));
-    }
-    assert_eq!(g.focused().as_deref(), Some("tree_page.tree[5]"));
+    g.tab_to("tree_page.tree[5]");
     assert!(g.enter());
     assert_eq!(
         g.state_of("tree_page.tree[5]", "selected"),
         Some(Value::Bool(true))
-    );
-    assert!(g.key(EditKey::Home));
-    assert!(g.view.close_top_overlay(), "Escape blurs");
-    assert!(g.tab());
-    assert_eq!(
-        g.focused().as_deref(),
-        Some("tree_page.tree[5]"),
-        "Tab comes back on the selected row"
     );
 }
 

@@ -64,7 +64,8 @@
             "tree_page.tree[2]:expanded"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "tree_page.tree[3]",
@@ -84,7 +85,8 @@
             "tree_page.tree[3]:selected"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "tree_page.tree[4]",
@@ -104,7 +106,8 @@
             "tree_page.tree[4]:selected"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "tree_page.tree[5]",
@@ -124,7 +127,8 @@
             "tree_page.tree[5]:selected"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "tree_page.tree[6]",
@@ -144,7 +148,8 @@
             "tree_page.tree[6]:selected"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "tree_page.tree[7]",
@@ -174,7 +179,8 @@
             "tree_page.tree[7]:expanded"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "tree_page.tree[10]",
@@ -194,7 +200,8 @@
             "tree_page.tree[10]:selected"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "tree_page.tree[11]",
@@ -214,7 +221,8 @@
             "tree_page.tree[11]:selected"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "tree_page.tree",
