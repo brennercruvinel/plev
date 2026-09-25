@@ -50,8 +50,26 @@ impl Rig {
             add.extend_from_slice(staged);
             git(at, &add);
         }
+        Rig::connect(dir)
+    }
+
+    /// The laboratory's repository of the review (task-96): three commits
+    /// over the first, and a note in the working tree that none of them
+    /// holds (`ide::lab_repo::review_in`), with a workbench connected.
+    // each test binary compiles this module whole; only the tests of the
+    // review start from it.
+    #[allow(dead_code)]
+    pub fn review() -> Rig {
+        let dir = TempDir::new().expect("temp dir");
+        ide::lab_repo::review_in(dir.path()).expect("the review's repository");
+        Rig::connect(dir)
+    }
+
+    /// A workbench on the repository in `dir`, on a real git worker, with
+    /// its first status, log and branches applied.
+    fn connect(dir: TempDir) -> Rig {
         let (tx, events) = channel();
-        let client = GitClient::spawn(at, move |event| {
+        let client = GitClient::spawn(dir.path(), move |event| {
             let _ = tx.send(event);
         })
         .expect("a git worker on the temp repository");

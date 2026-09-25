@@ -1,7 +1,8 @@
 //! the app under experiment: the ide's `Workbench` on the experiment's
 //! repository, its git worker waking this thread through a channel, and
 //! its frame drawn without a window through `engine::headless` when the
-//! machine has a GPU. the plev, scripted and screenshot arms start here.
+//! machine has a GPU. the plev, scripted, screenshot and review arms start
+//! here.
 
 use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender, channel};
 use std::time::{Duration, Instant};
@@ -42,7 +43,11 @@ impl Bench {
     /// and loaded (status, log and branches applied), the headless
     /// renderer opened at scale 1 when `draw` and the machine allow.
     pub fn open(draw: bool) -> Result<Bench, String> {
-        let repo = Repo::build()?;
+        Bench::open_on(Repo::build()?, draw)
+    }
+
+    /// `open`, on `repo` (the repository of the review, task-96).
+    pub fn open_on(repo: Repo, draw: bool) -> Result<Bench, String> {
         let (tx, rx) = channel();
         let to_loop = tx.clone();
         let client = GitClient::spawn(repo.path(), move |event| {

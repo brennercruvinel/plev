@@ -1,12 +1,15 @@
-//! The person's keys: text into the commit form, everything else through
-//! the keymap (Zed model: keystroke -> matcher -> name -> registry), and
-//! the actions that act on a capability through the workbench.
+//! The person's keys: text into the intent line or a field of a generated
+//! surface while one has the keyboard, text into the commit form,
+//! everything else through the keymap (Zed model: keystroke -> matcher ->
+//! name -> registry), and the actions that act on a capability through
+//! the workbench.
 
+use comps::form::EditKey;
 use engine::actions::{Action, ContextStack, KeyContext, MatchResult, keystroke_from_key_event};
 use rec::InputKind;
 use winit::event::KeyEvent;
 use winit::event_loop::ActiveEventLoop;
-use winit::keyboard::Key;
+use winit::keyboard::{Key, NamedKey};
 
 use crate::{App, actions};
 
@@ -18,6 +21,9 @@ impl App {
         key_event: &KeyEvent,
         event_loop: &ActiveEventLoop,
     ) -> bool {
+        if let Some(changed) = self.column_key(key_event) {
+            return changed;
+        }
         // The visible commit form captures plain characters as text before
         // the keymap sees them (named keys, Enter/Escape/Backspace, still
         // dispatch through the CommitForm context bindings). Typing is
@@ -52,6 +58,40 @@ impl App {
             }
             MatchResult::Pending | MatchResult::None => false,
         }
+    }
+
+    /// While the intent line or a field of a generated surface has the
+    /// keyboard (task-96), what is typed and its editing keys are theirs:
+    /// characters into the field, Enter proposes (or submits the
+    /// surface's field), Escape lets the keyboard go, the rest of the
+    /// named keys stop there. A chord with a modifier still reaches the
+    /// keymap (the session's save). `None` when the column does not have
+    /// the keyboard.
+    fn column_key(&mut self, key_event: &KeyEvent) -> Option<bool> {
+        let chord =
+            self.modifiers.control_key() || self.modifiers.super_key() || self.modifiers.alt_key();
+        if !self.bench.has_keyboard() || chord {
+            return None;
+        }
+        let bench = &mut self.bench;
+        let changed = match &key_event.logical_key {
+            Key::Character(text) => {
+                let typed = bench.type_text(text);
+                // typed into the field: recorded as text, never the text.
+                self.record_input(InputKind::Text, None);
+                return Some(typed);
+            }
+            Key::Named(NamedKey::Enter) => bench.enter(),
+            Key::Named(NamedKey::Escape) => bench.escape(),
+            Key::Named(NamedKey::Space) => bench.type_text(" "),
+            Key::Named(named) => match edit_key(*named) {
+                Some(key) => bench.edit_key(key),
+                None => false,
+            },
+            _ => false,
+        };
+        self.record_input(InputKind::Key, None);
+        Some(changed)
     }
 
     /// Key contexts from outermost to innermost; deeper entries win binding
@@ -110,4 +150,17 @@ impl App {
             false
         }
     }
+}
+
+/// The editing key a named key is for a field.
+fn edit_key(named: NamedKey) -> Option<EditKey> {
+    Some(match named {
+        NamedKey::Backspace => EditKey::Backspace,
+        NamedKey::Delete => EditKey::Delete,
+        NamedKey::ArrowLeft => EditKey::Left,
+        NamedKey::ArrowRight => EditKey::Right,
+        NamedKey::Home => EditKey::Home,
+        NamedKey::End => EditKey::End,
+        _ => return None,
+    })
 }

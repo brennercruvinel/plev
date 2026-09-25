@@ -12,6 +12,20 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-25, task-96 e a demo 5
+
+- **a superfície gerada ganha onde junta, perde onde precisa de um
+  componente que o vocabulário não tem:** juntar os arquivos de três
+  commits num lugar foi melhor que o painel fixo; mostrar um diff numa
+  tabela foi pior. o vocabulário fechado é o teto da geração: quando a
+  demo perde por falta de componente, a resposta é o componente, medido
+  de novo pelo mesmo critério, não um critério mais fácil. fonte: a demo
+  5 no arquivo da task-80.
+- **o Claude vê um snapshot feito para ele:** o prompt leva todo nó do
+  snapshot que recebe, então o ide monta um só com os commits que a
+  revisão pede. regra: um canal novo para o modelo recebe uma projeção
+  própria, nunca a do app inteiro. fonte: `crates/ide/src/generated/scope.rs`.
+
 ### 2026-09-25, task-80 fase 1
 
 - **um teste que espera tudo assentar não vê corrida:** o rerun da

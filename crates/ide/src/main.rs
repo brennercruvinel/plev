@@ -26,6 +26,14 @@
 //! change counts its time from the change, not from the last frame. Keys
 //! go through the keymap (`keys.rs`).
 //!
+//! Beside the panels, a column holds the intent line and the surface it
+//! generates (task-96, `Workbench::host_surfaces`): a person writes what
+//! they want to see ("review these three commits"), the rules propose a
+//! verified surface, and every act on it is a request through the same
+//! dispatcher. The shell gives the workbench the window's size, the wheel
+//! and the hover, and its keys while the line or a surface's field has
+//! the keyboard (`keys.rs`).
+//!
 //! With `PLEV_RECORD=1` in a debug build the shell records the session
 //! for the inspector (`ide::record`): the receipts, who observed what
 //! through the port, the state, a person's clicks and keys, and every
@@ -263,7 +271,7 @@ impl ApplicationHandler<AppEvent> for App {
         let sf = self.scale_factor as f32;
         let lw = size.width as f32 / sf;
         let lh = size.height as f32 / sf;
-        self.bench.workspace_mut().resize(lw, lh);
+        self.bench.resize(lw, lh);
         if let GpuState::Ready { gpu, .. } = &mut self.state {
             gpu.set_projection(lw, lh);
         }
@@ -314,7 +322,7 @@ impl ApplicationHandler<AppEvent> for App {
                     gpu.resize(size.width, size.height);
                     gpu.set_projection(lw, lh);
                 }
-                self.bench.workspace_mut().resize(lw, lh);
+                self.bench.resize(lw, lh);
                 self.invalidate();
             }
 
@@ -365,6 +373,7 @@ impl ApplicationHandler<AppEvent> for App {
                 } else {
                     ws.handle_hover(cx, cy)
                 };
+                let hover_changed = self.bench.hover(cx, cy) || hover_changed;
                 if let Some(w) = &self.window {
                     w.set_cursor(if on_handle {
                         CursorIcon::EwResize
@@ -414,14 +423,14 @@ impl ApplicationHandler<AppEvent> for App {
             }
 
             WindowEvent::MouseWheel { delta, .. } => {
-                let (cx, _) = self.cursor_pos;
+                let (cx, cy) = self.cursor_pos;
                 let scroll_delta = match delta {
                     MouseScrollDelta::LineDelta(_x, y) => -y * 20.0,
                     MouseScrollDelta::PixelDelta(pos) => -pos.y as f32,
                 };
                 // Scroll invalidates unconditionally: ScrollState clamps, so
                 // a no-op wheel costs one cheap identical-hash frame at most.
-                self.bench.workspace_mut().scroll(cx, scroll_delta);
+                self.bench.scroll(cx, cy, scroll_delta);
                 self.invalidate();
             }
 
@@ -552,6 +561,8 @@ fn main() {
     };
     let workdir = git.workdir().to_path_buf();
     let mut bench = Workbench::new(1280.0, 800.0);
+    // The intent line and its generated surface, beside the panels.
+    bench.host_surfaces();
     // Initial data load (results stream in as user events).
     bench.connect(git);
     // Off unless `PLEV_RECORD=1` in a debug build; nothing is created then.

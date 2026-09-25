@@ -35,6 +35,10 @@
 //!   layout, the lists under the entry. without one, the current
 //!   surface's form (two columns when its root is a grid), else compact.
 //! - **everything** ("everything", "tudo"): every part.
+//! - **review** ("review", "revisar", "revise"; task-96): the first items
+//!   of one kind, as many as a number says, each a card with what it
+//!   shows and its actions, and the region they open beside them; its own
+//!   path, before the grammar of the parts (`review.rs`).
 //!
 //! every other word of the intent is a word of the app (a label, an id's
 //! name or key, a state's key) and chooses: a part the intent names keeps
@@ -447,6 +451,9 @@ fn region(app: &sem::Snapshot) -> Option<String> {
 
 impl Proposer for Rules {
     fn propose(&mut self, ask: &Ask<'_>) -> Result<Ir, ProposeError> {
+        if let Some(review) = crate::review::read(ask.intent) {
+            return crate::review::propose(&review, ask);
+        }
         let reading = read(ask.intent);
         if reading.is_empty() {
             return Err(ProposeError::NotUnderstood {
