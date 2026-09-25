@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: ongoing
+status: done
 last-updated: 2026-09-25
 domain: generative-runtime
 task: task-70
@@ -1924,3 +1924,18 @@ chamado (o teste do prompt usa o `claude` falso do repositório).
   recusada por já estar feita na superfície pedida (um `restyle` para o
   papel que ela já tem): a preferência da pessoa ganha.
 - a adição ao ADR está como proposta; o índice é do orquestrador.
+
+## fechamento (2026-09-25, orquestrador)
+
+as quatro fases integradas; os critérios de aceitação cumpridos pelas
+regras (as operações com identidade e inversa, a demo da revisão de
+silêncios, a composta com a parada no meio, o gate verde). a prova da
+fase 2 com o Claude de verdade não é critério da task: fica na lista do
+orquestrador, esperando o brenner liberar o gasto (as três tentativas de
+180 s morreram; o prazo agora é 300 s). dívidas que seguem no programa:
+o leitor de tela não ouve qual preferência está ligada (task-75 fase 2,
+P2); o `prefer` recusa agente por nome, em vez de aceitar só os atores
+da pessoa (P3); o rótulo do stat a 4,13 com mais contraste (tema ou
+`comps`, do brenner); o prompt de mudança não cita as partes novas do
+`restyle` (P3); o botão promovido no tamanho padrão, a composta num
+corte já aplicado, `REPEATS=2` e a legenda da página Surface (P3).

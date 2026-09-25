@@ -12,6 +12,19 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-25, task-70 fase 4
+
+- **privacidade e accessibility puxam para lados opostos na mesma
+  projeção:** a preferência da pessoa não pode ir para o agente, e a
+  projeção que vai para o agente é a que vai para o leitor de tela; tirar
+  o estado para um tira para o outro. regra: um dado pessoal que o leitor
+  precisa entra só na árvore do AccessKit, nunca no snapshot do port.
+  fonte: `crates/showcase/src/view/apps/silences/generated/access.rs`.
+- **preferência é camada, não passo do histórico:** guardar a superfície
+  como foi pedida e refazer as preferências por cima depois de toda
+  mudança resolve o desligar sem desfazer o que outros pediram, coisa que
+  uma pilha de desfazer não faz. fonte: `crates/surface/src/host/prefer.rs`.
+
 ### 2026-09-25, task-71 fase 1
 
 - **o importer perdia a semântica antes de emitir:** o `ParserNode` era

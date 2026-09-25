@@ -674,5 +674,25 @@ fits declares it alike, checked after). the host's `registry` is gone.
 
 ### integração (fase 4)
 
-proposed by task-70 phase 4 (`task/70d-a11y-transforms`); the
-orchestrator accepts it.
+accepted on 2026-09-25 by the orchestrator (merge of
+`task/70d-a11y-transforms`). the whole diff read: `sem`, the protocol v1
+and every theme value unchanged, no new read of the system; the
+preferences are the host's last layer, made again over the surface as it
+was asked after every change, so turning one off leaves what others
+asked; the template promote lives in `uir` and the host's `registry`
+detour is gone, with phase 3's tests unchanged. the images seen: the
+review by the rules before, and with larger text and more contrast (the
+cut rows 15 to 20 px, the numbers one size up, the "pending" badge
+filled). gate 3010 passed, regress 176 (one new). debt recorded:
+
+- a person using a screen reader cannot hear which preference is on:
+  the band's buttons hold no state, because the projection that feeds
+  the port is the one that feeds AccessKit and a preference is personal
+  data the port must not carry. the fix is a state only the reader's
+  tree gets (task-75 phase 2, P2).
+- `SurfaceHost::prefer` refuses `Actor::Agent` by name; an allow list of
+  the person's actors (human, assistive, test) would refuse a variant
+  added later (P3).
+- a stat's label stays at 4.13 in the core with more contrast: `comps`
+  draws it in `text_dim`, which no IR role reaches (the theme or `comps`,
+  a design decision).

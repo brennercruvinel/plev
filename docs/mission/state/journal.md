@@ -14,6 +14,29 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-70 fase 4 e a task-70 fechada
+
+- **integrada:** `task/70d-a11y-transforms` (9 commits, agente no Opus).
+  as preferências de accessibility da pessoa (texto maior, mais
+  contraste, mais denso ou mais espaçado) viram operações da fase 1 por
+  token; o host guarda a superfície como foi pedida e refaz as
+  preferências por cima depois de toda mudança, então desligar deixa o
+  que um agente pediu no meio; só a pessoa liga, pela palavra
+  "accessibility" na linha da Silences; mais contraste leva o texto
+  secundário de 4,13 a mais de 18. o `promote` de template foi para o
+  `uir` e o `registry` do host saiu. a superfície gerada passou a seguir
+  o reduced motion da 75 (antes mostrava a forma velha um frame).
+- **validação:** diff inteiro lido; as duas imagens conferidas (antes e
+  com texto maior e mais contraste). gate local verde, 3010 passam (antes
+  2990); regress 176, um novo, nenhum mudou.
+- **dívida achada na validação:** quem usa leitor de tela não ouve qual
+  preferência está ligada, porque a mesma projeção alimenta o port e o
+  AccessKit e a preferência é dado pessoal que o port não pode levar. vai
+  para a task-75 fase 2 (P2).
+- **task-70 fechada:** os critérios de aceitação cumpridos; arquivo em
+  `checked/`. a prova da fase 2 com o Claude de verdade não é critério e
+  fica com o orquestrador, esperando o brenner liberar o gasto.
+
 ### task-71 fase 1: o parser escreve plev IR
 
 - **integrada:** `task/71a-compiler-target` (6 commits, agente no Opus).
