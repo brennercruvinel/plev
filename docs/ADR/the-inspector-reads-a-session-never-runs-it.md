@@ -168,6 +168,44 @@ carried was outside that scope.
 - the inspector is the reader the export and the session-to-test harness of
   phase c build on.
 
+## the window (phase b, 2026-09-25)
+
+`crates/inspector` (the lib and the bin `plev-inspector <session.monster>`)
+shows this model and never works an answer out again. it is its own crate,
+not a bin of `inspect`: the reader keeps its edges (`rec`, `sem`, serde),
+and the window adds `comps` and `engine` (winit through it), nothing from
+outside the workspace.
+
+- the panel of a control at `t` is `control(id, t)` as `text::control`
+  writes it, then the requests that touched it later, or were still open at
+  `t`, from `control(id, end)`, less what `t` already told whole. in the
+  commit scenario the button leaves the frame with the commit, so its sha
+  only exists after any instant where the button can be clicked.
+- the frame is `Session::scene_at(t)`, fit into the view by one scale and
+  one offset. the session keeps neither the window's size nor its scale:
+  the size is the extent of the frame's nodes and bindings from the origin
+  (the recorded apps draw their background there), and the scale does not
+  enter the drawing (the nodes are logical). a node past the window's edge,
+  whose clip the monster IR v0 does not carry, would widen it; recording
+  the window's size is pending for that case.
+- the recorded frame is a picture. its bindings are drawn as outlines and
+  hit-tested with `Session::hit_at`, never bound in the window's
+  compositor, so no recorded control answers there as a live one. the
+  window draws no image, from a file or from a session read in the
+  process that recorded it; where a stream image was is not shown yet (the
+  replay lowers it to nothing, and `rec` does not say where it was).
+- the window's own controls (the scrub, the lanes, the list of requests,
+  the pick) go to the view's handlers, never through a dispatcher: the
+  inspector must never create a request, so they stand outside the rule
+  that a click goes through the dispatcher
+  (docs/how-to/code-against-the-plev-engine.md, definition of done, 6),
+  and they project nothing for accessibility yet.
+- the proof is in tests: the sources name nothing that runs, records or
+  builds a request, and no socket, process, port or accessibility bridge;
+  the manifest depends on exactly `comps`, `engine`, `inspect`, `rec`,
+  `sem`; driving every handler over every instant of the two recorded
+  sessions leaves the session and the file's bytes as they were.
+
 ## avoid
 
 - anything in `inspect` that could create a request or run an action, or a
@@ -175,3 +213,6 @@ carried was outside that scope.
 - calling a correlation a cause, in the text or in a field name.
 - reading the state by time for the stretch before a request.
 - naming a refused receipt as the one that moved a value.
+- a dependency of the window on anything that dispatches or sends, a
+  recorded control bound in the window's compositor, or an answer in the
+  window that the model does not give.
