@@ -12,6 +12,7 @@ mod support;
 
 use parser::gpui::{GExpr, GFn};
 use parser::tokens::{color_distance, nearest, px_distance, type_distance};
+use parser::tsx::{TsxChild, TsxNode};
 use parser::{Category, Imported, Need, Report, Tokens, Verdict};
 use sem::Snapshot;
 use support::*;
@@ -29,6 +30,39 @@ fn site(file: &str, line: usize, needle: impl Into<String>) -> Site {
         at: format!("{file}:{line}"),
         needle: needle.into(),
     }
+}
+
+/// Every construct of a react source: the component, each element with
+/// its attributes and conditional classes, each text and expression child,
+/// and each declaration of each rule of the stylesheet.
+fn react_census(files: (&str, &str), tsx: &str, sass: &str, vars: &str) -> Vec<Site> {
+    fn walk(n: &TsxNode, f: &str, out: &mut Vec<Site>) {
+        out.push(site(f, n.line, format!("<{}", n.tag)));
+        for a in &n.attrs {
+            out.push(site(f, a.line, a.name.clone()));
+        }
+        for (class, _, line) in &n.cond_classes {
+            out.push(site(f, *line, format!("conditional class {class}")));
+        }
+        for child in &n.children {
+            match child {
+                TsxChild::Node(m) => walk(m, f, out),
+                TsxChild::Text(t, line) => out.push(site(f, *line, format!("\"{t}\""))),
+                TsxChild::Expr(e, line) | TsxChild::Other(e, line) => {
+                    out.push(site(f, *line, format!("{{{e}}}")))
+                }
+            }
+        }
+    }
+    let comp = parser::tsx::parse_tsx(tsx).expect("tsx");
+    let mut out = vec![site(files.0, comp.line, format!("component {}", comp.name))];
+    walk(&comp.root, files.0, &mut out);
+    for rule in parser::sass::parse_sass(sass, vars) {
+        for d in &rule.decls {
+            out.push(site(files.1, d.line, format!("{}: {}", d.prop, d.value)));
+        }
+    }
+    out
 }
 
 /// Every construct of a gpui widget: its `impl RenderOnce`, the base of
@@ -294,7 +328,162 @@ fn the_separator_binds_its_label_and_nothing_is_declared_for_it() {
 }
 
 #[test]
+fn the_note_card_ir_and_its_report() {
+    let imported = import_react();
+    goldens(&imported, "react");
+    let (tsx, sass, vars) = react_sources();
+    let code = parser::transpile_react((TSX, &tsx), (SASS, &sass), &vars).expect("react");
+    check_golden("react/expected.rs", &code.code);
+    let r = &imported.report;
+    let at = |at: &str, what: &str| {
+        r.at(at)
+            .find(|e| e.construct.contains(what))
+            .unwrap_or_else(|| panic!("{at} {what}"))
+            .category()
+    };
+    // the fixed width is the card's token, the off-token text color close
+    // to text_mid, the asymmetric padding one token, the preview's height
+    // and the slot have no IR form
+    assert_eq!(at("NoteCard.module.sass:5", "width"), Category::Transformed);
+    assert_eq!(
+        at("NoteCard.module.sass:42", "color"),
+        Category::Approximated
+    );
+    assert_eq!(
+        at("NoteCard.module.sass:28", "padding"),
+        Category::Approximated
+    );
+    assert_eq!(
+        at("NoteCard.module.sass:31", "height"),
+        Category::Impossible
+    );
+    assert_eq!(at("index.tsx:22", "{children}"), Category::Impossible);
+    // the controls: a component with a role, and the handler a binding
+    assert_eq!(at("index.tsx:29", "<button"), Category::Transformed);
+    assert_eq!(at("index.tsx:29", "onClick"), Category::Transformed);
+    assert_eq!(at("index.tsx:28", "<input"), Category::Transformed);
+    for c in Category::ALL {
+        assert!(r.count(c) > 0, "no {c:?} entry");
+    }
+}
+
+#[test]
+fn nothing_of_the_note_card_is_lost_or_invented() {
+    let imported = import_react();
+    let (tsx, sass, vars) = react_sources();
+    let census = react_census((TSX, SASS), &tsx, &sass, &vars);
+    nothing_is_lost(&imported.report, &census, &[(TSX, &tsx), (SASS, &sass)]);
+    nothing_is_invented(&imported);
+}
+
+#[test]
+fn the_note_cards_controls_need_the_app_and_invent_nothing() {
+    let imported = import_react();
+    let needs: Vec<String> = imported
+        .report
+        .bindings
+        .iter()
+        .map(|b| match &b.need {
+            Need::State { reference, .. } => format!("state {reference}"),
+            Need::Action {
+                action,
+                target,
+                param,
+                ..
+            } => {
+                format!("action {action} on {target} ({param:?})")
+            }
+        })
+        .collect();
+    assert_eq!(
+        needs,
+        [
+            "state note_card.props:title",
+            "state note_card.props:content",
+            "action reply on note_card.props (Some(\"text\"))",
+            "action open on note_card.props (None)",
+        ]
+    );
+    refused_for_its_bindings(&imported);
+    let verified = accepted_by(&imported, &note_card_app("A title", "Some content"));
+    let focus: Vec<&str> = verified
+        .focus_order()
+        .iter()
+        .map(|id| id.as_str())
+        .collect();
+    assert_eq!(
+        focus,
+        [
+            "note_card.root.inner.details.reply",
+            "note_card.root.inner.details.button"
+        ]
+    );
+    // an app that declares all but one: refused for that one only
+    let mut b = sem::SnapshotBuilder::new();
+    let mut props = b.node("note_card.props", sem::Role::Group, "note card");
+    props.state("title", "t").state("content", "c");
+    props.action("reply").param(sem::ParamSpec {
+        kind: sem::ValueKind::Text,
+        constrained: false,
+    });
+    let without_open = b.finish().expect("projects");
+    let errors = verify(
+        &imported.ir,
+        &Capabilities::from_snapshot(&without_open),
+        &GenerationPolicy::default(),
+    )
+    .expect_err("open is not declared");
+    assert_eq!(errors.len(), 1);
+    assert_eq!(
+        errors[0].reason,
+        "the app declares no action `open` on `note_card.props`"
+    );
+}
+
+/// A `<button>` that holds only its label collapses into that text run
+/// for the code emitter; for the IR it is still a button, named by the
+/// text, its action named by the handler or, with none, by the label.
+#[test]
+fn a_button_that_holds_only_its_label_is_still_a_button() {
+    let tsx = r#"
+const Bar = ({ go }: Props) => (
+    <div>
+        <button onClick={go}>Go</button>
+        <button>Stop now</button>
+    </div>
+);
+"#;
+    let imported =
+        parser::import_react(("bar.tsx", tsx), ("bar.sass", ""), "", &hoff()).expect("imports");
+    let kids = &imported.ir.surface.root.children;
+    let shown: Vec<(Option<uir::Component>, Option<&str>)> = kids
+        .iter()
+        .map(|k| (k.component, k.label.as_deref()))
+        .collect();
+    assert_eq!(
+        shown,
+        [
+            (Some(uir::Component::Button), Some("Go")),
+            (Some(uir::Component::Button), Some("Stop now")),
+        ]
+    );
+    let actions: Vec<&str> = imported
+        .report
+        .bindings
+        .iter()
+        .filter_map(|b| match &b.need {
+            Need::Action { action, .. } => Some(action.as_str()),
+            Need::State { .. } => None,
+        })
+        .collect();
+    assert_eq!(actions, ["go", "stop_now"]);
+    refused_for_its_bindings(&imported);
+    nothing_is_invented(&imported);
+}
+
+#[test]
 fn an_import_is_deterministic() {
+    assert_eq!(import_react(), import_react());
     assert_eq!(import_gpui(), import_gpui());
 }
 
@@ -369,4 +558,35 @@ fn the_tolerances_measured_on_hoff() {
     let caption = t.type_of(uir::TypographyRole::CaptionR).expect("caption_r");
     let near = nearest(&t.typography, &caption, type_distance).expect("near");
     assert!(close(near.tolerance, 1.0));
+}
+
+/// The card of the external corpus, when this checkout has it: the same
+/// checks, no golden (the corpus is not in the repo).
+#[test]
+fn the_corpus_card_when_present() {
+    let Some((tsx, sass, vars)) = corpus() else {
+        return;
+    };
+    let imported = parser::import_react(
+        ("index.tsx", &tsx),
+        ("HoffResearchCard.module.sass", &sass),
+        &vars,
+        &hoff(),
+    )
+    .expect("the corpus card imports");
+    let files = ("index.tsx", "HoffResearchCard.module.sass");
+    let census = react_census(files, &tsx, &sass, &vars);
+    nothing_is_lost(
+        &imported.report,
+        &census,
+        &[("index.tsx", &tsx), ("HoffResearchCard.module.sass", &sass)],
+    );
+    nothing_is_invented(&imported);
+    refused_for_its_bindings(&imported);
+    accepted_by(&imported, &corpus_app("Title", "Content"));
+    eprintln!(
+        "corpus: {} entries, {:?}",
+        imported.report.entries.len(),
+        Category::ALL.map(|c| imported.report.count(c))
+    );
 }

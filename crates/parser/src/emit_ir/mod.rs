@@ -2,8 +2,9 @@
 //! next to the code emitter (`emit.rs`), which stays until a decision
 //! removes it. It reads the same `Resolution` and writes what the IR can
 //! say, never a pixel or a color: every value goes to a token by the
-//! measure of `tokens`, and every construct of the source to the report
-//! (`report`), in exactly one of four categories, at its `file:line`.
+//! measure of `tokens`, every control to a component with its role, and
+//! every construct of the source to the report (`report`), in exactly one
+//! of four categories, at its `file:line`.
 //!
 //! The mapping, by what the `ParserNode` holds:
 //!
@@ -11,10 +12,12 @@
 //!   the spacers of the margin-bottom rewrite its gap (the smallest one's
 //!   token); a bar as thin as the separator's line in the divider color is
 //!   the `separator` component;
+//! - a `<button>`, an element with `onClick` and a text `<input>` are the
+//!   `button` and `text_field` components (`control`), bound to an action
+//!   the importer names on `<surface>.props`: a binding the app has to
+//!   make, listed in the report;
 //! - a text run is `text`: its literal is its label, a text parameter is
-//!   bound to `<surface>.props:<parameter>`, a state the importer names on
-//!   the app's node `<surface>.props`: a binding the app has to make,
-//!   listed in the report;
+//!   bound to `<surface>.props:<parameter>`, another binding required;
 //! - an element slot is left out: the IR holds no element the caller
 //!   builds at run time;
 //! - ids come from the source's class names (or the kind of node), under
@@ -25,6 +28,7 @@
 //! sanitizer lets through and the grammar refuses is an error, never a
 //! panic.
 
+mod control;
 mod props;
 
 use std::collections::BTreeSet;
@@ -36,6 +40,7 @@ use crate::ParserError;
 use crate::ir::{Arg, DropKind, NoteKind, ParserNode, Resolution, Src, Tag, TextValue, snake_case};
 use crate::report::{Binding, Ledger, Need, Report, Verdict};
 use crate::tokens::{Tokens, color_distance, role_named};
+use control::{Control, infer};
 use props::{Decision, flex, num};
 
 /// What an import gives: the IR and the truth about it.
@@ -206,6 +211,9 @@ impl Cx<'_> {
         id: &str,
         axis: Axis,
     ) -> Result<Option<IrNode>, ParserError> {
+        if let Some(kind) = infer(p) {
+            return self.control(p, id, kind);
+        }
         match &p.tag {
             Tag::Slot(name) => {
                 let reason = format!(
@@ -428,10 +436,12 @@ impl Cx<'_> {
         axis: Axis,
         taken: &mut BTreeSet<String>,
     ) -> String {
-        let hint = match &child.tag {
-            Tag::Text(_) => "text",
-            Tag::Slot(_) => "slot",
-            Tag::Div if self.is_separator(child, axis) => "line",
+        let hint = match (&child.tag, infer(child)) {
+            (_, Some(Control::Button)) => "button",
+            (_, Some(Control::Field)) => "field",
+            (Tag::Text(_), _) => "text",
+            (Tag::Slot(_), _) => "slot",
+            (Tag::Div, _) if self.is_separator(child, axis) => "line",
             _ => "box",
         };
         let base = sanitize(&snake_case(&child.origin.name), hint);

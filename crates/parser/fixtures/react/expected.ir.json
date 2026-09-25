@@ -1,0 +1,109 @@
+{
+  "plev_ir": 1,
+  "surface": {
+    "id": "note_card",
+    "title": "NoteCard",
+    "root": {
+      "sem": "note_card.root",
+      "props": {
+        "background": "surface",
+        "shape": "pill"
+      },
+      "size": {
+        "min": "card_w",
+        "max": "card_w"
+      },
+      "children": [
+        {
+          "sem": "note_card.root.inner",
+          "props": {
+            "padding": "lg"
+          },
+          "layout": {
+            "stack": {
+              "axis": "vertical",
+              "gap": "lg"
+            }
+          },
+          "children": [
+            {
+              "sem": "note_card.root.inner.preview"
+            },
+            {
+              "sem": "note_card.root.inner.details",
+              "layout": {
+                "stack": {
+                  "axis": "vertical",
+                  "gap": "sm"
+                }
+              },
+              "children": [
+                {
+                  "sem": "note_card.root.inner.details.meta",
+                  "component": "text",
+                  "label": "Field note",
+                  "props": {
+                    "typography": "caption_r",
+                    "color": "text_mid"
+                  }
+                },
+                {
+                  "sem": "note_card.root.inner.details.title",
+                  "component": "text",
+                  "props": {
+                    "typography": "title",
+                    "color": "text"
+                  },
+                  "bind": {
+                    "state": {
+                      "text": "note_card.props:title"
+                    }
+                  }
+                },
+                {
+                  "sem": "note_card.root.inner.details.content",
+                  "component": "text",
+                  "props": {
+                    "typography": "base_r",
+                    "color": "text_mid"
+                  },
+                  "bind": {
+                    "state": {
+                      "text": "note_card.props:content"
+                    }
+                  }
+                },
+                {
+                  "sem": "note_card.root.inner.details.reply",
+                  "component": "text_field",
+                  "label": "Reply",
+                  "bind": {
+                    "actions": {
+                      "set_value": {
+                        "target": "note_card.props",
+                        "action": "reply"
+                      }
+                    }
+                  }
+                },
+                {
+                  "sem": "note_card.root.inner.details.button",
+                  "component": "button",
+                  "label": "Open",
+                  "bind": {
+                    "actions": {
+                      "activate": {
+                        "target": "note_card.props",
+                        "action": "open"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

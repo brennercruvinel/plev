@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 use engine::theme::Theme;
 use parser::{Imported, Tokens, TypeStyle, Value};
-use sem::{Role, Snapshot, SnapshotBuilder};
+use sem::{ParamSpec, Role, Snapshot, SnapshotBuilder, ValueKind};
 use uir::{ColorRole, ShapeRole, SizeToken, SpacingToken, TypographyRole};
 
 pub fn fixture_path(rel: &str) -> PathBuf {
@@ -36,8 +36,39 @@ pub fn check_golden(rel: &str, actual: &str) {
     assert_eq!(expected, actual, "golden mismatch for {rel}");
 }
 
+/// The react fixture written for task-71 (`fixtures/react`).
+pub const TSX: &str = "index.tsx";
+pub const SASS: &str = "NoteCard.module.sass";
+
+pub fn react_sources() -> (String, String, String) {
+    (
+        fixture("react/index.tsx"),
+        fixture("react/NoteCard.module.sass"),
+        fixture("react/note-card-variables.sass"),
+    )
+}
+
 pub fn gpui_source() -> String {
     fixture("gpui/separator.rs")
+}
+
+/// The card of the external corpus (`tests/golden.rs` reads it too), when
+/// this checkout has it.
+pub fn corpus() -> Option<(String, String, String)> {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../refs/parsecomponentes/UIvisualREFs/cards/hoff-research-cards/react");
+    if !root.exists() {
+        eprintln!("SKIP: corpus refs/parsecomponentes ausente neste checkout");
+        return None;
+    }
+    let read = |rel: &str| {
+        fs::read_to_string(root.join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
+    };
+    Some((
+        read("components/HoffResearchCard/index.tsx"),
+        read("components/HoffResearchCard/HoffResearchCard.module.sass"),
+        read("styles/hoff-research-card-variables.sass"),
+    ))
 }
 
 fn style(s: engine::text::TextStyle) -> TypeStyle {
@@ -165,8 +196,27 @@ pub fn hoff() -> Tokens {
     tokens(&Theme::hoff())
 }
 
+pub fn import_react() -> Imported {
+    let (tsx, sass, vars) = react_sources();
+    parser::import_react((TSX, &tsx), (SASS, &sass), &vars, &hoff()).expect("react import")
+}
+
 pub fn import_gpui() -> Imported {
     parser::import_gpui(("separator.rs", &gpui_source()), &hoff()).expect("gpui import")
+}
+
+/// The app the note card is written for: its data and its two actions,
+/// as the report's bindings ask.
+pub fn note_card_app(title: &str, content: &str) -> Snapshot {
+    let mut b = SnapshotBuilder::new();
+    let mut props = b.node("note_card.props", Role::Group, "note card");
+    props.state("title", title).state("content", content);
+    props.action("reply").param(ParamSpec {
+        kind: ValueKind::Text,
+        constrained: false,
+    });
+    props.action("open");
+    b.finish().expect("the note card app projects")
 }
 
 /// The app the separator is written for: its label.
@@ -175,4 +225,13 @@ pub fn separator_app(label: &str) -> Snapshot {
     b.node("separator.props", Role::Group, "separator")
         .state("label", label);
     b.finish().expect("the separator app projects")
+}
+
+/// The app the corpus card is written for.
+pub fn corpus_app(title: &str, content: &str) -> Snapshot {
+    let mut b = SnapshotBuilder::new();
+    let mut props = b.node("hoff_research_card.props", Role::Group, "card");
+    props.state("title", title).state("content", content);
+    props.action("discover");
+    b.finish().expect("the corpus card app projects")
 }

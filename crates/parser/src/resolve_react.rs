@@ -325,6 +325,9 @@ impl<'a> Ctx<'a> {
             text.origin.folded.append(&mut origin.folded);
             origin.attrs.append(&mut text.origin.attrs);
             text.origin.attrs = origin.attrs;
+            // the run is the element now: a <button> around its label
+            // stays a button for the IR emitter
+            text.origin.tag = origin.tag;
             if text.origin.name.is_empty() {
                 text.origin.name = origin.name;
             }
