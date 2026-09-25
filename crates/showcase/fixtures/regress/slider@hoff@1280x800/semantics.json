@@ -1,0 +1,119 @@
+{
+  "nodes": [
+    {
+      "id": "slider_page",
+      "role": "region",
+      "label": "Slider"
+    },
+    {
+      "id": "slider_page.slider[0]",
+      "role": "slider",
+      "label": "continuous",
+      "parent": "slider_page",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 65.0
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "slider_page.slider[0]:value"
+          ],
+          "param": {
+            "kind": "num",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "range": [
+          0.0,
+          100.0
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "slider_page.slider[1]",
+      "role": "slider",
+      "label": "stepped",
+      "parent": "slider_page",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 4.0
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "slider_page.slider[1]:value"
+          ],
+          "param": {
+            "kind": "num",
+            "constrained": true
+          }
+        },
+        {
+          "name": "increment",
+          "reads": [
+            "slider_page.slider[1]:value"
+          ]
+        },
+        {
+          "name": "decrement",
+          "reads": [
+            "slider_page.slider[1]:value"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "range": [
+          0.0,
+          10.0
+        ],
+        "step": 1.0
+      },
+      "focusable": true
+    },
+    {
+      "id": "slider_page.slider[2]",
+      "role": "slider",
+      "label": "disabled",
+      "parent": "slider_page",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 30.0
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "slider_page.slider[2]:value"
+          ],
+          "param": {
+            "kind": "num",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "range": [
+          0.0,
+          100.0
+        ]
+      },
+      "enabled": false,
+      "focusable": true
+    }
+  ]
+}

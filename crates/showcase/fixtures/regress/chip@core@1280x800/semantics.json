@@ -1,0 +1,60 @@
+{
+  "nodes": [
+    {
+      "id": "chip_page",
+      "role": "region",
+      "label": "Chip"
+    },
+    {
+      "id": "chip_page.chip[0]",
+      "role": "label",
+      "label": "exact",
+      "parent": "chip_page"
+    },
+    {
+      "id": "chip_page.chip[1]",
+      "role": "label",
+      "label": "ann",
+      "parent": "chip_page"
+    },
+    {
+      "id": "chip_page.chip[2]",
+      "role": "label",
+      "label": "bm25",
+      "parent": "chip_page"
+    },
+    {
+      "id": "chip_page.chip[3]",
+      "role": "label",
+      "label": "missing",
+      "parent": "chip_page"
+    },
+    {
+      "id": "chip_page.chip[4]",
+      "role": "label",
+      "label": "beta",
+      "parent": "chip_page"
+    },
+    {
+      "id": "chip_page.chip[5]",
+      "role": "toggle",
+      "label": "click me",
+      "parent": "chip_page",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "chip_page.chip[5]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

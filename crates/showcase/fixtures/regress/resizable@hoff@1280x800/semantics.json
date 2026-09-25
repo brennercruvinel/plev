@@ -1,0 +1,41 @@
+{
+  "nodes": [
+    {
+      "id": "resizable_page",
+      "role": "region",
+      "label": "Resizable"
+    },
+    {
+      "id": "resizable_page.split",
+      "role": "group",
+      "label": "panes",
+      "description": "the first pane takes 35%",
+      "parent": "resizable_page",
+      "state": {
+        "ratio": {
+          "kind": "num",
+          "value": 0.3499999940395355
+        }
+      },
+      "actions": [
+        {
+          "name": "set_ratio",
+          "reads": [
+            "resizable_page.split:ratio"
+          ],
+          "param": {
+            "kind": "num",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "range": [
+          0.0,
+          1.0
+        ]
+      }
+    }
+  ]
+}

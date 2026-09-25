@@ -1,0 +1,73 @@
+{
+  "nodes": [
+    {
+      "id": "switch_page",
+      "role": "region",
+      "label": "Switch"
+    },
+    {
+      "id": "switch_page.switch[0]",
+      "role": "toggle",
+      "label": "Focus mode",
+      "parent": "switch_page",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "switch_page.switch[0]:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "switch_page.switch[1]",
+      "role": "toggle",
+      "label": "Wrap long lines",
+      "parent": "switch_page",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "switch_page.switch[1]:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "switch_page.switch[2]",
+      "role": "toggle",
+      "label": "Disabled switch",
+      "parent": "switch_page",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "switch_page.switch[2]:on"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    }
+  ]
+}

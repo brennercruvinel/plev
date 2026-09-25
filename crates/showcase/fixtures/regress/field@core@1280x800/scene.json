@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "f5402783b73fab7b",
+    "nodes": 5
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "input_page",
       "z": 0,
       "hash": "6f115b4a53d4b886",
       "nodes": 15,
@@ -51,5 +54,54 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "input_page.field[0]",
+      "layer": "input_page",
+      "rect": [
+        288.0,
+        180.83,
+        360.0,
+        44.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "input_page.field[1]",
+      "layer": "input_page",
+      "rect": [
+        288.0,
+        236.83,
+        360.0,
+        44.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "input_page.field[2]",
+      "layer": "input_page",
+      "rect": [
+        288.0,
+        292.83002,
+        360.0,
+        44.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
 }

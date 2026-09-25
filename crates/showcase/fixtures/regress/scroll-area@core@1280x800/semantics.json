@@ -1,0 +1,305 @@
+{
+  "nodes": [
+    {
+      "id": "scroll_area_page",
+      "role": "region",
+      "label": "Scroll Area"
+    },
+    {
+      "id": "scroll_area_page.list[0]",
+      "role": "list_item",
+      "label": "Item 0",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[1]",
+      "role": "list_item",
+      "label": "Item 1",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[2]",
+      "role": "list_item",
+      "label": "Item 2",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[3]",
+      "role": "list_item",
+      "label": "Item 3",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[4]",
+      "role": "list_item",
+      "label": "Item 4",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[5]",
+      "role": "list_item",
+      "label": "Item 5",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[6]",
+      "role": "list_item",
+      "label": "Item 6",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[7]",
+      "role": "list_item",
+      "label": "Item 7",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[8]",
+      "role": "list_item",
+      "label": "Item 8",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[9]",
+      "role": "list_item",
+      "label": "Item 9",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[10]",
+      "role": "list_item",
+      "label": "Item 10",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[11]",
+      "role": "list_item",
+      "label": "Item 11",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[12]",
+      "role": "list_item",
+      "label": "Item 12",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[13]",
+      "role": "list_item",
+      "label": "Item 13",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[14]",
+      "role": "list_item",
+      "label": "Item 14",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[15]",
+      "role": "list_item",
+      "label": "Item 15",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[16]",
+      "role": "list_item",
+      "label": "Item 16",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[17]",
+      "role": "list_item",
+      "label": "Item 17",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[18]",
+      "role": "list_item",
+      "label": "Item 18",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[19]",
+      "role": "list_item",
+      "label": "Item 19",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list",
+      "role": "list",
+      "label": "items",
+      "parent": "scroll_area_page",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 10000
+        },
+        "selected": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    }
+  ]
+}

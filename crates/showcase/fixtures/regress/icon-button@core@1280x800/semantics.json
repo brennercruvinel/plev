@@ -1,0 +1,103 @@
+{
+  "nodes": [
+    {
+      "id": "icon_button_page",
+      "role": "region",
+      "label": "Icon Button"
+    },
+    {
+      "id": "icon_button_page.button[copy]",
+      "role": "button",
+      "label": "copy",
+      "parent": "icon_button_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "icon_button_page.button[search]",
+      "role": "button",
+      "label": "search",
+      "parent": "icon_button_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "icon_button_page.button[settings]",
+      "role": "button",
+      "label": "settings",
+      "parent": "icon_button_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "icon_button_page.button[trash]",
+      "role": "button",
+      "label": "trash",
+      "parent": "icon_button_page",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "icon_button_page.button[trash]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "icon_button_page.button[save]",
+      "role": "button",
+      "label": "save",
+      "parent": "icon_button_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "icon_button_page.button[play]",
+      "role": "button",
+      "label": "play",
+      "parent": "icon_button_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "icon_button_page.button[undo]",
+      "role": "button",
+      "label": "undo",
+      "parent": "icon_button_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    }
+  ]
+}

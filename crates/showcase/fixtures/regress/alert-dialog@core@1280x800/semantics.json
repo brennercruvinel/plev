@@ -1,0 +1,33 @@
+{
+  "nodes": [
+    {
+      "id": "dialog_page",
+      "role": "region",
+      "label": "Alert Dialog"
+    },
+    {
+      "id": "dialog_page.open",
+      "role": "button",
+      "label": "Open dialog",
+      "parent": "dialog_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "dialog_page.delete",
+      "role": "button",
+      "label": "Delete repository…",
+      "parent": "dialog_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

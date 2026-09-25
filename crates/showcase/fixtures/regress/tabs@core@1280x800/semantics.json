@@ -1,0 +1,66 @@
+{
+  "nodes": [
+    {
+      "id": "tabs_page",
+      "role": "region",
+      "label": "Tabs"
+    },
+    {
+      "id": "tabs_page.tabs[0]",
+      "role": "tab",
+      "label": "Account",
+      "parent": "tabs_page.tabs",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tabs_page.tabs:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tabs_page.tabs[1]",
+      "role": "tab",
+      "label": "Appearance",
+      "parent": "tabs_page.tabs",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tabs_page.tabs:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tabs_page.tabs[2]",
+      "role": "tab",
+      "label": "About",
+      "parent": "tabs_page.tabs",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tabs_page.tabs:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tabs_page.tabs",
+      "role": "tab_list",
+      "label": "sections",
+      "parent": "tabs_page",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    }
+  ]
+}
