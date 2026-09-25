@@ -18,16 +18,18 @@
 //! three: each one is a card of its own, fixed on the surface, never a
 //! repeat that would follow the list as it moves.
 //!
-//! each item shows, from the registry: its texts (the first as what names
-//! it, the rest as its detail; a frame ref as an image), its lists as a
-//! table each (a commit's files), its numbers as a stat each, and a
-//! button per action with no parameter that the author may ask for and
-//! that is not destructive (a commit's `show_diff`). what those actions
-//! read outside the item (the `diff:target` a `show_diff` reads) is the
-//! region they open, shown once beside the items: its texts, its numbers,
-//! and its lists as tables whose height the token `dropdown_max_h` bounds
-//! (the diff's lines). the items on the left and the region on the right,
-//! in a split; the items alone in a column when there is no region.
+//! each item is a card with what the registry holds of it: a head with
+//! the text that names it and, on the same line, a button per action with
+//! no parameter that the author may ask for and that is not destructive
+//! (a commit's `show_diff`); then its other texts (a frame ref as an
+//! image), its lists as a table each (a commit's files) and its numbers
+//! as a stat each. what those actions read outside the item (the
+//! `diff:target` a `show_diff` reads) is the region they open, a card
+//! shown once beside the items: its texts, its numbers, and last its
+//! lists as tables whose height the token `dropdown_max_h` bounds (the
+//! diff's lines, which scroll inside it). the items on the left and the
+//! region on the right, in a split; the items alone in a column when
+//! there is no region.
 //!
 //! the refusals, each with why: a word that names no item of the app
 //! (`NoMatch`, with the words of the items), nothing to review, no word
@@ -38,7 +40,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use sem::{ActionDecl, Node, SemId, Snapshot, StateRef, Value, ValueKind};
 use uir::{
-    Axis, CapabilityRef, Component, ControlSize, Elevation, Ir, IrNode, Layout, Props, Size,
+    Align, Axis, CapabilityRef, Component, ControlSize, Elevation, Ir, IrNode, Layout, Props, Size,
     SizeToken, SpacingToken, Surface, TypographyRole,
 };
 
@@ -262,12 +264,11 @@ impl Build<'_> {
             .collect()
     }
 
-    /// `node`'s state shown by sense: each text (the first larger, as what
-    /// names it), each list as a table (bounded in height when `bounded`),
-    /// each number as a stat.
-    fn shows(&mut self, node: &Node, bounded: bool) -> Vec<IrNode> {
-        let mut out = Vec::new();
-        let mut texts = 0;
+    /// `node`'s state by sense: each text (the first larger, as what names
+    /// it, and a frame ref as an image), each number as a stat, each list
+    /// as a table (bounded in height when `bounded`).
+    fn senses(&mut self, node: &Node, bounded: bool) -> Senses {
+        let mut out = Senses::default();
         for (key, value) in self.data(node) {
             let at = StateRef::new(node.id.clone(), key.clone());
             let name = format!("{}.{key}", node.id);
@@ -278,18 +279,18 @@ impl Build<'_> {
                     n.component = Some(Component::Image);
                     n.props.control_size = Some(ControlSize::Xl);
                     n.bind.state.insert("source".to_owned(), at);
-                    out.push(self.bound(n, anchor, &name, label(key.as_str())));
+                    out.texts
+                        .push(self.bound(n, anchor, &name, label(key.as_str())));
                 }
                 ValueKind::Text => {
                     n.component = Some(Component::Text);
-                    let role = match texts {
+                    let role = match out.texts.len() {
                         0 => TypographyRole::Base2sm,
                         _ => TypographyRole::CaptionR,
                     };
                     n.props.typography = Some(role);
                     n.bind.state.insert("text".to_owned(), at);
-                    texts += 1;
-                    out.push(self.bound(n, anchor, &name, String::new()));
+                    out.texts.push(self.bound(n, anchor, &name, String::new()));
                 }
                 ValueKind::List | ValueKind::Set => {
                     n.component = Some(Component::Table);
@@ -300,13 +301,15 @@ impl Build<'_> {
                             ..Size::default()
                         };
                     }
-                    out.push(self.bound(n, anchor, &name, label(key.as_str())));
+                    out.lists
+                        .push(self.bound(n, anchor, &name, label(key.as_str())));
                 }
                 ValueKind::Int | ValueKind::Num => {
                     n.component = Some(Component::Stat);
                     n.props.typography = Some(TypographyRole::BaseM);
                     n.bind.state.insert("value".to_owned(), at);
-                    out.push(self.bound(n, anchor, &name, label(key.as_str())));
+                    out.numbers
+                        .push(self.bound(n, anchor, &name, label(key.as_str())));
                 }
                 ValueKind::Bool => {}
             }
@@ -353,18 +356,38 @@ impl Build<'_> {
         out
     }
 
-    /// one item as a card: what it shows, then its actions in a row.
+    /// one item as a card: a head with what names it and its actions on
+    /// one line, then its other texts, its lists and its numbers.
     fn item(&mut self, node: &Node) -> IrNode {
-        let mut children = self.shows(node, false);
-        let buttons = self.buttons(node);
-        if buttons.len() > 1 {
-            let name = format!("{}.actions", node.id);
-            let mut row = self.container(&name, None, buttons);
-            row.layout = stack(Axis::Horizontal, SpacingToken::Sm, None);
-            children.push(row);
-        } else {
-            children.extend(buttons);
+        let Senses {
+            mut texts,
+            lists,
+            numbers,
+        } = self.senses(node, false);
+        let mut head = Vec::new();
+        if !texts.is_empty() {
+            let mut name = texts.remove(0);
+            name.size = Size {
+                flex: Some(1),
+                ..Size::default()
+            };
+            head.push(name);
         }
+        head.extend(self.buttons(node));
+        let mut children = Vec::new();
+        match head.len() {
+            0 => {}
+            1 => children.extend(head),
+            _ => {
+                let name = format!("{}.head", node.id);
+                let mut row = self.container(&name, None, head);
+                row.layout = stack(Axis::Horizontal, SpacingToken::Sm, Some(Align::Center));
+                children.push(row);
+            }
+        }
+        children.extend(texts);
+        children.extend(lists);
+        children.extend(numbers);
         let mut card = self.container(node.id.as_str(), Some(node.label.clone()), children);
         card.component = Some(Component::Card);
         card.props.padding = Some(SpacingToken::Md);
@@ -372,14 +395,29 @@ impl Build<'_> {
         card
     }
 
-    /// the region the items' actions read outside them: `node`'s state,
-    /// its lists bounded in height.
+    /// the region the items' actions read outside them, as a card: its
+    /// texts, its numbers, and its lists bounded in height, last.
     fn region(&mut self, node: &Node) -> IrNode {
-        let children = self.shows(node, true);
-        let mut group = self.container(node.id.as_str(), Some(node.label.clone()), children);
-        group.layout = stack(Axis::Vertical, SpacingToken::Sm, None);
-        group
+        let Senses {
+            texts,
+            lists,
+            numbers,
+        } = self.senses(node, true);
+        let children = texts.into_iter().chain(numbers).chain(lists).collect();
+        let mut card = self.container(node.id.as_str(), Some(node.label.clone()), children);
+        card.component = Some(Component::Card);
+        card.props.padding = Some(SpacingToken::Md);
+        card.layout = stack(Axis::Vertical, SpacingToken::Sm, None);
+        card
     }
+}
+
+/// a node's state as a review shows it, by sense.
+#[derive(Default)]
+struct Senses {
+    texts: Vec<IrNode>,
+    numbers: Vec<IrNode>,
+    lists: Vec<IrNode>,
 }
 
 /// the nodes the actions of `members` read outside them, in the order

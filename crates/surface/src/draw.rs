@@ -356,12 +356,29 @@ pub(crate) fn draw(
             let rows = list_of(node.value("rows", shown));
             let style = theme.typography.base_2r();
             let ink = ink(node, theme).unwrap_or(theme.colors.text_mid.0);
+            // a table bounded in height (`size.max`, task-96) holds more
+            // rows than its rect shows, and the list under it draws its
+            // overscan past its bounds: its rows are clipped to it then. a
+            // table as tall as its rows draws as it always did.
+            let full = Table::header_h(theme) + rows.len() as f32 * Table::row_h(theme);
+            let clipped = full > rect.h + 0.5;
+            if clipped {
+                c.push(SceneNode::PushClip {
+                    x: rect.x,
+                    y: rect.y,
+                    w: rect.w,
+                    h: rect.h,
+                });
+            }
             t.render_with(c, rect, theme, |c, row, cell, _| {
                 if let Some(s) = rows.get(row) {
                     let y = cell.y + TextMeasurer::vertical_center(&style, cell.h);
                     text(c, s, &style, Rect::new(cell.x, y, cell.w, cell.h), ink);
                 }
             });
+            if clipped {
+                c.push(SceneNode::PopClip);
+            }
         }
         (_, Widget::Table(None) | Widget::Dialog(_) | Widget::Static) => {}
     }
@@ -484,5 +501,73 @@ fn draw_chart(c: &mut Compositor, kind: ChartKind, data: &[String], rect: Rect, 
         ChartKind::Bar => chart::bars(c, &values, rect, theme, 1.0),
         ChartKind::Area => chart::area(c, &values, &vec![0.0; values.len()], rect, theme, 1.0),
         ChartKind::Donut => chart::donut(c, &parsed, rect, theme, 1.0),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use comps::Rect;
+    use comps::content::Table;
+    use engine::compositor::{Compositor, LayerId, SceneNode};
+    use engine::theme::Theme;
+    use sem::{Role, Snapshot, SnapshotBuilder};
+    use uir::{Capabilities, GenerationPolicy, verify_json};
+
+    use crate::surface::Surface;
+
+    /// a log of `rows` lines.
+    fn app(rows: usize) -> Snapshot {
+        let mut b = SnapshotBuilder::new();
+        let lines: Vec<String> = (0..rows).map(|i| format!("line {i}")).collect();
+        b.node("log", Role::Region, "log").state("lines", lines);
+        b.finish().unwrap()
+    }
+
+    /// the log's lines in a table bounded by the one height token.
+    const IR: &str = r#"{"plev_ir": 1, "surface": {"id": "s", "title": "t", "root": {
+        "sem": "s.root",
+        "children": [{
+            "sem": "s.lines", "component": "table", "label": "lines",
+            "size": {"max": "dropdown_max_h"},
+            "bind": {"state": {"rows": "log:lines"}}
+        }]
+    }}}"#;
+
+    /// the table's rect, and every clip the frame pushed, for `rows`.
+    fn drawn(rows: usize) -> ([f32; 4], Vec<[f32; 4]>) {
+        let app = app(rows);
+        let caps = Capabilities::from_snapshot(&app);
+        let ir = verify_json(IR, &caps, &GenerationPolicy::default()).unwrap();
+        let mut surface = Surface::materialize(ir, &app);
+        let mut c = Compositor::new();
+        surface.render(&mut c, Rect::new(0.0, 0.0, 400.0, 2000.0), &Theme::hoff());
+        let table = c.binding(&"s.lines".parse().unwrap()).unwrap().rect;
+        let clips = c
+            .layer(LayerId::DEFAULT)
+            .unwrap()
+            .nodes()
+            .iter()
+            .filter_map(|n| match *n {
+                SceneNode::PushClip { x, y, w, h } => Some([x, y, w, h]),
+                _ => None,
+            })
+            .collect();
+        (table, clips)
+    }
+
+    #[test]
+    fn a_table_bounded_in_height_clips_its_rows_and_one_that_holds_them_does_not() {
+        let theme = Theme::hoff();
+        let (table, clips) = drawn(40);
+        let full = Table::header_h(&theme) + 40.0 * Table::row_h(&theme);
+        assert!(table[3] < full, "bounded: {table:?}");
+        assert_eq!(clips, [table], "the rows clipped to the table");
+        let (table, clips) = drawn(3);
+        let full = Table::header_h(&theme) + 3.0 * Table::row_h(&theme);
+        assert!(
+            (table[3] - full).abs() < 0.5,
+            "as tall as its rows: {table:?}"
+        );
+        assert!(clips.is_empty(), "drawn as it always was: {clips:?}");
     }
 }

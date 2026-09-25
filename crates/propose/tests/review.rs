@@ -130,7 +130,20 @@ fn review_these_three_commits_shows_the_three_with_their_files_and_the_diff() {
             [format!("activate={app} show_diff")]
         );
     }
+    let head = node(root, "proposed.stacks.commit[c3].head");
+    let head: Vec<&str> = head.children.iter().map(|c| c.sem.as_str()).collect();
+    assert_eq!(
+        head,
+        [
+            "proposed.stacks.commit[c3].summary",
+            "proposed.stacks.commit[c3].show_diff"
+        ],
+        "what names the commit and its action on one line"
+    );
     assert_eq!(region.sem.as_str(), "proposed.diff");
+    assert_eq!(region.component, Some(Component::Card));
+    let last = region.children.last().map(|c| c.sem.as_str());
+    assert_eq!(last, Some("proposed.diff.lines"), "the lines last, to scroll");
     assert_eq!(bound(root, "proposed.diff.target"), ["text=diff:target"]);
     assert_eq!(bound(root, "proposed.diff.lines"), ["rows=diff:lines"]);
     assert_eq!(bound(root, "proposed.diff.count"), ["value=diff:count"]);
