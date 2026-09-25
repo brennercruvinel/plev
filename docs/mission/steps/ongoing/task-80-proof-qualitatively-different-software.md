@@ -812,3 +812,168 @@ nada derrubou a demo. o que ela achou, para o orquestrador:
 - o ponto de verdade segurou: com a view mentindo, o `CommitIf` recusou o
   commit de dois arquivos. a segunda checagem é o que fez a corrida custar
   uma recusa, não um commit errado.
+
+## fase 1: demo 4, interface efêmera (feita)
+
+o teste `crates/showcase/tests/ephemeral.rs` (novo, no gate:
+`cargo test -p showcase --test ephemeral`) roda o roteiro do método sem
+janela, sem ffmpeg e sem Claude: a Silences em 1200 por 800 servida por
+uma porta de verdade num diretório temporário, a partir da semente
+(cortes 1 e 2), com frames sintéticos postos no cache pelo
+`stage_silences_frames` antes de cada tick, gravada pelo mesmo
+`Recording` do shell. o agente `demo80` age sempre sobre uma observação
+da página inteira feita logo antes; a pessoa clica no meio de onde o
+botão aparece no frame, e o clique é gravado como input. cada medida
+espera a página parar (a entrada e a saída da superfície) e usa o frame
+que foi gravado naquele instante; o teste confere que as ligações
+gravadas são as que o frame vivo tinha.
+
+### a gravação
+
+guardada fora do git, em `$CARGO_TARGET_TMPDIR/showcase-ephemeral-test.monster`
+(reescrita a cada corrida); a lida abaixo foi copiada para a scratchpad
+da sessão (sha256 `c9d20453...`). 153.658 bytes (eventos 71.146, chunks
+52.539, ligações 8.923), 59 eventos, 61 frames.
+
+```text
+$ plev-inspect showcase-ephemeral-test.monster
+session   rec 0.1.0, built from b26dc988
+span      +0.000s to +0.132s, 59 events, 61 frames
+actors    agent:demo80: 11 observations, 8 requests, 32 stages
+          human: 1 request, 4 stages, 2 inputs
+requests  9
+  +0.037s  request 1  agent:demo80  select on silences_surface.proposer   completed
+  +0.039s  request 2  agent:demo80  set_value on silences_surface.intent  completed
+  +0.041s  request 3  agent:demo80  propose on silences_surface.propose   completed: surface = "proposed", nodes = 39
+  +0.052s  request 4  human         apply_cut on silences.cut[1]          completed: decision = "apply"
+  +0.056s  request 5  agent:demo80  set_value on silences_surface.intent  completed
+  +0.061s  request 6  agent:demo80  propose on silences_surface.propose   failed: nothing here can be swapped for a table or a chart to compare: `proposed.silences.cuts` repeats its items over `silences:cuts` (as a table or a chart its items' ids would leave the surface), and no list of numbers is shown: each item's numbers are values of their own
+  +0.066s  request 7  agent:demo80  set_value on silences_surface.intent  completed
+  +0.071s  request 8  agent:demo80  propose on silences_surface.propose   completed: surface = "proposed", nodes = 33
+  +0.116s  request 9  agent:demo80  close on silences_surface.close       completed: closed = "proposed"
+refusals  0
+```
+
+a timeline sem as linhas de estágio (`--timeline`, cortada): a revisão
+nasce num keyframe, a pessoa decide nela, a comparação troca a forma no
+lugar, o close tira tudo.
+
+```text
++0.040s     changes   silences_surface.intent:text: "" -> "the list with the video and the counts"; ...
++0.043s     snapshot  keyframe, 57 nodes: proposed added; proposed.card added; proposed.silences.video.original added; and 40 more
++0.052s     input     pointer_down on proposed.silences.cut[1].apply_cut
++0.052s     input     pointer_up on proposed.silences.cut[1].apply_cut
++0.053s     changes   silences.cut[1]:decision: "pending" -> "apply"; ...; silences.counts label "2 silences, 0 applied, ..." -> "2 silences, 1 applied, 0 rejected, 2.0 s cut"; and 10 more
++0.058s     changes   silences_surface.intent:text: "the list with the video and the counts" -> "I can't compare these"
++0.063s     changes   silences_surface.status:message: "proposed by the rules for ..." -> "nothing here can be swapped for a table or a chart to compare: ..."
++0.067s     changes   silences_surface.intent:text: "I can't compare these" -> "compare the original with the cuts"
++0.074s     snapshot  keyframe, 51 nodes: proposed.silences.video.duration removed; proposed.silences.video.shown removed; proposed.silences.threshold.value removed; and 11 more
++0.117s     changes   proposed removed; proposed.card removed; proposed.silences.video_views removed; and 34 more
+```
+
+### a leitura pelo inspector: a tela nunca existiu como tela fixa
+
+```text
+$ plev-inspect showcase-ephemeral-test.monster --control proposed --at 50
+control proposed at +0.050s
+  node          proposed: region "the list with the video and the counts", enabled
+  source        crates/surface/src/project.rs:96:11, in build b26dc988
+
+$ plev-inspect showcase-ephemeral-test.monster --control proposed --at 130
+control proposed at +0.130s
+  node          not in the recorded state at that instant
+
+$ plev-inspect showcase-ephemeral-test.monster --control 'proposed.silences.cut[1].apply_cut' --at 50
+control proposed.silences.cut[1].apply_cut at +0.050s
+  node          proposed.silences.cut[1].apply_cut: button "apply cut", enabled
+  actions       activate (reads proposed.silences.cut[1].decision:text)
+  source        crates/surface/src/project.rs:104:23, in build b26dc988
+  requests      0 touched it up to +0.050s (their target, or a state they read)
+
+$ plev-inspect showcase-ephemeral-test.monster --control 'silences.cut[1]' --at 130
+control silences.cut[1] at +0.130s
+  state         ... decision = "apply", frame = "silences.video@4.017052"
+  source        crates/showcase/src/view/apps/silences/semantics.rs:256:30, in build b26dc988
+  requests      1 touched it up to +0.130s (their target, or a state they read)
+
+$ plev-inspect showcase-ephemeral-test.monster --why 4
+request 4 (origin 0): apply_cut on silences.cut[1] by human, at +0.052s
+  control       silences.cut[1]: list_item "0:03.0 to 0:05.0", enabled
+  initiated by  human
+  action        apply_cut, no parameter
+  observed      not recorded: no observation by human before the request
+                (a person acts on the frame on screen; the recorder keeps only the observations the app reports)
+  precondition  what the action reads, as human saw it:
+                  silences.cut[1]:decision = "pending"
+  stages        +0.052s requested, accepted, executing, completed: decision = "apply"
+  result        completed at +0.052s: decision = "apply"
+```
+
+a superfície e cada controle dela vêm do materializador
+(`crates/surface/src/project.rs`), nunca de um arquivo da tela do app; o
+controle do app que a decisão mudou vem de
+`crates/showcase/src/view/apps/silences/semantics.rs`, e é ele que guarda
+a decisão depois que a superfície some. o teste confere isso nó a nó: os
+40 nós da superfície carregam `source`, todos em `crates/surface/src/`; os
+9 da tela fixa, todos em `crates/showcase/src/view/apps/silences`.
+
+dois achados da task-69 fase 4c continuam como estavam, e o inspector os
+mostra aqui: o ato pela superfície chega ao dispatcher como a capacidade
+do app (`apply_cut on silences.cut[1]`; o `--control` do botão da
+superfície diz "0 requests touched it"), e a observação da pessoa não é
+colocada ("not recorded"). só o input dela nomeia o botão gerado.
+
+### a comparação contra a tela fixa, pelo critério do método
+
+| critério | gerada | fixa | fonte na gravação |
+| --- | --- | --- | --- |
+| K1, a tarefa chega ao app | o clique em `proposed.silences.cut[1].apply_cut` é o request 4 da pessoa, `apply_cut` em `silences.cut[1]`, concluído | a mesma decisão no nó da fixa, `silences.cut[1]:decision = "apply"`, no fim | receipts e estado no fim |
+| K2, corte 1 à vista em 1200x800 | 5 de 5 (frame, faixa, decisão, aplicar, rejeitar) | ao lado da gerada: 0 de 5 (a linha em y = 968, abaixo de 800); sozinha, antes da superfície: 5 de 5 (a linha inteira em y = 684) | ligações do frame medido |
+| K2, corte 2 à vista em 1200x800 | 5 de 5 | ao lado: 0 de 5 (y = 1080); sozinha: 0 de 5 (a linha em y = 752, 8 de 68 px à vista) | idem |
+| K3, o original ao lado do resultado | 2 frames à vista, lado a lado (`proposed.silences.video.original` e `.result`, 180 por 140 cada) | 1 frame (`silences.video`, 380 por 214); o resultado pede outro ato | ligações depois da comparação |
+| K4, efêmera | no estado só de +0.043 s (logo depois do propose, +0.041 s) a +0.117 s (o close, +0.116 s); nenhuma ligação dela fora disso; nada no último frame | a tela fixa, no estado do começo ao fim | estado evento a evento e ligações frame a frame |
+| K5, custo | a revisão em 0 ms pelas regras (39 nós); a comparação em 0 ms (33 nós); viveu 75 ms nesta corrida | não se aplica | receipts |
+| K6, a recusa | "I can't compare these" termina `failed` com o motivo; os nós e os estados da superfície iguais antes e depois | não se aplica | estado antes e depois do request 6 |
+
+nada derrubou a demo. a gerada não foi pior em K2 nem em K3, e em K2 foi
+melhor que a fixa sozinha na janela padrão (a fixa mostra o segundo
+corte só 8 px). a revisão nasceu da intenção, virou a comparação no
+lugar (o mesmo id, `proposed`), e sumiu no close sem deixar nó nem
+ligação.
+
+o que isso não cobre, dito: só as regras (o Claude fica com o
+orquestrador, e é por ele que "I can't compare these" pode virar outra
+coisa); a semente em vez da detecção real e frames sintéticos; "à vista"
+conta presença no frame, não quão bem uma pessoa decide (o frame da
+gerada é menor que o da fixa); e ao lado da superfície a fixa fica com
+meia largura e desce, pelo layout da própria página, por isso a fixa
+sozinha entra como segundo controle. "não consigo comparar" virando
+comparação na Silences pede o app declarar uma lista de durações (a
+proposta da sonda, P3).
+
+### privacidade da gravação
+
+conferido pelo teste, em todos os estados gravados (2.521 nós lidos
+evento a evento) e em todos os eventos:
+
+- a entrada da pessoa: dois inputs, `pointer_down` e `pointer_up`, com o
+  controle sob eles (`proposed.silences.cut[1].apply_cut`) e a posição;
+  o tipo do evento não tem campo para conteúdo
+  (`crates/rec/src/event.rs:57-63`, `:79-91`).
+- segredo: nenhum nó com `constraints.secret` na Silences, então nada a
+  redigir nesta gravação; a redação de valor secreto como tamanho não foi
+  exercida aqui (ela é da `sem::redact`, com testes próprios).
+- câmera: nenhum nó com "camera" no id ou no rótulo; nenhuma câmera é
+  aberta pela página.
+- accessibility: a faixa das preferências não abriu, então nenhum nó
+  dela está na gravação; aberta, os botões dela não têm estado
+  (`crates/showcase/src/view/apps/silences/generated/access.rs:169-186`),
+  e o teste confere que um nó de accessibility, se houver, não guarda
+  estado.
+- uma observação: o texto da intenção fica gravado como valor do campo
+  (`silences_surface.intent:text`), porque é estado projetado e não
+  secreto. aqui quem escreveu foi o agente; se uma pessoa digitar, o que
+  ela digitou chega à gravação pelo estado do campo, não pelo input. é o
+  desenho da gravação (a task-63 grava o estado), não um vazamento da
+  promessa sobre o input, e fica anotado para quem decidir se um campo de
+  intenção deve ser secreto.
