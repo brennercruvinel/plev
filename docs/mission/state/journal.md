@@ -14,6 +14,14 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-96 fase b: os defeitos visuais da validação
+
+- **integrada:** `task/96b-ide-surface-polish` (6 commits, agente no
+  Opus). o título do diff é "diff"; a linha de intenção numa faixa
+  embaixo, a coluna só com superfície aberta. as imagens antes e depois
+  vistas (`demo5b/`). gate local verde, 3062 passam (antes 3054); regress
+  176 sem mudança. a demo 5 não mudou de lado em nenhum número.
+
 ### task-97: código e diff no IR, e a demo 5 de novo
 
 - **integrada:** `task/97a-code-in-ir` (9 commits, agente no Opus). o
