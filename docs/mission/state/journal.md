@@ -14,6 +14,42 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### task-70 fase 1: a superfície muda aos poucos
+
+- **integrada:** `task/70a-transforms` (8 commits, agente no Opus). nove
+  operações como dado em `uir::transform`, cada resultado verificado de
+  novo, cada uma com a inversa que volta byte a byte; só o hide tira um
+  id da árvore (guardado de lado, sem campo novo no IR); o host aplica
+  com histórico (operação, inversa, ator) e desfaz. nada mudou no
+  vocabulário nem no verifier.
+- **validação:** diff inteiro lido; a imagem da demo conferida (a revisão
+  do Claude da primeira rodada com os cortes primeiro, cada um com frame
+  e duração, e a detecção repetida escondida). gate local verde, 2861
+  passam, 0 falham (antes 2832); regress 170 sem mudança.
+- **achado:** o gráfico das durações não cabe hoje: o único `List` da
+  Silences são os ids dos cortes. telas fixas: exprimir em IR (o todo
+  cabe, a Silences não, pela linha do tempo).
+- **próximo:** task-70 fase 2, o proponente de transformação e as lacunas
+  do checkpoint b.
+
+### checkpoint b, segunda rodada: a gerada deixou de ser pior
+
+- **rodada:** os mesmos passos da primeira, pelo contrato e pelo
+  espelho, com o binário da `main` depois do PR #92; uma chamada real
+  ao Claude (126,2 s, 1 tentativa, 0,159 USD). imagens em
+  `steps/checked/checkpoint-b/r2-*.png`.
+- **resultado:** a do Claude põe os dois cortes e as ações no topo, com
+  os sliders e os contadores rotulados, tudo à vista na janela padrão;
+  a das regras cabe no card. a fixa informa mais por corte (frame e
+  duração). o estado compartilhado funcionou de novo.
+- **decisão autônoma:** empate com vantagens diferentes, a hipótese
+  central não falhou, então não para (autonomy.md). a geração segue como
+  linha principal; 70, 71 e 80 destravadas. task-69 concluída e movida
+  para `checked/`. o que ficou (o frame de cada corte que o prompt fez
+  sumir, números sem rótulo nas regras, o estado como selo) vai para a
+  task-70.
+- **próximo:** task-70, onda 7.
+
 ### checkpoint b, as correções integradas
 
 - **integrada:** `task/69i-checkpoint-b` (7 commits, agente no Opus). a

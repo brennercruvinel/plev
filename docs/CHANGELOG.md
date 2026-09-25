@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- a generated surface changes by small steps (2026-09-24, task-70 phase
+  1): nine operations change a surface that is open without building it
+  again: hide, show, group, reorder, emphasize, density, restyle, swap a
+  view and promote an action. each result passes the verifier again, each
+  comes with the way back to the surface before, byte for byte, and no
+  node leaves without an explicit hide. the host keeps every change with
+  who asked and undoes the last one; what a widget holds (a drag, a
+  caret, a press on a cut) stays. the regress shows the Claude's
+  first-round review with the cuts moved first and the repeated
+  detection hidden.
+
 - a generated surface is usable at the default window (2026-09-24,
   task-69 checkpoint b fixes): the checkpoint b found the review generated
   by the rules broken at 1200x800 and the Claude's with unlabeled sliders

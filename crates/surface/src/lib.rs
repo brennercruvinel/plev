@@ -33,7 +33,12 @@
 //!   out where it was, a node that moved slides, on the theme's motion and
 //!   durations, instant with reduced motion; a dismissal (`close`) fades
 //!   the surface out and then lets it go. render on demand: frames are
-//!   asked for only while something moves (`wake`).
+//!   asked for only while something moves (`wake`);
+//! - **adaptation** by one small operation at a time (`SurfaceHost::apply`,
+//!   a `uir::Op`: hide, show, group, reorder, emphasize, density, restyle,
+//!   swap a view, promote an action), verified again and reconciled the
+//!   same way, kept with its inverse and who asked; `undo` takes back the
+//!   last one.
 //!
 //! only a `VerifiedIr` materializes; no function here takes an `Ir`:
 //!
@@ -60,5 +65,5 @@ mod surface;
 mod token;
 mod widget;
 
-pub use host::{Dispatch, Frames, NoFrames, SurfaceError, SurfaceHost};
+pub use host::{Change, Dispatch, Frames, NoFrames, SurfaceError, SurfaceHost};
 pub use surface::Surface;
